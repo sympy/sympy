@@ -48,7 +48,7 @@ def test_linear_2eq_order1():
     assert eq2[1].subs(s).doit().simplify()
 
     eq3 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
-    sol3 = [Eq(x(t), C1*(-2*sqrt(7)*I*(1/4 + sqrt(7)*I/4)*exp(t*(3 - sqrt(7)*I)/2)/7 + 2*sqrt(7)*I*(1/4 - sqrt(7)*I/4)*exp(t*(3 + sqrt(7)*I)/2)/7) + C2*((1/4 + sqrt(7)*I/4)*(1/2 + sqrt(7)*I/14)*exp(t*(3 - sqrt(7)*I)/2) + (1/4 - sqrt(7)*I/4)*(1/2 - sqrt(7)*I/14)*exp(t*(3 + sqrt(7)*I)/2))), Eq(y(t), C1*(-2*sqrt(7)*I*exp(t*(3 - sqrt(7)*I)/2)/7 + 2*sqrt(7)*I*exp(t*(3 + sqrt(7)*I)/2)/7) + C2*((1/2 + sqrt(7)*I/14)*exp(t*(3 - sqrt(7)*I)/2) + (1/2 - sqrt(7)*I/14)*exp(t*(3 + sqrt(7)*I)/2)))]
+    sol3 = [Eq(x(t), C1*(-2*sqrt(7)*I*(S(1)/4 + sqrt(7)*I/4)*exp(t*(3 - sqrt(7)*I)/2)/7 + 2*sqrt(7)*I*(S(1)/4 - sqrt(7)*I/4)*exp(t*(3 + sqrt(7)*I)/2)/7) + C2*((S(1)/4 + sqrt(7)*I/4)*(S(1)/2 + sqrt(7)*I/14)*exp(t*(3 - sqrt(7)*I)/2) + (S(1)/4 - sqrt(7)*I/4)*(S(1)/2 - sqrt(7)*I/14)*exp(t*(3 + sqrt(7)*I)/2))), Eq(y(t), C1*(-2*sqrt(7)*I*exp(t*(3 - sqrt(7)*I)/2)/7 + 2*sqrt(7)*I*exp(t*(3 + sqrt(7)*I)/2)/7) + C2*((S(1)/2 + sqrt(7)*I/14)*exp(t*(3 - sqrt(7)*I)/2) + (S(1)/2 - sqrt(7)*I/14)*exp(t*(3 + sqrt(7)*I)/2)))]
     s = dsolve(eq3)
     assert s == sol3
     s = [(l.lhs, l.rhs) for l in s]
@@ -376,7 +376,7 @@ def test_linear_3eq_order1():
     assert dsolve(eq1) == sol1
 
     eq2 = (Eq(diff(x(t),t),3*y(t)-11*z(t)),Eq(diff(y(t),t),7*z(t)-3*x(t)),Eq(diff(z(t),t),11*x(t)-7*y(t)))
-    sol2 = [Eq(x(t), C1*((-21/170 + 11*sqrt(179)*I/170)*(-21/358 - 11*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + 49/179 + (-21/170 - 11*sqrt(179)*I/170)*(-21/358 + 11*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C2*((-21/170 + 11*sqrt(179)*I/170)*(-33/358 + 7*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + 77/179 + (-21/170 - 11*sqrt(179)*I/170)*(-33/358 - 7*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C3*(85*(-21/170 + 11*sqrt(179)*I/170)*exp(sqrt(179)*I*t)/179 + 21/179 + 85*(-21/170 - 11*sqrt(179)*I/170)*exp(-sqrt(179)*I*t)/179)), Eq(y(t), C1*((-33/170 - 7*sqrt(179)*I/170)*(-21/358 - 11*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + 77/179 + (-33/170 + 7*sqrt(179)*I/170)*(-21/358 + 11*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C2*((-33/170 - 7*sqrt(179)*I/170)*(-33/358 + 7*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + 121/179 + (-33/170 + 7*sqrt(179)*I/170)*(-33/358 - 7*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C3*(85*(-33/170 - 7*sqrt(179)*I/170)*exp(sqrt(179)*I*t)/179 + 33/179 + 85*(-33/170 + 7*sqrt(179)*I/170)*exp(-sqrt(179)*I*t)/179)), Eq(z(t), C1*((-21/358 - 11*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + 21/179 + (-21/358 + 11*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C2*((-33/358 + 7*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + 33/179 + (-33/358 - 7*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C3*(85*exp(sqrt(179)*I*t)/179 + 9/179 + 85*exp(-sqrt(179)*I*t)/179))]
+    sol2 = [Eq(x(t), C1*((-S(21)/170 + 11*sqrt(179)*I/170)*(-S(21)/358 - 11*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + S(49)/179 + (-S(21)/170 - 11*sqrt(179)*I/170)*(-S(21)/358 + 11*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C2*((-S(21)/170 + 11*sqrt(179)*I/170)*(-S(33)/358 + 7*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + S(77)/179 + (-S(21)/170 - 11*sqrt(179)*I/170)*(-S(33)/358 - 7*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C3*(85*(-S(21)/170 + 11*sqrt(179)*I/170)*exp(sqrt(179)*I*t)/179 + S(21)/179 + 85*(-S(21)/170 - 11*sqrt(179)*I/170)*exp(-sqrt(179)*I*t)/179)), Eq(y(t), C1*((-S(33)/170 - 7*sqrt(179)*I/170)*(-S(21)/358 - 11*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + S(77)/179 + (-S(33)/170 + 7*sqrt(179)*I/170)*(-S(21)/358 + 11*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C2*((-S(33)/170 - 7*sqrt(179)*I/170)*(-S(33)/358 + 7*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + S(121)/179 + (-S(33)/170 + 7*sqrt(179)*I/170)*(-S(33)/358 - 7*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C3*(85*(-S(33)/170 - 7*sqrt(179)*I/170)*exp(sqrt(179)*I*t)/179 + S(33)/179 + 85*(-S(33)/170 + 7*sqrt(179)*I/170)*exp(-sqrt(179)*I*t)/179)), Eq(z(t), C1*((-S(21)/358 - 11*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + S(21)/179 + (-S(21)/358 + 11*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C2*((-S(33)/358 + 7*sqrt(179)*I/358)*exp(sqrt(179)*I*t) + S(33)/179 + (-S(33)/358 - 7*sqrt(179)*I/358)*exp(-sqrt(179)*I*t)) + C3*(85*exp(sqrt(179)*I*t)/179 + S(9)/179 + 85*exp(-sqrt(179)*I*t)/179))]
     assert dsolve(eq2) == sol2
 
     eq3 = (Eq(3*diff(x(t),t),4*5*(y(t)-z(t))),Eq(4*diff(y(t),t),3*5*(z(t)-x(t))),Eq(5*diff(z(t),t),3*4*(x(t)-y(t))))
@@ -2885,6 +2885,17 @@ def test_dsolve_linsystem_symbol():
     s = dsolve(eq1)
     assert checksysodesol(eq1, s) == (True, [0, 0])
     assert [a.rewrite(exp, cos).simplify() for a in s] == sol1
+
+
+def test_issue_14312():
+    k2, k3, t = symbols('k2 k3 t')
+    x, y, z = symbols('x y z', cls=Function)
+    eq1 = (Eq(Derivative(x(t),t), k3*y(t)), Eq(Derivative(y(t),t), -(k3+k2)*y(t)), Eq(Derivative(z(t),t), k2*y(t)))
+    sol1 = dsolve(eq1)
+    assert [eqn.subs({e.lhs: e.rhs for e in sol1}).doit().simplify() for eqn in eq1] == [True, True, True]
+    eq2 = (Eq(Derivative(z(t),t), k2*y(t)), Eq(Derivative(x(t),t), k3*y(t)), Eq(Derivative(y(t),t), -(k3+k2)*y(t)))
+    sol2 = dsolve(eq2)
+    assert [eqn.subs({e.lhs: e.rhs for e in sol2}).doit().simplify() for eqn in eq2] == [True, True, True]
 
 
 def test_C1_function_9239():
