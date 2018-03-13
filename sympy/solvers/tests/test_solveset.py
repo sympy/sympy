@@ -1750,8 +1750,6 @@ def test_issue_14300():
 
 def test_issue_14454():
     x = Symbol('x')
-    raises(ValueError, lambda: invert_real(CRootOf(x**4 + x - 1, 2), 0, x, S.Reals))
-
-    y = invert_real(x**2, CRootOf(x**4 + x - 1, 2), x, S.Reals)
-    assert y[1].has(Intersection) == True
-    assert y[1].has(CRootOf) == True
+    number = CRootOf(x**4 + x - 1, 2)
+    raises(ValueError, lambda: invert_real(number, 0, x, S.Reals))
+    assert invert_real(x**2, number, x, S.Reals)  # no error
