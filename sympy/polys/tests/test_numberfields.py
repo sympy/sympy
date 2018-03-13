@@ -288,6 +288,9 @@ def test_primitive_element():
     raises(ValueError, lambda: primitive_element([], x, ex=False))
     raises(ValueError, lambda: primitive_element([], x, ex=True))
 
+    # Issue 14117
+    a, b = I*sqrt(2*sqrt(2) + 3), I*sqrt(-2*sqrt(2) + 3)
+    assert primitive_element([a, b, I], x) == (x**4 + 6*x**2 + 1, [1, 0, 0])
 
 def test_field_isomorphism_pslq():
     a = AlgebraicNumber(I)
