@@ -314,75 +314,54 @@ def _invert_complex(f, g_ys, symbol):
 def _invert_abs(f, g_ys, symbol):
     """Helper function for inverting absolute value functions.
 
-    Returns the complete result of inverting an absolute value function.
-    Alongwith finding all the possible solutions of the given function,
-    the routine determines a set of conditions which must be satified
-    for their existence.
+    Returns the complete result of inverting an absolute value
+    function along with the conditions which must also be satisfied.
 
-    The returned values are determined by the condition
-    If it is certain that all these conditions are met, a `FiniteSet` of all
-    possible solutions is returned.
-    If it can be concluded that atleast one condition cannot be satified, an
-    `EmptySet` is returned.
-    In all other cases, a `ConditionSet` of the solutions, with all the required
-    conditions specified, is returned.
+    If it is certain that all these conditions are met, a `FiniteSet`
+    of all possible solutions is returned. If any condition cannot be
+    satisfied, an `EmptySet` is returned. Otherwise, a `ConditionSet`
+    of the solutions, with all the required conditions specified, is
+    returned.
 
     """
 
     n = Dummy('n', real=True)
 
-    conditions = S.EmptySet
     condition_interval = Interval(0, oo)
 
     if f.is_positive:
         f_n = f
     else:
         f_n = f.args[0]
+
     g_x, values = _invert_real(f_n, Union(imageset(Lambda(n, n), g_ys),
                                imageset(Lambda(n, -n), g_ys)), symbol)
 
-    if isinstance(values, ConditionSet):
-        values_condition = values.condition
-        if not any(condition_atom.has(symbol) for condition_atom in
-                   values_condition.args[0].args):
-            condition_base_set = g_ys
-            if values_condition.args[1] == condition_interval:
-                condition_base_set = Union(condition_base_set,
-                                           FiniteSet(*values_condition.args[0]))
-                conditions = Contains(condition_base_set.args,
-                                      condition_interval)
-            else:
-                condition = Contains(condition_base_set.args,
-                                     condition_interval)
-                conditions = And(values_condition, condition)
-        else:
-            pass  # No possible usecase
-        values = values.base_set
-
-    if conditions == S.EmptySet:
-        satisfied_ys = S.EmptySet
-        for condition_atom in g_ys.args:
-            if condition_atom.is_Number:
-                if condition_atom not in condition_interval:
-                    return g_x, S.EmptySet
-                else:
-                    satisfied_ys = Union(FiniteSet(condition_atom),
-                                         satisfied_ys)
-            elif condition_atom.is_positive:
-                satisfied_ys = Union(FiniteSet(condition_atom), satisfied_ys)
-            elif condition_atom.is_positive is False:
+    satisfied_ys = S.EmptySet
+    for condition_atom in g_ys.args:
+        if condition_atom.is_Number:
+            if condition_atom not in condition_interval:
                 return g_x, S.EmptySet
             else:
-                pass
-        condition_ys = g_ys - satisfied_ys
-        if condition_ys.is_EmptySet:
-            return g_x, values
-        elif len(condition_ys) == 1:
-            condition_base = condition_ys.args[0]
+                satisfied_ys = Union(FiniteSet(condition_atom),
+                                     satisfied_ys)
+        elif condition_atom.is_positive:
+            satisfied_ys = Union(FiniteSet(condition_atom), satisfied_ys)
+        elif condition_atom.is_positive is False:
+            return g_x, S.EmptySet
         else:
-            condition_base = condition_ys.args
-        conditions = Contains(condition_base, condition_interval)
+            pass
+    condition_ys = g_ys - satisfied_ys
 
+
+    if not condition_ys:
+        return g_x, values
+
+    if not isinstance(condition_ys, FiniteSet):
+        raise NotImplementedError
+
+    conditions = And(*[Contains(i, Interval(0, oo))
+        for i in condition_ys])
     return g_x, ConditionSet(g_x, conditions, values)
 
 

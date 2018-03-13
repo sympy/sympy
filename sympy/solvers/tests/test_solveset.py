@@ -16,6 +16,7 @@ from sympy.functions.elementary.trigonometric import (
     cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.error_functions import (erf, erfc,
     erfcinv, erfinv)
+from sympy.logic.boolalg import And
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import CRootOf
@@ -149,10 +150,19 @@ def test_invert_real():
     n = Dummy('n')
     x = Symbol('x')
 
-    conditions = Contains((b, a + b, a - b), Interval(0, oo))
-    base_values = FiniteSet(- a - b - 3, - a + b - 3, a - b - 3, a + b - 3)
-    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == \
-        (x, ConditionSet(x, conditions, base_values))
+    # XXX this is ugly
+    sol = (x,
+        ConditionSet(x,
+            Contains(b, Interval(0, oo)),
+            ConditionSet(x,
+                Contains(a + b, Interval(0, oo)) & Contains(a - b, Interval(0, oo)),
+                FiniteSet(-a - b - 3, -a + b - 3, a - b - 3, a + b - 3))))
+    eq = Abs(Abs(x + 3) - a) - b
+    assert invert_real(eq, 0, x) == sol
+    reps = {a: 3, b: 1}
+    eqab = eq.subs(reps)
+    for i in sol[1].subs(reps):
+        assert not eqab.subs(x, i)
 
 
 def test_invert_complex():
