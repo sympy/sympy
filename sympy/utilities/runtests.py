@@ -1534,11 +1534,10 @@ class SymPyDocTestFinder(DocTestFinder):
     object types: modules, functions, classes, methods, staticmethods,
     classmethods, and properties.
 
-    Modified from doctest's version by looking harder for code in the
-    case that it looks like the the code comes from a different module.
-    In the case of decorated functions (e.g. @vectorize) they appear
-    to come from a different module (e.g. multidemensional) even though
-    their code is not there.
+    Modified from doctest's version to look harder for code that
+    appears comes from a different module. For example, the @vectorize
+    decorator makes it look like functions come from multidimensional.py
+    even though their code exists elsewhere.
     """
 
     def _find(self, tests, obj, name, module, source_lines, globs, seen):

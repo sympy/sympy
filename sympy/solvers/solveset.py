@@ -48,7 +48,7 @@ def _masked(f, *atoms):
     where ``e`` is an object of type given by ``atoms`` in which
     any other instances of atoms have been recursively replaced with
     Dummy symbols, too. The tuples are ordered so that if they are
-    applied in sequence, the orgin ``f`` will be restored.
+    applied in sequence, the origin ``f`` will be restored.
 
     Examples
     ========
