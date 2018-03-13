@@ -526,7 +526,10 @@ class log(Function):
             except ValueError:
                 pass
             if base is not S.Exp1:
-                return cls(arg)/cls(base)
+                if arg.is_symbol or base.is_symbol:
+                    return cls(arg, base, evaluate=False)
+                else:
+                    return cls(arg)/cls(base)
             else:
                 return cls(arg)
 
@@ -608,57 +611,63 @@ class log(Function):
     def _eval_expand_log(self, deep=True, **hints):
         from sympy import unpolarify, expand_log
         from sympy.concrete import Sum, Product
-        force = hints.get('force', False)
-        if (len(self.args) == 2):
-            return expand_log(self.func(*self.args), deep=deep, force=force)
-        arg = self.args[0]
-        if arg.is_Integer:
-            # remove perfect powers
-            p = perfect_power(int(arg))
-            if p is not False:
-                return p[1]*self.func(p[0])
-        elif arg.is_Rational:
-            return log(arg.p) - log(arg.q)
-        elif arg.is_Mul:
-            expr = []
-            nonpos = []
-            for x in arg.args:
-                if force or x.is_positive or x.is_polar:
-                    a = self.func(x)
-                    if isinstance(a, log):
-                        expr.append(self.func(x)._eval_expand_log(**hints))
-                    else:
+        if self.args[0].is_symbol:
+            return self
+        else:
+            force = hints.get('force', False)
+            if (len(self.args) == 2):
+                return expand_log(self.func(*self.args), deep=deep, force=force)
+            arg = self.args[0]
+            if arg.is_Integer:
+                # remove perfect powers
+                p = perfect_power(int(arg))
+                if p is not False:
+                    return p[1]*self.func(p[0])
+            elif arg.is_Rational:
+                return log(arg.p) - log(arg.q)
+            elif arg.is_Mul:
+                expr = []
+                nonpos = []
+                for x in arg.args:
+                    if force or x.is_positive or x.is_polar:
+                        a = self.func(x)
+                        if isinstance(a, log):
+                            expr.append(self.func(x)._eval_expand_log(**hints))
+                        else:
+                            expr.append(a)
+                    elif x.is_negative:
+                        a = self.func(-x)
                         expr.append(a)
-                elif x.is_negative:
-                    a = self.func(-x)
-                    expr.append(a)
-                    nonpos.append(S.NegativeOne)
-                else:
-                    nonpos.append(x)
-            return Add(*expr) + log(Mul(*nonpos))
-        elif arg.is_Pow or isinstance(arg, exp):
-            if force or (arg.exp.is_real and (arg.base.is_positive or ((arg.exp+1)
-                .is_positive and (arg.exp-1).is_nonpositive))) or arg.base.is_polar:
-                b = arg.base
-                e = arg.exp
-                a = self.func(b)
-                if isinstance(a, log):
-                    return unpolarify(e) * a._eval_expand_log(**hints)
-                else:
-                    return unpolarify(e) * a
-        elif isinstance(arg, Product):
-            if arg.function.is_positive:
-                return Sum(log(arg.function), *arg.limits)
+                        nonpos.append(S.NegativeOne)
+                    else:
+                        nonpos.append(x)
+                return Add(*expr) + log(Mul(*nonpos))
+            elif arg.is_Pow or isinstance(arg, exp):
+                if force or (arg.exp.is_real and (arg.base.is_positive or ((arg.exp+1)
+                    .is_positive and (arg.exp-1).is_nonpositive))) or arg.base.is_polar:
+                    b = arg.base
+                    e = arg.exp
+                    a = self.func(b)
+                    if isinstance(a, log):
+                        return unpolarify(e) * a._eval_expand_log(**hints)
+                    else:
+                        return unpolarify(e) * a
+            elif isinstance(arg, Product):
+                if arg.function.is_positive:
+                    return Sum(log(arg.function), *arg.limits)
 
-        return self.func(arg)
+            return self.func(arg)
 
     def _eval_simplify(self, ratio, measure):
         from sympy.simplify.simplify import expand_log, simplify
-        if (len(self.args) == 2):
-            return simplify(self.func(*self.args), ratio=ratio, measure=measure)
-        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
-        expr = expand_log(expr, deep=True)
-        return min([expr, self], key=measure)
+        if self.args[0].is_symbol:
+            return self
+        else:
+            if (len(self.args) == 2):
+                return simplify(self.func(*self.args), ratio=ratio, measure=measure)
+            expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
+            expr = expand_log(expr, deep=True)
+            return min([expr, self], key=measure)
 
     def as_real_imag(self, deep=True, **hints):
         """
