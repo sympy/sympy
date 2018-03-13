@@ -1535,7 +1535,7 @@ class SymPyDocTestFinder(DocTestFinder):
     classmethods, and properties.
 
     Modified from doctest's version by looking harder for code in the
-    case that it looks like the the code comes from a different module.
+    case that it looks like the code comes from a different module.
     In the case of decorated functions (e.g. @vectorize) they appear
     to come from a different module (e.g. multidemensional) even though
     their code is not there.

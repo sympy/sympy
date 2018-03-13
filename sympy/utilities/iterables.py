@@ -2166,7 +2166,7 @@ def kbins(l, k, ordered=None):
     [[0, 1, 2, 3], [4]]
 
     The ``ordered`` flag which is either None (to give the simple partition
-    of the the elements) or is a 2 digit integer indicating whether the order of
+    of the elements) or is a 2 digit integer indicating whether the order of
     the bins and the order of the items in the bins matters. Given::
 
         A = [[0], [1, 2]]
