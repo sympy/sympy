@@ -85,7 +85,8 @@ class floor(RoundFunction):
     Floor is a univariate function which returns the largest integer
     value not greater than its argument. This implementation
     generalizes floor to complex numbers as follows:
-        floor(a + b*I) -> floor(a) + floor(b)*I
+    .. math::
+        \lfloor{a + b i}\rfloor = \lfloor{a}\rfloor + \lfloor{b}\rfloor i
 
     Examples
     ========
@@ -158,7 +159,8 @@ class ceiling(RoundFunction):
     Ceiling is a univariate function which returns the smallest integer
     value not less than its argument. This implementation
     generalizes ceiling to complex numbers as follows:
-        ceiling(a + b*I) -> ceiling(a) + ceiling(b)*I
+    .. math::
+        \lceil{a + b i}\rceil = \lceil{a}\rceil + \lceil{b}\rceil i
 
     Examples
     ========
