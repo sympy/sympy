@@ -177,7 +177,7 @@ class ComplexRootOf(RootOf):
         obj.index = index
 
         try:
-            assert isinstance(obj.poly, PurePoly)
+            assert isinstance(poly, PurePoly)
             _reals_cache[obj.poly] = _reals_cache[poly]
             _complexes_cache[obj.poly] = _complexes_cache[poly]
         except KeyError:
@@ -205,10 +205,12 @@ class ComplexRootOf(RootOf):
 
     def _eval_is_real(self):
         """Return ``True`` if the root is real. """
+        assert isinstance(self.poly, PurePoly)
         return self.index < len(_reals_cache[self.poly])
 
     def _eval_is_imaginary(self):
         """Return ``True`` if the root is real. """
+        assert isinstance(self.poly, PurePoly)
         if self.index >= len(_reals_cache[self.poly]):
             ivl = self._get_interval()
             return ivl.ax*ivl.bx <= 0  # all others are on one side or the other
@@ -255,9 +257,15 @@ class ComplexRootOf(RootOf):
 
         for factor, k in factors:
             assert isinstance(factor, PurePoly)
-            real_part = cls._get_reals_sqf(factor)
-            reals.extend([(root, factor, k) for root in real_part])
+            r = _reals_cache.get(factor, None)
+            if r is not None:
+                reals.extend([(i, factor, k) for i in r])
+            else:
+                real_part = cls._get_reals_sqf(factor)
+                new = [(root, factor, k) for root in real_part]
+                reals.extend(new)
 
+        reals = cls._reals_sorted(reals)
         return reals
 
     @classmethod
@@ -265,10 +273,16 @@ class ComplexRootOf(RootOf):
         """Compute complex root isolating intervals for a list of factors. """
         complexes = []
 
-        for factor, k in factors:
-            complex_part = cls._get_complexes_sqf(factor)
-            complexes.extend([(root, factor, k) for root in complex_part])
+        for factor, k in ordered(factors):
+            c = _complexes_cache.get(factor, None)
+            if c is not None:
+                complexes.extend([(i, factor, k) for i in c])
+            else:
+                complex_part = cls._get_complexes_sqf(factor)
+                new = [(root, factor, k) for root in complex_part]
+                complexes.extend(new)
 
+        complexes = cls._complexes_sorted(complexes)
         return complexes
 
     @classmethod
@@ -347,6 +361,16 @@ class ComplexRootOf(RootOf):
     def _complexes_sorted(cls, complexes):
         """Make complex isolating intervals disjoint and sort roots. """
         complexes = cls._refine_complexes(complexes)
+        # XXX don't sort until you are sure that it is compatible
+        # with the indexing method but assert that the desired state
+        # is not broken
+        fs = set([i[1] for i in complexes])
+        for i in range(1, len(complexes)):
+            if complexes[i][1] != complexes[i - 1][1]:
+                # if this fails the roots of a factor were not contiguous
+                fs.remove(complexes[i - 1][1])
+        for i in range(len(complexes)):
+            assert complexes[i][0].conj is (i % 2 == 0)
 
         # update cache
         cache = {}
@@ -418,11 +442,9 @@ class ComplexRootOf(RootOf):
         reals_count = cls._count_roots(reals)
 
         if index < reals_count:
-            reals = cls._reals_sorted(reals)
             return cls._reals_index(reals, index)
         else:
             complexes = cls._get_complexes(factors)
-            complexes = cls._complexes_sorted(complexes)
             return cls._complexes_index(complexes, index - reals_count)
 
     @classmethod
@@ -431,7 +453,6 @@ class ComplexRootOf(RootOf):
         factors = _pure_factors(poly)
 
         reals = cls._get_reals(factors)
-        reals = cls._reals_sorted(reals)
         reals_count = cls._count_roots(reals)
 
         roots = []
@@ -447,7 +468,6 @@ class ComplexRootOf(RootOf):
         factors = _pure_factors(poly)
 
         reals = cls._get_reals(factors)
-        reals = cls._reals_sorted(reals)
         reals_count = cls._count_roots(reals)
 
         roots = []
@@ -456,7 +476,6 @@ class ComplexRootOf(RootOf):
             roots.append(cls._reals_index(reals, index))
 
         complexes = cls._get_complexes(factors)
-        complexes = cls._complexes_sorted(complexes)
         complexes_count = cls._count_roots(complexes)
 
         for index in range(0, complexes_count):
