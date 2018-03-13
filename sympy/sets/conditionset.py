@@ -48,6 +48,11 @@ class ConditionSet(Set):
                     cls, sym, condition, FiniteSet(*sifted[None])))
             else:
                 return FiniteSet(*sifted[True])
+        if isinstance(base_set, ConditionSet):
+            s, c, b = base_set.args
+            if s != sym:
+                c = c.subs(s, sym)
+            return ConditionSet(sym, And(c, condition), b)
         return Basic.__new__(cls, sym, condition, base_set)
 
     sym = property(lambda self: self.args[0])

@@ -2,6 +2,8 @@ from sympy.sets import (ConditionSet, Intersection, FiniteSet, EmptySet, Union)
 from sympy import (Symbol, Eq, S, Abs, sin, pi, Lambda, Interval, And, Mod)
 
 x = Symbol('x')
+y = Symbol('y')
+z = Symbol('z')
 
 
 def test_CondSet():
@@ -12,6 +14,11 @@ def test_CondSet():
     assert 3*pi not in sin_sols_principal
     assert 5 in ConditionSet(x, x**2 > 4, S.Reals)
     assert 1 not in ConditionSet(x, x**2 > 4, S.Reals)
+
+    assert ConditionSet(x, Eq(x, 0), ConditionSet(y, Eq(z, 1),
+        S.Integers)) == ConditionSet(x, And(Eq(x, 0), Eq(z, 1)), S.Integers)
+    assert ConditionSet(x, Eq(x, 0), ConditionSet(y, Eq(y, 1),
+        S.Integers)) == ConditionSet(x, And(Eq(x, 0), Eq(x, 1)), S.Integers)
 
 
 def test_CondSet_intersect():
