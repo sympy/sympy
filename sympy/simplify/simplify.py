@@ -382,10 +382,8 @@ def signsimp(expr, evaluate=None):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
-    # type: (object, object, object, object) -> object
-    """
-    Simplifies the given expression.
+def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+    """Simplifies the given expression.
 
     Simplification is not a well defined term and the exact strategies
     this function tries can change in the future versions of SymPy. If
@@ -510,6 +508,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     If rational=None, Floats will be recast as Rationals but the result will
     be recast as Floats. If rational=False(default) then nothing will be done
     to the Floats.
+
+    If inverse=True, it will be assumed that a composition of inverse
+    functions, such as sin and asin, can be cancelled in any order.
+    For example, ``asin(sin(x))`` will yield ``x`` without checking whether
+    x belongs to the set where this relation is true. The default is
+    False.
     """
     expr = sympify(expr)
 
@@ -527,12 +531,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False):
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
 
+    if inverse and expr.has(Function):
+        expr = inversecombine(expr)
+        if not expr.args:  # simplified to atomic
+            return expr
+
     if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
-        if isinstance(expr, Function) and hasattr(expr, "inverse"):
-            if len(expr.args) == 1 and len(expr.args[0].args) == 1 and \
-               isinstance(expr.args[0], expr.inverse(argindex=1)):
-                return simplify(expr.args[0].args[0], ratio=ratio,
-                                measure=measure, rational=rational)
         return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational)
                          for x in expr.args])
 
@@ -1009,6 +1013,35 @@ def logcombine(expr, force=False):
                 other.append(k*log1.pop(k))
 
         return Add(*other)
+
+    return bottom_up(expr, f)
+
+
+def inversecombine(expr):
+    """Simplify the composition of a function and its inverse.
+
+    No attention is paid to whether the inverse is a left inverse or a
+    right inverse; thus, the result will in general not be equivalent
+    to the original expression.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.simplify import inversecombine
+    >>> from sympy import asin, sin, log, exp
+    >>> from sympy.abc import x
+    >>> inversecombine(asin(sin(x)))
+    x
+    >>> inversecombine(2*log(exp(3*x)))
+    6*x
+    """
+
+    def f(rv):
+        if rv.is_Function and hasattr(rv, "inverse"):
+            if (len(rv.args) == 1 and len(rv.args[0].args) == 1 and
+                isinstance(rv.args[0], rv.inverse(argindex=1))):
+                    rv = rv.args[0].args[0]
+        return rv
 
     return bottom_up(expr, f)
 

@@ -776,7 +776,7 @@ def solve(f, *symbols, **flags):
         >>> solve(sin(x)/x, check=False)
         [0, pi]
 
-    In the following case, however, the limit exists and is equal to the the
+    In the following case, however, the limit exists and is equal to the
     value of x = 0 that is excluded when check=True:
 
         >>> eq = x**2*(1/x - z**2/x)

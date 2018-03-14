@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
-from sympy import factorial, exp, S, sympify
+from sympy import factorial, exp, S, sympify, And
 from sympy.stats.rv import _value_check
 from sympy.sets.sets import Interval
 import random
@@ -31,9 +31,24 @@ class PoissonDistribution(SingleDiscreteDistribution):
     def sample(self):
         u = random.uniform(0, 1)
         inf = self.set.inf
-        while u > self.cdf(inf):
-            inf += 1
-        return inf
+
+        def search(x, y, u):
+            mid = (x + y)//2
+            if x == y:
+                return x
+            elif self.cdf(mid) >= u:
+                return search(x, mid, u)
+            else:
+                return search(mid + 1, y, u)
+
+        count = 0
+        while True:
+            if u > self.cdf(inf):
+                inf = 2**count
+                count += 1
+            else:
+                prev_inf, inf = 2**(count - 2), 2**(count - 1)
+                return search(prev_inf, inf, u)
 
 
 def Poisson(name, lamda):
@@ -90,7 +105,7 @@ class GeometricDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        _value_check(0 < p and p <= 1, "p must be between 0 and 1")
+        _value_check(And(0 < p, p<=1), "p must be between 0 and 1")
 
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p

@@ -7,6 +7,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
 from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
@@ -22,6 +23,7 @@ from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
 from sympy.calculus.util import AccumulationBounds
+import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
@@ -439,10 +441,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         next_sequence_term = sequence_term.xreplace({sym: sym + 1})
         ratio = combsimp(powsimp(next_sequence_term/sequence_term))
         lim_ratio = limit(ratio, sym, upper_limit)
-        if abs(lim_ratio) > 1:
-            return S.false
-        if abs(lim_ratio) < 1:
-            return S.true
+        if lim_ratio.is_number:
+            if abs(lim_ratio) > 1:
+                return S.false
+            if abs(lim_ratio) < 1:
+                return S.true
 
         ### --------- p-series test (1/n**p) ---------- ###
         p1_series_test = order.expr.match(sym**p)
@@ -458,6 +461,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 return S.true
             if p2_series_test[p] <= 1:
                 return S.false
+
+        ### ------------- Limit comparison test -----------###
+        # (1/n) comparison
+        try:
+            lim_comp = limit(sym*sequence_term, sym, S.Infinity)
+            if lim_comp.is_number and lim_comp > 0:
+                    return S.false
+        except NotImplementedError:
+            pass
 
         ### ----------- root test ---------------- ###
         lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
@@ -519,9 +531,30 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     pass
 
         ### ----- Dirichlet and bounded times convergent tests ----- ###
+        # TODO
+        #
+        # Dirichlet_test
+        # https://en.wikipedia.org/wiki/Dirichlet%27s_test
+        #
+        # Bounded times convergent test
+        # It is based on comparison theorems for series.
+        # In particular, if the general term of a series can
+        # be written as a product of two terms a_n and b_n
+        # and if a_n is bounded and if Sum(b_n) is absolutely
+        # convergent, then the original series Sum(a_n * b_n)
+        # is absolutely convergent and so convergent.
+        #
+        # The following code can grows like 2**n where n is the
+        # number of args in order.expr
+        # Possibly combined with the potentially slow checks
+        # inside the loop, could make this test extremely slow
+        # for larger summation expressions.
+
         if order.expr.is_Mul:
+            args = order.expr.args
+            argset = set(args)
+
             ### -------------- Dirichlet tests -------------- ###
-            a_n, b_n = order.expr.args[0], order.expr.args[1]
             m = Dummy('m', integer=True)
 
             def _dirichlet_test(g_n):
@@ -531,16 +564,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                         return S.true
                 except NotImplementedError:
                     pass
-
-            if is_decreasing(a_n, interval):
-                dirich1 = _dirichlet_test(b_n)
-                if dirich1 is not None:
-                    return dirich1
-
-            if is_decreasing(b_n, interval):
-                dirich2 = _dirichlet_test(a_n)
-                if dirich2 is not None:
-                    return dirich2
 
             ### -------- bounded times convergent test ---------###
             def _bounded_convergent_test(g1_n, g2_n):
@@ -553,14 +576,20 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 except NotImplementedError:
                     pass
 
-            test1 = _bounded_convergent_test(a_n, b_n)
-            if test1 is not None:
-                return test1
+            for n in range(1, len(argset)):
+                for a_tuple in itertools.combinations(args, n):
+                    b_set = argset - set(a_tuple)
+                    a_n = Mul(*a_tuple)
+                    b_n = Mul(*b_set)
 
-            test2 = _bounded_convergent_test(b_n, a_n)
-            if test2 is not None:
-                return test2
+                    if is_decreasing(a_n, interval):
+                        dirich = _dirichlet_test(b_n)
+                        if dirich is not None:
+                            return dirich
 
+                    bc_test = _bounded_convergent_test(a_n, b_n)
+                    if bc_test is not None:
+                        return bc_test
 
         _sym = self.limits[0][0]
         sequence_term = sequence_term.xreplace({sym: _sym})
