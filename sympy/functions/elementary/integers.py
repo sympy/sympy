@@ -86,8 +86,7 @@ class floor(RoundFunction):
     value not greater than its argument. This implementation
     generalizes floor to complex numbers as follows:
 
-    .. math::
-        \lfloor{a + b i}\rfloor = \lfloor{a}\rfloor + \lfloor{b}\rfloor i
+    .. math:: \lfloor{a + b i}\rfloor = \lfloor{a}\rfloor + \lfloor{b}\rfloor i
 
     Examples
     ========
@@ -161,8 +160,7 @@ class ceiling(RoundFunction):
     value not less than its argument. This implementation
     generalizes ceiling to complex numbers as follows:
 
-    .. math::
-        \lceil{a + b i}\rceil = \lceil{a}\rceil + \lceil{b}\rceil i
+    .. math:: \lceil{a + b i}\rceil = \lceil{a}\rceil + \lceil{b}\rceil i
 
     Examples
     ========
