@@ -362,8 +362,8 @@ def bin_to_gray(bin_list):
     gray_to_bin
     """
     b = [bin_list[0]]
-    for i in range(0, len(bin_list) - 1):
-        b += str(int(bin_list[i]) ^ int(b[i - 1]))
+    for i in range(1, len(bin_list)):
+        b += str(int(bin_list[i]) ^ int(bin_list[i - 1]))
     return ''.join(b)
 
 
