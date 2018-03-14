@@ -37,9 +37,6 @@ class Mod(Function):
             to be less than or equal q.
             """
 
-            if isinstance(p, MatrixBase):
-                return p % q
-
             if q == S.Zero:
                 raise ZeroDivisionError("Modulo by zero")
             if p.is_infinite or q.is_infinite or p is nan or q is nan:

@@ -1935,15 +1935,6 @@ class MatrixBase(MatrixDeprecated,
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
         return "Matrix(%s)" % str(self.tolist())
 
-    def __mod__(self, other):
-        temp = self.as_mutable()
-        for i in range(self.rows):
-            for j in range(self.cols):
-                temp[i, j] = temp[i, j] % other
-
-        return temp
-
-
     def _diagonalize_clear_subproducts(self):
         del self._is_symbolic
         del self._is_symmetric
