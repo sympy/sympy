@@ -556,7 +556,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
             ### -------------- Dirichlet tests -------------- ###
             m = Dummy('m', integer=True)
-
             def _dirichlet_test(g_n):
                 try:
                     ing_val = limit(Sum(g_n, (sym, interval.inf, m)).doit(), m, S.Infinity)
