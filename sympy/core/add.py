@@ -122,7 +122,7 @@ class Add(Expr, AssocOp):
         for arg in seq:
             ret = append_arg_Add(klass, data, arg)
             if not isinstance(ret, tuple):
-                return [ret], [], []
+                return [ret], [], None
             klass, data = ret
 
         terms = data["terms"]
