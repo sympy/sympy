@@ -381,7 +381,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Product.is_convergent()
         """
         from sympy import Interval, Integral, Limit, log, symbols, Ge, Gt, simplify
-        p, q = symbols('p q', cls=Wild)
+        p, q, r = symbols('p q r', cls=Wild)
 
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
@@ -437,16 +437,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         order = O(sequence_term, (sym, S.Infinity))
 
-        ### ----------- ratio test ---------------- ###
-        next_sequence_term = sequence_term.xreplace({sym: sym + 1})
-        ratio = combsimp(powsimp(next_sequence_term/sequence_term))
-        lim_ratio = limit(ratio, sym, upper_limit)
-        if lim_ratio.is_number:
-            if abs(lim_ratio) > 1:
-                return S.false
-            if abs(lim_ratio) < 1:
-                return S.true
-
         ### --------- p-series test (1/n**p) ---------- ###
         p1_series_test = order.expr.match(sym**p)
         if p1_series_test is not None:
@@ -462,6 +452,16 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if p2_series_test[p] <= 1:
                 return S.false
 
+        ### ------------- comparison test ------------- ###
+        # 1/(n**p*log(n)**q*log(log(n))**r) comparison
+        n_log_test = order.expr.match(1/(sym**p*log(sym)**q*log(log(sym))**r))
+        if n_log_test is not None:
+            if (n_log_test[p] > 1 or
+                (n_log_test[p] == 1 and n_log_test[q] > 1) or
+                (n_log_test[p] == n_log_test[q] == 1 and n_log_test[r] > 1)):
+                    return S.true
+            return S.false
+
         ### ------------- Limit comparison test -----------###
         # (1/n) comparison
         try:
@@ -471,56 +471,47 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         except NotImplementedError:
             pass
 
+        ### ----------- ratio test ---------------- ###
+        next_sequence_term = sequence_term.xreplace({sym: sym + 1})
+        ratio = combsimp(powsimp(next_sequence_term/sequence_term))
+        try:
+            lim_ratio = limit(ratio, sym, upper_limit)
+            if lim_ratio.is_number:
+                if abs(lim_ratio) > 1:
+                    return S.false
+                if abs(lim_ratio) < 1:
+                    return S.true
+        except NotImplementedError:
+            pass
+
         ### ----------- root test ---------------- ###
         lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
-        lim_evaluated = lim.doit()
-        if lim_evaluated.is_number:
-            if lim_evaluated < 1:
-                return S.true
-            if lim_evaluated > 1:
-                return S.false
+        try:
+            lim_evaluated = lim.doit()
+            if lim_evaluated.is_number:
+                if lim_evaluated < 1:
+                    return S.true
+                if lim_evaluated > 1:
+                    return S.false
+        except NotImplementedError:
+            pass
 
         ### ------------- alternating series test ----------- ###
         dict_val = sequence_term.match((-1)**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
 
-        ### ------------- comparison test ------------- ###
-        # (1/log(n)**p) comparison
-        log_test = order.expr.match(1/(log(sym)**p))
-        if log_test is not None:
-            return S.false
-
-        # (1/(n*log(n)**p)) comparison
-        log_n_test = order.expr.match(1/(sym*(log(sym))**p))
-        if log_n_test is not None:
-            if log_n_test[p] > 1:
-                return S.true
-            return S.false
-
-        # (1/(n*log(n)*log(log(n))*p)) comparison
-        log_log_n_test = order.expr.match(1/(sym*(log(sym)*log(log(sym))**p)))
-        if log_log_n_test is not None:
-            if log_log_n_test[p] > 1:
-                return S.true
-            return S.false
-
-        # (1/(n**p*log(n))) comparison
-        n_log_test = order.expr.match(1/(sym**p*log(sym)))
-        if n_log_test is not None:
-            if n_log_test[p] > 1:
-                return S.true
-            return S.false
 
         ### ------------- integral test -------------- ###
+        check_interval = None
         maxima = solveset(sequence_term.diff(sym), sym, interval)
         if not maxima:
             check_interval = interval
         elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:
             check_interval = Interval(maxima.sup, interval.sup)
-            if (
-                    is_decreasing(sequence_term, check_interval) or
-                    is_decreasing(-sequence_term, check_interval)):
+        if (check_interval is not None and
+            (is_decreasing(sequence_term, check_interval) or
+            is_decreasing(-sequence_term, check_interval))):
                 integral_val = Integral(
                     sequence_term, (sym, lower_limit, upper_limit))
                 try:
