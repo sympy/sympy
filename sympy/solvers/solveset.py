@@ -324,32 +324,27 @@ def _invert_abs(f, g_ys, symbol):
     returned.
 
     """
-
-    n = Dummy('n', real=True)
-
-    if f.is_positive:
-        f_n = f
-    else:
-        f_n = f.args[0]
-
-    g_x, values = _invert_real(f_n, Union(imageset(Lambda(n, n), g_ys),
-                               imageset(Lambda(n, -n), g_ys)), symbol)
-
     if not isinstance(g_ys, FiniteSet):
         raise NotImplementedError
+    # before attempting to solve make sure the conditions
+    # are not invalid
+    unknown = []
+    for a in g_ys.args:
+        ok = a.is_nonnegative if a.is_Number else a.is_positive
+        if ok is None:
+            unknown.append(a)
+        elif not ok:
+            return symbol, S.EmptySet
+    if unknown:
+        conditions = And(*[Contains(i, Interval(0, oo))
+            for i in unknown])
     else:
-        unknown = []
-        for a in g_ys.args:
-            ok = a.is_nonnegative if a.is_Number else a.is_positive
-            if ok is None:
-                unknown.append(a)
-            elif not ok:
-                return g_x, S.EmptySet
-        if unknown:
-            conditions = And(*[Contains(i, Interval(0, oo))
-                for i in unknown])
-        else:
-            conditions = True
+        conditions = True
+    # none were invalid
+    f_n = f.args[0]
+    n = Dummy('n', real=True)
+    g_x, values = _invert_real(f_n, Union(imageset(Lambda(n, n), g_ys),
+        imageset(Lambda(n, -n), g_ys)), symbol)
     return g_x, ConditionSet(g_x, conditions, values)
 
 

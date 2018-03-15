@@ -32,6 +32,7 @@ def test_issue_9849():
     assert ConditionSet(x, Eq(x, x), S.Naturals) == S.Naturals
     assert ConditionSet(x, Eq(Abs(sin(x)), -1), S.Naturals) == S.EmptySet
 
+
 def test_simplified_FiniteSet_in_CondSet():
     assert ConditionSet(x, And(x < 1, x > -3), FiniteSet(0, 1, 2)) == FiniteSet(0)
     assert ConditionSet(x, x < 0, FiniteSet(0, 1, 2)) == EmptySet()

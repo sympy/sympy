@@ -151,7 +151,7 @@ def test_invert_real():
     x = Symbol('x')
 
     sol = ConditionSet(
-            x, 
+            x,
             And(
                 Contains(b, Interval(0, oo)),
                 Contains(a + b, Interval(0, oo)),
