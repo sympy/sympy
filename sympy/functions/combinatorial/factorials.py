@@ -15,6 +15,8 @@ from sympy.core.cache import cacheit
 
 from sympy.polys.polytools import Poly
 
+from sympy.functions.special import gamma
+
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
@@ -359,6 +361,12 @@ class factorial2(CombinatorialFunction):
         # TODO: extend this to complex numbers?
 
         if arg.is_Number:
+            if arg.is_complex:
+                a = (2/pi)**((1-cos(pi*arg))/4)
+                b = 2**(arg/2)
+                c = gamma(arg/2 + 1)
+                return a*b*c
+                                
             if not arg.is_Integer:
                 raise ValueError("argument must be nonnegative integer or negative odd integer")
 
