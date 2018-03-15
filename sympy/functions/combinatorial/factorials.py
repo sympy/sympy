@@ -15,6 +15,8 @@ from sympy.core.cache import cacheit
 
 from sympy.polys.polytools import Poly
 
+from mpmath import gamma
+
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
@@ -357,6 +359,10 @@ class factorial2(CombinatorialFunction):
     @classmethod
     def eval(cls, arg):
         # TODO: extend this to complex numbers?
+        check = arg.is_real
+
+        if check == False:
+            return gamma(arg)
 
         if arg.is_Number:
             if not arg.is_Integer:
