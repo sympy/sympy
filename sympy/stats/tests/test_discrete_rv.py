@@ -34,9 +34,11 @@ def test_GeometricDistribution():
 
 def test_sample():
     X, Y, Z = Geometric('X', S(1)/2), Poisson('Y', 4), Poisson('Z', 1000)
+    W = Poisson('W', S(1)/100)
     assert sample(X) in X.pspace.domain.set
     assert sample(Y) in Y.pspace.domain.set
     assert sample(Z) in Z.pspace.domain.set
+    assert sample(W) in W.pspace.domain.set
 
 def test_discrete_probability():
     X = Geometric('X', S(1)/5)
