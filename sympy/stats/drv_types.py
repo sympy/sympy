@@ -29,26 +29,24 @@ class PoissonDistribution(SingleDiscreteDistribution):
         return self.lamda**k / factorial(k) * exp(-self.lamda)
 
     def sample(self):
-        u = random.uniform(0, 1)
-        inf = self.set.inf
-
         def search(x, y, u):
-            mid = (x + y)//2
-            if x == y:
-                return x
-            elif self.cdf(mid) >= u:
-                return search(x, mid, u)
-            else:
-                return search(mid + 1, y, u)
+            while x < y:
+                mid = (x + y)//2
+                if u <= self.cdf(mid):
+                    y = mid
+                else:
+                    x = mid + 1
+            return x
 
-        count = 0
+        u = random.uniform(0, 1)
+        if u <= self.cdf(S.Zero):
+            return S.Zero
+        n = S.One
         while True:
-            if u > self.cdf(inf):
-                inf = 2**count
-                count += 1
+            if u > self.cdf(2*n):
+                n *= 2
             else:
-                prev_inf, inf = 2**(count - 2), 2**(count - 1)
-                return search(prev_inf, inf, u)
+                return search(n, 2*n, u)
 
 
 def Poisson(name, lamda):
