@@ -2015,7 +2015,7 @@ class Integer(Rational):
             ival = int(i)
         except TypeError:
             raise TypeError(
-                'Integer can only work with expressions that can be rounded off to integer type.')
+                "Argument of Integer should be of numeric type, got %s." % i)
         try:
             return _intcache[ival]
         except KeyError:
