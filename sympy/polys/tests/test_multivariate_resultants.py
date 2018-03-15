@@ -88,16 +88,6 @@ def test_macaulay_resultant_init():
     assert macaulay.degree_m == 1
     assert macaulay.monomials_size == 2
 
-def test_get_max_degrees_macaulay():
-    max_degrees = macaulay.get_max_degrees()
-
-    assert type(max_degrees) == list
-    assert len(max_degrees) == 2
-
-def test_get_polynomial_degree():
-    assert macaulay.get_polynomial_degree(p) == 1
-    assert macaulay.get_polynomial_degree(q) == 1
-
 def test_get_degree_m():
     assert macaulay.get_degree_m() == 1
 

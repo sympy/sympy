@@ -196,28 +196,12 @@ class MacaulayResultant():
         self.variables = variables
         self.n = len(variables)
 
-        self.degrees = self.get_max_degrees()
+        # A list of the d_max of each variable.
+        self.degrees = [poly_from_expr(poly, self.variables)[0].degree()
+                        for poly in self.polynomials]
+
         self.degree_m = self.get_degree_m()
         self.monomials_size = self.get_size()
-
-    def get_max_degrees(self):
-        r"""
-        Returns
-        -------
-        degrees: list
-            A list of the d_max of each polynomial
-        """
-        degrees = [self.get_polynomial_degree(poly) for poly in self.polynomials]
-        return degrees
-
-    def get_polynomial_degree(self, poly):
-        """
-        Returns
-        -------
-        degree: int
-            The degree of a polynomial
-        """
-        return poly_from_expr(poly, self.variables)[0].degree()
 
     def get_degree_m(self):
         r"""
