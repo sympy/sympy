@@ -1495,7 +1495,7 @@ def clear_coefficients(expr, rhs=S.Zero):
 def nc_simplify(expr, max_subterm=None):
     '''
     Simplify a non-commutative expression composed of multiplication
-    and exponentiation by grouping repeating subterms into one power.
+    and raising to a power by grouping repeated subterms into one power.
     Priority is given to longer subterms. If `expr` is a sum of such
     terms, the sums of the simplified terms is returned.
 
@@ -1522,10 +1522,10 @@ def nc_simplify(expr, max_subterm=None):
     (a*b)**2 + 2*(a*c*a)**2
 
     '''
+    if not isinstance(expr, (Add, Mul, Pow)):
+        return expr
     args = expr.args[:]
     l = len(args)
-    if l == 0:
-        return expr
     if isinstance(expr, Pow):
         return Pow(nc_simplify(args[0]), args[1])
     elif isinstance(expr, Add):
