@@ -361,7 +361,7 @@ class factorial2(CombinatorialFunction):
         # TODO: extend this to complex numbers?
 
         if arg.is_Number:
-            if arg.is_complex:
+            if not arg.is_real:
                 a = (2/pi)**((1-cos(pi*arg))/4)
                 b = 2**(arg/2)
                 c = gamma(arg/2 + 1)
