@@ -18,13 +18,6 @@ from sympy.core.evaluate import global_distribute
 NC_Marker = Symbol("NC_Marker", commutative=False)
 
 
-# Key for sorting commutative args in canonical order
-_args_sortkey = cmp_to_key(Basic.compare)
-def _mulsort(args):
-    # in-place sorting of args
-    args.sort(key=_args_sortkey)
-
-
 # O(x)
 @dispatch(type, dict, Order)
 def append_arg_Mul(klass, data, o):

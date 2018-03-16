@@ -121,9 +121,8 @@ class Add(Expr, AssocOp):
         # Loop over the dispatchers:
         for arg in seq:
             ret = append_arg_Add(klass, data, arg)
-            if not isinstance(ret, tuple):
+            if ret is not None:
                 return [ret], [], None
-            klass, data = ret
 
         terms = data["terms"]
         coeff = data["coeff"]

@@ -22,7 +22,6 @@ def append_arg_c_s(klass, data, c, s):
     else:
         terms[s] = c
     data["terms"] = terms
-    return klass, data
 
 
 @dispatch(type, dict, Expr)
@@ -40,11 +39,10 @@ def append_arg_Add(klass, data, o):
             o = None
             break
     if o is None:
-        return klass, data
+        return
     order_factors = [o] + [
         o1 for o1 in order_factors if not o.contains(o1)]
     data["order_factors"] = order_factors
-    return klass, data
 
 @dispatch(type, dict, Number)
 def append_arg_Add(klass, data, o):
@@ -60,19 +58,16 @@ def append_arg_Add(klass, data, o):
             # we know for sure the result will be nan
             return S.NaN
     data["coeff"] = coeff
-    return klass, data
 
 @dispatch(type, dict, AccumBounds)
 def append_arg_Add(klass, data, o):
     data["coeff"] = o.__add__(data["coeff"])
-    return klass, data
 
 @dispatch(type, dict, MatrixExpr)
 def append_arg_Add(klass, data, o):
     # can't add 0 to Matrix so make sure coeff is not 0
     coeff = data["coeff"]
     data["coeff"] = o.__add__(coeff) if coeff else o
-    return klass, data
 
 @dispatch(type, dict, ComplexInfinity)
 def append_arg_Add(klass, data, o):
@@ -81,7 +76,6 @@ def append_arg_Add(klass, data, o):
         # we know for sure the result will be nan
         return S.NaN
     data["coeff"] = S.ComplexInfinity
-    return klass, data
 
 # Add([...])
 @dispatch(type, dict, Add)
@@ -90,10 +84,8 @@ def append_arg_Add(klass, data, o):
     # seq.extend(o.args)  # TODO zerocopy?
     for arg in o.args:
         ret = append_arg_Add(klass, data, arg)
-        if not isinstance(ret, tuple):
+        if ret is not None:
             return ret
-        klass, data = ret
-    return klass, data
 
 # Mul([...])
 @dispatch(type, dict, Mul)
@@ -107,10 +99,6 @@ def append_arg_Add(klass, data, o):
     # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
     if b.is_Number and (e.is_Integer or
                        (e.is_Rational and e.is_negative)):
-        ret = append_arg_Add(klass, data, b**e)
-        #f not isinstance(ret, tuple):
-        #   return ret
-        #klass, data = ret
-        return ret
+        return append_arg_Add(klass, data, b**e)
     c, s = S.One, o
     return append_arg_c_s(klass, data, c, s)

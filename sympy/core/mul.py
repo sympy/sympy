@@ -18,15 +18,6 @@ from .evaluate import global_distribute
 #   "there are still non-commutative objects -- don't forget to process them"
 
 
-class NC_Marker:
-    is_Order = False
-    is_Mul = False
-    is_Number = False
-    is_Poly = False
-
-    is_commutative = False
-
-
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
 def _mulsort(args):
