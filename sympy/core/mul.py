@@ -230,12 +230,10 @@ class Mul(Expr, AssocOp):
         # NOTE: this is optimized for all-objects-are-commutative case
 
         for arg in data["seq"]:
-            ret = append_arg_Mul(Mul, data, arg)
+            ret = append_arg_Mul(data, arg)
             if ret is None:
                 continue
-            if not isinstance(ret, tuple):
-                return [ret], [], None
-            assert ret[1] is data
+            return [ret], [], None
 
         c_part = data["c_part"]
         nc_part = data["nc_part"]

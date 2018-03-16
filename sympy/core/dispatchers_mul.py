@@ -19,16 +19,16 @@ NC_Marker = Symbol("NC_Marker", commutative=False)
 
 
 # O(x)
-@dispatch(type, dict, Order)
-def append_arg_Mul(klass, data, o):
+@dispatch(dict, Order)
+def append_arg_Mul(data, o):
     order_symbols = data["order_symbols"]
     o, order_symbols = o.as_expr_variables(order_symbols)
     data["order_symbols"] = order_symbols
-    append_arg_Mul(klass, data, o)
+    append_arg_Mul(data, o)
 
 # Mul([...])
-@dispatch(type, dict, Mul)
-def append_arg_Mul(klass, data, o):
+@dispatch(dict, Mul)
+def append_arg_Mul(data, o):
     seq = data["seq"]
     nc_seq = data["nc_seq"]
 
@@ -50,8 +50,8 @@ def append_arg_Mul(klass, data, o):
     data["seq"] = seq
     data["nc_seq"] = nc_seq
 
-@dispatch(type, dict, Number)
-def append_arg_Mul(klass, data, o):
+@dispatch(dict, Number)
+def append_arg_Mul(data, o):
     # 3
     coeff = data["coeff"]
     if o is S.NaN or coeff is S.ComplexInfinity and o is S.Zero:
@@ -64,20 +64,20 @@ def append_arg_Mul(klass, data, o):
             return S.NaN
     data["coeff"] = coeff
 
-@dispatch(type, dict, AccumBounds)
-def append_arg_Mul(klass, data, o):
+@dispatch(dict, AccumBounds)
+def append_arg_Mul(data, o):
     coeff = data["coeff"]
     coeff = o.__mul__(coeff)
     data["coeff"] = coeff
 
-@dispatch(type, dict, MatrixExpr)
-def append_arg_Mul(klass, data, o):
+@dispatch(dict, MatrixExpr)
+def append_arg_Mul(data, o):
     coeff = data["coeff"]
     coeff = o.__mul__(coeff)
     data["coeff"] = coeff
 
-@dispatch(type, dict, ComplexInfinity)
-def append_arg_Mul(klass, data, o):
+@dispatch(dict, ComplexInfinity)
+def append_arg_Mul(data, o):
     coeff = data["coeff"]
     if not coeff:
         # 0 * zoo = NaN
@@ -88,12 +88,12 @@ def append_arg_Mul(klass, data, o):
     coeff = S.ComplexInfinity
     data["coeff"] = coeff
 
-@dispatch(type, dict, ImaginaryUnit)
-def append_arg_Mul(klass, data, o):
+@dispatch(dict, ImaginaryUnit)
+def append_arg_Mul(data, o):
     data["neg1e"] += S.Half
 
-@dispatch(type, dict, Expr)
-def append_arg_Mul(klass, data, o):
+@dispatch(dict, Expr)
+def append_arg_Mul(data, o):
     coeff = data["coeff"]
     c_powers = data["c_powers"]
     neg1e = data["neg1e"]

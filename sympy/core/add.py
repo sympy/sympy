@@ -116,11 +116,10 @@ class Add(Expr, AssocOp):
             terms={},
             order_factors=[],
         )
-        klass = Add
 
         # Loop over the dispatchers:
         for arg in seq:
-            ret = append_arg_Add(klass, data, arg)
+            ret = append_arg_Add(data, arg)
             if ret is not None:
                 return [ret], [], None
 
