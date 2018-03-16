@@ -110,7 +110,6 @@ class Add(Expr, AssocOp):
                     return rv
                 return [], rv[0], None
 
-        #args = map(sympify, args)
         data = dict(
             coeff=S.Zero,
             terms={},
@@ -195,7 +194,6 @@ class Add(Expr, AssocOp):
                     break
 
         # order args canonically
-        from sympy.core.add import _addsort
         _addsort(newseq)
 
         # current code expects coeff to be first

@@ -15,7 +15,7 @@ from sympy.core.evaluate import global_distribute
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
-NC_Marker = Symbol("NC_Marker", commutative=False)
+NC_Marker = Symbol("NC_Marker", commutative=False, dummy=True)
 
 
 # O(x)

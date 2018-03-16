@@ -165,7 +165,7 @@ class Mul(Expr, AssocOp):
         """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
-        from sympy.core.dispatchers_mul import append_arg_Mul, NC_Marker
+        from sympy.core.dispatchers_mul import append_arg_Mul
 
         rv = None
         if len(seq) == 2:
@@ -244,7 +244,7 @@ class Mul(Expr, AssocOp):
         neg1e = data["neg1e"]
         pnum_rat = data["pnum_rat"]
         order_symbols = data["order_symbols"]
-        cls = data["cls"]
+        class_var = data["cls"]
 
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
