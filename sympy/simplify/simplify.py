@@ -540,6 +540,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational)
                          for x in expr.args])
 
+    if not expr.is_commutative:
+        expr = nc_simplify(expr)
+
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
@@ -1488,3 +1491,178 @@ def clear_coefficients(expr, rhs=S.Zero):
         expr = -expr
         rhs = -rhs
     return expr, rhs
+
+def nc_simplify(expr, max_subterm=None):
+    '''
+    Simplify a non-commutative expression composed of multiplication
+    and exponentiation by grouping repeating subterms into one power.
+    Priority is given to longer subterms. If `expr` is a sum of such
+    terms, the sums of the simplified terms is returned.
+
+    `max_subterm` is the maximal length of a subterm to be grouped by -
+    by default it is set to half the length of the expression's arguments
+    list.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.simplify.simplify import nc_simplify
+    >>> a, b, c = symbols("a b c", commutative=False)
+    >>> nc_simplify(a*b*a*b*a*b*c)
+    (a*b)**3*c
+    >>> expr = a**2*b*a**4*b*a**4
+    >>> nc_simplify(expr)
+    (a**2*b*a**2)**2*a**2
+    >>> nc_simplify(expr, max_subterm = 2)
+    a**2*(b*a**4)**2
+    >>> nc_simplify(a*b*a*b*c**2*(a*b)**2*c**2)
+    ((a*b)**2*c**2)**2
+    >>> nc_simplify(a*b*a*b + 2*a*c*a**2*c*a)
+    (a*b)**2 + 2*(a*c*a)**2
+
+    '''
+    args = expr.args[:]
+    l = len(args)
+    if l == 0:
+        return expr
+    if isinstance(expr, Pow):
+        return Pow(nc_simplify(args[0]), args[1])
+    elif isinstance(expr, Add):
+        return Add(*[nc_simplify(a) for a in args])
+
+    change = False
+
+    if not max_subterm:
+        max_subterm = len(args)//2 + 1
+
+    for m in range(max_subterm, 1, -1):
+        # consider subterms of length m
+        # starting at position i
+
+        i = 0
+        while i <= l - 2*m + 1:
+            j = i+m
+            subterm = args[i:j]
+            n = 1 # power of the subterm
+
+            # the following `if` clause is a bit of a mess
+            # because some of the arguments of the expression
+            # are powers; one way around it would be to expland each
+            # power so that we are left with a list of symbols
+            # in the order they appear; but expanding something
+            # like a**1000*b only to find no simplifications
+            # seems a waste of resources
+            mode = 0
+            power = False
+            if subterm[0] != args[j]:
+                # the next part of the expression is not
+                # the same as the target subterm but maybe
+                # the subterm can be modified to change that
+
+                if isinstance(subterm[0], Pow):
+                    arg = subterm[0].args[0]
+                    arg_pow = subterm[0].args[1]
+                    if isinstance(args[j], Pow) and arg == args[j].args[0]:
+                        # e.g. the subterm a**2*b in a**2*b*a*b could
+                        # be changed to a*b to match the rest of the
+                        # expression
+                        p = args[j].args[1]
+                    elif arg == args[j]:
+                        p = 1
+                    elif (isinstance(subterm[-1], Pow)
+                                and subterm[-1].args[1].is_even):
+                        # e.g. the subterm a**3*b*a**4 in a**3*b*a**4*b*a**2:
+                        # if the subterm is changed to a**2*b*a**2, then it
+                        # matches the next subterm of the expression
+                        p = subterm[-1].args[1]/2
+                        mode = 1
+                    else:
+                        # modifications failed
+                        i += 1
+                        continue
+                    d = arg_pow - p
+                    if d >= 0:
+                        power = True
+                        if mode:
+                            # actually, the new subterm is
+                            # (arg**p,) + subterm[1:-1] + (arg**p) but we will
+                            # be working with subterm[1:] because it's easier:
+                            # e.g. with subterm a*b*a in a*b*a**2*b*a**2
+                            # we can count up just the `b*a**2` and remember to
+                            # sort out the first and last `a` separately
+                            subterm = subterm[1:]
+                        else:
+                            subterm = (Pow(arg, p),) + subterm[1:]
+                elif subterm[-1] == subterm[0]**2:
+                    # e.g. the subterm a*b*a**2 in a*b*a**2*b*a
+                    # could be replaced by a*b*a
+                    arg = subterm[0]
+                    p = 1
+                    mode = 1
+                    subterm = subterm[1:]
+
+
+            # match the subterm
+            while (j < len(args) - (m - mode) + 1
+                                    and args[j:j + m - mode] == subterm):
+                j += m - mode
+                n += 1
+
+            # sometimes another match can be made, e.g.
+            # for b*a**2 in b*a**2*b*a**3
+            d2 = -1
+            last_arg = 1
+            if (j < len(args) - (m - mode) + 1
+                            and args[j:j + m - mode - 1] == subterm[:-1]):
+                if mode:
+                    last_arg = arg
+                else:
+                    if isinstance(subterm[-1], Pow):
+                        p = subterm[-1].args[1]
+                        last_arg = subterm[-1].args[0]
+                    else:
+                        p = 1
+                        last_arg = subterm[-1]
+
+                to_match = args[j + m - mode - 1]
+                if (isinstance(to_match, Pow) and to_match.args[0] == last_arg
+                                                 and to_match.args[1] >= p):
+                    d2 = to_match.args[1] - p
+                    n += 1
+                    j += m - mode
+                elif p == 1 and to_match == last_arg:
+                    d2 = 0
+                    n += 1
+                    j += m - mode
+            if mode and d2 < 0:
+                # no new match has been made but
+                # the last match has to be treated differently
+                # because the subterm we've been matching is not
+                # the actual target subterm. E.g. in a*b*a**2*b*a**2
+                # we are matching b*a**2 when the subterm is a*b*a
+                d2 = p
+                last_arg = arg
+
+            if n > 1:
+                # group the subterm with its matches taking care
+                # of the special cases because of modifications to
+                # the subterm in the big if clause above
+                s = tuple()
+                if power:
+                    s = (Pow(arg, d),)
+                    power = False
+                if mode:
+                    subterm = (Pow(arg, p),) + subterm[:-1] + (Pow(arg, p),)
+                t = (Pow(Mul(*subterm), n),)
+                args = args[:i] + s + t + (Pow(last_arg, d2),) + args[j:]
+                l = len(args)
+                change = True
+            i += 1
+
+    if change:
+        new = Mul(*args)
+        return nc_simplify(new)
+
+    new = Mul(*[nc_simplify(arg) for arg in args])
+    return new

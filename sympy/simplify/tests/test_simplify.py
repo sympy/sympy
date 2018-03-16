@@ -720,3 +720,15 @@ def test_clear_coefficients():
     assert clear_coefficients(S.Infinity, x) == (S.Infinity, x)
     assert clear_coefficients(-S.Pi, x) == (S.Pi, -x)
     assert clear_coefficients(2 - S.Pi/3, x) == (pi, -3*x + 6)
+
+def test_nc_simplify():
+    from sympy.simplify.simplify import nc_simplify
+    a, b, c = symbols('a b c', commutative = False)
+    x = Symbol('x')
+    assert nc_simplify(a*b*a*b*a*b*c*(a*b)**3*c) == ((a*b)**3*c)**2
+    assert nc_simplify(a**2*b*a*b*a*b) == a*(a*b)**3
+    expr = a*b*a**2*b*a**2*b*a**3
+    assert nc_simplify(expr) == (a*b*a)**3*a**2
+    assert nc_simplify(expr, max_subterm=2) == a*(b*a**2)**3*a
+    assert nc_simplify(a*b*a*b + a*b*c*x*a*b*c) == (a*b)**2 + x*(a*b*c)**2
+    assert nc_simplify(a*b*a*b*c*a*b*a*b*c) == ((a*b)**2*c)**2
