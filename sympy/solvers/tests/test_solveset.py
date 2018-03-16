@@ -1,3 +1,4 @@
+from sympy.core.containers import Tuple
 from sympy.core.function import (Function, Lambda, nfloat)
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi)
@@ -1492,14 +1493,14 @@ def test_nonlinsolve_conditionset():
     # return conditionset
     f = Function('f')
     f1 = f(x) - pi/2
-    f2 = f(x) - 3*pi/2
-    intermediate_system = FiniteSet(2*f(x) - 3*pi, 2*f(x) - pi)
-    symbols = FiniteSet(x, y)
+    f2 = f(y) - 3*pi/2
+    intermediate_system = FiniteSet(2*f(x) - pi, 2*f(y) - 3*pi)
+    symbols = Tuple(x, y)
     soln = ConditionSet(
         symbols,
         intermediate_system,
         S.Complexes)
-    assert nonlinsolve([f1, f2], [x,y]) == soln
+    assert nonlinsolve([f1, f2], [x, y]) == soln
 
 
 def test_substitution_basic():

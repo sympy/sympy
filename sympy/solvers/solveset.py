@@ -1558,7 +1558,7 @@ def linsolve(system, *symbols):
 def _return_conditionset(eqs, symbols):
         # return conditionset
         condition_set = ConditionSet(
-            FiniteSet(*symbols),
+            Tuple(*symbols),
             FiniteSet(*eqs),
             S.Complexes)
         return condition_set
