@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import S
+from sympy import S, Symbol
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_bool
@@ -57,3 +57,10 @@ class ConditionSet(Set):
     def contains(self, other):
         return And(Lambda(self.sym, self.condition)(
             other), self.base_set.contains(other))
+
+    def subs(self, *args):
+        if len(args) == 2:
+            if isinstance(args[0], Symbol) and isinstance(args[1], Symbol):
+                return self.xreplace({args[0]:args[1]})
+            else:
+                return self

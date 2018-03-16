@@ -2,6 +2,7 @@ from sympy.sets import (ConditionSet, Intersection, FiniteSet, EmptySet, Union)
 from sympy import (Symbol, Eq, S, Abs, sin, pi, Lambda, Interval, And, Mod)
 
 x = Symbol('x')
+y = Symbol('x')
 
 
 def test_CondSet():
@@ -34,3 +35,9 @@ def test_simplified_FiniteSet_in_CondSet():
         Union(FiniteSet(1), ConditionSet(x, And(x > 0), FiniteSet(y))))
     assert (ConditionSet(x, Eq(Mod(x, 3), 1), FiniteSet(1, 4, 2, y)) ==
         Union(FiniteSet(1, 4), ConditionSet(x, Eq(Mod(x, 3), 1), FiniteSet(y))))
+
+def test_issue_14495():
+    assert ConditionSet(x, Eq(y, 0), S.Integers).subs(x, 1) == \
+        ConditionSet(x, Eq(y, 0), S.Integers)
+    assert ConditionSet(x, Eq(y, 0), S.Integers).subs(x, y) == \
+        ConditionSet(y, Eq(y, 0), S.Integers)
