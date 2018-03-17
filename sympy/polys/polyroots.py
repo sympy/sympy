@@ -6,7 +6,7 @@ import math
 
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
-from sympy.core.compatibility import ordered
+from sympy.core.compatibility import ordered, range, reduce
 from sympy.core.mul import expand_2arg, Mul
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
@@ -28,8 +28,6 @@ from sympy.polys.rationaltools import together
 
 from sympy.simplify import simplify, powsimp
 from sympy.utilities import public
-
-from sympy.core.compatibility import reduce, range
 
 
 def roots_linear(f):
@@ -310,8 +308,8 @@ def roots_quartic(f):
     else:
         a2 = a**2
         e = b - 3*a2/8
-        f = c + a*(a2/8 - b/2)
-        g = d - a*(a*(3*a2/256 - b/16) + c/4)
+        f = (c + a*(a2/8 - b/2)).expand()
+        g = (d - a*(a*(3*a2/256 - b/16) + c/4)).expand()
         aon4 = a/4
 
         if f is S.Zero:
