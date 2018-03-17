@@ -18,88 +18,93 @@ from sympy.core.evaluate import global_distribute
 NC_Marker = Symbol("NC_Marker", commutative=False, dummy=True)
 
 
+class MulBuilder(object):
+    def __init__(self, seq):
+        self.c_part = []         # out: commutative factors
+        self.nc_part = []        # out: non-commutative factors
+
+        self.nc_seq = []
+
+        self.coeff = S.One       # standalone term
+                            # e.g. 3 * ...
+
+        self.c_powers = []       # (base,exp)      n
+                            # e.g. (x,n) for x
+
+        self.num_exp = []        # (num-base, exp)           y
+                            # e.g.  (3, y)  for  ... * 3  * ...
+
+        self.neg1e = S.Zero      # exponent on -1 extracted from Number-based Pow and I
+
+        self.pnum_rat = {}       # (num-base, Rat-exp)          1/2
+                            # e.g.  (3, 1/2)  for  ... * 3     * ...
+
+        self.order_symbols = None
+        self.seq = list(seq)
+
+
 # O(x)
-@dispatch(dict, Order)
+@dispatch(MulBuilder, Order)
 def append_arg_Mul(data, o):
-    order_symbols = data["order_symbols"]
-    o, order_symbols = o.as_expr_variables(order_symbols)
-    data["order_symbols"] = order_symbols
+    o, data.order_symbols = o.as_expr_variables(data.order_symbols)
     append_arg_Mul(data, o)
 
 # Mul([...])
-@dispatch(dict, Mul)
+@dispatch(MulBuilder, Mul)
 def append_arg_Mul(data, o):
-    seq = data["seq"]
-    nc_seq = data["nc_seq"]
 
     if o.is_commutative:
-        seq.extend(o.args)    # XXX zerocopy?
+        data.seq.extend(o.args)    # XXX zerocopy?
 
     else:
         # NCMul can have commutative parts as well
         for q in o.args:
             if q.is_commutative:
-                seq.append(q)
+                data.seq.append(q)
             else:
-                nc_seq.append(q)
+                data.nc_seq.append(q)
 
         # append non-commutative marker, so we don't forget to
         # process scheduled non-commutative objects
-        seq.append(NC_Marker)
+        data.seq.append(NC_Marker)
 
-    data["seq"] = seq
-    data["nc_seq"] = nc_seq
-
-@dispatch(dict, Number)
+@dispatch(MulBuilder, Number)
 def append_arg_Mul(data, o):
     # 3
-    coeff = data["coeff"]
-    if o is S.NaN or coeff is S.ComplexInfinity and o is S.Zero:
+    if o is S.NaN or data.coeff is S.ComplexInfinity and o is S.Zero:
         # we know for sure the result will be nan
         return S.NaN
-    elif coeff.is_Number:  # it could be zoo
-        coeff *= o
-        if coeff is S.NaN:
+    elif data.coeff.is_Number:  # it could be zoo
+        data.coeff *= o
+        if data.coeff is S.NaN:
             # we know for sure the result will be nan
             return S.NaN
-    data["coeff"] = coeff
 
-@dispatch(dict, AccumBounds)
+@dispatch(MulBuilder, AccumBounds)
 def append_arg_Mul(data, o):
-    coeff = data["coeff"]
-    coeff = o.__mul__(coeff)
-    data["coeff"] = coeff
+    data.coeff = o.__mul__(data.coeff)
 
-@dispatch(dict, MatrixExpr)
+@dispatch(MulBuilder, MatrixExpr)
 def append_arg_Mul(data, o):
-    coeff = data["coeff"]
-    coeff = o.__mul__(coeff)
-    data["coeff"] = coeff
+    data.coeff = o.__mul__(data.coeff)
 
-@dispatch(dict, ComplexInfinity)
+@dispatch(MulBuilder, ComplexInfinity)
 def append_arg_Mul(data, o):
-    coeff = data["coeff"]
-    if not coeff:
+    if not data.coeff:
         # 0 * zoo = NaN
         return S.NaN
-    if coeff is S.ComplexInfinity:
+    if data.coeff is S.ComplexInfinity:
         # zoo * zoo = zoo
         return S.ComplexInfinity
-    coeff = S.ComplexInfinity
-    data["coeff"] = coeff
+    data.coeff = S.ComplexInfinity
+    data.coeff = data.coeff
 
-@dispatch(dict, ImaginaryUnit)
+@dispatch(MulBuilder, ImaginaryUnit)
 def append_arg_Mul(data, o):
-    data["neg1e"] += S.Half
+    data.neg1e += S.Half
 
-@dispatch(dict, Expr)
+@dispatch(MulBuilder, Expr)
 def append_arg_Mul(data, o):
-    coeff = data["coeff"]
-    c_powers = data["c_powers"]
-    neg1e = data["neg1e"]
-    nc_seq = data["nc_seq"]
-    nc_part = data["nc_part"]
-    seq = data["seq"]
 
     if o.is_commutative:
         #      e
@@ -116,43 +121,43 @@ def append_arg_Mul(data, o):
                 # the exponent is an integer
                 if e.is_Rational:
                     if e.is_Integer:
-                        data["coeff"] *= Pow(b, e)  # it is an unevaluated power
+                        data.coeff *= Pow(b, e)  # it is an unevaluated power
                         return
                     elif e.is_negative:    # also a sign of an unevaluated power
-                        data["seq"].append(Pow(b, e))
+                        data.seq.append(Pow(b, e))
                         return
                     elif b.is_negative:
-                        data["neg1e"] += e
+                        data.neg1e += e
                         b = -b
                     if b is not S.One:
-                        data["pnum_rat"].setdefault(b, []).append(e)
+                        data.pnum_rat.setdefault(b, []).append(e)
                     return
                 elif b.is_positive or e.is_integer:
-                    data["num_exp"].append((b, e))
+                    data.num_exp.append((b, e))
                     return
 
             elif b is S.ImaginaryUnit and e.is_Rational:
-                data["neg1e"] += e/2
+                data.neg1e += e/2
                 return
 
-        c_powers.append((b, e))
+        data.c_powers.append((b, e))
 
     # NON-COMMUTATIVE
     # TODO: Make non-commutative exponents not combine automatically
     else:
         if o is not NC_Marker:
-            nc_seq.append(o)
+            data.nc_seq.append(o)
 
-        # process nc_seq (if any)
-        while nc_seq:
-            o = nc_seq.pop(0)
-            if not nc_part:
-                nc_part.append(o)
+        # process data.nc_seq (if any)
+        while data.nc_seq:
+            o = data.nc_seq.pop(0)
+            if not data.nc_part:
+                data.nc_part.append(o)
                 continue
 
             #                             b    c       b+c
             # try to combine last terms: a  * a   ->  a
-            o1 = nc_part.pop()
+            o1 = data.nc_part.pop()
             b1, e1 = o1.as_base_exp()
             b2, e2 = o.as_base_exp()
             new_exp = e1 + e2
@@ -165,18 +170,11 @@ def append_arg_Mul(data, o):
 
                 # now o12 could be a commutative object
                 if o12.is_commutative:
-                    seq.append(o12)
+                    data.seq.append(o12)
                     continue
                 else:
-                    nc_seq.insert(0, o12)
+                    data.nc_seq.insert(0, o12)
 
             else:
-                nc_part.append(o1)
-                nc_part.append(o)
-
-    data["coeff"] = coeff
-    data["c_powers"] = c_powers
-    data["neg1e"] = neg1e
-    data["nc_seq"] = nc_seq
-    data["nc_part"] = nc_part
-    data["seq"] = seq
+                data.nc_part.append(o1)
+                data.nc_part.append(o)

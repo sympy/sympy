@@ -95,7 +95,7 @@ class Add(Expr, AssocOp):
         """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
-        from sympy.core.dispatchers_add import append_arg_Add
+        from sympy.core.dispatchers_add import append_arg_Add, AddBuilder
 
         rv = None
         if len(seq) == 2:
@@ -110,11 +110,7 @@ class Add(Expr, AssocOp):
                     return rv
                 return [], rv[0], None
 
-        data = dict(
-            coeff=S.Zero,
-            terms={},
-            order_factors=[],
-        )
+        data = AddBuilder()
 
         # Loop over the dispatchers:
         for arg in seq:
@@ -122,9 +118,9 @@ class Add(Expr, AssocOp):
             if ret is not None:
                 return [ret], [], None
 
-        terms = data["terms"]
-        coeff = data["coeff"]
-        order_factors = data["order_factors"]
+        terms = data.terms
+        coeff = data.coeff
+        order_factors = data.order_factors
 
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]

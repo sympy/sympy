@@ -165,7 +165,7 @@ class Mul(Expr, AssocOp):
         """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
-        from sympy.core.dispatchers_mul import append_arg_Mul
+        from sympy.core.dispatchers_mul import append_arg_Mul, MulBuilder
 
         rv = None
         if len(seq) == 2:
@@ -191,32 +191,6 @@ class Mul(Expr, AssocOp):
             if rv:
                 return rv
 
-        # apply associativity, separate commutative part of seq
-        data = dict(
-            c_part = [],         # out: commutative factors
-            nc_part = [],        # out: non-commutative factors
-
-            nc_seq = [],
-
-            coeff = S.One,       # standalone term
-                                # e.g. 3 * ...
-
-            c_powers = [],       # (base,exp)      n
-                                # e.g. (x,n) for x
-
-            num_exp = [],        # (num-base, exp)           y
-                                # e.g.  (3, y)  for  ... * 3  * ...
-
-            neg1e = S.Zero,      # exponent on -1 extracted from Number-based Pow and I
-
-            pnum_rat = {},       # (num-base, Rat-exp)          1/2
-                                # e.g.  (3, 1/2)  for  ... * 3     * ...
-
-            order_symbols = None,
-            seq = list(seq),
-            cls = Mul,
-        )
-
         # --- PART 1 ---
         #
         # "collect powers and coeff":
@@ -229,22 +203,23 @@ class Mul(Expr, AssocOp):
         #
         # NOTE: this is optimized for all-objects-are-commutative case
 
-        for arg in data["seq"]:
+        data = MulBuilder(seq)
+
+        for arg in data.seq:
             ret = append_arg_Mul(data, arg)
             if ret is None:
                 continue
             return [ret], [], None
 
-        c_part = data["c_part"]
-        nc_part = data["nc_part"]
-        nc_seq = data["nc_seq"]
-        coeff = data["coeff"]
-        c_powers = data["c_powers"]
-        num_exp = data["num_exp"]
-        neg1e = data["neg1e"]
-        pnum_rat = data["pnum_rat"]
-        order_symbols = data["order_symbols"]
-        class_var = data["cls"]
+        c_part = data.c_part
+        nc_part = data.nc_part
+        nc_seq = data.nc_seq
+        coeff = data.coeff
+        c_powers = data.c_powers
+        num_exp = data.num_exp
+        neg1e = data.neg1e
+        pnum_rat = data.pnum_rat
+        order_symbols = data.order_symbols
 
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
