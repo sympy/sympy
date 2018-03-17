@@ -185,7 +185,7 @@ def _invert_real(f, g_ys, symbol):
                             symbol)
 
     if isinstance(f, Abs):
-        return _invert_abs(f, g_ys, symbol)
+        return _invert_abs(f.args[0], g_ys, symbol)
 
     if f.is_Add:
         # f = g + h
@@ -324,10 +324,21 @@ def _invert_abs(f, g_ys, symbol):
     returned.
 
     """
-    if not isinstance(g_ys, FiniteSet):
-        raise NotImplementedError
-    # before attempting to solve make sure the conditions
-    # are not invalid
+    if not g_ys.is_FiniteSet:
+        # this could be used for FiniteSet, but the
+        # results are more compact if they aren't, e.g.
+        # ConditionSet(x, Contains(n, Interval(0, oo)), {-n, n}) vs
+        # Union(Intersection(Interval(0, oo), {n}), Intersection(Interval(-oo, 0), {-n}))
+        # for the solution of abs(x) - n
+        pos = Intersection(g_ys, Interval(0, S.Infinity))
+        parg = _invert_real(f, pos, symbol)
+        narg = _invert_real(-f, pos, symbol)
+        if parg[0] != narg[0]:
+            raise NotImplementedError
+        return parg[0], Union(narg[1], parg[1])
+
+    # check conditions: all these must be true. If any are unknown
+    # then return them as conditions which must be satisfied
     unknown = []
     for a in g_ys.args:
         ok = a.is_nonnegative if a.is_Number else a.is_positive
@@ -340,10 +351,11 @@ def _invert_abs(f, g_ys, symbol):
             for i in unknown])
     else:
         conditions = True
-    # none were invalid
-    f_n = f.args[0]
     n = Dummy('n', real=True)
-    g_x, values = _invert_real(f_n, Union(imageset(Lambda(n, n), g_ys),
+    # this is slightly different than above: instead of solving
+    # +/-f on positive values, here we solve for f on +/- g_ys
+    g_x, values = _invert_real(f, Union(
+        imageset(Lambda(n, n), g_ys),
         imageset(Lambda(n, -n), g_ys)), symbol)
     return g_x, ConditionSet(g_x, conditions, values)
 
@@ -2378,7 +2390,7 @@ def nonlinsolve(system, *symbols):
         return _handle_positive_dimensional(polys, symbols, denominators)
 
     else:
-        # If alll the equations are not polynomial.
+        # If all the equations are not polynomial.
         # Use `substitution` method for the system
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)

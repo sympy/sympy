@@ -146,33 +146,6 @@ def test_invert_real():
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
 
-    # Test for ``set_h`` containing information about the domain
-
-    n = Dummy('n')
-    x = Symbol('x')
-
-    sol = ConditionSet(
-            x,
-            And(
-                Contains(b, Interval(0, oo)),
-                Contains(a + b, Interval(0, oo)),
-                Contains(a - b, Interval(0, oo))),
-            FiniteSet(-a - b - 3, -a + b - 3, a - b - 3, a + b - 3))
-    eq = Abs(Abs(x + 3) - a) - b
-    assert invert_real(eq, 0, x)[1] == sol
-    reps = {a: 3, b: 1}
-    eqab = eq.subs(reps)
-    for i in sol.subs(reps):
-        assert not eqab.subs(x, i)
-
-
-@XFAIL
-def test_solve_abs_with_imageset():
-    # not sure how to represent this: how do convert something
-    # like imageset(x, (-1)**x, S.Integers) into a set of positive
-    # numbers using set operations or solveset?
-    assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals)
-
 
 def test_invert_complex():
     assert invert_complex(x + 3, y, x) == (x, FiniteSet(y - 3))
@@ -604,17 +577,36 @@ def test_uselogcombine_2():
 
 
 def test_solve_abs():
-    assert solveset(Abs(x) - n, x, S.Reals) == ConditionSet(
-        x, Contains(n, Interval(0, oo)), {-n, n})
+    x = Symbol('x')
+    n = Dummy('n')
+    raises(ValueError, lambda: solveset(Abs(x) - 1, x))
+    assert solveset(Abs(x) - n, x, S.Reals) == ConditionSet(x, Contains(n, Interval(0, oo)), {-n, n})
     assert solveset_real(Abs(x) - 2, x) == FiniteSet(-2, 2)
+    assert solveset_real(Abs(x) + 2, x) is S.EmptySet
     assert solveset_real(Abs(x + 3) - 2*Abs(x - 3), x) == \
         FiniteSet(1, 9)
     assert solveset_real(2*Abs(x) - Abs(x - 1), x) == \
         FiniteSet(-1, Rational(1, 3))
 
-    assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
+    sol = ConditionSet(
+            x,
+            And(
+                Contains(b, Interval(0, oo)),
+                Contains(a + b, Interval(0, oo)),
+                Contains(a - b, Interval(0, oo))),
+            FiniteSet(-a - b - 3, -a + b - 3, a - b - 3, a + b - 3))
+    eq = Abs(Abs(x + 3) - a) - b
+    assert invert_real(eq, 0, x)[1] == sol
+    reps = {a: 3, b: 1}
+    eqab = eq.subs(reps)
+    for i in sol.subs(reps):
+        assert not eqab.subs(x, i)
+    assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals) == Union(
+        Intersection(Interval(0, oo),
+            ImageSet(Lambda(n, (-1)**n*pi/2 + n*pi), S.Integers)),
+        Intersection(Interval(-oo, 0),
+            ImageSet(Lambda(n, n*pi - (-1)**(-n)*pi/2), S.Integers)))
 
-    raises(ValueError, lambda: solveset(Abs(x) - 1, x))
 
 
 def test_issue_9565():
@@ -824,13 +816,6 @@ def test_solve_trig():
 
     assert solveset_real(cos(2*x)*cos(4*x) - 1, x) == \
                             ImageSet(Lambda(n, n*pi), S.Integers)
-
-
-@XFAIL
-def test_solve_trig_abs():
-    assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals) == \
-        Union(ImageSet(Lambda(n, n*pi + (-1)**n*pi/2), S.Naturals0),
-              ImageSet(Lambda(n, -n*pi - (-1)**n*pi/2), S.Naturals0))
 
 
 def test_solve_invalid_sol():
@@ -1213,9 +1198,8 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([x**2 -1], x + y) == FiniteSet((S.EmptySet,))
 
 
-@XFAIL
 def test_nonlinsolve_abs():
-    soln = FiniteSet((- y, y), (y, y))
+    soln = FiniteSet((x, Abs(x)))
     assert nonlinsolve([Abs(x) - y], x, y) == soln
 
 
