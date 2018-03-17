@@ -89,6 +89,10 @@ def test_subs_CondSet():
     assert ConditionSet(x, x < y, s
         ).subs(y, w) == ConditionSet(x, x < w, s.subs(y, w))
 
+    # to eventually be removed
+    c = ConditionSet((x, y), {x + 1, x + y}, S.Reals)
+    assert c.subs(x, z) == c
+
 
 def test_dummy_eq():
     C = ConditionSet
@@ -98,3 +102,12 @@ def test_dummy_eq():
     assert c.dummy_eq(1) == False
     assert c.dummy_eq(C(x, x < 1, S.Reals)) == False
     raises(ValueError, lambda: c.dummy_eq(C(x, x < 1, S.Reals), z))
+
+    # to eventually be removed
+    c1 = ConditionSet((x, y), {x + 1, x + y}, S.Reals)
+    c2 = ConditionSet((x, y), {x + 1, x + y}, S.Reals)
+    c3 = ConditionSet((x, y), {x + 1, x + y}, S.Complexes)
+    assert c1.dummy_eq(c2)
+    assert c1.dummy_eq(c3) is False
+    assert c.dummy_eq(c1) is False
+    assert c1.dummy_eq(c) is False
