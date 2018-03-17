@@ -58,6 +58,7 @@ class ConditionSet(Set):
         return And(Lambda(self.sym, self.condition)(
             other), self.base_set.contains(other))
 
+    @property
     def free_symbols(self):
         a = self.args[1].free_symbols
         b = self.args[2].free_symbols
