@@ -2,9 +2,10 @@ from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Integral, integrate, pi, Dummy, Derivative,
                    diff, I, sqrt, erf, Piecewise, Eq, Ne, symbols, Rational,
                    And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
-                   Function)
-from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
-    _parts_rule
+                   Function, jacobi, gegenbauer, chebyshevt, chebyshevu,
+                   legendre, hermite, laguerre, assoc_laguerre)
+from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
+    _parts_rule)
 
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
 f = Function('f')
@@ -211,6 +212,31 @@ def test_manualintegrate_Heaviside():
     assert manualintegrate(sin(y + x)*Heaviside(3*x - y), x) == \
             (cos(4*y/3) - cos(x + y))*Heaviside(3*x - y)
 
+
+def test_manualintegrate_orthogonal_poly():
+    n = symbols('n')
+    a, b = 7, S(5)/3
+    polys = [jacobi(n, a, b, x), gegenbauer(n, a, x), chebyshevt(n, x),
+        chebyshevu(n, x), legendre(n, x), hermite(n, x), laguerre(n, x),
+        assoc_laguerre(n, a, x)]
+    for p in polys:
+        integral = manualintegrate(p, x)
+        for deg in [-2, -1, 0, 1, 3, 5, 8]:
+            # some accept negative "degree", some do not
+            try:
+                p_subbed = p.subs(n, deg)
+            except ValueError:
+                continue
+            assert (integral.subs(n, deg).diff(x) - p_subbed).expand() == 0
+
+        # can also integrate simple expressions with these polynomials
+        q = x*p.subs(x, 2*x + 1)
+        integral = manualintegrate(q, x)
+        for deg in [2, 4, 7]:
+            assert (integral.subs(n, deg).diff(x) - q.subs(n, deg)).expand() == 0
+
+        # cannot integrate with respect to parameters
+        assert manualintegrate(jacobi(n, a + x, b, x), x).has(Integral)
 
 def test_issue_6799():
     r, x, phi = map(Symbol, 'r x phi'.split())
