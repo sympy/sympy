@@ -41,8 +41,28 @@ __all__ = ['CRootOf']
 
 
 
-_reals_cache = {}
-_complexes_cache = {}
+class _pure_key_dict(dict):
+    def __getitem__(self, k):
+        if not isinstance(k, PurePoly):
+            free = k.free_symbols
+            assert len(free) < 2
+            if not k.free_symbols:
+                k = PurePoly(k, Dummy('x'))
+            else:
+                k = PurePoly(k, expand=False)
+        v = self.get(k, None)
+        if v is None:
+            raise KeyError
+        return v
+
+    def __setitem__(self, k, v):
+        if not isinstance(k, PurePoly):
+            k = PurePoly(k, expand=False)
+        if self.get(k, None) is None:
+            return self.setdefault(k, v)
+
+_reals_cache = _pure_key_dict()
+_complexes_cache = _pure_key_dict()
 
 
 def _pure_factors(poly):
@@ -177,7 +197,6 @@ class ComplexRootOf(RootOf):
         obj.index = index
 
         try:
-            assert isinstance(poly, PurePoly)
             _reals_cache[obj.poly] = _reals_cache[poly]
             _complexes_cache[obj.poly] = _complexes_cache[poly]
         except KeyError:
@@ -228,7 +247,6 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _get_reals_sqf(cls, factor):
         """Get real root isolating intervals for a square-free factor."""
-        assert isinstance(factor, PurePoly)
         if factor in _reals_cache:
             real_part = _reals_cache[factor]
         else:
@@ -241,7 +259,6 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _get_complexes_sqf(cls, factor):
         """Get complex root isolating intervals for a square-free factor."""
-        assert isinstance(factor, PurePoly)
         if factor in _complexes_cache:
             complex_part = _complexes_cache[factor]
         else:
@@ -256,7 +273,6 @@ class ComplexRootOf(RootOf):
         reals = []
 
         for factor, k in factors:
-            assert isinstance(factor, PurePoly)
             r = _reals_cache.get(factor, None)
             if r is not None:
                 reals.extend([(i, factor, k) for i in r])
@@ -300,7 +316,6 @@ class ComplexRootOf(RootOf):
         reals = sorted(reals, key=lambda r: r[0].a)
 
         for root, factor, _ in reals:
-            assert isinstance(factor, PurePoly)
             if factor in cache:
                 cache[factor].append(root)
             else:
@@ -375,7 +390,6 @@ class ComplexRootOf(RootOf):
         # update cache
         cache = {}
         for root, factor, _ in complexes:
-            assert isinstance(factor, PurePoly)
             if factor in cache:
                 cache[factor].append(root)
             else:
@@ -414,7 +428,6 @@ class ComplexRootOf(RootOf):
         """
         i = 0
         for j, (_, factor, k) in enumerate(complexes):
-            assert isinstance(factor, PurePoly)
             if index < i + k:
                 poly, index = factor, 0
 
@@ -544,7 +557,6 @@ class ComplexRootOf(RootOf):
 
     def _get_interval(self):
         """Internal function for retrieving isolation interval from cache. """
-        assert isinstance(self.poly, PurePoly)
         if self.is_real:
             return _reals_cache[self.poly][self.index]
         else:
@@ -553,7 +565,6 @@ class ComplexRootOf(RootOf):
 
     def _set_interval(self, interval):
         """Internal function for updating isolation interval in cache. """
-        assert isinstance(self.poly, PurePoly)
         if self.is_real:
             _reals_cache[self.poly][self.index] = interval
         else:
@@ -618,7 +629,11 @@ class ComplexRootOf(RootOf):
                     if self.is_real:
                         if (a <= root <= b):
                             break
-                    elif (ax <= root.real <= bx and ay <= root.imag <= by):
+                    elif (ax <= root.real <= bx and
+                            root.imag and ay <= root.imag <= by):
+                        # The imaginary part should not be 0 so
+                        # we needed to check that imag != 0 or else it
+                        # may test as being equal to a 0 in (ay, by)
                         break
                 except (UnboundLocalError, ValueError):
                     pass
