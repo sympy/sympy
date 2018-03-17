@@ -230,7 +230,7 @@ def _roots_quartic_euler(p, q, r, a):
     x = Symbol('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
     xsols = list(roots(Poly(eq, x), cubics=False).keys())
-    xsols = [sol for sol in xsols if sol.is_rational]
+    xsols = [sol for sol in xsols if sol.is_rational and sol.is_nonzero]
     if not xsols:
         return None
     R = max(xsols)
