@@ -1778,7 +1778,7 @@ class ComplexInterval(object):
     >>> from sympy.abc import x
     >>> root = RootOf(x**10 - 2*x + 3, 9)
     >>> i = root._get_interval(); i
-    (0, 3/4) x (9/8, 3/2)
+    (3/64, 3/32) x (9/8, 75/64)
 
     The real part of the root lies within the range [0, 3/4] while
     the imaginary part lies within the range [9/8, 3/2]:
@@ -1790,24 +1790,24 @@ class ComplexInterval(object):
     plane are:
 
     >>> i.dx, i.dy
-    (3/4, 3/8)
+    (3/64, 3/64)
 
     The center of the range is
 
     >>> i.center
-    (3/8, 21/16)
+    (9/128, 147/128)
 
     The northeast coordinate of the rectangle bounding the root in the
     complex plane is given by attribute b and the x and y components
     are accessed by bx and by:
 
     >>> i.b, i.bx, i.by
-    ((3/4, 3/2), 3/4, 3/2)
+    ((3/32, 75/64), 3/32, 75/64)
 
     The southwest coordinate is similarly given by i.a
 
     >>> i.a, i.ax, i.ay
-    ((0, 9/8), 0, 9/8)
+    ((3/64, 9/8), 3/64, 9/8)
 
     Although the interval prints to show only the real and imaginary
     range of the root, all the information of the underlying root
@@ -1823,7 +1823,7 @@ class ComplexInterval(object):
     The conjugate's interval is
 
     >>> ic = i.conjugate(); ic
-    (0, 3/4) x (-3/2, -9/8)
+    (3/64, 3/32) x (-75/64, -9/8)
 
         NOTE: the values printed still represent the x and y range
         in which the root -- conjugate, in this case -- is located,
@@ -1835,25 +1835,28 @@ class ComplexInterval(object):
         What changes are the reported coordinates of the bounding rectangle:
 
         >>> (i.ax, i.ay), (i.bx, i.by)
-        ((0, 9/8), (3/4, 3/2))
+        ((3/64, 9/8), (3/32, 75/64))
         >>> (ic.ax, ic.ay), (ic.bx, ic.by)
-        ((0, -3/2), (3/4, -9/8))
+        ((3/64, -75/64), (3/32, -9/8))
 
     The interval can be refined once:
 
+    >>> i  # for reference, this is the current interval
+    (3/64, 3/32) x (9/8, 75/64)
+
     >>> i.refine()
-    (0, 3/8) x (9/8, 3/2)
+    (3/64, 3/32) x (9/8, 147/128)
 
-    Several refinement steps can be taken, too:
+    Several refinement steps can be taken:
 
-    >>> i.refine_step(2)
-    (0, 3/8) x (9/8, 21/16)
+    >>> i.refine_step(2)  # 2 steps
+    (9/128, 3/32) x (9/8, 147/128)
 
     It is also possible to refine to a given tolerance:
 
     >>> tol = min(i.dx, i.dy)/2
     >>> i.refine_size(tol)
-    (0, 3/32) x (9/8, 39/32)
+    (9/128, 21/256) x (9/8, 291/256)
 
     A disjoint interval is one whose bounding rectangle does not
     overlap with another. An interval, necessarily, is not disjoint with
@@ -1868,7 +1871,7 @@ class ComplexInterval(object):
 
     >>> close = RootOf(x**10 - 2*x + 300/S(101), 9)
     >>> j = close._get_interval(); j
-    (0, 75/101) x (225/202, 150/101)
+    (75/1616, 75/808) x (225/202, 1875/1616)
     >>> i.is_disjoint(j)
     False
 

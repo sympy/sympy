@@ -42,24 +42,62 @@ __all__ = ['CRootOf']
 
 
 class _pure_key_dict(dict):
+    """A dictionary that makes sure that the key is PurePoly.
+
+    Examples
+    ========
+
+    Only the following five actions are guaranteed:
+
+    >>> from sympy.polys.rootoftools import _pure_key_dict
+    >>> from sympy import S
+    >>> from sympy.abc import x, y
+
+    1) creation
+
+    >>> P = _pure_key_dict()
+
+    2) assignment
+
+    >>> P[x]=1
+
+    3) retrieval based on PurePoly comparison
+
+    >>> P[y]
+    1
+
+    4) KeyError if retrieval of a nonexisting key is made
+
+    >>> P[y + 1]
+    Traceback (most recent call last):
+    ...
+    KeyError: PurePoly(y + 1, y, domain='ZZ')
+
+    5) supply of a dummy symbol in case a key is a number
+
+    >>> P[S.One] = 2
+    >>> P[S.One]
+    2
+    """
     def __getitem__(self, k):
         if not isinstance(k, PurePoly):
             free = k.free_symbols
             assert len(free) < 2
-            if not k.free_symbols:
+            if not free:
                 k = PurePoly(k, Dummy('x'))
             else:
                 k = PurePoly(k, expand=False)
-        v = self.get(k, None)
-        if v is None:
-            raise KeyError
-        return v
+        return self.__dict__[k]
 
     def __setitem__(self, k, v):
         if not isinstance(k, PurePoly):
-            k = PurePoly(k, expand=False)
-        if self.get(k, None) is None:
-            return self.setdefault(k, v)
+            free = k.free_symbols
+            assert len(free) < 2
+            if not free:
+                k = PurePoly(k, Dummy('x'))
+            else:
+                k = PurePoly(k, expand=False)
+        self.__dict__[k] = v
 
 _reals_cache = _pure_key_dict()
 _complexes_cache = _pure_key_dict()
@@ -358,7 +396,9 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _refine_complexes(cls, complexes):
         """return complexes such that no bounding rectangles of non-conjugate
-        roots would intersect if slid horizontally or vertically/
+        roots would intersect. In addition, assure that neither ay nor by is
+        0 to guarantee that non-real roots are distinct from real roots in
+        terms of the y-bounds.
         """
         # get the intervals pairwise-disjoint.
         # If rectangles were drawn around the coordinates of the bounding
@@ -369,7 +409,16 @@ class ComplexRootOf(RootOf):
                 complexes[i + j + 1] = (v, g, m)
 
             complexes[i] = (u, f, k)
+
+        # refine until the x-bounds are unambiguously positive or negative
+        # for non-imaginary roots
         complexes = cls._refine_imaginary(complexes)
+
+        # make sure that all y bounds are off the real axis
+        for i, (u, f, k) in enumerate(complexes):
+            while 0 in (u.ay, u.by):
+                u = u.refine()
+            complexes[i] = u, f, k
         return complexes
 
     @classmethod
@@ -379,22 +428,25 @@ class ComplexRootOf(RootOf):
         # XXX don't sort until you are sure that it is compatible
         # with the indexing method but assert that the desired state
         # is not broken
-        fs = set([i[1] for i in complexes])
+        C, F = 0, 1  # location of ComplexInterval and factor
+        fs = set([i[F] for i in complexes])
         for i in range(1, len(complexes)):
-            if complexes[i][1] != complexes[i - 1][1]:
-                # if this fails the roots of a factor were not contiguous
-                fs.remove(complexes[i - 1][1])
+            if complexes[i][F] != complexes[i - 1][F]:
+                # if this fails the roots of a factor were not
+                # contiguous because a dicontinuity should only
+                # happen once
+                fs.remove(complexes[i - 1][F])
         for i in range(len(complexes)):
-            assert complexes[i][0].conj is (i % 2 == 0)
+            # negative im part (conj=True) comes before
+            # positive im part (conj=False)
+            assert complexes[i][C].conj is (i % 2 == 0)
 
         # update cache
         cache = {}
+        # -- collate
         for root, factor, _ in complexes:
-            if factor in cache:
-                cache[factor].append(root)
-            else:
-                cache[factor] = [root]
-
+            cache.setdefault(factor, []).append(root)
+        # -- store
         for factor, roots in cache.items():
             _complexes_cache[factor] = roots
 
@@ -629,11 +681,7 @@ class ComplexRootOf(RootOf):
                     if self.is_real:
                         if (a <= root <= b):
                             break
-                    elif (ax <= root.real <= bx and
-                            root.imag and ay <= root.imag <= by):
-                        # The imaginary part should not be 0 so
-                        # we needed to check that imag != 0 or else it
-                        # may test as being equal to a 0 in (ay, by)
+                    elif (ax <= root.real <= bx and ay <= root.imag <= by):
                         break
                 except (UnboundLocalError, ValueError):
                     pass
