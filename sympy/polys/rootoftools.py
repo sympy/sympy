@@ -42,61 +42,48 @@ __all__ = ['CRootOf']
 
 
 class _pure_key_dict(dict):
-    """A dictionary that makes sure that the key is PurePoly.
+    """A minimal dictionary that makes sure that the key is PurePoly.
 
     Examples
     ========
 
-    Only the following five actions are guaranteed:
+    Only the following four actions are guaranteed:
 
     >>> from sympy.polys.rootoftools import _pure_key_dict
-    >>> from sympy import S
+    >>> from sympy import S, PurePoly
     >>> from sympy.abc import x, y
 
     1) creation
 
     >>> P = _pure_key_dict()
 
-    2) assignment
+    2) assignment for a PurePoly or univariate polynomial
 
-    >>> P[x]=1
+    >>> P[x] = 1
+    >>> P[PurePoly(x - y, x)] = 2
 
-    3) retrieval based on PurePoly comparison
+    3) retrieval based on PurePoly key comparison
 
     >>> P[y]
     1
 
-    4) KeyError if retrieval of a nonexisting key is made
+    4) KeyError when trying to retrieve a nonexisting key
 
     >>> P[y + 1]
     Traceback (most recent call last):
     ...
     KeyError: PurePoly(y + 1, y, domain='ZZ')
-
-    5) supply of a dummy symbol in case a key is a number
-
-    >>> P[S.One] = 2
-    >>> P[S.One]
-    2
     """
     def __getitem__(self, k):
         if not isinstance(k, PurePoly):
-            free = k.free_symbols
-            assert len(free) < 2
-            if not free:
-                k = PurePoly(k, Dummy('x'))
-            else:
-                k = PurePoly(k, expand=False)
+            assert len(k.free_symbols) == 1
+            k = PurePoly(k, expand=False)
         return self.__dict__[k]
 
     def __setitem__(self, k, v):
         if not isinstance(k, PurePoly):
-            free = k.free_symbols
-            assert len(free) < 2
-            if not free:
-                k = PurePoly(k, Dummy('x'))
-            else:
-                k = PurePoly(k, expand=False)
+            assert len(k.free_symbols) == 1
+            k = PurePoly(k, expand=False)
         self.__dict__[k] = v
 
 _reals_cache = _pure_key_dict()
@@ -129,7 +116,8 @@ def rootof(f, x, index=None, radicals=True, expand=True):
     expression involving radicals.
 
     Parameters
-    ----------
+    ==========
+
     f : Expr
         Univariate polynomial.
     x : Symbol, optional
@@ -255,9 +243,9 @@ class ComplexRootOf(RootOf):
 
     @property
     def free_symbols(self):
-        # CRootOf currently only works with univariate expressions and although
-        # the poly attribute is often a PurePoly, sometimes it is a Poly. In
-        # either case no free symbols should be reported.
+        # CRootOf currently only works with univariate expressions
+        # whose poly attribute should be a PurePoly with no free
+        # symbols
         return set()
 
     def _eval_is_real(self):
@@ -432,7 +420,7 @@ class ComplexRootOf(RootOf):
         fs = set([i[F] for i in complexes])
         for i in range(1, len(complexes)):
             if complexes[i][F] != complexes[i - 1][F]:
-                # if this fails the roots of a factor were not
+                # if this fails the factors of a root were not
                 # contiguous because a dicontinuity should only
                 # happen once
                 fs.remove(complexes[i - 1][F])
