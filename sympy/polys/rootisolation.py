@@ -1913,6 +1913,16 @@ class ComplexInterval(object):
         self.conj = conj
 
     @property
+    def args(self):
+        i = self
+        return (i.a, i.b, i.I, i.Q, i.F1, i.F2, i.f1, i.f2, i.dom, i.conj)
+
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        return self.args == other.args
+
+    @property
     def ax(self):
         """Return ``x`` coordinate of south-western corner. """
         return self.a[0]
