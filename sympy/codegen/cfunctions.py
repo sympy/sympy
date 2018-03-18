@@ -93,7 +93,8 @@ class log1p(Function):
     ========
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log1p
-    >>> '%.0e' % log1p(1e-99).evalf()
+    >>> from sympy.core.function import expand_log
+    >>> '%.0e' % expand_log(log1p(1e-99)).evalf()
     '1e-99'
     >>> from math import log
     >>> log(1 + 1e-99)
@@ -130,10 +131,12 @@ class log1p(Function):
 
     @classmethod
     def eval(cls, arg):
-        if not arg.is_Float:  # not safe to add 1 to Float
+        if arg.is_Rational:
+            return log(arg + S.One)
+        elif not arg.is_Float:  # not safe to add 1 to Float
             return log.eval(arg + S.One)
         elif arg.is_number:
-            return log.eval(Rational(arg) + S.One)
+            return log(Rational(arg) + S.One)
 
     def _eval_is_real(self):
         return (self.args[0] + S.One).is_nonnegative

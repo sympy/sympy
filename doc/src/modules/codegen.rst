@@ -56,17 +56,6 @@ Code printers (sympy.printing)
 ------------------------------
 
 This is where the meat of code generation is; the translation of SymPy
-expressions to specific languages. Supported languages are
-C (:py:func:`sympy.printing.ccode.ccode`),
-C++ (:py:func:`sympy.printing.cxxcode.cxxcode`),
-R (:py:func:`sympy.printing.rcode.rcode`),
-Fortran 95 (:py:func:`sympy.printing.fcode.fcode`),
-Javascript (:py:func:`sympy.printing.jscode.jscode`),
-Julia (:py:func:`sympy.printing.julia.julia_code`),
-Mathematica (:py:func:`sympy.printing.mathematica.mathematica_code`),
-Octave/Matlab (:py:func:`sympy.printing.octave.octave_code`),
-Rust (:py:func:`sympy.printing.rust.rust_code`),
-Python (print_python, which is
 actually more like a lightweight version of codegen for Python, and
 Python (:py:func:`sympy.printing.pycode.pycode`), and
 :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
@@ -563,49 +552,58 @@ Special C math functions (sympy.codegen.cfunctions)
 ---------------------------------------------------
 
 .. automodule:: sympy.codegen.cfunctions
-    :members:
+   :members:
 
 
+=======
+Fortran specific functions
+--------------------------
+
+.. automodule:: sympy.codegen.ffunctions
+   :members:
+
+>>>>>>> master
 Classes for abstract syntax trees (sympy.codegen.ast)
 -----------------------------------------------------
 
 .. automodule:: sympy.codegen.ast
-    :members:
+<<<<<<< HEAD
+   :members:
 
 C specific AST nodes (sympy.codegen.cnodes)
 -------------------------------------------
 
 .. automodule:: sympy.codegen.cnodes
-    :members:
+   :members:
 
 C++ specific AST nodes (sympy.codegen.cxxnodes)
 -----------------------------------------------
 
 .. automodule:: sympy.codegen.cxxnodes
-    :members:
+   :members:
 
 Fortran specific AST nodes (sympy.codegen.fnodes)
 -------------------------------------------------
 
 .. automodule:: sympy.codegen.fnodes
-    :members:
+   :members:
 
 
 Algorithms (sympy.codegen.algorithms)
 -------------------------------------
 
 .. automodule:: sympy.codegen.algorithms
-    :members:
+   :members:
 
 
 Python utilities (sympy.codegen.pyutils)
 ----------------------------------------
 
 .. automodule:: sympy.codegen.pyutils
-    :members:
+   :members:
 
 Fortran utilities (sympy.codegen.futils)
 ----------------------------------------
 
 .. automodule:: sympy.codegen.futils
-    :members:
+   :members:

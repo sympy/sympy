@@ -231,12 +231,21 @@ class MatrixExpr(Expr):
         if res == 0:
             return res
         if len(repl) < 2:
-            return res
-        if m not in repl:
-            return MatrixExpr.from_index_summation(res, m)
-        if i not in repl:
-            return MatrixExpr.from_index_summation(res, i)
-        return MatrixExpr.from_index_summation(res)
+            parsed = res
+        else:
+            if m not in repl:
+                parsed = MatrixExpr.from_index_summation(res, m)
+            elif i not in repl:
+                parsed = MatrixExpr.from_index_summation(res, i)
+            else:
+                parsed = MatrixExpr.from_index_summation(res)
+
+        if (parsed.has(m)) or (parsed.has(n)) or (parsed.has(i)) or (parsed.has(j)):
+            # In this case, there are still some KroneckerDelta.
+            # It's because the result is not a matrix, but a higher dimensional array.
+            return None
+        else:
+            return parsed
 
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
@@ -688,6 +697,7 @@ class MatrixSymbol(MatrixExpr):
 
     def _eval_simplify(self, **kwargs):
         return self
+
 
 class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity

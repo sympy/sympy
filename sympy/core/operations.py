@@ -31,7 +31,10 @@ class AssocOp(Basic):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
-        if not options.pop('evaluate', global_evaluate[0]):
+        evaluate = options.get('evaluate')
+        if evaluate is None:
+            evaluate = global_evaluate[0]
+        if not evaluate:
             return cls._from_args(args)
 
         if len(args) == 0:

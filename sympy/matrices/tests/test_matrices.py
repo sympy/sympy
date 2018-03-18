@@ -4,7 +4,7 @@ import warnings
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
+    S, Symbol, cos, exp, expand_mul, oo, pi, signsimp, simplify, sin, sqrt, symbols,
     sympify, trigsimp, tan, sstr, diff, Function)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
@@ -1777,6 +1777,9 @@ def test_exp():
     assert m.exp() == Matrix([[E, 0], [0, E]])
     assert exp(m) == Matrix([[E, 0], [0, E]])
 
+    m = Matrix([[1, -1], [1, 1]])
+    assert m.exp() == Matrix([[E*cos(1), -E*sin(1)], [E*sin(1), E*cos(1)]])
+
 
 def test_has():
     A = Matrix(((x, y), (2, 3)))
@@ -2039,15 +2042,21 @@ def test_hessenberg():
 def test_cholesky():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2)).cholesky())
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky())
+    raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).cholesky())
+    raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).cholesky())
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     assert A.cholesky() * A.cholesky().T == A
     assert A.cholesky().is_lower
     assert A.cholesky() == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
+    A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
+    assert A.cholesky() == Matrix(((2, 0, 0), (I, 1, 0), (1 - I, 0, 3)))
 
 
 def test_LDLdecomposition():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2)).LDLdecomposition())
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition())
+    raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).LDLdecomposition())
+    raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).LDLdecomposition())
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     L, D = A.LDLdecomposition()
     assert L * D * L.T == A
@@ -2055,6 +2064,11 @@ def test_LDLdecomposition():
     assert L == Matrix([[1, 0, 0], [ S(3)/5, 1, 0], [S(-1)/5, S(1)/3, 1]])
     assert D.is_diagonal()
     assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])
+    A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
+    L, D = A.LDLdecomposition()
+    assert expand_mul(L * D * L.H) == A
+    assert L == Matrix(((1, 0, 0), (I/2, 1, 0), (S(1)/2 - I/2, 0, 1)))
+    assert D == Matrix(((4, 0, 0), (0, 1, 0), (0, 0, 9)))
 
 
 def test_cholesky_solve():
@@ -2072,6 +2086,16 @@ def test_cholesky_solve():
     b = A*x
     soln = A.cholesky_solve(b)
     assert soln == x
+    A = Matrix(((9, 3*I), (-3*I, 5)))
+    x = Matrix((-2, 1))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert expand_mul(soln) == x
+    A = Matrix(((9*I, 3), (-3 + I, 5)))
+    x = Matrix((2 + 3*I, -1))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert expand_mul(soln) == x
 
 
 def test_LDLsolve():
@@ -2089,6 +2113,16 @@ def test_LDLsolve():
     b = A*x
     soln = A.LDLsolve(b)
     assert soln == x
+    A = Matrix(((9, 3*I), (-3*I, 5)))
+    x = Matrix((-2, 1))
+    b = A*x
+    soln = A.LDLsolve(b)
+    assert expand_mul(soln) == x
+    A = Matrix(((9*I, 3), (-3 + I, 5)))
+    x = Matrix((2 + 3*I, -1))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert expand_mul(soln) == x
 
 
 def test_lower_triangular_solve():
@@ -3048,3 +3082,11 @@ def test_deprecated():
         P, Jcells = m.jordan_cells()
         assert Jcells[1] == Matrix(1, 1, [2])
         assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+def test_issue_14489():
+    from sympy import Mod
+    A = Matrix([-1, 1, 2])
+    B = Matrix([10, 20, -15])
+
+    assert Mod(A, 3) == Matrix([2, 1, 2])
+    assert Mod(B, 4) == Matrix([2, 0, 1])

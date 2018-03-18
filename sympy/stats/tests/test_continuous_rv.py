@@ -13,7 +13,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          VonMises, Weibull, WignerSemicircle, correlation,
                          moment, cmoment, smoment)
 
-from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
+from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
                    floor, expand_func, Rational, I, re, im, lambdify, hyper, diff)
@@ -22,7 +22,8 @@ from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.rv import ProductPSpace
 
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.utilities.pytest import raises, XFAIL, slow, skip
+from sympy.external import import_module
 
 from sympy.core.compatibility import range
 
@@ -354,6 +355,12 @@ def test_gamma_inverse():
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
 
+def test_sampling_gamma_inverse():
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
+    X = GammaInverse("x", 1, 1)
+    assert sample(X) in X.pspace.domain.set
 
 def test_gompertz():
     b = Symbol("b", positive=True)
@@ -832,3 +839,28 @@ def test_issue_13324():
     X = Uniform('X', 0, 1)
     assert E(X, X > Rational(1, 2)) == Rational(3, 4)
     assert E(X, X > 0) == Rational(1, 2)
+
+def test_FiniteSet_prob():
+    x = symbols('x')
+    E = Exponential('E', 3)
+    N = Normal('N', 5, 7)
+    assert P(Eq(E, 1)) is S.Zero
+    assert P(Eq(N, 2)) is S.Zero
+    assert P(Eq(N, x)) is S.Zero
+
+def test_prob_neq():
+    E = Exponential('E', 4)
+    X = ChiSquared('X', 4)
+    x = symbols('x')
+    assert P(Ne(E, 2)) == 1
+    assert P(Ne(X, 4)) == 1
+    assert P(Ne(X, 4)) == 1
+    assert P(Ne(X, 5)) == 1
+    assert P(Ne(E, x)) == 1
+
+def test_union():
+    N = Normal('N', 3, 2)
+    assert simplify(P(N**2 - N > 2)) == \
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + 3/2
+    assert simplify(P(N**2 - 4 > 0)) == \
+        -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + 3/2

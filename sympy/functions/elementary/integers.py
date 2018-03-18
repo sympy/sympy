@@ -20,7 +20,7 @@ class RoundFunction(Function):
     @classmethod
     def eval(cls, arg):
         from sympy import im
-        if arg.is_integer:
+        if arg.is_integer or arg.is_finite is False:
             return arg
         if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             i = im(arg)
@@ -83,13 +83,14 @@ class RoundFunction(Function):
 class floor(RoundFunction):
     """
     Floor is a univariate function which returns the largest integer
-    value not greater than its argument. However this implementation
-    generalizes floor to complex numbers.
+    value not greater than its argument. This implementation
+    generalizes floor to complex numbers by taking the floor of the
+    real and imaginary parts separately.
 
     Examples
     ========
 
-    >>> from sympy import floor, E, I, Float, Rational
+    >>> from sympy import floor, E, I, S, Float, Rational
     >>> floor(17)
     17
     >>> floor(Rational(23, 10))
@@ -100,6 +101,8 @@ class floor(RoundFunction):
     -1
     >>> floor(-I/2)
     -I
+    >>> floor(S(5)/2 + 5*I/2)
+    2 + 2*I
 
     See Also
     ========
@@ -153,13 +156,14 @@ class floor(RoundFunction):
 class ceiling(RoundFunction):
     """
     Ceiling is a univariate function which returns the smallest integer
-    value not less than its argument. Ceiling function is generalized
-    in this implementation to complex numbers.
+    value not less than its argument. This implementation
+    generalizes ceiling to complex numbers by taking the ceiling of the
+    real and imaginary parts separately.
 
     Examples
     ========
 
-    >>> from sympy import ceiling, E, I, Float, Rational
+    >>> from sympy import ceiling, E, I, S, Float, Rational
     >>> ceiling(17)
     17
     >>> ceiling(Rational(23, 10))
@@ -170,6 +174,8 @@ class ceiling(RoundFunction):
     0
     >>> ceiling(I/2)
     I
+    >>> ceiling(S(5)/2 + 5*I/2)
+    3 + 3*I
 
     See Also
     ========

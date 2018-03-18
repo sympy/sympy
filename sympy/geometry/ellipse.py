@@ -16,6 +16,7 @@ from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
@@ -150,7 +151,7 @@ class Ellipse(GeometrySet):
         if len(center) != 2:
             raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
 
-        if len(list(filter(None, (hradius, vradius, eccentricity)))) != 2:
+        if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError('Exactly two arguments of "hradius", '
                 '"vradius", and "eccentricity" must not be None."')
 
@@ -327,16 +328,17 @@ class Ellipse(GeometrySet):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.circumference
-        12*Integral(sqrt((-8*_x**2/9 + 1)/(-_x**2 + 1)), (_x, 0, 1))
+        12*elliptic_e(8/9)
 
         """
-        from sympy import Integral
         if self.eccentricity == 1:
-            return 2*pi*self.hradius
+            # degenerate
+            return 4 * self.major
+        elif self.eccentricity == 0:
+            # circle
+            return 2 * pi * self.hradius
         else:
-            x = Dummy('x', real=True)
-            return 4*self.major*Integral(
-                sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), (x, 0, 1))
+            return 4 * self.major * elliptic_e(self.eccentricity**2)
 
     @property
     def eccentricity(self):
@@ -1266,6 +1268,55 @@ class Ellipse(GeometrySet):
 
         """
         return self.args[2]
+
+
+    def second_moment_of_area(self, point=None):
+        """Returns the second moment and product moment area of an ellipse.
+
+        Parameters
+        ==========
+
+        point : Point, two-tuple of sympifiable objects, or None(default=None)
+            point is the point about which second moment of area is to be found.
+            If "point=None" it will be calculated about the axis passing through the
+            centroid of the ellipse.
+
+        Returns
+        =======
+
+        I_xx, I_yy, I_xy : number or sympy expression
+            I_xx, I_yy are second moment of area of an ellise.
+            I_xy is product moment of area of an ellipse.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Ellipse
+        >>> p1 = Point(0, 0)
+        >>> e1 = Ellipse(p1, 3, 1)
+        >>> e1.second_moment_of_area()
+        (3*pi/4, 27*pi/4, 0)
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/List_of_second_moments_of_area
+
+        """
+
+        I_xx = (S.Pi*(self.hradius)*(self.vradius**3))/4
+        I_yy = (S.Pi*(self.hradius**3)*(self.vradius))/4
+        I_xy = 0
+
+        if point is None:
+            return I_xx, I_yy, I_xy
+
+        # parallel axis theorem
+        I_xx = I_xx + self.area*((point[1] - self.center.y)**2)
+        I_yy = I_yy + self.area*((point[0] - self.center.x)**2)
+        I_xy = I_xy + self.area*(point[0] - self.center.x)*(point[1] - self.center.y)
+
+        return I_xx, I_yy, I_xy
 
 
 class Circle(Ellipse):

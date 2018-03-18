@@ -13,7 +13,6 @@ from sympy.abc import x, y, z, t
 import itertools
 
 
-
 def test_naturals():
     N = S.Naturals
     assert 5 in N
@@ -50,6 +49,8 @@ def test_integers():
 
     assert Z.intersect(Interval(-5, 5)) == Range(-5, 6)
     assert Z.intersect(Interval(-5, 5, True, True)) == Range(-4, 5)
+    assert Z.intersect(Interval(5, S.Infinity)) == Range(5, S.Infinity)
+    assert Z.intersect(Interval.Lopen(5, S.Infinity)) == Range(6, S.Infinity)
 
     assert Z.inf == -oo
     assert Z.sup == oo
@@ -78,6 +79,10 @@ def test_ImageSet():
     assert Rational(.3) not in harmonics
 
     assert harmonics.is_iterable
+
+    assert imageset(x, -x, Interval(0, 1)) == Interval(-1, 0)
+
+    assert ImageSet(Lambda(x, x**2), Interval(0, 2)).doit() == Interval(0, 4)
 
     c = ComplexRegion(Interval(1, 3)*Interval(1, 3))
     assert Tuple(2, 6) in ImageSet(Lambda((x, y), (x, 2*y)), c)

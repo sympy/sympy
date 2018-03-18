@@ -936,7 +936,6 @@ def test_is_convergent():
 
     # root test --
     assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
-    assert Sum(2**n/factorial(n), (n, 1, oo)).is_convergent() is S.true
 
     # integral test --
 
@@ -944,6 +943,7 @@ def test_is_convergent():
     assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() is S.true
     assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() is S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(sqrt(n)*sqrt(n)), (n, 2, oo)).is_convergent() is S.false
 
     # comparison test --
     assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
@@ -955,6 +955,9 @@ def test_is_convergent():
     assert Sum(1/(n*log(n)*log(log(n))), (n, 5, oo)).is_convergent() is S.false
     assert Sum((n - 1)/(n*log(n)**3), (n, 3, oo)).is_convergent() is S.false
     assert Sum(2/(n**2*log(n)), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(n*sqrt(log(n))*log(log(n))), (n, 100, oo)).is_convergent() is S.false
+    assert Sum(log(log(n))/(n*log(n)**2), (n, 100, oo)).is_convergent() is S.true
+    assert Sum(log(n)/n**2, (n, 5, oo)).is_convergent() is S.true
 
     # alternating series tests --
     assert Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() is S.true
@@ -989,8 +992,6 @@ def test_is_absolutely_convergent():
 
 @XFAIL
 def test_convergent_failing():
-    assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
@@ -1010,3 +1011,18 @@ def test_issue_10156():
     e = 2*y*Sum(2*cx*x**2, (x, 1, 9))
     assert e.factor() == \
         8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))
+
+def test_issue_14112():
+    assert Sum((-1)**n/sqrt(n), (n, 1, oo)).is_absolutely_convergent() is S.false
+    assert Sum((-1)**(2*n)/n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum((-2)**n + (-3)**n, (n, 1, oo)).is_convergent() is S.false
+
+def test_sin_times_absolutely_convergent():
+    assert Sum(sin(n) / n**3, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(sin(n) * log(n) / n**3, (n, 1, oo)).is_convergent() is S.true
+
+def test_issue_14111():
+    assert Sum(1/log(log(n)), (n, 22, oo)).is_convergent() is S.false
+
+def test_issue_14484():
+    raises(NotImplementedError, lambda: Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent())

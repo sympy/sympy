@@ -277,10 +277,12 @@ def test_binomial():
     nz = Symbol('nz', integer=True, nonzero=True)
     k = Symbol('k', integer=True)
     kp = Symbol('kp', integer=True, positive=True)
+    kn = Symbol('kn', integer=True, negative=True)
     u = Symbol('u', negative=True)
     p = Symbol('p', positive=True)
     z = Symbol('z', zero=True)
     nt = Symbol('nt', integer=False)
+    kt = Symbol('kt', integer=False)
     a = Symbol('a', integer=True, nonnegative=True)
     b = Symbol('b', integer=True, nonnegative=True)
 
@@ -295,7 +297,7 @@ def test_binomial():
     assert binomial(S.Half, S.Half) == 1
     assert binomial(-10, 1) == -10
     assert binomial(-10, 7) == -11440
-    assert binomial(n, -1).func == binomial
+    assert binomial(n, -1) == 0
     assert binomial(kp, -1) == 0
     assert binomial(nz, 0) == 1
     assert expand_func(binomial(n, 1)) == n
@@ -309,11 +311,11 @@ def test_binomial():
     assert binomial(n, n + 1).func == binomial  # e.g. (-1, 0) == 1
     assert binomial(kp, kp + 1) == 0
     assert binomial(n, u).func == binomial
-    assert binomial(kp, u) == 0
+    assert binomial(kp, u).func == binomial
     assert binomial(n, p).func == binomial
     assert binomial(n, k).func == binomial
     assert binomial(n, n + p).func == binomial
-    assert binomial(kp, kp + p) == 0
+    assert binomial(kp, kp + p).func == binomial
 
     assert expand_func(binomial(n, n - 3)) == n*(n - 2)*(n - 1)/6
 
@@ -324,6 +326,37 @@ def test_binomial():
     assert binomial(gamma(25), 6) == 79232165267303928292058750056084441948572511312165380965440075720159859792344339983120618959044048198214221915637090855535036339620413440000
 
     assert binomial(a, b).is_nonnegative is True
+
+    # issue #13980 and #13981
+    assert binomial(-7, -5) == 0
+    assert binomial(-23, -12) == 0
+    assert binomial(S(13)/2, -10) == 0
+    assert binomial(-49, -51) == 0
+
+    assert binomial(19, S(-7)/2) == S(-68719476736)/(911337863661225*pi)
+    assert binomial(0, S(3)/2) == S(-2)/(3*pi)
+    assert binomial(-3, S(-7)/2) == zoo
+    assert binomial(kn, kt) == zoo
+
+    assert binomial(nt, kt).func == binomial
+    assert binomial(nt, S(15)/6) == 8*gamma(nt + 1)/(15*sqrt(pi)*gamma(nt - S(3)/2))
+    assert binomial(S(20)/3, S(-10)/8) == gamma(S(23)/3)/(gamma(S(-1)/4)*gamma(S(107)/12))
+    assert binomial(S(19)/2, S(-7)/2) == S(-1615)/8388608
+    assert binomial(S(-13)/5, S(-7)/8) == gamma(S(-8)/5)/(gamma(S(-29)/40)*gamma(S(1)/8))
+    assert binomial(S(-19)/8, S(-13)/5) == gamma(S(-11)/8)/(gamma(S(-8)/5)*gamma(S(49)/40))
+
+    # binomial for complexes
+    from sympy import I
+    assert binomial(I, S(-89)/8) == gamma(1 + I)/(gamma(S(-81)/8)*gamma(S(97)/8 + I))
+    assert binomial(I, 2*I) == gamma(1 + I)/(gamma(1 - I)*gamma(1 + 2*I))
+    assert binomial(-7, I) == zoo
+    assert binomial(-7/S(6), I) == gamma(-1/S(6))/(gamma(-1/S(6) - I)*gamma(1 + I))
+    assert binomial((1+2*I), (1+3*I)) == gamma(2 + 2*I)/(gamma(1 - I)*gamma(2 + 3*I))
+    assert binomial(I, 5) == S(1)/3 - I/S(12)
+    assert binomial((2*I + 3), 7) == -13*I/S(63)
+    assert binomial(I, n).func == binomial
+
+
 
 def test_binomial_diff():
     n = Symbol('n', integer=True)

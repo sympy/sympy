@@ -716,7 +716,7 @@ class binomial(CombinatorialFunction):
     however 'k' must also be nonnegative. This case is very
     useful when evaluating summations.
 
-    For the sake of convenience for negative 'k' this function
+    For the sake of convenience for negative integer 'k' this function
     will return zero no matter what valued is the other argument.
 
     To expand the binomial when n is a symbol, use either
@@ -769,6 +769,12 @@ class binomial(CombinatorialFunction):
 
     >>> expand_func(binomial(n, 3))
     n*(n - 2)*(n - 1)/6
+
+    References
+    ==========
+
+    .. [1] https://www.johndcook.com/blog/binomial_coefficients/
+
 
     """
 
@@ -848,15 +854,23 @@ class binomial(CombinatorialFunction):
         d = n - k
         if d.is_zero or k.is_zero:
             return S.One
-        elif d.is_zero is False:
-            if (k - 1).is_zero:
-                return n
-            elif k.is_negative:
+        if (k - 1).is_zero:
+            return n
+        if k.is_integer:
+            if k.is_negative:
                 return S.Zero
-            elif n.is_integer and n.is_nonnegative and d.is_negative:
+            if n.is_integer and n.is_nonnegative and d.is_negative:
                 return S.Zero
-        if k.is_Integer and k > 0 and n.is_Number:
-            return cls._eval(n, k)
+            if n.is_number:
+                res = cls._eval(n, k)
+                return res.expand(basic=True) if res else res
+        elif n.is_negative and n.is_integer and not k.is_integer:
+            # a special case when binomial evaluates to complex infinity
+            return S.ComplexInfinity
+        elif k.is_number:
+            from sympy import gamma
+            return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+
 
     def _eval_expand_func(self, **hints):
         """

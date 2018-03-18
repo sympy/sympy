@@ -139,6 +139,12 @@ class PythonCodePrinter(CodePrinter):
         return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
             f=self._module_format('math.copysign'), e=self._print(e.args[0]))
 
+    def _print_NegativeInfinity(self, expr, **kwargs):
+        return "float('-inf')"
+
+    def _print_ComplexInfinity(self, expr, **kwargs):
+        return self._print_NaN(expr)
+
     def _print_Mod(self, expr, **kwargs):
         PREC = precedence(expr)
         return ('{0} % {1}'.format(*map(lambda x: self.parenthesize(x, PREC, **kwargs), expr.args)))
