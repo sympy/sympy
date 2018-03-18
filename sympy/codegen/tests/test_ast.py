@@ -3,7 +3,7 @@ from sympy import (
     Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Symbol, Tuple, Lt, nan, oo
 )
 from sympy.core.relational import Relational, StrictLessThan
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 
 from sympy.codegen.ast import (
@@ -166,6 +166,14 @@ def test_CodeBlock_cse():
         Assignment(t, x*z),
     )
 
+    raises(NotImplementedError, lambda: CodeBlock(
+        Assignment(x, 1),
+        Assignment(y, 1), Assignment(y, 2)
+    ).cse())
+
+@XFAIL
+def test_CodeBlock_cse__issue_14118():
+    # see https://github.com/sympy/sympy/issues/14118
     c = CodeBlock(
         Assignment(A22, Matrix([[x, sin(y)],[3, 4]])),
         Assignment(B22, Matrix([[sin(y), 2*sin(y)], [sin(y)**2, 7]]))
@@ -175,10 +183,6 @@ def test_CodeBlock_cse():
         Assignment(A22, Matrix([[x, x0],[3, 4]])),
         Assignment(B22, Matrix([[x0, 2*x0], [x0**2, 7]]))
     )
-    raises(NotImplementedError, lambda: CodeBlock(
-        Assignment(x, 1),
-        Assignment(y, 1), Assignment(y, 2)
-    ).cse())
 
 def test_For():
     f = For(n, Range(0, 3), (Assignment(A[n, 0], x + n), aug_assign(x, '+', y)))
