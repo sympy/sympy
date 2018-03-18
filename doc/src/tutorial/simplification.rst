@@ -742,7 +742,7 @@ Every finite continued fraction is a rational number, but we are interested in
 symbolics here, so let's create a symbolic continued fraction.  The
 ``symbols()`` function that we have been using has a shortcut to create
 numbered symbols.  ``symbols('a0:5')`` will create the symbols ``a0``, ``a1``,
-..., ``a5``.
+..., ``a4``.
 
     >>> syms = symbols('a0:5')
     >>> syms
