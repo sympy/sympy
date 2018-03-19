@@ -39,6 +39,7 @@ AST Type Tree
        |        |       |           |---> Pointer
        |        |       |--->FunctionPrototype
        |        |                            |--->FunctionDefinition
+       |        |--->Element
        |        |--->Declaration
        |        |--->While
        |        |--->Scope
@@ -49,6 +50,7 @@ AST Type Tree
        |        |--->ContinueToken
        |        |--->NoneToken
        |
+       |--->Statement
        |--->Return
 
 
