@@ -555,19 +555,16 @@ Special C math functions (sympy.codegen.cfunctions)
    :members:
 
 
-=======
 Fortran specific functions
 --------------------------
 
 .. automodule:: sympy.codegen.ffunctions
    :members:
 
->>>>>>> master
 Classes for abstract syntax trees (sympy.codegen.ast)
 -----------------------------------------------------
 
 .. automodule:: sympy.codegen.ast
-<<<<<<< HEAD
    :members:
 
 C specific AST nodes (sympy.codegen.cnodes)
