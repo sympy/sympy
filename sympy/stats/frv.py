@@ -298,7 +298,7 @@ class FinitePSpace(PSpace):
 
         return Lambda(t, sum(exp(I*k*t)*v for k,v in d.items()))
 
-    def integrate(self, expr, rvs=None):
+    def integrate(self, expr, rvs=None, evaluate=True):
         rvs = rvs or self.values
         expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
         return sum([expr.xreplace(dict(elem)) * self.prob_of(elem)
