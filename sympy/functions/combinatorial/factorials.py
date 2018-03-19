@@ -717,7 +717,8 @@ class binomial(CombinatorialFunction):
     useful when evaluating summations.
 
     For the sake of convenience for negative integer 'k' this function
-    will return zero no matter what valued is the other argument.
+    will return one if both the arguments are equal, and zero in all other
+    cases when the arguments are unequal.
 
     To expand the binomial when n is a symbol, use either
     expand_func() or expand(func=True). The former will keep the
