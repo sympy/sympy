@@ -352,3 +352,7 @@ def test_issue_12641():
 
 def test_issue_13297():
     assert manualintegrate(sin(x) * cos(x)**5, x) == -cos(x)**6 / 6
+
+def test_issue_14470():
+    assert manualintegrate(1/(x*sqrt(x + 1)), x) == \
+        log(-1 + 1/sqrt(x + 1)) - log(1 + 1/sqrt(x + 1))

@@ -1150,6 +1150,18 @@ def test_powers():
     assert integrate(2**x + 3**x, x) == 2**x/log(2) + 3**x/log(3)
 
 
+def test_manual_option():
+    raises(ValueError, lambda: integrate(1/x, x, manual=True, meijerg=True))
+    # an example of a function that manual integration cannot handle
+    assert integrate(exp(x**2), x, manual=True) == Integral(exp(x**2), x)
+
+
+def test_meijerg_option():
+    raises(ValueError, lambda: integrate(1/x, x, meijerg=True, risch=True))
+    # an example of a function that meijerg integration cannot handle
+    assert integrate(tan(x), x, meijerg=True) == Integral(tan(x), x)
+
+
 def test_risch_option():
     # risch=True only allowed on indefinite integrals
     raises(ValueError, lambda: integrate(1/log(x), (x, 0, oo), risch=True))
@@ -1324,3 +1336,7 @@ def test_issue_14437():
     f = Function('f')(x, y, z)
     assert integrate(f, (x, 0, 1), (y, 0, 2), (z, 0, 3)) == \
                 Integral(f, (x, 0, 1), (y, 0, 2), (z, 0, 3))
+
+def test_issue_14470():
+    assert integrate(1/sqrt(exp(x) + 1), x) == \
+        log(-1 + 1/sqrt(exp(x) + 1)) - log(1 + 1/sqrt(exp(x) + 1))

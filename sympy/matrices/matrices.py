@@ -2191,23 +2191,22 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if self.is_symmetric():
+        if self.is_hermitian:
             L = self._cholesky()
         elif self.rows >= self.cols:
-            L = (self.T * self)._cholesky()
-            rhs = self.T * rhs
+            L = (self.H * self)._cholesky()
+            rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
-        return (L.T)._upper_triangular_solve(Y)
+        return (L.H)._upper_triangular_solve(Y)
 
     def cholesky(self):
         """Returns the Cholesky decomposition L of a matrix A
-        such that L * L.T = A
+        such that L * L.H = A
 
-        A must be a square, symmetric, positive-definite
-        and non-singular matrix.
+        A must be a Hermitian positive-definite matrix.
 
         Examples
         ========
@@ -2225,6 +2224,19 @@ class MatrixBase(MatrixDeprecated,
         [15, 18,  0],
         [-5,  0, 11]])
 
+        The matrix can have complex entries:
+
+        >>> from sympy import I
+        >>> A = Matrix(((9, 3*I), (-3*I, 5)))
+        >>> A.cholesky()
+        Matrix([
+        [ 3, 0],
+        [-I, 2]])
+        >>> A.cholesky() * A.cholesky().H
+        Matrix([
+        [   9, 3*I],
+        [-3*I,   5]])
+
         See Also
         ========
 
@@ -2235,8 +2247,8 @@ class MatrixBase(MatrixDeprecated,
 
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if not self.is_symmetric():
-            raise ValueError("Matrix must be symmetric.")
+        if not self.is_hermitian:
+            raise ValueError("Matrix must be Hermitian.")
         return self._cholesky()
 
     def condition_number(self):
@@ -2911,11 +2923,10 @@ class MatrixBase(MatrixDeprecated,
 
     def LDLdecomposition(self):
         """Returns the LDL Decomposition (L, D) of matrix A,
-        such that L * D * L.T == A
+        such that L * D * L.H == A
         This method eliminates the use of square root.
         Further this ensures that all the diagonal entries of L are 1.
-        A must be a square, symmetric, positive-definite
-        and non-singular matrix.
+        A must be a Hermitian positive-definite matrix.
 
         Examples
         ========
@@ -2936,6 +2947,22 @@ class MatrixBase(MatrixDeprecated,
         >>> L * D * L.T * A.inv() == eye(A.rows)
         True
 
+        The matrix can have complex entries:
+
+        >>> from sympy import I
+        >>> A = Matrix(((9, 3*I), (-3*I, 5)))
+        >>> L, D = A.LDLdecomposition()
+        >>> L
+        Matrix([
+        [   1, 0],
+        [-I/3, 1]])
+        >>> D
+        Matrix([
+        [9, 0],
+        [0, 4]])
+        >>> L*D*L.H == A
+        True
+
         See Also
         ========
 
@@ -2945,8 +2972,8 @@ class MatrixBase(MatrixDeprecated,
         """
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if not self.is_symmetric():
-            raise ValueError("Matrix must be symmetric.")
+        if not self.is_hermitian:
+            raise ValueError("Matrix must be Hermitian.")
         return self._LDLdecomposition()
 
     def LDLsolve(self, rhs):
@@ -2978,17 +3005,17 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if self.is_symmetric():
+        if self.is_hermitian:
             L, D = self.LDLdecomposition()
         elif self.rows >= self.cols:
-            L, D = (self.T * self).LDLdecomposition()
-            rhs = self.T * rhs
+            L, D = (self.H * self).LDLdecomposition()
+            rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
         Z = D._diagonal_solve(Y)
-        return (L.T)._upper_triangular_solve(Z)
+        return (L.H)._upper_triangular_solve(Z)
 
     def lower_triangular_solve(self, rhs):
         """Solves Ax = B, where A is a lower triangular matrix.
@@ -3857,7 +3884,7 @@ class MatrixBase(MatrixDeprecated,
         """
         if method == 'CH':
             return self.cholesky_solve(rhs)
-        t = self.T
+        t = self.H
         return (t * self).inv(method=method) * t * rhs
 
     def solve(self, rhs, method='GE'):
