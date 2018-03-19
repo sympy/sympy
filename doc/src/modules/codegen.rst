@@ -548,17 +548,16 @@ There are other facilities available with SymPy to do efficient numeric
 computation. See :ref:`this<numeric_computation>` page for a comparison among them.
 
 
-Special C math functions (sympy.codegen.cfunctions)
----------------------------------------------------
+Classes and functions for rewriting expressions (sympy.codegen.rewriting)
+-------------------------------------------------------------------------
 
-.. automodule:: sympy.codegen.cfunctions
+.. automodule:: sympy.codegen.rewriting
    :members:
 
+Tools for simplifying expressions using approximations (sympy.codegen.approximations)
+-------------------------------------------------------------------------------------
 
-Fortran specific functions
---------------------------
-
-.. automodule:: sympy.codegen.ffunctions
+.. automodule:: sympy.codegen.approximations
    :members:
 
 Classes for abstract syntax trees (sympy.codegen.ast)
@@ -567,11 +566,18 @@ Classes for abstract syntax trees (sympy.codegen.ast)
 .. automodule:: sympy.codegen.ast
    :members:
 
+Special C math functions (sympy.codegen.cfunctions)
+---------------------------------------------------
+
+.. automodule:: sympy.codegen.cfunctions
+   :members:
+
 C specific AST nodes (sympy.codegen.cnodes)
 -------------------------------------------
 
 .. automodule:: sympy.codegen.cnodes
    :members:
+
 
 C++ specific AST nodes (sympy.codegen.cxxnodes)
 -----------------------------------------------
@@ -598,6 +604,14 @@ Python utilities (sympy.codegen.pyutils)
 
 .. automodule:: sympy.codegen.pyutils
    :members:
+
+
+C utilities (sympy.codegen.cutils)
+----------------------------------
+
+.. automodule:: sympy.codegen.cutils
+   :members:
+
 
 Fortran utilities (sympy.codegen.futils)
 ----------------------------------------
