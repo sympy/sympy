@@ -235,8 +235,12 @@ def test_manualintegrate_orthogonal_poly():
         for deg in [2, 4, 7]:
             assert (integral.subs(n, deg).diff(x) - q.subs(n, deg)).expand() == 0
 
-        # cannot integrate with respect to parameters
-        assert manualintegrate(jacobi(n, a + x, b, x), x).has(Integral)
+        # cannot integrate with respect to any other parameter
+        t = symbols('t')
+        for i in range(len(p.args) - 1):
+            new_args = list(p.args)
+            new_args[i] = t
+            assert isinstance(manualintegrate(p.func(*new_args), t), Integral)
 
 def test_issue_6799():
     r, x, phi = map(Symbol, 'r x phi'.split())
