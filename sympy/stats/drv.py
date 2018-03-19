@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq)
+        Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq, poly, Symbol)
+from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.crv import (reduce_rational_inequalities_wrap,
@@ -79,8 +80,15 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
+    def _cdf(self, x):
+        return None
+
     def cdf(self, x, **kwargs):
         """ Cumulative density function """
+        if len(kwargs) == 0:
+            cdf = self._cdf(x)
+            if cdf is not None:
+                return cdf
         return self.compute_cdf(**kwargs)(x)
 
     @cacheit
@@ -94,16 +102,40 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         cf = summation(exp(I*t*x)*pdf, (x, self.set.inf, self.set.sup))
         return Lambda(t, cf)
 
+    def _characteristic_function(self, t):
+        return None
+
     def characteristic_function(self, t, **kwargs):
         """ Characteristic function """
+        if len(kwargs) == 0:
+            cf = self._characteristic_function(t)
+            if cf is not None:
+                return cf
         return self.compute_characteristic_function(**kwargs)(t)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
         # TODO: support discrete sets with non integer stepsizes
+
         if evaluate:
-            return summation(expr * self.pdf(var),
-                         (var, self.set.inf, self.set.sup), **kwargs)
+            try:
+                # note: in order for this algorithm to be valid,
+                #   the characteristic function must have continuous
+                #   derivatives up to the highest power of the variable in the expression
+
+                t = Symbol('t', real=True, dummy=True)
+
+                cf = self.characteristic_function(t)
+                result = 0
+                for power, coeff in enumerate(poly(expr, var).all_coeffs()[::-1]):
+                    result += coeff * cf.diff(t, power).subs(t, 0) / I**power
+
+                return result
+
+            except PolynomialError:
+                return summation(expr * self.pdf(var),
+                                 (var, self.set.inf, self.set.sup), **kwargs)
+
         else:
             return Sum(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
@@ -134,7 +166,7 @@ class SingleDiscretePSpace(SinglePSpace):
         """
         return {self.value: self.distribution.sample()}
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def integrate(self, expr, rvs=None, evaluate=True, **kwargs):
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
@@ -143,7 +175,7 @@ class SingleDiscretePSpace(SinglePSpace):
 
         x = self.value.symbol
         try:
-            return self.distribution.expectation(expr, x, evaluate=False,
+            return self.distribution.expectation(expr, x, evaluate=evaluate,
                     **kwargs)
         except NotImplementedError:
             return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
@@ -151,7 +183,8 @@ class SingleDiscretePSpace(SinglePSpace):
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:
-            return self.distribution.compute_cdf(**kwargs)
+            x = symbols("x", real=True, cls=Dummy)
+            return Lambda(x, self.distribution.cdf(x, **kwargs))
         else:
             raise NotImplementedError()
 
@@ -162,7 +195,8 @@ class SingleDiscretePSpace(SinglePSpace):
 
     def compute_characteristic_function(self, expr, **kwargs):
         if expr == self.value:
-            return self.distribution.compute_characteristic_function(**kwargs)
+            t = symbols("t", real=True, cls=Dummy)
+            return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
         else:
             raise NotImplementedError()
 
