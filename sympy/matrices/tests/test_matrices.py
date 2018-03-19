@@ -3082,3 +3082,11 @@ def test_deprecated():
         P, Jcells = m.jordan_cells()
         assert Jcells[1] == Matrix(1, 1, [2])
         assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+def test_issue_14489():
+    from sympy import Mod
+    A = Matrix([-1, 1, 2])
+    B = Matrix([10, 20, -15])
+
+    assert Mod(A, 3) == Matrix([2, 1, 2])
+    assert Mod(B, 4) == Matrix([2, 0, 1])
