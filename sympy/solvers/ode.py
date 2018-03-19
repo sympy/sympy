@@ -594,7 +594,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
                 if isinstance(func_, list):
                     pass
                 else:
-                    if eq[i].coeff(diff(func[i],t,ode_order(eq[i], func[i]))).is_negative:
+                    if eq[i].coeff(diff(func[i], t, ode_order(eq[i], func[i]))).is_negative:
                         eq[i] = -eq[i]
         match['eq'] = eq
         if len(set(order.values()))!=1:
@@ -610,7 +610,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         else:
             if match['is_linear'] == True:
                 if match['type_of_equation'] == 'type1' and match['order'] == 1:
-                    solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
+                    if match['no_of_equation'] == 2:
+                        solvefunc = globals()['sysode_linear_2eq_order1']
+                    else:
+                        solvefunc = globals()['sysode_linear_neq_order1']
                 elif match['no_of_equation'] <= 3:
                     solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
             else:
