@@ -280,7 +280,7 @@ class ContinuousPSpace(PSpace):
     def pdf(self):
         return self.density(*self.domain.symbols)
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
         if rvs is None:
             rvs = self.values
         else:
@@ -419,7 +419,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         """
         return {self.value: self.distribution.sample()}
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
