@@ -211,7 +211,7 @@ class MacaulayResultant():
             The degree_m is calculated as  1 + \sum_1 ^ n (d_i - 1), where
             d_i is the degree of the i polynomial
         """
-        return 1 + sum([d - 1 for d in self.degrees])
+        return 1 + sum(d - 1 for d in self.degrees)
 
     def get_size(self):
         r"""
@@ -297,7 +297,7 @@ class MacaulayResultant():
         non_reduced: list
             A list of the monomials that are not reduced
 
-        Defition.
+        Definition.
         ---------
         A polynomial is said to be reduced in x_i, if its degree (the maximum
         degree of its monomials) in x_i is less than d_i. A polynomial that is
