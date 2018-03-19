@@ -66,7 +66,7 @@ from .crv_types import (
 __all__.extend(crv_types.__all__)
 
 from . import drv_types
-from .drv_types import (Geometric, Poisson)
+from .drv_types import (Geometric, Logarithmic, NegativeBinomial, Poisson, YuleSimon, Zeta)
 __all__.extend(drv_types.__all__)
 
 from . import symbolic_probability
