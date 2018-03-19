@@ -578,7 +578,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
                      for arg in expr.args])
 
     # Otherwise case is simple, pass work off to the ProbabilitySpace
-    result = pspace(expr).integrate(expr)
+    result = pspace(expr).integrate(expr, evaluate=evaluate)
     if evaluate and hasattr(result, 'doit'):
         return result.doit(**kwargs)
     else:
@@ -786,7 +786,7 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
 
     >>> Z = Poisson('Z', 2)
     >>> characteristic_function(Z)
-    Lambda(_t, Sum(2**_x*exp(-2)*exp(_t*_x*I)/factorial(_x), (_x, 0, oo)))
+    Lambda(_t, exp(2*exp(_t*I) - 2))
     """
     if condition is not None:
         return characteristic_function(given(expr, condition, **kwargs), **kwargs)
