@@ -1,8 +1,10 @@
 from __future__ import print_function, division
 
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
-from sympy import factorial, exp, S, sympify, And, I, zeta, polylog, log, beta, hyper, binomial
+from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta, hyper, binomial,
+                   Piecewise, floor)
 from sympy.stats.rv import _value_check
+from sympy.stats import density
 from sympy.sets.sets import Interval
 import random
 
@@ -103,6 +105,10 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
         p = self.p
         return log(1 - p * exp(I*t)) / log(1 - p)
 
+    def sample(self):
+        ### TODO
+        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
+
 
 def Logarithmic(name, p):
     r"""
@@ -138,10 +144,10 @@ def Logarithmic(name, p):
     -5**(-z)/(z*log(4/5))
 
     >>> E(X)
-    -1/(4*log(4/5))
+    -1/(-4*log(5) + 8*log(2))
 
     >>> variance(X)
-    -1/(4*(-2*log(5) + 4*log(2))*log(4/5)) + 1/(-64*log(2)*log(5) + 64*log(2)**2 + 16*log(5)**2) - 5/(16*log(4/5))
+    -1/((-4*log(5) + 8*log(2))*(-2*log(5) + 4*log(2))) + 1/(-64*log(2)*log(5) + 64*log(2)**2 + 16*log(5)**2) - 10/(-32*log(5) + 64*log(2))
     """
     return rv(name, LogarithmicDistribution, p)
 
@@ -169,6 +175,10 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
         p = self.p
 
         return ((1 - p) / (1 - p * exp(I*t)))**r
+
+    def sample(self):
+        ### TODO
+        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
 
 
 def NegativeBinomial(name, r, p):
@@ -318,11 +328,15 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
         return rho * beta(k, rho + 1)
 
     def _cdf(self, x):
-        return 1 - x * beta(x, self.rho + 1)
+        return Piecewise((1 - floor(x) * beta(floor(x), self.rho + 1), x >= 1), (0, True))
 
     def _characteristic_function(self, t):
         rho = self.rho
         return rho * hyper((1, 1), (rho + 2,), exp(I*t)) * exp(I*t) / (rho + 1)
+
+    def sample(self):
+        ### TODO
+        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
 
 
 def YuleSimon(name, rho):
@@ -384,6 +398,10 @@ class ZetaDistribution(SingleDiscreteDistribution):
 
     def _characteristic_function(self, t):
         return polylog(self.s, exp(I*t)) / zeta(self.s)
+
+    def sample(self):
+        ### TODO
+        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
 
 
 def Zeta(name, s):
