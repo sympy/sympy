@@ -3090,3 +3090,14 @@ def test_issue_14489():
 
     assert Mod(A, 3) == Matrix([2, 1, 2])
     assert Mod(B, 4) == Matrix([2, 0, 1])
+
+def test_issue_14517():
+    M = Matrix([
+        [   0, 10*I,    10*I,       0],
+        [10*I,    0,       0,    10*I],
+        [10*I,    0, 5 + 2*I,    10*I],
+        [   0, 10*I,    10*I, 5 + 2*I]])
+    ev = M.eigenvals()
+    # test one random eigenvalue, the computation is a little slow
+    test_ev = random.choice(list(ev.keys()))
+    assert (M - test_ev*eye(4)).det() == 0
