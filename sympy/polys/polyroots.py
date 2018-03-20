@@ -14,6 +14,7 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd, comp
 from sympy.core.exprtools import factor_terms
 from sympy.core.logic import fuzzy_not
+from sympy.core.function import _mexpand
 
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
@@ -308,8 +309,8 @@ def roots_quartic(f):
     else:
         a2 = a**2
         e = b - 3*a2/8
-        f = (c + a*(a2/8 - b/2)).expand()
-        g = (d - a*(a*(3*a2/256 - b/16) + c/4)).expand()
+        f = _mexpand(c + a*(a2/8 - b/2))
+        g = _mexpand(d - a*(a*(3*a2/256 - b/16) + c/4))
         aon4 = a/4
 
         if f is S.Zero:
