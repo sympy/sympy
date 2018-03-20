@@ -8,7 +8,7 @@ Multivariate resultants are used to identify whether a multivariate system has
 common roots. That is when the resultant is equal to zero.
 """
 
-from sympy import IndexedBase, Matrix, Mul, Poly, prod, fraction
+from sympy import IndexedBase, Matrix, Mul, Poly, prod, fraction, total_degree
 from sympy.core.compatibility import range
 from sympy.polys.monomials import monomial_deg
 from sympy.polys.monomials import itermonomials
@@ -77,8 +77,7 @@ class DixonResultant():
         self.dummy_variables = [a[i] for i in range(self.n)]
 
         # A list of the d_max of each variable.
-        self.max_degrees = [poly_from_expr(f, self.variables)[0].degree()
-                            for f in self.polynomials]
+        self.max_degrees = [total_degree(poly, *self.variables) for poly in self.polynomials]
 
     def get_dixon_polynomial(self):
         r"""
@@ -197,8 +196,7 @@ class MacaulayResultant():
         self.n = len(variables)
 
         # A list of the d_max of each variable.
-        self.degrees = [poly_from_expr(poly, self.variables)[0].degree()
-                        for poly in self.polynomials]
+        self.degrees = [total_degree(poly, *self.variables) for poly in self.polynomials]
 
         self.degree_m = self.get_degree_m()
         self.monomials_size = self.get_size()
@@ -307,9 +305,8 @@ class MacaulayResultant():
         for m in self.monomial_set:
             temp = []
             for i, v in enumerate(self.variables):
-                temp.append(Poly(m, v).degree() >= self.degrees[i])
+                temp.append(bool(total_degree(m, v) >= self.degrees[i]))
             divisible.append(temp)
-
         reduced = [i for i, r in enumerate(divisible) if sum(r) < self.n - 1]
         non_reduced = [i for i, r in enumerate(divisible) if sum(r) >= self.n -1]
 
