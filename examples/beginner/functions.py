@@ -6,7 +6,7 @@ Demonstrates sympy defined functions.
 """
 
 import sympy
-from sympy import pprint,Symbol,log,exp
+from sympy import pprint, Symbol, log, exp
 
 def main():
     a = Symbol('a')
