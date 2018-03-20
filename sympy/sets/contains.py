@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic
+from sympy.core import Basic, S
 from sympy.core.relational import Eq, Ne
 from sympy.logic.boolalg import BooleanFunction
 
@@ -28,16 +28,17 @@ class Contains(BooleanFunction):
     .. [1] http://en.wikipedia.org/wiki/Element_%28mathematics%29
     """
     @classmethod
-    def eval(cls, x, S):
+    def eval(cls, x, s):
         from sympy.sets.sets import Set
 
         if not isinstance(x, Basic):
             raise TypeError
-        if not isinstance(S, Set):
+        if not isinstance(s, Set):
             raise TypeError
 
-        ret = S.contains(x)
-        if not isinstance(ret, Contains):
+        ret = s.contains(x)
+        if not isinstance(ret, Contains) and (
+                ret in (S.true, S.false) or isinstance(ret, Set)):
             return ret
 
     @property

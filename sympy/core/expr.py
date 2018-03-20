@@ -344,6 +344,12 @@ class Expr(Basic, EvalfMixin):
                 return sympify(dif.is_negative)
         return StrictLessThan(self, other, evaluate=False)
 
+    def __trunc__(self):
+        if not self.is_number:
+            raise TypeError("can't truncate symbols and expressions")
+        else:
+            return Integer(self)
+
     @staticmethod
     def _from_mpmath(x, prec):
         from sympy import Float
