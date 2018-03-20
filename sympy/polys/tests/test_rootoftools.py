@@ -248,6 +248,11 @@ def test_CRootOf_evalf():
     c = CRootOf(90720*x**6 - 4032*x**4 + 84*x**2 - 1, 0)
     assert str(c._eval_evalf(2)) == '-0.e-1'
 
+    # watch out for imaginary parts that don't want to evaluate
+    assert str(RootOf(x**16 + 32*x**14 + 508*x**12 + 5440*x**10 +
+        39510*x**8 + 204320*x**6 + 755548*x**4 + 1434496*x**2 +
+        877969, 10).n(2)) == '-3.4*I'
+
 
 def test_CRootOf_evalf_caching_bug():
     r = rootof(x**5 - 5*x + 12, 1)

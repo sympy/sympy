@@ -403,8 +403,9 @@ class ComplexRootOf(RootOf):
         complexes = cls._refine_imaginary(complexes)
 
         # make sure that all y bounds are off the real axis
+        # and on the same side of the axis
         for i, (u, f, k) in enumerate(complexes):
-            while 0 in (u.ay, u.by):
+            while u.ay*u.by <= 0:
                 u = u.refine()
             complexes[i] = u, f, k
         return complexes
@@ -421,7 +422,7 @@ class ComplexRootOf(RootOf):
         for i in range(1, len(complexes)):
             if complexes[i][F] != complexes[i - 1][F]:
                 # if this fails the factors of a root were not
-                # contiguous because a dicontinuity should only
+                # contiguous because a discontinuity should only
                 # happen once
                 fs.remove(complexes[i - 1][F])
         for i in range(len(complexes)):
@@ -627,9 +628,14 @@ class ComplexRootOf(RootOf):
             g = self.poly.gen
             if not g.is_Symbol:
                 d = Dummy('x')
+                if self.is_imaginary:
+                    d *= I
                 func = lambdify(d, self.expr.subs(g, d))
             else:
-                func = lambdify(g, self.expr)
+                expr = self.expr
+                if self.is_imaginary:
+                    expr = self.expr.subs(g, I*g)
+                func = lambdify(g, expr)
 
             interval = self._get_interval()
             while True:
@@ -640,6 +646,13 @@ class ComplexRootOf(RootOf):
                         root = a
                         break
                     x0 = mpf(str(interval.center))
+                elif self.is_imaginary:
+                    a = mpf(str(interval.ay))
+                    b = mpf(str(interval.by))
+                    if a == b:
+                        root = mpc(mpf('0'), a)
+                        break
+                    x0 = mpf(str(interval.center[1]))
                 else:
                     ax = mpf(str(interval.ax))
                     bx = mpf(str(interval.bx))
@@ -666,8 +679,10 @@ class ComplexRootOf(RootOf):
                     # successful iterations to process (in which case it
                     # will fail to initialize a variable that is tested
                     # after the iterations and raise an UnboundLocalError).
-                    if self.is_real:
-                        if (a <= root <= b):
+                    if self.is_real or self.is_imaginary:
+                        if root.imag == self.is_real and (a <= root <= b):
+                            if self.is_imaginary:
+                                root = mpc(mpf('0'), root.real)
                             break
                     elif (ax <= root.real <= bx and ay <= root.imag <= by):
                         break
@@ -675,8 +690,8 @@ class ComplexRootOf(RootOf):
                     pass
                 interval = interval.refine()
 
-        return (Float._new(root.real._mpf_, prec)
-                + I*Float._new(root.imag._mpf_, prec))
+        return (Float._new(root.real._mpf_, prec) +
+            I*Float._new(root.imag._mpf_, prec))
 
     def eval_rational(self, tol):
         """
