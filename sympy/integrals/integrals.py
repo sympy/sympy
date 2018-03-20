@@ -385,6 +385,14 @@ class Integral(AddWithLimits):
         conds = hints.get('conds', 'piecewise')
         risch = hints.get('risch', None)
         manual = hints.get('manual', None)
+        if len(list(filter(None, (manual, meijerg, risch)))) > 1:
+            raise ValueError("At most one of manual, meijerg, risch can be True")
+        elif manual:
+            meijerg = risch = False
+        elif meijerg:
+            manual = risch = False
+        elif risch:
+            manual = meijerg = False
         eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual,
             conds=conds)
 
@@ -458,8 +466,8 @@ class Integral(AddWithLimits):
                         .rewrite(Piecewise).xreplace({xr: xab[0]}))
             elif function.has(Min, Max):
                 function = function.rewrite(Piecewise)
-            if function.has(Piecewise) and \
-                not isinstance(function, Piecewise):
+            if (function.has(Piecewise) and
+                not isinstance(function, Piecewise)):
                     function = piecewise_fold(function)
             if isinstance(function, Piecewise):
                 if len(xab) == 1:
@@ -830,7 +838,7 @@ class Integral(AddWithLimits):
         # will return a sympy expression instead of a Polynomial.
         #
         # see Polynomial for details.
-        if isinstance(f, Poly) and not meijerg:
+        if isinstance(f, Poly) and not (manual or meijerg or risch):
             return f.integrate(x)
 
         # Piecewise antiderivatives need to call special integrate.
@@ -844,7 +852,7 @@ class Integral(AddWithLimits):
 
         # try to convert to poly(x) and then integrate if successful (fast)
         poly = f.as_poly(x)
-        if poly is not None and not meijerg:
+        if poly is not None and not (manual or meijerg or risch):
             return poly.integrate().as_expr()
 
         if risch is not False:
@@ -934,11 +942,11 @@ class Integral(AddWithLimits):
             #        poly(x)
             # g(x) = -------
             #        poly(x)
-            if g.is_rational_function(x) and not meijerg:
+            if g.is_rational_function(x) and not (manual or meijerg or risch):
                 parts.append(coeff * ratint(g, x))
                 continue
 
-            if not meijerg:
+            if not (manual or meijerg or risch):
                 # g(x) = Mul(trig)
                 h = trigintegrate(g, x, conds=conds)
                 if h is not None:
@@ -1001,11 +1009,16 @@ class Integral(AddWithLimits):
                 try:
                     result = manualintegrate(g, x)
                     if result is not None and not isinstance(result, Integral):
-                        if result.has(Integral):
-                            # try to have other algorithms do the integrals
-                            # manualintegrate can't handle
+                        if result.has(Integral) and not manual:
+                            # Try to have other algorithms do the integrals
+                            # manualintegrate can't handle,
+                            # unless we were asked to use manual only.
+                            # Keep the rest of eval_kwargs in case another
+                            # method was set to False already
+                            new_eval_kwargs = eval_kwargs
+                            new_eval_kwargs["manual"] = False
                             result = result.func(*[
-                                arg.doit(manual=False) if
+                                arg.doit(**new_eval_kwargs) if
                                 arg.has(Integral) else arg
                                 for arg in result.args
                             ]).expand(multinomial=False,

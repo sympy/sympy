@@ -130,6 +130,19 @@ def find_substitutions(integrand, symbol, u_var):
         if symbol not in substituted.free_symbols:
             return substituted.as_independent(u_var, as_Add=False)
 
+        # special treatment for substitutions u = (a*x+b)**(1/n)
+        if (isinstance(u, sympy.Pow) and (1/u.exp).is_Integer and
+            sympy.Abs(u.exp) < 1):
+                a = sympy.Wild('a', exclude=[symbol])
+                b = sympy.Wild('b', exclude=[symbol])
+                match = u.base.match(a*symbol + b)
+                if match:
+                    a, b = [match.get(i, ZERO) for i in (a, b)]
+                    if a != 0 and b != 0:
+                        substituted = substituted.subs(symbol,
+                            (u_var**(1/u.exp) - b)/a)
+                        return substituted.as_independent(u_var, as_Add=False)
+
         return False
 
     def possible_subterms(term):
@@ -903,6 +916,12 @@ distribute_expand_rule = rewriter(
         or isinstance(integrand, sympy.Mul)),
     lambda integrand, symbol: integrand.expand())
 
+trig_expand_rule = rewriter(
+    # If there are trig functions with different arguments, expand them
+    lambda integrand, symbol: (
+        len(set(a.args[0] for a in integrand.atoms(TrigonometricFunction))) > 1),
+    lambda integrand, symbol: integrand.expand(trig=True))
+
 def derivative_rule(integral):
     integrand = integral[0]
     diff_variables = integrand.variables
@@ -1040,7 +1059,8 @@ def integral_steps(integrand, symbol, **options):
                 condition(
                     integral_is_subclass(sympy.Mul, sympy.Pow),
                     distribute_expand_rule),
-                trig_powers_products_rule
+                trig_powers_products_rule,
+                trig_expand_rule
             )),
             null_safe(trig_substitution_rule)
         ),

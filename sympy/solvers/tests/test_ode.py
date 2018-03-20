@@ -2926,3 +2926,9 @@ def test_issue_11290():
     sol_0 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact')
     assert str(sol_1)== "Eq(Subs(Integral(_y**2 - x*sin(_y) - Integral(-sin(_y), x), _y) + Integral(cos(_y), x), (_y,), (f(x),)), C1)"
     assert sol_1.doit() == sol_0
+
+
+def test_issue_14395():
+    sol = Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))
+        - 2*log(cos(x)**2)/3 + 2*cos(x)**2/3)*cos(3*x))
+    assert dsolve(Derivative(f(x), x, x) + 9*f(x) - sec(x), f(x)) == sol

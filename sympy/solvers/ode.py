@@ -6188,7 +6188,7 @@ def lie_heuristic_abaco2_similar(match, comp=False):
 
     The second assumption holds good if `\frac{dy}{dx} = h(x, y)` is rewritten as
     `\frac{dy}{dx} = \frac{1}{h(y, x)}` and the same properties of the first assumption
-    satisifes. After obtaining `f(x)` and `g(x)`, the coordinates are again
+    satisfies. After obtaining `f(x)` and `g(x)`, the coordinates are again
     interchanged, to get `\xi` as `f(x^*)` and `\eta` as `g(y^*)`
 
     References
@@ -7794,7 +7794,6 @@ def _linear_neq_order1_type1(match_):
     r"""
     System of n first-order constant-coefficient linear differential equations
     .. math ::
-
     M x' = L x + f(t)
     Notes
     =====

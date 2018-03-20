@@ -305,11 +305,14 @@ class lowergamma(Function):
     def _eval_evalf(self, prec):
         from mpmath import mp, workprec
         from sympy import Expr
-        a = self.args[0]._to_mpmath(prec)
-        z = self.args[1]._to_mpmath(prec)
-        with workprec(prec):
-            res = mp.gammainc(a, 0, z)
-        return Expr._from_mpmath(res, prec)
+        if all(x.is_number for x in self.args):
+            a = self.args[0]._to_mpmath(prec)
+            z = self.args[1]._to_mpmath(prec)
+            with workprec(prec):
+                res = mp.gammainc(a, 0, z)
+            return Expr._from_mpmath(res, prec)
+        else:
+            return self
 
     def _eval_conjugate(self):
         z = self.args[1]
@@ -401,11 +404,13 @@ class uppergamma(Function):
     def _eval_evalf(self, prec):
         from mpmath import mp, workprec
         from sympy import Expr
-        a = self.args[0]._to_mpmath(prec)
-        z = self.args[1]._to_mpmath(prec)
-        with workprec(prec):
-            res = mp.gammainc(a, z, mp.inf)
-        return Expr._from_mpmath(res, prec)
+        if all(x.is_number for x in self.args):
+            a = self.args[0]._to_mpmath(prec)
+            z = self.args[1]._to_mpmath(prec)
+            with workprec(prec):
+                res = mp.gammainc(a, z, mp.inf)
+            return Expr._from_mpmath(res, prec)
+        return self
 
     @classmethod
     def eval(cls, a, z):

@@ -344,6 +344,12 @@ class Expr(Basic, EvalfMixin):
                 return sympify(dif.is_negative)
         return StrictLessThan(self, other, evaluate=False)
 
+    def __trunc__(self):
+        if not self.is_number:
+            raise TypeError("can't truncate symbols and expressions")
+        else:
+            return Integer(self)
+
     @staticmethod
     def _from_mpmath(x, prec):
         from sympy import Float
@@ -818,6 +824,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.solvers.solveset import solveset
         from sympy.sets.sets import Interval
         from sympy.functions.elementary.exponential import log
+        from sympy.calculus.util import AccumBounds
 
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
@@ -829,7 +836,7 @@ class Expr(Basic, EvalfMixin):
             A = 0
         else:
             A = self.subs(x, a)
-            if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity, AccumBounds):
                 if (a < b) != False:
                     A = limit(self, x, a,"+")
                 else:
@@ -844,7 +851,7 @@ class Expr(Basic, EvalfMixin):
             B = 0
         else:
             B = self.subs(x, b)
-            if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity, AccumBounds):
                 if (a < b) != False:
                     B = limit(self, x, b,"-")
                 else:

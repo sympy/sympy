@@ -23,9 +23,10 @@ from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              piecewise_fold, Piecewise)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.functions.elementary.miscellaneous import real_root, Application
+from sympy.functions.elementary.miscellaneous import real_root
+from sympy.logic.boolalg import And
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
-                        Union, ConditionSet, ImageSet, Complement)
+                        Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
@@ -48,7 +49,7 @@ def _masked(f, *atoms):
     where ``e`` is an object of type given by ``atoms`` in which
     any other instances of atoms have been recursively replaced with
     Dummy symbols, too. The tuples are ordered so that if they are
-    applied in sequence, the orgin ``f`` will be restored.
+    applied in sequence, the origin ``f`` will be restored.
 
     Examples
     ========
@@ -68,18 +69,16 @@ def _masked(f, *atoms):
     >>> f
     cos(cos(x) + 1)
     """
-    sym = numbered_symbols('a', cls=Dummy)
+    sym = numbered_symbols('a', cls=Dummy, real=True)
     mask = []
     for a in ordered(f.atoms(*atoms)):
         for i in mask:
             a = a.replace(*i)
         mask.append((a, next(sym)))
-    mask = list(reversed(mask))
     for i, (o, n) in enumerate(mask):
         f = f.replace(o, n)
         mask[i] = (n, o)
-    if mask and f == mask[0][1]:
-        f = mask[0][0]
+    mask = list(reversed(mask))
     return f, mask
 
 
@@ -139,10 +138,10 @@ def _invert(f_x, y, x, domain=S.Complexes):
     if not x.is_Symbol:
         raise ValueError("x must be a symbol")
     f_x = sympify(f_x)
-    if not f_x.has(x):
+    if x not in f_x.free_symbols:
         raise ValueError("Inverse of constant function doesn't exist")
     y = sympify(y)
-    if y.has(x):
+    if x in y.free_symbols:
         raise ValueError("y should be independent of x ")
 
     if domain.is_subset(S.Reals):
@@ -186,11 +185,7 @@ def _invert_real(f, g_ys, symbol):
                             symbol)
 
     if isinstance(f, Abs):
-        pos = Interval(0, S.Infinity)
-        neg = Interval(S.NegativeInfinity, 0)
-        return _invert_real(f.args[0],
-                    Union(imageset(Lambda(n, n), g_ys).intersect(pos),
-                          imageset(Lambda(n, -n), g_ys).intersect(neg)), symbol)
+        return _invert_abs(f.args[0], g_ys, symbol)
 
     if f.is_Add:
         # f = g + h
@@ -314,6 +309,55 @@ def _invert_complex(f, g_ys, symbol):
             return _invert_complex(f.args[0], exp_invs, symbol)
 
     return (f, g_ys)
+
+
+def _invert_abs(f, g_ys, symbol):
+    """Helper function for inverting absolute value functions.
+
+    Returns the complete result of inverting an absolute value
+    function along with the conditions which must also be satisfied.
+
+    If it is certain that all these conditions are met, a `FiniteSet`
+    of all possible solutions is returned. If any condition cannot be
+    satisfied, an `EmptySet` is returned. Otherwise, a `ConditionSet`
+    of the solutions, with all the required conditions specified, is
+    returned.
+
+    """
+    if not g_ys.is_FiniteSet:
+        # this could be used for FiniteSet, but the
+        # results are more compact if they aren't, e.g.
+        # ConditionSet(x, Contains(n, Interval(0, oo)), {-n, n}) vs
+        # Union(Intersection(Interval(0, oo), {n}), Intersection(Interval(-oo, 0), {-n}))
+        # for the solution of abs(x) - n
+        pos = Intersection(g_ys, Interval(0, S.Infinity))
+        parg = _invert_real(f, pos, symbol)
+        narg = _invert_real(-f, pos, symbol)
+        if parg[0] != narg[0]:
+            raise NotImplementedError
+        return parg[0], Union(narg[1], parg[1])
+
+    # check conditions: all these must be true. If any are unknown
+    # then return them as conditions which must be satisfied
+    unknown = []
+    for a in g_ys.args:
+        ok = a.is_nonnegative if a.is_Number else a.is_positive
+        if ok is None:
+            unknown.append(a)
+        elif not ok:
+            return symbol, S.EmptySet
+    if unknown:
+        conditions = And(*[Contains(i, Interval(0, oo))
+            for i in unknown])
+    else:
+        conditions = True
+    n = Dummy('n', real=True)
+    # this is slightly different than above: instead of solving
+    # +/-f on positive values, here we solve for f on +/- g_ys
+    g_x, values = _invert_real(f, Union(
+        imageset(Lambda(n, n), g_ys),
+        imageset(Lambda(n, -n), g_ys)), symbol)
+    return g_x, ConditionSet(g_x, conditions, values)
 
 
 def domain_check(f, symbol, p):
@@ -448,7 +492,7 @@ def _solve_as_rational(f, symbol, domain):
             # The polynomial formed from g could end up having
             # coefficients in a ring over which finding roots
             # isn't implemented yet, e.g. ZZ[a] for some symbol a
-            return ConditionSet(f, symbol, domain)
+            return ConditionSet(symbol, Eq(f, 0), domain)
     else:
         valid_solns = _solveset(g, symbol, domain)
         invalid_solns = _solveset(h, symbol, domain)
@@ -688,9 +732,9 @@ def _solve_abs(f, symbol, domain):
             complex domain.'''))
     p, q, r = Wild('p'), Wild('q'), Wild('r')
     pattern_match = f.match(p*Abs(q) + r) or {}
-    if not pattern_match.get(p, S.Zero).is_zero:
-        f_p, f_q, f_r = pattern_match[p], pattern_match[q], pattern_match[r]
+    f_p, f_q, f_r = [pattern_match.get(i, S.Zero) for i in (p, q, r)]
 
+    if not (f_p.is_zero or f_q.is_zero):
         domain = continuous_domain(f_q, symbol, domain)
         q_pos_cond = solve_univariate_inequality(f_q >= 0, symbol,
                                                  relational=False, domain=domain, continuous=True)
@@ -725,7 +769,7 @@ def solve_decomposition(f, symbol, domain):
                2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi - 2 | n in S.Integers} U {pi*(2*n + 1) - 2 | n in S.Integers}
+    {2*n*pi - 2 | n in S.Integers} U {2*n*pi - 2 + pi | n in S.Integers}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -790,12 +834,11 @@ def _solveset(f, symbol, domain, _check=False):
     from sympy.simplify.simplify import signsimp
 
     orig_f = f
-    tf = f = together(f)
     if f.is_Mul:
         coeff, f = f.as_independent(symbol, as_Add=False)
         if coeff in set([S.ComplexInfinity, S.NegativeInfinity, S.Infinity]):
-            f = tf
-    if f.is_Add:
+            f = together(orig_f)
+    elif f.is_Add:
         a, h = f.as_independent(symbol)
         m, h = h.as_independent(symbol, as_Add=False)
         if m not in set([S.ComplexInfinity, S.Zero, S.Infinity,
@@ -838,6 +881,7 @@ def _solveset(f, symbol, domain, _check=False):
     elif isinstance(f, Eq):
         from sympy.core import Add
         result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
+
     elif f.is_Relational:
         if not domain.is_subset(S.Reals):
             raise NotImplementedError(filldedent('''
@@ -1526,7 +1570,7 @@ def linsolve(system, *symbols):
 def _return_conditionset(eqs, symbols):
         # return conditionset
         condition_set = ConditionSet(
-            FiniteSet(*symbols),
+            Tuple(*symbols),
             FiniteSet(*eqs),
             S.Complexes)
         return condition_set
@@ -2346,7 +2390,7 @@ def nonlinsolve(system, *symbols):
         return _handle_positive_dimensional(polys, symbols, denominators)
 
     else:
-        # If alll the equations are not polynomial.
+        # If all the equations are not polynomial.
         # Use `substitution` method for the system
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
