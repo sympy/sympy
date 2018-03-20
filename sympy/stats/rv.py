@@ -578,7 +578,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
                      for arg in expr.args])
 
     # Otherwise case is simple, pass work off to the ProbabilitySpace
-    result = pspace(expr).integrate(expr, evaluate=evaluate)
+    result = pspace(expr).integrate(expr, evaluate=evaluate, **kwargs)
     if evaluate and hasattr(result, 'doit'):
         return result.doit(**kwargs)
     else:
