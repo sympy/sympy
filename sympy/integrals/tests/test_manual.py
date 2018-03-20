@@ -75,6 +75,9 @@ def test_manualintegrate_trigonometry():
 
     assert manualintegrate(x * sec(x**2), x) == log(tan(x**2) + sec(x**2))/2
     assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
+    assert manualintegrate(cos(3*x)*sec(x), x) == -x + sin(2*x)
+    assert manualintegrate(sin(3*x)*sec(x), x) == \
+        -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
 
 
 def test_manualintegrate_trigpowers():
@@ -215,8 +218,9 @@ def test_issue_6799():
 
     integrand = (cos(n*(x-phi))*cos(n*x))
     limits = (x, -pi, pi)
-    assert manualintegrate(integrand, x).has(Integral)
-    assert r * integrate(integrand.expand(trig=True), limits) / pi == r * cos(n * phi)
+    assert manualintegrate(integrand, x) == \
+        ((n*x/2 + sin(2*n*x)/4)*cos(n*phi) - sin(n*phi)*cos(n*x)**2/2)/n
+    assert r * integrate(integrand, limits).trigsimp() / pi == r * cos(n * phi)
     assert not integrate(integrand, limits).has(Dummy)
 
 
@@ -348,3 +352,7 @@ def test_issue_12641():
 
 def test_issue_13297():
     assert manualintegrate(sin(x) * cos(x)**5, x) == -cos(x)**6 / 6
+
+def test_issue_14470():
+    assert manualintegrate(1/(x*sqrt(x + 1)), x) == \
+        log(-1 + 1/sqrt(x + 1)) - log(1 + 1/sqrt(x + 1))

@@ -1948,6 +1948,17 @@ def test_Mul_does_not_cancel_infinities():
     expr = (1/(a+b) + 1/(a-b))/(1/(a+b) - 1/(a-b))
     assert expr.subs(b, a) is nan
 
+
+def test_Mul_does_not_distribute_infinity():
+    a, b = symbols('a b')
+    assert ((1 + I)*oo).is_Mul
+    assert ((a + b)*(-oo)).is_Mul
+    assert ((a + 1)*zoo).is_Mul
+    assert ((1 + I)*oo).is_finite is False
+    z = (1 + I)*oo
+    assert ((1 - I)*z).expand() is oo
+
+
 def test_issue_8247_8354():
     from sympy import tan
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
@@ -1970,3 +1981,7 @@ def test_issue_8247_8354():
 def test_Add_is_zero():
     x, y = symbols('x y', zero=True)
     assert (x + y).is_zero
+
+
+def test_issue_14392():
+    assert (sin(zoo)**2).as_real_imag() == (nan, nan)

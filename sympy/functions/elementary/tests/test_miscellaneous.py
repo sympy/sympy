@@ -371,6 +371,24 @@ def test_rewrite_MaxMin_as_Heaviside():
         - 2*Heaviside(-x + 2)*Heaviside(x + 2)
 
 
+def test_rewrite_MaxMin_as_Piecewise():
+    from sympy import symbols, Piecewise
+    x, y, z, a, b = symbols('x y z a b', real=True)
+    vx, vy, va = symbols('vx vy va')
+    assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a >= b), (b, True))
+    assert Max(x, y, z).rewrite(Piecewise) == Piecewise((x, (x >= y) & (x >= z)), (y, y >= z), (z, True))
+    assert Max(x, y, a, b).rewrite(Piecewise) == Piecewise((a, (a >= b) & (a >= x) & (a >= y)),
+        (b, (b >= x) & (b >= y)), (x, x >= y), (y, True))
+    assert Min(a, b).rewrite(Piecewise) == Piecewise((a, a <= b), (b, True))
+    assert Min(x, y, z).rewrite(Piecewise) == Piecewise((x, (x <= y) & (x <= z)), (y, y <= z), (z, True))
+    assert Min(x,  y, a, b).rewrite(Piecewise) ==  Piecewise((a, (a <= b) & (a <= x) & (a <= y)),
+        (b, (b <= x) & (b <= y)), (x, x <= y), (y, True))
+
+    # Piecewise rewriting of Min/Max does not takes place for non-real arguments
+    assert Max(vx, vy).rewrite(Piecewise) == Max(vx, vy)
+    assert Min(va, vx, vy).rewrite(Piecewise) == Min(va, vx, vy)
+
+
 def test_issue_11099():
     from sympy.abc import x, y
     # some fixed value tests

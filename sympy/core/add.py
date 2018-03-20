@@ -435,8 +435,8 @@ class Add(Expr, AssocOp):
           then use self.as_coeff_mul()[0]
 
         >>> from sympy.abc import x, y
-        >>> (3*x*y).as_two_terms()
-        (3, x*y)
+        >>> (3*x - 2*y + 5).as_two_terms()
+        (5, 3*x - 2*y)
         """
         return self.args[0], self._new_rawargs(*self.args[1:])
 
