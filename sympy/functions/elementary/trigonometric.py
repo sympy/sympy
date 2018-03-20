@@ -1527,10 +1527,18 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
                     elif cls._is_even:
                         return -cls(narg)
 
-        t = cls._reciprocal_of.eval(arg)
         if hasattr(arg, 'inverse') and arg.inverse() == cls:
             return arg.args[0]
-        return 1/t if t != None else t
+
+        t = cls._reciprocal_of.eval(arg)
+        if t == None:
+            return t
+        elif isinstance(t, cls._reciprocal_of):
+            return (1/t).rewrite(cls)
+        elif isinstance(-t, cls._reciprocal_of):
+            return -(1/(-t)).rewrite(cls)
+        else:
+            return 1/t
 
     def _call_reciprocal(self, method_name, *args, **kwargs):
         # Calls method_name on _reciprocal_of
