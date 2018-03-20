@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq, poly, Symbol)
+        Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq, poly, Symbol, series, factorial)
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
@@ -85,7 +85,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
     def cdf(self, x, **kwargs):
         """ Cumulative density function """
-        if len(kwargs) == 0:
+        if not kwargs:
             cdf = self._cdf(x)
             if cdf is not None:
                 return cdf
@@ -107,7 +107,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
     def characteristic_function(self, t, **kwargs):
         """ Characteristic function """
-        if len(kwargs) == 0:
+        if not kwargs:
             cf = self._characteristic_function(t)
             if cf is not None:
                 return cf
@@ -126,9 +126,12 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
                 t = Symbol('t', real=True, dummy=True)
 
                 cf = self.characteristic_function(t)
-                result = 0
-                for power, coeff in enumerate(poly(expr, var).all_coeffs()[::-1]):
-                    result += coeff * cf.diff(t, power).subs(t, 0) / I**power
+
+                p = poly(expr, var)
+                deg = p.degree()
+                taylor = poly(series(cf.subs(t, t / I), t, 0, deg + 1).removeO(), t)
+                result = sum(
+                    p.coeff_monomial(var ** k) * taylor.coeff_monomial(t ** k) * factorial(k) for k in range(deg + 1))
 
                 return result
 
