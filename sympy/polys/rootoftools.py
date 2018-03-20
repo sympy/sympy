@@ -637,31 +637,33 @@ class ComplexRootOf(RootOf):
                     expr = self.expr.subs(g, I*g)
                 func = lambdify(g, expr)
 
+            def string(i):
+                return str(i).rstrip('L')  # for Py 2.7
             interval = self._get_interval()
             while True:
                 if self.is_real:
-                    a = mpf(str(interval.a))
-                    b = mpf(str(interval.b))
+                    a = mpf(string(interval.a))
+                    b = mpf(string(interval.b))
                     if a == b:
                         root = a
                         break
-                    x0 = mpf(str(interval.center))
+                    x0 = mpf(string(interval.center))
                 elif self.is_imaginary:
-                    a = mpf(str(interval.ay))
-                    b = mpf(str(interval.by))
+                    a = mpf(string(interval.ay))
+                    b = mpf(string(interval.by))
                     if a == b:
                         root = mpc(mpf('0'), a)
                         break
-                    x0 = mpf(str(interval.center[1]))
+                    x0 = mpf(string(interval.center[1]))
                 else:
-                    ax = mpf(str(interval.ax))
-                    bx = mpf(str(interval.bx))
-                    ay = mpf(str(interval.ay))
-                    by = mpf(str(interval.by))
+                    ax = mpf(string(interval.ax))
+                    bx = mpf(string(interval.bx))
+                    ay = mpf(string(interval.ay))
+                    by = mpf(string(interval.by))
                     if ax == bx and ay == by:
                         root = mpc(ax, ay)
                         break
-                    x0 = mpc(*map(str, interval.center))
+                    x0 = mpc(*map(string, interval.center))
 
                 try:
                     root = findroot(func, x0)
@@ -680,7 +682,8 @@ class ComplexRootOf(RootOf):
                     # will fail to initialize a variable that is tested
                     # after the iterations and raise an UnboundLocalError).
                     if self.is_real or self.is_imaginary:
-                        if root.imag == self.is_real and (a <= root <= b):
+                        if not bool(root.imag) == self.is_real and (
+                                a <= root <= b):
                             if self.is_imaginary:
                                 root = mpc(mpf('0'), root.real)
                             break
