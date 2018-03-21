@@ -510,7 +510,7 @@ def _solve_trig(f, symbol, domain):
         try:
             sol = _solve_trig2(f, symbol, domain)
         except BaseException as error:
-            pass
+            sol = sol1
         if isinstance(sol1, ConditionSet) and isinstance(sol, ConditionSet):
             if sol1.count_ops() < sol.count_ops():
                 sol = sol1
