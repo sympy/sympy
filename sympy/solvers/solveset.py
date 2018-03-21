@@ -566,17 +566,11 @@ def _solve_trig2(f, symbol, domain):
     x = Dummy('x')
 
     # ilcm() and igcd() require more than one argument
-    if len(denominators) == 1 and len(numerators) != 1:
-        mu = Rational(2)*denominators[0]/igcd(*numerators)
-
-    elif len(numerators) == 1 and len(denominators) != 1:
-        mu = Rational(2)*ilcm(*denominators)/numerators[0]
-
-    elif len(numerators) == 1 and len(denominators) == 1:
-        mu = Rational(2)*denominators[0]/numerators[0]
-
-    else:
+    if len(numerators) > 1:
         mu = Rational(2)*ilcm(*denominators)/igcd(*numerators)
+    else:
+        assert len(numerators) == 1
+        mu = Rational(2)*denominators[0]/numerators[0]
 
     f = f.subs(symbol, mu*x)
     f = f.rewrite(tan)
