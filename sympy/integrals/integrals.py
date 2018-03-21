@@ -1419,8 +1419,10 @@ def cauchypv(func, sym):
     >>> nan
     
     """
-    r = symbols('r')
-    if sym.is_real and func.is_real:
+    r = Dummy('r')
+    check_for_sym = sym.is_real
+    check_for_func = func.is_real
+    if check_for_sym == False and check_for_func == False:
         I = integrate(func,(sym,-r,r))
         principle_value = limit(I,r,oo)
         return principle_value
