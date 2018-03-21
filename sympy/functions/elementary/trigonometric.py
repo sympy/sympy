@@ -1533,10 +1533,14 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
         t = cls._reciprocal_of.eval(arg)
         if t == None:
             return t
-        elif isinstance(t, cls._reciprocal_of):
-            return (1/t).rewrite(cls)
-        elif isinstance(-t, cls._reciprocal_of):
-            return -(1/(-t)).rewrite(cls)
+        elif isinstance(t, cos):
+            return (1/t).rewrite(sec)
+        elif isinstance(-t, cos):
+            return -(-1/t).rewrite(sec)
+        elif isinstance(t, sin):
+            return (1/t).rewrite(csc)
+        elif isinstance(-t, sin):
+            return -(-1/t).rewrite(csc)
         else:
             return 1/t
 
