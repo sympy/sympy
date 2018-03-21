@@ -1938,6 +1938,10 @@ class MatrixArithmetic(MatrixRequired):
     def _eval_scalar_rmul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
+    def _eval_Mod(self, other):
+        from sympy import Mod
+        return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
+
     # python arithmetic functions
     def __abs__(self):
         """Returns a new matrix with entry-wise absolute values."""

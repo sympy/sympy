@@ -3082,3 +3082,22 @@ def test_deprecated():
         P, Jcells = m.jordan_cells()
         assert Jcells[1] == Matrix(1, 1, [2])
         assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+def test_issue_14489():
+    from sympy import Mod
+    A = Matrix([-1, 1, 2])
+    B = Matrix([10, 20, -15])
+
+    assert Mod(A, 3) == Matrix([2, 1, 2])
+    assert Mod(B, 4) == Matrix([2, 0, 1])
+
+def test_issue_14517():
+    M = Matrix([
+        [   0, 10*I,    10*I,       0],
+        [10*I,    0,       0,    10*I],
+        [10*I,    0, 5 + 2*I,    10*I],
+        [   0, 10*I,    10*I, 5 + 2*I]])
+    ev = M.eigenvals()
+    # test one random eigenvalue, the computation is a little slow
+    test_ev = random.choice(list(ev.keys()))
+    assert (M - test_ev*eye(4)).det() == 0
