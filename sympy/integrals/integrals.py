@@ -106,6 +106,13 @@ class Integral(AddWithLimits):
         """
         return AddWithLimits.free_symbols.fget(self)
 
+    @property
+    def is_number(self):
+        if (self.free_symbols == set()) and not isinstance(type(self.args[0]), UndefinedFunction):
+            return True
+        else:
+            return False
+
     def _eval_is_zero(self):
         # This is a very naive and quick test, not intended to do the integral to
         # answer whether it is zero or not, e.g. Integral(sin(x), (x, 0, 2*pi))
