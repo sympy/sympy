@@ -1394,7 +1394,7 @@ def integrate(*args, **kwargs):
 def cauchypv(func, sym):
     """cauchypv(function, symbol)
 
-    Compute the Cauchy Principle Value of a real function.
+    Compute the Cauchy Principle Value of a difinite integral of a real function on the entire real axis.
 
     Cauchy Principle Value is  defined as:
 
@@ -1417,6 +1417,11 @@ def cauchypv(func, sym):
     >>> g = x + 1
     >>> cauchypv(g,x)
     >>> nan
+    
+    See also
+    =========
+    [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
+    [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
     
     """
     r = Dummy('r')
