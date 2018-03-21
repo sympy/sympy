@@ -108,6 +108,7 @@ class Integral(AddWithLimits):
 
     @property
     def is_number(self):
+        from sympy.core.function import UndefinedFunction
         if (self.free_symbols == set()) and not isinstance(type(self.args[0]), UndefinedFunction):
             return True
         else:
