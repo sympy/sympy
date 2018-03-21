@@ -830,7 +830,7 @@ def test_is_number():
     # it is possible to get a false negative if the integrand is
     # actually an unsimplified zero, but this is true of is_number in general.
     assert Integral(sin(x)**2 + cos(x)**2 - 1, x).is_number is False
-    assert Integral(f(x), (x, 0, 1)).is_number is True
+    assert Integral(f(x), (x, 0, 1)).is_number is False
 
 
 def test_symbols():
