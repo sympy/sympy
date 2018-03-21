@@ -1600,3 +1600,14 @@ def test_issue_14543():
     assert csc(2*pi - 17) == -csc(17)
     assert csc(pi + 17) == -csc(17)
     assert csc(pi - 17) == csc(17)
+
+    x = Symbol('x')
+    assert csc(pi/2 + x) == sec(x)
+    assert csc(pi/2 - x) == sec(x)
+    assert csc(3*pi/2 + x) == -sec(x)
+    assert csc(3*pi/2 - x) == -sec(x)
+
+    assert sec(pi/2 - x) == csc(x)
+    assert sec(pi/2 + x) == -csc(x)
+    assert sec(3*pi/2 + x) == csc(x)
+    assert sec(3*pi/2 - x) == -csc(x)
