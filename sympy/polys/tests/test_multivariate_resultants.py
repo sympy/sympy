@@ -89,7 +89,7 @@ def test_macaulay_resultant_init():
     assert macaulay.monomials_size == 2
 
 def test_get_degree_m():
-    assert macaulay.get_degree_m() == 1
+    assert macaulay._get_degree_m() == 1
 
 def test_get_size():
     assert macaulay.get_size() == 2
