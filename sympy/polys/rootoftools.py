@@ -642,6 +642,7 @@ class ComplexRootOf(RootOf):
             def string(i):
                 return str(i).rstrip('L')  # for Py 2.7
             interval = self._get_interval()
+            solver = 'secant' if self.is_real or self.is_imaginary else 'muller'
             while True:
                 if self.is_real:
                     a = mpf(string(interval.a))
@@ -651,6 +652,7 @@ class ComplexRootOf(RootOf):
                         break
                     x0 = mpf(string(interval.center))
                     x1 = x0 + mpf(string(interval.dx))/4
+                    guess = (x0, x1)
                 elif self.is_imaginary:
                     a = mpf(string(interval.ay))
                     b = mpf(string(interval.by))
@@ -659,6 +661,7 @@ class ComplexRootOf(RootOf):
                         break
                     x0 = mpf(string(interval.center[1]))
                     x1 = x0 + mpf(string(interval.dy))/4
+                    guess = (x0, x1)
                 else:
                     ax = mpf(string(interval.ax))
                     bx = mpf(string(interval.bx))
@@ -669,8 +672,10 @@ class ComplexRootOf(RootOf):
                         break
                     x0 = mpc(*map(string, interval.center))
                     x1 = x0 + mpc(*map(string, (interval.dx, interval.dy)))/4
+                    x2 = x0 + mpc(*map(string, (interval.dx, interval.dy)))/3
+                    guess = (x0, x1, x2)
                 try:
-                    root = findroot(func, (x0, x1), tol=tol)
+                    root = findroot(func, guess, tol=tol, solver=solver)
                     # If the (real or complex) root is not in the 'interval',
                     # then keep refining the interval. This happens if findroot
                     # accidentally finds a different root outside of this
@@ -685,6 +690,9 @@ class ComplexRootOf(RootOf):
                     # successful iterations to process (in which case it
                     # will fail to initialize a variable that is tested
                     # after the iterations and raise an UnboundLocalError).
+                    #
+                    # With Muller's method it is possible to get a division
+                    # by zero error.
                     if self.is_real or self.is_imaginary:
                         if not bool(root.imag) == self.is_real and (
                                 a <= root <= b):
@@ -693,7 +701,7 @@ class ComplexRootOf(RootOf):
                             break
                     elif (ax <= root.real <= bx and ay <= root.imag <= by):
                         break
-                except (UnboundLocalError, ValueError):
+                except (UnboundLocalError, ValueError, ZeroDivisionError):
                     pass
                 interval = interval.refine()
 
