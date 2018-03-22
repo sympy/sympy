@@ -150,9 +150,9 @@ class Routine:
             language-specific.
 
         statements : list of Expressions
-            These are the different lines corresponding to the body of a 
+            These are the different lines corresponding to the body of a
             routine.
- 
+
         local_vars : list of Results
             These are variables that will be defined at the beginning of the
             function.
@@ -238,29 +238,15 @@ class Routine:
         args.extend(self.results)
         return args
 
-
-class DataType:
-    """Holds strings for a certain datatype in different languages."""
-    def __init__(self, cname, fname, pyname, jlname, octname, rsname):
-        self.cname = cname
-        self.fname = fname
-        self.pyname = pyname
-        self.jlname = jlname
-        self.octname = octname
-        self.rsname = rsname
+<<<<<<< HEAD
 
 
-default_datatypes = {
-    "int": DataType("int", "INTEGER*4", "int", "", "", "i32"),
-    "float": DataType("double", "REAL*8", "float", "", "", "f64"),
-    "complex": DataType("double", "COMPLEX*16", "complex", "", "", "float") #FIXME:
-       # complex is only supported in fortran, python, julia, and octave.
-       # So to not break c or rust code generation, we stick with double or
-       # float, respecitvely (but actually should raise an exception for
-       # explicitly complex variables (x.is_complex==True))
-}
-
-
+# TODO Loic: Must be added
+# "complex": DataType("double", "COMPLEX*16", "complex", "", "", "float") #FIXME:
+# complex is only supported in fortran, python, julia, and octave.
+# So to not break c or rust code generation, we stick with double or
+# float, respecitvely (but actually should raise an exception for
+# explicitly complex variables (x.is_complex==True))
 COMPLEX_ALLOWED = False
 def get_default_datatype(expr, complex_allowed=None):
     """Derives an appropriate datatype based on the expression."""
@@ -315,22 +301,15 @@ class Variable:
             raise TypeError("The first argument must be a sympy symbol.")
         if datatype is None:
             datatype = get_default_datatype(name)
-        elif not isinstance(datatype, DataType):
-            raise TypeError("The (optional) `datatype' argument must be an "
-                            "instance of the DataType class.")
+        # elif not isinstance(datatype, DataType):
+        #     raise TypeError("The (optional) `datatype' argument must be an "
+        #                     "instance of the DataType class.")
         if dimensions and not isinstance(dimensions, (tuple, list)):
             raise TypeError(
                 "The dimension argument must be a sequence of tuples")
 
         self._name = name
-        self._datatype = {
-            'C': datatype.cname,
-            'FORTRAN': datatype.fname,
-            'JULIA': datatype.jlname,
-            'OCTAVE': datatype.octname,
-            'PYTHON': datatype.pyname,
-            'RUST': datatype.rsname,
-        }
+        self.datatype = datatype
         self.dimensions = dimensions
         self.precision = precision
 
@@ -342,28 +321,6 @@ class Variable:
     @property
     def name(self):
         return self._name
-
-    def get_datatype(self, language):
-        """Returns the datatype string for the requested language.
-
-        Examples
-        ========
-
-        >>> from sympy import Symbol
-        >>> from sympy.utilities.codegen import Variable
-        >>> x = Variable(Symbol('x'))
-        >>> x.get_datatype('c')
-        'double'
-        >>> x.get_datatype('fortran')
-        'REAL*8'
-
-        """
-        try:
-            return self._datatype[language.upper()]
-        except KeyError:
-            raise CodeGenError("Has datatypes for languages: %s" %
-                    ", ".join(self._datatype))
-
 
 class Argument(Variable):
     """An abstract Argument data structure: a name and a data type.
