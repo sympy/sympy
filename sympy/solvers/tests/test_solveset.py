@@ -799,7 +799,7 @@ def test_solve_trig():
         imageset(Lambda(n, 2*n*pi), S.Integers)
 
     assert solveset_real(sin(2*x)*cos(x) + cos(2*x)*sin(x)-1, x) == \
-                            ConditionSet(x, Eq(sin(3*x) - 1, 0), S.Reals)
+                            ImageSet(Lambda(n, 2*n*pi/3 + pi/6), S.Integers)
 
     # Tests for _solve_trig2() function
     assert solveset_real(2*cos(x)*cos(2*x) - 1, x) == \
