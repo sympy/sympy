@@ -62,7 +62,8 @@ class _pure_key_dict(dict):
     >>> P[x] = 1
     >>> P[PurePoly(x - y, x)] = 2
 
-    3) retrieval based on PurePoly key comparison
+    3) retrieval based on PurePoly key comparison (use this
+       instead of the get method)
 
     >>> P[y]
     1
@@ -316,10 +317,10 @@ class ComplexRootOf(RootOf):
         complexes = []
 
         for factor, k in ordered(factors):
-            c = _complexes_cache.get(factor, None)
-            if c is not None:
+            try:
+                c = _complexes_cache[factor]
                 complexes.extend([(i, factor, k) for i in c])
-            else:
+            except KeyError:
                 complex_part = cls._get_complexes_sqf(factor)
                 new = [(root, factor, k) for root in complex_part]
                 complexes.extend(new)
@@ -693,6 +694,9 @@ class ComplexRootOf(RootOf):
                     pass
                 interval = interval.refine()
 
+        # update the interval so we at least for this precision or
+        # less we don't have much work to do to recompute the root
+        self._set_interval(interval)
         return (Float._new(root.real._mpf_, prec) +
             I*Float._new(root.imag._mpf_, prec))
 
