@@ -625,6 +625,7 @@ class ComplexRootOf(RootOf):
 
     def _eval_evalf(self, prec):
         """Evaluate this complex root to the given precision. """
+        tol = 10**-prec_to_dps(prec)
         with workprec(prec):
             g = self.poly.gen
             if not g.is_Symbol:
@@ -669,7 +670,7 @@ class ComplexRootOf(RootOf):
                     x0 = mpc(*map(string, interval.center))
                     x1 = x0 + mpc(*map(string, (interval.dx, interval.dy)))/4
                 try:
-                    root = findroot(func, (x0, x1))
+                    root = findroot(func, (x0, x1), tol=tol)
                     # If the (real or complex) root is not in the 'interval',
                     # then keep refining the interval. This happens if findroot
                     # accidentally finds a different root outside of this
