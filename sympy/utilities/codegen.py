@@ -526,6 +526,93 @@ class CodeGen:
                 raise ValueError("Failed to print %s" % str(s))
         return expr_str.strip()
 
+    def _cse_process(self, expr):
+        from sympy.simplify.cse_main import cse
+
+        if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
+            if not expr:
+                raise ValueError("No expression given")
+            for e in expr:
+                if not e.is_Equality:
+                    raise CodeGenError("Lists of expressions must all be Equalities. {} is not.".format(e))
+            lhs = [e.lhs for e in expr]
+
+            # create a list of right hand sides and simplify them
+            rhs = [e.rhs for e in expr]
+            common, simplified = cse(rhs)
+
+            # pack the simplified expressions back up with their left hand sides
+            expr = [Equality(e.lhs, rhs) for e, rhs in zip(expr, simplified)]
+        else:
+            rhs = [expr]
+
+            if isinstance(expr, Equality):
+                common, simplified = cse(expr.rhs) #, ignore=in_out_args)
+                expr = Equality(expr.lhs, simplified[0])
+            else:
+                common, simplified = cse(expr)
+                expr = simplified
+
+        local_vars = [Result(b,a) for a,b in common]
+        local_symbols = {a for a,_ in common}
+        local_expressions = Tuple(*[b for _,b in common])
+        return local_vars, local_symbols, local_expressions, expr
+
+    def _update_symbols(self, symbols):
+        new_symbols = set()
+        new_symbols.update(symbols)
+
+        for symbol in symbols:
+            if isinstance(symbol, Idx):
+                new_symbols.remove(symbol)
+                new_symbols.update(symbol.args[1].free_symbols)
+            if isinstance(symbol, Indexed):
+                new_symbols.remove(symbol)
+        return new_symbols
+
+    def _get_statements_and_outputs(self, expressions, symbols, local_vars):
+        # Decide whether to use output argument or return value
+        return_val = []
+        output_args = []
+
+        def extract(expressions, return_index=1):
+            new_expr = []
+            for iexpr, expr in enumerate(expressions):
+                if isinstance(expr, (Equality, Assignment)):
+                    new_expr.append(expr)
+                    out_arg = expr.lhs
+                    expr = expr.rhs
+                    symbol = out_arg
+                    if isinstance(out_arg, Indexed):
+                        dims = tuple([ (S.One, dim) for dim in out_arg.shape])
+                        symbol = out_arg.base.label
+                        output_args.append(
+                                InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                    if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
+                        raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
+                                        "can define output arguments.")
+
+                    r = Result(expr, symbol)
+                    return_index += 1
+                    return_val.append(r)
+
+                    if not expr.has(symbol):
+                        # this is a pure output: remove from the symbols list, so
+                        # it doesn't become an input.
+                        symbols.remove(symbol)
+                elif isinstance(expr, For): # we should add all the classes which have a CodeBlock
+                    body = extract(expr.body.args, return_index)
+                    new_expr.append(For(expr.target, expr.iterable, body))
+                else:
+                    r = Result(expr, 'out' + str(return_index))
+                    return_index += 1
+                    new_expr.append(Assignment(r.result_var, r.expr))
+                    return_val.append(r)
+            return new_expr
+
+        statements = extract(expressions)
+        return statements, return_val, output_args
+
     def __init__(self, project="project", cse=False):
         """Initialize a code generator.
 
@@ -552,34 +639,7 @@ class CodeGen:
         """
 
         if self.cse:
-            from sympy.simplify.cse_main import cse
-
-            if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
-                if not expr:
-                    raise ValueError("No expression given")
-                for e in expr:
-                    if not e.is_Equality:
-                        raise CodeGenError("Lists of expressions must all be Equalities. {} is not.".format(e))
-
-                # create a list of right hand sides and simplify them
-                rhs = [e.rhs for e in expr]
-                common, simplified = cse(rhs)
-
-                # pack the simplified expressions back up with their left hand sides
-                expr = [Equality(e.lhs, rhs) for e, rhs in zip(expr, simplified)]
-            else:
-                rhs = [expr]
-
-                if isinstance(expr, Equality):
-                    common, simplified = cse(expr.rhs) #, ignore=in_out_args)
-                    expr = Equality(expr.lhs, simplified[0])
-                else:
-                    common, simplified = cse(expr)
-                    expr = simplified
-
-            local_vars = [Result(b,a) for a,b in common]
-            local_symbols = {a for a,_ in common}
-            local_expressions = Tuple(*[b for _,b in common])
+            local_vars, local_symbols, local_expressions, expr = self._cse_process(expr)
         else:
             local_expressions = Tuple()
 
@@ -603,68 +663,10 @@ class CodeGen:
 
         # symbols that should be arguments
         symbols = (expressions.free_symbols | local_expressions.free_symbols) - local_symbols - global_vars
-        new_symbols = set()
-        new_symbols.update(symbols)
+        symbols = self._update_symbols(symbols)
 
-        for symbol in symbols:
-            if isinstance(symbol, Idx):
-                new_symbols.remove(symbol)
-                new_symbols.update(symbol.args[1].free_symbols)
-            if isinstance(symbol, Indexed):
-                new_symbols.remove(symbol)
-        symbols = new_symbols
-
-        # Decide whether to use output argument or return value
-        return_val = []
-        output_args = []
-
-        def extract(expressions):
-            for iexpr, expr in enumerate(expressions):
-                # Equality is for me ambiguous is it == or = ?
-                # it seems it depends ...
-                if isinstance(expr, Assignment):
-                    out_arg = expr.lhs
-                    expr = expr.rhs
-                    if isinstance(out_arg, Indexed):
-                        dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
-                        symbol = out_arg.base.label
-                    elif isinstance(out_arg, Symbol):
-                        dims = []
-                        symbol = out_arg
-                    elif isinstance(out_arg, MatrixSymbol):
-                        dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
-                        symbol = out_arg
-                    else:
-                        raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
-                                        "can define output arguments.")
-
-                    if expr.has(symbol):
-                        output_args.append(
-                            InOutArgument(symbol, out_arg, expr, dimensions=dims))
-                    else:
-                        output_args.append(
-                            OutputArgument(symbol, out_arg, expr, dimensions=dims))
-
-                    # remove duplicate arguments when they are not local variables
-                    if symbol not in local_vars:
-                        # avoid duplicate arguments
-                        symbols.remove(symbol)
-                elif isinstance(expr, For): # we should add all the classes which have a CodeBlock
-                    extract(expr.body.args)
-                elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
-                    # Create a "dummy" MatrixSymbol to use as the Output arg
-                    out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
-                    dims = tuple([(S.Zero, dim - 1) for dim in out_arg.shape])
-                    output_args.append(
-                        OutputArgument(out_arg, out_arg, expr, dimensions=dims))
-                else:
-                    return_val.append(Result(expr))
-
-        extract(expressions)
-
-        statements = []
-        for expr in expressions:
-            statements.append(expr)
+        statements, return_val, output_args = self._get_statements_and_outputs(expressions, symbols, local_vars)
+        expressions = Tuple(*statements)
 
         arg_list = []
 
@@ -854,6 +856,70 @@ class CCodeGen(CodeGen):
     default_datatypes = {'int': 'int',
                          'float': 'double'}
 
+    def _get_statements_and_outputs(self, expressions, symbols, local_vars):
+        # Decide whether to use output argument or return value
+        return_val = []
+        output_args = []
+
+        def extract(expressions, return_index=1):
+            new_expr = []
+            for iexpr, expr in enumerate(expressions):
+                print(iexpr, expr)
+                if isinstance(expr, (Equality, Assignment)):
+                    new_expr.append(expr)
+                    out_arg = expr.lhs
+                    expr = expr.rhs
+                    if isinstance(out_arg, Indexed):
+                        dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
+                        symbol = out_arg.base.label
+                    elif isinstance(out_arg, Symbol):
+                        dims = []
+                        symbol = out_arg
+                    elif isinstance(out_arg, MatrixSymbol):
+                        dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
+                        symbol = out_arg
+                    elif isinstance(expr, MatrixBase):
+                        for i in range(expr.shape[0]):
+                            symbol = expr[i].base.label
+                            dims = tuple([ (S.Zero, dim - 1) for dim in expr[i].base.shape if dim != 1])
+                    elif isinstance(expr, MatrixSlice):
+                        symbol = expr.parent
+                        dims = tuple([ (S.Zero, dim - 1) for dim in symbol.shape if dim != 1])
+                    else:
+                        raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
+                                        "can define output arguments.")
+
+                    if expr.has(symbol):
+                        output_args.append(
+                            InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                    else:
+                        output_args.append(
+                            OutputArgument(symbol, out_arg, expr, dimensions=dims))
+
+                    # remove duplicate arguments when they are not local variables
+                    if symbol not in local_vars:
+                        # avoid duplicate arguments
+                        symbols.remove(symbol)
+                elif isinstance(expr, For): # we should add all the classes which have a CodeBlock
+                    body = extract(expr.body.args, return_index)
+                    new_expr.append(For(expr.target, expr.iterable, body))
+                elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
+                    new_expr.append(expr)
+                    # Create a "dummy" MatrixSymbol to use as the Output arg
+                    out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
+                    dims = tuple([(S.Zero, dim - 1) for dim in out_arg.shape])
+                    output_args.append(
+                        OutputArgument(out_arg, out_arg, expr, dimensions=dims))
+                else:
+                    r = Result(expr, 'out' + str(return_index))
+                    return_index += 1
+                    new_expr.append(Assignment(r.result_var, r.expr))
+                    return_val.append(r)
+            return new_expr
+
+        statements = extract(expressions)
+        return statements, return_val, output_args
+
     def __init__(self, project="project", printer=None,
                  preprocessor_statements=None, cse=False):
         super().__init__(project=project, cse=cse)
@@ -979,21 +1045,15 @@ class CCodeGen(CodeGen):
                 t = self._get_type(result.datatype)
                 code_lines.append("{} {};\n".format(t, str(assign_to)))
                 return_val = assign_to
-            else:
-                assign_to = result.result_var
 
         for statement in routine.statements:
-            try:
-                constants, not_c, c_expr = self._printer_method_with_settings(
-                    'doprint', dict(human=False, dereference=dereference),
-                    statement)
-            except AssignmentError:
-                assign_to = result.result_var
-                code_lines.append(
-                    "%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
-                constants, not_c, c_expr = self._printer_method_with_settings(
-                    'doprint', dict(human=False, dereference=dereference),
-                    statement)
+            expr = statement
+            if isinstance(statement, Equality):
+                expr = Assignment(statement.lhs, statement.rhs)
+
+            constants, not_c, c_expr = self._printer_method_with_settings(
+                'doprint', dict(human=False, dereference=dereference),
+                expr)
 
             for name, value in sorted(constants, key=str):
                 code_lines.append("double const %s = %s;\n" % (name, value))
@@ -1071,7 +1131,7 @@ class C89CodeGen(CCodeGen):
 class C99CodeGen(CCodeGen):
     standard = 'C99'
 
-class FCodeGen(CodeGen):
+class FCodeGen(CCodeGen):
     """Generator for Fortran 95 code
 
     The .write() method inherited from CodeGen will output a code file and
@@ -1303,97 +1363,6 @@ class JuliaCodeGen(CodeGen):
         super().__init__(project)
         self.printer = printer or JuliaCodePrinter()
 
-    def routine(self, name, expr, argument_sequence, global_vars):
-        """Specialized Routine creation for Julia."""
-
-        if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
-            if not expr:
-                raise ValueError("No expression given")
-            expressions = Tuple(*expr)
-        else:
-            expressions = Tuple(expr)
-
-        # local variables
-        local_vars = {i.label for i in expressions.atoms(Idx)}
-
-        # global variables
-        global_vars = set() if global_vars is None else set(global_vars)
-
-        # symbols that should be arguments
-        old_symbols = expressions.free_symbols - local_vars - global_vars
-        symbols = set()
-        for s in old_symbols:
-            if isinstance(s, Idx):
-                symbols.update(s.args[1].free_symbols)
-            elif not isinstance(s, Indexed):
-                symbols.add(s)
-
-        # Julia supports multiple return values
-        return_vals = []
-        output_args = []
-        for (i, expr) in enumerate(expressions):
-            if isinstance(expr, Equality):
-                out_arg = expr.lhs
-                expr = expr.rhs
-                symbol = out_arg
-                if isinstance(out_arg, Indexed):
-                    dims = tuple([ (S.One, dim) for dim in out_arg.shape])
-                    symbol = out_arg.base.label
-                    output_args.append(InOutArgument(symbol, out_arg, expr, dimensions=dims))
-                if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
-                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
-                                       "can define output arguments.")
-
-                return_vals.append(Result(expr, name=symbol, result_var=out_arg))
-                if not expr.has(symbol):
-                    # this is a pure output: remove from the symbols list, so
-                    # it doesn't become an input.
-                    symbols.remove(symbol)
-
-            else:
-                # we have no name for this output
-                return_vals.append(Result(expr, name='out%d' % (i+1)))
-
-        # setup input argument list
-        output_args.sort(key=lambda x: str(x.name))
-        arg_list = list(output_args)
-        array_symbols = {}
-        for array in expressions.atoms(Indexed):
-            array_symbols[array.base.label] = array
-        for array in expressions.atoms(MatrixSymbol):
-            array_symbols[array] = array
-
-        for symbol in sorted(symbols, key=str):
-            arg_list.append(InputArgument(symbol))
-
-        if argument_sequence is not None:
-            # if the user has supplied IndexedBase instances, we'll accept that
-            new_sequence = []
-            for arg in argument_sequence:
-                if isinstance(arg, IndexedBase):
-                    new_sequence.append(arg.label)
-                else:
-                    new_sequence.append(arg)
-            argument_sequence = new_sequence
-
-            missing = [x for x in arg_list if x.name not in argument_sequence]
-            if missing:
-                msg = "Argument list didn't specify: {0} "
-                msg = msg.format(", ".join([str(m.name) for m in missing]))
-                raise CodeGenArgumentListError(msg, missing)
-
-            # create redundant arguments to produce the requested sequence
-            name_arg_dict = {x.name: x for x in arg_list}
-            new_args = []
-            for symbol in argument_sequence:
-                try:
-                    new_args.append(name_arg_dict[symbol])
-                except KeyError:
-                    new_args.append(InputArgument(symbol))
-            arg_list = new_args
-
-        return Routine(name, arg_list, return_vals, local_vars, global_vars)
-
     def _get_header(self):
         """Writes a common header for the generated files."""
         code_lines = []
@@ -1451,14 +1420,14 @@ class JuliaCodeGen(CodeGen):
     def _call_printer(self, routine):
         declarations = []
         code_lines = []
-        for i, result in enumerate(routine.results):
-            if isinstance(result, Result):
-                assign_to = result.result_var
-            else:
-                raise CodeGenError("unexpected object in Routine results")
+        # for i, result in enumerate(routine.results):
+        for statement in routine.statements:
+            expr = statement
+            if isinstance(statement, Equality):
+                expr = Assignment(statement.lhs, statement.rhs)
 
             constants, not_supported, jl_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False), result.expr, assign_to=assign_to)
+                'doprint', dict(human=False), expr)
 
             for obj, v in sorted(constants, key=str):
                 declarations.append(
@@ -1508,99 +1477,49 @@ class OctaveCodeGen(CodeGen):
 
     code_extension = "m"
 
+    def _get_statements_and_outputs(self, expressions, symbols, local_vars):
+        # Decide whether to use output argument or return value
+        return_val = []
+        output_args = []
+
+        def extract(expressions, return_index=1):
+            new_expr = []
+            for iexpr, expr in enumerate(expressions):
+                if isinstance(expr, (Equality, Assignment)):
+                    new_expr.append(expr)
+                    out_arg = expr.lhs
+                    expr = expr.rhs
+                    symbol = out_arg
+                    if isinstance(out_arg, Indexed):
+                        symbol = out_arg.base.label
+                    if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
+                        raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
+                                        "can define output arguments.")
+
+                    r = Result(expr, symbol)
+                    return_index += 1
+                    return_val.append(r)
+
+                    if not expr.has(symbol):
+                        # this is a pure output: remove from the symbols list, so
+                        # it doesn't become an input.
+                        symbols.remove(symbol)
+                elif isinstance(expr, For): # we should add all the classes which have a CodeBlock
+                    body = extract(expr.body.args, return_index)
+                    new_expr.append(For(expr.target, expr.iterable, body))
+                else:
+                    r = Result(expr, 'out' + str(return_index))
+                    return_index += 1
+                    new_expr.append(Assignment(r.result_var, r.expr))
+                    return_val.append(r)
+            return new_expr
+
+        statements = extract(expressions)
+        return statements, return_val, output_args
+
     def __init__(self, project='project', printer=None):
         super().__init__(project)
         self.printer = printer or OctaveCodePrinter()
-
-    def routine(self, name, expr, argument_sequence, global_vars):
-        """Specialized Routine creation for Octave."""
-
-        # FIXME: this is probably general enough for other high-level
-        # languages, perhaps its the C/Fortran one that is specialized!
-
-        if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
-            if not expr:
-                raise ValueError("No expression given")
-            expressions = Tuple(*expr)
-        else:
-            expressions = Tuple(expr)
-
-        # local variables
-        local_vars = {i.label for i in expressions.atoms(Idx)}
-
-        # global variables
-        global_vars = set() if global_vars is None else set(global_vars)
-
-        # symbols that should be arguments
-        old_symbols = expressions.free_symbols - local_vars - global_vars
-        symbols = set()
-        for s in old_symbols:
-            if isinstance(s, Idx):
-                symbols.update(s.args[1].free_symbols)
-            elif not isinstance(s, Indexed):
-                symbols.add(s)
-
-        # Octave supports multiple return values
-        return_vals = []
-        for (i, expr) in enumerate(expressions):
-            if isinstance(expr, Equality):
-                out_arg = expr.lhs
-                expr = expr.rhs
-                symbol = out_arg
-                if isinstance(out_arg, Indexed):
-                    symbol = out_arg.base.label
-                if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
-                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
-                                       "can define output arguments.")
-
-                return_vals.append(Result(expr, name=symbol, result_var=out_arg))
-                if not expr.has(symbol):
-                    # this is a pure output: remove from the symbols list, so
-                    # it doesn't become an input.
-                    symbols.remove(symbol)
-
-            else:
-                # we have no name for this output
-                return_vals.append(Result(expr, name='out%d' % (i+1)))
-
-        # setup input argument list
-        arg_list = []
-        array_symbols = {}
-        for array in expressions.atoms(Indexed):
-            array_symbols[array.base.label] = array
-        for array in expressions.atoms(MatrixSymbol):
-            array_symbols[array] = array
-
-        for symbol in sorted(symbols, key=str):
-            arg_list.append(InputArgument(symbol))
-
-        if argument_sequence is not None:
-            # if the user has supplied IndexedBase instances, we'll accept that
-            new_sequence = []
-            for arg in argument_sequence:
-                if isinstance(arg, IndexedBase):
-                    new_sequence.append(arg.label)
-                else:
-                    new_sequence.append(arg)
-            argument_sequence = new_sequence
-
-            missing = [x for x in arg_list if x.name not in argument_sequence]
-            if missing:
-                msg = "Argument list didn't specify: {0} "
-                msg = msg.format(", ".join([str(m.name) for m in missing]))
-                raise CodeGenArgumentListError(msg, missing)
-
-            # create redundant arguments to produce the requested sequence
-            name_arg_dict = {x.name: x for x in arg_list}
-            new_args = []
-            for symbol in argument_sequence:
-                try:
-                    new_args.append(name_arg_dict[symbol])
-                except KeyError:
-                    new_args.append(InputArgument(symbol))
-            arg_list = new_args
-
-        return Routine(name, arg_list, return_vals, local_vars, global_vars)
 
     def _get_header(self):
         """Writes a common header for the generated files."""
@@ -1669,14 +1588,13 @@ class OctaveCodeGen(CodeGen):
     def _call_printer(self, routine):
         declarations = []
         code_lines = []
-        for i, result in enumerate(routine.results):
-            if isinstance(result, Result):
-                assign_to = result.result_var
-            else:
-                raise CodeGenError("unexpected object in Routine results")
+        for statement in routine.statements:
+            expr = statement
+            if isinstance(statement, Equality):
+                expr = Assignment(statement.lhs, statement.rhs)
 
             constants, not_supported, oct_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False), result.expr, assign_to=assign_to)
+                'doprint', dict(human=False), expr)
 
             for obj, v in sorted(constants, key=str):
                 declarations.append(
@@ -1750,92 +1668,6 @@ class RustCodeGen(CodeGen):
     def __init__(self, project="project", printer=None):
         super().__init__(project=project)
         self.printer = printer or RustCodePrinter()
-
-    def routine(self, name, expr, argument_sequence, global_vars):
-        """Specialized Routine creation for Rust."""
-
-        if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
-            if not expr:
-                raise ValueError("No expression given")
-            expressions = Tuple(*expr)
-        else:
-            expressions = Tuple(expr)
-
-        # local variables
-        local_vars = {i.label for i in expressions.atoms(Idx)}
-
-        # global variables
-        global_vars = set() if global_vars is None else set(global_vars)
-
-        # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars - global_vars - expressions.atoms(Indexed)
-
-        # Rust supports multiple return values
-        return_vals = []
-        output_args = []
-        for (i, expr) in enumerate(expressions):
-            if isinstance(expr, Equality):
-                out_arg = expr.lhs
-                expr = expr.rhs
-                symbol = out_arg
-                if isinstance(out_arg, Indexed):
-                    dims = tuple([ (S.One, dim) for dim in out_arg.shape])
-                    symbol = out_arg.base.label
-                    output_args.append(InOutArgument(symbol, out_arg, expr, dimensions=dims))
-                if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
-                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
-                                       "can define output arguments.")
-
-                return_vals.append(Result(expr, name=symbol, result_var=out_arg))
-                if not expr.has(symbol):
-                    # this is a pure output: remove from the symbols list, so
-                    # it doesn't become an input.
-                    symbols.remove(symbol)
-
-            else:
-                # we have no name for this output
-                return_vals.append(Result(expr, name='out%d' % (i+1)))
-
-        # setup input argument list
-        output_args.sort(key=lambda x: str(x.name))
-        arg_list = list(output_args)
-        array_symbols = {}
-        for array in expressions.atoms(Indexed):
-            array_symbols[array.base.label] = array
-        for array in expressions.atoms(MatrixSymbol):
-            array_symbols[array] = array
-
-        for symbol in sorted(symbols, key=str):
-            arg_list.append(InputArgument(symbol))
-
-        if argument_sequence is not None:
-            # if the user has supplied IndexedBase instances, we'll accept that
-            new_sequence = []
-            for arg in argument_sequence:
-                if isinstance(arg, IndexedBase):
-                    new_sequence.append(arg.label)
-                else:
-                    new_sequence.append(arg)
-            argument_sequence = new_sequence
-
-            missing = [x for x in arg_list if x.name not in argument_sequence]
-            if missing:
-                msg = "Argument list didn't specify: {0} "
-                msg = msg.format(", ".join([str(m.name) for m in missing]))
-                raise CodeGenArgumentListError(msg, missing)
-
-            # create redundant arguments to produce the requested sequence
-            name_arg_dict = {x.name: x for x in arg_list}
-            new_args = []
-            for symbol in argument_sequence:
-                try:
-                    new_args.append(name_arg_dict[symbol])
-                except KeyError:
-                    new_args.append(InputArgument(symbol))
-            arg_list = new_args
-
-        return Routine(name, arg_list, return_vals, local_vars, global_vars)
-
 
     def _get_header(self):
         """Writes a common header for the generated files."""
@@ -1913,13 +1745,17 @@ class RustCodeGen(CodeGen):
 
         for i, result in enumerate(routine.results):
             if isinstance(result, Result):
-                assign_to = result.result_var
                 returns.append(str(result.result_var))
             else:
                 raise CodeGenError("unexpected object in Routine results")
 
+        for statement in routine.statements:
+            expr = statement
+            if isinstance(statement, Equality):
+                expr = Assignment(statement.lhs, statement.rhs)
+
             constants, not_supported, rs_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False), result.expr, assign_to=assign_to)
+                'doprint', dict(human=False), expr)
 
             for name, value in sorted(constants, key=str):
                 declarations.append("const %s: f64 = %s;\n" % (name, value))
