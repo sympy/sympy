@@ -231,7 +231,7 @@ class MacaulayResultant():
         monomials = list(itermonomials(self.variables, degree) -
                          itermonomials(self.variables, degree - 1))
 
-        return sorted(monomials, key=monomial_key('lex', self.variables))[::-1]
+        return sorted(monomials, key=monomial_key('lex', self.variables), reverse=True)
 
     def get_monomials_set(self):
         r"""
