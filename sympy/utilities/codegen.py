@@ -864,7 +864,6 @@ class CCodeGen(CodeGen):
         def extract(expressions, return_index=1):
             new_expr = []
             for iexpr, expr in enumerate(expressions):
-                print(iexpr, expr)
                 if isinstance(expr, (Equality, Assignment)):
                     new_expr.append(expr)
                     out_arg = expr.lhs
@@ -1885,9 +1884,9 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     #include "test.h"
     #include <math.h>
     double f(double x, double y, double z) {
-       double f_result;
-       f_result = x + y*z;
-       return f_result;
+       double out1;
+       out1 = x + y*z;
+       return out1;
     }
     <BLANKLINE>
     >>> print(h_name)
@@ -1913,9 +1912,9 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     #include "myfcn.h"
     #include <math.h>
     double myfcn(double x, double y) {
-       double myfcn_result;
-       myfcn_result = x + y;
-       return myfcn_result;
+       double out1;
+       out1 = x + y;
+       return out1;
     }
     void fcn2(double x, double y, double *f, double *g) {
        (*f) = 2*x;
