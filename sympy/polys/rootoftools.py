@@ -649,6 +649,7 @@ class ComplexRootOf(RootOf):
                         root = a
                         break
                     x0 = mpf(string(interval.center))
+                    x1 = x0 + mpf(string(interval.dx))/4
                 elif self.is_imaginary:
                     a = mpf(string(interval.ay))
                     b = mpf(string(interval.by))
@@ -656,6 +657,7 @@ class ComplexRootOf(RootOf):
                         root = mpc(mpf('0'), a)
                         break
                     x0 = mpf(string(interval.center[1]))
+                    x1 = x0 + mpf(string(interval.dy))/4
                 else:
                     ax = mpf(string(interval.ax))
                     bx = mpf(string(interval.bx))
@@ -665,9 +667,9 @@ class ComplexRootOf(RootOf):
                         root = mpc(ax, ay)
                         break
                     x0 = mpc(*map(string, interval.center))
-
+                    x1 = x0 + mpc(*map(string, (interval.dx, interval.dy)))/4
                 try:
-                    root = findroot(func, x0)
+                    root = findroot(func, (x0, x1))
                     # If the (real or complex) root is not in the 'interval',
                     # then keep refining the interval. This happens if findroot
                     # accidentally finds a different root outside of this
