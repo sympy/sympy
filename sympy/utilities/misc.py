@@ -438,7 +438,7 @@ def translate(s, a, b=None, c=None):
     if a is None:
         if c is not None:
             raise ValueError('c should be None when a=None is passed, instead got %s' % c)
-        if not b:
+        if b is None:
             return s
         c = b
         a = b = ''
