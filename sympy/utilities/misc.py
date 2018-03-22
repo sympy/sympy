@@ -437,9 +437,7 @@ def translate(s, a, b=None, c=None):
     mr = {}
     if a is None:
         if c is not None:
-            raise TypeError('Called translate with 4 arguments and a second '
-                            'argument of None, expected 3 arguments if second '
-                            'argument is None')
+            raise ValueError('c should be None when a=None is passed, instead got %s' % c)
         if not b:
             return s
         c = b
@@ -457,7 +455,7 @@ def translate(s, a, b=None, c=None):
             else:
                 a = b = ''
         elif len(a) != len(b):
-            raise TypeError('oldchars and newchars are different lengths')
+            raise ValueError('oldchars and newchars have different lengths')
     if PY3:
         if c:
             s = s.translate(maketrans('', '', c))
