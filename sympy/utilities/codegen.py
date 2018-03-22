@@ -238,9 +238,6 @@ class Routine:
         args.extend(self.results)
         return args
 
-<<<<<<< HEAD
-
-
 # TODO Loic: Must be added
 # "complex": DataType("double", "COMPLEX*16", "complex", "", "", "float") #FIXME:
 # complex is only supported in fortran, python, julia, and octave.
@@ -501,6 +498,7 @@ class CodeGen:
     """Abstract class for the code generators."""
 
     printer = None  # will be set to an instance of a CodePrinter subclass
+    default_datatypes = None
 
     def _indent_code(self, codelines):
         return self.printer.indent_code(codelines)
@@ -514,6 +512,9 @@ class CodeGen:
         for k, v in ori.items():
             self.printer._settings[k] = v
         return result
+
+    def _get_type(self, stype):
+        return self.default_datatypes[stype]
 
     def _get_symbol(self, s):
         """Returns the symbol as fcode prints it."""
@@ -850,6 +851,9 @@ class CCodeGen(CodeGen):
     interface_extension = "h"
     standard = 'c99'
 
+    default_datatypes = {'int': 'int',
+                         'float': 'double'}
+
     def __init__(self, project="project", printer=None,
                  preprocessor_statements=None, cse=False):
         super().__init__(project=project, cse=cse)
@@ -882,7 +886,7 @@ class CCodeGen(CodeGen):
         if len(routine.results) > 1:
             raise CodeGenError("C only supports a single or no return value.")
         elif len(routine.results) == 1:
-            ctype = routine.results[0].get_datatype('C')
+            ctype = self._get_type(routine.results[0].datatype)
         else:
             ctype = "void"
 
@@ -890,9 +894,9 @@ class CCodeGen(CodeGen):
         for arg in routine.arguments:
             name = self.printer.doprint(arg.name)
             if arg.dimensions or isinstance(arg, ResultBase):
-                type_args.append((arg.get_datatype('C'), "*%s" % name))
+                type_args.append((self._get_type(arg.datatype), "*%s" % name))
             else:
-                type_args.append((arg.get_datatype('C'), name))
+                type_args.append((self._get_type(arg.datatype), name))
         arguments = ", ".join([ "%s %s" % t for t in type_args])
         return "%s %s(%s)" % (ctype, routine.name, arguments)
 
@@ -936,7 +940,7 @@ class CCodeGen(CodeGen):
             if result.name != result.result_var:
                 raise CodeGen("Result variable and name should match: {}".format(result))
             assign_to = result.name
-            t = result.get_datatype('c')
+            t = self._get_type(result.datatype)
             if isinstance(result.expr, (MatrixBase, MatrixExpr)):
                 dims = result.expr.shape
                 if dims[1] != 1:
@@ -971,8 +975,8 @@ class CCodeGen(CodeGen):
         return_val = None
         for result in routine.result_variables:
             if isinstance(result, Result):
-                assign_to = routine.name + "_result"
-                t = result.get_datatype('c')
+                assign_to = result.name
+                t = self._get_type(result.datatype)
                 code_lines.append("{} {};\n".format(t, str(assign_to)))
                 return_val = assign_to
             else:
@@ -1078,6 +1082,9 @@ class FCodeGen(CodeGen):
     code_extension = "f90"
     interface_extension = "h"
 
+    default_datatypes = {'int': 'INTEGER*4',
+                         'float': 'REAL*8'}
+
     def __init__(self, project='project', printer=None):
         super().__init__(project)
         self.printer = printer or FCodePrinter()
@@ -1104,7 +1111,7 @@ class FCodeGen(CodeGen):
                 "Fortran only supports a single or no return value.")
         elif len(routine.results) == 1:
             result = routine.results[0]
-            code_list.append(result.get_datatype('fortran'))
+            code_list.append(self._get_type(result.datatype))
             code_list.append("function")
         else:
             code_list.append("subroutine")
@@ -1131,11 +1138,11 @@ class FCodeGen(CodeGen):
         for arg in routine.arguments:
 
             if isinstance(arg, InputArgument):
-                typeinfo = "%s, intent(in)" % arg.get_datatype('fortran')
+                typeinfo = "%s, intent(in)" % self._get_type(arg.datatype)
             elif isinstance(arg, InOutArgument):
-                typeinfo = "%s, intent(inout)" % arg.get_datatype('fortran')
+                typeinfo = "%s, intent(inout)" % self._get_type(arg.datatype)
             elif isinstance(arg, OutputArgument):
-                typeinfo = "%s, intent(out)" % arg.get_datatype('fortran')
+                typeinfo = "%s, intent(out)" % self._get_type(arg.datatype)
             else:
                 raise CodeGenError("Unknown Argument type: %s" % type(arg))
 
@@ -1165,9 +1172,9 @@ class FCodeGen(CodeGen):
     def _declare_locals(self, routine):
         code_list = []
         for var in sorted(routine.local_vars, key=str):
-            typeinfo = get_default_datatype(var)
+            typeinfo = self._get_type(get_default_datatype(var))
             code_list.append("%s :: %s\n" % (
-                typeinfo.fname, self._get_symbol(var)))
+                typeinfo, self._get_symbol(var)))
         return code_list
 
     def _get_routine_ending(self, routine):
@@ -1209,16 +1216,16 @@ class FCodeGen(CodeGen):
                 result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
-                t = get_default_datatype(obj)
+                t = self._get_type(get_default_datatype(obj))
                 declarations.append(
-                    "%s, parameter :: %s = %s\n" % (t.fname, obj, v))
+                    "%s, parameter :: %s = %s\n" % (t, obj, v))
             for obj in sorted(not_fortran, key=str):
-                t = get_default_datatype(obj)
+                t = self._get_type(get_default_datatype(obj))
                 if isinstance(obj, Function):
                     name = obj.func
                 else:
                     name = obj
-                declarations.append("%s :: %s\n" % (t.fname, name))
+                declarations.append("%s :: %s\n" % (t, name))
 
             code_lines.append("%s\n" % f_expr)
         return declarations + code_lines
@@ -1737,6 +1744,9 @@ class RustCodeGen(CodeGen):
 
     code_extension = "rs"
 
+    default_datatypes = {'int': 'i32',
+                         'float': 'f64'}
+
     def __init__(self, project="project", printer=None):
         super().__init__(project=project)
         self.printer = printer or RustCodePrinter()
@@ -1847,7 +1857,7 @@ class RustCodeGen(CodeGen):
         See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
-        results = [i.get_datatype('Rust') for i in routine.results]
+        results = [self._get_type(i.datatype) for i in routine.results]
 
         if len(results) == 1:
             rstype = " -> " + results[0]
@@ -1860,9 +1870,9 @@ class RustCodeGen(CodeGen):
         for arg in routine.arguments:
             name = self.printer.doprint(arg.name)
             if arg.dimensions or isinstance(arg, ResultBase):
-                type_args.append(("*%s" % name, arg.get_datatype('Rust')))
+                type_args.append(("*%s" % name, self._get_type(arg.datatype)))
             else:
-                type_args.append((name, arg.get_datatype('Rust')))
+                type_args.append((name, self._get_type(arg.datatype)))
         arguments = ", ".join([ "%s: %s" % t for t in type_args])
         return "fn %s(%s)%s" % (routine.name, arguments, rstype)
 
