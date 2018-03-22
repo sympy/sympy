@@ -484,7 +484,7 @@ def test_jl_loops():
                       header=False, empty=False)
     source = result[1]
     expected = (
-        'function mat_vec_mult(y, A, m, n, x)\n'
+        'function mat_vec_mult(A, m, n, x, y)\n'
         '    for i = 1:m\n'
         '        y[i] = 0\n'
         '    end\n'
@@ -516,7 +516,7 @@ def test_jl_tensor_loops_multiple_contractions():
                       "Julia", header=False, empty=False)
     source = result[1]
     expected = (
-        'function tensorthing(y, A, B, m, n, o, p)\n'
+        'function tensorthing(A, B, m, n, o, p, y)\n'
         '    for i = 1:m\n'
         '        y[i] = 0\n'
         '    end\n'
