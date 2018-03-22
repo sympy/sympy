@@ -316,11 +316,13 @@ class ProductPSpace(PSpace):
     def values(self):
         return sumsets(space.values for space in self.spaces)
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or self.values
         rvs = frozenset(rvs)
         for space in self.spaces:
-            expr = space.integrate(expr, rvs & space.values, **kwargs)
+            expr = space.integrate(expr, rvs & space.values, evaluate=False, **kwargs)
+        if evaluate and hasattr(expr, 'doit'):
+            return expr.doit(**kwargs)
         return expr
 
     @property
