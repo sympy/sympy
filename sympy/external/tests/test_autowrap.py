@@ -126,17 +126,17 @@ def runtest_issue_10274(language, backend):
                 "\n",
                 "double helper(double a, double b, double c) {\n",
                 "\n",
-                "   double helper_result;\n",
-                "   helper_result = a - b + c;\n",
-                "   return helper_result;\n",
+                "   double out1;\n",
+                "   out1 = a - b + c;\n",
+                "   return out1;\n",
                 "\n",
                 "}\n",
                 "\n",
                 "double autofunc(double a, double b, double c) {\n",
                 "\n",
-                "   double autofunc_result;\n",
-                "   autofunc_result = pow(helper(a, b, c), 13);\n",
-                "   return autofunc_result;\n",
+                "   double out1;\n",
+                "   out1 = pow(helper(a, b, c), 13);\n",
+                "   return out1;\n",
                 "\n",
                 "}\n",
                 ]
@@ -275,9 +275,9 @@ def test_autowrap_custom_printer():
         '\n'
         'double autofunc(double a) {\n'
         '\n'
-        '   double autofunc_result;\n'
-        '   autofunc_result = S_PI*a;\n'
-        '   return autofunc_result;\n'
+        '   double out1;\n'
+        '   out1 = S_PI*a;\n'
+        '   return out1;\n'
         '\n'
         '}\n'
     )
