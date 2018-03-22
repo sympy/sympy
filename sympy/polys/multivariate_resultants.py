@@ -16,6 +16,8 @@ from sympy.polys.orderings import monomial_key
 from sympy.polys.polytools import poly_from_expr
 from sympy.functions.combinatorial.factorials import binomial
 
+from itertools import combinations_with_replacement
+
 class DixonResultant():
     """
     A class for retrieving the Dixon's resultant of a multivariate system.
@@ -228,8 +230,7 @@ class MacaulayResultant():
         monomials: list
             A list of monomials of a certain degree.
         """
-        monomials = list(itermonomials(self.variables, degree) -
-                         itermonomials(self.variables, degree - 1))
+        monomials = [Mul(*monomial) for monomial in combinations_with_replacement(self.variables, degree)]
 
         return sorted(monomials, key=monomial_key('lex', self.variables), reverse=True)
 
