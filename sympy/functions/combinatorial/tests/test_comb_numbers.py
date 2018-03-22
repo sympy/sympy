@@ -122,6 +122,7 @@ def test_bell():
 
 def test_harmonic():
     n = Symbol("n")
+    m = Symbol("m")
 
     assert harmonic(n, 0) == n
     assert harmonic(n).evalf() == harmonic(n)
@@ -150,6 +151,8 @@ def test_harmonic():
     assert harmonic(oo, 1) == oo
     assert harmonic(oo, 2) == (pi**2)/6
     assert harmonic(oo, 3) == zeta(3)
+
+    assert harmonic(0, m) == 0
 
 
 def test_harmonic_rational():
@@ -216,7 +219,7 @@ def test_harmonic_rational():
     for h, a in zip(H, A):
         e = expand_func(h).doit()
         assert cancel(e/a) == 1
-        assert h.n() == a.n()
+        assert abs(h.n() - a.n()) < 1e-12
 
 
 def test_harmonic_evalf():

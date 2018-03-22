@@ -31,7 +31,7 @@ class PygletPlot(object):
     Plot Examples
     =============
 
-    See examples/advaned/pyglet_plotting.py for many more examples.
+    See examples/advanced/pyglet_plotting.py for many more examples.
 
 
     >>> from sympy.plotting.pygletplot import PygletPlot as Plot

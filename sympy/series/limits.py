@@ -163,6 +163,10 @@ class Limit(Expr):
 
         e, z, z0, dir = self.args
 
+        if z0 is S.ComplexInfinity:
+            raise NotImplementedError("Limits at complex "
+                                    "infinity are not implemented")
+
         if hints.get('deep', True):
             e = e.doit(**hints)
             z = z.doit(**hints)

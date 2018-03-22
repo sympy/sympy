@@ -281,8 +281,7 @@ class LLVMJitCode(object):
             print("Assembly")
             print(target_machine.emit_assembly(llmod))
 
-        fptr = exe_eng.get_pointer_to_function(
-            llmod.get_function(self.link_name))
+        fptr = exe_eng.get_function_address(self.link_name)
 
         return fptr
 

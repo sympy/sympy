@@ -26,7 +26,7 @@ from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
 from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational, Ge, _canonical
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.core.basic import preorder_traversal
 
@@ -361,6 +361,37 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
+def failing_assumptions(expr, **assumptions):
+    """Return a dictionary containing assumptions with values not
+    matching those of the passed assumptions.
+
+    Examples
+    ========
+
+    >>> from sympy import failing_assumptions, Symbol
+
+    >>> x = Symbol('x', real=True, positive=True)
+    >>> y = Symbol('y')
+    >>> failing_assumptions(6*x + y, real=True, positive=True)
+    {'positive': None, 'real': None}
+
+    >>> failing_assumptions(x**2 - 1, positive=True)
+    {'positive': None}
+
+    If all assumptions satisfy the `expr` an empty dictionary is returned.
+
+    >>> failing_assumptions(x**2, positive=True)
+    {}
+    """
+    expr = sympify(expr)
+    failed = {}
+    for key in list(assumptions.keys()):
+        test = getattr(expr, 'is_%s' % key, None)
+        if test is not assumptions[key]:
+            failed[key] = test
+    return failed  # {} or {assumption: value != desired}
+
+
 def check_assumptions(expr, against=None, **assumptions):
     """Checks whether expression `expr` satisfies all assumptions.
 
@@ -397,23 +428,23 @@ def check_assumptions(expr, against=None, **assumptions):
        >>> check_assumptions(2*x - 1, real=True, positive=True)
        >>> z = Symbol('z')
        >>> check_assumptions(z, real=True)
+
+    See Also
+    ========
+    failing_assumptions
     """
-    if against is not None:
-        assumptions = against.assumptions0
-
     expr = sympify(expr)
-
-    result = True
-    for key, expected in assumptions.items():
-        if expected is None:
-            continue
-        test = getattr(expr, 'is_' + key, None)
-        if test is expected:
-            continue
-        elif test is not None:
-            return False
-        result = None  # Can't conclude, unless an other test fails.
-    return result
+    if against:
+        if not isinstance(against, Symbol):
+            raise TypeError('against should be of type Symbol')
+        if assumptions:
+            raise AssertionError('No assumptions should be specified')
+        assumptions = against.assumptions0
+    def _test(key):
+        v = getattr(expr, 'is_' + key, None)
+        if v is not None:
+            return assumptions[key] is v
+    return fuzzy_and(_test(key) for key in assumptions)
 
 
 def solve(f, *symbols, **flags):
@@ -745,7 +776,7 @@ def solve(f, *symbols, **flags):
         >>> solve(sin(x)/x, check=False)
         [0, pi]
 
-    In the following case, however, the limit exists and is equal to the the
+    In the following case, however, the limit exists and is equal to the
     value of x = 0 that is excluded when check=True:
 
         >>> eq = x**2*(1/x - z**2/x)
@@ -2301,7 +2332,7 @@ def solve_linear_system(system, *symbols, **flags):
                     return dict()
                 continue
 
-            # we want to change the order of colums so
+            # we want to change the order of columns so
             # the order of variables must also change
             syms[i], syms[k] = syms[k], syms[i]
             matrix.col_swap(i, k)

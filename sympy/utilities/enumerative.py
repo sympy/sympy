@@ -36,7 +36,7 @@ partition A is greater than partition B if A's leftmost/greatest
 part is greater than B's leftmost part.  If the leftmost parts are
 equal, compare the second parts, and so on.
 
-In this ordering, the greatest partion of a given multiset has only
+In this ordering, the greatest partition of a given multiset has only
 one part.  The least partition is the one in which the components
 are spread out, one per part.
 
@@ -730,7 +730,7 @@ class MultisetPartitionTraverser():
         """
         return self.pstack[self.f[self.lpart]:self.f[self.lpart + 1]]
 
-    # Same interface and funtionality as multiset_partitions_taocp(),
+    # Same interface and functionality as multiset_partitions_taocp(),
     # but some might find this refactored version easier to follow.
     def enum_all(self, multiplicities):
         """Enumerate the partitions of a multiset.
@@ -1010,7 +1010,7 @@ class MultisetPartitionTraverser():
         programming to cut down on the number of nodes actually
         explored.  The dictionary used in order to accelerate the
         counting process is stored in the ``MultisetPartitionTraverser``
-        object and persists across calls.  If the the user does not
+        object and persists across calls.  If the user does not
         expect to call ``count_partitions`` for any additional
         multisets, the object should be cleared to save memory.  On
         the other hand, the cache built up from one count run can

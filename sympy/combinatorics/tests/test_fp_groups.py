@@ -183,7 +183,7 @@ def test_permutation_methods():
     G = FpGroup(F, [x**2, y**8, x*y*x**-1*y])
     T = G._to_perm_group()[1]
     assert T.is_isomorphism()
-    assert G.center() == [G.identity, y**4]
+    assert G.center() == [y**4]
 
     # DiheadralGroup(4)
     G = FpGroup(F, [x**2, y**4, x*y*x**-1*y])

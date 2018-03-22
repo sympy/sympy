@@ -8,8 +8,8 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.mul import Mul
-from sympy.core.numbers import oo
-from sympy.core.relational import Eq
+from sympy.core.numbers import oo, pi
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -19,11 +19,15 @@ from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.matrices import MatrixBase
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
-from sympy.functions import Piecewise, sqrt, sign
+from sympy.functions import Piecewise, sqrt, sign, piecewise_fold, tan, cot, atan
 from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.complexes import Abs, sign
+from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
+from sympy.simplify.fu import sincos_to_sum
 
 
 class Integral(AddWithLimits):
@@ -362,7 +366,8 @@ class Integral(AddWithLimits):
         >>> from sympy import Integral
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).doit()
-        Piecewise((2, Eq(log(x), 0)), (x**3/log(x) - x/log(x), True))
+        Piecewise((x**3/log(x) - x/log(x),
+            (x > 1) | ((x >= 0) & (x < 1))), (2, True))
 
         See Also
         ========
@@ -380,6 +385,14 @@ class Integral(AddWithLimits):
         conds = hints.get('conds', 'piecewise')
         risch = hints.get('risch', None)
         manual = hints.get('manual', None)
+        if len(list(filter(None, (manual, meijerg, risch)))) > 1:
+            raise ValueError("At most one of manual, meijerg, risch can be True")
+        elif manual:
+            meijerg = risch = False
+        elif meijerg:
+            manual = risch = False
+        elif risch:
+            manual = meijerg = False
         eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual,
             conds=conds)
 
@@ -443,6 +456,19 @@ class Integral(AddWithLimits):
                     function = factored_function
                 continue
 
+            if function.has(Abs, sign) and (
+                (len(xab) < 3 and all(x.is_real for x in xab)) or
+                (len(xab) == 3 and all(x.is_real and x.is_finite for
+                 x in xab[1:]))):
+                    # some improper integrals are better off with Abs
+                    xr = Dummy("xr", real=True)
+                    function = (function.xreplace({xab[0]: xr})
+                        .rewrite(Piecewise).xreplace({xr: xab[0]}))
+            elif function.has(Min, Max):
+                function = function.rewrite(Piecewise)
+            if (function.has(Piecewise) and
+                not isinstance(function, Piecewise)):
+                    function = piecewise_fold(function)
             if isinstance(function, Piecewise):
                 if len(xab) == 1:
                     antideriv = function._eval_integral(xab[0],
@@ -515,6 +541,30 @@ class Integral(AddWithLimits):
                         if ret is not None:
                             function = ret
                             continue
+
+            if not isinstance(antideriv, Integral) and antideriv is not None:
+                sym = xab[0]
+                for atan_term in antideriv.atoms(atan):
+                    atan_arg = atan_term.args[0]
+                    # Checking `atan_arg` to be linear combination of `tan` or `cot`
+                    for tan_part in atan_arg.atoms(tan):
+                        x1 = Dummy('x1')
+                        tan_exp1 = atan_arg.subs(tan_part, x1)
+                        # The coefficient of `tan` should be constant
+                        coeff = tan_exp1.diff(x1)
+                        if x1 not in coeff.free_symbols:
+                            a = tan_part.args[0]
+                            antideriv = antideriv.subs(atan_term, Add(atan_term,
+                                sign(coeff)*pi*floor((a-pi/2)/pi)))
+                    for cot_part in atan_arg.atoms(cot):
+                        x1 = Dummy('x1')
+                        cot_exp1 = atan_arg.subs(cot_part, x1)
+                        # The coefficient of `cot` should be constant
+                        coeff = cot_exp1.diff(x1)
+                        if x1 not in coeff.free_symbols:
+                            a = cot_part.args[0]
+                            antideriv = antideriv.subs(atan_term, Add(atan_term,
+                                sign(coeff)*pi*floor((a)/pi)))
 
             if antideriv is None:
                 undone_limits.append(xab)
@@ -788,7 +838,7 @@ class Integral(AddWithLimits):
         # will return a sympy expression instead of a Polynomial.
         #
         # see Polynomial for details.
-        if isinstance(f, Poly) and not meijerg:
+        if isinstance(f, Poly) and not (manual or meijerg or risch):
             return f.integrate(x)
 
         # Piecewise antiderivatives need to call special integrate.
@@ -802,7 +852,7 @@ class Integral(AddWithLimits):
 
         # try to convert to poly(x) and then integrate if successful (fast)
         poly = f.as_poly(x)
-        if poly is not None and not meijerg:
+        if poly is not None and not (manual or meijerg or risch):
             return poly.integrate().as_expr()
 
         if risch is not False:
@@ -884,7 +934,7 @@ class Integral(AddWithLimits):
                     else:
                         h1 = log(g.base)
                         h2 = g.base**(g.exp + 1) / (g.exp + 1)
-                        h = Piecewise((h1, Eq(g.exp, -1)), (h2, True))
+                        h = Piecewise((h2, Ne(g.exp, -1)), (h1, True))
 
                     parts.append(coeff * h / M[a])
                     continue
@@ -892,11 +942,11 @@ class Integral(AddWithLimits):
             #        poly(x)
             # g(x) = -------
             #        poly(x)
-            if g.is_rational_function(x) and not meijerg:
+            if g.is_rational_function(x) and not (manual or meijerg or risch):
                 parts.append(coeff * ratint(g, x))
                 continue
 
-            if not meijerg:
+            if not (manual or meijerg or risch):
                 # g(x) = Mul(trig)
                 h = trigintegrate(g, x, conds=conds)
                 if h is not None:
@@ -959,11 +1009,16 @@ class Integral(AddWithLimits):
                 try:
                     result = manualintegrate(g, x)
                     if result is not None and not isinstance(result, Integral):
-                        if result.has(Integral):
-                            # try to have other algorithms do the integrals
-                            # manualintegrate can't handle
+                        if result.has(Integral) and not manual:
+                            # Try to have other algorithms do the integrals
+                            # manualintegrate can't handle,
+                            # unless we were asked to use manual only.
+                            # Keep the rest of eval_kwargs in case another
+                            # method was set to False already
+                            new_eval_kwargs = eval_kwargs
+                            new_eval_kwargs["manual"] = False
                             result = result.func(*[
-                                arg.doit(manual=False) if
+                                arg.doit(**new_eval_kwargs) if
                                 arg.has(Integral) else arg
                                 for arg in result.args
                             ]).expand(multinomial=False,
@@ -989,7 +1044,7 @@ class Integral(AddWithLimits):
             # collection on the expressions if they are already
             # in an expanded form
             if not h and len(args) == 1:
-                f = f.expand(mul=True, deep=False)
+                f = sincos_to_sum(f).expand(mul=True, deep=False)
                 if f.is_Add:
                     # Note: risch will be identical on the expanded
                     # expression, but maybe it will be able to pick out parts,
@@ -1032,23 +1087,29 @@ class Integral(AddWithLimits):
                 break
         return integrate(leading_term, *self.args[1:])
 
-    def as_sum(self, n, method="midpoint"):
+    def as_sum(self, n=None, method="midpoint", evaluate=True):
         """
-        Approximates the definite integral by a sum.
+        Approximates a definite integral by a sum.
 
-        method ... one of: left, right, midpoint, trapezoid
+        Arguments
+        ---------
+        n
+            The number of subintervals to use, optional.
+        method
+            One of: 'left', 'right', 'midpoint', 'trapezoid'.
+        evaluate
+            If False, returns an unevaluated Sum expression. The default
+            is True, evaluate the sum.
 
-        These are all basically the rectangle method [1], the only difference
-        is where the function value is taken in each interval to define the
-        rectangle.
+        These methods of approximate integration are described in [1].
 
-        [1] http://en.wikipedia.org/wiki/Rectangle_method
+        [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
 
         Examples
         ========
 
         >>> from sympy import sin, sqrt
-        >>> from sympy.abc import x
+        >>> from sympy.abc import x, n
         >>> from sympy.integrals import Integral
         >>> e = Integral(sin(x), (x, 3, 7))
         >>> e
@@ -1083,9 +1144,8 @@ class Integral(AddWithLimits):
         >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == _
         True
 
-        All but the trapexoid method may be used when dealing with a function
-        with a discontinuity. Here, the discontinuity at x = 0 can be avoided
-        by using the midpoint or right-hand method:
+        Here, the discontinuity at x = 0 can be avoided by using the
+        midpoint or right-hand method:
 
         >>> e = Integral(1/sqrt(x), (x, 0, 1))
         >>> e.as_sum(5).n(4)
@@ -1096,12 +1156,25 @@ class Integral(AddWithLimits):
         2.000
 
         The left- or trapezoid method will encounter the discontinuity and
-        return oo:
+        return infinity:
 
         >>> e.as_sum(5, 'left')
-        oo
-        >>> e.as_sum(5, 'trapezoid')
-        oo
+        zoo
+
+        The number of intervals can be symbolic. If omitted, a dummy symbol
+        will be used for it.
+        >>> e = Integral(x**2, (x, 0, 2))
+        >>> e.as_sum(n, 'right').expand()
+        8/3 + 4/n + 4/(3*n**2)
+
+        This shows that the midpoint rule is more accurate, as its error
+        term decays as the square of n:
+        >>> e.as_sum(method='midpoint').expand()
+        8/3 - 2/(3*_n**2)
+
+        A symbolic sum is returned with evaluate=False:
+        >>> e.as_sum(n, 'midpoint', evaluate=False)
+        2*Sum((2*_k/n - 1/n)**2, (_k, 1, n))/n
 
         See Also
         ========
@@ -1109,48 +1182,41 @@ class Integral(AddWithLimits):
         Integral.doit : Perform the integration using any hints
         """
 
+        from sympy.concrete.summations import Sum
         limits = self.limits
         if len(limits) > 1:
             raise NotImplementedError(
                 "Multidimensional midpoint rule not implemented yet")
         else:
             limit = limits[0]
-            if len(limit) != 3:
-                raise ValueError("Expecting a definite integral.")
-        if n <= 0:
-            raise ValueError("n must be > 0")
-        if n == oo:
-            raise NotImplementedError("Infinite summation not yet implemented")
-        sym, lower_limit, upper_limit = limit
-        dx = (upper_limit - lower_limit)/n
+            if (len(limit) != 3 or limit[1].is_finite is False or
+                limit[2].is_finite is False):
+                raise ValueError("Expecting a definite integral over "
+                                  "a finite interval.")
+        if n is None:
+            n = Dummy('n', integer=True, positive=True)
+        else:
+            n = sympify(n)
+        if (n.is_positive is False or n.is_integer is False or
+            n.is_finite is False):
+            raise ValueError("n must be a positive integer, got %s" % n)
+        x, a, b = limit
+        dx = (b - a)/n
+        k = Dummy('k', integer=True, positive=True)
+        f = self.function
 
-        if method == 'trapezoid':
-            l = self.function.limit(sym, lower_limit)
-            r = self.function.limit(sym, upper_limit, "-")
-            result = (l + r)/2
-            for i in range(1, n):
-                x = lower_limit + i*dx
-                result += self.function.subs(sym, x)
-            return result*dx
-        elif method not in ('left', 'right', 'midpoint'):
-            raise NotImplementedError("Unknown method %s" % method)
-
-        result = 0
-        for i in range(n):
-            if method == "midpoint":
-                xi = lower_limit + i*dx + dx/2
-            elif method == "left":
-                xi = lower_limit + i*dx
-                if i == 0:
-                    result = self.function.limit(sym, lower_limit)
-                    continue
-            elif method == "right":
-                xi = lower_limit + i*dx + dx
-                if i == n:
-                    result += self.function.limit(sym, upper_limit, "-")
-                    continue
-            result += self.function.subs(sym, xi)
-        return result*dx
+        if method == "left":
+            result = dx*Sum(f.subs(x, a + (k-1)*dx), (k, 1, n))
+        elif method == "right":
+            result = dx*Sum(f.subs(x, a + k*dx), (k, 1, n))
+        elif method == "midpoint":
+            result = dx*Sum(f.subs(x, a + k*dx - dx/2), (k, 1, n))
+        elif method == "trapezoid":
+            result = dx*((f.subs(x, a) + f.subs(x, b))/2 +
+                Sum(f.subs(x, a + k*dx), (k, 1, n - 1)))
+        else:
+            raise ValueError("Unknown method %s" % method)
+        return result.doit() if evaluate else result
 
     def _sage_(self):
         import sage.all as sage

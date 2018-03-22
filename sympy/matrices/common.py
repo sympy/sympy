@@ -56,7 +56,7 @@ class MatrixRequired(object):
         raise NotImplementedError("Subclasses must implement this.")
 
     def __eq__(self, other):
-        raise NotImplementedError("Subclasses must impliment this.")
+        raise NotImplementedError("Subclasses must implement this.")
 
     def __getitem__(self, key):
         """Implementations of __getitem__ should accept ints, in which
@@ -86,7 +86,7 @@ class MatrixShaping(MatrixRequired):
                 return self[i, j]
             elif pos <= j < pos + other.cols:
                 return other[i, j - pos]
-            return self[i, j - pos - other.cols]
+            return self[i, j - other.cols]
 
         return self._new(self.rows, self.cols + other.cols,
                          lambda i, j: entry(i, j))
@@ -736,7 +736,7 @@ class MatrixSpecial(MatrixRequired):
         rows = kwargs.get('rows', diag_rows)
         cols = kwargs.get('cols', diag_cols)
         if rows < diag_rows or cols < diag_cols:
-            raise ValueError("A {} x {} diagnal matrix cannot accomodate a"
+            raise ValueError("A {} x {} diagnal matrix cannot accommodate a"
                              "diagonal of size at least {} x {}.".format(rows, cols,
                                                                          diag_rows, diag_cols))
 
@@ -1694,7 +1694,7 @@ class MatrixOperations(MatrixRequired):
                 perm = reversed(perm)
 
             # since Permutation doesn't let us have non-disjoint cycles,
-            # we'll construct the explict mapping ourselves XXX Bug #12479
+            # we'll construct the explicit mapping ourselves XXX Bug #12479
             mapping = list(range(max_index))
             for (i, j) in perm:
                 mapping[i], mapping[j] = mapping[j], mapping[i]
@@ -1938,6 +1938,10 @@ class MatrixArithmetic(MatrixRequired):
     def _eval_scalar_rmul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
+    def _eval_Mod(self, other):
+        from sympy import Mod
+        return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
+
     # python arithmetic functions
     def __abs__(self):
         """Returns a new matrix with entry-wise absolute values."""
@@ -1973,6 +1977,10 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
+        other = _matrixify(other)
+        if not getattr(other, 'is_Matrix', False) and not getattr(other, 'is_MatrixLike', False):
+            return NotImplemented
+
         return self.__mul__(other)
 
     @call_highest_priority('__rmul__')
@@ -2018,12 +2026,14 @@ class MatrixArithmetic(MatrixRequired):
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_mul(self, other)
 
-        try:
-            return self._eval_scalar_mul(other)
-        except TypeError:
-            pass
+        # if 'other' is not iterable then scalar multiplication.
+        if not isinstance(other, collections.Iterable):
+            try:
+                return self._eval_scalar_mul(other)
+            except TypeError:
+                pass
 
-        raise TypeError('Cannot multiply %s and %s' % (type(self), type(other)))
+        return NotImplemented
 
     def __neg__(self):
         return self._eval_scalar_mul(-1)
@@ -2066,6 +2076,10 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__matmul__')
     def __rmatmul__(self, other):
+        other = _matrixify(other)
+        if not getattr(other, 'is_Matrix', False) and not getattr(other, 'is_MatrixLike', False):
+            return NotImplemented
+
         return self.__rmul__(other)
 
     @call_highest_priority('__mul__')
@@ -2084,12 +2098,14 @@ class MatrixArithmetic(MatrixRequired):
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_rmul(self, other)
 
-        try:
-            return self._eval_scalar_rmul(other)
-        except TypeError:
-            pass
+        # if 'other' is not iterable then scalar multiplication.
+        if not isinstance(other, collections.Iterable):
+            try:
+                return self._eval_scalar_rmul(other)
+            except TypeError:
+                pass
 
-        raise TypeError('Cannot multiply %s and %s' % (type(self), type(other)))
+        return NotImplemented
 
     @call_highest_priority('__sub__')
     def __rsub__(self, a):
@@ -2134,7 +2150,7 @@ class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
-    pass
+    _diff_wrt = True
 
 
 class _MinimalMatrix(object):

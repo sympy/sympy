@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
-        sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, Integer,
+        sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, zoo, Integer,
         sign, im, nan, Dummy, factorial, comp, refine
 )
 from sympy.core.compatibility import long, range
@@ -1636,6 +1636,9 @@ def test_Mod():
     # modular exponentiation
     assert Mod(Pow(4, 13, evaluate=False), 497) == Mod(Pow(4, 13), 497)
     assert Mod(Pow(2, 10000000000, evaluate=False), 3) == 1
+    assert Mod(Pow(32131231232, 9**10**6, evaluate=False),10**12) == pow(32131231232,9**10**6,10**12)
+    assert Mod(Pow(33284959323, 123**999, evaluate=False),11**13) == pow(33284959323,123**999,11**13)
+    assert Mod(Pow(78789849597, 333**555, evaluate=False),12**9) == pow(78789849597,333**555,12**9)
 
     # Wilson's theorem
     factorial(18042, evaluate=False) % 18043 == 18042
@@ -1937,6 +1940,25 @@ def test_Mul_with_zero_infinite():
     assert e.is_positive is None
     assert e.is_hermitian is None
 
+def test_Mul_does_not_cancel_infinities():
+    a, b = symbols('a b')
+    assert ((zoo + 3*a)/(3*a + zoo)) is nan
+    assert ((b - oo)/(b - oo)) is nan
+    # issue 13904
+    expr = (1/(a+b) + 1/(a-b))/(1/(a+b) - 1/(a-b))
+    assert expr.subs(b, a) is nan
+
+
+def test_Mul_does_not_distribute_infinity():
+    a, b = symbols('a b')
+    assert ((1 + I)*oo).is_Mul
+    assert ((a + b)*(-oo)).is_Mul
+    assert ((a + 1)*zoo).is_Mul
+    assert ((1 + I)*oo).is_finite is False
+    z = (1 + I)*oo
+    assert ((1 - I)*z).expand() is oo
+
+
 def test_issue_8247_8354():
     from sympy import tan
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
@@ -1959,3 +1981,7 @@ def test_issue_8247_8354():
 def test_Add_is_zero():
     x, y = symbols('x y', zero=True)
     assert (x + y).is_zero
+
+
+def test_issue_14392():
+    assert (sin(zoo)**2).as_real_imag() == (nan, nan)

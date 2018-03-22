@@ -131,6 +131,9 @@ def test_FreeGroupElm_ext_rep():
 
 
 def test_FreeGroupElm__mul__pow__():
+    x1 = x.group.dtype(((Symbol('x'), 1),))
+    assert x**2 == x1*x
+
     assert (x**2*y*x**-2)**4 == x**2*y**4*x**-2
     assert (x**2)**2 == x**4
     assert (x**-1)**-1 == x

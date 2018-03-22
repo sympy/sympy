@@ -490,7 +490,11 @@ def test_Rational():
     assert str(2**Rational(1, 10**10)) == "2**(1/10000000000)"
 
     assert sstr(Rational(2, 3), sympy_integers=True) == "S(2)/3"
-    assert sstr(Symbol("x")**Rational(2, 3), sympy_integers=True) == "x**(S(2)/3)"
+    x = Symbol("x")
+    assert sstr(x**Rational(2, 3), sympy_integers=True) == "x**(S(2)/3)"
+    assert sstr(Eq(x, Rational(2, 3)), sympy_integers=True) == "Eq(x, S(2)/3)"
+    assert sstr(Limit(x, x, Rational(7, 2)), sympy_integers=True) == \
+        "Limit(x, x, S(7)/2)"
 
 
 def test_Float():
@@ -593,6 +597,8 @@ def test_Quaternion_str_printer():
 
 
 def test_Quantity_str():
+    assert sstr(second, abbrev=True) == "s"
+    assert sstr(joule, abbrev=True) == "J"
     assert str(second) == "second"
     assert str(joule) == "joule"
 
@@ -782,4 +788,12 @@ def test_MatrixElement_printing():
     assert(str(3 * A[0, 0]) == "3*A[0, 0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert str(F) == "((-1)*B + A)[0, 0]"
+    assert str(F) == "(-B + A)[0, 0]"
+
+
+def test_MatrixSymbol_printing():
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+
+    assert str(A - A*B - B) == "-B - A*B + A"
+    assert str(A*B - (A+B)) == "-(A + B) + A*B"

@@ -1,5 +1,5 @@
 import warnings
-from sympy.core import (S, pi, oo, symbols, Rational, Integer, Float,
+from sympy.core import (S, pi, oo, symbols, Rational, Integer, Float, Mod,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq, nan)
 from sympy.functions import (Abs, acos, acosh, asin, asinh, atan, atanh, atan2,
                              ceiling, cos, cosh, erf, erfc, exp, floor, gamma, log,
@@ -129,6 +129,9 @@ def test_ccode_exceptions():
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"
+    r, s = symbols('r,s', real=True)
+    assert ccode(Mod(ceiling(r), ceiling(s))) == "((ceil(r)) % (ceil(s)))"
+    assert ccode(Mod(r, s)) == "fmod(r, s)"
 
 
 def test_ccode_user_functions():
@@ -626,6 +629,10 @@ def test_C99CodePrinter__precision():
         check(exp(x*8.0), 'exp{s}(8.0{S}*x)')
         check(exp2(x), 'exp2{s}(x)')
         check(expm1(x*4.0), 'expm1{s}(4.0{S}*x)')
+        check(Mod(n, 2), '((n) % (2))')
+        check(Mod(2*n + 3, 3*n + 5), '((2*n + 3) % (3*n + 5))')
+        check(Mod(x + 2.0, 3.0), 'fmod{s}(1.0{S}*x + 2.0{S}, 3.0{S})')
+        check(Mod(x, 2.0*x + 3.0), 'fmod{s}(1.0{S}*x, 2.0{S}*x + 3.0{S})')
         check(log(x/2), 'log{s}((1.0{S}/2.0{S})*x)')
         check(log10(3*x/2), 'log10{s}((3.0{S}/2.0{S})*x)')
         check(log2(x*8.0), 'log2{s}(8.0{S}*x)')
@@ -748,7 +755,7 @@ def test_MatrixElement_printing():
     assert(ccode(3 * A[0, 0]) == "3*A[0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(ccode(F) == "((-1)*B + A)[0]")
+    assert(ccode(F) == "(-B + A)[0]")
 
 
 def test_subclass_CCodePrinter():

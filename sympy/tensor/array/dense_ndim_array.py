@@ -155,6 +155,9 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
     def __setitem__(self, index, value):
         raise TypeError('immutable N-dim array')
 
+    def as_mutable(self):
+        return MutableDenseNDimArray(self)
+
 
 class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
 
@@ -193,3 +196,10 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         value = _sympify(value)
 
         self._array[index] = value
+
+    def as_immutable(self):
+        return ImmutableDenseNDimArray(self)
+
+    @property
+    def free_symbols(self):
+        return {i for j in self._array for i in j.free_symbols}

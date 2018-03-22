@@ -132,8 +132,10 @@ class AskRationalHandler(CommonHandler):
             if ask(Q.prime(expr.base), assumptions):
                 return False
 
-    Rational, Float = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*2 # Float is finite-precision
+
+    Rational = staticmethod(CommonHandler.AlwaysTrue)
+
+    Float = staticmethod(CommonHandler.AlwaysNone)
 
     ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio = \
         [staticmethod(CommonHandler.AlwaysFalse)]*6

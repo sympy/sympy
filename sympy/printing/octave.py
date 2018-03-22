@@ -34,16 +34,21 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
 # generally a mapping to (argument_conditions, octave_function).
 known_fcns_src2 = {
     "Abs": "abs",
+    "arg": "angle",
     "ceiling": "ceil",
     "Chi": "coshint",
     "Ci": "cosint",
     "conjugate": "conj",
     "DiracDelta": "dirac",
     "Heaviside": "heaviside",
+    "im": "imag",
     "laguerre": "laguerreL",
     "li": "logint",
     "loggamma": "gammaln",
+    "Max": "max",
+    "Min": "min",
     "polygamma": "psi",
+    "re": "real",
     "Shi": "sinhint",
     "Si": "sinint",
 }
@@ -74,6 +79,7 @@ class OctaveCodePrinter(CodePrinter):
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Octave.
+
 
     def __init__(self, settings={}):
         super(OctaveCodePrinter, self).__init__(settings)
@@ -124,7 +130,7 @@ class OctaveCodePrinter(CodePrinter):
     def _print_Mul(self, expr):
         # print complex numbers nicely in Octave
         if (expr.is_number and expr.is_imaginary and
-                expr.as_coeff_Mul()[0].is_integer):
+                (S.ImaginaryUnit*expr).is_Integer):
             return "%si" % self._print(-S.ImaginaryUnit*expr)
 
         # cribbed from str.py
@@ -432,6 +438,16 @@ class OctaveCodePrinter(CodePrinter):
         return "lambertw(" + args + ")"
 
 
+    def _nested_binary_math_func(self, expr):
+        return '{name}({arg1}, {arg2})'.format(
+            name=self.known_functions[expr.__class__.__name__],
+            arg1=self._print(expr.args[0]),
+            arg2=self._print(expr.func(*expr.args[1:]))
+            )
+
+    _print_Max = _print_Min = _nested_binary_math_func
+
+
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
@@ -580,7 +596,7 @@ def octave_code(expr, assign_to=None, **settings):
 
     Matrices are supported using Octave inline notation.  When using
     ``assign_to`` with matrices, the name can be specified either as a string
-    or as a ``MatrixSymbol``.  The dimenions must align in the latter case.
+    or as a ``MatrixSymbol``.  The dimensions must align in the latter case.
 
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([[x**2, sin(x), ceiling(x)]])

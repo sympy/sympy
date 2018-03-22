@@ -13,7 +13,6 @@ from sympy.abc import x, y, z, t
 import itertools
 
 
-
 def test_naturals():
     N = S.Naturals
     assert 5 in N
@@ -50,6 +49,8 @@ def test_integers():
 
     assert Z.intersect(Interval(-5, 5)) == Range(-5, 6)
     assert Z.intersect(Interval(-5, 5, True, True)) == Range(-4, 5)
+    assert Z.intersect(Interval(5, S.Infinity)) == Range(5, S.Infinity)
+    assert Z.intersect(Interval.Lopen(5, S.Infinity)) == Range(6, S.Infinity)
 
     assert Z.inf == -oo
     assert Z.sup == oo
@@ -78,6 +79,10 @@ def test_ImageSet():
     assert Rational(.3) not in harmonics
 
     assert harmonics.is_iterable
+
+    assert imageset(x, -x, Interval(0, 1)) == Interval(-1, 0)
+
+    assert ImageSet(Lambda(x, x**2), Interval(0, 2)).doit() == Interval(0, 4)
 
     c = ComplexRegion(Interval(1, 3)*Interval(1, 3))
     assert Tuple(2, 6) in ImageSet(Lambda((x, y), (x, 2*y)), c)
@@ -486,24 +491,6 @@ def test_ImageSet_simplification():
     assert imageset(Lambda(n, sin(n)),
                     imageset(Lambda(m, tan(m)), S.Integers)) == \
             imageset(Lambda(m, sin(tan(m))), S.Integers)
-
-
-def test_ImageSet_contains():
-    from sympy.abc import x
-    a = ImageSet(Lambda(x, Interval(x, x + S(1)/2)), S.Naturals0)
-    b = ImageSet(Lambda(x, Interval(1/x, 1/x + S.One)), S.Naturals)
-    c = ImageSet(Lambda(x, Interval(2*x*pi, (2*x + 1)*pi)), S.Integers)
-    assert (2, S.Half) in imageset(x, (x, 1/x), S.Integers)
-    assert a.contains(S(3)/2)
-    assert not a.contains(S(5)/3)
-    assert b.contains(S.One)
-    assert not b.contains(5/2)
-    assert c.contains(3*pi/4)
-    assert c.contains(pi)
-    assert not c.contains(3*pi/2)
-    assert a.contains(Interval(10, 10 + S(1/3)))
-    assert not b.contains(Interval(2, 3))
-    assert c.contains(Interval(0, 3))
 
 def test_ComplexRegion_contains():
 

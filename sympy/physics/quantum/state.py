@@ -113,7 +113,7 @@ class StateBase(QExpr):
 
     @classmethod
     def dual_class(self):
-        """Return the class used to construt the dual."""
+        """Return the class used to construct the dual."""
         raise NotImplementedError(
             'dual_class must be implemented in a subclass'
         )
@@ -234,7 +234,7 @@ class KetBase(StateBase):
     #-------------------------------------------------------------------------
 
     def _eval_innerproduct(self, bra, **hints):
-        """Evaluate the inner product betweeen this ket and a bra.
+        """Evaluate the inner product between this ket and a bra.
 
         This is called to compute <bra|ket>, where the ket is ``self``.
 

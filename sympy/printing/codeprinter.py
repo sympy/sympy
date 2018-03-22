@@ -308,7 +308,7 @@ class CodePrinter(StrPrinter):
                 code0 = self._print(temp)
                 lines.append(code0)
             return "\n".join(lines)
-        elif self._settings["contract"] and (lhs.has(IndexedBase) or
+        elif self._settings.get("contract", False) and (lhs.has(IndexedBase) or
                 rhs.has(IndexedBase)):
             # Here we check if there is looping to be done, and if so
             # print the required loops.
@@ -331,7 +331,7 @@ class CodePrinter(StrPrinter):
         else:
             return name
 
-    def _print_Function(self, expr):
+    def _print_Function(self, expr, **kwargs):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
             func = None
@@ -343,9 +343,12 @@ class CodePrinter(StrPrinter):
                         break
             if func is not None:
                 try:
-                    return func(*[self.parenthesize(item, 0) for item in expr.args])
+                    return func(self, *[self.parenthesize(item, 0) for item in expr.args], **kwargs)
                 except TypeError:
-                    return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                    try:
+                        return func(*[self.parenthesize(item, 0) for item in expr.args])
+                    except TypeError:
+                        return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))

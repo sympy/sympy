@@ -3,7 +3,8 @@ from __future__ import print_function, division
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number
 from sympy.core.basic import as_Basic
 from sympy.core.sympify import SympifyError
-from sympy.core.relational import Equality, Relational, _canonical
+from sympy.core.relational import (Equality, Unequality, Relational,
+    _canonical)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
     true, false, Not, Or, ITE, simplify_logic)
@@ -663,17 +664,20 @@ class Piecewise(Function):
         return sum
 
     def _intervals(self, sym):
-        """Return a list of tuples, (a, b, e, i), where a and b
-        are the lower and upper bounds in which the expression e
-        of argument i in self is defined.
+        """Return a list of unique tuples, (a, b, e, i), where a and b
+        are the lower and upper bounds in which the expression e of
+        argument i in self is defined and a < b (when involving
+        numbers) or a <= b when involving symbols.
 
-        If there are any relationals not involving sym, or
-        any relational cannot be solved for sym,
-        NotImplementedError is raised. The evaluated conditions will
-        be returned as ranges. Discontinuous ranges will be
-        returned separately with identical expressions and
-        the first condition that evaluates to True will be
-        returned as the last tuple with a, b = -oo, oo.
+        If there are any relationals not involving sym, or any
+        relational cannot be solved for sym, NotImplementedError is
+        raised. The calling routine should have removed such
+        relationals before calling this routine.
+
+        The evaluated conditions will be returned as ranges.
+        Discontinuous ranges will be returned separately with
+        identical expressions. The first condition that evaluates to
+        True will be returned as the last tuple with a, b = -oo, oo.
         """
         from sympy.solvers.inequalities import _solve_inequality
         from sympy.logic.boolalg import to_cnf, distribute_or_over_and
@@ -681,20 +685,29 @@ class Piecewise(Function):
         assert isinstance(self, Piecewise)
 
         def _solve_relational(r):
+            if sym not in r.free_symbols:
+                nonsymfail(r)
             rv = _solve_inequality(r, sym)
-            if isinstance(rv, Relational) and \
-                    sym in rv.free_symbols:
-                if rv.args[0] != sym:
+            if isinstance(rv, Relational):
+                free = rv.args[1].free_symbols
+                if rv.args[0] != sym or sym in free:
                     raise NotImplementedError(filldedent('''
                         Unable to solve relational
                         %s for %s.''' % (r, sym)))
-                if rv.rel_op == '!=':
+                if rv.rel_op == '==':
+                    # this equality has been affirmed to have the form
+                    # Eq(sym, rhs) where rhs is sym-free; it represents
+                    # a zero-width interval which will be ignored
+                    # whether it is an isolated condition or contained
+                    # within an And or an Or
+                    rv = S.false
+                elif rv.rel_op == '!=':
                     try:
                         rv = Or(sym < rv.rhs, sym > rv.rhs)
                     except TypeError:
                         # e.g. x != I ==> all real x satisfy
                         rv = S.true
-            if rv == (S.NegativeInfinity < sym) & (sym < S.Infinity):
+            elif rv == (S.NegativeInfinity < sym) & (sym < S.Infinity):
                 rv = S.true
             return rv
 
@@ -704,8 +717,8 @@ class Piecewise(Function):
                 %s appeared: %s''' % (sym, cond)))
 
         # make self canonical wrt Relationals
-        reps = dict(
-            [(r,_solve_relational(r)) for r in self.atoms(Relational)])
+        reps = dict([
+            (r, _solve_relational(r)) for r in self.atoms(Relational)])
         # process args individually so if any evaluate, their position
         # in the original Piecewise will be known
         args = [i.xreplace(reps) for i in self.args]
@@ -714,14 +727,12 @@ class Piecewise(Function):
         expr_cond = []
         default = idefault = None
         for i, (expr, cond) in enumerate(args):
-            if cond == False:
+            if cond is S.false:
                 continue
-            elif cond == True:
+            elif cond is S.true:
                 default = expr
                 idefault = i
                 break
-            elif sym not in cond.free_symbols:
-                nonsymfail(cond)
 
             cond = to_cnf(cond)
             if isinstance(cond, And):
@@ -729,61 +740,27 @@ class Piecewise(Function):
 
             if isinstance(cond, Or):
                 expr_cond.extend(
-                    [(i, expr, o) for o in cond.args])
-            elif cond != False:
+                    [(i, expr, o) for o in cond.args
+                    if not isinstance(o, Equality)])
+            elif cond is not S.false:
                 expr_cond.append((i, expr, cond))
 
         # determine intervals represented by conditions
         int_expr = []
         for iarg, expr, cond in expr_cond:
-            if isinstance(cond, Equality):
-                if cond.lhs == sym:
-                    v = cond.rhs
-                    int_expr.append((v, v, expr.subs(sym, v), iarg))
-                    continue
-                else:
-                    nonsymfail(cond)
-
             if isinstance(cond, And):
                 lower = S.NegativeInfinity
                 upper = S.Infinity
-                nonsym = False
-                rhs = None
                 for cond2 in cond.args:
                     if isinstance(cond2, Equality):
-                        # all relationals were solved and
-                        # only sym-dependent ones made it to here
-                        assert cond2.lhs == sym
-                        assert sym not in cond2.rhs.free_symbols
-                        if rhs is None:
-                            rhs = cond2.rhs
-                        else:
-                            same = Eq(cond2.rhs, rhs)
-                            if same == False:
-                                cond = S.false
-                                break
-                            elif same != True:
-                                raise Undecidable('%s did not evaluate' % same)
+                        lower = upper  # ignore
+                        break
                     elif cond2.lts == sym:
                         upper = Min(cond2.gts, upper)
                     elif cond2.gts == sym:
                         lower = Max(cond2.lts, lower)
                     else:
-                        # mark but don't fail until later
-                        nonsym = cond2
-                if rhs is not None and cond not in (S.true, S.false):
-                    lower = upper = rhs
-                    cond = cond.subs(sym, lower)
-                # cond might have evaluated b/c of an Eq
-                if cond is S.true:
-                    default = expr
-                    continue
-                elif cond is S.false:
-                    continue
-                elif nonsym is not False:
-                    nonsymfail(nonsym)
-                else:
-                    pass  # for coverage
+                        nonsymfail(cond2)  # should never get here
             elif isinstance(cond, Relational):
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts == sym:                # part 1a: expand the side ...
@@ -797,14 +774,14 @@ class Piecewise(Function):
                     'unrecognized condition: %s' % cond)
 
             lower, upper = lower, Max(lower, upper)
-            if (lower > upper) is not S.true:
+            if (lower >= upper) is not S.true:
                 int_expr.append((lower, upper, expr, iarg))
 
         if default is not None:
             int_expr.append(
                 (S.NegativeInfinity, S.Infinity, default, idefault))
 
-        return int_expr
+        return list(uniq(int_expr))
 
     def _eval_nseries(self, x, n, logx):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
@@ -881,28 +858,42 @@ class Piecewise(Function):
             except TypeError:
                 pass
 
-    def as_expr_set_pairs(self):
+    def as_expr_set_pairs(self, domain=S.Reals):
         """Return tuples for each argument of self that give
-        the expression and the interval in which it is valid.
+        the expression and the interval in which it is valid
+        which is contained within the given domain.
         If a condition cannot be converted to a set, an error
         will be raised. The variable of the conditions is
         assumed to be real; sets of real values are returned.
 
         Examples
         ========
-        >>> from sympy import Piecewise
+
+        >>> from sympy import Piecewise, Interval
         >>> from sympy.abc import x
-        >>> Piecewise(
+        >>> p = Piecewise(
         ...     (1, x < 2),
         ...     (2,(x > 0) & (x < 4)),
-        ...     (3, True)).as_expr_set_pairs()
+        ...     (3, True))
+        >>> p.as_expr_set_pairs()
         [(1, Interval.open(-oo, 2)),
          (2, Interval.Ropen(2, 4)),
          (3, Interval(4, oo))]
+        >>> p.as_expr_set_pairs(Interval(0, 3))
+        [(1, Interval.Ropen(0, 2)),
+         (2, Interval(2, 3)), (3, EmptySet())]
         """
         exp_sets = []
-        U = S.Reals
+        U = domain
+        complex = not domain.is_subset(S.Reals)
         for expr, cond in self.args:
+            if complex:
+                for i in cond.atoms(Relational):
+                    if not isinstance(i, (Equality, Unequality)):
+                        raise ValueError(filldedent('''
+                            Inequalities in the complex domain are
+                            not supported. Try the real domain by
+                            setting domain=S.Reals'''))
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int
             exp_sets.append((expr, cond_int))

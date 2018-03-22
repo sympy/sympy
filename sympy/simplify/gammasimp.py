@@ -382,7 +382,7 @@ def _gammasimp(expr, as_comb):
                                     (denom_gammas, denom_others, numer_others)]:
                 _mult_thm(l, numer, denom)
 
-        # =========== level >= 2 work: factor absorbtion =========
+        # =========== level >= 2 work: factor absorption =========
 
         if level >= 2:
             # Try to absorb factors into the gammas: x*gamma(x) -> gamma(x + 1)

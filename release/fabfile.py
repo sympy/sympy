@@ -402,7 +402,7 @@ git_whitelist = {
     'bin/test_isolated',
     'bin/test_travis.sh',
     # The notebooks are not ready for shipping yet. They need to be cleaned
-    # up, and preferrably doctested.  See also
+    # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
     'examples/advanced/identitysearch_example.ipynb',
     'examples/beginner/plot_advanced.ipynb',

@@ -196,6 +196,7 @@ from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
 from sympy.functions.elementary.hyperbolic import (
     cosh, sinh, tanh, coth, sech, csch, HyperbolicFunction)
+from sympy.functions.combinatorial.factorials import binomial
 from sympy.core.compatibility import ordered, range
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
@@ -428,6 +429,8 @@ def TR3(rv):
         if not isinstance(rv, TrigonometricFunction):
             return rv
         rv = rv.func(signsimp(rv.args[0]))
+        if not isinstance(rv, TrigonometricFunction):
+            return rv
         if (rv.args[0] - S.Pi/4).is_positive is (S.Pi/2 - rv.args[0]).is_positive is True:
             fmap = {cos: sin, sin: cos, tan: cot, cot: tan, sec: csc, csc: sec}
             rv = fmap[rv.func](S.Pi/2 - rv.args[0])
@@ -1581,6 +1584,52 @@ def TR22(rv, max=4, pow=False):
     return bottom_up(rv, f)
 
 
+def TRpower(rv):
+    """Convert sin(x)**n and cos(x)**n with positive n to sums.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.fu import TRpower
+    >>> from sympy.abc import x
+    >>> from sympy import cos, sin
+    >>> TRpower(sin(x)**6)
+    -15*cos(2*x)/32 + 3*cos(4*x)/16 - cos(6*x)/32 + 5/16
+    >>> TRpower(sin(x)**3*cos(2*x)**4)
+    (3*sin(x)/4 - sin(3*x)/4)*(cos(4*x)/2 + cos(8*x)/8 + 3/8)
+
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/List_of_trigonometric_identities#Power-reduction_formulae
+
+    """
+
+    def f(rv):
+        if not (isinstance(rv, Pow) and isinstance(rv.base, (sin, cos))):
+            return rv
+        b, n = rv.as_base_exp()
+        x = b.args[0]
+        if n.is_Integer and n.is_positive:
+            if n.is_odd and isinstance(b, cos):
+                rv = 2**(1-n)*Add(*[binomial(n, k)*cos((n - 2*k)*x)
+                    for k in range((n + 1)/2)])
+            elif n.is_odd and isinstance(b, sin):
+                rv = 2**(1-n)*(-1)**((n-1)/2)*Add(*[binomial(n, k)*
+                    (-1)**k*sin((n - 2*k)*x) for k in range((n + 1)/2)])
+            elif n.is_even and isinstance(b, cos):
+                rv = 2**(1-n)*Add(*[binomial(n, k)*cos((n - 2*k)*x)
+                    for k in range(n/2)])
+            elif n.is_even and isinstance(b, sin):
+                rv = 2**(1-n)*(-1)**(n/2)*Add(*[binomial(n, k)*
+                    (-1)**k*cos((n - 2*k)*x) for k in range(n/2)])
+            if n.is_even:
+                rv += 2**(-n)*binomial(n, n/2)
+        return rv
+
+    return bottom_up(rv, f)
+
+
 def L(rv):
     """Return count of trigonometric functions in expression.
 
@@ -1621,7 +1670,7 @@ RL1 = (TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0)
 
 
 # XXX it's a little unclear how this one is to be implemented
-# see Fu paper of reference, page 7. What is the Union symbol refering to?
+# see Fu paper of reference, page 7. What is the Union symbol referring to?
 # The diagram shows all these as one chain of transformations, but the
 # text refers to them being applied independently. Also, a break
 # if L starts to increase has not been implemented.
@@ -2139,3 +2188,25 @@ def hyper_as_trig(rv):
 
     return _osborne(masked, d), lambda x: collect(signsimp(
         _osbornei(x, d).xreplace(dict(reps))), S.ImaginaryUnit)
+
+
+def sincos_to_sum(expr):
+    """Convert products and powers of sin and cos to sums.
+
+    Applied power reduction TRpower first, then expands products, and
+    converts products to sums with TR8.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.fu import sincos_to_sum
+    >>> from sympy.abc import x
+    >>> from sympy import cos, sin
+    >>> sincos_to_sum(16*sin(x)**3*cos(2*x)**2)
+    7*sin(x) - 5*sin(3*x) + 3*sin(5*x) - sin(7*x)
+    """
+
+    if not expr.has(cos, sin):
+        return expr
+    else:
+        return TR8(expand_mul(TRpower(expr)))

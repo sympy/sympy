@@ -4,8 +4,8 @@ import warnings
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
-    sympify, trigsimp, tan, sstr, diff)
+    S, Symbol, cos, exp, expand_mul, oo, pi, signsimp, simplify, sin, sqrt, symbols,
+    sympify, trigsimp, tan, sstr, diff, Function)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
     _simplify)
@@ -21,8 +21,9 @@ from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.solvers import solve
 from sympy.assumptions import Q
+from sympy.tensor.array import Array
 
-from sympy.abc import a, b, c, d, x, y, z
+from sympy.abc import a, b, c, d, x, y, z, t
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -400,6 +401,14 @@ def test_determinant():
 
     assert M.det(method="bareiss") == z**2 - x*y
     assert M.det(method="berkowitz") == z**2 - x*y
+
+    # issue 13835
+    a = symbols('a')
+    M = lambda n: Matrix([[i + a*j for i in range(n)]
+                          for j in range(n)])
+    assert M(5).det() == 0
+    assert M(6).det() == 0
+    assert M(7).det() == 0
 
 
 def test_det_LU_decomposition():
@@ -1689,6 +1698,14 @@ def test_jordan_form():
     P, J = m.jordan_form()
     assert Jmust == J
 
+    # checking for maximum precision to remain unchanged
+    m = Matrix([[Float('1.0', precision=110), Float('2.0', precision=110)],
+                [Float('3.14159265358979323846264338327', precision=110), Float('4.0', precision=110)]])
+    P, J = m.jordan_form()
+    for term in J._mat:
+        if isinstance(term, Float):
+            assert term._prec == 110
+
 
 def test_jordan_form_complex_issue_9274():
     A = Matrix([[ 2,  4,  1,  0],
@@ -1759,6 +1776,9 @@ def test_exp():
     m = Matrix([[1, 0], [0, 1]])
     assert m.exp() == Matrix([[E, 0], [0, E]])
     assert exp(m) == Matrix([[E, 0], [0, E]])
+
+    m = Matrix([[1, -1], [1, 1]])
+    assert m.exp() == Matrix([[E*cos(1), -E*sin(1)], [E*sin(1), E*cos(1)]])
 
 
 def test_has():
@@ -1938,6 +1958,65 @@ def test_diff():
     assert diff(A_imm, x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert diff(A_imm, y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
+    # Derive matrix by matrix:
+
+    A = MutableDenseMatrix([[x, y], [z, t]])
+    assert A.diff(A) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+    assert diff(A, A) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+
+    A_imm = A.as_immutable()
+    assert A_imm.diff(A_imm) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+    assert diff(A_imm, A_imm) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+
+    # Derive a constant matrix:
+    assert A.diff(a) == MutableDenseMatrix([[0, 0], [0, 0]])
+
+    B = ImmutableDenseMatrix([a, b])
+    assert A.diff(B) == Array(
+        [[[
+            [0,0],
+            [0,0]
+        ]],
+        [[
+            [0,0],
+            [0,0]
+        ]]])
+
+    # Test diff with tuples:
+
+    dB = B.diff([[a, b]])
+    assert dB.shape == (2, 2, 1)
+    assert dB == Array([[[1], [0]], [[0], [1]]])
+
+    f = Function("f")
+    fxyz = f(x, y, z)
+    assert fxyz.diff([[x, y, z]]) == Array([fxyz.diff(x), fxyz.diff(y), fxyz.diff(z)])
+    assert fxyz.diff(([x, y, z], 2)) == Array([
+        [fxyz.diff(x, 2), fxyz.diff(x, y), fxyz.diff(x, z)],
+        [fxyz.diff(x, y), fxyz.diff(y, 2), fxyz.diff(y, z)],
+        [fxyz.diff(x, z), fxyz.diff(z, y), fxyz.diff(z, 2)],
+    ])
+
+    expr = sin(x)*exp(y)
+    assert expr.diff([[x, y]]) == Array([cos(x)*exp(y), sin(x)*exp(y)])
+    assert expr.diff(y, ((x, y),)) == Array([cos(x)*exp(y), sin(x)*exp(y)])
+    assert expr.diff(x, ((x, y),)) == Array([-sin(x)*exp(y), cos(x)*exp(y)])
+    assert expr.diff(((y, x),), [[x, y]]) == Array([[cos(x)*exp(y), -sin(x)*exp(y)], [sin(x)*exp(y), cos(x)*exp(y)]])
+
+    # Test different notations:
+
+    fxyz.diff(x).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[0, 1, 0]
+    fxyz.diff(z).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[2, 1, 0]
+    fxyz.diff([[x, y, z]], ((z, y, x),)) == Array([[fxyz.diff(i).diff(j) for i in (x, y, z)] for j in (z, y, x)])
+
+    # Test scalar derived by matrix remains matrix:
+    res = x.diff(Matrix([[x, y]]))
+    assert isinstance(res, ImmutableDenseMatrix)
+    assert res == Matrix([[1, 0]])
+    res = (x**3).diff(Matrix([[x, y]]))
+    assert isinstance(res, ImmutableDenseMatrix)
+    assert res == Matrix([[3*x**2, 0]])
+
 
 def test_getattr():
     A = Matrix(((1, 4, x), (y, 2, 4), (10, 5, x**2 + 1)))
@@ -1963,15 +2042,21 @@ def test_hessenberg():
 def test_cholesky():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2)).cholesky())
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky())
+    raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).cholesky())
+    raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).cholesky())
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     assert A.cholesky() * A.cholesky().T == A
     assert A.cholesky().is_lower
     assert A.cholesky() == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
+    A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
+    assert A.cholesky() == Matrix(((2, 0, 0), (I, 1, 0), (1 - I, 0, 3)))
 
 
 def test_LDLdecomposition():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2)).LDLdecomposition())
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition())
+    raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).LDLdecomposition())
+    raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).LDLdecomposition())
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     L, D = A.LDLdecomposition()
     assert L * D * L.T == A
@@ -1979,6 +2064,11 @@ def test_LDLdecomposition():
     assert L == Matrix([[1, 0, 0], [ S(3)/5, 1, 0], [S(-1)/5, S(1)/3, 1]])
     assert D.is_diagonal()
     assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])
+    A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
+    L, D = A.LDLdecomposition()
+    assert expand_mul(L * D * L.H) == A
+    assert L == Matrix(((1, 0, 0), (I/2, 1, 0), (S(1)/2 - I/2, 0, 1)))
+    assert D == Matrix(((4, 0, 0), (0, 1, 0), (0, 0, 9)))
 
 
 def test_cholesky_solve():
@@ -1996,6 +2086,16 @@ def test_cholesky_solve():
     b = A*x
     soln = A.cholesky_solve(b)
     assert soln == x
+    A = Matrix(((9, 3*I), (-3*I, 5)))
+    x = Matrix((-2, 1))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert expand_mul(soln) == x
+    A = Matrix(((9*I, 3), (-3 + I, 5)))
+    x = Matrix((2 + 3*I, -1))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert expand_mul(soln) == x
 
 
 def test_LDLsolve():
@@ -2013,6 +2113,16 @@ def test_LDLsolve():
     b = A*x
     soln = A.LDLsolve(b)
     assert soln == x
+    A = Matrix(((9, 3*I), (-3*I, 5)))
+    x = Matrix((-2, 1))
+    b = A*x
+    soln = A.LDLsolve(b)
+    assert expand_mul(soln) == x
+    A = Matrix(((9*I, 3), (-3 + I, 5)))
+    x = Matrix((2 + 3*I, -1))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert expand_mul(soln) == x
 
 
 def test_lower_triangular_solve():
@@ -2079,6 +2189,7 @@ def test_matrix_norm():
     assert A.norm(-2) == 0
     assert A.norm('frobenius') == 2
     assert eye(10).norm(2) == eye(10).norm(-2) == 1
+    assert A.norm(oo) == 2
 
     # Test with Symbols and more complex entries
     A = Matrix([[3, y, y], [x, S(1)/2, -pi]])
@@ -2971,3 +3082,22 @@ def test_deprecated():
         P, Jcells = m.jordan_cells()
         assert Jcells[1] == Matrix(1, 1, [2])
         assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+def test_issue_14489():
+    from sympy import Mod
+    A = Matrix([-1, 1, 2])
+    B = Matrix([10, 20, -15])
+
+    assert Mod(A, 3) == Matrix([2, 1, 2])
+    assert Mod(B, 4) == Matrix([2, 0, 1])
+
+def test_issue_14517():
+    M = Matrix([
+        [   0, 10*I,    10*I,       0],
+        [10*I,    0,       0,    10*I],
+        [10*I,    0, 5 + 2*I,    10*I],
+        [   0, 10*I,    10*I, 5 + 2*I]])
+    ev = M.eigenvals()
+    # test one random eigenvalue, the computation is a little slow
+    test_ev = random.choice(list(ev.keys()))
+    assert (M - test_ev*eye(4)).det() == 0

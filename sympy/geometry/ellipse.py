@@ -16,6 +16,7 @@ from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
@@ -150,7 +151,7 @@ class Ellipse(GeometrySet):
         if len(center) != 2:
             raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
 
-        if len(list(filter(None, (hradius, vradius, eccentricity)))) != 2:
+        if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError('Exactly two arguments of "hradius", '
                 '"vradius", and "eccentricity" must not be None."')
 
@@ -327,16 +328,17 @@ class Ellipse(GeometrySet):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.circumference
-        12*Integral(sqrt((-8*_x**2/9 + 1)/(-_x**2 + 1)), (_x, 0, 1))
+        12*elliptic_e(8/9)
 
         """
-        from sympy import Integral
         if self.eccentricity == 1:
-            return 2*pi*self.hradius
+            # degenerate
+            return 4 * self.major
+        elif self.eccentricity == 0:
+            # circle
+            return 2 * pi * self.hradius
         else:
-            x = Dummy('x', real=True)
-            return 4*self.major*Integral(
-                sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), (x, 0, 1))
+            return 4 * self.major * elliptic_e(self.eccentricity**2)
 
     @property
     def eccentricity(self):
@@ -1013,21 +1015,6 @@ class Ellipse(GeometrySet):
 
         point : Point
 
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-        arbitrary_point : Returns parameterized point on ellipse
-
-        Notes
-        -----
-
-        A random point may not appear to be on the ellipse, ie, `p in e` may
-        return False. This is because the coordinates of the point will be
-        floating point values, and when these values are substituted into the
-        equation for the ellipse the result may not be zero because of floating
-        point rounding error.
-
         Examples
         ========
 
@@ -1038,33 +1025,29 @@ class Ellipse(GeometrySet):
         >>> p1 = e1.random_point(seed=0); p1.n(2)
         Point2D(2.1, 1.4)
 
-        The random_point method assures that the point will test as being
-        in the ellipse:
-
-        >>> p1 in e1
-        True
-
         Notes
         =====
 
-        An arbitrary_point with a random value of t substituted into it may
-        not test as being on the ellipse because the expression tested that
-        a point is on the ellipse doesn't simplify to zero and doesn't evaluate
-        exactly to zero:
+        When creating a random point, one may simply replace the
+        parameter with a random number. When doing so, however, the
+        random number should be made a Rational or else the point
+        may not test as being in the ellipse:
 
         >>> from sympy.abc import t
-        >>> e1.arbitrary_point(t)
+        >>> from sympy import Rational
+        >>> arb = e1.arbitrary_point(t); arb
         Point2D(3*cos(t), 2*sin(t))
-        >>> p2 = _.subs(t, 0.1)
-        >>> p2 in e1
+        >>> arb.subs(t, .1) in e1
         False
+        >>> arb.subs(t, Rational(.1)) in e1
+        True
+        >>> arb.subs(t, Rational('.1')) in e1
+        True
 
-        Note that arbitrary_point routine does not take this approach. A value
-        for cos(t) and sin(t) (not t) is substituted into the arbitrary point.
-        There is a small chance that this will give a point that will not
-        test as being in the ellipse, so the process is repeated (up to 10
-        times) until a valid point is obtained.
-
+        See Also
+        ========
+        sympy.geometry.point.Point
+        arbitrary_point : Returns parameterized point on ellipse
         """
         from sympy import sin, cos, Rational
         t = _symbol('t', real=True)
@@ -1075,15 +1058,11 @@ class Ellipse(GeometrySet):
             rng = random.Random(seed)
         else:
             rng = random
-        for i in range(10):  # should be enough?
-            # simplify this now or else the Float will turn s into a Float
-            c = 2*Rational(rng.random()) - 1
-            s = sqrt(1 - c**2)
-            p1 = Point(x.subs(cos(t), c), y.subs(sin(t), s))
-            if p1 in self:
-                return p1
-        raise GeometryError(
-            'Having problems generating a point in the ellipse.')
+        # simplify this now or else the Float will turn s into a Float
+        r = Rational(rng.random())
+        c = 2*r - 1
+        s = sqrt(1 - c**2)
+        return Point(x.subs(cos(t), c), y.subs(sin(t), s))
 
     def reflect(self, line):
         """Override GeometryEntity.reflect since the radius
@@ -1289,6 +1268,55 @@ class Ellipse(GeometrySet):
 
         """
         return self.args[2]
+
+
+    def second_moment_of_area(self, point=None):
+        """Returns the second moment and product moment area of an ellipse.
+
+        Parameters
+        ==========
+
+        point : Point, two-tuple of sympifiable objects, or None(default=None)
+            point is the point about which second moment of area is to be found.
+            If "point=None" it will be calculated about the axis passing through the
+            centroid of the ellipse.
+
+        Returns
+        =======
+
+        I_xx, I_yy, I_xy : number or sympy expression
+            I_xx, I_yy are second moment of area of an ellise.
+            I_xy is product moment of area of an ellipse.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Ellipse
+        >>> p1 = Point(0, 0)
+        >>> e1 = Ellipse(p1, 3, 1)
+        >>> e1.second_moment_of_area()
+        (3*pi/4, 27*pi/4, 0)
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/List_of_second_moments_of_area
+
+        """
+
+        I_xx = (S.Pi*(self.hradius)*(self.vradius**3))/4
+        I_yy = (S.Pi*(self.hradius**3)*(self.vradius))/4
+        I_xy = 0
+
+        if point is None:
+            return I_xx, I_yy, I_xy
+
+        # parallel axis theorem
+        I_xx = I_xx + self.area*((point[1] - self.center.y)**2)
+        I_yy = I_yy + self.area*((point[0] - self.center.x)**2)
+        I_xy = I_xy + self.area*(point[0] - self.center.x)*(point[1] - self.center.y)
+
+        return I_xx, I_yy, I_xy
 
 
 class Circle(Ellipse):

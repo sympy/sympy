@@ -397,11 +397,13 @@ def test_evaluate_false():
         '2 + 3': Add(2, 3, evaluate=False),
         '2**2 / 3': Mul(Pow(2, 2, evaluate=False), Pow(3, -1, evaluate=False), evaluate=False),
         '2 + 3 * 5': Add(2, Mul(3, 5, evaluate=False), evaluate=False),
-        '2 - 3 * 5': Add(2, -Mul(3, 5, evaluate=False), evaluate=False),
+        '2 - 3 * 5': Add(2, Mul(-1, Mul(3, 5,evaluate=False), evaluate=False), evaluate=False),
         '1 / 3': Mul(1, Pow(3, -1, evaluate=False), evaluate=False),
         'True | False': Or(True, False, evaluate=False),
         '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x**2/2, evaluate=False),
         '2 * 4 * 6 + 8': Add(Mul(2, 4, 6, evaluate=False), 8, evaluate=False),
+        '2 - 8 / 4': Add(2, Mul(-1, Mul(8, Pow(4, -1, evaluate=False), evaluate=False), evaluate=False), evaluate=False),
+        '2 - 2**2': Add(2, Mul(-1, Pow(2, 2, evaluate=False), evaluate=False), evaluate=False),
     }
     for case, result in cases.items():
         assert sympify(case, evaluate=False) == result
@@ -602,3 +604,12 @@ def test_sympify_numpy():
 def test_sympify_rational_numbers_set():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify({'.3', '.2'}, rational=True) == FiniteSet(*ans)
+
+
+def test_issue_13924():
+    if not numpy:
+        skip("numpy not installed.")
+
+    a = sympify(numpy.array([1]))
+    assert isinstance(a, ImmutableDenseNDimArray)
+    assert a[0] == 1
