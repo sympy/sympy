@@ -625,88 +625,24 @@ class ComplexRootOf(RootOf):
 
     def _eval_evalf(self, prec):
         """Evaluate this complex root to the given precision. """
-        tol = 10**-prec_to_dps(prec)
-        with workprec(prec):
-            g = self.poly.gen
-            if not g.is_Symbol:
-                d = Dummy('x')
-                if self.is_imaginary:
-                    d *= I
-                func = lambdify(d, self.expr.subs(g, d))
-            else:
-                expr = self.expr
-                if self.is_imaginary:
-                    expr = self.expr.subs(g, I*g)
-                func = lambdify(g, expr)
-
-            def string(i):
-                return str(i).rstrip('L')  # for Py 2.7
-            interval = self._get_interval()
-            solver = 'secant' if self.is_real or self.is_imaginary else 'muller'
-            while True:
-                if self.is_real:
-                    a = mpf(string(interval.a))
-                    b = mpf(string(interval.b))
-                    if a == b:
-                        root = a
-                        break
-                    x0 = mpf(string(interval.center))
-                    x1 = x0 + mpf(string(interval.dx))/4
-                    guess = (x0, x1)
-                elif self.is_imaginary:
-                    a = mpf(string(interval.ay))
-                    b = mpf(string(interval.by))
-                    if a == b:
-                        root = mpc(mpf('0'), a)
-                        break
-                    x0 = mpf(string(interval.center[1]))
-                    x1 = x0 + mpf(string(interval.dy))/4
-                    guess = (x0, x1)
-                else:
-                    ax = mpf(string(interval.ax))
-                    bx = mpf(string(interval.bx))
-                    ay = mpf(string(interval.ay))
-                    by = mpf(string(interval.by))
-                    if ax == bx and ay == by:
-                        root = mpc(ax, ay)
-                        break
-                    x0 = mpc(*map(string, interval.center))
-                    x1 = x0 + mpc(*map(string, (interval.dx, interval.dy)))/4
-                    x2 = x0 + mpc(*map(string, (interval.dx, interval.dy)))/3
-                    guess = (x0, x1, x2)
-                try:
-                    root = findroot(func, guess, tol=tol, solver=solver)
-                    # If the (real or complex) root is not in the 'interval',
-                    # then keep refining the interval. This happens if findroot
-                    # accidentally finds a different root outside of this
-                    # interval because our initial estimate 'x0' was not close
-                    # enough. It is also possible that the secant method will
-                    # get trapped by a max/min in the interval; the root
-                    # verification by findroot will raise a ValueError in this
-                    # case and the interval will then be tightened -- and
-                    # eventually the root will be found.
-                    #
-                    # It is also possible that findroot will not have any
-                    # successful iterations to process (in which case it
-                    # will fail to initialize a variable that is tested
-                    # after the iterations and raise an UnboundLocalError).
-                    #
-                    # With Muller's method it is possible to get a division
-                    # by zero error.
-                    if self.is_real or self.is_imaginary:
-                        if not bool(root.imag) == self.is_real and (
-                                a <= root <= b):
-                            if self.is_imaginary:
-                                root = mpc(mpf('0'), root.real)
-                            break
-                    elif (ax <= root.real <= bx and ay <= root.imag <= by):
-                        break
-                except (UnboundLocalError, ValueError, ZeroDivisionError):
-                    pass
-                interval = interval.refine()
-
-        # update the interval so we at least for this precision or
-        # less we don't have much work to do to recompute the root
+        mag = 10**prec_to_dps(prec)
+        interval = self._get_interval()
+        def mpfs(i):
+            return mpf(str(i).rstrip('L'))  # for Py 2.7
+        if self.is_real:
+            tol = abs(interval.center/mag)
+            interval = interval.refine_size(dx=tol)
+            root = mpfs(interval.center)
+        elif self.is_imaginary:
+            tol = abs(interval.center[1]/mag)
+            interval = interval.refine_size(dx=tol*1000, dy=tol)
+            root = mpc(mpf('0'), mpfs(interval.center[1]))
+        else:
+            tol = (abs(i)/mag for i in interval.center)
+            interval = interval.refine_size(*tol)
+            root = mpc(*(mpfs(i) for i in interval.center))
+        # update the interval so we at least (for this precision or
+        # less) don't have much work to do to recompute the root
         self._set_interval(interval)
         return (Float._new(root.real._mpf_, prec) +
             I*Float._new(root.imag._mpf_, prec))

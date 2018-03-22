@@ -194,10 +194,10 @@ def test_CRootOf_evalf():
     p = legendre_poly(4, x, polys=True)
     roots = [str(r.n(17)) for r in p.real_roots()]
     assert roots == [
-            "-0.86113631159405258",
+            "-0.86113631159405257",
             "-0.33998104358485626",
              "0.33998104358485626",
-             "0.86113631159405258",
+             "0.86113631159405257",
              ]
 
     re = rootof(x**5 - 5*x + 12, 0).evalf(n=20)
@@ -238,8 +238,8 @@ def test_CRootOf_evalf():
     # issue 9019
     r0 = rootof(x**2 + 1, 0, radicals=False)
     r1 = rootof(x**2 + 1, 1, radicals=False)
-    assert r0.n(4, chop=True) == -1.0*I
-    assert r1.n(4, chop=True) == 1.0*I
+    assert r0.n(4) == -1.0*I
+    assert r1.n(4) == 1.0*I
 
     # make sure verification is used in case a max/min traps the "root"
     assert str(rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0).n(3)) == '-0.976'
