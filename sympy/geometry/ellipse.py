@@ -1269,6 +1269,21 @@ class Ellipse(GeometrySet):
         """
         return self.args[2]
 
+    @property
+    def centroid(self):
+        """Returns the centroid of ellipse.
+
+        Returns
+        =======
+
+        centroid : Point
+
+        Examples
+        ========
+
+        """
+        return self.center
+
 
     def second_moment_of_area(self, point=None):
         """Returns the second moment and product moment area of an ellipse.

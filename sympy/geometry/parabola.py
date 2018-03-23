@@ -15,6 +15,7 @@ from sympy.geometry.point import Point, Point2D
 from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
 from sympy.geometry.ellipse import Ellipse
 
+from sympy import Abs, sqrt
 
 class Parabola(GeometrySet):
     """A parabolic GeometryEntity.
@@ -407,9 +408,135 @@ class Parabola(GeometrySet):
 
         """
         focus = self.focus
-        if (self.axis_of_symmetry.slope == 0):
-            vertex = Point(focus.args[0] - self.p_parameter, focus.args[1])
+
+        if(self.axis_of_symmetry.slope == 0):
+            vertex = Point((focus.args[0] + self.directrix.p1[0])/2, focus.args[1])
         else:
-            vertex = Point(focus.args[0], focus.args[1] - self.p_parameter)
+            vertex = Point(focus.args[0], (focus.args[1] + self.directrix.p1[1])/2)
 
         return vertex
+
+    def area(self, l):
+        """The Area of the parabola bounded by line l.
+
+        Parameters
+        ==========
+
+        l : Line
+            l is the line perpendicular to symmetric axis
+            up to which area is to be calculated.
+
+        Returns
+        =======
+
+        area : number or Basic instance
+
+        Examples
+        ========
+
+        >>> from sympy import Parabola, Point, Line
+        >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
+        >>> p1.area(Line(Point(0, 0), Point(2, 0)))
+        128/3
+
+        """
+        if(l.slope == 0):
+            return ((8*sqrt(self.focal_length)*sqrt(Abs(l.p1[1] - self.vertex[1])**3))/3)
+        if(l.slope == S.Infinity):
+            return ((8*sqrt(self.focal_length)*sqrt(Abs(l.p1[0] - self.vertex[0])**3))/3)
+
+    def centroid(self, l):
+        """The centroid of the parabola bounded by line l.
+
+        Parameters
+        ==========
+
+        l : Line
+            l is the line perpendicular to symmetric axis
+            up to which centroid is to be calculated.
+
+        Returns
+        =======
+
+        centroid : Point
+
+        Examples
+        ========
+
+        >>> from sympy import Parabola, Point, Line
+        >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
+        >>> p1.centroid(Line(Point(0, 0), Point(2, 0)))
+        Point2D(0, 8/5)
+
+        """
+
+        if(self.directrix.slope == 0):
+            return Point(self.vertex[0], (2*self.vertex[1] + 3*l.p1[1])/5)
+
+        if(self.directrix.slope == S.Infinity):
+            return Point((2*self.vertex[0] + 3*l.p1[0])/5, self.vertex[1])
+
+    def second_moment_of_area(self, l, point=None):
+        """Returns the second moment and product moment of area of a Parabola bounded by line l.
+
+        Parameters
+        ==========
+
+        l : Line
+            l is the line perpendicular to symmetric axis
+            up to which second moment of area is to be calculated.
+        point : Point, two-tuple of sympifiable objects, or None(default=None)
+            point is the point about which second moment of area is to be found.
+            If "point=None" it will be calculated about the axis passing through the
+            centroid of the polygon.
+
+        Returns
+        =======
+
+        I_xx, I_yy, I_xy : number or sympy expression
+            I_xx, I_yy are second moment of area of a two dimensional polygon.
+            I_xy is product moment of area of a two dimensional polygon.
+
+        Examples
+        ========
+        >>> from sympy import Parabola, Point, Line
+        >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
+        >>> p1.second_moment_of_area(Line(Point(0, 0), Point(2, 0)))
+        (94208/175, 8192/15, 0)
+
+        """
+        a = self.focal_length
+        I_xy_v = 0;
+        c = self.centroid(l)
+        Ar = self.area(l)
+        if(self.directrix.slope == 0):
+            I_xx_v = 32*sqrt((a**3))*sqrt(Abs((self.vertex[1] - l.p1[1])**5))/15
+            I_yy_v = 8*sqrt(a*(Abs((self.vertex[1] - l.p1[1]))**7))/7
+
+            I_xx_c = I_yy_v + Ar*((c[1] - self.vertex[1])**2)
+            I_yy_c = I_xx_v
+            I_xy_c = I_xy_v
+            if point is None:
+                return I_xx_c, I_yy_c, I_xy_c
+
+            I_xx = I_xx_c + Ar*((c[1] - point[1])**2)
+            I_yy = I_yy_c + Ar*((c[0] - point[0])**2)
+            I_xy = I_xy_c + Ar*((point[0]-c[0])*(point[1]-c[1]))
+
+            return I_xx, I_yy, I_xy
+
+        if(self.directrix.slope == S.Infinity):
+            I_xx_v = 32*sqrt((a**3))*sqrt((Abs((self.vertex[0] - l.p1[0]))**5))/15
+            I_yy_v = 8*sqrt(a*(Abs((self.vertex[0] - l.p1[0]))**7))/7
+
+            I_xx_c = I_xx_v
+            I_yy_c = I_yy_v - Ar*((c[0] - self.vertex[0])**2)
+            I_xy_c = I_xy_v
+            if point is None:
+                return I_xx_c, I_yy_c, I_xx_c
+
+            I_xx = I_xx_c + Ar*((c[1] - point[1])**2)
+            I_yy = I_yy_c + Ar*((c[0] - point[0])**2)
+            I_xy = I_xy_c + Ar*((point[0]-c[0])*(point[1]-c[1]))
+
+            return I_xx, I_yy, I_xy
