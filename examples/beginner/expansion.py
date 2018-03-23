@@ -5,9 +5,7 @@
 Demonstrates how to expand expressions.
 """
 
-import sympy
-from sympy import pprint
-from sympy import Symbol
+from sympy import pprint, Symbol
 
 def main():
     a = Symbol('a')
