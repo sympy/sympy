@@ -492,6 +492,18 @@ def test_ImageSet_simplification():
                     imageset(Lambda(m, tan(m)), S.Integers)) == \
             imageset(Lambda(m, sin(tan(m))), S.Integers)
 
+def test_ImageSet_contains():
+    from sympy.abc import x
+    assert (2, S.Half) in imageset(x, (x, 1/x), S.Integers)
+    a = ImageSet(Lambda(x, Interval(2*x, 2*x + 1)), S.Integers)
+    b = ImageSet(Lambda(x, Interval(x, x + S(1)/2)), S.Integers)
+    assert a.contains(Interval(2, 3)) == True
+    assert a.contains(Interval(5, 6)) == False
+    assert a.contains(Union(Interval(2, 3), Interval(4, 5))) == True
+    assert a.contains(Union(Interval(2, 3), Interval(5, 6))) == False
+    assert b.contains(Interval(2, S(5)/2)) == True
+    assert b.contains(Interval(2, S(11/5))) == False
+    assert b.contains(Interval(S(5)/2, 3)) == False
 def test_ComplexRegion_contains():
 
     # contains in ComplexRegion

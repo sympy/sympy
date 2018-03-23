@@ -245,9 +245,8 @@ class ImageSet(Set):
 
     def _contains(self, other):
         from sympy.matrices import Matrix
-        from sympy.solvers.solveset import solveset, linsolve, solvify
+        from sympy.solvers.solveset import solveset, linsolve
         from sympy.utilities.iterables import is_sequence, iterable, cartes
-        from sympy.functions.elementary.integers import floor
         L = self.lamda
         if is_sequence(other):
             if not is_sequence(L.expr):
@@ -305,48 +304,26 @@ class ImageSet(Set):
                     msgset = solnsSet
             elif isinstance(L.expr, Interval):
                 var = L.variables[0]
-                if not (self.base_set).is_subset(S.Integers):
-                    raise NotImplementedError(filldedent('''
-                        Determining whether %s is contained in imagesets
-                        with base sets %s has not been implemented.''')
-                        %(other, self.base_set))
-                if isinstance(other, (Expr, Interval)):
-                    interval = isinstance(other, Interval)
-                    if not iterable(other):
-                        other = (other,)
-                    for i in (other):
-                        if interval:
-                            interval_sol = solveset(
-                                L.expr.inf - i.inf, var)
-                        else:
-                            interval_sol = solveset(L.expr.inf - i, var)
-                        if interval_sol is S.EmptySet:
-                            return False
-                        for j in interval_sol:
-                            j_floor = floor(j)
-                            j_ceiling = j_floor + 1
-                            try:
-                                if interval:
-                                    if i.is_subset(
-                                        L.expr.subs(var, j_floor)) and \
-                                        self.base_set.contains(j_floor):
-                                        return True
-                                    if i.is_subset(
-                                        L.expr.subs(var, j_ceiling)) and \
-                                        self.base_set.contains(j_ceiling):
-                                        return True
-                                else:
-                                    if L.expr.subs(
-                                        var, j_floor).contains(i) and \
-                                        self.base_set.contains(j_floor):
-                                        return True
-                                    if L.expr.subs(
-                                        var, j_ceiling).contains(i) and \
-                                        self.base_set.contains(j_floor):
-                                        return True
-                            except:
-                                pass
+                if isinstance(other, Union):
+                    other = other.args
+                if not iterable(other):
+                    other = (other,)
+                if not all (isinstance(i, Interval) for i in other):
                     return S.false
+                for interv in other:
+                    is_contained = S.false
+                    sols =[i for i in solveset(L.expr.inf - interv.inf, var)
+                                    if i in self.base_set]
+                    if sols is S.EmptySet:
+                        return S.false
+                    for i in sols:
+                        interval_sol = L.expr.subs(var, i)
+                        if interval_sol == interv:
+                            is_contained = S.true
+                            break
+                    if not is_contained:
+                        return S.false
+                return S.true
             else:
                 # scalar -> vector
                 for e, o in zip(L.expr, other):
