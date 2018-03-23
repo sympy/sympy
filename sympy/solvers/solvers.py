@@ -852,7 +852,7 @@ def solve(f, *symbols, **flags):
         it satisfies the expression:
 
         >>> abs(real_root(eq.subs(x, sol[0])).n(2))
-        3.1e-18
+        3.1e-16
 
     If the roots of the equation are not real then more care will be necessary
     to find the roots, especially for higher order equations. Consider the

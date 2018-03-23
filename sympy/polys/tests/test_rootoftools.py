@@ -193,11 +193,15 @@ def test_CRootOf_evalf():
 
     p = legendre_poly(4, x, polys=True)
     roots = [str(r.n(17)) for r in p.real_roots()]
+    # magnitudes are given by
+    # sqrt(3/S(7) - 2*sqrt(6/S(5))/7)
+    #   and
+    # sqrt(3/S(7) + 2*sqrt(6/S(5))/7)
     assert roots == [
-            "-0.86113631159405257",
+            "-0.86113631159405258",
             "-0.33998104358485626",
              "0.33998104358485626",
-             "0.86113631159405257",
+             "0.86113631159405258",
              ]
 
     re = rootof(x**5 - 5*x + 12, 0).evalf(n=20)
@@ -246,7 +250,7 @@ def test_CRootOf_evalf():
 
     # watch out for UnboundLocalError
     c = CRootOf(90720*x**6 - 4032*x**4 + 84*x**2 - 1, 0)
-    assert str(c._eval_evalf(2)) == '-0.e-1'
+    assert c._eval_evalf(2)  # doesn't fail
 
     # watch out for imaginary parts that don't want to evaluate
     assert str(RootOf(x**16 + 32*x**14 + 508*x**12 + 5440*x**10 +

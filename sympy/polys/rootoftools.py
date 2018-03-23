@@ -623,37 +623,136 @@ class ComplexRootOf(RootOf):
         expr, i = self.args
         return self.func(expr, i + (1 if self._get_interval().conj else -1))
 
-    def _eval_evalf(self, prec):
-        """Evaluate this complex root to the given precision. """
-        mag = 10**prec_to_dps(prec)
-        interval = self._get_interval()
-        def mpfs(i):
-            return mpf(str(i).rstrip('L'))  # for Py 2.7
-        if self.is_real:
-            tol = abs(interval.center/mag)
-            interval = interval.refine_size(dx=tol)
-            root = mpfs(interval.center)
-        elif self.is_imaginary:
-            tol = abs(interval.center[1]/mag)
-            interval = interval.refine_size(dx=tol*1000, dy=tol)
-            root = mpc(mpf('0'), mpfs(interval.center[1]))
-        else:
-            tol = (abs(i)/mag for i in interval.center)
-            interval = interval.refine_size(*tol)
-            root = mpc(*(mpfs(i) for i in interval.center))
+    def _n(self, prec):
+        """Evaluate this complex root to the given precision
+        using the secant method. """
+        tol = 10**-prec_to_dps(prec)
+        with workprec(prec):
+            g = self.poly.gen
+            if not g.is_Symbol:
+                d = Dummy('x')
+                if self.is_imaginary:
+                    d *= I
+                func = lambdify(d, self.expr.subs(g, d))
+            else:
+                expr = self.expr
+                if self.is_imaginary:
+                    expr = self.expr.subs(g, I*g)
+                func = lambdify(g, expr)
+
+            interval = self._get_interval()
+            while True:
+                if self.is_real:
+                    a = mpf(str(interval.a))
+                    b = mpf(str(interval.b))
+                    if a == b:
+                        root = a
+                        break
+                    x0 = mpf(str(interval.center))
+                    x1 = x0 + mpf(str(interval.dx))/4
+                elif self.is_imaginary:
+                    a = mpf(str(interval.ay))
+                    b = mpf(str(interval.by))
+                    if a == b:
+                        root = mpc(mpf('0'), a)
+                        break
+                    x0 = mpf(str(interval.center[1]))
+                    x1 = x0 + mpf(str(interval.dy))/4
+                else:
+                    ax = mpf(str(interval.ax))
+                    bx = mpf(str(interval.bx))
+                    ay = mpf(str(interval.ay))
+                    by = mpf(str(interval.by))
+                    if ax == bx and ay == by:
+                        root = mpc(ax, ay)
+                        break
+                    x0 = mpc(*map(str, interval.center))
+                    x1 = x0 + mpc(*map(str, (interval.dx, interval.dy)))/4
+                try:
+                    root = findroot(func, (x0, x1), tol=tol)
+                    # If the (real or complex) root is not in the 'interval',
+                    # then keep refining the interval. This happens if findroot
+                    # accidentally finds a different root outside of this
+                    # interval because our initial estimate 'x0' was not close
+                    # enough. It is also possible that the secant method will
+                    # get trapped by a max/min in the interval; the root
+                    # verification by findroot will raise a ValueError in this
+                    # case and the interval will then be tightened -- and
+                    # eventually the root will be found.
+                    #
+                    # It is also possible that findroot will not have any
+                    # successful iterations to process (in which case it
+                    # will fail to initialize a variable that is tested
+                    # after the iterations and raise an UnboundLocalError).
+                    if self.is_real or self.is_imaginary:
+                        if not bool(root.imag) == self.is_real and (
+                                a <= root <= b):
+                            if self.is_imaginary:
+                                root = mpc(mpf('0'), root.real)
+                            break
+                    elif (ax <= root.real <= bx and ay <= root.imag <= by):
+                        break
+                except (UnboundLocalError, ValueError):
+                    pass
+                interval = interval.refine()
+
         # update the interval so we at least (for this precision or
         # less) don't have much work to do to recompute the root
         self._set_interval(interval)
         return (Float._new(root.real._mpf_, prec) +
             I*Float._new(root.imag._mpf_, prec))
 
+    def _eval_evalf(self, prec):
+        """Evaluate this complex root to the given precision. An attempt is
+        made to simply use the refine method to reduce the interval to the
+        desired size.
+
+        Notes
+        =====
+
+        The interval refinement used is slow but sure to converge. This
+        method also includes updating of interval for this root so
+        subsequent re-evaluations will be fast. An alternative is to
+        use the `_n` method to use a numerical method to search for the
+        root and to only use the interval to confirm that the root
+        found by iteration is the correct one (and if it isn't, only
+        then reduce the interval size to try get a better initial guess).
+        """
+        mag = 10**prec_to_dps(prec)
+        interval = self._get_interval()
+        if self.is_real:
+            tol = abs(interval.center/mag)
+            interval = interval.refine_size(dx=tol)
+            c = interval.center
+            c = Rational(c.p, c.q)
+            real = c
+            imag = S.Zero
+        elif self.is_imaginary:
+            tol = abs(interval.center[1]/mag)
+            interval = interval.refine_size(dx=tol*1000, dy=tol)
+            c = interval.center[1]
+            c = Rational(c.p, c.q)
+            real = S.Zero
+            imag = c
+        else:
+            tol = (abs(i)/mag for i in interval.center)
+            interval = interval.refine_size(*tol)
+            c = interval.center
+            real, imag = [Rational(i.p, i.q) for i in c]
+
+        # update the interval so we at least (for this precision or
+        # less) don't have much work to do to recompute the root
+        self._set_interval(interval)
+        return real.n(prec) + I*imag.n(prec)
+
     def eval_rational(self, tol):
         """
         Return a Rational approximation to ``self`` with the tolerance ``tol``.
 
-        This method uses bisection, which is very robust and it will always
-        converge. The returned Rational instance will be at most 'tol' from the
-        exact root.
+        This method uses bisection, which is very robust and it will
+        always converge. The returned Rational instance will be at most
+        'tol' from the exact real or imaginary root. (If ``self`` has
+        nonzero real and imaginary parts, an error will be raised.)
 
         The following example first obtains Rational approximation to 1e-7
         accuracy for all roots of the 4-th order Legendre polynomial, and then
@@ -670,14 +769,27 @@ class ComplexRootOf(RootOf):
 
         """
 
-        if not self.is_real:
+        if not (self.is_real or self.is_imaginary):
             raise NotImplementedError(
                 "eval_rational() only works for real polynomials so far")
-        func = lambdify(self.poly.gen, self.expr)
+        g = self.poly.gen
+        if not g.is_Symbol:
+            d = Dummy('x')
+            if self.is_imaginary:
+                d *= I
+            func = lambdify(d, self.expr.subs(g, d))
+        else:
+            expr = self.expr
+            if self.is_imaginary:
+                expr = self.expr.subs(g, I*g)
+            func = lambdify(g, expr)
         interval = self._get_interval()
         a = Rational(str(interval.a))
         b = Rational(str(interval.b))
-        return bisect(func, a, b, tol)
+        r = bisect(func, a, b, tol)
+        if self.is_real:
+            return r
+        return I*r
 
     def _eval_Eq(self, other):
         # CRootOf represents a Root, so if other is that root, it should set
