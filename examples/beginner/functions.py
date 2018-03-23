@@ -2,10 +2,9 @@
 
 """Functions example
 
-Demonstrates sympy defined functions.
+Demonstrates functions defined in SymPy.
 """
 
-import sympy
 from sympy import pprint, Symbol, log, exp
 
 def main():
