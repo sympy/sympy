@@ -442,8 +442,7 @@ def test_issue_3218():
 
 def test_issue_4988_builtins():
     C = Symbol('C')
-    vars = {}
-    vars['C'] = C
+    vars = {'C': C}
     exp1 = sympify('C')
     assert exp1 == C  # Make sure it did not get mixed up with sympy.C
 
