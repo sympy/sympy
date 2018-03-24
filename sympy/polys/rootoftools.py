@@ -249,17 +249,20 @@ class ComplexRootOf(RootOf):
         # symbols
         return set()
 
-    def _eval_is_real(self):
+    @property
+    def is_real(self):
         """Return ``True`` if the root is real. """
         assert isinstance(self.poly, PurePoly)
         return self.index < len(_reals_cache[self.poly])
 
-    def _eval_is_imaginary(self):
+    @property
+    def is_imaginary(self):
         """Return ``True`` if the root is real. """
         assert isinstance(self.poly, PurePoly)
         if self.index >= len(_reals_cache[self.poly]):
             ivl = self._get_interval()
             return ivl.ax*ivl.bx <= 0  # all others are on one side or the other
+        return False
 
     @classmethod
     def real_roots(cls, poly, radicals=True):
@@ -300,10 +303,10 @@ class ComplexRootOf(RootOf):
         reals = []
 
         for factor, k in factors:
-            r = _reals_cache.get(factor, None)
-            if r is not None:
+            try:
+                r = _reals_cache[factor]
                 reals.extend([(i, factor, k) for i in r])
-            else:
+            except KeyError:
                 real_part = cls._get_reals_sqf(factor)
                 new = [(root, factor, k) for root in real_part]
                 reals.extend(new)
@@ -374,11 +377,17 @@ class ComplexRootOf(RootOf):
                         u, f, k = sifted[f][i]
                         if u.ax*u.bx > 0:
                             potential_imag.remove(i)
-                        else:
+                        elif u.ax != u.bx:
                             u = u._inner_refine()
                             sifted[f][i] = u, f, k
                     if len(potential_imag) == nimag:
                         break
+                # set real part to 0 in what are now
+                # known to be the imaginaries
+                for i in potential_imag:
+                    u, f, k = sifted[f][i]
+                    u = u._set_imaginary()
+                    sifted[f][i] = u, f, k
                 complexes.extend(sifted[f])
         return complexes
 

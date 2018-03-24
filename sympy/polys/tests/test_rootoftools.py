@@ -481,3 +481,9 @@ def test__imag_count():
     assert imag_count(q(1, 2, 4)) == 4
     assert imag_count(q(-1, 2, 4)) == 2
     assert imag_count(q(-1, -2, 4)) == 0
+
+
+def test_set_imaginary():
+    r = RootOf(x**4 + 4*x**2 + 1, 1)
+    i = r._get_interval()
+    assert r.is_imaginary and i.ax == i.bx == 0
