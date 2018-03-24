@@ -62,7 +62,7 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         for i in range(2, n + 1):
             p = nextprime(p)
             a.append(sqrt(p))
-        return minimal_polynomial(Add(*a), x, polys=args.get('polys', False))
+        return minimal_polynomial(Add(*a), x, polys=polys)
 
     if n == 1:
         ex = x**2 - 2
