@@ -294,12 +294,12 @@ def test_CRootOf_all_roots():
 
 def test_CRootOf_eval_rational():
     p = legendre_poly(4, x, polys=True)
-    roots = [r.eval_rational(S(1)/10**20) for r in p.real_roots()]
+    roots = [r.eval_rational(1e-18) for r in p.real_roots()]
     for r in roots:
         assert isinstance(r, Rational)
-    # All we know is that the Rational instance will be at most 1/10^20 from
-    # the exact root. So if we evaluate to 17 digits, it must be exactly equal
-    # to:
+    # All we know is that the Rational instance will be less than
+    # 1/10^18 from the exact root. So the first 17 digits must
+    # be correct
     roots = [str(r.n(17)) for r in roots]
     assert roots == [
             "-0.86113631159405258",

@@ -29,7 +29,7 @@ from sympy.polys.polyerrors import (
 from sympy.polys.domains import QQ
 
 from mpmath import mpf, mpc, findroot, workprec
-from mpmath.libmp.libmpf import prec_to_dps
+from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
 
 from sympy.utilities import lambdify, public, sift
 
@@ -249,20 +249,18 @@ class ComplexRootOf(RootOf):
         # symbols
         return set()
 
-    @property
-    def is_real(self):
+    def _eval_is_real(self):
         """Return ``True`` if the root is real. """
         assert isinstance(self.poly, PurePoly)
         return self.index < len(_reals_cache[self.poly])
 
-    @property
-    def is_imaginary(self):
+    def _eval_is_imaginary(self):
         """Return ``True`` if the root is real. """
         assert isinstance(self.poly, PurePoly)
         if self.index >= len(_reals_cache[self.poly]):
             ivl = self._get_interval()
             return ivl.ax*ivl.bx <= 0  # all others are on one side or the other
-        return False
+        return False  # XXX is this necessary?
 
     @classmethod
     def real_roots(cls, poly, radicals=True):
@@ -632,10 +630,15 @@ class ComplexRootOf(RootOf):
         expr, i = self.args
         return self.func(expr, i + (1 if self._get_interval().conj else -1))
 
-    def _n(self, prec):
-        """Evaluate this complex root to the given precision
-        using the secant method. """
-        tol = 10**-prec_to_dps(prec)
+    def eval_approx(self, n):
+        """Evaluate this complex root to the given precision.
+
+        This uses secant method and root bounds are used to both
+        generate an initial guess and to check that the root
+        returned is valid. If ever the method converges outside the
+        root bounds, the bounds will be made smaller and updated.
+        """
+        prec = dps_to_prec(n)
         with workprec(prec):
             g = self.poly.gen
             if not g.is_Symbol:
@@ -678,7 +681,9 @@ class ComplexRootOf(RootOf):
                     x0 = mpc(*map(str, interval.center))
                     x1 = x0 + mpc(*map(str, (interval.dx, interval.dy)))/4
                 try:
-                    root = findroot(func, (x0, x1), tol=tol)
+                    # without a tolerance, this will return when (to within
+                    # the given precision) x_i == x_{i-1}
+                    root = findroot(func, (x0, x1))
                     # If the (real or complex) root is not in the 'interval',
                     # then keep refining the interval. This happens if findroot
                     # accidentally finds a different root outside of this
@@ -711,94 +716,118 @@ class ComplexRootOf(RootOf):
         return (Float._new(root.real._mpf_, prec) +
             I*Float._new(root.imag._mpf_, prec))
 
-    def _eval_evalf(self, prec):
-        """Evaluate this complex root to the given precision. An attempt is
-        made to simply use the refine method to reduce the interval to the
-        desired size.
+    def _eval_evalf(self, prec, **kwargs):
+        """Evaluate this complex root to the given precision.
+
+        Examples
+        ========
+
+        >>> from sympy import rootof
+        >>> from sympy.abc import x
+        >>> r = rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0)
+        >>> interval = r._get_interval()
+        >>> r.evalf(2)
+        -0.98
 
         Notes
         =====
 
-        The interval refinement used is slow but sure to converge. This
-        method also includes updating of interval for this root so
-        subsequent re-evaluations will be fast. An alternative is to
-        use the `_n` method to use a numerical method to search for the
-        root and to only use the interval to confirm that the root
-        found by iteration is the correct one (and if it isn't, only
-        then reduce the interval size to try get a better initial guess).
+        The interval is refined until the width of the root bounds
+        guarantees that any decimal approximation within those bounds
+        will satisfy the desired precision.
+
+        A side effect of this routine is that the refined interval is
+        stored so subsequent requests at or below the requested
+        precision will not have to recompute the root bounds and will
+        return very quickly.
+
+        >>> print('interval was %s and is now %s' % (interval, r._get_interval()))
+        interval was (-1, 0) and is now (-165/169, -206/211)
+
+        The `eval_approx` method will also find the root to a given
+        precision but the interval is not modified unless the search
+        for the root fails to converge within the root bounds.
         """
-        mag = 10**prec_to_dps(prec)
-        interval = self._get_interval()
-        if self.is_real:
-            tol = abs(interval.center/mag)
-            interval = interval.refine_size(dx=tol)
-            c = interval.center
-            c = Rational(c.p, c.q)
-            real = c
-            imag = S.Zero
-        elif self.is_imaginary:
-            tol = abs(interval.center[1]/mag)
-            interval = interval.refine_size(dx=tol*1000, dy=tol)
-            c = interval.center[1]
-            c = Rational(c.p, c.q)
-            real = S.Zero
-            imag = c
-        else:
-            tol = (abs(i)/mag for i in interval.center)
-            interval = interval.refine_size(*tol)
-            c = interval.center
-            real, imag = [Rational(i.p, i.q) for i in c]
+        # all kwargs are ignored
+        return self.eval_rational(n=prec_to_dps(prec))._evalf(prec)
 
-        # update the interval so we at least (for this precision or
-        # less) don't have much work to do to recompute the root
-        self._set_interval(interval)
-        return real.n(prec) + I*imag.n(prec)
-
-    def eval_rational(self, tol):
+    def eval_rational(self, dx=None, dy=None, n=15):
         """
-        Return a Rational approximation to ``self`` with the tolerance ``tol``.
+        Return a Rational approximation of ``self`` that has real
+        and imaginary component approximations that are within ``dx``
+        and ``dy`` of the true values, respectively. Alternatively,
+        ``n`` digits of precision can be specified.
 
-        This method uses bisection, which is very robust and it will
-        always converge. The returned Rational instance will be at most
-        'tol' from the exact real or imaginary root. (If ``self`` has
-        nonzero real and imaginary parts, an error will be raised.)
+        The interval is refined with bisection and is sure to
+        converge. The root bounds are updated when the refinement
+        is complete so recalculation at the same or lesser precision
+        will not have to repeat the refinement and should be much
+        faster.
 
-        The following example first obtains Rational approximation to 1e-7
-        accuracy for all roots of the 4-th order Legendre polynomial, and then
-        evaluates it to 5 decimal digits (so all digits will be correct
-        including rounding):
+        The following example first obtains Rational approximation to
+        1e-6 accuracy for all roots of the 4-th order Legendre
+        polynomial. Since the roots are all less than 1, this will
+        ensure the decimal representation of the approximation will be
+        correct (including rounding) to 5 digits:
 
         >>> from sympy import S, legendre_poly, Symbol
         >>> x = Symbol("x")
         >>> p = legendre_poly(4, x, polys=True)
-        >>> roots = [r.eval_rational(S(1)/10**7) for r in p.real_roots()]
-        >>> roots = [str(r.n(5)) for r in roots]
-        >>> roots
-        ['-0.86114', '-0.33998', '0.33998', '0.86114']
+        >>> r = p.real_roots()[-1]
+        >>> r.eval_rational(10**-6).n(5)
+        0.86114
+
+        It is not necessary to a two-step calculation, however: the
+        decimal representation can be computed directly:
+
+        >>> r.evalf(17)
+        0.86113631159405258
 
         """
-
-        if not (self.is_real or self.is_imaginary):
-            raise NotImplementedError(
-                "eval_rational() only works for real polynomials so far")
-        g = self.poly.gen
-        if not g.is_Symbol:
-            d = Dummy('x')
-            if self.is_imaginary:
-                d *= I
-            func = lambdify(d, self.expr.subs(g, d))
+        dy = dy or dx
+        if dx:
+            rtol = None
+            dx = dx if isinstance(dx, Rational) else Rational(str(dx))
+            dy = dy if isinstance(dy, Rational) else Rational(str(dy))
         else:
-            expr = self.expr
-            if self.is_imaginary:
-                expr = self.expr.subs(g, I*g)
-            func = lambdify(g, expr)
+            rtol = S(10)**-(n + 1)  # +1 for guard digit
         interval = self._get_interval()
-        a = Rational(str(interval.a))
-        b = Rational(str(interval.b))
-        r = bisect(func, a, b, tol)
-        if self.is_real:
-            return r
-        return I*r
+        while True:
+            if self.is_real:
+                if rtol:
+                    dx = abs(interval.center*rtol)
+                interval = interval.refine_size(dx=dx)
+                c = interval.center
+                real = Rational(c.p, c.q)
+                imag = S.Zero
+                if not rtol or interval.dx < abs(c*rtol):
+                    break
+            elif self.is_imaginary:
+                if rtol:
+                    dy = abs(interval.center[1]*rtol)
+                    dx = 1
+                interval = interval.refine_size(dx=dx, dy=dy)
+                c = interval.center[1]
+                imag = Rational(c.p, c.q)
+                real = S.Zero
+                if not rtol or interval.dy < abs(c*rtol):
+                    break
+            else:
+                if rtol:
+                    dx = abs(interval.center[0]*rtol)
+                    dy = abs(interval.center[1]*rtol)
+                interval = interval.refine_size(dx, dy)
+                c = interval.center
+                real, imag = [Rational(i.p, i.q) for i in interval.center]
+                if not rtol or (
+                        interval.dx < abs(c[0]*rtol) and
+                        interval.dy < abs(c[1]*rtol)):
+                    break
+
+        # update the interval so we at least (for this precision or
+        # less) don't have much work to do to recompute the root
+        self._set_interval(interval)
+        return real + I*imag
 
     def _eval_Eq(self, other):
         # CRootOf represents a Root, so if other is that root, it should set
