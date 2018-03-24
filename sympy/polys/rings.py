@@ -398,9 +398,9 @@ class PolyRing(DefaultPrinting, IPolys):
         elif isinstance(gen, int):
             i = gen
 
-            if 0 <= i and i < self.ngens:
+            if 0 <= i < self.ngens:
                 pass
-            elif -self.ngens <= i and i <= -1:
+            elif -self.ngens <= i <= -1:
                 i = -i - 1
             else:
                 raise ValueError("invalid generator index: %s" % gen)

@@ -840,7 +840,7 @@ def test_Infinity_inequations():
     assert (oo < oo) == False  # issue 7775
     assert (oo > oo) == False
     assert (-oo > -oo) == False and (-oo < -oo) == False
-    assert oo >= oo and oo <= oo and -oo >= -oo and -oo <= -oo
+    assert oo >= oo >= oo and -oo >= -oo and -oo <= -oo
     assert (-oo < -Float('inf')) ==  False
     assert (oo > Float('inf')) == False
     assert -oo >= -Float('inf')
@@ -849,7 +849,7 @@ def test_Infinity_inequations():
     x = Symbol('x')
     b = Symbol('b', finite=True, real=True)
     assert (x < oo) == Lt(x, oo)  # issue 7775
-    assert b < oo and b > -oo and b <= oo and b >= -oo
+    assert oo > b > -oo and b <= oo and b >= -oo
     assert oo > b and oo >= b and (oo < b) == False and (oo <= b) == False
     assert (-oo > b) == False and (-oo >= b) == False and -oo < b and -oo <= b
     assert (oo < x) == Lt(oo, x) and (oo > x) == Gt(oo, x)

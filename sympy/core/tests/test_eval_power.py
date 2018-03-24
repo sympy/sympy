@@ -105,7 +105,7 @@ def test_issue_4362():
     nneg = -1
     dpos = 2 - sqrt(3)
     dneg = 1 - sqrt(3)
-    assert dpos > 0 and dneg < 0 and npos > 0 and nneg < 0
+    assert dpos > 0 > dneg and npos > 0 and nneg < 0
     # pos or neg integer
     eq = eqn(npos, dpos, 2)
     assert eq.is_Pow and eq.as_numer_denom() == (1, dpos**2)

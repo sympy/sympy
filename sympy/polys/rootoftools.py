@@ -736,15 +736,15 @@ class ComplexRootOf(RootOf):
         if not im:
             if self.is_real:
                 a, b = [Rational(str(i)) for i in (a, b)]
-                return sympify(a < other and other < b)
+                return sympify(a < other < b)
             return S.false
         if self.is_real:
             return S.false
         z = r1, r2, i1, i2 = [Rational(str(j)) for j in (
             i.ax, i.bx, i.ay, i.by)]
         return sympify((
-            r1 < re and re < r2) and (
-            i1 < im and im < i2))
+                           r1 < re < r2) and (
+                           i1 < im < i2))
 
 CRootOf = ComplexRootOf
 
