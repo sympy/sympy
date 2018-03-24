@@ -1901,7 +1901,7 @@ class preorder_traversal(Iterator):
             else:
                 args = node.args
             if keys:
-                if keys != True:
+                if not keys:
                     args = ordered(args, keys, default=False)
                 else:
                     args = ordered(args)

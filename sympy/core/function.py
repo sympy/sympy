@@ -1239,7 +1239,7 @@ class Derivative(Expr):
 
             if unhandled_non_symbol:
                 obj = None
-            elif (count < 0) == True:
+            elif (count < 0):
                 obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):

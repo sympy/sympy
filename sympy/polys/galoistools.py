@@ -1614,7 +1614,7 @@ def gf_sqf_list(f, p, K, all=False):
     while True:
         F = gf_diff(f, p, K)
 
-        if F != []:
+        if F:
             g = gf_gcd(f, F, p, K)
             h = gf_quo(f, g, p, K)
 

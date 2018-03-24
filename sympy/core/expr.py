@@ -837,7 +837,7 @@ class Expr(Basic, EvalfMixin):
         else:
             A = self.subs(x, a)
             if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity, AccumBounds):
-                if (a < b) != False:
+                if (a < b):
                     A = limit(self, x, a,"+")
                 else:
                     A = limit(self, x, a,"-")
@@ -852,7 +852,7 @@ class Expr(Basic, EvalfMixin):
         else:
             B = self.subs(x, b)
             if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity, AccumBounds):
-                if (a < b) != False:
+                if (a < b):
                     B = limit(self, x, b,"-")
                 else:
                     B = limit(self, x, b,"+")
@@ -1384,7 +1384,7 @@ class Expr(Basic, EvalfMixin):
                 resid = margs.difference(xargs)
                 if len(resid) + len(xargs) == len(margs):
                     co.append(Mul(*resid))
-            if co == []:
+            if not co:
                 return S.Zero
             elif co:
                 return Add(*co)
@@ -1397,7 +1397,7 @@ class Expr(Basic, EvalfMixin):
                 resid = margs.difference(xargs)
                 if len(resid) + len(xargs) == len(margs):
                     co.append(Mul(*(list(resid) + nc)))
-            if co == []:
+            if not co:
                 return S.Zero
             elif co:
                 return Add(*co)
