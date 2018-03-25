@@ -1,6 +1,6 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
-from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda
+from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
 from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
@@ -44,6 +44,9 @@ def test_Pow():
     g = implemented_function('g', Lambda(x, 2*x))
     assert julia_code(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "(3.5*2*x).^(-x + y.^x)./(x.^2 + y)"
+    # For issue 14160
+    assert julia_code(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
+                                                evaluate=False)) == '-2*x./(y.*y)'
 
 
 def test_basic_ops():
@@ -374,4 +377,4 @@ def test_MatrixElement_printing():
     assert(julia_code(3 * A[0, 0]) == "3*A[1,1]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(julia_code(F) == "((-1)*B + A)[1,1]")
+    assert(julia_code(F) == "(-B + A)[1,1]")

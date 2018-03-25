@@ -622,9 +622,10 @@ class harmonic(Function):
             else:
                 return cls
 
+        if n == 0:
+            return S.Zero
+
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
-            if n == 0:
-                return S.Zero
             if not m in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
@@ -901,7 +902,7 @@ class catalan(Function):
     8/(3*pi)
 
     We can differentiate the Catalan numbers C(n) interpreted as a
-    continuous real funtion in n:
+    continuous real function in n:
 
     >>> diff(catalan(n), n)
     (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
@@ -1356,7 +1357,7 @@ def nC(n, k=None, replacement=False):
     35
 
     If there are ``k`` items with multiplicities ``m_1, m_2, ..., m_k``
-    then the total of all combinations of length 0 hrough ``k`` is the
+    then the total of all combinations of length 0 through ``k`` is the
     product, ``(m_1 + 1)*(m_2 + 1)*...*(m_k + 1)``. When the multiplicity
     of each item is 1 (i.e., k unique items) then there are 2**k
     combinations. For example, if there are 4 unique items, the total number

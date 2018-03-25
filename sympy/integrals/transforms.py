@@ -745,7 +745,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
         # See [L], 5.2
         cond = [abs(arg(G.argument)) < G.delta*pi]
         # Note: we allow ">=" here, this corresponds to convergence if we let
-        # limits go to oo symetrically. ">" corresponds to absolute convergence.
+        # limits go to oo symmetrically. ">" corresponds to absolute convergence.
         cond += [And(Or(len(G.ap) != len(G.bq), 0 >= re(G.nu) + 1),
                      abs(arg(G.argument)) == G.delta*pi)]
         cond = Or(*cond)
@@ -869,7 +869,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
 def _simplifyconds(expr, s, a):
     r"""
-    Naively simplify some conditions occuring in ``expr``, given that `\operatorname{Re}(s) > a`.
+    Naively simplify some conditions occurring in ``expr``, given that `\operatorname{Re}(s) > a`.
 
     >>> from sympy.integrals.transforms import _simplifyconds as simp
     >>> from sympy.abc import x
@@ -957,8 +957,8 @@ def _simplifyconds(expr, s, a):
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms. """
-    from sympy import (re, Max, exp, pi, Min, periodic_argument as arg,
-                       cos, Wild, symbols, polar_lift)
+    from sympy import (re, Max, exp, pi, Min, periodic_argument as arg_,
+                       arg, cos, Wild, symbols, polar_lift)
     s = Dummy('s')
     F = integrate(exp(-s*t) * f, (t, 0, oo))
 
@@ -982,27 +982,33 @@ def _laplace_transform(f, t, s_, simplify=True):
         u = Dummy('u', real=True)
         p, q, w1, w2, w3, w4, w5 = symbols(
             'p q w1 w2 w3 w4 w5', cls=Wild, exclude=[s])
+        patterns = (
+            p*abs(arg((s + w3)*q)) < w2,
+            p*abs(arg((s + w3)*q)) <= w2,
+            abs(arg_((s + w3)**p*q, w1)) < w2,
+            abs(arg_((s + w3)**p*q, w1)) <= w2,
+            abs(arg_((polar_lift(s + w3))**p*q, w1)) < w2,
+            abs(arg_((polar_lift(s + w3))**p*q, w1)) <= w2)
         for c in conds:
             a_ = oo
             aux_ = []
             for d in disjuncts(c):
                 if d.is_Relational and s in d.rhs.free_symbols:
                     d = d.reversed
-                m = d.match(abs(arg((s + w3)**p*q, w1)) < w2)
-                if not m:
-                    m = d.match(abs(arg((s + w3)**p*q, w1)) <= w2)
-                if not m:
-                    m = d.match(abs(arg((polar_lift(s + w3))**p*q, w1)) < w2)
-                if not m:
-                    m = d.match(abs(arg((polar_lift(s + w3))**p*q, w1)) <= w2)
+                for pat in patterns:
+                    m = d.match(pat)
+                    if m:
+                        break
                 if m:
                     if m[q].is_positive and m[w2]/m[p] == pi/2:
                         d = re(s + m[w3]) > 0
-                m = d.match(
-                    cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p > 0)
+                m = d.match(cos(w1*abs(arg(s*w5))*w2)*abs(s**w3)**w4 - p > 0)
                 if not m:
                     m = d.match(
-                        cos(abs(arg(polar_lift(s)**w1*w5, q))*w2
+                        cos(abs(arg_(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p > 0)
+                if not m:
+                    m = d.match(
+                        cos(abs(arg_(polar_lift(s)**w1*w5, q))*w2
                             )*abs(s**w3)**w4 - p > 0)
                 if m and all(m[wild].is_positive for wild in [w1, w2, w3, w4, w5]):
                     d = re(s) > m[p]

@@ -491,7 +491,7 @@ def assemble_partfrac_list(partial_list):
             func = Lambda(an, nu/de**ex)
             pfd += RootSum(r, func, auto=False, quadratic=False)
         else:
-            # Assemble in case the roots are given explicitely by a list of algebraic numbers
+            # Assemble in case the roots are given explicitly by a list of algebraic numbers
             for root in r:
                 pfd += nf(root)/df(root)**ex
 

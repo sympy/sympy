@@ -278,7 +278,7 @@ def matrix_eye(n, **options):
 
 
 def _numpy_zeros(m, n, **options):
-    """numpy verson of zeros."""
+    """numpy version of zeros."""
     dtype = options.get('dtype', 'float64')
     if not np:
         raise ImportError
@@ -286,7 +286,7 @@ def _numpy_zeros(m, n, **options):
 
 
 def _scipy_sparse_zeros(m, n, **options):
-    """scipy.sparse verson of zeros."""
+    """scipy.sparse version of zeros."""
     spmatrix = options.get('spmatrix', 'csr')
     dtype = options.get('dtype', 'float64')
     if not sparse:

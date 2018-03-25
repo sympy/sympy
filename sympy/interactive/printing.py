@@ -160,7 +160,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         if _can_print_latex(o):
             s = latex(o, mode='plain', **settings)
-            s = s.replace(r'\dag', r'\dagger')
             s = s.strip('$')
             return '$$%s$$' % s
 

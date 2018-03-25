@@ -360,16 +360,11 @@ class DiracDelta(Function):
                 return SingularityFunction(x, solve(args[0], x)[0], -1)
             return SingularityFunction(x, solve(args[0], x)[0], -args[1] - 1)
         else:
-            # I dont know how to handle the case for DiracDelta expressions
+            # I don't know how to handle the case for DiracDelta expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
                 rewrite(SingularityFunction) doesn't support
                 arguments with more that 1 variable.'''))
-
-
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\delta'
 
     def _sage_(self):
         import sage.all as sage
@@ -606,7 +601,7 @@ class Heaviside(Function):
             # ((x - 5)**3*Heaviside(x - 5)).rewrite(SingularityFunction) should output
             # SingularityFunction(x, 5, 0) instead of (x - 5)**3*SingularityFunction(x, 5, 0)
         else:
-            # I dont know how to handle the case for Heaviside expressions
+            # I don't know how to handle the case for Heaviside expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
                 rewrite(SingularityFunction) doesn't

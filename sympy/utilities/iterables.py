@@ -1068,7 +1068,7 @@ def multiset_permutations(m, size=None, g=None):
 
 def _partition(seq, vector, m=None):
     """
-    Return the partion of seq as specified by the partition vector.
+    Return the partition of seq as specified by the partition vector.
 
     Examples
     ========
@@ -2165,8 +2165,8 @@ def kbins(l, k, ordered=None):
     [[0, 1, 2], [3, 4]]
     [[0, 1, 2, 3], [4]]
 
-    The ``ordered`` flag which is either None (to give the simple partition
-    of the the elements) or is a 2 digit integer indicating whether the order of
+    The ``ordered`` flag is either None (to give the simple partition
+    of the elements) or is a 2 digit integer indicating whether the order of
     the bins and the order of the items in the bins matters. Given::
 
         A = [[0], [1, 2]]

@@ -420,7 +420,7 @@ class VectorMul(BasisDependentMul, Vector):
 
     @property
     def measure_number(self):
-        """ The scalar expression involved in the defition of
+        """ The scalar expression involved in the definition of
         this VectorMul.
         """
         return self._measure_number

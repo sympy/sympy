@@ -65,7 +65,7 @@ class RewritingSystem(object):
 
     def _add_rule(self, r1, r2):
         '''
-        Add the rule r1 -> r2 with no checking or futher
+        Add the rule r1 -> r2 with no checking or further
         deductions
 
         '''
@@ -113,7 +113,6 @@ class RewritingSystem(object):
             s1 = s1.subword(0, len(s1)-1)
             s2 = s2*g**-1
             if len(s1) - len(s2) < 0:
-                #print("this", len(s1)-len(s2))
                 if s2 not in self.rules:
                     if not check:
                         self._add_rule(s2, s1)

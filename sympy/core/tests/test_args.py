@@ -591,6 +591,22 @@ def test_sympy__calculus__util__AccumulationBounds():
     assert _test_args(AccumulationBounds(0, 1))
 
 
+def test_sympy__sets__ordinals__OmegaPower():
+    from sympy.sets.ordinals import OmegaPower
+    assert _test_args(OmegaPower(1, 1))
+
+def test_sympy__sets__ordinals__Ordinal():
+    from sympy.sets.ordinals import Ordinal, OmegaPower
+    assert _test_args(Ordinal(OmegaPower(2, 1)))
+
+def test_sympy__sets__ordinals__OrdinalOmega():
+    from sympy.sets.ordinals import OrdinalOmega
+    assert _test_args(OrdinalOmega())
+
+def test_sympy__sets__ordinals__OrdinalZero():
+    from sympy.sets.ordinals import OrdinalZero
+    assert _test_args(OrdinalZero())
+
 def test_sympy__sets__sets__EmptySet():
     from sympy.sets.sets import EmptySet
     assert _test_args(EmptySet())
@@ -648,6 +664,10 @@ def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
     a, b = symbols('a b')
     assert _test_args(Tr(a + b))
+
+def test_sympy__sets__setexpr__SetExpr():
+    from sympy.sets.setexpr import SetExpr
+    assert _test_args(SetExpr(Interval(0, 1)))
 
 
 def test_sympy__sets__fancysets__Naturals():
@@ -2338,6 +2358,13 @@ def test_sympy__matrices__expressions__hadamard__HadamardProduct():
     Y = MatrixSymbol('Y', x, y)
     assert _test_args(HadamardProduct(X, Y))
 
+def test_sympy__matrices__expressions__kronecker__KroneckerProduct():
+    from sympy.matrices.expressions.kronecker import KroneckerProduct
+    from sympy.matrices.expressions import MatrixSymbol
+    X = MatrixSymbol('X', x, y)
+    Y = MatrixSymbol('Y', x, y)
+    assert _test_args(KroneckerProduct(X, Y))
+
 
 def test_sympy__matrices__expressions__matpow__MatPow():
     from sympy.matrices.expressions.matpow import MatPow
@@ -3255,7 +3282,7 @@ def test_sympy__physics__units__dimensions__DimensionSystem():
 def test_sympy__physics__units__quantities__Quantity():
     from sympy.physics.units.quantities import Quantity
     from sympy.physics.units import length
-    assert _test_args(Quantity("dam", length, 10))
+    assert _test_args(Quantity("dam"))
 
 
 def test_sympy__physics__units__prefixes__Prefix():

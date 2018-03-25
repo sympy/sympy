@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy.physics.optics.utils import (refraction_angle, deviation,
-    lens_makers_formula, mirror_formula, lens_formula,
+    brewster_angle, lens_makers_formula, mirror_formula, lens_formula,
     hyperfocal_distance, transverse_magnification)
 from sympy.physics.optics.medium import Medium
 from sympy.physics.units import e0
@@ -78,6 +78,12 @@ def test_deviation():
     assert deviation(r1, 1.33, 1, plane=P) is None  # TIR
     assert deviation(r1, 1, 1, normal=[0, 0, 1]) == 0
     assert deviation([-1, -1, -1], 1, 1, normal=[0, 0, 1]) == 0
+
+
+def test_brewster_angle():
+    m1 = Medium('m1', permittivity=e0, n=1)
+    m2 = Medium('m2', permittivity=e0, n=1.33)
+    assert round(brewster_angle(m1, m2), 2) == 0.93
 
 
 def test_lens_makers_formula():

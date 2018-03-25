@@ -364,6 +364,19 @@ class Wild(Symbol):
     A Wild symbol matches anything, or anything
     without whatever is explicitly excluded.
 
+    Parameters
+    ==========
+
+    name : str
+        Name of the Wild instance.
+    exclude : iterable, optional
+        Instances in ``exclude`` will not be matched.
+    properties : iterable of functions, optional
+        Functions, each taking an expressions as input
+        and returns a ``bool``. All functions in ``properties``
+        need to return ``True`` in order for the Wild instance
+        to match the expression.
+
     Examples
     ========
 
@@ -423,6 +436,12 @@ class Wild(Symbol):
     >>> E.match(a*b)
     {a_: z, b_: 2*x**3*y}
     >>> a = Wild('a', exclude=[x, y, z])
+    >>> E.match(a*b)
+    {a_: 2, b_: x**3*y*z}
+
+    Wild also accepts a ``properties`` parameter:
+
+    >>> a = Wild('a', properties=[lambda k: k.is_Integer])
     >>> E.match(a*b)
     {a_: 2, b_: x**3*y*z}
 

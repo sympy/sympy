@@ -1,14 +1,15 @@
 from sympy import (
-    Abs, acos, Add, atan, Basic, binomial, besselsimp, collect,cos, cosh, cot,
-    coth, count_ops, Derivative, diff, E, Eq, erf, exp, exp_polar, expand,
-    expand_multinomial, factor, factorial, Float, fraction, Function,
-    gamma, GoldenRatio, hyper, hypersimp, I, Integral, integrate, log,
-    logcombine, Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise,
-    posify, rad, Rational, root, S, separatevars, signsimp, simplify,
-    sin, sinh, solve, sqrt, Symbol, symbols, sympify, tan, tanh, zoo,
-    Sum, Lt, sign)
+    Abs, acos, Add, asin, atan, Basic, binomial, besselsimp,
+    collect,cos, cosh, cot, coth, count_ops, csch, Derivative, diff, E,
+    Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
+    factorial, Float, fraction, Function, gamma, GoldenRatio, hyper,
+    hypersimp, I, Integral, integrate, log, logcombine, Lt, Matrix,
+    MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
+    Rational, root, S, separatevars, signsimp, simplify, sign, sin,
+    sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
+    zoo)
 from sympy.core.mul import _keep_coeff
-from sympy.simplify.simplify import nthroot
+from sympy.simplify.simplify import nthroot, inversecombine
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.core.compatibility import range
 
@@ -470,6 +471,14 @@ def test_logcombine_complex_coeff():
         i + log(x**2)
 
 
+def test_issue_5950():
+    x, y = symbols("x,y", positive=True)
+    assert logcombine(log(3) - log(2)) == log(Rational(3,2), evaluate=False)
+    assert logcombine(log(x) - log(y)) == log(x/y)
+    assert logcombine(log(Rational(3,2), evaluate=False) - log(2)) == \
+        log(Rational(3,4), evaluate=False)
+
+
 def test_posify():
     from sympy.abc import x
 
@@ -676,7 +685,15 @@ def test_issue_9324_simplify():
     assert simplify(e) == e
 
 
+def test_issue_13474():
+    x = Symbol('x')
+    assert simplify(x + csch(sinc(1))) == x + csch(sinc(1))
+
+
 def test_simplify_function_inverse():
+    # "inverse" attribute does not guarantee that f(g(x)) is x
+    # so this simplification should not happen automatically.
+    # See issue #12140
     x, y = symbols('x, y')
     g = Function('g')
 
@@ -684,9 +701,12 @@ def test_simplify_function_inverse():
         def inverse(self, argindex=1):
             return g
 
-    assert simplify(f(g(x))) == x
-    assert simplify(f(g(sin(x)**2 + cos(x)**2))) == 1
-    assert simplify(f(g(x, y))) == f(g(x, y))
+    assert simplify(f(g(x))) == f(g(x))
+    assert inversecombine(f(g(x))) == x
+    assert simplify(f(g(x)), inverse=True) == x
+    assert simplify(f(g(sin(x)**2 + cos(x)**2)), inverse=True) == 1
+    assert simplify(f(g(x, y)), inverse=True) == f(g(x, y))
+    assert simplify(2*asin(sin(3*x)), inverse=True) == 6*x
 
 
 def test_clear_coefficients():

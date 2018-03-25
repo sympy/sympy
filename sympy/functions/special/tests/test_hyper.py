@@ -211,6 +211,7 @@ def test_hyper_unpolarify():
     assert hyper([0], [], a).argument == a
     assert hyper([0], [0], a).argument == b
     assert hyper([0, 1], [0], a).argument == a
+    assert hyper([0, 1], [0], exp_polar(2*pi*I)).argument == 1
 
 
 @slow

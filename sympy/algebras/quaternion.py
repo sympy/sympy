@@ -13,6 +13,8 @@ from sympy import Matrix, Add, Mul
 from sympy import symbols, sympify
 from sympy.printing.latex import latex
 from sympy.printing import StrPrinter
+from sympy.core.numbers import Integer
+from sympy.core.compatibility import SYMPY_INTS
 
 
 class Quaternion(Expr):
@@ -44,7 +46,7 @@ class Quaternion(Expr):
 
     is_commutative = False
 
-    def __new__(cls, a=0, b=0, c=0, d=0, real_field = True):
+    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True):
         a = sympify(a)
         b = sympify(b)
         c = sympify(c)
@@ -303,6 +305,8 @@ class Quaternion(Expr):
     def inverse(self):
         """Returns the inverse of the quaternion."""
         q = self
+        if not q.norm():
+            raise ValueError("Cannot compute inverse for a quaternion with zero norm")
         return conjugate(q) * (1/q.norm()**2)
 
     def pow(self, p):
@@ -321,6 +325,13 @@ class Quaternion(Expr):
         if p == -1:
             return q.inverse()
         res = 1
+
+        if p < 0:
+            q, p = q.inverse(), -p
+
+        if not (isinstance(p, (Integer, SYMPY_INTS))):
+            return NotImplemented
+
         while p > 0:
             if p & 1:
                 res = q * res
@@ -475,7 +486,7 @@ class Quaternion(Expr):
 
         return t
 
-    def to_rotation_matrix(self, v = None):
+    def to_rotation_matrix(self, v=None):
         """Returns the equivalent rotation transformation matrix of the quaternion
         which represents rotation about the origin if v is not passed.
 

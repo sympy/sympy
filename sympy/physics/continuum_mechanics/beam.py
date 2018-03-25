@@ -33,7 +33,7 @@ class Beam(object):
     There is a beam of length 4 meters. A constant distributed load of 6 N/m
     is applied from half of the beam till the end. There are two simple supports
     below the beam, one at the starting point and another at the ending point
-    of the beam. The deflection of the beam at the end is resticted.
+    of the beam. The deflection of the beam at the end is restricted.
 
     Using the sign convention of downwards forces being positive.
 

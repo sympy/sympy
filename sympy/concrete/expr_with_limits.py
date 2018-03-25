@@ -411,7 +411,7 @@ class AddWithLimits(ExprWithLimits):
                 return Mul(*out[True])*self.func(Mul(*out[False]), \
                     *self.limits)
         else:
-            summand = self.func(self.function, self.limits[0:-1]).factor()
+            summand = self.func(self.function, *self.limits[0:-1]).factor()
             if not summand.has(self.variables[-1]):
                 return self.func(1, [self.limits[-1]]).doit()*summand
             elif isinstance(summand, Mul):
