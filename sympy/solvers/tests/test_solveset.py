@@ -572,9 +572,10 @@ def test_expo():
     assert solveset(4**(x**2) - 4**(6-x), x, S.Reals) == FiniteSet(-3, 2)
     assert solveset(4**(x+1) + 4**(x+2) + 4**(x-1) - 3**(x+2) -3**(x+3), x, S.Reals) == \
         FiniteSet(2)
-    assert solveset(5**(x-3) - 3**(2*x + 1), x, S.Reals) == FiniteSet(-log(375)/(-log(5) + 2*log(3)))
-    assert solveset(4**(x-2) - 5**(x), x, S.Reals) == FiniteSet(log(2**(4/(-log(5) + log(4)))))
+    assert solveset(5**(x-3) - 3**(2*x + 1), x, S.Reals) == FiniteSet(log(375**(1/log(S(5)/9))))
+    assert solveset(4**(x-2) - 5**(x), x, S.Reals) == FiniteSet(log(2**(4/log(S(4)/5))))
     assert solveset(2**(x) + 4**(x) + 8**(x) - 84, x, S.Reals) == FiniteSet(2)
+    assert solveset(2**(x) + 4**(x) + 8**(x), x, S.Reals) == S.EmptySet
 
     y = exp(x + 1/x**2)
     solution = solveset(y**2 + y, x, S.Reals)
@@ -595,12 +596,7 @@ def test_expo():
     assert solveset(5**(x-3) + 3**(2*x + 1), x) == \
         imageset(Lambda(n, (I*(2*n*pi + pi) + log(375))/(-2*log(3) + log(5))), S.Integers)
     assert solveset(4**(x-2) - 5**(x), x) == \
-        imageset(Lambda(n, (2*n*I*pi - 4*log(2))/(-2*log(2) + log(5))), S.Integers)
-
-@XFAIL
-def test_xfail_expo():
-    assert solveset(2**(x) + 4**(x) + 8**(x), x, S.Reals) == S.EmptySet
-    assert solveset(0**x - 100, x, S.Reals) == S.EmptySet
+        imageset(Lambda(n, (2*n*I*pi + 4*log(2))/(-log(5) + 2*log(2))), S.Integers)
 
 
 def test_uselogcombine_1():

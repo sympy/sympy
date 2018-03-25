@@ -14,7 +14,8 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.containers import Tuple
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand_complex, AppliedUndef, Function)
+from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
+                                expand_log, Function)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify import simplify, fraction, trigsimp, powdenest, logcombine, powsimp
@@ -31,7 +32,8 @@ from sympy.sets.sets import Set
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
-from sympy.solvers.solvers import checksol, denoms, unrad, _simple_dens, _ispow
+from sympy.solvers.solvers import (checksol, denoms, unrad, _simple_dens, _ispow,
+                                  recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
