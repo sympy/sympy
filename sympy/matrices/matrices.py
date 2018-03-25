@@ -2426,7 +2426,6 @@ class MatrixBase(MatrixDeprecated,
         multiply_elementwise
         """
         from .dense import Matrix
-
         if not isinstance(b, MatrixBase):
             if is_sequence(b):
                 if len(b) != self.cols and len(b) != self.rows:
@@ -2438,7 +2437,8 @@ class MatrixBase(MatrixDeprecated,
                 raise TypeError(
                     "`b` must be an ordered iterable or Matrix, not %s." %
                     type(b))
-
+        if (b.cols !=1 and b.rows != 1):
+            raise ShapeError("`b` must has only one row or one column")
         mat = self
         if mat.cols == b.rows:
             if b.cols != 1:
