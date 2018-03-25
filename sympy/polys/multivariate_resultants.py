@@ -8,7 +8,7 @@ Multivariate resultants are used to identify whether a multivariate system has
 common roots. That is when the resultant is equal to zero.
 """
 
-from sympy import IndexedBase, Matrix, Mul, Poly, prod, fraction, total_degree
+from sympy import IndexedBase, Matrix, Mul, Poly, rem, prod, fraction, total_degree
 from sympy.core.compatibility import range
 from sympy.polys.monomials import monomial_deg
 from sympy.polys.monomials import itermonomials
@@ -261,7 +261,7 @@ class MacaulayResultant():
                 poss_rows = self.get_monomials_of_certain_degree(self.degree_m - self.degrees[i])
                 for div in divisible:
                     for p in poss_rows:
-                        if fraction((p / div).expand())[1] == 1:
+                        if rem(p, div) == 0:
                             poss_rows = [item for item in poss_rows if item != p]
                 row_coefficients.append(poss_rows)
         return row_coefficients
