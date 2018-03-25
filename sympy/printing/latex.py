@@ -791,12 +791,18 @@ class LatexPrinter(Printer):
         from sympy.functions.special.beta_functions import beta
         from sympy.functions.special.delta_functions import DiracDelta
         from sympy.functions.special.error_functions import Chi
+        from sympy.functions.elementary.miscellaneous import Max
+        from sympy.functions.elementary.miscellaneous import Min
+
         return {KroneckerDelta: r'\delta',
                 gamma:  r'\Gamma',
                 lowergamma: r'\gamma',
                 beta: r'\operatorname{B}',
                 DiracDelta: r'\delta',
-                Chi: r'\operatorname{Chi}'}
+                Chi: r'\operatorname{Chi}',
+                Max: r'\max',
+                Min: r'\min'
+                }
 
     def _print_FunctionClass(self, expr):
         for cls in self._special_function_classes:
@@ -817,26 +823,19 @@ class LatexPrinter(Printer):
 
         return tex
 
-    def _print_Min(self, expr, exp=None):
-        args = sorted(expr.args, key=default_sort_key)
-        texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"\min\left(%s\right)" % ", ".join(texargs)
+    def _hprint_variadic_function(self, expr, exp=None): 
+        args = sorted(expr.args, key=default_sort_key) 
+        texargs = [r"%s" % self._print(symbol) for symbol in args] 
+        tex = r"%s\left(%s\right)" % (self._print(expr.func), ", ".join(texargs))
+     
+        if exp is not None: 
+            return r"%s^{%s}" % (tex, exp) 
+        else: 
+            return tex 
 
-        if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
-        else:
-            return tex
+    _print_Min = _print_Max = _hprint_variadic_function
 
-    def _print_Max(self, expr, exp=None):
-        args = sorted(expr.args, key=default_sort_key)
-        texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"\max\left(%s\right)" % ", ".join(texargs)
-
-        if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
-        else:
-            return tex
-
+    
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
 
