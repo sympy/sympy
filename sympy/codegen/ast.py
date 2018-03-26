@@ -25,6 +25,8 @@ AST Type Tree
        |        |--->Attribute
        |        |--->For
        |        |--->String
+       |        |       |--->QuotedString
+       |        |       |--->Comment
        |        |--->Type
        |        |       |--->IntBaseType
        |        |       |              |--->_SizedIntType
@@ -730,6 +732,8 @@ class String(Token):
 class QuotedString(String):
     """ Represents a string which should be printed with quotes. """
 
+class Comment(String):
+    """ Represents a comment. """
 
 class Node(Token):
     """ Subclass of Token, carrying the attribute 'attrs' (Tuple)

@@ -288,6 +288,9 @@ class CodePrinter(StrPrinter):
     def _print_QuotedString(self, arg, **kwargs):
         return '"%s"' % arg.text
 
+    def _print_Comment(self, string, **kwargs):
+        return self._get_comment(str(string), **kwargs)
+
     def _print_Assignment(self, expr, **kwargs):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol

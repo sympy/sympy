@@ -16,7 +16,7 @@ from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, g
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
     While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Statement, Return,
-    real, float32, float64, float80, float128, intc
+    real, float32, float64, float80, float128, intc, Comment
 )
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
 from sympy.codegen.cnodes import restrict
@@ -804,6 +804,7 @@ def test_ccode_Type():
 
 
 def test_ccode_codegen_ast():
+    assert ccode(Comment("this is a comment")) == "// this is a comment"
     assert ccode(While(abs(x) > 1, [aug_assign(x, '-', 1)])) == (
         'while (fabs(x) > 1) {\n'
         '   x -= 1;\n'
