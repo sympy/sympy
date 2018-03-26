@@ -189,7 +189,6 @@ def test_sympy__codegen__ast__NoneToken():
     from sympy.codegen.ast import NoneToken
     assert _test_args(NoneToken())
 
-
 def test_sympy__codegen__ast__String():
     from sympy.codegen.ast import String
     assert _test_args(String('foobar'))
@@ -198,6 +197,9 @@ def test_sympy__codegen__ast__QuotedString():
     from sympy.codegen.ast import QuotedString
     assert _test_args(QuotedString('foobar'))
 
+def test_sympy__codegen__ast__Comment():
+    from sympy.codegen.ast import Comment
+    assert _test_args(Comment('this is a comment'))
 
 def test_sympy__codegen__ast__Node():
     from sympy.codegen.ast import Node
