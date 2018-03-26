@@ -257,6 +257,17 @@ def test_CRootOf_evalf():
         39510*x**8 + 204320*x**6 + 755548*x**4 + 1434496*x**2 +
         877969, 10).n(2)) == '-3.4*I'
 
+    # check reset
+    r = [RootOf(x**3 + x + 3, i) for i in range(3)]
+    r[0]._reset()
+    for ri in r:
+        i = ri._get_interval()
+        n = ri.n(2)
+        assert str(i) != str(ri._get_interval())
+        ri._reset()
+        # XXX using strings because intervals don't compare equal
+        assert str(i) == str(ri._get_interval())
+
 
 def test_CRootOf_evalf_caching_bug():
     r = rootof(x**5 - 5*x + 12, 1)

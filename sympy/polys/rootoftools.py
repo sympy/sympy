@@ -296,12 +296,14 @@ class ComplexRootOf(RootOf):
         return complex_part
 
     @classmethod
-    def _get_reals(cls, factors):
+    def _get_reals(cls, factors, use_cache=True):
         """Compute real root isolating intervals for a list of factors. """
         reals = []
 
         for factor, k in factors:
             try:
+                if not use_cache:
+                    raise KeyError
                 r = _reals_cache[factor]
                 reals.extend([(i, factor, k) for i in r])
             except KeyError:
@@ -313,12 +315,14 @@ class ComplexRootOf(RootOf):
         return reals
 
     @classmethod
-    def _get_complexes(cls, factors):
+    def _get_complexes(cls, factors, use_cache=True):
         """Compute complex root isolating intervals for a list of factors. """
         complexes = []
 
         for factor, k in ordered(factors):
             try:
+                if not use_cache:
+                    raise KeyError
                 c = _complexes_cache[factor]
                 complexes.extend([(i, factor, k) for i in c])
             except KeyError:
@@ -524,12 +528,15 @@ class ComplexRootOf(RootOf):
 
         return roots
 
+    def _reset(self):
+        self._all_roots(self.poly, use_cache=False)
+
     @classmethod
-    def _all_roots(cls, poly):
+    def _all_roots(cls, poly, use_cache=True):
         """Get real and complex roots of a composite polynomial. """
         factors = _pure_factors(poly)
 
-        reals = cls._get_reals(factors)
+        reals = cls._get_reals(factors, use_cache=use_cache)
         reals_count = cls._count_roots(reals)
 
         roots = []
@@ -537,7 +544,7 @@ class ComplexRootOf(RootOf):
         for index in range(0, reals_count):
             roots.append(cls._reals_index(reals, index))
 
-        complexes = cls._get_complexes(factors)
+        complexes = cls._get_complexes(factors, use_cache=use_cache)
         complexes_count = cls._count_roots(complexes)
 
         for index in range(0, complexes_count):
