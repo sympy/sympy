@@ -152,7 +152,7 @@ def test_CRootOf___eval_Eq__():
             assert Eq(r, s) is S.true
     eq = x**3 + x + 1
     sol = solve(eq)
-    assert [Eq(rootof(eq,i), j) for i in range(3) for j in sol] == [
+    assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol] == [
         False, False, True, False, True, False, True, False, False]
     assert Eq(rootof(eq, 0), 1 + S.ImaginaryUnit) == False
 
@@ -305,12 +305,9 @@ def test_CRootOf_all_roots():
 
 def test_CRootOf_eval_rational():
     p = legendre_poly(4, x, polys=True)
-    roots = [r.eval_rational(1e-18) for r in p.real_roots()]
+    roots = [r.eval_rational(n=18) for r in p.real_roots()]
     for r in roots:
         assert isinstance(r, Rational)
-    # All we know is that the Rational instance will be less than
-    # 1/10^18 from the exact root. So the first 17 digits must
-    # be correct
     roots = [str(r.n(17)) for r in roots]
     assert roots == [
             "-0.86113631159405258",

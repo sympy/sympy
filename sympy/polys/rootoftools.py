@@ -154,6 +154,77 @@ class ComplexRootOf(RootOf):
     real or complex intervals and indexed in a fixed order.
     Currently only rational coefficients are allowed.
     Can be imported as ``CRootOf``.
+
+
+    Examples
+    ========
+
+    >>> from sympy import CRootOf, rootof
+    >>> from sympy.abc import x
+
+    CRootOf is a way to reference a particular root of a
+    polynomial. If there is a rational root, it will be returned:
+
+    >>> CRootOf(x**2 - 4, 0)
+    -2
+
+    Whether roots involving radicals are returned or not
+    depends on whether the ``radicals`` flag is true (which is
+    set to True with rootof):
+
+    >>> CRootOf(x**2 - 3, 0)
+    CRootOf(x**2 - 3, 0)
+    >>> CRootOf(x**2 - 3, 0, radicals=True)
+    -sqrt(3)
+    >>> rootof(x**2 - 3, 0)
+    -sqrt(3)
+
+    The following cannot be expressed in terms of radicals:
+
+    >>> r = rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0); r
+    CRootOf(4*x**5 + 16*x**3 + 12*x**2 + 7, 0)
+
+    The root bounds can be seen, however, and they are used by the
+    evaluation methods to get numerical approximations for the root.
+
+    >>> interval = r._get_interval(); interval
+    (-1, 0)
+    >>> r.evalf(2)
+    -0.98
+
+    The evalf method refines the width of the root bounds until it
+    guarantees that any decimal approximation within those bounds
+    will satisfy the desired precision. It then stores the refined
+    interval so subsequent requests at or below the requested
+    precision will not have to recompute the root bounds and will
+    return very quickly.
+
+    Before evaluation above, the interval was
+
+    >>> interval
+    (-1, 0)
+
+    After evaluation it is now
+
+    >>. r._get_interval()
+    (-165/169, -206/211)
+
+    The `eval_approx` method will also find the root to a given
+    precision but the interval is not modified unless the search
+    for the root fails to converge within the root bounds.
+
+    To reset all intervals for a given polynomial, the `_reset` method
+    can be called from any CRootOf instance of the polynomial:
+
+    >>> r._reset()
+    >>> r._get_interval()
+    (-1, 0)
+
+    See Also
+    ========
+    eval_approx
+    eval_rational
+    _eval_evalf
     """
 
     __slots__ = ['index']
@@ -251,12 +322,10 @@ class ComplexRootOf(RootOf):
 
     def _eval_is_real(self):
         """Return ``True`` if the root is real. """
-        assert isinstance(self.poly, PurePoly)
         return self.index < len(_reals_cache[self.poly])
 
     def _eval_is_imaginary(self):
         """Return ``True`` if the root is real. """
-        assert isinstance(self.poly, PurePoly)
         if self.index >= len(_reals_cache[self.poly]):
             ivl = self._get_interval()
             return ivl.ax*ivl.bx <= 0  # all others are on one side or the other
@@ -724,37 +793,7 @@ class ComplexRootOf(RootOf):
             I*Float._new(root.imag._mpf_, prec))
 
     def _eval_evalf(self, prec, **kwargs):
-        """Evaluate this complex root to the given precision.
-
-        Examples
-        ========
-
-        >>> from sympy import rootof
-        >>> from sympy.abc import x
-        >>> r = rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0)
-        >>> interval = r._get_interval()
-        >>> r.evalf(2)
-        -0.98
-
-        Notes
-        =====
-
-        The interval is refined until the width of the root bounds
-        guarantees that any decimal approximation within those bounds
-        will satisfy the desired precision.
-
-        A side effect of this routine is that the refined interval is
-        stored so subsequent requests at or below the requested
-        precision will not have to recompute the root bounds and will
-        return very quickly.
-
-        >>> print('interval was %s and is now %s' % (interval, r._get_interval()))
-        interval was (-1, 0) and is now (-165/169, -206/211)
-
-        The `eval_approx` method will also find the root to a given
-        precision but the interval is not modified unless the search
-        for the root fails to converge within the root bounds.
-        """
+        """Evaluate this complex root to the given precision."""
         # all kwargs are ignored
         return self.eval_rational(n=prec_to_dps(prec))._evalf(prec)
 
@@ -864,7 +903,7 @@ class ComplexRootOf(RootOf):
             a, b = [Rational(str(_)) for _ in (i.a, i.b)]
             return sympify(a <= other and other <= b)
         i = self._get_interval()
-        z = r1, r2, i1, i2 = [Rational(str(j)) for j in (
+        r1, r2, i1, i2 = [Rational(str(j)) for j in (
             i.ax, i.bx, i.ay, i.by)]
         return sympify((
             r1 <= re and re <= r2) and (
@@ -973,7 +1012,7 @@ class RootSum(Expr):
 
     @classmethod
     def _is_func_rational(cls, poly, func):
-        """Check if a lambda is areational function. """
+        """Check if a lambda is a rational function. """
         var, expr = func.variables[0], func.expr
         return expr.is_rational_function(var)
 
@@ -1073,39 +1112,3 @@ class RootSum(Expr):
         var, expr = self.fun.args
         func = Lambda(var, expr.diff(x))
         return self.new(self.poly, func, self.auto)
-
-
-def bisect(f, a, b, tol):
-    """
-    Implements bisection. This function is used in RootOf.eval_rational() and
-    it needs to be robust.
-
-    Examples
-    ========
-
-    >>> from sympy import S
-    >>> from sympy.polys.rootoftools import bisect
-    >>> bisect(lambda x: x**2-1, -10, 0, S(1)/10**2)
-    -1025/1024
-    >>> bisect(lambda x: x**2-1, -10, 0, S(1)/10**4)
-    -131075/131072
-
-    """
-    a = sympify(a)
-    b = sympify(b)
-    fa = f(a)
-    fb = f(b)
-    if fa * fb >= 0:
-        raise ValueError("bisect: f(a) and f(b) must have opposite signs")
-    while (b - a > tol):
-        c = (a + b)/2
-        fc = f(c)
-        if (fc == 0):
-            return c  # We need to make sure f(c) is not zero below
-        if (fa * fc < 0):
-            b = c
-            fb = fc
-        else:
-            a = c
-            fa = fc
-    return (a + b)/2
