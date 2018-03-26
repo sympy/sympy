@@ -16,6 +16,7 @@ from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.external import import_module
 
 import mpmath
+from mpmath.rational import mpq
 
 
 numpy = import_module('numpy')
@@ -115,6 +116,8 @@ def test_sympify_mpmath():
         mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) == False
 
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
+
+    assert sympify(mpq(1, 2)) == S.Half
 
 
 def test_sympify2():

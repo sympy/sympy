@@ -8,7 +8,6 @@ from sympy.core.cache import cacheit
 from sympy.core.function import AppliedUndef
 from sympy.functions.elementary.miscellaneous import root as _root
 
-from sympy.polys.domains.groundtypes import PythonRational
 from sympy.polys.polytools import Poly, PurePoly, factor
 from sympy.polys.rationaltools import together
 from sympy.polys.polyfuncs import symmetrize, viete
@@ -31,7 +30,6 @@ from sympy.polys.domains import QQ
 
 from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
-from mpmath.rational import mpq
 
 from sympy.utilities import lambdify, public, sift
 
@@ -850,10 +848,7 @@ class ComplexRootOf(RootOf):
                     dx = abs(interval.center*rtol)
                 interval = interval.refine_size(dx=dx)
                 c = interval.center
-                if isinstance(c, PythonRational):
-                    real = Rational(c.p, c.q)
-                elif isinstance(c, mpq):
-                    real = Rational(*c._mpq_)
+                real = Rational(c)
                 imag = S.Zero
                 if not rtol or interval.dx < abs(c*rtol):
                     break
@@ -863,10 +858,7 @@ class ComplexRootOf(RootOf):
                     dx = 1
                 interval = interval.refine_size(dx=dx, dy=dy)
                 c = interval.center[1]
-                if isinstance(c, PythonRational):
-                    imag = Rational(c.p, c.q)
-                elif isinstance(c, mpq):
-                    imag = Rational(*c._mpq_)
+                imag = Rational(c)
                 real = S.Zero
                 if not rtol or interval.dy < abs(c*rtol):
                     break
@@ -876,14 +868,7 @@ class ComplexRootOf(RootOf):
                     dy = abs(interval.center[1]*rtol)
                 interval = interval.refine_size(dx, dy)
                 c = interval.center
-                rat = []
-                for i in c:
-                    if isinstance(i, PythonRational):
-                        r = Rational(i.p, i.q)
-                    else:
-                        r = Rational(*i._mpq_)
-                    rat.append(r)
-                real, imag = rat
+                real, imag = map(Rational, c)
                 if not rtol or (
                         interval.dx < abs(c[0]*rtol) and
                         interval.dy < abs(c[1]*rtol)):
