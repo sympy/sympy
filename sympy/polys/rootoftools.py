@@ -813,17 +813,17 @@ class ComplexRootOf(RootOf):
         faster.
 
         The following example first obtains Rational approximation to
-        1e-6 accuracy for all roots of the 4-th order Legendre
+        1e-8 accuracy for all roots of the 4-th order Legendre
         polynomial. Since the roots are all less than 1, this will
         ensure the decimal representation of the approximation will be
-        correct (including rounding) to 5 digits:
+        correct (including rounding) to 6 digits:
 
         >>> from sympy import S, legendre_poly, Symbol
         >>> x = Symbol("x")
         >>> p = legendre_poly(4, x, polys=True)
         >>> r = p.real_roots()[-1]
-        >>> r.eval_rational(10**-6).n(5)
-        0.86114
+        >>> r.eval_rational(10**-8).n(6)
+        0.861136
 
         It is not necessary to a two-step calculation, however: the
         decimal representation can be computed directly:
@@ -838,7 +838,11 @@ class ComplexRootOf(RootOf):
             dx = dx if isinstance(dx, Rational) else Rational(str(dx))
             dy = dy if isinstance(dy, Rational) else Rational(str(dy))
         else:
-            rtol = S(10)**-(n + 1)  # +1 for guard digit
+            # 5 binary (or 2 decimal) digits are needed to ensure that
+            # a given digit is correctly rounded
+            # prec_to_dps(dps_to_prec(n) + 5) - n <= 2 (tested for
+            # n in range(1000000)
+            rtol = S(10)**-(n + 2)  # +2 for guard digits
         interval = self._get_interval()
         while True:
             if self.is_real:
