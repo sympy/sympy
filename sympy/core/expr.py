@@ -2168,8 +2168,7 @@ class Expr(Basic, EvalfMixin):
             co = self
             diff = co - c
             # XXX should we match types? i.e should 3 - .1 succeed?
-            if (co > 0 and 0 < diff < co or
-                co < 0 and 0 > diff > co):
+            if (0 < diff < co or 0 > diff > co):
                 return diff
             return None
 
