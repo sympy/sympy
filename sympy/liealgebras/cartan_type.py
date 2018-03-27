@@ -9,9 +9,11 @@ class CartanType_generator(Basic):
     """
     def __call__(self, *args):
         c = args[0]
-        c = list(c)
+        if type(c) == list:
+            letter, n = c[0], int(c[1])
+        if type(c) == str:
+            letter, n = c[0], int(c[1:])
 
-        letter, n = c[0], int(c[1])
         if n < 0:
             raise ValueError("Lie algebra rank cannot be negative")
         if letter == "A":
