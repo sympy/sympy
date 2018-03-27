@@ -2877,6 +2877,57 @@ class Expr(Basic, EvalfMixin):
                      nseries calls it.""" % self.func)
                      )
 
+    def aseries(self, x, n=6, bound=0, hierar=False):
+        from sympy.series.gruntz import mrv, rewrite, mrv_leadterm
+        from sympy.functions import exp, log
+
+        if x.is_positive is x.is_negative is None:
+            xpos = C.Dummy('x', positive=True, bounded=True)
+            return self.subs(x, xpos).aseries(xpos, n, bound, hir).subs(xpos, x)
+
+        omega, exps = mrv(self, x)
+        if x in omega:
+            s = self.subs(x, exp(x)).aseries(x, n, bound, hir).subs(x, log(x))
+            if s.getO():
+                o = C.Order(1/x**n, (x, S.Infinity))
+                return s + o
+            return s
+        d = C.Dummy('d', positive=True)
+        f, logw = rewrite(exps, omega, x, d)
+
+        if self in omega:
+            # Need to find a canonical representative
+            if bound <= 0:
+                return self
+            a = self.exp
+            s = a.aseries(x, n, bound=bound)
+            s = s.func(*[t.removeO() for t in s.args])
+            rep = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
+            f = exp(self.args[0] - rep.args[0]) / d
+            logw = log(1/rep)
+
+        s = f.series(d, 0, n)
+        # Hierarchical series: break after first recursion
+        if hierar:
+            return s.subs(d, exp(logw))
+
+        o = s.getO()
+        terms = sorted(Add.make_args(s.removeO()), key=lambda i: int(i.as_coeff_exponent(d)[1]))
+        s = S.Zero
+
+        for t in terms:
+            coeff, expo = t.as_coeff_exponent(d)
+            if coeff.has(x):
+                s1 = coeff.aseries(x, n, bound=bound-1)
+                s += (s1 * d**expo)
+            else:
+                s += t
+
+        if not o or s.getO():
+            return s.subs(d, exp(logw))
+        else:
+            return (s + o).subs(d, exp(logw))
+
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
         """
