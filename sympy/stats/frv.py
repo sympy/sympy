@@ -12,7 +12,7 @@ from __future__ import print_function, division
 from itertools import product
 
 from sympy import (Basic, Symbol, cacheit, sympify, Mul,
-        And, Or, Tuple, Piecewise, Eq, Lambda)
+        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy)
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs,
@@ -203,6 +203,11 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
             [(v, Eq(k, x)) for k, v in self.dict.items()] + [(0, True)])))
 
     @property
+    def characteristic_function(self):
+        t = Dummy('t', real=True)
+        return Lambda(t, sum(exp(I*k*t)*v for k, v in self.dict.items()))
+
+    @property
     def set(self):
         return list(self.dict.keys())
 
@@ -285,6 +290,13 @@ class FinitePSpace(PSpace):
             sorted_items = [(v, float(cum_prob))
                     for v, cum_prob in sorted_items]
         return sorted_items
+
+    @cacheit
+    def compute_characteristic_function(self, expr):
+        d = self.compute_density(expr)
+        t = Dummy('t', real=True)
+
+        return Lambda(t, sum(exp(I*k*t)*v for k,v in d.items()))
 
     def integrate(self, expr, rvs=None):
         rvs = rvs or self.values

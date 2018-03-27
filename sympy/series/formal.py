@@ -70,7 +70,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
 
     By setting ``full=True``, range of admissible functions to be solved using
     ``rational_algorithm`` can be increased. This option should be used
-    carefully as it can signifcantly slow down the computation as ``doit`` is
+    carefully as it can significantly slow down the computation as ``doit`` is
     performed on the :class:`RootSum` object returned by the ``apart`` function.
     Use ``full=False`` whenever possible.
 
@@ -401,7 +401,7 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
     from sympy.polys import lcm, roots
     from sympy.integrals import integrate
 
-    # tranformation - c
+    # transformation - c
     proots, qroots = roots(P, k), roots(Q, k)
     all_roots = dict(proots)
     all_roots.update(qroots)

@@ -1231,5 +1231,6 @@ def test_canonical_ordering_AntiSymmetricTensor():
     k, l = symbols(('k','l'), below_fermi=True,
                                    cls=Dummy)
 
-    assert AntiSymmetricTensor(v, (k, l), (d, c)) == -AntiSymmetricTensor(v, (l, k), (d, c))
-    # Gives AntiSymTensor(kl,dc) or -AntiSymTensor(lk,dc) randomly between runs.
+    # formerly, the left gave either the left or the right
+    assert AntiSymmetricTensor(v, (k, l), (d, c)
+        ) == -AntiSymmetricTensor(v, (l, k), (d, c))

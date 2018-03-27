@@ -7,7 +7,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion)
-from sympy.core import Expr
+from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
@@ -214,6 +214,10 @@ def test_Mul():
     assert str(-2*x/3) == '-2*x/3'
     assert str(-1.0*x) == '-1.0*x'
     assert str(1.0*x) == '1.0*x'
+    # For issue 14160
+    assert str(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
+                                                evaluate=False)) == '-2*x/(y*y)'
+
 
     class CustomClass1(Expr):
         is_commutative = True
@@ -490,7 +494,11 @@ def test_Rational():
     assert str(2**Rational(1, 10**10)) == "2**(1/10000000000)"
 
     assert sstr(Rational(2, 3), sympy_integers=True) == "S(2)/3"
-    assert sstr(Symbol("x")**Rational(2, 3), sympy_integers=True) == "x**(S(2)/3)"
+    x = Symbol("x")
+    assert sstr(x**Rational(2, 3), sympy_integers=True) == "x**(S(2)/3)"
+    assert sstr(Eq(x, Rational(2, 3)), sympy_integers=True) == "Eq(x, S(2)/3)"
+    assert sstr(Limit(x, x, Rational(7, 2)), sympy_integers=True) == \
+        "Limit(x, x, S(7)/2)"
 
 
 def test_Float():
@@ -593,6 +601,8 @@ def test_Quaternion_str_printer():
 
 
 def test_Quantity_str():
+    assert sstr(second, abbrev=True) == "s"
+    assert sstr(joule, abbrev=True) == "J"
     assert str(second) == "second"
     assert str(joule) == "joule"
 
@@ -782,4 +792,12 @@ def test_MatrixElement_printing():
     assert(str(3 * A[0, 0]) == "3*A[0, 0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert str(F) == "((-1)*B + A)[0, 0]"
+    assert str(F) == "(-B + A)[0, 0]"
+
+
+def test_MatrixSymbol_printing():
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+
+    assert str(A - A*B - B) == "-B - A*B + A"
+    assert str(A*B - (A+B)) == "-(A + B) + A*B"

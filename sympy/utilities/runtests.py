@@ -46,7 +46,7 @@ ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 # A list of [.6, .1, .3] would mean that if the tests are evenly split
 # into '1/3', '2/3', '3/3', the first split would take 60% of the time,
 # the second 10% and the third 30%.  These lists are normalized to sum
-# to 1, so [60, 10, 30] has the same behavoir as [6, 1, 3] or [.6, .1, .3].
+# to 1, so [60, 10, 30] has the same behavior as [6, 1, 3] or [.6, .1, .3].
 #
 # This list can be generated with the code:
 #     from time import time
@@ -89,7 +89,7 @@ def _indent(s, indent=4):
 
 pdoctest._indent = _indent
 
-# ovverride reporter to maintain windows and python3
+# override reporter to maintain windows and python3
 
 
 def _report_failure(self, out, test, example, got):
@@ -675,6 +675,8 @@ def _doctest(*paths, **kwargs):
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
         "sympy/physics/unitsystems.py", # raises deprecation warning
+        "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
+        "sympy/parsing/latex/_antlr/latexparser.py", # generated code
     ])
 
     if import_module('numpy') is None:
@@ -1532,11 +1534,10 @@ class SymPyDocTestFinder(DocTestFinder):
     object types: modules, functions, classes, methods, staticmethods,
     classmethods, and properties.
 
-    Modified from doctest's version by looking harder for code in the
-    case that it looks like the the code comes from a different module.
-    In the case of decorated functions (e.g. @vectorize) they appear
-    to come from a different module (e.g. multidemensional) even though
-    their code is not there.
+    Modified from doctest's version to look harder for code that
+    appears comes from a different module. For example, the @vectorize
+    decorator makes it look like functions come from multidimensional.py
+    even though their code exists elsewhere.
     """
 
     def _find(self, tests, obj, name, module, source_lines, globs, seen):

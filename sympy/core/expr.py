@@ -9,7 +9,7 @@ from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, range
 from mpmath.libmp import mpf_log, prec_to_dps
 
-from collections import defaultdict
+from collections import defaultdict, Iterable
 
 class Expr(Basic, EvalfMixin):
     """
@@ -343,6 +343,12 @@ class Expr(Basic, EvalfMixin):
                     dif.is_negative is not dif.is_nonnegative:
                 return sympify(dif.is_negative)
         return StrictLessThan(self, other, evaluate=False)
+
+    def __trunc__(self):
+        if not self.is_number:
+            raise TypeError("can't truncate symbols and expressions")
+        else:
+            return Integer(self)
 
     @staticmethod
     def _from_mpmath(x, prec):
@@ -807,7 +813,8 @@ class Expr(Basic, EvalfMixin):
 
         self.subs(x, b) - self.subs(x, a),
 
-        possibly using limit() if NaN is returned from subs.
+        possibly using limit() if NaN is returned from subs, or if
+        singularities are found between a and b.
 
         If b or a is None, it only evaluates -self.subs(x, a) or self.subs(b, x),
         respectively.
@@ -816,6 +823,8 @@ class Expr(Basic, EvalfMixin):
         from sympy.series import limit, Limit
         from sympy.solvers.solveset import solveset
         from sympy.sets.sets import Interval
+        from sympy.functions.elementary.exponential import log
+        from sympy.calculus.util import AccumBounds
 
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
@@ -827,7 +836,7 @@ class Expr(Basic, EvalfMixin):
             A = 0
         else:
             A = self.subs(x, a)
-            if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity, AccumBounds):
                 if (a < b) != False:
                     A = limit(self, x, a,"+")
                 else:
@@ -842,7 +851,7 @@ class Expr(Basic, EvalfMixin):
             B = 0
         else:
             B = self.subs(x, b)
-            if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity, AccumBounds):
                 if (a < b) != False:
                     B = limit(self, x, b,"-")
                 else:
@@ -861,11 +870,21 @@ class Expr(Basic, EvalfMixin):
                 domain = Interval(a, b)
             else:
                 domain = Interval(b, a)
-            singularities = list(solveset(self.cancel().as_numer_denom()[1], x, domain = domain))
+            # check the singularities of self within the interval
+            singularities = solveset(self.cancel().as_numer_denom()[1], x,
+                domain=domain)
+            for logterm in self.atoms(log):
+                singularities = singularities | solveset(logterm.args[0], x,
+                    domain=domain)
             for s in singularities:
-                if a < s < b:
+                if value is S.NaN:
+                    # no need to keep adding, it will stay NaN
+                    break
+                if not s.is_comparable:
+                    continue
+                if (a < s) == (s < b) == True:
                     value += -limit(self, x, s, "+") + limit(self, x, s, "-")
-                elif b < s < a:
+                elif (b < s) == (s < a) == True:
                     value += limit(self, x, s, "+") - limit(self, x, s, "-")
 
         return value
@@ -1550,7 +1569,8 @@ class Expr(Basic, EvalfMixin):
         following interpretation:
 
         * i will has no variable that appears in deps
-        * d will be 1 or else have terms that contain variables that are in deps
+        * d will either have terms that contain variables that are in deps, or
+          be equal to 0 (when self is an Add) or 1 (when self is a Mul)
         * if self is an Add then self = i + d
         * if self is a Mul then self = i*d
         * otherwise (self, S.One) or (S.One, self) is returned.
@@ -3350,6 +3370,17 @@ class AtomicExpr(Atom, Expr):
         if self == s:
             return S.One
         return S.Zero
+
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Piecewise, Eq
+        from sympy import NDimArray, Tuple
+        from sympy.matrices.common import MatrixCommon
+        if isinstance(s, (NDimArray, MatrixCommon, Tuple, Iterable)):
+            return super(AtomicExpr, self)._eval_derivative_n_times(s, n)
+        if self == s:
+            return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
+        else:
+            return Piecewise((self, Eq(n, 0)), (0, True))
 
     def _eval_is_polynomial(self, syms):
         return True

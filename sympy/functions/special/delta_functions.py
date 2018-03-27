@@ -366,11 +366,6 @@ class DiracDelta(Function):
                 rewrite(SingularityFunction) doesn't support
                 arguments with more that 1 variable.'''))
 
-
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\delta'
-
     def _sage_(self):
         import sage.all as sage
         return sage.dirac_delta(self.args[0]._sage_())

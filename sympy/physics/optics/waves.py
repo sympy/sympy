@@ -52,7 +52,7 @@ class TWave(Expr):
 
     ValueError : When neither frequency nor time period is provided
         or they are not consistent.
-    TypeError : When anyting other than TWave objects is added.
+    TypeError : When anything other than TWave objects is added.
 
 
     Examples

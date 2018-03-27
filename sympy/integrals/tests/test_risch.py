@@ -1,6 +1,6 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
-    Symbol, Lambda, sin, Eq, Piecewise, factor, expand_log, cancel,
+    Symbol, Lambda, sin, Eq, Ne, Piecewise, factor, expand_log, cancel,
     expand, diff, pi, atan)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
@@ -329,29 +329,38 @@ def test_integrate_hyperexponential_returns_piecewise():
     a, b = symbols('a b')
     DE = DifferentialExtension(a**x, x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
-        (x, Eq(log(a), 0)), (exp(x*log(a))/log(a), True)), 0, True)
+        (exp(x*log(a))/log(a), Ne(log(a), 0)), (x, True)), 0, True)
     DE = DifferentialExtension(a**(b*x), x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
-        (x, Eq(b*log(a), 0)), (exp(b*x*log(a))/(b*log(a)), True)), 0, True)
+        (exp(b*x*log(a))/(b*log(a)), Ne(b*log(a), 0)), (x, True)), 0, True)
     DE = DifferentialExtension(exp(a*x), x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
-        (x, Eq(a, 0)), (exp(a*x)/a, True)), 0, True)
+        (exp(a*x)/a, Ne(a, 0)), (x, True)), 0, True)
     DE = DifferentialExtension(x*exp(a*x), x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
-        (x**2/2, Eq(a**3, 0)), ((x*a**2 - a)*exp(a*x)/a**3, True)), 0, True)
+        ((x*a**2 - a)*exp(a*x)/a**3, Ne(a**3, 0)), (x**2/2, True)), 0, True)
     DE = DifferentialExtension(x**2*exp(a*x), x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
-        (x**3/3, Eq(a**6, 0)),
-        ((x**2*a**5 - 2*x*a**4 + 2*a**3)*exp(a*x)/a**6, True)), 0, True)
+        ((x**2*a**5 - 2*x*a**4 + 2*a**3)*exp(a*x)/a**6, Ne(a**6, 0)),
+        (x**3/3, True)), 0, True)
     DE = DifferentialExtension(x**y + z, y)
-    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise((y,
-        Eq(log(x), 0)), (exp(log(x)*y)/log(x), True)), z, True)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
+        (exp(log(x)*y)/log(x), Ne(log(x), 0)), (y, True)), z, True)
     DE = DifferentialExtension(x**y + z + x**(2*y), y)
-    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise((2*y,
-        Eq(2*log(x)**2, 0)), ((exp(2*log(x)*y)*log(x) +
-            2*exp(log(x)*y)*log(x))/(2*log(x)**2), True)), z, True)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
+        ((exp(2*log(x)*y)*log(x) +
+            2*exp(log(x)*y)*log(x))/(2*log(x)**2), Ne(2*log(x)**2, 0)),
+            (2*y, True),
+        ), z, True)
     # TODO: Add a test where two different parts of the extension use a
     # Piecewise, like y**x + z**x.
+
+def test_issue_13947():
+    a, t, s = symbols('a t s')
+    assert risch_integrate(2**(-pi)/(2**t + 1), t) == \
+        2**(-pi)*t - 2**(-pi)*log(2**t + 1)/log(2)
+    assert risch_integrate(a**(t - s)/(a**t + 1), t) == \
+        exp(-s*log(a))*log(a**t + 1)/log(a)
 
 def test_integrate_primitive():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],

@@ -121,9 +121,11 @@ print(blue("checking .mailmap..."))
 
 # put entries in order -- this will help the user
 # to see if there are already existing entries for an author
-lines = codecs.open(os.path.realpath(os.path.join(
+file = codecs.open(os.path.realpath(os.path.join(
         __file__, os.path.pardir, os.path.pardir, ".mailmap")),
-        "r", "utf-8").read().splitlines()
+        "r", "utf-8").read()
+blankline = not file or file.endswith('\n')
+lines = file.splitlines()
 def key(line):
     # return lower case first address on line or
     # raise an error if not an entry
@@ -162,7 +164,7 @@ for k in who:
         out.extend(long)
         out.extend(short)
 
-if out != lines:
+if out != lines or not blankline:
     # write lines
     with codecs.open(os.path.realpath(os.path.join(
             __file__, os.path.pardir, os.path.pardir, ".mailmap")),
@@ -170,6 +172,9 @@ if out != lines:
         fd.write('\n'.join(out))
         fd.write('\n')
     print()
-    print(yellow('.mailmap lines were re-odered.'))
+    if out != lines:
+        print(yellow('.mailmap lines were re-ordered.'))
+    else:
+        print(yellow('blank line added to end of .mailmap'))
 
 sys.exit(sysexit)

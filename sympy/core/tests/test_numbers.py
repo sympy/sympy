@@ -5,7 +5,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    AlgebraicNumber, simplify, sin, fibonacci, RealField,
                    sympify, srepr)
 from sympy.core.compatibility import long
-from sympy.core.power import integer_nthroot, isqrt
+from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
@@ -582,6 +582,15 @@ def test_Float_issue_2107():
     assert S.Zero + b + (-b) == 0
 
 
+def test_issue_14289():
+    from sympy.polys.numberfields import to_number_field
+
+    a = 1 - sqrt(2)
+    b = to_number_field(a)
+    assert b.as_expr() == a
+    assert b.minpoly(a).expand() == 0
+
+
 def test_Float_from_tuple():
     a = Float((0, '1L', 0, 1))
     b = Float((0, '1', 0, 1))
@@ -953,6 +962,27 @@ def test_integer_nthroot_overflow():
     assert integer_nthroot(10**100000, 10000) == (10**10, True)
 
 
+def test_integer_log():
+    raises(ValueError, lambda: integer_log(2, 1))
+    raises(ValueError, lambda: integer_log(0, 2))
+    raises(ValueError, lambda: integer_log(1.1, 2))
+    raises(ValueError, lambda: integer_log(1, 2.2))
+
+    assert integer_log(1, 2) == (0, True)
+    assert integer_log(1, 3) == (0, True)
+    assert integer_log(2, 3) == (0, False)
+    assert integer_log(3, 3) == (1, True)
+    assert integer_log(3*2, 3) == (1, False)
+    assert integer_log(3**2, 3) == (2, True)
+    assert integer_log(3*4, 3) == (2, False)
+    assert integer_log(3**3, 3) == (3, True)
+    assert integer_log(27, 5) == (2, False)
+    assert integer_log(2, 3) == (0, False)
+    assert integer_log(-4, -2) == (2, False)
+    assert integer_log(27, -3) == (3, False)
+    assert integer_log(-49, 7) == (0, False)
+    assert integer_log(-49, -7) == (2, False)
+
 def test_isqrt():
     from math import sqrt as _sqrt
     limit = 17984395633462800708566937239551
@@ -1020,6 +1050,16 @@ def test_powers_Integer():
         -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
     assert (-3) ** Rational(-2, 3) == \
         -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
+    assert (-2) ** Rational(-10, 3) == \
+        (-1)**Rational(2, 3)*2**Rational(2, 3)/16
+    assert abs(Pow(-2, Rational(-10, 3)).n() -
+        Pow(-2, Rational(-10, 3), evaluate=False).n()) < 1e-16
+
+    # negative base and rational power with some simplification
+    assert (-8) ** Rational(2, 5) == \
+        2*(-1)**Rational(2, 5)*2**Rational(1, 5)
+    assert (-4) ** Rational(9, 5) == \
+        -8*(-1)**Rational(4, 5)*2**Rational(3, 5)
 
     assert S(1234).factors() == {617: 1, 2: 1}
     assert Rational(2*3, 3*5*7).factors() == {2: 1, 5: -1, 7: -1}
@@ -1094,6 +1134,10 @@ def test_powers_Rational():
         -4*(-1)**Rational(2, 3)*2**Rational(1, 3)*3**Rational(2, 3)/27
     assert Rational(-3, 2)**Rational(-2, 3) == \
         -(-1)**Rational(1, 3)*2**Rational(2, 3)*3**Rational(1, 3)/3
+    assert Rational(-3, 2)**Rational(-10, 3) == \
+        8*(-1)**Rational(2, 3)*2**Rational(1, 3)*3**Rational(2, 3)/81
+    assert abs(Pow(Rational(-2, 3), Rational(-7, 4)).n() -
+        Pow(Rational(-2, 3), Rational(-7, 4), evaluate=False).n()) < 1e-16
 
     # negative integer power and negative rational base
     assert Rational(-2, 3) ** Rational(-2, 1) == Rational(9, 4)
@@ -1194,6 +1238,14 @@ def test_issue_3449():
     assert sqrt(x - 1).subs(x, 5) == 2
 
 
+def test_issue_13890():
+    x = Symbol("x")
+    e = (-x/4 - S(1)/12)**x - 1
+    f = simplify(e)
+    a = S(9)/5
+    assert abs(e.subs(x,a).evalf() - f.subs(x,a).evalf()) < 1e-15
+
+
 def test_Integer_factors():
     def F(i):
         return Integer(i).factors()
@@ -1285,6 +1337,8 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).lcm(2) == Integer(4)
     assert Integer(4).gcd(Integer(2)) == Integer(2)
     assert Integer(4).lcm(Integer(2)) == Integer(4)
+    a, b = 720**99911, 480**12342
+    assert Integer(a).lcm(b) == a*b/Integer(a).gcd(b)
 
     assert Integer(4).gcd(3) == Integer(1)
     assert Integer(4).lcm(3) == Integer(12)
@@ -1303,6 +1357,7 @@ def test_Rational_gcd_lcm_cofactors():
     assert Rational(4, 3).lcm(Rational(2, 9)) == Rational(4, 3)
     assert Rational(4, 5).gcd(Rational(2, 9)) == Rational(2, 45)
     assert Rational(4, 5).lcm(Rational(2, 9)) == Integer(4)
+    assert Rational(5, 9).lcm(Rational(3, 7)) == Rational(Integer(5).lcm(3),Integer(9).gcd(7))
 
     assert Integer(4).cofactors(2) == (Integer(2), Integer(2), Integer(1))
     assert Integer(4).cofactors(Integer(2)) == \
@@ -1654,7 +1709,10 @@ def test_mod_inverse():
     assert mod_inverse(5823991, 3299) == 1442
     assert mod_inverse(123, 44) == 39
     assert mod_inverse(2, 5) == 3
-    assert mod_inverse(-2, 5) == -3
+    assert mod_inverse(-2, 5) == 2
+    assert mod_inverse(2, -5) == -2
+    assert mod_inverse(-2, -5) == -3
+    assert mod_inverse(-3, -7) == -5
     x = Symbol('x')
     assert S(2).invert(x) == S.Half
     raises(TypeError, lambda: mod_inverse(2, x))
@@ -1764,15 +1822,15 @@ def test_numpy_to_float():
         skip('numpy not installed. Abort numpy tests.')
 
     def check_prec_and_relerr(npval, ratval):
-        prec = np.finfo(npval).nmant
+        prec = np.finfo(npval).nmant + 1
         x = Float(npval)
         assert x._prec == prec
         y = Float(ratval, precision=prec)
-        assert abs((x - y)/y) < 2**(-(prec+1))
+        assert abs((x - y)/y) < 2**(-(prec + 1))
 
-    check_prec_and_relerr(np.float16(2)/3, S(2)/3)
-    check_prec_and_relerr(np.float32(2)/3, S(2)/3)
-    check_prec_and_relerr(np.float64(2)/3, S(2)/3)
+    check_prec_and_relerr(np.float16(2/3), S(2)/3)
+    check_prec_and_relerr(np.float32(2/3), S(2)/3)
+    check_prec_and_relerr(np.float64(2/3), S(2)/3)
     # extended precision, on some arch/compilers:
     x = np.longdouble(2)/3
     check_prec_and_relerr(x, S(2)/3)

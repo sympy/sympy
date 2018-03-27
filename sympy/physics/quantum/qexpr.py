@@ -180,7 +180,7 @@ class QExpr(Expr):
         of arguments to be run through the constructor.
 
         NOTE: Any classes that override this MUST return a tuple of arguments.
-        Should be overidden by subclasses to specify the default arguments for kets and operators
+        Should be overridden by subclasses to specify the default arguments for kets and operators
         """
         raise NotImplementedError("No default arguments for this class!")
 

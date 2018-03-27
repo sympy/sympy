@@ -341,6 +341,45 @@ def potential_energy(*body):
             raise TypeError('*body must have only Particle or RigidBody')
     return pe_sys
 
+def gravity(acceleration, *bodies):
+    """
+    Returns a list of gravity forces given the acceleration
+    due to gravity and any number of particles or rigidbodies.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import ReferenceFrame, Point, Particle, outer, RigidBody
+    >>> from sympy.physics.mechanics.functions import gravity
+    >>> from sympy import symbols
+    >>> N = ReferenceFrame('N')
+    >>> m, M, g = symbols('m M g')
+    >>> F1, F2 = symbols('F1 F2')
+    >>> po = Point('po')
+    >>> pa = Particle('pa', po, m)
+    >>> A = ReferenceFrame('A')
+    >>> P = Point('P')
+    >>> I = outer(A.x, A.x)
+    >>> B = RigidBody('B', P, A, M, (I, P))
+    >>> forceList = [(po, F1), (P, F2)]
+    >>> forceList.extend(gravity(g*N.y, pa, B))
+    >>> forceList
+    [(po, F1), (P, F2), (po, g*m*N.y), (P, M*g*N.y)]
+    """
+
+    gravity_force = []
+    if not bodies:
+        raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
+
+    for e in bodies:
+        try:
+            point = e.masscenter
+        except AttributeError:
+            point = e.point
+
+        gravity_force.append((point, e.mass*acceleration))
+
+    return gravity_force
 
 def Lagrangian(frame, *body):
     """Lagrangian of a multibody system.

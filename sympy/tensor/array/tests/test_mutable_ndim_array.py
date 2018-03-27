@@ -1,7 +1,7 @@
 from copy import copy
 
 from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
-from sympy import Symbol, Rational, SparseMatrix, diff
+from sympy import Symbol, Rational, SparseMatrix, diff, sympify
 from sympy.core.compatibility import long
 from sympy.matrices import Matrix
 from sympy.tensor.array.sparse_ndim_array import MutableSparseNDimArray
@@ -73,6 +73,14 @@ def test_ndim_array_initiation():
     assert vector_with_long_shape.shape == (long(5),)
     assert vector_with_long_shape.rank() == 1
     raises(ValueError, lambda: vector_with_long_shape[long(5)])
+
+
+def test_sympify():
+    from sympy.abc import x, y, z, t
+    arr = MutableDenseNDimArray([[x, y], [1, z*t]])
+    arr_other = sympify(arr)
+    assert arr_other.shape == (2, 2)
+    assert arr_other == arr
 
 
 def test_reshape():
