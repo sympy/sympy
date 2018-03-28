@@ -103,6 +103,13 @@ class StrPrinter(Printer):
     def _print_ComplexInfinity(self, expr):
         return 'zoo'
 
+    def _print_ConditionSet(self, s):
+        args = tuple([self._print(i) for i in (s.sym, s.condition)])
+        if s.base_set is S.UniversalSet:
+            return 'ConditionSet(%s, %s)' % args
+        args += (self._print(s.base_set),)
+        return 'ConditionSet(%s, %s, %s)' % args
+
     def _print_Derivative(self, expr):
         dexpr = expr.expr
         dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]

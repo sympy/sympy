@@ -81,6 +81,11 @@ class ConditionSet(Set):
     Notes
     =====
 
+    If no base set is specified, the universal set is implied:
+
+    >>> ConditionSet(x, x < 1).base_set
+    UniversalSet()
+
     Although expressions other than symbols may be used, this
     is discouraged and will raise an error if the expression
     is not found in the condition:
@@ -107,7 +112,7 @@ class ConditionSet(Set):
     >>> _.subs(_.sym, Symbol('_x'))
     ConditionSet(_x, (_x < y) & (_x + x < 2), S.Integers)
     """
-    def __new__(cls, sym, condition, base_set):
+    def __new__(cls, sym, condition, base_set=S.UniversalSet):
         # nonlinsolve uses ConditionSet to return an unsolved system
         # of equations (see _return_conditionset in solveset) so until
         # that is changed we do minimal checking of the args

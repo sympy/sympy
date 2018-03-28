@@ -1778,8 +1778,11 @@ class PrettyPrinter(Printer):
                 cond = self._print_seq(cond, "(", ")")
 
         bar = self._print("|")
-        base = self._print(ts.base_set)
 
+        if ts.base_set is S.UniversalSet:
+            return self._print_seq((variables, bar, cond), "{", "}", ' ')
+
+        base = self._print(ts.base_set)
         return self._print_seq((variables, bar, variables, inn,
                                 base, _and, cond), "{", "}", ' ')
 
