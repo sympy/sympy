@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*- i am a hero
+# -*- coding: utf-8 -*-
+from __future__ import print_function
 
 from sympy import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
