@@ -336,7 +336,8 @@ def vpprint(expr, **settings):
     uflag = pretty_use_unicode(use_unicode)
 
     try:
-        return pp.doprint(expr)
+        pp.doprint(expr)
+        print(pp.doprint(expr))
     finally:
         pretty_use_unicode(uflag)
 
