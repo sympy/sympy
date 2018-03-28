@@ -52,9 +52,7 @@ def test_CondSet():
     assert c == C(c.sym, (L < y) & (x < 1), I)
     assert c.sym not in (x, y, L)
     c = C(y, x < 1, C(x, y < x, FiniteSet(L)))
-    assert c == C(
-        c.sym, c.condition.xreplace({L: c.sym}), FiniteSet(L))
-    assert c.sym not in (x, y, L)
+    assert c == C(L, And(x < 1, y < L), FiniteSet(L))
 
 
 def test_CondSet_intersect():
@@ -96,8 +94,15 @@ def test_subs_CondSet():
     # the free symbols
     assert c.subs(x, 1) == c
     assert c.subs(x, y) == ConditionSet(y, y < 2, s)
-    assert ConditionSet(y, y < 2, s).subs(
-        y, w) == ConditionSet(y, y < 2, {w, z})
+
+    # double subs needed to change dummy if the base set
+    # also contains the dummy
+    orig = ConditionSet(y, y < 2, s)
+    base = orig.subs(y, w)
+    and_dummy = base.subs(y, w)
+    assert base == ConditionSet(y, y < 2, {w, z})
+    assert and_dummy == ConditionSet(w, w < 2, {w, z})
+
     assert c.subs(x, w) == ConditionSet(w, w < 2, s)
     assert ConditionSet(x, x < y, s
         ).subs(y, w) == ConditionSet(x, x < w, s.subs(y, w))
@@ -115,6 +120,8 @@ def test_subs_CondSet():
         x, x < p, S.Integers).subs(x, n))
     raises(ValueError, lambda: ConditionSet(
         x + 1, x < 1, S.Integers))
+    raises(ValueError, lambda: ConditionSet(
+        x + 1, x < 1, s))
     assert ConditionSet(
         n, n < x, Interval(0, oo)).subs(x, p) == Interval(0, oo)
     assert ConditionSet(

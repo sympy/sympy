@@ -26,7 +26,7 @@ class ConditionSet(Set):
     ========
 
     >>> from sympy import Symbol, S, ConditionSet, pi, Eq, sin, Interval
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x, y, z
 
     >>> sin_sols = ConditionSet(x, Eq(sin(x), 0), Interval(0, 2*pi))
     >>> 2*pi in sin_sols
@@ -57,7 +57,29 @@ class ConditionSet(Set):
 
     In addition, substitution of a dummy symbol can only be
     done with a generic symbol with matching commutativity
-    or else a symbol that has identical assumptions.
+    or else a symbol that has identical assumptions. If the
+    base set contains the dummy symbol it is logically distinct
+    and will be the target of substitution.
+
+    >>> c = ConditionSet(x, x < 1, {x, z})
+    >>> c.subs(x, y)
+    ConditionSet(x, x < 1, {y, z})
+
+    A second substitution is needed to change the dummy symbol, too:
+
+    >>> _.subs(x, y)
+    ConditionSet(y, y < 1, {y, z})
+
+    And trying to replace the dummy symbol with anything but a symbol
+    is ignored: the only change possible will be in the base set:
+
+    >>> ConditionSet(y, y < 1, {y, z}).subs(y, 1)
+    ConditionSet(y, y < 1, {z})
+    >>> _.subs(y, 1)
+    ConditionSet(y, y < 1, {z})
+
+    Notes
+    =====
 
     Although expressions other than symbols may be used, this
     is discouraged and will raise an error if the expression
@@ -89,63 +111,57 @@ class ConditionSet(Set):
         # nonlinsolve uses ConditionSet to return an unsolved system
         # of equations (see _return_conditionset in solveset) so until
         # that is changed we do minimal checking of the args
-        unsolved = isinstance(sym, (Tuple, tuple))
-        if unsolved:
+        if isinstance(sym, (Tuple, tuple)):  # unsolved eqns syntax
             sym = Tuple(*sym)
             condition = FiniteSet(*condition)
-        else:
-            condition = as_Boolean(condition)
+            return Basic.__new__(cls, sym, condition, base_set)
+        condition = as_Boolean(condition)
         if isinstance(base_set, set):
             base_set = FiniteSet(*base_set)
         elif not isinstance(base_set, Set):
             raise TypeError('expecting set for base_set')
-        if condition == S.false:
+        if condition is S.false:
             return S.EmptySet
-        if condition == S.true:
+        if condition is S.true:
             return base_set
         if isinstance(base_set, EmptySet):
             return base_set
-        if not unsolved:
-            if isinstance(base_set, FiniteSet):
-                sifted = sift(
-                    base_set, lambda _: fuzzy_bool(
-                        condition.subs(sym, _)))
-                if sifted[None]:
-                    return Union(FiniteSet(*sifted[True]),
-                        Basic.__new__(cls, sym, condition,
-                        FiniteSet(*sifted[None])))
-                else:
-                    return FiniteSet(*sifted[True])
-            if isinstance(base_set, cls):
-                s, c, base_set = base_set.args
-                if sym == s:
-                    condition = And(condition, c)
-                elif sym not in c.free_symbols:
-                    condition = And(condition, c.xreplace({s: sym}))
-                elif s not in condition.free_symbols:
-                    condition = And(condition.xreplace({sym: s}), c)
-                    sym = s
-                else:
-                    # user will have to use cls.sym to get symbol
-                    dum = Symbol('lambda')
-                    if dum in condition.free_symbols or \
-                            dum in c.free_symbols:
-                        dum = Dummy(str(dum))
-                    condition = And(
-                        condition.xreplace({sym: dum}),
-                        c.xreplace({s: dum}))
-                    sym = dum
-            inbase = sym in base_set.free_symbols
-            if inbase or not isinstance(sym, Symbol):
-                s = Dummy('lambda')
-                cond = condition.xreplace({sym: s})
-                if s not in cond.free_symbols:
-                    raise ValueError(
-                        'non-symbol dummy not recognized in condition')
-                if inbase:
-                    condition = cond
-                    sym = s
-        return Basic.__new__(cls, sym, condition, base_set)
+        know = None
+        if isinstance(base_set, FiniteSet):
+            sifted = sift(
+                base_set, lambda _: fuzzy_bool(
+                    condition.subs(sym, _)))
+            if sifted[None]:
+                know = FiniteSet(*sifted[True])
+                base_set = FiniteSet(*sifted[None])
+            else:
+                return FiniteSet(*sifted[True])
+        if isinstance(base_set, cls):
+            s, c, base_set = base_set.args
+            if sym == s:
+                condition = And(condition, c)
+            elif sym not in c.free_symbols:
+                condition = And(condition, c.xreplace({s: sym}))
+            elif s not in condition.free_symbols:
+                condition = And(condition.xreplace({sym: s}), c)
+                sym = s
+            else:
+                # user will have to use cls.sym to get symbol
+                dum = Symbol('lambda')
+                if dum in condition.free_symbols or \
+                        dum in c.free_symbols:
+                    dum = Dummy(str(dum))
+                condition = And(
+                    condition.xreplace({sym: dum}),
+                    c.xreplace({s: dum}))
+                sym = dum
+        if not isinstance(sym, Symbol):
+            s = Dummy('lambda')
+            if s not in condition.xreplace({sym: s}).free_symbols:
+                raise ValueError(
+                    'non-symbol dummy not recognized in condition')
+        rv = Basic.__new__(cls, sym, condition, base_set)
+        return rv if know is None else Union(know, rv)
 
     sym = property(lambda self: self.args[0])
     condition = property(lambda self: self.args[1])
@@ -170,16 +186,21 @@ class ConditionSet(Set):
             # we try to be as lenient as possible to allow
             # the dummy symbol to be changed
             base = base.subs(old, new)
-            if base != self.base_set:
-                # deference is given to the base set
-                return self.func(sym, cond, base)
             if isinstance(new, Symbol):
                 # if the assumptions don't match, the cond
                 # might evaluate or change
                 if (new.assumptions0 == old.assumptions0 or
                         len(new.assumptions0) == 1 and
                         old.is_commutative == new.is_commutative):
-                    return self.func(new, cond.subs(old, new), base)
+                    if base != self.base_set:
+                        # it will be aggravating to have the dummy
+                        # symbol change if you are trying to target
+                        # the base set so if the base set is changed
+                        # leave the dummy symbol alone -- a second
+                        # subs will be needed to change the dummy
+                        return self.func(sym, cond, base)
+                    else:
+                        return self.func(new, cond.subs(old, new), base)
                 raise ValueError(filldedent('''
                     A dummy symbol can only be
                     replaced with a symbol having the same
@@ -189,7 +210,7 @@ class ConditionSet(Set):
             # don't target cond: it is there to tell how
             # the base set should be filtered and if new is not in
             # the base set then this substitution is ignored
-            return self
+            return self.func(sym, cond, base)
         cond = self.condition.subs(old, new)
         base = self.base_set.subs(old, new)
         if cond is S.true:
