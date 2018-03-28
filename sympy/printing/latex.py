@@ -1799,11 +1799,11 @@ class LatexPrinter(Printer):
     def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
         if s.base_set is S.UniversalSet:
-            return r"\left\{%s\; |\; %s \right\}" % (
+            return r"\left\{%s \mid %s \right\}" % (
             vars_print,
             self._print(s.condition.as_expr()))
 
-        return r"\left\{%s\; |\; %s \in %s \wedge %s \right\}" % (
+        return r"\left\{%s \mid %s \in %s \wedge %s \right\}" % (
             vars_print,
             vars_print,
             self._print(s.base_set),
