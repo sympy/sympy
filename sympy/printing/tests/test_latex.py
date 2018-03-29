@@ -781,7 +781,9 @@ def test_latex_ImageSet():
 def test_latex_ConditionSet():
     x = Symbol('x')
     assert latex(ConditionSet(x, Eq(x**2, 1), S.Reals)) == \
-        r"\left\{x\; |\; x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
+        r"\left\{x \mid x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
+    assert latex(ConditionSet(x, Eq(x**2, 1), S.UniversalSet)) == \
+        r"\left\{x \mid x^{2} = 1 \right\}"
 
 
 def test_latex_ComplexRegion():
