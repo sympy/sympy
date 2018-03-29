@@ -307,6 +307,27 @@ def vsprint(expr, **settings):
     string_printer = VectorStrPrinter(settings)
     return string_printer.doprint(expr)
 
+def vpretty(expr, **settings):
+    """Returns a string containing the prettified form of expr generated in the
+    sympy.physics vector package.
+
+    For information on keyword arguments see Sympy's pretty_print function.
+
+    """
+
+    # Note that this is copied from sympy.printing.pretty.pretty_print:
+
+    vpp = VectorPrettyPrinter(settings)
+
+    # XXX: this is an ugly hack, but at least it works
+    from sympy.printing.pretty.pretty_symbology import pretty_use_unicode
+    use_unicode = vpp._settings['use_unicode']
+    uflag = pretty_use_unicode(use_unicode)
+
+    try:
+        return vpp.doprint(expr)
+    finally:
+        pretty_use_unicode(uflag)
 
 def vpprint(expr, **settings):
     r"""Function for pretty printing of expressions generated in the
