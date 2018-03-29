@@ -5204,15 +5204,14 @@ def gcd_list(seq, *gens, **args):
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
 
         #for gcd in domain Q[irrational]
-        genrs = opt['gens']
-        if len(genrs) == 1:
-            genr = genrs[0]
-            if not genr.has(Symbol) and genr.is_irrational:
-                if all((element/genr).is_rational for element in seq):
-                    g = seq[0]/genr
-                    for element in seq[1:]:
-                        g = gcd(g, element/genr)
-                    return g * genr
+        if all(not ele.has(Symbol) and ele.is_irrational for ele in seq):
+            a = seq[0]
+            ls = [(a/ele).ratsimp() for ele in seq[1:]]
+            if all(frc.is_rational for frc in ls):
+                lc = 1
+                for frc in ls:
+                    lc = lcm(lc, frc.as_numer_denom()[0])
+                return a/lc
 
     except PolificationFailed as exc:
         result = try_non_polynomial_gcd(exc.exprs)
@@ -5270,14 +5269,10 @@ def gcd(f, g=None, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
 
-        #for gcd in domain Q[irrational]
-        genrs = opt['gens']
-        if len(genrs) == 1:
-            genr = genrs[0]
-            if not genr.has(Symbol) and genr.is_irrational:
-                a, b = f/genr, g/genr
-                if a.is_rational and b.is_rational:
-                    return gcd(a, b) * genr
+        if not f.has(Symbol) and f.is_irrational and not g.has(Symbol) and g.is_irrational:
+            frc = (f/g).ratsimp()
+            if frc.is_rational:
+                return f/frc.as_numer_denom()[0]
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
@@ -5339,15 +5334,14 @@ def lcm_list(seq, *gens, **args):
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
 
         #for lcm in domain Q[irrational]
-        genrs = opt['gens']
-        if len(genrs) == 1:
-            genr = genrs[0]
-            if not genr.has(Symbol) and genr.is_irrational:
-                if all((element/genr).is_rational for element in seq):
-                    l = seq[0]/genr
-                    for element in seq[1:]:
-                        l = lcm(l, element/genr)
-                    return l * genr
+        if all(not ele.has(Symbol) and ele.is_irrational for ele in seq):
+            a = seq[0]
+            ls = [(a/ele).ratsimp() for ele in seq[1:]]
+            if all(frc.is_rational for frc in ls):
+                lc = 1
+                for frc in ls:
+                    lc = lcm(lc, frc.as_numer_denom()[1])
+                return lc*a
 
     except PolificationFailed as exc:
         result = try_non_polynomial_lcm(exc.exprs)
@@ -5403,13 +5397,10 @@ def lcm(f, g=None, *gens, **args):
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
 
         #for lcm in domain Q[irrational]
-        genrs = opt['gens']
-        if len(genrs) == 1:
-            genr = genrs[0]
-            if not genr.has(Symbol) and genr.is_irrational:
-                a, b = f/genr, g/genr
-                if a.is_rational and b.is_rational:
-                    return lcm(a, b) * genr
+        if not f.has(Symbol) and f.is_irrational and not g.has(Symbol) and g.is_irrational:
+            frc = (f/g).ratsimp()
+            if frc.is_rational:
+                return f*frc.as_numer_denom()[1]
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
