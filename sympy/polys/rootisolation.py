@@ -1724,7 +1724,11 @@ class RealInterval(object):
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
-        return (self.b <= other.a or other.b <= self.a)
+        if isinstance(other, RealInterval):
+            return (self.b <= other.a or other.b <= self.a)
+        assert isinstance(other, ComplexInterval)
+        return (self.b <= other.ax or other.bx <= self.a
+            or other.ay*other.by > 0)
 
     def _inner_refine(self):
         """Internal one step real root refinement procedure. """
@@ -1978,7 +1982,9 @@ class ComplexInterval(object):
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
-        if self.conj != other.conj:
+        if isinstance(other, RealInterval):
+            return other.is_disjoint(self)
+        if self.conj != other.conj:  # above and below real axis
             return True
         re_distinct = (self.bx <= other.ax or other.bx <= self.ax)
         if re_distinct:
