@@ -53,7 +53,7 @@ from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
-    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
+    exp, sin, tanh, expand, oo, I, pi, E, re, im, rootof, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
@@ -3246,14 +3246,18 @@ def test_issue_12400():
 
 def test_issue_14364():
     assert gcd(S(4)/7, S(2)/3) == S(2)/21
+    assert gcd(S(6)*(1 + sqrt(3))/5, S(3)*(1 + sqrt(3))/10) == S(3)/10 * (1 + sqrt(3))
     assert gcd(pi*S(4)/7, pi*S(2)/3) == pi*S(2)/21
 
     assert lcm(S(2)/3*sqrt(3), S(5)/6*sqrt(3)) == S(10)*sqrt(3)/3
     assert lcm(3*sqrt(3), S(4)/sqrt(3)) == 12*sqrt(3)
+    assert lcm(S(5)*(1 + 2**(S(1)/3))/6, S(3)*(1 + 2**(S(1)/3))/8) == S(15)/2 * (1 + 2**(S(1)/3))
 
     assert gcd(S(2)/3*sqrt(3), S(5)/6/sqrt(3)) == sqrt(3)/18
     assert gcd(S(4)*pi/7, S(3)*pi/14) == pi/14
 
     # gcd_list and lcm_list
     assert gcd([S(2)*pi/7, S(6)*pi/5, S(8)*pi/5]) == S(2)*pi/35
+    assert gcd([S(6)*(1 + pi)/5, S(2)*(1 + pi)/7, S(4)*(1 + pi)/13]) == S(2)/455 * (1 + pi)
     assert lcm((S(7)/pi/2, S(5)/pi/6, S(5)/pi/8)) == S(35)/(2*pi)
+    assert lcm([S(5)*(2 + E)/6, S(7)*(2 + E)/2, S(13)*(2 + E)/4]) == S(455)/2 * (2 + E)
