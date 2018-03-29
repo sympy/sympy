@@ -5204,9 +5204,14 @@ def gcd_list(seq, *gens, **args):
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
 
         #for gcd in domain Q[irrational]
-        if all(not ele.has(Symbol) and ele.is_irrational for ele in seq):
-            a = seq[0]
-            ls = [(a/ele).ratsimp() for ele in seq[1:]]
+        ls = map(sympify, seq)
+        if all(not ele.has(Symbol) and ele.is_irrational for ele in ls):
+            a = ls[0]
+
+            for i in range(1, len(ls)):
+                ls[i-1] = (a/ls[i]).ratsimp()
+            ls.pop()
+
             if all(frc.is_rational for frc in ls):
                 lc = 1
                 for frc in ls:
@@ -5269,10 +5274,11 @@ def gcd(f, g=None, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
 
-        if not f.has(Symbol) and f.is_irrational and not g.has(Symbol) and g.is_irrational:
-            frc = (f/g).ratsimp()
+        a, b = map(sympify, (f, g))
+        if not a.has(Symbol) and a.is_irrational and not b.has(Symbol) and b.is_irrational:
+            frc = (a/b).ratsimp()
             if frc.is_rational:
-                return f/frc.as_numer_denom()[0]
+                return a/frc.as_numer_denom()[0]
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
@@ -5334,14 +5340,19 @@ def lcm_list(seq, *gens, **args):
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
 
         #for lcm in domain Q[irrational]
-        if all(not ele.has(Symbol) and ele.is_irrational for ele in seq):
-            a = seq[0]
-            ls = [(a/ele).ratsimp() for ele in seq[1:]]
+        ls = map(sympify, seq)
+        if all(not ele.has(Symbol) and ele.is_irrational for ele in ls):
+            a = ls[0]
+
+            for i in range(1, len(ls)):
+                ls[i-1] = (a/ls[i]).ratsimp()
+            ls.pop()
+
             if all(frc.is_rational for frc in ls):
                 lc = 1
                 for frc in ls:
                     lc = lcm(lc, frc.as_numer_denom()[1])
-                return lc*a
+                return a*lc
 
     except PolificationFailed as exc:
         result = try_non_polynomial_lcm(exc.exprs)
@@ -5397,10 +5408,11 @@ def lcm(f, g=None, *gens, **args):
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
 
         #for lcm in domain Q[irrational]
-        if not f.has(Symbol) and f.is_irrational and not g.has(Symbol) and g.is_irrational:
-            frc = (f/g).ratsimp()
+        a, b = map(sympify, (f, g))
+        if not a.has(Symbol) and a.is_irrational and not b.has(Symbol) and b.is_irrational:
+            frc = (a/b).ratsimp()
             if frc.is_rational:
-                return f*frc.as_numer_denom()[1]
+                return a*frc.as_numer_denom()[1]
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
