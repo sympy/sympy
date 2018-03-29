@@ -311,6 +311,7 @@ def test_binomial():
     assert binomial(n, n).func == binomial # e.g. (-1, -1) == 0, (2, 2) == 1
     assert binomial(n, n + 1).func == binomial  # e.g. (-1, 0) == 1
     assert binomial(kp, kp + 1) == 0
+    assert binomial(kn, kn) == 0 # issue #14529
     assert binomial(n, u).func == binomial
     assert binomial(kp, u).func == binomial
     assert binomial(n, p).func == binomial
