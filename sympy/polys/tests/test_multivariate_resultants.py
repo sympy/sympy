@@ -4,7 +4,8 @@ from sympy import Matrix
 from sympy.core import symbols
 from sympy.tensor.indexed import IndexedBase
 
-from sympy.polys.multivariate_resultants import (DixonResultant, MacaulayResultant)
+from sympy.polys.multivariate_resultants import (DixonResultant,
+                                                 MacaulayResultant)
 
 c, d = symbols("a, b")
 x, y = symbols("x, y")
@@ -35,9 +36,10 @@ def test_get_dixon_polynomial_numerical():
     h = x ** 2 + y
 
     dixon = DixonResultant([p, q, h], [x, y])
-    polynomial = -x * y ** 2 * a[0] - x * y ** 2 * a[1] - x * y * a[0] * a[1] \
-    - x * y * a[1] ** 2 - x * a[0] * a[1] ** 2 + x * a[0] - y ** 2 * a[0] * a[1] \
-    + y ** 2 * a[1] - y * a[0] * a[1] ** 2 + y * a[1] ** 2
+    polynomial = -x * y ** 2 * a[0] - x * y ** 2 * a[1] - x * y * a[0] \
+    * a[1] - x * y * a[1] ** 2 - x * a[0] * a[1] ** 2 + x * a[0] - \
+    y ** 2 * a[0] * a[1] + y ** 2 * a[1] - y * a[0] * a[1] ** 2 + y * \
+    a[1] ** 2
 
     assert dixon.get_dixon_polynomial().factor() == polynomial
 
@@ -98,14 +100,16 @@ def test_macaulay_example_one():
     """Tests the Macaulay for example from [Bruce97]_"""
 
     x, y, z = symbols('x, y, z')
-    a_1_1, a_1_2, a_1_3, a_2_2, a_2_3, a_3_3 = symbols('a_1_1, a_1_2, a_1_3, a_2_2, a_2_3, a_3_3')
-    b_1_1, b_1_2, b_1_3, b_2_2, b_2_3, b_3_3 = symbols('b_1_1, b_1_2, b_1_3, b_2_2, b_2_3, b_3_3')
+    a_1_1, a_1_2, a_1_3 = symbols('a_1_1, a_1_2, a_1_3')
+    a_2_2, a_2_3, a_3_3 = symbols('a_2_2, a_2_3, a_3_3')
+    b_1_1, b_1_2, b_1_3 = symbols('b_1_1, b_1_2, b_1_3')
+    b_2_2, b_2_3, b_3_3 = symbols('b_2_2, b_2_3, b_3_3')
     c_1, c_2, c_3 = symbols('c_1, c_2, c_3')
 
-    f_1 = a_1_1 * x ** 2 + a_1_2 * x * y + a_1_3 * x * z + a_2_2 * y ** 2 + \
-          a_2_3 * y * z + a_3_3 * z ** 2
-    f_2 = b_1_1 * x ** 2 + b_1_2 * x * y + b_1_3 * x * z + b_2_2 * y ** 2 + \
-          b_2_3 * y * z + b_3_3 * z ** 2
+    f_1 = a_1_1 * x ** 2 + a_1_2 * x * y + a_1_3 * x * z + \
+          a_2_2 * y ** 2 + a_2_3 * y * z + a_3_3 * z ** 2
+    f_2 = b_1_1 * x ** 2 + b_1_2 * x * y + b_1_3 * x * z + \
+          b_2_2 * y ** 2 + b_2_3 * y * z + b_3_3 * z ** 2
     f_3 = c_1 * x + c_2 * y + c_3 * z
 
     mac = MacaulayResultant([f_1, f_2, f_3], [x, y, z])
@@ -114,7 +118,8 @@ def test_macaulay_example_one():
     assert mac.degree_m == 3
 
     mac.get_monomials_set()
-    assert mac.monomial_set == [x ** 3, x ** 2 * y, x ** 2 * z, x * y ** 2,
+    assert mac.monomial_set == [x ** 3, x ** 2 * y, x ** 2 * z,
+                                x * y ** 2,
                                 x * y * z, x * z ** 2, y ** 3,
                                 y ** 2 *z, y * z ** 2, z ** 3]
     assert mac.monomials_size == 10
@@ -136,7 +141,8 @@ def test_macaulay_example_two():
 
     f = a_0 * y -  a_1 * x + a_2 * z
     g = b_1 * x ** 2 + b_0 * y ** 2 - b_2 * z ** 2
-    h = c_0 * y - c_1 * x ** 3 + c_2 * x ** 2 * z - c_3 * x * z ** 2 + c_4 * z ** 3
+    h = c_0 * y - c_1 * x ** 3 + c_2 * x ** 2 * z - c_3 * x * z ** 2 + \
+        c_4 * z ** 3
 
     mac = MacaulayResultant([f, g, h], [x, y, z])
 
