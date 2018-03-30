@@ -815,7 +815,7 @@ class binomial(CombinatorialFunction):
                 d = result = n - k + 1
                 for i in range(2, k + 1):
                     d += 1
-                    result = result // i * d + result % i * d // i
+                    result = result * d // i
                 return Integer(result)
             else:
                 d = result = n - k + 1
