@@ -11,8 +11,10 @@ class CartanType_generator(Basic):
         c = args[0]
         if type(c) == list:
             letter, n = c[0], int(c[1])
-        if type(c) == str:
+        elif type(c) == str:
             letter, n = c[0], int(c[1:])
+        else:
+            raise TypeError("Argument must be a string (e.g. 'A3') or a list (e.g. ['A', 3])")
 
         if n < 0:
             raise ValueError("Lie algebra rank cannot be negative")
