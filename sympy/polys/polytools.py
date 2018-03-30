@@ -5204,7 +5204,7 @@ def gcd_list(seq, *gens, **args):
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
 
         #for gcd in domain Q[irrational]
-        ls = map(sympify, seq)
+        ls = [sympify(ele) for ele in seq]
         if len(ls) > 1 and all(not ele.has(Symbol) and ele.is_irrational for ele in ls):
             a = ls[-1]
             ls.pop()
@@ -5337,7 +5337,7 @@ def lcm_list(seq, *gens, **args):
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
 
         #for lcm in domain Q[irrational]
-        ls = map(sympify, seq)
+        ls = [sympify(ele) for ele in seq]
         if len(ls) > 1 and all(not ele.has(Symbol) and ele.is_irrational for ele in ls):
             a = ls[-1]
             ls.pop()
