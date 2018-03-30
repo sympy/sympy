@@ -5205,7 +5205,7 @@ def gcd_list(seq, *gens, **args):
 
         #for gcd in domain Q[irrational]
         ls = map(sympify, seq)
-        if all(not ele.has(Symbol) and ele.is_irrational for ele in ls):
+        if len(ls) > 1 and all(not ele.has(Symbol) and ele.is_irrational for ele in ls):
             a = ls[-1]
             ls.pop()
             ls = [(a/ele).ratsimp() for ele in ls]
@@ -5338,7 +5338,7 @@ def lcm_list(seq, *gens, **args):
 
         #for lcm in domain Q[irrational]
         ls = map(sympify, seq)
-        if all(not ele.has(Symbol) and ele.is_irrational for ele in ls):
+        if len(ls) > 1 and all(not ele.has(Symbol) and ele.is_irrational for ele in ls):
             a = ls[-1]
             ls.pop()
             ls = [(a/ele).ratsimp() for ele in ls]
