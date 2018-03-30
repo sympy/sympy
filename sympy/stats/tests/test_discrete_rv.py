@@ -6,6 +6,7 @@ from sympy.stats import P, E, variance, density, characteristic_function
 from sympy.stats.rv import sample
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
+from sympy.logic.boolalg import Or
 
 def test_PoissonDistribution():
     l = 3
@@ -61,3 +62,9 @@ def test_discrete_probability():
     assert P(X > S.Infinity) is S.Zero
     assert P(G < 3) == x*(-x + 1) + x
     assert P(Eq(G, 3)) == x*(-x + 1)**2
+
+def test_Or():
+    X = Geometric('X', S(1)/2)
+    P(Or(X < 3, X > 4)) == S(13)/16
+    P(Or(X > 2, X > 1)) == P(X > 1)
+    P(Or(X >= 3, X < 3)) == 1
