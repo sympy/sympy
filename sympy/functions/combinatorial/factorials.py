@@ -812,14 +812,14 @@ class binomial(CombinatorialFunction):
                     from sympy.core.compatibility import gmpy
                     return Integer(gmpy.bincoef(n, k))
 
-                d = result = n - k + 1
-                for i in range(2, k + 1):
+                d, result = n - k, 1
+                for i in range(1, k + 1):
                     d += 1
                     result = result * d // i
                 return Integer(result)
             else:
-                d = result = n - k + 1
-                for i in range(2, k + 1):
+                d, result = n - k, 1
+                for i in range(1, k + 1):
                     d += 1
                     result *= d
                     result /= i
