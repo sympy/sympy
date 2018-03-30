@@ -19,13 +19,13 @@ from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.printing import sstr
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.core.compatibility import reduce, as_int, string_types
-from sympy.ntheory import isprime
 
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import (is_sequence, default_sort_key, range,
     NotIterable)
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
@@ -525,10 +525,10 @@ class MatrixReductions(MatrixDeterminant):
             return self[i, j]
         return self._new(self.rows, self.cols, entry)
 
-    def _eval_echelon_form(self, iszerofunc, simpfunc, prime=None):
+    def _eval_echelon_form(self, iszerofunc, simpfunc):
         """Returns (mat, swaps) where `mat` is a row-equivalent matrix
         in echelon form and `swaps` is a list of row-swaps performed."""
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc, prime,
+        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
                                                       normalize_last=True,
                                                       normalize=False,
                                                       zero_above=False)
@@ -542,8 +542,8 @@ class MatrixReductions(MatrixDeterminant):
             return zeros_below and self[:, 1:]._eval_is_echelon(iszerofunc)
         return zeros_below and self[1:, 1:]._eval_is_echelon(iszerofunc)
 
-    def _eval_rref(self, iszerofunc, simpfunc, prime=None, normalize_last=True):
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc, prime,
+    def _eval_rref(self, iszerofunc, simpfunc, normalize_last=True):
+        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
                                                       normalize_last, normalize=True,
                                                       zero_above=True)
         return reduced, pivot_cols
@@ -616,7 +616,7 @@ class MatrixReductions(MatrixDeterminant):
 
         return (self.permute(perm, orientation='cols'), perm)
 
-    def _row_reduce(self, iszerofunc, simpfunc, prime=None, normalize_last=True,
+    def _row_reduce(self, iszerofunc, simpfunc, normalize_last=True,
                     normalize=True, zero_above=True):
         """Row reduce `self` and return a tuple (rref_matrix,
         pivot_cols, swaps) where pivot_cols are the pivot columns
@@ -629,7 +629,6 @@ class MatrixReductions(MatrixDeterminant):
         iszerofunc : determines if an entry can be used as a pivot
         simpfunc : used to simplify elements and test if they are
             zero if `iszerofunc` returns `None`
-        prime : indicates whether reduction has to be done modulo prime
         normalize_last : indicates where all row reduction should
             happen in a fraction-free manner and then the rows are
             normalized (so that the pivots are 1), or whether
@@ -651,17 +650,9 @@ class MatrixReductions(MatrixDeterminant):
 
         def cross_cancel(a, i, b, j):
             """Does the row op row[i] = a*row[i] - b*row[j]"""
-            v = (j - i)*cols
-            if prime is None:
-                for u in range(i*cols, (i + 1)*cols):
-                    mat[u] = (a*mat[u] - b*mat[u + v])
-            else:
-                for u in range(i*cols, (i + 1)*cols):
-                    mat[u] = (a*mat[u] - b*mat[u + v]) % prime
-
-        if prime is not None:
-            for i in range(rows*cols):
-                mat[i] %= prime
+            q = (j - i)*cols
+            for p in range(i*cols, (i + 1)*cols):
+                mat[p] = a*mat[p] - b*mat[p + q]
 
         piv_row, piv_col = 0, 0
         pivot_cols = []
@@ -692,13 +683,8 @@ class MatrixReductions(MatrixDeterminant):
             if normalize_last is False:
                 i, j = piv_row, piv_col
                 mat[i*cols + j] = S.One
-                if prime is None:
-                    for u in range(i*cols + j + 1, (i + 1)*cols):
-                        mat[u] = mat[u] / pivot_val
-                else:
-                    pivot_inv = mod_inverse(pivot_val, prime)
-                    for u in range(i*cols + j + 1, (i + 1)*cols):
-                        mat[u] = mat[u] * pivot_inv % prime
+                for p in range(i*cols + j + 1, (i + 1)*cols):
+                    mat[p] = mat[p] / pivot_val
                 # after normalizing, the pivot value is 1
                 pivot_val = S.One
 
@@ -723,17 +709,12 @@ class MatrixReductions(MatrixDeterminant):
             for piv_i, piv_j in enumerate(pivot_cols):
                 pivot_val = mat[piv_i*cols + piv_j]
                 mat[piv_i*cols + piv_j] = S.One
-                if prime is None:
-                    for u in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
-                        mat[u] = mat[u] / pivot_val
-                else:
-                    pivot_inv = mod_inverse(pivot_val, prime)
-                    for u in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
-                        mat[u] = mat[u] * pivot_inv % prime
+                for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
+                    mat[p] = mat[p] / pivot_val
 
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
-    def echelon_form(self, iszerofunc=_iszero, simplify=False, prime=None, with_pivots=False):
+    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
         """Returns a matrix row-equivalent to `self` that is
         in echelon form.  Note that echelon form of a matrix
         is *not* unique, however, properties like the row
@@ -741,10 +722,7 @@ class MatrixReductions(MatrixDeterminant):
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
 
-        if prime is not None  and not isprime(prime):
-            raise ValueError("Not a valid prime number")
-
-        mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc, prime)
+        mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc)
         if with_pivots:
             return mat, pivots
         return mat
@@ -856,7 +834,7 @@ class MatrixReductions(MatrixDeterminant):
         echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
         return len(pivots)
 
-    def rref(self, iszerofunc=_iszero, simplify=False, prime=None, pivots=True, normalize_last=True):
+    def rref(self, iszerofunc=_iszero, simplify=False, pivots=True, normalize_last=True):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
         Parameters
@@ -868,8 +846,6 @@ class MatrixReductions(MatrixDeterminant):
         simplify : Function
             A function used to simplify elements when looking for a pivot.
             By default SymPy's `simplify`is used.
-        prime : prime number for modular reduction
-            If reduced row-echelon form of matrix is to be found in prime field.
         pivots : True or False
             If `True`, a tuple containing the row-reduced matrix and a tuple
             of pivot columns is returned.  If `False` just the row-reduced
@@ -912,12 +888,8 @@ class MatrixReductions(MatrixDeterminant):
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
 
-        if prime is not None  and not isprime(prime):
-            raise ValueError("Not a valid prime number")
-
         ret, pivot_cols = self._eval_rref(iszerofunc=iszerofunc,
                                           simpfunc=simpfunc,
-                                          prime=prime,
                                           normalize_last=normalize_last)
         if pivots:
             ret = (ret, pivot_cols)
@@ -1732,6 +1704,38 @@ class MatrixCalculus(MatrixCommon):
 # https://github.com/sympy/sympy/pull/12854
 class MatrixDeprecated(MatrixCommon):
     """A class to house deprecated matrix methods."""
+    def _legacy_array_dot(self, b):
+        """Compatibility function for deprecated behavior of ``matrix.dot(vector)``
+        """
+        from .dense import Matrix
+
+        if not isinstance(b, MatrixBase):
+            if is_sequence(b):
+                if len(b) != self.cols and len(b) != self.rows:
+                    raise ShapeError(
+                        "Dimensions incorrect for dot product: %s, %s" % (
+                            self.shape, len(b)))
+                return self.dot(Matrix(b))
+            else:
+                raise TypeError(
+                    "`b` must be an ordered iterable or Matrix, not %s." %
+                    type(b))
+
+        mat = self
+        if mat.cols == b.rows:
+            if b.cols != 1:
+                mat = mat.T
+                b = b.T
+            prod = flatten((mat * b).tolist())
+            return prod
+        if mat.cols == b.cols:
+            return mat.dot(b.T)
+        elif mat.rows == b.rows:
+            return mat.T.dot(b)
+        else:
+            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (
+                self.shape, b.shape))
+
 
     def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_simplify):
         return self.charpoly(x=x)
@@ -2220,23 +2224,22 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if self.is_symmetric():
+        if self.is_hermitian:
             L = self._cholesky()
         elif self.rows >= self.cols:
-            L = (self.T * self)._cholesky()
-            rhs = self.T * rhs
+            L = (self.H * self)._cholesky()
+            rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
-        return (L.T)._upper_triangular_solve(Y)
+        return (L.H)._upper_triangular_solve(Y)
 
     def cholesky(self):
         """Returns the Cholesky decomposition L of a matrix A
-        such that L * L.T = A
+        such that L * L.H = A
 
-        A must be a square, symmetric, positive-definite
-        and non-singular matrix.
+        A must be a Hermitian positive-definite matrix.
 
         Examples
         ========
@@ -2254,6 +2257,19 @@ class MatrixBase(MatrixDeprecated,
         [15, 18,  0],
         [-5,  0, 11]])
 
+        The matrix can have complex entries:
+
+        >>> from sympy import I
+        >>> A = Matrix(((9, 3*I), (-3*I, 5)))
+        >>> A.cholesky()
+        Matrix([
+        [ 3, 0],
+        [-I, 2]])
+        >>> A.cholesky() * A.cholesky().H
+        Matrix([
+        [   9, 3*I],
+        [-3*I,   5]])
+
         See Also
         ========
 
@@ -2264,8 +2280,8 @@ class MatrixBase(MatrixDeprecated,
 
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if not self.is_symmetric():
-            raise ValueError("Matrix must be symmetric.")
+        if not self.is_hermitian:
+            raise ValueError("Matrix must be Hermitian.")
         return self._cholesky()
 
     def condition_number(self):
@@ -2415,25 +2431,23 @@ class MatrixBase(MatrixDeprecated,
         return self._diagonal_solve(rhs)
 
     def dot(self, b):
-        """Return the dot product of Matrix self and b relaxing the condition
-        of compatible dimensions: if either the number of rows or columns are
-        the same as the length of b then the dot product is returned. If self
-        is a row or column vector, a scalar is returned. Otherwise, a list
-        of results is returned (and in that case the number of columns in self
-        must match the length of b).
+        """Return the dot product of two vectors of equal length. ``self`` must
+        be a ``Matrix`` of size 1 x n or n x 1, and ``b`` must be either a
+        matrix of size 1 x n, n x 1, or a list/tuple of length n. A scalar is returned.
 
         Examples
         ========
 
         >>> from sympy import Matrix
         >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-        >>> v = [1, 1, 1]
+        >>> v = Matrix([1, 1, 1])
         >>> M.row(0).dot(v)
         6
         >>> M.col(0).dot(v)
         12
-        >>> M.dot(v)
-        [6, 15, 24]
+        >>> v = [3, 2, 1]
+        >>> M.row(0).dot(v)
+        10
 
         See Also
         ========
@@ -2457,21 +2471,21 @@ class MatrixBase(MatrixDeprecated,
                     type(b))
 
         mat = self
-        if mat.cols == b.rows:
-            if b.cols != 1:
-                mat = mat.T
-                b = b.T
-            prod = flatten((mat * b).tolist())
-            if len(prod) == 1:
-                return prod[0]
-            return prod
-        if mat.cols == b.cols:
-            return mat.dot(b.T)
-        elif mat.rows == b.rows:
-            return mat.T.dot(b)
-        else:
-            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (
-                self.shape, b.shape))
+        if (1 not in mat.shape) or (1 not in b.shape) :
+            SymPyDeprecationWarning(
+                feature="Dot product of non row/column vectors",
+                issue=13815,
+                deprecated_since_version="1.2").warn()
+            return mat._legacy_array_dot(b)
+        if len(mat) != len(b):
+            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
+        n = len(mat)
+        if mat.shape != (1, n):
+            mat = mat.reshape(1, n)
+        if b.shape != (n, 1):
+            b = b.reshape(n, 1)
+        # Now ``mat`` is a row vector and ``b`` is a column vector.
+        return (mat * b)[0]
 
     def dual(self):
         """Returns the dual of a matrix, which is:
@@ -2716,23 +2730,22 @@ class MatrixBase(MatrixDeprecated,
         [0, 1]])
 
         """
-        try:
-            return self.inverse_GE(prime=m)
-        except NonSquareMatrixError:
+        if not self.is_square:
             raise NonSquareMatrixError()
+        N = self.cols
+        det_K = self.det()
+        det_inv = None
+
+        try:
+            det_inv = mod_inverse(det_K, m)
         except ValueError:
-            N = self.cols
-            det_K = self.det()
-            det_inv = None
-            try:
-                det_inv = mod_inverse(det_K, m)
-            except ValueError:
-                raise ValueError('Matrix is not invertible (mod %d)' % m)
-            K_adj = self.adjugate()
-            K_inv = self.__class__(N, N,
-                                   [det_inv * K_adj[i, j] % m for i in range(N) for
-                                    j in range(N)])
-            return K_inv
+            raise ValueError('Matrix is not invertible (mod %d)' % m)
+
+        K_adj = self.adjugate()
+        K_inv = self.__class__(N, N,
+                               [det_inv * K_adj[i, j] % m for i in range(N) for
+                                j in range(N)])
+        return K_inv
 
     def inverse_ADJ(self, iszerofunc=_iszero):
         """Calculates the inverse using the adjugate matrix and a determinant.
@@ -2758,7 +2771,7 @@ class MatrixBase(MatrixDeprecated,
 
         return self.adjugate() / d
 
-    def inverse_GE(self, iszerofunc=_iszero, prime=None):
+    def inverse_GE(self, iszerofunc=_iszero):
         """Calculates the inverse using Gaussian elimination.
 
         See Also
@@ -2772,11 +2785,8 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
-        if prime is not None  and not isprime(prime):
-            raise ValueError("Not a valid prime number.")
-
         big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc, simplify=True, prime=prime)[0]
+        red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
             raise ValueError("Matrix det == 0; not invertible.")
 
@@ -2946,11 +2956,10 @@ class MatrixBase(MatrixDeprecated,
 
     def LDLdecomposition(self):
         """Returns the LDL Decomposition (L, D) of matrix A,
-        such that L * D * L.T == A
+        such that L * D * L.H == A
         This method eliminates the use of square root.
         Further this ensures that all the diagonal entries of L are 1.
-        A must be a square, symmetric, positive-definite
-        and non-singular matrix.
+        A must be a Hermitian positive-definite matrix.
 
         Examples
         ========
@@ -2971,6 +2980,22 @@ class MatrixBase(MatrixDeprecated,
         >>> L * D * L.T * A.inv() == eye(A.rows)
         True
 
+        The matrix can have complex entries:
+
+        >>> from sympy import I
+        >>> A = Matrix(((9, 3*I), (-3*I, 5)))
+        >>> L, D = A.LDLdecomposition()
+        >>> L
+        Matrix([
+        [   1, 0],
+        [-I/3, 1]])
+        >>> D
+        Matrix([
+        [9, 0],
+        [0, 4]])
+        >>> L*D*L.H == A
+        True
+
         See Also
         ========
 
@@ -2980,8 +3005,8 @@ class MatrixBase(MatrixDeprecated,
         """
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if not self.is_symmetric():
-            raise ValueError("Matrix must be symmetric.")
+        if not self.is_hermitian:
+            raise ValueError("Matrix must be Hermitian.")
         return self._LDLdecomposition()
 
     def LDLsolve(self, rhs):
@@ -3013,17 +3038,17 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if self.is_symmetric():
+        if self.is_hermitian:
             L, D = self.LDLdecomposition()
         elif self.rows >= self.cols:
-            L, D = (self.T * self).LDLdecomposition()
-            rhs = self.T * rhs
+            L, D = (self.H * self).LDLdecomposition()
+            rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
         Z = D._diagonal_solve(Y)
-        return (L.T)._upper_triangular_solve(Z)
+        return (L.H)._upper_triangular_solve(Z)
 
     def lower_triangular_solve(self, rhs):
         """Solves Ax = B, where A is a lower triangular matrix.
@@ -3892,7 +3917,7 @@ class MatrixBase(MatrixDeprecated,
         """
         if method == 'CH':
             return self.cholesky_solve(rhs)
-        t = self.T
+        t = self.H
         return (t * self).inv(method=method) * t * rhs
 
     def solve(self, rhs, method='GE'):
