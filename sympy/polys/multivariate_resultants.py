@@ -122,7 +122,7 @@ class DixonResultant():
         return poly_from_expr(dixon_polynomial, self.dummy_variables)[0]
 
     def get_upper_degree(self):
-        list_of_products = [self.variables[i] ** ((i + 1) * \
+        list_of_products = [self.variables[i] ** ((i + 1) *
                             self.max_degrees[i] - 1) for i in range(self.n)]
         product = prod(list_of_products)
         product = Poly(product).monoms()
@@ -274,7 +274,7 @@ class MacaulayResultant():
                 monomial = self.get_monomials_of_certain_degree(degree)
                 row_coefficients.append(monomial)
             else:
-                divisible.append(self.variables[i - 1] ** \
+                divisible.append(self.variables[i - 1] **
                                  self.degrees[i - 1])
                 degree = self.degree_m - self.degrees[i]
                 poss_rows = self.get_monomials_of_certain_degree(degree)
