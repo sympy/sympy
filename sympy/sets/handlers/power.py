@@ -35,7 +35,7 @@ def _set_pow(x, exponent):
     """
     s1 = x.start**exponent
     s2 = x.end**exponent
-    if ((s2 > s1) if exponent > 0 else (x.end > -x.start)) == True:
+    if ((s2 > s1) if exponent > 0 else (x.end > -x.start)):
         left_open = x.left_open
         right_open = x.right_open
         # TODO: handle unevaluated condition.

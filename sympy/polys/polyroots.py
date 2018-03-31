@@ -127,7 +127,7 @@ def roots_cubic(f, trig=False):
         p = (3*a*c - b**2)/3/a**2
         q = (2*b**3 - 9*a*b*c + 27*a**2*d)/(27*a**3)
         D = 18*a*b*c*d - 4*b**3*d + b**2*c**2 - 4*a*c**3 - 27*a**2*d**2
-        if (D > 0) == True:
+        if (D > 0):
             rv = []
             for k in range(3):
                 rv.append(2*sqrt(-p/3)*cos(acos(3*q/2/p*sqrt(-3/p))/3 - k*2*pi/3))

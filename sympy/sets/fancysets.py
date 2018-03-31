@@ -841,7 +841,7 @@ class ComplexRegion(Set):
         polar = sympify(polar)
 
         # Rectangular Form
-        if polar == False:
+        if not polar:
             if all(_a.is_FiniteSet for _a in sets.args) and (len(sets.args) == 2):
 
                 # ** ProductSet of FiniteSets in the Complex Plane. **
@@ -858,7 +858,7 @@ class ComplexRegion(Set):
             obj._expr = x + I*y
 
         # Polar Form
-        elif polar == True:
+        elif polar:
             new_sets = []
             # sets is Union of ProductSets
             if not sets.is_ProductSet:

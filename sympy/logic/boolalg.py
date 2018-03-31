@@ -38,9 +38,9 @@ def as_Boolean(e):
     TypeError: expecting bool or Boolean, not `2`.
     """
     from sympy.core.symbol import Symbol
-    if e == True:
+    if e:
         return S.true
-    if e == False:
+    if not e:
         return S.false
     if isinstance(e, Symbol):
         z = e.is_zero
@@ -1840,7 +1840,7 @@ def SOPform(variables, minterms, dontcares=None):
 
     """
     variables = [sympify(v) for v in variables]
-    if minterms == []:
+    if not minterms:
         return false
 
     minterms = [list(i) for i in minterms]
@@ -1892,7 +1892,7 @@ def POSform(variables, minterms, dontcares=None):
 
     """
     variables = [sympify(v) for v in variables]
-    if minterms == []:
+    if not minterms:
         return false
 
     minterms = [list(i) for i in minterms]
@@ -1977,7 +1977,7 @@ def simplify_logic(expr, form=None, deep=True):
     truthtable = []
     for t in product([0, 1], repeat=len(variables)):
         t = list(t)
-        if expr.xreplace(dict(zip(variables, t))) == True:
+        if expr.xreplace(dict(zip(variables, t))):
             truthtable.append(t)
     big = len(truthtable) >= (2 ** (len(variables) - 1))
     if form == 'dnf' or form is None and big:

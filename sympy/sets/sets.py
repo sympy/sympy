@@ -772,7 +772,7 @@ class Interval(Set, EvalfMixin):
             raise ValueError("Non-real intervals are not supported")
 
         # evaluate if possible
-        if (end < start) == True:
+        if (end < start):
             return S.EmptySet
         elif (end - start).is_negative:
             return S.EmptySet
@@ -888,7 +888,7 @@ class Interval(Set, EvalfMixin):
 
         if isinstance(other, FiniteSet):
             nums = [m for m in other.args if m.is_number]
-            if nums == []:
+            if not nums:
                 return None
 
         return Set._complement(self, other)
@@ -1560,12 +1560,12 @@ class FiniteSet(Set, EvalfMixin):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
 
-                if syms != []:
+                if syms:
                     return Complement(Union(intervals, evaluate=False),
                             FiniteSet(*syms), evaluate=False)
                 else:
                     return Union(intervals, evaluate=False)
-            elif nums == []:
+            elif not nums:
                 return None
 
         elif isinstance(other, FiniteSet):
