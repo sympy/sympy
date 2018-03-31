@@ -291,13 +291,14 @@ def test_binomial():
     assert binomial(10, 10) == 1
     assert binomial(n, z) == 1
     assert binomial(1, 2) == 0
+    assert binomial(-1, 2) == 1
     assert binomial(1, -1) == 0
     assert binomial(-1, 1) == -1
-    assert binomial(-1, -1) == 1
+    assert binomial(-1, -1) == 0
     assert binomial(S.Half, S.Half) == 1
     assert binomial(-10, 1) == -10
     assert binomial(-10, 7) == -11440
-    assert binomial(n, -1) == 0
+    assert binomial(n, -1) == 0 # holds for all integers (negative, zero, positive)
     assert binomial(kp, -1) == 0
     assert binomial(nz, 0) == 1
     assert expand_func(binomial(n, 1)) == n
@@ -307,9 +308,10 @@ def test_binomial():
     assert binomial(n, 3).func == binomial
     assert binomial(n, 3).expand(func=True) ==  n**3/6 - n**2/2 + n/3
     assert expand_func(binomial(n, 3)) ==  n*(n - 2)*(n - 1)/6
-    assert binomial(n, n) == 1
+    assert binomial(n, n).func == binomial # e.g. (-1, -1) == 0, (2, 2) == 1
     assert binomial(n, n + 1).func == binomial  # e.g. (-1, 0) == 1
     assert binomial(kp, kp + 1) == 0
+    assert binomial(kn, kn) == 0 # issue #14529
     assert binomial(n, u).func == binomial
     assert binomial(kp, u).func == binomial
     assert binomial(n, p).func == binomial
@@ -324,6 +326,11 @@ def test_binomial():
     assert binomial(x, nt).is_integer is False
 
     assert binomial(gamma(25), 6) == 79232165267303928292058750056084441948572511312165380965440075720159859792344339983120618959044048198214221915637090855535036339620413440000
+    assert binomial(1324, 47) == 906266255662694632984994480774946083064699457235920708992926525848438478406790323869952
+    assert binomial(1735, 43) == 190910140420204130794758005450919715396159959034348676124678207874195064798202216379800
+    assert binomial(2512, 53) == 213894469313832631145798303740098720367984955243020898718979538096223399813295457822575338958939834177325304000
+    assert binomial(3383, 52) == 27922807788818096863529701501764372757272890613101645521813434902890007725667814813832027795881839396839287659777235
+    assert binomial(4321, 51) == 124595639629264868916081001263541480185227731958274383287107643816863897851139048158022599533438936036467601690983780576
 
     assert binomial(a, b).is_nonnegative is True
 

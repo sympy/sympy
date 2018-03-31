@@ -812,37 +812,14 @@ class binomial(CombinatorialFunction):
                     from sympy.core.compatibility import gmpy
                     return Integer(gmpy.bincoef(n, k))
 
-                prime_count_estimate = N(n / log(n))
-
-                # if the number of primes less than n is less than k, use prime sieve method
-                # otherwise it is more memory efficient to compute factorials explicitly
-                if prime_count_estimate < k:
-                    M, result = int(_sqrt(n)), 1
-                    for prime in sieve.primerange(2, n + 1):
-                        if prime > n - k:
-                            result *= prime
-                        elif prime > n // 2:
-                            continue
-                        elif prime > M:
-                            if n % prime < k % prime:
-                                result *= prime
-                        else:
-                            N, K = n, k
-                            exp = a = 0
-
-                            while N > 0:
-                                a = int((N % prime) < (K % prime + a))
-                                N, K = N // prime, K // prime
-                                exp = a + exp
-
-                            if exp > 0:
-                                result *= prime**exp
-                else:
-                    result = ff(n, k) / factorial(k)
+                d, result = n - k, 1
+                for i in range(1, k + 1):
+                    d += 1
+                    result = result * d // i
                 return Integer(result)
             else:
-                d = result = n - k + 1
-                for i in range(2, k + 1):
+                d, result = n - k, 1
+                for i in range(1, k + 1):
                     d += 1
                     result *= d
                     result /= i
@@ -851,20 +828,18 @@ class binomial(CombinatorialFunction):
     @classmethod
     def eval(cls, n, k):
         n, k = map(sympify, (n, k))
-        d = n - k
-        if d.is_zero or k.is_zero:
+        if k.is_zero:
             return S.One
         if (k - 1).is_zero:
             return n
         if k.is_integer:
-            if k.is_negative:
+            if k.is_negative or (n.is_integer and n.is_nonnegative
+                    and (n - k).is_negative):
                 return S.Zero
-            if n.is_integer and n.is_nonnegative and d.is_negative:
-                return S.Zero
-            if n.is_number:
+            elif n.is_number:
                 res = cls._eval(n, k)
                 return res.expand(basic=True) if res else res
-        elif n.is_negative and n.is_integer and not k.is_integer:
+        elif n.is_negative and n.is_integer:
             # a special case when binomial evaluates to complex infinity
             return S.ComplexInfinity
         elif k.is_number:
