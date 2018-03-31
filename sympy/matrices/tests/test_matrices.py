@@ -1897,6 +1897,8 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
     raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
+    raises(SymPyDeprecationWarning, lambda: Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]])))
+    raises(ShapeError, lambda: Matrix([1, 2]).dot([1, 2, 3]))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
     raises(ValueError, lambda: Matrix([1, 2]).inv(method='not a method'))
@@ -2516,6 +2518,7 @@ def test_is_Identity():
 def test_dot():
     assert ones(1, 3).dot(ones(3, 1)) == 3
     assert ones(1, 3).dot([1, 1, 1]) == 3
+    assert Matrix([1, 2, 3]).dot(Matrix([1, 2, 3])) == 14
 
 
 def test_dual():
@@ -3082,6 +3085,8 @@ def test_deprecated():
         P, Jcells = m.jordan_cells()
         assert Jcells[1] == Matrix(1, 1, [2])
         assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+        assert Matrix([[1,2],[3,4]]).dot(Matrix([[1,3],[4,5]])) == [10, 19, 14, 28]
+
 
 def test_issue_14489():
     from sympy import Mod
@@ -3090,3 +3095,14 @@ def test_issue_14489():
 
     assert Mod(A, 3) == Matrix([2, 1, 2])
     assert Mod(B, 4) == Matrix([2, 0, 1])
+
+def test_issue_14517():
+    M = Matrix([
+        [   0, 10*I,    10*I,       0],
+        [10*I,    0,       0,    10*I],
+        [10*I,    0, 5 + 2*I,    10*I],
+        [   0, 10*I,    10*I, 5 + 2*I]])
+    ev = M.eigenvals()
+    # test one random eigenvalue, the computation is a little slow
+    test_ev = random.choice(list(ev.keys()))
+    assert (M - test_ev*eye(4)).det() == 0

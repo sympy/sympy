@@ -501,16 +501,26 @@ def _solve_as_rational(f, symbol, domain):
 
 def _solve_trig(f, symbol, domain):
     """Function to call other helpers to solve trigonometric equations """
+    sol1 = sol = None
     try:
-        return _solve_trig1(f, symbol, domain)
-
+        sol1 = _solve_trig1(f, symbol, domain)
     except BaseException as error:
-        return _solve_trig2(f, symbol, domain)
-
-    else :
+        pass
+    if sol1 is None or isinstance(sol1, ConditionSet):
+        try:
+            sol = _solve_trig2(f, symbol, domain)
+        except BaseException as error:
+            sol = sol1
+        if isinstance(sol1, ConditionSet) and isinstance(sol, ConditionSet):
+            if sol1.count_ops() < sol.count_ops():
+                sol = sol1
+    else:
+        sol = sol1
+    if sol is None:
         raise NotImplementedError(filldedent('''
             Solution to this kind of trigonometric equations
             is yet to be implemented'''))
+    return sol
 
 
 def _solve_trig1(f, symbol, domain):
@@ -564,7 +574,14 @@ def _solve_trig2(f, symbol, domain):
         denominators.append(Rational(c).q)
 
     x = Dummy('x')
-    mu = Rational(2)*ilcm(*denominators)/igcd(*numerators)
+
+    # ilcm() and igcd() require more than one argument
+    if len(numerators) > 1:
+        mu = Rational(2)*ilcm(*denominators)/igcd(*numerators)
+    else:
+        assert len(numerators) == 1
+        mu = Rational(2)*denominators[0]/numerators[0]
+
     f = f.subs(symbol, mu*x)
     f = f.rewrite(tan)
     f = expand_trig(f)

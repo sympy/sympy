@@ -103,6 +103,12 @@ def test_issue_13340():
     assert len(roots_d) == 3
 
 
+def test_issue_14522():
+    eq = Poly(x**4 + x**3*(16 + 32*I) + x**2*(-285 + 386*I) + x*(-2824 - 448*I) - 2058 - 6053*I, x)
+    roots_eq = roots(eq)
+    assert all(eq(r) == 0 for r in roots_eq)
+
+
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
     assert roots_cubic(Poly(x**3 - 3*x**2 + 3*x - 1, x)) == [1, 1, 1]
