@@ -1027,10 +1027,6 @@ def test_solvify():
     assert solvify(cos(x), x, S.Reals) == [pi/2, 3*pi/2]
     assert solvify(sin(x) + 1, x, S.Reals) == [3*pi/2]
     raises(NotImplementedError, lambda: solvify(sin(exp(x)), x, S.Complexes))
-
-
-@XFAIL
-def test_abs_invert_solvify():
     assert solvify(sin(Abs(x)), x, S.Reals) is None
 
 
@@ -1749,3 +1745,10 @@ def test_issue_14454():
     number = CRootOf(x**4 + x - 1, 2)
     raises(ValueError, lambda: invert_real(number, 0, x, S.Reals))
     assert invert_real(x**2, number, x, S.Reals)  # no error
+
+def test_issue_14541():
+    x = Symbol('x')
+    y = FiniteSet(-sqrt(2).evalf()*I,  sqrt(2).evalf()*I)
+    z = FiniteSet(-sqrt(2)*I, sqrt(2)*I)
+    assert solveset(sqrt(-x**2 - 2.0), x) == y
+    assert solveset(sqrt(-x**2 - 2), x) == z
