@@ -783,6 +783,13 @@ def test_issue_12092():
     f = implemented_function('f', lambda x: x**2)
     assert f(f(2)).evalf() == Float(16)
 
+def test_issue_13881(): # tests for #11566
+    from sympy import MatrixSymbol
+    x = MatrixSymbol('x', 3, 1)
+    f = lambdify(x, x.T*x)
+    assert f(Matrix([1, 2, 3])) == 14
+    assert f(Matrix([4, 5, 6])) == 77
+
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
     assert lambdify((x, y, z), ITE(x, y, z))(False, 5, 3) == 3
