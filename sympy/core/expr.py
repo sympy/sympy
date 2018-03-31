@@ -7,9 +7,12 @@ from .evalf import EvalfMixin, pure_complex
 from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, range
+from sympy.multipledispatch import dispatch
+from copy import copy
 from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict, Iterable
+
 
 class Expr(Basic, EvalfMixin):
     """
@@ -3450,6 +3453,82 @@ class UnevaluatedExpr(Expr):
             return self.args[0].doit(*args, **kwargs)
         else:
             return self.args[0]
+
+
+@dispatch(object)
+def _imul(o):
+    return o
+
+@dispatch(object)
+def _iadd(o):
+    return o
+
+
+class MutableExpr(object):
+    def __iadd__(self, other):
+        _iadd(self, other)
+        return self
+
+    def __isub__(self, other):
+        _iadd(self, -other)
+        return self
+
+    def __imul__(self, other):
+        # TODO: review
+        _imul(self, other)
+        return self
+
+    def __idiv__(self, other):
+        from sympy import Pow
+        _imul(self, Pow(other, -1))
+        return self
+
+    __itruediv__ = __idiv__
+
+    def __add__(self, other):
+        expr = copy(self)
+        _iadd(expr, other)
+        return expr
+
+    def __radd__(self, other):
+        expr = copy(self)
+        _iadd(other, expr)
+        return expr
+
+    def __sub__(self, other):
+        expr = copy(self)
+        _iadd(expr, -other)
+        return expr
+
+    def __rsub__(self, other):
+        expr = copy(self)
+        _iadd(other, -expr)
+        return expr
+
+    def __mul__(self, other):
+        expr = copy(self)
+        _imul(expr, other)
+        return expr
+
+    def __rmul__(self, other):
+        expr = copy(self)
+        _imul(other, expr)
+        return expr
+
+    def __div__(self, other):
+        from sympy import S
+        expr = copy(self)
+        _imul(expr, S.One/other)
+        return expr
+
+    def __rdiv__(self, other):
+        from sympy import Pow
+        expr = copy(self)
+        _imul(other, Pow(expr, -1))
+        return expr
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
 
 def _n2(a, b):

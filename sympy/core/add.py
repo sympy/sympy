@@ -10,7 +10,7 @@ from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
-from .expr import Expr
+from .expr import Expr, MutableExpr
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -69,6 +69,30 @@ def _unevaluated_Add(*args):
     return Add._from_args(newargs)
 
 
+class MutableAdd(MutableExpr):
+    def __init__(self):
+        self.terms = {}
+        self.coeff = S.Zero
+        self.order_factors = []
+
+    @property
+    def args(self):
+        _args = []
+        if self.coeff:
+            _args = [self.coeff]
+        for k, v in self.terms.items():
+            _args.append(Pow(k, v))
+        for o in self.order_factors:
+            _args.append(o)
+        return tuple(_args)
+
+    def __str__(self):
+        args = self.args
+        return " + ".join(map(str, args))
+
+    __repr__ = __str__
+
+
 class Add(Expr, AssocOp):
 
     __slots__ = []
@@ -95,7 +119,7 @@ class Add(Expr, AssocOp):
         """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
-        from sympy.core.dispatchers_add import append_arg_Add, AddBuilder
+        from sympy.core.dispatchers_add import _iadd
 
         rv = None
         if len(seq) == 2:
@@ -110,11 +134,11 @@ class Add(Expr, AssocOp):
                     return rv
                 return [], rv[0], None
 
-        data = AddBuilder()
+        data = MutableAdd()
 
         # Loop over the dispatchers:
         for arg in seq:
-            ret = append_arg_Add(data, arg)
+            ret = _iadd(data, arg)
             if ret is not None:
                 return [ret], [], None
 

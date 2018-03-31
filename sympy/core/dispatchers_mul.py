@@ -11,6 +11,8 @@ from sympy.matrices.expressions import MatrixExpr
 from sympy.core.numbers import ComplexInfinity, ImaginaryUnit, Rational
 from sympy.core.logic import fuzzy_not, _fuzzy_group
 from sympy.core.evaluate import global_distribute
+from sympy.core.expr import _imul
+from sympy.core.mul import MutableMul
 
 
 # internal marker to indicate:
@@ -18,40 +20,15 @@ from sympy.core.evaluate import global_distribute
 NC_Marker = Symbol("NC_Marker", commutative=False, dummy=True)
 
 
-class MulBuilder(object):
-    def __init__(self, seq):
-        self.c_part = []         # out: commutative factors
-        self.nc_part = []        # out: non-commutative factors
-
-        self.nc_seq = []
-
-        self.coeff = S.One       # standalone term
-                            # e.g. 3 * ...
-
-        self.c_powers = []       # (base,exp)      n
-                            # e.g. (x,n) for x
-
-        self.num_exp = []        # (num-base, exp)           y
-                            # e.g.  (3, y)  for  ... * 3  * ...
-
-        self.neg1e = S.Zero      # exponent on -1 extracted from Number-based Pow and I
-
-        self.pnum_rat = {}       # (num-base, Rat-exp)          1/2
-                            # e.g.  (3, 1/2)  for  ... * 3     * ...
-
-        self.order_symbols = None
-        self.seq = list(seq)
-
-
 # O(x)
-@dispatch(MulBuilder, Order)
-def append_arg_Mul(data, o):
+@dispatch(MutableMul, Order)
+def _imul(data, o):
     o, data.order_symbols = o.as_expr_variables(data.order_symbols)
-    append_arg_Mul(data, o)
+    _imul(data, o)
 
 # Mul([...])
-@dispatch(MulBuilder, Mul)
-def append_arg_Mul(data, o):
+@dispatch(MutableMul, Mul)
+def _imul(data, o):
 
     if o.is_commutative:
         data.seq.extend(o.args)    # XXX zerocopy?
@@ -68,8 +45,8 @@ def append_arg_Mul(data, o):
         # process scheduled non-commutative objects
         data.seq.append(NC_Marker)
 
-@dispatch(MulBuilder, Number)
-def append_arg_Mul(data, o):
+@dispatch(MutableMul, Number)
+def _imul(data, o):
     # 3
     if o is S.NaN or data.coeff is S.ComplexInfinity and o is S.Zero:
         # we know for sure the result will be nan
@@ -80,16 +57,16 @@ def append_arg_Mul(data, o):
             # we know for sure the result will be nan
             return S.NaN
 
-@dispatch(MulBuilder, AccumBounds)
-def append_arg_Mul(data, o):
+@dispatch(MutableMul, AccumBounds)
+def _imul(data, o):
     data.coeff = o.__mul__(data.coeff)
 
-@dispatch(MulBuilder, MatrixExpr)
-def append_arg_Mul(data, o):
+@dispatch(MutableMul, MatrixExpr)
+def _imul(data, o):
     data.coeff = o.__mul__(data.coeff)
 
-@dispatch(MulBuilder, ComplexInfinity)
-def append_arg_Mul(data, o):
+@dispatch(MutableMul, ComplexInfinity)
+def _imul(data, o):
     if not data.coeff:
         # 0 * zoo = NaN
         return S.NaN
@@ -99,12 +76,12 @@ def append_arg_Mul(data, o):
     data.coeff = S.ComplexInfinity
     data.coeff = data.coeff
 
-@dispatch(MulBuilder, ImaginaryUnit)
-def append_arg_Mul(data, o):
+@dispatch(MutableMul, ImaginaryUnit)
+def _imul(data, o):
     data.neg1e += S.Half
 
-@dispatch(MulBuilder, Expr)
-def append_arg_Mul(data, o):
+@dispatch(MutableMul, Expr)
+def _imul(data, o):
 
     if o.is_commutative:
         #      e

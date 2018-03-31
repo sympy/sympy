@@ -11,7 +11,7 @@ from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .compatibility import reduce, range
-from .expr import Expr
+from .expr import Expr, MutableExpr
 from .evaluate import global_distribute
 
 # internal marker to indicate:
@@ -77,6 +77,55 @@ def _unevaluated_Mul(*args):
     if ncargs:
         newargs.append(Mul._from_args(ncargs))
     return Mul._from_args(newargs)
+
+
+class MutableMul(MutableExpr):
+    def __init__(self, seq):
+        self.c_part = []         # out: commutative factors
+        self.nc_part = []        # out: non-commutative factors
+
+        self.nc_seq = []
+
+        self.coeff = S.One       # standalone term
+                            # e.g. 3 * ...
+
+        self.c_powers = []       # (base,exp)      n
+                            # e.g. (x,n) for x
+
+        self.num_exp = []        # (num-base, exp)           y
+                            # e.g.  (3, y)  for  ... * 3  * ...
+
+        self.neg1e = S.Zero      # exponent on -1 extracted from Number-based Pow and I
+
+        self.pnum_rat = {}       # (num-base, Rat-exp)          1/2
+                            # e.g.  (3, 1/2)  for  ... * 3     * ...
+
+        self.order_symbols = None
+        self.seq = list(seq)
+
+    @property
+    def args(self):
+        a = []
+        if self.coeff != 1:
+            a.append(self.coeff)
+        for coll in [self.seq, self.c_part, self.nc_seq]:
+            for i in coll:
+                a.append(i)
+        for k, v in self.c_powers:
+            a.append(Pow(k, v))
+        for k, v in self.num_exp:
+            a.append(Pow(k, v))
+
+        # TODO
+        return tuple(a)
+
+    def __str__(self):
+        args = self.args
+        if len(args) == 0:
+            return "1"
+        return "*".join(map(str, self.args))
+
+    __repr__ = __str__
 
 
 class Mul(Expr, AssocOp):
@@ -165,7 +214,7 @@ class Mul(Expr, AssocOp):
         """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
-        from sympy.core.dispatchers_mul import append_arg_Mul, MulBuilder
+        from sympy.core.dispatchers_mul import _imul
 
         rv = None
         if len(seq) == 2:
@@ -203,10 +252,10 @@ class Mul(Expr, AssocOp):
         #
         # NOTE: this is optimized for all-objects-are-commutative case
 
-        data = MulBuilder(seq)
+        data = MutableMul(seq=seq)
 
         for arg in data.seq:
-            ret = append_arg_Mul(data, arg)
+            ret = _imul(data, arg)
             if ret is None:
                 continue
             return [ret], [], None
