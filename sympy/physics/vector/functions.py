@@ -4,10 +4,10 @@ from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
                                 Function, S, Symbol)
 from sympy import integrate, trigsimp
 from sympy.core.compatibility import reduce
-from .vector import Vector, _check_vector
-from .frame import CoordinateSym, _check_frame
-from .dyadic import Dyadic
-from .printing import vprint, vsprint, vpprint, vlatex, init_vprinting
+from vector import Vector, _check_vector
+from frame import CoordinateSym, _check_frame
+from dyadic import Dyadic
+from printing import vprint, vsprint, vpprint, vlatex, init_vprinting
 from sympy.utilities.iterables import iterable
 
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
@@ -282,80 +282,83 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         q1d, q2d, q3d = [diff(i, dynamicsymbols._t) for i in coords]
         s1, s2, s3 = [sin(q1), sin(q2), sin(q3)]
         c1, c2, c3 = [cos(q1), cos(q2), cos(q3)]
-        if rot_type.lower() == 'body':
-            if rot_order == '123':
-                return [q1d - (w1 * c3 - w2 * s3) / c2, q2d - w1 * s3 - w2 *
-                        c3, q3d - (-w1 * c3 + w2 * s3) * s2 / c2 - w3]
-            if rot_order == '231':
-                return [q1d - (w2 * c3 - w3 * s3) / c2, q2d - w2 * s3 - w3 *
-                        c3, q3d - w1 - (- w2 * c3 + w3 * s3) * s2 / c2]
-            if rot_order == '312':
-                return [q1d - (-w1 * s3 + w3 * c3) / c2, q2d - w1 * c3 - w3 *
-                        s3, q3d - (w1 * s3 - w3 * c3) * s2 / c2 - w2]
-            if rot_order == '132':
-                return [q1d - (w1 * c3 + w3 * s3) / c2, q2d + w1 * s3 - w3 *
-                        c3, q3d - (w1 * c3 + w3 * s3) * s2 / c2 - w2]
-            if rot_order == '213':
-                return [q1d - (w1 * s3 + w2 * c3) / c2, q2d - w1 * c3 + w2 *
-                        s3, q3d - (w1 * s3 + w2 * c3) * s2 / c2 - w3]
-            if rot_order == '321':
-                return [q1d - (w2 * s3 + w3 * c3) / c2, q2d - w2 * c3 + w3 *
-                        s3, q3d - w1 - (w2 * s3 + w3 * c3) * s2 / c2]
-            if rot_order == '121':
-                return [q1d - (w2 * s3 + w3 * c3) / s2, q2d - w2 * c3 + w3 *
-                        s3, q3d - w1 + (w2 * s3 + w3 * c3) * c2 / s2]
-            if rot_order == '131':
-                return [q1d - (-w2 * c3 + w3 * s3) / s2, q2d - w2 * s3 - w3 *
-                        c3, q3d - w1 - (w2 * c3 - w3 * s3) * c2 / s2]
-            if rot_order == '212':
-                return [q1d - (w1 * s3 - w3 * c3) / s2, q2d - w1 * c3 - w3 *
-                        s3, q3d - (-w1 * s3 + w3 * c3) * c2 / s2 - w2]
-            if rot_order == '232':
-                return [q1d - (w1 * c3 + w3 * s3) / s2, q2d + w1 * s3 - w3 *
-                        c3, q3d + (w1 * c3 + w3 * s3) * c2 / s2 - w2]
-            if rot_order == '313':
-                return [q1d - (w1 * s3 + w2 * c3) / s2, q2d - w1 * c3 + w2 *
-                        s3, q3d + (w1 * s3 + w2 * c3) * c2 / s2 - w3]
-            if rot_order == '323':
-                return [q1d - (-w1 * c3 + w2 * s3) / s2, q2d - w1 * s3 - w2 *
-                        c3, q3d - (w1 * c3 - w2 * s3) * c2 / s2 - w3]
-        if rot_type.lower() == 'space':
-            if rot_order == '123':
-                return [q1d - w1 - (w2 * s1 + w3 * c1) * s2 / c2, q2d - w2 *
-                        c1 + w3 * s1, q3d - (w2 * s1 + w3 * c1) / c2]
-            if rot_order == '231':
-                return [q1d - (w1 * c1 + w3 * s1) * s2 / c2 - w2, q2d + w1 *
-                        s1 - w3 * c1, q3d - (w1 * c1 + w3 * s1) / c2]
-            if rot_order == '312':
-                return [q1d - (w1 * s1 + w2 * c1) * s2 / c2 - w3, q2d - w1 *
-                        c1 + w2 * s1, q3d - (w1 * s1 + w2 * c1) / c2]
-            if rot_order == '132':
-                return [q1d - w1 - (-w2 * c1 + w3 * s1) * s2 / c2, q2d - w2 *
-                        s1 - w3 * c1, q3d - (w2 * c1 - w3 * s1) / c2]
-            if rot_order == '213':
-                return [q1d - (w1 * s1 - w3 * c1) * s2 / c2 - w2, q2d - w1 *
-                        c1 - w3 * s1, q3d - (-w1 * s1 + w3 * c1) / c2]
-            if rot_order == '321':
-                return [q1d - (-w1 * c1 + w2 * s1) * s2 / c2 - w3, q2d - w1 *
-                        s1 - w2 * c1, q3d - (w1 * c1 - w2 * s1) / c2]
-            if rot_order == '121':
-                return [q1d - w1 + (w2 * s1 + w3 * c1) * c2 / s2, q2d - w2 *
-                        c1 + w3 * s1, q3d - (w2 * s1 + w3 * c1) / s2]
-            if rot_order == '131':
-                return [q1d - w1 - (w2 * c1 - w3 * s1) * c2 / s2, q2d - w2 *
-                        s1 - w3 * c1, q3d - (-w2 * c1 + w3 * s1) / s2]
-            if rot_order == '212':
-                return [q1d - (-w1 * s1 + w3 * c1) * c2 / s2 - w2, q2d - w1 *
-                        c1 - w3 * s1, q3d - (w1 * s1 - w3 * c1) / s2]
-            if rot_order == '232':
-                return [q1d + (w1 * c1 + w3 * s1) * c2 / s2 - w2, q2d + w1 *
-                        s1 - w3 * c1, q3d - (w1 * c1 + w3 * s1) / s2]
-            if rot_order == '313':
-                return [q1d + (w1 * s1 + w2 * c1) * c2 / s2 - w3, q2d - w1 *
-                        c1 + w2 * s1, q3d - (w1 * s1 + w2 * c1) / s2]
-            if rot_order == '323':
-                return [q1d - (w1 * c1 - w2 * s1) * c2 / s2 - w3, q2d - w1 *
-                        s1 - w2 * c1, q3d - (-w1 * c1 + w2 * s1) / s2]
+        if w1==0 and w2==0 and w3==0:
+            return [0,0,0]
+        else:
+            if rot_type.lower() == 'body':
+                if rot_order == '123':
+                    return [q1d - (w1 * c3 - w2 * s3) / c2, q2d - w1 * s3 - w2 *
+                            c3, q3d - (-w1 * c3 + w2 * s3) * s2 / c2 - w3]
+                if rot_order == '231':
+                    return [q1d - (w2 * c3 - w3 * s3) / c2, q2d - w2 * s3 - w3 *
+                            c3, q3d - w1 - (- w2 * c3 + w3 * s3) * s2 / c2]
+                if rot_order == '312':
+                    return [q1d - (-w1 * s3 + w3 * c3) / c2, q2d - w1 * c3 - w3 *
+                            s3, q3d - (w1 * s3 - w3 * c3) * s2 / c2 - w2]
+                if rot_order == '132':
+                    return [q1d - (w1 * c3 + w3 * s3) / c2, q2d + w1 * s3 - w3 *
+                            c3, q3d - (w1 * c3 + w3 * s3) * s2 / c2 - w2]
+                if rot_order == '213':
+                    return [q1d - (w1 * s3 + w2 * c3) / c2, q2d - w1 * c3 + w2 *
+                            s3, q3d - (w1 * s3 + w2 * c3) * s2 / c2 - w3]
+                if rot_order == '321':
+                    return [q1d - (w2 * s3 + w3 * c3) / c2, q2d - w2 * c3 + w3 *
+                            s3, q3d - w1 - (w2 * s3 + w3 * c3) * s2 / c2]
+                if rot_order == '121':
+                    return [q1d - (w2 * s3 + w3 * c3) / s2, q2d - w2 * c3 + w3 *
+                            s3, q3d - w1 + (w2 * s3 + w3 * c3) * c2 / s2]
+                if rot_order == '131':
+                    return [q1d - (-w2 * c3 + w3 * s3) / s2, q2d - w2 * s3 - w3 *
+                            c3, q3d - w1 - (w2 * c3 - w3 * s3) * c2 / s2]
+                if rot_order == '212':
+                    return [q1d - (w1 * s3 - w3 * c3) / s2, q2d - w1 * c3 - w3 *
+                            s3, q3d - (-w1 * s3 + w3 * c3) * c2 / s2 - w2]
+                if rot_order == '232':
+                    return [q1d - (w1 * c3 + w3 * s3) / s2, q2d + w1 * s3 - w3 *
+                            c3, q3d + (w1 * c3 + w3 * s3) * c2 / s2 - w2]
+                if rot_order == '313':
+                    return [q1d - (w1 * s3 + w2 * c3) / s2, q2d - w1 * c3 + w2 *
+                            s3, q3d + (w1 * s3 + w2 * c3) * c2 / s2 - w3]
+                if rot_order == '323':
+                    return [q1d - (-w1 * c3 + w2 * s3) / s2, q2d - w1 * s3 - w2 *
+                            c3, q3d - (w1 * c3 - w2 * s3) * c2 / s2 - w3]
+            if rot_type.lower() == 'space':
+                if rot_order == '123':
+                    return [q1d - w1 - (w2 * s1 + w3 * c1) * s2 / c2, q2d - w2 *
+                            c1 + w3 * s1, q3d - (w2 * s1 + w3 * c1) / c2]
+                if rot_order == '231':
+                    return [q1d - (w1 * c1 + w3 * s1) * s2 / c2 - w2, q2d + w1 *
+                            s1 - w3 * c1, q3d - (w1 * c1 + w3 * s1) / c2]
+                if rot_order == '312':
+                    return [q1d - (w1 * s1 + w2 * c1) * s2 / c2 - w3, q2d - w1 *
+                            c1 + w2 * s1, q3d - (w1 * s1 + w2 * c1) / c2]
+                if rot_order == '132':
+                    return [q1d - w1 - (-w2 * c1 + w3 * s1) * s2 / c2, q2d - w2 *
+                            s1 - w3 * c1, q3d - (w2 * c1 - w3 * s1) / c2]
+                if rot_order == '213':
+                    return [q1d - (w1 * s1 - w3 * c1) * s2 / c2 - w2, q2d - w1 *
+                            c1 - w3 * s1, q3d - (-w1 * s1 + w3 * c1) / c2]
+                if rot_order == '321':
+                    return [q1d - (-w1 * c1 + w2 * s1) * s2 / c2 - w3, q2d - w1 *
+                            s1 - w2 * c1, q3d - (w1 * c1 - w2 * s1) / c2]
+                if rot_order == '121':
+                    return [q1d - w1 + (w2 * s1 + w3 * c1) * c2 / s2, q2d - w2 *
+                            c1 + w3 * s1, q3d - (w2 * s1 + w3 * c1) / s2]
+                if rot_order == '131':
+                    return [q1d - w1 - (w2 * c1 - w3 * s1) * c2 / s2, q2d - w2 *
+                            s1 - w3 * c1, q3d - (-w2 * c1 + w3 * s1) / s2]
+                if rot_order == '212':
+                    return [q1d - (-w1 * s1 + w3 * c1) * c2 / s2 - w2, q2d - w1 *
+                            c1 - w3 * s1, q3d - (w1 * s1 - w3 * c1) / s2]
+                if rot_order == '232':
+                    return [q1d + (w1 * c1 + w3 * s1) * c2 / s2 - w2, q2d + w1 *
+                            s1 - w3 * c1, q3d - (w1 * c1 + w3 * s1) / s2]
+                if rot_order == '313':
+                    return [q1d + (w1 * s1 + w2 * c1) * c2 / s2 - w3, q2d - w1 *
+                            c1 + w2 * s1, q3d - (w1 * s1 + w2 * c1) / s2]
+                if rot_order == '323':
+                    return [q1d - (w1 * c1 - w2 * s1) * c2 / s2 - w3, q2d - w1 *
+                            s1 - w2 * c1, q3d - (-w1 * c1 + w2 * s1) / s2]
     elif rot_type.lower() == 'quaternion':
         if rot_order != '':
             raise ValueError('Cannot have rotation order for quaternion')
