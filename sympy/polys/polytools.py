@@ -5203,17 +5203,15 @@ def gcd_list(seq, *gens, **args):
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
 
-        #for gcd in domain Q[irrational]
-        ls = [sympify(ele) for ele in seq]
-        if len(ls) > 1 and all(not ele.has(Symbol) and ele.is_irrational for ele in ls):
-            a = ls[-1]
-            ls.pop()
-            ls = [(a/ele).ratsimp() for ele in ls]
-            if all(frc.is_rational for frc in ls):
+        #gcd for domain Q[irrational] (purely algebraic irrational)
+        if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
+            a = seq[-1]
+            lst = [(a / elt).ratsimp() for elt in seq[:-1]]
+            if all(frc.is_rational for frc in lst):
                 lc = 1
-                for frc in ls:
+                for frc in lst:
                     lc = lcm(lc, frc.as_numer_denom()[0])
-                return a/lc
+                return a / lc
 
     except PolificationFailed as exc:
         result = try_non_polynomial_gcd(exc.exprs)
@@ -5271,11 +5269,12 @@ def gcd(f, g=None, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
 
+        #gcd for domain Q[irrational] (purely algebraic irrational)
         a, b = map(sympify, (f, g))
-        if not a.has(Symbol) and a.is_irrational and not b.has(Symbol) and b.is_irrational:
-            frc = (a/b).ratsimp()
+        if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
+            frc = (a / b).ratsimp()
             if frc.is_rational:
-                return a/frc.as_numer_denom()[0]
+                return a / frc.as_numer_denom()[0]
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
@@ -5336,17 +5335,15 @@ def lcm_list(seq, *gens, **args):
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
 
-        #for lcm in domain Q[irrational]
-        ls = [sympify(ele) for ele in seq]
-        if len(ls) > 1 and all(not ele.has(Symbol) and ele.is_irrational for ele in ls):
-            a = ls[-1]
-            ls.pop()
-            ls = [(a/ele).ratsimp() for ele in ls]
-            if all(frc.is_rational for frc in ls):
+        #lcm for domain Q[irrational] (purely algebraic irrational)
+        if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
+            a = seq[-1]
+            lst = [(a / elt).ratsimp() for elt in seq[:-1]]
+            if all(frc.is_rational for frc in lst):
                 lc = 1
-                for frc in ls:
+                for frc in lst:
                     lc = lcm(lc, frc.as_numer_denom()[1])
-                return a*lc
+                return a * lc
 
     except PolificationFailed as exc:
         result = try_non_polynomial_lcm(exc.exprs)
@@ -5401,12 +5398,12 @@ def lcm(f, g=None, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
 
-        #for lcm in domain Q[irrational]
+        #lcm for domain Q[irrational] (purely algebraic irrational)
         a, b = map(sympify, (f, g))
-        if not a.has(Symbol) and a.is_irrational and not b.has(Symbol) and b.is_irrational:
-            frc = (a/b).ratsimp()
+        if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
+            frc = (a / b).ratsimp()
             if frc.is_rational:
-                return a*frc.as_numer_denom()[1]
+                return a * frc.as_numer_denom()[1]
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
