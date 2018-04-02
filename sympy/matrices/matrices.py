@@ -10,7 +10,7 @@ from sympy.core.function import expand_mul
 from sympy.core.power import Pow
 from sympy.core.symbol import (Symbol, Dummy, symbols,
     _uniquely_named_symbol)
-from sympy.core.numbers import Integer, ilcm, Float
+from sympy.core.numbers import Integer, ilcm, mod_inverse, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -789,7 +789,7 @@ class MatrixReductions(MatrixDeterminant):
 
     @property
     def is_echelon(self, iszerofunc=_iszero):
-        """Returns `True` if he matrix is in echelon form.
+        """Returns `True` if the matrix is in echelon form.
         That is, all rows of zeros are at the bottom, and below
         each leading non-zero in a row are exclusively zeros."""
 
@@ -2730,15 +2730,17 @@ class MatrixBase(MatrixDeprecated,
         [0, 1]])
 
         """
-        from sympy.ntheory import totient
         if not self.is_square:
             raise NonSquareMatrixError()
         N = self.cols
-        phi = totient(m)
         det_K = self.det()
-        if gcd(det_K, m) != 1:
+        det_inv = None
+
+        try:
+            det_inv = mod_inverse(det_K, m)
+        except ValueError:
             raise ValueError('Matrix is not invertible (mod %d)' % m)
-        det_inv = pow(int(det_K), int(phi - 1), int(m))
+
         K_adj = self.adjugate()
         K_inv = self.__class__(N, N,
                                [det_inv * K_adj[i, j] % m for i in range(N) for
