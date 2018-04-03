@@ -484,8 +484,8 @@ def reduce_rational_inequalities_wrap(condition, var):
     if condition.is_Relational:
         return _reduce_inequalities([[condition]], var, relational=False)
     if condition.__class__ is Or:
-        return _reduce_inequalities([list(condition.args)],
-                var, relational=False)
+        return Union(*[_reduce_inequalities([[arg]], var, relational=False)
+            for arg in condition.args])
     if condition.__class__ is And:
         intervals = [_reduce_inequalities([[arg]], var, relational=False)
             for arg in condition.args]
