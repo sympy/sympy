@@ -1,9 +1,9 @@
 from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
-    factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
+    factorial, Function, harmonic, I, Integral, Interval, KroneckerDelta, log,
     nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod)
+    Indexed, Idx, IndexedBase, prod, Tuple)
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -1026,3 +1026,21 @@ def test_issue_14111():
 
 def test_issue_14484():
     raises(NotImplementedError, lambda: Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent())
+
+def test_issue_14587():
+    s1 = Sum(n, (n, Interval.open(2, 15)))
+    assert s1.limits == (Tuple(n, 3, 14),)
+    s2 = Sum(n, (n, Interval.Lopen(2, 15)))
+    assert s2.limits == (Tuple(n, 3, 15),)
+    s3 = Sum(n, (n, Interval.Ropen(2, 15)))
+    assert s3.limits == (Tuple(n, 2, 14),)
+
+    # Testing constructor with inequalities:
+    s6 = Sum(n, n > 10)
+    assert s6.limits == (Tuple(n, 11, oo),)
+    s6bis = Sum(n, n >= 10)
+    assert s6bis.limits == (Tuple(n, 10, oo),)
+    s7 = Sum(n, (n > 2) & (n < 15))
+    assert s7.limits == (Tuple(n, 3, 14),)
+    s7bis = Sum(n, (n >= 2) & (n < 15))
+    assert s7bis.limits == (Tuple(n, 2, 14),)

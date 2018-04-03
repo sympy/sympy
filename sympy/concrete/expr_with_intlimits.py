@@ -129,6 +129,16 @@ class ExprWithIntLimits(ExprWithLimits):
 
         return self.func(function, *limits)
 
+    @classmethod
+    def _convert_Interval_to_min_max(cls, interval):
+        # If the interval is open, add or remove a unit:
+        start = interval.start
+        end = interval.end
+        if interval.left_open:
+            start += 1
+        if interval.right_open:
+            end -= 1
+        return start, end
 
     def index(expr, x):
         """

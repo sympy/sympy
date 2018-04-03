@@ -36,7 +36,7 @@ def _common_new(cls, function, *symbols, **assumptions):
         return S.NaN
 
     if symbols:
-        limits, orientation = _process_limits(*symbols)
+        limits, orientation = cls._process_limits(*symbols)
     else:
         # symbol not provided -- we can still try to compute a general form
         free = function.free_symbols
@@ -68,64 +68,6 @@ def _common_new(cls, function, *symbols, **assumptions):
     return function, limits, orientation
 
 
-def _process_limits(*symbols):
-    """Process the list of symbols and convert them to canonical limits,
-    storing them as Tuple(symbol, lower, upper). The orientation of
-    the function is also returned when the upper limit is missing
-    so (x, 1, None) becomes (x, None, 1) and the orientation is changed.
-    """
-    limits = []
-    orientation = 1
-    for V in symbols:
-        if isinstance(V, (Relational, BooleanFunction)):
-            variable = V.atoms(Symbol).pop()
-            V = (variable, V.as_set())
-
-        if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
-            if isinstance(V, Idx):
-                if V.lower is None or V.upper is None:
-                    limits.append(Tuple(V))
-                else:
-                    limits.append(Tuple(V, V.lower, V.upper))
-            else:
-                limits.append(Tuple(V))
-            continue
-        elif is_sequence(V, Tuple):
-            V = sympify(flatten(V))
-            if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
-                newsymbol = V[0]
-                if len(V) == 2 and isinstance(V[1], Interval):
-                    V[1:] = [V[1].start, V[1].end]
-
-                if len(V) == 3:
-                    if V[1] is None and V[2] is not None:
-                        nlim = [V[2]]
-                    elif V[1] is not None and V[2] is None:
-                        orientation *= -1
-                        nlim = [V[1]]
-                    elif V[1] is None and V[2] is None:
-                        nlim = []
-                    else:
-                        nlim = V[1:]
-                    limits.append(Tuple(newsymbol, *nlim))
-                    if isinstance(V[0], Idx):
-                        if V[0].lower is not None and not bool(nlim[0] >= V[0].lower):
-                            raise ValueError("Summation exceeds Idx lower range.")
-                        if V[0].upper is not None and not bool(nlim[1] <= V[0].upper):
-                            raise ValueError("Summation exceeds Idx upper range.")
-                    continue
-                elif len(V) == 1 or (len(V) == 2 and V[1] is None):
-                    limits.append(Tuple(newsymbol))
-                    continue
-                elif len(V) == 2:
-                    limits.append(Tuple(newsymbol, V[1]))
-                    continue
-
-        raise ValueError('Invalid limits given: %s' % str(symbols))
-
-    return limits, orientation
-
-
 class ExprWithLimits(Expr):
     __slots__ = ['is_commutative']
 
@@ -148,6 +90,69 @@ class ExprWithLimits(Expr):
         obj.is_commutative = function.is_commutative  # limits already checked
 
         return obj
+
+    @classmethod
+    def _convert_Interval_to_min_max(cls, interval):
+        return interval.start, interval.end
+
+    @classmethod
+    def _process_limits(cls, *symbols):
+        """Process the list of symbols and convert them to canonical limits,
+        storing them as Tuple(symbol, lower, upper). The orientation of
+        the function is also returned when the upper limit is missing
+        so (x, 1, None) becomes (x, None, 1) and the orientation is changed.
+        """
+        limits = []
+        orientation = 1
+        for V in symbols:
+            if isinstance(V, (Relational, BooleanFunction)):
+                variable = V.atoms(Symbol).pop()
+                V = (variable, V.as_set())
+
+            if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
+                # TODO: this should only work for `Sum`, not `Integral`.
+                if isinstance(V, Idx):
+                    if V.lower is None or V.upper is None:
+                        limits.append(Tuple(V))
+                    else:
+                        limits.append(Tuple(V, V.lower, V.upper))
+                else:
+                    limits.append(Tuple(V))
+                continue
+            elif is_sequence(V, Tuple):
+                V = sympify(flatten(V))
+                if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
+                    newsymbol = V[0]
+                    if len(V) == 2 and isinstance(V[1], Interval):
+                        V[1:] = cls._convert_Interval_to_min_max(V[1])
+
+                    if len(V) == 3:
+                        if V[1] is None and V[2] is not None:
+                            nlim = [V[2]]
+                        elif V[1] is not None and V[2] is None:
+                            orientation *= -1
+                            nlim = [V[1]]
+                        elif V[1] is None and V[2] is None:
+                            nlim = []
+                        else:
+                            nlim = V[1:]
+                        limits.append(Tuple(newsymbol, *nlim))
+                        if isinstance(V[0], Idx):
+                            if V[0].lower is not None and not bool(nlim[0] >= V[0].lower):
+                                raise ValueError("Summation exceeds Idx lower range.")
+                            if V[0].upper is not None and not bool(nlim[1] <= V[0].upper):
+                                raise ValueError("Summation exceeds Idx upper range.")
+                        continue
+                    elif len(V) == 1 or (len(V) == 2 and V[1] is None):
+                        limits.append(Tuple(newsymbol))
+                        continue
+                    elif len(V) == 2:
+                        limits.append(Tuple(newsymbol, V[1]))
+                        continue
+
+            raise ValueError('Invalid limits given: %s' % str(symbols))
+
+        return limits, orientation
 
     @property
     def function(self):
