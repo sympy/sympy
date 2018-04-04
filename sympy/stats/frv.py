@@ -176,7 +176,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
     @property
     def set(self):
-        if self.fulldomain.__class__ is SingleFiniteDomain:
+        if isinstance(self.fulldomain, SingleFiniteDomain):
             return FiniteSet(*[elem for elem in self.fulldomain.set
                                if frozenset(((self.fulldomain.symbol, elem),)) in self])
         else:
