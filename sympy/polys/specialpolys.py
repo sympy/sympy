@@ -161,21 +161,11 @@ def interpolating_poly(n, x, X='x', Y='y'):
         Y = symbols("%s:%s" % (Y, n))
 
     coeffs = []
+    numert = Mul(*[ (x - u) for u in X ])
 
     for i in range(0, n):
-        numer = []
-        denom = []
-
-        for j in range(0, n):
-            if i == j:
-                continue
-
-            numer.append(x - X[j])
-            denom.append(X[i] - X[j])
-
-        numer = Mul(*numer)
-        denom = Mul(*denom)
-
+        numer = numert/(x - X[i])
+        denom = Mul(*[ (X[i] - X[j]) for j in range(0, n) if i != j ])
         coeffs.append(numer/denom)
 
     return Add(*[ coeff*y for coeff, y in zip(coeffs, Y) ])
