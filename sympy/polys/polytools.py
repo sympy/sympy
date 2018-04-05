@@ -5203,7 +5203,7 @@ def gcd_list(seq, *gens, **args):
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
 
-        #gcd for domain Q[irrational] (purely algebraic irrational)
+        # gcd for domain Q[irrational] (purely algebraic irrational)
         if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
             a = seq[-1]
             lst = [(a / elt).ratsimp() for elt in seq[:-1]]
@@ -5269,7 +5269,7 @@ def gcd(f, g=None, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
 
-        #gcd for domain Q[irrational] (purely algebraic irrational)
+        # gcd for domain Q[irrational] (purely algebraic irrational)
         a, b = map(sympify, (f, g))
         if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
             frc = (a / b).ratsimp()
@@ -5335,7 +5335,7 @@ def lcm_list(seq, *gens, **args):
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
 
-        #lcm for domain Q[irrational] (purely algebraic irrational)
+        # lcm for domain Q[irrational] (purely algebraic irrational)
         if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
             a = seq[-1]
             lst = [(a / elt).ratsimp() for elt in seq[:-1]]
@@ -5398,7 +5398,7 @@ def lcm(f, g=None, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
 
-        #lcm for domain Q[irrational] (purely algebraic irrational)
+        # lcm for domain Q[irrational] (purely algebraic irrational)
         a, b = map(sympify, (f, g))
         if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
             frc = (a / b).ratsimp()
