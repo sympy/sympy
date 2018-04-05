@@ -348,20 +348,9 @@ def vpprint(expr, **settings):
 
     """
 
-    pp = VectorPrettyPrinter(settings)
-
-    # Note that this is copied from sympy.printing.pretty.pretty_print:
-
-    # XXX: this is an ugly hack, but at least it works
-    use_unicode = pp._settings['use_unicode']
-    from sympy.printing.pretty.pretty_symbology import pretty_use_unicode
-    uflag = pretty_use_unicode(use_unicode)
-
-    try:
-        print(pp.doprint(expr))
-    finally:
-        pretty_use_unicode(uflag)
-
+    print(vpretty(expr, wrap_line=wrap_line, num_columns=num_columns,
+                 use_unicode=use_unicode, full_prec=full_prec, order=order,
+                 use_unicode_sqrt_char=use_unicode_sqrt_char))
 
 def vlatex(expr, **settings):
     r"""Function for printing latex representation of sympy.physics.vector
