@@ -5206,12 +5206,12 @@ def gcd_list(seq, *gens, **args):
         # gcd for domain Q[irrational] (purely algebraic irrational)
         if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
             a = seq[-1]
-            lst = [(a / elt).ratsimp() for elt in seq[:-1]]
+            lst = [ (a/elt).ratsimp() for elt in seq[:-1] ]
             if all(frc.is_rational for frc in lst):
                 lc = 1
                 for frc in lst:
                     lc = lcm(lc, frc.as_numer_denom()[0])
-                return a / lc
+                return a/lc
 
     except PolificationFailed as exc:
         result = try_non_polynomial_gcd(exc.exprs)
@@ -5272,9 +5272,9 @@ def gcd(f, g=None, *gens, **args):
         # gcd for domain Q[irrational] (purely algebraic irrational)
         a, b = map(sympify, (f, g))
         if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
-            frc = (a / b).ratsimp()
+            frc = (a/b).ratsimp()
             if frc.is_rational:
-                return a / frc.as_numer_denom()[0]
+                return a/frc.as_numer_denom()[0]
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
@@ -5338,12 +5338,12 @@ def lcm_list(seq, *gens, **args):
         # lcm for domain Q[irrational] (purely algebraic irrational)
         if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
             a = seq[-1]
-            lst = [(a / elt).ratsimp() for elt in seq[:-1]]
+            lst = [ (a/elt).ratsimp() for elt in seq[:-1] ]
             if all(frc.is_rational for frc in lst):
                 lc = 1
                 for frc in lst:
                     lc = lcm(lc, frc.as_numer_denom()[1])
-                return a * lc
+                return a*lc
 
     except PolificationFailed as exc:
         result = try_non_polynomial_lcm(exc.exprs)
@@ -5401,9 +5401,9 @@ def lcm(f, g=None, *gens, **args):
         # lcm for domain Q[irrational] (purely algebraic irrational)
         a, b = map(sympify, (f, g))
         if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
-            frc = (a / b).ratsimp()
+            frc = (a/b).ratsimp()
             if frc.is_rational:
-                return a * frc.as_numer_denom()[1]
+                return a*frc.as_numer_denom()[1]
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
