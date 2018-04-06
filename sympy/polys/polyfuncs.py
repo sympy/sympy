@@ -239,17 +239,26 @@ def interpolate(data, x):
 
     """
     n = len(data)
+    poly = None
 
     if isinstance(data, dict):
         X, Y = list(zip(*data.items()))
+        poly = interpolating_poly(n, x, X, Y)
     else:
         if isinstance(data[0], tuple):
             X, Y = list(zip(*data))
+            poly = interpolating_poly(n, x, X, Y)
         else:
-            X = list(range(1, n + 1))
             Y = list(data)
 
-    poly = interpolating_poly(n, x, X, Y)
+            numert = Mul(*[ (x - i) for i in range(1, n + 1) ])
+            denom = Mul(*[ (1 - i) for i in range(2, n + 1) ])
+            coeffs = []
+            for i in range(1, n + 1):
+                coeffs.append(numert/(x - i)/denom)
+                denom = denom*i/(i - n)
+
+            poly = Add(*[ coeff*y for coeff, y in zip(coeffs, Y) ])
 
     return poly.expand()
 
