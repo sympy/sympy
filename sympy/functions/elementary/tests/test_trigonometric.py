@@ -1589,3 +1589,25 @@ def test_issue_14320():
     assert asec(csc(13)) == -13 + 9*pi/2 and (0 <= -13 + 9*pi/2 <= pi) and sin(13) == cos(-13 + 9*pi/2)
     assert acsc(csc(14)) == -4*pi + 14 and (-pi/2 <= -4*pi + 14 <= pi/2) and sin(14) == sin(-4*pi + 14)
     assert acsc(sec(10)) == -7*pi/2 + 10 and (-pi/2 <= -7*pi/2 + 10 <= pi/2) and cos(10) == sin(-7*pi/2 + 10)
+
+def test_issue_14543():
+    assert sec(2*pi + 11) == sec(11)
+    assert sec(2*pi - 11) == sec(11)
+    assert sec(pi + 11) == -sec(11)
+    assert sec(pi - 11) == -sec(11)
+
+    assert csc(2*pi + 17) == csc(17)
+    assert csc(2*pi - 17) == -csc(17)
+    assert csc(pi + 17) == -csc(17)
+    assert csc(pi - 17) == csc(17)
+
+    x = Symbol('x')
+    assert csc(pi/2 + x) == sec(x)
+    assert csc(pi/2 - x) == sec(x)
+    assert csc(3*pi/2 + x) == -sec(x)
+    assert csc(3*pi/2 - x) == -sec(x)
+
+    assert sec(pi/2 - x) == csc(x)
+    assert sec(pi/2 + x) == -csc(x)
+    assert sec(3*pi/2 + x) == csc(x)
+    assert sec(3*pi/2 - x) == -csc(x)

@@ -1368,7 +1368,7 @@ class Complement(Set, EvalfMixin):
             return Intersection(s.complement(A) for s in B.args)
 
         result = B._complement(A)
-        if result != None:
+        if result is not None:
             return result
         else:
             return Complement(A, B, evaluate=False)

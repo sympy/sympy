@@ -1,11 +1,16 @@
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
         Poisson, Geometric, Logarithmic, NegativeBinomial, YuleSimon, Zeta)
 from sympy.abc import x
+
 from sympy import S, Sum, I, lambdify, re, im, log, simplify, zeta
-from sympy.stats import P, E, variance, density, characteristic_function
+from sympy.stats import (P, E, variance, density, characteristic_function,
+        where)
+
 from sympy.stats.rv import sample
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
+from sympy.sets.fancysets import Range
+from sympy.logic.boolalg import Or
 
 def test_PoissonDistribution():
     l = 3
@@ -120,3 +125,18 @@ def test_precomputed_characteristic_functions():
     test_cf(Poisson('p', 5), 0, mpmath.inf)
     test_cf(YuleSimon('y', 5), 1, mpmath.inf)
     test_cf(Zeta('z', 5), 1, mpmath.inf)
+
+def test_Or():
+    X = Geometric('X', S(1)/2)
+    P(Or(X < 3, X > 4)) == S(13)/16
+    P(Or(X > 2, X > 1)) == P(X > 1)
+    P(Or(X >= 3, X < 3)) == 1
+
+def test_where():
+    X = Geometric('X', S(1)/5)
+    Y = Poisson('Y', 4)
+    assert where(X**2 > 4).set == Range(3, S.Infinity, 1)
+    assert where(X**2 >= 4).set == Range(2, S.Infinity, 1)
+    assert where(Y**2 < 9).set == Range(0, 3, 1)
+    assert where(Y**2 <= 9).set == Range(0, 4, 1)
+

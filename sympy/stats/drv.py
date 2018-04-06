@@ -203,7 +203,7 @@ class SingleDiscretePSpace(SinglePSpace):
         else:
             raise NotImplementedError()
 
-    def restricted_domain(self, condition):
+    def where(self, condition):
         rvs = random_symbols(condition)
         assert all(r.symbol in self.symbols for r in rvs)
         if (len(rvs) > 1):
@@ -212,22 +212,21 @@ class SingleDiscretePSpace(SinglePSpace):
         conditional_domain = reduce_rational_inequalities_wrap(condition,
             rvs[0])
         conditional_domain = conditional_domain.intersect(self.domain.set)
-        return conditional_domain
+        return SingleDiscreteDomain(rvs[0].symbol, conditional_domain)
 
     def probability(self, condition):
         complement = isinstance(condition, Ne)
         if complement:
             condition = Eq(condition.args[0], condition.args[1])
-        _domain = self.restricted_domain(condition)
+        _domain = self.where(condition).set
         if condition == False or _domain is S.EmptySet:
             return S.Zero
         if condition == True or _domain == self.set:
             return S.One
-        try:
-            prob = self.eval_prob(_domain)
-            return prob if not complement else S.One - prob
-        except NotImplementedError:
-            return Probability(condition)
+        prob = self.eval_prob(_domain)
+        if prob == None:
+            prob = Probability(condition)
+        return prob if not complement else S.One - prob
 
     def eval_prob(self, _domain):
         if isinstance(_domain, Range):
@@ -245,6 +244,3 @@ class SingleDiscretePSpace(SinglePSpace):
         elif isinstance(_domain, Union):
             rv = sum(self.eval_prob(x) for x in _domain.args)
             return rv
-        else:
-            raise NotImplementedError(filldedent('''Probability for
-                the domain %s cannot be calculated.'''%(_domain)))
