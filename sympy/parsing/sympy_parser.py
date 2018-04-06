@@ -983,6 +983,30 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 result.append(arg)
         return result
 
+    def visit_Call(self, node):
+        from sympy import sympify
+        from sympy.core.expr import Expr, AtomicExpr
+        node_class = sympify(node.func.id)
+        if isinstance(node_class, type) and issubclass(node_class, Basic) and not issubclass(node_class, AtomicExpr):
+            args = []
+            for arg in node.args:
+                if isinstance(arg, ast.BinOp):
+                    args.append(self.visit_BinOp(arg))
+                elif isinstance(arg, ast.Call):
+                    args.append(self.visit_Call(arg))
+                else:
+                    args.append(ast.Call(
+                    func=ast.Name(id='sympify', ctx=ast.Load()),
+                    args= [arg],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    starargs=None,
+                    kwargs=None))
+
+            node = ast.Call(func=ast.Attribute(value=ast.Name(id='Basic', ctx=ast.Load()),
+                        attr='__new__', ctx=ast.Load()), args=[ast.Name(id=node.func.id,
+                        ctx=ast.Load())] + args, keywords=[])
+        return node
+
     def visit_BinOp(self, node):
         if node.op.__class__ in self.operators:
             sympy_class = self.operators[node.op.__class__]

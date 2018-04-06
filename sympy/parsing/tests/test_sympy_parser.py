@@ -2,7 +2,7 @@ import sys
 
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
 from sympy.core.compatibility import PY3
-from sympy.functions import exp, factorial, factorial2, sin
+from sympy.functions import exp, factorial, factorial2, sin, Abs, log
 from sympy.logic import And
 from sympy.series import Limit
 from sympy.utilities.pytest import raises, skip
@@ -106,6 +106,15 @@ def test_global_dict():
     }
     for text, result in inputs.items():
         assert parse_expr(text, global_dict=global_dict) == result
+
+
+def test_evaluate_false():
+    x = Symbol('x')
+    parse_expr("Abs(x+x)", evaluate=False) == Abs(x + x)
+    parse_expr("Mul(3, 5.5)", evaluate=False) == 3*5.5
+    parse_expr("log(5.5)", evaluate=False) == log(5.5)
+    parse_expr("log(5 - 3)", evaluate=False) == log(-3 + 5)
+    parse_expr("log(log(5 - 3))", evaluate=False) == log(log(-3 + 5))
 
 
 def test_issue_2515():
