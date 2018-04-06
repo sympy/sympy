@@ -139,4 +139,3 @@ def test_where():
     assert where(X**2 >= 4).set == Range(2, S.Infinity, 1)
     assert where(Y**2 < 9).set == Range(0, 3, 1)
     assert where(Y**2 <= 9).set == Range(0, 4, 1)
-
