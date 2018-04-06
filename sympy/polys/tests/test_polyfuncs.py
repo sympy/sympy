@@ -77,6 +77,7 @@ def test_horner():
 
 def test_interpolate():
     assert interpolate([1, 4, 9, 16], x) == x**2
+    assert interpolate([1, 4, 9, 25], x) == S(3)*x**3/2 - S(8)*x**2 + S(33)*x/2 - 9
     assert interpolate([(1, 1), (2, 4), (3, 9)], x) == x**2
     assert interpolate([(1, 2), (2, 5), (3, 10)], x) == 1 + x**2
     assert interpolate({1: 2, 2: 5, 3: 10}, x) == 1 + x**2
