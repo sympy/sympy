@@ -1212,8 +1212,8 @@ def solve(f, *symbols, **flags):
             solution and
             ordered_symbols and
             type(solution) is not dict and
-            type(solution[0]) is dict and
-            all(s in solution[0] for s in symbols)
+            all(type(sol) is dict for sol in solution) and
+            all(sym in sol for sym in symbols for sol in solution)
     ):
         solution = [tuple([r[s].subs(r) for s in symbols]) for r in solution]
 
