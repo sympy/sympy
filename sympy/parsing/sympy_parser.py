@@ -977,7 +977,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
     def flatten(self, args, func):
         result = []
         for arg in args:
-            if isinstance(arg, ast.Call) and arg.func.id == func:
+            if isinstance(arg, ast.Call) and hasattr(arg.func, 'id') and arg.func.id == func:
                 result.extend(self.flatten(arg.args, func))
             else:
                 result.append(arg)
@@ -986,7 +986,9 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
     def visit_Call(self, node):
         from sympy import sympify
         from sympy.core.expr import Expr, AtomicExpr
-        node_class = sympify(node.func.id)
+        node_class = None
+        if hasattr(node.func, 'id'):
+            node_class = sympify(node.func.id)
         if isinstance(node_class, type) and issubclass(node_class, Basic) and not issubclass(node_class, AtomicExpr):
             args = []
             for arg in node.args:

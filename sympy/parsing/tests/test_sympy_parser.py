@@ -115,6 +115,7 @@ def test_evaluate_false():
     parse_expr("log(5.5)", evaluate=False) == log(5.5)
     parse_expr("log(5 - 3)", evaluate=False) == log(-3 + 5)
     parse_expr("log(log(5 - 3))", evaluate=False) == log(log(-3 + 5))
+    parse_expr("1 + log(log(5 - 3))", evaluate=False) == log(log(-3 + 5)) + 1
 
 
 def test_issue_2515():
