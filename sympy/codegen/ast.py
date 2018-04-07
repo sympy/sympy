@@ -1573,13 +1573,6 @@ class FunctionPrototype(Node):
                 return Variable.deduced(arg)
         return Tuple(*map(_var, args))
 
-    def __new__(cls, *args, **kwargs):
-        return Token.__new__(cls, *args, **kwargs)
-        if not all(isinstance(inp, Variable) for inp in self.parameters):
-            raise TypeError("parameters need to be all instances of Declaration")
-        if not isinstance(self.return_type, Type):
-            raise TypeError("return_type should be an instance of Type")
-
     @classmethod
     def from_FunctionDefinition(cls, func_def):
         if not isinstance(func_def, FunctionDefinition):
