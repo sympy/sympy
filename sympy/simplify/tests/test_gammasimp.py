@@ -100,3 +100,6 @@ def test_gammasimp():
     assert gammasimp(e) == e
     e = gamma(m + 1)/(gamma(i + 1)*gamma(-i + m + 1))
     assert gammasimp(e) == e
+
+    p = symbols("p", integer=True, positive=True)
+    assert gammasimp(gamma(-p+4)) == gamma(-p+4)

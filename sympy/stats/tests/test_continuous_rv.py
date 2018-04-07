@@ -16,7 +16,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff)
+                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or)
 
 
 from sympy.stats.crv_types import NormalDistribution
@@ -864,3 +864,10 @@ def test_union():
         -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + 3/2
     assert simplify(P(N**2 - 4 > 0)) == \
         -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + 3/2
+
+def test_Or():
+    N = Normal('N', 0, 1)
+    assert simplify(P(Or(N > 2, N < 1))) == \
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/2)/2 + 3/2
+    assert P(Or(N < 0, N < 1)) == P(N < 1)
+    assert P(Or(N > 0, N < 0)) == 1

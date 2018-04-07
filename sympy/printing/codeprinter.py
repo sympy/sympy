@@ -449,6 +449,8 @@ class CodePrinter(StrPrinter):
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
+        pow_paren = []  # Will collect all pow with more than one base element and exp = -1
+
         if self.order not in ('old', 'none'):
             args = expr.as_ordered_factors()
         else:
@@ -461,6 +463,8 @@ class CodePrinter(StrPrinter):
                 if item.exp != -1:
                     b.append(Pow(item.base, -item.exp, evaluate=False))
                 else:
+                    if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
+                        pow_paren.append(item)
                     b.append(Pow(item.base, -item.exp))
             else:
                 a.append(item)
@@ -469,6 +473,11 @@ class CodePrinter(StrPrinter):
 
         a_str = [self.parenthesize(x, prec) for x in a]
         b_str = [self.parenthesize(x, prec) for x in b]
+
+        # To parenthesize Pow with exp = -1 and having more than one Symbol
+        for item in pow_paren:
+            if item.base in b:
+                b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
 
         if len(b) == 0:
             return sign + '*'.join(a_str)

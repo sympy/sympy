@@ -78,7 +78,7 @@ def _gammasimp(expr, as_comb):
 
     if as_comb:
         expr = expr.replace(_rf,
-            lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
+            lambda a, b: gamma(b + 1))
     else:
         expr = expr.replace(_rf,
             lambda a, b: gamma(a + b)/gamma(a))

@@ -52,6 +52,12 @@ def test_constructor():
     s5 = Integral(n, (n, Interval(1, 2)))
     assert s5.limits == (Tuple(n, 1, 2),)
 
+    # Testing constructor with inequalities:
+    s6 = Integral(n, n > 10)
+    assert s6.limits == (Tuple(n, 10, oo),)
+    s7 = Integral(n, (n > 2) & (n < 5))
+    assert s7.limits == (Tuple(n, 2, 5),)
+
 
 def test_basics():
 
