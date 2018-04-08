@@ -19,6 +19,7 @@ from sympy.core import S, Basic, Add, Mul, symbols
 
 from sympy.core.compatibility import range
 
+from sympy.functions.combinatorial.factorials import factorial
 
 @public
 def symmetrize(F, *gens, **args):
@@ -252,7 +253,7 @@ def interpolate(data, x):
             Y = list(data)
 
             numert = Mul(*[ (x - i) for i in range(1, n + 1) ])
-            denom = Mul(*[ (1 - i) for i in range(2, n + 1) ])
+            denom = -factorial(n - 1) if n%2 == 0 else factorial(n - 1)
             coeffs = []
             for i in range(1, n + 1):
                 coeffs.append(numert/(x - i)/denom)
