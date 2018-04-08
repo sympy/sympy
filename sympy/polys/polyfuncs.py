@@ -87,11 +87,11 @@ def symmetrize(F, *gens, **args):
     polys, symbols = [], opt.symbols
     gens, dom = opt.gens, opt.domain
 
-    for i in range(0, len(gens)):
+    for i in range(len(gens)):
         poly = symmetric_poly(i + 1, gens, polys=True)
         polys.append((next(symbols), poly.set_domain(dom)))
 
-    indices = list(range(0, len(gens) - 1))
+    indices = list(range(len(gens) - 1))
     weights = list(range(len(gens), 0, -1))
 
     result = []
@@ -108,7 +108,7 @@ def symmetrize(F, *gens, **args):
 
             for i, (monom, coeff) in enumerate(f.terms()):
                 if all(monom[i] >= monom[i + 1] for i in indices):
-                    height = max([ n*m for n, m in zip(weights, monom) ])
+                    height = max([n*m for n, m in zip(weights, monom)])
 
                     if height > _height:
                         _height, _monom, _coeff = height, monom, coeff
@@ -123,8 +123,8 @@ def symmetrize(F, *gens, **args):
             for m1, m2 in zip(monom, monom[1:] + (0,)):
                 exponents.append(m1 - m2)
 
-            term = [ s**n for (s, _), n in zip(polys, exponents) ]
-            poly = [ p**n for (_, p), n in zip(polys, exponents) ]
+            term = [s**n for (s, _), n in zip(polys, exponents)]
+            poly = [p**n for (_, p), n in zip(polys, exponents)]
 
             symmetric.append(Mul(coeff, *term))
             product = poly[0].mul(coeff)
@@ -136,7 +136,7 @@ def symmetrize(F, *gens, **args):
 
         result.append((Add(*symmetric), f.as_expr()))
 
-    polys = [ (s, p.as_expr()) for s, p in polys ]
+    polys = [(s, p.as_expr()) for s, p in polys]
 
     if not opt.formal:
         for i, (sym, non_sym) in enumerate(result):
@@ -252,14 +252,14 @@ def interpolate(data, x):
         else:
             Y = list(data)
 
-            numert = Mul(*[ (x - i) for i in range(1, n + 1) ])
+            numert = Mul(*[(x - i) for i in range(1, n + 1)])
             denom = -factorial(n - 1) if n%2 == 0 else factorial(n - 1)
             coeffs = []
             for i in range(1, n + 1):
                 coeffs.append(numert/(x - i)/denom)
-                denom = denom*i/(i - n)
+                denom = denom/(i - n)*i
 
-            poly = Add(*[ coeff*y for coeff, y in zip(coeffs, Y) ])
+            poly = Add(*[coeff*y for coeff, y in zip(coeffs, Y)])
 
     return poly.expand()
 
@@ -308,18 +308,18 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     xdata, ydata = list(zip(*data))
 
     k = len(xdata) - degnum - 1
-    if k<0:
+    if k < 0:
         raise OptionError("Too few values for the required degree.")
-    c = ones(degnum+k+1, degnum+k+2)
+    c = ones(degnum + k + 1, degnum + k + 2)
     for j in range(max(degnum, k)):
-        for i in range(degnum+k+1):
-            c[i, j+1] = c[i, j]*xdata[i]
-    for j in range(k+1):
-        for i in range(degnum+k+1):
-            c[i, degnum+k+1-j] = -c[i, k-j]*ydata[i]
+        for i in range(degnum + k + 1):
+            c[i, j + 1] = c[i, j]*xdata[i]
+    for j in range(k + 1):
+        for i in range(degnum + k + 1):
+            c[i, degnum + k + 1 - j] = -c[i, k - j]*ydata[i]
     r = c.nullspace()[0]
-    return (sum(r[i] * X**i for i in range(degnum+1))
-            / sum(r[i+degnum+1] * X**i for i in range(k+1)))
+    return (sum(r[i] * X**i for i in range(degnum + 1))
+            / sum(r[i + degnum + 1] * X**i for i in range(k + 1)))
 
 
 @public
