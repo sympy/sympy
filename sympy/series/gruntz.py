@@ -119,6 +119,7 @@ debug this function to figure out the exact problem.
 from __future__ import print_function, division
 
 from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
+from sympy.core.compatibility import default_sort_key
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest
@@ -571,7 +572,7 @@ def rewrite(e, Omega, x, wsym):
         if not isinstance(t, exp):
             raise ValueError("Value should be exp")
     rewrites = Omega.rewrites
-    Omega = list(Omega.items())
+    Omega = sorted(list(Omega.items()), key=default_sort_key)
 
     nodes = build_expression_tree(Omega, rewrites)
     Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)

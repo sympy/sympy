@@ -2879,20 +2879,22 @@ class Expr(Basic, EvalfMixin):
 
     def aseries(self, x, n=6, bound=0, hierar=False):
         from sympy.series.gruntz import mrv, rewrite, mrv_leadterm
+        from sympy.core.symbol import Dummy
         from sympy.functions import exp, log
+        from sympy.series.order import Order
 
         if x.is_positive is x.is_negative is None:
-            xpos = C.Dummy('x', positive=True, bounded=True)
-            return self.subs(x, xpos).aseries(xpos, n, bound, hir).subs(xpos, x)
+            xpos = Dummy('x', positive=True)
+            return self.subs(x, xpos).aseries(xpos, n, bound, hierar).subs(xpos, x)
 
         omega, exps = mrv(self, x)
         if x in omega:
-            s = self.subs(x, exp(x)).aseries(x, n, bound, hir).subs(x, log(x))
+            s = self.subs(x, exp(x)).aseries(x, n, bound, hierar).subs(x, log(x))
             if s.getO():
-                o = C.Order(1/x**n, (x, S.Infinity))
+                o = Order(1/x**n, (x, S.Infinity))
                 return s + o
             return s
-        d = C.Dummy('d', positive=True)
+        d = Dummy('d', positive=True)
         f, logw = rewrite(exps, omega, x, d)
 
         if self in omega:
@@ -2914,16 +2916,20 @@ class Expr(Basic, EvalfMixin):
         o = s.getO()
         terms = sorted(Add.make_args(s.removeO()), key=lambda i: int(i.as_coeff_exponent(d)[1]))
         s = S.Zero
+        gotO = False
 
         for t in terms:
             coeff, expo = t.as_coeff_exponent(d)
             if coeff.has(x):
                 s1 = coeff.aseries(x, n, bound=bound-1)
+                if gotO and s1.getO():
+                    break
+                elif s1.getO():
+                    gotO = True
                 s += (s1 * d**expo)
             else:
                 s += t
-
-        if not o or s.getO():
+        if not o or gotO:
             return s.subs(d, exp(logw))
         else:
             return (s + o).subs(d, exp(logw))
