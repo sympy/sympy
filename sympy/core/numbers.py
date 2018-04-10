@@ -591,8 +591,21 @@ class Number(AtomicExpr):
             raise TypeError(msg % (type(other).__name__, type(self).__name__))
         return divmod(other, self)
 
-    def __round__(self, *args):
-        return round(float(self), *args)
+    def __round__(self, *args):             # Bug fix #12056
+	    if (len(args) == 0) :				# Check if there are arguments for the precision
+		    prePsn = 0;				        # Assign a precision of zero
+    	else :						        # There is a precision value
+	    	prePsn = args[0];			    # Obtain the precision value from the arguments
+	    if (per > 15) : 				    # Check boundary for the how precise a number can be
+		    return self				        # Return the value not rounded
+	    preVal = self * (10 ** prePsn)		# Obtain the remained after the precision psn
+	    quotient = self - (self % 1)		# Obtain the quotient portion of the float	
+	    if (perVal % 1 >= .5) :				# Check if the number should be rounded
+		    preVal = preVal + 1		    	# Increment the precision value by one
+	    preVal = preVal - (preVal % 1)		# Take the precise portion without decimals
+	    preVal = preVal / (10 ** prePsn)	# Convert the precision back to a decimal
+	    quotient = quotient + preVal		# Form the number with a precise portion
+	    return quotient					    # Return the precise number rounded or not
 
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
