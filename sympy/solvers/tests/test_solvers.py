@@ -1447,7 +1447,7 @@ def test_issue_6792():
          CRootOf(x**6 - x + 1, 4), CRootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_6819_6820_6821_6248_8692_14607():
+def test_issues_6819_6820_6821_6248_8692():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
@@ -1495,6 +1495,8 @@ def test_issues_6819_6820_6821_6248_8692_14607():
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
 
+
+def test_issue_14607():
     # issue 14607
     s, tau_c, tau_1, tau_2, phi, K = symbols(
         's, tau_c, tau_1, tau_2, phi, K')
@@ -1510,17 +1512,17 @@ def test_issues_6819_6820_6821_6248_8692_14607():
     eq = Poly(eq, s)
     c = eq.coeffs()
 
-    s = solve(c, [K_C, tau_I, tau_D])
+    vars = [K_C, tau_I, tau_D]
+    s = solve(c, vars)
 
     assert len(s) == 1
 
-    s = [simplify(si) for si in s[0]]
+    knownsolution = {K_C: -(tau_1 + tau_2)/(K*(phi - tau_c)),
+                     tau_I: tau_1 + tau_2,
+                     tau_D: tau_1*tau_2/(tau_1 + tau_2)}
 
-    knownsolution = [-(tau_1 + tau_2)/(K*(phi - tau_c)),
-                     tau_1 + tau_2,
-                     tau_1*tau_2/(tau_1 + tau_2)]
-
-    assert s == [simplify(si) for si in knownsolution]
+    for var in vars:
+        assert s[0][var].simplify() == knownsolution[var].simplify()
 
 
 def test_lambert_multivariate():
