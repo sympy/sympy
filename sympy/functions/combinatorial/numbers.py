@@ -1701,6 +1701,13 @@ def nT(n, k=None):
     >>> nT(range(5)) == sum(_)
     True
 
+    Partitions of an integer expressed as a sum of positive integers:
+
+    >>> partition(4)
+    5
+    >>> sum([nT(4, i) for i in range(4 + 1)])
+    5
+
     References
     ==========
 
@@ -1710,6 +1717,7 @@ def nT(n, k=None):
     ========
     sympy.utilities.iterables.partitions
     sympy.utilities.iterables.multiset_partitions
+    sympy.functions.combinatorial.numbers.partition
 
     """
     from sympy.utilities.enumerative import MultisetPartitionTraverser
