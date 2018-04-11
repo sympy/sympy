@@ -946,6 +946,7 @@ def test_eigen():
                 [0, 0, 1]])
 
     assert M.eigenvals(multiple=False) == {S.One: 3}
+    assert M.eigenvals(multiple=True) == [1, 1, 1]
 
     assert M.eigenvects() == (
         [(1, 3, [Matrix([1, 0, 0]),
