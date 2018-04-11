@@ -1212,7 +1212,8 @@ def solve(f, *symbols, **flags):
             solution and
             ordered_symbols and
             not isinstance(solution, dict) and
-            all(isinstance(sol, dict) for sol in solution)
+            all(isinstance(sol, dict) for sol in solution) and
+            all(sym in sol for sol in solution for sym in symbols)
     ):
         solution = [tuple([r.get(s, s).subs(r) for s in symbols])
                     for r in solution]
