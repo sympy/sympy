@@ -33,9 +33,9 @@ def test_swap_back():
     fx, gx = f(x), g(x)
     assert solve([fx + y - 2, fx - gx - 5], fx, y, gx) == \
         {fx: gx + 5, y: -gx - 3}
-    assert solve(fx + gx*x - 2, [fx, gx]) == {fx: 2, gx: 0}
-    assert solve(fx + gx**2*x - y, [fx, gx]) == [{fx: y - gx**2*x}]
-    assert solve([f(1) - 2, x + 2]) == [{x: -2, f(1): 2}]
+    assert solve(fx + gx*x - 2, [fx, gx], dict=True)[0] == {fx: 2, gx: 0}
+    assert solve(fx + gx**2*x - y, [fx, gx], dict=True) == [{fx: y - gx**2*x}]
+    assert solve([f(1) - 2, x + 2], dict=True) == [{x: -2, f(1): 2}]
 
 
 def guess_solve_strategy(eq, symbol):
@@ -118,7 +118,7 @@ def test_solve_args():
     # more than 1
     assert solve(y - 3, set([x, y])) == [{y: 3}]
     # multiple symbols: take the first linear solution
-    assert solve(x + y - 3, [x, y]) == [{x: 3 - y}]
+    assert solve(x + y - 3, [x, y], dict=True) == [{x: 3 - y}]
     # unless it is an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
     args = (a + b)*x - b**2 + 2, a, b
@@ -136,7 +136,7 @@ def test_solve_args():
     assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
         [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
     # failing undetermined system
-    assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b) == \
+    assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b, dict=True) == \
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
     # failed single equation
     assert solve(1/(1/x - y + exp(y))) == []
@@ -277,9 +277,10 @@ def test_solve_rational():
 
 
 def test_solve_nonlinear():
-    assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
-    assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
-    assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
+    assert solve(x**2 - y**2, x, y, dict=True) == [{x: -y}, {x: y}]
+    assert solve(x**2 - y**2/exp(x), x, y, dict=True) == [{x: 2*LambertW(y/2)}]
+    assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: -x*sqrt(exp(x))},
+                                                          {y: x*sqrt(exp(x))}]
 
 
 def test_issue_8666():
@@ -659,10 +660,10 @@ def test_issue_5197():
     assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
     y = Symbol('y', positive=True)
     # The solution following should not contain {y: -x*exp(x/2)}
-    assert solve(x**2 - y**2/exp(x), y, x) == [{y: x*exp(x/2)}]
-    assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
+    assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: x*exp(x/2)}]
+    assert solve(x**2 - y**2/exp(x), x, y, dict=True) == [{x: 2*LambertW(y/2)}]
     x, y, z = symbols('x y z', positive=True)
-    assert solve(z**2*x**2 - z**2*y**2/exp(x), y, x, z) == [{y: x*exp(x/2)}]
+    assert solve(z**2*x**2 - z**2*y**2/exp(x), y, x, z, dict=True) == [{y: x*exp(x/2)}]
 
 
 def test_checking():
@@ -1161,8 +1162,8 @@ def test_issue_5849():
     I1: I2 + I3,
     Q4: -I3/2 + 3*I5/2 - dI4/2}]
     v = I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4
-    assert solve(e, *v, **dict(manual=True, check=False)) == ans
-    assert solve(e, *v, **dict(manual=True)) == []
+    assert solve(e, *v, manual=True, check=False, dict=True) == ans
+    assert solve(e, *v, manual=True) == []
     # the matrix solver (tested below) doesn't like this because it produces
     # a zero row in the matrix. Is this related to issue 4551?
     assert [ei.subs(
@@ -1513,7 +1514,7 @@ def test_issue_14607():
     c = eq.coeffs()
 
     vars = [K_C, tau_I, tau_D]
-    s = solve(c, vars)
+    s = solve(c, vars, dict=True)
 
     assert len(s) == 1
 
@@ -1847,7 +1848,7 @@ def test_issue_12114():
     a, b, c, d, e, f, g = symbols('a,b,c,d,e,f,g')
     terms = [1 + a*b + d*e, 1 + a*c + d*f, 1 + b*c + e*f,
              g - a**2 - d**2, g - b**2 - e**2, g - c**2 - f**2]
-    s = solve(terms, [a, b, c, d, e, f, g])
+    s = solve(terms, [a, b, c, d, e, f, g], dict=True)
     assert s == [{a: -sqrt(-f**2 - 1), b: -sqrt(-f**2 - 1),
                   c: -sqrt(-f**2 - 1), d: f, e: f, g: -1},
                  {a: sqrt(-f**2 - 1), b: sqrt(-f**2 - 1),
