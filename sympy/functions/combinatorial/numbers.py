@@ -1703,6 +1703,7 @@ def nT(n, k=None):
 
     Partitions of an integer expressed as a sum of positive integers:
 
+    >>> from sympy.functions.combinatorial.numbers import partition
     >>> partition(4)
     5
     >>> sum([nT(4, i) for i in range(4 + 1)])
