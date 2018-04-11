@@ -1212,10 +1212,10 @@ def solve(f, *symbols, **flags):
             solution and
             ordered_symbols and
             not isinstance(solution, dict) and
-            all(isinstance(sol, dict) for sol in solution) and
-            all(sym in sol for sym in symbols for sol in solution)
+            all(isinstance(sol, dict) for sol in solution)
     ):
-        solution = [tuple([r[s].subs(r) for s in symbols]) for r in solution]
+        solution = [tuple([r.get(s, s).subs(r) for s in symbols])
+                    for r in solution]
 
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still
