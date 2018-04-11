@@ -591,21 +591,23 @@ class Number(AtomicExpr):
             raise TypeError(msg % (type(other).__name__, type(self).__name__))
         return divmod(other, self)
 
-    def __round__(self, *args):             # Bug fix #12056
-	    if (len(args) == 0) :				# Check if there are arguments for the precision
-		    prePsn = 0;				        # Assign a precision of zero
-    	else :						        # There is a precision value
-	    	prePsn = args[0];			    # Obtain the precision value from the arguments
-	    if (per > 15) : 				    # Check boundary for the how precise a number can be
-		    return self				        # Return the value not rounded
-	    preVal = self * (10 ** prePsn)		# Obtain the remained after the precision psn
-	    quotient = self - (self % 1)		# Obtain the quotient portion of the float	
-	    if (perVal % 1 >= .5) :				# Check if the number should be rounded
-		    preVal = preVal + 1		    	# Increment the precision value by one
-	    preVal = preVal - (preVal % 1)		# Take the precise portion without decimals
-	    preVal = preVal / (10 ** prePsn)	# Convert the precision back to a decimal
-	    quotient = quotient + preVal		# Form the number with a precise portion
-	    return quotient					    # Return the precise number rounded or not
+    def __round__(self, *args):
+	if (len(args) == 0) :						# Check if there are arguments for the percision
+		precisionPsn = 0;					# Assign a percision of zero
+	else :								# There is a percision value
+		precisionPsn = args[0];					# Obtain the percision value from the arguments
+	value = self							# Obtain the float value 
+	if (per <= 15) : 						# Check boundary for the 
+		precisionVal = self * (10 ** precisionPsn)		# Obtain the remained after the percision psn
+		value = value - (value % 1)				# Obtain the quotient portion of the float	
+		if (precisionVal % 1 >= .5) :				# Check if the decimal is positive and should be rounded
+			precisionVal = precisionVal + 1			# Round the positive number
+		elif (precisionVal % 1 <= -.5) :			# Check if the decimal is negative and should be rounded
+			precisionVal = precisionVal - 1			# Round the negative number
+		precisionVal = precisionVal - (precisionVal % 1)	# Take the precise portion without decimals
+		precisionVal = precisionVal / (10 ** precisionPsn)	# Convert the percision back to a decimal
+		value = value + precisionVal				# Form the number with a precise portion
+	return value							# Return the precise number
 
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
