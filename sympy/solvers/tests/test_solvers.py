@@ -5,7 +5,7 @@ from sympy import (
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt)
+    E, cbrt, denom)
 
 from sympy.core.compatibility import range
 from sympy.core.function import nfloat
@@ -1494,6 +1494,35 @@ def test_issues_6819_6820_6821_6248_8692():
 
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
+
+def test_issue_14607():
+    # issue 14607
+    s, tau_c, tau_1, tau_2, phi, K = symbols(
+        's, tau_c, tau_1, tau_2, phi, K')
+
+    target = (s**2*tau_1*tau_2 + s*tau_1 + s*tau_2 + 1)/(K*s*(-phi + tau_c))
+
+    K_C, tau_I, tau_D = symbols('K_C, tau_I, tau_D',
+                                positive=True, nonzero=True)
+    PID = K_C*(1 + 1/(tau_I*s) + tau_D*s)
+
+    eq = (target - PID).together()
+    eq *= denom(eq).simplify()
+    eq = Poly(eq, s)
+    c = eq.coeffs()
+
+    vars = [K_C, tau_I, tau_D]
+    s = solve(c, vars)
+
+    assert len(s) == 1
+
+    knownsolution = {K_C: -(tau_1 + tau_2)/(K*(phi - tau_c)),
+                     tau_I: tau_1 + tau_2,
+                     tau_D: tau_1*tau_2/(tau_1 + tau_2)}
+
+    for var in vars:
+        assert s[0][var].simplify() == knownsolution[var].simplify()
 
 
 def test_lambert_multivariate():
