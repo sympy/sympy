@@ -575,6 +575,16 @@ def test_nC_nP_nT():
     raises(ValueError, lambda: _multiset_histogram({1:'a'}))
 
 
+def test_PR_14617():
+    from sympy.functions.combinatorial.numbers import nT
+    for n in (0, []):
+        for k in (-1, 0, 1):
+            if k == 0:
+                assert nT(n, k) == 1
+            else:
+                assert nT(n, k) == 0
+
+
 def test_issue_8496():
     n = Symbol("n")
     k = Symbol("k")
