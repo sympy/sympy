@@ -117,9 +117,14 @@ def test_solve_args():
     assert solve(y - 3, set([y])) == [3]
     # more than 1
     assert solve(y - 3, set([x, y])) == [{y: 3}]
-    # multiple symbols: take the first linear solution
+    # multiple symbols: take the first linear solution+
+    # - return as tuple with values for all requested symbols
+    assert solve(x + y - 3, [x, y]) == [(3 - y, y)]
+    # - unless dict is True
     assert solve(x + y - 3, [x, y], dict=True) == [{x: 3 - y}]
-    # unless it is an undetermined coefficients system
+    # - or no symbols are given
+    assert solve(x + y - 3) == [{x: 3 - y}]
+    # multiple symbols might represent an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
     args = (a + b)*x - b**2 + 2, a, b
     assert solve(*args) == \
@@ -591,10 +596,9 @@ def test_issue_4793():
     eq = 4*3**(5*x + 2) - 7
     ans = solve(eq, x)
     assert len(ans) == 5 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
-    assert solve(log(x**2) - y**2/exp(x), x, y, set=True) == \
-        ([y], set([
-            (-sqrt(exp(x)*log(x**2)),),
-            (sqrt(exp(x)*log(x**2)),)]))
+    assert solve(log(x**2) - y**2/exp(x), x, y, set=True) == (
+        [x, y],
+        {(x, sqrt(exp(x) * log(x ** 2))), (x, -sqrt(exp(x) * log(x ** 2)))})
     assert solve(x**2*z**2 - z**2*y**2) == [{x: -y}, {x: y}, {z: 0}]
     assert solve((x - 1)/(1 + 1/(x - 1))) == []
     assert solve(x**(y*z) - x, x) == [1]
@@ -724,10 +728,9 @@ def test_issue_5132():
         ([x, y], set([
         (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
         (log(-z**2 - sin(log(3)))/2, -log(3))]))
-    assert solve(eqs, x, z, set=True) == \
-        ([x], set([
-        (log(-sqrt(-z**2 + sin(y))),),
-        (log(-z**2 + sin(y))/2,)]))
+    assert solve(eqs, x, z, set=True) == (
+        [x, z],
+        {(log(-z**2 + sin(y))/2, z), (log(-sqrt(-z**2 + sin(y))), z)})
     assert set(solve(eqs, x, y)) == \
         set([
             (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
@@ -741,10 +744,9 @@ def test_issue_5132():
         [
         (log(-sqrt(-z - sin(log(3)))), -log(3)),
             (log(-z - sin(log(3)))/2, -log(3))]))
-    assert solve(eqs, x, z, set=True) == ([x], set(
-        [
-        (log(-sqrt(-z + sin(y))),),
-            (log(-z + sin(y))/2,)]))
+    assert solve(eqs, x, z, set=True) == (
+        [x, z],
+        {(log(-sqrt(-z + sin(y))), z), (log(-z + sin(y))/2, z)})
     assert set(solve(eqs, x, y)) == set(
         [
             (log(-sqrt(-z - sin(log(3)))), -log(3)),
