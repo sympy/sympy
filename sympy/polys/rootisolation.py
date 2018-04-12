@@ -2013,8 +2013,9 @@ class ComplexInterval(object):
     def _set_imaginary(self):
         a1, a2 = self.a
         b1, b2 = self.b
-        a = a1 - a1, a2
-        b = b1 - b1, b2
+        zero = a1 - a1  # to preserve type
+        a = zero, a2
+        b = zero, b2
         return ComplexInterval(a, b, self.I, self.Q,
             self.F1, self.F2, self.f1, self.f2, self.dom, self.conj)
 
