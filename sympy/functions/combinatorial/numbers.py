@@ -1708,6 +1708,8 @@ def nT(n, k=None):
     5
     >>> sum([nT(4, i) for i in range(4 + 1)])
     5
+    >>> nT('1'*4)
+    5
 
     References
     ==========
@@ -1727,14 +1729,16 @@ def nT(n, k=None):
         # assert n >= 0
         # all the same
         if k is None:
-            return sum(_nT(n, k) for k in range(1, n + 1))
+            return partition(n)
+        elif n == 0:
+            return S.One if k == 0 else S.Zero
         return _nT(n, k)
     if not isinstance(n, _MultisetHistogram):
         try:
             # if n contains hashable items there is some
             # quick handling that can be done
             u = len(set(n))
-            if u == 1:
+            if u <= 1:
                 return nT(len(n), k)
             elif u == len(n):
                 n = range(u)
