@@ -107,6 +107,30 @@ def test_print_builtin_option():
     # Python 2.7.5 + IPython 1.1.0 gives: '{pi: 3.14, n_i: 3}'
     assert text in ("{pi: 3.14, n_i: 3}", "{n_i: 3, pi: 3.14}")
 
+
+def test_builtin_containers():
+    # Initialize and setup IPython session
+    app = init_ipython_session()
+    app.run_cell("ip = get_ipython()")
+    app.run_cell("inst = ip.instance()")
+    app.run_cell("format = inst.display_formatter.format")
+    app.run_cell("inst.display_formatter.formatters['text/latex'].enabled = True")
+    app.run_cell("from sympy import init_printing")
+    app.run_cell('init_printing(use_latex=True)')
+
+    # Make sure containers that shouldn't pretty print don't.
+    app.run_cell('a = format((True, False))')
+    app.run_cell('import sys')
+    app.run_cell('b = format(sys.flags)')
+
+    # Deal with API change starting at IPython 1.0
+    if int(ipython.__version__.split(".")[0]) < 1:
+        assert app.user_ns['a']['text/plain'] == app.user_ns['a']['text/latex'] == '(True, False)'
+        assert app.user_ns['b']['text/plain'][:10] == app.user_ns['b']['text/latex'][:10] == 'sys.flags('
+    else:
+        assert app.user_ns['a'][0]['text/plain'] == app.user_ns['a'][0]['text/latex'] == '(True, False)'
+        assert app.user_ns['b'][0]['text/plain'][:10] == app.user_ns['b'][0]['text/latex'][:10] == 'sys.flags('
+
 def test_matplotlib_bad_latex():
     # Initialize and setup IPython session
     app = init_ipython_session()
