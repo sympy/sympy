@@ -666,8 +666,10 @@ def solve(f, *symbols, **flags):
         * when there is a linear solution
 
             >>> solve(x - y**2, x, y)
-            [{x: y**2}]
+            [(y**2, y)]
             >>> solve(x**2 - y, x, y)
+            [(x, x**2)]
+            >>> solve(x**2 - y, x, y, dict=True)
             [{y: x**2}]
 
         * when undetermined coefficients are identified
@@ -685,12 +687,12 @@ def solve(f, *symbols, **flags):
         * if there is no linear solution then the first successful
           attempt for a nonlinear solution will be returned
 
-            >>> solve(x**2 - y**2, x, y)
+            >>> solve(x**2 - y**2, x, y, dict=True)
             [{x: -y}, {x: y}]
-            >>> solve(x**2 - y**2/exp(x), x, y)
+            >>> solve(x**2 - y**2/exp(x), x, y, dict=True)
             [{x: 2*LambertW(y/2)}]
             >>> solve(x**2 - y**2/exp(x), y, x)
-            [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
+            [(-x*sqrt(exp(x)), x), (x*sqrt(exp(x)), x)]
 
     * iterable of one or more of the above
 
@@ -1166,14 +1168,14 @@ def solve(f, *symbols, **flags):
             return dict([(k, v.subs(non_inverts)) for k, v in
                          solution.items()])
         for i in range(1):
-            if type(solution) is dict:
+            if isinstance(solution, dict):
                 solution = _do_dict(solution)
                 break
-            elif solution and type(solution) is list:
-                if type(solution[0]) is dict:
+            elif solution and isinstance(solution, list):
+                if isinstance(solution[0], dict):
                     solution = [_do_dict(s) for s in solution]
                     break
-                elif type(solution[0]) is tuple:
+                elif isinstance(solution[0], tuple):
                     solution = [tuple([v.subs(non_inverts) for v in s]) for s
                                 in solution]
                     break
@@ -1197,10 +1199,10 @@ def solve(f, *symbols, **flags):
     #    above.
     if swap_sym:
         symbols = [swap_sym.get(k, k) for k in symbols]
-        if type(solution) is dict:
+        if isinstance(solution, dict):
             solution = dict([(swap_sym.get(k, k), v.subs(swap_sym))
                              for k, v in solution.items()])
-        elif solution and type(solution) is list and type(solution[0]) is dict:
+        elif solution and isinstance(solution, list) and isinstance(solution[0], dict):
             for i, sol in enumerate(solution):
                 solution[i] = dict([(swap_sym.get(k, k), v.subs(swap_sym))
                               for k, v in sol.items()])
@@ -1211,11 +1213,11 @@ def solve(f, *symbols, **flags):
             not flags.get('dict', False) and
             solution and
             ordered_symbols and
-            type(solution) is not dict and
-            type(solution[0]) is dict and
-            all(s in solution[0] for s in symbols)
+            not isinstance(solution, dict) and
+            all(isinstance(sol, dict) for sol in solution)
     ):
-        solution = [tuple([r[s].subs(r) for s in symbols]) for r in solution]
+        solution = [tuple([r.get(s, s).subs(r) for s in symbols])
+                    for r in solution]
 
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still
@@ -1231,11 +1233,11 @@ def solve(f, *symbols, **flags):
         warn = flags.get('warn', False)
         got_None = []  # solutions for which one or more symbols gave None
         no_False = []  # solutions for which no symbols gave False
-        if type(solution) is tuple:
+        if isinstance(solution, tuple):
             # this has already been checked and is in as_set form
             return solution
-        elif type(solution) is list:
-            if type(solution[0]) is tuple:
+        elif isinstance(solution, list):
+            if isinstance(solution[0], tuple):
                 for sol in solution:
                     for symb, val in zip(symbols, sol):
                         test = check_assumptions(val, **symb.assumptions0)
@@ -1245,7 +1247,7 @@ def solve(f, *symbols, **flags):
                             got_None.append(sol)
                     else:
                         no_False.append(sol)
-            elif type(solution[0]) is dict:
+            elif isinstance(solution[0], dict):
                 for sol in solution:
                     a_None = False
                     for symb, val in sol.items():
@@ -1268,7 +1270,7 @@ def solve(f, *symbols, **flags):
                     if test is None:
                         got_None.append(sol)
 
-        elif type(solution) is dict:
+        elif isinstance(solution, dict):
             a_None = False
             for symb, val in solution.items():
                 test = check_assumptions(val, **symb.assumptions0)
@@ -1368,19 +1370,19 @@ def _solve(f, *symbols, **flags):
                 pass
         if soln:
             if flags.get('simplify', True):
-                if type(soln) is dict:
+                if isinstance(soln, dict):
                     for k in soln:
                         soln[k] = simplify(soln[k])
-                elif type(soln) is list:
-                    if type(soln[0]) is dict:
+                elif isinstance(soln, list):
+                    if isinstance(soln[0], dict):
                         for d in soln:
                             for k in d:
                                 d[k] = simplify(d[k])
-                    elif type(soln[0]) is tuple:
+                    elif isinstance(soln[0], tuple):
                         soln = [tuple(simplify(i) for i in j) for j in soln]
                     else:
                         raise TypeError('unrecognized args in list')
-                elif type(soln) is tuple:
+                elif isinstance(soln, tuple):
                     sym, sols = soln
                     soln = sym, {tuple(simplify(i) for i in j) for j in sols}
                 else:
@@ -1843,7 +1845,7 @@ def _solve_system(exprs, symbols, **flags):
                     result = [dict(list(zip(solved_syms, r))) for r in result]
 
     if result:
-        if type(result) is dict:
+        if isinstance(result, dict):
             result = [result]
     else:
         result = [{}]
@@ -2096,7 +2098,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     all_zero = True
     for xi in sorted(symbols, key=default_sort_key):  # canonical order
         # if there are derivatives in this var, calculate them now
-        if type(derivs[xi]) is list:
+        if isinstance(derivs[xi], list):
             derivs[xi] = {der: der.doit() for der in derivs[xi]}
         newn = n.subs(derivs[xi])
         dnewn_dxi = newn.diff(xi)
