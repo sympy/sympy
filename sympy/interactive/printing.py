@@ -115,8 +115,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             if isinstance(o, builtin_types):
                 # If the object is a custom subclass with a custom str or
                 # repr, use that instead.
-                if (o.__str__ not in (i.__str__ for i in builtin_types) or
-                    o.__repr__ not in (i.__repr__ for i in builtin_types)):
+                if (type(o).__str__ not in (i.__str__ for i in builtin_types) or
+                    type(o).__repr__ not in (i.__repr__ for i in builtin_types)):
                     return False
                 return all(_can_print_latex(i) for i in o)
             elif isinstance(o, dict):
