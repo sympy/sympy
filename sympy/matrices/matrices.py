@@ -969,8 +969,7 @@ class MatrixSubspaces(MatrixReductions):
             vec = [S.Zero]*self.cols
             vec[free_var] = S.One
             for piv_row, piv_col in enumerate(pivots):
-                for pos in pivots[piv_row+1:] + (free_var,):
-                    vec[piv_col] -= reduced[piv_row, pos]
+                vec[piv_col] -= reduced[piv_row, free_var]
             basis.append(vec)
 
         return [self._new(self.cols, 1, b) for b in basis]
