@@ -1682,6 +1682,20 @@ class RealInterval(object):
         self.f, self.dom = f, dom
 
     @property
+    def func(self):
+        return RealInterval
+
+    @property
+    def args(self):
+        i = self
+        return (i.mobius + (i.neg,), i.f, i.dom)
+
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        return self.args == other.args
+
+    @property
     def a(self):
         """Return the position of the left end. """
         field = self.dom.get_field()
@@ -1915,6 +1929,10 @@ class ComplexInterval(object):
 
         self.dom = dom
         self.conj = conj
+
+    @property
+    def func(self):
+        return ComplexInterval
 
     @property
     def args(self):
