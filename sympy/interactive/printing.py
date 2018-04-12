@@ -112,17 +112,17 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             # later in this file as well
 
             if isinstance(o, (list, tuple, set, frozenset)):
-               return all(_can_print_latex(i) for i in o)
+                return all(_can_print_latex(i) for i in o)
             elif isinstance(o, dict):
-               return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
+                return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
             elif isinstance(o, bool):
-               return False
+                return False
             # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
             # to use here, than these explicit imports.
             elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic, NDimArray)):
-               return True
+                return True
             elif isinstance(o, (float, integer_types)) and print_builtin:
-               return True
+                return True
             return False
         except RuntimeError:
             return False
