@@ -125,11 +125,15 @@ def test_builtin_containers():
 
     # Deal with API change starting at IPython 1.0
     if int(ipython.__version__.split(".")[0]) < 1:
-        assert app.user_ns['a']['text/plain'] == app.user_ns['a']['text/latex'] == '(True, False)'
-        assert app.user_ns['b']['text/plain'][:10] == app.user_ns['b']['text/latex'][:10] == 'sys.flags('
+        assert app.user_ns['a']['text/plain'] ==  '(True, False)'
+        assert 'text/latex' not in app.user_ns['a']
+        assert app.user_ns['b']['text/plain'][:10] == 'sys.flags('
+        assert 'text/latex' not in app.user_ns['b']
     else:
-        assert app.user_ns['a'][0]['text/plain'] == app.user_ns['a'][0]['text/latex'] == '(True, False)'
-        assert app.user_ns['b'][0]['text/plain'][:10] == app.user_ns['b'][0]['text/latex'][:10] == 'sys.flags('
+        assert app.user_ns['a'][0]['text/plain'] ==  '(True, False)'
+        assert 'text/latex' not in app.user_ns['a'][0]
+        assert app.user_ns['b'][0]['text/plain'][:10] == 'sys.flags('
+        assert 'text/latex' not in app.user_ns['b'][0]
 
 def test_matplotlib_bad_latex():
     # Initialize and setup IPython session
