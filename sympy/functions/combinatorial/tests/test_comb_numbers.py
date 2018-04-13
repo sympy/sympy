@@ -4,7 +4,7 @@ from sympy import (
     Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
     expand_func, diff, EulerGamma, cancel, re, im, Product)
 from sympy.functions import (
-    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, genocchi,
+    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, genocchi, partition,
     binomial, gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial,
     sin, cos, cot, zeta)
 
@@ -398,6 +398,26 @@ def test_genocchi():
     assert genocchi(4 * n - 2).is_negative
 
 
+def test_partition():
+    partition_nums = [1, 1, 2, 3, 5, 7, 11, 15, 22]
+    for n, p in enumerate(partition_nums):
+        assert partition(n) == p
+
+    x = Symbol('x')
+    y = Symbol('y', real=True)
+    m = Symbol('m', integer=True)
+    n = Symbol('n', integer=True, negative=True)
+    p = Symbol('p', integer=True, nonnegative=True)
+    assert partition(m).is_integer
+    assert not partition(m).is_negative
+    assert partition(m).is_nonnegative
+    assert partition(n).is_zero
+    assert partition(p).is_positive
+    raises(ValueError, lambda: partition(x))
+    raises(ValueError, lambda: partition(y))
+    raises(ValueError, lambda: partition(S(5)/4))
+
+
 def test_nC_nP_nT():
     from sympy.utilities.iterables import (
         multiset_permutations, multiset_combinations, multiset_partitions,
@@ -553,6 +573,16 @@ def test_nC_nP_nT():
     t = (3, 9, 4, 6, 6, 5, 5, 2, 10, 4)
     assert sum(_AOP_product(t)[i] for i in range(55)) == 58212000
     raises(ValueError, lambda: _multiset_histogram({1:'a'}))
+
+
+def test_PR_14617():
+    from sympy.functions.combinatorial.numbers import nT
+    for n in (0, []):
+        for k in (-1, 0, 1):
+            if k == 0:
+                assert nT(n, k) == 1
+            else:
+                assert nT(n, k) == 0
 
 
 def test_issue_8496():
