@@ -74,6 +74,16 @@ class _pure_key_dict(dict):
     Traceback (most recent call last):
     ...
     KeyError: PurePoly(y + 1, y, domain='ZZ')
+
+    NOTE: this is a method meant for internal use and trying
+    anything other than what is shown above may not give the
+    results one would expect, e.g. `x in P`` is False even though
+    ``x`` *is* a known key:
+
+    >>> x in P
+    False
+    >>> P[x]
+    1
     """
     def __getitem__(self, k):
         if not isinstance(k, PurePoly):
@@ -325,7 +335,7 @@ class ComplexRootOf(RootOf):
         return self.index < len(_reals_cache[self.poly])
 
     def _eval_is_imaginary(self):
-        """Return ``True`` if the root is real. """
+        """Return ``True`` if the root is imaginary. """
         if self.index >= len(_reals_cache[self.poly]):
             ivl = self._get_interval()
             return ivl.ax*ivl.bx <= 0  # all others are on one side or the other
