@@ -256,6 +256,7 @@ def test_CRootOf_evalf():
     assert str(RootOf(x**16 + 32*x**14 + 508*x**12 + 5440*x**10 +
         39510*x**8 + 204320*x**6 + 755548*x**4 + 1434496*x**2 +
         877969, 10).n(2)) == '-3.4*I'
+    assert abs(RootOf(x**4 + 10*x**2 + 1, 0).n(2)) < 0.4
 
     # check reset and args
     r = [RootOf(x**3 + x + 3, i) for i in range(3)]
@@ -491,10 +492,10 @@ def test__imag_count():
     assert imag_count(q(-1, -2, 4)) == 0
 
 
-def test_set_imaginary():
+def test_RootOf_is_imaginary():
     r = RootOf(x**4 + 4*x**2 + 1, 1)
     i = r._get_interval()
-    assert r.is_imaginary and i.ax == i.bx == 0
+    assert r.is_imaginary and i.ax*i.bx <= 0
 
 
 def test_is_disjoint():

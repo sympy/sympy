@@ -2010,15 +2010,6 @@ class ComplexInterval(object):
         im_distinct = (self.by <= other.ay or other.by <= self.ay)
         return im_distinct
 
-    def _set_imaginary(self):
-        a1, a2 = self.a
-        b1, b2 = self.b
-        zero = a1 - a1  # to preserve type
-        a = zero, a2
-        b = zero, b2
-        return ComplexInterval(a, b, self.I, self.Q,
-            self.F1, self.F2, self.f1, self.f2, self.dom, self.conj)
-
     def _inner_refine(self):
         """Internal one step complex root refinement procedure. """
         (u, v), (s, t) = self.a, self.b

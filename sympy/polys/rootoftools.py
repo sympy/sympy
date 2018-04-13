@@ -463,12 +463,6 @@ class ComplexRootOf(RootOf):
                             sifted[f][i] = u, f, k
                     if len(potential_imag) == nimag:
                         break
-                # set real part to 0 in what are now
-                # known to be the imaginaries
-                for i in potential_imag:
-                    u, f, k = sifted[f][i]
-                    u = u._set_imaginary()
-                    sifted[f][i] = u, f, k
                 complexes.extend(sifted[f])
         return complexes
 
