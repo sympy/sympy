@@ -1162,18 +1162,19 @@ class partition(Function):
 
     @classmethod
     def eval(cls, n):
-        if not n.is_integer:
+        is_int = n.is_integer
+        if is_int == False:
             raise ValueError("Partition numbers are defined only for " +
                              "integers")
+        elif is_int:
+            if n.is_negative:
+                return S.Zero
 
-        if n.is_Integer:
-            return Integer(cls._partition(n))
+            if n.is_zero or (n - 1).is_zero:
+                return S.One
 
-        if n.is_negative:
-            return S.Zero
-
-        if n.is_zero or (n - 1).is_zero:
-            return S.One
+            if n.is_Integer:
+                return Integer(cls._partition(n))
 
 
     def _eval_is_integer(self):
@@ -1185,7 +1186,8 @@ class partition(Function):
             return False
 
     def _eval_is_positive(self):
-        if self.args[0].is_nonnegative:
+        n = self.args[0]
+        if n.is_nonnegative and n.is_integer:
             return True
 
 

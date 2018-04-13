@@ -413,8 +413,8 @@ def test_partition():
     assert partition(m).is_nonnegative
     assert partition(n).is_zero
     assert partition(p).is_positive
-    raises(ValueError, lambda: partition(x))
-    raises(ValueError, lambda: partition(y))
+    assert partition(x).subs(x, 7) == 15
+    assert partition(y).subs(y, 8) == 22
     raises(ValueError, lambda: partition(S(5)/4))
 
 
