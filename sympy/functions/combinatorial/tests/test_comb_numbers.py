@@ -403,8 +403,6 @@ def test_partition():
     for n, p in enumerate(partition_nums):
         assert partition(n) == p
 
-    x = Symbol('x')
-    y = Symbol('y', real=True)
     m = Symbol('m', integer=True)
     n = Symbol('n', integer=True, negative=True)
     p = Symbol('p', integer=True, nonnegative=True)
@@ -413,8 +411,6 @@ def test_partition():
     assert partition(m).is_nonnegative
     assert partition(n).is_zero
     assert partition(p).is_positive
-    raises(ValueError, lambda: partition(x))
-    raises(ValueError, lambda: partition(y))
     raises(ValueError, lambda: partition(S(5)/4))
 
 
