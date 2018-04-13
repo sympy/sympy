@@ -41,7 +41,7 @@ __all__ = ['CRootOf']
 
 
 
-class _pure_key_dict(dict):
+class _pure_key_dict(object):
     """A minimal dictionary that makes sure that the key is PurePoly.
 
     Examples
@@ -75,27 +75,47 @@ class _pure_key_dict(dict):
     ...
     KeyError: PurePoly(y + 1, y, domain='ZZ')
 
-    NOTE: this is a method meant for internal use and trying
-    anything other than what is shown above may not give the
-    results one would expect, e.g. `x in P`` is False even though
-    ``x`` *is* a known key:
+    5) ability to set via default:
 
-    >>> x in P
-    False
-    >>> P[x]
-    1
+    >>> P.setdefault(y + 1, 2)
+    2
+
+    6) ability to query with ``in``
+
+    >>> x + 1 in P
+    True
+
+    NOTE: this is a *not* a dictionary. It is a very basic object
+    for internal use that makes sure to always address its cache
+    via PurePoly instances.
     """
+    def __init__(self):
+        self.dict = {}
+
     def __getitem__(self, k):
         if not isinstance(k, PurePoly):
             assert len(k.free_symbols) == 1
             k = PurePoly(k, expand=False)
-        return self.__dict__[k]
+        return self.dict[k]
 
     def __setitem__(self, k, v):
         if not isinstance(k, PurePoly):
             assert len(k.free_symbols) == 1
             k = PurePoly(k, expand=False)
-        self.__dict__[k] = v
+        self.dict[k] = v
+
+    def __contains__(self, k):
+        try:
+            self[k]
+            return True
+        except KeyError:
+            return False
+
+    def setdefault(self, k, v):
+        if not isinstance(k, PurePoly):
+            assert len(k.free_symbols) == 1
+            k = PurePoly(k, expand=False)
+        return self.dict.setdefault(k, v)
 
 _reals_cache = _pure_key_dict()
 _complexes_cache = _pure_key_dict()
@@ -352,9 +372,9 @@ class ComplexRootOf(RootOf):
         return cls._get_roots("_all_roots", poly, radicals)
 
     @classmethod
-    def _get_reals_sqf(cls, factor):
+    def _get_reals_sqf(cls, factor, use_cache=True):
         """Get real root isolating intervals for a square-free factor."""
-        if factor in _reals_cache:
+        if use_cache and factor in _reals_cache:
             real_part = _reals_cache[factor]
         else:
             _reals_cache[factor] = real_part = \
@@ -364,9 +384,9 @@ class ComplexRootOf(RootOf):
         return real_part
 
     @classmethod
-    def _get_complexes_sqf(cls, factor):
+    def _get_complexes_sqf(cls, factor, use_cache=True):
         """Get complex root isolating intervals for a square-free factor."""
-        if factor in _complexes_cache:
+        if use_cache and factor in _complexes_cache:
             complex_part = _complexes_cache[factor]
         else:
             _complexes_cache[factor] = complex_part = \
@@ -386,7 +406,7 @@ class ComplexRootOf(RootOf):
                 r = _reals_cache[factor]
                 reals.extend([(i, factor, k) for i in r])
             except KeyError:
-                real_part = cls._get_reals_sqf(factor)
+                real_part = cls._get_reals_sqf(factor, use_cache)
                 new = [(root, factor, k) for root in real_part]
                 reals.extend(new)
 
@@ -405,7 +425,7 @@ class ComplexRootOf(RootOf):
                 c = _complexes_cache[factor]
                 complexes.extend([(i, factor, k) for i in c])
             except KeyError:
-                complex_part = cls._get_complexes_sqf(factor)
+                complex_part = cls._get_complexes_sqf(factor, use_cache)
                 new = [(root, factor, k) for root in complex_part]
                 complexes.extend(new)
 
