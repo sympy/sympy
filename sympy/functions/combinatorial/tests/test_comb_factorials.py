@@ -371,7 +371,7 @@ def test_binomial():
     assert binomial((1+2*I), (1+3*I)) == gamma(2 + 2*I)/(gamma(1 - I)*gamma(2 + 3*I))
     assert binomial(I, 5) == S(1)/3 - I/S(12)
     assert binomial((2*I + 3), 7) == -13*I/S(63)
-    assert isintance(binomial(I, n), binomial)
+    assert isinstance(binomial(I, n), binomial)
 
 
 def test_binomial_diff():
