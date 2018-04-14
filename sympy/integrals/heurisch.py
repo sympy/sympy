@@ -608,19 +608,20 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
         log_part, atan_part = [], []
 
-        x, y = symbols('x y', cls=Wild, exclude=[I])
         for poly in list(irreducibles):
-            m = poly.match(x + I*y)
-            if m is not None:
-                if m[y] == 0:  # No coefficient of I
-                    continue
-                pairs.add((m[x], m[y]))  # It is enough to save the coefficients
+            m = collect(poly, I, evaluate=False)
+            y = m.get(I, S.Zero)
+            if y:
+                x = m.get(S.One, S.Zero)
+                if x.has(I) or y.has(I):
+                    continue  # nontrivial x + I*y
+                pairs.add((x, y))
                 irreducibles.remove(poly)
 
         while pairs:
             x, y = pairs.pop()
-            if (x,-y) in pairs:
-                pairs.remove((x,-y))
+            if (x, -y) in pairs:
+                pairs.remove((x, -y))
                 # Choosing b with no minus sign
                 if y.could_extract_minus_sign():
                     y = -y
