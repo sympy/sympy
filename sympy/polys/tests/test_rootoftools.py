@@ -1,7 +1,8 @@
 """Tests for the implementation of RootOf class and related tools. """
 
 from sympy.polys.polytools import Poly
-from sympy.polys.rootoftools import rootof, RootOf, CRootOf, RootSum
+from sympy.polys.rootoftools import (rootof, RootOf, CRootOf, RootSum,
+    _pure_key_dict as D)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -504,3 +505,17 @@ def test_is_disjoint():
     ii = rootof(eq, 1)._get_interval()
     assert ir.is_disjoint(ii)
     assert ii.is_disjoint(ir)
+
+
+def test_pure_key_dict():
+    p = D()
+    assert (x in p) is False
+    assert (1 in p) is False
+    p[x] = 1
+    assert x in p
+    assert y in p
+    assert p[y] == 1
+    raises(KeyError, lambda: p[1])
+    def dont(k):
+        p[k] = 2
+    raises(ValueError, lambda: dont(1))

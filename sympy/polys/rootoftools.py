@@ -42,12 +42,13 @@ __all__ = ['CRootOf']
 
 
 class _pure_key_dict(object):
-    """A minimal dictionary that makes sure that the key is PurePoly.
+    """A minimal dictionary that makes sure that the key is a
+    univariate PurePoly instance.
 
     Examples
     ========
 
-    Only the following four actions are guaranteed:
+    Only the following actions are guaranteed:
 
     >>> from sympy.polys.rootoftools import _pure_key_dict
     >>> from sympy import S, PurePoly
@@ -75,34 +76,32 @@ class _pure_key_dict(object):
     ...
     KeyError: PurePoly(y + 1, y, domain='ZZ')
 
-    5) ability to set via default:
-
-    >>> P.setdefault(y + 1, 2)
-    2
-
-    6) ability to query with ``in``
+    5) ability to query with ``in``
 
     >>> x + 1 in P
-    True
+    False
 
     NOTE: this is a *not* a dictionary. It is a very basic object
     for internal use that makes sure to always address its cache
-    via PurePoly instances.
+    via PurePoly instances. It does not, for example, implement
+    ``get`` or ``setdefault``.
     """
     def __init__(self):
-        self.dict = {}
+        self._dict = {}
 
     def __getitem__(self, k):
         if not isinstance(k, PurePoly):
-            assert len(k.free_symbols) == 1
+            if not (isinstance(k, Expr) and len(k.free_symbols) == 1):
+                raise KeyError
             k = PurePoly(k, expand=False)
-        return self.dict[k]
+        return self._dict[k]
 
     def __setitem__(self, k, v):
         if not isinstance(k, PurePoly):
-            assert len(k.free_symbols) == 1
+            if not (isinstance(k, Expr) and len(k.free_symbols) == 1):
+                raise ValueError('expecting univariate expression')
             k = PurePoly(k, expand=False)
-        self.dict[k] = v
+        self._dict[k] = v
 
     def __contains__(self, k):
         try:
@@ -110,12 +109,6 @@ class _pure_key_dict(object):
             return True
         except KeyError:
             return False
-
-    def setdefault(self, k, v):
-        if not isinstance(k, PurePoly):
-            assert len(k.free_symbols) == 1
-            k = PurePoly(k, expand=False)
-        return self.dict.setdefault(k, v)
 
 _reals_cache = _pure_key_dict()
 _complexes_cache = _pure_key_dict()
