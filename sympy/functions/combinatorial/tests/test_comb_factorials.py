@@ -279,6 +279,7 @@ def test_binomial():
     kp = Symbol('kp', integer=True, positive=True)
     kn = Symbol('kn', integer=True, negative=True)
     u = Symbol('u', negative=True)
+    v = Symbol('v', nonnegative=True)
     p = Symbol('p', positive=True)
     z = Symbol('z', zero=True)
     nt = Symbol('nt', integer=False)
@@ -333,6 +334,14 @@ def test_binomial():
     assert binomial(4321, 51) == 124595639629264868916081001263541480185227731958274383287107643816863897851139048158022599533438936036467601690983780576
 
     assert binomial(a, b).is_nonnegative is True
+
+    # issue #14625
+    assert binomial(a, a) == 1
+    assert binomial(a, a - 1) == a
+    assert isinstance(binomial(u, u), binomial)
+    assert isinstance(binomial(u, u - 1), binomial)
+    assert binomial(v, v) == 1
+    assert binomial(v, v - 1) == v
 
     # issue #13980 and #13981
     assert binomial(-7, -5) == 0
