@@ -611,10 +611,11 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         x, y = symbols('x y', cls=Wild, exclude=[I])
         for poly in list(irreducibles):
             m = poly.match(x + I*y)
-            if m[y] == 0:  # No coefficient of I
-                continue
-            pairs.add((m[x], m[y]))  # It is enough to save the coefficients
-            irreducibles.remove(poly)
+            if m is not None:
+                if m[y] == 0:  # No coefficient of I
+                    continue
+                pairs.add((m[x], m[y]))  # It is enough to save the coefficients
+                irreducibles.remove(poly)
 
         while pairs:
             x, y = pairs.pop()
