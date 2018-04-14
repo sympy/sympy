@@ -232,16 +232,42 @@ class ComplexRootOf(RootOf):
     >>. r._get_interval()
     (-165/169, -206/211)
 
-    The `eval_approx` method will also find the root to a given
-    precision but the interval is not modified unless the search
-    for the root fails to converge within the root bounds.
-
     To reset all intervals for a given polynomial, the `_reset` method
     can be called from any CRootOf instance of the polynomial:
 
     >>> r._reset()
     >>> r._get_interval()
     (-1, 0)
+
+    The `eval_approx` method will also find the root to a given
+    precision but the interval is not modified unless the search
+    for the root fails to converge within the root bounds. And
+    the secant method is used to find the root. (The ``evalf``
+    method uses bisection and will always update the interval.)
+
+    >>> r.eval_approx(2)
+    -0.98
+
+    The interval needed to be slightly updated to find that root:
+
+    >>> r._get_interval()
+    (-1, -1/2)
+
+    The ``evalf_rational`` will compute a rational approximation
+    of the root to the desired accuracy or precision.
+
+    >>> r.eval_rational(n=2)
+    -69629/71318
+
+    >>> t = CRootOf(x**3 + 10*x + 1, 1)
+    >>> t.eval_rational(1e-1)
+    15/256 - 805*I/256
+    >>> t.eval_rational(1e-1, 1e-4)
+    3275/65536 - 414645*I/131072
+    >>> t.eval_rational(1e-4, 1e-4)
+    6545/131072 - 414645*I/131072
+    >>> t.eval_rational(n=2)
+    104755/2097152 - 6634255*I/2097152
 
     See Also
     ========

@@ -401,7 +401,7 @@ def test_RootSum_evalf():
     rs = RootSum(x**2 + 1, exp)
 
     assert rs.evalf(n=20, chop=True).epsilon_eq(
-        Float("1.0806046117362794348", 20), Float("1e-20")) is S.true
+        Float("1.0806046117362794348", 20), Float("1e-30")) is S.true
     assert rs.evalf(n=15, chop=True).epsilon_eq(
         Float("1.08060461173628", 15), Float("1e-15")) is S.true
 
@@ -519,3 +519,53 @@ def test_pure_key_dict():
     def dont(k):
         p[k] = 2
     raises(ValueError, lambda: dont(1))
+
+
+def test_eval_approx_relative():
+    t = [CRootOf(x**3 + 10*x + 1, i) for i in range(3)]
+    assert [i.eval_rational(1e-1) for i in t] == [
+        -21/220, 15/256 - 805*I/256, 15/256 + 805*I/256]
+    t[0]._reset()
+    assert [i.eval_rational(1e-1, 1e-4) for i in t] == [
+        -21/220, 3275/65536 - 414645*I/131072,
+        3275/65536 + 414645*I/131072]
+    assert S(t[0]._get_interval().dx) < 1e-1
+    assert S(t[1]._get_interval().dx) < 1e-1
+    assert S(t[1]._get_interval().dy) < 1e-4
+    assert S(t[2]._get_interval().dx) < 1e-1
+    assert S(t[2]._get_interval().dy) < 1e-4
+    t[0]._reset()
+    assert [i.eval_rational(1e-4, 1e-4) for i in t] == [
+        -2001/20020, 6545/131072 - 414645*I/131072,
+        6545/131072 + 414645*I/131072]
+    assert S(t[0]._get_interval().dx) < 1e-4
+    assert S(t[1]._get_interval().dx) < 1e-4
+    assert S(t[1]._get_interval().dy) < 1e-4
+    assert S(t[2]._get_interval().dx) < 1e-4
+    assert S(t[2]._get_interval().dy) < 1e-4
+    # in the following, the actual relative precision is
+    # less than tested, but it should never be greater
+    t[0]._reset()
+    assert [i.eval_rational(n=2) for i in t] == [
+        -202201/2024022, 104755/2097152 - 6634255*I/2097152,
+        104755/2097152 + 6634255*I/2097152]
+    assert abs(S(t[0]._get_interval().dx)/t[0]) < 1e-2
+    assert abs(S(t[1]._get_interval().dx)/t[1]).n() < 1e-2
+    assert abs(S(t[1]._get_interval().dy)/t[1]).n() < 1e-2
+    assert abs(S(t[2]._get_interval().dx)/t[2]).n() < 1e-2
+    assert abs(S(t[2]._get_interval().dy)/t[2]).n() < 1e-2
+    t[0]._reset()
+    assert [i.eval_rational(n=3) for i in t] == [
+        -202201/2024022, 1676045/33554432 - 106148135*I/33554432,
+        1676045/33554432 + 106148135*I/33554432]
+    assert abs(S(t[0]._get_interval().dx)/t[0]) < 1e-3
+    assert abs(S(t[1]._get_interval().dx)/t[1]).n() < 1e-3
+    assert abs(S(t[1]._get_interval().dy)/t[1]).n() < 1e-3
+    assert abs(S(t[2]._get_interval().dx)/t[2]).n() < 1e-3
+    assert abs(S(t[2]._get_interval().dy)/t[2]).n() < 1e-3
+
+    t[0]._reset()
+    a = [i.eval_approx(2) for i in t]
+    assert [str(i) for i in a] == [
+        '-0.10', '0.05 - 3.2*I', '0.05 + 3.2*I']
+    assert all(abs(((a[i] - t[i])/t[i]).n()) < 1e-2 for i in range(len(a)))
