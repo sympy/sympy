@@ -969,8 +969,7 @@ class MatrixSubspaces(MatrixReductions):
             vec = [S.Zero]*self.cols
             vec[free_var] = S.One
             for piv_row, piv_col in enumerate(pivots):
-                for pos in pivots[piv_row+1:] + (free_var,):
-                    vec[piv_col] -= reduced[piv_row, pos]
+                vec[piv_col] -= reduced[piv_row, free_var]
             basis.append(vec)
 
         return [self._new(self.cols, 1, b) for b in basis]
@@ -1131,7 +1130,8 @@ class MatrixEigen(MatrixSubspaces):
 
         # make sure the algebraic multiplicty sums to the
         # size of the matrix
-        if error_when_incomplete and sum(m for m in eigs.values()) != self.cols:
+        if error_when_incomplete and (sum(eigs.values()) if
+            isinstance(eigs, dict) else len(eigs)) != self.cols:
             raise MatrixError("Could not compute eigenvalues for {}".format(self))
 
         return eigs
