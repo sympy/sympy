@@ -342,6 +342,12 @@ def test_binomial():
     assert isinstance(binomial(u, u - 1), binomial)
     assert binomial(v, v) == 1
     assert binomial(v, v - 1) == v
+    assert binomial(-pi, -pi - 1) == -pi
+    assert binomial(pi, pi - 1) == pi
+    assert binomial(pi, pi) == 1
+    assert binomial(-pi, -pi) == 1
+    assert isinstance(binomial(x, x - 1), binomial)
+    assert isinstance(binomial(x, x), binomial)
 
     # issue #13980 and #13981
     assert binomial(-7, -5) == 0
