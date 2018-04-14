@@ -336,18 +336,13 @@ def test_binomial():
     assert binomial(a, b).is_nonnegative is True
 
     # issue #14625
-    assert binomial(a, a) == 1
-    assert binomial(a, a - 1) == a
+    for _ in (pi, -pi, nt, v, a):
+        assert binomial(_, _) == 1
+        assert binomial(_, _ - 1) == nt
     assert isinstance(binomial(u, u), binomial)
     assert isinstance(binomial(u, u - 1), binomial)
-    assert binomial(v, v) == 1
-    assert binomial(v, v - 1) == v
-    assert binomial(-pi, -pi - 1) == -pi
-    assert binomial(pi, pi - 1) == pi
-    assert binomial(pi, pi) == 1
-    assert binomial(-pi, -pi) == 1
-    assert isinstance(binomial(x, x - 1), binomial)
     assert isinstance(binomial(x, x), binomial)
+    assert isinstance(binomial(x, x - 1), binomial)
 
     # issue #13980 and #13981
     assert binomial(-7, -5) == 0
@@ -376,8 +371,7 @@ def test_binomial():
     assert binomial((1+2*I), (1+3*I)) == gamma(2 + 2*I)/(gamma(1 - I)*gamma(2 + 3*I))
     assert binomial(I, 5) == S(1)/3 - I/S(12)
     assert binomial((2*I + 3), 7) == -13*I/S(63)
-    assert binomial(I, n).func == binomial
-
+    assert isintance(binomial(I, n), binomial)
 
 
 def test_binomial_diff():
