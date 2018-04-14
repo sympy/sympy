@@ -19,6 +19,8 @@ from sympy.functions import hankel1, hankel2, jn, yn
 from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.elementary.piecewise import Piecewise
 
+from sympy.simplify.radsimp import collect
+
 from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
 
