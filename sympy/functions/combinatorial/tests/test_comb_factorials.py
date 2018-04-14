@@ -338,7 +338,7 @@ def test_binomial():
     # issue #14625
     for _ in (pi, -pi, nt, v, a):
         assert binomial(_, _) == 1
-        assert binomial(_, _ - 1) == nt
+        assert binomial(_, _ - 1) == _
     assert isinstance(binomial(u, u), binomial)
     assert isinstance(binomial(u, u - 1), binomial)
     assert isinstance(binomial(x, x), binomial)
