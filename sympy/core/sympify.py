@@ -313,7 +313,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             pass
 
     if not isinstance(a, string_types):
-        for coerce in (float, int):
+        for coerce in (int, float):
             try:
                 return sympify(coerce(a))
             except (TypeError, ValueError, AttributeError, SympifyError):
