@@ -40,8 +40,8 @@ class Sieve:
 
     # data shared (and updated) by all Sieve instances
     _list = _array('l', [2, 3, 5, 7, 11, 13]) # primes
-    _tlist = _array('l', [0, 1, 1, 2, 2, 4, 2]) # totient
-    _mlist = _array('i', [0, 1, -1, -1, 0, -1]) # mobius
+    _tlist = _array('l', [0, 1, 1, 2, 2, 4]) # totient
+    _mlist = _array('i', [0, 1, -1, -1, 0]) # mobius
 
     def __repr__(self):
         return "<Sieve with %i primes sieved: 2, 3, 5, ... %i, %i>" % \
@@ -51,6 +51,8 @@ class Sieve:
         """Return sieve to its initial state for testing purposes.
         """
         self._list = self._list[:6]
+        self._tlist = self._tlist[:6]
+        self._mlist = self._mlist[:6]
 
     def extend(self, n):
         """Grow the sieve to cover all primes <= n (a real number).
@@ -122,10 +124,10 @@ class Sieve:
         """
         from sympy.functions.elementary.integers import ceiling
 
-        # wrapping ceiling in int will raise an error if there was a problem
+        # wrapping ceiling in as_int will raise an error if there was a problem
         # determining whether the expression was exactly an integer or not
-        a = max(2, int(ceiling(a)))
-        b = int(ceiling(b))
+        a = max(2, as_int(ceiling(a)))
+        b = as_int(ceiling(b))
         if a >= b:
             return
         self.extend(b)
@@ -151,10 +153,10 @@ class Sieve:
         """
         from sympy.functions.elementary.integers import ceiling
 
-        # wrapping ceiling in int will raise an error if there was a problem
+        # wrapping ceiling in as_int will raise an error if there was a problem
         # determining whether the expression was exactly an integer or not
-        a = max(1, int(ceiling(a)))
-        b = int(ceiling(b))
+        a = max(1, as_int(ceiling(a)))
+        b = as_int(ceiling(b))
         n = len(self._tlist)
         if a >= b:
             return
@@ -190,10 +192,10 @@ class Sieve:
         """
         from sympy.functions.elementary.integers import ceiling
 
-        # wrapping ceiling in int will raise an error if there was a problem
+        # wrapping ceiling in as_int will raise an error if there was a problem
         # determining whether the expression was exactly an integer or not
-        a = max(1, int(ceiling(a)))
-        b = int(ceiling(b))
+        a = max(1, as_int(ceiling(a)))
+        b = as_int(ceiling(b))
         n = len(self._mlist)
         if a >= b:
             return
@@ -236,10 +238,10 @@ class Sieve:
         """
         from sympy.functions.elementary.integers import ceiling
 
-        # wrapping ceiling in int will raise an error if there was a problem
+        # wrapping ceiling in as_int will raise an error if there was a problem
         # determining whether the expression was exactly an integer or not
-        test = int(ceiling(n))
-        n = int(n)
+        test = as_int(ceiling(n))
+        n = as_int(n)
         if n < 2:
             raise ValueError("n should be >= 2 but got: %s" % n)
         if n > self._list[-1]:
@@ -540,9 +542,9 @@ def prevprime(n):
     """
     from sympy.functions.elementary.integers import ceiling
 
-    # wrapping ceiling in int will raise an error if there was a problem
+    # wrapping ceiling in as_int will raise an error if there was a problem
     # determining whether the expression was exactly an integer or not
-    n = int(ceiling(n))
+    n = as_int(ceiling(n))
     if n < 3:
         raise ValueError("no preceding primes")
     if n < 8:
@@ -640,10 +642,10 @@ def primerange(a, b):
         return
     # otherwise compute, without storing, the desired range.
 
-    # wrapping ceiling in int will raise an error if there was a problem
+    # wrapping ceiling in as_int will raise an error if there was a problem
     # determining whether the expression was exactly an integer or not
-    a = int(ceiling(a)) - 1
-    b = int(ceiling(b))
+    a = as_int(ceiling(a)) - 1
+    b = as_int(ceiling(b))
     while 1:
         a = nextprime(a)
         if a < b:
