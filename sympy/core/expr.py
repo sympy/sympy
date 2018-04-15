@@ -2879,7 +2879,8 @@ class Expr(Basic, EvalfMixin):
 
     def aseries(self, x, n=6, bound=0, hierar=False):
         from sympy.series.gruntz import mrv, rewrite, mrv_leadterm
-        from sympy.core.symbol import Dummy
+        from sympy.core.basic import Basic
+        from sympy.core.symbol import Dummy, symbols
         from sympy.functions import exp, log
         from sympy.series.order import Order
 
@@ -2894,6 +2895,7 @@ class Expr(Basic, EvalfMixin):
                 o = Order(1/x**n, (x, S.Infinity))
                 return s + o
             return s
+        od = symbols('od')
         d = Dummy('d', positive=True)
         f, logw = rewrite(exps, omega, x, d)
 
@@ -2911,7 +2913,8 @@ class Expr(Basic, EvalfMixin):
         s = f.series(d, 0, n)
         # Hierarchical series: break after first recursion
         if hierar:
-            return s.subs(d, exp(logw))
+            a = s.subs(d, od)
+            return a.subs(od, exp(logw))
 
         o = s.getO()
         terms = sorted(Add.make_args(s.removeO()), key=lambda i: int(i.as_coeff_exponent(d)[1]))
@@ -2930,9 +2933,11 @@ class Expr(Basic, EvalfMixin):
             else:
                 s += t
         if not o or gotO:
-            return s.subs(d, exp(logw))
+            a = s.subs(d, od)
+            return a.subs(od, exp(logw))
         else:
-            return (s + o).subs(d, exp(logw))
+            a = (s + o).subs(d, od)
+            return a.subs(od, exp(logw))
 
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.

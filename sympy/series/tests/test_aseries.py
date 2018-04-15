@@ -8,7 +8,6 @@ def test_aseries():
     # 6.6
     e = sin(1/x + exp(-x)) - sin(1/x)
     assert e.aseries(x) == (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
-    assert e.series(x, oo) == (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
 
     # 6.7
     e = exp(x) * (exp(1/x + exp(-x)) - exp(1/x))
@@ -24,18 +23,13 @@ def test_aseries():
     e = exp(sin(1/x + exp(-exp(x)))) - exp(sin(1/x))
     assert e.aseries(x, n=4) == (-1/(2*x**3) + 1/x + 1 + O(x**(-4), (x, oo)))*exp(-exp(x))
 
-    # 6.15
-    e3 = lambda x: exp(exp(exp(x)))
-    e = e3(x)/e3(x-1/e3(x))
-    assert e.aseries(x, n=3) == 1 + exp(x + exp(x))*exp(-exp(exp(x))) + ((-exp(x)/2 - S.Half)*exp(x + exp(x)) + \
-            exp(2*x + 2*exp(x))/2)*exp(-2*exp(exp(x))) + O(exp(-3*exp(exp(x))), (x, oo))
-
     # A New Algorithm for Computing Asymptotic Series by Gruntz - Examples
     e = exp(exp(x)) * (exp(sin(1/x + 1/exp(exp(x)))) - exp(sin(1/x)))
     assert e.aseries(x, n=4) == -1/(2*x**3) + 1/x + 1 + O(x**(-4), (x, oo))
     n = Symbol('n', integer=True)
     e = (sqrt(n)*log(n)**2*exp(sqrt(log(n))*log(log(n))**2*exp(sqrt(log(log(n)))*log(log(log(n)))**3)))/n
-    assert e.aseries(n) == exp(exp(sqrt(log(log(n)))*log(log(log(n)))**3)*sqrt(log(n))*log(log(n))**2)*log(n)**2/sqrt(n)
+    assert e.aseries(n) == \
+            exp(exp(sqrt(log(log(n)))*log(log(log(n)))**3)*sqrt(log(n))*log(log(n))**2)*log(n)**2/sqrt(n)
 
 
 def test_aseries_hierarchical():
