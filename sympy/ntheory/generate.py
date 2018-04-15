@@ -39,7 +39,9 @@ class Sieve:
     """
 
     # data shared (and updated) by all Sieve instances
-    _list = _array('l', [2, 3, 5, 7, 11, 13])
+    _list = _array('l', [2, 3, 5, 7, 11, 13]) # primes
+    _tlist = _array('l', [0, 1, 1, 2, 2, 4, 2]) # totient
+    _mlist = _array('i', [0, 1, -1, -1, 0, -1]) # mobius
 
     def __repr__(self):
         return "<Sieve with %i primes sieved: 2, 3, 5, ... %i, %i>" % \
@@ -136,6 +138,84 @@ class Sieve:
                 i += 1
             else:
                 return
+
+    def totientrange(self, a, b):
+        """Generate all totient numbers for the range [a, b).
+
+        Examples
+        ========
+
+        >>> from sympy import sieve
+        >>> print([i for i in sieve.totientrange(7, 18)])
+        [6, 4, 6, 4, 10, 4, 12, 6, 8, 8, 16]
+        """
+        from sympy.functions.elementary.integers import ceiling
+
+        # wrapping ceiling in int will raise an error if there was a problem
+        # determining whether the expression was exactly an integer or not
+        a = max(1, int(ceiling(a)))
+        b = int(ceiling(b))
+        n = len(self._tlist)
+        if a >= b:
+            return
+        elif b <= n:
+            for i in range(a, b):
+                yield self._tlist[i]
+        else:
+            self._tlist += _arange(n, b)
+            for i in range(1, n):
+                ti = self._tlist[i]
+                startindex = max(2, (n + i - 1) // i) * i
+                for j in range(startindex, b, i):
+                    self._tlist[j] -= ti
+                if i >= a:
+                    yield ti
+
+            for i in range(n, b):
+                ti = self._tlist[i]
+                for j in range(2 * i, b, i):
+                    self._tlist[j] -= ti
+                if a <= i < b:
+                    yield ti
+
+    def mobiusrange(self, a, b):
+        """Generate all mobius numbers for the range [a, b).
+
+        Examples
+        ========
+
+        >>> from sympy import sieve
+        >>> print([i for i in sieve.mobiusrange(7, 18)])
+        [1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0, -1]
+        """
+        from sympy.functions.elementary.integers import ceiling
+
+        # wrapping ceiling in int will raise an error if there was a problem
+        # determining whether the expression was exactly an integer or not
+        a = max(1, int(ceiling(a)))
+        b = int(ceiling(b))
+        n = len(self._mlist)
+        if a >= b:
+            return
+        elif b <= n:
+            for i in range(a, b):
+                yield self._mlist[i]
+        else:
+            self._mlist += _array('i', [0]*(b - n))
+            for i in range(1, n):
+                mi = self._mlist[i]
+                startindex = max(2, (n + i - 1) // i) * i
+                for j in range(startindex, b, i):
+                    self._mlist[j] -= mi
+                if i >= a:
+                    yield mi
+
+            for i in range(n, b):
+                mi = self._mlist[i]
+                for j in range(2 * i, b, i):
+                    self._mlist[j] -= mi
+                if a <= i < b:
+                    yield mi
 
     def search(self, n):
         """Return the indices i, j of the primes that bound n.
