@@ -797,7 +797,7 @@ def _factorint_small(factors, n, limit, fail_max):
             fails = 0
         else:
             fails += 1
-        # d = 6*(i+1) - 1
+        # d = 6*(i + 1) - 1
         d += 4
 
     return done(n, d)
@@ -1009,13 +1009,10 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         x = n.args[0]
         factors = {}
         for p in sieve.primerange(2, x):
-            m = 0
-            d = p
-            q = x // p
+            m, q = 0, x // p
             while q != 0:
                 m += q
-                d *= p
-                q = x // d
+                q //= p
             factors[p] = m
         if factors and verbose:
             for k in sorted(factors):
@@ -1108,7 +1105,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 b, fermat = integer_nthroot(b2, 2)
                 if fermat:
                     break
-                b2 += 2*a + 1  # equiv to (a+1)**2 - n
+                b2 += 2*a + 1  # equiv to (a + 1)**2 - n
                 a += 1
             if fermat:
                 if verbose:
@@ -1241,8 +1238,8 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     if multiple:
         fac = factorrat(rat, limit=limit, use_trial=use_trial,
                   use_rho=use_rho, use_pm1=use_pm1,
-                  verbose=verbose, visual=False,multiple=False)
-        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-1*fac[p])
+                  verbose=verbose, visual=False, multiple=False)
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
                                for p, _ in sorted(fac.items(),
                                                         key=lambda elem: elem[0]
                                                         if elem[1] > 0
@@ -1574,7 +1571,7 @@ def antidivisor_count(n):
     n = as_int(abs(n))
     if n <= 2:
         return 0
-    return divisor_count(2*n-1) + divisor_count(2*n+1) + \
+    return divisor_count(2*n - 1) + divisor_count(2*n + 1) + \
         divisor_count(n) - divisor_count(n, 2) - 5
 
 
@@ -1739,7 +1736,7 @@ class divisor_sigma(Function):
 
 def core(n, t=2):
     r"""
-    Calculate core(n,t) = `core_t(n)` of a positive integer n
+    Calculate core(n, t) = `core_t(n)` of a positive integer n
 
     ``core_2(n)`` is equal to the squarefree part of n
 
@@ -1756,7 +1753,7 @@ def core(n, t=2):
     Parameters
     ==========
 
-    t : core(n,t) calculates the t-th power free part of n
+    t : core(n, t) calculates the t-th power free part of n
 
         ``core(n, 2)`` is the squarefree part of ``n``
         ``core(n, 3)`` is the cubefree part of ``n``
