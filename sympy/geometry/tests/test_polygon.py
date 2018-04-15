@@ -316,6 +316,7 @@ def test_polygon():
     with warns(UserWarning, \
                match="Polygons may intersect producing erroneous output"):
         assert p1.distance(p2) == half/2
+    assert p1.distance(p2) == half/2
 
     assert p1.distance(p3) == sqrt(2)/2
 
@@ -323,6 +324,33 @@ def test_polygon():
     with warns(UserWarning, \
                match="Polygons may intersect producing erroneous output"):
         assert p3.distance(p4) == (sqrt(2)/2 - sqrt(Rational(2)/25)/2)
+
+    # Now, test overlaping
+    p = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
+    p1 = p.translate(2, -1).rotate('pi/4', (2, 0)) # disjoint
+    p2 = p.translate(1, -0.5) # side-side overlap
+    p3 = p.translate(1, -1) # vertex-vertex overlap
+    p4 = p.rotate('pi/4', (1, 0)).translate(0, 0.5) # overlap
+    p5 = p.scale(0.5, 0.5, (0.5, 0.5)) # containing
+    p6 = p.scale(2, 2, (0.5, 0.5)) # contained
+    assert p.distance(p2) == 0
+    assert p.distance(p3) == 0
+    assert p.distance(p4) == 0
+    assert p.distance(p5) == 1/4
+    assert p.distance(p6) == 1/2
+
+    # Critical support lines
+    assert set(p.critical_support_lines(p1)) == set([Line(Point(1, 1), Point(2, 0)), Line(Point(1, 0), Point(sqrt(2)/2 + 2, sqrt(2)/2))])
+    assert p.critical_support_lines(p2) == [Line(Point(1, 0), Point(1, 1/2))]
+    assert p.critical_support_lines(p3) == [Line(Point(0, 0), Point(2, 0))]
+    assert p.critical_support_lines(p5) == []
+    assert p.critical_support_lines(p6) == []
+
+    # Bridges
+    assert set(p.bridges(p1)) == set([Line(Point(1, 1), Point(sqrt(2)/2 + 2, sqrt(2)/2)), Line(Point(0, 0), Point(sqrt(2)/2 + 2, -sqrt(2)/2))])
+    assert set(p.bridges(p4)) == set([Line(Point(1, 1), Point(-sqrt(2)/2 + 1, 1/2 + sqrt(2)/2)), Line(Point(1, 0), Point(1, 1/2)), Line(Point(1, 0), Point(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1/2)), Line(Point(0, 0), Point(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1/2)), Line(Point(0, 0), Point(-sqrt(2) + 1, 1/2)), Line(Point(0, 1), Point(-sqrt(2) + 1, 1/2)), Line(Point(0, 1), Point(-sqrt(2)/2 + 1, 1/2 + sqrt(2)/2))])
+    assert p.bridges(p5) == []
+    assert p.bridges(p6) == []
 
 
 def test_convex_hull():

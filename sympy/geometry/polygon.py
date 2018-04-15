@@ -7,7 +7,7 @@ from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.geometry.exceptions import GeometryError
-from sympy.logic import And
+from sympy.logic import And, true
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
@@ -19,7 +19,7 @@ from .point import Point
 from .ellipse import Circle
 from .line import Line, Segment, Ray
 
-import warnings
+import itertools
 
 
 class Polygon(GeometrySet):
@@ -215,19 +215,22 @@ class Polygon(GeometrySet):
         ========
 
         >>> from sympy import Point, Polygon
-        >>> a, b, c = [Point(i) for i in [(0, 0), (1, 1), (1, 0)]]
+        >>> a, b, c, d = [Point(i) for i in [(0, 0), (1, 1), (1, 0), (2, 2)]]
         >>> Polygon._isright(a, b, c)
-        True
+        1
         >>> Polygon._isright(a, c, b)
-        False
+        -1
+        >>> Polygon._isright(a, b, d)
+        0
         """
         ba = b - a
         ca = c - a
         t_area = simplify(ba.x*ca.y - ca.x*ba.y)
-        res = t_area.is_nonpositive
-        if res is None:
+        is_pos = t_area.is_positive
+        is_neg = t_area.is_negative
+        if is_neg is None or is_pos is None:
             raise ValueError("Can't determine orientation")
-        return res
+        return -1 if is_pos else 1 if is_neg else 0
 
     @property
     def angles(self):
@@ -376,7 +379,6 @@ class Polygon(GeometrySet):
             cx += v*(x1 + x2)
             cy += v*(y1 + y2)
         return Point(simplify(A*cx), simplify(A*cy))
-
 
     def second_moment_of_area(self, point=None):
         """Returns the second moment and product moment of area of a two dimensional polygon.
@@ -677,7 +679,7 @@ class Polygon(GeometrySet):
         args = self.vertices
         cw = self._isright(args[-2], args[-1], args[0])
         for i in range(1, len(args)):
-            if cw ^ self._isright(args[i - 2], args[i - 1], args[i]):
+            if cw != self._isright(args[i - 2], args[i - 1], args[i]):
                 return False
         # check for intersecting sides
         sides = self.sides
@@ -1078,21 +1080,308 @@ class Polygon(GeometrySet):
                     dist = current
             return dist
         elif isinstance(o, Polygon) and self.is_convex() and o.is_convex():
-            return self._do_poly_distance(o)
+            if self._critical_support_lines(o) != []:
+                '''
+                Critical support lines mean they do not intersect.
+                '''
+                return self._do_poly_distance(o)
+            elif self._bridges(o) == []:
+                '''
+                No bridges mean they are nested.
+                '''
+                return self._do_poly_distance(o, nested=True)
+            else:
+                '''
+                Otherwise they intersect.
+                '''
+                return 0
         raise NotImplementedError()
 
-    def _do_poly_distance(self, e2):
+    def critical_support_lines(self, other):
+        """
+        Finds a list of critical support lines of two polygons.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point, Polygon
+        >>> e1 = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
+        >>> e2 = Polygon(Point(0, 2), Point(0, 3), Point(1, 3), Point(1, 2))
+        >>> e1.critical_support_lines(e2)
+        [Line2D(Point2D(1, 1), Point2D(0, 2)), Line2D(Point2D(0, 1), Point2D(1, 2))]
+
+        References
+        ==========
+
+        [1] Toussaint GT (1983) Solving geometric problems with the rotating
+            calipers. Proc. ME- LECON, Athens. Greece
+        """
+        if isinstance(other, Polygon) and self.is_convex() and other.is_convex():
+            return self._critical_support_lines(other)
+        raise NotImplementedError()
+
+    def bridges(self, other):
+        """
+        Finds a list of bridges of two convex polygons.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Polygon
+        >>> e1 = Polygon((-1, 0), (0, 1), (1, 0), (0, -1))
+        >>> e2 = Polygon((2, 0), (3, 0), (3, 1), (2, 1))
+        >>> e1.bridges(e2)
+        [Line2D(Point2D(0, 1), Point2D(2, 1)), Line2D(Point2D(0, -1), Point2D(3, 0))]
+
+        References
+        ==========
+
+        [1] http://en.wikipedia.org/wiki/Antipodal_point
+        """
+        if isinstance(other, Polygon) and self.is_convex() and other.is_convex():
+            return self._bridges(other)
+        raise NotImplementedError()
+
+    @staticmethod
+    def _rotating_calipers_initial_podal_pair(e1, e2, antipodal=True):
+        '''
+        Find the upper rightmost vertex of e1 and the lowest leftmost (upper rightmost
+        for antipodal pairs) vertex of e2,
+
+        Parameters
+        ==========
+
+        e1, e2: Polygons (must be convex)
+        antipodal: Bool, will return antipodal pair if True
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point, Polygon
+        >>> e1 = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
+        >>> e2 = Polygon(Point(0, 2), Point(0, 3), Point(1, 3), Point(1, 2))
+        >>> Polygon._rotating_calipers_initial_podal_pair(e1, e2)
+        (Point(0, 1), Point(1, 2))
+        >>> Polygon._rotating_calipers_initial_podal_pair(e1, e2, antipodal=True)
+        (Point(0, 1), Point(0, 3))
+
+        References
+        ==========
+
+        [1] http://en.wikipedia.org/wiki/Antipodal_point
+        '''
+        e1_ymax = Point(0, -oo)
+        e2_ymin = Point(0, oo) if antipodal else Point(0, -oo)
+
+        e1_vertices = e1.vertices
+        e2_vertices = e2.vertices
+        for idx, vertex in enumerate(e1_vertices):
+            if vertex.y > e1_ymax.y or (vertex.y == e1_ymax.y and vertex.x > e1_ymax.x):
+                e1_ymax = vertex
+                e1_ymax_idx = idx
+        for idx, vertex in enumerate(e2_vertices):
+            if (vertex.y < e2_ymin.y or (vertex.y == e2_ymin.y and vertex.x < e2_ymin.x)) == antipodal:
+                e2_ymin = vertex
+                e2_ymin_idx = idx
+
+        '''
+        Build an iterator each for e1 and e2 which starts from e1_ymax and e2_ymin,
+        yield vertices clockwise one by one.
+        '''
+        if Polygon._isright(e1_vertices[-2], e1_vertices[-1], e1_vertices[0]) == 1:
+            e1_previous = e1_vertices[(e1_ymax_idx - 1 + len(e1_vertices)) % len(e1_vertices)]
+            e1_vertices = itertools.chain(e1_vertices[e1_ymax_idx:], e1_vertices[:e1_ymax_idx])
+        else:
+            e1_previous = e1_vertices[(e1_ymax_idx + 1) % len(e1_vertices)]
+            e1_vertices = itertools.chain(e1_vertices[e1_ymax_idx::-1], e1_vertices[-1:e1_ymax_idx:-1])
+
+        if Polygon._isright(e2_vertices[-2], e2_vertices[-1], e2_vertices[0]) == 1:
+            e2_previous = e2_vertices[(e2_ymin_idx - 1 + len(e2_vertices)) % len(e2_vertices)]
+            e2_vertices = itertools.chain(e2_vertices[e2_ymin_idx:], e2_vertices[:e2_ymin_idx])
+        else:
+            e2_previous = e2_vertices[(e2_ymin_idx + 1) % len(e2_vertices)]
+            e2_vertices = itertools.chain(e2_vertices[e2_ymin_idx::-1], e2_vertices[-1:e2_ymin_idx:-1])
+
+        e1_vertices = itertools.cycle(e1_vertices)
+        e2_vertices = itertools.cycle(e2_vertices)
+
+        e1_current = next(e1_vertices)
+        e2_current = next(e2_vertices)
+
+        e1_next = next(e1_vertices)
+        e2_next = next(e2_vertices)
+
+        return (
+            e1_ymax, e2_ymin,
+            e1_previous, e1_current, e1_next, e1_vertices,
+            e2_previous, e2_current, e2_next, e2_vertices
+        )
+
+    @staticmethod
+    def _rotating_calipers_next_pair(support_line, e1_vertices, e1_previous, e1_current, e1_next, e2_vertices, e2_previous, e2_current, e2_next, antipodal=True):
+        '''
+        Compare the angles formed by the support_line and next vertices of the
+        two polygons.
+        For deciding the next (anti)podal-pairs.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Polygon, Line
+        >>> e1 = Polygon((-1, 0), (0, 1), (1, 0), (0, -1))
+        >>> e2 = Polygon((2, 0), (3, 0), (3, 1), (2, 1))
+        >>> e1_current, e1_next, _, _ = e1.vertices
+        >>> e2_next, e2_current, _, _ = e2.vertices
+        >>> support_line = Line(e1_current, e1_next)
+        >>> Polygon._rotating_calipers_next_pair(support_line, e1_current, e1_next, e2_current, e2_next)
+        False
+        '''
+        e1_angle = support_line.angle_between(Line(e1_current, e1_next))
+        e2_angle = support_line.angle_between(Line(e2_current, e2_next))
+        if antipodal:
+            e2_angle = pi - e2_angle
+        comp = e1_angle < e2_angle
+        if hasattr(comp, 'evalf'):
+            comp = comp.evalf()
+
+        if comp is true and Polygon._isright(Point(0, 0), support_line.direction, e1_next - e1_current) != -1:
+            support_line = Line(e1_current, e1_next)
+
+            e1_previous = e1_current
+            e1_current = e1_next
+            e1_next = next(e1_vertices)
+        else:
+            if antipodal:
+                support_line = Line(e2_next, e2_current)
+            else:
+                support_line = Line(e2_current, e2_next)
+
+            e2_previous = e2_current
+            e2_current = e2_next
+            e2_next = next(e2_vertices)
+
+        return support_line, e1_previous, e1_current, e1_next, e2_previous, e2_current, e2_next
+
+    def _bridges(self, e2):
+        """
+        Finds a list of bridges of two convex polygons.
+        Does not check for the convexity of the polygons.
+        Use `bridges` for general purpose.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Polygon
+        >>> e1 = Polygon((-1, 0), (0, 1), (1, 0), (0, -1))
+        >>> e2 = Polygon((2, 0), (3, 0), (3, 1), (2, 1))
+        >>> e1._bridges(e2)
+        [Line2D(Point2D(0, 1), Point2D(2, 1)), Line2D(Point2D(0, -1), Point2D(3, 0))]
+
+        References
+        ==========
+
+        [1] http://en.wikipedia.org/wiki/Antipodal_point
+        """
+        e1 = self
+
+        (e1_ymax, e2_ymax,
+         e1_previous, e1_current, e1_next, e1_vertices,
+         e2_previous, e2_current, e2_next, e2_vertices) = self._rotating_calipers_initial_podal_pair(e1, e2, antipodal=False)
+
+        support_line = Line(Point(S.Zero, S.Zero), Point(S.One, S.Zero))
+
+        results = []
+
+        '''
+        Loop which determines the distance between anti-podal pairs and updates the
+        minimum distance accordingly. It repeats until it reaches the starting position.
+        '''
+        while True:
+            if e1_current != e2_current:
+                is_e1_next_right = Polygon._isright(e1_current, e2_current, e1_next)
+                is_e2_next_right = Polygon._isright(e1_current, e2_current, e2_next)
+                is_e1_previous_right = Polygon._isright(e1_current, e2_current, e1_previous) or is_e1_next_right
+                is_e2_previous_right = Polygon._isright(e1_current, e2_current, e2_previous) or is_e2_next_right
+                if (
+                    is_e1_next_right != 0 and is_e2_next_right != 0 and
+                    is_e1_previous_right == is_e1_next_right == is_e2_previous_right == is_e2_next_right
+                ):
+                    results.append(Line(e1_current, e2_current))
+            (
+                support_line,
+                e1_previous, e1_current, e1_next,
+                e2_previous, e2_current, e2_next
+            ) = self._rotating_calipers_next_pair(support_line, e1_vertices, e1_previous, e1_current, e1_next, e2_vertices, e2_previous, e2_current, e2_next, False)
+
+            if e1_current == e1_ymax and e2_current == e2_ymax:
+                break
+        return results
+
+    def _critical_support_lines(self, e2):
+        """
+        Finds a list of critical support lines of two convex polygons.
+        Does not check for the convexity of the polygons.
+        Use `critical_support_lines` for general purpose.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point, Polygon
+        >>> e1 = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
+        >>> e2 = Polygon(Point(0, 2), Point(0, 3), Point(1, 3), Point(1, 2))
+        >>> e1.critical_support_lines(e2)
+        [Line2D(Point2D(1, 1), Point2D(0, 2)), Line2D(Point2D(0, 1), Point2D(1, 2))]
+
+        References
+        ==========
+
+        [1] Toussaint GT (1983) Solving geometric problems with the rotating
+            calipers. Proc. ME- LECON, Athens. Greece
+        """
+        e1 = self
+
+        (e1_ymax, e2_ymin,
+         e1_previous, e1_current, e1_next, e1_vertices,
+         e2_previous, e2_current, e2_next, e2_vertices) = self._rotating_calipers_initial_podal_pair(e1, e2)
+
+        support_line = Line(Point(S.Zero, S.Zero), Point(S.One, S.Zero))
+
+        results = []
+
+        '''
+        Loop which determines the distance between anti-podal pairs and updates the
+        minimum distance accordingly. It repeats until it reaches the starting position.
+        '''
+        while True:
+            if e1_current != e2_current:
+                is_e1_next_right = Polygon._isright(e1_current, e2_current, e1_next)
+                is_e2_next_right = Polygon._isright(e1_current, e2_current, e2_next)
+                is_e1_previous_right = Polygon._isright(e1_current, e2_current, e1_previous) or is_e1_next_right
+                is_e2_previous_right = Polygon._isright(e1_current, e2_current, e2_previous) or is_e2_next_right
+                if (
+                    is_e1_next_right != 0 and is_e2_next_right != 0 and
+                    is_e1_previous_right == is_e1_next_right and
+                    is_e2_previous_right == is_e2_next_right and
+                    is_e1_next_right != is_e2_next_right
+                ):
+                    results.append(Line(e1_current, e2_current))
+            (
+                support_line,
+                e1_previous, e1_current, e1_next,
+                e2_previous, e2_current, e2_next
+            ) = self._rotating_calipers_next_pair(support_line, e1_vertices, e1_previous, e1_current, e1_next, e2_vertices, e2_previous, e2_current, e2_next, True)
+
+            if e1_current == e1_ymax and e2_current == e2_ymin:
+                break
+        return results
+
+    def _do_poly_distance(self, e2, nested=False):
         """
         Calculates the least distance between the exteriors of two
         convex polygons e1 and e2. Does not check for the convexity
         of the polygons as this is checked by Polygon.distance.
-
-        Notes
-        =====
-
-            - Prints a warning if the two polygons possibly intersect as the return
-              value will not be valid in such a case. For a more through test of
-              intersection use intersection().
+        When nested is `True`, the method assumes the two polygons
+        are nested.
 
         See Also
         ========
@@ -1120,162 +1409,34 @@ class Polygon(GeometrySet):
         """
         e1 = self
 
-        '''Tests for a possible intersection between the polygons and outputs a warning'''
-        e1_center = e1.centroid
-        e2_center = e2.centroid
-        e1_max_radius = S.Zero
-        e2_max_radius = S.Zero
-        for vertex in e1.vertices:
-            r = Point.distance(e1_center, vertex)
-            if e1_max_radius < r:
-                e1_max_radius = r
-        for vertex in e2.vertices:
-            r = Point.distance(e2_center, vertex)
-            if e2_max_radius < r:
-                e2_max_radius = r
-        center_dist = Point.distance(e1_center, e2_center)
-        if center_dist <= e1_max_radius + e2_max_radius:
-            warnings.warn("Polygons may intersect producing erroneous output")
-
-        '''
-        Find the upper rightmost vertex of e1 and the lowest leftmost vertex of e2
-        '''
-        e1_ymax = Point(0, -oo)
-        e2_ymin = Point(0, oo)
-
-        for vertex in e1.vertices:
-            if vertex.y > e1_ymax.y or (vertex.y == e1_ymax.y and vertex.x > e1_ymax.x):
-                e1_ymax = vertex
-        for vertex in e2.vertices:
-            if vertex.y < e2_ymin.y or (vertex.y == e2_ymin.y and vertex.x < e2_ymin.x):
-                e2_ymin = vertex
+        (e1_ymax, e2_ymin,
+         _, e1_current, e1_next, e1_vertices,
+         _, e2_current, e2_next, e2_vertices) = self._rotating_calipers_initial_podal_pair(e1, e2, antipodal=not nested)
         min_dist = Point.distance(e1_ymax, e2_ymin)
 
-        '''
-        Produce a dictionary with vertices of e1 as the keys and, for each vertex, the points
-        to which the vertex is connected as its value. The same is then done for e2.
-        '''
-        e1_connections = {}
-        e2_connections = {}
-
-        for side in e1.sides:
-            if side.p1 in e1_connections:
-                e1_connections[side.p1].append(side.p2)
-            else:
-                e1_connections[side.p1] = [side.p2]
-
-            if side.p2 in e1_connections:
-                e1_connections[side.p2].append(side.p1)
-            else:
-                e1_connections[side.p2] = [side.p1]
-
-        for side in e2.sides:
-            if side.p1 in e2_connections:
-                e2_connections[side.p1].append(side.p2)
-            else:
-                e2_connections[side.p1] = [side.p2]
-
-            if side.p2 in e2_connections:
-                e2_connections[side.p2].append(side.p1)
-            else:
-                e2_connections[side.p2] = [side.p1]
-
-        e1_current = e1_ymax
-        e2_current = e2_ymin
         support_line = Line(Point(S.Zero, S.Zero), Point(S.One, S.Zero))
-
-        '''
-        Determine which point in e1 and e2 will be selected after e2_ymin and e1_ymax,
-        this information combined with the above produced dictionaries determines the
-        path that will be taken around the polygons
-        '''
-        point1 = e1_connections[e1_ymax][0]
-        point2 = e1_connections[e1_ymax][1]
-        angle1 = support_line.angle_between(Line(e1_ymax, point1))
-        angle2 = support_line.angle_between(Line(e1_ymax, point2))
-        if angle1 < angle2:
-            e1_next = point1
-        elif angle2 < angle1:
-            e1_next = point2
-        elif Point.distance(e1_ymax, point1) > Point.distance(e1_ymax, point2):
-            e1_next = point2
-        else:
-            e1_next = point1
-
-        point1 = e2_connections[e2_ymin][0]
-        point2 = e2_connections[e2_ymin][1]
-        angle1 = support_line.angle_between(Line(e2_ymin, point1))
-        angle2 = support_line.angle_between(Line(e2_ymin, point2))
-        if angle1 > angle2:
-            e2_next = point1
-        elif angle2 > angle1:
-            e2_next = point2
-        elif Point.distance(e2_ymin, point1) > Point.distance(e2_ymin, point2):
-            e2_next = point2
-        else:
-            e2_next = point1
 
         '''
         Loop which determines the distance between anti-podal pairs and updates the
         minimum distance accordingly. It repeats until it reaches the starting position.
         '''
         while True:
-            e1_angle = support_line.angle_between(Line(e1_current, e1_next))
-            e2_angle = pi - support_line.angle_between(Line(
-                e2_current, e2_next))
+            e1_segment = Segment(e1_current, e1_next)
+            min_dist_current = e1_segment.distance(e2_current)
+            if min_dist_current.evalf() < min_dist.evalf():
+                min_dist = min_dist_current
 
-            if (e1_angle < e2_angle) is True:
-                support_line = Line(e1_current, e1_next)
-                e1_segment = Segment(e1_current, e1_next)
-                min_dist_current = e1_segment.distance(e2_current)
+            e2_segment = Segment(e2_current, e2_next)
+            min_dist_current = e2_segment.distance(e1_current)
+            if min_dist_current.evalf() < min_dist.evalf():
+                min_dist = min_dist_current
 
-                if min_dist_current.evalf() < min_dist.evalf():
-                    min_dist = min_dist_current
+            (
+                support_line,
+                _, e1_current, e1_next,
+                _, e2_current, e2_next
+            ) = self._rotating_calipers_next_pair(support_line, e1_vertices, None, e1_current, e1_next, e2_vertices, None, e2_current, e2_next, not nested)
 
-                if e1_connections[e1_next][0] != e1_current:
-                    e1_current = e1_next
-                    e1_next = e1_connections[e1_next][0]
-                else:
-                    e1_current = e1_next
-                    e1_next = e1_connections[e1_next][1]
-            elif (e1_angle > e2_angle) is True:
-                support_line = Line(e2_next, e2_current)
-                e2_segment = Segment(e2_current, e2_next)
-                min_dist_current = e2_segment.distance(e1_current)
-
-                if min_dist_current.evalf() < min_dist.evalf():
-                    min_dist = min_dist_current
-
-                if e2_connections[e2_next][0] != e2_current:
-                    e2_current = e2_next
-                    e2_next = e2_connections[e2_next][0]
-                else:
-                    e2_current = e2_next
-                    e2_next = e2_connections[e2_next][1]
-            else:
-                support_line = Line(e1_current, e1_next)
-                e1_segment = Segment(e1_current, e1_next)
-                e2_segment = Segment(e2_current, e2_next)
-                min1 = e1_segment.distance(e2_next)
-                min2 = e2_segment.distance(e1_next)
-
-                min_dist_current = min(min1, min2)
-                if min_dist_current.evalf() < min_dist.evalf():
-                    min_dist = min_dist_current
-
-                if e1_connections[e1_next][0] != e1_current:
-                    e1_current = e1_next
-                    e1_next = e1_connections[e1_next][0]
-                else:
-                    e1_current = e1_next
-                    e1_next = e1_connections[e1_next][1]
-
-                if e2_connections[e2_next][0] != e2_current:
-                    e2_current = e2_next
-                    e2_next = e2_connections[e2_next][0]
-                else:
-                    e2_current = e2_next
-                    e2_next = e2_connections[e2_next][1]
             if e1_current == e1_ymax and e2_current == e2_ymin:
                 break
         return min_dist
