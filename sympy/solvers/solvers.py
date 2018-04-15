@@ -836,10 +836,10 @@ def solve(f, *symbols, **flags):
         >>> solve(eq, check=False)
         [1/3]
 
-    In the above example there is only a single solution to the equation. Other
-    expressions will yield spurious roots which must be checked manually;
-    roots which give a negative argument to odd-powered radicals will also need
-    special checking:
+    In the above example there is only a single solution to the
+    equation. Other expressions will yield spurious roots which
+    must be checked manually; roots which give a negative argument
+    to odd-powered radicals will also need special checking:
 
         >>> from sympy import real_root, S
         >>> eq = root(x, 3) - root(x, 5) + S(1)/7
@@ -850,15 +850,15 @@ def solve(f, *symbols, **flags):
         >>> [abs(eq.subs(x,i).n(2)) for i in sol]
         [0.48, 0.e-110, 0.e-110, 0.052, 0.052]
 
-        The first solution is negative so real_root must be used to see that
-        it satisfies the expression:
+        The first solution is negative so real_root must be used to see
+        that it satisfies the expression:
 
         >>> abs(real_root(eq.subs(x, sol[0])).n(2))
         0.e-110
 
-    If the roots of the equation are not real then more care will be necessary
-    to find the roots, especially for higher order equations. Consider the
-    following expression:
+    If the roots of the equation are not real then more care will be
+    necessary to find the roots, especially for higher order equations.
+    Consider the following expression:
 
         >>> expr = root(x, 3) - root(x, 5)
 
