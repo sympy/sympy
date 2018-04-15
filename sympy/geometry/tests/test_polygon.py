@@ -340,15 +340,29 @@ def test_polygon():
     assert p.distance(p6) == 1/2
 
     # Critical support lines
-    assert set(p.critical_support_lines(p1)) == set([Line(Point(1, 1), Point(2, 0)), Line(Point(1, 0), Point(sqrt(2)/2 + 2, sqrt(2)/2))])
+    assert set(p.critical_support_lines(p1)) == set([
+        Line(Point(1, 1), Point(2, 0)),
+        Line(Point(1, 0), Point(sqrt(2)/2 + 2, sqrt(2)/2))
+    ])
     assert p.critical_support_lines(p2) == [Line(Point(1, 0), Point(1, 1/2))]
     assert p.critical_support_lines(p3) == [Line(Point(0, 0), Point(2, 0))]
     assert p.critical_support_lines(p5) == []
     assert p.critical_support_lines(p6) == []
 
     # Bridges
-    assert set(p.bridges(p1)) == set([Line(Point(1, 1), Point(sqrt(2)/2 + 2, sqrt(2)/2)), Line(Point(0, 0), Point(sqrt(2)/2 + 2, -sqrt(2)/2))])
-    assert set(p.bridges(p4)) == set([Line(Point(1, 1), Point(-sqrt(2)/2 + 1, 1/2 + sqrt(2)/2)), Line(Point(1, 0), Point(1, 1/2)), Line(Point(1, 0), Point(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1/2)), Line(Point(0, 0), Point(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1/2)), Line(Point(0, 0), Point(-sqrt(2) + 1, 1/2)), Line(Point(0, 1), Point(-sqrt(2) + 1, 1/2)), Line(Point(0, 1), Point(-sqrt(2)/2 + 1, 1/2 + sqrt(2)/2))])
+    assert set(p.bridges(p1)) == set([
+        Line(Point(1, 1), Point(sqrt(2)/2 + 2, sqrt(2)/2)),
+        Line(Point(0, 0), Point(sqrt(2)/2 + 2, -sqrt(2)/2))
+    ])
+    assert set(p.bridges(p4)) == set([
+        Line(Point(1, 1), Point(-sqrt(2)/2 + 1, 1/2 + sqrt(2)/2)),
+        Line(Point(1, 0), Point(1, 1/2)),
+        Line(Point(1, 0), Point(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1/2)),
+        Line(Point(0, 0), Point(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1/2)),
+        Line(Point(0, 0), Point(-sqrt(2) + 1, 1/2)),
+        Line(Point(0, 1), Point(-sqrt(2) + 1, 1/2)),
+        Line(Point(0, 1), Point(-sqrt(2)/2 + 1, 1/2 + sqrt(2)/2))
+    ])
     assert p.bridges(p5) == []
     assert p.bridges(p6) == []
 

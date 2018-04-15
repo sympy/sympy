@@ -1080,12 +1080,12 @@ class Polygon(GeometrySet):
                     dist = current
             return dist
         elif isinstance(o, Polygon) and self.is_convex() and o.is_convex():
-            if self._critical_support_lines(o) != []:
+            if self._critical_support_lines(o):
                 '''
                 Critical support lines mean they do not intersect.
                 '''
                 return self._do_poly_distance(o)
-            elif self._bridges(o) == []:
+            elif not self._bridges(o):
                 '''
                 No bridges mean they are nested.
                 '''
@@ -1113,8 +1113,7 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        [1] Toussaint GT (1983) Solving geometric problems with the rotating
-            calipers. Proc. ME- LECON, Athens. Greece
+        [1] https://en.wikipedia.org/wiki/Supporting_line
         """
         if isinstance(other, Polygon) and self.is_convex() and other.is_convex():
             return self._critical_support_lines(other)
@@ -1136,14 +1135,14 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        [1] http://en.wikipedia.org/wiki/Antipodal_point
+        [1] https://en.wikipedia.org/wiki/Rotating_calipers
         """
         if isinstance(other, Polygon) and self.is_convex() and other.is_convex():
             return self._bridges(other)
         raise NotImplementedError()
 
     @staticmethod
-    def _rotating_calipers_initial_podal_pair(e1, e2, antipodal=True):
+    def _rotating_calipers_initial_pair(e1, e2, antipodal=True):
         '''
         Find the upper rightmost vertex of e1 and the lowest leftmost (upper rightmost
         for antipodal pairs) vertex of e2,
@@ -1160,10 +1159,28 @@ class Polygon(GeometrySet):
         >>> from sympy.geometry import Point, Polygon
         >>> e1 = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
         >>> e2 = Polygon(Point(0, 2), Point(0, 3), Point(1, 3), Point(1, 2))
-        >>> Polygon._rotating_calipers_initial_podal_pair(e1, e2)
-        (Point(0, 1), Point(1, 2))
-        >>> Polygon._rotating_calipers_initial_podal_pair(e1, e2, antipodal=True)
-        (Point(0, 1), Point(0, 3))
+        >>> Polygon._rotating_calipers_initial_pair(e1, e2)
+        (Point2D(1, 1),
+         Point2D(0, 2),
+         Point2D(0, 1),
+         Point2D(1, 1),
+         Point2D(1, 0),
+         <itertools.cycle at 0x7f359587abd0>,
+         Point2D(1, 2),
+         Point2D(0, 2),
+         Point2D(0, 3),
+         <itertools.cycle at 0x7f359587a318>)
+        >>> Polygon._rotating_calipers_initial_pair(e1, e2, antipodal=False)
+        (Point2D(1, 1),
+         Point2D(1, 3),
+         Point2D(0, 1),
+         Point2D(1, 1),
+         Point2D(1, 0),
+         <itertools.cycle at 0x7f359596bc60>,
+         Point2D(0, 3),
+         Point2D(1, 3),
+         Point2D(1, 2),
+         <itertools.cycle at 0x7f3598968360>)
 
         References
         ==========
@@ -1218,7 +1235,10 @@ class Polygon(GeometrySet):
         )
 
     @staticmethod
-    def _rotating_calipers_next_pair(support_line, e1_vertices, e1_previous, e1_current, e1_next, e2_vertices, e2_previous, e2_current, e2_next, antipodal=True):
+    def _rotating_calipers_next_pair(
+            support_line,
+            e1_vertices, e1_previous, e1_current, e1_next,
+            e2_vertices, e2_previous, e2_current, e2_next, antipodal=True):
         '''
         Compare the angles formed by the support_line and next vertices of the
         two polygons.
@@ -1227,24 +1247,34 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy.geometry import Polygon, Line
+        >>> from sympy import Polygon, Line, Point, S
         >>> e1 = Polygon((-1, 0), (0, 1), (1, 0), (0, -1))
         >>> e2 = Polygon((2, 0), (3, 0), (3, 1), (2, 1))
-        >>> e1_current, e1_next, _, _ = e1.vertices
-        >>> e2_next, e2_current, _, _ = e2.vertices
-        >>> support_line = Line(e1_current, e1_next)
-        >>> Polygon._rotating_calipers_next_pair(support_line, e1_current, e1_next, e2_current, e2_next)
-        False
+        >>> (
+                _, _
+                e1_previous, e1_current, e1_next, e1_vertices,
+                e2_previous, e2_current, e2_next, e2_vertices
+            ) = Polygon._rotating_calipers_initial_pair(e1, e2)
+        >>> support_line = Line(Point(S.Zero, S.Zero), Point(S.One, S.Zero))
+        >>> Polygon._rotating_calipers_next_pair(
+                support_line,
+                e1_vertices, e1_previous, e1_current, e1_next,
+                e2_vertices, e2_previous, e2_current, e2_next,
+            )
+        (Line2D(Point2D(2, 1), Point2D(2, 0)),
+         Point2D(-1, 0),
+         Point2D(0, 1),
+         Point2D(1, 0),
+         Point2D(2, 0),
+         Point2D(2, 1),
+         Point2D(3, 1))
         '''
         e1_angle = support_line.angle_between(Line(e1_current, e1_next))
         e2_angle = support_line.angle_between(Line(e2_current, e2_next))
         if antipodal:
             e2_angle = pi - e2_angle
-        comp = e1_angle < e2_angle
-        if hasattr(comp, 'evalf'):
-            comp = comp.evalf()
 
-        if comp is true and Polygon._isright(Point(0, 0), support_line.direction, e1_next - e1_current) != -1:
+        if (e1_angle < e2_angle) is true:
             support_line = Line(e1_current, e1_next)
 
             e1_previous = e1_current
@@ -1280,13 +1310,13 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        [1] http://en.wikipedia.org/wiki/Antipodal_point
+        [1] https://en.wikipedia.org/wiki/Rotating_calipers
         """
         e1 = self
 
         (e1_ymax, e2_ymax,
          e1_previous, e1_current, e1_next, e1_vertices,
-         e2_previous, e2_current, e2_next, e2_vertices) = self._rotating_calipers_initial_podal_pair(e1, e2, antipodal=False)
+         e2_previous, e2_current, e2_next, e2_vertices) = self._rotating_calipers_initial_pair(e1, e2, antipodal=False)
 
         support_line = Line(Point(S.Zero, S.Zero), Point(S.One, S.Zero))
 
@@ -1311,7 +1341,11 @@ class Polygon(GeometrySet):
                 support_line,
                 e1_previous, e1_current, e1_next,
                 e2_previous, e2_current, e2_next
-            ) = self._rotating_calipers_next_pair(support_line, e1_vertices, e1_previous, e1_current, e1_next, e2_vertices, e2_previous, e2_current, e2_next, False)
+            ) = self._rotating_calipers_next_pair(
+                support_line,
+                e1_vertices, e1_previous, e1_current, e1_next,
+                e2_vertices, e2_previous, e2_current, e2_next, False
+            )
 
             if e1_current == e1_ymax and e2_current == e2_ymax:
                 break
@@ -1335,14 +1369,13 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        [1] Toussaint GT (1983) Solving geometric problems with the rotating
-            calipers. Proc. ME- LECON, Athens. Greece
+        [1] https://en.wikipedia.org/wiki/Supporting_line
         """
         e1 = self
 
         (e1_ymax, e2_ymin,
          e1_previous, e1_current, e1_next, e1_vertices,
-         e2_previous, e2_current, e2_next, e2_vertices) = self._rotating_calipers_initial_podal_pair(e1, e2)
+         e2_previous, e2_current, e2_next, e2_vertices) = self._rotating_calipers_initial_pair(e1, e2)
 
         support_line = Line(Point(S.Zero, S.Zero), Point(S.One, S.Zero))
 
@@ -1369,7 +1402,11 @@ class Polygon(GeometrySet):
                 support_line,
                 e1_previous, e1_current, e1_next,
                 e2_previous, e2_current, e2_next
-            ) = self._rotating_calipers_next_pair(support_line, e1_vertices, e1_previous, e1_current, e1_next, e2_vertices, e2_previous, e2_current, e2_next, True)
+            ) = self._rotating_calipers_next_pair(
+                support_line,
+                e1_vertices, e1_previous, e1_current, e1_next,
+                e2_vertices, e2_previous, e2_current, e2_next, True
+            )
 
             if e1_current == e1_ymax and e2_current == e2_ymin:
                 break
@@ -1411,7 +1448,7 @@ class Polygon(GeometrySet):
 
         (e1_ymax, e2_ymin,
          _, e1_current, e1_next, e1_vertices,
-         _, e2_current, e2_next, e2_vertices) = self._rotating_calipers_initial_podal_pair(e1, e2, antipodal=not nested)
+         _, e2_current, e2_next, e2_vertices) = self._rotating_calipers_initial_pair(e1, e2, antipodal=not nested)
         min_dist = Point.distance(e1_ymax, e2_ymin)
 
         support_line = Line(Point(S.Zero, S.Zero), Point(S.One, S.Zero))
@@ -1435,7 +1472,11 @@ class Polygon(GeometrySet):
                 support_line,
                 _, e1_current, e1_next,
                 _, e2_current, e2_next
-            ) = self._rotating_calipers_next_pair(support_line, e1_vertices, None, e1_current, e1_next, e2_vertices, None, e2_current, e2_next, not nested)
+            ) = self._rotating_calipers_next_pair(
+                support_line,
+                e1_vertices, None, e1_current, e1_next,
+                e2_vertices, None, e2_current, e2_next, not nested
+            )
 
             if e1_current == e1_ymax and e2_current == e2_ymin:
                 break
