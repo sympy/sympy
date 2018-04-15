@@ -7,6 +7,7 @@ from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
 from sympy.utilities.pytest import raises
 
+from array import array as _array
 
 def test_prime():
     assert prime(1) == 2
@@ -109,11 +110,17 @@ def test_generate():
     assert prevprime(10**40) == (10**40 - 17)
 
     assert list(sieve.primerange(10, 1)) == []
+
     assert list(sieve.totientrange(5, 15)) == [4, 2, 6, 4, 6, 4, 10, 4, 12, 6]
+    sieve._tlist = _array('l', [0, 1, 1, 2, 2, 4])
+    assert list(sieve.totientrange(3, 13)) == [2, 2, 4, 2, 6, 4, 6, 4, 10, 4]
     assert list(sieve.totientrange(900, 1000)) == [totient(x) for x in range(900, 1000)]
     assert list(sieve.totientrange(0, 1)) == []
     assert list(sieve.totientrange(1, 2)) == [1]
+
     assert list(sieve.mobiusrange(5, 15)) == [-1, 1, -1, 0, 0, 1, -1, 0, -1, 1]
+    sieve._mlist = _array('i', [0, 1, -1, -1, 0, -1])
+    assert list(sieve.mobiusrange(3, 13)) == [-1, 0, -1, 1, -1, 0, 0, 1, -1, 0]
     assert list(sieve.mobiusrange(1050, 1100)) == [mobius(x) for x in range(1050, 1100)]
     assert list(sieve.mobiusrange(0, 1)) == []
     assert list(sieve.mobiusrange(1, 2)) == [1]
