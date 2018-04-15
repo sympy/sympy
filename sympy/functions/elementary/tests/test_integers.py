@@ -258,8 +258,16 @@ def test_issue_4149():
     assert floor(3*I + pi*I + y*I) == floor(3 + pi + y)*I
     assert floor(3 + E + pi*I + y*I) == 5 + floor(pi + y)*I
 
+
 def test_issue_11207():
     assert floor(floor(x)) == floor(x)
     assert floor(ceiling(x)) == ceiling(x)
     assert ceiling(floor(x)) == floor(x)
     assert ceiling(ceiling(x)) == ceiling(x)
+
+
+def test_nested_floor_ceiling():
+    assert floor(-floor(ceiling(x**3)/y)) == -floor(ceiling(x**3)/y)
+    assert ceiling(-floor(ceiling(x**3)/y)) == -floor(ceiling(x**3)/y)
+    assert floor(ceiling(-floor(x**Rational(7, 2)/y))) == -floor(x**Rational(7, 2)/y)
+    assert -ceiling(-ceiling(floor(x)/y)) == ceiling(floor(x)/y)
