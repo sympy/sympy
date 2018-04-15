@@ -828,18 +828,21 @@ class binomial(CombinatorialFunction):
     @classmethod
     def eval(cls, n, k):
         n, k = map(sympify, (n, k))
-        if k.is_zero:
+        d = n - k
+        n_nonneg, n_isint = n.is_nonnegative, n.is_integer
+        if k.is_zero or ((n_nonneg or n_isint == False)
+                and d.is_zero):
             return S.One
-        if (k - 1).is_zero:
+        if (k - 1).is_zero or ((n_nonneg or n_isint == False)
+                and (d - 1).is_zero):
             return n
         if k.is_integer:
-            if k.is_negative or (n.is_integer and n.is_nonnegative
-                    and (n - k).is_negative):
+            if k.is_negative or (n_nonneg and n_isint and d.is_negative):
                 return S.Zero
             elif n.is_number:
                 res = cls._eval(n, k)
                 return res.expand(basic=True) if res else res
-        elif n.is_negative and n.is_integer:
+        elif n_nonneg == False and n_isint:
             # a special case when binomial evaluates to complex infinity
             return S.ComplexInfinity
         elif k.is_number:
