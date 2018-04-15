@@ -1002,8 +1002,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     assert use_trial or use_rho or use_pm1
 
-    # for unevaluated factorial, if n < 20!, direct computation is faster
-    # since it uses lookup table
     from sympy.functions.combinatorial.factorials import factorial
     if isinstance(n, factorial):
         x = as_int(n.args[0])
