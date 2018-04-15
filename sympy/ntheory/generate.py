@@ -186,7 +186,7 @@ class Sieve:
 
         >>> from sympy import sieve
         >>> print([i for i in sieve.mobiusrange(7, 18)])
-        [1, -1, 0, 0, 1, -1, 0, -1, 1, 1, 0, -1]
+        [-1, 0, 0, 1, -1, 0, -1, 1, 1, 0, -1]
         """
         from sympy.functions.elementary.integers import ceiling
 
