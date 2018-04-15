@@ -1,7 +1,7 @@
 from sympy import Sieve, sieve
 from sympy.core.compatibility import range
 
-from sympy.ntheory import isprime, totient, randprime, nextprime, prevprime, \
+from sympy.ntheory import isprime, totient, mobius, randprime, nextprime, prevprime, \
     primerange, primepi, prime, primorial, composite, compositepi, reduced_totient
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
@@ -107,7 +107,17 @@ def test_generate():
     assert nextprime(10**40) == (10**40 + 121)
     assert prevprime(97) == 89
     assert prevprime(10**40) == (10**40 - 17)
+
     assert list(sieve.primerange(10, 1)) == []
+    assert list(sieve.totientrange(5, 15)) == [4, 2, 6, 4, 6, 4, 10, 4, 12, 6]
+    assert list(sieve.totientrange(900, 1000)) == [totient(x) for x in range(900, 1000)]
+    assert list(sieve.totientrange(0, 1)) == []
+    assert list(sieve.totientrange(1, 2)) == [1]
+    assert list(sieve.mobiusrange(5, 15)) == [-1, 1, -1, 0, 0, 1, -1, 0, -1, 1]
+    assert list(sieve.mobiusrange(1050, 1100)) == [mobius(x) for x in range(1050, 1100)]
+    assert list(sieve.mobiusrange(0, 1)) == []
+    assert list(sieve.mobiusrange(1, 2)) == [1]
+
     assert list(primerange(10, 1)) == []
     assert list(primerange(2, 7)) == [2, 3, 5]
     assert list(primerange(2, 10)) == [2, 3, 5, 7]
