@@ -165,7 +165,7 @@ class Sieve:
             self._tlist += _arange(n, b)
             for i in range(1, n):
                 ti = self._tlist[i]
-                startindex = max(2, (n + i - 1) // i) * i
+                startindex = (n + i - 1) // i * i
                 for j in range(startindex, b, i):
                     self._tlist[j] -= ti
                 if i >= a:
@@ -175,7 +175,7 @@ class Sieve:
                 ti = self._tlist[i]
                 for j in range(2 * i, b, i):
                     self._tlist[j] -= ti
-                if a <= i < b:
+                if i >= a:
                     yield ti
 
     def mobiusrange(self, a, b):
@@ -204,7 +204,7 @@ class Sieve:
             self._mlist += _array('i', [0]*(b - n))
             for i in range(1, n):
                 mi = self._mlist[i]
-                startindex = max(2, (n + i - 1) // i) * i
+                startindex = (n + i - 1) // i * i
                 for j in range(startindex, b, i):
                     self._mlist[j] -= mi
                 if i >= a:
@@ -214,7 +214,7 @@ class Sieve:
                 mi = self._mlist[i]
                 for j in range(2 * i, b, i):
                     self._mlist[j] -= mi
-                if a <= i < b:
+                if i >= a:
                     yield mi
 
     def search(self, n):
