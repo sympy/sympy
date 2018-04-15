@@ -957,7 +957,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         fac = factorint(n, limit=limit, use_trial=use_trial,
                            use_rho=use_rho, use_pm1=use_pm1,
                            verbose=verbose, visual=False, multiple=False)
-        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-1*fac[p])
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
                                for p in sorted(fac)), [])
         return factorlist
 
@@ -1005,21 +1005,28 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     # for unevaluated factorial, if n < 20!, direct computation is faster
     # since it uses lookup table
     from sympy.functions.combinatorial.factorials import factorial
-    if isinstance(n, factorial) and n.args[0].is_Integer and n.args[0] >= 20:
-        x = n.args[0]
-        factors = {}
-        for p in sieve.primerange(2, x):
-            m, q = 0, x // p
-            while q != 0:
-                m += q
-                q //= p
-            factors[p] = m
-        if factors and verbose:
-            for k in sorted(factors):
-                print(factor_msg % (k, factors[k]))
-        if verbose:
-            print(complete_msg)
-        return factors
+    if isinstance(n, factorial):
+        x = as_int(n.args[0])
+        if x >= 20:
+            factors = {}
+            m = 2 # to initialize the if condition below
+            for p in sieve.primerange(2, x):
+                if m > 1:
+                    m, q = 0, x // p
+                    while q != 0:
+                        m += q
+                        q //= p
+                factors[p] = m
+            if factors and verbose:
+                for k in sorted(factors):
+                    print(factor_msg % (k, factors[k]))
+            if verbose:
+                print(complete_msg)
+            return factors
+        else:
+            # if n < 20!, direct computation is faster
+            # since it uses a lookup table
+            n = n.func(x)
 
     n = as_int(n)
     if limit:
