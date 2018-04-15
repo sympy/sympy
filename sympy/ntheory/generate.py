@@ -41,7 +41,7 @@ class Sieve:
     # data shared (and updated) by all Sieve instances
     _list = _array('l', [2, 3, 5, 7, 11, 13]) # primes
     _tlist = _array('l', [0, 1, 1, 2, 2, 4]) # totient
-    _mlist = _array('i', [0, 1, -1, -1, 0]) # mobius
+    _mlist = _array('i', [0, 1, -1, -1, 0, -1]) # mobius
 
     def __repr__(self):
         return "<Sieve with %i primes sieved: 2, 3, 5, ... %i, %i>" % \
