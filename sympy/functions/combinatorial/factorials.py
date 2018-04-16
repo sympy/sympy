@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, Dummy, Mod
+from sympy.core import S, sympify, Dummy, Mod, Pow
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
@@ -173,6 +173,60 @@ class factorial(CombinatorialFunction):
 
                     return Integer(result)
 
+    def _facmod(self, n, q):
+        res, N = 1, int(_sqrt(n))
+        m, pw = 2, [1]*N
+        for prime in sieve.primerange(2, n + 1):
+            if m > 1:
+                m, y = 0, n // prime
+                while y:
+                    m += y
+                    y //= prime
+            if m < N:
+                pw[m] = pw[m]*prime % q
+            else:
+                res = res*Mod(Pow(prime, m, evaluate=False), q) % q
+
+        for ex, bs in enumerate(pw):
+            if ex == 0 or bs == 1:
+                continue
+            if bs == 0:
+                return 0
+            res = res*Mod(Pow(bs, ex, evaluate=False), q) % q
+
+        return res
+
+    def _eval_Mod(self, q):
+        x = self.args[0]
+        if x.is_integer and x.is_nonnegative and q.is_integer:
+            aq = abs(q)
+            d = aq - x
+            if d.is_negative:
+                return 0
+            else:
+                isprime = aq.is_prime
+                if d == 1:
+                    '''
+                    Apply Wilson's theorem-if a natural number n > 1
+                    is a prime number, (n-1)! = -1 mod n-and its
+                    inverse-if n > 4 is a composite number,
+                    (n-1)! = 0 mod n
+                    '''
+                    if isprime:
+                        return -1 % q
+                    elif isprime == False and (aq - 6).is_nonnegative:
+                        return 0
+                elif x.is_Integer and q.is_Integer:
+                    if isprime and (d - 1 < x):
+                        fc = self._facmod(d - 1, aq)
+                        fc = Mod(Pow(fc, aq - 2, evaluate=False), aq)
+                        if d%2:
+                            fc = -fc
+                    else:
+                        fc = self._facmod(x, aq)
+
+                    return Integer(fc % q)
+
     def _eval_rewrite_as_gamma(self, n):
         from sympy import gamma
         return gamma(n + 1)
@@ -205,26 +259,6 @@ class factorial(CombinatorialFunction):
         x = self.args[0]
         if x.is_nonnegative or x.is_noninteger:
             return True
-
-    def _eval_Mod(self, q):
-        x = self.args[0]
-        if x.is_integer and x.is_nonnegative and q.is_integer:
-            aq = abs(q)
-            d = x - aq
-            if d.is_nonnegative:
-                return 0
-            elif d == -1:
-                '''
-                Apply Wilson's theorem-if a natural number n > 1
-                is a prime number, (n-1)! = -1 mod n-and its
-                inverse-if n > 4 is a composite number,
-                (n-1)! = 0 mod n
-                '''
-                if aq.is_prime:
-                    return -1 % q
-                elif aq.is_composite and (aq - 6).is_nonnegative:
-                    return 0
-
 
 class MultiFactorial(CombinatorialFunction):
     pass
@@ -849,10 +883,83 @@ class binomial(CombinatorialFunction):
             from sympy import gamma
             return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
+    def _eval_Mod(self, q):
+        n, k = self.args
+        if all(x.is_integer for x in (n, k, q)):
+            if all(x.is_Integer for x in (n, k, q)):
+                n, k = map(int, (n, k))
+                aq = abs(q)
+
+                # handle negative integers k or n
+                if k < 0:
+                    return 0
+                if n < 0:
+                    n = -n + k - 1
+
+                # non negative integers k and n
+                if k > n:
+                    return 0
+
+                isprime = aq.is_prime
+                res, aq = 1, int(aq)
+                if isprime:
+                    if aq < n:
+                        # use Lucas Theorem
+                        N, K = n, k
+                        while N or K:
+                            res = res*binomial(N % aq, K % aq) % aq
+                            N, K = N // aq, K // aq
+
+                    else:
+                        # use factorial Mod
+                        d = n - k
+                        if k > d:
+                            k, d = d, k
+                        kf = 1
+                        for i in range(2, k + 1):
+                            kf = kf*i % aq
+                        df = kf
+                        for i in range(k + 1, d + 1):
+                            df = df*i % aq
+                        res = df
+                        for i in range(d + 1, n + 1):
+                            res = res*i % aq
+
+                        res *= Mod(Pow(kf*df % aq, aq - 2, evaluate=False), aq)
+                        res %= aq
+
+                else:
+                    # use binomial factorization
+                    M = int(_sqrt(n))
+                    for prime in sieve.primerange(2, n + 1):
+                        if prime > n - k:
+                            res = res*prime % aq
+                        elif prime > n // 2:
+                            continue
+                        elif prime > M:
+                            if n % prime < k % prime:
+                                res = res*prime % aq
+                        else:
+                            N, K = n, k
+                            exp = a = 0
+
+                            while N > 0:
+                                a = int((N % prime) < (K % prime + a))
+                                N, K = N // prime, K // prime
+                                exp += a
+
+                            if exp > 0:
+                                res *= Mod(Pow(prime, exp, evaluate=False), aq)
+                                res %= aq
+
+                return Integer(res % q)
+
+        else:
+            raise ValueError("Integers expected for binomial Mod")
 
     def _eval_expand_func(self, **hints):
         """
-        Function to expand binomial(n,k) when m is positive integer
+        Function to expand binomial(n, k) when m is positive integer
         Also,
         n is self.args[0] and k is self.args[1] while using binomial(n, k)
         """
@@ -870,9 +977,8 @@ class binomial(CombinatorialFunction):
             elif k < 0:
                 return S.Zero
             else:
-                n = self.args[0]
-                result = n - k + 1
-                for i in range(2, k + 1):
+                n, result = self.args[0], 1
+                for i in range(1, k + 1):
                     result *= n - k + i
                     result /= i
                 return result
@@ -901,6 +1007,9 @@ class binomial(CombinatorialFunction):
             return False
 
     def _eval_is_nonnegative(self):
-        if self.args[0].is_integer and self.args[1].is_integer:
-            if self.args[0].is_nonnegative and self.args[1].is_nonnegative:
+        n, k = self.args
+        if n.is_integer and k.is_integer:
+            if n.is_nonnegative or k.is_negative or k.is_even:
                 return True
+            elif k.is_even is False:
+                return  False
