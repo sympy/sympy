@@ -1765,12 +1765,10 @@ def Maxwell(name, a):
 
     with :math:`x \geq 0`.
 
-    .. TODO - what does the parameter mean?
-
     Parameters
     ==========
 
-    a : Real number, `a > 0`
+    a : Real number, `a > 0`, Scale parameter sqrt(kT/m)
 
     Returns
     =======
