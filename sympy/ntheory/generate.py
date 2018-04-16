@@ -52,10 +52,10 @@ class Sieve:
         assert all(len(i) == self._n for i in (self._list, self._tlist, self._mlist))
 
     def __repr__(self):
-        return ("<Sieve with \n%s (%i): %i, %i, %i, ... %i, %i\n"
-             "%s (%i): %i, %i, %i, ... %i, %i\n"
-             "%s (%i): %i, %i, %i, ... %i, %i>") % (
-             'primes', len(self._list),
+        return ("<%s sieve (%i): %i, %i, %i, ... %i, %i\n"
+             "%s sieve (%i): %i, %i, %i, ... %i, %i\n"
+             "%s sieve (%i): %i, %i, %i, ... %i, %i>") % (
+             'prime', len(self._list),
                  self._list[0], self._list[1], self._list[2],
                  self._list[-2], self._list[-1],
              'totient', len(self._tlist),
@@ -65,9 +65,11 @@ class Sieve:
                  self._mlist[0], self._mlist[1],
                  self._mlist[2], self._mlist[-2], self._mlist[-1])
 
-    def _reset(self, prime=True, totient=True, mobius=True):
-        """Return sieve to its initial state for testing purposes.
-        """
+    def _reset(self, prime=None, totient=None, mobius=None):
+        """Reset all caches (default). To reset one or more set the
+            desired keyword to True."""
+        if all(i is None for i in (prime, totient, mobius)):
+            prime = totient = mobius = True
         if prime:
             self._list = self._list[:self._n]
         if totient:
