@@ -23,10 +23,7 @@ def _aset(*v):
 
 
 def _arange(a, b):
-    ar = _azeros(b - a)
-    for i, e in enumerate(range(a, b)):
-        ar[i] = e
-    return ar
+    return _array('l', range(a, b))
 
 
 class Sieve:
