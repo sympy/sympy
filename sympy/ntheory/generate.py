@@ -49,6 +49,7 @@ class Sieve:
         self._list = _aset(2, 3, 5, 7, 11, 13) # primes
         self._tlist = _aset(0, 1, 1, 2, 2, 4) # totient
         self._mlist = _aset(0, 1, -1, -1, 0, -1) # mobius
+        assert all(len(i) == self._n for i in (self._list, self._tlist, self._mlist))
 
     def __repr__(self):
         return ("<Sieve with \n%s (%i): %i, %i, %i, ... %i, %i\n"
@@ -64,12 +65,15 @@ class Sieve:
                  self._mlist[0], self._mlist[1],
                  self._mlist[2], self._mlist[-2], self._mlist[-1])
 
-    def _reset(self):
+    def _reset(self, prime=True, totient=True, mobius=True):
         """Return sieve to its initial state for testing purposes.
         """
-        self._list = self._list[:self._n]
-        self._tlist = self._tlist[:self._n]
-        self._mlist = self._mlist[:self._n]
+        if prime:
+            self._list = self._list[:self._n]
+        if totient:
+            self._tlist = self._tlist[:self._n]
+        if mobius:
+            self._mlist = self._mlist[:self._n]
 
     def extend(self, n):
         """Grow the sieve to cover all primes <= n (a real number).
