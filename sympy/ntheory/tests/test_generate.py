@@ -110,16 +110,19 @@ def test_generate():
     assert prevprime(10**40) == (10**40 - 17)
 
     assert list(sieve.primerange(10, 1)) == []
+    assert list(sieve.primerange(5, 9)) == [5, 7]
+    sieve._reset(prime=True)
+    assert list(sieve.primerange(2, 12)) == [2, 3, 5, 7, 11]
 
     assert list(sieve.totientrange(5, 15)) == [4, 2, 6, 4, 6, 4, 10, 4, 12, 6]
-    sieve._reset()
+    sieve._reset(totient=True)
     assert list(sieve.totientrange(3, 13)) == [2, 2, 4, 2, 6, 4, 6, 4, 10, 4]
     assert list(sieve.totientrange(900, 1000)) == [totient(x) for x in range(900, 1000)]
     assert list(sieve.totientrange(0, 1)) == []
     assert list(sieve.totientrange(1, 2)) == [1]
 
     assert list(sieve.mobiusrange(5, 15)) == [-1, 1, -1, 0, 0, 1, -1, 0, -1, 1]
-    sieve._reset()
+    sieve._reset(mobius=True)
     assert list(sieve.mobiusrange(3, 13)) == [-1, 0, -1, 1, -1, 0, 0, 1, -1, 0]
     assert list(sieve.mobiusrange(1050, 1100)) == [mobius(x) for x in range(1050, 1100)]
     assert list(sieve.mobiusrange(0, 1)) == []
