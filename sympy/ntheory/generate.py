@@ -18,17 +18,14 @@ def _azeros(n):
     return _array('l', [0]*n)
 
 
+def _aset(*v):
+    return _array('l', v)
+
+
 def _arange(a, b):
     ar = _azeros(b - a)
     for i, e in enumerate(range(a, b)):
         ar[i] = e
-    return ar
-
-
-def _aset(*v):
-    ar = _azeros(len(v))
-    for i in range(len(v)):
-        ar[i] = v[i]
     return ar
 
 
