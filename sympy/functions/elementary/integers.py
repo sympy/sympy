@@ -122,9 +122,8 @@ class floor(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             return arg.floor()
-        elif isinstance(arg, ceiling):
-            return arg
-        elif isinstance(arg, floor):
+        elif any(isinstance(i, j)
+                for i in (arg, -arg) for j in (floor, ceiling)):
             return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[0]
@@ -195,9 +194,8 @@ class ceiling(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             return arg.ceiling()
-        elif isinstance(arg, ceiling):
-            return arg
-        elif isinstance(arg, floor):
+        elif any(isinstance(i, j)
+                for i in (arg, -arg) for j in (floor, ceiling)):
             return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[1]
