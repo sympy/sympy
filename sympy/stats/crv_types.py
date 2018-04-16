@@ -1021,13 +1021,11 @@ def FisherZ(name, d1, d2):
                 \frac{e^{d_1z}}{\left(d_1e^{2z}+d_2\right)^{\left(d_1+d_2\right)/2}}
 
 
-    .. TODO - What is the difference between these degrees of freedom?
-
     Parameters
     ==========
 
-    d1 : `d_1 > 0`, degree of freedom
-    d2 : `d_2 > 0`, degree of freedom
+    d1 : `d_1 > 0`, degree of freedom, (n_1 - 1) where n_1 is the size of set one
+    d2 : `d_2 > 0`, degree of freedom, (n_2 - 1) where n_2 is the size of set two
 
     Returns
     =======
