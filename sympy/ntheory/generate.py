@@ -14,10 +14,21 @@ from .primetest import isprime
 from sympy.core.compatibility import as_int, range
 
 
+def _azeros(n):
+    return _array('l', [0]*n)
+
+
 def _arange(a, b):
-    ar = _array('l', [0]*(b - a))
+    ar = _azeros(b - a)
     for i, e in enumerate(range(a, b)):
         ar[i] = e
+    return ar
+
+
+def _aset(*v):
+    ar = _azeros(len(v))
+    for i in range(len(v)):
+        ar[i] = v[i]
     return ar
 
 
@@ -39,20 +50,32 @@ class Sieve:
     """
 
     # data shared (and updated) by all Sieve instances
-    _list = _array('l', [2, 3, 5, 7, 11, 13]) # primes
-    _tlist = _array('l', [0, 1, 1, 2, 2, 4]) # totient
-    _mlist = _array('i', [0, 1, -1, -1, 0, -1]) # mobius
+    def __init__(self):
+        self._n = 6
+        self._list = _aset(2, 3, 5, 7, 11, 13) # primes
+        self._tlist = _aset(0, 1, 1, 2, 2, 4) # totient
+        self._mlist = _aset(0, 1, -1, -1, 0, -1) # mobius
 
     def __repr__(self):
-        return "<Sieve with %i primes sieved: 2, 3, 5, ... %i, %i>" % \
-            (len(self._list), self._list[-2], self._list[-1])
+        return ("<Sieve with \n%s (%i): %i, %i, %i, ... %i, %i\n"
+             "%s (%i): %i, %i, %i, ... %i, %i\n"
+             "%s (%i): %i, %i, %i, ... %i, %i>") % (
+             'primes', len(self._list),
+                 self._list[0], self._list[1], self._list[2],
+                 self._list[-2], self._list[-1],
+             'totient', len(self._tlist),
+                 self._tlist[0], self._tlist[1],
+                 self._tlist[2], self._tlist[-2], self._tlist[-1],
+             'mobius', len(self._mlist),
+                 self._mlist[0], self._mlist[1],
+                 self._mlist[2], self._mlist[-2], self._mlist[-1])
 
     def _reset(self):
         """Return sieve to its initial state for testing purposes.
         """
-        self._list = self._list[:6]
-        self._tlist = self._tlist[:6]
-        self._mlist = self._mlist[:6]
+        self._list = self._list[:self._n]
+        self._tlist = self._tlist[:self._n]
+        self._mlist = self._mlist[:self._n]
 
     def extend(self, n):
         """Grow the sieve to cover all primes <= n (a real number).
@@ -203,7 +226,7 @@ class Sieve:
             for i in range(a, b):
                 yield self._mlist[i]
         else:
-            self._mlist += _array('i', [0]*(b - n))
+            self._mlist += _azeros(b - n)
             for i in range(1, n):
                 mi = self._mlist[i]
                 startindex = (n + i - 1) // i * i
