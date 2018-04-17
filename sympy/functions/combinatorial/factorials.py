@@ -175,7 +175,14 @@ class factorial(CombinatorialFunction):
 
     def _facmod(self, n, q):
         res, N = 1, int(_sqrt(n))
-        m, pw = 2, [1]*N
+
+        # exponent of prime p in n! is e_p(n) = [n/p] + [n/p**2] + ...
+        # for p > sqrt(n), e_p(n) < sqrt(n), the primes with [n/p] = m,
+        # occur consecutively and are grouped together in pw[m] for
+        # simultaneous exponentiation at a later stage
+        pw = [1]*N
+
+        m = 2 # to initialize the if condition below
         for prime in sieve.primerange(2, n + 1):
             if m > 1:
                 m, y = 0, n // prime
