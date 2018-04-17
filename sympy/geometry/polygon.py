@@ -1108,7 +1108,7 @@ class Polygon(GeometrySet):
         >>> e1 = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
         >>> e2 = Polygon(Point(0, 2), Point(0, 3), Point(1, 3), Point(1, 2))
         >>> e1.critical_support_lines(e2)
-        [Line2D(Point2D(1, 1), Point2D(0, 2)), Line2D(Point2D(0, 1), Point2D(1, 2))]
+        [Line2D(Point2D(0, 1), Point2D(1, 2)), Line2D(Point2D(1, 1), Point2D(0, 2))]
 
         References
         ==========
@@ -1130,7 +1130,7 @@ class Polygon(GeometrySet):
         >>> e1 = Polygon((-1, 0), (0, 1), (1, 0), (0, -1))
         >>> e2 = Polygon((2, 0), (3, 0), (3, 1), (2, 1))
         >>> e1.bridges(e2)
-        [Line2D(Point2D(0, 1), Point2D(2, 1)), Line2D(Point2D(0, -1), Point2D(3, 0))]
+        [Line2D(Point2D(0, -1), Point2D(3, 0)), Line2D(Point2D(0, 1), Point2D(3, 1))]
 
         References
         ==========
@@ -1154,7 +1154,7 @@ class Polygon(GeometrySet):
         >>> e1 = Polygon((-1, 0), (0, 1), (1, 0), (0, -1))
         >>> e2 = Polygon((2, 0), (3, 0), (3, 1), (2, 1))
         >>> e1._bridges(e2)
-        [Line2D(Point2D(0, 1), Point2D(2, 1)), Line2D(Point2D(0, -1), Point2D(3, 0))]
+        [Line2D(Point2D(0, -1), Point2D(3, 0)), Line2D(Point2D(0, 1), Point2D(3, 1))]
 
         References
         ==========
@@ -1190,7 +1190,7 @@ class Polygon(GeometrySet):
         >>> e1 = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
         >>> e2 = Polygon(Point(0, 2), Point(0, 3), Point(1, 3), Point(1, 2))
         >>> e1.critical_support_lines(e2)
-        [Line2D(Point2D(1, 1), Point2D(0, 2)), Line2D(Point2D(0, 1), Point2D(1, 2))]
+        [Line2D(Point2D(0, 1), Point2D(1, 2)), Line2D(Point2D(1, 1), Point2D(0, 2))]
 
         References
         ==========
