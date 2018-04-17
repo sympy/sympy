@@ -201,7 +201,7 @@ class factorial(CombinatorialFunction):
         if x.is_integer and x.is_nonnegative and q.is_integer:
             aq = abs(q)
             d = aq - x
-            if d.is_negative:
+            if d.is_nonpositive:
                 return 0
             else:
                 isprime = aq.is_prime
