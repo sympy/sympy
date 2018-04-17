@@ -179,6 +179,9 @@ def test_factorint():
         {2: 11, 3: 6, 5: 3, 7: 2, 11: 1, 13: 1}
     assert factorint(fac(20, evaluate=False)) == \
         {2: 18, 3: 8, 5: 4, 7: 2, 11: 1, 13: 1, 17: 1, 19: 1}
+    assert factorint(fac(23, evaluate=False)) == \
+        {2: 19, 3: 9, 5: 4, 7: 3, 11: 2, 13: 1, 17: 1, 19: 1, 23: 1}
+
     assert multiproduct(factorint(fac(200))) == fac(200)
     assert multiproduct(factorint(fac(200, evaluate=False))) == fac(200)
     for b, e in factorint(fac(150)).items():
