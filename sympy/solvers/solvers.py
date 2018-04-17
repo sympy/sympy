@@ -901,6 +901,10 @@ def solve(f, *symbols, **flags):
         - dsolve() for solving differential equations
 
     """
+
+    if isinstance(f, bool):
+        raise AttributeError("equation must not be boolean")
+
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
     ###########################################################################

@@ -529,7 +529,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     from sympy import Sum, Product
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
-        return expr
+        if isinstance(expr, bool):
+            raise AttributeError("expression must not be boolean")
+        else:
+            return expr
 
     if inverse and expr.has(Function):
         expr = inversecombine(expr)
