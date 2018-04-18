@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, Dummy, Mod, Pow
+from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
@@ -176,7 +176,7 @@ class factorial(CombinatorialFunction):
     def _facmod(self, n, q):
         res, N = 1, int(_sqrt(n))
 
-        # exponent of prime p in n! is e_p(n) = [n/p] + [n/p**2] + ...
+        # Exponent of prime p in n! is e_p(n) = [n/p] + [n/p**2] + ...
         # for p > sqrt(n), e_p(n) < sqrt(n), the primes with [n/p] = m,
         # occur consecutively and are grouped together in pw[m] for
         # simultaneous exponentiation at a later stage
@@ -192,22 +192,22 @@ class factorial(CombinatorialFunction):
             if m < N:
                 pw[m] = pw[m]*prime % q
             else:
-                res = res*Mod(Pow(prime, m, evaluate=False), q) % q
+                res = res*pow(prime, m, q) % q
 
         for ex, bs in enumerate(pw):
             if ex == 0 or bs == 1:
                 continue
             if bs == 0:
                 return 0
-            res = res*Mod(Pow(bs, ex, evaluate=False), q) % q
+            res = res*pow(bs, ex, q) % q
 
         return res
 
     def _eval_Mod(self, q):
-        x = self.args[0]
-        if x.is_integer and x.is_nonnegative and q.is_integer:
+        n = self.args[0]
+        if n.is_integer and n.is_nonnegative and q.is_integer:
             aq = abs(q)
-            d = aq - x
+            d = aq - n
             if d.is_nonpositive:
                 return 0
             else:
@@ -223,14 +223,15 @@ class factorial(CombinatorialFunction):
                         return -1 % q
                     elif isprime == False and (aq - 6).is_nonnegative:
                         return 0
-                elif x.is_Integer and q.is_Integer:
-                    if isprime and (d - 1 < x):
+                elif n.is_Integer and q.is_Integer:
+                    n, d, aq = map(int, (n, d, aq))
+                    if isprime and (d - 1 < n):
                         fc = self._facmod(d - 1, aq)
-                        fc = Mod(Pow(fc, aq - 2, evaluate=False), aq)
+                        fc = pow(fc, aq - 2, aq)
                         if d%2:
                             fc = -fc
                     else:
-                        fc = self._facmod(x, aq)
+                        fc = self._facmod(n, aq)
 
                     return Integer(fc % q)
 
@@ -892,77 +893,83 @@ class binomial(CombinatorialFunction):
 
     def _eval_Mod(self, q):
         n, k = self.args
-        if all(x.is_integer for x in (n, k, q)):
-            if all(x.is_Integer for x in (n, k, q)):
-                n, k = map(int, (n, k))
-                aq = abs(q)
 
-                # handle negative integers k or n
-                if k < 0:
-                    return 0
-                if n < 0:
-                    n = -n + k - 1
+        if not all(x.is_integer for x in (n, k, q)):
+            raise ValueError("Integers expected for binomial Mod")
 
-                # non negative integers k and n
-                if k > n:
-                    return 0
+        if all(x.is_Integer for x in (n, k, q)):
+            n, k = map(int, (n, k))
+            aq, res = abs(q), 1
 
-                isprime = aq.is_prime
-                res, aq = 1, int(aq)
-                if isprime:
-                    if aq < n:
-                        # use Lucas Theorem
-                        N, K = n, k
-                        while N or K:
-                            res = res*binomial(N % aq, K % aq) % aq
-                            N, K = N // aq, K // aq
+            # handle negative integers k or n
+            if k < 0:
+                return 0
+            if n < 0:
+                n = -n + k - 1
+                res = -1 if k%2 else 1
 
-                    else:
-                        # use factorial Mod
-                        d = n - k
-                        if k > d:
-                            k, d = d, k
-                        kf = 1
-                        for i in range(2, k + 1):
-                            kf = kf*i % aq
-                        df = kf
-                        for i in range(k + 1, d + 1):
-                            df = df*i % aq
-                        res = df
-                        for i in range(d + 1, n + 1):
-                            res = res*i % aq
+            # non negative integers k and n
+            if k > n:
+                return 0
 
-                        res *= Mod(Pow(kf*df % aq, aq - 2, evaluate=False), aq)
-                        res %= aq
+            isprime = aq.is_prime
+            aq = int(aq)
+            if isprime:
+                if aq < n:
+                    # use Lucas Theorem
+                    N, K = n, k
+                    while N or K:
+                        res = res*binomial(N % aq, K % aq) % aq
+                        N, K = N // aq, K // aq
 
                 else:
-                    # use binomial factorization
-                    M = int(_sqrt(n))
-                    for prime in sieve.primerange(2, n + 1):
-                        if prime > n - k:
+                    # use Factorial Modulo
+                    d = n - k
+                    if k > d:
+                        k, d = d, k
+                    kf = 1
+                    for i in range(2, k + 1):
+                        kf = kf*i % aq
+                    df = kf
+                    for i in range(k + 1, d + 1):
+                        df = df*i % aq
+                    res *= df
+                    for i in range(d + 1, n + 1):
+                        res = res*i % aq
+
+                    res *= pow(kf*df % aq, aq - 2, aq)
+                    res %= aq
+
+            else:
+                # Binomial Factorization is performed by calculating the
+                # exponents of primes <= n in `n! /(k! (n - k)!)`,
+                # for non-negative integers n and k. As the exponent of
+                # prime in n! is e_p(n) = [n/p] + [n/p**2] + ...
+                # the exponent of prime in binomial(n, k) would be
+                # e_p(n) - e_p(k) - e_p(n - k)
+                M = int(_sqrt(n))
+                for prime in sieve.primerange(2, n + 1):
+                    if prime > n - k:
+                        res = res*prime % aq
+                    elif prime > n // 2:
+                        continue
+                    elif prime > M:
+                        if n % prime < k % prime:
                             res = res*prime % aq
-                        elif prime > n // 2:
-                            continue
-                        elif prime > M:
-                            if n % prime < k % prime:
-                                res = res*prime % aq
-                        else:
-                            N, K = n, k
-                            exp = a = 0
+                    else:
+                        N, K = n, k
+                        exp = a = 0
 
-                            while N > 0:
-                                a = int((N % prime) < (K % prime + a))
-                                N, K = N // prime, K // prime
-                                exp += a
+                        while N > 0:
+                            a = int((N % prime) < (K % prime + a))
+                            N, K = N // prime, K // prime
+                            exp += a
 
-                            if exp > 0:
-                                res *= Mod(Pow(prime, exp, evaluate=False), aq)
-                                res %= aq
+                        if exp > 0:
+                            res *= pow(prime, exp, aq)
+                            res %= aq
 
-                return Integer(res % q)
-
-        else:
-            raise ValueError("Integers expected for binomial Mod")
+            return Integer(res % q)
 
     def _eval_expand_func(self, **hints):
         """
