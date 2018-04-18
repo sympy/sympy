@@ -1008,7 +1008,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         if x >= 20:
             factors = {}
             m = 2 # to initialize the if condition below
-            for p in sieve.primerange(2, x):
+            for p in sieve.primerange(2, x + 1):
                 if m > 1:
                     m, q = 0, x // p
                     while q != 0:
