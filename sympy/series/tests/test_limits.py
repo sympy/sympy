@@ -535,4 +535,4 @@ def test_issue_14411():
 
 
 def test_issue_14503():
-    assert limit(x-sqrt(x**2+sin(x)), x, oo) == 0
+    assert limit(x-sqrt((x**2+sin(x)).expand()), x, oo) == 0
