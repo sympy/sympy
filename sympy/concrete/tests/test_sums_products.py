@@ -1012,17 +1012,39 @@ def test_issue_10156():
     assert e.factor() == \
         8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))
 
+
 def test_issue_14112():
     assert Sum((-1)**n/sqrt(n), (n, 1, oo)).is_absolutely_convergent() is S.false
     assert Sum((-1)**(2*n)/n, (n, 1, oo)).is_convergent() is S.false
     assert Sum((-2)**n + (-3)**n, (n, 1, oo)).is_convergent() is S.false
 
+
 def test_sin_times_absolutely_convergent():
     assert Sum(sin(n) / n**3, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(n) * log(n) / n**3, (n, 1, oo)).is_convergent() is S.true
 
+
 def test_issue_14111():
     assert Sum(1/log(log(n)), (n, 22, oo)).is_convergent() is S.false
 
+
 def test_issue_14484():
     raises(NotImplementedError, lambda: Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent())
+
+
+def test_issue_14640():
+    i, n = symbols("i n", integer=True)
+    a, b, c = symbols("a b c")
+
+    assert Sum(a**-i/(a - b), (i, 0, n)).doit() == Sum(
+        1/(a*a**i - a**i*b), (i, 0, n)).doit() == Piecewise(
+            (n + 1, Eq(1/a, 1)),
+            ((-a**(-n - 1) + 1)/(1 - 1/a), True))/(a - b)
+
+    assert Sum((b*a**i - c*a**i)**-2, (i, 0, n)).doit() == Piecewise(
+        (n + 1, Eq(a**(-2), 1)),
+        ((-a**(-2*n - 2) + 1)/(1 - 1/a**2), True))/(b - c)**2
+
+    s = Sum(i*(a**(n - i) - b**(n - i))/(a - b), (i, 0, n)).doit()
+    assert not s.has(Sum)
+    assert s.subs({a: 2, b: 3, n: 5}) == 122
