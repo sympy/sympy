@@ -404,18 +404,22 @@ def test_binomial_Mod():
     # Lucas Theorem
     assert Mod(binomial(156675, 4433, evaluate=False), p) == Mod(binomial(156675, 4433), p)
     assert Mod(binomial(123456, 43253, evaluate=False), p) == Mod(binomial(123456, 43253), p)
-    assert Mod(binomial(177911, 23856, evaluate=False), p) == Mod(binomial(177911, 23856), p)
+    assert Mod(binomial(-178911, 237, evaluate=False), p) == Mod(-binomial(178911 + 237 - 1, 237), p)
+    assert Mod(binomial(-178911, 238, evaluate=False), p) == Mod(binomial(178911 + 238 - 1, 238), p)
 
     # factorial Mod
     assert Mod(binomial(1234, 432, evaluate=False), q) == Mod(binomial(1234, 432), q)
     assert Mod(binomial(9734, 451, evaluate=False), q) == Mod(binomial(9734, 451), q)
-    assert Mod(binomial(10733, 4459, evaluate=False), q) == Mod(binomial(10733, 4459), q)
+    assert Mod(binomial(-10733, 4459, evaluate=False), q) == Mod(binomial(-10733, 4459), q)
+    assert Mod(binomial(-15733, 4458, evaluate=False), q) == Mod(binomial(-15733, 4458), q)
 
     # binomial factorize
     assert Mod(binomial(253, 113, evaluate=False), r) == Mod(binomial(253, 113), r)
     assert Mod(binomial(753, 119, evaluate=False), r) == Mod(binomial(753, 119), r)
     assert Mod(binomial(3781, 948, evaluate=False), s) == Mod(binomial(3781, 948), s)
     assert Mod(binomial(25773, 1793, evaluate=False), s) == Mod(binomial(25773, 1793), s)
+    assert Mod(binomial(-753, 118, evaluate=False), r) == Mod(binomial(-753, 118), r)
+    assert Mod(binomial(-25773, 1793, evaluate=False), s) == Mod(binomial(-25773, 1793), s)
 
 
 def test_binomial_diff():
