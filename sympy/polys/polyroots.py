@@ -720,6 +720,7 @@ def preprocess_roots(poly):
     """Try to get rid of symbolic coefficients from ``poly``. """
     coeff = S.One
 
+    poly_func = poly.func
     try:
         _, poly = poly.clear_denoms(convert=True)
     except DomainError:
@@ -783,6 +784,8 @@ def preprocess_roots(poly):
             poly = poly.termwise(func)
             coeff *= basis
 
+    if not isinstance(poly, poly_func):
+        poly = poly_func(poly)
     return coeff, poly
 
 
