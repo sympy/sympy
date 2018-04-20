@@ -2475,7 +2475,8 @@ class MatrixBase(MatrixDeprecated,
             SymPyDeprecationWarning(
                 feature="Dot product of non row/column vectors",
                 issue=13815,
-                deprecated_since_version="1.2").warn()
+                deprecated_since_version="1.2",
+                useinstead="* to take matrix products").warn()
             return mat._legacy_array_dot(b)
         if len(mat) != len(b):
             raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
