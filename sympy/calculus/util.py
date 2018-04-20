@@ -12,6 +12,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.utilities import filldedent
 from sympy.simplify.radsimp import denom
 from sympy.polys.rationaltools import together
+from sympy.matrices.matrices import *
 
 def continuous_domain(f, symbol, domain):
     """
@@ -1295,6 +1296,45 @@ class AccumulationBounds(AtomicExpr):
         if other.min <= self.min and other.max >= self.min:
             return AccumBounds(other.min, Max(self.max, other.max))
 
+def wronskian(F):
+    """
+    Returns the Wronskian of a set of functions
+    passed as arguments in the form of a python
+    list.
+    Definition of Wronskian:
 
+    W(y1, y2, y3, . . . , yn) = |y1 y1' y1'' . . . . y1'''''(n-times) |
+                                |y2 y2' y2'' . . . . y2'''''(n-times) |                                    
+                                |.  .   .    . . . . . . . . . . . .  |           
+                                |.  .   .    . . . . . . . . . . . .  |                                    
+                                |.  .   .    . . . . . . . . . . . .  |                                   
+                                |.  .   .    . . . . . . . . . . . .  |                                    
+                                |.  .   .    . . . . . . . . . . . .  |                                   
+                                |yn yn' yn'' . . . . yn'''''(n-times) |
+    Examples
+    ========
+    >>> from sympy import wronskian, symbols
+    >>> x = symbols('x')
+    >>> W([x**2,x**3]
+    2*x**4
+    
+    >>> W([x,x**2])
+    0
+
+    Further Readings
+    ================
+    https://en.wikipedia.org/wiki/Wronskian
+    """
+    N = len(F)
+    W = []
+    for i in range(N):
+        W.append([])
+    for i in range(N):
+        y = F[i]
+        for j in range(N):
+            W[i].append(y)
+            y = y.diff()
+    M = Matrix(W)
+    return M.det()
 # setting an alias for AccumulationBounds
 AccumBounds = AccumulationBounds
