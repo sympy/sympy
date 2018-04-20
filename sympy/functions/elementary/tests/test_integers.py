@@ -112,6 +112,13 @@ def test_floor():
     assert (floor(x) <= y).is_Relational  # arg is not same as rhs
     assert (floor(x) > y).is_Relational
 
+    assert floor(y).rewrite(frac) == y - frac(y)
+    assert floor(y).rewrite(ceiling) == -ceiling(-y)
+    assert floor(y).rewrite(frac).subs(y, -pi) == floor(-pi)
+    assert floor(y).rewrite(frac).subs(y, E) == floor(E)
+    assert floor(y).rewrite(ceiling).subs(y, E) == -ceiling(-E)
+    assert floor(y).rewrite(ceiling).subs(y, -pi) == -ceiling(pi)
+
 
 def test_ceiling():
 
@@ -217,6 +224,13 @@ def test_ceiling():
     assert (ceiling(x) >= y).is_Relational  # arg is not same as rhs
     assert (ceiling(x) < y).is_Relational
 
+    assert ceiling(y).rewrite(floor) == -floor(-y)
+    assert ceiling(y).rewrite(frac) == y + frac(-y)
+    assert ceiling(y).rewrite(floor).subs(y, -pi) == -floor(pi)
+    assert ceiling(y).rewrite(floor).subs(y, E) == -floor(-E)
+    assert ceiling(y).rewrite(frac).subs(y, pi) == ceiling(pi)
+    assert ceiling(y).rewrite(frac).subs(y, -E) == ceiling(-E)
+
 
 def test_frac():
     assert isinstance(frac(x), frac)
@@ -238,6 +252,10 @@ def test_frac():
     assert frac(x + I*n) == frac(x)
 
     assert frac(x).rewrite(floor) == x - floor(x)
+    assert frac(y).rewrite(floor).subs(y, pi) == frac(pi)
+    assert frac(y).rewrite(floor).subs(y, -E) == frac(-E)
+    assert frac(y).rewrite(ceiling).subs(y, -pi) == frac(-pi)
+    assert frac(y).rewrite(ceiling).subs(y, E) == frac(E)
 
 
 def test_series():
