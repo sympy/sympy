@@ -1,5 +1,5 @@
 from sympy import AccumBounds, Symbol, floor, nan, oo, zoo, E, symbols, \
-        ceiling, pi, Rational, Float, I, sin, exp, log, factorial, frac
+        ceiling, pi, Rational, Float, I, sin, exp, log, factorial, frac, Eq
 
 from sympy.utilities.pytest import XFAIL
 
@@ -119,6 +119,9 @@ def test_floor():
     assert floor(y).rewrite(ceiling).subs(y, E) == -ceiling(-E)
     assert floor(y).rewrite(ceiling).subs(y, -pi) == -ceiling(pi)
 
+    assert Eq(floor(y), y - frac(y))
+    assert Eq(floor(y), -ceiling(-y))
+
 
 def test_ceiling():
 
@@ -231,6 +234,9 @@ def test_ceiling():
     assert ceiling(y).rewrite(frac).subs(y, pi) == ceiling(pi)
     assert ceiling(y).rewrite(frac).subs(y, -E) == ceiling(-E)
 
+    assert Eq(ceiling(y), y + frac(-y))
+    assert Eq(ceiling(y), -floor(-y))
+
 
 def test_frac():
     assert isinstance(frac(x), frac)
@@ -252,10 +258,14 @@ def test_frac():
     assert frac(x + I*n) == frac(x)
 
     assert frac(x).rewrite(floor) == x - floor(x)
+    assert frac(x).rewrite(ceiling) == x + ceiling(-x)
     assert frac(y).rewrite(floor).subs(y, pi) == frac(pi)
     assert frac(y).rewrite(floor).subs(y, -E) == frac(-E)
     assert frac(y).rewrite(ceiling).subs(y, -pi) == frac(-pi)
     assert frac(y).rewrite(ceiling).subs(y, E) == frac(E)
+
+    assert Eq(frac(y), y - floor(y))
+    assert Eq(frac(y), y + ceiling(-y))
 
 
 def test_series():
