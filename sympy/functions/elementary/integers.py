@@ -141,6 +141,18 @@ class floor(RoundFunction):
         else:
             return r
 
+    def _eval_rewrite_as_ceiling(self, arg):
+        return -ceiling(-arg)
+
+    def _eval_rewrite_as_frac(self, arg):
+        return arg - frac(arg)
+
+    def _eval_Eq(self, other):
+        if isinstance(self, floor):
+            if (self.rewrite(ceiling) == other) or \
+                    (self.rewrite(frac) == other):
+                return S.true
+
     def __le__(self, other):
         if self.args[0] == other and other.is_real:
             return S.true
@@ -212,6 +224,18 @@ class ceiling(RoundFunction):
                 return r
         else:
             return r
+
+    def _eval_rewrite_as_floor(self, arg):
+        return -floor(-arg)
+
+    def _eval_rewrite_as_frac(self, arg):
+        return arg + frac(-arg)
+
+    def _eval_Eq(self, other):
+        if isinstance(self, ceiling):
+            if (self.rewrite(floor) == other) or \
+                    (self.rewrite(frac) == other):
+                return S.true
 
     def __lt__(self, other):
         if self.args[0] == other and other.is_real:
@@ -311,3 +335,12 @@ class frac(Function):
 
     def _eval_rewrite_as_floor(self, arg):
         return arg - floor(arg)
+
+    def _eval_rewrite_as_ceiling(self, arg):
+        return arg + ceiling(-arg)
+
+    def _eval_Eq(self, other):
+        if isinstance(self, frac):
+            if (self.rewrite(floor) == other) or \
+                    (self.rewrite(ceiling) == other):
+                return S.true
