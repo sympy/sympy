@@ -1262,7 +1262,7 @@ class Polygon(GeometrySet):
 
             e2_segment = Segment(e2_current, e2_next)
             min_dist_current = e2_segment.distance(e1_current)
-            if min_dist_current.evalf() < min_dist.evalf():
+            if min_dist_current < min_dist:
                 min_dist = min_dist_current
 
         return min_dist
