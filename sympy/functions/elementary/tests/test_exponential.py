@@ -359,6 +359,19 @@ def test_log_AccumBounds():
     assert log(AccumBounds(1, E)) == AccumBounds(0, 1)
 
 
+def test_log_at_reals():
+    x = symbols('x', positive=True)
+    assert log(x).at_reals(x, 1) == log(x)
+    assert log(x).at_reals(x, -1) == log(x)
+    # branch cut along the positive x-axis
+    # (upper for x is lower for -x)
+    assert log(-x).at_reals(x, 1) == log(-x) - 2*I*pi
+    assert log(-x).at_reals(x, -1) == log(-x)
+
+    y = symbols('y', negative=True)
+    assert log(y).at_reals(y, 1) == log(y)
+    assert log(y).at_reals(y, -1) == log(y) - 2*I*pi
+
 def test_lambertw():
     k = Symbol('k')
 
