@@ -125,10 +125,6 @@ def import_module(module, min_module_version=None, min_python_version=None,
                     UserWarning)
             return
 
-    # PyPy 1.6 has rudimentary NumPy support and importing it produces errors, so skip it
-    if module == 'numpy' and '__pypy__' in sys.builtin_module_names:
-        return
-
     try:
         mod = __import__(module, **__import__kwargs)
 
