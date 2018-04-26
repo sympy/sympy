@@ -326,6 +326,19 @@ class polylog(Function):
             return expand_mul(start).subs(u, z)
         return polylog(s, z)
 
+    def _eval_at_reals(self, x, side):
+        # polylog is a branched function with the branch cut of the
+        # principal branch along the interval [1, oo), where it is
+        # continous from below by convention. Reference:
+        # http://functions.wolfram.com/ZetaFunctionsandPolylogarithms/PolyLog/04/05/01/
+        from sympy.functions import Piecewise, gamma, unpolarify
+        s, z = self.args
+        z = unpolarify(z)
+        cond = (z > 1) & (z.diff(x)*side > 0)
+        return polylog(s, z) + Piecewise((2*pi*I*log(z)**(s-1)/gamma(s), cond),
+                                         (0, True))
+
+
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
 ###############################################################################

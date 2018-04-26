@@ -159,6 +159,14 @@ def test_polylog_values():
                 a=2, b=-2, c=5, d=2)
 
 
+def test_polylog_at_reals():
+    x = Symbol('x', positive=True)
+    assert polylog(1, x+1).at_reals(x, 1) == polylog(1, x+1) + 2*pi*I
+    assert polylog(1, x+1).at_reals(x, -1) == polylog(1, x+1)
+    assert polylog(2, x+1).at_reals(x, 1) == polylog(2, x+1) + 2*pi*I*log(x+1)
+    assert polylog(2, x+1).at_reals(x, -1) == polylog(2, x+1)
+
+
 def test_lerchphi_expansion():
     assert myexpand(lerchphi(1, s, a), zeta(s, a))
     assert myexpand(lerchphi(z, s, 1), polylog(s, z)/z)
