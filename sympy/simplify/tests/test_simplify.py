@@ -729,6 +729,13 @@ def test_nc_simplify():
     assert nc_simplify(a**2*b*a*b*a*b) == a*(a*b)**3
     expr = a*b*a**2*b*a**2*b*a**3
     assert nc_simplify(expr) == (a*b*a)**3*a**2
-    assert nc_simplify(expr, max_subterm=2) == a*(b*a**2)**3*a
+    assert nc_simplify(a**2*b*a**4*b*a**4*b*a**2) == (a**2*b*a**2)**3
+    assert nc_simplify(a**3*b*a**4*b*a**4*b*a) == a**3*(b*a**4)**3*a**-3
     assert nc_simplify(a*b*a*b + a*b*c*x*a*b*c) == (a*b)**2 + x*(a*b*c)**2
     assert nc_simplify(a*b*a*b*c*a*b*a*b*c) == ((a*b)**2*c)**2
+    assert nc_simplify(b**-1*a**-1*(a*b)**2) == a*b
+    assert nc_simplify(a**-1*b**-1*c**-1*d) == (d**-1*c*b*a)**-1
+    expr = a**3*b*a**4*b*a**4*b*a**2*b*a**2*b*a**2*b*a**2*b*a**2*b*a**2
+    for i in range(10):
+        expr *= a*b
+    assert nc_simplify(expr) == a**3*(b*a**4)**2*(b*a**2)**6*(a*b)**10
