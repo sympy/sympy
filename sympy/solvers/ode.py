@@ -952,7 +952,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return classify_ode(eq.lhs - eq.rhs, func, dict, ics=ics, xi=xi,
+            return classify_ode(eq.lhs - eq.rhs, func, dict=dict, ics=ics, xi=xi,
                 n=terms, eta=eta, prep=False)
         eq = eq.lhs
     order = ode_order(eq, f(x))
