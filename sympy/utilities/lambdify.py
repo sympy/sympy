@@ -427,11 +427,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # This is a fix for gh-11306.
     if module_provided and _module_present('numpy',namespaces):
         def array_wrap(funcarg):
+            builtin_numerics = integer_types + (float, complex)
+            array = namespace['array']
             @wraps(funcarg)
             def wrapper(*argsx, **kwargsx):
-                asarray = namespace['asarray']
-                newargs = [asarray(i) if isinstance(i, integer_types + (float,
-                    complex)) else i for i in argsx]
+                newargs = [array(i) if isinstance(i, builtin_numerics) else i for i in argsx]
                 return funcarg(*newargs, **kwargsx)
             return wrapper
         func = array_wrap(func)
