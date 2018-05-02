@@ -22,6 +22,8 @@ import sympy
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
+autograd_numpy = import_module('autograd.numpy',
+                               __import__kwargs={'fromlist': ['numpy']})
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 
@@ -168,6 +170,17 @@ def test_numpy_transl():
         assert sym in sympy.__dict__
         assert nump in numpy.__dict__
 
+
+def test_autograd_numpy_transl():
+    if not autograd_numpy:
+        skip("autograd not installed.")
+
+    from sympy.utilities.lambdify import AUTOGRAD_NUMPY_TRANSLATIONS
+    for sym, nump in AUTOGRAD_NUMPY_TRANSLATIONS.items():
+        assert sym in sympy.__dict__
+        assert nump in autograd_numpy.__dict__
+
+
 def test_tensorflow_transl():
     if not tensorflow:
         skip("tensorflow not installed")
@@ -177,11 +190,21 @@ def test_tensorflow_transl():
         assert sym in sympy.__dict__
         assert tens in tensorflow.__dict__
 
+
 def test_numpy_translation_abs():
     if not numpy:
         skip("numpy not installed.")
 
     f = lambdify(x, Abs(x), "numpy")
+    assert f(-1) == 1
+    assert f(1) == 1
+
+
+def test_autograd_numpy_translation_abs():
+    if not autograd_numpy:
+        skip("autograd not installed.")
+
+    f = lambdify(x, Abs(x), "autograd.numpy")
     assert f(-1) == 1
     assert f(1) == 1
 
@@ -321,6 +344,7 @@ def test_matrix():
     assert lambdify(v, J, modules='sympy')(1, 2) == sol
     assert lambdify(v.T, J, modules='sympy')(1, 2) == sol
 
+
 def test_numpy_matrix():
     if not numpy:
         skip("numpy not installed.")
@@ -332,12 +356,35 @@ def test_numpy_matrix():
     #Check that the types are arrays and matrices
     assert isinstance(f(1, 2, 3), numpy.ndarray)
 
+
+def test_autograd_numpy_matrix():
+    if not autograd_numpy:
+        skip("autograd not installed.")
+    A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
+    sol_arr = autograd_numpy.array([[1, 2], [autograd_numpy.sin(3) + 4, 1]])
+    # Lambdify array first, to ensure return to array as default
+    f = lambdify((x, y, z), A, ['autograd.numpy'])
+    assert autograd_numpy.allclose(f(1, 2, 3), sol_arr)
+    # Check that the types are arrays and matrices
+    assert isinstance(f(1, 2, 3), autograd_numpy.ndarray)
+
+
 def test_numpy_transpose():
     if not numpy:
         skip("numpy not installed.")
     A = Matrix([[1, x], [0, 1]])
     f = lambdify((x), A.T, modules="numpy")
     numpy.testing.assert_array_equal(f(2), numpy.array([[1, 0], [2, 1]]))
+
+
+def test_autograd_numpy_transpose():
+    if not autograd_numpy:
+        skip("autograd not installed.")
+    A = Matrix([[1, x], [0, 1]])
+    f = lambdify((x), A.T, modules="autograd.numpy")
+    assert autograd_numpy.array_equal(f(2),
+                                      autograd_numpy.array([[1, 0], [2, 1]]))
+
 
 def test_numpy_dotproduct():
     if not numpy:
@@ -354,12 +401,39 @@ def test_numpy_dotproduct():
            f4(1, 2, 3) == \
            numpy.array([14])
 
+
+def test_autograd_numpy_dotproduct():
+    if not autograd_numpy:
+        skip("autograd not installed")
+    A = Matrix([x, y, z])
+    f1 = lambdify([x, y, z], DotProduct(A, A), modules='autograd.numpy')
+    f2 = lambdify([x, y, z], DotProduct(A, A.T), modules='autograd.numpy')
+    f3 = lambdify([x, y, z], DotProduct(A.T, A), modules='autograd.numpy')
+    f4 = lambdify([x, y, z], DotProduct(A, A.T), modules='autograd.numpy')
+
+    assert f1(1, 2, 3) == \
+           f2(1, 2, 3) == \
+           f3(1, 2, 3) == \
+           f4(1, 2, 3) == \
+           autograd_numpy.array([14])
+
+
 def test_numpy_inverse():
     if not numpy:
         skip("numpy not installed.")
     A = Matrix([[1, x], [0, 1]])
     f = lambdify((x), A**-1, modules="numpy")
     numpy.testing.assert_array_equal(f(2), numpy.array([[1, -2], [0,  1]]))
+
+
+def test_autograd_numpy_inverse():
+    if not autograd_numpy:
+        skip("autograd not installed.")
+    A = Matrix([[1, x], [0, 1]])
+    f = lambdify((x), A**-1, modules="autograd.numpy")
+    assert autograd_numpy.array_equal(f(2),
+                                      autograd_numpy.array([[1, -2], [0, 1]]))
+
 
 def test_numpy_old_matrix():
     if not numpy:
@@ -423,11 +497,33 @@ def test_numpy_piecewise():
     pieces = Piecewise((x, x < 3), (x**2, x > 5), (0, True))
     f = lambdify(x, pieces, modules="numpy")
     numpy.testing.assert_array_equal(f(numpy.arange(10)),
-                                     numpy.array([0, 1, 2, 0, 0, 0, 36, 49, 64, 81]))
+                                     numpy.array([0, 1, 2, 0, 0, 0,
+                                                  36, 49, 64, 81]))
     # If we evaluate somewhere all conditions are False, we should get back NaN
-    nodef_func = lambdify(x, Piecewise((x, x > 0), (-x, x < 0)))
+    nodef_func = lambdify(x, Piecewise((x, x > 0), (-x, x < 0)),
+                          modules="numpy")
     numpy.testing.assert_array_equal(nodef_func(numpy.array([-1, 0, 1])),
                                      numpy.array([1, numpy.nan, 1]))
+
+
+def test_autograd_numpy_piecewise():
+    if not autograd_numpy:
+        skip("autograd not installed.")
+    pieces = Piecewise((x, x < 3), (x**2, x > 5), (0, True))
+    f = lambdify(x, pieces, modules="autograd.numpy")
+    assert autograd_numpy.array_equal(f(autograd_numpy.arange(10)),
+                                      autograd_numpy.array([0, 1, 2, 0, 0, 0,
+                                                            36, 49, 64, 81]))
+
+    # If we evaluate where all conditions are False, we should get back NaN
+    nodef_func = lambdify(x, Piecewise((x, x > 0), (-x, x < 0)),
+                          modules="autograd.numpy")
+    assert autograd_numpy.array_equal(
+        nodef_func(autograd_numpy.array([-1, 1])),
+        autograd_numpy.array([1, 1]))
+    assert all(autograd_numpy.isnan(
+        nodef_func(autograd_numpy.array([0]))))
+
 
 def test_numpy_logical_ops():
     if not numpy:
@@ -440,11 +536,40 @@ def test_numpy_logical_ops():
     arr1 = numpy.array([True, True])
     arr2 = numpy.array([False, True])
     arr3 = numpy.array([True, False])
-    numpy.testing.assert_array_equal(and_func(arr1, arr2), numpy.array([False, True]))
-    numpy.testing.assert_array_equal(and_func_3(arr1, arr2, arr3), numpy.array([False, False]))
-    numpy.testing.assert_array_equal(or_func(arr1, arr2), numpy.array([True, True]))
-    numpy.testing.assert_array_equal(or_func_3(arr1, arr2, arr3), numpy.array([True, True]))
-    numpy.testing.assert_array_equal(not_func(arr2), numpy.array([True, False]))
+    numpy.testing.assert_array_equal(and_func(arr1, arr2),
+                                     numpy.array([False, True]))
+    numpy.testing.assert_array_equal(and_func_3(arr1, arr2, arr3),
+                                     numpy.array([False, False]))
+    numpy.testing.assert_array_equal(or_func(arr1, arr2),
+                                     numpy.array([True, True]))
+    numpy.testing.assert_array_equal(or_func_3(arr1, arr2, arr3),
+                                     numpy.array([True, True]))
+    numpy.testing.assert_array_equal(not_func(arr2),
+                                     numpy.array([True, False]))
+
+
+def test_autograd_numpy_logical_ops():
+    if not autograd_numpy:
+        skip("autograd not installed.")
+    and_func = lambdify((x, y), And(x, y), modules="autograd.numpy")
+    and_func_3 = lambdify((x, y, z), And(x, y, z), modules="autograd.numpy")
+    or_func = lambdify((x, y), Or(x, y), modules="autograd.numpy")
+    or_func_3 = lambdify((x, y, z), Or(x, y, z), modules="autograd.numpy")
+    not_func = lambdify((x), Not(x), modules="autograd.numpy")
+    arr1 = autograd_numpy.array([True, True])
+    arr2 = autograd_numpy.array([False, True])
+    arr3 = autograd_numpy.array([True, False])
+    assert autograd_numpy.array_equal(and_func(arr1, arr2),
+                                      autograd_numpy.array([False, True]))
+    assert autograd_numpy.array_equal(and_func_3(arr1, arr2, arr3),
+                                      autograd_numpy.array([False, False]))
+    assert autograd_numpy.array_equal(or_func(arr1, arr2),
+                                      autograd_numpy.array([True, True]))
+    assert autograd_numpy.array_equal(or_func_3(arr1, arr2, arr3),
+                                      autograd_numpy.array([True, True]))
+    assert autograd_numpy.array_equal(not_func(arr2),
+                                      autograd_numpy.array([True, False]))
+
 
 def test_numpy_matmul():
     if not numpy:
@@ -458,6 +583,24 @@ def test_numpy_matmul():
     f = lambdify((x, y, z), xmat*xmat*xmat, modules="numpy")
     numpy.testing.assert_array_equal(f(0.5, 3, 4), numpy.array([[72.125, 119.25],
                                                                 [159, 251]]))
+
+
+def test_autograd_numpy_matmul():
+    if not autograd_numpy:
+        skip("autograd not installed.")
+    xmat = Matrix([[x, y], [z, 1+z]])
+    ymat = Matrix([[x**2], [Abs(x)]])
+    mat_func = lambdify((x, y, z), xmat*ymat, modules="autograd.numpy")
+    assert autograd_numpy.array_equal(mat_func(0.5, 3, 4),
+                                      autograd_numpy.array([[1.625], [3.5]]))
+    assert autograd_numpy.array_equal(mat_func(-0.5, 3, 4),
+                                      autograd_numpy.array([[1.375], [3.5]]))
+    # Multiple matrices chained together in multiplication
+    f = lambdify((x, y, z), xmat*xmat*xmat, modules="autograd.numpy")
+    assert autograd_numpy.array_equal(f(0.5, 3, 4),
+                                      autograd_numpy.array([[72.125, 119.25],
+                                                            [159, 251]]))
+
 
 def test_numpy_numexpr():
     if not numpy:

@@ -17,6 +17,7 @@ from sympy.utilities.decorator import doctest_depends_on
 MATH = {}
 MPMATH = {}
 NUMPY = {}
+AUTOGRAD_NUMPY = {}
 TENSORFLOW = {}
 SYMPY = {}
 NUMEXPR = {}
@@ -28,6 +29,7 @@ NUMEXPR = {}
 MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
+AUTOGRAD_NUMPY_DEFAULT = {"I": 1j}
 TENSORFLOW_DEFAULT = {}
 SYMPY_DEFAULT = {}
 NUMEXPR_DEFAULT = {}
@@ -68,6 +70,8 @@ MPMATH_TRANSLATIONS = {
 
 NUMPY_TRANSLATIONS = {}
 
+AUTOGRAD_NUMPY_TRANSLATIONS = {}
+
 TENSORFLOW_TRANSLATIONS = {
     "Abs": "abs",
     "ceiling": "ceil",
@@ -82,16 +86,45 @@ NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
 MODULES = {
-    "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
-    "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
-    "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *",)),
-    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
-    "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
-        "from sympy.functions import *",
-        "from sympy.matrices import *",
-        "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
-    "numexpr" : (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
-                 ("import_module('numexpr')", )),
+    "math": (MATH,
+             MATH_DEFAULT,
+             MATH_TRANSLATIONS,
+             ("from math import *",)),
+
+    "mpmath": (MPMATH,
+               MPMATH_DEFAULT,
+               MPMATH_TRANSLATIONS,
+               ("from mpmath import *",)),
+
+    "numpy": (NUMPY,
+              NUMPY_DEFAULT,
+              NUMPY_TRANSLATIONS,
+              ("import numpy; from numpy import *",)),
+
+    # augorad has a thin wrapper on numpy, so all the printers used
+    # for numpy should work with autograd.numpy
+    "autograd.numpy": (AUTOGRAD_NUMPY,
+                       AUTOGRAD_NUMPY_DEFAULT,
+                       AUTOGRAD_NUMPY_TRANSLATIONS,
+                       ("import autograd.numpy as numpy;"
+                        "from numpy import *",)),
+
+    "tensorflow": (TENSORFLOW,
+                   TENSORFLOW_DEFAULT,
+                   TENSORFLOW_TRANSLATIONS,
+                   ("import_module('tensorflow')",)),
+
+    "sympy": (SYMPY,
+              SYMPY_DEFAULT,
+              {},
+              ("from sympy.functions import *",
+               "from sympy.matrices import *",
+               "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
+
+    "numexpr": (NUMEXPR,
+                NUMEXPR_DEFAULT,
+                NUMEXPR_TRANSLATIONS,
+                ("import_module('numexpr')", )),
 }
 
 
@@ -100,7 +133,7 @@ def _import(module, reload="False"):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy", "tensorflow".
+    "mpmath", "numpy", "autograd.numpy", "sympy", "tensorflow".
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
@@ -166,7 +199,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     ``math``, or ``mpmath`` functions otherwise. To change this behavior, the
     "modules" argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "numexpr", "sympy", "tensorflow"
+     - the strings "math", "mpmath", "numpy", "autograd.numpy", "numexpr",
+       "sympy", "tensorflow"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -370,6 +404,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.pycode import MpmathPrinter as Printer
         elif _module_present('numpy', namespaces):
             from sympy.printing.pycode import NumPyPrinter as Printer
+        elif _module_present('autograd.numpy', namespaces):
+            from sympy.printing.pycode import NumPyPrinter as Printer
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer
         elif _module_present('tensorflow', namespaces):
@@ -435,6 +471,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 return funcarg(*newargs, **kwargsx)
             return wrapper
         func = array_wrap(func)
+
     # Apply the docstring
     sig = "func({0})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
@@ -452,6 +489,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         "{imp_mods}"
         ).format(sig=sig, expr=expr_str, src=lstr, imp_mods='\n'.join(imp_mod_lines))
     return func
+
 
 def _module_present(modname, modlist):
     if modname in modlist:
