@@ -6,7 +6,7 @@ singularity functions in mechanics.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol, diff
+from sympy.core import S, Symbol, diff, expand
 from sympy.solvers import linsolve, solve
 from sympy.printing import sstr
 from sympy.functions import SingularityFunction, Piecewise
