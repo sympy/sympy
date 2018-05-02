@@ -49,7 +49,7 @@ def test_trigsimp1():
     assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
     e = 2*sin(x)**2 + 2*cos(x)**2
     assert trigsimp(log(e)) == log(2)
-
+    assert trigsimp(cos(x).rewrite(exp)) == cos(x) # issue: 11459
 
 def test_trigsimp1a():
     assert trigsimp(sin(2)**2*cos(3)*exp(2)/cos(2)**2) == tan(2)**2*cos(3)*exp(2)

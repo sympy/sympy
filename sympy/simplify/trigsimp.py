@@ -11,6 +11,9 @@ from sympy.core.function import count_ops, _mexpand
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
+from sympy.functions.elementary.exponential import ExpBase
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
@@ -510,7 +513,13 @@ def trigsimp(expr, **opts):
         'old': lambda x: trigsimp_old(x, **opts),
                    }[method]
 
-    return trigsimpfunc(expr)
+    expr = trigsimpfunc(expr)
+    if expr.has(TrigonometricFunction, HyperbolicFunction, ExpBase):
+        try:
+            expr = exptrigsimp(expr)
+        except RuntimeError:
+            pass
+    return expr
 
 
 def exptrigsimp(expr):
