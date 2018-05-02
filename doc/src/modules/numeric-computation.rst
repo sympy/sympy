@@ -66,7 +66,7 @@ powerful vectorized ufuncs that are backed by compiled C code.
     >>> import numpy
     >>> data = numpy.linspace(1, 10, 10000)
     >>> f(data)
-    [ 0.84147098  0.84119981  0.84092844 ..., -0.05426074 -0.05433146
+    [ 0.84147098  0.84119981  0.84092844 ... -0.05426074 -0.05433146
                                -0.05440211]
 
 If you have array-based data this can confer a considerable speedup, on the
