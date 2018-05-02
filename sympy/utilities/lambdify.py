@@ -107,7 +107,7 @@ MODULES = {
                        AUTOGRAD_NUMPY_DEFAULT,
                        AUTOGRAD_NUMPY_TRANSLATIONS,
                        ("import autograd.numpy as numpy;"
-                        "from numpy import *",)),
+                        "from autograd.numpy import *",)),
 
     "tensorflow": (TENSORFLOW,
                    TENSORFLOW_DEFAULT,
