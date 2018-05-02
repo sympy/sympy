@@ -24,6 +24,9 @@ MutableDenseMatrix = Matrix
 numpy = import_module('numpy')
 autograd_numpy = import_module('autograd.numpy',
                                __import__kwargs={'fromlist': ['numpy']})
+if autograd_numpy:
+    autograd = import_module('autograd')
+
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 
@@ -208,6 +211,13 @@ def test_autograd_numpy_translation_abs():
     assert f(-1) == 1
     assert f(1) == 1
 
+    f_grad = autograd.grad(f)
+    assert f_grad(-2.) == -1.
+    assert f_grad(3.) == 1.
+    assert f_grad(0.) == 0.
+    return
+
+
 def test_numexpr_printer():
     if not numexpr:
         skip("numexpr not installed.")
@@ -350,10 +360,10 @@ def test_numpy_matrix():
         skip("numpy not installed.")
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
-    #Lambdify array first, to ensure return to array as default
+    # Lambdify array first, to ensure return to array as default
     f = lambdify((x, y, z), A, ['numpy'])
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
-    #Check that the types are arrays and matrices
+    # Check that the types are arrays and matrices
     assert isinstance(f(1, 2, 3), numpy.ndarray)
 
 
@@ -363,10 +373,62 @@ def test_autograd_numpy_matrix():
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = autograd_numpy.array([[1, 2], [autograd_numpy.sin(3) + 4, 1]])
     # Lambdify array first, to ensure return to array as default
-    f = lambdify((x, y, z), A, ['autograd.numpy'])
+    f = lambdify((x, y, z), A, modules="autograd.numpy")
     assert autograd_numpy.allclose(f(1, 2, 3), sol_arr)
     # Check that the types are arrays and matrices
     assert isinstance(f(1, 2, 3), autograd_numpy.ndarray)
+
+    def fv(xx):
+        return f(*xx)
+    f_jac = autograd.jacobian(fv)
+    xx = autograd_numpy.array([2., 3., 4.])
+    jac = autograd_numpy.array([
+        [[1., 0., 0.], [3., 2., 0.]],
+        [[0., 0., autograd_numpy.cos(4.)], [4. * 2**3., 0.,
+                                            2.**4. * autograd_numpy.log(2.)]]
+    ])
+    assert autograd_numpy.allclose(f_jac(xx), jac)
+    return
+
+
+def test_autograd_numpy_gradient():
+    if not autograd_numpy:
+        skip("autograd not installed.")
+
+    # This will actually still work with modules="numpy"
+    f = x**2
+    f_lmbda = lambdify(x, f, modules="autograd.numpy")
+    f_grad = autograd.grad(f_lmbda)
+    assert f_grad(2.) == 4.
+
+
+def test_autograd_numpy_jacobian():
+    if not autograd_numpy:
+        skip("autograd not installed.")
+
+    # When the output is a matrix we need modules="autograd.numpy"
+    f = Matrix([2 * x, x**2])
+    f_lmbda = lambdify(x, f, modules="autograd.numpy")
+    f_jac = autograd.jacobian(f_lmbda)
+    assert autograd_numpy.array_equal(f_jac(2.),
+                                      autograd_numpy.array([[2.],
+                                                            [4.]]))
+    g = Matrix([x * y, y**2 * z])
+    g_lmbda = lambdify((x, y, z), g, modules="autograd.numpy")
+
+    # Need a wrapper so that the argument is a single vector
+    def gv_lmbda(X):
+        return g_lmbda(X[0], X[1], X[2])
+    g_jac = autograd.jacobian(gv_lmbda)
+    # for a function mapping dimensions (i1, i2, ...) -> (o1, o2, ...)
+    # the jacobian has dimensions (o1, o2, ..., i1, i2, ...)
+    # In this case we have (3,) -> (2, 1) hence jacobian is (2, 1, 3)
+    assert autograd_numpy.array_equal(
+        g_jac(autograd_numpy.array([1., 2., 3.])),
+        autograd_numpy.array([[[2., 1., 0.]],
+                              [[0., 12., 4.]]])
+        )
+    return
 
 
 def test_numpy_transpose():
@@ -384,6 +446,11 @@ def test_autograd_numpy_transpose():
     f = lambdify((x), A.T, modules="autograd.numpy")
     assert autograd_numpy.array_equal(f(2),
                                       autograd_numpy.array([[1, 0], [2, 1]]))
+    f_jac = autograd.jacobian(f)
+    assert autograd_numpy.array_equal(f_jac(2.),
+                                      autograd_numpy.array([[0., 0.],
+                                                            [1., 0.]]))
+    return
 
 
 def test_numpy_dotproduct():
@@ -394,12 +461,7 @@ def test_numpy_dotproduct():
     f2 = lambdify([x, y, z], DotProduct(A, A.T), modules='numpy')
     f3 = lambdify([x, y, z], DotProduct(A.T, A), modules='numpy')
     f4 = lambdify([x, y, z], DotProduct(A, A.T), modules='numpy')
-
-    assert f1(1, 2, 3) == \
-           f2(1, 2, 3) == \
-           f3(1, 2, 3) == \
-           f4(1, 2, 3) == \
-           numpy.array([14])
+    assert all(f(1., 2., 3.) == numpy.array([14]) for f in (f1, f2, f3, f4))
 
 
 def test_autograd_numpy_dotproduct():
@@ -410,12 +472,18 @@ def test_autograd_numpy_dotproduct():
     f2 = lambdify([x, y, z], DotProduct(A, A.T), modules='autograd.numpy')
     f3 = lambdify([x, y, z], DotProduct(A.T, A), modules='autograd.numpy')
     f4 = lambdify([x, y, z], DotProduct(A, A.T), modules='autograd.numpy')
+    eq_to = autograd_numpy.array([14])
 
-    assert f1(1, 2, 3) == \
-           f2(1, 2, 3) == \
-           f3(1, 2, 3) == \
-           f4(1, 2, 3) == \
-           autograd_numpy.array([14])
+    assert all(f(1, 2, 3) == autograd_numpy.array([14])
+               for f in (f1, f2, f3, f4))
+
+    fv = [lambda xx: f(*xx) for f in (f1, f2, f3, f4)]
+    f_grad = [autograd.grad(f) for f in fv]
+
+    xx = autograd_numpy.array([1., 2., 3.])
+    eq_to = autograd_numpy.array([2., 4., 6.])
+    assert all(autograd_numpy.array_equal(f(xx), eq_to) for f in f_grad)
+    return
 
 
 def test_numpy_inverse():
@@ -433,6 +501,10 @@ def test_autograd_numpy_inverse():
     f = lambdify((x), A**-1, modules="autograd.numpy")
     assert autograd_numpy.array_equal(f(2),
                                       autograd_numpy.array([[1, -2], [0, 1]]))
+    # NOTE: A**-1 creates a symbolic inverse -- it doesn't map to np.linalg.inv
+    # there is thus no reason to test the jacobian since it's the same as
+    # differentiating any regular matrix.
+    return
 
 
 def test_numpy_old_matrix():
@@ -514,6 +586,14 @@ def test_autograd_numpy_piecewise():
     assert autograd_numpy.array_equal(f(autograd_numpy.arange(10)),
                                       autograd_numpy.array([0, 1, 2, 0, 0, 0,
                                                             36, 49, 64, 81]))
+    f_grad = autograd.grad(f)
+    expected = (1., 1., 0., 0., 0., 12., 14.)
+    x_test = (-2., 2., 3., 4., 5., 6., 7.)
+
+    # This will raise a warning for 3 <= x <= 5 saying that the output
+    # is independent of the input, because the output is indeed constant
+    # in this range.
+    assert all(f_grad(xi) == ei for xi, ei in zip(x_test, expected))
 
     # If we evaluate where all conditions are False, we should get back NaN
     nodef_func = lambdify(x, Piecewise((x, x > 0), (-x, x < 0)),
@@ -523,6 +603,7 @@ def test_autograd_numpy_piecewise():
         autograd_numpy.array([1, 1]))
     assert all(autograd_numpy.isnan(
         nodef_func(autograd_numpy.array([0]))))
+    return
 
 
 def test_numpy_logical_ops():
@@ -547,28 +628,8 @@ def test_numpy_logical_ops():
     numpy.testing.assert_array_equal(not_func(arr2),
                                      numpy.array([True, False]))
 
-
-def test_autograd_numpy_logical_ops():
-    if not autograd_numpy:
-        skip("autograd not installed.")
-    and_func = lambdify((x, y), And(x, y), modules="autograd.numpy")
-    and_func_3 = lambdify((x, y, z), And(x, y, z), modules="autograd.numpy")
-    or_func = lambdify((x, y), Or(x, y), modules="autograd.numpy")
-    or_func_3 = lambdify((x, y, z), Or(x, y, z), modules="autograd.numpy")
-    not_func = lambdify((x), Not(x), modules="autograd.numpy")
-    arr1 = autograd_numpy.array([True, True])
-    arr2 = autograd_numpy.array([False, True])
-    arr3 = autograd_numpy.array([True, False])
-    assert autograd_numpy.array_equal(and_func(arr1, arr2),
-                                      autograd_numpy.array([False, True]))
-    assert autograd_numpy.array_equal(and_func_3(arr1, arr2, arr3),
-                                      autograd_numpy.array([False, False]))
-    assert autograd_numpy.array_equal(or_func(arr1, arr2),
-                                      autograd_numpy.array([True, True]))
-    assert autograd_numpy.array_equal(or_func_3(arr1, arr2, arr3),
-                                      autograd_numpy.array([True, True]))
-    assert autograd_numpy.array_equal(not_func(arr2),
-                                      autograd_numpy.array([True, False]))
+# NOTE: There are no autograd_numpy tests for logical operators, as they
+# are not differentiable.
 
 
 def test_numpy_matmul():
@@ -590,16 +651,19 @@ def test_autograd_numpy_matmul():
         skip("autograd not installed.")
     xmat = Matrix([[x, y], [z, 1+z]])
     ymat = Matrix([[x**2], [Abs(x)]])
-    mat_func = lambdify((x, y, z), xmat*ymat, modules="autograd.numpy")
+    mat_func = lambdify((x, y, z), xmat * ymat, modules="autograd.numpy")
     assert autograd_numpy.array_equal(mat_func(0.5, 3, 4),
                                       autograd_numpy.array([[1.625], [3.5]]))
     assert autograd_numpy.array_equal(mat_func(-0.5, 3, 4),
                                       autograd_numpy.array([[1.375], [3.5]]))
     # Multiple matrices chained together in multiplication
-    f = lambdify((x, y, z), xmat*xmat*xmat, modules="autograd.numpy")
+    f = lambdify((x, y, z), xmat * xmat * xmat, modules="autograd.numpy")
     assert autograd_numpy.array_equal(f(0.5, 3, 4),
                                       autograd_numpy.array([[72.125, 119.25],
                                                             [159, 251]]))
+    # NOTE: There is little reason to test the jacobian here since the
+    # matrix multiplies are carried out symbolically.
+    return
 
 
 def test_numpy_numexpr():
