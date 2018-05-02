@@ -551,7 +551,7 @@ class Beam(object):
         ========
         There is a beam of length l with simple supports at both ends. A point load F is applied at the center of the beam.
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
+        >>> from sympy import symbols, Symbol
         >>> E, I = symbols('E, I')
         >>> l = Symbol('l', positive=True)
         >>> R1, R2 = symbols('R1, R2')
