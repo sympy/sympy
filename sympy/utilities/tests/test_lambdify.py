@@ -215,7 +215,6 @@ def test_autograd_numpy_translation_abs():
     assert f_grad(-2.) == -1.
     assert f_grad(3.) == 1.
     assert f_grad(0.) == 0.
-    return
 
 
 def test_numexpr_printer():
@@ -388,7 +387,6 @@ def test_autograd_numpy_matrix():
                                             2.**4. * autograd_numpy.log(2.)]]
     ])
     assert autograd_numpy.allclose(f_jac(xx), jac)
-    return
 
 
 def test_autograd_numpy_gradient():
@@ -428,7 +426,6 @@ def test_autograd_numpy_jacobian():
         autograd_numpy.array([[[2., 1., 0.]],
                               [[0., 12., 4.]]])
         )
-    return
 
 
 def test_numpy_transpose():
@@ -450,7 +447,6 @@ def test_autograd_numpy_transpose():
     assert autograd_numpy.array_equal(f_jac(2.),
                                       autograd_numpy.array([[0., 0.],
                                                             [1., 0.]]))
-    return
 
 
 def test_numpy_dotproduct():
@@ -483,7 +479,6 @@ def test_autograd_numpy_dotproduct():
     xx = autograd_numpy.array([1., 2., 3.])
     eq_to = autograd_numpy.array([2., 4., 6.])
     assert all(autograd_numpy.array_equal(f(xx), eq_to) for f in f_grad)
-    return
 
 
 def test_numpy_inverse():
@@ -498,13 +493,12 @@ def test_autograd_numpy_inverse():
     if not autograd_numpy:
         skip("autograd not installed.")
     A = Matrix([[1, x], [0, 1]])
-    f = lambdify((x), A**-1, modules="autograd.numpy")
-    assert autograd_numpy.array_equal(f(2),
-                                      autograd_numpy.array([[1, -2], [0, 1]]))
     # NOTE: A**-1 creates a symbolic inverse -- it doesn't map to np.linalg.inv
     # there is thus no reason to test the jacobian since it's the same as
     # differentiating any regular matrix.
-    return
+    f = lambdify((x), A**-1, modules="autograd.numpy")
+    assert autograd_numpy.array_equal(f(2),
+                                      autograd_numpy.array([[1, -2], [0, 1]]))
 
 
 def test_numpy_old_matrix():
@@ -603,7 +597,6 @@ def test_autograd_numpy_piecewise():
         autograd_numpy.array([1, 1]))
     assert all(autograd_numpy.isnan(
         nodef_func(autograd_numpy.array([0]))))
-    return
 
 
 def test_numpy_logical_ops():
@@ -663,7 +656,6 @@ def test_autograd_numpy_matmul():
                                                             [159, 251]]))
     # NOTE: There is little reason to test the jacobian here since the
     # matrix multiplies are carried out symbolically.
-    return
 
 
 def test_numpy_numexpr():
