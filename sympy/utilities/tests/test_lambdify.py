@@ -473,8 +473,7 @@ def test_autograd_numpy_dotproduct():
     assert all(f(1, 2, 3) == autograd_numpy.array([14])
                for f in (f1, f2, f3, f4))
 
-    fv = [lambda xx: f(*xx) for f in (f1, f2, f3, f4)]
-    f_grad = [autograd.grad(f) for f in fv]
+    f_grad = [autograd.grad(lambda xx: f(*xx)) for f in (f1, f2, f3, f4)]
 
     xx = autograd_numpy.array([1., 2., 3.])
     eq_to = autograd_numpy.array([2., 4., 6.])
@@ -587,7 +586,10 @@ def test_autograd_numpy_piecewise():
     # This will raise a warning for 3 <= x <= 5 saying that the output
     # is independent of the input, because the output is indeed constant
     # in this range.
-    assert all(f_grad(xi) == ei for xi, ei in zip(x_test, expected))
+    import warnings
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore')
+        assert all(f_grad(xi) == ei for xi, ei in zip(x_test, expected))
 
     # If we evaluate where all conditions are False, we should get back NaN
     nodef_func = lambdify(x, Piecewise((x, x > 0), (-x, x < 0)),
