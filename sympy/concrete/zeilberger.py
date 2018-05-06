@@ -2,14 +2,14 @@ from sympy.concrete.gosper import gosper_normal
 from sympy import Poly, degree, factor, fraction, cancel, LC, linsolve
 from sympy import symbols, Dummy, Function, combsimp, hypersimp, product
 """
-zb_recur provides an implementation of the algorithm described on pages 106 - 109 
-of 'A = B' https://www.math.upenn.edu/~wilf/AeqB.pdf, this aids in solving 
+zb_recur provides an implementation of the algorithm described on pages 106 - 109
+of 'A = B' https://www.math.upenn.edu/~wilf/AeqB.pdf, this aids in solving
 sums of hypergeometric functions.
 """
 
 def _find_b_deg(p_2, p_3, p):
-    """ 
-    Given polynomials p_2, p_3, p in k, finds a bound on the degree of a 
+    """
+    Given polynomials p_2, p_3, p in k, finds a bound on the degree of a
     polynomial b in k such that p_2(k)b(k+1)-p_3(k)b(k) = p(k).
     """
     d_2 = p_2.degree()
@@ -18,7 +18,7 @@ def _find_b_deg(p_2, p_3, p):
 
     if d_2 == 0 and d_3 == 0:
         return d + 1
-    
+
     if d_2 != d_3 or p_2.LC() != p_3.LC():
         return d - max(d_2, d_3)
 
@@ -33,7 +33,7 @@ def _find_b_deg(p_2, p_3, p):
 def _zb_gosper(F, J, n, k):
     """
     Given a hypergeometric function F of n and k (and possibly other variables),
-    we take t_k = a_0F(n, k) + a_1F(n + 1, k) + ... + a_JF(n + J, k) with a_i 
+    we take t_k = a_0F(n, k) + a_1F(n + 1, k) + ... + a_JF(n + J, k) with a_i
     some variables and determine the gosper normal form of t_(k+1)/t_k.
     """
     i = symbols('i', cls = Dummy)
@@ -43,10 +43,10 @@ def _zb_gosper(F, J, n, k):
     s_1, s_2 = fraction(hypersimp(F.subs(n, n-1), n))
 
     p_0 = Poly(sum(a(j) * (product(s_1.subs(n, n + j - i), (i, 0, j-1)) *
-                    product(s_2.subs(n, n + i), (i, j + 1, J))) 
+                    product(s_2.subs(n, n + i), (i, j + 1, J)))
                     for j in range(J + 1)), k)
 
-    # We can factor out a p_0(k+1)/p_0(k) from the gosper 
+    # We can factor out a p_0(k+1)/p_0(k) from the gosper
     # normal form calculation
 
     r = r_1 * product(s_2.subs(n, n + i), (i, 1, J))
@@ -59,16 +59,16 @@ def _zb_gosper(F, J, n, k):
 
 def zb_recur(F, J, n, k):
     """
-    Given a hypergeometric function F of n and k (and possibly other variables), 
-    determines if there  exists a_0, a_1, ... , a_J polynomials in n and a 
-    function G of n and k such that G / F is rational and 
+    Given a hypergeometric function F of n and k (and possibly other variables),
+    determines if there  exists a_0, a_1, ... , a_J polynomials in n and a
+    function G of n and k such that G / F is rational and
 
     a_0F(n, k) + a_1F(n + 1, k) + ... + a_JF(n + j, k) = G(n, k + 1) - G(n, k).
 
-    If such things exists this function returns a pair consisting of 
-    [a_0, a_1, ... , a_J] and the function G / F, otherwise it returns 
-    'try higher order', suggesting you try to find a higher order recurrence, 
-    i.e. increase J. If F is 'proper hypergeometric' (see page 64 of 'A = B' 
+    If such things exists this function returns a pair consisting of
+    [a_0, a_1, ... , a_J] and the function G / F, otherwise it returns
+    'try higher order', suggesting you try to find a higher order recurrence,
+    i.e. increase J. If F is 'proper hypergeometric' (see page 64 of 'A = B'
     for a definition) then such a recurrence always exists for some J.
 
     The main application of this is to sum k over some suitable values so that
@@ -94,14 +94,14 @@ def zb_recur(F, J, n, k):
     F may have other symbols than n and k, here we discover the sum from k = 0 to n to be
     x / (x + n).
 
-        F = (-1)**k * binomial(n, k) / binomial(x + k, k) 
+        F = (-1)**k * binomial(n, k) / binomial(x + k, k)
         zb_recur(F, 1, n, k)
     ([-n - x, n + x + 1], k*(k + x)/(k - n - 1))
     """
     a, w = symbols('a, w', cls = Function)
 
     p, p_2, p_3 = _zb_gosper(F, J, n, k)
-    # This provides us the polynomials appearing in (6.3.11) of 'A = B', p_3 
+    # This provides us the polynomials appearing in (6.3.11) of 'A = B', p_3
     # here is p_3(k-1)
 
     b_deg = _find_b_deg(p_2, p_3, p)
