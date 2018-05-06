@@ -78,24 +78,24 @@ def zb_recur(F, J, n, k):
     ========
     Helping us discover that sum of binomial(n - k - 1, k) over k is fibonacci
 
-    >>> F = binomial(n - k - 1, k)
-    >>> zb_recur(F, 1, n, k)
+        F = binomial(n - k - 1, k)
+        zb_recur(F, 1, n, k)
     try higher order
-    >>> zb_recur(F, 2, n, k)
+        zb_recur(F, 2, n, k)
     ([-1, -1, 1], k*(k - n)/((2*k - n)*(2*k - n - 1)))
 
     Discovering a recurrence for binomial(n, k)**3, the resulting recurrence for
     the sum can't be solved nicely, we don't care to look at G.
 
-    >>> F = binomial(n, k)**3
-    >>> zb_recur(F, 2, n, k)[0]
+        F = binomial(n, k)**3
+        zb_recur(F, 2, n, k)[0]
     ([-2, -(7*n**2 + 21*n + 16)/(4*(n + 1)**2), (n + 2)**2/(4*(n + 1)**2)]
 
     F may have other symbols than n and k, here we discover the sum from k = 0 to n to be
     x / (x + n).
 
-    >>> F = (-1)**k * binomial(n, k) / binomial(x + k, k) 
-    >>> zb_recur(F, 1, n, k)
+        F = (-1)**k * binomial(n, k) / binomial(x + k, k) 
+        zb_recur(F, 1, n, k)
     ([-n - x, n + x + 1], k*(k + x)/(k - n - 1))
     """
     a, w = symbols('a, w', cls = Function)
@@ -139,36 +139,3 @@ def zb_recur(F, J, n, k):
     G = combsimp((p_3 * b * t / p).subs(coeffs))
 
     return [c[1] for c in coeffs[0:J + 1]], combsimp(G / F)
-
-"""
-Tests
-========
-from sympy import factorial, binomial, simplify
-
-n, k, x, y, i, j = symbols('n, k, x, y, i, j')
-
-def test_zb_recur():
-
-    F_1 = (-1)**k * binomial(x - k + 1, k) * binomial(x - 2*k, n - k)
-    F_2 = binomial(n, k) / 2**n
-    F_3 = (-1)**k * binomial(n, k) * x * binomial(x + n, n) / (k + x)
-    F_4 = binomial(n - k - 1, k)
-    F_5 = (factorial(n - i) * factorial(n - j) * factorial(i - 1) * 
-        factorial(j - 1)) / (factorial(n - 1) * factorial(k - 1) * 
-        factorial(n - i - j + k) * factorial(i - k) * factorial(j - k))
-
-    R_1 = k*(-2*k + x + 1)*(-k + x + 2)/(2*(k - n - 2)*(k - n - 1))
-    R_2 = k/(2*(k - n - 1))
-    R_3 = k*(k + x)/(k - n - 1)
-    R_4 = k*(k - n)/((2*k - n)*(2*k - n - 1))
-    R_5 = -(k - 1)/n
-
-    assert simplify(zb_recur(F_1, 2, n, k)[1]) == simplify(R_1)
-    assert simplify(zb_recur(F_2, 1, n, k)[1]) == simplify(R_2)
-    assert simplify(zb_recur(F_3, 1, n, k)[1]) == simplify(R_3)
-    assert zb_recur(F_4, 1, n, k) == "try higher order"
-    assert simplify(zb_recur(F_4, 2, n, k)[1]) == simplify(R_4)
-    assert simplify(zb_recur(F_5, 1, n, k)[1]) == simplify(R_5)
-
-test_zb_recur()
-"""
