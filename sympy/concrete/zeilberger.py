@@ -126,6 +126,7 @@ def zb_recur(F, J, n, k):
         for s in syms:
             if c.coeff(s):
                 save = s
+                break
         else:
             continue
         break
