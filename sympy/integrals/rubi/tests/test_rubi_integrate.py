@@ -33,3 +33,11 @@ def test_rubi_integrate():
     assert rubi_integrate(x**3*(a + b*x), x) == a*x**4/4 + b*x**5/5
     assert rubi_integrate((b*x)**m*(d*x + 2)**n, x) == 2**n*(b*x)**(m + 1)*hyper((-n, m + 1), (m + 2,), -d*x/2)/(b*(m + 1))
     assert rubi_test(rubi_integrate(1/(1 + x**5), x), x, log(x + S(1))/S(5) + S(2)*Sum(-log((S(2)*x - S(2)*cos(pi*(S(2)*k/S(5) + S(-1)/5)))**S(2) - S(4)*sin(S(2)*pi*k/S(5) + S(3)*pi/S(10))**S(2) + S(4))*cos(pi*(S(2)*k/S(5) + S(-1)/5))/S(2) - (-S(2)*cos(pi*(S(2)*k/S(5) + S(-1)/5))**S(2) + S(2))*atan((-x/cos(pi*(S(2)*k/S(5) + S(-1)/5)) + S(1))/sqrt(-(cos(S(2)*pi*k/S(5) - pi/S(5)) + S(-1))*(cos(S(2)*pi*k/S(5) - pi/S(5)) + S(1))/cos(S(2)*pi*k/S(5) - pi/S(5))**S(2)))/(S(2)*sqrt(-(cos(S(2)*pi*k/S(5) - pi/S(5)) + S(-1))*(cos(S(2)*pi*k/S(5) - pi/S(5)) + S(1))/cos(S(2)*pi*k/S(5) - pi/S(5))**S(2))*cos(pi*(S(2)*k/S(5) + S(-1)/5))), (k, S(1), S(2)))/S(5), _numerical=True)
+
+    #from proposal
+    assert rubi_integrate(x**4*sqrt(a + b*x**2),x) == a*(-3*a*(-a*x*hyper((1, 1/2), (3/2,), b*x**2/(a + b*x**2))/(2*b*sqrt(a + b*x**2)) + x*sqrt(a + b*x**2)/(2*b))/(4*b) + x**3*sqrt(a + b*x**2)/(4*b))/6 + x**5*sqrt(a + b*x**2)/6
+
+    #New
+    assert rubi_integrate((-x + x**3)/(6 + 2*x),x) == x**3/6 - 3*x**2/4 + 4*x - 12*log(x + 3)
+    assert rubi_integrate((c + d*x + e*x**2)**1/sqrt(a + b*x),x) == 2*e*(a + b*x)**(5/2)/(5*b**3) + 2*(a + b*x)**(3/2)*(-2*a*e + b*d)/(3*b**3) + 2*sqrt(a + b*x)*(a**2*e - a*b*d + b**2*c)/b**3    
+    
