@@ -78,24 +78,27 @@ def zb_recur(F, J, n, k):
     ========
     Helping us discover that sum of binomial(n - k - 1, k) over k is fibonacci
 
-        F = binomial(n - k - 1, k)
-        zb_recur(F, 1, n, k)
-    try higher order
-        zb_recur(F, 2, n, k)
+    >>> from sympy.concrete.zeilberger import zb_recur
+    >>> from sympy.abc import n, k, x
+    >>> from sympy import binomial
+    >>> F = binomial(n - k - 1, k)
+    >>> zb_recur(F, 1, n, k)
+    'try higher order'
+    >>> zb_recur(F, 2, n, k)
     ([-1, -1, 1], k*(k - n)/((2*k - n)*(2*k - n - 1)))
 
     Discovering a recurrence for binomial(n, k)**3, the resulting recurrence for
     the sum can't be solved nicely, we don't care to look at G.
 
-        F = binomial(n, k)**3
-        zb_recur(F, 2, n, k)[0]
-    ([-2, -(7*n**2 + 21*n + 16)/(4*(n + 1)**2), (n + 2)**2/(4*(n + 1)**2)]
+    >>> F = binomial(n, k)**3
+    >>> zb_recur(F, 2, n, k)[0]
+    [-2, -(7*n**2 + 21*n + 16)/(4*(n + 1)**2), (n + 2)**2/(4*(n + 1)**2)]
 
     F may have other symbols than n and k, here we discover the sum from k = 0 to n to be
     x / (x + n).
 
-        F = (-1)**k * binomial(n, k) / binomial(x + k, k)
-        zb_recur(F, 1, n, k)
+    >>> F = (-1)**k * binomial(n, k) / binomial(x + k, k)
+    >>> zb_recur(F, 1, n, k)
     ([-n - x, n + x + 1], k*(k + x)/(k - n - 1))
     """
     a, w = symbols('a, w', cls = Function)
