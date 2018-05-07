@@ -1,5 +1,5 @@
-from sympy.concrete.zeilberger import zb_recur
-from sympy import factorial, binomial, simplify, symbols
+from sympy.concrete.zeilberger import zb_recur, zb_sum
+from sympy import factorial, binomial, simplify, symbols, sqrt, pi, gamma
 
 n, k, x, i, j, r = symbols('n, k, x, i, j, r')
 
@@ -24,7 +24,29 @@ def test_zb_recur():
     assert simplify(zb_recur(F_1, 2, n, k)[1]) == simplify(R_1)
     assert simplify(zb_recur(F_2, 1, n, k)[1]) == simplify(R_2)
     assert simplify(zb_recur(F_3, 1, n, k)[1]) == simplify(R_3)
-    assert zb_recur(F_4, 1, n, k) == "try higher order"
     assert simplify(zb_recur(F_4, 2, n, k)[1]) == simplify(R_4)
     assert simplify(zb_recur(F_5, 1, n, k)[1]) == simplify(R_5)
     assert simplify(zb_recur(F_6, 1, n, k)[1]) == simplify(R_6)
+
+def test_zb_sum():
+
+    F_1 = (-1)**k * binomial(n + k, 2 * k) * binomial(2 * k, k) / (k + 1)
+    F_2 = binomial(n, k)
+    F_3 = (-1)**k * binomial(n, k) * x / (k + x)
+    F_4 = binomial(n, k)**2
+    F_5 = k * binomial(2 * n + 1, 2 * k + 1)
+    F_6 = (-1)**k * binomial(n, k) / binomial(x + k, k)
+
+    R_1 = 0
+    R_2 = 2**n
+    R_3 = gamma(n + 1)*gamma(x + 1)/gamma(n + x + 1)
+    R_4 = 4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 1))
+    R_5 = 4*2**(2*n - 3)*gamma(n + 1/2)/gamma(n - 1/2)
+    R_6 = x/(n + x)
+
+    assert zb_sum(F_1, n, 2, n, k) == R_1
+    assert zb_sum(F_2, n, 1, n, k) == R_2
+    assert zb_sum(F_3, n, 1, n, k) == R_3
+    assert zb_sum(F_4, n, 1, n, k) == R_4
+    assert zb_sum(F_5, n, 1, n, k) == R_5
+    assert zb_sum(F_6, n, 1, n, k) == R_6
