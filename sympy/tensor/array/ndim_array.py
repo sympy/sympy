@@ -79,8 +79,8 @@ class NDimArray(object):
         for i in range(self._rank):
             if index[i] >= self.shape[i]:
                 raise ValueError('Index ' + str(index) + ' out of border')
-            if(index[i]<0):
-                real_index+=1
+            if index[i] < 0:
+                real_index += 1
             real_index = real_index*self.shape[i] + index[i]
 
         return real_index
