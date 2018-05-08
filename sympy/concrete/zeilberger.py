@@ -1,6 +1,7 @@
 from sympy.concrete.gosper import gosper_normal
 from sympy import Poly, degree, factor, fraction, cancel, LC, linsolve, rsolve
-from sympy import symbols, Dummy, Function, combsimp, hypersimp, product
+from sympy import symbols, Dummy, Function, combsimp, hypersimp, product, nan
+from sympy import summation
 """
 zb_recur provides an implementation of the algorithm described on pages 106 - 109
 of 'A = B' https://www.math.upenn.edu/~wilf/AeqB.pdf, this aids in solving
@@ -68,13 +69,18 @@ def zb_recur(F, J, n, k):
     a_0F(n, k) + a_1F(n + 1, k) + ... + a_JF(n + j, k) = G(n, k + 1) - G(n, k).
 
     If such things exists this function returns a pair consisting of
-    [a_0, a_1, ... , a_J] and the function G / F, otherwise it raised a value
-    error 'try higher order', suggesting you try to find a higher order recurrence,
-    i.e. increase J. If F is 'proper hypergeometric' (see page 64 of 'A = B'
+    [a_0, a_1, ... , a_J] and the function G / F, otherwise it will return
+    None. If F is 'proper hypergeometric' (see page 64 of 'A = B'
     for a definition) then such a recurrence always exists for some J.
 
     The main application of this is to sum k over some suitable values so that
     the G telescopes and you obtain a recurrence for the sum of F(n, k).
+
+    If you have a guess as to what your sum should be, there is a very fast way
+    to certify it, divide F by your guess and call zb_recur with J = 1 and your
+    new guess, it should respond with something of the form [-a, a], R.
+    Many famous hypergeometric identities e.g. Gauss's, Kummer's etc can be
+    proved this way.
 
     Examples
     ========
@@ -110,7 +116,7 @@ def zb_recur(F, J, n, k):
     b_deg = _find_b_deg(p_2, p_3, p)
 
     if b_deg < 0:
-        raise ValueError("try higher order")
+        return None
 
     b = Poly([w(i) for i in range(b_deg, -1, -1)], k)
 
@@ -121,7 +127,7 @@ def zb_recur(F, J, n, k):
     solns = list(linsolve(P.coeffs(), syms))[0]
 
     if all(c == 0 for c in solns):
-        raise ValueError("try higher order")
+        return None
 
     save = a(0)
 
@@ -143,13 +149,12 @@ def zb_recur(F, J, n, k):
 
     return [c[1] for c in coeffs[0:J + 1]], combsimp(G / F)
 
-def zb_sum(F, U, J, n, k, vanishes = True):
+def zb_sum(F, U, J, k, vanishes = True):
     """
     Attempts to compute the sum of a hypergometric function F(n, k) from
-    k = 0 to k = U by first finding a recurrence of order J in n that
-    F(n, k) satisfies. If it fails to find a recurrence it will raise a
-    value error - "try higher order", suggesting you try again with a
-    larger J.
+    k = 0 to k = U (which is assumed to be a function of n, and nothing else)
+    by first finding a recurrence of order J in n that F(n, k) satisfies.
+    If it fails to find a recurrence or solve the recurrence it will return None.
 
     By default it is assumed that F(n, k) is zero for k < 0 and
     k > U. To tell zb_sum that F(n, k) does not vanish for
@@ -162,34 +167,49 @@ def zb_sum(F, U, J, n, k, vanishes = True):
     >>> from sympy.abc import n, k, x
     >>> from sympy import binomial
     >>> F = (-1)**k * binomial(x - k + 1, k) * binomial(x - 2 * k, n - k)
-    >>> zb_sum(F, n, 2, n, k)
+    >>> zb_sum(F, n, 2, k)
     (-1)**n/2 + 1/2
+
+    Rediscovering the binomial formula
+    >>> F = binomial(n, k) * x**k
+    >>> zb_sum(F, n, 1, k)
+    (x + 1)**n
 
     Here F doesn't vanish for k > n
     >>> F = binomial(n + k, k) / 2**k
-    >>> zb_sum(F, n, 1, n, k, vanishes = False)
+    >>> zb_sum(F, n, 1, k, vanishes = False)
     2**n
     """
     f = symbols('f', cls = Function)
 
-    F_rec, R = zb_recur(F, J, n, k)
+    if len(U.free_symbols) != 1:
+        return None
+
+    n = list(U.free_symbols)[0]
+
+    pair = zb_recur(F, J, n, k)
+
+    if pair is None or pair[1] is nan:
+        return None
+
+    F_rec, R = pair
 
     sum_rec = sum(F_rec[i] * f(n + i) for i in range(J + 1))
 
-    initial = { f(i): sum(F.subs([(n, i), (k,  j)])
-        for j in range(U.subs(n, i) + 1)) for i in range(1, J + 1) }
+    initial = { f(i): summation(F.subs(n, i), (k, 0, U.subs(n, i)))
+                        for i in range(1, J + 1) }
 
     if vanishes:
-        return combsimp(rsolve(sum_rec, f(n), initial))
+        return rsolve(sum_rec, f(n), initial)
 
     G = F * R
 
-    boundary = sum(F.subs([(n, n + i), (k, U + j)])
-                    for i in range(J + 1) for j in range(i + 1, J + 1))
+    boundary = sum(summation(F.subs(n, n + i), (k, U.subs(n, n + i) + 1,
+                        U.subs(n, n + J))) for i in range(J + 1))
 
-    G_0, G_U = G.subs(k, 0), G.subs(k, U + J)
+    G_0, G_U = G.subs(k, 0), G.subs(k, U.subs(n, n + J))
 
     rec = sum_rec + boundary + G_0 - G_U
     # Your sum satisfies the reccurence rec = 0
 
-    return combsimp(rsolve(combsimp(rec), f(n), initial))
+    return rsolve(combsimp(rec), f(n), initial)

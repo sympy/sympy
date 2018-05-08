@@ -1,5 +1,6 @@
 from sympy.concrete.zeilberger import zb_recur, zb_sum
 from sympy import factorial, binomial, simplify, symbols, sqrt, pi, gamma
+from sympy import combsimp
 
 n, k, x, i, j, r = symbols('n, k, x, i, j, r')
 
@@ -36,6 +37,7 @@ def test_zb_sum():
     F_4 = binomial(n, k)**2
     F_5 = k * binomial(2 * n + 1, 2 * k + 1)
     F_6 = (-1)**k * binomial(n, k) / binomial(x + k, k)
+    F_7 = (-1)**k * binomial(n + 1, k) * binomial(2 * n-2 * k + 1, n)
 
     R_1 = 0
     R_2 = 2**n
@@ -43,10 +45,12 @@ def test_zb_sum():
     R_4 = 4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 1))
     R_5 = 4*2**(2*n - 3)*gamma(n + 1/2)/gamma(n - 1/2)
     R_6 = x/(n + x)
+    R_7 = 0
 
-    assert zb_sum(F_1, n, 2, n, k) == R_1
-    assert zb_sum(F_2, n, 1, n, k) == R_2
-    assert zb_sum(F_3, n, 1, n, k) == R_3
-    assert zb_sum(F_4, n, 1, n, k) == R_4
-    assert zb_sum(F_5, n, 1, n, k) == R_5
-    assert zb_sum(F_6, n, 1, n, k) == R_6
+    assert combsimp(zb_sum(F_1, n, 2, k)) == R_1
+    assert combsimp(zb_sum(F_2, n, 1, k)) == R_2
+    assert combsimp(zb_sum(F_3, n, 1, k)) == R_3
+    assert combsimp(zb_sum(F_4, n, 1, k)) == R_4
+    assert combsimp(zb_sum(F_5, n, 1, k)) == R_5
+    assert combsimp(zb_sum(F_6, n, 1, k)) == R_6
+    assert combsimp(zb_sum(F_7, n + 1, 1, k)) == R_7
