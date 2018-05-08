@@ -228,7 +228,7 @@ before_install:
       pip install "sphinx" "docutils" doctr;
     fi
   - |
-    if [[ "${TEST_OPT_DEPENDENCY}" ]]; then
+    if [[ -n "${TEST_OPT_DEPENDENCY}" || "${TEST_SAGE}" == "true" ]]; then
     # We do this conditionally because it saves us some downloading if the
     # version is the same.
         if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
@@ -244,15 +244,10 @@ before_install:
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
 
         conda info -a;
-        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY/autowrap/libgfortran libgcc gcc cython};
+        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY/autowrap/libgfortran libgcc gcc cython} sage;
         source activate test-environment;
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list --format=legacy | grep "numpy" && pip uninstall -y numpy;
-    fi
-  - if [[ "${TEST_SAGE}" == "true" ]]; then
-      sudo apt-add-repository -y ppa:aims/sagemath;
-      sudo apt-get update;
-      sudo apt-get install -y sagemath-upstream-binary;
     fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
       pip install matchpy;
