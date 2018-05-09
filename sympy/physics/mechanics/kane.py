@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core.backend import zeros, Matrix, diff, eye
-from sympy import solve_linear_system_LU
+from sympy.core.backend import zeros, Matrix, diff
 from sympy.core.compatibility import range
 from sympy.utilities import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
@@ -41,33 +40,33 @@ class KanesMethod(object):
 
         accelerations = mass_matrix.inv() * forcing
 
-    where fr, frstar, the mass matrix, and the right hand side vector are
-    available as class attributes after Kane's equations are formed.
+    where fr, frstar, the mass matrix, and the right hand side forcing vector
+    are available as class attributes after Kane's equations are formed.
 
     Attributes
     ==========
 
     inertial_frame : ReferenceFrame
-        The inertial reference frame the system is defined with respect to.
+        The inertial reference frame the dynamics are formed with respect to.
     n, num_coordinates, num_speeds : integer
         The total number of generalized coordinates and speeds.
-    q, coordinates : Matrix, shape(n, 1)
-        The generalized coordinates. These are ordered as [q_s, q_r]^T.
     o, num_dependent_coordinates : integer
         The number of dependent coordinates.
+    q, coordinates : Matrix, shape(n, 1)
+        The generalized coordinates. These are ordered as [q_s, q_r]^T.
     q_s, independent_coodrinates : Matrix, shape(n-o, 1)
         The independent generalized coordinates.
     q_r, dependent_coodrinates : Matrix, shape(o, 1)
         The dependent generalized coordinates.
+    p, num_indepenent_speeds : integer
+        The number of independen speeds.
+    m, num_dependent_speeds : integer
+        The number of dependent speeds.
     u, speeds : Matrix, shape(n, 1)
         The generalized speeds. For a nonholomic system these are ordered as
         [u_s, u_r]^T.
-    p, num_indepenent_speeds : integer
-        The number of independen speeds.
     u_s, independent_speeds : Matrix, shape(p, 1)
         The independent generalized speeds.
-    m, num_dependent_speeds : integer
-        The number of dependent speeds.
     u_r, dependent_speeds : Matrix, shape(m, 1)
         The dependent generalized speeds.
     holonomic : boolean
@@ -104,8 +103,8 @@ class KanesMethod(object):
     This is a simple example for a one degree of freedom translational
     spring-mass-damper.
 
-    In this example, we first need to do the kinematics.  This involves
-    creating generalized speeds and coordinates and their derivatives.  Then we
+    In this example, we first need to do the kinematics. This involves
+    creating generalized speeds and coordinates and their derivatives. Then we
     create a point and set its velocity in a frame.
 
         >>> from sympy import symbols
@@ -220,6 +219,7 @@ class KanesMethod(object):
 
         if not isinstance(frame, ReferenceFrame):
             raise TypeError('A ReferenceFrame must be supplied.')
+
         self._inertial = frame
 
         self._fr = None
@@ -262,7 +262,7 @@ class KanesMethod(object):
         if not iterable(u_dep):
             raise TypeError('Generalized dependent speeds must be an iterable.')
         if not iterable(u_ind):
-            raise TypeError('Generalized indepenent speeds must be an iterable.')
+            raise TypeError('Generalized independent speeds must be an iterable.')
         u_ind = Matrix(u_ind)
 
         self._uind = u_ind
@@ -917,12 +917,12 @@ class KanesMethod(object):
     @property
     def num_coordinates(self):
         """Returns the number of generalized coordinates."""
-        return len(self._q)
+        return len(self.coordinates)
 
     @property
     def q(self):
         """Returns a column matrix of the generalized coordinates."""
-        return self._q
+        return self.coordinates
 
     @property
     def coordinates(self):
