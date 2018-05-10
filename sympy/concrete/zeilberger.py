@@ -228,7 +228,9 @@ def zb_sum(F, k_a_b, J = 1):
     initial = { f(i): summation(F.subs(n, i), (k, 0, U.subs(n, i)))
                         for i in range(1, J + 1) }
 
-    if F.subs(k, U + 1) != 0:
+    dummy_n = symbols('dummy_n', positive = True, integer = True)
+
+    if F.subs(k, U + 1).subs(n, dummy_n) != 0:
         vanishes = False
     else:
         vanishes = _vanishes(F, U, n, k)
