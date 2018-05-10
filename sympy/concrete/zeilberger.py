@@ -1,14 +1,37 @@
 from sympy.concrete.gosper import gosper_normal
 from sympy import Poly, degree, factor, fraction, cancel, LC, linsolve, rsolve
 from sympy import symbols, Dummy, Function, combsimp, hypersimp, product, nan
-from sympy import summation
+from sympy import summation, oo, gamma, limit, factor_list, denom
 """
 zb_recur provides an implementation of the algorithm described on pages 106 - 109
 of 'A = B' https://www.math.upenn.edu/~wilf/AeqB.pdf, this aids in solving
-sums of hypergeometric functions.
+hypergeometric sums.
 
-zb_sum uses this function to attempt to compute some definite hypergeometric sum.
+zb_sum uses this function to attempt to compute some definite hypergeometric sums.
 """
+
+def _vanishes(F, U, n, k):
+    """
+    Determines if F(n, k) hypergeometric term vanishes for k > U,
+    where k is integer assuming we already know F(n, U + 1) = 0
+    by looking at F(n, k + 1) / F(n, k) = P / Q and considering roots of Q.
+    """
+    m = symbols('m', positive = True)
+    F = F.subs(n, m)
+    d = denom(hypersimp(F, k))
+    r = factor_list(d)[1]
+    L = []
+    for f in r:
+        if degree(f[0], k) != 1:
+            continue
+        if not f[0].free_symbols.issubset({n, k}):
+            continue
+        L.append((LC(f[0], k) * k - f[0]) / LC(f[0], k))
+    if L == []:
+        return True
+    if max(L) <= U.subs(n, m):
+        return True
+    return False
 
 def _find_b_deg(p_2, p_3, p):
     """
@@ -35,7 +58,7 @@ def _find_b_deg(p_2, p_3, p):
 
 def _zb_gosper(F, J, n, k):
     """
-    Given a hypergeometric function F of n and k (and possibly other variables),
+    Given a hypergeometric term F of n and k (and possibly other variables),
     we take t_k = a_0F(n, k) + a_1F(n + 1, k) + ... + a_JF(n + J, k) with a_i
     some variables and determine the gosper normal form of t_(k+1)/t_k.
     """
@@ -60,9 +83,9 @@ def _zb_gosper(F, J, n, k):
 
     return p_0 * p_1, p_2, p_3.shift(-1)
 
-def zb_recur(F, J, n, k):
+def zb_recur(F, n, k, J = 1):
     """
-    Given a hypergeometric function F of n and k (and possibly other variables),
+    Given a hypergeometric term F of n and k (and possibly other variables),
     determines if there  exists a_0, a_1, ... , a_J rational functions in n and a
     function G of n and k such that G / F is rational and
 
@@ -90,21 +113,21 @@ def zb_recur(F, J, n, k):
     >>> from sympy.abc import n, k, x
     >>> from sympy import binomial
     >>> F = binomial(n - k - 1, k)
-    >>> zb_recur(F, 2, n, k)
+    >>> zb_recur(F, n, k, J = 2)
     ([-1, -1, 1], k*(k - n)/((2*k - n)*(2*k - n - 1)))
 
     Discovering a recurrence for binomial(n, k)**3, the resulting recurrence for
     the sum can't be solved nicely, we don't care to look at G.
 
     >>> F = binomial(n, k)**3
-    >>> zb_recur(F, 2, n, k)[0]
+    >>> zb_recur(F, n, k, J = 2)[0]
     [-2, -(7*n**2 + 21*n + 16)/(4*(n + 1)**2), (n + 2)**2/(4*(n + 1)**2)]
 
     F may have other symbols than n and k, here we discover the sum from k = 0 to n to be
     x / (x + n).
 
     >>> F = (-1)**k * binomial(n, k) / binomial(x + k, k)
-    >>> zb_recur(F, 1, n, k)
+    >>> zb_recur(F, n, k)
     ([-n - x, n + x + 1], k*(k + x)/(k - n - 1))
     """
     a, w = symbols('a, w', cls = Function)
@@ -149,16 +172,12 @@ def zb_recur(F, J, n, k):
 
     return [c[1] for c in coeffs[0:J + 1]], combsimp(G / F)
 
-def zb_sum(F, U, J, k, vanishes = True):
+def zb_sum(F, k_a_b, J = 1):
     """
-    Attempts to compute the sum of a hypergometric function F(n, k) from
-    k = 0 to k = U (which is assumed to be a function of n, and nothing else)
-    by first finding a recurrence of order J in n that F(n, k) satisfies.
+    Attempts to compute the sum of a hypergometric term F(n, k) from
+    k = a (finite) to k = b (finite) (which is assumed to be a function of n,
+    and nothing else) by first finding a recurrence of order J in n that F(n, k) satisfies.
     If it fails to find a recurrence or solve the recurrence it will return None.
-
-    By default it is assumed that F(n, k) is zero for k < 0 and
-    k > U. To tell zb_sum that F(n, k) does not vanish for
-    k > U you should use the keyword vanishes = False
 
     Examples
     ========
@@ -167,49 +186,59 @@ def zb_sum(F, U, J, k, vanishes = True):
     >>> from sympy.abc import n, k, x
     >>> from sympy import binomial
     >>> F = (-1)**k * binomial(x - k + 1, k) * binomial(x - 2 * k, n - k)
-    >>> zb_sum(F, n, 2, k)
+    >>> zb_sum(F, (k, 0, n), J = 2)
     (-1)**n/2 + 1/2
 
     Rediscovering the binomial formula
     >>> F = binomial(n, k) * x**k
-    >>> zb_sum(F, n, 1, k)
+    >>> zb_sum(F, (k, 0, n))
     (x + 1)**n
 
     Here F doesn't vanish for k > n
     >>> F = binomial(n + k, k) / 2**k
-    >>> zb_sum(F, n, 1, k, vanishes = False)
+    >>> zb_sum(F, (k, 0, n))
     2**n
     """
+    k, a, b = k_a_b
+
+    F = F.subs(k, k + a)
+    U = b - a
+
     f = symbols('f', cls = Function)
+
+    F = F.rewrite(gamma)
 
     if len(U.free_symbols) != 1:
         return None
 
     n = list(U.free_symbols)[0]
 
-    pair = zb_recur(F, J, n, k)
+    pair = zb_recur(F, n, k, J)
 
     if pair is None or pair[1] is nan:
         return None
 
     F_rec, R = pair
 
+    G = F * R
+    G_0 = G.subs(k, 0)
+
     sum_rec = sum(F_rec[i] * f(n + i) for i in range(J + 1))
 
     initial = { f(i): summation(F.subs(n, i), (k, 0, U.subs(n, i)))
                         for i in range(1, J + 1) }
 
-    if vanishes:
-        return rsolve(sum_rec, f(n), initial)
+    if F.subs(k, U + 1) != 0:
+        vanishes = False
+    else:
+        vanishes = _vanishes(F, U, n, k)
 
-    G = F * R
+    if vanishes:
+        return rsolve(combsimp(sum_rec + G_0), f(n), initial)
 
     boundary = sum(summation(F.subs(n, n + i), (k, U.subs(n, n + i) + 1,
                         U.subs(n, n + J))) for i in range(J + 1))
 
-    G_0, G_U = G.subs(k, 0), G.subs(k, U.subs(n, n + J))
+    G_U = G.subs(k, U.subs(n, n + J))
 
-    rec = sum_rec + boundary + G_0 - G_U
-    # Your sum satisfies the reccurence rec = 0
-
-    return rsolve(combsimp(rec), f(n), initial)
+    return rsolve(combsimp(sum_rec + boundary + G_0 - G_U), f(n), initial)

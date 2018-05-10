@@ -22,12 +22,12 @@ def test_zb_recur():
     R_5 = -(k - 1)/n
     R_6 = k*(k + r)/((k - n - 1)*(n + x + 1))
 
-    assert simplify(zb_recur(F_1, 2, n, k)[1]) == simplify(R_1)
-    assert simplify(zb_recur(F_2, 1, n, k)[1]) == simplify(R_2)
-    assert simplify(zb_recur(F_3, 1, n, k)[1]) == simplify(R_3)
-    assert simplify(zb_recur(F_4, 2, n, k)[1]) == simplify(R_4)
-    assert simplify(zb_recur(F_5, 1, n, k)[1]) == simplify(R_5)
-    assert simplify(zb_recur(F_6, 1, n, k)[1]) == simplify(R_6)
+    assert simplify(zb_recur(F_1, n, k, J = 2)[1]) == simplify(R_1)
+    assert simplify(zb_recur(F_2, n, k)[1]) == simplify(R_2)
+    assert simplify(zb_recur(F_3, n, k)[1]) == simplify(R_3)
+    assert simplify(zb_recur(F_4, n, k, J = 2)[1]) == simplify(R_4)
+    assert simplify(zb_recur(F_5, n, k)[1]) == simplify(R_5)
+    assert simplify(zb_recur(F_6, n, k)[1]) == simplify(R_6)
 
 def test_zb_sum():
 
@@ -37,7 +37,6 @@ def test_zb_sum():
     F_4 = binomial(n, k)**2
     F_5 = k * binomial(2 * n + 1, 2 * k + 1)
     F_6 = (-1)**k * binomial(n, k) / binomial(x + k, k)
-    F_7 = (-1)**k * binomial(n + 1, k) * binomial(2 * n-2 * k + 1, n)
 
     R_1 = 0
     R_2 = 2**n
@@ -45,12 +44,10 @@ def test_zb_sum():
     R_4 = 4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 1))
     R_5 = 4*2**(2*n - 3)*gamma(n + 1/2)/gamma(n - 1/2)
     R_6 = x/(n + x)
-    R_7 = 0
 
-    assert combsimp(zb_sum(F_1, n, 2, k)) == R_1
-    assert combsimp(zb_sum(F_2, n, 1, k)) == R_2
-    assert combsimp(zb_sum(F_3, n, 1, k)) == R_3
-    assert combsimp(zb_sum(F_4, n, 1, k)) == R_4
-    assert combsimp(zb_sum(F_5, n, 1, k)) == R_5
-    assert combsimp(zb_sum(F_6, n, 1, k)) == R_6
-    assert combsimp(zb_sum(F_7, n + 1, 1, k)) == R_7
+    assert combsimp(zb_sum(F_1, (k, 0, n), J = 2)) == R_1
+    assert combsimp(zb_sum(F_2, (k, 0, n))) == R_2
+    assert combsimp(zb_sum(F_3, (k, 0, n))) == R_3
+    assert combsimp(zb_sum(F_4, (k, 0, n))) == R_4
+    assert combsimp(zb_sum(F_5, (k, 0, n))) == R_5
+    assert combsimp(zb_sum(F_6, (k, 0, n))) == R_6
