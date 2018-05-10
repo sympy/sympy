@@ -45,6 +45,17 @@ def test_list_args():
     f = lambdify([x, y], x + y)
     assert f(1, 2) == 3
 
+def test_nested_args():
+    f1 = lambdify([[w, x]], [w, x])
+    assert f1([91, 2]) == [91, 2]
+    raises(TypeError, lambda: f1(1, 2))
+
+    f2 = lambdify([(w, x), (y, z)], [w, x, y, z])
+    assert f2((18, 12), (73, 4)) == [18, 12, 73, 4]
+    raises(TypeError, lambda: f2(3, 4))
+
+    f3 = lambdify([w, [[[x]], y], z], [w, x, y, z])
+    assert f3(10, [[[52]], 31], 44) == [10, 52, 31, 44]
 
 def test_str_args():
     f = lambdify('x,y,z', 'z,y,x')
@@ -829,3 +840,24 @@ def test_lambdify_dummy_arg():
     d2 = Dummy('x')
     f2 = lambdify(d2, d2 + 1)
     assert f2(2) == 3
+
+def test_numpy_array_arg():
+    # Test for issue 14655 (numpy part)
+    if not numpy:
+        skip("numpy not installed")
+
+    f = lambdify([[x, y]], x*x + y, 'numpy')
+
+    assert f(numpy.array([2.0, 1.0])) == 5
+
+def test_tensorflow_array_arg():
+    # Test for issue 14655 (tensorflow part)
+    if not tensorflow:
+        skip("tensorflow not installed.")
+
+    f = lambdify([[x, y]], x*x + y, 'tensorflow')
+
+    fcall = f(tensorflow.constant([2.0, 1.0]))
+
+    s = tensorflow.Session()
+    assert s.run(fcall) == 5
