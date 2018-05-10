@@ -10,6 +10,7 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
+from sympy.concrete.zeilberger import zb_sum
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
@@ -1121,7 +1122,6 @@ def _eval_sum_hyper(f, i, a):
 
 def eval_sum_hyper(f, i_a_b):
     from sympy.logic.boolalg import And
-
     i, a, b = i_a_b
 
     if (b - a).is_Integer:
@@ -1136,6 +1136,12 @@ def eval_sum_hyper(f, i_a_b):
             if res is not None:
                 return Piecewise(res, (old_sum, True))
         else:
+            zb_try = zb_sum(f, i_a_b)
+            if zb_try is not None:
+                return zb_try
+            zb_try2 = zb_sum(f, i_a_b, J = 2)
+            if zb_try2 is not None:
+                return zb_try2
             res1 = _eval_sum_hyper(f, i, a)
             res2 = _eval_sum_hyper(f, i, b + 1)
             if res1 is None or res2 is None:

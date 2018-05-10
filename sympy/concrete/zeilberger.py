@@ -1,7 +1,10 @@
 from sympy.concrete.gosper import gosper_normal
-from sympy import Poly, degree, factor, fraction, cancel, LC, linsolve, rsolve
-from sympy import symbols, Dummy, Function, combsimp, hypersimp, product, nan
-from sympy import summation, oo, gamma, limit, factor_list, denom
+from sympy.core import Dummy, Function, symbols, nan
+from sympy.polys import Poly, factor, factor_list, cancel, degree, LC
+from sympy.solvers import linsolve, rsolve
+from sympy.simplify import hypersimp, combsimp, fraction, denom
+from sympy.concrete import product
+from sympy.functions import gamma
 """
 zb_recur provides an implementation of the algorithm described on pages 106 - 109
 of 'A = B' https://www.math.upenn.edu/~wilf/AeqB.pdf, this aids in solving
@@ -16,7 +19,7 @@ def _vanishes(F, U, n, k):
     where k is integer assuming we already know F(n, U + 1) = 0
     by looking at F(n, k + 1) / F(n, k) = P / Q and considering roots of Q.
     """
-    m = symbols('m', positive = True)
+    m = symbols('m', positive = True, Dummy = True)
     F = F.subs(n, m)
     d = denom(hypersimp(F, k))
     r = factor_list(d)[1]
@@ -198,10 +201,16 @@ def zb_sum(F, k_a_b, J = 1):
     >>> F = binomial(n + k, k) / 2**k
     >>> zb_sum(F, (k, 0, n))
     2**n
+
+    Here we need a large J
+    >>> F = binomial(n, 3 * k)
+    >>> zb_sum(F, (k, 0, n), J = 3)
+    2**n/3 + (1/2 - sqrt(3)*I/2)**n/3 + (1/2 + sqrt(3)*I/2)**n/3
     """
+    from sympy.concrete import summation
+
     k, a, b = k_a_b
 
-    F = F.subs(k, k + a)
     U = b - a
 
     f = symbols('f', cls = Function)
@@ -212,8 +221,14 @@ def zb_sum(F, k_a_b, J = 1):
         return None
 
     n = list(U.free_symbols)[0]
+    dummy_n = symbols('dummy_n', positive = True, integer = True, Dummy = True)
+
+    if hypersimp(F, k) is None or hypersimp(F, n) is None:
+        return None
 
     pair = zb_recur(F, n, k, J)
+    F = F.subs(k, k + a)
+    # By translating at this point we avoid giving zb_recur something tricky to handle.
 
     if pair is None or pair[1] is nan:
         return None
@@ -221,16 +236,15 @@ def zb_sum(F, k_a_b, J = 1):
     F_rec, R = pair
 
     G = F * R
-    G_0 = G.subs(k, 0)
+
+    G_0 = G.subs([(k, 0), (n, dummy_n)])
 
     sum_rec = sum(F_rec[i] * f(n + i) for i in range(J + 1))
 
     initial = { f(i): summation(F.subs(n, i), (k, 0, U.subs(n, i)))
                         for i in range(1, J + 1) }
 
-    dummy_n = symbols('dummy_n', positive = True, integer = True)
-
-    if F.subs(k, U + 1).subs(n, dummy_n) != 0:
+    if combsimp(F.subs(k, U + 1).subs(n, dummy_n)) != 0:
         vanishes = False
     else:
         vanishes = _vanishes(F, U, n, k)
