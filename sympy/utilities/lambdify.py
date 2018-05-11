@@ -157,7 +157,7 @@ def _import(module, reload="False"):
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=True):
     """
-    Returns a lambda function for fast calculation of numerical values.
+    Returns an anonymous function for fast calculation of numerical values.
 
     If not specified differently by the user, ``modules`` defaults to
     ``["numpy"]`` if NumPy is installed, and ``["math", "mpmath", "sympy"]``
@@ -405,8 +405,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 # Cannot infer name with certainty. arg_# will have to do.
                 names.append('arg_' + str(n))
 
-    # Create lambda function.
-    lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     imp_mod_lines = []
     for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
         for k in keys:
@@ -418,7 +416,17 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
 
-    func = eval(lstr, namespace)
+    # Create the function definition code and execute it
+    unpackByIndex = _module_present('tensorflow', namespaces)
+
+    funcname = '_lambdifygenerated'
+    funcstr = functiondefstr(args, expr, printer=printer, dummify=dummify,
+            name=funcname, unpackByIndex=unpackByIndex)
+
+    funclocals = {}
+    exec_(funcstr, namespace, funclocals)
+    func = funclocals[funcname]
+
     # For numpy lambdify, wrap all input arguments in arrays.
     # This is a fix for gh-11306.
     if module_provided and _module_present('numpy',namespaces):
@@ -446,7 +454,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         "{src}\n\n"
         "Imported modules:\n\n"
         "{imp_mods}"
-        ).format(sig=sig, expr=expr_str, src=lstr, imp_mods='\n'.join(imp_mod_lines))
+        ).format(sig=sig, expr=expr_str, src=funcstr, imp_mods='\n'.join(imp_mod_lines))
     return func
 
 def _module_present(modname, modlist):
@@ -588,6 +596,142 @@ def lambdastr(args, expr, printer=None, dummify=False):
     expr = lambdarepr(expr)
     return "lambda %s: (%s)" % (args, expr)
 
+def functiondefstr(args, expr, printer=None, dummify=False, name='_lambdifygenerated', unpackByIndex=False):
+    """
+    Returns a function definition statement as a string.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.utilities.lambdify import functiondefstr
+    >>> print(functiondefstr(x, x**2))
+    def _lambdifygenerated(x):
+        return (x**2)
+    >>> print(functiondefstr((x,y,z), [z,y,x]))
+    def _lambdifygenerated(x, y, z):
+        return ([z, y, x])
+
+    Although tuples may not appear as arguments to functions in Python 3,
+    functiondefstr will insert code to unpack the original arguments so
+    that nested arguments can be handled.
+
+    >>> print(functiondefstr((x, (y, z)), (x + y)*z))
+    def _lambdifygenerated(x, _Dummy_18):
+        [y, z] = _Dummy_18
+        return (z*(x + y))
+    """
+    from sympy.matrices import DeferredVector
+    from sympy import Dummy, sympify, Symbol, Function, flatten
+
+    if printer is not None:
+        if inspect.isfunction(printer):
+            lambdarepr = printer
+        else:
+            if inspect.isclass(printer):
+                lambdarepr = lambda expr: printer().doprint(expr)
+            else:
+                lambdarepr = lambda expr: printer.doprint(expr)
+    else:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import lambdarepr
+
+    def sub_expr(expr, dummies_dict):
+        try:
+            expr = sympify(expr).xreplace(dummies_dict)
+        except Exception:
+            if isinstance(expr, DeferredVector):
+                pass
+            elif isinstance(expr, dict):
+                k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
+                v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
+                expr = dict(zip(k, v))
+            elif isinstance(expr, tuple):
+                expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
+            elif isinstance(expr, list):
+                expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
+        return expr
+
+    def flat_indexes(elems):
+        n = 0
+
+        for el in elems:
+            if iterable(el):
+                for ndeep in flat_indexes(el):
+                    yield (n,) + ndeep
+            else:
+                yield (n,)
+
+            n += 1
+
+    def unpacklhs(argstrs):
+        return '[' +', '.join(
+            [ unpacklhs(argstr) if iterable(argstr)
+                else argstr for argstr in argstrs]) + ']'
+
+    def indexrhs(argstrs, dummystr):
+        return '[' + ','.join([
+                dummystr + ''.join(['[%s]' % k for k in ind])
+                        for ind in flat_indexes(argstrs)]) + ']'
+
+    def preprocess(args, expr):
+        import re
+        from keyword import iskeyword
+
+        idre = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
+
+        argstrs = []
+        for arg in args:
+            if iterable(arg):
+                deepargstrs, expr = preprocess(arg, expr)
+                argstrs.append(deepargstrs)
+            elif isinstance(arg, DeferredVector):
+                argstrs.append(str(arg))
+            elif isinstance(arg, (Function, Symbol)):
+                argrep = lambdarepr(arg)
+
+                if dummify or iskeyword(argrep) or not idre.match(argrep):
+                    dummy = Dummy()
+                    argstrs.append(lambdarepr(dummy))
+                    expr = sub_expr(expr, {arg: dummy})
+                else:
+                    argstrs.append(argrep)
+            else:
+                argstrs.append(str(arg))
+
+        return argstrs, expr
+
+    funcbody = []
+
+    if not isinstance(args, str):
+        if not iterable(args):
+            args = [args]
+
+        argstrs, expr = preprocess(args, expr)
+
+        funcargs = []
+
+        for argstr in argstrs:
+            if iterable(argstr):
+                funcargs.append(str(Dummy()))
+                if unpackByIndex:
+                    funcbody.append(unpacklhs(flatten(argstr))
+                            + ' = ' + indexrhs(argstr, funcargs[-1]))
+                else:
+                    funcbody.append(unpacklhs(argstr) + ' = ' + funcargs[-1])
+            else:
+                funcargs.append(argstr)
+
+        args = ', '.join(funcargs)
+
+    funcsig = "def %s(%s):" % (name, args)
+
+    funcbody.append("return (%s)" % (lambdarepr(expr)))
+
+    funclines = [funcsig]
+    funclines.extend(["    " + line for line in funcbody])
+
+    return '\n'.join(funclines)
 
 def _imp_namespace(expr, namespace=None):
     """ Return namespace dict with function implementations

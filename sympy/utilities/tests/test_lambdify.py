@@ -840,6 +840,8 @@ def test_lambdify_dummy_arg():
     d2 = Dummy('x')
     f2 = lambdify(d2, d2 + 1)
     assert f2(2) == 3
+    f3 = lambdify([[d2]], d2 + 1)
+    assert f3([2]) == 3
 
 def test_numpy_array_arg():
     # Test for issue 14655 (numpy part)
