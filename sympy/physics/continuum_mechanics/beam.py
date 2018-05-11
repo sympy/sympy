@@ -92,6 +92,7 @@ class Beam(object):
         self.variable = variable
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
+        self._applied_loads = []
         self._reaction_loads = {}
 
     def __str__(self):
@@ -256,6 +257,7 @@ class Beam(object):
         start = sympify(start)
         order = sympify(order)
 
+        self._applied_loads.append((value, start, order, end))
         self._load += value*SingularityFunction(x, start, order)
 
         if end:
@@ -292,6 +294,34 @@ class Beam(object):
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
         """
         return self._load
+
+    @property
+    def applied_loads(self):
+        """
+        Returns a list of all loads applied on the beam object.
+        Each load in the list is a tuple of form (value, start, order, end).
+
+        Examples
+        ========
+        There is a beam of length 4 meters. A moment of magnitude 3 Nm is
+        applied in the clockwise direction at the starting point of the beam.
+        A pointload of magnitude 4 N is applied from the top of the beam at
+        2 meters from the starting point. Another pointload of magnitude 5 N
+        is applied at same position.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> b = Beam(4, E, I)
+        >>> b.apply_load(-3, 0, -2)
+        >>> b.apply_load(4, 2, -1)
+        >>> b.apply_load(5, 2, -1)
+        >>> b.load
+        -3*SingularityFunction(x, 0, -2) + 9*SingularityFunction(x, 2, -1)
+        >>> b.applied_loads
+        [(-3, 0, -2, None), (4, 2, -1, None), (5, 2, -1, None)]
+        """
+        return self._applied_loads
 
     def solve_for_reaction_loads(self, *reactions):
         """
