@@ -320,10 +320,6 @@ class Beam(object):
         value = sympify(value)
         start = sympify(start)
         order = sympify(order)
-        print()
-        print(self._load)
-        print(self._applied_loads)
-        print()
 
         if (value, start, order, end) in self._applied_loads:
             self._load -= value*SingularityFunction(x, start, order)
@@ -392,7 +388,6 @@ class Beam(object):
         >>> b.applied_loads
         [(-3, 0, -2, None), (4, 2, -1, None), (5, 2, -1, None)]
         """
-        print(self._applied_loads)
         return self._applied_loads
 
     def solve_for_reaction_loads(self, *reactions):
