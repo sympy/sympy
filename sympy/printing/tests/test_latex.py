@@ -32,10 +32,11 @@ from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
+from sympy.physics.units import degree, radian, kg, meter, R
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
-from sympy import MatrixSymbol
+from sympy import MatrixSymbol, ln
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
 from sympy.sets.setexpr import SetExpr
 
@@ -83,10 +84,13 @@ def test_latex_basic():
         r"\left(x + y\right) / 2 x"
     assert latex((x + y)/(2*x), long_frac_ratio=0) == \
         r"\frac{1}{2 x} \left(x + y\right)"
-    assert latex((x + y)/x) == r"\frac{1}{x} \left(x + y\right)"
+    assert latex((x + y)/x) == r"\frac{x + y}{x}"
     assert latex((x + y)/x, long_frac_ratio=3) == r"\frac{x + y}{x}"
+    assert latex((2*sqrt(2)*x)/3) == r"\frac{2 \sqrt{2} x}{3}"
+    assert latex((2*sqrt(2)*x)/3, long_frac_ratio=2) == \
+        r"\frac{2 x}{3} \sqrt{2}"
 
-    assert latex(2*Integral(x, x)/3) == r"\frac{2}{3} \int x\, dx"
+    assert latex(2*Integral(x, x)/3) == r"\frac{2 \int x\, dx}{3}"
     assert latex(2*Integral(x, x)/3, fold_short_frac=True) == \
         r"\left(2 \int x\, dx\right) / 3"
 
@@ -330,14 +334,14 @@ def test_latex_functions():
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
     w = Wild('w')
     assert latex(gamma(w)) == r"\Gamma\left(w\right)"
-    assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, x)) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, (x, 0))) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, (x, oo))) == r"\mathcal{O}\left(x; x\rightarrow \infty\right)"
-    assert latex(Order(x - y, (x, y))) == r"\mathcal{O}\left(x - y; x\rightarrow y\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, (x, oo), (y, oo))) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( \infty, \quad \infty\right )\right)"
+    assert latex(Order(x)) == r"O\left(x\right)"
+    assert latex(Order(x, x)) == r"O\left(x\right)"
+    assert latex(Order(x, (x, 0))) == r"O\left(x\right)"
+    assert latex(Order(x, (x, oo))) == r"O\left(x; x\rightarrow \infty\right)"
+    assert latex(Order(x - y, (x, y))) == r"O\left(x - y; x\rightarrow y\right)"
+    assert latex(Order(x, x, y)) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, x, y)) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, (x, oo), (y, oo))) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( \infty, \quad \infty\right )\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
 
@@ -688,12 +692,12 @@ def test_latex_sequences():
 
 
 def test_latex_FourierSeries():
-    latex_str = r'2 \sin{\left (x \right )} - \sin{\left (2 x \right )} + \frac{2}{3} \sin{\left (3 x \right )} + \ldots'
+    latex_str = r'2 \sin{\left (x \right )} - \sin{\left (2 x \right )} + \frac{2 \sin{\left (3 x \right )}}{3} + \ldots'
     assert latex(fourier_series(x, (x, -pi, pi))) == latex_str
 
 
 def test_latex_FormalPowerSeries():
-    latex_str = r'\sum_{k=1}^{\infty} - \frac{\left(-1\right)^{- k}}{k} x^{k}'
+    latex_str = r'\sum_{k=1}^{\infty} - \frac{\left(-1\right)^{- k} x^{k}}{k}'
     assert latex(fps(log(1 + x))) == latex_str
 
 
@@ -777,7 +781,9 @@ def test_latex_ImageSet():
 def test_latex_ConditionSet():
     x = Symbol('x')
     assert latex(ConditionSet(x, Eq(x**2, 1), S.Reals)) == \
-        r"\left\{x\; |\; x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
+        r"\left\{x \mid x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
+    assert latex(ConditionSet(x, Eq(x**2, 1), S.UniversalSet)) == \
+        r"\left\{x \mid x^{2} = 1 \right\}"
 
 
 def test_latex_ComplexRegion():
@@ -828,6 +834,16 @@ def test_latex_limits():
     assert latex(Limit(f(x), x, 0)**2) == r"\left(\lim_{x \to 0^+} f{\left (x \right )}\right)^{2}"
     # bi-directional limit
     assert latex(Limit(f(x), x, 0, dir='+-')) == r"\lim_{x \to 0} f{\left (x \right )}"
+
+
+def test_latex_log():
+    assert latex(log(x)) == r"\log{\left (x \right )}"
+    assert latex(ln(x)) == r"\log{\left (x \right )}"
+    assert latex(log(x), ln_notation=True) == r"\ln{\left (x \right )}"
+    assert latex(log(x)+log(y)) == r"\log{\left (x \right )} + \log{\left (y \right )}"
+    assert latex(log(x)+log(y), ln_notation=True) == r"\ln{\left (x \right )} + \ln{\left (y \right )}"
+    assert latex(pow(log(x),x)) == r"\log{\left (x \right )}^{x}"
+    assert latex(pow(log(x),x), ln_notation=True) == r"\ln{\left (x \right )}^{x}"
 
 
 def test_issue_3568():
@@ -1132,9 +1148,18 @@ def test_latex_Poly():
     assert latex(Poly(x**2 + 2 * x, x)) == \
         r"\operatorname{Poly}{\left( x^{2} + 2 x, x, domain=\mathbb{Z} \right)}"
     assert latex(Poly(x/y, x)) == \
-        r"\operatorname{Poly}{\left( \frac{x}{y}, x, domain=\mathbb{Z}\left(y\right) \right)}"
+        r"\operatorname{Poly}{\left( \frac{1}{y} x, x, domain=\mathbb{Z}\left(y\right) \right)}"
     assert latex(Poly(2.0*x + y)) == \
         r"\operatorname{Poly}{\left( 2.0 x + 1.0 y, x, y, domain=\mathbb{R} \right)}"
+
+
+def test_latex_Poly_order():
+    assert latex(Poly([a, 1, b, 2, c, 3], x)) == \
+        '\\operatorname{Poly}{\\left( a x^{5} + x^{4} + b x^{3} + 2 x^{2} + c x + 3, x, domain=\\mathbb{Z}\\left[a, b, c\\right] \\right)}'
+    assert latex(Poly([a, 1, b+c, 2, 3], x)) == \
+        '\\operatorname{Poly}{\\left( a x^{4} + x^{3} + \\left(b + c\\right) x^{2} + 2 x + 3, x, domain=\\mathbb{Z}\\left[a, b, c\\right] \\right)}'
+    assert latex(Poly(a*x**3 + x**2*y - x*y - c*y**3 - b*x*y**2 + y - a*x + b, (x, y))) == \
+        '\\operatorname{Poly}{\\left( a x^{3} + x^{2}y -  b xy^{2} - xy -  a x -  c y^{3} + y + b, x, y, domain=\\mathbb{Z}\\left[a, b, c\\right] \\right)}'
 
 
 def test_latex_ComplexRootOf():
@@ -1611,7 +1636,7 @@ def test_Mul():
     e = Mul(2, x + 1, evaluate=False)
     assert latex(e)  == r'2 \left(x + 1\right)'
     e = Mul(S.One/2, x + 1, evaluate=False)
-    assert latex(e)  == r'\frac{1}{2} \left(x + 1\right)'
+    assert latex(e)  == r'\frac{x + 1}{2}'
     e = Mul(y, x + 1, evaluate=False)
     assert latex(e)  == r'y \left(x + 1\right)'
     e = Mul(-y, x + 1, evaluate=False)
@@ -1699,7 +1724,18 @@ def test_MatrixElement_printing():
     assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
 
     F = C[0, 0].subs(C, A - B)
-    assert latex(F) == r"\left(-1 B + A\right)_{0, 0}"
+    assert latex(F) == r"\left(-B + A\right)_{0, 0}"
+
+
+def test_MatrixSymbol_printing():
+    # test cases for issue #14237
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    C = MatrixSymbol("C", 3, 3)
+
+    assert latex(-A) == r"-A"
+    assert latex(A - A*B - B) == r"-B - A B + A"
+    assert latex(-A*B - A*B*C - B) == r"-B - A B - A B C"
 
 
 def test_Quaternion_latex_printing():

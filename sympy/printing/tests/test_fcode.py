@@ -756,4 +756,4 @@ def test_MatrixElement_printing():
     assert(fcode(3 * A[0, 0]) == "      3*A(1, 1)")
 
     F = C[0, 0].subs(C, A - B)
-    assert(fcode(F) == "      ((-1)*B + A)(1, 1)")
+    assert(fcode(F) == "      (-B + A)(1, 1)")

@@ -288,17 +288,19 @@ class Application(with_metaclass(FunctionClass, Basic)):
         Examples of eval() for the function "sign"
         ---------------------------------------------
 
-        @classmethod
-        def eval(cls, arg):
-            if arg is S.NaN:
-                return S.NaN
-            if arg is S.Zero: return S.Zero
-            if arg.is_positive: return S.One
-            if arg.is_negative: return S.NegativeOne
-            if isinstance(arg, Mul):
-                coeff, terms = arg.as_coeff_Mul(rational=True)
-                if coeff is not S.One:
-                    return cls(coeff) * cls(terms)
+        .. code-block:: python
+
+            @classmethod
+            def eval(cls, arg):
+                if arg is S.NaN:
+                    return S.NaN
+                if arg is S.Zero: return S.Zero
+                if arg.is_positive: return S.One
+                if arg.is_negative: return S.NegativeOne
+                if isinstance(arg, Mul):
+                    coeff, terms = arg.as_coeff_Mul(rational=True)
+                    if coeff is not S.One:
+                        return cls(coeff) * cls(terms)
 
         """
         return
@@ -1258,8 +1260,8 @@ class Derivative(Expr):
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
                             # Derivative evaluated at a point that is not a
-                            # symbol
-                            obj = Subs(obj, v, old_v)
+                            # symbol, let subs check if this is okay to replace
+                            obj = obj.subs(v, old_v)
                         else:
                             obj = obj.xreplace({v: old_v})
                     v = old_v
@@ -1492,7 +1494,25 @@ class Derivative(Expr):
             if _subset(old_vars, self_vars):
                 return Derivative(new, *(self_vars - old_vars).items())
 
-        return Derivative(*(x._subs(old, new) for x in self.args))
+        # Check whether the substitution (old, new) cannot be done inside
+        # Derivative(expr, vars). Disallowed:
+        # (1) changing expr by introducing a variable among vars
+        # (2) changing vars by introducing a variable contained in expr
+        old_symbols = (old.free_symbols if isinstance(old.free_symbols, set)
+            else set())
+        new_symbols = (new.free_symbols if isinstance(new.free_symbols, set)
+            else set())
+        introduced_symbols = new_symbols - old_symbols
+        args_subbed = tuple(x._subs(old, new) for x in self.args)
+        if ((self.args[0] != args_subbed[0] and
+            len(set(self.variables) & introduced_symbols) > 0
+            ) or
+            (self.args[1:] != args_subbed[1:] and
+            len(self.free_symbols & introduced_symbols) > 0
+            )):
+            return Subs(self, old, new)
+        else:
+            return Derivative(*args_subbed)
 
     def _eval_lseries(self, x, logx):
         dx = self.variables

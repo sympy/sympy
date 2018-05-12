@@ -1,154 +1,29 @@
 from sympy.multipledispatch import dispatch, Dispatcher
 from sympy.core import Basic, Expr, Function, Add, Mul, Pow, Dummy, Integer
-from sympy import Min, Max, Set, sympify, Lambda, symbols, exp, log, S
+from sympy import Min, Max, Set, sympify, symbols, exp, log, S, Wild
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-    ProductSet, EmptySet, Intersection)
+    ProductSet, EmptySet, Intersection, Range)
+from sympy.core.function import Lambda, _coeff_isneg
+from sympy.sets.fancysets import Integers
 from sympy.core.function import FunctionClass
 from sympy.logic.boolalg import And, Or, Not, true, false
 
 
 _x, _y = symbols("x y")
 
-
-@dispatch(Set, Set)
-def add_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x+_y)), x, y)
-
-
-@dispatch(Expr, Expr)
-def add_sets(x, y):
-    return x+y
-
-
-@dispatch(Interval, Interval)
-def add_sets(x, y):
-    """
-    Additions in interval arithmetic
-    https://en.wikipedia.org/wiki/Interval_arithmetic
-    """
-    return Interval(x.start + y.start, x.end + y.end,
-        x.left_open or y.left_open, x.right_open or y.right_open)
-
-
-@dispatch(Expr, Expr)
-def sub_sets(x, y):
-    return x-y
-
-
-@dispatch(Set, Set)
-def sub_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x - _y)), x, y)
-
-
-@dispatch(Interval, Interval)
-def sub_sets(x, y):
-    """
-    Subtractions in interval arithmetic
-    https://en.wikipedia.org/wiki/Interval_arithmetic
-    """
-    return Interval(x.start - y.end, x.end - y.start,
-        x.left_open or y.right_open, x.right_open or y.left_open)
-
-
-@dispatch(Set, Set)
-def mul_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x * _y)), x, y)
-
-
-@dispatch(Expr, Expr)
-def mul_sets(x, y):
-    return x*y
-
-
-@dispatch(Interval, Interval)
-def mul_sets(x, y):
-    """
-    Multiplications in interval arithmetic
-    https://en.wikipedia.org/wiki/Interval_arithmetic
-    """
-    comvals = (
-        (x.start * y.start, bool(x.left_open or y.left_open)),
-        (x.start * y.end, bool(x.left_open or y.right_open)),
-        (x.end * y.start, bool(x.right_open or y.left_open)),
-        (x.end * y.end, bool(x.right_open or y.right_open)),
-    )
-    # TODO: handle symbolic intervals
-    minval, minopen = min(comvals)
-    maxval, maxopen = max(comvals)
-    return Interval(
-        minval,
-        maxval,
-        minopen,
-        maxopen
-    )
-    return SetExpr(Interval(start, end))
-
-
-@dispatch(Expr, Expr)
-def div_sets(x, y):
-    return x/y
-
-
-@dispatch(Set, Set)
-def div_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x / _y)), x, y)
-
-
-@dispatch(Interval, Interval)
-def div_sets(x, y):
-    """
-    Divisions in interval arithmetic
-    https://en.wikipedia.org/wiki/Interval_arithmetic
-    """
-    if (y.start*y.end).is_negative:
-        from sympy import oo
-        return Interval(-oo, oo)
-    return mul_sets(x, Interval(1/y.end, 1/y.start, y.right_open, y.left_open))
-
-
-@dispatch(Set, Set)
-def pow_sets(x, y):
-    return ImageSet(Lambda((_x, _y), (_x ** _y)), x, y)
-
-
-@dispatch(Expr, Expr)
-def pow_sets(x, y):
-    return x**y
-
-
-@dispatch(Interval, Integer)
-def pow_sets(x, y):
-    """
-    Powers in interval arithmetic
-    https://en.wikipedia.org/wiki/Interval_arithmetic
-    """
-    exponent = sympify(exponent)
-    if exponent.is_odd:
-        return Interval(x.start**exponent, x.end**exponent, x.left_open, x.right_open)
-    if exponent.is_even:
-        if (x.start*x.end).is_negative:
-            if -x.start > x.end:
-                left_limit = x.start
-                left_open = x.right_open
-            else:
-                left_limit = x.end
-                left_open = x.left_open
-            return Interval(S.Zero, left_limit ** exponent, S.Zero not in x, left_open)
-        elif x.start.is_negative and x.end.is_negative:
-            return Interval(x.end**exponent, x.start**exponent, x.right_open, x.left_open)
-        else:
-            return Interval(x.start**exponent, x.end**exponent, x.left_open, x.right_open)
-
-
 FunctionUnion = (FunctionClass, Lambda)
 
 
+@dispatch(FunctionClass, Set)
+def _set_function(f, x):
+    return None
+
 @dispatch(FunctionUnion, FiniteSet)
-def function_sets(f, x):
+def _set_function(f, x):
     return FiniteSet(*map(f, x))
 
 @dispatch(Lambda, Interval)
-def function_sets(f, x):
+def _set_function(f, x):
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.solvers.solveset import solveset
     from sympy.core.function import diff, Lambda
@@ -234,7 +109,7 @@ def function_sets(f, x):
             imageset(f, Interval(sing[-1], x.end, True, x.right_open))
 
 @dispatch(FunctionClass, Interval)
-def function_sets(f, x):
+def _set_function(f, x):
     if f == exp:
         return Interval(exp(x.start), exp(x.end), x.left_open, x.right_open)
     elif f == log:
@@ -242,11 +117,11 @@ def function_sets(f, x):
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, Union)
-def function_sets(f, x):
+def _set_function(f, x):
     return Union(imageset(f, arg) for arg in x.args)
 
 @dispatch(FunctionUnion, Intersection)
-def function_sets(f, x):
+def _set_function(f, x):
     from sympy.sets.sets import is_function_invertible_in_set
     # If the function is invertible, intersect the maps of the sets.
     if is_function_invertible_in_set(f, x):
@@ -255,9 +130,64 @@ def function_sets(f, x):
         return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, EmptySet)
-def function_sets(f, x):
+def _set_function(f, x):
     return x
 
 @dispatch(FunctionUnion, Set)
-def function_sets(f, x):
+def _set_function(f, x):
     return ImageSet(Lambda(_x, f(_x)), x)
+
+@dispatch(FunctionUnion, Range)
+def _set_function(f, self):
+    from sympy.core.function import expand_mul
+    if not self:
+        return S.EmptySet
+    if not isinstance(f.expr, Expr):
+        return
+    if self.size == 1:
+        return FiniteSet(f(self[0]))
+    if f is S.IdentityFunction:
+        return self
+
+    x = f.variables[0]
+    expr = f.expr
+    # handle f that is linear in f's variable
+    if x not in expr.free_symbols or x in expr.diff(x).free_symbols:
+        return
+    if self.start.is_finite:
+        F = f(self.step*x + self.start)  # for i in range(len(self))
+    else:
+        F = f(-self.step*x + self[-1])
+    F = expand_mul(F)
+    if F != expr:
+        return imageset(x, F, Range(self.size))
+
+@dispatch(FunctionUnion, Integers)
+def _set_function(f, self):
+    expr = f.expr
+    if not isinstance(expr, Expr):
+        return
+
+    if len(f.variables) > 1:
+        return
+
+    n = f.variables[0]
+
+    # f(x) + c and f(-x) + c cover the same integers
+    # so choose the form that has the fewest negatives
+    c = f(0)
+    fx = f(n) - c
+    f_x = f(-n) - c
+    neg_count = lambda e: sum(_coeff_isneg(_) for _ in Add.make_args(e))
+    if neg_count(f_x) < neg_count(fx):
+        expr = f_x + c
+
+    a = Wild('a', exclude=[n])
+    b = Wild('b', exclude=[n])
+    match = expr.match(a*n + b)
+    if match and match[a]:
+        # canonical shift
+        expr = match[a]*n + match[b] % match[a]
+
+    if expr != f.expr:
+        return ImageSet(Lambda(n, expr), S.Integers)

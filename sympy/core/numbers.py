@@ -17,6 +17,7 @@ from .logic import fuzzy_not
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
+
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp.backend import MPZ
@@ -391,7 +392,7 @@ def ilcm(*args):
         return 0
     a = args[0]
     for b in args[1:]:
-        a = a*b // igcd(a, b)
+        a = a // igcd(a, b) * b # since gcd(a,b) | a
     return a
 
 
@@ -440,9 +441,9 @@ def igcdex(a, b):
 
 def mod_inverse(a, m):
     """
-    Return the number c such that, ( a * c ) % m == 1 where
-    c has the same sign as a. If no such value exists, a
-    ValueError is raised.
+    Return the number c such that, (a * c) = 1 (mod m)
+    where c has the same sign as m. If no such value exists,
+    a ValueError is raised.
 
     Examples
     ========
@@ -453,13 +454,13 @@ def mod_inverse(a, m):
     Suppose we wish to find multiplicative inverse x of
     3 modulo 11. This is the same as finding x such
     that 3 * x = 1 (mod 11). One value of x that satisfies
-    this congruence is 4. Because 3 * 4 = 12 and 12 = 1 mod(11).
+    this congruence is 4. Because 3 * 4 = 12 and 12 = 1 (mod 11).
     This is the value return by mod_inverse:
 
     >>> mod_inverse(3, 11)
     4
     >>> mod_inverse(-3, 11)
-    -4
+    7
 
     When there is a common factor between the numerators of
     ``a`` and ``m`` the inverse does not exist:
@@ -480,12 +481,10 @@ def mod_inverse(a, m):
     c = None
     try:
         a, m = as_int(a), as_int(m)
-        if m > 1:
+        if m != 1 and m != -1:
             x, y, g = igcdex(a, m)
             if g == 1:
                 c = x % m
-            if a < 0:
-                c -= m
     except ValueError:
         a, m = sympify(a), sympify(m)
         if not (a.is_number and m.is_number):
@@ -1484,35 +1483,38 @@ class Rational(Number):
             if isinstance(p, Rational):
                 return p
 
-            if isinstance(p, string_types):
-                if p.count('/') > 1:
-                    raise TypeError('invalid input: %s' % p)
-                pq = p.rsplit('/', 1)
-                if len(pq) == 2:
-                    p, q = pq
-                    fp = fractions.Fraction(p)
-                    fq = fractions.Fraction(q)
-                    f = fp/fq
-                    return Rational(f.numerator, f.denominator, 1)
-                p = p.replace(' ', '')
-                try:
-                    p = fractions.Fraction(p)
-                except ValueError:
-                    pass  # error will raise below
-
-            if not isinstance(p, string_types):
-                try:
-                    if isinstance(p, fractions.Fraction):
-                        return Rational(p.numerator, p.denominator, 1)
-                except NameError:
-                    pass  # error will raise below
-
+            if isinstance(p, SYMPY_INTS):
+                pass
+            else:
                 if isinstance(p, (float, Float)):
                     return Rational(*_as_integer_ratio(p))
 
-            if not isinstance(p, SYMPY_INTS + (Rational,)):
-                raise TypeError('invalid input: %s' % p)
-            q = q or S.One
+                if not isinstance(p, string_types):
+                    try:
+                        p = sympify(p)
+                    except (SympifyError, SyntaxError):
+                        pass  # error will raise below
+                else:
+                    if p.count('/') > 1:
+                        raise TypeError('invalid input: %s' % p)
+                    p = p.replace(' ', '')
+                    pq = p.rsplit('/', 1)
+                    if len(pq) == 2:
+                        p, q = pq
+                        fp = fractions.Fraction(p)
+                        fq = fractions.Fraction(q)
+                        p = fp/fq
+                    try:
+                        p = fractions.Fraction(p)
+                    except ValueError:
+                        pass  # error will raise below
+                    else:
+                        return Rational(p.numerator, p.denominator, 1)
+
+                if not isinstance(p, Rational):
+                    raise TypeError('invalid input: %s' % p)
+
+            q = 1
             gcd = 1
         else:
             p = Rational(p)
@@ -1862,7 +1864,7 @@ class Rational(Number):
     def lcm(self, other):
         if isinstance(other, Rational):
             return Rational(
-                self.p*other.p//igcd(self.p, other.p),
+                self.p // igcd(self.p, other.p) * other.p,
                 igcd(self.q, other.q))
         return Number.lcm(self, other)
 
@@ -2017,7 +2019,7 @@ class Integer(Rational):
             ival = int(i)
         except TypeError:
             raise TypeError(
-                'Integer can only work with integer expressions.')
+                "Argument of Integer should be of numeric type, got %s." % i)
         try:
             return _intcache[ival]
         except KeyError:
@@ -2386,10 +2388,6 @@ class AlgebraicNumber(Expr):
         else:
             rep = DMP.from_list([1, 0], 0, dom)
             scoeffs = Tuple(1, 0)
-
-            if root.is_negative:
-                rep = -rep
-                scoeffs = Tuple(-1, 0)
 
         sargs = (root, scoeffs)
 
@@ -3823,10 +3821,9 @@ I = S.ImaginaryUnit
 
 
 def sympify_fractions(f):
-    return Rational(f.numerator, f.denominator)
+    return Rational(f.numerator, f.denominator, 1)
 
 converter[fractions.Fraction] = sympify_fractions
-
 
 try:
     if HAS_GMPY == 2:
@@ -3852,6 +3849,13 @@ def sympify_mpmath(x):
     return Expr._from_mpmath(x, x.context.prec)
 
 converter[mpnumeric] = sympify_mpmath
+
+
+def sympify_mpq(x):
+    p, q = x._mpq_
+    return Rational(p, q, 1)
+
+converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpq
 
 
 def sympify_complex(a):

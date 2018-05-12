@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, Sum, exp, I, oo)
+        Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.crv import (reduce_rational_inequalities_wrap,
@@ -144,27 +144,31 @@ class DiscretePSpace(PSpace):
     is_real = True
     is_continuous = False
 
+
     def where(self, condition):
-            rvs = random_symbols(condition)
-            assert all(r.symbol in self.symbols for r in rvs)
-            if (len(rvs) > 1):
-                raise NotImplementedError(filldedent('''Multivariate discrete
-                random variables are not yet supported.'''))
-            conditional_domain = reduce_rational_inequalities_wrap(condition,
-                rvs[0])
-            conditional_domain = conditional_domain.intersect(self.domain.set)
-            return SingleDiscreteDomain(rvs[0].symbol, conditional_domain)
+        rvs = random_symbols(condition)
+        assert all(r.symbol in self.symbols for r in rvs)
+        if (len(rvs) > 1):
+            raise NotImplementedError(filldedent('''Multivariate discrete
+            random variables are not yet supported.'''))
+        conditional_domain = reduce_rational_inequalities_wrap(condition,
+            rvs[0])
+        conditional_domain = conditional_domain.intersect(self.domain.set)
+        return SingleDiscreteDomain(rvs[0].symbol, conditional_domain)
 
     def probability(self, condition):
-        _domain = self.where(condition)
+        complement = isinstance(condition, Ne)
+        if complement:
+            condition = Eq(condition.args[0], condition.args[1])
+        _domain = self.where(condition).set
         if condition == False or _domain is S.EmptySet:
             return S.Zero
         if condition == True or _domain == self.set:
             return S.One
-        try:
-            return self.eval_prob(_domain.set)
-        except NotImplementedError:
-            return Probability(condition)
+        prob = self.eval_prob(_domain)
+        if prob == None:
+            prob = Probability(condition)
+        return prob if not complement else S.One - prob
 
     def eval_prob(self, _domain):
         if isinstance(_domain, Range):
@@ -182,9 +186,6 @@ class DiscretePSpace(PSpace):
         elif isinstance(_domain, Union):
             rv = sum(self.eval_prob(x) for x in _domain.args)
             return rv
-        else:
-            raise NotImplementedError(filldedent('''Probability for
-                the domain %s cannot be calculated.'''%(_domain)))
 
     def conditional_space(self, condition):
         domain = ConditionalDiscreteDomain(self.domain, condition)

@@ -83,7 +83,7 @@ class fibonacci(Function):
     See Also
     ========
 
-    bell, bernoulli, catalan, euler, harmonic, lucas
+    bell, bernoulli, catalan, euler, harmonic, lucas, partition
     """
 
     @staticmethod
@@ -147,7 +147,7 @@ class lucas(Function):
     See Also
     ========
 
-    bell, bernoulli, catalan, euler, fibonacci, harmonic
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, partition
     """
 
     @classmethod
@@ -242,7 +242,7 @@ class bernoulli(Function):
     See Also
     ========
 
-    bell, catalan, euler, fibonacci, harmonic, lucas
+    bell, catalan, euler, fibonacci, harmonic, lucas, partition
     """
 
     # Calculates B_n for positive even n
@@ -380,7 +380,7 @@ class bell(Function):
     See Also
     ========
 
-    bernoulli, catalan, euler, fibonacci, harmonic, lucas
+    bernoulli, catalan, euler, fibonacci, harmonic, lucas, partition
     """
 
     @staticmethod
@@ -593,7 +593,7 @@ class harmonic(Function):
     See Also
     ========
 
-    bell, bernoulli, catalan, euler, fibonacci, lucas
+    bell, bernoulli, catalan, euler, fibonacci, lucas, partition
     """
 
     # Generate one memoized Harmonic number-generating function for each
@@ -622,9 +622,10 @@ class harmonic(Function):
             else:
                 return cls
 
+        if n == 0:
+            return S.Zero
+
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
-            if n == 0:
-                return S.Zero
             if not m in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
@@ -775,7 +776,7 @@ class euler(Function):
     See Also
     ========
 
-    bell, bernoulli, catalan, fibonacci, harmonic, lucas
+    bell, bernoulli, catalan, fibonacci, harmonic, lucas, partition
     """
 
     @classmethod
@@ -933,7 +934,7 @@ class catalan(Function):
     See Also
     ========
 
-    bell, bernoulli, euler, fibonacci, harmonic, lucas
+    bell, bernoulli, euler, fibonacci, harmonic, lucas, partition
     sympy.functions.combinatorial.factorials.binomial
     """
 
@@ -1039,7 +1040,7 @@ class genocchi(Function):
     See Also
     ========
 
-    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, partition
     """
 
     @classmethod
@@ -1098,6 +1099,96 @@ class genocchi(Function):
         # but SymPy does not consider negatives as prime
         # so only n=8 is tested
         return (n - 8).is_zero
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Partition numbers                                #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class partition(Function):
+    r"""
+    Partition numbers
+
+    The Partition numbers are a sequence of integers p_n that represent the
+    number of distinct ways of representing n as a sum of natural numbers
+    (with order irrelevant). The generating function for p_n is given by::
+
+    .. math:: \sum_{n=0}^\infty p_n x^n = \prod_{k=1}^\infty (1 - x^k)^{-1}
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.functions import partition
+    >>> [partition(n) for n in range(9)]
+    [1, 1, 2, 3, 5, 7, 11, 15, 22]
+    >>> n = Symbol('n', integer=True, negative=True)
+    >>> partition(n)
+    0
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Partition_(number_theory)
+    .. [2] https://en.wikipedia.org/wiki/Pentagonal_number_theorem
+
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas
+    """
+
+    @staticmethod
+    @recurrence_memo([1, 1])
+    def _partition(n, prev):
+        v, g, i = 0, 0, 0
+        while 1:
+            s = 0
+            i += 1
+            g = i * (3*i - 1) // 2
+            if n >= g:
+                s += prev[n - g]
+            g = i * (3*i + 1) // 2
+            if n >= g:
+                s += prev[n - g]
+            if s == 0:
+                break
+            else:
+                v += s if i%2 == 1 else -s
+        return v
+
+    @classmethod
+    def eval(cls, n):
+        is_int = n.is_integer
+        if is_int == False:
+            raise ValueError("Partition numbers are defined only for " +
+                             "integers")
+        elif is_int:
+            if n.is_negative:
+                return S.Zero
+
+            if n.is_zero or (n - 1).is_zero:
+                return S.One
+
+            if n.is_Integer:
+                return Integer(cls._partition(n))
+
+
+    def _eval_is_integer(self):
+        if self.args[0].is_integer:
+            return True
+
+    def _eval_is_negative(self):
+        if self.args[0].is_integer:
+            return False
+
+    def _eval_is_positive(self):
+        n = self.args[0]
+        if n.is_nonnegative and n.is_integer:
+            return True
 
 
 #######################################################################
@@ -1612,6 +1703,16 @@ def nT(n, k=None):
     >>> nT(range(5)) == sum(_)
     True
 
+    Partitions of an integer expressed as a sum of positive integers:
+
+    >>> from sympy.functions.combinatorial.numbers import partition
+    >>> partition(4)
+    5
+    >>> sum([nT(4, i) for i in range(4 + 1)])
+    5
+    >>> nT('1'*4)
+    5
+
     References
     ==========
 
@@ -1621,6 +1722,7 @@ def nT(n, k=None):
     ========
     sympy.utilities.iterables.partitions
     sympy.utilities.iterables.multiset_partitions
+    sympy.functions.combinatorial.numbers.partition
 
     """
     from sympy.utilities.enumerative import MultisetPartitionTraverser
@@ -1629,14 +1731,16 @@ def nT(n, k=None):
         # assert n >= 0
         # all the same
         if k is None:
-            return sum(_nT(n, k) for k in range(1, n + 1))
+            return partition(n)
+        elif n == 0:
+            return S.One if k == 0 else S.Zero
         return _nT(n, k)
     if not isinstance(n, _MultisetHistogram):
         try:
             # if n contains hashable items there is some
             # quick handling that can be done
             u = len(set(n))
-            if u == 1:
+            if u <= 1:
                 return nT(len(n), k)
             elif u == len(n):
                 n = range(u)

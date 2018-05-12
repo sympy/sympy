@@ -819,7 +819,20 @@ class PrettyPrinter(Printer):
         return self._print(B.blocks)
 
     def _print_MatAdd(self, expr):
-        return self._print_seq(expr.args, None, None, ' + ')
+        s = None
+        for item in expr.args:
+            pform = self._print(item)
+            if s is None:
+                s = pform     # First element
+            else:
+                if S(item.args[0]).is_negative:
+                    s = prettyForm(*stringPict.next(s, ' '))
+                    pform = self._print(item)
+                else:
+                    s = prettyForm(*stringPict.next(s, ' + '))
+                s = prettyForm(*stringPict.next(s, pform))
+
+        return s
 
     def _print_MatMul(self, expr):
         args = list(expr.args)
@@ -854,6 +867,15 @@ class PrettyPrinter(Printer):
             delim = pretty_atom('Ring')
         else:
             delim = '.*'
+        return self._print_seq(expr.args, None, None, delim,
+                parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
+
+    def _print_KroneckerProduct(self, expr):
+        from sympy import MatAdd, MatMul
+        if self._use_unicode:
+            delim = u' \N{N-ARY CIRCLED TIMES OPERATOR} '
+        else:
+            delim = ' x '
         return self._print_seq(expr.args, None, None, delim,
                 parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
 
@@ -1480,13 +1502,18 @@ class PrettyPrinter(Printer):
         return prettyForm.__add__(*pforms)
 
     def _print_Mul(self, product):
+        from sympy.physics.units import Quantity
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
         if self.order not in ('old', 'none'):
             args = product.as_ordered_factors()
         else:
-            args = product.args
+            args = list(product.args)
+
+        # If quantities are present append them at the back
+        args = sorted(args, key=lambda x: isinstance(x, Quantity) or
+                     (isinstance(x, Pow) and isinstance(x.base, Quantity)))
 
         # Gather terms for numerator/denominator
         for item in args:
@@ -1751,8 +1778,11 @@ class PrettyPrinter(Printer):
                 cond = self._print_seq(cond, "(", ")")
 
         bar = self._print("|")
-        base = self._print(ts.base_set)
 
+        if ts.base_set is S.UniversalSet:
+            return self._print_seq((variables, bar, cond), "{", "}", ' ')
+
+        base = self._print(ts.base_set)
         return self._print_seq((variables, bar, variables, inn,
                                 base, _and, cond), "{", "}", ' ')
 
@@ -2254,6 +2284,13 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pform.left('Omega'))
         return pform
 
+    def _print_Quantity(self, e):
+        if e.name.name == 'degree':
+            pform = self._print(u"\N{DEGREE SIGN}")
+            return pform
+        else:
+            return self.emptyPrinter(e)
+
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
@@ -2273,35 +2310,42 @@ def pretty(expr, **settings):
         pretty_use_unicode(uflag)
 
 
-def pretty_print(expr, **settings):
+def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
+                 full_prec="auto", order=None, use_unicode_sqrt_char=True):
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
-
 
     Parameters
     ==========
 
     expr : expression
-        the expression to print
-    wrap_line : bool, optional
-        line wrapping enabled/disabled, defaults to True
-    num_columns : int or None, optional
-        number of columns before line breaking (default to None which reads
+        The expression to print.
+
+    wrap_line : bool, optional (default=True)
+        Line wrapping enabled/disabled.
+
+    num_columns : int or None, optional (default=None)
+        Number of columns before line breaking (default to None which reads
         the terminal width), useful when using SymPy without terminal.
-    use_unicode : bool or None, optional
-        use unicode characters, such as the Greek letter pi instead of
+
+    use_unicode : bool or None, optional (default=None)
+        Use unicode characters, such as the Greek letter pi instead of
         the string pi.
-    full_prec : bool or string, optional
-        use full precision. Default to "auto"
-    order : bool or string, optional
-        set to 'none' for long expressions if slow; default is None
-    use_unicode_sqrt_char : bool, optional
-        use compact single-character square root symbol (when unambiguous);
-        default is True.
+
+    full_prec : bool or string, optional (default="auto")
+        Use full precision.
+
+    order : bool or string, optional (default=None)
+        Set to 'none' for long expressions if slow; default is None.
+
+    use_unicode_sqrt_char : bool, optional (default=True)
+        Use compact single-character square root symbol (when unambiguous).
 
     """
-    print(pretty(expr, **settings))
+    print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
+                 use_unicode=use_unicode, full_prec=full_prec, order=order,
+                 use_unicode_sqrt_char=use_unicode_sqrt_char))
 
 pprint = pretty_print
 

@@ -265,6 +265,9 @@ class sin(TrigonometricFunction):
             elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return AccumBounds(-1, 1)
 
+        if arg is S.ComplexInfinity:
+            return S.NaN
+
         if isinstance(arg, AccumBounds):
             min, max = arg.min, arg.max
             d = floor(min/(2*S.Pi))
@@ -540,6 +543,9 @@ class cos(TrigonometricFunction):
                 # preserves the information that sin(oo) is between
                 # -1 and 1, where S.NaN does not do that.
                 return AccumBounds(-1, 1)
+
+        if arg is S.ComplexInfinity:
+            return S.NaN
 
         if isinstance(arg, AccumBounds):
             return sin(arg + S.Pi/2)
@@ -959,6 +965,9 @@ class tan(TrigonometricFunction):
             elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return AccumBounds(S.NegativeInfinity, S.Infinity)
 
+        if arg is S.ComplexInfinity:
+            return S.NaN
+
         if isinstance(arg, AccumBounds):
             min, max = arg.min, arg.max
             d = floor(min/S.Pi)
@@ -1252,6 +1261,9 @@ class cot(TrigonometricFunction):
             if arg is S.Zero:
                 return S.ComplexInfinity
 
+        if arg is S.ComplexInfinity:
+            return S.NaN
+
         if isinstance(arg, AccumBounds):
             return -tan(arg + S.Pi/2)
 
@@ -1515,10 +1527,18 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
                     elif cls._is_even:
                         return -cls(narg)
 
-        t = cls._reciprocal_of.eval(arg)
         if hasattr(arg, 'inverse') and arg.inverse() == cls:
             return arg.args[0]
-        return 1/t if t != None else t
+
+        t = cls._reciprocal_of.eval(arg)
+        if t == None:
+            return t
+        elif any(isinstance(i, cos) for i in (t, -t)):
+            return (1/t).rewrite(sec)
+        elif any(isinstance(i, sin) for i in (t, -t)):
+            return (1/t).rewrite(csc)
+        else:
+            return 1/t
 
     def _call_reciprocal(self, method_name, *args, **kwargs):
         # Calls method_name on _reciprocal_of
@@ -1916,6 +1936,9 @@ class asin(InverseTrigonometricFunction):
             elif arg is S.NegativeOne:
                 return -S.Pi / 2
 
+        if arg is S.ComplexInfinity:
+            return S.ComplexInfinity
+
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
@@ -1947,6 +1970,26 @@ class asin(InverseTrigonometricFunction):
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
             return S.ImaginaryUnit * asinh(i_coeff)
+
+        if isinstance(arg, sin):
+            ang = arg.args[0]
+            if ang.is_comparable:
+                ang %= 2*pi # restrict to [0,2*pi)
+                if ang > pi: # restrict to (-pi,pi]
+                    ang = pi - ang
+
+                # restrict to [-pi/2,pi/2]
+                if ang > pi/2:
+                    ang = pi - ang
+                if ang < -pi/2:
+                    ang = -pi - ang
+
+                return ang
+
+        if isinstance(arg, cos): # acos(x) + asin(x) = pi/2
+            ang = arg.args[0]
+            if ang.is_comparable:
+                return pi/2 - acos(arg)
 
     @staticmethod
     @cacheit
@@ -2089,6 +2132,20 @@ class acos(InverseTrigonometricFunction):
 
             if arg in cst_table:
                 return cst_table[arg]
+
+        if isinstance(arg, cos):
+            ang = arg.args[0]
+            if ang.is_comparable:
+                ang %= 2*pi # restrict to [0,2*pi)
+                if ang > pi: # restrict to [0,pi]
+                    ang = 2*pi - ang
+
+                return ang
+
+        if isinstance(arg, sin): # acos(x) + asin(x) = pi/2
+            ang = arg.args[0]
+            if ang.is_comparable:
+                return pi/2 - asin(arg)
 
     @staticmethod
     @cacheit
@@ -2233,6 +2290,11 @@ class atan(InverseTrigonometricFunction):
                 return S.Pi / 4
             elif arg is S.NegativeOne:
                 return -S.Pi / 4
+
+        if arg is S.ComplexInfinity:
+            from sympy.calculus.util import AccumBounds
+            return AccumBounds(-S.Pi/2, S.Pi/2)
+
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
@@ -2260,6 +2322,23 @@ class atan(InverseTrigonometricFunction):
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
             return S.ImaginaryUnit * atanh(i_coeff)
+
+        if isinstance(arg, tan):
+            ang = arg.args[0]
+            if ang.is_comparable:
+                ang %= pi # restrict to [0,pi)
+                if ang > pi/2: # restrict to [-pi/2,pi/2]
+                    ang -= pi
+
+                return ang
+
+        if isinstance(arg, cot): # atan(x) + acot(x) = pi/2
+            ang = arg.args[0]
+            if ang.is_comparable:
+                ang = pi/2 - acot(arg)
+                if ang > pi/2: # restrict to [-pi/2,pi/2]
+                    ang -= pi
+                return ang
 
     @staticmethod
     @cacheit
@@ -2375,6 +2454,9 @@ class acot(InverseTrigonometricFunction):
             elif arg is S.NegativeOne:
                 return -S.Pi / 4
 
+        if arg is S.ComplexInfinity:
+            return S.Zero
+
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
@@ -2404,6 +2486,22 @@ class acot(InverseTrigonometricFunction):
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
             return -S.ImaginaryUnit * acoth(i_coeff)
+
+        if isinstance(arg, cot):
+            ang = arg.args[0]
+            if ang.is_comparable:
+                ang %= pi # restrict to [0,pi)
+                if ang > pi/2: # restrict to (-pi/2,pi/2]
+                    ang -= pi;
+                return ang
+
+        if isinstance(arg, tan): # atan(x) + acot(x) = pi/2
+            ang = arg.args[0]
+            if ang.is_comparable:
+                ang = pi/2 - atan(arg)
+                if ang > pi/2: # restrict to (-pi/2,pi/2]
+                    ang -= pi
+                return ang
 
     @staticmethod
     @cacheit
@@ -2531,6 +2629,20 @@ class asec(InverseTrigonometricFunction):
         if arg in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
             return S.Pi/2
 
+        if isinstance(arg, sec):
+            ang = arg.args[0]
+            if ang.is_comparable:
+                ang %= 2*pi # restrict to [0,2*pi)
+                if ang > pi: # restrict to [0,pi]
+                    ang = 2*pi - ang
+
+                return ang
+
+        if isinstance(arg, csc): # asec(x) + acsc(x) = pi/2
+            ang = arg.args[0]
+            if ang.is_comparable:
+                return pi/2 - acsc(arg)
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return 1/(self.args[0]**2*sqrt(1 - 1/self.args[0]**2))
@@ -2622,6 +2734,26 @@ class acsc(InverseTrigonometricFunction):
                 return -S.Pi/2
         if arg in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
             return S.Zero
+
+        if isinstance(arg, csc):
+            ang = arg.args[0]
+            if ang.is_comparable:
+                ang %= 2*pi # restrict to [0,2*pi)
+                if ang > pi: # restrict to (-pi,pi]
+                    ang = pi - ang
+
+                # restrict to [-pi/2,pi/2]
+                if ang > pi/2:
+                    ang = pi - ang
+                if ang < -pi/2:
+                    ang = -pi - ang
+
+                return ang
+
+        if isinstance(arg, sec): # asec(x) + acsc(x) = pi/2
+            ang = arg.args[0]
+            if ang.is_comparable:
+                return pi/2 - asec(arg)
 
     def fdiff(self, argindex=1):
         if argindex == 1:

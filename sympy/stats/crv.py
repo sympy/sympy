@@ -16,7 +16,7 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, Mul,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S, exp, I)
+        Basic, S, exp, I, FiniteSet, Ne, Eq, Union)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.polys.polyerrors import PolynomialError
@@ -325,6 +325,10 @@ class ContinuousPSpace(PSpace):
 
     def probability(self, condition, **kwargs):
         z = Dummy('z', real=True, finite=True)
+        cond_inv = False
+        if isinstance(condition, Ne):
+            condition = Eq(condition.args[0], condition.args[1])
+            cond_inv = True
         # Univariate case can be handled by where
         try:
             domain = self.where(condition)
@@ -332,8 +336,12 @@ class ContinuousPSpace(PSpace):
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
             # return S.Zero if `domain` is empty set
-            if domain.set is S.EmptySet:
-                return S.Zero
+            if domain.set is S.EmptySet or isinstance(domain.set, FiniteSet):
+                return S.Zero if not cond_inv else S.One
+            if isinstance(domain.set, Union):
+                return sum(
+                     Integral(pdf(z), (z, subset), **kwargs) for subset in
+                     domain.set.args if isinstance(subset, Interval))
             # Integrate out the last variable over the special domain
             return Integral(pdf(z), (z, domain.set), **kwargs)
 
@@ -347,7 +355,8 @@ class ContinuousPSpace(PSpace):
                 dens = ContinuousDistributionHandmade(dens)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)
-            return space.probability(condition.__class__(space.value, 0))
+            result = space.probability(condition.__class__(space.value, 0))
+            return result if not cond_inv else S.One - result
 
     def where(self, condition):
         rvs = frozenset(random_symbols(condition))
@@ -466,10 +475,10 @@ def _reduce_inequalities(conditions, var, **kwargs):
 def reduce_rational_inequalities_wrap(condition, var):
     if condition.is_Relational:
         return _reduce_inequalities([[condition]], var, relational=False)
-    if condition.__class__ is Or:
-        return _reduce_inequalities([list(condition.args)],
-                var, relational=False)
-    if condition.__class__ is And:
+    if isinstance(condition, Or):
+        return Union(*[_reduce_inequalities([[arg]], var, relational=False)
+            for arg in condition.args])
+    if isinstance(condition, And):
         intervals = [_reduce_inequalities([[arg]], var, relational=False)
             for arg in condition.args]
         I = intervals[0]

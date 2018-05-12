@@ -36,7 +36,10 @@ to ask us anything there. We have a very welcoming and helpful community.
 Download
 --------
 
-Get the latest version of SymPy from
+The recommended installation method is through Anaconda,
+https://www.anaconda.com/download/
+
+You can also get the latest version of SymPy from
 https://pypi.python.org/pypi/sympy/
 
 To get the git version do
@@ -146,16 +149,6 @@ to get it is::
 After making changes to `sympy/parsing/latex/LaTeX.g4`, run::
 
     $ ./setup.py antlr
-
-Usage in Python 3
------------------
-
-SymPy also supports Python 3. If you want to install the latest version in
-Python 3, get the Python 3 tarball from
-https://pypi.python.org/pypi/sympy/
-
-To install the SymPy for Python 3, simply run the above commands with a Python
-3 interpreter.
 
 Clean
 -----

@@ -3,7 +3,8 @@ from __future__ import print_function, division
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number
 from sympy.core.basic import as_Basic
 from sympy.core.sympify import SympifyError
-from sympy.core.relational import Equality, Relational, _canonical
+from sympy.core.relational import (Equality, Unequality, Relational,
+    _canonical)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
     true, false, Not, Or, ITE, simplify_logic)
@@ -857,28 +858,42 @@ class Piecewise(Function):
             except TypeError:
                 pass
 
-    def as_expr_set_pairs(self):
+    def as_expr_set_pairs(self, domain=S.Reals):
         """Return tuples for each argument of self that give
-        the expression and the interval in which it is valid.
+        the expression and the interval in which it is valid
+        which is contained within the given domain.
         If a condition cannot be converted to a set, an error
         will be raised. The variable of the conditions is
         assumed to be real; sets of real values are returned.
 
         Examples
         ========
-        >>> from sympy import Piecewise
+
+        >>> from sympy import Piecewise, Interval
         >>> from sympy.abc import x
-        >>> Piecewise(
+        >>> p = Piecewise(
         ...     (1, x < 2),
         ...     (2,(x > 0) & (x < 4)),
-        ...     (3, True)).as_expr_set_pairs()
+        ...     (3, True))
+        >>> p.as_expr_set_pairs()
         [(1, Interval.open(-oo, 2)),
          (2, Interval.Ropen(2, 4)),
          (3, Interval(4, oo))]
+        >>> p.as_expr_set_pairs(Interval(0, 3))
+        [(1, Interval.Ropen(0, 2)),
+         (2, Interval(2, 3)), (3, EmptySet())]
         """
         exp_sets = []
-        U = S.Reals
+        U = domain
+        complex = not domain.is_subset(S.Reals)
         for expr, cond in self.args:
+            if complex:
+                for i in cond.atoms(Relational):
+                    if not isinstance(i, (Equality, Unequality)):
+                        raise ValueError(filldedent('''
+                            Inequalities in the complex domain are
+                            not supported. Try the real domain by
+                            setting domain=S.Reals'''))
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int
             exp_sets.append((expr, cond_int))
@@ -971,8 +986,53 @@ def piecewise_fold(expr):
             else:
                 new_args.append((e, c))
     else:
-        from sympy.utilities.iterables import cartes
-        folded = list(map(piecewise_fold, expr.args))
+        from sympy.utilities.iterables import cartes, sift, common_prefix
+        # Given
+        #     P1 = Piecewise((e11, c1), (e12, c2), A)
+        #     P2 = Piecewise((e21, c1), (e22, c2), B)
+        #     ...
+        # the folding of f(P1, P2) is trivially
+        # Piecewise(
+        #   (f(e11, e21), c1),
+        #   (f(e12, e22), c2),
+        #   (f(Piecewise(A), Piecewise(B)), True))
+        # Certain objects end up rewriting themselves as thus, so
+        # we do that grouping before the more generic folding.
+        # The following applies this idea when f = Add or f = Mul
+        # (and the expression is commutative).
+        if expr.is_Add or expr.is_Mul and expr.is_commutative:
+            p, args = sift(expr.args, lambda x: x.is_Piecewise, binary=True)
+            pc = sift(p, lambda x: x.args[0].cond)
+            for c in pc:
+                if len(pc[c]) > 1:
+                    pargs = [list(i.args) for i in pc[c]]
+                    # the first one is the same; there may be more
+                    com = common_prefix(*[
+                        [i.cond for i in j] for j in pargs])
+                    n = len(com)
+                    collected = []
+                    for i in range(n):
+                        collected.append((
+                            expr.func(*[ai[i].expr for ai in pargs]),
+                            com[i]))
+                    remains = []
+                    for a in pargs:
+                        if n == len(a):  # no more args
+                            continue
+                        if a[n].cond == True:  # no longer Piecewise
+                            remains.append(a[n].expr)
+                        else:  # restore the remaining Piecewise
+                            remains.append(
+                                Piecewise(*a[n:], evaluate=False))
+                    if remains:
+                        collected.append((expr.func(*remains), True))
+                    args.append(Piecewise(*collected, evaluate=False))
+                    continue
+                args.extend(pc[c])
+        else:
+            args = expr.args
+        # fold
+        folded = list(map(piecewise_fold, args))
         for ec in cartes(*[
                 (i.args if isinstance(i, Piecewise) else
                  [(i, true)]) for i in folded]):

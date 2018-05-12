@@ -55,6 +55,7 @@ from sympy import cos, sin, exp, besseli, besselj
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
+from sympy.external import import_module
 import random
 
 oo = S.Infinity
@@ -953,13 +954,11 @@ def FDistribution(name, d1, d2):
 
     with :math:`x > 0`.
 
-    .. TODO - What do these parameters mean?
-
     Parameters
     ==========
 
-    d1 : `d_1 > 0` a parameter
-    d2 : `d_2 > 0` a parameter
+    d1 : `d_1 > 0`, where d_1 is the degrees of freedom (n_1 - 1)
+    d2 : `d_2 > 0`, where d_2 is the degrees of freedom (n_2 - 1)
 
     Returns
     =======
@@ -1260,6 +1259,13 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         return Piecewise((uppergamma(a,b/x)/gamma(a), x > 0),
                         (S.Zero, True))
 
+    def sample(self):
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import invgamma
+            return invgamma.rvs(float(self.a), 0, float(self.b))
+        else:
+            raise NotImplementedError('Sampling the inverse Gamma Distribution requires Scipy.')
 
 def GammaInverse(name, a, b):
     r"""
