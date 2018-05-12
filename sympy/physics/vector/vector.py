@@ -57,7 +57,7 @@ class Vector(object):
 
     def __add__(self, other):
         """The add operator for Vector. """
-        if other is None or other == 0:
+        if other == 0:
             return self
         other = _check_vector(other)
         return Vector(self.args + other.args)

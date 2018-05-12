@@ -13,7 +13,7 @@ def test_Vector():
     assert A.y != A.z
     assert A.z != A.x
 
-    assert sum([A.x, 0 * A.x, None]) == A.x
+    assert A.x + 0 == A.x
 
     v1 = x*A.x + y*A.y + z*A.z
     v2 = x**2*A.x + y**2*A.y + z**2*A.z
