@@ -630,7 +630,7 @@ class Pow(Expr):
         '''
         An integer raised to the n(>=2)-th power cannot be a prime.
         '''
-        if self.base.is_integer and self.exp.is_integer and (self.exp-1).is_positive:
+        if self.base.is_integer and self.exp.is_integer and (self.exp - 1).is_positive:
             return False
 
     def _eval_is_composite(self):
@@ -638,8 +638,8 @@ class Pow(Expr):
         A power is composite if both base and exponent are greater than 1
         """
         if (self.base.is_integer and self.exp.is_integer and
-            ((self.base-1).is_positive and (self.exp-1).is_positive or
-            (self.base+1).is_negative and self.exp.is_positive and self.exp.is_even)):
+            ((self.base - 1).is_positive and (self.exp - 1).is_positive or
+            (self.base + 1).is_negative and self.exp.is_positive and self.exp.is_even)):
             return True
 
     def _eval_is_polar(self):
@@ -724,7 +724,7 @@ class Pow(Expr):
                     if remainder_pow is not None:
                         result = Mul(result, Pow(old.base, remainder_pow))
                     return result
-            else:  # b**(6*x+a).subs(b**(3*x), y) -> y**2 * b**a
+            else:  # b**(6*x + a).subs(b**(3*x), y) -> y**2 * b**a
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
                 oarg = old.exp
                 new_l = []
@@ -823,7 +823,7 @@ class Pow(Expr):
                 return transpose(expanded)
 
     def _eval_expand_power_exp(self, **hints):
-        """a**(n+m) -> a**n*a**m"""
+        """a**(n + m) -> a**n*a**m"""
         b = self.base
         e = self.exp
         if e.is_Add and e.is_commutative:
@@ -952,7 +952,7 @@ class Pow(Expr):
         return rv
 
     def _eval_expand_multinomial(self, **hints):
-        """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
+        """(a + b + ..)**n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
 
         base, exp = self.args
         result = self
@@ -1033,7 +1033,7 @@ class Pow(Expr):
                             return Integer(c)/k + I*d/k
 
                 p = other_terms
-                # (x+y)**3 -> x**3 + 3*x**2*y + 3*x*y**2 + y**3
+                # (x + y)**3 -> x**3 + 3*x**2*y + 3*x*y**2 + y**3
                 # in this particular example:
                 # p = [x,y]; n = 3
                 # so now it's easy to get the correct result -- we get the
@@ -1212,6 +1212,22 @@ class Pow(Expr):
                 or self.base.is_irrational):
                 return self.exp.is_rational
 
+    def _eval_is_transcendental(self):
+        # Gelfond-Schneider theorem
+        def _is_one(expr):
+            try:
+                return (expr - 1).is_zero
+            except ValueError:
+                # when the operation is not allowed
+                return False
+
+        if self.base.is_zero or _is_one(self.base):
+            return False
+        elif self.base.is_real and self.exp.is_irrational:
+            return True
+        elif self.base.is_transcendental and self.exp.is_zero == False:
+            return True
+
     def _eval_is_rational_function(self, syms):
         if self.exp.has(*syms):
             return False
@@ -1231,6 +1247,11 @@ class Pow(Expr):
                 self.exp.is_Rational
         else:
             return True
+
+    def _eval_rewrite_as_exp(self, base, expo):
+        from sympy import exp as exp, log
+        if base.is_zero == False:
+            return exp(expand_complex(log(base)*expo))
 
     def as_numer_denom(self):
         if not self.is_commutative:
@@ -1313,13 +1334,13 @@ class Pow(Expr):
         if e.is_Integer:
             if e > 0:
                 # positive integer powers are easy to expand, e.g.:
-                # sin(x)**4 = (x-x**3/3+...)**4 = ...
+                # sin(x)**4 = (x - x**3/3 + ...)**4 = ...
                 return expand_multinomial(self.func(b._eval_nseries(x, n=n,
                     logx=logx), e), deep=False)
             elif e is S.NegativeOne:
                 # this is also easy to expand using the formula:
                 # 1/(1 + x) = 1 - x + x**2 - x**3 ...
-                # so we need to rewrite base to the form "1+x"
+                # so we need to rewrite base to the form "1 + x"
 
                 nuse = n
                 cf = 1
@@ -1388,7 +1409,7 @@ class Pow(Expr):
             else:
                 # negative powers are rewritten to the cases above, for
                 # example:
-                # sin(x)**(-4) = 1/( sin(x)**4) = ...
+                # sin(x)**(-4) = 1/(sin(x)**4) = ...
                 # and expand the denominator:
                 nuse, denominator = n, O(1, x)
                 while denominator.is_Order:
@@ -1423,7 +1444,7 @@ class Pow(Expr):
                 try:
                     n = int(n)
                 except TypeError:
-                    #well, the n is something more complicated (like 1+log(2))
+                    #well, the n is something more complicated (like 1 + log(2))
                     try:
                         n = int(n.evalf()) + 1  # XXX why is 1 being added?
                     except TypeError:
@@ -1499,7 +1520,7 @@ class Pow(Expr):
             return rv
 
         # either b0 is bounded but neither 1 nor 0 or e is infinite
-        # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
+        # b -> b0 + (b - b0) -> b0 * (1 + (b/b0 - 1))
         o2 = order*(b0**-e)
         z = (b/b0 - 1)
         o = O(z, x)
@@ -1532,7 +1553,7 @@ class Pow(Expr):
         return exp(self.exp * log(self.base)).as_leading_term(x)
 
     @cacheit
-    def _taylor_term(self, n, x, *previous_terms): # of (1+x)**e
+    def _taylor_term(self, n, x, *previous_terms): # of (1 + x)**e
         from sympy import binomial
         return binomial(self.exp, n) * self.func(x, n)
 
@@ -1593,7 +1614,7 @@ class Pow(Expr):
             #=> self
             #= b**(ce*h)*b**(ce*t)
             #= b**(cehp/cehq)*b**(ce*t)
-            #= b**(iceh+r/cehq)*b**(ce*t)
+            #= b**(iceh + r/cehq)*b**(ce*t)
             #= b**(iceh)*b**(r/cehq)*b**(ce*t)
             #= b**(iceh)*b**(ce*t + r/cehq)
             h, t = pe.as_coeff_Add()

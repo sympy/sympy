@@ -1,11 +1,11 @@
 from sympy.core import (
     Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
-    Basic, I, nan, pi, symbols, oo, zoo)
+    Basic, I, nan, pi, E, symbols, oo, zoo)
 from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.functions.elementary.trigonometric import sin, cos, atan
 from sympy.series.order import O
 from sympy.utilities.pytest import XFAIL
 
@@ -204,6 +204,29 @@ def test_power_with_noncommutative_mul_as_base():
     y = Symbol('y', commutative=False)
     assert not (x*y)**3 == x**3*y**3
     assert (2*x*y)**3 == 8*(x*y)**3
+
+
+def test_power_with_complex():
+    assert (I**I).rewrite(exp) == exp(-pi/2)
+    assert ((2 + 3*I)**(4 + 5*I)).rewrite(exp) == \
+            169*exp(-5*atan(S(3)/2) + I*(4*atan(S(3)/2) + 5*log(sqrt(13))))
+    assert ((6 + 7*I)**5).rewrite(exp) == 7225*sqrt(85)*exp(5*I*atan(S(7)/6))
+    assert (5**(6 + 7*I)).rewrite(exp) == 15625*exp(7*I*log(5))
+    assert Pow(123, 789, evaluate=False).rewrite(exp) == 123**789
+    assert (1**I).rewrite(exp) == 1**I
+    assert (0**I).rewrite(exp) == 0**I
+    assert ((-2)**(2 + 5*I)).rewrite(exp) == 4*exp(-5*pi + I*(5*log(2) + 2*pi))
+    assert ((-2)**S(-5)).rewrite(exp) == (-2)**S(-5)
+
+
+def test_power_transcendental():
+    p = Symbol('p', positive=True)
+    u = Symbol('u', irrational=True)
+    y = Symbol('y', transcendental=True)
+    z = Symbol('z', zero=True)
+    assert (y**z).is_transcendental == False
+    assert ((1 + p)**u).is_transcendental == True
+    assert all((x**u).is_transcendental == True for x in (pi, E, sqrt(2), 3))
 
 
 def test_zero():
