@@ -219,16 +219,6 @@ def test_power_with_complex():
     assert ((-2)**S(-5)).rewrite(exp) == (-2)**S(-5)
 
 
-def test_power_transcendental():
-    p = Symbol('p', positive=True)
-    u = Symbol('u', irrational=True)
-    y = Symbol('y', transcendental=True)
-    z = Symbol('z', zero=True)
-    assert (y**z).is_transcendental == False
-    assert ((1 + p)**u).is_transcendental == True
-    assert all((x**u).is_transcendental == True for x in (pi, E, sqrt(2), 3))
-
-
 def test_zero():
     x = Symbol('x')
     y = Symbol('y')

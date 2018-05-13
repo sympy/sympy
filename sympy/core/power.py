@@ -1212,21 +1212,6 @@ class Pow(Expr):
                 or self.base.is_irrational):
                 return self.exp.is_rational
 
-    def _eval_is_transcendental(self):
-        # Gelfond-Schneider theorem
-        def _is_one(expr):
-            try:
-                return (expr - 1).is_zero
-            except ValueError:
-                # when the operation is not allowed
-                return False
-
-        if self.base.is_zero or _is_one(self.base):
-            return False
-        elif self.base.is_real and self.exp.is_irrational:
-            return True
-        elif self.base.is_transcendental and self.exp.is_zero == False:
-            return True
 
     def _eval_is_rational_function(self, syms):
         if self.exp.has(*syms):
@@ -1249,7 +1234,7 @@ class Pow(Expr):
             return True
 
     def _eval_rewrite_as_exp(self, base, expo):
-        from sympy import exp as exp, log
+        from sympy import exp, log
         if base.is_zero == False:
             return exp(expand_complex(log(base)*expo))
 
@@ -1444,7 +1429,7 @@ class Pow(Expr):
                 try:
                     n = int(n)
                 except TypeError:
-                    #well, the n is something more complicated (like 1 + log(2))
+                    # well, the n is something more complicated (like 1 + log(2))
                     try:
                         n = int(n.evalf()) + 1  # XXX why is 1 being added?
                     except TypeError:

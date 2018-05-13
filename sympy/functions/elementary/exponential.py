@@ -116,9 +116,6 @@ class ExpBase(Function):
             return expr
         return self.func(arg)
 
-    def _eval_is_transcendental(self):
-        return self.exp.is_real and self.exp.is_zero == False
-
 
 class exp_polar(ExpBase):
     r"""
