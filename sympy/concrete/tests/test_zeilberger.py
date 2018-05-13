@@ -2,7 +2,8 @@ from sympy.concrete.zeilberger import zb_recur, zb_sum
 from sympy import factorial, binomial, simplify, symbols, sqrt, pi, gamma
 from sympy import combsimp, summation, RisingFactorial
 
-n, k, x, i, j, r = symbols('n, k, x, i, j, r')
+k, x, i, j, r = symbols('k, x, i, j, r')
+n = symbols('n', integer = True, positive = True)
 
 def test_zb_recur():
 
