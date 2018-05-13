@@ -417,19 +417,34 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     namespace.update({'builtins':builtins, 'range':range})
 
     # Create the function definition code and execute it
-    unpackByIndex = _module_present('tensorflow', namespaces)
+
+    # Required for #14655
+    unpack_by_index = _module_present('tensorflow', namespaces)
+
+    # For numpy lambdify, wrap all input arguments in arrays.
+    # If no arguments are strings, we can safely do this at
+    # code generation time.  Otherwise, apply a decorator to the
+    # generated function.
+    #
+    # This is a fix for gh-11306.
+    generate_arg_wrapping = None
+    apply_numpy_decorator = False
+    if module_provided and _module_present('numpy',namespaces):
+        if any(isinstance(arg, str) for arg in args):
+            apply_numpy_decorator = True
+        else:
+            generate_arg_wrapping = _generate_numpy_arg_wrapping
 
     funcname = '_lambdifygenerated'
     funcstr = functiondefstr(args, expr, printer=printer, dummify=dummify,
-            name=funcname, unpackByIndex=unpackByIndex)
+            name=funcname, unpack_by_index=unpack_by_index,
+            generate_arg_wrapping=generate_arg_wrapping)
 
     funclocals = {}
     exec_(funcstr, namespace, funclocals)
     func = funclocals[funcname]
 
-    # For numpy lambdify, wrap all input arguments in arrays.
-    # This is a fix for gh-11306.
-    if module_provided and _module_present('numpy',namespaces):
+    if apply_numpy_decorator:
         def array_wrap(funcarg):
             builtin_numerics = integer_types + (float, complex)
             array = namespace['array']
@@ -596,7 +611,57 @@ def lambdastr(args, expr, printer=None, dummify=False):
     expr = lambdarepr(expr)
     return "lambda %s: (%s)" % (args, expr)
 
-def functiondefstr(args, expr, printer=None, dummify=False, name='_lambdifygenerated', unpackByIndex=False):
+def _generate_unpack_iterable(lvalues, rvalue):
+    """Generate argument unpacking code for functiondefstr.
+
+    This method is used when the input value is iterable.
+    """
+    def unpack_lhs(lvalues):
+        return '[{}]'.format(', '.join(
+            unpack_lhs(val) if iterable(val) else val for val in lvalues))
+
+    return ['{} = {}'.format(unpack_lhs(lvalues), rvalue)]
+
+def _generate_unpack_indexable(lvalues, rvalue):
+    """Generate argument unpacking code for functiondefstr.
+
+    This method is used when the input value is not interable,
+    but can be indexed.
+    """
+    from sympy import flatten
+
+    def flat_indexes(elems):
+        n = 0
+
+        for el in elems:
+            if iterable(el):
+                for ndeep in flat_indexes(el):
+                    yield (n,) + ndeep
+            else:
+                yield (n,)
+
+            n += 1
+
+    indexed = ', '.join('{}[{}]'.format(rvalue, ']['.join(map(str, ind)))
+                            for ind in flat_indexes(lvalues))
+
+    return ['[{}] = [{}]'.format(', '.join(flatten(lvalues)), indexed)]
+
+def _generate_numpy_arg_wrapping(args):
+    """Generate numpy argument wrapping code for functiondefstr.
+    """
+    integer_names = ', '.join(cls.__name__ for cls in integer_types)
+
+    lines = ['builtin_numerics = ({}, float, complex)'.format(integer_names)]
+
+    wraparg = 'if isinstance({arg}, builtin_numerics): {arg} = array({arg})'
+    lines.extend(wraparg.format(arg=arg) for arg in args)
+
+    return lines
+
+def functiondefstr(args, expr, printer=None, dummify=False,
+        name='_lambdifygenerated', unpack_by_index=False,
+        generate_arg_wrapping=None):
     """
     Returns a function definition statement as a string.
 
@@ -623,6 +688,8 @@ def functiondefstr(args, expr, printer=None, dummify=False, name='_lambdifygener
     """
     from sympy.matrices import DeferredVector
     from sympy import Dummy, sympify, Symbol, Function, flatten
+    import re
+    from keyword import iskeyword
 
     if printer is not None:
         if inspect.isfunction(printer):
@@ -635,6 +702,30 @@ def functiondefstr(args, expr, printer=None, dummify=False, name='_lambdifygener
     else:
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import lambdarepr
+
+    identre = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
+
+    def sub_args(args, dummies_dict):
+        argstrs = []
+        for arg in args:
+            if iterable(arg):
+                deepargstrs = sub_args(arg, dummies_dict)
+                argstrs.append(deepargstrs)
+            elif isinstance(arg, DeferredVector):
+                argstrs.append(str(arg))
+            elif isinstance(arg, (Function, Symbol)):
+                argrep = lambdarepr(arg)
+
+                if dummify or iskeyword(argrep) or not identre.match(argrep):
+                    dummy = Dummy()
+                    argstrs.append(lambdarepr(dummy))
+                    dummies_dict[arg] = dummy
+                else:
+                    argstrs.append(argrep)
+            else:
+                argstrs.append(str(arg))
+
+        return argstrs
 
     def sub_expr(expr, dummies_dict):
         try:
@@ -652,84 +743,43 @@ def functiondefstr(args, expr, printer=None, dummify=False, name='_lambdifygener
                 expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
         return expr
 
-    def flat_indexes(elems):
-        n = 0
-
-        for el in elems:
-            if iterable(el):
-                for ndeep in flat_indexes(el):
-                    yield (n,) + ndeep
-            else:
-                yield (n,)
-
-            n += 1
-
-    def unpacklhs(argstrs):
-        return '[' +', '.join(
-            [ unpacklhs(argstr) if iterable(argstr)
-                else argstr for argstr in argstrs]) + ']'
-
-    def indexrhs(argstrs, dummystr):
-        return '[' + ','.join([
-                dummystr + ''.join(['[%s]' % k for k in ind])
-                        for ind in flat_indexes(argstrs)]) + ']'
-
-    def preprocess(args, expr):
-        import re
-        from keyword import iskeyword
-
-        idre = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
-
-        argstrs = []
-        for arg in args:
-            if iterable(arg):
-                deepargstrs, expr = preprocess(arg, expr)
-                argstrs.append(deepargstrs)
-            elif isinstance(arg, DeferredVector):
-                argstrs.append(str(arg))
-            elif isinstance(arg, (Function, Symbol)):
-                argrep = lambdarepr(arg)
-
-                if dummify or iskeyword(argrep) or not idre.match(argrep):
-                    dummy = Dummy()
-                    argstrs.append(lambdarepr(dummy))
-                    expr = sub_expr(expr, {arg: dummy})
-                else:
-                    argstrs.append(argrep)
-            else:
-                argstrs.append(str(arg))
-
-        return argstrs, expr
-
     funcbody = []
 
-    if not isinstance(args, str):
-        if not iterable(args):
-            args = [args]
+    if not iterable(args):
+        args = [args]
 
-        argstrs, expr = preprocess(args, expr)
+    dummies_dict = {}
+    argstrs = sub_args(args, dummies_dict)
+    expr = sub_expr(expr, dummies_dict)
 
-        funcargs = []
+    # Generate argument unpacking and final argument list
+    funcargs = []
+    unpackings = []
 
-        for argstr in argstrs:
-            if iterable(argstr):
-                funcargs.append(str(Dummy()))
-                if unpackByIndex:
-                    funcbody.append(unpacklhs(flatten(argstr))
-                            + ' = ' + indexrhs(argstr, funcargs[-1]))
-                else:
-                    funcbody.append(unpacklhs(argstr) + ' = ' + funcargs[-1])
+    for argstr in argstrs:
+        if iterable(argstr):
+            funcargs.append(str(Dummy()))
+            if unpack_by_index:
+                unpackings.extend(
+                    _generate_unpack_indexable(argstr, funcargs[-1]))
             else:
-                funcargs.append(argstr)
+                unpackings.extend(
+                    _generate_unpack_iterable(argstr, funcargs[-1]))
+        else:
+            funcargs.append(argstr)
 
-        args = ', '.join(funcargs)
+    funcsig = 'def {}({}):'.format(name, ', '.join(funcargs))
 
-    funcsig = "def %s(%s):" % (name, args)
+    # Wrap input arguments before unpacking
+    if generate_arg_wrapping:
+        funcbody.extend(generate_arg_wrapping(funcargs))
 
-    funcbody.append("return (%s)" % (lambdarepr(expr)))
+    funcbody.extend(unpackings)
+
+    funcbody.append('return ({})'.format(lambdarepr(expr)))
 
     funclines = [funcsig]
-    funclines.extend(["    " + line for line in funcbody])
+    funclines.extend("    " + line for line in funcbody)
 
     return '\n'.join(funclines)
 
