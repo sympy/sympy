@@ -208,8 +208,6 @@ def zb_sum(F, k_a_b, J = 1):
     >>> zb_sum(F, (k, 0, n), J = 3)
     2**n/3 + (1/2 - sqrt(3)*I/2)**n/3 + (1/2 + sqrt(3)*I/2)**n/3
     """
-    from sympy.concrete import summation
-
     k, a, b = k_a_b
     a, b = sympify(a), sympify(b)
 
@@ -243,8 +241,7 @@ def zb_sum(F, k_a_b, J = 1):
 
     sum_rec = sum(F_rec[i] * f(n + i) for i in range(J + 1))
 
-    initial = { f(i): summation(F.subs(n, i), (k, a.subs(n, i), b.subs(n, i)))
-                        for i in range(1, J + 1) }
+    initial = { f(i): sum(F.subs([(n, i), (k, j)]) for j in range(a.subs(n, i), b.subs(n, i) + 1)) for i in range(1, J + 1) }
 
     if combsimp(F.subs(k, b + 1)) != 0:
         vanishes = False
@@ -254,11 +251,16 @@ def zb_sum(F, k_a_b, J = 1):
     if vanishes:
         return rsolve(combsimp(sum_rec + G_a), f(n), initial)
 
-    boundary = sum(summation(F.subs(n, n + i), (k, b.subs(n, n + i) + 1,
-                        b.subs(n, n + J))) for i in range(J + 1))
+    i = symbols('i', cls = Dummy)
+    if not (b.subs(n, n + J) - b.subs(n, n + i)).free_symbols.issubset({i}):
+        return None
+
+    boundary = sum(sum(F.subs([(n, n + i), (k, b.subs(n, n + i) + 1 + j)])
+            for j in range(b.subs(n, n + J) - b.subs(n, n + i))) for i in range(J + 1))
 
     G_b = G.subs(k, b.subs(n, n + J))
     if G_b is nan:
         return None
-
-    return rsolve(combsimp(sum_rec + boundary + G_a - G_b), f(n), initial)
+    if combsimp(boundary + G_a - G_b) != 0:
+        return None
+    return rsolve(sum_rec, f(n), initial)
