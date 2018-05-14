@@ -725,17 +725,24 @@ def test_nc_simplify():
     from sympy.simplify.simplify import nc_simplify
     a, b, c = symbols('a b c', commutative = False)
     x = Symbol('x')
-    assert nc_simplify(a*b*a*b*a*b*c*(a*b)**3*c) == ((a*b)**3*c)**2
-    assert nc_simplify(a**2*b*a*b*a*b) == a*(a*b)**3
-    expr = a*b*a**2*b*a**2*b*a**3
-    assert nc_simplify(expr) == (a*b*a)**3*a**2
-    assert nc_simplify(a**2*b*a**4*b*a**4*b*a**2) == (a**2*b*a**2)**3
-    assert nc_simplify(a**3*b*a**4*b*a**4*b*a) == a**3*(b*a**4)**3*a**-3
-    assert nc_simplify(a*b*a*b + a*b*c*x*a*b*c) == (a*b)**2 + x*(a*b*c)**2
-    assert nc_simplify(a*b*a*b*c*a*b*a*b*c) == ((a*b)**2*c)**2
-    assert nc_simplify(b**-1*a**-1*(a*b)**2) == a*b
-    assert nc_simplify(a**-1*b**-1*c**-1*d) == (d**-1*c*b*a)**-1
-    expr = a**3*b*a**4*b*a**4*b*a**2*b*a**2*b*a**2*b*a**2*b*a**2*b*a**2
+
+    def _check(expr, simplified, deep=True):
+        assert nc_simplify(expr, deep=deep) == simplified
+
+    _check(a*b*a*b*a*b*c*(a*b)**3*c, ((a*b)**3*c)**2)
+    _check(a*b*(a*b)**-2*a*b, 1)
+    _check(a**2*b*a*b*a*b*(a*b)**-1, a*(a*b)**2)
+    _check(b*a*b**2*a*b**2*a*b**2, b*(a*b**2)**3)
+    _check(a*b*a**2*b*a**2*b*a**3, (a*b*a)**3*a**2)
+    _check(a**2*b*a**4*b*a**4*b*a**2, (a**2*b*a**2)**3)
+    _check(a**3*b*a**4*b*a**4*b*a, a**3*(b*a**4)**3*a**-3)
+    _check(a*b*a*b + a*b*c*x*a*b*c, (a*b)**2 + x*(a*b*c)**2)
+    _check(a*b*a*b*c*a*b*a*b*c, ((a*b)**2*c)**2)
+    _check(b**-1*a**-1*(a*b)**2, a*b)
+    _check(a**-1*b*c**-1, (c*b**-1*a)**-1)
+    expr = a**3*b*a**4*b*a**4*b*a**2*b*a**2*(b*a**2)**2*b*a**2*b*a**2
     for i in range(10):
         expr *= a*b
-    assert nc_simplify(expr) == a**3*(b*a**4)**2*(b*a**2)**6*(a*b)**10
+    _check(expr, a**3*(b*a**4)**2*(b*a**2)**6*(a*b)**10)
+    _check((a*b*a*b)**2, (a*b*a*b)**2, deep=False)
+    _check(a*b*(c*d)**2, a*b*(c*d)**2)

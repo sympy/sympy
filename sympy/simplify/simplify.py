@@ -1744,8 +1744,6 @@ def nc_simplify(expr, deep=True):
             if _pre_exp == 0 or _post_exp == 0:
                 if not pre_exp:
                     start -= 1
-                if not post_exp:
-                    end += l
                 post_exp = _post_exp
                 pre_exp = _pre_exp
                 pre_arg = post_arg
