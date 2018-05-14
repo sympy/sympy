@@ -1303,9 +1303,9 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     # A positive auxiliary variable is used for selecting the
     # relevant half-plane.
     p = Dummy('p', positive=True)
-    Fp = integrate(a*f*exp(-p*x), (x, 0, oo))
+    Fp = _simplify(integrate(a*f*exp(-p*x), (x, 0, oo)), simplify)
     Fp = Fp.subs(p, -b*I*k).at_reals(k, b)
-    Fn = integrate(a*f*exp(p*x), (x, -oo, 0))
+    Fn = _simplify(integrate(a*f*exp(p*x), (x, -oo, 0)), simplify)
     Fn = Fn.subs(p, b*I*k).at_reals(k, -b)
     F = unpolarify(Fp + Fn)  # remove polar numbers from conditions
 
