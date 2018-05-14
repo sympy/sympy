@@ -229,6 +229,14 @@ def test_pow_as_base_exp():
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S(1), S(2))
 
 
+def test_Pow_at_reals():
+    from sympy.functions import Piecewise
+    x = Symbol('x')
+    f = sqrt(1 - x**2)
+    assert f.at_reals(x, 1) == Piecewise((-f, x > 1), (f, True))
+    assert f.at_reals(x, -1) == Piecewise((-f, x < -1), (f, True))
+
+
 def test_issue_6100_12942():
     x = Symbol('x')
     y = Symbol('y')
