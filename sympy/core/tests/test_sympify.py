@@ -615,3 +615,23 @@ def test_issue_13924():
     a = sympify(numpy.array([1]))
     assert isinstance(a, ImmutableDenseNDimArray)
     assert a[0] == 1
+
+
+def test_issue_14706():
+    if not numpy:
+        skip("numpy not installed.")
+
+    from sympy import symbols
+
+    x = symbols('x')
+
+    z1 = np.zeros((1,1), dtype=np.float)
+    z2 = np.zeros((2,2), dtype=np.float)
+    z3 = np.zeros((), dtype=np.float)
+
+    assert np.all(x + z1 == np.full((1, 1), x))
+    assert np.all(x + z2 == np.full((2, 2), x))
+    assert x + z3 == x
+    assert x + np.int(0) == x
+    assert x + np.float(0) == x
+    assert x + np.complex(0) == x
