@@ -51,6 +51,18 @@ class CantSympify(object):
     pass
 
 
+def _is_numpy_instance(a):
+    """
+    Checks if an object is an instance of a type from the numpy module.
+    """
+    # This check avoids unnecessarily importing NumPy.  We check the whole
+    # __mro__ in case any base type is a numpy type.
+    for type_ in type(a).__mro__:
+        if type_.__module__ == 'numpy':
+            return True
+    return False
+
+
 def _convert_numpy_types(a):
     """
     Converts a numpy datatype input to an appropriate sympy type.
@@ -280,8 +292,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             return a
 
     # Support for basic numpy datatypes
-    # Note that this check exists to avoid importing NumPy when not necessary
-    if type(a).__module__ == 'numpy':
+    if _is_numpy_instance(a):
         import numpy as np
         if np.isscalar(a):
             return _convert_numpy_types(a)
@@ -313,11 +324,26 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             pass
 
     if not isinstance(a, string_types):
-        for coerce in (float, int):
-            try:
-                return sympify(coerce(a))
-            except (TypeError, ValueError, AttributeError, SympifyError):
-                continue
+        if _is_numpy_instance(a):
+            import numpy as np
+            if isinstance(a, np.number):
+                return sympify(a)
+            elif isinstance(a, np.ndarray):
+                # Scalar arrays (those with zero dimensions) have sympify
+                # called on the scalar element.
+                if a.ndim == 0:
+                    try:
+                        return sympify(a.item())
+                    except SympifyError:
+                        pass
+        else:
+            # float and int can coerce size-one numpy arrays to their lone
+            # element.  See issue https://github.com/numpy/numpy/issues/10404.
+            for coerce in (float, int):
+                try:
+                    return sympify(coerce(a))
+                except (TypeError, ValueError, AttributeError, SympifyError):
+                    continue
 
     if strict:
         raise SympifyError(a)
