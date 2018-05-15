@@ -978,8 +978,13 @@ class principal_branch(Function):
                     return polar_lift(expr)
                 return expr
             pl = pl.replace(polar_lift, mr)
+            # Recompute unbranched argument
+            ub = periodic_argument(pl, oo)
             if not pl.has(polar_lift):
-                res = exp_polar(I*(barg - ub))*pl
+                if ub != barg:
+                    res = exp_polar(I*(barg - ub))*pl
+                else:
+                    res = pl
                 if not res.is_polar and not res.has(exp_polar):
                     res *= exp_polar(0)
                 return res
