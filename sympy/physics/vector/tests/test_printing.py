@@ -203,11 +203,11 @@ def test_vlatex(): # vlatex is broken #12078
 
 
 def test_issue_13354():
-    """ 
-    Test for proper pretty printing of physics vectors with ADD 
+    """
+    Test for proper pretty printing of physics vectors with ADD
     instances in arguments.
 
-    Test is exactly the one suggested in the original bug report by 
+    Test is exactly the one suggested in the original bug report by
     @moorepants.
     """
 
@@ -220,5 +220,3 @@ def test_issue_13354():
     expected = """(a + b) a_x + (b + c) a_y + (a + c) a_z"""
 
     assert ascii_vpretty(z) == expected
-
-
