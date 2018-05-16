@@ -4,6 +4,7 @@ from __future__ import print_function, division
 from sympy.core import S, Dummy, symbols
 from sympy.core.compatibility import is_sequence, range
 from sympy.polys import Poly, parallel_poly_from_expr, factor
+from sympy.polys.dispersion import dispersionset
 from sympy.solvers import solve
 from sympy.simplify import hypersimp
 
@@ -50,18 +51,10 @@ def gosper_normal(f, g, n, polys=True):
     b, B = q.LC(), q.monic()
 
     C, Z = A.one, a/b
-    h = Dummy('h')
 
-    D = Poly(n + h, n, h, domain=opt.domain)
+    J = dispersionset(A, B)
 
-    R = A.resultant(B.compose(D))
-    roots = set(R.ground_roots().keys())
-
-    for r in set(roots):
-        if not r.is_Integer or r < 0:
-            roots.remove(r)
-
-    for i in sorted(roots):
+    for i in sorted(J):
         d = A.gcd(B.shift(+i))
 
         A = A.quo(d)
@@ -174,16 +167,18 @@ def gosper_sum(f, k):
 
     >>> from sympy.concrete.gosper import gosper_sum
     >>> from sympy.functions import factorial
-    >>> from sympy.abc import i, n, k
+    >>> from sympy.abc import n, k
 
     >>> f = (4*k + 1)*factorial(k)/factorial(2*k + 1)
-    >>> gosper_sum(f, (k, 0, n))
+    >>> F = gosper_sum(f, (k, 0, n))
+    >>> F
     (-factorial(n) + 2*factorial(2*n + 1))/factorial(2*n + 1)
-    >>> _.subs(n, 2) == sum(f.subs(k, i) for i in [0, 1, 2])
+    >>> F.subs(n, 2) == sum(f.subs(k, i) for i in [0, 1, 2])
     True
-    >>> gosper_sum(f, (k, 3, n))
+    >>> F = gosper_sum(f, (k, 3, n))
+    >>> F
     (-60*factorial(n) + factorial(2*n + 1))/(60*factorial(2*n + 1))
-    >>> _.subs(n, 5) == sum(f.subs(k, i) for i in [3, 4, 5])
+    >>> F.subs(n, 5) == sum(f.subs(k, i) for i in [3, 4, 5])
     True
 
     References
