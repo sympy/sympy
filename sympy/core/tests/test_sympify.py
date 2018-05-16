@@ -625,18 +625,20 @@ def test_issue_14706():
 
     x = symbols('x')
 
-    z1 = np.zeros((1,1), dtype=np.float)
-    z2 = np.zeros((2,2), dtype=np.float)
-    z3 = np.zeros((), dtype=np.float)
+    z1 = numpy.zeros((1,1), dtype=numpy.float)
+    z2 = numpy.zeros((2,2), dtype=numpy.float)
+    z3 = numpy.zeros((), dtype=numpy.float)
 
-    assert np.all(x + z1 == np.full((1, 1), x))
-    assert np.all(x + z2 == np.full((2, 2), x))
+    assert numpy.all(x + z1 == numpy.full((1, 1), x))
+    assert numpy.all(x + z2 == numpy.full((2, 2), x))
     for z in [z3,
-              np.int(0),
-              np.float(0),
-              np.complex(0)]:
+              numpy.int(0),
+              numpy.float(0),
+              numpy.complex(0)]:
         assert x + z == x
         assert isinstance(x + z, Symbol)
 
-    assert x + np.array(x) == 2 * x
-    assert x + np.array([x]) == np.array([2*x], dtype=object)
+    assert x + numpy.array(x) == 2 * x
+    assert x + numpy.array([x]) == numpy.array([2*x], dtype=object)
+
+    assert isinstance(sympify(numpy.array([1]), strict=True), numpy.ndarray)

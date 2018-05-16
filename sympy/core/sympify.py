@@ -57,10 +57,8 @@ def _is_numpy_instance(a):
     """
     # This check avoids unnecessarily importing NumPy.  We check the whole
     # __mro__ in case any base type is a numpy type.
-    for type_ in type(a).__mro__:
-        if type_.__module__ == 'numpy':
-            return True
-    return False
+    return any(type_.__module__ == 'numpy'
+               for type_ in type(a).__mro__)
 
 
 def _convert_numpy_types(a):
