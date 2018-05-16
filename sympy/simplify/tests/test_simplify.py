@@ -728,6 +728,7 @@ def test_nc_simplify():
 
     def _check(expr, simplified, deep=True):
         assert nc_simplify(expr, deep=deep) == simplified
+        assert expand(expr) == expand(simplified)
 
     _check(a*b*a*b*a*b*c*(a*b)**3*c, ((a*b)**3*c)**2)
     _check(a*b*(a*b)**-2*a*b, 1)

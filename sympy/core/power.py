@@ -856,7 +856,7 @@ class Pow(Expr):
                 if e.is_positive:
                     rv = Mul(*nc*e)
                 else:
-                    rv = 1/Mul(*nc*-e)
+                    rv = Mul(*[i**-1 for i in nc[::-1]]*-e)
                 if cargs:
                     rv *= Mul(*cargs)**e
                 return rv
