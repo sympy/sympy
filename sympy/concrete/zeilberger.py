@@ -17,7 +17,7 @@ def _vanishes(F, b, n, k):
     """
     Determines if F(n, k) hypergeometric term vanishes for k > b,
     where k is integer assuming we already know F(n, b + 1) = 0
-    by looking at F(n, k + 1) / F(n, k) = P / Q and considering roots of Q.
+    by looking at F(n, k + 1) / F(n, k) = P / Q, and considering roots of Q.
     """
     L = []
     for f in factor_list(denom(hypersimp(F, k)))[1]:
