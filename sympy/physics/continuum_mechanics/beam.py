@@ -110,7 +110,7 @@ class Beam(object):
 
     @length.setter
     def length(self, l):
-        self._length = sympify(l)
+        self._length = sympify(l).simplify()
 
     @property
     def variable(self):
@@ -152,7 +152,7 @@ class Beam(object):
 
     @elastic_modulus.setter
     def elastic_modulus(self, e):
-        self._elastic_modulus = sympify(e)
+        self._elastic_modulus = sympify(e).simplify()
 
     @property
     def second_moment(self):
@@ -161,7 +161,7 @@ class Beam(object):
 
     @second_moment.setter
     def second_moment(self, i):
-        self._second_moment = sympify(i)
+        self._second_moment = sympify(i).simplify()
 
     @property
     def boundary_conditions(self):
@@ -198,7 +198,12 @@ class Beam(object):
 
     @bc_slope.setter
     def bc_slope(self, s_bcs):
-        self._boundary_conditions['slope'] = s_bcs
+        slope = []
+        for (pos, val) in s_bcs:
+            pos = sympify(pos).simplify()
+            val = sympify(val).simplify()
+            slope.append((pos, val))
+        self._boundary_conditions['slope'] = slope
 
     @property
     def bc_deflection(self):
@@ -206,7 +211,12 @@ class Beam(object):
 
     @bc_deflection.setter
     def bc_deflection(self, d_bcs):
-        self._boundary_conditions['deflection'] = d_bcs
+        deflection = []
+        for (pos, val) in d_bcs:
+            pos = sympify(pos).simplify()
+            val = sympify(val).simplify()
+            deflection.append((pos, val))
+        self._boundary_conditions['deflection'] = deflection
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -252,13 +262,14 @@ class Beam(object):
             + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
         """
         x = self.variable
-        value = sympify(value)
-        start = sympify(start)
+        value = sympify(value).simplify()
+        start = sympify(start).simplify()
         order = sympify(order)
 
         self._load += value*SingularityFunction(x, start, order)
 
         if end:
+            end = sympify(end).simplify()
             if order == 0:
                 self._load -= value*SingularityFunction(x, end, order)
             elif order.is_positive:
