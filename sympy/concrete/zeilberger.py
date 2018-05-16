@@ -19,18 +19,12 @@ def _vanishes(F, b, n, k):
     where k is integer assuming we already know F(n, b + 1) = 0
     by looking at F(n, k + 1) / F(n, k) = P / Q and considering roots of Q.
     """
-    d = denom(hypersimp(F, k))
-    r = factor_list(d)[1]
     L = []
-    for f in r:
-        if degree(f[0], k) != 1:
-            continue
-        if not f[0].free_symbols.issubset({n, k}):
+    for f in factor_list(denom(hypersimp(F, k)))[1]:
+        if degree(f[0], k) != 1 or not f[0].free_symbols.issubset({n, k}):
             continue
         L.append((LC(f[0], k) * k - f[0]) / LC(f[0], k))
-    if L == []:
-        return True
-    if max(L) <= b:
+    if L == [] or max(L) <= b:
         return True
     return False
 
@@ -45,7 +39,6 @@ def _find_b_deg(p_2, p_3, p):
 
     if d_2 == 0 and d_3 == 0:
         return d + 1
-
     if d_2 != d_3 or p_2.LC() != p_3.LC():
         return d - max(d_2, d_3)
 
@@ -54,7 +47,6 @@ def _find_b_deg(p_2, p_3, p):
 
     if (B - A) % p_2.LC() == 0 and (B - A).free_symbols == set():
         return max((B - A) // p_2.LC(), d - d_2 + 1)
-
     return d - d_2 + 1
 
 def _zb_gosper(F, J, n, k):
@@ -81,7 +73,6 @@ def _zb_gosper(F, J, n, k):
     r, s = fraction(cancel(r / s))
 
     p_2, p_3, p_1 = gosper_normal(r, s, k)
-
     return p_0 * p_1, p_2, p_3.shift(-1)
 
 def zb_recur(F, n, k, J = 1):
@@ -94,17 +85,7 @@ def zb_recur(F, n, k, J = 1):
 
     If such things exists this function returns a pair consisting of
     [a_0, a_1, ... , a_J] and the function G / F, otherwise it will return
-    None. If F is 'proper hypergeometric' (see page 64 of 'A = B'
-    for a definition) then such a recurrence always exists for some J.
-
-    The main application of this is to sum k over some suitable values so that
-    the G telescopes and you obtain a recurrence for the sum of F(n, k).
-
-    If you have a guess as to what your sum should be, there is a very fast way
-    to certify it, divide F by your guess and call zb_recur with J = 1 and your
-    new guess, it should respond with something of the form [-a, a], R.
-    Many famous hypergeometric identities e.g. Gauss's, Kummer's etc can be
-    proved this way.
+    None.
 
     Examples
     ========
@@ -147,9 +128,7 @@ def zb_recur(F, n, k, J = 1):
     P = p_2 * b.shift(1) - p_3 * b - p
 
     syms = [a(i) for i in range(J + 1)] + [w(i) for i in range(b_deg + 1)]
-
     solns = list(linsolve(P.coeffs(), syms))[0]
-
     if all(c == 0 for c in solns):
         return None
 
@@ -211,45 +190,38 @@ def zb_sum(F, k_a_b, J = 1):
     k, a, b = k_a_b
     a, b = sympify(a), sympify(b)
 
-    f = symbols('f', cls = Function)
-
     F = F.rewrite(gamma)
 
     if len(b.free_symbols) != 1:
         return None
 
-    n = list(b.free_symbols)[0]
+    n = b.free_symbols.pop()
 
-    if not (n.is_positive and n.is_integer):
-        return None
-
-    if hypersimp(F, k) is None or hypersimp(F, n) is None:
+    if not (n.is_positive and n.is_integer) or (
+        hypersimp(F, k) is None or hypersimp(F, n) is None):
         return None
 
     pair = zb_recur(F, n, k, J)
 
-    if pair is None or pair[1] is nan:
+    if pair is None:
         return None
 
-    F_rec, R = pair
-
-    G = F * R
+    F_rec, G = pair[0], F * pair[1]
 
     G_a = G.subs(k, a)
-    if G_a is nan:
-        return None
 
+    f = symbols('f', cls = Function)
     sum_rec = sum(F_rec[i] * f(n + i) for i in range(J + 1))
 
-    initial = { f(i): sum(F.subs([(n, i), (k, j)]) for j in range(a.subs(n, i), b.subs(n, i) + 1)) for i in range(1, J + 1) }
+    initial = { f(i): sum(F.subs([(n, i), (k, j)])
+            for j in range(a.subs(n, i), b.subs(n, i) + 1)) for i in range(1, J + 2) }
 
-    if combsimp(F.subs(k, b + 1)) != 0:
-        vanishes = False
-    else:
-        vanishes = _vanishes(F, b, n, k)
-
+    vanishes = (combsimp(F.subs(k, b + 1)) == 0) and _vanishes(F, b, n, k)
     if vanishes:
-        return rsolve(combsimp(sum_rec + G_a), f(n), initial)
+        try:
+            return rsolve(combsimp(sum_rec + G_a), f(n), initial)
+        except ValueError:
+            return None
 
     i = symbols('i', cls = Dummy)
     if not (b.subs(n, n + J) - b.subs(n, n + i)).free_symbols.issubset({i}):
@@ -259,8 +231,7 @@ def zb_sum(F, k_a_b, J = 1):
             for j in range(b.subs(n, n + J) - b.subs(n, n + i))) for i in range(J + 1))
 
     G_b = G.subs(k, b.subs(n, n + J))
-    if G_b is nan:
+    try:
+        return rsolve(combsimp(sum_rec + boundary + G_a - G_b), f(n), initial)
+    except ValueError:
         return None
-    if combsimp(boundary + G_a - G_b) != 0:
-        return None
-    return rsolve(sum_rec, f(n), initial)

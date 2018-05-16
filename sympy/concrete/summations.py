@@ -1139,9 +1139,6 @@ def eval_sum_hyper(f, i_a_b):
             zb_try = zb_sum(f, i_a_b)
             if zb_try is not None:
                 return zb_try
-            zb_try2 = zb_sum(f, i_a_b, J = 2)
-            if zb_try2 is not None:
-                return zb_try2
             res1 = _eval_sum_hyper(f, i, a)
             res2 = _eval_sum_hyper(f, i, b + 1)
             if res1 is None or res2 is None:
