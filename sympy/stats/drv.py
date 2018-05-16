@@ -12,6 +12,7 @@ from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
+from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
 import random
 
@@ -120,30 +121,33 @@ class DiscreteDomain(RandomDomain):
     is_finite = False
 
 class SingleDiscreteDomain(DiscreteDomain, SingleDomain):
+    def as_boolean(self):
+        return Contains(self.symbol, self.set)
 
-    def boolean(self):
-        raise NotImplementedError
-    pass
 
 class ConditionalDiscreteDomain(DiscreteDomain, ConditionalDomain):
     """
     Domain with discrete support of step size one, that is restricted by
     some condition.
     """
+    @property
     def set(self):
         rv = self.symbols
         if len(self.symbols) > 1:
             raise NotImplementedError(filldedent('''
                 Multivariate condtional domains are not yet implemented.'''))
-        rv = rv[0]
-        conditional_set = DiscretePSpace(
-            DiscretePSpace, rv, self.fulldomain).where(condition)
-        return conditional_set
+        rv = list(rv)[0]
+        return reduce_rational_inequalities_wrap(self.condition,
+            rv).intersect(self.fulldomain.set)
+
 
 class DiscretePSpace(PSpace):
     is_real = True
     is_continuous = False
 
+    @property
+    def pdf(self):
+        return self.density(*self.symbols)
 
     def where(self, condition):
         rvs = random_symbols(condition)
@@ -151,6 +155,7 @@ class DiscretePSpace(PSpace):
         if (len(rvs) > 1):
             raise NotImplementedError(filldedent('''Multivariate discrete
             random variables are not yet supported.'''))
+        a = self.domain.set
         conditional_domain = reduce_rational_inequalities_wrap(condition,
             rvs[0])
         conditional_domain = conditional_domain.intersect(self.domain.set)
@@ -163,7 +168,7 @@ class DiscretePSpace(PSpace):
         _domain = self.where(condition).set
         if condition == False or _domain is S.EmptySet:
             return S.Zero
-        if condition == True or _domain == self.set:
+        if condition == True or _domain == self.domain.set:
             return S.One
         prob = self.eval_prob(_domain)
         if prob == None:
@@ -171,16 +176,17 @@ class DiscretePSpace(PSpace):
         return prob if not complement else S.One - prob
 
     def eval_prob(self, _domain):
+        sym = list(self.symbols)[0]
         if isinstance(_domain, Range):
             n = symbols('n')
             inf, sup, step = (r for r in _domain.args)
             summand = ((self.pdf).replace(
-                self.symbol, inf + n*step))
+                sym, inf + n*step))
             rv = summation(summand,
                 (n, 0, floor((sup - inf)/step - 1))).doit()
             return rv
         elif isinstance(_domain, FiniteSet):
-            pdf = Lambda(self.symbol, self.pdf)
+            pdf = Lambda(sym, self.pdf)
             rv = sum(pdf(x) for x in _domain)
             return rv
         elif isinstance(_domain, Union):
@@ -188,8 +194,9 @@ class DiscretePSpace(PSpace):
             return rv
 
     def conditional_space(self, condition):
+        density = Lambda(self.symbols, self.pdf/self.probability(condition))
+        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
         domain = ConditionalDiscreteDomain(self.domain, condition)
-        density = Lambda(self.symbols, self.density)/self.probability(condition)
         return DiscretePSpace(domain, density)
 
 class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):

@@ -792,8 +792,23 @@ def test_sympy__stats__drv__SingleDiscretePSpace():
     from sympy.stats.drv_types import PoissonDistribution
     assert _test_args(SingleDiscretePSpace(x, PoissonDistribution(1)))
 
+def test_sympy__stats__drv__DiscretePSpace():
+    from sympy.stats.drv import DiscretePSpace, SingleDiscreteDomain
+    density = Lambda(x, 2**(-x))
+    domain = SingleDiscreteDomain(x, S.Naturals)
+    assert _test_args(DiscretePSpace(domain, density))
+
+def test_sympy__stats__drv__ConditionalDiscreteDomain():
+    from sympy.stats.drv import ConditionalDiscreteDomain, SingleDiscreteDomain
+    X = SingleDiscreteDomain(x, S.Naturals0)
+    assert _test_args(ConditionalDiscreteDomain(X, x > 2))
+
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
+    pass
+
+@SKIP("abstract class")
+def test_sympy__stats__drv__DiscreteDomain():
     pass
 
 def test_sympy__stats__rv__RandomDomain():
