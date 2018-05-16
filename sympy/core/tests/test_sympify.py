@@ -631,7 +631,12 @@ def test_issue_14706():
 
     assert np.all(x + z1 == np.full((1, 1), x))
     assert np.all(x + z2 == np.full((2, 2), x))
-    assert x + z3 == x
-    assert x + np.int(0) == x
-    assert x + np.float(0) == x
-    assert x + np.complex(0) == x
+    for z in [z3,
+              np.int(0),
+              np.float(0),
+              np.complex(0)]:
+        assert x + z == x
+        assert isinstance(x + z, Symbol)
+
+    assert x + np.array(x) == 2 * x
+    assert x + np.array([x]) == np.array([2*x], dtype=object)

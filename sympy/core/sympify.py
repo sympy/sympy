@@ -326,14 +326,18 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if not isinstance(a, string_types):
         if _is_numpy_instance(a):
             import numpy as np
-            if isinstance(a, np.number):
-                return sympify(a)
-            elif isinstance(a, np.ndarray):
+            assert not isinstance(a, np.number)
+            if isinstance(a, np.ndarray):
                 # Scalar arrays (those with zero dimensions) have sympify
                 # called on the scalar element.
                 if a.ndim == 0:
                     try:
-                        return sympify(a.item())
+                        return sympify(a.item(),
+                                       locals=locals,
+                                       convert_xor=convert_xor,
+                                       strict=strict,
+                                       rational=rational,
+                                       evaluate=evaluate)
                     except SympifyError:
                         pass
         else:
