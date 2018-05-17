@@ -7,10 +7,11 @@ from __future__ import print_function, division
 
 from functools import wraps
 import inspect
+import re
 import textwrap
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, string_types, range, builtins, integer_types)
+    NotIterable, string_types, range, builtins, integer_types, PY3)
 from sympy.utilities.decorator import doctest_depends_on
 
 # These are the namespaces the lambda functions will use.
@@ -155,7 +156,7 @@ def _import(module, reload="False"):
 
 @doctest_depends_on(modules=('numpy'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=True):
+             dummify=False):
     """
     Returns an anonymous function for fast calculation of numerical values.
 
@@ -176,12 +177,12 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         Note that this function uses ``eval``, and thus shouldn't be used on
         unsanitized input.
 
-    The default behavior is to substitute all arguments in the provided
-    expression with dummy symbols. This allows for applied functions (e.g.
-    f(t)) to be supplied as arguments. Call the function with dummify=False if
-    dummy substitution is unwanted (and `args` is not a string). If you want
-    to view the lambdified function or provide "sympy" as the module, you
-    should probably set dummify=False.
+    Arguments in the provided expression that are not valid Python identifiers
+    are substitued with dummy symbols. This allows for applied functions
+    (e.g. f(t)) to be supplied as arguments. Call the function with
+    dummify=True to replace all arguments with dummy symbols (if `args` is
+    not a string) - for example, to ensure that the arguments do not
+    redefine any built-in names.
 
     For functions involving large array calculations, numexpr can provide a
     significant speedup over numpy.  Please note that the available functions
@@ -216,8 +217,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         >>> f = lambdify(x, sin(x), "math")
 
         Attention: Functions that are not in the math module will throw a name
-                   error when the lambda function is evaluated! So this would
-                   be better:
+                   error when the function definition is evaluated! So this
+                   would be better:
 
         >>> f = lambdify(x, sin(x)*gamma(x), ("math", "mpmath", "sympy"))
 
@@ -436,7 +437,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             generate_arg_wrapping = _generate_numpy_arg_wrapping
 
     funcname = '_lambdifygenerated'
-    funcstr = functiondefstr(args, expr, printer=printer, dummify=dummify,
+    funcstr = _lambdastrimpl(args, expr, printer=printer, dummify=dummify,
             name=funcname, unpack_by_index=unpack_by_index,
             generate_arg_wrapping=generate_arg_wrapping)
 
@@ -496,123 +497,51 @@ def _get_namespace(m):
         raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
 
 
-def lambdastr(args, expr, printer=None, dummify=False):
+def lambdastr(args, expr, printer=None, dummify=False,
+        name='_lambdifygenerated'):
     """
-    Returns a string that can be evaluated to a lambda function.
+    Returns a string that can be evaluated to a function.
 
     Examples
     ========
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.lambdify import lambdastr
-    >>> lambdastr(x, x**2)
-    'lambda x: (x**2)'
-    >>> lambdastr((x,y,z), [z,y,x])
-    'lambda x,y,z: ([z, y, x])'
+    >>> print(lambdastr(x, x**2, name='f'))
+    def f(x):
+        return (x**2)
+    >>> print(lambdastr((x,y,z), [z,y,x], name='g'))
+    def g(x, y, z):
+        return ([z, y, x])
 
     Although tuples may not appear as arguments to lambda in Python 3,
-    lambdastr will create a lambda function that will unpack the original
-    arguments so that nested arguments can be handled:
+    lambdastr will add code to unpack the original arguments so that
+    nested arguments can be handled:
 
-    >>> lambdastr((x, (y, z)), x + y)
-    'lambda _0,_1: (lambda x,y,z: (x + y))(_0,_1[0],_1[1])'
+    >>> print(lambdastr((x, (y, z)), x + y, name='h')) # doctest: +SKIP
+    def h(x, _Dummy_18):
+        [y, z] = _Dummy_1802
+        return (x + y)
     """
-    # Transforming everything to strings.
-    from sympy.matrices import DeferredVector
-    from sympy import Dummy, sympify, Symbol, Function, flatten
+    return _lambdastrimpl(args, expr, printer, dummify, name)
 
-    if printer is not None:
-        if inspect.isfunction(printer):
-            lambdarepr = printer
-        else:
-            if inspect.isclass(printer):
-                lambdarepr = lambda expr: printer().doprint(expr)
-            else:
-                lambdarepr = lambda expr: printer.doprint(expr)
-    else:
-        #XXX: This has to be done here because of circular imports
-        from sympy.printing.lambdarepr import lambdarepr
+if PY3:
+    def _is_safe_ident(ident):
+        from keyword import iskeyword
 
-    def sub_args(args, dummies_dict):
-        if isinstance(args, str):
-            return args
-        elif isinstance(args, DeferredVector):
-            return str(args)
-        elif iterable(args):
-            dummies = flatten([sub_args(a, dummies_dict) for a in args])
-            return ",".join(str(a) for a in dummies)
-        else:
-            #Sub in dummy variables for functions or symbols
-            if isinstance(args, (Function, Symbol)):
-                dummies = Dummy()
-                dummies_dict.update({args : dummies})
-                return str(dummies)
-            else:
-                return str(args)
+        return isinstance(ident, str) and ident.isidentifier() \
+                and not iskeyword(ident)
+else:
+    _safe_ident_re = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
 
-    def sub_expr(expr, dummies_dict):
-        try:
-            expr = sympify(expr).xreplace(dummies_dict)
-        except Exception:
-            if isinstance(expr, DeferredVector):
-                pass
-            elif isinstance(expr, dict):
-                k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
-                v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
-                expr = dict(zip(k, v))
-            elif isinstance(expr, tuple):
-                expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
-            elif isinstance(expr, list):
-                expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
-        return expr
+    def _is_safe_ident(ident):
+        from keyword import iskeyword
 
-    # Transform args
-    def isiter(l):
-        return iterable(l, exclude=(str, DeferredVector, NotIterable))
-
-    def flat_indexes(iterable):
-        n = 0
-
-        for el in iterable:
-            if isiter(el):
-                for ndeep in flat_indexes(el):
-                    yield (n,) + ndeep
-            else:
-                yield (n,)
-
-            n += 1
-
-    if isiter(args) and any(isiter(i) for i in args):
-        dum_args = [str(Dummy(str(i))) for i in range(len(args))]
-
-        indexed_args = ','.join([
-            dum_args[ind[0]] + ''.join(["[%s]" % k for k in ind[1:]])
-                    for ind in flat_indexes(args)])
-
-        lstr = lambdastr(flatten(args), expr, printer=printer, dummify=dummify)
-
-        return 'lambda %s: (%s)(%s)' % (','.join(dum_args), lstr, indexed_args)
-
-    dummies_dict = {}
-    if dummify:
-        args = sub_args(args, dummies_dict)
-    else:
-        if isinstance(args, str):
-            pass
-        elif iterable(args, exclude=DeferredVector):
-            args = ",".join(str(a) for a in args)
-
-    # Transform expr
-    if dummify:
-        if isinstance(expr, str):
-            pass
-        else:
-            expr = sub_expr(expr, dummies_dict)
-    expr = lambdarepr(expr)
-    return "lambda %s: (%s)" % (args, expr)
+        return isinstance(ident, str) and _safe_ident_re.match(ident) \
+            and not (iskeyword(ident) or ident == 'None')
 
 def _generate_unpack_iterable(lvalues, rvalue):
-    """Generate argument unpacking code for functiondefstr.
+    """Generate argument unpacking code for _lambdastrimpl.
 
     This method is used when the input value is iterable.
     """
@@ -623,7 +552,7 @@ def _generate_unpack_iterable(lvalues, rvalue):
     return ['{} = {}'.format(unpack_lhs(lvalues), rvalue)]
 
 def _generate_unpack_indexable(lvalues, rvalue):
-    """Generate argument unpacking code for functiondefstr.
+    """Generate argument unpacking code for _lambdastrimpl.
 
     This method is used when the input value is not interable,
     but can be indexed.
@@ -648,8 +577,7 @@ def _generate_unpack_indexable(lvalues, rvalue):
     return ['[{}] = [{}]'.format(', '.join(flatten(lvalues)), indexed)]
 
 def _generate_numpy_arg_wrapping(args):
-    """Generate numpy argument wrapping code for functiondefstr.
-    """
+    """Generate numpy argument wrapping code for _lambdastrimpl."""
     integer_names = ', '.join(cls.__name__ for cls in integer_types)
 
     lines = ['builtin_numerics = ({}, float, complex)'.format(integer_names)]
@@ -659,33 +587,10 @@ def _generate_numpy_arg_wrapping(args):
 
     return lines
 
-def functiondefstr(args, expr, printer=None, dummify=False,
+def _lambdastrimpl(args, expr, printer=None, dummify=False,
         name='_lambdifygenerated', unpack_by_index=False,
         generate_arg_wrapping=None):
-    """
-    Returns a function definition statement as a string.
-
-    Examples
-    ========
-
-    >>> from sympy.abc import x, y, z
-    >>> from sympy.utilities.lambdify import functiondefstr
-    >>> print(functiondefstr(x, x**2))
-    def _lambdifygenerated(x):
-        return (x**2)
-    >>> print(functiondefstr((x,y,z), [z,y,x]))
-    def _lambdifygenerated(x, y, z):
-        return ([z, y, x])
-
-    Although tuples may not appear as arguments to functions in Python 3,
-    functiondefstr will insert code to unpack the original arguments so
-    that nested arguments can be handled.
-
-    >>> print(functiondefstr((x, (y, z)), (x + y)*z))
-    def _lambdifygenerated(x, _Dummy_18):
-        [y, z] = _Dummy_18
-        return (z*(x + y))
-    """
+    """Generate function definition for lambdify()"""
     from sympy.matrices import DeferredVector
     from sympy import Dummy, sympify, Symbol, Function, flatten
     import re
@@ -703,8 +608,6 @@ def functiondefstr(args, expr, printer=None, dummify=False,
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import lambdarepr
 
-    identre = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
-
     def sub_args(args, dummies_dict):
         argstrs = []
         for arg in args:
@@ -716,7 +619,7 @@ def functiondefstr(args, expr, printer=None, dummify=False,
             elif isinstance(arg, (Function, Symbol)):
                 argrep = lambdarepr(arg)
 
-                if dummify or iskeyword(argrep) or not identre.match(argrep):
+                if dummify or not _is_safe_ident(argrep):
                     dummy = Dummy()
                     argstrs.append(lambdarepr(dummy))
                     dummies_dict[arg] = dummy
