@@ -4,8 +4,113 @@ from sympy.utilities.decorator import doctest_depends_on
 
 if matchpy:
     from matchpy import Pattern, ReplacementRule, CustomConstraint
-    from sympy.integrals.rubi.utility_function import (Int, Sum, Set, With, Module, Scan, MapAnd, FalseQ, ZeroQ, NegativeQ, NonzeroQ, FreeQ, NFreeQ, List, Log, PositiveQ, PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ, ComplexNumberQ, PureComplexNumberQ, RealNumericQ, PositiveOrZeroQ, NegativeOrZeroQ, FractionOrNegativeQ, NegQ, Equal, Unequal, IntPart, FracPart, RationalQ, ProductQ, SumQ, NonsumQ, Subst, First, Rest, SqrtNumberQ, SqrtNumberSumQ, LinearQ, Sqrt, ArcCosh, Coefficient, Denominator, Hypergeometric2F1, Not, Simplify, FractionalPart, IntegerPart, AppellF1, EllipticPi, EllipticE, EllipticF, ArcTan, ArcCot, ArcCoth, ArcTanh, ArcSin, ArcSinh, ArcCos, ArcCsc, ArcSec, ArcCsch, ArcSech, Sinh, Tanh, Cosh, Sech, Csch, Coth, LessEqual, Less, Greater, GreaterEqual, FractionQ, IntLinearcQ, Expand, IndependentQ, PowerQ, IntegerPowerQ, PositiveIntegerPowerQ, FractionalPowerQ, AtomQ, ExpQ, LogQ, Head, MemberQ, TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, Sin, Cos, Tan, Cot, Sec, Csc, HyperbolicQ, SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, InverseTrigQ, SinCosQ, SinhCoshQ, LeafCount, Numerator, NumberQ, NumericQ, Length, ListQ, Im, Re, InverseHyperbolicQ, InverseFunctionQ, TrigHyperbolicFreeQ, InverseFunctionFreeQ, RealQ, EqQ, FractionalPowerFreeQ, ComplexFreeQ, PolynomialQ, FactorSquareFree, PowerOfLinearQ, Exponent, QuadraticQ, LinearPairQ, BinomialParts, TrinomialParts, PolyQ, EvenQ, OddQ, PerfectSquareQ, NiceSqrtAuxQ, NiceSqrtQ, Together, PosAux, PosQ, CoefficientList, ReplaceAll, ExpandLinearProduct, GCD, ContentFactor, NumericFactor, NonnumericFactors, MakeAssocList, GensymSubst, KernelSubst, ExpandExpression, Apart, SmartApart, MatchQ, PolynomialQuotientRemainder, FreeFactors, NonfreeFactors, RemoveContentAux, RemoveContent, FreeTerms, NonfreeTerms, ExpandAlgebraicFunction, CollectReciprocals, ExpandCleanup, AlgebraicFunctionQ, Coeff, LeadTerm, RemainingTerms, LeadFactor, RemainingFactors, LeadBase, LeadDegree, Numer, Denom, hypergeom, Expon, MergeMonomials, PolynomialDivide, BinomialQ, TrinomialQ, GeneralizedBinomialQ, GeneralizedTrinomialQ, FactorSquareFreeList, PerfectPowerTest, SquareFreeFactorTest, RationalFunctionQ, RationalFunctionFactors, NonrationalFunctionFactors, Reverse, RationalFunctionExponents, RationalFunctionExpand, ExpandIntegrand, SimplerQ, SimplerSqrtQ, SumSimplerQ, BinomialDegree, TrinomialDegree, CancelCommonFactors, SimplerIntegrandQ, GeneralizedBinomialDegree, GeneralizedBinomialParts, GeneralizedTrinomialDegree, GeneralizedTrinomialParts, MonomialQ, MonomialSumQ, MinimumMonomialExponent, MonomialExponent, LinearMatchQ, PowerOfLinearMatchQ, QuadraticMatchQ, CubicMatchQ, BinomialMatchQ, TrinomialMatchQ, GeneralizedBinomialMatchQ, GeneralizedTrinomialMatchQ, QuotientOfLinearsMatchQ, PolynomialTermQ, PolynomialTerms, NonpolynomialTerms, PseudoBinomialParts, NormalizePseudoBinomial, PseudoBinomialPairQ, PseudoBinomialQ, PolynomialGCD, PolyGCD, AlgebraicFunctionFactors, NonalgebraicFunctionFactors, QuotientOfLinearsP, QuotientOfLinearsParts, QuotientOfLinearsQ, Flatten, Sort, AbsurdNumberQ, AbsurdNumberFactors, NonabsurdNumberFactors, SumSimplerAuxQ, Prepend, Drop, CombineExponents, FactorInteger, FactorAbsurdNumber, SubstForInverseFunction, SubstForFractionalPower, SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears, SubstForFractionalPowerQ, SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ, FractionalPowerSubexpressionQ, Apply, FactorNumericGcd, MergeableFactorQ, MergeFactor, MergeFactors, TrigSimplifyQ, TrigSimplify, TrigSimplifyRecur, Order, FactorOrder, Smallest, OrderedQ, MinimumDegree, PositiveFactors, Sign, NonpositiveFactors, PolynomialInAuxQ, PolynomialInQ, ExponentInAux, ExponentIn, PolynomialInSubstAux, PolynomialInSubst, Distrib, DistributeDegree, FunctionOfPower, DivideDegreesOfFactors, MonomialFactor, FullSimplify, FunctionOfLinearSubst, FunctionOfLinear, NormalizeIntegrand, NormalizeIntegrandAux, NormalizeIntegrandFactor, NormalizeIntegrandFactorBase, NormalizeTogether, NormalizeLeadTermSigns, AbsorbMinusSign, NormalizeSumFactors, SignOfFactor, NormalizePowerOfLinear, SimplifyIntegrand, SimplifyTerm, TogetherSimplify, SmartSimplify, SubstForExpn, ExpandToSum, UnifySum, UnifyTerms, UnifyTerm, CalculusQ, FunctionOfInverseLinear, PureFunctionOfSinhQ, PureFunctionOfTanhQ, PureFunctionOfCoshQ, IntegerQuotientQ, OddQuotientQ, EvenQuotientQ, FindTrigFactor, FunctionOfSinhQ, FunctionOfCoshQ, OddHyperbolicPowerQ, FunctionOfTanhQ, FunctionOfTanhWeight, FunctionOfHyperbolicQ, SmartNumerator, SmartDenominator, SubstForAux, ActivateTrig, ExpandTrig, TrigExpand, SubstForTrig, SubstForHyperbolic, InertTrigFreeQ, LCM, SubstForFractionalPowerOfLinear, FractionalPowerOfLinear, InverseFunctionOfLinear, InertTrigQ, InertReciprocalQ, DeactivateTrig, FixInertTrigFunction, DeactivateTrigAux, PowerOfInertTrigSumQ, PiecewiseLinearQ, KnownTrigIntegrandQ, KnownSineIntegrandQ, KnownTangentIntegrandQ, KnownCotangentIntegrandQ, KnownSecantIntegrandQ, TryPureTanSubst, TryTanhSubst, TryPureTanhSubst, AbsurdNumberGCD, AbsurdNumberGCDList, ExpandTrigExpand, ExpandTrigReduce, ExpandTrigReduceAux, NormalizeTrig, TrigToExp, ExpandTrigToExp, TrigReduce, FunctionOfTrig, AlgebraicTrigFunctionQ, FunctionOfHyperbolic, FunctionOfQ, FunctionOfExpnQ, PureFunctionOfSinQ, PureFunctionOfCosQ, PureFunctionOfTanQ, PureFunctionOfCotQ, FunctionOfCosQ, FunctionOfSinQ, OddTrigPowerQ, FunctionOfTanQ, FunctionOfTanWeight, FunctionOfTrigQ, FunctionOfDensePolynomialsQ, FunctionOfLog, PowerVariableExpn, PowerVariableDegree, PowerVariableSubst, EulerIntegrandQ, FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst, Divides, EasyDQ, ProductOfLinearPowersQ, Rt, NthRoot, AtomBaseQ, SumBaseQ, NegSumBaseQ, AllNegTermQ, SomeNegTermQ, TrigSquareQ, RtAux, TrigSquare, IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors, MostMainFactorPosition, FunctionOfExponentialQ, FunctionOfExponential, FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux, FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, rubi_test, If, IntQuadraticQ, IntBinomialQ, RectifyTangent, RectifyCotangent, Inequality, Condition, Simp, SimpHelp, SplitProduct, SplitSum, SubstFor, SubstForAux, FresnelS, FresnelC, Erfc, Erfi, Gamma, FunctionOfTrigOfLinearQ, ElementaryFunctionQ, Complex, UnsameQ, _SimpFixFactor, SimpFixFactor, _FixSimplify, FixSimplify, _SimplifyAntiderivativeSum, SimplifyAntiderivativeSum, _SimplifyAntiderivative, SimplifyAntiderivative, _TrigSimplifyAux, TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist)
-    from sympy import Integral, S, sqrt
+    from sympy.integrals.rubi.utility_function import (
+        sympy_op_factory, Int, Sum, Set, With, Module, Scan, MapAnd, FalseQ,
+        ZeroQ, NegativeQ, NonzeroQ, FreeQ, NFreeQ, List, Log, PositiveQ,
+        PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ,
+        ComplexNumberQ, PureComplexNumberQ, RealNumericQ, PositiveOrZeroQ,
+        NegativeOrZeroQ, FractionOrNegativeQ, NegQ, Equal, Unequal, IntPart,
+        FracPart, RationalQ, ProductQ, SumQ, NonsumQ, Subst, First, Rest,
+        SqrtNumberQ, SqrtNumberSumQ, LinearQ, Sqrt, ArcCosh, Coefficient,
+        Denominator, Hypergeometric2F1, Not, Simplify, FractionalPart,
+        IntegerPart, AppellF1, EllipticPi, EllipticE, EllipticF, ArcTan,
+        ArcCot, ArcCoth, ArcTanh, ArcSin, ArcSinh, ArcCos, ArcCsc, ArcSec,
+        ArcCsch, ArcSech, Sinh, Tanh, Cosh, Sech, Csch, Coth, LessEqual, Less,
+        Greater, GreaterEqual, FractionQ, IntLinearcQ, Expand, IndependentQ,
+        PowerQ, IntegerPowerQ, PositiveIntegerPowerQ, FractionalPowerQ, AtomQ,
+        ExpQ, LogQ, Head, MemberQ, TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ,
+        Sin, Cos, Tan, Cot, Sec, Csc, HyperbolicQ, SinhQ, CoshQ, TanhQ, CothQ,
+        SechQ, CschQ, InverseTrigQ, SinCosQ, SinhCoshQ, LeafCount, Numerator,
+        NumberQ, NumericQ, Length, ListQ, Im, Re, InverseHyperbolicQ,
+        InverseFunctionQ, TrigHyperbolicFreeQ, InverseFunctionFreeQ, RealQ,
+        EqQ, FractionalPowerFreeQ, ComplexFreeQ, PolynomialQ, FactorSquareFree,
+        PowerOfLinearQ, Exponent, QuadraticQ, LinearPairQ, BinomialParts,
+        TrinomialParts, PolyQ, EvenQ, OddQ, PerfectSquareQ, NiceSqrtAuxQ,
+        NiceSqrtQ, Together, PosAux, PosQ, CoefficientList, ReplaceAll,
+        ExpandLinearProduct, GCD, ContentFactor, NumericFactor,
+        NonnumericFactors, MakeAssocList, GensymSubst, KernelSubst,
+        ExpandExpression, Apart, SmartApart, MatchQ,
+        PolynomialQuotientRemainder, FreeFactors, NonfreeFactors,
+        RemoveContentAux, RemoveContent, FreeTerms, NonfreeTerms,
+        ExpandAlgebraicFunction, CollectReciprocals, ExpandCleanup,
+        AlgebraicFunctionQ, Coeff, LeadTerm, RemainingTerms, LeadFactor,
+        RemainingFactors, LeadBase, LeadDegree, Numer, Denom, hypergeom, Expon,
+        MergeMonomials, PolynomialDivide, BinomialQ, TrinomialQ,
+        GeneralizedBinomialQ, GeneralizedTrinomialQ, FactorSquareFreeList,
+        PerfectPowerTest, SquareFreeFactorTest, RationalFunctionQ,
+        RationalFunctionFactors, NonrationalFunctionFactors, Reverse,
+        RationalFunctionExponents, RationalFunctionExpand, ExpandIntegrand,
+        SimplerQ, SimplerSqrtQ, SumSimplerQ, BinomialDegree, TrinomialDegree,
+        CancelCommonFactors, SimplerIntegrandQ, GeneralizedBinomialDegree,
+        GeneralizedBinomialParts, GeneralizedTrinomialDegree,
+        GeneralizedTrinomialParts, MonomialQ, MonomialSumQ,
+        MinimumMonomialExponent, MonomialExponent, LinearMatchQ,
+        PowerOfLinearMatchQ, QuadraticMatchQ, CubicMatchQ, BinomialMatchQ,
+        TrinomialMatchQ, GeneralizedBinomialMatchQ, GeneralizedTrinomialMatchQ,
+        QuotientOfLinearsMatchQ, PolynomialTermQ, PolynomialTerms,
+        NonpolynomialTerms, PseudoBinomialParts, NormalizePseudoBinomial,
+        PseudoBinomialPairQ, PseudoBinomialQ, PolynomialGCD, PolyGCD,
+        AlgebraicFunctionFactors, NonalgebraicFunctionFactors,
+        QuotientOfLinearsP, QuotientOfLinearsParts, QuotientOfLinearsQ,
+        Flatten, Sort, AbsurdNumberQ, AbsurdNumberFactors,
+        NonabsurdNumberFactors, SumSimplerAuxQ, Prepend, Drop,
+        CombineExponents, FactorInteger, FactorAbsurdNumber,
+        SubstForInverseFunction, SubstForFractionalPower,
+        SubstForFractionalPowerOfQuotientOfLinears,
+        FractionalPowerOfQuotientOfLinears, SubstForFractionalPowerQ,
+        SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ,
+        FractionalPowerSubexpressionQ, Apply, FactorNumericGcd,
+        MergeableFactorQ, MergeFactor, MergeFactors, TrigSimplifyQ,
+        TrigSimplify, TrigSimplifyRecur, Order, FactorOrder, Smallest,
+        OrderedQ, MinimumDegree, PositiveFactors, Sign, NonpositiveFactors,
+        PolynomialInAuxQ, PolynomialInQ, ExponentInAux, ExponentIn,
+        PolynomialInSubstAux, PolynomialInSubst, Distrib, DistributeDegree,
+        FunctionOfPower, DivideDegreesOfFactors, MonomialFactor, FullSimplify,
+        FunctionOfLinearSubst, FunctionOfLinear, NormalizeIntegrand,
+        NormalizeIntegrandAux, NormalizeIntegrandFactor,
+        NormalizeIntegrandFactorBase, NormalizeTogether,
+        NormalizeLeadTermSigns, AbsorbMinusSign, NormalizeSumFactors,
+        SignOfFactor, NormalizePowerOfLinear, SimplifyIntegrand, SimplifyTerm,
+        TogetherSimplify, SmartSimplify, SubstForExpn, ExpandToSum, UnifySum,
+        UnifyTerms, UnifyTerm, CalculusQ, FunctionOfInverseLinear,
+        PureFunctionOfSinhQ, PureFunctionOfTanhQ, PureFunctionOfCoshQ,
+        IntegerQuotientQ, OddQuotientQ, EvenQuotientQ, FindTrigFactor,
+        FunctionOfSinhQ, FunctionOfCoshQ, OddHyperbolicPowerQ, FunctionOfTanhQ,
+        FunctionOfTanhWeight, FunctionOfHyperbolicQ, SmartNumerator,
+        SmartDenominator, SubstForAux, ActivateTrig, ExpandTrig, TrigExpand,
+        SubstForTrig, SubstForHyperbolic, InertTrigFreeQ, LCM,
+        SubstForFractionalPowerOfLinear, FractionalPowerOfLinear,
+        InverseFunctionOfLinear, InertTrigQ, InertReciprocalQ, DeactivateTrig,
+        FixInertTrigFunction, DeactivateTrigAux, PowerOfInertTrigSumQ,
+        PiecewiseLinearQ, KnownTrigIntegrandQ, KnownSineIntegrandQ,
+        KnownTangentIntegrandQ, KnownCotangentIntegrandQ,
+        KnownSecantIntegrandQ, TryPureTanSubst, TryTanhSubst, TryPureTanhSubst,
+        AbsurdNumberGCD, AbsurdNumberGCDList, ExpandTrigExpand,
+        ExpandTrigReduce, ExpandTrigReduceAux, NormalizeTrig, TrigToExp,
+        ExpandTrigToExp, TrigReduce, FunctionOfTrig, AlgebraicTrigFunctionQ,
+        FunctionOfHyperbolic, FunctionOfQ, FunctionOfExpnQ, PureFunctionOfSinQ,
+        PureFunctionOfCosQ, PureFunctionOfTanQ, PureFunctionOfCotQ,
+        FunctionOfCosQ, FunctionOfSinQ, OddTrigPowerQ, FunctionOfTanQ,
+        FunctionOfTanWeight, FunctionOfTrigQ, FunctionOfDensePolynomialsQ,
+        FunctionOfLog, PowerVariableExpn, PowerVariableDegree,
+        PowerVariableSubst, EulerIntegrandQ, FunctionOfSquareRootOfQuadratic,
+        SquareRootOfQuadraticSubst, Divides, EasyDQ, ProductOfLinearPowersQ,
+        Rt, NthRoot, AtomBaseQ, SumBaseQ, NegSumBaseQ, AllNegTermQ,
+        SomeNegTermQ, TrigSquareQ, RtAux, TrigSquare, IntSum, IntTerm, Map2,
+        ConstantFactor, SameQ, ReplacePart, CommonFactors,
+        MostMainFactorPosition, FunctionOfExponentialQ, FunctionOfExponential,
+        FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux,
+        FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev,
+        rubi_test, If, IntQuadraticQ, IntBinomialQ, RectifyTangent,
+        RectifyCotangent, Inequality, Condition, Simp, SimpHelp, SplitProduct,
+        SplitSum, SubstFor, SubstForAux, FresnelS, FresnelC, Erfc, Erfi, Gamma,
+        FunctionOfTrigOfLinearQ, ElementaryFunctionQ, Complex, UnsameQ,
+        _SimpFixFactor, SimpFixFactor, _FixSimplify, FixSimplify,
+        _SimplifyAntiderivativeSum, SimplifyAntiderivativeSum,
+        _SimplifyAntiderivative, SimplifyAntiderivative, _TrigSimplifyAux,
+        TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist
+    )
+    from sympy import Integral, S, sqrt, And, Or
     from sympy.integrals.rubi.symbol import WC
     from sympy.core.symbol import symbols, Symbol
     from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, exp, log)
@@ -13,1776 +118,2452 @@ if matchpy:
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec)
     from sympy import pi as Pi
 
+
     A_, B_, C_, F_, G_, H_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, y_, z_ = [WC(i) for i in 'ABCFGHabcdefghijklmnpqrtuvswxyz']
     a1_, a2_, b1_, b2_, c1_, c2_, d1_, d2_, n1_, n2_, e1_, e2_, f1_, f2_, g1_, g2_, n1_, n2_, n3_, Pq_, Pm_, Px_, Qm_, Qr_, Qx_, jn_, mn_, non2_, RFx_, RGx_ = [WC(i) for i in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'n1', 'n2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2', 'n1', 'n2', 'n3', 'Pq', 'Pm', 'Px', 'Qm', 'Qr', 'Qx', 'jn', 'mn', 'non2', 'RFx', 'RGx']]
 
     _UseGamma = False
 
 def binomial_products(rubi):
+    from sympy.integrals.rubi.constraints import cons459, cons3, cons4, cons5, cons460, cons2, cons461, cons54, cons462, cons87, cons463, cons38, cons464, cons148, cons13, cons163, cons465, cons466, cons43, cons448, cons67, cons137, cons467, cons468, cons469, cons470, cons471, cons472, cons473, cons474, cons475, cons476, cons477, cons478, cons479, cons480, cons481, cons482, cons483, cons484, cons105, cons485, cons486, cons487, cons488, cons196, cons489, cons128, cons357, cons490, cons491, cons492, cons493, cons68, cons69, cons55, cons494, cons57, cons58, cons59, cons60, cons495, cons496, cons497, cons498, cons147, cons7, cons21, cons499, cons500, cons501, cons18, cons502, cons503, cons66, cons504, cons505, cons506, cons507, cons17, cons244, cons94, cons508, cons509, cons510, cons511, cons512, cons513, cons514, cons515, cons516, cons517, cons518, cons519, cons520, cons521, cons62, cons522, cons523, cons524, cons525, cons526, cons527, cons528, cons529, cons31, cons530, cons531, cons532, cons533, cons534, cons535, cons536, cons367, cons537, cons538, cons539, cons540, cons356, cons541, cons23, cons542, cons543, cons544, cons545, cons546, cons547, cons548, cons549, cons550, cons551, cons552, cons553, cons554, cons71, cons555, cons27, cons220, cons50, cons556, cons85, cons557, cons395, cons403, cons63, cons558, cons559, cons560, cons561, cons562, cons563, cons564, cons565, cons566, cons567, cons568, cons569, cons70, cons570, cons571, cons572, cons573, cons402, cons574, cons575, cons576, cons405, cons577, cons578, cons579, cons580, cons581, cons177, cons582, cons583, cons117, cons584, cons585, cons586, cons587, cons386, cons588, cons589, cons590, cons591, cons48, cons53, cons592, cons593, cons594, cons595, cons596, cons93, cons597, cons598, cons599, cons600, cons601, cons602, cons603, cons604, cons88, cons605, cons606, cons607, cons608, cons609, cons610, cons611, cons612, cons613, cons614, cons615, cons616, cons617, cons618, cons619, cons620, cons621, cons622, cons623, cons624, cons625, cons626, cons627, cons46, cons628, cons125, cons629, cons630, cons631, cons153, cons632, cons633, cons176, cons634, cons635, cons636, cons637, cons638, cons178, cons639, cons640, cons396, cons641, cons52, cons642, cons643, cons644, cons645, cons646, cons647, cons648, cons649, cons650, cons651, cons652, cons653, cons654, cons655, cons656, cons208, cons657, cons658, cons659, cons660, cons661, cons380, cons662, cons663
 
-    pattern1 = Pattern(Integral((x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)))
-    rule1 = ReplacementRule(pattern1, lambda p, x, b, n : b**IntPart(p)*x**(-n*FracPart(p))*(b*x**n)**FracPart(p)*Int(x**(n*p), x))
-    rubi.add(rule1)
+    pattern689 = Pattern(Integral((x_**n_*WC('b', S(1)))**p_, x_), cons3, cons4, cons5, cons459)
+    def replacement689(n, x, p, b):
+        return b**IntPart(p)*x**(-n*FracPart(p))*(b*x**n)**FracPart(p)*Int(x**(n*p), x)
+    rule689 = ReplacementRule(pattern689, replacement689)
+    rubi.add(rule689.pattern, label = 689)
 
-    pattern2 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda p, n: ZeroQ(p + S(1) + 1/n)))
-    rule2 = ReplacementRule(pattern2, lambda b, n, a, p, x : x*(a + b*x**n)**(p + S(1))/a)
-    rubi.add(rule2)
+    pattern690 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons4, cons5, cons460)
+    def replacement690(n, p, x, b, a):
+        return x*(a + b*x**n)**(p + S(1))/a
+    rule690 = ReplacementRule(pattern690, replacement690)
+    rubi.add(rule690.pattern, label = 690)
 
-    pattern3 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda p, n: NegativeIntegerQ(p + S(1) + 1/n)), CustomConstraint(lambda p: NonzeroQ(p + S(1))))
-    rule3 = ReplacementRule(pattern3, lambda b, n, a, p, x : -x*(a + b*x**n)**(p + S(1))/(a*n*(p + S(1))) + (n*(p + S(1)) + S(1))*Int((a + b*x**n)**(p + S(1)), x)/(a*n*(p + S(1))))
-    rubi.add(rule3)
+    pattern691 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons4, cons5, cons461, cons54)
+    def replacement691(n, p, x, b, a):
+        return -x*(a + b*x**n)**(p + S(1))/(a*n*(p + S(1))) + (n*(p + S(1)) + S(1))*Int((a + b*x**n)**(p + S(1)), x)/(a*n*(p + S(1)))
+    rule691 = ReplacementRule(pattern691, replacement691)
+    rubi.add(rule691.pattern, label = 691)
 
-    pattern4 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**S(2), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda n: NonzeroQ(S(3)*n + S(1))))
-    rule4 = ReplacementRule(pattern4, lambda a, x, b, n : Int(a**S(2) + S(2)*a*b*x**n + b**S(2)*x**(S(2)*n), x))
-    rubi.add(rule4)
+    pattern692 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**S(2), x_), cons2, cons3, cons4, cons462)
+    def replacement692(n, x, b, a):
+        return Int(a**S(2) + S(2)*a*b*x**n + b**S(2)*x**(S(2)*n), x)
+    rule692 = ReplacementRule(pattern692, replacement692)
+    rubi.add(rule692.pattern, label = 692)
 
-    pattern5 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: RationalQ(n)), CustomConstraint(lambda n: Less(n, S(0))), CustomConstraint(lambda p: IntegerQ(p)))
-    rule5 = ReplacementRule(pattern5, lambda b, n, a, p, x : Int(x**(n*p)*(a*x**(-n) + b)**p, x))
-    rubi.add(rule5)
+    pattern693 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons87, cons463, cons38)
+    def replacement693(n, p, x, b, a):
+        return Int(x**(n*p)*(a*x**(-n) + b)**p, x)
+    rule693 = ReplacementRule(pattern693, replacement693)
+    rubi.add(rule693.pattern, label = 693)
 
-    pattern6 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda p, n: PositiveIntegerQ(n, p)))
-    rule6 = ReplacementRule(pattern6, lambda b, n, a, p, x : Int(ExpandIntegrand((a + b*x**n)**p, x), x))
-    rubi.add(rule6)
+    pattern694 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons464)
+    def replacement694(n, p, x, b, a):
+        return Int(ExpandIntegrand((a + b*x**n)**p, x), x)
+    rule694 = ReplacementRule(pattern694, replacement694)
+    rubi.add(rule694.pattern, label = 694)
 
-    pattern7 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda p, n: IntegerQ(S(2)*p) | (Equal(n, S(2)) & IntegerQ(S(3)*p)) | (Equal(n, S(2)) & IntegerQ(S(4)*p)) | Less(Denominator(p + 1/n), Denominator(p))))
-    rule7 = ReplacementRule(pattern7, lambda b, n, a, p, x : a*n*p*Int((a + b*x**n)**(p + S(-1)), x)/(n*p + S(1)) + x*(a + b*x**n)**p/(n*p + S(1)))
-    rubi.add(rule7)
+    pattern695 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons148, cons13, cons163, cons465)
+    def replacement695(n, p, x, b, a):
+        return a*n*p*Int((a + b*x**n)**(p + S(-1)), x)/(n*p + S(1)) + x*(a + b*x**n)**p/(n*p + S(1))
+    rule695 = ReplacementRule(pattern695, replacement695)
+    rubi.add(rule695.pattern, label = 695)
 
-    pattern8 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-5)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(b/a)), CustomConstraint(lambda a: PositiveQ(a)))
-    rule8 = ReplacementRule(pattern8, lambda a, x, b : S(2)*EllipticE(atan(x*Rt(b/a, S(2)))/S(2), S(2))/(a**(S(5)/4)*Rt(b/a, S(2))))
-    rubi.add(rule8)
+    pattern696 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-5)/4), x_), cons2, cons3, cons466, cons43)
+    def replacement696(x, b, a):
+        return S(2)*EllipticE(ArcTan(x*Rt(b/a, S(2)))/S(2), S(2))/(a**(S(5)/4)*Rt(b/a, S(2)))
+    rule696 = ReplacementRule(pattern696, replacement696)
+    rubi.add(rule696.pattern, label = 696)
 
-    pattern9 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-5)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(b/a)), CustomConstraint(lambda a: Not(PositiveQ(a))))
-    rule9 = ReplacementRule(pattern9, lambda a, x, b : (S(1) + b*x**S(2)/a)**(S(1)/4)*Int((S(1) + b*x**S(2)/a)**(S(-5)/4), x)/(a*(a + b*x**S(2))**(S(1)/4)))
-    rubi.add(rule9)
+    pattern697 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-5)/4), x_), cons2, cons3, cons466, cons448)
+    def replacement697(x, b, a):
+        return (S(1) + b*x**S(2)/a)**(S(1)/4)*Int((S(1) + b*x**S(2)/a)**(S(-5)/4), x)/(a*(a + b*x**S(2))**(S(1)/4))
+    rule697 = ReplacementRule(pattern697, replacement697)
+    rubi.add(rule697.pattern, label = 697)
 
-    pattern10 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-7)/6), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)))
-    rule10 = ReplacementRule(pattern10, lambda a, x, b : Subst(Int((-b*x**S(2) + S(1))**(S(-1)/3), x), x, x/sqrt(a + b*x**S(2)))/((a/(a + b*x**S(2)))**(S(2)/3)*(a + b*x**S(2))**(S(2)/3)))
-    rubi.add(rule10)
+    pattern698 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-7)/6), x_), cons2, cons3, cons67)
+    def replacement698(x, b, a):
+        return Subst(Int((-b*x**S(2) + S(1))**(S(-1)/3), x), x, x/sqrt(a + b*x**S(2)))/((a/(a + b*x**S(2)))**(S(2)/3)*(a + b*x**S(2))**(S(2)/3))
+    rule698 = ReplacementRule(pattern698, replacement698)
+    rubi.add(rule698.pattern, label = 698)
 
-    pattern11 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda p, n: IntegerQ(S(2)*p) | (Equal(n, S(2)) & IntegerQ(S(3)*p)) | (Equal(n, S(2)) & IntegerQ(S(4)*p)) | Less(Denominator(p + 1/n), Denominator(p))))
-    rule11 = ReplacementRule(pattern11, lambda b, n, a, p, x : -x*(a + b*x**n)**(p + S(1))/(a*n*(p + S(1))) + (n*(p + S(1)) + S(1))*Int((a + b*x**n)**(p + S(1)), x)/(a*n*(p + S(1))))
-    rubi.add(rule11)
+    pattern699 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons148, cons13, cons137, cons465)
+    def replacement699(n, p, x, b, a):
+        return -x*(a + b*x**n)**(p + S(1))/(a*n*(p + S(1))) + (n*(p + S(1)) + S(1))*Int((a + b*x**n)**(p + S(1)), x)/(a*n*(p + S(1)))
+    rule699 = ReplacementRule(pattern699, replacement699)
+    rubi.add(rule699.pattern, label = 699)
 
-    pattern12 = Pattern(Integral(1/(a_ + x_**S(3)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)))
-    rule12 = ReplacementRule(pattern12, lambda a, x, b : Int((-x*Rt(b, S(3)) + S(2)*Rt(a, S(3)))/(x**S(2)*Rt(b, S(3))**S(2) - x*Rt(a, S(3))*Rt(b, S(3)) + Rt(a, S(3))**S(2)), x)/(S(3)*Rt(a, S(3))**S(2)) + Int(1/(x*Rt(b, S(3)) + Rt(a, S(3))), x)/(S(3)*Rt(a, S(3))**S(2)))
-    rubi.add(rule12)
+    pattern700 = Pattern(Integral(S(1)/(a_ + x_**S(3)*WC('b', S(1))), x_), cons2, cons3, cons67)
+    def replacement700(x, b, a):
+        return Int((-x*Rt(b, S(3)) + S(2)*Rt(a, S(3)))/(x**S(2)*Rt(b, S(3))**S(2) - x*Rt(a, S(3))*Rt(b, S(3)) + Rt(a, S(3))**S(2)), x)/(S(3)*Rt(a, S(3))**S(2)) + Int(S(1)/(x*Rt(b, S(3)) + Rt(a, S(3))), x)/(S(3)*Rt(a, S(3))**S(2))
+    rule700 = ReplacementRule(pattern700, replacement700)
+    rubi.add(rule700.pattern, label = 700)
 
-    pattern13 = Pattern(Integral(1/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n/S(2) + S(-3)/2)), CustomConstraint(lambda a, b: PosQ(a/b)), )
-    def With13(a, x, b, n):
+    def With701(n, x, b, a):
         r = Numerator(Rt(a/b, n))
         s = Denominator(Rt(a/b, n))
         k = Symbol('k')
         u = Symbol('u')
         u = Int((r - s*x*cos(Pi*(2*k - 1)/n))/(r**2 - 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return Dist(S(2)*r/(a*n), Sum(u, List(k, S(1), n/S(2) + S(-1)/2)), x) + r*Int(1/(r + s*x), x)/(a*n)
-    rule13 = ReplacementRule(pattern13, lambda a, x, b, n : With13(a, x, b, n))
-    rubi.add(rule13)
+        return Dist(S(2)*r/(a*n), Sum(u, List(k, S(1), n/S(2) + S(-1)/2)), x) + r*Int(S(1)/(r + s*x), x)/(a*n)
+    pattern701 = Pattern(Integral(S(1)/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons467, cons468 )
+    rule701 = ReplacementRule(pattern701, With701)
+    rubi.add(rule701.pattern, label = 701)
 
-    pattern14 = Pattern(Integral(1/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n/S(2) + S(-3)/2)), CustomConstraint(lambda a, b: NegQ(a/b)), )
-    def With14(a, x, b, n):
+    def With702(n, x, b, a):
         r = Numerator(Rt(-a/b, n))
         s = Denominator(Rt(-a/b, n))
         k = Symbol('k')
         u = Symbol('u')
         u = Int((r + s*x*cos(Pi*(2*k - 1)/n))/(r**2 + 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return Dist(S(2)*r/(a*n), Sum(u, List(k, S(1), n/S(2) + S(-1)/2)), x) + r*Int(1/(r - s*x), x)/(a*n)
-    rule14 = ReplacementRule(pattern14, lambda a, x, b, n : With14(a, x, b, n))
-    rubi.add(rule14)
+        return Dist(S(2)*r/(a*n), Sum(u, List(k, S(1), n/S(2) + S(-1)/2)), x) + r*Int(S(1)/(r - s*x), x)/(a*n)
+    pattern702 = Pattern(Integral(S(1)/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons467, cons469 )
+    rule702 = ReplacementRule(pattern702, With702)
+    rubi.add(rule702.pattern, label = 702)
 
-    pattern15 = Pattern(Integral(1/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(a/b)), CustomConstraint(lambda a, b: PositiveQ(a) | PositiveQ(b)))
-    rule15 = ReplacementRule(pattern15, lambda a, x, b : atan(x*Rt(b, S(2))/Rt(a, S(2)))/(Rt(a, S(2))*Rt(b, S(2))))
-    rubi.add(rule15)
+    pattern703 = Pattern(Integral(S(1)/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons468, cons470)
+    def replacement703(x, b, a):
+        return ArcTan(x*Rt(b, S(2))/Rt(a, S(2)))/(Rt(a, S(2))*Rt(b, S(2)))
+    rule703 = ReplacementRule(pattern703, replacement703)
+    rubi.add(rule703.pattern, label = 703)
 
-    pattern16 = Pattern(Integral(1/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(a/b)), CustomConstraint(lambda a, b: NegativeQ(a) | NegativeQ(b)))
-    rule16 = ReplacementRule(pattern16, lambda a, x, b : -atan(x*Rt(-b, S(2))/Rt(-a, S(2)))/(Rt(-a, S(2))*Rt(-b, S(2))))
-    rubi.add(rule16)
+    pattern704 = Pattern(Integral(S(1)/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons468, cons471)
+    def replacement704(x, b, a):
+        return -ArcTan(x*Rt(-b, S(2))/Rt(-a, S(2)))/(Rt(-a, S(2))*Rt(-b, S(2)))
+    rule704 = ReplacementRule(pattern704, replacement704)
+    rubi.add(rule704.pattern, label = 704)
 
-    pattern17 = Pattern(Integral(1/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(a/b)))
-    rule17 = ReplacementRule(pattern17, lambda a, x, b : Rt(a/b, S(2))*atan(x/Rt(a/b, S(2)))/a)
-    rubi.add(rule17)
+    pattern705 = Pattern(Integral(S(1)/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons468)
+    def replacement705(x, b, a):
+        return ArcTan(x/Rt(a/b, S(2)))*Rt(a/b, S(2))/a
+    rule705 = ReplacementRule(pattern705, replacement705)
+    rubi.add(rule705.pattern, label = 705)
 
-    pattern18 = Pattern(Integral(1/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: NegQ(a/b)), CustomConstraint(lambda a, b: NegativeQ(b) | PositiveQ(a)))
-    rule18 = ReplacementRule(pattern18, lambda a, x, b : atanh(x*Rt(-b, S(2))/Rt(a, S(2)))/(Rt(a, S(2))*Rt(-b, S(2))))
-    rubi.add(rule18)
+    pattern706 = Pattern(Integral(S(1)/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons469, cons472)
+    def replacement706(x, b, a):
+        return atanh(x*Rt(-b, S(2))/Rt(a, S(2)))/(Rt(a, S(2))*Rt(-b, S(2)))
+    rule706 = ReplacementRule(pattern706, replacement706)
+    rubi.add(rule706.pattern, label = 706)
 
-    pattern19 = Pattern(Integral(1/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: NegQ(a/b)), CustomConstraint(lambda a, b: NegativeQ(a) | PositiveQ(b)))
-    rule19 = ReplacementRule(pattern19, lambda a, x, b : -atanh(x*Rt(b, S(2))/Rt(-a, S(2)))/(Rt(-a, S(2))*Rt(b, S(2))))
-    rubi.add(rule19)
+    pattern707 = Pattern(Integral(S(1)/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons469, cons473)
+    def replacement707(x, b, a):
+        return -atanh(x*Rt(b, S(2))/Rt(-a, S(2)))/(Rt(-a, S(2))*Rt(b, S(2)))
+    rule707 = ReplacementRule(pattern707, replacement707)
+    rubi.add(rule707.pattern, label = 707)
 
-    pattern20 = Pattern(Integral(1/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: NegQ(a/b)))
-    rule20 = ReplacementRule(pattern20, lambda a, x, b : Rt(-a/b, S(2))*atanh(x/Rt(-a/b, S(2)))/a)
-    rubi.add(rule20)
+    pattern708 = Pattern(Integral(S(1)/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons469)
+    def replacement708(x, b, a):
+        return Rt(-a/b, S(2))*atanh(x/Rt(-a/b, S(2)))/a
+    rule708 = ReplacementRule(pattern708, replacement708)
+    rubi.add(rule708.pattern, label = 708)
 
-    pattern21 = Pattern(Integral(1/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n/S(4) + S(-1)/2)), CustomConstraint(lambda a, b: PosQ(a/b)), )
-    def With21(a, x, b, n):
+    def With709(n, x, b, a):
         r = Numerator(Rt(a/b, n))
         s = Denominator(Rt(a/b, n))
         k = Symbol('k')
         u = Symbol('u')
         v = Symbol('v')
         u = Int((r - s*x*cos(Pi*(2*k - 1)/n))/(r**2 - 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x) + Int((r + s*x*cos(Pi*(2*k - 1)/n))/(r**2 + 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return Dist(S(2)*r/(a*n), Sum(u, List(k, S(1), n/S(4) + S(-1)/2)), x) + S(2)*r**S(2)*Int(1/(r**S(2) + s**S(2)*x**S(2)), x)/(a*n)
-    rule21 = ReplacementRule(pattern21, lambda a, x, b, n : With21(a, x, b, n))
-    rubi.add(rule21)
+        return Dist(S(2)*r/(a*n), Sum(u, List(k, S(1), n/S(4) + S(-1)/2)), x) + S(2)*r**S(2)*Int(S(1)/(r**S(2) + s**S(2)*x**S(2)), x)/(a*n)
+    pattern709 = Pattern(Integral(S(1)/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons474, cons468 )
+    rule709 = ReplacementRule(pattern709, With709)
+    rubi.add(rule709.pattern, label = 709)
 
-    pattern22 = Pattern(Integral(1/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n/S(4) + S(-1)/2)), CustomConstraint(lambda a, b: NegQ(a/b)), )
-    def With22(a, x, b, n):
+    def With710(n, x, b, a):
         r = Numerator(Rt(-a/b, n))
         s = Denominator(Rt(-a/b, n))
         k = Symbol('k')
         u = Symbol('u')
         u = Int((r - s*x*cos(2*Pi*k/n))/(r**2 - 2*r*s*x*cos(2*Pi*k/n) + s**2*x**2), x) + Int((r + s*x*cos(2*Pi*k/n))/(r**2 + 2*r*s*x*cos(2*Pi*k/n) + s**2*x**2), x)
-        return Dist(S(2)*r/(a*n), Sum(u, List(k, S(1), n/S(4) + S(-1)/2)), x) + S(2)*r**S(2)*Int(1/(r**S(2) - s**S(2)*x**S(2)), x)/(a*n)
-    rule22 = ReplacementRule(pattern22, lambda a, x, b, n : With22(a, x, b, n))
-    rubi.add(rule22)
+        return Dist(S(2)*r/(a*n), Sum(u, List(k, S(1), n/S(4) + S(-1)/2)), x) + S(2)*r**S(2)*Int(S(1)/(r**S(2) - s**S(2)*x**S(2)), x)/(a*n)
+    pattern710 = Pattern(Integral(S(1)/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons474, cons469 )
+    rule710 = ReplacementRule(pattern710, With710)
+    rubi.add(rule710.pattern, label = 710)
 
-    pattern23 = Pattern(Integral(1/(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PositiveQ(a/b) | (AtomQ(SplitProduct(SumBaseQ, a)) & AtomQ(SplitProduct(SumBaseQ, b)) & PosQ(a/b))), )
-    def With23(a, x, b):
+    def With711(x, b, a):
         r = Numerator(Rt(a/b, S(2)))
         s = Denominator(Rt(a/b, S(2)))
         return Int((r - s*x**S(2))/(a + b*x**S(4)), x)/(S(2)*r) + Int((r + s*x**S(2))/(a + b*x**S(4)), x)/(S(2)*r)
-    rule23 = ReplacementRule(pattern23, lambda a, x, b : With23(a, x, b))
-    rubi.add(rule23)
+    pattern711 = Pattern(Integral(S(1)/(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons475 )
+    rule711 = ReplacementRule(pattern711, With711)
+    rubi.add(rule711.pattern, label = 711)
 
-    pattern24 = Pattern(Integral(1/(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: Not(PositiveQ(a/b))), )
-    def With24(a, x, b):
+    def With712(x, b, a):
         r = Numerator(Rt(-a/b, S(2)))
         s = Denominator(Rt(-a/b, S(2)))
-        return r*Int(1/(r - s*x**S(2)), x)/(S(2)*a) + r*Int(1/(r + s*x**S(2)), x)/(S(2)*a)
-    rule24 = ReplacementRule(pattern24, lambda a, x, b : With24(a, x, b))
-    rubi.add(rule24)
+        return r*Int(S(1)/(r - s*x**S(2)), x)/(S(2)*a) + r*Int(S(1)/(r + s*x**S(2)), x)/(S(2)*a)
+    pattern712 = Pattern(Integral(S(1)/(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons476 )
+    rule712 = ReplacementRule(pattern712, With712)
+    rubi.add(rule712.pattern, label = 712)
 
-    pattern25 = Pattern(Integral(1/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n/S(4) + S(-1))), CustomConstraint(lambda a, b: PositiveQ(a/b)), )
-    def With25(a, x, b, n):
+    def With713(n, x, b, a):
         r = Numerator(Rt(a/b, S(4)))
         s = Denominator(Rt(a/b, S(4)))
         return sqrt(S(2))*r*Int((sqrt(S(2))*r - s*x**(n/S(4)))/(r**S(2) - sqrt(S(2))*r*s*x**(n/S(4)) + s**S(2)*x**(n/S(2))), x)/(S(4)*a) + sqrt(S(2))*r*Int((sqrt(S(2))*r + s*x**(n/S(4)))/(r**S(2) + sqrt(S(2))*r*s*x**(n/S(4)) + s**S(2)*x**(n/S(2))), x)/(S(4)*a)
-    rule25 = ReplacementRule(pattern25, lambda a, x, b, n : With25(a, x, b, n))
-    rubi.add(rule25)
+    pattern713 = Pattern(Integral(S(1)/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons477, cons478 )
+    rule713 = ReplacementRule(pattern713, With713)
+    rubi.add(rule713.pattern, label = 713)
 
-    pattern26 = Pattern(Integral(1/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n/S(4) + S(-1))), CustomConstraint(lambda a, b: Not(PositiveQ(a/b))), )
-    def With26(a, x, b, n):
+    def With714(n, x, b, a):
         r = Numerator(Rt(-a/b, S(2)))
         s = Denominator(Rt(-a/b, S(2)))
-        return r*Int(1/(r - s*x**(n/S(2))), x)/(S(2)*a) + r*Int(1/(r + s*x**(n/S(2))), x)/(S(2)*a)
-    rule26 = ReplacementRule(pattern26, lambda a, x, b, n : With26(a, x, b, n))
-    rubi.add(rule26)
+        return r*Int(S(1)/(r - s*x**(n/S(2))), x)/(S(2)*a) + r*Int(S(1)/(r + s*x**(n/S(2))), x)/(S(2)*a)
+    pattern714 = Pattern(Integral(S(1)/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons477, cons476 )
+    rule714 = ReplacementRule(pattern714, With714)
+    rubi.add(rule714.pattern, label = 714)
 
-    pattern27 = Pattern(Integral(1/sqrt(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: PositiveQ(a)), CustomConstraint(lambda b: PosQ(b)))
-    rule27 = ReplacementRule(pattern27, lambda a, x, b : asinh(x*Rt(b, S(2))/sqrt(a))/Rt(b, S(2)))
-    rubi.add(rule27)
+    pattern715 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons43, cons479)
+    def replacement715(x, b, a):
+        return asinh(x*Rt(b, S(2))/sqrt(a))/Rt(b, S(2))
+    rule715 = ReplacementRule(pattern715, replacement715)
+    rubi.add(rule715.pattern, label = 715)
 
-    pattern28 = Pattern(Integral(1/sqrt(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: PositiveQ(a)), CustomConstraint(lambda b: NegQ(b)))
-    rule28 = ReplacementRule(pattern28, lambda a, x, b : asin(x*Rt(-b, S(2))/sqrt(a))/Rt(-b, S(2)))
-    rubi.add(rule28)
+    pattern716 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons43, cons480)
+    def replacement716(x, b, a):
+        return asin(x*Rt(-b, S(2))/sqrt(a))/Rt(-b, S(2))
+    rule716 = ReplacementRule(pattern716, replacement716)
+    rubi.add(rule716.pattern, label = 716)
 
-    pattern29 = Pattern(Integral(1/sqrt(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: Not(PositiveQ(a))))
-    rule29 = ReplacementRule(pattern29, lambda a, x, b : Subst(Int(1/(-b*x**S(2) + S(1)), x), x, x/sqrt(a + b*x**S(2))))
-    rubi.add(rule29)
+    pattern717 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons448)
+    def replacement717(x, b, a):
+        return Subst(Int(S(1)/(-b*x**S(2) + S(1)), x), x, x/sqrt(a + b*x**S(2)))
+    rule717 = ReplacementRule(pattern717, replacement717)
+    rubi.add(rule717.pattern, label = 717)
 
-    pattern30 = Pattern(Integral(1/sqrt(a_ + x_**S(3)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: PosQ(a)), )
-    def With30(a, x, b):
+    def With718(x, b, a):
         r = Numer(Rt(b/a, S(3)))
         s = Denom(Rt(b/a, S(3)))
         return S(2)*S(3)**(S(3)/4)*sqrt((r**S(2)*x**S(2) - r*s*x + s**S(2))/(r*x + s*(S(1) + sqrt(S(3))))**S(2))*sqrt(sqrt(S(3)) + S(2))*(r*x + s)*EllipticF(asin((r*x + s*(-sqrt(S(3)) + S(1)))/(r*x + s*(S(1) + sqrt(S(3))))), S(-7) - S(4)*sqrt(S(3)))/(S(3)*r*sqrt(s*(r*x + s)/(r*x + s*(S(1) + sqrt(S(3))))**S(2))*sqrt(a + b*x**S(3)))
-    rule30 = ReplacementRule(pattern30, lambda a, x, b : With30(a, x, b))
-    rubi.add(rule30)
+    pattern718 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(3)*WC('b', S(1))), x_), cons2, cons3, cons481 )
+    rule718 = ReplacementRule(pattern718, With718)
+    rubi.add(rule718.pattern, label = 718)
 
-    pattern31 = Pattern(Integral(1/sqrt(a_ + x_**S(3)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: NegQ(a)), )
-    def With31(a, x, b):
+    def With719(x, b, a):
         r = Numer(Rt(b/a, S(3)))
         s = Denom(Rt(b/a, S(3)))
         return S(2)*S(3)**(S(3)/4)*sqrt((r**S(2)*x**S(2) - r*s*x + s**S(2))/(r*x + s*(-sqrt(S(3)) + S(1)))**S(2))*sqrt(-sqrt(S(3)) + S(2))*(r*x + s)*EllipticF(asin((r*x + s*(S(1) + sqrt(S(3))))/(r*x + s*(-sqrt(S(3)) + S(1)))), S(-7) + S(4)*sqrt(S(3)))/(S(3)*r*sqrt(-s*(r*x + s)/(r*x + s*(-sqrt(S(3)) + S(1)))**S(2))*sqrt(a + b*x**S(3)))
-    rule31 = ReplacementRule(pattern31, lambda a, x, b : With31(a, x, b))
-    rubi.add(rule31)
+    pattern719 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(3)*WC('b', S(1))), x_), cons2, cons3, cons482 )
+    rule719 = ReplacementRule(pattern719, With719)
+    rubi.add(rule719.pattern, label = 719)
 
-    pattern32 = Pattern(Integral(1/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(b/a)), )
-    def With32(a, x, b):
+    def With720(x, b, a):
         q = Rt(b/a, S(4))
-        return sqrt((a + b*x**S(4))/(a*(q**S(2)*x**S(2) + S(1))**S(2)))*(q**S(2)*x**S(2) + S(1))*EllipticF(S(2)*atan(q*x), S(1)/2)/(S(2)*q*sqrt(a + b*x**S(4)))
-    rule32 = ReplacementRule(pattern32, lambda a, x, b : With32(a, x, b))
-    rubi.add(rule32)
+        return sqrt((a + b*x**S(4))/(a*(q**S(2)*x**S(2) + S(1))**S(2)))*(q**S(2)*x**S(2) + S(1))*EllipticF(S(2)*ArcTan(q*x), S(1)/2)/(S(2)*q*sqrt(a + b*x**S(4)))
+    pattern720 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons466 )
+    rule720 = ReplacementRule(pattern720, With720)
+    rubi.add(rule720.pattern, label = 720)
 
-    pattern33 = Pattern(Integral(1/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: NegQ(b/a)), CustomConstraint(lambda a: PositiveQ(a)))
-    rule33 = ReplacementRule(pattern33, lambda a, x, b : EllipticF(asin(x*Rt(-b, S(4))/Rt(a, S(4))), S(-1))/(Rt(a, S(4))*Rt(-b, S(4))))
-    rubi.add(rule33)
+    pattern721 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons483, cons43)
+    def replacement721(x, b, a):
+        return EllipticF(asin(x*Rt(-b, S(4))/Rt(a, S(4))), S(-1))/(Rt(a, S(4))*Rt(-b, S(4)))
+    rule721 = ReplacementRule(pattern721, replacement721)
+    rubi.add(rule721.pattern, label = 721)
 
-    pattern34 = Pattern(Integral(1/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: NegativeQ(a)), CustomConstraint(lambda b: PositiveQ(b)), CustomConstraint(lambda q, a, b, x: IntegerQ(q)))
-    def With34(a, x, b):
+    def With722(x, b, a):
         q = Rt(-a*b, S(2))
-        return sqrt(S(2))*sqrt((a + q*x**S(2))/q)*sqrt(-a + q*x**S(2))*EllipticF(asin(sqrt(S(2))*x/sqrt((a + q*x**S(2))/q)), S(1)/2)/(S(2)*sqrt(-a)*sqrt(a + b*x**S(4)))
-    rule34 = ReplacementRule(pattern34, lambda a, x, b : With34(a, x, b))
-    rubi.add(rule34)
+        if IntegerQ(q):
+            return sqrt(S(2))*sqrt((a + q*x**S(2))/q)*sqrt(-a + q*x**S(2))*EllipticF(asin(sqrt(S(2))*x/sqrt((a + q*x**S(2))/q)), S(1)/2)/(S(2)*sqrt(-a)*sqrt(a + b*x**S(4)))
+        return False
+    pattern722 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons484, cons105, CustomConstraint(With722))
+    rule722 = ReplacementRule(pattern722, With722)
+    rubi.add(rule722.pattern, label = 722)
 
-    pattern35 = Pattern(Integral(1/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: NegativeQ(a)), CustomConstraint(lambda b: PositiveQ(b)), )
-    def With35(a, x, b):
+    def With723(x, b, a):
         q = Rt(-a*b, S(2))
         return sqrt(S(2))*sqrt((a + q*x**S(2))/q)*sqrt((a - q*x**S(2))/(a + q*x**S(2)))*EllipticF(asin(sqrt(S(2))*x/sqrt((a + q*x**S(2))/q)), S(1)/2)/(S(2)*sqrt(a/(a + q*x**S(2)))*sqrt(a + b*x**S(4)))
-    rule35 = ReplacementRule(pattern35, lambda a, x, b : With35(a, x, b))
-    rubi.add(rule35)
+    pattern723 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons484, cons105 )
+    rule723 = ReplacementRule(pattern723, With723)
+    rubi.add(rule723.pattern, label = 723)
 
-    pattern36 = Pattern(Integral(1/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: NegQ(b/a)), CustomConstraint(lambda a: Not(PositiveQ(a))))
-    rule36 = ReplacementRule(pattern36, lambda a, x, b : sqrt(S(1) + b*x**S(4)/a)*Int(1/sqrt(S(1) + b*x**S(4)/a), x)/sqrt(a + b*x**S(4)))
-    rubi.add(rule36)
+    pattern724 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons483, cons448)
+    def replacement724(x, b, a):
+        return sqrt(S(1) + b*x**S(4)/a)*Int(S(1)/sqrt(S(1) + b*x**S(4)/a), x)/sqrt(a + b*x**S(4))
+    rule724 = ReplacementRule(pattern724, replacement724)
+    rubi.add(rule724.pattern, label = 724)
 
-    pattern37 = Pattern(Integral(1/sqrt(a_ + x_**S(6)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), )
-    def With37(a, x, b):
+    def With725(x, b, a):
         r = Numer(Rt(b/a, S(3)))
         s = Denom(Rt(b/a, S(3)))
         return S(3)**(S(3)/4)*x*sqrt((r**S(2)*x**S(4) - r*s*x**S(2) + s**S(2))/(r*x**S(2)*(S(1) + sqrt(S(3))) + s)**S(2))*(r*x**S(2) + s)*EllipticF(acos((r*x**S(2)*(-sqrt(S(3)) + S(1)) + s)/(r*x**S(2)*(S(1) + sqrt(S(3))) + s)), sqrt(S(3))/S(4) + S(1)/2)/(S(6)*s*sqrt(r*x**S(2)*(r*x**S(2) + s)/(r*x**S(2)*(S(1) + sqrt(S(3))) + s)**S(2))*sqrt(a + b*x**S(6)))
-    rule37 = ReplacementRule(pattern37, lambda a, x, b : With37(a, x, b))
-    rubi.add(rule37)
+    pattern725 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(6)*WC('b', S(1))), x_), cons2, cons3, cons67 )
+    rule725 = ReplacementRule(pattern725, With725)
+    rubi.add(rule725.pattern, label = 725)
 
-    pattern38 = Pattern(Integral(1/sqrt(a_ + x_**S(8)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)))
-    rule38 = ReplacementRule(pattern38, lambda a, x, b : Int((-x**S(2)*Rt(b/a, S(4)) + S(1))/sqrt(a + b*x**S(8)), x)/S(2) + Int((x**S(2)*Rt(b/a, S(4)) + S(1))/sqrt(a + b*x**S(8)), x)/S(2))
-    rubi.add(rule38)
+    pattern726 = Pattern(Integral(S(1)/sqrt(a_ + x_**S(8)*WC('b', S(1))), x_), cons2, cons3, cons67)
+    def replacement726(x, b, a):
+        return Int((-x**S(2)*Rt(b/a, S(4)) + S(1))/sqrt(a + b*x**S(8)), x)/S(2) + Int((x**S(2)*Rt(b/a, S(4)) + S(1))/sqrt(a + b*x**S(8)), x)/S(2)
+    rule726 = ReplacementRule(pattern726, replacement726)
+    rubi.add(rule726.pattern, label = 726)
 
-    pattern39 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-1)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(b/a)))
-    rule39 = ReplacementRule(pattern39, lambda a, x, b : -a*Int((a + b*x**S(2))**(S(-5)/4), x) + S(2)*x/(a + b*x**S(2))**(S(1)/4))
-    rubi.add(rule39)
+    pattern727 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-1)/4), x_), cons2, cons3, cons466)
+    def replacement727(x, b, a):
+        return -a*Int((a + b*x**S(2))**(S(-5)/4), x) + S(2)*x/(a + b*x**S(2))**(S(1)/4)
+    rule727 = ReplacementRule(pattern727, replacement727)
+    rubi.add(rule727.pattern, label = 727)
 
-    pattern40 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-1)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: NegQ(b/a)), CustomConstraint(lambda a: PositiveQ(a)))
-    rule40 = ReplacementRule(pattern40, lambda a, x, b : S(2)*EllipticE(asin(x*Rt(-b/a, S(2)))/S(2), S(2))/(a**(S(1)/4)*Rt(-b/a, S(2))))
-    rubi.add(rule40)
+    pattern728 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-1)/4), x_), cons2, cons3, cons483, cons43)
+    def replacement728(x, b, a):
+        return S(2)*EllipticE(asin(x*Rt(-b/a, S(2)))/S(2), S(2))/(a**(S(1)/4)*Rt(-b/a, S(2)))
+    rule728 = ReplacementRule(pattern728, replacement728)
+    rubi.add(rule728.pattern, label = 728)
 
-    pattern41 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-1)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: NegQ(b/a)), CustomConstraint(lambda a: Not(PositiveQ(a))))
-    rule41 = ReplacementRule(pattern41, lambda a, x, b : (S(1) + b*x**S(2)/a)**(S(1)/4)*Int((S(1) + b*x**S(2)/a)**(S(-1)/4), x)/(a + b*x**S(2))**(S(1)/4))
-    rubi.add(rule41)
+    pattern729 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-1)/4), x_), cons2, cons3, cons483, cons448)
+    def replacement729(x, b, a):
+        return (S(1) + b*x**S(2)/a)**(S(1)/4)*Int((S(1) + b*x**S(2)/a)**(S(-1)/4), x)/(a + b*x**S(2))**(S(1)/4)
+    rule729 = ReplacementRule(pattern729, replacement729)
+    rubi.add(rule729.pattern, label = 729)
 
-    pattern42 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-3)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: PositiveQ(a)), CustomConstraint(lambda a, b: PosQ(b/a)))
-    rule42 = ReplacementRule(pattern42, lambda a, x, b : S(2)*EllipticF(atan(x*Rt(b/a, S(2)))/S(2), S(2))/(a**(S(3)/4)*Rt(b/a, S(2))))
-    rubi.add(rule42)
+    pattern730 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-3)/4), x_), cons2, cons3, cons43, cons466)
+    def replacement730(x, b, a):
+        return S(2)*EllipticF(ArcTan(x*Rt(b/a, S(2)))/S(2), S(2))/(a**(S(3)/4)*Rt(b/a, S(2)))
+    rule730 = ReplacementRule(pattern730, replacement730)
+    rubi.add(rule730.pattern, label = 730)
 
-    pattern43 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-3)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: PositiveQ(a)), CustomConstraint(lambda a, b: NegQ(b/a)))
-    rule43 = ReplacementRule(pattern43, lambda a, x, b : S(2)*EllipticF(asin(x*Rt(-b/a, S(2)))/S(2), S(2))/(a**(S(3)/4)*Rt(-b/a, S(2))))
-    rubi.add(rule43)
+    pattern731 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-3)/4), x_), cons2, cons3, cons43, cons483)
+    def replacement731(x, b, a):
+        return S(2)*EllipticF(asin(x*Rt(-b/a, S(2)))/S(2), S(2))/(a**(S(3)/4)*Rt(-b/a, S(2)))
+    rule731 = ReplacementRule(pattern731, replacement731)
+    rubi.add(rule731.pattern, label = 731)
 
-    pattern44 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-3)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: Not(PositiveQ(a))))
-    rule44 = ReplacementRule(pattern44, lambda a, x, b : (S(1) + b*x**S(2)/a)**(S(3)/4)*Int((S(1) + b*x**S(2)/a)**(S(-3)/4), x)/(a + b*x**S(2))**(S(3)/4))
-    rubi.add(rule44)
+    pattern732 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-3)/4), x_), cons2, cons3, cons448)
+    def replacement732(x, b, a):
+        return (S(1) + b*x**S(2)/a)**(S(3)/4)*Int((S(1) + b*x**S(2)/a)**(S(-3)/4), x)/(a + b*x**S(2))**(S(3)/4)
+    rule732 = ReplacementRule(pattern732, replacement732)
+    rubi.add(rule732.pattern, label = 732)
 
-    pattern45 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-1)/3), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)))
-    rule45 = ReplacementRule(pattern45, lambda a, x, b : S(3)*sqrt(b*x**S(2))*Subst(Int(x/sqrt(-a + x**S(3)), x), x, (a + b*x**S(2))**(S(1)/3))/(S(2)*b*x))
-    rubi.add(rule45)
+    pattern733 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-1)/3), x_), cons2, cons3, cons67)
+    def replacement733(x, b, a):
+        return S(3)*sqrt(b*x**S(2))*Subst(Int(x/sqrt(-a + x**S(3)), x), x, (a + b*x**S(2))**(S(1)/3))/(S(2)*b*x)
+    rule733 = ReplacementRule(pattern733, replacement733)
+    rubi.add(rule733.pattern, label = 733)
 
-    pattern46 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-2)/3), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)))
-    rule46 = ReplacementRule(pattern46, lambda a, x, b : S(3)*sqrt(b*x**S(2))*Subst(Int(1/sqrt(-a + x**S(3)), x), x, (a + b*x**S(2))**(S(1)/3))/(S(2)*b*x))
-    rubi.add(rule46)
+    pattern734 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-2)/3), x_), cons2, cons3, cons67)
+    def replacement734(x, b, a):
+        return S(3)*sqrt(b*x**S(2))*Subst(Int(S(1)/sqrt(-a + x**S(3)), x), x, (a + b*x**S(2))**(S(1)/3))/(S(2)*b*x)
+    rule734 = ReplacementRule(pattern734, replacement734)
+    rubi.add(rule734.pattern, label = 734)
 
-    pattern47 = Pattern(Integral((a_ + x_**S(4)*WC('b', S(1)))**(S(-3)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)))
-    rule47 = ReplacementRule(pattern47, lambda a, x, b : x**S(3)*(a/(b*x**S(4)) + S(1))**(S(3)/4)*Int(S(1)/(x**S(3)*(a/(b*x**S(4)) + S(1))**(S(3)/4)), x)/(a + b*x**S(4))**(S(3)/4))
-    rubi.add(rule47)
+    pattern735 = Pattern(Integral((a_ + x_**S(4)*WC('b', S(1)))**(S(-3)/4), x_), cons2, cons3, cons67)
+    def replacement735(x, b, a):
+        return x**S(3)*(a/(b*x**S(4)) + S(1))**(S(3)/4)*Int(S(1)/(x**S(3)*(a/(b*x**S(4)) + S(1))**(S(3)/4)), x)/(a + b*x**S(4))**(S(3)/4)
+    rule735 = ReplacementRule(pattern735, replacement735)
+    rubi.add(rule735.pattern, label = 735)
 
-    pattern48 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-1)/6), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)))
-    rule48 = ReplacementRule(pattern48, lambda a, x, b : -a*Int((a + b*x**S(2))**(S(-7)/6), x)/S(2) + S(3)*x/(S(2)*(a + b*x**S(2))**(S(1)/6)))
-    rubi.add(rule48)
+    pattern736 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(-1)/6), x_), cons2, cons3, cons67)
+    def replacement736(x, b, a):
+        return -a*Int((a + b*x**S(2))**(S(-7)/6), x)/S(2) + S(3)*x/(S(2)*(a + b*x**S(2))**(S(1)/6))
+    rule736 = ReplacementRule(pattern736, replacement736)
+    rubi.add(rule736.pattern, label = 736)
 
-    pattern49 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(S(-1), p, S(0))), CustomConstraint(lambda p: Unequal(p, S(-1)/2)), CustomConstraint(lambda p, n: IntegerQ(p + 1/n)))
-    rule49 = ReplacementRule(pattern49, lambda b, n, a, p, x : a**(p + 1/n)*Subst(Int((-b*x**n + S(1))**(-p + S(-1) - S(1)/n), x), x, x*(a + b*x**n)**(-S(1)/n)))
-    rubi.add(rule49)
+    pattern737 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons148, cons13, cons485, cons486, cons487)
+    def replacement737(n, p, x, b, a):
+        return a**(p + S(1)/n)*Subst(Int((-b*x**n + S(1))**(-p + S(-1) - S(1)/n), x), x, x*(a + b*x**n)**(-S(1)/n))
+    rule737 = ReplacementRule(pattern737, replacement737)
+    rubi.add(rule737.pattern, label = 737)
 
-    pattern50 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(S(-1), p, S(0))), CustomConstraint(lambda p: Unequal(p, S(-1)/2)), CustomConstraint(lambda p, n: Less(Denominator(p + 1/n), Denominator(p))))
-    rule50 = ReplacementRule(pattern50, lambda b, n, a, p, x : (a/(a + b*x**n))**(p + 1/n)*(a + b*x**n)**(p + 1/n)*Subst(Int((-b*x**n + S(1))**(-p + S(-1) - S(1)/n), x), x, x*(a + b*x**n)**(-S(1)/n)))
-    rubi.add(rule50)
+    pattern738 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons148, cons13, cons485, cons486, cons488)
+    def replacement738(n, p, x, b, a):
+        return (a/(a + b*x**n))**(p + S(1)/n)*(a + b*x**n)**(p + S(1)/n)*Subst(Int((-b*x**n + S(1))**(-p + S(-1) - S(1)/n), x), x, x*(a + b*x**n)**(-S(1)/n))
+    rule738 = ReplacementRule(pattern738, replacement738)
+    rubi.add(rule738.pattern, label = 738)
 
-    pattern51 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: NegativeIntegerQ(n)))
-    rule51 = ReplacementRule(pattern51, lambda b, n, a, p, x : -Subst(Int((a + b*x**(-n))**p/x**S(2), x), x, 1/x))
-    rubi.add(rule51)
+    pattern739 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons5, cons196)
+    def replacement739(n, p, x, b, a):
+        return -Subst(Int((a + b*x**(-n))**p/x**S(2), x), x, S(1)/x)
+    rule739 = ReplacementRule(pattern739, replacement739)
+    rubi.add(rule739.pattern, label = 739)
 
-    pattern52 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: FractionQ(n)), )
-    def With52(b, n, a, p, x):
+    def With740(n, p, x, b, a):
         k = Denominator(n)
-        return k*Subst(Int(x**(k + S(-1))*(a + b*x**(k*n))**p, x), x, x**(1/k))
-    rule52 = ReplacementRule(pattern52, lambda b, n, a, p, x : With52(b, n, a, p, x))
-    rubi.add(rule52)
+        return k*Subst(Int(x**(k + S(-1))*(a + b*x**(k*n))**p, x), x, x**(S(1)/k))
+    pattern740 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons5, cons489 )
+    rule740 = ReplacementRule(pattern740, With740)
+    rubi.add(rule740.pattern, label = 740)
 
-    pattern53 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p: PositiveIntegerQ(p)))
-    rule53 = ReplacementRule(pattern53, lambda b, n, a, p, x : Int(ExpandIntegrand((a + b*x**n)**p, x), x))
-    rubi.add(rule53)
+    pattern741 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons4, cons128)
+    def replacement741(n, p, x, b, a):
+        return Int(ExpandIntegrand((a + b*x**n)**p, x), x)
+    rule741 = ReplacementRule(pattern741, replacement741)
+    rubi.add(rule741.pattern, label = 741)
 
-    pattern54 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda p: Not(PositiveIntegerQ(p))), CustomConstraint(lambda n: Not(IntegerQ(1/n))), CustomConstraint(lambda p, n: Not(NegativeIntegerQ(p + 1/n))), CustomConstraint(lambda p, a: IntegerQ(p) | PositiveQ(a)))
-    rule54 = ReplacementRule(pattern54, lambda b, n, a, p, x : a**p*x*Hypergeometric2F1(-p, 1/n, S(1) + 1/n, -b*x**n/a))
-    rubi.add(rule54)
+    pattern742 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons4, cons5, cons357, cons490, cons491, cons492)
+    def replacement742(n, p, x, b, a):
+        return a**p*x*Hypergeometric2F1(-p, S(1)/n, S(1) + S(1)/n, -b*x**n/a)
+    rule742 = ReplacementRule(pattern742, replacement742)
+    rubi.add(rule742.pattern, label = 742)
 
-    pattern55 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda p: Not(PositiveIntegerQ(p))), CustomConstraint(lambda n: Not(IntegerQ(1/n))), CustomConstraint(lambda p, n: Not(NegativeIntegerQ(p + 1/n))), CustomConstraint(lambda p, a: Not(IntegerQ(p) | PositiveQ(a))))
-    rule55 = ReplacementRule(pattern55, lambda b, n, a, p, x : a**IntPart(p)*(S(1) + b*x**n/a)**(-FracPart(p))*(a + b*x**n)**FracPart(p)*Int((S(1) + b*x**n/a)**p, x))
-    rubi.add(rule55)
+    pattern743 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons4, cons5, cons357, cons490, cons491, cons493)
+    def replacement743(n, p, x, b, a):
+        return a**IntPart(p)*(S(1) + b*x**n/a)**(-FracPart(p))*(a + b*x**n)**FracPart(p)*Int((S(1) + b*x**n/a)**p, x)
+    rule743 = ReplacementRule(pattern743, replacement743)
+    rubi.add(rule743.pattern, label = 743)
 
-    pattern56 = Pattern(Integral((u_**n_*WC('b', S(1)) + WC('a', S(0)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda u, x: LinearQ(u, x)), CustomConstraint(lambda u, x: NonzeroQ(u - x)))
-    rule56 = ReplacementRule(pattern56, lambda b, n, a, u, p, x : Subst(Int((a + b*x**n)**p, x), x, u)/Coefficient(u, x, S(1)))
-    rubi.add(rule56)
+    pattern744 = Pattern(Integral((u_**n_*WC('b', S(1)) + WC('a', S(0)))**p_, x_), cons2, cons3, cons4, cons5, cons68, cons69)
+    def replacement744(n, p, x, b, u, a):
+        return Subst(Int((a + b*x**n)**p, x), x, u)/Coefficient(u, x, S(1))
+    rule744 = ReplacementRule(pattern744, replacement744)
+    rubi.add(rule744.pattern, label = 744)
 
-    pattern57 = Pattern(Integral((x_**n_*WC('b1', S(1)) + WC('a1', S(0)))**WC('p', S(1))*(x_**n_*WC('b2', S(1)) + WC('a2', S(0)))**WC('p', S(1)), x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, a2, a1: IntegerQ(p) | (PositiveQ(a1) & PositiveQ(a2))))
-    rule57 = ReplacementRule(pattern57, lambda n, p, a1, a2, b2, x, b1 : Int((a1*a2 + b1*b2*x**(S(2)*n))**p, x))
-    rubi.add(rule57)
+    pattern745 = Pattern(Integral((x_**n_*WC('b1', S(1)) + WC('a1', S(0)))**WC('p', S(1))*(x_**n_*WC('b2', S(1)) + WC('a2', S(0)))**WC('p', S(1)), x_), cons57, cons58, cons59, cons60, cons4, cons5, cons55, cons494)
+    def replacement745(n, a1, p, b2, a2, b1, x):
+        return Int((a1*a2 + b1*b2*x**(S(2)*n))**p, x)
+    rule745 = ReplacementRule(pattern745, replacement745)
+    rubi.add(rule745.pattern, label = 745)
 
-    pattern58 = Pattern(Integral((a1_ + x_**WC('n', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('n', S(1))*WC('b2', S(1)))**WC('p', S(1)), x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda p, n: IntegerQ(S(2)*p) | Less(Denominator(p + 1/n), Denominator(p))))
-    rule58 = ReplacementRule(pattern58, lambda n, p, a1, a2, b2, x, b1 : S(2)*a1*a2*n*p*Int((a1 + b1*x**n)**(p + S(-1))*(a2 + b2*x**n)**(p + S(-1)), x)/(S(2)*n*p + S(1)) + x*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p/(S(2)*n*p + S(1)))
-    rubi.add(rule58)
+    pattern746 = Pattern(Integral((a1_ + x_**WC('n', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('n', S(1))*WC('b2', S(1)))**WC('p', S(1)), x_), cons57, cons58, cons59, cons60, cons55, cons495, cons13, cons163, cons496)
+    def replacement746(n, a1, p, b2, a2, b1, x):
+        return S(2)*a1*a2*n*p*Int((a1 + b1*x**n)**(p + S(-1))*(a2 + b2*x**n)**(p + S(-1)), x)/(S(2)*n*p + S(1)) + x*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p/(S(2)*n*p + S(1))
+    rule746 = ReplacementRule(pattern746, replacement746)
+    rubi.add(rule746.pattern, label = 746)
 
-    pattern59 = Pattern(Integral((a1_ + x_**WC('n', S(1))*WC('b1', S(1)))**p_*(a2_ + x_**WC('n', S(1))*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda p, n: IntegerQ(S(2)*p) | Less(Denominator(p + 1/n), Denominator(p))))
-    rule59 = ReplacementRule(pattern59, lambda n, p, a1, a2, b2, x, b1 : -x*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*a1*a2*n*(p + S(1))) + (S(2)*n*(p + S(1)) + S(1))*Int((a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1)), x)/(S(2)*a1*a2*n*(p + S(1))))
-    rubi.add(rule59)
+    pattern747 = Pattern(Integral((a1_ + x_**WC('n', S(1))*WC('b1', S(1)))**p_*(a2_ + x_**WC('n', S(1))*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons55, cons495, cons13, cons137, cons496)
+    def replacement747(n, a1, p, b2, a2, b1, x):
+        return -x*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*a1*a2*n*(p + S(1))) + (S(2)*n*(p + S(1)) + S(1))*Int((a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1)), x)/(S(2)*a1*a2*n*(p + S(1)))
+    rule747 = ReplacementRule(pattern747, replacement747)
+    rubi.add(rule747.pattern, label = 747)
 
-    pattern60 = Pattern(Integral((a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: NegativeIntegerQ(S(2)*n)))
-    rule60 = ReplacementRule(pattern60, lambda n, p, a1, a2, b2, x, b1 : -Subst(Int((a1 + b1*x**(-n))**p*(a2 + b2*x**(-n))**p/x**S(2), x), x, 1/x))
-    rubi.add(rule60)
+    pattern748 = Pattern(Integral((a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons5, cons55, cons497)
+    def replacement748(n, a1, p, b2, a2, x, b1):
+        return -Subst(Int((a1 + b1*x**(-n))**p*(a2 + b2*x**(-n))**p/x**S(2), x), x, S(1)/x)
+    rule748 = ReplacementRule(pattern748, replacement748)
+    rubi.add(rule748.pattern, label = 748)
 
-    pattern61 = Pattern(Integral((a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: FractionQ(S(2)*n)), )
-    def With61(n, p, a1, a2, b2, x, b1):
+    def With749(n, a1, p, b2, a2, x, b1):
         k = Denominator(S(2)*n)
-        return k*Subst(Int(x**(k + S(-1))*(a1 + b1*x**(k*n))**p*(a2 + b2*x**(k*n))**p, x), x, x**(1/k))
-    rule61 = ReplacementRule(pattern61, lambda n, p, a1, a2, b2, x, b1 : With61(n, p, a1, a2, b2, x, b1))
-    rubi.add(rule61)
+        return k*Subst(Int(x**(k + S(-1))*(a1 + b1*x**(k*n))**p*(a2 + b2*x**(k*n))**p, x), x, x**(S(1)/k))
+    pattern749 = Pattern(Integral((a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons5, cons55, cons498 )
+    rule749 = ReplacementRule(pattern749, With749)
+    rubi.add(rule749.pattern, label = 749)
 
-    pattern62 = Pattern(Integral((x_**n_*WC('b1', S(1)) + WC('a1', S(0)))**p_*(x_**n_*WC('b2', S(1)) + WC('a2', S(0)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p: Not(IntegerQ(p))))
-    rule62 = ReplacementRule(pattern62, lambda n, p, a1, a2, b2, x, b1 : (a1 + b1*x**n)**FracPart(p)*(a2 + b2*x**n)**FracPart(p)*(a1*a2 + b1*b2*x**(S(2)*n))**(-FracPart(p))*Int((a1*a2 + b1*b2*x**(S(2)*n))**p, x))
-    rubi.add(rule62)
+    pattern750 = Pattern(Integral((x_**n_*WC('b1', S(1)) + WC('a1', S(0)))**p_*(x_**n_*WC('b2', S(1)) + WC('a2', S(0)))**p_, x_), cons57, cons58, cons59, cons60, cons4, cons5, cons55, cons147)
+    def replacement750(n, a1, p, b2, a2, b1, x):
+        return (a1 + b1*x**n)**FracPart(p)*(a2 + b2*x**n)**FracPart(p)*(a1*a2 + b1*b2*x**(S(2)*n))**(-FracPart(p))*Int((a1*a2 + b1*b2*x**(S(2)*n))**p, x)
+    rule750 = ReplacementRule(pattern750, replacement750)
+    rubi.add(rule750.pattern, label = 750)
 
-    pattern63 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, a2, a1: IntegerQ(p) | (PositiveQ(a1) & PositiveQ(a2))))
-    rule63 = ReplacementRule(pattern63, lambda n, p, a1, a2, c, b2, m, x, b1 : Int((c*x)**m*(a1*a2 + b1*b2*x**(S(2)*n))**p, x))
-    rubi.add(rule63)
+    pattern751 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons4, cons5, cons55, cons494)
+    def replacement751(m, n, a1, p, b2, a2, x, b1, c):
+        return Int((c*x)**m*(a1*a2 + b1*b2*x**(S(2)*n))**p, x)
+    rule751 = ReplacementRule(pattern751, replacement751)
+    rubi.add(rule751.pattern, label = 751)
 
-    pattern64 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda m, c: IntegerQ(m) | PositiveQ(c)), CustomConstraint(lambda m, n: IntegerQ((m + S(1))/n)))
-    rule64 = ReplacementRule(pattern64, lambda b, n, p, c, m, x : b**(S(1) - (m + S(1))/n)*c**m*Subst(Int((b*x)**(p + S(-1) + (m + S(1))/n), x), x, x**n)/n)
-    rubi.add(rule64)
+    pattern752 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(x_**n_*WC('b', S(1)))**p_, x_), cons3, cons7, cons21, cons4, cons5, cons499, cons500)
+    def replacement752(m, n, p, x, b, c):
+        return b**(S(1) - (m + S(1))/n)*c**m*Subst(Int((b*x)**(p + S(-1) + (m + S(1))/n), x), x, x**n)/n
+    rule752 = ReplacementRule(pattern752, replacement752)
+    rubi.add(rule752.pattern, label = 752)
 
-    pattern65 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(x_**WC('n', S(1))*WC('b', S(1)))**p_, x_), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda m, c: IntegerQ(m) | PositiveQ(c)), CustomConstraint(lambda m, n: Not(IntegerQ((m + S(1))/n))))
-    rule65 = ReplacementRule(pattern65, lambda b, n, p, c, m, x : b**IntPart(p)*c**m*x**(-n*FracPart(p))*(b*x**n)**FracPart(p)*Int(x**(m + n*p), x))
-    rubi.add(rule65)
+    pattern753 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(x_**WC('n', S(1))*WC('b', S(1)))**p_, x_), cons3, cons7, cons21, cons4, cons5, cons499, cons501)
+    def replacement753(m, n, p, x, b, c):
+        return b**IntPart(p)*c**m*x**(-n*FracPart(p))*(b*x**n)**FracPart(p)*Int(x**(m + n*p), x)
+    rule753 = ReplacementRule(pattern753, replacement753)
+    rubi.add(rule753.pattern, label = 753)
 
-    pattern66 = Pattern(Integral((c_*x_)**m_*(x_**WC('n', S(1))*WC('b', S(1)))**p_, x_), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda m: Not(IntegerQ(m))))
-    rule66 = ReplacementRule(pattern66, lambda b, n, p, c, m, x : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(b*x**n)**p, x))
-    rubi.add(rule66)
+    pattern754 = Pattern(Integral((c_*x_)**m_*(x_**WC('n', S(1))*WC('b', S(1)))**p_, x_), cons3, cons7, cons21, cons4, cons5, cons18)
+    def replacement754(m, n, p, x, b, c):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(b*x**n)**p, x)
+    rule754 = ReplacementRule(pattern754, replacement754)
+    rubi.add(rule754.pattern, label = 754)
 
-    pattern67 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p: IntegerQ(p)), CustomConstraint(lambda n: NegQ(n)))
-    rule67 = ReplacementRule(pattern67, lambda b, n, a, p, m, x : Int(x**(m + n*p)*(a*x**(-n) + b)**p, x))
-    rubi.add(rule67)
+    pattern755 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons21, cons4, cons38, cons502)
+    def replacement755(m, n, p, x, b, a):
+        return Int(x**(m + n*p)*(a*x**(-n) + b)**p, x)
+    rule755 = ReplacementRule(pattern755, replacement755)
+    rubi.add(rule755.pattern, label = 755)
 
-    pattern68 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda p, m, n: ZeroQ(p + S(1) + (m + S(1))/n)), CustomConstraint(lambda m: NonzeroQ(m + S(1))))
-    rule68 = ReplacementRule(pattern68, lambda b, n, a, p, c, m, x : (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*(m + S(1))))
-    rubi.add(rule68)
+    pattern756 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons4, cons5, cons503, cons66)
+    def replacement756(m, n, p, x, b, c, a):
+        return (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*(m + S(1)))
+    rule756 = ReplacementRule(pattern756, replacement756)
+    rubi.add(rule756.pattern, label = 756)
 
-    pattern69 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, m, n: ZeroQ(p + S(1) + (m + S(1))/(S(2)*n))), CustomConstraint(lambda m: NonzeroQ(m + S(1))))
-    rule69 = ReplacementRule(pattern69, lambda n, p, a1, a2, c, b2, m, x, b1 : (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(a1*a2*c*(m + S(1))))
-    rubi.add(rule69)
+    pattern757 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons4, cons5, cons55, cons504, cons66)
+    def replacement757(m, n, a1, p, b2, a2, x, b1, c):
+        return (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(a1*a2*c*(m + S(1)))
+    rule757 = ReplacementRule(pattern757, replacement757)
+    rubi.add(rule757.pattern, label = 757)
 
-    pattern70 = Pattern(Integral(x_**WC('m', S(1))*(x_**n_*WC('b', S(1)) + WC('a', S(0)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda m, n: IntegerQ((m + S(1))/n)))
-    rule70 = ReplacementRule(pattern70, lambda b, n, a, p, m, x : Subst(Int(x**(S(-1) + (m + S(1))/n)*(a + b*x)**p, x), x, x**n)/n)
-    rubi.add(rule70)
+    pattern758 = Pattern(Integral(x_**WC('m', S(1))*(x_**n_*WC('b', S(1)) + WC('a', S(0)))**p_, x_), cons2, cons3, cons21, cons4, cons5, cons500)
+    def replacement758(m, n, p, x, b, a):
+        return Subst(Int(x**(S(-1) + (m + S(1))/n)*(a + b*x)**p, x), x, x**n)/n
+    rule758 = ReplacementRule(pattern758, replacement758)
+    rubi.add(rule758.pattern, label = 758)
 
-    pattern71 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda m, n: IntegerQ((m + S(1))/(S(2)*n))))
-    rule71 = ReplacementRule(pattern71, lambda n, p, a1, a2, b2, m, x, b1 : Subst(Int(x**(S(-1) + (m + S(1))/n)*(a1 + b1*x)**p*(a2 + b2*x)**p, x), x, x**n)/n)
-    rubi.add(rule71)
+    pattern759 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons21, cons4, cons5, cons55, cons505)
+    def replacement759(m, n, a1, p, b2, a2, x, b1):
+        return Subst(Int(x**(S(-1) + (m + S(1))/n)*(a1 + b1*x)**p*(a2 + b2*x)**p, x), x, x**n)/n
+    rule759 = ReplacementRule(pattern759, replacement759)
+    rubi.add(rule759.pattern, label = 759)
 
-    pattern72 = Pattern(Integral((c_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda m, n: IntegerQ((m + S(1))/n)))
-    rule72 = ReplacementRule(pattern72, lambda b, n, a, p, c, m, x : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p, x))
-    rubi.add(rule72)
+    pattern760 = Pattern(Integral((c_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons4, cons5, cons500)
+    def replacement760(m, n, p, x, b, c, a):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p, x)
+    rule760 = ReplacementRule(pattern760, replacement760)
+    rubi.add(rule760.pattern, label = 760)
 
-    pattern73 = Pattern(Integral((c_*x_)**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda m, n: IntegerQ((m + S(1))/(S(2)*n))))
-    rule73 = ReplacementRule(pattern73, lambda n, p, a1, a2, c, b2, m, x, b1 : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x))
-    rubi.add(rule73)
+    pattern761 = Pattern(Integral((c_*x_)**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons4, cons5, cons55, cons505)
+    def replacement761(m, n, a1, p, b2, a2, x, b1, c):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)
+    rule761 = ReplacementRule(pattern761, replacement761)
+    rubi.add(rule761.pattern, label = 761)
 
-    pattern74 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p: PositiveIntegerQ(p)))
-    rule74 = ReplacementRule(pattern74, lambda b, n, p, a, c, m, x : Int(ExpandIntegrand((c*x)**m*(a + b*x**n)**p, x), x))
-    rubi.add(rule74)
+    pattern762 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1)), x_), cons2, cons3, cons7, cons21, cons4, cons128)
+    def replacement762(m, n, p, x, b, c, a):
+        return Int(ExpandIntegrand((c*x)**m*(a + b*x**n)**p, x), x)
+    rule762 = ReplacementRule(pattern762, replacement762)
+    rubi.add(rule762.pattern, label = 762)
 
-    pattern75 = Pattern(Integral(x_**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda p, m, n: NegativeIntegerQ((m + n*(p + S(1)) + S(1))/n)), CustomConstraint(lambda m: NonzeroQ(m + S(1))))
-    rule75 = ReplacementRule(pattern75, lambda b, n, a, p, m, x : -b*(m + n*(p + S(1)) + S(1))*Int(x**(m + n)*(a + b*x**n)**p, x)/(a*(m + S(1))) + x**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*(m + S(1))))
-    rubi.add(rule75)
+    pattern763 = Pattern(Integral(x_**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons21, cons4, cons5, cons506, cons66)
+    def replacement763(m, n, p, x, b, a):
+        return -b*(m + n*(p + S(1)) + S(1))*Int(x**(m + n)*(a + b*x**n)**p, x)/(a*(m + S(1))) + x**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*(m + S(1)))
+    rule763 = ReplacementRule(pattern763, replacement763)
+    rubi.add(rule763.pattern, label = 763)
 
-    pattern76 = Pattern(Integral(x_**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, m, n: NegativeIntegerQ((m + S(2)*n*(p + S(1)) + S(1))/(S(2)*n))), CustomConstraint(lambda m: NonzeroQ(m + S(1))))
-    rule76 = ReplacementRule(pattern76, lambda n, p, a1, a2, b2, m, x, b1 : -b1*b2*(m + S(2)*n*(p + S(1)) + S(1))*Int(x**(m + S(2)*n)*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)/(a1*a2*(m + S(1))) + x**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(a1*a2*(m + S(1))))
-    rubi.add(rule76)
+    pattern764 = Pattern(Integral(x_**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons21, cons4, cons5, cons55, cons507, cons66)
+    def replacement764(m, n, a1, p, b2, a2, x, b1):
+        return -b1*b2*(m + S(2)*n*(p + S(1)) + S(1))*Int(x**(m + S(2)*n)*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)/(a1*a2*(m + S(1))) + x**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(a1*a2*(m + S(1)))
+    rule764 = ReplacementRule(pattern764, replacement764)
+    rubi.add(rule764.pattern, label = 764)
 
-    pattern77 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda p, m, n: NegativeIntegerQ((m + n*(p + S(1)) + S(1))/n)), CustomConstraint(lambda p: NonzeroQ(p + S(1))))
-    rule77 = ReplacementRule(pattern77, lambda b, n, a, p, c, m, x : (m + n*(p + S(1)) + S(1))*Int((c*x)**m*(a + b*x**n)**(p + S(1)), x)/(a*n*(p + S(1))) - (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*n*(p + S(1))))
-    rubi.add(rule77)
+    pattern765 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons4, cons5, cons506, cons54)
+    def replacement765(m, n, p, x, b, c, a):
+        return (m + n*(p + S(1)) + S(1))*Int((c*x)**m*(a + b*x**n)**(p + S(1)), x)/(a*n*(p + S(1))) - (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*n*(p + S(1)))
+    rule765 = ReplacementRule(pattern765, replacement765)
+    rubi.add(rule765.pattern, label = 765)
 
-    pattern78 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, m, n: NegativeIntegerQ((m + S(2)*n*(p + S(1)) + S(1))/(S(2)*n))), CustomConstraint(lambda p: NonzeroQ(p + S(1))))
-    rule78 = ReplacementRule(pattern78, lambda n, p, a1, a2, c, b2, m, x, b1 : (m + S(2)*n*(p + S(1)) + S(1))*Int((c*x)**m*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1)), x)/(S(2)*a1*a2*n*(p + S(1))) - (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*a1*a2*c*n*(p + S(1))))
-    rubi.add(rule78)
+    pattern766 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons4, cons5, cons55, cons507, cons54)
+    def replacement766(m, n, a1, p, b2, a2, x, b1, c):
+        return (m + S(2)*n*(p + S(1)) + S(1))*Int((c*x)**m*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1)), x)/(S(2)*a1*a2*n*(p + S(1))) - (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*a1*a2*c*n*(p + S(1)))
+    rule766 = ReplacementRule(pattern766, replacement766)
+    rubi.add(rule766.pattern, label = 766)
 
-    pattern79 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda k, a, p, n, b, m, x: Unequal(k, S(1))))
-    def With79(b, n, a, p, m, x):
+    def With767(m, n, p, x, b, a):
         k = GCD(m + S(1), n)
-        return Subst(Int(x**(S(-1) + (m + S(1))/k)*(a + b*x**(n/k))**p, x), x, x**k)/k
-    rule79 = ReplacementRule(pattern79, lambda b, n, a, p, m, x : With79(b, n, a, p, m, x))
-    rubi.add(rule79)
+        if Unequal(k, S(1)):
+            return Subst(Int(x**(S(-1) + (m + S(1))/k)*(a + b*x**(n/k))**p, x), x, x**k)/k
+        return False
+    pattern767 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons5, cons148, cons17, CustomConstraint(With767))
+    rule767 = ReplacementRule(pattern767, With767)
+    rubi.add(rule767.pattern, label = 767)
 
-    pattern80 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda k, a1, n, b1, b2, p, m, a2, x: Unequal(k, S(1))))
-    def With80(n, p, a1, a2, b2, m, x, b1):
+    def With768(m, n, a1, p, b2, a2, x, b1):
         k = GCD(m + S(1), S(2)*n)
-        return Subst(Int(x**(S(-1) + (m + S(1))/k)*(a1 + b1*x**(n/k))**p*(a2 + b2*x**(n/k))**p, x), x, x**k)/k
-    rule80 = ReplacementRule(pattern80, lambda n, p, a1, a2, b2, m, x, b1 : With80(n, p, a1, a2, b2, m, x, b1))
-    rubi.add(rule80)
+        if Unequal(k, S(1)):
+            return Subst(Int(x**(S(-1) + (m + S(1))/k)*(a1 + b1*x**(n/k))**p*(a2 + b2*x**(n/k))**p, x), x, x**k)/k
+        return False
+    pattern768 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons5, cons55, cons495, cons17, CustomConstraint(With768))
+    rule768 = ReplacementRule(pattern768, With768)
+    rubi.add(rule768.pattern, label = 768)
 
-    pattern81 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, m: RationalQ(m, p)), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda m: Less(m, S(-1))), CustomConstraint(lambda p, m, n: Not(NegativeIntegerQ((m + n*p + n + S(1))/n))), CustomConstraint(lambda b, n, a, p, c, m, x: IntBinomialQ(a, b, c, n, m, p, x)))
-    rule81 = ReplacementRule(pattern81, lambda b, n, a, p, c, m, x : -b*c**(-n)*n*p*Int((c*x)**(m + n)*(a + b*x**n)**(p + S(-1)), x)/(m + S(1)) + (c*x)**(m + S(1))*(a + b*x**n)**p/(c*(m + S(1))))
-    rubi.add(rule81)
+    pattern769 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons148, cons244, cons163, cons94, cons508, cons509)
+    def replacement769(m, n, p, x, b, c, a):
+        return -b*c**(-n)*n*p*Int((c*x)**(m + n)*(a + b*x**n)**(p + S(-1)), x)/(m + S(1)) + (c*x)**(m + S(1))*(a + b*x**n)**p/(c*(m + S(1)))
+    rule769 = ReplacementRule(pattern769, replacement769)
+    rubi.add(rule769.pattern, label = 769)
 
-    pattern82 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda p, m: RationalQ(m, p)), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda p, m, n: NonzeroQ(m + S(2)*n*p + S(1))), CustomConstraint(lambda n, p, a1, a2, c, b2, m, x, b1: IntBinomialQ(a1*a2, b1*b2, c, n, m, p, x)))
-    rule82 = ReplacementRule(pattern82, lambda n, p, a1, a2, c, b2, m, x, b1 : S(2)*a1*a2*n*p*Int((c*x)**m*(a1 + b1*x**n)**(p + S(-1))*(a2 + b2*x**n)**(p + S(-1)), x)/(m + S(2)*n*p + S(1)) + (c*x)**(m + S(1))*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p/(c*(m + S(2)*n*p + S(1))))
-    rubi.add(rule82)
+    pattern770 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons55, cons495, cons244, cons163, cons510, cons511)
+    def replacement770(m, n, a1, p, b2, a2, x, b1, c):
+        return S(2)*a1*a2*n*p*Int((c*x)**m*(a1 + b1*x**n)**(p + S(-1))*(a2 + b2*x**n)**(p + S(-1)), x)/(m + S(2)*n*p + S(1)) + (c*x)**(m + S(1))*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p/(c*(m + S(2)*n*p + S(1)))
+    rule770 = ReplacementRule(pattern770, replacement770)
+    rubi.add(rule770.pattern, label = 770)
 
-    pattern83 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, m: RationalQ(m, p)), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda p, m, n: NonzeroQ(m + n*p + S(1))), CustomConstraint(lambda b, n, a, p, c, m, x: IntBinomialQ(a, b, c, n, m, p, x)))
-    rule83 = ReplacementRule(pattern83, lambda b, n, a, p, c, m, x : a*n*p*Int((c*x)**m*(a + b*x**n)**(p + S(-1)), x)/(m + n*p + S(1)) + (c*x)**(m + S(1))*(a + b*x**n)**p/(c*(m + n*p + S(1))))
-    rubi.add(rule83)
+    pattern771 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons148, cons244, cons163, cons512, cons509)
+    def replacement771(m, n, p, x, b, c, a):
+        return a*n*p*Int((c*x)**m*(a + b*x**n)**(p + S(-1)), x)/(m + n*p + S(1)) + (c*x)**(m + S(1))*(a + b*x**n)**p/(c*(m + n*p + S(1)))
+    rule771 = ReplacementRule(pattern771, replacement771)
+    rubi.add(rule771.pattern, label = 771)
 
-    pattern84 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1)))**(S(5)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(b/a)))
-    rule84 = ReplacementRule(pattern84, lambda a, x, b : x*(a/(b*x**S(4)) + S(1))**(S(1)/4)*Int(S(1)/(x**S(3)*(a/(b*x**S(4)) + S(1))**(S(5)/4)), x)/(b*(a + b*x**S(4))**(S(1)/4)))
-    rubi.add(rule84)
+    pattern772 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1)))**(S(5)/4), x_), cons2, cons3, cons466)
+    def replacement772(x, b, a):
+        return x*(a/(b*x**S(4)) + S(1))**(S(1)/4)*Int(S(1)/(x**S(3)*(a/(b*x**S(4)) + S(1))**(S(5)/4)), x)/(b*(a + b*x**S(4))**(S(1)/4))
+    rule772 = ReplacementRule(pattern772, replacement772)
+    rubi.add(rule772.pattern, label = 772)
 
-    pattern85 = Pattern(Integral(x_**m_/(a_ + x_**S(4)*WC('b', S(1)))**(S(5)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(b/a)), CustomConstraint(lambda m: PositiveIntegerQ(m/S(4) + S(-1)/2)))
-    rule85 = ReplacementRule(pattern85, lambda a, m, x, b : -a*(m + S(-3))*Int(x**(m + S(-4))/(a + b*x**S(4))**(S(5)/4), x)/(b*(m + S(-4))) + x**(m + S(-3))/(b*(a + b*x**S(4))**(S(1)/4)*(m + S(-4))))
-    rubi.add(rule85)
+    pattern773 = Pattern(Integral(x_**m_/(a_ + x_**S(4)*WC('b', S(1)))**(S(5)/4), x_), cons2, cons3, cons466, cons513)
+    def replacement773(m, x, b, a):
+        return -a*(m + S(-3))*Int(x**(m + S(-4))/(a + b*x**S(4))**(S(5)/4), x)/(b*(m + S(-4))) + x**(m + S(-3))/(b*(a + b*x**S(4))**(S(1)/4)*(m + S(-4)))
+    rule773 = ReplacementRule(pattern773, replacement773)
+    rubi.add(rule773.pattern, label = 773)
 
-    pattern86 = Pattern(Integral(x_**m_/(a_ + x_**S(4)*WC('b', S(1)))**(S(5)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(b/a)), CustomConstraint(lambda m: NegativeIntegerQ(m/S(4) + S(-1)/2)))
-    rule86 = ReplacementRule(pattern86, lambda a, m, x, b : -b*m*Int(x**(m + S(4))/(a + b*x**S(4))**(S(5)/4), x)/(a*(m + S(1))) + x**(m + S(1))/(a*(a + b*x**S(4))**(S(1)/4)*(m + S(1))))
-    rubi.add(rule86)
+    pattern774 = Pattern(Integral(x_**m_/(a_ + x_**S(4)*WC('b', S(1)))**(S(5)/4), x_), cons2, cons3, cons466, cons514)
+    def replacement774(m, x, b, a):
+        return -b*m*Int(x**(m + S(4))/(a + b*x**S(4))**(S(5)/4), x)/(a*(m + S(1))) + x**(m + S(1))/(a*(a + b*x**S(4))**(S(1)/4)*(m + S(1)))
+    rule774 = ReplacementRule(pattern774, replacement774)
+    rubi.add(rule774.pattern, label = 774)
 
-    pattern87 = Pattern(Integral(sqrt(x_*WC('c', S(1)))/(a_ + x_**S(2)*WC('b', S(1)))**(S(5)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda a, b: PosQ(b/a)))
-    rule87 = ReplacementRule(pattern87, lambda a, c, x, b : sqrt(c*x)*(a/(b*x**S(2)) + S(1))**(S(1)/4)*Int(S(1)/(x**S(2)*(a/(b*x**S(2)) + S(1))**(S(5)/4)), x)/(b*(a + b*x**S(2))**(S(1)/4)))
-    rubi.add(rule87)
+    pattern775 = Pattern(Integral(sqrt(x_*WC('c', S(1)))/(a_ + x_**S(2)*WC('b', S(1)))**(S(5)/4), x_), cons2, cons3, cons7, cons466)
+    def replacement775(x, c, b, a):
+        return sqrt(c*x)*(a/(b*x**S(2)) + S(1))**(S(1)/4)*Int(S(1)/(x**S(2)*(a/(b*x**S(2)) + S(1))**(S(5)/4)), x)/(b*(a + b*x**S(2))**(S(1)/4))
+    rule775 = ReplacementRule(pattern775, replacement775)
+    rubi.add(rule775.pattern, label = 775)
 
-    pattern88 = Pattern(Integral((x_*WC('c', S(1)))**m_/(a_ + x_**S(2)*WC('b', S(1)))**(S(5)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda a, b: PosQ(b/a)), CustomConstraint(lambda m: IntegerQ(S(2)*m)), CustomConstraint(lambda m: Greater(m, S(3)/2)))
-    rule88 = ReplacementRule(pattern88, lambda b, a, c, m, x : -S(2)*a*c**S(2)*(m + S(-1))*Int((c*x)**(m + S(-2))/(a + b*x**S(2))**(S(5)/4), x)/(b*(S(2)*m + S(-3))) + S(2)*c*(c*x)**(m + S(-1))/(b*(a + b*x**S(2))**(S(1)/4)*(S(2)*m + S(-3))))
-    rubi.add(rule88)
+    pattern776 = Pattern(Integral((x_*WC('c', S(1)))**m_/(a_ + x_**S(2)*WC('b', S(1)))**(S(5)/4), x_), cons2, cons3, cons7, cons466, cons515, cons516)
+    def replacement776(m, x, b, c, a):
+        return -S(2)*a*c**S(2)*(m + S(-1))*Int((c*x)**(m + S(-2))/(a + b*x**S(2))**(S(5)/4), x)/(b*(S(2)*m + S(-3))) + S(2)*c*(c*x)**(m + S(-1))/(b*(a + b*x**S(2))**(S(1)/4)*(S(2)*m + S(-3)))
+    rule776 = ReplacementRule(pattern776, replacement776)
+    rubi.add(rule776.pattern, label = 776)
 
-    pattern89 = Pattern(Integral((x_*WC('c', S(1)))**m_/(a_ + x_**S(2)*WC('b', S(1)))**(S(5)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda a, b: PosQ(b/a)), CustomConstraint(lambda m: IntegerQ(S(2)*m)), CustomConstraint(lambda m: Less(m, S(-1))))
-    rule89 = ReplacementRule(pattern89, lambda b, a, c, m, x : -b*(S(2)*m + S(1))*Int((c*x)**(m + S(2))/(a + b*x**S(2))**(S(5)/4), x)/(S(2)*a*c**S(2)*(m + S(1))) + (c*x)**(m + S(1))/(a*c*(a + b*x**S(2))**(S(1)/4)*(m + S(1))))
-    rubi.add(rule89)
+    pattern777 = Pattern(Integral((x_*WC('c', S(1)))**m_/(a_ + x_**S(2)*WC('b', S(1)))**(S(5)/4), x_), cons2, cons3, cons7, cons466, cons515, cons94)
+    def replacement777(m, x, b, c, a):
+        return -b*(S(2)*m + S(1))*Int((c*x)**(m + S(2))/(a + b*x**S(2))**(S(5)/4), x)/(S(2)*a*c**S(2)*(m + S(1))) + (c*x)**(m + S(1))/(a*c*(a + b*x**S(2))**(S(1)/4)*(m + S(1)))
+    rule777 = ReplacementRule(pattern777, replacement777)
+    rubi.add(rule777.pattern, label = 777)
 
-    pattern90 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1)))**(S(5)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: NegQ(b/a)))
-    rule90 = ReplacementRule(pattern90, lambda a, x, b : -Int(S(1)/(x**S(2)*(a + b*x**S(4))**(S(1)/4)), x)/b - S(1)/(b*x*(a + b*x**S(4))**(S(1)/4)))
-    rubi.add(rule90)
+    pattern778 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1)))**(S(5)/4), x_), cons2, cons3, cons483)
+    def replacement778(x, b, a):
+        return -Int(S(1)/(x**S(2)*(a + b*x**S(4))**(S(1)/4)), x)/b - S(1)/(b*x*(a + b*x**S(4))**(S(1)/4))
+    rule778 = ReplacementRule(pattern778, replacement778)
+    rubi.add(rule778.pattern, label = 778)
 
-    pattern91 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, m: RationalQ(m, p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda m, n: Greater(m + S(1), n)), CustomConstraint(lambda p, m, n: Not(NegativeIntegerQ((m + n*(p + S(1)) + S(1))/n))), CustomConstraint(lambda b, n, a, p, c, m, x: IntBinomialQ(a, b, c, n, m, p, x)))
-    rule91 = ReplacementRule(pattern91, lambda b, n, a, p, c, m, x : -c**n*(m - n + S(1))*Int((c*x)**(m - n)*(a + b*x**n)**(p + S(1)), x)/(b*n*(p + S(1))) + c**(n + S(-1))*(c*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))/(b*n*(p + S(1))))
-    rubi.add(rule91)
+    pattern779 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons148, cons244, cons137, cons517, cons518, cons509)
+    def replacement779(m, n, p, x, b, c, a):
+        return -c**n*(m - n + S(1))*Int((c*x)**(m - n)*(a + b*x**n)**(p + S(1)), x)/(b*n*(p + S(1))) + c**(n + S(-1))*(c*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))/(b*n*(p + S(1)))
+    rule779 = ReplacementRule(pattern779, replacement779)
+    rubi.add(rule779.pattern, label = 779)
 
-    pattern92 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda p, m: RationalQ(m, p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda m, n: Greater(m + S(1), S(2)*n)), CustomConstraint(lambda p, m, n: Not(NegativeIntegerQ((m + S(2)*n*(p + S(1)) + S(1))/(S(2)*n)))), CustomConstraint(lambda n, p, a1, a2, c, b2, m, x, b1: IntBinomialQ(a1*a2, b1*b2, c, n, m, p, x)))
-    rule92 = ReplacementRule(pattern92, lambda n, p, a1, a2, c, b2, m, x, b1 : -c**(S(2)*n)*(m - S(2)*n + S(1))*Int((c*x)**(m - S(2)*n)*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1)), x)/(S(2)*b1*b2*n*(p + S(1))) + c**(S(2)*n + S(-1))*(c*x)**(m - S(2)*n + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*b1*b2*n*(p + S(1))))
-    rubi.add(rule92)
+    pattern780 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons55, cons495, cons244, cons137, cons519, cons520, cons511)
+    def replacement780(m, n, a1, p, b2, a2, x, b1, c):
+        return -c**(S(2)*n)*(m - S(2)*n + S(1))*Int((c*x)**(m - S(2)*n)*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1)), x)/(S(2)*b1*b2*n*(p + S(1))) + c**(S(2)*n + S(-1))*(c*x)**(m - S(2)*n + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*b1*b2*n*(p + S(1)))
+    rule780 = ReplacementRule(pattern780, replacement780)
+    rubi.add(rule780.pattern, label = 780)
 
-    pattern93 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, m: RationalQ(m, p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda b, n, a, p, c, m, x: IntBinomialQ(a, b, c, n, m, p, x)))
-    rule93 = ReplacementRule(pattern93, lambda b, n, a, p, c, m, x : (m + n*(p + S(1)) + S(1))*Int((c*x)**m*(a + b*x**n)**(p + S(1)), x)/(a*n*(p + S(1))) - (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*n*(p + S(1))))
-    rubi.add(rule93)
+    pattern781 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons148, cons244, cons137, cons509)
+    def replacement781(m, n, p, x, b, c, a):
+        return (m + n*(p + S(1)) + S(1))*Int((c*x)**m*(a + b*x**n)**(p + S(1)), x)/(a*n*(p + S(1))) - (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*n*(p + S(1)))
+    rule781 = ReplacementRule(pattern781, replacement781)
+    rubi.add(rule781.pattern, label = 781)
 
-    pattern94 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda p, m: RationalQ(m, p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda n, p, a1, a2, c, b2, m, x, b1: IntBinomialQ(a1*a2, b1*b2, c, n, m, p, x)))
-    rule94 = ReplacementRule(pattern94, lambda n, p, a1, a2, c, b2, m, x, b1 : (m + S(2)*n*(p + S(1)) + S(1))*Int((c*x)**m*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1)), x)/(S(2)*a1*a2*n*(p + S(1))) - (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*a1*a2*c*n*(p + S(1))))
-    rubi.add(rule94)
+    pattern782 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons55, cons495, cons244, cons137, cons511)
+    def replacement782(m, n, a1, p, b2, a2, x, b1, c):
+        return (m + S(2)*n*(p + S(1)) + S(1))*Int((c*x)**m*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1)), x)/(S(2)*a1*a2*n*(p + S(1))) - (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*a1*a2*c*n*(p + S(1)))
+    rule782 = ReplacementRule(pattern782, replacement782)
+    rubi.add(rule782.pattern, label = 782)
 
-    pattern95 = Pattern(Integral(x_/(a_ + x_**S(3)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)))
-    rule95 = ReplacementRule(pattern95, lambda a, x, b : Int((x*Rt(b, S(3)) + Rt(a, S(3)))/(x**S(2)*Rt(b, S(3))**S(2) - x*Rt(a, S(3))*Rt(b, S(3)) + Rt(a, S(3))**S(2)), x)/(S(3)*Rt(a, S(3))*Rt(b, S(3))) - Int(1/(x*Rt(b, S(3)) + Rt(a, S(3))), x)/(S(3)*Rt(a, S(3))*Rt(b, S(3))))
-    rubi.add(rule95)
+    pattern783 = Pattern(Integral(x_/(a_ + x_**S(3)*WC('b', S(1))), x_), cons2, cons3, cons67)
+    def replacement783(x, b, a):
+        return Int((x*Rt(b, S(3)) + Rt(a, S(3)))/(x**S(2)*Rt(b, S(3))**S(2) - x*Rt(a, S(3))*Rt(b, S(3)) + Rt(a, S(3))**S(2)), x)/(S(3)*Rt(a, S(3))*Rt(b, S(3))) - Int(S(1)/(x*Rt(b, S(3)) + Rt(a, S(3))), x)/(S(3)*Rt(a, S(3))*Rt(b, S(3)))
+    rule783 = ReplacementRule(pattern783, replacement783)
+    rubi.add(rule783.pattern, label = 783)
 
-    pattern96 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n/S(2) + S(-1)/2)), CustomConstraint(lambda m: PositiveIntegerQ(m)), CustomConstraint(lambda m, n: Less(m, n + S(-1))), CustomConstraint(lambda a, b: PosQ(a/b)), )
-    def With96(b, n, a, m, x):
+    def With784(m, n, x, b, a):
         r = Numerator(Rt(a/b, n))
         s = Denominator(Rt(a/b, n))
         k = Symbol('k')
         u = Symbol('u')
         u = Int((r*cos(Pi*m*(2*k - 1)/n) - s*x*cos(Pi*(2*k - 1)*(m + 1)/n))/(r**2 - 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return Dist(S(2)*r**(m + S(1))*s**(-m)/(a*n), Sum(u, List(k, S(1), n/S(2) + S(-1)/2)), x) - s**(-m)*(-r)**(m + S(1))*Int(1/(r + s*x), x)/(a*n)
-    rule96 = ReplacementRule(pattern96, lambda b, n, a, m, x : With96(b, n, a, m, x))
-    rubi.add(rule96)
+        return Dist(S(2)*r**(m + S(1))*s**(-m)/(a*n), Sum(u, List(k, S(1), n/S(2) + S(-1)/2)), x) - s**(-m)*(-r)**(m + S(1))*Int(S(1)/(r + s*x), x)/(a*n)
+    pattern784 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons521, cons62, cons522, cons468 )
+    rule784 = ReplacementRule(pattern784, With784)
+    rubi.add(rule784.pattern, label = 784)
 
-    pattern97 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, n: PositiveIntegerQ(m, n/S(2) + S(-1)/2)), CustomConstraint(lambda m: PositiveIntegerQ(m)), CustomConstraint(lambda m, n: Less(m, n + S(-1))), CustomConstraint(lambda a, b: NegQ(a/b)), )
-    def With97(b, n, a, m, x):
+    def With785(m, n, x, b, a):
         r = Numerator(Rt(-a/b, n))
         s = Denominator(Rt(-a/b, n))
         k = Symbol('k')
         u = Symbol('u')
         u = Int((r*cos(Pi*m*(2*k - 1)/n) + s*x*cos(Pi*(2*k - 1)*(m + 1)/n))/(r**2 + 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return -Dist(S(2)*s**(-m)*(-r)**(m + S(1))/(a*n), Sum(u, List(k, S(1), n/S(2) + S(-1)/2)), x) + r**(m + S(1))*s**(-m)*Int(1/(r - s*x), x)/(a*n)
-    rule97 = ReplacementRule(pattern97, lambda b, n, a, m, x : With97(b, n, a, m, x))
-    rubi.add(rule97)
+        return -Dist(S(2)*s**(-m)*(-r)**(m + S(1))/(a*n), Sum(u, List(k, S(1), n/S(2) + S(-1)/2)), x) + r**(m + S(1))*s**(-m)*Int(S(1)/(r - s*x), x)/(a*n)
+    pattern785 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons523, cons62, cons522, cons469 )
+    rule785 = ReplacementRule(pattern785, With785)
+    rubi.add(rule785.pattern, label = 785)
 
-    pattern98 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, n: PositiveIntegerQ(m, n/S(4) + S(-1)/2)), CustomConstraint(lambda m: PositiveIntegerQ(m)), CustomConstraint(lambda m, n: Less(m, n + S(-1))), CustomConstraint(lambda a, b: PosQ(a/b)), )
-    def With98(b, n, a, m, x):
+    def With786(m, n, x, b, a):
         r = Numerator(Rt(a/b, n))
         s = Denominator(Rt(a/b, n))
         k = Symbol('k')
         u = Symbol('u')
         u = Int((r*cos(Pi*m*(2*k - 1)/n) - s*x*cos(Pi*(2*k - 1)*(m + 1)/n))/(r**2 - 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x) + Int((r*cos(Pi*m*(2*k - 1)/n) + s*x*cos(Pi*(2*k - 1)*(m + 1)/n))/(r**2 + 2*r*s*x*cos(Pi*(2*k - 1)/n) + s**2*x**2), x)
-        return S(2)*(S(-1))**(m/S(2))*r**(m + S(2))*s**(-m)*Int(1/(r**S(2) + s**S(2)*x**S(2)), x)/(a*n) + Dist(S(2)*r**(m + S(1))*s**(-m)/(a*n), Sum(u, List(k, S(1), n/S(4) + S(-1)/2)), x)
-    rule98 = ReplacementRule(pattern98, lambda b, n, a, m, x : With98(b, n, a, m, x))
-    rubi.add(rule98)
+        return S(2)*(S(-1))**(m/S(2))*r**(m + S(2))*s**(-m)*Int(S(1)/(r**S(2) + s**S(2)*x**S(2)), x)/(a*n) + Dist(S(2)*r**(m + S(1))*s**(-m)/(a*n), Sum(u, List(k, S(1), n/S(4) + S(-1)/2)), x)
+    pattern786 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons524, cons62, cons522, cons468 )
+    rule786 = ReplacementRule(pattern786, With786)
+    rubi.add(rule786.pattern, label = 786)
 
-    pattern99 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, n: PositiveIntegerQ(m, n/S(4) + S(-1)/2)), CustomConstraint(lambda m: PositiveIntegerQ(m)), CustomConstraint(lambda m, n: Less(m, n + S(-1))), CustomConstraint(lambda a, b: NegQ(a/b)), )
-    def With99(b, n, a, m, x):
+    def With787(m, n, x, b, a):
         r = Numerator(Rt(-a/b, n))
         s = Denominator(Rt(-a/b, n))
         k = Symbol('k')
         u = Symbol('u')
         u = Int((r*cos(2*Pi*k*m/n) - s*x*cos(2*Pi*k*(m + 1)/n))/(r**2 - 2*r*s*x*cos(2*Pi*k/n) + s**2*x**2), x) + Int((r*cos(2*Pi*k*m/n) + s*x*cos(2*Pi*k*(m + 1)/n))/(r**2 + 2*r*s*x*cos(2*Pi*k/n) + s**2*x**2), x)
-        return Dist(S(2)*r**(m + S(1))*s**(-m)/(a*n), Sum(u, List(k, S(1), n/S(4) + S(-1)/2)), x) + S(2)*r**(m + S(2))*s**(-m)*Int(1/(r**S(2) - s**S(2)*x**S(2)), x)/(a*n)
-    rule99 = ReplacementRule(pattern99, lambda b, n, a, m, x : With99(b, n, a, m, x))
-    rubi.add(rule99)
+        return Dist(S(2)*r**(m + S(1))*s**(-m)/(a*n), Sum(u, List(k, S(1), n/S(4) + S(-1)/2)), x) + S(2)*r**(m + S(2))*s**(-m)*Int(S(1)/(r**S(2) - s**S(2)*x**S(2)), x)/(a*n)
+    pattern787 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons524, cons62, cons522, cons469 )
+    rule787 = ReplacementRule(pattern787, With787)
+    rubi.add(rule787.pattern, label = 787)
 
-    pattern100 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PositiveQ(a/b) | (AtomQ(SplitProduct(SumBaseQ, a)) & AtomQ(SplitProduct(SumBaseQ, b)) & PosQ(a/b))), )
-    def With100(a, x, b):
+    def With788(x, b, a):
         r = Numerator(Rt(a/b, S(2)))
         s = Denominator(Rt(a/b, S(2)))
         return -Int((r - s*x**S(2))/(a + b*x**S(4)), x)/(S(2)*s) + Int((r + s*x**S(2))/(a + b*x**S(4)), x)/(S(2)*s)
-    rule100 = ReplacementRule(pattern100, lambda a, x, b : With100(a, x, b))
-    rubi.add(rule100)
+    pattern788 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons475 )
+    rule788 = ReplacementRule(pattern788, With788)
+    rubi.add(rule788.pattern, label = 788)
 
-    pattern101 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: Not(PositiveQ(a/b))), )
-    def With101(a, x, b):
+    def With789(x, b, a):
         r = Numerator(Rt(-a/b, S(2)))
         s = Denominator(Rt(-a/b, S(2)))
-        return -s*Int(1/(r - s*x**S(2)), x)/(S(2)*b) + s*Int(1/(r + s*x**S(2)), x)/(S(2)*b)
-    rule101 = ReplacementRule(pattern101, lambda a, x, b : With101(a, x, b))
-    rubi.add(rule101)
+        return -s*Int(S(1)/(r - s*x**S(2)), x)/(S(2)*b) + s*Int(S(1)/(r + s*x**S(2)), x)/(S(2)*b)
+    pattern789 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons476 )
+    rule789 = ReplacementRule(pattern789, With789)
+    rubi.add(rule789.pattern, label = 789)
 
-    pattern102 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, n: PositiveIntegerQ(m, n/S(4))), CustomConstraint(lambda m: PositiveIntegerQ(m)), CustomConstraint(lambda m, n: Less(m, n + S(-1))), CustomConstraint(lambda a, b: PositiveQ(a/b)), )
-    def With102(b, n, a, m, x):
+    def With790(m, n, x, b, a):
         r = Numerator(Rt(a/b, S(4)))
         s = Denominator(Rt(a/b, S(4)))
         return sqrt(S(2))*s**S(3)*Int(x**(m - n/S(4))/(r**S(2) - sqrt(S(2))*r*s*x**(n/S(4)) + s**S(2)*x**(n/S(2))), x)/(S(4)*b*r) - sqrt(S(2))*s**S(3)*Int(x**(m - n/S(4))/(r**S(2) + sqrt(S(2))*r*s*x**(n/S(4)) + s**S(2)*x**(n/S(2))), x)/(S(4)*b*r)
-    rule102 = ReplacementRule(pattern102, lambda b, n, a, m, x : With102(b, n, a, m, x))
-    rubi.add(rule102)
+    pattern790 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons525, cons62, cons522, cons478 )
+    rule790 = ReplacementRule(pattern790, With790)
+    rubi.add(rule790.pattern, label = 790)
 
-    pattern103 = Pattern(Integral(x_**m_/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, n: PositiveIntegerQ(m, n/S(4))), CustomConstraint(lambda m: PositiveIntegerQ(m)), CustomConstraint(lambda m, n: Less(m, n/S(2))), CustomConstraint(lambda a, b: Not(PositiveQ(a/b))), )
-    def With103(b, n, a, m, x):
+    def With791(m, n, x, b, a):
         r = Numerator(Rt(-a/b, S(2)))
         s = Denominator(Rt(-a/b, S(2)))
         return r*Int(x**m/(r - s*x**(n/S(2))), x)/(S(2)*a) + r*Int(x**m/(r + s*x**(n/S(2))), x)/(S(2)*a)
-    rule103 = ReplacementRule(pattern103, lambda b, n, a, m, x : With103(b, n, a, m, x))
-    rubi.add(rule103)
+    pattern791 = Pattern(Integral(x_**m_/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons525, cons62, cons526, cons476 )
+    rule791 = ReplacementRule(pattern791, With791)
+    rubi.add(rule791.pattern, label = 791)
 
-    pattern104 = Pattern(Integral(x_**m_/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, n: PositiveIntegerQ(m, n/S(4))), CustomConstraint(lambda m: PositiveIntegerQ(m)), CustomConstraint(lambda m, n: Inequality(n/S(2), LessEqual, m, Less, n)), CustomConstraint(lambda a, b: Not(PositiveQ(a/b))), )
-    def With104(b, n, a, m, x):
+    def With792(m, n, x, b, a):
         r = Numerator(Rt(-a/b, S(2)))
         s = Denominator(Rt(-a/b, S(2)))
         return -s*Int(x**(m - n/S(2))/(r - s*x**(n/S(2))), x)/(S(2)*b) + s*Int(x**(m - n/S(2))/(r + s*x**(n/S(2))), x)/(S(2)*b)
-    rule104 = ReplacementRule(pattern104, lambda b, n, a, m, x : With104(b, n, a, m, x))
-    rubi.add(rule104)
+    pattern792 = Pattern(Integral(x_**m_/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons525, cons62, cons527, cons476 )
+    rule792 = ReplacementRule(pattern792, With792)
+    rubi.add(rule792.pattern, label = 792)
 
-    pattern105 = Pattern(Integral(x_**m_/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, n: PositiveIntegerQ(m, n)), CustomConstraint(lambda m, n: Greater(m, S(2)*n + S(-1))))
-    rule105 = ReplacementRule(pattern105, lambda b, n, a, m, x : Int(PolynomialDivide(x**m, a + b*x**n, x), x))
-    rubi.add(rule105)
+    pattern793 = Pattern(Integral(x_**m_/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons528, cons529)
+    def replacement793(m, n, x, b, a):
+        return Int(PolynomialDivide(x**m, a + b*x**n, x), x)
+    rule793 = ReplacementRule(pattern793, replacement793)
+    rubi.add(rule793.pattern, label = 793)
 
-    pattern106 = Pattern(Integral(x_/sqrt(a_ + x_**S(3)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: PosQ(a)), )
-    def With106(a, x, b):
+    def With794(x, b, a):
         r = Numer(Rt(b/a, S(3)))
         s = Denom(Rt(b/a, S(3)))
-        return sqrt(S(2))*s*Int(1/sqrt(a + b*x**S(3)), x)/(r*sqrt(sqrt(S(3)) + S(2))) + Int((r*x + s*(-sqrt(S(3)) + S(1)))/sqrt(a + b*x**S(3)), x)/r
-    rule106 = ReplacementRule(pattern106, lambda a, x, b : With106(a, x, b))
-    rubi.add(rule106)
+        return sqrt(S(2))*s*Int(S(1)/sqrt(a + b*x**S(3)), x)/(r*sqrt(sqrt(S(3)) + S(2))) + Int((r*x + s*(-sqrt(S(3)) + S(1)))/sqrt(a + b*x**S(3)), x)/r
+    pattern794 = Pattern(Integral(x_/sqrt(a_ + x_**S(3)*WC('b', S(1))), x_), cons2, cons3, cons481 )
+    rule794 = ReplacementRule(pattern794, With794)
+    rubi.add(rule794.pattern, label = 794)
 
-    pattern107 = Pattern(Integral(x_/sqrt(a_ + x_**S(3)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: NegQ(a)), )
-    def With107(a, x, b):
+    def With795(x, b, a):
         r = Numer(Rt(b/a, S(3)))
         s = Denom(Rt(b/a, S(3)))
-        return -sqrt(S(2))*s*Int(1/sqrt(a + b*x**S(3)), x)/(r*sqrt(-sqrt(S(3)) + S(2))) + Int((r*x + s*(S(1) + sqrt(S(3))))/sqrt(a + b*x**S(3)), x)/r
-    rule107 = ReplacementRule(pattern107, lambda a, x, b : With107(a, x, b))
-    rubi.add(rule107)
+        return -sqrt(S(2))*s*Int(S(1)/sqrt(a + b*x**S(3)), x)/(r*sqrt(-sqrt(S(3)) + S(2))) + Int((r*x + s*(S(1) + sqrt(S(3))))/sqrt(a + b*x**S(3)), x)/r
+    pattern795 = Pattern(Integral(x_/sqrt(a_ + x_**S(3)*WC('b', S(1))), x_), cons2, cons3, cons482 )
+    rule795 = ReplacementRule(pattern795, With795)
+    rubi.add(rule795.pattern, label = 795)
 
-    pattern108 = Pattern(Integral(x_**S(2)/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(b/a)), )
-    def With108(a, x, b):
+    def With796(x, b, a):
         q = Rt(b/a, S(2))
-        return -Int((-q*x**S(2) + S(1))/sqrt(a + b*x**S(4)), x)/q + Int(1/sqrt(a + b*x**S(4)), x)/q
-    rule108 = ReplacementRule(pattern108, lambda a, x, b : With108(a, x, b))
-    rubi.add(rule108)
+        return -Int((-q*x**S(2) + S(1))/sqrt(a + b*x**S(4)), x)/q + Int(S(1)/sqrt(a + b*x**S(4)), x)/q
+    pattern796 = Pattern(Integral(x_**S(2)/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons466 )
+    rule796 = ReplacementRule(pattern796, With796)
+    rubi.add(rule796.pattern, label = 796)
 
-    pattern109 = Pattern(Integral(x_**S(2)/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a: NegativeQ(a)), CustomConstraint(lambda b: PositiveQ(b)), )
-    def With109(a, x, b):
+    def With797(x, b, a):
         q = Rt(-b/a, S(2))
-        return -Int((-q*x**S(2) + S(1))/sqrt(a + b*x**S(4)), x)/q + Int(1/sqrt(a + b*x**S(4)), x)/q
-    rule109 = ReplacementRule(pattern109, lambda a, x, b : With109(a, x, b))
-    rubi.add(rule109)
+        return -Int((-q*x**S(2) + S(1))/sqrt(a + b*x**S(4)), x)/q + Int(S(1)/sqrt(a + b*x**S(4)), x)/q
+    pattern797 = Pattern(Integral(x_**S(2)/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons484, cons105 )
+    rule797 = ReplacementRule(pattern797, With797)
+    rubi.add(rule797.pattern, label = 797)
 
-    pattern110 = Pattern(Integral(x_**S(2)/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: NegQ(b/a)), )
-    def With110(a, x, b):
+    def With798(x, b, a):
         q = Rt(-b/a, S(2))
-        return Int((q*x**S(2) + S(1))/sqrt(a + b*x**S(4)), x)/q - Int(1/sqrt(a + b*x**S(4)), x)/q
-    rule110 = ReplacementRule(pattern110, lambda a, x, b : With110(a, x, b))
-    rubi.add(rule110)
+        return Int((q*x**S(2) + S(1))/sqrt(a + b*x**S(4)), x)/q - Int(S(1)/sqrt(a + b*x**S(4)), x)/q
+    pattern798 = Pattern(Integral(x_**S(2)/sqrt(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons483 )
+    rule798 = ReplacementRule(pattern798, With798)
+    rubi.add(rule798.pattern, label = 798)
 
-    pattern111 = Pattern(Integral(x_**S(4)/sqrt(a_ + x_**S(6)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), )
-    def With111(a, x, b):
+    def With799(x, b, a):
         r = Numer(Rt(b/a, S(3)))
         s = Denom(Rt(b/a, S(3)))
-        return s**S(2)*(S(-1) + sqrt(S(3)))*Int(1/sqrt(a + b*x**S(6)), x)/(S(2)*r**S(2)) - Int((-S(2)*r**S(2)*x**S(4) + s**S(2)*(S(-1) + sqrt(S(3))))/sqrt(a + b*x**S(6)), x)/(S(2)*r**S(2))
-    rule111 = ReplacementRule(pattern111, lambda a, x, b : With111(a, x, b))
-    rubi.add(rule111)
+        return s**S(2)*(S(-1) + sqrt(S(3)))*Int(S(1)/sqrt(a + b*x**S(6)), x)/(S(2)*r**S(2)) - Int((-S(2)*r**S(2)*x**S(4) + s**S(2)*(S(-1) + sqrt(S(3))))/sqrt(a + b*x**S(6)), x)/(S(2)*r**S(2))
+    pattern799 = Pattern(Integral(x_**S(4)/sqrt(a_ + x_**S(6)*WC('b', S(1))), x_), cons2, cons3, cons67 )
+    rule799 = ReplacementRule(pattern799, With799)
+    rubi.add(rule799.pattern, label = 799)
 
-    pattern112 = Pattern(Integral(x_**S(2)/sqrt(a_ + x_**S(8)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)))
-    rule112 = ReplacementRule(pattern112, lambda a, x, b : -Int((-x**S(2)*Rt(b/a, S(4)) + S(1))/sqrt(a + b*x**S(8)), x)/(S(2)*Rt(b/a, S(4))) + Int((x**S(2)*Rt(b/a, S(4)) + S(1))/sqrt(a + b*x**S(8)), x)/(S(2)*Rt(b/a, S(4))))
-    rubi.add(rule112)
+    pattern800 = Pattern(Integral(x_**S(2)/sqrt(a_ + x_**S(8)*WC('b', S(1))), x_), cons2, cons3, cons67)
+    def replacement800(x, b, a):
+        return -Int((-x**S(2)*Rt(b/a, S(4)) + S(1))/sqrt(a + b*x**S(8)), x)/(S(2)*Rt(b/a, S(4))) + Int((x**S(2)*Rt(b/a, S(4)) + S(1))/sqrt(a + b*x**S(8)), x)/(S(2)*Rt(b/a, S(4)))
+    rule800 = ReplacementRule(pattern800, replacement800)
+    rubi.add(rule800.pattern, label = 800)
 
-    pattern113 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1)))**(S(1)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(b/a)))
-    rule113 = ReplacementRule(pattern113, lambda a, x, b : -a*Int(x**S(2)/(a + b*x**S(4))**(S(5)/4), x)/S(2) + x**S(3)/(S(2)*(a + b*x**S(4))**(S(1)/4)))
-    rubi.add(rule113)
+    pattern801 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1)))**(S(1)/4), x_), cons2, cons3, cons466)
+    def replacement801(x, b, a):
+        return -a*Int(x**S(2)/(a + b*x**S(4))**(S(5)/4), x)/S(2) + x**S(3)/(S(2)*(a + b*x**S(4))**(S(1)/4))
+    rule801 = ReplacementRule(pattern801, replacement801)
+    rubi.add(rule801.pattern, label = 801)
 
-    pattern114 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1)))**(S(1)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: NegQ(b/a)))
-    rule114 = ReplacementRule(pattern114, lambda a, x, b : a*Int(S(1)/(x**S(2)*(a + b*x**S(4))**(S(1)/4)), x)/(S(2)*b) + (a + b*x**S(4))**(S(3)/4)/(S(2)*b*x))
-    rubi.add(rule114)
+    pattern802 = Pattern(Integral(x_**S(2)/(a_ + x_**S(4)*WC('b', S(1)))**(S(1)/4), x_), cons2, cons3, cons483)
+    def replacement802(x, b, a):
+        return a*Int(S(1)/(x**S(2)*(a + b*x**S(4))**(S(1)/4)), x)/(S(2)*b) + (a + b*x**S(4))**(S(3)/4)/(S(2)*b*x)
+    rule802 = ReplacementRule(pattern802, replacement802)
+    rubi.add(rule802.pattern, label = 802)
 
-    pattern115 = Pattern(Integral(S(1)/(x_**S(2)*(a_ + x_**S(4)*WC('b', S(1)))**(S(1)/4)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: PosQ(b/a)))
-    rule115 = ReplacementRule(pattern115, lambda a, x, b : -b*Int(x**S(2)/(a + b*x**S(4))**(S(5)/4), x) - S(1)/(x*(a + b*x**S(4))**(S(1)/4)))
-    rubi.add(rule115)
+    pattern803 = Pattern(Integral(S(1)/(x_**S(2)*(a_ + x_**S(4)*WC('b', S(1)))**(S(1)/4)), x_), cons2, cons3, cons466)
+    def replacement803(x, b, a):
+        return -b*Int(x**S(2)/(a + b*x**S(4))**(S(5)/4), x) - S(1)/(x*(a + b*x**S(4))**(S(1)/4))
+    rule803 = ReplacementRule(pattern803, replacement803)
+    rubi.add(rule803.pattern, label = 803)
 
-    pattern116 = Pattern(Integral(S(1)/(x_**S(2)*(a_ + x_**S(4)*WC('b', S(1)))**(S(1)/4)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda a, b: NegQ(b/a)))
-    rule116 = ReplacementRule(pattern116, lambda a, x, b : x*(a/(b*x**S(4)) + S(1))**(S(1)/4)*Int(S(1)/(x**S(3)*(a/(b*x**S(4)) + S(1))**(S(1)/4)), x)/(a + b*x**S(4))**(S(1)/4))
-    rubi.add(rule116)
+    pattern804 = Pattern(Integral(S(1)/(x_**S(2)*(a_ + x_**S(4)*WC('b', S(1)))**(S(1)/4)), x_), cons2, cons3, cons483)
+    def replacement804(x, b, a):
+        return x*(a/(b*x**S(4)) + S(1))**(S(1)/4)*Int(S(1)/(x**S(3)*(a/(b*x**S(4)) + S(1))**(S(1)/4)), x)/(a + b*x**S(4))**(S(1)/4)
+    rule804 = ReplacementRule(pattern804, replacement804)
+    rubi.add(rule804.pattern, label = 804)
 
-    pattern117 = Pattern(Integral(sqrt(c_*x_)/(a_ + x_**S(2)*WC('b', S(1)))**(S(1)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda a, b: PosQ(b/a)))
-    rule117 = ReplacementRule(pattern117, lambda a, c, x, b : -a*Int(sqrt(c*x)/(a + b*x**S(2))**(S(5)/4), x)/S(2) + x*sqrt(c*x)/(a + b*x**S(2))**(S(1)/4))
-    rubi.add(rule117)
+    pattern805 = Pattern(Integral(sqrt(c_*x_)/(a_ + x_**S(2)*WC('b', S(1)))**(S(1)/4), x_), cons2, cons3, cons7, cons466)
+    def replacement805(x, c, b, a):
+        return -a*Int(sqrt(c*x)/(a + b*x**S(2))**(S(5)/4), x)/S(2) + x*sqrt(c*x)/(a + b*x**S(2))**(S(1)/4)
+    rule805 = ReplacementRule(pattern805, replacement805)
+    rubi.add(rule805.pattern, label = 805)
 
-    pattern118 = Pattern(Integral(sqrt(c_*x_)/(a_ + x_**S(2)*WC('b', S(1)))**(S(1)/4), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda a, b: NegQ(b/a)))
-    rule118 = ReplacementRule(pattern118, lambda a, c, x, b : a*c**S(2)*Int(S(1)/((c*x)**(S(3)/2)*(a + b*x**S(2))**(S(1)/4)), x)/(S(2)*b) + c*(a + b*x**S(2))**(S(3)/4)/(b*sqrt(c*x)))
-    rubi.add(rule118)
+    pattern806 = Pattern(Integral(sqrt(c_*x_)/(a_ + x_**S(2)*WC('b', S(1)))**(S(1)/4), x_), cons2, cons3, cons7, cons483)
+    def replacement806(x, c, b, a):
+        return a*c**S(2)*Int(S(1)/((c*x)**(S(3)/2)*(a + b*x**S(2))**(S(1)/4)), x)/(S(2)*b) + c*(a + b*x**S(2))**(S(3)/4)/(b*sqrt(c*x))
+    rule806 = ReplacementRule(pattern806, replacement806)
+    rubi.add(rule806.pattern, label = 806)
 
-    pattern119 = Pattern(Integral(S(1)/((x_*WC('c', S(1)))**(S(3)/2)*(a_ + x_**S(2)*WC('b', S(1)))**(S(1)/4)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda a, b: PosQ(b/a)))
-    rule119 = ReplacementRule(pattern119, lambda a, c, x, b : -b*Int(sqrt(c*x)/(a + b*x**S(2))**(S(5)/4), x)/c**S(2) - S(2)/(c*sqrt(c*x)*(a + b*x**S(2))**(S(1)/4)))
-    rubi.add(rule119)
+    pattern807 = Pattern(Integral(S(1)/((x_*WC('c', S(1)))**(S(3)/2)*(a_ + x_**S(2)*WC('b', S(1)))**(S(1)/4)), x_), cons2, cons3, cons7, cons466)
+    def replacement807(x, c, b, a):
+        return -b*Int(sqrt(c*x)/(a + b*x**S(2))**(S(5)/4), x)/c**S(2) - S(2)/(c*sqrt(c*x)*(a + b*x**S(2))**(S(1)/4))
+    rule807 = ReplacementRule(pattern807, replacement807)
+    rubi.add(rule807.pattern, label = 807)
 
-    pattern120 = Pattern(Integral(S(1)/((x_*WC('c', S(1)))**(S(3)/2)*(a_ + x_**S(2)*WC('b', S(1)))**(S(1)/4)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda a, b: NegQ(b/a)))
-    rule120 = ReplacementRule(pattern120, lambda a, c, x, b : sqrt(c*x)*(a/(b*x**S(2)) + S(1))**(S(1)/4)*Int(S(1)/(x**S(2)*(a/(b*x**S(2)) + S(1))**(S(1)/4)), x)/(c**S(2)*(a + b*x**S(2))**(S(1)/4)))
-    rubi.add(rule120)
+    pattern808 = Pattern(Integral(S(1)/((x_*WC('c', S(1)))**(S(3)/2)*(a_ + x_**S(2)*WC('b', S(1)))**(S(1)/4)), x_), cons2, cons3, cons7, cons483)
+    def replacement808(x, c, b, a):
+        return sqrt(c*x)*(a/(b*x**S(2)) + S(1))**(S(1)/4)*Int(S(1)/(x**S(2)*(a/(b*x**S(2)) + S(1))**(S(1)/4)), x)/(c**S(2)*(a + b*x**S(2))**(S(1)/4))
+    rule808 = ReplacementRule(pattern808, replacement808)
+    rubi.add(rule808.pattern, label = 808)
 
-    pattern121 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda m, n: Greater(m, n + S(-1))), CustomConstraint(lambda p, m, n: NonzeroQ(m + n*p + S(1))), CustomConstraint(lambda b, n, a, p, c, m, x: IntBinomialQ(a, b, c, n, m, p, x)))
-    rule121 = ReplacementRule(pattern121, lambda b, n, a, p, c, m, x : -a*c**n*(m - n + S(1))*Int((c*x)**(m - n)*(a + b*x**n)**p, x)/(b*(m + n*p + S(1))) + c**(n + S(-1))*(c*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))/(b*(m + n*p + S(1))))
-    rubi.add(rule121)
+    pattern809 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons5, cons148, cons31, cons530, cons512, cons509)
+    def replacement809(m, n, p, x, b, c, a):
+        return -a*c**n*(m - n + S(1))*Int((c*x)**(m - n)*(a + b*x**n)**p, x)/(b*(m + n*p + S(1))) + c**(n + S(-1))*(c*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))/(b*(m + n*p + S(1)))
+    rule809 = ReplacementRule(pattern809, replacement809)
+    rubi.add(rule809.pattern, label = 809)
 
-    pattern122 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m, n: SumSimplerQ(m, -n)), CustomConstraint(lambda p, m, n: NonzeroQ(m + n*p + S(1))), CustomConstraint(lambda p, m, n: NegativeIntegerQ((m + n*p + S(1))/n)))
-    rule122 = ReplacementRule(pattern122, lambda b, n, a, p, c, m, x : -a*c**n*(m - n + S(1))*Int((c*x)**(m - n)*(a + b*x**n)**p, x)/(b*(m + n*p + S(1))) + c**(n + S(-1))*(c*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))/(b*(m + n*p + S(1))))
-    rubi.add(rule122)
+    pattern810 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons5, cons148, cons531, cons512, cons532)
+    def replacement810(m, n, p, x, b, c, a):
+        return -a*c**n*(m - n + S(1))*Int((c*x)**(m - n)*(a + b*x**n)**p, x)/(b*(m + n*p + S(1))) + c**(n + S(-1))*(c*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))/(b*(m + n*p + S(1)))
+    rule810 = ReplacementRule(pattern810, replacement810)
+    rubi.add(rule810.pattern, label = 810)
 
-    pattern123 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda m, n: Greater(m, S(2)*n + S(-1))), CustomConstraint(lambda p, m, n: NonzeroQ(m + S(2)*n*p + S(1))), CustomConstraint(lambda n, p, a1, a2, c, b2, m, x, b1: IntBinomialQ(a1*a2, b1*b2, c, n, m, p, x)))
-    rule123 = ReplacementRule(pattern123, lambda n, p, a1, a2, c, b2, m, x, b1 : -a1*a2*c**(S(2)*n)*(m - S(2)*n + S(1))*Int((c*x)**(m - S(2)*n)*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)/(b1*b2*(m + S(2)*n*p + S(1))) + c**(S(2)*n + S(-1))*(c*x)**(m - S(2)*n + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(b1*b2*(m + S(2)*n*p + S(1))))
-    rubi.add(rule123)
+    pattern811 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons5, cons55, cons495, cons31, cons529, cons510, cons511)
+    def replacement811(m, n, a1, p, b2, a2, x, b1, c):
+        return -a1*a2*c**(S(2)*n)*(m - S(2)*n + S(1))*Int((c*x)**(m - S(2)*n)*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)/(b1*b2*(m + S(2)*n*p + S(1))) + c**(S(2)*n + S(-1))*(c*x)**(m - S(2)*n + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(b1*b2*(m + S(2)*n*p + S(1)))
+    rule811 = ReplacementRule(pattern811, replacement811)
+    rubi.add(rule811.pattern, label = 811)
 
-    pattern124 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda m, n: SumSimplerQ(m, -S(2)*n)), CustomConstraint(lambda p, m, n: NonzeroQ(m + S(2)*n*p + S(1))), CustomConstraint(lambda p, m, n: NegativeIntegerQ((m + S(2)*n*p + S(1))/(S(2)*n))))
-    rule124 = ReplacementRule(pattern124, lambda n, p, a1, a2, c, b2, m, x, b1 : -a1*a2*c**(S(2)*n)*(m - S(2)*n + S(1))*Int((c*x)**(m - S(2)*n)*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)/(b1*b2*(m + S(2)*n*p + S(1))) + c**(S(2)*n + S(-1))*(c*x)**(m - S(2)*n + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(b1*b2*(m + S(2)*n*p + S(1))))
-    rubi.add(rule124)
+    pattern812 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons5, cons55, cons495, cons533, cons510, cons534)
+    def replacement812(m, n, a1, p, b2, a2, x, b1, c):
+        return -a1*a2*c**(S(2)*n)*(m - S(2)*n + S(1))*Int((c*x)**(m - S(2)*n)*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)/(b1*b2*(m + S(2)*n*p + S(1))) + c**(S(2)*n + S(-1))*(c*x)**(m - S(2)*n + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(b1*b2*(m + S(2)*n*p + S(1)))
+    rule812 = ReplacementRule(pattern812, replacement812)
+    rubi.add(rule812.pattern, label = 812)
 
-    pattern125 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda m: Less(m, S(-1))), CustomConstraint(lambda b, n, a, p, c, m, x: IntBinomialQ(a, b, c, n, m, p, x)))
-    rule125 = ReplacementRule(pattern125, lambda b, n, a, p, c, m, x : -b*c**(-n)*(m + n*(p + S(1)) + S(1))*Int((c*x)**(m + n)*(a + b*x**n)**p, x)/(a*(m + S(1))) + (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*(m + S(1))))
-    rubi.add(rule125)
+    pattern813 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons5, cons148, cons31, cons94, cons509)
+    def replacement813(m, n, p, x, b, c, a):
+        return -b*c**(-n)*(m + n*(p + S(1)) + S(1))*Int((c*x)**(m + n)*(a + b*x**n)**p, x)/(a*(m + S(1))) + (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*(m + S(1)))
+    rule813 = ReplacementRule(pattern813, replacement813)
+    rubi.add(rule813.pattern, label = 813)
 
-    pattern126 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m, n: SumSimplerQ(m, n)), CustomConstraint(lambda p, m, n: NegativeIntegerQ((m + n*p + S(1))/n)))
-    rule126 = ReplacementRule(pattern126, lambda b, n, a, p, c, m, x : -b*c**(-n)*(m + n*(p + S(1)) + S(1))*Int((c*x)**(m + n)*(a + b*x**n)**p, x)/(a*(m + S(1))) + (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*(m + S(1))))
-    rubi.add(rule126)
+    pattern814 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons5, cons148, cons535, cons532)
+    def replacement814(m, n, p, x, b, c, a):
+        return -b*c**(-n)*(m + n*(p + S(1)) + S(1))*Int((c*x)**(m + n)*(a + b*x**n)**p, x)/(a*(m + S(1))) + (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*(m + S(1)))
+    rule814 = ReplacementRule(pattern814, replacement814)
+    rubi.add(rule814.pattern, label = 814)
 
-    pattern127 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda m: Less(m, S(-1))), CustomConstraint(lambda n, p, a1, a2, c, b2, m, x, b1: IntBinomialQ(a1*a2, b1*b2, c, n, m, p, x)))
-    rule127 = ReplacementRule(pattern127, lambda n, p, a1, a2, c, b2, m, x, b1 : -b1*b2*c**(-S(2)*n)*(m + S(2)*n*(p + S(1)) + S(1))*Int((c*x)**(m + S(2)*n)*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)/(a1*a2*(m + S(1))) + (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(a1*a2*c*(m + S(1))))
-    rubi.add(rule127)
+    pattern815 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons5, cons55, cons495, cons31, cons94, cons511)
+    def replacement815(m, n, a1, p, b2, a2, x, b1, c):
+        return -b1*b2*c**(-S(2)*n)*(m + S(2)*n*(p + S(1)) + S(1))*Int((c*x)**(m + S(2)*n)*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)/(a1*a2*(m + S(1))) + (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(a1*a2*c*(m + S(1)))
+    rule815 = ReplacementRule(pattern815, replacement815)
+    rubi.add(rule815.pattern, label = 815)
 
-    pattern128 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda m, n: SumSimplerQ(m, S(2)*n)), CustomConstraint(lambda p, m, n: NegativeIntegerQ((m + S(2)*n*p + S(1))/(S(2)*n))))
-    rule128 = ReplacementRule(pattern128, lambda n, p, a1, a2, c, b2, m, x, b1 : -b1*b2*c**(-S(2)*n)*(m + S(2)*n*(p + S(1)) + S(1))*Int((c*x)**(m + S(2)*n)*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)/(a1*a2*(m + S(1))) + (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(a1*a2*c*(m + S(1))))
-    rubi.add(rule128)
+    pattern816 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons5, cons55, cons495, cons536, cons534)
+    def replacement816(m, n, a1, p, b2, a2, x, b1, c):
+        return -b1*b2*c**(-S(2)*n)*(m + S(2)*n*(p + S(1)) + S(1))*Int((c*x)**(m + S(2)*n)*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)/(a1*a2*(m + S(1))) + (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(a1*a2*c*(m + S(1)))
+    rule816 = ReplacementRule(pattern816, replacement816)
+    rubi.add(rule816.pattern, label = 816)
 
-    pattern129 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: FractionQ(m)), CustomConstraint(lambda b, n, a, p, c, m, x: IntBinomialQ(a, b, c, n, m, p, x)), )
-    def With129(b, n, a, p, c, m, x):
+    def With817(m, n, p, x, b, c, a):
         k = Denominator(m)
-        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a + b*c**(-n)*x**(k*n))**p, x), x, (c*x)**(1/k))/c
-    rule129 = ReplacementRule(pattern129, lambda b, n, a, p, c, m, x : With129(b, n, a, p, c, m, x))
-    rubi.add(rule129)
+        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a + b*c**(-n)*x**(k*n))**p, x), x, (c*x)**(S(1)/k))/c
+    pattern817 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons5, cons148, cons367, cons509 )
+    rule817 = ReplacementRule(pattern817, With817)
+    rubi.add(rule817.pattern, label = 817)
 
-    pattern130 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda m: FractionQ(m)), CustomConstraint(lambda n, p, a1, a2, c, b2, m, x, b1: IntBinomialQ(a1*a2, b1*b2, c, n, m, p, x)), )
-    def With130(n, p, a1, a2, c, b2, m, x, b1):
+    def With818(m, n, a1, p, b2, a2, x, b1, c):
         k = Denominator(m)
-        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a1 + b1*c**(-n)*x**(k*n))**p*(a2 + b2*c**(-n)*x**(k*n))**p, x), x, (c*x)**(1/k))/c
-    rule130 = ReplacementRule(pattern130, lambda n, p, a1, a2, c, b2, m, x, b1 : With130(n, p, a1, a2, c, b2, m, x, b1))
-    rubi.add(rule130)
+        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a1 + b1*c**(-n)*x**(k*n))**p*(a2 + b2*c**(-n)*x**(k*n))**p, x), x, (c*x)**(S(1)/k))/c
+    pattern818 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons5, cons55, cons495, cons367, cons511 )
+    rule818 = ReplacementRule(pattern818, With818)
+    rubi.add(rule818.pattern, label = 818)
 
-    pattern131 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(S(-1), p, S(0))), CustomConstraint(lambda p: Unequal(p, S(-1)/2)), CustomConstraint(lambda p, m, n: IntegersQ(m, p + (m + S(1))/n)))
-    rule131 = ReplacementRule(pattern131, lambda b, n, a, p, m, x : a**(p + (m + S(1))/n)*Subst(Int(x**m*(-b*x**n + S(1))**(-p + S(-1) - (m + S(1))/n), x), x, x*(a + b*x**n)**(-S(1)/n)))
-    rubi.add(rule131)
+    pattern819 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons148, cons13, cons485, cons486, cons537)
+    def replacement819(m, n, p, x, b, a):
+        return a**(p + (m + S(1))/n)*Subst(Int(x**m*(-b*x**n + S(1))**(-p + S(-1) - (m + S(1))/n), x), x, x*(a + b*x**n)**(-S(1)/n))
+    rule819 = ReplacementRule(pattern819, replacement819)
+    rubi.add(rule819.pattern, label = 819)
 
-    pattern132 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(S(-1), p, S(0))), CustomConstraint(lambda p: Unequal(p, S(-1)/2)), CustomConstraint(lambda p, m, n: IntegersQ(m, p + (m + S(1))/(S(2)*n))))
-    rule132 = ReplacementRule(pattern132, lambda n, p, a1, a2, b2, m, x, b1 : (a1*a2)**(p + (m + S(1))/(S(2)*n))*Subst(Int(x**m*(-b1*x**n + S(1))**(-p + S(-1) - (m + S(1))/(S(2)*n))*(-b2*x**n + S(1))**(-p + S(-1) - (m + S(1))/(S(2)*n)), x), x, x*(a1 + b1*x**n)**(-S(1)/(S(2)*n))*(a2 + b2*x**n)**(-S(1)/(S(2)*n))))
-    rubi.add(rule132)
+    pattern820 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons55, cons495, cons13, cons485, cons486, cons538)
+    def replacement820(m, n, a1, p, b2, a2, x, b1):
+        return (a1*a2)**(p + (m + S(1))/(S(2)*n))*Subst(Int(x**m*(-b1*x**n + S(1))**(-p + S(-1) - (m + S(1))/(S(2)*n))*(-b2*x**n + S(1))**(-p + S(-1) - (m + S(1))/(S(2)*n)), x), x, x*(a1 + b1*x**n)**(-S(1)/(S(2)*n))*(a2 + b2*x**n)**(-S(1)/(S(2)*n)))
+    rule820 = ReplacementRule(pattern820, replacement820)
+    rubi.add(rule820.pattern, label = 820)
 
-    pattern133 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(S(-1), p, S(0))), CustomConstraint(lambda p: Unequal(p, S(-1)/2)), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda p, m, n: Less(Denominator(p + (m + S(1))/n), Denominator(p))))
-    rule133 = ReplacementRule(pattern133, lambda b, n, a, p, m, x : (a/(a + b*x**n))**(p + (m + S(1))/n)*(a + b*x**n)**(p + (m + S(1))/n)*Subst(Int(x**m*(-b*x**n + S(1))**(-p + S(-1) - (m + S(1))/n), x), x, x*(a + b*x**n)**(-S(1)/n)))
-    rubi.add(rule133)
+    pattern821 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons148, cons13, cons485, cons486, cons17, cons539)
+    def replacement821(m, n, p, x, b, a):
+        return (a/(a + b*x**n))**(p + (m + S(1))/n)*(a + b*x**n)**(p + (m + S(1))/n)*Subst(Int(x**m*(-b*x**n + S(1))**(-p + S(-1) - (m + S(1))/n), x), x, x*(a + b*x**n)**(-S(1)/n))
+    rule821 = ReplacementRule(pattern821, replacement821)
+    rubi.add(rule821.pattern, label = 821)
 
-    pattern134 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: PositiveIntegerQ(S(2)*n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(S(-1), p, S(0))), CustomConstraint(lambda p: Unequal(p, S(-1)/2)), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda p, m, n: Less(Denominator(p + (m + S(1))/(S(2)*n)), Denominator(p))))
-    rule134 = ReplacementRule(pattern134, lambda n, p, a1, a2, b2, m, x, b1 : (a1/(a1 + b1*x**n))**(p + (m + S(1))/(S(2)*n))*(a2/(a2 + b2*x**n))**(p + (m + S(1))/(S(2)*n))*(a1 + b1*x**n)**(p + (m + S(1))/(S(2)*n))*(a2 + b2*x**n)**(p + (m + S(1))/(S(2)*n))*Subst(Int(x**m*(-b1*x**n + S(1))**(-p + S(-1) - (m + S(1))/(S(2)*n))*(-b2*x**n + S(1))**(-p + S(-1) - (m + S(1))/(S(2)*n)), x), x, x*(a1 + b1*x**n)**(-S(1)/(S(2)*n))*(a2 + b2*x**n)**(-S(1)/(S(2)*n))))
-    rubi.add(rule134)
+    pattern822 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons55, cons495, cons13, cons485, cons486, cons17, cons540)
+    def replacement822(m, n, a1, p, b2, a2, x, b1):
+        return (a1/(a1 + b1*x**n))**(p + (m + S(1))/(S(2)*n))*(a2/(a2 + b2*x**n))**(p + (m + S(1))/(S(2)*n))*(a1 + b1*x**n)**(p + (m + S(1))/(S(2)*n))*(a2 + b2*x**n)**(p + (m + S(1))/(S(2)*n))*Subst(Int(x**m*(-b1*x**n + S(1))**(-p + S(-1) - (m + S(1))/(S(2)*n))*(-b2*x**n + S(1))**(-p + S(-1) - (m + S(1))/(S(2)*n)), x), x, x*(a1 + b1*x**n)**(-S(1)/(S(2)*n))*(a2 + b2*x**n)**(-S(1)/(S(2)*n)))
+    rule822 = ReplacementRule(pattern822, replacement822)
+    rubi.add(rule822.pattern, label = 822)
 
-    pattern135 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: NegativeIntegerQ(n)), CustomConstraint(lambda m: IntegerQ(m)))
-    rule135 = ReplacementRule(pattern135, lambda b, n, a, p, m, x : -Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p, x), x, 1/x))
-    rubi.add(rule135)
+    pattern823 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons5, cons196, cons17)
+    def replacement823(m, n, p, x, b, a):
+        return -Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p, x), x, S(1)/x)
+    rule823 = ReplacementRule(pattern823, replacement823)
+    rubi.add(rule823.pattern, label = 823)
 
-    pattern136 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: NegativeIntegerQ(S(2)*n)), CustomConstraint(lambda m: IntegerQ(m)))
-    rule136 = ReplacementRule(pattern136, lambda n, p, a1, a2, b2, m, x, b1 : -Subst(Int(x**(-m + S(-2))*(a1 + b1*x**(-n))**p*(a2 + b2*x**(-n))**p, x), x, 1/x))
-    rubi.add(rule136)
+    pattern824 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons5, cons55, cons497, cons17)
+    def replacement824(m, n, a1, p, b2, a2, x, b1):
+        return -Subst(Int(x**(-m + S(-2))*(a1 + b1*x**(-n))**p*(a2 + b2*x**(-n))**p, x), x, S(1)/x)
+    rule824 = ReplacementRule(pattern824, replacement824)
+    rubi.add(rule824.pattern, label = 824)
 
-    pattern137 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: NegativeIntegerQ(n)), CustomConstraint(lambda m: FractionQ(m)), )
-    def With137(b, n, a, p, c, m, x):
+    def With825(m, n, p, x, b, c, a):
         k = Denominator(m)
         return -k*Subst(Int(x**(-k*(m + S(1)) + S(-1))*(a + b*c**(-n)*x**(-k*n))**p, x), x, (c*x)**(-S(1)/k))/c
-    rule137 = ReplacementRule(pattern137, lambda b, n, a, p, c, m, x : With137(b, n, a, p, c, m, x))
-    rubi.add(rule137)
+    pattern825 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons5, cons196, cons367 )
+    rule825 = ReplacementRule(pattern825, With825)
+    rubi.add(rule825.pattern, label = 825)
 
-    pattern138 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: NegativeIntegerQ(S(2)*n)), CustomConstraint(lambda m: FractionQ(m)), )
-    def With138(n, p, a1, a2, c, b2, m, x, b1):
+    def With826(m, n, a1, p, b2, a2, x, b1, c):
         k = Denominator(m)
         return -k*Subst(Int(x**(-k*(m + S(1)) + S(-1))*(a1 + b1*c**(-n)*x**(-k*n))**p*(a2 + b2*c**(-n)*x**(-k*n))**p, x), x, (c*x)**(-S(1)/k))/c
-    rule138 = ReplacementRule(pattern138, lambda n, p, a1, a2, c, b2, m, x, b1 : With138(n, p, a1, a2, c, b2, m, x, b1))
-    rubi.add(rule138)
+    pattern826 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons5, cons55, cons497, cons367 )
+    rule826 = ReplacementRule(pattern826, With826)
+    rubi.add(rule826.pattern, label = 826)
 
-    pattern139 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: NegativeIntegerQ(n)), CustomConstraint(lambda m: Not(RationalQ(m))))
-    rule139 = ReplacementRule(pattern139, lambda b, n, a, p, c, m, x : -(c*x)**m*(1/x)**m*Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p, x), x, 1/x))
-    rubi.add(rule139)
+    pattern827 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons5, cons196, cons356)
+    def replacement827(m, n, p, x, b, c, a):
+        return -(c*x)**m*(S(1)/x)**m*Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p, x), x, S(1)/x)
+    rule827 = ReplacementRule(pattern827, replacement827)
+    rubi.add(rule827.pattern, label = 827)
 
-    pattern140 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: NegativeIntegerQ(S(2)*n)), CustomConstraint(lambda m: Not(RationalQ(m))))
-    rule140 = ReplacementRule(pattern140, lambda n, p, a1, a2, c, b2, m, x, b1 : -(c*x)**m*(1/x)**m*Subst(Int(x**(-m + S(-2))*(a1 + b1*x**(-n))**p*(a2 + b2*x**(-n))**p, x), x, 1/x))
-    rubi.add(rule140)
+    pattern828 = Pattern(Integral((x_*WC('c', S(1)))**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons5, cons55, cons497, cons356)
+    def replacement828(m, n, a1, p, b2, a2, x, b1, c):
+        return -(c*x)**m*(S(1)/x)**m*Subst(Int(x**(-m + S(-2))*(a1 + b1*x**(-n))**p*(a2 + b2*x**(-n))**p, x), x, S(1)/x)
+    rule828 = ReplacementRule(pattern828, replacement828)
+    rubi.add(rule828.pattern, label = 828)
 
-    pattern141 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: FractionQ(n)), )
-    def With141(b, n, a, p, m, x):
+    def With829(m, n, p, x, b, a):
         k = Denominator(n)
-        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a + b*x**(k*n))**p, x), x, x**(1/k))
-    rule141 = ReplacementRule(pattern141, lambda b, n, a, p, m, x : With141(b, n, a, p, m, x))
-    rubi.add(rule141)
+        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a + b*x**(k*n))**p, x), x, x**(S(1)/k))
+    pattern829 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons21, cons5, cons489 )
+    rule829 = ReplacementRule(pattern829, With829)
+    rubi.add(rule829.pattern, label = 829)
 
-    pattern142 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: FractionQ(S(2)*n)), )
-    def With142(n, p, a1, a2, b2, m, x, b1):
+    def With830(m, n, a1, p, b2, a2, x, b1):
         k = Denominator(S(2)*n)
-        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a1 + b1*x**(k*n))**p*(a2 + b2*x**(k*n))**p, x), x, x**(1/k))
-    rule142 = ReplacementRule(pattern142, lambda n, p, a1, a2, b2, m, x, b1 : With142(n, p, a1, a2, b2, m, x, b1))
-    rubi.add(rule142)
+        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a1 + b1*x**(k*n))**p*(a2 + b2*x**(k*n))**p, x), x, x**(S(1)/k))
+    pattern830 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons21, cons5, cons55, cons498 )
+    rule830 = ReplacementRule(pattern830, With830)
+    rubi.add(rule830.pattern, label = 830)
 
-    pattern143 = Pattern(Integral((c_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: FractionQ(n)))
-    rule143 = ReplacementRule(pattern143, lambda b, n, a, p, c, m, x : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p, x))
-    rubi.add(rule143)
+    pattern831 = Pattern(Integral((c_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons5, cons489)
+    def replacement831(m, n, p, x, b, c, a):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p, x)
+    rule831 = ReplacementRule(pattern831, replacement831)
+    rubi.add(rule831.pattern, label = 831)
 
-    pattern144 = Pattern(Integral((c_*x_)**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n: FractionQ(S(2)*n)))
-    rule144 = ReplacementRule(pattern144, lambda n, p, a1, a2, c, b2, m, x, b1 : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x))
-    rubi.add(rule144)
+    pattern832 = Pattern(Integral((c_*x_)**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons5, cons55, cons498)
+    def replacement832(m, n, a1, p, b2, a2, x, b1, c):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)
+    rule832 = ReplacementRule(pattern832, replacement832)
+    rubi.add(rule832.pattern, label = 832)
 
-    pattern145 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda m, n: IntegerQ(n/(m + S(1)))), CustomConstraint(lambda n: Not(IntegerQ(n))))
-    rule145 = ReplacementRule(pattern145, lambda b, n, a, p, m, x : Subst(Int((a + b*x**(n/(m + S(1))))**p, x), x, x**(m + S(1)))/(m + S(1)))
-    rubi.add(rule145)
+    pattern833 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons21, cons4, cons5, cons541, cons23)
+    def replacement833(m, n, p, x, b, a):
+        return Subst(Int((a + b*x**(n/(m + S(1))))**p, x), x, x**(m + S(1)))/(m + S(1))
+    rule833 = ReplacementRule(pattern833, replacement833)
+    rubi.add(rule833.pattern, label = 833)
 
-    pattern146 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda m, n: IntegerQ(S(2)*n/(m + S(1)))), CustomConstraint(lambda n: Not(IntegerQ(S(2)*n))))
-    rule146 = ReplacementRule(pattern146, lambda n, p, a1, a2, b2, m, x, b1 : Subst(Int((a1 + b1*x**(n/(m + S(1))))**p*(a2 + b2*x**(n/(m + S(1))))**p, x), x, x**(m + S(1)))/(m + S(1)))
-    rubi.add(rule146)
+    pattern834 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons21, cons4, cons5, cons55, cons542, cons543)
+    def replacement834(m, n, a1, p, b2, a2, x, b1):
+        return Subst(Int((a1 + b1*x**(n/(m + S(1))))**p*(a2 + b2*x**(n/(m + S(1))))**p, x), x, x**(m + S(1)))/(m + S(1))
+    rule834 = ReplacementRule(pattern834, replacement834)
+    rubi.add(rule834.pattern, label = 834)
 
-    pattern147 = Pattern(Integral((c_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda m, n: IntegerQ(n/(m + S(1)))), CustomConstraint(lambda n: Not(IntegerQ(n))))
-    rule147 = ReplacementRule(pattern147, lambda b, n, a, p, c, m, x : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p, x))
-    rubi.add(rule147)
+    pattern835 = Pattern(Integral((c_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons4, cons5, cons541, cons23)
+    def replacement835(m, n, p, x, b, c, a):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p, x)
+    rule835 = ReplacementRule(pattern835, replacement835)
+    rubi.add(rule835.pattern, label = 835)
 
-    pattern148 = Pattern(Integral((c_*x_)**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda m, n: IntegerQ(S(2)*n/(m + S(1)))), CustomConstraint(lambda n: Not(IntegerQ(S(2)*n))))
-    rule148 = ReplacementRule(pattern148, lambda n, p, a1, a2, c, b2, m, x, b1 : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x))
-    rubi.add(rule148)
+    pattern836 = Pattern(Integral((c_*x_)**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons4, cons5, cons55, cons542, cons543)
+    def replacement836(m, n, a1, p, b2, a2, x, b1, c):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)
+    rule836 = ReplacementRule(pattern836, replacement836)
+    rubi.add(rule836.pattern, label = 836)
 
-    pattern149 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, m, n: ZeroQ(p + (m + S(1))/n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Greater(p, S(0))))
-    rule149 = ReplacementRule(pattern149, lambda b, n, a, p, m, x : -b*n*p*Int(x**(m + n)*(a + b*x**n)**(p + S(-1)), x)/(m + S(1)) + x**(m + S(1))*(a + b*x**n)**p/(m + S(1)))
-    rubi.add(rule149)
+    pattern837 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons21, cons4, cons544, cons13, cons163)
+    def replacement837(m, n, p, x, b, a):
+        return -b*n*p*Int(x**(m + n)*(a + b*x**n)**(p + S(-1)), x)/(m + S(1)) + x**(m + S(1))*(a + b*x**n)**p/(m + S(1))
+    rule837 = ReplacementRule(pattern837, replacement837)
+    rubi.add(rule837.pattern, label = 837)
 
-    pattern150 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, m, n: ZeroQ(p + (m + S(1))/(S(2)*n))), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Greater(p, S(0))))
-    rule150 = ReplacementRule(pattern150, lambda n, p, a1, a2, b2, m, x, b1 : -S(2)*b1*b2*n*p*Int(x**(m + n)*(a1 + b1*x**n)**(p + S(-1))*(a2 + b2*x**n)**(p + S(-1)), x)/(m + S(1)) + x**(m + S(1))*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p/(m + S(1)))
-    rubi.add(rule150)
+    pattern838 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons21, cons4, cons55, cons545, cons13, cons163)
+    def replacement838(m, n, a1, p, b2, a2, x, b1):
+        return -S(2)*b1*b2*n*p*Int(x**(m + n)*(a1 + b1*x**n)**(p + S(-1))*(a2 + b2*x**n)**(p + S(-1)), x)/(m + S(1)) + x**(m + S(1))*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p/(m + S(1))
+    rule838 = ReplacementRule(pattern838, replacement838)
+    rubi.add(rule838.pattern, label = 838)
 
-    pattern151 = Pattern(Integral((c_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, m, n: ZeroQ(p + (m + S(1))/n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Greater(p, S(0))))
-    rule151 = ReplacementRule(pattern151, lambda b, n, a, p, c, m, x : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p, x))
-    rubi.add(rule151)
+    pattern839 = Pattern(Integral((c_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons4, cons544, cons13, cons163)
+    def replacement839(m, n, p, x, b, c, a):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p, x)
+    rule839 = ReplacementRule(pattern839, replacement839)
+    rubi.add(rule839.pattern, label = 839)
 
-    pattern152 = Pattern(Integral((c_*x_)**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, m, n: ZeroQ(p + (m + S(1))/(S(2)*n))), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Greater(p, S(0))))
-    rule152 = ReplacementRule(pattern152, lambda n, p, a1, a2, c, b2, m, x, b1 : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x))
-    rubi.add(rule152)
+    pattern840 = Pattern(Integral((c_*x_)**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons4, cons55, cons545, cons13, cons163)
+    def replacement840(m, n, a1, p, b2, a2, x, b1, c):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)
+    rule840 = ReplacementRule(pattern840, replacement840)
+    rubi.add(rule840.pattern, label = 840)
 
-    pattern153 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, m, n: IntegerQ(p + (m + S(1))/n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda p, m, n: NonzeroQ(m + n*p + S(1))))
-    rule153 = ReplacementRule(pattern153, lambda b, n, a, p, c, m, x : a*n*p*Int((c*x)**m*(a + b*x**n)**(p + S(-1)), x)/(m + n*p + S(1)) + (c*x)**(m + S(1))*(a + b*x**n)**p/(c*(m + n*p + S(1))))
-    rubi.add(rule153)
+    pattern841 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons4, cons546, cons13, cons163, cons512)
+    def replacement841(m, n, p, x, b, c, a):
+        return a*n*p*Int((c*x)**m*(a + b*x**n)**(p + S(-1)), x)/(m + n*p + S(1)) + (c*x)**(m + S(1))*(a + b*x**n)**p/(c*(m + n*p + S(1)))
+    rule841 = ReplacementRule(pattern841, replacement841)
+    rubi.add(rule841.pattern, label = 841)
 
-    pattern154 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, m, n: IntegerQ(p + (m + S(1))/(S(2)*n))), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda p, m, n: NonzeroQ(m + S(2)*n*p + S(1))))
-    rule154 = ReplacementRule(pattern154, lambda n, p, a1, a2, c, b2, m, x, b1 : S(2)*a1*a2*n*p*Int((c*x)**m*(a1 + b1*x**n)**(p + S(-1))*(a2 + b2*x**n)**(p + S(-1)), x)/(m + S(2)*n*p + S(1)) + (c*x)**(m + S(1))*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p/(c*(m + S(2)*n*p + S(1))))
-    rubi.add(rule154)
+    pattern842 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons4, cons55, cons547, cons13, cons163, cons510)
+    def replacement842(m, n, a1, p, b2, a2, x, b1, c):
+        return S(2)*a1*a2*n*p*Int((c*x)**m*(a1 + b1*x**n)**(p + S(-1))*(a2 + b2*x**n)**(p + S(-1)), x)/(m + S(2)*n*p + S(1)) + (c*x)**(m + S(1))*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p/(c*(m + S(2)*n*p + S(1)))
+    rule842 = ReplacementRule(pattern842, replacement842)
+    rubi.add(rule842.pattern, label = 842)
 
-    pattern155 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, m, n: IntegerQ(p + (m + S(1))/n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(S(-1), p, S(0))), )
-    def With155(b, n, a, p, m, x):
+    def With843(m, n, p, x, b, a):
         k = Denominator(p)
         return a**(p + (m + S(1))/n)*k*Subst(Int(x**(k*(m + S(1))/n + S(-1))*(-b*x**k + S(1))**(-p + S(-1) - (m + S(1))/n), x), x, x**(n/k)*(a + b*x**n)**(-S(1)/k))/n
-    rule155 = ReplacementRule(pattern155, lambda b, n, a, p, m, x : With155(b, n, a, p, m, x))
-    rubi.add(rule155)
+    pattern843 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons21, cons4, cons546, cons13, cons485 )
+    rule843 = ReplacementRule(pattern843, With843)
+    rubi.add(rule843.pattern, label = 843)
 
-    pattern156 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, m, n: IntegerQ(p + (m + S(1))/(S(2)*n))), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(S(-1), p, S(0))), )
-    def With156(n, p, a1, a2, b2, m, x, b1):
+    def With844(m, n, a1, p, b2, a2, x, b1):
         k = Denominator(p)
         return k*(a1*a2)**(p + (m + S(1))/(S(2)*n))*Subst(Int(x**(k*(m + S(1))/(S(2)*n) + S(-1))*(-b1*x**k + S(1))**(-p + S(-1) - (m + S(1))/(S(2)*n))*(-b2*x**k + S(1))**(-p + S(-1) - (m + S(1))/(S(2)*n)), x), x, x**(S(2)*n/k)*(a1 + b1*x**n)**(-S(1)/k)*(a2 + b2*x**n)**(-S(1)/k))/(S(2)*n)
-    rule156 = ReplacementRule(pattern156, lambda n, p, a1, a2, b2, m, x, b1 : With156(n, p, a1, a2, b2, m, x, b1))
-    rubi.add(rule156)
+    pattern844 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons21, cons4, cons55, cons547, cons13, cons485 )
+    rule844 = ReplacementRule(pattern844, With844)
+    rubi.add(rule844.pattern, label = 844)
 
-    pattern157 = Pattern(Integral((c_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, m, n: IntegerQ(p + (m + S(1))/n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(S(-1), p, S(0))))
-    rule157 = ReplacementRule(pattern157, lambda b, n, a, p, c, m, x : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p, x))
-    rubi.add(rule157)
+    pattern845 = Pattern(Integral((c_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons4, cons546, cons13, cons485)
+    def replacement845(m, n, p, x, b, c, a):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p, x)
+    rule845 = ReplacementRule(pattern845, replacement845)
+    rubi.add(rule845.pattern, label = 845)
 
-    pattern158 = Pattern(Integral((c_*x_)**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, m, n: IntegerQ(p + (m + S(1))/(S(2)*n))), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(S(-1), p, S(0))))
-    rule158 = ReplacementRule(pattern158, lambda n, p, a1, a2, c, b2, m, x, b1 : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x))
-    rubi.add(rule158)
+    pattern846 = Pattern(Integral((c_*x_)**m_*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons4, cons55, cons547, cons13, cons485)
+    def replacement846(m, n, a1, p, b2, a2, x, b1, c):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m*(a1 + b1*x**n)**p*(a2 + b2*x**n)**p, x)
+    rule846 = ReplacementRule(pattern846, replacement846)
+    rubi.add(rule846.pattern, label = 846)
 
-    pattern159 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, m, n: IntegerQ(p + (m + S(1))/n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))))
-    rule159 = ReplacementRule(pattern159, lambda b, n, a, p, c, m, x : (m + n*(p + S(1)) + S(1))*Int((c*x)**m*(a + b*x**n)**(p + S(1)), x)/(a*n*(p + S(1))) - (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*n*(p + S(1))))
-    rubi.add(rule159)
+    pattern847 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons4, cons546, cons13, cons137)
+    def replacement847(m, n, p, x, b, c, a):
+        return (m + n*(p + S(1)) + S(1))*Int((c*x)**m*(a + b*x**n)**(p + S(1)), x)/(a*n*(p + S(1))) - (c*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*c*n*(p + S(1)))
+    rule847 = ReplacementRule(pattern847, replacement847)
+    rubi.add(rule847.pattern, label = 847)
 
-    pattern160 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, m, n: IntegerQ(p + (m + S(1))/n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))))
-    rule160 = ReplacementRule(pattern160, lambda n, p, a1, a2, c, b2, m, x, b1 : (m + S(2)*n*(p + S(1)) + S(1))*Int((c*x)**m*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1)), x)/(S(2)*a1*a2*n*(p + S(1))) - (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*a1*a2*c*n*(p + S(1))))
-    rubi.add(rule160)
+    pattern848 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons4, cons55, cons546, cons13, cons137)
+    def replacement848(m, n, a1, p, b2, a2, x, b1, c):
+        return (m + S(2)*n*(p + S(1)) + S(1))*Int((c*x)**m*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1)), x)/(S(2)*a1*a2*n*(p + S(1))) - (c*x)**(m + S(1))*(a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*a1*a2*c*n*(p + S(1)))
+    rule848 = ReplacementRule(pattern848, replacement848)
+    rubi.add(rule848.pattern, label = 848)
 
-    pattern161 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda m, n: FractionQ((m + S(1))/n)), CustomConstraint(lambda m, n: SumSimplerQ(m, -n)), )
-    def With161(b, n, a, m, x):
+    def With849(m, n, x, b, a):
         mn = m - n
         return -a*Int(x**mn/(a + b*x**n), x)/b + x**(mn + S(1))/(b*(mn + S(1)))
-    rule161 = ReplacementRule(pattern161, lambda b, n, a, m, x : With161(b, n, a, m, x))
-    rubi.add(rule161)
+    pattern849 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons21, cons4, cons548, cons531 )
+    rule849 = ReplacementRule(pattern849, With849)
+    rubi.add(rule849.pattern, label = 849)
 
-    pattern162 = Pattern(Integral(x_**m_/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda m, n: FractionQ((m + S(1))/n)), CustomConstraint(lambda m, n: SumSimplerQ(m, n)))
-    rule162 = ReplacementRule(pattern162, lambda b, n, a, m, x : -b*Int(x**(m + n)/(a + b*x**n), x)/a + x**(m + S(1))/(a*(m + S(1))))
-    rubi.add(rule162)
+    pattern850 = Pattern(Integral(x_**m_/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons21, cons4, cons548, cons535)
+    def replacement850(m, n, x, b, a):
+        return -b*Int(x**(m + n)/(a + b*x**n), x)/a + x**(m + S(1))/(a*(m + S(1)))
+    rule850 = ReplacementRule(pattern850, replacement850)
+    rubi.add(rule850.pattern, label = 850)
 
-    pattern163 = Pattern(Integral((c_*x_)**m_/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda m, n: FractionQ((m + S(1))/n)), CustomConstraint(lambda m, n: SumSimplerQ(m, n) | SumSimplerQ(m, -n)))
-    rule163 = ReplacementRule(pattern163, lambda b, n, a, c, m, x : c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m/(a + b*x**n), x))
-    rubi.add(rule163)
+    pattern851 = Pattern(Integral((c_*x_)**m_/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons7, cons21, cons4, cons548, cons549)
+    def replacement851(m, n, x, b, c, a):
+        return c**IntPart(m)*x**(-FracPart(m))*(c*x)**FracPart(m)*Int(x**m/(a + b*x**n), x)
+    rule851 = ReplacementRule(pattern851, replacement851)
+    rubi.add(rule851.pattern, label = 851)
 
-    pattern164 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda p: Not(PositiveIntegerQ(p))), CustomConstraint(lambda p, a: NegativeIntegerQ(p) | PositiveQ(a)))
-    rule164 = ReplacementRule(pattern164, lambda b, n, a, p, c, m, x : a**p*(c*x)**(m + S(1))*Hypergeometric2F1(-p, (m + S(1))/n, S(1) + (m + S(1))/n, -b*x**n/a)/(c*(m + S(1))))
-    rubi.add(rule164)
+    pattern852 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons4, cons5, cons357, cons550)
+    def replacement852(m, n, p, x, b, c, a):
+        return a**p*(c*x)**(m + S(1))*Hypergeometric2F1(-p, (m + S(1))/n, S(1) + (m + S(1))/n, -b*x**n/a)/(c*(m + S(1)))
+    rule852 = ReplacementRule(pattern852, replacement852)
+    rubi.add(rule852.pattern, label = 852)
 
-    pattern165 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda p: Not(PositiveIntegerQ(p))), CustomConstraint(lambda p, a: Not(NegativeIntegerQ(p) | PositiveQ(a))))
-    rule165 = ReplacementRule(pattern165, lambda b, n, a, p, c, m, x : a**IntPart(p)*(S(1) + b*x**n/a)**(-FracPart(p))*(a + b*x**n)**FracPart(p)*Int((c*x)**m*(S(1) + b*x**n/a)**p, x))
-    rubi.add(rule165)
+    pattern853 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons7, cons21, cons4, cons5, cons357, cons551)
+    def replacement853(m, n, p, x, b, c, a):
+        return a**IntPart(p)*(S(1) + b*x**n/a)**(-FracPart(p))*(a + b*x**n)**FracPart(p)*Int((c*x)**m*(S(1) + b*x**n/a)**p, x)
+    rule853 = ReplacementRule(pattern853, replacement853)
+    rubi.add(rule853.pattern, label = 853)
 
-    pattern166 = Pattern(Integral(x_**WC('m', S(1))*(a_ + v_**n_*WC('b', S(1)))**WC('p', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda v, x: LinearQ(v, x)), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda v, x: NonzeroQ(v - x)))
-    rule166 = ReplacementRule(pattern166, lambda b, n, p, a, v, m, x : Coefficient(v, x, S(1))**(-m + S(-1))*Subst(Int(SimplifyIntegrand((a + b*x**n)**p*(x - Coefficient(v, x, S(0)))**m, x), x), x, v))
-    rubi.add(rule166)
+    pattern854 = Pattern(Integral(x_**WC('m', S(1))*(a_ + v_**n_*WC('b', S(1)))**WC('p', S(1)), x_), cons2, cons3, cons4, cons5, cons552, cons17, cons553)
+    def replacement854(m, n, p, v, x, b, a):
+        return Coefficient(v, x, S(1))**(-m + S(-1))*Subst(Int(SimplifyIntegrand((a + b*x**n)**p*(x - Coefficient(v, x, S(0)))**m, x), x), x, v)
+    rule854 = ReplacementRule(pattern854, replacement854)
+    rubi.add(rule854.pattern, label = 854)
 
-    pattern167 = Pattern(Integral(u_**WC('m', S(1))*(a_ + v_**n_*WC('b', S(1)))**WC('p', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda u, v, x: LinearPairQ(u, v, x)))
-    rule167 = ReplacementRule(pattern167, lambda b, n, p, u, a, v, m, x : u**m*v**(-m)*Subst(Int(x**m*(a + b*x**n)**p, x), x, v)/Coefficient(v, x, S(1)))
-    rubi.add(rule167)
+    pattern855 = Pattern(Integral(u_**WC('m', S(1))*(a_ + v_**n_*WC('b', S(1)))**WC('p', S(1)), x_), cons2, cons3, cons21, cons4, cons5, cons554)
+    def replacement855(m, n, p, v, x, b, u, a):
+        return u**m*v**(-m)*Subst(Int(x**m*(a + b*x**n)**p, x), x, v)/Coefficient(v, x, S(1))
+    rule855 = ReplacementRule(pattern855, replacement855)
+    rubi.add(rule855.pattern, label = 855)
 
-    pattern168 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p: Not(IntegerQ(p))))
-    rule168 = ReplacementRule(pattern168, lambda n, p, a1, a2, c, b2, m, x, b1 : (a1 + b1*x**n)**FracPart(p)*(a2 + b2*x**n)**FracPart(p)*(a1*a2 + b1*b2*x**(S(2)*n))**(-FracPart(p))*Int((c*x)**m*(a1*a2 + b1*b2*x**(S(2)*n))**p, x))
-    rubi.add(rule168)
+    pattern856 = Pattern(Integral((x_*WC('c', S(1)))**WC('m', S(1))*(a1_ + x_**n_*WC('b1', S(1)))**p_*(a2_ + x_**n_*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons7, cons21, cons4, cons5, cons55, cons147)
+    def replacement856(m, n, a1, p, b2, a2, x, b1, c):
+        return (a1 + b1*x**n)**FracPart(p)*(a2 + b2*x**n)**FracPart(p)*(a1*a2 + b1*b2*x**(S(2)*n))**(-FracPart(p))*Int((c*x)**m*(a1*a2 + b1*b2*x**(S(2)*n))**p, x)
+    rule856 = ReplacementRule(pattern856, replacement856)
+    rubi.add(rule856.pattern, label = 856)
 
-    pattern169 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q: PositiveIntegerQ(p, q)))
-    rule169 = ReplacementRule(pattern169, lambda b, n, a, p, c, q, d, x : Int(ExpandIntegrand((a + b*x**n)**p*(c + d*x**n)**q, x), x))
-    rubi.add(rule169)
+    pattern857 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons4, cons71, cons555)
+    def replacement857(n, p, q, x, b, d, c, a):
+        return Int(ExpandIntegrand((a + b*x**n)**p*(c + d*x**n)**q, x), x)
+    rule857 = ReplacementRule(pattern857, replacement857)
+    rubi.add(rule857.pattern, label = 857)
 
-    pattern170 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q: IntegersQ(p, q)), CustomConstraint(lambda n: NegQ(n)))
-    rule170 = ReplacementRule(pattern170, lambda b, n, a, p, c, q, d, x : Int(x**(n*(p + q))*(a*x**(-n) + b)**p*(c*x**(-n) + d)**q, x))
-    rubi.add(rule170)
+    pattern858 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons4, cons71, cons220, cons502)
+    def replacement858(n, p, q, x, b, d, c, a):
+        return Int(x**(n*(p + q))*(a*x**(-n) + b)**p*(c*x**(-n) + d)**q, x)
+    rule858 = ReplacementRule(pattern858, replacement858)
+    rubi.add(rule858.pattern, label = 858)
 
-    pattern171 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: NegativeIntegerQ(n)))
-    rule171 = ReplacementRule(pattern171, lambda b, n, a, p, c, q, d, x : -Subst(Int((a + b*x**(-n))**p*(c + d*x**(-n))**q/x**S(2), x), x, 1/x))
-    rubi.add(rule171)
+    pattern859 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons5, cons50, cons71, cons196)
+    def replacement859(n, p, q, x, b, d, c, a):
+        return -Subst(Int((a + b*x**(-n))**p*(c + d*x**(-n))**q/x**S(2), x), x, S(1)/x)
+    rule859 = ReplacementRule(pattern859, replacement859)
+    rubi.add(rule859.pattern, label = 859)
 
-    pattern172 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: FractionQ(n)), )
-    def With172(b, n, a, p, c, q, d, x):
+    def With860(n, p, q, x, b, d, c, a):
         g = Denominator(n)
-        return g*Subst(Int(x**(g + S(-1))*(a + b*x**(g*n))**p*(c + d*x**(g*n))**q, x), x, x**(1/g))
-    rule172 = ReplacementRule(pattern172, lambda b, n, a, p, c, q, d, x : With172(b, n, a, p, c, q, d, x))
-    rubi.add(rule172)
+        return g*Subst(Int(x**(g + S(-1))*(a + b*x**(g*n))**p*(c + d*x**(g*n))**q, x), x, x**(S(1)/g))
+    pattern860 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons5, cons50, cons71, cons489 )
+    rule860 = ReplacementRule(pattern860, With860)
+    rubi.add(rule860.pattern, label = 860)
 
-    pattern173 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_/(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, n: ZeroQ(n*p + S(1))), CustomConstraint(lambda n: IntegerQ(n)))
-    rule173 = ReplacementRule(pattern173, lambda b, n, a, p, c, d, x : Subst(Int(1/(c - x**n*(-a*d + b*c)), x), x, x*(a + b*x**n)**(-S(1)/n)))
-    rubi.add(rule173)
+    pattern861 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_/(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons71, cons556, cons85)
+    def replacement861(n, p, x, b, d, c, a):
+        return Subst(Int(S(1)/(c - x**n*(-a*d + b*c)), x), x, x*(a + b*x**n)**(-S(1)/n))
+    rule861 = ReplacementRule(pattern861, replacement861)
+    rubi.add(rule861.pattern, label = 861)
 
-    pattern174 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q, n: ZeroQ(n*(p + q + S(1)) + S(1))), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda p: NonzeroQ(p + S(1))))
-    rule174 = ReplacementRule(pattern174, lambda b, n, a, p, c, q, d, x : -c*q*Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1)), x)/(a*(p + S(1))) - x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*n*(p + S(1))))
-    rubi.add(rule174)
+    pattern862 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons4, cons5, cons71, cons557, cons395, cons403, cons54)
+    def replacement862(n, q, p, x, b, d, c, a):
+        return -c*q*Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1)), x)/(a*(p + S(1))) - x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*n*(p + S(1)))
+    rule862 = ReplacementRule(pattern862, replacement862)
+    rubi.add(rule862.pattern, label = 862)
 
-    pattern175 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q, n: ZeroQ(n*(p + q + S(1)) + S(1))), CustomConstraint(lambda p: NegativeIntegerQ(p)))
-    rule175 = ReplacementRule(pattern175, lambda b, n, a, p, c, q, d, x : a**p*c**(-p + S(-1))*x*(c + d*x**n)**(-S(1)/n)*Hypergeometric2F1(1/n, -p, S(1) + 1/n, x**n*(a*d - b*c)/(a*(c + d*x**n))))
-    rubi.add(rule175)
+    pattern863 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons50, cons71, cons557, cons63)
+    def replacement863(n, p, q, x, b, d, c, a):
+        return a**p*c**(-p + S(-1))*x*(c + d*x**n)**(-S(1)/n)*Hypergeometric2F1(S(1)/n, -p, S(1) + S(1)/n, -x**n*(-a*d + b*c)/(a*(c + d*x**n)))
+    rule863 = ReplacementRule(pattern863, replacement863)
+    rubi.add(rule863.pattern, label = 863)
 
-    pattern176 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q, n: ZeroQ(n*(p + q + S(1)) + S(1))))
-    rule176 = ReplacementRule(pattern176, lambda b, n, a, p, c, q, d, x : x*(c*(a + b*x**n)/(a*(c + d*x**n)))**(-p)*(a + b*x**n)**p*(c + d*x**n)**(-p - S(1)/n)*Hypergeometric2F1(1/n, -p, S(1) + 1/n, x**n*(a*d - b*c)/(a*(c + d*x**n)))/c)
-    rubi.add(rule176)
+    pattern864 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons5, cons50, cons71, cons557)
+    def replacement864(n, p, q, x, b, d, c, a):
+        return x*(c*(a + b*x**n)/(a*(c + d*x**n)))**(-p)*(a + b*x**n)**p*(c + d*x**n)**(-p - S(1)/n)*Hypergeometric2F1(S(1)/n, -p, S(1) + S(1)/n, -x**n*(-a*d + b*c)/(a*(c + d*x**n)))/c
+    rule864 = ReplacementRule(pattern864, replacement864)
+    rubi.add(rule864.pattern, label = 864)
 
-    pattern177 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q, n: ZeroQ(n*(p + q + S(2)) + S(1))), CustomConstraint(lambda b, a, p, c, q, d: ZeroQ(a*d*(p + S(1)) + b*c*(q + S(1)))))
-    rule177 = ReplacementRule(pattern177, lambda b, n, a, p, c, q, d, x : x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*c))
-    rubi.add(rule177)
+    pattern865 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons5, cons50, cons71, cons558, cons559)
+    def replacement865(n, p, q, x, b, d, c, a):
+        return x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*c)
+    rule865 = ReplacementRule(pattern865, replacement865)
+    rubi.add(rule865.pattern, label = 865)
 
-    pattern178 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q, n: ZeroQ(n*(p + q + S(2)) + S(1))), CustomConstraint(lambda p, q: (RationalQ(p) & Less(p, S(-1))) | Not(RationalQ(q) & Less(q, S(-1)))), CustomConstraint(lambda p: NonzeroQ(p + S(1))))
-    rule178 = ReplacementRule(pattern178, lambda b, n, a, p, c, q, d, x : -b*x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*n*(p + S(1))*(-a*d + b*c)) + (b*c + n*(p + S(1))*(-a*d + b*c))*Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**q, x)/(a*n*(p + S(1))*(-a*d + b*c)))
-    rubi.add(rule178)
+    pattern866 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons50, cons71, cons558, cons560, cons54)
+    def replacement866(n, p, q, x, b, d, c, a):
+        return -b*x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*n*(p + S(1))*(-a*d + b*c)) + (b*c + n*(p + S(1))*(-a*d + b*c))*Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**q, x)/(a*n*(p + S(1))*(-a*d + b*c))
+    rule866 = ReplacementRule(pattern866, replacement866)
+    rubi.add(rule866.pattern, label = 866)
 
-    pattern179 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n, b, a, p, c, d: ZeroQ(a*d - b*c*(n*(p + S(1)) + S(1)))))
-    rule179 = ReplacementRule(pattern179, lambda b, n, p, a, c, d, x : c*x*(a + b*x**n)**(p + S(1))/a)
-    rubi.add(rule179)
+    pattern867 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons4, cons5, cons71, cons561)
+    def replacement867(n, p, x, b, d, c, a):
+        return c*x*(a + b*x**n)**(p + S(1))/a
+    rule867 = ReplacementRule(pattern867, replacement867)
+    rubi.add(rule867.pattern, label = 867)
 
-    pattern180 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, n: NegativeIntegerQ(p + 1/n) | (RationalQ(p) & Less(p, S(-1)))))
-    rule180 = ReplacementRule(pattern180, lambda b, n, a, p, c, d, x : x*(a + b*x**n)**(p + S(1))*(a*d - b*c)/(a*b*n*(p + S(1))) - (a*d - b*c*(n*(p + S(1)) + S(1)))*Int((a + b*x**n)**(p + S(1)), x)/(a*b*n*(p + S(1))))
-    rubi.add(rule180)
+    pattern868 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons4, cons5, cons71, cons562)
+    def replacement868(n, p, x, b, d, c, a):
+        return -x*(a + b*x**n)**(p + S(1))*(-a*d + b*c)/(a*b*n*(p + S(1))) - (a*d - b*c*(n*(p + S(1)) + S(1)))*Int((a + b*x**n)**(p + S(1)), x)/(a*b*n*(p + S(1)))
+    rule868 = ReplacementRule(pattern868, replacement868)
+    rubi.add(rule868.pattern, label = 868)
 
-    pattern181 = Pattern(Integral((c_ + x_**n_*WC('d', S(1)))/(a_ + x_**n_*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: RationalQ(n)), CustomConstraint(lambda n: Less(n, S(0))))
-    rule181 = ReplacementRule(pattern181, lambda b, n, a, c, d, x : c*x/a - (-a*d + b*c)*Int(1/(a*x**(-n) + b), x)/a)
-    rubi.add(rule181)
+    pattern869 = Pattern(Integral((c_ + x_**n_*WC('d', S(1)))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons7, cons27, cons4, cons71, cons87, cons463)
+    def replacement869(n, x, b, d, c, a):
+        return c*x/a - (-a*d + b*c)*Int(S(1)/(a*x**(-n) + b), x)/a
+    rule869 = ReplacementRule(pattern869, replacement869)
+    rubi.add(rule869.pattern, label = 869)
 
-    pattern182 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, n: NonzeroQ(n*(p + S(1)) + S(1))))
-    rule182 = ReplacementRule(pattern182, lambda b, n, a, p, c, d, x : d*x*(a + b*x**n)**(p + S(1))/(b*(n*(p + S(1)) + S(1))) - (a*d - b*c*(n*(p + S(1)) + S(1)))*Int((a + b*x**n)**p, x)/(b*(n*(p + S(1)) + S(1))))
-    rubi.add(rule182)
+    pattern870 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons4, cons71, cons563)
+    def replacement870(n, p, x, b, d, c, a):
+        return d*x*(a + b*x**n)**(p + S(1))/(b*(n*(p + S(1)) + S(1))) - (a*d - b*c*(n*(p + S(1)) + S(1)))*Int((a + b*x**n)**p, x)/(b*(n*(p + S(1)) + S(1)))
+    rule870 = ReplacementRule(pattern870, replacement870)
+    rubi.add(rule870.pattern, label = 870)
 
-    pattern183 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, n: PositiveIntegerQ(n, p)), CustomConstraint(lambda q: NegativeIntegerQ(q)), CustomConstraint(lambda p, q: GreaterEqual(p, -q)))
-    rule183 = ReplacementRule(pattern183, lambda b, n, a, p, c, q, d, x : Int(PolynomialDivide((a + b*x**n)**p, (c + d*x**n)**(-q), x), x))
-    rubi.add(rule183)
+    pattern871 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons71, cons464, cons564, cons565)
+    def replacement871(n, p, q, x, b, d, c, a):
+        return Int(PolynomialDivide((a + b*x**n)**p, (c + d*x**n)**(-q), x), x)
+    rule871 = ReplacementRule(pattern871, replacement871)
+    rubi.add(rule871.pattern, label = 871)
 
-    pattern184 = Pattern(Integral(S(1)/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)))
-    rule184 = ReplacementRule(pattern184, lambda b, n, a, c, d, x : b*Int(1/(a + b*x**n), x)/(-a*d + b*c) - d*Int(1/(c + d*x**n), x)/(-a*d + b*c))
-    rubi.add(rule184)
+    pattern872 = Pattern(Integral(S(1)/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons4, cons71)
+    def replacement872(n, x, b, d, c, a):
+        return b*Int(S(1)/(a + b*x**n), x)/(-a*d + b*c) - d*Int(S(1)/(c + d*x**n), x)/(-a*d + b*c)
+    rule872 = ReplacementRule(pattern872, replacement872)
+    rubi.add(rule872.pattern, label = 872)
 
-    pattern185 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))**(S(1)/3)*(c_ + x_**S(2)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda a, c, b, d: ZeroQ(S(3)*a*d + b*c)), CustomConstraint(lambda a, b: PosQ(b/a)))
-    rule185 = ReplacementRule(pattern185, lambda b, a, c, d, x : sqrt(S(3))*Int(S(1)/((a + b*x**S(2))**(S(1)/3)*(-x*Rt(b/a, S(2)) + sqrt(S(3)))), x)/(S(2)*c) + sqrt(S(3))*Int(S(1)/((a + b*x**S(2))**(S(1)/3)*(x*Rt(b/a, S(2)) + sqrt(S(3)))), x)/(S(2)*c))
-    rubi.add(rule185)
+    pattern873 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))**(S(1)/3)*(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71, cons566, cons466)
+    def replacement873(x, b, d, c, a):
+        return sqrt(S(3))*Int(S(1)/((a + b*x**S(2))**(S(1)/3)*(-x*Rt(b/a, S(2)) + sqrt(S(3)))), x)/(S(2)*c) + sqrt(S(3))*Int(S(1)/((a + b*x**S(2))**(S(1)/3)*(x*Rt(b/a, S(2)) + sqrt(S(3)))), x)/(S(2)*c)
+    rule873 = ReplacementRule(pattern873, replacement873)
+    rubi.add(rule873.pattern, label = 873)
 
-    pattern186 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))**(S(1)/3)*(c_ + x_**S(2)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda a, c, b, d: ZeroQ(S(3)*a*d + b*c)), CustomConstraint(lambda a, b: NegQ(b/a)))
-    rule186 = ReplacementRule(pattern186, lambda b, a, c, d, x : Int((-x*Rt(-b/a, S(2)) + S(3))/((a + b*x**S(2))**(S(1)/3)*(c + d*x**S(2))), x)/S(6) + Int((x*Rt(-b/a, S(2)) + S(3))/((a + b*x**S(2))**(S(1)/3)*(c + d*x**S(2))), x)/S(6))
-    rubi.add(rule186)
+    pattern874 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))**(S(1)/3)*(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71, cons566, cons483)
+    def replacement874(x, b, d, c, a):
+        return Int((-x*Rt(-b/a, S(2)) + S(3))/((a + b*x**S(2))**(S(1)/3)*(c + d*x**S(2))), x)/S(6) + Int((x*Rt(-b/a, S(2)) + S(3))/((a + b*x**S(2))**(S(1)/3)*(c + d*x**S(2))), x)/S(6)
+    rule874 = ReplacementRule(pattern874, replacement874)
+    rubi.add(rule874.pattern, label = 874)
 
-    pattern187 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(2)/3)/(c_ + x_**S(2)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda a, c, b, d: ZeroQ(S(3)*a*d + b*c)))
-    rule187 = ReplacementRule(pattern187, lambda b, a, c, d, x : b*Int((a + b*x**S(2))**(S(-1)/3), x)/d - (-a*d + b*c)*Int(S(1)/((a + b*x**S(2))**(S(1)/3)*(c + d*x**S(2))), x)/d)
-    rubi.add(rule187)
+    pattern875 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**(S(2)/3)/(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons71, cons566)
+    def replacement875(x, b, d, c, a):
+        return b*Int((a + b*x**S(2))**(S(-1)/3), x)/d - (-a*d + b*c)*Int(S(1)/((a + b*x**S(2))**(S(1)/3)*(c + d*x**S(2))), x)/d
+    rule875 = ReplacementRule(pattern875, replacement875)
+    rubi.add(rule875.pattern, label = 875)
 
-    pattern188 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))**(S(1)/4)*(c_ + x_**S(2)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)))
-    rule188 = ReplacementRule(pattern188, lambda b, a, c, d, x : sqrt(-b*x**S(2)/a)*Subst(Int(S(1)/(sqrt(-b*x/a)*(a + b*x)**(S(1)/4)*(c + d*x)), x), x, x**S(2))/(S(2)*x))
-    rubi.add(rule188)
+    pattern876 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))**(S(1)/4)*(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71)
+    def replacement876(x, b, d, c, a):
+        return sqrt(-b*x**S(2)/a)*Subst(Int(S(1)/(sqrt(-b*x/a)*(a + b*x)**(S(1)/4)*(c + d*x)), x), x, x**S(2))/(S(2)*x)
+    rule876 = ReplacementRule(pattern876, replacement876)
+    rubi.add(rule876.pattern, label = 876)
 
-    pattern189 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))**(S(3)/4)*(c_ + x_**S(2)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)))
-    rule189 = ReplacementRule(pattern189, lambda b, a, c, d, x : sqrt(-b*x**S(2)/a)*Subst(Int(S(1)/(sqrt(-b*x/a)*(a + b*x)**(S(3)/4)*(c + d*x)), x), x, x**S(2))/(S(2)*x))
-    rubi.add(rule189)
+    pattern877 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))**(S(3)/4)*(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71)
+    def replacement877(x, b, d, c, a):
+        return sqrt(-b*x**S(2)/a)*Subst(Int(S(1)/(sqrt(-b*x/a)*(a + b*x)**(S(3)/4)*(c + d*x)), x), x, x**S(2))/(S(2)*x)
+    rule877 = ReplacementRule(pattern877, replacement877)
+    rubi.add(rule877.pattern, label = 877)
 
-    pattern190 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**WC('p', S(1))/(c_ + x_**S(2)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda p: Equal(p, S(1)/2) | Equal(Denominator(p), S(4))))
-    rule190 = ReplacementRule(pattern190, lambda b, p, a, c, d, x : b*Int((a + b*x**S(2))**(p + S(-1)), x)/d - (-a*d + b*c)*Int((a + b*x**S(2))**(p + S(-1))/(c + d*x**S(2)), x)/d)
-    rubi.add(rule190)
+    pattern878 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**WC('p', S(1))/(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons71, cons13, cons163, cons567)
+    def replacement878(p, x, b, d, c, a):
+        return b*Int((a + b*x**S(2))**(p + S(-1)), x)/d - (-a*d + b*c)*Int((a + b*x**S(2))**(p + S(-1))/(c + d*x**S(2)), x)/d
+    rule878 = ReplacementRule(pattern878, replacement878)
+    rubi.add(rule878.pattern, label = 878)
 
-    pattern191 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**p_/(c_ + x_**S(2)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda p: Equal(Denominator(p), S(4))), CustomConstraint(lambda p: Equal(p, S(-7)/4) | Equal(p, S(-5)/4)))
-    rule191 = ReplacementRule(pattern191, lambda b, a, p, c, d, x : b*Int((a + b*x**S(2))**p, x)/(-a*d + b*c) - d*Int((a + b*x**S(2))**(p + S(1))/(c + d*x**S(2)), x)/(-a*d + b*c))
-    rubi.add(rule191)
+    pattern879 = Pattern(Integral((a_ + x_**S(2)*WC('b', S(1)))**p_/(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons71, cons13, cons137, cons568, cons569)
+    def replacement879(p, x, b, d, c, a):
+        return b*Int((a + b*x**S(2))**p, x)/(-a*d + b*c) - d*Int((a + b*x**S(2))**(p + S(1))/(c + d*x**S(2)), x)/(-a*d + b*c)
+    rule879 = ReplacementRule(pattern879, replacement879)
+    rubi.add(rule879.pattern, label = 879)
 
-    pattern192 = Pattern(Integral(sqrt(a_ + x_**S(4)*WC('b', S(1)))/(c_ + x_**S(4)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: ZeroQ(a*d + b*c)), CustomConstraint(lambda a, b: PosQ(a*b)))
-    rule192 = ReplacementRule(pattern192, lambda b, a, c, d, x : a*Subst(Int(1/(-S(4)*a*b*x**S(4) + S(1)), x), x, x/sqrt(a + b*x**S(4)))/c)
-    rubi.add(rule192)
+    pattern880 = Pattern(Integral(sqrt(a_ + x_**S(4)*WC('b', S(1)))/(c_ + x_**S(4)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons70, cons570)
+    def replacement880(x, b, d, c, a):
+        return a*Subst(Int(S(1)/(-S(4)*a*b*x**S(4) + S(1)), x), x, x/sqrt(a + b*x**S(4)))/c
+    rule880 = ReplacementRule(pattern880, replacement880)
+    rubi.add(rule880.pattern, label = 880)
 
-    pattern193 = Pattern(Integral(sqrt(a_ + x_**S(4)*WC('b', S(1)))/(c_ + x_**S(4)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: ZeroQ(a*d + b*c)), CustomConstraint(lambda a, b: NegQ(a*b)), )
-    def With193(b, a, c, d, x):
+    def With881(x, b, d, c, a):
         q = Rt(-a*b, S(4))
-        return a*atan(q*x*(a + q**S(2)*x**S(2))/(a*sqrt(a + b*x**S(4))))/(S(2)*c*q) + a*atanh(q*x*(a - q**S(2)*x**S(2))/(a*sqrt(a + b*x**S(4))))/(S(2)*c*q)
-    rule193 = ReplacementRule(pattern193, lambda b, a, c, d, x : With193(b, a, c, d, x))
-    rubi.add(rule193)
+        return a*ArcTan(q*x*(a + q**S(2)*x**S(2))/(a*sqrt(a + b*x**S(4))))/(S(2)*c*q) + a*atanh(q*x*(a - q**S(2)*x**S(2))/(a*sqrt(a + b*x**S(4))))/(S(2)*c*q)
+    pattern881 = Pattern(Integral(sqrt(a_ + x_**S(4)*WC('b', S(1)))/(c_ + x_**S(4)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons70, cons571 )
+    rule881 = ReplacementRule(pattern881, With881)
+    rubi.add(rule881.pattern, label = 881)
 
-    pattern194 = Pattern(Integral(sqrt(a_ + x_**S(4)*WC('b', S(1)))/(c_ + x_**S(4)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)))
-    rule194 = ReplacementRule(pattern194, lambda b, a, c, d, x : b*Int(1/sqrt(a + b*x**S(4)), x)/d - (-a*d + b*c)*Int(S(1)/(sqrt(a + b*x**S(4))*(c + d*x**S(4))), x)/d)
-    rubi.add(rule194)
+    pattern882 = Pattern(Integral(sqrt(a_ + x_**S(4)*WC('b', S(1)))/(c_ + x_**S(4)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons71)
+    def replacement882(x, b, d, c, a):
+        return b*Int(S(1)/sqrt(a + b*x**S(4)), x)/d - (-a*d + b*c)*Int(S(1)/(sqrt(a + b*x**S(4))*(c + d*x**S(4))), x)/d
+    rule882 = ReplacementRule(pattern882, replacement882)
+    rubi.add(rule882.pattern, label = 882)
 
-    pattern195 = Pattern(Integral((a_ + x_**S(4)*WC('b', S(1)))**(S(1)/4)/(c_ + x_**S(4)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)))
-    rule195 = ReplacementRule(pattern195, lambda b, a, c, d, x : sqrt(a/(a + b*x**S(4)))*sqrt(a + b*x**S(4))*Subst(Int(S(1)/((c - x**S(4)*(-a*d + b*c))*sqrt(-b*x**S(4) + S(1))), x), x, x/(a + b*x**S(4))**(S(1)/4)))
-    rubi.add(rule195)
+    pattern883 = Pattern(Integral((a_ + x_**S(4)*WC('b', S(1)))**(S(1)/4)/(c_ + x_**S(4)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons71)
+    def replacement883(x, b, d, c, a):
+        return sqrt(a/(a + b*x**S(4)))*sqrt(a + b*x**S(4))*Subst(Int(S(1)/((c - x**S(4)*(-a*d + b*c))*sqrt(-b*x**S(4) + S(1))), x), x, x/(a + b*x**S(4))**(S(1)/4))
+    rule883 = ReplacementRule(pattern883, replacement883)
+    rubi.add(rule883.pattern, label = 883)
 
-    pattern196 = Pattern(Integral((a_ + x_**S(4)*WC('b', S(1)))**p_/(c_ + x_**S(4)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Equal(p, S(3)/4) | Equal(p, S(5)/4)))
-    rule196 = ReplacementRule(pattern196, lambda b, a, p, c, d, x : b*Int((a + b*x**S(4))**(p + S(-1)), x)/d - (-a*d + b*c)*Int((a + b*x**S(4))**(p + S(-1))/(c + d*x**S(4)), x)/d)
-    rubi.add(rule196)
+    pattern884 = Pattern(Integral((a_ + x_**S(4)*WC('b', S(1)))**p_/(c_ + x_**S(4)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons71, cons13, cons572)
+    def replacement884(p, x, b, d, c, a):
+        return b*Int((a + b*x**S(4))**(p + S(-1)), x)/d - (-a*d + b*c)*Int((a + b*x**S(4))**(p + S(-1))/(c + d*x**S(4)), x)/d
+    rule884 = ReplacementRule(pattern884, replacement884)
+    rubi.add(rule884.pattern, label = 884)
 
-    pattern197 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(4)*WC('b', S(1)))*(c_ + x_**S(4)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)))
-    rule197 = ReplacementRule(pattern197, lambda b, a, c, d, x : Int(S(1)/(sqrt(a + b*x**S(4))*(-x**S(2)*Rt(-d/c, S(2)) + S(1))), x)/(S(2)*c) + Int(S(1)/(sqrt(a + b*x**S(4))*(x**S(2)*Rt(-d/c, S(2)) + S(1))), x)/(S(2)*c))
-    rubi.add(rule197)
+    pattern885 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(4)*WC('b', S(1)))*(c_ + x_**S(4)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71)
+    def replacement885(x, b, d, c, a):
+        return Int(S(1)/(sqrt(a + b*x**S(4))*(-x**S(2)*Rt(-d/c, S(2)) + S(1))), x)/(S(2)*c) + Int(S(1)/(sqrt(a + b*x**S(4))*(x**S(2)*Rt(-d/c, S(2)) + S(1))), x)/(S(2)*c)
+    rule885 = ReplacementRule(pattern885, replacement885)
+    rubi.add(rule885.pattern, label = 885)
 
-    pattern198 = Pattern(Integral(S(1)/((a_ + x_**S(4)*WC('b', S(1)))**(S(3)/4)*(c_ + x_**S(4)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)))
-    rule198 = ReplacementRule(pattern198, lambda b, a, c, d, x : b*Int((a + b*x**S(4))**(S(-3)/4), x)/(-a*d + b*c) - d*Int((a + b*x**S(4))**(S(1)/4)/(c + d*x**S(4)), x)/(-a*d + b*c))
-    rubi.add(rule198)
+    pattern886 = Pattern(Integral(S(1)/((a_ + x_**S(4)*WC('b', S(1)))**(S(3)/4)*(c_ + x_**S(4)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71)
+    def replacement886(x, b, d, c, a):
+        return b*Int((a + b*x**S(4))**(S(-3)/4), x)/(-a*d + b*c) - d*Int((a + b*x**S(4))**(S(1)/4)/(c + d*x**S(4)), x)/(-a*d + b*c)
+    rule886 = ReplacementRule(pattern886, replacement886)
+    rubi.add(rule886.pattern, label = 886)
 
-    pattern199 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, b: PosQ(b/a)), CustomConstraint(lambda d, c: PosQ(d/c)))
-    rule199 = ReplacementRule(pattern199, lambda b, a, c, d, x : sqrt(a + b*x**S(2))*EllipticE(atan(x*Rt(d/c, S(2))), S(1) - b*c/(a*d))/(c*sqrt(c*(a + b*x**S(2))/(a*(c + d*x**S(2))))*sqrt(c + d*x**S(2))*Rt(d/c, S(2))))
-    rubi.add(rule199)
+    pattern887 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2), x_), cons2, cons3, cons7, cons27, cons466, cons573)
+    def replacement887(x, b, d, c, a):
+        return sqrt(a + b*x**S(2))*EllipticE(ArcTan(x*Rt(d/c, S(2))), S(1) - b*c/(a*d))/(c*sqrt(c*(a + b*x**S(2))/(a*(c + d*x**S(2))))*sqrt(c + d*x**S(2))*Rt(d/c, S(2)))
+    rule887 = ReplacementRule(pattern887, replacement887)
+    rubi.add(rule887.pattern, label = 887)
 
-    pattern200 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda q: Less(S(0), q, S(1))), CustomConstraint(lambda n, b, a, p, c, q, d, x: IntBinomialQ(a, b, c, d, n, p, q, x)))
-    rule200 = ReplacementRule(pattern200, lambda b, n, a, p, c, q, d, x : -x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*n*(p + S(1))) + Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(n*(p + S(1)) + S(1)) + d*x**n*(n*(p + q + S(1)) + S(1)), x), x)/(a*n*(p + S(1))))
-    rubi.add(rule200)
+    pattern888 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons71, cons402, cons137, cons574, cons575)
+    def replacement888(n, p, q, x, b, d, c, a):
+        return -x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*n*(p + S(1))) + Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(n*(p + S(1)) + S(1)) + d*x**n*(n*(p + q + S(1)) + S(1)), x), x)/(a*n*(p + S(1)))
+    rule888 = ReplacementRule(pattern888, replacement888)
+    rubi.add(rule888.pattern, label = 888)
 
-    pattern201 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda q: Greater(q, S(1))), CustomConstraint(lambda n, b, a, p, c, q, d, x: IntBinomialQ(a, b, c, d, n, p, q, x)))
-    rule201 = ReplacementRule(pattern201, lambda b, n, a, p, c, q, d, x : x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*(a*d - b*c)/(a*b*n*(p + S(1))) - Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-2))*Simp(c*(a*d - b*c*(n*(p + S(1)) + S(1))) + d*x**n*(a*d*(n*(q + S(-1)) + S(1)) - b*c*(n*(p + q) + S(1))), x), x)/(a*b*n*(p + S(1))))
-    rubi.add(rule201)
+    pattern889 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons71, cons402, cons137, cons576, cons575)
+    def replacement889(n, p, q, x, b, d, c, a):
+        return x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*(a*d - b*c)/(a*b*n*(p + S(1))) - Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-2))*Simp(c*(a*d - b*c*(n*(p + S(1)) + S(1))) + d*x**n*(a*d*(n*(q + S(-1)) + S(1)) - b*c*(n*(p + q) + S(1))), x), x)/(a*b*n*(p + S(1)))
+    rule889 = ReplacementRule(pattern889, replacement889)
+    rubi.add(rule889.pattern, label = 889)
 
-    pattern202 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda p, q: Not(IntegerQ(q) & Less(q, S(-1)) & Not(IntegerQ(p)))), CustomConstraint(lambda n, b, a, p, c, q, d, x: IntBinomialQ(a, b, c, d, n, p, q, x)))
-    rule202 = ReplacementRule(pattern202, lambda b, n, a, p, c, q, d, x : -b*x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*n*(p + S(1))*(-a*d + b*c)) + Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(b*c + b*d*x**n*(n*(p + q + S(2)) + S(1)) + n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c)))
-    rubi.add(rule202)
+    pattern890 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons50, cons71, cons13, cons137, cons405, cons575)
+    def replacement890(n, p, q, x, b, d, c, a):
+        return -b*x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*n*(p + S(1))*(-a*d + b*c)) + Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(b*c + b*d*x**n*(n*(p + q + S(2)) + S(1)) + n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c))
+    rule890 = ReplacementRule(pattern890, replacement890)
+    rubi.add(rule890.pattern, label = 890)
 
-    pattern203 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, q: IntegersQ(p, q)), CustomConstraint(lambda p, q: Greater(p + q, S(0))))
-    rule203 = ReplacementRule(pattern203, lambda b, n, a, p, c, q, d, x : Int(ExpandIntegrand((a + b*x**n)**p*(c + d*x**n)**q, x), x))
-    rubi.add(rule203)
+    pattern891 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons71, cons148, cons220, cons577)
+    def replacement891(n, p, q, x, b, d, c, a):
+        return Int(ExpandIntegrand((a + b*x**n)**p*(c + d*x**n)**q, x), x)
+    rule891 = ReplacementRule(pattern891, replacement891)
+    rubi.add(rule891.pattern, label = 891)
 
-    pattern204 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: Greater(q, S(1))), CustomConstraint(lambda p, q, n: NonzeroQ(n*(p + q) + S(1))), CustomConstraint(lambda p: Not(IntegerQ(p) & Greater(p, S(1)))), CustomConstraint(lambda n, b, a, p, c, q, d, x: IntBinomialQ(a, b, c, d, n, p, q, x)))
-    rule204 = ReplacementRule(pattern204, lambda b, n, a, p, c, q, d, x : d*x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))/(b*(n*(p + q) + S(1))) + Int((a + b*x**n)**p*(c + d*x**n)**(q + S(-2))*Simp(c*(-a*d + b*c*(n*(p + q) + S(1))) + d*x**n*(-a*d*(n*(q + S(-1)) + S(1)) + b*c*(n*(p + S(2)*q + S(-1)) + S(1))), x), x)/(b*(n*(p + q) + S(1))))
-    rubi.add(rule204)
+    pattern892 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons5, cons71, cons395, cons576, cons578, cons579, cons575)
+    def replacement892(n, p, q, x, b, d, c, a):
+        return d*x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))/(b*(n*(p + q) + S(1))) + Int((a + b*x**n)**p*(c + d*x**n)**(q + S(-2))*Simp(c*(-a*d + b*c*(n*(p + q) + S(1))) + d*x**n*(-a*d*(n*(q + S(-1)) + S(1)) + b*c*(n*(p + S(2)*q + S(-1)) + S(1))), x), x)/(b*(n*(p + q) + S(1)))
+    rule892 = ReplacementRule(pattern892, replacement892)
+    rubi.add(rule892.pattern, label = 892)
 
-    pattern205 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda n, b, a, p, c, q, d, x: IntBinomialQ(a, b, c, d, n, p, q, x)))
-    rule205 = ReplacementRule(pattern205, lambda b, n, a, p, c, q, d, x : n*Int((a + b*x**n)**(p + S(-1))*(c + d*x**n)**(q + S(-1))*Simp(a*c*(p + q) + x**n*(a*d*(p + q) + q*(-a*d + b*c)), x), x)/(n*(p + q) + S(1)) + x*(a + b*x**n)**p*(c + d*x**n)**q/(n*(p + q) + S(1)))
-    rubi.add(rule205)
+    pattern893 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons71, cons402, cons403, cons163, cons575)
+    def replacement893(n, p, q, x, b, d, c, a):
+        return n*Int((a + b*x**n)**(p + S(-1))*(c + d*x**n)**(q + S(-1))*Simp(a*c*(p + q) + x**n*(a*d*(p + q) + q*(-a*d + b*c)), x), x)/(n*(p + q) + S(1)) + x*(a + b*x**n)**p*(c + d*x**n)**q/(n*(p + q) + S(1))
+    rule893 = ReplacementRule(pattern893, replacement893)
+    rubi.add(rule893.pattern, label = 893)
 
-    pattern206 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda d, c: PosQ(d/c)), CustomConstraint(lambda a, b: PosQ(b/a)), CustomConstraint(lambda a, c, b, d: Not(SimplerSqrtQ(b/a, d/c))))
-    rule206 = ReplacementRule(pattern206, lambda b, a, c, d, x : sqrt(a + b*x**S(2))*EllipticF(atan(x*Rt(d/c, S(2))), S(1) - b*c/(a*d))/(a*sqrt(c*(a + b*x**S(2))/(a*(c + d*x**S(2))))*sqrt(c + d*x**S(2))*Rt(d/c, S(2))))
-    rubi.add(rule206)
+    pattern894 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons573, cons466, cons580)
+    def replacement894(x, b, d, c, a):
+        return sqrt(a + b*x**S(2))*EllipticF(ArcTan(x*Rt(d/c, S(2))), S(1) - b*c/(a*d))/(a*sqrt(c*(a + b*x**S(2))/(a*(c + d*x**S(2))))*sqrt(c + d*x**S(2))*Rt(d/c, S(2)))
+    rule894 = ReplacementRule(pattern894, replacement894)
+    rubi.add(rule894.pattern, label = 894)
 
-    pattern207 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda d, c: NegQ(d/c)), CustomConstraint(lambda c: PositiveQ(c)), CustomConstraint(lambda a: PositiveQ(a)), CustomConstraint(lambda a, c, b, d: Not(NegQ(b/a) & SimplerSqrtQ(-b/a, -d/c))))
-    rule207 = ReplacementRule(pattern207, lambda b, a, c, d, x : EllipticF(asin(x*Rt(-d/c, S(2))), b*c/(a*d))/(sqrt(a)*sqrt(c)*Rt(-d/c, S(2))))
-    rubi.add(rule207)
+    pattern895 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons581, cons177, cons43, cons582)
+    def replacement895(x, b, d, c, a):
+        return EllipticF(asin(x*Rt(-d/c, S(2))), b*c/(a*d))/(sqrt(a)*sqrt(c)*Rt(-d/c, S(2)))
+    rule895 = ReplacementRule(pattern895, replacement895)
+    rubi.add(rule895.pattern, label = 895)
 
-    pattern208 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda d, c: NegQ(d/c)), CustomConstraint(lambda c: PositiveQ(c)), CustomConstraint(lambda a, c, b, d: PositiveQ(a - b*c/d)))
-    rule208 = ReplacementRule(pattern208, lambda b, a, c, d, x : -EllipticF(acos(x*Rt(-d/c, S(2))), b*c/(-a*d + b*c))/(sqrt(c)*sqrt(a - b*c/d)*Rt(-d/c, S(2))))
-    rubi.add(rule208)
+    pattern896 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons581, cons177, cons583)
+    def replacement896(x, b, d, c, a):
+        return -EllipticF(acos(x*Rt(-d/c, S(2))), b*c/(-a*d + b*c))/(sqrt(c)*sqrt(a - b*c/d)*Rt(-d/c, S(2)))
+    rule896 = ReplacementRule(pattern896, replacement896)
+    rubi.add(rule896.pattern, label = 896)
 
-    pattern209 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda c: Not(PositiveQ(c))))
-    rule209 = ReplacementRule(pattern209, lambda b, a, c, d, x : sqrt(S(1) + d*x**S(2)/c)*Int(S(1)/(sqrt(S(1) + d*x**S(2)/c)*sqrt(a + b*x**S(2))), x)/sqrt(c + d*x**S(2)))
-    rubi.add(rule209)
+    pattern897 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons117)
+    def replacement897(x, b, d, c, a):
+        return sqrt(S(1) + d*x**S(2)/c)*Int(S(1)/(sqrt(S(1) + d*x**S(2)/c)*sqrt(a + b*x**S(2))), x)/sqrt(c + d*x**S(2))
+    rule897 = ReplacementRule(pattern897, replacement897)
+    rubi.add(rule897.pattern, label = 897)
 
-    pattern210 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda d, c: PosQ(d/c)), CustomConstraint(lambda a, b: PosQ(b/a)))
-    rule210 = ReplacementRule(pattern210, lambda b, a, c, d, x : a*Int(S(1)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))), x) + b*Int(x**S(2)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))), x))
-    rubi.add(rule210)
+    pattern898 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons573, cons466)
+    def replacement898(x, b, d, c, a):
+        return a*Int(S(1)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))), x) + b*Int(x**S(2)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))), x)
+    rule898 = ReplacementRule(pattern898, replacement898)
+    rubi.add(rule898.pattern, label = 898)
 
-    pattern211 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda d, c: PosQ(d/c)), CustomConstraint(lambda a, b: NegQ(b/a)))
-    rule211 = ReplacementRule(pattern211, lambda b, a, c, d, x : b*Int(sqrt(c + d*x**S(2))/sqrt(a + b*x**S(2)), x)/d - (-a*d + b*c)*Int(S(1)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/d)
-    rubi.add(rule211)
+    pattern899 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons573, cons483)
+    def replacement899(x, b, d, c, a):
+        return b*Int(sqrt(c + d*x**S(2))/sqrt(a + b*x**S(2)), x)/d - (-a*d + b*c)*Int(S(1)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/d
+    rule899 = ReplacementRule(pattern899, replacement899)
+    rubi.add(rule899.pattern, label = 899)
 
-    pattern212 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda d, c: NegQ(d/c)), CustomConstraint(lambda c: PositiveQ(c)), CustomConstraint(lambda a: PositiveQ(a)))
-    rule212 = ReplacementRule(pattern212, lambda b, a, c, d, x : sqrt(a)*EllipticE(asin(x*Rt(-d/c, S(2))), b*c/(a*d))/(sqrt(c)*Rt(-d/c, S(2))))
-    rubi.add(rule212)
+    pattern900 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons581, cons177, cons43)
+    def replacement900(x, b, d, c, a):
+        return sqrt(a)*EllipticE(asin(x*Rt(-d/c, S(2))), b*c/(a*d))/(sqrt(c)*Rt(-d/c, S(2)))
+    rule900 = ReplacementRule(pattern900, replacement900)
+    rubi.add(rule900.pattern, label = 900)
 
-    pattern213 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda d, c: NegQ(d/c)), CustomConstraint(lambda c: PositiveQ(c)), CustomConstraint(lambda a, c, b, d: PositiveQ(a - b*c/d)))
-    rule213 = ReplacementRule(pattern213, lambda b, a, c, d, x : -sqrt(a - b*c/d)*EllipticE(acos(x*Rt(-d/c, S(2))), b*c/(-a*d + b*c))/(sqrt(c)*Rt(-d/c, S(2))))
-    rubi.add(rule213)
+    pattern901 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons581, cons177, cons583)
+    def replacement901(x, b, d, c, a):
+        return -sqrt(a - b*c/d)*EllipticE(acos(x*Rt(-d/c, S(2))), b*c/(-a*d + b*c))/(sqrt(c)*Rt(-d/c, S(2)))
+    rule901 = ReplacementRule(pattern901, replacement901)
+    rubi.add(rule901.pattern, label = 901)
 
-    pattern214 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda d, c: NegQ(d/c)), CustomConstraint(lambda c: PositiveQ(c)), CustomConstraint(lambda a: Not(PositiveQ(a))))
-    rule214 = ReplacementRule(pattern214, lambda b, a, c, d, x : sqrt(a + b*x**S(2))*Int(sqrt(S(1) + b*x**S(2)/a)/sqrt(c + d*x**S(2)), x)/sqrt(S(1) + b*x**S(2)/a))
-    rubi.add(rule214)
+    pattern902 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons581, cons177, cons448)
+    def replacement902(x, b, d, c, a):
+        return sqrt(a + b*x**S(2))*Int(sqrt(S(1) + b*x**S(2)/a)/sqrt(c + d*x**S(2)), x)/sqrt(S(1) + b*x**S(2)/a)
+    rule902 = ReplacementRule(pattern902, replacement902)
+    rubi.add(rule902.pattern, label = 902)
 
-    pattern215 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda d, c: NegQ(d/c)), CustomConstraint(lambda c: Not(PositiveQ(c))))
-    rule215 = ReplacementRule(pattern215, lambda b, a, c, d, x : sqrt(S(1) + d*x**S(2)/c)*Int(sqrt(a + b*x**S(2))/sqrt(S(1) + d*x**S(2)/c), x)/sqrt(c + d*x**S(2)))
-    rubi.add(rule215)
+    pattern903 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/sqrt(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons581, cons117)
+    def replacement903(x, b, d, c, a):
+        return sqrt(S(1) + d*x**S(2)/c)*Int(sqrt(a + b*x**S(2))/sqrt(S(1) + d*x**S(2)/c), x)/sqrt(c + d*x**S(2))
+    rule903 = ReplacementRule(pattern903, replacement903)
+    rubi.add(rule903.pattern, label = 903)
 
-    pattern216 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p: PositiveIntegerQ(p)))
-    rule216 = ReplacementRule(pattern216, lambda b, n, a, p, c, q, d, x : Int(ExpandIntegrand((a + b*x**n)**p*(c + d*x**n)**q, x), x))
-    rubi.add(rule216)
+    pattern904 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons50, cons71, cons128)
+    def replacement904(n, p, q, x, b, d, c, a):
+        return Int(ExpandIntegrand((a + b*x**n)**p*(c + d*x**n)**q, x), x)
+    rule904 = ReplacementRule(pattern904, replacement904)
+    rubi.add(rule904.pattern, label = 904)
 
-    pattern217 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: NonzeroQ(n + S(1))), CustomConstraint(lambda a: PositiveQ(a)), CustomConstraint(lambda c: PositiveQ(c)))
-    rule217 = ReplacementRule(pattern217, lambda b, n, a, p, c, q, d, x : a**p*c**q*x*AppellF1(1/n, -p, -q, S(1) + 1/n, -b*x**n/a, -d*x**n/c))
-    rubi.add(rule217)
+    pattern905 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons5, cons50, cons71, cons584, cons43, cons177)
+    def replacement905(n, p, q, x, b, d, c, a):
+        return a**p*c**q*x*AppellF1(S(1)/n, -p, -q, S(1) + S(1)/n, -b*x**n/a, -d*x**n/c)
+    rule905 = ReplacementRule(pattern905, replacement905)
+    rubi.add(rule905.pattern, label = 905)
 
-    pattern218 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: NonzeroQ(n + S(1))), CustomConstraint(lambda a: Not(PositiveQ(a))))
-    rule218 = ReplacementRule(pattern218, lambda b, n, a, p, c, q, d, x : a**IntPart(p)*(S(1) + b*x**n/a)**(-FracPart(p))*(a + b*x**n)**FracPart(p)*Int((S(1) + b*x**n/a)**p*(c + d*x**n)**q, x))
-    rubi.add(rule218)
+    pattern906 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons5, cons50, cons71, cons584, cons448)
+    def replacement906(n, p, q, x, b, d, c, a):
+        return a**IntPart(p)*(S(1) + b*x**n/a)**(-FracPart(p))*(a + b*x**n)**FracPart(p)*Int((S(1) + b*x**n/a)**p*(c + d*x**n)**q, x)
+    rule906 = ReplacementRule(pattern906, replacement906)
+    rubi.add(rule906.pattern, label = 906)
 
-    pattern219 = Pattern(Integral((a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)), CustomConstraint(lambda q: IntegerQ(q)), CustomConstraint(lambda p, n: PosQ(n) | Not(IntegerQ(p))))
-    rule219 = ReplacementRule(pattern219, lambda mn, b, n, p, a, c, q, d, x : Int(x**(-n*q)*(a + b*x**n)**p*(c*x**n + d)**q, x))
-    rubi.add(rule219)
+    pattern907 = Pattern(Integral((a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons4, cons5, cons585, cons586, cons587)
+    def replacement907(n, q, p, x, b, d, c, mn, a):
+        return Int(x**(-n*q)*(a + b*x**n)**p*(c*x**n + d)**q, x)
+    rule907 = ReplacementRule(pattern907, replacement907)
+    rubi.add(rule907.pattern, label = 907)
 
-    pattern220 = Pattern(Integral((a_ + x_**WC('n', S(1))*WC('b', S(1)))**p_*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)), CustomConstraint(lambda q: Not(IntegerQ(q))), CustomConstraint(lambda p: Not(IntegerQ(p))))
-    rule220 = ReplacementRule(pattern220, lambda mn, b, n, a, p, c, q, d, x : x**(n*FracPart(q))*(c + d*x**(-n))**FracPart(q)*(c*x**n + d)**(-FracPart(q))*Int(x**(-n*q)*(a + b*x**n)**p*(c*x**n + d)**q, x))
-    rubi.add(rule220)
+    pattern908 = Pattern(Integral((a_ + x_**WC('n', S(1))*WC('b', S(1)))**p_*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons4, cons5, cons50, cons585, cons386, cons147)
+    def replacement908(n, q, p, x, b, d, c, mn, a):
+        return x**(n*FracPart(q))*(c + d*x**(-n))**FracPart(q)*(c*x**n + d)**(-FracPart(q))*Int(x**(-n*q)*(a + b*x**n)**p*(c*x**n + d)**q, x)
+    rule908 = ReplacementRule(pattern908, replacement908)
+    rubi.add(rule908.pattern, label = 908)
 
-    pattern221 = Pattern(Integral((u_**n_*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*(u_**n_*WC('d', S(1)) + WC('c', S(0)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda u, x: LinearQ(u, x)), CustomConstraint(lambda u, x: NonzeroQ(u - x)))
-    rule221 = ReplacementRule(pattern221, lambda b, n, a, p, u, c, q, d, x : Subst(Int((a + b*x**n)**p*(c + d*x**n)**q, x), x, u)/Coefficient(u, x, S(1)))
-    rubi.add(rule221)
+    pattern909 = Pattern(Integral((u_**n_*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*(u_**n_*WC('d', S(1)) + WC('c', S(0)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons4, cons5, cons50, cons68, cons69)
+    def replacement909(n, p, q, x, b, d, c, u, a):
+        return Subst(Int((a + b*x**n)**p*(c + d*x**n)**q, x), x, u)/Coefficient(u, x, S(1))
+    rule909 = ReplacementRule(pattern909, replacement909)
+    rubi.add(rule909.pattern, label = 909)
 
-    pattern222 = Pattern(Integral(u_**WC('p', S(1))*v_**WC('q', S(1)), x_), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda u, v, x: PseudoBinomialPairQ(u, v, x)))
-    rule222 = ReplacementRule(pattern222, lambda p, u, v, q, x : Int(NormalizePseudoBinomial(u, x)**p*NormalizePseudoBinomial(v, x)**q, x))
-    rubi.add(rule222)
+    pattern910 = Pattern(Integral(u_**WC('p', S(1))*v_**WC('q', S(1)), x_), cons5, cons50, cons588)
+    def replacement910(p, q, v, x, u):
+        return Int(NormalizePseudoBinomial(u, x)**p*NormalizePseudoBinomial(v, x)**q, x)
+    rule910 = ReplacementRule(pattern910, replacement910)
+    rubi.add(rule910.pattern, label = 910)
 
-    pattern223 = Pattern(Integral(u_**WC('p', S(1))*v_**WC('q', S(1))*x_**WC('m', S(1)), x_), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda p, m: IntegersQ(p, m/p)), CustomConstraint(lambda p, u, v, m, x: PseudoBinomialPairQ(u*x**(m/p), v, x)))
-    rule223 = ReplacementRule(pattern223, lambda p, u, v, q, m, x : Int(NormalizePseudoBinomial(v, x)**q*NormalizePseudoBinomial(u*x**(m/p), x)**p, x))
-    rubi.add(rule223)
+    pattern911 = Pattern(Integral(u_**WC('p', S(1))*v_**WC('q', S(1))*x_**WC('m', S(1)), x_), cons5, cons50, cons589, cons590)
+    def replacement911(m, p, q, v, x, u):
+        return Int(NormalizePseudoBinomial(v, x)**q*NormalizePseudoBinomial(u*x**(m/p), x)**p, x)
+    rule911 = ReplacementRule(pattern911, replacement911)
+    rubi.add(rule911.pattern, label = 911)
 
-    pattern224 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda m, e: IntegerQ(m) | PositiveQ(e)), CustomConstraint(lambda m, n: IntegerQ((m + S(1))/n)))
-    rule224 = ReplacementRule(pattern224, lambda b, n, p, c, q, e, d, m, x : b**(S(1) - (m + S(1))/n)*e**m*Subst(Int((b*x)**(p + S(-1) + (m + S(1))/n)*(c + d*x)**q, x), x, x**n)/n)
-    rubi.add(rule224)
+    pattern912 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons50, cons591, cons500)
+    def replacement912(m, n, q, p, e, x, b, d, c):
+        return b**(S(1) - (m + S(1))/n)*e**m*Subst(Int((b*x)**(p + S(-1) + (m + S(1))/n)*(c + d*x)**q, x), x, x**n)/n
+    rule912 = ReplacementRule(pattern912, replacement912)
+    rubi.add(rule912.pattern, label = 912)
 
-    pattern225 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(x_**WC('n', S(1))*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda m, e: IntegerQ(m) | PositiveQ(e)), CustomConstraint(lambda m, n: Not(IntegerQ((m + S(1))/n))))
-    rule225 = ReplacementRule(pattern225, lambda n, b, p, c, q, e, d, m, x : b**IntPart(p)*e**m*x**(-n*FracPart(p))*(b*x**n)**FracPart(p)*Int(x**(m + n*p)*(c + d*x**n)**q, x))
-    rubi.add(rule225)
+    pattern913 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(x_**WC('n', S(1))*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons50, cons591, cons501)
+    def replacement913(m, n, q, p, e, x, b, d, c):
+        return b**IntPart(p)*e**m*x**(-n*FracPart(p))*(b*x**n)**FracPart(p)*Int(x**(m + n*p)*(c + d*x**n)**q, x)
+    rule913 = ReplacementRule(pattern913, replacement913)
+    rubi.add(rule913.pattern, label = 913)
 
-    pattern226 = Pattern(Integral((e_*x_)**m_*(x_**WC('n', S(1))*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda m: Not(IntegerQ(m))))
-    rule226 = ReplacementRule(pattern226, lambda b, n, p, c, q, e, d, m, x : e**IntPart(m)*x**(-FracPart(m))*(e*x)**FracPart(m)*Int(x**m*(b*x**n)**p*(c + d*x**n)**q, x))
-    rubi.add(rule226)
+    pattern914 = Pattern(Integral((e_*x_)**m_*(x_**WC('n', S(1))*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons50, cons18)
+    def replacement914(m, n, q, p, e, x, b, d, c):
+        return e**IntPart(m)*x**(-FracPart(m))*(e*x)**FracPart(m)*Int(x**m*(b*x**n)**p*(c + d*x**n)**q, x)
+    rule914 = ReplacementRule(pattern914, replacement914)
+    rubi.add(rule914.pattern, label = 914)
 
-    pattern227 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda m, n: ZeroQ(m - n + S(1))))
-    rule227 = ReplacementRule(pattern227, lambda b, n, p, a, c, q, d, m, x : Subst(Int((a + b*x)**p*(c + d*x)**q, x), x, x**n)/n)
-    rubi.add(rule227)
+    pattern915 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons21, cons4, cons5, cons50, cons71, cons53)
+    def replacement915(m, n, p, q, x, b, d, c, a):
+        return Subst(Int((a + b*x)**p*(c + d*x)**q, x), x, x**n)/n
+    rule915 = ReplacementRule(pattern915, replacement915)
+    rubi.add(rule915.pattern, label = 915)
 
-    pattern228 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q: IntegersQ(p, q)), CustomConstraint(lambda n: NegQ(n)))
-    rule228 = ReplacementRule(pattern228, lambda b, n, p, a, c, q, d, m, x : Int(x**(m + n*(p + q))*(a*x**(-n) + b)**p*(c*x**(-n) + d)**q, x))
-    rubi.add(rule228)
+    pattern916 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons21, cons4, cons71, cons220, cons502)
+    def replacement916(m, n, p, q, x, b, d, c, a):
+        return Int(x**(m + n*(p + q))*(a*x**(-n) + b)**p*(c*x**(-n) + d)**q, x)
+    rule916 = ReplacementRule(pattern916, replacement916)
+    rubi.add(rule916.pattern, label = 916)
 
-    pattern229 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda m, n: IntegerQ((m + S(1))/n)))
-    rule229 = ReplacementRule(pattern229, lambda b, n, p, a, c, q, d, m, x : Subst(Int(x**(S(-1) + (m + S(1))/n)*(a + b*x)**p*(c + d*x)**q, x), x, x**n)/n)
-    rubi.add(rule229)
+    pattern917 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons21, cons4, cons5, cons50, cons71, cons500)
+    def replacement917(m, n, p, q, x, b, d, c, a):
+        return Subst(Int(x**(S(-1) + (m + S(1))/n)*(a + b*x)**p*(c + d*x)**q, x), x, x**n)/n
+    rule917 = ReplacementRule(pattern917, replacement917)
+    rubi.add(rule917.pattern, label = 917)
 
-    pattern230 = Pattern(Integral((e_*x_)**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda m, n: IntegerQ((m + S(1))/n)))
-    rule230 = ReplacementRule(pattern230, lambda b, n, p, a, c, q, e, d, m, x : e**IntPart(m)*x**(-FracPart(m))*(e*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q, x))
-    rubi.add(rule230)
+    pattern918 = Pattern(Integral((e_*x_)**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons50, cons71, cons500)
+    def replacement918(m, n, p, q, e, x, b, d, c, a):
+        return e**IntPart(m)*x**(-FracPart(m))*(e*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q, x)
+    rule918 = ReplacementRule(pattern918, replacement918)
+    rubi.add(rule918.pattern, label = 918)
 
-    pattern231 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q: PositiveIntegerQ(p, q)))
-    rule231 = ReplacementRule(pattern231, lambda b, n, p, a, c, q, e, d, m, x : Int(ExpandIntegrand((e*x)**m*(a + b*x**n)**p*(c + d*x**n)**q, x), x))
-    rubi.add(rule231)
+    pattern919 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons71, cons555)
+    def replacement919(m, n, p, q, e, x, b, d, c, a):
+        return Int(ExpandIntegrand((e*x)**m*(a + b*x**n)**p*(c + d*x**n)**q, x), x)
+    rule919 = ReplacementRule(pattern919, replacement919)
+    rubi.add(rule919.pattern, label = 919)
 
-    pattern232 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda b, n, a, p, c, d, m: ZeroQ(a*d*(m + S(1)) - b*c*(m + n*(p + S(1)) + S(1)))), CustomConstraint(lambda m: NonzeroQ(m + S(1))))
-    rule232 = ReplacementRule(pattern232, lambda b, n, p, a, c, e, d, m, x : c*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*e*(m + S(1))))
-    rubi.add(rule232)
+    pattern920 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons71, cons592, cons66)
+    def replacement920(m, n, p, e, x, b, d, c, a):
+        return c*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*e*(m + S(1)))
+    rule920 = ReplacementRule(pattern920, replacement920)
+    rubi.add(rule920.pattern, label = 920)
 
-    pattern233 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda non2, n: ZeroQ(-n/S(2) + non2)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n, p, a1, a2, c, b2, d, m, b1: ZeroQ(a1*a2*d*(m + S(1)) - b1*b2*c*(m + n*(p + S(1)) + S(1)))), CustomConstraint(lambda m: NonzeroQ(m + S(1))))
-    rule233 = ReplacementRule(pattern233, lambda n, non2, p, a1, a2, c, b2, e, d, m, x, b1 : c*(e*x)**(m + S(1))*(a1 + b1*x**(n/S(2)))**(p + S(1))*(a2 + b2*x**(n/S(2)))**(p + S(1))/(a1*a2*e*(m + S(1))))
-    rubi.add(rule233)
+    pattern921 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), cons57, cons58, cons59, cons60, cons7, cons27, cons48, cons21, cons4, cons5, cons593, cons55, cons594, cons66)
+    def replacement921(m, n, a1, p, non2, b2, a2, e, b1, x, d, c):
+        return c*(e*x)**(m + S(1))*(a1 + b1*x**(n/S(2)))**(p + S(1))*(a2 + b2*x**(n/S(2)))**(p + S(1))/(a1*a2*e*(m + S(1)))
+    rule921 = ReplacementRule(pattern921, replacement921)
+    rubi.add(rule921.pattern, label = 921)
 
-    pattern234 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, m, n: ZeroQ(m + n*(p + S(1)) + S(1))), CustomConstraint(lambda n, e: IntegerQ(n) | PositiveQ(e)), CustomConstraint(lambda m, n: RationalQ(m, n)), CustomConstraint(lambda m, n: (Greater(n, S(0)) & Less(m, S(-1))) | (Less(n, S(0)) & Greater(m + n, S(-1)))))
-    rule234 = ReplacementRule(pattern234, lambda b, n, p, a, c, e, d, m, x : d*e**(-n)*Int((e*x)**(m + n)*(a + b*x**n)**p, x) + c*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*e*(m + S(1))))
-    rubi.add(rule234)
+    pattern922 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons5, cons71, cons595, cons596, cons93, cons597)
+    def replacement922(m, n, p, e, x, b, d, c, a):
+        return d*e**(-n)*Int((e*x)**(m + n)*(a + b*x**n)**p, x) + c*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*e*(m + S(1)))
+    rule922 = ReplacementRule(pattern922, replacement922)
+    rubi.add(rule922.pattern, label = 922)
 
-    pattern235 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, m, n: ZeroQ(m + n*(p + S(1)) + S(1))), CustomConstraint(lambda m: NonzeroQ(m + S(1))))
-    rule235 = ReplacementRule(pattern235, lambda b, n, p, a, c, e, d, m, x : d*Int((e*x)**m*(a + b*x**n)**(p + S(1)), x)/b + (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(-a*d + b*c)/(a*b*e*(m + S(1))))
-    rubi.add(rule235)
+    pattern923 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons71, cons595, cons66)
+    def replacement923(m, n, p, e, x, b, d, c, a):
+        return d*Int((e*x)**m*(a + b*x**n)**(p + S(1)), x)/b + (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(-a*d + b*c)/(a*b*e*(m + S(1)))
+    rule923 = ReplacementRule(pattern923, replacement923)
+    rubi.add(rule923.pattern, label = 923)
 
-    pattern236 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n, e: IntegerQ(n) | PositiveQ(e)), CustomConstraint(lambda m, n: RationalQ(m, n)), CustomConstraint(lambda m, n: (Greater(n, S(0)) & Less(m, S(-1))) | (Less(n, S(0)) & Greater(m + n, S(-1)))), CustomConstraint(lambda p: Not(IntegerQ(p) & Less(p, S(-1)))))
-    rule236 = ReplacementRule(pattern236, lambda b, n, p, a, c, e, d, m, x : c*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*e*(m + S(1))) + e**(-n)*(a*d*(m + S(1)) - b*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**(m + n)*(a + b*x**n)**p, x)/(a*(m + S(1))))
-    rubi.add(rule236)
+    pattern924 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons5, cons71, cons596, cons93, cons597, cons598)
+    def replacement924(m, n, p, e, x, b, d, c, a):
+        return c*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*e*(m + S(1))) + e**(-n)*(a*d*(m + S(1)) - b*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**(m + n)*(a + b*x**n)**p, x)/(a*(m + S(1)))
+    rule924 = ReplacementRule(pattern924, replacement924)
+    rubi.add(rule924.pattern, label = 924)
 
-    pattern237 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda non2, n: ZeroQ(-n/S(2) + non2)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda n, e: IntegerQ(n) | PositiveQ(e)), CustomConstraint(lambda m, n: RationalQ(m, n)), CustomConstraint(lambda m, n: (Greater(n, S(0)) & Less(m, S(-1))) | (Less(n, S(0)) & Greater(m + n, S(-1)))), CustomConstraint(lambda p: Not(IntegerQ(p) & Less(p, S(-1)))))
-    rule237 = ReplacementRule(pattern237, lambda n, non2, p, a1, a2, c, b2, e, d, m, x, b1 : c*(e*x)**(m + S(1))*(a1 + b1*x**(n/S(2)))**(p + S(1))*(a2 + b2*x**(n/S(2)))**(p + S(1))/(a1*a2*e*(m + S(1))) + e**(-n)*(a1*a2*d*(m + S(1)) - b1*b2*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**(m + n)*(a1 + b1*x**(n/S(2)))**p*(a2 + b2*x**(n/S(2)))**p, x)/(a1*a2*(m + S(1))))
-    rubi.add(rule237)
+    pattern925 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), cons57, cons58, cons59, cons60, cons7, cons27, cons48, cons5, cons593, cons55, cons596, cons93, cons597, cons598)
+    def replacement925(m, n, a1, p, non2, b2, a2, e, b1, x, d, c):
+        return c*(e*x)**(m + S(1))*(a1 + b1*x**(n/S(2)))**(p + S(1))*(a2 + b2*x**(n/S(2)))**(p + S(1))/(a1*a2*e*(m + S(1))) + e**(-n)*(a1*a2*d*(m + S(1)) - b1*b2*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**(m + n)*(a1 + b1*x**(n/S(2)))**p*(a2 + b2*x**(n/S(2)))**p, x)/(a1*a2*(m + S(1)))
+    rule925 = ReplacementRule(pattern925, replacement925)
+    rubi.add(rule925.pattern, label = 925)
 
-    pattern238 = Pattern(Integral(x_**m_*(a_ + x_**S(2)*WC('b', S(1)))**p_*(c_ + x_**S(2)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda m: PositiveIntegerQ(m/S(2))), CustomConstraint(lambda p, m: IntegerQ(p) | Equal(m + S(2)*p + S(1), S(0))))
-    rule238 = ReplacementRule(pattern238, lambda b, a, p, c, d, m, x : b**(-m/S(2) + S(-1))*x*(-a)**(m/S(2) + S(-1))*(a + b*x**S(2))**(p + S(1))*(-a*d + b*c)/(S(2)*(p + S(1))) + b**(-m/S(2) + S(-1))*Int((a + b*x**S(2))**(p + S(1))*ExpandToSum(S(2)*b*x**S(2)*(p + S(1))*(b**(m/S(2))*x**(m + S(-2))*(c + d*x**S(2)) - (-a)**(m/S(2) + S(-1))*(-a*d + b*c))/(a + b*x**S(2)) - (-a)**(m/S(2) + S(-1))*(-a*d + b*c), x), x)/(S(2)*(p + S(1))))
-    rubi.add(rule238)
+    pattern926 = Pattern(Integral(x_**m_*(a_ + x_**S(2)*WC('b', S(1)))**p_*(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons71, cons13, cons137, cons599, cons600)
+    def replacement926(m, p, x, b, d, c, a):
+        return b**(-m/S(2) + S(-1))*x*(-a)**(m/S(2) + S(-1))*(a + b*x**S(2))**(p + S(1))*(-a*d + b*c)/(S(2)*(p + S(1))) + b**(-m/S(2) + S(-1))*Int((a + b*x**S(2))**(p + S(1))*ExpandToSum(S(2)*b*x**S(2)*(p + S(1))*(b**(m/S(2))*x**(m + S(-2))*(c + d*x**S(2)) - (-a)**(m/S(2) + S(-1))*(-a*d + b*c))/(a + b*x**S(2)) - (-a)**(m/S(2) + S(-1))*(-a*d + b*c), x), x)/(S(2)*(p + S(1)))
+    rule926 = ReplacementRule(pattern926, replacement926)
+    rubi.add(rule926.pattern, label = 926)
 
-    pattern239 = Pattern(Integral(x_**m_*(a_ + x_**S(2)*WC('b', S(1)))**p_*(c_ + x_**S(2)*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda m: NegativeIntegerQ(m/S(2))), CustomConstraint(lambda p, m: IntegerQ(p) | Equal(m + S(2)*p + S(1), S(0))))
-    rule239 = ReplacementRule(pattern239, lambda b, a, p, c, d, m, x : b**(-m/S(2) + S(-1))*x*(-a)**(m/S(2) + S(-1))*(a + b*x**S(2))**(p + S(1))*(-a*d + b*c)/(S(2)*(p + S(1))) + b**(-m/S(2) + S(-1))*Int(x**m*(a + b*x**S(2))**(p + S(1))*ExpandToSum(S(2)*b*(p + S(1))*(b**(m/S(2))*(c + d*x**S(2)) - x**(-m + S(2))*(-a)**(m/S(2) + S(-1))*(-a*d + b*c))/(a + b*x**S(2)) - x**(-m)*(-a)**(m/S(2) + S(-1))*(-a*d + b*c), x), x)/(S(2)*(p + S(1))))
-    rubi.add(rule239)
+    pattern927 = Pattern(Integral(x_**m_*(a_ + x_**S(2)*WC('b', S(1)))**p_*(c_ + x_**S(2)*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons71, cons13, cons137, cons601, cons600)
+    def replacement927(m, p, x, b, d, c, a):
+        return b**(-m/S(2) + S(-1))*x*(-a)**(m/S(2) + S(-1))*(a + b*x**S(2))**(p + S(1))*(-a*d + b*c)/(S(2)*(p + S(1))) + b**(-m/S(2) + S(-1))*Int(x**m*(a + b*x**S(2))**(p + S(1))*ExpandToSum(S(2)*b*(p + S(1))*(b**(m/S(2))*(c + d*x**S(2)) - x**(-m + S(2))*(-a)**(m/S(2) + S(-1))*(-a*d + b*c))/(a + b*x**S(2)) - x**(-m)*(-a)**(m/S(2) + S(-1))*(-a*d + b*c), x), x)/(S(2)*(p + S(1)))
+    rule927 = ReplacementRule(pattern927, replacement927)
+    rubi.add(rule927.pattern, label = 927)
 
-    pattern240 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda p, m, n: IntegerQ(p) | Not(RationalQ(m)) | (PositiveIntegerQ(n) & NegativeIntegerQ(p + S(1)/2) & LessEqual(S(-1), m, -n*(p + S(1))))))
-    rule240 = ReplacementRule(pattern240, lambda b, n, p, a, c, e, d, m, x : -(a*d*(m + S(1)) - b*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**m*(a + b*x**n)**(p + S(1)), x)/(a*b*n*(p + S(1))) + (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(a*d - b*c)/(a*b*e*n*(p + S(1))))
-    rubi.add(rule240)
+    pattern928 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons71, cons13, cons137, cons602)
+    def replacement928(m, n, p, e, x, b, d, c, a):
+        return -(a*d*(m + S(1)) - b*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**m*(a + b*x**n)**(p + S(1)), x)/(a*b*n*(p + S(1))) - (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(-a*d + b*c)/(a*b*e*n*(p + S(1)))
+    rule928 = ReplacementRule(pattern928, replacement928)
+    rubi.add(rule928.pattern, label = 928)
 
-    pattern241 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda non2, n: ZeroQ(-n/S(2) + non2)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda p, m, n: IntegerQ(p) | Not(RationalQ(m)) | (PositiveIntegerQ(n) & NegativeIntegerQ(p + S(1)/2) & LessEqual(S(-1), m, -n*(p + S(1))))))
-    rule241 = ReplacementRule(pattern241, lambda n, non2, p, a1, a2, c, b2, e, d, m, x, b1 : -(a1*a2*d*(m + S(1)) - b1*b2*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**m*(a1 + b1*x**(n/S(2)))**(p + S(1))*(a2 + b2*x**(n/S(2)))**(p + S(1)), x)/(a1*a2*b1*b2*n*(p + S(1))) + (e*x)**(m + S(1))*(a1 + b1*x**(n/S(2)))**(p + S(1))*(a2 + b2*x**(n/S(2)))**(p + S(1))*(a1*a2*d - b1*b2*c)/(a1*a2*b1*b2*e*n*(p + S(1))))
-    rubi.add(rule241)
+    pattern929 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), cons57, cons58, cons59, cons60, cons7, cons27, cons48, cons21, cons4, cons593, cons55, cons13, cons137, cons602)
+    def replacement929(m, n, a1, p, non2, b2, a2, e, b1, x, d, c):
+        return -(a1*a2*d*(m + S(1)) - b1*b2*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**m*(a1 + b1*x**(n/S(2)))**(p + S(1))*(a2 + b2*x**(n/S(2)))**(p + S(1)), x)/(a1*a2*b1*b2*n*(p + S(1))) - (e*x)**(m + S(1))*(a1 + b1*x**(n/S(2)))**(p + S(1))*(a2 + b2*x**(n/S(2)))**(p + S(1))*(-a1*a2*d + b1*b2*c)/(a1*a2*b1*b2*e*n*(p + S(1)))
+    rule929 = ReplacementRule(pattern929, replacement929)
+    rubi.add(rule929.pattern, label = 929)
 
-    pattern242 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, m, n: NonzeroQ(m + n*(p + S(1)) + S(1))))
-    rule242 = ReplacementRule(pattern242, lambda b, n, p, a, c, e, d, m, x : d*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(b*e*(m + n*(p + S(1)) + S(1))) - (a*d*(m + S(1)) - b*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**m*(a + b*x**n)**p, x)/(b*(m + n*(p + S(1)) + S(1))))
-    rubi.add(rule242)
+    pattern930 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons71, cons603)
+    def replacement930(m, n, p, e, x, b, d, c, a):
+        return d*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(b*e*(m + n*(p + S(1)) + S(1))) - (a*d*(m + S(1)) - b*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**m*(a + b*x**n)**p, x)/(b*(m + n*(p + S(1)) + S(1)))
+    rule930 = ReplacementRule(pattern930, replacement930)
+    rubi.add(rule930.pattern, label = 930)
 
-    pattern243 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda non2, n: ZeroQ(-n/S(2) + non2)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, m, n: NonzeroQ(m + n*(p + S(1)) + S(1))))
-    rule243 = ReplacementRule(pattern243, lambda n, non2, p, a1, a2, c, b2, e, d, m, x, b1 : d*(e*x)**(m + S(1))*(a1 + b1*x**(n/S(2)))**(p + S(1))*(a2 + b2*x**(n/S(2)))**(p + S(1))/(b1*b2*e*(m + n*(p + S(1)) + S(1))) - (a1*a2*d*(m + S(1)) - b1*b2*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**m*(a1 + b1*x**(n/S(2)))**p*(a2 + b2*x**(n/S(2)))**p, x)/(b1*b2*(m + n*(p + S(1)) + S(1))))
-    rubi.add(rule243)
+    pattern931 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1))), x_), cons57, cons58, cons59, cons60, cons7, cons27, cons48, cons21, cons4, cons5, cons593, cons55, cons603)
+    def replacement931(m, n, a1, p, non2, b2, a2, e, b1, x, d, c):
+        return d*(e*x)**(m + S(1))*(a1 + b1*x**(n/S(2)))**(p + S(1))*(a2 + b2*x**(n/S(2)))**(p + S(1))/(b1*b2*e*(m + n*(p + S(1)) + S(1))) - (a1*a2*d*(m + S(1)) - b1*b2*c*(m + n*(p + S(1)) + S(1)))*Int((e*x)**m*(a1 + b1*x**(n/S(2)))**p*(a2 + b2*x**(n/S(2)))**p, x)/(b1*b2*(m + n*(p + S(1)) + S(1)))
+    rule931 = ReplacementRule(pattern931, replacement931)
+    rubi.add(rule931.pattern, label = 931)
 
-    pattern244 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_/(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p: PositiveIntegerQ(p)), CustomConstraint(lambda m: IntegerQ(m) | Not(RationalQ(m)) | PositiveIntegerQ(S(2)*m + S(2))))
-    rule244 = ReplacementRule(pattern244, lambda b, n, a, p, c, e, d, m, x : Int(ExpandIntegrand((e*x)**m*(a + b*x**n)**p/(c + d*x**n), x), x))
-    rubi.add(rule244)
+    pattern932 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_/(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons21, cons71, cons148, cons128, cons604)
+    def replacement932(m, n, p, x, e, b, d, c, a):
+        return Int(ExpandIntegrand((e*x)**m*(a + b*x**n)**p/(c + d*x**n), x), x)
+    rule932 = ReplacementRule(pattern932, replacement932)
+    rubi.add(rule932.pattern, label = 932)
 
-    pattern245 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**S(2), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m, n: RationalQ(m, n)), CustomConstraint(lambda m: Less(m, S(-1))), CustomConstraint(lambda n: Greater(n, S(0))))
-    rule245 = ReplacementRule(pattern245, lambda b, n, a, p, c, e, d, m, x : c**S(2)*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*e*(m + S(1))) - e**(-n)*Int((e*x)**(m + n)*(a + b*x**n)**p*Simp(-a*d**S(2)*x**n*(m + S(1)) + b*c**S(2)*n*(p + S(1)) + c*(m + S(1))*(-S(2)*a*d + b*c), x), x)/(a*(m + S(1))))
-    rubi.add(rule245)
+    pattern933 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**S(2), x_), cons2, cons3, cons7, cons27, cons48, cons5, cons71, cons148, cons93, cons94, cons88)
+    def replacement933(m, n, p, x, e, b, d, c, a):
+        return c**S(2)*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))/(a*e*(m + S(1))) - e**(-n)*Int((e*x)**(m + n)*(a + b*x**n)**p*Simp(-a*d**S(2)*x**n*(m + S(1)) + b*c**S(2)*n*(p + S(1)) + c*(m + S(1))*(-S(2)*a*d + b*c), x), x)/(a*(m + S(1)))
+    rule933 = ReplacementRule(pattern933, replacement933)
+    rubi.add(rule933.pattern, label = 933)
 
-    pattern246 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**S(2), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))))
-    rule246 = ReplacementRule(pattern246, lambda b, n, a, p, c, e, d, m, x : Int((e*x)**m*(a + b*x**n)**(p + S(1))*Simp(a*b*d**S(2)*n*x**n*(p + S(1)) + b**S(2)*c**S(2)*n*(p + S(1)) + (m + S(1))*(-a*d + b*c)**S(2), x), x)/(a*b**S(2)*n*(p + S(1))) - (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(-a*d + b*c)**S(2)/(a*b**S(2)*e*n*(p + S(1))))
-    rubi.add(rule246)
+    pattern934 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**S(2), x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons71, cons148, cons13, cons137)
+    def replacement934(m, n, p, x, e, b, d, c, a):
+        return Int((e*x)**m*(a + b*x**n)**(p + S(1))*Simp(a*b*d**S(2)*n*x**n*(p + S(1)) + b**S(2)*c**S(2)*n*(p + S(1)) + (m + S(1))*(-a*d + b*c)**S(2), x), x)/(a*b**S(2)*n*(p + S(1))) - (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(-a*d + b*c)**S(2)/(a*b**S(2)*e*n*(p + S(1)))
+    rule934 = ReplacementRule(pattern934, replacement934)
+    rubi.add(rule934.pattern, label = 934)
 
-    pattern247 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**S(2), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, m, n: NonzeroQ(m + n*(p + S(2)) + S(1))))
-    rule247 = ReplacementRule(pattern247, lambda b, n, a, p, c, e, d, m, x : d**S(2)*e**(-n + S(-1))*(e*x)**(m + n + S(1))*(a + b*x**n)**(p + S(1))/(b*(m + n*(p + S(2)) + S(1))) + Int((e*x)**m*(a + b*x**n)**p*Simp(b*c**S(2)*(m + n*(p + S(2)) + S(1)) + d*x**n*(S(2)*b*c*n*(p + S(1)) + (-a*d + S(2)*b*c)*(m + n + S(1))), x), x)/(b*(m + n*(p + S(2)) + S(1))))
-    rubi.add(rule247)
+    pattern935 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**S(2), x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons71, cons148, cons605)
+    def replacement935(m, n, p, x, e, b, d, c, a):
+        return d**S(2)*e**(-n + S(-1))*(e*x)**(m + n + S(1))*(a + b*x**n)**(p + S(1))/(b*(m + n*(p + S(2)) + S(1))) + Int((e*x)**m*(a + b*x**n)**p*Simp(b*c**S(2)*(m + n*(p + S(2)) + S(1)) + d*x**n*(S(2)*b*c*n*(p + S(1)) + (-a*d + S(2)*b*c)*(m + n + S(1))), x), x)/(b*(m + n*(p + S(2)) + S(1)))
+    rule935 = ReplacementRule(pattern935, replacement935)
+    rubi.add(rule935.pattern, label = 935)
 
-    pattern248 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda k, n, d, q, a, p, b, c, m, x: Unequal(k, S(1))))
-    def With248(b, n, a, p, c, q, d, m, x):
+    def With936(m, n, p, q, x, b, d, c, a):
         k = GCD(m + S(1), n)
-        return Subst(Int(x**(S(-1) + (m + S(1))/k)*(a + b*x**(n/k))**p*(c + d*x**(n/k))**q, x), x, x**k)/k
-    rule248 = ReplacementRule(pattern248, lambda b, n, a, p, c, q, d, m, x : With248(b, n, a, p, c, q, d, m, x))
-    rubi.add(rule248)
+        if Unequal(k, S(1)):
+            return Subst(Int(x**(S(-1) + (m + S(1))/k)*(a + b*x**(n/k))**p*(c + d*x**(n/k))**q, x), x, x**k)/k
+        return False
+    pattern936 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons5, cons50, cons71, cons148, cons17, CustomConstraint(With936))
+    rule936 = ReplacementRule(pattern936, With936)
+    rubi.add(rule936.pattern, label = 936)
 
-    pattern249 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: FractionQ(m)), CustomConstraint(lambda p: IntegerQ(p)), )
-    def With249(b, n, a, p, c, q, e, d, m, x):
+    def With937(m, n, p, q, x, e, b, d, c, a):
         k = Denominator(m)
-        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a + b*e**(-n)*x**(k*n))**p*(c + d*e**(-n)*x**(k*n))**q, x), x, (e*x)**(1/k))/e
-    rule249 = ReplacementRule(pattern249, lambda b, n, a, p, c, q, e, d, m, x : With249(b, n, a, p, c, q, e, d, m, x))
-    rubi.add(rule249)
+        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a + b*e**(-n)*x**(k*n))**p*(c + d*e**(-n)*x**(k*n))**q, x), x, (e*x)**(S(1)/k))/e
+    pattern937 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons5, cons50, cons71, cons148, cons367, cons38 )
+    rule937 = ReplacementRule(pattern937, With937)
+    rubi.add(rule937.pattern, label = 937)
 
-    pattern250 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, m, q: RationalQ(m, p, q)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda m, n: Greater(m - n + S(1), S(0))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule250 = ReplacementRule(pattern250, lambda b, n, a, p, c, q, e, d, m, x : -e**n*Int((e*x)**(m - n)*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(m - n + S(1)) + d*x**n*(m + n*(q + S(-1)) + S(1)), x), x)/(b*n*(p + S(1))) + e**(n + S(-1))*(e*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(b*n*(p + S(1))))
-    rubi.add(rule250)
+    pattern938 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons71, cons148, cons606, cons137, cons403, cons607, cons608)
+    def replacement938(m, n, p, q, x, e, b, d, c, a):
+        return -e**n*Int((e*x)**(m - n)*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(m - n + S(1)) + d*x**n*(m + n*(q + S(-1)) + S(1)), x), x)/(b*n*(p + S(1))) + e**(n + S(-1))*(e*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(b*n*(p + S(1)))
+    rule938 = ReplacementRule(pattern938, replacement938)
+    rubi.add(rule938.pattern, label = 938)
 
-    pattern251 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda q: Greater(q, S(1))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule251 = ReplacementRule(pattern251, lambda b, n, a, p, c, q, e, d, m, x : Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-2))*Simp(c*(b*c*n*(p + S(1)) + (m + S(1))*(-a*d + b*c)) + d*x**n*(b*c*n*(p + S(1)) + (-a*d + b*c)*(m + n*(q + S(-1)) + S(1))), x), x)/(a*b*n*(p + S(1))) + (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*(a*d - b*c)/(a*b*e*n*(p + S(1))))
-    rubi.add(rule251)
+    pattern939 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons71, cons148, cons402, cons137, cons576, cons608)
+    def replacement939(m, n, p, q, x, e, b, d, c, a):
+        return Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-2))*Simp(c*(b*c*n*(p + S(1)) + (m + S(1))*(-a*d + b*c)) + d*x**n*(b*c*n*(p + S(1)) + (-a*d + b*c)*(m + n*(q + S(-1)) + S(1))), x), x)/(a*b*n*(p + S(1))) - (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*(-a*d + b*c)/(a*b*e*n*(p + S(1)))
+    rule939 = ReplacementRule(pattern939, replacement939)
+    rubi.add(rule939.pattern, label = 939)
 
-    pattern252 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda q: Less(S(0), q, S(1))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule252 = ReplacementRule(pattern252, lambda b, n, a, p, c, q, e, d, m, x : Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(m + n*(p + S(1)) + S(1)) + d*x**n*(m + n*(p + q + S(1)) + S(1)), x), x)/(a*n*(p + S(1))) - (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*e*n*(p + S(1))))
-    rubi.add(rule252)
+    pattern940 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons71, cons148, cons402, cons137, cons574, cons608)
+    def replacement940(m, n, p, q, x, e, b, d, c, a):
+        return Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(m + n*(p + S(1)) + S(1)) + d*x**n*(m + n*(p + q + S(1)) + S(1)), x), x)/(a*n*(p + S(1))) - (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*e*n*(p + S(1)))
+    rule940 = ReplacementRule(pattern940, replacement940)
+    rubi.add(rule940.pattern, label = 940)
 
-    pattern253 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, m: RationalQ(m, p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda m, n: Greater(m - n + S(1), n)), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule253 = ReplacementRule(pattern253, lambda b, n, a, p, c, q, e, d, m, x : -a*e**(S(2)*n + S(-1))*(e*x)**(m - S(2)*n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(b*n*(p + S(1))*(-a*d + b*c)) + e**(S(2)*n)*Int((e*x)**(m - S(2)*n)*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(a*c*(m - S(2)*n + S(1)) + x**n*(a*d*(m + n*q - n + S(1)) + b*c*n*(p + S(1))), x), x)/(b*n*(p + S(1))*(-a*d + b*c)))
-    rubi.add(rule253)
+    pattern941 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons50, cons71, cons148, cons244, cons137, cons609, cons608)
+    def replacement941(m, n, p, q, x, e, b, d, c, a):
+        return -a*e**(S(2)*n + S(-1))*(e*x)**(m - S(2)*n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(b*n*(p + S(1))*(-a*d + b*c)) + e**(S(2)*n)*Int((e*x)**(m - S(2)*n)*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(a*c*(m - S(2)*n + S(1)) + x**n*(a*d*(m + n*q - n + S(1)) + b*c*n*(p + S(1))), x), x)/(b*n*(p + S(1))*(-a*d + b*c))
+    rule941 = ReplacementRule(pattern941, replacement941)
+    rubi.add(rule941.pattern, label = 941)
 
-    pattern254 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, m: RationalQ(m, p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda m, n: Inequality(n, GreaterEqual, m - n + S(1), Greater, S(0))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule254 = ReplacementRule(pattern254, lambda b, n, a, p, c, q, e, d, m, x : -e**n*Int((e*x)**(m - n)*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(c*(m - n + S(1)) + d*x**n*(m + n*(p + q + S(1)) + S(1)), x), x)/(n*(p + S(1))*(-a*d + b*c)) + e**(n + S(-1))*(e*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(n*(p + S(1))*(-a*d + b*c)))
-    rubi.add(rule254)
+    pattern942 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons50, cons71, cons148, cons244, cons137, cons610, cons608)
+    def replacement942(m, n, p, q, x, e, b, d, c, a):
+        return -e**n*Int((e*x)**(m - n)*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(c*(m - n + S(1)) + d*x**n*(m + n*(p + q + S(1)) + S(1)), x), x)/(n*(p + S(1))*(-a*d + b*c)) + e**(n + S(-1))*(e*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(n*(p + S(1))*(-a*d + b*c))
+    rule942 = ReplacementRule(pattern942, replacement942)
+    rubi.add(rule942.pattern, label = 942)
 
-    pattern255 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule255 = ReplacementRule(pattern255, lambda b, n, a, p, c, q, e, d, m, x : -b*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*e*n*(p + S(1))*(-a*d + b*c)) + Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(b*c*(m + S(1)) + b*d*x**n*(m + n*(p + q + S(2)) + S(1)) + n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c)))
-    rubi.add(rule255)
+    pattern943 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons50, cons71, cons148, cons13, cons137, cons608)
+    def replacement943(m, n, p, q, x, e, b, d, c, a):
+        return -b*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*e*n*(p + S(1))*(-a*d + b*c)) + Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(b*c*(m + S(1)) + b*d*x**n*(m + n*(p + q + S(2)) + S(1)) + n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c))
+    rule943 = ReplacementRule(pattern943, replacement943)
+    rubi.add(rule943.pattern, label = 943)
 
-    pattern256 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, m, q: RationalQ(m, p, q)), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda m: Less(m, S(-1))), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule256 = ReplacementRule(pattern256, lambda b, n, a, p, c, q, e, d, m, x : -e**(-n)*n*Int((e*x)**(m + n)*(a + b*x**n)**(p + S(-1))*(c + d*x**n)**(q + S(-1))*Simp(a*d*q + b*c*p + b*d*x**n*(p + q), x), x)/(m + S(1)) + (e*x)**(m + S(1))*(a + b*x**n)**p*(c + d*x**n)**q/(e*(m + S(1))))
-    rubi.add(rule256)
+    pattern944 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons71, cons148, cons606, cons403, cons94, cons163, cons608)
+    def replacement944(m, n, p, q, x, e, b, d, c, a):
+        return -e**(-n)*n*Int((e*x)**(m + n)*(a + b*x**n)**(p + S(-1))*(c + d*x**n)**(q + S(-1))*Simp(a*d*q + b*c*p + b*d*x**n*(p + q), x), x)/(m + S(1)) + (e*x)**(m + S(1))*(a + b*x**n)**p*(c + d*x**n)**q/(e*(m + S(1)))
+    rule944 = ReplacementRule(pattern944, replacement944)
+    rubi.add(rule944.pattern, label = 944)
 
-    pattern257 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m, q: RationalQ(m, q)), CustomConstraint(lambda q: Greater(q, S(1))), CustomConstraint(lambda m: Less(m, S(-1))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule257 = ReplacementRule(pattern257, lambda b, n, a, p, c, q, e, d, m, x : c*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))/(a*e*(m + S(1))) - e**(-n)*Int((e*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**(q + S(-2))*Simp(c*n*(a*d*(q + S(-1)) + b*c*(p + S(1))) + c*(m + S(1))*(-a*d + b*c) + d*x**n*(b*c*n*(p + q) + (m + S(1))*(-a*d + b*c)), x), x)/(a*(m + S(1))))
-    rubi.add(rule257)
+    pattern945 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons5, cons71, cons148, cons611, cons576, cons94, cons608)
+    def replacement945(m, n, p, q, x, e, b, d, c, a):
+        return c*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))/(a*e*(m + S(1))) - e**(-n)*Int((e*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**(q + S(-2))*Simp(c*n*(a*d*(q + S(-1)) + b*c*(p + S(1))) + c*(m + S(1))*(-a*d + b*c) + d*x**n*(b*c*n*(p + q) + (m + S(1))*(-a*d + b*c)), x), x)/(a*(m + S(1)))
+    rule945 = ReplacementRule(pattern945, replacement945)
+    rubi.add(rule945.pattern, label = 945)
 
-    pattern258 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m, q: RationalQ(m, q)), CustomConstraint(lambda q: Less(S(0), q, S(1))), CustomConstraint(lambda m: Less(m, S(-1))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule258 = ReplacementRule(pattern258, lambda b, n, a, p, c, q, e, d, m, x : -e**(-n)*Int((e*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(b*c*(m + S(1)) + d*x**n*(b*n*(p + q + S(1)) + b*(m + S(1))) + n*(a*d*q + b*c*(p + S(1))), x), x)/(a*(m + S(1))) + (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*e*(m + S(1))))
-    rubi.add(rule258)
+    pattern946 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons5, cons71, cons148, cons611, cons574, cons94, cons608)
+    def replacement946(m, n, p, q, x, e, b, d, c, a):
+        return -e**(-n)*Int((e*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(b*c*(m + S(1)) + d*x**n*(b*n*(p + q + S(1)) + b*(m + S(1))) + n*(a*d*q + b*c*(p + S(1))), x), x)/(a*(m + S(1))) + (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*e*(m + S(1)))
+    rule946 = ReplacementRule(pattern946, replacement946)
+    rubi.add(rule946.pattern, label = 946)
 
-    pattern259 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule259 = ReplacementRule(pattern259, lambda b, n, a, p, c, q, e, d, m, x : n*Int((e*x)**m*(a + b*x**n)**(p + S(-1))*(c + d*x**n)**(q + S(-1))*Simp(a*c*(p + q) + x**n*(a*d*(p + q) + q*(-a*d + b*c)), x), x)/(m + n*(p + q) + S(1)) + (e*x)**(m + S(1))*(a + b*x**n)**p*(c + d*x**n)**q/(e*(m + n*(p + q) + S(1))))
-    rubi.add(rule259)
+    pattern947 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons71, cons148, cons402, cons403, cons163, cons608)
+    def replacement947(m, n, p, q, x, e, b, d, c, a):
+        return n*Int((e*x)**m*(a + b*x**n)**(p + S(-1))*(c + d*x**n)**(q + S(-1))*Simp(a*c*(p + q) + x**n*(a*d*(p + q) + q*(-a*d + b*c)), x), x)/(m + n*(p + q) + S(1)) + (e*x)**(m + S(1))*(a + b*x**n)**p*(c + d*x**n)**q/(e*(m + n*(p + q) + S(1)))
+    rule947 = ReplacementRule(pattern947, replacement947)
+    rubi.add(rule947.pattern, label = 947)
 
-    pattern260 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: Greater(q, S(1))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule260 = ReplacementRule(pattern260, lambda b, n, a, p, c, q, e, d, m, x : d*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))/(b*e*(m + n*(p + q) + S(1))) + Int((e*x)**m*(a + b*x**n)**p*(c + d*x**n)**(q + S(-2))*Simp(c*(b*c*n*(p + q) + (m + S(1))*(-a*d + b*c)) + x**n*(b*c*d*n*(p + q) + d*n*(q + S(-1))*(-a*d + b*c) + d*(m + S(1))*(-a*d + b*c)), x), x)/(b*(m + n*(p + q) + S(1))))
-    rubi.add(rule260)
+    pattern948 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons5, cons71, cons148, cons395, cons576, cons608)
+    def replacement948(m, n, p, q, x, e, b, d, c, a):
+        return d*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))/(b*e*(m + n*(p + q) + S(1))) + Int((e*x)**m*(a + b*x**n)**p*(c + d*x**n)**(q + S(-2))*Simp(c*(b*c*n*(p + q) + (m + S(1))*(-a*d + b*c)) + x**n*(b*c*d*n*(p + q) + d*n*(q + S(-1))*(-a*d + b*c) + d*(m + S(1))*(-a*d + b*c)), x), x)/(b*(m + n*(p + q) + S(1)))
+    rule948 = ReplacementRule(pattern948, replacement948)
+    rubi.add(rule948.pattern, label = 948)
 
-    pattern261 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m, q: RationalQ(m, q)), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda m, n: Greater(m - n + S(1), S(0))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule261 = ReplacementRule(pattern261, lambda b, n, a, p, c, q, e, d, m, x : -e**n*Int((e*x)**(m - n)*(a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(a*c*(m - n + S(1)) + x**n*(a*d*(m - n + S(1)) - n*q*(-a*d + b*c)), x), x)/(b*(m + n*(p + q) + S(1))) + e**(n + S(-1))*(e*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(b*(m + n*(p + q) + S(1))))
-    rubi.add(rule261)
+    pattern949 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons5, cons71, cons148, cons611, cons403, cons607, cons608)
+    def replacement949(m, n, p, q, x, e, b, d, c, a):
+        return -e**n*Int((e*x)**(m - n)*(a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(a*c*(m - n + S(1)) + x**n*(a*d*(m - n + S(1)) - n*q*(-a*d + b*c)), x), x)/(b*(m + n*(p + q) + S(1))) + e**(n + S(-1))*(e*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(b*(m + n*(p + q) + S(1)))
+    rule949 = ReplacementRule(pattern949, replacement949)
+    rubi.add(rule949.pattern, label = 949)
 
-    pattern262 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda m, n: Greater(m - n + S(1), n)), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule262 = ReplacementRule(pattern262, lambda b, n, a, p, c, q, e, d, m, x : -e**(S(2)*n)*Int((e*x)**(m - S(2)*n)*(a + b*x**n)**p*(c + d*x**n)**q*Simp(a*c*(m - S(2)*n + S(1)) + x**n*(a*d*(m + n*(q + S(-1)) + S(1)) + b*c*(m + n*(p + S(-1)) + S(1))), x), x)/(b*d*(m + n*(p + q) + S(1))) + e**(S(2)*n + S(-1))*(e*x)**(m - S(2)*n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(b*d*(m + n*(p + q) + S(1))))
-    rubi.add(rule262)
+    pattern950 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons5, cons50, cons71, cons148, cons31, cons609, cons608)
+    def replacement950(m, n, p, q, x, e, b, d, c, a):
+        return -e**(S(2)*n)*Int((e*x)**(m - S(2)*n)*(a + b*x**n)**p*(c + d*x**n)**q*Simp(a*c*(m - S(2)*n + S(1)) + x**n*(a*d*(m + n*(q + S(-1)) + S(1)) + b*c*(m + n*(p + S(-1)) + S(1))), x), x)/(b*d*(m + n*(p + q) + S(1))) + e**(S(2)*n + S(-1))*(e*x)**(m - S(2)*n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(b*d*(m + n*(p + q) + S(1)))
+    rule950 = ReplacementRule(pattern950, replacement950)
+    rubi.add(rule950.pattern, label = 950)
 
-    pattern263 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda m: Less(m, S(-1))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule263 = ReplacementRule(pattern263, lambda b, n, a, p, c, q, e, d, m, x : -e**(-n)*Int((e*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**q*Simp(b*d*x**n*(m + n*(p + q + S(2)) + S(1)) + n*(a*d*q + b*c*p) + (a*d + b*c)*(m + n + S(1)), x), x)/(a*c*(m + S(1))) + (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*c*e*(m + S(1))))
-    rubi.add(rule263)
+    pattern951 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons5, cons50, cons71, cons148, cons31, cons94, cons608)
+    def replacement951(m, n, p, q, x, e, b, d, c, a):
+        return -e**(-n)*Int((e*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**q*Simp(b*d*x**n*(m + n*(p + q + S(2)) + S(1)) + n*(a*d*q + b*c*p) + (a*d + b*c)*(m + n + S(1)), x), x)/(a*c*(m + S(1))) + (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*c*e*(m + S(1)))
+    rule951 = ReplacementRule(pattern951, replacement951)
+    rubi.add(rule951.pattern, label = 951)
 
-    pattern264 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda m, n: LessEqual(n, m, S(2)*n + S(-1))))
-    rule264 = ReplacementRule(pattern264, lambda b, n, a, c, e, d, m, x : -a*e**n*Int((e*x)**(m - n)/(a + b*x**n), x)/(-a*d + b*c) + c*e**n*Int((e*x)**(m - n)/(c + d*x**n), x)/(-a*d + b*c))
-    rubi.add(rule264)
+    pattern952 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons21, cons4, cons71, cons148, cons31, cons612)
+    def replacement952(m, n, x, e, b, d, c, a):
+        return -a*e**n*Int((e*x)**(m - n)/(a + b*x**n), x)/(-a*d + b*c) + c*e**n*Int((e*x)**(m - n)/(c + d*x**n), x)/(-a*d + b*c)
+    rule952 = ReplacementRule(pattern952, replacement952)
+    rubi.add(rule952.pattern, label = 952)
 
-    pattern265 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: PositiveIntegerQ(n)))
-    rule265 = ReplacementRule(pattern265, lambda b, n, a, c, e, d, m, x : b*Int((e*x)**m/(a + b*x**n), x)/(-a*d + b*c) - d*Int((e*x)**m/(c + d*x**n), x)/(-a*d + b*c))
-    rubi.add(rule265)
+    pattern953 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons21, cons71, cons148)
+    def replacement953(m, n, x, e, b, d, c, a):
+        return b*Int((e*x)**m/(a + b*x**n), x)/(-a*d + b*c) - d*Int((e*x)**m/(c + d*x**n), x)/(-a*d + b*c)
+    rule953 = ReplacementRule(pattern953, replacement953)
+    rubi.add(rule953.pattern, label = 953)
 
-    pattern266 = Pattern(Integral(x_**m_/((a_ + x_**n_*WC('b', S(1)))*sqrt(c_ + x_**n_*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda m, n: IntegersQ(m/S(2), n/S(2))), CustomConstraint(lambda m, n: Less(S(0), m - n + S(1), n)), CustomConstraint(lambda n: LessEqual(n, S(4))))
-    rule266 = ReplacementRule(pattern266, lambda b, n, a, c, d, m, x : -a*Int(x**(m - n)/((a + b*x**n)*sqrt(c + d*x**n)), x)/b + Int(x**(m - n)/sqrt(c + d*x**n), x)/b)
-    rubi.add(rule266)
+    pattern954 = Pattern(Integral(x_**m_/((a_ + x_**n_*WC('b', S(1)))*sqrt(c_ + x_**n_*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71, cons613, cons614, cons615)
+    def replacement954(m, n, x, b, d, c, a):
+        return -a*Int(x**(m - n)/((a + b*x**n)*sqrt(c + d*x**n)), x)/b + Int(x**(m - n)/sqrt(c + d*x**n), x)/b
+    rule954 = ReplacementRule(pattern954, replacement954)
+    rubi.add(rule954.pattern, label = 954)
 
-    pattern267 = Pattern(Integral(x_**S(2)/((a_ + x_**S(4)*WC('b', S(1)))*sqrt(c_ + x_**S(4)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), )
-    def With267(b, a, c, d, x):
+    def With955(x, b, d, c, a):
         r = Numerator(Rt(-a/b, S(2)))
         s = Denominator(Rt(-a/b, S(2)))
         return -s*Int(S(1)/(sqrt(c + d*x**S(4))*(r - s*x**S(2))), x)/(S(2)*b) + s*Int(S(1)/(sqrt(c + d*x**S(4))*(r + s*x**S(2))), x)/(S(2)*b)
-    rule267 = ReplacementRule(pattern267, lambda b, a, c, d, x : With267(b, a, c, d, x))
-    rubi.add(rule267)
+    pattern955 = Pattern(Integral(x_**S(2)/((a_ + x_**S(4)*WC('b', S(1)))*sqrt(c_ + x_**S(4)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71 )
+    rule955 = ReplacementRule(pattern955, With955)
+    rubi.add(rule955.pattern, label = 955)
 
-    pattern268 = Pattern(Integral(x_/((a_ + x_**S(3)*WC('b', S(1)))*sqrt(c_ + x_**S(3)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda a, c, b, d: ZeroQ(-a*d + S(4)*b*c)), )
-    def With268(b, a, c, d, x):
+    def With956(x, b, d, c, a):
         q = Rt(d/c, S(3))
-        return S(2)**(S(1)/3)*q*log(-S(2)**(S(1)/3)*q*x + S(1) - sqrt(c + d*x**S(3))/sqrt(c))/(S(12)*b*sqrt(c)) - S(2)**(S(1)/3)*q*log(-S(2)**(S(1)/3)*q*x + S(1) + sqrt(c + d*x**S(3))/sqrt(c))/(S(12)*b*sqrt(c)) - S(2)**(S(1)/3)*sqrt(S(3))*q*atan(sqrt(S(3))/S(3) + S(2)**(S(2)/3)*sqrt(S(3))*(sqrt(c) - sqrt(c + d*x**S(3)))/(S(3)*sqrt(c)*q*x))/(S(18)*b*sqrt(c)) + S(2)**(S(1)/3)*sqrt(S(3))*q*atan(sqrt(S(3))/S(3) + S(2)**(S(2)/3)*sqrt(S(3))*(sqrt(c) + sqrt(c + d*x**S(3)))/(S(3)*sqrt(c)*q*x))/(S(18)*b*sqrt(c)) + S(2)**(S(1)/3)*q*atanh(sqrt(c + d*x**S(3))/sqrt(c))/(S(18)*b*sqrt(c))
-    rule268 = ReplacementRule(pattern268, lambda b, a, c, d, x : With268(b, a, c, d, x))
-    rubi.add(rule268)
+        return -S(2)**(S(1)/3)*sqrt(S(3))*q*ArcTan(sqrt(S(3))/S(3) + S(2)**(S(2)/3)*sqrt(S(3))*(sqrt(c) - sqrt(c + d*x**S(3)))/(S(3)*sqrt(c)*q*x))/(S(18)*b*sqrt(c)) + S(2)**(S(1)/3)*sqrt(S(3))*q*ArcTan(sqrt(S(3))/S(3) + S(2)**(S(2)/3)*sqrt(S(3))*(sqrt(c) + sqrt(c + d*x**S(3)))/(S(3)*sqrt(c)*q*x))/(S(18)*b*sqrt(c)) + S(2)**(S(1)/3)*q*log(-S(2)**(S(1)/3)*q*x + S(1) - sqrt(c + d*x**S(3))/sqrt(c))/(S(12)*b*sqrt(c)) - S(2)**(S(1)/3)*q*log(-S(2)**(S(1)/3)*q*x + S(1) + sqrt(c + d*x**S(3))/sqrt(c))/(S(12)*b*sqrt(c)) + S(2)**(S(1)/3)*q*atanh(sqrt(c + d*x**S(3))/sqrt(c))/(S(18)*b*sqrt(c))
+    pattern956 = Pattern(Integral(x_/((a_ + x_**S(3)*WC('b', S(1)))*sqrt(c_ + x_**S(3)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71, cons616 )
+    rule956 = ReplacementRule(pattern956, With956)
+    rubi.add(rule956.pattern, label = 956)
 
-    pattern269 = Pattern(Integral(x_**m_/((a_ + x_**S(3)*WC('b', S(1)))*sqrt(c_ + x_**S(3)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda a, c, b, d: ZeroQ(-a*d + S(4)*b*c)), CustomConstraint(lambda m: PositiveIntegerQ(m/S(3) + S(-1)/3)))
-    rule269 = ReplacementRule(pattern269, lambda b, a, c, d, m, x : -a*Int(x**(m + S(-3))/((a + b*x**S(3))*sqrt(c + d*x**S(3))), x)/b + Int(x**(m + S(-3))/sqrt(c + d*x**S(3)), x)/b)
-    rubi.add(rule269)
+    pattern957 = Pattern(Integral(x_**m_/((a_ + x_**S(3)*WC('b', S(1)))*sqrt(c_ + x_**S(3)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71, cons616, cons617)
+    def replacement957(m, x, b, d, c, a):
+        return -a*Int(x**(m + S(-3))/((a + b*x**S(3))*sqrt(c + d*x**S(3))), x)/b + Int(x**(m + S(-3))/sqrt(c + d*x**S(3)), x)/b
+    rule957 = ReplacementRule(pattern957, replacement957)
+    rubi.add(rule957.pattern, label = 957)
 
-    pattern270 = Pattern(Integral(x_**m_/((a_ + x_**S(3)*WC('b', S(1)))*sqrt(c_ + x_**S(3)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda a, c, b, d: ZeroQ(-a*d + S(4)*b*c)), CustomConstraint(lambda m: NegativeIntegerQ(m/S(3) + S(-1)/3)))
-    rule270 = ReplacementRule(pattern270, lambda b, a, c, d, m, x : -b*Int(x**(m + S(3))/((a + b*x**S(3))*sqrt(c + d*x**S(3))), x)/a + Int(x**m/sqrt(c + d*x**S(3)), x)/a)
-    rubi.add(rule270)
+    pattern958 = Pattern(Integral(x_**m_/((a_ + x_**S(3)*WC('b', S(1)))*sqrt(c_ + x_**S(3)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71, cons616, cons618)
+    def replacement958(m, x, b, d, c, a):
+        return -b*Int(x**(m + S(3))/((a + b*x**S(3))*sqrt(c + d*x**S(3))), x)/a + Int(x**m/sqrt(c + d*x**S(3)), x)/a
+    rule958 = ReplacementRule(pattern958, replacement958)
+    rubi.add(rule958.pattern, label = 958)
 
-    pattern271 = Pattern(Integral(x_**S(2)*sqrt(c_ + x_**S(4)*WC('d', S(1)))/(a_ + x_**S(4)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)))
-    rule271 = ReplacementRule(pattern271, lambda b, a, c, d, x : d*Int(x**S(2)/sqrt(c + d*x**S(4)), x)/b + (-a*d + b*c)*Int(x**S(2)/((a + b*x**S(4))*sqrt(c + d*x**S(4))), x)/b)
-    rubi.add(rule271)
+    pattern959 = Pattern(Integral(x_**S(2)*sqrt(c_ + x_**S(4)*WC('d', S(1)))/(a_ + x_**S(4)*WC('b', S(1))), x_), cons2, cons3, cons7, cons27, cons71)
+    def replacement959(x, b, d, c, a):
+        return d*Int(x**S(2)/sqrt(c + d*x**S(4)), x)/b + (-a*d + b*c)*Int(x**S(2)/((a + b*x**S(4))*sqrt(c + d*x**S(4))), x)/b
+    rule959 = ReplacementRule(pattern959, replacement959)
+    rubi.add(rule959.pattern, label = 959)
 
-    pattern272 = Pattern(Integral(x_**WC('m', S(1))*sqrt(c_ + x_**S(3)*WC('d', S(1)))/(a_ + x_**S(3)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda a, c, b, d: ZeroQ(-a*d + S(4)*b*c)), CustomConstraint(lambda m: IntegerQ(m/S(3) + S(-1)/3)))
-    rule272 = ReplacementRule(pattern272, lambda b, a, c, d, m, x : d*Int(x**m/sqrt(c + d*x**S(3)), x)/b + (-a*d + b*c)*Int(x**m/((a + b*x**S(3))*sqrt(c + d*x**S(3))), x)/b)
-    rubi.add(rule272)
+    pattern960 = Pattern(Integral(x_**WC('m', S(1))*sqrt(c_ + x_**S(3)*WC('d', S(1)))/(a_ + x_**S(3)*WC('b', S(1))), x_), cons2, cons3, cons7, cons27, cons71, cons616, cons619)
+    def replacement960(m, x, b, d, c, a):
+        return d*Int(x**m/sqrt(c + d*x**S(3)), x)/b + (-a*d + b*c)*Int(x**m/((a + b*x**S(3))*sqrt(c + d*x**S(3))), x)/b
+    rule960 = ReplacementRule(pattern960, replacement960)
+    rubi.add(rule960.pattern, label = 960)
 
-    pattern273 = Pattern(Integral(x_**S(2)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda a, b: PosQ(b/a)), CustomConstraint(lambda d, c: PosQ(d/c)), CustomConstraint(lambda a, c, b, d: Not(SimplerSqrtQ(b/a, d/c))))
-    rule273 = ReplacementRule(pattern273, lambda b, a, c, d, x : -c*Int(sqrt(a + b*x**S(2))/(c + d*x**S(2))**(S(3)/2), x)/b + x*sqrt(a + b*x**S(2))/(b*sqrt(c + d*x**S(2))))
-    rubi.add(rule273)
+    pattern961 = Pattern(Integral(x_**S(2)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71, cons466, cons573, cons580)
+    def replacement961(x, b, d, c, a):
+        return -c*Int(sqrt(a + b*x**S(2))/(c + d*x**S(2))**(S(3)/2), x)/b + x*sqrt(a + b*x**S(2))/(b*sqrt(c + d*x**S(2)))
+    rule961 = ReplacementRule(pattern961, replacement961)
+    rubi.add(rule961.pattern, label = 961)
 
-    pattern274 = Pattern(Integral(x_**n_/(sqrt(a_ + x_**n_*WC('b', S(1)))*sqrt(c_ + x_**n_*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: EqQ(n, S(2)) | EqQ(n, S(4))), CustomConstraint(lambda b, n, a, c, d: Not(EqQ(n, S(2)) & SimplerSqrtQ(-b/a, -d/c))))
-    rule274 = ReplacementRule(pattern274, lambda b, n, a, c, d, x : -a*Int(S(1)/(sqrt(a + b*x**n)*sqrt(c + d*x**n)), x)/b + Int(sqrt(a + b*x**n)/sqrt(c + d*x**n), x)/b)
-    rubi.add(rule274)
+    pattern962 = Pattern(Integral(x_**n_/(sqrt(a_ + x_**n_*WC('b', S(1)))*sqrt(c_ + x_**n_*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons71, cons620, cons621)
+    def replacement962(n, x, b, d, c, a):
+        return -a*Int(S(1)/(sqrt(a + b*x**n)*sqrt(c + d*x**n)), x)/b + Int(sqrt(a + b*x**n)/sqrt(c + d*x**n), x)/b
+    rule962 = ReplacementRule(pattern962, replacement962)
+    rubi.add(rule962.pattern, label = 962)
 
-    pattern275 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, m: RationalQ(m, p)), CustomConstraint(lambda p, m, q, n: IntegersQ(p + (m + S(1))/n, q)), CustomConstraint(lambda p: Less(S(-1), p, S(0))), )
-    def With275(b, n, a, p, c, q, d, m, x):
+    def With963(m, n, q, p, x, b, d, c, a):
         k = Denominator(p)
         return a**(p + (m + S(1))/n)*k*Subst(Int(x**(k*(m + S(1))/n + S(-1))*(c - x**k*(-a*d + b*c))**q*(-b*x**k + S(1))**(-p - q + S(-1) - (m + S(1))/n), x), x, x**(n/k)*(a + b*x**n)**(-S(1)/k))/n
-    rule275 = ReplacementRule(pattern275, lambda b, n, a, p, c, q, d, m, x : With275(b, n, a, p, c, q, d, m, x))
-    rubi.add(rule275)
+    pattern963 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons148, cons244, cons622, cons485 )
+    rule963 = ReplacementRule(pattern963, With963)
+    rubi.add(rule963.pattern, label = 963)
 
-    pattern276 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: NegativeIntegerQ(n)), CustomConstraint(lambda m: IntegerQ(m)))
-    rule276 = ReplacementRule(pattern276, lambda b, n, a, p, c, q, d, m, x : -Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p*(c + d*x**(-n))**q, x), x, 1/x))
-    rubi.add(rule276)
+    pattern964 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons5, cons50, cons71, cons196, cons17)
+    def replacement964(m, n, p, q, x, b, d, c, a):
+        return -Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p*(c + d*x**(-n))**q, x), x, S(1)/x)
+    rule964 = ReplacementRule(pattern964, replacement964)
+    rubi.add(rule964.pattern, label = 964)
 
-    pattern277 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda n: NegativeIntegerQ(n)), CustomConstraint(lambda m: FractionQ(m)), )
-    def With277(b, n, a, p, c, q, e, d, m, x):
+    def With965(m, n, p, q, x, e, b, d, c, a):
         g = Denominator(m)
         return -g*Subst(Int(x**(-g*(m + S(1)) + S(-1))*(a + b*e**(-n)*x**(-g*n))**p*(c + d*e**(-n)*x**(-g*n))**q, x), x, (e*x)**(-S(1)/g))/e
-    rule277 = ReplacementRule(pattern277, lambda b, n, a, p, c, q, e, d, m, x : With277(b, n, a, p, c, q, e, d, m, x))
-    rubi.add(rule277)
+    pattern965 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons5, cons50, cons196, cons367 )
+    rule965 = ReplacementRule(pattern965, With965)
+    rubi.add(rule965.pattern, label = 965)
 
-    pattern278 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: NegativeIntegerQ(n)), CustomConstraint(lambda m: Not(RationalQ(m))))
-    rule278 = ReplacementRule(pattern278, lambda b, n, a, p, c, q, e, d, m, x : -(e*x)**m*(1/x)**m*Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p*(c + d*x**(-n))**q, x), x, 1/x))
-    rubi.add(rule278)
+    pattern966 = Pattern(Integral((x_*WC('e', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons5, cons50, cons71, cons196, cons356)
+    def replacement966(m, n, p, q, x, e, b, d, c, a):
+        return -(e*x)**m*(S(1)/x)**m*Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p*(c + d*x**(-n))**q, x), x, S(1)/x)
+    rule966 = ReplacementRule(pattern966, replacement966)
+    rubi.add(rule966.pattern, label = 966)
 
-    pattern279 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: FractionQ(n)), )
-    def With279(b, n, a, p, c, q, d, m, x):
+    def With967(m, n, p, q, x, b, d, c, a):
         g = Denominator(n)
-        return g*Subst(Int(x**(g*(m + S(1)) + S(-1))*(a + b*x**(g*n))**p*(c + d*x**(g*n))**q, x), x, x**(1/g))
-    rule279 = ReplacementRule(pattern279, lambda b, n, a, p, c, q, d, m, x : With279(b, n, a, p, c, q, d, m, x))
-    rubi.add(rule279)
+        return g*Subst(Int(x**(g*(m + S(1)) + S(-1))*(a + b*x**(g*n))**p*(c + d*x**(g*n))**q, x), x, x**(S(1)/g))
+    pattern967 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons21, cons5, cons50, cons71, cons489 )
+    rule967 = ReplacementRule(pattern967, With967)
+    rubi.add(rule967.pattern, label = 967)
 
-    pattern280 = Pattern(Integral((e_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda n: FractionQ(n)))
-    rule280 = ReplacementRule(pattern280, lambda b, n, a, p, c, q, e, d, m, x : e**IntPart(m)*x**(-FracPart(m))*(e*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q, x))
-    rubi.add(rule280)
+    pattern968 = Pattern(Integral((e_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons5, cons50, cons71, cons489)
+    def replacement968(m, n, p, q, x, e, b, d, c, a):
+        return e**IntPart(m)*x**(-FracPart(m))*(e*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q, x)
+    rule968 = ReplacementRule(pattern968, replacement968)
+    rubi.add(rule968.pattern, label = 968)
 
-    pattern281 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda m, n: IntegerQ(n/(m + S(1)))), CustomConstraint(lambda n: Not(IntegerQ(n))))
-    rule281 = ReplacementRule(pattern281, lambda b, n, a, p, c, q, d, m, x : Subst(Int((a + b*x**(n/(m + S(1))))**p*(c + d*x**(n/(m + S(1))))**q, x), x, x**(m + S(1)))/(m + S(1)))
-    rubi.add(rule281)
+    pattern969 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons21, cons4, cons5, cons50, cons71, cons541, cons23)
+    def replacement969(m, n, p, q, x, b, d, c, a):
+        return Subst(Int((a + b*x**(n/(m + S(1))))**p*(c + d*x**(n/(m + S(1))))**q, x), x, x**(m + S(1)))/(m + S(1))
+    rule969 = ReplacementRule(pattern969, replacement969)
+    rubi.add(rule969.pattern, label = 969)
 
-    pattern282 = Pattern(Integral((e_*x_)**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda m, n: IntegerQ(n/(m + S(1)))), CustomConstraint(lambda n: Not(IntegerQ(n))))
-    rule282 = ReplacementRule(pattern282, lambda b, n, a, p, c, q, e, d, m, x : e**IntPart(m)*x**(-FracPart(m))*(e*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q, x))
-    rubi.add(rule282)
+    pattern970 = Pattern(Integral((e_*x_)**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons50, cons71, cons541, cons23)
+    def replacement970(m, n, p, q, x, e, b, d, c, a):
+        return e**IntPart(m)*x**(-FracPart(m))*(e*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q, x)
+    rule970 = ReplacementRule(pattern970, replacement970)
+    rubi.add(rule970.pattern, label = 970)
 
-    pattern283 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda q: Greater(q, S(1))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule283 = ReplacementRule(pattern283, lambda b, n, a, p, c, q, e, d, m, x : Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-2))*Simp(c*(b*c*n*(p + S(1)) + (m + S(1))*(-a*d + b*c)) + d*x**n*(b*c*n*(p + S(1)) + (-a*d + b*c)*(m + n*(q + S(-1)) + S(1))), x), x)/(a*b*n*(p + S(1))) + (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*(a*d - b*c)/(a*b*e*n*(p + S(1))))
-    rubi.add(rule283)
+    pattern971 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons71, cons402, cons137, cons576, cons608)
+    def replacement971(m, n, p, q, x, e, b, d, c, a):
+        return Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-2))*Simp(c*(b*c*n*(p + S(1)) + (m + S(1))*(-a*d + b*c)) + d*x**n*(b*c*n*(p + S(1)) + (-a*d + b*c)*(m + n*(q + S(-1)) + S(1))), x), x)/(a*b*n*(p + S(1))) - (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*(-a*d + b*c)/(a*b*e*n*(p + S(1)))
+    rule971 = ReplacementRule(pattern971, replacement971)
+    rubi.add(rule971.pattern, label = 971)
 
-    pattern284 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda q: Less(S(0), q, S(1))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule284 = ReplacementRule(pattern284, lambda b, n, a, p, c, q, e, d, m, x : Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(m + n*(p + S(1)) + S(1)) + d*x**n*(m + n*(p + q + S(1)) + S(1)), x), x)/(a*n*(p + S(1))) - (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*e*n*(p + S(1))))
-    rubi.add(rule284)
+    pattern972 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons71, cons402, cons137, cons574, cons608)
+    def replacement972(m, n, p, q, x, e, b, d, c, a):
+        return Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(m + n*(p + S(1)) + S(1)) + d*x**n*(m + n*(p + q + S(1)) + S(1)), x), x)/(a*n*(p + S(1))) - (e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*e*n*(p + S(1)))
+    rule972 = ReplacementRule(pattern972, replacement972)
+    rubi.add(rule972.pattern, label = 972)
 
-    pattern285 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule285 = ReplacementRule(pattern285, lambda b, n, a, p, c, q, e, d, m, x : -b*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*e*n*(p + S(1))*(-a*d + b*c)) + Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(b*c*(m + S(1)) + b*d*x**n*(m + n*(p + q + S(2)) + S(1)) + n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c)))
-    rubi.add(rule285)
+    pattern973 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons50, cons71, cons13, cons137, cons608)
+    def replacement973(m, n, p, q, x, e, b, d, c, a):
+        return -b*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*e*n*(p + S(1))*(-a*d + b*c)) + Int((e*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(b*c*(m + S(1)) + b*d*x**n*(m + n*(p + q + S(2)) + S(1)) + n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c))
+    rule973 = ReplacementRule(pattern973, replacement973)
+    rubi.add(rule973.pattern, label = 973)
 
-    pattern286 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda p: Greater(p, S(0))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule286 = ReplacementRule(pattern286, lambda b, n, a, p, c, q, e, d, m, x : n*Int((e*x)**m*(a + b*x**n)**(p + S(-1))*(c + d*x**n)**(q + S(-1))*Simp(a*c*(p + q) + x**n*(a*d*(p + q) + q*(-a*d + b*c)), x), x)/(m + n*(p + q) + S(1)) + (e*x)**(m + S(1))*(a + b*x**n)**p*(c + d*x**n)**q/(e*(m + n*(p + q) + S(1))))
-    rubi.add(rule286)
+    pattern974 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons71, cons402, cons403, cons163, cons608)
+    def replacement974(m, n, p, q, x, e, b, d, c, a):
+        return n*Int((e*x)**m*(a + b*x**n)**(p + S(-1))*(c + d*x**n)**(q + S(-1))*Simp(a*c*(p + q) + x**n*(a*d*(p + q) + q*(-a*d + b*c)), x), x)/(m + n*(p + q) + S(1)) + (e*x)**(m + S(1))*(a + b*x**n)**p*(c + d*x**n)**q/(e*(m + n*(p + q) + S(1)))
+    rule974 = ReplacementRule(pattern974, replacement974)
+    rubi.add(rule974.pattern, label = 974)
 
-    pattern287 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: Greater(q, S(1))), CustomConstraint(lambda b, n, a, p, c, q, e, d, m, x: IntBinomialQ(a, b, c, d, e, m, n, p, q, x)))
-    rule287 = ReplacementRule(pattern287, lambda b, n, a, p, c, q, e, d, m, x : d*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))/(b*e*(m + n*(p + q) + S(1))) + Int((e*x)**m*(a + b*x**n)**p*(c + d*x**n)**(q + S(-2))*Simp(c*(b*c*n*(p + q) + (m + S(1))*(-a*d + b*c)) + x**n*(b*c*d*n*(p + q) + d*n*(q + S(-1))*(-a*d + b*c) + d*(m + S(1))*(-a*d + b*c)), x), x)/(b*(m + n*(p + q) + S(1))))
-    rubi.add(rule287)
+    pattern975 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons71, cons395, cons576, cons608)
+    def replacement975(m, n, p, q, x, e, b, d, c, a):
+        return d*(e*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))/(b*e*(m + n*(p + q) + S(1))) + Int((e*x)**m*(a + b*x**n)**p*(c + d*x**n)**(q + S(-2))*Simp(c*(b*c*n*(p + q) + (m + S(1))*(-a*d + b*c)) + x**n*(b*c*d*n*(p + q) + d*n*(q + S(-1))*(-a*d + b*c) + d*(m + S(1))*(-a*d + b*c)), x), x)/(b*(m + n*(p + q) + S(1)))
+    rule975 = ReplacementRule(pattern975, replacement975)
+    rubi.add(rule975.pattern, label = 975)
 
-    pattern288 = Pattern(Integral(x_**m_/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda m, n: ZeroQ(m - n) | ZeroQ(m - S(2)*n + S(1))))
-    rule288 = ReplacementRule(pattern288, lambda b, n, a, c, d, m, x : -a*Int(x**(m - n)/(a + b*x**n), x)/(-a*d + b*c) + c*Int(x**(m - n)/(c + d*x**n), x)/(-a*d + b*c))
-    rubi.add(rule288)
+    pattern976 = Pattern(Integral(x_**m_/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons21, cons4, cons71, cons623)
+    def replacement976(m, n, x, b, d, c, a):
+        return -a*Int(x**(m - n)/(a + b*x**n), x)/(-a*d + b*c) + c*Int(x**(m - n)/(c + d*x**n), x)/(-a*d + b*c)
+    rule976 = ReplacementRule(pattern976, replacement976)
+    rubi.add(rule976.pattern, label = 976)
 
-    pattern289 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)))
-    rule289 = ReplacementRule(pattern289, lambda b, n, a, c, e, d, m, x : b*Int((e*x)**m/(a + b*x**n), x)/(-a*d + b*c) - d*Int((e*x)**m/(c + d*x**n), x)/(-a*d + b*c))
-    rubi.add(rule289)
+    pattern977 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons4, cons21, cons71)
+    def replacement977(m, n, x, e, b, d, c, a):
+        return b*Int((e*x)**m/(a + b*x**n), x)/(-a*d + b*c) - d*Int((e*x)**m/(c + d*x**n), x)/(-a*d + b*c)
+    rule977 = ReplacementRule(pattern977, replacement977)
+    rubi.add(rule977.pattern, label = 977)
 
-    pattern290 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda p, m, q: IntegersQ(m, p, q)), CustomConstraint(lambda p: GreaterEqual(p, S(-2))), CustomConstraint(lambda m, q: GreaterEqual(q, S(-2)) | (Equal(q, S(-3)) & IntegerQ(m/S(2) + S(-1)/2))))
-    rule290 = ReplacementRule(pattern290, lambda b, n, a, p, c, q, e, d, m, x : Int(ExpandIntegrand((e*x)**m*(a + b*x**n)**p*(c + d*x**n)**q, x), x))
-    rubi.add(rule290)
+    pattern978 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons71, cons624, cons625, cons626)
+    def replacement978(m, n, p, q, x, e, b, d, c, a):
+        return Int(ExpandIntegrand((e*x)**m*(a + b*x**n)**p*(c + d*x**n)**q, x), x)
+    rule978 = ReplacementRule(pattern978, replacement978)
+    rubi.add(rule978.pattern, label = 978)
 
-    pattern291 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)), CustomConstraint(lambda q: IntegerQ(q)), CustomConstraint(lambda p, n: PosQ(n) | Not(IntegerQ(p))))
-    rule291 = ReplacementRule(pattern291, lambda mn, b, n, p, a, c, q, d, m, x : Int(x**(m - n*q)*(a + b*x**n)**p*(c*x**n + d)**q, x))
-    rubi.add(rule291)
+    pattern979 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons21, cons4, cons5, cons585, cons586, cons587)
+    def replacement979(m, n, q, p, x, b, d, c, mn, a):
+        return Int(x**(m - n*q)*(a + b*x**n)**p*(c*x**n + d)**q, x)
+    rule979 = ReplacementRule(pattern979, replacement979)
+    rubi.add(rule979.pattern, label = 979)
 
-    pattern292 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)), CustomConstraint(lambda q: Not(IntegerQ(q))), CustomConstraint(lambda p: Not(IntegerQ(p))))
-    rule292 = ReplacementRule(pattern292, lambda mn, b, n, p, a, c, q, d, m, x : x**(n*FracPart(q))*(c + d*x**(-n))**FracPart(q)*(c*x**n + d)**(-FracPart(q))*Int(x**(m - n*q)*(a + b*x**n)**p*(c*x**n + d)**q, x))
-    rubi.add(rule292)
+    pattern980 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons21, cons4, cons5, cons50, cons585, cons386, cons147)
+    def replacement980(m, n, p, q, x, b, d, c, mn, a):
+        return x**(n*FracPart(q))*(c + d*x**(-n))**FracPart(q)*(c*x**n + d)**(-FracPart(q))*Int(x**(m - n*q)*(a + b*x**n)**p*(c*x**n + d)**q, x)
+    rule980 = ReplacementRule(pattern980, replacement980)
+    rubi.add(rule980.pattern, label = 980)
 
-    pattern293 = Pattern(Integral((e_*x_)**m_*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)))
-    rule293 = ReplacementRule(pattern293, lambda mn, b, n, a, p, c, q, e, d, m, x : e**IntPart(m)*x**(-FracPart(m))*(e*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**(-n))**q, x))
-    rubi.add(rule293)
+    pattern981 = Pattern(Integral((e_*x_)**m_*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons50, cons585)
+    def replacement981(m, n, q, p, e, x, b, d, c, mn, a):
+        return e**IntPart(m)*x**(-FracPart(m))*(e*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**(-n))**q, x)
+    rule981 = ReplacementRule(pattern981, replacement981)
+    rubi.add(rule981.pattern, label = 981)
 
-    pattern294 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda m: NonzeroQ(m + S(1))), CustomConstraint(lambda m, n: NonzeroQ(m - n + S(1))), CustomConstraint(lambda a: PositiveQ(a)), CustomConstraint(lambda c: PositiveQ(c)))
-    rule294 = ReplacementRule(pattern294, lambda b, n, a, p, c, q, e, d, m, x : a**p*c**q*(e*x)**(m + S(1))*AppellF1((m + S(1))/n, -p, -q, S(1) + (m + S(1))/n, -b*x**n/a, -d*x**n/c)/(e*(m + S(1))))
-    rubi.add(rule294)
+    pattern982 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons50, cons71, cons66, cons627, cons43, cons177)
+    def replacement982(m, n, p, q, x, e, b, d, c, a):
+        return a**p*c**q*(e*x)**(m + S(1))*AppellF1((m + S(1))/n, -p, -q, S(1) + (m + S(1))/n, -b*x**n/a, -d*x**n/c)/(e*(m + S(1)))
+    rule982 = ReplacementRule(pattern982, replacement982)
+    rubi.add(rule982.pattern, label = 982)
 
-    pattern295 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda a, c, b, d: NonzeroQ(-a*d + b*c)), CustomConstraint(lambda m: NonzeroQ(m + S(1))), CustomConstraint(lambda m, n: NonzeroQ(m - n + S(1))), CustomConstraint(lambda a: Not(PositiveQ(a))))
-    rule295 = ReplacementRule(pattern295, lambda b, n, a, p, c, q, e, d, m, x : a**IntPart(p)*(S(1) + b*x**n/a)**(-FracPart(p))*(a + b*x**n)**FracPart(p)*Int((e*x)**m*(S(1) + b*x**n/a)**p*(c + d*x**n)**q, x))
-    rubi.add(rule295)
+    pattern983 = Pattern(Integral((x_*WC('e', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_, x_), cons2, cons3, cons7, cons27, cons48, cons21, cons4, cons5, cons50, cons71, cons66, cons627, cons448)
+    def replacement983(m, n, p, q, x, e, b, d, c, a):
+        return a**IntPart(p)*(S(1) + b*x**n/a)**(-FracPart(p))*(a + b*x**n)**FracPart(p)*Int((e*x)**m*(S(1) + b*x**n/a)**p*(c + d*x**n)**q, x)
+    rule983 = ReplacementRule(pattern983, replacement983)
+    rubi.add(rule983.pattern, label = 983)
 
-    pattern296 = Pattern(Integral(x_**WC('m', S(1))*(v_**n_*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*(v_**n_*WC('d', S(1)) + WC('c', S(0)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda v, x: LinearQ(v, x)), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda v, x: NonzeroQ(v - x)))
-    rule296 = ReplacementRule(pattern296, lambda b, n, a, p, v, c, q, d, m, x : Coefficient(v, x, S(1))**(-m + S(-1))*Subst(Int(SimplifyIntegrand((a + b*x**n)**p*(c + d*x**n)**q*(x - Coefficient(v, x, S(0)))**m, x), x), x, v))
-    rubi.add(rule296)
+    pattern984 = Pattern(Integral(x_**WC('m', S(1))*(v_**n_*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*(v_**n_*WC('d', S(1)) + WC('c', S(0)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons4, cons5, cons50, cons552, cons17, cons553)
+    def replacement984(m, n, p, q, v, x, b, d, c, a):
+        return Coefficient(v, x, S(1))**(-m + S(-1))*Subst(Int(SimplifyIntegrand((a + b*x**n)**p*(c + d*x**n)**q*(x - Coefficient(v, x, S(0)))**m, x), x), x, v)
+    rule984 = ReplacementRule(pattern984, replacement984)
+    rubi.add(rule984.pattern, label = 984)
 
-    pattern297 = Pattern(Integral(u_**WC('m', S(1))*(v_**n_*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*(v_**n_*WC('d', S(1)) + WC('c', S(0)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda u, v, x: LinearPairQ(u, v, x)))
-    rule297 = ReplacementRule(pattern297, lambda b, n, a, p, u, v, c, q, d, m, x : u**m*v**(-m)*Subst(Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q, x), x, v)/Coefficient(v, x, S(1)))
-    rubi.add(rule297)
+    pattern985 = Pattern(Integral(u_**WC('m', S(1))*(v_**n_*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*(v_**n_*WC('d', S(1)) + WC('c', S(0)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons21, cons4, cons5, cons50, cons554)
+    def replacement985(m, n, p, q, v, x, b, d, c, u, a):
+        return u**m*v**(-m)*Subst(Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q, x), x, v)/Coefficient(v, x, S(1))
+    rule985 = ReplacementRule(pattern985, replacement985)
+    rubi.add(rule985.pattern, label = 985)
 
-    pattern298 = Pattern(Integral((a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**WC('n', S(1))*WC('d', S(1)))**WC('q', S(1))*WC('u', S(1)), x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda non2, n: ZeroQ(-n/S(2) + non2)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, a2, a1: IntegerQ(p) | (PositiveQ(a1) & PositiveQ(a2))))
-    rule298 = ReplacementRule(pattern298, lambda n, u, non2, p, a1, a2, c, q, b2, d, x, b1 : Int(u*(c + d*x**n)**q*(a1*a2 + b1*b2*x**n)**p, x))
-    rubi.add(rule298)
+    pattern986 = Pattern(Integral((a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**WC('n', S(1))*WC('d', S(1)))**WC('q', S(1))*WC('u', S(1)), x_), cons57, cons58, cons59, cons60, cons7, cons27, cons4, cons5, cons50, cons593, cons55, cons494)
+    def replacement986(n, a1, q, non2, p, b2, a2, b1, x, d, c, u):
+        return Int(u*(c + d*x**n)**q*(a1*a2 + b1*b2*x**n)**p, x)
+    rule986 = ReplacementRule(pattern986, replacement986)
+    rubi.add(rule986.pattern, label = 986)
 
-    pattern299 = Pattern(Integral((a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**WC('n', S(1))*WC('d', S(1)) + x_**WC('n2', S(1))*WC('e', S(1)))**WC('q', S(1))*WC('u', S(1)), x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda non2, n: ZeroQ(-n/S(2) + non2)), CustomConstraint(lambda n2, n: ZeroQ(-S(2)*n + n2)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)), CustomConstraint(lambda p, a2, a1: IntegerQ(p) | (PositiveQ(a1) & PositiveQ(a2))))
-    rule299 = ReplacementRule(pattern299, lambda x, n, u, non2, p, a1, a2, c, q, b2, e, d, n2, b1 : Int(u*(a1*a2 + b1*b2*x**n)**p*(c + d*x**n + e*x**(S(2)*n))**q, x))
-    rubi.add(rule299)
+    pattern987 = Pattern(Integral((a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**WC('n', S(1))*WC('d', S(1)) + x_**WC('n2', S(1))*WC('e', S(1)))**WC('q', S(1))*WC('u', S(1)), x_), cons57, cons58, cons59, cons60, cons7, cons27, cons48, cons4, cons5, cons50, cons593, cons46, cons55, cons494)
+    def replacement987(n, a1, n2, q, non2, p, b2, a2, e, b1, x, d, c, u):
+        return Int(u*(a1*a2 + b1*b2*x**n)**p*(c + d*x**n + e*x**(S(2)*n))**q, x)
+    rule987 = ReplacementRule(pattern987, replacement987)
+    rubi.add(rule987.pattern, label = 987)
 
-    pattern300 = Pattern(Integral((a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**p_*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**p_*(c_ + x_**WC('n', S(1))*WC('d', S(1)))**WC('q', S(1))*WC('u', S(1)), x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda non2, n: ZeroQ(-n/S(2) + non2)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)))
-    rule300 = ReplacementRule(pattern300, lambda n, u, non2, p, a1, a2, c, q, b2, d, x, b1 : (a1 + b1*x**(n/S(2)))**FracPart(p)*(a2 + b2*x**(n/S(2)))**FracPart(p)*(a1*a2 + b1*b2*x**n)**(-FracPart(p))*Int(u*(c + d*x**n)**q*(a1*a2 + b1*b2*x**n)**p, x))
-    rubi.add(rule300)
+    pattern988 = Pattern(Integral((a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**p_*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**p_*(c_ + x_**WC('n', S(1))*WC('d', S(1)))**WC('q', S(1))*WC('u', S(1)), x_), cons57, cons58, cons59, cons60, cons7, cons27, cons4, cons5, cons50, cons593, cons55)
+    def replacement988(n, a1, q, non2, p, b2, a2, b1, x, d, c, u):
+        return (a1 + b1*x**(n/S(2)))**FracPart(p)*(a2 + b2*x**(n/S(2)))**FracPart(p)*(a1*a2 + b1*b2*x**n)**(-FracPart(p))*Int(u*(c + d*x**n)**q*(a1*a2 + b1*b2*x**n)**p, x)
+    rule988 = ReplacementRule(pattern988, replacement988)
+    rubi.add(rule988.pattern, label = 988)
 
-    pattern301 = Pattern(Integral((a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**WC('n', S(1))*WC('d', S(1)) + x_**WC('n2', S(1))*WC('e', S(1)))**WC('q', S(1))*WC('u', S(1)), x_), CustomConstraint(lambda a1, x: FreeQ(a1, x)), CustomConstraint(lambda b1, x: FreeQ(b1, x)), CustomConstraint(lambda a2, x: FreeQ(a2, x)), CustomConstraint(lambda b2, x: FreeQ(b2, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda non2, n: ZeroQ(-n/S(2) + non2)), CustomConstraint(lambda n2, n: ZeroQ(-S(2)*n + n2)), CustomConstraint(lambda a2, a1, b2, b1: ZeroQ(a1*b2 + a2*b1)))
-    rule301 = ReplacementRule(pattern301, lambda x, n, u, non2, p, a1, a2, c, q, b2, e, d, n2, b1 : (a1 + b1*x**(n/S(2)))**FracPart(p)*(a2 + b2*x**(n/S(2)))**FracPart(p)*(a1*a2 + b1*b2*x**n)**(-FracPart(p))*Int(u*(a1*a2 + b1*b2*x**n)**p*(c + d*x**n + e*x**(S(2)*n))**q, x))
-    rubi.add(rule301)
+    pattern989 = Pattern(Integral((a1_ + x_**WC('non2', S(1))*WC('b1', S(1)))**WC('p', S(1))*(a2_ + x_**WC('non2', S(1))*WC('b2', S(1)))**WC('p', S(1))*(c_ + x_**WC('n', S(1))*WC('d', S(1)) + x_**WC('n2', S(1))*WC('e', S(1)))**WC('q', S(1))*WC('u', S(1)), x_), cons57, cons58, cons59, cons60, cons7, cons27, cons48, cons4, cons5, cons50, cons593, cons46, cons55)
+    def replacement989(n, a1, n2, q, non2, p, b2, a2, e, b1, x, d, c, u):
+        return (a1 + b1*x**(n/S(2)))**FracPart(p)*(a2 + b2*x**(n/S(2)))**FracPart(p)*(a1*a2 + b1*b2*x**n)**(-FracPart(p))*Int(u*(a1*a2 + b1*b2*x**n)**p*(c + d*x**n + e*x**(S(2)*n))**q, x)
+    rule989 = ReplacementRule(pattern989, replacement989)
+    rubi.add(rule989.pattern, label = 989)
 
-    pattern302 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, q, r: PositiveIntegerQ(p, q, r)))
-    rule302 = ReplacementRule(pattern302, lambda b, n, p, a, f, q, c, e, d, x, r : Int(ExpandIntegrand((a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x), x))
-    rubi.add(rule302)
+    pattern990 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons628)
+    def replacement990(n, p, q, x, e, b, d, f, r, c, a):
+        return Int(ExpandIntegrand((a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x), x)
+    rule990 = ReplacementRule(pattern990, replacement990)
+    rubi.add(rule990.pattern, label = 990)
 
-    pattern303 = Pattern(Integral((e_ + x_**n_*WC('f', S(1)))/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)))
-    rule303 = ReplacementRule(pattern303, lambda b, n, a, f, c, e, d, x : (-a*f + b*e)*Int(1/(a + b*x**n), x)/(-a*d + b*c) - (-c*f + d*e)*Int(1/(c + d*x**n), x)/(-a*d + b*c))
-    rubi.add(rule303)
+    pattern991 = Pattern(Integral((e_ + x_**n_*WC('f', S(1)))/((a_ + x_**n_*WC('b', S(1)))*(c_ + x_**n_*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons629)
+    def replacement991(n, x, e, b, d, f, c, a):
+        return (-a*f + b*e)*Int(S(1)/(a + b*x**n), x)/(-a*d + b*c) - (-c*f + d*e)*Int(S(1)/(c + d*x**n), x)/(-a*d + b*c)
+    rule991 = ReplacementRule(pattern991, replacement991)
+    rubi.add(rule991.pattern, label = 991)
 
-    pattern304 = Pattern(Integral((e_ + x_**n_*WC('f', S(1)))/((a_ + x_**n_*WC('b', S(1)))*sqrt(c_ + x_**n_*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)))
-    rule304 = ReplacementRule(pattern304, lambda b, n, a, f, c, e, d, x : f*Int(1/sqrt(c + d*x**n), x)/b + (-a*f + b*e)*Int(S(1)/((a + b*x**n)*sqrt(c + d*x**n)), x)/b)
-    rubi.add(rule304)
+    pattern992 = Pattern(Integral((e_ + x_**n_*WC('f', S(1)))/((a_ + x_**n_*WC('b', S(1)))*sqrt(c_ + x_**n_*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons629)
+    def replacement992(n, x, e, b, d, f, c, a):
+        return f*Int(S(1)/sqrt(c + d*x**n), x)/b + (-a*f + b*e)*Int(S(1)/((a + b*x**n)*sqrt(c + d*x**n)), x)/b
+    rule992 = ReplacementRule(pattern992, replacement992)
+    rubi.add(rule992.pattern, label = 992)
 
-    pattern305 = Pattern(Integral((e_ + x_**n_*WC('f', S(1)))/(sqrt(a_ + x_**n_*WC('b', S(1)))*sqrt(c_ + x_**n_*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda b, n, a, c, d: Not(ZeroQ(n + S(-2)) & ((PosQ(b/a) & PosQ(d/c)) | (NegQ(b/a) & (PosQ(d/c) | (PositiveQ(a) & (Not(PositiveQ(c)) | SimplerSqrtQ(-b/a, -d/c)))))))))
-    rule305 = ReplacementRule(pattern305, lambda b, n, a, f, c, e, d, x : f*Int(sqrt(a + b*x**n)/sqrt(c + d*x**n), x)/b + (-a*f + b*e)*Int(S(1)/(sqrt(a + b*x**n)*sqrt(c + d*x**n)), x)/b)
-    rubi.add(rule305)
+    pattern993 = Pattern(Integral((e_ + x_**n_*WC('f', S(1)))/(sqrt(a_ + x_**n_*WC('b', S(1)))*sqrt(c_ + x_**n_*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons630)
+    def replacement993(n, x, e, b, d, f, c, a):
+        return f*Int(sqrt(a + b*x**n)/sqrt(c + d*x**n), x)/b + (-a*f + b*e)*Int(S(1)/(sqrt(a + b*x**n)*sqrt(c + d*x**n)), x)/b
+    rule993 = ReplacementRule(pattern993, replacement993)
+    rubi.add(rule993.pattern, label = 993)
 
-    pattern306 = Pattern(Integral((e_ + x_**S(2)*WC('f', S(1)))/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda a, b: PosQ(b/a)), CustomConstraint(lambda d, c: PosQ(d/c)))
-    rule306 = ReplacementRule(pattern306, lambda b, a, f, c, e, d, x : (-a*f + b*e)*Int(S(1)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/(-a*d + b*c) - (-c*f + d*e)*Int(sqrt(a + b*x**S(2))/(c + d*x**S(2))**(S(3)/2), x)/(-a*d + b*c))
-    rubi.add(rule306)
+    pattern994 = Pattern(Integral((e_ + x_**S(2)*WC('f', S(1)))/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons466, cons573)
+    def replacement994(x, e, b, d, f, c, a):
+        return (-a*f + b*e)*Int(S(1)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/(-a*d + b*c) - (-c*f + d*e)*Int(sqrt(a + b*x**S(2))/(c + d*x**S(2))**(S(3)/2), x)/(-a*d + b*c)
+    rule994 = ReplacementRule(pattern994, replacement994)
+    rubi.add(rule994.pattern, label = 994)
 
-    pattern307 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda q: Greater(q, S(0))))
-    rule307 = ReplacementRule(pattern307, lambda b, n, a, p, f, q, c, e, d, x : x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*(a*f - b*e)/(a*b*n*(p + S(1))) + Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(-a*f + b*e*n*(p + S(1)) + b*e) + d*x**n*(b*e*n*(p + S(1)) + (-a*f + b*e)*(n*q + S(1))), x), x)/(a*b*n*(p + S(1))))
-    rubi.add(rule307)
+    pattern995 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons402, cons137, cons403)
+    def replacement995(n, q, p, x, e, b, d, f, c, a):
+        return -x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*(-a*f + b*e)/(a*b*n*(p + S(1))) + Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(-a*f + b*e*n*(p + S(1)) + b*e) + d*x**n*(b*e*n*(p + S(1)) + (-a*f + b*e)*(n*q + S(1))), x), x)/(a*b*n*(p + S(1)))
+    rule995 = ReplacementRule(pattern995, replacement995)
+    rubi.add(rule995.pattern, label = 995)
 
-    pattern308 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))))
-    rule308 = ReplacementRule(pattern308, lambda b, n, a, p, f, q, c, e, d, x : x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))*(a*f - b*e)/(a*n*(p + S(1))*(-a*d + b*c)) + Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(c*(-a*f + b*e) + d*x**n*(-a*f + b*e)*(n*(p + q + S(2)) + S(1)) + e*n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c)))
-    rubi.add(rule308)
+    pattern996 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons50, cons13, cons137)
+    def replacement996(n, q, p, x, e, b, d, f, c, a):
+        return -x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))*(-a*f + b*e)/(a*n*(p + S(1))*(-a*d + b*c)) + Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(c*(-a*f + b*e) + d*x**n*(-a*f + b*e)*(n*(p + q + S(2)) + S(1)) + e*n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c))
+    rule996 = ReplacementRule(pattern996, replacement996)
+    rubi.add(rule996.pattern, label = 996)
 
-    pattern309 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda p, q, n: NonzeroQ(n*(p + q + S(1)) + S(1))))
-    rule309 = ReplacementRule(pattern309, lambda b, n, p, a, f, q, c, e, d, x : f*x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(b*(n*(p + q + S(1)) + S(1))) + Int((a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(c*(-a*f + b*e*n*(p + q + S(1)) + b*e) + x**n*(b*d*e*n*(p + q + S(1)) + d*(-a*f + b*e) + f*n*q*(-a*d + b*c)), x), x)/(b*(n*(p + q + S(1)) + S(1))))
-    rubi.add(rule309)
+    pattern997 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons5, cons395, cons403, cons631)
+    def replacement997(n, p, q, x, e, b, d, f, c, a):
+        return f*x*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(b*(n*(p + q + S(1)) + S(1))) + Int((a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(c*(-a*f + b*e*n*(p + q + S(1)) + b*e) + x**n*(b*d*e*n*(p + q + S(1)) + d*(-a*f + b*e) + f*n*q*(-a*d + b*c)), x), x)/(b*(n*(p + q + S(1)) + S(1)))
+    rule997 = ReplacementRule(pattern997, replacement997)
+    rubi.add(rule997.pattern, label = 997)
 
-    pattern310 = Pattern(Integral((e_ + x_**S(4)*WC('f', S(1)))/((a_ + x_**S(4)*WC('b', S(1)))**(S(3)/4)*(c_ + x_**S(4)*WC('d', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)))
-    rule310 = ReplacementRule(pattern310, lambda b, a, f, c, e, d, x : (-a*f + b*e)*Int((a + b*x**S(4))**(S(-3)/4), x)/(-a*d + b*c) - (-c*f + d*e)*Int((a + b*x**S(4))**(S(1)/4)/(c + d*x**S(4)), x)/(-a*d + b*c))
-    rubi.add(rule310)
+    pattern998 = Pattern(Integral((e_ + x_**S(4)*WC('f', S(1)))/((a_ + x_**S(4)*WC('b', S(1)))**(S(3)/4)*(c_ + x_**S(4)*WC('d', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons153)
+    def replacement998(x, e, b, d, f, c, a):
+        return (-a*f + b*e)*Int((a + b*x**S(4))**(S(-3)/4), x)/(-a*d + b*c) - (-c*f + d*e)*Int((a + b*x**S(4))**(S(1)/4)/(c + d*x**S(4)), x)/(-a*d + b*c)
+    rule998 = ReplacementRule(pattern998, replacement998)
+    rubi.add(rule998.pattern, label = 998)
 
-    pattern311 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(e_ + x_**n_*WC('f', S(1)))/(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n, x: FreeQ(n, x)))
-    rule311 = ReplacementRule(pattern311, lambda b, n, a, p, f, c, e, d, x : f*Int((a + b*x**n)**p, x)/d + (-c*f + d*e)*Int((a + b*x**n)**p/(c + d*x**n), x)/d)
-    rubi.add(rule311)
+    pattern999 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(e_ + x_**n_*WC('f', S(1)))/(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons5, cons4, cons632)
+    def replacement999(n, p, x, e, b, d, f, c, a):
+        return f*Int((a + b*x**n)**p, x)/d + (-c*f + d*e)*Int((a + b*x**n)**p/(c + d*x**n), x)/d
+    rule999 = ReplacementRule(pattern999, replacement999)
+    rubi.add(rule999.pattern, label = 999)
 
-    pattern312 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)))
-    rule312 = ReplacementRule(pattern312, lambda b, n, p, a, f, q, c, e, d, x : e*Int((a + b*x**n)**p*(c + d*x**n)**q, x) + f*Int(x**n*(a + b*x**n)**p*(c + d*x**n)**q, x))
-    rubi.add(rule312)
+    pattern1000 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons5, cons50, cons633)
+    def replacement1000(n, p, q, x, e, b, d, f, c, a):
+        return e*Int((a + b*x**n)**p*(c + d*x**n)**q, x) + f*Int(x**n*(a + b*x**n)**p*(c + d*x**n)**q, x)
+    rule1000 = ReplacementRule(pattern1000, replacement1000)
+    rubi.add(rule1000.pattern, label = 1000)
 
-    pattern313 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))*(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)))
-    rule313 = ReplacementRule(pattern313, lambda b, a, f, c, e, d, x : b*Int(S(1)/((a + b*x**S(2))*sqrt(e + f*x**S(2))), x)/(-a*d + b*c) - d*Int(S(1)/((c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(-a*d + b*c))
-    rubi.add(rule313)
+    pattern1001 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))*(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons153)
+    def replacement1001(x, e, b, d, f, c, a):
+        return b*Int(S(1)/((a + b*x**S(2))*sqrt(e + f*x**S(2))), x)/(-a*d + b*c) - d*Int(S(1)/((c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(-a*d + b*c)
+    rule1001 = ReplacementRule(pattern1001, replacement1001)
+    rubi.add(rule1001.pattern, label = 1001)
 
-    pattern314 = Pattern(Integral(S(1)/(x_**S(2)*(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda f, d, c, e: NonzeroQ(-c*f + d*e)))
-    rule314 = ReplacementRule(pattern314, lambda f, c, e, d, x : -d*Int(S(1)/((c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/c + Int(S(1)/(x**S(2)*sqrt(e + f*x**S(2))), x)/c)
-    rubi.add(rule314)
+    pattern1002 = Pattern(Integral(S(1)/(x_**S(2)*(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), cons7, cons27, cons48, cons125, cons176)
+    def replacement1002(x, e, d, f, c):
+        return -d*Int(S(1)/((c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/c + Int(S(1)/(x**S(2)*sqrt(e + f*x**S(2))), x)/c
+    rule1002 = ReplacementRule(pattern1002, replacement1002)
+    rubi.add(rule1002.pattern, label = 1002)
 
-    pattern315 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda d, c: PositiveQ(d/c)), CustomConstraint(lambda f, e: PositiveQ(f/e)), CustomConstraint(lambda d, e, c, f: Not(SimplerSqrtQ(d/c, f/e))))
-    rule315 = ReplacementRule(pattern315, lambda b, a, f, c, e, d, x : d*Int(sqrt(e + f*x**S(2))/sqrt(c + d*x**S(2)), x)/b + (-a*d + b*c)*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/b)
-    rubi.add(rule315)
+    pattern1003 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons634, cons635, cons636)
+    def replacement1003(x, e, b, d, f, c, a):
+        return d*Int(sqrt(e + f*x**S(2))/sqrt(c + d*x**S(2)), x)/b + (-a*d + b*c)*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/b
+    rule1003 = ReplacementRule(pattern1003, replacement1003)
+    rubi.add(rule1003.pattern, label = 1003)
 
-    pattern316 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda d, f, c, e: Not(SimplerSqrtQ(-f/e, -d/c))))
-    rule316 = ReplacementRule(pattern316, lambda b, a, f, c, e, d, x : d*Int(sqrt(e + f*x**S(2))/sqrt(c + d*x**S(2)), x)/b + (-a*d + b*c)*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/b)
-    rubi.add(rule316)
+    pattern1004 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons637)
+    def replacement1004(x, e, b, d, f, c, a):
+        return d*Int(sqrt(e + f*x**S(2))/sqrt(c + d*x**S(2)), x)/b + (-a*d + b*c)*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/b
+    rule1004 = ReplacementRule(pattern1004, replacement1004)
+    rubi.add(rule1004.pattern, label = 1004)
 
-    pattern317 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda d, c: PosQ(d/c)), CustomConstraint(lambda f, e: PosQ(f/e)), CustomConstraint(lambda d, e, c, f: Not(SimplerSqrtQ(d/c, f/e))))
-    rule317 = ReplacementRule(pattern317, lambda b, a, f, c, e, d, x : b*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/(-a*f + b*e) - f*Int(S(1)/(sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(-a*f + b*e))
-    rubi.add(rule317)
+    pattern1005 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons573, cons638, cons636)
+    def replacement1005(x, e, b, d, f, c, a):
+        return b*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/(-a*f + b*e) - f*Int(S(1)/(sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(-a*f + b*e)
+    rule1005 = ReplacementRule(pattern1005, replacement1005)
+    rubi.add(rule1005.pattern, label = 1005)
 
-    pattern318 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda d, c: NegQ(d/c)), CustomConstraint(lambda c: PositiveQ(c)), CustomConstraint(lambda e: PositiveQ(e)), CustomConstraint(lambda d, f, c, e: Not(NegQ(f/e) & SimplerSqrtQ(-f/e, -d/c))))
-    rule318 = ReplacementRule(pattern318, lambda b, a, f, c, e, d, x : EllipticPi(b*c/(a*d), asin(x*Rt(-d/c, S(2))), c*f/(d*e))/(a*sqrt(c)*sqrt(e)*Rt(-d/c, S(2))))
-    rubi.add(rule318)
+    pattern1006 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons581, cons177, cons178, cons639)
+    def replacement1006(x, e, b, d, f, c, a):
+        return EllipticPi(b*c/(a*d), asin(x*Rt(-d/c, S(2))), c*f/(d*e))/(a*sqrt(c)*sqrt(e)*Rt(-d/c, S(2)))
+    rule1006 = ReplacementRule(pattern1006, replacement1006)
+    rubi.add(rule1006.pattern, label = 1006)
 
-    pattern319 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda c: Not(PositiveQ(c))))
-    rule319 = ReplacementRule(pattern319, lambda b, a, f, c, e, d, x : sqrt(S(1) + d*x**S(2)/c)*Int(S(1)/(sqrt(S(1) + d*x**S(2)/c)*(a + b*x**S(2))*sqrt(e + f*x**S(2))), x)/sqrt(c + d*x**S(2)))
-    rubi.add(rule319)
+    pattern1007 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons117)
+    def replacement1007(x, e, b, d, f, c, a):
+        return sqrt(S(1) + d*x**S(2)/c)*Int(S(1)/(sqrt(S(1) + d*x**S(2)/c)*(a + b*x**S(2))*sqrt(e + f*x**S(2))), x)/sqrt(c + d*x**S(2))
+    rule1007 = ReplacementRule(pattern1007, replacement1007)
+    rubi.add(rule1007.pattern, label = 1007)
 
-    pattern320 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))/((a_ + x_**S(2)*WC('b', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda d, c: PosQ(d/c)))
-    rule320 = ReplacementRule(pattern320, lambda b, a, f, c, e, d, x : c*sqrt(e + f*x**S(2))*EllipticPi(S(1) - b*c/(a*d), atan(x*Rt(d/c, S(2))), -c*f/(d*e) + S(1))/(a*e*sqrt(c*(e + f*x**S(2))/(e*(c + d*x**S(2))))*sqrt(c + d*x**S(2))*Rt(d/c, S(2))))
-    rubi.add(rule320)
+    pattern1008 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))/((a_ + x_**S(2)*WC('b', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons573)
+    def replacement1008(x, e, b, d, f, c, a):
+        return c*sqrt(e + f*x**S(2))*EllipticPi(S(1) - b*c/(a*d), ArcTan(x*Rt(d/c, S(2))), -c*f/(d*e) + S(1))/(a*e*sqrt(c*(e + f*x**S(2))/(e*(c + d*x**S(2))))*sqrt(c + d*x**S(2))*Rt(d/c, S(2)))
+    rule1008 = ReplacementRule(pattern1008, replacement1008)
+    rubi.add(rule1008.pattern, label = 1008)
 
-    pattern321 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))/((a_ + x_**S(2)*WC('b', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda d, c: NegQ(d/c)))
-    rule321 = ReplacementRule(pattern321, lambda b, a, f, c, e, d, x : d*Int(S(1)/(sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/b + (-a*d + b*c)*Int(S(1)/((a + b*x**S(2))*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/b)
-    rubi.add(rule321)
+    pattern1009 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))/((a_ + x_**S(2)*WC('b', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons581)
+    def replacement1009(x, e, b, d, f, c, a):
+        return d*Int(S(1)/(sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/b + (-a*d + b*c)*Int(S(1)/((a + b*x**S(2))*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/b
+    rule1009 = ReplacementRule(pattern1009, replacement1009)
+    rubi.add(rule1009.pattern, label = 1009)
 
-    pattern322 = Pattern(Integral(sqrt(e_ + x_**S(2)*WC('f', S(1)))/((a_ + x_**S(2)*WC('b', S(1)))*(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda d, c: PosQ(d/c)), CustomConstraint(lambda f, e: PosQ(f/e)))
-    rule322 = ReplacementRule(pattern322, lambda b, a, f, c, e, d, x : b*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/(-a*d + b*c) - d*Int(sqrt(e + f*x**S(2))/(c + d*x**S(2))**(S(3)/2), x)/(-a*d + b*c))
-    rubi.add(rule322)
+    pattern1010 = Pattern(Integral(sqrt(e_ + x_**S(2)*WC('f', S(1)))/((a_ + x_**S(2)*WC('b', S(1)))*(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons573, cons638)
+    def replacement1010(x, e, b, d, f, c, a):
+        return b*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/(-a*d + b*c) - d*Int(sqrt(e + f*x**S(2))/(c + d*x**S(2))**(S(3)/2), x)/(-a*d + b*c)
+    rule1010 = ReplacementRule(pattern1010, replacement1010)
+    rubi.add(rule1010.pattern, label = 1010)
 
-    pattern323 = Pattern(Integral((e_ + x_**S(2)*WC('f', S(1)))**(S(3)/2)/((a_ + x_**S(2)*WC('b', S(1)))*(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda d, c: PosQ(d/c)), CustomConstraint(lambda f, e: PosQ(f/e)))
-    rule323 = ReplacementRule(pattern323, lambda b, a, f, c, e, d, x : (-a*f + b*e)*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/(-a*d + b*c) - (-c*f + d*e)*Int(sqrt(e + f*x**S(2))/(c + d*x**S(2))**(S(3)/2), x)/(-a*d + b*c))
-    rubi.add(rule323)
+    pattern1011 = Pattern(Integral((e_ + x_**S(2)*WC('f', S(1)))**(S(3)/2)/((a_ + x_**S(2)*WC('b', S(1)))*(c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons573, cons638)
+    def replacement1011(x, e, b, d, f, c, a):
+        return (-a*f + b*e)*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/(-a*d + b*c) - (-c*f + d*e)*Int(sqrt(e + f*x**S(2))/(c + d*x**S(2))**(S(3)/2), x)/(-a*d + b*c)
+    rule1011 = ReplacementRule(pattern1011, replacement1011)
+    rubi.add(rule1011.pattern, label = 1011)
 
-    pattern324 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2)*sqrt(e_ + x_**S(2)*WC('f', S(1)))/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda d, c: PosQ(d/c)), CustomConstraint(lambda f, e: PosQ(f/e)))
-    rule324 = ReplacementRule(pattern324, lambda b, a, f, c, e, d, x : d*Int(sqrt(e + f*x**S(2))*(-a*d + S(2)*b*c + b*d*x**S(2))/sqrt(c + d*x**S(2)), x)/b**S(2) + (-a*d + b*c)**S(2)*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/b**S(2))
-    rubi.add(rule324)
+    pattern1012 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**(S(3)/2)*sqrt(e_ + x_**S(2)*WC('f', S(1)))/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons573, cons638)
+    def replacement1012(x, e, b, d, f, c, a):
+        return d*Int(sqrt(e + f*x**S(2))*(-a*d + S(2)*b*c + b*d*x**S(2))/sqrt(c + d*x**S(2)), x)/b**S(2) + (-a*d + b*c)**S(2)*Int(sqrt(e + f*x**S(2))/((a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/b**S(2)
+    rule1012 = ReplacementRule(pattern1012, replacement1012)
+    rubi.add(rule1012.pattern, label = 1012)
 
-    pattern325 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**q_*(e_ + x_**S(2)*WC('f', S(1)))**r_/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda q, r: RationalQ(q, r)), CustomConstraint(lambda q: Less(q, S(-1))), CustomConstraint(lambda r: Greater(r, S(1))))
-    rule325 = ReplacementRule(pattern325, lambda b, a, f, c, q, e, d, x, r : b*(-a*f + b*e)*Int((c + d*x**S(2))**(q + S(2))*(e + f*x**S(2))**(r + S(-1))/(a + b*x**S(2)), x)/(-a*d + b*c)**S(2) - Int((c + d*x**S(2))**q*(e + f*x**S(2))**(r + S(-1))*(-a*d**S(2)*e - b*c**S(2)*f + S(2)*b*c*d*e + d**S(2)*x**S(2)*(-a*f + b*e)), x)/(-a*d + b*c)**S(2))
-    rubi.add(rule325)
+    pattern1013 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**q_*(e_ + x_**S(2)*WC('f', S(1)))**r_/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons640, cons396, cons641)
+    def replacement1013(q, x, e, b, d, f, r, c, a):
+        return b*(-a*f + b*e)*Int((c + d*x**S(2))**(q + S(2))*(e + f*x**S(2))**(r + S(-1))/(a + b*x**S(2)), x)/(-a*d + b*c)**S(2) - Int((c + d*x**S(2))**q*(e + f*x**S(2))**(r + S(-1))*(-a*d**S(2)*e - b*c**S(2)*f + S(2)*b*c*d*e + d**S(2)*x**S(2)*(-a*f + b*e)), x)/(-a*d + b*c)**S(2)
+    rule1013 = ReplacementRule(pattern1013, replacement1013)
+    rubi.add(rule1013.pattern, label = 1013)
 
-    pattern326 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**q_*(e_ + x_**S(2)*WC('f', S(1)))**r_/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: Greater(q, S(1))))
-    rule326 = ReplacementRule(pattern326, lambda b, a, f, c, q, e, d, x, r : d*Int((c + d*x**S(2))**(q + S(-1))*(e + f*x**S(2))**r, x)/b + (-a*d + b*c)*Int((c + d*x**S(2))**(q + S(-1))*(e + f*x**S(2))**r/(a + b*x**S(2)), x)/b)
-    rubi.add(rule326)
+    pattern1014 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**q_*(e_ + x_**S(2)*WC('f', S(1)))**r_/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons52, cons395, cons576)
+    def replacement1014(q, x, e, b, d, f, r, c, a):
+        return d*Int((c + d*x**S(2))**(q + S(-1))*(e + f*x**S(2))**r, x)/b + (-a*d + b*c)*Int((c + d*x**S(2))**(q + S(-1))*(e + f*x**S(2))**r/(a + b*x**S(2)), x)/b
+    rule1014 = ReplacementRule(pattern1014, replacement1014)
+    rubi.add(rule1014.pattern, label = 1014)
 
-    pattern327 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**q_*(e_ + x_**S(2)*WC('f', S(1)))**r_/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: Less(q, S(-1))))
-    rule327 = ReplacementRule(pattern327, lambda b, a, f, c, q, e, d, x, r : b**S(2)*Int((c + d*x**S(2))**(q + S(2))*(e + f*x**S(2))**r/(a + b*x**S(2)), x)/(-a*d + b*c)**S(2) - d*Int((c + d*x**S(2))**q*(e + f*x**S(2))**r*(-a*d + S(2)*b*c + b*d*x**S(2)), x)/(-a*d + b*c)**S(2))
-    rubi.add(rule327)
+    pattern1015 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**q_*(e_ + x_**S(2)*WC('f', S(1)))**r_/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons52, cons395, cons396)
+    def replacement1015(q, x, e, b, d, f, r, c, a):
+        return b**S(2)*Int((c + d*x**S(2))**(q + S(2))*(e + f*x**S(2))**r/(a + b*x**S(2)), x)/(-a*d + b*c)**S(2) - d*Int((c + d*x**S(2))**q*(e + f*x**S(2))**r*(-a*d + S(2)*b*c + b*d*x**S(2)), x)/(-a*d + b*c)**S(2)
+    rule1015 = ReplacementRule(pattern1015, replacement1015)
+    rubi.add(rule1015.pattern, label = 1015)
 
-    pattern328 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**q_*(e_ + x_**S(2)*WC('f', S(1)))**r_/(a_ + x_**S(2)*WC('b', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: LessEqual(q, S(-1))))
-    rule328 = ReplacementRule(pattern328, lambda b, a, f, c, q, e, d, x, r : b*Int((c + d*x**S(2))**(q + S(1))*(e + f*x**S(2))**r/(a + b*x**S(2)), x)/(-a*d + b*c) - d*Int((c + d*x**S(2))**q*(e + f*x**S(2))**r, x)/(-a*d + b*c))
-    rubi.add(rule328)
+    pattern1016 = Pattern(Integral((c_ + x_**S(2)*WC('d', S(1)))**q_*(e_ + x_**S(2)*WC('f', S(1)))**r_/(a_ + x_**S(2)*WC('b', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons52, cons395, cons642)
+    def replacement1016(q, x, e, b, d, f, r, c, a):
+        return b*Int((c + d*x**S(2))**(q + S(1))*(e + f*x**S(2))**r/(a + b*x**S(2)), x)/(-a*d + b*c) - d*Int((c + d*x**S(2))**q*(e + f*x**S(2))**r, x)/(-a*d + b*c)
+    rule1016 = ReplacementRule(pattern1016, replacement1016)
+    rubi.add(rule1016.pattern, label = 1016)
 
-    pattern329 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))/(a_ + x_**S(2)*WC('b', S(1)))**S(2), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)))
-    rule329 = ReplacementRule(pattern329, lambda b, a, f, c, e, d, x : x*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))/(S(2)*a*(a + b*x**S(2))) + d*f*Int((a - b*x**S(2))/(sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*a*b**S(2)) + (-a**S(2)*d*f + b**S(2)*c*e)*Int(S(1)/((a + b*x**S(2))*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*a*b**S(2)))
-    rubi.add(rule329)
+    pattern1017 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))/(a_ + x_**S(2)*WC('b', S(1)))**S(2), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons153)
+    def replacement1017(x, e, b, d, f, c, a):
+        return x*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))/(S(2)*a*(a + b*x**S(2))) + d*f*Int((a - b*x**S(2))/(sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*a*b**S(2)) + (-a**S(2)*d*f + b**S(2)*c*e)*Int(S(1)/((a + b*x**S(2))*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*a*b**S(2))
+    rule1017 = ReplacementRule(pattern1017, replacement1017)
+    rubi.add(rule1017.pattern, label = 1017)
 
-    pattern330 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))**S(2)*sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)))
-    rule330 = ReplacementRule(pattern330, lambda b, a, f, c, e, d, x : b**S(2)*x*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))/(S(2)*a*(a + b*x**S(2))*(-a*d + b*c)*(-a*f + b*e)) - d*f*Int((a + b*x**S(2))/(sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*a*(-a*d + b*c)*(-a*f + b*e)) + (S(3)*a**S(2)*d*f - S(2)*a*b*(c*f + d*e) + b**S(2)*c*e)*Int(S(1)/((a + b*x**S(2))*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*a*(-a*d + b*c)*(-a*f + b*e)))
-    rubi.add(rule330)
+    pattern1018 = Pattern(Integral(S(1)/((a_ + x_**S(2)*WC('b', S(1)))**S(2)*sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons153)
+    def replacement1018(x, e, b, d, f, c, a):
+        return b**S(2)*x*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))/(S(2)*a*(a + b*x**S(2))*(-a*d + b*c)*(-a*f + b*e)) - d*f*Int((a + b*x**S(2))/(sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*a*(-a*d + b*c)*(-a*f + b*e)) + (S(3)*a**S(2)*d*f - S(2)*a*b*(c*f + d*e) + b**S(2)*c*e)*Int(S(1)/((a + b*x**S(2))*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*a*(-a*d + b*c)*(-a*f + b*e))
+    rule1018 = ReplacementRule(pattern1018, replacement1018)
+    rubi.add(rule1018.pattern, label = 1018)
 
-    pattern331 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1)))**r_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda p: NegativeIntegerQ(p)), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: Greater(q, S(0))))
-    rule331 = ReplacementRule(pattern331, lambda b, n, a, p, f, c, q, e, d, x, r : d*Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*(e + f*x**n)**r, x)/b + (-a*d + b*c)*Int((a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*(e + f*x**n)**r, x)/b)
-    rubi.add(rule331)
+    pattern1019 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1)))**r_, x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons52, cons63, cons395, cons403)
+    def replacement1019(n, p, q, x, e, b, d, f, r, c, a):
+        return d*Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*(e + f*x**n)**r, x)/b + (-a*d + b*c)*Int((a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*(e + f*x**n)**r, x)/b
+    rule1019 = ReplacementRule(pattern1019, replacement1019)
+    rubi.add(rule1019.pattern, label = 1019)
 
-    pattern332 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1)))**r_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda p: NegativeIntegerQ(p)), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: LessEqual(q, S(-1))))
-    rule332 = ReplacementRule(pattern332, lambda b, n, a, p, f, c, q, e, d, x, r : b*Int((a + b*x**n)**p*(c + d*x**n)**(q + S(1))*(e + f*x**n)**r, x)/(-a*d + b*c) - d*Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**q*(e + f*x**n)**r, x)/(-a*d + b*c))
-    rubi.add(rule332)
+    pattern1020 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1)))**r_, x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons50, cons63, cons395, cons642)
+    def replacement1020(n, p, q, x, e, b, d, f, r, c, a):
+        return b*Int((a + b*x**n)**p*(c + d*x**n)**(q + S(1))*(e + f*x**n)**r, x)/(-a*d + b*c) - d*Int((a + b*x**n)**(p + S(1))*(c + d*x**n)**q*(e + f*x**n)**r, x)/(-a*d + b*c)
+    rule1020 = ReplacementRule(pattern1020, replacement1020)
+    rubi.add(rule1020.pattern, label = 1020)
 
-    pattern333 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)))
-    rule333 = ReplacementRule(pattern333, lambda b, a, f, c, e, d, x : sqrt(a*(e + f*x**S(2))/(e*(a + b*x**S(2))))*sqrt(c + d*x**S(2))*Subst(Int(S(1)/(sqrt(S(1) - x**S(2)*(-a*d + b*c)/c)*sqrt(S(1) - x**S(2)*(-a*f + b*e)/e)), x), x, x/sqrt(a + b*x**S(2)))/(c*sqrt(a*(c + d*x**S(2))/(c*(a + b*x**S(2))))*sqrt(e + f*x**S(2))))
-    rubi.add(rule333)
+    pattern1021 = Pattern(Integral(S(1)/(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons153)
+    def replacement1021(x, e, b, d, f, c, a):
+        return sqrt(a*(e + f*x**S(2))/(e*(a + b*x**S(2))))*sqrt(c + d*x**S(2))*Subst(Int(S(1)/(sqrt(S(1) - x**S(2)*(-a*d + b*c)/c)*sqrt(S(1) - x**S(2)*(-a*f + b*e)/e)), x), x, x/sqrt(a + b*x**S(2)))/(c*sqrt(a*(c + d*x**S(2))/(c*(a + b*x**S(2))))*sqrt(e + f*x**S(2)))
+    rule1021 = ReplacementRule(pattern1021, replacement1021)
+    rubi.add(rule1021.pattern, label = 1021)
 
-    pattern334 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/(sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)))
-    rule334 = ReplacementRule(pattern334, lambda b, a, f, c, e, d, x : a*sqrt(a*(e + f*x**S(2))/(e*(a + b*x**S(2))))*sqrt(c + d*x**S(2))*Subst(Int(S(1)/(sqrt(S(1) - x**S(2)*(-a*d + b*c)/c)*sqrt(S(1) - x**S(2)*(-a*f + b*e)/e)*(-b*x**S(2) + S(1))), x), x, x/sqrt(a + b*x**S(2)))/(c*sqrt(a*(c + d*x**S(2))/(c*(a + b*x**S(2))))*sqrt(e + f*x**S(2))))
-    rubi.add(rule334)
+    pattern1022 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))/(sqrt(c_ + x_**S(2)*WC('d', S(1)))*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons153)
+    def replacement1022(x, e, b, d, f, c, a):
+        return a*sqrt(a*(e + f*x**S(2))/(e*(a + b*x**S(2))))*sqrt(c + d*x**S(2))*Subst(Int(S(1)/(sqrt(S(1) - x**S(2)*(-a*d + b*c)/c)*sqrt(S(1) - x**S(2)*(-a*f + b*e)/e)*(-b*x**S(2) + S(1))), x), x, x/sqrt(a + b*x**S(2)))/(c*sqrt(a*(c + d*x**S(2))/(c*(a + b*x**S(2))))*sqrt(e + f*x**S(2)))
+    rule1022 = ReplacementRule(pattern1022, replacement1022)
+    rubi.add(rule1022.pattern, label = 1022)
 
-    pattern335 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))/((a_ + x_**S(2)*WC('b', S(1)))**(S(3)/2)*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)))
-    rule335 = ReplacementRule(pattern335, lambda b, a, f, c, e, d, x : sqrt(a*(e + f*x**S(2))/(e*(a + b*x**S(2))))*sqrt(c + d*x**S(2))*Subst(Int(sqrt(S(1) - x**S(2)*(-a*d + b*c)/c)/sqrt(S(1) - x**S(2)*(-a*f + b*e)/e), x), x, x/sqrt(a + b*x**S(2)))/(a*sqrt(a*(c + d*x**S(2))/(c*(a + b*x**S(2))))*sqrt(e + f*x**S(2))))
-    rubi.add(rule335)
+    pattern1023 = Pattern(Integral(sqrt(c_ + x_**S(2)*WC('d', S(1)))/((a_ + x_**S(2)*WC('b', S(1)))**(S(3)/2)*sqrt(e_ + x_**S(2)*WC('f', S(1)))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons153)
+    def replacement1023(x, e, b, d, f, c, a):
+        return sqrt(a*(e + f*x**S(2))/(e*(a + b*x**S(2))))*sqrt(c + d*x**S(2))*Subst(Int(sqrt(S(1) - x**S(2)*(-a*d + b*c)/c)/sqrt(S(1) - x**S(2)*(-a*f + b*e)/e), x), x, x/sqrt(a + b*x**S(2)))/(a*sqrt(a*(c + d*x**S(2))/(c*(a + b*x**S(2))))*sqrt(e + f*x**S(2)))
+    rule1023 = ReplacementRule(pattern1023, replacement1023)
+    rubi.add(rule1023.pattern, label = 1023)
 
-    pattern336 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))/sqrt(e_ + x_**S(2)*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda f, d, c, e: PosQ((-c*f + d*e)/c)))
-    rule336 = ReplacementRule(pattern336, lambda b, a, f, c, e, d, x : b*c*(-c*f + d*e)*Int(S(1)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*d*f) - c*(-c*f + d*e)*Int(sqrt(a + b*x**S(2))/((c + d*x**S(2))**(S(3)/2)*sqrt(e + f*x**S(2))), x)/(S(2)*f) + d*x*sqrt(a + b*x**S(2))*sqrt(e + f*x**S(2))/(S(2)*f*sqrt(c + d*x**S(2))) - (-a*d*f - b*c*f + b*d*e)*Int(sqrt(c + d*x**S(2))/(sqrt(a + b*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*d*f))
-    rubi.add(rule336)
+    pattern1024 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))/sqrt(e_ + x_**S(2)*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons643)
+    def replacement1024(x, e, b, d, f, c, a):
+        return b*c*(-c*f + d*e)*Int(S(1)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*d*f) - c*(-c*f + d*e)*Int(sqrt(a + b*x**S(2))/((c + d*x**S(2))**(S(3)/2)*sqrt(e + f*x**S(2))), x)/(S(2)*f) + d*x*sqrt(a + b*x**S(2))*sqrt(e + f*x**S(2))/(S(2)*f*sqrt(c + d*x**S(2))) - (-a*d*f - b*c*f + b*d*e)*Int(sqrt(c + d*x**S(2))/(sqrt(a + b*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*d*f)
+    rule1024 = ReplacementRule(pattern1024, replacement1024)
+    rubi.add(rule1024.pattern, label = 1024)
 
-    pattern337 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))/sqrt(e_ + x_**S(2)*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda f, d, c, e: NegQ((-c*f + d*e)/c)))
-    rule337 = ReplacementRule(pattern337, lambda b, a, f, c, e, d, x : e*(-a*f + b*e)*Int(sqrt(c + d*x**S(2))/(sqrt(a + b*x**S(2))*(e + f*x**S(2))**(S(3)/2)), x)/(S(2)*f) + x*sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))/(S(2)*sqrt(e + f*x**S(2))) + (-a*f + b*e)*(-S(2)*c*f + d*e)*Int(S(1)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*f**S(2)) - (-a*d*f - b*c*f + b*d*e)*Int(sqrt(e + f*x**S(2))/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/(S(2)*f**S(2)))
-    rubi.add(rule337)
+    pattern1025 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))/sqrt(e_ + x_**S(2)*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons644)
+    def replacement1025(x, e, b, d, f, c, a):
+        return e*(-a*f + b*e)*Int(sqrt(c + d*x**S(2))/(sqrt(a + b*x**S(2))*(e + f*x**S(2))**(S(3)/2)), x)/(S(2)*f) + x*sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))/(S(2)*sqrt(e + f*x**S(2))) + (-a*f + b*e)*(-S(2)*c*f + d*e)*Int(S(1)/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))*sqrt(e + f*x**S(2))), x)/(S(2)*f**S(2)) - (-a*d*f - b*c*f + b*d*e)*Int(sqrt(e + f*x**S(2))/(sqrt(a + b*x**S(2))*sqrt(c + d*x**S(2))), x)/(S(2)*f**S(2))
+    rule1025 = ReplacementRule(pattern1025, replacement1025)
+    rubi.add(rule1025.pattern, label = 1025)
 
-    pattern338 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))/(e_ + x_**S(2)*WC('f', S(1)))**(S(3)/2), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)))
-    rule338 = ReplacementRule(pattern338, lambda b, a, f, c, e, d, x : b*Int(sqrt(c + d*x**S(2))/(sqrt(a + b*x**S(2))*sqrt(e + f*x**S(2))), x)/f - (-a*f + b*e)*Int(sqrt(c + d*x**S(2))/(sqrt(a + b*x**S(2))*(e + f*x**S(2))**(S(3)/2)), x)/f)
-    rubi.add(rule338)
+    pattern1026 = Pattern(Integral(sqrt(a_ + x_**S(2)*WC('b', S(1)))*sqrt(c_ + x_**S(2)*WC('d', S(1)))/(e_ + x_**S(2)*WC('f', S(1)))**(S(3)/2), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons153)
+    def replacement1026(x, e, b, d, f, c, a):
+        return b*Int(sqrt(c + d*x**S(2))/(sqrt(a + b*x**S(2))*sqrt(e + f*x**S(2))), x)/f - (-a*f + b*e)*Int(sqrt(c + d*x**S(2))/(sqrt(a + b*x**S(2))*(e + f*x**S(2))**(S(3)/2)), x)/f
+    rule1026 = ReplacementRule(pattern1026, replacement1026)
+    rubi.add(rule1026.pattern, label = 1026)
 
-    pattern339 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1)))**r_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda u, x: SumQ(u)))
-    def With339(b, n, a, p, f, c, q, e, d, x, r):
+    def With1027(n, p, q, x, e, b, d, f, r, c, a):
         u = ExpandIntegrand((a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x)
-        return Int(u, x)
-    rule339 = ReplacementRule(pattern339, lambda b, n, a, p, f, c, q, e, d, x, r : With339(b, n, a, p, f, c, q, e, d, x, r))
-    rubi.add(rule339)
+        if SumQ(u):
+            return Int(u, x)
+        return False
+    pattern1027 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1)))**r_, x_), cons2, cons3, cons7, cons27, cons48, cons125, cons5, cons50, cons52, cons148, CustomConstraint(With1027))
+    rule1027 = ReplacementRule(pattern1027, With1027)
+    rubi.add(rule1027.pattern, label = 1027)
 
-    pattern340 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1)))**r_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n: NegativeIntegerQ(n)))
-    rule340 = ReplacementRule(pattern340, lambda b, n, a, p, f, c, q, e, d, x, r : -Subst(Int((a + b*x**(-n))**p*(c + d*x**(-n))**q*(e + f*x**(-n))**r/x**S(2), x), x, 1/x))
-    rubi.add(rule340)
+    pattern1028 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1)))**r_, x_), cons2, cons3, cons7, cons27, cons48, cons125, cons5, cons50, cons52, cons196)
+    def replacement1028(n, p, q, x, e, b, d, f, r, c, a):
+        return -Subst(Int((a + b*x**(-n))**p*(c + d*x**(-n))**q*(e + f*x**(-n))**r/x**S(2), x), x, S(1)/x)
+    rule1028 = ReplacementRule(pattern1028, replacement1028)
+    rubi.add(rule1028.pattern, label = 1028)
 
-    pattern341 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)))
-    rule341 = ReplacementRule(pattern341, lambda b, n, p, a, f, q, c, e, d, x, r : Int((a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x))
-    rubi.add(rule341)
+    pattern1029 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons5, cons50, cons52, cons645)
+    def replacement1029(n, p, q, x, e, b, d, f, r, c, a):
+        return Int((a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x)
+    rule1029 = ReplacementRule(pattern1029, replacement1029)
+    rubi.add(rule1029.pattern, label = 1029)
 
-    pattern342 = Pattern(Integral((u_**n_*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*(v_**n_*WC('d', S(1)) + WC('c', S(0)))**WC('q', S(1))*(w_**n_*WC('f', S(1)) + WC('e', S(0)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda u, v: ZeroQ(u - v)), CustomConstraint(lambda u, w: ZeroQ(u - w)), CustomConstraint(lambda u, x: LinearQ(u, x)), CustomConstraint(lambda u, x: NonzeroQ(u - x)))
-    rule342 = ReplacementRule(pattern342, lambda b, n, w, a, p, u, v, c, q, f, e, d, x, r : Subst(Int((a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x), x, u)/Coefficient(u, x, S(1)))
-    rubi.add(rule342)
+    pattern1030 = Pattern(Integral((u_**n_*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*(v_**n_*WC('d', S(1)) + WC('c', S(0)))**WC('q', S(1))*(w_**n_*WC('f', S(1)) + WC('e', S(0)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons5, cons4, cons50, cons52, cons646, cons647, cons68, cons69)
+    def replacement1030(n, w, p, q, v, e, x, b, d, f, r, c, u, a):
+        return Subst(Int((a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x), x, u)/Coefficient(u, x, S(1))
+    rule1030 = ReplacementRule(pattern1030, replacement1030)
+    rubi.add(rule1030.pattern, label = 1030)
 
-    pattern343 = Pattern(Integral((c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)), CustomConstraint(lambda q: IntegerQ(q)))
-    rule343 = ReplacementRule(pattern343, lambda mn, b, n, a, p, f, q, c, e, d, x, r : Int(x**(-n*q)*(a + b*x**n)**p*(e + f*x**n)**r*(c*x**n + d)**q, x))
-    rubi.add(rule343)
+    pattern1031 = Pattern(Integral((c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons5, cons52, cons585, cons586)
+    def replacement1031(n, q, p, x, e, b, d, f, r, c, mn, a):
+        return Int(x**(-n*q)*(a + b*x**n)**p*(e + f*x**n)**r*(c*x**n + d)**q, x)
+    rule1031 = ReplacementRule(pattern1031, replacement1031)
+    rubi.add(rule1031.pattern, label = 1031)
 
-    pattern344 = Pattern(Integral((c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)), CustomConstraint(lambda p: IntegerQ(p)), CustomConstraint(lambda r: IntegerQ(r)))
-    rule344 = ReplacementRule(pattern344, lambda mn, b, n, a, p, f, q, c, e, d, x, r : Int(x**(n*(p + r))*(c + d*x**(-n))**q*(a*x**(-n) + b)**p*(e*x**(-n) + f)**r, x))
-    rubi.add(rule344)
+    pattern1032 = Pattern(Integral((c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons50, cons585, cons38, cons648)
+    def replacement1032(n, q, p, x, e, b, d, f, r, c, mn, a):
+        return Int(x**(n*(p + r))*(c + d*x**(-n))**q*(a*x**(-n) + b)**p*(e*x**(-n) + f)**r, x)
+    rule1032 = ReplacementRule(pattern1032, replacement1032)
+    rubi.add(rule1032.pattern, label = 1032)
 
-    pattern345 = Pattern(Integral((c_ + x_**WC('mn', S(1))*WC('d', S(1)))**q_*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)), CustomConstraint(lambda q: Not(IntegerQ(q))))
-    rule345 = ReplacementRule(pattern345, lambda mn, b, n, a, p, f, c, q, e, d, x, r : x**(n*FracPart(q))*(c + d*x**(-n))**FracPart(q)*(c*x**n + d)**(-FracPart(q))*Int(x**(-n*q)*(a + b*x**n)**p*(e + f*x**n)**r*(c*x**n + d)**q, x))
-    rubi.add(rule345)
+    pattern1033 = Pattern(Integral((c_ + x_**WC('mn', S(1))*WC('d', S(1)))**q_*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons4, cons5, cons50, cons52, cons585, cons386)
+    def replacement1033(n, p, q, x, e, b, d, f, r, c, mn, a):
+        return x**(n*FracPart(q))*(c + d*x**(-n))**FracPart(q)*(c*x**n + d)**(-FracPart(q))*Int(x**(-n*q)*(a + b*x**n)**p*(e + f*x**n)**r*(c*x**n + d)**q, x)
+    rule1033 = ReplacementRule(pattern1033, replacement1033)
+    rubi.add(rule1033.pattern, label = 1033)
 
-    pattern346 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e1_ + x_**WC('n2', S(1))*WC('f1', S(1)))**WC('r', S(1))*(e2_ + x_**WC('n2', S(1))*WC('f2', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e1, x: FreeQ(e1, x)), CustomConstraint(lambda f1, x: FreeQ(f1, x)), CustomConstraint(lambda e2, x: FreeQ(e2, x)), CustomConstraint(lambda f2, x: FreeQ(f2, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n2, n: ZeroQ(-n/S(2) + n2)), CustomConstraint(lambda f2, e2, e1, f1: ZeroQ(e1*f2 + e2*f1)), CustomConstraint(lambda e2, e1, r: IntegerQ(r) | (PositiveQ(e1) & PositiveQ(e2))))
-    rule346 = ReplacementRule(pattern346, lambda e1, x, b, e2, n, p, a, f2, c, q, f1, d, n2, r : Int((a + b*x**n)**p*(c + d*x**n)**q*(e1*e2 + f1*f2*x**n)**r, x))
-    rubi.add(rule346)
+    pattern1034 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e1_ + x_**WC('n2', S(1))*WC('f1', S(1)))**WC('r', S(1))*(e2_ + x_**WC('n2', S(1))*WC('f2', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons652, cons653, cons654, cons655, cons4, cons5, cons50, cons52, cons649, cons650, cons651)
+    def replacement1034(n, n2, p, q, e2, c, f1, e1, x, b, d, r, f2, a):
+        return Int((a + b*x**n)**p*(c + d*x**n)**q*(e1*e2 + f1*f2*x**n)**r, x)
+    rule1034 = ReplacementRule(pattern1034, replacement1034)
+    rubi.add(rule1034.pattern, label = 1034)
 
-    pattern347 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e1_ + x_**WC('n2', S(1))*WC('f1', S(1)))**WC('r', S(1))*(e2_ + x_**WC('n2', S(1))*WC('f2', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e1, x: FreeQ(e1, x)), CustomConstraint(lambda f1, x: FreeQ(f1, x)), CustomConstraint(lambda e2, x: FreeQ(e2, x)), CustomConstraint(lambda f2, x: FreeQ(f2, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n2, n: ZeroQ(-n/S(2) + n2)), CustomConstraint(lambda f2, e2, e1, f1: ZeroQ(e1*f2 + e2*f1)))
-    rule347 = ReplacementRule(pattern347, lambda e1, x, b, e2, n, p, a, f2, c, q, f1, d, n2, r : (e1 + f1*x**(n/S(2)))**FracPart(r)*(e2 + f2*x**(n/S(2)))**FracPart(r)*(e1*e2 + f1*f2*x**n)**(-FracPart(r))*Int((a + b*x**n)**p*(c + d*x**n)**q*(e1*e2 + f1*f2*x**n)**r, x))
-    rubi.add(rule347)
+    pattern1035 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e1_ + x_**WC('n2', S(1))*WC('f1', S(1)))**WC('r', S(1))*(e2_ + x_**WC('n2', S(1))*WC('f2', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons652, cons653, cons654, cons655, cons4, cons5, cons50, cons52, cons649, cons650)
+    def replacement1035(n, n2, p, q, e2, c, f1, e1, x, b, d, r, f2, a):
+        return (e1 + f1*x**(n/S(2)))**FracPart(r)*(e2 + f2*x**(n/S(2)))**FracPart(r)*(e1*e2 + f1*f2*x**n)**(-FracPart(r))*Int((a + b*x**n)**p*(c + d*x**n)**q*(e1*e2 + f1*f2*x**n)**r, x)
+    rule1035 = ReplacementRule(pattern1035, replacement1035)
+    rubi.add(rule1035.pattern, label = 1035)
 
-    pattern348 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda g, m: IntegerQ(m) | PositiveQ(g)), CustomConstraint(lambda m, n: IntegerQ((m + S(1))/n)))
-    rule348 = ReplacementRule(pattern348, lambda b, n, g, p, f, q, c, e, d, m, x, r : b**(S(1) - (m + S(1))/n)*g**m*Subst(Int((b*x)**(p + S(-1) + (m + S(1))/n)*(c + d*x)**q*(e + f*x)**r, x), x, x**n)/n)
-    rubi.add(rule348)
+    pattern1036 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons5, cons50, cons52, cons656, cons500)
+    def replacement1036(m, n, q, p, g, x, e, b, d, f, r, c):
+        return b**(S(1) - (m + S(1))/n)*g**m*Subst(Int((b*x)**(p + S(-1) + (m + S(1))/n)*(c + d*x)**q*(e + f*x)**r, x), x, x**n)/n
+    rule1036 = ReplacementRule(pattern1036, replacement1036)
+    rubi.add(rule1036.pattern, label = 1036)
 
-    pattern349 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(x_**WC('n', S(1))*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda g, m: IntegerQ(m) | PositiveQ(g)), CustomConstraint(lambda m, n: Not(IntegerQ((m + S(1))/n))))
-    rule349 = ReplacementRule(pattern349, lambda b, n, g, p, f, q, c, e, d, m, x, r : b**IntPart(p)*g**m*x**(-n*FracPart(p))*(b*x**n)**FracPart(p)*Int(x**(m + n*p)*(c + d*x**n)**q*(e + f*x**n)**r, x))
-    rubi.add(rule349)
+    pattern1037 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(x_**WC('n', S(1))*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons5, cons50, cons52, cons656, cons501)
+    def replacement1037(m, n, q, p, g, x, e, b, d, f, r, c):
+        return b**IntPart(p)*g**m*x**(-n*FracPart(p))*(b*x**n)**FracPart(p)*Int(x**(m + n*p)*(c + d*x**n)**q*(e + f*x**n)**r, x)
+    rule1037 = ReplacementRule(pattern1037, replacement1037)
+    rubi.add(rule1037.pattern, label = 1037)
 
-    pattern350 = Pattern(Integral((g_*x_)**m_*(x_**WC('n', S(1))*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda m: Not(IntegerQ(m))))
-    rule350 = ReplacementRule(pattern350, lambda b, n, g, p, f, q, c, e, d, m, x, r : g**IntPart(m)*x**(-FracPart(m))*(g*x)**FracPart(m)*Int(x**m*(b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x))
-    rubi.add(rule350)
+    pattern1038 = Pattern(Integral((g_*x_)**m_*(x_**WC('n', S(1))*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons5, cons50, cons52, cons18)
+    def replacement1038(m, n, q, p, g, x, e, b, d, f, r, c):
+        return g**IntPart(m)*x**(-FracPart(m))*(g*x)**FracPart(m)*Int(x**m*(b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x)
+    rule1038 = ReplacementRule(pattern1038, replacement1038)
+    rubi.add(rule1038.pattern, label = 1038)
 
-    pattern351 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, q, r: PositiveIntegerQ(p + S(2), q, r)))
-    rule351 = ReplacementRule(pattern351, lambda b, n, g, p, a, f, q, c, e, d, m, x, r : Int(ExpandIntegrand((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x), x))
-    rubi.add(rule351)
+    pattern1039 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons657)
+    def replacement1039(m, n, p, q, g, x, e, b, d, f, r, c, a):
+        return Int(ExpandIntegrand((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x), x)
+    rule1039 = ReplacementRule(pattern1039, replacement1039)
+    rubi.add(rule1039.pattern, label = 1039)
 
-    pattern352 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda m, n: ZeroQ(m - n + S(1))))
-    rule352 = ReplacementRule(pattern352, lambda b, n, p, a, f, q, c, e, d, m, x, r : Subst(Int((a + b*x)**p*(c + d*x)**q*(e + f*x)**r, x), x, x**n)/n)
-    rubi.add(rule352)
+    pattern1040 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons21, cons4, cons5, cons50, cons52, cons53)
+    def replacement1040(m, n, p, q, x, e, b, d, f, r, c, a):
+        return Subst(Int((a + b*x)**p*(c + d*x)**q*(e + f*x)**r, x), x, x**n)/n
+    rule1040 = ReplacementRule(pattern1040, replacement1040)
+    rubi.add(rule1040.pattern, label = 1040)
 
-    pattern353 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, q, r: IntegersQ(p, q, r)), CustomConstraint(lambda n: NegQ(n)))
-    rule353 = ReplacementRule(pattern353, lambda b, n, p, a, f, q, c, e, d, m, x, r : Int(x**(m + n*(p + q + r))*(a*x**(-n) + b)**p*(c*x**(-n) + d)**q*(e*x**(-n) + f)**r, x))
-    rubi.add(rule353)
+    pattern1041 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons21, cons4, cons658, cons502)
+    def replacement1041(m, n, p, q, x, e, b, d, f, r, c, a):
+        return Int(x**(m + n*(p + q + r))*(a*x**(-n) + b)**p*(c*x**(-n) + d)**q*(e*x**(-n) + f)**r, x)
+    rule1041 = ReplacementRule(pattern1041, replacement1041)
+    rubi.add(rule1041.pattern, label = 1041)
 
-    pattern354 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda m, n: IntegerQ((m + S(1))/n)))
-    rule354 = ReplacementRule(pattern354, lambda b, n, p, a, f, q, c, e, d, m, x, r : Subst(Int(x**(S(-1) + (m + S(1))/n)*(a + b*x)**p*(c + d*x)**q*(e + f*x)**r, x), x, x**n)/n)
-    rubi.add(rule354)
+    pattern1042 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons21, cons4, cons5, cons50, cons52, cons500)
+    def replacement1042(m, n, p, q, x, e, b, d, f, r, c, a):
+        return Subst(Int(x**(S(-1) + (m + S(1))/n)*(a + b*x)**p*(c + d*x)**q*(e + f*x)**r, x), x, x**n)/n
+    rule1042 = ReplacementRule(pattern1042, replacement1042)
+    rubi.add(rule1042.pattern, label = 1042)
 
-    pattern355 = Pattern(Integral((g_*x_)**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda m, n: IntegerQ((m + S(1))/n)))
-    rule355 = ReplacementRule(pattern355, lambda b, n, p, g, a, f, q, c, e, d, m, x, r : g**IntPart(m)*x**(-FracPart(m))*(g*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x))
-    rubi.add(rule355)
+    pattern1043 = Pattern(Integral((g_*x_)**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons5, cons50, cons52, cons500)
+    def replacement1043(m, n, p, q, g, x, e, b, d, f, r, c, a):
+        return g**IntPart(m)*x**(-FracPart(m))*(g*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x)
+    rule1043 = ReplacementRule(pattern1043, replacement1043)
+    rubi.add(rule1043.pattern, label = 1043)
 
-    pattern356 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda k, n, d, q, a, p, b, c, f, m, r, e, x: Unequal(k, S(1))))
-    def With356(b, n, p, a, f, q, c, e, d, m, x, r):
+    def With1044(m, n, p, q, x, e, b, d, f, r, c, a):
         k = GCD(m + S(1), n)
-        return Subst(Int(x**(S(-1) + (m + S(1))/k)*(a + b*x**(n/k))**p*(c + d*x**(n/k))**q*(e + f*x**(n/k))**r, x), x, x**k)/k
-    rule356 = ReplacementRule(pattern356, lambda b, n, p, a, f, q, c, e, d, m, x, r : With356(b, n, p, a, f, q, c, e, d, m, x, r))
-    rubi.add(rule356)
+        if Unequal(k, S(1)):
+            return Subst(Int(x**(S(-1) + (m + S(1))/k)*(a + b*x**(n/k))**p*(c + d*x**(n/k))**q*(e + f*x**(n/k))**r, x), x, x**k)/k
+        return False
+    pattern1044 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons5, cons50, cons52, cons148, cons17, CustomConstraint(With1044))
+    rule1044 = ReplacementRule(pattern1044, With1044)
+    rubi.add(rule1044.pattern, label = 1044)
 
-    pattern357 = Pattern(Integral((x_*WC('g', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1)))**r_, x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: FractionQ(m)), )
-    def With357(b, n, g, a, p, f, c, q, e, d, m, x, r):
+    def With1045(m, n, p, q, g, x, e, b, d, f, r, c, a):
         k = Denominator(m)
-        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a + b*g**(-n)*x**(k*n))**p*(c + d*g**(-n)*x**(k*n))**q*(e + f*g**(-n)*x**(k*n))**r, x), x, (g*x)**(1/k))/g
-    rule357 = ReplacementRule(pattern357, lambda b, n, g, a, p, f, c, q, e, d, m, x, r : With357(b, n, g, a, p, f, c, q, e, d, m, x, r))
-    rubi.add(rule357)
+        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a + b*g**(-n)*x**(k*n))**p*(c + d*g**(-n)*x**(k*n))**q*(e + f*g**(-n)*x**(k*n))**r, x), x, (g*x)**(S(1)/k))/g
+    pattern1045 = Pattern(Integral((x_*WC('g', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1)))**r_, x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons5, cons50, cons52, cons148, cons367 )
+    rule1045 = ReplacementRule(pattern1045, With1045)
+    rubi.add(rule1045.pattern, label = 1045)
 
-    pattern358 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda b, a, c, q, f, e, d: Not(Equal(q, S(1)) & SimplerQ(-a*d + b*c, -a*f + b*e))))
-    rule358 = ReplacementRule(pattern358, lambda b, n, g, a, p, f, q, c, e, d, m, x : Int((g*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(b*e*n*(p + S(1)) + (m + S(1))*(-a*f + b*e)) + d*x**n*(b*e*n*(p + S(1)) + (-a*f + b*e)*(m + n*q + S(1))), x), x)/(a*b*n*(p + S(1))) + (g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*(a*f - b*e)/(a*b*g*n*(p + S(1))))
-    rubi.add(rule358)
+    pattern1046 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons148, cons402, cons137, cons403, cons659)
+    def replacement1046(m, n, q, p, g, x, e, b, d, f, c, a):
+        return Int((g*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(b*e*n*(p + S(1)) + (m + S(1))*(-a*f + b*e)) + d*x**n*(b*e*n*(p + S(1)) + (-a*f + b*e)*(m + n*q + S(1))), x), x)/(a*b*n*(p + S(1))) - (g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*(-a*f + b*e)/(a*b*g*n*(p + S(1)))
+    rule1046 = ReplacementRule(pattern1046, replacement1046)
+    rubi.add(rule1046.pattern, label = 1046)
 
-    pattern359 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p, m: RationalQ(m, p)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda m, n: Greater(m - n + S(1), S(0))))
-    rule359 = ReplacementRule(pattern359, lambda b, n, g, a, p, f, c, q, e, d, m, x : -g**n*Int((g*x)**(m - n)*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(c*(-a*f + b*e)*(m - n + S(1)) + x**n*(-b*n*(p + S(1))*(c*f - d*e) + d*(-a*f + b*e)*(m + n*q + S(1))), x), x)/(b*n*(p + S(1))*(-a*d + b*c)) + g**(n + S(-1))*(g*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))*(-a*f + b*e)/(b*n*(p + S(1))*(-a*d + b*c)))
-    rubi.add(rule359)
+    pattern1047 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons50, cons148, cons244, cons137, cons607)
+    def replacement1047(m, n, p, q, g, x, e, b, d, f, c, a):
+        return -g**n*Int((g*x)**(m - n)*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(c*(-a*f + b*e)*(m - n + S(1)) + x**n*(-b*n*(p + S(1))*(c*f - d*e) + d*(-a*f + b*e)*(m + n*q + S(1))), x), x)/(b*n*(p + S(1))*(-a*d + b*c)) + g**(n + S(-1))*(g*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))*(-a*f + b*e)/(b*n*(p + S(1))*(-a*d + b*c))
+    rule1047 = ReplacementRule(pattern1047, replacement1047)
+    rubi.add(rule1047.pattern, label = 1047)
 
-    pattern360 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))))
-    rule360 = ReplacementRule(pattern360, lambda b, n, g, a, p, f, c, q, e, d, m, x : Int((g*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(c*(m + S(1))*(-a*f + b*e) + d*x**n*(-a*f + b*e)*(m + n*(p + q + S(2)) + S(1)) + e*n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c)) + (g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))*(a*f - b*e)/(a*g*n*(p + S(1))*(-a*d + b*c)))
-    rubi.add(rule360)
+    pattern1048 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons50, cons148, cons13, cons137)
+    def replacement1048(m, n, p, q, g, x, e, b, d, f, c, a):
+        return Int((g*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(c*(m + S(1))*(-a*f + b*e) + d*x**n*(-a*f + b*e)*(m + n*(p + q + S(2)) + S(1)) + e*n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c)) - (g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))*(-a*f + b*e)/(a*g*n*(p + S(1))*(-a*d + b*c))
+    rule1048 = ReplacementRule(pattern1048, replacement1048)
+    rubi.add(rule1048.pattern, label = 1048)
 
-    pattern361 = Pattern(Integral((x_*WC('g', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m, q: RationalQ(m, q)), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda m: Less(m, S(-1))), CustomConstraint(lambda n, f, q, c, e, d, x: Not(Equal(q, S(1)) & SimplerQ(e + f*x**n, c + d*x**n))))
-    rule361 = ReplacementRule(pattern361, lambda b, n, g, p, a, f, q, c, e, d, m, x : e*(g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*g*(m + S(1))) - g**(-n)*Int((g*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(c*(m + S(1))*(-a*f + b*e) + d*x**n*(b*e*n*(p + q + S(1)) + (m + S(1))*(-a*f + b*e)) + e*n*(a*d*q + b*c*(p + S(1))), x), x)/(a*(m + S(1))))
-    rubi.add(rule361)
+    pattern1049 = Pattern(Integral((x_*WC('g', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons5, cons148, cons611, cons403, cons94, cons660)
+    def replacement1049(m, n, q, p, g, x, e, b, d, f, c, a):
+        return e*(g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(a*g*(m + S(1))) - g**(-n)*Int((g*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(c*(m + S(1))*(-a*f + b*e) + d*x**n*(b*e*n*(p + q + S(1)) + (m + S(1))*(-a*f + b*e)) + e*n*(a*d*q + b*c*(p + S(1))), x), x)/(a*(m + S(1)))
+    rule1049 = ReplacementRule(pattern1049, replacement1049)
+    rubi.add(rule1049.pattern, label = 1049)
 
-    pattern362 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda n, f, q, c, e, d, x: Not(Equal(q, S(1)) & SimplerQ(e + f*x**n, c + d*x**n))))
-    rule362 = ReplacementRule(pattern362, lambda b, n, g, p, a, f, q, c, e, d, m, x : f*(g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(b*g*(m + n*(p + q + S(1)) + S(1))) + Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(c*(b*e*n*(p + q + S(1)) + (m + S(1))*(-a*f + b*e)) + x**n*(b*d*e*n*(p + q + S(1)) + d*(m + S(1))*(-a*f + b*e) + f*n*q*(-a*d + b*c)), x), x)/(b*(m + n*(p + q + S(1)) + S(1))))
-    rubi.add(rule362)
+    pattern1050 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons5, cons148, cons395, cons403, cons660)
+    def replacement1050(m, n, p, q, g, x, e, b, d, f, c, a):
+        return f*(g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(b*g*(m + n*(p + q + S(1)) + S(1))) + Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(c*(b*e*n*(p + q + S(1)) + (m + S(1))*(-a*f + b*e)) + x**n*(b*d*e*n*(p + q + S(1)) + d*(m + S(1))*(-a*f + b*e) + f*n*q*(-a*d + b*c)), x), x)/(b*(m + n*(p + q + S(1)) + S(1)))
+    rule1050 = ReplacementRule(pattern1050, replacement1050)
+    rubi.add(rule1050.pattern, label = 1050)
 
-    pattern363 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda m, n: Greater(m, n + S(-1))))
-    rule363 = ReplacementRule(pattern363, lambda b, n, g, p, a, f, q, c, e, d, m, x : f*g**(n + S(-1))*(g*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(b*d*(m + n*(p + q + S(1)) + S(1))) - g**n*Int((g*x)**(m - n)*(a + b*x**n)**p*(c + d*x**n)**q*Simp(a*c*f*(m - n + S(1)) + x**n*(a*d*f*(m + n*q + S(1)) + b*(c*f*(m + n*p + S(1)) - d*e*(m + n*(p + q + S(1)) + S(1)))), x), x)/(b*d*(m + n*(p + q + S(1)) + S(1))))
-    rubi.add(rule363)
+    pattern1051 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons5, cons50, cons148, cons31, cons530)
+    def replacement1051(m, n, p, q, g, x, e, b, d, f, c, a):
+        return f*g**(n + S(-1))*(g*x)**(m - n + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(b*d*(m + n*(p + q + S(1)) + S(1))) - g**n*Int((g*x)**(m - n)*(a + b*x**n)**p*(c + d*x**n)**q*Simp(a*c*f*(m - n + S(1)) + x**n*(a*d*f*(m + n*q + S(1)) + b*(c*f*(m + n*p + S(1)) - d*e*(m + n*(p + q + S(1)) + S(1)))), x), x)/(b*d*(m + n*(p + q + S(1)) + S(1)))
+    rule1051 = ReplacementRule(pattern1051, replacement1051)
+    rubi.add(rule1051.pattern, label = 1051)
 
-    pattern364 = Pattern(Integral((x_*WC('g', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda m: RationalQ(m)), CustomConstraint(lambda m: Less(m, S(-1))))
-    rule364 = ReplacementRule(pattern364, lambda b, n, g, p, a, f, q, c, e, d, m, x : e*(g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*c*g*(m + S(1))) + g**(-n)*Int((g*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**q*Simp(a*c*f*(m + S(1)) - b*d*e*x**n*(m + n*(p + q + S(2)) + S(1)) - e*n*(a*d*q + b*c*p) - e*(a*d + b*c)*(m + n + S(1)), x), x)/(a*c*(m + S(1))))
-    rubi.add(rule364)
+    pattern1052 = Pattern(Integral((x_*WC('g', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons5, cons50, cons148, cons31, cons94)
+    def replacement1052(m, n, q, p, g, x, e, b, d, f, c, a):
+        return e*(g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))/(a*c*g*(m + S(1))) + g**(-n)*Int((g*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**q*Simp(a*c*f*(m + S(1)) - b*d*e*x**n*(m + n*(p + q + S(2)) + S(1)) - e*n*(a*d*q + b*c*p) - e*(a*d + b*c)*(m + n + S(1)), x), x)/(a*c*(m + S(1)))
+    rule1052 = ReplacementRule(pattern1052, replacement1052)
+    rubi.add(rule1052.pattern, label = 1052)
 
-    pattern365 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(e_ + x_**n_*WC('f', S(1)))/(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)))
-    rule365 = ReplacementRule(pattern365, lambda b, n, g, a, p, f, c, e, d, m, x : Int(ExpandIntegrand((g*x)**m*(a + b*x**n)**p*(e + f*x**n)/(c + d*x**n), x), x))
-    rubi.add(rule365)
+    pattern1053 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(e_ + x_**n_*WC('f', S(1)))/(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons5, cons148)
+    def replacement1053(m, n, p, g, x, e, b, d, f, c, a):
+        return Int(ExpandIntegrand((g*x)**m*(a + b*x**n)**p*(e + f*x**n)/(c + d*x**n), x), x)
+    rule1053 = ReplacementRule(pattern1053, replacement1053)
+    rubi.add(rule1053.pattern, label = 1053)
 
-    pattern366 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)))
-    rule366 = ReplacementRule(pattern366, lambda b, n, g, p, a, f, q, c, e, d, m, x : e*Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q, x) + e**(-n)*f*Int((g*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**q, x))
-    rubi.add(rule366)
+    pattern1054 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons5, cons50, cons148)
+    def replacement1054(m, n, p, q, g, x, e, b, d, f, c, a):
+        return e*Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q, x) + e**(-n)*f*Int((g*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**q, x)
+    rule1054 = ReplacementRule(pattern1054, replacement1054)
+    rubi.add(rule1054.pattern, label = 1054)
 
-    pattern367 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda n: PositiveIntegerQ(n)), CustomConstraint(lambda r: PositiveIntegerQ(r)))
-    rule367 = ReplacementRule(pattern367, lambda b, n, g, p, a, f, q, c, e, d, m, x, r : e*Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**(r + S(-1)), x) + e**(-n)*f*Int((g*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**(r + S(-1)), x))
-    rubi.add(rule367)
+    pattern1055 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons5, cons50, cons148, cons661)
+    def replacement1055(m, n, p, q, g, x, e, b, d, f, r, c, a):
+        return e*Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**(r + S(-1)), x) + e**(-n)*f*Int((g*x)**(m + n)*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**(r + S(-1)), x)
+    rule1055 = ReplacementRule(pattern1055, replacement1055)
+    rubi.add(rule1055.pattern, label = 1055)
 
-    pattern368 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n: NegativeIntegerQ(n)), CustomConstraint(lambda m: IntegerQ(m)))
-    rule368 = ReplacementRule(pattern368, lambda b, n, p, a, f, q, c, e, d, m, x, r : -Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p*(c + d*x**(-n))**q*(e + f*x**(-n))**r, x), x, 1/x))
-    rubi.add(rule368)
+    pattern1056 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons5, cons50, cons52, cons196, cons17)
+    def replacement1056(m, n, p, q, x, e, b, d, f, r, c, a):
+        return -Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p*(c + d*x**(-n))**q*(e + f*x**(-n))**r, x), x, S(1)/x)
+    rule1056 = ReplacementRule(pattern1056, replacement1056)
+    rubi.add(rule1056.pattern, label = 1056)
 
-    pattern369 = Pattern(Integral((x_*WC('g', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n: NegativeIntegerQ(n)), CustomConstraint(lambda m: FractionQ(m)), )
-    def With369(b, n, g, p, a, f, q, c, e, d, m, x, r):
+    def With1057(m, n, q, p, g, x, e, b, d, f, r, c, a):
         k = Denominator(m)
         return -k*Subst(Int(x**(-k*(m + S(1)) + S(-1))*(a + b*g**(-n)*x**(-k*n))**p*(c + d*g**(-n)*x**(-k*n))**q*(e + f*g**(-n)*x**(-k*n))**r, x), x, (g*x)**(-S(1)/k))/g
-    rule369 = ReplacementRule(pattern369, lambda b, n, g, p, a, f, q, c, e, d, m, x, r : With369(b, n, g, p, a, f, q, c, e, d, m, x, r))
-    rubi.add(rule369)
+    pattern1057 = Pattern(Integral((x_*WC('g', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons5, cons50, cons52, cons196, cons367 )
+    rule1057 = ReplacementRule(pattern1057, With1057)
+    rubi.add(rule1057.pattern, label = 1057)
 
-    pattern370 = Pattern(Integral((x_*WC('g', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n: NegativeIntegerQ(n)), CustomConstraint(lambda m: Not(RationalQ(m))))
-    rule370 = ReplacementRule(pattern370, lambda b, n, g, p, a, f, q, c, e, d, m, x, r : -(g*x)**m*(1/x)**m*Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p*(c + d*x**(-n))**q*(e + f*x**(-n))**r, x), x, 1/x))
-    rubi.add(rule370)
+    pattern1058 = Pattern(Integral((x_*WC('g', S(1)))**m_*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons5, cons50, cons52, cons196, cons356)
+    def replacement1058(m, n, q, p, g, x, e, b, d, f, r, c, a):
+        return -(g*x)**m*(S(1)/x)**m*Subst(Int(x**(-m + S(-2))*(a + b*x**(-n))**p*(c + d*x**(-n))**q*(e + f*x**(-n))**r, x), x, S(1)/x)
+    rule1058 = ReplacementRule(pattern1058, replacement1058)
+    rubi.add(rule1058.pattern, label = 1058)
 
-    pattern371 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n: FractionQ(n)), )
-    def With371(b, n, p, a, f, q, c, e, d, m, x, r):
+    def With1059(m, n, p, q, x, e, b, d, f, r, c, a):
         k = Denominator(n)
-        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a + b*x**(k*n))**p*(c + d*x**(k*n))**q*(e + f*x**(k*n))**r, x), x, x**(1/k))
-    rule371 = ReplacementRule(pattern371, lambda b, n, p, a, f, q, c, e, d, m, x, r : With371(b, n, p, a, f, q, c, e, d, m, x, r))
-    rubi.add(rule371)
+        return k*Subst(Int(x**(k*(m + S(1)) + S(-1))*(a + b*x**(k*n))**p*(c + d*x**(k*n))**q*(e + f*x**(k*n))**r, x), x, x**(S(1)/k))
+    pattern1059 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons21, cons5, cons50, cons52, cons489 )
+    rule1059 = ReplacementRule(pattern1059, With1059)
+    rubi.add(rule1059.pattern, label = 1059)
 
-    pattern372 = Pattern(Integral((g_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n: FractionQ(n)))
-    rule372 = ReplacementRule(pattern372, lambda b, n, p, g, a, f, q, c, e, d, m, x, r : g**IntPart(m)*x**(-FracPart(m))*(g*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x))
-    rubi.add(rule372)
+    pattern1060 = Pattern(Integral((g_*x_)**m_*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons5, cons50, cons52, cons489)
+    def replacement1060(m, n, p, q, g, x, e, b, d, f, r, c, a):
+        return g**IntPart(m)*x**(-FracPart(m))*(g*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x)
+    rule1060 = ReplacementRule(pattern1060, replacement1060)
+    rubi.add(rule1060.pattern, label = 1060)
 
-    pattern373 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda m, n: IntegerQ(n/(m + S(1)))))
-    rule373 = ReplacementRule(pattern373, lambda b, n, p, a, f, q, c, e, d, m, x, r : Subst(Int((a + b*x**(n/(m + S(1))))**p*(c + d*x**(n/(m + S(1))))**q*(e + f*x**(n/(m + S(1))))**r, x), x, x**(m + S(1)))/(m + S(1)))
-    rubi.add(rule373)
+    pattern1061 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons21, cons4, cons5, cons50, cons52, cons541)
+    def replacement1061(m, n, p, q, x, e, b, d, f, r, c, a):
+        return Subst(Int((a + b*x**(n/(m + S(1))))**p*(c + d*x**(n/(m + S(1))))**q*(e + f*x**(n/(m + S(1))))**r, x), x, x**(m + S(1)))/(m + S(1))
+    rule1061 = ReplacementRule(pattern1061, replacement1061)
+    rubi.add(rule1061.pattern, label = 1061)
 
-    pattern374 = Pattern(Integral((g_*x_)**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda m, n: IntegerQ(n/(m + S(1)))))
-    rule374 = ReplacementRule(pattern374, lambda b, n, p, g, a, f, q, c, e, d, m, x, r : g**IntPart(m)*x**(-FracPart(m))*(g*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x))
-    rubi.add(rule374)
+    pattern1062 = Pattern(Integral((g_*x_)**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons5, cons50, cons52, cons541)
+    def replacement1062(m, n, p, q, g, x, e, b, d, f, r, c, a):
+        return g**IntPart(m)*x**(-FracPart(m))*(g*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x)
+    rule1062 = ReplacementRule(pattern1062, replacement1062)
+    rubi.add(rule1062.pattern, label = 1062)
 
-    pattern375 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, q: RationalQ(p, q)), CustomConstraint(lambda p: Less(p, S(-1))), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda b, a, c, q, f, e, d: Not(Equal(q, S(1)) & SimplerQ(-a*d + b*c, -a*f + b*e))))
-    rule375 = ReplacementRule(pattern375, lambda b, n, g, a, p, f, q, c, e, d, m, x : Int((g*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(b*e*n*(p + S(1)) + (m + S(1))*(-a*f + b*e)) + d*x**n*(b*e*n*(p + S(1)) + (-a*f + b*e)*(m + n*q + S(1))), x), x)/(a*b*n*(p + S(1))) + (g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*(a*f - b*e)/(a*b*g*n*(p + S(1))))
-    rubi.add(rule375)
+    pattern1063 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons402, cons137, cons403, cons659)
+    def replacement1063(m, n, q, p, g, x, e, b, d, f, c, a):
+        return Int((g*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(-1))*Simp(c*(b*e*n*(p + S(1)) + (m + S(1))*(-a*f + b*e)) + d*x**n*(b*e*n*(p + S(1)) + (-a*f + b*e)*(m + n*q + S(1))), x), x)/(a*b*n*(p + S(1))) - (g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*(-a*f + b*e)/(a*b*g*n*(p + S(1)))
+    rule1063 = ReplacementRule(pattern1063, replacement1063)
+    rubi.add(rule1063.pattern, label = 1063)
 
-    pattern376 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda p: RationalQ(p)), CustomConstraint(lambda p: Less(p, S(-1))))
-    rule376 = ReplacementRule(pattern376, lambda b, n, g, a, p, f, c, q, e, d, m, x : Int((g*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(c*(m + S(1))*(-a*f + b*e) + d*x**n*(-a*f + b*e)*(m + n*(p + q + S(2)) + S(1)) + e*n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c)) + (g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))*(a*f - b*e)/(a*g*n*(p + S(1))*(-a*d + b*c)))
-    rubi.add(rule376)
+    pattern1064 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons50, cons13, cons137)
+    def replacement1064(m, n, p, q, g, x, e, b, d, f, c, a):
+        return Int((g*x)**m*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q*Simp(c*(m + S(1))*(-a*f + b*e) + d*x**n*(-a*f + b*e)*(m + n*(p + q + S(2)) + S(1)) + e*n*(p + S(1))*(-a*d + b*c), x), x)/(a*n*(p + S(1))*(-a*d + b*c)) - (g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**(q + S(1))*(-a*f + b*e)/(a*g*n*(p + S(1))*(-a*d + b*c))
+    rule1064 = ReplacementRule(pattern1064, replacement1064)
+    rubi.add(rule1064.pattern, label = 1064)
 
-    pattern377 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q: RationalQ(q)), CustomConstraint(lambda q: Greater(q, S(0))), CustomConstraint(lambda n, f, q, c, e, d, x: Not(Equal(q, S(1)) & SimplerQ(e + f*x**n, c + d*x**n))))
-    rule377 = ReplacementRule(pattern377, lambda b, n, g, p, a, f, q, c, e, d, m, x : f*(g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(b*g*(m + n*(p + q + S(1)) + S(1))) + Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(c*(b*e*n*(p + q + S(1)) + (m + S(1))*(-a*f + b*e)) + x**n*(b*d*e*n*(p + q + S(1)) + d*(m + S(1))*(-a*f + b*e) + f*n*q*(-a*d + b*c)), x), x)/(b*(m + n*(p + q + S(1)) + S(1))))
-    rubi.add(rule377)
+    pattern1065 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons5, cons395, cons403, cons660)
+    def replacement1065(m, n, p, q, g, x, e, b, d, f, c, a):
+        return f*(g*x)**(m + S(1))*(a + b*x**n)**(p + S(1))*(c + d*x**n)**q/(b*g*(m + n*(p + q + S(1)) + S(1))) + Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**(q + S(-1))*Simp(c*(b*e*n*(p + q + S(1)) + (m + S(1))*(-a*f + b*e)) + x**n*(b*d*e*n*(p + q + S(1)) + d*(m + S(1))*(-a*f + b*e) + f*n*q*(-a*d + b*c)), x), x)/(b*(m + n*(p + q + S(1)) + S(1)))
+    rule1065 = ReplacementRule(pattern1065, replacement1065)
+    rubi.add(rule1065.pattern, label = 1065)
 
-    pattern378 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(e_ + x_**n_*WC('f', S(1)))/(c_ + x_**n_*WC('d', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)))
-    rule378 = ReplacementRule(pattern378, lambda b, n, g, a, p, f, c, e, d, m, x : Int(ExpandIntegrand((g*x)**m*(a + b*x**n)**p*(e + f*x**n)/(c + d*x**n), x), x))
-    rubi.add(rule378)
+    pattern1066 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(e_ + x_**n_*WC('f', S(1)))/(c_ + x_**n_*WC('d', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons5, cons380)
+    def replacement1066(m, n, p, g, x, e, b, d, f, c, a):
+        return Int(ExpandIntegrand((g*x)**m*(a + b*x**n)**p*(e + f*x**n)/(c + d*x**n), x), x)
+    rule1066 = ReplacementRule(pattern1066, replacement1066)
+    rubi.add(rule1066.pattern, label = 1066)
 
-    pattern379 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1))), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)))
-    rule379 = ReplacementRule(pattern379, lambda b, n, g, a, p, f, c, q, e, d, m, x : e*Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q, x) + f*x**(-m)*(g*x)**m*Int(x**(m + n)*(a + b*x**n)**p*(c + d*x**n)**q, x))
-    rubi.add(rule379)
+    pattern1067 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_*(c_ + x_**n_*WC('d', S(1)))**q_*(e_ + x_**n_*WC('f', S(1))), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons5, cons50, cons662)
+    def replacement1067(m, n, p, q, g, x, e, b, d, f, c, a):
+        return e*Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q, x) + f*x**(-m)*(g*x)**m*Int(x**(m + n)*(a + b*x**n)**p*(c + d*x**n)**q, x)
+    rule1067 = ReplacementRule(pattern1067, replacement1067)
+    rubi.add(rule1067.pattern, label = 1067)
 
-    pattern380 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)), CustomConstraint(lambda q: IntegerQ(q)))
-    rule380 = ReplacementRule(pattern380, lambda mn, b, n, p, a, f, q, c, e, d, m, x, r : Int(x**(m - n*q)*(a + b*x**n)**p*(e + f*x**n)**r*(c*x**n + d)**q, x))
-    rubi.add(rule380)
+    pattern1068 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons21, cons4, cons5, cons52, cons585, cons586)
+    def replacement1068(m, n, q, p, x, e, b, d, f, r, c, mn, a):
+        return Int(x**(m - n*q)*(a + b*x**n)**p*(e + f*x**n)**r*(c*x**n + d)**q, x)
+    rule1068 = ReplacementRule(pattern1068, replacement1068)
+    rubi.add(rule1068.pattern, label = 1068)
 
-    pattern381 = Pattern(Integral(x_**WC('m', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)), CustomConstraint(lambda p: IntegerQ(p)), CustomConstraint(lambda r: IntegerQ(r)))
-    rule381 = ReplacementRule(pattern381, lambda mn, b, n, a, p, f, q, c, e, d, m, x, r : Int(x**(m + n*(p + r))*(c + d*x**(-n))**q*(a*x**(-n) + b)**p*(e*x**(-n) + f)**r, x))
-    rubi.add(rule381)
+    pattern1069 = Pattern(Integral(x_**WC('m', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons21, cons4, cons50, cons585, cons38, cons648)
+    def replacement1069(m, n, q, p, x, e, b, d, f, r, c, mn, a):
+        return Int(x**(m + n*(p + r))*(c + d*x**(-n))**q*(a*x**(-n) + b)**p*(e*x**(-n) + f)**r, x)
+    rule1069 = ReplacementRule(pattern1069, replacement1069)
+    rubi.add(rule1069.pattern, label = 1069)
 
-    pattern382 = Pattern(Integral(x_**WC('m', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**q_*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)), CustomConstraint(lambda q: Not(IntegerQ(q))))
-    rule382 = ReplacementRule(pattern382, lambda mn, b, n, a, p, f, c, q, e, d, m, x, r : x**(n*FracPart(q))*(c + d*x**(-n))**FracPart(q)*(c*x**n + d)**(-FracPart(q))*Int(x**(m - n*q)*(a + b*x**n)**p*(e + f*x**n)**r*(c*x**n + d)**q, x))
-    rubi.add(rule382)
+    pattern1070 = Pattern(Integral(x_**WC('m', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**q_*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1))*(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons21, cons4, cons5, cons50, cons52, cons585, cons386)
+    def replacement1070(m, n, p, q, x, e, b, d, f, r, c, mn, a):
+        return x**(n*FracPart(q))*(c + d*x**(-n))**FracPart(q)*(c*x**n + d)**(-FracPart(q))*Int(x**(m - n*q)*(a + b*x**n)**p*(e + f*x**n)**r*(c*x**n + d)**q, x)
+    rule1070 = ReplacementRule(pattern1070, replacement1070)
+    rubi.add(rule1070.pattern, label = 1070)
 
-    pattern383 = Pattern(Integral((g_*x_)**m_*(a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda mn, n: EqQ(mn, -n)))
-    rule383 = ReplacementRule(pattern383, lambda mn, b, n, p, g, a, f, q, c, e, d, m, x, r : g**IntPart(m)*x**(-FracPart(m))*(g*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**(-n))**q*(e + f*x**n)**r, x))
-    rubi.add(rule383)
+    pattern1071 = Pattern(Integral((g_*x_)**m_*(a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**WC('mn', S(1))*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**WC('n', S(1))*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons5, cons50, cons52, cons585)
+    def replacement1071(m, n, q, p, g, x, e, b, d, f, r, c, mn, a):
+        return g**IntPart(m)*x**(-FracPart(m))*(g*x)**FracPart(m)*Int(x**m*(a + b*x**n)**p*(c + d*x**(-n))**q*(e + f*x**n)**r, x)
+    rule1071 = ReplacementRule(pattern1071, replacement1071)
+    rubi.add(rule1071.pattern, label = 1071)
 
-    pattern384 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)))
-    rule384 = ReplacementRule(pattern384, lambda b, n, g, p, a, f, q, c, e, d, m, x, r : Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x))
-    rubi.add(rule384)
+    pattern1072 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e_ + x_**n_*WC('f', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons208, cons21, cons4, cons5, cons50, cons52, cons663)
+    def replacement1072(m, n, p, q, g, x, e, b, d, f, r, c, a):
+        return Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x)
+    rule1072 = ReplacementRule(pattern1072, replacement1072)
+    rubi.add(rule1072.pattern, label = 1072)
 
-    pattern385 = Pattern(Integral(u_**WC('m', S(1))*(e_ + v_**n_*WC('f', S(1)))**WC('r', S(1))*(v_**n_*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*(v_**n_*WC('d', S(1)) + WC('c', S(0)))**WC('q', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e, x: FreeQ(e, x)), CustomConstraint(lambda f, x: FreeQ(f, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda u, v, x: LinearPairQ(u, v, x)))
-    rule385 = ReplacementRule(pattern385, lambda b, n, a, p, u, v, c, q, f, e, d, m, x, r : u**m*v**(-m)*Subst(Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x), x, v)/Coefficient(v, x, S(1)))
-    rubi.add(rule385)
+    pattern1073 = Pattern(Integral(u_**WC('m', S(1))*(e_ + v_**n_*WC('f', S(1)))**WC('r', S(1))*(v_**n_*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*(v_**n_*WC('d', S(1)) + WC('c', S(0)))**WC('q', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons125, cons21, cons4, cons5, cons50, cons52, cons554)
+    def replacement1073(m, n, p, q, v, e, x, b, d, f, r, c, u, a):
+        return u**m*v**(-m)*Subst(Int(x**m*(a + b*x**n)**p*(c + d*x**n)**q*(e + f*x**n)**r, x), x, v)/Coefficient(v, x, S(1))
+    rule1073 = ReplacementRule(pattern1073, replacement1073)
+    rubi.add(rule1073.pattern, label = 1073)
 
-    pattern386 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e1_ + x_**WC('n2', S(1))*WC('f1', S(1)))**WC('r', S(1))*(e2_ + x_**WC('n2', S(1))*WC('f2', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e1, x: FreeQ(e1, x)), CustomConstraint(lambda f1, x: FreeQ(f1, x)), CustomConstraint(lambda e2, x: FreeQ(e2, x)), CustomConstraint(lambda f2, x: FreeQ(f2, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n2, n: ZeroQ(-n/S(2) + n2)), CustomConstraint(lambda f2, e2, e1, f1: ZeroQ(e1*f2 + e2*f1)), CustomConstraint(lambda e2, e1, r: IntegerQ(r) | (PositiveQ(e1) & PositiveQ(e2))))
-    rule386 = ReplacementRule(pattern386, lambda e1, x, b, e2, n, g, p, f2, a, c, q, f1, d, m, n2, r : Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q*(e1*e2 + f1*f2*x**n)**r, x))
-    rubi.add(rule386)
+    pattern1074 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e1_ + x_**WC('n2', S(1))*WC('f1', S(1)))**WC('r', S(1))*(e2_ + x_**WC('n2', S(1))*WC('f2', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons652, cons653, cons654, cons655, cons208, cons21, cons4, cons5, cons50, cons52, cons649, cons650, cons651)
+    def replacement1074(m, n, n2, p, q, e2, c, f1, g, x, e1, b, d, r, f2, a):
+        return Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q*(e1*e2 + f1*f2*x**n)**r, x)
+    rule1074 = ReplacementRule(pattern1074, replacement1074)
+    rubi.add(rule1074.pattern, label = 1074)
 
-    pattern387 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e1_ + x_**WC('n2', S(1))*WC('f1', S(1)))**WC('r', S(1))*(e2_ + x_**WC('n2', S(1))*WC('f2', S(1)))**WC('r', S(1)), x_), CustomConstraint(lambda a, x: FreeQ(a, x)), CustomConstraint(lambda b, x: FreeQ(b, x)), CustomConstraint(lambda c, x: FreeQ(c, x)), CustomConstraint(lambda d, x: FreeQ(d, x)), CustomConstraint(lambda e1, x: FreeQ(e1, x)), CustomConstraint(lambda f1, x: FreeQ(f1, x)), CustomConstraint(lambda e2, x: FreeQ(e2, x)), CustomConstraint(lambda f2, x: FreeQ(f2, x)), CustomConstraint(lambda g, x: FreeQ(g, x)), CustomConstraint(lambda m, x: FreeQ(m, x)), CustomConstraint(lambda n, x: FreeQ(n, x)), CustomConstraint(lambda p, x: FreeQ(p, x)), CustomConstraint(lambda q, x: FreeQ(q, x)), CustomConstraint(lambda r, x: FreeQ(r, x)), CustomConstraint(lambda n2, n: ZeroQ(-n/S(2) + n2)), CustomConstraint(lambda f2, e2, e1, f1: ZeroQ(e1*f2 + e2*f1)))
-    rule387 = ReplacementRule(pattern387, lambda e1, x, b, e2, n, g, p, f2, a, c, q, f1, d, m, n2, r : (e1 + f1*x**(n/S(2)))**FracPart(r)*(e2 + f2*x**(n/S(2)))**FracPart(r)*(e1*e2 + f1*f2*x**n)**(-FracPart(r))*Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q*(e1*e2 + f1*f2*x**n)**r, x))
-    rubi.add(rule387)
+    pattern1075 = Pattern(Integral((x_*WC('g', S(1)))**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**WC('p', S(1))*(c_ + x_**n_*WC('d', S(1)))**WC('q', S(1))*(e1_ + x_**WC('n2', S(1))*WC('f1', S(1)))**WC('r', S(1))*(e2_ + x_**WC('n2', S(1))*WC('f2', S(1)))**WC('r', S(1)), x_), cons2, cons3, cons7, cons27, cons652, cons653, cons654, cons655, cons208, cons21, cons4, cons5, cons50, cons52, cons649, cons650)
+    def replacement1075(m, n, n2, p, q, e2, c, f1, g, x, e1, b, d, r, f2, a):
+        return (e1 + f1*x**(n/S(2)))**FracPart(r)*(e2 + f2*x**(n/S(2)))**FracPart(r)*(e1*e2 + f1*f2*x**n)**(-FracPart(r))*Int((g*x)**m*(a + b*x**n)**p*(c + d*x**n)**q*(e1*e2 + f1*f2*x**n)**r, x)
+    rule1075 = ReplacementRule(pattern1075, replacement1075)
+    rubi.add(rule1075.pattern, label = 1075)
 
-    return rubi
+    return (rubi, (rule689, rule690, rule691, rule692, rule693, rule694, rule695, rule696, rule697, rule698, rule699, rule700, rule701, rule702, rule703, rule704, rule705, rule706, rule707, rule708, rule709, rule710, rule711, rule712, rule713, rule714, rule715, rule716, rule717, rule718, rule719, rule720, rule721, rule722, rule723, rule724, rule725, rule726, rule727, rule728, rule729, rule730, rule731, rule732, rule733, rule734, rule735, rule736, rule737, rule738, rule739, rule740, rule741, rule742, rule743, rule744, rule745, rule746, rule747, rule748, rule749, rule750, rule751, rule752, rule753, rule754, rule755, rule756, rule757, rule758, rule759, rule760, rule761, rule762, rule763, rule764, rule765, rule766, rule767, rule768, rule769, rule770, rule771, rule772, rule773, rule774, rule775, rule776, rule777, rule778, rule779, rule780, rule781, rule782, rule783, rule784, rule785, rule786, rule787, rule788, rule789, rule790, rule791, rule792, rule793, rule794, rule795, rule796, rule797, rule798, rule799, rule800, rule801, rule802, rule803, rule804, rule805, rule806, rule807, rule808, rule809, rule810, rule811, rule812, rule813, rule814, rule815, rule816, rule817, rule818, rule819, rule820, rule821, rule822, rule823, rule824, rule825, rule826, rule827, rule828, rule829, rule830, rule831, rule832, rule833, rule834, rule835, rule836, rule837, rule838, rule839, rule840, rule841, rule842, rule843, rule844, rule845, rule846, rule847, rule848, rule849, rule850, rule851, rule852, rule853, rule854, rule855, rule856, rule857, rule858, rule859, rule860, rule861, rule862, rule863, rule864, rule865, rule866, rule867, rule868, rule869, rule870, rule871, rule872, rule873, rule874, rule875, rule876, rule877, rule878, rule879, rule880, rule881, rule882, rule883, rule884, rule885, rule886, rule887, rule888, rule889, rule890, rule891, rule892, rule893, rule894, rule895, rule896, rule897, rule898, rule899, rule900, rule901, rule902, rule903, rule904, rule905, rule906, rule907, rule908, rule909, rule910, rule911, rule912, rule913, rule914, rule915, rule916, rule917, rule918, rule919, rule920, rule921, rule922, rule923, rule924, rule925, rule926, rule927, rule928, rule929, rule930, rule931, rule932, rule933, rule934, rule935, rule936, rule937, rule938, rule939, rule940, rule941, rule942, rule943, rule944, rule945, rule946, rule947, rule948, rule949, rule950, rule951, rule952, rule953, rule954, rule955, rule956, rule957, rule958, rule959, rule960, rule961, rule962, rule963, rule964, rule965, rule966, rule967, rule968, rule969, rule970, rule971, rule972, rule973, rule974, rule975, rule976, rule977, rule978, rule979, rule980, rule981, rule982, rule983, rule984, rule985, rule986, rule987, rule988, rule989, rule990, rule991, rule992, rule993, rule994, rule995, rule996, rule997, rule998, rule999, rule1000, rule1001, rule1002, rule1003, rule1004, rule1005, rule1006, rule1007, rule1008, rule1009, rule1010, rule1011, rule1012, rule1013, rule1014, rule1015, rule1016, rule1017, rule1018, rule1019, rule1020, rule1021, rule1022, rule1023, rule1024, rule1025, rule1026, rule1027, rule1028, rule1029, rule1030, rule1031, rule1032, rule1033, rule1034, rule1035, rule1036, rule1037, rule1038, rule1039, rule1040, rule1041, rule1042, rule1043, rule1044, rule1045, rule1046, rule1047, rule1048, rule1049, rule1050, rule1051, rule1052, rule1053, rule1054, rule1055, rule1056, rule1057, rule1058, rule1059, rule1060, rule1061, rule1062, rule1063, rule1064, rule1065, rule1066, rule1067, rule1068, rule1069, rule1070, rule1071, rule1072, rule1073, rule1074, rule1075, ))

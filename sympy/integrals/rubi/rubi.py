@@ -160,12 +160,16 @@ if matchpy:
         #from sympy.integrals.rubi.rules.derivative import derivative
         from sympy.integrals.rubi.rules.piecewise_linear import piecewise_linear
         #from sympy.integrals.rubi.rules.miscellaneous_integration import miscellaneous_integration
-
-        rubi = ManyToOneReplacer()
-        #rubi = integrand_simplification(rubi)
-        rubi = linear_products(rubi)
-        rubi = quadratic_products(rubi)
-        rubi = binomial_products(rubi)
+        
+        rules = ()
+        from matchpy import ManyToOneMatcher
+        
+        rubi =  ManyToOneMatcher(rename = False)
+        rubi, rule1 = integrand_simplification(rubi)
+        rubi, rule2 = linear_products(rubi)
+        rubi, rule3 = quadratic_products(rubi)
+        rubi, rule4 = binomial_products(rubi)
+        rules = rule1 + rule2 + rule3 + rule4
         #rubi = trinomial_products(rubi)
         #rubi = miscellaneous_algebraic(rubi)
         #rubi = exponential(rubi)
@@ -179,10 +183,10 @@ if matchpy:
         #rubi = inverse_hyperbolic(rubi)
         #rubi = piecewise_linear(rubi)
         #rubi = miscellaneous_integration(rubi)
+        #mit = ManyToOneReplacer(*rules)
+        return rubi, rules
 
-        return rubi
-
-    rubi = rubi_object()
+    rubi, rules = rubi_object()
 
 @doctest_depends_on(modules=('matchpy',))
 def rubi_integrate(expr, var, showsteps=False):
@@ -199,11 +203,26 @@ def rubi_integrate(expr, var, showsteps=False):
 
     Returns Integral object if unable to integrate.
     '''
+    
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
-
-    result = rubi.replace(Integral(expr, var))
-
+    a = []
+    miter = rubi.match(Integral(expr, var))
+    for label, e in miter:
+        a.append(label)
+    if a:
+        from matchpy import replace_all
+        result = replace_all(Integral(expr, var), [rules[min(a) - 1]])
+        elements = []
+        for i in result.args:
+            if isinstance(i, Integral):
+                elements.append(i)
+        if len(elements) >1:
+            result = 0
+            for j in elements:
+                result += rubi_integrate(j.args[0], var)
+    else:
+        result = Integral(expr, var)
     return result
 
 

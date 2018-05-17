@@ -187,21 +187,50 @@ def seperate_freeq(s, variables=[], x=None):
             variables, x = seperate_freeq(i, variables, x)
     return variables, x
 
-def parse_freeq(l, x, symbols=None):
+def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
     '''
     Converts FreeQ constraints into MatchPy constraint
     '''
     res = []
+    cons = ''
     for i in l:
         if isinstance(i, str):
-            res.append(('CustomConstraint(lambda {}, {}: FreeQ({}, {}))').format(i, x, i, x))
+            r = '    return FreeQ({}, {})'.format(i, x)
+            if r not in cons_dict.values():
+                cons_index += 1
+                c = '\ndef cons_f{}({}, {}):\n'.format(cons_index, i, x)
+                c += r
+                c += '\n\ncons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+                cons_name = 'cons{}'.format(cons_index)
+                cons_dict[cons_name] = r
+            else:
+                c = ''
+                cons_name = next(key for key, value in cons_dict.items() if value == r)
+
         elif isinstance(i, list):
             s = list(set(get_free_symbols(i, symbols)))
             s = ', '.join(s)
-            res.append(('CustomConstraint(lambda {}: FreeQ({}, {}))').format(s, generate_sympy_from_parsed(i), x))
+            r = '    return FreeQ({}, {})'.format(generate_sympy_from_parsed(i), x)
+            if r not in cons_dict.values():
+                cons_index += 1
+                c = '\ndef cons_f{}({}):\n'.format(cons_index, s)
+                c += r
+                c += '\n\ncons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+                cons_name = 'cons{}'.format(cons_index)
+                cons_dict[cons_name] = r
+            else:
+                c = ''
+                cons_name = next(key for key, value in cons_dict.items() if value == r)
+
+        if cons_name not in cons_import:
+            cons_import.append(cons_name)
+
+        res.append(cons_name)
+        cons += c
+
     if res != []:
-        return ', ' + ', '.join(res)
-    return ''
+        return ', ' + ', '.join(res), cons, cons_index
+    return '', cons, cons_index
 
 def generate_sympy_from_parsed(parsed, wild=False, symbols=[], replace_Int=False):
     '''
@@ -263,12 +292,27 @@ def get_free_symbols(s, symbols, free_symbols=[]):
 
     return free_symbols
 
-def _divide_constriant(s, symbols):
+def _divide_constriant(s, symbols, cons_index, cons_dict, cons_import):
     # Creates a CustomConstraint of the form `CustomConstraint(lambda a, x: FreeQ(a, x))`
     lambda_symbols = list(set(get_free_symbols(s, symbols, [])))
-    return 'CustomConstraint(lambda {}: {})'.format(', '.join(lambda_symbols), sstr(sympify(generate_sympy_from_parsed(s)), sympy_integers=True))
+    res = '    return {}'.format(sstr(sympify(generate_sympy_from_parsed(s),locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not")}), sympy_integers=True))
+    if not res in cons_dict.values():
+        cons_index += 1
+        cons = '\ndef cons_f{}({}):\n'.format(cons_index, ', '.join(lambda_symbols))
+        cons += res
+        cons += '\n\ncons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+        cons_name = 'cons{}'.format(cons_index)
+        cons_dict[cons_name] = res
+    else:
+        cons = ''
+        cons_name = next(key for key, value in cons_dict.items() if value == res)
 
-def divide_constraint(s, symbols):
+    if cons_name not in cons_import:
+        cons_import.append(cons_name)
+    return (cons_name, cons, cons_index)
+
+
+def divide_constraint(s, symbols, cons_index, cons_dict, cons_import):
     '''
     Divides multiple constraints into smaller constraints.
 
@@ -277,17 +321,28 @@ def divide_constraint(s, symbols):
     s : constraint as list
     symbols : all the symbols present in the expression
     '''
+    result =[]
+    cons = ''
     if s[0] == 'And':
-        result = [_divide_constriant(i, symbols) for i in s[1:] if i[0]!='FreeQ']
+        for i in s[1:]:
+            if i[0]!= 'FreeQ':
+                a = _divide_constriant(i, symbols, cons_index, cons_dict, cons_import)
+                result.append(a[0])
+                cons += a[1]
+                cons_index = a[2]
     else:
-        result = [_divide_constriant(s, symbols)]
+        a = _divide_constriant(s, symbols, cons_index, cons_dict, cons_import)
+        result.append(a[0])
+        cons += a[1]
+        cons_index = a[2]
+
 
     r = ['']
     for i in result:
         if i != '':
             r.append(i)
 
-    return ', '.join(r)
+    return ', '.join(r),cons, cons_index
 
 def setWC(string):
     '''
@@ -300,13 +355,13 @@ def setWC(string):
 
     return string
 
-def replaceWith(s, symbols, i):
+def replaceWith(s, symbols, index):
     '''
     Replaces `With` and `Module by python functions`
     '''
     if type(s) == Function('With') or type(s) == Function('Module'):
-        constraints = ', '
-        result = '    def With{}({}):'.format(i, ', '.join(symbols))
+        constraints = ' '
+        result = '    def With{}({}):'.format(index, ', '.join(symbols))
         if type(s.args[0]) == Function('List'): # get all local variables of With and Module
             L = list(s.args[0].args)
         else:
@@ -317,7 +372,6 @@ def replaceWith(s, symbols, i):
                 result += '\n        {} = {}'.format(i.args[0], sstr(i.args[1], sympy_integers=True))
             elif isinstance(i, Symbol):
                 result += "\n        {} = Symbol('{}')".format(i, i)
-
         if type(s.args[1]) == Function('CompoundExpression'): # Expand CompoundExpression
             C = s.args[1]
             if isinstance(C.args[0], Set):
@@ -328,26 +382,29 @@ def replaceWith(s, symbols, i):
             C = s.args[1]
             if len(C.args) == 2:
                 if all(j in symbols for j in [str(i) for i in C.free_symbols]):
-                    constraints += 'CustomConstraint(lambda {}: {})'.format(', '.join([str(i) for i in C.free_symbols]), sstr(C.args[1], sympy_integers=True))
+                    #constraints += 'CustomConstraint(lambda {}: {})'.format(', '.join([str(i) for i in C.free_symbols]), sstr(C.args[1], sympy_integers=True))
                     result += '\n        return {}'.format(sstr(C.args[0], sympy_integers=True))
                 else:
                     result += '\n        if {}:'.format(sstr(C.args[1], sympy_integers=True))
                     result += '\n            return {}'.format(sstr(C.args[0], sympy_integers=True))
-                    result += '\n        print("Unable to Integrate")'
-            return result, constraints
+                    result += '\n        return False'
 
+            constraints = ', CustomConstraint(With{})'.format(index)
+            return result, constraints
         result += '\n        return {}'.format(sstr(s.args[1], sympy_integers=True))
         return result, constraints
     else:
         return sstr(s, sympy_integers=True), ''
 
-def downvalues_rules(r, parsed):
+def downvalues_rules(r, header, cons_dict, cons_index, index):
     '''
     Function which generates parsed rules by substituting all possible
     combinations of default values.
     '''
-    res = []
-    index = 0
+    parsed = '\n\n'
+    cons = ''
+    cons_import = []
+    rules = '('
     for i in r:
         print('parsing rule {}'.format(r.index(i) + 1))
         # Parse Pattern
@@ -360,38 +417,44 @@ def downvalues_rules(r, parsed):
         pattern = generate_sympy_from_parsed(p.copy(), replace_Int=True)
         pattern, free_symbols = add_wildcards(pattern, optional=optional)
         free_symbols = list(set(free_symbols)) #remove common symbols
-
         # Parse Transformed Expression and Constraints
         if i[2][0] == 'Condition': # parse rules without constraints separately
-            constriant = divide_constraint(i[2][2], free_symbols) # separate And constraints into individual constraints
+            constriant, constraint_def, cons_index = divide_constraint(i[2][2], free_symbols, cons_index, cons_dict, cons_import) # separate And constraints into individual constraints
             FreeQ_vars, FreeQ_x = seperate_freeq(i[2][2].copy()) # separate FreeQ into individual constraints
             transformed = generate_sympy_from_parsed(i[2][1].copy(), symbols=free_symbols)
         else:
             constriant = ''
+            constraint_def = ''
             FreeQ_vars, FreeQ_x = [], []
             transformed = generate_sympy_from_parsed(i[2].copy(), symbols=free_symbols)
 
-        FreeQ_constraint = parse_freeq(FreeQ_vars, FreeQ_x, free_symbols)
-        pattern = sympify(pattern)
+        FreeQ_constraint, free_cons_def, cons_index = parse_freeq(FreeQ_vars, FreeQ_x, cons_index, cons_dict, cons_import, free_symbols)
+        pattern = sympify(pattern, locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not") })
         pattern = sstr(pattern, sympy_integers=True)
         pattern = setWC(pattern)
-        transformed = sympify(transformed)
-
+        transformed = sympify(transformed, locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not") })
+        constraint_def = constraint_def + free_cons_def
+        cons+=constraint_def
         index += 1
         if type(transformed) == Function('With') or type(transformed) == Function('Module'): # define separate function when With appears
             transformed, With_constraints = replaceWith(transformed, free_symbols, index)
-            parsed += '    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + With_constraints + ')'
-            parsed += '\n{}'.format(transformed)
-            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', lambda ' + ', '.join(free_symbols) + ' : ' + 'With{}({})'.format(index, ', '.join(free_symbols)) + ')\n    '
+            parsed += '{}'.format(transformed)
+            parsed += '\n    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + With_constraints + ')'
+            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', With{}'.format(index) + ')\n    '
         else:
             transformed = sstr(transformed, sympy_integers=True)
             parsed += '    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
-            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', lambda ' + ', '.join(free_symbols) + ' : ' + transformed + ')\n    '
-        parsed += 'rubi.add(rule'+ str(index) +')\n\n'
+            parsed += '\n    def replacement{}({}):\n        return '.format(index, ', '.join(free_symbols)) + transformed
+            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n    '
+        parsed += 'rubi.add(rule{}.pattern, label = {})\n\n'.format(index, index)
+        rules += 'rule{}, '.format(index)
 
-    parsed += '    return rubi\n'
+    rules += ')'
+    parsed += '    return (rubi' +', ' + rules + '\n'
 
-    return parsed
+    header += '    from sympy.integrals.rubi.constraints import ' + ', '.join(word for word in cons_import)
+    parsed = header + parsed
+    return parsed, cons_index, cons, index
 
 def rubi_rule_parser(fullform, header=None, module_name='rubi_object'):
     '''
@@ -418,23 +481,43 @@ def rubi_rule_parser(fullform, header=None, module_name='rubi_object'):
 
     # Temporarily rename these variables because it
     # can raise errors while sympifying
-    for i in temporary_variable_replacement:
-        fullform = fullform.replace(i, temporary_variable_replacement[i])
-    # Permanently rename these variables
-    for i in permanent_variable_replacement:
-        fullform = fullform.replace(i, permanent_variable_replacement[i])
+    cons_dict = {}
+    cons_index =0
+    index = 0
+    cons = ''
+    input =['integrand_simplification.txt', 'linear_product.txt', 'quadratic_product.txt', 'binomial_product.txt' ]
+    output =['integrand_simplification.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py' ]
+    for k in range(0, 4):
+        with open(input[k], 'r') as myfile:
+            fullform =myfile.read().replace('\n', '')
+        for i in temporary_variable_replacement:
+            fullform = fullform.replace(i, temporary_variable_replacement[i])
+        # Permanently rename these variables
+        for i in permanent_variable_replacement:
+            fullform = fullform.replace(i, permanent_variable_replacement[i])
 
-    rules = []
+        rules = []
+        for i in parse_full_form(fullform): # separate all rules
+            if i[0] == 'RuleDelayed':
+                rules.append(i)
+        parsed = downvalues_rules(rules, header, cons_dict, cons_index, index)
+        result = parsed[0].strip() + '\n'
+        cons_index = parsed[1]
+        cons += parsed[2]
+        index = parsed[3]
+        # Replace temporary variables by actual values
+        for i in temporary_variable_replacement:
+            cons = cons.replace(temporary_variable_replacement[i], i)
+            result = result.replace(temporary_variable_replacement[i], i)
 
-    for i in parse_full_form(fullform): # separate all rules
-        if i[0] == 'RuleDelayed':
-            rules.append(i)
+        StrPrinter._print_Not = lambda self, expr: "Not(%s)" % self._print(expr.args[0])
 
-    result = downvalues_rules(rules, header).strip() + '\n'
-    # Replace temporary variables by actual values
-    for i in temporary_variable_replacement:
-        result = result.replace(temporary_variable_replacement[i], i)
+        file = open(output[k],'w')         
+        file.write(str(result)) 
+        file.close()
 
-    StrPrinter._print_Not = lambda self, expr: "Not(%s)" % self._print(expr.args[0])
-
-    return result
+    cons = "\n".join(header.split("\n")[:-15])+ '\n' + cons
+    constraints = open('constraints.py', 'w')
+    constraints.write(str(cons))
+    constraints.close()
+    return None
