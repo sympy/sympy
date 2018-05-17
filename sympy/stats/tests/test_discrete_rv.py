@@ -78,3 +78,11 @@ def test_where():
     assert where(X**2 >= 4).set == Range(2, S.Infinity, 1)
     assert where(Y**2 < 9).set == Range(0, 3, 1)
     assert where(Y**2 <= 9).set == Range(0, 4, 1)
+
+def test_conditional():
+    X = Geometric('X', S(2)/3)
+    Y = Poisson('Y', 3)
+    assert P(X > 2, X > 3) == 1
+    assert P(X > 3, X > 2) == S(1)/3
+    assert P(Y > 2, Y < 2) == 0
+    assert P(Eq(Y, 3), Y >= 0) == 9*exp(-3)/2
