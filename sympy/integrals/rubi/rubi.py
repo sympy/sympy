@@ -160,10 +160,9 @@ if matchpy:
         #from sympy.integrals.rubi.rules.derivative import derivative
         from sympy.integrals.rubi.rules.piecewise_linear import piecewise_linear
         #from sympy.integrals.rubi.rules.miscellaneous_integration import miscellaneous_integration
-        
         rules = ()
         from matchpy import ManyToOneMatcher
-        
+
         rubi =  ManyToOneMatcher(rename = False)
         rubi, rule1 = integrand_simplification(rubi)
         rubi, rule2 = linear_products(rubi)
@@ -203,7 +202,7 @@ def rubi_integrate(expr, var, showsteps=False):
 
     Returns Integral object if unable to integrate.
     '''
-    
+
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
     a = []

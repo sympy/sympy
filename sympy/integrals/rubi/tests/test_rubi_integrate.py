@@ -39,5 +39,4 @@ def test_rubi_integrate():
 
     #New
     assert rubi_integrate((-x + x**3)/(6 + 2*x),x) == x**3/6 - 3*x**2/4 + 4*x - 12*log(x + 3)
-    assert rubi_integrate((c + d*x + e*x**2)**1/sqrt(a + b*x),x) == 2*e*(a + b*x)**(5/2)/(5*b**3) + 2*(a + b*x)**(3/2)*(-2*a*e + b*d)/(3*b**3) + 2*sqrt(a + b*x)*(a**2*e - a*b*d + b**2*c)/b**3    
-    
+    assert rubi_integrate((c + d*x + e*x**2)**1/sqrt(a + b*x),x) == 2*e*(a + b*x)**(5/2)/(5*b**3) + 2*(a + b*x)**(3/2)*(-2*a*e + b*d)/(3*b**3) + 2*sqrt(a + b*x)*(a**2*e - a*b*d + b**2*c)/b**3

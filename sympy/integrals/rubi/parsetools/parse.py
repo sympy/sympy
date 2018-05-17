@@ -449,7 +449,7 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
         parsed += 'rubi.add(rule{}.pattern, label = {})\n\n'.format(index, index)
         rules += 'rule{}, '.format(index)
 
-    rules += ')'
+    rules += '))'
     parsed += '    return (rubi' +', ' + rules + '\n'
 
     header += '    from sympy.integrals.rubi.constraints import ' + ', '.join(word for word in cons_import)
@@ -512,8 +512,8 @@ def rubi_rule_parser(fullform, header=None, module_name='rubi_object'):
 
         StrPrinter._print_Not = lambda self, expr: "Not(%s)" % self._print(expr.args[0])
 
-        file = open(output[k],'w')         
-        file.write(str(result)) 
+        file = open(output[k],'w')
+        file.write(str(result))
         file.close()
 
     cons = "\n".join(header.split("\n")[:-15])+ '\n' + cons
