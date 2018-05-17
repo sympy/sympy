@@ -1,8 +1,5 @@
-# XXX: Don't put a newline here, or it will add an extra line with
-# isympy --help
-#  |
-#  v
-"""Python shell for SymPy.
+"""
+Python shell for SymPy.
 
 This is just a normal Python shell (IPython shell if you have the
 IPython package installed), that executes the following commands for
@@ -140,6 +137,16 @@ COMMAND LINE OPTIONS
     If you want an int, you can wrap the literal in int(), e.g. int(3)/int(2)
     gives 1.5 (with division imported from __future__).
 
+-r, --rationalize-floats (requires at least IPython 0.11)
+
+    Automatically rationalize float literals, by wrapping with Rational.
+    Note that this will not change the behavior of float literals
+    assigned to variables, functions that return float literals, and
+    those wrapped with float or Float.
+
+    If you want a float literal or Float, you can wrap the floats in
+    float() or Float(), respectively.
+
 -I, --interactive (requires at least IPython 0.11)
 
     This is equivalent to --auto-symbols --int-to-Integer.  Future options
@@ -168,7 +175,6 @@ COMMAND LINE OPTIONS
         $isympy -q -- -colors NoColor
 
 See also isympy --help.
-
 """
 
 import os
@@ -178,13 +184,7 @@ import sys
 # by the command line will break.
 
 def main():
-    from optparse import OptionParser
-
-    if '-h' in sys.argv or '--help' in sys.argv:
-        # XXX: We can't use description=__doc__  in the OptionParser call
-        # below because optparse line wraps it weird.  The argparse module
-        # allows you to disable this, though.
-        print(__doc__)  # the docstring of this module above
+    from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
     VERSION = None
     if '--version' in sys.argv:
@@ -194,100 +194,114 @@ def main():
         # version, which only matters with the --version flag.
         import sympy
         VERSION = sympy.__version__
-    usage = 'usage: isympy [options] -- [ipython options]'
-    parser = OptionParser(
+
+    usage = 'isympy [options] -- [ipython options]'
+    parser = ArgumentParser(
         usage=usage,
-        version=VERSION,
-        # XXX: We need a more centralized place to store the version.
-        # It is currently stored in sympy.__version__, but we can't yet
-        # import sympy at this point.
+        description=__doc__,
+        formatter_class=RawDescriptionHelpFormatter,
     )
 
-    parser.add_option(
+    parser.add_argument('--version', action='version', version=VERSION)
+
+    parser.add_argument(
         '-c', '--console',
         dest='console',
         action='store',
         default=None,
         choices=['ipython', 'python'],
+        metavar='CONSOLE',
         help='select type of interactive session: ipython | python; defaults '
         'to ipython if IPython is installed, otherwise python')
 
-    parser.add_option(
+    parser.add_argument(
         '-p', '--pretty',
         dest='pretty',
         action='store',
         default=None,
+        metavar='PRETTY',
         choices=['unicode', 'ascii', 'no'],
         help='setup pretty printing: unicode | ascii | no; defaults to '
         'unicode printing if the terminal supports it, otherwise ascii')
 
-    parser.add_option(
+    parser.add_argument(
         '-t', '--types',
         dest='types',
         action='store',
         default=None,
+        metavar='TYPES',
         choices=['gmpy', 'gmpy1', 'python'],
         help='setup ground types: gmpy | gmpy1 | python; defaults to gmpy if gmpy2 '
         'or gmpy is installed, otherwise python')
 
-    parser.add_option(
+    parser.add_argument(
         '-o', '--order',
         dest='order',
         action='store',
         default=None,
+        metavar='ORDER',
         choices=['lex', 'grlex', 'grevlex', 'rev-lex', 'rev-grlex', 'rev-grevlex', 'old', 'none'],
         help='setup ordering of terms: [rev-]lex | [rev-]grlex | [rev-]grevlex | old | none; defaults to lex')
 
-    parser.add_option(
+    parser.add_argument(
         '-q', '--quiet',
         dest='quiet',
         action='store_true',
         default=False,
         help='print only version information at startup')
 
-    parser.add_option(
+    parser.add_argument(
         '-d', '--doctest',
         dest='doctest',
         action='store_true',
         default=False,
         help='use the doctest format for output (you can just copy and paste it)')
 
-    parser.add_option(
+    parser.add_argument(
         '-C', '--no-cache',
         dest='cache',
         action='store_false',
         default=True,
         help='disable caching mechanism')
 
-    parser.add_option(
+    parser.add_argument(
         '-a', '--auto-symbols',
         dest='auto_symbols',
         action='store_true',
         default=False,
         help='automatically construct missing symbols')
 
-    parser.add_option(
+    parser.add_argument(
         '-i', '--int-to-Integer',
         dest='auto_int_to_Integer',
         action='store_true',
         default=False,
         help="automatically wrap int literals with Integer")
 
-    parser.add_option(
+    parser.add_argument(
+        '-r', '--rationalize-floats',
+        dest='auto_rationalize',
+        action='store_true',
+        default=False,
+        help="automatically rationalize floats")
+
+    parser.add_argument(
         '-I', '--interactive',
         dest='interactive',
         action='store_true',
         default=False,
         help="equivalent to -a -i")
 
-    parser.add_option(
+    parser.add_argument(
         '-D', '--debug',
         dest='debug',
         action='store_true',
         default=False,
         help='enable debugging output')
 
-    (options, ipy_args) = parser.parse_args()
+    (options, ipy_args) = parser.parse_known_args()
+    if '--' in ipy_args:
+        ipy_args.remove('--')
 
     if not options.cache:
         os.environ['SYMPY_USE_CACHE'] = 'no'
@@ -337,6 +351,7 @@ def main():
     args['quiet'] = options.quiet
     args['auto_symbols'] = options.auto_symbols or options.interactive
     args['auto_int_to_Integer'] = options.auto_int_to_Integer or options.interactive
+    args['auto_rationalize'] = options.auto_rationalize
 
     from sympy.interactive import init_session
     init_session(ipython, **args)
