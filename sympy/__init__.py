@@ -62,6 +62,7 @@ from .series import *
 from .functions import *
 from .ntheory import *
 from .concrete import *
+from .discrete import *
 from .simplify import *
 from .sets import *
 from .solvers import *
