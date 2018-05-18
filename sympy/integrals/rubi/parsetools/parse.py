@@ -74,6 +74,7 @@ replacements = dict( # Mathematica equivalent functions in SymPy
         Sign='sign',
         Simplify='simplify',
         Defer='UnevaluatedExpr',
+        Identity = 'S'
 )
 
 temporary_variable_replacement = { # Temporarily rename because it can raise errors while sympifying

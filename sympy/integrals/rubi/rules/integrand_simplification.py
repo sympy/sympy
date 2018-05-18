@@ -117,6 +117,7 @@ if matchpy:
     from sympy.functions.elementary.hyperbolic import (acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch)
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec)
     from sympy import pi as Pi
+    from sympy import I
 
 
     A_, B_, C_, F_, G_, H_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, y_, z_ = [WC(i) for i in 'ABCFGHabcdefghijklmnpqrtuvswxyz']
@@ -177,7 +178,7 @@ def integrand_simplification(rubi):
 
     pattern9 = Pattern(Integral(-u_, x_))
     def replacement9(x, u):
-        return I*Int(u, x)
+        return -1*Int(u, x)
     rule9 = ReplacementRule(pattern9, replacement9)
     rubi.add(rule9.pattern, label = 9)
 

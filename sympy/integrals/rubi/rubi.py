@@ -211,6 +211,7 @@ def rubi_integrate(expr, var, showsteps=False):
         a.append(label)
     if a:
         from matchpy import replace_all
+        ru = ManyToOneReplacer(rules[min(a) - 1])
         result = replace_all(Integral(expr, var), [rules[min(a) - 1]])
         elements = []
         for i in result.args:
