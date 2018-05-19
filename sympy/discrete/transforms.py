@@ -5,44 +5,41 @@ Number Theoretic Transform, Zeta Transform, Mobius Transform
 from __future__ import print_function, division
 
 from sympy.core import S, Symbol, sympify
-from sympy.core.compatibility import as_int, range
+from sympy.core.compatibility import as_int, range, iterable
 from sympy.core.function import expand, expand_mul
 from sympy.core.numbers import pi, I
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.ntheory import isprime, primitive_root
 from sympy.utilities.iterables import ibin
 
 def _fourier_transform(seq, inverse=False):
-    """
-    Performs the DFT in complex field, by padding zeros as
-    radix 2 FFT, requires the number of sample points to be
-    a power of 2.
-    """
+    """Utility function for the discrete Fourier transform (DFT)"""
 
-    if not hasattr(seq, '__iter__'):
+    if not iterable(seq):
         raise TypeError("Expected a sequence of numeric coefficients " +
                         "for Fourier Transform")
 
-    a = sympify(seq)
+    a = [sympify(arg) for arg in seq]
     if any(x.has(Symbol) for x in a):
         raise ValueError("Expected non-symbolic coefficients")
 
     n = len(a)
     if n < 2:
-        return
+        return a
 
-    while n&(n - 1):
-        n += n&-n
+    b = n.bit_length() - 1
+    if n&(n - 1): # not a power of 2
+        b += 1
+        n = 2**b
 
     a += [S.Zero]*(n - len(a))
-    b = n.bit_length() - 1
     for i in range(1, n):
         j = int(ibin(i, b, str=True)[::-1], 2)
         if i < j:
             a[i], a[j] = a[j], a[i]
 
     ang = -2*pi/n if inverse else 2*pi/n
-    w = [exp(I*ang*i).expand(complex=True) for i in range(n // 2)]
+    w = [cos(ang*i) + I*sin(ang*i) for i in range(n // 2)]
 
     h = 2
     while h <= n:
@@ -61,8 +58,68 @@ def _fourier_transform(seq, inverse=False):
 
 
 def fft(seq):
+    r"""
+    Performs the discrete Fourier transform (DFT) in the complex domain.
+
+    The sequence is automatically padded to the right with zeros, as the
+    radix 2 FFT requires the number of sample points to be a power of 2.
+
+    Examples
+    ========
+
+    >>> from sympy import fft, ifft
+    >>> fft([1, 2, 3, 4])
+    [10, -2 - 2*I, -2, -2 + 2*I]
+    >>> ifft(_)
+    [1, 2, 3, 4]
+    >>> fft([5])
+    [5]
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm
+    .. [2] http://mathworld.wolfram.com/FastFourierTransform.html
+
+    See Also
+    ========
+
+    ifft
+
+    """
+
     return _fourier_transform(seq)
 
 
 def ifft(seq):
+    r"""
+    Performs the inverse discrete Fourier transform (IDFT) in the complex domain.
+
+    The sequence is automatically padded to the right with zeros, as the
+    radix 2 FFT requires the number of sample points to be a power of 2.
+
+    Examples
+    ========
+
+    >>> from sympy import fft, ifft
+    >>> ifft([1, 2, 3, 4])
+    [5/2, -1/2 + I/2, -1/2, -1/2 - I/2]
+    >>> fft(_)
+    [1, 2, 3, 4]
+    >>> ifft([7])
+    [7]
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm
+    .. [2] http://mathworld.wolfram.com/FastFourierTransform.html
+
+    See Also
+    ========
+
+    fft
+
+    """
+
     return _fourier_transform(seq, inverse=True)
