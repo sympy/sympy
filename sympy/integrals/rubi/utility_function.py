@@ -19,7 +19,7 @@ from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul,
     Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E,
-    expand_trig, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr)
+    expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr)
 from mpmath import appellf1
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
 from sympy.utilities.iterables import flatten
@@ -458,11 +458,8 @@ def Coefficient(expr, var, n=1):
     c
 
     """
-    a = Poly(expr, var)
-    if (degree(a) - n) < 0:
-        return 0
-    else:
-        return a.all_coeffs()[degree(a) - n]
+    expr = expand(expr)
+    return expr.coeff(var, n)
 
 def Denominator(var):
     return fraction(var)[1]
@@ -2877,6 +2874,7 @@ def LinearMatchQ(u, x):
         re = u.match(a + b*x)
         if re:
             return True
+    return False
 
 def PowerOfLinearMatchQ(u, x):
     if isinstance(u, list):

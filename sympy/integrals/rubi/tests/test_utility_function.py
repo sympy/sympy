@@ -61,6 +61,7 @@ def test_PositiveQ():
     assert not PositiveQ(S(-3))
     assert not PositiveQ(S(0))
     assert not PositiveQ(zoo)
+    assert not PositiveQ(I)
 
 def test_IntegerQ():
     assert IntegerQ(S(1))
@@ -106,6 +107,7 @@ def test_Coefficient():
     assert Coefficient(a + b*x + c*x**3, x, 0) == a
     assert Coefficient(a + b*x + c*x**3, x, 4) == 0
     assert Coefficient(b*x + c*x**3, x, 3) == c
+    assert Coefficient(x, x, -1) == 0
 
 def test_Denominator():
     assert Denominator(S(3)/2) == 2
