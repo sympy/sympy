@@ -6,8 +6,10 @@ from sympy.core.compatibility import range
 from sympy.discrete import fft, ifft
 from sympy.utilities.pytest import raises
 
+
 def test_fft_ifft():
-    assert all(tf(ls) == ls for tf in (fft, ifft) for ls in ([], [S(5)/3]))
+    assert all(tf(ls) == ls for tf in (fft, ifft) \
+                        for ls in ([], [S(5)/3]))
 
     ls = list(range(6))
     fls = [15, -7*sqrt(2)/2 - 4 - sqrt(2)*I/2 + 2*I, 2 + 3*I,
