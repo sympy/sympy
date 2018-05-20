@@ -843,7 +843,6 @@ def test_lambdify_dummy_arg():
     f3 = lambdify([[d2]], d2 + 1)
     assert f3([2]) == 3
 
-@XFAIL
 def test_lambdify_mixed_symbol_dummy_args():
     d = Dummy()
     # Contrived example of name clash

@@ -761,8 +761,16 @@ class _EvaluatorPrinter(object):
 
         Returns string form of args, and updated expr.
         """
-        from sympy import Dummy, Symbol, Function
+        from sympy import Dummy, Symbol, Function, flatten
         from sympy.matrices import DeferredVector
+
+        dummify = self._dummify
+
+        # Args of type Dummy can cause name collisions with args
+        # of type Symbol.  Force dummify of everything in this
+        # situation.
+        if not dummify:
+            dummify = any(isinstance(arg, Dummy) for arg in flatten(args))
 
         argstrs = []
         for arg in args:
@@ -774,7 +782,7 @@ class _EvaluatorPrinter(object):
             elif isinstance(arg, Symbol):
                 argrep = self._argrepr(arg)
 
-                if self._dummify or not self._is_safe_ident(argrep):
+                if dummify or not self._is_safe_ident(argrep):
                     dummy = Dummy()
                     argstrs.append(self._argrepr(dummy))
                     expr = self._subexpr(expr, {arg: dummy})
