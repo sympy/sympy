@@ -7,6 +7,7 @@ from __future__ import print_function, division
 
 from functools import wraps
 import inspect
+import keyword
 import re
 import textwrap
 
@@ -419,27 +420,31 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     # Create the function definition code and execute it
 
-    # Required for #14655
-    unpack_by_index = _module_present('tensorflow', namespaces)
-
     # For numpy lambdify, wrap all input arguments in arrays.
     # If no arguments are strings, we can safely do this at
     # code generation time.  Otherwise, apply a decorator to the
     # generated function.
     #
     # This is a fix for gh-11306.
-    generate_arg_wrapping = None
+    wrap_numpy_args = False
     apply_numpy_decorator = False
     if module_provided and _module_present('numpy',namespaces):
         if any(isinstance(arg, str) for arg in args):
             apply_numpy_decorator = True
         else:
-            generate_arg_wrapping = _generate_numpy_arg_wrapping
+            wrap_numpy_args = True
 
     funcname = '_lambdifygenerated'
-    funcstr = _lambdastrimpl(args, expr, printer=printer, dummify=dummify,
-            name=funcname, unpack_by_index=unpack_by_index,
-            generate_arg_wrapping=generate_arg_wrapping)
+
+    if _module_present('numpy', namespaces):
+        funcprinter = _NumpyEvaluatorPrinter(
+                printer, dummify, wrap_numpy_args)
+    elif _module_present('tensorflow', namespaces):
+        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
+    else:
+        funcprinter = _EvaluatorPrinter(printer, dummify)
+
+    funcstr = funcprinter.doprint(funcname, args, expr)
 
     funclocals = {}
     exec_(funcstr, namespace, funclocals)
@@ -496,34 +501,120 @@ def _get_namespace(m):
     else:
         raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
 
-
-def lambdastr(args, expr, printer=None, dummify=False,
-        name='_lambdifygenerated'):
+def lambdastr(args, expr, printer=None, dummify=False):
     """
-    Returns a string that can be evaluated to a function.
+    Returns a string that can be evaluated to a lambda function.
 
     Examples
     ========
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.lambdify import lambdastr
-    >>> print(lambdastr(x, x**2, name='f'))
-    def f(x):
-        return (x**2)
-    >>> print(lambdastr((x,y,z), [z,y,x], name='g'))
-    def g(x, y, z):
-        return ([z, y, x])
+    >>> lambdastr(x, x**2)
+    'lambda x: (x**2)'
+    >>> lambdastr((x,y,z), [z,y,x])
+    'lambda x,y,z: ([z, y, x])'
 
     Although tuples may not appear as arguments to lambda in Python 3,
-    lambdastr will add code to unpack the original arguments so that
-    nested arguments can be handled:
+    lambdastr will create a lambda function that will unpack the original
+    arguments so that nested arguments can be handled:
 
-    >>> print(lambdastr((x, (y, z)), x + y, name='h')) # doctest: +SKIP
-    def h(x, _Dummy_18):
-        [y, z] = _Dummy_1802
-        return (x + y)
+    >>> lambdastr((x, (y, z)), x + y)
+    'lambda _0,_1: (lambda x,y,z: (x + y))(_0,_1[0],_1[1])'
     """
-    return _lambdastrimpl(args, expr, printer, dummify, name)
+    # Transforming everything to strings.
+    from sympy.matrices import DeferredVector
+    from sympy import Dummy, sympify, Symbol, Function, flatten
+
+    if printer is not None:
+        if inspect.isfunction(printer):
+            lambdarepr = printer
+        else:
+            if inspect.isclass(printer):
+                lambdarepr = lambda expr: printer().doprint(expr)
+            else:
+                lambdarepr = lambda expr: printer.doprint(expr)
+    else:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import lambdarepr
+
+    def sub_args(args, dummies_dict):
+        if isinstance(args, str):
+            return args
+        elif isinstance(args, DeferredVector):
+            return str(args)
+        elif iterable(args):
+            dummies = flatten([sub_args(a, dummies_dict) for a in args])
+            return ",".join(str(a) for a in dummies)
+        else:
+            #Sub in dummy variables for functions or symbols
+            if isinstance(args, (Function, Symbol)):
+                dummies = Dummy()
+                dummies_dict.update({args : dummies})
+                return str(dummies)
+            else:
+                return str(args)
+
+    def sub_expr(expr, dummies_dict):
+        try:
+            expr = sympify(expr).xreplace(dummies_dict)
+        except Exception:
+            if isinstance(expr, DeferredVector):
+                pass
+            elif isinstance(expr, dict):
+                k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
+                v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
+                expr = dict(zip(k, v))
+            elif isinstance(expr, tuple):
+                expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
+            elif isinstance(expr, list):
+                expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
+        return expr
+
+    # Transform args
+    def isiter(l):
+        return iterable(l, exclude=(str, DeferredVector, NotIterable))
+
+    def flat_indexes(iterable):
+        n = 0
+
+        for el in iterable:
+            if isiter(el):
+                for ndeep in flat_indexes(el):
+                    yield (n,) + ndeep
+            else:
+                yield (n,)
+
+            n += 1
+
+    if isiter(args) and any(isiter(i) for i in args):
+        dum_args = [str(Dummy(str(i))) for i in range(len(args))]
+
+        indexed_args = ','.join([
+            dum_args[ind[0]] + ''.join(["[%s]" % k for k in ind[1:]])
+                    for ind in flat_indexes(args)])
+
+        lstr = lambdastr(flatten(args), expr, printer=printer, dummify=dummify)
+
+        return 'lambda %s: (%s)(%s)' % (','.join(dum_args), lstr, indexed_args)
+
+    dummies_dict = {}
+    if dummify:
+        args = sub_args(args, dummies_dict)
+    else:
+        if isinstance(args, str):
+            pass
+        elif iterable(args, exclude=DeferredVector):
+            args = ",".join(str(a) for a in args)
+
+    # Transform expr
+    if dummify:
+        if isinstance(expr, str):
+            pass
+        else:
+            expr = sub_expr(expr, dummies_dict)
+    expr = lambdarepr(expr)
+    return "lambda %s: (%s)" % (args, expr)
 
 if PY3:
     def _is_safe_ident(ident):
@@ -587,50 +678,122 @@ def _generate_numpy_arg_wrapping(args):
 
     return lines
 
-def _lambdastrimpl(args, expr, printer=None, dummify=False,
-        name='_lambdifygenerated', unpack_by_index=False,
-        generate_arg_wrapping=None):
-    """Generate function definition for lambdify()"""
-    from sympy.matrices import DeferredVector
-    from sympy import Dummy, sympify, Symbol, Function, flatten
-    import re
-    from keyword import iskeyword
+class _EvaluatorPrinter(object):
+    def __init__(self, printer=None, dummify=False):
+        self._dummify = dummify
 
-    if printer is not None:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import LambdaPrinter
+
+        if printer is None:
+            printer = LambdaPrinter()
+
         if inspect.isfunction(printer):
-            lambdarepr = printer
+            self._exprrepr = printer
         else:
             if inspect.isclass(printer):
-                lambdarepr = lambda expr: printer().doprint(expr)
-            else:
-                lambdarepr = lambda expr: printer.doprint(expr)
-    else:
-        #XXX: This has to be done here because of circular imports
-        from sympy.printing.lambdarepr import lambdarepr
+                printer = printer()
 
-    def sub_args(args, dummies_dict):
+            self._exprrepr = printer.doprint
+
+            if hasattr(printer, '_print_Symbol'):
+                symbolrepr = printer._print_Symbol
+
+            if hasattr(printer, '_print_Dummy'):
+                dummyrepr = printer._print_Dummy
+
+        # Used to print the generated function arguments in a standard way
+        self._argrepr = LambdaPrinter().doprint
+
+    def doprint(self, funcname, args, expr):
+        """Returns the function definition code as a string."""
+        from sympy import Dummy
+
+        funcbody = []
+
+        if not iterable(args):
+            args = [args]
+
+        argstrs, expr = self._preprocess(args, expr)
+
+        # Generate argument unpacking and final argument list
+        funcargs = []
+        unpackings = []
+
+        for argstr in argstrs:
+            if iterable(argstr):
+                funcargs.append(self._argrepr(Dummy()))
+                unpackings.extend(self._print_unpacking(argstr, funcargs[-1]))
+            else:
+                funcargs.append(argstr)
+
+        funcsig = 'def {}({}):'.format(funcname, ', '.join(funcargs))
+
+        # Wrap input arguments before unpacking
+        funcbody.extend(self._print_funcargwrapping(funcargs))
+
+        funcbody.extend(unpackings)
+
+        funcbody.append('return ({})'.format(self._exprrepr(expr)))
+
+        funclines = [funcsig]
+        funclines.extend('    ' + line for line in funcbody)
+
+        return '\n'.join(funclines)
+
+    if PY3:
+        @classmethod
+        def _is_safe_ident(cls, ident):
+            return isinstance(ident, str) and ident.isidentifier() \
+                    and not keyword.iskeyword(ident)
+    else:
+        _safe_ident_re = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
+
+        @classmethod
+        def _is_safe_ident(cls, ident):
+            return isinstance(ident, str) and cls._safe_ident_re.match(ident) \
+                and not (keyword.iskeyword(ident) or ident == 'None')
+
+
+    def _preprocess(self, args, expr):
+        """Preprocess args, expr to replace arguments that do not map
+        to valid Python identifiers.
+
+        Returns string form of args, and updated expr.
+        """
+        from sympy import Dummy, Symbol, Function
+        from sympy.matrices import DeferredVector
+
         argstrs = []
         for arg in args:
             if iterable(arg):
-                deepargstrs = sub_args(arg, dummies_dict)
-                argstrs.append(deepargstrs)
+                nested_argstrs, expr = self._preprocess(arg, expr)
+                argstrs.append(nested_argstrs)
             elif isinstance(arg, DeferredVector):
                 argstrs.append(str(arg))
-            elif isinstance(arg, (Function, Symbol)):
-                argrep = lambdarepr(arg)
+            elif isinstance(arg, Symbol):
+                argrep = self._argrepr(arg)
 
-                if dummify or not _is_safe_ident(argrep):
+                if self._dummify or not self._is_safe_ident(argrep):
                     dummy = Dummy()
-                    argstrs.append(lambdarepr(dummy))
-                    dummies_dict[arg] = dummy
+                    argstrs.append(self._argrepr(dummy))
+                    expr = self._subexpr(expr, {arg: dummy})
                 else:
                     argstrs.append(argrep)
+            elif isinstance(arg, Function):
+                dummy = Dummy()
+                argstrs.append(self._argrepr(dummy))
+                expr = self._subexpr(expr, {arg: dummy})
             else:
                 argstrs.append(str(arg))
 
-        return argstrs
+        return argstrs, expr
 
-    def sub_expr(expr, dummies_dict):
+    @staticmethod
+    def _subexpr(expr, dummies_dict):
+        from sympy.matrices import DeferredVector
+        from sympy import sympify
+
         try:
             expr = sympify(expr).xreplace(dummies_dict)
         except Exception:
@@ -646,45 +809,75 @@ def _lambdastrimpl(args, expr, printer=None, dummify=False,
                 expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
         return expr
 
-    funcbody = []
+    def _print_funcargwrapping(self, args):
+        """Generate argument wrapping code.
 
-    if not iterable(args):
-        args = [args]
+        args is the argument list of the generated function (strings).
 
-    dummies_dict = {}
-    argstrs = sub_args(args, dummies_dict)
-    expr = sub_expr(expr, dummies_dict)
+        Return value is a list of lines of code that will be inserted  at
+        the beginning of the function definition.
+        """
+        return []
 
-    # Generate argument unpacking and final argument list
-    funcargs = []
-    unpackings = []
+    def _print_unpacking(self, unpackto, arg):
+        """Generate argument unpacking code.
 
-    for argstr in argstrs:
-        if iterable(argstr):
-            funcargs.append(str(Dummy()))
-            if unpack_by_index:
-                unpackings.extend(
-                    _generate_unpack_indexable(argstr, funcargs[-1]))
-            else:
-                unpackings.extend(
-                    _generate_unpack_iterable(argstr, funcargs[-1]))
-        else:
-            funcargs.append(argstr)
+        arg is the function argument to be unpacked (a string), and
+        unpackto is a list or nested lists of the variable names (strings) to
+        unpack to.
+        """
+        def unpack_lhs(lvalues):
+            return '[{}]'.format(', '.join(
+                unpack_lhs(val) if iterable(val) else val for val in lvalues))
 
-    funcsig = 'def {}({}):'.format(name, ', '.join(funcargs))
+        return ['{} = {}'.format(unpack_lhs(unpackto), arg)]
 
-    # Wrap input arguments before unpacking
-    if generate_arg_wrapping:
-        funcbody.extend(generate_arg_wrapping(funcargs))
+class _NumpyEvaluatorPrinter(_EvaluatorPrinter):
+    def __init__(self, printer=None, dummify=False, wrapargs=True):
+        super(_NumpyEvaluatorPrinter, self).__init__(
+            printer=printer, dummify=dummify)
 
-    funcbody.extend(unpackings)
+        self._wrapargs = wrapargs
 
-    funcbody.append('return ({})'.format(lambdarepr(expr)))
+    def _print_funcargwrapping(self, args):
+        if not self._wrapargs:
+            return []
 
-    funclines = [funcsig]
-    funclines.extend("    " + line for line in funcbody)
+        integer_names = ', '.join(cls.__name__ for cls in integer_types)
 
-    return '\n'.join(funclines)
+        lines = [
+            'builtin_numerics = ({}, float, complex)'.format(integer_names)]
+
+        stmt = 'if isinstance({arg}, builtin_numerics): {arg} = array({arg})'
+        lines.extend(stmt.format(arg=arg) for arg in args)
+
+        return lines
+
+class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
+    def _print_unpacking(self, lvalues, rvalue):
+        """Generate argument unpacking code.
+
+        This method is used when the input value is not interable,
+        but can be indexed (see issue #14655).
+        """
+        from sympy import flatten
+
+        def flat_indexes(elems):
+            n = 0
+
+            for el in elems:
+                if iterable(el):
+                    for ndeep in flat_indexes(el):
+                        yield (n,) + ndeep
+                else:
+                    yield (n,)
+
+                n += 1
+
+        indexed = ', '.join('{}[{}]'.format(rvalue, ']['.join(map(str, ind)))
+                                for ind in flat_indexes(lvalues))
+
+        return ['[{}] = [{}]'.format(', '.join(flatten(lvalues)), indexed)]
 
 def _imp_namespace(expr, namespace=None):
     """ Return namespace dict with function implementations
