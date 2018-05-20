@@ -18,7 +18,7 @@ from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, er
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul,
-    Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E,
+    Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E, Function,
     expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr)
 from mpmath import appellf1
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
@@ -484,7 +484,10 @@ def IntegerPart(a):
     return floor(a)
 
 def AppellF1(a, b1, b2, c, x, y):
-    return appellf1(a, b1, b2, c, x, y)
+    try:
+        return appellf1(a, b1, b2, c, x, y)
+    except TypeError:
+        return Function('AppellF1')(a, b1, b2, c, x, y)
 
 def EllipticPi(*args):
     return elliptic_pi(*args)

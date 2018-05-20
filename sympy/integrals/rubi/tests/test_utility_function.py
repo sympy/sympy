@@ -133,6 +133,7 @@ def test_IntegerPart():
 
 def test_AppellF1():
     assert AppellF1(1,0,0.5,1,0.5,0.25) == 1.154700538379251529018298
+    assert AppellF1(a, b, c, d, e, f) == AppellF1(a, b, c, d, e, f)
 
 def test_Simplify():
     assert Simplify(sin(x)**2 + cos(x)**2) == 1
