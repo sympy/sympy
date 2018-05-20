@@ -1,0 +1,71 @@
+class State(object):
+    """A representation of a state managed by a ``StateMachine``.
+
+    Attributes:
+        name (str): State name which is also assigned to the Machine.
+        transisitons (OrderedDict): Represents all the transitions of the state object.
+        is_start (boolean): To mark if the state is a start state.
+        is_dead (boolean): To mark if the state is a dead state.
+        is_accept (boolean): To mark if te state is an accept state.
+    """
+    transistions = []
+
+    def __init__(self, name, is_start=False, is_dead=False, is_accept=False):
+        self.name = name
+        self.is_start = is_start
+        self.is_dead = is_dead
+        self.is_accept = is_accept 
+
+    def add_transisiton(self, alphabet, state) 
+        """
+        This method is to add a transition from the current state to a new state. 
+
+        Arguments: 
+            alphabet: The alphabet the current state reads to make the state transition. 
+            state: This will be an instance of the State object which represents a new state after in the transition after the alphabet is read. 
+        """
+        self.transistions[alphabet] = state
+
+    def set_start(self):
+        self.is_start = True
+    
+    def set_dead(self):
+        self.is_accept = False
+        self.is_dead = True
+
+    def set_accept(self):
+        self.is_dead = False
+        self.is_accept = True
+    
+    def __repr__(self):
+        return "%s" % (self.name)
+
+class StateMachine(object):
+    """ The state machine class which manages the states and their transisitons of the automata.
+
+    Attribute:
+        states (OrderedDict): Collection of all registered states.
+        name (str): Name of the state machine.
+    """
+
+    states = [] # Contains all the states in the machine.
+
+    def __init__(self, name):
+        self.name = name
+
+    def add_state(self, state_name, is_start=False, is_dead=False, is_accept=False):
+        """
+        This instantiates a state object and stores this in the 'states' list.
+
+        Arguments: 
+            Same as the __init__ function of the State class. 
+        """
+        new_state = State(state_name, is_start, is_dead, is_accept)
+        states.append(new_state) 
+
+    def __repr__(self):
+        return "%s" % (self.name)
+    
+
+
+
