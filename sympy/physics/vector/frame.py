@@ -697,7 +697,8 @@ class ReferenceFrame(object):
 
         """
 
-        newframe = self.__class__(newname, variables, indices, latexs)
+        newframe = self.__class__(newname, variables=variables,
+                                  indices=indices, latexs=latexs)
         newframe.orient(self, rot_type, amounts, rot_order)
         return newframe
 
