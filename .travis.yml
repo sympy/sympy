@@ -252,19 +252,18 @@ install:
   # -We:invalid makes invalid escape sequences error in Python 3.6. See
   # -#12028.
   - |
-    if [[ "${TEST_SAGE}" != "true" ]]; then
-      pip install mpmath;
-      if [[ "${TEST_SETUP}" == "true" ]]; then
-      # The install cycle below is to test installation on systems without setuptools.
-        pip uninstall -y setuptools;
-        python -We:invalid setup.py install;
-        pip uninstall -y sympy;
-        pip install --upgrade setuptools;
-      fi
-      python -We:invalid -m compileall -f sympy/;
+    pip install mpmath;
+    if [[ "${TEST_SETUP}" == "true" ]]; then
+    # The install cycle below is to test installation on systems without setuptools.
+      pip uninstall -y setuptools;
       python -We:invalid setup.py install;
-      pip list --format=columns;
+      pip uninstall -y sympy;
+      pip install --upgrade setuptools;
     fi
+    python -We:invalid -m compileall -f sympy/;
+    python -We:invalid setup.py install;
+    pip list --format=columns;
+
 script:
   # Don't run doctr if the build fails
   - set -e
