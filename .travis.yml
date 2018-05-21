@@ -24,7 +24,7 @@ matrix:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
         # autowrap installs libgfortran libgcc gcc cython
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 sage fflas-ffpack=2.2.*"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 sage"
         - TEST_SAGE="true"
       addons:
         apt:
@@ -221,7 +221,7 @@ before_install:
     # We do this conditionally because it saves us some downloading if the
     # version is the same.
         if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-          wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -q -O miniconda.sh;
+          wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -q -O miniconda.sh;
         else
           wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -q -O miniconda.sh;
         fi
