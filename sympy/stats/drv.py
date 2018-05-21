@@ -196,9 +196,8 @@ class DiscretePSpace(PSpace):
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
             dens = density(expr)
-            domain = Intersection(*[i.set for i in self.domain.domains])
             if not isinstance(dens, DiscreteDistribution):
-                dens = DiscreteDistributionHandmade(dens, domain)
+                dens = DiscreteDistributionHandmade(dens)
             z = Dummy('z', real = True)
             space = SingleDiscretePSpace(z, dens)
             return space.probability(condition.__class__(space.value, 0))
