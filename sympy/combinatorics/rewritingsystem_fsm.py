@@ -8,7 +8,7 @@ class State(object):
         is_dead (boolean): To mark if the state is a dead state.
         is_accept (boolean): To mark if te state is an accept state.
     """
-    transistions = []
+    transitions = {}
 
     def __init__(self, name, is_start=False, is_dead=False, is_accept=False):
         self.name = name
@@ -16,7 +16,7 @@ class State(object):
         self.is_dead = is_dead
         self.is_accept = is_accept 
 
-    def add_transisiton(self, alphabet, state) 
+    def add_transition(self, alphabet, state):
         """
         This method is to add a transition from the current state to a new state. 
 
@@ -24,7 +24,7 @@ class State(object):
             alphabet: The alphabet the current state reads to make the state transition. 
             state: This will be an instance of the State object which represents a new state after in the transition after the alphabet is read. 
         """
-        self.transistions[alphabet] = state
+        self.transitions[alphabet] = state
 
     def set_start(self):
         self.is_start = True
@@ -32,6 +32,7 @@ class State(object):
     def set_dead(self):
         self.is_accept = False
         self.is_dead = True
+        self.transisitons = {} # empty the transitions if it is a dead state.
 
     def set_accept(self):
         self.is_dead = False
@@ -44,7 +45,7 @@ class StateMachine(object):
     """ The state machine class which manages the states and their transisitons of the automata.
 
     Attribute:
-        states (OrderedDict): Collection of all registered states.
+        states (list of States): Collection of all registered states.
         name (str): Name of the state machine.
     """
 
@@ -61,11 +62,7 @@ class StateMachine(object):
             Same as the __init__ function of the State class. 
         """
         new_state = State(state_name, is_start, is_dead, is_accept)
-        states.append(new_state) 
+        self.states.append(new_state) 
 
     def __repr__(self):
         return "%s" % (self.name)
-    
-
-
-
