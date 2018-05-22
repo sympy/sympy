@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy import S
 from sympy.combinatorics.free_groups import FreeGroupElement
+from sympy.combinatorics.rewritingsystem_fsm import State, StateMachine
 
 class RewritingSystem(object):
     '''
@@ -38,7 +39,7 @@ class RewritingSystem(object):
 
         # Automaton variables 
         self.automaton_alphabets = []
-        self.prefixes = []
+        self.left_hand_rules = []
         self.proper_prefixes = {}
 
     def set_max(self, n):
@@ -306,12 +307,13 @@ class RewritingSystem(object):
             if not gen**-1 in generators:
                 generators.append(gen**-1)
 
-        # Contains the alphabets that will be used for state transitions
+        # Contains the alphabets that will be used for state transitions.
         self.automaton_alphabets = generators
 
+        # Store the complete left hand side of the rules - dead states.        
         for r in self.rules:
-            if not r in self.prefixes:
-                self.prefixes.append(r)
+            if not r in self.left_hand_rules:
+                self.left_hand_rules.append(r)
 
         # Compute the proper prefixes for every rule.
         for r in self.rules:
@@ -321,6 +323,53 @@ class RewritingSystem(object):
                 letter_word_array[i] = letter_word_array[i-1]*letter_word_array[i]
             self.proper_prefixes[r] = letter_word_array
         
-        print(self.automaton_alphabets)
-        print(self.prefixes)
-        print(self.proper_prefixes)
+        # Create the states in the automaton. 
+        # The left-hand side of the rules are the dead states.
+        # The proper left-hand side of the rules are the accept states.
+
+        fsm = StateMachine('fsm')
+        fsm.add_state('start', is_start=True)
+
+        # Add dead states. 
+        for rule in self.left_hand_rules:
+            if not rule in fsm.state_names:
+                fsm.add_state(rule, is_dead=True)
+
+        # Add accept states.
+        for r in self.rules:
+            prop_prefix = self.proper_prefixes[r]
+            for elem in prop_prefix:
+                if not elem in fsm.state_names:
+                    fsm.add_state(elem, is_accept=True)
+
+        # Add transitions for every state
+        for state in fsm.states:
+            current_state_name = state.name
+            current_state_type = state.state_type
+            # print(current_state_type)
+            if current_state_type == "start":
+                for letter in self.automaton_alphabets:
+                    if letter in fsm.state_names:
+                        state.add_transition(letter, letter)
+                    else:
+                        state.add_transition(letter, current_state_name)
+            elif current_state_type == "accept":
+                for letter in self.automaton_alphabets:
+                    next = current_state_name*letter
+                    len_next_word = len(next)
+                    # print(next, len_next_word, len(current_state_name))
+                    while True:
+                        if len(next) <= 1:
+                            if next in fsm.state_names:
+                                state.add_transition(letter, next)
+                            else:
+                                state.add_transition(letter, 'start')
+                            break
+                        else:
+                            if next in fsm.state_names:
+                                state.add_transition(letter, next)
+                                break
+                            next = next.subword(1, len(next))
+
+        # for i in fsm.states:
+        #     print(i.name, i.state_type, i.transitions)
