@@ -14,7 +14,7 @@ class State(object):
         self.name = name
         self.is_start = is_start
         self.is_dead = is_dead
-        self.is_accept = is_accept 
+        self.is_accept = is_accept
 
     def add_transition(self, alphabet, state):
         """

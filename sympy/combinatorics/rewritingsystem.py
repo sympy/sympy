@@ -36,6 +36,11 @@ class RewritingSystem(object):
         self.rules_cache = deque([], 50)
         self._init_rules()
 
+        # Automaton variables 
+        self.automaton_alphabets = []
+        self.prefixes = []
+        self.proper_prefixes = {}
+
     def set_max(self, n):
         '''
         Set the maximum number of rules that can be defined
@@ -285,3 +290,37 @@ class RewritingSystem(object):
                 if new != prev:
                     again = True
         return new
+
+    def construct_automaton(self):
+        '''
+        Construct the automaton based on the set of reduction rules of the system.
+
+        Automata Design:
+        1. The accept states of the automaton are the proper prefixes of the left hand side of the rules.
+        2. The complete left hand side of the rules are the dead states of the automaton
+
+        '''
+
+        generators = [x for x in self.alphabet]
+        for gen in generators:
+            if not gen**-1 in generators:
+                generators.append(gen**-1)
+
+        # Contains the alphabets that will be used for state transitions
+        self.automaton_alphabets = generators
+
+        for r in self.rules:
+            if not r in self.prefixes:
+                self.prefixes.append(r)
+
+        # Compute the proper prefixes for every rule.
+        for r in self.rules:
+            self.proper_prefixes[r] = []
+            letter_word_array = [s for s in r.letter_form_elm]
+            for i in range (1, len(letter_word_array)):
+                letter_word_array[i] = letter_word_array[i-1]*letter_word_array[i]
+            self.proper_prefixes[r] = letter_word_array
+        
+        print(self.automaton_alphabets)
+        print(self.prefixes)
+        print(self.proper_prefixes)
