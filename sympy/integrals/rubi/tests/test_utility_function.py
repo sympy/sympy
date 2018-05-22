@@ -62,6 +62,7 @@ def test_PositiveQ():
     assert not PositiveQ(S(0))
     assert not PositiveQ(zoo)
     assert not PositiveQ(I)
+    assert PositiveQ(b/(b*(b*c/(-a*d + b*c)) - a*(b*d/(-a*d + b*c))))
 
 def test_IntegerQ():
     assert IntegerQ(S(1))

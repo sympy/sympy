@@ -231,6 +231,7 @@ def Log(e):
     return log(e)
 
 def PositiveQ(var):
+    var = simplify(var)
     if var in (zoo, oo, I, -I):
         return False
     res = var > 0
