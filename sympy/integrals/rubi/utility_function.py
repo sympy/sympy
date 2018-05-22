@@ -158,8 +158,8 @@ if matchpy:
     a, b, c, d, e = symbols('a b c d e')
 
 def Int(expr, var):
-    from sympy.integrals.rubi.rubi import rubi_integrate
-    return rubi_integrate(expr, var)
+    from sympy.integrals.rubi.rubi import util_rubi_integrate
+    return util_rubi_integrate(expr, var)
 
 def Set(expr, value):
     return {expr: value}

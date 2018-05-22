@@ -360,6 +360,8 @@ def replaceWith(s, symbols, index):
     '''
     Replaces `With` and `Module by python functions`
     '''
+    return_type = None 
+    with_value = ''
     if type(s) == Function('With') or type(s) == Function('Module'):
         constraints = ' '
         result = '    def With{}({}):'.format(index, ', '.join(symbols))
@@ -370,42 +372,45 @@ def replaceWith(s, symbols, index):
 
         for i in L: # define local variables
             if isinstance(i, Set):
-                result += '\n        {} = {}'.format(i.args[0], sstr(i.args[1], sympy_integers=True))
+                with_value += '\n        {} = {}'.format(i.args[0], sstr(i.args[1], sympy_integers=True))
+                #result += with_value
             elif isinstance(i, Symbol):
-                result += "\n        {} = Symbol('{}')".format(i, i)
+                with_value += "\n        {} = Symbol('{}')".format(i, i)
+        result += with_value
         if type(s.args[1]) == Function('CompoundExpression'): # Expand CompoundExpression
             C = s.args[1]
             if isinstance(C.args[0], Set):
                 result += '\n        {} = {}'.format(C.args[0].args[0], C.args[0].args[1])
-            result += '\n        return {}'.format(sstr(C.args[1], sympy_integers=True))
-            return result, constraints
+            result += '\n        rubi.append({})\n        return {}'.format(index, sstr(C.args[1], sympy_integers=True))
+            return result, constraints, return_type
         elif type(s.args[1]) == Function('Condition'):
             C = s.args[1]
             if len(C.args) == 2:
                 if all(j in symbols for j in [str(i) for i in C.free_symbols]):
                     #constraints += 'CustomConstraint(lambda {}: {})'.format(', '.join([str(i) for i in C.free_symbols]), sstr(C.args[1], sympy_integers=True))
-                    result += '\n        return {}'.format(sstr(C.args[0], sympy_integers=True))
+                    result += '\n        rubi.append({})\n        return {}'.format(index, sstr(C.args[0], sympy_integers=True))
                 else:
                     result += '\n        if {}:'.format(sstr(C.args[1], sympy_integers=True))
-                    result += '\n            return {}'.format(sstr(C.args[0], sympy_integers=True))
+                    return_type = (with_value, sstr(C.args[0], sympy_integers=True))
+                    result += '\n            return True'
                     result += '\n        return False'
 
             constraints = ', CustomConstraint(With{})'.format(index)
-            return result, constraints
-        result += '\n        return {}'.format(sstr(s.args[1], sympy_integers=True))
-        return result, constraints
+            return result, constraints, return_type
+        result += '\n        rubi.append({})\n        return {}'.format(index, sstr(s.args[1], sympy_integers=True))
+        return result, constraints, return_type
     else:
-        return sstr(s, sympy_integers=True), ''
+        return sstr(s, sympy_integers=True), '', return_type
 
 def downvalues_rules(r, header, cons_dict, cons_index, index):
     '''
     Function which generates parsed rules by substituting all possible
     combinations of default values.
     '''
+    rules = '['
     parsed = '\n\n'
     cons = ''
     cons_import = []
-    rules = '('
     for i in r:
         print('parsing rule {}'.format(r.index(i) + 1))
         # Parse Pattern
@@ -438,20 +443,26 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
         cons+=constraint_def
         index += 1
         if type(transformed) == Function('With') or type(transformed) == Function('Module'): # define separate function when With appears
-            transformed, With_constraints = replaceWith(transformed, free_symbols, index)
-            parsed += '{}'.format(transformed)
-            parsed += '\n    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + With_constraints + ')'
-            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', With{}'.format(index) + ')\n    '
+            transformed, With_constraints, return_type = replaceWith(transformed, free_symbols, index)
+            if return_type is None:
+                parsed += '{}'.format(transformed)
+                parsed += '\n    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
+                parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', With{}'.format(index) + ')\n'
+            else:
+                parsed += '{}'.format(transformed)
+                parsed += '\n    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + With_constraints + ')'
+                parsed += '\n    def replacement{}({}):\n        '.format(index, ', '.join(free_symbols)) + return_type[0] + '\n        rubi.append({})\n        return '.format(index) + return_type[1]
+                parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
+
         else:
             transformed = sstr(transformed, sympy_integers=True)
             parsed += '    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
-            parsed += '\n    def replacement{}({}):\n        return '.format(index, ', '.join(free_symbols)) + transformed
-            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n    '
-        parsed += 'rubi.add(rule{}.pattern, label = {})\n\n'.format(index, index)
+            parsed += '\n    def replacement{}({}):\n        rubi.append({})\n        return '.format(index, ', '.join(free_symbols), index) + transformed
+            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
         rules += 'rule{}, '.format(index)
-
-    rules += '))'
-    parsed += '    return (rubi' +', ' + rules + '\n'
+        #parsed += 'rubi.add(rule{})\n\n'.format(index)
+    rules += ']'
+    parsed += '    return' + rules +'\n'
 
     header += '    from sympy.integrals.rubi.constraints import ' + ', '.join(word for word in cons_import)
     parsed = header + parsed
@@ -486,9 +497,9 @@ def rubi_rule_parser(fullform, header=None, module_name='rubi_object'):
     cons_index =0
     index = 0
     cons = ''
-    input =['integrand_simplification.txt', 'linear_product.txt', 'quadratic_product.txt', 'binomial_product.txt' ]
-    output =['integrand_simplification.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py' ]
-    for k in range(0, 4):
+    input =['integrand_simplification.txt', 'linear_product.txt', 'quadratic_product.txt', 'binomial_product.txt', 'trinomial_product.txt', 'miscellaneous_algebra.txt' ]
+    output =['integrand_simplification.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py', 'trinomial_products.py', 'miscellaneous_algebraic.py' ]
+    for k in range(0, 6):
         with open(input[k], 'r') as myfile:
             fullform =myfile.read().replace('\n', '')
         for i in temporary_variable_replacement:
