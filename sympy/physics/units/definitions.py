@@ -52,7 +52,7 @@ meter.set_scale_factor(One)
 
 kg = kilogram = kilograms = Quantity("kilogram", abbrev="kg")
 kilogram.set_dimension(mass)
-kilogram.set_scale_factor(kilo)
+kilogram.set_scale_factor(One)
 
 s = second = seconds = Quantity("second", abbrev="s")
 second.set_dimension(time)
@@ -79,7 +79,7 @@ candela.set_scale_factor(One)
 
 g = gram = grams = Quantity("gram", abbrev="g")
 gram.set_dimension(mass)
-gram.set_scale_factor(One)
+gram.set_scale_factor(milli*kilogram)
 
 mg = milligram = milligrams = Quantity("milligram", abbrev="mg")
 milligram.set_dimension(mass)
@@ -430,7 +430,7 @@ psi = Quantity("psi")
 psi.set_dimension(pressure)
 psi.set_scale_factor(pound * gee / inch ** 2)
 
-dHg0 = 13.5951  # approx value at 0 C
+dHg0 = 13595.1  # approx value at 0 C in kg/m^3
 mmHg = torr = Quantity("mmHg")
 mmHg.set_dimension(pressure)
 mmHg.set_scale_factor(dHg0 * acceleration_due_to_gravity * kilogram / meter**2)
