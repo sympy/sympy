@@ -8,7 +8,7 @@ class State(object):
         is_dead (boolean): To mark if the state is a dead state.
         is_accept (boolean): To mark if te state is an accept state.
     """
-    
+
 
     def __init__(self, name, is_start=False, is_dead=False, is_accept=False):
         self.name = name
@@ -56,7 +56,7 @@ class StateMachine(object):
         states (list of States): Collection of all registered.
         name (str): Name of the state machine.
     """
-    
+
     def __init__(self, name):
         self.name = name
         self.states = [] # Contains all the states in the machine.
