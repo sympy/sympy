@@ -6,4 +6,4 @@ Recurrence Evaluation - reval_hcc
 """
 
 
-from .transforms import (fft, ifft)
+from .transforms import (fft, ifft, ntt, intt)
