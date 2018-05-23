@@ -37,7 +37,7 @@ class RewritingSystem(object):
         self.rules_cache = deque([], 50)
         self._init_rules()
 
-        # Automaton variables 
+        # Automaton variables
         self.automaton_alphabets = []
         self.left_hand_rules = []
         self.proper_prefixes = {}
@@ -310,7 +310,7 @@ class RewritingSystem(object):
         # Contains the alphabets that will be used for state transitions.
         self.automaton_alphabets = generators
 
-        # Store the complete left hand side of the rules - dead states.        
+        # Store the complete left hand side of the rules - dead states.
         for r in self.rules:
             if not r in self.left_hand_rules:
                 self.left_hand_rules.append(r)
@@ -323,14 +323,14 @@ class RewritingSystem(object):
                 letter_word_array[i] = letter_word_array[i-1]*letter_word_array[i]
             self.proper_prefixes[r] = letter_word_array
 
-        # Create the states in the automaton. 
+        # Create the states in the automaton.
         # The left-hand side of the rules are the dead states.
         # The proper left-hand side of the rules are the accept states.
 
         fsm = StateMachine('fsm')
         fsm.add_state('start', is_start=True)
 
-        # Add dead states. 
+        # Add dead states.
         for rule in self.left_hand_rules:
             if not rule in fsm.state_names:
                 fsm.add_state(rule, is_dead=True)
@@ -368,16 +368,15 @@ class RewritingSystem(object):
                                 state.add_transition(letter, next)
                                 break
                             next = next.subword(1, len(next))
-        
         return fsm
 
     def reduce_using_automaton(self, word):
         '''
-        The method for word reduction using automaton is mentioned in the section 13.1.3 of the Handook. 
+        The method for word reduction using automaton is mentioned in the section 13.1.3 of the Handook.
         All the elements of the automaton are stored in an array and are given as the input to the automaton.
-        If the automaton reaches a dead state that subword is replaced and the automaton is run from the beginning. 
+        If the automaton reaches a dead state that subword is replaced and the automaton is run from the beginning.
         This is repeated until the word reached the end and the automaton stays in the accept state.
-        
+
         '''
         fsm = self.construct_automaton()
         while True:
@@ -396,7 +395,7 @@ class RewritingSystem(object):
                     flag = 0
                     break
                 current_state = next_state
-            # Break if the whole word is read and no dead state is encountered. 
+            # Break if the whole word is read and no dead state is encountered.
             if flag == 1:
                 break
         return word

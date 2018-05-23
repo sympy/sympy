@@ -22,22 +22,22 @@ class State(object):
         elif is_accept:
             self.state_type = "accept"
         elif is_dead:
-            self.state_type = "dead"           
+            self.state_type = "dead"
 
     def add_transition(self, alphabet, state):
         """
-        This method is to add a transition from the current state to a new state. 
+        This method is to add a transition from the current state to a new state.
 
         Arguments:
-            alphabet: The alphabet the current state reads to make the state transition. 
-            state: This will be an instance of the State object which represents a new state after in the transition after the alphabet is read. 
+            alphabet: The alphabet the current state reads to make the state transition.
+            state: This will be an instance of the State object which represents a new state after in the transition after the alphabet is read.
         """
         self.transitions[alphabet] = state
 
     def set_start(self):
         self.is_start = True
         self.state_type = "start"
-    
+
     def set_dead(self):
         self.is_accept = False
         self.is_dead = True
@@ -66,7 +66,7 @@ class StateMachine(object):
         """
         This instantiates a state object and stores this in the 'states' list.
 
-        Arguments: 
+        Arguments:
             Same as the __init__ function of the State class.
         """
         new_state = State(state_name, is_start, is_dead, is_accept)
