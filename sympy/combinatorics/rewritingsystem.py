@@ -322,7 +322,7 @@ class RewritingSystem(object):
             for i in range (1, len(letter_word_array)):
                 letter_word_array[i] = letter_word_array[i-1]*letter_word_array[i]
             self.proper_prefixes[r] = letter_word_array
-        
+
         # Create the states in the automaton. 
         # The left-hand side of the rules are the dead states.
         # The proper left-hand side of the rules are the accept states.
@@ -346,7 +346,6 @@ class RewritingSystem(object):
         for state in fsm.states:
             current_state_name = state.name
             current_state_type = state.state_type
-            # print(current_state_type)
             if current_state_type == "start":
                 for letter in self.automaton_alphabets:
                     if letter in fsm.state_names:
@@ -357,7 +356,6 @@ class RewritingSystem(object):
                 for letter in self.automaton_alphabets:
                     next = current_state_name*letter
                     len_next_word = len(next)
-                    # print(next, len_next_word, len(current_state_name))
                     while True:
                         if len(next) <= 1:
                             if next in fsm.state_names:
@@ -370,6 +368,35 @@ class RewritingSystem(object):
                                 state.add_transition(letter, next)
                                 break
                             next = next.subword(1, len(next))
+        
+        return fsm
 
-        # for i in fsm.states:
-        #     print(i.name, i.state_type, i.transitions)
+    def reduce_using_automaton(self, word):
+        '''
+        The method for word reduction using automaton is mentioned in the section 13.1.3 of the Handook. 
+        All the elements of the automaton are stored in an array and are given as the input to the automaton.
+        If the automaton reaches a dead state that subword is replaced and the automaton is run from the beginning. 
+        This is repeated until the word reached the end and the automaton stays in the accept state.
+        
+        '''
+        fsm = self.construct_automaton()
+        while True:
+            flag = 1
+            current_state = fsm.states[0]
+            word_array = [s for s in word.letter_form_elm]
+            for i in range (0, len(word_array)):
+                next_state_name = current_state.transitions[word_array[i]]
+                next_state = None
+                for state in fsm.states:
+                    if state.name == next_state_name:
+                        next_state = state
+                if next_state.state_type == "dead":
+                    subst = self.rules[next_state_name]
+                    word = word.substituted_word(i - len(next_state_name) + 1, i+1, subst)
+                    flag = 0
+                    break
+                current_state = next_state
+            # Break if the whole word is read and no dead state is encountered. 
+            if flag == 1:
+                break
+        return word

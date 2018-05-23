@@ -12,6 +12,10 @@ def test_rewriting():
     assert G.reduce(b**3*a**4*b**-2*a) == a**5*b
     assert G.equals(b**2*a**-1*b, b**4*a**-1*b**-1)
 
+    assert R.reduce_using_automaton(b*a*a**2*b**-1) == a**3
+    assert R.reduce_using_automaton(b**3*a**4*b**-2*a) == a**5*b
+    assert R.reduce_using_automaton(b**-1*a) == a*b**-1
+
     G = FpGroup(F, [a**3, b**3, (a*b)**2])
     R = G._rewriting_system
     R.make_confluent()
