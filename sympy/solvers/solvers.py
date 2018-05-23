@@ -1847,12 +1847,7 @@ def _solve_system(exprs, symbols, **flags):
                 except NotImplementedError:
                     failed.extend([g.as_expr() for g in polys])
                     solved_syms = []
-                if result:
-                    # we don't know here if the symbols provided were given
-                    # or not, so let solve resolve that. A list of dictionaries
-                    # is going to always be returned from here.
-                    #
-                    result = [dict(list(zip(solved_syms, r))) for r in result]
+                    result = []
 
     if result:
         if isinstance(result, dict):
@@ -1875,7 +1870,6 @@ def _solve_system(exprs, symbols, **flags):
 
         solved_syms = set(solved_syms)  # set of symbols we have solved for
         legal = set(symbols)  # what we are interested in
-
         # sort so equation with the fewest potential symbols is first
         u = Dummy()  # used in solution checking
         for eq in ordered(failed, lambda _: len(_ok_syms(_))):

@@ -222,6 +222,8 @@ def solve_generic(polys, opt):
             for solution in _solve_reduced_system(new_system, new_gens):
                 solutions.append(solution + (zero,))
 
+        if solutions and len(solutions[0]) != len(gens):
+            raise NotImplementedError
         return solutions
 
     try:
