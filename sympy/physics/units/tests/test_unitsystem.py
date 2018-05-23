@@ -56,7 +56,7 @@ def test_print_unit_base():
         Js.set_scale_factor(S.One)
 
         mksa = UnitSystem((m, kg, s, A), (Js,))
-        assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
+        assert mksa.print_unit_base(Js) == m**2*kg*s**-1
 
 
 def test_extend():
