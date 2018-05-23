@@ -14,10 +14,12 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.containers import Tuple
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand_complex, AppliedUndef, Function)
+from sympy.core.function import (Lambda, expand_complex, AppliedUndef, Function,
+                                expand_log)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
+from sympy.simplify import powdenest
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold, Piecewise)
@@ -29,9 +31,9 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
 from sympy.sets.sets import Set
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
-                         RootOf)
+                         RootOf, factor)
 from sympy.solvers.solvers import (checksol, denoms, unrad,
-    _simple_dens, recast_to_symbols)
+    _simple_dens, recast_to_symbols, _ispow)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -876,7 +878,12 @@ def _solveset(f, symbol, domain, _check=False):
                     elif equation.has(Abs):
                         result += _solve_abs(f, symbol, domain)
                     else:
-                        result += _solve_as_rational(equation, symbol, domain)
+                        new_result = _solve_as_rational(equation, symbol, domain)
+                        if isinstance(new_result, ConditionSet):
+                            # may be a transcendental type equation
+                            result += transolve(equation, symbol, domain)
+                        else:
+                            result += new_result
                 else:
                     result += solver(equation, symbol)
 
@@ -908,6 +915,70 @@ def _solveset(f, symbol, domain, _check=False):
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
 
+    return result
+
+
+def _expo_solver(f, symbol):
+
+    a, b = ordered(f.args)
+    
+    lhs = a
+    rhs = -b
+
+    lhs = expand_log(log(lhs), force=True)
+    rhs = expand_log(log(rhs), force=True)
+
+    return (lhs - rhs)
+
+
+def _check_expo(f, symbol):
+
+    try:
+        a, b = ordered(f.args)
+    except ValueError:
+        return False
+
+    ad = a.as_independent(symbol)[1]
+    bd = b.as_independent(symbol)[1]
+
+    return any(_ispow(i) for i in (ad, bd))
+
+
+def transolve(f, symbol, domain, **flags):
+    """Helper for solving transcendental equations."""
+
+    if 'tsolve_saw' not in flags:
+        flags['tsolve_saw'] = []
+    if f in flags['tsolve_saw']:
+        return ConditionSet(symbol, Eq(f, 0), domain)
+    else:
+        flags['tsolve_saw'].append(f)
+
+    inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
+    lhs, rhs_s = inverter(f, 0, symbol, domain)
+
+    result = ConditionSet(symbol, Eq(f, 0), domain)
+
+    if lhs.is_Add:
+        # do we need a loop for rhs?
+        # Can't determine a case as of now.
+        rhs = rhs_s.args[0]
+        equation = factor(powdenest(lhs-rhs))    
+
+        if equation.is_Mul:
+            result = _solveset(equation, symbol, domain)
+
+        # check if it is exponential type equation
+        elif _check_expo(equation, symbol):
+            new_f = _expo_solver(equation, symbol)
+            result = _solveset(new_f, symbol, domain)
+
+            if isinstance(result, ConditionSet):
+                result = ConditionSet(symbol, Eq(f, 0), domain)
+
+        else:
+            result = transolve(f, symbol, domain, **flags)
+    
     return result
 
 
