@@ -20,7 +20,7 @@ from sympy.utilities.iterables import ibin
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _fourier_transform(seq, symbolic, inverse=False):
+def _fourier_transform(seq, symbolic, dps, inverse=False):
     """Utility function for the Discrete Fourier Transform (DFT)"""
 
     if not iterable(seq):
@@ -49,7 +49,9 @@ def _fourier_transform(seq, symbolic, inverse=False):
     ang = -2*pi/n if inverse else 2*pi/n
 
     if not symbolic:
-        ang = ang.evalf()
+        if dps is None:
+            dps = 15
+        ang = ang.evalf(dps + 10)
 
     w = [cos(ang*i) + I*sin(ang*i) for i in range(n // 2)]
 
@@ -63,13 +65,13 @@ def _fourier_transform(seq, symbolic, inverse=False):
         h *= 2
 
     if inverse:
-        for i in range(n):
-            a[i] /= n
+        a = [x/n for x in a] if symbolic else \
+            [(x/n).evalf(dps) for x in a]
 
     return a
 
 
-def fft(seq, symbolic=True):
+def fft(seq, symbolic=True, dps=None):
     r"""
     Performs the Discrete Fourier Transform (DFT) in the complex domain.
 
@@ -84,6 +86,8 @@ def fft(seq, symbolic=True):
     symbolic : bool
         Determines if DFT is to be performed using symbolic values or
         numerical values.
+    dps : Integer
+        Specifies the number of decimal digits for precision.
 
     Examples
     ========
@@ -100,6 +104,11 @@ def fft(seq, symbolic=True):
     >>> fft(_)
     [1, 2, 3, 4]
 
+    >>> ifft([1, 7, 3, 4], symbolic=False)
+    [3.75, -0.5 - 0.75*I, -1.75, -0.5 + 0.75*I]
+    >>> fft(_)
+    [1.0, 7.0, 3.0, 4.0]
+
     >>> fft([5])
     [5]
     >>> ifft([7])
@@ -113,11 +122,11 @@ def fft(seq, symbolic=True):
 
     """
 
-    return _fourier_transform(seq, symbolic=symbolic)
+    return _fourier_transform(seq, symbolic=symbolic, dps=dps)
 
 
-def ifft(seq, symbolic=True):
-    return _fourier_transform(seq, symbolic=symbolic, inverse=True)
+def ifft(seq, symbolic=True, dps=None):
+    return _fourier_transform(seq, symbolic=symbolic, dps=dps, inverse=True)
 
 ifft.__doc__ = fft.__doc__
 
