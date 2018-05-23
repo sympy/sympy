@@ -919,6 +919,18 @@ def _solveset(f, symbol, domain, _check=False):
 
 
 def _expo_solver(f, symbol):
+    """
+    Helper function for solving exponential equations.
+
+    This function solves exponential equation by using logarithms.
+    Exponents are converted to a more general form of logs which can further be
+    solved by passing to _solveset.
+    It deals with equations of type `a*f(x) + b*g(x)`, where f(x) and g(x)
+    are power terms.
+
+    eg: 3**(2*x) - 2**(x + 3) can be transformed to a better log form,
+    2*x*log(3) - (x+3)*log(2), which is easily solvable.
+    """
 
     a, b = ordered(f.args)
 
@@ -932,7 +944,9 @@ def _expo_solver(f, symbol):
 
 
 def _check_expo(f, symbol):
-
+    """
+    Helper to check whether an equation is exponential or not.
+    """
     try:
         a, b = ordered(f.args)
     except ValueError:
