@@ -8,8 +8,8 @@ from sympy.utilities.pytest import raises
 
 
 def test_fft_ifft():
-    assert all(tf(ls) == ls for tf in (fft, ifft) \
-                        for ls in ([], [S(5)/3]))
+    assert all(tf(ls) == ls for tf in (fft, ifft)
+                            for ls in ([], [S(5)/3]))
 
     ls = list(range(6))
     fls = [15, -7*sqrt(2)/2 - 4 - sqrt(2)*I/2 + 2*I, 2 + 3*I,
@@ -32,17 +32,17 @@ def test_fft_ifft():
 
 
 def test_ntt_intt():
-    # prime modulo of the form (m*2**k + 1), sequence length should
+    # prime modulus of the form (m*2**k + 1), sequence length should
     # be a divisor of 2**k
     p = 7*17*2**23 + 1
-    q = 2*500000003 + 1 # prime modulo only for (length = 1)
-    r = 2*3*5*7 # composite modulo
+    q = 2*500000003 + 1 # prime modulus (valid only for unity length)
+    r = 2*3*5*7 # composite modulus
 
-    assert all(tf(ls, p) == ls for tf in (ntt, intt) \
+    assert all(tf(ls, p) == ls for tf in (ntt, intt)
                                 for ls in ([], [5]))
 
     ls = list(range(6))
-    nls = [15, 801133602, 738493201, 334102277, 998244350, 849020224, \
+    nls = [15, 801133602, 738493201, 334102277, 998244350, 849020224,
             259751156, 12232587]
 
     assert ntt(ls, p) == nls
