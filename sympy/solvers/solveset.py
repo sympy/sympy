@@ -921,7 +921,7 @@ def _solveset(f, symbol, domain, _check=False):
 def _expo_solver(f, symbol):
 
     a, b = ordered(f.args)
-    
+
     lhs = a
     rhs = -b
 
@@ -963,7 +963,7 @@ def transolve(f, symbol, domain, **flags):
         # do we need a loop for rhs?
         # Can't determine a case as of now.
         rhs = rhs_s.args[0]
-        equation = factor(powdenest(lhs-rhs))    
+        equation = factor(powdenest(lhs-rhs))
 
         if equation.is_Mul:
             result = _solveset(equation, symbol, domain)
@@ -978,7 +978,11 @@ def transolve(f, symbol, domain, **flags):
 
         else:
             result = transolve(f, symbol, domain, **flags)
-    
+
+    if lhs.is_Pow:
+        new_f = _expo_solver(lhs, symbol)
+        result = _solveset(new_f, symbol, domain)
+
     return result
 
 
