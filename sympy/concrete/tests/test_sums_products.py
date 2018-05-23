@@ -955,6 +955,9 @@ def test_is_convergent():
     assert Sum(1/(n*log(n)*log(log(n))), (n, 5, oo)).is_convergent() is S.false
     assert Sum((n - 1)/(n*log(n)**3), (n, 3, oo)).is_convergent() is S.false
     assert Sum(2/(n**2*log(n)), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(n*sqrt(log(n))*log(log(n))), (n, 100, oo)).is_convergent() is S.false
+    assert Sum(log(log(n))/(n*log(n)**2), (n, 100, oo)).is_convergent() is S.true
+    assert Sum(log(n)/n**2, (n, 5, oo)).is_convergent() is S.true
 
     # alternating series tests --
     assert Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() is S.true
@@ -989,8 +992,6 @@ def test_is_absolutely_convergent():
 
 @XFAIL
 def test_convergent_failing():
-    assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
@@ -1016,3 +1017,34 @@ def test_issue_14112():
     assert Sum((-1)**n/sqrt(n), (n, 1, oo)).is_absolutely_convergent() is S.false
     assert Sum((-1)**(2*n)/n, (n, 1, oo)).is_convergent() is S.false
     assert Sum((-2)**n + (-3)**n, (n, 1, oo)).is_convergent() is S.false
+
+
+def test_sin_times_absolutely_convergent():
+    assert Sum(sin(n) / n**3, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(sin(n) * log(n) / n**3, (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_14111():
+    assert Sum(1/log(log(n)), (n, 22, oo)).is_convergent() is S.false
+
+
+def test_issue_14484():
+    raises(NotImplementedError, lambda: Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent())
+
+
+def test_issue_14640():
+    i, n = symbols("i n", integer=True)
+    a, b, c = symbols("a b c")
+
+    assert Sum(a**-i/(a - b), (i, 0, n)).doit() == Sum(
+        1/(a*a**i - a**i*b), (i, 0, n)).doit() == Piecewise(
+            (n + 1, Eq(1/a, 1)),
+            ((-a**(-n - 1) + 1)/(1 - 1/a), True))/(a - b)
+
+    assert Sum((b*a**i - c*a**i)**-2, (i, 0, n)).doit() == Piecewise(
+        (n + 1, Eq(a**(-2), 1)),
+        ((-a**(-2*n - 2) + 1)/(1 - 1/a**2), True))/(b - c)**2
+
+    s = Sum(i*(a**(n - i) - b**(n - i))/(a - b), (i, 0, n)).doit()
+    assert not s.has(Sum)
+    assert s.subs({a: 2, b: 3, n: 5}) == 122

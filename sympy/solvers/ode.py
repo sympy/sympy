@@ -952,7 +952,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return classify_ode(eq.lhs - eq.rhs, func, ics=ics, xi=xi,
+            return classify_ode(eq.lhs - eq.rhs, func, dict=dict, ics=ics, xi=xi,
                 n=terms, eta=eta, prep=False)
         eq = eq.lhs
     order = ode_order(eq, f(x))
@@ -2028,7 +2028,7 @@ def checksysodesol(eqs, sols, func=None):
     can be supplied through the ``func`` argument.
 
     When a sequence of equations is passed, the same sequence is used to return
-    the result for each equation with each function substitued with corresponding
+    the result for each equation with each function substituted with corresponding
     solutions.
 
     It tries the following method to find zero equivalence for each equation:
@@ -4029,7 +4029,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     constant, `r` is a root of the characteristic equation, and `k` ranges
     over the multiplicity of `r`.  In the cases where the roots are complex,
     solutions of the form `C_1 x^a \sin(b \log(x)) + C_2 x^a \cos(b \log(x))`
-    are returned, based on expansions with Eulers formula.  The general
+    are returned, based on expansions with Euler's formula.  The general
     solution is the sum of the terms found.  If SymPy cannot find exact roots
     to the characteristic equation, a
     :py:class:`~sympy.polys.rootoftools.CRootOf` instance will be returned
@@ -4167,7 +4167,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients(eq, func, o
     solutions of the form `x = exp(t)`, and deriving a characteristic equation
     of form `g(exp(t)) = b_0 f(t) + b_1 f'(t) + b_2 f''(t) \cdots` which can
     be then solved by nth_linear_constant_coeff_undetermined_coefficients if
-    g(exp(t)) has finite number of lineary independent derivatives.
+    g(exp(t)) has finite number of linearly independent derivatives.
 
     Functions that fit this requirement are finite sums functions of the form
     `a x^i e^{b x} \sin(c x + d)` or `a x^i e^{b x} \cos(c x + d)`, where `i`
@@ -5870,7 +5870,7 @@ def lie_heuristic_abaco1_product(match, comp=False):
 
     The second assumption holds good if `\frac{dy}{dx} = h(x, y)` is rewritten as
     `\frac{dy}{dx} = \frac{1}{h(y, x)}` and the same properties of the first assumption
-    satisifes. After obtaining `f(x)` and `g(y)`, the coordinates are again
+    satisfies. After obtaining `f(x)` and `g(y)`, the coordinates are again
     interchanged, to get `\eta` as `f(x)*g(y)`
 
 
@@ -6001,7 +6001,7 @@ def lie_heuristic_chi(match, comp=False):
     that satisfies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
     - \frac{\partial h}{\partial y}\chi = 0`.
 
-    This assumes `\chi` to be a bivariate polynomial in `x` and `y`. By intution,
+    This assumes `\chi` to be a bivariate polynomial in `x` and `y`. By intuition,
     `h` should be a rational function in `x` and `y`. The method used here is
     to substitute a general binomial for `\chi` up to a certain maximum degree
     is reached. The coefficients of the polynomials, are calculated by by collecting
@@ -6090,7 +6090,7 @@ def lie_heuristic_function_sum(match, comp=False):
 
     The second assumption holds good if `\frac{dy}{dx} = h(x, y)` is rewritten as
     `\frac{dy}{dx} = \frac{1}{h(y, x)}` and the same properties of the first
-    assumption satisifes. After obtaining `f(x)` and `g(y)`, the coordinates
+    assumption satisfies. After obtaining `f(x)` and `g(y)`, the coordinates
     are again interchanged, to get `\eta` as `f(x) + g(y)`.
 
     For both assumptions, the constant factors are separated among `g(y)`
@@ -6187,7 +6187,7 @@ def lie_heuristic_abaco2_similar(match, comp=False):
 
     The second assumption holds good if `\frac{dy}{dx} = h(x, y)` is rewritten as
     `\frac{dy}{dx} = \frac{1}{h(y, x)}` and the same properties of the first assumption
-    satisifes. After obtaining `f(x)` and `g(x)`, the coordinates are again
+    satisfies. After obtaining `f(x)` and `g(x)`, the coordinates are again
     interchanged, to get `\xi` as `f(x^*)` and `\eta` as `g(y^*)`
 
     References
@@ -6612,7 +6612,7 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
 
     2. Case when `ad - bc = 0` and `a^{2} + b^{2} > 0`. The whole straight
     line `ax + by = 0` consists of singular points. The original system of differential
-    equaitons can be rewritten as
+    equations can be rewritten as
 
     .. math:: x' = ax + by , y' = k (ax + by)
 
@@ -6846,7 +6846,7 @@ def _linear_2eq_order1_type6(x, y, t, r, eq):
 
     .. math:: y - ax = C_1 e^{-a \int h(t) \,dt}
 
-    and on substituing the value of y in first equation give rise to first order ODEs. After solving for
+    and on substituting the value of y in first equation give rise to first order ODEs. After solving for
     `x`, we can obtain `y` by substituting the value of `x` in second equation.
 
     """
@@ -6901,7 +6901,7 @@ def _linear_2eq_order1_type7(x, y, t, r, eq):
     2. `fgp - g^{2} h + f g' - f' g = ag, fg + gp + g' = bg`
 
     If first condition is satisfied then it is solved by current dsolve solver and in second case it becomes
-    a constant cofficient differential equation which is also solved by current solver.
+    a constant coefficient differential equation which is also solved by current solver.
 
     Otherwise if the above condition fails then,
     a particular solution is assumed as `x = x_0(t)` and `y = y_0(t)`
@@ -7003,7 +7003,7 @@ def _linear_2eq_order2_type1(x, y, t, r, eq):
 
     .. math:: y'' = cx + dy
 
-    The charecteristic equation for above equations
+    The characteristic equation for above equations
 
     .. math:: \lambda^4 - (a + d) \lambda^2 + ad - bc = 0
 
@@ -7011,7 +7011,7 @@ def _linear_2eq_order2_type1(x, y, t, r, eq):
 
     1. When `ad - bc \neq 0`
 
-    1.1. If `D \neq 0`. The characteristic equation has four distict roots, `\lambda_1, \lambda_2, \lambda_3, \lambda_4`.
+    1.1. If `D \neq 0`. The characteristic equation has four distinct roots, `\lambda_1, \lambda_2, \lambda_3, \lambda_4`.
     The general solution of the system is
 
     .. math:: x = C_1 b e^{\lambda_1 t} + C_2 b e^{\lambda_2 t} + C_3 b e^{\lambda_3 t} + C_4 b e^{\lambda_4 t}
@@ -7206,7 +7206,7 @@ def _linear_2eq_order2_type4(x, y, t, r, eq):
 
     .. math:: x = A e^{\lambda t}, y = B e^{\lambda t}
 
-    On substituting these expressions into the original system and colleting the
+    On substituting these expressions into the original system and collecting the
     coefficients of the unknown `A` and `B`, one obtains
 
     .. math:: (\lambda^{2} + a_1 \lambda + c_1) A + (b_1 \lambda + d_1) B = 0
@@ -7218,7 +7218,7 @@ def _linear_2eq_order2_type4(x, y, t, r, eq):
 
     .. math:: (\lambda^2 + a_1 \lambda + c_1) (\lambda^2 + b_2 \lambda + d_2) - (b_1 \lambda + d_1) (a_2 \lambda + c_2) = 0
 
-    If all roots `k_1,...,k_4` of this equation are distict, the general solution of the original
+    If all roots `k_1,...,k_4` of this equation are distinct, the general solution of the original
     system of the differential equations has the form
 
     .. math:: x = C_1 (b_1 \lambda_1 + d_1) e^{\lambda_1 t} - C_2 (b_1 \lambda_2 + d_1) e^{\lambda_2 t} - C_3 (b_1 \lambda_3 + d_1) e^{\lambda_3 t} - C_4 (b_1 \lambda_4 + d_1) e^{\lambda_4 t}
@@ -7330,7 +7330,7 @@ def _linear_2eq_order2_type6(x, y, t, r, eq):
     .. math:: z_2'' = k_2 f(t) z_2, z_2 = a_2 x + (k_2 - a_1) y
 
     Solving the equations will give the values of `x` and `y` after obtaining the value
-    of `z_1` and `z_2` by solving the differential equation and substuting the result.
+    of `z_1` and `z_2` by solving the differential equation and substituting the result.
 
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
@@ -7476,7 +7476,7 @@ def _linear_2eq_order2_type9(x, y, t, r, eq):
 
     .. math:: x = A e^{\lambda t}, y = B e^{\lambda t}
 
-    On substituting these expressions into the original system and colleting the
+    On substituting these expressions into the original system and collecting the
     coefficients of the unknown `A` and `B`, one obtains
 
     .. math:: (\lambda^{2} + (a_1 - 1) \lambda + c_1) A + (b_1 \lambda + d_1) B = 0
@@ -7488,7 +7488,7 @@ def _linear_2eq_order2_type9(x, y, t, r, eq):
 
     .. math:: (\lambda^2 + (a_1 - 1) \lambda + c_1) (\lambda^2 + (b_2 - 1) \lambda + d_2) - (b_1 \lambda + d_1) (a_2 \lambda + c_2) = 0
 
-    If all roots `k_1,...,k_4` of this equation are distict, the general solution of the original
+    If all roots `k_1,...,k_4` of this equation are distinct, the general solution of the original
     system of the differential equations has the form
 
     .. math:: x = C_1 (b_1 \lambda_1 + d_1) e^{\lambda_1 t} - C_2 (b_1 \lambda_2 + d_1) e^{\lambda_2 t} - C_3 (b_1 \lambda_3 + d_1) e^{\lambda_3 t} - C_4 (b_1 \lambda_4 + d_1) e^{\lambda_4 t}
@@ -7823,7 +7823,7 @@ def _linear_neq_order1_type1(match_):
     where `C_1,C_2,...,C_n` are arbitrary constants.
 
     2. When some eigenvalues are complex then in order to make the solution real,
-    we take a llinear combination: if `r = a + bi` has an eigenvector
+    we take a linear combination: if `r = a + bi` has an eigenvector
     `\vec{v} = \vec{w_1} + i \vec{w_2}` then to obtain real-valued solutions to
     the system, replace the complex-valued solutions `e^{rx} \vec{v}`
     with real-valued solution `e^{ax} (\vec{w_1} \cos(bx) - \vec{w_2} \sin(bx))`
@@ -8070,7 +8070,7 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
 
     On solving the first integral for `x` (resp., `y` ) and on substituting the
     resulting expression into either equation of the original solution, one
-    arrives at a firs-order equation for determining `y` (resp., `x` ).
+    arrives at a first-order equation for determining `y` (resp., `x` ).
 
     """
     C1, C2 = get_numbered_constants(eq, num=2)

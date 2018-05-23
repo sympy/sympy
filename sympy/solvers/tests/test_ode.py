@@ -836,6 +836,7 @@ def test_classify_ode():
     # test issue 13864
     assert classify_ode(Eq(diff(f(x), x) - f(x)**x, 0), f(x)) == \
         ('1st_power_series', 'lie_group')
+    assert isinstance(classify_ode(Eq(f(x), 5), f(x), dict=True), dict)
 
 
 def test_classify_ode_ics():

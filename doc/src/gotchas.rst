@@ -20,7 +20,7 @@ remainder of the SymPy Docs, and the `official Python Tutorial <https://docs.pyt
 
 If you are already familiar with C or Java, you might also want to look
 at this `4 minute Python tutorial
-<http://www.nerdparadise.com/tech/python/4minutecrashcourse/>`_.
+<https://nerdparadise.com/programming/python4minutes/>`_.
 
 Ignore ``#doctest: +SKIP`` in the examples.  That has to do with
 internal testing of the examples.
@@ -334,9 +334,9 @@ you don't have to worry about this problem:
     3.142857142857143
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
-    >>> a = solve(7*x - 22, x)
+    >>> a = solve(7*x - 22, x)[0]
     >>> a
-    [22/7]
+    22/7
 
     The other solution is to put quotes around the expression
     and run it through S() (i.e., sympify it):

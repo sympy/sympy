@@ -407,7 +407,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
-    flat = '__flatten_args__'
     imp_mod_lines = []
     for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
         for k in keys:
@@ -415,9 +414,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 imp_mod_lines.append("from %s import %s" % (mod, k))
     for ln in imp_mod_lines:
         exec_(ln, {}, namespace)
-
-    if flat in lstr:
-        namespace.update({flat: flatten})
 
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
@@ -427,11 +423,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # This is a fix for gh-11306.
     if module_provided and _module_present('numpy',namespaces):
         def array_wrap(funcarg):
+            builtin_numerics = integer_types + (float, complex)
+            array = namespace['array']
             @wraps(funcarg)
             def wrapper(*argsx, **kwargsx):
-                asarray = namespace['asarray']
-                newargs = [asarray(i) if isinstance(i, integer_types + (float,
-                    complex)) else i for i in argsx]
+                newargs = [array(i) if isinstance(i, builtin_numerics) else i for i in argsx]
                 return funcarg(*newargs, **kwargsx)
             return wrapper
         func = array_wrap(func)
@@ -496,7 +492,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     arguments so that nested arguments can be handled:
 
     >>> lambdastr((x, (y, z)), x + y)
-    'lambda _0,_1: (lambda x,y,z: (x + y))(*list(__flatten_args__([_0,_1])))'
+    'lambda _0,_1: (lambda x,y,z: (x + y))(_0,_1[0],_1[1])'
     """
     # Transforming everything to strings.
     from sympy.matrices import DeferredVector
@@ -551,19 +547,28 @@ def lambdastr(args, expr, printer=None, dummify=False):
     def isiter(l):
         return iterable(l, exclude=(str, DeferredVector, NotIterable))
 
+    def flat_indexes(iterable):
+        n = 0
+
+        for el in iterable:
+            if isiter(el):
+                for ndeep in flat_indexes(el):
+                    yield (n,) + ndeep
+            else:
+                yield (n,)
+
+            n += 1
+
     if isiter(args) and any(isiter(i) for i in args):
-        from sympy.utilities.iterables import flatten
-        import re
         dum_args = [str(Dummy(str(i))) for i in range(len(args))]
-        iter_args = ','.join([i if isiter(a) else i
-            for i, a in zip(dum_args, args)])
+
+        indexed_args = ','.join([
+            dum_args[ind[0]] + ''.join(["[%s]" % k for k in ind[1:]])
+                    for ind in flat_indexes(args)])
+
         lstr = lambdastr(flatten(args), expr, printer=printer, dummify=dummify)
-        flat = '__flatten_args__'
-        rv = 'lambda %s: (%s)(*list(%s([%s])))' % (
-            ','.join(dum_args), lstr, flat, iter_args)
-        if len(re.findall(r'\b%s\b' % flat, rv)) > 1:
-            raise ValueError('the name %s is reserved by lambdastr' % flat)
-        return rv
+
+        return 'lambda %s: (%s)(%s)' % (','.join(dum_args), lstr, indexed_args)
 
     dummies_dict = {}
     if dummify:

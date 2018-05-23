@@ -954,13 +954,11 @@ def FDistribution(name, d1, d2):
 
     with :math:`x > 0`.
 
-    .. TODO - What do these parameters mean?
-
     Parameters
     ==========
 
-    d1 : `d_1 > 0` a parameter
-    d2 : `d_2 > 0` a parameter
+    d1 : `d_1 > 0`, where d_1 is the degrees of freedom (n_1 - 1)
+    d2 : `d_2 > 0`, where d_2 is the degrees of freedom (n_2 - 1)
 
     Returns
     =======

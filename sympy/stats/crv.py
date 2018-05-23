@@ -269,14 +269,6 @@ class ContinuousPSpace(PSpace):
     is_real = True
 
     @property
-    def domain(self):
-        return self.args[0]
-
-    @property
-    def density(self):
-        return self.args[1]
-
-    @property
     def pdf(self):
         return self.density(*self.domain.symbols)
 
@@ -483,10 +475,10 @@ def _reduce_inequalities(conditions, var, **kwargs):
 def reduce_rational_inequalities_wrap(condition, var):
     if condition.is_Relational:
         return _reduce_inequalities([[condition]], var, relational=False)
-    if condition.__class__ is Or:
-        return _reduce_inequalities([list(condition.args)],
-                var, relational=False)
-    if condition.__class__ is And:
+    if isinstance(condition, Or):
+        return Union(*[_reduce_inequalities([[arg]], var, relational=False)
+            for arg in condition.args])
+    if isinstance(condition, And):
         intervals = [_reduce_inequalities([[arg]], var, relational=False)
             for arg in condition.args]
         I = intervals[0]

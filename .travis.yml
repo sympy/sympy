@@ -103,7 +103,6 @@ matrix:
       env:
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
-        - TEST_SETUP="true"
       addons:
         apt:
           sources:
@@ -167,7 +166,6 @@ matrix:
       env:
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
-        - TEST_SETUP="true"
       addons:
         apt:
           sources:

@@ -16,6 +16,7 @@ from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.external import import_module
 
 import mpmath
+from mpmath.rational import mpq
 
 
 numpy = import_module('numpy')
@@ -115,6 +116,8 @@ def test_sympify_mpmath():
         mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) == False
 
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
+
+    assert sympify(mpq(1, 2)) == S.Half
 
 
 def test_sympify2():
@@ -442,8 +445,7 @@ def test_issue_3218():
 
 def test_issue_4988_builtins():
     C = Symbol('C')
-    vars = {}
-    vars['C'] = C
+    vars = {'C': C}
     exp1 = sympify('C')
     assert exp1 == C  # Make sure it did not get mixed up with sympy.C
 

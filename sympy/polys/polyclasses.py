@@ -247,6 +247,23 @@ class DMP(PicklableWithSlots, CantSympify):
 
         return rep
 
+    def to_list(f):
+        """Convert ``f`` to a list representation with native coefficients. """
+        return f.rep
+
+    def to_sympy_list(f):
+        """Convert ``f`` to a list representation with SymPy coefficients. """
+        def sympify_nested_list(rep):
+            out = []
+            for val in rep:
+                if isinstance(val, list):
+                    out.append(sympify_nested_list(val))
+                else:
+                    out.append(f.dom.to_sympy(val))
+            return out
+
+        return sympify_nested_list(f.rep)
+
     def to_tuple(f):
         """
         Convert ``f`` to a tuple representation with native coefficients.
