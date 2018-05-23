@@ -128,15 +128,15 @@ ifft.__doc__ = fft.__doc__
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _number_theoretic_transform(seq, q, inverse=False):
+def _number_theoretic_transform(seq, p, inverse=False):
     """Utility function for the Number Theoretic transform (NTT)"""
 
     if not iterable(seq):
         raise TypeError("Expected a sequence of integer coefficients " +
                         "for Number Theoretic Transform")
 
-    q = as_int(q)
-    if isprime(q) == False:
+    p = as_int(p)
+    if isprime(p) == False:
         raise ValueError("Expected prime modulo for " +
                         "Number Theoretic Transform")
 
@@ -151,24 +151,24 @@ def _number_theoretic_transform(seq, q, inverse=False):
         b += 1
         n = 2**b
 
-    if (q - 1) % n:
+    if (p - 1) % n:
         raise ValueError("Expected prime modulo of the form (m*2**k + 1)")
 
     a += [0]*(n - len(a))
     for i in range(1, n):
         j = int(ibin(i, b, str=True)[::-1], 2)
         if i < j:
-            a[i], a[j] = a[j] % q, a[i] % q
+            a[i], a[j] = a[j] % p, a[i] % p
 
-    pr = primitive_root(q)
+    pr = primitive_root(p)
 
-    rt = pow(pr, (q - 1) // n, q)
+    rt = pow(pr, (p - 1) // n, p)
     if inverse:
-        rt = pow(rt, q - 2, q)
+        rt = pow(rt, p - 2, p)
 
     w = [1]*(n // 2)
     for i in range(1, n // 2):
-        w[i] = w[i - 1] * rt % q
+        w[i] = w[i - 1] * rt % p
 
     h = 2
     while h <= n:
@@ -176,18 +176,18 @@ def _number_theoretic_transform(seq, q, inverse=False):
         for i in range(0, n, h):
             for j in range(hf):
                 u, v = a[i + j], a[i + j + hf]*w[ut * j]
-                a[i + j], a[i + j + hf] = (u + v) % q, (u - v) % q
+                a[i + j], a[i + j + hf] = (u + v) % p, (u - v) % p
         h *= 2
 
     if inverse:
-        rv = pow(n, q - 2, q)
+        rv = pow(n, p - 2, p)
         for i in range(n):
-            a[i] = a[i]*rv % q
+            a[i] = a[i]*rv % p
 
     return a
 
 
-def ntt(seq, q):
+def ntt(seq, p):
     r"""
     Performs the Number Theoretic Transform (NTT), which specializes the
     Discrete Fourier Transform (DFT) over quotient ring Z/pZ for prime p
@@ -196,6 +196,15 @@ def ntt(seq, q):
 
     The sequence is automatically padded to the right with zeros, as the
     radix 2 NTT requires the number of sample points to be a power of 2.
+
+    Parameters
+    ==========
+
+    seq : iterable
+        The sequence on which DFT is to be applied.
+    p : Integer
+        Prime modulus of the form (m*2**k + 1) to be used for performing
+        NTT on the sequence.
 
     Examples
     ========
@@ -218,10 +227,10 @@ def ntt(seq, q):
 
     """
 
-    return _number_theoretic_transform(seq, q)
+    return _number_theoretic_transform(seq, p)
 
 
-def intt(seq, q):
-    return _number_theoretic_transform(seq, q, inverse=True)
+def intt(seq, p):
+    return _number_theoretic_transform(seq, p, inverse=True)
 
 intt.__doc__ = ntt.__doc__
