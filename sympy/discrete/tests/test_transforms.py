@@ -32,21 +32,25 @@ def test_fft_ifft():
 
 
 def test_ntt_intt():
-    # prime modulo of the form (m*2**k + 1), sequence length should be a divisor of 2**k
+    # prime modulo of the form (m*2**k + 1), sequence length should
+    # be a divisor of 2**k
     p = 7*17*2**23 + 1
-    q = 2*500000003 + 1 # prime modulo not of the required form (for length > 1)
+    q = 2*500000003 + 1 # prime modulo only for (length = 1)
     r = 2*3*5*7 # composite modulo
 
     assert all(tf(ls, p) == ls for tf in (ntt, intt) \
                                 for ls in ([], [5]))
 
     ls = list(range(6))
-    nls = [15, 801133602, 738493201, 334102277, 998244350, 849020224, 259751156, 12232587]
+    nls = [15, 801133602, 738493201, 334102277, 998244350, 849020224, \
+            259751156, 12232587]
+
     assert ntt(ls, p) == nls
     assert intt(nls, p) == ls + [0]*2
 
     ls = [1 + 2*I, 3 + 4*I, 5 + 6*I]
     x = Symbol('x', integer=True)
+
     raises(TypeError, lambda: ntt(x, p))
     raises(ValueError, lambda: intt([x, 2*x, 3*x**2, 4*x**3], p))
     raises(ValueError, lambda: intt(ls, p))
