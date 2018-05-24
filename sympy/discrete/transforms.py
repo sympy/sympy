@@ -49,7 +49,7 @@ def _fourier_transform(seq, dps, inverse=False):
     ang = -2*pi/n if inverse else 2*pi/n
 
     if dps is not None:
-        ang = ang.evalf(dps + 10)
+        ang = ang.evalf(dps + 2)
 
     w = [cos(ang*i) + I*sin(ang*i) for i in range(n // 2)]
 
@@ -228,6 +228,7 @@ def ntt(seq, p):
 
     .. [1] http://www.apfloat.org/ntt.html
     .. [2] http://mathworld.wolfram.com/NumberTheoreticTransform.html
+    .. [3] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general)
 
     """
 

@@ -32,10 +32,10 @@ def test_fft_ifft():
 
 
 def test_ntt_intt():
-    # prime modulus of the form (m*2**k + 1), sequence length should
-    # be a divisor of 2**k
+    # prime moduli of the form (m*2**k + 1), sequence length
+    # should be a divisor of 2**k
     p = 7*17*2**23 + 1
-    q = 2*500000003 + 1 # prime modulus (valid only for unity length)
+    q = 2*500000003 + 1 # only for sequences of length 1 or 2
     r = 2*3*5*7 # composite modulus
 
     assert all(tf(ls, p) == ls for tf in (ntt, intt)
