@@ -1013,6 +1013,7 @@ def _expo_solver(f, symbol):
 def _check_expo(f, symbol):
     """
     Helper to check whether an equation is exponential or not.
+    Returns True if it is exponential type otherwise False.
     """
     try:
         a, b = ordered(f.args)
@@ -1026,7 +1027,92 @@ def _check_expo(f, symbol):
 
 
 def transolve(f, symbol, domain, **flags):
-    """Helper for solving transcendental equations."""
+    """
+    Function to solve transcendental equations. It is a
+    helper to solveset and should be used internally as of now.
+    Handles the following class of transcendental equations:
+
+        - Exponential equations
+        - Logarithmic equations
+        - LambertW type equations.
+        - Trigonometric equations
+
+
+    Parameters
+    ==========
+
+    f: Expr
+       The target equation.
+    symbol: Symbol
+        The variable for which the eqquation is solved.
+    doamin: Set
+        The domain over which the equation is solved.
+    flags: Dictionary
+        Takes care of the recursive calls.
+
+
+    How is transolve better than _tsolve.
+    ====================================
+
+    1) Improved Output
+
+       The output of many types of equations is much better and easy to
+       understand than the ones computed by _tsolve.
+       
+       eg: for 3**(2*x) - 2**(x + 3) transolve would return
+       FiniteSet(-3*log(2)/(-2*log(3) + log(2))), whereas _tsolve
+       would return [-log(2**(3/log(2/9)))]. Both are same but the former
+       increases readability and simplicity.
+
+
+    2) Less Complex API
+
+       transolve's API and its flow is simple to understand. Unlike _tsolve which
+       computes by solving with lots of recursive calls.
+       transolve eases the task by reducing it to a two step procedure as
+       dicussed below.
+
+
+    3) Extensible
+
+       transolve is easily extensible, unlike _tsolve which requires in depth knowledge
+       of the method and adding new class of equation is difficult due to its complex
+       structure.
+       To add a new class of equation in transolve one needs to figure out a way to
+       identify the equation and a generalised way to solve that particular
+       class of eqaution.
+
+
+    How transolve works
+    ===================
+
+    The way transolve solves any transcendental equation is very much
+    different from the old solve way of solving as pointed out above.
+
+    transolve solves equations in two step procedure.
+
+    i)  Identification of the type of equation.
+
+        Helpers are used with heuristics implemented to determine
+        if the equation is of a certain type.
+
+    ii) Invoking the respective helper to solve the equation.
+
+        Once identified what family the equation belongs, respective
+        helpers are called and the equation is solved by either returning
+        the solution or by simplifying the original one to the one that can be
+        handled by _solveset. 
+
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import transolve
+
+    >>> x = symbols('x')
+    >>> transolve(5**(x-3) - 3**(2*x + 1), x, S.Reals)
+    FiniteSet(-log(375)/(-log(5) + 2*log(3)))
+    """
 
     if 'tsolve_saw' not in flags:
         flags['tsolve_saw'] = []

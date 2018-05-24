@@ -1796,7 +1796,6 @@ def test_expo_fail():
 
     assert solveset(z**x - y, x, S.Reals) == Intersection(S.Reals, FiniteSet(log(y)/log(z)))
     assert solveset(y - a*x**b, x) == FiniteSet((y/a)**(1/b))
-    assert solveset(Poly(exp(x) + exp(-x) - 4)) == FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
 
     w = symbols('w', integer=True)
     f1 = 2*x**w - 4*y**w
