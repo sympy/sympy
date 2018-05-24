@@ -1013,7 +1013,7 @@ def _expo_solver(f, symbol):
 def _check_expo(f, symbol):
     """
     Helper to check whether an equation is exponential or not.
-    Returns True if it is exponential type otherwise False.
+    Returns True if it is of exponential type otherwise False.
     """
     try:
         a, b = ordered(f.args)
@@ -1058,7 +1058,7 @@ def transolve(f, symbol, domain, **flags):
 
        The output of many types of equations is much better and easy to
        understand than the ones computed by _tsolve.
-       
+
        eg: for 3**(2*x) - 2**(x + 3) transolve would return
        FiniteSet(-3*log(2)/(-2*log(3) + log(2))), whereas _tsolve
        would return [-log(2**(3/log(2/9)))]. Both are same but the former
@@ -1101,7 +1101,7 @@ def transolve(f, symbol, domain, **flags):
         Once identified what family the equation belongs, respective
         helpers are called and the equation is solved by either returning
         the solution or by simplifying the original one to the one that can be
-        handled by _solveset. 
+        handled by _solveset.
 
 
     Examples
@@ -1126,29 +1126,35 @@ def transolve(f, symbol, domain, **flags):
 
     result = ConditionSet(symbol, Eq(f, 0), domain)
 
-    if lhs.is_Add:
-        # do we need a loop for rhs?
-        # Can't determine a case as of now.
+    if rhs_s is S.EmptySet:
+        result = S.EmptySet
+    else:
         rhs = rhs_s.args[0]
-        equation = factor(powdenest(lhs-rhs))
+        # do we need a loop for rhs_s?
+        # Can't determine a case as of now.
+        if lhs == symbol:
+            result = rhs_s
 
-        if equation.is_Mul:
-            result = _solveset(equation, symbol, domain)
+        elif lhs.is_Add:
+            equation = factor(powdenest(lhs-rhs))
 
-        # check if it is exponential type equation
-        elif _check_expo(equation, symbol):
-            new_f = _expo_solver(equation, symbol)
+            if equation.is_Mul:
+                result = _solveset(equation, symbol, domain)
+
+            # check if it is exponential type equation
+            elif _check_expo(equation, symbol):
+                new_f = _expo_solver(equation, symbol)
+                result = _solveset(new_f, symbol, domain)
+
+                if isinstance(result, ConditionSet):
+                    result = ConditionSet(symbol, Eq(f, 0), domain)
+
+            else:
+                result = transolve(f, symbol, domain, **flags)
+
+        elif lhs.is_Pow:
+            new_f = _expo_solver(lhs, symbol)
             result = _solveset(new_f, symbol, domain)
-
-            if isinstance(result, ConditionSet):
-                result = ConditionSet(symbol, Eq(f, 0), domain)
-
-        else:
-            result = transolve(f, symbol, domain, **flags)
-
-    if lhs.is_Pow:
-        new_f = _expo_solver(lhs, symbol)
-        result = _solveset(new_f, symbol, domain)
 
     return result
 

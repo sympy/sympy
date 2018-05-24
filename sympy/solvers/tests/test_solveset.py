@@ -38,7 +38,7 @@ from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
-    _is_finite_with_finite_vars)
+    _is_finite_with_finite_vars, transolve)
 
 
 a = Symbol('a', real=True)
@@ -1752,10 +1752,17 @@ def test_issue_14454():
 
 
 def test_transolve():
-    from sympy.abc import x, y
+    from sympy.abc import x
     from sympy.simplify import simplify
 
-    #### exponential equations ####
+    assert transolve(2**x - 32, x, S.Reals) == FiniteSet(log(32)/log(2))
+    assert transolve(3**x, x, S.Reals) == S.EmptySet
+    assert simplify(transolve(3**x - 9**(x+5), x, S.Reals)) == FiniteSet(-10)
+
+
+def test_expo_solver():
+    from sympy.abc import x, y, z
+    from sympy.simplify import simplify
 
     e1 = 3**(2*x) - 2**(x + 3)
     e2 = 4**(5 - 9*x) - 8**(2 - x)
