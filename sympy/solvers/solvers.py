@@ -1842,12 +1842,10 @@ def _solve_system(exprs, symbols, **flags):
                         # A list of dictionaries is going to always be
                         # returned from here.
                         result = [dict(list(zip(solved_syms, r))) for r in result]
-                    else:
-                        raise NotImplementedError
                 except NotImplementedError:
                     failed.extend([g.as_expr() for g in polys])
                     solved_syms = []
-                    result = []
+                    result = None
 
     if result:
         if isinstance(result, dict):
