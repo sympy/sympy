@@ -10,6 +10,7 @@ import inspect
 import keyword
 import re
 import textwrap
+import linecache
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, integer_types, PY3)
@@ -154,6 +155,10 @@ def _import(module, reload="False"):
     if 'Abs' not in namespace:
         namespace['Abs'] = abs
 
+
+# Used for dynamically generated filenames that are inserted into the
+# linecache.
+_lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
@@ -447,7 +452,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     funcstr = funcprinter.doprint(funcname, args, expr)
 
     funclocals = {}
-    exec_(funcstr, namespace, funclocals)
+    global _lambdify_generated_counter
+    filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
+    _lambdify_generated_counter += 1
+    c = compile(funcstr, filename, 'exec')
+    exec_(c, namespace, funclocals)
+    # mtime has to be None or else linecache.checkcache will remove it
+    linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename)
+
     func = funclocals[funcname]
 
     if apply_numpy_decorator:
@@ -739,7 +751,7 @@ class _EvaluatorPrinter(object):
         funclines = [funcsig]
         funclines.extend('    ' + line for line in funcbody)
 
-        return '\n'.join(funclines)
+        return '\n'.join(funclines) + '\n'
 
     if PY3:
         @classmethod
