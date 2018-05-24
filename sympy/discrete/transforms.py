@@ -20,7 +20,7 @@ from sympy.utilities.iterables import ibin
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _fourier_transform(seq, symbolic, dps, inverse=False):
+def _fourier_transform(seq, dps, inverse=False):
     """Utility function for the Discrete Fourier Transform (DFT)"""
 
     if not iterable(seq):
@@ -48,9 +48,7 @@ def _fourier_transform(seq, symbolic, dps, inverse=False):
 
     ang = -2*pi/n if inverse else 2*pi/n
 
-    if not symbolic:
-        if dps is None:
-            dps = 15
+    if dps is not None:
         ang = ang.evalf(dps + 10)
 
     w = [cos(ang*i) + I*sin(ang*i) for i in range(n // 2)]
@@ -65,13 +63,13 @@ def _fourier_transform(seq, symbolic, dps, inverse=False):
         h *= 2
 
     if inverse:
-        a = [x/n for x in a] if symbolic else \
-            [(x/n).evalf(dps) for x in a]
+        a = [(x/n).evalf(dps) for x in a] if dps is not None \
+                            else [x/n for x in a]
 
     return a
 
 
-def fft(seq, symbolic=True, dps=None):
+def fft(seq, dps=None):
     r"""
     Performs the Discrete Fourier Transform (DFT) in the complex domain.
 
@@ -83,9 +81,6 @@ def fft(seq, symbolic=True, dps=None):
 
     seq : iterable
         The sequence on which DFT is to be applied.
-    symbolic : bool
-        Determines if DFT is to be performed using symbolic values or
-        numerical values.
     dps : Integer
         Specifies the number of decimal digits for precision.
 
@@ -104,7 +99,7 @@ def fft(seq, symbolic=True, dps=None):
     >>> fft(_)
     [1, 2, 3, 4]
 
-    >>> ifft([1, 7, 3, 4], symbolic=False)
+    >>> ifft([1, 7, 3, 4], dps=15)
     [3.75, -0.5 - 0.75*I, -1.75, -0.5 + 0.75*I]
     >>> fft(_)
     [1.0, 7.0, 3.0, 4.0]
@@ -122,11 +117,11 @@ def fft(seq, symbolic=True, dps=None):
 
     """
 
-    return _fourier_transform(seq, symbolic=symbolic, dps=dps)
+    return _fourier_transform(seq, dps=dps)
 
 
-def ifft(seq, symbolic=True, dps=None):
-    return _fourier_transform(seq, symbolic=symbolic, dps=dps, inverse=True)
+def ifft(seq, dps=None):
+    return _fourier_transform(seq, dps=dps, inverse=True)
 
 ifft.__doc__ = fft.__doc__
 
@@ -146,7 +141,7 @@ def _number_theoretic_transform(seq, p, inverse=False):
 
     p = as_int(p)
     if isprime(p) == False:
-        raise ValueError("Expected prime modulo for " +
+        raise ValueError("Expected prime modulus for " +
                         "Number Theoretic Transform")
 
     a = [as_int(x) for x in seq]
@@ -161,7 +156,7 @@ def _number_theoretic_transform(seq, p, inverse=False):
         n = 2**b
 
     if (p - 1) % n:
-        raise ValueError("Expected prime modulo of the form (m*2**k + 1)")
+        raise ValueError("Expected prime modulus of the form (m*2**k + 1)")
 
     a += [0]*(n - len(a))
     for i in range(1, n):
