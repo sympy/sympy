@@ -288,7 +288,7 @@ def checksol(f, symbol, sol=None, **flags):
                     return False
                 # there are free symbols -- simple expansion might work
                 _, val = val.as_content_primitive()
-                val = _mexpand(val, recursive=True)
+                val = _mexpand(val.as_numer_denom()[0], recursive=True)
         elif attempt == 2:
             if minimal:
                 return
@@ -1877,9 +1877,7 @@ def _solve_system(exprs, symbols, **flags):
             hit = False
             for r in result:
                 # update eq with everything that is known so far
-                # and work with expanded numerator since substitution
-                # may re-introduce denominators
-                eq2 = _mexpand(eq.subs(r).as_numer_denom()[0])
+                eq2 = eq.subs(r)
                 # if check is True then we see if it satisfies this
                 # equation, otherwise we just accept it
                 if check and r:
