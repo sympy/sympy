@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
 from pyglet.gl import *
-from managed_window import ManagedWindow
+from .managed_window import ManagedWindow
 
-from plot_camera import PlotCamera
-from plot_controller import PlotController
+from .plot_camera import PlotCamera
+from .plot_controller import PlotController
 
 from time import clock
 

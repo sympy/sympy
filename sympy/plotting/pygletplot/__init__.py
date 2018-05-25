@@ -136,8 +136,8 @@ try:
         =============================
         """
 
-        import plot
-        return plot.PygletPlot(*args, **kwargs)
+        from .plot import PygletPlot
+        return PygletPlot(*args, **kwargs)
 
 except Exception as e:
     def PygletPlot(*args, **kwargs):

@@ -12,14 +12,14 @@ except ImportError:
     raise ImportError("pyglet is required for plotting.\n "
                       "visit http://www.pyglet.org/")
 
-from plot_object import PlotObject
-from plot_axes import PlotAxes
-from plot_window import PlotWindow
-from plot_mode import PlotMode
+from .plot_object import PlotObject
+from .plot_axes import PlotAxes
+from .plot_window import PlotWindow
+from .plot_mode import PlotMode
 
 from time import sleep
 from os import getcwd, listdir
-from util import parse_option_string
+from .util import parse_option_string
 
 from sympy.geometry.entity import GeometryEntity
 
