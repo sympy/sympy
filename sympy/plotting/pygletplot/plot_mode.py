@@ -168,7 +168,7 @@ class PlotMode(PlotObject):
             i_vars = i
         try:
             return PlotMode._mode_default_map[d][i]
-        except TypeError:
+        except KeyError:
             # Keep looking for modes in higher i var counts
             # which support the given d var count until we
             # reach the max i_var count.
