@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
-from plot_curve import PlotCurve
-from plot_surface import PlotSurface
+from .plot_curve import PlotCurve
+from .plot_surface import PlotSurface
 
 from sympy import pi, lambdify
 from sympy.functions import sin, cos
