@@ -205,6 +205,7 @@ class ColorScheme(object):
     def _sort_args(self, args):
         lists, atoms = sift(args,
             lambda a: isinstance(a, (tuple, list)), binary=True)
+        return atoms, lists
 
     def _test_color_function(self):
         if not callable(self.f):

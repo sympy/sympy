@@ -147,7 +147,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
         return []
     try:
         range(int(r_min - r_max))
-    except TypeError:
+    except (TypeError, OverflowError):
         return []
     if r_min > r_max:
         raise ValueError("r_min can not be greater than r_max")
