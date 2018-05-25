@@ -11,9 +11,9 @@ from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
         ProductDomain, ProductPSpace)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
-from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.sets.fancysets import Range, FiniteSet
-from sympy.sets.sets import Union, Intersection
+from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
 import random
@@ -178,7 +178,7 @@ class DiscretePSpace(PSpace):
         conditional_domain = conditional_domain.intersect(self.domain.set)
         return SingleDiscreteDomain(rvs[0].symbol, conditional_domain)
 
-    def probability(self, condition):
+    def probability(self, condition, evaluate = True):
         complement = isinstance(condition, Ne)
         if complement:
             condition = Eq(condition.args[0], condition.args[1])
@@ -189,9 +189,6 @@ class DiscretePSpace(PSpace):
             if condition == True or _domain == self.domain.set:
                 return S.One
             prob = self.eval_prob(_domain)
-            if prob == None:
-                prob = Probability(condition)
-            return prob if not complement else S.One - prob
         except NotImplementedError:
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
@@ -200,17 +197,20 @@ class DiscretePSpace(PSpace):
                 dens = DiscreteDistributionHandmade(dens)
             z = Dummy('z', real = True)
             space = SingleDiscretePSpace(z, dens)
-            return space.probability(condition.__class__(space.value, 0))
+            prob = space.probability(condition.__class__(space.value, 0), evaluate)
+        if (prob == None) or (isinstance(prob, (Sum, Probability)) and not evaluate):
+            prob = Probability(condition)
+        return prob if not complement else S.One - prob
 
     def eval_prob(self, _domain):
         sym = list(self.symbols)[0]
         if isinstance(_domain, Range):
-            n = symbols('n')
+            n = symbols('n', real = True, finite = True)
             inf, sup, step = (r for r in _domain.args)
             summand = ((self.pdf).replace(
-                sym, inf + n*step))
+              sym, n*step))
             rv = summation(summand,
-                (n, 0, floor((sup - inf)/step - 1))).doit()
+                (n, inf/step, (sup)/step - 1)).doit()
             return rv
         elif isinstance(_domain, FiniteSet):
             pdf = Lambda(sym, self.pdf)
@@ -228,11 +228,11 @@ class DiscretePSpace(PSpace):
 
     def compute_density(self, expr, **kwargs):
         z = Dummy('z', real=True, finite=True)
-        return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
+        return Lambda(z, self.integrate(KroneckerDelta(expr, z), **kwargs))
 
 class ProductDiscreteDomain(ProductDomain, DiscreteDomain):
      def as_boolean(self):
-        return And(domain.as_boolean for domain in self.domains)
+        return And(*[domain.as_boolean for domain in self.domains])
 
 class ProductDiscretePSpace(ProductPSpace, DiscretePSpace):
 
