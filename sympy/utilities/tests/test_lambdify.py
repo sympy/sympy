@@ -1,6 +1,7 @@
 from distutils.version import LooseVersion as V
 from itertools import product
 import math
+import inspect
 
 import mpmath
 from sympy.utilities.pytest import XFAIL, raises
@@ -870,3 +871,9 @@ def test_tensorflow_array_arg():
 
     s = tensorflow.Session()
     assert s.run(fcall) == 5
+
+def test_lambdify_inspect():
+    f = lambdify(x, x**2)
+    # Test that inspect.getsource works but don't hard-code implementation
+    # details
+    assert 'x**2' in inspect.getsource(f)
