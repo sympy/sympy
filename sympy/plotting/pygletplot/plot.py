@@ -226,6 +226,9 @@ class PygletPlot(object):
             True OR False
 
         """
+        # Register the plot modes
+        from . import plot_modes
+
         self._win_args = win_args
         self._window = None
 
