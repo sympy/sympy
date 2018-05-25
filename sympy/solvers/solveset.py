@@ -236,12 +236,12 @@ def _invert_real(f, g_ys, symbol):
             rhs = g_ys.args[0]
             if base > S.Zero:
                 return _invert_real(expo,
-                    imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
+                    imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
             elif base < S.Zero:
                 from sympy.core.power import integer_log
                 s, b = integer_log(rhs, base)
                 if b:
-                    return expo, FiniteSet(s)
+                    return _invert_real(expo, FiniteSet(s), symbol)
             elif rhs is S.One:
                 #special case: 0**x - 1
                 return (expo, FiniteSet(0))
@@ -1108,10 +1108,11 @@ def transolve(f, symbol, domain, **flags):
     ========
 
     >>> from sympy.solvers.solveset import transolve
+    >>> from sympy import symbols, S
 
     >>> x = symbols('x')
     >>> transolve(5**(x-3) - 3**(2*x + 1), x, S.Reals)
-    FiniteSet(-log(375)/(-log(5) + 2*log(3)))
+    {-log(375)/(-log(5) + 2*log(3))}
     """
 
     if 'tsolve_saw' not in flags:

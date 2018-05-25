@@ -269,7 +269,7 @@ def test_solve_invert():
         S.Reals, FiniteSet(a/log(y/b)))
 
     # issue 4504
-    assert solveset_real(2**x - 10, x) == FiniteSet(log(10)/log(2))
+    assert solveset_real(2**x - 10, x) == FiniteSet(1 + log(5)/log(2))
 
 
 def test_errorinverses():
@@ -748,6 +748,8 @@ def test_solveset_real_exp():
     assert solveset(Eq(2**(x-3), -16), x, S.Reals) == S.EmptySet
     assert solveset(Eq((-3)**(x - 3), -3**39), x, S.Reals) == FiniteSet(42)
     assert solveset(Eq(2**x, y), x, S.Reals) == Intersection(S.Reals, FiniteSet(log(y)/log(2)))
+
+    assert invert_real((-2)**(2*x) - 16, 0, x) == (x, FiniteSet(2))
 
 
 def test_solve_complex_log():
@@ -1753,16 +1755,14 @@ def test_issue_14454():
 
 def test_transolve():
     from sympy.abc import x
-    from sympy.simplify import simplify
 
-    assert transolve(2**x - 32, x, S.Reals) == FiniteSet(log(32)/log(2))
+    assert transolve(2**x - 32, x, S.Reals) == FiniteSet(5)
     assert transolve(3**x, x, S.Reals) == S.EmptySet
-    assert simplify(transolve(3**x - 9**(x+5), x, S.Reals)) == FiniteSet(-10)
+    assert transolve(3**x - 9**(x+5), x, S.Reals) == FiniteSet(-10)
 
 
 def test_expo_solver():
     from sympy.abc import x, y, z
-    from sympy.simplify import simplify
 
     e1 = 3**(2*x) - 2**(x + 3)
     e2 = 4**(5 - 9*x) - 8**(2 - x)
@@ -1777,12 +1777,12 @@ def test_expo_solver():
     f2 = x**x
 
     assert solveset(e1, x, S.Reals) == FiniteSet(-3*log(2)/(-2*log(3) + log(2)))
-    assert simplify(solveset(e2, x, S.Reals)) == FiniteSet(4/S(15))
+    assert solveset(e2, x, S.Reals) == FiniteSet(4/S(15))
     assert solveset(e3, x, S.Reals) == S.EmptySet
     assert solveset(e4, x, S.Reals) == FiniteSet(0)
     assert solveset(e5, x, S.Reals) == FiniteSet(1)
     assert solveset(e6, x, S.Reals) == FiniteSet(0)
-    assert simplify(solveset(e7, x, S.Reals)) == FiniteSet(2)
+    assert solveset(e7, x, S.Reals) == FiniteSet(2)
     assert solveset(e8, x, S.Reals) == FiniteSet(2)
     assert solveset(f1, x, S.Reals) == Intersection(S.Reals, FiniteSet(y*log(2*exp(z/y))))
     assert solveset(f2, x, S.Reals) == S.EmptySet
