@@ -72,6 +72,11 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
+if [[ -z "${TEST_OPT_DEPENDENCY}" ]]; then
+    python bin/test_external_imports.py;
+
+fi
+
 # lambdify with tensorflow and numexpr is tested here
 if [[ "${TEST_OPT_DEPENDENCY}" == *"numpy"* ]]; then
     cat << EOF | python
