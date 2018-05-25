@@ -616,68 +616,6 @@ def lambdastr(args, expr, printer=None, dummify=False):
     expr = lambdarepr(expr)
     return "lambda %s: (%s)" % (args, expr)
 
-if PY3:
-    def _is_safe_ident(ident):
-        from keyword import iskeyword
-
-        return isinstance(ident, str) and ident.isidentifier() \
-                and not iskeyword(ident)
-else:
-    _safe_ident_re = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
-
-    def _is_safe_ident(ident):
-        from keyword import iskeyword
-
-        return isinstance(ident, str) and _safe_ident_re.match(ident) \
-            and not (iskeyword(ident) or ident == 'None')
-
-def _generate_unpack_iterable(lvalues, rvalue):
-    """Generate argument unpacking code for _lambdastrimpl.
-
-    This method is used when the input value is iterable.
-    """
-    def unpack_lhs(lvalues):
-        return '[{}]'.format(', '.join(
-            unpack_lhs(val) if iterable(val) else val for val in lvalues))
-
-    return ['{} = {}'.format(unpack_lhs(lvalues), rvalue)]
-
-def _generate_unpack_indexable(lvalues, rvalue):
-    """Generate argument unpacking code for _lambdastrimpl.
-
-    This method is used when the input value is not interable,
-    but can be indexed.
-    """
-    from sympy import flatten
-
-    def flat_indexes(elems):
-        n = 0
-
-        for el in elems:
-            if iterable(el):
-                for ndeep in flat_indexes(el):
-                    yield (n,) + ndeep
-            else:
-                yield (n,)
-
-            n += 1
-
-    indexed = ', '.join('{}[{}]'.format(rvalue, ']['.join(map(str, ind)))
-                            for ind in flat_indexes(lvalues))
-
-    return ['[{}] = [{}]'.format(', '.join(flatten(lvalues)), indexed)]
-
-def _generate_numpy_arg_wrapping(args):
-    """Generate numpy argument wrapping code for _lambdastrimpl."""
-    integer_names = ', '.join(cls.__name__ for cls in integer_types)
-
-    lines = ['builtin_numerics = ({}, float, complex)'.format(integer_names)]
-
-    wraparg = 'if isinstance({arg}, builtin_numerics): {arg} = array({arg})'
-    lines.extend(wraparg.format(arg=arg) for arg in args)
-
-    return lines
-
 class _EvaluatorPrinter(object):
     def __init__(self, printer=None, dummify=False):
         self._dummify = dummify
@@ -841,6 +779,9 @@ class _EvaluatorPrinter(object):
         return ['{} = {}'.format(unpack_lhs(unpackto), arg)]
 
 class _NumpyEvaluatorPrinter(_EvaluatorPrinter):
+    _numerics_def_stmt = 'builtin_numerics = ({}, float, complex)'.format(
+                        ', '.join(cls.__name__ for cls in integer_types))
+
     def __init__(self, printer=None, dummify=False, wrapargs=True):
         super(_NumpyEvaluatorPrinter, self).__init__(
             printer=printer, dummify=dummify)
@@ -851,10 +792,7 @@ class _NumpyEvaluatorPrinter(_EvaluatorPrinter):
         if not self._wrapargs:
             return []
 
-        integer_names = ', '.join(cls.__name__ for cls in integer_types)
-
-        lines = [
-            'builtin_numerics = ({}, float, complex)'.format(integer_names)]
+        lines = [self._numerics_def_stmt]
 
         stmt = 'if isinstance({arg}, builtin_numerics): {arg} = array({arg})'
         lines.extend(stmt.format(arg=arg) for arg in args)
