@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import Basic, Symbol, symbols, lambdify
 from sympy.utilities.iterables import sift
-from util import interpolate, rinterpolate, create_bounds, update_bounds
+from .util import interpolate, rinterpolate, create_bounds, update_bounds
 from sympy.core.compatibility import range
 
 
