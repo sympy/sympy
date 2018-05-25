@@ -27,6 +27,10 @@ if [[ "${TEST_SAGE}" == "true" ]]; then
     sage -t sympy/external/tests/test_sage.py
 fi
 
+if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
+    python bin/test_external_imports.py;
+fi
+
 # We change directories to make sure that we test the installed version of
 # sympy.
 mkdir empty
@@ -70,11 +74,6 @@ import sympy
 if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
     raise Exception('Tests failed')
 EOF
-fi
-
-if [[ -z "${TEST_OPT_DEPENDENCY}" ]]; then
-    python bin/test_external_imports.py;
-
 fi
 
 # lambdify with tensorflow and numexpr is tested here
