@@ -323,7 +323,7 @@ class ContinuousPSpace(PSpace):
         cf = integrate(exp(I*t*x)*d(x), (x, -oo, oo), **kwargs)
         return Lambda(t, cf)
 
-    def probability(self, condition, **kwargs):
+    def probability(self, condition, evaluate = True, **kwargs):
         z = Dummy('z', real=True, finite=True)
         cond_inv = False
         if isinstance(condition, Ne):

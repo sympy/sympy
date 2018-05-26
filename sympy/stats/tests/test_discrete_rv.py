@@ -96,5 +96,5 @@ def test_product_spaces():
     assert P(X1 + X2 < 3, evaluate=False) == Probability(X1 + X2 < 3)
     assert P(X1 + X2 > 3, evaluate=False) == Probability(X1 + X2 > 3)
     assert P(Eq(X1 + X2, 3), evaluate=False) == Probability(Eq(X1 + X2, 3))
-    assert P(Eq(X1 + X2, 3)).Sum(Piecewise(
-        (2**(X2 - 2)*(2/3)**(X2 - 1)/6, X2 <= 2), (0, True)), (X2, 1, oo))
+    assert P(Eq(X1 + X2, 3)) == Sum(
+        Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, X2 <= 2), (0, True)), (X2, 1, oo))
