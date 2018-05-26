@@ -375,7 +375,7 @@ class RewritingSystem(object):
         The method for word reduction using automaton is mentioned in the section 13.1.3 of the Handook.
         All the elements of the automaton are stored in an array and are given as the input to the automaton.
         If the automaton reaches a dead state that subword is replaced and the automaton is run from the beginning.
-        This is repeated until the word reached the end and the automaton stays in the accept state.
+        This is repeated until the word reaches the end and the automaton stays in the accept state.
 
         '''
         fsm = self.construct_automaton()
