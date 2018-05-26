@@ -3,9 +3,30 @@ from __future__ import print_function, division
 from sympy import sqrt, pi, E, exp
 from sympy.core import S, Symbol, I
 from sympy.core.compatibility import range
-from sympy.discrete import convolution_fft, convolution_ntt
+from sympy.discrete import convolution, convolution_fft, convolution_ntt
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y
+
+def test_convolution():
+    a = [1, S(5)/3, sqrt(3)]
+    b = [9, 5, 5, 4, 3, 2]
+    c = [3, 5, 3, 7, 8]
+    d = [1422, 6572, 3213, 5552]
+
+    assert convolution(a, b, fft=True) == convolution_fft(a, b)
+    assert convolution(a, b, dps=9, fft=True) == convolution_fft(a, b, dps=9)
+    assert convolution(a, d, fft=True, dps=7) == convolution_fft(d, a, dps=7)
+    assert convolution(a, d[1:], dps=3) == convolution_fft(d[1:], a, dps=3)
+
+    # prime moduli of the form (m*2**k + 1), sequence length
+    # should be a divisor of 2**k
+    p = 7*17*2**23 + 1
+    q = 19*2**10 + 1
+    raises(TypeError, lambda: convolution(a, b, ntt=True))
+    assert convolution(d, b, ntt=True, p=q) == convolution_ntt(b, d, p=q)
+    assert convolution(c, b, p=p) == convolution_ntt(b, c, p=p)
+    assert convolution(d, c, p=p, ntt=True) == convolution_ntt(c, d, p=p)
+
 
 def test_convolution_fft():
     assert convolution_fft([1, 2, 3], [4, 5, 6]) == [4, 13, 28, 27, 18]
