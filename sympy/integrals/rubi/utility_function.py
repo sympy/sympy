@@ -205,6 +205,7 @@ def ZeroQ(expr):
         return expr == 0
 
 def NegativeQ(u):
+    u = simplify(u)
     if u == zoo or u == oo:
         return False
     res = u < 0
@@ -287,7 +288,8 @@ def FractionOrNegativeQ(u):
     return FractionQ(u) or NegativeQ(u)
 
 def NegQ(var):
-    return NegativeQ(var)
+    return Not(PosQ(var)) and NonzeroQ(var)
+
 
 def Equal(a, b):
     return a == b
@@ -1191,6 +1193,9 @@ def PosAux(u):
     elif SumQ(u):
         return PosAux(First(u))
     else:
+        res = u > 0
+        if res in(True, False):
+            return res
         return True
 
 def PosQ(u):
@@ -2935,15 +2940,9 @@ def TrinomialMatchQ(u, x):
     if isinstance(u, list):
         return all(TrinomialMatchQ(i, x) for i in u)
     else:
-        a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x, 0])
-        n = Wild('n', exclude=[x, 0])
-        c = Wild('c', exclude=[x, 0])
-        Match = Expand(u).match(a + b*x**n + c*x**(2*n))
-        if Match and Match[a] and Match[b] and Match[n] and Match[c]:
-            return True
-        else:
-            return False
+        pattern = Pattern(x**WC('j', S(1))*WC('c', S(1)) + x**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)) , CustomConstraint(lambda a, b, c, n, x: FreeQ([a, b, c, n], x)),  CustomConstraint(lambda j, n: ZeroQ(j-2*n) ))
+        from matchpy import is_match
+        return is_match(u, pattern)
 
 def GeneralizedBinomialMatchQ(u, x):
     if isinstance(u, list):
@@ -5872,7 +5871,7 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         try:
             if stdev(rand_val) < Pow(10, -3):
                 return True
-            return False
+            # return False
         except:
             return False
 

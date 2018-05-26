@@ -866,9 +866,10 @@ def test_BinomialMatchQ():
     assert not BinomialMatchQ(3*x, x)
 
 def test_TrinomialMatchQ():
-    assert TrinomialMatchQ((5 + 2*x**6)**2, x)
+    assert not TrinomialMatchQ((5 + 2*x**6)**2, x)
     assert not TrinomialMatchQ((7 + 8*x**6), x)
     assert TrinomialMatchQ((7 + 2*x**6 + 3*x**3), x)
+    assert TrinomialMatchQ(b*x**2 + c*x**4, x)
 
 def test_GeneralizedBinomialMatchQ():
     assert not GeneralizedBinomialMatchQ((1 + x**4), x)
