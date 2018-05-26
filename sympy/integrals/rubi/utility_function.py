@@ -30,7 +30,7 @@ if matchpy:
     from matchpy import Arity, Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer
     from matchpy.expressions.functions import register_operation_iterator, register_operation_factory
     from sympy.integrals.rubi.symbol import WC
-
+    from matchpy import is_match
     class UtilityOperator(Operation):
         name = 'UtilityOperator'
         arity = Arity.variadic
@@ -2927,21 +2927,16 @@ def BinomialMatchQ(u, x):
     if isinstance(u, list):
         return all(BinomialMatchQ(i, x) for i in u)
     else:
-        a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x, 0])
-        n = Wild('n', exclude=[x, 0])
-        Match = u.match(a + b*x**n)
-        if Match and Match[a] and Match[b] and Match[n]:
-            return True
-        else:
-            return False
+        pattern = Pattern(UtilityOperator(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)), x_) , CustomConstraint(lambda a,b,n,x : FreeQ([a,b,n],x)))
+        u = UtilityOperator(u, x)
+        return is_match(u, pattern)
 
 def TrinomialMatchQ(u, x):
     if isinstance(u, list):
         return all(TrinomialMatchQ(i, x) for i in u)
     else:
-        pattern = Pattern(x**WC('j', S(1))*WC('c', S(1)) + x**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)) , CustomConstraint(lambda a, b, c, n, x: FreeQ([a, b, c, n], x)),  CustomConstraint(lambda j, n: ZeroQ(j-2*n) ))
-        from matchpy import is_match
+        pattern = Pattern(UtilityOperator(x_**WC('j', S(1))*WC('c', S(1)) + x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)), x_) , CustomConstraint(lambda a, b, c, n, x: FreeQ([a, b, c, n], x)),  CustomConstraint(lambda j, n: ZeroQ(j-2*n) ))
+        u = UtilityOperator(u, x)
         return is_match(u, pattern)
 
 def GeneralizedBinomialMatchQ(u, x):

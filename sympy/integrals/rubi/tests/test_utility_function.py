@@ -861,9 +861,11 @@ def test_CubicMatchQ():
     assert CubicMatchQ(S(3 + x**3 + 2*x), x)
 
 def test_BinomialMatchQ():
+    assert BinomialMatchQ(x, x)
     assert BinomialMatchQ(2 + 3*x**5, x)
-    assert not BinomialMatchQ(3*x**5, x)
-    assert not BinomialMatchQ(3*x, x)
+    assert BinomialMatchQ(3*x**5, x)
+    assert BinomialMatchQ(3*x, x)
+    assert not BinomialMatchQ(x + x**2 + x**3, x)
 
 def test_TrinomialMatchQ():
     assert not TrinomialMatchQ((5 + 2*x**6)**2, x)
