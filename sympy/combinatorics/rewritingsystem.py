@@ -38,9 +38,7 @@ class RewritingSystem(object):
         self._init_rules()
 
         # Automaton variables
-        self.automaton_alphabet = []
-        self.left_hand_rules = []
-        self.proper_prefixes = {}
+        self.reduction_automaton = self.construct_automaton()
 
     def set_max(self, n):
         '''
@@ -80,6 +78,7 @@ class RewritingSystem(object):
             self._max_exceeded = True
             raise RuntimeError("Too many rules were defined.")
         self.rules[r1] = r2
+        self.reduction_automaton = self.construct_automaton()
 
     def add_rule(self, w1, w2, check=False):
         new_keys = set()
@@ -141,6 +140,7 @@ class RewritingSystem(object):
                 new = self.add_rule(w1, w2, check)
                 new_keys.update(new)
 
+        self.reduction_automaton = self.construct_automaton()
         return new_keys
 
     def _remove_redundancies(self, changes=False):
@@ -302,38 +302,43 @@ class RewritingSystem(object):
 
         '''
 
+        automaton_alphabet = []
+        left_hand_rules = []
+        proper_prefixes = {}
+
         generators = list(self.alphabet)
         generators += [gen**-1 for gen in generators]
 
         # Contains the alphabets that will be used for state transitions.
-        self.automaton_alphabet = generators
+        automaton_alphabet = generators
 
         # Store the complete left hand side of the rules - dead states.
-        self.left_hand_rules = list(self.rules)
+        left_hand_rules = list(self.rules)
 
         # Compute the proper prefixes for every rule.
         for r in self.rules:
-            self.proper_prefixes[r] = []
+            proper_prefixes[r] = []
             letter_word_array = [s for s in r.letter_form_elm]
             for i in range (1, len(letter_word_array)):
                 letter_word_array[i] = letter_word_array[i-1]*letter_word_array[i]
-            self.proper_prefixes[r] = letter_word_array
+            proper_prefixes[r] = letter_word_array
 
         # Create the states in the automaton.
         # The left-hand side of the rules are the dead states.
         # The proper left-hand side of the rules are the accept states.
 
+        # Create a finite state machine as an instance of the StateMachine object
         fsm = StateMachine('fsm')
         fsm.add_state('start', is_start=True)
 
         # Add dead states.
-        for rule in self.left_hand_rules:
+        for rule in left_hand_rules:
             if not rule in fsm.state_names:
                 fsm.add_state(rule, is_dead=True)
 
         # Add accept states.
         for r in self.rules:
-            prop_prefix = self.proper_prefixes[r]
+            prop_prefix = proper_prefixes[r]
             for elem in prop_prefix:
                 if not elem in fsm.state_names:
                     fsm.add_state(elem, is_accept=True)
@@ -343,13 +348,13 @@ class RewritingSystem(object):
             current_state_name = state.name
             current_state_type = state.state_type
             if current_state_type == "start":
-                for letter in self.automaton_alphabet:
+                for letter in automaton_alphabet:
                     if letter in fsm.state_names:
                         state.add_transition(letter, letter)
                     else:
                         state.add_transition(letter, current_state_name)
             elif current_state_type == "accept":
-                for letter in self.automaton_alphabet:
+                for letter in automaton_alphabet:
                     next = current_state_name*letter
                     len_next_word = len(next)
                     while True:
@@ -374,15 +379,15 @@ class RewritingSystem(object):
         This is repeated until the word reaches the end and the automaton stays in the accept state.
 
         '''
-        fsm = self.construct_automaton()
+
         while True:
             flag = 1
-            current_state = fsm.states[0]
+            current_state = self.reduction_automaton.states[0]
             word_array = [s for s in word.letter_form_elm]
             for i in range (0, len(word_array)):
                 next_state_name = current_state.transitions[word_array[i]]
                 next_state = None
-                for state in fsm.states:
+                for state in self.reduction_automaton.states:
                     if state.name == next_state_name:
                         next_state = state
                 if next_state.state_type == "dead":
