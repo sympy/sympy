@@ -205,7 +205,7 @@ class DiscretePSpace(PSpace):
     def eval_prob(self, _domain):
         sym = list(self.symbols)[0]
         if isinstance(_domain, Range):
-            n = symbols('n', real = True, finite = True)
+            n = symbols('n', integer=True, finite=True)
             inf, sup, step = (r for r in _domain.args)
             summand = ((self.pdf).replace(
               sym, n*step))
