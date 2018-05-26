@@ -16,11 +16,6 @@ def test_rewriting():
     assert R.reduce_using_automaton(b**3*a**4*b**-2*a) == a**5*b
     assert R.reduce_using_automaton(b**-1*a) == a*b**-1
 
-    # Add rules
-    R.add_rule(a*b**5, b**2)
-    assert G.reduce(b**2*a*b**3) == a**-1*b**-1
-    assert R.reduce_using_automaton(b**2*a*b**3) == a**-1*b**-1
-
     G = FpGroup(F, [a**2, b**3, (a*b)**4])
     a, b = G.generators
     R = G._rewriting_system
@@ -39,5 +34,3 @@ def test_rewriting():
     # Additional tests
     assert G.reduce(a**2*b**-1*a) == b*a**-1
     assert R.reduce_using_automaton(a**2*b**-1*a) == b*a**-1
-    assert G.reduce(a**2*b**-1*a*b**3*a**-2) == b
-    assert R.reduce_using_automaton(a**2*b**-1*a*b**3*a**-2) == b
