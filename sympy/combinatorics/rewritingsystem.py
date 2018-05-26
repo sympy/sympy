@@ -38,7 +38,7 @@ class RewritingSystem(object):
         self._init_rules()
 
         # Automaton variables
-        self.automaton_alphabets = []
+        self.automaton_alphabet = []
         self.left_hand_rules = []
         self.proper_prefixes = {}
 
@@ -302,18 +302,14 @@ class RewritingSystem(object):
 
         '''
 
-        generators = [x for x in self.alphabet]
-        for gen in generators:
-            if not gen**-1 in generators:
-                generators.append(gen**-1)
+        generators = list(self.alphabet)
+        generators += [gen**-1 for gen in generators]
 
         # Contains the alphabets that will be used for state transitions.
-        self.automaton_alphabets = generators
+        self.automaton_alphabet = generators
 
         # Store the complete left hand side of the rules - dead states.
-        for r in self.rules:
-            if not r in self.left_hand_rules:
-                self.left_hand_rules.append(r)
+        self.left_hand_rules = list(self.rules)
 
         # Compute the proper prefixes for every rule.
         for r in self.rules:
@@ -347,13 +343,13 @@ class RewritingSystem(object):
             current_state_name = state.name
             current_state_type = state.state_type
             if current_state_type == "start":
-                for letter in self.automaton_alphabets:
+                for letter in self.automaton_alphabet:
                     if letter in fsm.state_names:
                         state.add_transition(letter, letter)
                     else:
                         state.add_transition(letter, current_state_name)
             elif current_state_type == "accept":
-                for letter in self.automaton_alphabets:
+                for letter in self.automaton_alphabet:
                     next = current_state_name*letter
                     len_next_word = len(next)
                     while True:
@@ -372,7 +368,7 @@ class RewritingSystem(object):
 
     def reduce_using_automaton(self, word):
         '''
-        The method for word reduction using automaton is mentioned in the section 13.1.3 of the Handook.
+        The method for word reduction using automaton is mentioned in the section 13.1.3 of the Handbook.
         All the elements of the automaton are stored in an array and are given as the input to the automaton.
         If the automaton reaches a dead state that subword is replaced and the automaton is run from the beginning.
         This is repeated until the word reaches the end and the automaton stays in the accept state.

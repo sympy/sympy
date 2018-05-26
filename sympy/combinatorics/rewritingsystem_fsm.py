@@ -6,7 +6,7 @@ class State(object):
         transisitons (OrderedDict): Represents all the transitions of the state object.
         is_start (boolean): To mark if the state is a start state.
         is_dead (boolean): To mark if the state is a dead state.
-        is_accept (boolean): To mark if te state is an accept state.
+        is_accept (boolean): To mark if the state is an accept state.
     """
 
 
@@ -24,30 +24,15 @@ class State(object):
         elif is_dead:
             self.state_type = "dead"
 
-    def add_transition(self, alphabet, state):
+    def add_transition(self, letter, state):
         """
         This method is to add a transition from the current state to a new state.
 
         Arguments:
-            alphabet: The alphabet the current state reads to make the state transition.
+            letter: The alphabet element the current state reads to make the state transition.
             state: This will be an instance of the State object which represents a new state after in the transition after the alphabet is read.
         """
-        self.transitions[alphabet] = state
-
-    def set_start(self):
-        self.is_start = True
-        self.state_type = "start"
-
-    def set_dead(self):
-        self.is_accept = False
-        self.is_dead = True
-        self.transisitons = {} # empty the transitions if it is a dead state.
-        self.state_type = "dead"
-
-    def set_accept(self):
-        self.is_dead = False
-        self.is_accept = True
-        self.state_type = "accept"
+        self.transitions[letter] = state
 
 class StateMachine(object):
     """ The state machine class which manages the states and their transisitons of the automata.
