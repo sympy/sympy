@@ -160,14 +160,15 @@ if matchpy:
         #from sympy.integrals.rubi.rules.derivative import derivative
         from sympy.integrals.rubi.rules.piecewise_linear import piecewise_linear
         #from sympy.integrals.rubi.rules.miscellaneous_integration import miscellaneous_integration
-
-        rubi = ManyToOneReplacer()
-        #rubi = integrand_simplification(rubi)
-        rubi = linear_products(rubi)
-        rubi = quadratic_products(rubi)
-        rubi = binomial_products(rubi)
-        #rubi = trinomial_products(rubi)
-        #rubi = miscellaneous_algebraic(rubi)
+        rules = []
+        rules_applied = []
+        rules += integrand_simplification(rules_applied)
+        rules += linear_products(rules_applied)
+        rules += quadratic_products(rules_applied)
+        rules += binomial_products(rules_applied)
+        rubi = ManyToOneReplacer(*rules)
+        # rubi = miscellaneous_algebraic(rubi)
+        # rubi = trinomial_products(rubi)
         #rubi = exponential(rubi)
         #rubi = logarithms(rubi)
         #rubi = sine(rubi)
@@ -179,10 +180,27 @@ if matchpy:
         #rubi = inverse_hyperbolic(rubi)
         #rubi = piecewise_linear(rubi)
         #rubi = miscellaneous_integration(rubi)
+        #mit = ManyToOneReplacer(*rules)
+        return rubi, rules_applied, rules
 
-        return rubi
+    rubi, rules_applied, rules = rubi_object()
 
-    rubi = rubi_object()
+@doctest_depends_on(modules=('matchpy',))
+def remove_rule(rule, expr, var):
+    rules_applied[:] = []
+    new_rules = rules
+    new_rules.remove(rule)
+    new_rubi = ManyToOneReplacer(*new_rules)
+    a = new_rubi.replace(Integral(expr, var))
+    rules_applied[:] = []
+    return a
+
+def _has_cycle(): #this has to  be improved
+    if rules_applied.count(rules_applied[-1]) == 1:
+        return False
+    if rules_applied[-1] == rules_applied[-2] == rules_applied[-3]:
+        return True
+
 
 @doctest_depends_on(modules=('matchpy',))
 def rubi_integrate(expr, var, showsteps=False):
@@ -199,12 +217,39 @@ def rubi_integrate(expr, var, showsteps=False):
 
     Returns Integral object if unable to integrate.
     '''
+    rules_applied[:] = []
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
 
-    result = rubi.replace(Integral(expr, var))
+    from sympy import Add
+    if isinstance(expr, Add):
+        results = 0
+        for ex in expr.args:
+            rules_applied[:] = []
+            results += rubi.replace(Integral(ex, var))
+            rules_applied[:] = []
+        return results
 
-    return result
+    results = rubi.replace(Integral(expr, var))
+    return results
+
+
+@doctest_depends_on(modules=('matchpy',))
+def util_rubi_integrate(expr, var, showsteps=False):
+    if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
+        return S(expr)*var
+    from sympy import Add
+    if isinstance(expr, Add):
+        return rubi_integrate(expr, var)
+
+    if len(rules_applied) > 6:
+        if _has_cycle():
+            ru = remove_rule(rules[rules_applied[-1] - 1], expr, var)
+            return ru
+
+    results = rubi.replace(Integral(expr, var))
+    rules_applied[:] = []
+    return results
 
 
 @doctest_depends_on(modules=('matchpy',))

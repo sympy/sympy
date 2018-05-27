@@ -61,6 +61,8 @@ def test_PositiveQ():
     assert not PositiveQ(S(-3))
     assert not PositiveQ(S(0))
     assert not PositiveQ(zoo)
+    assert not PositiveQ(I)
+    assert PositiveQ(b/(b*(b*c/(-a*d + b*c)) - a*(b*d/(-a*d + b*c))))
 
 def test_IntegerQ():
     assert IntegerQ(S(1))
@@ -106,6 +108,7 @@ def test_Coefficient():
     assert Coefficient(a + b*x + c*x**3, x, 0) == a
     assert Coefficient(a + b*x + c*x**3, x, 4) == 0
     assert Coefficient(b*x + c*x**3, x, 3) == c
+    assert Coefficient(x, x, -1) == 0
 
 def test_Denominator():
     assert Denominator(S(3)/2) == 2
@@ -131,6 +134,7 @@ def test_IntegerPart():
 
 def test_AppellF1():
     assert AppellF1(1,0,0.5,1,0.5,0.25) == 1.154700538379251529018298
+    assert AppellF1(a, b, c, d, e, f) == AppellF1(a, b, c, d, e, f)
 
 def test_Simplify():
     assert Simplify(sin(x)**2 + cos(x)**2) == 1
@@ -857,14 +861,17 @@ def test_CubicMatchQ():
     assert CubicMatchQ(S(3 + x**3 + 2*x), x)
 
 def test_BinomialMatchQ():
+    assert BinomialMatchQ(x, x)
     assert BinomialMatchQ(2 + 3*x**5, x)
-    assert not BinomialMatchQ(3*x**5, x)
-    assert not BinomialMatchQ(3*x, x)
+    assert BinomialMatchQ(3*x**5, x)
+    assert BinomialMatchQ(3*x, x)
+    assert not BinomialMatchQ(x + x**2 + x**3, x)
 
 def test_TrinomialMatchQ():
-    assert TrinomialMatchQ((5 + 2*x**6)**2, x)
+    assert not TrinomialMatchQ((5 + 2*x**6)**2, x)
     assert not TrinomialMatchQ((7 + 8*x**6), x)
     assert TrinomialMatchQ((7 + 2*x**6 + 3*x**3), x)
+    assert TrinomialMatchQ(b*x**2 + c*x**4, x)
 
 def test_GeneralizedBinomialMatchQ():
     assert not GeneralizedBinomialMatchQ((1 + x**4), x)

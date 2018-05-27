@@ -18,8 +18,8 @@ from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, er
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul,
-    Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E,
-    expand_trig, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr)
+    Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E, Function,
+    expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr)
 from mpmath import appellf1
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
 from sympy.utilities.iterables import flatten
@@ -30,7 +30,7 @@ if matchpy:
     from matchpy import Arity, Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer
     from matchpy.expressions.functions import register_operation_iterator, register_operation_factory
     from sympy.integrals.rubi.symbol import WC
-
+    from matchpy import is_match
     class UtilityOperator(Operation):
         name = 'UtilityOperator'
         arity = Arity.variadic
@@ -158,8 +158,8 @@ if matchpy:
     a, b, c, d, e = symbols('a b c d e')
 
 def Int(expr, var):
-    from sympy.integrals.rubi.rubi import rubi_integrate
-    return rubi_integrate(expr, var)
+    from sympy.integrals.rubi.rubi import util_rubi_integrate
+    return util_rubi_integrate(expr, var)
 
 def Set(expr, value):
     return {expr: value}
@@ -205,6 +205,7 @@ def ZeroQ(expr):
         return expr == 0
 
 def NegativeQ(u):
+    u = simplify(u)
     if u == zoo or u == oo:
         return False
     res = u < 0
@@ -231,7 +232,8 @@ def Log(e):
     return log(e)
 
 def PositiveQ(var):
-    if var.has(zoo) or var.has(oo):
+    var = simplify(var)
+    if var in (zoo, oo, I, -I):
         return False
     res = var > 0
     if not res.is_Relational:
@@ -286,7 +288,8 @@ def FractionOrNegativeQ(u):
     return FractionQ(u) or NegativeQ(u)
 
 def NegQ(var):
-    return NegativeQ(var)
+    return Not(PosQ(var)) and NonzeroQ(var)
+
 
 def Equal(a, b):
     return a == b
@@ -458,11 +461,8 @@ def Coefficient(expr, var, n=1):
     c
 
     """
-    a = Poly(expr, var)
-    if (degree(a) - n) < 0:
-        return 0
-    else:
-        return a.all_coeffs()[degree(a) - n]
+    expr = expand(expr)
+    return expr.coeff(var, n)
 
 def Denominator(var):
     return fraction(var)[1]
@@ -487,7 +487,10 @@ def IntegerPart(a):
     return floor(a)
 
 def AppellF1(a, b1, b2, c, x, y):
-    return appellf1(a, b1, b2, c, x, y)
+    try:
+        return appellf1(a, b1, b2, c, x, y)
+    except TypeError:
+        return Function('AppellF1')(a, b1, b2, c, x, y)
 
 def EllipticPi(*args):
     return elliptic_pi(*args)
@@ -1190,6 +1193,9 @@ def PosAux(u):
     elif SumQ(u):
         return PosAux(First(u))
     else:
+        res = u > 0
+        if res in(True, False):
+            return res
         return True
 
 def PosQ(u):
@@ -2877,6 +2883,7 @@ def LinearMatchQ(u, x):
         re = u.match(a + b*x)
         if re:
             return True
+    return False
 
 def PowerOfLinearMatchQ(u, x):
     if isinstance(u, list):
@@ -2920,28 +2927,17 @@ def BinomialMatchQ(u, x):
     if isinstance(u, list):
         return all(BinomialMatchQ(i, x) for i in u)
     else:
-        a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x, 0])
-        n = Wild('n', exclude=[x, 0])
-        Match = u.match(a + b*x**n)
-        if Match and Match[a] and Match[b] and Match[n]:
-            return True
-        else:
-            return False
+        pattern = Pattern(UtilityOperator(x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)), x_) , CustomConstraint(lambda a,b,n,x : FreeQ([a,b,n],x)))
+        u = UtilityOperator(u, x)
+        return is_match(u, pattern)
 
 def TrinomialMatchQ(u, x):
     if isinstance(u, list):
         return all(TrinomialMatchQ(i, x) for i in u)
     else:
-        a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x, 0])
-        n = Wild('n', exclude=[x, 0])
-        c = Wild('c', exclude=[x, 0])
-        Match = Expand(u).match(a + b*x**n + c*x**(2*n))
-        if Match and Match[a] and Match[b] and Match[n] and Match[c]:
-            return True
-        else:
-            return False
+        pattern = Pattern(UtilityOperator(x_**WC('j', S(1))*WC('c', S(1)) + x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)), x_) , CustomConstraint(lambda a, b, c, n, x: FreeQ([a, b, c, n], x)),  CustomConstraint(lambda j, n: ZeroQ(j-2*n) ))
+        u = UtilityOperator(u, x)
+        return is_match(u, pattern)
 
 def GeneralizedBinomialMatchQ(u, x):
     if isinstance(u, list):
@@ -5870,7 +5866,7 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         try:
             if stdev(rand_val) < Pow(10, -3):
                 return True
-            return False
+            # return False
         except:
             return False
 
