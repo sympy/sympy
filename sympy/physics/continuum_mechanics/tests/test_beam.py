@@ -1,4 +1,4 @@
-from sympy import Symbol, symbols
+from sympy import Symbol, symbols, S
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction
 from sympy.utilities.pytest import raises
@@ -206,3 +206,15 @@ def test_remove_load():
     b.remove_load(4, 2, -1)
     assert b.load == 0
     assert b.applied_loads == []
+
+def test_point_cflexure():
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    b.apply_load(-4, 0, -1)
+    b.apply_load(-46, 6, -1)
+    b.apply_load(10, 2, -1)
+    b.apply_load(20, 4, -1)
+    b.apply_load(3, 6, 0)
+
+    assert b.point_cflexure() == {S(10)/3}
