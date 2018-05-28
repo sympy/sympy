@@ -107,7 +107,7 @@ if sys.version_info >= (3, 5):
 
 WHITELISTED_NODES = tuple(WHITELISTED_NODES)
 
-BLACKLISTED_NAMES = ['eval', 'exec', 'sympify', 'parse_expr']
+BLACKLISTED_NAMES = ['eval', 'exec', 'sympify', 'parse_expr', 'locals', 'globals']
 
 def check_string_for_safety(s, whitelisted_nodes=WHITELISTED_NODES,
     blacklisted_names=BLACKLISTED_NAMES):
