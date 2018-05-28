@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Parser that allows evaling expressions (mostly) safely
 
@@ -18,7 +19,10 @@ import ast
 # minimize the attack surface. The dangerous nodes include comprehensions
 # (they create their own namespace), and attribute access (see
 # https://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html).
-whitelisted_nodes = [
+WHITELISTED_NODES = [
+    ast.Module,
+    ast.Expr,
+
     # Literals
     ast.Num,
     ast.Str,
@@ -85,18 +89,47 @@ whitelisted_nodes = [
 
 # Python 3-only
 if sys.version_info >= (3,):
-    whitelisted_nodes += [
+    WHITELISTED_NODES += [
         ast.Bytes
     ]
 
 if sys.version_info >= (3, 4):
-    whitelisted_nodes += [
+    WHITELISTED_NODES += [
         # True, False, None
-        ast.NamedConstant,
+        ast.NameConstant,
     ]
 
 if sys.version_info >= (3, 5):
-    whitelisted_nodes += [
+    WHITELISTED_NODES += [
         # Matmul (A @ B)
         ast.MatMult,
     ]
+
+WHITELISTED_NODES = tuple(WHITELISTED_NODES)
+
+DISALLOWED_NAMES = ['eval', 'exec', 'sympify', 'parse_expr']
+
+def check_string_for_safety(s, whitelisted_nodes=WHITELISTED_NODES,
+    disallowed_names=DISALLOWED_NAMES):
+    """
+    Checks if the input string is safe for parsing.
+
+    Returns None if the string s is safe to parse and raises
+    UnsafeSympifyError if it is not.
+
+    whitelisted_nodes should be a tuple of AST types to be whitelisted.
+
+    disallowed_names should be a list of variable names that are disallowed.
+
+    """
+    from ..core.sympify import UnsafeSympifyError
+
+    p = ast.parse(s)
+    for node in ast.walk(p):
+        if not isinstance(node, whitelisted_nodes):
+            raise UnsafeSympifyError(s, reason='Non-whitelisted AST node %s found' % node)
+
+        if isinstance(node, ast.Name) and node.id in disallowed_names:
+            # Note, the AST module normalizes Unicode characters
+            # automatically, so we don't need to worry about things like evªl.
+            raise UnsafeSympifyError(s, reason='disallowed name %r found' % node.id)
