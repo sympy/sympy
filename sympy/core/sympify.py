@@ -224,19 +224,30 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     be unsafe to use on untrusted arbitrary input,
 
     If the option ``safe`` is set to ``True`` (the default), expressions that
-    are considered unsafe to parse raise ``UnsafeSympifyError``. In the
-    current implementation, this is any expression with an attribute access.
-    This avoids most (but not all) potential security issues with using
-    ``sympify`` on untrusted input. However, we cannot guarantee that there
-    are still not ways to run arbitrary code, and there may still be "safe"
-    expressions that hang or crash the interpreter. Therefore, it is still
-    highly recommended to properly sandbox your code if you will be accepting
-    arbitrary untrusted input.
+    are considered unsafe to parse raise ``UnsafeSympifyError``. The current
+    implementation implements an AST node whitelist and a name blacklist.
+    There are some important caveats here, however.
+
+    - It may still be possible to construct "safe" expressions that crash the
+      Python interpreter or cause it to run out of memory, for instance, a
+      numeric expression that when evaluated produces a number that cannot fit
+      in memory. The current implementation does not attempt to protect
+      against these scenarios.
+
+    - The safe parsing is only safe if the default locals=None is used. If
+      user-defined names can be added to the locals dictionary, the user could
+      simply redefine the ``eval`` function and bypass the name blacklisting.
+
+    - We cannot guarantee that there won't be ways to bypass the safety checks
+      andrun arbitrary code. It is still highly recommended to properly
+      sandbox your code if you will be passing arbitrary untrusted input to
+      sympify.
 
     >>> sympify('a.b')
     Traceback (most recent call last):
     ...
-    sympy.core.sympify.UnsafeSympifyError: 'a.b' cannot be parsed safely
+    sympy.core.sympify.UnsafeSympifyError: 'a.b' cannot be parsed safely.
+    Reason: Non-whitelisted AST node <_ast.Attribute object at ...> found.
 
     Extending
     ---------
