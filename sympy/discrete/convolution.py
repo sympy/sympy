@@ -4,8 +4,8 @@ Arithmetic Convolution (bitwise XOR, AND, OR), Subset Convolution
 """
 from __future__ import print_function, division
 
-from sympy.core import S, sympify
-from sympy.core.compatibility import range, iterable
+from sympy.core import S
+from sympy.core.compatibility import range, as_int
 from sympy.core.function import expand_mul
 from sympy.discrete.transforms import fft, ifft, ntt, intt
 
@@ -164,7 +164,7 @@ def convolution_ntt(a, b, prime, cycle=None):
 
     """
 
-    a, b, c = a[:], b[:], cycle
+    a, b, c, p = a[:], b[:], cycle, as_int(prime)
     n = m = len(a) + len(b) - 1 # convolution size
 
     nb = n.bit_length()
@@ -177,8 +177,8 @@ def convolution_ntt(a, b, prime, cycle=None):
 
     a, b = ntt(a, prime), ntt(b, prime)
     for i in range(n):
-        a[i] = a[i]*b[i]%prime
+        a[i] = a[i]*b[i] % p
 
-    a = intt(a, prime)[:m]
+    a = intt(a, p)[:m]
 
-    return a if c is None else [sum(a[i::c])%prime for i in range(c)]
+    return a if c is None else [sum(a[i::c]) % p for i in range(c)]
