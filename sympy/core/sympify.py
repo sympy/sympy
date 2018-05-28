@@ -239,7 +239,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
       simply redefine the ``eval`` function and bypass the name blacklisting.
 
     - We cannot guarantee that there won't be ways to bypass the safety checks
-      andrun arbitrary code. It is still highly recommended to properly
+      and run arbitrary code. It is still highly recommended to properly
       sandbox your code if you will be passing arbitrary untrusted input to
       sympify.
 
