@@ -841,9 +841,6 @@ def stringify_expr(s, local_dict, global_dict, transformations, safe=True):
 
     Generally, ``parse_expr`` should be used.
     """
-    from .safe_parser import check_string_for_safety
-    if safe:
-        check_string_for_safety(s)
     tokens = []
     input_code = StringIO(s.strip())
     for toknum, tokval, _, _, _ in generate_tokens(input_code.readline):
@@ -852,8 +849,13 @@ def stringify_expr(s, local_dict, global_dict, transformations, safe=True):
     for transform in transformations:
         tokens = transform(tokens, local_dict, global_dict)
 
-    return untokenize(tokens)
+    res = untokenize(tokens)
 
+    if safe:
+        from .safe_parser import check_string_for_safety
+        check_string_for_safety(res)
+
+    return res
 
 def eval_expr(code, local_dict, global_dict):
     """
