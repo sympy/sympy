@@ -6,10 +6,10 @@ singularity functions in mechanics.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol, diff
-from sympy.solvers import linsolve
+from sympy.core import S, Symbol, diff, expand
+from sympy.solvers import linsolve, solve
 from sympy.printing import sstr
-from sympy.functions import SingularityFunction
+from sympy.functions import SingularityFunction, Piecewise
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
@@ -92,6 +92,7 @@ class Beam(object):
         self.variable = variable
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
+        self._reaction_symbols = set()
         self._reaction_loads = {}
 
     def __str__(self):
@@ -257,6 +258,8 @@ class Beam(object):
         order = sympify(order)
 
         self._load += value*SingularityFunction(x, start, order)
+        
+        self._reaction_symbols = self._reaction_symbols.union(value.free_symbols)
 
         if end:
             if order == 0:
@@ -331,11 +334,34 @@ class Beam(object):
         """
         x = self.variable
         l = self.length
+        C3 = Symbol('C3')
+        C4 = Symbol('C4')
+
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
-        reaction_values = linsolve([shear_curve, moment_curve], reactions).args
-        self._reaction_loads = dict(zip(reactions, reaction_values[0]))
-        self._load = self._load.subs(self._reaction_loads)
+
+        slope_eqs = []
+        deflection_eqs = []
+
+        slope_curve = integrate(self.bending_moment(), x) + C3
+    
+
+        for position, value in self._boundary_conditions['slope']:
+            eqs = slope_curve.subs(x, position) - value
+            slope_eqs.append(eqs)
+
+        deflection_curve = integrate(slope_curve, x) + C4
+
+        for position, value in self._boundary_conditions['deflection']:
+            eqs = deflection_curve.subs(x, position) - value
+            deflection_eqs.append(eqs)
+       
+        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs + deflection_eqs, (C3, C4) + reactions).args)[0])
+        
+        solution = solution[2:]
+
+        self._reaction_loads = dict(zip(reactions, solution))
+        self._load = self._load.subs(self._reaction_loads)   
 
     def shear_force(self):
         """
@@ -451,7 +477,7 @@ class Beam(object):
             eqs = slope_curve.subs(x, position) - value
             bc_eqs.append(eqs)
 
-        constants = list(linsolve(bc_eqs, C3))
+        constants = list(linsolve(bc_eqs, (C3,)+tuple(self._reaction_symbols)))
         slope_curve = slope_curve.subs({C3: constants[0][0]})
         return S(1)/(E*I)*slope_curve
 
@@ -468,10 +494,8 @@ class Beam(object):
         point. There are two simple supports below the beam. One at the end
         and another one at a distance of 10 meters from the start. The
         deflection is restricted at both the supports.
-
         Using the sign convention of upward forces and clockwise moment
         being positive.
-
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -503,7 +527,7 @@ class Beam(object):
             for position, value in self._boundary_conditions['deflection']:
                 eqs = deflection_curve.subs(x, position) - value
                 bc_eqs.append(eqs)
-            constants = list(linsolve(bc_eqs, (C3, C4)))
+            constants = list(linsolve(bc_eqs, (C3, C4)+tuple(self._reaction_symbols)))
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
             return S(1)/(E*I)*deflection_curve
 
@@ -515,6 +539,43 @@ class Beam(object):
             eqs = deflection_curve.subs(x, position) - value
             bc_eqs.append(eqs)
 
-        constants = list(linsolve(bc_eqs, C4))
-        deflection_curve = deflection_curve.subs({C4: constants[0][0]})
+        constants = list(linsolve(bc_eqs, (C4,)+tuple(self._reaction_symbols)))
+        deflection_curve = deflection_curve.subs({C4: expand(constants[0][0])})
         return S(1)/(E*I)*deflection_curve
+
+    def max_deflection(self):
+        """
+        Return the maximum deflection point in form of tuple of x and deflection.
+
+        Examples
+        ========
+        There is a beam of length l with simple supports at both ends. A point load F is applied at the center of the beam.
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols, Symbol
+        >>> E, I = symbols('E, I')
+        >>> l = Symbol('l', positive=True)
+        >>> R1, R2 = symbols('R1, R2')
+        >>> F = Symbol('F')
+        >>> b = Beam(l, E, I)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(R2, l, -1)
+        >>> b.apply_load(-F, l/2, -1)
+        >>> b.bc_deflection = [(0, 0),(l, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.max_deflection()
+        (l/2, -F*l**3/(48*E*I))
+        """
+
+        extrema = []
+        
+        extreme_points = solve(self.slope().rewrite(Piecewise), self.variable, domain=S.Reals)
+        for ep in extreme_points:
+            extrema.append(self.deflection().subs(self.variable, ep))
+        
+        maximum = max(map(abs, extrema))
+        
+        for i in range(0, len(extrema)):
+            if abs(extrema[i]) == maximum:
+                return (extreme_points[i], extrema[i])
+        
+        return None
