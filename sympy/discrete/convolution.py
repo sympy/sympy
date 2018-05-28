@@ -1,6 +1,6 @@
 """
-Linear Convolution, Arithmetic Convolution (bitwise XOR, AND, OR),
-Subset Convolution, Superset Convolution
+Convolution (using FFT, NTT),
+Arithmetic Convolution (bitwise XOR, AND, OR), Subset Convolution
 """
 from __future__ import print_function, division
 
@@ -29,10 +29,11 @@ def convolution(a, b, **hints):
         dps : Integer
             Specifies the number of decimal digits for precision for
             performing FFT on the sequence.
-
-        p : Integer
+        prime : Integer
             Prime modulus of the form (m*2**k + 1) to be used for
             performing NTT on the sequence.
+        cycle : Integer
+            Specifies the length for doing cyclic convolution.
 
     Examples
     ========
@@ -42,22 +43,23 @@ def convolution(a, b, **hints):
     >>> convolution([1 + 2*I, 4 + 3*I], [S(5)/4, 6], dps=3)
     [1.25 + 2.5*I, 11.0 + 15.8*I, 24.0 + 18.0*I]
 
-    >>> convolution([111, 777], [888, 444], p=19*2**10 + 1)
+    >>> convolution([111, 777], [888, 444], prime=19*2**10 + 1)
     [1283, 19351, 14219]
     """
 
-    p = hints.pop('p', None)
     dps = hints.pop('dps', None)
+    prime = hints.pop('prime', None)
+    cycle = hints.pop('cycle', None)
 
-    if sum(x is not None for x in (p, dps)) > 1:
+    if sum(x is not None for x in (prime, dps)) > 1:
         raise TypeError("Ambiguity in determining the convolution type")
 
-    if p is not None:
-        return convolution_ntt(a, b, p)
+    if prime is not None:
+        return convolution_ntt(a, b, prime=prime, cycle=cycle)
     elif hints.pop('ntt', False):
         raise TypeError("Prime modulus must be specified for performing NTT")
 
-    return convolution_fft(a, b, dps)
+    return convolution_fft(a, b, dps=dps, cycle=cycle)
 
 
 #----------------------------------------------------------------------------#
@@ -66,7 +68,7 @@ def convolution(a, b, **hints):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def convolution_fft(a, b, dps=None):
+def convolution_fft(a, b, dps=None, cycle=None):
     """
     Performs linear convolution using Fast Fourier Transform.
 
@@ -77,6 +79,8 @@ def convolution_fft(a, b, dps=None):
         The sequences for which convolution is performed.
     dps : Integer
         Specifies the number of decimal digits for precision.
+    cycle : Integer
+        Specifies the length for doing cyclic convolution.
 
     Examples
     ========
@@ -98,7 +102,7 @@ def convolution_fft(a, b, dps=None):
     .. [1] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general)
 
     """
-    a, b = a[:], b[:]
+    a, b, c = a[:], b[:], cycle
     n = m = len(a) + len(b) - 1 # convolution size
 
     nb = n.bit_length()
@@ -115,7 +119,7 @@ def convolution_fft(a, b, dps=None):
 
     a = ifft(a, dps)[:m]
 
-    return a
+    return a if c is None else [sum(a[i::c]) for i in range(c)]
 
 
 #----------------------------------------------------------------------------#
@@ -124,7 +128,7 @@ def convolution_fft(a, b, dps=None):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def convolution_ntt(a, b, p):
+def convolution_ntt(a, b, prime, cycle=None):
     """
     Performs linear convolution using Number Theoretic Transform.
 
@@ -133,21 +137,23 @@ def convolution_ntt(a, b, p):
 
     a, b : iterables
         The sequences for which convolution is performed.
-    p : Integer
+    prime : Integer
         Prime modulus of the form (m*2**k + 1) to be used for performing
         NTT on the sequence.
+    cycle : Integer
+        Specifies the length for doing cyclic convolution.
 
     Examples
     ========
 
     >>> from sympy import convolution_ntt
 
-    >>> convolution_ntt([2, 3], [4, 5], 19*2**10 + 1)
+    >>> convolution_ntt([2, 3], [4, 5], prime=19*2**10 + 1)
     [8, 22, 15]
-    >>> convolution_ntt([2, 5], [6, 7, 3], 19*2**10 + 1)
+    >>> convolution_ntt([2, 5], [6, 7, 3], prime=19*2**10 + 1)
     [12, 44, 41, 15]
 
-    >>> convolution_ntt([333, 555], [222, 666], 19*2**10 + 1)
+    >>> convolution_ntt([333, 555], [222, 666], prime=19*2**10 + 1)
     [15555, 14219, 19404]
 
     References
@@ -158,7 +164,7 @@ def convolution_ntt(a, b, p):
 
     """
 
-    a, b = a[:], b[:]
+    a, b, c = a[:], b[:], cycle
     n = m = len(a) + len(b) - 1 # convolution size
 
     nb = n.bit_length()
@@ -169,10 +175,10 @@ def convolution_ntt(a, b, p):
     a += [0]*(n - len(a))
     b += [0]*(n - len(b))
 
-    a, b = ntt(a, p), ntt(b, p)
+    a, b = ntt(a, prime), ntt(b, prime)
     for i in range(n):
-        a[i] = a[i]*b[i] % p
+        a[i] = a[i]*b[i]%prime
 
-    a = intt(a, p)[:m]
+    a = intt(a, prime)[:m]
 
-    return a
+    return a if c is None else [sum(a[i::c])%prime for i in range(c)]

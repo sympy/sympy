@@ -2,8 +2,7 @@
 
 Transforms - fft, ifft, ntt, intt, fwht, ifwht, fzt, ifzt, fmt, ifmt
 Convolution - convolution, convolution_fft, convolution_ntt,
-                convolution_xor, convolution_and, convolution_or,
-                convolution_subset, convolution_superset
+    convolution_xor, convolution_and, convolution_or, convolution_subset
 Recurrence Evaluation - reval_hcc
 """
 

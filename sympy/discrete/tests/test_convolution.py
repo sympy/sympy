@@ -8,7 +8,7 @@ from sympy.utilities.pytest import raises
 from sympy.abc import x, y
 
 def test_convolution():
-    a = [1, S(5)/3, sqrt(3)]
+    a = [1, S(5)/3, sqrt(3), S(7)/5]
     b = [9, 5, 5, 4, 3, 2]
     c = [3, 5, 3, 7, 8]
     d = [1422, 6572, 3213, 5552]
@@ -18,14 +18,69 @@ def test_convolution():
     assert convolution(a, d, fft=True, dps=7) == convolution_fft(d, a, dps=7)
     assert convolution(a, d[1:], dps=3) == convolution_fft(d[1:], a, dps=3)
 
+    assert convolution(a, b, fft=True, cycle=4) == convolution_fft(a, b, cycle=4)
+    assert convolution(a, b, dps=5, cycle=5) == convolution_fft(a, b, dps=5, cycle=5)
+    assert convolution(a, b, dps=7, cycle=6) == convolution_fft(a, b, dps=7, cycle=6)
+    assert convolution(a, b, cycle=None)
+
     # prime moduli of the form (m*2**k + 1), sequence length
     # should be a divisor of 2**k
     p = 7*17*2**23 + 1
     q = 19*2**10 + 1
-    raises(TypeError, lambda: convolution(a, b, ntt=True))
-    assert convolution(d, b, ntt=True, p=q) == convolution_ntt(b, d, p=q)
-    assert convolution(c, b, p=p) == convolution_ntt(b, c, p=p)
-    assert convolution(d, c, p=p, ntt=True) == convolution_ntt(c, d, p=p)
+    assert convolution(d, b, ntt=True, prime=q) == convolution_ntt(b, d, prime=q)
+    assert convolution(c, b, prime=p) == convolution_ntt(b, c, prime=p)
+    assert convolution(d, c, prime=p, ntt=True) == convolution_ntt(c, d, prime=p)
+
+    raises(TypeError, lambda: convolution(b, d, ntt=True))
+    raises(TypeError, lambda: convolution(b, d, ntt=True, cycle=None))
+    raises(TypeError, lambda: convolution(b, d, dps=5, prime=q))
+    raises(TypeError, lambda: convolution(b, d, dps=6, ntt=True, prime=q))
+    raises(TypeError, lambda: convolution(b, d, fft=True, dps=7, ntt=True, prime=q))
+
+    # ntt is a specialized variant of fft, TypeError should not be raised
+    assert convolution(b, d, fft=True, ntt=True, prime=q) == \
+            convolution_ntt(b, d, prime=q)
+
+
+def test_cyclic_convolution():
+    # fft
+    assert convolution_fft([1, 2, 3], [4, 5, 6], cycle=None) == \
+            convolution_fft([1, 2, 3], [4, 5, 6], cycle=5) == \
+                convolution_fft([1, 2, 3], [4, 5, 6])
+
+    assert convolution_fft([1, 2, 3], [4, 5, 6], cycle=3) == [31, 31, 28]
+
+    a = [S(1)/3, S(7)/3, S(5)/9, S(2)/7, S(5)/8]
+    b = [S(3)/5, S(4)/7, S(7)/8, S(8)/9]
+
+    assert convolution_fft(a, b, cycle=None) == \
+            convolution_fft(a, b, cycle=len(a) + len(b) - 1)
+
+    assert convolution_fft(a, b, cycle=4) == [S(87277)/26460, S(30521)/11340,
+                            S(11125)/4032, S(3653)/1080]
+
+    assert convolution_fft(a, b, cycle=6) == [S(20177)/20160, S(676)/315, S(47)/24,
+                            S(3053)/1080, S(16397)/5292, S(2497)/2268]
+
+    assert convolution_fft(a, b, cycle=9) == \
+                convolution_fft(a, b, cycle=None) + [S.Zero]
+
+    # ntt
+    a = [2313, 5323532, S(3232), 42142, 42242421]
+    b = [S(33456), 56757, 45754, 432423]
+
+    assert convolution_ntt(a, b, prime=19*2**10 + 1) == \
+            convolution_ntt(a, b, prime=19*2**10 + 1, cycle=None) == \
+                convolution_ntt(a, b, prime=19*2**10 + 1, cycle=8)
+
+    assert convolution_ntt(a, b, prime=19*2**10 + 1, cycle=5) == [96, 17146, 2664,
+                                                                    15534, 3517]
+
+    assert convolution_ntt(a, b, prime=19*2**10 + 1, cycle=7) == [4643, 3458, 1260,
+                                                        15534, 3517, 16314, 13688]
+
+    assert convolution_ntt(a, b, prime=19*2**10 + 1, cycle=9) == \
+        convolution_ntt(a, b, prime=19*2**10 + 1) + [0]
 
 
 def test_convolution_fft():
