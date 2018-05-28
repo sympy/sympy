@@ -193,7 +193,7 @@ def guess_generating_function_rational(v, X=Symbol('x')):
     if n <= 1: return None
     #   b) compute the numerator as p
     p = [sum(v[i-k]*q[k] for k in range(min(i+1, n)))
-            for i in range(len(v))] # TODO: maybe better with:  len(v)>>1
+            for i in range(len(v)>>1)]
     return (sum(p[k]*X**k for k in range(len(p)))
             / sum(q[k]*X**k for k in range(n)))
 

@@ -243,8 +243,8 @@ precision argument. Parameter definitions are easily avoided using the ``N``
 function.
 
     >>> print(fcode(x - pi**2 - E))
-          parameter (E = 2.71828182845905d0)
-          parameter (pi = 3.14159265358979d0)
+          parameter (E = 2.7182818284590452d0)
+          parameter (pi = 3.1415926535897932d0)
           x - pi**2 - E
     >>> print(fcode(x - pi**2 - E, precision=25))
           parameter (E = 2.718281828459045235360287d0)
@@ -279,7 +279,7 @@ translated in pure Fortran and (iii) a string of Fortran code. A few examples:
     >>> fcode(1 - sin(x)**2, human=False)
     (set(), set(), '      -sin(x)**2 + 1')
     >>> fcode(x - pi**2, human=False)
-    ({(pi, '3.14159265358979d0')}, set(), '      x - pi**2')
+    ({(pi, '3.1415926535897932d0')}, set(), '      x - pi**2')
 
 Mathematica code printing
 -------------------------
@@ -426,12 +426,19 @@ MathMLPrinter
 
 This class is responsible for MathML printing. See ``sympy.printing.mathml``.
 
-More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
+More info on mathml : http://www.w3.org/TR/MathML2
 
-.. autoclass:: MathMLPrinter
+.. autoclass:: MathMLPrinterBase
+
+.. autoclass:: MathMLContentPrinter
    :members:
 
-   .. autoattribute:: MathMLPrinter.printmethod
+   .. autoattribute:: MathMLContentPrinter.printmethod
+
+.. autoclass:: MathMLPresentationPrinter
+   :members:
+
+   .. autoattribute:: MathMLPresentationPrinter.printmethod
 
 .. autofunction:: mathml
 

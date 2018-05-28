@@ -6,7 +6,7 @@ from sympy.core import S
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyerrors import (ComputationFailed,
-    PolificationFailed, CoercionFailed)
+    PolificationFailed, CoercionFailed, PolynomialError)
 from sympy.simplify import rcollect
 from sympy.utilities import default_sort_key, postfixes
 
@@ -37,10 +37,7 @@ def solve_poly_system(seq, *gens, **args):
     if len(polys) == len(opt.gens) == 2:
         f, g = polys
 
-        a, b = f.degree_list()
-        c, d = g.degree_list()
-
-        if a <= 2 and b <= 2 and c <= 2 and d <= 2:
+        if all(i <= 2 for i in f.degree_list() + g.degree_list()):
             try:
                 return solve_biquadratic(f, g, opt)
             except SolveFailed:
@@ -79,13 +76,16 @@ def solve_biquadratic(f, g, opt):
     if len(G) != 2:
         raise SolveFailed
 
-    p, q = G
     x, y = opt.gens
+    p, q = G
+    if not p.gcd(q).is_ground:
+        # not 0-dimensional
+        raise SolveFailed
 
     p = Poly(p, x, expand=False)
-    q = q.ltrim(-1)
-
     p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]
+
+    q = q.ltrim(-1)
     q_roots = list(roots(q).keys())
 
     solutions = []
@@ -161,7 +161,7 @@ def solve_generic(polys, opt):
     def _is_univariate(f):
         """Returns True if 'f' is univariate in its last variable. """
         for monom in f.monoms():
-            if any(m > 0 for m in monom[:-1]):
+            if any(m for m in monom[:-1]):
                 return False
 
         return True

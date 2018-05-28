@@ -90,10 +90,10 @@ def test_constants():
 
 
 def test_constants_other():
-    assert rust_code(2*GoldenRatio) == "const GoldenRatio: f64 = 1.61803398874989;\n2*GoldenRatio"
+    assert rust_code(2*GoldenRatio) == "const GoldenRatio: f64 = %s;\n2*GoldenRatio" % GoldenRatio.evalf(17)
     assert rust_code(
-            2*Catalan) == "const Catalan: f64 = 0.915965594177219;\n2*Catalan"
-    assert rust_code(2*EulerGamma) == "const EulerGamma: f64 = 0.577215664901533;\n2*EulerGamma"
+            2*Catalan) == "const Catalan: f64 = %s;\n2*Catalan" % Catalan.evalf(17)
+    assert rust_code(2*EulerGamma) == "const EulerGamma: f64 = %s;\n2*EulerGamma" % EulerGamma.evalf(17)
 
 
 def test_boolean():
@@ -182,12 +182,12 @@ def test_reserved_words():
 
 
 def test_ITE():
-    expr = ITE(x < 1, x, x + 2)
+    expr = ITE(x < 1, y, z)
     assert rust_code(expr) == (
             "if (x < 1) {\n"
-            "    x\n"
+            "    y\n"
             "} else {\n"
-            "    x + 2\n"
+            "    z\n"
             "}")
 
 
@@ -318,7 +318,7 @@ def test_inline_function():
 
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
     assert rust_code(g(x)) == (
-        "const Catalan: f64 = %s;\n2*x/Catalan" % Catalan.n())
+        "const Catalan: f64 = %s;\n2*x/Catalan" % Catalan.evalf(17))
 
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))

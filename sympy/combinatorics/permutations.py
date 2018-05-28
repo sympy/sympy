@@ -540,8 +540,8 @@ class Permutation(Basic):
     >>> Permutation(1,2,3) == Permutation(2,3,1) == Permutation(3,1,2)
     True
 
-    The disjoint cycle notation is convenient when representing permutations
-    that have several cycles in them:
+    The disjoint cycle notation is convenient when representing
+    permutations that have several cycles in them:
 
     >>> Permutation(1, 2)(3, 5) == Permutation([[1, 2], [3, 5]])
     True
@@ -553,6 +553,29 @@ class Permutation(Basic):
     Permutation([0, 3, 2, 1])
     >>> _ == Permutation([[1, 2]])*Permutation([[1, 3]])*Permutation([[2, 3]])
     True
+
+        Caution: when the cycles have common elements
+        between them then the order in which the
+        permutations are applied matters. The
+        convention is that the permutations are
+        applied from *right to left*. In the following, the
+        transposition of elements 2 and 3 is followed
+        by the transposition of elements 1 and 2:
+
+        >>> Permutation(1, 2)(2, 3) == Permutation([(1, 2), (2, 3)])
+        True
+        >>> Permutation(1, 2)(2, 3).list()
+        [0, 3, 1, 2]
+
+        If the first and second elements had been
+        swapped first, followed by the swapping of the second
+        and third, the result would have been [0, 2, 3, 1].
+        If, for some reason, you want to apply the cycles
+        in the order they are entered, you can simply reverse
+        the order of cycles:
+
+        >>> Permutation([(1, 2), (2, 3)][::-1]).list()
+        [0, 2, 3, 1]
 
     Entering a singleton in a permutation is a way to indicate the size of the
     permutation. The ``size`` keyword can also be used.
@@ -1900,6 +1923,10 @@ class Permutation(Basic):
         is_Singleton
         """
         return self.size == 0
+
+    @property
+    def is_identity(self):
+        return self.is_Identity
 
     @property
     def is_Identity(self):

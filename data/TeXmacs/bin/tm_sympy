@@ -13,9 +13,9 @@
 # in a sequence. However you can and must indent your
 # expression using standard Pyhon rules.
 #
-# You can retrive the last output using '_' built-in
+# You can retrieve the last output using '_' built-in
 # symbol. If the previous command did not generate
-# any ouput, it will be assigned with None.
+# any output, it will be assigned with None.
 #
 # For a complete Python interface visit:
 #

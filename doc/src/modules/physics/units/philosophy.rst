@@ -202,28 +202,29 @@ To find the change of basis matrix we just have to take the inverse
     \end{pmatrix}.
 
 
+Quantities
+==========
+
+A quantity is defined by its name, dimension and factor to a canonical quantity
+of the same dimension. The canonical quantities are an internal reference of
+the units module and should not be relevant for end-users. Both units and
+physical constants are quantities.
+
 Units
-=====
+-----
 
-Units are constructed upon dimensions: they give them an ordering, or
-equivalently a magnitude. First one has to choose some origin, usually based
-on some physical measurement. Then the other units of the same dimensions
-follow by simple rescaling (we omit for now the case of unit with offset, such
-as the temperature).
-
-For example consider the length dimension. We start by choosing the origin
-to be the meter m, and we define the other units from it: the kilometer is
-:math:`10^3` m, the foot is :math:`0.3048` m, etc.
+Units, such as meters,
+seconds and kilograms, are usually reference quantities chosen by men to refer
+to other quantities.
 
 After defining several units of different dimensions we can form a unit system,
 which is basically a dimension system with a notion of scale.
 
-
 Constants
-=========
+---------
 
-Physical constants are really just units. They indicate that we did not
-understand that two dimensions are in fact the same. For example we see
+Physical constants are just quantities. They indicate that we used not
+to understand that two dimensions are in fact the same. For example, we see
 a velocity for the light different from 1 because we do not think that time
 is the same as space (which is normal because of our sense; but it is different
 at the fundamental level). For example, once there was the "heat constant"
@@ -234,16 +235,6 @@ that heat was energy. As soon as they understood it they fixed this constant to
 We can interpret the fact that now we fix the value of fundamental constants
 in the SI as showing that they are units (and we use them to define the other
 usual units).
-
-
-Quantities
-==========
-
-A quantity is defined from a factor and a unit. According to this construction,
-they are very similar to unit since at the very end a quantity is just a scale
-(made from the quantity and unit factors) and a dimension. What distinguishes
-units is that they play the role of some fixed references, and we always have
-a definite number of them.
 
 
 The need for a reference

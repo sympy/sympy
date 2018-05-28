@@ -341,6 +341,45 @@ def potential_energy(*body):
             raise TypeError('*body must have only Particle or RigidBody')
     return pe_sys
 
+def gravity(acceleration, *bodies):
+    """
+    Returns a list of gravity forces given the acceleration
+    due to gravity and any number of particles or rigidbodies.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import ReferenceFrame, Point, Particle, outer, RigidBody
+    >>> from sympy.physics.mechanics.functions import gravity
+    >>> from sympy import symbols
+    >>> N = ReferenceFrame('N')
+    >>> m, M, g = symbols('m M g')
+    >>> F1, F2 = symbols('F1 F2')
+    >>> po = Point('po')
+    >>> pa = Particle('pa', po, m)
+    >>> A = ReferenceFrame('A')
+    >>> P = Point('P')
+    >>> I = outer(A.x, A.x)
+    >>> B = RigidBody('B', P, A, M, (I, P))
+    >>> forceList = [(po, F1), (P, F2)]
+    >>> forceList.extend(gravity(g*N.y, pa, B))
+    >>> forceList
+    [(po, F1), (P, F2), (po, g*m*N.y), (P, M*g*N.y)]
+    """
+
+    gravity_force = []
+    if not bodies:
+        raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
+
+    for e in bodies:
+        try:
+            point = e.masscenter
+        except AttributeError:
+            point = e.point
+
+        gravity_force.append((point, e.mass*acceleration))
+
+    return gravity_force
 
 def Lagrangian(frame, *body):
     """Lagrangian of a multibody system.
@@ -399,20 +438,44 @@ def Lagrangian(frame, *body):
     return kinetic_energy(frame, *body) - potential_energy(*body)
 
 
-def find_dynamicsymbols(expression, exclude=None):
+def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     """Find all dynamicsymbols in expression.
 
+    If the optional ``exclude`` kwarg is used, only dynamicsymbols
+    not in the iterable ``exclude`` are returned.
+    If we intend to apply this function on a vector, the optional
+    ''reference_frame'' is also used to inform about the corresponding frame
+    with respect to which the dynamic symbols of the given vector is to be
+    determined.
+
+    Parameters
+    ==========
+
+    expression : sympy expression
+
+    exclude : iterable of dynamicsymbols, optional
+
+    reference_frame : ReferenceFrame, optional
+        The frame with respect to which the dynamic symbols of the
+        given vector is to be determined.
+
+    Examples
+    ========
+
     >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
+    >>> from sympy.physics.mechanics import ReferenceFrame
     >>> x, y = dynamicsymbols('x, y')
     >>> expr = x + x.diff()*y
     >>> find_dynamicsymbols(expr)
     {x(t), y(t), Derivative(x(t), t)}
-
-    If the optional ``exclude`` kwarg is used, only dynamicsymbols
-    not in the iterable ``exclude`` are returned.
-
-    >>> find_dynamicsymbols(expr, [x, y])
+    >>> find_dynamicsymbols(expr, exclude=[x, y])
     {Derivative(x(t), t)}
+    >>> a, b, c = dynamicsymbols('a, b, c')
+    >>> A = ReferenceFrame('A')
+    >>> v = a * A.x + b * A.y + c * A.z
+    >>> find_dynamicsymbols(v, reference_frame=A)
+    {a(t), b(t), c(t)}
+
     """
     t_set = {dynamicsymbols._t}
     if exclude:
@@ -422,6 +485,12 @@ def find_dynamicsymbols(expression, exclude=None):
             raise TypeError("exclude kwarg must be iterable")
     else:
         exclude_set = set()
+    if isinstance(expression, Vector):
+        if reference_frame is None:
+            raise ValueError("You must provide reference_frame when passing a "
+                             "vector expression, got %s." % reference_frame)
+        else:
+            expression = expression.to_matrix(reference_frame)
     return set([i for i in expression.atoms(AppliedUndef, Derivative) if
             i.free_symbols == t_set]) - exclude_set
 

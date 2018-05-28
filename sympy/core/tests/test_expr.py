@@ -1,13 +1,13 @@
 from __future__ import division
 
-from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
+from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, I,
                    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
                    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
                    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate)
+                   integrate, gammasimp)
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -580,6 +580,23 @@ def test_as_numer_denom():
     assert ((A*B*C)**-1/x).as_numer_denom() == ((A*B*C)**-1, x)
 
 
+def test_trunc():
+    import math
+    x, y = symbols('x y')
+    assert math.trunc(2) == 2
+    assert math.trunc(4.57) == 4
+    assert math.trunc(-5.79) == -5
+    assert math.trunc(pi) == 3
+    assert math.trunc(log(7)) == 1
+    assert math.trunc(exp(5)) == 148
+    assert math.trunc(cos(pi)) == -1
+    assert math.trunc(sin(5)) == 0
+
+    raises(TypeError, lambda: math.trunc(x))
+    raises(TypeError, lambda: math.trunc(x + y**2))
+    raises(TypeError, lambda: math.trunc(oo))
+
+
 def test_as_independent():
     assert S.Zero.as_independent(x, as_Add=True) == (0, 0)
     assert S.Zero.as_independent(x, as_Add=False) == (0, 0)
@@ -1065,6 +1082,14 @@ def test_extractions():
     assert ((x + x*y)/y).could_extract_minus_sign() is False
     assert (x*(-x - x**3)).could_extract_minus_sign() is True
     assert ((-x - y)/(x + y)).could_extract_minus_sign() is True
+
+    class sign_invariant(Function, Expr):
+        nargs = 1
+        def __neg__(self):
+            return self
+    foo = sign_invariant(x)
+    assert foo == -foo
+    assert foo.could_extract_minus_sign() is False
     # The results of each of these will vary on different machines, e.g.
     # the first one might be False and the other (then) is true or vice versa,
     # so both are included.
@@ -1218,6 +1243,7 @@ def test_action_verbs():
         (a*x**2 + b*x**2 + a*x - b*x + c).collect(x)
     assert apart(y/(y + 2)/(y + 1), y) == (y/(y + 2)/(y + 1)).apart(y)
     assert combsimp(y/(x + 2)/(x + 1)) == (y/(x + 2)/(x + 1)).combsimp()
+    assert gammasimp(gamma(x)/gamma(x-5)) == (gamma(x)/gamma(x-5)).gammasimp()
     assert factor(x**2 + 5*x + 6) == (x**2 + 5*x + 6).factor()
     assert refine(sqrt(x**2)) == sqrt(x**2).refine()
     assert cancel((x**2 + 5*x + 6)/(x + 2)) == ((x**2 + 5*x + 6)/(x + 2)).cancel()
@@ -1235,6 +1261,8 @@ def test_as_coefficients_dict():
     check = [S(1), x, y, x*y, 1]
     assert [Add(3*x, 2*x, y, 3).as_coefficients_dict()[i] for i in check] == \
         [3, 5, 1, 0, 3]
+    assert [Add(3*x, 2*x, y, 3, evaluate=False).as_coefficients_dict()[i]
+            for i in check] == [3, 5, 1, 0, 3]
     assert [(3*x*y).as_coefficients_dict()[i] for i in check] == \
         [0, 0, 0, 3, 0]
     assert [(3.0*x*y).as_coefficients_dict()[i] for i in check] == \
@@ -1511,6 +1539,7 @@ def test_is_constant():
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
     f = Function('f')
+    assert f(1).is_constant
     assert checksol(x, x, f(x)) is False
 
     p = symbols('p', positive=True)
@@ -1525,6 +1554,8 @@ def test_is_constant():
     assert meter.is_constant() is True
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
+
+    assert Poly(3,x).is_constant() is True
 
 
 def test_equals():
@@ -1761,12 +1792,13 @@ def test_issue_6325():
 def test_issue_7426():
     f1 = a % c
     f2 = x % z
-    assert f1.equals(f2) == False
+    assert f1.equals(f2) is None
 
 
 def test_issue_1112():
     x = Symbol('x', positive=False)
     assert (x > 0) is S.false
+
 
 def test_issue_10161():
     x = symbols('x', real=True)
@@ -1778,6 +1810,13 @@ def test_issue_10755():
     raises(TypeError, lambda: int(log(x)))
     raises(TypeError, lambda: log(x).round(2))
 
+
 def test_issue_11877():
     x = symbols('x')
     assert integrate(log(S(1)/2 - x), (x, 0, S(1)/2)) == -S(1)/2 -log(2)/2
+
+
+def test_normal():
+    x = symbols('x')
+    e = Mul(S.Half, 1 + x, evaluate=False)
+    assert e.normal() == e

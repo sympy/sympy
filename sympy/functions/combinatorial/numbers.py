@@ -83,7 +83,7 @@ class fibonacci(Function):
     See Also
     ========
 
-    bell, bernoulli, catalan, euler, harmonic, lucas
+    bell, bernoulli, catalan, euler, harmonic, lucas, partition
     """
 
     @staticmethod
@@ -147,7 +147,7 @@ class lucas(Function):
     See Also
     ========
 
-    bell, bernoulli, catalan, euler, fibonacci, harmonic
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, partition
     """
 
     @classmethod
@@ -242,7 +242,7 @@ class bernoulli(Function):
     See Also
     ========
 
-    bell, catalan, euler, fibonacci, harmonic, lucas
+    bell, catalan, euler, fibonacci, harmonic, lucas, partition
     """
 
     # Calculates B_n for positive even n
@@ -380,7 +380,7 @@ class bell(Function):
     See Also
     ========
 
-    bernoulli, catalan, euler, fibonacci, harmonic, lucas
+    bernoulli, catalan, euler, fibonacci, harmonic, lucas, partition
     """
 
     @staticmethod
@@ -434,6 +434,15 @@ class bell(Function):
 
     @classmethod
     def eval(cls, n, k_sym=None, symbols=None):
+        if n is S.Infinity:
+            if k_sym is None:
+                return S.Infinity
+            else:
+                raise ValueError("Bell polynomial is not defined")
+
+        if n.is_negative or n.is_integer is False:
+            raise ValueError("a non-negative integer expected")
+
         if n.is_Integer and n.is_nonnegative:
             if k_sym is None:
                 return Integer(cls._bell(int(n)))
@@ -584,7 +593,7 @@ class harmonic(Function):
     See Also
     ========
 
-    bell, bernoulli, catalan, euler, fibonacci, lucas
+    bell, bernoulli, catalan, euler, fibonacci, lucas, partition
     """
 
     # Generate one memoized Harmonic number-generating function for each
@@ -613,9 +622,10 @@ class harmonic(Function):
             else:
                 return cls
 
+        if n == 0:
+            return S.Zero
+
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
-            if n == 0:
-                return S.Zero
             if not m in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
@@ -694,9 +704,9 @@ class harmonic(Function):
 
 class euler(Function):
     r"""
-    Euler numbers
+    Euler numbers / Euler polynomials
 
-    The euler numbers are given by::
+    The Euler numbers are given by::
 
                   2*n+1   k
                    ___   ___            j          2*n+1
@@ -708,18 +718,51 @@ class euler(Function):
           E     = 0
            2n+1
 
-    * euler(n) gives the n-th Euler number, E_n
+    Euler numbers and Euler polynomials are related by
+
+    .. math:: E_n = 2^n E_n\left(\frac{1}{2}\right).
+
+    We compute symbolic Euler polynomials using [5]
+
+    .. math:: E_n(x) = \sum_{k=0}^n \binom{n}{k} \frac{E_k}{2^k}
+                       \left(x - \frac{1}{2}\right)^{n-k}.
+
+    However, numerical evaluation of the Euler polynomial is computed
+    more efficiently (and more accurately) using the mpmath library.
+
+    * euler(n) gives the n-th Euler number, `E_n`.
+    * euler(n, x) gives the n-th Euler polynomial, `E_n(x)`.
 
     Examples
     ========
 
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, S
     >>> from sympy.functions import euler
     >>> [euler(n) for n in range(10)]
     [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
     >>> n = Symbol("n")
     >>> euler(n+2*n)
     euler(3*n)
+
+    >>> x = Symbol("x")
+    >>> euler(n, x)
+    euler(n, x)
+
+    >>> euler(0, x)
+    1
+    >>> euler(1, x)
+    x - 1/2
+    >>> euler(2, x)
+    x**2 - x
+    >>> euler(3, x)
+    x**3 - 3*x**2/2 + 1/4
+    >>> euler(4, x)
+    x**4 - 2*x**3 + x
+
+    >>> euler(12, S.Half)
+    2702765/4096
+    >>> euler(12)
+    2702765
 
     References
     ==========
@@ -728,43 +771,83 @@ class euler(Function):
     .. [2] http://mathworld.wolfram.com/EulerNumber.html
     .. [3] http://en.wikipedia.org/wiki/Alternating_permutation
     .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
+    .. [5] http://dlmf.nist.gov/24.2#ii
 
     See Also
     ========
 
-    bell, bernoulli, catalan, fibonacci, harmonic, lucas
+    bell, bernoulli, catalan, fibonacci, harmonic, lucas, partition
     """
 
     @classmethod
-    def eval(cls, m):
-        if m.is_odd:
-            return S.Zero
-        if m.is_Integer and m.is_nonnegative:
-            from mpmath import mp
-            m = m._to_mpmath(mp.prec)
-            res = mp.eulernum(m, exact=True)
-            return Integer(res)
+    def eval(cls, m, sym=None):
+        if m.is_Number:
+            if m.is_Integer and m.is_nonnegative:
+                # Euler numbers
+                if sym is None:
+                    if m.is_odd:
+                        return S.Zero
+                    from mpmath import mp
+                    m = m._to_mpmath(mp.prec)
+                    res = mp.eulernum(m, exact=True)
+                    return Integer(res)
+                # Euler polynomial
+                else:
+                    from sympy.core.evalf import pure_complex
+                    reim = pure_complex(sym, or_real=True)
+                    # Evaluate polynomial numerically using mpmath
+                    if reim and all(a.is_Float or a.is_Integer for a in reim) \
+                            and any(a.is_Float for a in reim):
+                        from mpmath import mp
+                        from sympy import Expr
+                        m = int(m)
+                        # XXX ComplexFloat (#12192) would be nice here, above
+                        prec = min([a._prec for a in reim if a.is_Float])
+                        with workprec(prec):
+                            res = mp.eulerpoly(m, sym)
+                        return Expr._from_mpmath(res, prec)
+                    # Construct polynomial symbolically from definition
+                    m, result = int(m), []
+                    for k in range(m + 1):
+                        result.append(binomial(m, k)*cls(k)/(2**k)*(sym - S.Half)**(m - k))
+                    return Add(*result).expand()
+            else:
+                raise ValueError("Euler numbers are defined only"
+                                 " for nonnegative integer indices.")
+        if sym is None:
+            if m.is_odd and m.is_positive:
+                return S.Zero
 
-    def _eval_rewrite_as_Sum(self, arg):
+    def _eval_rewrite_as_Sum(self, n, x=None):
         from sympy import Sum
-        if arg.is_even:
+        if x is None and n.is_even:
             k = Dummy("k", integer=True)
             j = Dummy("j", integer=True)
-            n = self.args[0] / 2
+            n = n / 2
             Em = (S.ImaginaryUnit * Sum(Sum(binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
                   (2**k*S.ImaginaryUnit**k * k), (j, 0, k)), (k, 1, 2*n + 1)))
-
             return Em
+        if x:
+            k = Dummy("k", integer=True)
+            return Sum(binomial(n, k)*euler(k)/2**k*(x-S.Half)**(n-k), (k, 0, n))
 
     def _eval_evalf(self, prec):
-        m = self.args[0]
+        m, x = (self.args[0], None) if len(self.args) == 1 else self.args
 
-        if m.is_Integer and m.is_nonnegative:
+        if x is None and m.is_Integer and m.is_nonnegative:
             from mpmath import mp
             from sympy import Expr
             m = m._to_mpmath(prec)
             with workprec(prec):
                 res = mp.eulernum(m)
+            return Expr._from_mpmath(res, prec)
+        if x and x.is_number and m.is_Integer and m.is_nonnegative:
+            from mpmath import mp
+            from sympy import Expr
+            m = int(m)
+            x = x._to_mpmath(prec)
+            with workprec(prec):
+                res = mp.eulerpoly(m, x)
             return Expr._from_mpmath(res, prec)
 
 #----------------------------------------------------------------------------#
@@ -819,7 +902,7 @@ class catalan(Function):
     8/(3*pi)
 
     We can differentiate the Catalan numbers C(n) interpreted as a
-    continuous real funtion in n:
+    continuous real function in n:
 
     >>> diff(catalan(n), n)
     (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
@@ -851,7 +934,7 @@ class catalan(Function):
     See Also
     ========
 
-    bell, bernoulli, euler, fibonacci, harmonic, lucas
+    bell, bernoulli, euler, fibonacci, harmonic, lucas, partition
     sympy.functions.combinatorial.factorials.binomial
     """
 
@@ -894,6 +977,18 @@ class catalan(Function):
             return self
         k = Dummy('k', integer=True, positive=True)
         return Product((n + k) / k, (k, 2, n))
+
+    def _eval_is_integer(self):
+        if self.args[0].is_integer and self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_positive(self):
+        if self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_composite(self):
+        if self.args[0].is_integer and (self.args[0] - 3).is_positive:
+            return True
 
     def _eval_evalf(self, prec):
         from sympy import gamma
@@ -945,7 +1040,7 @@ class genocchi(Function):
     See Also
     ========
 
-    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, partition
     """
 
     @classmethod
@@ -1004,6 +1099,96 @@ class genocchi(Function):
         # but SymPy does not consider negatives as prime
         # so only n=8 is tested
         return (n - 8).is_zero
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Partition numbers                                #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class partition(Function):
+    r"""
+    Partition numbers
+
+    The Partition numbers are a sequence of integers p_n that represent the
+    number of distinct ways of representing n as a sum of natural numbers
+    (with order irrelevant). The generating function for p_n is given by::
+
+    .. math:: \sum_{n=0}^\infty p_n x^n = \prod_{k=1}^\infty (1 - x^k)^{-1}
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.functions import partition
+    >>> [partition(n) for n in range(9)]
+    [1, 1, 2, 3, 5, 7, 11, 15, 22]
+    >>> n = Symbol('n', integer=True, negative=True)
+    >>> partition(n)
+    0
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Partition_(number_theory)
+    .. [2] https://en.wikipedia.org/wiki/Pentagonal_number_theorem
+
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas
+    """
+
+    @staticmethod
+    @recurrence_memo([1, 1])
+    def _partition(n, prev):
+        v, g, i = 0, 0, 0
+        while 1:
+            s = 0
+            i += 1
+            g = i * (3*i - 1) // 2
+            if n >= g:
+                s += prev[n - g]
+            g = i * (3*i + 1) // 2
+            if n >= g:
+                s += prev[n - g]
+            if s == 0:
+                break
+            else:
+                v += s if i%2 == 1 else -s
+        return v
+
+    @classmethod
+    def eval(cls, n):
+        is_int = n.is_integer
+        if is_int == False:
+            raise ValueError("Partition numbers are defined only for " +
+                             "integers")
+        elif is_int:
+            if n.is_negative:
+                return S.Zero
+
+            if n.is_zero or (n - 1).is_zero:
+                return S.One
+
+            if n.is_Integer:
+                return Integer(cls._partition(n))
+
+
+    def _eval_is_integer(self):
+        if self.args[0].is_integer:
+            return True
+
+    def _eval_is_negative(self):
+        if self.args[0].is_integer:
+            return False
+
+    def _eval_is_positive(self):
+        n = self.args[0]
+        if n.is_nonnegative and n.is_integer:
+            return True
 
 
 #######################################################################
@@ -1262,7 +1447,7 @@ def nC(n, k=None, replacement=False):
     35
 
     If there are ``k`` items with multiplicities ``m_1, m_2, ..., m_k``
-    then the total of all combinations of length 0 hrough ``k`` is the
+    then the total of all combinations of length 0 through ``k`` is the
     product, ``(m_1 + 1)*(m_2 + 1)*...*(m_k + 1)``. When the multiplicity
     of each item is 1 (i.e., k unique items) then there are 2**k
     combinations. For example, if there are 4 unique items, the total number
@@ -1518,6 +1703,16 @@ def nT(n, k=None):
     >>> nT(range(5)) == sum(_)
     True
 
+    Partitions of an integer expressed as a sum of positive integers:
+
+    >>> from sympy.functions.combinatorial.numbers import partition
+    >>> partition(4)
+    5
+    >>> sum([nT(4, i) for i in range(4 + 1)])
+    5
+    >>> nT('1'*4)
+    5
+
     References
     ==========
 
@@ -1527,6 +1722,7 @@ def nT(n, k=None):
     ========
     sympy.utilities.iterables.partitions
     sympy.utilities.iterables.multiset_partitions
+    sympy.functions.combinatorial.numbers.partition
 
     """
     from sympy.utilities.enumerative import MultisetPartitionTraverser
@@ -1535,14 +1731,16 @@ def nT(n, k=None):
         # assert n >= 0
         # all the same
         if k is None:
-            return sum(_nT(n, k) for k in range(1, n + 1))
+            return partition(n)
+        elif n == 0:
+            return S.One if k == 0 else S.Zero
         return _nT(n, k)
     if not isinstance(n, _MultisetHistogram):
         try:
             # if n contains hashable items there is some
             # quick handling that can be done
             u = len(set(n))
-            if u == 1:
+            if u <= 1:
                 return nT(len(n), k)
             elif u == len(n):
                 n = range(u)

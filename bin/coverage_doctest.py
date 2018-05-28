@@ -144,11 +144,11 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
                     print('  * ' + md)
             if c_idt:
                 # Use "# indirect doctest" in the docstring to
-                # supress this warning.
+                # suppress this warning.
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
                 for md in c_idt:
                     print('  * ' + md)
-                print('\n    Use \"# indirect doctest\" in the docstring to supress this warning')
+                print('\n    Use \"# indirect doctest\" in the docstring to suppress this warning')
             if c_sph:
                 print_header('Not imported into Sphinx', '-', not no_color and small_header_color)
                 for md in c_sph:
@@ -170,7 +170,7 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
                 for md in f_idt:
                     print('  * ' + md)
-                print('\n    Use \"# indirect doctest\" in the docstring to supress this warning')
+                print('\n    Use \"# indirect doctest\" in the docstring to suppress this warning')
             if f_sph:
                 print_header('Not imported into Sphinx', '-', not no_color and small_header_color)
                 for md in f_sph:

@@ -195,11 +195,11 @@ class L2(HilbertSpace):
     >>> from sympy.physics.quantum.hilbert import L2
     >>> hs = L2(Interval(0,oo))
     >>> hs
-    L2(Interval(0, oo, False, True))
+    L2(Interval(0, oo))
     >>> hs.dimension
     oo
     >>> hs.interval
-    Interval(0, oo, False, True)
+    Interval(0, oo)
 
     """
 

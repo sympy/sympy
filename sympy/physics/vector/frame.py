@@ -70,7 +70,7 @@ class CoordinateSym(Symbol):
         return False
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def __hash__(self):
         return tuple((self._id[0].__hash__(), self._id[1])).__hash__()
@@ -697,7 +697,8 @@ class ReferenceFrame(object):
 
         """
 
-        newframe = self.__class__(newname, variables, indices, latexs)
+        newframe = self.__class__(newname, variables=variables,
+                                  indices=indices, latexs=latexs)
         newframe.orient(self, rot_type, amounts, rot_order)
         return newframe
 

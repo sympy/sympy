@@ -674,6 +674,7 @@ combsimp
 
 To simplify combinatorial expressions, use ``combsimp()``.
 
+    >>> n, k = symbols('n k', integer = True)
     >>> combsimp(factorial(n)/factorial(n - 3))
     n⋅(n - 2)⋅(n - 1)
     >>> combsimp(binomial(n+1, k+1)/binomial(n, k))
@@ -681,9 +682,13 @@ To simplify combinatorial expressions, use ``combsimp()``.
     ─────
     k + 1
 
-``combsimp()`` also simplifies expressions with ``gamma``.
+gammasimp
+---------
 
-    >>> combsimp(gamma(x)*gamma(1 - x))
+To simplify expressions with gamma functions or combinatorial functions with
+non-integer argument, use ``gammasimp()``.
+
+    >>> gammasimp(gamma(x)*gamma(1 - x))
        π
     ────────
     sin(π⋅x)
@@ -737,7 +742,7 @@ Every finite continued fraction is a rational number, but we are interested in
 symbolics here, so let's create a symbolic continued fraction.  The
 ``symbols()`` function that we have been using has a shortcut to create
 numbered symbols.  ``symbols('a0:5')`` will create the symbols ``a0``, ``a1``,
-..., ``a5``.
+..., ``a4``.
 
     >>> syms = symbols('a0:5')
     >>> syms

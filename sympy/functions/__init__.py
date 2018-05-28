@@ -8,7 +8,7 @@ Special - gamma, zeta,spherical harmonics...
 from sympy.functions.combinatorial.factorials import (factorial, factorial2,
         rf, ff, binomial, RisingFactorial, FallingFactorial, subfactorial)
 from sympy.functions.combinatorial.numbers import (fibonacci, lucas, harmonic,
-        bernoulli, bell, euler, catalan, genocchi)
+        bernoulli, bell, euler, catalan, genocchi, partition)
 from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
         Id, real_root, cbrt)
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
@@ -33,7 +33,7 @@ from sympy.functions.special.tensor_functions import (Eijk, LeviCivita,
         KroneckerDelta)
 from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
-from sympy.functions.special.bsplines import bspline_basis, bspline_basis_set
+from sympy.functions.special.bsplines import bspline_basis, bspline_basis_set, interpolating_spline
 from sympy.functions.special.bessel import (besselj, bessely, besseli, besselk,
         hankel1, hankel2, jn, yn, jn_zeros, hn1, hn2, airyai, airybi, airyaiprime, airybiprime)
 from sympy.functions.special.hyper import hyper, meijerg

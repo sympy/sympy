@@ -13,18 +13,36 @@ source code files that are compilable without further modifications.
 
 from __future__ import print_function, division
 
+from functools import wraps
+from itertools import chain
+
 from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
-from sympy.codegen.ast import Assignment
-from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence
+from sympy.codegen.ast import (
+    Assignment, Pointer, Type, Variable, real, complex_, integer, bool_,
+    float32, float64, float80, complex64, complex128, intc, value_const,
+    Declaration
+)
+from sympy.printing.codeprinter import CodePrinter, requires
+from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in C89CodePrinter._print_Function(self)
 known_functions_C89 = {
-    "Abs": [(lambda x: not x.is_integer, "fabs")],
+    "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
+    "Mod": [
+        (
+            lambda numer, denom: numer.is_integer and denom.is_integer,
+            lambda printer, numer, denom, *args, **kwargs: "((%s) %% (%s))" % (
+                printer._print(numer, *args, **kwargs), printer._print(denom, *args, **kwargs))
+        ),
+        (
+            lambda numer, denom: not numer.is_integer or not denom.is_integer,
+            "fmod"
+        )
+    ],
     "sin": "sin",
     "cos": "cos",
     "tan": "tan",
@@ -52,7 +70,19 @@ _known_functions_C9X = dict(known_functions_C89, **{
 known_functions = _known_functions_C9X
 
 known_functions_C99 = dict(_known_functions_C9X, **{
-    "erfc": "erfc",
+    'exp2': 'exp2',
+    'expm1': 'expm1',
+    'expm1': 'expm1',
+    'log10': 'log10',
+    'log2': 'log2',
+    'log1p': 'log1p',
+    'Cbrt': 'cbrt',
+    'hypot': 'hypot',
+    'fma': 'fma',
+    'loggamma': 'lgamma',
+    'erfc': 'erfc',
+    'Max': 'fmax',
+    'Min': 'fmin'
 })
 
 # These are the core reserved words in the C language. Taken from:
@@ -104,6 +134,25 @@ def get_math_macros():
     }
 
 
+def _as_macro_if_defined(meth):
+    """ Decorator for printer methods
+
+    When a Printer's method is decorated using this decorator the expressions printed
+    will first be looked for in the attribute ``math_macros``, and if present it will
+    print the macro name in ``math_macros`` followed by a type suffix for the type
+    ``real``. e.g. printing ``sympy.pi`` would print ``M_PIl`` if real is mapped to float80.
+
+    """
+    @wraps(meth)
+    def _meth_wrapper(self, expr, **kwargs):
+        if expr in self.math_macros:
+            return '%s%s' % (self.math_macros[expr], self._get_math_macro_suffix(real))
+        else:
+            return meth(self, expr, **kwargs)
+
+    return _meth_wrapper
+
+
 class C89CodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
@@ -114,7 +163,7 @@ class C89CodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 15,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'contract': True,
@@ -123,13 +172,70 @@ class C89CodePrinter(CodePrinter):
         'reserved_word_suffix': '_',
     }
 
+    type_aliases = {
+        real: float64,
+        complex_: complex128,
+        integer: intc
+    }
+
+    type_mappings = {
+        real: 'double',
+        intc: 'int',
+        float32: 'float',
+        float64: 'double',
+        integer: 'int',
+        bool_: 'bool',
+    }
+
+    type_headers = {
+        bool_: {'stdbool.h'}
+    }
+    type_macros = {}  # Macros needed to be defined when using a Type
+
+    type_func_suffixes = {
+        float32: 'f',
+        float64: '',
+        float80: 'l'
+    }
+
+    type_literal_suffixes = {
+        float32: 'F',
+        float64: '',
+        float80: 'L'
+    }
+
+    type_math_macro_suffixes = {
+        float80: 'l'
+    }
+
+    math_macros = None
+
     _ns = ''  # namespace, C++ uses 'std::'
     _kf = known_functions_C89  # known_functions-dict to copy
 
     def __init__(self, settings={}):
+        if self.math_macros is None:
+            self.math_macros = settings.pop('math_macros', get_math_macros())
+        self.type_aliases = dict(chain(self.type_aliases.items(),
+                                       settings.pop('type_aliases', {}).items()))
+        self.type_mappings = dict(chain(self.type_mappings.items(),
+                                        settings.pop('type_mappings', {}).items()))
+        self.type_headers = dict(chain(self.type_headers.items(),
+                                       settings.pop('type_headers', {}).items()))
+        self.type_macros = dict(chain(self.type_macros.items(),
+                                       settings.pop('type_macros', {}).items()))
+        self.type_func_suffixes = dict(chain(self.type_func_suffixes.items(),
+                                        settings.pop('type_func_suffixes', {}).items()))
+        self.type_literal_suffixes = dict(chain(self.type_literal_suffixes.items(),
+                                        settings.pop('type_literal_suffixes', {}).items()))
+        self.type_math_macro_suffixes = dict(chain(self.type_math_macro_suffixes.items(),
+                                        settings.pop('type_math_macro_suffixes', {}).items()))
         super(C89CodePrinter, self).__init__(settings)
         self.known_functions = dict(self._kf, **settings.get('user_functions', {}))
         self._dereference = set(settings.get('dereference', []))
+        self.headers = set()
+        self.libraries = set()
+        self.macros = set()
 
     def _rate_index_position(self, p):
         return p*5
@@ -141,7 +247,10 @@ class C89CodePrinter(CodePrinter):
         return "// {0}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "double const {0} = {1};".format(name, value)
+        type_ = self.type_aliases[real]
+        var = Variable(name, {value_const}, type_)
+        decl = Declaration(var, value.evalf(type_.decimal_dig))
+        return self._get_statement(self._print(decl))
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -150,42 +259,60 @@ class C89CodePrinter(CodePrinter):
         rows, cols = mat.shape
         return ((i, j) for i in range(rows) for j in range(cols))
 
+    @_as_macro_if_defined
+    def _print_Mul(self, expr):
+        return super(C89CodePrinter, self)._print_Mul(expr)
+
+    @_as_macro_if_defined
     def _print_Pow(self, expr):
         if "Pow" in self.known_functions:
             return self._print_Function(expr)
         PREC = precedence(expr)
+        suffix = self._get_func_suffix(real)
         if expr.exp == -1:
-            return '1.0/%s' % (self.parenthesize(expr.base, PREC))
+            return '1.0%s/%s' % (suffix.upper(), self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
-            return '%ssqrt(%s)' % (self._ns, self._print(expr.base))
+            return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':
-            return '%scbrt(%s)' % (self._ns, self._print(expr.base))
+            return '%scbrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         else:
-            return '%spow(%s, %s)' % (self._ns, self._print(expr.base),
+            return '%spow%s(%s, %s)' % (self._ns, suffix, self._print(expr.base),
                                    self._print(expr.exp))
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        return '%d.0L/%d.0L' % (p, q)
+        suffix = self._get_literal_suffix(real)
+        return '%d.0%s/%d.0%s' % (p, suffix, q, suffix)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
-        dims = expr.shape
-        elem = S.Zero
-        offset = S.One
-        for i in reversed(range(expr.rank)):
-            elem += expr.indices[i]*offset
-            offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
+        offset = getattr(expr.base, 'offset', S.Zero)
+        strides = getattr(expr.base, 'strides', None)
+        indices = expr.indices
+
+        if strides is None or isinstance(strides, string_types):
+            dims = expr.shape
+            shift = S.One
+            temp = tuple()
+            if strides == 'C' or strides is None:
+                traversal = reversed(range(expr.rank))
+                indices = indices[::-1]
+            elif strides == 'F':
+                traversal = range(expr.rank)
+
+            for i in traversal:
+                temp += (shift,)
+                shift *= dims[i]
+            strides = temp
+        flat_index = sum([x[0]*x[1] for x in zip(indices, strides)]) + offset
+        return "%s[%s]" % (self._print(expr.base.label), self._print(flat_index))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
 
-    def _print_Exp1(self, expr):
-        return "M_E"
-
-    def _print_Pi(self, expr):
-        return 'M_PI'
+    @_as_macro_if_defined
+    def _print_NumberSymbol(self, expr):
+        return super(C89CodePrinter, self)._print_NumberSymbol(expr)
 
     def _print_Infinity(self, expr):
         return 'HUGE_VAL'
@@ -231,12 +358,12 @@ class C89CodePrinter(CodePrinter):
         return self._print(_piecewise)
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(expr.parent, expr.j +
-                expr.i*expr.parent.shape[1])
+        return "{0}[{1}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
+            strict=True), expr.j + expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
         name = super(C89CodePrinter, self)._print_Symbol(expr)
-        if expr in self._dereference:
+        if expr in self._settings['dereference']:
             return '(*{0})'.format(name)
         else:
             return name
@@ -259,7 +386,8 @@ class C89CodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         op = expr.rel_op
         rhs_code = self._print(expr.rhs)
-        return "{0} {1} {2};".format(lhs_code, op, rhs_code)
+        return self._get_statement("{0} {1} {2}".format(
+            *map(self._print, [lhs_code, op, rhs_code])))
 
     def _print_For(self, expr):
         target = self._print(expr.target)
@@ -320,6 +448,73 @@ class C89CodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
+    def _get_func_suffix(self, type_):
+        return self.type_func_suffixes[self.type_aliases.get(type_, type_)]
+
+    def _get_literal_suffix(self, type_):
+        return self.type_literal_suffixes[self.type_aliases.get(type_, type_)]
+
+    def _get_math_macro_suffix(self, type_):
+        alias = self.type_aliases.get(type_, type_)
+        dflt = self.type_math_macro_suffixes.get(alias, '')
+        return self.type_math_macro_suffixes.get(type_, dflt)
+
+    def _print_Type(self, type_):
+        self.headers.update(self.type_headers.get(type_, set()))
+        self.macros.update(self.type_macros.get(type_, set()))
+        return self.type_mappings.get(type_, type_.name)
+
+    def _print_Declaration(self, expr):
+        from sympy.codegen.cfunctions import restrict
+        var, val = expr.variable, expr.value
+        if isinstance(var, Pointer):
+            result = '{vc}{t} *{pc} {r}{s}'.format(
+                vc='const ' if var.value_const else '',
+                t=self._print(var.type),
+                pc=' const' if var.pointer_const else '',
+                r='restrict ' if var.attributes.contains(restrict) == True else '',
+                s=self._print(var.symbol)
+            )
+        elif isinstance(var, Variable):
+            result = '{vc}{t} {s}'.format(
+                vc='const ' if var.value_const else '',
+                t=self._print(var.type),
+                s=self._print(var.symbol)
+            )
+        else:
+            raise NotImplementedError("Unknown type of var: %s" % type(var))
+        if val is not None:
+            result += ' = %s' % self._print(val)
+        return result
+
+    def _print_Variable(self, expr):
+        return self._print(expr.symbol)
+
+    def _print_Pointer(self, expr):
+        return self._print(expr.symbol)
+
+    def _print_Float(self, flt):
+        type_ = self.type_aliases.get(real, real)
+        self.macros.update(self.type_macros.get(type_, set()))
+        suffix = self._get_literal_suffix(type_)
+        num = str(flt.evalf(type_.decimal_dig))
+        if 'e' not in num and '.' not in num:
+            num += '.0'
+        num_parts = num.split('e')
+        num_parts[0] = num_parts[0].rstrip('0')
+        if num_parts[0].endswith('.'):
+            num_parts[0] += '0'
+        return 'e'.join(num_parts) + suffix
+
+    @requires(headers={'stdbool.h'})
+    def _print_BooleanTrue(self, expr):
+        return 'true'
+
+    @requires(headers={'stdbool.h'})
+    def _print_BooleanFalse(self, expr):
+        return 'false'
+
+
 
 class _C9XCodePrinter(object):
     # Move these methods to C99CodePrinter when removing CCodePrinter
@@ -354,23 +549,22 @@ class CCodePrinter(_C9XCodePrinter, C89CodePrinter):
 class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
     standard = 'C99'
     reserved_words = set(reserved_words + reserved_words_c99)
+    type_mappings=dict(chain(C89CodePrinter.type_mappings.items(), {
+        complex64: 'float complex',
+        complex128: 'double complex',
+    }.items()))
+    type_headers = dict(chain(C89CodePrinter.type_headers.items(), {
+        complex64: {'complex.h'},
+        complex128: {'complex.h'}
+    }.items()))
     _kf = known_functions_C99  # known_functions-dict to copy
 
-    def _print_Max(self, expr):
-        if "Max" in self.known_functions:
-            return self._print_Function(expr)
-        from sympy import Max
-        if len(expr.args) == 1:
-            return self._print(expr.args[0])
-        return "%sfmax(%s, %s)" % (self._ns, expr.args[0], self._print(Max(*expr.args[1:])))
-
-    def _print_Min(self, expr):
-        if "Min" in self.known_functions:
-            return self._print_Function(expr)
-        from sympy import Min
-        if len(expr.args) == 1:
-            return self._print(expr.args[0])
-        return "%sfmin(%s, %s)" % (self._ns, expr.args[0], self._print(Min(*expr.args[1:])))
+    # functions with versions with 'f' and 'l' suffixes:
+    _prec_funcs = ('fabs fmod remainder remquo fma fmax fmin fdim nan exp exp2'
+                   ' expm1 log log10 log2 log1p pow sqrt cbrt hypot sin cos tan'
+                   ' asin acos atan atan2 sinh cosh tanh asinh acosh atanh erf'
+                   ' erfc tgamma lgamma ceil floor trunc round nearbyint rint'
+                   ' frexp ldexp modf scalbn ilogb logb nextafter copysign').split()
 
     def _print_Infinity(self, expr):
         return 'INFINITY'
@@ -381,38 +575,48 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
     def _print_NaN(self, expr):
         return 'NAN'
 
-    def _print_fma(self, expr):  # fused mutiply-add
-        return '{0}fma({1}, {2}, {3})'.format(self._ns, *map(self._print, expr.args))
-
-    def _print_log10(self, expr):  # log10 in C89, but type-generic macro in C99
-        return '{0}log10({1})'.format(self._ns, self._print(expr.args[0]))
-
-    def _print_Sqrt(self, expr):
-        return '{0}sqrt({1})'.format(self._ns, self._print(expr.args[0]))
-
-    def _print_Cbrt(self, expr):
-        return '{0}cbrt({1})'.format(self._ns, self._print(expr.args[0]))
-
-    def _print_hypot(self, expr):
-        return '{0}hypot({1}, {2})'.format(self._ns, *map(self._print, expr.args))
-
-    def _print_expm1(self, expr):
-        return '{0}expm1({1})'.format(self._ns, self._print(expr.args[0]))
-
-    def _print_log1p(self, expr):
-        return '{0}log1p({1})'.format(self._ns, self._print(expr.args[0]))
-
-    def _print_exp2(self, expr):
-        return '{0}exp2({1})'.format(self._ns, self._print(expr.args[0]))
-
-    def _print_log2(self, expr):
-        return '{0}log2({1})'.format(self._ns, self._print(expr.args[0]))
-
-    def _print_loggamma(self, expr):
-        return '{0}lgamma({1})'.format(self._ns, self._print(expr.args[0]))
-
     # tgamma was already covered by 'known_functions' dict
 
+    @requires(headers={'math.h'}, libraries={'m'})
+    @_as_macro_if_defined
+    def _print_math_func(self, expr, nest=False):
+        known = self.known_functions[expr.__class__.__name__]
+        if not isinstance(known, string_types):
+            for cb, name in known:
+                if cb(*expr.args):
+                    known = name
+                    break
+            else:
+                raise ValueError("No matching printer")
+        try:
+            return known(self, *expr.args)
+        except TypeError:
+            suffix = self._get_func_suffix(real) if self._ns + known in self._prec_funcs else ''
+
+        if nest:
+            args = self._print(expr.args[0])
+            if len(expr.args) > 1:
+                args += ', %s' % self._print(expr.func(*expr.args[1:]))
+        else:
+            args = ', '.join(map(self._print, expr.args))
+        return '{ns}{name}{suffix}({args})'.format(
+            ns=self._ns,
+            name=known,
+            suffix=suffix,
+            args=args
+        )
+
+    def _print_Max(self, expr):
+        return self._print_math_func(expr, nest=True)
+
+    def _print_Min(self, expr):
+        return self._print_math_func(expr, nest=True)
+
+
+for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma Mod'
+          ' loggamma sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh '
+          'atanh erf erfc loggamma gamma ceiling floor').split():
+    setattr(C99CodePrinter, '_print_%s' % k, C99CodePrinter._print_math_func)
 
 c_code_printers = {
     'c89': C89CodePrinter,
@@ -438,7 +642,7 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
         standard you may set this to 'c99' to allow the printer to use more math
         functions. [default='c89'].
     precision : integer, optional
-        The precision for numbers such as pi [default=15].
+        The precision for numbers such as pi [default=17].
     user_functions : dict, optional
         A dictionary where the keys are string representations of either
         ``FunctionClass`` or ``UndefinedFunction`` instances and the values
@@ -468,10 +672,16 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
 
     >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs, Function
     >>> x, tau = symbols("x, tau")
-    >>> ccode((2*tau)**Rational(7, 2), standard='C89')
-    '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
-    >>> ccode(sin(x), assign_to="s", standard='C89')
+    >>> expr = (2*tau)**Rational(7, 2)
+    >>> ccode(expr)
+    '8*M_SQRT2*pow(tau, 7.0/2.0)'
+    >>> ccode(expr, math_macros={})
+    '8*sqrt(2)*pow(tau, 7.0/2.0)'
+    >>> ccode(sin(x), assign_to="s")
     's = sin(x);'
+    >>> from sympy.codegen.ast import real, float80
+    >>> ccode(expr, type_aliases={real: float80})
+    '8*M_SQRT2l*powl(tau, 7.0L/2.0L)'
 
     Simple custom printing can be defined for certain types by passing a
     dictionary of {"type" : "function"} to the ``user_functions`` kwarg.

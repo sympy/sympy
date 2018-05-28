@@ -189,6 +189,7 @@ _assume_rules = FactRules([
 
     'prime          ->  integer & positive',
     'composite      ->  integer & positive & !prime',
+    '!composite     ->  !positive | !even | prime',
 
     'irrational     ==  real & !rational',
 

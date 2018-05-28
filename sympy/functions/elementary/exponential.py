@@ -152,9 +152,9 @@ class exp_polar(ExpBase):
     is_polar = True
     is_comparable = False  # cannot be evalf'd
 
-    def _eval_Abs(self):
-        from sympy import expand_mul
-        return sqrt( expand_mul(self * self.conjugate()) )
+    def _eval_Abs(self):   # Abs is never a polar number
+        from sympy.functions.elementary.complexes import re
+        return exp(re(self.args[0]))
 
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
@@ -229,6 +229,8 @@ class exp(ExpBase):
     def eval(cls, arg):
         from sympy.assumptions import ask, Q
         from sympy.calculus import AccumBounds
+        from sympy.sets.setexpr import SetExpr
+        from sympy.matrices.matrices import MatrixBase
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -240,10 +242,14 @@ class exp(ExpBase):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Zero
-        elif arg.func is log:
+        elif arg is S.ComplexInfinity:
+            return S.NaN
+        elif isinstance(arg, log):
             return arg.args[0]
         elif isinstance(arg, AccumBounds):
             return AccumBounds(exp(arg.min), exp(arg.max))
+        elif isinstance(arg, SetExpr):
+            return arg._eval_func(cls)
         elif arg.is_Mul:
             if arg.is_number or arg.is_Symbol:
                 coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
@@ -271,7 +277,7 @@ class exp(ExpBase):
 
             coeffs, log_term = [coeff], None
             for term in Mul.make_args(terms):
-                if term.func is log:
+                if isinstance(term, log):
                     if log_term is None:
                         log_term = term.args[0]
                     else:
@@ -291,14 +297,14 @@ class exp(ExpBase):
                     add.append(a)
                     continue
                 newa = cls(a)
-                if newa.func is cls:
+                if isinstance(newa, cls):
                     add.append(a)
                 else:
                     out.append(newa)
             if out:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
-        elif arg.is_Matrix:
+        elif isinstance(arg, MatrixBase):
             return arg.exp()
 
     @property
@@ -364,9 +370,9 @@ class exp(ExpBase):
             old = exp(old.exp*log(old.base))
         elif old is S.Exp1 and new.is_Function:
             old = exp
-        if old.func is exp or old is S.Exp1:
+        if isinstance(old, exp) or old is S.Exp1:
             f = lambda a: Pow(*a.as_base_exp(), evaluate=False) if (
-                a.is_Pow or a.func is exp) else a
+                a.is_Pow or isinstance(a, exp)) else a
             return Pow._eval_subs(f(self), f(old), new)
 
         if old is exp and not new.is_Function:
@@ -452,9 +458,18 @@ class exp(ExpBase):
         from sympy import tanh
         return (1 + tanh(arg/2))/(1 - tanh(arg/2))
 
+    def _eval_rewrite_as_sqrt(self, arg):
+        from sympy.functions.elementary.trigonometric import sin, cos
+        if arg.is_Mul:
+            coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
+            if coeff and coeff.is_number:
+                cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
+                if not isinstance(cosine, cos) and not isinstance (sine, sin):
+                    return cosine + S.ImaginaryUnit*sine
+
 
 class log(Function):
-    """
+    r"""
     The natural logarithm function `\ln(x)` or `\log(x)`.
     Logarithms are taken with the natural base, `e`. To get
     a logarithm of a different base ``b``, use ``log(x, b)``,
@@ -476,7 +491,7 @@ class log(Function):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
-        """
+        r"""
         Returns `e^x`, the inverse function of `\log(x)`.
         """
         return exp
@@ -485,6 +500,8 @@ class log(Function):
     def eval(cls, arg, base=None):
         from sympy import unpolarify
         from sympy.calculus import AccumBounds
+        from sympy.sets.setexpr import SetExpr
+
         arg = sympify(arg)
 
         if base is not None:
@@ -524,19 +541,22 @@ class log(Function):
                 return S.Infinity
             elif arg is S.NaN:
                 return S.NaN
-            elif arg.is_Rational:
-                if arg.q != 1:
-                    return cls(arg.p) - cls(arg.q)
+            elif arg.is_Rational and arg.p == 1:
+                return -cls(arg.q)
 
-        if arg.func is exp and arg.args[0].is_real:
+        if arg is S.ComplexInfinity:
+                return S.ComplexInfinity
+        if isinstance(arg, exp) and arg.args[0].is_real:
             return arg.args[0]
-        elif arg.func is exp_polar:
+        elif isinstance(arg, exp_polar):
             return unpolarify(arg.exp)
         elif isinstance(arg, AccumBounds):
             if arg.min.is_positive:
                 return AccumBounds(log(arg.min), log(arg.max))
             else:
                 return
+        elif isinstance(arg, SetExpr):
+            return arg._eval_func(cls)
 
         if arg.is_number:
             if arg.is_negative:
@@ -570,7 +590,7 @@ class log(Function):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):  # of log(1+x)
-        """
+        r"""
         Returns the next term in the Taylor series expansion of `\log(1+x)`.
         """
         from sympy import powsimp
@@ -597,6 +617,8 @@ class log(Function):
             p = perfect_power(int(arg))
             if p is not False:
                 return p[1]*self.func(p[0])
+        elif arg.is_Rational:
+            return log(arg.p) - log(arg.q)
         elif arg.is_Mul:
             expr = []
             nonpos = []
@@ -615,8 +637,8 @@ class log(Function):
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
         elif arg.is_Pow or isinstance(arg, exp):
-            if force or (arg.exp.is_real and arg.base.is_positive) or \
-                    arg.base.is_polar:
+            if force or (arg.exp.is_real and (arg.base.is_positive or ((arg.exp+1)
+                .is_positive and (arg.exp-1).is_nonpositive))) or arg.base.is_polar:
                 b = arg.base
                 e = arg.exp
                 a = self.func(b)
@@ -750,7 +772,7 @@ class log(Function):
 
 
 class LambertW(Function):
-    """
+    r"""
     The Lambert W function `W(z)` is defined as the inverse
     function of `w \exp(w)` [1]_.
 

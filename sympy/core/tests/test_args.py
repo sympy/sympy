@@ -25,7 +25,7 @@ def test_all_classes_are_tested():
     sympy_path = os.path.abspath(path)
     prefix = os.path.split(sympy_path)[0] + os.sep
 
-    re_cls = re.compile("^class ([A-Za-z][A-Za-z0-9_]*)\s*\(", re.MULTILINE)
+    re_cls = re.compile(r"^class ([A-Za-z][A-Za-z0-9_]*)\s*\(", re.MULTILINE)
 
     modules = {}
 
@@ -87,7 +87,9 @@ def _test_args(obj):
 
 def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
+    from sympy import Q
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
+    assert _test_args(Q.is_true(True))
 
 def test_sympy__assumptions__assume__Predicate():
     from sympy.assumptions.assume import Predicate
@@ -168,6 +170,72 @@ def test_sympy__codegen__ast__For():
     from sympy.codegen.ast import For, CodeBlock, AddAugmentedAssignment
     from sympy import Range
     assert _test_args(For(x, Range(10), CodeBlock(AddAugmentedAssignment(y, 1))))
+
+
+def test_sympy__codegen__ast__Token():
+    from sympy.codegen.ast import Token
+    assert _test_args(Token())
+
+
+def test_sympy__codegen__ast__Type():
+    from sympy.codegen.ast import Type
+    assert _test_args(Type('float128'))
+
+
+def test_sympy__codegen__ast__IntBaseType():
+    from sympy.codegen.ast import IntBaseType
+    assert _test_args(IntBaseType('bigint'))
+
+
+def test_sympy__codegen__ast___SizedIntType():
+    from sympy.codegen.ast import _SizedIntType
+    assert _test_args(_SizedIntType('int128', 128))
+
+
+def test_sympy__codegen__ast__SignedIntType():
+    from sympy.codegen.ast import SignedIntType
+    assert _test_args(SignedIntType('int128_with_sign', 128))
+
+
+def test_sympy__codegen__ast__UnsignedIntType():
+    from sympy.codegen.ast import UnsignedIntType
+    assert _test_args(UnsignedIntType('unt128', 128))
+
+
+def test_sympy__codegen__ast__FloatType():
+    from sympy.codegen.ast import FloatType
+    assert _test_args(FloatType('float242', 242, nmant=142, nexp=99))
+
+
+def test_sympy__codegen__ast__ComplexType():
+    from sympy.codegen.ast import ComplexType
+    assert _test_args(ComplexType('complex42', 42, nmant=15, nexp=5))
+
+
+def test_sympy__codegen__ast__Attribute():
+    from sympy.codegen.ast import Attribute
+    assert _test_args(Attribute('noexcept'))
+
+
+def test_sympy__codegen__ast__Variable():
+    from sympy.codegen.ast import Variable, Type, value_const
+    assert _test_args(Variable(x))
+    assert _test_args(Variable(y, {value_const}, Type('float32')))
+    assert _test_args(Variable(z, type_=Type('float64')))
+
+
+def test_sympy__codegen__ast__Pointer():
+    from sympy.codegen.ast import Pointer, Type, pointer_const
+    assert _test_args(Pointer(x))
+    assert _test_args(Pointer(y, type_=Type('float32')))
+    assert _test_args(Pointer(z, {pointer_const}, Type('float64')))
+
+
+def test_sympy__codegen__ast__Declaration():
+    from sympy.codegen.ast import Declaration, Variable, Type
+    vx = Variable(x, type_=Type('float'))
+    assert _test_args(Declaration(vx))
+    assert _test_args(Declaration(vx, 3.0))
 
 
 @XFAIL
@@ -468,6 +536,11 @@ def test_sympy__core__power__Pow():
     assert _test_args(Pow(x, 2))
 
 
+def test_sympy__algebras__quaternion__Quaternion():
+    from sympy.algebras.quaternion import Quaternion
+    assert _test_args(Quaternion(x, 1, 2, 3))
+
+
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))
@@ -517,6 +590,22 @@ def test_sympy__calculus__util__AccumulationBounds():
     from sympy.calculus.util import AccumulationBounds
     assert _test_args(AccumulationBounds(0, 1))
 
+
+def test_sympy__sets__ordinals__OmegaPower():
+    from sympy.sets.ordinals import OmegaPower
+    assert _test_args(OmegaPower(1, 1))
+
+def test_sympy__sets__ordinals__Ordinal():
+    from sympy.sets.ordinals import Ordinal, OmegaPower
+    assert _test_args(Ordinal(OmegaPower(2, 1)))
+
+def test_sympy__sets__ordinals__OrdinalOmega():
+    from sympy.sets.ordinals import OrdinalOmega
+    assert _test_args(OrdinalOmega())
+
+def test_sympy__sets__ordinals__OrdinalZero():
+    from sympy.sets.ordinals import OrdinalZero
+    assert _test_args(OrdinalZero())
 
 def test_sympy__sets__sets__EmptySet():
     from sympy.sets.sets import EmptySet
@@ -575,6 +664,10 @@ def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
     a, b = symbols('a b')
     assert _test_args(Tr(a + b))
+
+def test_sympy__sets__setexpr__SetExpr():
+    from sympy.sets.setexpr import SetExpr
+    assert _test_args(SetExpr(Interval(0, 1)))
 
 
 def test_sympy__sets__fancysets__Naturals():
@@ -699,8 +792,23 @@ def test_sympy__stats__drv__SingleDiscretePSpace():
     from sympy.stats.drv_types import PoissonDistribution
     assert _test_args(SingleDiscretePSpace(x, PoissonDistribution(1)))
 
+def test_sympy__stats__drv__DiscretePSpace():
+    from sympy.stats.drv import DiscretePSpace, SingleDiscreteDomain
+    density = Lambda(x, 2**(-x))
+    domain = SingleDiscreteDomain(x, S.Naturals)
+    assert _test_args(DiscretePSpace(domain, density))
+
+def test_sympy__stats__drv__ConditionalDiscreteDomain():
+    from sympy.stats.drv import ConditionalDiscreteDomain, SingleDiscreteDomain
+    X = SingleDiscreteDomain(x, S.Naturals0)
+    assert _test_args(ConditionalDiscreteDomain(X, x > 2))
+
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
+    pass
+
+@SKIP("abstract class")
+def test_sympy__stats__drv__DiscreteDomain():
     pass
 
 def test_sympy__stats__rv__RandomDomain():
@@ -1028,6 +1136,9 @@ def test_sympy__stats__crv_types__StudentTDistribution():
     from sympy.stats.crv_types import StudentTDistribution
     assert _test_args(StudentTDistribution(1))
 
+def test_sympy__stats__crv_types__TrapezoidalDistribution():
+    from sympy.stats.crv_types import TrapezoidalDistribution
+    assert _test_args(TrapezoidalDistribution(1, 2, 3, 4))
 
 def test_sympy__stats__crv_types__TriangularDistribution():
     from sympy.stats.crv_types import TriangularDistribution
@@ -1161,6 +1272,12 @@ def test_sympy__functions__combinatorial__numbers__lucas():
     assert _test_args(lucas(x))
 
 
+def test_sympy__functions__combinatorial__numbers__partition():
+    from sympy.core.symbol import Symbol
+    from sympy.functions.combinatorial.numbers import partition
+    assert _test_args(partition(Symbol('a', integer=True)))
+
+
 def test_sympy__functions__elementary__complexes__Abs():
     from sympy.functions.elementary.complexes import Abs
     assert _test_args(Abs(x))
@@ -1248,6 +1365,11 @@ def test_sympy__functions__elementary__hyperbolic__HyperbolicFunction():
 
 @SKIP("abstract class")
 def test_sympy__functions__elementary__hyperbolic__ReciprocalHyperbolicFunction():
+    pass
+
+
+@SKIP("abstract class")
+def test_sympy__functions__elementary__hyperbolic__InverseHyperbolicFunction():
     pass
 
 
@@ -2046,7 +2168,7 @@ def test_sympy__liealgebras__type_g__TypeG():
 
 def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
-    assert _test_args(And(x, y, 2))
+    assert _test_args(And(x, y, 1))
 
 
 @SKIP("abstract class")
@@ -2077,7 +2199,7 @@ def test_sympy__logic__boolalg__Equivalent():
 
 def test_sympy__logic__boolalg__ITE():
     from sympy.logic.boolalg import ITE
-    assert _test_args(ITE(x, y, 2))
+    assert _test_args(ITE(x, y, 1))
 
 
 def test_sympy__logic__boolalg__Implies():
@@ -2087,7 +2209,7 @@ def test_sympy__logic__boolalg__Implies():
 
 def test_sympy__logic__boolalg__Nand():
     from sympy.logic.boolalg import Nand
-    assert _test_args(Nand(x, y, 2))
+    assert _test_args(Nand(x, y, 1))
 
 
 def test_sympy__logic__boolalg__Nor():
@@ -2256,6 +2378,13 @@ def test_sympy__matrices__expressions__hadamard__HadamardProduct():
     X = MatrixSymbol('X', x, y)
     Y = MatrixSymbol('Y', x, y)
     assert _test_args(HadamardProduct(X, Y))
+
+def test_sympy__matrices__expressions__kronecker__KroneckerProduct():
+    from sympy.matrices.expressions.kronecker import KroneckerProduct
+    from sympy.matrices.expressions import MatrixSymbol
+    X = MatrixSymbol('X', x, y)
+    Y = MatrixSymbol('Y', x, y)
+    assert _test_args(KroneckerProduct(X, Y))
 
 
 def test_sympy__matrices__expressions__matpow__MatPow():
@@ -3165,10 +3294,16 @@ def test_sympy__physics__units__dimensions__Dimension():
     assert _test_args(Dimension("length", "L"))
 
 
+def test_sympy__physics__units__dimensions__DimensionSystem():
+    from sympy.physics.units.dimensions import DimensionSystem
+    from sympy.physics.units.dimensions import length, time, velocity
+    assert _test_args(DimensionSystem((length, time), (velocity,)))
+
+
 def test_sympy__physics__units__quantities__Quantity():
     from sympy.physics.units.quantities import Quantity
     from sympy.physics.units import length
-    assert _test_args(Quantity("dam", length, 10))
+    assert _test_args(Quantity("dam"))
 
 
 def test_sympy__physics__units__prefixes__Prefix():
@@ -3307,6 +3442,12 @@ def test_sympy__tensor__array__sparse_ndim_array__ImmutableSparseNDimArray():
     from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
     sparr = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
     assert _test_args(sparr)
+
+
+def test_sympy__tensor__functions__TensorProduct():
+    from sympy.tensor.functions import TensorProduct
+    tp = TensorProduct(3, 4, evaluate=False)
+    assert _test_args(tp)
 
 
 def test_sympy__tensor__indexed__Idx():
@@ -3832,9 +3973,9 @@ def test_sympy__codegen__ffunctions__literal_dp():
     assert _test_args(literal_dp(1))
 
 
-def test_sympy__vector__coordsysrect__CoordSysCartesian():
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    assert _test_args(CoordSysCartesian('C'))
+def test_sympy__vector__coordsysrect__CoordSys3D():
+    from sympy.vector.coordsysrect import CoordSys3D
+    assert _test_args(CoordSys3D('C'))
 
 
 def test_sympy__vector__point__Point():
@@ -3868,15 +4009,15 @@ def test_sympy__vector__basisdependent__BasisDependentZero():
 
 def test_sympy__vector__vector__BaseVector():
     from sympy.vector.vector import BaseVector
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
-    assert _test_args(BaseVector('Ci', 0, C, ' ', ' '))
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    assert _test_args(BaseVector(0, C, ' ', ' '))
 
 
 def test_sympy__vector__vector__VectorAdd():
     from sympy.vector.vector import VectorAdd, VectorMul
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     from sympy.abc import a, b, c, x, y, z
     v1 = a*C.i + b*C.j + c*C.k
     v2 = x*C.i + y*C.j + z*C.k
@@ -3886,8 +4027,8 @@ def test_sympy__vector__vector__VectorAdd():
 
 def test_sympy__vector__vector__VectorMul():
     from sympy.vector.vector import VectorMul
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     from sympy.abc import a
     assert _test_args(VectorMul(a, C.i))
 
@@ -3903,6 +4044,20 @@ def test_sympy__vector__vector__Vector():
     pass
 
 
+def test_sympy__vector__vector__Cross():
+    from sympy.vector.vector import Cross
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    _test_args(Cross(C.i, C.j))
+
+
+def test_sympy__vector__vector__Dot():
+    from sympy.vector.vector import Dot
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    _test_args(Dot(C.i, C.j))
+
+
 def test_sympy__vector__dyadic__Dyadic():
     from sympy.vector.dyadic import Dyadic
     #Dyadic is never to be initialized using args
@@ -3911,22 +4066,22 @@ def test_sympy__vector__dyadic__Dyadic():
 
 def test_sympy__vector__dyadic__BaseDyadic():
     from sympy.vector.dyadic import BaseDyadic
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     assert _test_args(BaseDyadic(C.i, C.j))
 
 
 def test_sympy__vector__dyadic__DyadicMul():
     from sympy.vector.dyadic import BaseDyadic, DyadicMul
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     assert _test_args(DyadicMul(3, BaseDyadic(C.i, C.j)))
 
 
 def test_sympy__vector__dyadic__DyadicAdd():
     from sympy.vector.dyadic import BaseDyadic, DyadicAdd
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     assert _test_args(2 * DyadicAdd(BaseDyadic(C.i, C.i),
                                     BaseDyadic(C.i, C.j)))
 
@@ -3938,9 +4093,28 @@ def test_sympy__vector__dyadic__DyadicZero():
 
 def test_sympy__vector__deloperator__Del():
     from sympy.vector.deloperator import Del
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
-    assert _test_args(Del(C))
+    assert _test_args(Del())
+
+
+def test_sympy__vector__operators__Curl():
+    from sympy.vector.operators import Curl
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    assert _test_args(Curl(C.i))
+
+
+def test_sympy__vector__operators__Divergence():
+    from sympy.vector.operators import Divergence
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    assert _test_args(Divergence(C.i))
+
+
+def test_sympy__vector__operators__Gradient():
+    from sympy.vector.operators import Gradient
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    assert _test_args(Gradient(C.x))
 
 
 def test_sympy__vector__orienters__Orienter():
@@ -3955,8 +4129,8 @@ def test_sympy__vector__orienters__ThreeAngleOrienter():
 
 def test_sympy__vector__orienters__AxisOrienter():
     from sympy.vector.orienters import AxisOrienter
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
     assert _test_args(AxisOrienter(x, C.i))
 
 
@@ -3978,10 +4152,15 @@ def test_sympy__vector__orienters__QuaternionOrienter():
 
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
-    assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    assert _test_args(BaseScalar(0, C, ' ', ' '))
+
 
 def test_sympy__physics__wigner__Wigner3j():
     from sympy.physics.wigner import Wigner3j
     assert _test_args(Wigner3j(0, 0, 0, 0, 0, 0))
+
+def test_sympy__integrals__rubi__symbol__matchpyWC():
+    from sympy.integrals.rubi.symbol import matchpyWC
+    assert _test_args(matchpyWC(1, True, 'a'))

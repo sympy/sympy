@@ -45,7 +45,7 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.utilities import group, sift, public
+from sympy.utilities import group, sift, public, filldedent
 
 import sympy.polys
 import mpmath
@@ -56,8 +56,7 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
-from sympy.core.compatibility import iterable, range
-
+from sympy.core.compatibility import iterable, range, ordered
 
 @public
 class Poly(Expr):
@@ -107,6 +106,7 @@ class Poly(Expr):
 
     is_commutative = True
     is_Poly = True
+    _op_priority = 10.001
 
     def __new__(cls, rep, *gens, **args):
         """Create a new polynomial instance out of something useful. """
@@ -255,7 +255,7 @@ class Poly(Expr):
         ========
 
         >>> from sympy import Poly
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x, y, z
 
         >>> Poly(x**2 + 1).free_symbols
         {x}
@@ -263,12 +263,17 @@ class Poly(Expr):
         {x, y}
         >>> Poly(x**2 + y, x).free_symbols
         {x, y}
+        >>> Poly(x**2 + y, x, z).free_symbols
+        {x, y}
 
         """
-        symbols = set([])
-
-        for gen in self.gens:
-            symbols |= gen.free_symbols
+        symbols = set()
+        gens = self.gens
+        for i in range(len(gens)):
+            for monom in self.monoms():
+                if monom[i]:
+                    symbols |= gens[i].free_symbols
+                    break
 
         return symbols | self.free_symbols_in_domain
 
@@ -609,7 +614,10 @@ class Poly(Expr):
 
     def ltrim(f, gen):
         """
-        Remove dummy generators from the "left" of ``f``.
+        Remove dummy generators from ``f`` that are to the left of
+        specified ``gen`` in the generators as ordered. When ``gen``
+        is an integer, it refers to the generator located at that
+        position within the tuple of generators of ``f``.
 
         Examples
         ========
@@ -619,19 +627,22 @@ class Poly(Expr):
 
         >>> Poly(y**2 + y*z**2, x, y, z).ltrim(y)
         Poly(y**2 + y*z**2, y, z, domain='ZZ')
+        >>> Poly(z, x, y, z).ltrim(-1)
+        Poly(z, z, domain='ZZ')
 
         """
         rep = f.as_dict(native=True)
         j = f._gen_to_level(gen)
+
         terms = {}
 
         for monom, coeff in rep.items():
-            monom = monom[j:]
 
-            if monom not in terms:
-                terms[monom] = coeff
-            else:
+            if any(i for i in monom[:j]):
+                # some generator is used in the portion to be trimmed
                 raise PolynomialError("can't left trim %s" % f)
+
+            terms[monom[j:]] = coeff
 
         gens = f.gens[j:]
 
@@ -653,7 +664,7 @@ class Poly(Expr):
         False
 
         """
-        indices = set([])
+        indices = set()
 
         for gen in gens:
             try:
@@ -1588,7 +1599,7 @@ class Poly(Expr):
         dom, per, F, G = f._unify(g)
         retract = False
 
-        if auto and dom.has_Ring and not dom.has_Field:
+        if auto and dom.is_Ring and not dom.is_Field:
             F, G = F.to_field(), G.to_field()
             retract = True
 
@@ -1627,7 +1638,7 @@ class Poly(Expr):
         dom, per, F, G = f._unify(g)
         retract = False
 
-        if auto and dom.has_Ring and not dom.has_Field:
+        if auto and dom.is_Ring and not dom.is_Field:
             F, G = F.to_field(), G.to_field()
             retract = True
 
@@ -1664,7 +1675,7 @@ class Poly(Expr):
         dom, per, F, G = f._unify(g)
         retract = False
 
-        if auto and dom.has_Ring and not dom.has_Field:
+        if auto and dom.is_Ring and not dom.is_Field:
             F, G = F.to_field(), G.to_field()
             retract = True
 
@@ -1703,7 +1714,7 @@ class Poly(Expr):
         dom, per, F, G = f._unify(g)
         retract = False
 
-        if auto and dom.has_Ring and not dom.has_Field:
+        if auto and dom.is_Ring and not dom.is_Field:
             F, G = F.to_field(), G.to_field()
             retract = True
 
@@ -2152,7 +2163,7 @@ class Poly(Expr):
         """
         f = self
 
-        if not f.rep.dom.has_Field:
+        if not f.rep.dom.is_Field:
             return S.One, f
 
         dom = f.get_domain()
@@ -2199,7 +2210,7 @@ class Poly(Expr):
         f = per(f)
         g = per(g)
 
-        if not (dom.has_Field and dom.has_assoc_Ring):
+        if not (dom.is_Field and dom.has_assoc_Ring):
             return f, g
 
         a, f = f.clear_denoms(convert=True)
@@ -2229,7 +2240,7 @@ class Poly(Expr):
         """
         f = self
 
-        if args.get('auto', True) and f.rep.dom.has_Ring:
+        if args.get('auto', True) and f.rep.dom.is_Ring:
             f = f.to_field()
 
         if hasattr(f.rep, 'integrate'):
@@ -2409,7 +2420,7 @@ class Poly(Expr):
         """
         dom, per, F, G = f._unify(g)
 
-        if auto and dom.has_Ring:
+        if auto and dom.is_Ring:
             F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'half_gcdex'):
@@ -2442,7 +2453,7 @@ class Poly(Expr):
         """
         dom, per, F, G = f._unify(g)
 
-        if auto and dom.has_Ring:
+        if auto and dom.is_Ring:
             F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'gcdex'):
@@ -2473,7 +2484,7 @@ class Poly(Expr):
         """
         dom, per, F, G = f._unify(g)
 
-        if auto and dom.has_Ring:
+        if auto and dom.is_Ring:
             F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'invert'):
@@ -2867,7 +2878,7 @@ class Poly(Expr):
         """
         f = self
 
-        if auto and f.rep.dom.has_Ring:
+        if auto and f.rep.dom.is_Ring:
             f = f.to_field()
 
         if hasattr(f.rep, 'monic'):
@@ -3029,7 +3040,7 @@ class Poly(Expr):
         """
         f = self
 
-        if auto and f.rep.dom.has_Ring:
+        if auto and f.rep.dom.is_Ring:
             f = f.to_field()
 
         if hasattr(f.rep, 'sturm'):
@@ -3061,6 +3072,41 @@ class Poly(Expr):
             raise OperationNotSupported(f, 'gff_list')
 
         return [(f.per(g), k) for g, k in result]
+
+    def norm(f):
+        """
+        Computes the product, ``Norm(f)``, of the conjugates of
+        a polynomial ``f`` defined over a number field ``K``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, sqrt
+        >>> from sympy.abc import x
+
+        >>> a, b = sqrt(2), sqrt(3)
+
+        A polynomial over a quadratic extension.
+        Two conjugates x - a and x + a.
+
+        >>> f = Poly(x - a, x, extension=a)
+        >>> f.norm()
+        Poly(x**2 - 2, x, domain='QQ')
+
+        A polynomial over a quartic extension.
+        Four conjugates x - a, x - a, x + a and x + a.
+
+        >>> f = Poly(x - a, x, extension=(a, b))
+        >>> f.norm()
+        Poly(x**4 - 4*x**2 + 4, x, domain='QQ')
+
+        """
+        if hasattr(f.rep, 'norm'):
+            r = f.rep.norm()
+        else:  # pragma: no cover
+            raise OperationNotSupported(f, 'norm')
+
+        return f.per(r)
 
     def sqf_norm(f):
         """
@@ -3508,6 +3554,7 @@ class Poly(Expr):
         [-1.73205080756887729352744634151, 1.73205080756887729352744634151]
 
         """
+        from sympy.functions.elementary.complexes import sign
         if f.is_multivariate:
             raise MultivariatePolynomialError(
                 "can't compute numerical roots of %s" % f)
@@ -3546,7 +3593,7 @@ class Poly(Expr):
             # Mpmath puts real roots first, then complex ones (as does all_roots)
             # so we make sure this convention holds here, too.
             roots = list(map(sympify,
-                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, r.imag))))
+                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
         except NoConvergence:
             raise NoConvergence(
                 'convergence to root failed; try n < %s or maxsteps > %s' % (
@@ -4098,7 +4145,7 @@ class Poly(Expr):
 
     @_sympifyit('g', NotImplemented)
     def __ne__(f, g):
-        return not f.__eq__(g)
+        return not f == g
 
     def __nonzero__(f):
         return not f.is_zero
@@ -4107,7 +4154,7 @@ class Poly(Expr):
 
     def eq(f, g, strict=False):
         if not strict:
-            return f.__eq__(g)
+            return f == g
         else:
             return f._strict_eq(sympify(g))
 
@@ -4372,7 +4419,7 @@ def _update_args(args, key, value):
 
 
 @public
-def degree(f, *gens, **args):
+def degree(f, gen=0):
     """
     Return the degree of ``f`` in the given variable.
 
@@ -4391,15 +4438,91 @@ def degree(f, *gens, **args):
     >>> degree(0, x)
     -oo
 
+    See also
+    ========
+    total_degree
+    degree_list
     """
-    options.allowed_flags(args, ['gen', 'polys'])
 
-    try:
-        F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed as exc:
-        raise ComputationFailed('degree', 1, exc)
+    f = sympify(f, strict=True)
+    if f.is_Poly:
+        p = f
+        isNum = p.as_expr().is_Number
+    else:
+        isNum = f.is_Number
+        if not isNum:
+            p, _ = poly_from_expr(f)
 
-    return sympify(F.degree(opt.gen))
+    if isNum:
+        return S.Zero if f else S.NegativeInfinity
+
+    if not sympify(gen, strict=True).is_Number:
+        if f.is_Poly and gen not in p.gens:
+            # try recast without explicit gens
+            p, _ = poly_from_expr(f.as_expr())
+        if gen not in p.gens:
+            return S.Zero
+    elif not f.is_Poly and len(f.free_symbols) > 1:
+        raise TypeError(filldedent('''
+         A symbolic generator of interest is required for a multivariate
+         expression like func = %s, e.g. degree(func, gen = %s) instead of
+         degree(func, gen = %s).
+        ''' % (f, next(ordered(f.free_symbols)), gen)))
+
+    return Integer(p.degree(gen))
+
+
+@public
+def total_degree(f, *gens):
+    """
+    Return the total_degree of ``f`` in the given variables.
+
+    Examples
+    ========
+    >>> from sympy import total_degree, Poly
+    >>> from sympy.abc import x, y, z
+
+    >>> total_degree(1)
+    0
+    >>> total_degree(x + x*y)
+    2
+    >>> total_degree(x + x*y, x)
+    1
+
+    If the expression is a Poly and no variables are given
+    then the generators of the Poly will be used:
+
+    >>> p = Poly(x + x*y, y)
+    >>> total_degree(p)
+    1
+
+    To deal with the underlying expression of the Poly, convert
+    it to an Expr:
+
+    >>> total_degree(p.as_expr())
+    2
+
+    This is done automatically if any variables are given:
+
+    >>> total_degree(p, x)
+    1
+
+    See also
+    ========
+    degree
+    """
+
+    p = sympify(f)
+    if p.is_Poly:
+        p = p.as_expr()
+    if p.is_Number:
+        rv = 0
+    else:
+        if f.is_Poly:
+            gens = gens or f.gens
+        rv = Poly(p, gens).total_degree()
+
+    return Integer(rv)
 
 
 @public
@@ -5081,6 +5204,17 @@ def gcd_list(seq, *gens, **args):
 
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
+
+        # gcd for domain Q[irrational] (purely algebraic irrational)
+        if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
+            a = seq[-1]
+            lst = [ (a/elt).ratsimp() for elt in seq[:-1] ]
+            if all(frc.is_rational for frc in lst):
+                lc = 1
+                for frc in lst:
+                    lc = lcm(lc, frc.as_numer_denom()[0])
+                return a/lc
+
     except PolificationFailed as exc:
         result = try_non_polynomial_gcd(exc.exprs)
 
@@ -5136,6 +5270,14 @@ def gcd(f, g=None, *gens, **args):
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+
+        # gcd for domain Q[irrational] (purely algebraic irrational)
+        a, b = map(sympify, (f, g))
+        if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
+            frc = (a/b).ratsimp()
+            if frc.is_rational:
+                return a/frc.as_numer_denom()[0]
+
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
 
@@ -5194,6 +5336,17 @@ def lcm_list(seq, *gens, **args):
 
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
+
+        # lcm for domain Q[irrational] (purely algebraic irrational)
+        if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
+            a = seq[-1]
+            lst = [ (a/elt).ratsimp() for elt in seq[:-1] ]
+            if all(frc.is_rational for frc in lst):
+                lc = 1
+                for frc in lst:
+                    lc = lcm(lc, frc.as_numer_denom()[1])
+                return a*lc
+
     except PolificationFailed as exc:
         result = try_non_polynomial_lcm(exc.exprs)
 
@@ -5246,6 +5399,14 @@ def lcm(f, g=None, *gens, **args):
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+
+        # lcm for domain Q[irrational] (purely algebraic irrational)
+        a, b = map(sympify, (f, g))
+        if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
+            frc = (a/b).ratsimp()
+            if frc.is_rational:
+                return a*frc.as_numer_denom()[1]
+
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
 
@@ -5353,13 +5514,13 @@ def terms_gcd(f, *gens, **args):
 
     J, f = F.terms_gcd()
 
-    if opt.domain.has_Ring:
-        if opt.domain.has_Field:
+    if opt.domain.is_Ring:
+        if opt.domain.is_Field:
             denom, f = f.clear_denoms(convert=True)
 
         coeff, f = f.primitive()
 
-        if opt.domain.has_Field:
+        if opt.domain.is_Field:
             coeff /= denom
     else:
         coeff = S.One
@@ -5604,27 +5765,30 @@ def gff_list(f, *gens, **args):
     """
     Compute a list of greatest factorial factors of ``f``.
 
+    Note that the input to ff() and rf() should be Poly instances to use the
+    definitions here.
+
     Examples
     ========
 
-    >>> from sympy import gff_list, ff
+    >>> from sympy import gff_list, ff, Poly
     >>> from sympy.abc import x
 
-    >>> f = x**5 + 2*x**4 - x**3 - 2*x**2
+    >>> f = Poly(x**5 + 2*x**4 - x**3 - 2*x**2, x)
 
     >>> gff_list(f)
-    [(x, 1), (x + 2, 4)]
+    [(Poly(x, x, domain='ZZ'), 1), (Poly(x + 2, x, domain='ZZ'), 4)]
 
-    >>> (ff(x, 1)*ff(x + 2, 4)).expand() == f
+    >>> (ff(Poly(x), 1)*ff(Poly(x + 2), 4)).expand() == f
     True
 
-    >>> f = x**12 + 6*x**11 - 11*x**10 - 56*x**9 + 220*x**8 + 208*x**7 - \
-        1401*x**6 + 1090*x**5 + 2715*x**4 - 6720*x**3 - 1092*x**2 + 5040*x
+    >>> f = Poly(x**12 + 6*x**11 - 11*x**10 - 56*x**9 + 220*x**8 + 208*x**7 - \
+        1401*x**6 + 1090*x**5 + 2715*x**4 - 6720*x**3 - 1092*x**2 + 5040*x, x)
 
     >>> gff_list(f)
-    [(x**3 + 7, 2), (x**2 + 5*x, 3)]
+    [(Poly(x**3 + 7, x, domain='ZZ'), 2), (Poly(x**2 + 5*x, x, domain='ZZ'), 3)]
 
-    >>> ff(x**3 + 7, 2)*ff(x**2 + 5*x, 3) == f
+    >>> ff(Poly(x**3 + 7, x), 2)*ff(Poly(x**2 + 5*x, x), 3) == f
     True
 
     """
@@ -5952,8 +6116,7 @@ def to_rational_coeffs(f):
                 func = c.func
             else:
                 args = [c]
-            sifted = sift(args, lambda z: z.is_rational)
-            c1, c2 = sifted[True], sifted[False]
+            c1, c2 = sift(args, lambda z: z.is_rational, binary=True)
             alpha = -func(*c2)/n
             f2 = f1.shift(alpha)
             return alpha, f2
@@ -6439,8 +6602,9 @@ def cancel(f, *gens, **args):
             raise PolynomialError(msg)
         # Handling of noncommutative and/or piecewise expressions
         if f.is_Add or f.is_Mul:
-            sifted = sift(f.args, lambda x: x.is_commutative is True and not x.has(Piecewise))
-            c, nc = sifted[True], sifted[False]
+            c, nc = sift(f.args, lambda x:
+                x.is_commutative is True and not x.has(Piecewise),
+                binary=True)
             nc = [cancel(i) for i in nc]
             return f.func(cancel(f.func._from_args(c)), *nc)
         else:
@@ -6499,7 +6663,7 @@ def reduced(f, G, *gens, **args):
     domain = opt.domain
     retract = False
 
-    if opt.auto and domain.has_Ring and not domain.has_Field:
+    if opt.auto and domain.is_Ring and not domain.is_Field:
         opt = opt.clone(dict(domain=domain.get_field()))
         retract = True
 
@@ -6686,7 +6850,7 @@ class GroebnerBasis(Basic):
             return False
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     @property
     def is_zero_dimensional(self):
@@ -6780,7 +6944,7 @@ class GroebnerBasis(Basic):
         G = matrix_fglm(polys, _ring, dst_order)
         G = [Poly._from_dict(dict(g), opt) for g in G]
 
-        if not domain.has_Field:
+        if not domain.is_Field:
             G = [g.clear_denoms(convert=True)[1] for g in G]
             opt.domain = domain
 
@@ -6822,7 +6986,7 @@ class GroebnerBasis(Basic):
 
         retract = False
 
-        if auto and domain.has_Ring and not domain.has_Field:
+        if auto and domain.is_Ring and not domain.is_Field:
             opt = opt.clone(dict(domain=domain.get_field()))
             retract = True
 
@@ -6899,7 +7063,8 @@ def poly(expr, *gens, **args):
             for factor in Mul.make_args(term):
                 if factor.is_Add:
                     poly_factors.append(_poly(factor, opt))
-                elif factor.is_Pow and factor.base.is_Add and factor.exp.is_Integer:
+                elif factor.is_Pow and factor.base.is_Add and \
+                        factor.exp.is_Integer and factor.exp >= 0:
                     poly_factors.append(
                         _poly(factor.base, opt).pow(factor.exp))
                 else:

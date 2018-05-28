@@ -10,5 +10,6 @@ exec("from sympy.physics.units import *")
 SymPyDeprecationWarning(
     feature ="sympy.physics.unitsystems",
     useinstead ="sympy.physics.units",
-    deprecated_since_version ="1.1"
+    deprecated_since_version ="1.1",
+    issue=12856,
 ).warn()
