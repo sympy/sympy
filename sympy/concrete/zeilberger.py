@@ -155,8 +155,7 @@ def zb_recur(F, n, k, J = 1):
 def zb_sum(F, k_a_b, J = 1):
     """
     Attempts to compute the sum of a hypergometric term F(n, k) from
-    k = a (finite) to k = b (finite) (which is assumed to be a function of n, a positive
-    integer, and nothing else) by first finding a recurrence of order J in n that
+    k = a (finite) to k = b (finite) by first finding a recurrence of order J in n that
     F(n, k) satisfies. If it fails to find a recurrence or solve the recurrence
     it will return None.
 
@@ -192,13 +191,12 @@ def zb_sum(F, k_a_b, J = 1):
 
     F = F.rewrite(gamma)
 
-    if len(b.free_symbols) != 1:
-        return None
-
-    n = b.free_symbols.pop()
-
-    if not (n.is_positive and n.is_integer) or (
-        hypersimp(F, k) is None or hypersimp(F, n) is None):
+    for w in F.free_symbols.intersection(b.free_symbols.union(a.free_symbols)):
+        n = w
+        if  (n.is_positive and n.is_integer) and not (
+            hypersimp(F, k) is None or hypersimp(F, n) is None):
+            break
+    else:
         return None
 
     pair = zb_recur(F, n, k, J)
@@ -213,8 +211,12 @@ def zb_sum(F, k_a_b, J = 1):
     f = symbols('f', cls = Function)
     sum_rec = sum(F_rec[i] * f(n + i) for i in range(J + 1))
 
-    initial = { f(i): sum(F.subs([(n, i), (k, j)])
-            for j in range(a.subs(n, i), b.subs(n, i) + 1)) for i in range(1, J + 2) }
+    i = symbols('i', cls = Dummy)
+    if not (b.subs(n, i) - a.subs(n, n + i)).free_symbols.issubset({i}):
+        return None
+
+    initial = { f(i): sum(F.subs([(n, i), (k, a.subs(n, i) + j)])
+            for j in range(b.subs(n, i) - a.subs(n, i) + 1)) for i in range(1, J + 2) }
 
     vanishes = (combsimp(F.subs(k, b + 1)) == 0) and _vanishes(F, b, n, k)
     if vanishes:
@@ -223,7 +225,6 @@ def zb_sum(F, k_a_b, J = 1):
         except ValueError:
             return None
 
-    i = symbols('i', cls = Dummy)
     if not (b.subs(n, n + J) - b.subs(n, n + i)).free_symbols.issubset({i}):
         return None
 

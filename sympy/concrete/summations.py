@@ -1057,6 +1057,11 @@ def eval_sum_symbolic(f, limits):
         if not r in (None, S.NaN):
             return r
 
+        zb_try = zb_sum(f, (i, a, b))
+
+        if zb_try is not None:
+            return zb_try
+
     h = eval_sum_hyper(f_orig, (i, a, b))
     if h is not None:
         return h
@@ -1136,9 +1141,6 @@ def eval_sum_hyper(f, i_a_b):
             if res is not None:
                 return Piecewise(res, (old_sum, True))
         else:
-            zb_try = zb_sum(f, i_a_b)
-            if zb_try is not None:
-                return zb_try
             res1 = _eval_sum_hyper(f, i, a)
             res2 = _eval_sum_hyper(f, i, b + 1)
             if res1 is None or res2 is None:
