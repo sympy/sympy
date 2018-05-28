@@ -23,8 +23,16 @@ class SympifyError(ValueError):
             str(self.base_exc)))
 
 class UnsafeSympifyError(SympifyError):
+    def __init__(self, expr, base_exc=None, reason=None):
+        self.expr = expr
+        self.base_exc = base_exc
+        self.reason = reason
+
     def __str__(self):
-        return "%r cannot be parsed safely" % (self.expr,)
+        msg = "%r cannot be parsed safely" % (self.expr,)
+        if self.reason:
+            msg += '. Reason: %s.' % (self.reason,)
+        return msg
 
 converter = {}  # See sympify docstring.
 
