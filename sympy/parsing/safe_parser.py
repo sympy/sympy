@@ -76,6 +76,9 @@ WHITELISTED_NODES = [
     # Other
     ast.Call,
     ast.keyword,
+    ast.Lambda,
+    ast.arguments,
+    ast.Param,
     # Not included: IfExp, Attribute
 
     # Subscripting
@@ -90,7 +93,8 @@ WHITELISTED_NODES = [
 # Python 3-only
 if sys.version_info >= (3,):
     WHITELISTED_NODES += [
-        ast.Bytes
+        ast.Bytes,
+        ast.arg,
     ]
 
 if sys.version_info >= (3, 4):
