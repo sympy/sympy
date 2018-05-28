@@ -48,18 +48,28 @@ def convolution(a, b, **hints):
     """
 
     dps = hints.pop('dps', None)
-    prime = hints.pop('prime', None)
-    cycle = hints.pop('cycle', None)
+    p = hints.pop('prime', None)
+    c = hints.pop('cycle', None)
 
-    if sum(x is not None for x in (prime, dps)) > 1:
+    if sum(x is not None for x in (p, dps)) > 1:
         raise TypeError("Ambiguity in determining the convolution type")
 
-    if prime is not None:
-        return convolution_ntt(a, b, prime=prime, cycle=cycle)
+    if c is not None:
+        c = as_int(c)
+        if c < 0:
+            raise ValueError("The length for cyclic convolution must be non-negative")
+
+    if p is not None:
+        ls = convolution_ntt(a, b, prime=p)
+        return ls if c is None else [sum(ls[i::c]) % p for i in range(c)]
+
     elif hints.pop('ntt', False):
         raise TypeError("Prime modulus must be specified for performing NTT")
 
-    return convolution_fft(a, b, dps=dps, cycle=cycle)
+
+    ls = convolution_fft(a, b, dps=dps)
+
+    return ls if c is None else [sum(ls[i::c]) for i in range(c)]
 
 
 #----------------------------------------------------------------------------#
@@ -102,12 +112,11 @@ def convolution_fft(a, b, dps=None, cycle=None):
     .. [1] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general)
 
     """
-    a, b, c = a[:], b[:], cycle
+    a, b = a[:], b[:]
     n = m = len(a) + len(b) - 1 # convolution size
 
-    nb = n.bit_length()
-    if n&(n - 1): # not a power of 2
-        n = 2**nb
+    if n > 0 and n&(n - 1): # not a power of 2
+        n = 2**n.bit_length()
 
     # padding with zeros
     a += [S.Zero]*(n - len(a))
@@ -119,7 +128,7 @@ def convolution_fft(a, b, dps=None, cycle=None):
 
     a = ifft(a, dps)[:m]
 
-    return a if c is None else [sum(a[i::c]) for i in range(c)]
+    return a
 
 
 #----------------------------------------------------------------------------#
@@ -128,7 +137,7 @@ def convolution_fft(a, b, dps=None, cycle=None):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def convolution_ntt(a, b, prime, cycle=None):
+def convolution_ntt(a, b, prime):
     """
     Performs linear convolution using Number Theoretic Transform.
 
@@ -140,8 +149,6 @@ def convolution_ntt(a, b, prime, cycle=None):
     prime : Integer
         Prime modulus of the form (m*2**k + 1) to be used for performing
         NTT on the sequence.
-    cycle : Integer
-        Specifies the length for doing cyclic convolution.
 
     Examples
     ========
@@ -164,12 +171,11 @@ def convolution_ntt(a, b, prime, cycle=None):
 
     """
 
-    a, b, c, p = a[:], b[:], cycle, as_int(prime)
+    a, b, p = a[:], b[:], as_int(prime)
     n = m = len(a) + len(b) - 1 # convolution size
 
-    nb = n.bit_length()
-    if n&(n - 1): # not a power of 2
-        n = 2**nb
+    if n > 0 and n&(n - 1): # not a power of 2
+        n = 2**n.bit_length()
 
     # padding with zeros
     a += [0]*(n - len(a))
@@ -181,4 +187,4 @@ def convolution_ntt(a, b, prime, cycle=None):
 
     a = intt(a, p)[:m]
 
-    return a if c is None else [sum(a[i::c]) % p for i in range(c)]
+    return a

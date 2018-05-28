@@ -18,11 +18,6 @@ def test_convolution():
     assert convolution(a, d, fft=True, dps=7) == convolution_fft(d, a, dps=7)
     assert convolution(a, d[1:], dps=3) == convolution_fft(d[1:], a, dps=3)
 
-    assert convolution(a, b, fft=True, cycle=4) == convolution_fft(a, b, cycle=4)
-    assert convolution(a, b, dps=5, cycle=5) == convolution_fft(a, b, dps=5, cycle=5)
-    assert convolution(a, b, dps=7, cycle=6) == convolution_fft(a, b, dps=7, cycle=6)
-    assert convolution(a, b, cycle=None)
-
     # prime moduli of the form (m*2**k + 1), sequence length
     # should be a divisor of 2**k
     p = 7*17*2**23 + 1
@@ -44,46 +39,56 @@ def test_convolution():
 
 def test_cyclic_convolution():
     # fft
-    assert convolution_fft([1, 2, 3], [4, 5, 6], cycle=None) == \
-            convolution_fft([1, 2, 3], [4, 5, 6], cycle=5) == \
-                convolution_fft([1, 2, 3], [4, 5, 6])
+    a = [1, S(5)/3, sqrt(3), S(7)/5]
+    b = [9, 5, 5, 4, 3, 2]
 
-    assert convolution_fft([1, 2, 3], [4, 5, 6], cycle=3) == [31, 31, 28]
+    assert convolution([1, 2, 3], [4, 5, 6], cycle=None) == \
+            convolution([1, 2, 3], [4, 5, 6], cycle=5) == \
+                convolution([1, 2, 3], [4, 5, 6])
+
+    assert convolution([1, 2, 3], [4, 5, 6], cycle=3) == [31, 31, 28]
+
+    assert convolution(a, b, fft=True, cycle=4) == \
+            convolution(a, b, cycle=4)
+
+    assert convolution(a, b, fft=True, dps=3, cycle=4) == \
+            convolution(a, b, dps=3, cycle=4)
 
     a = [S(1)/3, S(7)/3, S(5)/9, S(2)/7, S(5)/8]
     b = [S(3)/5, S(4)/7, S(7)/8, S(8)/9]
 
-    assert convolution_fft(a, b, cycle=None) == \
-            convolution_fft(a, b, cycle=len(a) + len(b) - 1)
+    assert convolution(a, b, cycle=None) == \
+            convolution(a, b, cycle=len(a) + len(b) - 1)
 
-    assert convolution_fft(a, b, cycle=4) == [S(87277)/26460, S(30521)/11340,
+    assert convolution(a, b, cycle=4) == [S(87277)/26460, S(30521)/11340,
                             S(11125)/4032, S(3653)/1080]
 
-    assert convolution_fft(a, b, cycle=6) == [S(20177)/20160, S(676)/315, S(47)/24,
+    assert convolution(a, b, cycle=6) == [S(20177)/20160, S(676)/315, S(47)/24,
                             S(3053)/1080, S(16397)/5292, S(2497)/2268]
 
-    assert convolution_fft(a, b, cycle=9) == \
-                convolution_fft(a, b, cycle=None) + [S.Zero]
+    assert convolution(a, b, cycle=9) == \
+                convolution(a, b, cycle=None) + [S.Zero]
 
     # ntt
     a = [2313, 5323532, S(3232), 42142, 42242421]
     b = [S(33456), 56757, 45754, 432423]
 
-    assert convolution_ntt(a, b, prime=19*2**10 + 1) == \
-            convolution_ntt(a, b, prime=19*2**10 + 1, cycle=None) == \
-                convolution_ntt(a, b, prime=19*2**10 + 1, cycle=8)
+    assert convolution(a, b, prime=19*2**10 + 1) == \
+            convolution(a, b, prime=19*2**10 + 1, cycle=None) == \
+                convolution(a, b, prime=19*2**10 + 1, cycle=8)
 
-    assert convolution_ntt(a, b, prime=19*2**10 + 1, cycle=5) == [96, 17146, 2664,
+    assert convolution(a, b, prime=19*2**10 + 1, cycle=5) == [96, 17146, 2664,
                                                                     15534, 3517]
 
-    assert convolution_ntt(a, b, prime=19*2**10 + 1, cycle=7) == [4643, 3458, 1260,
+    assert convolution(a, b, prime=19*2**10 + 1, cycle=7) == [4643, 3458, 1260,
                                                         15534, 3517, 16314, 13688]
 
-    assert convolution_ntt(a, b, prime=19*2**10 + 1, cycle=9) == \
-        convolution_ntt(a, b, prime=19*2**10 + 1) + [0]
+    assert convolution(a, b, prime=19*2**10 + 1, cycle=9) == \
+            convolution(a, b, prime=19*2**10 + 1) + [0]
 
 
 def test_convolution_fft():
+    assert all(convolution_fft([], x, dps=y) == [] for x in ([], [1]) for y in (None, 3))
     assert convolution_fft([1, 2, 3], [4, 5, 6]) == [4, 13, 28, 27, 18]
     assert convolution_fft([1], [5, 6, 7]) == [5, 6, 7]
     assert convolution_fft([1, 3], [5, 6, 7]) == [5, 21, 25, 21]
@@ -119,6 +124,7 @@ def test_convolution_ntt():
     r = 2*500000003 + 1 # only for sequences of length 1 or 2
     s = 2*3*5*7 # composite modulus
 
+    assert all(convolution_ntt([], x, prime=y) == [] for x in ([], [1]) for y in (p, q, r))
     assert convolution_ntt([2], [3], r) == [6]
     assert convolution_ntt([2, 3], [4], r) == [8, 12]
 
