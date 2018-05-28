@@ -3,7 +3,8 @@ from __future__ import print_function, division
 from sympy import sqrt, pi, E, exp
 from sympy.core import S, Symbol, I
 from sympy.core.compatibility import range
-from sympy.discrete import convolution, convolution_fft, convolution_ntt
+from sympy.discrete.convolution import (convolution,
+    convolution_fft, convolution_ntt)
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y
 

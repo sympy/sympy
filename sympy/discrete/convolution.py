@@ -100,7 +100,8 @@ def convolution_fft(a, b, dps=None):
     Examples
     ========
 
-    >>> from sympy import S, I, convolution_fft
+    >>> from sympy import S, I
+    >>> from sympy.discrete.convolution import convolution_fft
 
     >>> convolution_fft([2, 3], [4, 5])
     [8, 22, 15]
@@ -116,6 +117,7 @@ def convolution_fft(a, b, dps=None):
     .. [1] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general)
 
     """
+
     a, b = a[:], b[:]
     n = m = len(a) + len(b) - 1 # convolution size
 
@@ -157,7 +159,7 @@ def convolution_ntt(a, b, prime):
     Examples
     ========
 
-    >>> from sympy import convolution_ntt
+    >>> from sympy.discrete.convolution import convolution_ntt
 
     >>> convolution_ntt([2, 3], [4, 5], prime=19*2**10 + 1)
     [8, 22, 15]

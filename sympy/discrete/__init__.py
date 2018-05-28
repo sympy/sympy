@@ -8,4 +8,4 @@ Recurrence Evaluation - reval_hcc
 
 
 from .transforms import (fft, ifft, ntt, intt)
-from .convolution import (convolution, convolution_fft, convolution_ntt)
+from .convolution import convolution
