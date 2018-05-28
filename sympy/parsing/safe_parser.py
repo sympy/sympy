@@ -107,10 +107,10 @@ if sys.version_info >= (3, 5):
 
 WHITELISTED_NODES = tuple(WHITELISTED_NODES)
 
-DISALLOWED_NAMES = ['eval', 'exec', 'sympify', 'parse_expr']
+BLACKLISTED_NAMES = ['eval', 'exec', 'sympify', 'parse_expr']
 
 def check_string_for_safety(s, whitelisted_nodes=WHITELISTED_NODES,
-    disallowed_names=DISALLOWED_NAMES):
+    blacklisted_names=BLACKLISTED_NAMES):
     """
     Checks if the input string is safe for parsing.
 
@@ -119,7 +119,7 @@ def check_string_for_safety(s, whitelisted_nodes=WHITELISTED_NODES,
 
     whitelisted_nodes should be a tuple of AST types to be whitelisted.
 
-    disallowed_names should be a list of variable names that are disallowed.
+    blacklisted_names should be a list of variable names that are disallowed.
 
     """
     from ..core.sympify import UnsafeSympifyError
@@ -129,7 +129,7 @@ def check_string_for_safety(s, whitelisted_nodes=WHITELISTED_NODES,
         if not isinstance(node, whitelisted_nodes):
             raise UnsafeSympifyError(s, reason='Non-whitelisted AST node %s found' % node)
 
-        if isinstance(node, ast.Name) and node.id in disallowed_names:
+        if isinstance(node, ast.Name) and node.id in blacklisted_names:
             # Note, the AST module normalizes Unicode characters
             # automatically, so we don't need to worry about things like evªl.
             raise UnsafeSympifyError(s, reason='disallowed name %r found' % node.id)
