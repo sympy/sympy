@@ -25,3 +25,12 @@ def test_rewriting():
     # but also the system should actually be confluent
     assert R._check_confluence()
     assert G.reduce(b*a**-1*b**-1*a**3*b**4*a**-1*b**-15) == a**-1*b**-1
+    # check for automaton reduction
+    assert R.reduce_using_automaton(b*a**-1*b**-1*a**3*b**4*a**-1*b**-15) == a**-1*b**-1
+
+    G = FpGroup(F, [a**2, b**3, (a*b)**4])
+    R = G._rewriting_system
+    assert G.reduce(a**2*b**-2*a**2*b) == b**-1
+    assert R.reduce_using_automaton(a**2*b**-2*a**2*b) == b**-1
+    assert G.reduce(a**3*b**-2*a**2*b) == a**-1*b**-1
+    assert R.reduce_using_automaton(a**3*b**-2*a**2*b) == a**-1*b**-1

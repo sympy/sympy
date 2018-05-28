@@ -37,6 +37,10 @@ class RewritingSystem(object):
         self.rules_cache = deque([], 50)
         self._init_rules()
 
+        # inverse rules - used in automaton
+        self.inverse_rules = {}
+        self.compute_inverse_rules()
+
         # Automaton variables
         self.reduction_automaton = self.construct_automaton()
 
@@ -78,7 +82,6 @@ class RewritingSystem(object):
             self._max_exceeded = True
             raise RuntimeError("Too many rules were defined.")
         self.rules[r1] = r2
-        self.reduction_automaton = self.construct_automaton()
 
     def add_rule(self, w1, w2, check=False):
         new_keys = set()
@@ -140,7 +143,6 @@ class RewritingSystem(object):
                 new = self.add_rule(w1, w2, check)
                 new_keys.update(new)
 
-        self.reduction_automaton = self.construct_automaton()
         return new_keys
 
     def _remove_redundancies(self, changes=False):
@@ -292,6 +294,20 @@ class RewritingSystem(object):
                     again = True
         return new
 
+    def compute_inverse_rules(self):
+        '''
+        This computes the inverse rules and stores them in the inverse_rules dictionary.
+        The inverse rules are used in the automaton for word reduction.
+
+        '''
+        for r in self.rules:
+            rule_key_inverse = r.inverse()
+            rule_value_inverse = (self.rules[r]).inverse()
+            if (rule_value_inverse < rule_key_inverse):
+                self.inverse_rules[rule_key_inverse] = rule_value_inverse
+            elif (rule_key_inverse < rule_value_inverse):
+                self.inverse_rules[rule_value_inverse] = rule_key_inverse
+
     def construct_automaton(self):
         '''
         Construct the automaton based on the set of reduction rules of the system.
@@ -305,6 +321,8 @@ class RewritingSystem(object):
         automaton_alphabet = []
         left_hand_rules = []
         proper_prefixes = {}
+        all_rules = self.rules
+        all_rules.update(self.inverse_rules)
 
         generators = list(self.alphabet)
         generators += [gen**-1 for gen in generators]
@@ -313,10 +331,10 @@ class RewritingSystem(object):
         automaton_alphabet = generators
 
         # Store the complete left hand side of the rules - dead states.
-        left_hand_rules = list(self.rules)
+        left_hand_rules = list(all_rules)
 
         # Compute the proper prefixes for every rule.
-        for r in self.rules:
+        for r in all_rules:
             proper_prefixes[r] = []
             letter_word_array = [s for s in r.letter_form_elm]
             for i in range (1, len(letter_word_array)):
@@ -337,7 +355,7 @@ class RewritingSystem(object):
                 fsm.add_state(rule, is_dead=True)
 
         # Add accept states.
-        for r in self.rules:
+        for r in all_rules:
             prop_prefix = proper_prefixes[r]
             for elem in prop_prefix:
                 if not elem in fsm.state_names:
@@ -379,6 +397,8 @@ class RewritingSystem(object):
         This is repeated until the word reaches the end and the automaton stays in the accept state.
 
         '''
+        all_rules = self.rules
+        all_rules.update(self.inverse_rules)
 
         while True:
             flag = 1
@@ -391,7 +411,7 @@ class RewritingSystem(object):
                     if state.name == next_state_name:
                         next_state = state
                 if next_state.state_type == "dead":
-                    subst = self.rules[next_state_name]
+                    subst = all_rules[next_state_name]
                     word = word.substituted_word(i - len(next_state_name) + 1, i+1, subst)
                     flag = 0
                     break
