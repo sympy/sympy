@@ -25,7 +25,7 @@ def convolution(a, b, **hints):
         The sequences for which convolution is performed.
     hints : dict
         Specifies the type of convolution to be performed.
-
+        The following hints can be given as keyword arguments.
         dps : Integer
             Specifies the number of decimal digits for precision for
             performing FFT on the sequence.
@@ -43,21 +43,28 @@ def convolution(a, b, **hints):
     >>> convolution([1 + 2*I, 4 + 3*I], [S(5)/4, 6], dps=3)
     [1.25 + 2.5*I, 11.0 + 15.8*I, 24.0 + 18.0*I]
 
+    >>> convolution([1, 2, 3], [4, 5, 6], cycle=3)
+    [31, 31, 28]
+
     >>> convolution([111, 777], [888, 444], prime=19*2**10 + 1)
     [1283, 19351, 14219]
+
+    >>> convolution([111, 777], [888, 444], prime=19*2**10 + 1, cycle=2)
+    [15502, 19351]
+
     """
 
     dps = hints.pop('dps', None)
     p = hints.pop('prime', None)
     c = hints.pop('cycle', None)
 
-    if sum(x is not None for x in (p, dps)) > 1:
-        raise TypeError("Ambiguity in determining the convolution type")
-
     if c is not None:
         c = as_int(c)
         if c < 0:
             raise ValueError("The length for cyclic convolution must be non-negative")
+
+    if sum(x is not None for x in (p, dps)) > 1:
+        raise TypeError("Ambiguity in determining the convolution type")
 
     if p is not None:
         ls = convolution_ntt(a, b, prime=p)
@@ -78,7 +85,7 @@ def convolution(a, b, **hints):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def convolution_fft(a, b, dps=None, cycle=None):
+def convolution_fft(a, b, dps=None):
     """
     Performs linear convolution using Fast Fourier Transform.
 
@@ -89,8 +96,6 @@ def convolution_fft(a, b, dps=None, cycle=None):
         The sequences for which convolution is performed.
     dps : Integer
         Specifies the number of decimal digits for precision.
-    cycle : Integer
-        Specifies the length for doing cyclic convolution.
 
     Examples
     ========
@@ -101,7 +106,6 @@ def convolution_fft(a, b, dps=None, cycle=None):
     [8, 22, 15]
     >>> convolution_fft([2, 5], [6, 7, 3])
     [12, 44, 41, 15]
-
     >>> convolution_fft([1 + 2*I, 4 + 3*I], [S(5)/4, 6])
     [5/4 + 5*I/2, 11 + 63*I/4, 24 + 18*I]
 
@@ -159,7 +163,6 @@ def convolution_ntt(a, b, prime):
     [8, 22, 15]
     >>> convolution_ntt([2, 5], [6, 7, 3], prime=19*2**10 + 1)
     [12, 44, 41, 15]
-
     >>> convolution_ntt([333, 555], [222, 666], prime=19*2**10 + 1)
     [15555, 14219, 19404]
 
