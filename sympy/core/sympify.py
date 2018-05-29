@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from inspect import getmro
+from inspect import getmro, currentframe, getmodule
 
 from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
@@ -307,6 +307,21 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     """
+    if not safe:
+        # Make sure no library code disables the safe flag. Otherwise, it
+        # potentially could be used to bypass it, defeating the purpose.
+
+        # Note: by its nature, this makes it so that safe=False cannot be
+        # tested, so if this code is modified, be sure to test it manually.
+        frame = currentframe()
+        mod = getmodule(getattr(frame, 'f_back'))
+        if not mod:
+            # Some alt-Python implementations don't support currentframe(), in
+            # which case the above returns None.
+            pass
+        elif hasattr(mod, '__name__') and mod.__name__ == 'sympy' or mod.__name__.startswith('sympy.'):
+            raise RuntimeError("Setting sympify(safe=True) in SymPy library code is not allowed")
+
     if evaluate is None:
         if global_evaluate[0] is False:
             evaluate = global_evaluate[0]

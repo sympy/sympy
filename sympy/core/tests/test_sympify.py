@@ -670,3 +670,11 @@ def test_safe():
         ),{}
     )()
 )()"""))
+
+    # safe=False is not allowed in library code
+
+    # Normally test files are not imported when the test runner runs, so make
+    # sure this one is.
+    import sympy.core.tests.test_sympify
+
+    raises(RuntimeError, lambda: sympify('a', safe=False))
