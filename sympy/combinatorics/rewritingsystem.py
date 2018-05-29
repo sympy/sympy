@@ -37,6 +37,9 @@ class RewritingSystem(object):
         self.rules_cache = deque([], 50)
         self._init_rules()
 
+        # All rules
+        self.all_rules = {}
+
         # inverse rules - used in automaton
         self.inverse_rules = {}
         self.compute_inverse_rules()
@@ -317,12 +320,15 @@ class RewritingSystem(object):
         2. The complete left hand side of the rules are the dead states of the automaton
 
         '''
-
         automaton_alphabet = []
         left_hand_rules = []
         proper_prefixes = {}
-        all_rules = self.rules
-        all_rules.update(self.inverse_rules)
+        # compute all_rules when the automaton is constucted.
+        rules = self.rules
+        inverse_rules = self.inverse_rules
+        all = rules
+        all.update(inverse_rules)
+        self.all_rules = all
 
         generators = list(self.alphabet)
         generators += [gen**-1 for gen in generators]
@@ -331,10 +337,10 @@ class RewritingSystem(object):
         automaton_alphabet = generators
 
         # Store the complete left hand side of the rules - dead states.
-        left_hand_rules = list(all_rules)
+        left_hand_rules = list(self.all_rules)
 
         # Compute the proper prefixes for every rule.
-        for r in all_rules:
+        for r in self.all_rules:
             proper_prefixes[r] = []
             letter_word_array = [s for s in r.letter_form_elm]
             for i in range (1, len(letter_word_array)):
@@ -355,7 +361,7 @@ class RewritingSystem(object):
                 fsm.add_state(rule, is_dead=True)
 
         # Add accept states.
-        for r in all_rules:
+        for r in self.all_rules:
             prop_prefix = proper_prefixes[r]
             for elem in prop_prefix:
                 if not elem in fsm.state_names:
@@ -397,8 +403,8 @@ class RewritingSystem(object):
         This is repeated until the word reaches the end and the automaton stays in the accept state.
 
         '''
-        all_rules = self.rules
-        all_rules.update(self.inverse_rules)
+        self.compute_inverse_rules()
+        (self.all_rules).update(self.inverse_rules)
 
         while True:
             flag = 1
@@ -411,7 +417,7 @@ class RewritingSystem(object):
                     if state.name == next_state_name:
                         next_state = state
                 if next_state.state_type == "dead":
-                    subst = all_rules[next_state_name]
+                    subst = self.all_rules[next_state_name]
                     word = word.substituted_word(i - len(next_state_name) + 1, i+1, subst)
                     flag = 0
                     break
