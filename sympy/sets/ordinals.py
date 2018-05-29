@@ -1,6 +1,4 @@
 from sympy.core import Basic, Integer
-from sympy.core.compatibility import with_metaclass
-from sympy.core.singleton import Singleton, S
 import operator
 
 class OmegaPower(Basic):
