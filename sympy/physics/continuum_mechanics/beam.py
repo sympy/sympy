@@ -13,6 +13,7 @@ from sympy.functions import SingularityFunction
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
+from sympy import symbols, simplify
 
 
 class Beam(object):
@@ -333,7 +334,25 @@ class Beam(object):
         l = self.length
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
-        reaction_values = linsolve([shear_curve, moment_curve], reactions).args
+
+        c_eqs = []
+        c_eqs.append(shear_curve)
+        c_eqs.append(moment_curve)
+
+        for position, value in self._boundary_conditions['deflection']:
+            eqs = self.deflection().subs(x, position) - value
+            if (simplify(eqs) == 0):
+                continue
+            c_eqs.append(eqs)
+
+        for position, value in self._boundary_conditions['slope']:
+            eqs = self.slope().subs(x, position) - value
+            if (simplify(eqs) == 0):
+                continue
+            c_eqs.append(eqs)
+
+        reaction_values = linsolve(c_eqs, reactions).args
+
         self._reaction_loads = dict(zip(reactions, reaction_values[0]))
         self._load = self._load.subs(self._reaction_loads)
 
@@ -447,7 +466,7 @@ class Beam(object):
         slope_curve = integrate(self.bending_moment(), x) + C3
 
         bc_eqs = []
-        for position, value in self._boundary_conditions['slope']:
+        for position, value in self._boundary_conditions['slope'][:1]:
             eqs = slope_curve.subs(x, position) - value
             bc_eqs.append(eqs)
 
@@ -500,7 +519,7 @@ class Beam(object):
             slope_curve = integrate(self.bending_moment(), x) + C3
             deflection_curve = integrate(slope_curve, x) + C4
             bc_eqs = []
-            for position, value in self._boundary_conditions['deflection']:
+            for position, value in self._boundary_conditions['deflection'][:2]:
                 eqs = deflection_curve.subs(x, position) - value
                 bc_eqs.append(eqs)
             constants = list(linsolve(bc_eqs, (C3, C4)))
@@ -511,7 +530,7 @@ class Beam(object):
         deflection_curve = integrate((E*I)*self.slope(), x) + C4
 
         bc_eqs = []
-        for position, value in self._boundary_conditions['deflection']:
+        for position, value in self._boundary_conditions['deflection'][:1]:
             eqs = deflection_curve.subs(x, position) - value
             bc_eqs.append(eqs)
 

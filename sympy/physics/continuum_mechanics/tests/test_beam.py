@@ -171,3 +171,25 @@ def test_Beam():
     raises(ValueError, lambda: b4.apply_load(-3, 0, -1, end=3))
     with raises(TypeError):
         b4.variable = 1
+
+def test_statically_indeterminate_beam():
+    E = symbols('E', positive=True)
+    I = symbols('I', positive=True)
+    R1, R2 = symbols('R1, R2')
+    M1, M2 = symbols('M1, M2')
+    p = symbols('p')
+    l = symbols('l',positive=True)
+    b = Beam(l, E, I)
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
+    b.apply_load(M2, l, -2)
+    b.apply_load(M1, 0, -2)
+    b.apply_load(p, l/2, -1)
+    b.bc_deflection = [(0, 0), (l, 0)]
+    b.bc_slope = [(0, 0), (l, 0)]
+    b.solve_for_reaction_loads(R1,R2,M1,M2)
+
+    assert b.reaction_loads[M2] == -l*p/8
+    assert b.reaction_loads[M1] == l*p/8
+    assert b.reaction_loads[R2] == -p/2
+    assert b.reaction_loads[R1] == -p/2
