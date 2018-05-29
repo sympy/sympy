@@ -2,7 +2,7 @@ from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range)
 from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
+from sympy.core.sympify import sympify, _sympify, SympifyError, kernS, UnsafeSympifyError
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, XFAIL, skip
@@ -615,3 +615,58 @@ def test_issue_13924():
     a = sympify(numpy.array([1]))
     assert isinstance(a, ImmutableDenseNDimArray)
     assert a[0] == 1
+
+def test_safe():
+    # These raise unrelated errors because of the token transformations. Make
+    # sure they fail regardless.
+    raises(SympifyError, lambda: sympify('[i for i in []]'))
+    raises(SympifyError, lambda: sympify('a = b'))
+
+    raises(UnsafeSympifyError, lambda: sympify('a.b'))
+    raises(UnsafeSympifyError, lambda: sympify('[Sum for Sum in []]'))
+
+    raises(UnsafeSympifyError, lambda: sympify('sympify("1", safe=False)'))
+
+    # These currently change the blacklisted names to Symbols, causing them to
+    # not raise. Make sure they either raise or give a Function.
+    if not isinstance(sympify('eval("1")'), Function):
+        raises(UnsafeSympifyError, lambda: sympify('eval("1")'))
+    # exec is a keyword in Python 2. In Python 3 raises regular SympifyError
+    # because of transformed 'Symbol('a') = 1' (which could change).
+    raises(SympifyError, lambda: sympify('exec("a = 1")'))
+    if not isinstance(sympify('locals()'), Function):
+        raises(UnsafeSympifyError, lambda: sympify('locals()["eval"]'))
+    if not isinstance(sympify('globals()'), Function):
+        raises(UnsafeSympifyError, lambda: sympify('globals()["eval"]'))
+    if not isinstance(sympify('parse_expr("1")'), Function):
+        raises(UnsafeSympifyError, lambda: sympify('parse_expr("1", safe=False)'))
+
+    # If this executes the arbitrary code it will raise ValueError
+    raises(UnsafeSympifyError, lambda: sympify('[sympify("[I for I in ().__class__.__base__.__subclasses__() if I.__name__ == \'catch_warnings\'][0]()._module.__builtins__[\'int\'](\'a\')", safe=False) for Sum in Range(1)]', {'sympify': None}))
+
+    a = Symbol('y1')
+    a._assumptions.__class__.generator = {"real": "x.__class__.__mod__.__globals__['__builtins__']['int']('a')"}
+
+    raises(UnsafeSympifyError, lambda: sympify(srepr(a)))
+
+    raises(SympifyError, lambda: sympify("""
+[
+    c for c in ().__class__.__base__.__subclasses__()
+    if c.__name__ == 'catch_warnings'
+][0]()._module.__builtins__
+"""))
+
+    raises(SympifyError, lambda: sympify("""
+(lambda fc=(
+    lambda n: [
+        c for c in
+            ().__class__.__bases__[0].__subclasses__()
+            if c.__name__ == n
+        ][0]
+    ):
+    fc("function")(
+        fc("code")(
+            0,0,0,0,"KABOOM",(),(),(),"","",0,""
+        ),{}
+    )()
+)()"""))
