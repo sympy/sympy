@@ -33,7 +33,9 @@ def solve_poly_inequality(poly, rel):
     [{0}]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '!=')
-    [Interval.open(-oo, -1), Interval.open(-1, 1), Interval.open(1, oo)]
+    [Interval(-oo, -1, left_open=True, right_open=True),
+     Interval(-1, 1, left_open=True, right_open=True),
+     Interval(1, oo, left_open=True, right_open=True)]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '==')
     [{-1}, {1}]
@@ -123,7 +125,9 @@ def solve_poly_inequalities(polys):
     >>> solve_poly_inequalities(((
     ... Poly(x**2 - 3), ">"), (
     ... Poly(-x**2 + 1), ">")))
-    Union(Interval.open(-oo, -sqrt(3)), Interval.open(-1, 1), Interval.open(sqrt(3), oo))
+    Union(Interval(-oo, -sqrt(3), left_open=True, right_open=True),
+          Interval(-1, 1, left_open=True, right_open=True),
+          Interval(sqrt(3), oo, left_open=True, right_open=True))
     """
     from sympy import Union
     return Union(*[solve_poly_inequality(*p) for p in polys])
@@ -147,7 +151,8 @@ def solve_rational_inequalities(eqs):
     >>> solve_rational_inequalities([[
     ... ((Poly(x), Poly(1, x)), '!='),
     ... ((Poly(-x + 1), Poly(1, x)), '>=')]])
-    Union(Interval.open(-oo, 0), Interval.Lopen(0, 1))
+    Union(Interval(-oo, 0, left_open=True, right_open=True),
+          Interval(0, 1, left_open=True))
 
     See Also
     ========
@@ -442,7 +447,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Interval(2, oo)
 
     >>> solve_univariate_inequality(sin(x) > 0, x, relational=False)
-    Interval.open(0, pi)
+    Interval(0, pi, left_open=True, right_open=True)
 
     """
     from sympy import im

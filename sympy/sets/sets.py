@@ -78,14 +78,14 @@ class Set(Basic):
         >>> Interval(0, 1) + Interval(2, 3)
         Union(Interval(0, 1), Interval(2, 3))
         >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
-        Union(Interval.Lopen(1, 2), {3})
+        Union(Interval(1, 2, left_open=True), {3})
 
         Similarly it is possible to use the '-' operator for set differences:
 
         >>> Interval(0, 2) - Interval(0, 1)
-        Interval.Lopen(1, 2)
+        Interval(1, 2, left_open=True)
         >>> Interval(1, 3) - FiniteSet(2)
-        Union(Interval.Ropen(1, 2), Interval.Lopen(2, 3))
+        Union(Interval(1, 2, right_open=True), Interval(2, 3, left_open=True))
 
         """
         return Union(self, other)
@@ -149,7 +149,8 @@ class Set(Basic):
 
         >>> from sympy import Interval, S
         >>> Interval(0, 1).complement(S.Reals)
-        Union(Interval.open(-oo, 0), Interval.open(1, oo))
+        Union(Interval(-oo, 0, left_open=True, right_open=True),
+              Interval(1, oo, left_open=True, right_open=True))
 
         >>> Interval(0, 1).complement(S.UniversalSet)
         UniversalSet() \ Interval(0, 1)
@@ -206,9 +207,11 @@ class Set(Basic):
 
         >>> from sympy import Interval, S
         >>> Interval(1, 3).symmetric_difference(S.Reals)
-        Union(Interval.open(-oo, 1), Interval.open(3, oo))
+        Union(Interval(-oo, 1, left_open=True, right_open=True),
+              Interval(3, oo, left_open=True, right_open=True))
         >>> Interval(1, 10).symmetric_difference(S.Reals)
-        Union(Interval.open(-oo, 1), Interval.open(10, oo))
+        Union(Interval(-oo, 1, left_open=True, right_open=True),
+              Interval(10, oo, left_open=True, right_open=True))
 
         >>> from sympy import S, EmptySet
         >>> S.Reals.symmetric_difference(EmptySet())
@@ -513,7 +516,7 @@ class Set(Basic):
         ========
         >>> from sympy import Interval
         >>> Interval(0, 1).interior
-        Interval.open(0, 1)
+        Interval(0, 1, left_open=True, right_open=True)
         >>> Interval(0, 1).boundary.interior
         EmptySet()
         """
@@ -727,13 +730,11 @@ class Interval(Set, EvalfMixin):
     >>> Interval(0, 1)
     Interval(0, 1)
     >>> Interval.Ropen(0, 1)
-    Interval.Ropen(0, 1)
-    >>> Interval.Ropen(0, 1)
-    Interval.Ropen(0, 1)
+    Interval(0, 1, right_open=True)
     >>> Interval.Lopen(0, 1)
-    Interval.Lopen(0, 1)
+    Interval(0, 1, left_open=True)
     >>> Interval.open(0, 1)
-    Interval.open(0, 1)
+    Interval(0, 1, left_open=True, right_open=True)
 
     >>> a = Symbol('a', real=True)
     >>> Interval(0, a)
