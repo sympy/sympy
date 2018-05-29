@@ -33,7 +33,7 @@ import signal
 import stat
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import exec_, PY3, string_types, range
+from sympy.core.compatibility import exec_, PY3, string_types, range, unwrap
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -1593,6 +1593,7 @@ class SymPyDocTestFinder(DocTestFinder):
                 self._find(tests, val, valname, module, source_lines,
                            globs, seen)
 
+
         # Look for tests in a class's contained objects.
         if inspect.isclass(obj):
             for valname, val in obj.__dict__.items():
@@ -1603,7 +1604,7 @@ class SymPyDocTestFinder(DocTestFinder):
                     val = getattr(obj, valname).__func__
 
                 # Recurse to methods, properties, and nested classes.
-                if (inspect.isfunction(val) or
+                if (inspect.isroutine(unwrap(val)) or
                         inspect.isclass(val) or
                         isinstance(val, property)):
                     # Make sure we don't run doctests functions or classes
@@ -1673,6 +1674,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Find the docstring's location in the file.
         if lineno is None:
+            obj = unwrap(obj)
             # handling of properties is not implemented in _find_lineno so do
             # it here
             if hasattr(obj, 'func_closure') and obj.func_closure is not None:
