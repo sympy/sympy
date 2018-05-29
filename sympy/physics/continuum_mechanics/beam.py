@@ -405,6 +405,46 @@ class Beam(object):
         x = self.variable
         return integrate(self.shear_force(), x)
 
+    def point_cflexure(self):
+        """
+        Returns a Set of point(s) with zero bending moment and
+        where bending moment curve of the beam object changes
+        its sign from negative to positive or vice versa.
+        Examples
+        ========
+        There is is 10 meter long overhanging beam. There are
+        two simple supports below the beam. One at the start
+        and another one at a distance of 6 meters from the start.
+        Point loads of magnitude 10KN and 20KN are applied at
+        2 meters and 4 meters from start respectively. A Uniformly
+        distribute load of magnitude of magnitude 3KN/m is also
+        applied on top starting from 6 meters away from starting
+        point till end.
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> b = Beam(10, E, I)
+        >>> b.apply_load(-4, 0, -1)
+        >>> b.apply_load(-46, 6, -1)
+        >>> b.apply_load(10, 2, -1)
+        >>> b.apply_load(20, 4, -1)
+        >>> b.apply_load(3, 6, 0)
+        >>> b.point_cflexure()
+        [10/3]
+        """
+        from sympy import solve, Piecewise
+
+        # To restrict the range within length of the Beam
+        moment_curve = Piecewise((float("nan"), self.variable<=0),
+                (self.bending_moment(), self.variable<self.length),
+                (float("nan"), True))
+
+        points = solve(moment_curve.rewrite(Piecewise), self.variable,
+                        domain=S.Reals)
+        return points
+
     def slope(self):
         """
         Returns a Singularity Function expression which represents
