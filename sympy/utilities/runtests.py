@@ -120,7 +120,7 @@ def convert_to_native_paths(lst):
             if pos != -1:
                 if rv[pos + 1] != '\\':
                     rv = rv[:pos + 1] + '\\' + rv[pos + 1:]
-        newlst.append(sys_normcase(rv))
+        newlst.append(os.path.normcase(rv))
     return newlst
 
 
@@ -129,21 +129,10 @@ def get_sympy_dir():
     Returns the root sympy directory and set the global value
     indicating whether the system is case sensitive or not.
     """
-    global sys_case_insensitive
-
     this_file = os.path.abspath(__file__)
     sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
     sympy_dir = os.path.normpath(sympy_dir)
-    sys_case_insensitive = (os.path.isdir(sympy_dir) and
-                            os.path.isdir(sympy_dir.lower()) and
-                            os.path.isdir(sympy_dir.upper()))
-    return sys_normcase(sympy_dir)
-
-
-def sys_normcase(f):
-    if sys_case_insensitive:  # global defined after call to get_sympy_dir()
-        return f.lower()
-    return f
+    return os.path.normcase(sympy_dir)
 
 
 def setup_pprint():
@@ -1294,7 +1283,7 @@ class SymPyTests(object):
         for path, folders, files in os.walk(dir):
             g.extend([os.path.join(path, f) for f in files if fnmatch(f, pat)])
 
-        return sorted([sys_normcase(gi) for gi in g])
+        return sorted([os.path.normcase(gi) for gi in g])
 
 
 class SymPyDocTests(object):
@@ -1437,7 +1426,7 @@ class SymPyDocTests(object):
             # skip files that are not importable (i.e. missing __init__.py)
             g = [x for x in g if importable(x)]
 
-        return [sys_normcase(gi) for gi in g]
+        return [os.path.normcase(gi) for gi in g]
 
     def _process_dependencies(self, deps):
         """
