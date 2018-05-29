@@ -1,6 +1,7 @@
 import sys
 
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
+from sympy.core.sympify import UnsafeSympifyError
 from sympy.core.compatibility import PY3
 from sympy.functions import exp, factorial, factorial2, sin
 from sympy.logic import And
@@ -37,8 +38,6 @@ def test_sympy_parser():
         '10!': 3628800,
         '-(2)': -Integer(2),
         '[-1, -2, 3]': [Integer(-1), Integer(-2), Integer(3)],
-        'Symbol("x").free_symbols': x.free_symbols,
-        "S('S(3).n(n=3)')": 3.00,
         'factorint(12, visual=True)': Mul(
             Pow(2, 2, evaluate=False),
             Pow(3, 1, evaluate=False),
@@ -49,6 +48,15 @@ def test_sympy_parser():
     for text, result in inputs.items():
         assert parse_expr(text) == result
 
+def parse_expr_unsafe():
+    x = Symbol('x')
+    inputs = {
+        'Symbol("x").free_symbols': x.free_symbols,
+        "S('S(3).n(n=3)')": 3.00,
+        }
+    for text, result in inputs.items():
+        raises(UnsafeSympifyError, lambda: parse_expr(text))
+        assert parse_expr(text, safe=False) == result
 
 def test_rationalize():
     inputs = {
