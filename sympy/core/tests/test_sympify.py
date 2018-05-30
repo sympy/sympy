@@ -644,10 +644,14 @@ def test_safe():
     # If this executes the arbitrary code it will raise ValueError
     raises(UnsafeSympifyError, lambda: sympify('[sympify("[I for I in ().__class__.__base__.__subclasses__() if I.__name__ == \'catch_warnings\'][0]()._module.__builtins__[\'int\'](\'a\')", safe=False) for Sum in Range(1)]', {'sympify': None}))
 
-    a = Symbol('y1')
-    a._assumptions.__class__.generator = {"real": "x.__class__.__mod__.__globals__['__builtins__']['int']('a')"}
+    try:
+        a = Symbol('y1')
+        old_generator = a._assumptions.__class__.generator
+        a._assumptions.__class__.generator = {"real": "x.__class__.__mod__.__globals__['__builtins__']['int']('a')"}
 
-    raises(UnsafeSympifyError, lambda: sympify(srepr(a)))
+        raises(UnsafeSympifyError, lambda: sympify(srepr(a)))
+    finally:
+        a._assumptions.__class__.generator = old_generator
 
     raises(SympifyError, lambda: sympify("""
 [
