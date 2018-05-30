@@ -52,7 +52,6 @@ def test_parse_expr_unsafe():
     x = Symbol('x')
     inputs = {
         'Symbol("x").free_symbols': x.free_symbols,
-        "S('S(3).n(n=3)')": 3.00,
         }
     for text, result in inputs.items():
         raises(UnsafeSympifyError, lambda: parse_expr(text))
