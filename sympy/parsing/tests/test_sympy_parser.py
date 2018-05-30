@@ -48,7 +48,7 @@ def test_sympy_parser():
     for text, result in inputs.items():
         assert parse_expr(text) == result
 
-def parse_expr_unsafe():
+def test_parse_expr_unsafe():
     x = Symbol('x')
     inputs = {
         'Symbol("x").free_symbols': x.free_symbols,
