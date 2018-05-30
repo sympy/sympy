@@ -1400,7 +1400,7 @@ class EvalfMixin(object):
              naive substitution;
         ii.  expr.evalf(subs=...) the expression is run through the evalf algorithm,
              which takes into account various issues that can lead to loss of
-             significance.
+             significance;
         iii. The subs dictionary tells the evalf algorithms which symbols should be
              replaced with numbers when they are encountered.
 
@@ -1415,7 +1415,7 @@ class EvalfMixin(object):
         1.00000000000000
 
         In the above example, in #case_1, naive substitution evaluates 1e100 + 1 - 1e100
-        which looses 1 because the default precesion setting. However, in #case_2, the
+        which looses 1 because of the default precesion setting. However, in #case_2, the
         evalf algorithm takes care of the significance.
 
         """
