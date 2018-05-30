@@ -1404,8 +1404,8 @@ class EvalfMixin(object):
         iii. The subs dictionary tells the evalf algorithms which symbols should be
              replaced with numbers when they are encountered.
 
-        Example
-        =======
+        Examples
+        ========
         
         >>> from sympy.core.evalf import evalf
         >>> from sympy.abc import x,y,z
