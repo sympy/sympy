@@ -28,7 +28,7 @@ def test_convolution():
     assert convolution(d, c, prime=p, ntt=True) == convolution_ntt(c, d, prime=p)
 
     raises(TypeError, lambda: convolution(b, d, ntt=True))
-    raises(TypeError, lambda: convolution(b, d, ntt=True, cycle=None))
+    raises(TypeError, lambda: convolution(b, d, ntt=True, cycle=0))
     raises(TypeError, lambda: convolution(b, d, dps=5, prime=q))
     raises(TypeError, lambda: convolution(b, d, dps=6, ntt=True, prime=q))
     raises(TypeError, lambda: convolution(b, d, fft=True, dps=7, ntt=True, prime=q))
@@ -43,10 +43,9 @@ def test_cyclic_convolution():
     a = [1, S(5)/3, sqrt(3), S(7)/5]
     b = [9, 5, 5, 4, 3, 2]
 
-    assert convolution([1, 2, 3], [4, 5, 6], cycle=None) == \
+    assert convolution([1, 2, 3], [4, 5, 6], cycle=0) == \
             convolution([1, 2, 3], [4, 5, 6], cycle=5) == \
-                convolution([1, 2, 3], [4, 5, 6], cycle=0) == \
-                    convolution([1, 2, 3], [4, 5, 6])
+                convolution([1, 2, 3], [4, 5, 6])
 
     assert convolution([1, 2, 3], [4, 5, 6], cycle=3) == [31, 31, 28]
 
@@ -59,7 +58,7 @@ def test_cyclic_convolution():
     a = [S(1)/3, S(7)/3, S(5)/9, S(2)/7, S(5)/8]
     b = [S(3)/5, S(4)/7, S(7)/8, S(8)/9]
 
-    assert convolution(a, b, cycle=None) == \
+    assert convolution(a, b, cycle=0) == \
             convolution(a, b, cycle=len(a) + len(b) - 1)
 
     assert convolution(a, b, cycle=4) == [S(87277)/26460, S(30521)/11340,
@@ -69,16 +68,15 @@ def test_cyclic_convolution():
                             S(3053)/1080, S(16397)/5292, S(2497)/2268]
 
     assert convolution(a, b, cycle=9) == \
-                convolution(a, b, cycle=None) + [S.Zero]
+                convolution(a, b, cycle=0) + [S.Zero]
 
     # ntt
     a = [2313, 5323532, S(3232), 42142, 42242421]
     b = [S(33456), 56757, 45754, 432423]
 
-    assert convolution(a, b, prime=19*2**10 + 1, cycle=None) == \
-            convolution(a, b, prime=19*2**10 + 1, cycle=0) == \
-                convolution(a, b, prime=19*2**10 + 1, cycle=8) == \
-                    convolution(a, b, prime=19*2**10 + 1)
+    assert convolution(a, b, prime=19*2**10 + 1, cycle=0) == \
+            convolution(a, b, prime=19*2**10 + 1, cycle=8) == \
+                convolution(a, b, prime=19*2**10 + 1)
 
     assert convolution(a, b, prime=19*2**10 + 1, cycle=5) == [96, 17146, 2664,
                                                                     15534, 3517]

@@ -56,12 +56,10 @@ def convolution(a, b, **hints):
 
     dps = hints.pop('dps', None)
     p = hints.pop('prime', None)
-    c = hints.pop('cycle', None)
+    c = as_int(hints.pop('cycle', 0))
 
-    if c is not None:
-        c = as_int(c)
-        if c < 0:
-            raise ValueError("The length for cyclic convolution must be non-negative")
+    if c < 0:
+        raise ValueError("The length for cyclic convolution must be non-negative")
 
     if sum(x is not None for x in (p, dps)) > 1:
         raise TypeError("Ambiguity in determining the convolution type")
