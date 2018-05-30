@@ -1235,13 +1235,17 @@ class Pow(Expr):
 
     def _eval_rewrite_as_exp(self, base, expo):
         from sympy import exp, log, I, arg
-        if not base.is_zero:
-            if base.has(Symbol):
-                # delay evaluation if expo is non symbolic
-                # (as exp(x*log(5)) automatically reduces to x**5)
-                return exp(log(base)*expo, evaluate=expo.has(Symbol))
-            else:
-                return exp((log(abs(base)) + I*arg(base))*expo)
+
+        if base.is_zero or base.has(exp) or expo.has(exp):
+            return base**expo
+
+        if base.has(Symbol):
+            # delay evaluation if expo is non symbolic
+            # (as exp(x*log(5)) automatically reduces to x**5)
+            return exp(log(base)*expo, evaluate=expo.has(Symbol))
+
+        else:
+            return exp((log(abs(base)) + I*arg(base))*expo)
 
     def as_numer_denom(self):
         if not self.is_commutative:

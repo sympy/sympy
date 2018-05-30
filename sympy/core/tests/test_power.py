@@ -5,7 +5,8 @@ from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.trigonometric import sin, cos, atan
+from sympy.functions.elementary.trigonometric import (
+    sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
 from sympy.series.order import O
 from sympy.utilities.pytest import XFAIL
 
@@ -206,7 +207,7 @@ def test_power_with_noncommutative_mul_as_base():
     assert (2*x*y)**3 == 8*(x*y)**3
 
 
-def test_power_with_complex():
+def test_power_rewrite_exp():
     assert (I**I).rewrite(exp) == exp(-pi/2)
 
     expr = (2 + 3*I)**(4 + 5*I)
@@ -235,6 +236,9 @@ def test_power_with_complex():
     assert (7**x).rewrite(exp) == exp(x*log(7), evaluate=False)
     assert ((2 + 3*I)**x).rewrite(exp) == exp(x*(log(sqrt(13)) + I*atan(S(3)/2)))
     assert (y**(5 + 6*I)).rewrite(exp) == exp(log(y)*(5 + 6*I))
+
+    assert all((1/func(x)).rewrite(exp) == 1/(func(x).rewrite(exp)) for func in
+                    (sin, cos, tan, sec, csc, sinh, cosh, tanh))
 
 
 def test_zero():
