@@ -1010,7 +1010,7 @@ class MultisetPartitionTraverser():
         programming to cut down on the number of nodes actually
         explored.  The dictionary used in order to accelerate the
         counting process is stored in the ``MultisetPartitionTraverser``
-        object and persists across calls.  If the the user does not
+        object and persists across calls.  If the user does not
         expect to call ``count_partitions`` for any additional
         multisets, the object should be cleared to save memory.  On
         the other hand, the cache built up from one count run can

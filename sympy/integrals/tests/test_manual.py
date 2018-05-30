@@ -2,9 +2,10 @@ from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Integral, integrate, pi, Dummy, Derivative,
                    diff, I, sqrt, erf, Piecewise, Eq, Ne, symbols, Rational,
                    And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
-                   Function)
-from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
-    _parts_rule
+                   Function, jacobi, gegenbauer, chebyshevt, chebyshevu,
+                   legendre, hermite, laguerre, assoc_laguerre)
+from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
+    _parts_rule)
 
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
 f = Function('f')
@@ -75,6 +76,9 @@ def test_manualintegrate_trigonometry():
 
     assert manualintegrate(x * sec(x**2), x) == log(tan(x**2) + sec(x**2))/2
     assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
+    assert manualintegrate(cos(3*x)*sec(x), x) == -x + sin(2*x)
+    assert manualintegrate(sin(3*x)*sec(x), x) == \
+        -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
 
 
 def test_manualintegrate_trigpowers():
@@ -209,14 +213,44 @@ def test_manualintegrate_Heaviside():
             (cos(4*y/3) - cos(x + y))*Heaviside(3*x - y)
 
 
+def test_manualintegrate_orthogonal_poly():
+    n = symbols('n')
+    a, b = 7, S(5)/3
+    polys = [jacobi(n, a, b, x), gegenbauer(n, a, x), chebyshevt(n, x),
+        chebyshevu(n, x), legendre(n, x), hermite(n, x), laguerre(n, x),
+        assoc_laguerre(n, a, x)]
+    for p in polys:
+        integral = manualintegrate(p, x)
+        for deg in [-2, -1, 0, 1, 3, 5, 8]:
+            # some accept negative "degree", some do not
+            try:
+                p_subbed = p.subs(n, deg)
+            except ValueError:
+                continue
+            assert (integral.subs(n, deg).diff(x) - p_subbed).expand() == 0
+
+        # can also integrate simple expressions with these polynomials
+        q = x*p.subs(x, 2*x + 1)
+        integral = manualintegrate(q, x)
+        for deg in [2, 4, 7]:
+            assert (integral.subs(n, deg).diff(x) - q.subs(n, deg)).expand() == 0
+
+        # cannot integrate with respect to any other parameter
+        t = symbols('t')
+        for i in range(len(p.args) - 1):
+            new_args = list(p.args)
+            new_args[i] = t
+            assert isinstance(manualintegrate(p.func(*new_args), t), Integral)
+
 def test_issue_6799():
     r, x, phi = map(Symbol, 'r x phi'.split())
     n = Symbol('n', integer=True, positive=True)
 
     integrand = (cos(n*(x-phi))*cos(n*x))
     limits = (x, -pi, pi)
-    assert manualintegrate(integrand, x).has(Integral)
-    assert r * integrate(integrand.expand(trig=True), limits) / pi == r * cos(n * phi)
+    assert manualintegrate(integrand, x) == \
+        ((n*x/2 + sin(2*n*x)/4)*cos(n*phi) - sin(n*phi)*cos(n*x)**2/2)/n
+    assert r * integrate(integrand, limits).trigsimp() / pi == r * cos(n * phi)
     assert not integrate(integrand, limits).has(Dummy)
 
 
@@ -348,3 +382,7 @@ def test_issue_12641():
 
 def test_issue_13297():
     assert manualintegrate(sin(x) * cos(x)**5, x) == -cos(x)**6 / 6
+
+def test_issue_14470():
+    assert manualintegrate(1/(x*sqrt(x + 1)), x) == \
+        log(-1 + 1/sqrt(x + 1)) - log(1 + 1/sqrt(x + 1))

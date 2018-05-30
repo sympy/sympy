@@ -580,6 +580,23 @@ def test_as_numer_denom():
     assert ((A*B*C)**-1/x).as_numer_denom() == ((A*B*C)**-1, x)
 
 
+def test_trunc():
+    import math
+    x, y = symbols('x y')
+    assert math.trunc(2) == 2
+    assert math.trunc(4.57) == 4
+    assert math.trunc(-5.79) == -5
+    assert math.trunc(pi) == 3
+    assert math.trunc(log(7)) == 1
+    assert math.trunc(exp(5)) == 148
+    assert math.trunc(cos(pi)) == -1
+    assert math.trunc(sin(5)) == 0
+
+    raises(TypeError, lambda: math.trunc(x))
+    raises(TypeError, lambda: math.trunc(x + y**2))
+    raises(TypeError, lambda: math.trunc(oo))
+
+
 def test_as_independent():
     assert S.Zero.as_independent(x, as_Add=True) == (0, 0)
     assert S.Zero.as_independent(x, as_Add=False) == (0, 0)

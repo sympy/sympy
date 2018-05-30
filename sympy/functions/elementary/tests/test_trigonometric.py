@@ -23,6 +23,7 @@ def test_sin():
 
     assert sin.nargs == FiniteSet(1)
     assert sin(nan) == nan
+    assert sin(zoo) == nan
 
     assert sin(oo) == AccumBounds(-1, 1)
     assert sin(oo) - sin(oo) == AccumBounds(-2, 2)
@@ -244,6 +245,7 @@ def test_cos():
     assert cos(oo) - cos(oo) == AccumBounds(-2, 2)
     assert cos(oo*I) == oo
     assert cos(-oo*I) == oo
+    assert cos(zoo) == nan
 
     assert cos(0) == 1
 
@@ -398,6 +400,7 @@ def test_cos_AccumBounds():
 def test_tan():
     assert tan(nan) == nan
 
+    assert tan(zoo) == nan
     assert tan(oo) == AccumBounds(-oo, oo)
     assert tan(oo) - tan(oo) == AccumBounds(-oo, oo)
     assert tan.nargs == FiniteSet(1)
@@ -548,6 +551,7 @@ def test_cot():
     assert cot.nargs == FiniteSet(1)
     assert cot(oo*I) == -I
     assert cot(-oo*I) == I
+    assert cot(zoo) == nan
 
     assert cot(0) == zoo
     assert cot(2*pi) == zoo
@@ -723,6 +727,7 @@ def test_asin():
     assert asin.nargs == FiniteSet(1)
     assert asin(oo) == -I*oo
     assert asin(-oo) == I*oo
+    assert asin(zoo) == zoo
 
     # Note: asin(-x) = - asin(x)
     assert asin(0) == 0
@@ -836,6 +841,7 @@ def test_atan():
     assert atan.nargs == FiniteSet(1)
     assert atan(oo) == pi/2
     assert atan(-oo) == -pi/2
+    assert atan(zoo) == AccumBounds(-pi/2, pi/2)
 
     assert atan(0) == 0
     assert atan(1) == pi/4
@@ -928,6 +934,7 @@ def test_acot():
     assert acot.nargs == FiniteSet(1)
     assert acot(-oo) == 0
     assert acot(oo) == 0
+    assert acot(zoo) == 0
     assert acot(1) == pi/4
     assert acot(0) == pi/2
     assert acot(sqrt(3)/3) == pi/3
@@ -1308,6 +1315,7 @@ def test_sec():
 
     assert sec.nargs == FiniteSet(1)
 
+    assert sec(zoo) == nan
     assert sec(0) == 1
     assert sec(pi) == -1
     assert sec(pi/2) == zoo
@@ -1390,6 +1398,7 @@ def test_csc():
 
     assert csc(0) == zoo
     assert csc(pi) == zoo
+    assert csc(zoo) == nan
 
     assert csc(pi/2) == 1
     assert csc(-pi/2) == -1
@@ -1580,3 +1589,25 @@ def test_issue_14320():
     assert asec(csc(13)) == -13 + 9*pi/2 and (0 <= -13 + 9*pi/2 <= pi) and sin(13) == cos(-13 + 9*pi/2)
     assert acsc(csc(14)) == -4*pi + 14 and (-pi/2 <= -4*pi + 14 <= pi/2) and sin(14) == sin(-4*pi + 14)
     assert acsc(sec(10)) == -7*pi/2 + 10 and (-pi/2 <= -7*pi/2 + 10 <= pi/2) and cos(10) == sin(-7*pi/2 + 10)
+
+def test_issue_14543():
+    assert sec(2*pi + 11) == sec(11)
+    assert sec(2*pi - 11) == sec(11)
+    assert sec(pi + 11) == -sec(11)
+    assert sec(pi - 11) == -sec(11)
+
+    assert csc(2*pi + 17) == csc(17)
+    assert csc(2*pi - 17) == -csc(17)
+    assert csc(pi + 17) == -csc(17)
+    assert csc(pi - 17) == csc(17)
+
+    x = Symbol('x')
+    assert csc(pi/2 + x) == sec(x)
+    assert csc(pi/2 - x) == sec(x)
+    assert csc(3*pi/2 + x) == -sec(x)
+    assert csc(3*pi/2 - x) == -sec(x)
+
+    assert sec(pi/2 - x) == csc(x)
+    assert sec(pi/2 + x) == -csc(x)
+    assert sec(3*pi/2 + x) == csc(x)
+    assert sec(3*pi/2 - x) == -csc(x)

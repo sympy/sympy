@@ -265,6 +265,9 @@ class sin(TrigonometricFunction):
             elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return AccumBounds(-1, 1)
 
+        if arg is S.ComplexInfinity:
+            return S.NaN
+
         if isinstance(arg, AccumBounds):
             min, max = arg.min, arg.max
             d = floor(min/(2*S.Pi))
@@ -540,6 +543,9 @@ class cos(TrigonometricFunction):
                 # preserves the information that sin(oo) is between
                 # -1 and 1, where S.NaN does not do that.
                 return AccumBounds(-1, 1)
+
+        if arg is S.ComplexInfinity:
+            return S.NaN
 
         if isinstance(arg, AccumBounds):
             return sin(arg + S.Pi/2)
@@ -959,6 +965,9 @@ class tan(TrigonometricFunction):
             elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return AccumBounds(S.NegativeInfinity, S.Infinity)
 
+        if arg is S.ComplexInfinity:
+            return S.NaN
+
         if isinstance(arg, AccumBounds):
             min, max = arg.min, arg.max
             d = floor(min/S.Pi)
@@ -1252,6 +1261,9 @@ class cot(TrigonometricFunction):
             if arg is S.Zero:
                 return S.ComplexInfinity
 
+        if arg is S.ComplexInfinity:
+            return S.NaN
+
         if isinstance(arg, AccumBounds):
             return -tan(arg + S.Pi/2)
 
@@ -1515,10 +1527,18 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
                     elif cls._is_even:
                         return -cls(narg)
 
-        t = cls._reciprocal_of.eval(arg)
         if hasattr(arg, 'inverse') and arg.inverse() == cls:
             return arg.args[0]
-        return 1/t if t != None else t
+
+        t = cls._reciprocal_of.eval(arg)
+        if t == None:
+            return t
+        elif any(isinstance(i, cos) for i in (t, -t)):
+            return (1/t).rewrite(sec)
+        elif any(isinstance(i, sin) for i in (t, -t)):
+            return (1/t).rewrite(csc)
+        else:
+            return 1/t
 
     def _call_reciprocal(self, method_name, *args, **kwargs):
         # Calls method_name on _reciprocal_of
@@ -1916,6 +1936,9 @@ class asin(InverseTrigonometricFunction):
             elif arg is S.NegativeOne:
                 return -S.Pi / 2
 
+        if arg is S.ComplexInfinity:
+            return S.ComplexInfinity
+
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
@@ -2267,6 +2290,11 @@ class atan(InverseTrigonometricFunction):
                 return S.Pi / 4
             elif arg is S.NegativeOne:
                 return -S.Pi / 4
+
+        if arg is S.ComplexInfinity:
+            from sympy.calculus.util import AccumBounds
+            return AccumBounds(-S.Pi/2, S.Pi/2)
+
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
@@ -2425,6 +2453,9 @@ class acot(InverseTrigonometricFunction):
                 return S.Pi / 4
             elif arg is S.NegativeOne:
                 return -S.Pi / 4
+
+        if arg is S.ComplexInfinity:
+            return S.Zero
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)

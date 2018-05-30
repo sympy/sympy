@@ -915,7 +915,7 @@ def test_presentation_mathml_order():
     assert mml.childNodes[6].childNodes[1].childNodes[0].nodeValue == '3'
 
 
-def test_presentaion_settings():
+def test_presentation_settings():
     raises(TypeError, lambda: mathml(Symbol("x"), printer='presentation',method="garbage"))
 
 def test_toprettyxml_hooking():

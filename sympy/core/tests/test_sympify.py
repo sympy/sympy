@@ -16,6 +16,7 @@ from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.external import import_module
 
 import mpmath
+from mpmath.rational import mpq
 
 
 numpy = import_module('numpy')
@@ -115,6 +116,8 @@ def test_sympify_mpmath():
         mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) == False
 
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
+
+    assert sympify(mpq(1, 2)) == S.Half
 
 
 def test_sympify2():
@@ -397,11 +400,13 @@ def test_evaluate_false():
         '2 + 3': Add(2, 3, evaluate=False),
         '2**2 / 3': Mul(Pow(2, 2, evaluate=False), Pow(3, -1, evaluate=False), evaluate=False),
         '2 + 3 * 5': Add(2, Mul(3, 5, evaluate=False), evaluate=False),
-        '2 - 3 * 5': Add(2, -Mul(3, 5, evaluate=False), evaluate=False),
+        '2 - 3 * 5': Add(2, Mul(-1, Mul(3, 5,evaluate=False), evaluate=False), evaluate=False),
         '1 / 3': Mul(1, Pow(3, -1, evaluate=False), evaluate=False),
         'True | False': Or(True, False, evaluate=False),
         '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x**2/2, evaluate=False),
         '2 * 4 * 6 + 8': Add(Mul(2, 4, 6, evaluate=False), 8, evaluate=False),
+        '2 - 8 / 4': Add(2, Mul(-1, Mul(8, Pow(4, -1, evaluate=False), evaluate=False), evaluate=False), evaluate=False),
+        '2 - 2**2': Add(2, Mul(-1, Pow(2, 2, evaluate=False), evaluate=False), evaluate=False),
     }
     for case, result in cases.items():
         assert sympify(case, evaluate=False) == result
@@ -440,8 +445,7 @@ def test_issue_3218():
 
 def test_issue_4988_builtins():
     C = Symbol('C')
-    vars = {}
-    vars['C'] = C
+    vars = {'C': C}
     exp1 = sympify('C')
     assert exp1 == C  # Make sure it did not get mixed up with sympy.C
 

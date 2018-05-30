@@ -474,7 +474,7 @@ def orthogonalize(*vlist, **kwargs):
     vlist : sequence of independent vectors to be made orthogonal.
 
     orthonormal : Optional parameter
-                  Set to True if the the vectors returned should be
+                  Set to True if the vectors returned should be
                   orthonormal.
                   Default: False
 

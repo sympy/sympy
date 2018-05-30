@@ -83,13 +83,14 @@ class RoundFunction(Function):
 class floor(RoundFunction):
     """
     Floor is a univariate function which returns the largest integer
-    value not greater than its argument. However this implementation
-    generalizes floor to complex numbers.
+    value not greater than its argument. This implementation
+    generalizes floor to complex numbers by taking the floor of the
+    real and imaginary parts separately.
 
     Examples
     ========
 
-    >>> from sympy import floor, E, I, Float, Rational
+    >>> from sympy import floor, E, I, S, Float, Rational
     >>> floor(17)
     17
     >>> floor(Rational(23, 10))
@@ -100,6 +101,8 @@ class floor(RoundFunction):
     -1
     >>> floor(-I/2)
     -I
+    >>> floor(S(5)/2 + 5*I/2)
+    2 + 2*I
 
     See Also
     ========
@@ -119,9 +122,8 @@ class floor(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             return arg.floor()
-        elif isinstance(arg, ceiling):
-            return arg
-        elif isinstance(arg, floor):
+        elif any(isinstance(i, j)
+                for i in (arg, -arg) for j in (floor, ceiling)):
             return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[0]
@@ -139,6 +141,18 @@ class floor(RoundFunction):
         else:
             return r
 
+    def _eval_rewrite_as_ceiling(self, arg):
+        return -ceiling(-arg)
+
+    def _eval_rewrite_as_frac(self, arg):
+        return arg - frac(arg)
+
+    def _eval_Eq(self, other):
+        if isinstance(self, floor):
+            if (self.rewrite(ceiling) == other) or \
+                    (self.rewrite(frac) == other):
+                return S.true
+
     def __le__(self, other):
         if self.args[0] == other and other.is_real:
             return S.true
@@ -153,13 +167,14 @@ class floor(RoundFunction):
 class ceiling(RoundFunction):
     """
     Ceiling is a univariate function which returns the smallest integer
-    value not less than its argument. Ceiling function is generalized
-    in this implementation to complex numbers.
+    value not less than its argument. This implementation
+    generalizes ceiling to complex numbers by taking the ceiling of the
+    real and imaginary parts separately.
 
     Examples
     ========
 
-    >>> from sympy import ceiling, E, I, Float, Rational
+    >>> from sympy import ceiling, E, I, S, Float, Rational
     >>> ceiling(17)
     17
     >>> ceiling(Rational(23, 10))
@@ -170,6 +185,8 @@ class ceiling(RoundFunction):
     0
     >>> ceiling(I/2)
     I
+    >>> ceiling(S(5)/2 + 5*I/2)
+    3 + 3*I
 
     See Also
     ========
@@ -189,9 +206,8 @@ class ceiling(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             return arg.ceiling()
-        elif isinstance(arg, ceiling):
-            return arg
-        elif isinstance(arg, floor):
+        elif any(isinstance(i, j)
+                for i in (arg, -arg) for j in (floor, ceiling)):
             return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[1]
@@ -208,6 +224,18 @@ class ceiling(RoundFunction):
                 return r
         else:
             return r
+
+    def _eval_rewrite_as_floor(self, arg):
+        return -floor(-arg)
+
+    def _eval_rewrite_as_frac(self, arg):
+        return arg + frac(-arg)
+
+    def _eval_Eq(self, other):
+        if isinstance(self, ceiling):
+            if (self.rewrite(floor) == other) or \
+                    (self.rewrite(frac) == other):
+                return S.true
 
     def __lt__(self, other):
         if self.args[0] == other and other.is_real:
@@ -307,3 +335,12 @@ class frac(Function):
 
     def _eval_rewrite_as_floor(self, arg):
         return arg - floor(arg)
+
+    def _eval_rewrite_as_ceiling(self, arg):
+        return arg + ceiling(-arg)
+
+    def _eval_Eq(self, other):
+        if isinstance(self, frac):
+            if (self.rewrite(floor) == other) or \
+                    (self.rewrite(ceiling) == other):
+                return S.true

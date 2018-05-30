@@ -106,6 +106,7 @@ class Poly(Expr):
 
     is_commutative = True
     is_Poly = True
+    _op_priority = 10.001
 
     def __new__(cls, rep, *gens, **args):
         """Create a new polynomial instance out of something useful. """
@@ -3553,6 +3554,7 @@ class Poly(Expr):
         [-1.73205080756887729352744634151, 1.73205080756887729352744634151]
 
         """
+        from sympy.functions.elementary.complexes import sign
         if f.is_multivariate:
             raise MultivariatePolynomialError(
                 "can't compute numerical roots of %s" % f)
@@ -3591,7 +3593,7 @@ class Poly(Expr):
             # Mpmath puts real roots first, then complex ones (as does all_roots)
             # so we make sure this convention holds here, too.
             roots = list(map(sympify,
-                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, r.imag))))
+                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
         except NoConvergence:
             raise NoConvergence(
                 'convergence to root failed; try n < %s or maxsteps > %s' % (
@@ -5202,6 +5204,17 @@ def gcd_list(seq, *gens, **args):
 
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
+
+        # gcd for domain Q[irrational] (purely algebraic irrational)
+        if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
+            a = seq[-1]
+            lst = [ (a/elt).ratsimp() for elt in seq[:-1] ]
+            if all(frc.is_rational for frc in lst):
+                lc = 1
+                for frc in lst:
+                    lc = lcm(lc, frc.as_numer_denom()[0])
+                return a/lc
+
     except PolificationFailed as exc:
         result = try_non_polynomial_gcd(exc.exprs)
 
@@ -5257,6 +5270,14 @@ def gcd(f, g=None, *gens, **args):
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+
+        # gcd for domain Q[irrational] (purely algebraic irrational)
+        a, b = map(sympify, (f, g))
+        if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
+            frc = (a/b).ratsimp()
+            if frc.is_rational:
+                return a/frc.as_numer_denom()[0]
+
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
 
@@ -5315,6 +5336,17 @@ def lcm_list(seq, *gens, **args):
 
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
+
+        # lcm for domain Q[irrational] (purely algebraic irrational)
+        if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
+            a = seq[-1]
+            lst = [ (a/elt).ratsimp() for elt in seq[:-1] ]
+            if all(frc.is_rational for frc in lst):
+                lc = 1
+                for frc in lst:
+                    lc = lcm(lc, frc.as_numer_denom()[1])
+                return a*lc
+
     except PolificationFailed as exc:
         result = try_non_polynomial_lcm(exc.exprs)
 
@@ -5367,6 +5399,14 @@ def lcm(f, g=None, *gens, **args):
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+
+        # lcm for domain Q[irrational] (purely algebraic irrational)
+        a, b = map(sympify, (f, g))
+        if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
+            frc = (a/b).ratsimp()
+            if frc.is_rational:
+                return a*frc.as_numer_denom()[1]
+
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
 

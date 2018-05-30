@@ -165,6 +165,22 @@ def test_factorial():
     assert factorial(oo) == oo
 
 
+def test_factorial_Mod():
+    pr = Symbol('pr', prime=True)
+    p, q = 10**9 + 9, 10**9 + 33 # prime modulo
+    r, s = 10**7 + 5, 33333333 # composite modulo
+    assert Mod(factorial(pr - 1), pr) == pr - 1
+    assert Mod(factorial(pr - 1), -pr) == -1
+    assert Mod(factorial(r - 1, evaluate=False), r) == 0
+    assert Mod(factorial(s - 1, evaluate=False), s) == 0
+    assert Mod(factorial(p - 1, evaluate=False), p) == p - 1
+    assert Mod(factorial(q - 1, evaluate=False), q) == q - 1
+    assert Mod(factorial(p - 50, evaluate=False), p) == 854928834
+    assert Mod(factorial(q - 1800, evaluate=False), q) == 905504050
+    assert Mod(factorial(153, evaluate=False), r) == Mod(factorial(153), r)
+    assert Mod(factorial(255, evaluate=False), s) == Mod(factorial(255), s)
+
+
 def test_factorial_diff():
     n = Symbol('n', integer=True)
 
@@ -279,6 +295,7 @@ def test_binomial():
     kp = Symbol('kp', integer=True, positive=True)
     kn = Symbol('kn', integer=True, negative=True)
     u = Symbol('u', negative=True)
+    v = Symbol('v', nonnegative=True)
     p = Symbol('p', positive=True)
     z = Symbol('z', zero=True)
     nt = Symbol('nt', integer=False)
@@ -291,13 +308,14 @@ def test_binomial():
     assert binomial(10, 10) == 1
     assert binomial(n, z) == 1
     assert binomial(1, 2) == 0
+    assert binomial(-1, 2) == 1
     assert binomial(1, -1) == 0
     assert binomial(-1, 1) == -1
-    assert binomial(-1, -1) == 1
+    assert binomial(-1, -1) == 0
     assert binomial(S.Half, S.Half) == 1
     assert binomial(-10, 1) == -10
     assert binomial(-10, 7) == -11440
-    assert binomial(n, -1) == 0
+    assert binomial(n, -1) == 0 # holds for all integers (negative, zero, positive)
     assert binomial(kp, -1) == 0
     assert binomial(nz, 0) == 1
     assert expand_func(binomial(n, 1)) == n
@@ -307,9 +325,10 @@ def test_binomial():
     assert binomial(n, 3).func == binomial
     assert binomial(n, 3).expand(func=True) ==  n**3/6 - n**2/2 + n/3
     assert expand_func(binomial(n, 3)) ==  n*(n - 2)*(n - 1)/6
-    assert binomial(n, n) == 1
+    assert binomial(n, n).func == binomial # e.g. (-1, -1) == 0, (2, 2) == 1
     assert binomial(n, n + 1).func == binomial  # e.g. (-1, 0) == 1
     assert binomial(kp, kp + 1) == 0
+    assert binomial(kn, kn) == 0 # issue #14529
     assert binomial(n, u).func == binomial
     assert binomial(kp, u).func == binomial
     assert binomial(n, p).func == binomial
@@ -324,8 +343,29 @@ def test_binomial():
     assert binomial(x, nt).is_integer is False
 
     assert binomial(gamma(25), 6) == 79232165267303928292058750056084441948572511312165380965440075720159859792344339983120618959044048198214221915637090855535036339620413440000
+    assert binomial(1324, 47) == 906266255662694632984994480774946083064699457235920708992926525848438478406790323869952
+    assert binomial(1735, 43) == 190910140420204130794758005450919715396159959034348676124678207874195064798202216379800
+    assert binomial(2512, 53) == 213894469313832631145798303740098720367984955243020898718979538096223399813295457822575338958939834177325304000
+    assert binomial(3383, 52) == 27922807788818096863529701501764372757272890613101645521813434902890007725667814813832027795881839396839287659777235
+    assert binomial(4321, 51) == 124595639629264868916081001263541480185227731958274383287107643816863897851139048158022599533438936036467601690983780576
 
     assert binomial(a, b).is_nonnegative is True
+    assert binomial(-1, 2, evaluate=False).is_nonnegative is True
+    assert binomial(10, 5, evaluate=False).is_nonnegative is True
+    assert binomial(10, -3, evaluate=False).is_nonnegative is True
+    assert binomial(-10, -3, evaluate=False).is_nonnegative is True
+    assert binomial(-10, 2, evaluate=False).is_nonnegative is True
+    assert binomial(-10, 1, evaluate=False).is_nonnegative is False
+    assert binomial(-10, 7, evaluate=False).is_nonnegative is False
+
+    # issue #14625
+    for _ in (pi, -pi, nt, v, a):
+        assert binomial(_, _) == 1
+        assert binomial(_, _ - 1) == _
+    assert isinstance(binomial(u, u), binomial)
+    assert isinstance(binomial(u, u - 1), binomial)
+    assert isinstance(binomial(x, x), binomial)
+    assert isinstance(binomial(x, x - 1), binomial)
 
     # issue #13980 and #13981
     assert binomial(-7, -5) == 0
@@ -354,8 +394,32 @@ def test_binomial():
     assert binomial((1+2*I), (1+3*I)) == gamma(2 + 2*I)/(gamma(1 - I)*gamma(2 + 3*I))
     assert binomial(I, 5) == S(1)/3 - I/S(12)
     assert binomial((2*I + 3), 7) == -13*I/S(63)
-    assert binomial(I, n).func == binomial
+    assert isinstance(binomial(I, n), binomial)
 
+
+def test_binomial_Mod():
+    p, q = 10**5 + 3, 10**9 + 33 # prime modulo
+    r, s = 10**7 + 5, 33333333 # composite modulo
+
+    # Lucas Theorem
+    assert Mod(binomial(156675, 4433, evaluate=False), p) == Mod(binomial(156675, 4433), p)
+    assert Mod(binomial(123456, 43253, evaluate=False), p) == Mod(binomial(123456, 43253), p)
+    assert Mod(binomial(-178911, 237, evaluate=False), p) == Mod(-binomial(178911 + 237 - 1, 237), p)
+    assert Mod(binomial(-178911, 238, evaluate=False), p) == Mod(binomial(178911 + 238 - 1, 238), p)
+
+    # factorial Mod
+    assert Mod(binomial(1234, 432, evaluate=False), q) == Mod(binomial(1234, 432), q)
+    assert Mod(binomial(9734, 451, evaluate=False), q) == Mod(binomial(9734, 451), q)
+    assert Mod(binomial(-10733, 4459, evaluate=False), q) == Mod(binomial(-10733, 4459), q)
+    assert Mod(binomial(-15733, 4458, evaluate=False), q) == Mod(binomial(-15733, 4458), q)
+
+    # binomial factorize
+    assert Mod(binomial(253, 113, evaluate=False), r) == Mod(binomial(253, 113), r)
+    assert Mod(binomial(753, 119, evaluate=False), r) == Mod(binomial(753, 119), r)
+    assert Mod(binomial(3781, 948, evaluate=False), s) == Mod(binomial(3781, 948), s)
+    assert Mod(binomial(25773, 1793, evaluate=False), s) == Mod(binomial(25773, 1793), s)
+    assert Mod(binomial(-753, 118, evaluate=False), r) == Mod(binomial(-753, 118), r)
+    assert Mod(binomial(-25773, 1793, evaluate=False), s) == Mod(binomial(-25773, 1793), s)
 
 
 def test_binomial_diff():
