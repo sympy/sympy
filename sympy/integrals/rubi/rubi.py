@@ -3,6 +3,7 @@ matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.core import Integer, Float
 import inspect, re
+from sympy import powsimp
 
 if matchpy:
     from matchpy import (Operation, CommutativeOperation, AssociativeOperation,
@@ -165,10 +166,10 @@ if matchpy:
         rules += integrand_simplification(rules_applied)
         rules += linear_products(rules_applied)
         rules += quadratic_products(rules_applied)
-        rules += binomial_products(rules_applied)
+        rules += binomial_products(rules_applied)    
+        rules += trinomial_products(rules_applied)
+        rules += miscellaneous_algebraic(rules_applied)
         rubi = ManyToOneReplacer(*rules)
-        # rubi = miscellaneous_algebraic(rubi)
-        # rubi = trinomial_products(rubi)
         #rubi = exponential(rubi)
         #rubi = logarithms(rubi)
         #rubi = sine(rubi)
@@ -218,9 +219,10 @@ def rubi_integrate(expr, var, showsteps=False):
     Returns Integral object if unable to integrate.
     '''
     rules_applied[:] = []
+    #print(expr)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
-
+    expr = powsimp(expr)
     from sympy import Add
     if isinstance(expr, Add):
         results = 0
@@ -230,18 +232,21 @@ def rubi_integrate(expr, var, showsteps=False):
             rules_applied[:] = []
         return results
 
+
     results = rubi.replace(Integral(expr, var))
     return results
 
 
 @doctest_depends_on(modules=('matchpy',))
 def util_rubi_integrate(expr, var, showsteps=False):
+    #print(rules_applied)
+    #print(expr)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
+    expr = powsimp(expr)
     from sympy import Add
     if isinstance(expr, Add):
         return rubi_integrate(expr, var)
-
     if len(rules_applied) > 6:
         if _has_cycle():
             ru = remove_rule(rules[rules_applied[-1] - 1], expr, var)

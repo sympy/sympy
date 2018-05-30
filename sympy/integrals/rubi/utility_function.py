@@ -17,7 +17,7 @@ from sympy.utilities.iterables import postorder_traversal
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
-from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul,
+from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Integer, Float,
     Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E, Function,
     expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr)
 from mpmath import appellf1
@@ -441,6 +441,17 @@ def Sqrt(a):
 def ArcCosh(a):
     return acosh(a)
 
+class Util_Coefficient(Function):
+    def doit(self):
+        if len(self.args) == 2:
+            n = 1
+        else:
+            if not isinstance(self.args[2], (int, Integer,float, Float)):
+                return self
+            n = self.args[2]
+        expr = expand(self.args[0])
+        return expr.coeff(self.args[1], n)
+
 def Coefficient(expr, var, n=1):
     """
     Coefficient(expr, var) gives the coefficient of form in the polynomial expr.
@@ -461,8 +472,11 @@ def Coefficient(expr, var, n=1):
     c
 
     """
-    expr = expand(expr)
-    return expr.coeff(var, n)
+    if isinstance(n, (int, Integer,float, Float)):
+        expr = expand(expr)
+        return expr.coeff(var, n)
+
+    return Util_Coefficient(expr, var, n)
 
 def Denominator(var):
     return fraction(var)[1]
@@ -1127,11 +1141,12 @@ def PolyQ(u, x, n=None):
 
 def EvenQ(u):
     # gives True if expr is an even integer, and False otherwise.
-    return u.is_Integer and u%2 == 0
+    return isinstance(u, (Integer, int)) and u%2 == 0
 
 def OddQ(u):
     # gives True if expr is an odd integer, and False otherwise.
-    return u.is_Integer and u%2 == 1
+
+    return isinstance(u, (Integer, int)) and u%2 == 1
 
 def PerfectSquareQ(u):
     # (* If u is a rational number whose squareroot is rational or if u is of the form u1^n1 u2^n2 ...
@@ -5520,7 +5535,7 @@ def RtAux(u, n):
         if ListQ(lst):
             if EqQ(lst[0], -1):
                 v = lst[1]
-                if PowerQ(v) and NegativeQ(v[1]):
+                if PowerQ(v) and NegativeQ(v.args[1]):
                     return 1/RtAux(-v[0]**(-v.args[1]), n)
                 if ProductQ(v):
                     if ListQ(SplitProduct(SumBaseQ, v)):
@@ -5837,24 +5852,27 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
     #_hyper_check=True evaluates numerically
     #_diff=True differentiates the expressions before equating
     #_numerical=True equates the expressions at random `x`. Normally used for large expressions.
-
+    from sympy import nsimplify
     if expr == optimal_output:
         return True
 
-    res = expr - optimal_output
+    if nsimplify(expr) == nsimplify(optimal_output):
+        return True
 
-    if res.has(hyper):
-        if _hyper_check:
-            dres = res.diff(x)
-            args = dres.free_symbols
-            for i in range(1, 6):
-                sub = dict((s, i) for s in args)
-                if not abs(dres.subs(sub).n()) < S(10)**(-100):
-                    return False
-            return True
-        else:
-            return True
-        return False
+    res = expr - optimal_output
+    #print("res--  ", res)
+    # if res.has(hyper):
+    #     if _hyper_check:
+    #         dres = res.diff(x)
+    #         args = dres.free_symbols
+    #         for i in range(1, 6):
+    #             sub = dict((s, i) for s in args)
+    #             if not abs(dres.subs(sub).n()) < S(10)**(-100):
+    #                 return False
+    #         return True
+    #     else:
+    #         return True
+    #     return False
 
     if _numerical:
         args = res.free_symbols
@@ -5868,9 +5886,29 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
                 return True
             # return False
         except:
-            return False
+            pass
+            # return False
+    
+    if _numerical:
+        dres = res.diff(x)
 
-    r = simplify(res)
+        args = dres.free_symbols
+        rand_val = []
+        for i in range(0, 5): # check at 5 random points
+            rand_x = randint(1, 40)
+            substitutions = dict((s, rand_x) for s in args)
+            rand_val.append(float(abs(dres.subs(substitutions).n())))
+        try:
+            if stdev(rand_val) < Pow(10, -3):
+                return True
+            # return False
+        except:
+            pass
+            # return False
+
+
+
+    r = simplify(nsimplify(res))
     if r == 0 or (not r.has(x)):
         return True
 
@@ -6741,6 +6779,25 @@ def PureFunctionOfCothQ(u, v, x):
 def LogIntegral(z):
     tx = symbols('tx')
     return Integral(1/log(tx),(tx, 0, z))
+
+def Sum_doit(exp, args):
+    return Sum(exp, args).doit
+
+def PolynomialQuotient(p, q, x):
+    p = poly(p, x)
+    q = poly(q, x)
+    return quo(p, q).as_expr()
+
+
+def PolynomialRemainder(p, q, x):
+    p = poly(p, x)
+    q = poly(q, x)
+    return rem(p, q).as_expr()
+
+def Floor(x, a = None):
+    if a is None:
+        return floor(x)
+    return a*floor(x/a)
 
 if matchpy:
     TrigSimplifyAux_replacer = _TrigSimplifyAux()
