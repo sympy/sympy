@@ -1,9 +1,11 @@
 """A module containing discrete functions.
 
 Transforms - fft, ifft, ntt, intt, fwht, ifwht, fzt, ifzt, fmt, ifmt
-Convolution - conv, conv_xor, conv_and, conv_or, conv_sub, conv_sup
+Convolution - convolution, convolution_fft, convolution_ntt,
+    convolution_xor, convolution_and, convolution_or, convolution_subset
 Recurrence Evaluation - reval_hcc
 """
 
 
 from .transforms import (fft, ifft, ntt, intt)
+from .convolution import convolution
