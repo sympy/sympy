@@ -1395,7 +1395,7 @@ def test_2():
 
     for i in test:
         try:
-            r = rubi_integrate(nsimplify(i[0]), i[1])
+            r = rubi_integrate(i[0], i[1])
 
             if len(i) == 5:
                 assert rubi_test(r, i[1], i[3], expand=True, _diff=True, _numerical=True) or rubi_test(r, i[1], i[4], expand=True, _diff=True, _numerical=True)
