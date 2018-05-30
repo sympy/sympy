@@ -68,15 +68,14 @@ def convolution(a, b, **hints):
 
     if p is not None:
         ls = convolution_ntt(a, b, prime=p)
-        return ls if c is None else [sum(ls[i::c]) % p for i in range(c)]
+        return ls if not c else [sum(ls[i::c]) % p for i in range(c)]
 
     elif hints.pop('ntt', False):
         raise TypeError("Prime modulus must be specified for performing NTT")
 
-
     ls = convolution_fft(a, b, dps=dps)
 
-    return ls if c is None else [sum(ls[i::c]) for i in range(c)]
+    return ls if not c else [sum(ls[i::c]) for i in range(c)]
 
 
 #----------------------------------------------------------------------------#

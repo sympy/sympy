@@ -45,7 +45,8 @@ def test_cyclic_convolution():
 
     assert convolution([1, 2, 3], [4, 5, 6], cycle=None) == \
             convolution([1, 2, 3], [4, 5, 6], cycle=5) == \
-                convolution([1, 2, 3], [4, 5, 6])
+                convolution([1, 2, 3], [4, 5, 6], cycle=0) == \
+                    convolution([1, 2, 3], [4, 5, 6])
 
     assert convolution([1, 2, 3], [4, 5, 6], cycle=3) == [31, 31, 28]
 
@@ -74,9 +75,10 @@ def test_cyclic_convolution():
     a = [2313, 5323532, S(3232), 42142, 42242421]
     b = [S(33456), 56757, 45754, 432423]
 
-    assert convolution(a, b, prime=19*2**10 + 1) == \
-            convolution(a, b, prime=19*2**10 + 1, cycle=None) == \
-                convolution(a, b, prime=19*2**10 + 1, cycle=8)
+    assert convolution(a, b, prime=19*2**10 + 1, cycle=None) == \
+            convolution(a, b, prime=19*2**10 + 1, cycle=0) == \
+                convolution(a, b, prime=19*2**10 + 1, cycle=8) == \
+                    convolution(a, b, prime=19*2**10 + 1)
 
     assert convolution(a, b, prime=19*2**10 + 1, cycle=5) == [96, 17146, 2664,
                                                                     15534, 3517]
