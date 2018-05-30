@@ -1397,9 +1397,9 @@ class EvalfMixin(object):
         following reasons:-
 
         i.   expr.evalf(subs=...) avoids the loss of significance caused due to
-             naive subtitution;
-        ii.  expr.evalf(subs=...) the expression is run throught the evalf algorithm,
-             which takes into account various issues that can leade to loss of
+             naive substitution;
+        ii.  expr.evalf(subs=...) the expression is run through the evalf algorithm,
+             which takes into account various issues that can lead to loss of
              significance.
         iii. The subs dictionary tells the evalf algorithms which symbols should be
              replaced with numbers when they are encountered.
