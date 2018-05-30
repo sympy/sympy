@@ -1409,9 +1409,9 @@ class EvalfMixin(object):
         >>> from sympy.core.evalf import evalf
         >>> from sympy.abc import x,y,z
         >>> (x+y-z).subs({x:1e100,y:1,z:1e100}) #case_1
-        >>> 0
+        0
         >>> (x+y-z).evalf(subs={x: 1e100, y: 1, z: 1e100}) #case_2
-        >>> 1.00000000000000
+        1.00000000000000
 
         In the above example, in #case_1, naive substitution evaluates 1e100 + 1 - 1e100
         which looses 1 because the default precesion setting. However, in #case_2, the
