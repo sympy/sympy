@@ -1405,7 +1405,8 @@ class EvalfMixin(object):
              replaced with numbers when they are encountered.
 
         Example
-        -------
+        =======
+        
         >>> from sympy.core.evalf import evalf
         >>> from sympy.abc import x,y,z
         >>> (x+y-z).subs({x:1e100,y:1,z:1e100}) #case_1
