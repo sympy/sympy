@@ -1212,7 +1212,6 @@ class Pow(Expr):
                 or self.base.is_irrational):
                 return self.exp.is_rational
 
-
     def _eval_is_rational_function(self, syms):
         if self.exp.has(*syms):
             return False
