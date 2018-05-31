@@ -59,7 +59,7 @@ def test_names_in_namespace():
     for name in dir(S):
         if name.startswith('_'):
             continue
-        if hasattr(SingletonRegistry, name):
+        if name == 'register':
             continue
         if isinstance(getattr(S, name), Rational):
             continue
