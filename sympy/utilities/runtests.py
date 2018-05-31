@@ -1605,7 +1605,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
 
                 # Recurse to methods, properties, and nested classes.
-                if ((inspect.isroutine(val) or
+                if ((inspect.isfunction(unwrap(val)) or
                         inspect.isclass(val) or
                         isinstance(val, property)) and
                     self._from_module(module, val)):
