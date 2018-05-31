@@ -3610,8 +3610,8 @@ def test_pretty_ImageSet():
 
     imgset = ImageSet(Lambda(x, x**2), S.Naturals)
     ascii_str = \
-    '  2                   \n'\
-    '{x  | x in S.Naturals}'
+    '  2                 \n'\
+    '{x  | x in Naturals}'
     ucode_str = u('''\
 ⎧ 2        ⎫\n\
 ⎨x  | x ∊ ℕ⎬\n\
@@ -5810,9 +5810,9 @@ def test_issue_7180():
 
 
 def test_pretty_Complement():
-    assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \\ S.Naturals'
+    assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \\ Naturals'
     assert upretty(S.Reals - S.Naturals) == u'ℝ \\ ℕ'
-    assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \\ S.Naturals0'
+    assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \\ Naturals0'
     assert upretty(S.Reals - S.Naturals0) == u'ℝ \\ ℕ₀'
 
 
@@ -5826,7 +5826,7 @@ def test_pretty_SymmetricDifference():
 
 
 def test_pretty_Contains():
-    assert pretty(Contains(x, S.Integers)) == 'Contains(x, S.Integers)'
+    assert pretty(Contains(x, S.Integers)) == 'Contains(x, Integers)'
     assert upretty(Contains(x, S.Integers)) == u'x ∈ ℤ'
 
 
