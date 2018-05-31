@@ -63,7 +63,7 @@ def test_names_in_namespace():
             continue
         if isinstance(getattr(S, name), Rational):
             continue
-        if name == 'MySingleton':
+        if name in ['MySingleton', 'MySingleton_sub']:
             # From the test above
             continue
         if name == 'NegativeInfinity':
