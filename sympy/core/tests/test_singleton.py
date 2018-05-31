@@ -56,7 +56,7 @@ def test_names_in_namespace():
     d = {}
     exec_('from sympy import *', d)
 
-    for name in dir(S):
+    for name in dir(S) + list(S._classes_to_install):
         if name.startswith('_'):
             continue
         if name == 'register':
