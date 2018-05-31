@@ -71,4 +71,4 @@ def test_names_in_namespace():
             continue
 
         # Use is here because of complications with ==
-        assert any(getattr(S, name) is i for i in d.values()), name
+        assert any(getattr(S, name) is i or type(getattr(S, name)) is i for i in d.values()), name
