@@ -215,7 +215,7 @@ class Set(Basic):
 
         >>> from sympy import S, EmptySet
         >>> S.Reals.symmetric_difference(EmptySet())
-        S.Reals
+        Reals
 
         References
         ==========
@@ -499,7 +499,7 @@ class Set(Basic):
         ========
         >>> from sympy import S, Interval
         >>> S.Reals.closure
-        S.Reals
+        Reals
         >>> Interval(0, 1).closure
         Interval(0, 1)
         """
@@ -1757,7 +1757,7 @@ def imageset(*args):
     then the unevaluated ImageSet should be used.
 
     >>> imageset(x, -2*x + 5, S.Integers)
-    ImageSet(Lambda(x, 2*x + 1), S.Integers)
+    ImageSet(Lambda(x, 2*x + 1), Integers)
 
     See Also
     ========
