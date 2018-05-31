@@ -5536,7 +5536,7 @@ def RtAux(u, n):
             if EqQ(lst[0], -1):
                 v = lst[1]
                 if PowerQ(v) and NegativeQ(v.args[1]):
-                    return 1/RtAux(-v[0]**(-v.args[1]), n)
+                    return 1/RtAux(-v.args[0]**(-v.args[1]), n)
                 if ProductQ(v):
                     if ListQ(SplitProduct(SumBaseQ, v)):
                         lst = SplitProduct(AllNegTermQ, v)
