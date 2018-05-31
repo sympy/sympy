@@ -1134,9 +1134,9 @@ def TrinomialParts(u, x):
 def PolyQ(u, x, n=None):
     # returns True iff u is a polynomial of degree n.
     if n==None:
-        return u.is_polynomial(x)
+        return u.is_polynomial(x) and Coefficient(u, x) != 0
     elif u.is_polynomial(x):
-        return degree(u, gen=x) == n
+        return Exponent(u, x) == n
     return False
 
 def EvenQ(u):

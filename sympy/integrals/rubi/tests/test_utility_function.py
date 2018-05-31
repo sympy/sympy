@@ -478,6 +478,7 @@ def test_PolynomialQ():
     assert not PolynomialQ(sqrt(x), x)
 
 def test_PolyQ():
+    assert not PolyQ(1/sqrt(a + b*x**2 - c*x**4), x**2)
     assert PolyQ(x, x, 1)
     assert PolyQ(x**2, x, 2)
     assert not PolyQ(x**3, x, 2)
