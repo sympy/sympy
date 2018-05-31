@@ -9,4 +9,5 @@ Reals = S.Reals
 Naturals = S.Naturals
 Naturals0 = S.Naturals0
 UniversalSet = S.UniversalSet
+Integers = S.Integers
 del S
