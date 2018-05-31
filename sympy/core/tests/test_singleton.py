@@ -63,6 +63,8 @@ def test_names_in_namespace():
             continue
         if isinstance(getattr(S, name), Rational):
             continue
+        if getattr(S, name).__module__.startswith('sympy.physics'):
+            continue
         if name in ['MySingleton', 'MySingleton_sub']:
             # From the test above
             continue
