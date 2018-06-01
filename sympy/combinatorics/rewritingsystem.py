@@ -37,12 +37,8 @@ class RewritingSystem(object):
         self.rules_cache = deque([], 50)
         self._init_rules()
 
-        # All rules
-        self.all_rules = {}
-
         # inverse rules - used in automaton
         self.inverse_rules = {}
-        self.compute_inverse_rules()
 
         # Automaton variables
         self.reduction_automaton = self.construct_automaton()
@@ -304,11 +300,11 @@ class RewritingSystem(object):
 
         '''
         for r in self.rules:
-            rule_key_inverse = r.inverse()
-            rule_value_inverse = (self.rules[r]).inverse()
+            rule_key_inverse = r**-1
+            rule_value_inverse = (self.rules[r])**-1
             if (rule_value_inverse < rule_key_inverse):
                 self.inverse_rules[rule_key_inverse] = rule_value_inverse
-            elif (rule_key_inverse < rule_value_inverse):
+            else:
                 self.inverse_rules[rule_value_inverse] = rule_key_inverse
 
     def construct_automaton(self):
@@ -323,12 +319,11 @@ class RewritingSystem(object):
         automaton_alphabet = []
         left_hand_rules = []
         proper_prefixes = {}
+
         # compute all_rules when the automaton is constucted.
-        rules = self.rules
-        inverse_rules = self.inverse_rules
-        all = rules
-        all.update(inverse_rules)
-        self.all_rules = all
+        all_rules = self.rules
+        self.compute_inverse_rules()
+        all_rules.update(self.inverse_rules)
 
         generators = list(self.alphabet)
         generators += [gen**-1 for gen in generators]
@@ -337,10 +332,10 @@ class RewritingSystem(object):
         automaton_alphabet = generators
 
         # Store the complete left hand side of the rules - dead states.
-        left_hand_rules = list(self.all_rules)
+        left_hand_rules = list(all_rules)
 
         # Compute the proper prefixes for every rule.
-        for r in self.all_rules:
+        for r in all_rules:
             proper_prefixes[r] = []
             letter_word_array = [s for s in r.letter_form_elm]
             for i in range (1, len(letter_word_array)):
@@ -357,40 +352,40 @@ class RewritingSystem(object):
 
         # Add dead states.
         for rule in left_hand_rules:
-            if not rule in fsm.state_names:
+            if not rule in fsm.states:
                 fsm.add_state(rule, is_dead=True)
 
         # Add accept states.
-        for r in self.all_rules:
+        for r in all_rules:
             prop_prefix = proper_prefixes[r]
             for elem in prop_prefix:
-                if not elem in fsm.state_names:
+                if not elem in fsm.states:
                     fsm.add_state(elem, is_accept=True)
 
         # Add transitions for every state
         for state in fsm.states:
-            current_state_name = state.name
-            current_state_type = state.state_type
+            current_state_name = state
+            current_state_type = fsm.states[state].state_type
             if current_state_type == "start":
                 for letter in automaton_alphabet:
-                    if letter in fsm.state_names:
-                        state.add_transition(letter, letter)
+                    if letter in fsm.states:
+                        fsm.states[state].add_transition(letter, letter)
                     else:
-                        state.add_transition(letter, current_state_name)
+                        fsm.states[state].add_transition(letter, current_state_name)
             elif current_state_type == "accept":
                 for letter in automaton_alphabet:
                     next = current_state_name*letter
                     len_next_word = len(next)
                     while True:
                         if len(next) <= 1:
-                            if next in fsm.state_names:
-                                state.add_transition(letter, next)
+                            if next in fsm.states:
+                                fsm.states[state].add_transition(letter, next)
                             else:
-                                state.add_transition(letter, 'start')
+                                fsm.states[state].add_transition(letter, 'start')
                             break
                         else:
-                            if next in fsm.state_names:
-                                state.add_transition(letter, next)
+                            if next in fsm.states:
+                                fsm.states[state].add_transition(letter, next)
                                 break
                             next = next.subword(1, len(next))
         return fsm
@@ -403,26 +398,26 @@ class RewritingSystem(object):
         This is repeated until the word reaches the end and the automaton stays in the accept state.
 
         '''
+        # compute all_rules.
+        all_rules = self.rules
         self.compute_inverse_rules()
-        (self.all_rules).update(self.inverse_rules)
+        all_rules.update(self.inverse_rules)
 
-        while True:
-            flag = 1
-            current_state = self.reduction_automaton.states[0]
+        flag = 1
+        while flag:
+            flag = 0
+            current_state = self.reduction_automaton.states['start']
             word_array = [s for s in word.letter_form_elm]
             for i in range (0, len(word_array)):
                 next_state_name = current_state.transitions[word_array[i]]
                 next_state = None
                 for state in self.reduction_automaton.states:
-                    if state.name == next_state_name:
-                        next_state = state
+                    if state == next_state_name:
+                        next_state = self.reduction_automaton.states[state]
                 if next_state.state_type == "dead":
-                    subst = self.all_rules[next_state_name]
+                    subst = all_rules[next_state_name]
                     word = word.substituted_word(i - len(next_state_name) + 1, i+1, subst)
-                    flag = 0
+                    flag = 1
                     break
                 current_state = next_state
-            # Break if the whole word is read and no dead state is encountered.
-            if flag == 1:
-                break
         return word

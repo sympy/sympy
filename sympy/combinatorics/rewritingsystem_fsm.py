@@ -2,7 +2,7 @@ class State(object):
     """A representation of a state managed by a ``StateMachine``.
 
     Attributes:
-        name (str): State name which is also assigned to the Machine.
+        name (instance of FreeGroupElement or string): State name which is also assigned to the Machine.
         transisitons (OrderedDict): Represents all the transitions of the state object.
         is_start (boolean): To mark if the state is a start state.
         is_dead (boolean): To mark if the state is a dead state.
@@ -35,28 +35,30 @@ class State(object):
         self.transitions[letter] = state
 
 class StateMachine(object):
-    """ The state machine class which manages the states and their transisitons of the automata.
+    """
+    The state machine class which manages the states and their transisitons of the automata.
 
-    Attribute:
-        states (list of States): Collection of all registered.
+    Attributes:
+        states (dictionary): Collection of all registered.
         name (str): Name of the state machine.
     """
 
     def __init__(self, name):
         self.name = name
-        self.states = [] # Contains all the states in the machine.
-        self.state_names = []
+        self.states = {} # Contains all the states in the machine.
 
     def add_state(self, state_name, is_start=False, is_dead=False, is_accept=False):
         """
         This instantiates a state object and stores this in the 'states' list.
 
         Arguments:
-            Same as the __init__ function of the State class.
+            state_name (instance of FreeGroupElement or string): name of the new states.
+            is_start (boolean): To mark if the state is a start state.
+            is_dead (boolean): To mark if the state is a dead state.
+            is_accept (boolean): To mark if the state is an accept state.
         """
         new_state = State(state_name, is_start, is_dead, is_accept)
-        self.states.append(new_state)
-        self.state_names.append(new_state.name)
+        self.states[state_name] = new_state
 
     def __repr__(self):
         return "%s" % (self.name)
