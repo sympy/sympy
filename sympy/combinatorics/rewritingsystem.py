@@ -410,10 +410,7 @@ class RewritingSystem(object):
             word_array = [s for s in word.letter_form_elm]
             for i in range (0, len(word_array)):
                 next_state_name = current_state.transitions[word_array[i]]
-                next_state = None
-                for state in self.reduction_automaton.states:
-                    if state == next_state_name:
-                        next_state = self.reduction_automaton.states[state]
+                next_state = self.reduction_automaton.states[next_state_name]
                 if next_state.state_type == "dead":
                     subst = all_rules[next_state_name]
                     word = word.substituted_word(i - len(next_state_name) + 1, i+1, subst)
