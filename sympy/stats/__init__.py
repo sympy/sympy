@@ -72,3 +72,8 @@ __all__.extend(drv_types.__all__)
 from . import symbolic_probability
 from .symbolic_probability import Probability, Expectation, Variance, Covariance
 __all__.extend(symbolic_probability.__all__)
+
+from .import joint_rv
+from .joint_rv import (
+    Joint)
+__all__.extend(joint_rv.__all__)
