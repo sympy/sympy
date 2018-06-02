@@ -57,6 +57,10 @@ class JointPSpace(PSpace):
     def value(self):
         return RandomSymbol(self.symbol, self)
 
+    @property
+    def distribution(self):
+        return self.args[1]
+
     def where(self, condition):
         raise NotImplementedError()
 
@@ -151,9 +155,33 @@ class JointDistribution(Basic, NamedArgsMixin):
             rvs.remove(i)
         return expr
 
+    def __call__(self, *args):
+        return self.pdf(*args)
+
+
 def Joint(name, rvs, density=None):
     """
-    DOCUMENTATION
+    Create a discrete random variable with a Joint probability distribution.
+
+    The density of the distribution may/may not be provided by the user.
+
+    Parameters
+    ==========
+
+    rvs: a tuple/list of Random symbols or symbols to be used as the constituents
+    of the joint distribution.
+
+    density: The probability density function of the joint distribution.
+    This must be provided in case at least one of `rvs` is a `symbol`. The
+    `_check` method of JointDistribution checks if the CDF over the entire
+    domain evaluates to one, and raises an error if the condition evaluates
+    to `False`.
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
     """
     if isinstance(name, string_types):
         name = Symbol(name)

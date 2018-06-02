@@ -429,6 +429,7 @@ def pspace(expr):
     >>> pspace(2*X + 1) == X.pspace
     True
     """
+    from sympy.stats.joint_rv import JointPSpace
 
     expr = sympify(expr)
     rvs = random_symbols(expr)
@@ -437,6 +438,9 @@ def pspace(expr):
     # If only one space present
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
+    # If joint space is present
+    elif isinstance(expr.pspace, JointPSpace):
+        return expr.pspace
     # Otherwise make a product space
     return ProductPSpace(*[rv.pspace for rv in rvs])
 
@@ -661,6 +665,8 @@ class Density(Basic):
             return None
 
     def doit(self, evaluate=True, **kwargs):
+        from sympy.stats.joint_rv import JointPSpace
+
         expr, condition = self.expr, self.condition
         if condition is not None:
             # Recompute on new conditional expr
@@ -669,7 +675,7 @@ class Density(Basic):
             return Lambda(x, DiracDelta(x - expr))
         if (isinstance(expr, RandomSymbol) and
             hasattr(expr.pspace, 'distribution') and
-            isinstance(pspace(expr), SinglePSpace)):
+            isinstance(pspace(expr), (SinglePSpace, JointPSpace))):
             return expr.pspace.distribution
         result = pspace(expr).compute_density(expr, **kwargs)
 
