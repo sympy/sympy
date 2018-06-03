@@ -1,6 +1,6 @@
 from sympy import Symbol, symbols, S
 from sympy.physics.continuum_mechanics.beam import Beam
-from sympy.functions import SingularityFunction
+from sympy.functions import SingularityFunction, Piecewise
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
@@ -171,6 +171,26 @@ def test_Beam():
     raises(ValueError, lambda: b4.apply_load(-3, 0, -1, end=3))
     with raises(TypeError):
         b4.variable = 1
+
+
+def test_variable_second_moment():
+    E = Symbol('E')
+    I = Symbol('I')
+
+    I1 = [(1.5*I, 0, 0, 2),(I, 2, 0, 4)]
+    b = Beam(4, E, I1)
+    b.apply_load(-20, 0, -1)
+    b.apply_load(80, 0, -2)
+    b.apply_load(20, 4, -1)
+    b.bc_slope = [(0, 0)]
+    b.bc_deflection = [(0, 0)]
+
+    assert b.slope() == Piecewise((0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) +
+        10*SingularityFunction(x, 4, 2))/(E*I), x <= 2), (((80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2)
+        + 10*SingularityFunction(x, 4, 2))/I - 40.0/I)/E, x <= 4))
+    assert b.slope().subs(x, 4) == 120.0/(E*I)
+    assert b.slope().subs(x, 2) == 80.0/(E*I)
+    assert b.slope().deflection(x, 4) == 302.222222222222/(E*I)
 
 
 def test_point_cflexure():
