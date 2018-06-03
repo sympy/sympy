@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import sqrt
-from sympy.core import S, Symbol, I
+from sympy.core import S, Symbol, symbols, I
 from sympy.core.compatibility import range
 from sympy.discrete import fft, ifft, ntt, intt, fwht, ifwht
 from sympy.utilities.pytest import raises
@@ -78,10 +78,31 @@ def test_fwht_ifwht():
     assert ifwht(ls) == ifls
     assert fwht(ifls) == ls + [S.Zero]*3
 
-    x = Symbol('x')
+    x, y = symbols('x y')
 
     raises(TypeError, lambda: fwht(x))
-    raises(ValueError, lambda: ifwht([x, 2*x, 3*x**2, 4*x**3]))
+
+    ls = [x, 2*x, 3*x**2, 4*x**3]
+    ifls = [x**3 + 3*x**2/4 + 3*x/4,
+        -x**3 + 3*x**2/4 - x/4,
+        -x**3 - 3*x**2/4 + 3*x/4,
+        x**3 - 3*x**2/4 - x/4]
+
+    assert ifwht(ls) == ifls
+    assert fwht(ifls) == ls
+
+    ls = [x, y, x**2, y**2, x*y]
+    fls = [x**2 + x*y + x + y**2 + y,
+        x**2 + x*y + x - y**2 - y,
+        -x**2 + x*y + x - y**2 + y,
+        -x**2 + x*y + x + y**2 - y,
+        x**2 - x*y + x + y**2 + y,
+        x**2 - x*y + x - y**2 - y,
+        -x**2 - x*y + x - y**2 + y,
+        -x**2 - x*y + x + y**2 - y]
+
+    assert fwht(ls) == fls
+    assert ifwht(fls) == ls + [S.Zero]*3
 
     ls = list(range(6))
 

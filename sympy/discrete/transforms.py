@@ -249,13 +249,10 @@ def _walsh_hadamard_transform(seq, inverse=False):
     """Utility function for the Walsh Hadamard transform (WHT)"""
 
     if not iterable(seq):
-        raise TypeError("Expected a sequence of numeric coefficients " +
+        raise TypeError("Expected a sequence of coefficients " +
                         "for Walsh Hadamard Transform")
 
     a = [sympify(arg) for arg in seq]
-    if any(x.has(Symbol) for x in a):
-        raise ValueError("Expected non-symbolic coefficients")
-
     n = len(a)
     if n < 2:
         return a
@@ -300,7 +297,6 @@ def fwht(seq):
     [2, 0, 4, 0, 3, 10, 0, 0]
     >>> fwht(_)
     [19, -1, 11, -9, -7, 13, -15, 5]
-
 
     References
     ==========
