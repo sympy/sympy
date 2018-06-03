@@ -1,6 +1,7 @@
 from distutils.version import LooseVersion as V
 from itertools import product
 import math
+import inspect
 
 import mpmath
 from sympy.utilities.pytest import XFAIL, raises
@@ -840,6 +841,15 @@ def test_lambdify_dummy_arg():
     d2 = Dummy('x')
     f2 = lambdify(d2, d2 + 1)
     assert f2(2) == 3
+    f3 = lambdify([[d2]], d2 + 1)
+    assert f3([2]) == 3
+
+def test_lambdify_mixed_symbol_dummy_args():
+    d = Dummy()
+    # Contrived example of name clash
+    dsym = symbols(str(d))
+    f = lambdify([d, dsym], d - dsym)
+    assert f(4, 1) == 3
 
 def test_numpy_array_arg():
     # Test for issue 14655 (numpy part)
@@ -861,3 +871,9 @@ def test_tensorflow_array_arg():
 
     s = tensorflow.Session()
     assert s.run(fcall) == 5
+
+def test_lambdify_inspect():
+    f = lambdify(x, x**2)
+    # Test that inspect.getsource works but don't hard-code implementation
+    # details
+    assert 'x**2' in inspect.getsource(f)
