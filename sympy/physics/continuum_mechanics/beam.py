@@ -9,7 +9,7 @@ from __future__ import print_function, division
 from sympy.core import S, Symbol, diff
 from sympy.solvers import linsolve
 from sympy.printing import sstr
-from sympy.functions import SingularityFunction
+from sympy.functions import SingularityFunction, Piecewise
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
@@ -580,6 +580,15 @@ class Beam(object):
         if not self._boundary_conditions['slope']:
             return diff(self.deflection(), x)
 
+        if isinstance(I, list):
+            conditions = []
+            prev_slope = 0
+            for i in range(len(I)):
+                slope_value = integrate(self.bending_moment()/I[i][0], (x, I[i][1], x))
+                conditions.append(((prev_slope + slope_value)/E, x <= I[i][3]))
+                prev_slope = slope_value.subs(x, I[i][3])
+            return Piecewise(*conditions)
+
         C3 = Symbol('C3')
         slope_curve = integrate(self.bending_moment(), x) + C3
 
@@ -643,6 +652,16 @@ class Beam(object):
             constants = list(linsolve(bc_eqs, (C3, C4)))
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
             return S(1)/(E*I)*deflection_curve
+
+        if isinstance(I, list):
+            conditions = []
+            prev_def = 0
+            for i in range(len(I)):
+                slope_value = integrate(self.bending_moment()/I[i][0], (x, I[i][1], x))
+                deflection_value = integrate(slope_value, (x, I[i][1], x))
+                conditions.append(((prev_def + deflection_value)/E, x <= I[i][3]))
+                prev_def = deflection_value.subs(x, I[i][3])
+            return Piecewise(*conditions)
 
         C4 = Symbol('C4')
         deflection_curve = integrate((E*I)*self.slope(), x) + C4
