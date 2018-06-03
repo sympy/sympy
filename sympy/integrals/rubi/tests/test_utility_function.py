@@ -19,7 +19,7 @@ from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, co
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy import (I, E, pi, hyper, Add, Wild, simplify, polylog, Symbol, exp,
     zoo, gamma, polylog, oo)
-from sympy import Integral
+from sympy import Integral, nsimplify
 A, B, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B a b c d e f g h y z m n p q u v w F', real=True, imaginary=False)
 x = Symbol('x')
 
@@ -478,6 +478,8 @@ def test_PolynomialQ():
     assert not PolynomialQ(sqrt(x), x)
 
 def test_PolyQ():
+    assert PolyQ(-2*a*d**3*e**2 + x**6*(a*e**5 - b*d*e**4 + c*d**2*e**3)\
+        + x**4*(-2*a*d*e**4 + 2*b*d**2*e**3 - 2*c*d**3*e**2) + x**2*(2*a*d**2*e**3 - 2*b*d**3*e**2), x)
     assert not PolyQ(1/sqrt(a + b*x**2 - c*x**4), x**2)
     assert PolyQ(x, x, 1)
     assert PolyQ(x**2, x, 2)
@@ -590,6 +592,7 @@ def test_ExpandCleanup():
     assert ExpandCleanup(b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
 
 def test_AlgebraicFunctionQ():
+    assert not AlgebraicFunctionQ(1/(a + c*x**(2*n)), x)
     assert AlgebraicFunctionQ(a, x) == True
     assert AlgebraicFunctionQ(a*b, x) == True
     assert AlgebraicFunctionQ(x**2, x) == True
@@ -1107,6 +1110,8 @@ def test_NormalizeIntegrand():
     assert NormalizeIntegrand(b**2/(a**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2)
 
 def test_NormalizeIntegrandAux():
+    v = (6*A*a*c - 2*A*b**2 + B*a*b)/(a*x**2) - (6*A*a**2*c**2 - 10*A*a*b**2*c - 8*A*a*b*c**2*x + 2*A*b**4 + 2*A*b**3*c*x + 5*B*a**2*b*c + 4*B*a**2*c**2*x - B*a*b**3 - B*a*b**2*c*x)/(a**2*(a + b*x + c*x**2)) + (-2*A*b + B*a)*(4*a*c - b**2)/(a**2*x)
+    assert NormalizeIntegrandAux(v, x) == (6*A*a*c - 2*A*b**2 + B*a*b)/(a*x**2) - (6*A*a**2*c**2 - 10*A*a*b**2*c + 2*A*b**4 + 5*B*a**2*b*c - B*a*b**3 + x*(-8*A*a*b*c**2 + 2*A*b**3*c + 4*B*a**2*c**2 - B*a*b**2*c))/(a**2*(a + b*x + c*x**2)) + (-2*A*b + B*a)*(4*a*c - b**2)/(a**2*x)
     assert NormalizeIntegrandAux((x**2 + 3*x)**2, x) == x**2*(x + 3)**2
     assert NormalizeIntegrandAux((x**2 + 8), x) == x**2 + 8
 
@@ -1147,7 +1152,18 @@ def test_togetherSimplify():
     assert TogetherSimplify(-6*x/5 + (5*x + 3)**2/25 - 9/25) == x**2
 
 def test_ExpandToSum():
-    assert ExpandToSum(S(x**2 + 3*x + 3), x**3 + 3, x) == x**3*(x**2 + 3*x + 3) + 3*x**2 + 9*x + 9
+
+    qq = 6
+    Pqq = e**3
+    Pq = (d+e*x**2)**3
+    aa = 2
+    nn = 2
+    cc = 1
+    pp = -1/2
+    bb = 3
+    assert nsimplify(ExpandToSum(Pq - Pqq*x**qq - Pqq*(aa*x**(-2*nn + qq)*(-2*nn + qq + 1) + bb*x**(-nn + qq)*(nn*(pp - 1) + qq + 1))/(cc*(2*nn*pp + qq + 1)), x) - \
+        (d**3 + x**4*(3*d*e**2 - 2.4*e**3) + x**2*(3*d**2*e - 1.2*e**3))) == 0
+    assert ExpandToSum(x**2 + 3*x + 3, x**3 + 3, x) == x**3*(x**2 + 3*x + 3) + 3*x**2 + 9*x + 9
     assert ExpandToSum(x**3 + 6, x) == x**3 + 6
     assert ExpandToSum(S(x**2 + 3*x + 3)*3, x) == 3*x**2 + 9*x + 9
     assert ExpandToSum((a + b*x), x) == a + b*x
@@ -1732,6 +1748,10 @@ def test_PureFunctionOfCothQ():
     assert not PureFunctionOfCothQ(sin(v), v, x)
 
 def test_ExpandIntegrand():
+    assert ExpandIntegrand(sqrt(a + b*x**S(2) + c*x**S(4)), (f*x)**(S(3)/2)*(d + e*x**S(2)), x) == \
+        d*(f*x)**(3/2)*sqrt(a + b*x**2 + c*x**4) + e*(f*x)**(7/2)*sqrt(a + b*x**2 + c*x**4)/f**2
+    assert ExpandIntegrand((6*A*a*c - 2*A*b**2 + B*a*b - 2*c*x*(A*b - 2*B*a))/(x**2*(a + b*x + c*x**2)), x) == \
+        (6*A*a*c - 2*A*b**2 + B*a*b)/(a*x**2) + (-6*A*a**2*c**2 + 10*A*a*b**2*c - 2*A*b**4 - 5*B*a**2*b*c + B*a*b**3 + x*(8*A*a*b*c**2 - 2*A*b**3*c - 4*B*a**2*c**2 + B*a*b**2*c))/(a**2*(a + b*x + c*x**2)) + (-2*A*b + B*a)*(4*a*c - b**2)/(a**2*x)
     assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
     assert ExpandIntegrand((x)*(a + b*x)**2*f**(e*(c + d*x)**n), x) == a**2*f**(e*(c + d*x)**n)*x + 2*a*b*f**(e*(c + d*x)**n)*x**2 + b**2*f**(e*(c + d*x)**n)*x**3
     assert ExpandIntegrand(sin(x)**3*(a + b*(1/sin(x)))**2, x) == a**2*sin(x)**3 + 2*a*b*sin(x)**2 + b**2*sin(x)
@@ -1742,7 +1762,7 @@ def test_ExpandIntegrand():
     assert ExpandIntegrand(x*(e + f*x)**2*F**(b*(c + d*x)), x) == -F**(b*(c + d*x))*e*(e + f*x)**2/f + F**(b*(c + d*x))*(e + f*x)**3/f
     assert ExpandIntegrand(x**m*(e + f*x)**2*F**(b*(c + d*x)**n), x) == F**(b*(c + d*x)**n)*e**2*x**m + 2*F**(b*(c + d*x)**n)*e*f*x*x**m + F**(b*(c + d*x)**n)*f**2*x**2*x**m
     assert simplify(ExpandIntegrand((S(1) - S(1)*x**S(2))**(-S(3)), x) - (-S(3)/(8*(x**2 - 1)) + S(3)/(16*(x + 1)**2) + S(1)/(S(8)*(x + 1)**3) + S(3)/(S(16)*(x - 1)**2) - S(1)/(S(8)*(x - 1)**3))) == 0
-    assert ExpandIntegrand(-S(1), x, 1/((-q - x)**3*(q - x)**3)) == 1/(8*q**3*(q + x)**3) - 1/(8*q**3*(-q + x)**3) - 3/(8*q**4*(-q**2 + x**2)) + 3/(16*q**4*(q + x)**2) + 3/(16*q**4*(-q + x)**2)
+    assert ExpandIntegrand(-S(1), 1/((-q - x)**3*(q - x)**3), x) == 1/(8*q**3*(q + x)**3) - 1/(8*q**3*(-q + x)**3) - 3/(8*q**4*(-q**2 + x**2)) + 3/(16*q**4*(q + x)**2) + 3/(16*q**4*(-q + x)**2)
     assert ExpandIntegrand((1 + 1*x)**(3)/(2 + 1*x), x) == x**2 + x + 1 - 1/(x + 2)
     assert ExpandIntegrand((c + d*x**1 + e*x**2)/(1 - x**3), x) == (c - (-1)**(S(1)/3)*d + (-1)**(S(2)/3)*e)/(-3*(-1)**(S(2)/3)*x + 3) + (c + (-1)**(S(2)/3)*d - (-1)**(S(1)/3)*e)/(3*(-1)**(S(1)/3)*x + 3) + (c + d + e)/(-3*x + 3)
     assert ExpandIntegrand((c + d*x**1 + e*x**2 + f*x**3)/(1 - x**4), x) == (c + I*d - e - I*f)/(4*I*x + 4) + (c - I*d - e + I*f)/(-4*I*x + 4) + (c - d + e - f)/(4*x + 4) + (c + d + e + f)/(-4*x + 4)

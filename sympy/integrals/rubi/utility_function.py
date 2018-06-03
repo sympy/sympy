@@ -18,7 +18,7 @@ from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, er
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Integer, Float,
-    Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E, Function,
+    Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E, Function, collect,
     expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr)
 from mpmath import appellf1
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
@@ -918,6 +918,7 @@ def Exponent(expr, x, *k):
         if S(expr).is_number or (not expr.has(x)):
             return [0]
         if expr.is_Add:
+            expr = collect(expr, x)
             lst = []
             k = 1
             for t in expr.args:
@@ -1133,11 +1134,28 @@ def TrinomialParts(u, x):
 
 def PolyQ(u, x, n=None):
     # returns True iff u is a polynomial of degree n.
+    if ListQ(u):
+        return all(PolyQ(i, x) for i in u)
+
     if n==None:
-        return u.is_polynomial(x) and Coefficient(u, x) != 0
-    elif u.is_polynomial(x):
-        return Exponent(u, x) == n
-    return False
+        if u == x:
+            return False
+        elif isinstance(x, Pow):
+            n = x.exp
+            x_base = x.base
+            if FreeQ(n, x_base):
+                if PositiveIntegerQ(n):
+                    return PolyQ(u, x_base) and (u.is_polynomial(x) or Together(u).is_polynomial(x))
+                elif AtomQ(n):
+                    return PolynomialQ(u, x) and FreeQ(CoefficientList(u, x), x_base)
+                else:
+                    return False
+
+        return u.is_polynomial(x) or u.is_polynomial(Together(x))
+
+    else:
+        return u.is_polynomial(x) and Coefficient(u, x, n) != 0 and Exponent(u, x) == n
+
 
 def EvenQ(u):
     # gives True if expr is an even integer, and False otherwise.
@@ -1642,16 +1660,17 @@ def AlgebraicFunctionQ(u, x, flag=False):
             return AlgebraicFunctionQ(Rest(u), x, flag)
         else:
             return False
+
     elif AtomQ(u) or FreeQ(u, x):
         return True
-    elif PowerQ(u):
-        if RationalQ(u.args[1]) | flag & FreeQ(u.args[1], x):
-            return AlgebraicFunctionQ(u.args[1], x, flag)
+    elif PowerQ(u) and (RationalQ(u.args[1]) | flag & FreeQ(u.args[1], x)):
+            return AlgebraicFunctionQ(u.args[0], x, flag)
     elif ProductQ(u) | SumQ(u):
         for i in u.args:
             if not AlgebraicFunctionQ(i, x, flag):
                 return False
         return True
+
     return False
 
 def Coeff(expr, form, n=1):
@@ -2059,6 +2078,7 @@ def RationalFunctionExpand(expr, x):
 
 def ExpandIntegrand(expr, x, extra=None):
     if extra:
+        extra, x = x, extra
         w = ExpandIntegrand(extra, x)
         r = NonfreeTerms(w, x)
         if SumQ(r):
@@ -2085,7 +2105,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             u, a, b, m, f, e, c, d, n = tuple([match[i] for i in keys])
             if PolynomialQ(u, x):
-                v = ExpandIntegrand(u*(a + b*x)**m)
+                v = ExpandIntegrand(u*(a + b*x)**m, x)
                 if SumQ(v):
                     return Add(*[f**(e*(c + d*x)**n)*i for i in v.args])
 
@@ -2201,7 +2221,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             u, a, b, m, c, d, e, n, p = tuple([match[i] for i in keys])
             if PolynomialQ(u, x):
-                return ExpandIntegrand(Log(c*(d + e*x**n)**p), x, u*(a + b*x)**m)
+                return ExpandIntegrand(Log(c*(d + e*x**n)**p), u*(a + b*x)**m, x)
 
     c_ = Wild('c', exclude=[x])
     d_ = Wild('d', exclude=[x, 0])
@@ -2217,7 +2237,7 @@ def ExpandIntegrand(expr, x, extra=None):
             u, f, e, c, d, n = tuple([match[i] for i in keys])
             if PolynomialQ(u,x):
                 if EqQ(n, 1):
-                    return ExpandIntegrand(f**(e*(c + d*x)**n), x, u)
+                    return ExpandIntegrand(f**(e*(c + d*x)**n), u, x)
                 else:
                     return ExpandLinearProduct(f**(e*(c + d*x)**n), u, c, d, x)
 
@@ -2254,7 +2274,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             a, b, u, n, c, j, p = tuple([match[i] for i in keys])
             if IntegerQ(n) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and NonzeroQ(b**2 - 4*a*c):
-                ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, (b - q + 2*c*x)**p*(b + q + 2*c*x)**p), {q: Rt(b**2-4*a*c, S(2)), x: u**n})
+                ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), (b - q + 2*c*x)**p*(b + q + 2*c*x)**p, x), {q: Rt(b**2-4*a*c, S(2)), x: u**n})
 
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x, 0])
@@ -2271,7 +2291,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             u, m, a, b, n, c, j, p = tuple([match[i] for i in keys])
             if IntegersQ(m, n, j) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and 0<m<2*n and Not(m == n and p == -1) and NonzeroQ(b**2 - 4*a*c):
-                return ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x, x**m*(b - q + 2*c*x**n)**p*(b + q+ 2*c*x**n)**p), {q: Rt(b**2 - 4*a*c, S(2)),x: u})
+                return ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x**m*(b - q + 2*c*x**n)**p*(b + q+ 2*c*x**n)**p, x), {q: Rt(b**2 - 4*a*c, S(2)),x: u})
 
     a_ = Wild('a', exclude=[x, 0])
     c_ = Wild('c', exclude=[x, 0])
@@ -2286,7 +2306,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             a, c, u, n, p = tuple([match[i] for i in keys])
             if IntegerQ(n/2) and NegativeIntegerQ(p):
-                return ReplaceAll(ExpandIntegrand(S(1)/c**p, x, (-q + c*x)**p*(q + c*x)**p), {q: Rt(-a*c, S(2)),x: u**(n/2)})
+                return ReplaceAll(ExpandIntegrand(S(1)/c**p, (-q + c*x)**p*(q + c*x)**p, x), {q: Rt(-a*c, S(2)),x: u**(n/2)})
 
     u_ = Wild('u', exclude=[0, 1])
     m_ = Wild('m', exclude=[x, 0])
@@ -2301,7 +2321,7 @@ def ExpandIntegrand(expr, x, extra=None):
         if len(keys) == len(match):
             u, m, a, c, n, p = tuple([match[i] for i in keys])
             if IntegersQ(m, n/2) and NegativeIntegerQ(p) and 0 < m < n and (m != n/2):
-                return ReplaceAll(ExpandIntegrand(S(1)/c**p, x, x**m*(-q + c*x**(n/2))**p*(q + c*x**(n/2))**p),{q: Rt(-a*c, S(2)), x: u})
+                return ReplaceAll(ExpandIntegrand(S(1)/c**p, x**m*(-q + c*x**(n/2))**p*(q + c*x**(n/2))**p, x),{q: Rt(-a*c, S(2)), x: u})
 
     u_ = Wild('u', exclude=[0])
     a_ = Wild('a', exclude=[x, 0])
@@ -2627,7 +2647,7 @@ def ExpandIntegrand(expr, x, extra=None):
                 if PolynomialQ(u, x) and FreeQ(v/x, x):
                     return ExpandToSum((v)**p, u, x)
                 else:
-                    return ExpandIntegrand(NormalizeIntegrand(v**p, x), x, u)
+                    return ExpandIntegrand(NormalizeIntegrand(v**p, x), u, x)
 
     u_ = Wild('u', exclude=[0, 1])
     v_ = Wild('v', exclude=[0, 1])
@@ -2769,7 +2789,10 @@ def SumSimplerQ(u, v):
 
 def BinomialDegree(u, x):
     # if u is a binomial. BinomialDegree[u,x] returns the degree of x in u.
-    return BinomialParts(u, x)[2]
+    bp = BinomialParts(u, x)
+    if bp == False:
+        return bp
+    return bp[2]
 
 def TrinomialDegree(u, x):
     # If u is equivalent to a trinomial of the form a + b*x^n + c*x^(2*n) where n!=0, b!=0 and c!=0, TrinomialDegree[u,x] returns n
@@ -2875,10 +2898,13 @@ def MinimumMonomialExponent(u, x):
     >>> MinimumMonomialExponent(x**2 + 5*x**2 + 1, x)
     0
     """
-    lst = []
+
+    n =MonomialExponent(First(u), x)
     for i in u.args:
-        lst = lst + [MonomialExponent(i, x)]
-    return min(lst)
+        if PosQ(n - MonomialExponent(i, x)):
+            n = MonomialExponent(i, x)
+
+    return n
 
 def MonomialExponent(u, x):
     # u is a monomial. MonomialExponent(u, x) returns the exponent of x in u
@@ -3951,7 +3977,7 @@ def ExpandToSum(u, *x):
     if len(x) == 1:
         x = x[0]
         expr = 0
-        if S(u).is_polynomial(x):
+        if PolyQ(S(u), x):
             for t in Exponent(u, x, List):
                 expr += Coeff(u, x, t)*x**t
             return expr
@@ -5877,28 +5903,28 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
     if _numerical:
         args = res.free_symbols
         rand_val = []
-        for i in range(0, 5): # check at 5 random points
-            rand_x = randint(1, 40)
-            substitutions = dict((s, rand_x) for s in args)
-            rand_val.append(float(abs(res.subs(substitutions).n())))
         try:
+            for i in range(0, 5): # check at 5 random points
+                rand_x = randint(1, 40)
+                substitutions = dict((s, rand_x) for s in args)
+                rand_val.append(float(abs(res.subs(substitutions).n())))
+            
             if stdev(rand_val) < Pow(10, -3):
                 return True
-            # return False
         except:
             pass
             # return False
-    
+
     if _numerical:
         dres = res.diff(x)
 
         args = dres.free_symbols
         rand_val = []
-        for i in range(0, 5): # check at 5 random points
-            rand_x = randint(1, 40)
-            substitutions = dict((s, rand_x) for s in args)
-            rand_val.append(float(abs(dres.subs(substitutions).n())))
         try:
+            for i in range(0, 5): # check at 5 random points
+                rand_x = randint(1, 40)
+                substitutions = dict((s, rand_x) for s in args)
+                rand_val.append(float(abs(dres.subs(substitutions).n())))
             if stdev(rand_val) < Pow(10, -3):
                 return True
             # return False
@@ -6781,7 +6807,7 @@ def LogIntegral(z):
     return Integral(1/log(tx),(tx, 0, z))
 
 def Sum_doit(exp, args):
-    return Sum(exp, args).doit
+    return Sum(exp, args).doit()
 
 def PolynomialQuotient(p, q, x):
     p = poly(p, x)
