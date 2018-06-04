@@ -1,6 +1,7 @@
 """
 Convolution (using FFT, NTT),
-Arithmetic Convolution (bitwise XOR, AND, OR), Subset Convolution
+Arithmetic Convolution (bitwise XOR, AND, OR),
+Subset Convolution
 """
 from __future__ import print_function, division
 
@@ -126,9 +127,7 @@ def convolution_fft(a, b, dps=None):
     b += [S.Zero]*(n - len(b))
 
     a, b = fft(a, dps), fft(b, dps)
-    for i in range(n):
-        a[i] = expand_mul(a[i]*b[i])
-
+    a = [expand_mul(x*y) for x, y in zip(a, b)]
     a = ifft(a, dps)[:m]
 
     return a
@@ -183,10 +182,8 @@ def convolution_ntt(a, b, prime):
     a += [0]*(n - len(a))
     b += [0]*(n - len(b))
 
-    a, b = ntt(a, prime), ntt(b, prime)
-    for i in range(n):
-        a[i] = a[i]*b[i] % p
-
+    a, b = ntt(a, p), ntt(b, p)
+    a = [x*y % p for x, y in zip(a, b)]
     a = intt(a, p)[:m]
 
     return a

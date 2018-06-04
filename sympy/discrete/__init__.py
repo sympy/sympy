@@ -7,5 +7,5 @@ Recurrence Evaluation - reval_hcc
 """
 
 
-from .transforms import (fft, ifft, ntt, intt)
+from .transforms import (fft, ifft, ntt, intt, fwht, ifwht)
 from .convolution import convolution
