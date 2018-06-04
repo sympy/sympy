@@ -2072,7 +2072,7 @@ def _legendre(a, p):
     legendre symbol (a / p) (int)
 
     """
-    sig = pow(a%p, (p - 1)//2) % p
+    sig = pow(a, (p - 1)//2, p)
     if sig == 1:
         return 1
     elif sig == 0:
