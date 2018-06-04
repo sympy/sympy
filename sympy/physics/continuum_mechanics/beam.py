@@ -580,13 +580,17 @@ class Beam(object):
         if not self._boundary_conditions['slope']:
             return diff(self.deflection(), x)
 
-        if isinstance(I, list):
+        if isinstance(I, Piecewise):
+            args = I.args
             conditions = []
             prev_slope = 0
-            for i in range(len(I)):
-                slope_value = integrate(self.bending_moment()/I[i][0], (x, I[i][1], x))
-                conditions.append(((prev_slope + slope_value)/E, x <= I[i][3]))
-                prev_slope = slope_value.subs(x, I[i][3])
+            prev_end = 0
+            for i in range(len(args)):
+                if i != 0:
+                    prev_end = args[i-1][1].args[1]
+                slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                conditions.append((prev_slope + slope_value, args[i][1]))
+                prev_slope = slope_value.subs(x, args[i][1].args[1])
             return Piecewise(*conditions)
 
         C3 = Symbol('C3')
@@ -637,10 +641,34 @@ class Beam(object):
         E = self.elastic_modulus
         I = self.second_moment
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
+            if isinstance(I, Piecewise):
+                args = I.args
+                conditions = []
+                prev_def = 0
+                prev_end = 0
+                for i in range(len(args)):
+                    if i != 0:
+                        prev_end = args[i-1][1].args[1]
+                    deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
+                    conditions.append(((prev_def + deflection_value), args[i][1]))
+                    prev_def = deflection_value.subs(x, args[i][1].args[1])
+                return Piecewise(*conditions)
             return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x)
         elif not self._boundary_conditions['deflection']:
             return integrate(self.slope(), x)
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
+            if isinstance(I, Piecewise):
+                args = I.args
+                conditions = []
+                prev_def = 0
+                prev_end = 0
+                for i in range(len(args)):
+                    if i != 0:
+                        prev_end = args[i-1][1].args[1]
+                    deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
+                    conditions.append(((prev_def + deflection_value), args[i][1]))
+                    prev_def = deflection_value.subs(x, args[i][1].args[1])
+                return Piecewise(*conditions)
             C3 = Symbol('C3')
             C4 = Symbol('C4')
             slope_curve = integrate(self.bending_moment(), x) + C3
@@ -653,14 +681,17 @@ class Beam(object):
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
             return S(1)/(E*I)*deflection_curve
 
-        if isinstance(I, list):
+        if isinstance(I, Piecewise):
+            args = I.args
             conditions = []
             prev_def = 0
-            for i in range(len(I)):
-                slope_value = integrate(self.bending_moment()/I[i][0], (x, I[i][1], x))
-                deflection_value = integrate(slope_value, (x, I[i][1], x))
-                conditions.append(((prev_def + deflection_value)/E, x <= I[i][3]))
-                prev_def = deflection_value.subs(x, I[i][3])
+            prev_end = 0
+            for i in range(len(args)):
+                if i != 0:
+                    prev_end = args[i-1][1].args[1]
+                deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
+                conditions.append(((prev_def + deflection_value), args[i][1]))
+                prev_def = deflection_value.subs(x, args[i][1].args[1])
             return Piecewise(*conditions)
 
         C4 = Symbol('C4')
