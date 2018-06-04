@@ -178,7 +178,7 @@ class DiscretePSpace(PSpace):
         conditional_domain = conditional_domain.intersect(self.domain.set)
         return SingleDiscreteDomain(rvs[0].symbol, conditional_domain)
 
-    def probability(self, condition, evaluate = True):
+    def probability(self, condition):
         complement = isinstance(condition, Ne)
         if complement:
             condition = Eq(condition.args[0], condition.args[1])
@@ -197,8 +197,8 @@ class DiscretePSpace(PSpace):
                 dens = DiscreteDistributionHandmade(dens)
             z = Dummy('z', real = True)
             space = SingleDiscretePSpace(z, dens)
-            prob = space.probability(condition.__class__(space.value, 0), evaluate)
-        if (prob == None) or (isinstance(prob, (Sum, Probability)) and not evaluate):
+            prob = space.probability(condition.__class__(space.value, 0))
+        if (prob == None):
             prob = Probability(condition)
         return prob if not complement else S.One - prob
 

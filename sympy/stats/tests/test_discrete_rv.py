@@ -92,9 +92,12 @@ def test_conditional():
 def test_product_spaces():
     X1 = Geometric('X1', S(1)/2)
     X2 = Geometric('X2', S(1)/3)
+    from sympy import symbols
+    n = symbols('n')
     oo = S.Infinity
-    assert P(X1 + X2 < 3, evaluate=False) == Probability(X1 + X2 < 3)
-    assert P(X1 + X2 > 3, evaluate=False) == Probability(X1 + X2 > 3)
-    assert P(Eq(X1 + X2, 3), evaluate=False) == Probability(Eq(X1 + X2, 3))
+    assert str(P(X1 + X2 < 3, evaluate=False) == Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6,
+    (-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1)))
+    assert str(P(X1 + X2 > 3) == Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6,
+        (-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, 1, oo)))
     assert str(P(Eq(X1 + X2, 3)) == Sum(
         Piecewise((2**(X2 - 2)*(S(2)/3)**(X2 - 1)/6, X2 <= 2), (0, True)), (X2, 1, oo)))

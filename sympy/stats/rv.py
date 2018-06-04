@@ -650,7 +650,7 @@ def probability(condition, given_condition=None, numsamples=None,
         return probability(given(condition, given_condition, **kwargs), **kwargs)
 
     # Otherwise pass work off to the ProbabilitySpace
-    result = pspace(condition).probability(condition, evaluate, **kwargs)
+    result = pspace(condition).probability(condition, **kwargs)
     if evaluate and hasattr(result, 'doit'):
         return result.doit()
     else:
