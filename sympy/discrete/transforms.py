@@ -23,7 +23,7 @@ def _fourier_transform(seq, dps, inverse=False):
     """Utility function for the Discrete Fourier Transform (DFT)"""
 
     if not iterable(seq):
-        raise TypeError("Expected a sequence of numeric coefficients " +
+        raise TypeError("Expected a sequence of numeric coefficients "
                         "for Fourier Transform")
 
     a = [sympify(arg) for arg in seq]
@@ -135,12 +135,12 @@ def _number_theoretic_transform(seq, prime, inverse=False):
     """Utility function for the Number Theoretic transform (NTT)"""
 
     if not iterable(seq):
-        raise TypeError("Expected a sequence of integer coefficients " +
+        raise TypeError("Expected a sequence of integer coefficients "
                         "for Number Theoretic Transform")
 
     p = as_int(prime)
     if isprime(p) == False:
-        raise ValueError("Expected prime modulus for " +
+        raise ValueError("Expected prime modulus for "
                         "Number Theoretic Transform")
 
     a = [as_int(x) % p for x in seq]
@@ -249,7 +249,7 @@ def _walsh_hadamard_transform(seq, inverse=False):
     """Utility function for the Walsh Hadamard transform (WHT)"""
 
     if not iterable(seq):
-        raise TypeError("Expected a sequence of coefficients " +
+        raise TypeError("Expected a sequence of coefficients "
                         "for Walsh Hadamard Transform")
 
     a = [sympify(arg) for arg in seq]
