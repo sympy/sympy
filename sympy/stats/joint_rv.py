@@ -13,15 +13,15 @@ from __future__ import print_function, division
 
 __all__ = ['Joint']
 
-from sympy import Basic, Eq, Mul, Lambda
+from sympy import Basic, Eq, Mul, Lambda, S
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.compatibility import string_types
+from sympy.concrete.summations import summation
+from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (PSpace, RandomDomain, random_symbols,
         NamedArgsMixin, RandomSymbol, density)
-from sympy.core.symbol import symbols, Dummy, Symbol
 from sympy.utilities.misc import filldedent
-from sympy.sets.sets import FiniteSet
 from sympy.sets.contains import Contains
-from sympy.integrals.integrals import Integral, integrate
 
 class JointDomain(RandomDomain):
     """
@@ -71,8 +71,7 @@ class JointPSpace(PSpace):
         raise NotImplementedError()
 
     def probability(self, condition):
-        rvs = random_symbols(condition)
-
+        raise NotImplementedError()
 
 
 class JointDistribution(Basic, NamedArgsMixin):
@@ -98,7 +97,7 @@ class JointDistribution(Basic, NamedArgsMixin):
             if isinstance(sym, RandomSymbol):
                 assert Eq(density(sym)(x), self.marginal_density(sym)(x)) != False
         cdf_lim = {i:S.Infinity for i in self.symbols}
-        if (cdf(cdf_lim) == 1) == False:
+        if (self.cdf(cdf_lim) == 1) == False:
             raise ValueError("The density entered is invalid for the given variables")
 
     @property
@@ -130,7 +129,7 @@ class JointDistribution(Basic, NamedArgsMixin):
                 density = Integral(expr, (rvs[i], _set[i].inf,
                     other[rvs[i]]))
             elif rvs[i].is_Discrete:
-                density = Summation(expr, (rvs[i], _set[i].inf,
+                density = summation(expr, (rvs[i], _set[i].inf,
                     other[rvs[i]]))
         return density
 
