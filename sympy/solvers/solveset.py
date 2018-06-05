@@ -989,17 +989,38 @@ def _expo_solver(f):
     """
     Helper function for solving exponential equations.
 
-    This function solves exponential equation by using logarithms.
-    Exponents are converted to a more general form of logs which can be
-    solved by solveset.
-    It deals with equations of type `a*f(x) + b*g(x)`, where f(x) and g(x)
-    are power terms.
+    Exponential equations are the type of equations which includes a
+    variable located in the exponent.
+    For example `5**(2*x + 3) - 5**(3*x - 1)`.
+    Equations having two arguments (like the one above) or that can be
+    reduced to two argument form can be handled by this helper, other
+    variants require numerical methods to evaluate.
 
-    eg: 3**(2*x) - 2**(x + 3) can be transformed to a better log form,
-    2*x*log(3) - (x+3)*log(2), which is easily solvable.
+    The helper takes the equation as the input, tries to reduce the
+    equation to log form (if possible) and returns the modified
+    equation.
+
+    * Proof of corectness of the method
+
+    The logarithm is actually the inverse function to exponentiation.
+    The defining relation between exponentiation and logarithm is:
+
+        log(x, b) = y if b**y = x
+
+    Therefore if we are given an equation with exponent terms, we can
+    convert every term to its corresponding log form. This is achieved by
+    taking logarithms and expanding them using log identities so that the
+    equations can be easily handled by `solveset`.
+    For example: 3**(2*x) = 2**(x + 3). Taking log both sides will reduce
+    the equation to `2*x*log(3) - (x+3)*log(2)`. This is easily handled by
+    solveset.
     """
 
-    a, b = ordered(f.args)
+    try:
+        a, b = ordered(f.args)
+    except TypeError:
+        raise ValueError("Equations with more than two arguments are not\
+            supported")
 
     lhs = a
     rhs = -b
@@ -1013,12 +1034,15 @@ def _expo_solver(f):
 def _check_expo(f, symbol):
     """
     Helper to check whether an equation is exponential or not.
+
     Returns True if it is of exponential type otherwise False.
+
     This function simply determines whether any of the symbol dependent
     term contains power. If so there is a chance that the equation is of
-    exponential type, hence returns True otherwise false. It relies on the
-    fact that the eponential equations are of two argument form as
-    `a*f(x) + b*g(x)`, where f(x) and g(x) are power terms.
+    exponential type, hence returns True otherwise False. It relies on
+    the fact that the exponential equations are of two argument form as
+    `a*f(x) + b*g(x)`, where f(x) and g(x) are power terms, for any other
+    form False is returned.
 
     Examples
     ========
@@ -1176,13 +1200,17 @@ def transolve(f, symbol, domain, **flags):
     `transolve` is designed in such a way that it becomes an easy task to
     add a new class of equation solver.
 
-    Determine the general form of the class of the equation to place the
-    invocation of the identification helper to an appropriate place, for
-    example if the general form of the equations is of add type place them
-    inside `is_Add` case. Once the place for identification helper is
-    determined, you can add a call to solving helper. For your class of
-    equation you need to define your own identification and solving helpers.
-    The identification helper should be implemented for generalised cases
+    The first task that needs to be done for adding your own solver
+    is to decide from where its `identificaion helper` will be
+    invoked. To do so determine the general form of the class of the
+    equation to place the invocation of the identification helper to
+    an appropriate place within transolve, for example the general
+    form of the exponential equations is `a**f(x) + b**g(x)` so we
+    need to place the invocation condition inside `is_Add` case. Once
+    the place for identification helper is determined, you can add a
+    call to solving helper. For your class of equation you need to
+    define your own identification and solving helpers. The
+    identification helper should be implemented for generalised cases
     and should return either `True` if the given equation belongs to the
     class otherwise `False`. Solving helpers needs to be implemented with
     such heuristics or algorithms that solves most of the equations

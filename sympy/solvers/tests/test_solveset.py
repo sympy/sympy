@@ -1829,7 +1829,7 @@ def test_expo_fail():
     assert ans1 == ans2
 
     assert solveset(x**(y*z) - x, x, S.Reals) == FiniteSet(1)    # issue 10864
-    assert solveset(x**X, x, S.Reals) == S.EmptySet
+    assert solveset(x**x, x, S.Reals) == S.EmptySet
     assert solveset(x**y - 1, x, S.Reals) == FiniteSet(1)
     assert solveset(x**y + x**(2*y) - 1, x, S.Reals) == FiniteSet(
         (-S.Half + sqrt(5)/2)**(1/y), (-S.Half - sqrt(5)/2)**(1/y))
