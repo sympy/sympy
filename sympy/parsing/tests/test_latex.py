@@ -10,7 +10,7 @@ from sympy.parsing.latex._build_latex_antlr import (
     dir_latex_antlr
 )
 
-from sympy.utilities import pytest
+from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.external import import_module
 
 from sympy import (
@@ -178,6 +178,22 @@ GOOD_PAIRS = [
     ("\\frac{d}{dx} [ \\tan x ]", Derivative(tan(x), x))
 ]
 
+def test_parseable():
+    from sympy.parsing.latex import parse_latex
+    for latex_str, sympy_expr in GOOD_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr
+
+# At time of migration from latex2sympy, should work but doesn't
+FAILING_PAIRS = [
+    ("\\log_2 x", _log(x, 2)),
+    ("\\log_a x", _log(x, a)),
+]
+def test_failing_parseable():
+    from sympy.parsing.latex import parse_latex
+    for latex_str, sympy_expr in FAILING_PAIRS:
+        with raises(Exception):
+            assert parse_latex(latex_str) == sympy_expr
+
 # These bad LaTeX strings should raise a LaTeXParsingError when parsed
 BAD_STRINGS = [
     "(",
@@ -218,11 +234,11 @@ BAD_STRINGS = [
     "\\frac{(2 + x}{1 - x)}"
 ]
 
-# At time of migration from latex2sympy, should work but doesn't
-FAILING_PAIRS = [
-    ("\\log_2 x", _log(x, 2)),
-    ("\\log_a x", _log(x, a)),
-]
+def test_not_parseable():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    for latex_str in BAD_STRINGS:
+        with raises(LaTeXParsingError):
+            parse_latex(latex_str)
 
 # At time of migration from latex2sympy, should fail but doesn't
 FAILING_BAD_STRINGS = [
@@ -238,33 +254,12 @@ FAILING_BAD_STRINGS = [
     "a / b /",
 ]
 
-
-def test_parseable():
-    from sympy.parsing.latex import parse_latex
-    for latex_str, sympy_expr in GOOD_PAIRS:
-        assert parse_latex(latex_str) == sympy_expr
-
-
-def test_failing_parseable():
-    from sympy.parsing.latex import parse_latex
-    for latex_str, sympy_expr in FAILING_PAIRS:
-        with pytest.raises(Exception):
-            assert parse_latex(latex_str) == sympy_expr
-
-
-def test_not_parseable():
-    from sympy.parsing.latex import parse_latex, LaTeXParsingError
-    for latex_str in BAD_STRINGS:
-        with pytest.raises(LaTeXParsingError):
-            print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(
-                latex_str, parse_latex(latex_str)))
-
-
+@XFAIL
 def test_failing_not_parseable():
-    from sympy.parsing.latex import parse_latex
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
     for latex_str in FAILING_BAD_STRINGS:
-        print("'{}' SHOULD NOT PARSE, BUT DID: {}".format(
-            latex_str, parse_latex(latex_str)))
+        with raises(LaTeXParsingError):
+            parse_latex(latex_str)
 
 
 def test_antlr_generation():
@@ -272,7 +267,7 @@ def test_antlr_generation():
         what is checked in?
     """
     if not check_antlr_version():
-        return pytest.skip('antlr4 not available, skipping')
+        return skip('antlr4 not available, skipping')
 
     tmpdir = tempfile.mkdtemp()
 
@@ -281,7 +276,6 @@ def test_antlr_generation():
 
         for filename in sorted(glob.glob(os.path.join(tmpdir, "*.*"))):
             base = os.path.basename(filename)
-            print("Comparing {}...".format(base))
             with open(filename) as generated:
                 with open(os.path.join(dir_latex_antlr, base)) as checked_in:
                     diff = difflib.context_diff(
