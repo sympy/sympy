@@ -146,7 +146,7 @@ doctest_list = [
     'sympy/parsing/latex',
 ]
 
-if not (sympy.test(test_list, blacklist=blacklist) and sympy.doctest(doctest_list)):
+if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(doctest_list)):
     raise Exception('Tests failed')
 EOF
 fi
