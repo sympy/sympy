@@ -47,12 +47,15 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfc, I, uppergamma, hyper)
+                   Lambda, Basic, lowergamma, erf, erfi, erfc, I, hyper, uppergamma,
+                   sinh, Ne)
+
 from sympy import beta as beta_fn
-from sympy import cos, exp, besseli
+from sympy import cos, sin, exp, besseli, besselj
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
+from sympy.external import import_module
 import random
 
 oo = S.Infinity
@@ -308,6 +311,9 @@ class BetaDistribution(SingleContinuousDistribution):
     def sample(self):
         return random.betavariate(self.alpha, self.beta)
 
+    def _characteristic_function(self, t):
+        return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
+
 
 def Beta(name, alpha, beta):
     r"""
@@ -348,7 +354,7 @@ def Beta(name, alpha, beta):
      alpha - 1         beta - 1
     z         *(-z + 1)
     ---------------------------
-         beta(alpha, beta)
+           B(alpha, beta)
 
     >>> expand_func(simplify(E(X, meijerg=True)))
     alpha/(alpha + beta)
@@ -418,7 +424,7 @@ def BetaPrime(name, alpha, beta):
      alpha - 1        -alpha - beta
     z         *(z + 1)
     -------------------------------
-           beta(alpha, beta)
+             B(alpha, beta)
 
     References
     ==========
@@ -497,6 +503,13 @@ class ChiDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 2**(1 - self.k/2)*x**(self.k - 1)*exp(-x**2/2)/gamma(self.k/2)
 
+    def _characteristic_function(self, t):
+        k = self.k
+
+        part_1 = hyper((k/2,), (S(1)/2,), -t**2/2)
+        part_2 = I*t*sqrt(2)*gamma((k+1)/2)/gamma(k/2)
+        part_3 = hyper(((k+1)/2,), (S(3)/2,), -t**2/2)
+        return part_1 + part_2*part_3
 
 def Chi(name, k):
     r"""
@@ -623,6 +636,8 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
                 (0, True)
         )
 
+    def _characteristic_function(self, t):
+        return (1 - 2*I*t)**(-self.k/2)
 
 def ChiSquared(name, k):
     r"""
@@ -787,14 +802,14 @@ def Erlang(name, k, l):
      k  k - 1  -l*z
     l *z     *e
     ---------------
-        gamma(k)
+        Gamma(k)
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
     /   -2*I*pi*k
     |k*e         *lowergamma(k, l*z)
     |-------------------------------  for z >= 0
-    <          gamma(k + 1)
+    <          Gamma(k + 1)
     |
     |               0                 otherwise
     \
@@ -939,13 +954,11 @@ def FDistribution(name, d1, d2):
 
     with :math:`x > 0`.
 
-    .. TODO - What do these parameters mean?
-
     Parameters
     ==========
 
-    d1 : `d_1 > 0` a parameter
-    d2 : `d_2 > 0` a parameter
+    d1 : `d_1 > 0`, where d_1 is the degrees of freedom (n_1 - 1)
+    d2 : `d_2 > 0`, where d_2 is the degrees of freedom (n_2 - 1)
 
     Returns
     =======
@@ -971,9 +984,9 @@ def FDistribution(name, d1, d2):
       2    /       d1            -d1 - d2
     d2  *\/  (d1*z)  *(d1*z + d2)
     --------------------------------------
-                      /d1  d2\
-                z*beta|--, --|
-                      \2   2 /
+                    /d1  d2\
+                 z*B|--, --|
+                    \2   2 /
 
     References
     ==========
@@ -1039,9 +1052,9 @@ def FisherZ(name, d1, d2):
         2    2  /    2*z     \           d1*z
     2*d1  *d2  *\d1*e    + d2/         *e
     -----------------------------------------
-                       /d1  d2\
-                   beta|--, --|
-                       \2   2 /
+                     /d1  d2\
+                    B|--, --|
+                     \2   2 /
 
     References
     ==========
@@ -1193,7 +1206,7 @@ def Gamma(name, k, theta):
          -k  k - 1  theta
     theta  *z     *e
     ---------------------
-           gamma(k)
+           Gamma(k)
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
@@ -1201,7 +1214,7 @@ def Gamma(name, k, theta):
     |k*lowergamma|k, -----|
     |            \   theta/
     <----------------------  for z >= 0
-    |     gamma(k + 1)
+    |     Gamma(k + 1)
     |
     \          0             otherwise
 
@@ -1246,6 +1259,13 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         return Piecewise((uppergamma(a,b/x)/gamma(a), x > 0),
                         (S.Zero, True))
 
+    def sample(self):
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import invgamma
+            return invgamma.rvs(float(self.a), 0, float(self.b))
+        else:
+            raise NotImplementedError('Sampling the inverse Gamma Distribution requires Scipy.')
 
 def GammaInverse(name, a, b):
     r"""
@@ -1289,7 +1309,7 @@ def GammaInverse(name, a, b):
      a  -a - 1   z
     b *z      *e
     ---------------
-       gamma(a)
+       Gamma(a)
 
     >>> cdf(X)(z)
     Piecewise((uppergamma(a, b/z)/gamma(a), z > 0), (0, True))
@@ -1582,6 +1602,8 @@ class LogisticDistribution(SingleContinuousDistribution):
         mu, s = self.mu, self.s
         return S.One/(1 + exp(-(x - mu)/s))
 
+    def _characteristic_function(self, t):
+        return Piecewise((exp(I*t*self.mu) * pi*self.s*t / sinh(pi*self.s*t), Ne(t, 0)), (S.One, True))
 
 def Logistic(name, mu, s):
     r"""
@@ -1845,7 +1867,7 @@ def Nakagami(name, mu, omega):
         mu      -mu  2*mu - 1  omega
     2*mu  *omega   *z        *e
     ----------------------------------
-                gamma(mu)
+                Gamma(mu)
 
     >>> simplify(E(X, meijerg=True))
     sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
@@ -1853,9 +1875,9 @@ def Nakagami(name, mu, omega):
     >>> V = simplify(variance(X, meijerg=True))
     >>> pprint(V, use_unicode=False)
                         2
-             omega*gamma (mu + 1/2)
+             omega*Gamma (mu + 1/2)
     omega - -----------------------
-            gamma(mu)*gamma(mu + 1)
+            Gamma(mu)*Gamma(mu + 1)
 
     >>> cdf(X)(z)
     Piecewise((lowergamma(mu, mu*z**2/omega)/gamma(mu), z > 0),
@@ -2133,6 +2155,12 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
                 ((1+cos(pi*(x-mu)/s)) / (2*s), And(mu-s<=x, x<=mu+s)),
                 (S.Zero, True))
 
+    def _characteristic_function(self, t):
+        mu, s = self.mu, self.s
+        return Piecewise((exp(-I*pi*mu/s)/2, Eq(t, -pi/s)),
+                         (exp(I*pi*mu/s)/2, Eq(t, pi/s)),
+                         (pi**2*sin(s*t)*exp(I*mu*t) / (s*t*(pi**2 - s**2*t**2)), True))
+
 
 def RaisedCosine(name, mu, s):
     r"""
@@ -2198,6 +2226,10 @@ class RayleighDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         sigma = self.sigma
         return x/sigma**2*exp(-x**2/(2*sigma**2))
+
+    def _characteristic_function(self, t):
+        sigma = self.sigma
+        return 1 - sigma*t*exp(-sigma**2*t**2/2) * sqrt(pi/2) * (erfi(sigma*t/sqrt(2)) - I)
 
 
 def Rayleigh(name, sigma):
@@ -2364,17 +2396,17 @@ def StudentT(name, nu):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                nu   1
-              - -- - -
-                2    2
-      /     2\
-      |    z |
-      |1 + --|
-      \    nu/
-    --------------------
-      ____     /     nu\
-    \/ nu *beta|1/2, --|
-               \     2 /
+               nu   1
+             - -- - -
+               2    2
+     /     2\
+     |    z |
+     |1 + --|
+     \    nu/
+    -----------------
+      ____  /     nu\
+    \/ nu *B|1/2, --|
+            \     2 /
 
     >>> cdf(X)(z)
     1/2 + z*gamma(nu/2 + 1/2)*hyper((1/2, nu/2 + 1/2), (3/2,),
@@ -2574,7 +2606,8 @@ class UniformDistribution(SingleContinuousDistribution):
 
     def _characteristic_function(self, t):
         left, right = self.left, self.right
-        return (exp(I*t*right) - exp(I*t*left)) / (I*t*(right - left))
+        return Piecewise(((exp(I*t*right) - exp(I*t*left)) / (I*t*(right - left)), Ne(t, 0)),
+                         (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
         from sympy import Max, Min
@@ -2670,7 +2703,6 @@ class UniformSumDistribution(SingleContinuousDistribution):
                         (1/factorial(n)*Sum((-1)**k*binomial(n, k)*(x - k)**(n),
                         (k, 0, floor(x))), x <= n),
                         (S.One, True))
-
 
 def UniformSum(name, n):
     r"""
@@ -2901,6 +2933,9 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
         R = self.R
         return 2/(pi*R**2)*sqrt(R**2 - x**2)
 
+    def _characteristic_function(self, t):
+        return Piecewise((2 * besselj(1, self.R*t) / (self.R*t), Ne(t, 0)),
+                         (S.One, True))
 
 def WignerSemicircle(name, R):
     r"""

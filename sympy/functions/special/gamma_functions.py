@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, S, sympify, oo, pi, Dummy
+from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -10,6 +10,7 @@ from .error_functions import erf, erfc
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
 
@@ -133,9 +134,6 @@ class gamma(Function):
                     else:
                         return 2**n*sqrt(S.Pi) / coeff
 
-        if arg.is_integer and arg.is_nonpositive:
-            return S.ComplexInfinity
-
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
         if arg.is_Rational:
@@ -184,19 +182,6 @@ class gamma(Function):
         t = self.args[0] - x0
         return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
-    def _latex(self, printer, exp=None):
-        if len(self.args) != 1:
-            raise ValueError("Args length should be 1")
-        aa = printer._print(self.args[0])
-        if exp:
-            return r'\Gamma^{%s}{\left(%s \right)}' % (printer._print(exp), aa)
-        else:
-            return r'\Gamma{\left(%s \right)}' % aa
-
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\Gamma'
-
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
@@ -226,7 +211,7 @@ class lowergamma(Function):
     >>> lowergamma(s, x)
     lowergamma(s, x)
     >>> lowergamma(3, x)
-    -x**2*exp(-x) - 2*x*exp(-x) + 2 - 2*exp(-x)
+    -2*(x**2/2 + x + 1)*exp(-x) + 2
     >>> lowergamma(-S(1)/2, x)
     -2*sqrt(pi)*erf(sqrt(x)) - 2*exp(-x)/sqrt(x)
 
@@ -299,7 +284,6 @@ class lowergamma(Function):
 
         # Special values.
         if a.is_Number:
-            # TODO this should be non-recursive
             if a is S.One:
                 return S.One - exp(-x)
             elif a is S.Half:
@@ -307,19 +291,25 @@ class lowergamma(Function):
             elif a.is_Integer or (2*a).is_Integer:
                 b = a - 1
                 if b.is_positive:
-                    return b*cls(b, x) - x**b * exp(-x)
+                    if a.is_integer:
+                        return factorial(b) - exp(-x) * factorial(b) * Add(*[x ** k / factorial(k) for k in range(a)])
+                    else:
+                        return gamma(a) * (lowergamma(S.Half, x)/sqrt(pi) - exp(-x) * Add(*[x**(k-S.Half) / gamma(S.Half+k) for k in range(1, a+S.Half)]))
 
                 if not a.is_Integer:
-                    return (cls(a + 1, x) + x**a * exp(-x))/a
+                    return (-1)**(S.Half - a) * pi*erf(sqrt(x)) / gamma(1-a) + exp(-x) * Add(*[x**(k+a-1)*gamma(a) / gamma(a+k) for k in range(1, S(3)/2-a)])
 
     def _eval_evalf(self, prec):
         from mpmath import mp, workprec
         from sympy import Expr
-        a = self.args[0]._to_mpmath(prec)
-        z = self.args[1]._to_mpmath(prec)
-        with workprec(prec):
-            res = mp.gammainc(a, 0, z)
-        return Expr._from_mpmath(res, prec)
+        if all(x.is_number for x in self.args):
+            a = self.args[0]._to_mpmath(prec)
+            z = self.args[1]._to_mpmath(prec)
+            with workprec(prec):
+                res = mp.gammainc(a, 0, z)
+            return Expr._from_mpmath(res, prec)
+        else:
+            return self
 
     def _eval_conjugate(self):
         z = self.args[1]
@@ -335,9 +325,6 @@ class lowergamma(Function):
             return self
         return self.rewrite(uppergamma).rewrite(expint)
 
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\gamma'
 
 class uppergamma(Function):
     r"""
@@ -370,7 +357,7 @@ class uppergamma(Function):
     >>> uppergamma(s, x)
     uppergamma(s, x)
     >>> uppergamma(3, x)
-    x**2*exp(-x) + 2*x*exp(-x) + 2*exp(-x)
+    2*(x**2/2 + x + 1)*exp(-x)
     >>> uppergamma(-S(1)/2, x)
     -2*sqrt(pi)*erfc(sqrt(x)) + 2*exp(-x)/sqrt(x)
     >>> uppergamma(-2, x)
@@ -414,11 +401,13 @@ class uppergamma(Function):
     def _eval_evalf(self, prec):
         from mpmath import mp, workprec
         from sympy import Expr
-        a = self.args[0]._to_mpmath(prec)
-        z = self.args[1]._to_mpmath(prec)
-        with workprec(prec):
-            res = mp.gammainc(a, z, mp.inf)
-        return Expr._from_mpmath(res, prec)
+        if all(x.is_number for x in self.args):
+            a = self.args[0]._to_mpmath(prec)
+            z = self.args[1]._to_mpmath(prec)
+            with workprec(prec):
+                res = mp.gammainc(a, z, mp.inf)
+            return Expr._from_mpmath(res, prec)
+        return self
 
     @classmethod
     def eval(cls, a, z):
@@ -446,7 +435,6 @@ class uppergamma(Function):
 
         # Special values.
         if a.is_Number:
-            # TODO this should be non-recursive
             if a is S.One:
                 return exp(-z)
             elif a is S.Half:
@@ -454,12 +442,15 @@ class uppergamma(Function):
             elif a.is_Integer or (2*a).is_Integer:
                 b = a - 1
                 if b.is_positive:
-                    return b*cls(b, z) + z**b * exp(-z)
+                    if a.is_integer:
+                        return exp(-z) * factorial(b) * Add(*[z**k / factorial(k) for k in range(a)])
+                    else:
+                        return gamma(a) * erfc(sqrt(z)) + (-1)**(a - S(3)/2) * exp(-z) * sqrt(z) * Add(*[gamma(-S.Half - k) * (-z)**k / gamma(1-a) for k in range(a - S.Half)])
                 elif b.is_Integer:
                     return expint(-b, z)*unpolarify(z)**(b + 1)
 
                 if not a.is_Integer:
-                    return (cls(a + 1, z) - z**a * exp(-z))/a
+                    return (-1)**(S.Half - a) * pi*erfc(sqrt(z))/gamma(1-a) - z**a * exp(-z) * Add(*[z**k * gamma(a) / gamma(a+k+1) for k in range(S.Half - a)])
 
     def _eval_conjugate(self):
         z = self.args[1]
@@ -499,9 +490,9 @@ class polygamma(Function):
     >>> polygamma(0, 1/S(2))
     -2*log(2) - EulerGamma
     >>> polygamma(0, 1/S(3))
-    -3*log(3)/2 - sqrt(3)*pi/6 - EulerGamma
+    -log(3) - sqrt(3)*pi/6 - EulerGamma - log(sqrt(3))
     >>> polygamma(0, 1/S(4))
-    -3*log(2) - pi/2 - EulerGamma
+    -pi/2 - log(4) - log(2) - EulerGamma
     >>> polygamma(0, 2)
     -EulerGamma + 1
     >>> polygamma(0, 23)
@@ -669,22 +660,13 @@ class polygamma(Function):
             if z is S.NaN:
                 return S.NaN
             elif z.is_Rational:
-                # TODO actually *any* n/m can be done, but that is messy
-                lookup = {S(1)/2: -2*log(2) - S.EulerGamma,
-                          S(1)/3: -S.Pi/2/sqrt(3) - 3*log(3)/2 - S.EulerGamma,
-                          S(1)/4: -S.Pi/2 - 3*log(2) - S.EulerGamma,
-                          S(3)/4: -3*log(2) - S.EulerGamma + S.Pi/2,
-                          S(2)/3: -3*log(3)/2 + S.Pi/2/sqrt(3) - S.EulerGamma}
-                if z > 0:
-                    n = floor(z)
-                    z0 = z - n
-                    if z0 in lookup:
-                        return lookup[z0] + Add(*[1/(z0 + k) for k in range(n)])
-                elif z < 0:
-                    n = floor(1 - z)
-                    z0 = z + n
-                    if z0 in lookup:
-                        return lookup[z0] - Add(*[1/(z0 - 1 - k) for k in range(n)])
+
+                p, q = z.as_numer_denom()
+
+                # only expand for small denominators to avoid creating long expressions
+                if q <= 5:
+                    return expand_func(polygamma(n, z, evaluate=False))
+
             elif z in (S.Infinity, S.NegativeInfinity):
                 return S.Infinity
             else:
@@ -720,6 +702,23 @@ class polygamma(Function):
                     else:
                         return Add(*tail)/coeff**(n + 1)
                 z *= coeff
+
+        if n == 0 and z.is_Rational:
+            p, q = z.as_numer_denom()
+
+            # Reference:
+            #   Values of the polygamma functions at rational arguments, J. Choi, 2007
+            part_1 = -S.EulerGamma - pi * cot(p * pi / q) / 2 - log(q) + Add(
+                *[cos(2 * k * pi * p / q) * log(2 * sin(k * pi / q)) for k in range(1, q)])
+
+            if z > 0:
+                n = floor(z)
+                z0 = z - n
+                return part_1 + Add(*[1 / (z0 + k) for k in range(n)])
+            elif z < 0:
+                n = floor(1 - z)
+                z0 = z + n
+                return part_1 - Add(*[1 / (z0 - 1 - k) for k in range(n)])
 
         return polygamma(n, z)
 

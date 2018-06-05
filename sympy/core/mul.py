@@ -617,8 +617,8 @@ class Mul(Expr, AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if (global_distribute[0] and not nc_part and len(c_part) == 2 and c_part[0].is_Number and
-                c_part[1].is_Add):
+        if (global_distribute[0] and not nc_part and len(c_part) == 2 and
+                c_part[0].is_Number and c_part[0].is_finite and c_part[1].is_Add):
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
@@ -899,14 +899,16 @@ class Mul(Expr, AssocOp):
         for i in range(len(args)):
             d = args[i].diff(s)
             if d:
-                terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))
-        return Add(*terms)
+                # Note: reduce is used in step of Mul as Mul is unable to
+                # handle subtypes and operation priority:
+                terms.append(reduce(lambda x, y: x*y, (args[:i] + [d] + args[i + 1:]), S.One))
+        return reduce(lambda x, y: x+y, terms, S.Zero)
 
     @cacheit
     def _eval_derivative_n_times(self, s, n):
         # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
         from sympy import Integer, factorial, prod, Dummy, symbols, Sum
-        args = [arg for arg in self.args if arg.has(s)]
+        args = [arg for arg in self.args if arg.free_symbols & s.free_symbols]
         coeff_args = [arg for arg in self.args if arg not in args]
         m = len(args)
         if m == 1:

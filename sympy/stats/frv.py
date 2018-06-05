@@ -176,7 +176,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
     @property
     def set(self):
-        if self.fulldomain.__class__ is SingleFiniteDomain:
+        if isinstance(self.fulldomain, SingleFiniteDomain):
             return FiniteSet(*[elem for elem in self.fulldomain.set
                                if frozenset(((self.fulldomain.symbol, elem),)) in self])
         else:
@@ -234,14 +234,6 @@ class FinitePSpace(PSpace):
     Represents the probabilities of a finite number of events.
     """
     is_Finite = True
-
-    @property
-    def domain(self):
-        return self.args[0]
-
-    @property
-    def density(self):
-        return self.args[1]
 
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))

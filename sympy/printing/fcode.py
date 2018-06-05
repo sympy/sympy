@@ -13,8 +13,8 @@ Fortran77" by Clive G. Page:
 http://www.star.le.ac.uk/~cgp/prof77.html
 
 Fortran is a case-insensitive language. This might cause trouble because
-SymPy is case sensitive. The implementation below does not care and leaves
-the responsibility for generating properly cased Fortran code to the user.
+SymPy is case sensitive. So, fcode adds underscores to variable names when
+it is necessary to make them different for Fortran.
 """
 
 from __future__ import print_function, division
@@ -23,7 +23,7 @@ from collections import defaultdict
 from itertools import chain
 import string
 
-from sympy.core import S, Add, N, Float
+from sympy.core import S, Add, N, Float, Symbol
 from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
 from sympy.core.relational import Eq
@@ -89,6 +89,7 @@ class FCodePrinter(CodePrinter):
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,
+        'name_mangling' : True,
     }
 
     _operators = {
@@ -104,6 +105,8 @@ class FCodePrinter(CodePrinter):
     }
 
     def __init__(self, settings={}):
+        self.mangled_symbols = {}         ## Dict showing mapping of all words
+        self.used_name= []
         self.type_aliases = dict(chain(self.type_aliases.items(),
                                        settings.pop('type_aliases', {}).items()))
         self.type_mappings = dict(chain(self.type_mappings.items(),
@@ -119,7 +122,6 @@ class FCodePrinter(CodePrinter):
                              'standard'])
         self.module_uses = defaultdict(set)  # e.g.: use iso_c_binding, only: c_int
 
-
     @property
     def _lead(self):
         if self._settings['source_format'] == 'fixed':
@@ -128,6 +130,23 @@ class FCodePrinter(CodePrinter):
             return {'code': "", 'cont': "      ", 'comment': "! "}
         else:
             raise ValueError("Unknown source format: %s" % self._settings['source_format'])
+
+    def _print_Symbol(self, expr):
+        if self._settings['name_mangling'] == True:
+            if expr not in self.mangled_symbols:
+                name = expr.name
+                while name.lower() in self.used_name:
+                    name += '_'
+                self.used_name.append(name.lower())
+                if name == expr.name:
+                    self.mangled_symbols[expr] = expr
+                else:
+                    self.mangled_symbols[expr] = Symbol(name)
+
+            expr = expr.xreplace(self.mangled_symbols)
+
+        name = super(FCodePrinter, self)._print_Symbol(expr)
+        return name
 
     def _rate_index_position(self, p):
         return -p*5
@@ -546,6 +565,11 @@ def fcode(expr, assign_to=None, **settings):
         Note that currently the only distinction internally is between
         standards before 95, and those 95 and after. This may change later as
         more features are added.
+    name_mangling : bool, optional
+        If True, then the variables that would become identical in
+        case-insensitive Fortran are mangled by appending different number
+        of ``_`` at the end. If False, SymPy won't interfere with naming of
+        variables. [default=True]
 
     Examples
     ========

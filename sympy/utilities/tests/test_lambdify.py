@@ -1,6 +1,7 @@
 from distutils.version import LooseVersion as V
 from itertools import product
 import math
+import inspect
 
 import mpmath
 from sympy.utilities.pytest import XFAIL, raises
@@ -8,7 +9,7 @@ from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy)
+    DotProduct, Eq, Dummy, sinc)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -45,6 +46,17 @@ def test_list_args():
     f = lambdify([x, y], x + y)
     assert f(1, 2) == 3
 
+def test_nested_args():
+    f1 = lambdify([[w, x]], [w, x])
+    assert f1([91, 2]) == [91, 2]
+    raises(TypeError, lambda: f1(1, 2))
+
+    f2 = lambdify([(w, x), (y, z)], [w, x, y, z])
+    assert f2((18, 12), (73, 4)) == [18, 12, 73, 4]
+    raises(TypeError, lambda: f2(3, 4))
+
+    f3 = lambdify([w, [[[x]], y], z], [w, x, y, z])
+    assert f3(10, [[[52]], 31], 44) == [10, 52, 31, 44]
 
 def test_str_args():
     f = lambdify('x,y,z', 'z,y,x')
@@ -609,6 +621,13 @@ def test_namespace_order():
     assert if1(1) == 'first f'
 
 
+def test_namespace_type():
+    # lambdify had a bug where it would reject modules of type unicode
+    # on Python 2.
+    x = sympy.Symbol('x')
+    lambdify(x, x, modules=u'math')
+
+
 def test_imps():
     # Here we check if the default returned functions are anonymous - in
     # the sense that we can have more than one function with the same name
@@ -803,6 +822,16 @@ def test_issue_12173():
     assert exp1 == uppergamma(1, 2).evalf()
     assert exp2 == lowergamma(1, 2).evalf()
 
+def test_issue_13642():
+    if not numpy:
+        skip("numpy not installed")
+    f = lambdify(x, sinc(x))
+    assert Abs(f(1) - sinc(1)).n() < 1e-15
+
+def test_sinc_mpmath():
+    f = lambdify(x, sinc(x), "mpmath")
+    assert Abs(f(1) - sinc(1)).n() < 1e-15
+
 def test_lambdify_dummy_arg():
     d1 = Dummy()
     f1 = lambdify(d1, d1 + 1, dummify=False)
@@ -812,3 +841,39 @@ def test_lambdify_dummy_arg():
     d2 = Dummy('x')
     f2 = lambdify(d2, d2 + 1)
     assert f2(2) == 3
+    f3 = lambdify([[d2]], d2 + 1)
+    assert f3([2]) == 3
+
+def test_lambdify_mixed_symbol_dummy_args():
+    d = Dummy()
+    # Contrived example of name clash
+    dsym = symbols(str(d))
+    f = lambdify([d, dsym], d - dsym)
+    assert f(4, 1) == 3
+
+def test_numpy_array_arg():
+    # Test for issue 14655 (numpy part)
+    if not numpy:
+        skip("numpy not installed")
+
+    f = lambdify([[x, y]], x*x + y, 'numpy')
+
+    assert f(numpy.array([2.0, 1.0])) == 5
+
+def test_tensorflow_array_arg():
+    # Test for issue 14655 (tensorflow part)
+    if not tensorflow:
+        skip("tensorflow not installed.")
+
+    f = lambdify([[x, y]], x*x + y, 'tensorflow')
+
+    fcall = f(tensorflow.constant([2.0, 1.0]))
+
+    s = tensorflow.Session()
+    assert s.run(fcall) == 5
+
+def test_lambdify_inspect():
+    f = lambdify(x, x**2)
+    # Test that inspect.getsource works but don't hard-code implementation
+    # details
+    assert 'x**2' in inspect.getsource(f)

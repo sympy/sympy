@@ -81,6 +81,18 @@ know how to compute the derivative of an expression (for example, if it
 contains an undefined function, which are described in the :ref:`Solving
 Differential Equations <tutorial-dsolve>` section).
 
+Derivatives of unspecified order can be created using tuple ``(x, n)`` where
+``n`` is the order of the derivative with respect to ``x``.
+
+    >>> m, n, a, b = symbols('m n a b')
+    >>> expr = (a*x + b)**m
+    >>> expr.diff((x, n))
+      n
+     ∂ ⎛         m⎞
+    ───⎝(a⋅x + b) ⎠
+      n
+    ∂x
+
 Integrals
 =========
 

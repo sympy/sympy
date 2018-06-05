@@ -24,7 +24,8 @@ matrix:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
         # autowrap installs libgfortran libgcc gcc cython
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib=2.1.0 theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 sage"
+        - TEST_SAGE="true"
       addons:
         apt:
           packages:
@@ -36,7 +37,7 @@ matrix:
     - python: 3.6
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib=2.1.0 theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8"
       addons:
         apt:
           packages:
@@ -93,17 +94,10 @@ matrix:
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
-    - python: 3.5 # Dummy value
-      env:
-        - TEST_SAGE="true"
-        - FASTCACHE="false"
-      sudo: true
-
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
-        - TEST_SETUP="true"
       addons:
         apt:
           sources:
@@ -156,18 +150,11 @@ matrix:
             - pypy
 
   allow_failures:
-    # The apt installation of sage fails sometimes
-    - python: 3.5 # Dummy value
-      env:
-        - TEST_SAGE="true"
-        - FASTCACHE="false"
-      sudo: true
     # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
-        - TEST_SETUP="true"
       addons:
         apt:
           sources:
@@ -228,11 +215,11 @@ before_install:
       pip install "sphinx" "docutils" doctr;
     fi
   - |
-    if [[ "${TEST_OPT_DEPENDENCY}" ]]; then
+    if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     # We do this conditionally because it saves us some downloading if the
     # version is the same.
         if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-          wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -q -O miniconda.sh;
+          wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -q -O miniconda.sh;
         else
           wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -q -O miniconda.sh;
         fi
@@ -242,16 +229,18 @@ before_install:
         conda config --set always_yes yes --set changeps1 no;
         conda update -q conda;
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
+
         conda info -a;
-        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY/autowrap/libgfortran libgcc gcc cython};
+        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY/sage};
         source activate test-environment;
+        conda clean --all;
+        if [[ "$TEST_OPT_DEPENDENCY" == *"sage"* ]]; then
+            conda install -q "sage==8.1";
+            conda remove --force sympy;
+            conda clean --all;
+        fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list --format=legacy | grep "numpy" && pip uninstall -y numpy;
-    fi
-  - if [[ "${TEST_SAGE}" == "true" ]]; then
-      sudo apt-add-repository -y ppa:aims/sagemath;
-      sudo apt-get update;
-      sudo apt-get install -y sagemath-upstream-binary;
     fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
       pip install matchpy;
@@ -266,19 +255,18 @@ install:
   # -We:invalid makes invalid escape sequences error in Python 3.6. See
   # -#12028.
   - |
-    if [[ "${TEST_SAGE}" != "true" ]]; then
-      pip install mpmath;
-      if [[ "${TEST_SETUP}" == "true" ]]; then
-      # The install cycle below is to test installation on systems without setuptools.
-        pip uninstall -y setuptools;
-        python -We:invalid setup.py install;
-        pip uninstall -y sympy;
-        pip install --upgrade setuptools;
-      fi
-      python -We:invalid -m compileall -f sympy/;
+    pip install mpmath;
+    if [[ "${TEST_SETUP}" == "true" ]]; then
+    # The install cycle below is to test installation on systems without setuptools.
+      pip uninstall -y setuptools;
       python -We:invalid setup.py install;
-      pip list --format=columns;
+      pip uninstall -y sympy;
+      pip install --upgrade setuptools;
     fi
+    python -We:invalid -m compileall -f sympy/;
+    python -We:invalid setup.py install;
+    pip list --format=columns;
+
 script:
   # Don't run doctr if the build fails
   - set -e

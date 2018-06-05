@@ -1895,7 +1895,7 @@ class PermutationGroup(Basic):
     def minimal_blocks(self, randomized=True):
         '''
         For a transitive group, return the list of all minimal
-        block systems. If a group is intrasitive, return `False`.
+        block systems. If a group is intransitive, return `False`.
 
         Examples
         ========
@@ -3310,7 +3310,7 @@ class PermutationGroup(Basic):
         A crucial part in the procedure is the frequent base change performed
         (this is line 11 in the pseudocode) in order to obtain a new basic
         stabilizer. The book mentiones that this can be done by using
-        ``.baseswap(...)``, however the current imlementation uses a more
+        ``.baseswap(...)``, however the current implementation uses a more
         straightforward way to find the next basic stabilizer - calling the
         function ``.stabilizer(...)`` on the previous basic stabilizer.
 

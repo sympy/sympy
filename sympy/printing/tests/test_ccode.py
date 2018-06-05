@@ -1,6 +1,6 @@
 import warnings
-from sympy.core import (S, pi, oo, symbols, Rational, Integer, Float, Mod,
-                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq, nan)
+from sympy.core import (S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio,
+                        EulerGamma, Catalan, Lambda, Dummy, Eq, nan, Mul, Pow)
 from sympy.functions import (Abs, acos, acosh, asin, asinh, atan, atanh, atan2,
                              ceiling, cos, cosh, erf, erfc, exp, floor, gamma, log,
                              loggamma, Max, Min, Piecewise,
@@ -58,6 +58,9 @@ def test_ccode_Pow():
     # Related to gh-11353
     assert ccode(2**x, user_functions={'Pow': _cond_cfunc2}) == 'exp2(x)'
     assert ccode(x**2, user_functions={'Pow': _cond_cfunc2}) == 'pow(x, 2)'
+    # For issue 14160
+    assert ccode(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
+                                                evaluate=False)) == '-2*x/(y*y)'
 
 
 def test_ccode_Max():
@@ -755,7 +758,7 @@ def test_MatrixElement_printing():
     assert(ccode(3 * A[0, 0]) == "3*A[0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(ccode(F) == "((-1)*B + A)[0]")
+    assert(ccode(F) == "(-B + A)[0]")
 
 
 def test_subclass_CCodePrinter():

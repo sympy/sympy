@@ -288,17 +288,19 @@ class Application(with_metaclass(FunctionClass, Basic)):
         Examples of eval() for the function "sign"
         ---------------------------------------------
 
-        @classmethod
-        def eval(cls, arg):
-            if arg is S.NaN:
-                return S.NaN
-            if arg is S.Zero: return S.Zero
-            if arg.is_positive: return S.One
-            if arg.is_negative: return S.NegativeOne
-            if isinstance(arg, Mul):
-                coeff, terms = arg.as_coeff_Mul(rational=True)
-                if coeff is not S.One:
-                    return cls(coeff) * cls(terms)
+        .. code-block:: python
+
+            @classmethod
+            def eval(cls, arg):
+                if arg is S.NaN:
+                    return S.NaN
+                if arg is S.Zero: return S.Zero
+                if arg.is_positive: return S.One
+                if arg.is_negative: return S.NegativeOne
+                if isinstance(arg, Mul):
+                    coeff, terms = arg.as_coeff_Mul(rational=True)
+                    if coeff is not S.One:
+                        return cls(coeff) * cls(terms)
 
         """
         return
@@ -1237,6 +1239,8 @@ class Derivative(Expr):
 
             if unhandled_non_symbol:
                 obj = None
+            elif (count < 0) == True:
+                obj = None
             else:
                 if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
                     # Treat derivatives by arrays/matrices as much as symbols.
@@ -1256,8 +1260,8 @@ class Derivative(Expr):
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
                             # Derivative evaluated at a point that is not a
-                            # symbol
-                            obj = Subs(obj, v, old_v)
+                            # symbol, let subs check if this is okay to replace
+                            obj = obj.subs(v, old_v)
                         else:
                             obj = obj.xreplace({v: old_v})
                     v = old_v
@@ -1287,44 +1291,6 @@ class Derivative(Expr):
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))
         return expr
-
-    @staticmethod
-    def _helper_apply_n_times(expr, s, n, func):
-        from sympy import Integer, Tuple, NDimArray
-        from sympy.matrices.common import MatrixCommon
-
-        # This `if` could be avoided with double dispatch, combinations of type
-        # requiring `derive_by_array`:
-        # 1. (array, array) ==> this is managed by the following `if`.
-        # 2. (array, scalar)
-        # 3. (scalar, array) ==> this is managed by the following `if`.
-        # 4. (scalar, scalar)
-        #
-        # Case 1. is handled by `_eval_derivative` of `NDimArray`.
-        # Case 4., i.e. pair (x=scalar, y=scalar) should be passed to
-        # x._eval_derivative(y).
-        if isinstance(s, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
-            from sympy import derive_by_array
-            func = derive_by_array
-
-        if isinstance(n, (int, Integer)):
-            obj = expr
-            for i in range(n):
-                obj2 = func(obj, s)
-                if obj == obj2:
-                    break
-                obj = obj2
-            return obj
-        elif expr.is_Derivative:
-            dict_var_count = dict(expr.variable_count)
-            if s in dict_var_count:
-                dict_var_count[s] += n
-            else:
-                dict_var_count[s] = n
-            from sympy import Derivative
-            return Derivative(expr.expr, *dict_var_count.items())
-        else:
-            return None
 
     @classmethod
     def _remove_derived_once(cls, v):
@@ -1418,6 +1384,19 @@ class Derivative(Expr):
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative
+
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Integer
+        if isinstance(n, (int, Integer)):
+            # TODO: it would be desirable to squash `_eval_derivative` into
+            # this code.
+            return super(Derivative, self)._eval_derivative_n_times(s, n)
+        dict_var_count = dict(self.variable_count)
+        if s in dict_var_count:
+            dict_var_count[s] += n
+        else:
+            dict_var_count[s] = n
+        return Derivative(self.expr, *dict_var_count.items())
 
     def _eval_derivative(self, v):
         # If the variable s we are diff wrt is not in self.variables, we
@@ -1515,7 +1494,25 @@ class Derivative(Expr):
             if _subset(old_vars, self_vars):
                 return Derivative(new, *(self_vars - old_vars).items())
 
-        return Derivative(*(x._subs(old, new) for x in self.args))
+        # Check whether the substitution (old, new) cannot be done inside
+        # Derivative(expr, vars). Disallowed:
+        # (1) changing expr by introducing a variable among vars
+        # (2) changing vars by introducing a variable contained in expr
+        old_symbols = (old.free_symbols if isinstance(old.free_symbols, set)
+            else set())
+        new_symbols = (new.free_symbols if isinstance(new.free_symbols, set)
+            else set())
+        introduced_symbols = new_symbols - old_symbols
+        args_subbed = tuple(x._subs(old, new) for x in self.args)
+        if ((self.args[0] != args_subbed[0] and
+            len(set(self.variables) & introduced_symbols) > 0
+            ) or
+            (self.args[1:] != args_subbed[1:] and
+            len(self.free_symbols & introduced_symbols) > 0
+            )):
+            return Subs(self, old, new)
+        else:
+            return Derivative(*args_subbed)
 
     def _eval_lseries(self, x, logx):
         dx = self.variables

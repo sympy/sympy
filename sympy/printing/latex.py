@@ -13,6 +13,7 @@ from sympy.core.alphabets import greeks
 from sympy.core.operations import AssocOp
 from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
+from sympy.core.function import UndefinedFunction, AppliedUndef
 
 ## sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
@@ -127,12 +128,13 @@ class LatexPrinter(Printer):
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": None,
-        "long_frac_ratio": 2,
+        "long_frac_ratio": None,
         "mul_symbol": None,
         "inv_trig_style": "abbreviated",
         "mat_str": None,
         "mat_delim": "[",
         "symbol_names": {},
+        "ln_notation": False,
     }
 
     def __init__(self, settings=None):
@@ -386,6 +388,7 @@ class LatexPrinter(Printer):
 
     def _print_Mul(self, expr):
         from sympy.core.power import Pow
+        from sympy.physics.units import Quantity
         include_parens = False
         if _coeff_isneg(expr):
             expr = -expr
@@ -410,7 +413,11 @@ class LatexPrinter(Printer):
                 if self.order not in ('old', 'none'):
                     args = expr.as_ordered_factors()
                 else:
-                    args = expr.args
+                    args = list(expr.args)
+
+                # If quantities are present append them at the back
+                args = sorted(args, key=lambda x: isinstance(x, Quantity) or
+                             (isinstance(x, Pow) and isinstance(x.base, Quantity)))
 
                 for i, term in enumerate(args):
                     term_tex = self._print(term)
@@ -441,13 +448,14 @@ class LatexPrinter(Printer):
             ldenom = len(sdenom.split())
             ratio = self._settings['long_frac_ratio']
             if self._settings['fold_short_frac'] \
-                    and ldenom <= 2 and not "^" in sdenom:
+                   and ldenom <= 2 and not "^" in sdenom:
                 # handle short fractions
                 if self._needs_mul_brackets(numer, last=False):
                     tex += r"\left(%s\right) / %s" % (snumer, sdenom)
                 else:
                     tex += r"%s / %s" % (snumer, sdenom)
-            elif len(snumer.split()) > ratio*ldenom:
+            elif ratio is not None and \
+                    len(snumer.split()) > ratio*ldenom:
                 # handle long fractions
                 if self._needs_mul_brackets(numer, last=True):
                     tex += r"\frac{1}{%s}%s\left(%s\right)" \
@@ -696,7 +704,6 @@ class LatexPrinter(Printer):
             mindful of undercores in the name
         '''
         func = self._deal_with_super_sub(func)
-
         if func in accepted_latex_functions:
             name = r"\%s" % func
         elif len(func) == 1 or func.startswith('\\'):
@@ -718,8 +725,8 @@ class LatexPrinter(Printer):
         exp is an exponent
         '''
         func = expr.func.__name__
-
-        if hasattr(self, '_print_' + func):
+        if hasattr(self, '_print_' + func) and \
+            not isinstance(expr.func, UndefinedFunction):
             return getattr(self, '_print_' + func)(expr, exp)
         else:
             args = [ str(self._print(arg)) for arg in expr.args ]
@@ -777,10 +784,24 @@ class LatexPrinter(Printer):
     def _print_UndefinedFunction(self, expr):
         return self._hprint_Function(str(expr))
 
-    def _print_FunctionClass(self, expr):
-        if hasattr(expr, '_latex_no_arg'):
-            return expr._latex_no_arg(self)
+    @property
+    def _special_function_classes(self):
+        from sympy.functions.special.tensor_functions import KroneckerDelta
+        from sympy.functions.special.gamma_functions import gamma, lowergamma
+        from sympy.functions.special.beta_functions import beta
+        from sympy.functions.special.delta_functions import DiracDelta
+        from sympy.functions.special.error_functions import Chi
+        return {KroneckerDelta: r'\delta',
+                gamma:  r'\Gamma',
+                lowergamma: r'\gamma',
+                beta: r'\operatorname{B}',
+                DiracDelta: r'\delta',
+                Chi: r'\operatorname{Chi}'}
 
+    def _print_FunctionClass(self, expr):
+        for cls in self._special_function_classes:
+            if issubclass(expr, cls) and expr.__name__ == cls.__name__:
+                return self._special_function_classes[cls]
         return self._hprint_Function(str(expr))
 
     def _print_Lambda(self, expr):
@@ -823,6 +844,17 @@ class LatexPrinter(Printer):
         else:
             return tex
 
+    def _print_log(self, expr, exp=None):
+        if not self._settings["ln_notation"]:
+            tex = r"\log{\left (%s \right )}" % self._print(expr.args[0])
+        else:
+            tex = r"\ln{\left (%s \right )}" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
     def _print_Abs(self, expr, exp=None):
         tex = r"\left|{%s}\right|" % self._print(expr.args[0])
 
@@ -845,7 +877,7 @@ class LatexPrinter(Printer):
     def _print_Not(self, e):
         from sympy import Equivalent, Implies
         if isinstance(e.args[0], Equivalent):
-            return self._print_Equivalent(e.args[0], r"\not\equiv")
+            return self._print_Equivalent(e.args[0], r"\not\Leftrightarrow")
         if isinstance(e.args[0], Implies):
             return self._print_Implies(e.args[0], r"\not\Rightarrow")
         if (e.args[0].is_Boolean):
@@ -885,7 +917,7 @@ class LatexPrinter(Printer):
 
     def _print_Equivalent(self, e, altchar=None):
         args = sorted(e.args, key=default_sort_key)
-        return self._print_LogOp(args, altchar or r"\equiv")
+        return self._print_LogOp(args, altchar or r"\Leftrightarrow")
 
     def _print_conjugate(self, expr, exp=None):
         tex = r"\overline{%s}" % self._print(expr.args[0])
@@ -949,13 +981,14 @@ class LatexPrinter(Printer):
         else:
             return r"\Pi%s" % tex
 
-    def _hprint_one_args_func(self, expr, exp=None):
-        tex = r"\left(%s\right)" % self._print(expr.args[0])
+    def _print_beta(self, expr, exp=None):
+        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
 
         if exp is not None:
-            return r"%s^{%s}%s" % (self._print(expr.func), exp, tex)
+            return r"\operatorname{B}^{%s}%s" % (exp, tex)
         else:
-            return r"%s%s" % (self._print(expr.func), tex)
+            return r"\operatorname{B}%s" % tex
 
     def _print_uppergamma(self, expr, exp=None):
         tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
@@ -974,6 +1007,24 @@ class LatexPrinter(Printer):
             return r"\gamma^{%s}%s" % (exp, tex)
         else:
             return r"\gamma%s" % tex
+
+    def _hprint_one_arg_func(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^{%s}%s" % (self._print(expr.func), exp, tex)
+        else:
+            return r"%s%s" % (self._print(expr.func), tex)
+
+    _print_gamma = _hprint_one_arg_func
+
+    def _print_Chi(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"\operatorname{Chi}^{%s}%s" % (exp, tex)
+        else:
+            return r"\operatorname{Chi}%s" % tex
 
     def _print_expint(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[1])
@@ -1289,7 +1340,7 @@ class LatexPrinter(Printer):
                 s += self._print(expr.point)
             else:
                 s += self._print(expr.point[0])
-        return r"\mathcal{O}\left(%s\right)" % s
+        return r"O\left(%s\right)" % s
 
     def _print_Symbol(self, expr):
         if expr in self._settings['symbol_names']:
@@ -1420,18 +1471,33 @@ class LatexPrinter(Printer):
             return r"%s^\dagger" % self._print(mat)
 
     def _print_MatAdd(self, expr):
-        terms = list(expr.args)
-        tex = " + ".join(map(self._print, terms))
-        return tex
+        terms = [self._print(t) for t in expr.args]
+        l = []
+        for t in terms:
+            if t.startswith('-'):
+                sign = "-"
+                t = t[1:]
+            else:
+                sign = "+"
+            l.extend([sign, t])
+        sign = l.pop(0)
+        if sign == '+':
+            sign = ""
+        return sign + ' '.join(l)
 
     def _print_MatMul(self, expr):
-        from sympy import Add, MatAdd, HadamardProduct
+        from sympy import Add, MatAdd, HadamardProduct, MatMul, Mul
 
         def parens(x):
             if isinstance(x, (Add, MatAdd, HadamardProduct)):
                 return r"\left(%s\right)" % self._print(x)
             return self._print(x)
-        return ' '.join(map(parens, expr.args))
+
+        if isinstance(expr, MatMul) and expr.args[0].is_Number and expr.args[0]<0:
+            expr = Mul(-1*expr.args[0], MatMul(*expr.args[1:]))
+            return '-' + ' '.join(map(parens, expr.args))
+        else:
+            return ' '.join(map(parens, expr.args))
 
     def _print_Mod(self, expr, exp=None):
         if exp is not None:
@@ -1448,6 +1514,15 @@ class LatexPrinter(Printer):
                 return r"\left(%s\right)" % self._print(x)
             return self._print(x)
         return r' \circ '.join(map(parens, expr.args))
+
+    def _print_KroneckerProduct(self, expr):
+        from sympy import Add, MatAdd, MatMul
+
+        def parens(x):
+            if isinstance(x, (Add, MatAdd, MatMul)):
+                return r"\left(%s\right)" % self._print(x)
+            return self._print(x)
+        return r' \otimes '.join(map(parens, expr.args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -1707,14 +1782,21 @@ class LatexPrinter(Printer):
         return r"\mathbb{C}"
 
     def _print_ImageSet(self, s):
-        return r"\left\{%s\; |\; %s \in %s\right\}" % (
+        sets = s.args[1:]
+        varsets = [r"%s \in %s" % (self._print(var), self._print(setv))
+            for var, setv in zip(s.lamda.variables, sets)]
+        return r"\left\{%s\; |\; %s\right\}" % (
             self._print(s.lamda.expr),
-            ', '.join([self._print(var) for var in s.lamda.variables]),
-            self._print(s.base_set))
+            ', '.join(varsets))
 
     def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
-        return r"\left\{%s\; |\; %s \in %s \wedge %s \right\}" % (
+        if s.base_set is S.UniversalSet:
+            return r"\left\{%s \mid %s \right\}" % (
+            vars_print,
+            self._print(s.condition.as_expr()))
+
+        return r"\left\{%s \mid %s \in %s \wedge %s \right\}" % (
             vars_print,
             vars_print,
             self._print(s.base_set),
@@ -1771,7 +1853,50 @@ class LatexPrinter(Printer):
 
     def _print_Poly(self, poly):
         cls = poly.__class__.__name__
-        expr = self._print(poly.as_expr())
+        terms = []
+        for monom, coeff in poly.terms():
+            s_monom = ''
+            for i, exp in enumerate(monom):
+                if exp > 0:
+                    if exp == 1:
+                        s_monom += self._print(poly.gens[i])
+                    else:
+                        s_monom += self._print(pow(poly.gens[i], exp))
+
+            if coeff.is_Add:
+                if s_monom:
+                    s_coeff = r"\left(%s\right)" % self._print(coeff)
+                else:
+                    s_coeff = self._print(coeff)
+            else:
+                if s_monom:
+                    if coeff is S.One:
+                        terms.extend(['+', s_monom])
+                        continue
+
+                    if coeff is S.NegativeOne:
+                        terms.extend(['-', s_monom])
+                        continue
+
+                s_coeff = self._print(coeff)
+
+            if not s_monom:
+                s_term = s_coeff
+            else:
+                s_term = s_coeff + " " + s_monom
+
+            if s_term.startswith('-'):
+                terms.extend(['-', s_term[1:]])
+            else:
+                terms.extend(['+', s_term])
+
+        if terms[0] in ['-', '+']:
+            modifier = terms.pop(0)
+
+            if modifier == '-':
+                terms[0] = '-' + terms[0]
+
+        expr = ' '.join(terms)
         gens = list(map(self._print, poly.gens))
         domain = "domain=%s" % self._print(poly.get_domain())
 
@@ -2081,7 +2206,7 @@ def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
 
-    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational
+    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational, log
     >>> from sympy.abc import x, y, mu, r, tau
 
     >>> print(latex((2*tau)**Rational(7,2)))
@@ -2149,7 +2274,7 @@ def latex(expr, **settings):
 
     long_frac_ratio: The allowed ratio of the width of the numerator to the
     width of the denominator before we start breaking off long fractions.
-    The default value is 2.
+    If None (the default value), long fractions are not broken up.
 
     >>> print(latex(Integral(r, r)/2/pi, long_frac_ratio=2))
     \frac{\int r\, dr}{2 \pi}
@@ -2199,6 +2324,14 @@ def latex(expr, **settings):
 
     >>> print(latex([2/x, y], mode='inline'))
     $\left [ 2 / x, \quad y\right ]$
+
+    ln_notation: If set to ``True`` "\ln" is used instead of default "\log"
+
+    >>> print(latex(log(10)))
+    \log{\left (10 \right )}
+
+    >>> print(latex(log(10), ln_notation=True))
+    \ln{\left (10 \right )}
 
     """
 

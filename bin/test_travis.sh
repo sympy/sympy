@@ -24,7 +24,8 @@ if [[ "${TEST_SAGE}" == "true" ]]; then
     echo "Testing SAGE"
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
-    sage -t sympy/external/tests/test_sage.py
+    PYTHONPATH=. sage -t sympy/external/tests/test_sage.py
+    export MPMATH_NOSAGE=1
 fi
 
 # We change directories to make sure that we test the installed version of
@@ -184,4 +185,13 @@ if not sympy.test('sympy/liealgebras'):
     raise Exception('Tests failed')
 EOF
     unset USE_SYMENGINE
+fi
+
+if [[ "${TEST_OPT_DEPENDENCY}" == *"antlr"* ]]; then
+    cat << EOF | python -We:invalid
+print('Testing ANTLR')
+import sympy
+if not sympy.test('sympy/parsing/tests/test_latex'):
+    raise Exception('Tests failed')
+EOF
 fi

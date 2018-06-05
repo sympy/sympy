@@ -1808,7 +1808,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             for symbol in free_symbols:
                 ranges.append(Tuple(symbol) + default_range)
 
-            for i in range(len(free_symbols) - nb_of_free_symbols):
+            for i in range(nb_of_free_symbols - len(free_symbols)):
                 ranges.append(Tuple(Dummy()) + default_range)
             ranges = Tuple(*ranges)
             plots = [expr + ranges for expr in exprs]

@@ -404,10 +404,21 @@ class Pow(Expr):
 
             '''
             For unevaluated Integer power, use built-in pow modular
-            exponentiation.
+            exponentiation, if powers are not too large wrt base.
             '''
             if self.base.is_Integer and self.exp.is_Integer and q.is_Integer:
-                return pow(int(self.base), int(self.exp), int(q))
+                b, e, m = int(self.base), int(self.exp), int(q)
+                # For very large powers, use totient reduction if e >= lg(m).
+                # Bound on m, is for safe factorization memory wise ie m^(1/4).
+                # For pollard-rho to be faster than built-in pow lg(e) > m^(1/4)
+                # check is added.
+                mb = m.bit_length()
+                if mb <= 80  and e >= mb and e.bit_length()**4 >= m:
+                    from sympy.ntheory import totient
+                    phi = totient(m)
+                    return pow(b, phi + e%phi, m)
+                else:
+                    return pow(b, e, m)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
@@ -845,7 +856,7 @@ class Pow(Expr):
                 if e.is_positive:
                     rv = Mul(*nc*e)
                 else:
-                    rv = 1/Mul(*nc*-e)
+                    rv = Mul(*[i**-1 for i in nc[::-1]]*-e)
                 if cargs:
                     rv *= Mul(*cargs)**e
                 return rv
@@ -1076,7 +1087,8 @@ class Pow(Expr):
                 if re.is_Number and im.is_Number:
                     # We can be more efficient in this case
                     expr = expand_multinomial(self.base**exp)
-                    return expr.as_real_imag()
+                    if expr != self:
+                        return expr.as_real_imag()
 
                 expr = poly(
                     (a + b)**exp)  # a = re, b = im; expr = (a + b*I)**exp
@@ -1086,7 +1098,8 @@ class Pow(Expr):
                 if re.is_Number and im.is_Number:
                     # We can be more efficient in this case
                     expr = expand_multinomial((re + im*S.ImaginaryUnit)**-exp)
-                    return expr.as_real_imag()
+                    if expr != self:
+                        return expr.as_real_imag()
 
                 expr = poly((a + b)**-exp)
 

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from functools import wraps
 from itertools import chain
-from sympy.core import sympify
+from sympy.core import sympify, S
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
@@ -124,6 +124,16 @@ class PythonCodePrinter(CodePrinter):
     def _print_Infinity(self, expr):
         return "float('inf')"
 
+    def _print_sign(self, e):
+        return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
+            f=self._module_format('math.copysign'), e=self._print(e.args[0]))
+
+    def _print_NegativeInfinity(self, expr):
+        return "float('-inf')"
+
+    def _print_ComplexInfinity(self, expr):
+        return self._print_NaN(expr)
+
     def _print_Mod(self, expr):
         PREC = precedence(expr)
         return ('{0} % {1}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
@@ -214,7 +224,9 @@ def pycode(expr, **settings):
 
 _not_in_mpmath = 'log1p log2'.split()
 _in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
-_known_functions_mpmath = dict(_in_mpmath)
+_known_functions_mpmath = dict(_in_mpmath, **{
+    'sign': 'sign',
+})
 _known_constants_mpmath = {
     'Pi': 'pi'
 }
@@ -276,6 +288,7 @@ _known_functions_numpy = dict(_in_numpy, **{
     'atan2': 'arctan2',
     'atanh': 'arctanh',
     'exp2': 'exp2',
+    'sign': 'sign',
 })
 
 
@@ -385,6 +398,9 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format('numpy.real'), self._print(expr.args[0]))
+
+    def _print_sinc(self, expr):
+        return "%s(%s)" % (self._module_format('numpy.sinc'), self._print(expr.args[0]/S.Pi))
 
     def _print_MatrixBase(self, expr):
         func = self.known_functions.get(expr.__class__.__name__, None)

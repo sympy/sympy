@@ -91,7 +91,7 @@ def test_are_concurrent_2d():
     assert Line.are_concurrent(l1, Line(Point(0, 0), Point(-x1, x1)), l2) is False
 
 
-def test_are_concurent_3d():
+def test_are_concurrent_3d():
     p1 = Point3D(0, 0, 0)
     l1 = Line(p1, Point3D(1, 1, 1))
     parallel_1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
