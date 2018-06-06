@@ -173,17 +173,20 @@ def test_Beam():
         b4.variable = 1
 
 
-def test_variable_second_moment():
+def test_composite_beam():
     E = Symbol('E')
     I = Symbol('I')
-    b = Beam(4, E, [(1.5*I, 0, 0, 2), (I, 2, 0, 4)])
+    b = Beam(2, E, 1.5*I)
+    b2 = Beam(2, E, I)
+    b.join(b2, "fixed")
     b.apply_load(-20, 0, -1)
     b.apply_load(80, 0, -2)
     b.apply_load(20, 4, -1)
     b.bc_slope = [(0, 0)]
     b.bc_deflection = [(0, 0)]
 
-    assert b.second_moment == 1.5*I*SingularityFunction(x, 0, 0) - 0.5*I*SingularityFunction(x, 2, 0) - I*SingularityFunction(x, 4, 0)
+    assert b.length == 4
+    assert b.second_moment == Piecewise((1.5*I, x <= 2), (I, x <= 4))
     assert b.slope().subs(x, 4) == 120.0/(E*I)
     assert b.slope().subs(x, 2) == 80.0/(E*I)
     assert int(b.deflection().subs(x, 4).args[0]) == 302  # Coefficient of 1/(E*I)

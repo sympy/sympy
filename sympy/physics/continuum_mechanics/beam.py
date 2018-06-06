@@ -88,12 +88,13 @@ class Beam(object):
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
-        self.variable = variable
         self.second_moment = second_moment
+        self.variable = variable
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
         self._applied_loads = []
         self._reaction_loads = {}
+        self._composite_type = None
 
     def __str__(self):
         str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
@@ -162,26 +163,7 @@ class Beam(object):
 
     @second_moment.setter
     def second_moment(self, i):
-        if isinstance(i, list):
-            self._second_moment_list = i
-            self._second_moment = 0
-            x = self.variable
-            for moment in i:
-                value = sympify(moment[0])
-                start = sympify(moment[1])
-                order = sympify(moment[2])
-                end = sympify(moment[3])
-
-                self._second_moment += value*SingularityFunction(x, start, order)
-                if order == 0:
-                    self._second_moment -= value*SingularityFunction(x, end, order)
-                elif order.is_positive:
-                    self._second_moment -= value*SingularityFunction(x, end, order) + value*SingularityFunction(x, end, 0)
-                else:
-                    raise ValueError("""Order of the Second moment should be non-negative.""")
-        else:
-            self._second_moment_list = None
-            self._second_moment = sympify(i)
+        self._second_moment = sympify(i)
 
     @property
     def boundary_conditions(self):
@@ -227,6 +209,47 @@ class Beam(object):
     @bc_deflection.setter
     def bc_deflection(self, d_bcs):
         self._boundary_conditions['deflection'] = d_bcs
+
+    def join(self, beam, via="fixed"):
+        """
+        This method joins two beams to make a new composite beam system.
+        Passed Beam class instance is attached to the right end of calling
+        object.
+
+        Examples
+        ========
+        There is a cantilever beam of length 4 meters. For first 2 meters
+        its moment of inertia is `1.5*I` and `I` for the other end.
+        A pointload of magnitude 4 N is applied from the top at its free end.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b1 = Beam(2, E, 1.5*I)
+        >>> b2 = Beam(2, E, I)
+        >>> b1.join(b2, "fixed")
+        >>> b1.apply_load(20, 4, -1)
+        >>> b1.apply_load(R1, 0, -1)
+        >>> b1.apply_load(R2, 0, -2)
+        >>> b1.bc_slope = [(0, 0)]
+        >>> b1.bc_deflection = [(0, 0)]
+        >>> b1.solve_for_reaction_loads(R1, R2)
+        >>> b1.load
+        80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
+        >>> b1.slope()
+        Piecewise((0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) +
+        10*SingularityFunction(x, 4, 2))/(E*I), x <= 2), (((80*SingularityFunction(x, 0, 1) -
+        10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))/I - 120/I)/E + 80.0/(E*I), x <= 4))
+        """
+        if via == "fixed":
+            self._composite_type = "fixed"
+            old_length = self.length
+            self.length += beam.length
+            if self.second_moment != beam.second_moment:
+                x = self.variable
+                self.second_moment = Piecewise((self.second_moment, x<=old_length),
+                                        (beam.second_moment, x<=self.length))
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -598,10 +621,19 @@ class Beam(object):
         I = self.second_moment
         if not self._boundary_conditions['slope']:
             return diff(self.deflection(), x)
-        if self._second_moment_list is not None:
-            slope_curve = integrate(S(1)/(I.rewrite(Piecewise))*self.bending_moment(), x)
-            slope_curve = Piecewise((float("nan"), x<0), *slope_curve.args[1:-1])
-            return S(1)/E*slope_curve
+
+        if self._composite_type is not None:
+            args = I.args
+            conditions = []
+            prev_slope = 0
+            prev_end = 0
+            for i in range(len(args)):
+                if i != 0:
+                    prev_end = args[i-1][1].args[1]
+                slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                conditions.append((prev_slope + slope_value, args[i][1]))
+                prev_slope = slope_value.subs(x, args[i][1].args[1])
+            return Piecewise(*conditions)
 
         C3 = Symbol('C3')
         slope_curve = integrate(self.bending_moment(), x) + C3
@@ -651,38 +683,34 @@ class Beam(object):
         E = self.elastic_modulus
         I = self.second_moment
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
-            if self._second_moment_list is not None:
-                moment_list = self._second_moment_list
+            if self._composite_type is not None:
+                args = I.args
                 conditions = []
                 prev_def = 0
                 prev_end = 0
-                slope_curve = integrate(S(1)/(I.rewrite(Piecewise))*self.bending_moment(), x)
-                slope_curve = Piecewise(*slope_curve.args[1:-1])
-                for i in range(len(moment_list)):
+                for i in range(len(args)):
                     if i != 0:
-                        prev_end = moment_list[i-1][3]
-                    deflection_value = integrate(slope_curve.args[i][0], (x, prev_end, x))
-                    conditions.append(((prev_def + deflection_value), slope_curve.args[i][1]))
-                    prev_def = deflection_value.subs(x, moment_list[i][3])
-                return S(1)/E*Piecewise(*conditions)
+                        prev_end = args[i-1][1].args[1]
+                    deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
+                    conditions.append(((prev_def + deflection_value), args[i][1]))
+                    prev_def = deflection_value.subs(x, args[i][1].args[1])
+                return Piecewise(*conditions)
             return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x)
         elif not self._boundary_conditions['deflection']:
             return integrate(self.slope(), x)
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
-            if self._second_moment_list is not None:
-                moment_list = self._second_moment_list
+            if self._composite_type is not None:
+                args = I.args
                 conditions = []
                 prev_def = 0
                 prev_end = 0
-                slope_curve = integrate(S(1)/(I.rewrite(Piecewise))*self.bending_moment(), x)
-                slope_curve = Piecewise(*slope_curve.args[1:-1])
-                for i in range(len(moment_list)):
+                for i in range(len(args)):
                     if i != 0:
-                        prev_end = moment_list[i-1][3]
-                    deflection_value = integrate(slope_curve.args[i][0], (x, prev_end, x))
-                    conditions.append(((prev_def + deflection_value), slope_curve.args[i][1]))
-                    prev_def = deflection_value.subs(x, moment_list[i][3])
-                return S(1)/E*Piecewise(*conditions)
+                        prev_end = args[i-1][1].args[1]
+                    deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
+                    conditions.append(((prev_def + deflection_value), args[i][1]))
+                    prev_def = deflection_value.subs(x, args[i][1].args[1])
+                return Piecewise(*conditions)
             C3 = Symbol('C3')
             C4 = Symbol('C4')
             slope_curve = integrate(self.bending_moment(), x) + C3
@@ -695,20 +723,18 @@ class Beam(object):
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
             return S(1)/(E*I)*deflection_curve
 
-        if self._second_moment_list is not None:
-            moment_list = self._second_moment_list
+        if self._composite_type is not None:
+            args = I.args
             conditions = []
             prev_def = 0
             prev_end = 0
-            slope_curve = integrate(S(1)/(I.rewrite(Piecewise))*self.bending_moment(), x)
-            slope_curve = Piecewise(*slope_curve.args[1:-1])
-            for i in range(len(moment_list)):
+            for i in range(len(args)):
                 if i != 0:
-                    prev_end = moment_list[i-1][3]
-                deflection_value = integrate(slope_curve.args[i][0], (x, prev_end, x))
-                conditions.append(((prev_def + deflection_value), slope_curve.args[i][1]))
-                prev_def = deflection_value.subs(x, moment_list[i][3])
-            return S(1)/E*Piecewise(*conditions)
+                    prev_end = args[i-1][1].args[1]
+                deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
+                conditions.append(((prev_def + deflection_value), args[i][1]))
+                prev_def = deflection_value.subs(x, args[i][1].args[1])
+            return Piecewise(*conditions)
 
         C4 = Symbol('C4')
         deflection_curve = integrate((E*I)*self.slope(), x) + C4
