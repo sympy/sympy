@@ -817,25 +817,16 @@ class LatexPrinter(Printer):
 
         return tex
 
-    def _print_Min(self, expr, exp=None):
+    def _hprint_variadic_function(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
         texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"\min\left(%s\right)" % ", ".join(texargs)
-
+        tex = r"\%s\left(%s\right)" % (self._print((str(expr.func)).lower()), ", ".join(texargs))
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
 
-    def _print_Max(self, expr, exp=None):
-        args = sorted(expr.args, key=default_sort_key)
-        texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"\max\left(%s\right)" % ", ".join(texargs)
-
-        if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
-        else:
-            return tex
+    _print_Min = _print_Max = _hprint_variadic_function
 
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
@@ -999,14 +990,6 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{B}%s" % tex
 
-    def _print_gamma(self, expr, exp=None):
-        tex = r"\left(%s\right)" % self._print(expr.args[0])
-
-        if exp is not None:
-            return r"\Gamma^{%s}%s" % (exp, tex)
-        else:
-            return r"\Gamma%s" % tex
-
     def _print_uppergamma(self, expr, exp=None):
         tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
                                         self._print(expr.args[1]))
@@ -1024,6 +1007,16 @@ class LatexPrinter(Printer):
             return r"\gamma^{%s}%s" % (exp, tex)
         else:
             return r"\gamma%s" % tex
+
+    def _hprint_one_arg_func(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^{%s}%s" % (self._print(expr.func), exp, tex)
+        else:
+            return r"%s%s" % (self._print(expr.func), tex)
+
+    _print_gamma = _hprint_one_arg_func
 
     def _print_Chi(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
