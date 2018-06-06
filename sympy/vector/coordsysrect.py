@@ -11,7 +11,7 @@ from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos,\
 import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-import collections
+import collections.abc
 
 
 def CoordSysCartesian(*args, **kwargs):
@@ -84,7 +84,7 @@ class CoordSys3D(Basic):
                 else:
                     transformation = Lambda(transformation[0],
                                             transformation[1])
-            elif isinstance(transformation, collections.Callable):
+            elif isinstance(transformation, collections.abc.Callable):
                 x1, x2, x3 = symbols('x1 x2 x3', cls=Dummy)
                 transformation = Lambda((x1, x2, x3),
                                         transformation(x1, x2, x3))

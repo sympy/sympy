@@ -58,7 +58,7 @@ import mpmath
 import mpmath.libmp as mlib
 
 import inspect
-import collections
+import collections.abc
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -1242,7 +1242,7 @@ class Derivative(Expr):
             elif (count < 0) == True:
                 obj = None
             else:
-                if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+                if isinstance(v, (collections.abc.Iterable, Tuple, MatrixCommon, NDimArray)):
                     # Treat derivatives by arrays/matrices as much as symbols.
                     is_symbol = True
                 if not is_symbol:

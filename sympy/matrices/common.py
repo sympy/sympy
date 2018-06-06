@@ -6,7 +6,7 @@ etc.).
 
 from __future__ import print_function, division
 
-import collections
+import collections.abc
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
@@ -2027,7 +2027,7 @@ class MatrixArithmetic(MatrixRequired):
             return MatrixArithmetic._eval_matrix_mul(self, other)
 
         # if 'other' is not iterable then scalar multiplication.
-        if not isinstance(other, collections.Iterable):
+        if not isinstance(other, collections.abc.Iterable):
             try:
                 return self._eval_scalar_mul(other)
             except TypeError:
@@ -2099,7 +2099,7 @@ class MatrixArithmetic(MatrixRequired):
             return MatrixArithmetic._eval_matrix_rmul(self, other)
 
         # if 'other' is not iterable then scalar multiplication.
-        if not isinstance(other, collections.Iterable):
+        if not isinstance(other, collections.abc.Iterable):
             try:
                 return self._eval_scalar_rmul(other)
             except TypeError:

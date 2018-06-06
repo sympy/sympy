@@ -9,7 +9,8 @@ from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, range
 from mpmath.libmp import mpf_log, prec_to_dps
 
-from collections import defaultdict, Iterable
+from collections import defaultdict
+from collections.abc import Iterable
 
 class Expr(Basic, EvalfMixin):
     """

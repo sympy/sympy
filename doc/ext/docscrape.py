@@ -7,7 +7,7 @@ import inspect
 import textwrap
 import re
 import pydoc
-import collections
+import collections.abc
 import sys
 
 
@@ -87,7 +87,7 @@ class Reader(object):
         return not ''.join(self._str).strip()
 
 
-class NumpyDocString(collections.Mapping):
+class NumpyDocString(collections.abc.Mapping):
     def __init__(self, docstring, config={}):
         docstring = textwrap.dedent(docstring).split('\n')
 

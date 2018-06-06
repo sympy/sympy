@@ -1,4 +1,4 @@
-import collections
+import collections.abc
 import random
 import warnings
 
@@ -2634,7 +2634,7 @@ def test_hash():
         assert len(s) == 1 and s.pop() == cls.eye(1)
     # issue 3979
     for cls in classes[:2]:
-        assert not isinstance(cls.eye(1), collections.Hashable)
+        assert not isinstance(cls.eye(1), collections.abc.Hashable)
 
 
 @XFAIL

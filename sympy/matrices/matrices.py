@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-import collections
+import collections.abc
 from mpmath.libmp.libmpf import prec_to_dps
 from sympy.assumptions.refine import refine
 from sympy.core.add import Add
@@ -2104,7 +2104,7 @@ class MatrixBase(MatrixDeprecated,
                                  "Both dimensions must be positive".format(rows, cols))
 
             # Matrix(2, 2, lambda i, j: i+j)
-            if len(args) == 3 and isinstance(args[2], collections.Callable):
+            if len(args) == 3 and isinstance(args[2], collections.abc.Callable):
                 op = args[2]
                 flat_list = []
                 for i in range(rows):

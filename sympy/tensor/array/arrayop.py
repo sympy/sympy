@@ -1,6 +1,6 @@
 import itertools
 
-import collections
+import collections.abc
 
 from sympy import S, Tuple, diff
 
@@ -103,7 +103,7 @@ def tensorcontraction(array, *contraction_axes):
     # Verify contraction_axes:
     taken_dims = set([])
     for axes_group in contraction_axes:
-        if not isinstance(axes_group, collections.Iterable):
+        if not isinstance(axes_group, collections.abc.Iterable):
             raise ValueError("collections of contraction axes expected")
 
         dim = array.shape[axes_group[0]]
@@ -190,7 +190,7 @@ def derive_by_array(expr, dx):
 
     """
     from sympy.matrices import MatrixBase
-    array_types = (collections.Iterable, MatrixBase, NDimArray)
+    array_types = (collections.abc.Iterable, MatrixBase, NDimArray)
 
     if isinstance(dx, array_types):
         dx = ImmutableDenseNDimArray(dx)

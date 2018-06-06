@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from collections import MutableMapping, defaultdict
+from collections import defaultdict
+from collections.abc import MutableMapping
 
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
 from sympy.core.numbers import ImaginaryUnit
