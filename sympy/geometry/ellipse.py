@@ -97,22 +97,6 @@ class Ellipse(GeometrySet):
     >>> e2
     Ellipse(Point2D(3, 1), 3, 9/5)
 
-    Plotting:
-
-    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
-    >>> from sympy import Circle, Segment
-    >>> c1 = Circle(Point(0,0), 1)
-    >>> Plot(c1)                                # doctest: +SKIP
-    [0]: cos(t), sin(t), 'mode=parametric'
-    >>> p = Plot()                              # doctest: +SKIP
-    >>> p[0] = c1                               # doctest: +SKIP
-    >>> radius = Segment(c1.center, c1.random_point())
-    >>> p[1] = radius                           # doctest: +SKIP
-    >>> p                                       # doctest: +SKIP
-    [0]: cos(t), sin(t), 'mode=parametric'
-    [1]: t*cos(1.546086215036205357975518382),
-    t*sin(1.546086215036205357975518382), 'mode=parametric'
-
     """
 
     def __contains__(self, o):
@@ -1154,7 +1138,7 @@ class Ellipse(GeometrySet):
         v = self.vradius
         return self.func(c.scale(x, y), hradius=h*x, vradius=v*y)
 
-    @doctest_depends_on(modules=('pyglet',))
+
     def tangent_lines(self, p):
         """Tangent lines between `p` and the ellipse.
 
@@ -1190,15 +1174,6 @@ class Ellipse(GeometrySet):
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.tangent_lines(Point(3, 0))
         [Line2D(Point2D(3, 0), Point2D(3, -12))]
-
-        >>> # This will plot an ellipse together with a tangent line.
-        >>> from sympy.plotting.pygletplot import PygletPlot as Plot
-        >>> from sympy import Point, Ellipse
-        >>> e = Ellipse(Point(0,0), 3, 2)
-        >>> t = e.tangent_lines(e.random_point())
-        >>> p = Plot()
-        >>> p[0] = e # doctest: +SKIP
-        >>> p[1] = t # doctest: +SKIP
 
         """
         p = Point(p, dim=2)

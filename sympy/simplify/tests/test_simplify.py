@@ -720,3 +720,30 @@ def test_clear_coefficients():
     assert clear_coefficients(S.Infinity, x) == (S.Infinity, x)
     assert clear_coefficients(-S.Pi, x) == (S.Pi, -x)
     assert clear_coefficients(2 - S.Pi/3, x) == (pi, -3*x + 6)
+
+def test_nc_simplify():
+    from sympy.simplify.simplify import nc_simplify
+    a, b, c = symbols('a b c', commutative = False)
+    x = Symbol('x')
+
+    def _check(expr, simplified, deep=True):
+        assert nc_simplify(expr, deep=deep) == simplified
+        assert expand(expr) == expand(simplified)
+
+    _check(a*b*a*b*a*b*c*(a*b)**3*c, ((a*b)**3*c)**2)
+    _check(a*b*(a*b)**-2*a*b, 1)
+    _check(a**2*b*a*b*a*b*(a*b)**-1, a*(a*b)**2)
+    _check(b*a*b**2*a*b**2*a*b**2, b*(a*b**2)**3)
+    _check(a*b*a**2*b*a**2*b*a**3, (a*b*a)**3*a**2)
+    _check(a**2*b*a**4*b*a**4*b*a**2, (a**2*b*a**2)**3)
+    _check(a**3*b*a**4*b*a**4*b*a, a**3*(b*a**4)**3*a**-3)
+    _check(a*b*a*b + a*b*c*x*a*b*c, (a*b)**2 + x*(a*b*c)**2)
+    _check(a*b*a*b*c*a*b*a*b*c, ((a*b)**2*c)**2)
+    _check(b**-1*a**-1*(a*b)**2, a*b)
+    _check(a**-1*b*c**-1, (c*b**-1*a)**-1)
+    expr = a**3*b*a**4*b*a**4*b*a**2*b*a**2*(b*a**2)**2*b*a**2*b*a**2
+    for i in range(10):
+        expr *= a*b
+    _check(expr, a**3*(b*a**4)**2*(b*a**2)**6*(a*b)**10)
+    _check((a*b*a*b)**2, (a*b*a*b)**2, deep=False)
+    _check(a*b*(c*d)**2, a*b*(c*d)**2)

@@ -17,6 +17,7 @@ from .logic import fuzzy_not
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
+
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp.backend import MPZ
@@ -1482,35 +1483,38 @@ class Rational(Number):
             if isinstance(p, Rational):
                 return p
 
-            if isinstance(p, string_types):
-                if p.count('/') > 1:
-                    raise TypeError('invalid input: %s' % p)
-                pq = p.rsplit('/', 1)
-                if len(pq) == 2:
-                    p, q = pq
-                    fp = fractions.Fraction(p)
-                    fq = fractions.Fraction(q)
-                    f = fp/fq
-                    return Rational(f.numerator, f.denominator, 1)
-                p = p.replace(' ', '')
-                try:
-                    p = fractions.Fraction(p)
-                except ValueError:
-                    pass  # error will raise below
-
-            if not isinstance(p, string_types):
-                try:
-                    if isinstance(p, fractions.Fraction):
-                        return Rational(p.numerator, p.denominator, 1)
-                except NameError:
-                    pass  # error will raise below
-
+            if isinstance(p, SYMPY_INTS):
+                pass
+            else:
                 if isinstance(p, (float, Float)):
                     return Rational(*_as_integer_ratio(p))
 
-            if not isinstance(p, SYMPY_INTS + (Rational,)):
-                raise TypeError('invalid input: %s' % p)
-            q = q or S.One
+                if not isinstance(p, string_types):
+                    try:
+                        p = sympify(p)
+                    except (SympifyError, SyntaxError):
+                        pass  # error will raise below
+                else:
+                    if p.count('/') > 1:
+                        raise TypeError('invalid input: %s' % p)
+                    p = p.replace(' ', '')
+                    pq = p.rsplit('/', 1)
+                    if len(pq) == 2:
+                        p, q = pq
+                        fp = fractions.Fraction(p)
+                        fq = fractions.Fraction(q)
+                        p = fp/fq
+                    try:
+                        p = fractions.Fraction(p)
+                    except ValueError:
+                        pass  # error will raise below
+                    else:
+                        return Rational(p.numerator, p.denominator, 1)
+
+                if not isinstance(p, Rational):
+                    raise TypeError('invalid input: %s' % p)
+
+            q = 1
             gcd = 1
         else:
             p = Rational(p)
@@ -3817,10 +3821,9 @@ I = S.ImaginaryUnit
 
 
 def sympify_fractions(f):
-    return Rational(f.numerator, f.denominator)
+    return Rational(f.numerator, f.denominator, 1)
 
 converter[fractions.Fraction] = sympify_fractions
-
 
 try:
     if HAS_GMPY == 2:
@@ -3846,6 +3849,13 @@ def sympify_mpmath(x):
     return Expr._from_mpmath(x, x.context.prec)
 
 converter[mpnumeric] = sympify_mpmath
+
+
+def sympify_mpq(x):
+    p, q = x._mpq_
+    return Rational(p, q, 1)
+
+converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpq
 
 
 def sympify_complex(a):

@@ -269,14 +269,6 @@ class ContinuousPSpace(PSpace):
     is_real = True
 
     @property
-    def domain(self):
-        return self.args[0]
-
-    @property
-    def density(self):
-        return self.args[1]
-
-    @property
     def pdf(self):
         return self.density(*self.domain.symbols)
 

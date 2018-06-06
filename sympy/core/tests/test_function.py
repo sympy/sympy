@@ -555,11 +555,36 @@ def test_diff_wrt():
     assert f(
         sin(x)).diff(x) == Subs(Derivative(f(x), x), (x,), (sin(x),))*cos(x)
 
-    assert diff(f(g(x)), g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
+    assert diff(f(g(x)), g(x)) == Derivative(f(g(x)), g(x))
 
 
 def test_diff_wrt_func_subs():
     assert f(g(x)).diff(x).subs(g, Lambda(x, 2*x)).doit() == f(2*x).diff(x)
+
+
+def test_subs_in_derivative():
+    expr = sin(x*exp(y))
+    u = Function('u')
+    v = Function('v')
+    assert Derivative(expr, y).subs(y, x).doit() == \
+        Derivative(expr, y).doit().subs(y, x)
+    assert Derivative(f(x, y), y).subs(y, x) == Subs(Derivative(f(x, y), y), y, x)
+    assert Derivative(f(x, y), y).subs(x, y) == Subs(Derivative(f(x, y), y), x, y)
+    assert Derivative(f(x, y), y).subs(y, g(x, y)) == Subs(Derivative(f(x, y), y), y, g(x, y))
+    assert Derivative(f(x, y), y).subs(x, g(x, y)) == Subs(Derivative(f(x, y), y), x, g(x, y))
+    assert Derivative(f(u(x), h(y)), h(y)).subs(h(y), g(x, y)) == \
+        Subs(Derivative(f(u(x), h(y)), h(y)), h(y), g(x, y))
+    assert Derivative(f(x, y), y).subs(y, z) == Derivative(f(x, z), z)
+    assert Derivative(f(x, y), y).subs(y, g(y)) == Derivative(f(x, g(y)), g(y))
+    assert Derivative(f(g(x), h(y)), h(y)).subs(h(y), u(y)) == \
+        Derivative(f(g(x), u(y)), u(y))
+    # Issue 13791. No comparison (it's a long formula) but this used to raise an exception.
+    assert isinstance(v(x, y, u(x, y)).diff(y).diff(x).diff(y), Expr)
+    # This is also related to issues 13791 and 13795
+    F = Lambda((x, y), exp(2*x + 3*y))
+    abstract = f(x, f(x, x)).diff(x, 2)
+    concrete = F(x, F(x, x)).diff(x, 2)
+    assert (abstract.replace(f, F).doit() - concrete).simplify() == 0
 
 
 def test_diff_wrt_not_allowed():
@@ -863,7 +888,7 @@ def test_issue_12005():
     assert e4.diff(y) == S.Zero
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
-    assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
+    assert f(g(x)).diff(g(x), g(x)) == Derivative(f(g(x)), g(x), g(x))
 
 def test_issue_13843():
     x = symbols('x')

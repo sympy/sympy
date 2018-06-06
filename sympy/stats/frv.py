@@ -235,14 +235,6 @@ class FinitePSpace(PSpace):
     """
     is_Finite = True
 
-    @property
-    def domain(self):
-        return self.args[0]
-
-    @property
-    def density(self):
-        return self.args[1]
-
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))
                 for key, val in density.items())
