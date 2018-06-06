@@ -556,6 +556,14 @@ class CodeBlock(Basic):
 
         """
         from sympy.utilities.iterables import topological_sort
+
+        if not all(isinstance(i, Assignment) for i in assignments):
+            # Will support more things later
+            raise NotImplementedError("CodeBlock.topological_sort only supports Assignments")
+
+        if any(isinstance(i, AugmentedAssignment) for i in assignments):
+            raise NotImplementedError("CodeBlock.topological_sort doesn't yet work with AugmentedAssignments")
+
         # Create a graph where the nodes are assignments and there is a directed edge
         # between nodes that use a variable and nodes that assign that
         # variable, like
