@@ -1,11 +1,9 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq)
+        Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, And, Mul)
 from sympy.solvers.solveset import solveset
-from sympy.solvers.inequalities import reduce_rational_inequalities
-from sympy.stats.crv import (reduce_rational_inequalities_wrap,
-        _reduce_inequalities)
+from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
         random_symbols, PSpace, ConditionalDomain, RandomDomain,
         ProductDomain, ProductPSpace)
@@ -172,7 +170,6 @@ class DiscretePSpace(PSpace):
         if (len(rvs) > 1):
             raise NotImplementedError(filldedent('''Multivariate discrete
             random variables are not yet supported.'''))
-        a = self.domain.set
         conditional_domain = reduce_rational_inequalities_wrap(condition,
             rvs[0])
         conditional_domain = conditional_domain.intersect(self.domain.set)
