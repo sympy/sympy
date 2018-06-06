@@ -1655,34 +1655,12 @@ def test_issue_13651():
 def test_issue_14041():
     import sympy.physics.mechanics as me
 
-    N_frame = me.ReferenceFrame('N')
     A_frame = me.ReferenceFrame('A')
-    B_frame = me.ReferenceFrame('B')
-
-    R_length = symbols('R')
-    L_length = symbols('L')
-
-    theta, phi  = me.dynamicsymbols('theta, phi')
     thetad, phid  = me.dynamicsymbols('theta, phi', 1)
-    t = Symbol('t')
+    L = Symbol('L')
 
-    A_frame.orient(N_frame, 'Axis', (theta, N_frame.z))
-    B_frame.orient(A_frame, 'Axis', (phi, A_frame.z))
-
-    O_point = me.Point('O')
-    O_point.set_vel(N_frame, 0)
-
-    O_point = me.Point('O')
-    O_point.set_vel(N_frame, 0)
-
-    Q_point = O_point.locatenew('A', R_length*A_frame.x)
-    P_point = Q_point.locatenew('B', L_length*B_frame.x)
-
-    r = P_point.pos_from(O_point)
-    r_dot = r.diff(t,N_frame).simplify()
-    r_ddot = r_dot.diff(t,N_frame).simplify()
-
-    assert latex(r_ddot) == '-  L \\left(\\dot{\\phi} + \\dot{\\theta}\\right)^{2}\\mathbf{\\hat{b}_x} + L \\left(\\ddot{\\phi} + \\ddot{\\theta}\\right)\\mathbf{\\hat{b}_y} -  R \\dot{\\theta}^{2}\\mathbf{\\hat{a}_x} + R \\ddot{\\theta}\\mathbf{\\hat{a}_y}'
+    assert latex(L*(phid + thetad)**2*A_frame.x) == \
+        r"L \left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
 
 
 def test_latex_UnevaluatedExpr():
