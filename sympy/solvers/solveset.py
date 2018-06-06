@@ -14,10 +14,11 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.containers import Tuple
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand_complex, AppliedUndef, Function)
+from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
+                                expand_log, Function)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
-from sympy.simplify.simplify import simplify, fraction, trigsimp
+from sympy.simplify import simplify, fraction, trigsimp, powdenest, logcombine, powsimp
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold, Piecewise)
@@ -30,9 +31,9 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
 from sympy.sets.sets import Set
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
-                         RootOf)
-from sympy.solvers.solvers import (checksol, denoms, unrad,
-    _simple_dens, recast_to_symbols)
+                         RootOf, factor)
+from sympy.solvers.solvers import (checksol, denoms, unrad, _simple_dens, _ispow,
+                                  recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -193,6 +194,32 @@ def _invert_real(f, g_ys, symbol):
         if g is not S.Zero:
             return _invert_real(h, imageset(Lambda(n, n - g), g_ys), symbol)
 
+        # if there are two terms with g_ys=0
+        # e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3,
+        # where f(x) and g(x) are power terms
+        if not g and not g_ys.args[0] and len(h.args) == 2 and \
+                not h.is_polynomial(symbol):
+            a, b = ordered(h.args)
+            ai, ad = a.as_independent(symbol)
+            bi, bd = b.as_independent(symbol)
+
+            if any(_ispow(i) for i in (ad,bd)):
+                a_base, a_exp = ad.as_base_exp()
+                b_base, b_exp = bd.as_base_exp()
+
+                if a_base == b_base:
+                    h = powsimp(powdenest(ad/bd))
+                    g = -bi/ai
+
+                else:
+                    rat = ad/bd
+                    _h = powsimp(rat)
+                    if _h != rat:
+                        h = _h
+                        g = -bi/ai
+
+            return (h, FiniteSet(g))
+
     if f.is_Mul:
         # f = g*h
         g, h = f.as_independent(symbol)
@@ -283,6 +310,29 @@ def _invert_complex(f, g_ys, symbol):
         if g is not S.Zero:
             return _invert_complex(h, imageset(Lambda(n, n - g), g_ys), symbol)
 
+        if not g and not g_ys.args[0] and len(h.args) == 2 and \
+                not h.is_polynomial(symbol):
+            a, b = ordered(h.args)
+            ai, ad = a.as_independent(symbol)
+            bi, bd = b.as_independent(symbol)
+
+            if any(_ispow(i) for i in (ad,bd)):
+                a_base, a_exp = ad.as_base_exp()
+                b_base, b_exp = bd.as_base_exp()
+
+                if a_base == b_base:
+                    h = powsimp(powdenest(ad/bd))
+                    g = -bi/ai
+
+                else:
+                    rat = ad/bd
+                    _h = powsimp(rat)
+                    if _h != rat:
+                        h = _h
+                        g = -bi/ai
+
+            return (h, FiniteSet(g))
+
     if f.is_Mul:
         # f = g*h
         g, h = f.as_independent(symbol)
@@ -307,6 +357,17 @@ def _invert_complex(f, g_ys, symbol):
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
             return _invert_complex(f.args[0], exp_invs, symbol)
+
+    if f.is_Pow:
+        base, expo = f.args
+        base_has_symbol = base.has(symbol)
+        expo_has_symbol = expo.has(symbol)
+
+        if expo_has_symbol:
+            pow_inv = Union(*[ imageset(Lambda(n, (I*(2*n*pi + arg(g_y)) +
+                expand_log(log(Abs(g_y))))/expand_log(log(base))), S.Integers)
+                                for g_y in g_ys if g_y !=0])
+            return _invert_complex(expo, pow_inv, symbol)
 
     return (f, g_ys)
 
@@ -927,7 +988,7 @@ def _solveset(f, symbol, domain, _check=False):
             # be repeated for each step of the inversion
             if isinstance(rhs_s, FiniteSet):
                 rhs_s = FiniteSet(*[Mul(*
-                    signsimp(i).as_content_primitive())
+                    signsimp(simplify(i)).as_content_primitive())
                     for i in rhs_s])
             result = rhs_s
 
@@ -943,7 +1004,12 @@ def _solveset(f, symbol, domain, _check=False):
                     elif equation.has(Abs):
                         result += _solve_abs(f, symbol, domain)
                     else:
-                        result += _solve_as_rational(equation, symbol, domain)
+                        new_result = _solve_as_rational(equation, symbol, domain)
+                        if isinstance(new_result, ConditionSet):
+                            result += transolve(equation, symbol, domain)
+                        else:
+                            result += new_result
+
                 else:
                     result += solver(equation, symbol)
 
@@ -974,6 +1040,75 @@ def _solveset(f, symbol, domain, _check=False):
             result = FiniteSet(*[s for s in result
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
+
+    return result
+
+
+def transolve(f, symbol, domain, **flags):
+    """Helper for solving transcendental equations."""
+
+    orig_f = fraction(together(f, deep=True))[0]
+    if 'tsolve_saw' not in flags:
+        flags['tsolve_saw'] = []
+    if f in flags['tsolve_saw']:
+        return None
+    else:
+        flags['tsolve_saw'].append(f)
+
+    inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
+    lhs, rhs_s = inverter(f, 0, symbol, domain)
+
+    result = S.EmptySet
+    if lhs.is_Add:
+        # solving equation
+        for rhs in rhs_s:
+            f = factor(powdenest(lhs - rhs))
+            g = _check_log(f)
+            if f.is_Mul:
+                result += _solveset(f, symbol, domain)
+
+            elif g:
+                result += _solve_log(f, symbol, domain)
+
+            else:
+                transolve(f, symbol, domain, **flags)
+
+
+    if result is S.EmptySet:
+        result = ConditionSet(symbol, Eq(orig_f, 0), domain)
+
+    return result
+
+
+def _check_log(f):
+    """Helper function to check if the equation is logarithmic or not."""
+
+    orig_f = f
+    # Heuristic-01
+    g = logcombine(f, force=True)
+    if g.count(log) != f.count(log):
+        return g
+
+    return False
+
+
+def _solve_log(f, symbol, domain):
+    """Helper function to solve logarithmic equations."""
+
+    from sympy.solvers.solvers import checksol
+
+    result = S.EmptySet
+    orig_f = f
+    f = _check_log(orig_f)
+    solutions = _solveset(f, symbol, domain)
+
+    if isinstance(solutions, FiniteSet):
+        for solution in solutions:
+            if checksol(orig_f, symbol, solution):
+                result += FiniteSet(solution)
+
+    else:
+        result += solutions
 
     return result
 

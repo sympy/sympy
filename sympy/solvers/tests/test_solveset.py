@@ -83,6 +83,10 @@ def test_invert_real():
 
     assert invert_real(Abs(x), y, x) == (x, FiniteSet(y, -y))
 
+    assert invert_real(2**(2*x) + 2**x + 1, 0, x) == (2**(2*x) + 2**x, {-1})
+    assert invert_real(-(375*3**(2*x) - 5**x)/125, 0, x) == ((5/9)**x, {375})
+    assert invert_real(9*2**(2*x) - 16*3**x, 0, x) == ((3/4)**x, {Rational(9,16)})
+
     assert invert_real(2**x, y, x) == (x, FiniteSet(log(y)/log(2)))
     assert invert_real(2**exp(x), y, x) == (x, ireal(FiniteSet(log(log(y)/log(2)))))
 
@@ -155,6 +159,9 @@ def test_invert_complex():
         (x, imageset(Lambda(n, I*(2*pi*n + arg(y)) + log(Abs(y))), S.Integers))
 
     assert invert_complex(log(x), y, x) == (x, FiniteSet(exp(y)))
+
+    assert invert_complex(2**x + 32, y, x) == \
+        (x, imageset(Lambda(n, (I*(2*n*pi + arg(y - 32)) + log(Abs(y - 32)))/log(2)), S.Integers))
 
     raises(ValueError, lambda: invert_real(1, y, x))
     raises(ValueError, lambda: invert_complex(x, x, x))
@@ -441,7 +448,7 @@ def test_solve_sqrt_fail():
     assert solveset_real(eq, x) == FiniteSet(S(1)/3)
 
 
-@slow
+@XFAIL
 def test_solve_sqrt_3():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
@@ -484,7 +491,7 @@ def test_solve_polynomial_symbolic_param():
 
     # issue 4507
     assert solveset_complex(y - b/(1 + a*x), x) == \
-        FiniteSet((b/y - 1)/a) - FiniteSet(-1/a)
+        FiniteSet((b - y)/(y*a)) - FiniteSet(-1/a)
 
     # issue 4508
     assert solveset_complex(y - b*x/(a + x), x) == \
@@ -558,19 +565,51 @@ def test_poly_gens():
     assert solveset_real(4**(2*(x**2) + 2*x) - 8, x) == \
         FiniteSet(-Rational(3, 2), S.Half)
 
+def test_expo():
+    x = Symbol('x')
+    assert solveset(4**(5-9*x) - 8**(2-x), x, S.Reals) == FiniteSet(Rational(4, 15))
+    assert solveset(3**x - 9**(x+5), x, S.Reals) == FiniteSet(-10)
+    assert solveset(4**(x**2) - 4**(6-x), x, S.Reals) == FiniteSet(-3, 2)
+    assert solveset(4**(x+1) + 4**(x+2) + 4**(x-1) - 3**(x+2) -3**(x+3), x, S.Reals) == \
+        FiniteSet(2)
+    assert solveset(5**(x-3) - 3**(2*x + 1), x, S.Reals) == FiniteSet(log(375**(1/log(S(5)/9))))
+    assert solveset(4**(x-2) - 5**(x), x, S.Reals) == FiniteSet(log(2**(4/log(S(4)/5))))
+    assert solveset(2**(x) + 4**(x) + 8**(x) - 84, x, S.Reals) == FiniteSet(2)
+    assert solveset(2**(x) + 4**(x) + 8**(x), x, S.Reals) == S.EmptySet
 
-@XFAIL
+    y = exp(x + 1/x**2)
+    solution = solveset(y**2 + y, x, S.Reals)
+    assert solution == S.EmptySet
+
+    #complex domain
+    assert solveset(3**x + 9**(x+5), x) == \
+        imageset(Lambda(n, -I*(2*n*pi + pi)/log(3) - 10), S.Integers)
+    assert solveset(4**(5-9*x) + 8**(2-x), x) == \
+        imageset(Lambda(n, -I*(2*n*pi + pi)/(15*log(2)) + 4/15), S.Integers)
+    assert solveset(2**x + 32, x) == \
+        imageset(Lambda(n, (I*(2*n*pi + pi) + 5*log(2))/log(2)), S.Integers)
+    assert solveset(2**(x) + 4**(x) + 8**(x), x) == \
+        Union(imageset(Lambda(n, I*(2*n*pi - 2*pi/3)/log(2)), S.Integers),
+            imageset(Lambda(n, I*(2*n*pi + 2*pi/3)/log(2)), S.Integers))
+    assert solveset(4**(x+1) + 4**(x+2) + 4**(x-1) - 3**(x+2) -3**(x+3), x) == \
+        imageset(Lambda(n, (2*n*I*pi - 4*log(2) + 2*log(3))/(-2*log(2) + log(3))), S.Integers)
+    assert solveset(5**(x-3) + 3**(2*x + 1), x) == \
+        imageset(Lambda(n, (I*(2*n*pi + pi) + log(375))/(-2*log(3) + log(5))), S.Integers)
+    assert solveset(4**(x-2) - 5**(x), x) == \
+        imageset(Lambda(n, (2*n*I*pi + 4*log(2))/(-log(5) + 2*log(2))), S.Integers)
+
+
 def test_uselogcombine_1():
     assert solveset_real(log(x - 3) + log(x + 3), x) == \
         FiniteSet(sqrt(10))
     assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
-    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3) == FiniteSet(
+    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3, x) == FiniteSet(
         -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
         -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
 
 
 @XFAIL
-def test_uselogcombine_2():
+def test_logsolver():
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solveset_real(eq, x) == \
         FiniteSet(-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z))))
