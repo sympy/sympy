@@ -16,7 +16,7 @@ from sympy.codegen.ast import (
     FunctionCall, untyped, IntBaseType, intc, Node, none, NoneToken, Token, Comment
 )
 
-x, y, z, t, x0 = symbols("x, y, z, t, x0")
+x, y, z, t, x0, a, b = symbols("x, y, z, t, x0, a, b")
 n = symbols("n", integer=True)
 A = MatrixSymbol('A', 3, 1)
 mat = Matrix([1, 2, 3])
@@ -144,12 +144,40 @@ def test_CodeBlock_topological_sort():
 
     raises(ValueError, lambda: CodeBlock.topological_sort(invalid_assignments))
 
-    # Undefined variable
-    invalid_assignments = [
-        Assignment(x, y)
+    # Free symbols
+    free_assignments = [
+        Assignment(x, y + z),
+        Assignment(z, a * b),
+        Assignment(t, x),
+        Assignment(y, b + 3),
         ]
 
-    raises(ValueError, lambda: CodeBlock.topological_sort(invalid_assignments))
+    free_assignments_ordered = [
+        Assignment(z, a * b),
+        Assignment(y, b + 3),
+        Assignment(x, y + z),
+        Assignment(t, x),
+        ]
+
+    c = CodeBlock.topological_sort(assignments)
+    assert c == CodeBlock(*ordered_assignments)
+
+def test_CodeBlock_free_symbols():
+    c1 = CodeBlock(
+        Assignment(x, y + z),
+        Assignment(z, 1),
+        Assignment(t, x),
+        Assignment(y, 2),
+        )
+    assert c1.free_symbols == set()
+
+    c2 = CodeBlock(
+        Assignment(x, y + z),
+        Assignment(z, a * b),
+        Assignment(t, x),
+        Assignment(y, b + 3),
+    )
+    assert c2.free_symbols == {a, b}
 
 def test_CodeBlock_cse():
     c = CodeBlock(

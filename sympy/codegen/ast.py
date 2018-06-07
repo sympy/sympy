@@ -125,6 +125,7 @@ from __future__ import print_function, division
 
 from functools import total_ordering
 from itertools import chain
+from collections import defaultdict
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
@@ -465,6 +466,8 @@ class CodeBlock(Basic):
         Tuple of left-hand sides of assignments, in order.
     ``left_hand_sides``:
         Tuple of right-hand sides of assignments, in order.
+    ``free_symbols``: Free symbols of the expressions in the right-hand sides
+        which do not appear in the left-hand side of an assignment.
 
     Useful methods on this object are:
 
@@ -515,6 +518,10 @@ class CodeBlock(Basic):
 
     _sympystr = _sympyrepr
 
+    @property
+    def free_symbols(self):
+        return super(CodeBlock, self).free_symbols - set(self.left_hand_sides)
+
     @classmethod
     def topological_sort(cls, assignments):
         """
@@ -549,6 +556,14 @@ class CodeBlock(Basic):
 
         """
         from sympy.utilities.iterables import topological_sort
+
+        if not all(isinstance(i, Assignment) for i in assignments):
+            # Will support more things later
+            raise NotImplementedError("CodeBlock.topological_sort only supports Assignments")
+
+        if any(isinstance(i, AugmentedAssignment) for i in assignments):
+            raise NotImplementedError("CodeBlock.topological_sort doesn't yet work with AugmentedAssignments")
+
         # Create a graph where the nodes are assignments and there is a directed edge
         # between nodes that use a variable and nodes that assign that
         # variable, like
@@ -569,26 +584,25 @@ class CodeBlock(Basic):
         # the same variable when those are implemented.
         A = list(enumerate(assignments))
 
-        # var_map = {variable: [assignments using variable]}
-        # like {x: [y := x + 1, z := y + x], ...}
-        var_map = {}
+        # var_map = {variable: [nodes for which this variable is assigned to]}
+        # like {x: [(1, x := y + z), (4, x := 2 * w)], ...}
+        var_map = defaultdict(list)
+        for node in A:
+            i, a = node
+            var_map[a.lhs].append(node)
 
         # E = Edges in the graph
         E = []
-        for i in A:
-            if i[1].lhs in var_map:
-                E.append((var_map[i[1].lhs], i))
-            var_map[i[1].lhs] = i
-        for i in A:
-            for x in i[1].rhs.free_symbols:
-                if x not in var_map:
-                    # XXX: Allow this case?
-                    raise ValueError("Undefined variable %s" % x)
-                E.append((var_map[x], i))
+        for dst_node in A:
+            i, a = dst_node
+            for s in a.rhs.free_symbols:
+                for src_node in var_map[s]:
+                    E.append((src_node, dst_node))
 
         ordered_assignments = topological_sort([A, E])
+
         # De-enumerate the result
-        return cls(*list(zip(*ordered_assignments))[1])
+        return cls(*[a for i, a in ordered_assignments])
 
     def cse(self, symbols=None, optimizations=None, postprocess=None,
         order='canonical'):
