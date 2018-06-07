@@ -243,13 +243,16 @@ class Beam(object):
         10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))/I - 120/I)/E + 80.0/(E*I), x <= 4))
         """
         if via == "fixed":
-            self._composite_type = "fixed"
-            old_length = self.length
-            self.length += beam.length
+            new_length = self.length + beam.length
             if self.second_moment != beam.second_moment:
                 x = self.variable
-                self.second_moment = Piecewise((self.second_moment, x<=old_length),
-                                        (beam.second_moment, x<=self.length))
+                new_second_moment = Piecewise((self.second_moment, x<=self.length),
+                                        (beam.second_moment, x<=new_length))
+            else:
+                new_second_moment = self.second_moment
+            new_beam = Beam(new_length, self.elastic_modulus, new_second_moment, x)
+            new_beam._composite_type = "fixed"
+            return new_beam
 
     def apply_load(self, value, start, order, end=None):
         """

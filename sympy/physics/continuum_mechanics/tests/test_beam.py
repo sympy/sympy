@@ -176,9 +176,9 @@ def test_Beam():
 def test_composite_beam():
     E = Symbol('E')
     I = Symbol('I')
-    b = Beam(2, E, 1.5*I)
+    b1 = Beam(2, E, 1.5*I)
     b2 = Beam(2, E, I)
-    b.join(b2, "fixed")
+    b = b1.join(b2, "fixed")
     b.apply_load(-20, 0, -1)
     b.apply_load(80, 0, -2)
     b.apply_load(20, 4, -1)
