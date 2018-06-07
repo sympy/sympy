@@ -15,8 +15,8 @@ sympy.stats.rv_interface
 from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-        Equality, Lambda, DiracDelta, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta)
+        Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
+        DiracDelta, Mul)
 from sympy.core.relational import Relational
 from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
@@ -297,6 +297,11 @@ class ProductPSpace(PSpace):
         return obj
 
     @property
+    def pdf(self):
+        p = Mul(*[space.pdf for space in self.spaces])
+        return p.subs(dict((rv, rv.symbol) for rv in self.values))
+
+    @property
     def rs_space_dict(self):
         d = {}
         for space in self.spaces:
@@ -371,6 +376,30 @@ class ProductPSpace(PSpace):
 
     def compute_cdf(self, expr, **kwargs):
         raise ValueError("CDF not well defined on multivariate expressions")
+
+    def conditional_space(self, condition, normalize=True, **kwargs):
+        rvs = random_symbols(condition)
+        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        if any([pspace(rv).is_Continuous for rv in rvs]):
+            from sympy.stats.crv import (ConditionalContinuousDomain,
+                ContinuousPSpace)
+            space = ContinuousPSpace
+            domain = ConditionalContinuousDomain(self.domain, condition)
+        elif any([pspace(rv).is_Discrete for rv in rvs]):
+            from sympy.stats.drv import (ConditionalDiscreteDomain,
+                DiscretePSpace)
+            space = DiscretePSpace
+            domain = ConditionalDiscreteDomain(self.domain, condition)
+        elif all([pspace(rv).is_Finite for rv in rvs]):
+            from sympy.stats.frv import FinitePSpace
+            return FinitePSpace.conditional_space(self, condition)
+        if normalize:
+            replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
+            norm = domain.integrate(self.pdf, **kwargs)
+            pdf = self.pdf / norm.xreplace(replacement)
+            density = Lambda(domain.symbols, pdf)
+
+        return space(domain, density)
 
 class ProductDomain(RandomDomain):
     """

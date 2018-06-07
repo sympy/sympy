@@ -760,7 +760,6 @@ def test_sympy__stats__crv__ConditionalContinuousDomain():
     D = SingleContinuousDomain(x, Interval(-oo, oo))
     assert _test_args(ConditionalContinuousDomain(D, x > 0))
 
-
 def test_sympy__stats__crv__ContinuousPSpace():
     from sympy.stats.crv import ContinuousPSpace, SingleContinuousDomain
     D = SingleContinuousDomain(x, Interval(-oo, oo))
@@ -770,13 +769,6 @@ def test_sympy__stats__crv__ContinuousPSpace():
 def test_sympy__stats__crv__SingleContinuousPSpace():
     from sympy.stats.crv import SingleContinuousPSpace
     assert _test_args(SingleContinuousPSpace(x, nd))
-
-
-def test_sympy__stats__crv__ProductContinuousPSpace():
-    from sympy.stats.crv import ProductContinuousPSpace, SingleContinuousPSpace
-    A = SingleContinuousPSpace(x, nd)
-    B = SingleContinuousPSpace(y, nd)
-    assert _test_args(ProductContinuousPSpace(A, B))
 
 @SKIP("abstract class")
 def test_sympy__stats__crv__SingleContinuousDistribution():
@@ -802,12 +794,6 @@ def test_sympy__stats__drv__DiscretePSpace():
     density = Lambda(x, 2**(-x))
     domain = SingleDiscreteDomain(x, S.Naturals)
     assert _test_args(DiscretePSpace(domain, density))
-
-def test_sympy__stats__drv__ProductDiscretePSpace():
-    from sympy.stats.drv import SingleDiscretePSpace, ProductDiscretePSpace
-    from sympy.stats.drv_types import PoissonDistribution as pd
-    assert _test_args(ProductDiscretePSpace(SingleDiscretePSpace(
-        x, pd(1)), SingleDiscretePSpace(y, pd(2))))
 
 def test_sympy__stats__drv__ConditionalDiscreteDomain():
     from sympy.stats.drv import ConditionalDiscreteDomain, SingleDiscreteDomain
