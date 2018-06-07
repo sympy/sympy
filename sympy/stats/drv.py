@@ -223,20 +223,9 @@ class DiscretePSpace(PSpace):
         domain = ConditionalDiscreteDomain(self.domain, condition)
         return DiscretePSpace(domain, density)
 
-    def compute_density(self, expr, **kwargs):
-        z = Dummy('z', real=True, finite=True)
-        return Lambda(z, self.integrate(KroneckerDelta(expr, z), **kwargs))
-
 class ProductDiscreteDomain(ProductDomain, DiscreteDomain):
      def as_boolean(self):
         return And(*[domain.as_boolean for domain in self.domains])
-
-class ProductDiscretePSpace(ProductPSpace, DiscretePSpace):
-
-    @property
-    def pdf(self):
-        p = Mul(*[space.pdf for space in self.spaces])
-        return p.subs(dict((rv, rv.symbol) for rv in self.values))
 
 class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
     """ Discrete probability space over a single univariate variable """

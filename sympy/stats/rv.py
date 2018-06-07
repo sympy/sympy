@@ -15,7 +15,8 @@ sympy.stats.rv_interface
 from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-        Equality, Lambda, DiracDelta, sympify)
+        Equality, Lambda, DiracDelta, sympify, Dummy, Ne, KroneckerDelta,
+        DiracDelta)
 from sympy.core.relational import Relational
 from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
@@ -290,12 +291,6 @@ class ProductPSpace(PSpace):
         if all(space.is_Finite for space in spaces):
             from sympy.stats.frv import ProductFinitePSpace
             cls = ProductFinitePSpace
-        if all(space.is_Continuous for space in spaces):
-            from sympy.stats.crv import ProductContinuousPSpace
-            cls = ProductContinuousPSpace
-        if all(space.is_Discrete for space in spaces):
-            from sympy.stats.drv import ProductDiscretePSpace
-            cls = ProductDiscretePSpace
 
         obj = Basic.__new__(cls, *FiniteSet(*spaces))
 
@@ -321,13 +316,6 @@ class ProductPSpace(PSpace):
     def values(self):
         return sumsets(space.values for space in self.spaces)
 
-    def integrate(self, expr, rvs=None, **kwargs):
-        rvs = rvs or self.values
-        rvs = frozenset(rvs)
-        for space in self.spaces:
-            expr = space.integrate(expr, rvs & space.values, **kwargs)
-        return expr
-
     @property
     def domain(self):
         return ProductDomain(*[space.domain for space in self.spaces])
@@ -340,6 +328,49 @@ class ProductPSpace(PSpace):
         return dict([(k, v) for space in self.spaces
             for k, v in space.sample().items()])
 
+    def probability(self, condition, **kwargs):
+        cond_inv = False
+        if isinstance(condition, Ne):
+            condition = Eq(condition.args[0], condition.args[1])
+            cond_inv = True
+        expr = condition.lhs - condition.rhs
+        rvs = random_symbols(expr)
+        z = Dummy('z', real=True, Finite=True)
+        dens = self.compute_density(expr)
+        if any([pspace(rv).is_Continuous for rv in rvs]):
+            from sympy.stats.crv import (ContinuousDistributionHandmade,
+                SingleContinuousPSpace)
+            if expr in self.values:
+                # Marginalize all other random symbols out of the density
+                randomsymbols = tuple(set(self.values) - frozenset([expr]))
+                symbols = tuple(rs.symbol for rs in randomsymbols)
+                pdf = self.domain.integrate(self.pdf, symbols, **kwargs)
+                return Lambda(expr.symbol, pdf)
+            dens = ContinuousDistributionHandmade(dens)
+            space = SingleContinuousPSpace(z, dens)
+            result = space.probability(condition.__class__(space.value, 0))
+        elif any([pspace(rv).is_Discrete for rv in rvs]):
+            from sympy.stats.drv import (DiscreteDistributionHandmade,
+                SingleDiscretePSpace)
+            dens = DiscreteDistributionHandmade(dens)
+            space = SingleDiscretePSpace(z, dens)
+            result = space.probability(condition.__class__(space.value, 0))
+        return result if not cond_inv else S.One - result
+
+    def compute_density(self, expr, **kwargs):
+        z = Dummy('z', real=True, finite=True)
+        for rv in random_symbols(expr):
+            space = pspace(rv)
+            if space.is_Continuous:
+                expr = Lambda(z, pspace(rv).integrate(DiracDelta(expr - z),
+                 **kwargs))
+            elif space.is_Discrete:
+                expr = Lambda(z, pspace(rv).integrate(KroneckerDelta(expr, z),
+                 **kwargs))
+        return expr
+
+    def compute_cdf(self, expr, **kwargs):
+        raise ValueError("CDF not well defined on multivariate expressions")
 
 class ProductDomain(RandomDomain):
     """
