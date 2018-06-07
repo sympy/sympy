@@ -228,16 +228,16 @@ class Beam(object):
         >>> R1, R2 = symbols('R1, R2')
         >>> b1 = Beam(2, E, 1.5*I)
         >>> b2 = Beam(2, E, I)
-        >>> b1.join(b2, "fixed")
-        >>> b1.apply_load(20, 4, -1)
-        >>> b1.apply_load(R1, 0, -1)
-        >>> b1.apply_load(R2, 0, -2)
-        >>> b1.bc_slope = [(0, 0)]
-        >>> b1.bc_deflection = [(0, 0)]
-        >>> b1.solve_for_reaction_loads(R1, R2)
-        >>> b1.load
+        >>> b = b1.join(b2, "fixed")
+        >>> b.apply_load(20, 4, -1)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(R2, 0, -2)
+        >>> b.bc_slope = [(0, 0)]
+        >>> b.bc_deflection = [(0, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.load
         80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
-        >>> b1.slope()
+        >>> b.slope()
         Piecewise((0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) +
         10*SingularityFunction(x, 4, 2))/(E*I), x <= 2), (((80*SingularityFunction(x, 0, 1) -
         10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))/I - 120/I)/E + 80.0/(E*I), x <= 4))
