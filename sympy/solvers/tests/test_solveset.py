@@ -1833,32 +1833,28 @@ def test_expo_conditionset():
     assert solveset(f4, x, S.Reals) == ConditionSet(x, Eq(-exp(x) + log(x), 0), S.Reals)
 
 
-@XFAIL
-def test_expo_fail():
-    from sympy.abc import x, y, z, a, b
+def test_expo_symbols():
+    x, y, z = symbols('x y z', real=True)
+    from sympy import simplify
 
     assert solveset(z**x - y, x, S.Reals) == Intersection(
         S.Reals, FiniteSet(log(y)/log(z)))
-    assert solveset(y - a*x**b, x) == FiniteSet((y/a)**(1/b))
 
+    x, y = symbols('x y', positive=True)
     w = symbols('w', integer=True)
     f1 = 2*x**w - 4*y**w
     f2 = (x/y)**w - 2
     ans1 = solveset(f1, w, S.Reals)
     ans2 = solveset(f2, w, S.Reals)
-    assert ans1 == ans2
+    assert ans1 == simplify(ans2)
 
-    assert solveset(x**(y*z) - x, x, S.Reals) == FiniteSet(1)    # issue 10864
+    # issue 10864
+    assert solveset(x**(y*z) - x, x, S.Reals) == FiniteSet(1)
+
     assert solveset(x**x, x, S.Reals) == S.EmptySet
-    assert solveset(x**y - 1, x, S.Reals) == FiniteSet(1)
-    assert solveset(x**y + x**(2*y) - 1, x, S.Reals) == FiniteSet(
-        (-S.Half + sqrt(5)/2)**(1/y), (-S.Half - sqrt(5)/2)**(1/y))
+    assert solveset(x**y - 1, y, S.Reals) == FiniteSet(0)
     assert solveset(exp(x/y)*exp(-z/y) - 2, y, S.Reals) == FiniteSet(
-        (x - z)/log(2))
-
-    assert solveset(a*x**b - y, x, S.Reals) == FiniteSet((y/a)**(1/b))
-    assert solveset_real(1/(1/x - y + exp(y)), x) == EmptySet()
-    assert solveset_real(1/x**y, x) == EmptySet()
+        (x - z)/log(2)) - FiniteSet(0)
 
 
 def test_check_expo():

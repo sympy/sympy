@@ -234,18 +234,22 @@ def _invert_real(f, g_ys, symbol):
 
         if not base_has_sym:
             rhs = g_ys.args[0]
-            if base > S.Zero:
+            try:
+                if base > S.Zero:
+                    return _invert_real(expo,
+                        imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
+                elif base < S.Zero:
+                    from sympy.core.power import integer_log
+                    s, b = integer_log(rhs, base)
+                    if b:
+                        return _invert_real(expo, FiniteSet(s), symbol)
+                elif rhs is S.One:
+                    #special case: 0**x - 1
+                    return (expo, FiniteSet(0))
+                return (expo, S.EmptySet)
+            except TypeError:
                 return _invert_real(expo,
-                    imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
-            elif base < S.Zero:
-                from sympy.core.power import integer_log
-                s, b = integer_log(rhs, base)
-                if b:
-                    return _invert_real(expo, FiniteSet(s), symbol)
-            elif rhs is S.One:
-                #special case: 0**x - 1
-                return (expo, FiniteSet(0))
-            return (expo, S.EmptySet)
+                imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
 
 
     if isinstance(f, TrigonometricFunction):
@@ -1250,11 +1254,11 @@ def _transolve(f, symbol, domain):
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import transolve
+    >>> from sympy.solvers.solveset import _transolve
     >>> from sympy import symbols, S
 
     >>> x = symbols('x', real=True)
-    >>> transolve(5**(x-3) - 3**(2*x + 1), x, S.Reals)
+    >>> _transolve(5**(x-3) - 3**(2*x + 1), x, S.Reals)
     {-log(375)/(-log(5) + 2*log(3))}
     """
 
