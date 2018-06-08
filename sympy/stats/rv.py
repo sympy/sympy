@@ -321,6 +321,13 @@ class ProductPSpace(PSpace):
     def values(self):
         return sumsets(space.values for space in self.spaces)
 
+    def integrate(self, expr, rvs=None, **kwargs):
+        rvs = rvs or self.values
+        rvs = frozenset(rvs)
+        for space in self.spaces:
+            expr = space.integrate(expr, rvs & space.values, **kwargs)
+        return expr
+
     @property
     def domain(self):
         return ProductDomain(*[space.domain for space in self.spaces])
@@ -364,15 +371,14 @@ class ProductPSpace(PSpace):
 
     def compute_density(self, expr, **kwargs):
         z = Dummy('z', real=True, finite=True)
-        for rv in random_symbols(expr):
-            space = pspace(rv)
-            if space.is_Continuous:
-                expr = Lambda(z, pspace(rv).integrate(DiracDelta(expr - z),
-                 **kwargs))
-            elif space.is_Discrete:
-                expr = Lambda(z, pspace(rv).integrate(KroneckerDelta(expr, z),
-                 **kwargs))
-        return expr
+        rvs = random_symbols(expr)
+        if any(pspace(rv).is_Continuous for rv in rvs):
+            expr = self.integrate(DiracDelta(expr - z),
+             **kwargs)
+        elif any(pspace(rv).is_Discrete for rv in rvs):
+            expr = self.integrate(KroneckerDelta(expr, z),
+             **kwargs)
+        return Lambda(z, expr)
 
     def compute_cdf(self, expr, **kwargs):
         raise ValueError("CDF not well defined on multivariate expressions")
