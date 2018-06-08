@@ -634,9 +634,10 @@ class CodeBlock(Basic):
         )
 
         """
-        # TODO: Check that the symbols are new
         from sympy.simplify.cse_main import cse
+        from sympy.utilities.iterables import numbered_symbols, filter_symbols
 
+        # Check that the CodeBlock only contains assignments to unique variables
         if not all(isinstance(i, Assignment) for i in self.args):
             # Will support more things later
             raise NotImplementedError("CodeBlock.cse only supports Assignments")
@@ -649,12 +650,19 @@ class CodeBlock(Basic):
                 raise NotImplementedError("Duplicate assignments to the same "
                     "variable are not yet supported (%s)" % lhs)
 
-        replacements, reduced_exprs = cse(self.right_hand_sides, symbols=symbols,
-            optimizations=optimizations, postprocess=postprocess, order=order)
-        assert len(reduced_exprs) == 1
-        new_block = tuple(Assignment(var, expr) for var, expr in
-            zip(self.left_hand_sides, reduced_exprs[0]))
-        new_assignments = tuple(Assignment(*i) for i in replacements)
+        # Ensure new symbols for subexpressions do not conflict with existing
+        existing_symbols = self.atoms(Symbol)
+        if symbols is None:
+            symbols = numbered_symbols()
+        symbols = filter_symbols(symbols, existing_symbols)
+
+        replacements, reduced_exprs = cse(list(self.right_hand_sides),
+            symbols=symbols, optimizations=optimizations, postprocess=postprocess,
+            order=order)
+
+        new_block = [Assignment(var, expr) for var, expr in
+            zip(self.left_hand_sides, reduced_exprs)]
+        new_assignments = [Assignment(var, expr) for var, expr in replacements]
         return self.topological_sort(new_assignments + new_block)
 
 
