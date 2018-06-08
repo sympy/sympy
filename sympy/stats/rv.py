@@ -37,6 +37,7 @@ class RandomDomain(Basic):
     is_ProductDomain = False
     is_Finite = False
     is_Continuous = False
+    is_Discrete = False
 
     def __new__(cls, symbols, *args):
         symbols = FiniteSet(*symbols)
@@ -292,6 +293,9 @@ class ProductPSpace(PSpace):
         if all(space.is_Continuous for space in spaces):
             from sympy.stats.crv import ProductContinuousPSpace
             cls = ProductContinuousPSpace
+        if all(space.is_Discrete for space in spaces):
+            from sympy.stats.drv import ProductDiscretePSpace
+            cls = ProductDiscretePSpace
 
         obj = Basic.__new__(cls, *FiniteSet(*spaces))
 
@@ -366,6 +370,9 @@ class ProductDomain(RandomDomain):
         if all(domain.is_Continuous for domain in domains2):
             from sympy.stats.crv import ProductContinuousDomain
             cls = ProductContinuousDomain
+        if all(domain.is_Discrete for domain in domains2):
+            from sympy.stats.drv import ProductDiscreteDomain
+            cls = ProductDiscreteDomain
 
         return Basic.__new__(cls, *domains2)
 
@@ -643,7 +650,7 @@ def probability(condition, given_condition=None, numsamples=None,
         return probability(given(condition, given_condition, **kwargs), **kwargs)
 
     # Otherwise pass work off to the ProbabilitySpace
-    result = pspace(condition).probability(condition, **kwargs)
+    result = pspace(condition).probability(condition, evaluate, **kwargs)
     if evaluate and hasattr(result, 'doit'):
         return result.doit()
     else:
