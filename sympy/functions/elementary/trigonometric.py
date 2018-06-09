@@ -197,6 +197,31 @@ def _pi_coeff(arg, cycles=1):
             return cx
 
 
+def _expand_sin_cos_Add(args):
+    """
+    Expands (sin(Add(*args)), cos(Add(*args))) more efficiently 
+    than recursively expanding two terms at a time
+
+    Examples
+    ========
+
+    >>> from sympy.functions.elementary.trigonometric import _expand_sin_cos_Add as expand_sc
+    >>> from sympy.abc import x,y,z
+    >>> expand_sc(x,y,z)
+    >>> expand_sc([x,y,z])
+    ((-sin(x)*sin(y) + cos(x)*cos(y))*sin(z) + (sin(x)*cos(y) + sin(y)*cos(x))*cos(z), (-sin(x)*sin(y) + cos(x)*cos(y))*cos(z) - (sin(x)*cos(y) + sin(y)*cos(x))*sin(z))
+
+    """
+
+    sx, cx = 0, 1
+    for arg in args:
+        sy = sin(arg, evaluate=False)._eval_expand_trig()
+        cy = cos(arg, evaluate=False)._eval_expand_trig()
+
+        sx, cx = sx*cy + sy*cx, cx*cy - sx*sy
+
+    return sx, cx
+
 class sin(TrigonometricFunction):
     """
     The sine function.
@@ -431,14 +456,8 @@ class sin(TrigonometricFunction):
         from sympy.functions.special.polynomials import chebyshevt, chebyshevu
         arg = self.args[0]
         x = None
-        if arg.is_Add:  # TODO, implement more if deep stuff here
-            # TODO: Do this more efficiently for more than two terms
-            x, y = arg.as_two_terms()
-            sx = sin(x, evaluate=False)._eval_expand_trig()
-            sy = sin(y, evaluate=False)._eval_expand_trig()
-            cx = cos(x, evaluate=False)._eval_expand_trig()
-            cy = cos(y, evaluate=False)._eval_expand_trig()
-            return sx*cy + sy*cx
+        if arg.is_Add: 
+            return _expand_sin_cos_Add(arg.args)[0]
         else:
             n, x = arg.as_coeff_Mul(rational=True)
             if n.is_Integer:  # n will be positive because of .eval
@@ -866,12 +885,7 @@ class cos(TrigonometricFunction):
         arg = self.args[0]
         x = None
         if arg.is_Add:  # TODO: Do this more efficiently for more than two terms
-            x, y = arg.as_two_terms()
-            sx = sin(x, evaluate=False)._eval_expand_trig()
-            sy = sin(y, evaluate=False)._eval_expand_trig()
-            cx = cos(x, evaluate=False)._eval_expand_trig()
-            cy = cos(y, evaluate=False)._eval_expand_trig()
-            return cx*cy - sx*sy
+            return _expand_sin_cos_Add(arg.args)[1]
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer:
