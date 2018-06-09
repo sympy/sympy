@@ -737,6 +737,7 @@ nd = NormalDistribution(0, 1)
 from sympy.stats.frv_types import DieDistribution
 die = DieDistribution(6)
 
+
 def test_sympy__stats__crv__ContinuousDomain():
     from sympy.stats.crv import ContinuousDomain
     assert _test_args(ContinuousDomain({x}, Interval(-oo, oo)))
@@ -760,6 +761,7 @@ def test_sympy__stats__crv__ConditionalContinuousDomain():
     D = SingleContinuousDomain(x, Interval(-oo, oo))
     assert _test_args(ConditionalContinuousDomain(D, x > 0))
 
+
 def test_sympy__stats__crv__ContinuousPSpace():
     from sympy.stats.crv import ContinuousPSpace, SingleContinuousDomain
     D = SingleContinuousDomain(x, Interval(-oo, oo))
@@ -774,15 +776,18 @@ def test_sympy__stats__crv__SingleContinuousPSpace():
 def test_sympy__stats__crv__SingleContinuousDistribution():
     pass
 
+
 def test_sympy__stats__drv__SingleDiscreteDomain():
     from sympy.stats.drv import SingleDiscreteDomain
     assert _test_args(SingleDiscreteDomain(x, S.Naturals))
+
 
 def test_sympy__stats__drv__ProductDiscreteDomain():
     from sympy.stats.drv import SingleDiscreteDomain, ProductDiscreteDomain
     X = SingleDiscreteDomain(x, S.Naturals)
     Y = SingleDiscreteDomain(y, S.Integers)
     assert _test_args(ProductDiscreteDomain(X, Y))
+
 
 def test_sympy__stats__drv__SingleDiscretePSpace():
     from sympy.stats.drv import SingleDiscretePSpace
@@ -803,7 +808,6 @@ def test_sympy__stats__drv__ConditionalDiscreteDomain():
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
     pass
-
 
 @SKIP("abstract class")
 def test_sympy__stats__drv__DiscreteDistribution():
@@ -990,9 +994,11 @@ def test_sympy__stats__crv__ContinuousDistributionHandmade():
     assert _test_args(ContinuousDistributionHandmade(Symbol('x'),
                                                      Interval(0, 2)))
 
+
 def test_sympy__stats__drv__DiscreteDistributionHandmade():
     from sympy.stats.drv import DiscreteDistributionHandmade
     assert _test_args(DiscreteDistributionHandmade(x, S.Naturals))
+
 
 def test_sympy__stats__rv__Density():
     from sympy.stats.rv import Density
