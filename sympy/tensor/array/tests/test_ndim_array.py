@@ -14,5 +14,3 @@ def test_array_negative_indices():
 	assert test_array[:, 2] == Array([3, 8])
 	assert test_array[:, 3] == Array([4, 9])
 	assert test_array[:, 4] == Array([5, 10])
-
-test_array_negative_indices()
