@@ -290,7 +290,7 @@ class RewritingSystem(object):
                     again = True
         return new
 
-    def compute_inverse_rules(self, rules):
+    def _compute_inverse_rules(self, rules):
         '''
         This computes the inverse rules and stores them in the inverse_rules dictionary.
         The inverse rules are used in the automaton for word reduction.
@@ -316,12 +316,11 @@ class RewritingSystem(object):
 
         '''
         automaton_alphabet = []
-        left_hand_rules = []
         proper_prefixes = {}
 
         # compute all_rules when the automaton is constucted.
         all_rules = self.rules
-        inverse_rules = self.compute_inverse_rules(all_rules)
+        inverse_rules = self._compute_inverse_rules(all_rules)
         all_rules.update(inverse_rules)
 
         generators = list(self.alphabet)
@@ -329,9 +328,6 @@ class RewritingSystem(object):
 
         # Contains the alphabets that will be used for state transitions.
         automaton_alphabet = generators
-
-        # Store the complete left hand side of the rules - dead states.
-        left_hand_rules = list(all_rules)
 
         # Compute the proper prefixes for every rule.
         for r in all_rules:
@@ -350,9 +346,10 @@ class RewritingSystem(object):
         fsm.add_state('start', is_start=True)
 
         # Add dead states.
-        for rule in left_hand_rules:
+        # This is essentially checking the left hand side of the rules.
+        for rule in all_rules:
             if not rule in fsm.states:
-                fsm.add_state(rule, is_dead=True)
+                fsm.add_state(rule, is_dead=True, subst=all_rules[rule])
 
         # Add accept states.
         for r in all_rules:
@@ -392,12 +389,11 @@ class RewritingSystem(object):
     def add_to_automaton(self, rules):
         # Automaton vairables
         automaton_alphabet = []
-        left_hand_rules = []
         proper_prefixes = {}
 
         # compute the inverses of all the new rules added
         all_rules = rules
-        inverse_rules = self.compute_inverse_rules(all_rules)
+        inverse_rules = self._compute_inverse_rules(all_rules)
         all_rules.update(inverse_rules)
 
         # All the transition symbols in the automaton
@@ -406,12 +402,9 @@ class RewritingSystem(object):
 
         # The symbols present in the new rules are the symbols to be verified at each state.
         # computes the automaton_alphabet, as the transitions solely depend upon the new states.
-        for rule in rules:
+        for rule in all_rules:
             automaton_alphabet += rule.letter_form_elm
         automaton_alphabet = set(automaton_alphabet)
-
-        # Store the complete left hand side of the rules - dead states.
-        left_hand_rules = list(all_rules)
 
         # Compute the proper prefixes for every rule.
         for r in all_rules:
@@ -422,9 +415,10 @@ class RewritingSystem(object):
             proper_prefixes[r] = letter_word_array
 
         # Add dead states.
-        for rule in left_hand_rules:
+        # This is essentially checking the left hand side of the rules.
+        for rule in all_rules:
             if not rule in self.reduction_automaton.states:
-                self.reduction_automaton.add_state(rule, is_dead=True)
+                self.reduction_automaton.add_state(rule, is_dead=True, subst=all_rules[rule])
 
         # Add accept states.
         for r in all_rules:
@@ -486,10 +480,6 @@ class RewritingSystem(object):
         This is repeated until the word reaches the end and the automaton stays in the accept state.
 
         '''
-        # compute all_rules.
-        all_rules = self.rules
-        inverse_rules = self.compute_inverse_rules(all_rules)
-        all_rules.update(inverse_rules)
 
         # Find the dead states - left_hand_rules
         dead_states = []
@@ -516,7 +506,7 @@ class RewritingSystem(object):
                 next_state_name = current_state.transitions[word_array[i]]
                 next_state = self.reduction_automaton.states[next_state_name]
                 if next_state.state_type == "dead":
-                    subst = all_rules[next_state_name]
+                    subst = next_state.rh_rule
                     word = word.substituted_word(i - len(next_state_name) + 1, i+1, subst)
                     flag = 1
                     break

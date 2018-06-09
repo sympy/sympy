@@ -7,15 +7,17 @@ class State(object):
         is_start (boolean): To mark if the state is a start state.
         is_dead (boolean): To mark if the state is a dead state.
         is_accept (boolean): To mark if the state is an accept state.
+        subt (instance of FreeGroupElement): right hand rule for dead state.
     """
 
 
-    def __init__(self, name, is_start=False, is_dead=False, is_accept=False):
+    def __init__(self, name, is_start=False, is_dead=False, is_accept=False, subst=None):
         self.name = name
         self.is_start = is_start
         self.is_dead = is_dead
         self.is_accept = is_accept
         self.transitions = {}
+        self.rh_rule = subst
         self.state_type = None
         if is_start:
             self.state_type = "start"
@@ -47,7 +49,7 @@ class StateMachine(object):
         self.name = name
         self.states = {} # Contains all the states in the machine.
 
-    def add_state(self, state_name, is_start=False, is_dead=False, is_accept=False):
+    def add_state(self, state_name, is_start=False, is_dead=False, is_accept=False, subst=None):
         """
         This instantiates a state object and stores this in the 'states' list.
 
@@ -56,8 +58,9 @@ class StateMachine(object):
             is_start (boolean): To mark if the state is a start state.
             is_dead (boolean): To mark if the state is a dead state.
             is_accept (boolean): To mark if the state is an accept state.
+            subt (instance of FreeGroupElement): right hand rule for dead state.
         """
-        new_state = State(state_name, is_start, is_dead, is_accept)
+        new_state = State(state_name, is_start, is_dead, is_accept, subst)
         self.states[state_name] = new_state
 
     def __repr__(self):
