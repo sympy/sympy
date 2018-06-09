@@ -68,7 +68,6 @@ sympy.functions.elementary.trigonometric
 
 
 .. _trionometric functions:
-.. _trigonometric functions:
 
 Trigonometric Functions
 ========================
