@@ -18,8 +18,8 @@ from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, er
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Integer, Float,
-    Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E, Function, collect,
-    expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr)
+    Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E, Function, collect, FiniteSet,
+    expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr, PolynomialError)
 from mpmath import appellf1
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
 from sympy.utilities.iterables import flatten
@@ -200,21 +200,23 @@ def FalseQ(u):
 
 def ZeroQ(expr):
     if isinstance(expr, list):
-        return any(ZeroQ(i) for i in expr)
+        return list(ZeroQ(i) for i in expr)
     else:
-        return expr == 0
+
+        return simplify(expr) == 0
 
 def NegativeQ(u):
     u = simplify(u)
-    if u == zoo or u == oo:
+    if u in (zoo, oo):
         return False
-    res = u < 0
-    if not res.is_Relational:
-        return res
+    if u.is_comparable:
+        res = u < 0
+        if not res.is_Relational:
+            return res
     return False
 
 def NonzeroQ(expr):
-    return expr != 0
+    return simplify(expr) != 0
 
 def FreeQ(nodes, var):
     if isinstance(nodes, list):
@@ -233,11 +235,12 @@ def Log(e):
 
 def PositiveQ(var):
     var = simplify(var)
-    if var in (zoo, oo, I, -I):
+    if var in (zoo, oo):
         return False
-    res = var > 0
-    if not res.is_Relational:
-        return res
+    if var.is_comparable:
+        res = var > 0
+        if not res.is_Relational:
+            return res
     return False
 
 def PositiveIntegerQ(*args):
@@ -446,11 +449,13 @@ class Util_Coefficient(Function):
         if len(self.args) == 2:
             n = 1
         else:
-            if not isinstance(self.args[2], (int, Integer,float, Float)):
-                return self
-            n = self.args[2]
-        expr = expand(self.args[0])
-        return expr.coeff(self.args[1], n)
+            n = simplify(self.args[2])
+
+        if isinstance(n, (int, Integer,float, Float)):
+            expr = expand(self.args[0])
+            return expr.coeff(self.args[1], n)
+        else:
+            return self
 
 def Coefficient(expr, var, n=1):
     """
@@ -886,7 +891,35 @@ def ComplexFreeQ(u):
     else:
          return False
 
-def PolynomialQ(u, x):
+def PolynomialQ(u, x = None):
+    if x is None :
+        return u.is_polynomial()
+    if isinstance(x, Pow) and isinstance(x.exp ,(int, Integer)):
+        deg = degree(u, x.base)
+        if u.is_polynomial(x):
+            if deg % x.exp !=0 :
+                return False
+            try:
+                p = Poly(u, x.base)
+            except PolynomialError:
+                return False
+
+            c_list = p.all_coeffs()
+            coeff_list = c_list[:-1:x.exp]
+            coeff_list += [c_list[-1]]
+            for i in coeff_list:
+                if not i == 0:
+                    index = c_list.index(i)
+                    c_list[index] = 0
+
+            if all(i == 0 for i in c_list):
+                return True
+            else:
+                return False
+
+            return u.is_polynomial(x)
+        else:
+            return False
     return u.is_polynomial(x)
 
 def FactorSquareFree(u):
@@ -1145,16 +1178,16 @@ def PolyQ(u, x, n=None):
             x_base = x.base
             if FreeQ(n, x_base):
                 if PositiveIntegerQ(n):
-                    return PolyQ(u, x_base) and (u.is_polynomial(x) or Together(u).is_polynomial(x))
+                    return PolyQ(u, x_base) and (PolynomialQ(u, x) or PolynomialQ(Together(u), x))
                 elif AtomQ(n):
                     return PolynomialQ(u, x) and FreeQ(CoefficientList(u, x), x_base)
                 else:
                     return False
 
-        return u.is_polynomial(x) or u.is_polynomial(Together(x))
+        return PolynomialQ(u, x) or PolynomialQ(u, Together(x))
 
     else:
-        return u.is_polynomial(x) and Coefficient(u, x, n) != 0 and Exponent(u, x) == n
+        return PolynomialQ(u, x) and Coefficient(u, x, n) != 0 and Exponent(u, x) == n
 
 
 def EvenQ(u):
@@ -1376,7 +1409,7 @@ def KernelSubst(u, x, alst):
                 break
         if tmp == []:
             return u
-        return tmp[0][1]
+        return tmp[0].args[1]
     elif IntegerPowerQ(u):
         tmp = KernelSubst(u.base, x, alst)
         if u.args[1] < 0 and ZeroQ(tmp):
@@ -1411,6 +1444,7 @@ def ExpandExpression(u, x):
 def Apart(u, x):
     if RationalFunctionQ(u, x):
         return apart(u, x)
+
     return u
 
 def SmartApart(*args):
@@ -1438,7 +1472,7 @@ def MatchQ(expr, pattern, *var):
         return None
 
 def PolynomialQuotientRemainder(p, q, x):
-    return [quo(p, q), rem(p, q)]
+    return [PolynomialQuotient(p, q, x), PolynomialRemainder(p, q, x)]
 
 def FreeFactors(u, x):
     # returns the product of the factors of u free of x.
@@ -2290,7 +2324,7 @@ def ExpandIntegrand(expr, x, extra=None):
         keys = [u_, m_, a_, b_, n_, c_, j_, p_]
         if len(keys) == len(match):
             u, m, a, b, n, c, j, p = tuple([match[i] for i in keys])
-            if IntegersQ(m, n, j) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and 0<m<2*n and Not(m == n and p == -1) and NonzeroQ(b**2 - 4*a*c):
+            if IntegersQ(m, n, j) and ZeroQ(j - 2*n) and NegativeIntegerQ(p) and 0 < m and m < 2*n and Not(m == n and p == -1) and NonzeroQ(b**2 - 4*a*c):
                 return ReplaceAll(ExpandIntegrand(S(1)/(4**p*c**p), x**m*(b - q + 2*c*x**n)**p*(b + q+ 2*c*x**n)**p, x), {q: Rt(b**2 - 4*a*c, S(2)),x: u})
 
     a_ = Wild('a', exclude=[x, 0])
@@ -2320,7 +2354,7 @@ def ExpandIntegrand(expr, x, extra=None):
         keys = [u_, m_, a_, c_, n_, p_]
         if len(keys) == len(match):
             u, m, a, c, n, p = tuple([match[i] for i in keys])
-            if IntegersQ(m, n/2) and NegativeIntegerQ(p) and 0 < m < n and (m != n/2):
+            if IntegersQ(m, n/2) and NegativeIntegerQ(p) and 0 < m and m < n and (m != n/2):
                 return ReplaceAll(ExpandIntegrand(S(1)/c**p, x**m*(-q + c*x**(n/2))**p*(q + c*x**(n/2))**p, x),{q: Rt(-a*c, S(2)), x: u})
 
     u_ = Wild('u', exclude=[0])
@@ -2405,7 +2439,7 @@ def ExpandIntegrand(expr, x, extra=None):
         keys = [c_, d_, u_, m_, e_, p_, f_, q_, a_, b_, n_]
         if len(keys) == len(match):
             c, d, u, m, e, p, f, q, a, b, n = tuple([match[i] for i in keys])
-            if IntegersQ(m, n, p, q) & 0<m<p<q<n:
+            if IntegersQ(m, n, p, q) and 0 < m and m < p and p < q and q < n:
                 r = Numerator(Rt(-a/b, n))
                 s = Denominator(Rt(-a/b, n))
                 return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n) + r*e*(r/s)**p*(-1)**(-2*k*p/n) + r*f*(r/s)**q*(-1)**(-2*k*q/n))/(a*n*(r - (-1)**(2*k/n)*s*u)),(k,1,n)).doit()
@@ -2426,7 +2460,7 @@ def ExpandIntegrand(expr, x, extra=None):
         keys = [c_, d_, u_, m_, e_, p_, a_, b_, n_]
         if len(keys) == len(match):
             c, d, u, m, e, p, a, b, n = tuple([match[i] for i in keys])
-            if IntegersQ(m, n, p) & 0<m<p<n:
+            if IntegersQ(m, n, p) and 0 < m and m < p and p < n:
                 r = Numerator(Rt(-a/b, n))
                 s = Denominator(Rt(-a/b, n))
                 return Sum((r*c + r*d*(r/s)**m*(-1)**(-2*k*m/n) + r*e*(r/s)**p*(-1)**(-2*k*p/n))/(a*n*(r - (-1)**(2*k/n)*s*u)),(k, 1, n)).doit()
@@ -2481,7 +2515,7 @@ def ExpandIntegrand(expr, x, extra=None):
         keys = [c_, d_, u_, m_, a_, b_, n_]
         if len(keys) == len(match):
             c, d, u, m, a, b, n = tuple([match[i] for i in keys])
-            if IntegersQ(m,n) & 0<m<n:
+            if IntegersQ(m,n) and 0<m and m<n:
                 # *Basis: If (m|n)\[Element]\[DoubleStruckCapitalZ] \[And] 0<=m<n, let r/s=(-(a/b))^(1/n), then  (c + d*z^m)/(a + b*z^n) == (r*Sum[(c + (d*(r/s)^m)/(-1)^(2*k*(m/n)))/(r - (-1)^(2*(k/n))*s*z), {k, 1, n}])/(a*n)
                 r = Numerator(Rt(-a/b, n))
                 s = Denominator(Rt(-a/b, n))
@@ -2531,7 +2565,7 @@ def ExpandIntegrand(expr, x, extra=None):
         keys = [u_, m_, a_, b_, n_]
         if len(keys) == len(match):
             u, m, a, b, n = tuple([match[i] for i in keys])
-            if IntegersQ(m, n) and 0 < m < n and OddQ(n/GCD(m, n)) and PosQ(a/b):
+            if IntegersQ(m, n) and 0 < m and m < n and OddQ(n/GCD(m, n)) and PosQ(a/b):
                 g = GCD(m, n)
                 r = Numerator(Rt(a/b, n/GCD(m, n)))
                 s = Denominator(Rt(a/b, n/GCD(m, n)))
@@ -2539,7 +2573,7 @@ def ExpandIntegrand(expr, x, extra=None):
                     return Sum(r*(-r/s)**(m/g)*(-1)**(-2*k*m/n)/(a*n*(r + (-1)**(2*k*g/n)*s*u**g)),(k, 1, n/g)).doit()
                 else:
                     return Sum(r*(-r/s)**(m/g)*(-1)**(2*k*(m+g)/n)/(a*n*((-1)**(2*k*g/n)*r + s*u**g)),(k, 1, n/g)).doit()
-            elif IntegersQ(m, n) and 0 < m < n:
+            elif IntegersQ(m, n) and  0 < m and m < n:
                 g = GCD(m, n)
                 r = Numerator(Rt(-a/b, n/GCD(m, n)))
                 s = Denominator(Rt(-a/b, n/GCD(m, n)))
@@ -3407,7 +3441,7 @@ def FactorNumericGcd(u):
         res = [FactorNumericGcd(i) for i in u.args]
         return Mul(*res)
     elif SumQ(u):
-        g = GCD(*[NumericFactor(i) for i in u.args])
+        g = GCD([NumericFactor(i) for i in u.args])
         r = Add(*[i/g for i in u.args])
         return g*r
     return u
@@ -5396,7 +5430,7 @@ def FunctionOfSquareRootOfQuadratic(u, *args):
             lst = [v]
             lst1 = []
             for i in u.args:
-                if FunctionOfSquareRootOfQuadratic(i, lst.args[0], x) == False:
+                if FunctionOfSquareRootOfQuadratic(i, lst[0], x) == False:
                     return False
                 lst1 = FunctionOfSquareRootOfQuadratic(i, lst.args[0], x)
             return lst1
@@ -6094,6 +6128,7 @@ def Condition(r, c):
         raise NotImplementedError('In Condition()')
 
 def Simp(u, x):
+    # print("in sum", u, x)
     return NormalizeSumFactors(SimpHelp(u, x))
 
 def SimpHelp(u, x):
@@ -6807,23 +6842,42 @@ def LogIntegral(z):
     return Integral(1/log(tx),(tx, 0, z))
 
 def Sum_doit(exp, args):
+    if not isinstance(args[2], (int, Integer)):
+        new_args = [args[0], args[1], Floor(args[2])]
+        return Sum(exp, new_args).doit()
+
     return Sum(exp, args).doit()
 
 def PolynomialQuotient(p, q, x):
-    p = poly(p, x)
-    q = poly(q, x)
+    try:
+        p = poly(p, x)
+        q = poly(q, x)
+
+    except PolynomialError:
+        p = poly(p)
+        q = poly(q)
+
     return quo(p, q).as_expr()
 
 
 def PolynomialRemainder(p, q, x):
-    p = poly(p, x)
-    q = poly(q, x)
+    try:
+        p = poly(p, x)
+        q = poly(q, x)
+
+    except PolynomialError:
+        p = poly(p)
+        q = poly(q)
+
     return rem(p, q).as_expr()
 
 def Floor(x, a = None):
     if a is None:
         return floor(x)
     return a*floor(x/a)
+
+def Factor(var):
+    return factor(var)
 
 if matchpy:
     TrigSimplifyAux_replacer = _TrigSimplifyAux()
