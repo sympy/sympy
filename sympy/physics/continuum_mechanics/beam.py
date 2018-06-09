@@ -92,6 +92,7 @@ class Beam(object):
         self.variable = variable
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
+        self._supports = []
         self._applied_loads = []
         self._reaction_loads = {}
 
@@ -208,6 +209,68 @@ class Beam(object):
     @bc_deflection.setter
     def bc_deflection(self, d_bcs):
         self._boundary_conditions['deflection'] = d_bcs
+
+    def apply_support(self, loc, type="cantilever"):
+        """
+        This method applies support to a particular beam object.
+
+        Parameters
+        ==========
+        loc : Sympifyable
+            Location of point at which support is applied.
+        type : String
+            Determines type of Beam support applied.
+            - For Hinged Support, type = "hinge"
+            - For Cantilever Support, type = "fixed"
+            - For Rolling Support, type = "roller"
+
+        Examples
+        ========
+        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        applied in the clockwise direction at the end of the beam. A pointload
+        of magnitude 8 N is applied from the top of the beam at the starting
+        point. There are two simple supports below the beam. One at the end
+        and another one at a distance of 10 meters from the start. The
+        deflection is restricted at both the supports.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> b.apply_support(10, 'hinge')
+        >>> b.apply_support(30, 'hinge')
+        >>> b.apply_load(120, 30, -2)
+        >>> R_10, R_30 = symbols('R_10, R_30')
+        >>> b.solve_for_reaction_loads(R_10, R_30)
+        >>> b.load
+        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1) 
+        + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
+        >>> b.slope()
+        (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
+            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
+        """
+        if type == "hinge" or type == "roller":
+            reaction_load = Symbol('R_'+str(loc))
+            self.apply_load(reaction_load, loc, -1)
+            self.bc_deflection.append((loc, 0))
+            self._supports.append((loc, type))
+        else:
+            reaction_load = Symbol('R_'+str(loc))
+            reaction_moment = Symbol('M_'+str(loc))
+            self.apply_load(reaction_load, loc, -1)
+            self.apply_load(reaction_moment, loc, -2)
+            self.bc_deflection = [(loc, 0)]
+            self.bc_slope.append((loc, 0))
+            self._supports.append((loc, type))
+
+    def support_locations(self):
+        """ Returns a list of tuples containing location of Support 
+        and its type respectively."""
+        return self._supports
 
     def apply_load(self, value, start, order, end=None):
         """
