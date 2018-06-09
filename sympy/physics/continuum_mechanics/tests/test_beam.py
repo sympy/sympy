@@ -219,3 +219,31 @@ def test_remove_load():
     b.remove_load(4, 2, -1)
     assert b.load == 0
     assert b.applied_loads == []
+
+
+def test_apply_support():
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(4, E, I)
+    b.apply_support(0, "cantilever")
+    b.apply_load(20, 4, -1)
+    M_0, R_0 = symbols('M_0, R_0')
+    b.solve_for_reaction_loads(R_0, M_0)
+
+    assert b.slope() == (80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2)
+                + 10*SingularityFunction(x, 4, 2))/(E*I)
+    assert b.deflection() == (40*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 0, 3)/3
+                + 10*SingularityFunction(x, 4, 3)/3)/(E*I)
+
+
+def test_max_deflection():
+    E, I, l, F = symbols('E, I, l, F', positive=True)
+    b = Beam(l, E, I)
+    b.bc_deflection = [(0, 0),(l, 0)]
+    b.bc_slope = [(0, 0),(l, 0)]
+    b.apply_load(F/2, 0, -1)
+    b.apply_load(-F*l/8, 0, -2)
+    b.apply_load(F/2, l, -1)
+    b.apply_load(F*l/8, l, -2)
+    b.apply_load(-F, l/2, -1)
+    assert b.max_deflection() == (l/2, F*l**3/(192*E*I))

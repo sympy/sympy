@@ -247,7 +247,7 @@ class Beam(object):
         >>> R_10, R_30 = symbols('R_10, R_30')
         >>> b.solve_for_reaction_loads(R_10, R_30)
         >>> b.load
-        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1) 
+        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
         + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         >>> b.slope()
         (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
@@ -268,7 +268,7 @@ class Beam(object):
             self._supports.append((loc, type))
 
     def support_locations(self):
-        """ Returns a list of tuples containing location of Support 
+        """ Returns a list of tuples containing location of Support
         and its type respectively."""
         return self._supports
 
@@ -718,3 +718,26 @@ class Beam(object):
         constants = list(linsolve(bc_eqs, C4))
         deflection_curve = deflection_curve.subs({C4: constants[0][0]})
         return S(1)/(E*I)*deflection_curve
+
+    def max_deflection(self):
+        """
+        Returns point of max deflection and its coresponding deflection value
+        in a Beam object.
+        """
+        from sympy import solve, Piecewise
+
+        # To restrict the range within length of the Beam
+        slope_curve = Piecewise((float("nan"), self.variable<=0),
+                (self.slope(), self.variable<self.length),
+                (float("nan"), True))
+
+        points = solve(slope_curve.rewrite(Piecewise), self.variable,
+                        domain=S.Reals)
+        deflection_curve = self.deflection()
+        deflections = [deflection_curve.subs(self.variable, x) for x in points]
+        deflections = list(map(abs, deflections))
+        if len(deflections) != 0:
+            max_def = max(deflections)
+            return (points[deflections.index(max_def)], max_def)
+        else:
+            return None
