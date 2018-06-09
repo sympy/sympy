@@ -1705,6 +1705,17 @@ def test_issue_13651():
     assert latex(expr) == r"c - \left(a + b\right)"
 
 
+def test_issue_14041():
+    import sympy.physics.mechanics as me
+
+    A_frame = me.ReferenceFrame('A')
+    thetad, phid  = me.dynamicsymbols('theta, phi', 1)
+    L = Symbol('L')
+
+    assert latex(L*(phid + thetad)**2*A_frame.x) == \
+        r"L \left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
+
+
 def test_latex_UnevaluatedExpr():
     x = symbols("x")
     he = UnevaluatedExpr(1/x)
