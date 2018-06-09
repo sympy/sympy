@@ -361,7 +361,7 @@ class ProductPSpace(PSpace):
             dens = ContinuousDistributionHandmade(dens)
             space = SingleContinuousPSpace(z, dens)
             result = space.probability(condition.__class__(space.value, 0))
-        elif any([pspace(rv).is_Discrete for rv in rvs]):
+        else:
             from sympy.stats.drv import (DiscreteDistributionHandmade,
                 SingleDiscretePSpace)
             dens = DiscreteDistributionHandmade(dens)
@@ -375,7 +375,7 @@ class ProductPSpace(PSpace):
         if any(pspace(rv).is_Continuous for rv in rvs):
             expr = self.integrate(DiracDelta(expr - z),
              **kwargs)
-        elif any(pspace(rv).is_Discrete for rv in rvs):
+        else:
             expr = self.integrate(KroneckerDelta(expr, z),
              **kwargs)
         return Lambda(z, expr)
