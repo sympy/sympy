@@ -16,7 +16,7 @@ from sympy.codegen.ast import (
     FunctionCall, untyped, IntBaseType, intc, Node, none, NoneToken, Token, Comment
 )
 
-x, y, z, t, x0, a, b = symbols("x, y, z, t, x0, a, b")
+x, y, z, t, x0, x1, x2, a, b = symbols("x, y, z, t, x0, x1, x2, a, b")
 n = symbols("n", integer=True)
 A = MatrixSymbol('A', 3, 1)
 mat = Matrix([1, 2, 3])
@@ -180,13 +180,13 @@ def test_CodeBlock_free_symbols():
     assert c2.free_symbols == {a, b}
 
 def test_CodeBlock_cse():
-    c = CodeBlock(
+    c1 = CodeBlock(
         Assignment(y, 1),
         Assignment(x, sin(y)),
         Assignment(z, sin(y)),
         Assignment(t, x*z),
         )
-    assert c.cse() == CodeBlock(
+    assert c1.cse() == CodeBlock(
         Assignment(y, 1),
         Assignment(x0, sin(y)),
         Assignment(x, x0),
@@ -194,10 +194,24 @@ def test_CodeBlock_cse():
         Assignment(t, x*z),
     )
 
+    # Multiple assignments to same symbol not supported
     raises(NotImplementedError, lambda: CodeBlock(
         Assignment(x, 1),
         Assignment(y, 1), Assignment(y, 2)
     ).cse())
+
+    # Check auto-generated symbols do not collide with existing ones
+    c2 = CodeBlock(
+        Assignment(x0, sin(y) + 1),
+        Assignment(x1, 2 * sin(y)),
+        Assignment(z, x * y),
+        )
+    assert c2.cse() == CodeBlock(
+        Assignment(x2, sin(y)),
+        Assignment(x0, x2 + 1),
+        Assignment(x1, 2 * x2),
+        Assignment(z, x * y),
+        )
 
 @XFAIL
 def test_CodeBlock_cse__issue_14118():
