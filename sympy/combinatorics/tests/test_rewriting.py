@@ -37,3 +37,4 @@ def test_rewriting():
     # Check after adding a rule
     R.add_rule(a**2, b)
     assert R.reduce_using_automaton(a**2*b**-2*a**2*b) == b**-1
+    assert R.reduce_using_automaton(a**4*b**-2*a**2*b**3) == b

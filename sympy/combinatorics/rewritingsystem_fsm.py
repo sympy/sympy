@@ -1,5 +1,6 @@
 class State(object):
-    """A representation of a state managed by a ``StateMachine``.
+    '''
+    A representation of a state managed by a ``StateMachine``.
 
     Attributes:
         name (instance of FreeGroupElement or string): State name which is also assigned to the Machine.
@@ -7,8 +8,8 @@ class State(object):
         is_start (boolean): To mark if the state is a start state.
         is_dead (boolean): To mark if the state is a dead state.
         is_accept (boolean): To mark if the state is an accept state.
-        subt (instance of FreeGroupElement): right hand rule for dead state.
-    """
+        rh_rule (instance of FreeGroupElement): right hand rule for dead state.
+    '''
 
 
     def __init__(self, name, is_start=False, is_dead=False, is_accept=False, subst=None):
@@ -27,39 +28,41 @@ class State(object):
             self.state_type = "dead"
 
     def add_transition(self, letter, state):
-        """
-        This method is to add a transition from the current state to a new state.
+        '''
+        Add a transition from the current state to a new state.
 
-        Arguments:
-            letter: The alphabet element the current state reads to make the state transition.
-            state: This will be an instance of the State object which represents a new state after in the transition after the alphabet is read.
-        """
+        Keyword Arguments:
+            letter -- The alphabet element the current state reads to make the state transition.
+            state -- This will be an instance of the State object which represents a new state after in the transition after the alphabet is read.
+
+        '''
         self.transitions[letter] = state
 
 class StateMachine(object):
-    """
-    The state machine class which manages the states and their transisitons of the automata.
+    '''
+    Represents the attributes and methods of a finite state machine.
 
     Attributes:
-        states (dictionary): Collection of all registered.
-        name (str): Name of the state machine.
-    """
+        states (dictionary) -- Collection of all registered `State` objects.
+        name (str) -- Name of the state machine.
+    '''
 
     def __init__(self, name):
         self.name = name
         self.states = {} # Contains all the states in the machine.
 
     def add_state(self, state_name, is_start=False, is_dead=False, is_accept=False, subst=None):
-        """
-        This instantiates a state object and stores this in the 'states' list.
+        '''
+        Instantiate a state object and stores it in the 'states' dictionary.
 
         Arguments:
-            state_name (instance of FreeGroupElement or string): name of the new states.
-            is_start (boolean): To mark if the state is a start state.
-            is_dead (boolean): To mark if the state is a dead state.
-            is_accept (boolean): To mark if the state is an accept state.
-            subt (instance of FreeGroupElement): right hand rule for dead state.
-        """
+            state_name (instance of FreeGroupElement or string) -- name of the new states.
+            is_start (boolean) -- To mark if the state is a start state.
+            is_dead (boolean) -- To mark if the state is a dead state.
+            is_accept (boolean) -- To mark if the state is an accept state.
+            subt (instance of FreeGroupElement) -- right hand rule for dead state.
+
+        '''
         new_state = State(state_name, is_start, is_dead, is_accept, subst)
         self.states[state_name] = new_state
 
