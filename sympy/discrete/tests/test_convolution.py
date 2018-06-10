@@ -39,12 +39,12 @@ def test_convolution():
             convolution_ntt(b, d, prime=q)
 
     # fwht
-    assert convolution(a, b, fwht=True) == convolution_fwht(a, b)
-    assert convolution(a, b, fwht=False) == convolution(a, b)
-    raises(TypeError, lambda: convolution(b, d, fft=True, dps=2, fwht=True))
-    raises(TypeError, lambda: convolution(b, d, ntt=True, prime=p, fwht=True))
+    assert convolution(a, b, dyadic=True) == convolution_fwht(a, b)
+    assert convolution(a, b, dyadic=False) == convolution(a, b)
+    raises(TypeError, lambda: convolution(b, d, fft=True, dps=2, dyadic=True))
+    raises(TypeError, lambda: convolution(b, d, ntt=True, prime=p, dyadic=True))
     # fwht is a specialized variant of fft, TypeError should not be raised
-    assert convolution(b, d, fft=True, fwht=True) == convolution_fwht(b, d)
+    assert convolution(b, d, fft=True, dyadic=True) == convolution_fwht(b, d)
 
 
 def test_cyclic_convolution():
@@ -97,9 +97,9 @@ def test_cyclic_convolution():
             convolution(a, b, prime=19*2**10 + 1) + [0]
 
     # fwht
-    assert convolution(a, b, fwht=True, cycle=3) == [2499522285783,
+    assert convolution(a, b, dyadic=True, cycle=3) == [2499522285783,
                                         19861417974796, 4702176579021]
-    assert convolution(a, b, fwht=True, cycle=5) == [2718149225143,
+    assert convolution(a, b, dyadic=True, cycle=5) == [2718149225143,
             2114320852171, 20571217906407, 246166418903, 1413262436976]
 
 

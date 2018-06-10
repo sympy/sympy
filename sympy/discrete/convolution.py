@@ -35,9 +35,9 @@ def convolution(a, b, **hints):
             performing NTT on the sequence.
         cycle : Integer
             Specifies the length for doing cyclic convolution.
-        fwht : bool
-            Identifies the convolution type as bitwise XOR
-            convolution, performed using FWHT.
+        dyadic : bool
+            Identifies the convolution type as dyadic (XOR)
+            convolution, which is performed using FWHT.
 
     Examples
     ========
@@ -57,20 +57,21 @@ def convolution(a, b, **hints):
     [15502, 19351]
 
     >>> u, v, x, y, z = symbols('u v x y z')
-    >>> convolution([u, v], [x, y, z], fwht=True)
+    >>> convolution([u, v], [x, y, z], dyadic=True)
     [u*x + v*y, u*y + v*x, u*z, v*z]
+
     """
 
     dps = hints.pop('dps', None)
     p = hints.pop('prime', None)
-    fwht = hints.pop('fwht', None)
+    dyadic = hints.pop('dyadic', None)
     c = as_int(hints.pop('cycle', 0))
 
     if c < 0:
         raise ValueError("The length for cyclic convolution must be non-negative")
 
-    fwht = True if fwht else None
-    if sum(x is not None for x in (p, dps, fwht)) > 1:
+    dyadic = True if dyadic else None
+    if sum(x is not None for x in (p, dps, dyadic)) > 1:
         raise TypeError("Ambiguity in determining the convolution type")
 
     if p is not None:
@@ -80,7 +81,7 @@ def convolution(a, b, **hints):
     elif hints.pop('ntt', False):
         raise TypeError("Prime modulus must be specified for performing NTT")
 
-    if fwht:
+    if dyadic:
         ls = convolution_fwht(a, b)
     else:
         ls = convolution_fft(a, b, dps=dps)
@@ -202,13 +203,13 @@ def convolution_ntt(a, b, prime):
 
 #----------------------------------------------------------------------------#
 #                                                                            #
-#                          Convolution for 2**n-group                        #
+#                         Convolution for 2**n-group                         #
 #                                                                            #
 #----------------------------------------------------------------------------#
 
 def convolution_fwht(a, b):
     """
-    Performs dyadic convolution using Fast Walsh Hadamard Transform.
+    Performs dyadic (XOR) convolution using Fast Walsh Hadamard Transform.
 
     The convolution is automatically padded to the right with zeros, as the
     radix 2 FWHT requires the number of sample points to be a power of 2.
