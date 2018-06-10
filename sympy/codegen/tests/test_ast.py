@@ -131,8 +131,8 @@ def test_CodeBlock_topological_sort():
         Assignment(x, y + z),
         Assignment(t, x),
         ]
-    c = CodeBlock.topological_sort(assignments)
-    assert c == CodeBlock(*ordered_assignments)
+    c1 = CodeBlock.topological_sort(assignments)
+    assert c1 == CodeBlock(*ordered_assignments)
 
     # Cycle
     invalid_assignments = [
@@ -159,8 +159,8 @@ def test_CodeBlock_topological_sort():
         Assignment(t, x),
         ]
 
-    c = CodeBlock.topological_sort(assignments)
-    assert c == CodeBlock(*ordered_assignments)
+    c2 = CodeBlock.topological_sort(free_assignments)
+    assert c2 == CodeBlock(*free_assignments_ordered)
 
 def test_CodeBlock_free_symbols():
     c1 = CodeBlock(
