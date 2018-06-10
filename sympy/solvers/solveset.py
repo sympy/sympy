@@ -990,12 +990,15 @@ def _solveset(f, symbol, domain, _check=False):
 
 
 def _expo_solver(f):
-    """
+    r"""
     Helper function for solving exponential equations.
 
     Exponential equations are the type of equations which includes a
     variable located in the exponent.
-    For example `5**(2*x + 3) - 5**(3*x - 1)`.
+    For example
+
+    .. math:: 5^{(2*x + 3)} - 5^{(3*x - 1)}
+
     The function evaluates exponetial equations having two arguments,
     i.e, exponential equations having only two exponent terms
     (like the one above).
@@ -1004,20 +1007,37 @@ def _expo_solver(f):
     equation to log form (if possible) and returns the modified
     equation.
 
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import _expo_solver as expo_solver
+    >>> from sympy import symbols
+    >>> x = symbols('x', real=True)
+    >>> expo_solver(3**(2*x) - 2**(x + 3))
+    2*x*log(3) - (x + 3)*log(2)
+
+
     * Proof of correctness of the method
 
     The logarithm is the inverse function to exponentiation.
     The defining relation between exponentiation and logarithm is:
 
-        log(x, b) = y if b**y = x
+    .. math:: {log_b x} = y \enspace if \enspace b^y = x
 
     Therefore if we are given an equation with exponent terms, we can
     convert every term to its corresponding log form. This is achieved by
     taking logarithms and expanding them using log identities so that the
     equations can be easily handled by `solveset`.
-    For example: 3**(2*x) = 2**(x + 3). Taking log both sides will reduce
-    the equation to `2*x*log(3) - (x + 3)*log(2)`. This is easily handled by
-    solveset.
+
+    For example:
+
+    .. math:: 3^{2*x} = 2^{(x + 3)}
+
+    Taking log both sides will reduce the equation to
+
+    .. math:: (2*x)*log(3) = (x + 3)*log(2)
+
+    This form can be easily handed by `solveset`.
     """
 
     try:
@@ -1036,7 +1056,7 @@ def _expo_solver(f):
 
 
 def _check_expo(f, symbol):
-    """
+    r"""
     Helper to check whether an equation is exponential or not.
 
     Returns True if it is of exponential type otherwise False.
@@ -1073,38 +1093,50 @@ def _check_expo(f, symbol):
 
 
 def _transolve(f, symbol, domain):
-    """
+    r"""
     Function to solve transcendental equations. It is a helper to
     solveset and should be used internally as of now. `transolve`
     currently supports the following class of equations:
 
         - Exponential equations
 
+
     Parameters
     ==========
 
-    ``f`` can be any (supported) transcendental equation that needs
-    to be solved. This needs to be an expression, which is assumed
-    to be equal to 0.
+    f : can be any transcendental equation that needs to be solved.
+        This needs to be an expression, which is assumed
+        to be equal to 0.
 
-    ``symbol`` is variable for which the equation is solved.
-    This needs to be of class `Symbol`.
+    symbol : is variable for which the equation is solved.
+        This needs to be of class `Symbol`.
 
-    ``domain`` is a set over which the equation is solved.
-    This needs to be of class `Set`.
+    domain : is a set over which the equation is solved.
+        This needs to be of class `Set`.
 
 
-    How to use transolve
-    ====================
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import _transolve as transolve
+    >>> from sympy.solvers.solvers import _tsolve as tsolve
+    >>> from sympy import symbols, S, pprint
+    >>> x = symbols('x', real=True)
+    >>> transolve(5**(x-3) - 3**(2*x + 1), x, S.Reals)
+    {-log(375)/(-log(5) + 2*log(3))}
+
+
+    How to use `transolve`
+    ======================
 
     `transolve` should be used as an internal function. There should be
     an internal call to `transolve`, passing all the three above
-    arguments as parameters. These three parameters should be sympy
+    parameters as arguments. These three arguments should be sympy
     instances.
 
 
-    How transolve works
-    ===================
+    How `transolve` works
+    =====================
 
     The main idea behind `transolve` is to make it modular, extensible,
     robust and easy to understand. For this to be achieved `transolve`
@@ -1127,49 +1159,60 @@ def _transolve(f, symbol, domain):
     `transolve` comes into action when solveset is unable to solve the
     equation as a last resort to get the solutions. So the idea is that,
     first it tries to invert the equation to get the `lhs` and the `rhs`.
-    Depending on the general form of the class of the equation the
-    equations are sent to different cases, like for example, logarithmic
+    Depending on the general form of the class of the equation it
+    is sent to different cases, like for example, logarithmic
     and exponential equations takes the form as `a*f(x) + b*g(x)`, where
-    f(x) and g(x) are power (or log) terms, therefore they are included in
-    `Add` case. Similarly different classes of equation can be included
-    in cases depending on their general form. Once figuring out, different
-    identifying helper conditions are included to check which class the
-    equation belongs. If the equation belongs to a particular class it is
-    solved by a call to its respective solving helper. This helper either
-    solves the equation completely or transforms to a better form for
-    `solveset` to handle. If the equation is solved the result is returned
-    otherwise a `ConditionSet` is returned.
+    `f(x)` and `g(x)` are power (or log) terms, therefore they are
+    included in `Add` case. Similarly different classes of equation can
+    be included in cases depending on their general form. Once figuring
+    out, different identifying helper conditions are included to check
+    which class the equation belongs. If the equation belongs to a
+    particular class it is solved by a call to its respective solving
+    helper. This helper either solves the equation completely or
+    transforms to a better form for `solveset` to handle. If the
+    equation is solved the result is returned otherwise a `ConditionSet`
+    is returned.
 
 
-    How transolve is better than _tsolve
-    ====================================
+    How `transolve` is better than `\_tsolve`
+    =========================================
 
     1) Better output
 
     `transolve` provides a better output to some equations than
-    `_tsolve`. Though result from both the functions are correct
-    it's just that the one from transolve is easy to understand and
-    appropriate. This is because transolve smartly evaluates the
+    `\_tsolve`. Though result from both the functions are correct
+    it's just that the one from `transolve` is easy to understand and
+    appropriate. This is because `transolve` smartly evaluates the
     result minimising it wherever necessary.
 
-    Consider a simple exponential equation 3**(2*x) - 2**(x + 3)
-    transolve gives the output as {(-3*log(2)/(-2*log(3) + log(2))},
-    whereas _tsolve would return [-log(2**(3/log(2/9)))].`transolve's`
-    output seems more simple, readable and appropriate as compared to
-    the latter one.
+    Consider a simple exponential equation
+
+    >>> f = 3**(2*x) - 2**(x + 3)
+    >>> pprint(transolve(f, x, S.Reals), use_unicode=False)
+        -3*log(2)
+    {------------------}
+     -2*log(3) + log(2)
+    >>> pprint(tsolve(f, x), use_unicode=False)
+         /   3     \
+         | --------|
+         | log(2/9)|
+    [-log\2         /]
+
+
+    `transolve's` output seems more simple, readable and appropriate
+    as compared to that of `\_tsolve`.
 
 
     2) Extensible
 
     The API of `transolve` is designed such that it is easily extensible,
     i.e, it is easy to add a new class of equation solver without having
-    to mess with the API or solving code of other helpers. The idea is
-    that the function itself contains call to different helpers that
-    identifies and solves the equation. So to make new class of equation
-    solve, you must add a helper that identifies that particular class
-    of the equation and another helper that solves that type of
-    equations. You should read the below section to get more insight
-    on how to add new class of equations in transolve.
+    to mess with the API or solving code of other helpers. The idea
+    behind transolve is making seperate helpers for different equation
+    solver. So to make new class of equation solve, you must add a
+    helper that identifies that particular class of the equation and
+    another helper that solves that type of equations. This way it
+    becomes easily extensible.
 
 
     3) Modular
@@ -1184,7 +1227,7 @@ def _transolve(f, symbol, domain):
     4) Less complex API
 
     Since modular approach is used in transolve, the API automatically
-    becomes less complex to read and understand unlike in `_tsolve`
+    becomes less complex to read and understand unlike in `\_tsolve`
     where the API structure is a mess and lots of recursive and function
     calls makes it more hard to understand.
 
@@ -1192,12 +1235,12 @@ def _transolve(f, symbol, domain):
     5) Faster Computation
 
     Equation solving via transolve is much faster as compared to
-    `_tsolve`. The way equations are treated in solve is complicated
+    `\_tsolve`. The way equations are treated in solve is complicated
     which make it a bit time consuming. `solve` tries every possibility
     to solve the equation and in process it gets into each and every
-    condition and starts solving the equation to get an answer,
+    condition and starts solving the equation to get the result,
     if the result is not achieved the equation is solved by another
-    means. Therefore this series of solving makes it a bit slow.
+    way. Therefore this series of solving makes it a bit slow.
     Whereas in `transolve` computation begins only when the equation
     is identified of being a particular type.
 
@@ -1209,57 +1252,48 @@ def _transolve(f, symbol, domain):
     add a new class of equation solver.
 
     The first task that needs to be done for adding your own solver
-    is to decide from where its `identificaion helper` will be
+    is to decide from where its `identification helper` will be
     invoked. To do so determine the general form of the class of the
     equation to place the invocation of the identification helper to
     an appropriate place within transolve, for example the general
-    form of the exponential equations is `a*f(x) + b*g(x)` so we
-    need to place the invocation condition inside `Add` case. Once
-    the place for identification helper is determined, you can add a
-    call to solving helper. For your class of equation you need to
-    define your own identification and solving helpers. The
-    identification helper should be implemented for generalised cases
-    and should return either `True` if the given equation belongs to the
-    class otherwise `False`. Solving helpers needs to be implemented with
-    such heuristics or algorithms that solves most of the equations
-    belonging to that class. The value returned from this helper should
-    be handled properly in the main (transolve) function itself. It could
-    be either the exact solution or a reduced form of the equation which
+    form of the exponential equation is `a*f(x) + b*g(x)` where
+    `f(x)` and `g(x)` are power (or log) terms so we need to place the
+    invocation condition inside `Add` case. Once the place for
+    identification helper is determined, you can add a call to solving
+    helper. For your class of equation you need to define your own
+    identification and solving helpers. The identification helper
+    should be implemented for generalised cases and should return
+    either `True` if the given equation belongs to the class otherwise
+    `False`. Solving helpers needs to be implemented with such
+    heuristics or algorithms that solves most of the equations belonging
+    to that class. The value returned from this helper should be handled
+    properly in the main (transolve) function itself. It could be either
+    the exact solution or a reduced form of the equation which
     `solveset` can handle.
 
     Apart from this, few other things needs to be taken care while adding
     an equation solver:
 
-    - Naming conventions
-      Name of the identification helper should be like  `_check_class`,
+    - Naming conventions:
+      Name of the identification helper should be like  `\_check\_class`
       where `class` will be the name or abbreviation of the class of
-      equation. The solving helper will be named as `_class_solver`.
-      For eg: for exponential equation it becomes `_check_expo` and
-      `_expo_solver_`.
+      equation. The solving helper will be named as `\_class\_solver`.
+      For example: for exponential equation it becomes `\_check\_expo`
+      and `\_expo\_solver`.
     - Be sure to consider consider corner cases.
-    - Adding tests for each method (if necessary).
+    - Adding tests for each helper.
     - Adding a docstring to your helper that describes the method
       implemented with its proof of correctness by explaining with few
       examples. Since most of the methods devised to identify and solve
-      particular class of equations are mostly heuristics therefore it
+      particular class of equations are heuristics therefore it
       becomes necessary to provide proof of correctness of these methods.
       Following things needs to be included while writing the
       documentation for the helpers:
-        - What is the purpose of the helper.
-        - How it solves the equation and how does it identifies the equation.
-        - Examples should be included to prove its correctness.
-        - What are the input parameters and what does the helper returns.
 
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.solveset import _transolve
-    >>> from sympy import symbols, S
-
-    >>> x = symbols('x', real=True)
-    >>> _transolve(5**(x-3) - 3**(2*x + 1), x, S.Reals)
-    {-log(375)/(-log(5) + 2*log(3))}
+      - What is the purpose of the helper.
+      - How it solves the equation and how does it identifies the equation.
+      - Examples should be included to prove its correctness.
+      - What are the input parameters and what does the helper returns.
     """
 
     # invert_complex handles the call to the desired inverter based
