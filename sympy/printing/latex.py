@@ -7,13 +7,13 @@ from __future__ import print_function, division
 import itertools
 
 from sympy.core import S, Add, Symbol, Mod
-from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
 from sympy.core.operations import AssocOp
 from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
-from sympy.core.function import UndefinedFunction, AppliedUndef
+from sympy.core.function import (_coeff_isneg,
+    UndefinedFunction, AppliedUndef, Derivative)
 
 ## sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
@@ -526,11 +526,11 @@ class LatexPrinter(Printer):
                 base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
                 if '^' in base and expr.base.is_Symbol:
                     base = r"\left(%s\right)" % base
-                elif not (expr.base.is_Add or expr.base.is_Mul
-                        ) and base.startswith(r'\left(') and re.match(
-                        r'\\left\(\\d?d?dot', base):
+                elif isinstance(expr.base, Derivative
+                        ) and base.startswith(r'\left('
+                        ) and re.match(r'\\left\(\\d?d?dot', base
+                        ) and base.endswith(r'\right)'):
                     # don't use parentheses around dotted derivative
-                    assert base.endswith(r'\right)')
                     base = base[6: -7]  # remove outermost added parens
 
                 return tex % (base, exp)

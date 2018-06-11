@@ -1772,3 +1772,5 @@ def test_issue_14041():
         r"L \left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
     assert latex((phid + thetad)**2*A_frame.x) == \
         r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
+    assert latex((phid*thetad)**a*A_frame.x) == \
+        r"\left(\dot{\phi} \dot{\theta}\right)^{a}\mathbf{\hat{a}_x}"
