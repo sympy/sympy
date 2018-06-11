@@ -216,6 +216,16 @@ class Beam(object):
         Passed Beam class instance is attached to the right end of calling
         object.
 
+        Parameters
+        ==========
+        beam : Beam class object
+            The Beam object which would be connected to the right of calling
+            object.
+        via : String
+            States the way two Beam object would get connected
+            - For axially fixed Beams, via="fixed"
+            - For Beams connected via hinge, via="hinge"
+
         Examples
         ========
         There is a cantilever beam of length 4 meters. For first 2 meters
@@ -252,6 +262,18 @@ class Beam(object):
                 new_second_moment = self.second_moment
             new_beam = Beam(new_length, self.elastic_modulus, new_second_moment, x)
             new_beam._composite_type = "fixed"
+            return new_beam
+
+        if via == "hinge":
+            new_length = self.length + beam.length
+            if self.second_moment != beam.second_moment:
+                x = self.variable
+                new_second_moment = Piecewise((self.second_moment, x<=self.length),
+                                        (beam.second_moment, x<=new_length))
+            else:
+                new_second_moment = self.second_moment
+            new_beam = Beam(new_length, self.elastic_modulus, new_second_moment, x)
+            new_beam._composite_type = "hinge"
             return new_beam
 
     def apply_load(self, value, start, order, end=None):
