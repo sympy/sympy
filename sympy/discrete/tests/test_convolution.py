@@ -43,8 +43,9 @@ def test_convolution():
     assert convolution(a, b, dyadic=False) == convolution(a, b)
     raises(TypeError, lambda: convolution(b, d, fft=True, dps=2, dyadic=True))
     raises(TypeError, lambda: convolution(b, d, ntt=True, prime=p, dyadic=True))
-    # fwht is a specialized variant of fft, TypeError should not be raised
-    assert convolution(b, d, fft=True, dyadic=True) == convolution_fwht(b, d)
+    raises(TypeError, lambda: convolution(b, d, fft=True, dyadic=True))
+    raises(TypeError, lambda: convolution(a, b, dps=2, dyadic=True))
+    raises(TypeError, lambda: convolution(b, c, prime=p, dyadic=True))
 
 
 def test_cyclic_convolution():
