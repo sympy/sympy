@@ -521,11 +521,17 @@ class LatexPrinter(Printer):
                 return self._print(expr.base, self._print(expr.exp))
             else:
                 tex = r"%s^{%s}"
-                #fixes issue #12886, adds parentheses before superscripts raised to powers
+                exp = self._print(expr.exp)
+                # issue #12886: add parentheses around superscripts raised to powers
                 base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
                 if '^' in base and expr.base.is_Symbol:
                     base = r"\left(%s\right)" % base
-                exp = self._print(expr.exp)
+                elif not (expr.base.is_Add or expr.base.is_Mul
+                        ) and base.startswith(r'\left(') and re.match(
+                        r'\\left\(\\d?d?dot', base):
+                    # don't use parentheses around dotted derivative
+                    assert base.endswith(r'\right)')
+                    base = base[6: -7]  # remove outermost added parens
 
                 return tex % (base, exp)
 

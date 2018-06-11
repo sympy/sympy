@@ -1759,3 +1759,16 @@ def test_WedgeProduct_printing():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert latex(wp) == r"\mathrm{d}x \wedge \mathrm{d}y"
+
+
+def test_issue_14041():
+    import sympy.physics.mechanics as me
+
+    A_frame = me.ReferenceFrame('A')
+    thetad, phid  = me.dynamicsymbols('theta, phi', 1)
+    L = Symbol('L')
+
+    assert latex(L*(phid + thetad)**2*A_frame.x) == \
+        r"L \left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
+    assert latex((phid + thetad)**2*A_frame.x) == \
+        r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
