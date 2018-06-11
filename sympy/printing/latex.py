@@ -507,29 +507,19 @@ class LatexPrinter(Printer):
             and expr.exp.is_Rational \
                 and expr.exp.q != 1:
             base, p, q = self.parenthesize(expr.base, PRECEDENCE['Pow']), expr.exp.p, expr.exp.q
-            #fixes issue #12886, adds parentheses before superscripts raised to powers
+            # issue #12886: add parentheses for superscripts raised to powers
             if '^' in base and expr.base.is_Symbol:
                 base = r"\left(%s\right)" % base
             if expr.base.is_Function:
                 return self._print(expr.base, "%s/%s" % (p, q))
             return r"%s^{%s/%s}" % (base, p, q)
         elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_commutative:
-            # Things like 1/x
+            # things like 1/x
             return self._print_Mul(expr)
         else:
             if expr.base.is_Function:
                 return self._print(expr.base, self._print(expr.exp))
             else:
-                if expr.is_commutative and expr.exp == -1:
-                    #solves issue 4129
-                    #As Mul always simplify 1/x to x**-1
-                    #The objective is achieved with this hack
-                    #first we get the latex for -1 * expr,
-                    #which is a Mul expression
-                    tex = self._print(S.NegativeOne * expr).strip()
-                    #the result comes with a minus and a space, so we remove
-                    if tex[:1] == "-":
-                        return tex[1:].strip()
                 tex = r"%s^{%s}"
                 #fixes issue #12886, adds parentheses before superscripts raised to powers
                 base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
