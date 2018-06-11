@@ -389,6 +389,14 @@ def test_expint():
         z**5/240 + O(z**6)
 
 
+def test_expint_at_reals():
+    t = Symbol('t', negative=True)
+    assert expint(1, t).at_reals(t, 1) == expint(1, t)
+    assert expint(1, t).at_reals(t, -1) == expint(1, t) + 2*I*pi
+    assert expint(2, t).at_reals(t, 1) == expint(2, t)
+    assert expint(2, t).at_reals(t, -1) == expint(2, t) - 2*I*pi*t
+
+
 def test__eis():
     assert _eis(z).diff(z) == -_eis(z) + 1/z
 

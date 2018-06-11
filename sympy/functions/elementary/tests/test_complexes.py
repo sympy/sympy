@@ -708,7 +708,7 @@ def test_polarify():
 
 def test_unpolarify():
     from sympy import (exp_polar, polar_lift, exp, unpolarify,
-                       principal_branch)
+                       principal_branch, Piecewise)
     from sympy import gamma, erf, sin, tanh, uppergamma, Eq, Ne
     from sympy.abc import x
     p = exp_polar(7*I) + 1
@@ -746,6 +746,9 @@ def test_unpolarify():
     assert unpolarify(Eq(p, 0)) == Eq(u, 0)
     assert unpolarify(Ne(p, 0)) == Ne(u, 0)
     assert unpolarify(polar_lift(x) > 0) == (x > 0)
+    assert unpolarify(Piecewise(
+                  (exp(x), x*exp_polar(pi*I) < 0), (0, True))) == \
+        Piecewise((exp(x), -x < 0), (0, True))
 
     # Test bools
     assert unpolarify(True) is True

@@ -770,6 +770,12 @@ class log(Function):
             return (self.args[0] - 1).as_leading_term(x)
         return self.func(arg)
 
+    def _eval_at_reals(self, x, side):
+        from sympy.functions import Piecewise, unpolarify
+        # unpolarify(log(z)) does not touch the argument
+        z = unpolarify(self.args[0])
+        cond = (z < 0) & (z.diff(x)*side < 0)
+        return log(z) + Piecewise((-2*S.Pi*S.ImaginaryUnit, cond), (0, True))
 
 class LambertW(Function):
     r"""

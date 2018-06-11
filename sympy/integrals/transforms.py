@@ -1293,8 +1293,21 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     For suitable choice of a and b, this reduces to the standard Fourier
     and inverse Fourier transforms.
     """
-    from sympy import exp, I
-    F = integrate(a*f*exp(b*I*x*k), (x, -oo, oo))
+    from sympy import exp, I, unpolarify
+    # The integral is computed in two parts, Fp from 0 to oo, and
+    # Fn from -oo to 0. If f is bounded (or polynomially growing)
+    # these are analytic functions of k in the upper or lower
+    # half-plane, depending on the sign of b. The (generalized)
+    # transform is obtained from their boundary values at the
+    # real line.
+    # A positive auxiliary variable is used for selecting the
+    # relevant half-plane.
+    p = Dummy('p', positive=True)
+    Fp = _simplify(integrate(a*f*exp(-p*x), (x, 0, oo)), simplify)
+    Fp = Fp.subs(p, -b*I*k).at_reals(k, b)
+    Fn = _simplify(integrate(a*f*exp(p*x), (x, -oo, 0)), simplify)
+    Fn = Fn.subs(p, b*I*k).at_reals(k, -b)
+    F = unpolarify(Fp + Fn)  # remove polar numbers from conditions
 
     if not F.has(Integral):
         return _simplify(F, simplify), True

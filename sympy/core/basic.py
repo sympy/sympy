@@ -1716,6 +1716,35 @@ class Basic(with_metaclass(ManagedProperties)):
 
         return obj
 
+    def at_reals(self, x, side):
+        """
+        Evaluate a possibly branched function of x on the real line.
+
+        If side < 0, return the value on the boundary of the lower
+        half-plane, otherwise return the value on the boundary of
+        the upper half-plane.
+
+        Examples
+        ========
+
+        >>> from sympy.functions import log
+        >>> from sympy.abc import x
+        >>> log(x).at_reals(x, 1)
+        log(x)
+        >>> log(x).at_reals(x, -1)
+        Piecewise((-2*I*pi, x < 0), (0, True)) + log(x)
+
+        """
+        if not self.args:
+            return self
+
+        args = [a.at_reals(x, side) for a in self.args]
+        res = self.func(*args)
+        if hasattr(res, '_eval_at_reals'):
+            return res._eval_at_reals(x, side)
+        else:
+            return res
+
 
 class Atom(Basic):
     """

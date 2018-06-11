@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
+from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic, Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
@@ -1110,6 +1110,7 @@ def _unpolarify(eq, exponents_only, pause=False):
             return _unpolarify(eq.args[0], exponents_only)
         if (
             eq.is_Add or eq.is_Mul or eq.is_Boolean or
+            isinstance(eq, Tuple) or
             eq.is_Relational and (
                 eq.rel_op in ('==', '!=') and 0 in eq.args or
                 eq.rel_op not in ('==', '!='))

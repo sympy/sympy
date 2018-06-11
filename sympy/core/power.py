@@ -1649,6 +1649,14 @@ class Pow(Expr):
             new_e = e.subs(n, n + step)
             return (b**(new_e - e) - 1) * self
 
+    def _eval_at_reals(self, x, side):
+        # Preliminary version, for sqrt only.
+        if self.exp is not S.Half:
+            return self
+        from sympy.functions import Piecewise, unpolarify
+        z = unpolarify(self.base)
+        cond = (z < 0) & (z.diff(x)*side < 0)
+        return Piecewise((-self, cond), (self, True))
 
 from .add import Add
 from .numbers import Integer

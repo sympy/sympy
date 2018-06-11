@@ -12,7 +12,8 @@ from sympy import (
     cos, S, Abs, And, Or, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
-    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2, Abs)
+    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2,
+    Abs, Piecewise)
 from sympy.utilities.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
@@ -618,11 +619,14 @@ def test_fourier_transform():
     # NOTE: the ift comes out in pieces
     assert IFT(1/(a + 2*pi*I*x), x, posk,
             noconds=False) == (exp(-a*posk), True)
-    assert IFT(1/(a + 2*pi*I*x), x, -posk,
-            noconds=False) == (0, True)
+    # Boundary value implementation assumes that x and k are symbols.
+    # assert IFT(1/(a + 2*pi*I*x), x, -posk,
+    #        noconds=False) == (0, True)
     assert IFT(1/(a + 2*pi*I*x), x, symbols('k', negative=True),
             noconds=False) == (0, True)
-    # TODO IFT without factoring comes out as meijer g
+    # IFT without factoring comes out as Piecewise
+    assert IFT(1/(a + 2*pi*I*x), x, k) == \
+        Piecewise((exp(-a*k), -a*k < 0), (0, True))
 
     assert factor(FT(x*exp(-a*x)*Heaviside(x), x, k), extension=I) == \
         1/(a + 2*pi*I*k)**2

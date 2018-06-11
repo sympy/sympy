@@ -9,7 +9,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, root
-from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.complexes import polar_lift
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.trigonometric import cos, sin, sinc
@@ -1254,6 +1254,14 @@ class expint(Function):
 
     def _eval_expand_func(self, **hints):
         return self.rewrite(Ei).rewrite(expint, **hints)
+
+    def _eval_at_reals(self, x, side):
+        from sympy.functions import Piecewise, unpolarify
+        nu, z = self.args
+        z = unpolarify(z)
+        cond = (z < 0) & (z.diff(x)*side < 0)
+        return Piecewise((expint(nu, z*exp_polar(-2*pi*I)), cond),
+                         (expint(nu, z), True))
 
     def _eval_rewrite_as_Si(self, nu, z):
         if nu != 1:

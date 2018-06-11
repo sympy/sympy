@@ -118,6 +118,7 @@ class Piecewise(Function):
 
     nargs = None
     is_Piecewise = True
+    unbranched = True
 
     def __new__(cls, *args, **options):
         # (Try to) sympify args first
