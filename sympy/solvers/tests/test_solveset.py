@@ -1886,7 +1886,6 @@ def test_uselogcombine_1():
     assert solveset_real(log(x + 3) + log(1 + 3/x) - 3) == FiniteSet(
         -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
         -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
-    assert solveset_real(log(x-3) + log(x+3), x) == FiniteSet(sqrt(10))
 
 
 @XFAIL
