@@ -95,6 +95,7 @@ class Beam(object):
         self._applied_loads = []
         self._reaction_loads = {}
         self._composite_type = None
+        self._hinge_position = None
 
     def __str__(self):
         str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
@@ -272,8 +273,9 @@ class Beam(object):
                                         (beam.second_moment, x<=new_length))
             else:
                 new_second_moment = self.second_moment
-            new_beam = Beam(new_length, self.elastic_modulus, new_second_moment, x)
+            new_beam = Beam(new_length, self.elastic_modulus, new_second_moment, self.variable)
             new_beam._composite_type = "hinge"
+            new_beam._hinge_position = self.length
             return new_beam
 
     def apply_load(self, value, start, order, end=None):
@@ -456,6 +458,56 @@ class Beam(object):
         [(-3, 0, -2, None), (4, 2, -1, None), (5, 2, -1, None)]
         """
         return self._applied_loads
+
+    def _solve_hinge_beams(self, reaction1, reaction2):
+        C1 = Symbol('C1')
+        C2 = Symbol('C2')
+        C3 = Symbol('C3')
+        C4 = Symbol('C4')
+
+        load_1 = 0
+        load_2 = 0
+        for load in self.applied_loads:
+            if load[1] < self._hinge_position:
+                load_1 += load[0]*SingularityFunction(self.variable, load[1], load[2])
+            elif load[1] >= self._hinge_position and load[1] < self._length:
+                load_2 += load[0]*SingularityFunction(self.variable, load[1]-self._hinge_position, load[2])
+
+        x = self.variable
+        l = self._hinge_position
+        E = self._elastic_modulus
+        I = self._second_moment
+        h = Symbol('h')
+        load_1 += h*SingularityFunction(self.variable, self._hinge_position, -1)
+        load_2 -= h*SingularityFunction(self.variable, 0, -1)
+
+        eq = []
+        shear_1 = integrate(load_1, x)
+        shear_curve_1 = limit(shear_1, x, l)
+        eq.append(shear_curve_1)
+        bending_1 = integrate(shear_1, x)
+        moment_curve_1 = limit(bending_1, x, l)
+        eq.append(moment_curve_1)
+        slope_1 = S(1)/(E*I)*(integrate(bending_1, x) + C1)
+        def_1 = S(1)/(E*I)*(integrate((E*I)*slope_1, x) + C1*x + C2)
+
+        slope_2 = S(1)/(E*I)*(integrate(integrate(integrate(load_2, x), x), x) + C3)
+        def_2 = S(1)/(E*I)*(integrate((E*I)*slope_2, x) + C4)
+
+        for position, value in self.bc_slope:
+            if position<self._hinge_position:
+                eq.append(slope_1.subs(x, position) - value) 
+            else:
+                eq.append(slope_2.subs(x, position - self._hinge_position) - value)
+            print(eq)
+        for position, value in self.bc_deflection:
+            if position<self._hinge_position:
+                eq.append(def_1.subs(x, position) - value) 
+            else:
+                eq.append(def_2.subs(x, position - self._hinge_position) - value)
+
+        eq.append(def_1.subs(x, self._hinge_position)-def_2.subs(x, 0))
+        constants = linsolve(eq, C1,C2,C3,C4,h,reaction1, reaction2)
 
     def solve_for_reaction_loads(self, *reactions):
         """
