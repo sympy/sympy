@@ -269,14 +269,6 @@ class ContinuousPSpace(PSpace):
     is_real = True
 
     @property
-    def domain(self):
-        return self.args[0]
-
-    @property
-    def density(self):
-        return self.args[1]
-
-    @property
     def pdf(self):
         return self.density(*self.domain.symbols)
 
@@ -462,16 +454,6 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         fx = self.compute_density(self.value)
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
         return Lambda(y, fy)
-
-
-class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
-    """
-    A collection of independent continuous probability spaces
-    """
-    @property
-    def pdf(self):
-        p = Mul(*[space.pdf for space in self.spaces])
-        return p.subs(dict((rv, rv.symbol) for rv in self.values))
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:

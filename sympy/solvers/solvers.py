@@ -288,7 +288,7 @@ def checksol(f, symbol, sol=None, **flags):
                     return False
                 # there are free symbols -- simple expansion might work
                 _, val = val.as_content_primitive()
-                val = expand_mul(expand_multinomial(val))
+                val = _mexpand(val.as_numer_denom()[0], recursive=True)
         elif attempt == 2:
             if minimal:
                 return
@@ -301,7 +301,7 @@ def checksol(f, symbol, sol=None, **flags):
             if flags.get('force', True):
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
-                exval = expand_mul(expand_multinomial(val))
+                exval = _mexpand(val, recursive=True)
                 if exval.is_number or not exval.free_symbols:
                     # we can decide now
                     val = exval
@@ -666,8 +666,10 @@ def solve(f, *symbols, **flags):
         * when there is a linear solution
 
             >>> solve(x - y**2, x, y)
-            [{x: y**2}]
+            [(y**2, y)]
             >>> solve(x**2 - y, x, y)
+            [(x, x**2)]
+            >>> solve(x**2 - y, x, y, dict=True)
             [{y: x**2}]
 
         * when undetermined coefficients are identified
@@ -685,12 +687,12 @@ def solve(f, *symbols, **flags):
         * if there is no linear solution then the first successful
           attempt for a nonlinear solution will be returned
 
-            >>> solve(x**2 - y**2, x, y)
+            >>> solve(x**2 - y**2, x, y, dict=True)
             [{x: -y}, {x: y}]
-            >>> solve(x**2 - y**2/exp(x), x, y)
+            >>> solve(x**2 - y**2/exp(x), x, y, dict=True)
             [{x: 2*LambertW(y/2)}]
             >>> solve(x**2 - y**2/exp(x), y, x)
-            [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
+            [(-x*sqrt(exp(x)), x), (x*sqrt(exp(x)), x)]
 
     * iterable of one or more of the above
 
@@ -834,10 +836,10 @@ def solve(f, *symbols, **flags):
         >>> solve(eq, check=False)
         [1/3]
 
-    In the above example there is only a single solution to the equation. Other
-    expressions will yield spurious roots which must be checked manually;
-    roots which give a negative argument to odd-powered radicals will also need
-    special checking:
+    In the above example there is only a single solution to the
+    equation. Other expressions will yield spurious roots which
+    must be checked manually; roots which give a negative argument
+    to odd-powered radicals will also need special checking:
 
         >>> from sympy import real_root, S
         >>> eq = root(x, 3) - root(x, 5) + S(1)/7
@@ -848,15 +850,15 @@ def solve(f, *symbols, **flags):
         >>> [abs(eq.subs(x,i).n(2)) for i in sol]
         [0.48, 0.e-110, 0.e-110, 0.052, 0.052]
 
-        The first solution is negative so real_root must be used to see that
-        it satisfies the expression:
+        The first solution is negative so real_root must be used to see
+        that it satisfies the expression:
 
         >>> abs(real_root(eq.subs(x, sol[0])).n(2))
         0.e-110
 
-    If the roots of the equation are not real then more care will be necessary
-    to find the roots, especially for higher order equations. Consider the
-    following expression:
+    If the roots of the equation are not real then more care will be
+    necessary to find the roots, especially for higher order equations.
+    Consider the following expression:
 
         >>> expr = root(x, 3) - root(x, 5)
 
@@ -1126,7 +1128,9 @@ def solve(f, *symbols, **flags):
     non_inverts = dict(list(zip(non_inverts, [Dummy() for d in non_inverts])))
     f = [fi.subs(non_inverts) for fi in f]
 
-    non_inverts = [(v, k.subs(swap_sym)) for k, v in non_inverts.items()]
+    # Both xreplace and subs are needed below: xreplace to force substitution
+    # inside Derivative, subs to handle non-straightforward substitutions
+    non_inverts = [(v, k.xreplace(swap_sym).subs(swap_sym)) for k, v in non_inverts.items()]
 
     # rationalize Floats
     floats = False
@@ -1166,14 +1170,14 @@ def solve(f, *symbols, **flags):
             return dict([(k, v.subs(non_inverts)) for k, v in
                          solution.items()])
         for i in range(1):
-            if type(solution) is dict:
+            if isinstance(solution, dict):
                 solution = _do_dict(solution)
                 break
-            elif solution and type(solution) is list:
-                if type(solution[0]) is dict:
+            elif solution and isinstance(solution, list):
+                if isinstance(solution[0], dict):
                     solution = [_do_dict(s) for s in solution]
                     break
-                elif type(solution[0]) is tuple:
+                elif isinstance(solution[0], tuple):
                     solution = [tuple([v.subs(non_inverts) for v in s]) for s
                                 in solution]
                     break
@@ -1197,10 +1201,10 @@ def solve(f, *symbols, **flags):
     #    above.
     if swap_sym:
         symbols = [swap_sym.get(k, k) for k in symbols]
-        if type(solution) is dict:
+        if isinstance(solution, dict):
             solution = dict([(swap_sym.get(k, k), v.subs(swap_sym))
                              for k, v in solution.items()])
-        elif solution and type(solution) is list and type(solution[0]) is dict:
+        elif solution and isinstance(solution, list) and isinstance(solution[0], dict):
             for i, sol in enumerate(solution):
                 solution[i] = dict([(swap_sym.get(k, k), v.subs(swap_sym))
                               for k, v in sol.items()])
@@ -1211,11 +1215,11 @@ def solve(f, *symbols, **flags):
             not flags.get('dict', False) and
             solution and
             ordered_symbols and
-            type(solution) is not dict and
-            type(solution[0]) is dict and
-            all(s in solution[0] for s in symbols)
+            not isinstance(solution, dict) and
+            all(isinstance(sol, dict) for sol in solution)
     ):
-        solution = [tuple([r[s].subs(r) for s in symbols]) for r in solution]
+        solution = [tuple([r.get(s, s).subs(r) for s in symbols])
+                    for r in solution]
 
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still
@@ -1231,11 +1235,11 @@ def solve(f, *symbols, **flags):
         warn = flags.get('warn', False)
         got_None = []  # solutions for which one or more symbols gave None
         no_False = []  # solutions for which no symbols gave False
-        if type(solution) is tuple:
+        if isinstance(solution, tuple):
             # this has already been checked and is in as_set form
             return solution
-        elif type(solution) is list:
-            if type(solution[0]) is tuple:
+        elif isinstance(solution, list):
+            if isinstance(solution[0], tuple):
                 for sol in solution:
                     for symb, val in zip(symbols, sol):
                         test = check_assumptions(val, **symb.assumptions0)
@@ -1245,7 +1249,7 @@ def solve(f, *symbols, **flags):
                             got_None.append(sol)
                     else:
                         no_False.append(sol)
-            elif type(solution[0]) is dict:
+            elif isinstance(solution[0], dict):
                 for sol in solution:
                     a_None = False
                     for symb, val in sol.items():
@@ -1268,7 +1272,7 @@ def solve(f, *symbols, **flags):
                     if test is None:
                         got_None.append(sol)
 
-        elif type(solution) is dict:
+        elif isinstance(solution, dict):
             a_None = False
             for symb, val in solution.items():
                 test = check_assumptions(val, **symb.assumptions0)
@@ -1368,19 +1372,19 @@ def _solve(f, *symbols, **flags):
                 pass
         if soln:
             if flags.get('simplify', True):
-                if type(soln) is dict:
+                if isinstance(soln, dict):
                     for k in soln:
                         soln[k] = simplify(soln[k])
-                elif type(soln) is list:
-                    if type(soln[0]) is dict:
+                elif isinstance(soln, list):
+                    if isinstance(soln[0], dict):
                         for d in soln:
                             for k in d:
                                 d[k] = simplify(d[k])
-                    elif type(soln[0]) is tuple:
+                    elif isinstance(soln[0], tuple):
                         soln = [tuple(simplify(i) for i in j) for j in soln]
                     else:
                         raise TypeError('unrecognized args in list')
-                elif type(soln) is tuple:
+                elif isinstance(soln, tuple):
                     sym, sols = soln
                     soln = sym, {tuple(simplify(i) for i in j) for j in sols}
                 else:
@@ -1831,19 +1835,20 @@ def _solve_system(exprs, symbols, **flags):
             else:
                 try:
                     result = solve_poly_system(polys, *symbols)
-                    solved_syms = symbols
+                    if result:
+                        solved_syms = symbols
+                        # we don't know here if the symbols provided
+                        # were given or not, so let solve resolve that.
+                        # A list of dictionaries is going to always be
+                        # returned from here.
+                        result = [dict(list(zip(solved_syms, r))) for r in result]
                 except NotImplementedError:
                     failed.extend([g.as_expr() for g in polys])
                     solved_syms = []
-                if result:
-                    # we don't know here if the symbols provided were given
-                    # or not, so let solve resolve that. A list of dictionaries
-                    # is going to always be returned from here.
-                    #
-                    result = [dict(list(zip(solved_syms, r))) for r in result]
+                    result = None
 
     if result:
-        if type(result) is dict:
+        if isinstance(result, dict):
             result = [result]
     else:
         result = [{}]
@@ -1863,10 +1868,9 @@ def _solve_system(exprs, symbols, **flags):
 
         solved_syms = set(solved_syms)  # set of symbols we have solved for
         legal = set(symbols)  # what we are interested in
-
         # sort so equation with the fewest potential symbols is first
+        u = Dummy()  # used in solution checking
         for eq in ordered(failed, lambda _: len(_ok_syms(_))):
-            u = Dummy()  # used in solution checking
             newresult = []
             bad_results = []
             got_s = set()
@@ -2096,7 +2100,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     all_zero = True
     for xi in sorted(symbols, key=default_sort_key):  # canonical order
         # if there are derivatives in this var, calculate them now
-        if type(derivs[xi]) is list:
+        if isinstance(derivs[xi], list):
             derivs[xi] = {der: der.doit() for der in derivs[xi]}
         newn = n.subs(derivs[xi])
         dnewn_dxi = newn.diff(xi)

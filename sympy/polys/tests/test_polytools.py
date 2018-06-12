@@ -677,6 +677,12 @@ def test_Poly_mul():
     assert Poly(x, x) * 2 == Poly(2*x, x)
     assert 2 * Poly(x, x) == Poly(2*x, x)
 
+def test_issue_13079():
+    assert Poly(x)*x == Poly(x**2, x, domain='ZZ')
+    assert x*Poly(x) == Poly(x**2, x, domain='ZZ')
+    assert -2*Poly(x) == Poly(-2*x, x, domain='ZZ')
+    assert S(-2)*Poly(x) == Poly(-2*x, x, domain='ZZ')
+    assert Poly(x)*S(-2) == Poly(-2*x, x, domain='ZZ')
 
 def test_Poly_sqr():
     assert Poly(x*y, x, y).sqr() == Poly(x**2*y**2, x, y)
@@ -2797,6 +2803,13 @@ def test_nroots():
     # issue 8296
     f = Poly(x**4 - 1)
     assert f.nroots(2) == [w.n(2) for w in f.all_roots()]
+
+    assert str(Poly(x**16 + 32*x**14 + 508*x**12 + 5440*x**10 +
+        39510*x**8 + 204320*x**6 + 755548*x**4 + 1434496*x**2 +
+        877969).nroots(2)) == ('[-1.7 - 1.9*I, -1.7 + 1.9*I, -1.7 '
+        '- 2.5*I, -1.7 + 2.5*I, -1.0*I, 1.0*I, -1.7*I, 1.7*I, -2.8*I, '
+        '2.8*I, -3.4*I, 3.4*I, 1.7 - 1.9*I, 1.7 + 1.9*I, 1.7 - 2.5*I, '
+        '1.7 + 2.5*I]')
 
 
 def test_ground_roots():

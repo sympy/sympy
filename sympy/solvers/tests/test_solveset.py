@@ -781,18 +781,18 @@ def test_solve_trig():
         imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
 
     assert solveset_real(cos(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi/2), S.Integers))
+        Union(imageset(Lambda(n, 2*pi*n + pi/2), S.Integers),
+              imageset(Lambda(n, 2*pi*n + 3*pi/2), S.Integers))
 
     assert solveset_real(sin(x) + cos(x), x) == \
-        Union(imageset(Lambda(n, 2*n*pi - pi/4), S.Integers),
-              imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers))
+        Union(imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers),
+              imageset(Lambda(n, 2*n*pi + 7*pi/4), S.Integers))
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
     assert solveset_complex(cos(x) - S.Half, x) == \
-        Union(imageset(Lambda(n, 2*n*pi + pi/3), S.Integers),
-              imageset(Lambda(n, 2*n*pi - pi/3), S.Integers))
+        Union(imageset(Lambda(n, 2*n*pi + 5*pi/3), S.Integers),
+              imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
 
     y, a = symbols('y,a')
     assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
