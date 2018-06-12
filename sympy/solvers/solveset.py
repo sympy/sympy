@@ -1095,7 +1095,7 @@ def _check_expo(f, symbol):
 def _transolve(f, symbol, domain):
     r"""
     Function to solve transcendental equations. It is a helper to
-    solveset and should be used internally as of now. `transolve`
+    `solveset` and should be used internally as of now. `\_transolve`
     currently supports the following class of equations:
 
         - Exponential equations
@@ -1126,20 +1126,20 @@ def _transolve(f, symbol, domain):
     {-log(375)/(-log(5) + 2*log(3))}
 
 
-    How to use `transolve`
-    ======================
+    How to use `\_transolve`
+    ========================
 
-    `transolve` should be used as an internal function. There should be
-    an internal call to `transolve`, passing all the three above
+    `\_transolve` should be used as an internal function. There should be
+    an internal call to `\_transolve`, passing all the three above
     parameters as arguments. These three arguments should be sympy
     instances.
 
 
-    How `transolve` works
-    =====================
+    How `\_transolve` works
+    =======================
 
-    The main idea behind `transolve` is to make it modular, extensible,
-    robust and easy to understand. For this to be achieved `transolve`
+    The main idea behind `\_transolve` is to make it modular, extensible,
+    robust and easy to understand. For this to be achieved `\_transolve`
     uses two types of helper functions to solve equation of a particular
     class:
 
@@ -1156,7 +1156,7 @@ def _transolve(f, symbol, domain):
 
     * Philosophy behind the module
 
-    `transolve` comes into action when solveset is unable to solve the
+    `\_transolve` comes into action when solveset is unable to solve the
     equation as a last resort to get the solutions. So the idea is that,
     first it tries to invert the equation to get the `lhs` and the `rhs`.
     Depending on the general form of the class of the equation it
@@ -1174,15 +1174,15 @@ def _transolve(f, symbol, domain):
     is returned.
 
 
-    How `transolve` is better than `\_tsolve`
-    =========================================
+    How `\_transolve` is better than `\_tsolve`
+    ===========================================
 
     1) Better output
 
-    `transolve` provides a better output to some equations than
+    `\_transolve` provides a better output to some equations than
     `\_tsolve`. Though result from both the functions are correct
-    it's just that the one from `transolve` is easy to understand and
-    appropriate. This is because `transolve` smartly evaluates the
+    it's just that the one from `\_transolve` is easy to understand and
+    appropriate. This is because `\_transolve` smartly evaluates the
     result minimising it wherever necessary.
 
     Consider a simple exponential equation
@@ -1199,25 +1199,24 @@ def _transolve(f, symbol, domain):
     [-log\2         /]
 
 
-    `transolve's` output seems more simple, readable and appropriate
+    `\_transolve's` output seems more simple, readable and appropriate
     as compared to that of `\_tsolve`.
 
 
     2) Extensible
 
-    The API of `transolve` is designed such that it is easily extensible,
+    The API of `\_transolve` is designed such that it is easily extensible,
     i.e, it is easy to add a new class of equation solver without having
     to mess with the API or solving code of other helpers. The idea
-    behind transolve is making seperate helpers for different equation
+    behind `\_transolve` is making seperate helpers for different equation
     solver. So to make new class of equation solve, you must add a
     helper that identifies that particular class of the equation and
-    another helper that solves that type of equations. This way it
-    becomes easily extensible.
+    another helper that solves that type of equations.
 
 
     3) Modular
 
-    `transolve` is designed to be modular i.e, for every class of
+    `\_transolve` is designed to be modular i.e, for every class of
     equation a separate helper for identification and solving is
     implemented. This makes it easy to change or modify any of the
     method implemented directly in the helpers without interfering
@@ -1226,36 +1225,32 @@ def _transolve(f, symbol, domain):
 
     4) Less complex API
 
-    Since modular approach is used in transolve, the API automatically
-    becomes less complex to read and understand unlike in `\_tsolve`
-    where the API structure is a mess and lots of recursive and function
-    calls makes it more hard to understand.
+    The API of `\_transolve` is designed in a way that it is less
+    complex to read and understand unlike in `\_tsolve` where the
+    API structure is a mess with lots of recursive and function
+    calls making it hard to understand.
 
 
     5) Faster Computation
 
-    Equation solving via transolve is much faster as compared to
-    `\_tsolve`. The way equations are treated in solve is complicated
-    which make it a bit time consuming. `solve` tries every possibility
-    to solve the equation and in process it gets into each and every
-    condition and starts solving the equation to get the result,
-    if the result is not achieved the equation is solved by another
-    way. Therefore this series of solving makes it a bit slow.
-    Whereas in `transolve` computation begins only when the equation
-    is identified of being a particular type.
+    Solving equation via `\_transolve` is much faster as compared to
+    `\_tsolve`. Attempts are made computing every possibility to get
+    the solutions. This series of attempts makes solving a bit slow.
+    Whereas in `\_transolve` computation begins only when the
+    equation is identified of being a particular type.
 
 
     How to add new class of equations
     =================================
 
-    `transolve` is designed in such a way that it becomes an easy task to
+    `\_transolve` is designed in such a way that it becomes an easy task to
     add a new class of equation solver.
 
     The first task that needs to be done for adding your own solver
     is to decide from where its `identification helper` will be
     invoked. To do so determine the general form of the class of the
     equation to place the invocation of the identification helper to
-    an appropriate place within transolve, for example the general
+    an appropriate place within \_transolve, for example the general
     form of the exponential equation is `a*f(x) + b*g(x)` where
     `f(x)` and `g(x)` are power (or log) terms so we need to place the
     invocation condition inside `Add` case. Once the place for
@@ -1267,7 +1262,7 @@ def _transolve(f, symbol, domain):
     `False`. Solving helpers needs to be implemented with such
     heuristics or algorithms that solves most of the equations belonging
     to that class. The value returned from this helper should be handled
-    properly in the main (transolve) function itself. It could be either
+    properly in the main (\_transolve) function itself. It could be either
     the exact solution or a reduced form of the equation which
     `solveset` can handle.
 
