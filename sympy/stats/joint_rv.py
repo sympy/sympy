@@ -18,33 +18,18 @@ from sympy.core.symbol import Dummy, Symbol
 from sympy.core.compatibility import string_types
 from sympy.concrete.summations import summation
 from sympy.integrals.integrals import Integral, integrate
-from sympy.stats.rv import (PSpace, RandomDomain, random_symbols,
-        NamedArgsMixin, RandomSymbol, density)
+from sympy.stats.rv import (ProductPSpace, RandomSymbol,
+    density, NamedArgsMixin, ProductDomain)
+from sympy.sets.sets import FiniteSet
 from sympy.utilities.misc import filldedent
-from sympy.sets.contains import Contains
 
-class JointDomain(RandomDomain):
-    """
-    Represents the joint domain as a ProductSet.
-    """
-    @property
-    def set(self):
-        rv_sets = [rv.args[1].domain.set for rv in self.symbols]
-        _set = rv_sets[0]
-        for i in rv_sets[1:]:
-            _set = _set*i
-        return _set
-
-    def as_boolean(self):
-        return Contains(self.symbols, self.set)
-
-    def __contains__(self, other):
-        return other in self.set()
-
-class JointPSpace(PSpace):
+class JointPSpace(ProductPSpace):
     """
 
     """
+    def __new__(cls, name, syms):
+        return Basic.__new__(cls, name, syms)
+
     @property
     def set(self):
         return self.domain.set
@@ -60,6 +45,11 @@ class JointPSpace(PSpace):
     @property
     def distribution(self):
         return self.args[1]
+
+    @property
+    def spaces(self):
+        rvs = self.distribution.symbols
+        return FiniteSet(*[rv.pspace for rv in rvs])
 
     def where(self, condition):
         raise NotImplementedError()
@@ -102,7 +92,7 @@ class JointDistribution(Basic, NamedArgsMixin):
 
     @property
     def domain(self):
-        return JointDomain(self.symbols)
+        return ProductDomain(self.symbols)
 
     @property
     def symbols(self):

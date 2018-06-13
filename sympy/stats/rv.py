@@ -439,7 +439,8 @@ def pspace(expr):
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
     # If joint space is present
-    elif isinstance(expr.pspace, JointPSpace):
+    elif isinstance(expr, RandomSymbol) and \
+        isinstance(expr.pspace, JointPSpace):
         return expr.pspace
     # Otherwise make a product space
     return ProductPSpace(*[rv.pspace for rv in rvs])
