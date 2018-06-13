@@ -459,7 +459,7 @@ class Beam(object):
         """
         return self._applied_loads
 
-    def _solve_hinge_beams(self, reaction1, reaction2):
+    def _solve_hinge_beams(self, r1, r2, r3, r4):
         C1 = Symbol('C1')
         C2 = Symbol('C2')
         C3 = Symbol('C3')
@@ -469,8 +469,14 @@ class Beam(object):
         load_2 = 0
         for load in self.applied_loads:
             if load[1] < self._hinge_position:
+                if load[2] == 0:
+                    load_1 += (load[0]*SingularityFunction(self.variable, load[1], load[2]) - load[0]*SingularityFunction(self.variable, load[3], load[2]))
+                else:
+                    load_1 += load[0]*SingularityFunction(self.variable, load[1], load[2])
+            elif load[1] == self._hinge_position:
                 load_1 += load[0]*SingularityFunction(self.variable, load[1], load[2])
-            elif load[1] >= self._hinge_position and load[1] < self._length:
+                load_2 += load[0]*SingularityFunction(self.variable, load[1]-self._hinge_position, load[2])
+            elif load[1] > self._hinge_position:
                 load_2 += load[0]*SingularityFunction(self.variable, load[1]-self._hinge_position, load[2])
 
         x = self.variable
@@ -491,6 +497,13 @@ class Beam(object):
         slope_1 = S(1)/(E*I)*(integrate(bending_1, x) + C1)
         def_1 = S(1)/(E*I)*(integrate((E*I)*slope_1, x) + C1*x + C2)
 
+        shear_2 = integrate(load_2, x)
+        shear_curve_2 = limit(shear_2, x, self.length - l)
+        eq.append(shear_curve_2)
+        bending_2 = integrate(shear_2, x)
+        moment_curve_2 = limit(bending_2, x, self.length - l)
+        eq.append(moment_curve_2)
+
         slope_2 = S(1)/(E*I)*(integrate(integrate(integrate(load_2, x), x), x) + C3)
         def_2 = S(1)/(E*I)*(integrate((E*I)*slope_2, x) + C4)
 
@@ -499,7 +512,7 @@ class Beam(object):
                 eq.append(slope_1.subs(x, position) - value) 
             else:
                 eq.append(slope_2.subs(x, position - self._hinge_position) - value)
-            print(eq)
+
         for position, value in self.bc_deflection:
             if position<self._hinge_position:
                 eq.append(def_1.subs(x, position) - value) 
@@ -507,7 +520,7 @@ class Beam(object):
                 eq.append(def_2.subs(x, position - self._hinge_position) - value)
 
         eq.append(def_1.subs(x, self._hinge_position)-def_2.subs(x, 0))
-        constants = linsolve(eq, C1,C2,C3,C4,h,reaction1, reaction2)
+        constants = linsolve(eq, C1,C2,C3,C4,h,r1,r2, r3, r4)
 
     def solve_for_reaction_loads(self, *reactions):
         """
