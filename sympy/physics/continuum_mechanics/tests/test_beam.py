@@ -191,6 +191,26 @@ def test_composite_beam():
     assert b.slope().subs(x, 2) == 80.0/(E*I)
     assert int(b.deflection().subs(x, 4).args[0]) == 302  # Coefficient of 1/(E*I)
 
+    l=symbols('l', positive=True)
+    M1, A1, M2, A2, P = symbols('M1 A1 M2 A2 P')
+    b1=Beam(l ,E,I)
+    b2=Beam(2*l ,E,I)
+    b=b1.join(b2,"hinge")
+    b.apply_load(A1,0,-1)
+    b.apply_load(M1,0,-2)
+    b.apply_load(P,2*l,-1)
+    b.apply_load(A2,3*l,-1)
+    b.apply_load(M2,3*l,-2)
+    b.bc_slope=[(0,0), (3*l, 0)]
+    b.bc_deflection=[(0,0), (3*l, 0)]
+    b._solve_hinge_beams(M1, A1, M2, A2)
+
+    assert b.reaction_loads == {A1: -5*P/18, M1: 5*P*l/18, A2: -13*P/18, M2: -4*P*l/9}
+    assert b.slope().subs(x, l) == 5*P*l**2/(36*E*I)
+    assert b.slope().subs(x, 2*l) == -P*l**2/(12*E*I)
+    assert b.deflection().subs(x, l) == 5*P*l**3/(54*E*I)
+    assert b.deflection().subs(x, 2*l) == 11*P*l**3/(108*E*I)
+
 
 def test_point_cflexure():
     E = Symbol('E')
