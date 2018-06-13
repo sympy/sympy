@@ -224,16 +224,28 @@ def test_remove_load():
 def test_apply_support():
     E = Symbol('E')
     I = Symbol('I')
+
     b = Beam(4, E, I)
     b.apply_support(0, "cantilever")
     b.apply_load(20, 4, -1)
     M_0, R_0 = symbols('M_0, R_0')
     b.solve_for_reaction_loads(R_0, M_0)
-
     assert b.slope() == (80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2)
                 + 10*SingularityFunction(x, 4, 2))/(E*I)
     assert b.deflection() == (40*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 0, 3)/3
                 + 10*SingularityFunction(x, 4, 3)/3)/(E*I)
+
+    b = Beam(30, E, I)
+    b.apply_support(10, "pin")
+    b.apply_support(30, "roller")
+    b.apply_load(-8, 0, -1)
+    b.apply_load(120, 30, -2)
+    R_10, R_30 = symbols('R_10, R_30')
+    b.solve_for_reaction_loads(R_10, R_30)
+    assert b.slope() == (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
+            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
+    assert b.deflection() == (4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
+            + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
 
 
 def test_max_deflection():

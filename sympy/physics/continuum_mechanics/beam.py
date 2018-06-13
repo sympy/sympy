@@ -220,7 +220,7 @@ class Beam(object):
             Location of point at which support is applied.
         type : String
             Determines type of Beam support applied.
-            - For Hinged Support, type = "hinge"
+            - For Simple pinned Support, type = "pin"
             - For Cantilever Support, type = "fixed"
             - For Rolling Support, type = "roller"
 
@@ -241,8 +241,8 @@ class Beam(object):
         >>> E, I = symbols('E, I')
         >>> b = Beam(30, E, I)
         >>> b.apply_load(-8, 0, -1)
-        >>> b.apply_support(10, 'hinge')
-        >>> b.apply_support(30, 'hinge')
+        >>> b.apply_support(10, 'roller')
+        >>> b.apply_support(30, 'roller')
         >>> b.apply_load(120, 30, -2)
         >>> R_10, R_30 = symbols('R_10, R_30')
         >>> b.solve_for_reaction_loads(R_10, R_30)
@@ -253,7 +253,7 @@ class Beam(object):
         (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
         """
-        if type == "hinge" or type == "roller":
+        if type == "pin" or type == "roller":
             reaction_load = Symbol('R_'+str(loc))
             self.apply_load(reaction_load, loc, -1)
             self.bc_deflection.append((loc, 0))
