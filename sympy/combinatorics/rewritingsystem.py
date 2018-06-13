@@ -318,7 +318,7 @@ class RewritingSystem(object):
 
         Automata Design:
         The accept states of the automaton are the proper prefixes of the left hand side of the rules.
-        The complete left hand side of the rules are the dead states of the automaton
+        The complete left hand side of the rules are the dead states of the automaton.
 
         '''
         automaton_alphabet = []
@@ -355,7 +355,7 @@ class RewritingSystem(object):
         # This is essentially checking the left hand side of the rules.
         for rule in all_rules:
             if not rule in fsm.states:
-                fsm.add_state(rule, is_dead=True, subst=all_rules[rule])
+                fsm.add_state(rule, is_dead=True, rh_rule=all_rules[rule])
 
         # Add accept states.
         for r in all_rules:
@@ -435,7 +435,7 @@ class RewritingSystem(object):
         # This is essentially checking the left hand side of the rules.
         for rule in all_rules:
             if not rule in self.reduction_automaton.states:
-                self.reduction_automaton.add_state(rule, is_dead=True, subst=all_rules[rule])
+                self.reduction_automaton.add_state(rule, is_dead=True, rh_rule=all_rules[rule])
 
         # Add accept states.
         for r in all_rules:
