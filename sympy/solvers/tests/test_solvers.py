@@ -421,6 +421,12 @@ def test_solve_transcendental():
     assert solve(exp(log(5)*x) - exp(log(2)*x), x) == [0]
     f = Function('f')
     assert solve(y*f(log(5)*x) - y*f(log(2)*x), x) == [0]
+    assert solve(f(x) - f(0), x) == [0]
+    assert solve(f(x) - f(2 - x), x) == [1]
+    raises(NotImplementedError, lambda: solve(f(x, y) - f(1, 2), x))
+    raises(NotImplementedError, lambda: solve(f(x, y) - f(2 - x, 2), x))
+    raises(ValueError, lambda: solve(f(x, y) - f(1 - x), x))
+    raises(ValueError, lambda: solve(f(x, y) - f(1), x))
 
     # misc
     # make sure that the right variables is picked up in tsolve

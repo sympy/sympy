@@ -3058,16 +3058,17 @@ def _invert(eq, *symbols, **kwargs):
                         lhs = _lhs
                         rhs = -bi/ai
             elif ai == -bi:
-                if isinstance(ad, Function) and \
-                        ad.func == bd.func and \
-                        len(ad.args) == len(bd.args):
-                    if len(ad.args) == 1:
+                if isinstance(ad, Function) and ad.func == bd.func:
+                    if len(ad.args) == len(bd.args) == 1:
                         lhs = ad.args[0] - bd.args[0]
-                    else:
+                    elif len(ad.args) == len(bd.args):
                         # should be able to solve
-                        # f(x, y) == f(2, 3) -> x == 2
-                        # f(x, x + y) == f(2, 3) -> x == 2 or x == 3 - y
-                        raise NotImplementedError('equal function with more than 1 argument')
+                        # f(x, y) - f(2 - x, 0) == 0 -> x == 1
+                        raise NotImplementedError(
+                            'equal function with more than 1 argument')
+                    else:
+                        raise ValueError(
+                            'function with different numbers of args')
 
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
@@ -3085,6 +3086,21 @@ def _invert(eq, *symbols, **kwargs):
             elif isinstance(lhs, atan2):
                 y, x = lhs.args
                 lhs = 2*atan(y/(sqrt(x**2 + y**2) + x))
+            elif lhs.func == rhs.func:
+                if len(lhs.args) == len(rhs.args) == 1:
+                    lhs = lhs.args[0]
+                    rhs = rhs.args[0]
+                elif len(lhs.args) == len(rhs.args):
+                    # should be able to solve
+                    # f(x, y) == f(2, 3) -> x == 2
+                    # f(x, x + y) == f(2, 3) -> x == 2
+                    raise NotImplementedError(
+                        'equal function with more than 1 argument')
+                else:
+                    raise ValueError(
+                        'function with different numbers of args')
+
+
         if rhs and lhs.is_Pow and lhs.exp.is_Integer and lhs.exp < 0:
             lhs = 1/lhs
             rhs = 1/rhs
