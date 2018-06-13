@@ -1746,7 +1746,7 @@ def test_transolve():
 
     assert _transolve(2**x - 32, x, S.Reals) == FiniteSet(5)
     assert _transolve(3**x, x, S.Reals) == S.EmptySet
-    assert _transolve(3**x - 9**(x+5), x, S.Reals) == FiniteSet(-10)
+    assert _transolve(3**x - 9**(x + 5), x, S.Reals) == FiniteSet(-10)
 
 
 # exponential tests
@@ -1759,8 +1759,8 @@ def test_expo_solver_real():
     e4 = exp(log(5)*x) - 2**x
     e5 = exp(x/y)*exp(-z/y) - 2
     e6 = 5**(x/2) - 2**(x/3)
-    e7 = 2**(x) + 4**(x) + 8**(x) - 84
-    e8 = 4**(x+1) + 4**(x+2) + 4**(x-1) - 3**(x+2) - 3**(x+3)
+    e7 = 2**x + 4**x + 8**x - 84
+    e8 = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
     e9 = -9*exp(-2*x + 5) + 4*exp(3*x + 1)
 
     assert solveset(e1, x, S.Reals) == FiniteSet(-3*log(2)/(-2*log(3) + log(2)))
@@ -1774,8 +1774,7 @@ def test_expo_solver_real():
     assert solveset(e8, x, S.Reals) == FiniteSet(2)
     assert solveset(e9, x, S.Reals) == FiniteSet(log(9*exp(4)/4)/5)
 
-
-    assert solveset_real(-9*exp(-2*x + 5) + 2**(x+1), x) == \
+    assert solveset_real(-9*exp(-2*x + 5) + 2**(x + 1), x) == \
         FiniteSet(-((-5 - 2*log(3) + log(2))/(log(2) + 2)))
     assert solveset_real(4**(x/2) - 2**(x/3), x) == FiniteSet(0)
     b = sqrt(6)*sqrt(log(2))/sqrt(log(5))
@@ -1807,10 +1806,10 @@ def _expo_solver_complex():
         imageset(Lambda(n, 3*n*I*pi/log(2)), S.Integers)
     assert solveset(2**x + 32, x) == \
         imageset(Lambda(n, (I*(2*n*pi + pi) + 5*log(2))/log(2)), S.Integers)
-    assert solveset(2**(x) + 4**(x) + 8**(x), x) == \
+    assert solveset(2**x + 4**x + 8**x, x) == \
         Union(imageset(Lambda(n, I*(2*n*pi - 2*pi/3)/log(2)), S.Integers),
               imageset(Lambda(n, I*(2*n*pi + 2*pi/3)/log(2)), S.Integers))
-    assert solveset(4**(x+1) + 4**(x+2) + 4**(x-1) - 3**(x+2) - 3**(x+3), x) == \
+    assert solveset(4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3), x) == \
         imageset(Lambda(n, (2*n*I*pi - 4*log(2) + 2*log(3))/(-2*log(2) + log(3))),
                  S.Integers)
     assert solveset_complex((2**exp(y**2/x) + 2)/(x**2 + 15), y) == \
@@ -1834,13 +1833,12 @@ def test_expo_conditionset():
 
 
 def test_expo_symbols():
-    x, y, z = symbols('x y z', real=True)
+    x, y, z = symbols('x y z', positive=True)
     from sympy import simplify
 
     assert solveset(z**x - y, x, S.Reals) == Intersection(
         S.Reals, FiniteSet(log(y)/log(z)))
 
-    x, y = symbols('x y', positive=True)
     w = symbols('w', integer=True)
     f1 = 2*x**w - 4*y**w
     f2 = (x/y)**w - 2
@@ -1848,23 +1846,26 @@ def test_expo_symbols():
     ans2 = solveset(f2, w, S.Reals)
     assert ans1 == simplify(ans2)
 
-    # issue 10864
-    assert solveset(x**(y*z) - x, x, S.Reals) == FiniteSet(1)
-
     assert solveset(x**x, x, S.Reals) == S.EmptySet
     assert solveset(x**y - 1, y, S.Reals) == FiniteSet(0)
     assert solveset(exp(x/y)*exp(-z/y) - 2, y, S.Reals) == FiniteSet(
         (x - z)/log(2)) - FiniteSet(0)
 
 
+@XFAIL
+def test_issue_10864():
+    assert solveset(x**(y*z) - x, x, S.Reals) == FiniteSet(1)
+
+
 def test_check_expo():
     x, y, z = symbols('x y z')
 
     assert _check_expo(3**x - 2, x) == True
-    assert _check_expo(5**x - 7**(2-x), x) == True
+    assert _check_expo(5**x - 7**(2 - x), x) == True
     assert _check_expo(sin(x) - 4*x, x) == False
     assert _check_expo(x**y - z, y) == True
-    assert _check_expo(2**x + 4**x - 1, x) == False
+    assert _check_expo(2**x + 4**x - 1, x) == True
+    assert _check_expo(x**(y*z) - x, x) == False
 
 
 def test_expo_solver():

@@ -34,7 +34,7 @@ from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.solvers.solvers import (checksol, denoms, unrad,
-    _simple_dens, recast_to_symbols, _ispow)
+    _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -234,22 +234,18 @@ def _invert_real(f, g_ys, symbol):
 
         if not base_has_sym:
             rhs = g_ys.args[0]
-            try:
-                if base > S.Zero:
-                    return _invert_real(expo,
-                        imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
-                elif base < S.Zero:
-                    from sympy.core.power import integer_log
-                    s, b = integer_log(rhs, base)
-                    if b:
-                        return _invert_real(expo, FiniteSet(s), symbol)
-                elif rhs is S.One:
-                    #special case: 0**x - 1
-                    return (expo, FiniteSet(0))
-                return (expo, S.EmptySet)
-            except TypeError:
+            if base.is_positive:
                 return _invert_real(expo,
-                imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
+                    imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
+            elif base.is_negative:
+                from sympy.core.power import integer_log
+                s, b = integer_log(rhs, base)
+                if b:
+                    return _invert_real(expo, FiniteSet(s), symbol)
+            elif rhs is S.One:
+                # special case: 0**x - 1
+                return (expo, FiniteSet(0))
+            return (expo, S.EmptySet)
 
 
     if isinstance(f, TrigonometricFunction):
@@ -993,19 +989,22 @@ def _expo_solver(f):
     r"""
     Helper function for solving exponential equations.
 
-    Exponential equations are the type of equations which includes a
-    variable located in the exponent.
+    Exponential equations are the type of equations which has a
+    variable to be solved located in the exponent.
     For example
 
     .. math:: 5^{(2*x + 3)} - 5^{(3*x - 1)}
 
-    The function evaluates exponetial equations having two arguments,
-    i.e, exponential equations having only two exponent terms
-    (like the one above).
+    .. math:: 4^{(5 - 9*x)} - 8^{(2 - x)}
 
-    The helper takes the equation as the input, tries to reduce the
-    equation to log form (if possible) and returns the modified
-    equation.
+    The function evaluates exponential equations having two arguments,
+    i.e, exponential equations having only two exponent terms
+    (like the ones above). Returns `None` for any other type
+    of exponential equation.
+
+    The helper takes the equation to be solved as the only parameter,
+    tries to reduce it to log form (if possible) and returns the
+    modified equation which is further handled by `solveset`.
 
     Examples
     ========
@@ -1042,9 +1041,8 @@ def _expo_solver(f):
 
     try:
         arg1, arg2 = ordered(f.args)
-    except TypeError:
-        raise ValueError("Equations with more than two arguments are not\
-            supported")
+    except ValueError:
+        return None
 
     lhs = arg1
     rhs = -arg2
@@ -1059,37 +1057,34 @@ def _check_expo(f, symbol):
     r"""
     Helper to check whether an equation is exponential or not.
 
-    Returns True if it is of exponential type otherwise False.
-    This helper is specifically designed to determine two argument
-    type exponential equations. Two argument type exponential
-    equations are the ones which consists of only two exponent terms.
-    Therefore it returns False if `f` does not contains exactly two
-    arguments.
-
-    It checks whether any of the symbol dependent term contains
-    power. If so there is a chance that the equation is of exponential
-    type, hence returns True otherwise False.
+    It filters out power and `exp` terms from the equation and
+    checks whether their exponent contains the `symbol`. If so
+    the equation is of exponential type and True is returned
+    otherwise False.
 
     Examples
     ========
 
     >>> from sympy import symbols
     >>> from sympy.solvers.solveset import _check_expo as check
-    >>> x = symbols('x')
+    >>> x, y = symbols('x y')
     >>> check(3**x - 2, x)
     True
     >>> check(2*x, x)
     False
+    >>> check(x**y - x, x)
+    False
+    >>> check(x**y - x, y)
+    True
     """
-    try:
-        arg1, arg2 = ordered(f.args)
-    except ValueError:
-        return False
+    pow_args = f.atoms(Pow, exp)
+    number_of_terms = len(pow_args)
 
-    arg1_dep = arg1.as_independent(symbol)[1]
-    arg2_dep = arg2.as_independent(symbol)[1]
-
-    return any(_ispow(i) for i in (arg1_dep, arg2_dep))
+    for i in pow_args:
+        i_expo = i.args[0] if isinstance(i, exp) else i.exp
+        if i_expo.has(symbol):
+            return True
+    return False
 
 
 def _transolve(f, symbol, domain):
@@ -1122,7 +1117,7 @@ def _transolve(f, symbol, domain):
     >>> from sympy.solvers.solvers import _tsolve as tsolve
     >>> from sympy import symbols, S, pprint
     >>> x = symbols('x', real=True)
-    >>> transolve(5**(x-3) - 3**(2*x + 1), x, S.Reals)
+    >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
     {-log(375)/(-log(5) + 2*log(3))}
 
 
@@ -1295,39 +1290,44 @@ def _transolve(f, symbol, domain):
     # on the domain specified.
     lhs, rhs_s = invert_complex(f, 0, symbol, domain)
 
-    result = ConditionSet(symbol, Eq(f, 0), domain)
+    unsolved_result = ConditionSet(symbol, Eq(f, 0), domain)
+    result = unsolved_result
 
-    if rhs_s is S.EmptySet:
-        result = S.EmptySet
+    if lhs == symbol:
+        result = rhs_s
+
+    elif isinstance(rhs_s, FiniteSet):
+        for equation in [lhs - rhs for rhs in rhs_s]:
+            if equation == f:
+                if lhs.is_Add:
+                    # trying to convert to P.O.S form
+                    simplified_f = factor(powdenest(equation))
+
+                    if simplified_f.is_Mul:
+                        result = _solveset(
+                            simplified_f, symbol, domain)
+
+                    # check if it is exponential type equation
+                    elif _check_expo(simplified_f, symbol):
+                        new_f = _expo_solver(simplified_f)
+                        if new_f:
+                            result = _solveset(new_f, symbol, domain)
+
+                elif lhs.is_Pow:
+                    new_f = _expo_solver(equation)
+                    if new_f:
+                        result = _solveset(new_f, symbol, domain)
+            else:
+                if isinstance(result, ConditionSet):
+                    result = S.EmptySet
+                    result += _solveset(equation, symbol, domain)
+                else:
+                    result += _solveset(equation, symbol, domain)
+
+        if isinstance(result, ConditionSet):
+            result = unsolved_result
     else:
-        rhs = rhs_s.args[0]
-        # do we need a loop for rhs_s?
-        # Can't determine a case as of now.
-        if lhs == symbol:
-            result = rhs_s
-
-        elif lhs.is_Add:
-            # trying to convert to P.O.S form
-            equation = factor(powdenest(lhs - rhs))
-
-            if equation.is_Mul:
-                result = _solveset(equation, symbol, domain)
-
-            # check if it is exponential type equation
-            elif _check_expo(equation, symbol):
-                new_f = _expo_solver(equation)
-                result = _solveset(new_f, symbol, domain)
-
-        elif lhs.is_Pow:
-            new_f = _expo_solver(lhs - rhs)
-            result = _solveset(new_f, symbol, domain)
-
-    if isinstance(result, ConditionSet):
-        # there is chance that ConditionSet is returned from
-        # any of the helper which will have modified equation
-        # therefore to get the original equation in the ConditionSet
-        # this condition is necessary.
-        result = ConditionSet(symbol, Eq(f, 0), domain)
+        result = rhs_s
 
     return result
 
