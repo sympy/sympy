@@ -323,7 +323,7 @@ class RewritingSystem(object):
         '''
         # Create a finite state machine as an instance of the StateMachine object
         fsm = StateMachine('fsm')
-        fsm.add_state('start', is_start=True)
+        fsm.add_state('start', state_type='s')
 
         self.reduction_automaton = fsm
         self.add_to_automaton(self.rules)
@@ -374,14 +374,14 @@ class RewritingSystem(object):
         # This is essentially checking the left hand side of the rules.
         for rule in all_rules:
             if not rule in self.reduction_automaton.states:
-                self.reduction_automaton.add_state(rule, is_dead=True, rh_rule=all_rules[rule])
+                self.reduction_automaton.add_state(rule, state_type='d', rh_rule=all_rules[rule])
 
         # Add accept states.
         for r in all_rules:
             prop_prefix = proper_prefixes[r]
             for elem in prop_prefix:
                 if not elem in self.reduction_automaton.states:
-                    self.reduction_automaton.add_state(elem, is_accept=True)
+                    self.reduction_automaton.add_state(elem, state_type='a')
                     accept_states.append(elem)
 
         # Add new transitions for every state.
@@ -436,7 +436,7 @@ class RewritingSystem(object):
 
     def reduce_using_automaton(self, word):
         '''
-        Reduces a word using an automaton.
+        Reduce a word using an automaton.
 
         Summary:
         All the elements of the automaton are stored in an array and are given as the input to the automaton.
