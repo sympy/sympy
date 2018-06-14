@@ -871,3 +871,11 @@ def test_Or():
         -erf(sqrt(2))/2 - erfc(sqrt(2)/2)/2 + 3/2
     assert P(Or(N < 0, N < 1)) == P(N < 1)
     assert P(Or(N > 0, N < 0)) == 1
+
+
+def test_conditional_eq():
+    E = Exponential('E', 1)
+    assert P(Eq(E, 1), Eq(E, 1)) == 1
+    assert P(Eq(E, 1), Eq(E, 2)) == 0
+    assert P(E > 1, Eq(E, 2)) == 1
+    assert P(E < 1, Eq(E, 2)) == 0

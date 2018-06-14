@@ -522,7 +522,16 @@ def given(expr, condition=None, **kwargs):
         if isinstance(results, Intersection) and S.Reals in results.args:
             results = list(results.args[1])
 
-        return sum(expr.subs(rv, res) for res in results)
+        sums = 0
+        for res in results:
+            temp = expr.subs(rv, res)
+            if temp == True:
+                return True
+            if temp != False:
+                sums += expr.subs(rv, res)
+        if sums == 0:
+            return False
+        return sums
 
     # Get full probability space of both the expression and the condition
     fullspace = pspace(Tuple(expr, condition))
