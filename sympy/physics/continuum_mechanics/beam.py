@@ -92,7 +92,6 @@ class Beam(object):
         self.variable = variable
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
-        self._supports = []
         self._applied_loads = []
         self._reaction_loads = {}
 
@@ -210,7 +209,7 @@ class Beam(object):
     def bc_deflection(self, d_bcs):
         self._boundary_conditions['deflection'] = d_bcs
 
-    def apply_support(self, loc, type="cantilever"):
+    def apply_support(self, loc, type="fixed"):
         """
         This method applies support to a particular beam object.
 
@@ -219,10 +218,11 @@ class Beam(object):
         loc : Sympifyable
             Location of point at which support is applied.
         type : String
-            Determines type of Beam support applied.
-            - For Simple pinned Support, type = "pin"
-            - For Cantilever Support, type = "fixed"
-            - For Rolling Support, type = "roller"
+            Determines type of Beam support applied. To apply support structure
+            with
+            - zero degree of freedom, type = "fixed"
+            - one degree of freedom, type = "pin"
+            - two degrees of freedom, type = "roller"
 
         Examples
         ========
@@ -240,9 +240,9 @@ class Beam(object):
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
         >>> b = Beam(30, E, I)
-        >>> b.apply_load(-8, 0, -1)
         >>> b.apply_support(10, 'roller')
         >>> b.apply_support(30, 'roller')
+        >>> b.apply_load(-8, 0, -1)
         >>> b.apply_load(120, 30, -2)
         >>> R_10, R_30 = symbols('R_10, R_30')
         >>> b.solve_for_reaction_loads(R_10, R_30)
@@ -257,7 +257,6 @@ class Beam(object):
             reaction_load = Symbol('R_'+str(loc))
             self.apply_load(reaction_load, loc, -1)
             self.bc_deflection.append((loc, 0))
-            self._supports.append((loc, type))
         else:
             reaction_load = Symbol('R_'+str(loc))
             reaction_moment = Symbol('M_'+str(loc))
@@ -265,12 +264,6 @@ class Beam(object):
             self.apply_load(reaction_moment, loc, -2)
             self.bc_deflection = [(loc, 0)]
             self.bc_slope.append((loc, 0))
-            self._supports.append((loc, type))
-
-    def support_locations(self):
-        """ Returns a list of tuples containing location of Support
-        and its type respectively."""
-        return self._supports
 
     def apply_load(self, value, start, order, end=None):
         """
