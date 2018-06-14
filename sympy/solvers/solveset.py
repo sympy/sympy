@@ -23,7 +23,7 @@ from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
-from sympy.simplify import powdenest
+from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold, Piecewise)
@@ -1139,6 +1139,34 @@ def _is_exponential(f, symbol):
         if isinstance(expr_arg, (Pow, exp)) and (
                 symbol in expr_arg.exp.free_symbols):
             return True
+    return False
+
+
+def _log_solver(eq_tup, symbol, domain):
+    lhs, rhs = eq_tup
+    f = lhs - rhs
+    new_lhs = _check_log(lhs)
+    new_f = new_lhs - rhs
+
+    result = S.EmptySet
+    solutions = _solveset(new_f, symbol, domain)
+
+    if isinstance(solutions, FiniteSet):
+        from sympy.solvers.solvers import checksol
+        for solution in solutions:
+            if checksol(f, symbol, solution):
+                result += FiniteSet(solution)
+    else:
+        result = solutions
+
+    return result
+
+
+def _check_log(f):
+    g = logcombine(f, force=True)
+    if g.count(log) != f.count(log):
+        if isinstance(g, log):
+            return g
     return False
 
 

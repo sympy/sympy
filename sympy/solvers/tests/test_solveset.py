@@ -1898,19 +1898,24 @@ def test_solve_expo():
 
 
 # logarithmic tests
-@XFAIL
 def test_logarithmic():
     assert solveset_real(log(x - 3) + log(x + 3), x) == FiniteSet(
-        sqrt(10))
+            sqrt(10))
     assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
-    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3) == FiniteSet(
+    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3, x) == FiniteSet(
         -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
         -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
 
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solveset_real(eq, x) == \
-        FiniteSet(-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z))))
+        Intersection(S.Reals, FiniteSet(-sqrt(y**2 - y*exp(z)),
+            sqrt(y**2 - y*exp(z)))) - \
+        Intersection(S.Reals, FiniteSet(-sqrt(y**2), sqrt(y**2)))
+
+@XFAIL
+def test_uselogcombine_2():
     eq = log(exp(2*x) + 1) + log(-tanh(x) + 1) - log(2)
     assert solveset_real(eq, x) == EmptySet()
-
+    eq = log(8*x) - log(sqrt(x) + 1) - 2
+    assert solveset_real(eq, x) == EmptySet()
 # end of logarithmic tests
