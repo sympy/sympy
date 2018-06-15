@@ -6,9 +6,8 @@ from __future__ import print_function, division
 
 from sympy.core import S, Symbol, sympify
 from sympy.core.compatibility import as_int, range, iterable
-from sympy.core.function import expand, expand_mul
+from sympy.core.function import expand_mul
 from sympy.core.numbers import pi, I
-from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.ntheory import isprime, primitive_root
 from sympy.utilities.iterables import ibin
@@ -24,7 +23,7 @@ def _fourier_transform(seq, dps, inverse=False):
     """Utility function for the Discrete Fourier Transform (DFT)"""
 
     if not iterable(seq):
-        raise TypeError("Expected a sequence of numeric coefficients " +
+        raise TypeError("Expected a sequence of numeric coefficients "
                         "for Fourier Transform")
 
     a = [sympify(arg) for arg in seq]
@@ -132,19 +131,19 @@ ifft.__doc__ = fft.__doc__
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _number_theoretic_transform(seq, p, inverse=False):
+def _number_theoretic_transform(seq, prime, inverse=False):
     """Utility function for the Number Theoretic transform (NTT)"""
 
     if not iterable(seq):
-        raise TypeError("Expected a sequence of integer coefficients " +
+        raise TypeError("Expected a sequence of integer coefficients "
                         "for Number Theoretic Transform")
 
-    p = as_int(p)
+    p = as_int(prime)
     if isprime(p) == False:
-        raise ValueError("Expected prime modulus for " +
+        raise ValueError("Expected prime modulus for "
                         "Number Theoretic Transform")
 
-    a = [as_int(x) for x in seq]
+    a = [as_int(x) % p for x in seq]
 
     n = len(a)
     if n < 1:
@@ -162,7 +161,7 @@ def _number_theoretic_transform(seq, p, inverse=False):
     for i in range(1, n):
         j = int(ibin(i, b, str=True)[::-1], 2)
         if i < j:
-            a[i], a[j] = a[j] % p, a[i] % p
+            a[i], a[j] = a[j], a[i]
 
     pr = primitive_root(p)
 
@@ -172,7 +171,7 @@ def _number_theoretic_transform(seq, p, inverse=False):
 
     w = [1]*(n // 2)
     for i in range(1, n // 2):
-        w[i] = w[i - 1] * rt % p
+        w[i] = w[i - 1]*rt % p
 
     h = 2
     while h <= n:
@@ -185,13 +184,12 @@ def _number_theoretic_transform(seq, p, inverse=False):
 
     if inverse:
         rv = pow(n, p - 2, p)
-        for i in range(n):
-            a[i] = a[i]*rv % p
+        a = [x*rv % p for x in a]
 
     return a
 
 
-def ntt(seq, p):
+def ntt(seq, prime):
     r"""
     Performs the Number Theoretic Transform (NTT), which specializes the
     Discrete Fourier Transform (DFT) over quotient ring Z/pZ for prime p
@@ -206,7 +204,7 @@ def ntt(seq, p):
 
     seq : iterable
         The sequence on which DFT is to be applied.
-    p : Integer
+    prime : Integer
         Prime modulus of the form (m*2**k + 1) to be used for performing
         NTT on the sequence.
 
@@ -214,13 +212,13 @@ def ntt(seq, p):
     ========
 
     >>> from sympy import ntt, intt
-    >>> ntt([1, 2, 3, 4], 3*2**8 + 1)
+    >>> ntt([1, 2, 3, 4], prime=3*2**8 + 1)
     [10, 643, 767, 122]
     >>> intt(_, 3*2**8 + 1)
     [1, 2, 3, 4]
-    >>> intt([1, 2, 3, 4], 3*2**8 + 1)
+    >>> intt([1, 2, 3, 4], prime=3*2**8 + 1)
     [387, 415, 384, 353]
-    >>> ntt(_, 3*2**8 + 1)
+    >>> ntt(_, prime=3*2**8 + 1)
     [1, 2, 3, 4]
 
     References
@@ -232,10 +230,86 @@ def ntt(seq, p):
 
     """
 
-    return _number_theoretic_transform(seq, p)
+    return _number_theoretic_transform(seq, prime=prime)
 
 
-def intt(seq, p):
-    return _number_theoretic_transform(seq, p, inverse=True)
+def intt(seq, prime):
+    return _number_theoretic_transform(seq, prime=prime, inverse=True)
 
 intt.__doc__ = ntt.__doc__
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                          Walsh Hadamard Transform                          #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+def _walsh_hadamard_transform(seq, inverse=False):
+    """Utility function for the Walsh Hadamard transform (WHT)"""
+
+    if not iterable(seq):
+        raise TypeError("Expected a sequence of coefficients "
+                        "for Walsh Hadamard Transform")
+
+    a = [sympify(arg) for arg in seq]
+    n = len(a)
+    if n < 2:
+        return a
+
+    if n&(n - 1):
+        n = 2**n.bit_length()
+
+    a += [S.Zero]*(n - len(a))
+    h = 2
+    while h <= n:
+        hf, ut = h // 2, n // h
+        for i in range(0, n, h):
+            for j in range(hf):
+                u, v = a[i + j], a[i + j + hf]
+                a[i + j], a[i + j + hf] = u + v, u - v
+        h *= 2
+
+    if inverse:
+        a = [x/n for x in a]
+
+    return a
+
+
+def fwht(seq):
+    r"""
+    Performs the Walsh Hadamard Transform (WHT), and uses Hadamard
+    ordering for the sequence.
+
+    The sequence is automatically padded to the right with zeros, as the
+    radix 2 FWHT requires the number of sample points to be a power of 2.
+
+    Examples
+    ========
+
+    >>> from sympy import fwht, ifwht
+    >>> fwht([4, 2, 2, 0, 0, 2, -2, 0])
+    [8, 0, 8, 0, 8, 8, 0, 0]
+    >>> ifwht(_)
+    [4, 2, 2, 0, 0, 2, -2, 0]
+
+    >>> ifwht([19, -1, 11, -9, -7, 13, -15, 5])
+    [2, 0, 4, 0, 3, 10, 0, 0]
+    >>> fwht(_)
+    [19, -1, 11, -9, -7, 13, -15, 5]
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Hadamard_transform
+    .. [2] https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform
+
+    """
+
+    return _walsh_hadamard_transform(seq)
+
+
+def ifwht(seq):
+    return _walsh_hadamard_transform(seq, inverse=True)
+
+ifwht.__doc__ = fwht.__doc__

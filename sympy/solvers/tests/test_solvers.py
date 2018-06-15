@@ -761,24 +761,28 @@ def test_issue_5132():
 
 def test_issue_5335():
     lam, a0, conc = symbols('lam a0 conc')
-    eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
-           a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
+    a = 0.005
+    b = 0.743436700916726
+    eqs = [lam + 2*y - a0*(1 - x/2)*x - a*x/2*x,
+           a0*(1 - x/2)*x - 1*y - b*y,
            x + y - conc]
     sym = [x, y, a0]
-    # there are 4 solutions but only two are valid
-    assert len(solve(eqs, sym, manual=True, minimal=True, simplify=False)) == 2
+    # there are 4 solutions obtained manually but only two are valid
+    assert len(solve(eqs, sym, manual=True, minimal=True)) == 2
+    assert len(solve(eqs, sym)) == 2  # cf below with rational=False
 
 
 @SKIP("Hangs")
 def _test_issue_5335_float():
     # gives ZeroDivisionError: polynomial division
     lam, a0, conc = symbols('lam a0 conc')
-    eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
-           a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
+    a = 0.005
+    b = 0.743436700916726
+    eqs = [lam + 2*y - a0*(1 - x/2)*x - a*x/2*x,
+           a0*(1 - x/2)*x - 1*y - b*y,
            x + y - conc]
     sym = [x, y, a0]
-    assert len(
-        solve(eqs, sym, rational=False, check=False, simplify=False)) == 2
+    assert len(solve(eqs, sym, rational=False)) == 2
 
 
 def test_issue_5767():
@@ -1932,3 +1936,17 @@ def test_issue_12476():
 def test_issue_13849():
     t = symbols('t')
     assert solve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == []
+
+
+def test_issue_14721():
+    k, h, a, b = symbols(':4')
+    assert solve([
+        -1 + (-k + 1)**2/b**2 + (-h - 1)**2/a**2,
+        -1 + (-k + 1)**2/b**2 + (-h + 1)**2/a**2,
+        h, k + 2], h, k, a, b) == [
+        (0, -2, -b*sqrt(1/(b**2 - 9)), b),
+        (0, -2, b*sqrt(1/(b**2 - 9)), b)]
+    assert solve([
+        h, h/a + 1/b**2 - 2, -h/2 + 1/b**2 - 2], a, h, b) == [
+        (a, 0, -sqrt(2)/2), (a, 0, sqrt(2)/2)]
+    assert solve((a + b**2 - 1, a + b**2 - 2)) == []
