@@ -139,12 +139,12 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None):
                                       disable_viewers=disable_viewers,
                                       pyglet=pyglet)
 
-        # once we drop py2.5 support and use class decorators this evaluates
-        # to True
         if inspect.isclass(fn):
-            fn._doctest_depdends_on = no_attrs_in_subclass(fn, fn._doctest_depends_on)
+            fn._doctest_depdends_on = no_attrs_in_subclass(
+                fn, fn._doctest_depends_on)
         return fn
     return depends_on_deco
+
 
 def public(obj):
     """
