@@ -202,7 +202,7 @@ def test_composite_beam():
     b.apply_load(P, 3*l, -1)
     b.bc_slope = [(0, 0)]
     b.bc_deflection = [(0, 0), (l, 0), (4*l, 0)]
-    b._solve_hinge_beams(M1, R1, R2, R3)
+    b.solve_for_reaction_loads(M1, R1, R2, R3)
     assert b.reaction_loads == {R3: -P/2, R2: -5*P/4, M1: -P*l/4, R1: 3*P/4}
     assert b.slope().subs(x, 3*l) == -7*P*l**2/(48*E*I)
     assert b.deflection().subs(x, 2*l) == 7*P*l**3/(24*E*I)

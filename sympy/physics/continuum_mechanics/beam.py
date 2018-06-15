@@ -485,7 +485,7 @@ class Beam(object):
         >>> b.apply_load(M2,3*l,-2)
         >>> b.bc_slope=[(0,0), (3*l, 0)]
         >>> b.bc_deflection=[(0,0), (3*l, 0)]
-        >>> b._solve_hinge_beams(M1, A1, M2, A2)
+        >>> b.solve_for_reaction_loads(M1, A1, M2, A2)
         >>> b.reaction_loads
         {A1: -5*P/18, A2: -13*P/18, M1: 5*P*l/18, M2: -4*P*l/9}
         >>> b.slope()
@@ -506,17 +506,24 @@ class Beam(object):
 
         load_1 = 0       # Load equation on first segment of composite beam
         load_2 = 0       # Load equation on second segment of composite beam
+
+        # Distributing load on both segments
         for load in self.applied_loads:
             if load[1] < l:
+                load_1 += load[0]*SingularityFunction(x, load[1], load[2])
                 if load[2] == 0:
-                    load_1 += (load[0]*SingularityFunction(x, load[1], load[2]) - load[0]*SingularityFunction(x, load[3], load[2]))
-                else:
-                    load_1 += load[0]*SingularityFunction(x, load[1], load[2])
+                    load_1 -= load[0]*SingularityFunction(x, load[3], load[2])
+                elif load[2] > 0:
+                    load_1 -= load[0]*SingularityFunction(x, load[3], load[2]) + load[0]*SingularityFunction(x, load[3], 0)
             elif load[1] == l:
                 load_1 += load[0]*SingularityFunction(x, load[1], load[2])
                 load_2 += load[0]*SingularityFunction(x, load[1] - l, load[2])
             elif load[1] > l:
                 load_2 += load[0]*SingularityFunction(x, load[1] - l, load[2])
+                if load[2] == 0:
+                    load_2 -= load[0]*SingularityFunction(x, load[3] - l, load[2])
+                elif load[2] > 0:
+                    load_2 -= load[0]*SingularityFunction(x, load[3] - l, load[2]) + load[0]*SingularityFunction(x, load[3] - l, 0)
 
         h = Symbol('h')     # Force due to hinge
         load_1 += h*SingularityFunction(x, l, -1)
@@ -611,6 +618,9 @@ class Beam(object):
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         """
+        if self._composite_type == "hinge":
+            return self._solve_hinge_beams(*reactions)
+
         x = self.variable
         l = self.length
         shear_curve = limit(self.shear_force(), x, l)
