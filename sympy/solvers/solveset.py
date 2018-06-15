@@ -1143,6 +1143,89 @@ def _is_exponential(f, symbol):
 
 
 def _log_solver(eq_tup, symbol, domain):
+    r"""
+    Helper to solve logarithmic equations.
+
+    Logarithmic equation is an equation that involves the logarithm
+    of an expression containing a variable.
+
+    Parameters
+    ==========
+
+    eq_tup :
+        lhs and rhs of the equation passed in tuple as (lhs, rhs).
+
+    symbol :
+        variable for which the equation is solved.
+
+    domain :
+        set over which the equation is solved.
+
+    Returns
+    =======
+
+    Returns the solution of the logarithmic equation. `ConditionSet`
+    is returned if it is unable to solve the equation
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, S, log
+    >>> from sympy.solvers.solveset import _log_solver as log_solver
+    >>> x = symbols('x')
+    >>> eq_tup = (log(x - 3) + log(x + 3), 0)
+    >>> log_solver(eq_tup, x, S.Reals)
+    {sqrt(10)}
+
+    Idea behind `\_log\_solver`
+    ===========================
+
+    The `lhs` of the equation is passed to `\_check\_log` which using
+    logarithmic identities returns a reduced form of `lhs` containing
+    only single logarithm. This form is easily handled by `solveset`.
+    Further every soluion returned from `solveset` is checked by
+    replacing it with the variable in the equation so as to remove
+    unwanted result (the solution that does not satisfies the equation).
+    Once filtered a newly formed set of solutions is returned.
+
+    * Proof of correctness
+
+    A logarithm is another way to write exponent and is defined by
+
+    .. math:: {log_b x} = y \enspace if \enspace b^y = x
+
+    When one side of the equation contains a single logarithm, the
+    equation can be solved by rewriting the equation as an equivalent
+    exponential equation as defined above. But if one side contains
+    more than one logarithm, we need to use the properties of logarithm
+    to condense it into a single logarithm.
+
+    Take for example
+
+    .. math:: log(2*x) - 15 = 0
+
+    contains single logarithm, therefore we can directly rewrite it to
+    exponential form as
+
+    .. math:: x = exp(15)/2
+
+    But if the equation has more than one logarithm as
+
+    .. math:: log(x - 3) + log(x + 3) = 0
+
+    we use log identities to convert into a reduced form
+
+    Using,
+
+    .. math:: log(a) + log(b) = log(a*b)
+
+    therefore the equation becomes,
+
+    .. math:: log((x - 3)*(x  + 3))
+
+    This equation contains one logarithm and can be solved by rewriting
+    to exponents.
+    """
     lhs, rhs = eq_tup
     f = lhs - rhs
     new_lhs = _check_log(lhs)
@@ -1163,6 +1246,35 @@ def _log_solver(eq_tup, symbol, domain):
 
 
 def _check_log(f):
+    r"""
+    Helper to check if the given equation is logarithmic
+    or not.
+
+    Takes the equation as the input and returns the condensed
+    form of the equation (if possible), if the equation is of
+    logarithmic type otherwise returns `False`.
+
+    Examples
+    ========
+    >>> from sympy.solvers.solveset import _check_log as check
+    >>> from sympy import symbols, log
+    >>> x = symbols('x')
+    >>> check(log(x - 3) + log(x + 3))
+    log((x - 3)*(x + 3))
+    >>> check(3*x - 1)
+    False
+
+    Idea behind `\_check\_log`
+    ==========================
+
+    Logarithmic equations can be easily solved by reducing them
+    into a condensed form using logarithmic identities. Therefore
+    this helper tries reducing the equation by using any of the
+    log identities. If the equation gets reduced it is necessarily
+    a logarithmic equation. The reduced form is returned, if no
+    change occurs to the equation `False` is returned.
+    """
+    # Make helper generalised
     g = logcombine(f, force=True)
     if g.count(log) != f.count(log):
         if isinstance(g, log):

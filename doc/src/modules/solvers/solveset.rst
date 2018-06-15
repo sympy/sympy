@@ -600,6 +600,10 @@ transolve
 
 .. autofunction:: sympy.solvers.solveset._solve_expo
 
+.. autofunction:: sympy.solvers.solveset._log_solver
+
+.. autofunction:: sympy.solvers.solveset._check_log
+
 
 Diophantine Equations (DEs)
 ---------------------------
