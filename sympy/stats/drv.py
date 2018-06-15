@@ -1,14 +1,15 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-                   Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq, poly, Symbol, series, factorial, And, Mul)
+                   Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq, poly,
+                   Symbol, series, factorial, And, Mul)
 
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
-        random_symbols, PSpace, ConditionalDomain, RandomDomain,
-        ProductDomain, ProductPSpace)
+                            random_symbols, PSpace, ConditionalDomain, RandomDomain,
+                            ProductDomain, ProductPSpace)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -17,6 +18,7 @@ from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
 import random
+
 
 class DiscreteDistribution(Basic):
     def __call__(self, *args):
@@ -130,15 +132,16 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
                 #   the characteristic function must have continuous
                 #   derivatives up to the highest power of the variable in the expression
 
-                t = Symbol('t', real=True, dummy=True)
+                p = poly(expr, var)
+
+                t = Dummy('t', real=True)
 
                 cf = self.characteristic_function(t)
-
-                p = poly(expr, var)
                 deg = p.degree()
                 taylor = poly(series(cf.subs(t, t / I), t, 0, deg + 1).removeO(), t)
-                result = sum(
-                    p.coeff_monomial(var ** k) * taylor.coeff_monomial(t ** k) * factorial(k) for k in range(deg + 1))
+                result = 0
+                for k in range(deg+1):
+                    result += p.coeff_monomial(var ** k) * taylor.coeff_monomial(t ** k) * factorial(k)
 
                 return result
 
