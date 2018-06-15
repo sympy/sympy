@@ -27,7 +27,7 @@ class GeometricDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        _value_check(And(0 < p, p<=1), "p must be between 0 and 1")
+        _value_check(And(0 < p, p <= 1), "p must be between 0 and 1")
 
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p
