@@ -461,7 +461,44 @@ class Beam(object):
 
     def _solve_hinge_beams(self, *reactions):
         """Method to find integration constants and reactional variables in a
-        composite beam connected via hinge"""
+        composite beam connected via hinge
+
+        Examples
+        ========
+        A combined beam, with constant fkexural rigidity E*I, is formed by joining
+        a Beam of length 2*l to the right of another Beam of length l. The whole beam
+        is fixed at both of its both end. A point load of magnitude P is also applied
+        from the top at a distance of 2*l from starting point.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> l=symbols('l', positive=True)
+        >>> b1=Beam(l ,E,I)
+        >>> b2=Beam(2*l ,E,I)
+        >>> b=b1.join(b2,"hinge")
+        >>> M1, A1, M2, A2, P = symbols('M1 A1 M2 A2 P')
+        >>> b.apply_load(A1,0,-1)
+        >>> b.apply_load(M1,0,-2)
+        >>> b.apply_load(P,2*l,-1)
+        >>> b.apply_load(A2,3*l,-1)
+        >>> b.apply_load(M2,3*l,-2)
+        >>> b.bc_slope=[(0,0), (3*l, 0)]
+        >>> b.bc_deflection=[(0,0), (3*l, 0)]
+        >>> b._solve_hinge_beams(M1, A1, M2, A2)
+        >>> b.reaction_loads
+        {A1: -5*P/18, A2: -13*P/18, M1: 5*P*l/18, M2: -4*P*l/9}
+        >>> b.slope()
+        Piecewise(((5*P*l*SingularityFunction(x, 0, 1)/18 - 5*P*SingularityFunction(x, 0, 2)/36
+        + 5*P*SingularityFunction(x, l, 2)/36)/(E*I), l >= x), ((P*l**2/18 - 4*P*l*SingularityFunction(-l +
+        x, 2*l, 1)/9 - 5*P*SingularityFunction(-l + x, 0, 2)/36 + P*SingularityFunction(-l + x, l, 2)/2
+        - 13*P*SingularityFunction(-l + x, 2*l, 2)/36)/(E*I), x < 3*l))
+        >>> b.deflection()
+        Piecewise(((5*P*l*SingularityFunction(x, 0, 2)/36 - 5*P*SingularityFunction(x, 0, 3)/108
+        + 5*P*SingularityFunction(x, l, 3)/108)/(E*I), l >= x), ((5*P*l**3/54 + P*l**2*(-l + x)/18
+        - 2*P*l*SingularityFunction(-l + x, 2*l, 2)/9 - 5*P*SingularityFunction(-l + x, 0, 3)/108
+        + P*SingularityFunction(-l + x, l, 3)/6 - 13*P*SingularityFunction(-l + x, 2*l, 3)/108)/(E*I), x < 3*l))
+        """
         x = self.variable
         l = self._hinge_position
         E = self._elastic_modulus
