@@ -253,27 +253,22 @@ class Beam(object):
         10*SingularityFunction(x, 4, 2))/(E*I), x <= 2), (((80*SingularityFunction(x, 0, 1) -
         10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))/I - 120/I)/E + 80.0/(E*I), x <= 4))
         """
+        x = self.variable
+        E = self.elastic_modulus
+        new_length = self.length + beam.length
+        if self.second_moment != beam.second_moment:
+            new_second_moment = Piecewise((self.second_moment, x<=self.length),
+                                    (beam.second_moment, x<=new_length))
+        else:
+            new_second_moment = self.second_moment
+
         if via == "fixed":
-            new_length = self.length + beam.length
-            if self.second_moment != beam.second_moment:
-                x = self.variable
-                new_second_moment = Piecewise((self.second_moment, x<=self.length),
-                                        (beam.second_moment, x<=new_length))
-            else:
-                new_second_moment = self.second_moment
-            new_beam = Beam(new_length, self.elastic_modulus, new_second_moment, x)
+            new_beam = Beam(new_length, E, new_second_moment, x)
             new_beam._composite_type = "fixed"
             return new_beam
 
         if via == "hinge":
-            new_length = self.length + beam.length
-            if self.second_moment != beam.second_moment:
-                x = self.variable
-                new_second_moment = Piecewise((self.second_moment, x<=self.length),
-                                        (beam.second_moment, x<=new_length))
-            else:
-                new_second_moment = self.second_moment
-            new_beam = Beam(new_length, self.elastic_modulus, new_second_moment, self.variable)
+            new_beam = Beam(new_length, E, new_second_moment, x)
             new_beam._composite_type = "hinge"
             new_beam._hinge_position = self.length
             return new_beam
@@ -461,7 +456,13 @@ class Beam(object):
 
     def _solve_hinge_beams(self, *reactions):
         """Method to find integration constants and reactional variables in a
-        composite beam connected via hinge
+        composite beam connected via hinge.
+        This method resolves the composite Beam into its sub-beams and then
+        equations of shear force, bending moment, slope and deflection are
+        evaluated for both of them separately. These equations are then solved
+        for unknown reactions and integration constants using the boundary
+        conditions applied on the Beam. Equal deflection of both sub-beams
+        at the hinge joint gives us another equation to solve the system.
 
         Examples
         ========
@@ -503,6 +504,12 @@ class Beam(object):
         l = self._hinge_position
         E = self._elastic_modulus
         I = self._second_moment
+
+        if isinstance(I, Piecewise):
+            I1 = I.args[0][0]
+            I2 = I.args[1][0]
+        else:
+            I1 = I2 = I
 
         load_1 = 0       # Load equation on first segment of composite beam
         load_2 = 0       # Load equation on second segment of composite beam
@@ -548,10 +555,10 @@ class Beam(object):
         C2 = Symbol('C2')
         C3 = Symbol('C3')
         C4 = Symbol('C4')
-        slope_1 = S(1)/(E*I)*(integrate(bending_1, x) + C1)
-        def_1 = S(1)/(E*I)*(integrate((E*I)*slope_1, x) + C1*x + C2)
-        slope_2 = S(1)/(E*I)*(integrate(integrate(integrate(load_2, x), x), x) + C3)
-        def_2 = S(1)/(E*I)*(integrate((E*I)*slope_2, x) + C4)
+        slope_1 = S(1)/(E*I1)*(integrate(bending_1, x) + C1)
+        def_1 = S(1)/(E*I1)*(integrate((E*I)*slope_1, x) + C1*x + C2)
+        slope_2 = S(1)/(E*I2)*(integrate(integrate(integrate(load_2, x), x), x) + C3)
+        def_2 = S(1)/(E*I2)*(integrate((E*I)*slope_2, x) + C4)
 
         for position, value in self.bc_slope:
             if position<l:
