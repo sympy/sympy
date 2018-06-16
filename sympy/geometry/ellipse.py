@@ -21,7 +21,7 @@ from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
-from sympy.solvers import solve
+from sympy.solvers import solve, nonlinsolve
 from sympy.utilities.misc import filldedent, func_name
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -628,7 +628,16 @@ class Ellipse(GeometrySet):
 
         elif isinstance(o, (Segment2D, Ray2D)):
             ellipse_equation = self.equation(x, y)
-            result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
+            temporary_result = nonlinsolve([ellipse_equation,Line(o.points[0],o.points[1]).equation(x,y)],[x,y])
+            flag = True
+            for i in temporary_result:
+                for j in i:
+                    if not j.is_real:
+                        flag = False
+            if flag:
+                result = temporary_result
+            else:
+                result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
             return list(ordered([Point(i) for i in result if i in o]))
 
         elif isinstance(o, Polygon):
