@@ -1,7 +1,7 @@
 from __future__ import division
 from sympy import (
     Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
-    Integer, Eq, symbols, Add, I, Float, log, Rational,
+    Integer, Eq, symbols, Add, I, Float, log, Rational, Integral
     Lambda, atan2, cse, cot, tan, S, Tuple, Basic, Dict,
     Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
     AccumBounds, Matrix, zeros)
@@ -780,3 +780,33 @@ def test_issue_12657():
     reps = [(-oo, 2), (oo, 1)]
     assert (x < oo).subs(reps) == (x < 1)
     assert (x < oo).subs(list(reversed(reps))) == (x < 1)
+
+def test_issue_14796():
+    f,g = symbols("f g", cls=Function)
+    x,y = symbols("x y")
+    
+    # substitute one undefined function for another
+    int_expr = Integral(f(x), (x,0,1))
+    int_expr2 = Integral(g(x), (x,0,1))
+    int_expr3 = int_expr.subs(f, g)
+    assert int_expr2 == int_expr3
+    
+    # substitute a built-in function for an undefined function
+    int_expr4 = int_expr.subs(f, cos)
+    int_expr5 = Integral(cos(x), (x,0,1))
+    assert int_expr4 == int_expr5
+    
+    # substitute an undefined function for a built-in function
+    assert int_expr == int_expr5.subs(cos, f)
+    
+    # substitute a symbol for an undefined function (does nothing)
+    int_expr6 = int_expr.subs(f, y)
+    int_expr7 = Integral(y(x), (x,0,1))
+    assert int_expr6 != int_expr7
+    assert int_expr6 == int_expr
+    
+    # substitute a lambda for an undefined function
+    l = Lambda(y, g(y))
+    int_expr8 = Integral(g(x), (x,0,1))
+    int_expr9 = int_expr.subs(f, l)
+    assert int_expr9 == int_expr8
