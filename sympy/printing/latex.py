@@ -736,7 +736,7 @@ class LatexPrinter(Printer):
                 len(args) == 1 and \
                 not self._needs_function_brackets(expr.args[0])
 
-            inv_trig_table = ["asin", "acos", "atan", "acot"]
+            inv_trig_table = ["asin", "acos", "atan", "acsc", "asec", "acot"]
 
             # If the function is an inverse trig function, handle the style
             if func in inv_trig_table:
