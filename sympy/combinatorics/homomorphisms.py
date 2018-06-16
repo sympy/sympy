@@ -430,7 +430,7 @@ def group_isomorphism(G, H):
 
     Returns:
     If the groups are not isomorphic, `None` is returned.
-    If the groups are isomorphic, the corresponding `GroupHomomorphism` object is returned.
+    If the groups are isomorphic, a corresponding `GroupHomomorphism` object is returned.
 
     Summary:
     Uses the approach suggested by Robert Tarjan to compute the isomorphism between two groups.
@@ -474,24 +474,24 @@ def group_isomorphism(G, H):
                     extended_map[g*h] = func_map[g]*func_map[h]
 
             # Break when all the elements are mapped.
-            if len(func_map) == len(G):
+            if len(func_map) == G.order() and len(func_map) == H.order() :
                 break
 
             # Remove the duplicate elements in extended_map
             # and merge the extended_map with the map.
-            image_len = len(set(func_map.values()) + set(extended_map.values()))
+            image_len = len(set(func_map.values()) | set(extended_map.values()))
             if image_len != len(func_map) + len(extended_map):
                 counterexample = True
                 break
             func_map.update(extended_map)
 
         if not counterexample:
-            # Trivial homomorphism is computed.
-            return homomorphism(G, H, gens)
+            # Returns a `GroupHomomorphism` object.
+            return homomorphism(G, H, G.generators, H, check=False)
 
     return None
 
-def is_isomorphism(G, H):
+def is_isomorphic(G, H):
     '''
     Check if the given groups are isomorphic.
 
@@ -502,5 +502,6 @@ def is_isomorphism(G, H):
     Returns:
     `True` if the groups are isomorphic
     `False` if the groups are not isomorphic
+
     '''
     return bool(group_isomorphism(G, H))

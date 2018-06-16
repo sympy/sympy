@@ -63,7 +63,7 @@ def test_isomorphisms():
     H = FpGroup(F, [a**3, b**3, (a*b)**2])
     F, c, d = free_group("c, d")
     G = FpGroup(F, [c**3, d**3, (c*d)**2])
-    assert is_isomorphism(G, H)
+    assert is_isomorphic(G, H)
 
     # FpGroup -> PermutationGroup
     # FpGroup is converted to the equivalent isomorphic group.
@@ -71,17 +71,18 @@ def test_isomorphisms():
     G = FpGroup(F, [a**3, b**3, (a*b)**2])
     H = AlternatingGroup(4)
     T = group_isomorphism(G, H)
-    assert T.kernel().order() == G.order()
-    assert T.is_trivial()
-    assert is_isomorphism(G, H)
+    assert is_isomorphic(G, H)
+    assert T(Permutation(0, 9, 6)(1, 10, 8)(2, 11, 4)(3, 5, 7)) == Permutation(0, 2, 3)
+    assert T(Permutation(0, 6, 9)(1, 8, 10)(2, 4, 11)(3, 7, 5)) == Permutation(0, 3, 2)
+    assert T.is_isomorphism()
 
     # PermutationGroup -> PermutationGroup
     D = DihedralGroup(8)
     p = Permutation(0, 1, 2, 3, 4, 5, 6, 7)
     P = PermutationGroup(p)
-    assert not is_isomorphism(D, P)
+    assert not is_isomorphic(D, P)
 
-    # Cyclic Groups of prime order are isomorphic to each other.
+    # Cyclic Groups of different prime order are not isomorphic to each other.
     A = CyclicGroup(5)
     B = CyclicGroup(7)
-    assert is_isomorphism(A, B)
+    assert not is_isomorphic(A, B)
