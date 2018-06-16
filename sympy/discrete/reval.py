@@ -3,7 +3,7 @@ Recurrence evaluation
 """
 from __future__ import print_function, division
 
-from sympy.core import S, sympify
+from sympy.core import S, Symbol, sympify
 from sympy.core.compatibility import as_int, range, iterable
 
 def reval_lhcc(coeffs, init, n):
@@ -24,13 +24,15 @@ def reval_lhcc(coeffs, init, n):
     Explanation
     ===========
 
-    Let, y be the recurrence of given type and c be the sequence of
-    coeffs, and k (equal to len(c)) be the order of recurrence. Then,
+    Let, y(n) be the recurrence of given type, c be the sequence
+    of coefficients, b be the sequence of intial/base values of the
+    reccurence and k (equal to len(c)) be the order of recurrence.
+    Then,
 
     if n < k,
-        y(n) = init(n)
+        y(n) = b[n]
     otherwise,
-        y(n) = c(0)*y(n - 1) + c(1)*y(n - 2) + ... + c(k - 1)*y(n - k)
+        y(n) = c[0]*y(n - 1) + c[1]*y(n - 2) + ... + c[k - 1]*y(n - k)
 
     """
 
@@ -38,27 +40,30 @@ def reval_lhcc(coeffs, init, n):
         return 0
 
     if not iterable(coeffs):
-        raise TypeError("Expected a sequence of coefficients for the "
-                        "recurrence")
+        raise TypeError("Expected a sequence of constant coefficients for"
+                        " the recurrence")
 
     if not iterable(init):
         raise TypeError("Expected a sequence of values for the initialization"
-                        "of the recurrence")
+                        " of the recurrence")
 
-    c = [sympify(arg) for arg in coeffs] # coefficients of recurrence
-    b = [sympify(arg) for arg in init] # intial/base values of recurrence
+    c = [sympify(arg) for arg in coeffs]
+    b = [sympify(arg) for arg in init]
     n, k = as_int(n), len(c)
 
     if n < 0:
-        raise ValueError("Point of evaluation of recurrence "
-                        "must be a non-negative integer")
+        raise ValueError("Point of evaluation of recurrence must be a "
+                        "non-negative integer")
+
+    if any(x.has(Symbol) for x in c):
+        raise ValueError("Expected a sequence of constant coefficients for"
+                        " the recurrence")
 
     if len(b) > k:
-        raise TypeError("Count of initial values should not exceed "
-                        "the count of coefficients of the recurrence")
+        raise TypeError("Count of initial values should not exceed the "
+                        "order of the recurrence")
     else:
-        # remaining initial values are assumed to be 0
-        b += [S.Zero]*(k - len(b))
+        b += [S.Zero]*(k - len(b)) # remaining initial values default to zero
 
     def _square_and_reduce_cht(u, offset):
         # Squares the coefficient vector u of length at
@@ -80,12 +85,8 @@ def reval_lhcc(coeffs, init, n):
         # Computes the final coefficient vector corresponding
         # to given point of evaluation of recurrence
         if n < k:
-            a = [S.Zero]*k
-            a[n] = S.One
-            return a
-
-        a = _final_coeffs(n // 2)
-
-        return _square_and_reduce_cht(a, offset=n%2)
+            return [S.Zero]*n + [S.One] + [S.Zero]*(k - n - 1)
+        else:
+            return _square_and_reduce_cht(_final_coeffs(n // 2), offset=n%2)
 
     return b[n] if n < k else sum(u*v for u, v in zip(_final_coeffs(n), b))

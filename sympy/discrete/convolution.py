@@ -62,16 +62,19 @@ def convolution(a, b, **hints):
 
     """
 
+    fft = hints.pop('fft', None)
     dps = hints.pop('dps', None)
     p = hints.pop('prime', None)
-    dyadic = hints.pop('dyadic', None)
     c = as_int(hints.pop('cycle', 0))
+    dyadic = hints.pop('dyadic', None)
 
     if c < 0:
         raise ValueError("The length for cyclic convolution must be non-negative")
 
+    fft = True if fft else None
     dyadic = True if dyadic else None
-    if sum(x is not None for x in (p, dps, dyadic)) > 1:
+    if sum(x is not None for x in (p, dps, dyadic)) > 1 or \
+            sum(x is not None for x in (fft, dyadic)) > 1:
         raise TypeError("Ambiguity in determining the convolution type")
 
     if p is not None:
