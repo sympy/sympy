@@ -343,7 +343,7 @@ class ExprWithLimits(Expr):
         # it has no free_symbols or args or atoms, so the code
         # breaks. I'm assuming in those cases, it is okay to treat
         # it as if all three lists are empty lists.
-        
+
         if isinstance(old, FunctionClass):
             old_syms = set([])
             old_args = set([])
