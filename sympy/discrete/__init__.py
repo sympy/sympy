@@ -3,8 +3,9 @@
 Transforms - fft, ifft, ntt, intt, fwht, ifwht, fzt, ifzt, fmt, ifmt
 Convolution - convolution, convolution_fft, convolution_ntt, convolution_fwht,
     convolution_subset, covering_product, intersecting_product
-Recurrence evaluation - reval_hcc
+Recurrence evaluation - reval_lhcc
 """
 
 from .transforms import (fft, ifft, ntt, intt, fwht, ifwht)
 from .convolution import convolution
+from .reval import reval_lhcc
