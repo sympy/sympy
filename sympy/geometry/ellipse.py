@@ -16,11 +16,12 @@ from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
-from sympy.solvers import solve
+from sympy.solvers import solve, nonlinsolve
 from sympy.utilities.misc import filldedent, func_name
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -96,22 +97,6 @@ class Ellipse(GeometrySet):
     >>> e2
     Ellipse(Point2D(3, 1), 3, 9/5)
 
-    Plotting:
-
-    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
-    >>> from sympy import Circle, Segment
-    >>> c1 = Circle(Point(0,0), 1)
-    >>> Plot(c1)                                # doctest: +SKIP
-    [0]: cos(t), sin(t), 'mode=parametric'
-    >>> p = Plot()                              # doctest: +SKIP
-    >>> p[0] = c1                               # doctest: +SKIP
-    >>> radius = Segment(c1.center, c1.random_point())
-    >>> p[1] = radius                           # doctest: +SKIP
-    >>> p                                       # doctest: +SKIP
-    [0]: cos(t), sin(t), 'mode=parametric'
-    [1]: t*cos(1.546086215036205357975518382),
-    t*sin(1.546086215036205357975518382), 'mode=parametric'
-
     """
 
     def __contains__(self, o):
@@ -150,7 +135,7 @@ class Ellipse(GeometrySet):
         if len(center) != 2:
             raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
 
-        if len(list(filter(None, (hradius, vradius, eccentricity)))) != 2:
+        if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError('Exactly two arguments of "hradius", '
                 '"vradius", and "eccentricity" must not be None."')
 
@@ -327,16 +312,17 @@ class Ellipse(GeometrySet):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.circumference
-        12*Integral(sqrt((-8*_x**2/9 + 1)/(-_x**2 + 1)), (_x, 0, 1))
+        12*elliptic_e(8/9)
 
         """
-        from sympy import Integral
         if self.eccentricity == 1:
-            return 2*pi*self.hradius
+            # degenerate
+            return 4 * self.major
+        elif self.eccentricity == 0:
+            # circle
+            return 2 * pi * self.hradius
         else:
-            x = Dummy('x', real=True)
-            return 4*self.major*Integral(
-                sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), (x, 0, 1))
+            return 4 * self.major * elliptic_e(self.eccentricity**2)
 
     @property
     def eccentricity(self):
@@ -642,7 +628,16 @@ class Ellipse(GeometrySet):
 
         elif isinstance(o, (Segment2D, Ray2D)):
             ellipse_equation = self.equation(x, y)
-            result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
+            temporary_result = nonlinsolve([ellipse_equation,Line(o.points[0],o.points[1]).equation(x,y)],[x,y])
+            flag = True
+            for i in temporary_result:
+                for j in i:
+                    if not j.is_real:
+                        flag = False
+            if flag:
+                result = temporary_result
+            else:
+                result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
             return list(ordered([Point(i) for i in result if i in o]))
 
         elif isinstance(o, Polygon):
@@ -1152,7 +1147,7 @@ class Ellipse(GeometrySet):
         v = self.vradius
         return self.func(c.scale(x, y), hradius=h*x, vradius=v*y)
 
-    @doctest_depends_on(modules=('pyglet',))
+
     def tangent_lines(self, p):
         """Tangent lines between `p` and the ellipse.
 
@@ -1188,15 +1183,6 @@ class Ellipse(GeometrySet):
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.tangent_lines(Point(3, 0))
         [Line2D(Point2D(3, 0), Point2D(3, -12))]
-
-        >>> # This will plot an ellipse together with a tangent line.
-        >>> from sympy.plotting.pygletplot import PygletPlot as Plot
-        >>> from sympy import Point, Ellipse
-        >>> e = Ellipse(Point(0,0), 3, 2)
-        >>> t = e.tangent_lines(e.random_point())
-        >>> p = Plot()
-        >>> p[0] = e # doctest: +SKIP
-        >>> p[1] = t # doctest: +SKIP
 
         """
         p = Point(p, dim=2)
