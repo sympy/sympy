@@ -335,7 +335,7 @@ class ExprWithLimits(Expr):
 
         # Reorder limits to match standard mathematical practice for scoping
         limits.reverse()
-        
+
         # Daryl McCullough 2018/06/15
         # stevendaryl3016@yahoo.com
         # in response to https://github.com/sympy/sympy/issues/14796
