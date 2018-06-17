@@ -1,6 +1,6 @@
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism, is_isomorphism
+from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism, is_isomorphic
 from sympy.combinatorics.free_groups import free_group
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.named_groups import AlternatingGroup, DihedralGroup, CyclicGroup
@@ -70,11 +70,10 @@ def test_isomorphisms():
     F, a, b = free_group("a, b")
     G = FpGroup(F, [a**3, b**3, (a*b)**2])
     H = AlternatingGroup(4)
-    T = group_isomorphism(G, H)
-    assert is_isomorphic(G, H)
+    check, T = is_isomorphic(G, H, isomorphism=True)
+    assert check
     assert T(Permutation(0, 9, 6)(1, 10, 8)(2, 11, 4)(3, 5, 7)) == Permutation(0, 2, 3)
     assert T(Permutation(0, 6, 9)(1, 8, 10)(2, 4, 11)(3, 7, 5)) == Permutation(0, 3, 2)
-    assert T.is_isomorphism()
 
     # PermutationGroup -> PermutationGroup
     D = DihedralGroup(8)

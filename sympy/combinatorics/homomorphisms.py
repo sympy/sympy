@@ -452,7 +452,7 @@ def group_isomorphism(G, H):
     if not isinstance(H, PermutationGroup):
         raise TypeError("The group must be a PermutationGroup or a finite FpGroup")
 
-    if (len(G) != len(H)) and (G.is_abelian != H.is_abelian):
+    if (G.order() != H.order()) and (G.is_abelian != H.is_abelian):
         return None
 
     # Match the generators of `G` with the subsets of H
@@ -474,7 +474,7 @@ def group_isomorphism(G, H):
                     extended_map[g*h] = func_map[g]*func_map[h]
 
             # Break when all the elements are mapped.
-            if len(func_map) == G.order() and len(func_map) == H.order() :
+            if len(func_map) == H.order() :
                 break
 
             # Remove the duplicate elements in extended_map
@@ -487,21 +487,28 @@ def group_isomorphism(G, H):
 
         if not counterexample:
             # Returns a `GroupHomomorphism` object.
-            return homomorphism(G, H, G.generators, H, check=False)
+            return homomorphism(G, H, G.generators, subset, check=False)
 
     return None
 
-def is_isomorphic(G, H):
+def is_isomorphic(G, H, isomorphism=False):
     '''
     Check if the given groups are isomorphic.
 
     Arguments:
         G (a finite `FpGroup` or a `PermutationGroup`) -- First group
         H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
+        isomorphism(boolean) -- This computes the isomorphism when set to True
 
     Returns:
-    `True` if the groups are isomorphic
-    `False` if the groups are not isomorphic
+    if isomorphism is set to `False` --
+        `True` if the groups are isomorphic
+        `False` if the groups are not isomorphic
+    if isomorphism is set to `True` --
+        Returns a tuple (boolean, `GroupHomomorphism` object).
 
     '''
-    return bool(group_isomorphism(G, H))
+    T = group_isomorphism(G, H)
+    if isomorphism:
+        return (T.is_isomorphism() , T)
+    return bool(T)
