@@ -616,7 +616,7 @@ class Ellipse(GeometrySet):
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
         [Point2D(-17/5, -12/5), Point2D(-17/5, 12/5), Point2D(7/5, -12/5), Point2D(7/5, 12/5)]
         """
-        
+        # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
         x = Dummy('x', real=True)
         y = Dummy('y', real=True)
 
@@ -628,7 +628,7 @@ class Ellipse(GeometrySet):
 
         elif isinstance(o, (Segment2D, Ray2D)):
             ellipse_equation = self.equation(x, y)
-            temporary_result = nonlinsolve([ellipse_equation,Line(o.points[0],o.points[1]).equation(x,y)],[x,y])
+            temporary_result = nonlinsolve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
             flag = True
             for i in temporary_result:
                 for j in i:
@@ -637,7 +637,7 @@ class Ellipse(GeometrySet):
             if flag:
                 result = temporary_result
             else:
-                result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
+                result = solve([ellipse_equation, Line(o.points[0],o.points[1]).equation(x,y)],[x,y])
             return list(ordered([Point(i) for i in result if i in o]))
 
         elif isinstance(o, Polygon):
@@ -648,7 +648,17 @@ class Ellipse(GeometrySet):
                 return self
             else:
                 ellipse_equation = self.equation(x, y)
-                return list(ordered([Point(i) for i in solve([ellipse_equation, o.equation(x, y)], [x, y])]))
+                temporary_result = nonlinsolve([ellipse_equation, o.equation(x, y)], [x, y])
+                flag = True
+                for i in temporary_result:
+                    for j in i:
+                        if not j.is_real:
+                            flag = False
+                if flag:
+                    result = temporary_result
+                else:
+                    result = solve([ellipse_equation, o.equation(x, y)], [x, y])
+                return list(ordered([Point(i) for i in result]))
         elif isinstance(o, LinearEntity3D):
                 raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
