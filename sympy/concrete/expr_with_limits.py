@@ -336,13 +336,17 @@ class ExprWithLimits(Expr):
         # Reorder limits to match standard mathematical practice for scoping
         limits.reverse()
 
-        # Daryl McCullough 2018/06/15
-        # stevendaryl3016@yahoo.com
         # in response to https://github.com/sympy/sympy/issues/14796
         # If old or new is an instance of FunctionClass, then
         # it has no free_symbols or args or atoms, so the code
         # breaks. I'm assuming in those cases, it is okay to treat
         # it as if all three lists are empty lists.
+
+        # This change should allow the following:::
+        # f, g = symbols("f g", cls=Function)
+        # x = symbols("x")
+        # expr = Integral(f(x), (x, 0, 1))
+        # expr.subs(f,g)
 
         if isinstance(old, FunctionClass):
             old_syms = set([])
