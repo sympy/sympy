@@ -2,7 +2,7 @@ import math
 from sympy import (
     Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Symbol, Tuple, Lt, nan, oo
 )
-from sympy.core.relational import Relational, StrictLessThan
+from sympy.core.relational import StrictLessThan
 from sympy.utilities.pytest import raises, XFAIL
 
 
@@ -43,6 +43,7 @@ def test_Assignment():
     Assignment(B[i], 0)
     a = Assignment(x, y)
     assert a.func(*a.args) == a
+    assert a.op == ':='
     # Here we test things to show that they error
     # Matrix to scalar
     raises(ValueError, lambda: Assignment(B[i], A))
@@ -60,7 +61,6 @@ def test_Assignment():
     raises(TypeError, lambda: Assignment(A + A, mat))
     raises(TypeError, lambda: Assignment(B, 0))
 
-    assert Relational(x, y, ':=') == Assignment(x, y)
 
 def test_AugAssign():
     # Here we just do things to show they don't error
@@ -72,25 +72,19 @@ def test_AugAssign():
     aug_assign(B[i], '+', x)
     aug_assign(B[i], '+', 0)
 
-    a = aug_assign(x, '+', y)
-    b = AddAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '-', y)
-    b = SubAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '*', y)
-    b = MulAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '/', y)
-    b = DivAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '%', y)
-    b = ModAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
+    # Check creation via aug_assign vs constructor
+    for binop, cls in [
+            ('+', AddAugmentedAssignment),
+            ('-', SubAugmentedAssignment),
+            ('*', MulAugmentedAssignment),
+            ('/', DivAugmentedAssignment),
+            ('%', ModAugmentedAssignment),
+        ]:
+        a = aug_assign(x, binop, y)
+        b = cls(x, y)
+        assert a.func(*a.args) == a == b
+        assert a.binop == binop
+        assert a.op == binop + '='
 
     # Here we test things to show that they error
     # Matrix to scalar
@@ -108,6 +102,7 @@ def test_AugAssign():
     raises(TypeError, lambda: aug_assign(x * x, '+', 1))
     raises(TypeError, lambda: aug_assign(A + A, '+', mat))
     raises(TypeError, lambda: aug_assign(B, '+', 0))
+
 
 def test_CodeBlock():
     c = CodeBlock(Assignment(x, 1), Assignment(y, x + 1))
