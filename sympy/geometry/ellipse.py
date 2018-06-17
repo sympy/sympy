@@ -616,7 +616,7 @@ class Ellipse(GeometrySet):
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
         [Point2D(-17/5, -12/5), Point2D(-17/5, 12/5), Point2D(7/5, -12/5), Point2D(7/5, 12/5)]
         """
-        # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
+        
         x = Dummy('x', real=True)
         y = Dummy('y', real=True)
 
