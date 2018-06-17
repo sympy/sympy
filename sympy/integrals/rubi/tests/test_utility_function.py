@@ -19,7 +19,7 @@ from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, co
 from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy import (I, E, pi, hyper, Add, Wild, simplify, polylog, Symbol, exp,
     zoo, gamma, polylog, oo)
-from sympy import Integral, nsimplify
+from sympy import Integral, nsimplify, Min
 A, B, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B a b c d e f g h y z m n p q u v w F', real=True, imaginary=False)
 x = Symbol('x')
 
@@ -30,6 +30,7 @@ def test_ZeroQ():
     assert ZeroQ(S(0))
     assert not ZeroQ(S(10))
     assert not ZeroQ(S(-2))
+    assert ZeroQ(0, 2-2)
     assert ZeroQ([S(2), (4), S(0), S(8)]) == [False, False, True, False]
     assert ZeroQ([S(2), S(4), S(8)]) == [False, False, False]
 
@@ -114,6 +115,8 @@ def test_Coefficient():
     assert Coefficient(x, x, -1) == 0
 
 def test_Denominator():
+    assert Denominator((-S(1)/S(2) + I/3)) == 6
+    assert Denominator((-a/b)**3) == (b)**(3)
     assert Denominator(S(3)/2) == 2
     assert Denominator(x/y) == y
     assert Denominator(S(4)/5) == 5
@@ -380,6 +383,8 @@ def test_LeafCount():
     assert LeafCount(1 + a + x**2) == 6
 
 def test_Numerator():
+    assert Numerator((-S(1)/S(2) + I/3)) == -3 + 2*I
+    assert Numerator((-a/b)**3) == (-a)**(3)
     assert Numerator(S(3)/2) == 3
     assert Numerator(x/y) == x
 
@@ -442,6 +447,7 @@ def test_FractionalPowerFreeQ():
     assert FractionalPowerFreeQ(x)
 
 def test_Exponent():
+    assert Exponent(x**2 + x + 1 + 5, x, Min) == 0
     assert Exponent(x**2 + x + 1 + 5, x, List) == [0, 1, 2]
     assert Exponent(x**2 + x + 1, x, List) == [0, 1, 2]
     assert Exponent(x**2 + 2*x + 1, x, List) == [0, 1, 2]
@@ -478,6 +484,7 @@ def test_BinomialDegree():
     assert BinomialDegree(x**9, x) == 9
 
 def test_PolynomialQ():
+    assert not PolynomialQ((16*x + 1)/((x + 5)**2*(x**2 + x + 1)), 2*x)
     C = Symbol('C')
     assert not PolynomialQ(A + b*x + c*x**2, x**2)
     assert PolynomialQ(A + B*x + C*x**2)
@@ -549,10 +556,9 @@ def test_PolynomialDivide():
     assert PolynomialDivide((a*c - b*c*x)**2, (a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
     assert PolynomialDivide(x + x**2, x, x) == x + 1
     assert PolynomialDivide((1 + x)**3, (1 + x)**2, x) == x + 1
-    assert PolynomialDivide((a + b*x)**3, x**3, x) == a**3/x**3 + 3*a**2*b/x**2 + 3*a*b**2/x + b**3
+    assert PolynomialDivide((a + b*x)**3, x**3, x) == a*(a**2 + 3*a*b*x + 3*b**2*x**2)/x**3 + b**3
     assert PolynomialDivide(x**3*(a + b*x), S(1), x) == b*x**4 + a*x**3
-    assert PolynomialDivide(x**6, (a + b*x)**2, x) == -5*a**6/(b**6*(a + b*x)**2) - 6*a**5*x/(b**5*(a + b*x)**2) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
-
+    assert PolynomialDivide(x**6, (a + b*x)**2, x) == -a**5*(5*a + 6*b*x)/(b**6*(a + b*x)**2) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
 
 def test_MatchQ():
     a_ = Wild('a', exclude=[x])
@@ -684,14 +690,14 @@ def test_RemainingTerms():
 def test_LeadFactor():
     assert LeadFactor(a*b*c) == a
     assert LeadFactor(a + b + c) == a + b + c
-    assert LeadFactor(b*I) == b
+    assert LeadFactor(b*I) == I
     assert LeadFactor(c*a**b) == a**b
     assert LeadFactor(S(2)) == S(2)
 
 def test_RemainingFactors():
     assert RemainingFactors(a*b*c) == b*c
     assert RemainingFactors(a + b + c) == 1
-    assert RemainingFactors(a*I) == I
+    assert RemainingFactors(a*I) == a
 
 def test_LeadBase():
     assert LeadBase(a**b) == a
@@ -868,7 +874,7 @@ def test_TrinomialDegree():
 
 def test_CubicMatchQ():
     assert not CubicMatchQ(S(3 + x**6), x)
-    assert not CubicMatchQ(S(x**3), x)
+    assert CubicMatchQ(S(x**3), x)
     assert not CubicMatchQ(S(3), x)
     assert CubicMatchQ(S(3 + x**3), x)
     assert CubicMatchQ(S(3 + x**3 + 2*x), x)
@@ -928,22 +934,22 @@ def test_NonpolynomialTerms():
     assert NonpolynomialTerms(x + 6*x**3 + 6, x) == 6
 
 def test_PseudoBinomialQ():
-    assert not PseudoBinomialQ(3 + 5*(x)**6, x)
+    assert PseudoBinomialQ(3 + 5*(x)**6, x)
     assert PseudoBinomialQ(3 + 5*(2 + 5*x)**6, x)
 
 def test_PseudoBinomialParts():
-    assert PseudoBinomialParts(3 + 7*(1 + x)**6, x) == [3, 7, 1, 1, 6]
-    assert PseudoBinomialParts(3 + 7*(1 + x)**3, x) == [3, 7, 1, 1, 3]
+    assert PseudoBinomialParts(3 + 7*(1 + x)**6, x) == [3, 1, 7**(S(1)/S(6)), 7**(S(1)/S(6)), 6]
+    assert PseudoBinomialParts(3 + 7*(1 + x)**3, x) == [3, 1, 7**(S(1)/S(3)), 7**(S(1)/S(3)), 3]
     assert not PseudoBinomialParts(3 + 7*(1 + x)**2, x)
-    assert not PseudoBinomialParts(3 + 7*(x)**5, x)
+    assert PseudoBinomialParts(3 + 7*(x)**5, x) == [3, 1, 0, 7**(S(1)/S(5)), 5]
 
 def test_PseudoBinomialPairQ():
     assert not PseudoBinomialPairQ(3 + 5*(x)**6,3 + (x)**6, x)
-    assert PseudoBinomialPairQ(3 + 5*(1 + x)**6,3 + (1 + x)**6, x)
+    assert not PseudoBinomialPairQ(3 + 5*(1 + x)**6,3 + (1 + x)**6, x)
 
 def test_NormalizePseudoBinomial():
-    assert NormalizePseudoBinomial(3 + 5*(1 + x)**6, x) == 5*(x + 1)**6 + 3
-    assert not NormalizePseudoBinomial(3 + 5*(x)**6, x)
+    assert NormalizePseudoBinomial(3 + 5*(1 + x)**6, x) == 3+(5**(S(1)/S(6))+5**(S(1)/S(6))*x)**S(6)
+    assert NormalizePseudoBinomial(3 + 5*(x)**6, x) == 3+5*x**6
 
 def test_CancelCommonFactors():
     assert CancelCommonFactors(S(x*y*6)**6, S(x*y*6)) == [7776*x**5*y**5, 1]
@@ -1008,6 +1014,9 @@ def test_TrigSimplify():
     assert TrigSimplify(-1 + csc(x)**2) == cot(x)**2
 
 def test_MergeFactors():
+    assert simplify(MergeFactors(b/(a - c)**3 , 8*c**3*(b*x + c)**(3/2)/(3*b**4) - 24*c**2*(b*x + c)**(5/2)/(5*b**4) + \
+        24*c*(b*x + c)**(7/2)/(7*b**4) - 8*(b*x + c)**(9/2)/(9*b**4)) - (8*c**3*(b*x + c)**1.5/(3*b**3) - 24*c**2*(b*x + c)**2.5/(5*b**3) + \
+        24*c*(b*x + c)**3.5/(7*b**3) - 8*(b*x + c)**4.5/(9*b**3))/(a - c)**3) == 0
     assert MergeFactors(x, x) == x**2
     assert MergeFactors(x*y, x) == x**2*y
 
@@ -1480,7 +1489,9 @@ def test_FunctionOfTrigQ():
     assert FunctionOfTrigQ(sin(t), v, x)
 
 def test_RationalFunctionExpand():
-    assert RationalFunctionExpand(x**S(3)*(S(2)*x + 2)**S(2)/(2*x**2 + 1), x) == 2*x**3 + 4*x**2 + x - (x - 2)/(2*x**2 + 1) - 2
+    assert RationalFunctionExpand(x**S(5)*(e + f*x)**n/(a + b*x**S(3)), x) == -a*x**2*(e + f*x)**n/(b*(a + b*x**3)) +\
+        e**2*(e + f*x)**n/(b*f**2) - 2*e*(e + f*x)**(n + 1)/(b*f**2) + (e + f*x)**(n + 2)/(b*f**2)
+    assert RationalFunctionExpand(x**S(3)*(S(2)*x + 2)**S(2)/(2*x**2 + 1), x) == 2*x**3 + 4*x**2 + x + (- x + 2)/(2*x**2 + 1) - 2
     assert RationalFunctionExpand((a + b*x + c*x**4)*log(x)**3, x) == a*log(x)**3 + b*x*log(x)**3 + c*x**4*log(x)**3
     assert RationalFunctionExpand(a + b*x + c*x**4, x) == a + b*x + c*x**4
 
@@ -1633,8 +1644,8 @@ def test_ProductOfLinearPowersQ():
     assert ProductOfLinearPowersQ(x + 1, x)
 
 def test_Rt():
-    from sympy import nsimplify
-    assert Rt(-b**2, 4) == (-b**2)**(0.25)
+    b = symbols('b')
+    assert Rt(-b**2, 4) == (-b**2)**(S(1)/S(4))
     assert Rt(x**2, 2) == x
     assert Rt(S(2 + 3*I), S(8)) == (2 + 3*I)**(1/8)
     assert Rt(x**2 + 4 + 4*x, 2) == x + 2
@@ -1642,6 +1653,7 @@ def test_Rt():
     assert Rt(S(16807), S(5)) == 7
 
 def test_NthRoot():
+    assert NthRoot(S(14580), S(3)) == 9*2**(S(2)/S(3))*5**(S(1)/S(3))
     assert NthRoot(9, 2) == 3.0
     assert NthRoot(81, 2) == 9.0
     assert NthRoot(81, 4) == 3.0
@@ -1706,7 +1718,7 @@ def test_SimpFixFactor():
 def test_SimplifyAntiderivative():
     assert SimplifyAntiderivative(acoth(coth(x)), x) == x
     assert SimplifyAntiderivative(a*x, x) == a*x
-    assert SimplifyAntiderivative(atanh(cot(x)), x) == atanh(1/cot(x))
+    assert SimplifyAntiderivative(atanh(cot(x)), x) == atanh(2*sin(x)*cos(x))/2
     assert SimplifyAntiderivative(a*cos(x)**2 + a*sin(x)**2 + v, x) == a*cos(x)**2 + a*sin(x)**2
 
 def test_FixSimplify():
@@ -1780,7 +1792,7 @@ def test_ExpandIntegrand():
     assert ExpandIntegrand(x/(a*x**3 + b*Sqrt(c + d*x**6)), x) == a*x**4/(-b**2*c + x**6*(a**2 - b**2*d)) + b*x*sqrt(c + d*x**6)/(b**2*c + x**6*(-a**2 + b**2*d))
     assert simplify(ExpandIntegrand(x**1*(1 - x**4)**(-2), x) - (x/(S(4)*(x**2 + 1)) + x/(S(4)*(x**2 + 1)**2) - x/(S(4)*(x**2 - 1)) + x/(S(4)*(x**2 - 1)**2))) == 0
     assert simplify(ExpandIntegrand((-1 + x**S(6))**(-3), x) - (S(3)/(S(8)*(x**6 - 1)) - S(3)/(S(16)*(x**S(3) + S(1))**S(2)) - S(1)/(S(8)*(x**S(3) + S(1))**S(3)) - S(3)/(S(16)*(x**S(3) - S(1))**S(2)) + S(1)/(S(8)*(x**S(3) - S(1))**S(3)))) == 0
-    assert ExpandIntegrand(u**1*(a + b*u**2 + c*u**4)**(-1), x) == -2*c*u/(sqrt(-4*a*c + b**2)*(b + 2*c*u**2 + sqrt(-4*a*c + b**2))) + 2*c*u/(sqrt(-4*a*c + b**2)*(b + 2*c*u**2 - sqrt(-4*a*c + b**2)))
+    assert simplify(ExpandIntegrand(u**1*(a + b*u**2 + c*u**4)**(-1), x)) == simplify(1/(2*b*(u + sqrt(-(a + c*u**4)/b))) - 1/(2*b*(-u + sqrt(-(a + c*u**4)/b))))
     assert simplify(ExpandIntegrand((1 + 1*u + 1*u**2)**(-2), x) - (S(1)/(S(2)*(-u - 1)*(-u**2 - u - 1)) + S(1)/(S(4)*(-u - 1)*(u + sqrt(-u - 1))**2) + S(1)/(S(4)*(-u - 1)*(u - sqrt(-u - 1))**2))) == 0
     assert ExpandIntegrand(x*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == -e*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f
     assert ExpandIntegrand(x*f**(e*(c + d*x)*S(1)), x) == f**(e*(c + d*x))*x
@@ -1788,7 +1800,7 @@ def test_ExpandIntegrand():
     assert simplify(ExpandIntegrand(u*(a + b*F**v)**S(2)*(c + d*F**v)**S(-3), x) - (b**2*u/(d**2*(F**v*d + c)) + 2*b*u*(a*d - b*c)/(d**2*(F**v*d + c)**2) + u*(a*d - b*c)**2/(d**2*(F**v*d + c)**3))) == 0
     assert ExpandIntegrand((S(1) + 1*x)**S(2)*f**(e*(1 + S(1)*x)**n)/(g + h*x), x) == f**(e*(x + 1)**n)*(x + 1)/h + f**(e*(x + 1)**n)*(-g + h)/h**2 + f**(e*(x + 1)**n)*(g - h)**2/(h**2*(g + h*x))
 
-    assert ExpandIntegrand((a*c - b*c*x)**2/(a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
+    assert ExpandIntegrand((a*c - b*c*x)**2/(a + b*x)**2, x) == 4*a**2*c**2/(a + b*x)**2 - 4*a*c**2/(a + b*x) + c**2
     assert simplify(ExpandIntegrand(x**2*(1 - 1*x**2)**(-2), x) - (1/(S(2)*(x**2 - 1)) + 1/(S(4)*(x + 1)**2) + 1/(S(4)*(x - 1)**2))) == 0
     assert ExpandIntegrand((a + x)**2, x) == a**2 + 2*a*x + x**2
     assert ExpandIntegrand((a + b*x)**S(2)/x**3, x) == a**2/x**3 + 2*a*b/x**2 + b**2/x
