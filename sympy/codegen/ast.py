@@ -138,14 +138,36 @@ from sympy.utilities.iterables import iterable
 
 
 def _mk_Tuple(args):
+    """
+    Create a Sympy Tuple object from an iterable, converting Python strings to
+    AST strings.
+
+    Parameters:
+    ===========
+    args: iterable
+        Arguments to :class:`sympy.Tuple`.
+
+    Returns:
+    ========
+    sympy.Tuple
+    """
     args = [String(arg) if isinstance(arg, string_types) else arg for arg in args]
     return Tuple(*args)
 
-class Token(Basic):
-    """ Base class for the AST types
 
-    Defining fields are set in ``__slots__``. Attributes (defined in __slots__) are
-    only allowed to contain instances of Basic (unless atomic, see ``String``).
+class Token(Basic):
+    """ Base class for the AST types.
+
+    Defining fields are set in ``__slots__``. Attributes (defined in __slots__)
+    are only allowed to contain instances of Basic (unless atomic, see
+    ``String``). The arguments to ``__new__()`` correspond to the attributes in
+    the order defined in ``__slots__`. The ``defaults`` class attribute is a
+    dictionary mapping attribute names to their default values.
+
+    Subclasses should not need to override the ``__new__()`` method. They may
+    define a class or static method named ``_construct_<attr>`` for each
+    attribute to process the value passed to ``__new__()``. Attributes listed
+    in the class attribute ``not_in_args`` are not passed to :class:`sympy.Basic`.
     """
 
     __slots__ = []
@@ -159,10 +181,12 @@ class Token(Basic):
 
     @classmethod
     def _get_constructor(cls, attr):
+        """ Get the constructor function for an attribute by name. """
         return getattr(cls, '_construct_%s' % attr, lambda x: x)
 
     @classmethod
     def _construct(cls, attr, arg):
+        """ Construct an attribute value from argument passed to ``__new__()``. """
         if arg == None:
             return cls.defaults.get(attr, none)
         else:
@@ -172,21 +196,49 @@ class Token(Basic):
                 return cls._get_constructor(attr)(arg)
 
     def __new__(cls, *args, **kwargs):
+        # Pass through existing instances when given as sole argument
         if len(args) == 1 and not kwargs and isinstance(args[0], cls):
             return args[0]
+
         if len(args) > len(cls.__slots__):
             raise ValueError("Too many arguments (%d), expected at most %d" % (len(args), len(cls.__slots__)))
-        args = [cls._construct(attr, arg) for attr, arg in zip(
-            cls.__slots__, args + tuple([
-                kwargs.pop(k, cls.defaults[k]) if k in cls.defaults else kwargs.pop(k) for k
-                in cls.__slots__[len(args):]])
-        )]
-        if kwargs:
-            raise ValueError("Unknown kwargs: %s" % kwargs)
 
-        obj = Basic.__new__(cls, *[arg for slot, arg in zip(cls.__slots__, args) if slot not in cls.not_in_args])
-        for attr, arg in zip(cls.__slots__, args):
+        attrvals = []
+
+        # Process positional arguments
+        for attrname, argval in zip(cls.__slots__, args):
+            if attrname in kwargs:
+                raise TypeError('Got multiple values for attribute %r' % attrname)
+
+            attrvals.append(cls._construct(attrname, argval))
+
+        # Process keyword arguments
+        for attrname in cls.__slots__[len(args):]:
+            if attrname in kwargs:
+                argval = kwargs.pop(attrname)
+
+            elif attrname in cls.defaults:
+                argval = cls.defaults[attrname]
+
+            else:
+                raise TypeError('No value for %r given and attribute has no default' % attrname)
+
+            attrvals.append(cls._construct(attrname, argval))
+
+        if kwargs:
+            raise ValueError("Unknown keyword arguments: %s" % ' '.join(kwargs))
+
+        # Parent constructor
+        basic_args = [
+            val for attr, val in zip(cls.__slots__, attrvals)
+            if attr not in cls.not_in_args
+        ]
+        obj = Basic.__new__(cls, *basic_args)
+
+        # Set attributes
+        for attr, arg in zip(cls.__slots__, attrvals):
             setattr(obj, attr, arg)
+
         return obj
 
     def __eq__(self, other):
@@ -227,12 +279,22 @@ class Token(Basic):
         values = [getattr(self, k) for k in self.__slots__]
         indent_level = kwargs.pop('indent_level', 0)
         joiner = kwargs.pop('joiner', ', ')
-        ils = [indent_level + (4 if k in self.indented_args else 0) for k in self.__slots__]
-        return "{0}({1})".format(self.__class__.__name__, joiner.join([
-            ('{1}' if i == 0 else '{0}={1}').format(k, self._indented(printer, k, v, il, *args, **kwargs))
-            for i, (k, v, il) in enumerate(zip(self.__slots__, values, ils))
-            if not (k in self.defaults and v == self.defaults[k]) and k not in exclude
-        ]))
+
+        arg_reprs = []
+
+        for i, (attr, value) in enumerate(zip(self.__slots__, values)):
+            if attr in exclude:
+                continue
+
+            # Skip attributes which have the default value
+            if attr in self.defaults and value == self.defaults[attr]:
+                continue
+
+            ilvl = indent_level + 4 if attr in self.indented_args else 0
+            indented = self._indented(printer, attr, value, ilvl, *args, **kwargs)
+            arg_reprs.append(('{1}' if i == 0 else '{0}={1}').format(attr, indented))
+
+        return "{0}({1})".format(self.__class__.__name__, joiner.join(arg_reprs))
 
     _sympystr = _sympyrepr
 
@@ -240,9 +302,22 @@ class Token(Basic):
         from sympy.printing import srepr
         return srepr(self)
 
+    def kwargs(self, exclude=(), apply=None):
+        """ Get instance's attributes as dict of keyword arguments.
 
-    def kwargs(self, exclude=(), apply=lambda arg: arg):
-        return {k: apply(getattr(self, k)) for k in self.__slots__ if k not in exclude}
+        Parameters:
+        ===========
+        exclude : collection of str
+            Collection of keywords to exclude.
+
+        apply : callable, optional
+            Function to apply to all values.
+        """
+        kwargs = {k: getattr(self, k) for k in self.__slots__ if k not in exclude}
+        if apply is not None:
+            return {k: apply(v) for k, v in kwargs.items()}
+        else:
+            return kwargs
 
 
 class BreakToken(Token):
