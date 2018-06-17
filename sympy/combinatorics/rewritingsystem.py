@@ -32,6 +32,10 @@ class RewritingSystem(object):
         # at any point
         self._max_exceeded = False
 
+        # Reduction automaton
+        self.reduction_automaton = None
+        self.new_rules = {}
+
         # dictionary of reductions
         self.rules = {}
         self.rules_cache = deque([], 50)
@@ -138,6 +142,11 @@ class RewritingSystem(object):
             elif len(w1) - len(w2) < 3:
                 new = self.add_rule(w1, w2, check)
                 new_keys.update(new)
+
+        # Add new rules to the `new_rules` dictionary.
+        if self.reduction_automaton:
+            for new_rule in new_keys:
+                self.new_rules[new_rule] = self.rules[new_rule]
 
         return new_keys
 
@@ -376,7 +385,6 @@ class RewritingSystem(object):
             if not rule in self.reduction_automaton.states:
                 self.reduction_automaton.add_state(rule, state_type='d', rh_rule=all_rules[rule])
 
-        # Add accept states.
         for r in all_rules:
             prop_prefix = proper_prefixes[r]
             for elem in prop_prefix:
@@ -396,23 +404,33 @@ class RewritingSystem(object):
                         self.reduction_automaton.states[state].add_transition(letter, letter)
                     else:
                         self.reduction_automaton.states[state].add_transition(letter, current_state_name)
-            if current_state_name in accept_states:
-                if current_state_type == "accept":
-                    for letter in automaton_alphabet:
-                        next = current_state_name*letter
-                        len_next_word = len(next)
-                        while True:
-                            if len(next) <= 1:
-                                if next in self.reduction_automaton.states:
-                                    self.reduction_automaton.states[state].add_transition(letter, next)
-                                else:
-                                    self.reduction_automaton.states[state].add_transition(letter, 'start')
-                                break
-                            else:
-                                if next in self.reduction_automaton.states:
-                                    self.reduction_automaton.states[state].add_transition(letter, next)
-                                    break
-                                next = next.subword(1, len(next))
+            else:
+                # Store subwords of current state in an array.
+                current_state_name_array = []
+                next_sub = current_state_name
+                while len(next_sub):
+                    current_state_name_array.append(next_sub)
+                    next_sub = next_sub.subword(1, len(next_sub))
+                # Check if the transition to any new state in posible.
+                for sub_word in current_state_name_array:
+                    if sub_word in accept_states:
+                        # Add accept states.
+                        if current_state_type == "accept":
+                            for letter in automaton_alphabet:
+                                next = current_state_name*letter
+                                while True:
+                                    if len(next) <= 1:
+                                        if next in self.reduction_automaton.states:
+                                            self.reduction_automaton.states[state].add_transition(letter, next)
+                                        else:
+                                            self.reduction_automaton.states[state].add_transition(letter, 'start')
+                                        break
+                                    else:
+                                        if next in self.reduction_automaton.states:
+                                            self.reduction_automaton.states[state].add_transition(letter, next)
+                                            break
+                                        next = next.subword(1, len(next))
+                        break
 
         # Add transitions for new states. All symbols used in the automaton are considered here.
         # Ignore this if `generators` = `automaton_alphabet`.
@@ -447,22 +465,10 @@ class RewritingSystem(object):
             word (instance of FreeGroupElement) -- Word that needs to be reduced.
 
         '''
-
-        # Find the dead states - left_hand_rules
-        dead_states = []
-        for state in self.reduction_automaton.states:
-            if self.reduction_automaton.states[state].state_type == "dead":
-                dead_states.append(state)
-
-        # Find the newly added rules to the rewriting system after the construction of the automaton.
-        new_rules = {}
-        for rule in self.rules:
-            if rule not in dead_states:
-                new_rules[rule] = self.rules[rule]
-
         # Modify the automaton if new rules are found.
-        if new_rules:
-            self.add_to_automaton(new_rules)
+        if self.new_rules:
+            self.add_to_automaton(self.new_rules)
+            self.new_rules = {}
 
         flag = 1
         while flag:
