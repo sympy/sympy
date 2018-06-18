@@ -1964,6 +1964,11 @@ def simplify_logic(expr, form=None, deep=True):
     if form not in (None, 'cnf', 'dnf'):
         raise ValueError("form can be cnf or dnf only")
     expr = sympify(expr)
+
+    from sympy import Symbol
+    if len(expr.atoms(Symbol)) >= 10:
+        raise RuntimeError("expression is too large, try with number of symbols less than 10")
+
     if deep:
         variables = _find_predicates(expr)
         from sympy.simplify.simplify import simplify
