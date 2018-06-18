@@ -1,12 +1,14 @@
-from sympy import S, symbols
+from sympy import S, symbols, sqrt, exp, pi
 from sympy.stats import Poisson, Geometric, density
+from sympy.stats.rv import pspace
 from sympy.stats.joint_rv import Joint
+from sympy.stats.joint_rv_types import MultivariateNormal
+from sympy.stats.crv_types import Normal, Exponential
+from sympy.utilities.pytest import raises
+x, y, n = symbols('x y n')
 
-x, y = symbols('x y')
-
-def test_density():
-    from sympy.functions.elementary.exponential import exp
-    from sympy.functions.combinatorial.factorials import factorial
-    X, Y = Geometric('X', S(1)/2), Poisson('Y', 4)
-    Z = Joint('Z', (X, Y))
-    assert density(Z)(x, y) == 2**(-x + 1)*4**y*exp(-4)/(2*factorial(y))
+def test_multivariate_normal():
+    m = MultivariateNormal('m', ('m1', 'm2'), [1, 2], [[1, 0], [0, 1]])
+    assert density(m)(1, 2) == 1/(2*pi)
+    raises (ValueError,\
+        lambda: MultivariateNormal('m', ('m1', 'm2'),[1, 2], [[0, 0], [0, 1]]))

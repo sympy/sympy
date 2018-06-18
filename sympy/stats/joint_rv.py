@@ -13,22 +13,21 @@ from __future__ import print_function, division
 
 __all__ = ['Joint']
 
-from sympy import Basic, Eq, Mul, Lambda, S
-from sympy.core.symbol import Dummy, Symbol
+from sympy import Basic, Lambda, sympify
+from sympy.core.symbol import Symbol
 from sympy.core.compatibility import string_types
-from sympy.concrete.summations import summation
-from sympy.integrals.integrals import Integral, integrate
-from sympy.stats.rv import (ProductPSpace, RandomSymbol,
-    density, NamedArgsMixin, ProductDomain)
-from sympy.sets.sets import FiniteSet
-from sympy.utilities.misc import filldedent
+from sympy.concrete.summations import Sum
+from sympy.integrals.integrals import Integral
+from sympy.stats.rv import (ProductPSpace, RandomSymbol, pspace,
+        NamedArgsMixin, ProductDomain)
 
 class JointPSpace(ProductPSpace):
     """
 
     """
-    def __new__(cls, name, syms):
-        return Basic.__new__(cls, name, syms)
+    def __new__(cls, name, syms, dist, **args):
+        name = sympify(name)
+        return Basic.__new__(cls, name, syms, dist, **args)
 
     @property
     def set(self):
@@ -39,17 +38,29 @@ class JointPSpace(ProductPSpace):
         return self.args[0]
 
     @property
+    def symbols(self):
+        return tuple(self.args[1])
+
+    @property
     def value(self):
         return RandomSymbol(self.symbol, self)
 
     @property
     def distribution(self):
-        return self.args[1]
+        return self.args[2]
 
-    @property
-    def spaces(self):
-        rvs = self.distribution.symbols
-        return FiniteSet(*[rv.pspace for rv in rvs])
+    # @property
+    # def spaces(self):
+    #     rvs = self.distribution.symbols
+    #     return FiniteSet(*[rv.pspace for rv in rvs])
+
+    def pdf(self, *args):
+        return self.distribution(*args)
+
+
+    # def marginal(self, rv):
+    #     assert rv in self.distribution.symbols
+    #     return self.distribution.marginal_density(rv)
 
     def where(self, condition):
         raise NotImplementedError()
@@ -70,25 +81,9 @@ class JointDistribution(Basic, NamedArgsMixin):
     Contains methods for PDF, CDF, sampling, marginal densities, etc.
     """
 
-    def __new__(cls, _symbols, _density):
-        if (_density!=None):
-            jrv = Basic.__new__(cls, _symbols, _density)
-            jrv._check()
-        else:
-            syms = [i.args[0] for i in _symbols]
-            _density = Mul(*[density(_symbols[i])(syms[i]) for i in
-                range(len(_symbols))])
-            jrv = Basic.__new__(cls, _symbols, _density)
-        return jrv
-
-    def _check(self):
-        x = Symbol('x', real=True)
-        for sym in self.symbols:
-            if isinstance(sym, RandomSymbol):
-                assert Eq(density(sym)(x), self.marginal_density(sym)(x)) != False
-        cdf_lim = {i:S.Infinity for i in self.symbols}
-        if (self.cdf(cdf_lim) == 1) == False:
-            raise ValueError("The density entered is invalid for the given variables")
+    def __new__(cls, *args):
+        args = list(map(sympify, args))
+        return Basic.__new__(cls, *args)
 
     @property
     def domain(self):
@@ -99,19 +94,12 @@ class JointDistribution(Basic, NamedArgsMixin):
         return list(self.args[0])
 
     @property
-    def pdf(self):
-        rvs = self.symbols
-        z = [Dummy(str(i.args[0])) for i in rvs]
-        _density = self.args[1]
-        for i in range(len(rvs)):
-            _density = _density.replace(rvs[i].symbol, z[i])
-        return Lambda(z, _density)
+    def pdf(self, *args):
+        return self.density.args[1]
 
     def cdf(self, other):
         assert isinstance(other, dict)
         rvs = other.keys()
-        #all_syms = [Dummy(i.args[0]) for i in rvs]
-        # _symbols = other.keys
         _set = self.domain.set
         expr = self.pdf(tuple(i.args[0] for i in self.symbols))
         for i in len(other):
@@ -119,30 +107,31 @@ class JointDistribution(Basic, NamedArgsMixin):
                 density = Integral(expr, (rvs[i], _set[i].inf,
                     other[rvs[i]]))
             elif rvs[i].is_Discrete:
-                density = summation(expr, (rvs[i], _set[i].inf,
+                density = Sum(expr, (rvs[i], _set[i].inf,
                     other[rvs[i]]))
         return density
 
-    def marginalise_out(self, expr, other, evaluate):
-        z = [Dummy(str(i.args[0])) for i in self.symbols]
-        if evaluate:
-            return Lambda(z, integrate(expr, (other.args[0],
-             other.domain.set.inf, other.domain.set.sup)))
-        else:
-            return Lambda(z, Integral(expr, (other.args[0],
-             other.set.inf, other.set.sup)))
+    def marginalise_out(self, expr, other, evaluate=False):
+        if pspace(other).is_Continuous:
+            result = Integral(expr, (other.args[0],
+                other.pspace.set.inf, other.pspace.set.sup))
+        elif pspace(other).is_Discrete:
+            result = Sum(expr, (other.args[0],
+                other.set.inf, other.set.sup))
+        return result if not evaluate else result.doit()
 
-
-    def marginal_density(self, rv, evaluate=True):
+    def marginal_density(self, rv, evaluate=False):
         if (rv not in self.symbols):
             raise ValueError("%s is not a part of the joint distribtion" %rv)
+        if isinstance(rv, RandomSymbol):
+            return Lambda(rv.symbol, pspace(rv).pdf)
         rvs = self.symbols
         rvs.remove(rv)
         expr = self.pdf
         for i in rvs:
             expr = self.marginalise_out(expr, i, evaluate)
             rvs.remove(i)
-        return expr
+        return Lambda([i.symbol for i in rvs    ], expr)
 
     def __call__(self, *args):
         return self.pdf(*args)
@@ -176,9 +165,6 @@ def Joint(name, rvs, density=None):
         name = Symbol(name)
     if not isinstance(name, Symbol):
         raise TypeError("Name must be a string or a symbol.")
-    assert all([isinstance(rv, (RandomSymbol, Symbol)) for rv in rvs])
-    if any([isinstance(rv, Symbol) for rv in rvs]) and (density == None):
-        raise ValueError(filldedent('''Density must be provided for user
-            defined random distributions.'''))
+    assert all([isinstance(rv, (RandomSymbol)) for rv in rvs])
     dist = JointDistribution(rvs, density)
     return JointPSpace(name, dist).value
