@@ -987,24 +987,22 @@ def _solveset(f, symbol, domain, _check=False):
 
 def _expo_solver(f):
     r"""
-    Helper function for solving exponential equations.
+    Helper function for solving (supported) exponential equations.
 
-    Exponential equations are the type of equations which has a
-    variable to be solved located in the exponent.
+    Exponential equations are a sum of (currently) at most
+    2 terms with one or both of them having a power with a
+    symbol-dependent exponent.
+
     For example
 
     .. math:: 5^{(2*x + 3)} - 5^{(3*x - 1)}
 
-    .. math:: 4^{(5 - 9*x)} - 8^{(2 - x)}
+    .. math:: 4^{(5 - 9*x)} - exp^{(2 - x)}
 
-    The function evaluates exponential equations having two arguments,
-    i.e, exponential equations having only two exponent terms
-    (like the ones above). Returns `None` for any other type
-    of exponential equation.
 
-    The helper takes the equation to be solved as the only parameter,
-    tries to reduce it to log form (if possible) and returns the
-    modified equation which is further handled by `solveset`.
+    The function reduces the equation (`f`) to a better log form
+    (if possible) and returns the modified equation which can be
+    further handled by `solveset`.
 
     Examples
     ========
@@ -1025,8 +1023,8 @@ def _expo_solver(f):
 
     Therefore if we are given an equation with exponent terms, we can
     convert every term to its corresponding log form. This is achieved by
-    taking logarithms and expanding them using log identities so that the
-    equations can be easily handled by `solveset`.
+    taking logarithms and expanding it using log identities so that the
+    equation can be easily handled by `solveset`.
 
     For example:
 
@@ -1040,50 +1038,52 @@ def _expo_solver(f):
     """
 
     try:
-        arg1, arg2 = ordered(f.args)
+        pow_type_arg1, pow_type_arg2 = ordered(f.args)
     except ValueError:
         return None
 
-    lhs = arg1
-    rhs = -arg2
+    lhs = pow_type_arg1
+    rhs = - pow_type_arg2
 
-    lhs = expand_log(log(lhs))
-    rhs = expand_log(log(rhs))
+    log_type_equation = expand_log(log(lhs)) - expand_log(log(rhs))
 
-    return lhs - rhs
+    return log_type_equation
 
 
 def _check_expo(f, symbol):
     r"""
     Helper to check whether an equation is exponential or not.
 
-    It filters out power and `exp` terms from the equation and
-    checks whether their exponent contains the `symbol`. If so
-    the equation is of exponential type and True is returned
-    otherwise False.
+    ``f`` is the equation to be checked
+
+    ``symbol`` is the variable in which the equation needs to be checked
+
+    The function extracts each term of the equation and checks if it is
+    of exponential form w.r.t `symbol`.
+    Returns `True` if any term is of exponential type otherwise `False`.
 
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import symbols, cos, exp
     >>> from sympy.solvers.solveset import _check_expo as check
     >>> x, y = symbols('x y')
-    >>> check(3**x - 2, x)
-    True
-    >>> check(2*x, x)
-    False
-    >>> check(x**y - x, x)
-    False
     >>> check(x**y - x, y)
     True
+    >>> check(x**y - x, x)
+    False
+    >>> check(exp(x + 3), x)
+    True
+    >>> check(cos(2**x), x)
+    False
     """
-    pow_args = f.atoms(Pow, exp)
-    number_of_terms = len(pow_args)
+    from sympy.core import Add, Mul
 
-    for i in pow_args:
-        i_expo = i.args[0] if isinstance(i, exp) else i.exp
-        if i_expo.has(symbol):
-            return True
+    for add_arg in Add.make_args(f):
+        for mul_arg in Mul.make_args(add_arg):
+            if isinstance(mul_arg, (Pow, exp)) and \
+                    mul_arg.exp.has(symbol):
+                return True
     return False
 
 
@@ -1133,26 +1133,22 @@ def _transolve(f, symbol, domain):
     How `\_transolve` works
     =======================
 
-    The main idea behind `\_transolve` is to make it modular, extensible,
-    robust and easy to understand. For this to be achieved `\_transolve`
-    uses two types of helper functions to solve equation of a particular
-    class:
+    `\_transolve` uses two types of helper functions to solve equation
+    of a particular class:
 
-    Identifying helpers: These helpers are used to determine whether a given
-    equation belongs to a certain class of equation or not.
-    Heuristics are implemented to determine this. These functions return
-    either True or False.
+    Identifying helpers: These helpers are used to determine whether a
+    given equation belongs to a certain class of equation or not.
+    These functions return either True or False.
 
-    Solving helpers: Once identified that the equation belongs to a
-    particular class, another helper is invoked which will be responsible
-    to either solve the equation fully or reduce to a better form for
-    `solveset` to handle it. A generalized algorithm or heuristic is
-    implemented to get the output.
+    Solving helpers: These are the helpers that solve the equation. They
+    are invoked once the equation is identified by the identifying
+    helpers. These function return either the complete solution or
+    modifies the equation for `solveset` to handle.
 
     * Philosophy behind the module
 
     `\_transolve` comes into action when solveset is unable to solve the
-    equation as a last resort to get the solutions. So the idea is that,
+    equation as a last resort to get the solutions. The idea is that,
     first it tries to invert the equation to get the `lhs` and the `rhs`.
     Depending on the general form of the class of the equation it
     is sent to different cases, like for example, logarithmic
@@ -1177,8 +1173,8 @@ def _transolve(f, symbol, domain):
     `\_transolve` provides a better output to some equations than
     `\_tsolve`. Though result from both the functions are correct
     it's just that the one from `\_transolve` is easy to understand and
-    appropriate. This is because `\_transolve` smartly evaluates the
-    result minimising it wherever necessary.
+    appropriate. This is because `\_transolve` simplifies the result
+    wherever necessary.
 
     Consider a simple exponential equation
 
@@ -1286,6 +1282,39 @@ def _transolve(f, symbol, domain):
       - What are the input parameters and what does the helper returns.
     """
 
+    def add_type(eq, symbol, domain):
+        """
+        Helper for `_transolve` to handle equations of
+        `Add` type.
+        """
+        result = ConditionSet(symbol, Eq(eq, 0), domain)
+        # trying to convert to P.O.S form
+        simplified_equation = factor(powdenest(eq))
+
+        if simplified_equation.is_Mul:
+            result = _solveset(
+                simplified_equation, symbol, domain)
+
+        # check if it is exponential type equation
+        elif _check_expo(simplified_equation, symbol):
+            new_eq = _expo_solver(simplified_equation)
+            if new_eq:
+                result = _solveset(new_eq, symbol, domain)
+
+        return result
+
+    def pow_type(eq, symbol, domain):
+        """
+        Helper for `_transolve` to handle equations of
+        power type.
+        """
+        result = ConditionSet(symbol, Eq(eq, 0), domain)
+        new_eq = _expo_solver(eq)
+        if new_eq:
+            result = _solveset(new_eq, symbol, domain)
+
+        return result
+
     # invert_complex handles the call to the desired inverter based
     # on the domain specified.
     lhs, rhs_s = invert_complex(f, 0, symbol, domain)
@@ -1293,41 +1322,24 @@ def _transolve(f, symbol, domain):
     unsolved_result = ConditionSet(symbol, Eq(f, 0), domain)
     result = unsolved_result
 
-    if lhs == symbol:
-        result = rhs_s
+    if lhs == symbol or not isinstance(rhs_s, FiniteSet):
+        return rhs_s
 
-    elif isinstance(rhs_s, FiniteSet):
-        for equation in [lhs - rhs for rhs in rhs_s]:
-            if equation == f:
-                if lhs.is_Add:
-                    # trying to convert to P.O.S form
-                    simplified_f = factor(powdenest(equation))
-
-                    if simplified_f.is_Mul:
-                        result = _solveset(
-                            simplified_f, symbol, domain)
-
-                    # check if it is exponential type equation
-                    elif _check_expo(simplified_f, symbol):
-                        new_f = _expo_solver(simplified_f)
-                        if new_f:
-                            result = _solveset(new_f, symbol, domain)
-
-                elif lhs.is_Pow:
-                    new_f = _expo_solver(equation)
-                    if new_f:
-                        result = _solveset(new_f, symbol, domain)
+    for equation in [lhs - rhs for rhs in rhs_s]:
+        if equation == f:
+            if lhs.is_Add:
+                result = add_type(equation, symbol, domain)
+            elif lhs.is_Pow:
+                result = pow_type(equation, symbol, domain)
+        else:
+            if isinstance(result, ConditionSet):
+                result = S.EmptySet
+                result += _solveset(equation, symbol, domain)
             else:
-                if isinstance(result, ConditionSet):
-                    result = S.EmptySet
-                    result += _solveset(equation, symbol, domain)
-                else:
-                    result += _solveset(equation, symbol, domain)
+                result += _solveset(equation, symbol, domain)
 
-        if isinstance(result, ConditionSet):
-            result = unsolved_result
-    else:
-        result = rhs_s
+    if isinstance(result, ConditionSet):
+        result = unsolved_result
 
     return result
 

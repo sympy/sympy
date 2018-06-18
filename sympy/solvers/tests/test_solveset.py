@@ -1860,12 +1860,12 @@ def test_issue_10864():
 def test_check_expo():
     x, y, z = symbols('x y z')
 
-    assert _check_expo(3**x - 2, x) == True
-    assert _check_expo(5**x - 7**(2 - x), x) == True
-    assert _check_expo(sin(x) - 4*x, x) == False
-    assert _check_expo(x**y - z, y) == True
-    assert _check_expo(2**x + 4**x - 1, x) == True
-    assert _check_expo(x**(y*z) - x, x) == False
+    assert _check_expo(3**x - 2, x) is True
+    assert _check_expo(5**x - 7**(2 - x), x) is True
+    assert _check_expo(sin(2**x) - 4*x, x) is False
+    assert _check_expo(x**y - z, y) is True
+    assert _check_expo(2**x + 4**x - 1, x) is True
+    assert _check_expo(x**(y*z) - x, x) is False
 
 
 def test_expo_solver():
