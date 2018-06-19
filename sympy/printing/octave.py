@@ -37,6 +37,8 @@ known_fcns_src2 = {
     "Abs": "abs",
     "arg": "angle",  # arg/angle ok in Octave but only angle in Matlab
     "ceiling": "ceil",
+    "chebyshevu": "chebyshevU",
+    "chebyshevt": "chebyshevT",
     "Chi": "coshint",
     "Ci": "cosint",
     "conjugate": "conj",
@@ -50,6 +52,7 @@ known_fcns_src2 = {
     "Min": "min",
     "polygamma": "psi",
     "re": "real",
+    "RisingFactorial": "pochhammer",
     "Shi": "sinhint",
     "Si": "sinint",
 }
