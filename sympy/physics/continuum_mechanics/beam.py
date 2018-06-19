@@ -9,7 +9,7 @@ from __future__ import print_function, division
 from sympy.core import S, Symbol, diff
 from sympy.solvers import linsolve
 from sympy.printing import sstr
-from sympy.functions import SingularityFunction
+from sympy.functions import SingularityFunction, Piecewise
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
@@ -94,6 +94,8 @@ class Beam(object):
         self._load = 0
         self._applied_loads = []
         self._reaction_loads = {}
+        self._composite_type = None
+        self._hinge_position = None
 
     def __str__(self):
         str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
@@ -208,6 +210,68 @@ class Beam(object):
     @bc_deflection.setter
     def bc_deflection(self, d_bcs):
         self._boundary_conditions['deflection'] = d_bcs
+
+    def join(self, beam, via="fixed"):
+        """
+        This method joins two beams to make a new composite beam system.
+        Passed Beam class instance is attached to the right end of calling
+        object.
+
+        Parameters
+        ==========
+        beam : Beam class object
+            The Beam object which would be connected to the right of calling
+            object.
+        via : String
+            States the way two Beam object would get connected
+            - For axially fixed Beams, via="fixed"
+            - For Beams connected via hinge, via="hinge"
+
+        Examples
+        ========
+        There is a cantilever beam of length 4 meters. For first 2 meters
+        its moment of inertia is `1.5*I` and `I` for the other end.
+        A pointload of magnitude 4 N is applied from the top at its free end.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b1 = Beam(2, E, 1.5*I)
+        >>> b2 = Beam(2, E, I)
+        >>> b = b1.join(b2, "fixed")
+        >>> b.apply_load(20, 4, -1)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(R2, 0, -2)
+        >>> b.bc_slope = [(0, 0)]
+        >>> b.bc_deflection = [(0, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.load
+        80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
+        >>> b.slope()
+        Piecewise((0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) +
+        10*SingularityFunction(x, 4, 2))/(E*I), x <= 2), (((80*SingularityFunction(x, 0, 1) -
+        10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))/I - 120/I)/E + 80.0/(E*I), x <= 4))
+        """
+        x = self.variable
+        E = self.elastic_modulus
+        new_length = self.length + beam.length
+        if self.second_moment != beam.second_moment:
+            new_second_moment = Piecewise((self.second_moment, x<=self.length),
+                                    (beam.second_moment, x<=new_length))
+        else:
+            new_second_moment = self.second_moment
+
+        if via == "fixed":
+            new_beam = Beam(new_length, E, new_second_moment, x)
+            new_beam._composite_type = "fixed"
+            return new_beam
+
+        if via == "hinge":
+            new_beam = Beam(new_length, E, new_second_moment, x)
+            new_beam._composite_type = "hinge"
+            new_beam._hinge_position = self.length
+            return new_beam
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -390,6 +454,141 @@ class Beam(object):
         """
         return self._applied_loads
 
+    def _solve_hinge_beams(self, *reactions):
+        """Method to find integration constants and reactional variables in a
+        composite beam connected via hinge.
+        This method resolves the composite Beam into its sub-beams and then
+        equations of shear force, bending moment, slope and deflection are
+        evaluated for both of them separately. These equations are then solved
+        for unknown reactions and integration constants using the boundary
+        conditions applied on the Beam. Equal deflection of both sub-beams
+        at the hinge joint gives us another equation to solve the system.
+
+        Examples
+        ========
+        A combined beam, with constant fkexural rigidity E*I, is formed by joining
+        a Beam of length 2*l to the right of another Beam of length l. The whole beam
+        is fixed at both of its both end. A point load of magnitude P is also applied
+        from the top at a distance of 2*l from starting point.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> l=symbols('l', positive=True)
+        >>> b1=Beam(l ,E,I)
+        >>> b2=Beam(2*l ,E,I)
+        >>> b=b1.join(b2,"hinge")
+        >>> M1, A1, M2, A2, P = symbols('M1 A1 M2 A2 P')
+        >>> b.apply_load(A1,0,-1)
+        >>> b.apply_load(M1,0,-2)
+        >>> b.apply_load(P,2*l,-1)
+        >>> b.apply_load(A2,3*l,-1)
+        >>> b.apply_load(M2,3*l,-2)
+        >>> b.bc_slope=[(0,0), (3*l, 0)]
+        >>> b.bc_deflection=[(0,0), (3*l, 0)]
+        >>> b.solve_for_reaction_loads(M1, A1, M2, A2)
+        >>> b.reaction_loads
+        {A1: -5*P/18, A2: -13*P/18, M1: 5*P*l/18, M2: -4*P*l/9}
+        >>> b.slope()
+        Piecewise(((5*P*l*SingularityFunction(x, 0, 1)/18 - 5*P*SingularityFunction(x, 0, 2)/36
+        + 5*P*SingularityFunction(x, l, 2)/36)/(E*I), l >= x), ((P*l**2/18 - 4*P*l*SingularityFunction(-l +
+        x, 2*l, 1)/9 - 5*P*SingularityFunction(-l + x, 0, 2)/36 + P*SingularityFunction(-l + x, l, 2)/2
+        - 13*P*SingularityFunction(-l + x, 2*l, 2)/36)/(E*I), x < 3*l))
+        >>> b.deflection()
+        Piecewise(((5*P*l*SingularityFunction(x, 0, 2)/36 - 5*P*SingularityFunction(x, 0, 3)/108
+        + 5*P*SingularityFunction(x, l, 3)/108)/(E*I), l >= x), ((5*P*l**3/54 + P*l**2*(-l + x)/18
+        - 2*P*l*SingularityFunction(-l + x, 2*l, 2)/9 - 5*P*SingularityFunction(-l + x, 0, 3)/108
+        + P*SingularityFunction(-l + x, l, 3)/6 - 13*P*SingularityFunction(-l + x, 2*l, 3)/108)/(E*I), x < 3*l))
+        """
+        x = self.variable
+        l = self._hinge_position
+        E = self._elastic_modulus
+        I = self._second_moment
+
+        if isinstance(I, Piecewise):
+            I1 = I.args[0][0]
+            I2 = I.args[1][0]
+        else:
+            I1 = I2 = I
+
+        load_1 = 0       # Load equation on first segment of composite beam
+        load_2 = 0       # Load equation on second segment of composite beam
+
+        # Distributing load on both segments
+        for load in self.applied_loads:
+            if load[1] < l:
+                load_1 += load[0]*SingularityFunction(x, load[1], load[2])
+                if load[2] == 0:
+                    load_1 -= load[0]*SingularityFunction(x, load[3], load[2])
+                elif load[2] > 0:
+                    load_1 -= load[0]*SingularityFunction(x, load[3], load[2]) + load[0]*SingularityFunction(x, load[3], 0)
+            elif load[1] == l:
+                load_1 += load[0]*SingularityFunction(x, load[1], load[2])
+                load_2 += load[0]*SingularityFunction(x, load[1] - l, load[2])
+            elif load[1] > l:
+                load_2 += load[0]*SingularityFunction(x, load[1] - l, load[2])
+                if load[2] == 0:
+                    load_2 -= load[0]*SingularityFunction(x, load[3] - l, load[2])
+                elif load[2] > 0:
+                    load_2 -= load[0]*SingularityFunction(x, load[3] - l, load[2]) + load[0]*SingularityFunction(x, load[3] - l, 0)
+
+        h = Symbol('h')     # Force due to hinge
+        load_1 += h*SingularityFunction(x, l, -1)
+        load_2 -= h*SingularityFunction(x, 0, -1)
+
+        eq = []
+        shear_1 = integrate(load_1, x)
+        shear_curve_1 = limit(shear_1, x, l)
+        eq.append(shear_curve_1)
+        bending_1 = integrate(shear_1, x)
+        moment_curve_1 = limit(bending_1, x, l)
+        eq.append(moment_curve_1)
+
+        shear_2 = integrate(load_2, x)
+        shear_curve_2 = limit(shear_2, x, self.length - l)
+        eq.append(shear_curve_2)
+        bending_2 = integrate(shear_2, x)
+        moment_curve_2 = limit(bending_2, x, self.length - l)
+        eq.append(moment_curve_2)
+
+        C1 = Symbol('C1')
+        C2 = Symbol('C2')
+        C3 = Symbol('C3')
+        C4 = Symbol('C4')
+        slope_1 = S(1)/(E*I1)*(integrate(bending_1, x) + C1)
+        def_1 = S(1)/(E*I1)*(integrate((E*I)*slope_1, x) + C1*x + C2)
+        slope_2 = S(1)/(E*I2)*(integrate(integrate(integrate(load_2, x), x), x) + C3)
+        def_2 = S(1)/(E*I2)*(integrate((E*I)*slope_2, x) + C4)
+
+        for position, value in self.bc_slope:
+            if position<l:
+                eq.append(slope_1.subs(x, position) - value)
+            else:
+                eq.append(slope_2.subs(x, position - l) - value)
+
+        for position, value in self.bc_deflection:
+            if position<l:
+                eq.append(def_1.subs(x, position) - value)
+            else:
+                eq.append(def_2.subs(x, position - l) - value)
+
+        eq.append(def_1.subs(x, l) - def_2.subs(x, 0)) # Deflection of both the segments at hinge would be equal
+
+        constants = list(linsolve(eq, C1, C2, C3, C4, h, *reactions))
+        reaction_values = list(constants[0])[5:]
+
+        self._reaction_loads = dict(zip(reactions, reaction_values))
+        self._load = self._load.subs(self._reaction_loads)
+
+        # Substituting constants and reactional load and moments with their corresponding values
+        slope_1 = slope_1.subs({C1: constants[0][0], h:constants[0][4]}).subs(self._reaction_loads)
+        def_1 = def_1.subs({C1: constants[0][0], C2: constants[0][1], h:constants[0][4]}).subs(self._reaction_loads)
+        slope_2 = slope_2.subs({x: x-l, C3: constants[0][2], h:constants[0][4]}).subs(self._reaction_loads)
+        def_2 = def_2.subs({x: x-l,C3: constants[0][2], C4: constants[0][3], h:constants[0][4]}).subs(self._reaction_loads)
+
+        self._hinge_beam_slope = Piecewise((slope_1, x<=l), (slope_2, x<self.length))
+        self._hinge_beam_deflection = Piecewise((def_1, x<=l), (def_2, x<self.length))
+
     def solve_for_reaction_loads(self, *reactions):
         """
         Solves for the reaction forces.
@@ -426,6 +625,9 @@ class Beam(object):
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         """
+        if self._composite_type == "hinge":
+            return self._solve_hinge_beams(*reactions)
+
         x = self.variable
         l = self.length
         shear_curve = limit(self.shear_force(), x, l)
@@ -577,8 +779,23 @@ class Beam(object):
         x = self.variable
         E = self.elastic_modulus
         I = self.second_moment
+
+        if self._composite_type == "hinge":
+            return self._hinge_beam_slope
         if not self._boundary_conditions['slope']:
             return diff(self.deflection(), x)
+        if self._composite_type == "fixed":
+            args = I.args
+            conditions = []
+            prev_slope = 0
+            prev_end = 0
+            for i in range(len(args)):
+                if i != 0:
+                    prev_end = args[i-1][1].args[1]
+                slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                conditions.append((prev_slope + slope_value, args[i][1]))
+                prev_slope = slope_value.subs(x, args[i][1].args[1])
+            return Piecewise(*conditions)
 
         C3 = Symbol('C3')
         slope_curve = integrate(self.bending_moment(), x) + C3
@@ -627,11 +844,37 @@ class Beam(object):
         x = self.variable
         E = self.elastic_modulus
         I = self.second_moment
+        if self._composite_type == "hinge":
+            return self._hinge_beam_deflection
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
+            if self._composite_type == "fixed":
+                args = I.args
+                conditions = []
+                prev_def = 0
+                prev_end = 0
+                for i in range(len(args)):
+                    if i != 0:
+                        prev_end = args[i-1][1].args[1]
+                    deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
+                    conditions.append(((prev_def + deflection_value), args[i][1]))
+                    prev_def = deflection_value.subs(x, args[i][1].args[1])
+                return Piecewise(*conditions)
             return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x)
         elif not self._boundary_conditions['deflection']:
             return integrate(self.slope(), x)
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
+            if self._composite_type == "fixed":
+                args = I.args
+                conditions = []
+                prev_def = 0
+                prev_end = 0
+                for i in range(len(args)):
+                    if i != 0:
+                        prev_end = args[i-1][1].args[1]
+                    deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
+                    conditions.append(((prev_def + deflection_value), args[i][1]))
+                    prev_def = deflection_value.subs(x, args[i][1].args[1])
+                return Piecewise(*conditions)
             C3 = Symbol('C3')
             C4 = Symbol('C4')
             slope_curve = integrate(self.bending_moment(), x) + C3
@@ -643,6 +886,19 @@ class Beam(object):
             constants = list(linsolve(bc_eqs, (C3, C4)))
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
             return S(1)/(E*I)*deflection_curve
+
+        if self._composite_type == "fixed":
+            args = I.args
+            conditions = []
+            prev_def = 0
+            prev_end = 0
+            for i in range(len(args)):
+                if i != 0:
+                    prev_end = args[i-1][1].args[1]
+                deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
+                conditions.append(((prev_def + deflection_value), args[i][1]))
+                prev_def = deflection_value.subs(x, args[i][1].args[1])
+            return Piecewise(*conditions)
 
         C4 = Symbol('C4')
         deflection_curve = integrate((E*I)*self.slope(), x) + C4
