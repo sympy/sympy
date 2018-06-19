@@ -484,6 +484,7 @@ def test_BinomialDegree():
     assert BinomialDegree(x**9, x) == 9
 
 def test_PolynomialQ():
+    assert not PolynomialQ(x*(-1 + x**2), (1 + x)**(S(1)/2))
     assert not PolynomialQ((16*x + 1)/((x + 5)**2*(x**2 + x + 1)), 2*x)
     C = Symbol('C')
     assert not PolynomialQ(A + b*x + c*x**2, x**2)

@@ -160,7 +160,7 @@ if matchpy:
         #from sympy.integrals.rubi.rules.special_function import special_function
         #from sympy.integrals.rubi.rules.derivative import derivative
         from sympy.integrals.rubi.rules.piecewise_linear import piecewise_linear
-        #from sympy.integrals.rubi.rules.miscellaneous_integration import miscellaneous_integration
+        from sympy.integrals.rubi.rules.miscellaneous_integration import miscellaneous_integration
         rules = []
         rules_applied = []
         rules += integrand_simplification(rules_applied)
@@ -169,7 +169,7 @@ if matchpy:
         rules += binomial_products(rules_applied)    
         rules += trinomial_products(rules_applied)
         rules += miscellaneous_algebraic(rules_applied)
-        rubi = ManyToOneReplacer(*rules)
+        
         #rubi = exponential(rubi)
         #rubi = logarithms(rubi)
         #rubi = sine(rubi)
@@ -180,8 +180,9 @@ if matchpy:
         #rubi = hyperbolic(rubi)
         #rubi = inverse_hyperbolic(rubi)
         #rubi = piecewise_linear(rubi)
-        #rubi = miscellaneous_integration(rubi)
+        rules += miscellaneous_integration(rules_applied)
         #mit = ManyToOneReplacer(*rules)
+        rubi = ManyToOneReplacer(*rules)
         return rubi, rules_applied, rules
 
     rubi, rules_applied, rules = rubi_object()
@@ -199,7 +200,7 @@ def remove_rule(rule, expr, var):
 def _has_cycle(): #this has to  be improved
     if rules_applied.count(rules_applied[-1]) == 1:
         return False
-    if rules_applied[-1] == rules_applied[-2] == rules_applied[-3]:
+    if rules_applied[-1] == rules_applied[-2] == rules_applied[-3] == rules_applied[-4] == rules_applied[-5]:
         return True
 
 
@@ -219,10 +220,9 @@ def rubi_integrate(expr, var, showsteps=False):
     Returns Integral object if unable to integrate.
     '''
     rules_applied[:] = []
-    #print(expr)
+    expr = powsimp(expr)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
-    expr = powsimp(expr)
     from sympy import Add
     if isinstance(expr, Add):
         results = 0
@@ -232,22 +232,18 @@ def rubi_integrate(expr, var, showsteps=False):
             rules_applied[:] = []
         return results
 
-
     results = rubi.replace(Integral(expr, var))
     return results
 
-
 @doctest_depends_on(modules=('matchpy',))
 def util_rubi_integrate(expr, var, showsteps=False):
-    #print(rules_applied)
-    #print(expr)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
     expr = powsimp(expr)
     from sympy import Add
     if isinstance(expr, Add):
         return rubi_integrate(expr, var)
-    if len(rules_applied) > 6:
+    if len(rules_applied) > 10:
         if _has_cycle():
             ru = remove_rule(rules[rules_applied[-1] - 1], expr, var)
             return ru
@@ -255,7 +251,6 @@ def util_rubi_integrate(expr, var, showsteps=False):
     results = rubi.replace(Integral(expr, var))
     rules_applied[:] = []
     return results
-
 
 @doctest_depends_on(modules=('matchpy',))
 def get_matching_rule_definition(expr, var):

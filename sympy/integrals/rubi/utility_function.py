@@ -10,14 +10,14 @@ from sympy.functions.elementary.integers import floor, frac
 from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, gamma)
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
-from sympy.polys.polytools import degree, Poly, quo, rem
+from sympy.polys.polytools import Poly, quo, rem, total_degree, degree
 from sympy.simplify.simplify import fraction, simplify, cancel
 from sympy.core.sympify import sympify
 from sympy.utilities.iterables import postorder_traversal
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
-from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Integer, Float, Dict, Symbol,
+from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Integer, Float, Dict, Symbol, Rational,
     Add, hyper, symbols, sqf_list, sqf, Max, factorint, factorrat, Min, sign, E, Function, collect, FiniteSet, nsimplify,
     expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr, PolynomialError)
 from mpmath import appellf1
@@ -938,32 +938,39 @@ def ComplexFreeQ(u):
 def PolynomialQ(u, x = None):
     if x is None :
         return u.is_polynomial()
-    if isinstance(x, Pow) and isinstance(x.exp ,(int, Integer)):
-        deg = degree(u, x.base)
-        if u.is_polynomial(x):
-            if deg % x.exp !=0 :
-                return False
-            try:
-                p = Poly(u, x.base)
-            except PolynomialError:
-                return False
+    if isinstance(x, Pow):
+        if isinstance(x.exp, Integer):
+            deg = degree(u, x.base)
+            if u.is_polynomial(x):
+                if deg % x.exp !=0 :
+                    return False
+                try:
+                    p = Poly(u, x.base)
+                except PolynomialError:
+                    return False
 
-            c_list = p.all_coeffs()
-            coeff_list = c_list[:-1:x.exp]
-            coeff_list += [c_list[-1]]
-            for i in coeff_list:
-                if not i == 0:
-                    index = c_list.index(i)
-                    c_list[index] = 0
+                c_list = p.all_coeffs()
+                coeff_list = c_list[:-1:x.exp]
+                coeff_list += [c_list[-1]]
+                for i in coeff_list:
+                    if not i == 0:
+                        index = c_list.index(i)
+                        c_list[index] = 0
 
-            if all(i == 0 for i in c_list):
-                return True
+                if all(i == 0 for i in c_list):
+                    return True
+                else:
+                    return False
+
+                return u.is_polynomial(x)
             else:
                 return False
 
-            return u.is_polynomial(x)
-        else:
-            return False
+        elif isinstance(x.exp, (Float, Rational)): #not full - proof 
+            if FreeQ(simplify(u), x.base) and Exponent(u, x.base) == 0:
+                if not all(FreeQ(u, i) for i in x.base.free_symbols):
+                    return False 
+
     if isinstance(x, Mul):
         return all(PolynomialQ(u, i) for i in x.args)
 
@@ -990,7 +997,9 @@ def Exponent(expr, x, h = None):
     if h == None:
         if S(expr).is_number or (not expr.has(x)):
             return 0
-        if expr.is_polynomial(x):
+        if PolynomialQ(expr, x):
+            if isinstance(x, Rational):
+                return degree(Poly(expr, x), x)
             return degree(expr, gen = x)
         else:
             return 0
@@ -4857,13 +4866,8 @@ def EulerIntegrandQ(expr, x):
 def FunctionOfSquareRootOfQuadratic(u, *args):
     if len(args) == 1:
         x = args[0]
-        a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x])
-        n = Wild('n', exclude=[x, 0])
-        p = Wild('p', exclude=[x, 0])
-        m = Wild('m', exclude=[x, 0])
-        v = Wild('v')
-        M = u.match(x**m*(a+b*x**n)**p)
+        pattern = Pattern(UtilityOperator(x_**WC('m', 1)*(a_ + x**WC('n', 1)*WC('b', 1))**p_, x), CustomConstraint(lambda a, b, m, n, p, x: FreeQ([a, b, m, n, p], x)))
+        M = is_match(UtilityOperator(u, args[0]), pattern)
         if M:
             return False
         tmp = FunctionOfSquareRootOfQuadratic(u, False, x)
@@ -5387,29 +5391,14 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
     #_diff=True differentiates the expressions before equating
     #_numerical=True equates the expressions at random `x`. Normally used for large expressions.
     from sympy import nsimplify
-    if expr == optimal_output:
+    if simplify(expr) == simplify(optimal_output):
         return True
+
     if nsimplify(expr) == nsimplify(optimal_output):
         return True
 
     res = expr - optimal_output
-
-    if expand: # expands the expression and equates
-        e = res.expand()
-        if simplify(e) == 0 or (not e.has(x)):
-            return True
-
-    r = simplify(nsimplify(res))
-    if r == 0 or (not r.has(x)):
-        return True
-
-    dres = res.diff(x)
-    if _diff:
-        if dres == 0:
-            return True
-        elif simplify(dres) == 0:
-            return True
-
+    ##print("res--  ", res)
     # if res.has(hyper):
     #     if _hyper_check:
     #         dres = res.diff(x)
@@ -5438,8 +5427,8 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
             pass
             # return False
 
+    dres = res.diff(x)
     if _numerical:
-
         args = dres.free_symbols
         rand_val = []
         try:
@@ -5454,7 +5443,25 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
             pass
             # return False
 
+
+
+    r = simplify(nsimplify(res))
+    if r == 0 or (not r.has(x)):
+        return True
+
+    if _diff:
+        if dres == 0:
+            return True
+        elif simplify(dres) == 0:
+            return True
+
+    if expand: # expands the expression and equates
+        e = res.expand()
+        if simplify(e) == 0 or (not e.has(x)):
+            return True
+
     return False
+
 
 def If(cond, t, f):
     # returns t if condition is true else f
@@ -6115,7 +6122,7 @@ def _FixSimplify():
 
 @doctest_depends_on(modules=('matchpy',))
 def FixSimplify(expr):
-    return FixSimplify_replacer.replace(UtilityOperator(expr))
+    return replace_all(UtilityOperator(expr), FixSimplify_rules, max_count = 1)
 
 @doctest_depends_on(modules=('matchpy',))
 def _SimplifyAntiderivativeSum():
@@ -7084,5 +7091,5 @@ if matchpy:
     TrigSimplifyAux_replacer = _TrigSimplifyAux()
     SimplifyAntiderivative_replacer = _SimplifyAntiderivative()
     SimplifyAntiderivativeSum_replacer = _SimplifyAntiderivativeSum()
-    FixSimplify_replacer = ManyToOneReplacer(*_FixSimplify())
+    FixSimplify_rules = _FixSimplify()
     SimpFixFactor_replacer = _SimpFixFactor()

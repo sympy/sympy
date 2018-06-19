@@ -109,7 +109,7 @@ if matchpy:
         _SimplifyAntiderivativeSum, SimplifyAntiderivativeSum,
         _SimplifyAntiderivative, SimplifyAntiderivative, _TrigSimplifyAux,
         TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist, Sum_doit, PolynomialQuotient, Floor,
-        PolynomialRemainder, Factor
+        PolynomialRemainder, Factor, DerivativeDivides, Rule
     )
     from sympy import Integral, S, sqrt, And, Or, Integer, Float, Mod, I
     from sympy.integrals.rubi.symbol import WC
