@@ -1,14 +1,13 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
 from collections import defaultdict
-from collections.abc import Mapping
 from itertools import chain
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
-    string_types, with_metaclass, zip_longest, range)
+    string_types, with_metaclass, zip_longest, range, Mapping)
 from .singleton import S
 
 from inspect import getmro

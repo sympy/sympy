@@ -25,13 +25,12 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 from __future__ import print_function, division
 
 import inspect
-from collections.abc import Callable
 import warnings
 import sys
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, Callable
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)

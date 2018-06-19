@@ -35,7 +35,7 @@ from .add import Add
 from .assumptions import ManagedProperties, _assume_defined
 from .basic import Basic
 from .cache import cacheit
-from .compatibility import iterable, is_sequence, as_int, ordered
+from .compatibility import iterable, is_sequence, as_int, ordered, Iterable
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float
@@ -58,7 +58,7 @@ import mpmath
 import mpmath.libmp as mlib
 
 import inspect
-import collections.abc
+from collections import Counter
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -1242,7 +1242,7 @@ class Derivative(Expr):
             elif (count < 0) == True:
                 obj = None
             else:
-                if isinstance(v, (collections.abc.Iterable, Tuple, MatrixCommon, NDimArray)):
+                if isinstance(v, (Iterable, Tuple, MatrixCommon, NDimArray)):
                     # Treat derivatives by arrays/matrices as much as symbols.
                     is_symbol = True
                 if not is_symbol:
@@ -1481,9 +1481,9 @@ class Derivative(Expr):
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
         if old.is_Derivative and old.expr == self.expr:
-            # Check if canonnical order of variables is equal.
-            old_vars = collections.Counter(dict(reversed(old.variable_count)))
-            self_vars = collections.Counter(dict(reversed(self.variable_count)))
+            # Check if canonical order of variables is equal.
+            old_vars = Counter(dict(reversed(old.variable_count)))
+            self_vars = Counter(dict(reversed(self.variable_count)))
             if old_vars == self_vars:
                 return new
 
