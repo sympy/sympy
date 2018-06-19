@@ -817,7 +817,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
             os.chdir(oldwork)
             if not self.filepath:
                 try:
-                    pass # shutil.rmtree(workdir)
+                    shutil.rmtree(workdir)
                 except OSError:
                     # Could be some issues on Windows
                     pass

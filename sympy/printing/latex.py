@@ -7,13 +7,13 @@ from __future__ import print_function, division
 import itertools
 
 from sympy.core import S, Add, Symbol, Mod
-from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
 from sympy.core.operations import AssocOp
 from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
-from sympy.core.function import UndefinedFunction, AppliedUndef
+from sympy.core.function import (_coeff_isneg,
+    UndefinedFunction, AppliedUndef, Derivative)
 
 ## sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
@@ -507,35 +507,31 @@ class LatexPrinter(Printer):
             and expr.exp.is_Rational \
                 and expr.exp.q != 1:
             base, p, q = self.parenthesize(expr.base, PRECEDENCE['Pow']), expr.exp.p, expr.exp.q
-            #fixes issue #12886, adds parentheses before superscripts raised to powers
+            # issue #12886: add parentheses for superscripts raised to powers
             if '^' in base and expr.base.is_Symbol:
                 base = r"\left(%s\right)" % base
             if expr.base.is_Function:
                 return self._print(expr.base, "%s/%s" % (p, q))
             return r"%s^{%s/%s}" % (base, p, q)
         elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_commutative:
-            # Things like 1/x
+            # things like 1/x
             return self._print_Mul(expr)
         else:
             if expr.base.is_Function:
                 return self._print(expr.base, self._print(expr.exp))
             else:
-                if expr.is_commutative and expr.exp == -1:
-                    #solves issue 4129
-                    #As Mul always simplify 1/x to x**-1
-                    #The objective is achieved with this hack
-                    #first we get the latex for -1 * expr,
-                    #which is a Mul expression
-                    tex = self._print(S.NegativeOne * expr).strip()
-                    #the result comes with a minus and a space, so we remove
-                    if tex[:1] == "-":
-                        return tex[1:].strip()
                 tex = r"%s^{%s}"
-                #fixes issue #12886, adds parentheses before superscripts raised to powers
+                exp = self._print(expr.exp)
+                # issue #12886: add parentheses around superscripts raised to powers
                 base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
                 if '^' in base and expr.base.is_Symbol:
                     base = r"\left(%s\right)" % base
-                exp = self._print(expr.exp)
+                elif isinstance(expr.base, Derivative
+                        ) and base.startswith(r'\left('
+                        ) and re.match(r'\\left\(\\d?d?dot', base
+                        ) and base.endswith(r'\right)'):
+                    # don't use parentheses around dotted derivative
+                    base = base[6: -7]  # remove outermost added parens
 
                 return tex % (base, exp)
 
@@ -740,7 +736,7 @@ class LatexPrinter(Printer):
                 len(args) == 1 and \
                 not self._needs_function_brackets(expr.args[0])
 
-            inv_trig_table = ["asin", "acos", "atan", "acot"]
+            inv_trig_table = ["asin", "acos", "atan", "acsc", "asec", "acot"]
 
             # If the function is an inverse trig function, handle the style
             if func in inv_trig_table:
@@ -817,25 +813,16 @@ class LatexPrinter(Printer):
 
         return tex
 
-    def _print_Min(self, expr, exp=None):
+    def _hprint_variadic_function(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
         texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"\min\left(%s\right)" % ", ".join(texargs)
-
+        tex = r"\%s\left(%s\right)" % (self._print((str(expr.func)).lower()), ", ".join(texargs))
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
 
-    def _print_Max(self, expr, exp=None):
-        args = sorted(expr.args, key=default_sort_key)
-        texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"\max\left(%s\right)" % ", ".join(texargs)
-
-        if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
-        else:
-            return tex
+    _print_Min = _print_Max = _hprint_variadic_function
 
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
@@ -999,14 +986,6 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{B}%s" % tex
 
-    def _print_gamma(self, expr, exp=None):
-        tex = r"\left(%s\right)" % self._print(expr.args[0])
-
-        if exp is not None:
-            return r"\Gamma^{%s}%s" % (exp, tex)
-        else:
-            return r"\Gamma%s" % tex
-
     def _print_uppergamma(self, expr, exp=None):
         tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
                                         self._print(expr.args[1]))
@@ -1024,6 +1003,16 @@ class LatexPrinter(Printer):
             return r"\gamma^{%s}%s" % (exp, tex)
         else:
             return r"\gamma%s" % tex
+
+    def _hprint_one_arg_func(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^{%s}%s" % (self._print(expr.func), exp, tex)
+        else:
+            return r"%s%s" % (self._print(expr.func), tex)
+
+    _print_gamma = _hprint_one_arg_func
 
     def _print_Chi(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])

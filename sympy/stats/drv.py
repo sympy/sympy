@@ -1,20 +1,25 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq)
+        Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, And, Mul)
 from sympy.solvers.solveset import solveset
-from sympy.solvers.inequalities import reduce_rational_inequalities
-from sympy.stats.crv import (reduce_rational_inequalities_wrap,
-        _reduce_inequalities)
+from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
-        random_symbols, PSpace, ConditionalDomain, RandomDomain)
+        random_symbols, PSpace, ConditionalDomain, RandomDomain,
+        ProductDomain, ProductPSpace)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
 import random
+
+class DiscreteDistribution(Basic):
+    def __call__(self, *args):
+        return self.pdf(*args)
+
 
 class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     """ Discrete distribution of a single variable
@@ -112,13 +117,23 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     def __call__(self, *args):
         return self.pdf(*args)
 
+
+class DiscreteDistributionHandmade(SingleDiscreteDistribution):
+    _argnames = ('pdf',)
+
+    @property
+    def set(self):
+        return self.args[1]
+
+    def __new__(cls, pdf, set=S.Integers):
+        return Basic.__new__(cls, pdf, set)
+
 class DiscreteDomain(RandomDomain):
     """
     A domain with discrete support with step size one.
     Represented using symbols and Range.
     """
-    is_continuous = False
-    is_finite = False
+    is_Discrete = True
 
 class SingleDiscreteDomain(DiscreteDomain, SingleDomain):
     def as_boolean(self):
@@ -143,7 +158,7 @@ class ConditionalDiscreteDomain(DiscreteDomain, ConditionalDomain):
 
 class DiscretePSpace(PSpace):
     is_real = True
-    is_continuous = False
+    is_Discrete = True
 
     @property
     def pdf(self):
@@ -155,7 +170,6 @@ class DiscretePSpace(PSpace):
         if (len(rvs) > 1):
             raise NotImplementedError(filldedent('''Multivariate discrete
             random variables are not yet supported.'''))
-        a = self.domain.set
         conditional_domain = reduce_rational_inequalities_wrap(condition,
             rvs[0])
         conditional_domain = conditional_domain.intersect(self.domain.set)
@@ -165,25 +179,35 @@ class DiscretePSpace(PSpace):
         complement = isinstance(condition, Ne)
         if complement:
             condition = Eq(condition.args[0], condition.args[1])
-        _domain = self.where(condition).set
-        if condition == False or _domain is S.EmptySet:
-            return S.Zero
-        if condition == True or _domain == self.domain.set:
-            return S.One
-        prob = self.eval_prob(_domain)
-        if prob == None:
+        try:
+            _domain = self.where(condition).set
+            if condition == False or _domain is S.EmptySet:
+                return S.Zero
+            if condition == True or _domain == self.domain.set:
+                return S.One
+            prob = self.eval_prob(_domain)
+        except NotImplementedError:
+            from sympy.stats.rv import density
+            expr = condition.lhs - condition.rhs
+            dens = density(expr)
+            if not isinstance(dens, DiscreteDistribution):
+                dens = DiscreteDistributionHandmade(dens)
+            z = Dummy('z', real = True)
+            space = SingleDiscretePSpace(z, dens)
+            prob = space.probability(condition.__class__(space.value, 0))
+        if (prob == None):
             prob = Probability(condition)
         return prob if not complement else S.One - prob
 
     def eval_prob(self, _domain):
         sym = list(self.symbols)[0]
         if isinstance(_domain, Range):
-            n = symbols('n')
+            n = symbols('n', integer=True, finite=True)
             inf, sup, step = (r for r in _domain.args)
             summand = ((self.pdf).replace(
-                sym, inf + n*step))
+              sym, n*step))
             rv = summation(summand,
-                (n, 0, floor((sup - inf)/step - 1))).doit()
+                (n, inf/step, (sup)/step - 1)).doit()
             return rv
         elif isinstance(_domain, FiniteSet):
             pdf = Lambda(sym, self.pdf)
@@ -198,6 +222,10 @@ class DiscretePSpace(PSpace):
         condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
         domain = ConditionalDiscreteDomain(self.domain, condition)
         return DiscretePSpace(domain, density)
+
+class ProductDiscreteDomain(ProductDomain, DiscreteDomain):
+     def as_boolean(self):
+        return And(*[domain.as_boolean for domain in self.domains])
 
 class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
     """ Discrete probability space over a single univariate variable """

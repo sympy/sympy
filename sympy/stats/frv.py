@@ -374,3 +374,9 @@ class ProductFinitePSpace(ProductPSpace, FinitePSpace):
     @cacheit
     def density(self):
         return Dict(self._density)
+
+    def probability(self, condition):
+        return FinitePSpace.probability(self, condition)
+
+    def compute_density(self, expr):
+        return FinitePSpace.compute_density(self, expr)

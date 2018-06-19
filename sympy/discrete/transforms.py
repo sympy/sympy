@@ -23,7 +23,7 @@ def _fourier_transform(seq, dps, inverse=False):
     """Utility function for the Discrete Fourier Transform (DFT)"""
 
     if not iterable(seq):
-        raise TypeError("Expected a sequence of numeric coefficients " +
+        raise TypeError("Expected a sequence of numeric coefficients "
                         "for Fourier Transform")
 
     a = [sympify(arg) for arg in seq]
@@ -135,12 +135,12 @@ def _number_theoretic_transform(seq, prime, inverse=False):
     """Utility function for the Number Theoretic transform (NTT)"""
 
     if not iterable(seq):
-        raise TypeError("Expected a sequence of integer coefficients " +
+        raise TypeError("Expected a sequence of integer coefficients "
                         "for Number Theoretic Transform")
 
     p = as_int(prime)
     if isprime(p) == False:
-        raise ValueError("Expected prime modulus for " +
+        raise ValueError("Expected prime modulus for "
                         "Number Theoretic Transform")
 
     a = [as_int(x) % p for x in seq]
@@ -184,8 +184,7 @@ def _number_theoretic_transform(seq, prime, inverse=False):
 
     if inverse:
         rv = pow(n, p - 2, p)
-        for i in range(n):
-            a[i] = a[i]*rv % p
+        a = [x*rv % p for x in a]
 
     return a
 
@@ -238,3 +237,79 @@ def intt(seq, prime):
     return _number_theoretic_transform(seq, prime=prime, inverse=True)
 
 intt.__doc__ = ntt.__doc__
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                          Walsh Hadamard Transform                          #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+def _walsh_hadamard_transform(seq, inverse=False):
+    """Utility function for the Walsh Hadamard transform (WHT)"""
+
+    if not iterable(seq):
+        raise TypeError("Expected a sequence of coefficients "
+                        "for Walsh Hadamard Transform")
+
+    a = [sympify(arg) for arg in seq]
+    n = len(a)
+    if n < 2:
+        return a
+
+    if n&(n - 1):
+        n = 2**n.bit_length()
+
+    a += [S.Zero]*(n - len(a))
+    h = 2
+    while h <= n:
+        hf, ut = h // 2, n // h
+        for i in range(0, n, h):
+            for j in range(hf):
+                u, v = a[i + j], a[i + j + hf]
+                a[i + j], a[i + j + hf] = u + v, u - v
+        h *= 2
+
+    if inverse:
+        a = [x/n for x in a]
+
+    return a
+
+
+def fwht(seq):
+    r"""
+    Performs the Walsh Hadamard Transform (WHT), and uses Hadamard
+    ordering for the sequence.
+
+    The sequence is automatically padded to the right with zeros, as the
+    radix 2 FWHT requires the number of sample points to be a power of 2.
+
+    Examples
+    ========
+
+    >>> from sympy import fwht, ifwht
+    >>> fwht([4, 2, 2, 0, 0, 2, -2, 0])
+    [8, 0, 8, 0, 8, 8, 0, 0]
+    >>> ifwht(_)
+    [4, 2, 2, 0, 0, 2, -2, 0]
+
+    >>> ifwht([19, -1, 11, -9, -7, 13, -15, 5])
+    [2, 0, 4, 0, 3, 10, 0, 0]
+    >>> fwht(_)
+    [19, -1, 11, -9, -7, 13, -15, 5]
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Hadamard_transform
+    .. [2] https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform
+
+    """
+
+    return _walsh_hadamard_transform(seq)
+
+
+def ifwht(seq):
+    return _walsh_hadamard_transform(seq, inverse=True)
+
+ifwht.__doc__ = fwht.__doc__

@@ -1,6 +1,6 @@
 from sympy import Symbol, symbols, S
 from sympy.physics.continuum_mechanics.beam import Beam
-from sympy.functions import SingularityFunction
+from sympy.functions import SingularityFunction, Piecewise
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
@@ -171,6 +171,42 @@ def test_Beam():
     raises(ValueError, lambda: b4.apply_load(-3, 0, -1, end=3))
     with raises(TypeError):
         b4.variable = 1
+
+
+def test_composite_beam():
+    E = Symbol('E')
+    I = Symbol('I')
+    b1 = Beam(2, E, 1.5*I)
+    b2 = Beam(2, E, I)
+    b = b1.join(b2, "fixed")
+    b.apply_load(-20, 0, -1)
+    b.apply_load(80, 0, -2)
+    b.apply_load(20, 4, -1)
+    b.bc_slope = [(0, 0)]
+    b.bc_deflection = [(0, 0)]
+    assert b.length == 4
+    assert b.second_moment == Piecewise((1.5*I, x <= 2), (I, x <= 4))
+    assert b.slope().subs(x, 4) == 120.0/(E*I)
+    assert b.slope().subs(x, 2) == 80.0/(E*I)
+    assert int(b.deflection().subs(x, 4).args[0]) == 302  # Coefficient of 1/(E*I)
+
+    l = symbols('l', positive=True)
+    R1, M1, R2, R3, P = symbols('R1 M1 R2 R3 P')
+    b1 = Beam(2*l, E, I)
+    b2 = Beam(2*l, E, I)
+    b = b1.join(b2,"hinge")
+    b.apply_load(M1, 0, -2)
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
+    b.apply_load(R3, 4*l, -1)
+    b.apply_load(P, 3*l, -1)
+    b.bc_slope = [(0, 0)]
+    b.bc_deflection = [(0, 0), (l, 0), (4*l, 0)]
+    b.solve_for_reaction_loads(M1, R1, R2, R3)
+    assert b.reaction_loads == {R3: -P/2, R2: -5*P/4, M1: -P*l/4, R1: 3*P/4}
+    assert b.slope().subs(x, 3*l) == -7*P*l**2/(48*E*I)
+    assert b.deflection().subs(x, 2*l) == 7*P*l**3/(24*E*I)
+    assert b.deflection().subs(x, 3*l) == 5*P*l**3/(16*E*I)
 
 
 def test_point_cflexure():
