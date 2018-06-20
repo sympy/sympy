@@ -243,6 +243,7 @@ before_install:
 
         conda info -a;
         conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY/autowrap/libgfortran libgcc gcc cython};
+        deactivate; # Deactivate the Travis virtualenv
         source activate test-environment;
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list --format=legacy | grep "numpy" && pip uninstall -y numpy;
