@@ -24,7 +24,8 @@ if [[ "${TEST_SAGE}" == "true" ]]; then
     echo "Testing SAGE"
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
-    sage -t sympy/external/tests/test_sage.py
+    PYTHONPATH=. sage -t sympy/external/tests/test_sage.py
+    export MPMATH_NOSAGE=1
 fi
 
 if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
