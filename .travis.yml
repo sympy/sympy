@@ -240,11 +240,11 @@ before_install:
             conda remove --force sympy;
             conda clean --all;
         fi
+        if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+            conda install matchpy;
+        fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list --format=legacy | grep "numpy" && pip uninstall -y numpy;
-    fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-      pip install matchpy;
     fi
 install:
   # If a command fails, fail the build.

@@ -114,6 +114,9 @@ test_list = [
 
     # antlr
     'sympy/parsing/tests/test_latex',
+
+    # matchpy
+    '*rubi*',
 ]
 
 blacklist = [
