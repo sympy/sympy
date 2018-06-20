@@ -273,6 +273,62 @@ class Beam(object):
             new_beam._hinge_position = self.length
             return new_beam
 
+    def apply_support(self, loc, type="fixed"):
+        """
+        This method applies support to a particular beam object.
+
+        Parameters
+        ==========
+        loc : Sympifyable
+            Location of point at which support is applied.
+        type : String
+            Determines type of Beam support applied. To apply support structure
+            with
+            - zero degree of freedom, type = "fixed"
+            - one degree of freedom, type = "pin"
+            - two degrees of freedom, type = "roller"
+
+        Examples
+        ========
+        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        applied in the clockwise direction at the end of the beam. A pointload
+        of magnitude 8 N is applied from the top of the beam at the starting
+        point. There are two simple supports below the beam. One at the end
+        and another one at a distance of 10 meters from the start. The
+        deflection is restricted at both the supports.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_support(10, 'roller')
+        >>> b.apply_support(30, 'roller')
+        >>> b.apply_load(-8, 0, -1)
+        >>> b.apply_load(120, 30, -2)
+        >>> R_10, R_30 = symbols('R_10, R_30')
+        >>> b.solve_for_reaction_loads(R_10, R_30)
+        >>> b.load
+        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
+        + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
+        >>> b.slope()
+        (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
+            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
+        """
+        if type == "pin" or type == "roller":
+            reaction_load = Symbol('R_'+str(loc))
+            self.apply_load(reaction_load, loc, -1)
+            self.bc_deflection.append((loc, 0))
+        else:
+            reaction_load = Symbol('R_'+str(loc))
+            reaction_moment = Symbol('M_'+str(loc))
+            self.apply_load(reaction_load, loc, -1)
+            self.apply_load(reaction_moment, loc, -2)
+            self.bc_deflection = [(loc, 0)]
+            self.bc_slope.append((loc, 0))
+
     def apply_load(self, value, start, order, end=None):
         """
         This method adds up the loads given to a particular beam object.
@@ -911,3 +967,26 @@ class Beam(object):
         constants = list(linsolve(bc_eqs, C4))
         deflection_curve = deflection_curve.subs({C4: constants[0][0]})
         return S(1)/(E*I)*deflection_curve
+
+    def max_deflection(self):
+        """
+        Returns point of max deflection and its coresponding deflection value
+        in a Beam object.
+        """
+        from sympy import solve, Piecewise
+
+        # To restrict the range within length of the Beam
+        slope_curve = Piecewise((float("nan"), self.variable<=0),
+                (self.slope(), self.variable<self.length),
+                (float("nan"), True))
+
+        points = solve(slope_curve.rewrite(Piecewise), self.variable,
+                        domain=S.Reals)
+        deflection_curve = self.deflection()
+        deflections = [deflection_curve.subs(self.variable, x) for x in points]
+        deflections = list(map(abs, deflections))
+        if len(deflections) != 0:
+            max_def = max(deflections)
+            return (points[deflections.index(max_def)], max_def)
+        else:
+            return None
