@@ -219,6 +219,7 @@ before_install:
     # We do this conditionally because it saves us some downloading if the
     # version is the same.
         if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+          deactivate; # Deactivate the Travis virtualenv
           wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -q -O miniconda.sh;
         else
           wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -q -O miniconda.sh;
@@ -231,7 +232,6 @@ before_install:
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
 
         conda info -a;
-        deactivate; # Deactivate the Travis virtualenv
         conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY/sage};
         source activate test-environment;
         conda clean --all;
