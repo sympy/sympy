@@ -1098,3 +1098,9 @@ def test_issue_14240():
     assert piecewise_fold(Mul(*[
         Piecewise((i, a), (0, True)) for i in range(1, 41)])
         ) == Piecewise((factorial(40), a), (0, True))
+
+def test_issue_14787():
+    x = Symbol('x')
+    f = Piecewise((x, x < 1), ((S(58) / 7), True))
+    assert str(f.evalf()) == "Piecewise((x, x < 1), (8.28571428571429, True))"
+
