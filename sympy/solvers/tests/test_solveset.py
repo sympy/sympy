@@ -1874,6 +1874,7 @@ def test_expo_solver():
     y = symbols('y')
     assert _expo_solver(2**y + 4**y) == \
         log(2**y) - log(-4**y)
+    assert _expo_solver(2**x + 3**x + 5**x) is None
 
 # end of exponential tests
 

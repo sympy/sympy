@@ -10,7 +10,8 @@ This module contains functions to:
 from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
+from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
+                        Add, Mul)
 from sympy.core.containers import Tuple
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
@@ -902,7 +903,6 @@ def _solveset(f, symbol, domain, _check=False):
             solns = solver(expr, symbol, in_set)
             result += solns
     elif isinstance(f, Eq):
-        from sympy.core import Add
         result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
 
     elif f.is_Relational:
@@ -1034,9 +1034,8 @@ def _expo_solver(f):
 
     This form can be easily handed by `solveset`.
     """
-    from sympy.core import Add
 
-    if not (isinstance(f, Add) and len(pow_type_args) == 2):
+    if not (isinstance(f, Add) and len(f.args) == 2):
         # solving for the sum of more than two powers is possible
         # but not yet implemented
         return None
@@ -1075,7 +1074,6 @@ def _check_expo(f, symbol):
     >>> check(cos(2**x), x)
     False
     """
-    from sympy.core import Add, Mul
 
     for add_arg in Add.make_args(f):
         for mul_arg in Mul.make_args(add_arg):
