@@ -6094,10 +6094,15 @@ def test_MatrixSymbol_printing():
     A = MatrixSymbol("A", 3, 3)
     B = MatrixSymbol("B", 3, 3)
     C = MatrixSymbol("C", 3, 3)
-
     assert pretty(-A*B*C) == "-A*B*C"
     assert pretty(A - B) == "-B + A"
     assert pretty(A*B*C - A*B - B*C) == "-A*B -B*C + A*B*C"
+
+    # issue #14814
+    x = MatrixSymbol('x', n, n)
+    y = MatrixSymbol('y*', n, n)
+    assert pretty(x + y) == "x + y*"
+    assert pretty(-a*x + -2*y*y) == "-a*x -2*y**y*"
 
 
 def test_degree_printing():
