@@ -945,12 +945,12 @@ def _solveset(f, symbol, domain, _check=False):
                     elif equation.has(Abs):
                         result += _solve_abs(f, symbol, domain)
                     else:
-                        new_result = _solve_as_rational(equation, symbol, domain)
-                        if isinstance(new_result, ConditionSet):
+                        result_rational = _solve_as_rational(equation, symbol, domain)
+                        if isinstance(result_rational, ConditionSet):
                             # may be a transcendental type equation
                             result += _transolve(equation, symbol, domain)
                         else:
-                            result += new_result
+                            result += result_rational
                 else:
                     result += solver(equation, symbol)
 
@@ -1143,28 +1143,24 @@ def _transolve(f, symbol, domain):
     These functions return either True or False.
 
     Solving helpers: These are the helpers that solve the equation. They
-    are invoked once the equation is identified by the identifying
-    helpers. These function return either the complete solution or
+    are invoked once the equation is identified by the `identifying
+    helpers`. These function return either the complete solution or
     modifies the equation for `solveset` to handle.
 
     * Philosophy behind the module
 
-    `\_transolve` comes into action when solveset is unable to solve the
-    equation as a last resort to get the solutions. The idea is that,
-    first it tries to invert the equation to get the `lhs` and the `rhs`.
-    Depending on the general form of the class of the equation it
-    is sent to different cases, like for example, logarithmic
-    and exponential equations takes the form as `a*f(x) + b*g(x)`, where
-    `f(x)` and `g(x)` are power (or log) terms, therefore they are
-    included in `Add` case. Similarly different classes of equation can
-    be included in cases depending on their general form. Once figuring
-    out, different identifying helper conditions are included to check
-    which class the equation belongs. If the equation belongs to a
-    particular class it is solved by a call to its respective solving
-    helper. This helper either solves the equation completely or
-    transforms to a better form for `solveset` to handle. If the
-    equation is solved the result is returned otherwise a `ConditionSet`
-    is returned.
+    `\_transolve` comes into action when `solveset` is unable to solve
+    the equation as a last resort to get the solutions. The idea is to
+    get the equation in a case (Add, Pow etc.) that satisfies its
+    general form, for example exponential equations take the form as
+    `a*f(x) + b*g(x)`, where `f(x)` and `g(x)` are power terms,
+    therefore they are included in `Add` case.
+
+    Once done different `identifying helper` conditions are included
+    to check which class the equation belongs. `Solving helper` is
+    invoked once the class of the equation is identified. If the
+    equation is solved the result is returned otherwise a
+    `ConditionSet` is returned.
 
 
     How `\_transolve` is better than `\_tsolve`
@@ -1227,9 +1223,9 @@ def _transolve(f, symbol, domain):
     5) Faster Computation
 
     Solving equation via `\_transolve` is much faster as compared to
-    `\_tsolve`. Attempts are made computing every possibility to get
-    the solutions. This series of attempts makes solving a bit slow.
-    Whereas in `\_transolve` computation begins only when the
+    `\_tsolve`. In `solve` attempts are made computing every possibility
+    to get the solutions. This series of attempts makes solving a bit
+    slow. Whereas in `\_transolve` computation begins only when the
     equation is identified of being a particular type.
 
 
@@ -1242,45 +1238,41 @@ def _transolve(f, symbol, domain):
     The first task that needs to be done for adding your own solver
     is to decide from where its `identification helper` will be
     invoked. To do so determine the general form of the class of the
-    equation to place the invocation of the identification helper to
-    an appropriate place within \_transolve, for example the general
-    form of the exponential equation is `a*f(x) + b*g(x)` where
-    `f(x)` and `g(x)` are power (or log) terms so we need to place the
-    invocation condition inside `Add` case. Once the place for
-    identification helper is determined, you can add a call to solving
-    helper. For your class of equation you need to define your own
-    identification and solving helpers. The identification helper
+    equation, for example the general form of the exponential equation
+    is `a*f(x) + b*g(x)` where `f(x)` and `g(x)` are power terms, so we
+    need to place the invocation condition inside `Add` case. Once the
+    place for `identification helper` is determined, you can add a call
+    to its `solving helper`.
+
+    For your class of equation you need to define your own
+    identification and solving helpers. The `identification helper`
     should be implemented for generalised cases and should return
     either `True` if the given equation belongs to the class otherwise
-    `False`. Solving helpers needs to be implemented with such
-    heuristics or algorithms that solves most of the equations belonging
-    to that class. The value returned from this helper should be handled
-    properly in the main (\_transolve) function itself. It could be either
-    the exact solution or a reduced form of the equation which
-    `solveset` can handle.
+    `False`. `Solving helpers` needs to be implemented with
+    heuristics or algorithms that solves majority of the equations
+    belonging to that class. The value returned could be either the
+    exact solution or a reduced form of the equation which `solveset`
+    can handle.
 
     Apart from this, few other things needs to be taken care while adding
     an equation solver:
 
     - Naming conventions:
-      Name of the identification helper should be like  `\_check\_class`
+      Name of the `identification helper` should be like  `\_check\_class`
       where `class` will be the name or abbreviation of the class of
-      equation. The solving helper will be named as `\_class\_solver`.
+      equation. The `solving helper` will be named as `\_class\_solver`.
       For example: for exponential equation it becomes `\_check\_expo`
       and `\_expo\_solver`.
-    - Be sure to consider consider corner cases.
+    - Be sure to consider corner cases.
     - Adding tests for each helper.
     - Adding a docstring to your helper that describes the method
-      implemented with its proof of correctness by explaining with few
-      examples. Since most of the methods devised to identify and solve
-      particular class of equations are heuristics therefore it
-      becomes necessary to provide proof of correctness of these methods.
+      implemented.
       Following things needs to be included while writing the
       documentation for the helpers:
 
       - What is the purpose of the helper.
       - How it solves the equation and how does it identifies the equation.
-      - Examples should be included to prove its correctness.
+      - Examples should be included with its proof of correctness.
       - What are the input parameters and what does the helper returns.
     """
 
