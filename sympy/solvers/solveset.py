@@ -1036,16 +1036,18 @@ def _expo_solver(f):
 
     This form can be easily handed by `solveset`.
     """
+    from sympy.core import Add
 
-    try:
-        pow_type_arg1, pow_type_arg2 = ordered(f.args)
-    except ValueError:
+    pow_type_args = list(ordered(f.args))
+
+    if not (isinstance(f, Add) and len(pow_type_args) == 2):
+        # solving for the sum of more than two powers is possible
+        # but not yet implemented
         return None
 
-    lhs = pow_type_arg1
-    rhs = - pow_type_arg2
+    lhs, rhs = pow_type_args
 
-    log_type_equation = expand_log(log(lhs)) - expand_log(log(rhs))
+    log_type_equation = expand_log(log(lhs)) - expand_log(log(-rhs))
 
     return log_type_equation
 
@@ -1082,7 +1084,7 @@ def _check_expo(f, symbol):
     for add_arg in Add.make_args(f):
         for mul_arg in Mul.make_args(add_arg):
             if isinstance(mul_arg, (Pow, exp)) and \
-                    mul_arg.exp.has(symbol):
+                    symbol in mul_arg.exp.free_symbols:
                 return True
     return False
 
