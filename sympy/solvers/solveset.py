@@ -1036,14 +1036,12 @@ def _expo_solver(f):
     """
     from sympy.core import Add
 
-    pow_type_args = list(ordered(f.args))
-
     if not (isinstance(f, Add) and len(pow_type_args) == 2):
         # solving for the sum of more than two powers is possible
         # but not yet implemented
         return None
 
-    lhs, rhs = pow_type_args
+    lhs, rhs = list(ordered(f.args))
 
     log_type_equation = expand_log(log(lhs)) - expand_log(log(-rhs))
 
