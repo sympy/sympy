@@ -48,6 +48,9 @@ _show = True
 
 
 def unset_show():
+    """
+    Disable show(). For use in the tests.
+    """
     global _show
     _show = False
 
@@ -1030,6 +1033,8 @@ class MatplotlibBackend(BaseBackend):
         #self.fig.show()
         if _show:
             self.plt.show()
+        else:
+            self.close()
 
     def save(self, path):
         self.process_series()
