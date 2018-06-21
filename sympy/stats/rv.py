@@ -748,17 +748,19 @@ class Density(Basic):
             return None
 
     def doit(self, evaluate=True, **kwargs):
-        from sympy.stats.joint_rv import JointPSpace
+        from sympy.stats.joint_rv import MarginalPSpace, JointPSpace
 
         expr, condition = self.expr, self.condition
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
+        if isinstance(expr, JointPSpace):
+            return expr.distribution
         if not random_symbols(expr):
             return Lambda(x, DiracDelta(x - expr))
         if (isinstance(expr, RandomSymbol) and
             hasattr(expr.pspace, 'distribution') and
-            isinstance(pspace(expr), (SinglePSpace, JointPSpace))):
+            isinstance(pspace(expr), (SinglePSpace))):
             return expr.pspace.distribution
         result = pspace(expr).compute_density(expr, **kwargs)
 
