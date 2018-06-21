@@ -34,14 +34,16 @@ class RewritingSystem(object):
 
         # Reduction automaton
         self.reduction_automaton = None
-        self.new_rules = {}
+        self._new_rules = {}
 
         # dictionary of reductions
         self.rules = {}
         self.rules_cache = deque([], 50)
         self._init_rules()
 
-        # Automaton variables
+        # Create a finite state machine as an instance of the StateMachine object
+        self.reduction_automaton = StateMachine('fsm')
+        self.reduction_automaton.add_state('start', state_type='s')
         self.construct_automaton()
 
     def set_max(self, n):
@@ -82,6 +84,9 @@ class RewritingSystem(object):
             self._max_exceeded = True
             raise RuntimeError("Too many rules were defined.")
         self.rules[r1] = r2
+        # Add the newly added rule to the `new_rules` dictionary.
+        if self.reduction_automaton:
+            self._new_rules[r1] = r2
 
     def add_rule(self, w1, w2, check=False):
         new_keys = set()
@@ -142,11 +147,6 @@ class RewritingSystem(object):
             elif len(w1) - len(w2) < 3:
                 new = self.add_rule(w1, w2, check)
                 new_keys.update(new)
-
-        # Add new rules to the `new_rules` dictionary.
-        if self.reduction_automaton:
-            for new_rule in new_keys:
-                self.new_rules[new_rule] = self.rules[new_rule]
 
         return new_keys
 
@@ -330,14 +330,9 @@ class RewritingSystem(object):
         The complete left hand side of the rules are the dead states of the automaton.
 
         '''
-        # Create a finite state machine as an instance of the StateMachine object
-        fsm = StateMachine('fsm')
-        fsm.add_state('start', state_type='s')
+        self._add_to_automaton(self.rules)
 
-        self.reduction_automaton = fsm
-        self.add_to_automaton(self.rules)
-
-    def add_to_automaton(self, rules):
+    def _add_to_automaton(self, rules):
         '''
         Add new states and transitions to the automaton.
 
@@ -436,6 +431,7 @@ class RewritingSystem(object):
         # Ignore this if `generators` = `automaton_alphabet`.
         if len(generators) != len(automaton_alphabet):
             for state in proper_prefixes:
+                current_state_name = state
                 for letter in generators:
                     next = current_state_name*letter
                     len_next_word = len(next)
@@ -457,18 +453,19 @@ class RewritingSystem(object):
         Reduce a word using an automaton.
 
         Summary:
-        All the elements of the automaton are stored in an array and are given as the input to the automaton.
+        All the symbols of the word are stored in an array and are given as the input to the automaton.
         If the automaton reaches a dead state that subword is replaced and the automaton is run from the beginning.
-        This is repeated until the word reaches the end and the automaton stays in the accept state.
+        The complete word has to be replaced when the word is read and the automaton reaches a dead state.
+        So, this process is repeated until the word is read completely and the automaton reaches the accept state.
 
         Arguments:
             word (instance of FreeGroupElement) -- Word that needs to be reduced.
 
         '''
         # Modify the automaton if new rules are found.
-        if self.new_rules:
-            self.add_to_automaton(self.new_rules)
-            self.new_rules = {}
+        if self._new_rules:
+            self._add_to_automaton(self._new_rules)
+            self._new_rules = {}
 
         flag = 1
         while flag:
