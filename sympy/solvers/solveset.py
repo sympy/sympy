@@ -995,10 +995,9 @@ def _expo_solver(f):
 
     For example
 
-    .. math:: 5^{(2*x + 3)} - 5^{(3*x - 1)}
+    .. math:: 5^{2x + 3} - 5^{3x - 1}
 
-    .. math:: 4^{(5 - 9*x)} - exp^{(2 - x)}
-
+    .. math:: 4^{5 - 9x} - e^{2 - x}
 
     The function reduces the equation (`f`) to a better log form
     (if possible) and returns the modified equation which can be
@@ -1012,7 +1011,6 @@ def _expo_solver(f):
     >>> x = symbols('x', real=True)
     >>> expo_solver(3**(2*x) - 2**(x + 3))
     2*x*log(3) - (x + 3)*log(2)
-
 
     * Proof of correctness of the method
 
@@ -1028,11 +1026,11 @@ def _expo_solver(f):
 
     For example:
 
-    .. math:: 3^{2*x} = 2^{(x + 3)}
+    .. math:: 3^{2x} = 2^{x + 3}
 
     Taking log both sides will reduce the equation to
 
-    .. math:: (2*x)*log(3) = (x + 3)*log(2)
+    .. math:: (2x)*log(3) = (x + 3)*log(2)
 
     This form can be easily handed by `solveset`.
     """
@@ -1097,7 +1095,6 @@ def _transolve(f, symbol, domain):
 
         - Exponential equations
 
-
     Parameters
     ==========
 
@@ -1111,7 +1108,6 @@ def _transolve(f, symbol, domain):
     domain : is a set over which the equation is solved.
         This needs to be of class `Set`.
 
-
     Examples
     ========
 
@@ -1122,7 +1118,6 @@ def _transolve(f, symbol, domain):
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
     {-log(375)/(-log(5) + 2*log(3))}
 
-
     How to use `\_transolve`
     ========================
 
@@ -1130,7 +1125,6 @@ def _transolve(f, symbol, domain):
     an internal call to `\_transolve`, passing all the three above
     parameters as arguments. These three arguments should be sympy
     instances.
-
 
     How `\_transolve` works
     =======================
@@ -1162,7 +1156,6 @@ def _transolve(f, symbol, domain):
     equation is solved the result is returned otherwise a
     `ConditionSet` is returned.
 
-
     How `\_transolve` is better than `\_tsolve`
     ===========================================
 
@@ -1187,10 +1180,8 @@ def _transolve(f, symbol, domain):
          | log(2/9)|
     [-log\2         /]
 
-
     `\_transolve's` output seems more simple, readable and appropriate
     as compared to that of `\_tsolve`.
-
 
     2) Extensible
 
@@ -1202,7 +1193,6 @@ def _transolve(f, symbol, domain):
     helper that identifies that particular class of the equation and
     another helper that solves that type of equations.
 
-
     3) Modular
 
     `\_transolve` is designed to be modular i.e, for every class of
@@ -1211,14 +1201,12 @@ def _transolve(f, symbol, domain):
     method implemented directly in the helpers without interfering
     with the actual structure of the API.
 
-
     4) Less complex API
 
     The API of `\_transolve` is designed in a way that it is less
     complex to read and understand unlike in `\_tsolve` where the
     API structure is a mess with lots of recursive and function
     calls making it hard to understand.
-
 
     5) Faster Computation
 
@@ -1227,7 +1215,6 @@ def _transolve(f, symbol, domain):
     to get the solutions. This series of attempts makes solving a bit
     slow. Whereas in `\_transolve` computation begins only when the
     equation is identified of being a particular type.
-
 
     How to add new class of equations
     =================================
