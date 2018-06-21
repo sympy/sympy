@@ -148,6 +148,10 @@ doctest_list = [
 
     # antlr
     'sympy/parsing/latex',
+
+    # matchpy
+    '*rubi*',
+
 ]
 
 if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
