@@ -74,7 +74,7 @@ def _convert_numpy_types(a):
 
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
-        evaluate=None):
+        evaluate=None, default_float_dps=None):
     """Converts an arbitrary expression to a type that can be used inside SymPy.
 
     For example, it will convert Python ints into instances of sympy.Integer,
@@ -256,6 +256,20 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> kernS(s)
     -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
+    Floating point literals ... TODO: explain this (!)  Consider:
+
+    >>> sympify('0.1*1.4142135623730950488016887242097')**2
+    0.020000000000000002220446049250313
+
+    What happened?  The parser made two Floats with precision roughly 16 and
+    32; their product is then accurate to only 15 or so digits.  If instead
+    we add the ``default_float_dps`` keyword argument, we can specify that
+    all floating-point literals should make Floats with the specified
+    precision.
+
+    >>> sympify('0.1*1.4142135623730950488016887242097', default_float_dps=32)**2
+    0.020000000000000000000000000000000
+
     """
     if evaluate is None:
         if global_evaluate[0] is False:
@@ -365,7 +379,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     try:
         a = a.replace('\n', '')
-        expr = parse_expr(a, local_dict=locals, transformations=transformations, evaluate=evaluate)
+        expr = parse_expr(a, local_dict=locals, transformations=transformations, evaluate=evaluate, default_float_dps=default_float_dps)
     except (TokenError, SyntaxError) as exc:
         raise SympifyError('could not parse %r' % a, exc)
 

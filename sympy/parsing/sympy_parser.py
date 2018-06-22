@@ -710,7 +710,7 @@ def repeated_decimals(tokens, local_dict, global_dict):
 
     return result
 
-def auto_number(tokens, local_dict, global_dict):
+def auto_number(tokens, local_dict, global_dict, default_float_dps=None):
     """
     Converts numeric literals to use SymPy equivalents.
 
@@ -732,7 +732,7 @@ def auto_number(tokens, local_dict, global_dict):
             if '.' in number or (('e' in number or 'E' in number) and
                     not (number.startswith('0x') or number.startswith('0X'))):
                 seq = [(NAME, 'Float'), (OP, '('),
-                    (NUMBER, repr(str(number))), (OP, ')')]
+                    (NUMBER, repr(str(number))), (OP, ','), (NUMBER, str(default_float_dps)), (OP, ')')]
             else:
                 seq = [(NAME, 'Integer'), (OP, '('), (
                     NUMBER, number), (OP, ')')]
@@ -835,7 +835,7 @@ standard_transformations = (lambda_notation, auto_symbol, repeated_decimals, aut
     factorial_notation)
 
 
-def stringify_expr(s, local_dict, global_dict, transformations):
+def stringify_expr(s, local_dict, global_dict, transformations, default_float_dps=None):
     """
     Converts the string ``s`` to Python code, in ``local_dict``
 
@@ -848,7 +848,11 @@ def stringify_expr(s, local_dict, global_dict, transformations):
         tokens.append((toknum, tokval))
 
     for transform in transformations:
-        tokens = transform(tokens, local_dict, global_dict)
+        # TODO: yuck!
+        if transform == auto_number:
+            tokens = transform(tokens, local_dict, global_dict, default_float_dps)
+        else:
+            tokens = transform(tokens, local_dict, global_dict)
 
     return untokenize(tokens)
 
@@ -866,7 +870,7 @@ def eval_expr(code, local_dict, global_dict):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True):
+               global_dict=None, evaluate=True, default_float_dps=None):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -942,7 +946,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         global_dict = {}
         exec_('from sympy import *', global_dict)
 
-    code = stringify_expr(s, local_dict, global_dict, transformations)
+    code = stringify_expr(s, local_dict, global_dict, transformations, default_float_dps)
 
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
