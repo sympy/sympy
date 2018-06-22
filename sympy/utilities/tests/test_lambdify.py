@@ -388,7 +388,8 @@ def test_python_div_zero_issue_11306():
     p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
     f = lambdify([x, y], p, modules='numpy')
     numpy.seterr(divide='ignore')
-    assert str(float(f(0,1))) == 'inf'
+    assert float(f(numpy.array([0]),numpy.array([0.5]))) == 0
+    assert str(float(f(numpy.array([0]),numpy.array([1])))) == 'inf'
     numpy.seterr(divide='warn')
 
 def test_issue9474():
