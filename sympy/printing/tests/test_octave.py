@@ -80,6 +80,7 @@ def test_Function_change_name():
     assert mcode(polygamma(x, y)) == "psi(x, y)"
     assert mcode(RisingFactorial(x, y)) == "pochhammer(x, y)"
     assert mcode(DiracDelta(x)) == "dirac(x)"
+    assert mcode(DiracDelta(x, 3)) == "dirac(3, x)"
     assert mcode(Heaviside(x)) == "heaviside(x)"
     assert mcode(Heaviside(x, y)) == "heaviside(x, y)"
 
@@ -445,8 +446,7 @@ def test_specfun():
     n = Symbol('n')
     for f in [besselj, bessely, besseli, besselk]:
         assert octave_code(f(n, x)) == f.__name__ + '(n, x)'
-    for f in (erfc, erfi, erf, erfinv, erfcinv, fresnelc, fresnels, gamma,
-              zeta):
+    for f in (erfc, erfi, erf, erfinv, erfcinv, fresnelc, fresnels, gamma):
         assert octave_code(f(x)) == f.__name__ + '(x)'
     assert octave_code(hankel1(n, x)) == 'besselh(n, 1, x)'
     assert octave_code(hankel2(n, x)) == 'besselh(n, 2, x)'
@@ -460,6 +460,8 @@ def test_specfun():
     assert octave_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
     assert octave_code(LambertW(x)) == 'lambertw(x)'
     assert octave_code(LambertW(x, n)) == 'lambertw(n, x)'
+    assert octave_code(zeta(x)) == 'zeta(x)'
+    assert octave_code(zeta(x, n)) == 'zeta(n, x)'
 
 
 def test_MatrixElement_printing():

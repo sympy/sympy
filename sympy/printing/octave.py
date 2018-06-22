@@ -46,6 +46,7 @@ known_fcns_src2 = {
     "Heaviside": "heaviside",
     "im": "imag",
     "laguerre": "laguerreL",
+    "LambertW": "lambertw",
     "li": "logint",
     "loggamma": "gammaln",
     "Max": "max",
@@ -463,10 +464,15 @@ class OctaveCodePrinter(CodePrinter):
         return "expint(%s)" % self._print(x)
 
 
-    def _print_LambertW(self, expr):
-        # argument order is reversed
-        args = ", ".join([self._print(x) for x in reversed(expr.args)])
-        return "lambertw(" + args + ")"
+    def _one_or_two_reversed_args(self, expr):
+        assert len(expr.args) <= 2
+        return '{name}({args})'.format(
+            name=self.known_functions[expr.__class__.__name__],
+            args=", ".join([self._print(x) for x in reversed(expr.args)])
+        )
+
+
+    _print_DiracDelta = _print_LambertW = _print_zeta = _one_or_two_reversed_args
 
 
     def _nested_binary_math_func(self, expr):
