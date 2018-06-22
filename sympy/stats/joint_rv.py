@@ -18,15 +18,16 @@ from sympy.concrete.summations import Sum
 from sympy.integrals.integrals import Integral
 from sympy.stats.rv import (ProductPSpace, RandomSymbol,
         NamedArgsMixin, ProductDomain)
+from sympy.core.containers import Tuple
 
 class JointPSpace(ProductPSpace):
     """
     Represents a joint probability space. Represented using symbols for
     each component and a distribution.
     """
-    def __new__(cls, syms, dist, **args):
-        syms = tuple(map(sympify, syms))
-        return Basic.__new__(cls, syms, dist, **args)
+    def __new__(cls, syms, dist, *args):
+        syms = Tuple.fromiter(i for i in syms)
+        return Basic.__new__(cls, syms, dist, *args)
 
     @property
     def set(self):
@@ -34,7 +35,7 @@ class JointPSpace(ProductPSpace):
 
     @property
     def symbols(self):
-        return tuple(self.args[0])
+        return self.args[0]
 
     @property
     def values(self):
@@ -69,6 +70,7 @@ class MarginalPSpace(JointPSpace):
     of random variables from a joint probability space.
     """
     def __new__(cls, sym, jpspace):
+        sym = Tuple.fromiter(i for i in sym)
         return Basic.__new__(cls, sym, jpspace)
 
     @property
@@ -104,6 +106,9 @@ class JointDistribution(Basic, NamedArgsMixin):
 
     def __new__(cls, *args):
         args = list(map(sympify, args))
+        for i in range(len(args)):
+            if isinstance(args[i], list):
+                args[i] = Tuple.fromiter(j for j in args[i])
         return Basic.__new__(cls, *args)
 
     @property

@@ -805,6 +805,10 @@ def test_sympy__stats__drv__ConditionalDiscreteDomain():
     X = SingleDiscreteDomain(x, S.Naturals0)
     assert _test_args(ConditionalDiscreteDomain(X, x > 2))
 
+def test_sympy__stats__joint_rv__JointPSpace():
+    from sympy.stats.joint_rv import JointPSpace, JointDistribution
+    assert _test_args(JointPSpace(('x',), JointDistribution(1)))
+
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
     pass
@@ -1180,13 +1184,48 @@ def test_sympy__stats__crv_types__WignerSemicircleDistribution():
     from sympy.stats.crv_types import WignerSemicircleDistribution
     assert _test_args(WignerSemicircleDistribution(1))
 
+
 def test_sympy__stats__drv_types__PoissonDistribution():
     from sympy.stats.drv_types import PoissonDistribution
     assert _test_args(PoissonDistribution(1))
 
+
 def test_sympy__stats__drv_types__GeometricDistribution():
     from sympy.stats.drv_types import GeometricDistribution
     assert _test_args(GeometricDistribution(.5))
+
+
+def test_sympy__stats__joint_rv__JointDistribution():
+    from sympy.stats.joint_rv import JointDistribution
+    assert _test_args(JointDistribution(1, 2, 3, 4))
+
+
+def test_sympy__stats__joint_rv_types__MultivariateNormalDistribution():
+    from sympy.stats.joint_rv_types import MultivariateNormalDistribution
+    assert _test_args(MultivariateNormalDistribution([0, 1], [[1, 0],[0, 1]]))
+
+
+def test_sympy__stats__joint_rv_types__MultivariateLaplaceDistribution():
+    from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution
+    assert _test_args(MultivariateLaplaceDistribution([0, 1], [[1, 0],[0, 1]]))
+
+
+def test_sympy__stats__joint_rv_types__MultivariateTDistribution():
+    from sympy.stats.joint_rv_types import MultivariateTDistribution
+    assert _test_args(MultivariateTDistribution([0, 1], [[1, 0],[0, 1]], 1))
+
+
+def test_sympy__stats__joint_rv_types__NormalGammaDistribution():
+    from sympy.stats.joint_rv_types import NormalGammaDistribution
+    assert _test_args(NormalGammaDistribution(1, 2, 3, 4))
+
+
+def test_sympy__stats__joint_rv__MarginalPSpace():
+    from sympy.stats.joint_rv import (JointPSpace, JointDistribution,
+        MarginalPSpace)
+    jpspace = (JointPSpace(('x', 'y', 'z'), JointDistribution(1)))
+    assert _test_args(MarginalPSpace((x, y), jpspace))
+
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy

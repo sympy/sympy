@@ -3,6 +3,7 @@ from sympy.stats.rv import _value_check
 from sympy.stats.joint_rv import JointDistribution, JointPSpace
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.determinant import det
+from sympy.core.containers import Tuple
 
 __all__ = ['MultivariateNormal',
 'MultivariateLaplace',
