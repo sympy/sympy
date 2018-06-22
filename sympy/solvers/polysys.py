@@ -186,7 +186,7 @@ def solve_generic(polys, opt):
         """Check if all constant polynomials are satisfiable. """
         for p in const_poly:
             p = p.as_expr()
-            if p.expand() != 0:
+            if p.simplify() != 0:
                 return []
 
         """If there are no variables left to eliminate, we have reached the bottom of recursion. """
