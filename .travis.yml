@@ -207,6 +207,7 @@ matrix:
             - pypy
 
 before_install:
+  - set -x # echo each command
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
