@@ -899,7 +899,6 @@ class Beam(object):
         distribute load of magnitude of magnitude 3KN/m is also
         applied on top starting from 6 meters away from starting
         point till end.
-
         Using the sign convention of upward forces and clockwise moment
         being positive.
 

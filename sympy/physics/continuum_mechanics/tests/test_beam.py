@@ -241,7 +241,6 @@ def test_point_cflexure():
     b.apply_load(10, 2, -1)
     b.apply_load(20, 4, -1)
     b.apply_load(3, 6, 0)
-
     assert b.point_cflexure() == [S(10)/3]
 
 
@@ -353,6 +352,7 @@ def test_max_bmoment():
     b.apply_load(P, 0, 0, end=l)
     b.solve_for_reaction_loads(R1, R2)
     assert b.max_bmoment() == (l/2, P*l**2/8)
+
 
 def test_max_deflection():
     E, I, l, F = symbols('E, I, l, F', positive=True)

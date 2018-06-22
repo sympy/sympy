@@ -57,6 +57,8 @@ class Vector(object):
 
     def __add__(self, other):
         """The add operator for Vector. """
+        if other == 0:
+            return self
         other = _check_vector(other)
         return Vector(self.args + other.args)
 
@@ -270,18 +272,18 @@ class Vector(object):
                         # if the coef of the basis vector is -1, we skip the 1
                         elif ar[i][0][j] == -1:
                             pform = vp._print(ar[i][1].pretty_vecs[j])
-                            pform= prettyForm(*pform.left(" - "))
+                            pform = prettyForm(*pform.left(" - "))
                             bin = prettyForm.NEG
                             pform = prettyForm(binding=bin, *pform)
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
+                            pform = vp._print(ar[i][0][j])
+
                             if isinstance(ar[i][0][j], Add):
-                                pform = vp._print(
-                                    ar[i][0][j]).parens()
-                            else:
-                                pform = vp._print(
-                                    ar[i][0][j])
+                                tmp = pform.parens()
+                                pform = prettyForm(tmp[0], tmp[1])
+
                             pform = prettyForm(*pform.right(" ",
                                                 ar[i][1].pretty_vecs[j]))
                         else:

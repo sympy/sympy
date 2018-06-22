@@ -1056,7 +1056,13 @@ def eval_sum_symbolic(f, limits):
         if not r in (None, S.NaN):
             return r
 
-    return eval_sum_hyper(f_orig, (i, a, b))
+    h = eval_sum_hyper(f_orig, (i, a, b))
+    if h is not None:
+        return h
+
+    factored = f_orig.factor()
+    if factored != f_orig:
+        return eval_sum_symbolic(factored, (i, a, b))
 
 
 def _eval_sum_hyper(f, i, a):
