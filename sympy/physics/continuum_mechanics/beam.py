@@ -20,17 +20,21 @@ class Beam(object):
     primarily by resisting against bending. Beams are characterized by
     their cross sectional profile(Second moment of area), their length
     and their material.
+
     .. note::
        While solving a beam bending problem, a user should choose its
        own sign convention and should stick to it. The results will
        automatically follow the chosen sign convention.
+
     Examples
     ========
     There is a beam of length 4 meters. A constant distributed load of 6 N/m
     is applied from half of the beam till the end. There are two simple supports
     below the beam, one at the starting point and another at the ending point
     of the beam. The deflection of the beam at the end is restricted.
+
     Using the sign convention of downwards forces being positive.
+
     >>> from sympy.physics.continuum_mechanics.beam import Beam
     >>> from sympy import symbols, Piecewise
     >>> E, I = symbols('E, I')
@@ -63,6 +67,7 @@ class Beam(object):
 
     def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x')):
         """Initializes the class.
+
         Parameters
         ==========
         length : Sympifyable
@@ -115,8 +120,10 @@ class Beam(object):
         while representing load distribution, shear force curve, bending
         moment, slope curve and the deflection curve. By default, it is set
         to ``Symbol('x')``, but this property is mutable.
+
         Examples
         ========
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -166,11 +173,13 @@ class Beam(object):
         The value of each keyword is a list of tuple, where each tuple
         contains loaction and value of a boundary condition in the format
         (location, value).
+
         Examples
         ========
         There is a beam of length 4 meters. The bending moment at 0 should be 4
         and at 4 it should be 0. The slope of the beam should be 1 at 0. The
         deflection should be 2 at 0.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -179,6 +188,7 @@ class Beam(object):
         >>> b.bc_slope = [(0, 1)]
         >>> b.boundary_conditions
         {'deflection': [(0, 2)], 'slope': [(0, 1)]}
+
         Here the deflection of the beam should be ``2`` at ``0``.
         Similarly, the slope of the beam should be ``1`` at ``0``.
         """
@@ -205,6 +215,7 @@ class Beam(object):
         This method joins two beams to make a new composite beam system.
         Passed Beam class instance is attached to the right end of calling
         object.
+
         Parameters
         ==========
         beam : Beam class object
@@ -214,11 +225,13 @@ class Beam(object):
             States the way two Beam object would get connected
             - For axially fixed Beams, via="fixed"
             - For Beams connected via hinge, via="hinge"
+
         Examples
         ========
         There is a cantilever beam of length 4 meters. For first 2 meters
         its moment of inertia is `1.5*I` and `I` for the other end.
         A pointload of magnitude 4 N is applied from the top at its free end.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -262,6 +275,7 @@ class Beam(object):
     def apply_support(self, loc, type="fixed"):
         """
         This method applies support to a particular beam object.
+
         Parameters
         ==========
         loc : Sympifyable
@@ -272,6 +286,7 @@ class Beam(object):
             - zero degree of freedom, type = "fixed"
             - one degree of freedom, type = "pin"
             - two degrees of freedom, type = "roller"
+
         Examples
         ========
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
@@ -280,8 +295,10 @@ class Beam(object):
         point. There are two simple supports below the beam. One at the end
         and another one at a distance of 10 meters from the start. The
         deflection is restricted at both the supports.
+
         Using the sign convention of upward forces and clockwise moment
         being positive.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -314,6 +331,7 @@ class Beam(object):
     def apply_load(self, value, start, order, end=None):
         """
         This method adds up the loads given to a particular beam object.
+
         Parameters
         ==========
         value : Sympifyable
@@ -332,6 +350,7 @@ class Beam(object):
         end : Sympifyable, optional
             An optional argument that can be used if the load has an end point
             within the length of the beam.
+
         Examples
         ========
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
@@ -340,6 +359,7 @@ class Beam(object):
         2 meters from the starting point and a parabolic ramp load of magnitude
         2 N/m is applied below the beam starting from 2 meters to 3 meters
         away from the starting point of the beam.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -372,6 +392,7 @@ class Beam(object):
         This method removes a particular load present on the beam object.
         Returns a ValueError if the load passed as an argument is not
         present on the beam.
+
         Parameters
         ==========
         value : Sympifyable
@@ -390,6 +411,7 @@ class Beam(object):
         end : Sympifyable, optional
             An optional argument that can be used if the load has an end point
             within the length of the beam.
+
         Examples
         ========
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
@@ -398,6 +420,7 @@ class Beam(object):
         2 meters from the starting point and a parabolic ramp load of magnitude
         2 N/m is applied below the beam starting from 2 meters to 3 meters
         away from the starting point of the beam.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -436,6 +459,7 @@ class Beam(object):
         """
         Returns a Singularity Function expression which represents
         the load distribution curve of the Beam object.
+
         Examples
         ========
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
@@ -444,6 +468,7 @@ class Beam(object):
         2 meters from the starting point and a parabolic ramp load of magnitude
         2 N/m is applied below the beam starting from 3 meters away from the
         starting point of the beam.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -461,6 +486,7 @@ class Beam(object):
         """
         Returns a list of all loads applied on the beam object.
         Each load in the list is a tuple of form (value, start, order, end).
+
         Examples
         ========
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
@@ -468,6 +494,7 @@ class Beam(object):
         A pointload of magnitude 4 N is applied from the top of the beam at
         2 meters from the starting point. Another pointload of magnitude 5 N
         is applied at same position.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -491,12 +518,14 @@ class Beam(object):
         for unknown reactions and integration constants using the boundary
         conditions applied on the Beam. Equal deflection of both sub-beams
         at the hinge joint gives us another equation to solve the system.
+
         Examples
         ========
         A combined beam, with constant fkexural rigidity E*I, is formed by joining
         a Beam of length 2*l to the right of another Beam of length l. The whole beam
         is fixed at both of its both end. A point load of magnitude P is also applied
         from the top at a distance of 2*l from starting point.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -618,6 +647,7 @@ class Beam(object):
     def solve_for_reaction_loads(self, *reactions):
         """
         Solves for the reaction forces.
+
         Examples
         ========
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
@@ -626,8 +656,10 @@ class Beam(object):
         point. There are two simple supports below the beam. One at the end
         and another one at a distance of 10 meters from the start. The
         deflection is restricted at both the supports.
+
         Using the sign convention of upward forces and clockwise moment
         being positive.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols, linsolve, limit
         >>> E, I = symbols('E, I')
@@ -671,7 +703,7 @@ class Beam(object):
         for position, value in self._boundary_conditions['deflection']:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
-        
+
         solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
                             + deflection_eqs, (C3, C4) + reactions).args)[0])
         solution = solution[2:]
@@ -683,6 +715,7 @@ class Beam(object):
         """
         Returns a Singularity Function expression which represents
         the shear force curve of the Beam object.
+
         Examples
         ========
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
@@ -691,8 +724,10 @@ class Beam(object):
         point. There are two simple supports below the beam. One at the end
         and another one at a distance of 10 meters from the start. The
         deflection is restricted at both the supports.
+
         Using the sign convention of upward forces and clockwise moment
         being positive.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -727,7 +762,7 @@ class Beam(object):
         singularity = list(set(singularity))
 
         intervals = []    # List of Intervals with discrete value of shear force
-        shear_values = []   # List of values of shear force in each interval 
+        shear_values = []   # List of values of shear force in each interval
         for i, s in enumerate(singularity):
             if s == 0:
                 continue
@@ -766,6 +801,7 @@ class Beam(object):
         """
         Returns a Singularity Function expression which represents
         the bending moment curve of the Beam object.
+
         Examples
         ========
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
@@ -774,8 +810,10 @@ class Beam(object):
         point. There are two simple supports below the beam. One at the end
         and another one at a distance of 10 meters from the start. The
         deflection is restricted at both the supports.
+
         Using the sign convention of upward forces and clockwise moment
         being positive.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -801,7 +839,7 @@ class Beam(object):
         x = self.variable
 
         terms = bending_curve.args
-        singularity = []        # Points at which shear function changes
+        singularity = []        # Points at which bending moment changes
         for term in terms:
             if isinstance(term, Mul):
                 term = term.args[-1]    # SingularityFunction in the term
@@ -809,8 +847,8 @@ class Beam(object):
         singularity.sort()
         singularity = list(set(singularity))
 
-        intervals = []    # List of Intervals with discrete value of shear force
-        moment_values = []   # List of values of shear force in each interval 
+        intervals = []    # List of Intervals with discrete value of bending moment
+        moment_values = []   # List of values of bending moment in each interval
         for i, s in enumerate(singularity):
             if s == 0:
                 continue
@@ -826,9 +864,9 @@ class Beam(object):
                 max_moment = max(val)
                 moment_values.append(max_moment)
                 intervals.append(points[val.index(max_moment)])
-            # If shear force in a particular Interval has zero or constant
-            # slope, then above block gives NotImplementedError as
-            # solve can't represent Interval solutions.
+            # If bending moment in a particular Interval has zero or constant
+            # slope, then above block gives NotImplementedError as solve
+            # can't represent Interval solutions.
             except NotImplementedError:
                 initial_moment = limit(bending_curve, x, singularity[i-1], '+')
                 final_moment = limit(bending_curve, x, s, '-')
@@ -841,7 +879,6 @@ class Beam(object):
                     intervals.append(Interval(singularity[i-1], s))
 
         moment_values = list(map(abs, moment_values))
-        print(moment_values)
         maximum_moment = max(moment_values)
         point = intervals[moment_values.index(maximum_moment)]
         return (point, maximum_moment)
@@ -851,6 +888,7 @@ class Beam(object):
         Returns a Set of point(s) with zero bending moment and
         where bending moment curve of the beam object changes
         its sign from negative to positive or vice versa.
+
         Examples
         ========
         There is is 10 meter long overhanging beam. There are
@@ -861,8 +899,10 @@ class Beam(object):
         distribute load of magnitude of magnitude 3KN/m is also
         applied on top starting from 6 meters away from starting
         point till end.
+
         Using the sign convention of upward forces and clockwise moment
         being positive.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -890,6 +930,7 @@ class Beam(object):
         """
         Returns a Singularity Function expression which represents
         the slope the elastic curve of the Beam object.
+
         Examples
         ========
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
@@ -898,8 +939,10 @@ class Beam(object):
         point. There are two simple supports below the beam. One at the end
         and another one at a distance of 10 meters from the start. The
         deflection is restricted at both the supports.
+
         Using the sign convention of upward forces and clockwise moment
         being positive.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -952,6 +995,7 @@ class Beam(object):
         """
         Returns a Singularity Function expression which represents
         the elastic curve or deflection of the Beam object.
+
         Examples
         ========
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
@@ -960,8 +1004,10 @@ class Beam(object):
         point. There are two simple supports below the beam. One at the end
         and another one at a distance of 10 meters from the start. The
         deflection is restricted at both the supports.
+
         Using the sign convention of upward forces and clockwise moment
         being positive.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
