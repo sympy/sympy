@@ -710,6 +710,49 @@ class Beam(object):
         x = self.variable
         return integrate(self.load, x)
 
+    def max_shear_force(self):
+        from sympy import solve, Mul, Interval
+        shear_curve = self.shear_force()
+        x = self.variable
+        terms = shear_curve.args
+        singularity = []
+        for term in terms:
+            if isinstance(term, Mul):
+                term = term.args[-1]
+            singularity.append(term.args[1])
+        singularity.sort()
+        singularity = list(set(singularity))
+        shear_values = []
+        intervals = []
+        for i, s in enumerate(singularity):
+            if s == 0:
+                continue
+            try:
+                shear_slope = Piecewise((float("nan"), x<singularity[i-1]),(self._load.rewrite(Piecewise), x<s), (float("nan"), True))
+                points = solve(shear_slope, self.variable)
+                val = []
+                for point in points:
+                    val.append(shear_curve.subs(self.variable, point))
+                points.extend([singularity[i-1], s])
+                val.extend([limit(shear_curve, x, singularity[i-1], '+'), limit(shear_curve, x, s, '-')])
+                max_shear = max(list(map(abs, val)))
+                shear_values.append(max_shear)
+                intervals.append(points[val.index(max_shear)])
+
+            except NotImplementedError:
+                if shear_curve.subs(x, (singularity[i-1] + s)/2) == (limit(shear_curve, x, singularity[i-1], '+') + limit(shear_curve, x, s, '-'))/2:
+                    shear_values.extend([limit(shear_curve, x, singularity[i-1], '+'), limit(shear_curve, x, s, '-')])
+                    intervals.extend([singularity[i-1], s])
+                else:
+                    value = limit(shear_curve, self.variable, s, '-')  
+                    shear_values.append(value)
+                    intervals.append(Interval(singularity[i-1], s))
+
+        shear_values = list(map(abs, shear_values))
+        maximum_shear = max(shear_values)
+        point = intervals[shear_values.index(maximum_shear)]
+        return (point, maximum_shear)
+
     def bending_moment(self):
         """
         Returns a Singularity Function expression which represents
