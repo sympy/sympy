@@ -218,8 +218,8 @@ before_install:
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     # We do this conditionally because it saves us some downloading if the
     # version is the same.
+        deactivate; # Deactivate the Travis virtualenv
         if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-          deactivate; # Deactivate the Travis virtualenv
           wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -q -O miniconda.sh;
         else
           wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -q -O miniconda.sh;
@@ -246,6 +246,7 @@ before_install:
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list --format=legacy | grep "numpy" && pip uninstall -y numpy;
     fi
+
 install:
   # If a command fails, fail the build.
   - set -e
