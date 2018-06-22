@@ -235,7 +235,7 @@ before_install:
         conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY};
         source activate test-environment;
         conda clean --all;
-        if [[ "$TEST_OPT_DEPENDENCY" == *"sage"* ]]; then
+        if [[ "$TEST_SAGE" == "true" ]]; then
             # Use a separate environment because sage downgrades matplotlib
             conda create -n sage sage=8.1;
             conda remove -n sage --force sympy;
