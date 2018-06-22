@@ -711,41 +711,49 @@ class Beam(object):
         return integrate(self.load, x)
 
     def max_shear_force(self):
+        """Returns maximum Shear force and its coordinate
+        in the Beam object."""
         from sympy import solve, Mul, Interval
         shear_curve = self.shear_force()
         x = self.variable
+
         terms = shear_curve.args
-        singularity = []
+        singularity = []        # Points at which shear function changes
         for term in terms:
             if isinstance(term, Mul):
-                term = term.args[-1]
+                term = term.args[-1]    # SingularityFunction in the term
             singularity.append(term.args[1])
         singularity.sort()
         singularity = list(set(singularity))
-        shear_values = []
-        intervals = []
+
+        intervals = []    # List of Intervals with discrete value of shear force
+        shear_values = []   # List of values of shear force in each interval 
         for i, s in enumerate(singularity):
             if s == 0:
                 continue
             try:
                 shear_slope = Piecewise((float("nan"), x<singularity[i-1]),(self._load.rewrite(Piecewise), x<s), (float("nan"), True))
-                points = solve(shear_slope, self.variable)
+                points = solve(shear_slope, x)
                 val = []
                 for point in points:
-                    val.append(shear_curve.subs(self.variable, point))
+                    val.append(shear_curve.subs(x, point))
                 points.extend([singularity[i-1], s])
                 val.extend([limit(shear_curve, x, singularity[i-1], '+'), limit(shear_curve, x, s, '-')])
                 max_shear = max(list(map(abs, val)))
                 shear_values.append(max_shear)
                 intervals.append(points[val.index(max_shear)])
-
+            # If shear force in a particular Interval has zero or constant
+            # slope, then above block gives NotImplementedError as
+            # solve can't represent Interval solutions.
             except NotImplementedError:
-                if shear_curve.subs(x, (singularity[i-1] + s)/2) == (limit(shear_curve, x, singularity[i-1], '+') + limit(shear_curve, x, s, '-'))/2:
-                    shear_values.extend([limit(shear_curve, x, singularity[i-1], '+'), limit(shear_curve, x, s, '-')])
+                initial_shear = limit(shear_curve, x, singularity[i-1], '+')
+                final_shear = limit(shear_curve, x, s, '-')
+                # If shear_curve has a constant slope(it is a line).
+                if shear_curve.subs(x, (singularity[i-1] + s)/2) == (initial_shear + final_shear)/2 and initial_shear != final_shear:
+                    shear_values.extend([initial_shear, final_shear])
                     intervals.extend([singularity[i-1], s])
-                else:
-                    value = limit(shear_curve, self.variable, s, '-')  
-                    shear_values.append(value)
+                else:    # shear_curve has same value in whole Interval
+                    shear_values.append(final_shear)
                     intervals.append(Interval(singularity[i-1], s))
 
         shear_values = list(map(abs, shear_values))
