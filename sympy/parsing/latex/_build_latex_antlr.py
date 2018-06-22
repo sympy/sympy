@@ -5,7 +5,7 @@ import glob
 from sympy.utilities.misc import debug
 
 here = os.path.dirname(__file__)
-grammar_file = os.path.join(here, "LaTeX.g4")
+grammar_file = os.path.abspath(os.path.join(here, "LaTeX.g4"))
 dir_latex_antlr = os.path.join(here, "_antlr")
 
 header = '''
