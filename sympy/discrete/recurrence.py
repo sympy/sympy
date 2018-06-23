@@ -7,9 +7,9 @@ from sympy.core import S, Symbol, sympify
 from sympy.core.compatibility import as_int, range, iterable
 
 def linrec(coeffs, init, n):
-    """
-    Linear recurrence evaluation of homogeneous type, having coefficients
-    independent of the variable on which the recurrence is defined.
+    r"""
+    Evaluation of univariate linear recurrences of homogeneous type
+    having coefficients independent of the recurrence variable.
 
     Parameters
     ==========
@@ -24,15 +24,26 @@ def linrec(coeffs, init, n):
     Explanation
     ===========
 
-    Let, y(n) be the recurrence of given type, c be the sequence
+    Let `y(n)` be the recurrence of given type, c be the sequence
     of coefficients, b be the sequence of intial/base values of the
     recurrence and k (equal to len(c)) be the order of recurrence.
-    Then,
-
-    if n < k,
-        y(n) = b[n]
+    Then, if n < k,
+        `y(n) = b_n`
     otherwise,
-        y(n) = c[0]*y(n - 1) + c[1]*y(n - 2) + ... + c[k - 1]*y(n - k)
+        `y(n) = c_0 y(n-1) + c_1 y(n-2) + \cdots + c_{k-1} y(n-k)`
+
+    Let `x_0, x_1, \cdots, x_n` be a sequence and consider the transformation
+    that maps each polynomial `f(x)` to `T(f(x))` where each power `x^i` is
+    replaced by the corresponding value `x_i`. The sequence is then a solution
+    of the recurrence if and only if `T(x^i p(x)) = 0` for each `i ge 0` where
+    `p(x) = x^k - c_0 x^(k-1) - \cdots - c_{k-1}` is the characteristic
+    polynomial.
+
+    Then `T(f(x)p(x)) = 0` for each polynomial `f(x)` (as it is a linear
+    combination of powers `x^i`). Now, if `x^n` is congruent to
+    `g(x) = a_0 x^0 + a_1 x^1 + \cdots + a_{k-1} x^{k-1}` modulo `p(x)`, then
+    `T(x^n) = x_n` is equal to
+    `T(g(x)) = a_0 x_0 + a_1 x_1 + \cdots + a_{k-1} x_{k-1}`.
 
     Examples
     ========
@@ -42,17 +53,31 @@ def linrec(coeffs, init, n):
 
     >>> linrec(coeffs=[1, 1], init=[0, 1], n=10)
     55
+
     >>> linrec(coeffs=[1, 1], init=[x, y], n=10)
     34*x + 55*y
+
     >>> linrec(coeffs=[x, y], init=[0, 1], n=5)
     x**2*y + x*(x**3 + 2*x*y) + y**2
+
     >>> linrec(coeffs=[1, 2, 3, 0, 0, 4], init=[x, y, z], n=16)
     13576*x + 5676*y + 2356*z
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Exponentiation_by_squaring
+    .. [2] https://en.wikipedia.org/w/index.php?title=Modular_exponentiation&section=6#Matrices
+
+    See Also
+    ========
+
+    sympy.polys.agca.extensions.ExtensionElement.__pow__
 
     """
 
     if not coeffs:
-        return 0
+        return S.Zero
 
     if not iterable(coeffs):
         raise TypeError("Expected a sequence of coefficients for"
@@ -78,10 +103,10 @@ def linrec(coeffs, init, n):
         b += [S.Zero]*(k - len(b)) # remaining initial values default to zero
 
     def _square_and_reduce(u, offset):
-        # squares (u[0] + u[1] * x + u[2] * x**2 + ... + u[k - 1] * x**(k - 1))
-        # (multiplies by x if offset is 1) and reduces the above result of length
-        # upto 2*k to k using the characterstic equation of the recurrence,
-        # which is, x**k = c[0] * x**(k - 1) + c[1] * x**(k - 2) + ... + c[k - 1]
+        # squares `(u_0 + u_1 x + u_2 x^2 + \cdots + u_{k-1} x^k)` (and
+        # multiplies by `x` if offset is 1) and reduces the above result of
+        # length upto 2*k to k using the characteristic equation of the
+        # recurrence given by, `x^k = c_0 x^{k-1} + c_1 x^{k-2} + \cdots + c_{k-1}`
 
         w = [S.Zero]*(2*len(u) - 1 + offset)
         for i, p in enumerate(u):
@@ -97,11 +122,11 @@ def linrec(coeffs, init, n):
     def _final_coeffs(n):
         # computes the final coefficient list - `cf` corresponding to the
         # point at which recurrence is to be evalauted - `n`, such that,
-        # y(n) = cf[0]*y(k - 1) + cf[1]*y(k - 2) + ... + cf[k - 1]*y(0)
+        # `y(n) = cf_0 y(k-1) + cf_1 y(k-2) + \cdots + cf_{k-1} y(0)`
 
         if n < k:
             return [S.Zero]*n + [S.One] + [S.Zero]*(k - n - 1)
         else:
-            return _square_and_reduce(_final_coeffs(n // 2), offset=n%2)
+            return _square_and_reduce(_final_coeffs(n//2), n%2)
 
     return b[n] if n < k else sum(u*v for u, v in zip(_final_coeffs(n), b))
