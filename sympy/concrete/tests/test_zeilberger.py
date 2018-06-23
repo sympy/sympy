@@ -46,12 +46,12 @@ def test_zb_sum():
     R_5 = 4*2**(2*n - 3)*gamma(n + 1/2)/gamma(n - 1/2)
     R_6 = x/(n + x)
 
-    assert combsimp(zb_sum(F_1, (k, 0, n), J = 2)) == R_1
-    assert combsimp(zb_sum(F_2, (k, 0, n))) == R_2
-    assert combsimp(zb_sum(F_3, (k, 0, n))) == R_3
-    assert combsimp(zb_sum(F_4, (k, 0, n))) == R_4
-    assert combsimp(zb_sum(F_5, (k, 0, n))) == R_5
-    assert combsimp(zb_sum(F_6, (k, 0, n))) == R_6
+    assert combsimp(zb_sum(F_1, (k, 0, n), J = 2)[0]) == R_1
+    assert combsimp(zb_sum(F_2, (k, 0, n))[0]) == R_2
+    assert combsimp(zb_sum(F_3, (k, 0, n))[0]) == R_3
+    assert combsimp(zb_sum(F_4, (k, 0, n))[0]) == R_4
+    assert combsimp(zb_sum(F_5, (k, 0, n))[0]) == R_5
+    assert combsimp(zb_sum(F_6, (k, 0, n))[0]) == R_6
 
 def test_new_summation():
 
