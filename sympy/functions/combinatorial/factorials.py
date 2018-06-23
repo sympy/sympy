@@ -478,22 +478,17 @@ class RisingFactorial(CombinatorialFunction):
     Rising factorial (also called Pochhammer symbol) is a double valued
     function arising in concrete mathematics, hypergeometric functions
     and series expansions. It is defined by:
-
                 rf(x, k) = x * (x + 1) * ... * (x + k - 1)
-
     where 'x' can be arbitrary expression and 'k' is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit http://mathworld.wolfram.com/RisingFactorial.html page.
-
     When x is a Poly instance of degree >= 1 with a single variable,
     rf(x,k) = x(y) * x(y+1) * ... * x(y+k-1), where y is the variable of x.
     This is as described in Peter Paule, "Greatest Factorial Factorization and
     Symbolic Summation", Journal of Symbolic Computation, vol. 20, pp.
     235-268, 1995.
-
     Examples
     ========
-
     >>> from sympy import rf, symbols, factorial, ff, binomial, Poly
     >>> from sympy.abc import x
     >>> n, k = symbols('n k', integer=True)
@@ -505,26 +500,19 @@ class RisingFactorial(CombinatorialFunction):
     True
     >>> rf(Poly(x**3, x), 2)
     Poly(x**6 + 3*x**5 + 3*x**4 + x**3, x, domain='ZZ')
-
     Rewrite
-
     >>> rf(x, k).rewrite(ff)
     FallingFactorial(k + x - 1, k)
     >>> rf(x, k).rewrite(binomial)
     binomial(k + x - 1, k)*factorial(k)
     >>> rf(n, k).rewrite(factorial)
     factorial(k + n - 1)/factorial(n - 1)
-
     See Also
     ========
-
     factorial, factorial2, FallingFactorial
-
     References
     ==========
-
     .. [1] https://en.wikipedia.org/wiki/Pochhammer_symbol
-
     """
 
     @classmethod
@@ -578,6 +566,10 @@ class RisingFactorial(CombinatorialFunction):
                             return 1/reduce(lambda r, i:
                                             r*(x - i),
                                             range(1, abs(int(k)) + 1), 1)
+        elif not (k.is_Integer) and not (x.is_Integer):
+            return factorial(k + x - 1) / factorial(x - 1)
+        elif not (k.is_Integer):
+            return factorial(k + x - 1) / factorial(x - 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
@@ -603,24 +595,21 @@ class RisingFactorial(CombinatorialFunction):
         return sage.rising_factorial(self.args[0]._sage_(), self.args[1]._sage_())
 
 
+
 class FallingFactorial(CombinatorialFunction):
     """
     Falling factorial (related to rising factorial) is a double valued
     function arising in concrete mathematics, hypergeometric functions
     and series expansions. It is defined by
-
                 ff(x, k) = x * (x-1) * ... * (x - k+1)
-
     where 'x' can be arbitrary expression and 'k' is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit http://mathworld.wolfram.com/FallingFactorial.html page.
-
     When x is a Poly instance of degree >= 1 with single variable,
     ff(x,k) = x(y) * x(y-1) * ... * x(y-k+1), where y is the variable of x.
     This is as described in Peter Paule, "Greatest Factorial Factorization and
     Symbolic Summation", Journal of Symbolic Computation, vol. 20, pp.
     235-268, 1995.
-
     >>> from sympy import ff, factorial, rf, gamma, polygamma, binomial, symbols, Poly
     >>> from sympy.abc import x, k
     >>> n, m = symbols('n m', integer=True)
@@ -634,9 +623,7 @@ class FallingFactorial(CombinatorialFunction):
     Poly(x**4 - 2*x**3 + x**2, x, domain='ZZ')
     >>> ff(n, n)
     factorial(n)
-
     Rewrite
-
     >>> ff(x, k).rewrite(gamma)
     (-1)**k*gamma(k - x)/gamma(-x)
     >>> ff(x, k).rewrite(rf)
@@ -645,17 +632,12 @@ class FallingFactorial(CombinatorialFunction):
     binomial(x, m)*factorial(m)
     >>> ff(n, m).rewrite(factorial)
     factorial(n)/factorial(-m + n)
-
     See Also
     ========
-
     factorial, factorial2, RisingFactorial
-
     References
     ==========
-
     .. [1] http://mathworld.wolfram.com/FallingFactorial.html
-
     """
 
     @classmethod
@@ -708,6 +690,11 @@ class FallingFactorial(CombinatorialFunction):
                         else:
                             return 1/reduce(lambda r, i: r*(x + i),
                                             range(1, abs(int(k)) + 1), 1)
+        elif not (k.is_Integer) and not (x.is_Integer):
+            return factorial(x) / factorial(x - k)
+        elif not (k.is_Integer):
+            return factorial(x) / factorial(x - k)
+
 
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
