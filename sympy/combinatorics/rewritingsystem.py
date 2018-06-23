@@ -43,7 +43,6 @@ class RewritingSystem(object):
 
         # Create a finite state machine as an instance of the StateMachine object
         self.reduction_automaton = StateMachine('fsm')
-        self.reduction_automaton.add_state('start', state_type='s')
         self.construct_automaton()
 
     def set_max(self, n):

@@ -44,6 +44,7 @@ class StateMachine(object):
     def __init__(self, name):
         self.name = name
         self.states = {} # Contains all the states in the machine.
+        self.add_state('start', state_type='s')
 
     def add_state(self, state_name, state_type=None, rh_rule=None):
         '''
