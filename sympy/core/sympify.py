@@ -369,8 +369,16 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                                             standard_transformations)
     from sympy.parsing.sympy_parser import convert_xor as t_convert_xor
     from sympy.parsing.sympy_parser import rationalize as t_rationalize
+    from sympy.parsing.sympy_parser import auto_number as t_auto_number
 
     transformations = standard_transformations
+    if default_float_dps is not None:
+        myfcn = lambda x,y,z: t_auto_number(x,y,z,default_float_dps=default_float_dps)
+        # TODO: this doesn't seem to work, got:
+        #   ValueError: could not convert string to float: '0.1'
+        #transformations += (myfcn,)
+        # So instead, something horrible
+        transformations = tuple(myfcn if x is t_auto_number else x for x in transformations)
 
     if rational:
         transformations += (t_rationalize,)
@@ -379,7 +387,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     try:
         a = a.replace('\n', '')
-        expr = parse_expr(a, local_dict=locals, transformations=transformations, evaluate=evaluate, default_float_dps=default_float_dps)
+        expr = parse_expr(a, local_dict=locals, transformations=transformations, evaluate=evaluate)
     except (TokenError, SyntaxError) as exc:
         raise SympifyError('could not parse %r' % a, exc)
 

@@ -835,7 +835,7 @@ standard_transformations = (lambda_notation, auto_symbol, repeated_decimals, aut
     factorial_notation)
 
 
-def stringify_expr(s, local_dict, global_dict, transformations, default_float_dps=None):
+def stringify_expr(s, local_dict, global_dict, transformations):
     """
     Converts the string ``s`` to Python code, in ``local_dict``
 
@@ -848,11 +848,7 @@ def stringify_expr(s, local_dict, global_dict, transformations, default_float_dp
         tokens.append((toknum, tokval))
 
     for transform in transformations:
-        # TODO: yuck!
-        if transform == auto_number:
-            tokens = transform(tokens, local_dict, global_dict, default_float_dps)
-        else:
-            tokens = transform(tokens, local_dict, global_dict)
+        tokens = transform(tokens, local_dict, global_dict)
 
     return untokenize(tokens)
 
@@ -870,7 +866,7 @@ def eval_expr(code, local_dict, global_dict):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True, default_float_dps=None):
+               global_dict=None, evaluate=True):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -946,7 +942,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         global_dict = {}
         exec_('from sympy import *', global_dict)
 
-    code = stringify_expr(s, local_dict, global_dict, transformations, default_float_dps)
+    code = stringify_expr(s, local_dict, global_dict, transformations)
 
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
