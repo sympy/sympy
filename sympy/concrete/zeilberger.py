@@ -192,18 +192,18 @@ def zb_sum(F, k_a_b, J = 1):
 
     F = F.rewrite(gamma)
 
-    for w in F.free_symbols.intersection(b.free_symbols.union(a.free_symbols)):
+    for w in F.free_symbols.intersection((b - a).free_symbols):
         if  not (w.is_positive is False or w.is_integer is False) and not (
             hypersimp(F, k) is None or hypersimp(F, w) is None):
             break
     else:
         return None
 
-    _n = symbols('_n', positive = True, integer = True)
-    F = F.subs(w, _n)
-    a, b = a.subs(w, _n), b.subs(w, _n)
+    n = symbols('n', positive = True, integer = True)
+    F = F.subs(w, n)
+    a, b = a.subs(w, n), b.subs(w, n)
 
-    pair = zb_recur(F, _n, k, J)
+    pair = zb_recur(F, n, k, J)
 
     if pair is None:
         return None
@@ -213,36 +213,36 @@ def zb_sum(F, k_a_b, J = 1):
     G_a = G.subs(k, a)
 
     f = symbols('f', cls = Function)
-    sum_rec = sum(F_rec[i] * f(_n + i) for i in range(J + 1))
+    sum_rec = sum(F_rec[i] * f(n + i) for i in range(J + 1))
 
     i = symbols('i', cls = Dummy)
-    if not (b.subs(_n, i) - a.subs(_n, _n + i)).free_symbols.issubset({i}):
+    if not (b.subs(n, i) - a.subs(n, n + i)).free_symbols.issubset({i}):
         return None
 
-    initial = { f(i): sum(F.subs([(_n, i), (k, a.subs(_n, i) + j)])
-            for j in range(b.subs(_n, i) - a.subs(_n, i) + 1)) for i in range(1, J + 2) }
+    initial = { f(i): sum(F.subs([(n, i), (k, a.subs(n, i) + j)])
+            for j in range(b.subs(n, i) - a.subs(n, i) + 1)) for i in range(1, J + 2) }
 
-    vanishes = (combsimp(F.subs(k, b + 1)) == 0) and _vanishes(F, b, _n, k)
+    vanishes = (combsimp(F.subs(k, b + 1)) == 0) and _vanishes(F, b, n, k)
     if vanishes:
         try:
-            res = rsolve(combsimp(sum_rec + G_a), f(_n), initial)
+            res = rsolve(combsimp(sum_rec + G_a), f(n), initial)
             if res == None:
                 return None
-            return res.subs(_n, w), w
+            return res.subs(n, w), w
         except ValueError:
             return None
 
-    if not (b.subs(_n, _n + J) - b.subs(_n, _n + i)).free_symbols.issubset({i}):
+    if not (b.subs(n, n + J) - b.subs(n, n + i)).free_symbols.issubset({i}):
         return None
 
-    boundary = sum(sum(F.subs([(_n, _n + i), (k, b.subs(_n, _n + i) + 1 + j)])
-            for j in range(b.subs(_n, _n + J) - b.subs(_n, _n + i))) for i in range(J + 1))
+    boundary = sum(sum(F.subs([(n, n + i), (k, b.subs(n, n + i) + 1 + j)])
+            for j in range(b.subs(n, n + J) - b.subs(n, n + i))) for i in range(J + 1))
 
-    G_b = G.subs(k, b.subs(_n, _n + J))
+    G_b = G.subs(k, b.subs(n, n + J))
     try:
-        res = rsolve(combsimp(sum_rec + boundary + G_a - G_b), f(_n), initial)
+        res = rsolve(combsimp(sum_rec + boundary + G_a - G_b), f(n), initial)
         if res == None:
             return None
-        return res.subs(_n, w), w
+        return res.subs(n, w), w
     except ValueError:
         return None
