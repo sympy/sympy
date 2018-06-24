@@ -3,13 +3,12 @@ from sympy.stats.rv import _value_check
 from sympy.stats.joint_rv import JointDistribution, JointPSpace
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.determinant import det
-from sympy.core.containers import Tuple
 
-__all__ = ['MultivariateNormal',
-'MultivariateLaplace',
-'MultivariateT',
-'NormalGamma'
-]
+# __all__ = ['MultivariateNormal',
+# 'MultivariateLaplace',
+# 'MultivariateT',
+# 'NormalGamma'
+# ]
 
 def rv(cls, syms, *args):
     args = list(map(sympify, args))
@@ -25,8 +24,9 @@ class MultivariateNormalDistribution(JointDistribution):
 
     is_Continuous=True
 
-    def set(mu):
-        k = len(mu)
+    @property
+    def set(self):
+        k = len(self.mu)
         return S.Reals**k
 
     def check(self, mu, sigma):
@@ -45,7 +45,7 @@ class MultivariateNormalDistribution(JointDistribution):
             -S(1)/2*(mu - args).transpose()*(sigma**(-1)*\
                 (mu - args)))[0]
 
-    def marginal_density(self, indices, *sym):
+    def marginal_distribution(self, indices, *sym):
         _mu, _sigma = Matrix(self.mu), Matrix(self.sigma)
         sym = Matrix(list(sym))
         k = len(self.mu)
@@ -86,8 +86,9 @@ class MultivariateLaplaceDistribution(JointDistribution):
     _argnames = ['mu', 'sigma']
     is_Continuous=True
 
-    def set(mu):
-        k = len(mu)
+    @property
+    def set(self):
+        k = len(self.mu)
         return S.Reals**k
 
     def check(self, mu, sigma):
@@ -103,7 +104,7 @@ class MultivariateLaplaceDistribution(JointDistribution):
         mu, sigma = Matrix(self.mu), Matrix(self.sigma)
         k = len(mu)
         sigma_inv = sigma**(-1)
-        args = Matrix(args)
+        args = Matrix(args).transpose()
         v = 1 - S(k)/2
         return S(2)/((2*pi)**(S(k)/2)*sqrt(det(sigma))) \
         *((args.transpose()*sigma_inv*args)[0]/(2 + (mu.transpose()*sigma_inv*mu)[0])) \
@@ -138,8 +139,9 @@ class MultivariateTDistribution(JointDistribution):
     _argnames = ['mu', 'shape_mat', 'dof']
     is_Continuous=True
 
-    def set(mu):
-        k = len(mu)
+    @property
+    def set(self):
+        k = len(self.mu)
         return S.Reals**k
 
     def check(self, mu, sigma, v):
@@ -193,8 +195,10 @@ class NormalGammaDistribution(JointDistribution):
         _value_check(alpha > 0, "alpha must be positive")
         _value_check(beta > 0, "beta must be positive")
 
+    @property
     def set(self):
-        return S.Reals**2
+        from sympy.sets.sets import Interval
+        return S.Reals*Interval(0, S.Infinity)
 
     def pdf(self, x, tau):
         from sympy.functions.special.gamma_functions import gamma
@@ -204,6 +208,22 @@ class NormalGammaDistribution(JointDistribution):
         return beta**alpha*sqrt(lamda)/(gamma(alpha)*sqrt(2*pi))*\
         tau**(alpha - S(1)/2)*exp(-1*beta*tau)*\
         exp(-1*(lamda*tau*(x - mu)**2)/S(2))
+
+    def marginal_distribution(self, indices, *sym):
+        from sympy.functions.special.gamma_functions import gamma
+        if len(indices) == 2:
+            return self.pdf(*sym)
+        if indices[0] == 0:
+            #For marginal over `x`, return non-standardized Student-T's
+            #distribution
+            x = sym[0]
+            v, mu, sigma = self.alpha - S(1)/2, self.mu, \
+                S(self.beta)/(self.lamda * self.alpha)
+            return Lambda(sym, gamma((v + 1)/2)/(gamma(v/2)*sqrt(pi*v)*sigma)*\
+                (1 + 1/v*((x - mu)/sigma)**2)**((-v -1)/2))
+        #For marginal over `tau`, return Gamma distribution as per construction
+        from sympy.stats.crv_types import GammaDistribution
+        return Lambda(sym, GammaDistribution(self.alpha, self.beta)(sym[0]))
 
 def NormalGamma(syms, mu, lamda, alpha, beta):
     """

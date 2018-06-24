@@ -859,12 +859,17 @@ def test_sympy__stats__rv__RandomSymbol():
     assert _test_args(RandomSymbol(x, A))
 
 
+@SKIP("abstract Class")
 def test_sympy__stats__rv__ProductPSpace():
-    from sympy.stats.rv import ProductPSpace
+    pass
+
+
+def test_sympy__stats__rv__IndependentProductPSpace():
+    from sympy.stats.rv import IndependentProductPSpace
     from sympy.stats.crv import SingleContinuousPSpace
     A = SingleContinuousPSpace(x, nd)
     B = SingleContinuousPSpace(y, nd)
-    assert _test_args(ProductPSpace(A, B))
+    assert _test_args(IndependentProductPSpace(A, B))
 
 
 def test_sympy__stats__rv__ProductDomain():
@@ -1218,13 +1223,6 @@ def test_sympy__stats__joint_rv_types__MultivariateTDistribution():
 def test_sympy__stats__joint_rv_types__NormalGammaDistribution():
     from sympy.stats.joint_rv_types import NormalGammaDistribution
     assert _test_args(NormalGammaDistribution(1, 2, 3, 4))
-
-
-def test_sympy__stats__joint_rv__MarginalPSpace():
-    from sympy.stats.joint_rv import (JointPSpace, JointDistribution,
-        MarginalPSpace)
-    jpspace = (JointPSpace(('x', 'y', 'z'), JointDistribution(1)))
-    assert _test_args(MarginalPSpace((x, y), jpspace))
 
 
 def test_sympy__core__symbol__Dummy():

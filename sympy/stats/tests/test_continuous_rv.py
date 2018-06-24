@@ -20,7 +20,7 @@ from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne
 
 
 from sympy.stats.crv_types import NormalDistribution
-from sympy.stats.rv import ProductPSpace
+from sympy.stats.rv import IndependentProductPSpace
 
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.external import import_module
@@ -722,7 +722,7 @@ def test_random_parameters():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
-    assert isinstance(pspace(meas), ProductPSpace)
+    assert isinstance(pspace(meas), IndependentProductPSpace)
     #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
     #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
 

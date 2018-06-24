@@ -267,8 +267,19 @@ class RandomSymbol(Expr):
     def free_symbols(self):
         return {self}
 
-
 class ProductPSpace(PSpace):
+    """
+    Abstract class for representing probability spaces with multiple random
+    variables.
+
+    See Also
+    ========
+    sympy.stats.rv.IndependentProductPSpace
+    sympy.stats.joint_rv.JointPSpace
+    """
+    pass
+
+class IndependentProductPSpace(ProductPSpace):
     """
     A probability space resulting from the merger of two independent probability
     spaces.
@@ -497,7 +508,7 @@ def pspace(expr):
     ========
 
     >>> from sympy.stats import pspace, Normal
-    >>> from sympy.stats.rv import ProductPSpace
+    >>> from sympy.stats.rv import IndependentProductPSpace
     >>> X = Normal('X', 0, 1)
     >>> pspace(2*X + 1) == X.pspace
     True
@@ -516,7 +527,7 @@ def pspace(expr):
         isinstance(expr.pspace, JointPSpace):
         return expr.pspace
     # Otherwise make a product space
-    return ProductPSpace(*[rv.pspace for rv in rvs])
+    return IndependentProductPSpace(*[rv.pspace for rv in rvs])
 
 
 def sumsets(sets):
@@ -748,7 +759,7 @@ class Density(Basic):
             return None
 
     def doit(self, evaluate=True, **kwargs):
-        from sympy.stats.joint_rv import MarginalPSpace, JointPSpace
+        from sympy.stats.joint_rv import JointPSpace
 
         expr, condition = self.expr, self.condition
         if condition is not None:

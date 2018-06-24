@@ -11,13 +11,13 @@ sympy.stats.drv
 
 from __future__ import print_function, division
 
-__all__ = ['marginal_density']
+# __all__ = ['marginal_distribution']
 
-from sympy import Basic, Lambda, sympify, S
+from sympy import Basic, Lambda, sympify
 from sympy.concrete.summations import Sum
-from sympy.integrals.integrals import Integral
-from sympy.stats.rv import (ProductPSpace, RandomSymbol,
-        NamedArgsMixin, ProductDomain)
+from sympy.integrals.integrals import Integral, integrate
+from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
+     ProductDomain)
 from sympy.core.containers import Tuple
 
 class JointPSpace(ProductPSpace):
@@ -38,18 +38,28 @@ class JointPSpace(ProductPSpace):
         return self.args[0]
 
     @property
-    def values(self):
-        vls = []
-        for sym in self.symbols:
-            vls.extend(MarginalPSpace((sym,), self).values)
-        return tuple(vls)
-
-    @property
     def distribution(self):
         return self.args[1]
 
     def pdf(self, *args):
         return self.distribution(*args)
+
+    def marginal_distribution(self, indices, *sym):
+        limits = list([i,] for i in self.symbols if i not in sym)
+        for i in indices:
+            limits[i].append(self.distribution.set.args[i])
+            limits[i] = tuple(limits[i])
+        limits = tuple(limits)
+        if self.distribution.is_Continuous:
+            return Lambda(sym, integrate(self.distribution(
+                *self.symbols), limits))
+        if self.distribution.is_Discrete:
+            return Lambda(sym, integrate(self.distribution(
+                *self.symbols), limits))
+
+    @property
+    def values(self):
+        raise NotImplementedError
 
     def where(self, condition):
         raise NotImplementedError()
@@ -62,41 +72,6 @@ class JointPSpace(ProductPSpace):
 
     def probability(self, condition):
         raise NotImplementedError()
-
-
-class MarginalPSpace(JointPSpace):
-    """
-    Space representing the marginal probaility space of a subset
-    of random variables from a joint probability space.
-    """
-    def __new__(cls, sym, jpspace):
-        sym = Tuple.fromiter(i for i in sym)
-        return Basic.__new__(cls, sym, jpspace)
-
-    @property
-    def joint_space(self):
-        return self.args[1]
-
-    @property
-    def symbols(self):
-        return self.args[0]
-
-    @property
-    def density(self, *sym):
-        space = self.joint_space
-        sym_2 = tuple(i for i in space.symbols if i not in sym)
-        if space.distributions.is_Continuous:
-            limits = tuple((i, S.Reals) for i in self.symbols)
-            return Lambda(sym_2, Integral(space.distribution(
-                space.symbols), limits))
-        if space.distributions.is_Discrete:
-            limits = tuple((i, S.Integers) for i in self.symbols)
-            return Lambda(sym_2, Integral(space.distribution(
-                space.symbols), limits))
-
-    @property
-    def values(self):
-        return tuple(RandomSymbol(sym, self) for sym in self.symbols)
 
 class JointDistribution(Basic, NamedArgsMixin):
     """
@@ -114,10 +89,6 @@ class JointDistribution(Basic, NamedArgsMixin):
     @property
     def domain(self):
         return ProductDomain(self.symbols)
-
-    @property
-    def symbols(self):
-        return list(map(sympify, self.args[0]))
 
     @property
     def pdf(self, *args):
@@ -140,7 +111,7 @@ class JointDistribution(Basic, NamedArgsMixin):
     def __call__(self, *args):
         return self.pdf(*args)
 
-def marginal_density(prob_space, *sym):
+def marginal_distribution(prob_space, *sym):
     """
     Marginal density of a joint random variable.
 
@@ -158,11 +129,11 @@ def marginal_density(prob_space, *sym):
     Example:
     =======
     >>> from sympy.stats.joint_rv_types import MultivariateNormal
-    >>> from sympy.stats.joint_rv import marginal_density
+    >>> from sympy.stats.joint_rv import marginal_distribution
     >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> m = MultivariateNormal(('x', 'y'), [1, 2], [[2, 1], [1, 2]])
-    >>> marginal_density(m, x)(1)
+    >>> marginal_distribution(m, x)(1)
     1/(2*sqrt(pi))
 
     """
@@ -170,7 +141,8 @@ def marginal_density(prob_space, *sym):
     if sym == ():
         raise ValueError(
             "At least one symbol for marginal density is needed.")
+    assert all([i in pspace_sym for i in sym])
     indices = tuple((pspace_sym).index(s) for s in sym)
-    if hasattr(prob_space.distribution, 'marginal_density'):
-        return prob_space.distribution.marginal_density(indices, *sym)
-    return MarginalPSpace(prob_space, *sym).density
+    if hasattr(prob_space.distribution, 'marginal_distribution'):
+        return prob_space.distribution.marginal_distribution(indices, *sym)
+    return prob_space.marginal_distribution(indices, *sym)
