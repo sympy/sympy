@@ -536,7 +536,7 @@ class RisingFactorial(CombinatorialFunction):
             return S.NaN
         elif x is S.One:
             return factorial(k)
-        elif k.is_Integer:
+        if k.is_Integer:
             if k is S.Zero:
                 return S.One
             else:
@@ -578,6 +578,10 @@ class RisingFactorial(CombinatorialFunction):
                             return 1/reduce(lambda r, i:
                                             r*(x - i),
                                             range(1, abs(int(k)) + 1), 1)
+        else:
+            from sympy import integrate, Symbol, exp, oo
+            t = Symbol('t')
+            return (integrate(t**(x+k-1)*exp(-t), (t,0,oo)))/(integrate(t**(x-1)*exp(-t), (t,0,oo)))
 
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
@@ -667,7 +671,7 @@ class FallingFactorial(CombinatorialFunction):
             return S.NaN
         elif k.is_integer and x == k:
             return factorial(x)
-        elif k.is_Integer:
+        if k.is_Integer:
             if k is S.Zero:
                 return S.One
             else:
@@ -708,6 +712,10 @@ class FallingFactorial(CombinatorialFunction):
                         else:
                             return 1/reduce(lambda r, i: r*(x + i),
                                             range(1, abs(int(k)) + 1), 1)
+        else:
+            from sympy import integrate, Symbol, exp, oo
+            t = Symbol('t')
+            return (integrate(t**(x)*exp(-t), (t,0,oo)))/(integrate(t**(x-k)*exp(-t), (t,0,oo)))
 
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
