@@ -21,8 +21,8 @@ def linrec(coeffs, init, n):
     n : Integer
         point of evaluation of recurrence
 
-    Explanation
-    ===========
+    Notes
+    =====
 
     Let `y(n)` be the recurrence of given type, c be the sequence
     of coefficients, b be the sequence of intial/base values of the
@@ -45,10 +45,15 @@ def linrec(coeffs, init, n):
     `T(x^n) = x_n` is equal to
     `T(g(x)) = a_0 x_0 + a_1 x_1 + \cdots + a_{k-1} x_{k-1}`.
 
+    Computation of `x^n`, given `x^k = c_0 x^{k-1} + c_1 x^{k-2} + \cdots + c_{k-1}`
+    is performed using exponentiation by squaring (refer to [1]) with an additional
+    reduction step performed to retain only first k powers of `x` in the
+    representation of `x^n`.
+
     Examples
     ========
 
-    >>> from sympy import linrec
+    >>> from sympy.discrete.recurrence import linrec
     >>> from sympy.abc import x, y, z
 
     >>> linrec(coeffs=[1, 1], init=[0, 1], n=10)
