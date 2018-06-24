@@ -1432,13 +1432,13 @@ def NonfreeFactors(u, x):
 
     """
     if ProductQ(u):
-        result = 1
+        result = S(1)
         for i in u.args:
             if not FreeQ(i, x):
                 result *= i
         return result
     elif FreeQ(u, x):
-        return 1
+        return S(1)
     else:
         return u
 
@@ -6883,6 +6883,99 @@ def LeQ(u, v, w=None):
 def ProperPolyQ(u, x):
     return PolyQ(u, x) and NeQ(Coeff(u, x, 0), 0)
 
+def QuadraticProductQ(u, x):
+    def _cons_f(A, m, x):
+        return PolyQ(A, x) and Expon(A, x) <= 2 and IntegerQ(m)
+    cons = CustomConstraint(_cons_f)
+    pattern = Pattern(UtilityOperator(Pow(A_, WC('m', S(1))), x_), cons)
+    for i in NonfreeFactors(u, x).args:
+        if not is_match(UtilityOperator(i, x), pattern):
+            return False
+    return ProductQ(NonfreeFactors(u, x))
+
+def InverseFunctionOfQuotientOfLinears(u, x):
+    if AtomQ(u) or CalculusQ(u) or FreeQ(u, x):
+        return False
+    elif InverseFunctionQ(u) and QuotientOfLinearsQ(u.args[0], x):
+        return u
+    else:
+        for i in u.args:
+            tmp = InverseFunctionOfQuotientOfLinears(i, x)
+            if not AtomQ(tmp):
+                return tmp
+    return False
+
+# def SubstForInverseFunctionOfQuotientOfLinears(u, x):
+#     tmp = InverseFunctionOfQuotientOfLinears(u, x)
+#     if AtomQ(tmp):
+#         return False
+#     else:
+#         h = InverseFunction()
+
+# SubstForInverseFunctionOfQuotientOfLinears[u_,x_Symbol] :=
+#   With[{tmp=InverseFunctionOfQuotientOfLinears[u,x]},
+#   If[AtomQ[tmp],
+#     False,
+#   With[{h=InverseFunction[Head[tmp]],lst=QuotientOfLinearsParts[tmp[[1]],x]},
+#   With[{a=lst[[1]],b=lst[[2]],c=lst[[3]],d=lst[[4]]},
+#   {SubstForInverseFunction[u,tmp,(-a+c*h[x])/(b-d*h[x]),x]*D[h[x],x]/(b-d*h[x])^2, tmp, b*c-a*d}]]]]
+
+
+def NormalizeTrig(func, expr, b, x):
+    from matchpy import match
+    pattern = Pattern(UtilityOperator((pi*WC('n', S(1)) + WC('r', S(0)))*WC('m', S(1)) + WC('s', S(0))))
+    if is_match(expr, pattern):
+        mt =  next(match(UtilityOperator(expr), pattern))
+        m = mt['m']
+        n = mt['n']
+        r = mt['r']
+        s = mt['s']
+        if m*n == S(1)/4 and NegQ(b):
+            if func == sin:
+                return cos(pi/S(4) - m*r - s - b*x)
+            elif func == cos:
+                return sin(pi/S(4) - m*r - s - b*x)
+            elif func == tan:
+                return cot(pi/S(4) - m*r - s - b*x)
+            elif func == cot:
+                return tan(pi/S(4) - m*r - s - b*x)
+            elif func == sec:
+                return csc(pi/S(4) - m*r - s - b*x)
+            elif func == csc:
+                return sec(pi/S(4) - m*r - s - b*x)
+
+        elif m*n == S(-1)/4:
+            if PosQ(b):
+                if func == sin:
+                    return -cos(pi/S(4) + m*r + s + b*x)
+                elif func == cos:
+                    return sin(pi/S(4) + m*r + s + b*x)
+                elif func == tan:
+                    return -cot(pi/S(4) + m*r + s + b*x)
+                elif func == cot:
+                    return -tan(pi/S(4) + m*r + s + b*x)
+                elif func == sec:
+                    return csc(pi/S(4) + m*r + s + b*x)
+                elif func == csc:
+                    return -sec(pi/S(4) + m*r + s + b*x)
+
+            else:
+                if func == sin:
+                    return -sin(pi/S(4) - m*r - s - b*x)
+                elif func == cos:
+                    return cos(pi/S(4) - m*r - s - b*x)
+                elif func == tan:
+                    return -tan(pi/S(4) - m*r - s - b*x)
+                elif func == cot:
+                    return -cot(pi/S(4) - m*r - s - b*x)
+                elif func == sec:
+                    return sec(pi/S(4) - m*r - s - b*x)
+                elif func == csc:
+                    return -csc(pi/S(4) - m*r - s - b*x)
+        return func(m*n*pi+ m*r + s + b*x)
+    return Function('NormalizeTrig')(func, expr, b, x)
+
+def NormalizeHyperbolic()
 # ===========================
 
 if matchpy:
