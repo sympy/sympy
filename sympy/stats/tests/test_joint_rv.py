@@ -1,4 +1,4 @@
-from sympy import symbols, pi, oo, sqrt, exp
+from sympy import S, symbols, pi, oo, sqrt, exp
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.utilities.pytest import raises
@@ -28,9 +28,13 @@ def test_MultivariateTDist():
 
 def test_NormalGamma():
     from sympy.stats.joint_rv_types import NormalGamma
+    from sympy import gamma
     ng = NormalGamma(('x', 'y'), 1, 2, 3, 4)
     assert density(ng)(1, 1) == 32*exp(-4)/sqrt(pi)
     raises(ValueError, lambda:NormalGamma(('x', 'y'), 1, 2, 3, -1))
+    assert marginal_distribution(ng, x)(1) == \
+        3*sqrt(10)*gamma(S(7)/4)/(10*sqrt(pi)*gamma(S(5)/4))
+    assert marginal_distribution(ng, y)(1) == exp(-S(1)/4)/128
 
 def test_JointPSpace_margial_distribution():
     from sympy.stats.joint_rv_types import MultivariateT
