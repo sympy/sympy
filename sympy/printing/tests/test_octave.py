@@ -388,6 +388,12 @@ def test_octave_expint():
     )
 
 
+def test_octave_zeta():
+    assert octave_code(zeta(x)) == 'zeta(x)'
+    n = Symbol('n')
+    assert octave_code(zeta(x, n)) != 'zeta(n, x)'
+
+
 def test_trick_indent_with_end_else_words():
     # words starting with "end" or "else" do not confuse the indenter
     t1 = S('endless');
@@ -460,8 +466,6 @@ def test_specfun():
     assert octave_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
     assert octave_code(LambertW(x)) == 'lambertw(x)'
     assert octave_code(LambertW(x, n)) == 'lambertw(n, x)'
-    assert octave_code(zeta(x)) == 'zeta(x)'
-    assert octave_code(zeta(x, n)) == 'zeta(n, x)'
 
 
 def test_MatrixElement_printing():

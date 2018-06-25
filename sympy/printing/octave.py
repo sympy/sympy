@@ -464,6 +464,13 @@ class OctaveCodePrinter(CodePrinter):
         return "expint(%s)" % self._print(x)
 
 
+    def _print_zeta(self, expr):
+        if len(expr.args) == 1:
+            return "zeta(%s)" % self._print(expr.args[0])
+        # their two-arg form is the derivative, not same thing
+        return self._print_not_supported(expr)
+
+
     def _one_or_two_reversed_args(self, expr):
         assert len(expr.args) <= 2
         return '{name}({args})'.format(
@@ -472,7 +479,7 @@ class OctaveCodePrinter(CodePrinter):
         )
 
 
-    _print_DiracDelta = _print_LambertW = _print_zeta = _one_or_two_reversed_args
+    _print_DiracDelta = _print_LambertW = _one_or_two_reversed_args
 
 
     def _nested_binary_math_func(self, expr):
