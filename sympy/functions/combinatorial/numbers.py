@@ -1164,7 +1164,7 @@ class partition(Function):
     def eval(cls, n):
         is_int = n.is_integer
         if is_int == False:
-            raise ValueError("Partition numbers are defined only for " +
+            raise ValueError("Partition numbers are defined only for "
                              "integers")
         elif is_int:
             if n.is_negative:
@@ -1215,7 +1215,7 @@ def _multiset_histogram(n):
     The data is stored in a class deriving from tuple so it is easily
     recognized and so it can be converted easily to a list.
     """
-    if type(n) is dict:  # item: count
+    if isinstance(n, dict):  # item: count
         if not all(isinstance(v, int) and v >= 0 for v in n.values()):
             raise ValueError
         tot = sum(n.values())
