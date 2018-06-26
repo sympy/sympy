@@ -598,7 +598,7 @@ transolve
 
 .. autofunction:: sympy.solvers.solveset._check_expo
 
-.. autofunction:: sympy.solvers.solveset._expo_solver
+.. autofunction:: sympy.solvers.solveset._solve_expo
 
 
 Diophantine Equations (DEs)

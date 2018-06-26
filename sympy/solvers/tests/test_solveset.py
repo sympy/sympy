@@ -38,7 +38,7 @@ from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
-    _is_finite_with_finite_vars, _transolve, _check_expo, _expo_solver)
+    _is_finite_with_finite_vars, _transolve, _check_expo, _solve_expo)
 
 
 a = Symbol('a', real=True)
@@ -631,14 +631,6 @@ def test_solve_only_exp_1():
     assert solveset_real(exp(x) + exp(-x) - 4, x) == \
         FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
     assert solveset_real(exp(x) + exp(-x) - y, x) != S.EmptySet
-
-
-@XFAIL
-def test_solve_only_exp_2():
-    assert solveset_real(exp(x/y)*exp(-z/y) - 2, y) == \
-        FiniteSet((x - z)/log(2))
-    assert solveset_real(sqrt(exp(x)) + sqrt(exp(-x)) - 4, x) == \
-        FiniteSet(2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2))
 
 
 def test_atan2():
@@ -1744,13 +1736,12 @@ def test_issue_14454():
 def test_transolve():
     from sympy.abc import x
 
-    assert _transolve(2**x - 32, x, S.Reals) == FiniteSet(5)
     assert _transolve(3**x, x, S.Reals) == S.EmptySet
     assert _transolve(3**x - 9**(x + 5), x, S.Reals) == FiniteSet(-10)
 
 
 # exponential tests
-def test_expo_solver_real():
+def test_exponential_real():
     from sympy.abc import x, y, z
 
     e1 = 3**(2*x) - 2**(x + 3)
@@ -1793,7 +1784,7 @@ def test_expo_solver_real():
 
 
 @XFAIL
-def _expo_solver_complex():
+def test_exponential_complex():
     from sympy.abc import x
     from sympy import Dummy
     n = Dummy('n')
@@ -1832,14 +1823,14 @@ def test_expo_conditionset():
     assert solveset(f4, x, S.Reals) == ConditionSet(x, Eq(-exp(x) + log(x), 0), S.Reals)
 
 
-def test_expo_symbols():
+def test_exponential_symbols():
     x, y, z = symbols('x y z', positive=True)
     from sympy import simplify
 
     assert solveset(z**x - y, x, S.Reals) == Intersection(
         S.Reals, FiniteSet(log(y)/log(z)))
 
-    w = symbols('w', integer=True)
+    w = symbols('w')
     f1 = 2*x**w - 4*y**w
     f2 = (x/y)**w - 2
     ans1 = solveset(f1, w, S.Reals)
@@ -1857,6 +1848,12 @@ def test_issue_10864():
     assert solveset(x**(y*z) - x, x, S.Reals) == FiniteSet(1)
 
 
+@XFAIL
+def test_solve_only_exp_2():
+    assert solveset_real(sqrt(exp(x)) + sqrt(exp(-x)) - 4, x) == \
+        FiniteSet(2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2))
+
+
 def test_check_expo():
     x, y, z = symbols('x y z')
 
@@ -1868,13 +1865,13 @@ def test_check_expo():
     assert _check_expo(x**(y*z) - x, x) is False
 
 
-def test_expo_solver():
-    assert _expo_solver(3**(2*x) - 2**(x + 3)) == \
+def test_solve_expo():
+    assert _solve_expo(3**(2*x) - 2**(x + 3)) == \
         2*x*log(3) - (x + 3)*log(2)
     y = symbols('y')
-    assert _expo_solver(2**y + 4**y) == \
+    assert _solve_expo(2**y + 4**y) == \
         log(2**y) - log(-4**y)
-    assert _expo_solver(2**x + 3**x + 5**x) is None
+    assert _solve_expo(2**x + 3**x + 5**x) is None
 
 # end of exponential tests
 
