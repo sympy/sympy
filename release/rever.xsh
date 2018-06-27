@@ -262,7 +262,8 @@ def test_tarball(py_version):
         cd @("/root/{source-orig-notar}".format(**tarball_format))
         python setup.py install
         python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
-
+        python -m isympy --help
+        isympy --help
 
 def get_tarball_name(file):
     """
