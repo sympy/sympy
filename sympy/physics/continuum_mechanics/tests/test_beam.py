@@ -310,7 +310,7 @@ def max_shear_force(self):
     E = Symbol('E')
     I = Symbol('I')
 
-    b=Beam(3, E, I)
+    b = Beam(3, E, I)
     R, M = symbols('R, M')
     b.apply_load(R, 0, -1)
     b.apply_load(M, 0, -2)
@@ -320,9 +320,9 @@ def max_shear_force(self):
     b.solve_for_reaction_loads(R, M)
     assert b.max_shear_force() == (Interval(0, 2), 8)
 
-    l=symbols('l', positive=True)
-    P=Symbol('P')
-    b=Beam(l, E, I)
+    l = symbols('l', positive=True)
+    P = Symbol('P')
+    b = Beam(l, E, I)
     R1, R2 = symbols('R1, R2')
     b.apply_load(R1, 0, -1)
     b.apply_load(R2, l, -1)
@@ -336,7 +336,7 @@ def test_max_bmoment():
     I = Symbol('I')
     l, P = symbols('l, P', positive=True)
 
-    b=Beam(l, E, I)
+    b = Beam(l, E, I)
     R1, R2 = symbols('R1, R2')
     b.apply_load(R1, 0, -1)
     b.apply_load(R2, l, -1)
@@ -345,7 +345,7 @@ def test_max_bmoment():
     b.reaction_loads
     assert b.max_bmoment() == (l/2, P*l/4)
 
-    b=Beam(l, E, I)
+    b = Beam(l, E, I)
     R1, R2 = symbols('R1, R2')
     b.apply_load(R1, 0, -1)
     b.apply_load(R2, l, -1)
