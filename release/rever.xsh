@@ -127,6 +127,10 @@ def test_tarball36():
     test_tarball('3.6')
 
 @activity(deps={'source_tarball'})
+def test_tarball37():
+    test_tarball('3.7')
+
+@activity(deps={'source_tarball'})
 def compare_tar_against_git():
     """
     Compare the contents of the tarball against git ls-files
@@ -247,8 +251,8 @@ def test_tarball(py_version):
     Test that the tarball can be unpacked and installed, and that sympy
     imports in the install.
     """
-    if py_version not in {'2.7', '3.4', '3.5', '3.6'}: # TODO: Add win32
-        raise ValueError("release must be one of 2.7, 3.4, 3.5, or 3.6 not %s" % py_version)
+    if py_version not in {'2.7', '3.4', '3.5', '3.6', '3.7'}: # TODO: Add win32
+        raise ValueError("release must be one of 2.7, 3.4, 3.5, 3.6, or 3.7 not %s" % py_version)
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
