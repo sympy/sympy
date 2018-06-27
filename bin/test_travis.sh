@@ -128,8 +128,6 @@ blacklist = [
 ]
 
 doctest_list = [
-    'doc/',
-
     # numpy
     'sympy/matrices/',
     'sympy/utilities/lambdify.py',
@@ -163,6 +161,8 @@ doctest_list = [
 if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
     raise Exception('Tests failed')
 EOF
+    cd ..
+    bin/doctest doc/
 fi
 
 # This is separate because it needs to be run with subprocess=False
