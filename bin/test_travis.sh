@@ -128,6 +128,8 @@ blacklist = [
 ]
 
 doctest_list = [
+    'doc/',
+
     # numpy
     'sympy/matrices/',
     'sympy/utilities/lambdify.py',
