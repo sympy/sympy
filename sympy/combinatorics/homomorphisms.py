@@ -437,6 +437,10 @@ def group_isomorphism(G, H):
     First, the set of generators are mapped with the elements of `H` and we check if the mapping induces an isomorphism.
 
     '''
+    # Two infinte FpGroups with the same generators are isomorphic when the relators are same but are ordered differently.
+    if isinstance(G, FpGroup) and isinstance(H, FpGroup):
+        if G.generators == H.generators and (G.relators).sort() == (H.relators).sort():
+            return homomorphism(G, H, G.generators, H.generators)
 
     if isinstance(G, FpGroup):
         if G.order() == S.Infinity:
@@ -498,7 +502,7 @@ def is_isomorphic(G, H, isomorphism=False):
     Arguments:
         G (a finite `FpGroup` or a `PermutationGroup`) -- First group
         H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
-        isomorphism(boolean) -- This computes the isomorphism when set to True
+        isomorphism(boolean) -- This computes an isomorphism when set to True
 
     Returns:
     if isomorphism is set to `False` --
@@ -507,8 +511,34 @@ def is_isomorphic(G, H, isomorphism=False):
     if isomorphism is set to `True` --
         Returns a tuple (boolean, `GroupHomomorphism` object).
 
+    Examples
+    ========
+
+    >>> from sympy.combinatorics import Permutation
+    >>> from sympy.combinatorics.perm_groups import PermutationGroup
+    >>> from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism, is_isomorphic
+    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics.fp_groups import FpGroup
+    >>> from sympy.combinatorics.named_groups import DihedralGroup, AlternatingGroup
+
+    >>> D = DihedralGroup(8)
+    >>> p = Permutation(0, 1, 2, 3, 4, 5, 6, 7)
+    >>> P = PermutationGroup(p)
+    >>> is_isomorphic(D, P, isomorphism=True)
+    (False, None)
+
+    >>> F, a, b = free_group("a, b")
+    >>> G = FpGroup(F, [a**3, b**3, (a*b)**2])
+    >>> H = AlternatingGroup(4)
+    >>> G = G._to_perm_group()[0]
+    >>> (check, T) = is_isomorphic(G, H, isomorphism=True)
+    >>> check
+    True
+    >>> T(Permutation(0, 9, 6)(1, 10, 8)(2, 11, 4)(3, 5, 7))
+    (0 2 3)
+
     '''
     T = group_isomorphism(G, H)
     if isomorphism:
-        return (T.is_isomorphism() , T)
+        return (bool(T), T)
     return bool(T)

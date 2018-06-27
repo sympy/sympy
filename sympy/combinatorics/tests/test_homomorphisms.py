@@ -57,6 +57,13 @@ def test_homomorphism():
     assert T(a*b) == p
 
 def test_isomorphisms():
+
+    # Infinite ordered groups where relators arrangement is different.
+    F, a, b = free_group("a, b")
+    G = FpGroup(F, [a**2, b**3])
+    H = FpGroup(F, [b**3, a**2])
+    assert is_isomorphic(G, H)
+
     # Trivial Case
     # FpGroup -> FpGroup
     F, a, b = free_group("a, b")
