@@ -459,7 +459,6 @@ class OctaveCodePrinter(CodePrinter):
     def _print_expint(self, expr):
         mu, x = expr.args
         if mu != 1:
-            # they only implement nu = 1
             return self._print_not_supported(expr)
         return "expint(%s)" % self._print(x)
 
