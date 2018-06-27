@@ -1075,4 +1075,5 @@ tarball_whitelist = {
     'sympy.egg-info/requires.txt',
     'sympy.egg-info/top_level.txt',
     'sympy.egg-info/not-zip-safe',
+    'sympy.egg-info/entry_points.txt',
     }
