@@ -41,6 +41,13 @@ def test_Add():
     assert srepr(x**2 + 1, order='old') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
 
 
+def test_more_than_255_args_issue_10259():
+    from sympy import Add, Mul
+    for op in (Add, Mul):
+        expr = op(*symbols('x:256'))
+        assert eval(srepr(expr)) == expr
+
+
 def test_Function():
     sT(Function("f")(x), "Function('f')(Symbol('x'))")
     # test unapplied Function
