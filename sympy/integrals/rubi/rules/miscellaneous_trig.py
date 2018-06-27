@@ -602,7 +602,6 @@ def miscellaneous_trig(rubi):
     pattern136 = Pattern(Integral(u_, x_), CustomConstraint(lambda x, u, d, v: Not(FalseQ(v)) and TryPureTanSubst(ActivateTrig(u), x) and FunctionOfQ(NonfreeFactors(tan(v), x), u, x, True)))
     def With136(u, x):
         v = FunctionOfTrig(u, x)
-        print(u, v)
         d = FreeFactors(tan(v), x)
 
         return Dist(d/Coefficient(v, x, S(1)), Subst(Int(SubstFor(1/(d**S(2)*x**S(2) + S(1)), tan(v)/d, u, x), x), x, tan(v)/d), x)

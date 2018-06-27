@@ -107,12 +107,11 @@ matrix element ``M[i, j]`` as in the following diagram::
 
 from __future__ import print_function, division
 
-import collections
-
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core import Expr, Tuple, Symbol, sympify, S
-from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
+from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
+    range, Iterable)
 
 
 class IndexException(Exception):
@@ -152,7 +151,7 @@ class Indexed(Expr):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol, or IndexedBase as base."""))
         args = list(map(sympify, args))
-        if isinstance(base, (NDimArray, collections.Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
+        if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
             if len(args) == 1:
                 return base[args[0]]
             else:
@@ -384,7 +383,7 @@ class IndexedBase(Expr, NotIterable):
             pass
         elif isinstance(label, (MatrixBase, NDimArray)):
             return label
-        elif isinstance(label, collections.Iterable):
+        elif isinstance(label, Iterable):
             return _sympify(label)
         else:
             label = _sympify(label)

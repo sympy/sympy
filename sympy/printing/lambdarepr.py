@@ -10,12 +10,6 @@ from .pycode import (
 from sympy.external import import_module
 from sympy.utilities import default_sort_key
 
-tensorflow = import_module('tensorflow')
-if tensorflow and V(tensorflow.__version__) < '1.0':
-    tensorflow_piecewise = "select"
-else:
-    tensorflow_piecewise = "where"
-
 class LambdaPrinter(PythonCodePrinter):
     """
     This printer converts expressions into strings that can be used by
@@ -111,6 +105,12 @@ class TensorflowPrinter(LambdaPrinter):
             self._print(Max(*expr.args[1:]), **kwargs))
 
     def _print_Piecewise(self, expr, **kwargs):
+        tensorflow = import_module('tensorflow')
+        if tensorflow and V(tensorflow.__version__) < '1.0':
+            tensorflow_piecewise = "select"
+        else:
+            tensorflow_piecewise = "where"
+
         from sympy import Piecewise
         e, cond = expr.args[0].args
         if len(expr.args) == 1:

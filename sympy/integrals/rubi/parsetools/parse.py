@@ -32,6 +32,7 @@ import os
 import inspect
 from sympy import sympify, Function, Set, Symbol
 from sympy.printing import sstr, StrPrinter
+from sympy.utilities.misc import debug
 
 replacements = dict( # Mathematica equivalent functions in SymPy
         Times="Mul",
@@ -356,7 +357,7 @@ def downvalues_rules(r, parsed):
     res = []
     index = 0
     for i in r:
-        print('parsing rule {}'.format(r.index(i) + 1))
+        debug('parsing rule {}'.format(r.index(i) + 1))
         # Parse Pattern
         if i[1][1][0] == 'Condition':
             p = i[1][1][1].copy()

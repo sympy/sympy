@@ -2,8 +2,10 @@ import os
 import subprocess
 import glob
 
+from sympy.utilities.misc import debug
+
 here = os.path.dirname(__file__)
-grammar_file = os.path.join(here, "LaTeX.g4")
+grammar_file = os.path.abspath(os.path.join(here, "LaTeX.g4"))
 dir_latex_antlr = os.path.join(here, "_antlr")
 
 header = '''
@@ -20,14 +22,14 @@ header = '''
 
 
 def check_antlr_version():
-    print("Checking antlr4 version...")
+    debug("Checking antlr4 version...")
 
     try:
-        print(subprocess.check_output(["antlr4"])
+        debug(subprocess.check_output(["antlr4"])
               .decode('utf-8').split("\n")[0])
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("The antlr4 command line tool is not installed, "
+        debug("The antlr4 command line tool is not installed, "
               "or not on your PATH\n"
               "> Please install it via your preferred package manager")
         return False
@@ -36,7 +38,7 @@ def check_antlr_version():
 def build_parser(output_dir=dir_latex_antlr):
     check_antlr_version()
 
-    print("Updating ANTLR-generated code in {}".format(output_dir))
+    debug("Updating ANTLR-generated code in {}".format(output_dir))
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -53,10 +55,10 @@ def build_parser(output_dir=dir_latex_antlr):
         "-no-listener",
     ]
 
-    print("Running code generation...\n\t$ {}".format(" ".join(args)))
+    debug("Running code generation...\n\t$ {}".format(" ".join(args)))
     subprocess.check_output(args, cwd=output_dir)
 
-    print("Applying headers and renaming...")
+    debug("Applying headers and renaming...")
     for path in glob.glob(os.path.join(output_dir, "LaTeX*.*")):
         offset = 0
         new_path = os.path.join(output_dir,
@@ -71,7 +73,7 @@ def build_parser(output_dir=dir_latex_antlr):
                     for line in in_file.readlines()[offset:]
                 ])
         os.unlink(path)
-        print("\t{}".format(new_path))
+        debug("\t{}".format(new_path))
 
     return True
 

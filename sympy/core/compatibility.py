@@ -93,6 +93,9 @@ if PY3:
     exec_=getattr(builtins, "exec")
 
     range=range
+
+    from collections.abc import (Mapping, Callable, MutableMapping,
+        MutableSet, Iterable, Hashable)
 else:
     import codecs
     import types
@@ -136,6 +139,9 @@ else:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
     range=xrange
+
+    from collections import (Mapping, Callable, MutableMapping,
+        MutableSet, Iterable, Hashable)
 
 def with_metaclass(meta, *bases):
     """
