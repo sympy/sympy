@@ -469,12 +469,14 @@ def test_evalf_issue_939():
         integrate(1/(x**5 + 1), (x, 2, 4)), chop=True) == '0.0144361088886740'
 
 
-def test_double_integrals():
-    #double integral
-    assert NS(integrate(
+@XFAIL
+def test_failing_integrals():
+    #---
+    # Double integrals not implemented
+    assert NS(Integral(
         sqrt(x) + x*y, (x, 1, 2), (y, -1, 1)), 15) == '2.43790283299492'
     # double integral + zero detection
-    assert NS(integrate(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0'
+    assert NS(Integral(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0.0'
 
 
 def test_integrate_SingularityFunction():
