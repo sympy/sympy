@@ -982,10 +982,14 @@ git_whitelist = {
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
+    '.ci/blacklisted.json',
+    '.editorconfig',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Pull request template
     'PULL_REQUEST_TEMPLATE.md',
+    # Contributing guide
+    'CONTRIBUTING.md',
     # Nothing from bin/ should be shipped unless we intend to install it. Most
     # of this stuff is for development anyway. To run the tests from the
     # tarball, use setup.py test, or import sympy and run sympy.test() or
@@ -1008,6 +1012,7 @@ git_whitelist = {
     'bin/sympy_time.py',
     'bin/sympy_time_cache.py',
     'bin/test',
+    'bin/test_external_imports.py',
     'bin/test_import',
     'bin/test_import.py',
     'bin/test_isolated',
@@ -1031,6 +1036,10 @@ git_whitelist = {
     'examples/notebooks/sho1d_example.ipynb',
     'examples/notebooks/spin.ipynb',
     'examples/notebooks/trace.ipynb',
+    'examples/notebooks/Bezout_Dixon_resultant.ipynb',
+    'examples/notebooks/IntegrationOverPolytopes.ipynb',
+    'examples/notebooks/Macaulay_resultant.ipynb',
+    'examples/notebooks/Sylvester_resultant.ipynb',
     'examples/notebooks/README.txt',
     # This stuff :)
     'release/.gitignore',
