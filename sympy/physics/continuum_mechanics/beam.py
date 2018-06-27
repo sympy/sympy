@@ -1,7 +1,6 @@
 """
 This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
-
 """
 
 from __future__ import print_function, division
@@ -26,7 +25,6 @@ class Beam(object):
        While solving a beam bending problem, a user should choose its
        own sign convention and should stick to it. The results will
        automatically follow the chosen sign convention.
-
 
     Examples
     ========
@@ -125,6 +123,7 @@ class Beam(object):
 
         Examples
         ========
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
@@ -686,10 +685,30 @@ class Beam(object):
 
         x = self.variable
         l = self.length
+        C3 = Symbol('C3')
+        C4 = Symbol('C4')
+
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
-        reaction_values = linsolve([shear_curve, moment_curve], reactions).args
-        self._reaction_loads = dict(zip(reactions, reaction_values[0]))
+
+        slope_eqs = []
+        deflection_eqs = []
+
+        slope_curve = integrate(self.bending_moment(), x) + C3
+        for position, value in self._boundary_conditions['slope']:
+            eqs = slope_curve.subs(x, position) - value
+            slope_eqs.append(eqs)
+
+        deflection_curve = integrate(slope_curve, x) + C4
+        for position, value in self._boundary_conditions['deflection']:
+            eqs = deflection_curve.subs(x, position) - value
+            deflection_eqs.append(eqs)
+
+        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
+                            + deflection_eqs, (C3, C4) + reactions).args)[0])
+        solution = solution[2:]
+
+        self._reaction_loads = dict(zip(reactions, solution))
         self._load = self._load.subs(self._reaction_loads)
 
     def shear_force(self):
@@ -726,6 +745,58 @@ class Beam(object):
         x = self.variable
         return integrate(self.load, x)
 
+    def max_shear_force(self):
+        """Returns maximum Shear force and its coordinate
+        in the Beam object."""
+        from sympy import solve, Mul, Interval
+        shear_curve = self.shear_force()
+        x = self.variable
+
+        terms = shear_curve.args
+        singularity = []        # Points at which shear function changes
+        for term in terms:
+            if isinstance(term, Mul):
+                term = term.args[-1]    # SingularityFunction in the term
+            singularity.append(term.args[1])
+        singularity.sort()
+        singularity = list(set(singularity))
+
+        intervals = []    # List of Intervals with discrete value of shear force
+        shear_values = []   # List of values of shear force in each interval
+        for i, s in enumerate(singularity):
+            if s == 0:
+                continue
+            try:
+                shear_slope = Piecewise((float("nan"), x<=singularity[i-1]),(self._load.rewrite(Piecewise), x<s), (float("nan"), True))
+                points = solve(shear_slope, x)
+                val = []
+                for point in points:
+                    val.append(shear_curve.subs(x, point))
+                points.extend([singularity[i-1], s])
+                val.extend([limit(shear_curve, x, singularity[i-1], '+'), limit(shear_curve, x, s, '-')])
+                val = list(map(abs, val))
+                max_shear = max(val)
+                shear_values.append(max_shear)
+                intervals.append(points[val.index(max_shear)])
+            # If shear force in a particular Interval has zero or constant
+            # slope, then above block gives NotImplementedError as
+            # solve can't represent Interval solutions.
+            except NotImplementedError:
+                initial_shear = limit(shear_curve, x, singularity[i-1], '+')
+                final_shear = limit(shear_curve, x, s, '-')
+                # If shear_curve has a constant slope(it is a line).
+                if shear_curve.subs(x, (singularity[i-1] + s)/2) == (initial_shear + final_shear)/2 and initial_shear != final_shear:
+                    shear_values.extend([initial_shear, final_shear])
+                    intervals.extend([singularity[i-1], s])
+                else:    # shear_curve has same value in whole Interval
+                    shear_values.append(final_shear)
+                    intervals.append(Interval(singularity[i-1], s))
+
+        shear_values = list(map(abs, shear_values))
+        maximum_shear = max(shear_values)
+        point = intervals[shear_values.index(maximum_shear)]
+        return (point, maximum_shear)
+
     def bending_moment(self):
         """
         Returns a Singularity Function expression which represents
@@ -760,11 +831,64 @@ class Beam(object):
         x = self.variable
         return integrate(self.shear_force(), x)
 
+    def max_bmoment(self):
+        """Returns maximum Shear force and its coordinate
+        in the Beam object."""
+        from sympy import solve, Mul, Interval
+        bending_curve = self.bending_moment()
+        x = self.variable
+
+        terms = bending_curve.args
+        singularity = []        # Points at which bending moment changes
+        for term in terms:
+            if isinstance(term, Mul):
+                term = term.args[-1]    # SingularityFunction in the term
+            singularity.append(term.args[1])
+        singularity.sort()
+        singularity = list(set(singularity))
+
+        intervals = []    # List of Intervals with discrete value of bending moment
+        moment_values = []   # List of values of bending moment in each interval
+        for i, s in enumerate(singularity):
+            if s == 0:
+                continue
+            try:
+                moment_slope = Piecewise((float("nan"), x<=singularity[i-1]),(self.shear_force().rewrite(Piecewise), x<s), (float("nan"), True))
+                points = solve(moment_slope, x)
+                val = []
+                for point in points:
+                    val.append(bending_curve.subs(x, point))
+                points.extend([singularity[i-1], s])
+                val.extend([limit(bending_curve, x, singularity[i-1], '+'), limit(bending_curve, x, s, '-')])
+                val = list(map(abs, val))
+                max_moment = max(val)
+                moment_values.append(max_moment)
+                intervals.append(points[val.index(max_moment)])
+            # If bending moment in a particular Interval has zero or constant
+            # slope, then above block gives NotImplementedError as solve
+            # can't represent Interval solutions.
+            except NotImplementedError:
+                initial_moment = limit(bending_curve, x, singularity[i-1], '+')
+                final_moment = limit(bending_curve, x, s, '-')
+                # If bending_curve has a constant slope(it is a line).
+                if bending_curve.subs(x, (singularity[i-1] + s)/2) == (initial_moment + final_moment)/2 and initial_moment != final_moment:
+                    moment_values.extend([initial_moment, final_moment])
+                    intervals.extend([singularity[i-1], s])
+                else:    # bending_curve has same value in whole Interval
+                    moment_values.append(final_moment)
+                    intervals.append(Interval(singularity[i-1], s))
+
+        moment_values = list(map(abs, moment_values))
+        maximum_moment = max(moment_values)
+        point = intervals[moment_values.index(maximum_moment)]
+        return (point, maximum_moment)
+
     def point_cflexure(self):
         """
         Returns a Set of point(s) with zero bending moment and
         where bending moment curve of the beam object changes
         its sign from negative to positive or vice versa.
+
         Examples
         ========
         There is is 10 meter long overhanging beam. There are
@@ -777,6 +901,7 @@ class Beam(object):
         point till end.
         Using the sign convention of upward forces and clockwise moment
         being positive.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
