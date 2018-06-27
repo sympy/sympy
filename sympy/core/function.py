@@ -35,7 +35,7 @@ from .add import Add
 from .assumptions import ManagedProperties, _assume_defined
 from .basic import Basic
 from .cache import cacheit
-from .compatibility import iterable, is_sequence, as_int, ordered
+from .compatibility import iterable, is_sequence, as_int, ordered, Iterable
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float
@@ -58,7 +58,7 @@ import mpmath
 import mpmath.libmp as mlib
 
 import inspect
-import collections
+from collections import Counter
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -1242,7 +1242,7 @@ class Derivative(Expr):
             elif (count < 0) == True:
                 obj = None
             else:
-                if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+                if isinstance(v, (Iterable, Tuple, MatrixCommon, NDimArray)):
                     # Treat derivatives by arrays/matrices as much as symbols.
                     is_symbol = True
                 if not is_symbol:
@@ -1260,8 +1260,8 @@ class Derivative(Expr):
                     if obj is not None:
                         if not old_v.is_symbol and obj.is_Derivative:
                             # Derivative evaluated at a point that is not a
-                            # symbol
-                            obj = Subs(obj, v, old_v)
+                            # symbol, let subs check if this is okay to replace
+                            obj = obj.subs(v, old_v)
                         else:
                             obj = obj.xreplace({v: old_v})
                     v = old_v
@@ -1481,9 +1481,9 @@ class Derivative(Expr):
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
         if old.is_Derivative and old.expr == self.expr:
-            # Check if canonnical order of variables is equal.
-            old_vars = collections.Counter(dict(reversed(old.variable_count)))
-            self_vars = collections.Counter(dict(reversed(self.variable_count)))
+            # Check if canonical order of variables is equal.
+            old_vars = Counter(dict(reversed(old.variable_count)))
+            self_vars = Counter(dict(reversed(self.variable_count)))
             if old_vars == self_vars:
                 return new
 
@@ -1494,7 +1494,25 @@ class Derivative(Expr):
             if _subset(old_vars, self_vars):
                 return Derivative(new, *(self_vars - old_vars).items())
 
-        return Derivative(*(x._subs(old, new) for x in self.args))
+        # Check whether the substitution (old, new) cannot be done inside
+        # Derivative(expr, vars). Disallowed:
+        # (1) changing expr by introducing a variable among vars
+        # (2) changing vars by introducing a variable contained in expr
+        old_symbols = (old.free_symbols if isinstance(old.free_symbols, set)
+            else set())
+        new_symbols = (new.free_symbols if isinstance(new.free_symbols, set)
+            else set())
+        introduced_symbols = new_symbols - old_symbols
+        args_subbed = tuple(x._subs(old, new) for x in self.args)
+        if ((self.args[0] != args_subbed[0] and
+            len(set(self.variables) & introduced_symbols) > 0
+            ) or
+            (self.args[1:] != args_subbed[1:] and
+            len(self.free_symbols & introduced_symbols) > 0
+            )):
+            return Subs(self, old, new)
+        else:
+            return Derivative(*args_subbed)
 
     def _eval_lseries(self, x, logx):
         dx = self.variables

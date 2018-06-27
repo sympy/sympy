@@ -43,7 +43,7 @@ To update to the latest version, go into your repository and execute::
 If you want to install SymPy, but still want to use the git version, you can run
 from your repository::
 
-    setupegg.py develop
+    python setupegg.py develop
 
 This will cause the installed version to always point to the version in the git
 directory.
