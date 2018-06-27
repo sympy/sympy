@@ -162,7 +162,7 @@ if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_l
     raise Exception('Tests failed')
 EOF
     cd ..
-    bin/doctest doc/
+    bin/doctest doc/src/modules/numeric-computation.rst
 fi
 
 # This is separate because it needs to be run with subprocess=False
