@@ -13,11 +13,11 @@ from __future__ import print_function, division
 
 # __all__ = ['marginal_distribution']
 
-from sympy import Basic, Lambda, sympify
-from sympy.concrete.summations import Sum
+from sympy import Basic, Lambda, sympify, Indexed, Symbol
+from sympy.concrete.summations import Sum, summation
 from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-     ProductDomain)
+     ProductDomain, RandomSymbol)
 from sympy.core.containers import Tuple
 
 class JointPSpace(ProductPSpace):
@@ -25,41 +25,48 @@ class JointPSpace(ProductPSpace):
     Represents a joint probability space. Represented using symbols for
     each component and a distribution.
     """
-    def __new__(cls, syms, dist, *args):
-        syms = Tuple.fromiter(i for i in syms)
-        return Basic.__new__(cls, syms, dist, *args)
+    def __new__(cls, sym, dist):
+        sym = sympify(sym)
+        return Basic.__new__(cls, sym, dist)
 
     @property
     def set(self):
         return self.domain.set
 
     @property
-    def symbols(self):
+    def symbol(self):
         return self.args[0]
 
     @property
     def distribution(self):
         return self.args[1]
 
+    @property
+    def value(self):
+        return JointRandomSymbol(self.symbol, self)
+
+    @property
+    def component_count(self):
+        return len(self.distribution.set.args)
+
     def pdf(self, *args):
         return self.distribution(*args)
 
-    def marginal_distribution(self, indices, *sym):
-        limits = list([i,] for i in self.symbols if i not in sym)
-        for i in indices:
-            limits[i].append(self.distribution.set.args[i])
-            limits[i] = tuple(limits[i])
+    def marginal_distribution(self, *indices):
+        count = self.component_count
+        all_syms = [Symbol(str(Indexed(self.symbol, i))) for i in range(count)]
+        sym = [Symbol(str(Indexed(self.symbol, i))) for i in indices]
+        limits = list([i,] for i in all_syms if i not in sym)
+        for i in range(len(limits)):
+            if i not in indices:
+                limits[i].append(self.distribution.set.args[i])
+                limits[i] = tuple(limits[i])
         limits = tuple(limits)
         if self.distribution.is_Continuous:
-            return Lambda(sym, integrate(self.distribution(
-                *self.symbols), limits))
+            return Lambda(sym, integrate(self.distribution(*all_syms), limits))
         if self.distribution.is_Discrete:
-            return Lambda(sym, integrate(self.distribution(
-                *self.symbols), limits))
+            return Lambda(sym, summation(self.distribution(all_syms), limits))
 
-    @property
-    def values(self):
-        raise NotImplementedError
 
     def where(self, condition):
         raise NotImplementedError()
@@ -111,16 +118,26 @@ class JointDistribution(Basic, NamedArgsMixin):
     def __call__(self, *args):
         return self.pdf(*args)
 
-def marginal_distribution(prob_space, *sym):
+class JointRandomSymbol(RandomSymbol):
     """
-    Marginal density of a joint random variable.
+    Representation of random symbols with joint probability distributions
+    to allow indexing."
+    """
+    def __getitem__(self, key):
+        from sympy.stats.joint_rv import JointPSpace
+        if isinstance(self.pspace, JointPSpace):
+            return Indexed(self.pspace.value, key)
+
+def marginal_distribution(rv, *indices):
+    """
+    Marginal distribution function of a joint random variable.
 
     Parameters:
     ==========
 
-    prob_space: A joint probability space.
-    sym: list of symbols for whom the marginal density is to be
-    calculated.
+    rv: A random variable with a joint probability distribution.
+    indices: component indices or the indexed random symbol
+        for whom the joint distribution is to be calculated
 
     Returns:
     =======
@@ -130,19 +147,19 @@ def marginal_distribution(prob_space, *sym):
     =======
     >>> from sympy.stats.joint_rv_types import MultivariateNormal
     >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> from sympy import Symbol
-    >>> x = Symbol('x')
-    >>> m = MultivariateNormal(('x', 'y'), [1, 2], [[2, 1], [1, 2]])
-    >>> marginal_distribution(m, x)(1)
+    >>> m = MultivariateNormal('X', [1, 2], [[2, 1], [1, 2]])
+    >>> marginal_distribution(m, m[0])(1)
     1/(2*sqrt(pi))
 
     """
-    pspace_sym = prob_space.symbols
-    if sym == ():
+    indices = list(indices)
+    for i in range(len(indices)):
+        if isinstance(indices[i], Indexed):
+            indices[i] = indices[i].args[1]
+    prob_space = rv.pspace
+    if indices == ():
         raise ValueError(
-            "At least one symbol for marginal density is needed.")
-    assert all([i in pspace_sym for i in sym])
-    indices = tuple((pspace_sym).index(s) for s in sym)
+            "At least one component for marginal density is needed.")
     if hasattr(prob_space.distribution, 'marginal_distribution'):
-        return prob_space.distribution.marginal_distribution(indices, *sym)
-    return prob_space.marginal_distribution(indices, *sym)
+        return prob_space.distribution.marginal_distribution(indices, rv.symbol)
+    return prob_space.marginal_distribution(*indices)

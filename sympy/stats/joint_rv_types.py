@@ -1,4 +1,4 @@
-from sympy import sympify, S, pi, sqrt, exp, Lambda
+from sympy import sympify, S, pi, sqrt, exp, Lambda, Indexed, Symbol
 from sympy.stats.rv import _value_check
 from sympy.stats.joint_rv import JointDistribution, JointPSpace
 from sympy.matrices.dense import Matrix
@@ -10,11 +10,12 @@ from sympy.matrices.expressions.determinant import det
 # 'NormalGamma'
 # ]
 
-def rv(cls, syms, *args):
+def rv(cls, sym, *args):
+    sym = sympify(sym)
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
-    return JointPSpace(syms, dist)
+    return JointPSpace(sym, dist).value
 
 #-------------------------------------------------------------------------------
 # Multivariate Normal distribution ---------------------------------------------------------
@@ -45,9 +46,9 @@ class MultivariateNormalDistribution(JointDistribution):
             -S(1)/2*(mu - args).transpose()*(sigma**(-1)*\
                 (mu - args)))[0]
 
-    def marginal_distribution(self, indices, *sym):
+    def marginal_distribution(self, indices, sym):
+        sym = Matrix([Symbol(str(Indexed(sym, i))) for i in indices])
         _mu, _sigma = Matrix(self.mu), Matrix(self.sigma)
-        sym = Matrix(list(sym))
         k = len(self.mu)
         for i in range(k):
             if i not in indices:

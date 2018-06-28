@@ -16,7 +16,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta, Mul)
+        DiracDelta, Mul, Indexed)
 from sympy.core.relational import Relational
 from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
@@ -513,8 +513,6 @@ def pspace(expr):
     >>> pspace(2*X + 1) == X.pspace
     True
     """
-    from sympy.stats.joint_rv import JointPSpace
-
     expr = sympify(expr)
     rvs = random_symbols(expr)
     if not rvs:
@@ -522,10 +520,6 @@ def pspace(expr):
     # If only one space present
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
-    # If joint space is present
-    elif isinstance(expr, RandomSymbol) and \
-        isinstance(expr.pspace, JointPSpace):
-        return expr.pspace
     # Otherwise make a product space
     return IndependentProductPSpace(*[rv.pspace for rv in rvs])
 
@@ -760,13 +754,13 @@ class Density(Basic):
 
     def doit(self, evaluate=True, **kwargs):
         from sympy.stats.joint_rv import JointPSpace
-
         expr, condition = self.expr, self.condition
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
-        if isinstance(expr, JointPSpace):
-            return expr.distribution
+        if isinstance(expr, RandomSymbol) and \
+            isinstance(expr.pspace, JointPSpace):
+            return expr.pspace.distribution
         if not random_symbols(expr):
             return Lambda(x, DiracDelta(x - expr))
         if (isinstance(expr, RandomSymbol) and

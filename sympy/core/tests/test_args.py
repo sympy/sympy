@@ -807,7 +807,11 @@ def test_sympy__stats__drv__ConditionalDiscreteDomain():
 
 def test_sympy__stats__joint_rv__JointPSpace():
     from sympy.stats.joint_rv import JointPSpace, JointDistribution
-    assert _test_args(JointPSpace(('x',), JointDistribution(1)))
+    assert _test_args(JointPSpace('X', JointDistribution(1)))
+
+def test_sympy__stats__joint_rv__JointRandomSymbol():
+    from sympy.stats.joint_rv import JointRandomSymbol
+    assert _test_args(JointRandomSymbol(x))
 
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
