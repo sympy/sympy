@@ -58,15 +58,28 @@ def test_homomorphism():
 
 def test_isomorphisms():
 
-    # Infinite ordered groups where relators arrangement is different.
+    # Infinite groups where there exists a map from
+    # the generators of one group to the other.
     F, a, b = free_group("a, b")
+    E, c, d = free_group("c, d")
+    G = FpGroup(F, [a*b])
+    H = FpGroup(E, [c*d])
+    check, T = is_isomorphic(G, H, isomorphism=True)
+    assert check
+    assert T(a**2*b) == c**2*d
+
+    # Infinite groups with redundant relators
+    G = FpGroup(F, [a**2])
+    H = FpGroup(E, [c**2, c**4])
+    assert is_isomorphic(G, H)
+
+    # Infinite groups with differently ordered relators.
     G = FpGroup(F, [a**2, b**3])
     H = FpGroup(F, [b**3, a**2])
     assert is_isomorphic(G, H)
 
     # Trivial Case
     # FpGroup -> FpGroup
-    F, a, b = free_group("a, b")
     H = FpGroup(F, [a**3, b**3, (a*b)**2])
     F, c, d = free_group("c, d")
     G = FpGroup(F, [c**3, d**3, (c*d)**2])
@@ -92,3 +105,9 @@ def test_isomorphisms():
     A = CyclicGroup(5)
     B = CyclicGroup(7)
     assert not is_isomorphic(A, B)
+
+    # Two groups of same prime order are isomorphic to each other.
+    G = FpGroup(F, [a, b**5])
+    H = CyclicGroup(5)
+    assert G.order() == H.order()
+    assert is_isomorphic(G, H)

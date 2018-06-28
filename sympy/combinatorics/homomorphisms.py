@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 import itertools
 
-from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup
+from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup, simplify_presentation
 from sympy.combinatorics.free_groups import FreeGroup, FreeGroupElement
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy import S
@@ -437,10 +437,19 @@ def group_isomorphism(G, H):
     First, the set of generators are mapped with the elements of `H` and we check if the mapping induces an isomorphism.
 
     '''
-    # Two infinte FpGroups with the same generators are isomorphic when the relators are same but are ordered differently.
+
     if isinstance(G, FpGroup) and isinstance(H, FpGroup):
+        G = simplify_presentation(G)
+        H = simplify_presentation(H)
+        # Two infinite FpGroups with the same generators are isomorphic
+        # when the relators are same but are ordered differently.
         if G.generators == H.generators and (G.relators).sort() == (H.relators).sort():
             return homomorphism(G, H, G.generators, H.generators)
+        # Two infinite FpGroups with the same generators are isomorphic
+        # if there exists a map from the generators of one group to the other.
+        gen_map = homomorphism(G, H, G.generators, H.generators)
+        if gen_map:
+            return gen_map
 
     if isinstance(G, FpGroup):
         if G.order() == S.Infinity:
@@ -516,7 +525,6 @@ def is_isomorphic(G, H, isomorphism=False):
 
     >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
-    >>> from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism, is_isomorphic
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup
     >>> from sympy.combinatorics.named_groups import DihedralGroup, AlternatingGroup
@@ -538,6 +546,12 @@ def is_isomorphic(G, H, isomorphism=False):
     (0 2 3)
 
     '''
+    if not isomorphism:
+        # Two groups of same prime order are isomorphic.
+        from sympy import sieve
+        if (G in sieve) and (H in sieve):
+            return True
+
     T = group_isomorphism(G, H)
     if isomorphism:
         return (bool(T), T)
