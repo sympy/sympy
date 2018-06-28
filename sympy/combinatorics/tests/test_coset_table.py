@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.coset_table import (CosetTable,
-                    coset_enumeration_r, coset_enumeration_c)
+                    coset_enumeration_r, coset_enumeration_c, modified_scan_and_fill,
+                    modified_coincidence, modified_define, modified_merge, modified_rep, modified_scan)
 from sympy.combinatorics.free_groups import free_group
 
 """

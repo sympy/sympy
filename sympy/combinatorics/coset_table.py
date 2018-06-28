@@ -5,6 +5,7 @@ from sympy.printing.defaults import DefaultPrinting
 
 from itertools import chain, product
 from bisect import bisect_left
+from sympy.combinatorics.free_groups import free_group
 
 
 ###############################################################################
@@ -1027,7 +1028,7 @@ def modified_define(C, alpha, x):
         raise ValueError("the coset enumeration has defined more than %s cosets. Try with a greater value max number of cosets "%C.coset_table_max_limit)
     C.table.append([None]*len(C.A))
     H = C.subgroup
-    C._grp = (list(free_group(', ' .join(["a_%d" % x for x in range(len(H))])))).pop(0)
+    C._grp = (list(free_group(', ' .join(["a_%d" % i for i in range(len(H))])))).pop(0)
     C.P.append([None]*len(C.A))
     beta = len_table
     C.p.append(beta)
@@ -1068,9 +1069,9 @@ def modified_scan(C, alpha, w, y, fill=False):
         elif j == i:
             # Dedcution
             C.table[f][C.A_dict[w[i]]] = b
-            C.table[b][c.A_dict_inv[w[i]]] = f
+            C.table[b][C.A_dict_inv[w[i]]] = f
             C.P[f][C.A_dict[w[i]]] = f_p**-1*b_p
-            C.P[f][C.A_dict_inv[w[i]]] = b_p**-1*f_p
+            C.P[b][C.A_dict_inv[w[i]]] = b_p**-1*f_p
         else:
             if not fill:
                 modified_define(C, f, w[i])
@@ -1079,7 +1080,7 @@ def modified_scan(C, alpha, w, y, fill=False):
         if not fill:
             break
 
-def modifed_scan_and_fill(C, alpha, w, y):
+def modified_scan_and_fill(C, alpha, w, y):
     modified_scan(C, alpha, w, y, fill=True)
 
 def modified_rep(C, k, p_p):
@@ -1152,7 +1153,7 @@ def modified_coincidence(C, alpha, beta, w):
             C.P[mu][C.A_dict[x]] = v
             C.P[nu][C.A_dict_inv[x]] = v**-1
 
-def modifed_coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None, incomplete=False):
+def modified_coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None, incomplete=False):
     C = CosetTable(fp_grp, Y, max_cosets=max_cosets)
     if draft:
         C.table = draft.table[:]
@@ -1162,20 +1163,20 @@ def modifed_coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None, incomple
     A_dict_inv = C.A_dict_inv
     p = C.p
     for w in Y:
-        C.modifed_scan_and_fill(0, w)
+        modified_scan_and_fill(C, 0, w)
     alpha = 0
     while alpha < C.n:
         if p[alpha] == alpha:
             try:
                 for w in R:
-                    C.modifed_scan_and_fill(alpha, w)
+                    modified_scan_and_fill(C, alpha, w)
                     # if α was eliminated during the scan then break
                     if p[alpha] < alpha:
                         break
                 if p[alpha] == alpha:
                     for x in A_dict:
                         if C.table[alpha][A_dict[x]] is None:
-                            C.modifed_define(alpha, x)
+                            modified_define(C, alpha, x)
             except ValueError as e:
                 if incomplete:
                     return C
