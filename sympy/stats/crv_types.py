@@ -55,8 +55,8 @@ from sympy import cos, sin, exp, besseli, besselj
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
-from sympy.matrices import Matrix, MatrixSymbol
-from sympy.stats.joint_rv_types import MultivariateNormalDistribution, rv as mrv
+from sympy.matrices import MatrixBase
+from sympy.stats.joint_rv_types import MultivariateNormalDistribution, multivariate_rv
 from sympy.external import import_module
 import random
 
@@ -1999,8 +1999,10 @@ def Normal(name, mean, std):
     .. [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
     """
 
-    if isinstance(mean, (list)) and isinstance(std, list):
-        return mrv(MultivariateNormalDistribution, name, mean, std)
+    if isinstance(mean, (list, MatrixBase)) and\
+        isinstance(std, (list, MatrixBase)):
+        return multivariate_rv(
+            MultivariateNormalDistribution, name, mean, std)
     return rv(name, NormalDistribution, (mean, std))
 
 #-------------------------------------------------------------------------------
