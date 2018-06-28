@@ -1021,8 +1021,8 @@ def _solve_expo(f):
 
     Therefore if we are given an equation with exponent terms, we can
     convert every term to its corresponding log form. This is achieved by
-    taking logarithms and expanding it using log identities so that the
-    equation can be easily handled by `solveset`.
+    taking logarithms and expanding the equation using log identities
+    so that it can be easily handled by `solveset`.
 
     For example:
 
@@ -1120,8 +1120,7 @@ def _transolve(f, symbol, domain):
     >>> from sympy.solvers.solveset import _transolve as transolve
     >>> from sympy.solvers.solvers import _tsolve as tsolve
     >>> from sympy import symbols, S, pprint
-    >>> # symbol modified as would have been by solveset
-    >>> x = symbols('x', real=True)
+    >>> x = symbols('x', real=True) # assumption added
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
     {-log(375)/(-log(5) + 2*log(3))}
 
@@ -1161,11 +1160,7 @@ def _transolve(f, symbol, domain):
 
     1) Better output
 
-    `\_transolve` provides a better output to some equations than
-    `\_tsolve`. Though result from both the functions are correct
-    it's just that the one from `\_transolve` is easy to understand and
-    appropriate. This is because `\_transolve` simplifies the result
-    wherever necessary.
+    `\_transolve` provides expressions in a more simplified form.
 
     Consider a simple exponential equation
 
@@ -1180,18 +1175,12 @@ def _transolve(f, symbol, domain):
          | log(2/9)|
     [-log\2         /]
 
-    `\_transolve's` output seems more simple, readable and appropriate
-    as compared to that of `\_tsolve`.
-
     2) Extensible
 
     The API of `\_transolve` is designed such that it is easily
-    extensible, i.e, it is easy to add a new class of equation solver
-    without having to mess with the API or solving code of other
-    helpers. The idea behind `\_transolve` is to make seperate helpers
-    for different equation solvers. So to solve a given class of
-    equation, one helper identifies the equation and another solves
-    the equation or modifies it into a form that can be solved.
+    extensible, i.e. the code that solves a given class of
+    equations is encapsulated in a helper and not mixed in with
+    the code of \_transolve itself.
 
     3) Modular
 
@@ -1201,14 +1190,7 @@ def _transolve(f, symbol, domain):
     method implemented directly in the helpers without interfering
     with the actual structure of the API.
 
-    4) Less complex API
-
-    The API of `\_transolve` is designed in a way that it is less
-    complex to read and understand unlike in `\_tsolve` where the
-    API structure is a mess with lots of recursive and function
-    calls making it hard to understand.
-
-    5) Faster Computation
+    4) Faster Computation
 
     Solving equation via `\_transolve` is much faster as compared to
     `\_tsolve`. In `solve` attempts are made computing every possibility
@@ -1251,7 +1233,7 @@ def _transolve(f, symbol, domain):
       For example: for exponential equations it becomes `\_check\_expo`
       and `\_solve\_expo`.
     - The helper should take two input parameters, the equation to be
-      checked and the variable for which the equation will be checked.
+      checked and the variable for which a solution is being sought.
     - Be sure to consider corner cases.
     - Add tests for each helper.
     - Add a docstring to your helper that describes the method
