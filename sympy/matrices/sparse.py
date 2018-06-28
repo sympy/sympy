@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.compatibility import is_sequence, as_int, range
+from sympy.core.compatibility import is_sequence, as_int, range, Callable
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.functions import Abs
@@ -14,7 +14,6 @@ from sympy.utilities.iterables import uniq
 
 from .matrices import MatrixBase, ShapeError, a2idx
 from .dense import Matrix
-import collections
 
 
 class SparseMatrix(MatrixBase):
@@ -53,7 +52,7 @@ class SparseMatrix(MatrixBase):
             self.rows = as_int(args[0])
             self.cols = as_int(args[1])
 
-            if isinstance(args[2], collections.Callable):
+            if isinstance(args[2], Callable):
                 op = args[2]
                 for i in range(self.rows):
                     for j in range(self.cols):

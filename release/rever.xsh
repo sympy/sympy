@@ -127,6 +127,10 @@ def test_tarball36():
     test_tarball('3.6')
 
 @activity(deps={'source_tarball'})
+def test_tarball37():
+    test_tarball('3.7')
+
+@activity(deps={'source_tarball'})
 def compare_tar_against_git():
     """
     Compare the contents of the tarball against git ls-files
@@ -247,8 +251,8 @@ def test_tarball(py_version):
     Test that the tarball can be unpacked and installed, and that sympy
     imports in the install.
     """
-    if py_version not in {'2.7', '3.4', '3.5', '3.6'}: # TODO: Add win32
-        raise ValueError("release must be one of 2.7, 3.4, 3.5, or 3.6 not %s" % py_version)
+    if py_version not in {'2.7', '3.4', '3.5', '3.6', '3.7'}: # TODO: Add win32
+        raise ValueError("release must be one of 2.7, 3.4, 3.5, 3.6, or 3.7 not %s" % py_version)
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
@@ -258,7 +262,8 @@ def test_tarball(py_version):
         cd @("/root/{source-orig-notar}".format(**tarball_format))
         python setup.py install
         python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
-
+        python -m isympy --help
+        isympy --help
 
 def get_tarball_name(file):
     """
@@ -977,10 +982,14 @@ git_whitelist = {
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
+    '.ci/blacklisted.json',
+    '.editorconfig',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Pull request template
     'PULL_REQUEST_TEMPLATE.md',
+    # Contributing guide
+    'CONTRIBUTING.md',
     # Nothing from bin/ should be shipped unless we intend to install it. Most
     # of this stuff is for development anyway. To run the tests from the
     # tarball, use setup.py test, or import sympy and run sympy.test() or
@@ -1003,6 +1012,7 @@ git_whitelist = {
     'bin/sympy_time.py',
     'bin/sympy_time_cache.py',
     'bin/test',
+    'bin/test_external_imports.py',
     'bin/test_import',
     'bin/test_import.py',
     'bin/test_isolated',
@@ -1026,6 +1036,10 @@ git_whitelist = {
     'examples/notebooks/sho1d_example.ipynb',
     'examples/notebooks/spin.ipynb',
     'examples/notebooks/trace.ipynb',
+    'examples/notebooks/Bezout_Dixon_resultant.ipynb',
+    'examples/notebooks/IntegrationOverPolytopes.ipynb',
+    'examples/notebooks/Macaulay_resultant.ipynb',
+    'examples/notebooks/Sylvester_resultant.ipynb',
     'examples/notebooks/README.txt',
     # This stuff :)
     'release/.gitignore',
@@ -1061,4 +1075,5 @@ tarball_whitelist = {
     'sympy.egg-info/requires.txt',
     'sympy.egg-info/top_level.txt',
     'sympy.egg-info/not-zip-safe',
+    'sympy.egg-info/entry_points.txt',
     }

@@ -217,6 +217,7 @@ before_install:
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     # We do this conditionally because it saves us some downloading if the
     # version is the same.
+        deactivate; # Deactivate the Travis virtualenv
         if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
           wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -q -O miniconda.sh;
         else
@@ -230,23 +231,23 @@ before_install:
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
 
         conda info -a;
-        CONDA_PKGS=${TEST_OPT_DEPENDENCY/sage}
-        CONDA_PKGS=${CONDA_PKGS/autowrap/libgfortran libgcc gcc cython}
-        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${CONDA_PKGS};
+        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY};
         pip install wurlitzer;  # package for capturing C level output (tests for stdin/stderr)
         source activate test-environment;
         conda clean --all;
-        if [[ "$TEST_OPT_DEPENDENCY" == *"sage"* ]]; then
-            conda install -q "sage==8.1";
-            conda remove --force sympy;
+        if [[ "$TEST_SAGE" == "true" ]]; then
+            # Use a separate environment because sage downgrades matplotlib
+            conda create -n sage sage=8.1;
+            conda remove -n sage --force sympy;
             conda clean --all;
+        fi
+        if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+            conda install matchpy;
         fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list --format=legacy | grep "numpy" && pip uninstall -y numpy;
     fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-      pip install matchpy;
-    fi
+
 install:
   # If a command fails, fail the build.
   - set -e
