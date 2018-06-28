@@ -267,6 +267,7 @@ class RandomSymbol(Expr):
     def free_symbols(self):
         return {self}
 
+
 class ProductPSpace(PSpace):
     """
     Abstract class for representing probability spaces with multiple random

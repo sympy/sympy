@@ -59,26 +59,6 @@ class MultivariateNormalDistribution(JointDistribution):
             -S(1)/2*(_mu - sym).transpose()*(_sigma**(-1)*\
                 (_mu - sym)))[0])
 
-
-def MultivariateNormal(syms, mu, sigma):
-    """
-    Creates a joint random variable with multivariate noramal distribution.
-
-    Parameters:
-    ==========
-
-    syms: list/tuple/set of symbols for identifying each component
-    mu: A list/tuple/set consisting of k means,represents a k
-        dimensional location vector
-    covariance_mat: The covariance matrix for the distribution
-
-    Returns:
-    =======
-
-    A random symbol
-    """
-    return rv(MultivariateNormalDistribution, syms, mu, sigma)
-
 #-------------------------------------------------------------------------------
 # Multivariate laplace distribution ---------------------------------------------------------
 

@@ -1,20 +1,22 @@
 from sympy import S, symbols, pi, oo, sqrt, exp
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
+from sympy.stats.crv_types import Normal
 from sympy.utilities.pytest import raises
 from sympy.integrals.integrals import integrate
 x, y, z, a, b = symbols('x y z a b')
 
-def test_MultivariateNormal():
-    from sympy.stats.joint_rv_types import MultivariateNormal
-    m = MultivariateNormal('A', [1, 2], [[1, 0], [0, 1]])
+def test_Normal():
+    m = Normal('A', [1, 2], [[1, 0], [0, 1]])
     assert density(m)(1, 2) == 1/(2*pi)
     raises (ValueError,\
-        lambda: MultivariateNormal('M',[1, 2], [[0, 0], [0, 1]]))
-    n = MultivariateNormal('B', [1, 2, 3], [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        lambda: Normal('M',[1, 2], [[0, 0], [0, 1]]))
+    n = Normal('B', [1, 2, 3], [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    p = Normal('C',  [1, 2], [[1, 0], [0, 1]])
+    assert density(m)(x, y) == density(p)(x, y)
     assert marginal_distribution(n, 0, 1)(1, 2) == 1/(2*pi)
     assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
-    raises (ValueError, lambda: MultivariateNormal('M', [1, 2], [[1, 1], [1, -1]]))
+    raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
 
 def test_MultivariateTDist():
     from sympy.stats.joint_rv_types import MultivariateT

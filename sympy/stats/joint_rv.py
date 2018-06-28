@@ -126,7 +126,7 @@ class JointRandomSymbol(RandomSymbol):
     def __getitem__(self, key):
         from sympy.stats.joint_rv import JointPSpace
         if isinstance(self.pspace, JointPSpace):
-            return Indexed(self.pspace.value, key)
+            return Indexed(self, key)
 
 def marginal_distribution(rv, *indices):
     """
@@ -145,9 +145,9 @@ def marginal_distribution(rv, *indices):
 
     Example:
     =======
-    >>> from sympy.stats.joint_rv_types import MultivariateNormal
+    >>> from sympy.stats.crv_types import Normal
     >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> m = MultivariateNormal('X', [1, 2], [[2, 1], [1, 2]])
+    >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> marginal_distribution(m, m[0])(1)
     1/(2*sqrt(pi))
 
