@@ -999,20 +999,22 @@ def test_sympy__stats__crv__SingleContinuousPSpace():
     from sympy.stats.crv import SingleContinuousPSpace
     assert _test_args(SingleContinuousPSpace(x, nd))
 
-
-def test_sympy__stats__crv__ProductContinuousPSpace():
-    from sympy.stats.crv import ProductContinuousPSpace, SingleContinuousPSpace
-    A = SingleContinuousPSpace(x, nd)
-    B = SingleContinuousPSpace(y, nd)
-    assert _test_args(ProductContinuousPSpace(A, B))
-
 @SKIP("abstract class")
 def test_sympy__stats__crv__SingleContinuousDistribution():
     pass
 
+
 def test_sympy__stats__drv__SingleDiscreteDomain():
     from sympy.stats.drv import SingleDiscreteDomain
     assert _test_args(SingleDiscreteDomain(x, S.Naturals))
+
+
+def test_sympy__stats__drv__ProductDiscreteDomain():
+    from sympy.stats.drv import SingleDiscreteDomain, ProductDiscreteDomain
+    X = SingleDiscreteDomain(x, S.Naturals)
+    Y = SingleDiscreteDomain(y, S.Integers)
+    assert _test_args(ProductDiscreteDomain(X, Y))
+
 
 def test_sympy__stats__drv__SingleDiscretePSpace():
     from sympy.stats.drv import SingleDiscretePSpace
@@ -1032,6 +1034,10 @@ def test_sympy__stats__drv__ConditionalDiscreteDomain():
 
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
+    pass
+
+@SKIP("abstract class")
+def test_sympy__stats__drv__DiscreteDistribution():
     pass
 
 @SKIP("abstract class")
@@ -1127,8 +1133,7 @@ def test_sympy__stats__frv_types__DiscreteUniformDistribution():
 
 
 def test_sympy__stats__frv_types__DieDistribution():
-    from sympy.stats.frv_types import DieDistribution
-    assert _test_args(DieDistribution(6))
+    assert _test_args(die)
 
 
 def test_sympy__stats__frv_types__BernoulliDistribution():
@@ -1215,6 +1220,12 @@ def test_sympy__stats__crv__ContinuousDistributionHandmade():
     from sympy import Symbol, Interval
     assert _test_args(ContinuousDistributionHandmade(Symbol('x'),
                                                      Interval(0, 2)))
+
+
+def test_sympy__stats__drv__DiscreteDistributionHandmade():
+    from sympy.stats.drv import DiscreteDistributionHandmade
+    assert _test_args(DiscreteDistributionHandmade(x, S.Naturals))
+
 
 def test_sympy__stats__rv__Density():
     from sympy.stats.rv import Density

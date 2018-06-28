@@ -1,14 +1,14 @@
 """
-Convolution (using FFT, NTT),
-Arithmetic Convolution (bitwise XOR, AND, OR),
-Subset Convolution
+Convolution (using FFT, NTT, FWHT), Subset Convolution,
+Covering Product, Intersecting Product
 """
 from __future__ import print_function, division
 
 from sympy.core import S
 from sympy.core.compatibility import range, as_int
 from sympy.core.function import expand_mul
-from sympy.discrete.transforms import fft, ifft, ntt, intt
+from sympy.discrete.transforms import (
+    fft, ifft, ntt, intt, fwht, ifwht)
 
 
 def convolution(a, b, **hints):
@@ -35,11 +35,14 @@ def convolution(a, b, **hints):
             performing NTT on the sequence.
         cycle : Integer
             Specifies the length for doing cyclic convolution.
+        dyadic : bool
+            Identifies the convolution type as dyadic (XOR)
+            convolution, which is performed using FWHT.
 
     Examples
     ========
 
-    >>> from sympy import S, I, convolution
+    >>> from sympy import convolution, symbols, S, I
 
     >>> convolution([1 + 2*I, 4 + 3*I], [S(5)/4, 6], dps=3)
     [1.25 + 2.5*I, 11.0 + 15.8*I, 24.0 + 18.0*I]
@@ -53,16 +56,25 @@ def convolution(a, b, **hints):
     >>> convolution([111, 777], [888, 444], prime=19*2**10 + 1, cycle=2)
     [15502, 19351]
 
+    >>> u, v, x, y, z = symbols('u v x y z')
+    >>> convolution([u, v], [x, y, z], dyadic=True)
+    [u*x + v*y, u*y + v*x, u*z, v*z]
+
     """
 
+    fft = hints.pop('fft', None)
     dps = hints.pop('dps', None)
     p = hints.pop('prime', None)
     c = as_int(hints.pop('cycle', 0))
+    dyadic = hints.pop('dyadic', None)
 
     if c < 0:
         raise ValueError("The length for cyclic convolution must be non-negative")
 
-    if sum(x is not None for x in (p, dps)) > 1:
+    fft = True if fft else None
+    dyadic = True if dyadic else None
+    if sum(x is not None for x in (p, dps, dyadic)) > 1 or \
+            sum(x is not None for x in (fft, dyadic)) > 1:
         raise TypeError("Ambiguity in determining the convolution type")
 
     if p is not None:
@@ -72,7 +84,10 @@ def convolution(a, b, **hints):
     elif hints.pop('ntt', False):
         raise TypeError("Prime modulus must be specified for performing NTT")
 
-    ls = convolution_fft(a, b, dps=dps)
+    if dyadic:
+        ls = convolution_fwht(a, b)
+    else:
+        ls = convolution_fft(a, b, dps=dps)
 
     return ls if not c else [sum(ls[i::c]) for i in range(c)]
 
@@ -185,5 +200,70 @@ def convolution_ntt(a, b, prime):
     a, b = ntt(a, p), ntt(b, p)
     a = [x*y % p for x, y in zip(a, b)]
     a = intt(a, p)[:m]
+
+    return a
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                         Convolution for 2**n-group                         #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+def convolution_fwht(a, b):
+    """
+    Performs dyadic (XOR) convolution using Fast Walsh Hadamard Transform.
+
+    The convolution is automatically padded to the right with zeros, as the
+    radix 2 FWHT requires the number of sample points to be a power of 2.
+
+    Parameters
+    ==========
+
+    a, b : iterables
+        The sequences for which convolution is performed.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, S, I
+    >>> from sympy.discrete.convolution import convolution_fwht
+
+    >>> u, v, x, y = symbols('u v x y')
+    >>> convolution_fwht([u, v], [x, y])
+    [u*x + v*y, u*y + v*x]
+
+    >>> convolution_fwht([2, 3], [4, 5])
+    [23, 22]
+    >>> convolution_fwht([2, 5 + 4*I, 7], [6*I, 7, 3 + 4*I])
+    [56 + 68*I, -10 + 30*I, 6 + 50*I, 48 + 32*I]
+
+    >>> convolution_fwht([S(33)/7, S(55)/6, S(7)/4], [S(2)/3, 5])
+    [2057/42, 1870/63, 7/6, 35/4]
+
+    References
+    ==========
+
+    .. [1] https://researchgate.net/publication/26511536_Walsh_-_Hadamard_Transformation_of_a_Convolution
+    .. [2] https://en.wikipedia.org/wiki/Hadamard_transform
+
+    """
+
+    if not a or not b:
+        return []
+
+    a, b = a[:], b[:]
+    n = max(len(a), len(b))
+
+    if n&(n - 1): # not a power of 2
+        n = 2**n.bit_length()
+
+    # padding with zeros
+    a += [S.Zero]*(n - len(a))
+    b += [S.Zero]*(n - len(b))
+
+    a, b = fwht(a), fwht(b)
+    a = [expand_mul(x*y) for x, y in zip(a, b)]
+    a = ifwht(a)
 
     return a

@@ -455,16 +455,6 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
         return Lambda(y, fy)
 
-
-class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
-    """
-    A collection of independent continuous probability spaces
-    """
-    @property
-    def pdf(self):
-        p = Mul(*[space.pdf for space in self.spaces])
-        return p.subs(dict((rv, rv.symbol) for rv in self.values))
-
 def _reduce_inequalities(conditions, var, **kwargs):
     try:
         return reduce_rational_inequalities(conditions, var, **kwargs)
