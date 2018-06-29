@@ -527,6 +527,7 @@ def is_isomorphic(G, H, isomorphism=False):
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup
+    >>> from sympy.combinatorics.homomorphisms import homomorphism, is_isomorphic
     >>> from sympy.combinatorics.named_groups import DihedralGroup, AlternatingGroup
 
     >>> D = DihedralGroup(8)
