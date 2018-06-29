@@ -7,19 +7,21 @@ class State(object):
         transisitons (OrderedDict) -- Represents all the transitions of the state object.
         state_type (string) -- Denotes the type (accept/start/dead) of the state.
         rh_rule (instance of FreeGroupElement) -- right hand rule for dead state.
+        state_machine (instance of StateMachine object) -- The finite state machine that the state belongs to.
     '''
 
-    def __init__(self, name, state_type=None, rh_rule=None):
+    def __init__(self, name, state_machine, state_type=None, rh_rule=None):
         self.name = name
         self.transitions = {}
+        self.state_machine = state_machine
         self.state_type = state_type
         self.rh_rule = rh_rule
-        if self.state_type == 's':
-            self.state_type = "start"
-        elif self.state_type == 'a':
-            self.state_type = "accept"
-        elif self.state_type == 'd':
-            self.state_type = "dead"
+        if self.state_type == "start":
+            self.state_type = 's'
+        elif self.state_type == "accept":
+            self.state_type = 'a'
+        elif self.state_type == "dead":
+            self.state_type = 'd'
 
     def add_transition(self, letter, state):
         '''
@@ -41,8 +43,9 @@ class StateMachine(object):
         name (str) -- Name of the state machine.
     '''
 
-    def __init__(self, name):
+    def __init__(self, name, automaton_alphabet):
         self.name = name
+        self.automaton_alphabet = automaton_alphabet
         self.states = {} # Contains all the states in the machine.
         self.add_state('start', state_type='s')
 
@@ -56,7 +59,7 @@ class StateMachine(object):
             rh_rule (instance of FreeGroupElement) -- right hand rule for dead state.
 
         '''
-        new_state = State(state_name, state_type, rh_rule)
+        new_state = State(state_name, self, state_type, rh_rule)
         self.states[state_name] = new_state
 
     def __repr__(self):

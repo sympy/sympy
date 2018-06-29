@@ -41,8 +41,12 @@ class RewritingSystem(object):
         self.rules_cache = deque([], 50)
         self._init_rules()
 
+
+        # All the transition symbols in the automaton
+        generators = list(self.alphabet)
+        generators += [gen**-1 for gen in generators]
         # Create a finite state machine as an instance of the StateMachine object
-        self.reduction_automaton = StateMachine('fsm')
+        self.reduction_automaton = StateMachine('Reduction automaton for '+ repr(self.group), generators)
         self.construct_automaton()
 
     def set_max(self, n):
@@ -343,7 +347,7 @@ class RewritingSystem(object):
             rules (dictionary) -- Dictionary of the newly added rules.
 
         '''
-        # Automaton vairables
+        # Automaton variables
         automaton_alphabet = []
         proper_prefixes = {}
 
@@ -351,10 +355,6 @@ class RewritingSystem(object):
         all_rules = rules
         inverse_rules = self._compute_inverse_rules(all_rules)
         all_rules.update(inverse_rules)
-
-        # All the transition symbols in the automaton
-        generators = list(self.alphabet)
-        generators += [gen**-1 for gen in generators]
 
         # Keep track of the accept_states.
         accept_states = []
@@ -392,7 +392,7 @@ class RewritingSystem(object):
             current_state_type = self.reduction_automaton.states[state].state_type
             # Transitions will be modified only when current_state belongs to the proper_perfixes of the new rules.
             # The rest are ignored if they cannot lead to a dead state after a finite number of transisitons.
-            if current_state_type == "start":
+            if current_state_type == 's':
                 for letter in automaton_alphabet:
                     if letter in self.reduction_automaton.states:
                         self.reduction_automaton.states[state].add_transition(letter, letter)
@@ -409,7 +409,7 @@ class RewritingSystem(object):
                 for sub_word in current_state_name_array:
                     if sub_word in accept_states:
                         # Add accept states.
-                        if current_state_type == "accept":
+                        if current_state_type == 'a':
                             for letter in automaton_alphabet:
                                 next = current_state_name*letter
                                 while True:
@@ -427,11 +427,11 @@ class RewritingSystem(object):
                         break
 
         # Add transitions for new states. All symbols used in the automaton are considered here.
-        # Ignore this if `generators` = `automaton_alphabet`.
-        if len(generators) != len(automaton_alphabet):
+        # Ignore this if `self.automaton_alphabet` = `automaton_alphabet`.
+        if len(self.reduction_automaton.automaton_alphabet) != len(automaton_alphabet):
             for state in proper_prefixes:
                 current_state_name = state
-                for letter in generators:
+                for letter in self.reduction_automaton.automaton_alphabet:
                     next = current_state_name*letter
                     len_next_word = len(next)
                     while True:
@@ -474,7 +474,7 @@ class RewritingSystem(object):
             for i in range (0, len(word_array)):
                 next_state_name = current_state.transitions[word_array[i]]
                 next_state = self.reduction_automaton.states[next_state_name]
-                if next_state.state_type == "dead":
+                if next_state.state_type == 'd':
                     subst = next_state.rh_rule
                     word = word.substituted_word(i - len(next_state_name) + 1, i+1, subst)
                     flag = 1
