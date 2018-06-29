@@ -1213,6 +1213,20 @@ def test_sympy__stats__joint_rv_types__MultivariateNormalDistribution():
     from sympy.stats.joint_rv_types import MultivariateNormalDistribution
     assert _test_args(MultivariateNormalDistribution([0, 1], [[1, 0],[0, 1]]))
 
+def test_sympy__stats__joint_rv_types__MultivariateLaplaceDistribution():
+    from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution
+    assert _test_args(MultivariateLaplaceDistribution([0, 1], [[1, 0],[0, 1]]))
+
+
+def test_sympy__stats__joint_rv_types__MultivariateTDistribution():
+    from sympy.stats.joint_rv_types import MultivariateTDistribution
+    assert _test_args(MultivariateTDistribution([0, 1], [[1, 0],[0, 1]], 1))
+
+
+def test_sympy__stats__joint_rv_types__NormalGammaDistribution():
+    from sympy.stats.joint_rv_types import NormalGammaDistribution
+    assert _test_args(NormalGammaDistribution(1, 2, 3, 4))
+
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
