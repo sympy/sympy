@@ -59,20 +59,24 @@ def build_parser(output_dir=dir_latex_antlr):
     subprocess.check_output(args, cwd=output_dir)
 
     debug("Applying headers and renaming...")
-    for path in glob.glob(os.path.join(output_dir, "LaTeX*.*")):
+    # Handle case insensitive file systems. If the files are already
+    # generated, they will be written to latex* but LaTeX*.* won't match them.
+    for path in (glob.glob(os.path.join(output_dir, "LaTeX*.*")) +
+        glob.glob(os.path.join(output_dir, "latex*.*"))):
         offset = 0
         new_path = os.path.join(output_dir,
                                 os.path.basename(path).lower())
-        with open(new_path, "w+") as out_file:
-            if path.endswith(".py"):
-                out_file.write(header)
-                offset = 2
-            with open(path) as in_file:
-                out_file.writelines([
-                    line.rstrip() + "\n"
-                    for line in in_file.readlines()[offset:]
-                ])
+        with open(path, 'r') as f:
+            lines = [line.rstrip() + '\n' for line in f.readlines()]
+
         os.unlink(path)
+
+        with open(new_path, "w") as out_file:
+            if path.endswith(".py"):
+                offset = 2
+                out_file.write(header)
+            out_file.writelines(lines[offset:])
+
         debug("\t{}".format(new_path))
 
     return True
