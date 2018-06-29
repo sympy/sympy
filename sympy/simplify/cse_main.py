@@ -2,7 +2,7 @@
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
+from sympy.core import Expr, Basic, Mul, Add, Pow, sympify, Symbol
 from sympy.core.containers import Tuple, OrderedSet
 from sympy.core.singleton import S
 from sympy.core.function import _coeff_isneg
@@ -684,8 +684,14 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
                                 SparseMatrix, ImmutableSparseMatrix)
 
     # Handle the case if just one expression was passed.
-    if isinstance(exprs, (Basic, MatrixBase)):
+    if isinstance(exprs, (Expr, MatrixBase)):
         exprs = [exprs]
+    # Convert all iterables into a list for a consistent output
+    elif iterable(exprs):
+        exprs = list(exprs)
+    # Any other kind of input should not be processed further
+    else:
+        raise TypeError('unrecognized input')
 
     copy = exprs
     temp = []
