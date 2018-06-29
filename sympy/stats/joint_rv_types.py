@@ -82,15 +82,17 @@ class MultivariateLaplaceDistribution(JointDistribution):
     def pdf(self, *args):
         from sympy.functions.special.bessel import besselk
         mu, sigma = Matrix(self.mu), Matrix(self.sigma)
+        mu_T = mu.transpose()
         k = len(mu)
         sigma_inv = sigma**(-1)
         args = Matrix(args)
+        args_T = args.transpose()
         v = 1 - S(k)/2
         return S(2)/((2*pi)**(S(k)/2)*sqrt(det(sigma))) \
-        *((args.transpose()*sigma_inv*args)[0]/(2 + (mu.transpose()*sigma_inv*mu)[0])) \
-        **(S(v)/2)*besselk(v, sqrt((2 + (mu.transpose()*sigma_inv*mu)[0])
-            *((args.transpose()*sigma_inv*args)[0])))\
-        *exp((args.transpose()*sigma_inv*mu)[0])
+        *((args_T*sigma_inv*args)[0]/(2 + (mu_T*sigma_inv*mu)[0])) \
+        **(S(v)/2)*besselk(v, sqrt((2 + (mu_T*sigma_inv*mu)[0])
+            *((args_T*sigma_inv*args)[0])))\
+        *exp((args_T*sigma_inv*mu)[0])
 
 
 #-------------------------------------------------------------------------------
