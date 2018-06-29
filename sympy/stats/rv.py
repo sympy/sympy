@@ -16,7 +16,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta, Mul)
+        DiracDelta, Mul, Indexed)
 from sympy.core.relational import Relational
 from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
@@ -270,6 +270,18 @@ class RandomSymbol(Expr):
 
 class ProductPSpace(PSpace):
     """
+    Abstract class for representing probability spaces with multiple random
+    variables.
+
+    See Also
+    ========
+    sympy.stats.rv.IndependentProductPSpace
+    sympy.stats.joint_rv.JointPSpace
+    """
+    pass
+
+class IndependentProductPSpace(ProductPSpace):
+    """
     A probability space resulting from the merger of two independent probability
     spaces.
 
@@ -497,12 +509,11 @@ def pspace(expr):
     ========
 
     >>> from sympy.stats import pspace, Normal
-    >>> from sympy.stats.rv import ProductPSpace
+    >>> from sympy.stats.rv import IndependentProductPSpace
     >>> X = Normal('X', 0, 1)
     >>> pspace(2*X + 1) == X.pspace
     True
     """
-
     expr = sympify(expr)
     rvs = random_symbols(expr)
     if not rvs:
@@ -511,7 +522,7 @@ def pspace(expr):
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
     # Otherwise make a product space
-    return ProductPSpace(*[rv.pspace for rv in rvs])
+    return IndependentProductPSpace(*[rv.pspace for rv in rvs])
 
 
 def sumsets(sets):
@@ -590,7 +601,16 @@ def given(expr, condition=None, **kwargs):
         if isinstance(results, Intersection) and S.Reals in results.args:
             results = list(results.args[1])
 
-        return sum(expr.subs(rv, res) for res in results)
+        sums = 0
+        for res in results:
+            temp = expr.subs(rv, res)
+            if temp == True:
+                return True
+            if temp != False:
+                sums += expr.subs(rv, res)
+        if sums == 0:
+            return False
+        return sums
 
     # Get full probability space of both the expression and the condition
     fullspace = pspace(Tuple(expr, condition))
@@ -734,15 +754,19 @@ class Density(Basic):
             return None
 
     def doit(self, evaluate=True, **kwargs):
+        from sympy.stats.joint_rv import JointPSpace
         expr, condition = self.expr, self.condition
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
+        if isinstance(expr, RandomSymbol) and \
+            isinstance(expr.pspace, JointPSpace):
+            return expr.pspace.distribution
         if not random_symbols(expr):
             return Lambda(x, DiracDelta(x - expr))
         if (isinstance(expr, RandomSymbol) and
             hasattr(expr.pspace, 'distribution') and
-            isinstance(pspace(expr), SinglePSpace)):
+            isinstance(pspace(expr), (SinglePSpace))):
             return expr.pspace.distribution
         result = pspace(expr).compute_density(expr, **kwargs)
 
