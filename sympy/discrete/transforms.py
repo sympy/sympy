@@ -313,3 +313,66 @@ def ifwht(seq):
     return _walsh_hadamard_transform(seq, inverse=True)
 
 ifwht.__doc__ = fwht.__doc__
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                         Zeta and Mobius Transforms                         #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+def _yate_dp(seq, sgn, subset, superset):
+    """Utility function for performing Yate's Dynamic Programming (DP) for
+    Zeta or Mobius Transform.
+
+    The sequence is automatically padded to the right with zeros, as the
+    definition of subset/superset based on bitmasks (indices) requires
+    the size of sequence to be a power of 2.
+    """
+
+    if not iterable(seq):
+        raise TypeError("Expected a sequence of coefficients")
+
+    a = [sympify(arg) for arg in seq]
+    subset, superset = map(bool, (subset, superset))
+
+    if (subset, superset).count(True) != 1:
+        raise ValueError("Exactly one of subset and superset must be True")
+
+    n = len(a)
+    if n < 2:
+        return a
+
+    if n&(n - 1):
+        n = 2**n.bit_length()
+
+    a += [S.Zero]*(n - len(a))
+
+    if superset:
+        i = 1
+        while i < n:
+            for j in range(n):
+                if j & i:
+                    continue
+                a[j] += sgn*a[j ^ i]
+            i *= 2
+    else:
+        i = 1
+        while i < n:
+            for j in range(n):
+                if j & i:
+                    a[j] += sgn*a[j ^ i]
+            i *= 2
+
+    return a
+
+
+def fzt(seq, subset=None, superset=None):
+    return _yate_dp(seq, sgn=1, subset=subset, superset=superset)
+
+
+def fmt(seq, subset=None, superset=None):
+    return _yate_dp(seq, sgn=-1, subset=subset, superset=superset)
+
+ifzt = fmt
+ifmt = fzt

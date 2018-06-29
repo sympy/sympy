@@ -6,5 +6,5 @@ Convolution - convolution, convolution_fft, convolution_ntt, convolution_fwht,
 Recurrence - linrec
 """
 
-from .transforms import (fft, ifft, ntt, intt, fwht, ifwht)
+from .transforms import (fft, ifft, ntt, intt, fwht, ifwht, fzt, ifzt, fmt, ifmt)
 from .convolution import convolution
