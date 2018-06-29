@@ -155,6 +155,16 @@ user's discretion by setting the ``chop`` flag to True.
     >>> (one - 1).evalf(chop=True)
     0
 
+It is always suggested to use ``expr.evalf(subs=...)`` over,
+``expr.subs(...).evalf()`` or ``expr.evalf().subs(...)`` because it
+avoids the loss of significance caused due to naive substitution.
+
+    >>> (x+y-z).subs({x:1e100,y:1,z:1e100})
+    0
+    >>> (x+y-z).evalf(subs={x: 1e100, y: 1, z: 1e100})
+    1.0000000000000
+
+
 ``lambdify``
 ============
 
