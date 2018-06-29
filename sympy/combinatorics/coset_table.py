@@ -914,7 +914,7 @@ class CosetTable(DefaultPrinting):
 
 # relator-based method
 def coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
-                                                            incomplete=False):
+                                    incomplete=False, modified=False):
     """
     This is easier of the two implemented methods of coset enumeration.
     and is often called the HLT method, after Hazelgrove, Leech, Trotter
@@ -1066,6 +1066,12 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
     """
     # 1. Initialize a coset table C for < X|R >
     C = CosetTable(fp_grp, Y, max_cosets=max_cosets)
+    # Defines coset table methods.
+    _scan_and_fill = C.scan_and_fill
+    _define = C.define
+    if modified:
+        _scan_and_fill = C.modified_scan_and_fill
+        _define = C.modified_define
     if draft:
         C.table = draft.table[:]
         C.p = draft.p[:]
@@ -1074,20 +1080,20 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
     A_dict_inv = C.A_dict_inv
     p = C.p
     for w in Y:
-        C.scan_and_fill(0, w)
+        _scan_and_fill(0, w)
     alpha = 0
     while alpha < C.n:
         if p[alpha] == alpha:
             try:
                 for w in R:
-                    C.scan_and_fill(alpha, w)
+                    _scan_and_fill(alpha, w)
                     # if α was eliminated during the scan then break
                     if p[alpha] < alpha:
                         break
                 if p[alpha] == alpha:
                     for x in A_dict:
                         if C.table[alpha][A_dict[x]] is None:
-                            C.define(alpha, x)
+                            _define(alpha, x)
             except ValueError as e:
                 if incomplete:
                     return C
@@ -1099,7 +1105,7 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
 # Pg. 166
 # coset-table based method
 def coset_enumeration_c(fp_grp, Y, max_cosets=None, draft=None,
-                                                            incomplete=False):
+                                                incomplete=False):
     """
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_c
@@ -1149,37 +1155,6 @@ def coset_enumeration_c(fp_grp, Y, max_cosets=None, draft=None,
                     if C.table[alpha][C.A_dict[x]] is None:
                         C.define_c(alpha, x)
                         C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
-            except ValueError as e:
-                if incomplete:
-                    return C
-                raise e
-        alpha += 1
-    return C
-
-def modified_coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None, incomplete=False):
-    C = CosetTable(fp_grp, Y, max_cosets=max_cosets)
-    if draft:
-        C.table = draft.table[:]
-        C.p = draft.p[:]
-    R = fp_grp.relators
-    A_dict = C.A_dict
-    A_dict_inv = C.A_dict_inv
-    p = C.p
-    for w in Y:
-        modified_scan_and_fill(C, 0, w)
-    alpha = 0
-    while alpha < C.n:
-        if p[alpha] == alpha:
-            try:
-                for w in R:
-                    modified_scan_and_fill(C, alpha, w)
-                    # if α was eliminated during the scan then break
-                    if p[alpha] < alpha:
-                        break
-                if p[alpha] == alpha:
-                    for x in A_dict:
-                        if C.table[alpha][A_dict[x]] is None:
-                            modified_define(C, alpha, x)
             except ValueError as e:
                 if incomplete:
                     return C
