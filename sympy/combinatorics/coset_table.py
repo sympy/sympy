@@ -1044,14 +1044,11 @@ def modified_scan(C, alpha, w, y, fill=False):
     Input: α∈Ω, w∈A*, y∈(Y∪Y-1)* with τ(α)w=G φ(y)τ(α).
     Modified scan_and_fill if fill = True.
     '''
-    r = len(w)
-    f = alpha
-    i = 0
-    f_p = C._grp.identity
-    b = alpha
-    b_p = y
-    j = r - 1
     while True:
+        r = len(w)
+        f = alpha
+        i = 0
+        f_p = C._grp.identity
         while i < r and C.table[f][C.A_dict[w[i]]] is not None:
             f_p = f_p*C.P[f][C.A_dict[w[i]]]
             f = C.table[f][C.A_dict[w[i]]]
@@ -1060,8 +1057,11 @@ def modified_scan(C, alpha, w, y, fill=False):
             if f != alpha:
                 modified_coincidence(C, f, alpha, f_p**-1*y)
             return
+        b = alpha
+        b_p = y
+        j = r - 1
         while j >= i and C.table[b][C.A_dict_inv[w[j]]] is not None:
-            b_p = C.P[b][C.A_dict_inv[w[j]]]
+            b_p = b_p*C.P[b][C.A_dict_inv[w[j]]]
             b = C.table[b][C.A_dict_inv[w[j]]]
             j -= 1
         if j < i:
