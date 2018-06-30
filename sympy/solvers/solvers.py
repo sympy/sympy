@@ -1307,43 +1307,44 @@ def solve(f, *symbols, **flags):
                 ', '.join(str(s) for s in got_None)))
 
         #Filtering the correct solutions
-        if isinstance(solution, list):
-            if isinstance(solution[0],dict):
-                correct_sol = []
-                for sol in solution:
-                    if checksol(f,sol):
-                        correct_sol.append(sol)
-                solution = correct_sol
-            elif isinstance(solution[0],tuple):
-                correct_sol = []
-                for sol in solution:
-                    sol_dict = {}
-                    i = 0
-                    while i < len(symbols):
-                        sol_dict[symbols[i]] = sol[i]
-                        i += 1
-                    if checksol(f,sol_dict):
-                        correct_sol.append(sol)
-                solution = correct_sol
-            else:
-                correct_sol = []
-                for sol in solution:
-                    if checksol(f,symbols[0],sol):
-                        correct_sol.append(sol)
-                solution = correct_sol
-        elif isinstance(solution,tuple):
-            if isinstance(solution[0],list) and isinstance(solution[1],set):
-                correct_sol = []
-                for sol in solution[1]:
-                    sol_dict = {}
-                    for symb,val in zip(solution[0],sol):
-                        sol_dict[symb] = val
-                    if checksol(f,sol_dict):
-                        correct_sol.append(sol)
-                solution = (solution[0],set(correct_sol))
-        elif isinstance(solution,dict):
-            if not checksol(f,solution):
-                solution.clear()
+        if solution:
+            if isinstance(solution, list):
+                if isinstance(solution[0],dict):
+                    correct_sol = []
+                    for sol in solution:
+                        if checksol(f,sol):
+                            correct_sol.append(sol)
+                    solution = correct_sol
+                elif isinstance(solution[0],tuple):
+                    correct_sol = []
+                    for sol in solution:
+                        sol_dict = {}
+                        i = 0
+                        while i < len(symbols):
+                            sol_dict[symbols[i]] = sol[i]
+                            i += 1
+                        if checksol(f,sol_dict):
+                            correct_sol.append(sol)
+                    solution = correct_sol
+                else:
+                    correct_sol = []
+                    for sol in solution:
+                        if checksol(f,symbols[0],sol):
+                            correct_sol.append(sol)
+                    solution = correct_sol
+            elif isinstance(solution,tuple):
+                if isinstance(solution[0],list) and isinstance(solution[1],set):
+                    correct_sol = []
+                    for sol in solution[1]:
+                        sol_dict = {}
+                        for symb,val in zip(solution[0],sol):
+                            sol_dict[symb] = val
+                        if checksol(f,sol_dict):
+                            correct_sol.append(sol)
+                    solution = (solution[0],set(correct_sol))
+            elif isinstance(solution,dict):
+                if not checksol(f,solution):
+                    solution.clear()
 
     #
     # done
