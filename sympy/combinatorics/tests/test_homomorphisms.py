@@ -1,6 +1,6 @@
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism, is_isomorphic
+from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism
 from sympy.combinatorics.free_groups import free_group
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.named_groups import AlternatingGroup, DihedralGroup, CyclicGroup
@@ -58,56 +58,45 @@ def test_homomorphism():
 
 def test_isomorphisms():
 
-    # Infinite groups where there exists a map from
-    # the generators of one group to the other.
     F, a, b = free_group("a, b")
     E, c, d = free_group("c, d")
-    G = FpGroup(F, [a*b])
-    H = FpGroup(E, [c*d])
-    check, T = is_isomorphic(G, H, isomorphism=True)
-    assert check
-    assert T(a**2*b) == c**2*d
-
-    # Infinite groups with redundant relators
-    G = FpGroup(F, [a**2])
-    H = FpGroup(E, [c**2, c**4])
-    assert is_isomorphic(G, H)
-
     # Infinite groups with differently ordered relators.
     G = FpGroup(F, [a**2, b**3])
     H = FpGroup(F, [b**3, a**2])
-    assert is_isomorphic(G, H)
+    assert group_isomorphism(G, H)
 
     # Trivial Case
     # FpGroup -> FpGroup
     H = FpGroup(F, [a**3, b**3, (a*b)**2])
     F, c, d = free_group("c, d")
     G = FpGroup(F, [c**3, d**3, (c*d)**2])
-    assert is_isomorphic(G, H)
+    check, T =  group_isomorphism(G, H, isomorphism=True)
+    assert check
+    T(c**3*d**2) == a**3*b**2
 
     # FpGroup -> PermutationGroup
     # FpGroup is converted to the equivalent isomorphic group.
     F, a, b = free_group("a, b")
     G = FpGroup(F, [a**3, b**3, (a*b)**2])
     H = AlternatingGroup(4)
-    check, T = is_isomorphic(G, H, isomorphism=True)
+    check, T = group_isomorphism(G, H, isomorphism=True)
     assert check
-    assert T(Permutation(0, 9, 6)(1, 10, 8)(2, 11, 4)(3, 5, 7)) == Permutation(0, 2, 3)
-    assert T(Permutation(0, 6, 9)(1, 8, 10)(2, 4, 11)(3, 7, 5)) == Permutation(0, 3, 2)
+    assert T(b*a*b**-1*a**-1*b**-1) == Permutation(0, 2, 3)
+    assert T(b*a*b*a**-1*b**-1) == Permutation(0, 3, 2)
 
     # PermutationGroup -> PermutationGroup
     D = DihedralGroup(8)
     p = Permutation(0, 1, 2, 3, 4, 5, 6, 7)
     P = PermutationGroup(p)
-    assert not is_isomorphic(D, P)
+    assert not group_isomorphism(D, P)
 
     # Cyclic Groups of different prime order are not isomorphic to each other.
     A = CyclicGroup(5)
     B = CyclicGroup(7)
-    assert not is_isomorphic(A, B)
+    assert not group_isomorphism(A, B)
 
     # Two groups of same prime order are isomorphic to each other.
     G = FpGroup(F, [a, b**5])
     H = CyclicGroup(5)
     assert G.order() == H.order()
-    assert is_isomorphic(G, H)
+    assert group_isomorphism(G, H)
