@@ -666,9 +666,9 @@ def solve(f, *symbols, **flags):
         * when there is a linear solution
 
             >>> solve(x - y**2, x, y)
-            [(y**2, y)]
+            [{x: y**2}]
             >>> solve(x**2 - y, x, y)
-            [(x, x**2)]
+            [{y: x**2}]
             >>> solve(x**2 - y, x, y, dict=True)
             [{y: x**2}]
 
