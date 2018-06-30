@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function)
 
 from collections import namedtuple
 from contextlib import contextmanager
+from distutils.errors import CompileError
 from hashlib import sha256
 import glob
 import io
@@ -12,12 +13,11 @@ import sys
 import tempfile
 
 
-class CompilationError(Exception):
-    pass
-
-
-class FileNotFoundError(IOError):
-    pass
+if sys.version_info[0] == 2:
+    class FileNotFoundError(IOError):
+        pass
+else:
+    FileNotFoundError = FileNotFoundError
 
 
 def get_abspath(path, cwd='.'):

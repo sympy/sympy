@@ -36,8 +36,8 @@ known_functions_C89 = {
     "Mod": [
         (
             lambda numer, denom: numer.is_integer and denom.is_integer,
-            lambda printer, numer, denom, *args, **kwargs: "((%s) %% (%s))" % (
-                printer._print(numer, **kwargs), printer._print(denom, **kwargs))
+            lambda printer, numer, denom, *args: "((%s) %% (%s))" % (
+                printer._print(numer), printer._print(denom))
         ),
         (
             lambda numer, denom: not numer.is_integer or not denom.is_integer,
@@ -282,27 +282,27 @@ class C89CodePrinter(CodePrinter):
         return super(C89CodePrinter, self)._print_Mul(expr, **kwargs)
 
     @_as_macro_if_defined
-    def _print_Pow(self, expr, **kwargs):
+    def _print_Pow(self, expr):
         if "Pow" in self.known_functions:
-            return self._print_Function(expr, **kwargs)
+            return self._print_Function(expr)
         PREC = precedence(expr)
         suffix = self._get_func_suffix(real)
         if expr.exp == -1:
             return '1.0%s/%s' % (suffix.upper(), self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
-            return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base, **kwargs))
+            return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':
-            return '%scbrt%s(%s)' % (self._ns, suffix, self._print(expr.base, **kwargs))
+            return '%scbrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         else:
-            return '%spow%s(%s, %s)' % (self._ns, suffix, self._print(expr.base, **kwargs),
-                                   self._print(expr.exp, **kwargs))
+            return '%spow%s(%s, %s)' % (self._ns, suffix, self._print(expr.base),
+                                   self._print(expr.exp))
 
-    def _print_Rational(self, expr, **kwargs):
+    def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
         suffix = self._get_literal_suffix(real)
         return '%d.0%s/%d.0%s' % (p, suffix, q, suffix)
 
-    def _print_Indexed(self, expr, **kwargs):
+    def _print_Indexed(self, expr):
         # calculate index for 1d array
         offset = getattr(expr.base, 'offset', S.Zero)
         strides = getattr(expr.base, 'strides', None)
@@ -323,23 +323,23 @@ class C89CodePrinter(CodePrinter):
                 shift *= dims[i]
             strides = temp
         flat_index = sum([x[0]*x[1] for x in zip(indices, strides)]) + offset
-        return "%s[%s]" % (self._print(expr.base.label, **kwargs),
-                           self._print(flat_index, **kwargs))
+        return "%s[%s]" % (self._print(expr.base.label),
+                           self._print(flat_index))
 
-    def _print_Idx(self, expr, **kwargs):
-        return self._print(expr.label, **kwargs)
+    def _print_Idx(self, expr):
+        return self._print(expr.label)
 
     @_as_macro_if_defined
-    def _print_NumberSymbol(self, expr, **kwargs):
-        return super(C89CodePrinter, self)._print_NumberSymbol(expr, **kwargs)
+    def _print_NumberSymbol(self, expr):
+        return super(C89CodePrinter, self)._print_NumberSymbol(expr)
 
-    def _print_Infinity(self, expr, **kwargs):
+    def _print_Infinity(self, expr):
         return 'HUGE_VAL'
 
-    def _print_NegativeInfinity(self, expr, **kwargs):
+    def _print_NegativeInfinity(self, expr):
         return '-HUGE_VAL'
 
-    def _print_Piecewise(self, expr, **kwargs):
+    def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
@@ -352,12 +352,12 @@ class C89CodePrinter(CodePrinter):
         if expr.has(Assignment):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
-                    lines.append("if (%s) {" % self._print(c, **kwargs))
+                    lines.append("if (%s) {" % self._print(c))
                 elif i == len(expr.args) - 1 and c == True:
                     lines.append("else {")
                 else:
-                    lines.append("else if (%s) {" % self._print(c, **kwargs))
-                code0 = self._print(e, **kwargs)
+                    lines.append("else if (%s) {" % self._print(c))
+                code0 = self._print(e)
                 lines.append(code0)
                 lines.append("}")
             return "\n".join(lines)
@@ -366,73 +366,73 @@ class C89CodePrinter(CodePrinter):
             # operators. This has the downside that inline operators will
             # not work for statements that span multiple lines (Matrix or
             # Indexed expressions).
-            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c, **kwargs),
-                                               self._print(e, **kwargs))
+            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c),
+                                               self._print(e))
                     for e, c in expr.args[:-1]]
-            last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr, **kwargs)
+            last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
-    def _print_ITE(self, expr, **kwargs):
+    def _print_ITE(self, expr):
         from sympy.functions import Piecewise
         _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
-        return self._print(_piecewise, **kwargs)
+        return self._print(_piecewise)
 
-    def _print_MatrixElement(self, expr, **kwargs):
+    def _print_MatrixElement(self, expr):
         return "{0}[{1}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
             strict=True), expr.j + expr.i*expr.parent.shape[1])
 
-    def _print_Symbol(self, expr, **kwargs):
-        name = super(C89CodePrinter, self)._print_Symbol(expr, **kwargs)
+    def _print_Symbol(self, expr):
+        name = super(C89CodePrinter, self)._print_Symbol(expr)
         if expr in self._settings['dereference']:
             return '(*{0})'.format(name)
         else:
             return name
 
-    def _print_Relational(self, expr, **kwargs):
-        lhs_code = self._print(expr.lhs, **kwargs)
-        rhs_code = self._print(expr.rhs, **kwargs)
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
         op = expr.rel_op
         return ("{0} {1} {2}").format(lhs_code, op, rhs_code)
 
-    def _print_sinc(self, expr, **kwargs):
+    def _print_sinc(self, expr):
         from sympy.functions.elementary.trigonometric import sin
         from sympy.core.relational import Ne
         from sympy.functions import Piecewise
         _piecewise = Piecewise(
             (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
-        return self._print(_piecewise, **kwargs)
+        return self._print(_piecewise)
 
-    def _print_For(self, expr, **kwargs):
-        target = self._print(expr.target, **kwargs)
+    def _print_For(self, expr):
+        target = self._print(expr.target)
         if isinstance(expr.iterable, Range):
             start, stop, step = expr.iterable.args
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
-        body = self._print(expr.body, **kwargs)
+        body = self._print(expr.body)
         return ('for ({target} = {start}; {target} < {stop}; {target} += '
                 '{step}) {{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
 
-    def _print_sign(self, func, **kwargs):
-        return '((({0}) > 0) - (({0}) < 0))'.format(self._print(func.args[0], **kwargs))
+    def _print_sign(self, func):
+        return '((({0}) > 0) - (({0}) < 0))'.format(self._print(func.args[0]))
 
-    def _print_Max(self, expr, **kwargs):
+    def _print_Max(self, expr):
         if "Max" in self.known_functions:
-            return self._print_Function(expr, **kwargs)
+            return self._print_Function(expr)
         from sympy import Max
         if len(expr.args) == 1:
-            return self._print(expr.args[0], **kwargs)
+            return self._print(expr.args[0])
         return "((%(a)s > %(b)s) ? %(a)s : %(b)s)" % {
-            'a': expr.args[0], 'b': self._print(Max(*expr.args[1:]), **kwargs)}
+            'a': expr.args[0], 'b': self._print(Max(*expr.args[1:]))}
 
-    def _print_Min(self, expr, **kwargs):
+    def _print_Min(self, expr):
         if "Min" in self.known_functions:
-            return self._print_Function(expr, **kwargs)
+            return self._print_Function(expr)
         from sympy import Min
         if len(expr.args) == 1:
-            return self._print(expr.args[0], **kwargs)
+            return self._print(expr.args[0])
         return "((%(a)s < %(b)s) ? %(a)s : %(b)s)" % {
-            'a': expr.args[0], 'b': self._print(Min(*expr.args[1:]), **kwargs)}
+            'a': expr.args[0], 'b': self._print(Min(*expr.args[1:]))}
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
@@ -472,12 +472,12 @@ class C89CodePrinter(CodePrinter):
         dflt = self.type_math_macro_suffixes.get(alias, '')
         return self.type_math_macro_suffixes.get(type_, dflt)
 
-    def _print_Type(self, type_, **kwargs):
+    def _print_Type(self, type_):
         self.headers.update(self.type_headers.get(type_, set()))
         self.macros.update(self.type_macros.get(type_, set()))
-        return self._print(self.type_mappings.get(type_, type_.name), **kwargs)
+        return self._print(self.type_mappings.get(type_, type_.name))
 
-    def _print_Declaration(self, decl, **kwargs):
+    def _print_Declaration(self, decl):
         from sympy.codegen.cnodes import restrict
         var = decl.variable
         val = var.value
@@ -487,24 +487,24 @@ class C89CodePrinter(CodePrinter):
         if isinstance(var, Pointer):
             result = '{vc}{t} *{pc} {r}{s}'.format(
                 vc='const ' if value_const in var.attrs else '',
-                t=self._print(var.type, **kwargs),
+                t=self._print(var.type),
                 pc=' const' if pointer_const in var.attrs else '',
                 r='restrict ' if restrict in var.attrs else '',
-                s=self._print(var.symbol, **kwargs)
+                s=self._print(var.symbol)
             )
         elif isinstance(var, Variable):
             result = '{vc}{t} {s}'.format(
                 vc='const ' if value_const in var.attrs else '',
-                t=self._print(var.type, **kwargs),
-                s=self._print(var.symbol, **kwargs)
+                t=self._print(var.type),
+                s=self._print(var.symbol)
             )
         else:
             raise NotImplementedError("Unknown type of var: %s" % type(var))
         if val != None:
-            result += ' = %s' % self._print(val, **kwargs)
+            result += ' = %s' % self._print(val)
         return result
 
-    def _print_Float(self, flt, **kwargs):
+    def _print_Float(self, flt):
         type_ = self.type_aliases.get(real, real)
         self.macros.update(self.type_macros.get(type_, set()))
         suffix = self._get_literal_suffix(type_)
@@ -518,95 +518,95 @@ class C89CodePrinter(CodePrinter):
         return 'e'.join(num_parts) + suffix
 
     @requires(headers={'stdbool.h'})
-    def _print_BooleanTrue(self, expr, **kwargs):
+    def _print_BooleanTrue(self, expr):
         return 'true'
 
     @requires(headers={'stdbool.h'})
-    def _print_BooleanFalse(self, expr, **kwargs):
+    def _print_BooleanFalse(self, expr):
         return 'false'
 
-    def _print_Element(self, elem, **kwargs):
+    def _print_Element(self, elem):
         if elem.strides == None:
             if elem.offset != None:
                 raise ValueError("Expected strides when offset is given")
-            idxs = ']['.join(map(lambda arg: self._print(arg, **kwargs),
+            idxs = ']['.join(map(lambda arg: self._print(arg),
                                  elem.indices))
         else:
             global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
             if elem.offset != None:
                 global_idx += elem.offset
-            idxs = self._print(global_idx, **kwargs)
+            idxs = self._print(global_idx)
 
         return "{symb}[{idxs}]".format(
-            symb=self._print(elem.symbol, **kwargs),
+            symb=self._print(elem.symbol),
             idxs=idxs
         )
 
-    def _print_While(self, expr, **kwargs):
+    def _print_While(self, expr):
         return 'while ({condition}) {{\n{body}\n}}'.format(**expr.kwargs(
-            apply=lambda arg: self._print(arg, **kwargs)))
+            apply=lambda arg: self._print(arg)))
 
-    def _print_Scope(self, expr, **kwargs):
-        return '{\n%s\n}' % self._print_CodeBlock(expr.body, **kwargs)
+    def _print_Scope(self, expr):
+        return '{\n%s\n}' % self._print_CodeBlock(expr.body)
 
     @requires(headers={'stdio.h'})
-    def _print_Print(self, expr, **kwargs):
+    def _print_Print(self, expr):
         return 'printf({fmt}, {pargs})'.format(
-            fmt=self._print(expr.format_string, **kwargs),
-            pargs=', '.join(map(lambda arg: self._print(arg, **kwargs), expr.print_args))
+            fmt=self._print(expr.format_string),
+            pargs=', '.join(map(lambda arg: self._print(arg), expr.print_args))
         )
 
-    def _print_FunctionPrototype(self, expr, **kwargs):
-        pars = ', '.join(map(lambda arg: self._print(Declaration(arg), **kwargs),
+    def _print_FunctionPrototype(self, expr):
+        pars = ', '.join(map(lambda arg: self._print(Declaration(arg)),
                              expr.parameters))
         return "%s %s(%s)" % (
-            tuple(map(lambda arg: self._print(arg, **kwargs),
+            tuple(map(lambda arg: self._print(arg),
                       (expr.return_type, expr.name))) + (pars,)
         )
 
-    def _print_FunctionDefinition(self, expr, **kwargs):
-        return "%s%s" % (self._print_FunctionPrototype(expr, **kwargs),
-                         self._print_Scope(expr, **kwargs))
+    def _print_FunctionDefinition(self, expr):
+        return "%s%s" % (self._print_FunctionPrototype(expr),
+                         self._print_Scope(expr))
 
-    def _print_Return(self, expr, **kwargs):
+    def _print_Return(self, expr):
         arg, = expr.args
-        return 'return %s' % self._print(arg, **kwargs)
+        return 'return %s' % self._print(arg)
 
-    def _print_CommaOperator(self, expr, **kwargs):
-        return '(%s)' % ', '.join(map(lambda arg: self._print(arg, **kwargs), expr.args))
+    def _print_CommaOperator(self, expr):
+        return '(%s)' % ', '.join(map(lambda arg: self._print(arg), expr.args))
 
-    def _print_Label(self, expr, **kwargs):
+    def _print_Label(self, expr):
         return '%s:' % str(expr)
 
-    def _print_goto(self, expr, **kwargs):
+    def _print_goto(self, expr):
         return 'goto %s' % expr.label
 
-    def _print_PreIncrement(self, expr, **kwargs):
+    def _print_PreIncrement(self, expr):
         arg, = expr.args
-        return '++(%s)' % self._print(arg, **kwargs)
+        return '++(%s)' % self._print(arg)
 
-    def _print_PostIncrement(self, expr, **kwargs):
+    def _print_PostIncrement(self, expr):
         arg, = expr.args
-        return '(%s)++' % self._print(arg, **kwargs)
+        return '(%s)++' % self._print(arg)
 
-    def _print_PreDecrement(self, expr, **kwargs):
+    def _print_PreDecrement(self, expr):
         arg, = expr.args
-        return '--(%s)' % self._print(arg, **kwargs)
+        return '--(%s)' % self._print(arg)
 
-    def _print_PostDecrement(self, expr, **kwargs):
+    def _print_PostDecrement(self, expr):
         arg, = expr.args
-        return '(%s)--' % self._print(arg, **kwargs)
+        return '(%s)--' % self._print(arg)
 
-    def _print_struct(self, expr, **kwargs):
+    def _print_struct(self, expr):
         return "%(keyword)s %(name)s {\n%(lines)s}" % dict(
             keyword=expr.__class__.__name__, name=expr.name, lines=';\n'.join(
-                [self._print(decl, **kwargs) for decl in expr.declarations] + [''])
+                [self._print(decl) for decl in expr.declarations] + [''])
         )
 
-    def _print_BreakToken(self, _, **kwargs):
+    def _print_BreakToken(self, _):
         return 'break'
 
-    def _print_ContinueToken(self, _, **kwargs):
+    def _print_ContinueToken(self, _):
         return 'continue'
 
     _print_union = _print_struct
@@ -663,21 +663,20 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
                    ' erfc tgamma lgamma ceil floor trunc round nearbyint rint'
                    ' frexp ldexp modf scalbn ilogb logb nextafter copysign').split()
 
-    def _print_Infinity(self, expr, **kwargs):
+    def _print_Infinity(self, expr):
         return 'INFINITY'
 
-    def _print_NegativeInfinity(self, expr, **kwargs):
+    def _print_NegativeInfinity(self, expr):
         return '-INFINITY'
 
-    def _print_NaN(self, expr, **kwargs):
+    def _print_NaN(self, expr):
         return 'NAN'
 
     # tgamma was already covered by 'known_functions' dict
 
     @requires(headers={'math.h'}, libraries={'m'})
     @_as_macro_if_defined
-    def _print_math_func(self, expr, **kwargs):
-        nest = kwargs.get('nest', False)
+    def _print_math_func(self, expr, nest=False):
         known = self.known_functions[expr.__class__.__name__]
         if not isinstance(known, string_types):
             for cb, name in known:
@@ -692,11 +691,11 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
             suffix = self._get_func_suffix(real) if self._ns + known in self._prec_funcs else ''
 
         if nest:
-            args = self._print(expr.args[0], **kwargs)
+            args = self._print(expr.args[0])
             if len(expr.args) > 1:
-                args += ', %s' % self._print(expr.func(*expr.args[1:]), **kwargs)
+                args += ', %s' % self._print(expr.func(*expr.args[1:]))
         else:
-            args = ', '.join(map(lambda arg: self._print(arg, **kwargs), expr.args))
+            args = ', '.join(map(lambda arg: self._print(arg), expr.args))
         return '{ns}{name}{suffix}({args})'.format(
             ns=self._ns,
             name=known,
@@ -704,13 +703,11 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
             args=args
         )
 
-    def _print_Max(self, expr, **kwargs):
-        kwargs['nest'] = True
-        return self._print_math_func(expr, **kwargs)
+    def _print_Max(self, expr):
+        return self._print_math_func(expr, nest=True)
 
-    def _print_Min(self, expr, **kwargs):
-        kwargs['nest'] = True
-        return self._print_math_func(expr, **kwargs)
+    def _print_Min(self, expr):
+        return self._print_math_func(expr, nest=True)
 
 
 for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma Mod'
@@ -722,9 +719,9 @@ for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma Mod'
 class C11CodePrinter(C99CodePrinter):
 
     @requires(headers={'stdalign.h'})
-    def _print_alignof(self, expr, **kwargs):
+    def _print_alignof(self, expr):
         arg, = expr.args
-        return 'alignof(%s)' % self._print(arg, **kwargs)
+        return 'alignof(%s)' % self._print(arg)
 
 
 c_code_printers = {

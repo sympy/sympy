@@ -172,12 +172,24 @@ The output of the code above is::
 
 from __future__ import print_function, division
 
+from contextlib import contextmanager
+
 from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
 
 from functools import cmp_to_key
+
+
+@contextmanager
+def printer_context(printer, **kwargs):
+    original = printer._context.copy()
+    try:
+        printer._context.update(kwargs)
+        yield
+    finally:
+        printer._context = original
 
 
 class Printer(object):
@@ -200,6 +212,7 @@ class Printer(object):
         self._str = str
 
         self._settings = self._default_settings.copy()
+        self._context = dict()  # mutable during printing
 
         for key, val in self._global_settings.items():
             if key in self._default_settings:

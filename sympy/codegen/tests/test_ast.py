@@ -213,7 +213,7 @@ def test_CodeBlock_cse():
         Assignment(z, x * y),
         )
 
-@XFAIL
+
 def test_CodeBlock_cse__issue_14118():
     # see https://github.com/sympy/sympy/issues/14118
     c = CodeBlock(

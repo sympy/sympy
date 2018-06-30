@@ -12,7 +12,7 @@ from distutils.sysconfig import get_config_var, get_config_vars
 
 from .util import (
     get_abspath, make_dirs, copy, Glob, ArbitraryDepthGlob,
-    glob_at_depth, CompilationError,
+    glob_at_depth, CompileError,
     import_module_from_file, pyx_is_cplus,
     sha256_of_string, sha256_of_file
 )
@@ -371,7 +371,7 @@ def src2obj(srcpath, Runner=None, objpath=None, cwd=None, inc_py=False, **kwargs
     # src2obj implies not running the linker...
     run_linker = kwargs.pop('run_linker', False)
     if run_linker:
-        raise CompilationError("src2obj called with run_linker=True")
+        raise CompileError("src2obj called with run_linker=True")
 
     runner = Runner([srcpath], objpath, include_dirs=include_dirs,
                     run_linker=run_linker, cwd=cwd, flags=flags, **kwargs)
@@ -446,7 +446,7 @@ def pyx2obj(pyxpath, objpath=None, destdir=None, cwd=None,
     options = kwargs.pop('options', [])
 
     if kwargs.pop('strict_aliasing', False):
-        raise CompilationError("Cython requires strict aliasing to be disabled.")
+        raise CompileError("Cython requires strict aliasing to be disabled.")
 
     # Let's be explicit about standard
     if cplus:

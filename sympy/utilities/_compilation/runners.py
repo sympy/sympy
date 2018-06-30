@@ -10,7 +10,7 @@ import sys
 from .util import (
     get_abspath, FileNotFoundError,
     find_binary_of_command, unique_list,
-    CompilationError
+    CompileError
 )
 
 
@@ -107,7 +107,7 @@ class CompilerRunner(object):
             sa_re = re.compile("strict-aliasing$")
             if strict_aliasing is True:
                 if any(map(nsa_re.match, flags)):
-                    raise CompilationError("Strict aliasing cannot be both enforced and disabled")
+                    raise CompileError("Strict aliasing cannot be both enforced and disabled")
                 elif any(map(sa_re.match, flags)):
                     pass  # already enforced
                 else:
@@ -117,7 +117,7 @@ class CompilerRunner(object):
                     pass  # already disabled
                 else:
                     if any(map(sa_re.match, flags)):
-                        raise CompilationError("Strict aliasing cannot be both enforced and disabled")
+                        raise CompileError("Strict aliasing cannot be both enforced and disabled")
                     else:
                         flags.append('-fno-strict-aliasing')
             else:
@@ -156,7 +156,7 @@ class CompilerRunner(object):
                 if envvar not in counted:
                     counted.append(envvar)
                     msg = "Environment variable '{}' undefined.".format(envvar)
-                    raise CompilationError(msg)
+                    raise CompileError(msg)
         return cmd
 
     def run(self):
@@ -190,7 +190,7 @@ class CompilerRunner(object):
             msg = "Error executing '{0}' in {1} (exited status {2}):\n {3}\n".format(
                 ' '.join(self.cmd()), self.cwd, str(self.cmd_returncode), self.cmd_outerr
             )
-            raise CompilationError(msg)
+            raise CompileError(msg)
 
         return self.cmd_outerr, self.cmd_returncode
 

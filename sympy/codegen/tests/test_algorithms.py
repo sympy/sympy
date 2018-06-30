@@ -85,7 +85,7 @@ def test_newtons_method_function__ccode_parameters():
     args = x, A, k, p = sp.symbols('x A k p')
     expr = A*sp.cos(k*x) - p*x**3
     raises(ValueError, lambda: newtons_method_function(expr, x))
-    use_wurlitzer = wurlitzer and sys.version_info[0] == 2  # weird threading issues with Python 3
+    use_wurlitzer = wurlitzer
 
     func = newtons_method_function(expr, x, args, debug=use_wurlitzer)
 
@@ -95,9 +95,9 @@ def test_newtons_method_function__ccode_parameters():
     compile_kw = dict(std='c99')
     try:
         mod, info = compile_link_import_strings([
-            ('newton.c', ('#include <math.h>\n'
+            ('newton_par.c', ('#include <math.h>\n'
                           '#include <stdio.h>\n') + ccode(func)),
-            ('_newton.pyx', ("cdef extern double newton(double, double, double, double)\n"
+            ('_newton_par.pyx', ("cdef extern double newton(double, double, double, double)\n"
                              "def py_newton(x, A=1, k=1, p=1):\n"
                              "    return newton(x, A, k, p)\n"))
         ], compile_kwargs=compile_kw)
@@ -113,16 +113,17 @@ def test_newtons_method_function__ccode_parameters():
         if not use_wurlitzer:
             skip("C-level output only tested on Python 2 when package wurlitzer is available.")
 
-        assert err.read() == ''
-        assert out.read() == """\
-    x=         0.5 d_x=     0.61214
-    x=      1.1121 d_x=    -0.20247
-    x=     0.90967 d_x=   -0.042409
-    x=     0.86726 d_x=  -0.0017867
-    x=     0.86548 d_x= -3.1022e-06
-    x=     0.86547 d_x= -9.3421e-12
-    x=     0.86547 d_x=  3.6902e-17
-    """
+        out, err = out.read(), err.read()
+        assert err == ''
+        assert out == """\
+x=         0.5 d_x=     0.61214
+x=      1.1121 d_x=    -0.20247
+x=     0.90967 d_x=   -0.042409
+x=     0.86726 d_x=  -0.0017867
+x=     0.86548 d_x= -3.1022e-06
+x=     0.86547 d_x= -9.3421e-12
+x=     0.86547 d_x=  3.6902e-17
+"""  # try to run tests with LC_ALL=C if this assertion fails
     finally:
         if info['build_dir']:
             shutil.rmtree(info['build_dir'])

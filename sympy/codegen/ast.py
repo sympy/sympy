@@ -258,10 +258,11 @@ class Token(Basic):
     def _joiner(self, k, indent_level):
         return (',\n' + ' '*indent_level) if k in self.indented_args else ', '
 
-    def _indented(self, printer, k, v, il, *args, **kwargs):
+    def _indented(self, printer, k, v, *args, **kwargs):
+        il = printer._context['indent_level']
         def _print(arg):
             if isinstance(arg, Token):
-                return printer._print(arg, *args, indent_level=il, joiner=self._joiner(k, il), **kwargs)
+                return printer._print(arg, *args, joiner=self._joiner(k, il), **kwargs)
             else:
                 return printer._print(v, *args, **kwargs)
 
@@ -275,9 +276,10 @@ class Token(Basic):
             return _print(v)
 
     def _sympyrepr(self, printer, *args, **kwargs):
+        from sympy.printing.printer import printer_context
         exclude = kwargs.get('exclude', ())
         values = [getattr(self, k) for k in self.__slots__]
-        indent_level = kwargs.pop('indent_level', 0)
+        indent_level = printer._context.get('indent_level', 0)
         joiner = kwargs.pop('joiner', ', ')
 
         arg_reprs = []
@@ -291,7 +293,8 @@ class Token(Basic):
                 continue
 
             ilvl = indent_level + 4 if attr in self.indented_args else 0
-            indented = self._indented(printer, attr, value, ilvl, *args, **kwargs)
+            with printer_context(printer, indent_level=ilvl):
+                indented = self._indented(printer, attr, value, *args, **kwargs)
             arg_reprs.append(('{1}' if i == 0 else '{0}={1}').format(attr, indented))
 
         return "{0}({1})".format(self.__class__.__name__, joiner.join(arg_reprs))
@@ -585,9 +588,11 @@ class CodeBlock(Basic):
         return iter(self.args)
 
     def _sympyrepr(self, printer, *args, **kwargs):
-        il = kwargs.pop('indent_level', 0) + 4
+        from sympy.printing.printer import printer_context
+        il = printer._context.get('indent_level', 0) + 4
         joiner = ',\n' + ' '*il
-        joined = joiner.join(map(printer._print, self.args))
+        with printer_context(printer, indent_level=il):
+            joined = joiner.join(map(printer._print, self.args))
         return ('{0}(\n'.format(' '*(il-4) + self.__class__.__name__,) +
                 ' '*il + joined + '\n' + ' '*(il - 4) + ')')
 
