@@ -573,16 +573,16 @@ class StrPrinter(Printer):
         return str(expr.p)
 
     def _print_Integers(self, expr, **kwargs):
-        return 'S.Integers'
+        return 'Integers'
 
     def _print_Naturals(self, expr, **kwargs):
-        return 'S.Naturals'
+        return 'Naturals'
 
     def _print_Naturals0(self, expr, **kwargs):
-        return 'S.Naturals0'
+        return 'Naturals0'
 
     def _print_Reals(self, expr, **kwargs):
-        return 'S.Reals'
+        return 'Reals'
 
     def _print_int(self, expr, **kwargs):
         return str(expr)

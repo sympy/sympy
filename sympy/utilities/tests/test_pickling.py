@@ -73,7 +73,7 @@ def check(a, exclude=[], check_attr=True):
                 attr = getattr(a, i)
                 if not hasattr(attr, "__call__"):
                     assert hasattr(b, i), i
-                    assert getattr(b, i) == attr, "%s != %s" % (getattr(b, i), attr)
+                    assert getattr(b, i) == attr, "%s != %s, protocol: %s" % (getattr(b, i), attr, protocol)
         c(a, b, d1)
         c(b, a, d2)
 
