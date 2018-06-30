@@ -102,7 +102,7 @@ def test_Module():
     (stdout, stderr), info = compile_run_strings([
         ('mod_sq.f90', fcode(mod_sq, standard=90)),
         ('main.f90', fcode(prg_sq, standard=90))
-    ])
+    ], clean=True)
     assert '42' in stdout
     assert str(42**2) in stdout
     assert stderr == ''

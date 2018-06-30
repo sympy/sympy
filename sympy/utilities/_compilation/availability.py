@@ -10,7 +10,7 @@ def has_fortran():
                     'program foo\n'
                     'print *, "hello world"\n'
                     'end program'
-                ))]
+                ))], clean=True
             )
             assert 'hello world' in stdout
             assert stderr == ''
@@ -30,7 +30,7 @@ def has_c():
                     'int main(){\n'
                     'printf("hello world\\n");\n'
                     '}'
-                ))]
+                ))], clean=True
             )
             assert 'hello world' in stdout
             assert stderr == ''
@@ -50,7 +50,7 @@ def has_cxx():
                     'int main(){\n'
                     'std::cout << "hello world" << std::endl;\n'
                     '}'
-                ))]
+                ))], clean=True
             )
             assert 'hello world' in stdout
             assert stderr == ''

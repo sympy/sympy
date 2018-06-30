@@ -620,7 +620,7 @@ def compile_run_strings(sources, build_dir=None, clean=False, compile_kwargs=Non
         exit_status = p.wait()
         stdout, stderr = [txt.decode('utf-8') for txt in p.communicate()]
     finally:
-        if clean:
+        if clean and os.path.isdir(build_dir):
             shutil.rmtree(build_dir)
             build_dir = None
     info = dict(exit_status=exit_status, build_dir=build_dir)
