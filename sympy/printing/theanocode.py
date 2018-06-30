@@ -95,15 +95,15 @@ class TheanoPrinter(Printer):
             return value
 
 
-    def _print_Basic(self, expr):
+    def _print_Basic(self, expr, **kwargs):
         op = mapping[type(expr)]
-        children = [self._print(arg) for arg in expr.args]
+        children = [self._print(arg, **kwargs) for arg in expr.args]
         return op(*children)
 
-    def _print_Number(self, n):
+    def _print_Number(self, n, **kwargs):
         return eval(str(n))
 
-    def _print_MatrixSymbol(self, X, dtypes={}):
+    def _print_MatrixSymbol(self, X, dtypes={}, **kwargs):
         dtype = dtypes.get(X, 'floatX')
         key = (X.name, dtype, type(X))
         if key in self.cache:
@@ -113,80 +113,80 @@ class TheanoPrinter(Printer):
             self.cache[key] = value
             return value
 
-    def _print_DenseMatrix(self, X):
+    def _print_DenseMatrix(self, X, **kwargs):
         try:
             tt.stacklists
         except AttributeError:
             raise NotImplementedError(
                "Matrix translation not yet supported in this version of Theano")
         else:
-            return tt.stacklists([[self._print(arg) for arg in L]
+            return tt.stacklists([[self._print(arg, **kwargs) for arg in L]
                                          for L in X.tolist()])
     _print_ImmutableMatrix = _print_ImmutableDenseMatrix = _print_DenseMatrix
 
-    def _print_MatMul(self, expr):
-        children = [self._print(arg) for arg in expr.args]
+    def _print_MatMul(self, expr, **kwargs):
+        children = [self._print(arg, **kwargs) for arg in expr.args]
         result = children[0]
         for child in children[1:]:
             result = tt.dot(result, child)
         return result
 
-    def _print_MatrixSlice(self, expr):
-        parent = self._print(expr.parent)
-        rowslice = self._print(slice(*expr.rowslice))
-        colslice = self._print(slice(*expr.colslice))
+    def _print_MatrixSlice(self, expr, **kwargs):
+        parent = self._print(expr.parent, **kwargs)
+        rowslice = self._print(slice(*expr.rowslice), **kwargs)
+        colslice = self._print(slice(*expr.colslice), **kwargs)
         return parent[rowslice, colslice]
 
-    def _print_BlockMatrix(self, expr):
+    def _print_BlockMatrix(self, expr, **kwargs):
         nrows, ncols = expr.blocks.shape
-        blocks = [[self._print(expr.blocks[r, c])
+        blocks = [[self._print(expr.blocks[r, c], **kwargs)
                         for c in range(ncols)]
                         for r in range(nrows)]
         return tt.join(0, *[tt.join(1, *row) for row in blocks])
 
 
-    def _print_slice(self, expr):
-        return slice(*[self._print(i)
+    def _print_slice(self, expr, **kwargs):
+        return slice(*[self._print(i, **kwargs)
                         if isinstance(i, sympy.Basic) else i
                         for i in (expr.start, expr.stop, expr.step)])
 
-    def _print_Pi(self, expr):
+    def _print_Pi(self, expr, **kwargs):
         return 3.141592653589793
 
-    def _print_Piecewise(self, expr):
+    def _print_Piecewise(self, expr, **kwargs):
         import numpy as np
         e, cond = expr.args[0].args
         if len(expr.args) == 1:
-            return tt.switch(self._print(cond),
-                             self._print(e),
+            return tt.switch(self._print(cond, **kwargs),
+                             self._print(e, **kwargs),
                              np.nan)
-        return tt.switch(self._print(cond),
-                         self._print(e),
-                         self._print(sympy.Piecewise(*expr.args[1:])))
+        return tt.switch(self._print(cond, **kwargs),
+                         self._print(e, **kwargs),
+                         self._print(sympy.Piecewise(*expr.args[1:]), **kwargs))
 
-    def _print_Rational(self, expr):
-        return tt.true_div(self._print(expr.p),
-                           self._print(expr.q))
+    def _print_Rational(self, expr, **kwargs):
+        return tt.true_div(self._print(expr.p, **kwargs),
+                           self._print(expr.q, **kwargs))
 
-    def _print_Integer(self, expr):
+    def _print_Integer(self, expr, **kwargs):
         return expr.p
 
-    def _print_factorial(self, expr):
-        return self._print(sympy.gamma(expr.args[0] + 1))
+    def _print_factorial(self, expr, **kwargs):
+        return self._print(sympy.gamma(expr.args[0] + 1), **kwargs)
 
-    def _print_Derivative(self, deriv):
-        rv = self._print(deriv.expr)
+    def _print_Derivative(self, deriv, **kwargs):
+        rv = self._print(deriv.expr, **kwargs)
         for var in deriv.variables:
-            var = self._print(var)
+            var = self._print(var, **kwargs)
             rv = tt.Rop(rv, var, tt.ones_like(var))
         return rv
 
     def emptyPrinter(self, expr):
         return expr
 
-    def doprint(self, expr):
+    def doprint(self, expr, **kwargs):
         """Returns printer's representation for expr (as a string)"""
-        return self._print(expr)
+        return self._print(expr, **kwargs)
 
 global_cache = {}
 
