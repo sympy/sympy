@@ -772,20 +772,22 @@ def test_sympy__stats__crv__SingleContinuousPSpace():
     from sympy.stats.crv import SingleContinuousPSpace
     assert _test_args(SingleContinuousPSpace(x, nd))
 
-
-def test_sympy__stats__crv__ProductContinuousPSpace():
-    from sympy.stats.crv import ProductContinuousPSpace, SingleContinuousPSpace
-    A = SingleContinuousPSpace(x, nd)
-    B = SingleContinuousPSpace(y, nd)
-    assert _test_args(ProductContinuousPSpace(A, B))
-
 @SKIP("abstract class")
 def test_sympy__stats__crv__SingleContinuousDistribution():
     pass
 
+
 def test_sympy__stats__drv__SingleDiscreteDomain():
     from sympy.stats.drv import SingleDiscreteDomain
     assert _test_args(SingleDiscreteDomain(x, S.Naturals))
+
+
+def test_sympy__stats__drv__ProductDiscreteDomain():
+    from sympy.stats.drv import SingleDiscreteDomain, ProductDiscreteDomain
+    X = SingleDiscreteDomain(x, S.Naturals)
+    Y = SingleDiscreteDomain(y, S.Integers)
+    assert _test_args(ProductDiscreteDomain(X, Y))
+
 
 def test_sympy__stats__drv__SingleDiscretePSpace():
     from sympy.stats.drv import SingleDiscretePSpace
@@ -803,8 +805,20 @@ def test_sympy__stats__drv__ConditionalDiscreteDomain():
     X = SingleDiscreteDomain(x, S.Naturals0)
     assert _test_args(ConditionalDiscreteDomain(X, x > 2))
 
+def test_sympy__stats__joint_rv__JointPSpace():
+    from sympy.stats.joint_rv import JointPSpace, JointDistribution
+    assert _test_args(JointPSpace('X', JointDistribution(1)))
+
+def test_sympy__stats__joint_rv__JointRandomSymbol():
+    from sympy.stats.joint_rv import JointRandomSymbol
+    assert _test_args(JointRandomSymbol(x))
+
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
+    pass
+
+@SKIP("abstract class")
+def test_sympy__stats__drv__DiscreteDistribution():
     pass
 
 @SKIP("abstract class")
@@ -849,12 +863,17 @@ def test_sympy__stats__rv__RandomSymbol():
     assert _test_args(RandomSymbol(x, A))
 
 
+@SKIP("abstract Class")
 def test_sympy__stats__rv__ProductPSpace():
-    from sympy.stats.rv import ProductPSpace
+    pass
+
+
+def test_sympy__stats__rv__IndependentProductPSpace():
+    from sympy.stats.rv import IndependentProductPSpace
     from sympy.stats.crv import SingleContinuousPSpace
     A = SingleContinuousPSpace(x, nd)
     B = SingleContinuousPSpace(y, nd)
-    assert _test_args(ProductPSpace(A, B))
+    assert _test_args(IndependentProductPSpace(A, B))
 
 
 def test_sympy__stats__rv__ProductDomain():
@@ -900,8 +919,7 @@ def test_sympy__stats__frv_types__DiscreteUniformDistribution():
 
 
 def test_sympy__stats__frv_types__DieDistribution():
-    from sympy.stats.frv_types import DieDistribution
-    assert _test_args(DieDistribution(6))
+    assert _test_args(die)
 
 
 def test_sympy__stats__frv_types__BernoulliDistribution():
@@ -988,6 +1006,12 @@ def test_sympy__stats__crv__ContinuousDistributionHandmade():
     from sympy import Symbol, Interval
     assert _test_args(ContinuousDistributionHandmade(Symbol('x'),
                                                      Interval(0, 2)))
+
+
+def test_sympy__stats__drv__DiscreteDistributionHandmade():
+    from sympy.stats.drv import DiscreteDistributionHandmade
+    assert _test_args(DiscreteDistributionHandmade(x, S.Naturals))
+
 
 def test_sympy__stats__rv__Density():
     from sympy.stats.rv import Density
@@ -1169,13 +1193,26 @@ def test_sympy__stats__crv_types__WignerSemicircleDistribution():
     from sympy.stats.crv_types import WignerSemicircleDistribution
     assert _test_args(WignerSemicircleDistribution(1))
 
+
 def test_sympy__stats__drv_types__PoissonDistribution():
     from sympy.stats.drv_types import PoissonDistribution
     assert _test_args(PoissonDistribution(1))
 
+
 def test_sympy__stats__drv_types__GeometricDistribution():
     from sympy.stats.drv_types import GeometricDistribution
     assert _test_args(GeometricDistribution(.5))
+
+
+def test_sympy__stats__joint_rv__JointDistribution():
+    from sympy.stats.joint_rv import JointDistribution
+    assert _test_args(JointDistribution(1, 2, 3, 4))
+
+
+def test_sympy__stats__joint_rv_types__MultivariateNormalDistribution():
+    from sympy.stats.joint_rv_types import MultivariateNormalDistribution
+    assert _test_args(MultivariateNormalDistribution([0, 1], [[1, 0],[0, 1]]))
+
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy

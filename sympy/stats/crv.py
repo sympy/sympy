@@ -11,10 +11,9 @@ sympy.stats.frv
 from __future__ import print_function, division
 
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace,
-        NamedArgsMixin)
+        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import (Interval, Intersection, symbols, sympify, Dummy, Mul,
+from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union)
 from sympy.solvers.solveset import solveset
@@ -454,16 +453,6 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         fx = self.compute_density(self.value)
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
         return Lambda(y, fy)
-
-
-class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
-    """
-    A collection of independent continuous probability spaces
-    """
-    @property
-    def pdf(self):
-        p = Mul(*[space.pdf for space in self.spaces])
-        return p.subs(dict((rv, rv.symbol) for rv in self.values))
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:

@@ -415,8 +415,18 @@ def test_solve_transcendental():
     assert solve([x**y - 1]) == [{x: 1}, {y: 0}]
     assert solve(x*y*(x**2 - y**2)) == [{x: 0}, {x: -y}, {x: y}, {y: 0}]
     assert solve([x*y*(x**2 - y**2)]) == [{x: 0}, {x: -y}, {x: y}, {y: 0}]
-    #issue 4739
+    # issue 4739
     assert solve(exp(log(5)*x) - 2**x, x) == [0]
+    # issue 14791
+    assert solve(exp(log(5)*x) - exp(log(2)*x), x) == [0]
+    f = Function('f')
+    assert solve(y*f(log(5)*x) - y*f(log(2)*x), x) == [0]
+    assert solve(f(x) - f(0), x) == [0]
+    assert solve(f(x) - f(2 - x), x) == [1]
+    raises(NotImplementedError, lambda: solve(f(x, y) - f(1, 2), x))
+    raises(NotImplementedError, lambda: solve(f(x, y) - f(2 - x, 2), x))
+    raises(ValueError, lambda: solve(f(x, y) - f(1 - x), x))
+    raises(ValueError, lambda: solve(f(x, y) - f(1), x))
 
     # misc
     # make sure that the right variables is picked up in tsolve
@@ -761,24 +771,28 @@ def test_issue_5132():
 
 def test_issue_5335():
     lam, a0, conc = symbols('lam a0 conc')
-    eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
-           a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
+    a = 0.005
+    b = 0.743436700916726
+    eqs = [lam + 2*y - a0*(1 - x/2)*x - a*x/2*x,
+           a0*(1 - x/2)*x - 1*y - b*y,
            x + y - conc]
     sym = [x, y, a0]
-    # there are 4 solutions but only two are valid
-    assert len(solve(eqs, sym, manual=True, minimal=True, simplify=False)) == 2
+    # there are 4 solutions obtained manually but only two are valid
+    assert len(solve(eqs, sym, manual=True, minimal=True)) == 2
+    assert len(solve(eqs, sym)) == 2  # cf below with rational=False
 
 
 @SKIP("Hangs")
 def _test_issue_5335_float():
     # gives ZeroDivisionError: polynomial division
     lam, a0, conc = symbols('lam a0 conc')
-    eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
-           a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
+    a = 0.005
+    b = 0.743436700916726
+    eqs = [lam + 2*y - a0*(1 - x/2)*x - a*x/2*x,
+           a0*(1 - x/2)*x - 1*y - b*y,
            x + y - conc]
     sym = [x, y, a0]
-    assert len(
-        solve(eqs, sym, rational=False, check=False, simplify=False)) == 2
+    assert len(solve(eqs, sym, rational=False)) == 2
 
 
 def test_issue_5767():
@@ -1307,6 +1321,7 @@ def test_check_assumptions():
     raises(AssertionError, lambda: check_assumptions(2*x, x, positive=True))
     raises(TypeError, lambda: check_assumptions(1, 1))
 
+
 def test_failing_assumptions():
     x = Symbol('x', real=True, positive=True)
     y = Symbol('y')
@@ -1545,22 +1560,25 @@ def test_lambert_multivariate():
     # coverage test
     raises(NotImplementedError, lambda: solve(x - sin(x)*log(y - x), x))
 
-    # if sign is unknown then only this one solution is obtained
-    assert solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
-        -((log(a**5) + LambertW(S(1)/3))/(3*log(a)))]
-    p = symbols('p', positive=True)
     _13 = S(1)/3
     _56 = S(5)/6
     _53 = S(5)/3
-    assert solve(3*log(p**(3*x + 5)) + p**(3*x + 5), x) == [
-        log((-3**_13 - 3**_56*I)*LambertW(_13)**_13/(2*p**_53))/log(p),
-        log((-3**_13 + 3**_56*I)*LambertW(_13)**_13/(2*p**_53))/log(p),
-        log((3*LambertW(_13)/p**5)**(1/(3*log(p))))]
+    K = (a**(-5))**(_13)*LambertW(_13)**(_13)/-2
+    assert solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
+        (log(a**(-5)) + log(3*LambertW(_13)))/(3*log(a)),
+        log((3**(_13) - 3**(_56)*I)*K)/log(a),
+        log((3**(_13) + 3**(_56)*I)*K)/log(a)]
 
     # check collection
-    assert solve(3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
-        -((log(a**5) + LambertW(1/(b + 3)))/(3*log(a)))]
+    K = ((b + 3)*LambertW(1/(b + 3))/a**5)**(_13)
+    assert solve(
+            3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5),
+            x) == [
+        log(K*(1 - sqrt(3)*I)/-2)/log(a),
+        log(K*(1 + sqrt(3)*I)/-2)/log(a),
+        log((b + 3)*LambertW(1/(b + 3))/a**5)/(3*log(a))]
 
+    p = symbols('p', positive=True)
     eq = 4*2**(2*p + 3) - 2*p - 3
     assert _solve_lambert(eq, p, _filtered_gens(Poly(eq), p)) == [
         -S(3)/2 - LambertW(-4*log(2))/(2*log(2))]
@@ -1932,3 +1950,17 @@ def test_issue_12476():
 def test_issue_13849():
     t = symbols('t')
     assert solve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == []
+
+
+def test_issue_14721():
+    k, h, a, b = symbols(':4')
+    assert solve([
+        -1 + (-k + 1)**2/b**2 + (-h - 1)**2/a**2,
+        -1 + (-k + 1)**2/b**2 + (-h + 1)**2/a**2,
+        h, k + 2], h, k, a, b) == [
+        (0, -2, -b*sqrt(1/(b**2 - 9)), b),
+        (0, -2, b*sqrt(1/(b**2 - 9)), b)]
+    assert solve([
+        h, h/a + 1/b**2 - 2, -h/2 + 1/b**2 - 2], a, h, b) == [
+        (a, 0, -sqrt(2)/2), (a, 0, sqrt(2)/2)]
+    assert solve((a + b**2 - 1, a + b**2 - 2)) == []

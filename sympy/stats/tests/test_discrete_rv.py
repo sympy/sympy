@@ -5,8 +5,10 @@ from sympy import S, Sum
 from sympy.stats import (P, E, variance, density, characteristic_function,
         where)
 from sympy.stats.rv import sample
+from sympy.stats.symbolic_probability import Probability
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.sets.fancysets import Range
 from sympy.logic.boolalg import Or
 
@@ -86,3 +88,16 @@ def test_conditional():
     assert P(X > 3, X > 2) == S(1)/3
     assert P(Y > 2, Y < 2) == 0
     assert P(Eq(Y, 3), Y >= 0) == 9*exp(-3)/2
+    assert P(Eq(Y, 3), Eq(Y, 2)) == 0
+    assert P(X < 2, Eq(X, 2)) == 0
+    assert P(X > 2, Eq(X, 3)) == 1
+
+def test_product_spaces():
+    X1 = Geometric('X1', S(1)/2)
+    X2 = Geometric('X2', S(1)/3)
+    assert str(P(X1 + X2 < 3, evaluate=False)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """\
+    + """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1))"""
+    assert str(P(X1 + X2 > 3)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """ +\
+        """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, 1, oo))"""
+    assert str(P(Eq(X1 + X2, 3))) == """Sum(Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, """ +\
+    """X2 <= 2), (0, True)), (X2, 1, oo))"""
