@@ -142,7 +142,7 @@ class FCodePrinter(CodePrinter):
         else:
             raise ValueError("Unknown source format: %s" % self._settings['source_format'])
 
-    def _print_Symbol(self, expr):
+    def _print_Symbol(self, expr, **kwargs):
         if self._settings['name_mangling'] == True:
             if expr not in self.mangled_symbols:
                 name = expr.name
