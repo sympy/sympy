@@ -1,10 +1,12 @@
 """A module containing discrete functions.
 
-Transforms - fft, ifft, ntt, intt, fwht, ifwht, fzt, ifzt, fmt, ifmt
+Transforms - fft, ifft, ntt, intt, fwht, ifwht,
+    mobius_transform, inverse_mobius_transform
 Convolution - convolution, convolution_fft, convolution_ntt, convolution_fwht,
     convolution_subset, covering_product, intersecting_product
 Recurrence - linrec
 """
 
-from .transforms import (fft, ifft, ntt, intt, fwht, ifwht)
+from .transforms import (fft, ifft, ntt, intt, fwht, ifwht,
+    mobius_transform, inverse_mobius_transform)
 from .convolution import convolution
