@@ -7,20 +7,23 @@ from sympy.external import import_module
 matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.functions.elementary.integers import floor, frac
-from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, gamma)
+from sympy.functions import (log as sym_log , sin, cos, tan, cot, csc, sec, sqrt, erf, gamma, uppergamma, polygamma, digamma,
+    loggamma, factorial, zeta, LambertW)
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.polys.polytools import Poly, quo, rem, total_degree, degree
-from sympy.simplify.simplify import fraction, simplify, cancel
+from sympy.simplify.simplify import fraction, simplify, cancel, powsimp
 from sympy.core.sympify import sympify
 from sympy.utilities.iterables import postorder_traversal
-from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi
+from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei, expint, li, Si, Ci, Shi, Chi
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
-from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Integer, Float, Dict, Symbol, Rational,
+from sympy import (Basic, E, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Integer, Float, Dict, Symbol, Rational,
     Add, hyper, symbols, sqf_list, sqf, Max, factorint, factorrat, Min, sign, E, Function, collect, FiniteSet, nsimplify,
-    expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr, PolynomialError)
+    expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr, PolynomialError, Dummy, exp as sym_exp,
+    powdenest)
 from mpmath import appellf1
+from sympy.functions.special.hyper import TupleArg
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
 from sympy.utilities.iterables import flatten
 from random import randint
@@ -36,6 +39,27 @@ if matchpy:
         arity = Arity.variadic
         commutative=False
         associative=True
+
+    class rubi_unevaluated_expr(UnevaluatedExpr):
+        @property
+        def is_commutative(self):
+            from sympy.core.logic import fuzzy_and
+            return fuzzy_and(a.is_commutative for a in self.args)
+
+    _E = rubi_unevaluated_expr(E)
+    class exp(Function):
+        @classmethod
+        def eval(cls, *args):
+            return Pow(_E, args[0])
+
+    #log = sym_log
+    class log(Function):
+        @classmethod
+        def eval(cls, *args):
+            if args[0].has(_E):
+                return sym_log(args[0]).doit()
+            else:
+                return sym_log(args[0])
 
     Operation.register(Integral)
     register_operation_iterator(Integral, lambda a: (a._args[0],) + a._args[1], lambda a: len((a._args[0],) + a._args[1]))
@@ -62,14 +86,26 @@ if matchpy:
     Operation.register(log)
     register_operation_iterator(log, lambda a: a._args, lambda a: len(a._args))
 
+    Operation.register(sym_log)
+    register_operation_iterator(sym_log, lambda a: a._args, lambda a: len(a._args))
+
     Operation.register(gamma)
     register_operation_iterator(gamma, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(uppergamma)
+    register_operation_iterator(uppergamma, lambda a: a._args, lambda a: len(a._args))
 
     Operation.register(fresnels)
     register_operation_iterator(fresnels, lambda a: a._args, lambda a: len(a._args))
 
     Operation.register(fresnelc)
     register_operation_iterator(fresnelc, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(erf)
+    register_operation_iterator(erf, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(Ei)
+    register_operation_iterator(Ei, lambda a: a._args, lambda a: len(a._args))
 
     Operation.register(erfc)
     register_operation_iterator(erfc, lambda a: a._args, lambda a: len(a._args))
@@ -156,10 +192,19 @@ if matchpy:
 
     A_, B_, C_, F_, G_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, z_ = [WC(i) for i in 'ABCFGabcdefghijklmnpqrtuvswxz']
     a, b, c, d, e = symbols('a b c d e')
-
 def Int(expr, var):
     from sympy.integrals.rubi.rubi import util_rubi_integrate
     return util_rubi_integrate(expr, var)
+
+def replace_pow_exp(z):
+    z = S(z)
+    if z.has(_E):
+        z = z.replace(_E, E)
+    return z
+
+def Simplify(expr):
+    expr = simplify(expr)
+    return expr
 
 def Set(expr, value):
     return {expr: value}
@@ -207,11 +252,11 @@ def ZeroQ(*expr):
             return list(ZeroQ(i) for i in expr[0])
         else:
 
-            return simplify(expr[0]) == 0
+            return Simplify(expr[0]) == 0
     else:
         return all(ZeroQ(i) for i in expr)
 def NegativeQ(u):
-    u = simplify(u)
+    u = Simplify(u)
     if u in (zoo, oo):
         return False
     if u.is_comparable:
@@ -221,7 +266,7 @@ def NegativeQ(u):
     return False
 
 def NonzeroQ(expr):
-    return simplify(expr) != 0
+    return Simplify(expr) != 0
 
 def FreeQ(nodes, var):
     if isinstance(nodes, list):
@@ -237,11 +282,8 @@ def NFreeQ(nodes, var):
 def List(*var):
     return list(var)
 
-def Log(e):
-    return log(e)
-
 def PositiveQ(var):
-    var = simplify(var)
+    var = Simplify(var)
     if var in (zoo, oo):
         return False
     if var.is_comparable:
@@ -257,7 +299,7 @@ def NegativeIntegerQ(*args):
     return all(var.is_Integer and NegativeQ(var) for var in args)
 
 def IntegerQ(var):
-    var = simplify(var)
+    var = Simplify(var)
     if isinstance(var, (int, Integer)):
         return True
     else:
@@ -329,8 +371,7 @@ def IntPart(u):
         for i in u.args:
             res += IntPart(i)
         return res
-    else:
-        return 0
+    return 0
 
 def FracPart(u):
     # FracPart[u] returns the sum of the non-integer terms of u.
@@ -354,7 +395,7 @@ def RationalQ(*nodes):
     return all(var.is_Rational for var in nodes)
 
 def ProductQ(expr):
-    return expr.is_Mul
+    return S(expr).is_Mul
 
 def SumQ(expr):
     return expr.is_Add
@@ -365,6 +406,9 @@ def NonsumQ(expr):
 def Subst(a, x, y):
     if None in [a, x, y]:
         return None
+    if a.has(Function('Integrate')):
+        # substituting in `Function(Integrate)` won't take care of properties of Integral
+        a = a.replace(Function('Integrate'), Integral)
     return a.subs(x, y)
     # return a.xreplace({x: y})
 
@@ -420,7 +464,7 @@ def Rest(expr):
 
 def SqrtNumberQ(expr):
     # SqrtNumberQ[u] returns True if u^2 is a rational number; else it returns False.
-    if expr.is_Pow:
+    if PowerQ(expr):
         m = expr.base
         n = expr.exp
         return (IntegerQ(n) and SqrtNumberQ(m)) or (IntegerQ(n-S(1)/2) and RationalQ(m))
@@ -467,7 +511,7 @@ class Util_Coefficient(Function):
         if len(self.args) == 2:
             n = 1
         else:
-            n = simplify(self.args[2])
+            n = Simplify(self.args[2])
 
         if NumericQ(n):
             expr = expand(self.args[0])
@@ -510,7 +554,7 @@ def Coefficient(expr, var, n=1):
     return Util_Coefficient(expr, var, n)
 
 def Denominator(var):
-    var = simplify(var)
+    var = Simplify(var)
     if isinstance(var, Pow):
         if isinstance(var.exp, Integer):
             if var.exp > 0:
@@ -531,8 +575,6 @@ def Not(var):
         var = False
     return not var
 
-def Simplify(expr):
-    return simplify(expr)
 
 def FractionalPart(a):
     return frac(a)
@@ -686,22 +728,28 @@ def IndependentQ(u, x):
     return FreeQ(u, x)
 
 def PowerQ(expr):
-    return expr.is_Pow
+    return expr.is_Pow or ExpQ(expr)
 
 def IntegerPowerQ(u):
+    if isinstance(u, sym_exp): #special case for exp
+        return IntegerQ(u.args[0])
     return PowerQ(u) and IntegerQ(u.args[1])
 
 def PositiveIntegerPowerQ(u):
+    if isinstance(u, sym_exp):
+        return IntegerQ(u.args[0]) and PositiveQ(u.args[0])
     return PowerQ(u) and IntegerQ(u.args[1]) and PositiveQ(u.args[1])
 
 def FractionalPowerQ(u):
+    if isinstance(u, sym_exp):
+        return FractionQ(u.args[0])
     return PowerQ(u) and FractionQ(u.args[1])
 
 def AtomQ(expr):
     expr = sympify(expr)
     if isinstance(expr, list):
         return False
-    if expr in [None, True, False]: # [None, True, False] are atoms in mathematica
+    if expr in [None, True, False, _E]: # [None, True, False] are atoms in mathematica and _E is also an atom
         return True
     # elif isinstance(expr, list):
     #     return all(AtomQ(i) for i in expr)
@@ -709,10 +757,10 @@ def AtomQ(expr):
         return expr.is_Atom
 
 def ExpQ(u):
-    return Head(u) == exp
+    return Head(u.doit()) in (sym_exp, exp)
 
 def LogQ(u):
-    return u.func == log
+    return u.func in (sym_log, log)
 
 def Head(u):
     return u.func
@@ -808,7 +856,7 @@ def LeafCount(expr):
     return len(list(postorder_traversal(expr)))
 
 def Numerator(u):
-    u = simplify(u)
+    u = Simplify(u)
     if isinstance(u, Pow):
         if isinstance(u.exp, Integer):
             if u.exp > 0:
@@ -851,10 +899,12 @@ def ListQ(u):
     return isinstance(u, list)
 
 def Im(u):
-    return im(u)
+    u = S(u)
+    return im(u.doit())
 
 def Re(u):
-    return re(u)
+    u = S(u)
+    return re(u.doit())
 
 def InverseHyperbolicQ(u):
     if not u.is_Atom:
@@ -896,7 +946,7 @@ def RealQ(u):
         return MapAnd(RealQ, u)
     elif NumericQ(u):
         return ZeroQ(Im(N(u)))
-    elif u.is_Pow:
+    elif PowerQ(u):
         u = u.base
         v = u.exp
         return RealQ(u) & RealQ(v) & (IntegerQ(v) | PositiveOrZeroQ(u))
@@ -913,7 +963,7 @@ def RealQ(u):
             if f in [asin, acos]:
                 return LE(-1, u, 1)
             else:
-                if f == log:
+                if f == sym_log:
                     return PositiveOrZeroQ(u)
                 else:
                     return False
@@ -982,15 +1032,20 @@ def FactorSquareFree(u):
 def PowerOfLinearQ(expr, x):
     u = Wild('u')
     w = Wild('w')
-    m = Wild('m', exclude=[x])
-    n = Wild('n', exclude=[x])
+    m = Wild('m')
+    n = Wild('n')
     Match = expr.match(u**m)
-    if PolynomialQ(Match[u], x):
+    if PolynomialQ(Match[u], x) and FreeQ(Match[m], x):
         if IntegerQ(Match[m]):
             e = FactorSquareFree(Match[u]).match(w**n)
-            return LinearQ(e[w], x)
+            if FreeQ(e[n], x) and LinearQ(e[w], x):
+                return True
+            else:
+                return False
         else:
             return LinearQ(Match[u], x)
+    else:
+        return False
 
 def Exponent(expr, x, h = None):
     expr = Expand(S(expr))
@@ -1012,7 +1067,10 @@ def Exponent(expr, x, h = None):
             k = 1
             for t in expr.args:
                 if t.has(x):
-                    lst += [degree(t, gen = x)]
+                    if isinstance(x, Rational):
+                        lst += [degree(Poly(t, x), x)]
+                    else:
+                        lst += [degree(t, gen = x)]
                 else:
                     if k == 1:
                         lst += [0]
@@ -1020,7 +1078,10 @@ def Exponent(expr, x, h = None):
             lst.sort()
             res = lst
         else:
-            res = [degree(expr, gen = x)]
+            if isinstance(x, Rational):
+                res = [degree(Poly(expr, x), x)]
+            else:
+                res = [degree(expr, gen = x)]
         return h(*res)
 
 def QuadraticQ(u, x):
@@ -1050,8 +1111,8 @@ def BinomialParts(u, x):
         else:
             return False
     elif PowerQ(u):
-        if u.args[0] == x and FreeQ(u.args[1], x):
-            return [0, 1, u.args[1]]
+        if u.base == x and FreeQ(u.exp, x):
+            return [0, 1, u.exp]
         else:
             return False
     elif ProductQ(u):
@@ -1132,8 +1193,8 @@ def TrinomialParts(u, x):
          #   Scan(Function(if ZeroQ(lst), Null, Throw(False), Drop(Drop(Drop(lst, [(len(lst)+1)/2]), 1), -1];
           #  [First(lst), lst[(len(lst)+1)/2], Last(lst), (len(lst)-1)/2]):
     if PowerQ(u):
-        if EqQ(u.args[1], 2):
-            lst = BinomialParts(u.args[0], x)
+        if EqQ(u.exp, 2):
+            lst = BinomialParts(u.base, x)
             if not lst or ZeroQ(lst[0]):
                 return False
             else:
@@ -1262,7 +1323,7 @@ def PerfectSquareQ(u):
     if RationalQ(u):
         return Greater(u, 0) and RationalQ(Sqrt(u))
     elif PowerQ(u):
-        return EvenQ(u.args[1])
+        return EvenQ(u.exp)
     elif ProductQ(u):
         return PerfectSquareQ(First(u)) and PerfectSquareQ(Rest(u))
     elif SumQ(u):
@@ -1277,7 +1338,7 @@ def NiceSqrtAuxQ(u):
     if RationalQ(u):
         return u > 0
     elif PowerQ(u):
-        return EvenQ(u.args[1])
+        return EvenQ(u.exp)
     elif ProductQ(u):
         return NiceSqrtAuxQ(First(u)) and NiceSqrtAuxQ(Rest(u))
     elif SumQ(u):
@@ -1306,8 +1367,11 @@ def PosAux(u):
             return Im(v) > 0
         else:
             return Re(v) > 0
-    elif PowerQ(u) and OddQ(u.args[1]):
-        return PosAux(u.args[0])
+    elif PowerQ(u):
+        if OddQ(u.exp):
+            return PosAux(u.base)
+        else:
+            return True
     elif ProductQ(u):
         if PosAux(First(u)):
             return PosAux(Rest(u))
@@ -1346,11 +1410,13 @@ def ExpandLinearProduct(v, u, a, b, x):
         lst = [SimplifyTerm(i, x) for i in lst]
         res = 0
         for k in range(1, len(lst)+1):
-            res = res + simplify(v*lst[k-1]*(a + b*x)**(k - 1))
+            res = res + Simplify(v*lst[k-1]*(a + b*x)**(k - 1))
         return res
     return u*v
 
 def GCD(*args):
+    if len(args) == 1:
+        return gcd(*args, S(1)) # GCD[1] in mathematica returns 1
     return gcd(*args)
 
 def ContentFactor(expn):
@@ -1421,41 +1487,59 @@ def NonnumericFactors(u):
         return result
     return u
 
-def MakeAssocList(u, x, alst=[]):
+def MakeAssocList(u, x, alst=None):
     # (* MakeAssocList[u,x,alst] returns an association list of gensymed symbols with the nonatomic
     # parameters of a u that are not integer powers, products or sums. *)
+    if alst == None:
+        alst = []
+    u = replace_pow_exp(u)
+    x = replace_pow_exp(x)
     if AtomQ(u):
         return alst
     elif IntegerPowerQ(u):
-        return MakeAssocList(u.args[0], x, alst)
+        return MakeAssocList(u.base, x, alst)
     elif ProductQ(u) or SumQ(u):
         return MakeAssocList(Rest(u), x, MakeAssocList(First(u), x, alst))
     elif FreeQ(u, x):
         tmp = []
         for i in alst:
-            if i.args[1] == u:
-                tmp.append(i)
-                break
+            if PowerQ(i):
+                if i.exp == u:
+                    tmp.append(i)
+                    break
+            elif len(i.args) > 1: # make sure args has length > 1, else causes index error some times
+                if i.args[1] == u:
+                    tmp.append(i)
+                    break
         if tmp == []:
-            # Append[alst,{Unique["Rubi"],u}],
             alst.append(u)
         return alst
     return alst
 
-def GensymSubst(u, x, alst):
+def GensymSubst(u, x, alst=None):
     # (* GensymSubst[u,x,alst] returns u with the kernels in alst free of x replaced by gensymed names. *)
+    if alst == None:
+        alst =[]
+    u = replace_pow_exp(u)
+    x = replace_pow_exp(x)
     if AtomQ(u):
         return u
     elif IntegerPowerQ(u):
-        return GensymSubst(u.args[0], x, alst)**u.exp
+        return GensymSubst(u.base, x, alst)**u.exp
     elif ProductQ(u) or SumQ(u):
         return u.func(*[GensymSubst(i, x, alst) for i in u.args])
     elif FreeQ(u, x):
         tmp = []
         for i in alst:
-            if i.args[1] == u:
-                tmp.append(i)
-                break
+            if PowerQ(i):
+                if i.exp == u:
+                    tmp.append(i)
+                    break
+
+            elif len(i.args) > 1: # make sure args has length > 1, else causes index error some times
+                if i.args[1] == u:
+                    tmp.append(i)
+                    break
         if tmp == []:
             return u
         return tmp[0][0]
@@ -1471,10 +1555,12 @@ def KernelSubst(u, x, alst):
                 break
         if tmp == []:
             return u
-        return tmp[0].args[1]
+        elif len(tmp[0].args) > 1: # make sure args has length > 1, else causes index error some times
+            return tmp[0].args[1]
+
     elif IntegerPowerQ(u):
         tmp = KernelSubst(u.base, x, alst)
-        if u.args[1] < 0 and ZeroQ(tmp):
+        if u.exp < 0 and ZeroQ(tmp):
             return 'Indeterminate'
         return tmp**u.exp
     elif ProductQ(u) or SumQ(u):
@@ -1715,8 +1801,9 @@ def AlgebraicFunctionQ(u, x, flag=False):
 
     elif AtomQ(u) or FreeQ(u, x):
         return True
-    elif PowerQ(u) and (RationalQ(u.args[1]) | flag & FreeQ(u.args[1], x)):
-            return AlgebraicFunctionQ(u.args[0], x, flag)
+    elif PowerQ(u):
+        if RationalQ(u.exp) | flag & FreeQ(u.exp, x):
+            return AlgebraicFunctionQ(u.base, x, flag)
     elif ProductQ(u) | SumQ(u):
         for i in u.args:
             if not AlgebraicFunctionQ(i, x, flag):
@@ -1797,7 +1884,7 @@ def LeadDegree(u):
 def Numer(expr):
     # returns the numerator of u.
     if PowerQ(expr):
-        if expr.args[1] < 0:
+        if expr.exp < 0:
             return 1
     if ProductQ(expr):
         return Mul(*[Numer(i) for i in expr.args])
@@ -1806,7 +1893,7 @@ def Numer(expr):
 def Denom(u):
     # returns the denominator of u
     if PowerQ(u):
-        if u.args[1] < 0:
+        if u.exp < 0:
             return u.args[0]**(-u.args[1])
     elif ProductQ(u):
         return Mul(*[Denom(i) for i in u.args])
@@ -2016,7 +2103,7 @@ def RationalFunctionQ(u, x):
     if AtomQ(u) or FreeQ(u, x):
         return True
     elif IntegerPowerQ(u):
-        return RationalFunctionQ(u.args[0], x)
+        return RationalFunctionQ(u.base, x)
     elif ProductQ(u) or SumQ(u):
         for i in u.args:
             if Not(RationalFunctionQ(i, x)):
@@ -2075,9 +2162,9 @@ def RationalFunctionExponents(u, x):
     if PolynomialQ(u, x):
         return [Exponent(u, x), 0]
     elif IntegerPowerQ(u):
-        if PositiveQ(u.args[1]):
-            return u.args[1]*RationalFunctionExponents(u.args[0], x)
-        return  (-u.args[1])*Reverse(RationalFunctionExponents(u.args[0], x))
+        if PositiveQ(u.exp):
+            return u.exp*RationalFunctionExponents(u.base, x)
+        return  (-u.exp)*Reverse(RationalFunctionExponents(u.base, x))
     elif ProductQ(u):
         lst1 = RationalFunctionExponents(First(u), x)
         lst2 = RationalFunctionExponents(Rest(u), x)
@@ -2095,7 +2182,6 @@ def RationalFunctionExponents(u, x):
 def RationalFunctionExpand(expr, x):
     # expr is a polynomial or rational function of x.
     # RationalFunctionExpand[u,x] returns the expansion of the factors of u that are rational functions times the other factors.
-    
     def cons_f1(n):
         return FractionQ(n)
     cons1 = CustomConstraint(cons_f1)
@@ -2130,12 +2216,13 @@ def RationalFunctionExpand(expr, x):
                 return v*w
     pattern2 = Pattern(UtilityOperator(u_, x_))
     rule2 = ReplacementRule(pattern2, With2)
-    
-    return replace_all(UtilityOperator(expr, x), [rule1, rule2])
+    expr = expr.replace(sym_exp, exp)
+    res = replace_all(UtilityOperator(expr, x), [rule1, rule2])
+    return replace_pow_exp(res)
 
 
 def ExpandIntegrand(expr, x, extra=None):
-    expr = S(expr)
+    expr = replace_pow_exp(expr)
     if not extra == None:
         extra, x = x, extra
         w = ExpandIntegrand(extra, x)
@@ -2172,9 +2259,9 @@ def ExpandIntegrand(expr, x, extra=None):
                                 F = F.func
                                 return ExpandLinearProduct((a + b*F(c + d*x))**n, u, c, d, x)
 
-
-        return replace_all(UtilityOperator(expr, x), ExpandIntegrand_rules, max_count = 1)
-
+        expr = expr.replace(sym_exp, exp)
+        res = replace_all(UtilityOperator(expr, x), ExpandIntegrand_rules, max_count = 1)
+        return replace_pow_exp(res)
 
 
 def SimplerQ(u, v):
@@ -2312,9 +2399,56 @@ def TrinomialDegree(u, x):
     return t
 
 def CancelCommonFactors(u, v):
+    def _delete_cases(a, b):
+        # only for CancelCommonFactors
+        lst = []
+        deleted = False
+        for i in a.args:
+            if i == b and not deleted:
+                deleted = True
+                continue
+            lst.append(i)
+        return a.func(*lst)
+
+
+
+
+ # If[ProductQ[u],
+ #    If[ProductQ[v],
+ #      If[MemberQ[v,First[u]],
+ #        CancelCommonFactors[Rest[u],DeleteCases[v,First[u],1,1]],
+ #      Function[{First[u]*@[[1]],@[[2]]}][CancelCommonFactors[Rest[u],v]]],
+ #    If[MemberQ[u,v],
+ #      {DeleteCases[u,v,1,1],1},
+ #    {u,v}]],
+ #  If[ProductQ[v],
+ #    If[MemberQ[v,u],
+ #      {1,DeleteCases[v,u,1,1]},
+ #    {u,v}],
+ #  {u,v}]]
+
+
+ #    print("canel ", u, v)
+
     # CancelCommonFactors[u,v] returns {u',v'} are the noncommon factors of u and v respectively.
-    com_fac = gcd(u, v)
-    return [cancel(u/com_fac), cancel(v/com_fac)]
+    if ProductQ(u):
+        if ProductQ(v):
+            if MemberQ(v, First(u)):
+                return CancelCommonFactors(Rest(u), _delete_cases(v, First(u)))
+            else:
+                lst = CancelCommonFactors(Rest(u), v)
+                return [First(u)*lst[0], lst[1]]
+        else:
+            if MemberQ(u, v):
+                return [_delete_cases(u, v), 1]
+            else:
+                return[u, v]
+    elif ProductQ(v):
+        if MemberQ(v, u):
+            return [1, _delete_cases(v, u)]
+        else:
+            return [u, v]
+    return[u, v]
 
 def SimplerIntegrandQ(u, v, x):
     lst = CancelCommonFactors(u, v)
@@ -2445,21 +2579,21 @@ def PowerOfLinearMatchQ(u, x):
         return True
     else:
         a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x])
-        m = Wild('m', exclude=[x])
+        b = Wild('b', exclude=[x, 0])
+        m = Wild('m', exclude=[x, 0])
         Match = u.match((a + b*x)**m)
-        if Match and Match[a] and Match[b] and Match[m]:
-            try:
-                return True
-            except KeyError:
-                return False
+        if Match:
+            return True
         else:
             return False
 
 def QuadraticMatchQ(u, x):
     if ListQ(u):
         return all(QuadraticMatchQ(i, x) for i in u)
-    return QuadraticQ(u, x)
+    pattern1 = Pattern(UtilityOperator(x_**2*WC('c', 1) + x_*WC('b', 1) + WC('a', 0), x_), CustomConstraint(lambda a, b, c, x: FreeQ([a, b, c], x)))
+    pattern2 = Pattern(UtilityOperator(x_**2*WC('c', 1) + WC('a', 0), x_), CustomConstraint(lambda a, c, x: FreeQ([a, c], x)))
+    u1 = UtilityOperator(u, x)
+    return is_match(u1, pattern1) or is_match(u1, pattern2)
 
 def CubicMatchQ(u, x):
     if isinstance(u, list):
@@ -2563,7 +2697,7 @@ def PseudoBinomialParts(u, x):
         n = Expon(u, x)
         d = Rt(Coefficient(u, x, n), n)
         c =  d**(-n + S(1))*Coefficient(u, x, n + S(-1))/n
-        a = simplify(u - (c + d*x)**n)
+        a = Simplify(u - (c + d*x)**n)
         if NonzeroQ(a) and FreeQ(a, x):
             return [a, S(1), c, d, n]
         else:
@@ -2824,8 +2958,9 @@ def SubstForFractionalPower(u, v, n, w, x):
         if u == x:
             return w
         return u
-    elif FractionalPowerQ(u) and ZeroQ(u.args[0] - v):
-        return x**(n*u.args[1])
+    elif FractionalPowerQ(u):
+        if ZeroQ(u.base - v):
+            return x**(n*u.exp)
     res = [SubstForFractionalPower(i, v, n, w, x) for i in u.args]
     return u.func(*res)
 
@@ -2852,8 +2987,9 @@ def FractionalPowerOfQuotientOfLinears(u, n, v, x):
         return [n, v]
     elif CalculusQ(u):
         return False
-    elif FractionalPowerQ(u) and QuotientOfLinearsQ(u.args[0], x) and Not(LinearQ(u.args[0], x)) and (FalseQ(v) or ZeroQ(u.args[0] - v)):
-        return [LCM(Denominator(u.exp), n), u.base]
+    elif FractionalPowerQ(u):
+        if QuotientOfLinearsQ(u.base, x) and Not(LinearQ(u.base, x)) and (FalseQ(v) or ZeroQ(u.base - v)):
+            return [LCM(Denominator(u.exp), n), u.base]
     lst = [n, v]
     for i in u.args:
         lst = FractionalPowerOfQuotientOfLinears(i, lst[0], lst[1],x)
@@ -2873,8 +3009,9 @@ def SubstForFractionalPowerQ(u, v, x):
 def SubstForFractionalPowerAuxQ(u, v, x):
     if AtomQ(u):
         return False
-    elif FractionalPowerQ(u) and ZeroQ(u.args[0] - v):
-        return True
+    elif FractionalPowerQ(u):
+        if ZeroQ(u.base - v):
+            return True
     return any(SubstForFractionalPowerAuxQ(i, v, x) for i in u.args)
 
 def FractionalPowerOfSquareQ(u):
@@ -2886,7 +3023,7 @@ def FractionalPowerOfSquareQ(u):
         a_ = Wild('a', exclude=[0])
         b_ = Wild('b', exclude=[0])
         c_ = Wild('c', exclude=[0])
-        match = u.args[0].match(a_*(b_ + c_)**(S(2)))
+        match = u.base.match(a_*(b_ + c_)**(S(2)))
         if match:
             keys = [a_, b_, c_]
             if len(keys) == len(match):
@@ -2904,8 +3041,9 @@ def FractionalPowerSubexpressionQ(u, v, w):
     # (* FractionalPowerSubexpressionQ[u,v,w] returns True; else it returns False. *)
     if AtomQ(u):
         return False
-    elif FractionalPowerQ(u) and PositiveQ(u.args[0]/w):
-        return Not(u.args[0] == v) and LeafCount(w) < 3*LeafCount(v)
+    elif FractionalPowerQ(u):
+        if PositiveQ(u.base/w):
+            return Not(u.base == v) and LeafCount(w) < 3*LeafCount(v)
     for i in u.args:
         if FractionalPowerSubexpressionQ(i, v, w):
             return True
@@ -3228,7 +3366,7 @@ def MonomialFactor(u, x):
     return [S(0), u]
 
 def FullSimplify(expr):
-    return simplify(expr)
+    return Simplify(expr)
 
 def FunctionOfLinearSubst(u, a, b, x):
     if FreeQ(u, x):
@@ -3273,8 +3411,9 @@ def FunctionOfLinear(*args):
         elif ZeroQ(b*Coefficient(u, x, 0) - a*Coefficient(u, x, 1)):
             return [a/lst[1], lst[0]]
         return [0, 1]
-    elif PowerQ(u) and FreeQ(u.args[0], x):
-        return FunctionOfLinear(log(u.base)*u.exp, a, b, x, False)
+    elif PowerQ(u):
+        if FreeQ(u.base, x):
+            return FunctionOfLinear(Log(u.base)*u.exp, a, b, x, False)
     lst = MonomialFactor(u, x)
     if ProductQ(u) and NonzeroQ(lst[0]):
         if False and IntegerQ(lst[0]) and lst[0] != -1 and FreeQ(lst[1], x):
@@ -3311,22 +3450,24 @@ def NormalizeIntegrandAux(u, x):
         return NormalizeIntegrandFactor(MergeMonomials(u, x), x)
 
 def NormalizeIntegrandFactor(u, x):
-    if PowerQ(u) and FreeQ(u.args[1], x):
-        bas = NormalizeIntegrandFactorBase(u.args[0], x)
-        deg = u.args[1]
-        if IntegerQ(deg) and SumQ(bas):
-            if all(MonomialQ(i, x) for i in bas.args):
-                mi = MinimumMonomialExponent(bas, x)
-                q = 0
-                for i in bas.args:
-                    q += Simplify(i/x**mi)
-                return x**(mi*deg)*q**deg
+    if PowerQ(u):
+        if FreeQ(u.exp, x):
+            bas = NormalizeIntegrandFactorBase(u.base, x)
+            deg = u.exp
+            if IntegerQ(deg) and SumQ(bas):
+                if all(MonomialQ(i, x) for i in bas.args):
+                    mi = MinimumMonomialExponent(bas, x)
+                    q = 0
+                    for i in bas.args:
+                        q += Simplify(i/x**mi)
+                    return x**(mi*deg)*q**deg
+                else:
+                    return bas**deg
             else:
                 return bas**deg
-        else:
-            return bas**deg
-    if PowerQ(u) and FreeQ(u.args[0], x):
-        return u.args[0]**NormalizeIntegrandFactorBase(u.args[1], x)
+    if PowerQ(u):
+        if FreeQ(u.base, x):
+            return u.base**NormalizeIntegrandFactorBase(u.exp, x)
     bas = NormalizeIntegrandFactorBase(u, x)
     if SumQ(bas):
         if all(MonomialQ(i, x) for i in bas.args):
@@ -3426,26 +3567,27 @@ def NormalizeSumFactors(u):
         return u
 
 def SignOfFactor(u):
-    if RationalQ(u) and u<0 or SumQ(u) and NumericFactor(First(u))<0:
+    if RationalQ(u) and u < 0 or SumQ(u) and NumericFactor(First(u)) < 0:
         return [-1, -u]
-    elif IntegerPowerQ(u) and SumQ(u.args[0]) and NumericFactor(First(u.args[0]))<0:
-        return [(-1)**u.args[1], (-u.args[0])**u.args[1]]
+    elif IntegerPowerQ(u):
+        if SumQ(u.base) and NumericFactor(First(u.base)) < 0:
+            return [(-1)**u.exp, (-u.base)**u.exp]
     elif ProductQ(u):
         k = 1
         h = 1
         for i in u.args:
             k *= SignOfFactor(i)[0]
             h *= SignOfFactor(i)[1]
-        return [k, h]
-    else:
-        return [1, u]
+        return [k, h]  
+    return [1, u]
 
 def NormalizePowerOfLinear(u, x):
     v = FactorSquareFree(u)
-    if PowerQ(v) and LinearQ(v.args[0], x) and FreeQ(v.args[1], x):
-        return ExpandToSum(v.args[0], x)**v.args[1]
-    else:
-        return ExpandToSum(v, x)
+    if PowerQ(v):
+        if LinearQ(v.base, x) and FreeQ(v.exp, x):
+            return ExpandToSum(v.base, x)**v.exp
+
+    return ExpandToSum(v, x)
 
 def SimplifyIntegrand(u, x):
     v = NormalizeLeadTermSigns(NormalizeIntegrandAux(Simplify(u), x))
@@ -3669,11 +3811,12 @@ def FunctionOfSinhQ(u, v, x):
             return SinhQ(u) or CschQ(u)
         # (* Basis: If m even, Cos[m*v]^n is a function of Sinh[v]. *)
         return CoshQ(u) or SechQ(u)
-    elif IntegerPowerQ(u) and HyperbolicQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
-        if EvenQ(u.args[1]):
-            # (* Basis: If m integer and n even, Hyper[m*v]^n is a function of Sinh[v]. *)
-            return True
-        return FunctionOfSinhQ(u.args[0], v, x)
+    elif IntegerPowerQ(u):
+        if HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+            if EvenQ(u.exp):
+                # (* Basis: If m integer and n even, Hyper[m*v]^n is a function of Sinh[v]. *)
+                return True
+            return FunctionOfSinhQ(u.base, v, x)
     elif ProductQ(u):
         if CoshQ(u.args[0]) and SinhQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
             return FunctionOfSinhQ(Drop(u, 2), v, x)
@@ -3701,11 +3844,12 @@ def FunctionOfCoshQ(u, v, x):
     elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
         # (* Basis: If m integer, Cosh[m*v]^n is a function of Cosh[v]. *)
         return CoshQ(u) or SechQ(u)
-    elif IntegerPowerQ(u) and HyperbolicQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
-        if EvenQ(u.args[1]):
-            # (* Basis: If m integer and n even, Hyper[m*v]^n is a function of Cosh[v]. *)
-            return True
-        return FunctionOfCoshQ(u.args[0], v, x)
+    elif IntegerPowerQ(u):
+        if HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+            if EvenQ(u.exp):
+                # (* Basis: If m integer and n even, Hyper[m*v]^n is a function of Cosh[v]. *)
+                return True
+            return FunctionOfCoshQ(u.base, v, x)
     elif ProductQ(u):
         lst = FindTrigFactor(Sinh, Csch, u, v, False)
         if ListQ(lst):
@@ -3722,7 +3866,7 @@ def OddHyperbolicPowerQ(u, v, x):
     if SinhQ(u) or CoshQ(u) or SechQ(u) or CschQ(u):
         return OddQuotientQ(u.args[0], v)
     if PowerQ(u):
-        return OddQ(u.args[1]) and OddHyperbolicPowerQ(u.base, v, x)
+        return OddQ(u.exp) and OddHyperbolicPowerQ(u.base, v, x)
     if ProductQ(u):
         if Not(EqQ(FreeFactors(u, x), 1)):
             return OddHyperbolicPowerQ(NonfreeFactors(u, x), v, x)
@@ -3747,7 +3891,7 @@ def FunctionOfTanhQ(u, v, x):
     elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
         return TanhQ(u) or CothQ(u) or EvenQuotientQ(u.args[0], v)
     elif PowerQ(u):
-        if EvenQ(u.args[1]) and HyperbolicQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
+        if EvenQ(u.exp) and HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             return True
         elif EvenQ(u.args[1]) and SumQ(u.args[0]):
             return FunctionOfTanhQ(Expand(u.args[0]**2, v, x))
@@ -3924,8 +4068,9 @@ def FractionalPowerOfLinear(u, n, v, x):
         return [n, v]
     elif CalculusQ(u):
         return False
-    elif FractionalPowerQ(u) and LinearQ(u.args[0], x) and (FalseQ(v) or ZeroQ(u.args[0] - v)):
-        return [LCM(Denominator(u.exp), n), u.base]
+    elif FractionalPowerQ(u):
+        if LinearQ(u.base, x) and (FalseQ(v) or ZeroQ(u.base - v)):
+            return [LCM(Denominator(u.exp), n), u.base]
     lst = [n, v]
     for i in u.args:
         lst = FractionalPowerOfLinear(i, lst[0], lst[1], x)
@@ -4140,7 +4285,7 @@ def TryPureTanSubst(u, x):
     return False
 
 def TryTanhSubst(u, x):
-    if u.func == log:
+    if LogQ(u):
         return False
     elif not FalseQ(FunctionOfLinear(u, x)):
         return False
@@ -4189,7 +4334,7 @@ def TryPureTanhSubst(u, x):
     a_ = Wild('a', exclude=[x])
     G_ = Wild('G')
 
-    if F == log:
+    if F == sym_log:
         return False
 
     match = u.args[0].match(a_*G_)
@@ -4277,9 +4422,10 @@ def NormalizeTrig(v, x):
         return M[a]*M[F].xreplace({u: ExpandToSum(u, x)})**M[n]
     else:
         return v
-
+#=================================
 def TrigToExp(expr):
-    return expr.rewrite(sin, exp).rewrite(cos, exp).rewrite(tan, exp).rewrite(sec, exp).rewrite(csc, exp).rewrite(cot, exp)
+    ex = expr.rewrite(sin, exp).rewrite(cos, exp).rewrite(tan, exp).rewrite(sec, exp).rewrite(csc, exp).rewrite(cot, exp)
+    return ex.replace(sym_exp, exp)
 
 def ExpandTrigToExp(u, *args):
     if len(args) == 1:
@@ -4297,7 +4443,7 @@ def ExpandTrigToExp(u, *args):
         else:
             w = SimplifyIntegrand(u*w, x)
         return ExpandIntegrand(FreeFactors(w, x), NonfreeFactors(w, x),x)
-
+#======================================
 def TrigReduce(i):
     """
     TrigReduce(expr) rewrites products and powers of trigonometric functions in expr in terms of trigonometric functions with combined arguments.
@@ -4323,10 +4469,10 @@ def TrigReduce(i):
         return t
     if ProductQ(i):
         if any(PowerQ(k) for k in i.args):
-            if (i.rewrite(sin, exp).rewrite(cos, exp).expand().rewrite(exp, sin)).has(I):
-                return i.rewrite(sin, exp).rewrite(cos, exp).expand().rewrite(exp, sin).simplify()
+            if (i.rewrite(sin, sym_exp).rewrite(cos, sym_exp).expand().rewrite(sym_exp, sin)).has(I):
+                return i.rewrite(sin, sym_exp).rewrite(cos, sym_exp).expand().rewrite(sym_exp, sin).simplify()
             else:
-                return i.rewrite(sin, exp).rewrite(cos, exp).expand().rewrite(exp, sin)
+                return i.rewrite(sin, sym_exp).rewrite(cos, sym_exp).expand().rewrite(sym_exp, sin)
         else:
             a = Wild('a')
             b = Wild('b')
@@ -4351,15 +4497,15 @@ def TrigReduce(i):
                 return i.subs(v*cos(a)*cos(b), v*S(1)/2*cos(a + b) + cos(a - b))
     if PowerQ(i):
         if i.has(sin):
-            if (i.rewrite(sin, exp).expand().rewrite(exp, sin)).has(I):
-                return i.rewrite(sin, exp).expand().rewrite(exp, sin).simplify()
+            if (i.rewrite(sin, sym_exp).expand().rewrite(sym_exp, sin)).has(I):
+                return i.rewrite(sin, sym_exp).expand().rewrite(sym_exp, sin).simplify()
             else:
-                return i.rewrite(sin, exp).expand().rewrite(exp, sin)
+                return i.rewrite(sin, sym_exp).expand().rewrite(sym_exp, sin)
         if i.has(cos):
-            if (i.rewrite(cos, exp).expand().rewrite(exp, cos)).has(I):
-                return i.rewrite(cos, exp).expand().rewrite(exp, cos).simplify()
+            if (i.rewrite(cos, sym_exp).expand().rewrite(sym_exp, cos)).has(I):
+                return i.rewrite(cos, sym_exp).expand().rewrite(sym_exp, cos).simplify()
             else:
-                return i.rewrite(cos, exp).expand().rewrite(exp, cos)
+                return i.rewrite(cos, sym_exp).expand().rewrite(sym_exp, cos)
     else:
         return i
 
@@ -4421,15 +4567,16 @@ def AlgebraicTrigFunctionQ(u, x):
         return True
     elif HyperbolicQ(u) and LinearQ(u.args[0], x):
         return True
-    elif PowerQ(u) and FreeQ(u.args[1], x):
-        return AlgebraicTrigFunctionQ(u.args[0], x)
+    elif PowerQ(u):
+        if FreeQ(u.exp, x):
+            return AlgebraicTrigFunctionQ(u.base, x)
     elif ProductQ(u) or SumQ(u):
         for i in u.args:
             if not AlgebraicTrigFunctionQ(i, x):
                 return False
         return True
-    else:
-        return False
+
+    return False
 
 def FunctionOfHyperbolic(u, *x):
     # If u is a function of hyperbolic trig functions of v where v is linear in x,
@@ -4508,6 +4655,8 @@ def FunctionOfQ(v, u, x, PureFlag=False):
         return FunctionOfTanhQ(u, v.args[0], x)
     return FunctionOfExpnQ(u, v, x) != False
 
+
+
 def FunctionOfExpnQ(u, v, x):
     if u == v:
         return 1
@@ -4518,23 +4667,25 @@ def FunctionOfExpnQ(u, v, x):
             return 0
     if CalculusQ(u):
         return False
-    if PowerQ(u) and FreeQ(u.args[1], x):
-        if ZeroQ(u.args[0]-v):
-            if IntegerQ(u.args[1]):
-                return u.args[1]
-            else:
-                return 1
-        if PowerQ(v) and FreeQ(v.args[1], x) and ZeroQ(u.args[0]-v.args[0]):
-            if RationalQ(v.args[1]):
-                if RationalQ(u.args[1]) and IntegerQ(u.args[1]/v.args[1]) and (v.args[1]>0 or u.args[1]<0):
-                    return u.args[1]/v.args[1]
+    if PowerQ(u):
+        if FreeQ(u.exp, x):
+            if ZeroQ(u.base - v):
+                if IntegerQ(u.exp):
+                    return u.exp
                 else:
-                    return False
-            if IntegerQ(Simplify(u.args[1]/v.args[1])):
-                return Simplify(u.args[1]/v.args[1])
-            else:
-                return False
-        return FunctionOfExpnQ(u.args[0], v, x)
+                    return 1
+            if PowerQ(v):
+                if FreeQ(v.exp, x) and ZeroQ(u.base-v.base):
+                    if RationalQ(v.exp):
+                        if RationalQ(u.exp) and IntegerQ(u.exp/v.exp) and (v.exp>0 or u.exp<0):
+                            return u.exp/v.exp
+                        else:
+                            return False
+                    if IntegerQ(Simplify(u.exp/v.exp)):
+                        return Simplify(u.exp/v.exp)
+                    else:
+                        return False
+            return FunctionOfExpnQ(u.base, v, x)
     if ProductQ(u) and Not(EqQ(FreeFactors(u, x), 1)):
         return FunctionOfExpnQ(NonfreeFactors(u, x), v, x)
     if ProductQ(u) and ProductQ(v):
@@ -4548,7 +4699,7 @@ def FunctionOfExpnQ(u, v, x):
             return False
     lst = []
     for i in u.args:
-        if FunctionOfExpnQ(i, v, x) == False:
+        if FunctionOfExpnQ(i, v, x) is False:
             return False
         lst.append(FunctionOfExpnQ(i, v, x))
     return Apply(GCD, lst)
@@ -4614,11 +4765,12 @@ def FunctionOfCosQ(u, v, x):
     elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
         # Basis: If m integer, Cos[m*v]^n is a function of Cos[v]. *)
         return CosQ(u) or SecQ(u)
-    elif IntegerPowerQ(u) and TrigQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
-        if EvenQ(u.args[1]):
-            # Basis: If m integer and n even, Trig[m*v]^n is a function of Cos[v]. *)
-            return True
-        return FunctionOfCosQ(u.args[0], v, x)
+    elif IntegerPowerQ(u):
+        if TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+            if EvenQ(u.exp):
+                # Basis: If m integer and n even, Trig[m*v]^n is a function of Cos[v]. *)
+                return True
+            return FunctionOfCosQ(u.base, v, x)
     elif ProductQ(u):
         lst = FindTrigFactor(sin, csc, u, v, False)
         if ListQ(lst):
@@ -4643,11 +4795,12 @@ def FunctionOfSinQ(u, v, x):
             return SinQ(u) or CscQ(u)
         # Basis: If m even, Cos[m*v]^n is a function of Sin[v].
         return CosQ(u) or SecQ(u)
-    elif IntegerPowerQ(u) and TrigQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
-        if EvenQ(u.args[1]):
-            # Basis: If m integer and n even, Hyper[m*v]^n is a function of Sin[v].
-            return True
-        return FunctionOfSinQ(u.args[0], v, x)
+    elif IntegerPowerQ(u):
+        if TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+            if EvenQ(u.exp):
+                # Basis: If m integer and n even, Hyper[m*v]^n is a function of Sin[v].
+                return True
+            return FunctionOfSinQ(u.base, v, x)
     elif ProductQ(u):
         if CosQ(u.args[0]) and SinQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
             return FunctionOfSinQ(Drop(u, 2), v, x)
@@ -4670,7 +4823,7 @@ def OddTrigPowerQ(u, v, x):
     if SinQ(u) or CosQ(u) or SecQ(u) or CscQ(u):
         return OddQuotientQ(u.args[0], v)
     if PowerQ(u):
-        return OddQ(u.args[1]) and OddTrigPowerQ(u.base, v, x)
+        return OddQ(u.exp) and OddTrigPowerQ(u.base, v, x)
     if ProductQ(u):
         if not FreeFactors(u, x) == 1:
             return OddTrigPowerQ(NonfreeFactors(u, x), v, x)
@@ -4695,10 +4848,10 @@ def FunctionOfTanQ(u, v, x):
     elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
         return TanQ(u) or CotQ(u) or EvenQuotientQ(u.args[0], v)
     elif PowerQ(u):
-        if EvenQ(u.args[1]) and TrigQ(u.args[0]) and IntegerQuotientQ(u.args[0].args[0], v):
+        if EvenQ(u.exp) and TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             return True
-        elif EvenQ(u.args[1]) and SumQ(u.args[0]):
-            return FunctionOfTanQ(Expand(u.args[0]**2, v, x))
+        elif EvenQ(u.exp) and SumQ(u.base):
+            return FunctionOfTanQ(Expand(u.base**2, v, x))
     if ProductQ(u):
         lst = []
         for i in u.args:
@@ -4758,7 +4911,7 @@ def FunctionOfLog(u, *args):
     if len(args) == 1:
         x = args[0]
         lst = FunctionOfLog(u, False, False, x)
-        if AtomQ(lst) or FalseQ(lst[1]):
+        if AtomQ(lst) or FalseQ(lst[1]) or not isinstance(x, Symbol):
             return False
         else:
             return lst
@@ -4780,14 +4933,15 @@ def FunctionOfLog(u, *args):
             else:
                 return False
         lst = [0, v, n]
-        lst1 = []
+        l = []
         for i in u.args:
-            if not S(i).is_number:
-                lst1 = FunctionOfLog(i, lst[1], lst[2], x)
-        if AtomQ(lst1):
-            return False
-        else:
-            return [u.subs(log(lst1[1]), x), lst1[1], lst1[2]]
+                lst = FunctionOfLog(i, lst[1], lst[2], x)
+                if AtomQ(lst):
+                    return False
+                else:
+                    l.append(lst[0])
+
+        return [u.func(*l), lst[1], lst[2]]
 
 def PowerVariableExpn(u, m, x):
     # If m is an integer, u is an expression of the form f((c*x)**n) and g=GCD(m,n)>1,
@@ -4806,13 +4960,14 @@ def PowerVariableDegree(u, m, c, x):
         return [m, c]
     if AtomQ(u) or CalculusQ(u):
         return False
-    if PowerQ(u) and FreeQ(u.args[0]/x, x):
-        if ZeroQ(m) or m == u.args[1] and c == u.args[0]/x:
-            return [u.args[1], u.args[0]/x]
-        if IntegerQ(u.args[1]) and IntegerQ(m) and GCD(m, u.args[1])>1 and c==u.args[0]/x:
-            return [GCD(m, u.args[1]), c]
-        else:
-            return False
+    if PowerQ(u):
+        if FreeQ(u.base/x, x):
+            if ZeroQ(m) or m == u.exp and c == u.base/x:
+                return [u.exp, u.base/x]
+            if IntegerQ(u.exp) and IntegerQ(m) and GCD(m, u.exp)>1 and c==u.base/x:
+                return [GCD(m, u.exp), c]
+            else:
+                return False
     lst = [m, c]
     for i in u.args:
         if PowerVariableDegree(i, lst[0], lst[1], x) == False:
@@ -4826,8 +4981,9 @@ def PowerVariableDegree(u, m, c, x):
 def PowerVariableSubst(u, m, x):
     if FreeQ(u, x) or AtomQ(u) or CalculusQ(u):
         return u
-    if PowerQ(u) and FreeQ(u.args[0]/x, x):
-        return x**(u.args[1]/m)
+    if PowerQ(u):
+        if FreeQ(u.base/x, x):
+            return x**(u.exp/m)
     if ProductQ(u):
         l = 1
         for i in u.args:
@@ -4850,16 +5006,19 @@ def EulerIntegrandQ(expr, x):
     v = Wild('v')
     # Pattern 1
     M = expr.match((a*x + b*u**n)**p)
-    if M and len(M) == 5 and FreeQ([M[a], M[b]], x) and IntegerQ(M[n] + 1/2) and QuadraticQ(M[u], x) and Not(RationalQ(M[p])) or NegativeIntegerQ(M[p]) and Not(BinomialQ(M[u], x)):
-        return True
+    if M:
+        if len(M) == 5 and FreeQ([M[a], M[b]], x) and IntegerQ(M[n] + 1/2) and QuadraticQ(M[u], x) and Not(RationalQ(M[p])) or NegativeIntegerQ(M[p]) and Not(BinomialQ(M[u], x)):
+            return True
     # Pattern 2
     M = expr.match(v**m*(a*x + b*u**n)**p)
-    if M and len(M) == 6 and FreeQ([M[a], M[b]], x) and ZeroQ(M[u] - M[v]) and IntegersQ(2*M[m], M[n] + 1/2) and QuadraticQ(M[u], x) and Not(RationalQ(M[p])) or NegativeIntegerQ(M[p]) and Not(BinomialQ(M[u], x)):
-        return True
+    if M:
+        if len(M) == 6 and FreeQ([M[a], M[b]], x) and ZeroQ(M[u] - M[v]) and IntegersQ(2*M[m], M[n] + 1/2) and QuadraticQ(M[u], x) and Not(RationalQ(M[p])) or NegativeIntegerQ(M[p]) and Not(BinomialQ(M[u], x)):
+            return True
     # Pattern 3
     M = expr.match(u**n*v**p)
-    if M and len(M) == 3 and NegativeIntegerQ(M[p]) and IntegerQ(M[n] + 1/2) and QuadraticQ(M[u], x) and QuadraticQ(M[v], x) and Not(BinomialQ(M[v], x)):
-        return True
+    if M:
+        if len(M) == 3 and NegativeIntegerQ(M[p]) and IntegerQ(M[n] + 1/2) and QuadraticQ(M[u], x) and QuadraticQ(M[v], x) and Not(BinomialQ(M[v], x)):
+            return True
     else:
         return False
 
@@ -4897,13 +5056,14 @@ def FunctionOfSquareRootOfQuadratic(u, *args):
         x = args[1]
         if AtomQ(u) or FreeQ(u, x):
             return [v]
-        if PowerQ(u) and FreeQ(u.args[1], x):
-            if FractionQ(u.args[1]) and Denominator(u.args[1])==2 and PolynomialQ(u.args[0], x) and Exponent(u.args[0], x)==2:
-                if FalseQ(v) or u.args[0] == v:
-                    return [u.args[0]]
-                else:
-                    return False
-            return FunctionOfSquareRootOfQuadratic(u.args[0], v, x)
+        if PowerQ(u):
+            if FreeQ(u.exp, x):
+                if FractionQ(u.exp) and Denominator(u.exp)==2 and PolynomialQ(u.base, x) and Exponent(u.base, x)==2:
+                    if FalseQ(v) or u.base == v:
+                        return [u.base]
+                    else:
+                        return False
+                return FunctionOfSquareRootOfQuadratic(u.base, v, x)
         if ProductQ(u) or SumQ(u):
             lst = [v]
             lst1 = []
@@ -4921,10 +5081,11 @@ def SquareRootOfQuadraticSubst(u, vv, xx, x):
         if u==x:
             return xx
         return u
-    if PowerQ(u) and FreeQ(u.args[1], x):
-        if FractionQ(u.args[1]) and Denominator(u.args[1])==2 and PolynomialQ(u.args[0], x) and Exponent(u.args[0], x)==2:
-            return vv**Numerator(u.args[1])
-        return SquareRootOfQuadraticSubst(u.args[0], vv, xx, x)**u.args[1]
+    if PowerQ(u):
+        if FreeQ(u.exp, x):
+            if FractionQ(u.exp) and Denominator(u.exp)==2 and PolynomialQ(u.base, x) and Exponent(u.base, x)==2:
+                return vv**Numerator(u.exp)
+            return SquareRootOfQuadraticSubst(u.base, vv, xx, x)**u.exp
     elif SumQ(u):
         t = 0
         for i in u.args:
@@ -5036,16 +5197,18 @@ def NegSumBaseQ(u):
 
 def AllNegTermQ(u):
     # If all terms of u have a negative form, AllNegTermQ(u) returns True; else it returns False
-    if PowerQ(u) and OddQ(u.args[1]):
-        return AllNegTermQ(u.args[0])
+    if PowerQ(u):
+        if OddQ(u.exp):
+            return AllNegTermQ(u.base)
     if SumQ(u):
         return NegQ(First(u)) and AllNegTermQ(Rest(u))
     return NegQ(u)
 
 def SomeNegTermQ(u):
     # If some term of u has a negative form,  SomeNegTermQ(u) returns True; else it returns False
-    if PowerQ(u) and OddQ(u.args[1]):
-        return SomeNegTermQ(u.args[0])
+    if PowerQ(u):
+        if OddQ(u.exp):
+            return SomeNegTermQ(u.base)
     if SumQ(u):
         return NegQ(First(u)) or SomeNegTermQ(Rest(u))
     return NegQ(u)
@@ -5056,7 +5219,7 @@ def TrigSquareQ(u):
 
 def RtAux(u, n):
     if PowerQ(u):
-        return u.args[0]**(u.args[1]/n)
+        return u.base**(u.exp/n)
     if ComplexNumberQ(u):
         a = Re(u)
         b = Im(u)
@@ -5073,8 +5236,9 @@ def RtAux(u, n):
         if ListQ(lst):
             if EqQ(lst[0], -1):
                 v = lst[1]
-                if PowerQ(v) and NegativeQ(v.args[1]):
-                    return 1/RtAux(-v.args[0]**(-v.args[1]), n)
+                if PowerQ(v):
+                    if NegativeQ(v.exp):
+                        return 1/RtAux(-v.base**(-v.exp), n)
                 if ProductQ(v):
                     if ListQ(SplitProduct(SumBaseQ, v)):
                         lst = SplitProduct(AllNegTermQ, v)
@@ -5276,7 +5440,8 @@ def FunctionOfExponentialQ(u, x):
     global SbaseS, SexponS, SexponFlagS
     SbaseS, SexponS = None, None
     SexponFlagS = False
-    return FunctionOfExponentialTest(u, x) and SexponFlagS
+    res = FunctionOfExponentialTest(u, x)
+    return res and SexponFlagS
 
 def FunctionOfExponential(u, x):
     global SbaseS, SexponS, SexponFlagS
@@ -5300,10 +5465,11 @@ def FunctionOfExponentialFunctionAux(u, x):
     global SbaseS, SexponS, SexponFlagS
     if AtomQ(u):
         return u
-    elif PowerQ(u) and FreeQ(u.args[0], x) and LinearQ(u.args[1], x):
-        if ZeroQ(Coefficient(SexponS, x, 0)):
-            return u.base**Coefficient(u.exp, x, 0)*x**FullSimplify(log(u.base)*Coefficient(u.exp, x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
-        return x**FullSimplify(log(u.base)*Coefficient(u.exp, x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
+    elif PowerQ(u):
+        if FreeQ(u.base, x) and LinearQ(u.exp, x):
+            if ZeroQ(Coefficient(SexponS, x, 0)):
+                return u.base**Coefficient(u.exp, x, 0)*x**FullSimplify(Log(u.base)*Coefficient(u.exp, x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
+            return x**FullSimplify(Log(u.base)*Coefficient(u.exp, x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
     elif HyperbolicQ(u) and LinearQ(u.args[0], x):
         tmp = x**FullSimplify(Coefficient(u.args[0], x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
         if SinhQ(u):
@@ -5317,8 +5483,9 @@ def FunctionOfExponentialFunctionAux(u, x):
         elif SechQ(u):
             return 2/(tmp + 1/tmp)
         return 2/(tmp - 1/tmp)
-    elif PowerQ(u) and FreeQ(u.args[0], x) and SumQ(u.args[1]):
-        return FunctionOfExponentialFunctionAux(u.base**First(u.exp), x)*FunctionOfExponentialFunctionAux(u.base*Rest(u.exp), x)
+    if PowerQ(u):
+        if FreeQ(u.base, x) and SumQ(u.exp):
+            return FunctionOfExponentialFunctionAux(u.base**First(u.exp), x)*FunctionOfExponentialFunctionAux(u.base**Rest(u.exp), x)
     return u.func(*[FunctionOfExponentialFunctionAux(i, x) for i in u.args])
 
 def FunctionOfExponentialTest(u, x):
@@ -5331,13 +5498,15 @@ def FunctionOfExponentialTest(u, x):
         return True
     elif u == x or CalculusQ(u):
         return False
-    elif PowerQ(u) and FreeQ(u.args[0], x) and LinearQ(u.args[1], x):
-        SexponFlagS = True
-        return FunctionOfExponentialTestAux(u.base, u.exp, x)
+    elif PowerQ(u):
+        if FreeQ(u.base, x) and LinearQ(u.exp, x):
+            SexponFlagS = True
+            return FunctionOfExponentialTestAux(u.base, u.exp, x)
     elif HyperbolicQ(u) and LinearQ(u.args[0], x):
         return FunctionOfExponentialTestAux(E, u.args[0], x)
-    elif PowerQ(u) and FreeQ(u.args[0], x) and SumQ(u.args[1]):
-        return FunctionOfExponentialTest(u.base**First(u.exp), x) and FunctionOfExponentialTest(u.base**Rest(u.exp), x)
+    if PowerQ(u):
+        if FreeQ(u.base, x) and SumQ(u.exp):
+            return FunctionOfExponentialTest(u.base**First(u.exp), x) and FunctionOfExponentialTest(u.base**Rest(u.exp), x)
     return all(FunctionOfExponentialTest(i, x) for i in u.args)
 
 def FunctionOfExponentialTestAux(base, expon, x):
@@ -5397,6 +5566,10 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
     if nsimplify(expr) == nsimplify(optimal_output):
         return True
 
+    if expr.has(sym_exp):
+        expr = powsimp(powdenest(expr), force=True)
+        if simplify(expr) == simplify(powsimp(optimal_output, force=True)):
+            return True
     res = expr - optimal_output
     ##print("res--  ", res)
     # if res.has(hyper):
@@ -5445,19 +5618,19 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
 
 
 
-    r = simplify(nsimplify(res))
+    r = Simplify(nsimplify(res))
     if r == 0 or (not r.has(x)):
         return True
 
     if _diff:
         if dres == 0:
             return True
-        elif simplify(dres) == 0:
+        elif Simplify(dres) == 0:
             return True
 
     if expand: # expands the expression and equates
         e = res.expand()
-        if simplify(e) == 0 or (not e.has(x)):
+        if Simplify(e) == 0 or (not e.has(x)):
             return True
 
     return False
@@ -5606,6 +5779,7 @@ def Condition(r, c):
         raise NotImplementedError('In Condition()')
 
 def Simp(u, x):
+    u = replace_pow_exp(u)
     return NormalizeSumFactors(SimpHelp(u, x))
 
 def SimpHelp(u, x):
@@ -5741,22 +5915,24 @@ def SubstForAux(u, v, x):
     if u==v:
         return x
     elif AtomQ(u):
-        if PowerQ(v) and FreeQ(v.args[1], x) and ZeroQ(u - v.args[0]):
-            return x**Simplify(1/v.args[1])
-        else:
-            return u
-    elif PowerQ(u) and FreeQ(u.args[1], x):
-        if ZeroQ(u.args[0] - v):
-            return x**u.args[1]
-        if PowerQ(v) and FreeQ(v.args[1], x) and ZeroQ(u.args[0] - v.args[0]):
-            return x**Simplify(u.args[1]/v.args[1])
-        return SubstForAux(u.args[0], v, x)**u.args[1]
+        if PowerQ(v):
+            if FreeQ(v.exp, x) and ZeroQ(u - v.base):
+                return x**Simplify(1/v.exp)
+        return u
+    elif PowerQ(u):
+        if FreeQ(u.exp, x):
+            if ZeroQ(u.base - v):
+                return x**u.exp
+            if PowerQ(v):
+                if FreeQ(v.exp, x) and ZeroQ(u.base - v.base):
+                    return x**Simplify(u.exp/v.exp)
+            return SubstForAux(u.base, v, x)**u.exp
     elif ProductQ(u) and Not(EqQ(FreeFactors(u, x), 1)):
         return FreeFactors(u, x)*SubstForAux(NonfreeFactors(u, x), v, x)
     elif ProductQ(u) and ProductQ(v):
         return SubstForAux(First(u), First(v), x)
-    else:
-        return u.func(*[SubstForAux(i, v, x) for i in u.args])
+
+    return u.func(*[SubstForAux(i, v, x) for i in u.args])
 
 def FresnelS(x):
     return fresnels(x)
@@ -5764,19 +5940,25 @@ def FresnelS(x):
 def FresnelC(x):
     return fresnelc(x)
 
+def Erf(x):
+    return erf(x)
+
 def Erfc(x):
     return erfc(x)
 
 def Erfi(x):
     return erfi(x)
 
-def Gamma(*args):
-    if len(args) == 1:
+class Gamma(Function):
+    @classmethod
+    def eval(cls,*args):
         a = args[0]
-        return gamma(a)
-    else:
-        print('gammainc is not implemented in SymPy')
-        return S(0)
+        if len(args) == 1:
+            return gamma(a)
+        else:
+            b = args[1]
+            if (NumericQ(a) and NumericQ(b)) or a == 1:
+                return uppergamma(a, b)
 
 def FunctionOfTrigOfLinearQ(u, x):
     # If u is an algebraic function of trig functions of a linear function of x,
@@ -6122,7 +6304,9 @@ def _FixSimplify():
 
 @doctest_depends_on(modules=('matchpy',))
 def FixSimplify(expr):
-    return replace_all(UtilityOperator(expr), FixSimplify_rules, max_count = 1)
+    if isinstance(expr, (list, tuple, TupleArg)):
+        return [replace_all(UtilityOperator(i), FixSimplify_rules) for i in expr]
+    return replace_all(UtilityOperator(expr), FixSimplify_rules)
 
 @doctest_depends_on(modules=('matchpy',))
 def _SimplifyAntiderivativeSum():
@@ -6455,7 +6639,7 @@ def Cancel(expr):
 
 class Util_Part(Function):
     def doit(self):
-        i = simplify(self.args[-1])
+        i = Simplify(self.args[-1])
         if len(self.args) > 2 :
             lst = list(self.args[0:-1])
         else:
@@ -6484,8 +6668,9 @@ def IntegralFreeQ(u):
     return FreeQ(u, Integral)
 
 def Dist(u, v, x):
-    #Dist(u,v)Dreturns the sum of u times each term of v, provided v is free of Int
-    #return Mul(u, v)
+    #Dist(u,v) returns the sum of u times each term of v, provided v is free of Int
+    u = replace_pow_exp(u) # to replace back to sympy's exp
+    v = replace_pow_exp(v)
     w = Simp(u*x**2, x)/x**2
     if u == 1:
         return v
@@ -6513,8 +6698,51 @@ def PureFunctionOfCothQ(u, v, x):
     return all(PureFunctionOfCothQ(i, v, x) for i in u.args)
 
 def LogIntegral(z):
-    tx = symbols('tx')
-    return Integral(1/log(tx),(tx, 0, z))
+    return li(z)
+
+def ExpIntegralEi(z):
+    return Ei(z)
+
+def ExpIntegralE(a, b):
+    return expint(a, b).evalf()
+
+def SinIntegral(z):
+    return Si(z)
+
+def CosIntegral(z):
+    return Ci(z)
+
+def SinhIntegral(z):
+    return Shi(z)
+
+def CoshIntegral(z):
+    return Chi(z)
+
+class PolyGamma(Function):
+    @classmethod
+    def eval(cls, *args):
+        if len(args) == 2:
+            return polygamma(args[0], args[1])
+        return digamma(args[0])
+
+def LogGamma(z):
+    return loggamma(z)
+
+class ProductLog(Function):
+    @classmethod
+    def eval(cls, *args):
+        if len(args) == 2:
+            return LambertW(args[1], args[0]).evalf()
+        return LambertW(args[0]).evalf()
+
+def Factorial(a):
+    return factorial(a)
+
+def Zeta(*args):
+    return zeta(*args)
+
+def HypergeometricPFQ(a, b, c):
+    return hyper(a, b, c)
 
 def Sum_doit(exp, args):
     if not isinstance(args[2], (int, Integer)):
@@ -7085,6 +7313,8 @@ def _RemoveContentAux():
     rule4 = ReplacementRule(pattern4, replacement4)
     return [rule1, rule2, rule3, rule4, ]
 
+IntHide = Int
+Log = log
 if matchpy:
     RemoveContentAux_replacer = ManyToOneReplacer(* _RemoveContentAux())
     ExpandIntegrand_rules = _ExpandIntegrand()

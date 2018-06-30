@@ -9,11 +9,13 @@ if matchpy:
     from matchpy import (Operation, CommutativeOperation, AssociativeOperation,
         ManyToOneReplacer, OneIdentityOperation, CustomConstraint)
     from matchpy.expressions.functions import register_operation_iterator, register_operation_factory
-    from sympy import Pow, Add, Integral, Basic, Mul, S
+    from sympy import Pow, Add, Integral, Basic, Mul, S, Function, E
     from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf,
-        exp, log, gamma, acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh,
+        exp as sym_exp, gamma, acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh,
         tanh, coth, sech, csch, atan, acsc, asin, acot, acos, asec, fresnels,
-        fresnelc, erfc, erfi)
+        fresnelc, erfc, erfi, Ei, uppergamma, polylog, zeta, factorial, polygamma, digamma, li,
+        expint, LambertW, loggamma)
+    from sympy.integrals.rubi.utility_function import Gamma, exp, log, ProductLog, PolyGamma, rubi_unevaluated_expr
 
     Operation.register(Integral)
     register_operation_iterator(Integral, lambda a: (a._args[0],) + a._args[1], lambda a: len((a._args[0],) + a._args[1]))
@@ -40,14 +42,56 @@ if matchpy:
     Operation.register(log)
     register_operation_iterator(log, lambda a: a._args, lambda a: len(a._args))
 
+    Operation.register(Gamma)
+    register_operation_iterator(Gamma, lambda a: a._args, lambda a: len(a._args))
+
     Operation.register(gamma)
     register_operation_iterator(gamma, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(polygamma)
+    register_operation_iterator(polygamma, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(loggamma)
+    register_operation_iterator(loggamma, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(PolyGamma)
+    register_operation_iterator(PolyGamma, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(LambertW)
+    register_operation_iterator(LambertW, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(uppergamma)
+    register_operation_iterator(uppergamma, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(polylog)
+    register_operation_iterator(polylog, lambda a: a._args, lambda a: len(a._args))
+    
+    Operation.register(ProductLog)
+    register_operation_iterator(ProductLog, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(zeta)
+    register_operation_iterator(zeta, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(li)
+    register_operation_iterator(li, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(expint)
+    register_operation_iterator(expint, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(factorial)
+    register_operation_iterator(factorial, lambda a: a._args, lambda a: len(a._args))
 
     Operation.register(fresnels)
     register_operation_iterator(fresnels, lambda a: a._args, lambda a: len(a._args))
 
     Operation.register(fresnelc)
     register_operation_iterator(fresnelc, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(erf)
+    register_operation_iterator(erf, lambda a: a._args, lambda a: len(a._args))
+
+    Operation.register(Ei)
+    register_operation_iterator(Ei, lambda a: a._args, lambda a: len(a._args))
 
     Operation.register(erfc)
     register_operation_iterator(erfc, lambda a: a._args, lambda a: len(a._args))
@@ -128,7 +172,7 @@ if matchpy:
     register_operation_iterator(asech, lambda a: a._args, lambda a: len(a._args))
 
     def sympy_op_factory(old_operation, new_operands, variable_name):
-         return type(old_operation)(*new_operands)
+        return type(old_operation)(*new_operands)
 
     register_operation_factory(Basic, sympy_op_factory)
 
@@ -150,16 +194,16 @@ if matchpy:
         from sympy.integrals.rubi.rules.miscellaneous_algebraic import miscellaneous_algebraic
         from sympy.integrals.rubi.rules.exponential import exponential
         from sympy.integrals.rubi.rules.logarithms import logarithms
-        from sympy.integrals.rubi.rules.sine import sine
-        from sympy.integrals.rubi.rules.tangent import tangent
-        from sympy.integrals.rubi.rules.secant import secant
-        from sympy.integrals.rubi.rules.miscellaneous_trig import miscellaneous_trig
-        from sympy.integrals.rubi.rules.inverse_trig import inverse_trig
-        from sympy.integrals.rubi.rules.hyperbolic import hyperbolic
-        from sympy.integrals.rubi.rules.inverse_hyperbolic import inverse_hyperbolic
-        #from sympy.integrals.rubi.rules.special_function import special_function
+        #from sympy.integrals.rubi.rules.sine import sine
+        #from sympy.integrals.rubi.rules.tangent import tangent
+        #from sympy.integrals.rubi.rules.secant import secant
+        #from sympy.integrals.rubi.rules.miscellaneous_trig import miscellaneous_trig
+        #from sympy.integrals.rubi.rules.inverse_trig import inverse_trig
+        #from sympy.integrals.rubi.rules.hyperbolic import hyperbolic
+        #from sympy.integrals.rubi.rules.inverse_hyperbolic import inverse_hyperbolic
+        from sympy.integrals.rubi.rules.special_functions import special_functions
         #from sympy.integrals.rubi.rules.derivative import derivative
-        from sympy.integrals.rubi.rules.piecewise_linear import piecewise_linear
+        #from sympy.integrals.rubi.rules.piecewise_linear import piecewise_linear
         from sympy.integrals.rubi.rules.miscellaneous_integration import miscellaneous_integration
         rules = []
         rules_applied = []
@@ -169,9 +213,9 @@ if matchpy:
         rules += binomial_products(rules_applied)    
         rules += trinomial_products(rules_applied)
         rules += miscellaneous_algebraic(rules_applied)
-        
-        #rubi = exponential(rubi)
-        #rubi = logarithms(rubi)
+        rules += exponential(rules_applied)
+        rules += logarithms(rules_applied)
+        rules += special_functions(rules_applied)
         #rubi = sine(rubi)
         #rubi = tangent(rubi)
         #rubi = secant(rubi)
@@ -181,28 +225,46 @@ if matchpy:
         #rubi = inverse_hyperbolic(rubi)
         #rubi = piecewise_linear(rubi)
         rules += miscellaneous_integration(rules_applied)
-        #mit = ManyToOneReplacer(*rules)
         rubi = ManyToOneReplacer(*rules)
         return rubi, rules_applied, rules
-
+    _E = rubi_unevaluated_expr(E)
+    Integrate = Function('Integrate')
     rubi, rules_applied, rules = rubi_object()
 
-@doctest_depends_on(modules=('matchpy',))
-def remove_rule(rule, expr, var):
-    rules_applied[:] = []
-    new_rules = rules
-    new_rules.remove(rule)
-    new_rubi = ManyToOneReplacer(*new_rules)
-    a = new_rubi.replace(Integral(expr, var))
-    rules_applied[:] = []
-    return a
-
-def _has_cycle(): #this has to  be improved
+def _has_cycle():
     if rules_applied.count(rules_applied[-1]) == 1:
         return False
     if rules_applied[-1] == rules_applied[-2] == rules_applied[-3] == rules_applied[-4] == rules_applied[-5]:
         return True
 
+def process_final_integral(expr):
+    '''
+    When there is recursion for more than 10 rules or in total 20 rules have been applied
+    rubi returns `Integrate` in oreder to stop any further matching. after complete integration,
+    Integrate needs to be replaced back to Integral.
+    '''
+    if expr.has(Integrate):
+        expr = expr.replace(Integrate, Integral)
+    if expr.has(_E):
+        expr = expr.replace(_E, E)
+    return expr
+
+
+def rubi_powsimp(expr):
+    '''
+    This function is needed to preprocess an expression as done in matchpy
+    `x^a*x^b` in matchpy auotmatically transforms to `x^(a+b)`
+    '''
+    lst_pow =[]
+    lst_non_pow = []
+    if isinstance(expr, Mul):
+        for i in expr.args:
+            if isinstance(i, (Pow, exp, sym_exp)):
+                lst_pow.append(i)
+            else:
+                lst_non_pow.append(i)
+        return powsimp(Mul(*lst_pow))*Mul(*lst_non_pow)
+    return expr
 
 @doctest_depends_on(modules=('matchpy',))
 def rubi_integrate(expr, var, showsteps=False):
@@ -219,36 +281,33 @@ def rubi_integrate(expr, var, showsteps=False):
 
     Returns Integral object if unable to integrate.
     '''
+    expr = expr.replace(sym_exp, exp)
     rules_applied[:] = []
-    expr = powsimp(expr)
+    expr = rubi_powsimp(expr)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
-    from sympy import Add
     if isinstance(expr, Add):
         results = 0
         for ex in expr.args:
             rules_applied[:] = []
             results += rubi.replace(Integral(ex, var))
             rules_applied[:] = []
-        return results
+        return process_final_integral(results)
 
-    results = rubi.replace(Integral(expr, var))
-    return results
+    results = rubi.replace(Integral(expr, var), max_count = 10)
+    return process_final_integral(results)
 
 @doctest_depends_on(modules=('matchpy',))
 def util_rubi_integrate(expr, var, showsteps=False):
+    expr = expr.replace(sym_exp, exp)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
-    expr = powsimp(expr)
-    from sympy import Add
     if isinstance(expr, Add):
         return rubi_integrate(expr, var)
     if len(rules_applied) > 10:
-        if _has_cycle():
-            ru = remove_rule(rules[rules_applied[-1] - 1], expr, var)
-            return ru
-
-    results = rubi.replace(Integral(expr, var))
+        if _has_cycle() or len(rules_applied) > 20: 
+            return Integrate(expr, var)
+    results = rubi.replace(Integral(expr, var), max_count = 10)
     rules_applied[:] = []
     return results
 

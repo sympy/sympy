@@ -109,12 +109,12 @@ if matchpy:
         _SimplifyAntiderivativeSum, SimplifyAntiderivativeSum,
         _SimplifyAntiderivative, SimplifyAntiderivative, _TrigSimplifyAux,
         TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist, Sum_doit, PolynomialQuotient, Floor,
-        PolynomialRemainder, Factor, DerivativeDivides, Rule
+        PolynomialRemainder, Factor, DerivativeDivides, Rule, exp
     )
     from sympy import Integral, S, sqrt, And, Or, Integer, Float, Mod, I
     from sympy.integrals.rubi.symbol import WC
     from sympy.core.symbol import symbols, Symbol
-    from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, exp, log)
+    from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, log)
     from sympy.functions.elementary.hyperbolic import (acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch)
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec)
     from sympy import pi as Pi
