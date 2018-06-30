@@ -1329,7 +1329,7 @@ def solve(f, *symbols, **flags):
                 else:
                     correct_sol = []
                     for sol in solution:
-                        if checksol(f,symbols[0],sol):
+                        if checksol(f,sol,symbols[0]):
                             correct_sol.append(sol)
                     solution = correct_sol
             elif isinstance(solution,tuple):
