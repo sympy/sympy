@@ -295,7 +295,7 @@ class Token(Basic):
             ilvl = indent_level + 4 if attr in self.indented_args else 0
             with printer_context(printer, indent_level=ilvl):
                 indented = self._indented(printer, attr, value, *args, **kwargs)
-            arg_reprs.append(('{1}' if i == 0 else '{0}={1}').format(attr, indented))
+            arg_reprs.append(('{1}' if i == 0 else '{0}={1}').format(attr, indented.lstrip()))
 
         return "{0}({1})".format(self.__class__.__name__, joiner.join(arg_reprs))
 
@@ -589,10 +589,9 @@ class CodeBlock(Basic):
 
     def _sympyrepr(self, printer, *args, **kwargs):
         from sympy.printing.printer import printer_context
-        il = printer._context.get('indent_level', 0) + 4
+        il = printer._context.get('indent_level', 0)
         joiner = ',\n' + ' '*il
-        with printer_context(printer, indent_level=il):
-            joined = joiner.join(map(printer._print, self.args))
+        joined = joiner.join(map(printer._print, self.args))
         return ('{0}(\n'.format(' '*(il-4) + self.__class__.__name__,) +
                 ' '*il + joined + '\n' + ' '*(il - 4) + ')')
 
@@ -766,12 +765,28 @@ class For(Token):
 
     >>> from sympy import symbols, Range
     >>> from sympy.codegen.ast import aug_assign, For
-    >>> x, n = symbols('x n')
-    >>> For(n, Range(10), [aug_assign(x, '+', n)])
-    For(n, iterable=Range(0, 10, 1), body=CodeBlock(
-        AddAugmentedAssignment(x, n)
+    >>> x, i, j, k = symbols('x i j k')
+    >>> for_i = For(i, Range(10), [aug_assign(x, '+', i*j*k)])
+    >>> for_i  # doctest: -NORMALIZE_WHITESPACE
+    For(i, iterable=Range(0, 10, 1), body=CodeBlock(
+        AddAugmentedAssignment(x, i*j*k)
     ))
-
+    >>> for_ji = For(j, Range(7), [for_i])
+    >>> for_ji  # doctest: -NORMALIZE_WHITESPACE
+    For(j, iterable=Range(0, 7, 1), body=CodeBlock(
+        For(i, iterable=Range(0, 10, 1), body=CodeBlock(
+            AddAugmentedAssignment(x, i*j*k)
+        ))
+    ))
+    >>> for_kji =For(k, Range(5), [for_ji])
+    >>> for_kji  # doctest: -NORMALIZE_WHITESPACE
+    For(k, iterable=Range(0, 5, 1), body=CodeBlock(
+        For(j, iterable=Range(0, 7, 1), body=CodeBlock(
+            For(i, iterable=Range(0, 10, 1), body=CodeBlock(
+                AddAugmentedAssignment(x, i*j*k)
+            ))
+        ))
+    ))
     """
     __slots__ = ['target', 'iterable', 'body']
     _construct_target = staticmethod(_sympify)
