@@ -1,9 +1,9 @@
 # This file contains tests that exercise multiple AST nodes
-import shutil
 
 from sympy.external import import_module
 from sympy.printing.ccode import ccode
 from sympy.utilities._compilation import compile_link_import_strings
+from sympy.utilities._compilation.util import TemporaryDirectory
 from sympy.utilities.pytest import skip
 from sympy.sets import Range
 from sympy.codegen.ast import (
@@ -23,7 +23,7 @@ def _mk_func1():
     return FunctionDefinition(void, 'our_test_function', declars, body)
 
 
-def _render_compile_import(funcdef):
+def _render_compile_import(funcdef, build_dir):
     code_str = render_as_source_file(funcdef, settings=dict(contract=False))
     declar = ccode(FunctionPrototype.from_FunctionDefinition(funcdef))
     return compile_link_import_strings([
@@ -33,7 +33,7 @@ def _render_compile_import(funcdef):
                                 "    {fname}(inp.size, &inp[0], &out[0])").format(
                                     declar=declar, fname=funcdef.name, typ='double'
                                 ))
-    ])
+    ], build_dir=build_dir)
 
 
 def test_copying_function():
@@ -41,12 +41,9 @@ def test_copying_function():
         skip("numpy not installed.")
 
     info = None
-    try:
-        mod, info = _render_compile_import(_mk_func1())
+    with TemporaryDirectory() as folder:
+        mod, info = _render_compile_import(_mk_func1(), build_dir=folder)
         inp = np.arange(10.0)
         out = np.empty_like(inp)
         mod._our_test_function(inp, out)
         assert np.allclose(inp, out)
-    finally:
-        if info and info['build_dir']:
-            shutil.rmtree(info['build_dir'])

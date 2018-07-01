@@ -1,5 +1,4 @@
 import os
-import shutil
 from sympy import Symbol, symbols
 from sympy.codegen.ast import (
     Assignment, Print, Declaration, FunctionDefinition, Return, real,
@@ -14,6 +13,7 @@ from sympy.codegen.futils import render_as_module
 from sympy.external import import_module
 from sympy.printing.fcode import fcode
 from sympy.utilities._compilation import has_fortran, compile_run_strings, compile_link_import_strings
+from sympy.utilities._compilation.util import TemporaryDirectory
 from sympy.utilities.pytest import skip
 
 cython = import_module('cython')
@@ -188,7 +188,8 @@ def test_bind_C():
     arr = array(a, dim=[s], intent='in')
     fd = FunctionDefinition(real, 'rms', [arr, s], body, attrs=[bind_C('rms')])
     f_mod = render_as_module([fd], 'mod_rms')
-    try:
+
+    with TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings([
             ('rms.f90', f_mod),
             ('_rms.pyx', (
@@ -196,8 +197,5 @@ def test_bind_C():
                 "def py_rms(double[::1] x):\n"
                 "    cdef int s = x.size\n"
                 "    return rms(&x[0], &s)\n"))
-        ])
+        ], build_dir=folder)
         assert abs(mod.py_rms(np.array([2., 4., 2., 2.])) - 7**0.5) < 1e-14
-    finally:
-        if info['build_dir']:
-            shutil.rmtree(info['build_dir'])

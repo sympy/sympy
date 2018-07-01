@@ -16,8 +16,17 @@ import tempfile
 if sys.version_info[0] == 2:
     class FileNotFoundError(IOError):
         pass
+
+    class TemporaryDirectory(object):
+        def __init__(self):
+            self.path = tempfile.mkdtemp()
+        def __enter__(self):
+            return self.path
+        def __exit__(self, exc, value, tb):
+            shutil.rmtree(self.path)
 else:
     FileNotFoundError = FileNotFoundError
+    TemporaryDirectory = tempfile.TemporaryDirectory
 
 
 def get_abspath(path, cwd='.'):

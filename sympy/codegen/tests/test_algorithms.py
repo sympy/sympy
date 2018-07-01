@@ -1,7 +1,6 @@
 from __future__ import (absolute_import, division, print_function)
 
 import sys
-import shutil
 
 import sympy as sp
 from sympy.core.compatibility import exec_
@@ -13,6 +12,7 @@ from sympy.codegen.pyutils import render_as_module as py_module
 from sympy.external import import_module
 from sympy.printing.ccode import ccode
 from sympy.utilities._compilation import compile_link_import_strings
+from sympy.utilities._compilation.util import TemporaryDirectory
 from sympy.utilities.pytest import skip, USE_PYTEST, raises
 
 cython = import_module('cython')
@@ -34,18 +34,15 @@ def test_newtons_method_function__ccode():
         skip("cython not installed.")
 
     compile_kw = dict(std='c99')
-    try:
+    with TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings([
             ('newton.c', ('#include <math.h>\n'
                           '#include <stdio.h>\n') + ccode(func)),
             ('_newton.pyx', ("cdef extern double newton(double)\n"
                              "def py_newton(x):\n"
                              "    return newton(x)\n"))
-        ], compile_kwargs=compile_kw)
+        ], build_dir=folder, compile_kwargs=compile_kw)
         assert abs(mod.py_newton(0.5) - 0.865474033102) < 1e-12
-    finally:
-        if info['build_dir']:
-            shutil.rmtree(info['build_dir'])
 
 
 def test_newtons_method_function__fcode():
@@ -57,17 +54,14 @@ def test_newtons_method_function__fcode():
         skip("cython not installed.")
 
     f_mod = f_module([func], 'mod_newton')
-    try:
+    with TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings([
             ('newton.f90', f_mod),
             ('_newton.pyx', ("cdef extern double newton(double*)\n"
                              "def py_newton(double x):\n"
                              "    return newton(&x)\n"))
-        ])
+        ], build_dir=folder)
         assert abs(mod.py_newton(0.5) - 0.865474033102) < 1e-12
-    finally:
-        if info['build_dir']:
-            shutil.rmtree(info['build_dir'])
 
 
 def test_newtons_method_function__pycode():
@@ -93,14 +87,14 @@ def test_newtons_method_function__ccode_parameters():
         skip("cython not installed.")
 
     compile_kw = dict(std='c99')
-    try:
+    with TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings([
             ('newton_par.c', ('#include <math.h>\n'
                           '#include <stdio.h>\n') + ccode(func)),
             ('_newton_par.pyx', ("cdef extern double newton(double, double, double, double)\n"
                              "def py_newton(x, A=1, k=1, p=1):\n"
                              "    return newton(x, A, k, p)\n"))
-        ], compile_kwargs=compile_kw)
+        ], compile_kwargs=compile_kw, build_dir=folder)
 
         if use_wurlitzer:
             with wurlitzer.pipes() as (out, err):
@@ -124,6 +118,3 @@ x=     0.86548 d_x= -3.1022e-06
 x=     0.86547 d_x= -9.3421e-12
 x=     0.86547 d_x=  3.6902e-17
 """  # try to run tests with LC_ALL=C if this assertion fails
-    finally:
-        if info['build_dir']:
-            shutil.rmtree(info['build_dir'])
