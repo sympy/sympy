@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 """
 Discrete Fourier Transform, Number Theoretic Transform,
-Walsh Hadamard Transform, Zeta Transform, Mobius Transform
+Walsh Hadamard Transform, Mobius Transform
 """
-from __future__ import print_function, division
+from __future__ import print_function, division, unicode_literals
 
 from sympy.core import S, Symbol, sympify
 from sympy.core.compatibility import as_int, range, iterable
@@ -284,6 +285,12 @@ def fwht(seq):
     The sequence is automatically padded to the right with zeros, as the
     radix 2 FWHT requires the number of sample points to be a power of 2.
 
+    Parameters
+    ==========
+
+    seq : iterable
+        The sequence on which WHT is to be applied.
+
     Examples
     ========
 
@@ -317,27 +324,18 @@ ifwht.__doc__ = fwht.__doc__
 
 #----------------------------------------------------------------------------#
 #                                                                            #
-#                         Zeta and Mobius Transforms                         #
+#                    Mobius Transform for Subset Lattice                     #
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _yate_dp(seq, sgn, subset, superset):
-    """Utility function for performing Yate's Dynamic Programming (DP) for
-    Zeta or Mobius Transform.
-
-    The sequence is automatically padded to the right with zeros, as the
-    definition of subset/superset based on bitmasks (indices) requires
-    the size of sequence to be a power of 2.
-    """
+def _mobius_transform(seq, sgn, subset):
+    r"""Utility function for performing Möbius Transform using
+    Yate's Dynamic Programming (DP)"""
 
     if not iterable(seq):
         raise TypeError("Expected a sequence of coefficients")
 
     a = [sympify(arg) for arg in seq]
-    subset, superset = map(bool, (subset, superset))
-
-    if (subset, superset).count(True) != 1:
-        raise ValueError("Exactly one of subset and superset must be True")
 
     n = len(a)
     if n < 2:
@@ -348,15 +346,7 @@ def _yate_dp(seq, sgn, subset, superset):
 
     a += [S.Zero]*(n - len(a))
 
-    if superset:
-        i = 1
-        while i < n:
-            for j in range(n):
-                if j & i:
-                    continue
-                a[j] += sgn*a[j ^ i]
-            i *= 2
-    else:
+    if subset:
         i = 1
         while i < n:
             for j in range(n):
@@ -364,15 +354,73 @@ def _yate_dp(seq, sgn, subset, superset):
                     a[j] += sgn*a[j ^ i]
             i *= 2
 
+    else:
+        i = 1
+        while i < n:
+            for j in range(n):
+                if j & i:
+                    continue
+                a[j] += sgn*a[j ^ i]
+            i *= 2
+
     return a
 
 
-def fzt(seq, subset=None, superset=None):
-    return _yate_dp(seq, sgn=1, subset=subset, superset=superset)
+def mobius_transform(seq, subset=True):
+    r"""
+    Performs the Möbius Transform for subset lattice with indices of
+    sequence as bitmasks.
 
+    The sequence is automatically padded to the right with zeros, as the
+    definition of subset/superset based on bitmasks (indices) requires
+    the size of sequence to be a power of 2.
 
-def fmt(seq, subset=None, superset=None):
-    return _yate_dp(seq, sgn=-1, subset=subset, superset=superset)
+    Parameters
+    ==========
 
-ifzt = fmt
-ifmt = fzt
+    seq : iterable
+        The sequence on which Möbius Transform is to be applied.
+    subset : bool
+        Specifies if Möbius Transform is applied by enumerating subsets
+        or supersets of the given set.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy import mobius_transform, inverse_mobius_transform
+    >>> x, y, z = symbols('x y z')
+
+    >>> mobius_transform([x, y, z])
+    [x, x + y, x + z, x + y + z]
+    >>> inverse_mobius_transform(_)
+    [x, y, z, 0]
+
+    >>> mobius_transform([x, y, z], subset=False)
+    [x + y + z, y, z, 0]
+    >>> inverse_mobius_transform(_, subset=False)
+    [x, y, z, 0]
+
+    >>> mobius_transform([1, 2, 3, 4])
+    [1, 3, 4, 10]
+    >>> inverse_mobius_transform(_)
+    [1, 2, 3, 4]
+    >>> mobius_transform([1, 2, 3, 4], subset=False)
+    [10, 6, 7, 4]
+    >>> inverse_mobius_transform(_, subset=False)
+    [1, 2, 3, 4]
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Möbius_inversion_formula
+    .. [2] https://arxiv.org/pdf/1211.0189.pdf
+
+    """
+
+    return _mobius_transform(seq, sgn=+1, subset=subset)
+
+def inverse_mobius_transform(seq, subset=True):
+    return _mobius_transform(seq, sgn=-1, subset=subset)
+
+inverse_mobius_transform.__doc__ = mobius_transform.__doc__
