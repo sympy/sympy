@@ -575,7 +575,7 @@ def compile_link_import_strings(sources, build_dir=None, **kwargs):
 
     """
     source_files, build_dir = _write_sources_to_build_dir(sources, build_dir)
-    mod = compile_link_import_py_ext(source_files, build_dir, **kwargs)
+    mod = compile_link_import_py_ext(source_files, build_dir=build_dir, **kwargs)
     info = dict(build_dir=build_dir)
     return mod, info
 

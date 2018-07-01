@@ -232,16 +232,24 @@ def import_module_from_file(filename, only_if_newer_than=None):
     ``ImportError`` if any of the files specified in ``only_if_newer_than`` are newer
     than the file given by filename.
     """
-    import imp
     path, name = os.path.split(filename)
     name, ext = os.path.splitext(name)
     name = name.split('.')[0]
-    fobj, filename, data = imp.find_module(name, [path])
-    if only_if_newer_than:
-        for dep in only_if_newer_than:
-            if os.path.getmtime(filename) < os.path.getmtime(dep):
-                raise ImportError("{} is newer than {}".format(dep, filename))
-    mod = imp.load_module(name, fobj, filename, data)
+    if sys.version_info[0] == 2:
+        from imp import find_module, load_module
+        fobj, filename, data = find_module(name, [path])
+        if only_if_newer_than:
+            for dep in only_if_newer_than:
+                if os.path.getmtime(filename) < os.path.getmtime(dep):
+                    raise ImportError("{} is newer than {}".format(dep, filename))
+        mod = load_module(name, fobj, filename, data)
+    else:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(name, filename)
+        if spec is None:
+            raise ImportError("Failed to import: '%s'" % filename)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
     return mod
 
 
