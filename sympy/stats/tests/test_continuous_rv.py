@@ -879,3 +879,9 @@ def test_conditional_eq():
     assert P(Eq(E, 1), Eq(E, 2)) == 0
     assert P(E > 1, Eq(E, 2)) == 1
     assert P(E < 1, Eq(E, 2)) == 0
+
+def test_compound_pdf():
+    N1 = Normal('N1', 0, 1)
+    N2 = Normal('N2', N1, 2)
+    N = Symbol('N2')
+    assert simplify(N2.pspace.pdf) == sqrt(10)*exp(-N**2/10)/(10*sqrt(pi))
