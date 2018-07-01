@@ -1312,7 +1312,7 @@ def solve(f, *symbols, **flags):
                 if isinstance(solution[0],dict):
                     correct_sol = []
                     for sol in solution:
-                        if checksol(f,sol):
+                        if checksol(f,sol) != False:
                             correct_sol.append(sol)
                     solution = correct_sol
                 elif isinstance(solution[0],tuple):
@@ -1323,13 +1323,13 @@ def solve(f, *symbols, **flags):
                         while i < len(symbols):
                             sol_dict[symbols[i]] = sol[i]
                             i += 1
-                        if checksol(f,sol_dict):
+                        if checksol(f,sol_dict) != False:
                             correct_sol.append(sol)
                     solution = correct_sol
                 else:
                     correct_sol = []
                     for sol in solution:
-                        if checksol(f,sol,symbols[0]):
+                        if checksol(f,symbols[0],sol) != False:
                             correct_sol.append(sol)
                     solution = correct_sol
             elif isinstance(solution,tuple):
@@ -1339,11 +1339,11 @@ def solve(f, *symbols, **flags):
                         sol_dict = {}
                         for symb,val in zip(solution[0],sol):
                             sol_dict[symb] = val
-                        if checksol(f,sol_dict):
+                        if checksol(f,sol_dict) != False:
                             correct_sol.append(sol)
                     solution = (solution[0],set(correct_sol))
             elif isinstance(solution,dict):
-                if not checksol(f,solution):
+                if not (checksol(f,solution) != False):
                     solution.clear()
 
     #
