@@ -29,6 +29,10 @@ else:
     TemporaryDirectory = tempfile.TemporaryDirectory
 
 
+class CompilerNotFoundError(FileNotFoundError):
+    pass
+
+
 def get_abspath(path, cwd='.'):
     """ Returns the aboslute path.
 
@@ -268,14 +272,14 @@ def find_binary_of_command(candidates):
     Raises
     ======
 
-    FileNotFoundError if no candidates match.
+    CompilerNotFoundError if no candidates match.
     """
     from distutils.spawn import find_executable
     for c in candidates:
         binary_path = find_executable(c)
         if c and binary_path:
             return c, binary_path
-    raise FileNotFoundError('No binary located for candidates: {}'.format(candidates))
+    raise CompilerNotFoundError('No binary located for candidates: {}'.format(candidates))
 
 
 def unique_list(l):
