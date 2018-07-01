@@ -236,6 +236,7 @@ before_install:
         source activate test-environment;
         export CPATH=$CONDA_PREFIX/include;
         export LIBRARY_PATH=$CONDA_PREFIX/lib;
+        export LD_LIBRARY_PATH=$CONDA_PREFIX/lib;
         export SYMPY_STRICT_COMPILER_CHECKS=1;
         conda clean --all;
         if [[ "$TEST_SAGE" == "true" ]]; then
