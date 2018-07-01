@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy import factorial, exp, S, sympify, And
 from sympy.stats.rv import _value_check
-from sympy.sets.sets import Interval
 import random
 
 __all__ = ['Geometric', 'Poisson']
@@ -26,7 +25,9 @@ class PoissonDistribution(SingleDiscreteDistribution):
         _value_check(lamda > 0, "Lambda must be positive")
 
     def pdf(self, k):
-        return self.lamda**k / factorial(k) * exp(-self.lamda)
+        _pdf = self.lamda**k / factorial(k) * exp(-self.lamda)
+        _pdf = self.handle_compound_rv(_pdf)
+        return _pdf
 
     def sample(self):
         def search(x, y, u):
@@ -106,7 +107,9 @@ class GeometricDistribution(SingleDiscreteDistribution):
         _value_check(And(0 < p, p<=1), "p must be between 0 and 1")
 
     def pdf(self, k):
-        return (1 - self.p)**(k - 1) * self.p
+        _pdf = (1 - self.p)**(k - 1) * self.p
+        _pdf = self.handle_compound_rv(_pdf)
+        return _pdf
 
 
 def Geometric(name, p):

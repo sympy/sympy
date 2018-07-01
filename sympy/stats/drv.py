@@ -6,12 +6,13 @@ from sympy.solvers.solveset import solveset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
         random_symbols, PSpace, ConditionalDomain, RandomDomain,
-        ProductDomain)
+        ProductDomain, RandomSymbol)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
+from sympy.integrals.integrals import integrate
 from sympy.utilities import filldedent
 import random
 
@@ -112,6 +113,20 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         else:
             return Sum(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
+
+    def handle_compound_rv(self, expr):
+        from sympy.stats.rv import density
+        from sympy.concrete.summations import summation
+        for arg in self.args:
+            if isinstance(arg, RandomSymbol):
+                sym, dom = arg.symbol, arg.pspace.set
+                lpdf = density(arg)(sym)
+                expr = expr.replace(arg, sym)*lpdf
+                if arg.pspace.is_Continuous:
+                    expr = integrate(expr, (sym, dom))
+                elif arg.pspace.is_Discrete:
+                    expr = summation(expr, (sym, dom))
+        return expr
 
     def __call__(self, *args):
         return self.pdf(*args)
