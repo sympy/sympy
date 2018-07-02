@@ -20,7 +20,7 @@ from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne
 
 
 from sympy.stats.crv_types import NormalDistribution
-from sympy.stats.rv import ProductPSpace
+from sympy.stats.rv import IndependentProductPSpace
 
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.external import import_module
@@ -722,7 +722,7 @@ def test_random_parameters():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
-    assert isinstance(pspace(meas), ProductPSpace)
+    assert isinstance(pspace(meas), IndependentProductPSpace)
     #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
     #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
 
@@ -871,3 +871,11 @@ def test_Or():
         -erf(sqrt(2))/2 - erfc(sqrt(2)/2)/2 + 3/2
     assert P(Or(N < 0, N < 1)) == P(N < 1)
     assert P(Or(N > 0, N < 0)) == 1
+
+
+def test_conditional_eq():
+    E = Exponential('E', 1)
+    assert P(Eq(E, 1), Eq(E, 1)) == 1
+    assert P(Eq(E, 1), Eq(E, 2)) == 0
+    assert P(E > 1, Eq(E, 2)) == 1
+    assert P(E < 1, Eq(E, 2)) == 0

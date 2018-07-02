@@ -15,8 +15,8 @@ from sympy import (Basic, Symbol, cacheit, sympify, Mul,
         And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy)
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
-        PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs,
-        NamedArgsMixin)
+        PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
+        sumsets, rv_subs, NamedArgsMixin)
 from sympy.core.containers import Dict
 import random
 
@@ -349,7 +349,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
                     for val, prob in self.distribution.dict.items())
 
 
-class ProductFinitePSpace(ProductPSpace, FinitePSpace):
+class ProductFinitePSpace(IndependentProductPSpace, FinitePSpace):
     """
     A collection of several independent finite probability spaces
     """

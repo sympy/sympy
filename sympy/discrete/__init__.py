@@ -3,7 +3,7 @@
 Transforms - fft, ifft, ntt, intt, fwht, ifwht, fzt, ifzt, fmt, ifmt
 Convolution - convolution, convolution_fft, convolution_ntt, convolution_fwht,
     convolution_subset, covering_product, intersecting_product
-Recurrence evaluation - reval_hcc
+Recurrence - linrec
 """
 
 from .transforms import (fft, ifft, ntt, intt, fwht, ifwht)

@@ -12,7 +12,9 @@ if sys.version_info[:2] < (3, 6):
 from sympy.integrals.rubi.parsetools.parse import (rubi_rule_parser,
     get_default_values, add_wildcards, parse_freeq, seperate_freeq,
     get_free_symbols, divide_constraint, generate_sympy_from_parsed,
-    setWC, replaceWith)
+    setWC, replaceWith, rubi_printer)
+
+from sympy import Symbol, Not
 from sympy import sympify
 
 def test_rubi_rule_parser():
@@ -77,3 +79,9 @@ def test_generate_sympy_from_parsed():
     assert generate_sympy_from_parsed(s ,replace_Int=True) == 'Integral(Pow(Add(Pattern(a, Blank), Mul(Optional(Pattern(b, Blank)), Pow(Pattern(x, Blank), Pattern(n, Blank)))), S(-1)), Pattern(x, Blank(Symbol)))'
     s = ['And', ['FreeQ', ['List', 'a', 'b'], 'x'], ['PositiveIntegerQ', ['Times', ['Plus', 'n', '-3'], ['Power', '2', '-1']]], ['PosQ', ['Times', 'a', ['Power', 'b', '-1']]]]
     assert generate_sympy_from_parsed(s) == 'And(FreeQ(List(a, b), x), PositiveIntegerQ(Mul(Add(n, S(-3)), Pow(S(2), S(-1)))), PosQ(Mul(a, Pow(b, S(-1)))))'
+
+
+def test_rubi_printer():
+    #14819
+    a = Symbol('a')
+    assert rubi_printer(Not(a)) == 'Not(a)'
