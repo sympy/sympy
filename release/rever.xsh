@@ -40,6 +40,7 @@ $ACTIVITIES = [
     'test_tarball34',
     'test_tarball35',
     'test_tarball36',
+    'test_tarball37',
     'print_authors',
     'md5',
     # 'tag',
