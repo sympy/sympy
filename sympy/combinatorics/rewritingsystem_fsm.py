@@ -14,14 +14,8 @@ class State(object):
         self.name = name
         self.transitions = {}
         self.state_machine = state_machine
-        self.state_type = state_type
+        self.state_type = state_type[0]
         self.rh_rule = rh_rule
-        if self.state_type == "start":
-            self.state_type = 's'
-        elif self.state_type == "accept":
-            self.state_type = 'a'
-        elif self.state_type == "dead":
-            self.state_type = 'd'
 
     def add_transition(self, letter, state):
         '''
