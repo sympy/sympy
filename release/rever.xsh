@@ -68,9 +68,11 @@ def mailmap_update():
 
 @activity
 def test_sympy():
-    with run_in_conda_env(['mpmath', 'matplotlib', 'numpy', 'scipy', 'theano',
+    with run_in_conda_env(['mpmath', 'matplotlib>=2.2', 'numpy', 'scipy', 'theano',
         'ipython', 'gmpy2', 'fastcache', 'symengine', 'libgfortran', 'libgcc',
-        'gcc', 'cython', 'tensorflow=0.12', 'llvmlite'], 'sympy-tests'):
+        'gcc', 'cython', 'tensorflow', 'llvmlite', 'wurlitzer', 'autowrap',
+        'python-symengine=0.3.*', 'numexpr', 'antlr-python-runtime>=4.7,<4.8',
+        'antlr>=4.7,<4.8'], 'sympy-tests'):
 
         ./setup.py test
 
