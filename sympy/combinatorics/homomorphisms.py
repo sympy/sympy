@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup
 from sympy.combinatorics.free_groups import FreeGroup, FreeGroupElement
 from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy import S
 
 class GroupHomomorphism(object):
     '''
@@ -417,3 +418,126 @@ def block_homomorphism(group, blocks):
     images = {g: Permutation([b[p[i]^g] for i in identity]) for g in group.generators}
     H = GroupHomomorphism(group, codomain, images)
     return H
+
+def group_isomorphism(G, H, isomorphism=False):
+    '''
+    Compute an isomorphism between 2 given groups.
+
+    Arguments:
+        G (a finite `FpGroup` or a `PermutationGroup`) -- First group
+        H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
+        isomorphism (boolean) -- This is used to avoid the computation of homomorphism
+                                 when the user only wants to check if there exists
+                                 an isomorphism between the groups.
+
+    Returns:
+    If isomorphism = False -- Returns a boolean.
+    If isomorphism = True  -- Returns a boolean and an isomorphism between `G` and `H`.
+
+    Summary:
+    Uses the approach suggested by Robert Tarjan to compute the isomorphism between two groups.
+    First, the generators of `G` are mapped to the elements of `H` and
+    we check if the mapping induces an isomorphism.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics import Permutation
+    >>> from sympy.combinatorics.perm_groups import PermutationGroup
+    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics.fp_groups import FpGroup
+    >>> from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism
+    >>> from sympy.combinatorics.named_groups import DihedralGroup, AlternatingGroup
+
+    >>> D = DihedralGroup(8)
+    >>> p = Permutation(0, 1, 2, 3, 4, 5, 6, 7)
+    >>> P = PermutationGroup(p)
+    >>> group_isomorphism(D, P, isomorphism=True)
+    (False, None)
+
+    >>> F, a, b = free_group("a, b")
+    >>> G = FpGroup(F, [a**3, b**3, (a*b)**2])
+    >>> H = AlternatingGroup(4)
+    >>> (check, T) = group_isomorphism(G, H, isomorphism=True)
+    >>> check
+    True
+    >>> T(b*a*b**-1*a**-1*b**-1)
+    (0 2 3)
+
+    '''
+    if not isinstance(G, (PermutationGroup, FpGroup)):
+        raise TypeError("The group must be a PermutationGroup or a finite FpGroup")
+    if not isinstance(H, (PermutationGroup, FpGroup)):
+        raise TypeError("The group must be a PermutationGroup or a finite FpGroup")
+
+    if isinstance(G, FpGroup) and isinstance(H, FpGroup):
+        G = simplify_presentation(G)
+        H = simplify_presentation(H)
+        # Two infinite FpGroups with the same generators are isomorphic
+        # when the relators are same but are ordered differently.
+        if G.generators == H.generators and (G.relators).sort() == (H.relators).sort():
+            return homomorphism(G, H, G.generators, H.generators)
+
+    # `_G` and `_H` are the permutation groups isomorphic to
+    # `G` and `H` respectively, if they are `FpGroups`
+    _G = G
+    group_isomorphism = None
+    _H = H
+    h_isomorphism = None
+    g_order = G.order()
+    h_order = H.order()
+
+    if isinstance(G, FpGroup):
+        if g_order == S.Infinity:
+            raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
+        _G, g_isomorphism = G._to_perm_group()
+    if isinstance(H, FpGroup):
+        if h_order == S.Infinity:
+            raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
+        _H, h_isomorphism = H._to_perm_group()
+
+    if not isomorphism:
+        # Prime ordered groups are cyclic.
+        from sympy import sieve
+        if (g_order in sieve) and (h_order in sieve):
+            if g_order == h_order:
+                return True
+            return False
+
+    if (g_order != h_order) and (G.is_abelian != H.is_abelian):
+        if not isomorphism:
+            return False
+        return (False, None)
+
+    # Match the generators of `_G` with the subsets of `_H`
+    gens = _G.generators
+    for subset in itertools.permutations(_H, len(gens)):
+        gens = list(gens)
+        images = list(subset)
+        images.extend([_H.identity]*(len(_G.generators)-len(images)))
+        gens.extend([g for g in _G.generators if g not in gens])
+        _images = dict(zip(gens,images))
+        if _check_homomorphism(_G, _H, _images):
+            images = []
+            gens = []
+            if isinstance(H, FpGroup):
+                for s in subset:
+                    images.append(h_isomorphism.invert(s))
+            else:
+                images = subset
+            if isinstance(G, FpGroup):
+                for g in _G.generators:
+                    gens.append(g_isomorphism.invert(g))
+            else:
+                gens = G.generators
+            T =  homomorphism(G, H, gens, images, check=False)
+            if T.is_injective() and T.is_surjective():
+                # It is a valid isomorohism
+                if not isomorphism:
+                    return True
+                else:
+                    return (True, T)
+
+    if not isomorphism:
+        return False
+    return (False, None)
