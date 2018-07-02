@@ -152,10 +152,10 @@ modules = [
     'sympy.tensor.array',
     'sympy.unify',
     'sympy.utilities',
+    'sympy.utilities._compilation',
     'sympy.utilities.mathml',
     'sympy.vector',
 ]
-
 
 class audit(Command):
     """Audits SymPy's source code for following issues:
@@ -358,6 +358,7 @@ tests = [
     'sympy.tensor.array.tests',
     'sympy.tensor.tests',
     'sympy.unify.tests',
+    'sympy.utilities._compilation.tests',
     'sympy.utilities.tests',
     'sympy.vector.tests',
 ]

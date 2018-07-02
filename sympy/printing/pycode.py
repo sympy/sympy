@@ -1,3 +1,10 @@
+"""
+Python code printers
+
+This module contains python code printers for plain python as well as NumPy & SciPy enabled code.
+"""
+
+
 from collections import defaultdict
 from functools import wraps
 from itertools import chain
@@ -59,7 +66,7 @@ _known_constants_math = {
 def _print_known_func(self, expr):
     known = self.known_functions[expr.__class__.__name__]
     return '{name}({args})'.format(name=self._module_format(known),
-                                   args=', '.join(map(self._print, expr.args)))
+                                   args=', '.join(map(lambda arg: self._print(arg), expr.args)))
 
 
 def _print_known_const(self, expr):
@@ -85,7 +92,8 @@ class PythonCodePrinter(CodePrinter):
         user_functions={},
         precision=17,
         inline=True,
-        fully_qualified_modules=True
+        fully_qualified_modules=True,
+        contract=False
     )
 
     def __init__(self, settings=None):
@@ -95,6 +103,9 @@ class PythonCodePrinter(CodePrinter):
             'user_functions', {}))
         self.known_constants = dict(self._kc, **(settings or {}).get(
             'user_constants', {}))
+
+    def _get_statement(self, codestring):
+        return codestring
 
     def _declare_number_const(self, name, value):
         return "%s = %s" % (name, value)
@@ -210,6 +221,54 @@ class PythonCodePrinter(CodePrinter):
         _print_ImmutableDenseMatrix = \
         lambda self, expr: self._print_MatrixBase(expr)
 
+    def _indent_codestring(self, codestring):
+        return '\n'.join([self.tab + line for line in codestring.split('\n')])
+
+    def _print_FunctionDefinition(self, fd):
+        body = '\n'.join(map(lambda arg: self._print(arg), fd.body))
+        return "def {name}({parameters}):\n{body}".format(
+            name=self._print(fd.name),
+            parameters=', '.join([self._print(var.symbol) for var in fd.parameters]),
+            body=self._indent_codestring(body)
+        )
+
+    def _print_While(self, whl):
+        body = '\n'.join(map(lambda arg: self._print(arg), whl.body))
+        return "while {cond}:\n{body}".format(
+            cond=self._print(whl.condition),
+            body=self._indent_codestring(body)
+        )
+
+    def _print_Declaration(self, decl):
+        return '%s = %s' % (
+            self._print(decl.variable.symbol),
+            self._print(decl.variable.value)
+        )
+
+    def _print_Return(self, ret):
+        arg, = ret.args
+        return 'return %s' % self._print(arg)
+
+    def _print_Print(self, prnt):
+        print_args = ', '.join(map(lambda arg: self._print(arg), prnt.print_args))
+        if prnt.format_string != None:
+            print_args = '{0} % ({1})'.format(
+                self._print(prnt.format_string), print_args)
+        if prnt.file != None:
+            print_args += ', file=%s' % self._print(prnt.file)
+        return 'print(%s)' % print_args
+
+    def _print_Stream(self, strm):
+        if str(strm.name) == 'stdout':
+            return self._module_format('sys.stdout')
+        elif str(strm.name) == 'stderr':
+            return self._module_format('sys.stderr')
+        else:
+            return self._print(strm.name)
+
+    def _print_NoneToken(self, arg):
+        return 'None'
+
 
 for k in PythonCodePrinter._kf:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
@@ -219,6 +278,26 @@ for k in _known_constants_math:
 
 
 def pycode(expr, **settings):
+    """ Converts an expr to a string of Python code
+
+    Parameters
+    ==========
+
+    expr : Expr
+        A SymPy expression.
+    fully_qualified_modules : bool
+        Whether or not to write out full module names of functions
+        (``math.sin`` vs. ``sin``). default: ``True``.
+
+    Examples
+    ========
+
+    >>> from sympy import tan, Symbol
+    >>> from sympy.printing.pycode import pycode
+    >>> pycode(tan(Symbol('x')) + 1)
+    'math.tan(x) + 1'
+
+    """
     return PythonCodePrinter(settings).doprint(expr)
 
 
@@ -253,14 +332,18 @@ class MpmathPrinter(PythonCodePrinter):
         return '{func}({args})'.format(func=self._module_format('mpmath.mpf'), args=args)
 
 
-    def _print_uppergamma(self,e): #printer for the uppergamma function
+    def _print_uppergamma(self, e):
         return "{0}({1}, {2}, {3})".format(
-            self._module_format('mpmath.gammainc'), self._print(e.args[0]), self._print(e.args[1]),
+            self._module_format('mpmath.gammainc'),
+            self._print(e.args[0]),
+            self._print(e.args[1]),
             self._module_format('mpmath.inf'))
 
-    def _print_lowergamma(self,e): #printer for the lowergamma functioin
+    def _print_lowergamma(self, e):
         return "{0}({1}, 0, {2})".format(
-            self._module_format('mpmath.gammainc'), self._print(e.args[0]), self._print(e.args[1]))
+            self._module_format('mpmath.gammainc'),
+            self._print(e.args[0]),
+            self._print(e.args[1]))
 
     def _print_log2(self, e):
         return '{0}({1})/{0}(2)'.format(
@@ -306,10 +389,11 @@ class NumPyPrinter(PythonCodePrinter):
     _kc = {k: 'numpy.'+v for k, v in _known_constants_math.items()}
 
 
-    def _print_seq(self, seq, delimiter=', '):
+    def _print_seq(self, seq):
         "General sequence printer: converts to tuple"
         # Print tuples here instead of lists because numba supports
         #     tuples in nopython mode.
+        delimite.get('delimiter', ', ')
         return '({},)'.format(delimiter.join(self._print(item) for item in seq))
 
     def _print_MatMul(self, expr):
@@ -325,7 +409,9 @@ class NumPyPrinter(PythonCodePrinter):
         if arg2.shape[1] != 1:
             arg2 = arg2.T
 
-        return "%s(%s, %s)" % (self._module_format('numpy.dot'), self._print(arg1), self._print(arg2))
+        return "%s(%s, %s)" % (self._module_format('numpy.dot'),
+                               self._print(arg1),
+                               self._print(arg2))
 
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
@@ -394,7 +480,8 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s)" % (self._module_format('numpy.imag', self._print(expr.args[0])))
 
     def _print_Mod(self, expr):
-        return "%s(%s)" % (self._module_format('numpy.mod'), ', '.join(map(self._print, expr.args)))
+        return "%s(%s)" % (self._module_format('numpy.mod'), ', '.join(
+            map(lambda arg: self._print(arg), expr.args)))
 
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format('numpy.real'), self._print(expr.args[0]))
@@ -466,4 +553,4 @@ class SymPyPrinter(PythonCodePrinter):
     def _print_Function(self, expr):
         mod = expr.func.__module__ or ''
         return '%s(%s)' % (self._module_format(mod + ('.' if mod else '') + expr.func.__name__),
-                           ', '.join(map(self._print, expr.args)))
+                           ', '.join(map(lambda arg: self._print(arg), expr.args)))

@@ -121,6 +121,10 @@ test_list = [
 
     # matchpy
     '*rubi*',
+
+    # codegen
+    'sympy/codegen/',
+    'sympy/utilities/tests/test_codegen',
 ]
 
 blacklist = [
@@ -156,6 +160,8 @@ doctest_list = [
     # matchpy
     '*rubi*',
 
+    # codegen
+    'sympy/codegen/',
 ]
 
 if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):

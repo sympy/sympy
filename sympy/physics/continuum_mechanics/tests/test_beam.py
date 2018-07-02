@@ -173,6 +173,29 @@ def test_Beam():
         b4.variable = 1
 
 
+def test_statically_indeterminate():
+    E = Symbol('E')
+    I = Symbol('I')
+    M1, M2 = symbols('M1, M2')
+    F = Symbol('F')
+    l = Symbol('l', positive=True)
+
+    b5 = Beam(l, E, I)
+    b5.bc_deflection = [(0, 0),(l, 0)]
+    b5.bc_slope = [(0, 0),(l, 0)]
+
+    b5.apply_load(R1, 0, -1)
+    b5.apply_load(M1, 0, -2)
+    b5.apply_load(R2, l, -1)
+    b5.apply_load(M2, l, -2)
+    b5.apply_load(-F, l/2, -1)
+
+    b5.solve_for_reaction_loads(R1, R2, M1, M2)
+    p = b5.reaction_loads
+    q = {R1: F/2, R2: F/2, M1: -F*l/8, M2: F*l/8}
+    assert p == q
+
+
 def test_composite_beam():
     E = Symbol('E')
     I = Symbol('I')
@@ -218,7 +241,6 @@ def test_point_cflexure():
     b.apply_load(10, 2, -1)
     b.apply_load(20, 4, -1)
     b.apply_load(3, 6, 0)
-
     assert b.point_cflexure() == [S(10)/3]
 
 
@@ -282,6 +304,54 @@ def test_apply_support():
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
     assert b.deflection() == (4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
             + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
+
+
+def max_shear_force(self):
+    E = Symbol('E')
+    I = Symbol('I')
+
+    b = Beam(3, E, I)
+    R, M = symbols('R, M')
+    b.apply_load(R, 0, -1)
+    b.apply_load(M, 0, -2)
+    b.apply_load(2, 3, -1)
+    b.apply_load(4, 2, -1)
+    b.apply_load(2, 2, 0, end=3)
+    b.solve_for_reaction_loads(R, M)
+    assert b.max_shear_force() == (Interval(0, 2), 8)
+
+    l = symbols('l', positive=True)
+    P = Symbol('P')
+    b = Beam(l, E, I)
+    R1, R2 = symbols('R1, R2')
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
+    b.apply_load(P, 0, 0, end=l)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.max_shear_force() == (0, l*Abs(P)/2)
+
+
+def test_max_bmoment():
+    E = Symbol('E')
+    I = Symbol('I')
+    l, P = symbols('l, P', positive=True)
+
+    b = Beam(l, E, I)
+    R1, R2 = symbols('R1, R2')
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
+    b.apply_load(P, l/2, -1)
+    b.solve_for_reaction_loads(R1, R2)
+    b.reaction_loads
+    assert b.max_bmoment() == (l/2, P*l/4)
+
+    b = Beam(l, E, I)
+    R1, R2 = symbols('R1, R2')
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
+    b.apply_load(P, 0, 0, end=l)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.max_bmoment() == (l/2, P*l**2/8)
 
 
 def test_max_deflection():

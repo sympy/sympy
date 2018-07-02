@@ -1,5 +1,6 @@
 """
-Functions with corresponding implementations in C.
+This module contains SymPy functions mathcin corresponding to special math functions in the
+C standard library (since C99, also available in C++11).
 
 The functions defined in this module allows the user to express functions such as ``expm1``
 as a SymPy function for symbolic manipulation.
@@ -13,11 +14,7 @@ from sympy.core.function import ArgumentIndexError, Function, Lambda
 from sympy.core.power import Pow
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import exp, log
-from .ast import Attribute
 
-restrict = Attribute('restrict')  # guarantees no pointer aliasing
-volatile = Attribute('volatile')
-static = Attribute('static')
 
 def _expm1(x):
     return exp(x) - S.One
@@ -78,7 +75,6 @@ class expm1(Function):
 
     def _eval_is_finite(self):
         return self.args[0].is_finite
-
 
 
 def _log1p(x):
