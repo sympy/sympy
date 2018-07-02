@@ -137,6 +137,12 @@ def test_sympy__assumptions__sathandlers__CheckIsPrime():
     assert _test_args(CheckIsPrime(Q.positive))
     assert _test_args(CheckIsPrime(Q.positive(5)))
 
+
+@SKIP("abstract Class")
+def test_sympy__codegen__ast__AssignmentBase():
+    from sympy.codegen.ast import AssignmentBase
+    assert _test_args(AssignmentBase(x, 1))
+
 @SKIP("abstract Class")
 def test_sympy__codegen__ast__AugmentedAssignment():
     from sympy.codegen.ast import AugmentedAssignment
