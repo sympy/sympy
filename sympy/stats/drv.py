@@ -12,7 +12,6 @@ from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
                             ProductDomain, ProductPSpace)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
-from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
