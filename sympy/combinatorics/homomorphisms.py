@@ -1,6 +1,6 @@
 from __future__ import print_function, division
-
-from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup
+import itertools
+from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup, simplify_presentation
 from sympy.combinatorics.free_groups import FreeGroup, FreeGroupElement
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy import S
