@@ -31,6 +31,7 @@ import random
 import subprocess
 import signal
 import stat
+import tempfile
 
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import exec_, PY3, string_types, range
@@ -67,6 +68,10 @@ class Skipped(Exception):
 
 class TimeOutError(Exception):
     pass
+
+class DependencyError(Exception):
+    pass
+
 
 # add more flags ??
 future_flags = division.compiler_flag
@@ -1365,10 +1370,10 @@ class SymPyDocTests(object):
 
             # check if there are external dependencies which need to be met
             if '_doctest_depends_on' in test.globs:
-                has_dependencies = self._process_dependencies(test.globs['_doctest_depends_on'])
-                if has_dependencies is not True:
-                    # has_dependencies is either True or a message
-                    self._reporter.test_skip(v="\n" + has_dependencies)
+                try:
+                    self._check_dependencies(**test.globs['_doctest_depends_on'])
+                except DependencyError as e:
+                    self._reporter.test_skip(v="\n" + str(e))
                     continue
 
             if self._reporter._verbose:
@@ -1439,74 +1444,58 @@ class SymPyDocTests(object):
 
         return [sys_normcase(gi) for gi in g]
 
-    def _process_dependencies(self, deps):
+    def _check_dependencies(self,
+                            executables=(),
+                            modules=(),
+                            disable_viewers=()):
         """
-        Returns ``False`` if some dependencies are not met and the test should be
-        skipped otherwise returns ``True``.
+        Checks if the dependencies for the test are installed.
+
+        Raises ``DependencyError`` it at least one dependency is not installed.
         """
-        executables = deps.get('exe', None)
-        moduledeps = deps.get('modules', None)
-        viewers = deps.get('disable_viewers', None)
-        pyglet = deps.get('pyglet', None)
 
-        # print deps
+        for executable in executables:
+            if not find_executable(executable):
+                raise DependencyError("Could not find %s" % executable)
 
-        if executables is not None:
-            for ex in executables:
-                found = find_executable(ex)
-                if found is None:
-                    return "Could not find %s" % ex
-        if moduledeps is not None:
-            for extmod in moduledeps:
-                if extmod == 'matplotlib':
-                    matplotlib = import_module(
-                        'matplotlib',
-                        __import__kwargs={'fromlist':
-                                          ['pyplot', 'cm', 'collections']},
-                        min_module_version='1.0.0', catch=(RuntimeError,))
-                    if matplotlib is not None:
-                        pass
-                    else:
-                        return "Could not import matplotlib"
-                else:
-                    # TODO min version support
-                    mod = import_module(extmod)
-                    if mod is not None:
-                        version = "unknown"
-                        if hasattr(mod, '__version__'):
-                            version = mod.__version__
-                    else:
-                        return "Could not import %s" % mod
-        if viewers is not None:
-            import tempfile
+        for module in modules:
+            if module == 'matplotlib':
+                matplotlib = import_module(
+                    'matplotlib',
+                    __import__kwargs={'fromlist':
+                                      ['pyplot', 'cm', 'collections']},
+                    min_module_version='1.0.0', catch=(RuntimeError,))
+                if matplotlib is None:
+                    raise DependencyError("Could not import matplotlib")
+            else:
+                if not import_module(module):
+                    raise DependencyError("Could not import %s" % module)
+
+        if disable_viewers:
             tempdir = tempfile.mkdtemp()
             os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
 
-            if PY3:
-                vw = '#!/usr/bin/env python3\n' \
-                     'import sys\n' \
-                     'if len(sys.argv) <= 1:\n' \
-                     '    exit("wrong number of args")\n'
-            else:
-                vw = '#!/usr/bin/env python\n' \
-                     'import sys\n' \
-                     'if len(sys.argv) <= 1:\n' \
-                     '    exit("wrong number of args")\n'
+            vw = ('#!/usr/bin/env {}\n'
+                  'import sys\n'
+                  'if len(sys.argv) <= 1:\n'
+                  '    exit("wrong number of args")\n').format(
+                      'python3' if PY3 else 'python')
 
-            for viewer in viewers:
+            for viewer in disable_viewers:
                 with open(os.path.join(tempdir, viewer), 'w') as fh:
                     fh.write(vw)
 
                 # make the file executable
                 os.chmod(os.path.join(tempdir, viewer),
                          stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR)
-        if pyglet:
+
+        if 'pyglet' in modules:
             # monkey-patch pyglet s.t. it does not open a window during
             # doctesting
             import pyglet
             class DummyWindow(object):
                 def __init__(self, *args, **kwargs):
-                    self.has_exit=True
+                    self.has_exit = True
                     self.width = 600
                     self.height = 400
 
@@ -1524,7 +1513,6 @@ class SymPyDocTests(object):
 
             pyglet.window.Window = DummyWindow
 
-        return True
 
 class SymPyDocTestFinder(DocTestFinder):
     """
@@ -1705,10 +1693,7 @@ class SymPyDocTestFinder(DocTestFinder):
             if filename[-4:] in (".pyc", ".pyo"):
                 filename = filename[:-1]
 
-        if hasattr(obj, '_doctest_depends_on'):
-            globs['_doctest_depends_on'] = obj._doctest_depends_on
-        else:
-            globs['_doctest_depends_on'] = {}
+        globs['_doctest_depends_on'] = getattr(obj, '_doctest_depends_on', {})
 
         return self._parser.get_doctest(docstring, globs, name,
                                         filename, lineno)
