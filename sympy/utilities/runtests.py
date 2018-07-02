@@ -2092,12 +2092,9 @@ class PyTestReporter(Reporter):
         self.write(t + "\n")
 
     def write_exception(self, e, val, tb):
-        t = traceback.extract_tb(tb)
         # remove the first item, as that is always runtests.py
-        t = t[1:]
-        t = traceback.format_list(t)
-        self.write("".join(t))
-        t = traceback.format_exception_only(e, val)
+        tb = tb.tb_next
+        t = traceback.format_exception(e, val, tb)
         self.write("".join(t))
 
     def start(self, seed=None, msg="test process starts"):
