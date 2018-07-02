@@ -3,6 +3,8 @@ import itertools
 from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup, simplify_presentation
 from sympy.combinatorics.free_groups import FreeGroup, FreeGroupElement
 from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.core.numbers import igcd
+from sympy.ntheory.factor_ import totient
 from sympy import S
 
 class GroupHomomorphism(object):
@@ -476,7 +478,9 @@ def group_isomorphism(G, H, isomorphism=False):
         # Two infinite FpGroups with the same generators are isomorphic
         # when the relators are same but are ordered differently.
         if G.generators == H.generators and (G.relators).sort() == (H.relators).sort():
-            return homomorphism(G, H, G.generators, H.generators)
+            if not isomorphism:
+                return True
+            return (True, homomorphism(G, H, G.generators, H.generators))
 
     # `_G` and `_H` are the permutation groups isomorphic to
     # `G` and `H` respectively, if they are `FpGroups`
@@ -496,18 +500,15 @@ def group_isomorphism(G, H, isomorphism=False):
             raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
         _H, h_isomorphism = H._to_perm_group()
 
-    if not isomorphism:
-        # Prime ordered groups are cyclic.
-        from sympy import sieve
-        if (g_order in sieve) and (h_order in sieve):
-            if g_order == h_order:
-                return True
-            return False
-
     if (g_order != h_order) and (G.is_abelian != H.is_abelian):
         if not isomorphism:
             return False
         return (False, None)
+
+    if not isomorphism:
+        n = g_order
+        if igcd(n, totient(n)) == 1:
+            return True
 
     # Match the generators of `_G` with the subsets of `_H`
     gens = _G.generators
@@ -531,7 +532,7 @@ def group_isomorphism(G, H, isomorphism=False):
             else:
                 gens = G.generators
             T =  homomorphism(G, H, gens, images, check=False)
-            if T.is_injective() and T.is_surjective():
+            if T.is_isomorphism():
                 # It is a valid isomorohism
                 if not isomorphism:
                     return True
