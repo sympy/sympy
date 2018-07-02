@@ -30,7 +30,7 @@ a, b, c, d, e, f, m, n, x, u , k, p, j, l , i= symbols('a b c d e f m n x u k p 
 A, B, C, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B C a b c d e f g h y z m n p q u v w F', real=True, imaginary=False)
 
 
-@SKIP
+
 def test_1():
 
     assert rubi_test(rubi_integrate(x**m*(b*x**S(2) + c*x**S(4)), x), x, b*x**(m + S(3))/(m + S(3)) + c*x**(m + S(5))/(m + S(5)), expand=True, _diff=True, _numerical=True)
@@ -1831,7 +1831,7 @@ def test_1():
     assert rubi_test(rubi_integrate((S(3)*x + S(2))**S(6)*((S(3)*x + S(2))**S(14) + (S(3)*x + S(2))**S(7) + S(1))**S(2), x), x, (S(3)*x + S(2))**S(35)/S(105) + (S(3)*x + S(2))**S(28)/S(42) + (S(3)*x + S(2))**S(21)/S(21) + (S(3)*x + S(2))**S(14)/S(21) + (S(3)*x + S(2))**S(7)/S(21), expand=True, _diff=True, _numerical=True)
 
 
-@SKIP
+
 def test_2():
 
     assert rubi_test(rubi_integrate((c + d*x**S(2))/(a + b*x**S(4)), x), x, -sqrt(S(2))*(-sqrt(a)*d + sqrt(b)*c)*log(-sqrt(S(2))*a**(S(1)/4)*b**(S(1)/4)*x + sqrt(a) + sqrt(b)*x**S(2))/(S(8)*a**(S(3)/4)*b**(S(3)/4)) + sqrt(S(2))*(-sqrt(a)*d + sqrt(b)*c)*log(sqrt(S(2))*a**(S(1)/4)*b**(S(1)/4)*x + sqrt(a) + sqrt(b)*x**S(2))/(S(8)*a**(S(3)/4)*b**(S(3)/4)) - sqrt(S(2))*(sqrt(a)*d + sqrt(b)*c)*atan(S(1) - sqrt(S(2))*b**(S(1)/4)*x/a**(S(1)/4))/(S(4)*a**(S(3)/4)*b**(S(3)/4)) + sqrt(S(2))*(sqrt(a)*d + sqrt(b)*c)*atan(S(1) + sqrt(S(2))*b**(S(1)/4)*x/a**(S(1)/4))/(S(4)*a**(S(3)/4)*b**(S(3)/4)), expand=True, _diff=True, _numerical=True)
@@ -2153,7 +2153,7 @@ def test_2():
 
     '''
 
-@SKIP
+
 def test_3():
 
     assert rubi_test(rubi_integrate(x**S(3)*(a + c*x**S(4))**S(5)*(d + e*x**S(2)), x), x, a**S(5)*d*x**S(4)/S(4) + a**S(5)*e*x**S(6)/S(6) + S(5)*a**S(4)*c*d*x**S(8)/S(8) + a**S(4)*c*e*x**S(10)/S(2) + S(5)*a**S(3)*c**S(2)*d*x**S(12)/S(6) + S(5)*a**S(3)*c**S(2)*e*x**S(14)/S(7) + S(5)*a**S(2)*c**S(3)*d*x**S(16)/S(8) + S(5)*a**S(2)*c**S(3)*e*x**S(18)/S(9) + a*c**S(4)*d*x**S(20)/S(4) + S(5)*a*c**S(4)*e*x**S(22)/S(22) + c**S(5)*d*x**S(24)/S(24) + c**S(5)*e*x**S(26)/S(26), expand=True, _diff=True, _numerical=True)
@@ -2629,7 +2629,7 @@ def test_3():
 
     '''
 
-@SKIP
+
 def test_4():
     assert rubi_test(rubi_integrate((x**S(3) + x**S(2))/(x**S(2) + x + S(-2)), x), x, x**S(2)/S(2) + S(2)*log(-x + S(1))/S(3) + S(4)*log(x + S(2))/S(3), expand=True, _diff=True, _numerical=True)
     # Large time  assert rubi_test(rubi_integrate((d + e*x + f*x**S(2) + g*x**S(3) + h*x**S(4) + j*x**S(5) + k*x**S(6) + l*x**S(7) + m*x**S(8))/(a + b*x + c*x**S(2)), x), x, m*x**S(7)/(S(7)*c) + x**S(6)*(-b*m + c*l)/(S(6)*c**S(2)) + x**S(5)*(b**S(2)*m + c**S(2)*k - c*(a*m + b*l))/(S(5)*c**S(3)) + x**S(4)*(-b**S(3)*m + b*c*(S(2)*a*m + b*l) + c**S(3)*j - c**S(2)*(a*l + b*k))/(S(4)*c**S(4)) + x**S(3)*(b**S(4)*m - b**S(2)*c*(S(3)*a*m + b*l) + c**S(4)*h - c**S(3)*(a*k + b*j) + c**S(2)*(a**S(2)*m + S(2)*a*b*l + b**S(2)*k))/(S(3)*c**S(5)) + x**S(2)*(-b**S(5)*m + b**S(3)*c*(S(4)*a*m + b*l) - b*c**S(2)*(S(3)*a**S(2)*m + S(3)*a*b*l + b**S(2)*k) + c**S(5)*g - c**S(4)*(a*j + b*h) + c**S(3)*(a**S(2)*l + S(2)*a*b*k + b**S(2)*j))/(S(2)*c**S(6)) + x*(b**S(6)*m - b**S(4)*c*(S(5)*a*m + b*l) + b**S(2)*c**S(2)*(S(6)*a**S(2)*m + S(4)*a*b*l + b**S(2)*k) + c**S(6)*f - c**S(5)*(a*h + b*g) + c**S(4)*(a**S(2)*k + S(2)*a*b*j + b**S(2)*h) - c**S(3)*(a**S(3)*m + S(3)*a**S(2)*b*l + S(3)*a*b**S(2)*k + b**S(3)*j))/c**S(7) + (-b**S(7)*m + b**S(5)*c*(S(6)*a*m + b*l) - b**S(3)*c**S(2)*(S(10)*a**S(2)*m + S(5)*a*b*l + b**S(2)*k) + b*c**S(3)*(S(4)*a**S(3)*m + S(6)*a**S(2)*b*l + S(4)*a*b**S(2)*k + b**S(3)*j) + c**S(7)*e - c**S(6)*(a*g + b*f) + c**S(5)*(a**S(2)*j + S(2)*a*b*h + b**S(2)*g) - c**S(4)*(a**S(3)*l + S(3)*a**S(2)*b*k + S(3)*a*b**S(2)*j + b**S(3)*h))*log(a + b*x + c*x**S(2))/(S(2)*c**S(8)) - (b**S(8)*m - b**S(6)*c*(S(8)*a*m + b*l) + b**S(4)*c**S(2)*(S(20)*a**S(2)*m + S(7)*a*b*l + b**S(2)*k) - b**S(2)*c**S(3)*(S(16)*a**S(3)*m + S(14)*a**S(2)*b*l + S(6)*a*b**S(2)*k + b**S(3)*j) + S(2)*c**S(8)*d - c**S(7)*(S(2)*a*f + b*e) + c**S(6)*(S(2)*a**S(2)*h + S(3)*a*b*g + b**S(2)*f) - c**S(5)*(S(2)*a**S(3)*k + S(5)*a**S(2)*b*j + S(4)*a*b**S(2)*h + b**S(3)*g) + c**S(4)*(S(2)*a**S(4)*m + S(7)*a**S(3)*b*l + S(9)*a**S(2)*b**S(2)*k + S(5)*a*b**S(3)*j + b**S(4)*h))*atanh((b + S(2)*c*x)/sqrt(-S(4)*a*c + b**S(2)))/(c**S(8)*sqrt(-S(4)*a*c + b**S(2))), expand=True, _diff=True, _numerical=True)
@@ -2821,7 +2821,7 @@ def test_4():
     assert rubi_test(rubi_integrate((d*x)**(n/S(2) + S(-1))*(-a*h + c*f*x**(n/S(2)) + c*g*x**(S(3)*n/S(2)) + c*h*x**(S(2)*n))/(a + b*x**n + c*x**(S(2)*n))**(S(3)/2), x), x, -S(2)*x**(-n/S(2) + S(1))*(d*x)**(n/S(2) + S(-1))*(c*x**n*(-b*g + S(2)*c*f) + c*(-S(2)*a*g + b*f) + h*x**(n/S(2))*(-S(4)*a*c + b**S(2)))/(n*(-S(4)*a*c + b**S(2))*sqrt(a + b*x**n + c*x**(S(2)*n))), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate((g*x)**m*(a + b*x**n + c*x**(S(2)*n))**p*(a*(m + S(1)) + b*x**n*(m + n*p + n + S(1)) + c*x**(S(2)*n)*(m + S(2)*n*(p + S(1)) + S(1))), x), x, (g*x)**(m + S(1))*(a + b*x**n + c*x**(S(2)*n))**(p + S(1))/g, expand=True, _diff=True, _numerical=True)
 
-@SKIP
+
 def test_5():
 
     assert rubi_test(rubi_integrate(x**S(2)*(a*x**S(2) + b*x**S(3) + c*x**S(4)), x), x, a*x**S(5)/S(5) + b*x**S(6)/S(6) + c*x**S(7)/S(7), expand=True, _diff=True, _numerical=True)

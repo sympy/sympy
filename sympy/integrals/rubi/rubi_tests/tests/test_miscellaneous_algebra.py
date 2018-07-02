@@ -31,7 +31,7 @@ a, b, c, d, e, f, m, n, x, u , k, p, r, s, t= symbols('a b c d e f m n x u k p r
 A, B, C, D, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B C D a b c d e f g h y z m n p q u v w F',)
 
 
-@SKIP
+
 def test_1():
 
 	# difference in apart assert rubi_test(rubi_integrate(S(1)/(S(2)*sqrt(S(3))*b**(S(3)/2) - S(9)*b*x + S(9)*x**S(3)), x), x, -log(sqrt(b) - sqrt(S(3))*x)/(S(27)*b) + log(S(2)*sqrt(b) + sqrt(S(3))*x)/(S(27)*b) + sqrt(S(3))/(S(9)*sqrt(b)*(sqrt(S(3))*sqrt(b) - S(3)*x)), expand=True, _diff=True, _numerical=True)
@@ -312,7 +312,7 @@ def test_1():
 	assert rubi_test(rubi_integrate(S(1)/(a + b*x + c*(d + e*x)**S(2)), x), x, -S(2)*atanh((b + S(2)*c*d*e + S(2)*c*e**S(2)*x)/sqrt(-S(4)*a*c*e**S(2) + b**S(2) + S(4)*b*c*d*e))/sqrt(-S(4)*a*c*e**S(2) + b**S(2) + S(4)*b*c*d*e), expand=True, _diff=True, _numerical=True)
 	assert rubi_test(rubi_integrate(x**S(2)/((x**S(2) + S(-1))**S(2) + S(1)), x), x, log(x**S(2) - x*sqrt(S(2) + S(2)*sqrt(S(2))) + sqrt(S(2)))/(S(4)*sqrt(S(2) + S(2)*sqrt(S(2)))) - log(x**S(2) + x*sqrt(S(2) + S(2)*sqrt(S(2))) + sqrt(S(2)))/(S(4)*sqrt(S(2) + S(2)*sqrt(S(2)))) - sqrt(S(1)/2 + sqrt(S(2))/S(2))*atan((-S(2)*x + sqrt(S(2) + S(2)*sqrt(S(2))))/sqrt(S(-2) + S(2)*sqrt(S(2))))/S(2) + sqrt(S(1)/2 + sqrt(S(2))/S(2))*atan((S(2)*x + sqrt(S(2) + S(2)*sqrt(S(2))))/sqrt(S(-2) + S(2)*sqrt(S(2))))/S(2), expand=True, _diff=True, _numerical=True)
 
-@SKIP
+
 def test_2():
 	assert rubi_test(rubi_integrate(x**S(5)*(a + b*x**S(2))/(sqrt(-c + d*x)*sqrt(c + d*x)), x), x, b*x**S(6)*sqrt(-c + d*x)*sqrt(c + d*x)/(S(7)*d**S(2)) + S(8)*c**S(4)*sqrt(-c + d*x)*sqrt(c + d*x)*(S(7)*a*d**S(2) + S(6)*b*c**S(2))/(S(105)*d**S(8)) + S(4)*c**S(2)*x**S(2)*sqrt(-c + d*x)*sqrt(c + d*x)*(S(7)*a*d**S(2) + S(6)*b*c**S(2))/(S(105)*d**S(6)) + x**S(4)*sqrt(-c + d*x)*sqrt(c + d*x)*(S(7)*a*d**S(2) + S(6)*b*c**S(2))/(S(35)*d**S(4)), expand=True, _diff=True, _numerical=True)
 	assert rubi_test(rubi_integrate(x**S(4)*(a + b*x**S(2))/(sqrt(-c + d*x)*sqrt(c + d*x)), x), x, b*x**S(5)*sqrt(-c + d*x)*sqrt(c + d*x)/(S(6)*d**S(2)) + c**S(4)*(S(6)*a*d**S(2) + S(5)*b*c**S(2))*atanh(sqrt(-c + d*x)/sqrt(c + d*x))/(S(8)*d**S(7)) + c**S(2)*x*sqrt(-c + d*x)*sqrt(c + d*x)*(S(6)*a*d**S(2) + S(5)*b*c**S(2))/(S(16)*d**S(6)) + x**S(3)*sqrt(-c + d*x)*sqrt(c + d*x)*(S(6)*a*d**S(2) + S(5)*b*c**S(2))/(S(24)*d**S(4)), expand=True, _diff=True, _numerical=True)
@@ -1042,7 +1042,7 @@ def test_2():
 	assert rubi_test(rubi_integrate((-x**S(2) + S(1))/((-x**S(3) + S(1))**(S(2)/3)*(x**S(2) - x + S(1))), x), x, S(3)*S(2)**(S(1)/3)*log(S(2)**(S(1)/3)*(-x + S(1)) + (-x**S(3) + S(1))**(S(1)/3))/S(4) - S(2)**(S(1)/3)*log(-x**S(3) + S(2)*(-x + S(1))**S(3) + S(1))/S(4) + S(2)**(S(1)/3)*sqrt(S(3))*atan(sqrt(S(3))*(-S(2)*S(2)**(S(1)/3)*(-x + S(1))/(-x**S(3) + S(1))**(S(1)/3) + S(1))/S(3))/S(2), expand=True, _diff=True, _numerical=True)
 	assert rubi_test(rubi_integrate(x**S(2)/(sqrt(x**S(4) + S(-1))*(x**S(4) + S(1))), x), x, -atan((x**S(2) + S(1))/(x*sqrt(x**S(4) + S(-1))))/S(4) - atanh((-x**S(2) + S(1))/(x*sqrt(x**S(4) + S(-1))))/S(4), expand=True, _diff=True, _numerical=True)
 
-@SKIP
+
 def test_3():
 	assert rubi_test(rubi_integrate(sqrt(x**S(2) + S(-1))/sqrt(x**S(4) + S(-1)), x), x, sqrt(x**S(2) + S(-1))*sqrt(x**S(2) + S(1))*asinh(x)/sqrt(x**S(4) + S(-1)), expand=True, _diff=True, _numerical=True)
 	assert rubi_test(rubi_integrate(sqrt(x**S(2) + S(1))/sqrt(x**S(4) + S(-1)), x), x, -sqrt(x**S(4) + S(-1))*asin(x)/sqrt(-x**S(4) + S(1)), expand=True, _diff=True, _numerical=True) or rubi_test(rubi_integrate(sqrt(x**S(2) + S(1))/sqrt(x**S(4) + S(-1)), x), x, sqrt(x**S(2) + S(-1))*sqrt(x**S(2) + S(1))*atanh(x/sqrt(x**S(2) + S(-1)))/sqrt(x**S(4) + S(-1)), expand=True, _diff=True, _numerical=True) 
@@ -1155,7 +1155,7 @@ def test_3():
 	assert rubi_test(rubi_integrate((a + b*x + c*x**S(2))/((d + e*x)**S(3)*sqrt(x**S(2) + S(-1))), x), x, (a*(S(2)*d**S(2) + e**S(2))/S(2) - S(3)*b*d*e/S(2) + c*(d**S(2) + S(2)*e**S(2))/S(2))*atanh((d*x + e)/(sqrt(d**S(2) - e**S(2))*sqrt(x**S(2) + S(-1))))/(d**S(2) - e**S(2))**(S(5)/2) + sqrt(x**S(2) + S(-1))*(c*(d**S(3) - S(4)*d*e**S(2))/S(2) - e*(S(3)*a*d*e - b*(d**S(2) + S(2)*e**S(2)))/S(2))/(e*(d + e*x)*(d**S(2) - e**S(2))**S(2)) - sqrt(x**S(2) + S(-1))*(a*e**S(2)/S(2) - b*d*e/S(2) + c*d**S(2)/S(2))/(e*(d + e*x)**S(2)*(d**S(2) - e**S(2))), expand=True, _diff=True, _numerical=True)
 	assert rubi_test(rubi_integrate((a + b*x + c*x**S(2))/((d + e*x)**S(3)*sqrt(x + S(-1))*sqrt(x + S(1))), x), x, (-S(3)*b*d*e + d**S(2)*(S(2)*a + c) + e**S(2)*(a + S(2)*c))*atanh(sqrt(d + e)*sqrt(x + S(1))/(sqrt(d - e)*sqrt(x + S(-1))))/((d - e)**(S(5)/2)*(d + e)**(S(5)/2)) + sqrt(x + S(-1))*sqrt(x + S(1))*(b*d**S(2)*e/S(2) + b*e**S(3) + c*d**S(3)/S(2) - d*e**S(2)*(S(3)*a + S(4)*c)/S(2))/(e*(d + e*x)*(d**S(2) - e**S(2))**S(2)) - sqrt(x + S(-1))*sqrt(x + S(1))*(a*e**S(2)/S(2) - b*d*e/S(2) + c*d**S(2)/S(2))/(e*(d + e*x)**S(2)*(d**S(2) - e**S(2))), expand=True, _diff=True, _numerical=True) or rubi_test(rubi_integrate((a + b*x + c*x**S(2))/((d + e*x)**S(3)*sqrt(x + S(-1))*sqrt(x + S(1))), x), x, S(2)*c*atanh(sqrt(d + e)*sqrt(x + S(1))/(sqrt(d - e)*sqrt(x + S(-1))))/(e**S(2)*sqrt(d - e)*sqrt(d + e)) - S(3)*d*sqrt(x + S(-1))*sqrt(x + S(1))*(a*e**S(2) - b*d*e + c*d**S(2))/(S(2)*e*(d + e*x)*(d**S(2) - e**S(2))**S(2)) - S(2)*d*(-b*e + S(2)*c*d)*atanh(sqrt(d + e)*sqrt(x + S(1))/(sqrt(d - e)*sqrt(x + S(-1))))/(e**S(2)*(d - e)**(S(3)/2)*(d + e)**(S(3)/2)) + sqrt(x + S(-1))*sqrt(x + S(1))*(-b*e + S(2)*c*d)/(e*(d + e*x)*(d**S(2) - e**S(2))) - sqrt(x + S(-1))*sqrt(x + S(1))*(a*e**S(2)/S(2) - b*d*e/S(2) + c*d**S(2)/S(2))/(e*(d + e*x)**S(2)*(d**S(2) - e**S(2))) + (S(2)*d**S(2) + e**S(2))*(a*e**S(2) - b*d*e + c*d**S(2))*atanh(sqrt(d + e)*sqrt(x + S(1))/(sqrt(d - e)*sqrt(x + S(-1))))/(e**S(2)*(d - e)**(S(5)/2)*(d + e)**(S(5)/2)), expand=True, _diff=True, _numerical=True)
 
-@SKIP
+
 def test_4():
 	assert rubi_test(rubi_integrate((b + S(2)*c*x + S(3)*d*x**S(2))*(a + b*x + c*x**S(2) + d*x**S(3))**n, x), x, (a + b*x + c*x**S(2) + d*x**S(3))**(n + S(1))/(n + S(1)), expand=True, _diff=True, _numerical=True)
 	assert rubi_test(rubi_integrate((b + S(2)*c*x + S(3)*d*x**S(2))*(b*x + c*x**S(2) + d*x**S(3))**n, x), x, (b*x + c*x**S(2) + d*x**S(3))**(n + S(1))/(n + S(1)), expand=True, _diff=True, _numerical=True)
