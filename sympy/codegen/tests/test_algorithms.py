@@ -11,8 +11,8 @@ from sympy.codegen.futils import render_as_module as f_module
 from sympy.codegen.pyutils import render_as_module as py_module
 from sympy.external import import_module
 from sympy.printing.ccode import ccode
-from sympy.utilities._compilation import compile_link_import_strings
-from sympy.utilities._compilation.util import TemporaryDirectory
+from sympy.utilities._compilation import compile_link_import_strings, has_c, has_fortran
+from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
 from sympy.utilities.pytest import skip, USE_PYTEST, raises
 
 cython = import_module('cython')
@@ -25,6 +25,7 @@ def test_newtons_method():
     assert algo.has(Assignment(dx, -expr/expr.diff(x)))
 
 
+@may_xfail
 def test_newtons_method_function__ccode():
     x = sp.Symbol('x', real=True)
     expr = sp.cos(x) - x**3
@@ -32,6 +33,8 @@ def test_newtons_method_function__ccode():
 
     if not cython:
         skip("cython not installed.")
+    if not has_c():
+        skip("No C compiler found.")
 
     compile_kw = dict(std='c99')
     with TemporaryDirectory() as folder:
@@ -45,6 +48,7 @@ def test_newtons_method_function__ccode():
         assert abs(mod.py_newton(0.5) - 0.865474033102) < 1e-12
 
 
+@may_xfail
 def test_newtons_method_function__fcode():
     x = sp.Symbol('x', real=True)
     expr = sp.cos(x) - x**3
@@ -52,6 +56,8 @@ def test_newtons_method_function__fcode():
 
     if not cython:
         skip("cython not installed.")
+    if not has_fortran():
+        skip("No Fortran compiler found.")
 
     f_mod = f_module([func], 'mod_newton')
     with TemporaryDirectory() as folder:
@@ -75,6 +81,7 @@ def test_newtons_method_function__pycode():
     assert abs(res - 0.865474033102) < 1e-12
 
 
+@may_xfail
 def test_newtons_method_function__ccode_parameters():
     args = x, A, k, p = sp.symbols('x A k p')
     expr = A*sp.cos(k*x) - p*x**3
@@ -83,6 +90,8 @@ def test_newtons_method_function__ccode_parameters():
 
     func = newtons_method_function(expr, x, args, debug=use_wurlitzer)
 
+    if not has_c():
+        skip("No C compiler found.")
     if not cython:
         skip("cython not installed.")
 
@@ -105,7 +114,7 @@ def test_newtons_method_function__ccode_parameters():
         assert abs(result - 0.865474033102) < 1e-12
 
         if not use_wurlitzer:
-            skip("C-level output only tested on Python 2 when package wurlitzer is available.")
+            skip("C-level output only tested when package 'wurlitzer' is available.")
 
         out, err = out.read(), err.read()
         assert err == ''

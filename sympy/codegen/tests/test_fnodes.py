@@ -13,7 +13,7 @@ from sympy.codegen.futils import render_as_module
 from sympy.external import import_module
 from sympy.printing.fcode import fcode
 from sympy.utilities._compilation import has_fortran, compile_run_strings, compile_link_import_strings
-from sympy.utilities._compilation.util import TemporaryDirectory
+from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
 from sympy.utilities.pytest import skip
 
 cython = import_module('cython')
@@ -26,6 +26,7 @@ def test_size():
     assert fcode(sx, source_format='free') == 'size(x)'
 
 
+@may_xfail
 def test_size_assumed_shape():
     if not has_fortran():
         skip("No fortran compiler found.")
@@ -50,6 +51,7 @@ def test_size_assumed_shape():
     assert info['exit_status'] == os.EX_OK
 
 
+@may_xfail
 def test_ImpliedDoLoop():
     if not has_fortran():
         skip("No fortran compiler found.")
@@ -71,6 +73,7 @@ def test_ImpliedDoLoop():
     assert info['exit_status'] == os.EX_OK
 
 
+@may_xfail
 def test_Program():
     x = Symbol('x', real=True)
     vx = Variable.deduced(x, 42)
@@ -87,6 +90,7 @@ def test_Program():
     assert info['exit_status'] == os.EX_OK
 
 
+@may_xfail
 def test_Module():
     x = Symbol('x', real=True)
     v_x = Variable.deduced(x)
@@ -108,6 +112,7 @@ def test_Module():
     assert stderr == ''
 
 
+@may_xfail
 def test_Subroutine():
     # Code to generate the subroutine in the example from
     # http://www.fortran90.org/src/best-practices.html#arrays
@@ -174,6 +179,8 @@ def test_kind():
 def test_literal_dp():
     assert fcode(literal_dp(0), source_format='free') == '0d0'
 
+
+@may_xfail
 def test_bind_C():
     if not has_fortran():
         skip("No fortran compiler found.")

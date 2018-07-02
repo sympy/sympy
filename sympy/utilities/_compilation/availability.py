@@ -36,6 +36,7 @@ def has_c():
                     '#include <stdio.h>\n'
                     'int main(){\n'
                     'printf("hello world\\n");\n'
+                    'return 0;\n'
                     '}'
                 ))], clean=True
             )

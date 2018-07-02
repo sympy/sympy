@@ -2,8 +2,8 @@
 
 from sympy.external import import_module
 from sympy.printing.ccode import ccode
-from sympy.utilities._compilation import compile_link_import_strings
-from sympy.utilities._compilation.util import TemporaryDirectory
+from sympy.utilities._compilation import compile_link_import_strings, has_c
+from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
 from sympy.utilities.pytest import skip
 from sympy.sets import Range
 from sympy.codegen.ast import (
@@ -13,6 +13,7 @@ from sympy.codegen.ast import (
 from sympy.codegen.cnodes import void, PreIncrement
 from sympy.codegen.cutils import render_as_source_file
 
+cython = import_module('cython')
 np = import_module('numpy')
 
 def _mk_func1():
@@ -36,9 +37,14 @@ def _render_compile_import(funcdef, build_dir):
     ], build_dir=build_dir)
 
 
+@may_xfail
 def test_copying_function():
     if not np:
         skip("numpy not installed.")
+    if not has_c():
+        skip("No C compiler found.")
+    if not cython:
+        skip("Cython not found.")
 
     info = None
     with TemporaryDirectory() as folder:
