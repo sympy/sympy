@@ -1139,7 +1139,10 @@ def solve(f, *symbols, **flags):
             if fi.has(Float):
                 floats = True
                 f[i] = nsimplify(fi, rational=True)
-
+    
+    # capture any denominators before rewriting since
+    # they may disappear after the rewrite, e.g. issue 14779
+    flags['_denominators'] = _simple_dens(f[0], symbols)
     # Any embedded piecewise functions need to be brought out to the
     # top level so that the appropriate strategy gets selected.
     # However, this is necessary only if one of the piecewise
@@ -1445,7 +1448,7 @@ def _solve(f, *symbols, **flags):
             # all solutions have been checked but now we must
             # check that the solutions do not set denominators
             # in any factor to zero
-            dens = _simple_dens(f, symbols)
+            dens = flags.get('_denominators', _simple_dens(f, symbols))
             result = [s for s in result if
                 all(not checksol(den, {symbol: s}, **flags) for den in
                 dens)]
