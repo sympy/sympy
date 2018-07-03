@@ -1516,7 +1516,12 @@ def linsolve(system, *symbols):
                     be given as a sequence, too.
                 '''))
             system = list(system)
+
+            from sympy.physics.units import Quantity
+            from sympy.physics.units.util import quantity_simplify
             for i, eq in enumerate(system):
+                if eq.has(Quantity):
+                    eq = quantity_simplify(eq)
                 try:
                     # since we are checking it, we might as well take the
                     # expanded expr that it will give

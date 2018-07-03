@@ -1145,6 +1145,11 @@ def test_linsolve():
     f = Function('f')
     assert linsolve([f(x) - 5], f(x)) == FiniteSet((5,))
 
+    # Issue #14860
+    from sympy.physics.units import meter, newton, kilo
+    Eqns = [8*kilo*newton + x + y, 28*kilo*newton*meter + 3*x*meter]
+    assert linsolve(Eqns, x, y) == {(-28000*newton/3, 4000*newton/3)}
+
 
 def test_solve_decomposition():
     x = Symbol('x')
