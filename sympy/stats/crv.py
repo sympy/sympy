@@ -243,8 +243,8 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
-        integral = Integral(expr * self.pdf(var), (var, self.set), **kwargs)
-        return integral.doit() if evaluate else integral
+        integral = Integral(expr * self.pdf(var), (var, self.set))
+        return integral.doit(**kwargs) if evaluate else integral
 
     def handle_compound_rv(self, expr):
         from sympy.stats.rv import density
@@ -286,7 +286,7 @@ class ContinuousPSpace(PSpace):
     def pdf(self):
         return self.density(*self.domain.symbols)
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
         if rvs is None:
             rvs = self.values
         else:
@@ -425,7 +425,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         """
         return {self.value: self.distribution.sample()}
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
@@ -434,7 +434,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
         x = self.value.symbol
         try:
-            return self.distribution.expectation(expr, x, evaluate=False, **kwargs)
+            return self.distribution.expectation(expr, x, evaluate=evaluate, **kwargs)
         except Exception:
             return Integral(expr * self.pdf, (x, self.set), **kwargs)
 

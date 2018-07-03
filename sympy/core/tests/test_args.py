@@ -1194,14 +1194,34 @@ def test_sympy__stats__crv_types__WignerSemicircleDistribution():
     assert _test_args(WignerSemicircleDistribution(1))
 
 
+def test_sympy__stats__drv_types__GeometricDistribution():
+    from sympy.stats.drv_types import GeometricDistribution
+    assert _test_args(GeometricDistribution(.5))
+
+
+def test_sympy__stats__drv_types__LogarithmicDistribution():
+    from sympy.stats.drv_types import LogarithmicDistribution
+    assert _test_args(LogarithmicDistribution(.5))
+
+
+def test_sympy__stats__drv_types__NegativeBinomialDistribution():
+    from sympy.stats.drv_types import NegativeBinomialDistribution
+    assert _test_args(NegativeBinomialDistribution(.5, .5))
+
+
 def test_sympy__stats__drv_types__PoissonDistribution():
     from sympy.stats.drv_types import PoissonDistribution
     assert _test_args(PoissonDistribution(1))
 
 
-def test_sympy__stats__drv_types__GeometricDistribution():
-    from sympy.stats.drv_types import GeometricDistribution
-    assert _test_args(GeometricDistribution(.5))
+def test_sympy__stats__drv_types__YuleSimonDistribution():
+    from sympy.stats.drv_types import YuleSimonDistribution
+    assert _test_args(YuleSimonDistribution(.5))
+
+
+def test_sympy__stats__drv_types__ZetaDistribution():
+    from sympy.stats.drv_types import ZetaDistribution
+    assert _test_args(ZetaDistribution(1.5))
 
 
 def test_sympy__stats__joint_rv__JointDistribution():
