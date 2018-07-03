@@ -16,7 +16,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta, Mul, Indexed)
+        DiracDelta, Mul, Indexed, integrate)
 from sympy.core.relational import Relational
 from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
@@ -119,6 +119,27 @@ class ConditionalDomain(RandomDomain):
 
     def as_boolean(self):
         return And(self.fulldomain.as_boolean(), self.condition)
+
+
+class RandomDistribution(Basic):
+    def __call__(self, *args):
+        return self.pdf(*args)
+
+    def handle_compound_dist(self, expr):
+        from sympy.stats.rv import density
+        from sympy.concrete.summations import summation
+        for arg in self.args:
+            if isinstance(arg, RandomSymbol):
+                sym, dom = arg.symbol, arg.pspace.set
+                lpdf = density(arg)(sym)
+                expr = expr.replace(arg, sym)*lpdf
+                if arg.pspace.is_Continuous:
+                    expr = integrate(expr, (sym, dom))
+                elif arg.pspace.is_Discrete:
+                    if dom in (S.Integers, S.Naturals, S.Naturals0):
+                        dom = (dom.inf, dom.sup)
+                    expr = summation(expr, (sym, dom))
+        return expr
 
 
 class PSpace(Basic):

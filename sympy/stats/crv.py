@@ -12,7 +12,7 @@ from __future__ import print_function, division
 
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin,
-        RandomSymbol)
+        RandomDistribution)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
@@ -139,12 +139,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 "Set of Conditional Domain not Implemented")
 
 
-class ContinuousDistribution(Basic):
-    def __call__(self, *args):
-        return self.pdf(*args)
-
-
-class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
+class SingleContinuousDistribution(RandomDistribution, NamedArgsMixin):
     """ Continuous distribution of a single variable
 
     Serves as superclass for Normal/Exponential/UniformDistribution etc....
@@ -246,19 +241,6 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         integral = Integral(expr * self.pdf(var), (var, self.set))
         return integral.doit(**kwargs) if evaluate else integral
 
-    def handle_compound_rv(self, expr):
-        from sympy.stats.rv import density
-        from sympy.concrete.summations import summation
-        for arg in self.args:
-            if isinstance(arg, RandomSymbol):
-                sym, dom = arg.symbol, arg.pspace.set
-                lpdf = density(arg)(sym)
-                expr = expr.replace(arg, sym)*lpdf
-                if arg.pspace.is_Continuous:
-                    expr = integrate(expr, (sym, dom))
-                elif arg.pspace.is_Discrete:
-                    expr = summation(expr, (sym, dom))
-        return expr
 
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
@@ -269,7 +251,6 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
 
     def __new__(cls, pdf, set=Interval(-oo, oo)):
         return Basic.__new__(cls, pdf, set)
-
 
 class ContinuousPSpace(PSpace):
     """ Continuous Probability Space
@@ -365,7 +346,7 @@ class ContinuousPSpace(PSpace):
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
             dens = density(expr, **kwargs)
-            if not isinstance(dens, ContinuousDistribution):
+            if not isinstance(dens, RandomDistribution):
                 dens = ContinuousDistributionHandmade(dens)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)

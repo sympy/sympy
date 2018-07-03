@@ -1,9 +1,10 @@
 from __future__ import print_function, division
 
-from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
-from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta, hyper, binomial,
-                   Piecewise, floor)
-from sympy.stats.rv import _value_check
+from sympy.stats.drv import (SingleDiscreteDistribution, SingleDiscretePSpace,
+                DiscreteDistributionHandmade)
+from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log,
+                beta, hyper, binomial, Piecewise, floor, Lambda)
+from sympy.stats.rv import _value_check, RandomSymbol
 from sympy.stats import density
 import random
 
@@ -14,6 +15,12 @@ def rv(symbol, cls, *args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
+    if any([isinstance(arg, RandomSymbol) for arg in args]):
+        symbol = sympify(symbol)
+        _pdf = dist.pdf(symbol)
+        _pdf, _set = dist.handle_compound_dist(_pdf), dist.set
+        dist = DiscreteDistributionHandmade(Lambda(symbol, _pdf), _set)
+        return SingleDiscretePSpace(symbol, dist).value
     return SingleDiscretePSpace(symbol, dist).value
 
 
@@ -237,9 +244,7 @@ class PoissonDistribution(SingleDiscreteDistribution):
         _value_check(lamda > 0, "Lambda must be positive")
 
     def pdf(self, k):
-        _pdf = self.lamda**k / factorial(k) * exp(-self.lamda)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return self.lamda**k / factorial(k) * exp(-self.lamda)
 
     def sample(self):
         def search(x, y, u):

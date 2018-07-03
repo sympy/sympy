@@ -1,31 +1,25 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-                   Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq, poly,
-                   Symbol, series, factorial, And, Mul)
+                   Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
+                   series, factorial, And)
 
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
         random_symbols, PSpace, ConditionalDomain, RandomDomain,
-        ProductDomain, RandomSymbol)
+        ProductDomain, RandomDistribution)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
-from sympy.integrals.integrals import integrate
 from sympy.utilities import filldedent
 import random
 
 
-class DiscreteDistribution(Basic):
-    def __call__(self, *args):
-        return self.pdf(*args)
-
-
-class SingleDiscreteDistribution(Basic, NamedArgsMixin):
+class SingleDiscreteDistribution(RandomDistribution, NamedArgsMixin):
     """ Discrete distribution of a single variable
 
     Serves as superclass for PoissonDistribution etc....
@@ -153,23 +147,6 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
             return Sum(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
 
-    def handle_compound_rv(self, expr):
-        from sympy.stats.rv import density
-        from sympy.concrete.summations import summation
-        for arg in self.args:
-            if isinstance(arg, RandomSymbol):
-                sym, dom = arg.symbol, arg.pspace.set
-                lpdf = density(arg)(sym)
-                expr = expr.replace(arg, sym)*lpdf
-                if arg.pspace.is_Continuous:
-                    expr = integrate(expr, (sym, dom))
-                elif arg.pspace.is_Discrete:
-                    expr = summation(expr, (sym, dom))
-        return expr
-
-    def __call__(self, *args):
-        return self.pdf(*args)
-
 
 class DiscreteDistributionHandmade(SingleDiscreteDistribution):
     _argnames = ('pdf',)
@@ -243,7 +220,7 @@ class DiscretePSpace(PSpace):
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
             dens = density(expr)
-            if not isinstance(dens, DiscreteDistribution):
+            if not isinstance(dens, RandomDistribution):
                 dens = DiscreteDistributionHandmade(dens)
             z = Dummy('z', real = True)
             space = SingleDiscretePSpace(z, dens)

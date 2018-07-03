@@ -818,7 +818,7 @@ def test_sympy__stats__drv__SingleDiscreteDistribution():
     pass
 
 @SKIP("abstract class")
-def test_sympy__stats__drv__DiscreteDistribution():
+def test_sympy__stats__rv__RandomDistribution():
     pass
 
 @SKIP("abstract class")
@@ -989,10 +989,6 @@ def test_sympy__stats__frv__ProductFinitePSpace():
 
 @SKIP("abstract class")
 def test_sympy__stats__frv__SingleFiniteDistribution():
-    pass
-
-@SKIP("abstract class")
-def test_sympy__stats__crv__ContinuousDistribution():
     pass
 
 

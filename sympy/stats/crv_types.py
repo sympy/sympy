@@ -54,7 +54,7 @@ from sympy import beta as beta_fn
 from sympy import cos, sin, exp, besseli, besselj
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
-from sympy.stats.rv import _value_check
+from sympy.stats.rv import _value_check, RandomSymbol
 from sympy.matrices import MatrixBase
 from sympy.stats.joint_rv_types import MultivariateNormalDistribution, multivariate_rv
 from sympy.external import import_module
@@ -143,6 +143,12 @@ def rv(symbol, cls, args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
+    if any([isinstance(arg, RandomSymbol) for arg in args]):
+        symbol = sympify(symbol)
+        _pdf = dist.pdf(symbol)
+        _pdf, _set = dist.handle_compound_dist(_pdf), dist.set
+        dist = ContinuousDistributionHandmade(Lambda(symbol, _pdf), _set)
+        return SingleContinuousPSpace(symbol, dist).value
     return SingleContinuousPSpace(symbol, dist).value
 
 ########################################
