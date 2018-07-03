@@ -40,11 +40,18 @@ def test_ccode_sqrt():
 
 
 def test_ccode_Pow():
-    assert ccode(x**3) == "pow(x, 3)"
-    assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
+    assert ccode(x**2) == "(x*x)"
+    assert ccode(x**3) == "(x*x*x)"
+    assert ccode(x**4) == "((x*x)*(x*x))"
+    assert ccode(x**5) == "pow(x, 5)"
+    assert ccode(x**3.5) == "pow(x, 3.5)"
+    assert ccode(x**(y**2)) == "pow(x, (y*y))"
+    assert ccode(x**(y**5)) == "pow(x, pow(y, 5))"
     g = implemented_function('g', Lambda(x, 2*x))
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2) + y)"
+        "pow(3.5*2*x, -x + pow(y, x))/((x*x) + y)"
+    assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**5 + y)) == \
+        "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 5) + y)"
     assert ccode(x**-1.0) == '1.0/x'
     assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0/3.0)'
     assert ccode(x**Rational(2, 3), type_aliases={real: float80}) == 'powl(x, 2.0L/3.0L)'
@@ -174,20 +181,21 @@ def test_ccode_Relational():
 
 
 def test_ccode_Piecewise():
+    #Exponent as multiplication
     expr = Piecewise((x, x < 1), (x**2, True))
     assert ccode(expr) == (
             "((x < 1) ? (\n"
             "   x\n"
             ")\n"
             ": (\n"
-            "   pow(x, 2)\n"
+            "   (x*x)\n"
             "))")
     assert ccode(expr, assign_to="c") == (
             "if (x < 1) {\n"
             "   c = x;\n"
             "}\n"
             "else {\n"
-            "   c = pow(x, 2);\n"
+            "   c = (x*x);\n"
             "}")
     expr = Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True))
     assert ccode(expr) == (
@@ -198,7 +206,7 @@ def test_ccode_Piecewise():
             "   x + 1\n"
             ")\n"
             ": (\n"
-            "   pow(x, 2)\n"
+            "   (x*x)\n"
             ")))")
     assert ccode(expr, assign_to='c') == (
             "if (x < 1) {\n"
@@ -208,10 +216,51 @@ def test_ccode_Piecewise():
             "   c = x + 1;\n"
             "}\n"
             "else {\n"
-            "   c = pow(x, 2);\n"
+            "   c = (x*x);\n"
             "}")
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
+    raises(ValueError, lambda: ccode(expr))
+
+    #Exponent as pow
+    expr = Piecewise((x, x < 1), (x**5, True))
+    assert ccode(expr) == (
+            "((x < 1) ? (\n"
+            "   x\n"
+            ")\n"
+            ": (\n"
+            "   pow(x, 5)\n"
+            "))")
+    assert ccode(expr, assign_to="c") == (
+            "if (x < 1) {\n"
+            "   c = x;\n"
+            "}\n"
+            "else {\n"
+            "   c = pow(x, 5);\n"
+            "}")
+    expr = Piecewise((x, x < 1), (x + 1, x < 2), (x**5, True))
+    assert ccode(expr) == (
+            "((x < 1) ? (\n"
+            "   x\n"
+            ")\n"
+            ": ((x < 2) ? (\n"
+            "   x + 1\n"
+            ")\n"
+            ": (\n"
+            "   pow(x, 5)\n"
+            ")))")
+    assert ccode(expr, assign_to='c') == (
+            "if (x < 1) {\n"
+            "   c = x;\n"
+            "}\n"
+            "else if (x < 2) {\n"
+            "   c = x + 1;\n"
+            "}\n"
+            "else {\n"
+            "   c = pow(x, 5);\n"
+            "}")
+    # Check that Piecewise without a True (default) condition error
+    expr = Piecewise((x, x < 1), (x**5, x > 1), (sin(x), x > 0))
     raises(ValueError, lambda: ccode(expr))
 
 
@@ -228,6 +277,7 @@ def test_ccode_sinc():
 
 
 def test_ccode_Piecewise_deep():
+    #Exponent as multiplication
     p = ccode(2*Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True)))
     assert p == (
             "2*((x < 1) ? (\n"
@@ -237,24 +287,104 @@ def test_ccode_Piecewise_deep():
             "   x + 1\n"
             ")\n"
             ": (\n"
-            "   pow(x, 2)\n"
+            "   (x*x)\n"
             ")))")
     expr = x*y*z + x**2 + y**2 + Piecewise((0, x < 0.5), (1, True)) + cos(z) - 1
     assert ccode(expr) == (
-            "pow(x, 2) + x*y*z + pow(y, 2) + ((x < 0.5) ? (\n"
+            "(x*x) + x*y*z + (y*y) + ((x < 0.5) ? (\n"
             "   0\n"
             ")\n"
             ": (\n"
             "   1\n"
             ")) + cos(z) - 1")
     assert ccode(expr, assign_to='c') == (
-            "c = pow(x, 2) + x*y*z + pow(y, 2) + ((x < 0.5) ? (\n"
+            "c = (x*x) + x*y*z + (y*y) + ((x < 0.5) ? (\n"
+            "   0\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            ")) + cos(z) - 1;")
+    p = ccode(2*Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True)))
+    assert p == (
+            "2*((x < 1) ? (\n"
+            "   x\n"
+            ")\n"
+            ": ((x < 2) ? (\n"
+            "   x + 1\n"
+            ")\n"
+            ": (\n"
+            "   (x*x)\n"
+            ")))")
+    expr = x*y*z + x**2 + y**2 + Piecewise((0, x < 0.5), (1, True)) + cos(z) - 1
+    assert ccode(expr) == (
+            "(x*x) + x*y*z + (y*y) + ((x < 0.5) ? (\n"
+            "   0\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            ")) + cos(z) - 1")
+    assert ccode(expr, assign_to='c') == (
+            "c = (x*x) + x*y*z + (y*y) + ((x < 0.5) ? (\n"
             "   0\n"
             ")\n"
             ": (\n"
             "   1\n"
             ")) + cos(z) - 1;")
 
+    #Exponent as pow
+    p = ccode(2*Piecewise((x, x < 1), (x + 1, x < 2), (x**5, True)))
+    assert p == (
+            "2*((x < 1) ? (\n"
+            "   x\n"
+            ")\n"
+            ": ((x < 2) ? (\n"
+            "   x + 1\n"
+            ")\n"
+            ": (\n"
+            "   pow(x, 5)\n"
+            ")))")
+    expr = x*y*z + x**5 + y**5 + Piecewise((0, x < 0.5), (1, True)) + cos(z) - 1
+    assert ccode(expr) == (
+            "pow(x, 5) + x*y*z + pow(y, 5) + ((x < 0.5) ? (\n"
+            "   0\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            ")) + cos(z) - 1")
+    assert ccode(expr, assign_to='c') == (
+            "c = pow(x, 5) + x*y*z + pow(y, 5) + ((x < 0.5) ? (\n"
+            "   0\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            ")) + cos(z) - 1;")
+            
+    p = ccode(2*Piecewise((x, x < 1), (x + 1, x < 2), (x**5, True)))
+    assert p == (
+            "2*((x < 1) ? (\n"
+            "   x\n"
+            ")\n"
+            ": ((x < 2) ? (\n"
+            "   x + 1\n"
+            ")\n"
+            ": (\n"
+            "   pow(x, 5)\n"
+            ")))")
+    expr = x*y*z + x**5 + y**5 + Piecewise((0, x < 0.5), (1, True)) + cos(z) - 1
+    assert ccode(expr) == (
+            "pow(x, 5) + x*y*z + pow(y, 5) + ((x < 0.5) ? (\n"
+            "   0\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            ")) + cos(z) - 1")
+    assert ccode(expr, assign_to='c') == (
+            "c = pow(x, 5) + x*y*z + pow(y, 5) + ((x < 0.5) ? (\n"
+            "   0\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            ")) + cos(z) - 1;")
 
 def test_ccode_ITE():
     expr = ITE(x < 1, y, z)
@@ -533,15 +663,18 @@ def test_ccode_reserved_words():
     x, y = symbols('x, if')
     with raises(ValueError):
         ccode(y**2, error_on_reserved=True, standard='C99')
-    assert ccode(y**2) == 'pow(if_, 2)'
-    assert ccode(x * y**2, dereference=[y]) == 'pow((*if_), 2)*x'
-    assert ccode(y**2, reserved_word_suffix='_unreserved') == 'pow(if_unreserved, 2)'
+    assert ccode(y**2) == '(if_*if_)'
+    assert ccode(y**5) == 'pow(if_, 5)'
+    assert ccode(x * y**2, dereference=[y]) == '((*if_)*(*if_))*x'
+    assert ccode(x * y**5, dereference=[y]) == 'pow((*if_), 5)*x'
+    assert ccode(y**2, reserved_word_suffix='_unreserved') == '(if_unreserved*if_unreserved)'
+    assert ccode(y**5, reserved_word_suffix='_unreserved') == 'pow(if_unreserved, 5)'
 
 
 def test_ccode_sign():
     expr1, ref1 = sign(x) * y, 'y*(((x) > 0) - ((x) < 0))'
     expr2, ref2 = sign(cos(x)), '(((cos(x)) > 0) - ((cos(x)) < 0))'
-    expr3, ref3 = sign(2 * x + x**2) * x + x**2, 'pow(x, 2) + x*(((pow(x, 2) + 2*x) > 0) - ((pow(x, 2) + 2*x) < 0))'
+    expr3, ref3 = sign(2 * x + x**2) * x + x**2, '(x*x) + x*((((x*x) + 2*x) > 0) - (((x*x) + 2*x) < 0))'
     assert ccode(expr1) == ref1
     assert ccode(expr1, 'z') == 'z = %s;' % ref1
     assert ccode(expr2) == ref2
@@ -599,7 +732,8 @@ def test_C99CodePrinter():
     assert C99CodePrinter().doprint(Cbrt(x)) == 'cbrt(x)'  # note Cbrt due to cbrt already taken.
     assert C99CodePrinter().doprint(hypot(x, y)) == 'hypot(x, y)'
     assert C99CodePrinter().doprint(loggamma(x)) == 'lgamma(x)'
-    assert C99CodePrinter().doprint(Max(x, 3, x**2)) == 'fmax(3, fmax(x, pow(x, 2)))'
+    assert C99CodePrinter().doprint(Max(x, 3, x**2)) == 'fmax(3, fmax(x, (x*x)))'
+    assert C99CodePrinter().doprint(Max(x, 3, x**5)) == 'fmax(3, fmax(x, pow(x, 5)))'
     assert C99CodePrinter().doprint(Min(x, 3)) == 'fmin(3, x)'
     c99printer = C99CodePrinter()
     assert c99printer.language == 'C'
@@ -642,8 +776,8 @@ def test_C99CodePrinter__precision():
         check(log1p(x), 'log1p{s}(x)')
         check(2**x, 'pow{s}(2, x)')
         check(2.0**x, 'pow{s}(2.0{S}, x)')
-        check(x**3, 'pow{s}(x, 3)')
-        check(x**4.0, 'pow{s}(x, 4.0{S})')
+        check(x**5, 'pow{s}(x, 5)')
+        check(x**6.0, 'pow{s}(x, 6.0{S})')
         check(sqrt(3+x), 'sqrt{s}(x + 3)')
         check(Cbrt(x-2.0), 'cbrt{s}(x - 2.0{S})')
         check(hypot(x, y), 'hypot{s}(x, y)')
@@ -669,7 +803,7 @@ def test_C99CodePrinter__precision():
         check(ceiling(x + 2.), "ceil{s}(x + 2.0{S})")
         check(floor(x + 2.), "floor{s}(x + 2.0{S})")
         check(fma(x, y, -z), 'fma{s}(x, y, -z)')
-        check(Max(x, 8.0, x**4.0), 'fmax{s}(8.0{S}, fmax{s}(x, pow{s}(x, 4.0{S})))')
+        check(Max(x, 8.0, x**5.0), 'fmax{s}(8.0{S}, fmax{s}(x, pow{s}(x, 5.0{S})))')
         check(Min(x, 2.0), 'fmin{s}(2.0{S}, x)')
 
 

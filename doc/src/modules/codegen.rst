@@ -95,10 +95,10 @@ Here is a simple example of printing a C version of a SymPy expression::
     ────────
       2⋅r
     >>> ccode(expr)
-    -1.0/2.0*Z*pow(e, 2)*k/r
+    -1.0/2.0*Z*(e*e)*k/r
     >>> from sympy.codegen.ast import real, float80
     >>> ccode(expr, assign_to="E", type_aliases={real: float80})
-    E = -1.0L/2.0L*Z*powl(e, 2)*k/r;
+    E = -1.0L/2.0L*Z*(e*e)*k/r;
 
 To generate code with some math functions provided by e.g. the C99 standard we need
 to import functions from :mod:`sympy.codegen.cfunctions`::
@@ -196,7 +196,7 @@ how it works::
     >>> print(jscode(expr, assign_to="H_is"))
     H_is = I*S*gamma_1*gamma_2*k*(3*Math.pow(Math.cos(beta), 2) - 1)/Math.pow(r, 3);
     >>> print(ccode(expr, assign_to="H_is", standard='C89'))
-    H_is = I*S*gamma_1*gamma_2*k*(3*pow(cos(beta), 2) - 1)/pow(r, 3);
+    H_is = I*S*gamma_1*gamma_2*k*(3*(cos(beta)*cos(beta)) - 1)/(r*r*r);
     >>> print(fcode(expr, assign_to="H_is"))
           H_is = I*S*gamma_1*gamma_2*k*(3*cos(beta)**2 - 1)/r**3
     >>> print(julia_code(expr, assign_to="H_is"))
