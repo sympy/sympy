@@ -1754,7 +1754,8 @@ def test_exponential_real():
     e8 = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
     e9 = -9*exp(-2*x + 5) + 4*exp(3*x + 1)
 
-    assert solveset(e1, x, S.Reals) == FiniteSet(-3*log(2)/(-2*log(3) + log(2)))
+    assert solveset(e1, x, S.Reals) == FiniteSet(
+        -3*log(2)/(-2*log(3) + log(2)))
     assert solveset(e2, x, S.Reals) == FiniteSet(4/S(15))
     assert solveset(e3, x, S.Reals) == S.EmptySet
     assert solveset(e4, x, S.Reals) == FiniteSet(0)
@@ -1765,8 +1766,8 @@ def test_exponential_real():
     assert solveset(e8, x, S.Reals) == FiniteSet(2)
     assert solveset(e9, x, S.Reals) == FiniteSet(log(9*exp(4)/4)/5)
 
-    assert solveset_real(-9*exp(-2*x + 5) + 2**(x + 1), x) == \
-        FiniteSet(-((-5 - 2*log(3) + log(2))/(log(2) + 2)))
+    assert solveset_real(-9*exp(-2*x + 5) + 2**(x + 1), x) == FiniteSet(
+        -((-5 - 2*log(3) + log(2))/(log(2) + 2)))
     assert solveset_real(4**(x/2) - 2**(x/3), x) == FiniteSet(0)
     b = sqrt(6)*sqrt(log(2))/sqrt(log(5))
     assert solveset_real(5**(x/2) - 2**(3/x), x) == FiniteSet(-b, b)
@@ -1774,11 +1775,11 @@ def test_exponential_real():
     # coverage test
     C1, C2 = symbols('C1 C2')
     f = Function('f')
-    assert solveset_real(C1 + C2/x**2 - exp(-f(x)), f(x)) == \
-        Intersection(S.Reals, FiniteSet(-log(C1 + C2/x**2)))
+    assert solveset_real(C1 + C2/x**2 - exp(-f(x)), f(x)) == Intersection(
+        S.Reals, FiniteSet(-log(C1 + C2/x**2)))
     y = symbols('y', positive=True)
-    assert solveset_real(x**2 - y**2/exp(x), y) == \
-        Intersection(S.Reals, FiniteSet(-sqrt(x**2*exp(x)), sqrt(x**2*exp(x))))
+    assert solveset_real(x**2 - y**2/exp(x), y) == Intersection(
+        S.Reals, FiniteSet(-sqrt(x**2*exp(x)), sqrt(x**2*exp(x))))
     p = Symbol('p', positive=True)
     assert solveset_real((1/p + 1)**(p + 1), p) == EmptySet()
 
@@ -1789,23 +1790,29 @@ def test_exponential_complex():
     from sympy import Dummy
     n = Dummy('n')
 
-    assert solveset_complex(2**x + 4**x, x) == \
-        imageset(Lambda(n, I*(2*n*pi + pi)/log(2)), S.Integers)
-    assert solveset_complex(x**z*y**z - 2, z) == \
-        FiniteSet(log(2)/(log(x) + log(y)))
-    assert solveset_complex(4**(x/2) - 2**(x/3), x) == \
-        imageset(Lambda(n, 3*n*I*pi/log(2)), S.Integers)
-    assert solveset(2**x + 32, x) == \
-        imageset(Lambda(n, (I*(2*n*pi + pi) + 5*log(2))/log(2)), S.Integers)
-    assert solveset(2**x + 4**x + 8**x, x) == \
-        Union(imageset(Lambda(n, I*(2*n*pi - 2*pi/3)/log(2)), S.Integers),
-              imageset(Lambda(n, I*(2*n*pi + 2*pi/3)/log(2)), S.Integers))
-    assert solveset(4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3), x) == \
-        imageset(Lambda(n, (2*n*I*pi - 4*log(2) + 2*log(3))/(-2*log(2) + log(3))),
-                 S.Integers)
-    assert solveset_complex((2**exp(y**2/x) + 2)/(x**2 + 15), y) == \
-        FiniteSet(-sqrt(x)*sqrt(-log(log(2)) + log(log(2) + 2*n*I*pi)),
-                  sqrt(x)*sqrt(-log(log(2)) + log(log(2) + 2*n*I*pi)))
+    assert solveset_complex(2**x + 4**x, x) == imageset(
+        Lambda(n, I*(2*n*pi + pi)/log(2)), S.Integers)
+    assert solveset_complex(x**z*y**z - 2, z) == FiniteSet(
+        log(2)/(log(x) + log(y)))
+    assert solveset_complex(4**(x/2) - 2**(x/3), x) == imageset(
+        Lambda(n, 3*n*I*pi/log(2)), S.Integers)
+    assert solveset(2**x + 32, x) == imageset(
+        Lambda(n, (I*(2*n*pi + pi) + 5*log(2))/log(2)), S.Integers)
+
+    eq = (2**exp(y**2/x) + 2)/(x**2 + 15)
+    a = sqrt(x)*sqrt(-log(log(2)) + log(log(2) + 2*n*I*pi))
+    assert solveset_complex(eq, y) == FiniteSet(-a, a)
+
+    union1 = imageset(Lambda(n, I*(2*n*pi - 2*pi/3)/log(2)), S.Integers)
+    union2 = imageset(Lambda(n, I*(2*n*pi + 2*pi/3)/log(2)), S.Integers)
+    assert solveset(2**x + 4**x + 8**x, x) == Union(union1, union2)
+
+    eq = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
+    res = solveset(eq, x)
+    num = 2*n*I*pi - 4*log(2) + 2*log(3)
+    den = -2*log(2) + log(3)
+    ans = imageset(Lambda(n, num/den), S.Integers)
+    assert res == ans
 
 
 def test_expo_conditionset():
@@ -1816,11 +1823,14 @@ def test_expo_conditionset():
     f3 = 2**x - exp(x) - 3
     f4 = log(x) - exp(x)
 
-    assert solveset(f1, x, S.Reals) == \
-        ConditionSet(x, Eq((exp(x) + 1)**x - 2, 0), S.Reals)
-    assert solveset(f2, x, S.Reals) == ConditionSet(x, Eq(x*(x + 2)**y - 3, 0), S.Reals)
-    assert solveset(f3, x, S.Reals) == ConditionSet(x, Eq(2**x - exp(x) - 3, 0), S.Reals)
-    assert solveset(f4, x, S.Reals) == ConditionSet(x, Eq(-exp(x) + log(x), 0), S.Reals)
+    assert solveset(f1, x, S.Reals) == ConditionSet(
+        x, Eq((exp(x) + 1)**x - 2, 0), S.Reals)
+    assert solveset(f2, x, S.Reals) == ConditionSet(
+        x, Eq(x*(x + 2)**y - 3, 0), S.Reals)
+    assert solveset(f3, x, S.Reals) == ConditionSet(
+        x, Eq(2**x - exp(x) - 3, 0), S.Reals)
+    assert solveset(f4, x, S.Reals) == ConditionSet(
+        x, Eq(-exp(x) + log(x), 0), S.Reals)
 
 
 def test_exponential_symbols():
@@ -1879,8 +1889,8 @@ def test_solve_expo():
 # logarithmic tests
 @XFAIL
 def test_uselogcombine_1():
-    assert solveset_real(log(x - 3) + log(x + 3), x) == \
-        FiniteSet(sqrt(10))
+    assert solveset_real(log(x - 3) + log(x + 3), x) == FiniteSet(
+            sqrt(10))
     assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
     assert solveset_real(log(x + 3) + log(1 + 3/x) - 3) == FiniteSet(
         -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
