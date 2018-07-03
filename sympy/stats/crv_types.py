@@ -157,9 +157,7 @@ class ArcsinDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
     def pdf(self, x):
-        _pdf = 1/(pi*sqrt((x - self.a)*(self.b - x)))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return 1/(pi*sqrt((x - self.a)*(self.b - x)))
 
     def _cdf(self, x):
         from sympy import asin
@@ -234,11 +232,8 @@ class BeniniDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         alpha, beta, sigma = self.alpha, self.beta, self.sigma
-        _pdf = (exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2)
+        return (exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2)
                *(alpha/x + 2*beta*log(x/sigma)/x))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
-
 
 def Benini(name, alpha, beta, sigma):
     r"""
@@ -312,9 +307,8 @@ class BetaDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         alpha, beta = self.alpha, self.beta
-        _pdf = x**(alpha - 1) * (1 - x)**(beta - 1) / beta_fn(alpha, beta)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return x**(alpha - 1) * (1 - x)**(beta - 1) / beta_fn(alpha, beta)
+
 
     def sample(self):
         return random.betavariate(self.alpha, self.beta)
@@ -390,10 +384,7 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         alpha, beta = self.alpha, self.beta
-        _pdf = x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
-
+        return x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
 
 def BetaPrime(name, alpha, beta):
     r"""
@@ -453,10 +444,7 @@ class CauchyDistribution(SingleContinuousDistribution):
     _argnames = ('x0', 'gamma')
 
     def pdf(self, x):
-        _pdf = 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
-
+        return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
 def Cauchy(name, x0, gamma):
     r"""
@@ -513,9 +501,7 @@ class ChiDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     def pdf(self, x):
-        _pdf = 2**(1 - self.k/2)*x**(self.k - 1)*exp(-x**2/2)/gamma(self.k/2)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return 2**(1 - self.k/2)*x**(self.k - 1)*exp(-x**2/2)/gamma(self.k/2)
 
     def _characteristic_function(self, t):
         k = self.k
@@ -580,10 +566,7 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         k, l = self.k, self.l
-        _pdf = exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
-
+        return exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
 
 def ChiNoncentral(name, k, l):
     r"""
@@ -643,9 +626,7 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         k = self.k
-        _pdf = 1/(2**(k/2)*gamma(k/2))*x**(k/2 - 1)*exp(-x/2)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return 1/(2**(k/2)*gamma(k/2))*x**(k/2 - 1)*exp(-x/2)
 
     def _cdf(self, x):
         k = self.k
@@ -717,9 +698,7 @@ class DagumDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         p, a, b = self.p, self.a, self.b
-        _pdf = a*p/x*((x/b)**(a*p)/(((x/b)**a + 1)**(p + 1)))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return a*p/x*((x/b)**(a*p)/(((x/b)**a + 1)**(p + 1)))
 
     def _cdf(self, x):
         p, a, b = self.p, self.a, self.b
@@ -863,9 +842,7 @@ class ExponentialDistribution(SingleContinuousDistribution):
         _value_check(rate > 0, "Rate must be positive.")
 
     def pdf(self, x):
-        _pdf = self.rate * exp(-self.rate*x)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return  self.rate * exp(-self.rate*x)
 
     def sample(self):
         return random.expovariate(self.rate)
@@ -959,10 +936,8 @@ class FDistributionDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
-        _pdf = (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
+        return (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
                / (x * beta_fn(d1/2, d2/2)))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
 
 
 def FDistribution(name, d1, d2):
@@ -1029,10 +1004,8 @@ class FisherZDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
-        _pdf = (2*d1**(d1/2)*d2**(d2/2) / beta_fn(d1/2, d2/2) *
+        return (2*d1**(d1/2)*d2**(d2/2) / beta_fn(d1/2, d2/2) *
                exp(d1*x) / (d1*exp(2*x)+d2)**((d1+d2)/2))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
 
 def FisherZ(name, d1, d2):
     r"""
@@ -1105,9 +1078,7 @@ class FrechetDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, s, m = self.a, self.s, self.m
-        _pdf = a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)**(-a))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)**(-a))
 
     def _cdf(self, x):
         a, s, m = self.a, self.s, self.m
@@ -1181,9 +1152,7 @@ class GammaDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         k, theta = self.k, self.theta
-        _pdf = x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
 
     def sample(self):
         return random.gammavariate(self.k, self.theta)
@@ -1282,9 +1251,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, b = self.a, self.b
-        _pdf = b**a/gamma(a) * x**(-a-1) * exp(-b/x)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return b**a/gamma(a) * x**(-a-1) * exp(-b/x)
 
     def _cdf(self, x):
         a, b = self.a, self.b
@@ -1366,9 +1333,7 @@ class GumbelDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         beta, mu = self.beta, self.mu
-        _pdf = (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
 
 def Gumbel(name, beta, mu):
     r"""
@@ -1427,9 +1392,7 @@ class GompertzDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         eta, b = self.eta, self.b
-        _pdf = b*eta*exp(b*x)*exp(eta)*exp(-eta*exp(b*x))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return b*eta*exp(b*x)*exp(eta)*exp(-eta*exp(b*x))
 
 
 def Gompertz(name, b, eta):
@@ -1493,9 +1456,7 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, b = self.a, self.b
-        _pdf = a * b * x**(a-1) * (1-x**a)**(b-1)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return a * b * x**(a-1) * (1-x**a)**(b-1)
 
     def _cdf(self, x):
         a, b = self.a, self.b
@@ -1567,9 +1528,7 @@ class LaplaceDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         mu, b = self.mu, self.b
-        _pdf = 1/(2*b)*exp(-Abs(x - mu)/b)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return 1/(2*b)*exp(-Abs(x - mu)/b)
 
     def _cdf(self, x):
         mu, b = self.mu, self.b
@@ -1636,9 +1595,7 @@ class LogisticDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         mu, s = self.mu, self.s
-        _pdf = exp(-(x - mu)/s)/(s*(1 + exp(-(x - mu)/s))**2)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return exp(-(x - mu)/s)/(s*(1 + exp(-(x - mu)/s))**2)
 
     def _cdf(self, x):
         mu, s = self.mu, self.s
@@ -1705,9 +1662,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         mean, std = self.mean, self.std
-        _pdf = exp(-(log(x) - mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return exp(-(log(x) - mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
 
     def sample(self):
         return random.lognormvariate(self.mean, self.std)
@@ -1793,9 +1748,7 @@ class MaxwellDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a = self.a
-        _pdf = sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
 
 
 def Maxwell(name, a):
@@ -1865,12 +1818,9 @@ class NakagamiDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         mu, omega = self.mu, self.omega
-        _pdf = Piecewise(
+        return Piecewise(
                     (lowergamma(mu, (mu/omega)*x**2)/gamma(mu), x > 0),
                     (S.Zero, True))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
-
 
 def Nakagami(name, mu, omega):
     r"""
@@ -1952,9 +1902,7 @@ class NormalDistribution(SingleContinuousDistribution):
         _value_check(std > 0, "Standard deviation must be positive")
 
     def pdf(self, x):
-        _pdf = exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
     def sample(self):
         return random.normalvariate(self.mean, self.std)
@@ -2071,9 +2019,7 @@ class ParetoDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         xm, alpha = self.xm, self.alpha
-        _pdf = alpha * xm**alpha / x**(alpha + 1)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return alpha * xm**alpha / x**(alpha + 1)
 
     def sample(self):
         return random.paretovariate(self.alpha)
@@ -2147,11 +2093,9 @@ class QuadraticUDistribution(SingleContinuousDistribution):
         a, b = self.a, self.b
         alpha = 12 / (b-a)**3
         beta = (a+b) / 2
-        _pdf = Piecewise(
+        return Piecewise(
                   (alpha * (x-beta)**2, And(a<=x, x<=b)),
                   (S.Zero, True))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
 
 
 def QuadraticU(name, a, b):
@@ -2225,11 +2169,9 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         mu, s = self.mu, self.s
-        _pdf = Piecewise(
+        return Piecewise(
                 ((1+cos(pi*(x-mu)/s)) / (2*s), And(mu-s<=x, x<=mu+s)),
                 (S.Zero, True))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
 
     def _characteristic_function(self, t):
         mu, s = self.mu, self.s
@@ -2301,9 +2243,7 @@ class RayleighDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         sigma = self.sigma
-        _pdf = x/sigma**2*exp(-x**2/(2*sigma**2))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return x/sigma**2*exp(-x**2/(2*sigma**2))
 
     def _characteristic_function(self, t):
         sigma = self.sigma
@@ -2376,10 +2316,7 @@ class ShiftedGompertzDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         b, eta = self.b, self.eta
-        _pdf = b*exp(-b*x)*exp(-eta*exp(-b*x))*(1+eta*(1-exp(-b*x)))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
-
+        return b*exp(-b*x)*exp(-eta*exp(-b*x))*(1+eta*(1-exp(-b*x)))
 
 def ShiftedGompertz(name, b, eta):
     r"""
@@ -2434,9 +2371,7 @@ class StudentTDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         nu = self.nu
-        _pdf = 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
 
     def _cdf(self, x):
         nu = self.nu
@@ -2513,14 +2448,11 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, b, c, d = self.a, self.b, self.c, self.d
-        _pdf = Piecewise(
+        return Piecewise(
             (2*(x-a) / ((b-a)*(d+c-a-b)), And(a <= x, x < b)),
             (2 / (d+c-a-b), And(b <= x, x < c)),
             (2*(d-x) / ((d-c)*(d+c-a-b)), And(c <= x, x <= d)),
             (S.Zero, True))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
-
 
 def Trapezoidal(name, a, b, c, d):
     r"""
@@ -2595,14 +2527,11 @@ class TriangularDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, b, c = self.a, self.b, self.c
-        _pdf = Piecewise(
+        return Piecewise(
             (2*(x - a)/((b - a)*(c - a)), And(a <= x, x < c)),
             (2/(b - a), Eq(x, c)),
             (2*(b - x)/((b - a)*(b - c)), And(c < x, x <= b)),
             (S.Zero, True))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
-
 
 def Triangular(name, a, b, c):
     r"""
@@ -2677,13 +2606,10 @@ class UniformDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         left, right = self.left, self.right
-        _pdf = Piecewise(
+        return Piecewise(
             (S.One/(right - left), And(left <= x, x <= right)),
             (S.Zero, True)
         )
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
-
 
     def _cdf(self, x):
         left, right = self.left, self.right
@@ -2782,10 +2708,8 @@ class UniformSumDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         n = self.n
         k = Dummy("k")
-        _pdf = 1/factorial(
+        return 1/factorial(
             n - 1)*Sum((-1)**k*binomial(n, k)*(x - k)**(n - 1), (k, 0, floor(x)))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
 
     def _cdf(self, x):
         n = self.n
@@ -2878,10 +2802,7 @@ class VonMisesDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         mu, k = self.mu, self.k
-        _pdf = exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
-
+        return exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
 
 def VonMises(name, mu, k):
     r"""
@@ -2950,9 +2871,7 @@ class WeibullDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         alpha, beta = self.alpha, self.beta
-        _pdf = beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
 
     def sample(self):
         return random.weibullvariate(self.alpha, self.beta)
@@ -3026,9 +2945,7 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         R = self.R
-        _pdf = 2/(pi*R**2)*sqrt(R**2 - x**2)
-        _pdf = self.handle_compound_rv(_pdf)
-        return _pdf
+        return 2/(pi*R**2)*sqrt(R**2 - x**2)
 
     def _characteristic_function(self, t):
         return Piecewise((2 * besselj(1, self.R*t) / (self.R*t), Ne(t, 0)),
