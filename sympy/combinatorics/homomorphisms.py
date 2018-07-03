@@ -507,7 +507,7 @@ def group_isomorphism(G, H, isomorphism=False):
 
     if not isomorphism:
         n = g_order
-        if igcd(n, totient(n)) == 1:
+        if (g_order == h_order) and (igcd(n, totient(n))) == 1:
             return True
 
     # Match the generators of `_G` with the subsets of `_H`
