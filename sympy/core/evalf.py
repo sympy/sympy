@@ -1390,7 +1390,28 @@ class EvalfMixin(object):
 
             verbose=<bool>
                 Print debug information (default=False)
-
+        Note:
+        It is always suggested to use expr.evalf(subs=...) over,
+        expr.subs(...).evalf() or expr.evalf().subs(...) because of the
+        following reasons:-
+        i.  The subs dictionary tells the evalf algorithms which symbols should be
+            replaced with numbers when they are encountered.
+        ii. expr.evalf(subs=...) the expression is run through the evalf algorithm,
+            which takes into account various issues that can lead to loss of
+            significance;
+        iii.expr.evalf(subs=...) avoids the loss of significance caused due to
+            naive substitution.
+        Let's take an  example, in first case naive substitution evaluates 1e100 + 1 - 1e100 as 0
+        because of the default precision setting. However, in second case, the
+        evalf algorithm takes care of the significance.
+        Example
+        =======
+            >>> from sympy.core.evalf import evalf
+            >>> from sympy.abc import x,y,z
+            >>> (x+y-z).subs({x:1e100,y:1,z:1e100})
+            0
+            >>> (x+y-z).evalf(subs={x: 1e100, y: 1, z: 1e100})
+            1.0000000000000
         """
         from sympy import Float, Number
         n = n if n is not None else 15

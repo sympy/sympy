@@ -141,9 +141,10 @@ To numerically evaluate an expression with a Symbol at a point, we might use
 stable to pass the substitution to ``evalf`` using the ``subs`` flag, which
 takes a dictionary of ``Symbol: point`` pairs.
 
-    >>> expr = cos(2*x)
-    >>> expr.evalf(subs={x: 2.4})
-    0.0874989834394464
+    >>> (x+y-z).subs({x:1e100,y:1,z:1e100})
+    0
+    >>> (x+y-z).evalf(subs={x: 1e100, y: 1, z: 1e100})
+    1.0000000000000
 
 Sometimes there are roundoff errors smaller than the desired precision that
 remain after an expression is evaluated. Such numbers can be removed at the
