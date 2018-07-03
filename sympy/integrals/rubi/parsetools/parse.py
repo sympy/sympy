@@ -218,6 +218,7 @@ def seperate_freeq(s, variables=[], x=None):
     else:
         for i in s[1:]:
             variables, x = seperate_freeq(i, variables, x)
+            return variables, x
     return variables, x
 
 def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
@@ -357,7 +358,6 @@ def set_matchq_in_constraint(a, cons_index):
                     res = r[1]
                 else:
                     lst.append(i)
-
     return (lst, res)
 
 
@@ -437,8 +437,7 @@ def setWC(string):
 
     return string
 
-def process_return_type(a1):
-    # print(a1)
+def process_return_type(a1, L):
     a = sympify(a1[1])
     x  =''
     processed = False
@@ -446,7 +445,7 @@ def process_return_type(a1):
     if type(a) == Function('With') or type(a) == Function('Module'):
         for i in a.args:
             for s in i.args:
-                if isinstance(s, Set):
+                if isinstance(s, Set) and not s in L:
                     x += '\n        {} = {}'.format(s.args[0], rubi_printer(s.args[1], sympy_integers=True))        
             
             if not type(i) in (Function('List'),  Function('CompoundExpression')):
@@ -458,6 +457,21 @@ def process_return_type(a1):
                 processed = True
 
     return x, return_value, processed
+
+def extract_set(s, L):
+    '''
+    this function extracts all `Set` functions
+    '''
+    lst = []
+    if isinstance(s, Set) and not s in L:
+        lst.append(s)
+    else:
+        try:
+            for i in s.args:
+                lst+=extract_set(i, L)
+        except: #when s has no attribute args (like `bool`)
+            pass
+    return lst
 
 def replaceWith(s, symbols, index):
     '''
@@ -472,7 +486,11 @@ def replaceWith(s, symbols, index):
             L = list(s.args[0].args)
         else:
             L = [s.args[0]]
+        lst = []
+        for i in s.args[1:]:
+            lst+=extract_set(i, L)
 
+        L+=lst
         for i in L: # define local variables
             if isinstance(i, Set):
                 with_value += '\n        {} = {}'.format(i.args[0], rubi_printer(i.args[1], sympy_integers=True))
@@ -507,7 +525,7 @@ def replaceWith(s, symbols, index):
                     else:
                         result += '\n        if {}:'.format(rubi_printer(C.args[1], sympy_integers=True))
                     return_type = (with_value, rubi_printer(C.args[0], sympy_integers=True))
-                    return_type1 = process_return_type(return_type)
+                    return_type1 = process_return_type(return_type, L)
                     if return_type1[2]:
                         return_type = ( with_value+return_type1[0], rubi_printer(return_type1[1]))
                     result += '\n            return True'
@@ -519,7 +537,7 @@ def replaceWith(s, symbols, index):
             C = s.args[1]
             result += with_value
             return_type = (with_value, rubi_printer(C, sympy_integers=True))
-            return_type1 = process_return_type(return_type)
+            return_type1 = process_return_type(return_type, L)
             if return_type1[2]:
                 return_type = ( with_value+return_type1[0], rubi_printer(return_type1[1]))
             result+=return_type1[0]
@@ -571,7 +589,6 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
             constraint_def = ''
             FreeQ_vars, FreeQ_x = [], []
             transformed = generate_sympy_from_parsed(i[2].copy(), symbols=free_symbols)
-
         FreeQ_constraint, free_cons_def, cons_index = parse_freeq(FreeQ_vars, FreeQ_x, cons_index, cons_dict, cons_import, free_symbols)
         pattern = sympify(pattern, locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not") })
         pattern = rubi_printer(pattern, sympy_integers=True)
