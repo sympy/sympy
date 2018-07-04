@@ -286,11 +286,6 @@ def test_sympy__codegen__ast__Scope():
     assert _test_args(Scope([AddAugmentedAssignment(x, -1)]))
 
 
-def test_sympy__codegen__ast__Statement():
-    from sympy.codegen.ast import Statement, AddAugmentedAssignment
-    assert _test_args(Statement(AddAugmentedAssignment(x, -1)))
-
-
 def test_sympy__codegen__ast__Stream():
     from sympy.codegen.ast import Stream
     assert _test_args(Stream('stdin'))

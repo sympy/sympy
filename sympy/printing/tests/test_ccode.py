@@ -15,7 +15,7 @@ from sympy.utilities.pytest import raises, XFAIL
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
-    While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Statement, Return,
+    While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Return,
     real, float32, float64, float80, float128, intc, Comment
 )
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
@@ -827,7 +827,7 @@ def test_ccode_codegen_ast():
     )
 
     # explicit wrapping node for statement:
-    assert ccode(Statement(x)) == 'x;'
-    assert ccode(Statement(Print([x, y], "%d %d"))) == 'printf("%d %d", x, y);'
-    assert ccode(Statement(FunctionCall('pwer', [x]))) == 'pwer(x);'
-    assert ccode(Statement(Return(x))) == 'return x;'
+    assert ccode(x) == 'x;'
+    assert ccode(Print([x, y], "%d %d")) == 'printf("%d %d", x, y);'
+    assert ccode(FunctionCall('pwer', [x])) == 'pwer(x);'
+    assert ccode(Return(x)) == 'return x;'

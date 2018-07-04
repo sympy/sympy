@@ -13,7 +13,7 @@ from sympy.core.function import Function
 from sympy.core.numbers import Float, Integer
 from sympy.core.sympify import sympify
 from sympy.codegen.ast import (
-    Attribute, CodeBlock, Declaration, FunctionCall, Node, none, Statement, String,
+    Attribute, CodeBlock, Declaration, FunctionCall, Node, none, String,
     Token, Type, _mk_Tuple, Variable
 )
 from sympy.logic import true, false

@@ -8,7 +8,7 @@ from sympy.utilities.pytest import skip
 from sympy.sets import Range
 from sympy.codegen.ast import (
     FunctionDefinition, FunctionPrototype, Variable, Pointer, real, Assignment,
-    integer, Variable, CodeBlock, While, Statement
+    integer, Variable, CodeBlock, While
 )
 from sympy.codegen.cnodes import void, PreIncrement
 from sympy.codegen.cutils import render_as_source_file
@@ -19,8 +19,8 @@ np = import_module('numpy')
 def _mk_func1():
     declars = n, inp, out = Variable('n', integer), Pointer('inp', real), Pointer('out', real)
     i = Variable('i', integer)
-    whl = While(i<n, [Assignment(out[i], inp[i]), Statement(PreIncrement(i))])
-    body = CodeBlock(Statement(i.as_Declaration(value=0)), whl)
+    whl = While(i<n, [Assignment(out[i], inp[i]), PreIncrement(i)])
+    body = CodeBlock(i.as_Declaration(value=0), whl)
     return FunctionDefinition(void, 'our_test_function', declars, body)
 
 
