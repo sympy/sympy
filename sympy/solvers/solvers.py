@@ -1139,7 +1139,7 @@ def solve(f, *symbols, **flags):
             if fi.has(Float):
                 floats = True
                 f[i] = nsimplify(fi, rational=True)
-    
+
     # capture any denominators before rewriting since
     # they may disappear after the rewrite, e.g. issue 14779
     flags['_denominators'] = _simple_dens(f[0], symbols)
