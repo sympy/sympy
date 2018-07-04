@@ -1130,13 +1130,12 @@ def _transolve(f, symbol, domain):
     `\_transolve` uses two types of helper functions to solve equations
     of a particular class:
 
-    Identifying helpers: These helpers are used to determine whether a
-    given equation belongs to a certain class of equation or not.
-    These functions return either True or False.
+    Identifying helpers: To determine whether a given equation
+    belongs to a certain class of equation or not. Returns either
+    True or False.
 
-    Solving helpers: These are the helpers that solve the equation.
-    They are invoked once the equation is identified by the `identifying
-    helpers`. These functions return a modified form of the equation
+    Solving helpers: Once an equation is identified, a corresponding
+    helper either solves the equation or returns a form of the equation
     that `solveset` might better be able to handle.
 
     * Philosophy behind the module
@@ -1201,24 +1200,21 @@ def _transolve(f, symbol, domain):
     How to add new class of equations
     =================================
 
-    `\_transolve` is designed in such a way that it becomes an easy
-    task to add a new class of equation solver.
+    The design of `\_transolve` makes adding a new class of equation
+    solver easy.
 
-    The first task that needs to be done for adding your own solver
-    is to decide from where its *identification* *helper* will be
-    invoked. To do so determine the general form of the class of the
-    equation, for example the general form of the exponential equation
-    is `a*f(x) + b*g(x)` where `f(x)` and `g(x)` are power terms, so we
-    need to place the invocation condition inside `Add` case. Once the
-    place for *identification* *helper* is determined, you can add a
-    call to its *solving* *helper*.
+    Decide from where the *identification* *helper* will be invoked.
+    To do so determine the general form of the class of the equation,
+    for example the general form of the exponential equation is
+    `a*f(x) + b*g(x)` where `f(x)` and `g(x)` are power terms, so the
+    invocation condition is placed inside `Add` case.
+    Once done, add a call to its corresponding *solving* *helper*.
 
-    For your class of equation you need to define your own
-    *identification* and *solving* *helpers*. The *identification*
-    *helper* should return either `True` if the given equation belongs
-    to the class otherwise `False`. *Solving* *helpers* should return
-    either the exact solution or a tractable form which `solveset`
-    can handle.
+    For the class of equation define *identification* and
+    *solving* *helpers*. The *identification* *helper* should return
+    either `True` if the given equation belongs to the class otherwise
+    `False`. *Solving* *helpers* should return either the exact solution
+    or a form that `solveset` can better handle.
 
     Apart from this, a few other things needs to be taken care while
     adding an equation solver:
@@ -1240,7 +1236,7 @@ def _transolve(f, symbol, domain):
       documentation for the helpers:
 
       - What is the purpose of the helper.
-      - How it solves the equation and how does it identifies the equation.
+      - How it solves and identifies the equation.
       - Examples should be included with its proof of correctness.
       - What does the helper returns.
     """
