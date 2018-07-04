@@ -38,7 +38,8 @@ from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
-    _is_finite_with_finite_vars, _transolve, _check_expo, _solve_expo)
+    _is_finite_with_finite_vars, _transolve, _is_exponential,
+    _solve_expo)
 
 
 a = Symbol('a', real=True)
@@ -1864,24 +1865,24 @@ def test_solve_only_exp_2():
         FiniteSet(2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2))
 
 
-def test_check_expo():
+def test_is_exponential():
     x, y, z = symbols('x y z')
 
-    assert _check_expo(3**x - 2, x) is True
-    assert _check_expo(5**x - 7**(2 - x), x) is True
-    assert _check_expo(sin(2**x) - 4*x, x) is False
-    assert _check_expo(x**y - z, y) is True
-    assert _check_expo(2**x + 4**x - 1, x) is True
-    assert _check_expo(x**(y*z) - x, x) is False
+    assert _is_exponential(3**x - 2, x) is True
+    assert _is_exponential(5**x - 7**(2 - x), x) is True
+    assert _is_exponential(sin(2**x) - 4*x, x) is False
+    assert _is_exponential(x**y - z, y) is True
+    assert _is_exponential(2**x + 4**x - 1, x) is True
+    assert _is_exponential(x**(y*z) - x, x) is False
 
 
 def test_solve_expo():
-    assert _solve_expo(3**(2*x) - 2**(x + 3)) == \
+    assert _solve_expo(3**(2*x) - 2**(x + 3), x) == \
         2*x*log(3) - (x + 3)*log(2)
     y = symbols('y')
-    assert _solve_expo(2**y + 4**y) == \
+    assert _solve_expo(2**y + 4**y, y) == \
         log(2**y) - log(-4**y)
-    assert _solve_expo(2**x + 3**x + 5**x) is None
+    assert _solve_expo(2**x + 3**x + 5**x, x) is None
 
 # end of exponential tests
 
