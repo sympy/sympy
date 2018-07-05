@@ -421,7 +421,7 @@ def block_homomorphism(group, blocks):
     H = GroupHomomorphism(group, codomain, images)
     return H
 
-def group_isomorphism(G, H, isomorphism=False):
+def group_isomorphism(G, H, isomorphism=True):
     '''
     Compute an isomorphism between 2 given groups.
 
@@ -454,13 +454,13 @@ def group_isomorphism(G, H, isomorphism=False):
     >>> D = DihedralGroup(8)
     >>> p = Permutation(0, 1, 2, 3, 4, 5, 6, 7)
     >>> P = PermutationGroup(p)
-    >>> group_isomorphism(D, P, isomorphism=True)
+    >>> group_isomorphism(D, P)
     (False, None)
 
     >>> F, a, b = free_group("a, b")
     >>> G = FpGroup(F, [a**3, b**3, (a*b)**2])
     >>> H = AlternatingGroup(4)
-    >>> (check, T) = group_isomorphism(G, H, isomorphism=True)
+    >>> (check, T) = group_isomorphism(G, H)
     >>> check
     True
     >>> T(b*a*b**-1*a**-1*b**-1)
@@ -482,19 +482,15 @@ def group_isomorphism(G, H, isomorphism=False):
                 return True
             return (True, homomorphism(G, H, G.generators, H.generators))
 
-    # `_G` and `_H` are the permutation groups isomorphic to
-    # `G` and `H` respectively, if they are `FpGroups`
-    _G = G
-    group_isomorphism = None
+    #  `_H` is the permutation groups isomorphic to `H`.
     _H = H
     h_isomorphism = None
     g_order = G.order()
     h_order = H.order()
 
-    if isinstance(G, FpGroup):
-        if g_order == S.Infinity:
-            raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
-        _G, g_isomorphism = G._to_perm_group()
+    if g_order == S.Infinity:
+        raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
+
     if isinstance(H, FpGroup):
         if h_order == S.Infinity:
             raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
@@ -506,34 +502,29 @@ def group_isomorphism(G, H, isomorphism=False):
         return (False, None)
 
     if not isomorphism:
+        # Two groups of same cyclic numbered order
+        # are ismorphic to each other.
         n = g_order
         if (g_order == h_order) and (igcd(n, totient(n))) == 1:
             return True
 
     # Match the generators of `_G` with the subsets of `_H`
-    gens = _G.generators
+    gens = G.generators
     for subset in itertools.permutations(_H, len(gens)):
         gens = list(gens)
         images = list(subset)
-        images.extend([_H.identity]*(len(_G.generators)-len(images)))
-        gens.extend([g for g in _G.generators if g not in gens])
+        images.extend([_H.identity]*(len(G.generators)-len(images)))
+        gens.extend([g for g in G.generators if g not in gens])
         _images = dict(zip(gens,images))
-        if _check_homomorphism(_G, _H, _images):
+        if _check_homomorphism(G, _H, _images):
             images = []
-            gens = []
             if isinstance(H, FpGroup):
-                for s in subset:
-                    images.append(h_isomorphism.invert(s))
+                images = h_isomorphism.invert(list(subset))
             else:
                 images = subset
-            if isinstance(G, FpGroup):
-                for g in _G.generators:
-                    gens.append(g_isomorphism.invert(g))
-            else:
-                gens = G.generators
-            T =  homomorphism(G, H, gens, images, check=False)
+            T =  homomorphism(G, H, G.generators, images, check=False)
             if T.is_isomorphism():
-                # It is a valid isomorohism
+                # It is a valid isomorphism
                 if not isomorphism:
                     return True
                 else:
@@ -542,3 +533,15 @@ def group_isomorphism(G, H, isomorphism=False):
     if not isomorphism:
         return False
     return (False, None)
+
+def is_isomorphic(G, H):
+    '''
+    Check if the groups are isomorphic to each other
+
+    Arguments:
+        G (a finite `FpGroup` or a `PermutationGroup`) -- First group
+        H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
+
+    Returns -- boolean
+    '''
+    return group_isomorphism(G, H, isomorphism=False)
