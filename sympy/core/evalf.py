@@ -1391,6 +1391,44 @@ class EvalfMixin(object):
             verbose=<bool>
                 Print debug information (default=False)
 
+        Note:
+        It is suggested to use expr.evalf(subs=...) over expr.subs(...).evalf()
+        or expr.evalf().subs(...) since expr.evalf(subs=...) avoids the loss of
+        significance caused due to naive substitution as the expression is run
+        through the evalf algorithm which takes into account, the various issues
+        that can cause loss of significance.
+
+        Examples
+        ========
+
+        >>> import sympy
+        >>> omega, t = sympy.symbols("omega, t")
+        >>> s = sympy.pi * sympy.cos(omega*t)
+
+        >>> print(s.evalf().subs({t: 0}))
+        3.14159265358979
+
+        >>> print(s.subs({t: 0}).evalf())
+        3.14159265358979
+
+        >>> print(s.evalf(subs={t: 0})) #let's call this to_do_1
+        3.14159265358979*cos(omega*t)
+
+        in to_do_1 evalf(subs...) evalf leaves the expression as it is, in order to
+        avoid evaluation of naive or ingenuous substitution and resulting loss of
+        significance.
+
+        >>> x, y, z = sympy.symbols("x, y, z")
+        >>> (x+y-z).subs({x:1e100,y:1,z:1e100}) #case_1
+        0
+
+        >>> (x+y-z).evalf(subs={x: 1e100, y: 1, z: 1e100}) #case_2
+        1.00000000000000
+
+        in case_1, naive substitution evaluates 1e100 + 1 - 1e100 which looses 1 because of
+        the default precision setting. However, in case_2, the evalf algorithm takes care
+        of the significance.
+
         """
         from sympy import Float, Number
         n = n if n is not None else 15
