@@ -1,7 +1,7 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func, Product, Mul, Piecewise, Mod,
-                   Eq, sqrt, Poly, Sum)
+                   Eq, sqrt, Poly)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.utilities.pytest import XFAIL, raises
@@ -59,6 +59,7 @@ def test_rf_eval_apply():
 
     assert rf(x, k).rewrite(ff) == ff(x + k - 1, k)
     assert rf(x, k).rewrite(binomial) == factorial(k)*binomial(x + k - 1, k)
+    assert rf(x, k).rewrite(factorial) == rf(x, k)
 
     assert rf(n, z).rewrite(factorial) == \
         factorial(n + z - 1) / factorial(n - 1)
