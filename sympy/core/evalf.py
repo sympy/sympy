@@ -1402,22 +1402,6 @@ class EvalfMixin(object):
         ========
 
         >>> import sympy
-        >>> omega, t = sympy.symbols("omega, t")
-        >>> s = sympy.pi * sympy.cos(omega*t)
-
-        >>> print(s.evalf().subs({t: 0}))
-        3.14159265358979
-
-        >>> print(s.subs({t: 0}).evalf())
-        3.14159265358979
-
-        >>> print(s.evalf(subs={t: 0})) #let's call this to_do_1
-        3.14159265358979*cos(omega*t)
-
-        in to_do_1 evalf(subs...) evalf leaves the expression as it is, in order to
-        avoid evaluation of naive or ingenuous substitution and resulting loss of
-        significance.
-
         >>> x, y, z = sympy.symbols("x, y, z")
         >>> (x+y-z).subs({x:1e100,y:1,z:1e100}) #case_1
         0
