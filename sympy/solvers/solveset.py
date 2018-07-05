@@ -1200,21 +1200,30 @@ def _transolve(f, symbol, domain):
     How to add new class of equations
     =================================
 
-    The design of `\_transolve` makes adding a new class of equation
-    solver easy.
+    Adding a new class of equation solver is a three-step procedure:
 
-    Decide from where the *identification* *helper* will be invoked.
-    To do so determine the general form of the class of the equation,
-    for example the general form of the exponential equation is
-    `a*f(x) + b*g(x)` where `f(x)` and `g(x)` are power terms, so the
-    invocation condition is placed inside `Add` case.
-    Once done, add a call to its corresponding *solving* *helper*.
+    - Identify the type of the equations
 
-    For the class of equation define *identification* and
-    *solving* *helpers*. The *identification* *helper* should return
-    either `True` if the given equation belongs to the class otherwise
-    `False`. *Solving* *helpers* should return either the exact solution
-    or a form that `solveset` can better handle.
+      Determine the type of the class of equations to which they belong,
+      it could be of `Add`, `Pow`, etc. types. Separate internal functions
+      are used for each type, if it is already present include
+      identification and solving helpers within the routine otherwise add
+      a new internal function and then include identification and solving
+      helpers within it. Something like:
+
+      .. code-block:: python
+
+        def add_type(eq, x):
+            ....
+            if _is_exponential(eq, x):
+                new_eq = _solve_expo(eq, x)
+        ....
+        if eq.is_Add:
+            result = add_type(eq, x)
+
+    - Define the identification helper.
+
+    - Define the solving helper.
 
     Apart from this, a few other things needs to be taken care while
     adding an equation solver:
