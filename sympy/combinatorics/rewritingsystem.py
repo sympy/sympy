@@ -359,7 +359,6 @@ class RewritingSystem(object):
         # Keep track of the accept_states.
         accept_states = []
 
-
         for rule in all_rules:
             # The symbols present in the new rules are the symbols to be verified at each state.
             # computes the automaton_alphabet, as the transitions solely depend upon the new states.
@@ -374,13 +373,13 @@ class RewritingSystem(object):
             # Add dead states
             if not rule in self.reduction_automaton.states:
                 self.reduction_automaton.add_state(rule, state_type='d', rh_rule=all_rules[rule])
-
+        automaton_alphabet = set(automaton_alphabet)
+        # Add accept states
+        for rule in all_rules:
             for elem in proper_prefixes[rule]:
                 if not elem in self.reduction_automaton.states:
                     self.reduction_automaton.add_state(elem, state_type='a')
                     accept_states.append(elem)
-
-        automaton_alphabet = set(automaton_alphabet)
 
         # Add new transitions for every state.
         for state in self.reduction_automaton.states:
@@ -396,21 +395,14 @@ class RewritingSystem(object):
                     else:
                         self.reduction_automaton.states[state].add_transition(letter, current_state_name)
             elif current_state_type == 'a':
-                next_sub = current_state_name
                 # Check if the transition to any new state in posible.
-                while len(next_sub):
-                    if next_sub in accept_states:
-                        # Add accept states.
-                        for letter in automaton_alphabet:
-                            _next = current_state_name*letter
-                            while len(_next):
-                                if _next in self.reduction_automaton.states:
-                                    self.reduction_automaton.states[state].add_transition(letter, _next)
-                                    break
-                                elif len(_next) == 1:
-                                    self.reduction_automaton.states[state].add_transition(letter, 'start')
-                                _next = _next.subword(1, len(_next))
-                    next_sub = next_sub.subword(1, len(next_sub))
+                for letter in automaton_alphabet:
+                    _next = current_state_name*letter
+                    while len(_next) and _next not in self.reduction_automaton.states:
+                        _next = _next.subword(1, len(_next))
+                    if not len(_next):
+                        _next = 'start'
+                    self.reduction_automaton.states[state].add_transition(letter, _next)
 
         # Add transitions for new states. All symbols used in the automaton are considered here.
         # Ignore this if `reduction_automaton.automaton_alphabet` = `automaton_alphabet`.
@@ -418,15 +410,13 @@ class RewritingSystem(object):
             for state in accept_states:
                 current_state_name = state
                 for letter in self.reduction_automaton.automaton_alphabet:
-                    next = current_state_name*letter
-                    len_next_word = len(next)
-                    while len(next):
-                        if next in self.reduction_automaton.states:
-                            self.reduction_automaton.states[state].add_transition(letter, next)
-                            break
-                        elif len(next) == 1:
-                            self.reduction_automaton.states[state].add_transition(letter, 'start')
-                        next = next.subword(1, len(next))
+                    _next = current_state_name*letter
+                    len_next_word = len(_next)
+                    while len(_next) and _next not in self.reduction_automaton.states:
+                        _next = _next.subword(1, len(_next))
+                    if not len(_next):
+                        _next = 'start'
+                    self.reduction_automaton.states[state].add_transition(letter, _next)
 
     def reduce_using_automaton(self, word):
         '''
