@@ -1952,6 +1952,11 @@ def test_issue_13849():
     assert solve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == []
 
 
+def test_issue_14860():
+    from sympy.physics.units import newton, kilo
+    assert solve(8*kilo*newton + x + y, x) == [-8000*newton - y]
+
+
 def test_issue_14721():
     k, h, a, b = symbols(':4')
     assert solve([

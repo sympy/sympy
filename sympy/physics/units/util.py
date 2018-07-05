@@ -133,12 +133,13 @@ def convert_to(expr, target_units):
 
 
 def quantity_simplify(expr):
-    if expr.is_Atom:
+    if expr.is_Atom or not expr.has(Quantity):
         return expr
-    if not expr.is_Mul:
-        return expr.func(*map(quantity_simplify, expr.args))
+    expr = expr.func(*map(quantity_simplify, expr.args))
+    if not isinstance(expr, Mul):
+        return expr
 
-    if expr.has(Prefix):
+    if any(isinstance(a, Prefix) for a in expr.args):
         coeff, args = expr.as_coeff_mul(Prefix)
         args = list(args)
         for arg in args:
