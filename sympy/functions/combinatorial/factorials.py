@@ -496,7 +496,7 @@ class RisingFactorial(CombinatorialFunction):
 
     >>> from sympy import rf, symbols, factorial, ff, binomial, Poly
     >>> from sympy.abc import x
-    >>> n, k = symbols('n k', integer=True)
+    >>> n, k = symbols('n k', integer=True, positive=True)
     >>> rf(x, 0)
     1
     >>> rf(1, 5)
@@ -588,7 +588,13 @@ class RisingFactorial(CombinatorialFunction):
 
     def _eval_rewrite_as_factorial(self, x, k):
         if x.is_integer and k.is_integer:
-            return factorial(k + x - 1) / factorial(x - 1)
+
+            if k.is_positive:
+                return factorial(k + x - 1) / factorial(x - 1)
+
+            if x == 0:
+                if k.is_negative or k == 0:
+                    return (-1)**(-k) / factorial(-k)
 
     def _eval_rewrite_as_binomial(self, x, k):
         if k.is_integer:

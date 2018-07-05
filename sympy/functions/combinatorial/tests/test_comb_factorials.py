@@ -12,6 +12,7 @@ def test_rf_eval_apply():
     x, y = symbols('x,y')
     n, k = symbols('n k', integer=True)
     m = Symbol('m', integer=True, nonnegative=True)
+    z = Symbol('z', integer=True, positive=True)
 
     assert rf(nan, y) == nan
     assert rf(x, nan) == nan
@@ -58,8 +59,16 @@ def test_rf_eval_apply():
 
     assert rf(x, k).rewrite(ff) == ff(x + k - 1, k)
     assert rf(x, k).rewrite(binomial) == factorial(k)*binomial(x + k - 1, k)
-    assert rf(n, k).rewrite(factorial) == \
-        factorial(n + k - 1) / factorial(n - 1)
+    assert rf(x, k).rewrite(factorial) == rf(x, k)
+
+    assert rf(n, z).rewrite(factorial) == \
+        factorial(n + z - 1) / factorial(n - 1)
+
+    assert rf(0, -z).rewrite(factorial) == \
+           (-1)**z / factorial(z)
+
+    assert rf(0, m).rewrite(factorial) != 0
+    assert rf(0, z).rewrite(factorial) == 0
 
 
 def test_ff_eval_apply():
