@@ -1864,6 +1864,42 @@ class MatrixDeprecated(MatrixCommon):
         return self.det(method='lu')
 
     def jordan_cell(self, eigenval, n):
+        """
+        Generates the jordan block when eigenvalue and dimension is specified.
+        A jordan block is a matrix composed of 0 elements everywhere except for
+        the diagonal, which is filled with eigenvalue, and for the super-diagonal,
+        which is filled with ones.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import jordan_cell
+        >>> from sympy.abc import x
+
+        >>> jordan_cell(2, 5)
+        Matrix([
+        [2, 1, 0, 0, 0],
+        [0, 2, 1, 0, 0],
+        [0, 0, 2, 1, 0],
+        [0, 0, 0, 2, 1],
+        [0, 0, 0, 0, 2]])
+
+        >>> jordan_cell(x, 7)
+        Matrix([
+        [x, 1, 0, 0, 0, 0, 0],
+        [0, x, 1, 0, 0, 0, 0],
+        [0, 0, x, 1, 0, 0, 0],
+        [0, 0, 0, x, 1, 0, 0],
+        [0, 0, 0, 0, x, 1, 0],
+        [0, 0, 0, 0, 0, x, 1],
+        [0, 0, 0, 0, 0, 0, x]])
+
+        Reference
+        =========
+
+        https://en.wikipedia.org/wiki/Jordan_matrix
+
+        """
         return self.jordan_block(size=n, eigenvalue=eigenval)
 
     def jordan_cells(self, calc_transformation=True):
