@@ -414,7 +414,8 @@ def mobius_transform(seq, subset=True):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Möbius_inversion_formula
-    .. [2] https://arxiv.org/pdf/1211.0189.pdf
+    .. [2] https://people.csail.mit.edu/rrw/presentations/subset-conv.pdf
+    .. [3] https://arxiv.org/pdf/1211.0189.pdf
 
     """
 
