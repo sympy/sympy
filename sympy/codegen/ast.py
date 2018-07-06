@@ -106,6 +106,22 @@ class Assignment(Relational):
     Assignment(A, Matrix([[x, y, z]]))
     >>> Assignment(A[0, 1], x)
     Assignment(A[0, 1], x)
+
+    >>> n = symbols('n', integer=True)
+
+    >>> ccode(Assignment(Indexed("A", Idx('i', (0, n))), 0))  #case_1
+    'for (int i=0; i<n + 1; i++){\n   A[i] = 0;\n}'
+
+    >>> fcode(Assignment(Indexed("A", Idx('i', (0, n))), 0))  #case_2
+    '      do i = 1, n + 1\n         A(i) = 0\n      end do'
+
+    As shown in case_1, the C loop runs from [0, n], i.e. the upper limit is
+    included, unlike what we would expect from ranges. We can also use Idx in
+    summation, thereby utilizing the fact of the inclusion of upper limit.
+
+    Also, as shown in case_2, the Fortran loop runs from [1, n+1] because in
+    1-indexing languages like Fortran and Julia, the loop indices are increased
+    by 1.
     """
 
     rel_op = ':='
