@@ -117,7 +117,6 @@ def contains_diff_return_type(a):
     else:
         if a in f_diff_return_type:
             return True
-
     return False
 
 def parse_full_form(wmexpr):
@@ -446,8 +445,8 @@ def process_return_type(a1, L):
         for i in a.args:
             for s in i.args:
                 if isinstance(s, Set) and not s in L:
-                    x += '\n        {} = {}'.format(s.args[0], rubi_printer(s.args[1], sympy_integers=True))        
-            
+                    x += '\n        {} = {}'.format(s.args[0], rubi_printer(s.args[1], sympy_integers=True))
+
             if not type(i) in (Function('List'),  Function('CompoundExpression')):
                 return_value = i
                 processed = True
@@ -455,7 +454,6 @@ def process_return_type(a1, L):
             elif type(i) ==Function('CompoundExpression'):
                 return_value = i.args[-1]
                 processed = True
-
     return x, return_value, processed
 
 def extract_set(s, L):
@@ -568,7 +566,6 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
     cons = ''
     cons_import = []
     for i in r:
-        print('parsing rule {}'.format(r.index(i) + 1))
         # Parse Pattern
         if i[1][1][0] == 'Condition':
             p = i[1][1][1].copy()
@@ -606,10 +603,10 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
                 parsed += '\n    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
                 parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', With{}'.format(index) + ')\n'
             else:
-                
+
                 parsed += '{}'.format(transformed)
                 parsed += '\n    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + With_constraints + ')'
-                parsed += '\n    def replacement{}({}):\n        '.format(index, ', '.join(free_symbols)) + return_type[0] + '\n        rubi.append({})\n        return '.format(index) + return_type[1]
+                parsed += '\n    def replacement{}({}):\n'.format(index, ', '.join(free_symbols)) + return_type[0] + '\n        rubi.append({})\n        return '.format(index) + return_type[1]
                 parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
 
         else:
@@ -678,9 +675,9 @@ def rubi_rule_parser(fullform, header=None, module_name='rubi_object', file = Fa
         cons = "\n".join(header.split("\n")[:-2])+ '\n' + cons
         return result, cons
 
-    input =['integrand_simplification.txt', 'linear_product.txt', 'quadratic_product.txt', 'binomial_product.txt', 'trinomial_product.txt', 'miscellaneous_algebra.txt',  'exponential.txt', 'logarithms.txt', 'special_functions.txt','miscellanintegration.txt']
-    output =['integrand_simplifications.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py', 'trinomial_products.py', 'miscellaneous_algebraic.py' , 'exponential.py', 'logarithms.py', 'special_functions.py', 'miscellaneous_integration.py']
-    for k in range(0, 10):
+    input =['integrand_simplification.txt', 'linear_product.txt', 'quadratic_product.txt', 'binomial_product.txt', 'trinomial_product.txt', 'miscellaneous_algebra.txt',  'exponential.txt', 'logarithms.txt', 'sine.txt', 'tangent.txt', 'secant.txt', 'miscellaneous_trig.txt', 'special_functions.txt','miscellanintegration.txt']
+    output =['integrand_simplification.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py', 'trinomial_products.py', 'miscellaneous_algebraic.py' , 'exponential.py', 'logarithms.py', 'sine.py', 'tangent.py', 'secant.py', 'miscellaneous_trig.py', 'special_functions.py', 'miscellaneous_integration.py']
+    for k in range(0, 14):
         module_name = output[k][0:-3]
         path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         header = open(os.path.join(path_header, "header.py.txt"), "r").read()

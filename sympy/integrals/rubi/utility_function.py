@@ -21,7 +21,7 @@ from sympy.core.exprtools import factor_terms
 from sympy import (Basic, E, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Integer, Float, Dict, Symbol, Rational,
     Add, hyper, symbols, sqf_list, sqf, Max, factorint, factorrat, Min, sign, E, Function, collect, FiniteSet, nsimplify,
     expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr, PolynomialError, Dummy, exp as sym_exp,
-    powdenest)
+    powdenest, PolynomialDivisionFailed)
 from mpmath import appellf1
 from sympy.functions.special.hyper import TupleArg
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
@@ -255,6 +255,12 @@ def ZeroQ(*expr):
             return Simplify(expr[0]) == 0
     else:
         return all(ZeroQ(i) for i in expr)
+
+def OneQ(a):
+    if a == S(1):
+        return True
+    return False
+
 def NegativeQ(u):
     u = Simplify(u)
     if u in (zoo, oo):
@@ -757,7 +763,8 @@ def AtomQ(expr):
         return expr.is_Atom
 
 def ExpQ(u):
-    return Head(u.doit()) in (sym_exp, exp)
+    u = replace_pow_exp(u)
+    return Head(u) in (sym_exp, exp)
 
 def LogQ(u):
     return u.func in (sym_log, log)
@@ -1016,10 +1023,10 @@ def PolynomialQ(u, x = None):
             else:
                 return False
 
-        elif isinstance(x.exp, (Float, Rational)): #not full - proof 
+        elif isinstance(x.exp, (Float, Rational)): #not full - proof
             if FreeQ(simplify(u), x.base) and Exponent(u, x.base) == 0:
                 if not all(FreeQ(u, i) for i in x.base.free_symbols):
-                    return False 
+                    return False
 
     if isinstance(x, Mul):
         return all(PolynomialQ(u, i) for i in x.args)
@@ -1415,6 +1422,7 @@ def ExpandLinearProduct(v, u, a, b, x):
     return u*v
 
 def GCD(*args):
+    args = S(args)
     if len(args) == 1:
         return gcd(*args, S(1)) # GCD[1] in mathematica returns 1
     return gcd(*args)
@@ -2019,6 +2027,7 @@ def TrinomialQ(u, x):
         return True
 
     check = False
+    u = replace_pow_exp(u)
     if PowerQ(u):
         if u.exp == 2 and BinomialQ(u.base, x):
             check = True
@@ -2409,26 +2418,6 @@ def CancelCommonFactors(u, v):
                 continue
             lst.append(i)
         return a.func(*lst)
-
-
-
-
- # If[ProductQ[u],
- #    If[ProductQ[v],
- #      If[MemberQ[v,First[u]],
- #        CancelCommonFactors[Rest[u],DeleteCases[v,First[u],1,1]],
- #      Function[{First[u]*@[[1]],@[[2]]}][CancelCommonFactors[Rest[u],v]]],
- #    If[MemberQ[u,v],
- #      {DeleteCases[u,v,1,1],1},
- #    {u,v}]],
- #  If[ProductQ[v],
- #    If[MemberQ[v,u],
- #      {1,DeleteCases[v,u,1,1]},
- #    {u,v}],
- #  {u,v}]]
-
-
- #    print("canel ", u, v)
 
     # CancelCommonFactors[u,v] returns {u',v'} are the noncommon factors of u and v respectively.
     if ProductQ(u):
@@ -2917,8 +2906,9 @@ def FactorAbsurdNumber(m):
     elif PowerQ(m):
         r = FactorInteger(m.base)
         return [r[0], r[1]*m.exp]
-    #CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]]]
-    return CombineExponents
+
+    # CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]
+    return list((m.as_base_exp(),))
 
 def SubstForInverseFunction(*args):
     """
@@ -3578,7 +3568,7 @@ def SignOfFactor(u):
         for i in u.args:
             k *= SignOfFactor(i)[0]
             h *= SignOfFactor(i)[1]
-        return [k, h]  
+        return [k, h]
     return [1, u]
 
 def NormalizePowerOfLinear(u, x):
@@ -5560,6 +5550,8 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
     #_diff=True differentiates the expressions before equating
     #_numerical=True equates the expressions at random `x`. Normally used for large expressions.
     from sympy import nsimplify
+    if expr == optimal_output:
+        return True
     if simplify(expr) == simplify(optimal_output):
         return True
 
@@ -5571,7 +5563,6 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         if simplify(expr) == simplify(powsimp(optimal_output, force=True)):
             return True
     res = expr - optimal_output
-    ##print("res--  ", res)
     # if res.has(hyper):
     #     if _hyper_check:
     #         dres = res.diff(x)
@@ -5593,7 +5584,7 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
                 rand_x = randint(1, 40)
                 substitutions = dict((s, rand_x) for s in args)
                 rand_val.append(float(abs(res.subs(substitutions).n())))
-            
+
             if stdev(rand_val) < Pow(10, -3):
                 return True
         except:
@@ -6182,7 +6173,6 @@ def _FixSimplify():
         return False
     pattern2 = Pattern(UtilityOperator(u_**WC('m', S(1))*v_**n_*WC('w', S(1))), cons2, cons3, cons4, cons5, cons6, cons7, CustomConstraint(With2))
     def replacement2(m, n, u, w, v):
-        
         z = u**(m/GCD(m, n))*v**(n/GCD(m, n))
         return FixSimplify(w*z**GCD(m, n))
     rule2 = ReplacementRule(pattern2, replacement2)
@@ -6193,7 +6183,6 @@ def _FixSimplify():
         return False
     pattern3 = Pattern(UtilityOperator(u_**WC('m', S(1))*v_**n_*WC('w', S(1))), cons2, cons3, cons4, cons8, cons6, cons7, CustomConstraint(With3))
     def replacement3(m, n, u, w, v):
-        
         z = u**(m/GCD(m, -n))*v**(n/GCD(m, -n))
         return FixSimplify(w*z**GCD(m, -n))
     rule3 = ReplacementRule(pattern3, replacement3)
@@ -6204,7 +6193,6 @@ def _FixSimplify():
         return False
     pattern4 = Pattern(UtilityOperator(u_**WC('m', S(1))*v_**n_*WC('w', S(1))), cons9, cons3, cons4, cons5, cons10, cons7, CustomConstraint(With4))
     def replacement4(m, n, u, w, v):
-        
         z = v**(n/GCD(m, n))*(-u)**(m/GCD(m, n))
         return FixSimplify(-w*z**GCD(m, n))
     rule4 = ReplacementRule(pattern4, replacement4)
@@ -6215,7 +6203,6 @@ def _FixSimplify():
         return False
     pattern5 = Pattern(UtilityOperator(u_**WC('m', S(1))*v_**n_*WC('w', S(1))), cons9, cons3, cons4, cons8, cons10, cons7, CustomConstraint(With5))
     def replacement5(m, n, u, w, v):
-        
         z = v**(n/GCD(m, -n))*(-u)**(m/GCD(m, -n))
         return FixSimplify(-w*z**GCD(m, -n))
     rule5 = ReplacementRule(pattern5, replacement5)
@@ -6226,7 +6213,6 @@ def _FixSimplify():
         return False
     pattern6 = Pattern(UtilityOperator(a_**m_*(b_**n_*WC('v', S(1)) + u_)**WC('p', S(1))*WC('w', S(1))), cons11, cons12, cons13, cons14, CustomConstraint(With6))
     def replacement6(p, m, n, u, w, v, a, b):
-        
         c = a**(m/p)*b**n
         return FixSimplify(w*(a**(m/p)*u + c*v)**p)
     rule6 = ReplacementRule(pattern6, replacement6)
@@ -6662,7 +6648,10 @@ def PolyLog(n, p, z=None):
     return polylog(n, p)
 
 def D(f, x):
-    return f.diff(x)
+    try:
+        return f.diff(x)
+    except ValueError:
+        return Function('D')(f, x)
 
 def IntegralFreeQ(u):
     return FreeQ(u, Integral)
@@ -6745,6 +6734,7 @@ def HypergeometricPFQ(a, b, c):
     return hyper(a, b, c)
 
 def Sum_doit(exp, args):
+    exp = replace_pow_exp(exp)
     if not isinstance(args[2], (int, Integer)):
         new_args = [args[0], args[1], Floor(args[2])]
         return Sum(exp, new_args).doit()
@@ -6759,9 +6749,10 @@ def PolynomialQuotient(p, q, x):
     except PolynomialError:
         p = poly(p)
         q = poly(q)
-
-    return quo(p, q).as_expr()
-
+    try:
+        return quo(p, q).as_expr()
+    except PolynomialDivisionFailed:
+        return p/q
 
 def PolynomialRemainder(p, q, x):
     try:
@@ -6771,8 +6762,10 @@ def PolynomialRemainder(p, q, x):
     except PolynomialError:
         p = poly(p)
         q = poly(q)
-
-    return rem(p, q).as_expr()
+    try:
+        return rem(p, q).as_expr()
+    except PolynomialDivisionFailed:
+        return S(0)
 
 def Floor(x, a = None):
     if a is None:
@@ -6923,7 +6916,7 @@ def _ExpandIntegrand():
         pat = Pattern(UtilityOperator((c_ + x_*WC('d', S(1)))**p_*WC('w', S(1)), x_), cons_u)
         result_matchq = is_match(UtilityOperator(u, x), pat)
         return Not(And(PositiveIntegerQ(m), result_matchq))
-    
+
     cons26 = CustomConstraint(cons_f26)
     def cons_f27(b, v, n, a, x, u, m):
         if not isinstance(x, Symbol):
@@ -7052,7 +7045,7 @@ def _ExpandIntegrand():
     def replacement4(e, b, c, f, n, a, p, F, x, d, m):
         return If(And(PositiveIntegerQ(m, p), LessEqual(m, p), Or(EqQ(n, S(1)), ZeroQ(-c*f + d*e))), ExpandLinearProduct(F**(a + b*(c + d*x)**n)*(e + f*x)**p, x**m, e, f, x), If(PositiveIntegerQ(p), Distribute(F**(a + b*(c + d*x)**n)*x**m*(e + f*x)**p, Plus, Times), ExpandIntegrand(F**(a + b*(c + d*x)**n), x**m*(e + f*x)**p, x)))
     rule4 = ReplacementRule(pattern4, replacement4)
-    def With5(b, v, c, n, a, F, u, x, d, m): 
+    def With5(b, v, c, n, a, F, u, x, d, m):
         if not isinstance(x, Symbol) or not (FreeQ([F, a, b, c, d], x) and IntegersQ(m, n) and n < 0):
             return False
         w = ExpandIntegrand((a + b*x)**m*(c + d*x)**n, x)
@@ -7136,7 +7129,6 @@ def _ExpandIntegrand():
                 return tmp1
     pattern15 = Pattern(UtilityOperator(u_*(a_ + x_*WC('b', S(1)))**m_, x_), cons3, cons4, cons13, cons19, cons26)
     rule15 = ReplacementRule(pattern15, With15)
-    
     pattern16 = Pattern(UtilityOperator(u_*v_**n_*(a_ + x_*WC('b', S(1)))**m_, x_), cons27)
     def replacement16(b, v, n, a, x, u, m):
         s = PolynomialQuotientRemainder(u, v**(-n)*(a+b*x)**(-IntegerPart(m)), x)
@@ -7148,7 +7140,7 @@ def _ExpandIntegrand():
         s = PolynomialQuotientRemainder(u, v**(-n),x)
         return ExpandIntegrand((a + b*x)**(m)*s[0], x) + ExpandIntegrand(v**n*(a + b*x)**m*s[1], x)
     rule17 = ReplacementRule(pattern17, replacement17)
-    
+
     def With18(b, n, a, x, u):
         r = Numerator(Rt(-a/b, S(2)))
         s = Denominator(Rt(-a/b, S(2)))

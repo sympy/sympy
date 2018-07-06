@@ -65,7 +65,7 @@ if matchpy:
 
     Operation.register(polylog)
     register_operation_iterator(polylog, lambda a: a._args, lambda a: len(a._args))
-    
+
     Operation.register(ProductLog)
     register_operation_iterator(ProductLog, lambda a: a._args, lambda a: len(a._args))
 
@@ -194,10 +194,10 @@ if matchpy:
         from sympy.integrals.rubi.rules.miscellaneous_algebraic import miscellaneous_algebraic
         from sympy.integrals.rubi.rules.exponential import exponential
         from sympy.integrals.rubi.rules.logarithms import logarithms
-        #from sympy.integrals.rubi.rules.sine import sine
-        #from sympy.integrals.rubi.rules.tangent import tangent
-        #from sympy.integrals.rubi.rules.secant import secant
-        #from sympy.integrals.rubi.rules.miscellaneous_trig import miscellaneous_trig
+        from sympy.integrals.rubi.rules.sine import sine
+        from sympy.integrals.rubi.rules.tangent import tangent
+        from sympy.integrals.rubi.rules.secant import secant
+        from sympy.integrals.rubi.rules.miscellaneous_trig import miscellaneous_trig
         #from sympy.integrals.rubi.rules.inverse_trig import inverse_trig
         #from sympy.integrals.rubi.rules.hyperbolic import hyperbolic
         #from sympy.integrals.rubi.rules.inverse_hyperbolic import inverse_hyperbolic
@@ -210,16 +210,16 @@ if matchpy:
         rules += integrand_simplification(rules_applied)
         rules += linear_products(rules_applied)
         rules += quadratic_products(rules_applied)
-        rules += binomial_products(rules_applied)    
+        rules += binomial_products(rules_applied)
         rules += trinomial_products(rules_applied)
         rules += miscellaneous_algebraic(rules_applied)
         rules += exponential(rules_applied)
         rules += logarithms(rules_applied)
         rules += special_functions(rules_applied)
-        #rubi = sine(rubi)
-        #rubi = tangent(rubi)
-        #rubi = secant(rubi)
-        #rubi = miscellaneous_trig(rubi)
+        # rules += sine(rules_applied)
+        # rules += tangent(rules_applied)
+        # rules += secant(rules_applied)
+        # rules += miscellaneous_trig(rules_applied)
         #rubi = inverse_trig(rubi)
         #rubi = hyperbolic(rubi)
         #rubi = inverse_hyperbolic(rubi)
@@ -305,7 +305,7 @@ def util_rubi_integrate(expr, var, showsteps=False):
     if isinstance(expr, Add):
         return rubi_integrate(expr, var)
     if len(rules_applied) > 10:
-        if _has_cycle() or len(rules_applied) > 20: 
+        if _has_cycle() or len(rules_applied) > 20:
             return Integrate(expr, var)
     results = rubi.replace(Integral(expr, var), max_count = 10)
     rules_applied[:] = []
