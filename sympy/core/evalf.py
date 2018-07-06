@@ -1392,7 +1392,7 @@ class EvalfMixin(object):
                 Print debug information (default=False)
 
         Notes
-        ========
+        =====
 
         It is suggested to use expr.evalf(subs=...) over expr.subs(...).evalf()
         or expr.evalf().subs(...) since expr.evalf(subs=...) avoids the loss of
