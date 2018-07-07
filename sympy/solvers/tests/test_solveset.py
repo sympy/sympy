@@ -39,7 +39,7 @@ from sympy.solvers.solveset import (
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
-    _solve_expo, _term_factors)
+    _solve_expo, term_factors, _is_logarithmic, _solve_log)
 
 
 a = Symbol('a', real=True)
@@ -1918,4 +1918,15 @@ def test_uselogcombine_2():
     assert solveset_real(eq, x) == EmptySet()
     eq = log(8*x) - log(sqrt(x) + 1) - 2
     assert solveset_real(eq, x) == EmptySet()
+
+
+def test_is_logarithmic():
+    assert _is_logarithmic(log(x), x) is True
+    assert _is_logarithmic(log(x)*log(y), x) is True
+    assert _is_logarithmic(log(x)**2, x) is True
+    assert _is_logarithmic(log(x**y) - y*log(x), x) is True
+    assert _is_logarithmic(sin(log(x)), x) is False
+    assert _is_logarithmic(log(x) + log(x + 3), y) is False
+    assert _is_logarithmic(x + y, x) is False
+
 # end of logarithmic tests

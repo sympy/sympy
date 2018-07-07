@@ -985,6 +985,21 @@ def _solveset(f, symbol, domain, _check=False):
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
 
+            if domain.is_subset(S.Reals) and _is_logarithmic(f, symbol):
+                expr_args = make_expr_args(f)
+                _result = []
+                for res in result:
+                    ok = True
+                    for expr_arg in expr_args:
+                        if symbol in expr_arg.free_symbols:
+                            ans_arg = expr_arg.subs(symbol, res)
+                            if not ans_arg.is_real:
+                                ok = False
+                                break
+                    if ok:
+                        _result.append(res)
+                result = FiniteSet(*_result)
+
     return result
 
 
@@ -1142,51 +1157,22 @@ def _is_exponential(f, symbol):
     return False
 
 
-def _log_solver(eq_tup, symbol, domain):
+def _solve_log(f, symbol):
     r"""
     Helper to solve logarithmic equations.
 
     Logarithmic equation is an equation that involves the logarithm
     of an expression containing a variable.
 
-    Parameters
-    ==========
-
-    eq_tup :
-        lhs and rhs of the equation passed in tuple as (lhs, rhs).
-
-    symbol :
-        variable for which the equation is solved.
-
-    domain :
-        set over which the equation is solved.
-
-    Returns
-    =======
-
-    Returns the solution of the logarithmic equation. `ConditionSet`
-    is returned if it is unable to solve the equation
-
     Examples
     ========
 
     >>> from sympy import symbols, S, log
-    >>> from sympy.solvers.solveset import _log_solver as log_solver
+    >>> from sympy.solvers.solveset import _solve_log as solve_log
     >>> x = symbols('x')
-    >>> eq_tup = (log(x - 3) + log(x + 3), 0)
-    >>> log_solver(eq_tup, x, S.Reals)
-    {sqrt(10)}
-
-    Idea behind `\_log\_solver`
-    ===========================
-
-    The `lhs` of the equation is passed to `\_check\_log` which using
-    logarithmic identities returns a reduced form of `lhs` containing
-    only single logarithm. This form is easily handled by `solveset`.
-    Further every soluion returned from `solveset` is checked by
-    replacing it with the variable in the equation so as to remove
-    unwanted result (the solution that does not satisfies the equation).
-    Once filtered a newly formed set of solutions is returned.
+    >>> f = log(x - 3) + log(x + 3)
+    >>> solve_log(f, x)
+    log((x - 3)*(x + 3))
 
     * Proof of correctness
 
@@ -1226,59 +1212,35 @@ def _log_solver(eq_tup, symbol, domain):
     This equation contains one logarithm and can be solved by rewriting
     to exponents.
     """
-    lhs, rhs = eq_tup
-    f = lhs - rhs
-    new_lhs = _check_log(lhs)
+
+    lhs, rhs_s = invert_real(f, 0, symbol)
+    rhs = rhs_s.args[0]
+
+    new_lhs = logcombine(lhs, force=True)
     new_f = new_lhs - rhs
 
-    result = S.EmptySet
-    solutions = _solveset(new_f, symbol, domain)
-
-    if isinstance(solutions, FiniteSet):
-        from sympy.solvers.solvers import checksol
-        for solution in solutions:
-            if checksol(f, symbol, solution):
-                result += FiniteSet(solution)
-    else:
-        result = solutions
-
-    return result
+    return new_f
 
 
-def _check_log(f):
+def _is_logarithmic(f, symbol):
     r"""
     Helper to check if the given equation is logarithmic
     or not.
-
-    Takes the equation as the input and returns the condensed
-    form of the equation (if possible), if the equation is of
-    logarithmic type otherwise returns `False`.
-
-    Examples
-    ========
-    >>> from sympy.solvers.solveset import _check_log as check
-    >>> from sympy import symbols, log
-    >>> x = symbols('x')
-    >>> check(log(x - 3) + log(x + 3))
-    log((x - 3)*(x + 3))
-    >>> check(3*x - 1)
-    False
-
-    Idea behind `\_check\_log`
-    ==========================
-
-    Logarithmic equations can be easily solved by reducing them
-    into a condensed form using logarithmic identities. Therefore
-    this helper tries reducing the equation by using any of the
-    log identities. If the equation gets reduced it is necessarily
-    a logarithmic equation. The reduced form is returned, if no
-    change occurs to the equation `False` is returned.
     """
-    # Make helper generalised
-    g = logcombine(f, force=True)
-    if g.count(log) != f.count(log):
-        if isinstance(g, log):
-            return g
+
+    def check_log(arg, symbol):
+        if isinstance(arg, log) and (
+                symbol in arg.free_symbols):
+            return True
+
+    expr_args = make_expr_args(f)
+    for expr_arg in expr_args:
+        if check_log(expr_arg, symbol):
+            return True
+        if isinstance(expr_arg, Pow):
+            base = expr_arg.base
+            if check_log(base, symbol):
+                return True
     return False
 
 
@@ -1289,6 +1251,7 @@ def _transolve(f, symbol, domain):
     currently supports the following class of equations:
 
         - Exponential equations
+        - Logarithmic equations
 
     Parameters
     ==========
@@ -1479,6 +1442,11 @@ def _transolve(f, symbol, domain):
         # check if it is exponential type equation
         elif _is_exponential(simplified_equation, symbol):
             new_eq = _solve_expo(simplified_equation, symbol)
+        # check if it is logarithmic type equation
+        elif _is_logarithmic(simplified_equation, symbol):
+            new_eq1 = _solve_log(simplified_equation, symbol)
+            if new_eq1 != simplified_equation:
+                new_eq = new_eq1
 
         if new_eq:
             result = _solveset(new_eq, symbol, domain)
