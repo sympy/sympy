@@ -12,6 +12,8 @@ from sympy.core.symbol import Dummy
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth, Abs)
 
+from mpmath import appellf1 as apl
+
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
@@ -1043,3 +1045,42 @@ class HyperRep_sinasin(HyperRep):
     @classmethod
     def _expr_big_minus(cls, a, z, n):
         return -1/sqrt(1 + 1/z)*sinh(2*a*asinh(sqrt(z)) + 2*a*pi*I*n)
+
+class appellf1(Function):
+    '''
+    This is the Appell hypergeometric function of two variables as:
+    .. math ::
+        F_1(a,b_1,b_2,c,x,y) = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
+        \frac{(a)_{m+n} (b_1)_m (b_2)_n}{(c)_{m+n}}
+        \frac{x^m y^n}{m! n!}.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Appell_series
+    .. [2] http://functions.wolfram.com/HypergeometricFunctions/AppellF1/
+
+    '''
+    @classmethod
+    def eval(cls, a, b1, b2, c, x, y):
+        if all(i.is_number for i in (a, b1, b2, c, x, y)):
+            return S(apl(a, b1, b2, c, x, y))
+
+    def _eval_rewrite_as_factorial(self, *args):
+        from sympy import symbols, Sum, RisingFactorial, factorial
+        m, n = symbols('m n', integer = True)
+        a, b1, b2, c, x, y = (i for i in self.args)
+        return Sum(x**m*y**n*RisingFactorial(a, m + n)*RisingFactorial(b1, m)*\
+            RisingFactorial(b2, n)/(factorial(m)*factorial(n)*RisingFactorial(c, m + n)), (m, 0, zoo), (n, 0, zoo)).rewrite(factorial)
+
+    def fdiff(self, *args):
+        if len(args) == 1:
+            a, b1, b2, c, x, y = (i for i in self.args)
+            if args[0] == 5:
+                return (a*b1/c)*appellf1(a + 1, b1 + 1, b2, c + 1, x, y)
+            elif args[0] == 6:
+                return (a*b2/c)*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)
+            else:
+                return NotImplemented
+        else:
+            return NotImplemented
