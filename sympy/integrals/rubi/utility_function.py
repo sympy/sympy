@@ -6746,7 +6746,7 @@ def PolynomialQuotient(p, q, x):
         p = poly(p, x)
         q = poly(q, x)
 
-    except PolynomialError:
+    except:
         p = poly(p)
         q = poly(q)
     try:
@@ -6759,7 +6759,7 @@ def PolynomialRemainder(p, q, x):
         p = poly(p, x)
         q = poly(q, x)
 
-    except PolynomialError:
+    except:
         p = poly(p)
         q = poly(q)
     try:
