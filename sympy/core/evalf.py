@@ -1432,7 +1432,7 @@ class EvalfMixin(object):
         argument for subs, the correct value is obtained:
 
         >>> (x + y - z).evalf(subs=values)
-        1
+        1.00000000000000
 
         Using the subs argument for evalf is the accurate way to
         evaluate an expression at a desired set of values when
