@@ -828,7 +828,6 @@ class MatrixSpecial(MatrixRequired):
         =========
 
         https://en.wikipedia.org/wiki/Jordan_matrix
-        
         """
 
         klass = kwargs.get('cls', kls)
