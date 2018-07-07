@@ -113,7 +113,7 @@ class Assignment(Relational):
     'for (int i=0; i<n + 1; i++){\n   A[i] = 0;\n}'
 
     >>> fcode(Assignment(Indexed("A", Idx('i', (0, n))), 0))  #case_2
-    '      do i = 1, n + 1\n         A(i) = 0\n      end do'
+    'do i = 1, n + 1\n  A(i) = 0\n  end do'
 
     As shown in case_1, the C loop runs from [0, n], i.e. the upper limit is
     included, unlike what we would expect from ranges. We can also use Idx in
