@@ -268,7 +268,7 @@ class CosetTable(DefaultPrinting):
                         table[mu][A_dict[x]] = nu
                         table[nu][A_dict_inv[x]] = mu
 
-    def scan(self, alpha, word):
+    def scan(self, alpha, word, y=None, fill=False, modified=False):
         r"""
         ``scan`` performs a scanning process on the input ``word``.
         It first locates the largest prefix ``s`` of ``word`` for which
@@ -298,6 +298,14 @@ class CosetTable(DefaultPrinting):
         ========
         scan_c, scan_check, scan_and_fill, scan_and_fill_c
 
+        Scan and fill
+        =============
+        Performed when the default argument fill=True.
+
+        Modified scan
+        =============
+        Performed when the default argument modified=True
+
         """
         # α is an integer representing a "coset"
         # since scanning can be in two cases
@@ -311,25 +319,48 @@ class CosetTable(DefaultPrinting):
         r = len(word)
         b = alpha
         j = r - 1
-        while i <= j and table[f][A_dict[word[i]]] is not None:
-            f = table[f][A_dict[word[i]]]
-            i += 1
-        if i > j:
-            if f != b:
-                self.coincidence(f, b)
-            return
-        while j >= i and table[b][A_dict_inv[word[j]]] is not None:
-            b = table[b][A_dict_inv[word[j]]]
-            j -= 1
-        if j < i:
-            # we have an incorrect completed scan with coincidence f ~ b
-            # run the "coincidence" routine
-            self.coincidence(f, b)
-        elif j == i:
-            # deduction process
-            table[f][A_dict[word[i]]] = b
-            table[b][A_dict_inv[word[i]]] = f
-        # otherwise scan is incomplete and yields no information
+        b_p = y
+        f_p = None
+        if modified:
+            f_p = self._grp.identity
+        while fill or i == 0:
+            while i <= j and table[f][A_dict[word[i]]] is not None:
+                if modified:
+                    f_p = f_p*self.P[f][A_dict[word[i]]]
+                f = table[f][A_dict[word[i]]]
+                i += 1
+            if i > j:
+                if f != b:
+                    if modified:
+                        self.modified_coincidence(f, alpha, f_p**-1*y)
+                    else:
+                        self.coincidence(f, b)
+                return
+            while j >= i and table[b][A_dict_inv[word[j]]] is not None:
+                if modified:
+                    b_p = b_p*self.P[b][self.A_dict_inv[word[j]]]
+                b = table[b][A_dict_inv[word[j]]]
+                j -= 1
+            if j < i:
+                # we have an incorrect completed scan with coincidence f ~ b
+                # run the "coincidence" routine
+                if modified:
+                    self.modified_coincidence(f, b, f_p**-1*b_p)
+                else:
+                    self.coincidence(f, b)
+            elif j == i:
+                # deduction process
+                table[f][A_dict[word[i]]] = b
+                table[b][A_dict_inv[word[i]]] = f
+                if modified:
+                    self.P[f][self.A_dict[word[i]]] = f_p**-1*b_p
+                    self.P[b][self.A_dict_inv[word[i]]] = b_p**-1*f_p
+            elif fill:
+                if modified:
+                    self.modified_define(f, word[i])
+                else:
+                    self.define(f, word[i])
+            # otherwise scan is incomplete and yields no information
 
     # used in the low-index subgroups algorithm
     def scan_check(self, alpha, word):
@@ -458,7 +489,7 @@ class CosetTable(DefaultPrinting):
 
     # α, β coincide, i.e. α, β represent the pair of cosets
     # where coincidence occurs
-    def coincidence(self, alpha, beta):
+    def coincidence(self, alpha, beta, w=None,modified=False):
         r"""
         The third situation described in ``scan`` routine is handled by this
         routine, described on Pg. 156-161 [1].
@@ -480,25 +511,49 @@ class CosetTable(DefaultPrinting):
         A_dict_inv = self.A_dict_inv
         table = self.table
         p = self.p
-        l = 0
         # behaves as a queue
         q = []
-        self.merge(alpha, beta, q)
+        p_p = []
+        if modified:
+            p_p[beta] = self._grp.identity
+        l = 0
+        if modified:
+            self.modified_merge(alpha, beta, w, p_p, q)
+        else:
+            self.merge(alpha, beta, q)
         while len(q) > 0:
             gamma = q.pop(0)
             for x in A_dict:
                 delta = table[gamma][A_dict[x]]
                 if delta is not None:
                     table[delta][A_dict_inv[x]] = None
-                    mu = self.rep(gamma)
-                    nu = self.rep(delta)
+                    mu = None
+                    nu = None
+                    if modified:
+                        mu = self.modified_rep(gamma, p_p)
+                        nu = self.modified_rep(delta, p_p)
+                    else:
+                        mu = self.rep(gamma)
+                        nu = self.rep(delta)
                     if table[mu][A_dict[x]] is not None:
-                        self.merge(nu, table[mu][A_dict[x]], q)
+                        if modified:
+                            v = p_p[delta]**-1*self.P[gamma][self.A_dict[x]]**-1*p_p[gamma]*self.P[mu][self.A_dict[x]]
+                            self.modified_merge(nu, table[mu][self.A_dict[x]], v, p_p, q)
+                        else:
+                            self.merge(nu, table[mu][A_dict[x]], q)
                     elif table[nu][A_dict_inv[x]] is not None:
-                        self.merge(mu, table[nu][A_dict_inv[x]], q)
+                        if modified:
+                            v = p_p[gamma]**-1*self.P[gamma][self.A_dict[x]]*p_p[delta]*self.P[mu][self.A_dict_inv[x]]
+                            self.modified_merge(mu, table[nu][self.A_dict_inv[x]], v, p_p, q)
+                        else:
+                            self.merge(mu, table[nu][A_dict_inv[x]], q)
                     else:
                         table[mu][A_dict[x]] = nu
                         table[nu][A_dict_inv[x]] = mu
+                        if modified:
+                            v = p_p[gamma]**-1*self.P[gamma][self.A_dict[x]]*p_p[delta]
+                            self.P[mu][self.A_dict[x]] = v
+                            self.P[nu][self.A_dict_inv[x]] = v**-1
 
     # method used in the HLT strategy
     def scan_and_fill(self, alpha, word):
@@ -511,35 +566,7 @@ class CosetTable(DefaultPrinting):
         subgroup generator.
 
         """
-        A_dict = self.A_dict
-        A_dict_inv = self.A_dict_inv
-        table = self.table
-        r = len(word)
-        f = alpha
-        i = 0
-        b = alpha
-        j = r - 1
-        # loop until it has filled the α row in the table.
-        while True:
-            # do the forward scanning
-            while i <= j and table[f][A_dict[word[i]]] is not None:
-                f = table[f][A_dict[word[i]]]
-                i += 1
-            if i > j:
-                if f != b:
-                    self.coincidence(f, b)
-                return
-            # forward scan was incomplete, scan backwards
-            while j >= i and table[b][A_dict_inv[word[j]]] is not None:
-                b = table[b][A_dict_inv[word[j]]]
-                j -= 1
-            if j < i:
-                self.coincidence(f, b)
-            elif j == i:
-                table[f][A_dict[word[i]]] = b
-                table[b][A_dict_inv[word[i]]] = f
-            else:
-                self.define(f, word[i])
+        self.scan(alpha, word, fill=True)
 
     def scan_and_fill_c(self, alpha, word):
         """
@@ -783,7 +810,7 @@ class CosetTable(DefaultPrinting):
             raise ValueError("the coset enumeration has defined more than %s cosets. Try with a greater value max number of cosets "%C.coset_table_max_limit)
         self.table.append([None]*len(self.A))
         H = self.subgroup
-        self._grp = (list(free_group(', ' .join(["a_%d" % i for i in range(len(H))])))).pop(0)
+        self._grp = list(free_group(', ' .join(["a_%d" % i for i in range(len(H))])))[0]
         self.P.append([None]*len(self.A))
         beta = len_table
         self.p.append(beta)
@@ -799,41 +826,7 @@ class CosetTable(DefaultPrinting):
         Input: α∈Ω, w∈A*, y∈(Y∪Y-1)* with τ(α)w=G φ(y)τ(α).
         Modified scan_and_fill if fill = True.
         '''
-        while True:
-            r = len(w)
-            f = alpha
-            i = 0
-            f_p = self._grp.identity
-            while i < r and self.table[f][self.A_dict[w[i]]] is not None:
-                f_p = f_p*self.P[f][self.A_dict[w[i]]]
-                f = self.table[f][self.A_dict[w[i]]]
-                i += 1
-            if i >= r:
-                if f != alpha:
-                    self.modified_coincidence(f, alpha, f_p**-1*y)
-                return
-            b = alpha
-            b_p = y
-            j = r - 1
-            while j >= i and self.table[b][self.A_dict_inv[w[j]]] is not None:
-                b_p = b_p*self.P[b][self.A_dict_inv[w[j]]]
-                b = self.table[b][self.A_dict_inv[w[j]]]
-                j -= 1
-            if j < i:
-                self.modified_coincidence(f, b, f_p**-1*b_p)
-            elif j == i:
-                # Dedcution
-                self.table[f][self.A_dict[w[i]]] = b
-                self.table[b][self.A_dict_inv[w[i]]] = f
-                self.P[f][self.A_dict[w[i]]] = f_p**-1*b_p
-                self.P[b][self.A_dict_inv[w[i]]] = b_p**-1*f_p
-            else:
-                if not fill:
-                    self.modified_define(f, w[i])
-
-            # For scan an not filling.
-            if not fill:
-                break
+        self.scan(alpha, w, y=y, fill=fill, modified=True)
 
     def modified_scan_and_fill(self, alpha, w, y):
         self.modified_scan(alpha, w, y, fill=True)
@@ -869,44 +862,17 @@ class CosetTable(DefaultPrinting):
         if phi > psi:
             self.p[phi] = psi
             p_p[phi] =  p_p[k]**-1*w*p_p[lamda]
-            l += 1
-            q[l] = psi
+            q.append(phi)
         elif phi < psi:
             self.p[psi] = phi
             p_p[psi] = p_p[lamda]**-1*w**-1*p_p[k]
-            l += 1
-            q[l] = psi
+            q.append(psi)
 
     def modified_coincidence(self, alpha, beta, w):
         '''
         Input: A coincident pair α, ß∈Ω, w∈ (Y∪Y–1)*
         '''
-        l = 0
-        i = 0
-        q = []
-        p_p = []
-        table = self.table
-        self.modified_merge(alpha, beta, w, p_p, q, l)
-        while len(q):
-            gamma = q.pop(0)
-            for x in self.A_dict:
-                delta = self.table[gamma][self.A_dict[x]]
-            if delta:
-                table[delta][self.A_dict_inv[x]] = None
-                mu = self.modified_rep(gamma, p_p)
-                nu = self.modified_rep(delta, p_p)
-            if table[mu][self.A_dict[x]]:
-                v = p_p[delta]**-1*self.P[gamma][self.A_dict[x]]**-1*p_p[gamma]*self.P[mu][self.A_dict[x]]
-                self.modified_merge(nu, table[mu][self.A_dict[x]], v, p_p, q, l)
-            elif table[nu][self.A_dict_inv[x]]:
-                v = p_p[gamma]**-1*self.P[gamma][self.A_dict[x]]*p_p[delta]*self.P[mu][self.A_dict_inv[x]]
-                self.modified_merge(mu, table[nu][self.A_dict_inv[x]], v, p_p, q, l)
-            else:
-                table[mu][self.A_dict[x]] = nu
-                table[nu][self.A_dict_inv[x]] = mu
-                v = p_p[gamma]**-1*self.P[gamma][self.A_dict[x]]*p_p[delta]
-                self.P[mu][self.A_dict[x]] = v
-                self.P[nu][self.A_dict_inv[x]] = v**-1
+        self.coincidence(alpha, beta, w=w, modified=True)
 
 ###############################################################################
 #                           COSET ENUMERATION                                 #
