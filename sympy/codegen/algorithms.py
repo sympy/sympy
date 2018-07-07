@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function)
 from sympy import And, Gt, Lt, Abs, Dummy, oo, Tuple, Symbol, Function, Pow
 from sympy.codegen.ast import (
     Assignment, AddAugmentedAssignment, CodeBlock, Declaration, FunctionDefinition,
-    Print, Return, Scope, Statement, While, Variable, Pointer, real
+    Print, Return, Scope, While, Variable, Pointer, real
 )
 
 """ This module collects functions for constructing ASTs representing algorithms. """
@@ -62,10 +62,10 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
     delta_expr = -expr/expr.diff(wrt)
     whl_bdy = [Assignment(delta, delta_expr), AddAugmentedAssignment(wrt, delta)]
     if debug:
-        prnt = Statement(Print([wrt, delta], r"{0}=%12.5g {1}=%12.5g\n".format(wrt.name, name_d)))
+        prnt = Print([wrt, delta], r"{0}=%12.5g {1}=%12.5g\n".format(wrt.name, name_d))
         whl_bdy = [whl_bdy[0], prnt] + whl_bdy[1:]
     req = Gt(Abs(delta), atol)
-    declars = [Statement(Declaration(Variable(delta, type=real, value=oo)))]
+    declars = [Declaration(Variable(delta, type=real, value=oo))]
     if itermax is not None:
         counter = counter or Dummy(integer=True)
         v_counter = Variable.deduced(counter, 0)
@@ -142,5 +142,5 @@ def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tu
     if not_in_params:
         raise ValueError("Missing symbols in params: %s" % ', '.join(map(str, not_in_params)))
     declars = tuple(Variable(p, real) for p in params)
-    body = CodeBlock(algo, Statement(Return(wrt)))
+    body = CodeBlock(algo, Return(wrt))
     return FunctionDefinition(real, func_name, declars, body, attrs=attrs)

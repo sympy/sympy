@@ -259,7 +259,8 @@ class C89CodePrinter(CodePrinter):
         return p*5
 
     def _get_statement(self, codestring):
-        return "%s;" % codestring
+        """ Get code string as a statement - i.e. ending with a semicolon. """
+        return codestring if codestring.endswith(';') else codestring + ';'
 
     def _get_comment(self, text):
         return "// {0}".format(text)
@@ -541,6 +542,10 @@ class C89CodePrinter(CodePrinter):
             symb=self._print(elem.symbol),
             idxs=idxs
         )
+
+    def _print_CodeBlock(self, expr):
+        """ Elements of code blocks printed as statements. """
+        return '\n'.join([self._get_statement(self._print(i)) for i in expr.args])
 
     def _print_While(self, expr):
         return 'while ({condition}) {{\n{body}\n}}'.format(**expr.kwargs(

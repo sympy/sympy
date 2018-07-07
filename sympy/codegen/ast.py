@@ -1586,11 +1586,6 @@ class Scope(Token):
             return CodeBlock(*itr)
 
 
-class Statement(Basic):
-    """ Represents a statement """
-    nargs = 1
-
-
 class Stream(Token):
     """ Represents a stream.
 
@@ -1719,8 +1714,8 @@ class FunctionDefinition(FunctionPrototype):
     >>> fp = FunctionPrototype(real, 'foo', [x, y])
     >>> ccode(fp)
     'double foo(double x, double y)'
-    >>> from sympy.codegen.ast import FunctionDefinition, Return, Statement
-    >>> body = [Statement(Return(x*y))]
+    >>> from sympy.codegen.ast import FunctionDefinition, Return
+    >>> body = [Return(x*y)]
     >>> fd = FunctionDefinition.from_FunctionPrototype(fp, body)
     >>> print(ccode(fd))
     double foo(double x, double y){
