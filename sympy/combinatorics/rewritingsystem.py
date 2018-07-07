@@ -369,17 +369,22 @@ class RewritingSystem(object):
             len_letter_word_array = len(letter_word_array)
             for i in range (1, len_letter_word_array):
                 letter_word_array[i] = letter_word_array[i-1]*letter_word_array[i]
-            proper_prefixes[rule] = letter_word_array
-            # Add dead states
-            if not rule in self.reduction_automaton.states:
-                self.reduction_automaton.add_state(rule, state_type='d', rh_rule=all_rules[rule])
-        automaton_alphabet = set(automaton_alphabet)
-        # Add accept states
-        for rule in all_rules:
-            for elem in proper_prefixes[rule]:
+                # Add accept states.
+                elem = letter_word_array[i-1]
                 if not elem in self.reduction_automaton.states:
                     self.reduction_automaton.add_state(elem, state_type='a')
                     accept_states.append(elem)
+            proper_prefixes[rule] = letter_word_array
+            # Check for overlaps between dead and accept states.
+            if rule in accept_states:
+                self.reduction_automaton.states[rule].state_type = 'd'
+                self.reduction_automaton.states[rule].rh_rule = all_rules[rule]
+                accept_states.remove(rule)
+            # Add dead states
+            if not rule in self.reduction_automaton.states:
+                self.reduction_automaton.add_state(rule, state_type='d', rh_rule=all_rules[rule])
+
+        automaton_alphabet = set(automaton_alphabet)
 
         # Add new transitions for every state.
         for state in self.reduction_automaton.states:
@@ -411,7 +416,6 @@ class RewritingSystem(object):
                 current_state_name = state
                 for letter in self.reduction_automaton.automaton_alphabet:
                     _next = current_state_name*letter
-                    len_next_word = len(_next)
                     while len(_next) and _next not in self.reduction_automaton.states:
                         _next = _next.subword(1, len(_next))
                     if not len(_next):
