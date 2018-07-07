@@ -290,6 +290,9 @@ def convolution_subset(a, b):
     """
     Performs Subset Convolution of given sequences.
 
+    The indices of each argument, considered as bit strings, correspond to
+    subsets of a finite set.
+
     The sequence is automatically padded to the right with zeros, as the
     definition of subset based on bitmasks (indices) requires the size of
     sequence to be a power of 2.
