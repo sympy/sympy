@@ -26,6 +26,7 @@ Laplace
 Logistic
 LogNormal
 Maxwell
+Moyal
 Nakagami
 Normal
 Pareto
@@ -86,6 +87,7 @@ __all__ = ['ContinuousRV',
 'Logistic',
 'LogNormal',
 'Maxwell',
+'Moyal',
 'Nakagami',
 'Normal',
 'Pareto',
@@ -1805,6 +1807,79 @@ def Maxwell(name, a):
     """
 
     return rv(name, MaxwellDistribution, (a, ))
+
+#-------------------------------------------------------------------------------
+# Moyal distribution -----------------------------------------------------------
+
+
+class MoyalDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 'sigma')
+
+    def pdf(self, x):
+        mu, sigma = self.mu, self.sigma
+        return exp(-exp(-(x-mu)/sigma)/2 - (x-mu)/(2*sigma)) / (sqrt(2*pi) * sigma)
+
+    def _cdf(self, x):
+        from sympy import erfc
+        mu, sigma = self.mu, self.sigma
+        return erfc(exp(-(x-mu)/(2*sigma)) / sqrt(2))
+
+
+def Moyal(name, mu, sigma):
+    r"""
+    Create a continuous random variable with a Moyal distribution.
+
+    The density of the Moyal distribution is given by
+
+    .. math::
+        f(x) := \frac{-/frac{1}{2}\exp\left(-\frac{x-\mu}{\sigma}\right) - \frac{x-\mu}{2\sigma}}
+
+    with :math:`x \in \mathbb{R}`. The parameters default to `\mu=0` and `\sigma=1`.
+
+    Parameters
+    ==========
+
+    mu : Real number, location shift
+    sigma : Real number, scale factor
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Moyal, density, cdf
+    >>> from sympy import Symbol, simplify
+
+    >>> mu = Symbol("mu")
+    >>> sigma = Symbol("sigma")
+    >>> z = Symbol("z")
+
+    >>> X = Moyal("x", mu, sigma)
+
+    >>> density(X)(z)
+    sqrt(2)*exp(-exp((mu - z)/sigma)/2 - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
+
+    >>> cdf(X)(z)
+    erfc(sqrt(2)*exp((mu - z)/(2*sigma))/2)
+
+
+    References
+    ==========
+
+    .. [1] G. E. Crooks: Field Guide to Probability Distributions
+           http://threeplusone.com/gud
+
+    .. [2] Christian Walck: Hand-book on Statistical Distributions for Experimentalists
+           http://www.stat.rice.edu/~dobelman/textfiles/DistributionsHandbook.pdf
+
+    .. [3] scipy.stats.moyal
+           https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.moyal.html
+    """
+
+    return rv(name, MoyalDistribution, (mu, sigma))
 
 #-------------------------------------------------------------------------------
 # Nakagami distribution --------------------------------------------------------
