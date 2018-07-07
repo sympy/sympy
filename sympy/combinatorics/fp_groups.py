@@ -14,6 +14,8 @@ from sympy.combinatorics.coset_table import (CosetTable,
                                              coset_enumeration_r,
                                              coset_enumeration_c)
 from sympy.combinatorics import PermutationGroup
+from sympy.core.numbers import igcd
+from sympy.ntheory.factor_ import totient
 
 from itertools import product
 
@@ -494,6 +496,97 @@ class FpGroup(DefaultPrinting):
         P, T = self._to_perm_group()
         return T.invert(P._elements)
 
+    @property
+    def is_polycyclic(self):
+        if self.is_solvable:
+            return True
+        return None
+
+    def is_subgroup(self, other):
+        """
+        Return ``True`` if all elements of ``self`` belong to ``other``.
+        """
+        _grp1 = self._to_perm_group()[0]
+        _other = self._to_perm_group()[0]
+        return _grp1.is_subgroup(_other, strict=False)
+
+    def compute_polycyclic_series(self):
+        '''
+        ToDo - Update docstring.
+        '''
+        if not self.is_polycyclic:
+            raise NotImplementedError("Polycyclic methods are only"
+                                        "implemented for FpGroups")
+        # Compute the derived series.
+        derived_series = self.derived_series()
+        derived_series.insert(0, self)
+        len_derived_series = len(derived_series)
+
+        # Compute the polycyclic series by computing the
+        # subnormal series for every quotient G_i/G_i+1
+        # in the derived series and finally,
+        # lifting them to the original derived series.
+        pc_series = [derived_series[0]]
+        for i in range(0, len_derived_series-1):
+            # Compute the quotient group G_i/Gi+1.
+            q_grp = subgroup_quotient(FpSubgroup(derived_series[i]), derived_series[i+1])
+            # Return a subnormal series.
+            _subnormal_series = _subnormal_series(q_grp)
+            # The images of every subgroup in the quotient map
+            # can be lifted to the orginal group
+            gens = q_grp.generators
+            q_map = homomorphism(derived_series[i], q_grp, gens, gens)
+            for sub_group in _subnormal_series:
+                # Pre-image of subgroup in quotient map.
+                _sub_group = q_map.invert_subgroup(sub_group)
+                pc_series.append(_sub_group)
+            pc_series.append(derived_series[i+1])
+
+        return pc_series
+
+
+def subgroup_quotient(G, H):
+    '''
+    Compute the quotient group G/H
+    where, H is the subgroup of G.
+    '''
+    if not (isinstance(G, FpGroup)
+                and isinstance(H, FpGroup)):
+        raise ValueError("The group must be an instance of FpGroup")
+
+    if not G.free_group == H.free_group:
+        raise ValueError("The elements must belong"
+                                "to the same FreeGroup")
+
+    if not H.is_subgroup(G):
+        raise ValueError("H must be a subgroup of G")
+
+    free_group = G.free_group
+    q_relators = G.relators + H.generators
+    q_group = FpGroup(free_group, q_relators)
+
+    # Return the quotient group with presentation
+    # <G.generators|q_realtors>
+    return q_group
+
+def _subnormal_series(G):
+    '''
+    Computes the subnormal series for an abelian group.
+    '''
+    if not G.is_abelian:
+        raise NotImplementedError("Subnormal series computation is"
+                                    "only implemented for AbelianGroups")
+    subnormal_series = [G]
+    _next = G
+    _next_order = _next.order()
+    while not igcd(_next_order, totient(_next_order)) == 1:
+        # Loop until a square free ordered group is obtained.
+        elem = _next.generators[0]
+        _next = _next.subgroup(elem)
+        _next_order = _next.order()
+        subnormal_series.append(_next)
+
+    return set(subnormal_series)
 
 class FpSubgroup(DefaultPrinting):
     '''

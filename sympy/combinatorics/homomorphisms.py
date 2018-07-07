@@ -3,6 +3,8 @@ from __future__ import print_function, division
 from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup
 from sympy.combinatorics.free_groups import FreeGroup, FreeGroupElement
 from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.core.numbers import igcd
+from sympy.ntheory.factor_ import totient
 
 class GroupHomomorphism(object):
     '''
