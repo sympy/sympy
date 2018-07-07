@@ -468,9 +468,9 @@ def group_isomorphism(G, H, isomorphism=True):
 
     '''
     if not isinstance(G, (PermutationGroup, FpGroup)):
-        raise TypeError("The group must be a PermutationGroup or a finite FpGroup")
+        raise TypeError("The group must be a PermutationGroup or an FpGroup")
     if not isinstance(H, (PermutationGroup, FpGroup)):
-        raise TypeError("The group must be a PermutationGroup or a finite FpGroup")
+        raise TypeError("The group must be a PermutationGroup or an FpGroup")
 
     if isinstance(G, FpGroup) and isinstance(H, FpGroup):
         G = simplify_presentation(G)
@@ -482,9 +482,8 @@ def group_isomorphism(G, H, isomorphism=True):
                 return True
             return (True, homomorphism(G, H, G.generators, H.generators))
 
-    #  `_H` is the permutation groups isomorphic to `H`.
+    #  `_H` is the permutation group isomorphic to `H`.
     _H = H
-    h_isomorphism = None
     g_order = G.order()
     h_order = H.order()
 
@@ -496,39 +495,33 @@ def group_isomorphism(G, H, isomorphism=True):
             raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
         _H, h_isomorphism = H._to_perm_group()
 
-    if (g_order != h_order) and (G.is_abelian != H.is_abelian):
+    if (g_order != h_order) or (G.is_abelian != H.is_abelian):
         if not isomorphism:
             return False
         return (False, None)
 
     if not isomorphism:
-        # Two groups of same cyclic numbered order
-        # are ismorphic to each other.
+        # Two groups of the same cyclic numbered order
+        # are isomorphic to each other.
         n = g_order
-        if (g_order == h_order) and (igcd(n, totient(n))) == 1:
+        if (igcd(n, totient(n))) == 1:
             return True
 
-    # Match the generators of `_G` with the subsets of `_H`
-    gens = G.generators
+    # Match the generators of `G` with subsets of `_H`
+    gens = list(G.generators)
     for subset in itertools.permutations(_H, len(gens)):
-        gens = list(gens)
         images = list(subset)
         images.extend([_H.identity]*(len(G.generators)-len(images)))
-        gens.extend([g for g in G.generators if g not in gens])
         _images = dict(zip(gens,images))
         if _check_homomorphism(G, _H, _images):
-            images = []
             if isinstance(H, FpGroup):
-                images = h_isomorphism.invert(list(subset))
-            else:
-                images = subset
+                images = h_isomorphism.invert(images)
             T =  homomorphism(G, H, G.generators, images, check=False)
             if T.is_isomorphism():
                 # It is a valid isomorphism
                 if not isomorphism:
                     return True
-                else:
-                    return (True, T)
+                return (True, T)
 
     if not isomorphism:
         return False

@@ -90,12 +90,11 @@ def test_isomorphisms():
     P = PermutationGroup(p)
     assert not is_isomorphic(D, P)
 
-    # Cyclic Groups of different prime order are not isomorphic to each other.
     A = CyclicGroup(5)
     B = CyclicGroup(7)
     assert not is_isomorphic(A, B)
 
-    # Two groups of same prime order are isomorphic to each other.
+    # Two groups of the same prime order are isomorphic to each other.
     G = FpGroup(F, [a, b**5])
     H = CyclicGroup(5)
     assert G.order() == H.order()
