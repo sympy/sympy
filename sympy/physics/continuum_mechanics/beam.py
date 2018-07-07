@@ -1115,3 +1115,46 @@ class Beam(object):
             return (points[deflections.index(max_def)], max_def)
         else:
             return None
+
+
+class Beam_3d(Beam):
+    """
+    A Beam is a structural element that is capable of withstanding load
+    primarily by resisting against bending. Beams are characterized by
+    their cross sectional profile(Second moment of area), their length
+    and their material.
+    This class can handle loads applied in any direction of a 3D space.
+
+    .. note::
+       While solving a beam bending problem, a user should choose its
+       own sign convention and should stick to it. The results will
+       automatically follow the chosen sign convention.
+    """
+
+    def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x')):
+        """Initializes the class.
+
+        Parameters
+        ==========
+        length : Sympifyable
+            A Symbol or value representing the Beam's length.
+        elastic_modulus : Sympifyable
+            A SymPy expression representing the Beam's Modulus of Elasticity.
+            It is a measure of the stiffness of the Beam material.
+        second_moment : Sympifyable
+            A SymPy expression representing the Beam's Second moment of area.
+            It is a geometrical property of an area which reflects how its
+            points are distributed with respect to its neutral axis.
+        variable : Symbol, optional
+            A Symbol object that will be used as the variable along the beam
+            while representing the load, shear, moment, slope and deflection
+            curve. By default, it is set to ``Symbol('x')``.
+        """
+        self.length = length
+        self.elastic_modulus = elastic_modulus
+        self.second_moment = second_moment
+        self.variable = variable
+        self._boundary_conditions = {'deflection': [], 'slope': []}
+        self._load = 0
+        self._applied_loads = []
+        self._reaction_loads = {}
