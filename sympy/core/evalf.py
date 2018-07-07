@@ -1391,31 +1391,6 @@ class EvalfMixin(object):
             verbose=<bool>
                 Print debug information (default=False)
 
-        Notes
-        ========
-
-        It is suggested to use expr.evalf(subs=...) over expr.subs(...).evalf()
-        or expr.evalf().subs(...) since expr.evalf(subs=...) avoids the loss of
-        significance caused due to naive substitution as the expression is run
-        through the evalf algorithm which takes into account, the various issues
-        that can cause loss of significance or precision. Naive substitution can
-        also include substitution of only a few rather than all symbols in the
-        expression.
-
-        Examples
-        ========
-
-        >>> import sympy
-        >>> from sympy.abc import x, y, z
-        >>> (x + y - z).subs({x: 1e100, y: 1, z: 1e100}) #case_1
-        0
-        >>> (x + y - z).evalf(subs={x: 1e100, y: 1, z: 1e100}) #case_2
-        1.00000000000000
-
-        In case_1, naive substitution evaluates 1e100 + 1 - 1e100 which loses 1 because of
-        the default precision setting. However, in case_2, the evalf algorithm takes care
-        of the significance.
-
         """
         from sympy import Float, Number
         n = n if n is not None else 15
