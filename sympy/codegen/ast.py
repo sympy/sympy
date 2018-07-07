@@ -107,13 +107,19 @@ class Assignment(Relational):
     >>> Assignment(A[0, 1], x)
     Assignment(A[0, 1], x)
 
+    >>> from sympy import ccode
+    >>> from sympy import fcode
+    >>> from sympy.tensor import Indexed
+    >>> from sympy.tensor import Idx
+
+
     >>> n = symbols('n', integer=True)
 
-    >>> ccode(Assignment(Indexed("A", Idx('i', (0, n))), 0))  #case_1
+    >>> ccode(Assignment(Indexed("A", Idx('i', (0, n))), 0))
     'for (int i=0; i<n + 1; i++){\n   A[i] = 0;\n}'
 
-    >>> fcode(Assignment(Indexed("A", Idx('i', (0, n))), 0))  #case_2
-    'do i = 1, n + 1\n  A(i) = 0\n  end do'
+    >>> fcode(Assignment(Indexed("A", Idx('i', (0, n))), 0))
+    '      do i = 1, n + 1\n         A(i) = 0\n      end do'
 
     As shown in case_1, the C loop runs from [0, n], i.e. the upper limit is
     included, unlike what we would expect from ranges. We can also use Idx in
