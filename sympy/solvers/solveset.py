@@ -985,6 +985,17 @@ def _solveset(f, symbol, domain, _check=False):
     return result
 
 
+def make_expr_args(f):
+    """
+    Returns a list of all the terms in an expression.
+    """
+    args = []
+    for add_arg in Add.make_args(f):
+        for mul_arg in Mul.make_args(add_arg):
+            args.append(mul_arg)
+    return args
+
+
 def _solve_expo(f, symbol):
     r"""
     Helper function for solving (supported) exponential equations.
@@ -1075,11 +1086,11 @@ def _is_exponential(f, symbol):
     False
     """
 
-    for add_arg in Add.make_args(f):
-        for mul_arg in Mul.make_args(add_arg):
-            if isinstance(mul_arg, (Pow, exp)) and (
-                    symbol in mul_arg.exp.free_symbols):
-                return True
+    expr_args = make_expr_args(f)
+    for expr_arg in expr_args:
+        if isinstance(expr_arg, (Pow, exp)) and (
+                symbol in expr_arg.exp.free_symbols):
+            return True
     return False
 
 
@@ -1285,7 +1296,7 @@ def _transolve(f, symbol, domain):
 
     if isinstance(rhs_s, FiniteSet):
         rhs = rhs_s.args[0]
-        equation = lhs - rhs
+        equation = Add(lhs, -rhs, evaluate=False)
 
         if lhs.is_Add:
             result = add_type(equation, symbol, domain)

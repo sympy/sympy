@@ -39,7 +39,7 @@ from sympy.solvers.solveset import (
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
-    _solve_expo)
+    _solve_expo, make_expr_args)
 
 
 a = Symbol('a', real=True)
@@ -1730,6 +1730,13 @@ def test_issue_14454():
     number = CRootOf(x**4 + x - 1, 2)
     raises(ValueError, lambda: invert_real(number, 0, x, S.Reals))
     assert invert_real(x**2, number, x, S.Reals)  # no error
+
+
+def test_make_expr_args():
+    assert make_expr_args(3**x - 2) == [-2, 3**x]
+    expr = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
+    assert make_expr_args(expr) == \
+        [4**(x + 1), 4**(x - 1), 4**(x + 2), -1, 3**(x + 2), -1, 3**(x + 3)]
 
 
 #################### tests for transolve and its helpers ###############
