@@ -1416,6 +1416,28 @@ class EvalfMixin(object):
         the default precision setting. However, in case_2, the evalf algorithm takes care
         of the significance.
 
+        When using Floats in a computation, precision errors may affect the
+        final result when the Float values are substituted into an expression.
+        The way to obtain an accurate result is to pass the desired values as
+        the subs argument when doing the evaluation. For example, adding
+        1e16 (a Float) to 1 will truncate to 1e16 and then subtracting 1e16
+        will give 0 -- that is the result obtained from the following when trying
+        to evaluate by simple substitution of values into the expression:
+
+        >>> values = {x: 1e16, y: 1, z: 1e16}
+        >>> (x + y - z).subs(values)
+        0
+
+        If evalf is used and the desired values are sent as the
+        argument for subs, the correct value is obtained:
+
+        >>> (x + y - z).evalf(subs=values)
+        1
+
+        Using the subs argument for evalf is the accurate way to
+        evaluate an expression at a desired set of values when
+        precision errors may otherwise affect the calculation.
+
         """
         from sympy import Float, Number
         n = n if n is not None else 15
