@@ -7,7 +7,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
                          Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
-                         LogNormal, Maxwell, Nakagami, Normal, Pareto,
+                         LogNormal, Maxwell, Moyal, Nakagami, Normal, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
@@ -443,6 +443,18 @@ def test_maxwell():
         (sqrt(pi)*a**3))
     assert E(X) == 2*sqrt(2)*a/sqrt(pi)
     assert simplify(variance(X)) == a**2*(-8 + 3*pi)/pi
+
+
+def test_moyal():
+    mu = Symbol('mu', real=True, finite=True)
+    sigma = Symbol('sigma', real=True, positive=True, finite=True)
+
+    X = Moyal('x', mu, sigma)
+
+    assert density(X)(x) == (sqrt(2)*
+        exp(-exp((mu - x)/sigma)/2 - (-mu + x)/(2*sigma))
+        /(2*sqrt(pi)*sigma))
+    assert cdf(X)(x) == erfc(sqrt(2)*exp((mu - x)/(2*sigma))/2)
 
 
 def test_nakagami():
