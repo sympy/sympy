@@ -1066,19 +1066,19 @@ class appellf1(Function):
         if default_sort_key(b1) > default_sort_key(b2):
             b1, b2 = b2, b1
             x, y = y, x
-        if b1 == b2:
+        elif b1 == b2:
             x, y = sorted([x, y], key=default_sort_key)
         return Function.__new__(cls, a, b1, b2, c, x, y)
 
     def _eval_rewrite_as_factorial(self, *args):
         from sympy import symbols, Sum, RisingFactorial, factorial
         m, n = symbols('m n', integer = True)
-        a, b1, b2, c, x, y = (i for i in self.args)
+        a, b1, b2, c, x, y = self.args
         return Sum(x**m*y**n*RisingFactorial(a, m + n)*RisingFactorial(b1, m)*\
             RisingFactorial(b2, n)/(factorial(m)*factorial(n)*RisingFactorial(c, m + n)), (m, 0, oo), (n, 0, oo)).rewrite(factorial)
 
     def fdiff(self, argindex=5):
-        a, b1, b2, c, x, y = (i for i in self.args)
+        a, b1, b2, c, x, y = self.args
         if argindex == 5:
             return (a*b1/c)*appellf1(a + 1, b1 + 1, b2, c + 1, x, y)
         elif argindex == 6:
