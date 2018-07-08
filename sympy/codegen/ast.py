@@ -73,7 +73,7 @@ from sympy.sets import FiniteSet
 from sympy.utilities.iterables import iterable
 
 class Assignment(Relational):
-    """
+    r"""
     Represents variable assignment for code generation.
 
     Parameters
