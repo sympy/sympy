@@ -1156,5 +1156,38 @@ class Beam_3d(Beam):
         self.variable = variable
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
-        self._applied_loads = []
+        self._load_vector = [0, 0, 0]
         self._reaction_loads = {}
+
+    @property
+    def load_vector(self):
+        """
+        Returns a list of load applied on object in terms of SingularityFunction.
+        """
+        return self._load_vector
+
+    def apply_load(self, value, start, order, end=None, dir="y"):
+        """
+        This method adds up the loads given to a particular beam object.
+        """
+        x = self.variable
+        value = sympify(value)
+        start = sympify(start)
+        order = sympify(order)
+        direction = str(dir)
+
+        load = value*SingularityFunction(x, start, order)
+        if end:
+            if order == 0:
+                load -= value*SingularityFunction(x, end, order)
+            elif order.is_positive:
+                load -= value*SingularityFunction(x, end, order) + value*SingularityFunction(x, end, 0)
+            else:
+                raise ValueError("""Order of the load should be positive.""")
+
+        if dir == "x":
+            self._load_vector[0] += load
+        elif dir == "y":
+            self._load_vector[1] += load
+        else:
+            self._load_vector[2] += load
