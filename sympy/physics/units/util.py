@@ -133,31 +133,35 @@ def convert_to(expr, target_units):
 
 
 def quantity_simplify(expr):
-    if expr.is_Atom or not expr.has(Quantity):
-        return expr
-    expr = expr.func(*map(quantity_simplify, expr.args))
-    if not isinstance(expr, Mul):
-        return expr
+    from sympy import ordered
+    if isinstance(expr, Add):
+        # get units of first args in Add
+        units = expr.args[0].as_coeff_mul(Quantity)[-1]
+        # recursively use quantity_simplify on all args and xreplace them in expr
+        new_expr = expr.xreplace(dict([(i, convert_to(quantity_simplify(i), units)) for i in expr.args]))
+        return new_expr
 
-    if any(isinstance(a, Prefix) for a in expr.args):
-        coeff, args = expr.as_coeff_mul(Prefix)
-        args = list(args)
-        for arg in args:
-            if isinstance(arg, Pow):
-                coeff = coeff * (arg.base.scale_factor ** arg.exp)
+    # replace all prefixes with numbers
+    nopre = expr.xreplace(dict([(i, i.scale_factor) for i in expr.atoms(Prefix)]))
+    # reduce all mixed units of a given dimension to a single Quantity
+    # e.g. foot*inch**2 -> 1/144*foot**3
+    reps = {}
+    for m in nopre.atoms(Mul):
+        be = [i.as_base_exp() for i in m.args]
+        be, c = sift(be, lambda x: isinstance(x[0], Quantity), binary=True)
+        c = Mul(*[b**e for b, e in c])
+        be = [(b.dimension, (b, e)) for b, e in be]
+        s = {}
+        for d, (b, e) in be:
+            s.setdefault(d, []).append((b,e))
+        f = []
+        for k in s:
+            s[k] = list(ordered(s[k]))
+            B, e = s[k][0]
+            if len(s[k]) > 1:
+                scale = B.scale_factor
+                f.append(Mul(*[(B*b.scale_factor/scale)**e for b, e in s[k]]))
             else:
-                coeff = coeff * arg.scale_factor
-        expr = coeff
-
-    coeff, args = expr.as_coeff_mul(Quantity)
-    args_pow = [arg.as_base_exp() for arg in args]
-    quantity_pow, other_pow = sift(args_pow, lambda x: isinstance(x[0], Quantity), binary=True)
-    quantity_pow_by_dim = sift(quantity_pow, lambda x: x[0].dimension)
-    # Just pick the first quantity:
-    ref_quantities = [i[0][0] for i in quantity_pow_by_dim.values()]
-    new_quantities = [
-        Mul.fromiter(
-            (quantity*i.scale_factor/quantity.scale_factor)**p for i, p in v)
-            if len(v) > 1 else v[0][0]**v[0][1]
-        for quantity, (k, v) in zip(ref_quantities, quantity_pow_by_dim.items())]
-    return coeff*Mul.fromiter(other_pow)*Mul.fromiter(new_quantities)
+                f.append(B**e)
+        reps[m] = c*Mul(*f)
+    return nopre.subs(reps)
