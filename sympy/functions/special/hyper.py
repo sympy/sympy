@@ -11,8 +11,7 @@ from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth, Abs)
-
-from mpmath import appellf1 as apl
+from sympy.utilities.iterables import default_sort_key
 
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
@@ -1061,10 +1060,15 @@ class appellf1(Function):
     .. [2] http://functions.wolfram.com/HypergeometricFunctions/AppellF1/
 
     '''
-    @classmethod
-    def eval(cls, a, b1, b2, c, x, y):
-        if all(i.is_number for i in (a, b1, b2, c, x, y)):
-            return S(apl(a, b1, b2, c, x, y))
+    nargs = 6
+
+    def __new__(cls, a, b1, b2, c, x, y):
+        if default_sort_key(b1) > default_sort_key(b2):
+            b1, b2 = b2, b1
+            x, y = y, x
+        if b1 == b2:
+            x, y = sorted([x, y], key=default_sort_key)
+        return Function.__new__(cls, a, b1, b2, c, x, y)
 
     def _eval_rewrite_as_factorial(self, *args):
         from sympy import symbols, Sum, RisingFactorial, factorial
@@ -1073,14 +1077,13 @@ class appellf1(Function):
         return Sum(x**m*y**n*RisingFactorial(a, m + n)*RisingFactorial(b1, m)*\
             RisingFactorial(b2, n)/(factorial(m)*factorial(n)*RisingFactorial(c, m + n)), (m, 0, zoo), (n, 0, zoo)).rewrite(factorial)
 
-    def fdiff(self, *args):
-        if len(args) == 1:
-            a, b1, b2, c, x, y = (i for i in self.args)
-            if args[0] == 5:
-                return (a*b1/c)*appellf1(a + 1, b1 + 1, b2, c + 1, x, y)
-            elif args[0] == 6:
-                return (a*b2/c)*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)
-            else:
-                return NotImplemented
+    def fdiff(self, argindex=5):
+        a, b1, b2, c, x, y = (i for i in self.args)
+        if argindex == 5:
+            return (a*b1/c)*appellf1(a + 1, b1 + 1, b2, c + 1, x, y)
+        elif argindex == 6:
+            return (a*b2/c)*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)
+        elif argindex in (1, 2, 3, 4):
+            raise NotImplementedError("Unable to find derivative wrt to {}".format(self.args[argindex-1]))
         else:
-            return NotImplemented
+            raise ArgumentIndexError(self, argindex)
