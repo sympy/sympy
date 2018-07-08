@@ -446,6 +446,11 @@ def test_sympy__core__numbers__GoldenRatio():
     assert _test_args(GoldenRatio())
 
 
+def test_sympy__core__numbers__TribonacciConstant():
+    from sympy.core.numbers import TribonacciConstant
+    assert _test_args(TribonacciConstant())
+
+
 def test_sympy__core__numbers__Half():
     from sympy.core.numbers import Half
     assert _test_args(Half())
@@ -1317,6 +1322,11 @@ def test_sympy__functions__combinatorial__numbers__euler():
 def test_sympy__functions__combinatorial__numbers__fibonacci():
     from sympy.functions.combinatorial.numbers import fibonacci
     assert _test_args(fibonacci(x))
+
+
+def test_sympy__functions__combinatorial__numbers__tribonacci():
+    from sympy.functions.combinatorial.numbers import tribonacci
+    assert _test_args(tribonacci(x))
 
 
 def test_sympy__functions__combinatorial__numbers__harmonic():
