@@ -985,9 +985,10 @@ def _solveset(f, symbol, domain, _check=False):
     return result
 
 
-def make_expr_args(f):
+def term_factors(f):
     """
-    Returns a list of all the terms in an expression.
+    Returns a list of the factors of all terms present in the
+    expression.
     """
     args = []
     for add_arg in Add.make_args(f):
@@ -1086,7 +1087,7 @@ def _is_exponential(f, symbol):
     False
     """
 
-    expr_args = make_expr_args(f)
+    expr_args = term_factors(f)
     for expr_arg in expr_args:
         if isinstance(expr_arg, (Pow, exp)) and (
                 symbol in expr_arg.exp.free_symbols):

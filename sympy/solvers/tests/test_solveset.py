@@ -39,7 +39,7 @@ from sympy.solvers.solveset import (
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
-    _solve_expo, make_expr_args)
+    _solve_expo, term_factors)
 
 
 a = Symbol('a', real=True)
@@ -1732,10 +1732,10 @@ def test_issue_14454():
     assert invert_real(x**2, number, x, S.Reals)  # no error
 
 
-def test_make_expr_args():
-    assert make_expr_args(3**x - 2) == [-2, 3**x]
+def test_term_factors():
+    assert term_factors(3**x - 2) == [-2, 3**x]
     expr = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
-    assert make_expr_args(expr) == \
+    assert term_factors(expr) == \
         [4**(x + 1), 4**(x - 1), 4**(x + 2), -1, 3**(x + 2), -1, 3**(x + 3)]
 
 
