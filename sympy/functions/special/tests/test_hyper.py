@@ -1,5 +1,5 @@
 from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
-                   cos, sqrt, symbols, oo, Derivative, gamma, O)
+                   cos, sqrt, symbols, oo, Derivative, gamma, O, appellf1)
 from sympy.series.limits import limit
 from sympy.abc import x, z, k
 from sympy.utilities.pytest import raises, slow
@@ -343,3 +343,27 @@ def test_limits():
            O(k**6) # issue 6350
     assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
             meijerg(((), ()), ((1,), (0,)), 0) # issue 6052
+
+def test_appellf1():
+    a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
+    assert appellf1(a, b2, b1, c, y, x) == appellf1(a, b1, b2, c, x, y)
+    assert appellf1(a, b1, b1, c, y, x) == appellf1(a, b1, b1, c, x, y)
+
+def test_derivative_appellf1():
+    from sympy import diff
+    a, b1, b2, c, x, y, z = symbols('a b1 b2 c x y z')
+    assert diff(appellf1(a, b1, b2, c, x, y), x) == a*b1*appellf1(a + 1, b2, b1 + 1, c + 1, y, x)/c
+    assert diff(appellf1(a, b1, b2, c, x, y), y) == a*b2*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)/c
+    assert diff(appellf1(a, b1, b2, c, x, y), z) == 0
+
+def test_appellf1_rewrite_factorial():
+    from sympy import factorial, Sum, oo
+    x, y = symbols('x y')
+    m, n = symbols('m n', integer=True)
+    assert appellf1(1 ,2 ,2, 1, 0.5, 0.6).rewrite(factorial) == \
+        Sum(0.5**m*0.6**n*factorial(m + 1)*factorial(n + 1)/(factorial(m)*\
+        factorial(n)), (m, 0, oo), (n, 0, oo))
+
+    assert appellf1(1 ,2 ,4, 2, x, y).rewrite(factorial) == \
+        Sum(x**m*y**n*factorial(m + 1)*factorial(m + n)*factorial(n + 3)/(6*factorial(m)*\
+            factorial(n)*factorial(m + n + 1)), (m, 0, oo), (n, 0, oo))

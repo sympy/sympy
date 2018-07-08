@@ -36,7 +36,7 @@ from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.bsplines import bspline_basis, bspline_basis_set, interpolating_spline
 from sympy.functions.special.bessel import (besselj, bessely, besseli, besselk,
         hankel1, hankel2, jn, yn, jn_zeros, hn1, hn2, airyai, airybi, airyaiprime, airybiprime)
-from sympy.functions.special.hyper import hyper, meijerg
+from sympy.functions.special.hyper import hyper, meijerg, appellf1
 from sympy.functions.special.polynomials import (legendre, assoc_legendre,
         hermite, chebyshevt, chebyshevu, chebyshevu_root, chebyshevt_root,
         laguerre, assoc_laguerre, gegenbauer, jacobi, jacobi_normalized)

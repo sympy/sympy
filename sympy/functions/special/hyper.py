@@ -1075,7 +1075,7 @@ class appellf1(Function):
         m, n = symbols('m n', integer = True)
         a, b1, b2, c, x, y = (i for i in self.args)
         return Sum(x**m*y**n*RisingFactorial(a, m + n)*RisingFactorial(b1, m)*\
-            RisingFactorial(b2, n)/(factorial(m)*factorial(n)*RisingFactorial(c, m + n)), (m, 0, zoo), (n, 0, zoo)).rewrite(factorial)
+            RisingFactorial(b2, n)/(factorial(m)*factorial(n)*RisingFactorial(c, m + n)), (m, 0, oo), (n, 0, oo)).rewrite(factorial)
 
     def fdiff(self, argindex=5):
         a, b1, b2, c, x, y = (i for i in self.args)
