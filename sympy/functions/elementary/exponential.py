@@ -501,7 +501,31 @@ class log(Function):
         from sympy import unpolarify
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
+        from sympy.physics.units import Quantity
 
+        arg = sympify(arg)
+
+        addends = arg.as_coeff_add()
+        addends_list = list(addends[1])
+        for i in range(len(addends_list)):
+            if Quantity.get_dimensional_expr(addends_list[i]) != Quantity.get_dimensional_expr(1):
+                multiplicands = addends_list[i].as_coeff_mul()
+                multiplicands_list = list(multiplicands[1])
+                for j in range(len(multiplicands_list)):
+                    r = list(multiplicands_list[j].as_numer_denom())
+                    if Quantity.get_dimensional_expr(r[0]) != Quantity.get_dimensional_expr(1):
+                        r[0] = Quantity(r[0].name, Quantity.get_dimensional_expr(1))
+                    if Quantity.get_dimensional_expr(r[1]) != Quantity.get_dimensional_expr(1):
+                        r[1] = Quantity(r[1].name, Quantity.get_dimensional_expr(1))
+                    multiplicands_list[j] = r[0]/r[1]
+                addends_list[i] = 1
+                for multiplicand in multiplicands_list:
+                    addends_list[i] *= multiplicand
+                addends_list[i] *= multiplicands[0]
+        arg = 0
+        for addend in addends_list:
+            arg += addend
+        arg += addends[0]
         arg = sympify(arg)
 
         if base is not None:
