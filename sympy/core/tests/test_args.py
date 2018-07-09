@@ -1972,6 +1972,10 @@ def test_sympy__functions__special__hyper__HyperRep_sinasin():
     from sympy.functions.special.hyper import HyperRep_sinasin
     assert _test_args(HyperRep_sinasin(x, y))
 
+def test_sympy__functions__special__hyper__appellf1():
+    from sympy.functions.special.hyper import appellf1
+    a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
+    assert _test_args(appellf1(a, b1, b2, c, x, y))
 
 @SKIP("abstract class")
 def test_sympy__functions__special__polynomials__OrthogonalPolynomial():
