@@ -5,7 +5,6 @@ from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta,
                    Piecewise, floor)
 from sympy.stats.rv import _value_check
 from sympy.stats import density
-from sympy.sets.sets import Interval
 import random
 
 __all__ = ['Geometric', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'YuleSimon', 'Zeta']
@@ -238,7 +237,9 @@ class PoissonDistribution(SingleDiscreteDistribution):
         _value_check(lamda > 0, "Lambda must be positive")
 
     def pdf(self, k):
-        return self.lamda**k / factorial(k) * exp(-self.lamda)
+        _pdf = self.lamda**k / factorial(k) * exp(-self.lamda)
+        _pdf = self.handle_compound_rv(_pdf)
+        return _pdf
 
     def sample(self):
         def search(x, y, u):

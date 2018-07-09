@@ -11,7 +11,8 @@ sympy.stats.frv
 from __future__ import print_function, division
 
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
+        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin,
+        RandomSymbol)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
@@ -244,6 +245,20 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """ Expectation of expression over distribution """
         integral = Integral(expr * self.pdf(var), (var, self.set))
         return integral.doit(**kwargs) if evaluate else integral
+
+    def handle_compound_rv(self, expr):
+        from sympy.stats.rv import density
+        from sympy.concrete.summations import summation
+        for arg in self.args:
+            if isinstance(arg, RandomSymbol):
+                sym, dom = arg.symbol, arg.pspace.set
+                lpdf = density(arg)(sym)
+                expr = expr.replace(arg, sym)*lpdf
+                if arg.pspace.is_Continuous:
+                    expr = integrate(expr, (sym, dom))
+                elif arg.pspace.is_Discrete:
+                    expr = summation(expr, (sym, dom))
+        return expr
 
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
