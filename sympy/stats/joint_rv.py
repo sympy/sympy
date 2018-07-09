@@ -18,8 +18,6 @@ from sympy.concrete.summations import Sum, summation
 from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
      ProductDomain, RandomSymbol)
-from sympy.core.containers import Tuple
-
 class JointPSpace(ProductPSpace):
     """
     Represents a joint probability space. Represented using symbols for
@@ -88,9 +86,6 @@ class JointDistribution(Basic, NamedArgsMixin):
 
     def __new__(cls, *args):
         args = list(map(sympify, args))
-        for i in range(len(args)):
-            if isinstance(args[i], list):
-                args[i] = Tuple.fromiter(j for j in args[i])
         return Basic.__new__(cls, *args)
 
     @property

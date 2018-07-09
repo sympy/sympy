@@ -960,6 +960,7 @@ def test_sympy__sets__contains__Contains():
 
 
 from sympy.stats.crv_types import NormalDistribution
+from sympy.matrices import ImmutableMatrix
 nd = NormalDistribution(0, 1)
 from sympy.stats.frv_types import DieDistribution
 die = DieDistribution(6)
@@ -1458,16 +1459,22 @@ def test_sympy__stats__joint_rv__JointDistribution():
 
 def test_sympy__stats__joint_rv_types__MultivariateNormalDistribution():
     from sympy.stats.joint_rv_types import MultivariateNormalDistribution
-    assert _test_args(MultivariateNormalDistribution([0, 1], [[1, 0],[0, 1]]))
+    assert _test_args(
+        MultivariateNormalDistribution(ImmutableMatrix([0, 1]),
+         ImmutableMatrix([[1, 0],[0, 1]])))
 
 def test_sympy__stats__joint_rv_types__MultivariateLaplaceDistribution():
     from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution
-    assert _test_args(MultivariateLaplaceDistribution([0, 1], [[1, 0],[0, 1]]))
+    assert _test_args(
+        MultivariateLaplaceDistribution(ImmutableMatrix([0, 1]),
+            ImmutableMatrix([[1, 0],[0, 1]])))
 
 
 def test_sympy__stats__joint_rv_types__MultivariateTDistribution():
     from sympy.stats.joint_rv_types import MultivariateTDistribution
-    assert _test_args(MultivariateTDistribution([0, 1], [[1, 0],[0, 1]], 1))
+    assert _test_args(MultivariateTDistribution(
+        ImmutableMatrix([0, 1]),
+        ImmutableMatrix([[1, 0],[0, 1]]), 1))
 
 
 def test_sympy__stats__joint_rv_types__NormalGammaDistribution():
