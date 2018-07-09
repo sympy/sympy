@@ -1131,7 +1131,7 @@ class Beam_3d(Beam):
        automatically follow the chosen sign convention.
     """
 
-    def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x')):
+    def __init__(self, length, elastic_modulus, shear_modulus ,second_moment, variable=Symbol('x')):
         """Initializes the class.
 
         Parameters
@@ -1152,42 +1152,131 @@ class Beam_3d(Beam):
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
+        self.shear_modulus = shear_modulus
         self.second_moment = second_moment
         self.variable = variable
         self._boundary_conditions = {'deflection': [], 'slope': []}
-        self._load = 0
         self._load_vector = [0, 0, 0]
-        self._reaction_loads = {}
+        self._moment_load_vector = [0, 0, 0]
+        self._slope = []
+        self._deflection = []
+
+    @property
+    def shear_modulus(self):
+        """Young's Modulus of the Beam. """
+        return self._shear_modulus
+
+    @shear_modulus.setter
+    def shear_modulus(self, e):
+        self._shear_modulus = sympify(e)
 
     @property
     def load_vector(self):
         """
-        Returns a list of load applied on object in terms of SingularityFunction.
+        Returns a three element list representing the load vector.
         """
         return self._load_vector
 
-    def apply_load(self, value, start, order, end=None, dir="y"):
+    @property
+    def moment_load_vector(self):
         """
-        This method adds up the loads given to a particular beam object.
+        Returns a three element list representing moment loads on Beam.
         """
-        x = self.variable
+        return self._moment_load_vector
+
+    def apply_load(self, value, dir="y"):
+        """
+        This method adds up the force load to a particular beam object.
+        """
         value = sympify(value)
-        start = sympify(start)
-        order = sympify(order)
-        direction = str(dir)
-
-        load = value*SingularityFunction(x, start, order)
-        if end:
-            if order == 0:
-                load -= value*SingularityFunction(x, end, order)
-            elif order.is_positive:
-                load -= value*SingularityFunction(x, end, order) + value*SingularityFunction(x, end, 0)
-            else:
-                raise ValueError("""Order of the load should be positive.""")
-
         if dir == "x":
-            self._load_vector[0] += load
+            self._load_vector[0] += value
         elif dir == "y":
-            self._load_vector[1] += load
+            self._load_vector[1] += value
         else:
-            self._load_vector[2] += load
+            self._load_vector[2] += value
+
+    def apply_moment_load(self, value, dir="y"):
+        """
+        This method adds up the moment loads to a particular beam object.
+        """
+        value = sympify(value)
+        if dir == "x":
+            self._moment_load_vector[0] += value
+        elif dir == "y":
+            self._moment_load_vector[1] += value
+        else:
+            self._moment_load_vector[2] += value
+
+    def _solver(self):
+        x = self.variable
+        l = self.length
+        E = self.elastic_modulus
+        G = self.shear_modulus
+        I = self.second_moment
+
+        from sympy import dsolve, Function, Derivative, Eq
+        m = Symbol('m')
+        q = Symbol('q')
+        A = Symbol('a')
+        w = Function('w')
+        th = Function('th')
+
+        # eq1 = Derivative(E*I*Derivative(th(x), x), x) + G*A*(Derivative(w(x), x) - th(x))+m
+        # eq2 = Derivative(G*A*(Derivative(w(x), x) - th(x)), x) + q
+
+        C_i = Symbol('C_i')
+        eq1 = Derivative(E*I*Derivative(th(x), x), x) + integrate(-q, x) + C_i + m
+        th = dsolve(Eq(eq1, 0)).args[1]
+        # print(th)
+        #solve for constants
+        C1 = Symbol('C1')
+        C2 = Symbol('C2')
+        solution = list((linsolve([th.subs(x, 0), th.subs(x, l)], C1, C2).args)[0])
+        th = th.subs({C1:solution[0], C2:solution[1]})
+
+        eq2 = G*A*(Derivative(w(x), x)) + q*x - C_i - G*A*th
+        eq2 = dsolve(Eq(eq2,0)).args[1]
+        solution = list((linsolve([eq2.subs(x, 0), eq2.subs(x, l)], C1, C_i).args)[0])
+        print(solution)
+        deflection = eq2.subs({C1:solution[0], C_i:solution[1]})
+        slope = th.subs(C_i, solution[1])
+        print(slope)
+        print(deflection)
+
+    def solver(self):
+        from sympy import dsolve, Function, Derivative, Eq
+        x = self.variable
+        l = self.length
+        E = self.elastic_modulus
+        G = self.shear_modulus
+        I = self.second_moment
+
+        m = Symbol('m')
+        q = Symbol('q')
+        A = Symbol('a')
+        defl = Function('defl')
+        theta = Function('theta')
+
+        # eq1 = Derivative(E*I*Derivative(theta(x), x), x) + G*A*(Derivative(defl(x), x) - theta(x))+m
+        # eq2 = Derivative(G*A*(Derivative(defl(x), x) - theta(x)), x) + q
+
+        C_i = Symbol('C_i')
+        eq1 = Derivative(E*I*Derivative(theta(x), x), x) + integrate(-q, x) + C_i + m
+        slope = dsolve(Eq(eq1, 0)).args[1]
+
+        #solve for constants originated from using dsolve on eq1
+        C1 = Symbol('C1')
+        C2 = Symbol('C2')
+        constants = list((linsolve([slope.subs(x, 0), slope.subs(x, l)], C1, C2).args)[0])
+        slope = slope.subs({C1:constants[0], C2:constants[1]})
+
+        eq2 = G*A*(Derivative(defl(x), x)) + q*x - C_i - G*A*slope
+        eq2 = dsolve(Eq(eq2,0)).args[1]
+        #solve for constants originated from using dsolve on eq2
+        constants = list((linsolve([eq2.subs(x, 0), eq2.subs(x, l)], C1, C_i).args)[0])
+        # print(constants)
+        deflection = eq2.subs({C1:constants[0], C_i:constants[1]})
+        slope = slope.subs(C_i, constants[1])
+        # print(slope)
+        # print(deflection)
