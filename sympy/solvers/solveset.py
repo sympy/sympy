@@ -996,13 +996,9 @@ def term_factors(f):
     >>> from sympy import symbols
     >>> from sympy.solvers.solveset import term_factors
     >>> x = symbols('x')
-    >>> term_factors_obj = term_factors(x**2 - 1)
-    >>> for term in term_factors_obj:
-    ...     print(term)
-    -1
-    x**2
+    >>> list(term_factors(-2 - x**2 + x*(x + 1)))
+    [-2, -1, x**2, x, x + 1]
     """
-    args = []
     for add_arg in Add.make_args(f):
         for mul_arg in Mul.make_args(add_arg):
             yield mul_arg
