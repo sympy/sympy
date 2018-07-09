@@ -17,6 +17,9 @@ def test_Normal():
     assert density(m)(x, y) == density(p)(x, y)
     assert marginal_distribution(n, 0, 1)(1, 2) == 1/(2*pi)
     assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
+    N1 = Normal('N1', [1, 2], [[x, 0], [0, y]])
+    assert str(density(N1)(0, 0)) == "exp(-(4*x + y)/(2*x*y))/(2*pi*sqrt(x*y))"
+
     raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
 
 def test_MultivariateTDist():
@@ -26,12 +29,17 @@ def test_MultivariateTDist():
     assert integrate(density(t1)(x, y), (x, -oo, oo), \
         (y, -oo, oo)).evalf() == 1
     raises(ValueError, lambda: MultivariateT('T', [1, 2], [[1, 1], [1, -1]], 1))
+    t2 = MultivariateT('t2', [1, 2], [[x, 0], [0, y]], 1)
+    assert density(t2)(1, 2) == 1/(2*pi*sqrt(x*y))
 
 def test_multivariate_laplace():
     from sympy.stats.crv_types import Laplace
     raises(ValueError, lambda: Laplace('T', [1, 2], [[1, 2], [2, 1]]))
     L = Laplace('L', [1, 0], [[1, 2], [0, 1]])
     assert density(L)(2, 3) == exp(2)*besselk(0, sqrt(3))/pi
+    L1 = Laplace('L1', [1, 2], [[x, 0], [0, y]])
+    assert density(L1)(0, 1) == \
+        exp(2/y)*besselk(0, sqrt((2 + 4/y + 1/x)/y))/(pi*sqrt(x*y))
 
 def test_NormalGamma():
     from sympy.stats.joint_rv_types import NormalGamma

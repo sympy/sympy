@@ -1,4 +1,4 @@
-from sympy import sympify, S, pi, sqrt, exp, Lambda, Indexed, Symbol
+from sympy import sympify, S, pi, sqrt, exp, Lambda, Indexed, Symbol, Gt
 from sympy.stats.rv import _value_check
 from sympy.stats.joint_rv import JointDistribution, JointPSpace
 from sympy.matrices.dense import Matrix
@@ -35,16 +35,17 @@ class MultivariateNormalDistribution(JointDistribution):
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the mean vector and covariance matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
-        _value_check(all([i > 0 for i in sigma.eigenvals().keys()]),
+        _value_check(all([Gt(i, 0) != False for i in sigma.eigenvals().keys()]),
             "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = Matrix(self.mu), Matrix(self.sigma)
         k = len(mu)
         args = Matrix(args)
+        x = args - mu
         return  S(1)/sqrt((2*pi)**(k)*det(sigma))*exp(
-            -S(1)/2*(mu - args).transpose()*(sigma**(-1)*\
-                (mu - args)))[0]
+            -S(1)/2*x.transpose()*(sigma.inv()*\
+                x))[0]
 
     def marginal_distribution(self, indices, sym):
         sym = Matrix([Symbol(str(Indexed(sym, i))) for i in indices])
@@ -56,7 +57,7 @@ class MultivariateNormalDistribution(JointDistribution):
                 _sigma.col_del(i)
                 _sigma.row_del(i)
         return Lambda(sym, S(1)/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
-            -S(1)/2*(_mu - sym).transpose()*(_sigma**(-1)*\
+            -S(1)/2*(_mu - sym).transpose()*(_sigma.inv()*\
                 (_mu - sym)))[0])
 
 #-------------------------------------------------------------------------------
@@ -76,22 +77,22 @@ class MultivariateLaplaceDistribution(JointDistribution):
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the mean vector and covariance matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
-        _value_check(all([i > 0 for i in sigma.eigenvals().keys()]),
+        _value_check(all([Gt(i, 0) != False for i in sigma.eigenvals().keys()]),
             "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
         from sympy.functions.special.bessel import besselk
         mu, sigma = Matrix(self.mu), Matrix(self.sigma)
         mu_T = mu.transpose()
-        k = len(mu)
-        sigma_inv = sigma**(-1)
+        k = S(len(mu))
+        sigma_inv = sigma.inv()
         args = Matrix(args)
         args_T = args.transpose()
-        v = 1 - S(k)/2
-        return S(2)/((2*pi)**(S(k)/2)*sqrt(det(sigma))) \
-        *((args_T*sigma_inv*args)[0]/(2 + (mu_T*sigma_inv*mu)[0])) \
-        **(S(v)/2)*besselk(v, sqrt((2 + (mu_T*sigma_inv*mu)[0])
-            *((args_T*sigma_inv*args)[0])))\
+        x = (mu_T*sigma_inv*mu)[0]
+        y = (args_T*sigma_inv*args)[0]
+        v = 1 - k/2
+        return S(2)/((2*pi)**(S(k)/2)*sqrt(det(sigma)))\
+        *(y/(2 + x))**(S(v)/2)*besselk(v, sqrt((2 + x)*(y)))\
         *exp((args_T*sigma_inv*mu)[0])
 
 
@@ -112,7 +113,7 @@ class MultivariateTDistribution(JointDistribution):
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the location vector and shape matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
-        _value_check(all([i > 0 for i in sigma.eigenvals().keys()]),
+        _value_check(all([Gt(i, 0) != False for i in sigma.eigenvals().keys()]),
             "The shape matrix must be positive definite. ")
 
     def pdf(self, *args):
@@ -120,10 +121,11 @@ class MultivariateTDistribution(JointDistribution):
         mu, sigma = Matrix(self.mu), Matrix(self.shape_mat)
         v = S(self.dof)
         k = S(len(mu))
-        sigma_inv = sigma**(-1)
+        sigma_inv = sigma.inv()
         args = Matrix(args)
+        x = args - mu
         return gamma((k + v)/2)/(gamma(v/2)*(v*pi)**(k/2)*sqrt(det(sigma)))\
-        *(1 + 1/v*((args - mu).transpose()*sigma_inv*(args - mu))[0])**((-v - k)/2)
+        *(1 + 1/v*(x.transpose()*sigma_inv*x)[0])**((-v - k)/2)
 
 def MultivariateT(syms, mu, sigma, v):
     """
