@@ -348,6 +348,7 @@ def test_appellf1():
     a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
     assert appellf1(a, b2, b1, c, y, x) == appellf1(a, b1, b2, c, x, y)
     assert appellf1(a, b1, b1, c, y, x) == appellf1(a, b1, b1, c, x, y)
+    assert appellf1(a, b1, b2, c, S(0), S(0)) == S(1)
 
 def test_derivative_appellf1():
     from sympy import diff
@@ -355,15 +356,4 @@ def test_derivative_appellf1():
     assert diff(appellf1(a, b1, b2, c, x, y), x) == a*b1*appellf1(a + 1, b2, b1 + 1, c + 1, y, x)/c
     assert diff(appellf1(a, b1, b2, c, x, y), y) == a*b2*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)/c
     assert diff(appellf1(a, b1, b2, c, x, y), z) == 0
-
-def test_appellf1_rewrite_factorial():
-    from sympy import factorial, Sum, oo
-    x, y = symbols('x y')
-    m, n = symbols('m n', integer=True)
-    assert appellf1(1 ,2 ,2, 1, 0.5, 0.6).rewrite(factorial) == \
-        Sum(0.5**m*0.6**n*factorial(m + 1)*factorial(n + 1)/(factorial(m)*\
-        factorial(n)), (m, 0, oo), (n, 0, oo))
-
-    assert appellf1(1 ,2 ,4, 2, x, y).rewrite(factorial) == \
-        Sum(x**m*y**n*factorial(m + 1)*factorial(m + n)*factorial(n + 3)/(6*factorial(m)*\
-            factorial(n)*factorial(m + n + 1)), (m, 0, oo), (n, 0, oo))
+    assert diff(appellf1(a, b1, b2, c, x, y), a) ==  Derivative(appellf1(a, b1, b2, c, x, y), a)

@@ -1070,13 +1070,8 @@ class appellf1(Function):
         elif b1 == b2 and default_sort_key(x) > default_sort_key(y):
             x, y = y, x
             return cls(a, b1, b2, c, x, y)
-
-    def _eval_rewrite_as_factorial(self, *args):
-        from sympy import symbols, Sum, RisingFactorial, factorial
-        m, n = symbols('m n', integer = True)
-        a, b1, b2, c, x, y = self.args
-        return Sum(x**m*y**n*RisingFactorial(a, m + n)*RisingFactorial(b1, m)*\
-            RisingFactorial(b2, n)/(factorial(m)*factorial(n)*RisingFactorial(c, m + n)), (m, 0, oo), (n, 0, oo)).rewrite(factorial)
+        if x == 0 and y == 0:
+            return 1
 
     def fdiff(self, argindex=5):
         a, b1, b2, c, x, y = self.args
@@ -1085,6 +1080,6 @@ class appellf1(Function):
         elif argindex == 6:
             return (a*b2/c)*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)
         elif argindex in (1, 2, 3, 4):
-            raise NotImplementedError("Unable to find derivative wrt to {}".format(self.args[argindex-1]))
+            return Derivative(self, self.args[argindex-1])
         else:
             raise ArgumentIndexError(self, argindex)
