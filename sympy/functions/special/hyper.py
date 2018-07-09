@@ -1071,7 +1071,7 @@ class appellf1(Function):
             x, y = y, x
             return cls(a, b1, b2, c, x, y)
         if x == 0 and y == 0:
-            return 1
+            return S.One
 
     def fdiff(self, argindex=5):
         a, b1, b2, c, x, y = self.args
