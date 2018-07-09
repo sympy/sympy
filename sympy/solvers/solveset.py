@@ -987,14 +987,25 @@ def _solveset(f, symbol, domain, _check=False):
 
 def term_factors(f):
     """
-    Returns a list of the factors of all terms present in the
-    expression.
+    An iterator that returns the factors of all terms
+    present in the expression.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.solvers.solveset import term_factors
+    >>> x = symbols('x')
+    >>> term_factors_obj = term_factors(x**2 - 1)
+    >>> for term in term_factors_obj:
+    ...     print(term)
+    -1
+    x**2
     """
     args = []
     for add_arg in Add.make_args(f):
         for mul_arg in Mul.make_args(add_arg):
-            args.append(mul_arg)
-    return args
+            yield mul_arg
 
 
 def _solve_expo(f, symbol):

@@ -1733,10 +1733,10 @@ def test_issue_14454():
 
 
 def test_term_factors():
-    assert term_factors(3**x - 2) == [-2, 3**x]
+    assert list(term_factors(3**x - 2)) == [-2, 3**x]
     expr = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
-    assert term_factors(expr) == \
-        [4**(x + 1), 4**(x - 1), 4**(x + 2), -1, 3**(x + 2), -1, 3**(x + 3)]
+    assert set(term_factors(expr)) == set([
+        3**(x + 2), 4**(x + 2), 3**(x + 3), 4**(x - 1), -1, 4**(x + 1)])
 
 
 #################### tests for transolve and its helpers ###############
