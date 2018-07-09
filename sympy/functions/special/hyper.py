@@ -1068,7 +1068,7 @@ class appellf1(Function):
             x, y = y, x
             return cls(a, b1, b2, c, x, y)
         elif b1 == b2 and default_sort_key(x) > default_sort_key(y):
-            x, y = sorted([x, y], key=default_sort_key)
+            x, y = y, x
             return cls(a, b1, b2, c, x, y)
 
     def _eval_rewrite_as_factorial(self, *args):
