@@ -514,9 +514,11 @@ class log(Function):
                 for j in range(len(multiplicands_list)):
                     r = list(multiplicands_list[j].as_numer_denom())
                     if Quantity.get_dimensional_expr(r[0]) != Quantity.get_dimensional_expr(1):
-                        r[0] = Quantity(r[0].name, Quantity.get_dimensional_expr(1))
+                        r[0] = Quantity(r[0].name)
+                        r[0].set_dimension(Quantity.get_dimensional_expr(1))
                     if Quantity.get_dimensional_expr(r[1]) != Quantity.get_dimensional_expr(1):
-                        r[1] = Quantity(r[1].name, Quantity.get_dimensional_expr(1))
+                        r[1] = Quantity(r[1].name)
+                        r[1].set_dimension(Quantity.get_dimensional_expr(1))
                     multiplicands_list[j] = r[0]/r[1]
                 addends_list[i] = 1
                 for multiplicand in multiplicands_list:
