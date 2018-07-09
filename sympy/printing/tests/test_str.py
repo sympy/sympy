@@ -1,10 +1,10 @@
 from __future__ import division
 
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
-    factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow, Rational, Float, Rel,
-    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
-    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
+    factorial, factorial2, Function, GoldenRatio, TribonacciConstant, I,
+    Integer, Integral, Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow,
+    Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
+    symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion)
 from sympy.core import Expr, Mul
@@ -131,6 +131,10 @@ def test_Geometry():
 
 def test_GoldenRatio():
     assert str(GoldenRatio) == "GoldenRatio"
+
+
+def test_TribonacciConstant():
+    assert str(TribonacciConstant) == "TribonacciConstant"
 
 
 def test_ImaginaryUnit():

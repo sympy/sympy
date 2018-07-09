@@ -446,6 +446,11 @@ def test_sympy__core__numbers__GoldenRatio():
     assert _test_args(GoldenRatio())
 
 
+def test_sympy__core__numbers__TribonacciConstant():
+    from sympy.core.numbers import TribonacciConstant
+    assert _test_args(TribonacciConstant())
+
+
 def test_sympy__core__numbers__Half():
     from sympy.core.numbers import Half
     assert _test_args(Half())
@@ -1229,6 +1234,20 @@ def test_sympy__stats__joint_rv_types__MultivariateNormalDistribution():
     from sympy.stats.joint_rv_types import MultivariateNormalDistribution
     assert _test_args(MultivariateNormalDistribution([0, 1], [[1, 0],[0, 1]]))
 
+def test_sympy__stats__joint_rv_types__MultivariateLaplaceDistribution():
+    from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution
+    assert _test_args(MultivariateLaplaceDistribution([0, 1], [[1, 0],[0, 1]]))
+
+
+def test_sympy__stats__joint_rv_types__MultivariateTDistribution():
+    from sympy.stats.joint_rv_types import MultivariateTDistribution
+    assert _test_args(MultivariateTDistribution([0, 1], [[1, 0],[0, 1]], 1))
+
+
+def test_sympy__stats__joint_rv_types__NormalGammaDistribution():
+    from sympy.stats.joint_rv_types import NormalGammaDistribution
+    assert _test_args(NormalGammaDistribution(1, 2, 3, 4))
+
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
@@ -1313,6 +1332,11 @@ def test_sympy__functions__combinatorial__numbers__euler():
 def test_sympy__functions__combinatorial__numbers__fibonacci():
     from sympy.functions.combinatorial.numbers import fibonacci
     assert _test_args(fibonacci(x))
+
+
+def test_sympy__functions__combinatorial__numbers__tribonacci():
+    from sympy.functions.combinatorial.numbers import tribonacci
+    assert _test_args(tribonacci(x))
 
 
 def test_sympy__functions__combinatorial__numbers__harmonic():
@@ -1968,6 +1992,10 @@ def test_sympy__functions__special__hyper__HyperRep_sinasin():
     from sympy.functions.special.hyper import HyperRep_sinasin
     assert _test_args(HyperRep_sinasin(x, y))
 
+def test_sympy__functions__special__hyper__appellf1():
+    from sympy.functions.special.hyper import appellf1
+    a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
+    assert _test_args(appellf1(a, b1, b2, c, x, y))
 
 @SKIP("abstract class")
 def test_sympy__functions__special__polynomials__OrthogonalPolynomial():

@@ -4,8 +4,8 @@ Covering Product, Intersecting Product
 """
 from __future__ import print_function, division
 
-from sympy.core import S
-from sympy.core.compatibility import range, as_int
+from sympy.core import S, sympify
+from sympy.core.compatibility import range, as_int, iterable
 from sympy.core.function import expand_mul
 from sympy.discrete.transforms import (
     fft, ifft, ntt, intt, fwht, ifwht)
@@ -38,27 +38,34 @@ def convolution(a, b, **hints):
         dyadic : bool
             Identifies the convolution type as dyadic (XOR)
             convolution, which is performed using FWHT.
+        subset : bool
+            Identifies the convolution type as subset convolution.
 
     Examples
     ========
 
     >>> from sympy import convolution, symbols, S, I
+    >>> u, v, w, x, y, z = symbols('u v w x y z')
 
     >>> convolution([1 + 2*I, 4 + 3*I], [S(5)/4, 6], dps=3)
     [1.25 + 2.5*I, 11.0 + 15.8*I, 24.0 + 18.0*I]
-
     >>> convolution([1, 2, 3], [4, 5, 6], cycle=3)
     [31, 31, 28]
 
     >>> convolution([111, 777], [888, 444], prime=19*2**10 + 1)
     [1283, 19351, 14219]
-
     >>> convolution([111, 777], [888, 444], prime=19*2**10 + 1, cycle=2)
     [15502, 19351]
 
-    >>> u, v, x, y, z = symbols('u v x y z')
     >>> convolution([u, v], [x, y, z], dyadic=True)
     [u*x + v*y, u*y + v*x, u*z, v*z]
+    >>> convolution([u, v], [x, y, z], dyadic=True, cycle=2)
+    [u*x + u*z + v*y, u*y + v*x + v*z]
+
+    >>> convolution([u, v, w], [x, y, z], subset=True)
+    [u*x, u*y + v*x, u*z + w*x, v*z + w*y]
+    >>> convolution([u, v, w], [x, y, z], subset=True, cycle=3)
+    [u*x + v*z + w*y, u*y + v*x, u*z + w*x]
 
     """
 
@@ -67,14 +74,16 @@ def convolution(a, b, **hints):
     p = hints.pop('prime', None)
     c = as_int(hints.pop('cycle', 0))
     dyadic = hints.pop('dyadic', None)
+    subset = hints.pop('subset', None)
 
     if c < 0:
         raise ValueError("The length for cyclic convolution must be non-negative")
 
     fft = True if fft else None
     dyadic = True if dyadic else None
-    if sum(x is not None for x in (p, dps, dyadic)) > 1 or \
-            sum(x is not None for x in (fft, dyadic)) > 1:
+    subset = True if subset else None
+    if sum(x is not None for x in (p, dps, dyadic, subset)) > 1 or \
+            sum(x is not None for x in (fft, dyadic, subset)) > 1:
         raise TypeError("Ambiguity in determining the convolution type")
 
     if p is not None:
@@ -86,6 +95,8 @@ def convolution(a, b, **hints):
 
     if dyadic:
         ls = convolution_fwht(a, b)
+    elif subset:
+        ls = convolution_subset(a, b)
     else:
         ls = convolution_fft(a, b, dps=dps)
 
@@ -267,3 +278,80 @@ def convolution_fwht(a, b):
     a = ifwht(a)
 
     return a
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                            Subset Convolution                              #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+def convolution_subset(a, b):
+    """
+    Performs Subset Convolution of given sequences.
+
+    The indices of each argument, considered as bit strings, correspond to
+    subsets of a finite set.
+
+    The sequence is automatically padded to the right with zeros, as the
+    definition of subset based on bitmasks (indices) requires the size of
+    sequence to be a power of 2.
+
+    Parameters
+    ==========
+
+    a, b : iterables
+        The sequences for which convolution is performed.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, S, I
+    >>> from sympy.discrete.convolution import convolution_subset
+    >>> u, v, x, y, z = symbols('u v x y z')
+
+    >>> convolution_subset([u, v], [x, y])
+    [u*x, u*y + v*x]
+    >>> convolution_subset([u, v, x], [y, z])
+    [u*y, u*z + v*y, x*y, x*z]
+
+    >>> convolution_subset([1, S(2)/3], [3, 4])
+    [3, 6]
+    >>> convolution_subset([1, 3, S(5)/7], [7])
+    [7, 21, 5, 0]
+
+    References
+    ==========
+
+    .. [1] https://people.csail.mit.edu/rrw/presentations/subset-conv.pdf
+
+    """
+
+    if not a or not b:
+        return []
+
+    if not iterable(a) or not iterable(b):
+        raise TypeError("Expected a sequence of coefficients for convolution")
+
+    a = [sympify(arg) for arg in a]
+    b = [sympify(arg) for arg in b]
+    n = max(len(a), len(b))
+
+    if n&(n - 1): # not a power of 2
+        n = 2**n.bit_length()
+
+    # padding with zeros
+    a += [S.Zero]*(n - len(a))
+    b += [S.Zero]*(n - len(b))
+
+    c = [S.Zero]*n
+
+    for mask in range(n):
+        smask = mask
+        while smask > 0:
+            c[mask] += expand_mul(a[smask] * b[mask^smask])
+            smask = (smask - 1)&mask
+
+        c[mask] += expand_mul(a[smask] * b[mask^smask])
+
+    return c
