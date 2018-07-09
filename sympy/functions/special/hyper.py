@@ -1046,7 +1046,7 @@ class HyperRep_sinasin(HyperRep):
         return -1/sqrt(1 + 1/z)*sinh(2*a*asinh(sqrt(z)) + 2*a*pi*I*n)
 
 class appellf1(Function):
-    '''
+    r"""
     This is the Appell hypergeometric function of two variables as:
     .. math ::
         F_1(a,b_1,b_2,c,x,y) = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
@@ -1059,16 +1059,17 @@ class appellf1(Function):
     .. [1] https://en.wikipedia.org/wiki/Appell_series
     .. [2] http://functions.wolfram.com/HypergeometricFunctions/AppellF1/
 
-    '''
-    nargs = 6
+    """
 
-    def __new__(cls, a, b1, b2, c, x, y):
+    @classmethod
+    def eval(cls, a, b1, b2, c, x, y):
         if default_sort_key(b1) > default_sort_key(b2):
             b1, b2 = b2, b1
             x, y = y, x
-        elif b1 == b2:
+            return cls(a, b1, b2, c, x, y)
+        elif b1 == b2 and default_sort_key(x) > default_sort_key(y):
             x, y = sorted([x, y], key=default_sort_key)
-        return Function.__new__(cls, a, b1, b2, c, x, y)
+            return cls(a, b1, b2, c, x, y)
 
     def _eval_rewrite_as_factorial(self, *args):
         from sympy import symbols, Sum, RisingFactorial, factorial
