@@ -133,35 +133,29 @@ def convert_to(expr, target_units):
 
 
 def quantity_simplify(expr):
-    from sympy import ordered
-    if isinstance(expr, Add):
-        # get units of first args in Add
-        units = expr.args[0].as_coeff_mul(Quantity)[-1]
-        # recursively use quantity_simplify on all args and xreplace them in expr
-        new_expr = expr.xreplace(dict([(i, convert_to(quantity_simplify(i), units)) for i in expr.args]))
-        return new_expr
-
+    from sympy.physics.units.definitions import (percent, permille,
+        radian, degree, angular_mil, avogadro_number,
+        meter, liter, gram, second, ampere, kelvin, mole, candela,
+        hertz, coulomb, dioptre, lux, katal, gray, becquerel, bit)
     # replace all prefixes with numbers
-    nopre = expr.xreplace(dict([(i, i.scale_factor) for i in expr.atoms(Prefix)]))
-    # reduce all mixed units of a given dimension to a single Quantity
-    # e.g. foot*inch**2 -> 1/144*foot**3
+    rv = expr.xreplace(dict([(i, i.scale_factor)
+        for i in expr.atoms(Prefix)]))
+    # convert all Quanities to base quanitities
+    rv = rv.xreplace({percent: percent.scale_factor})
+    rv = rv.xreplace({permille: permille.scale_factor})
+    rv = rv.xreplace({degree: degree.convert_to(radian)})
+    rv = rv.xreplace({angular_mil: degree.convert_to(radian)})
+    rv = rv.xreplace({avogadro_number: avogadro_number.scale_factor})
+    # steradian unchanged
+    q = rv.atoms(Quantity)
     reps = {}
-    for m in nopre.atoms(Mul):
-        be = [i.as_base_exp() for i in m.args]
-        be, c = sift(be, lambda x: isinstance(x[0], Quantity), binary=True)
-        c = Mul(*[b**e for b, e in c])
-        be = [(b.dimension, (b, e)) for b, e in be]
-        s = {}
-        for d, (b, e) in be:
-            s.setdefault(d, []).append((b,e))
-        f = []
-        for k in s:
-            s[k] = list(ordered(s[k]))
-            B, e = s[k][0]
-            if len(s[k]) > 1:
-                scale = B.scale_factor
-                f.append(Mul(*[(B*b.scale_factor/scale)**e for b, e in s[k]]))
-            else:
-                f.append(B**e)
-        reps[m] = c*Mul(*f)
-    return nopre.subs(reps)
+    for i in q:
+        for b in [meter, liter, gram, second, ampere, kelvin, mole,
+                candela, hertz, coulomb, dioptre, lux, katal, gray,
+                becquerel, bit]:
+            if i.dimension == b.dimension:
+                reps[i] = i.convert_to(b)
+                break
+    rv = rv.xreplace(reps)
+    rv = rv.xreplace({liter: liter.convert_to(meter)})
+    return rv
