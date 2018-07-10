@@ -1169,6 +1169,7 @@ class Beam_3d(Beam):
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load_vector = [0, 0, 0]
         self._moment_load_vector = [0, 0, 0]
+        self._reaction_loads = []
         self._slope = [0, 0, 0]
         self._deflection = [0, 0, 0]
 
@@ -1240,6 +1241,55 @@ class Beam_3d(Beam):
             self._moment_load_vector[1] += value
         else:
             self._moment_load_vector[2] += value
+
+    def apply_support(self, loc, type="fixed"):
+        if type == "pin" or type == "roller":
+            reaction_load = Symbol('R_'+str(loc))
+            self._reaction_loads[reaction_load] = reaction_load
+            self.bc_deflection.append((loc, [0, 0, 0]))
+        else:
+            reaction_load = Symbol('R_'+str(loc))
+            reaction_moment = Symbol('M_'+str(loc))
+            self._reaction_loads[reaction_load] = [reaction_load, reaction_moment]
+            self.bc_deflection = [(loc, [0, 0, 0])]
+            self.bc_slope.append((loc, [0, 0, 0]))
+
+    def solve_for_reaction_loads(self, *reaction):
+        raise NotImplementedError("Beam_3d can't solve for"
+                       "reactional loads")
+
+    def shear_force(self):
+        """
+        Returns a list of three expressions which represents the shear force
+        curve of the Beam object along all three axes.
+        """
+        q = self._load_vector
+        m = self._moment_load_vector
+        return list(integrate(-q[0], x), integrate(-q[1], x), integrate(-q[2], x))
+
+    def axial_force(self):
+        """
+        Returns expression of Axial shear force present inside the Beam object.
+        """
+        return self.shear_force()[0]
+
+    def bending_moment(self):
+        """
+        Returns a list of three expressions which represents the bending moment
+        curve of the Beam object along all three axes.
+        """
+        q = self._load_vector
+        m = self._moment_load_vector
+        shear = self.shear_force()
+
+        return [integrate(-m[0], x), integrate(-m[1] + shear[2], x),
+                integrate(-m[2] - shear[1], x) ]
+
+    def torsional_moment():
+        """
+        Returns expression of Torsional moment present inside the Beam object.
+        """
+        return self.bending_moment()[0]
 
     def solve(self):
         from sympy import dsolve, Function, Derivative, Eq
