@@ -1123,12 +1123,15 @@ class Beam_3d(Beam):
     primarily by resisting against bending. Beams are characterized by
     their cross sectional profile(Second moment of area), their length
     and their material.
-    This class can handle loads applied in any direction of a 3D space.
+    This class can handle loads applied in any direction of a 3D space 
+    with unsimilar values of Second moment along different axes.
 
     .. note::
        While solving a beam bending problem, a user should choose its
        own sign convention and should stick to it. The results will
        automatically follow the chosen sign convention.
+
+    ref : http://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
     """
 
     def __init__(self, length, elastic_modulus, shear_modulus , second_moment, area, variable=Symbol('x')):
@@ -1141,10 +1144,17 @@ class Beam_3d(Beam):
         elastic_modulus : Sympifyable
             A SymPy expression representing the Beam's Modulus of Elasticity.
             It is a measure of the stiffness of the Beam material.
-        second_moment : Sympifyable
-            A SymPy expression representing the Beam's Second moment of area.
-            It is a geometrical property of an area which reflects how its
-            points are distributed with respect to its neutral axis.
+        shear_modulus : Sympifyable
+            A SymPy expression representing the Beam's Modulus of rigidity.
+            It is a measure of rigidity of the Beam material.
+        second_moment : Sympifyable or list
+            A list of two elements having SymPy expression representing the
+            Beam's Second moment of area. First value represent Second moment
+            across y-axis and second across z-axis. 
+            Single SymPy expression can be passed if both values are same
+        area : Sympifyable
+            A SymPy expression representing the Beam's cross-sectional area
+            in a plane prependicular to length of the Beam.
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
@@ -1170,6 +1180,19 @@ class Beam_3d(Beam):
     @shear_modulus.setter
     def shear_modulus(self, e):
         self._shear_modulus = sympify(e)
+
+    @property
+    def second_moment(self):
+        """Second moment of area of the Beam. """
+        return self._second_moment
+
+    @second_moment.setter
+    def second_moment(self, i):
+        if isinstance(i, list):
+            i = [sympify(x) for x in i]
+            self._second_moment = i
+        else:
+            self._second_moment = sympify(i)
 
     @property
     def area(self):
@@ -1225,6 +1248,10 @@ class Beam_3d(Beam):
         E = self.elastic_modulus
         G = self.shear_modulus
         I = self.second_moment
+        if isinstance(I, list):
+            I_y, I_z = I[0], I[1]
+        else:
+            I_y = I_z = I
         A = self.area
         load = self._load_vector
         moment = self._moment_load_vector
@@ -1245,11 +1272,11 @@ class Beam_3d(Beam):
         self._slope[0] = slope_x
 
         # Finding deflection along y-axis and slope across z-axis. System of equation involved:
-        # 1: Derivative(E*I*Derivative(theta_z(x), x), x) + G*A*(Derivative(defl_y(x), x) - theta_z(x)) + moment_z = 0
+        # 1: Derivative(E*I_z*Derivative(theta_z(x), x), x) + G*A*(Derivative(defl_y(x), x) - theta_z(x)) + moment_z = 0
         # 2: Derivative(G*A*(Derivative(defl_y(x), x) - theta_z(x)), x) + load_y = 0
         C_i = Symbol('C_i')
         # substitute value of `G*A*(Derivative(defl_y(x), x) - theta_z(x))` from (2) in (1)
-        eq1 = Derivative(E*I*Derivative(theta(x), x), x) + (integrate(-load[1], x) + C_i) + moment[2]
+        eq1 = Derivative(E*I_z*Derivative(theta(x), x), x) + (integrate(-load[1], x) + C_i) + moment[2]
         slope_z = dsolve(Eq(eq1, 0)).args[1]
 
         #solve for constants originated from using dsolve on eq1
@@ -1265,11 +1292,11 @@ class Beam_3d(Beam):
         self._slope[2] = slope_z.subs(C_i, constants[1])
 
         # Finding deflection along z-axis and slope across y-axis. System of equation involved:
-        # 1: Derivative(E*I*Derivative(theta_y(x), x), x) - G*A*(Derivative(defl_z(x), x) + theta_y(x)) + moment_y = 0
+        # 1: Derivative(E*I_y*Derivative(theta_y(x), x), x) - G*A*(Derivative(defl_z(x), x) + theta_y(x)) + moment_y = 0
         # 2: Derivative(G*A*(Derivative(defl_z(x), x) + theta_y(x)), x) + load_z = 0
 
         # substitute value of `G*A*(Derivative(defl_y(x), x) + theta_z(x))` from (2) in (1)
-        eq1 = Derivative(E*I*Derivative(theta(x), x), x) + (integrate(load[2], x) - C_i) + moment[1]
+        eq1 = Derivative(E*I_y*Derivative(theta(x), x), x) + (integrate(load[2], x) - C_i) + moment[1]
         slope_y = dsolve(Eq(eq1, 0)).args[1]
         #solve for constants originated from using dsolve on eq1
         constants = list((linsolve([slope_y.subs(x, 0), slope_y.subs(x, l)], C1, C2).args)[0])
@@ -1282,3 +1309,17 @@ class Beam_3d(Beam):
         constants = list((linsolve([def_z.subs(x, 0), def_z.subs(x, l)], C1, C_i).args)[0])
         self._deflection[2] = def_z.subs({C1:constants[0], C_i:constants[1]})
         self._slope[1] = slope_y.subs(C_i, constants[1])
+
+    def slope(self):
+        """
+        Returns a three element list representing slope of deflection curve
+        along all the three axes.
+        """
+        return self._slope
+
+    def deflection(self):
+        """
+        Returns a three element list representing deflection curve along all
+        the three axes.
+        """
+        return self._deflection
