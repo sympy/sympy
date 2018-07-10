@@ -54,7 +54,7 @@ from sympy import beta as beta_fn
 from sympy import cos, sin, exp, besseli, besselj
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
-from sympy.stats.rv import _value_check, RandomSymbol
+from sympy.stats.rv import _value_check, RandomSymbol, pspace
 from sympy.matrices import MatrixBase
 from sympy.stats.joint_rv_types import multivariate_rv
 from sympy.external import import_module
@@ -145,6 +145,9 @@ def rv(symbol, cls, args):
     dist.check(*args)
     if any([isinstance(arg, RandomSymbol) for arg in args]):
         symbol = sympify(symbol)
+        new_dist = find_dist(cls, args)
+        if  new_dist != None:
+            return rv(symbol, new_dist[0], new_dist[1])
         _pdf = dist.pdf(symbol)
         _pdf, _set = dist.handle_compound_dist(_pdf), dist.set
         dist = ContinuousDistributionHandmade(Lambda(symbol, _pdf), _set)
@@ -3019,3 +3022,13 @@ def WignerSemicircle(name, R):
     """
 
     return rv(name, WignerSemicircleDistribution, (R,))
+
+
+def find_dist(cls, args):
+    def distribution(rv):
+        return pspace(rv).distribution
+    if cls == NormalDistribution:
+        if isinstance(args[0], RandomSymbol) and \
+            isinstance(distribution(args[0]), NormalDistribution):
+            mu, sigma = distribution(args[0]).args
+            return NormalDistribution, (mu, sqrt(sigma**2 + args[1]**2))
