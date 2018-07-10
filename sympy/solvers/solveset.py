@@ -39,7 +39,8 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
-
+from sympy import Float, nfloat
+from sympy.simplify import nsimplify
 from types import GeneratorType
 
 
@@ -855,6 +856,13 @@ def _solveset(f, symbol, domain, _check=False):
     from sympy.simplify.simplify import signsimp
 
     orig_f = f
+
+    # rationalize float
+    floats = False
+    if f.has(Float):
+        floats = True
+        f = nsimplify(f, rational=True)
+
     if f.is_Mul:
         coeff, f = f.as_independent(symbol, as_Add=False)
         if coeff in set([S.ComplexInfinity, S.NegativeInfinity, S.Infinity]):
@@ -974,6 +982,9 @@ def _solveset(f, symbol, domain, _check=False):
             result = FiniteSet(*[s for s in result
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
+    # restore floats
+    if floats and isinstance(result, FiniteSet):
+        result = FiniteSet(*(nfloat(list(result), exponent=False)))
 
     return result
 
