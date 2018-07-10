@@ -4,7 +4,7 @@ from sympy.core import (S, pi, oo, symbols, Rational, Integer, Float, Mod, Golde
 from sympy.functions import (Abs, acos, acosh, asin, asinh, atan, atanh, atan2,
                              ceiling, cos, cosh, erf, erfc, exp, floor, gamma, log,
                              loggamma, Max, Min, Piecewise,
-                             sign, sin, sinh, sqrt, tan, tanh)
+                             sign, sin, sinh, sqrt, tan, tanh, DiracDelta, Heaviside)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
@@ -765,6 +765,11 @@ def test_subclass_CCodePrinter():
     # issue gh-12687
     class MySubClass(CCodePrinter):
         pass
+
+
+def test_DiracDelta_Heaviside():
+    assert ccode(DiracDelta(x)) == 'static inline double DiracDelta (double x)         { return x == 0 ? HUGE_VAL : 0; }'
+    assert ccode(Heaviside(x)) == 'static inline double Heaviside (double x)         { return x < 0 ? 0 : x > 0 ? 1 : 0.5; }'
 
 
 def test_ccode_math_macros():
