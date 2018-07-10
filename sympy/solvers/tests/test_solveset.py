@@ -39,7 +39,7 @@ from sympy.solvers.solveset import (
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
-    _solve_expo, term_factors)
+    _solve_expo, _term_factors)
 
 
 a = Symbol('a', real=True)
@@ -1733,9 +1733,9 @@ def test_issue_14454():
 
 
 def test_term_factors():
-    assert list(term_factors(3**x - 2)) == [-2, 3**x]
+    assert list(_term_factors(3**x - 2)) == [-2, 3**x]
     expr = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
-    assert set(term_factors(expr)) == set([
+    assert set(_term_factors(expr)) == set([
         3**(x + 2), 4**(x + 2), 3**(x + 3), 4**(x - 1), -1, 4**(x + 1)])
 
 
@@ -1896,17 +1896,14 @@ def test_solve_expo():
 
 # logarithmic tests
 @XFAIL
-def test_uselogcombine_1():
+def test_logarithmic():
     assert solveset_real(log(x - 3) + log(x + 3), x) == FiniteSet(
-            sqrt(10))
+        sqrt(10))
     assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
     assert solveset_real(log(x + 3) + log(1 + 3/x) - 3) == FiniteSet(
         -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
         -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
 
-
-@XFAIL
-def test_uselogcombine_2():
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solveset_real(eq, x) == \
         FiniteSet(-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z))))

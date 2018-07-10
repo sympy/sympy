@@ -3,6 +3,8 @@ This module contains functions to:
 
     - solve a single equation for a single variable, in any domain either real or complex.
 
+    - solve a single transcendental equation for a single variable in any domain either real or complex.
+
     - solve a system of linear equations with N variables and M equations.
 
     - solve a system of Non Linear Equations with N variables and M equations
@@ -11,11 +13,11 @@ from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
-                        Add, Mul)
+                        Add)
 from sympy.core.containers import Tuple
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand_complex, AppliedUndef, Function,
+from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
@@ -985,18 +987,29 @@ def _solveset(f, symbol, domain, _check=False):
     return result
 
 
-def term_factors(f):
+def _term_factors(f):
     """
-    An iterator that returns the factors of all terms
-    present in the expression.
+    Iterator to get the factors of all terms present
+    in the given equation.
+
+    Parameters
+    ==========
+
+    f : Expr
+        Equation that needs to be addressed
+
+    Returns
+    =======
+
+    Factors of all terms present in the equation.
 
     Examples
     ========
 
     >>> from sympy import symbols
-    >>> from sympy.solvers.solveset import term_factors
+    >>> from sympy.solvers.solveset import _term_factors
     >>> x = symbols('x')
-    >>> list(term_factors(-2 - x**2 + x*(x + 1)))
+    >>> list(_term_factors(-2 - x**2 + x*(x + 1)))
     [-2, -1, x**2, x, x + 1]
     """
     for add_arg in Add.make_args(f):
@@ -1008,6 +1021,26 @@ def _solve_expo(f, symbol):
     r"""
     Helper function for solving (supported) exponential equations.
 
+    Parameters
+    ==========
+
+    f : Expr
+        The exponential equation to be solved
+
+    symbol : Symbol
+        The variable in which the equation is solved
+
+    Returns
+    =======
+
+    An equation in `log` form that `solveset` might better handle.
+
+    `None`:
+        If the equation is not of supported type
+
+    Notes
+    =====
+
     Exponential equations are the sum of (currently) at most
     two terms with one or both of them having a power with a
     symbol-dependent exponent.
@@ -1017,11 +1050,6 @@ def _solve_expo(f, symbol):
     .. math:: 5^{2x + 3} - 5^{3x - 1}
 
     .. math:: 4^{5 - 9x} - e^{2 - x}
-
-    The function reduces the equation (`f`) to a better log form
-    (if possible) and returns the modified equation which can be
-    further handled by `solveset`. `None` is returned if the equation
-    is not of supported type.
 
     Examples
     ========
@@ -1070,13 +1098,19 @@ def _is_exponential(f, symbol):
     r"""
     Helper to check whether an equation is exponential or not.
 
-    ``f`` is the equation to be checked
+    Parameters
+    ==========
 
-    ``symbol`` is the variable in which the equation needs to be checked
+    f : Expr
+        The equation to be checked
 
-    The function extracts each term of the equation and checks if it is
-    of exponential form w.r.t `symbol`.
-    Returns `True` if any term is of exponential type otherwise `False`.
+    symbol : Symbol
+        The variable in which the equation is checked
+
+    Returns
+    =======
+
+    `True` if the equation is in exponential form otherwise `False`.
 
     Examples
     ========
@@ -1092,9 +1126,14 @@ def _is_exponential(f, symbol):
     True
     >>> check(cos(2**x), x)
     False
+
+    * Philosophy behind the helper
+
+    The function extracts each term of the equation and checks if it is
+    of exponential form w.r.t `symbol`.
     """
 
-    expr_args = term_factors(f)
+    expr_args = _term_factors(f)
     for expr_arg in expr_args:
         if isinstance(expr_arg, (Pow, exp)) and (
                 symbol in expr_arg.exp.free_symbols):
@@ -1113,15 +1152,25 @@ def _transolve(f, symbol, domain):
     Parameters
     ==========
 
-    f : is any transcendental equation that needs to be solved.
+    f : Any transcendental equation that needs to be solved.
         This needs to be an expression, which is assumed
         to be equal to 0.
 
-    symbol : is variable for which the equation is solved.
+    symbol : The variable for which the equation is solved.
         This needs to be of class `Symbol`.
 
-    domain : is a set over which the equation is solved.
+    domain : A set over which the equation is solved.
         This needs to be of class `Set`.
+
+    Returns
+    =======
+
+    Set
+        A set of values for `symbol` for which `f` is equal to
+        zero. An `EmptySet` is returned if `f` does not have solutions
+        in respective domain. A `ConditionSet` is returned as unsolved
+        object if algorithms to evaluate complete solution are not
+        yet implemented.
 
     How to use `\_transolve`
     ========================
@@ -1171,7 +1220,7 @@ def _transolve(f, symbol, domain):
     can be transformed to
     `log(a) + f(x)*log(b) - log(c) - g(x)*log(d) = 0`
     (under certain assumptions) and this can be solved with `solveset`
-    if `f(x)` and `g(x)` are polynomial in form.
+    if `f(x)` and `g(x)` are in polynomial form.
 
     How `\_transolve` is better than `\_tsolve`
     ===========================================
@@ -1303,6 +1352,7 @@ def _transolve(f, symbol, domain):
     lhs, rhs_s = invert_complex(f, 0, symbol, domain)
 
     if isinstance(rhs_s, FiniteSet):
+        assert (len(rhs_s.args)) == 1
         rhs = rhs_s.args[0]
         equation = Add(lhs, -rhs, evaluate=False)
 
