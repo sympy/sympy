@@ -364,7 +364,7 @@ def test_factor_and_dimension():
 
     pH = -log(cH)
 
-    assert (1, 1) == Quantity._collect_factor_and_dimension(exp(pH))
+    assert (1, Quantity.get_dimensional_expr(1)) == Quantity._collect_factor_and_dimension(exp(pH))
 
     v_w1 = Quantity('v_w1')
     v_w2 = Quantity('v_w2')
