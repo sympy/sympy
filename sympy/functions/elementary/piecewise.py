@@ -876,11 +876,11 @@ class Piecewise(Function):
         ...     (2,(x > 0) & (x < 4)),
         ...     (3, True))
         >>> p.as_expr_set_pairs()
-        [(1, Interval.open(-oo, 2)),
-         (2, Interval.Ropen(2, 4)),
+        [(1, Interval(-oo, 2, left_open=True, right_open=True)),
+         (2, Interval(2, 4, right_open=True)),
          (3, Interval(4, oo))]
         >>> p.as_expr_set_pairs(Interval(0, 3))
-        [(1, Interval.Ropen(0, 2)),
+        [(1, Interval(0, 2, right_open=True)),
          (2, Interval(2, 3)), (3, EmptySet())]
         """
         exp_sets = []

@@ -130,11 +130,12 @@ class Boolean(Basic):
         >>> Eq(x, 0).as_set()
         {0}
         >>> (x > 0).as_set()
-        Interval.open(0, oo)
+        Interval(0, oo, left_open=True, right_open=True)
         >>> And(-2 < x, x < 2).as_set()
-        Interval.open(-2, 2)
+        Interval(-2, 2, left_open=True, right_open=True)
         >>> Or(x < -2, 2 < x).as_set()
-        Union(Interval.open(-oo, -2), Interval.open(2, oo))
+        Union(Interval(-oo, -2, left_open=True, right_open=True),
+              Interval(2, oo, left_open=True, right_open=True))
         """
         from sympy.calculus.util import periodicity
         from sympy.core.relational import Relational

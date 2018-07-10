@@ -695,11 +695,11 @@ def normalize_theta_set(theta):
     >>> normalize_theta_set(Interval(9*pi/2, 5*pi))
     Interval(pi/2, pi)
     >>> normalize_theta_set(Interval(-3*pi/2, pi/2))
-    Interval.Ropen(0, 2*pi)
+    Interval(0, 2*pi, right_open=True)
     >>> normalize_theta_set(Interval(-pi/2, pi/2))
-    Union(Interval(0, pi/2), Interval.Ropen(3*pi/2, 2*pi))
+    Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, right_open=True))
     >>> normalize_theta_set(Interval(-4*pi, 3*pi))
-    Interval.Ropen(0, 2*pi)
+    Interval(0, 2*pi, right_open=True)
     >>> normalize_theta_set(Interval(-3*pi/2, -pi/2))
     Interval(pi/2, 3*pi/2)
     >>> normalize_theta_set(FiniteSet(0, pi, 3*pi))
@@ -807,7 +807,7 @@ class ComplexRegion(Set):
     >>> theta = Interval(0, 2*S.Pi)
     >>> c2 = ComplexRegion(r*theta, polar=True)  # Polar Form
     >>> c2  # unit Disk
-    ComplexRegion(Interval(0, 1) x Interval.Ropen(0, 2*pi), True)
+    ComplexRegion(Interval(0, 1) x Interval(0, 2*pi, right_open=True), True)
 
     * c2 represents the region in complex plane inside the
       Unit Disk centered at the origin.

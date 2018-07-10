@@ -835,13 +835,12 @@ standard_transformations = (lambda_notation, auto_symbol, repeated_decimals, aut
     factorial_notation)
 
 
-def stringify_expr(s, local_dict, global_dict, transformations):
+def stringify_expr(s, local_dict, global_dict, transformations, safe=True):
     """
     Converts the string ``s`` to Python code, in ``local_dict``
 
     Generally, ``parse_expr`` should be used.
     """
-
     tokens = []
     input_code = StringIO(s.strip())
     for toknum, tokval, _, _, _ in generate_tokens(input_code.readline):
@@ -850,8 +849,13 @@ def stringify_expr(s, local_dict, global_dict, transformations):
     for transform in transformations:
         tokens = transform(tokens, local_dict, global_dict)
 
-    return untokenize(tokens)
+    res = untokenize(tokens)
 
+    if safe:
+        from .safe_parser import check_string_for_safety
+        check_string_for_safety(res)
+
+    return res
 
 def eval_expr(code, local_dict, global_dict):
     """
@@ -866,8 +870,9 @@ def eval_expr(code, local_dict, global_dict):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True):
-    """Converts the string ``s`` to a SymPy expression, in ``local_dict``
+               global_dict=None, evaluate=True, safe=True):
+    """
+    Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
     ==========
@@ -927,6 +932,10 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     >>> b.args
     (x, 1)
 
+    When safe=True (the default), expressions that are unsafe to parse from
+    untrusted input raise UnsafeSympifyError. Note, there are caveats to this
+    flag. See the discussion in the :func:`sympy.core.sympify` docstring.
+
     See Also
     ========
 
@@ -942,7 +951,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         global_dict = {}
         exec_('from sympy import *', global_dict)
 
-    code = stringify_expr(s, local_dict, global_dict, transformations)
+    code = stringify_expr(s, local_dict, global_dict, transformations, safe=safe)
 
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')

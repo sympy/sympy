@@ -187,23 +187,26 @@ class StrPrinter(Printer):
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
     def _print_Interval(self, i):
-        fin =  'Interval{m}({a}, {b})'
+        # Different from str to avoid attribute access so it works with
+        # sympify(safe=True)
+
+        fin =  'Interval({a}, {b}{flags})'
         a, b, l, r = i.args
         if a.is_infinite and b.is_infinite:
-            m = ''
+            flags = ''
         elif a.is_infinite and not r:
-            m = ''
+            flags = ''
         elif b.is_infinite and not l:
-            m = ''
+            flags = ''
         elif not l and not r:
-            m = ''
+            flags = ''
         elif l and r:
-            m = '.open'
+            flags = ', left_open=True, right_open=True'
         elif l:
-            m = '.Lopen'
+            flags = ', left_open=True'
         else:
-            m = '.Ropen'
-        return fin.format(**{'a': a, 'b': b, 'm': m})
+            flags = ', right_open=True'
+        return fin.format(**{'a': a, 'b': b, 'flags': flags})
 
     def _print_AccumulationBounds(self, i):
         return "AccumBounds(%s, %s)" % (self._print(i.min), self._print(i.max))
@@ -573,16 +576,16 @@ class StrPrinter(Printer):
         return str(expr.p)
 
     def _print_Integers(self, expr):
-        return 'S.Integers'
+        return 'Integers'
 
     def _print_Naturals(self, expr):
-        return 'S.Naturals'
+        return 'Naturals'
 
     def _print_Naturals0(self, expr):
-        return 'S.Naturals0'
+        return 'Naturals0'
 
     def _print_Reals(self, expr):
-        return 'S.Reals'
+        return 'Reals'
 
     def _print_int(self, expr):
         return str(expr)

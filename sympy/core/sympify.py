@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from inspect import getmro
+from inspect import getmro, currentframe, getmodule
 
 from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
@@ -16,11 +16,23 @@ class SympifyError(ValueError):
 
     def __str__(self):
         if self.base_exc is None:
-            return "SympifyError: %r" % (self.expr,)
+            return "%r" % (self.expr,)
 
         return ("Sympify of expression '%s' failed, because of exception being "
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
             str(self.base_exc)))
+
+class UnsafeSympifyError(SympifyError):
+    def __init__(self, expr, base_exc=None, reason=None):
+        self.expr = expr
+        self.base_exc = base_exc
+        self.reason = reason
+
+    def __str__(self):
+        msg = "%r cannot be parsed safely" % (self.expr,)
+        if self.reason:
+            msg += '. Reason: %s.' % (self.reason,)
+        return msg
 
 converter = {}  # See sympify docstring.
 
@@ -74,8 +86,9 @@ def _convert_numpy_types(a):
 
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
-        evaluate=None):
-    """Converts an arbitrary expression to a type that can be used inside SymPy.
+        evaluate=None, safe=True):
+    """
+    Converts an arbitrary expression to a type that can be used inside SymPy.
 
     For example, it will convert Python ints into instances of sympy.Integer,
     floats into instances of sympy.Float, etc. It is also able to coerce symbolic
@@ -91,7 +104,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     .. warning::
         Note that this function uses ``eval``, and thus shouldn't be used on
-        unsanitized input.
+        unsanitized input. See the :ref:`Safety <sympify-safety>` discussion below.
 
     If the argument is already a type that SymPy understands, it will do
     nothing but return that value. This can be used at the beginning of a
@@ -199,6 +212,43 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> sympify('2**2 / 3 + 5', evaluate=False)
     2**2/3 + 5
 
+    .. _sympify-safety:
+
+    Safety
+    ------
+
+    When parsing a string, ``sympify`` parses it, applies some
+    transformations, and uses ``eval`` to convert it to a SymPy Python object.
+    However, ``eval`` is `known
+    <https://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html>`_ to
+    be unsafe to use on untrusted arbitrary input,
+
+    If the option ``safe`` is set to ``True`` (the default), expressions that
+    are considered unsafe to parse raise ``UnsafeSympifyError``. The current
+    implementation implements an AST node whitelist and a name blacklist.
+    There are some important caveats here, however.
+
+    - It may still be possible to construct "safe" expressions that crash the
+      Python interpreter or cause it to run out of memory, for instance, a
+      numeric expression that when evaluated produces a number that cannot fit
+      in memory. The current implementation does not attempt to protect
+      against these scenarios.
+
+    - The safe parsing is only safe if the default locals=None is used. If
+      user-defined names can be added to the locals dictionary, the user could
+      simply redefine the ``eval`` function and bypass the name blacklisting.
+
+    - We cannot guarantee that there won't be ways to bypass the safety checks
+      and run arbitrary code. It is still highly recommended to properly
+      sandbox your code if you will be passing arbitrary untrusted input to
+      sympify.
+
+    >>> sympify('a.b')
+    Traceback (most recent call last):
+    ...
+    sympy.core.sympify.UnsafeSympifyError: 'a.b' cannot be parsed safely.
+    Reason: Non-whitelisted AST node <_ast.Attribute object at ...> found.
+
     Extending
     ---------
 
@@ -257,6 +307,21 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     """
+    if not safe:
+        # Make sure no library code disables the safe flag. Otherwise, it
+        # potentially could be used to bypass it, defeating the purpose.
+
+        # Note: by its nature, this makes it so that safe=False cannot be
+        # tested, so if this code is modified, be sure to test it manually.
+        frame = currentframe()
+        mod = getmodule(getattr(frame, 'f_back'))
+        if not mod:
+            # Some alt-Python implementations don't support currentframe(), in
+            # which case the above returns None.
+            pass
+        elif hasattr(mod, '__name__') and mod.__name__ == 'sympy' or mod.__name__.startswith('sympy.'):
+            raise RuntimeError("Setting sympify(safe=True) in SymPy library code is not allowed")
+
     if evaluate is None:
         if global_evaluate[0] is False:
             evaluate = global_evaluate[0]
@@ -365,7 +430,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     try:
         a = a.replace('\n', '')
-        expr = parse_expr(a, local_dict=locals, transformations=transformations, evaluate=evaluate)
+        expr = parse_expr(a, local_dict=locals,
+            transformations=transformations, evaluate=evaluate, safe=safe)
     except (TokenError, SyntaxError) as exc:
         raise SympifyError('could not parse %r' % a, exc)
 
