@@ -10,7 +10,7 @@ from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
-from .expr import Expr
+from .expr import Expr, MutableExpr
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -69,6 +69,30 @@ def _unevaluated_Add(*args):
     return Add._from_args(newargs)
 
 
+class MutableAdd(MutableExpr):
+    def __init__(self):
+        self.terms = {}
+        self.coeff = S.Zero
+        self.order_factors = []
+
+    @property
+    def args(self):
+        _args = []
+        if self.coeff:
+            _args = [self.coeff]
+        for k, v in self.terms.items():
+            _args.append(Pow(k, v))
+        for o in self.order_factors:
+            _args.append(o)
+        return tuple(_args)
+
+    def __str__(self):
+        args = self.args
+        return " + ".join(map(str, args))
+
+    __repr__ = __str__
+
+
 class Add(Expr, AssocOp):
 
     __slots__ = []
@@ -95,6 +119,8 @@ class Add(Expr, AssocOp):
         """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
+        from sympy.core.dispatchers_add import _iadd
+
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -108,94 +134,17 @@ class Add(Expr, AssocOp):
                     return rv
                 return [], rv[0], None
 
-        terms = {}      # term -> coeff
-                        # e.g. x**2 -> 5   for ... + 5*x**2 + ...
+        data = MutableAdd()
 
-        coeff = S.Zero  # coefficient (Number or zoo) to always be in slot 0
-                        # e.g. 3 + ...
-        order_factors = []
+        # Loop over the dispatchers:
+        for arg in seq:
+            ret = _iadd(data, arg)
+            if ret is not None:
+                return [ret], [], None
 
-        for o in seq:
-
-            # O(x)
-            if o.is_Order:
-                for o1 in order_factors:
-                    if o1.contains(o):
-                        o = None
-                        break
-                if o is None:
-                    continue
-                order_factors = [o] + [
-                    o1 for o1 in order_factors if not o.contains(o1)]
-                continue
-
-            # 3 or NaN
-            elif o.is_Number:
-                if (o is S.NaN or coeff is S.ComplexInfinity and
-                        o.is_finite is False):
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
-                if coeff.is_Number:
-                    coeff += o
-                    if coeff is S.NaN:
-                        # we know for sure the result will be nan
-                        return [S.NaN], [], None
-                continue
-
-            elif isinstance(o, AccumBounds):
-                coeff = o.__add__(coeff)
-                continue
-
-            elif isinstance(o, MatrixExpr):
-                # can't add 0 to Matrix so make sure coeff is not 0
-                coeff = o.__add__(coeff) if coeff else o
-                continue
-
-            elif o is S.ComplexInfinity:
-                if coeff.is_finite is False:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
-                coeff = S.ComplexInfinity
-                continue
-
-            # Add([...])
-            elif o.is_Add:
-                # NB: here we assume Add is always commutative
-                seq.extend(o.args)  # TODO zerocopy?
-                continue
-
-            # Mul([...])
-            elif o.is_Mul:
-                c, s = o.as_coeff_Mul()
-
-            # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
-            elif o.is_Pow:
-                b, e = o.as_base_exp()
-                if b.is_Number and (e.is_Integer or
-                                   (e.is_Rational and e.is_negative)):
-                    seq.append(b**e)
-                    continue
-                c, s = S.One, o
-
-            else:
-                # everything else
-                c = S.One
-                s = o
-
-            # now we have:
-            # o = c*s, where
-            #
-            # c is a Number
-            # s is an expression with number factor extracted
-            # let's collect terms with the same s, so e.g.
-            # 2*x**2 + 3*x**2  ->  5*x**2
-            if s in terms:
-                terms[s] += c
-                if terms[s] is S.NaN:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
-            else:
-                terms[s] = c
+        terms = data.terms
+        coeff = data.coeff
+        order_factors = data.order_factors
 
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]

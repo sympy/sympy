@@ -11,20 +11,11 @@ from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .compatibility import reduce, range
-from .expr import Expr
+from .expr import Expr, MutableExpr
 from .evaluate import global_distribute
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
-
-
-class NC_Marker:
-    is_Order = False
-    is_Mul = False
-    is_Number = False
-    is_Poly = False
-
-    is_commutative = False
 
 
 # Key for sorting commutative args in canonical order
@@ -86,6 +77,55 @@ def _unevaluated_Mul(*args):
     if ncargs:
         newargs.append(Mul._from_args(ncargs))
     return Mul._from_args(newargs)
+
+
+class MutableMul(MutableExpr):
+    def __init__(self, seq):
+        self.c_part = []         # out: commutative factors
+        self.nc_part = []        # out: non-commutative factors
+
+        self.nc_seq = []
+
+        self.coeff = S.One       # standalone term
+                            # e.g. 3 * ...
+
+        self.c_powers = []       # (base,exp)      n
+                            # e.g. (x,n) for x
+
+        self.num_exp = []        # (num-base, exp)           y
+                            # e.g.  (3, y)  for  ... * 3  * ...
+
+        self.neg1e = S.Zero      # exponent on -1 extracted from Number-based Pow and I
+
+        self.pnum_rat = {}       # (num-base, Rat-exp)          1/2
+                            # e.g.  (3, 1/2)  for  ... * 3     * ...
+
+        self.order_symbols = None
+        self.seq = list(seq)
+
+    @property
+    def args(self):
+        a = []
+        if self.coeff != 1:
+            a.append(self.coeff)
+        for coll in [self.seq, self.c_part, self.nc_seq]:
+            for i in coll:
+                a.append(i)
+        for k, v in self.c_powers:
+            a.append(Pow(k, v))
+        for k, v in self.num_exp:
+            a.append(Pow(k, v))
+
+        # TODO
+        return tuple(a)
+
+    def __str__(self):
+        args = self.args
+        if len(args) == 0:
+            return "1"
+        return "*".join(map(str, self.args))
+
+    __repr__ = __str__
 
 
 class Mul(Expr, AssocOp):
@@ -172,9 +212,10 @@ class Mul(Expr, AssocOp):
 
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
-
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
+        from sympy.core.dispatchers_mul import _imul
+
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -199,28 +240,6 @@ class Mul(Expr, AssocOp):
             if rv:
                 return rv
 
-        # apply associativity, separate commutative part of seq
-        c_part = []         # out: commutative factors
-        nc_part = []        # out: non-commutative factors
-
-        nc_seq = []
-
-        coeff = S.One       # standalone term
-                            # e.g. 3 * ...
-
-        c_powers = []       # (base,exp)      n
-                            # e.g. (x,n) for x
-
-        num_exp = []        # (num-base, exp)           y
-                            # e.g.  (3, y)  for  ... * 3  * ...
-
-        neg1e = S.Zero      # exponent on -1 extracted from Number-based Pow and I
-
-        pnum_rat = {}       # (num-base, Rat-exp)          1/2
-                            # e.g.  (3, 1/2)  for  ... * 3     * ...
-
-        order_symbols = None
-
         # --- PART 1 ---
         #
         # "collect powers and coeff":
@@ -232,136 +251,24 @@ class Mul(Expr, AssocOp):
         # o pnum_rat
         #
         # NOTE: this is optimized for all-objects-are-commutative case
-        for o in seq:
-            # O(x)
-            if o.is_Order:
-                o, order_symbols = o.as_expr_variables(order_symbols)
 
-            # Mul([...])
-            if o.is_Mul:
-                if o.is_commutative:
-                    seq.extend(o.args)    # XXX zerocopy?
+        data = MutableMul(seq=seq)
 
-                else:
-                    # NCMul can have commutative parts as well
-                    for q in o.args:
-                        if q.is_commutative:
-                            seq.append(q)
-                        else:
-                            nc_seq.append(q)
-
-                    # append non-commutative marker, so we don't forget to
-                    # process scheduled non-commutative objects
-                    seq.append(NC_Marker)
-
+        for arg in data.seq:
+            ret = _imul(data, arg)
+            if ret is None:
                 continue
+            return [ret], [], None
 
-            # 3
-            elif o.is_Number:
-                if o is S.NaN or coeff is S.ComplexInfinity and o is S.Zero:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
-                elif coeff.is_Number:  # it could be zoo
-                    coeff *= o
-                    if coeff is S.NaN:
-                        # we know for sure the result will be nan
-                        return [S.NaN], [], None
-                continue
-
-            elif isinstance(o, AccumBounds):
-                coeff = o.__mul__(coeff)
-                continue
-
-            elif isinstance(o, MatrixExpr):
-                coeff = o.__mul__(coeff)
-                continue
-
-            elif o is S.ComplexInfinity:
-                if not coeff:
-                    # 0 * zoo = NaN
-                    return [S.NaN], [], None
-                if coeff is S.ComplexInfinity:
-                    # zoo * zoo = zoo
-                    return [S.ComplexInfinity], [], None
-                coeff = S.ComplexInfinity
-                continue
-
-            elif o is S.ImaginaryUnit:
-                neg1e += S.Half
-                continue
-
-            elif o.is_commutative:
-                #      e
-                # o = b
-                b, e = o.as_base_exp()
-
-                #  y
-                # 3
-                if o.is_Pow:
-                    if b.is_Number:
-
-                        # get all the factors with numeric base so they can be
-                        # combined below, but don't combine negatives unless
-                        # the exponent is an integer
-                        if e.is_Rational:
-                            if e.is_Integer:
-                                coeff *= Pow(b, e)  # it is an unevaluated power
-                                continue
-                            elif e.is_negative:    # also a sign of an unevaluated power
-                                seq.append(Pow(b, e))
-                                continue
-                            elif b.is_negative:
-                                neg1e += e
-                                b = -b
-                            if b is not S.One:
-                                pnum_rat.setdefault(b, []).append(e)
-                            continue
-                        elif b.is_positive or e.is_integer:
-                            num_exp.append((b, e))
-                            continue
-
-                    elif b is S.ImaginaryUnit and e.is_Rational:
-                        neg1e += e/2
-                        continue
-
-                c_powers.append((b, e))
-
-            # NON-COMMUTATIVE
-            # TODO: Make non-commutative exponents not combine automatically
-            else:
-                if o is not NC_Marker:
-                    nc_seq.append(o)
-
-                # process nc_seq (if any)
-                while nc_seq:
-                    o = nc_seq.pop(0)
-                    if not nc_part:
-                        nc_part.append(o)
-                        continue
-
-                    #                             b    c       b+c
-                    # try to combine last terms: a  * a   ->  a
-                    o1 = nc_part.pop()
-                    b1, e1 = o1.as_base_exp()
-                    b2, e2 = o.as_base_exp()
-                    new_exp = e1 + e2
-                    # Only allow powers to combine if the new exponent is
-                    # not an Add. This allow things like a**2*b**3 == a**5
-                    # if a.is_commutative == False, but prohibits
-                    # a**x*a**y and x**a*x**b from combining (x,y commute).
-                    if b1 == b2 and (not new_exp.is_Add):
-                        o12 = b1 ** new_exp
-
-                        # now o12 could be a commutative object
-                        if o12.is_commutative:
-                            seq.append(o12)
-                            continue
-                        else:
-                            nc_seq.insert(0, o12)
-
-                    else:
-                        nc_part.append(o1)
-                        nc_part.append(o)
+        c_part = data.c_part
+        nc_part = data.nc_part
+        nc_seq = data.nc_seq
+        coeff = data.coeff
+        c_powers = data.c_powers
+        num_exp = data.num_exp
+        neg1e = data.neg1e
+        pnum_rat = data.pnum_rat
+        order_symbols = data.order_symbols
 
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
