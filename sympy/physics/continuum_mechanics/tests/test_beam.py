@@ -365,3 +365,22 @@ def test_max_deflection():
     b.apply_load(F*l/8, l, -2)
     b.apply_load(-F, l/2, -1)
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
+
+def test_Beam_3d():
+    from sympy.physics.continuum_mechanics.beam import Beam, Beam_3d
+    l, E, G, I, A = symbols('l, E, G, I, A')
+    b = Beam_3d(l, E, G, I, A)
+    b.apply_support(0, "fixed")
+    b.apply_support(l, "fixed")
+    m, q = symbols('m, q')
+    b.apply_load(q, dir="y")
+    b.apply_moment_load(m, dir="z")
+    b.solve_slope_deflection()
+
+    assert b.shear_force() == [0, -q*x, 0]
+    assert b.bending_moment() == [0, 0, -m*x + q*x**2/2]
+    assert b.deflection() == [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l**2*q - 2*A*G*l*m
+            + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I)) + l*m*x**2/(4*E*I) - l*x**3*(A*G*l**2*q
+            - 2*A*G*l*m + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I) + q*x**4/(24*E*I)
+            + l*x*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I))
+            - q*x**2/(2*A*G), 0]

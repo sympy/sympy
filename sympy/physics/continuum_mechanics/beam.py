@@ -1117,14 +1117,11 @@ class Beam(object):
             return None
 
 
+
 class Beam_3d(Beam):
     """
-    A Beam is a structural element that is capable of withstanding load
-    primarily by resisting against bending. Beams are characterized by
-    their cross sectional profile(Second moment of area), their length
-    and their material.
-    This class can handle loads applied in any direction of a 3D space 
-    with unsimilar values of Second moment along different axes.
+    This class handles loads applied in any direction of a 3D space along
+    with unequal values of Second moment along different axes.
 
     .. note::
        While solving a beam bending problem, a user should choose its
@@ -1132,6 +1129,37 @@ class Beam_3d(Beam):
        automatically follow the chosen sign convention.
 
     ref : http://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
+
+    Examples
+    ========
+    There is a beam of l meters long. A constant distributed load of magnitude q
+    is applied along y-axis from start till the end of beam. A constant distributed
+    moment of magnitude m is also applied along z-axis from start till the end of beam.
+    Beam is fixed at both of its end. So, deflection of the beam at the both ends
+    is restricted.
+
+    >>> from sympy.physics.continuum_mechanics.beam import Beam_3d
+    >>> from sympy import symbols
+    >>> l, E, G, I, A = symbols('l, E, G, I, A')
+    >>> b = Beam_3d(l, E, G, I, A)
+    >>> b.apply_support(0, "fixed")
+    >>> b.apply_support(l, "fixed")
+    >>> q, m = symbols('q, m')
+    >>> b.apply_load(q, dir="y")
+    >>> b.apply_moment_load(m, dir="z")
+    >>> b.shear_force()
+    [0, -q*x, 0]
+    >>> b.bending_moment()
+    [0, 0, -m*x + q*x**2/2]
+    >>> b.solve_slope_deflection()
+    >>> b.slope()
+    [0, 0, l*x*(-l*q + 3*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
+    + q*x**3/(6*E*I) + x**2*(-l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I))
+    - m)/(2*E*I)]
+    >>> b.deflection()
+    [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
+    + l*m*x**2/(4*E*I) - l*x**3*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
+    + q*x**4/(24*E*I) + l*x*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G), 0]
     """
 
     def __init__(self, length, elastic_modulus, shear_modulus , second_moment, area, variable=Symbol('x')):
@@ -1150,7 +1178,7 @@ class Beam_3d(Beam):
         second_moment : Sympifyable or list
             A list of two elements having SymPy expression representing the
             Beam's Second moment of area. First value represent Second moment
-            across y-axis and second across z-axis. 
+            across y-axis and second across z-axis.
             Single SymPy expression can be passed if both values are same
         area : Sympifyable
             A SymPy expression representing the Beam's cross-sectional area
@@ -1169,7 +1197,7 @@ class Beam_3d(Beam):
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load_vector = [0, 0, 0]
         self._moment_load_vector = [0, 0, 0]
-        self._reaction_loads = []
+        self._reaction_loads = {}
         self._slope = [0, 0, 0]
         self._deflection = [0, 0, 0]
 
@@ -1263,9 +1291,10 @@ class Beam_3d(Beam):
         Returns a list of three expressions which represents the shear force
         curve of the Beam object along all three axes.
         """
+        x = self.variable
         q = self._load_vector
         m = self._moment_load_vector
-        return list(integrate(-q[0], x), integrate(-q[1], x), integrate(-q[2], x))
+        return [integrate(-q[0], x), integrate(-q[1], x), integrate(-q[2], x)]
 
     def axial_force(self):
         """
@@ -1278,6 +1307,7 @@ class Beam_3d(Beam):
         Returns a list of three expressions which represents the bending moment
         curve of the Beam object along all three axes.
         """
+        x = self.variable
         q = self._load_vector
         m = self._moment_load_vector
         shear = self.shear_force()
@@ -1291,7 +1321,7 @@ class Beam_3d(Beam):
         """
         return self.bending_moment()[0]
 
-    def solve(self):
+    def solve_slope_deflection(self):
         from sympy import dsolve, Function, Derivative, Eq
         x = self.variable
         l = self.length
