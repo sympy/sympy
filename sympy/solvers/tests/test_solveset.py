@@ -39,7 +39,7 @@ from sympy.solvers.solveset import (
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
-    _solve_expo, term_factors, _is_logarithmic, _solve_log)
+    _solve_expo, _term_factors, _is_logarithmic, _solve_log)
 
 
 a = Symbol('a', real=True)

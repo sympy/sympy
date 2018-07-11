@@ -985,22 +985,29 @@ def _solveset(f, symbol, domain, _check=False):
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
 
-            if domain.is_subset(S.Reals) and _is_logarithmic(f, symbol):
-                expr_args = make_expr_args(f)
-                _result = []
-                for res in result:
-                    ok = True
-                    for expr_arg in expr_args:
-                        if symbol in expr_arg.free_symbols:
-                            ans_arg = expr_arg.subs(symbol, res)
-                            if not ans_arg.is_real:
-                                ok = False
-                                break
-                    if ok:
-                        _result.append(res)
-                result = FiniteSet(*_result)
+            logarithmic_singularities = log_singularities(
+                orig_f, symbol, result, domain)
+            result -= logarithmic_singularities
 
     return result
+
+
+def log_singularities(f, symbol, result, domain):
+    singularities = S.EmptySet
+    if domain.is_subset(S.Reals):
+        if _is_logarithmic(f, symbol):
+            expr_args = list(_term_factors(f))
+            for res in result:
+                ok = True
+                for expr_arg in expr_args:
+                    if symbol in expr_arg.free_symbols:
+                        ans_arg = expr_arg.subs(symbol, res)
+                        if not ans_arg.is_real:
+                            ok = False
+                            break
+                if not ok:
+                    singularities += FiniteSet(res)
+    return singularities
 
 
 def _term_factors(f):
@@ -1161,8 +1168,22 @@ def _solve_log(f, symbol):
     r"""
     Helper to solve logarithmic equations.
 
-    Logarithmic equation is an equation that involves the logarithm
-    of an expression containing a variable.
+    Parameters
+    ==========
+
+    f : Expr
+        The logarithmic equation to be solved
+
+    symbol : Symbol
+        The variable in which the equation is solved
+
+    Returns
+    =======
+
+    An improved equation containg a single instance of log.
+
+    `None`:
+        If the equation does not change.
 
     Examples
     ========
@@ -1215,17 +1236,48 @@ def _solve_log(f, symbol):
 
     lhs, rhs_s = invert_real(f, 0, symbol)
     rhs = rhs_s.args[0]
+    new_f = None
 
     new_lhs = logcombine(lhs, force=True)
-    new_f = new_lhs - rhs
+    if new_lhs != lhs:
+        new_f = new_lhs - rhs
 
     return new_f
 
 
 def _is_logarithmic(f, symbol):
     r"""
-    Helper to check if the given equation is logarithmic
-    or not.
+    Helper to check if the given equation is logarithmic or not.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The equation to be checked
+
+    symbol : Symbol
+        The variable in which the equation is checked
+
+    Returns
+    =======
+
+    `True` if the equation is logarithmic otherwise `False`.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, tan, log
+    >>> from sympy.solvers.solveset import _is_logarithmic as check
+    >>> x = symbols('x')
+    >>> check(log(x + 2) - log(x + 3), x)
+    True
+    >>> check(tan(log(2*x)), x)
+    False
+
+    * Philosophy behind the helper
+
+    The function extracts each term of the equation and checks if it
+    it is an instance of `log` w.r.t `symbol`
     """
 
     def check_log(arg, symbol):
@@ -1233,7 +1285,7 @@ def _is_logarithmic(f, symbol):
                 symbol in arg.free_symbols):
             return True
 
-    expr_args = make_expr_args(f)
+    expr_args = _term_factors(f)
     for expr_arg in expr_args:
         if check_log(expr_arg, symbol):
             return True
@@ -1444,9 +1496,7 @@ def _transolve(f, symbol, domain):
             new_eq = _solve_expo(simplified_equation, symbol)
         # check if it is logarithmic type equation
         elif _is_logarithmic(simplified_equation, symbol):
-            new_eq1 = _solve_log(simplified_equation, symbol)
-            if new_eq1 != simplified_equation:
-                new_eq = new_eq1
+            new_eq = _solve_log(simplified_equation, symbol)
 
         if new_eq:
             result = _solveset(new_eq, symbol, domain)
