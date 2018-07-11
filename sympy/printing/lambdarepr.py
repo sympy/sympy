@@ -10,12 +10,6 @@ from .pycode import (
 from sympy.external import import_module
 from sympy.utilities import default_sort_key
 
-tensorflow = import_module('tensorflow')
-if tensorflow and V(tensorflow.__version__) < '1.0':
-    tensorflow_piecewise = "select"
-else:
-    tensorflow_piecewise = "where"
-
 class LambdaPrinter(PythonCodePrinter):
     """
     This printer converts expressions into strings that can be used by
@@ -92,39 +86,45 @@ class TensorflowPrinter(LambdaPrinter):
         #     own because StrPrinter doesn't define it.
         return '{0}({1})'.format('logical_not', ','.join(self._print(i) for i in expr.args))
 
-    def _print_Min(self, expr, **kwargs):
+    def _print_Min(self, expr):
         from sympy import Min
         if len(expr.args) == 1:
-            return self._print(expr.args[0], **kwargs)
+            return self._print(expr.args[0])
 
         return 'minimum({0}, {1})'.format(
-            self._print(expr.args[0], **kwargs),
-            self._print(Min(*expr.args[1:]), **kwargs))
+            self._print(expr.args[0]),
+            self._print(Min(*expr.args[1:])))
 
-    def _print_Max(self, expr, **kwargs):
+    def _print_Max(self, expr):
         from sympy import Max
         if len(expr.args) == 1:
-            return self._print(expr.args[0], **kwargs)
+            return self._print(expr.args[0])
 
         return 'maximum({0}, {1})'.format(
-            self._print(expr.args[0], **kwargs),
-            self._print(Max(*expr.args[1:]), **kwargs))
+            self._print(expr.args[0]),
+            self._print(Max(*expr.args[1:])))
 
-    def _print_Piecewise(self, expr, **kwargs):
+    def _print_Piecewise(self, expr):
+        tensorflow = import_module('tensorflow')
+        if tensorflow and V(tensorflow.__version__) < '1.0':
+            tensorflow_piecewise = "select"
+        else:
+            tensorflow_piecewise = "where"
+
         from sympy import Piecewise
         e, cond = expr.args[0].args
         if len(expr.args) == 1:
             return '{0}({1}, {2}, {3})'.format(
                 tensorflow_piecewise,
-                self._print(cond, **kwargs),
-                self._print(e, **kwargs),
+                self._print(cond),
+                self._print(e),
                 0)
 
         return '{0}({1}, {2}, {3})'.format(
             tensorflow_piecewise,
-            self._print(cond, **kwargs),
-            self._print(e, **kwargs),
-            self._print(Piecewise(*expr.args[1:]), **kwargs))
+            self._print(cond),
+            self._print(e),
+            self._print(Piecewise(*expr.args[1:])))
 
     def _print_Relational(self, expr):
         "Relational printer for Equality and Unequality"

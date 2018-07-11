@@ -34,7 +34,7 @@ import stat
 import tempfile
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import exec_, PY3, string_types, range
+from sympy.core.compatibility import exec_, PY3, string_types, range, unwrap
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -125,7 +125,7 @@ def convert_to_native_paths(lst):
             if pos != -1:
                 if rv[pos + 1] != '\\':
                     rv = rv[:pos + 1] + '\\' + rv[pos + 1:]
-        newlst.append(sys_normcase(rv))
+        newlst.append(os.path.normcase(rv))
     return newlst
 
 
@@ -134,21 +134,10 @@ def get_sympy_dir():
     Returns the root sympy directory and set the global value
     indicating whether the system is case sensitive or not.
     """
-    global sys_case_insensitive
-
     this_file = os.path.abspath(__file__)
     sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
     sympy_dir = os.path.normpath(sympy_dir)
-    sys_case_insensitive = (os.path.isdir(sympy_dir) and
-                            os.path.isdir(sympy_dir.lower()) and
-                            os.path.isdir(sympy_dir.upper()))
-    return sys_normcase(sympy_dir)
-
-
-def sys_normcase(f):
-    if sys_case_insensitive:  # global defined after call to get_sympy_dir()
-        return f.lower()
-    return f
+    return os.path.normcase(sympy_dir)
 
 
 def setup_pprint():
@@ -1299,7 +1288,7 @@ class SymPyTests(object):
         for path, folders, files in os.walk(dir):
             g.extend([os.path.join(path, f) for f in files if fnmatch(f, pat)])
 
-        return sorted([sys_normcase(gi) for gi in g])
+        return sorted([os.path.normcase(gi) for gi in g])
 
 
 class SymPyDocTests(object):
@@ -1442,7 +1431,7 @@ class SymPyDocTests(object):
             # skip files that are not importable (i.e. missing __init__.py)
             g = [x for x in g if importable(x)]
 
-        return [sys_normcase(gi) for gi in g]
+        return [os.path.normcase(gi) for gi in g]
 
     def _check_dependencies(self,
                             executables=(),
@@ -1592,6 +1581,7 @@ class SymPyDocTestFinder(DocTestFinder):
                 self._find(tests, val, valname, module, source_lines,
                            globs, seen)
 
+
         # Look for tests in a class's contained objects.
         if inspect.isclass(obj):
             for valname, val in obj.__dict__.items():
@@ -1601,10 +1591,12 @@ class SymPyDocTestFinder(DocTestFinder):
                 if isinstance(val, classmethod):
                     val = getattr(obj, valname).__func__
 
+
                 # Recurse to methods, properties, and nested classes.
-                if (inspect.isfunction(val) or
+                if ((inspect.isfunction(unwrap(val)) or
                         inspect.isclass(val) or
-                        isinstance(val, property)):
+                        isinstance(val, property)) and
+                    self._from_module(module, val)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
                     if isinstance(val, property):
@@ -1672,6 +1664,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Find the docstring's location in the file.
         if lineno is None:
+            obj = unwrap(obj)
             # handling of properties is not implemented in _find_lineno so do
             # it here
             if hasattr(obj, 'func_closure') and obj.func_closure is not None:
@@ -1901,6 +1894,8 @@ class PyTestReporter(Reporter):
         self._terminal_width = None
         self._default_width = 80
         self._split = split
+        self._active_file = ''
+        self._active_f = None
 
         # TODO: Should these be protected?
         self.slow_test_functions = []
@@ -2082,12 +2077,9 @@ class PyTestReporter(Reporter):
         self.write(t + "\n")
 
     def write_exception(self, e, val, tb):
-        t = traceback.extract_tb(tb)
         # remove the first item, as that is always runtests.py
-        t = t[1:]
-        t = traceback.format_list(t)
-        self.write("".join(t))
-        t = traceback.format_exception_only(e, val)
+        tb = tb.tb_next
+        t = traceback.format_exception(e, val, tb)
         self.write("".join(t))
 
     def start(self, seed=None, msg="test process starts"):

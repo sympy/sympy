@@ -26,6 +26,11 @@ numpy = import_module('numpy')
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 
+if tensorflow:
+    # Hide Tensorflow warnings
+    import os
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 w, x, y, z = symbols('w,x,y,z')
 
 #================== Test different arguments =======================
