@@ -12,7 +12,7 @@ from __future__ import print_function, division
 
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin,
-        RandomDistribution)
+        ProbabilityDistribution)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
@@ -139,7 +139,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 "Set of Conditional Domain not Implemented")
 
 
-class SingleContinuousDistribution(RandomDistribution, NamedArgsMixin):
+class SingleContinuousDistribution(ProbabilityDistribution, NamedArgsMixin):
     """ Continuous distribution of a single variable
 
     Serves as superclass for Normal/Exponential/UniformDistribution etc....
@@ -346,7 +346,7 @@ class ContinuousPSpace(PSpace):
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
             dens = density(expr, **kwargs)
-            if not isinstance(dens, RandomDistribution):
+            if not isinstance(dens, ProbabilityDistribution):
                 dens = ContinuousDistributionHandmade(dens)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)

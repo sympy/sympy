@@ -851,7 +851,7 @@ class ExponentialDistribution(SingleContinuousDistribution):
         _value_check(rate > 0, "Rate must be positive.")
 
     def pdf(self, x):
-        return  self.rate * exp(-self.rate*x)
+        return self.rate * exp(-self.rate*x)
 
     def sample(self):
         return random.expovariate(self.rate)

@@ -9,7 +9,7 @@ from sympy.solvers.solveset import solveset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
         random_symbols, PSpace, ConditionalDomain, RandomDomain,
-        ProductDomain, RandomDistribution)
+        ProductDomain, ProbabilityDistribution)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
@@ -19,7 +19,7 @@ from sympy.utilities import filldedent
 import random
 
 
-class SingleDiscreteDistribution(RandomDistribution, NamedArgsMixin):
+class SingleDiscreteDistribution(ProbabilityDistribution, NamedArgsMixin):
     """ Discrete distribution of a single variable
 
     Serves as superclass for PoissonDistribution etc....
@@ -220,7 +220,7 @@ class DiscretePSpace(PSpace):
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
             dens = density(expr)
-            if not isinstance(dens, RandomDistribution):
+            if not isinstance(dens, ProbabilityDistribution):
                 dens = DiscreteDistributionHandmade(dens)
             z = Dummy('z', real = True)
             space = SingleDiscretePSpace(z, dens)

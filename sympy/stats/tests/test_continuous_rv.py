@@ -20,7 +20,7 @@ from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne
 
 
 from sympy.stats.crv_types import NormalDistribution
-from sympy.stats.crv import  SingleContinuousPSpace
+from sympy.stats.crv import SingleContinuousPSpace
 
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.external import import_module

@@ -121,7 +121,7 @@ class ConditionalDomain(RandomDomain):
         return And(self.fulldomain.as_boolean(), self.condition)
 
 
-class RandomDistribution(Basic):
+class ProbabilityDistribution(Basic):
     def __call__(self, *args):
         return self.pdf(*args)
 
@@ -134,6 +134,8 @@ class RandomDistribution(Basic):
                 lpdf = density(arg)(sym)
                 expr = expr.replace(arg, sym)*lpdf
                 if arg.pspace.is_Continuous:
+                    #TODO: Modify to support integration
+                    #for all kinds of sets.
                     expr = integrate(expr, (sym, dom))
                 elif arg.pspace.is_Discrete:
                     if dom in (S.Integers, S.Naturals, S.Naturals0):
