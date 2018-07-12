@@ -179,7 +179,7 @@ def test_files():
             if gen_raise_re.search(line):
                 assert False, message_gen_raise % (fname, idx + 1)
             if (implicit_test_re.search(line) and
-                    not filter(lambda ex: ex in fname, import_exclude)):
+                    not list(filter(lambda ex: ex in fname, import_exclude))):
                 assert False, message_implicit % (fname, idx + 1)
             if func_is_re.search(line) and not test_file_re.search(fname):
                 assert False, message_func_is % (fname, idx + 1)
