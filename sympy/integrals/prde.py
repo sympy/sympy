@@ -132,8 +132,8 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                 etaa, etad = frac_in(dcoeff, DE.t)
                 A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
                 if A is not None:
-                    a, m, z = A
-                    if a == 1:
+                    Q, m, z = A
+                    if Q == 1:
                         n = min(n, m)
 
         elif case == 'tan':
@@ -147,9 +147,9 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                     A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
                     B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
                     if A is not None and B is not None:
-                        a, s, z = A
+                        Q, s, z = A
                         # TODO: Add test
-                        if a == 1:
+                        if Q == 1:
                             n = min(n, s/2)
 
     N = max(0, -nb)
