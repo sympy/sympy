@@ -225,7 +225,7 @@ class AskFiniteHandler(CommonHandler):
 
     exp = log
 
-    cos, sin, Number, Pi, Exp1, GoldenRatio, ImaginaryUnit, sign = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*8
+    cos, sin, Number, Pi, Exp1, GoldenRatio, TribonacciConstant, ImaginaryUnit, sign = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*9
 
     Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysFalse)]*2

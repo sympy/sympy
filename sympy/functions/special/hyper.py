@@ -11,6 +11,7 @@ from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth, Abs)
+from sympy.utilities.iterables import default_sort_key
 
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
@@ -1043,3 +1044,42 @@ class HyperRep_sinasin(HyperRep):
     @classmethod
     def _expr_big_minus(cls, a, z, n):
         return -1/sqrt(1 + 1/z)*sinh(2*a*asinh(sqrt(z)) + 2*a*pi*I*n)
+
+class appellf1(Function):
+    r"""
+    This is the Appell hypergeometric function of two variables as:
+    .. math ::
+        F_1(a,b_1,b_2,c,x,y) = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
+        \frac{(a)_{m+n} (b_1)_m (b_2)_n}{(c)_{m+n}}
+        \frac{x^m y^n}{m! n!}.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Appell_series
+    .. [2] http://functions.wolfram.com/HypergeometricFunctions/AppellF1/
+
+    """
+
+    @classmethod
+    def eval(cls, a, b1, b2, c, x, y):
+        if default_sort_key(b1) > default_sort_key(b2):
+            b1, b2 = b2, b1
+            x, y = y, x
+            return cls(a, b1, b2, c, x, y)
+        elif b1 == b2 and default_sort_key(x) > default_sort_key(y):
+            x, y = y, x
+            return cls(a, b1, b2, c, x, y)
+        if x == 0 and y == 0:
+            return S.One
+
+    def fdiff(self, argindex=5):
+        a, b1, b2, c, x, y = self.args
+        if argindex == 5:
+            return (a*b1/c)*appellf1(a + 1, b1 + 1, b2, c + 1, x, y)
+        elif argindex == 6:
+            return (a*b2/c)*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)
+        elif argindex in (1, 2, 3, 4):
+            return Derivative(self, self.args[argindex-1])
+        else:
+            raise ArgumentIndexError(self, argindex)

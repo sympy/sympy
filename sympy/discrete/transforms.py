@@ -371,6 +371,9 @@ def mobius_transform(seq, subset=True):
     Performs the Möbius Transform for subset lattice with indices of
     sequence as bitmasks.
 
+    The indices of each argument, considered as bit strings, correspond
+    to subsets of a finite set.
+
     The sequence is automatically padded to the right with zeros, as the
     definition of subset/superset based on bitmasks (indices) requires
     the size of sequence to be a power of 2.
@@ -414,7 +417,8 @@ def mobius_transform(seq, subset=True):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Möbius_inversion_formula
-    .. [2] https://arxiv.org/pdf/1211.0189.pdf
+    .. [2] https://people.csail.mit.edu/rrw/presentations/subset-conv.pdf
+    .. [3] https://arxiv.org/pdf/1211.0189.pdf
 
     """
 

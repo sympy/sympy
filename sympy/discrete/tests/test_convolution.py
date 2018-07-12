@@ -4,7 +4,8 @@ from sympy import sqrt, pi, E, exp
 from sympy.core import S, Symbol, symbols, I
 from sympy.core.compatibility import range
 from sympy.discrete.convolution import (
-    convolution, convolution_fft, convolution_ntt, convolution_fwht)
+    convolution, convolution_fft, convolution_ntt, convolution_fwht,
+    convolution_subset)
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y
 
@@ -46,6 +47,18 @@ def test_convolution():
     raises(TypeError, lambda: convolution(b, d, fft=True, dyadic=True))
     raises(TypeError, lambda: convolution(a, b, dps=2, dyadic=True))
     raises(TypeError, lambda: convolution(b, c, prime=p, dyadic=True))
+
+    # subset
+    assert convolution(a, b, subset=True) == convolution_subset(a, b) == \
+            convolution(a, b, subset=True, dyadic=False) == \
+                convolution(a, b, subset=True, fft=False) == \
+                    convolution(a, b, subset=True, fft=False, ntt=False)
+    assert convolution(a, b, subset=False) == convolution(a, b)
+    raises(TypeError, lambda: convolution(a, b, subset=True, dyadic=True))
+    raises(TypeError, lambda: convolution(b, c, subset=True, fft=True))
+    raises(TypeError, lambda: convolution(c, d, subset=True, dps=6))
+    raises(TypeError, lambda: convolution(a, c, subset=True, prime=q))
+
 
 
 def test_cyclic_convolution():
@@ -98,10 +111,53 @@ def test_cyclic_convolution():
             convolution(a, b, prime=19*2**10 + 1) + [0]
 
     # fwht
-    assert convolution(a, b, dyadic=True, cycle=3) == [2499522285783,
-                                        19861417974796, 4702176579021]
+    u, v, w, x, y = symbols('u v w x y')
+    p, q, r, s, t = symbols('p q r s t')
+    c = [u, v, w, x, y]
+    d = [p, q, r, s, t]
+
+    assert convolution(a, b, dyadic=True, cycle=3) == \
+                        [2499522285783, 19861417974796, 4702176579021]
+
     assert convolution(a, b, dyadic=True, cycle=5) == [2718149225143,
             2114320852171, 20571217906407, 246166418903, 1413262436976]
+
+    assert convolution(c, d, dyadic=True, cycle=4) == \
+            [p*u + p*y + q*v + r*w + s*x + t*u + t*y,
+             p*v + q*u + q*y + r*x + s*w + t*v,
+             p*w + q*x + r*u + r*y + s*v + t*w,
+             p*x + q*w + r*v + s*u + s*y + t*x]
+
+    assert convolution(c, d, dyadic=True, cycle=6) == \
+            [p*u + q*v + r*w + r*y + s*x + t*w + t*y,
+             p*v + q*u + r*x + s*w + s*y + t*x,
+             p*w + q*x + r*u + s*v,
+             p*x + q*w + r*v + s*u,
+             p*y + t*u,
+             q*y + t*v]
+
+    # subset
+    assert convolution(a, b, subset=True, cycle=7) == [18266671799811,
+                    178235365533, 213958794, 246166418903, 1413262436976,
+                    2397553088697, 1932759730434]
+
+    assert convolution(a[1:], b, subset=True, cycle=4) == \
+            [178104086592, 302255835516, 244982785880, 3717819845434]
+
+    assert convolution(a, b[:-1], subset=True, cycle=6) == [1932837114162,
+            178235365533, 213958794, 245166224504, 1413262436976, 2397553088697]
+
+    assert convolution(c, d, subset=True, cycle=3) == \
+            [p*u + p*x + q*w + r*v + r*y + s*u + t*w,
+             p*v + p*y + q*u + s*y + t*u + t*x,
+             p*w + q*y + r*u + t*v]
+
+    assert convolution(c, d, subset=True, cycle=5) == \
+            [p*u + q*y + t*v,
+             p*v + q*u + r*y + t*w,
+             p*w + r*u + s*y + t*x,
+             p*x + q*w + r*v + s*u,
+             p*y + t*u]
 
 
 def test_convolution_fft():
@@ -114,20 +170,21 @@ def test_convolution_fft():
     assert convolution_fft([1 + 2*I, 3 + 4*I, 5 + S(3)/5*I], [S(2)/5 + S(4)/7*I]) == \
             [-S(26)/35 + 48*I/35, -S(38)/35 + 116*I/35, S(58)/35 + 542*I/175]
 
-    assert convolution_fft([S(3)/4, S(5)/6], [S(7)/8, S(1)/3, S(2)/5]) == [S(21)/32,
-                                                S(47)/48, S(26)/45, S(1)/3]
-    assert convolution_fft([S(1)/9, S(2)/3, S(3)/5], [S(2)/5, S(3)/7, S(4)/9]) == [S(2)/45,
-                                    S(11)/35, S(8152)/14175, S(523)/945, S(4)/15]
-    assert convolution_fft([pi, E, sqrt(2)], [sqrt(3), 1/pi, 1/E]) == [sqrt(3)*pi,
-                                                            1 + sqrt(3)*E,
-                                                            E/pi + pi*exp(-1) + sqrt(6),
-                                                            sqrt(2)/pi + 1,
-                                                            sqrt(2)*exp(-1)]
+    assert convolution_fft([S(3)/4, S(5)/6], [S(7)/8, S(1)/3, S(2)/5]) == \
+                                    [S(21)/32, S(47)/48, S(26)/45, S(1)/3]
 
-    assert convolution_fft([2321, 33123], [5321, 6321, 71323]) == [12350041, 190918524,
-                                                        374911166, 2362431729]
-    assert convolution_fft([312313, 31278232], [32139631, 319631]) == [10037624576503,
-                                                1005370659728895, 9997492572392]
+    assert convolution_fft([S(1)/9, S(2)/3, S(3)/5], [S(2)/5, S(3)/7, S(4)/9]) == \
+                                [S(2)/45, S(11)/35, S(8152)/14175, S(523)/945, S(4)/15]
+
+    assert convolution_fft([pi, E, sqrt(2)], [sqrt(3), 1/pi, 1/E]) == \
+                    [sqrt(3)*pi, 1 + sqrt(3)*E, E/pi + pi*exp(-1) + sqrt(6),
+                                            sqrt(2)/pi + 1, sqrt(2)*exp(-1)]
+
+    assert convolution_fft([2321, 33123], [5321, 6321, 71323]) == \
+                        [12350041, 190918524, 374911166, 2362431729]
+
+    assert convolution_fft([312313, 31278232], [32139631, 319631]) == \
+                        [10037624576503, 1005370659728895, 9997492572392]
 
     raises(TypeError, lambda: convolution_fft(x, y))
     raises(ValueError, lambda: convolution_fft([x, y], [y, x]))
@@ -200,3 +257,41 @@ def test_convolution_fwht():
 
     raises(TypeError, lambda: convolution_fwht(x, y))
     raises(TypeError, lambda: convolution_fwht(x*y, u + v))
+
+
+def test_convolution_subset():
+    assert convolution_subset([], []) == []
+    assert convolution_subset([], [S(1)/3]) == []
+    assert convolution_subset([6 + 3*I/7], [S(2)/3]) == [4 + 2*I/7]
+
+    a = [1, S(5)/3, sqrt(3), 4 + 5*I]
+    b = [64, 71, 55, 47, 33, 29, 15]
+    c = [3 + 2*I/3, 5 + 7*I, 7, S(7)/5, 9]
+
+    assert convolution_subset(a, b) == [64, 533/S(3), 55 + 64*sqrt(3),
+                                        71*sqrt(3) + 1184/S(3) + 320*I, 33, 84,
+                                        15 + 33*sqrt(3), 29*sqrt(3) + 157 + 165*I]
+
+    assert convolution_subset(b, c) == [192 + 128*I/3, 533 + 1486*I/3,
+                                        613 + 110*I/3, 5013/5 + 1249*I/3,
+                                        675 + 22*I, 891 + 751*I/3,
+                                        771 + 10*I, 3736/5 + 105*I]
+
+    assert convolution_subset(a, c) == convolution_subset(c, a)
+    assert convolution_subset(a[:2], b) == \
+            [64, 533/S(3), 55, 416/S(3), 33, 84, 15, 25]
+
+    assert convolution_subset(a[:2], c) == \
+            [3 + 2*I/3, 10 + 73*I/9, 7, 196/S(15), 9, 15, 0, 0]
+
+    u, v, w, x, y, z = symbols('u v w x y z')
+
+    assert convolution_subset([u, v, w], [x, y]) == [u*x, u*y + v*x, w*x, w*y]
+    assert convolution_subset([u, v, w, x], [y, z]) == \
+                            [u*y, u*z + v*y, w*y, w*z + x*y]
+
+    assert convolution_subset([u, v], [x, y, z]) == \
+                    convolution_subset([x, y, z], [u, v])
+
+    raises(TypeError, lambda: convolution_subset(x, z))
+    raises(TypeError, lambda: convolution_subset(S(7)/3, u))
