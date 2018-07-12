@@ -177,6 +177,21 @@ def plot_and_save(name):
     p.save(tmp_file('%s_parametric_surface' % name))
     p._backend.close()
 
+    # Single Contour plot.
+    p = plot_contour(sin(x)*sin(y), (x, -5, 5), (y, -5, 5))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+
+    # Multiple Contour plots with same range.
+    p = plot_contour(x**2 + y**2, x**3 + y**3, (x, -5, 5), (y, -5, 5))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+
+    # Multiple Contour plots with different range.
+    p = plot_contour((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x**3 + y**3, (x, -3, 3), (y, -3, 3)))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+
     ###
     # Examples from the 'colors' notebook
     ###
