@@ -123,7 +123,7 @@ class CosetTable(DefaultPrinting):
         return not any(None in self.table[coset] for coset in self.omega)
 
     # Pg. 153 [1]
-    def define(self, alpha, x):
+    def define(self, alpha, x, modified=True):
         r"""
         This routine is used in the relator-based strategy of Todd-Coxeter
         algorithm if some `\alpha^x` is undefined. We check whether there is
@@ -151,9 +151,18 @@ class CosetTable(DefaultPrinting):
         table.append([None]*len(A))
         # beta is the new coset generated
         beta = len_table
+        if modified:
+            H = self.subgroup
+            self._grp = free_group(', ' .join(["a_%d" % i for i in range(len(H))]))[0]
+            self.P.append([None]*len(self.A))
+            self.p_p = []
         self.p.append(beta)
         table[alpha][self.A_dict[x]] = beta
         table[beta][self.A_dict_inv[x]] = alpha
+        # P[alpha][x] = epsilon, P[beta][x**-1] = epsilon
+        if modified:
+            self.P[alpha][self.A_dict[x]] = self._grp.identity
+            self.P[beta][self.A_dict_inv[x]] = self._grp.identity
 
     def define_c(self, alpha, x):
         r"""
@@ -323,7 +332,9 @@ class CosetTable(DefaultPrinting):
         f_p = None
         if modified:
             f_p = self._grp.identity
-        while fill or i == 0:
+        itr = 0
+        while fill or itr == 0:
+            itr += 1
             while i <= j and table[f][A_dict[word[i]]] is not None:
                 if modified:
                     f_p = f_p*self.P[f][A_dict[word[i]]]
@@ -356,10 +367,7 @@ class CosetTable(DefaultPrinting):
                     self.P[f][self.A_dict[word[i]]] = f_p**-1*b_p
                     self.P[b][self.A_dict_inv[word[i]]] = b_p**-1*f_p
             elif fill:
-                if modified:
-                    self.modified_define(f, word[i])
-                else:
-                    self.define(f, word[i])
+                self.define(f, word[i], modified=modified)
             # otherwise scan is incomplete and yields no information
 
     # used in the low-index subgroups algorithm
@@ -436,7 +444,7 @@ class CosetTable(DefaultPrinting):
             p[v] = mu
             q.append(v)
 
-    def rep(self, k):
+    def rep(self, k, modified=False):
         r"""
         Input: `k \in [0 \ldots n-1]`, as for ``self`` only array ``p`` is used
         =====
@@ -476,20 +484,32 @@ class CosetTable(DefaultPrinting):
         p = self.p
         lamda = k
         rho = p[lamda]
+        if modified:
+            s = p[:]
         while rho != lamda:
+            if modified:
+                s[rho] = lamda
             lamda = rho
             rho = p[lamda]
-        mu = k
-        rho = p[mu]
-        while rho != lamda:
-            p[mu] = lamda
-            mu = rho
+        if modified:
+            rho = s[lamda]
+            while rho != k:
+                mu = rho
+                rho = s[mu]
+                p[rho] = lamda
+                self.p_p[rho] = self.p_p[rho]*self.p_p[mu]
+        else:
+            mu = k
             rho = p[mu]
+            while rho != lamda:
+                p[mu] = lamda
+                mu = rho
+                rho = p[mu]
         return lamda
 
     # α, β coincide, i.e. α, β represent the pair of cosets
     # where coincidence occurs
-    def coincidence(self, alpha, beta, w=None,modified=False):
+    def coincidence(self, alpha, beta, w=None, modified=False):
         r"""
         The third situation described in ``scan`` routine is handled by this
         routine, described on Pg. 156-161 [1].
@@ -513,12 +533,9 @@ class CosetTable(DefaultPrinting):
         p = self.p
         # behaves as a queue
         q = []
-        p_p = []
         if modified:
-            p_p[beta] = self._grp.identity
-        l = 0
-        if modified:
-            self.modified_merge(alpha, beta, w, p_p, q)
+            self.p_p[beta] = self._grp.identity
+            self.modified_merge(alpha, beta, w, q)
         else:
             self.merge(alpha, beta, q)
         while len(q) > 0:
@@ -527,31 +544,25 @@ class CosetTable(DefaultPrinting):
                 delta = table[gamma][A_dict[x]]
                 if delta is not None:
                     table[delta][A_dict_inv[x]] = None
-                    mu = None
-                    nu = None
-                    if modified:
-                        mu = self.modified_rep(gamma, p_p)
-                        nu = self.modified_rep(delta, p_p)
-                    else:
-                        mu = self.rep(gamma)
-                        nu = self.rep(delta)
+                    mu = self.rep(gamma, modified=modified)
+                    nu = self.rep(delta, modified=modified)
                     if table[mu][A_dict[x]] is not None:
                         if modified:
-                            v = p_p[delta]**-1*self.P[gamma][self.A_dict[x]]**-1*p_p[gamma]*self.P[mu][self.A_dict[x]]
-                            self.modified_merge(nu, table[mu][self.A_dict[x]], v, p_p, q)
+                            v = self.p_p[delta]**-1*self.P[gamma][self.A_dict[x]]**-1*self.p_p[gamma]*self.P[mu][self.A_dict[x]]
+                            self.modified_merge(nu, table[mu][self.A_dict[x]], v, q)
                         else:
                             self.merge(nu, table[mu][A_dict[x]], q)
                     elif table[nu][A_dict_inv[x]] is not None:
                         if modified:
-                            v = p_p[gamma]**-1*self.P[gamma][self.A_dict[x]]*p_p[delta]*self.P[mu][self.A_dict_inv[x]]
-                            self.modified_merge(mu, table[nu][self.A_dict_inv[x]], v, p_p, q)
+                            v = self.p_p[gamma]**-1*self.P[gamma][self.A_dict[x]]*self.p_p[delta]*self.P[mu][self.A_dict_inv[x]]
+                            self.modified_merge(mu, table[nu][self.A_dict_inv[x]], v, q)
                         else:
                             self.merge(mu, table[nu][A_dict_inv[x]], q)
                     else:
                         table[mu][A_dict[x]] = nu
                         table[nu][A_dict_inv[x]] = mu
                         if modified:
-                            v = p_p[gamma]**-1*self.P[gamma][self.A_dict[x]]*p_p[delta]
+                            v = self.p_p[gamma]**-1*self.P[gamma][self.A_dict[x]]*self.p_p[delta]
                             self.P[mu][self.A_dict[x]] = v
                             self.P[nu][self.A_dict_inv[x]] = v**-1
 
@@ -804,22 +815,7 @@ class CosetTable(DefaultPrinting):
         '''
         Input:  ∈ , x∈A, with  x undefined.
         '''
-        len_table = len(self.table)
-        if len_table >= self.coset_table_max_limit:
-            # abort the further generation of cosets
-            raise ValueError("the coset enumeration has defined more than %s cosets. Try with a greater value max number of cosets "%C.coset_table_max_limit)
-        self.table.append([None]*len(self.A))
-        H = self.subgroup
-        self._grp = list(free_group(', ' .join(["a_%d" % i for i in range(len(H))])))[0]
-        self.P.append([None]*len(self.A))
-        beta = len_table
-        self.p.append(beta)
-        # Define alpha^x = beta, beta^(x**-1) = alpha
-        self.table[alpha][self.A_dict[x]] = beta
-        self.table[beta][self.A_dict_inv[x]] = alpha
-        # P[alpha][x] = epsilon, P[beta][x**-1] = epsilon
-        self.P[alpha][self.A_dict[x]] = self._grp.identity
-        self.P[beta][self.A_dict_inv[x]] = self._grp.identity
+        self.define(alpha, x, modified=True)
 
     def modified_scan(self, alpha, w, y, fill=False):
         '''
@@ -831,41 +827,26 @@ class CosetTable(DefaultPrinting):
     def modified_scan_and_fill(self, alpha, w, y):
         self.modified_scan(alpha, w, y, fill=True)
 
-    def modified_rep(self, k, p_p):
+    def modified_rep(self, k):
         '''
         Input: C, κ∈Ω, , pP
         '''
-        p = self.p
-        lambda_ = k
-        rho = p[lambda_]
-        # Array to trace back compression path.
-        s = p[:]
-        while rho != lambda_:
-            s[rho] = lambda_
-            lambda_ = rho
-            rho = p[lambda_]
-        rho = s[lamda]
-        while rho != k:
-            mu = rho
-            rho = s[mu]
-            p[rho] = lambda_
-            p_p[rho] = p_p[rho]*p_p[mu]
-        return lambda_
+        self.rep(k, modified=True)
 
-    def modified_merge(k, lamda, w, p_p, q, l):
+    def modified_merge(k, lamda, w, q):
         '''
         Input: κ, λ∈Ω, w∈(Y∪Y–1)*withτ(κ)= φ(w)τ(λ), p_p, q,l GP
         q is a queue of length l of elements to be deleted from Ω *
         '''
-        phi = self.modified_rep(k, p_p)
-        psi = self.modified_rep(lamda, p_p)
+        phi = self.modified_rep(k)
+        psi = self.modified_rep(lamda)
         if phi > psi:
             self.p[phi] = psi
-            p_p[phi] =  p_p[k]**-1*w*p_p[lamda]
+            self.p_p[phi] =  self.p_p[k]**-1*w*self.p_p[lamda]
             q.append(phi)
         elif phi < psi:
             self.p[psi] = phi
-            p_p[psi] = p_p[lamda]**-1*w**-1*p_p[k]
+            self.p_p[psi] = self.p_p[lamda]**-1*w**-1*self.p_p[k]
             q.append(psi)
 
     def modified_coincidence(self, alpha, beta, w):
