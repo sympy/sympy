@@ -231,6 +231,8 @@ def test_files():
         "%(sep)sparsing%(sep)ssympy_tokenize.py" % sepd,
         # this one should be fixed:
         "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
+        # False positive in the docstring
+        "%(sep)sbin%(sep)stest_external_imports.py" % sepd,
     ])
     check_files(top_level_files, test)
     check_directory_tree(BIN_PATH, test, set(["~", ".pyc", ".sh"]), "*")
