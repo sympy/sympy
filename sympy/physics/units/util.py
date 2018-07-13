@@ -133,29 +133,33 @@ def convert_to(expr, target_units):
 
 
 def quantity_simplify(expr):
-    from sympy.physics.units.definitions import (percent, permille,
-        radian, degree, angular_mil, avogadro_number,
-        meter, liter, gram, second, ampere, kelvin, mole, candela,
-        hertz, coulomb, dioptre, lux, katal, gray, becquerel, bit)
-    # replace all prefixes with numbers
-    rv = expr.xreplace(dict([(i, i.scale_factor)
-        for i in expr.atoms(Prefix)]))
-    # convert all Quanities to base quanitities
-    rv = rv.xreplace({percent: percent.scale_factor})
-    rv = rv.xreplace({permille: permille.scale_factor})
-    rv = rv.xreplace({degree: degree.convert_to(radian)})
-    rv = rv.xreplace({angular_mil: degree.convert_to(radian)})
-    rv = rv.xreplace({avogadro_number: avogadro_number.scale_factor})
-    # steradian unchanged
-    q = rv.atoms(Quantity)
-    reps = {}
-    for i in q:
-        for b in [meter, liter, gram, second, ampere, kelvin, mole,
-                candela, hertz, coulomb, dioptre, lux, katal, gray,
-                becquerel, bit]:
-            if i.dimension == b.dimension:
-                reps[i] = i.convert_to(b)
-                break
-    rv = rv.xreplace(reps)
-    rv = rv.xreplace({liter: liter.convert_to(meter)})
-    return rv
+    if expr.is_Atom or not expr.has(Quantity):
+        return expr
+    expr = expr.func(*map(quantity_simplify, expr.args))
+    if not isinstance(expr, Mul):
+        return expr
+
+    if any(isinstance(a, Prefix) for a in expr.args):
+        coeff, args = expr.as_coeff_mul(Prefix)
+        args = list(args)
+        for arg in args:
+            if isinstance(arg, Pow):
+                coeff = coeff * (arg.base.scale_factor ** arg.exp)
+            else:
+                coeff = coeff * arg.scale_factor
+        expr = coeff
+
+    if any(isinstance(a, Add) for a in expr.args):
+        return expr.func(*map(quantity_simplify, expr.args))
+    coeff, args = expr.as_coeff_mul(Quantity)
+    args_pow = [arg.as_base_exp() for arg in args]
+    quantity_pow, other_pow = sift(args_pow, lambda x: isinstance(x[0], Quantity), binary=True)
+    quantity_pow_by_dim = sift(quantity_pow, lambda x: x[0].dimension)
+    # Just pick the first quantity:
+    ref_quantities = [i[0][0] for i in quantity_pow_by_dim.values()]
+    new_quantities = [
+        Mul.fromiter(
+            (quantity*i.scale_factor/quantity.scale_factor)**p for i, p in v)
+            if len(v) > 1 else v[0][0]**v[0][1]
+        for quantity, (k, v) in zip(ref_quantities, quantity_pow_by_dim.items())]
+    return coeff*Mul.fromiter(other_pow)*Mul.fromiter(new_quantities)

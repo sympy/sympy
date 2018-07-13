@@ -127,10 +127,9 @@ def test_eval_simplify():
     assert ((km/m).simplify()) == 1000
     assert ((km/cm).simplify()) == 100000
     assert ((10*x*K*km**2/m/cm).simplify()) == 1000000000*x*kelvin
-    assert ((cm/km/m).simplify()) == 1/(100000*meter)
+    assert ((cm/km/m).simplify()) == 1/(100*kilometer)
 
     assert (3*kilo*meter).simplify() == 3000*meter
     assert (4*kilo*meter/(2*kilometer)).simplify() == 2
     assert (4*kilometer**2/(kilo*meter)**2).simplify() == 4
-    assert (x*(8*newton*meter+y)).simplify() == x*(8*meter*newton + y)
-    assert (3*inch + 2*meter).simplify() == 10381*meter/5000
+    assert (x*(8*kilo*newton*meter+y)).simplify() == x*(8000*meter*newton + y)
