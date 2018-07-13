@@ -6,7 +6,9 @@ from __future__ import print_function, division
 
 import inspect
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+@deprecated
 def source(object):
     """
     Prints the source code of a given object.
