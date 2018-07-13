@@ -1794,37 +1794,6 @@ def plot_contour(*args, **kwargs):
 
     ``title`` : str. Title of the plot.
 
-    Examples
-    ========
-
-    >>> from sympy import symbols, sin, cos
-    >>> from sympy.plotting.plot import plot_contour
-    >>> x, y = symbols('x y')
-
-    Single plot
-
-    >>> plot_contour(sin(x)*sin(y), (x, -5, 5), (y, -5, 5))
-    Plot object containing:
-    [0]: cartesian surface: sin(x)*sin(y) for x over (-5.0, 5.0) and y over (-5.0, 5.0)
-
-
-    Multiple plots with same range
-
-    >>> plot_contour(x**2 + y**2, x**3 + y**3, (x, -5, 5), (y, -5, 5))
-    Plot object containing:
-    [0]: cartesian surface: x**2 + y**2 for x over (-5.0, 5.0) and y over (-5.0, 5.0)
-    [1]: cartesian surface: x**3 + y**3 for x over (-5.0, 5.0) and y over (-5.0, 5.0)
-
-
-    Multiple plots with different ranges.
-
-    >>> plot_contour((x**2 + y**2, (x, -5, 5), (y, -5, 5)),
-    ...     (x**3 + y**3, (x, -3, 3), (y, -3, 3)))
-    Plot object containing:
-    [0]: cartesian surface: x**2 + y**2 for x over (-5.0, 5.0) and y over (-5.0, 5.0)
-    [1]: cartesian surface: x**3 + y**3 for x over (-3.0, 3.0) and y over (-3.0, 3.0)
-
-
     See Also
     ========
     Plot, ContourSeries
