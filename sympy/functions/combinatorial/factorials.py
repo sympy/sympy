@@ -894,7 +894,7 @@ class binomial(CombinatorialFunction):
     def _eval_Mod(self, q):
         n, k = self.args
 
-        if not all(x.is_integer for x in (n, k, q)):
+        if any(x.is_integer is False for x in (n, k, q)):
             raise ValueError("Integers expected for binomial Mod")
 
         if all(x.is_Integer for x in (n, k, q)):
