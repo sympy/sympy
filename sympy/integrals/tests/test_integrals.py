@@ -539,7 +539,7 @@ def test_integrate_returns_piecewise():
     assert integrate(exp(n*x), x) == Piecewise(
         (exp(n*x)/n, Ne(n, 0)), (x, True))
     assert integrate(x*exp(n*x), x) == Piecewise(
-        ((n**2*x - n)*exp(n*x)/n**3, Ne(n**3, 0)), (x**2/2, True))
+        ((n*x - 1)*exp(n*x)/n**2, Ne(n**2, 0)), (x**2/2, True))
     assert integrate(x**(n*y), x) == Piecewise(
         (x**(n*y + 1)/(n*y + 1), Ne(n*y, -1)), (log(x), True))
     assert integrate(x**(n*y), y) == Piecewise(
@@ -1348,3 +1348,8 @@ def test_issue_14437():
 def test_issue_14470():
     assert integrate(1/sqrt(exp(x) + 1), x) == \
         log(-1 + 1/sqrt(exp(x) + 1)) - log(1 + 1/sqrt(exp(x) + 1))
+
+def test_issue_14877():
+    f = exp(1 - exp(x**2)*x + 2*x**2)*(2*x**3 + x)/(1 - exp(x**2)*x)**2
+    assert integrate(f, x) == \
+        -exp(2*x**2 - x*exp(x**2) + 1)/(x*exp(3*x**2) - exp(2*x**2))
