@@ -1,6 +1,5 @@
 """
-Convolution (using FFT, NTT, FWHT), Subset Convolution,
-Covering Product, Intersecting Product
+Convolution (using FFT, NTT, FWHT), Subset Convolution
 """
 from __future__ import print_function, division
 
@@ -24,22 +23,19 @@ def convolution(a, b, **hints):
 
     a, b : iterables
         The sequences for which convolution is performed.
-    hints : dict
-        Specifies the type of convolution to be performed.
-        The following hints can be given as keyword arguments.
-        dps : Integer
-            Specifies the number of decimal digits for precision for
-            performing FFT on the sequence.
-        prime : Integer
-            Prime modulus of the form (m*2**k + 1) to be used for
-            performing NTT on the sequence.
-        cycle : Integer
-            Specifies the length for doing cyclic convolution.
-        dyadic : bool
-            Identifies the convolution type as dyadic (XOR)
-            convolution, which is performed using FWHT.
-        subset : bool
-            Identifies the convolution type as subset convolution.
+    cycle : Integer
+        Specifies the length for doing cyclic convolution.
+    dps : Integer
+        Specifies the number of decimal digits for precision for
+        performing FFT on the sequence.
+    prime : Integer
+        Prime modulus of the form (m*2**k + 1) to be used for
+        performing NTT on the sequence.
+    dyadic : bool
+        Identifies the convolution type as dyadic (XOR)
+        convolution, which is performed using FWHT.
+    subset : bool
+        Identifies the convolution type as subset convolution.
 
     Examples
     ========
@@ -69,10 +65,10 @@ def convolution(a, b, **hints):
 
     """
 
+    c = as_int(hints.pop('cycle', 0))
     fft = hints.pop('fft', None)
     dps = hints.pop('dps', None)
     p = hints.pop('prime', None)
-    c = as_int(hints.pop('cycle', 0))
     dyadic = hints.pop('dyadic', None)
     subset = hints.pop('subset', None)
 
@@ -84,7 +80,7 @@ def convolution(a, b, **hints):
     subset = True if subset else None
     if sum(x is not None for x in (p, dps, dyadic, subset)) > 1 or \
             sum(x is not None for x in (fft, dyadic, subset)) > 1:
-        raise TypeError("Ambiguity in determining the convolution type")
+        raise TypeError("Ambiguity in determining the type of convolution")
 
     if p is not None:
         ls = convolution_ntt(a, b, prime=p)
