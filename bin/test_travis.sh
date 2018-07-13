@@ -70,6 +70,8 @@ if not sympy.doctest():
 EOF
     cd ..
     bin/doctest doc/
+    # Run full code quality tests here, as they test non-installed files
+    bin/test quality
 fi
 
 if [[ "${TEST_SLOW}" == "true" ]]; then
