@@ -507,7 +507,7 @@ class FpGroup(DefaultPrinting):
         Return ``True`` if all elements of ``self`` belong to ``other``.
         """
         _grp1 = self._to_perm_group()[0]
-        _other = self._to_perm_group()[0]
+        _other = other._to_perm_group()[0]
         return _grp1.is_subgroup(_other, strict=False)
 
     def compute_polycyclic_series(self):
@@ -515,10 +515,10 @@ class FpGroup(DefaultPrinting):
         ToDo - Update docstring.
         '''
         if not self.is_polycyclic:
-            raise NotImplementedError("Polycyclic methods are only"
-                                        "implemented for FpGroups")
+            raise NotImplementedError("No methods currently implemented to"
+                                            "check if the given group is polycyclic")
         # Compute the derived series.
-        derived_series = self.derived_series()
+        derived_series = [self] + self.derived_series()
         derived_series.insert(0, self)
         len_derived_series = len(derived_series)
 
@@ -529,11 +529,11 @@ class FpGroup(DefaultPrinting):
         pc_series = [derived_series[0]]
         for i in range(0, len_derived_series-1):
             # Compute the quotient group G_i/Gi+1.
-            q_grp = subgroup_quotient(FpSubgroup(derived_series[i]), derived_series[i+1])
+            q_grp = subgroup_quotient(self.free_group, self, derived_series[i], derived_series[i+1])
             # Return a subnormal series.
-            _subnormal_series = _subnormal_series(q_grp)
-            # The images of every subgroup in the quotient map
-            # can be lifted to the orginal group
+            _subnormal_series = _subnormal_series(self.free_group, q_grp)
+            # The images of Every subgroup in _subnormal_series
+            # can be lifted to the original group
             gens = q_grp.generators
             q_map = homomorphism(derived_series[i], q_grp, gens, gens)
             for sub_group in _subnormal_series:
@@ -545,24 +545,34 @@ class FpGroup(DefaultPrinting):
         return pc_series
 
 
-def subgroup_quotient(G, H):
+def subgroup_quotient(free_group, fp_grp, G, H):
     '''
     Compute the quotient group G/H
     where, H is the subgroup of G.
     '''
-    if not (isinstance(G, FpGroup)
-                and isinstance(H, FpGroup)):
-        raise ValueError("The group must be an instance of FpGroup")
+    if not isinstance(fp_group, FpGroup):
+        raise ValueError("The parent group must be an instance"
+                                "of FpGroup")
 
-    if not G.free_group == H.free_group:
-        raise ValueError("The elements must belong"
-                                "to the same FreeGroup")
+    if isinstance(G, list):
+        g_gens, g_rels, _gens = reidemeister_presentation(fp_group, G, rel=True)
+        _homomorphism = homomorphism(G, fp_group, g_gens, _gens, check=False)
+        g_gens = _gens
+        g_rels = _homomorphism(g_rels)
+    else:
+        g_gens = G.generators
+        g_rels = G.relators
 
-    if not H.is_subgroup(G):
-        raise ValueError("H must be a subgroup of G")
+    if isinstance(H, list):
+        h_gens, h_rels, _gens = reidemeister_presentation(fp_group, H, rel=True)
+        _homomorphism = homomorphism(H, fp_group, h_gens, _gens, check=False)
+        h_gens = _gens
+        h_rels = _homomorphism(h_rels)
+    else:
+        h_gens = H.generators
+        h_rels = H.relators
 
-    free_group = G.free_group
-    q_relators = G.relators + H.generators
+    q_relators = g_gens + h_rels
     q_group = FpGroup(free_group, q_relators)
 
     # Return the quotient group with presentation
@@ -581,12 +591,18 @@ def _subnormal_series(G):
     _next_order = _next.order()
     while not igcd(_next_order, totient(_next_order)) == 1:
         # Loop until a square free ordered group is obtained.
-        elem = _next.generators[0]
-        _next = _next.subgroup(elem)
+        _parent = _next
+        elem = _parent.generators[0]
+        _next = _parent.subgroup(elem)
+        # Injective homomorphism between `_next` which is defined
+        # on another free_group and the parent group.
+        _homomorphism = homomorphism(_next, _parent, _next.generators[0], _parent.generaotrs[0], check=False)
+        new_relators = _homomorphism(list(_next.relators))
+        _next = FpGroup(free_group, new_relators)
         _next_order = _next.order()
         subnormal_series.append(_next)
 
-    return set(subnormal_series)
+    return subnormal_series
 
 class FpSubgroup(DefaultPrinting):
     '''
@@ -1161,11 +1177,21 @@ def _simplification_technique_1(rels):
 ###############################################################################
 
 # Pg 175 [1]
-def define_schreier_generators(C):
+def define_schreier_generators(C, rel=False):
+    '''
+    Arguments:
+    C -- Coset table.
+    rel -- When set to True, this returns a relation between subgroup generators
+           and the elements of the parent group.
+    '''
     y = []
     gamma = 1
     f = C.fp_group
     X = f.generators
+    if rel:
+        # `_gens` stores the elements of the parent group to
+        # to which the schreier generators correspond to.
+        _gens = []
     C.P = [[None]*len(C.A) for i in range(C.n)]
     for alpha, x in product(C.omega, C.A):
         beta = C.table[alpha][C.A_dict[x]]
@@ -1174,12 +1200,22 @@ def define_schreier_generators(C):
             C.P[beta][C.A_dict_inv[x]] = "<identity>"
             gamma += 1
         elif x in X and C.P[alpha][C.A_dict[x]] is None:
+            if rel:
+                # The schreier generators are defined as
+                # coset_rep(alpha)*x = schrier_gen*coset_rep(beta)
+                rh = C.coset_representative(alpha)*x
+                lh_suffix = C.coset_representative(beta)
+                for i in range(1, len(rh)):
+                    if rh.subword(i, len(rh)) == lh_suffix:
+                        _gens.append(rh.subword(0, i))
             y_alpha_x = '%s_%s' % (x, alpha)
             y.append(y_alpha_x)
             C.P[alpha][C.A_dict[x]] = y_alpha_x
     grp_gens = list(free_group(', '.join(y)))
     C._schreier_free_group = grp_gens.pop(0)
     C._schreier_generators = grp_gens
+    if rel:
+        C._schreier_gen_elem = _gens
     # replace all elements of P by, free group elements
     for i, j in product(range(len(C.P)), range(len(C.A))):
         # if equals "<identity>", replace by identity element
@@ -1302,11 +1338,13 @@ def elimination_technique_2(C):
     C._schreier_generators = gens
     return C._schreier_generators, C._reidemeister_relators
 
-def reidemeister_presentation(fp_grp, H, C=None):
+def reidemeister_presentation(fp_grp, H, C=None ,rel=False):
     """
     fp_group: A finitely presented group, an instance of FpGroup
     H: A subgroup whose presentation is to be found, given as a list
     of words in generators of `fp_grp`
+    rel: When set to True, this computes the elements in the `fp_grp`
+         to which the shreier generators corresponf to.
 
     Examples
     ========
@@ -1343,13 +1381,17 @@ def reidemeister_presentation(fp_grp, H, C=None):
     if not C:
         C = coset_enumeration_r(fp_grp, H)
     C.compress(); C.standardize()
-    define_schreier_generators(C)
+    define_schreier_generators(C, rel=rel)
     reidemeister_relators(C)
     gens, rels = C._schreier_generators, C._reidemeister_relators
+    # To-do change scherier generators correspondance to newset of gens.s
     gens, rels = simplify_presentation(gens, rels, change_gens=True)
 
     C.schreier_generators = tuple(gens)
     C.reidemeister_relators = tuple(rels)
+    if rel:
+        C.schreier_gen_elem = tuple(C._schreier_gen_elem)
+        return C.schreier_generators, C.reidemeister_relators, C.schreier_gen_elem
 
     return C.schreier_generators, C.reidemeister_relators
 

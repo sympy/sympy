@@ -766,6 +766,13 @@ class CosetTable(DefaultPrinting):
             R_set.difference_update(r)
         return R_c_list
 
+    def coset_representative(self, alpha):
+        '''
+        Compute the coset representative of a coset alpha
+        '''
+        # To be implemented
+        return None
+
 
 ###############################################################################
 #                           COSET ENUMERATION                                 #
