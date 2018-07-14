@@ -15,6 +15,10 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
     Performs convolution by determining the type of desired
     convolution using hints.
 
+    Exactly one of `dps`, `prime`, `dyadic`, `subset` arguments should be
+    specified explicitly for identifying the type of convolution, and the
+    argument `cycle` can be specified optionally.
+
     For the default arguments, linear convolution is performed using
     FFT.
 
