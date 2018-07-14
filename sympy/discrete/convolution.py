@@ -10,12 +10,12 @@ from sympy.discrete.transforms import (
     fft, ifft, ntt, intt, fwht, ifwht)
 
 
-def convolution(a, b, **hints):
+def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
     """
     Performs convolution by determining the type of desired
     convolution using hints.
 
-    If no hints are given, linear convolution is performed using
+    For the default arguments, linear convolution is performed using
     FFT.
 
     Parameters
@@ -65,29 +65,18 @@ def convolution(a, b, **hints):
 
     """
 
-    c = as_int(hints.pop('cycle', 0))
-    fft = hints.pop('fft', None)
-    dps = hints.pop('dps', None)
-    p = hints.pop('prime', None)
-    dyadic = hints.pop('dyadic', None)
-    subset = hints.pop('subset', None)
-
+    c = as_int(cycle)
     if c < 0:
         raise ValueError("The length for cyclic convolution must be non-negative")
 
-    fft = True if fft else None
     dyadic = True if dyadic else None
     subset = True if subset else None
-    if sum(x is not None for x in (p, dps, dyadic, subset)) > 1 or \
-            sum(x is not None for x in (fft, dyadic, subset)) > 1:
+    if sum(x is not None for x in (prime, dps, dyadic, subset)) > 1:
         raise TypeError("Ambiguity in determining the type of convolution")
 
-    if p is not None:
-        ls = convolution_ntt(a, b, prime=p)
-        return ls if not c else [sum(ls[i::c]) % p for i in range(c)]
-
-    elif hints.pop('ntt', False):
-        raise TypeError("Prime modulus must be specified for performing NTT")
+    if prime is not None:
+        ls = convolution_ntt(a, b, prime=prime)
+        return ls if not c else [sum(ls[i::c]) % prime for i in range(c)]
 
     if dyadic:
         ls = convolution_fwht(a, b)

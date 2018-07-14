@@ -16,9 +16,9 @@ def test_convolution():
     c = [3, 5, 3, 7, 8]
     d = [1422, 6572, 3213, 5552]
 
-    assert convolution(a, b, fft=True) == convolution_fft(a, b)
-    assert convolution(a, b, dps=9, fft=True) == convolution_fft(a, b, dps=9)
-    assert convolution(a, d, fft=True, dps=7) == convolution_fft(d, a, dps=7)
+    assert convolution(a, b) == convolution_fft(a, b)
+    assert convolution(a, b, dps=9) == convolution_fft(a, b, dps=9)
+    assert convolution(a, d, dps=7) == convolution_fft(d, a, dps=7)
     assert convolution(a, d[1:], dps=3) == convolution_fft(d[1:], a, dps=3)
 
     # prime moduli of the form (m*2**k + 1), sequence length
@@ -27,35 +27,26 @@ def test_convolution():
     q = 19*2**10 + 1
 
     # ntt
-    assert convolution(d, b, ntt=True, prime=q) == convolution_ntt(b, d, prime=q)
+    assert convolution(d, b, prime=q) == convolution_ntt(b, d, prime=q)
     assert convolution(c, b, prime=p) == convolution_ntt(b, c, prime=p)
-    assert convolution(d, c, prime=p, ntt=True) == convolution_ntt(c, d, prime=p)
-    raises(TypeError, lambda: convolution(b, d, ntt=True))
-    raises(TypeError, lambda: convolution(b, d, ntt=True, cycle=0))
+    assert convolution(d, c, prime=p) == convolution_ntt(c, d, prime=p)
     raises(TypeError, lambda: convolution(b, d, dps=5, prime=q))
-    raises(TypeError, lambda: convolution(b, d, dps=6, ntt=True, prime=q))
-    raises(TypeError, lambda: convolution(b, d, fft=True, dps=7, ntt=True, prime=q))
-    # ntt is a specialized variant of fft, TypeError should not be raised
-    assert convolution(b, d, fft=True, ntt=True, prime=q) == \
-            convolution_ntt(b, d, prime=q)
+    raises(TypeError, lambda: convolution(b, d, dps=6, prime=q))
 
     # fwht
     assert convolution(a, b, dyadic=True) == convolution_fwht(a, b)
     assert convolution(a, b, dyadic=False) == convolution(a, b)
-    raises(TypeError, lambda: convolution(b, d, fft=True, dps=2, dyadic=True))
-    raises(TypeError, lambda: convolution(b, d, ntt=True, prime=p, dyadic=True))
-    raises(TypeError, lambda: convolution(b, d, fft=True, dyadic=True))
+    raises(TypeError, lambda: convolution(b, d, dps=2, dyadic=True))
+    raises(TypeError, lambda: convolution(b, d, prime=p, dyadic=True))
     raises(TypeError, lambda: convolution(a, b, dps=2, dyadic=True))
     raises(TypeError, lambda: convolution(b, c, prime=p, dyadic=True))
 
     # subset
     assert convolution(a, b, subset=True) == convolution_subset(a, b) == \
             convolution(a, b, subset=True, dyadic=False) == \
-                convolution(a, b, subset=True, fft=False) == \
-                    convolution(a, b, subset=True, fft=False, ntt=False)
+                convolution(a, b, subset=True)
     assert convolution(a, b, subset=False) == convolution(a, b)
     raises(TypeError, lambda: convolution(a, b, subset=True, dyadic=True))
-    raises(TypeError, lambda: convolution(b, c, subset=True, fft=True))
     raises(TypeError, lambda: convolution(c, d, subset=True, dps=6))
     raises(TypeError, lambda: convolution(a, c, subset=True, prime=q))
 
@@ -71,12 +62,6 @@ def test_cyclic_convolution():
                 convolution([1, 2, 3], [4, 5, 6])
 
     assert convolution([1, 2, 3], [4, 5, 6], cycle=3) == [31, 31, 28]
-
-    assert convolution(a, b, fft=True, cycle=4) == \
-            convolution(a, b, cycle=4)
-
-    assert convolution(a, b, fft=True, dps=3, cycle=4) == \
-            convolution(a, b, dps=3, cycle=4)
 
     a = [S(1)/3, S(7)/3, S(5)/9, S(2)/7, S(5)/8]
     b = [S(3)/5, S(4)/7, S(7)/8, S(8)/9]
