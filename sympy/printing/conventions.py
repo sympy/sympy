@@ -5,8 +5,8 @@ A few practical conventions common to all printers.
 from __future__ import print_function, division
 
 import re
-import collections
 
+from sympy.core.compatibility import Iterable
 
 _name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')
 
@@ -77,7 +77,7 @@ def requires_partial(expr):
     get the context of the expression.
     """
 
-    if not isinstance(expr.free_symbols, collections.Iterable):
+    if not isinstance(expr.free_symbols, Iterable):
         return len(set(expr.variables)) > 1
 
     return sum(not s.is_integer for s in expr.free_symbols) > 1

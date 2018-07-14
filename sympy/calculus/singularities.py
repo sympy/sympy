@@ -62,7 +62,8 @@ def singularities(expression, symbol):
             " functions are not yet implemented."
         )
     else:
-        return solveset(simplify(1 / expression), symbol)
+        domain = S.Reals if symbol.is_real else S.Complexes
+        return solveset(simplify(1 / expression), symbol, domain)
 
 
 ###########################################################################

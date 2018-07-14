@@ -6,12 +6,10 @@ Several methods to simplify expressions involving unit objects.
 
 from __future__ import division
 
-import collections
-
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import Add, Function, Mul, Pow, Rational, Tuple, sympify
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, Iterable
 from sympy.physics.units.dimensions import Dimension, dimsys_default
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.prefixes import Prefix
@@ -104,7 +102,7 @@ def convert_to(expr, target_units):
     7.62950196312651e-20*gravitational_constant**(-0.5)*hbar**0.5*speed_of_light**0.5
 
     """
-    if not isinstance(target_units, (collections.Iterable, Tuple)):
+    if not isinstance(target_units, (Iterable, Tuple)):
         target_units = [target_units]
 
     if isinstance(expr, Add):

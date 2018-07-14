@@ -35,7 +35,7 @@ from .add import Add
 from .assumptions import ManagedProperties, _assume_defined
 from .basic import Basic
 from .cache import cacheit
-from .compatibility import iterable, is_sequence, as_int, ordered
+from .compatibility import iterable, is_sequence, as_int, ordered, Iterable
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float
@@ -58,7 +58,7 @@ import mpmath
 import mpmath.libmp as mlib
 
 import inspect
-import collections
+from collections import Counter
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -193,7 +193,7 @@ class FunctionClass(ManagedProperties):
         numbers is returned:
 
         >>> Function('f').nargs
-        S.Naturals0
+        Naturals0
 
         If the function was initialized to accept one or more arguments, a
         corresponding set will be returned:
@@ -209,7 +209,7 @@ class FunctionClass(ManagedProperties):
 
         >>> f = Function('f')
         >>> f(1).nargs
-        S.Naturals0
+        Naturals0
         >>> len(f(1).args)
         1
         """
@@ -843,7 +843,7 @@ class WildFunction(Function, AtomicExpr):
     >>> F = WildFunction('F')
     >>> f = Function('f')
     >>> F.nargs
-    S.Naturals0
+    Naturals0
     >>> x.match(F)
     >>> F.match(F)
     {F_: F_}
@@ -1242,7 +1242,7 @@ class Derivative(Expr):
             elif (count < 0) == True:
                 obj = None
             else:
-                if isinstance(v, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+                if isinstance(v, (Iterable, Tuple, MatrixCommon, NDimArray)):
                     # Treat derivatives by arrays/matrices as much as symbols.
                     is_symbol = True
                 if not is_symbol:
@@ -1481,9 +1481,9 @@ class Derivative(Expr):
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
         if old.is_Derivative and old.expr == self.expr:
-            # Check if canonnical order of variables is equal.
-            old_vars = collections.Counter(dict(reversed(old.variable_count)))
-            self_vars = collections.Counter(dict(reversed(self.variable_count)))
+            # Check if canonical order of variables is equal.
+            old_vars = Counter(dict(reversed(old.variable_count)))
+            self_vars = Counter(dict(reversed(self.variable_count)))
             if old_vars == self_vars:
                 return new
 

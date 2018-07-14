@@ -1,4 +1,3 @@
-import collections
 import random
 import warnings
 
@@ -14,7 +13,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
-from sympy.core.compatibility import long, iterable, range
+from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
@@ -2634,7 +2633,7 @@ def test_hash():
         assert len(s) == 1 and s.pop() == cls.eye(1)
     # issue 3979
     for cls in classes[:2]:
-        assert not isinstance(cls.eye(1), collections.Hashable)
+        assert not isinstance(cls.eye(1), Hashable)
 
 
 @XFAIL

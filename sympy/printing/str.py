@@ -113,7 +113,7 @@ class StrPrinter(Printer):
     def _print_Derivative(self, expr):
         dexpr = expr.expr
         dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
-        return 'Derivative(%s)' % ", ".join(map(self._print, [dexpr] + dvars))
+        return 'Derivative(%s)' % ", ".join(map(lambda arg: self._print(arg), [dexpr] + dvars))
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -127,7 +127,6 @@ class StrPrinter(Printer):
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
-
 
     def _print_RandomDomain(self, d):
         if hasattr(d, 'as_boolean'):
@@ -206,7 +205,8 @@ class StrPrinter(Printer):
         return fin.format(**{'a': a, 'b': b, 'm': m})
 
     def _print_AccumulationBounds(self, i):
-        return "AccumBounds(%s, %s)" % (self._print(i.min), self._print(i.max))
+        return "AccumBounds(%s, %s)" % (self._print(i.min),
+                                        self._print(i.max))
 
     def _print_Inverse(self, I):
         return "%s^-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
@@ -259,7 +259,7 @@ class StrPrinter(Printer):
                 del x[1]
             if x[0] == 0:
                 x[0] = ''
-            return ':'.join(map(self._print, x))
+            return ':'.join(map(lambda arg: self._print(arg), x))
         return (self._print(expr.parent) + '[' +
                 strslice(expr.rowslice) + ', ' +
                 strslice(expr.colslice) + ']')
@@ -331,8 +331,9 @@ class StrPrinter(Printer):
         else:
             sign = ""
 
-        return sign + '*'.join([self.parenthesize(arg, precedence(expr))
-            for arg in expr.args])
+        return sign + '*'.join(
+            [self.parenthesize(arg, precedence(expr)) for arg in expr.args]
+        )
 
     def _print_HadamardProduct(self, expr):
         return '.*'.join([self.parenthesize(arg, precedence(expr))
@@ -432,12 +433,12 @@ class StrPrinter(Printer):
 
     def _print_PolyRing(self, ring):
         return "Polynomial ring in %s over %s with %s order" % \
-            (", ".join(map(self._print, ring.symbols)),
+            (", ".join(map(lambda rs: self._print(rs), ring.symbols)),
             self._print(ring.domain), self._print(ring.order))
 
     def _print_FracField(self, field):
         return "Rational function field in %s over %s with %s order" % \
-            (", ".join(map(self._print, field.symbols)),
+            (", ".join(map(lambda fs: self._print(fs), field.symbols)),
             self._print(field.domain), self._print(field.order))
 
     def _print_FreeGroupElement(self, elm):
@@ -539,7 +540,7 @@ class StrPrinter(Printer):
             if -expr.exp is S.Half and not rational:
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
-                return "%s/sqrt(%s)" % tuple(map(self._print, (S.One, expr.base)))
+                return "%s/sqrt(%s)" % tuple(map(lambda arg: self._print(arg), (S.One, expr.base)))
             if expr.exp is -S.One:
                 # Similarly to the S.Half case, don't test with "==" here.
                 return '%s/%s' % (self._print(S.One),
@@ -573,16 +574,16 @@ class StrPrinter(Printer):
         return str(expr.p)
 
     def _print_Integers(self, expr):
-        return 'S.Integers'
+        return 'Integers'
 
     def _print_Naturals(self, expr):
-        return 'S.Naturals'
+        return 'Naturals'
 
     def _print_Naturals0(self, expr):
-        return 'S.Naturals0'
+        return 'Naturals0'
 
     def _print_Reals(self, expr):
-        return 'S.Reals'
+        return 'Reals'
 
     def _print_int(self, expr):
         return str(expr)
@@ -660,7 +661,7 @@ class StrPrinter(Printer):
                            self.parenthesize(expr.rhs, precedence(expr)))
 
     def _print_ComplexRootOf(self, expr):
-        return "CRootOf(%s, %d)" % (self._print_Add(expr.expr, order='lex'),
+        return "CRootOf(%s, %d)" % (self._print_Add(expr.expr,  order='lex'),
                                     expr.index)
 
     def _print_RootSum(self, expr):
@@ -674,8 +675,7 @@ class StrPrinter(Printer):
     def _print_GroebnerBasis(self, basis):
         cls = basis.__class__.__name__
 
-        exprs = [ self._print_Add(arg, order=basis.order)
-                  for arg in basis.exprs ]
+        exprs = [self._print_Add(arg, order=basis.order) for arg in basis.exprs]
         exprs = "[%s]" % ", ".join(exprs)
 
         gens = [ self._print(gen) for gen in basis.gens ]
@@ -730,7 +730,7 @@ class StrPrinter(Printer):
         return "Q.%s" % expr.name
 
     def _print_str(self, expr):
-        return expr
+        return str(expr)
 
     def _print_tuple(self, expr):
         if len(expr) == 1:
@@ -751,7 +751,7 @@ class StrPrinter(Printer):
         return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
 
     def _print_Complement(self, expr):
-        return r' \ '.join(self._print(set) for set in expr.args)
+        return r' \ '.join(self._print(set_) for set_ in expr.args)
 
     def _print_Quantity(self, expr):
         if self._settings.get("abbrev", False):
@@ -796,8 +796,8 @@ class StrPrinter(Printer):
     def _print_DMF(self, expr):
         return self._print_DMP(expr)
 
-    def _print_Object(self, object):
-        return 'Object("%s")' % object.name
+    def _print_Object(self, obj):
+        return 'Object("%s")' % obj.name
 
     def _print_IdentityMorphism(self, morphism):
         return 'IdentityMorphism(%s)' % morphism.domain
