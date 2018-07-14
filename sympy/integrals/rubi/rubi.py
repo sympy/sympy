@@ -198,9 +198,9 @@ if matchpy:
         from sympy.integrals.rubi.rules.tangent import tangent
         from sympy.integrals.rubi.rules.secant import secant
         from sympy.integrals.rubi.rules.miscellaneous_trig import miscellaneous_trig
-        #from sympy.integrals.rubi.rules.inverse_trig import inverse_trig
-        #from sympy.integrals.rubi.rules.hyperbolic import hyperbolic
-        #from sympy.integrals.rubi.rules.inverse_hyperbolic import inverse_hyperbolic
+        from sympy.integrals.rubi.rules.inverse_trig import inverse_trig
+        from sympy.integrals.rubi.rules.hyperbolic import hyperbolic
+        from sympy.integrals.rubi.rules.inverse_hyperbolic import inverse_hyperbolic
         from sympy.integrals.rubi.rules.special_functions import special_functions
         #from sympy.integrals.rubi.rules.derivative import derivative
         #from sympy.integrals.rubi.rules.piecewise_linear import piecewise_linear
@@ -216,13 +216,13 @@ if matchpy:
         rules += exponential(rules_applied)
         rules += logarithms(rules_applied)
         rules += special_functions(rules_applied)
-        # rules += sine(rules_applied)
-        # rules += tangent(rules_applied)
-        # rules += secant(rules_applied)
-        # rules += miscellaneous_trig(rules_applied)
-        #rubi = inverse_trig(rubi)
-        #rubi = hyperbolic(rubi)
-        #rubi = inverse_hyperbolic(rubi)
+        rules += sine(rules_applied)
+        rules += tangent(rules_applied)
+        rules += secant(rules_applied)
+        rules += miscellaneous_trig(rules_applied)
+        rules += inverse_trig(rules_applied)
+        rules += hyperbolic(rules_applied)
+        rules += inverse_hyperbolic(rules_applied)
         #rubi = piecewise_linear(rubi)
         rules += miscellaneous_integration(rules_applied)
         rubi = ManyToOneReplacer(*rules)
@@ -249,6 +249,14 @@ def process_final_integral(expr):
         expr = expr.replace(_E, E)
     return expr
 
+def process_trig(expr):
+    expr = expr.replace(lambda x: isinstance(x, cot), lambda x: 1/tan(x.args[0]))
+    expr = expr.replace(lambda x: isinstance(x, sec), lambda x: 1/cos(x.args[0]))
+    expr = expr.replace(lambda x: isinstance(x, csc), lambda x: 1/sin(x.args[0]))
+    expr = expr.replace(lambda x: isinstance(x, coth), lambda x: 1/tanh(x.args[0]))
+    expr = expr.replace(lambda x: isinstance(x, sech), lambda x: 1/cosh(x.args[0]))
+    expr = expr.replace(lambda x: isinstance(x, csch), lambda x: 1/sinh(x.args[0]))
+    return expr
 
 def rubi_powsimp(expr):
     '''
@@ -283,6 +291,7 @@ def rubi_integrate(expr, var, showsteps=False):
     '''
     expr = expr.replace(sym_exp, exp)
     rules_applied[:] = []
+    expr = process_trig(expr)
     expr = rubi_powsimp(expr)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
@@ -299,6 +308,7 @@ def rubi_integrate(expr, var, showsteps=False):
 
 @doctest_depends_on(modules=('matchpy',))
 def util_rubi_integrate(expr, var, showsteps=False):
+    expr = process_trig(expr)
     expr = expr.replace(sym_exp, exp)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var

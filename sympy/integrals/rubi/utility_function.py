@@ -10,7 +10,7 @@ from sympy.functions.elementary.integers import floor, frac
 from sympy.functions import (log as sym_log , sin, cos, tan, cot, csc, sec, sqrt, erf, gamma, uppergamma, polygamma, digamma,
     loggamma, factorial, zeta, LambertW)
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
-from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
+from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec, atan2
 from sympy.polys.polytools import Poly, quo, rem, total_degree, degree
 from sympy.simplify.simplify import fraction, simplify, cancel, powsimp
 from sympy.core.sympify import sympify
@@ -18,10 +18,10 @@ from sympy.utilities.iterables import postorder_traversal
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei, expint, li, Si, Ci, Shi, Chi
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
-from sympy import (Basic, E, polylog, N, Wild, factor, gcd, Sum, S, I, Mul, Integer, Float, Dict, Symbol, Rational,
+from sympy import (Basic, E, polylog, N, Wild, WildFunction, factor, gcd, Sum, S, I, Mul, Integer, Float, Dict, Symbol, Rational,
     Add, hyper, symbols, sqf_list, sqf, Max, factorint, factorrat, Min, sign, E, Function, collect, FiniteSet, nsimplify,
     expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr, PolynomialError, Dummy, exp as sym_exp,
-    powdenest, PolynomialDivisionFailed)
+    powdenest, PolynomialDivisionFailed, discriminant, UnificationFailed)
 from mpmath import appellf1
 from sympy.functions.special.hyper import TupleArg
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
@@ -192,9 +192,12 @@ if matchpy:
 
     A_, B_, C_, F_, G_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, z_ = [WC(i) for i in 'ABCFGabcdefghijklmnpqrtuvswxz']
     a, b, c, d, e = symbols('a b c d e')
-def Int(expr, var):
-    from sympy.integrals.rubi.rubi import util_rubi_integrate
-    return util_rubi_integrate(expr, var)
+
+class Int(Function):
+    @classmethod
+    def eval(cls, expr, var):
+        from sympy.integrals.rubi.rubi import util_rubi_integrate
+        return util_rubi_integrate(expr, var)
 
 def replace_pow_exp(z):
     z = S(z)
@@ -275,6 +278,8 @@ def NonzeroQ(expr):
     return Simplify(expr) != 0
 
 def FreeQ(nodes, var):
+    if var == Int:
+        return FreeQ(nodes, Integral)
     if isinstance(nodes, list):
         return not any(S(expr).has(var) for expr in nodes)
     else:
@@ -603,8 +608,11 @@ def EllipticE(*args):
 def EllipticF(Phi, m):
     return elliptic_f(Phi, m)
 
-def ArcTan(a):
-    return atan(a)
+def ArcTan(a, b = None):
+    if b == None:
+        return atan(a)
+    else:
+        return atan2(a, b)
 
 def ArcCot(a):
     return acot(a)
@@ -3983,7 +3991,30 @@ def ExpandTrig(*args):
 def TrigExpand(u):
     return expand_trig(u)
 
-def SubstForTrig(u, sin , cos, v, x):
+# SubstForTrig[u_,sin_,cos_,v_,x_] :=
+#   If[AtomQ[u],
+#     u,
+#   If[TrigQ[u] && IntegerQuotientQ[u[[1]],v],
+#     If[u[[1]]===v || ZeroQ[u[[1]]-v],
+#       If[SinQ[u],
+#         sin,
+#       If[CosQ[u],
+#         cos,
+#       If[TanQ[u],
+#         sin/cos,
+#       If[CotQ[u],
+#         cos/sin,
+#       If[SecQ[u],
+#         1/cos,
+#       1/sin]]]]],
+#     Map[Function[SubstForTrig[#,sin,cos,v,x]],
+#             ReplaceAll[TrigExpand[Head[u][Simplify[u[[1]]/v]*x]],x->v]]],
+#   If[ProductQ[u] && CosQ[u[[1]]] && SinQ[u[[2]]] && ZeroQ[u[[1,1]]-v/2] && ZeroQ[u[[2,1]]-v/2],
+#     sin/2*SubstForTrig[Drop[u,2],sin,cos,v,x],
+#   Map[Function[SubstForTrig[#,sin,cos,v,x]],u]]]]
+
+
+def SubstForTrig(u, sin_ , cos_, v, x):
     # (* u (v) is an expression of the form f (Sin[v],Cos[v],Tan[v],Cot[v],Sec[v],Csc[v]). *)
     # (* SubstForTrig[u,sin,cos,v,x] returns the expression f (sin,cos,sin/cos,cos/sin,1/cos,1/sin). *)
     if AtomQ(u):
@@ -3991,23 +4022,23 @@ def SubstForTrig(u, sin , cos, v, x):
     elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
         if u.args[0] == v or ZeroQ(u.args[0] - v):
             if SinQ(u):
-                return sin(x)
+                return sin_
             elif CosQ(u):
-                return cos(x)
+                return cos_
             elif TanQ(u):
-                return sin(x)/cos(x)
+                return sin_/cos_
             elif CotQ(u):
-                return cos(x)/sin(x)
+                return cos_/sin_
             elif SecQ(u):
-                return 1/cos(x)
-            return 1/sin(x)
+                return 1/cos_
+            return 1/sin_
         r = ReplaceAll(TrigExpand(Head(u)(Simplify(u.args[0]/v*x))), {x: v})
-        return r.func(*[SubstForTrig(i, sin, cos, v, x) for i in r.args])
+        return r.func(*[SubstForTrig(i, sin_, cos_, v, x) for i in r.args])
     if ProductQ(u) and CosQ(u.args[0]) and SinQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
-        return sin(x)/2*SubstForTrig(Drop(u, 2), sin, cos, v, x)
-    return u.func(*[SubstForTrig(i, sin, cos, v, x) for i in u.args])
+        return sin(x)/2*SubstForTrig(Drop(u, 2), sin_, cos_, v, x)
+    return u.func(*[SubstForTrig(i, sin_, cos_, v, x) for i in u.args])
 
-def SubstForHyperbolic(u, sinh, cosh, v, x):
+def SubstForHyperbolic(u, sinh_, cosh_, v, x):
     # (* u (v) is an expression of the form f (Sinh[v],Cosh[v],Tanh[v],Coth[v],Sech[v],Csch[v]). *)
     # (* SubstForHyperbolic[u,sinh,cosh,v,x] returns the expression
     # f (sinh,cosh,sinh/cosh,cosh/sinh,1/cosh,1/sinh). *)
@@ -4016,21 +4047,21 @@ def SubstForHyperbolic(u, sinh, cosh, v, x):
     elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
         if u.args[0] == v or ZeroQ(u.args[0] - v):
             if SinhQ(u):
-                return sinh(x)
+                return sinh_
             elif CoshQ(u):
-                return cosh(x)
+                return cosh_
             elif TanhQ(u):
-                return sinh(x)/cosh(x)
+                return sinh_/cosh_
             elif CothQ(u):
-                return cosh(x)/sinh(x)
+                return cosh_/sinh_
             if SechQ(u):
-                return 1/cosh(x)
-            return 1/sinh(x)
+                return 1/cosh_
+            return 1/sinh_
         r = ReplaceAll(TrigExpand(Head(u)(Simplify(u.args[0]/v)*x)), {x: v})
-        return r.func(*[SubstForHyperbolic(i, sinh, cosh, v, x) for i in r.args])
+        return r.func(*[SubstForHyperbolic(i, sinh_, cosh_, v, x) for i in r.args])
     elif ProductQ(u) and CoshQ(u.args[0]) and SinhQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
-        return sinh(x)/2*SubstForHyperbolic(Drop(u, 2), sinh, cosh, v, x)
-    return u.func(*[SubstForHyperbolic(i, sinh, cosh, v, x) for i in u.args])
+        return sinh(x)/2*SubstForHyperbolic(Drop(u, 2), sinh_, cosh_, v, x)
+    return u.func(*[SubstForHyperbolic(i, sinh_, cosh_, v, x) for i in u.args])
 
 def InertTrigFreeQ(u):
     return FreeQ(u, sin) and FreeQ(u, cos) and FreeQ(u, tan) and FreeQ(u, cot) and FreeQ(u, sec) and FreeQ(u, csc)
@@ -4120,7 +4151,7 @@ def DeactivateTrigAux(u, x):
         elif CotQ(u):
             return cot(v)
         elif SecQ(u):
-            return csc(v)
+            return sec(v)
         return csc(v)
     elif HyperbolicQ(u) and LinearQ(u.args[0], x):
         v = ExpandToSum(I*u.args[0], x)
@@ -4197,7 +4228,7 @@ def KnownTrigIntegrandQ(lst, u, x):
         return True
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x])
-    func_ = Wild('func')
+    func_ = WildFunction('func')
     m_ = Wild('m', exclude=[x])
     A_ = Wild('A', exclude=[x])
     B_ = Wild('B', exclude=[x])
@@ -4459,10 +4490,10 @@ def TrigReduce(i):
         return t
     if ProductQ(i):
         if any(PowerQ(k) for k in i.args):
-            if (i.rewrite(sin, sym_exp).rewrite(cos, sym_exp).expand().rewrite(sym_exp, sin)).has(I):
-                return i.rewrite(sin, sym_exp).rewrite(cos, sym_exp).expand().rewrite(sym_exp, sin).simplify()
+            if (i.rewrite((sin, sinh), sym_exp).rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, sin)).has(I, cosh, sinh):
+                return i.rewrite((sin, sinh), sym_exp).rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, sin).simplify()
             else:
-                return i.rewrite(sin, sym_exp).rewrite(cos, sym_exp).expand().rewrite(sym_exp, sin)
+                return i.rewrite((sin, sinh), sym_exp).rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, sin)
         else:
             a = Wild('a')
             b = Wild('b')
@@ -4485,19 +4516,37 @@ def TrigReduce(i):
                 b = Match[b]
                 v = Match[v]
                 return i.subs(v*cos(a)*cos(b), v*S(1)/2*cos(a + b) + cos(a - b))
+            Match = i.match(v*sinh(a)*cosh(b))
+            if Match:
+                a = Match[a]
+                b = Match[b]
+                v = Match[v]
+                return i.subs(v*sinh(a)*cosh(b), v*S(1)/2*(sinh(a + b) + sinh(a - b)))
+            Match = i.match(v*sinh(a)*sinh(b))
+            if Match:
+                a = Match[a]
+                b = Match[b]
+                v = Match[v]
+                return i.subs(v*sinh(a)*sinh(b), v*S(1)/2*cosh(a - b) - cosh(a + b))
+            Match = i.match(v*cosh(a)*cosh(b))
+            if Match:
+                a = Match[a]
+                b = Match[b]
+                v = Match[v]
+                return i.subs(v*cosh(a)*cosh(b), v*S(1)/2*cosh(a + b) + cosh(a - b))
+
     if PowerQ(i):
-        if i.has(sin):
-            if (i.rewrite(sin, sym_exp).expand().rewrite(sym_exp, sin)).has(I):
-                return i.rewrite(sin, sym_exp).expand().rewrite(sym_exp, sin).simplify()
+        if i.has(sin, sinh):
+            if (i.rewrite((sin, sinh), sym_exp).expand().rewrite(sym_exp, sin)).has(I, cosh, sinh):
+                return i.rewrite((sin, sinh), sym_exp).expand().rewrite(sym_exp, sin).simplify()
             else:
-                return i.rewrite(sin, sym_exp).expand().rewrite(sym_exp, sin)
-        if i.has(cos):
-            if (i.rewrite(cos, sym_exp).expand().rewrite(sym_exp, cos)).has(I):
-                return i.rewrite(cos, sym_exp).expand().rewrite(sym_exp, cos).simplify()
+                return i.rewrite((sin, sinh), sym_exp).expand().rewrite(sym_exp, sin)
+        if i.has(cos, cosh):
+            if (i.rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, cos)).has(I, cosh, sinh):
+                return i.rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, cos).simplify()
             else:
-                return i.rewrite(cos, sym_exp).expand().rewrite(sym_exp, cos)
-    else:
-        return i
+                return i.rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, cos)
+    return i
 
 def FunctionOfTrig(u, *args):
     # If u is a function of trig functions of v where v is a linear function of x,
@@ -4544,10 +4593,10 @@ def FunctionOfTrig(u, *args):
         else:
             w = v
             for i in u.args:
-                if not w == FunctionOfTrig(i, w, x):
+                w = FunctionOfTrig(i, w, x)
+                if FalseQ(w):
                     return False
-            else:
-                return w
+            return w
 
 def AlgebraicTrigFunctionQ(u, x):
     # If u is algebraic function of trig functions, AlgebraicTrigFunctionQ(u,x) returns True; else it returns False.
@@ -6751,7 +6800,7 @@ def PolynomialQuotient(p, q, x):
         q = poly(q)
     try:
         return quo(p, q).as_expr()
-    except PolynomialDivisionFailed:
+    except (PolynomialDivisionFailed, UnificationFailed):
         return p/q
 
 def PolynomialRemainder(p, q, x):
@@ -6764,7 +6813,7 @@ def PolynomialRemainder(p, q, x):
         q = poly(q)
     try:
         return rem(p, q).as_expr()
-    except PolynomialDivisionFailed:
+    except (PolynomialDivisionFailed, UnificationFailed):
         return S(0)
 
 def Floor(x, a = None):
@@ -6797,6 +6846,12 @@ def CoprimeQ(*args):
     if g == 1:
         return True
     return False
+
+def Discriminant(a, b):
+    try:
+        return discriminant(a, b)
+    except PolynomialError:
+        return Function('Discriminant')(a, b)
 
 def _ExpandIntegrand():
     Plus = Add
@@ -7307,6 +7362,7 @@ def _RemoveContentAux():
 
 IntHide = Int
 Log = log
+Null = None
 if matchpy:
     RemoveContentAux_replacer = ManyToOneReplacer(* _RemoveContentAux())
     ExpandIntegrand_rules = _ExpandIntegrand()

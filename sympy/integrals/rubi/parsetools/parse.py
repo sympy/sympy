@@ -49,20 +49,27 @@ replacements = dict( # Mathematica equivalent functions in SymPy
         Cos='cos',
         Sin='sin',
         Tan='tan',
-        Cot='cot',
-        Sec='sec',
-        Csc='csc',
+        Cot='1/tan',
+        cot='1/tan',
+        Sec='1/cos',
+        sec='1/cos',
+        Csc='1/sin',
+        csc='1/sin',
         ArcSin='asin',
         ArcCos='acos',
-        #ArcTan='atan',
+        # ArcTan='atan',
         ArcCot='acot',
         ArcSec='asec',
         ArcCsc='acsc',
         Sinh='sinh',
+        Cosh='cosh',
         Tanh='tanh',
-        Coth='coth',
-        Sech='sech',
-        Csch='csch',
+        Coth='1/tanh',
+        coth='1/tanh',
+        Sech='1/cosh',
+        sech='1/cosh',
+        Csch='1/sinh',
+        csch='1/sinh',
         ArcSinh='asinh',
         ArcCosh='acosh',
         ArcTanh='atanh',
@@ -83,7 +90,8 @@ replacements = dict( # Mathematica equivalent functions in SymPy
         Identity = 'S',
         Sum = 'Sum_doit',
         Module = 'With',
-        Block = 'With'
+        Block = 'With',
+        Null = 'None'
 )
 
 temporary_variable_replacement = { # Temporarily rename because it can raise errors while sympifying
@@ -99,10 +107,10 @@ permanent_variable_replacement = { # Permamenely rename these variables
 
 #these functions have different return type in different cases. So better to use a try and except in the constraints, when any of these appear
 f_diff_return_type = ['BinomialParts', 'BinomialDegree', 'TrinomialParts', 'GeneralizedBinomialParts', 'GeneralizedTrinomialParts', 'PseudoBinomialParts', 'PerfectPowerTest',
-    # SquareFreeFactorTest, SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears, InverseFunctionOfQuotientOfLinears,
-    # FractionalPowerOfSquareQ, FunctionOfLinear, FunctionOfInverseLinear, FunctionOfTrig, FindTrigFactor, FunctionOfLog,
-    'PowerVariableExpn', 'FunctionOfSquareRootOfQuadratic', 'SubstForFractionalPowerOfLinear', #FractionalPowerOfLinear, InverseFunctionOfLinear,
-    # Divides, DerivativeDivides, TrigSquare, SplitProduct, SubstForFractionalPowerOfQuotientOfLinears, InverseFunctionOfQuotientOfLinears,
+    'SquareFreeFactorTest', 'SubstForFractionalPowerOfQuotientOfLinears', 'FractionalPowerOfQuotientOfLinears', 'InverseFunctionOfQuotientOfLinears',
+    'FractionalPowerOfSquareQ', 'FunctionOfLinear', 'FunctionOfInverseLinear', 'FunctionOfTrig', 'FindTrigFactor', 'FunctionOfLog',
+    'PowerVariableExpn', 'FunctionOfSquareRootOfQuadratic', 'SubstForFractionalPowerOfLinear', 'FractionalPowerOfLinear', 'InverseFunctionOfLinear',
+    'Divides', 'DerivativeDivides', 'TrigSquare', 'SplitProduct', 'SubstForFractionalPowerOfQuotientOfLinears', 'InverseFunctionOfQuotientOfLinears',
     'FunctionOfHyperbolic', 'SplitSum']
 
 def contains_diff_return_type(a):
@@ -371,7 +379,7 @@ def _divide_constriant(s, symbols, cons_index, cons_dict, cons_import):
         res += '\n    return {}'.format(rubi_printer(sympify(generate_sympy_from_parsed(match_res[0]), locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not")}), sympy_integers = True))
 
     elif contains_diff_return_type(s):
-        res = '    try:\n        return {}\n    except TypeError:\n        return False'.format(rubi_printer(r, sympy_integers=True))
+        res = '    try:\n        return {}\n    except (TypeError, AttributeError):\n        return False'.format(rubi_printer(r, sympy_integers=True))
     else:
         res = '    return {}'.format(rubi_printer(r, sympy_integers=True))
 
@@ -447,12 +455,17 @@ def process_return_type(a1, L):
                 if isinstance(s, Set) and not s in L:
                     x += '\n        {} = {}'.format(s.args[0], rubi_printer(s.args[1], sympy_integers=True))
 
-            if not type(i) in (Function('List'),  Function('CompoundExpression')):
+            if not type(i) in (Function('List'),  Function('CompoundExpression')) and not i.has(Function('CompoundExpression')):
                 return_value = i
                 processed = True
 
             elif type(i) ==Function('CompoundExpression'):
                 return_value = i.args[-1]
+                processed = True
+
+            elif type(i.args[0]) == Function('CompoundExpression'):
+                C = i.args[0]
+                return_value = '{}({}, {})'.format(i.func, C.args[-1], i.args[1])
                 processed = True
     return x, return_value, processed
 
@@ -466,7 +479,7 @@ def extract_set(s, L):
     else:
         try:
             for i in s.args:
-                lst+=extract_set(i, L)
+                lst += extract_set(i, L)
         except: #when s has no attribute args (like `bool`)
             pass
     return lst
@@ -514,13 +527,15 @@ def replaceWith(s, symbols, index):
                 else:
                     if 'x' in symbols:
                         result += '\n        if isinstance(x, (int, Integer, float, Float)):\n            return False'
-                    result += with_value
+
                     if contains_diff_return_type(s):
-                        result += '\n        try:\n            res = {}'.format(rubi_printer(C.args[1], sympy_integers=True))
-                        result += '\n        except TypeError:\n            return False'
+                        n_with_value = with_value.replace('\n', '\n    ')
+                        result += '\n        try:{}\n            res = {}'.format(n_with_value, rubi_printer(C.args[1], sympy_integers=True))
+                        result += '\n        except (TypeError, AttributeError):\n            return False'
                         result += '\n        if res:'
 
                     else:
+                        result+=with_value
                         result += '\n        if {}:'.format(rubi_printer(C.args[1], sympy_integers=True))
                     return_type = (with_value, rubi_printer(C.args[0], sympy_integers=True))
                     return_type1 = process_return_type(return_type, L)
@@ -675,9 +690,9 @@ def rubi_rule_parser(fullform, header=None, module_name='rubi_object', file = Fa
         cons = "\n".join(header.split("\n")[:-2])+ '\n' + cons
         return result, cons
 
-    input =['integrand_simplification.txt', 'linear_product.txt', 'quadratic_product.txt', 'binomial_product.txt', 'trinomial_product.txt', 'miscellaneous_algebra.txt',  'exponential.txt', 'logarithms.txt', 'sine.txt', 'tangent.txt', 'secant.txt', 'miscellaneous_trig.txt', 'special_functions.txt','miscellanintegration.txt']
-    output =['integrand_simplification.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py', 'trinomial_products.py', 'miscellaneous_algebraic.py' , 'exponential.py', 'logarithms.py', 'sine.py', 'tangent.py', 'secant.py', 'miscellaneous_trig.py', 'special_functions.py', 'miscellaneous_integration.py']
-    for k in range(0, 14):
+    input =['integrand_simplification.txt', 'linear_product.txt', 'quadratic_product.txt', 'binomial_product.txt', 'trinomial_product.txt', 'miscellaneous_algebra.txt', 'piecewise_linear.txt', 'exponential.txt', 'logarithms.txt', 'sine.txt', 'tangent.txt', 'secant.txt', 'miscellaneous_trig.txt', 'inverse_trig.txt', 'hyperbolic.txt', 'inverse_hyperbolic.txt', 'special_functions.txt', 'miscellanintegration.txt']
+    output =['integrand_simplification.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py', 'trinomial_products.py', 'miscellaneous_algebraic.py' ,'piecewise_linear.py', 'exponential.py', 'logarithms.py', 'sine.py', 'tangent.py', 'secant.py', 'miscellaneous_trig.py','inverse_trig.py', 'hyperbolic.py', 'inverse_hyperbolic.py', 'special_functions.py', 'miscellaneous_integration.py']
+    for k in range(0, 18):
         module_name = output[k][0:-3]
         path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         header = open(os.path.join(path_header, "header.py.txt"), "r").read()
