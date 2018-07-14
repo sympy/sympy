@@ -23,8 +23,7 @@ matrix:
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
-        # autowrap installs libgfortran libgcc gcc cython
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 sage"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8"
         - TEST_SAGE="true"
       addons:
         apt:
@@ -37,7 +36,7 @@ matrix:
     - python: 3.6
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8"
       addons:
         apt:
           packages:
@@ -207,6 +206,7 @@ matrix:
             - pypy
 
 before_install:
+  - set -e
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
@@ -218,6 +218,7 @@ before_install:
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     # We do this conditionally because it saves us some downloading if the
     # version is the same.
+        deactivate; # Deactivate the Travis virtualenv
         if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
           wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -q -O miniconda.sh;
         else
@@ -231,20 +232,26 @@ before_install:
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
 
         conda info -a;
-        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY/sage};
+        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION ${TEST_OPT_DEPENDENCY};
         source activate test-environment;
+        export CPATH=$CONDA_PREFIX/include;
+        export LIBRARY_PATH=$CONDA_PREFIX/lib;
+        export LD_LIBRARY_PATH=$CONDA_PREFIX/lib;
+        export SYMPY_STRICT_COMPILER_CHECKS=1;
         conda clean --all;
-        if [[ "$TEST_OPT_DEPENDENCY" == *"sage"* ]]; then
-            conda install -q "sage==8.1";
-            conda remove --force sympy;
+        if [[ "$TEST_SAGE" == "true" ]]; then
+            # Use a separate environment because sage downgrades matplotlib
+            conda create -n sage sage=8.1;
+            conda remove -n sage --force sympy;
             conda clean --all;
+        fi
+        if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+            conda install matchpy;
         fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list --format=legacy | grep "numpy" && pip uninstall -y numpy;
     fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-      pip install matchpy;
-    fi
+
 install:
   # If a command fails, fail the build.
   - set -e

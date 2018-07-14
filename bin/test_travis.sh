@@ -22,10 +22,18 @@ fi
 
 if [[ "${TEST_SAGE}" == "true" ]]; then
     echo "Testing SAGE"
+    source deactivate
+    source activate sage
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
     PYTHONPATH=. sage -t sympy/external/tests/test_sage.py
     export MPMATH_NOSAGE=1
+    source deactivate
+    source activate test-environment
+fi
+
+if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
+    python bin/test_external_imports.py;
 fi
 
 # We change directories to make sure that we test the installed version of
@@ -62,6 +70,8 @@ if not sympy.doctest():
 EOF
     cd ..
     bin/doctest doc/
+    # Run full code quality tests here, as they test non-installed files
+    bin/test quality
 fi
 
 if [[ "${TEST_SLOW}" == "true" ]]; then
@@ -74,58 +84,96 @@ EOF
 fi
 
 # lambdify with tensorflow and numexpr is tested here
-if [[ "${TEST_OPT_DEPENDENCY}" == *"numpy"* ]]; then
+
+# TODO: Generate these tests automatically
+if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     cat << EOF | python
-print('Testing NUMPY')
+print('Testing optional dependencies')
+
 import sympy
-if not (sympy.test('*numpy*', 'sympy/core/tests/test_numbers.py',
-                   'sympy/matrices/', 'sympy/physics/quantum/',
-                   'sympy/core/tests/test_sympify.py',
-                   'sympy/utilities/tests/test_lambdify.py',
-                   blacklist=['sympy/physics/quantum/tests/test_circuitplot.py'])
-        and sympy.doctest('sympy/matrices/', 'sympy/utilities/lambdify.py')):
+test_list = [
+    # numpy
+    '*numpy*',
+    'sympy/core/tests/test_numbers.py',
+    'sympy/matrices/',
+    'sympy/physics/quantum/',
+    'sympy/core/tests/test_sympify.py',
+    'sympy/utilities/tests/test_lambdify.py',
+
+    # scipy
+    '*scipy*',
+
+    # llvmlite
+    '*llvm*',
+
+    # theano
+    '*theano*',
+
+    # gmpy
+    'polys',
+
+    # autowrap
+    '*autowrap*',
+
+    # ipython
+    '*ipython*',
+
+    # antlr
+    'sympy/parsing/tests/test_latex',
+
+    # matchpy
+    '*rubi*',
+
+    # codegen
+    'sympy/codegen/',
+    'sympy/utilities/tests/test_codegen',
+]
+
+blacklist = [
+    'sympy/physics/quantum/tests/test_circuitplot.py',
+]
+
+doctest_list = [
+    # numpy
+    'sympy/matrices/',
+    'sympy/utilities/lambdify.py',
+
+    # scipy
+    '*scipy*',
+
+    # llvmlite
+    '*llvm*',
+
+    # theano
+    '*theano*',
+
+    # gmpy
+    'polys',
+
+    # autowrap
+    '*autowrap*',
+
+    # ipython
+    '*ipython*',
+
+    # antlr
+    'sympy/parsing/latex',
+
+    # matchpy
+    '*rubi*',
+
+    # codegen
+    'sympy/codegen/',
+]
+
+if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
     raise Exception('Tests failed')
 EOF
+    cd ..
+    bin/doctest doc/src/modules/numeric-computation.rst
 fi
 
-if [[ "${TEST_OPT_DEPENDENCY}" == *"scipy"* ]]; then
-    cat << EOF | python
-print('Testing SCIPY')
-import sympy
-# scipy matrices are tested in numpy testing
-if not sympy.test('sympy/external/tests/test_scipy.py'):
-    raise Exception('Tests failed')
-EOF
-fi
-
-if [[ "${TEST_OPT_DEPENDENCY}" == *"llvmlite"* ]]; then
-    cat << EOF | python
-print('Testing LLVMJIT')
-import sympy
-if not (sympy.test('sympy/printing/tests/test_llvmjit.py')
-        and sympy.doctest('sympy/printing/llvmjitcode.py')):
-    raise Exception('Tests failed')
-EOF
-fi
-
-if [[ "${TEST_OPT_DEPENDENCY}" == *"theano"* ]]; then
-    cat << EOF | python
-print('Testing THEANO')
-import sympy
-if not sympy.test('*theano*'):
-    raise Exception('Tests failed')
-EOF
-fi
-
-if [[ "${TEST_OPT_DEPENDENCY}" == *"gmpy"* ]]; then
-    cat << EOF | python
-print('Testing GMPY')
-import sympy
-if not (sympy.test('sympy/polys/') and sympy.doctest('sympy/polys/')):
-    raise Exception('Tests failed')
-EOF
-fi
-
+# This is separate because it needs to be run with subprocess=False
 if [[ "${TEST_OPT_DEPENDENCY}" == *"matplotlib"* ]]; then
     cat << EOF | python
 print('Testing MATPLOTLIB')
@@ -143,37 +191,6 @@ if not (sympy.test('sympy/plotting', 'sympy/physics/quantum/tests/test_circuitpl
 EOF
 fi
 
-if [[ "${TEST_OPT_DEPENDENCY}" == *"autowrap"* ]]; then
-    cat << EOF | python
-print('Testing AUTOWRAP')
-import sympy
-if not (sympy.test('sympy/external/tests/test_autowrap.py')
-        and sympy.doctest('sympy/utilities/autowrap.py')):
-    raise Exception('Tests failed')
-EOF
-fi
-
-if [[ "${TEST_OPT_DEPENDENCY}" == *"ipython"* ]]; then
-    cat << EOF | python
-print('Testing IPYTHON')
-import sympy
-if not sympy.test('*ipython*'):
-    raise Exception('Tests failed')
-EOF
-fi
-
-if [[ "${TEST_SYMPY}" == "true" ]]; then
-    # -We:invalid makes invalid escape sequences error in Python 3.6. See
-    # -#12028.
-    cat << EOF | python -We:invalid
-print('Testing SYMPY, split ${SPLIT}')
-import sympy
-if not sympy.test(split='${SPLIT}'):
-   raise Exception('Tests failed')
-EOF
-fi
-
-
 if [[ "${TEST_OPT_DEPENDENCY}" == *"symengine"* ]]; then
     export USE_SYMENGINE=1
     cat << EOF | python
@@ -187,11 +204,13 @@ EOF
     unset USE_SYMENGINE
 fi
 
-if [[ "${TEST_OPT_DEPENDENCY}" == *"antlr"* ]]; then
+if [[ "${TEST_SYMPY}" == "true" ]]; then
+    # -We:invalid makes invalid escape sequences error in Python 3.6. See
+    # -#12028.
     cat << EOF | python -We:invalid
-print('Testing ANTLR')
+print('Testing SYMPY, split ${SPLIT}')
 import sympy
-if not sympy.test('sympy/parsing/tests/test_latex'):
-    raise Exception('Tests failed')
+if not sympy.test(split='${SPLIT}'):
+   raise Exception('Tests failed')
 EOF
 fi

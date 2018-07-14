@@ -2,8 +2,8 @@ from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
     factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq,
     Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda, sign)
 
-from sympy.codegen import For, Assignment
-from sympy.codegen.ast import Declaration, Type, Variable, float32, float64, value_const, real, bool_
+from sympy.codegen import For, Assignment, aug_assign
+from sympy.codegen.ast import Declaration, Type, Variable, float32, float64, value_const, real, bool_, While
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.printing.fcode import fcode, FCodePrinter
@@ -46,7 +46,7 @@ def test_fcode_Pow():
     assert fcode(x**0.5) == '      sqrt(x)'
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
-    assert fcode(x**-1.0) == '      1.0/x'
+    assert fcode(x**-1.0) == '      1d0/x'
     assert fcode(x**-2.0, 'y', source_format='free') == 'y = x**(-2.0d0)'  # 2823
     assert fcode(x**Rational(3, 7)) == '      x**(3.0d0/7.0d0)'
 
@@ -728,22 +728,22 @@ def test_fcode_Declaration():
     i = symbols('i', integer=True)
     var1 = Variable.deduced(i)
     dcl1 = Declaration(var1)
-    check(dcl1, "integer :: i")
+    check(dcl1, "integer*4 :: i")
 
 
     x, y = symbols('x y')
-    var2 = Variable(x, {value_const}, float32)
-    dcl2b = Declaration(var2, 42)
-    check(dcl2b, 'real(4), parameter :: x = 42')
+    var2 = Variable(x, float32, value=42, attrs={value_const})
+    dcl2b = Declaration(var2)
+    check(dcl2b, 'real*4, parameter :: x = 42')
 
-    var3 = Variable(y, (), bool_)
+    var3 = Variable(y, type=bool_)
     dcl3 = Declaration(var3)
     check(dcl3, 'logical :: y')
 
-    check(float32, "real(4)")
-    check(float64, "real(8)")
-    check(real, "real(4)", type_aliases={real: float32})
-    check(real, "real(8)", type_aliases={real: float64})
+    check(float32, "real*4")
+    check(float64, "real*8")
+    check(real, "real*4", type_aliases={real: float32})
+    check(real, "real*8", type_aliases={real: float64})
 
 
 def test_MatrixElement_printing():
@@ -757,3 +757,17 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert(fcode(F) == "      (-B + A)(1, 1)")
+
+
+def test_aug_assign():
+    x = symbols('x')
+    assert fcode(aug_assign(x, '+', 1), source_format='free') == 'x = x + 1'
+
+
+def test_While():
+    x = symbols('x')
+    assert fcode(While(abs(x) > 1, [aug_assign(x, '-', 1)]), source_format='free') == (
+        'do while (abs(x) > 1)\n'
+        '   x = x - 1\n'
+        'end do'
+    )

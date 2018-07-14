@@ -119,14 +119,14 @@ def _invert(f_x, y, x, domain=S.Complexes):
     When does exp(x) == y?
 
     >>> invert_complex(exp(x), y, x)
-    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), S.Integers))
+    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers))
     >>> invert_real(exp(x), y, x)
-    (x, Intersection(S.Reals, {log(y)}))
+    (x, Intersection(Reals, {log(y)}))
 
     When does exp(x) == 1?
 
     >>> invert_complex(exp(x), 1, x)
-    (x, ImageSet(Lambda(_n, 2*_n*I*pi), S.Integers))
+    (x, ImageSet(Lambda(_n, 2*_n*I*pi), Integers))
     >>> invert_real(exp(x), 1, x)
     (x, {0})
 
@@ -786,11 +786,11 @@ def solve_decomposition(f, symbol, domain):
     >>> f2 = sin(x)**2 + 2*sin(x) + 1
     >>> pprint(sd(f2, x, S.Reals), use_unicode=False)
               3*pi
-    {2*n*pi + ---- | n in S.Integers}
+    {2*n*pi + ---- | n in Integers}
                2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi - 2 | n in S.Integers} U {2*n*pi - 2 + pi | n in S.Integers}
+    {2*n*pi - 2 | n in Integers} U {2*n*pi - 2 + pi | n in Integers}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -1042,11 +1042,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     >>> x = Symbol('x')
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
-    {2*n*I*pi | n in S.Integers}
+    {2*n*I*pi | n in Integers}
 
     >>> x = Symbol('x', real=True)
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
-    {2*n*I*pi | n in S.Integers}
+    {2*n*I*pi | n in Integers}
 
     * If you want to use `solveset` to solve the equation in the
       real domain, provide a real domain. (Using `solveset\_real`
@@ -1063,11 +1063,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
     but there may be some slight difference:
 
     >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
-    ({2*n*pi | n in S.Integers} \ {0}) U ({2*n*pi + pi | n in S.Integers} \ {0})
+    ({2*n*pi | n in Integers} \ {0}) U ({2*n*pi + pi | n in Integers} \ {0})
 
     >>> p = Symbol('p', positive=True)
     >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
-    {2*n*pi | n in S.Integers} U {2*n*pi + pi | n in S.Integers}
+    {2*n*pi | n in Integers} U {2*n*pi + pi | n in Integers}
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
@@ -1672,19 +1672,19 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
     {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) +
-        log(sin(2))), S.Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
-        Mod(log(sin(2)), 2*I*pi)), S.Integers), 2)}
+        log(sin(2))), Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
+        Mod(log(sin(2)), 2*I*pi)), Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
     {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
     (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
-    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), S.Integers),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), Integers),
     ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi +
-    Mod(-log(3), 2*I*pi)))), S.Integers)),
-    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), S.Integers),
+    Mod(-log(3), 2*I*pi)))), Integers)),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), Integers),
     ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi +
-        Mod(-log(3), 2*I*pi)))), S.Integers))}
+        Mod(-log(3), 2*I*pi)))), Integers))}
 
     """
 
@@ -2295,8 +2295,8 @@ def nonlinsolve(system, *symbols):
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
     {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) +
-        log(sin(2))), S.Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
-        Mod(log(sin(2)), 2*I*pi)), S.Integers), 2)}
+        log(sin(2))), Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
+        Mod(log(sin(2)), 2*I*pi)), Integers), 2)}
 
     3. If system is Non linear polynomial zero dimensional then it returns
     both solution (real and complex solutions, if present using

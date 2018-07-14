@@ -338,10 +338,10 @@ def test_integrate_hyperexponential_returns_piecewise():
         (exp(a*x)/a, Ne(a, 0)), (x, True)), 0, True)
     DE = DifferentialExtension(x*exp(a*x), x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
-        ((x*a**2 - a)*exp(a*x)/a**3, Ne(a**3, 0)), (x**2/2, True)), 0, True)
+        ((a*x - 1)*exp(a*x)/a**2, Ne(a**2, 0)), (x**2/2, True)), 0, True)
     DE = DifferentialExtension(x**2*exp(a*x), x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
-        ((x**2*a**5 - 2*x*a**4 + 2*a**3)*exp(a*x)/a**6, Ne(a**6, 0)),
+        ((x**2*a**2 - 2*a*x + 2)*exp(a*x)/a**3, Ne(a**3, 0)),
         (x**3/3, True)), 0, True)
     DE = DifferentialExtension(x**y + z, y)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(

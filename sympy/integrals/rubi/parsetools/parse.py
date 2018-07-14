@@ -32,6 +32,7 @@ import os
 import inspect
 from sympy import sympify, Function, Set, Symbol
 from sympy.printing import sstr, StrPrinter
+from sympy.utilities.misc import debug
 
 class RubiStrPrinter(StrPrinter):
     def _print_Not(self, expr):
@@ -581,6 +582,7 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
     cons = ''
     cons_import = []
     for i in r:
+        debug('parsing rule {}'.format(r.index(i) + 1))
         # Parse Pattern
         if i[1][1][0] == 'Condition':
             p = i[1][1][1].copy()

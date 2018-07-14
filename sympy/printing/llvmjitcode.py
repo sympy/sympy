@@ -39,7 +39,7 @@ class LLVMJitPrinter(Printer):
     def _add_tmp_var(self, name, value):
         self.tmp_var[name] = value
 
-    def _print_Number(self, n, **kwargs):
+    def _print_Number(self, n):
         return ll.Constant(self.fp_type, float(n))
 
     def _print_Integer(self, expr):

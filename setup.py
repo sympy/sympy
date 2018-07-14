@@ -152,10 +152,10 @@ modules = [
     'sympy.tensor.array',
     'sympy.unify',
     'sympy.utilities',
+    'sympy.utilities._compilation',
     'sympy.utilities.mathml',
     'sympy.vector',
 ]
-
 
 class audit(Command):
     """Audits SymPy's source code for following issues:
@@ -358,6 +358,7 @@ tests = [
     'sympy.tensor.array.tests',
     'sympy.tensor.tests',
     'sympy.unify.tests',
+    'sympy.utilities._compilation.tests',
     'sympy.utilities.tests',
     'sympy.vector.tests',
 ]
@@ -392,6 +393,7 @@ if __name__ == '__main__':
               'sympy.logic.benchmarks': ['input/*.cnf'],
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.parsing.latex._antlr': ['*.interp', '*.tokens'],
+              'sympy.integrals.rubi.parsetools': ['header.py.txt'],
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,

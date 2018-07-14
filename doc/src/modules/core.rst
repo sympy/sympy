@@ -225,6 +225,12 @@ GoldenRatio
 .. autoclass:: GoldenRatio
    :members:
 
+TribonacciConstant
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: TribonacciConstant
+   :members:
+
 power
 -----
 .. module:: sympy.core.power

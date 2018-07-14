@@ -56,7 +56,7 @@ from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistributio
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
 from sympy.matrices import MatrixBase
-from sympy.stats.joint_rv_types import MultivariateNormalDistribution, multivariate_rv
+from sympy.stats.joint_rv_types import multivariate_rv
 from sympy.external import import_module
 import random
 
@@ -1553,8 +1553,10 @@ def Laplace(name, mu, b):
     Parameters
     ==========
 
-    mu : Real number, the location (mean)
-    b : Real number, `b > 0`, a scale
+    mu : Real number or a list/matrix, the location (mean) or the
+        location vector
+    b : Real number or a positive definite matrix, representing a scale
+        or the covariance matrix.
 
     Returns
     =======
@@ -1565,7 +1567,7 @@ def Laplace(name, mu, b):
     ========
 
     >>> from sympy.stats import Laplace, density, cdf
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu")
     >>> b = Symbol("b", positive=True)
@@ -1580,12 +1582,25 @@ def Laplace(name, mu, b):
     Piecewise((exp((-mu + z)/b)/2, mu > z),
             (-exp((mu - z)/b)/2 + 1, True))
 
+    >>> L = Laplace('L', [1, 2], [[1, 0], [0, 1]])
+    >>> pprint(density(L)(1, 2), use_unicode=False)
+     5        /     ____\
+    e *besselk\0, \/ 35 /
+    ---------------------
+              pi
+
     References
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Laplace_distribution
     .. [2] http://mathworld.wolfram.com/LaplaceDistribution.html
     """
+
+    if isinstance(mu, (list, MatrixBase)) and\
+        isinstance(b, (list, MatrixBase)):
+        from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution
+        return multivariate_rv(
+            MultivariateLaplaceDistribution, name, mu, b)
 
     return rv(name, LaplaceDistribution, (mu, b))
 
@@ -2001,6 +2016,7 @@ def Normal(name, mean, std):
 
     if isinstance(mean, (list, MatrixBase)) and\
         isinstance(std, (list, MatrixBase)):
+        from sympy.stats.joint_rv_types import MultivariateNormalDistribution
         return multivariate_rv(
             MultivariateNormalDistribution, name, mean, std)
     return rv(name, NormalDistribution, (mean, std))

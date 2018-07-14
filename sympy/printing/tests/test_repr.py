@@ -69,6 +69,7 @@ def test_Singletons():
     sT(S.EulerGamma, 'EulerGamma')
     sT(S.Exp1, 'E')
     sT(S.GoldenRatio, 'GoldenRatio')
+    sT(S.TribonacciConstant, 'TribonacciConstant')
     sT(S.Half, 'Rational(1, 2)')
     sT(S.ImaginaryUnit, 'I')
     sT(S.Infinity, 'oo')
@@ -253,5 +254,5 @@ def test_ExtensionElement():
         "ExtElem(DMP([1, 0], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x'))), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
 
 def test_BooleanAtom():
-    assert srepr(true) == "S.true"
-    assert srepr(false) == "S.false"
+    assert srepr(true) == "true"
+    assert srepr(false) == "false"
