@@ -36,6 +36,9 @@ class GeometricDistribution(SingleDiscreteDistribution):
         p = self.p
         return p * exp(I*t) / (1 - (1 - p)*exp(I*t))
 
+    def _moment_generating_function(self, t):
+        p = self.p
+        return p * exp(t) / (1 - (1 - p) * exp(t))
 
 def Geometric(name, p):
     r"""
@@ -104,6 +107,10 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
     def _characteristic_function(self, t):
         p = self.p
         return log(1 - p * exp(I*t)) / log(1 - p)
+
+    def _moment_generating_function(self, t):
+        p = self.p
+        return log(1 - p * exp(t)) / log(1 - p)
 
     def sample(self):
         ### TODO
@@ -175,6 +182,12 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
         p = self.p
 
         return ((1 - p) / (1 - p * exp(I*t)))**r
+
+    def _moment_generating_function(self, t):
+        r = self.r
+        p = self.p
+
+        return ((1 - p) / (1 - p * exp(t)))**r
 
     def sample(self):
         ### TODO
@@ -263,6 +276,9 @@ class PoissonDistribution(SingleDiscreteDistribution):
     def _characteristic_function(self, t):
         return exp(self.lamda * (exp(I*t) - 1))
 
+    def _moment_generating_function(self, t):
+        return exp(self.lamda * (exp(t) - 1))
+
 
 def Poisson(name, lamda):
     r"""
@@ -334,6 +350,10 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
         rho = self.rho
         return rho * hyper((1, 1), (rho + 2,), exp(I*t)) * exp(I*t) / (rho + 1)
 
+    def _moment_generating_function(self, t):
+        rho = self.rho
+        return rho * hyper((1, 1), (rho + 2,), exp(t)) * exp(t) / (rho + 1)
+
     def sample(self):
         ### TODO
         raise NotImplementedError("Sampling of %s is not implemented" % density(self))
@@ -398,6 +418,9 @@ class ZetaDistribution(SingleDiscreteDistribution):
 
     def _characteristic_function(self, t):
         return polylog(self.s, exp(I*t)) / zeta(self.s)
+
+    def _moment_generating_function(self, t):
+        return polylog(self.s, exp(t)) / zeta(self.s)
 
     def sample(self):
         ### TODO
