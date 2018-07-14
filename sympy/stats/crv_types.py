@@ -48,10 +48,10 @@ from __future__ import print_function, division
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfi, I, hyper, uppergamma,
-                   sinh, Ne)
+                   sinh, Ne, expint)
 
 from sympy import beta as beta_fn
-from sympy import cos, sin, exp, besseli, besselj
+from sympy import cos, sin, exp, besseli, besselj, besselk
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
@@ -167,6 +167,9 @@ class ArcsinDistribution(SingleContinuousDistribution):
             (2*asin(sqrt((x - a)/(b - a)))/pi, x <= b),
             (S.One, True))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
+
 
 def Arcsin(name, a=0, b=1):
     r"""
@@ -235,6 +238,8 @@ class BeniniDistribution(SingleContinuousDistribution):
         return (exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2)
                *(alpha/x + 2*beta*log(x/sigma)/x))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('The moment generating function of the Benini distribution does not exist.')
 
 def Benini(name, alpha, beta, sigma):
     r"""
@@ -316,6 +321,8 @@ class BetaDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
 
+    def _moment_generating_function(self, t):
+        return hyper((self.alpha,), (self.alpha + self.beta,), t)
 
 def Beta(name, alpha, beta):
     r"""
@@ -386,6 +393,8 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
 
 def BetaPrime(name, alpha, beta):
     r"""
@@ -447,6 +456,11 @@ class CauchyDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
+    def _characteristic_function(self, t):
+        return exp(self.x0 * I * t -  self.gamma * Abs(t))
+
+    def _moment_generating_function(self, t):
+        raise NotImplementedError("The moment generating function for the Cauchy distribution does not exist.")
 
 def Cauchy(name, x0, gamma):
     r"""
@@ -513,6 +527,14 @@ class ChiDistribution(SingleContinuousDistribution):
         part_3 = hyper(((k+1)/2,), (S(3)/2,), -t**2/2)
         return part_1 + part_2*part_3
 
+    def _moment_generating_function(self, t):
+        k = self.k
+
+        part_1 = hyper((k / 2,), (S(1) / 2,), t ** 2 / 2)
+        part_2 = t * sqrt(2) * gamma((k + 1) / 2) / gamma(k / 2)
+        part_3 = hyper(((k + 1) / 2,), (S(3) / 2,), t ** 2 / 2)
+        return part_1 + part_2 * part_3
+
 def Chi(name, k):
     r"""
     Create a continuous random variable with a Chi distribution.
@@ -570,6 +592,8 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
         k, l = self.k, self.l
         return exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
 
 def ChiNoncentral(name, k, l):
     r"""
@@ -641,6 +665,9 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         return (1 - 2*I*t)**(-self.k/2)
 
+    def  _moment_generating_function(self, t):
+        return (1 - 2*t)**(-self.k/2)
+
 def ChiSquared(name, k):
     r"""
     Create a continuous random variable with a Chi-squared distribution.
@@ -708,6 +735,8 @@ class DagumDistribution(SingleContinuousDistribution):
         return Piecewise(((S.One + (S(x)/b)**-a)**-p, x>=0),
                     (S.Zero, True))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
 
 def Dagum(name, p, a, b):
     r"""
@@ -860,6 +889,10 @@ class ExponentialDistribution(SingleContinuousDistribution):
         rate = self.rate
         return rate / (rate - I*t)
 
+    def _moment_generating_function(self, t):
+        rate = self.rate
+        return rate / (rate - t)
+
 def Exponential(name, rate):
     r"""
     Create a continuous random variable with an Exponential distribution.
@@ -942,6 +975,8 @@ class FDistributionDistribution(SingleContinuousDistribution):
         return (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
                / (x * beta_fn(d1/2, d2/2)))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('The moment generating function for the F-distribution does not exist.')
 
 def FDistribution(name, d1, d2):
     r"""
@@ -1009,6 +1044,9 @@ class FisherZDistribution(SingleContinuousDistribution):
         d1, d2 = self.d1, self.d2
         return (2*d1**(d1/2)*d2**(d2/2) / beta_fn(d1/2, d2/2) *
                exp(d1*x) / (d1*exp(2*x)+d2)**((d1+d2)/2))
+
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
 
 def FisherZ(name, d1, d2):
     r"""
@@ -1088,6 +1126,9 @@ class FrechetDistribution(SingleContinuousDistribution):
         return Piecewise((exp(-((x-m)/s)**(-a)), x >= m),
                         (S.Zero, True))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
+
 def Frechet(name, a, s=1, m=0):
     r"""
     Create a continuous random variable with a Frechet distribution.
@@ -1166,6 +1207,11 @@ class GammaDistribution(SingleContinuousDistribution):
                     (lowergamma(k, S(x)/theta)/gamma(k), x > 0),
                     (S.Zero, True))
 
+    def _characteristic_function(self, t):
+        return (1 - self.theta*I*t)**(-self.k)
+
+    def _moment_generating_function(self, t):
+        return (1- self.theta*t)**(-self.k)
 
 def Gamma(name, k, theta):
     r"""
@@ -1221,7 +1267,7 @@ def Gamma(name, k, theta):
     \          0             otherwise
 
     >>> E(X)
-    theta*gamma(k + 1)/gamma(k)
+    k*theta
 
     >>> V = simplify(variance(X))
     >>> pprint(V, use_unicode=False)
@@ -1268,6 +1314,13 @@ class GammaInverseDistribution(SingleContinuousDistribution):
             return invgamma.rvs(float(self.a), 0, float(self.b))
         else:
             raise NotImplementedError('Sampling the inverse Gamma Distribution requires Scipy.')
+
+    def _characteristic_function(self, t):
+        a, b = self.a, self.b
+        return 2 * (-I*b*t)**(a/2) * besselk(sqrt(-4*I*b*t)) / gamma(a)
+
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('The moment generating function for the gamma inverse distribution does not exist.')
 
 def GammaInverse(name, a, b):
     r"""
@@ -1338,6 +1391,12 @@ class GumbelDistribution(SingleContinuousDistribution):
         beta, mu = self.beta, self.mu
         return (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
 
+    def _characteristic_function(self, t):
+        return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
+
+    def _moment_generating_function(self, t):
+        return gamma(1 - self.beta*t) * exp(I*self.mu*t)
+
 def Gumbel(name, beta, mu):
     r"""
     Create a Continuous Random Variable with Gumbel distribution.
@@ -1397,6 +1456,9 @@ class GompertzDistribution(SingleContinuousDistribution):
         eta, b = self.eta, self.b
         return b*eta*exp(b*x)*exp(eta)*exp(-eta*exp(b*x))
 
+    def _moment_generating_function(self, t):
+        eta, b = self.eta, self.b
+        return eta * exp(eta) * expint(t/b, eta)
 
 def Gompertz(name, b, eta):
     r"""
@@ -1468,6 +1530,8 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
             (1 - (1 - x**a)**b, x <= S.One),
             (S.One, True))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
 
 def Kumaraswamy(name, a, b):
     r"""
@@ -1540,6 +1604,11 @@ class LaplaceDistribution(SingleContinuousDistribution):
                     (S.One - S.Half*exp(-(x - mu)/b), x >= mu)
                         )
 
+    def _characteristic_function(self, t):
+        return exp(self.mu*I*t) / (1 + self.b**2*t**2)
+
+    def _moment_generating_function(self, t):
+        return exp(self.mu*t) / (1 - self.b**2*t**2)
 
 def Laplace(name, mu, b):
     r"""
@@ -1622,6 +1691,9 @@ class LogisticDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         return Piecewise((exp(I*t*self.mu) * pi*self.s*t / sinh(pi*self.s*t), Ne(t, 0)), (S.One, True))
 
+    def _moment_generating_function(self, t):
+        return exp(self.mu*t) * Beta(1 - self.s*t, 1 + self.s*t)
+
 def Logistic(name, mu, s):
     r"""
     Create a continuous random variable with a logistic distribution.
@@ -1692,6 +1764,8 @@ class LogNormalDistribution(SingleContinuousDistribution):
                 (S.Zero, True)
         )
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function of the log-normal distribution is not defined.')
 
 def LogNormal(name, mean, std):
     r"""
@@ -1768,6 +1842,8 @@ class MaxwellDistribution(SingleContinuousDistribution):
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
 
 def Maxwell(name, a):
     r"""
@@ -1840,6 +1916,8 @@ class NakagamiDistribution(SingleContinuousDistribution):
                     (lowergamma(mu, (mu/omega)*x**2)/gamma(mu), x > 0),
                     (S.Zero, True))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
 
 def Nakagami(name, mu, omega):
     r"""
@@ -1886,10 +1964,10 @@ def Nakagami(name, mu, omega):
     ----------------------------------
                 Gamma(mu)
 
-    >>> simplify(E(X, meijerg=True))
+    >>> simplify(E(X))
     sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
 
-    >>> V = simplify(variance(X, meijerg=True))
+    >>> V = simplify(variance(X))
     >>> pprint(V, use_unicode=False)
                         2
              omega*Gamma (mu + 1/2)
@@ -1933,6 +2011,10 @@ class NormalDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         mean, std = self.mean, self.std
         return exp(I*mean*t - std**2*t**2/2)
+
+    def _moment_generating_function(self, t):
+        mean, std = self.mean, self.std
+        return exp(mean*t + std**2*t**2/2)
 
 def Normal(name, mean, std):
     r"""
@@ -2051,6 +2133,14 @@ class ParetoDistribution(SingleContinuousDistribution):
                 (0, True),
         )
 
+    def _moment_generating_function(self, t):
+        xm, alpha = self.xm, self.alpha
+        return alpha * (-xm*t)**alpha * uppergamma(-alpha, -xm*t)
+
+    def _characteristic_function(self, t):
+        xm, alpha = self.xm, self.alpha
+        return alpha * (-I * xm * t) ** alpha * uppergamma(-alpha, -I * xm * t)
+
 
 def Pareto(name, xm, alpha):
     r"""
@@ -2116,6 +2206,17 @@ class QuadraticUDistribution(SingleContinuousDistribution):
         return Piecewise(
                   (alpha * (x-beta)**2, And(a<=x, x<=b)),
                   (S.Zero, True))
+
+    def _moment_generating_function(self, t):
+        a, b = self.a, self.b
+
+        return -3 * (exp(a*t) * (4  + (a**2 + 2*a*(-2 + b) + b**2) * t) - exp(b*t) * (4 + (-4*b + (a + b)**2) * t)) / ((a-b)**3 * t**2)
+
+    def _characteristic_function(self, t):
+        def _moment_generating_function(self, t):
+            a, b = self.a, self.b
+
+            return -3*I*(exp(I*a*t*exp(I*b*t)) * (4*I - (-4*b + (a+b)**2)*t)) / ((a-b)**3 * t**2)
 
 
 def QuadraticU(name, a, b):
@@ -2199,6 +2300,9 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
                          (exp(I*pi*mu/s)/2, Eq(t, pi/s)),
                          (pi**2*sin(s*t)*exp(I*mu*t) / (s*t*(pi**2 - s**2*t**2)), True))
 
+    def _moment_generating_function(self, t):
+        mu, s = self.mu, self.s
+        return pi**2 * sinh(s*t) * exp(mu*t) /  (s*t*(pi**2 + s**2*t**2))
 
 def RaisedCosine(name, mu, s):
     r"""
@@ -2269,6 +2373,10 @@ class RayleighDistribution(SingleContinuousDistribution):
         sigma = self.sigma
         return 1 - sigma*t*exp(-sigma**2*t**2/2) * sqrt(pi/2) * (erfi(sigma*t/sqrt(2)) - I)
 
+    def _moment_generating_function(self, t):
+        sigma = self.sigma
+        return 1 + sigma*t*exp(sigma**2*t**2/2) * sqrt(pi/2) * (erf(sigma*t/sqrt(2)) + 1)
+
 
 def Rayleigh(name, sigma):
     r"""
@@ -2338,6 +2446,8 @@ class ShiftedGompertzDistribution(SingleContinuousDistribution):
         b, eta = self.b, self.eta
         return b*exp(-b*x)*exp(-eta*exp(-b*x))*(1+eta*(1-exp(-b*x)))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
 
 def ShiftedGompertz(name, b, eta):
     r"""
@@ -2399,6 +2509,8 @@ class StudentTDistribution(SingleContinuousDistribution):
         return S.Half + x*gamma((nu+1)/2)*hyper((S.Half, (nu+1)/2),
                                 (S(3)/2,), -x**2/nu)/(sqrt(pi*nu)*gamma(nu/2))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('The moment generating function for the Student-T distribution is undefined.')
 
 def StudentT(name, nu):
     r"""
@@ -2475,6 +2587,8 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
             (2*(d-x) / ((d-c)*(d+c-a-b)), And(c <= x, x <= d)),
             (S.Zero, True))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
 
 def Trapezoidal(name, a, b, c, d):
     r"""
@@ -2554,6 +2668,15 @@ class TriangularDistribution(SingleContinuousDistribution):
             (2/(b - a), Eq(x, c)),
             (2*(b - x)/((b - a)*(b - c)), And(c < x, x <= b)),
             (S.Zero, True))
+
+    def _characteristic_function(self, t):
+        a, b, c = self.a, self.b, self.c
+        return -2 *((b-c) * exp(I*a*t) - (b-a) * exp(I*c*t) + (c-a) * exp(I*b*t)) / ((b-a)*(c-a)*(b-c)*t**2)
+
+    def _moment_generating_function(self, t):
+        a, b, c = self.a, self.b, self.c
+        return 2 * ((b - c) * exp(a * t) - (b - a) * exp(c * t) + (c + a) * exp(b * t)) / (
+        (b - a) * (c - a) * (b - c) * t ** 2)
 
 
 def Triangular(name, a, b, c):
@@ -2645,6 +2768,11 @@ class UniformDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         left, right = self.left, self.right
         return Piecewise(((exp(I*t*right) - exp(I*t*left)) / (I*t*(right - left)), Ne(t, 0)),
+                         (S.One, True))
+
+    def _moment_generating_function(self, t):
+        left, right = self.left, self.right
+        return Piecewise(((exp(t*right) - exp(t*left)) / (t * (right - left)), Ne(t, 0)),
                          (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
@@ -2742,6 +2870,12 @@ class UniformSumDistribution(SingleContinuousDistribution):
                         (k, 0, floor(x))), x <= n),
                         (S.One, True))
 
+    def _characteristic_function(self, t):
+        return ((exp(I*t) - 1) / (I*t))**self.n
+
+    def _moment_generating_function(self, t):
+        return ((exp(t) - 1) / t)**self.n
+
 def UniformSum(name, n):
     r"""
     Create a continuous random variable with an Irwin-Hall distribution.
@@ -2827,6 +2961,8 @@ class VonMisesDistribution(SingleContinuousDistribution):
         mu, k = self.mu, self.k
         return exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function not implemented.')
 
 def VonMises(name, mu, k):
     r"""
@@ -2896,6 +3032,11 @@ class WeibullDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         alpha, beta = self.alpha, self.beta
         return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
+
+    def _moment_generating_function(self, t):
+        lamda, k = self.alpha, self.beta
+        n = Dummy('n')
+        return Sum(t**n * lamda**n  * gamma(1 + n/k) / factorial(n), [n, 0, oo])
 
     def sample(self):
         return random.weibullvariate(self.alpha, self.beta)
@@ -2973,6 +3114,10 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
 
     def _characteristic_function(self, t):
         return Piecewise((2 * besselj(1, self.R*t) / (self.R*t), Ne(t, 0)),
+                         (S.One, True))
+
+    def _moment_generating_function(self, t):
+        return Piecewise((2 * besseli(1, self.R*t) / (self.R*t), Ne(t, 0)),
                          (S.One, True))
 
 def WignerSemicircle(name, R):
