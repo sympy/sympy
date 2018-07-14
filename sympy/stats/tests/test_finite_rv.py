@@ -7,7 +7,7 @@ from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
     Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
     density, where, FiniteRV, pspace, cdf,
-    correlation, moment, cmoment, smoment, characteristic_function)
+    correlation, moment, cmoment, smoment, characteristic_function, moment_generating_function)
 from sympy.stats.frv_types import DieDistribution
 from sympy.utilities.pytest import raises, slow
 from sympy.abc import p, x, i
@@ -45,7 +45,7 @@ def test_discreteuniform():
            dict(density(DiscreteUniform('U', range(1, 7))).items())
 
     assert characteristic_function(X)(t) == exp(I*a*t)/3 + exp(I*b*t)/3 + exp(I*c*t)/3
-
+    assert moment_generating_function(X)(t) == exp(a*t)/3 + exp(b*t)/3 + exp(c*t)/3
 
 def test_dice():
     # TODO: Make iid method!
@@ -94,6 +94,7 @@ def test_dice():
     assert where(X > 3).set == FiniteSet(4, 5, 6)
 
     assert characteristic_function(X)(t) == exp(6*I*t)/6 + exp(5*I*t)/6 + exp(4*I*t)/6 + exp(3*I*t)/6 + exp(2*I*t)/6 + exp(I*t)/6
+    assert moment_generating_function(X)(t) == exp(6*t)/6 + exp(5*t)/6 + exp(4*t)/6 + exp(3*t)/6 + exp(2*t)/6 + exp(t)/6
 
 
 def test_given():
@@ -156,6 +157,7 @@ def test_bernoulli():
     assert density(X)[a] == p
     assert density(X)[b] == 1 - p
     assert characteristic_function(X)(t) == p * exp(I * a * t) + (-p + 1) * exp(I * b * t)
+    assert moment_generating_function(X)(t) == p * exp(a * t) + (-p + 1) * exp(b * t)
 
     X = Bernoulli('B', p, 1, 0)
 
@@ -218,6 +220,7 @@ def test_binomial_symbolic():
     assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
     assert cancel((skewness(X) - (1 - 2*p)/sqrt(n*p*(1 - p)))) == 0
     assert characteristic_function(X)(t) == p ** 2 * exp(2 * I * t) + 2 * p * (-p + 1) * exp(I * t) + (-p + 1) ** 2
+    assert moment_generating_function(X)(t) == p ** 2 * exp(2 * t) + 2 * p * (-p + 1) * exp(t) + (-p + 1) ** 2
 
     # Test ability to change success/failure winnings
     H, T = symbols('H T')
@@ -250,6 +253,8 @@ def test_rademacher():
     assert density(X)[-1] == S.Half
     assert density(X)[1] == S.Half
     assert characteristic_function(X)(t) == exp(I*t)/2 + exp(-I*t)/2
+    assert moment_generating_function(X)(t) == exp(t) / 2 + exp(-t) / 2
+
 
 def test_FiniteRV():
     F = FiniteRV('F', {1: S.Half, 2: S.One/4, 3: S.One/4})
