@@ -179,7 +179,7 @@ def test_files():
             if gen_raise_re.search(line):
                 assert False, message_gen_raise % (fname, idx + 1)
             if (implicit_test_re.search(line) and
-                    not filter(lambda ex: ex in fname, import_exclude)):
+                    not list(filter(lambda ex: ex in fname, import_exclude))):
                 assert False, message_implicit % (fname, idx + 1)
             if func_is_re.search(line) and not test_file_re.search(fname):
                 assert False, message_func_is % (fname, idx + 1)
@@ -231,6 +231,8 @@ def test_files():
         "%(sep)sparsing%(sep)ssympy_tokenize.py" % sepd,
         # this one should be fixed:
         "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
+        # False positive in the docstring
+        "%(sep)sbin%(sep)stest_external_imports.py" % sepd,
     ])
     check_files(top_level_files, test)
     check_directory_tree(BIN_PATH, test, set(["~", ".pyc", ".sh"]), "*")
