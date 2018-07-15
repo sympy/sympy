@@ -12,28 +12,31 @@
 
 from __future__ import print_function, division
 
+
 from sympy.core.function import Function
 from sympy.functions import exp, Piecewise
 from sympy.tensor.indexed import Idx, Indexed
 
 
 from sympy.core.compatibility import reduce
-
-
+from collections import OrderedDict
+from sympy.utilities import sift
 class IndexConformanceException(Exception):
     pass
 
 def _unique_and_repeated(inds):
-    """returns the unique and repeated indices. This is used in the function
-    _remove_repeated to remove the recurring indices.
+    """
+    Returns the unique and repeated indices. Also note, from the examples given below
+    that the order of indices is maintained as given in the input.
 
     Examples :
     ========
 
     >>> from sympy.tensor.index_methods import _unique_and_repeated
-    >>> _unique_and_repeated([1,2,3,2,3,4,5,3,4,7,2,7])
-    ([1, 5], [2, 3, 4, 7])
 
+    >>> _unique_and_repeated([2, 3, 1, 3, 0, 4, 0])
+    ([2, 1, 4], [3, 0])
+    
     """
     uniq = OrderedDict()
     for i in inds:
@@ -44,7 +47,8 @@ def _unique_and_repeated(inds):
     return sift(uniq, lambda x: uniq[x], binary=True)
 
 def _remove_repeated(inds):
-    """Removes repeated objects from sequences
+    """
+    Removes repeated objects from sequences
 
     Returns a set of the unique objects and a tuple of all that have been
     removed.
@@ -58,7 +62,7 @@ def _remove_repeated(inds):
     ({1, 3}, (2,))
 
     """
-    u, r = _unique_and_repeated([1, 2, 3, 2, 3, 4, 5, 3, 4, 7, 2, 7])
+    u, r = _unique_and_repeated(inds)
     return set(u), tuple(r)
 
 
