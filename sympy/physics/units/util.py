@@ -149,8 +149,16 @@ def quantity_simplify(expr):
                 coeff = coeff * arg.scale_factor
         expr = coeff
 
-    if any(isinstance(a, Add) for a in expr.args):
-        return expr.func(*map(quantity_simplify, expr.args))
+    if isinstance(expr, Mul) and any(isinstance(a, Add) for a in expr.args):
+        non_add = []
+        add = []
+        for arg in expr.args:
+            if isinstance(arg, Add):
+                add.append(arg)
+            else:
+                non_add.append(arg)
+        return Mul(quantity_simplify(Mul(*non_add)), *add)
+
     coeff, args = expr.as_coeff_mul(Quantity)
     args_pow = [arg.as_base_exp() for arg in args]
     quantity_pow, other_pow = sift(args_pow, lambda x: isinstance(x[0], Quantity), binary=True)

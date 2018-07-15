@@ -115,7 +115,7 @@ def test_convert_to_tuples_of_quantities():
 
 
 def test_eval_simplify():
-    from sympy.physics.units import cm, mm, km, m, K, Quantity, kilo
+    from sympy.physics.units import cm, mm, km, m, K, Quantity, kilo, foot
     from sympy.simplify.simplify import simplify
     from sympy.core.symbol import symbols
     from sympy.utilities.pytest import raises
@@ -133,3 +133,5 @@ def test_eval_simplify():
     assert (4*kilo*meter/(2*kilometer)).simplify() == 2
     assert (4*kilometer**2/(kilo*meter)**2).simplify() == 4
     assert (x*(8*kilo*newton*meter+y)).simplify() == x*(8000*meter*newton + y)
+    assert (foot*inch*(foot + inch)).simplify() == foot**2*(foot + inch)/12
+    assert (foot*inch*(foot*foot + inch*(foot+inch))).simplify() == foot**2*(foot**2 + inch*(foot + inch))/12
