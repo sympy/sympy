@@ -339,8 +339,8 @@ def test_gamma():
 
     k, theta = symbols('k theta', real=True, finite=True, positive=True)
     X = Gamma('x', k, theta)
-    assert simplify(E(X)) == k*theta
-    assert simplify(variance(X)) == k*theta**2
+    assert E(X) == k*theta
+    assert variance(X) == k*theta**2
     assert simplify(skewness(X)) == 2/sqrt(k)
 
 
