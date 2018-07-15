@@ -36,7 +36,6 @@ def _unique_and_repeated(inds):
 
     >>> _unique_and_repeated([2, 3, 1, 3, 0, 4, 0])
     ([2, 1, 4], [3, 0])
-    
     """
     uniq = OrderedDict()
     for i in inds:
