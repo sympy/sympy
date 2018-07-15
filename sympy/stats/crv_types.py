@@ -3001,14 +3001,8 @@ class WeibullDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
 
-    def _moment_generating_function(self, t):
-        lamda, k = self.alpha, self.beta
-        n = Dummy('n')
-        return Sum(t**n * lamda**n  * gamma(1 + n/k) / factorial(n), [n, 0, oo])
-
     def sample(self):
         return random.weibullvariate(self.alpha, self.beta)
-
 
 def Weibull(name, alpha, beta):
     r"""
