@@ -8,7 +8,10 @@ env:
   - SPLIT="3/4" TEST_SYMPY="true"
   - SPLIT="4/4" TEST_SYMPY="true"
   global:
+    # Doctr deploy key for sympy/sympy_doc
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
+    # Doctr deploy key for sympy/sympy.wiki
+    - secure: "c6eRGaJxmgH13eUd0yyJPkEse6+BzYtFfWfXfKt6h74ObmCJYuM3tuWQf/QBgAgkDbk7YHUbyBBmN1Z+OWQ7uPhFOKuah1mYxnoXNeQPqhDuyOcBJyBSO0/RF5QJDFNNoX6J2e+9K/64qiuzyVKdOc1VXNcOlC0wDYMGioHOw9U="
 dist: trusty
 
 python:
@@ -212,7 +215,7 @@ before_install:
       pip install fastcache;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr;
+      pip install "sphinx" "docutils" requests doctr;
     fi
   - |
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
@@ -277,6 +280,11 @@ install:
 script:
   # Don't run doctr if the build fails
   - set -e
+  - if [[ "${TEST_SPHINX}" == "true" ]]; then
+        cp bin/changelog.py ~/changelog.py;
+        chmod +x ~/changelog.py;
+        doctr deploy . --built-docs . --deploy-repo sympy/sympy.wiki --no-sync --command '~/changelog.py';
+    fi
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
