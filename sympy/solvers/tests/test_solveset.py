@@ -909,8 +909,6 @@ def test_other_lambert():
     a = S(6)/5
     assert solveset_real(x**a - a**x, x) == FiniteSet(
         a, -a*LambertW(-log(a)/a)/log(a))
-    assert solveset_real(3**cos(x) - cos(x)**3, x) == FiniteSet(
-        acos(3), acos(-3*LambertW(-log(3)/3)/log(3)))
 
 
 def test_solveset():

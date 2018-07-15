@@ -4,6 +4,7 @@ This module contains functions to:
     - solve a single equation for a single variable, in any domain either real or complex.
 
     - solve a single transcendental equation for a single variable in any domain either real or complex.
+      (currently supports solving in real domain only)
 
     - solve a system of linear equations with N variables and M equations.
 
