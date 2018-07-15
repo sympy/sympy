@@ -149,19 +149,10 @@ def quantity_simplify(expr):
                 coeff = coeff * arg.scale_factor
         expr = coeff
 
-    if isinstance(expr, Mul) and any(isinstance(a, Add) for a in expr.args):
-        non_add = []
-        add = []
-        for arg in expr.args:
-            if isinstance(arg, Add):
-                add.append(arg)
-            else:
-                non_add.append(arg)
-        return Mul(quantity_simplify(Mul(*non_add)), *add)
-
     coeff, args = expr.as_coeff_mul(Quantity)
     args_pow = [arg.as_base_exp() for arg in args]
     quantity_pow, other_pow = sift(args_pow, lambda x: isinstance(x[0], Quantity), binary=True)
+    coeff *= Mul.fromiter([Pow(b, e, evaluate=False) for b, e in other_pow])
     quantity_pow_by_dim = sift(quantity_pow, lambda x: x[0].dimension)
     # Just pick the first quantity:
     ref_quantities = [i[0][0] for i in quantity_pow_by_dim.values()]
@@ -170,4 +161,4 @@ def quantity_simplify(expr):
             (quantity*i.scale_factor/quantity.scale_factor)**p for i, p in v)
             if len(v) > 1 else v[0][0]**v[0][1]
         for quantity, (k, v) in zip(ref_quantities, quantity_pow_by_dim.items())]
-    return coeff*Mul.fromiter(other_pow)*Mul.fromiter(new_quantities)
+    return coeff*Mul.fromiter(new_quantities)
