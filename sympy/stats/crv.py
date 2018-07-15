@@ -262,10 +262,8 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
                 mgf = self._moment_generating_function(t)
                 if mgf is not None:
                     return mgf
-
             except NotImplementedError:
-                raise NotImplementedError('Moment generating function is not defined')
-
+                return None
         return self.compute_moment_generating_function(**kwargs)(t)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
@@ -276,10 +274,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
                 t = Dummy('t', real=True)
 
-                try:
-                    mgf = self.moment_generating_function(t)
-                except NotImplementedError:
-                    return self.expectation(expr, var, evaluate=False, **kwargs)
+                mgf = self._moment_generating_function(t)
+                if mgf is None:
+                    return integrate(expr * self.pdf(var), (var, self.set), **kwargs)
 
                 deg = p.degree()
                 taylor = poly(series(mgf, t, 0, deg + 1).removeO(), t)
