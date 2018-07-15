@@ -167,9 +167,6 @@ class ArcsinDistribution(SingleContinuousDistribution):
             (2*asin(sqrt((x - a)/(b - a)))/pi, x <= b),
             (S.One, True))
 
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
-
 
 def Arcsin(name, a=0, b=1):
     r"""
@@ -393,9 +390,6 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
 
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
-
 def BetaPrime(name, alpha, beta):
     r"""
     Create a continuous random variable with a Beta prime distribution.
@@ -592,9 +586,6 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
         k, l = self.k, self.l
         return exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
 
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
-
 def ChiNoncentral(name, k, l):
     r"""
     Create a continuous random variable with a non-central Chi distribution.
@@ -734,9 +725,6 @@ class DagumDistribution(SingleContinuousDistribution):
         p, a, b = self.p, self.a, self.b
         return Piecewise(((S.One + (S(x)/b)**-a)**-p, x>=0),
                     (S.Zero, True))
-
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
 
 def Dagum(name, p, a, b):
     r"""
@@ -1045,9 +1033,6 @@ class FisherZDistribution(SingleContinuousDistribution):
         return (2*d1**(d1/2)*d2**(d2/2) / beta_fn(d1/2, d2/2) *
                exp(d1*x) / (d1*exp(2*x)+d2)**((d1+d2)/2))
 
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
-
 def FisherZ(name, d1, d2):
     r"""
     Create a Continuous Random Variable with an Fisher's Z distribution.
@@ -1125,9 +1110,6 @@ class FrechetDistribution(SingleContinuousDistribution):
         a, s, m = self.a, self.s, self.m
         return Piecewise((exp(-((x-m)/s)**(-a)), x >= m),
                         (S.Zero, True))
-
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
 
 def Frechet(name, a, s=1, m=0):
     r"""
@@ -1530,9 +1512,6 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
             (1 - (1 - x**a)**b, x <= S.One),
             (S.One, True))
 
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
-
 def Kumaraswamy(name, a, b):
     r"""
     Create a Continuous Random Variable with a Kumaraswamy distribution.
@@ -1842,9 +1821,6 @@ class MaxwellDistribution(SingleContinuousDistribution):
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
 
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
-
 def Maxwell(name, a):
     r"""
     Create a continuous random variable with a Maxwell distribution.
@@ -1915,9 +1891,6 @@ class NakagamiDistribution(SingleContinuousDistribution):
         return Piecewise(
                     (lowergamma(mu, (mu/omega)*x**2)/gamma(mu), x > 0),
                     (S.Zero, True))
-
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
 
 def Nakagami(name, mu, omega):
     r"""
@@ -2446,9 +2419,6 @@ class ShiftedGompertzDistribution(SingleContinuousDistribution):
         b, eta = self.b, self.eta
         return b*exp(-b*x)*exp(-eta*exp(-b*x))*(1+eta*(1-exp(-b*x)))
 
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
-
 def ShiftedGompertz(name, b, eta):
     r"""
     Create a continuous random variable with a Shifted Gompertz distribution.
@@ -2586,9 +2556,6 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
             (2 / (d+c-a-b), And(b <= x, x < c)),
             (2*(d-x) / ((d-c)*(d+c-a-b)), And(c <= x, x <= d)),
             (S.Zero, True))
-
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
 
 def Trapezoidal(name, a, b, c, d):
     r"""
@@ -2960,9 +2927,6 @@ class VonMisesDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         mu, k = self.mu, self.k
         return exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
-
-    def _moment_generating_function(self, t):
-        raise NotImplementedError('Moment generating function not implemented.')
 
 def VonMises(name, mu, k):
     r"""
