@@ -1355,18 +1355,18 @@ class Beam_3d(Beam):
         # 1: Derivative(E*I_z*Derivative(theta_z(x), x), x) + G*A*(Derivative(defl_y(x), x) - theta_z(x)) + moment_z = 0
         # 2: Derivative(G*A*(Derivative(defl_y(x), x) - theta_z(x)), x) + load_y = 0
         C_i = Symbol('C_i')
-        # substitute value of `G*A*(Derivative(defl_y(x), x) - theta_z(x))` from (2) in (1)
+        # Substitute value of `G*A*(Derivative(defl_y(x), x) - theta_z(x))` from (2) in (1)
         eq1 = Derivative(E*I_z*Derivative(theta(x), x), x) + (integrate(-load[1], x) + C_i) + moment[2]
         slope_z = dsolve(Eq(eq1, 0)).args[1]
 
-        #solve for constants originated from using dsolve on eq1
+        # Solve for constants originated from using dsolve on eq1
         constants = list((linsolve([slope_z.subs(x, 0), slope_z.subs(x, l)], C1, C2).args)[0])
         slope_z = slope_z.subs({C1:constants[0], C2:constants[1]})
 
         # Put value of slope obtained back in (2) to solve for `C_i` and find deflection across y-axis
         eq2 = G*A*(Derivative(defl(x), x)) + load[1]*x - C_i - G*A*slope_z
         def_y = dsolve(Eq(eq2, 0), defl(x)).args[1]
-        #solve for constants originated from using dsolve on eq2
+        # Solve for constants originated from using dsolve on eq2
         constants = list((linsolve([def_y.subs(x, 0), def_y.subs(x, l)], C1, C_i).args)[0])
         self._deflection[1] = def_y.subs({C1:constants[0], C_i:constants[1]})
         self._slope[2] = slope_z.subs(C_i, constants[1])
@@ -1375,17 +1375,17 @@ class Beam_3d(Beam):
         # 1: Derivative(E*I_y*Derivative(theta_y(x), x), x) - G*A*(Derivative(defl_z(x), x) + theta_y(x)) + moment_y = 0
         # 2: Derivative(G*A*(Derivative(defl_z(x), x) + theta_y(x)), x) + load_z = 0
 
-        # substitute value of `G*A*(Derivative(defl_y(x), x) + theta_z(x))` from (2) in (1)
+        # Substitute value of `G*A*(Derivative(defl_y(x), x) + theta_z(x))` from (2) in (1)
         eq1 = Derivative(E*I_y*Derivative(theta(x), x), x) + (integrate(load[2], x) - C_i) + moment[1]
         slope_y = dsolve(Eq(eq1, 0)).args[1]
-        #solve for constants originated from using dsolve on eq1
+        # Solve for constants originated from using dsolve on eq1
         constants = list((linsolve([slope_y.subs(x, 0), slope_y.subs(x, l)], C1, C2).args)[0])
         slope_y = slope_y.subs({C1:constants[0], C2:constants[1]})
 
         # Put value of slope obtained back in (2) to solve for `C_i` and find deflection across z-axis
         eq2 = G*A*(Derivative(defl(x), x)) + load[2]*x - C_i + G*A*slope_y
         def_z = dsolve(Eq(eq2,0)).args[1]
-        #solve for constants originated from using dsolve on eq2
+        # Solve for constants originated from using dsolve on eq2
         constants = list((linsolve([def_z.subs(x, 0), def_z.subs(x, l)], C1, C_i).args)[0])
         self._deflection[2] = def_z.subs({C1:constants[0], C_i:constants[1]})
         self._slope[1] = slope_y.subs(C_i, constants[1])
