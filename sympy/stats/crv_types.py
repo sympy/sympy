@@ -236,7 +236,8 @@ class BeniniDistribution(SingleContinuousDistribution):
                *(alpha/x + 2*beta*log(x/sigma)/x))
 
     def _moment_generating_function(self, t):
-        raise NotImplementedError('The moment generating function of the Benini distribution does not exist.')
+        raise NotImplementedError('The moment generating function of the '
+                                  'Benini distribution does not exist.')
 
 def Benini(name, alpha, beta, sigma):
     r"""
@@ -454,7 +455,8 @@ class CauchyDistribution(SingleContinuousDistribution):
         return exp(self.x0 * I * t -  self.gamma * Abs(t))
 
     def _moment_generating_function(self, t):
-        raise NotImplementedError("The moment generating function for the Cauchy distribution does not exist.")
+        raise NotImplementedError("The moment generating function for the "
+                                  "Cauchy distribution does not exist.")
 
 def Cauchy(name, x0, gamma):
     r"""
@@ -964,7 +966,8 @@ class FDistributionDistribution(SingleContinuousDistribution):
                / (x * beta_fn(d1/2, d2/2)))
 
     def _moment_generating_function(self, t):
-        raise NotImplementedError('The moment generating function for the F-distribution does not exist.')
+        raise NotImplementedError('The moment generating function for the '
+                                  'F-distribution does not exist.')
 
 def FDistribution(name, d1, d2):
     r"""
@@ -1302,7 +1305,8 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         return 2 * (-I*b*t)**(a/2) * besselk(sqrt(-4*I*b*t)) / gamma(a)
 
     def _moment_generating_function(self, t):
-        raise NotImplementedError('The moment generating function for the gamma inverse distribution does not exist.')
+        raise NotImplementedError('The moment generating function for the '
+                                  'gamma inverse distribution does not exist.')
 
 def GammaInverse(name, a, b):
     r"""
