@@ -246,7 +246,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
+        x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
         mgf = integrate(exp(t * x) * pdf, (x, -oo, oo))
         return Lambda(t, mgf)
