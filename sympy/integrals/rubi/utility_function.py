@@ -28,6 +28,26 @@ from sympy.utilities.iterables import flatten
 from random import randint
 from sympy.logic.boolalg import Or
 
+class rubi_unevaluated_expr(UnevaluatedExpr):
+    @property
+    def is_commutative(self):
+        from sympy.core.logic import fuzzy_and
+        return fuzzy_and(a.is_commutative for a in self.args)
+
+_E = rubi_unevaluated_expr(E)
+class exp(Function):
+    @classmethod
+    def eval(cls, *args):
+        return Pow(_E, args[0])
+
+class log(Function):
+    @classmethod
+    def eval(cls, *args):
+        if args[0].has(_E):
+            return sym_log(args[0]).doit()
+        else:
+            return sym_log(args[0])
+
 if matchpy:
     from matchpy import Arity, Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer
     from matchpy.expressions.functions import register_operation_iterator, register_operation_factory
@@ -38,27 +58,6 @@ if matchpy:
         arity = Arity.variadic
         commutative=False
         associative=True
-
-    class rubi_unevaluated_expr(UnevaluatedExpr):
-        @property
-        def is_commutative(self):
-            from sympy.core.logic import fuzzy_and
-            return fuzzy_and(a.is_commutative for a in self.args)
-
-    _E = rubi_unevaluated_expr(E)
-    class exp(Function):
-        @classmethod
-        def eval(cls, *args):
-            return Pow(_E, args[0])
-
-    #log = sym_log
-    class log(Function):
-        @classmethod
-        def eval(cls, *args):
-            if args[0].has(_E):
-                return sym_log(args[0]).doit()
-            else:
-                return sym_log(args[0])
 
     Operation.register(Integral)
     register_operation_iterator(Integral, lambda a: (a._args[0],) + a._args[1], lambda a: len((a._args[0],) + a._args[1]))
@@ -1428,7 +1427,10 @@ def ExpandLinearProduct(v, u, a, b, x):
 def GCD(*args):
     args = S(args)
     if len(args) == 1:
-        return gcd(*args, S(1)) # GCD[1] in mathematica returns 1
+        if isinstance(args[0], (int, Integer)):
+            return args[0]
+        else:
+            return S(1)
     return gcd(*args)
 
 def ContentFactor(expn):
@@ -6660,24 +6662,24 @@ def Cancel(expr):
 
 class Util_Part(Function):
     def doit(self):
-        i = Simplify(self.args[-1])
+        i = Simplify(self.args[0])
         if len(self.args) > 2 :
-            lst = list(self.args[0:-1])
+            lst = list(self.args[1:])
         else:
-            lst = self.args[0]
+            lst = self.args[1]
         if isinstance(i, (int, Integer)):
             if isinstance(lst, list):
                 return lst[i - 1]
             elif AtomQ(lst):
                 return lst
-            return lst.args[i-1]
+            return lst.args[i - 1]
         else:
             return self
 
 def Part(lst, i): #see i = -1
     if isinstance(lst, list):
-        return Util_Part(*lst, i).doit()
-    return Util_Part(lst, i).doit()
+        return Util_Part(i, *lst).doit()
+    return Util_Part(i, lst).doit()
 
 def PolyLog(n, p, z=None):
     return polylog(n, p)
