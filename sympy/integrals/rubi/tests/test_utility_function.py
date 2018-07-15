@@ -13,7 +13,7 @@ from sympy.integrals.rubi.utility_function import (Int, Set, With, Module, Scan,
     EllipticE, EllipticF, ArcTan, ArcCot, ArcCoth, ArcTanh, ArcSin, ArcSinh, ArcCos, ArcCsc, ArcSec, ArcCsch, ArcSech, Sinh, Tanh, Cosh, Sech, Csch, Coth, LessEqual, Less, Greater, GreaterEqual, FractionQ, IntLinearcQ, Expand, IndependentQ, PowerQ, IntegerPowerQ, PositiveIntegerPowerQ, FractionalPowerQ, AtomQ, ExpQ, LogQ, Head, MemberQ, TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, Sin, Cos, Tan, Cot, Sec, Csc, HyperbolicQ, SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, InverseTrigQ, SinCosQ, SinhCoshQ, LeafCount, Numerator, NumberQ, NumericQ, Length, ListQ, Im, Re, InverseHyperbolicQ,
     InverseFunctionQ, TrigHyperbolicFreeQ, InverseFunctionFreeQ, RealQ, EqQ, FractionalPowerFreeQ, ComplexFreeQ, PolynomialQ, FactorSquareFree, PowerOfLinearQ, Exponent, QuadraticQ, LinearPairQ, BinomialParts, TrinomialParts, PolyQ, EvenQ, OddQ, PerfectSquareQ, NiceSqrtAuxQ, NiceSqrtQ, Together, PosAux, PosQ, CoefficientList, ReplaceAll, ExpandLinearProduct, GCD, ContentFactor, NumericFactor, NonnumericFactors, MakeAssocList, GensymSubst, KernelSubst, ExpandExpression, Apart, SmartApart, MatchQ, PolynomialQuotientRemainder, FreeFactors, NonfreeFactors, RemoveContentAux, RemoveContent, FreeTerms, NonfreeTerms, ExpandAlgebraicFunction, CollectReciprocals, ExpandCleanup, AlgebraicFunctionQ, Coeff, LeadTerm, RemainingTerms, LeadFactor, RemainingFactors, LeadBase, LeadDegree, Numer, Denom, hypergeom, Expon, MergeMonomials, PolynomialDivide, BinomialQ, TrinomialQ, GeneralizedBinomialQ, GeneralizedTrinomialQ, FactorSquareFreeList, PerfectPowerTest, SquareFreeFactorTest, RationalFunctionQ, RationalFunctionFactors, NonrationalFunctionFactors, Reverse, RationalFunctionExponents, RationalFunctionExpand, ExpandIntegrand, SimplerQ, SimplerSqrtQ, SumSimplerQ, BinomialDegree, TrinomialDegree, CancelCommonFactors, SimplerIntegrandQ, GeneralizedBinomialDegree, GeneralizedBinomialParts, GeneralizedTrinomialDegree, GeneralizedTrinomialParts, MonomialQ, MonomialSumQ, MinimumMonomialExponent, MonomialExponent, LinearMatchQ, PowerOfLinearMatchQ, QuadraticMatchQ, CubicMatchQ, BinomialMatchQ, TrinomialMatchQ, GeneralizedBinomialMatchQ, GeneralizedTrinomialMatchQ, QuotientOfLinearsMatchQ, PolynomialTermQ, PolynomialTerms, NonpolynomialTerms, PseudoBinomialParts, NormalizePseudoBinomial, PseudoBinomialPairQ, PseudoBinomialQ, PolynomialGCD, PolyGCD, AlgebraicFunctionFactors, NonalgebraicFunctionFactors, QuotientOfLinearsP, QuotientOfLinearsParts, QuotientOfLinearsQ, Flatten, Sort, AbsurdNumberQ, AbsurdNumberFactors, NonabsurdNumberFactors, SumSimplerAuxQ, Prepend, Drop, CombineExponents, FactorInteger, FactorAbsurdNumber, SubstForInverseFunction, SubstForFractionalPower, SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears, SubstForFractionalPowerQ, SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ, FractionalPowerSubexpressionQ, Apply, FactorNumericGcd, MergeableFactorQ, MergeFactor, MergeFactors, TrigSimplifyQ, TrigSimplify, TrigSimplifyRecur, Order, FactorOrder, Smallest, OrderedQ, MinimumDegree, PositiveFactors, Sign, NonpositiveFactors, PolynomialInAuxQ, PolynomialInQ, ExponentInAux, ExponentIn, PolynomialInSubstAux, PolynomialInSubst, Distrib, DistributeDegree, FunctionOfPower, DivideDegreesOfFactors, MonomialFactor, FullSimplify, FunctionOfLinearSubst, FunctionOfLinear, NormalizeIntegrand, NormalizeIntegrandAux, NormalizeIntegrandFactor, NormalizeIntegrandFactorBase, NormalizeTogether, NormalizeLeadTermSigns, AbsorbMinusSign, NormalizeSumFactors, SignOfFactor, NormalizePowerOfLinear, SimplifyIntegrand, SimplifyTerm, TogetherSimplify, SmartSimplify, SubstForExpn, ExpandToSum, UnifySum, UnifyTerms, UnifyTerm, CalculusQ, FunctionOfInverseLinear, PureFunctionOfSinhQ, PureFunctionOfTanhQ, PureFunctionOfCoshQ, IntegerQuotientQ, OddQuotientQ, EvenQuotientQ, FindTrigFactor, FunctionOfSinhQ, FunctionOfCoshQ, OddHyperbolicPowerQ, FunctionOfTanhQ, FunctionOfTanhWeight, FunctionOfHyperbolicQ, SmartNumerator, SmartDenominator, SubstForAux, ActivateTrig, ExpandTrig, TrigExpand, SubstForTrig, SubstForHyperbolic, InertTrigFreeQ, LCM, SubstForFractionalPowerOfLinear, FractionalPowerOfLinear, InverseFunctionOfLinear, InertTrigQ, InertReciprocalQ, DeactivateTrig, FixInertTrigFunction, DeactivateTrigAux, PowerOfInertTrigSumQ, PiecewiseLinearQ, KnownTrigIntegrandQ, KnownSineIntegrandQ, KnownTangentIntegrandQ, KnownCotangentIntegrandQ, KnownSecantIntegrandQ, TryPureTanSubst, TryTanhSubst, TryPureTanhSubst, AbsurdNumberGCD, AbsurdNumberGCDList, ExpandTrigExpand, ExpandTrigReduce, ExpandTrigReduceAux, NormalizeTrig, TrigToExp, ExpandTrigToExp, TrigReduce, FunctionOfTrig, AlgebraicTrigFunctionQ, FunctionOfHyperbolic, FunctionOfQ, FunctionOfExpnQ, PureFunctionOfSinQ, PureFunctionOfCosQ, PureFunctionOfTanQ, PureFunctionOfCotQ, FunctionOfCosQ, FunctionOfSinQ, OddTrigPowerQ, FunctionOfTanQ, FunctionOfTanWeight, FunctionOfTrigQ, FunctionOfDensePolynomialsQ, FunctionOfLog, PowerVariableExpn, PowerVariableDegree, PowerVariableSubst, EulerIntegrandQ, FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst, Divides, EasyDQ, ProductOfLinearPowersQ, Rt, NthRoot, AtomBaseQ, SumBaseQ, NegSumBaseQ, AllNegTermQ, SomeNegTermQ, TrigSquareQ, RtAux, TrigSquare, IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors, MostMainFactorPosition, FunctionOfExponentialQ, FunctionOfExponential, FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux, FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, rubi_test, If, IntQuadraticQ, IntBinomialQ, RectifyTangent, RectifyCotangent, Inequality, Condition, Simp, SimpHelp, SplitProduct, SplitSum, SubstFor, SubstForAux, FresnelS, FresnelC, Erfc, Erfi, Gamma, FunctionOfTrigOfLinearQ, ElementaryFunctionQ, Complex, UnsameQ, _SimpFixFactor,
     DerivativeDivides, SimpFixFactor, _FixSimplify, FixSimplify, _SimplifyAntiderivativeSum, SimplifyAntiderivativeSum, PureFunctionOfCothQ, _SimplifyAntiderivative, SimplifyAntiderivative, _TrigSimplifyAux, TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist, IntegralFreeQ, Sum_doit, log,
-    PolynomialRemainder, CoprimeQ, Distribute, ProductLog, Floor, PolyGamma)
+    PolynomialRemainder, CoprimeQ, Distribute, ProductLog, Floor, PolyGamma, process_trig)
 from sympy.core.symbol import symbols, S
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch, acoth
@@ -141,7 +141,7 @@ def test_IntegerPart():
     assert IntegerPart(-3.6) == -4
 
 def test_AppellF1():
-    assert AppellF1(1,0,0.5,1,0.5,0.25) == 1.154700538379251529018298
+    assert AppellF1(1,0,0.5,1,0.5,0.25).evalf() == 1.154700538379251529018298
     assert AppellF1(a, b, c, d, e, f) == AppellF1(a, b, c, d, e, f)
 
 def test_Simplify():
@@ -1304,18 +1304,19 @@ def test_SubstForAux():
 def test_SubstForTrig():
     v = log(x)
     s, c, t = sin(v), cos(v), tan(v)
-    assert SubstForTrig(s, sin, cos, v, x) == sin(x)
-    assert SubstForTrig(t, sin, cos, v, x) == sin(x)/cos(x)
-    assert SubstForTrig(sin(2*v), sin, cos, v, x) == 2*sin(x)*cos(x)
-    assert SubstForTrig(s*t, sin, cos, v, x) == sin(x)**2/cos(x)
+    assert SubstForTrig(cos(a/2 + b*x/2), x/sqrt(x**2 + 1), 1/sqrt(x**2 + 1), a/2 + b*x/2, x) == 1/sqrt(x**2 + 1)
+    assert SubstForTrig(s, sin, cos, v, x) == sin
+    assert SubstForTrig(t, sin(v), cos(v), v, x) == sin(log(x))/cos(log(x))
+    assert SubstForTrig(sin(2*v), sin(x), cos(x), v, x) == 2*sin(x)*cos(x)
+    assert SubstForTrig(s*t, sin(x), cos(x), v, x) == sin(x)**2/cos(x)
 
 def test_SubstForHyperbolic():
     v = log(x)
     s, c, t = sinh(v), cosh(v), tanh(v)
-    assert SubstForHyperbolic(s, sinh, cosh, v, x) == sinh(x)
-    assert SubstForHyperbolic(t, sinh, cosh, v, x) == sinh(x)/cosh(x)
-    assert SubstForHyperbolic(sinh(2*v), sinh, cosh, v, x) == 2*sinh(x)*cosh(x)
-    assert SubstForHyperbolic(s*t, sinh, cosh, v, x) == sinh(x)**2/cosh(x)
+    assert SubstForHyperbolic(s, sinh(x), cosh(x), v, x) == sinh(x)
+    assert SubstForHyperbolic(t, sinh(x), cosh(x), v, x) == sinh(x)/cosh(x)
+    assert SubstForHyperbolic(sinh(2*v), sinh(x), cosh(x), v, x) == 2*sinh(x)*cosh(x)
+    assert SubstForHyperbolic(s*t, sinh(x), cosh(x), v, x) == sinh(x)**2/cosh(x)
 
 def test_SubstForFractionalPowerOfLinear():
     u = a + b*x
@@ -1418,6 +1419,8 @@ def test_TrigReduce():
     assert TrigReduce(cos(x)**2+sin(x)) == sin(x) + cos(2*x)/2 + 1/2
     assert TrigReduce(cos(x)**2*sin(x)**5) == 5*sin(x)/64 + sin(3*x)/64 - 3*sin(5*x)/64 + sin(7*x)/64
     assert TrigReduce(2*sin(x)*cos(x) + 2*cos(x)**2) == sin(2*x) + cos(2*x) + 1
+    assert TrigReduce(sinh(a + b*x)**2) == cosh(2*a + 2*b*x)/2 - 1/2
+    assert TrigReduce(sinh(a + b*x)*cosh(a + b*x)) == sinh(2*a + 2*b*x)/2
 
 def test_FunctionOfDensePolynomialsQ():
     assert FunctionOfDensePolynomialsQ(x**2 + 3, x)
@@ -1547,6 +1550,7 @@ def test_FunctionOfTrig():
     assert FunctionOfTrig(sin(x + 1), x + 1, x) == x + 1
     assert FunctionOfTrig(sin(x), x) == x
     assert not FunctionOfTrig(cos(x**2 + 1), x)
+    assert FunctionOfTrig(sin(a+b*x)**3, x) == a+b*x
 
 def test_AlgebraicTrigFunctionQ():
     assert AlgebraicTrigFunctionQ(sin(x + 3), x)
@@ -1869,3 +1873,10 @@ def test_CoprimeQ():
 
 def test_Sum_doit():
     assert Sum_doit(2*x + 2, [x, 0, 1.7]) == 6
+
+def test_DeactivateTrig():
+    assert DeactivateTrig(sec(a + b*x), x) == sec(a + b*x)
+
+def test_process_trig():
+    assert process_trig(x*cot(x)) == x/tan(x)
+    assert process_trig(coth(x)*csc(x)) == S(1)/(tanh(x)*sin(x))

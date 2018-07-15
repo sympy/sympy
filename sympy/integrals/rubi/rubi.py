@@ -15,7 +15,8 @@ if matchpy:
         tanh, coth, sech, csch, atan, acsc, asin, acot, acos, asec, fresnels,
         fresnelc, erfc, erfi, Ei, uppergamma, polylog, zeta, factorial, polygamma, digamma, li,
         expint, LambertW, loggamma)
-    from sympy.integrals.rubi.utility_function import Gamma, exp, log, ProductLog, PolyGamma, rubi_unevaluated_expr
+    from sympy.integrals.rubi.utility_function import (Gamma, exp, log, ProductLog, PolyGamma,
+    rubi_unevaluated_expr, process_trig)
 
     Operation.register(Integral)
     register_operation_iterator(Integral, lambda a: (a._args[0],) + a._args[1], lambda a: len((a._args[0],) + a._args[1]))
@@ -247,15 +248,6 @@ def process_final_integral(expr):
         expr = expr.replace(Integrate, Integral)
     if expr.has(_E):
         expr = expr.replace(_E, E)
-    return expr
-
-def process_trig(expr):
-    expr = expr.replace(lambda x: isinstance(x, cot), lambda x: 1/tan(x.args[0]))
-    expr = expr.replace(lambda x: isinstance(x, sec), lambda x: 1/cos(x.args[0]))
-    expr = expr.replace(lambda x: isinstance(x, csc), lambda x: 1/sin(x.args[0]))
-    expr = expr.replace(lambda x: isinstance(x, coth), lambda x: 1/tanh(x.args[0]))
-    expr = expr.replace(lambda x: isinstance(x, sech), lambda x: 1/cosh(x.args[0]))
-    expr = expr.replace(lambda x: isinstance(x, csch), lambda x: 1/sinh(x.args[0]))
     return expr
 
 def rubi_powsimp(expr):

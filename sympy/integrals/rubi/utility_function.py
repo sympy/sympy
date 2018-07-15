@@ -21,8 +21,7 @@ from sympy.core.exprtools import factor_terms
 from sympy import (Basic, E, polylog, N, Wild, WildFunction, factor, gcd, Sum, S, I, Mul, Integer, Float, Dict, Symbol, Rational,
     Add, hyper, symbols, sqf_list, sqf, Max, factorint, factorrat, Min, sign, E, Function, collect, FiniteSet, nsimplify,
     expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr, PolynomialError, Dummy, exp as sym_exp,
-    powdenest, PolynomialDivisionFailed, discriminant, UnificationFailed)
-from mpmath import appellf1
+    powdenest, PolynomialDivisionFailed, discriminant, UnificationFailed, appellf1)
 from sympy.functions.special.hyper import TupleArg
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
 from sympy.utilities.iterables import flatten
@@ -594,10 +593,7 @@ def IntegerPart(a):
     return floor(a)
 
 def AppellF1(a, b1, b2, c, x, y):
-    try:
-        return appellf1(a, b1, b2, c, x, y)
-    except TypeError:
-        return Function('AppellF1')(a, b1, b2, c, x, y)
+    return appellf1(a, b1, b2, c, x, y)
 
 def EllipticPi(*args):
     return elliptic_pi(*args)
@@ -4227,12 +4223,12 @@ def KnownTrigIntegrandQ(lst, u, x):
     if u == 1:
         return True
     a_ = Wild('a', exclude=[x])
-    b_ = Wild('b', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
     func_ = WildFunction('func')
     m_ = Wild('m', exclude=[x])
     A_ = Wild('A', exclude=[x])
-    B_ = Wild('B', exclude=[x])
-    C_ = Wild('C', exclude=[x])
+    B_ = Wild('B', exclude=[x, 0])
+    C_ = Wild('C', exclude=[x, 0])
 
     match = u.match((a_ + b_*func_)**m_)
     if match:
@@ -5599,6 +5595,8 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
     #_diff=True differentiates the expressions before equating
     #_numerical=True equates the expressions at random `x`. Normally used for large expressions.
     from sympy import nsimplify
+    if not expr.has(csc, sec, cot, csch, sech, coth):
+        optimal_output = process_trig(optimal_output)
     if expr == optimal_output:
         return True
     if simplify(expr) == simplify(optimal_output):
@@ -5612,19 +5610,6 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         if simplify(expr) == simplify(powsimp(optimal_output, force=True)):
             return True
     res = expr - optimal_output
-    # if res.has(hyper):
-    #     if _hyper_check:
-    #         dres = res.diff(x)
-    #         args = dres.free_symbols
-    #         for i in range(1, 6):
-    #             sub = dict((s, i) for s in args)
-    #             if not abs(dres.subs(sub).n()) < S(10)**(-100):
-    #                 return False
-    #         return True
-    #     else:
-    #         return True
-    #     return False
-
     if _numerical:
         args = res.free_symbols
         rand_val = []
@@ -5672,6 +5657,7 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         e = res.expand()
         if Simplify(e) == 0 or (not e.has(x)):
             return True
+
 
     return False
 
@@ -6852,6 +6838,15 @@ def Discriminant(a, b):
         return discriminant(a, b)
     except PolynomialError:
         return Function('Discriminant')(a, b)
+
+def process_trig(expr):
+    expr = expr.replace(lambda x: isinstance(x, cot), lambda x: 1/tan(x.args[0]))
+    expr = expr.replace(lambda x: isinstance(x, sec), lambda x: 1/cos(x.args[0]))
+    expr = expr.replace(lambda x: isinstance(x, csc), lambda x: 1/sin(x.args[0]))
+    expr = expr.replace(lambda x: isinstance(x, coth), lambda x: 1/tanh(x.args[0]))
+    expr = expr.replace(lambda x: isinstance(x, sech), lambda x: 1/cosh(x.args[0]))
+    expr = expr.replace(lambda x: isinstance(x, csch), lambda x: 1/sinh(x.args[0]))
+    return expr
 
 def _ExpandIntegrand():
     Plus = Add

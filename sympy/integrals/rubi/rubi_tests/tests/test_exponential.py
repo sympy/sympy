@@ -23,7 +23,7 @@ a, b, c, d, e, f, m, n, x, u , k, p, r, s, t= symbols('a b c d e f m n x u k p r
 A, B, C, D, a, b, c, d, e, f, g, h, i, y, z, m, n, p, q, u, v, w, E, F, G, H = symbols('A B C D a b c d e f g h i y z m n p q u v w E F G H')
 
 
-def test_0():
+def test_1():
     assert rubi_test(rubi_integrate(F**(c*(a + b*x))*(d + e*x)**m, x), x, F**(c*(a - b*d/e))*(-b*c*(d + e*x)*log(F)/e)**(-m)*(d + e*x)**m*Gamma(m + S(1), -b*c*(d + e*x)*log(F)/e)/(b*c*log(F)), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(F**(c*(a + b*x))*(d + e*x)**S(4), x), x, F**(c*(a + b*x))*(d + e*x)**S(4)/(b*c*log(F)) - S(4)*F**(c*(a + b*x))*e*(d + e*x)**S(3)/(b**S(2)*c**S(2)*log(F)**S(2)) + S(12)*F**(c*(a + b*x))*e**S(2)*(d + e*x)**S(2)/(b**S(3)*c**S(3)*log(F)**S(3)) - S(24)*F**(c*(a + b*x))*e**S(3)*(d + e*x)/(b**S(4)*c**S(4)*log(F)**S(4)) + S(24)*F**(c*(a + b*x))*e**S(4)/(b**S(5)*c**S(5)*log(F)**S(5)), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(F**(c*(a + b*x))*(d + e*x)**S(3), x), x, F**(c*(a + b*x))*(d + e*x)**S(3)/(b*c*log(F)) - S(3)*F**(c*(a + b*x))*e*(d + e*x)**S(2)/(b**S(2)*c**S(2)*log(F)**S(2)) + S(6)*F**(c*(a + b*x))*e**S(2)*(d + e*x)/(b**S(3)*c**S(3)*log(F)**S(3)) - S(6)*F**(c*(a + b*x))*e**S(3)/(b**S(4)*c**S(4)*log(F)**S(4)), expand=True, _diff=True, _numerical=True)
@@ -706,7 +706,6 @@ def test_3():
     assert rubi_test(rubi_integrate(exp(x)/(exp(S(2)*x) + S(1)), x), x, atan(exp(x)), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(exp(x)/(-exp(S(2)*x) + S(1)), x), x, atanh(exp(x)), expand=True, _diff=True, _numerical=True)
 
-    ''' depends on trigo rules
     assert rubi_test(rubi_integrate(x*exp(x)/(-exp(S(2)*x) + S(1)), x), x, x*atanh(exp(x)) + polylog(S(2), -exp(x))/S(2) - polylog(S(2), exp(x))/S(2), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(x**S(2)*exp(x)/(-exp(S(2)*x) + S(1)), x), x, x**S(2)*atanh(exp(x)) + x*polylog(S(2), -exp(x)) - x*polylog(S(2), exp(x)) - polylog(S(3), -exp(x)) + polylog(S(3), exp(x)), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(x**S(3)*exp(x)/(-exp(S(2)*x) + S(1)), x), x, x**S(3)*atanh(exp(x)) + S(3)*x**S(2)*polylog(S(2), -exp(x))/S(2) - S(3)*x**S(2)*polylog(S(2), exp(x))/S(2) - S(3)*x*polylog(S(3), -exp(x)) + S(3)*x*polylog(S(3), exp(x)) + S(3)*polylog(S(4), -exp(x)) - S(3)*polylog(S(4), exp(x)), expand=True, _diff=True, _numerical=True)
@@ -723,7 +722,7 @@ def test_3():
     assert rubi_test(rubi_integrate(x/(a*f**x + b*f**(-x)), x), x, x*atan(sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)) - I*polylog(S(2), -I*sqrt(a)*f**x/sqrt(b))/(S(2)*sqrt(a)*sqrt(b)*log(f)**S(2)) + I*polylog(S(2), I*sqrt(a)*f**x/sqrt(b))/(S(2)*sqrt(a)*sqrt(b)*log(f)**S(2)), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(x**S(2)/(a*f**x + b*f**(-x)), x), x, x**S(2)*atan(sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)) - I*x*polylog(S(2), -I*sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)**S(2)) + I*x*polylog(S(2), I*sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)**S(2)) + I*polylog(S(3), -I*sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)**S(3)) - I*polylog(S(3), I*sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)**S(3)), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(x**S(3)/(a*f**x + b*f**(-x)), x), x, x**S(3)*atan(sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)) - S(3)*I*x**S(2)*polylog(S(2), -I*sqrt(a)*f**x/sqrt(b))/(S(2)*sqrt(a)*sqrt(b)*log(f)**S(2)) + S(3)*I*x**S(2)*polylog(S(2), I*sqrt(a)*f**x/sqrt(b))/(S(2)*sqrt(a)*sqrt(b)*log(f)**S(2)) + S(3)*I*x*polylog(S(3), -I*sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)**S(3)) - S(3)*I*x*polylog(S(3), I*sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)**S(3)) - S(3)*I*polylog(S(4), -I*sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)**S(4)) + S(3)*I*polylog(S(4), I*sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)**S(4)), expand=True, _diff=True, _numerical=True)
-    '''
+
     assert rubi_test(rubi_integrate(f**x/(a + b*f**(S(2)*x))**S(3), x), x, f**x/(S(4)*a*(a + b*f**(S(2)*x))**S(2)*log(f)) + S(3)*f**x/(S(8)*a**S(2)*(a + b*f**(S(2)*x))*log(f)) + S(3)*atan(sqrt(b)*f**x/sqrt(a))/(S(8)*a**(S(5)/2)*sqrt(b)*log(f)), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(S(1)/(a*f**x + b*f**(-x)), x), x, atan(sqrt(a)*f**x/sqrt(b))/(sqrt(a)*sqrt(b)*log(f)), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate((a*f**x + b*f**(-x))**(S(-2)), x), x, -S(1)/(S(2)*a*(a*f**(S(2)*x) + b)*log(f)), expand=True, _diff=True, _numerical=True)
@@ -811,12 +810,10 @@ def test_3():
     assert rubi_test(rubi_integrate(exp(S(2)*x)/(exp(x) + S(1)), x), x, exp(x) - log(exp(x) + S(1)), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(exp(S(3)*x)*cos(S(5)*x), x), x, S(5)*exp(S(3)*x)*sin(S(5)*x)/S(34) + S(3)*exp(S(3)*x)*cos(S(5)*x)/S(34), expand=True, _diff=True, _numerical=True)
 
-    # depends on trigo assert rubi_test(rubi_integrate(exp(x)*sech(exp(x)), x), x, atan(sinh(exp(x))), expand=True, _diff=True, _numerical=True)
+    assert rubi_test(rubi_integrate(exp(x)*sech(exp(x)), x), x, atan(sinh(exp(x))), expand=True, _diff=True, _numerical=True)
 
     assert rubi_test(rubi_integrate(exp(-x)/(S(2)*exp(x) + S(1)), x), x, -S(2)*x + S(2)*log(S(2)*exp(x) + S(1)) - exp(-x), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(exp(x)*cos(S(3)*x + S(4)), x), x, S(3)*exp(x)*sin(S(3)*x + S(4))/S(10) + exp(x)*cos(S(3)*x + S(4))/S(10), expand=True, _diff=True, _numerical=True)
-
-    # depends on trigo assert rubi_test(rubi_integrate(exp(x)*sec(exp(x) + S(-1))**S(3), x), x, tan(exp(x) + S(-1))*sec(exp(x) + S(-1))/S(2) + atanh(sin(exp(x) + S(-1)))/S(2), expand=True, _diff=True, _numerical=True)
 
     assert rubi_test(rubi_integrate(x*(exp(x) + exp(-x)), x), x, x*exp(x) - x*exp(-x) - exp(x) - exp(-x), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(exp(x)/(exp(S(2)*x) + S(3)*exp(x) + S(2)), x), x, -S(2)*atanh(S(2)*exp(x) + S(3)), expand=True, _diff=True, _numerical=True)
