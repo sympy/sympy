@@ -1404,6 +1404,52 @@ def integrate(*args, **kwargs):
     else:
         return integral
 
+def cauchy_principal_value(func, sym):
+    """
+    Compute the Cauchy Principle Value of the definite integral of a real function on the entire real axis.
+    In mathematics, the Cauchy principal value, is a method for assigning values to certain improper
+    integrals which would otherwise be undefined.
+    Cauchy Principle Value is  defined as:
+          +oo               +r
+          /                  /
+         /                  /
+         |                  |
+         |                  |
+    p.v. | f(x)dx  = lim    | f(x)dx
+         |          r -> oo |
+         |                  |
+         /                  /
+        /                  /
+     -oo               -r
+
+    Examples
+    ========
+
+    >>> from sympy import Dummy, symbols, integrate, limit
+    >>> from sympy.integrals.integrals import cauchy_principal_value
+    >>> x = symbols('x', real = True)
+    >>> f = x
+    >>> cauchy_principal_value(f,x)
+    >>> 0
+    >>> g = x + 1
+    >>> cauchy_principal_value(g,x)
+    >>> oo
+
+    See also
+    ========
+
+    [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
+    [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
+    """
+
+    r = Dummy('r')
+    if (sym.is_real == False) or (func.is_real == False):
+        raise ValueError("The function should be real valued for calculation of Cauchy Principle Value")
+    else:
+        I = integrate(func, (sym, -r, r))
+        principle_value = limit(I, r, oo)
+        return principle_value
+
 
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)
