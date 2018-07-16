@@ -1430,7 +1430,7 @@ def cauchy_principal_value(func, sym):
     >>> x = symbols('x', real = True)
     >>> g = x + 1
     >>> cauchy_principal_value(g,x)
-    >>> oo
+    oo
 
     See also
     ========
