@@ -1,11 +1,12 @@
 from __future__ import print_function, division
 
-from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
-from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta, hyper, binomial,
-                   Piecewise, floor)
-from sympy.stats.rv import _value_check
+from sympy.stats.drv import (SingleDiscreteDistribution, SingleDiscretePSpace,
+                DiscreteDistributionHandmade)
+from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log,
+                beta, hyper, binomial, Piecewise, floor, Lambda)
+from sympy.stats.rv import _value_check, RandomSymbol
+from sympy.stats.joint_rv import MarginalDistribution
 from sympy.stats import density
-from sympy.sets.sets import Interval
 import random
 
 __all__ = ['Geometric', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'YuleSimon', 'Zeta']
@@ -15,7 +16,13 @@ def rv(symbol, cls, *args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
-    return SingleDiscretePSpace(symbol, dist).value
+    pspace = SingleDiscretePSpace(symbol, dist)
+    latent_dist = [arg for arg in args if isinstance(arg, RandomSymbol)]
+    _pdf = pspace.pdf
+    if latent_dist != []:
+        dist = MarginalDistribution(symbol, _pdf, tuple(latent_dist))
+        return SingleDiscretePSpace(symbol, dist).value
+    return pspace.value
 
 
 #-------------------------------------------------------------------------------

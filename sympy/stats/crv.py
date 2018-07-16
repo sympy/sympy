@@ -11,7 +11,8 @@ sympy.stats.frv
 from __future__ import print_function, division
 
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
+        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin,
+        ProbabilityDistribution)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
@@ -138,12 +139,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 "Set of Conditional Domain not Implemented")
 
 
-class ContinuousDistribution(Basic):
-    def __call__(self, *args):
-        return self.pdf(*args)
-
-
-class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
+class SingleContinuousDistribution(ProbabilityDistribution, NamedArgsMixin):
     """ Continuous distribution of a single variable
 
     Serves as superclass for Normal/Exponential/UniformDistribution etc....
@@ -245,6 +241,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         integral = Integral(expr * self.pdf(var), (var, self.set))
         return integral.doit(**kwargs) if evaluate else integral
 
+
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
 
@@ -254,7 +251,6 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
 
     def __new__(cls, pdf, set=Interval(-oo, oo)):
         return Basic.__new__(cls, pdf, set)
-
 
 class ContinuousPSpace(PSpace):
     """ Continuous Probability Space
@@ -350,7 +346,7 @@ class ContinuousPSpace(PSpace):
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
             dens = density(expr, **kwargs)
-            if not isinstance(dens, ContinuousDistribution):
+            if not isinstance(dens, ProbabilityDistribution):
                 dens = ContinuousDistributionHandmade(dens)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)

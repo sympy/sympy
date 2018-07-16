@@ -16,7 +16,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta, Mul, Indexed)
+        DiracDelta, Mul, Indexed, integrate)
 from sympy.core.relational import Relational
 from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
@@ -120,6 +120,10 @@ class ConditionalDomain(RandomDomain):
     def as_boolean(self):
         return And(self.fulldomain.as_boolean(), self.condition)
 
+
+class ProbabilityDistribution(Basic):
+    def __call__(self, *args):
+        return self.pdf(*args)
 
 class PSpace(Basic):
     """
@@ -517,6 +521,8 @@ def pspace(expr):
     True
     """
     expr = sympify(expr)
+    if isinstance(expr, RandomSymbol) and expr.pspace != None:
+        return expr.pspace
     rvs = random_symbols(expr)
     if not rvs:
         raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
@@ -1203,6 +1209,9 @@ def pspace_independent(a, b):
     """
     a_symbols = set(pspace(b).symbols)
     b_symbols = set(pspace(a).symbols)
+
+    if len(set(random_symbols(a)).intersection(random_symbols(b))) != 0:
+        return False
 
     if len(a_symbols.intersection(b_symbols)) == 0:
         return True

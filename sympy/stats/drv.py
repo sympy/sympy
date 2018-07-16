@@ -1,15 +1,15 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-                   Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq, poly,
-                   Symbol, series, factorial, And, Mul)
+                   Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
+                   series, factorial, And)
 
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
-                            random_symbols, PSpace, ConditionalDomain, RandomDomain,
-                            ProductDomain, ProductPSpace)
+        random_symbols, PSpace, ConditionalDomain, RandomDomain,
+        ProductDomain, ProbabilityDistribution)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
@@ -19,12 +19,7 @@ from sympy.utilities import filldedent
 import random
 
 
-class DiscreteDistribution(Basic):
-    def __call__(self, *args):
-        return self.pdf(*args)
-
-
-class SingleDiscreteDistribution(Basic, NamedArgsMixin):
+class SingleDiscreteDistribution(ProbabilityDistribution, NamedArgsMixin):
     """ Discrete distribution of a single variable
 
     Serves as superclass for PoissonDistribution etc....
@@ -152,9 +147,6 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
             return Sum(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
 
-    def __call__(self, *args):
-        return self.pdf(*args)
-
 
 class DiscreteDistributionHandmade(SingleDiscreteDistribution):
     _argnames = ('pdf',)
@@ -228,7 +220,7 @@ class DiscretePSpace(PSpace):
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
             dens = density(expr)
-            if not isinstance(dens, DiscreteDistribution):
+            if not isinstance(dens, ProbabilityDistribution):
                 dens = DiscreteDistributionHandmade(dens)
             z = Dummy('z', real = True)
             space = SingleDiscretePSpace(z, dens)

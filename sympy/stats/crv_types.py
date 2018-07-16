@@ -54,9 +54,10 @@ from sympy import beta as beta_fn
 from sympy import cos, sin, exp, besseli, besselj
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
-from sympy.stats.rv import _value_check
+from sympy.stats.rv import _value_check, RandomSymbol, pspace
 from sympy.matrices import MatrixBase
 from sympy.stats.joint_rv_types import multivariate_rv
+from sympy.stats.joint_rv import MarginalDistribution
 from sympy.external import import_module
 import random
 
@@ -143,7 +144,13 @@ def rv(symbol, cls, args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
-    return SingleContinuousPSpace(symbol, dist).value
+    pspace = SingleContinuousPSpace(symbol, dist)
+    latent_dist = [arg for arg in args if isinstance(arg, RandomSymbol)]
+    _pdf = pspace.pdf
+    if latent_dist != []:
+        dist = MarginalDistribution(symbol, _pdf, (pspace.value,))
+        return SingleContinuousPSpace(symbol, dist).value
+    return pspace.value
 
 ########################################
 # Continuous Probability Distributions #
@@ -235,7 +242,6 @@ class BeniniDistribution(SingleContinuousDistribution):
         return (exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2)
                *(alpha/x + 2*beta*log(x/sigma)/x))
 
-
 def Benini(name, alpha, beta, sigma):
     r"""
     Create a Continuous Random Variable with a Benini distribution.
@@ -309,6 +315,7 @@ class BetaDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1) * (1 - x)**(beta - 1) / beta_fn(alpha, beta)
+
 
     def sample(self):
         return random.betavariate(self.alpha, self.beta)
@@ -386,7 +393,6 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
 
-
 def BetaPrime(name, alpha, beta):
     r"""
     Create a continuous random variable with a Beta prime distribution.
@@ -446,7 +452,6 @@ class CauchyDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
-
 
 def Cauchy(name, x0, gamma):
     r"""
@@ -569,7 +574,6 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         k, l = self.k, self.l
         return exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
-
 
 def ChiNoncentral(name, k, l):
     r"""
@@ -1840,7 +1844,6 @@ class NakagamiDistribution(SingleContinuousDistribution):
                     (lowergamma(mu, (mu/omega)*x**2)/gamma(mu), x > 0),
                     (S.Zero, True))
 
-
 def Nakagami(name, mu, omega):
     r"""
     Create a continuous random variable with a Nakagami distribution.
@@ -1948,7 +1951,7 @@ def Normal(name, mean, std):
 
     mu : Real number or a list representing the mean or the mean vector
     sigma : Real number or a positive definite sqaure matrix,
-         :math:`\sigma^2 > 0` the variance
+         :math:`\sigma^2 > 0` the std deviation
 
     Returns
     =======
@@ -2338,7 +2341,6 @@ class ShiftedGompertzDistribution(SingleContinuousDistribution):
         b, eta = self.b, self.eta
         return b*exp(-b*x)*exp(-eta*exp(-b*x))*(1+eta*(1-exp(-b*x)))
 
-
 def ShiftedGompertz(name, b, eta):
     r"""
     Create a continuous random variable with a Shifted Gompertz distribution.
@@ -2475,7 +2477,6 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
             (2*(d-x) / ((d-c)*(d+c-a-b)), And(c <= x, x <= d)),
             (S.Zero, True))
 
-
 def Trapezoidal(name, a, b, c, d):
     r"""
     Create a continuous random variable with a trapezoidal distribution.
@@ -2554,7 +2555,6 @@ class TriangularDistribution(SingleContinuousDistribution):
             (2/(b - a), Eq(x, c)),
             (2*(b - x)/((b - a)*(b - c)), And(c < x, x <= b)),
             (S.Zero, True))
-
 
 def Triangular(name, a, b, c):
     r"""
@@ -2827,7 +2827,6 @@ class VonMisesDistribution(SingleContinuousDistribution):
         mu, k = self.mu, self.k
         return exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
 
-
 def VonMises(name, mu, k):
     r"""
     Create a Continuous Random Variable with a von Mises distribution.
@@ -3021,3 +3020,13 @@ def WignerSemicircle(name, R):
     """
 
     return rv(name, WignerSemicircleDistribution, (R,))
+
+
+def find_dist(cls, args):
+    def distribution(rv):
+        return pspace(rv).distribution
+    if cls == NormalDistribution:
+        if isinstance(args[0], RandomSymbol) and \
+            isinstance(distribution(args[0]), NormalDistribution):
+            mu, sigma = distribution(args[0]).args
+            return NormalDistribution, (mu, sqrt(sigma**2 + args[1]**2))
