@@ -11,7 +11,7 @@ import collections
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import Add, Function, Mul, Pow, Rational, Tuple, sympify
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, ordered
 from sympy.physics.units.dimensions import Dimension, dimsys_default
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.prefixes import Prefix
@@ -133,32 +133,46 @@ def convert_to(expr, target_units):
 
 
 def quantity_simplify(expr):
-    if expr.is_Atom or not expr.has(Quantity):
+    """Return an equivalent expression in which prefixes are replaced
+    with numerical values and products of related quantities are
+    unified in a canonical manner.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.units.util import quantity_simplify
+    >>> from sympy.physics.units.prefixes import kilo
+    >>> from sympy.physics.units import foot, inch
+    >>> quantity_simplify(kilo*foot*inch)
+    250*foot**2/3
+    """
+
+    if expr.is_Atom:
         return expr
+
+    if isinstance(expr, Prefix):
+        return expr.scale_factor
+
     expr = expr.func(*map(quantity_simplify, expr.args))
-    if not isinstance(expr, Mul):
+
+    if not expr.is_Mul or not expr.has(Quantity):
         return expr
 
-    if any(isinstance(a, Prefix) for a in expr.args):
-        coeff, args = expr.as_coeff_mul(Prefix)
-        args = list(args)
-        for arg in args:
-            if isinstance(arg, Pow):
-                coeff = coeff * (arg.base.scale_factor ** arg.exp)
-            else:
-                coeff = coeff * arg.scale_factor
-        expr = coeff
-
-    coeff, args = expr.as_coeff_mul(Quantity)
-    args_pow = [arg.as_base_exp() for arg in args]
-    quantity_pow, other_pow = sift(args_pow, lambda x: isinstance(x[0], Quantity), binary=True)
-    coeff *= Mul.fromiter([Pow(b, e, evaluate=False) for b, e in other_pow])
+    args_pow = [arg.as_base_exp() for arg in expr.args]
+    quantity_pow, other_pow = sift(
+        args_pow, lambda x: isinstance(x[0], Quantity), binary=True)
+    coeff = Mul.fromiter([
+        Pow(b, e, evaluate=False) for b, e in other_pow])
     quantity_pow_by_dim = sift(quantity_pow, lambda x: x[0].dimension)
-    # Just pick the first quantity:
-    ref_quantities = [i[0][0] for i in quantity_pow_by_dim.values()]
-    new_quantities = [
-        Mul.fromiter(
-            (quantity*i.scale_factor/quantity.scale_factor)**p for i, p in v)
-            if len(v) > 1 else v[0][0]**v[0][1]
-        for quantity, (k, v) in zip(ref_quantities, quantity_pow_by_dim.items())]
+    new_quantities = []
+    for _, bp in quantity_pow_by_dim.items():
+        if len(bp) == 1:
+            new_quantities.append(bp[0][0]**bp[0][1])
+        else:
+            # just let reference quantity be the first quantity,
+            # picked from an ordered list
+            bp = list(ordered(bp))
+            ref = bp[0][0]/bp[0][0].scale_factor
+            new_quantities.append(Mul.fromiter((
+                (ref*b.scale_factor)**p for b, p in bp)))
     return coeff*Mul.fromiter(new_quantities)
