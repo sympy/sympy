@@ -1425,12 +1425,9 @@ def cauchy_principal_value(func, sym):
     Examples
     ========
 
-    >>> from sympy import Dummy, symbols, integrate, limit
+    >>> from sympy import Dummy, symbols, integrate, limit, oo
     >>> from sympy.integrals.integrals import cauchy_principal_value
     >>> x = symbols('x', real = True)
-    >>> f = x
-    >>> cauchy_principal_value(f,x)
-    >>> 0
     >>> g = x + 1
     >>> cauchy_principal_value(g,x)
     >>> oo
