@@ -13,11 +13,11 @@ from __future__ import print_function, division
 
 # __all__ = ['marginal_distribution']
 
-from sympy import Basic, Lambda, sympify, Indexed, Symbol
+from sympy import Basic, Lambda, sympify, Indexed, Symbol, S, ProductSet
 from sympy.concrete.summations import Sum, summation
 from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-     ProductDomain, RandomSymbol)
+     ProductDomain, RandomSymbol, pspace, random_symbols)
 from sympy.core.containers import Tuple
 
 class JointPSpace(ProductPSpace):
@@ -49,8 +49,10 @@ class JointPSpace(ProductPSpace):
     def component_count(self):
         return len(self.distribution.set.args)
 
+    @property
     def pdf(self, *args):
-        return self.distribution(*args)
+        sym = [Indexed(self.symbol, i) for i in range(self.component_count)]
+        return self.distribution(*sym)
 
     def marginal_distribution(self, *indices):
         count = self.component_count
@@ -163,3 +165,45 @@ def marginal_distribution(rv, *indices):
     if hasattr(prob_space.distribution, 'marginal_distribution'):
         return prob_space.distribution.marginal_distribution(indices, rv.symbol)
     return prob_space.marginal_distribution(*indices)
+
+class MarginalDistribution(Basic):
+
+    def __new__(cls, symbol, pdf, rvs=None):
+        symbol = sympify(symbol)
+        return Basic.__new__(cls, symbol, pdf, rvs)
+
+    def check(self):
+        pass
+
+    def set(self):
+        rvs = (i for i in random_symbols(self.args[1]))
+        return ProductSet((i.pspace.set for i in rvs))
+
+    def pdf(self, x):
+        expr = self.args[1]
+        rvs = [i for i in random_symbols(expr) if i not in self.args[2]]
+        return Lambda(self.args[0], self.compute_pdf(expr, rvs))(x)
+
+    def compute_pdf(self, expr, rvs):
+        from sympy.stats.rv import density
+        for rv in rvs:
+            lpdf = density(rv)(rv)
+            expr = self.marginalise_out(expr*lpdf, rv)
+        return expr
+
+    def marginalise_out(self, expr, rv):
+        from sympy.concrete.summations import summation
+        dom = rv.pspace.set
+        if rv.pspace.is_Continuous:
+            #TODO: Modify to support integration
+            #for all kinds of sets.
+            expr = integrate(expr, (rv, dom))
+        elif rv.pspace.is_Discrete:
+            #incorporate this into `Sum`/`summation`
+            if dom in (S.Integers, S.Naturals, S.Naturals0):
+                dom = (dom.inf, dom.sup)
+            expr = summation(expr, (rv, dom))
+        return expr
+
+    def __call__(self, args):
+        return self.pdf(args)

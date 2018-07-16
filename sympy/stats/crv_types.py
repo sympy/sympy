@@ -57,6 +57,7 @@ from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistributio
 from sympy.stats.rv import _value_check, RandomSymbol, pspace
 from sympy.matrices import MatrixBase
 from sympy.stats.joint_rv_types import multivariate_rv
+from sympy.stats.joint_rv import MarginalDistribution
 from sympy.external import import_module
 import random
 
@@ -143,16 +144,13 @@ def rv(symbol, cls, args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
-    if any([isinstance(arg, RandomSymbol) for arg in args]):
-        symbol = sympify(symbol)
-        new_dist = find_dist(cls, args)
-        if  new_dist != None:
-            return rv(symbol, new_dist[0], new_dist[1])
-        _pdf = dist.pdf(symbol)
-        _pdf, _set = dist.handle_compound_dist(_pdf), dist.set
-        dist = ContinuousDistributionHandmade(Lambda(symbol, _pdf), _set)
+    pspace = SingleContinuousPSpace(symbol, dist)
+    latent_dist = [arg for arg in args if isinstance(arg, RandomSymbol)]
+    _pdf = pspace.pdf
+    if latent_dist != []:
+        dist = MarginalDistribution(symbol, _pdf, (pspace.value,))
         return SingleContinuousPSpace(symbol, dist).value
-    return SingleContinuousPSpace(symbol, dist).value
+    return pspace.value
 
 ########################################
 # Continuous Probability Distributions #

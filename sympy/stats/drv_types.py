@@ -5,6 +5,7 @@ from sympy.stats.drv import (SingleDiscreteDistribution, SingleDiscretePSpace,
 from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log,
                 beta, hyper, binomial, Piecewise, floor, Lambda)
 from sympy.stats.rv import _value_check, RandomSymbol
+from sympy.stats.joint_rv import MarginalDistribution
 from sympy.stats import density
 import random
 
@@ -15,13 +16,13 @@ def rv(symbol, cls, *args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
-    if any([isinstance(arg, RandomSymbol) for arg in args]):
-        symbol = sympify(symbol)
-        _pdf = dist.pdf(symbol)
-        _pdf, _set = dist.handle_compound_dist(_pdf), dist.set
-        dist = DiscreteDistributionHandmade(Lambda(symbol, _pdf), _set)
+    pspace = SingleDiscretePSpace(symbol, dist)
+    latent_dist = [arg for arg in args if isinstance(arg, RandomSymbol)]
+    _pdf = pspace.pdf
+    if latent_dist != []:
+        dist = MarginalDistribution(symbol, _pdf, tuple(latent_dist))
         return SingleDiscretePSpace(symbol, dist).value
-    return SingleDiscretePSpace(symbol, dist).value
+    return pspace.value
 
 
 #-------------------------------------------------------------------------------

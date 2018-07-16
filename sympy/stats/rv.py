@@ -125,25 +125,6 @@ class ProbabilityDistribution(Basic):
     def __call__(self, *args):
         return self.pdf(*args)
 
-    def handle_compound_dist(self, expr):
-        from sympy.stats.rv import density
-        from sympy.concrete.summations import summation
-        for arg in self.args:
-            if isinstance(arg, RandomSymbol):
-                sym, dom = arg.symbol, arg.pspace.set
-                lpdf = density(arg)(sym)
-                expr = expr.replace(arg, sym)*lpdf
-                if arg.pspace.is_Continuous:
-                    #TODO: Modify to support integration
-                    #for all kinds of sets.
-                    expr = integrate(expr, (sym, dom))
-                elif arg.pspace.is_Discrete:
-                    if dom in (S.Integers, S.Naturals, S.Naturals0):
-                        dom = (dom.inf, dom.sup)
-                    expr = summation(expr, (sym, dom))
-        return expr
-
-
 class PSpace(Basic):
     """
     A Probability Space
@@ -540,6 +521,8 @@ def pspace(expr):
     True
     """
     expr = sympify(expr)
+    if isinstance(expr, RandomSymbol) and expr.pspace != None:
+        return expr.pspace
     rvs = random_symbols(expr)
     if not rvs:
         raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
@@ -1226,6 +1209,9 @@ def pspace_independent(a, b):
     """
     a_symbols = set(pspace(b).symbols)
     b_symbols = set(pspace(a).symbols)
+
+    if len(set(random_symbols(a)).intersection(random_symbols(b))) != 0:
+        return False
 
     if len(a_symbols.intersection(b_symbols)) == 0:
         return True
