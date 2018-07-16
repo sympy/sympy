@@ -13,10 +13,8 @@ from sympy.matrices.expressions.determinant import det
 def multivariate_rv(cls, sym, *args):
     sym = sympify(sym)
     args = list(map(sympify, args))
-    for i in range(len(args)):
-        if isinstance(args[i], list):
-            args[i] = ImmutableMatrix(args[i])
     dist = cls(*args)
+    args = dist.args
     dist.check(*args)
     return JointPSpace(sym, dist).value
 

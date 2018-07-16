@@ -18,6 +18,7 @@ from sympy.concrete.summations import Sum, summation
 from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
      ProductDomain, RandomSymbol)
+from sympy.matrices import ImmutableMatrix
 class JointPSpace(ProductPSpace):
     """
     Represents a joint probability space. Represented using symbols for
@@ -86,6 +87,9 @@ class JointDistribution(Basic, NamedArgsMixin):
 
     def __new__(cls, *args):
         args = list(map(sympify, args))
+        for i in range(len(args)):
+            if isinstance(args[i], list):
+                args[i] = ImmutableMatrix(args[i])
         return Basic.__new__(cls, *args)
 
     @property
