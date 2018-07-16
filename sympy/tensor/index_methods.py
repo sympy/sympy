@@ -27,7 +27,7 @@ class IndexConformanceException(Exception):
 def _remove_repeated(inds):
     """Removes repeated objects from sequences
 
-    Returns a set of the unique objects and a tuple of all that have been
+    Returns a tuple of the unique objects and a tuple of all that have been
     removed.
 
     >>> from sympy.tensor.index_methods import _remove_repeated
@@ -43,7 +43,7 @@ def _remove_repeated(inds):
         else:
             sum_index[i] = 0
     inds = [x for x in inds if not sum_index[x]]
-    return set(inds), tuple([ i for i in sum_index if sum_index[i] ])
+    return tuple(inds), tuple([ i for i in sum_index if sum_index[i] ])
 
 
 def _get_indices_Mul(expr, return_dummies=False):
