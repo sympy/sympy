@@ -819,8 +819,8 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
 ### Contours
 class ContourSeries(BaseSeries):
     """Representation for a contour plot."""
-    #The code is mostly repetition of SurfaceOver2DRange.
-    #Presently used in contour_plot function
+    # The code is mostly repetition of SurfaceOver2DRange.
+    # Presently used in contour_plot function
 
     is_contour = True
 
