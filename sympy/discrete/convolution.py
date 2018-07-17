@@ -356,8 +356,10 @@ def convolution_subset(a, b):
 def covering_product(a, b):
     """
     Returns the covering product of given sequences.
+
     The indices of each argument, considered as bit strings, correspond to
     subsets of a finite set.
+
     The covering product of given sequences is a sequence which contains
     sum of products of the elements of the given sequences grouped by
     bitwise OR of the corresponding indices.
