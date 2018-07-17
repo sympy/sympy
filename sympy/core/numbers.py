@@ -3623,6 +3623,73 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     _eval_rewrite_as_sqrt = _eval_expand_func
 
 
+class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
+    r"""The tribonacci constant.
+
+    The tribonacci numbers are like the Fibonacci numbers, but instead
+    of starting with two predetermined terms, the sequence starts with
+    three predetermined terms and each term afterwards is the sum of the
+    preceding three terms.
+
+    The tribonacci constant is the ratio toward which adjacent tribonacci
+    numbers tend. It is a root of the polynomial `x^3 - x^2 - x - 1 = 0`,
+    and also satisfies the equation `x + x^{-3} = 2`.
+
+    TribonacciConstant is a singleton, and can be accessed
+    by ``S.TribonacciConstant``.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.TribonacciConstant > 1
+    True
+    >>> S.TribonacciConstant.expand(func=True)
+    1/3 + (-3*sqrt(33) + 19)**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
+    >>> S.TribonacciConstant.is_irrational
+    True
+    >>> S.TribonacciConstant.n(20)
+    1.8392867552141611326
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Generalizations_of_Fibonacci_numbers#Tribonacci_numbers
+    """
+
+    is_real = True
+    is_positive = True
+    is_negative = False
+    is_irrational = True
+    is_number = True
+    is_algebraic = True
+    is_transcendental = False
+
+    __slots__ = []
+
+    def _latex(self, printer):
+        return r"\mathrm{TribonacciConstant}"
+
+    def __int__(self):
+        return 2
+
+    def _eval_evalf(self, prec):
+        rv = self._eval_expand_func(function=True)._eval_evalf(prec + 4)
+        return Float(rv, precision=prec)
+
+    def _eval_expand_func(self, **hints):
+        from sympy import sqrt, cbrt
+        return (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
+
+    def approximation_interval(self, number_cls):
+        if issubclass(number_cls, Integer):
+            return (S.One, Rational(2))
+        elif issubclass(number_cls, Rational):
+            pass
+
+    _eval_rewrite_as_sqrt = _eval_expand_func
+
+
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     r"""The Euler-Mascheroni constant.
 

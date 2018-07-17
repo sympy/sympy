@@ -1,6 +1,7 @@
 import decimal
-from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
-                   S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
+from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
+                   Integer, S, factorial, Catalan, EulerGamma, GoldenRatio,
+                   TribonacciConstant, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
                    AlgebraicNumber, simplify, sin, fibonacci, RealField,
                    sympify, srepr)
@@ -1182,6 +1183,7 @@ def test_int():
     assert int(pi) == 3
     assert int(E) == 2
     assert int(GoldenRatio) == 1
+    assert int(TribonacciConstant) == 2
     # issue 10368
     a = S(32442016954)/78058255275
     assert type(int(a)) is type(int(-a)) is int
@@ -1197,6 +1199,8 @@ def test_long():
     assert long(pi) == 3
     assert long(E) == 2
     assert long(GoldenRatio) == 1
+    assert long(TribonacciConstant) == 2
+
 
 def test_real_bug():
     x = Symbol("x")
@@ -1397,12 +1401,16 @@ def test_issue_4611():
     assert abs(Catalan._evalf(50) - 0.915965594177219) < 1e-10
     assert abs(EulerGamma._evalf(50) - 0.577215664901533) < 1e-10
     assert abs(GoldenRatio._evalf(50) - 1.61803398874989) < 1e-10
+    assert abs(TribonacciConstant._evalf(50) - 1.83928675521416) < 1e-10
+
     x = Symbol("x")
     assert (pi + x).evalf() == pi.evalf() + x
     assert (E + x).evalf() == E.evalf() + x
     assert (Catalan + x).evalf() == Catalan.evalf() + x
     assert (EulerGamma + x).evalf() == EulerGamma.evalf() + x
     assert (GoldenRatio + x).evalf() == GoldenRatio.evalf() + x
+    assert (TribonacciConstant + x).evalf() == TribonacciConstant.evalf() + x
+
 
 @conserve_mpmath_dps
 def test_conversion_to_mpmath():
@@ -1541,6 +1549,11 @@ def test_GoldenRatio_expand():
     assert GoldenRatio.expand(func=True) == S.Half + sqrt(5)/2
 
 
+def test_TribonacciConstant_expand():
+        assert TribonacciConstant.expand(func=True) == \
+          (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
+
+
 def test_as_content_primitive():
     assert S.Zero.as_content_primitive() == (1, 0)
     assert S.Half.as_content_primitive() == (S.Half, 1)
@@ -1629,6 +1642,7 @@ def test_latex():
     assert latex(pi) == r"\pi"
     assert latex(E) == r"e"
     assert latex(GoldenRatio) == r"\phi"
+    assert latex(TribonacciConstant) == r"\mathrm{TribonacciConstant}"
     assert latex(EulerGamma) == r"\gamma"
     assert latex(oo) == r"\infty"
     assert latex(-oo) == r"-\infty"
@@ -1729,6 +1743,12 @@ def test_mod_inverse():
 
 def test_golden_ratio_rewrite_as_sqrt():
     assert GoldenRatio.rewrite(sqrt) == S.Half + sqrt(5)*S.Half
+
+
+def test_tribonacci_constant_rewrite_as_sqrt():
+    assert TribonacciConstant.rewrite(sqrt) == \
+      (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
+
 
 def test_comparisons_with_unknown_type():
     class Foo(object):

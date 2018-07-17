@@ -6203,7 +6203,6 @@ def Gamma(*args):
         a = args[0]
         return gamma(a)
     else:
-        print('gammainc is not implemented in SymPy')
         return S(0)
 
 def FunctionOfTrigOfLinearQ(u, x):

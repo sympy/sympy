@@ -6,7 +6,6 @@ etc.).
 
 from __future__ import print_function, division
 
-import collections
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
@@ -15,7 +14,7 @@ from sympy.core.function import count_ops
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, range, \
-    NotIterable
+    NotIterable, Iterable
 
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
@@ -25,7 +24,7 @@ from sympy.assumptions.refine import refine
 from sympy.core.decorators import call_highest_priority
 
 from types import FunctionType
-
+from collections import defaultdict
 
 class MatrixError(Exception):
     pass
@@ -741,7 +740,7 @@ class MatrixSpecial(MatrixRequired):
                                                                          diag_rows, diag_cols))
 
         # fill a default dict with the diagonal entries
-        diag_entries = collections.defaultdict(lambda: S.Zero)
+        diag_entries = defaultdict(lambda: S.Zero)
         row_pos, col_pos = 0, 0
         for m in args:
             if hasattr(m, 'rows'):
@@ -2027,7 +2026,7 @@ class MatrixArithmetic(MatrixRequired):
             return MatrixArithmetic._eval_matrix_mul(self, other)
 
         # if 'other' is not iterable then scalar multiplication.
-        if not isinstance(other, collections.Iterable):
+        if not isinstance(other, Iterable):
             try:
                 return self._eval_scalar_mul(other)
             except TypeError:
@@ -2099,7 +2098,7 @@ class MatrixArithmetic(MatrixRequired):
             return MatrixArithmetic._eval_matrix_rmul(self, other)
 
         # if 'other' is not iterable then scalar multiplication.
-        if not isinstance(other, collections.Iterable):
+        if not isinstance(other, Iterable):
             try:
                 return self._eval_scalar_rmul(other)
             except TypeError:

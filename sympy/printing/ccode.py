@@ -20,9 +20,10 @@ from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
-    Assignment, Pointer, Type, Variable, real, complex_, integer, bool_,
-    float32, float64, float80, complex64, complex128, intc, value_const,
-    Declaration
+    Assignment, Pointer, Type, Variable, Declaration,
+    real, complex_, integer, bool_, float32, float64, float80,
+    complex64, complex128, intc, value_const, pointer_const,
+    int8, int16, int32, int64, uint8, uint16, uint32, uint64, untyped
 )
 from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -35,8 +36,8 @@ known_functions_C89 = {
     "Mod": [
         (
             lambda numer, denom: numer.is_integer and denom.is_integer,
-            lambda printer, numer, denom, *args, **kwargs: "((%s) %% (%s))" % (
-                printer._print(numer, *args, **kwargs), printer._print(denom, *args, **kwargs))
+            lambda printer, numer, denom, *args: "((%s) %% (%s))" % (
+                printer._print(numer), printer._print(denom))
         ),
         (
             lambda numer, denom: not numer.is_integer or not denom.is_integer,
@@ -106,7 +107,8 @@ def get_math_macros():
     via a compilation flag).
 
     Returns
-    -------
+    =======
+
     Dictionary mapping sympy expressions to strings (macro names)
 
     """
@@ -185,10 +187,26 @@ class C89CodePrinter(CodePrinter):
         float64: 'double',
         integer: 'int',
         bool_: 'bool',
+        int8: 'int8_t',
+        int16: 'int16_t',
+        int32: 'int32_t',
+        int64: 'int64_t',
+        uint8: 'int8_t',
+        uint16: 'int16_t',
+        uint32: 'int32_t',
+        uint64: 'int64_t',
     }
 
     type_headers = {
-        bool_: {'stdbool.h'}
+        bool_: {'stdbool.h'},
+        int8: {'stdint.h'},
+        int16: {'stdint.h'},
+        int32: {'stdint.h'},
+        int64: {'stdint.h'},
+        uint8: {'stdint.h'},
+        uint16: {'stdint.h'},
+        uint32: {'stdint.h'},
+        uint64: {'stdint.h'},
     }
     type_macros = {}  # Macros needed to be defined when using a Type
 
@@ -241,15 +259,16 @@ class C89CodePrinter(CodePrinter):
         return p*5
 
     def _get_statement(self, codestring):
-        return "%s;" % codestring
+        """ Get code string as a statement - i.e. ending with a semicolon. """
+        return codestring if codestring.endswith(';') else codestring + ';'
 
     def _get_comment(self, text):
         return "// {0}".format(text)
 
     def _declare_number_const(self, name, value):
         type_ = self.type_aliases[real]
-        var = Variable(name, {value_const}, type_)
-        decl = Declaration(var, value.evalf(type_.decimal_dig))
+        var = Variable(name, type=type_, value=value.evalf(type_.decimal_dig), attrs={value_const})
+        decl = Declaration(var)
         return self._get_statement(self._print(decl))
 
     def _format_code(self, lines):
@@ -260,8 +279,8 @@ class C89CodePrinter(CodePrinter):
         return ((i, j) for i in range(rows) for j in range(cols))
 
     @_as_macro_if_defined
-    def _print_Mul(self, expr):
-        return super(C89CodePrinter, self)._print_Mul(expr)
+    def _print_Mul(self, expr, **kwargs):
+        return super(C89CodePrinter, self)._print_Mul(expr, **kwargs)
 
     @_as_macro_if_defined
     def _print_Pow(self, expr):
@@ -305,7 +324,8 @@ class C89CodePrinter(CodePrinter):
                 shift *= dims[i]
             strides = temp
         flat_index = sum([x[0]*x[1] for x in zip(indices, strides)]) + offset
-        return "%s[%s]" % (self._print(expr.base.label), self._print(flat_index))
+        return "%s[%s]" % (self._print(expr.base.label),
+                           self._print(flat_index))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
@@ -347,7 +367,8 @@ class C89CodePrinter(CodePrinter):
             # operators. This has the downside that inline operators will
             # not work for statements that span multiple lines (Matrix or
             # Indexed expressions).
-            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
+            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c),
+                                               self._print(e))
                     for e, c in expr.args[:-1]]
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
@@ -381,13 +402,6 @@ class C89CodePrinter(CodePrinter):
         _piecewise = Piecewise(
             (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
         return self._print(_piecewise)
-
-    def _print_AugmentedAssignment(self, expr):
-        lhs_code = self._print(expr.lhs)
-        op = expr.rel_op
-        rhs_code = self._print(expr.rhs)
-        return self._get_statement("{0} {1} {2}".format(
-            *map(self._print, [lhs_code, op, rhs_code])))
 
     def _print_For(self, expr):
         target = self._print(expr.target)
@@ -462,36 +476,34 @@ class C89CodePrinter(CodePrinter):
     def _print_Type(self, type_):
         self.headers.update(self.type_headers.get(type_, set()))
         self.macros.update(self.type_macros.get(type_, set()))
-        return self.type_mappings.get(type_, type_.name)
+        return self._print(self.type_mappings.get(type_, type_.name))
 
-    def _print_Declaration(self, expr):
-        from sympy.codegen.cfunctions import restrict
-        var, val = expr.variable, expr.value
+    def _print_Declaration(self, decl):
+        from sympy.codegen.cnodes import restrict
+        var = decl.variable
+        val = var.value
+        if var.type == untyped:
+            raise ValueError("C does not support untyped variables")
+
         if isinstance(var, Pointer):
             result = '{vc}{t} *{pc} {r}{s}'.format(
-                vc='const ' if var.value_const else '',
+                vc='const ' if value_const in var.attrs else '',
                 t=self._print(var.type),
-                pc=' const' if var.pointer_const else '',
-                r='restrict ' if var.attributes.contains(restrict) == True else '',
+                pc=' const' if pointer_const in var.attrs else '',
+                r='restrict ' if restrict in var.attrs else '',
                 s=self._print(var.symbol)
             )
         elif isinstance(var, Variable):
             result = '{vc}{t} {s}'.format(
-                vc='const ' if var.value_const else '',
+                vc='const ' if value_const in var.attrs else '',
                 t=self._print(var.type),
                 s=self._print(var.symbol)
             )
         else:
             raise NotImplementedError("Unknown type of var: %s" % type(var))
-        if val is not None:
+        if val != None:
             result += ' = %s' % self._print(val)
         return result
-
-    def _print_Variable(self, expr):
-        return self._print(expr.symbol)
-
-    def _print_Pointer(self, expr):
-        return self._print(expr.symbol)
 
     def _print_Float(self, flt):
         type_ = self.type_aliases.get(real, real)
@@ -513,6 +525,96 @@ class C89CodePrinter(CodePrinter):
     @requires(headers={'stdbool.h'})
     def _print_BooleanFalse(self, expr):
         return 'false'
+
+    def _print_Element(self, elem):
+        if elem.strides == None:
+            if elem.offset != None:
+                raise ValueError("Expected strides when offset is given")
+            idxs = ']['.join(map(lambda arg: self._print(arg),
+                                 elem.indices))
+        else:
+            global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
+            if elem.offset != None:
+                global_idx += elem.offset
+            idxs = self._print(global_idx)
+
+        return "{symb}[{idxs}]".format(
+            symb=self._print(elem.symbol),
+            idxs=idxs
+        )
+
+    def _print_CodeBlock(self, expr):
+        """ Elements of code blocks printed as statements. """
+        return '\n'.join([self._get_statement(self._print(i)) for i in expr.args])
+
+    def _print_While(self, expr):
+        return 'while ({condition}) {{\n{body}\n}}'.format(**expr.kwargs(
+            apply=lambda arg: self._print(arg)))
+
+    def _print_Scope(self, expr):
+        return '{\n%s\n}' % self._print_CodeBlock(expr.body)
+
+    @requires(headers={'stdio.h'})
+    def _print_Print(self, expr):
+        return 'printf({fmt}, {pargs})'.format(
+            fmt=self._print(expr.format_string),
+            pargs=', '.join(map(lambda arg: self._print(arg), expr.print_args))
+        )
+
+    def _print_FunctionPrototype(self, expr):
+        pars = ', '.join(map(lambda arg: self._print(Declaration(arg)),
+                             expr.parameters))
+        return "%s %s(%s)" % (
+            tuple(map(lambda arg: self._print(arg),
+                      (expr.return_type, expr.name))) + (pars,)
+        )
+
+    def _print_FunctionDefinition(self, expr):
+        return "%s%s" % (self._print_FunctionPrototype(expr),
+                         self._print_Scope(expr))
+
+    def _print_Return(self, expr):
+        arg, = expr.args
+        return 'return %s' % self._print(arg)
+
+    def _print_CommaOperator(self, expr):
+        return '(%s)' % ', '.join(map(lambda arg: self._print(arg), expr.args))
+
+    def _print_Label(self, expr):
+        return '%s:' % str(expr)
+
+    def _print_goto(self, expr):
+        return 'goto %s' % expr.label
+
+    def _print_PreIncrement(self, expr):
+        arg, = expr.args
+        return '++(%s)' % self._print(arg)
+
+    def _print_PostIncrement(self, expr):
+        arg, = expr.args
+        return '(%s)++' % self._print(arg)
+
+    def _print_PreDecrement(self, expr):
+        arg, = expr.args
+        return '--(%s)' % self._print(arg)
+
+    def _print_PostDecrement(self, expr):
+        arg, = expr.args
+        return '(%s)--' % self._print(arg)
+
+    def _print_struct(self, expr):
+        return "%(keyword)s %(name)s {\n%(lines)s}" % dict(
+            keyword=expr.__class__.__name__, name=expr.name, lines=';\n'.join(
+                [self._print(decl) for decl in expr.declarations] + [''])
+        )
+
+    def _print_BreakToken(self, _):
+        return 'break'
+
+    def _print_ContinueToken(self, _):
+        return 'continue'
+
+    _print_union = _print_struct
 
 
 
@@ -598,7 +700,7 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
             if len(expr.args) > 1:
                 args += ', %s' % self._print(expr.func(*expr.args[1:]))
         else:
-            args = ', '.join(map(self._print, expr.args))
+            args = ', '.join(map(lambda arg: self._print(arg), expr.args))
         return '{ns}{name}{suffix}({args})'.format(
             ns=self._ns,
             name=known,
@@ -618,9 +720,19 @@ for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma Mod'
           'atanh erf erfc loggamma gamma ceiling floor').split():
     setattr(C99CodePrinter, '_print_%s' % k, C99CodePrinter._print_math_func)
 
+
+class C11CodePrinter(C99CodePrinter):
+
+    @requires(headers={'stdalign.h'})
+    def _print_alignof(self, expr):
+        arg, = expr.args
+        return 'alignof(%s)' % self._print(arg)
+
+
 c_code_printers = {
     'c89': C89CodePrinter,
     'c99': C99CodePrinter,
+    'c11': C11CodePrinter
 }
 
 

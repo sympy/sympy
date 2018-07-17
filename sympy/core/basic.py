@@ -1,13 +1,13 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
-from collections import Mapping, defaultdict
+from collections import defaultdict
 from itertools import chain
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
-    string_types, with_metaclass, zip_longest, range)
+    string_types, with_metaclass, zip_longest, range, PY3, Mapping)
 from .singleton import S
 
 from inspect import getmro
@@ -318,13 +318,24 @@ class Basic(with_metaclass(ManagedProperties)):
         if self is other:
             return True
 
+        tself = type(self)
+        tother = type(other)
         if type(self) is not type(other):
             try:
                 other = _sympify(other)
+                tother = type(other)
             except SympifyError:
                 return NotImplemented
 
-            if type(self) != type(other):
+            # As long as we have the ordering of classes (sympy.core),
+            # comparing types will be slow in Python 2, because it uses
+            # __cmp__. Until we can remove it
+            # (https://github.com/sympy/sympy/issues/4269), we only compare
+            # types in Python 2 directly if they actually have __ne__.
+            if PY3 or type(tself).__ne__ is not type.__ne__:
+                if tself != tother:
+                    return False
+            elif tself is not tother:
                 return False
 
         return self._hashable_content() == other._hashable_content()

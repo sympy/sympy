@@ -29,7 +29,12 @@ class TmpFileManager:
 
     @classmethod
     def cleanup(cls):
-        map(os.remove, cls.tmp_files)
+        for file in cls.tmp_files:
+            try:
+                os.remove(file)
+            except OSError:
+                # If the file doesn't exist, for instance, if the test failed.
+                pass
 
 def plot_and_save(name):
     tmp_file = TmpFileManager.tmp_file
