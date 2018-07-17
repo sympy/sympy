@@ -70,7 +70,7 @@ In first step, we need to get the `FullForm` of tests.
 
 * Download test files from official rubi [website](http://www.apmaths.uwo.ca/~arich/IntegrationProblems/MathematicaSyntaxFiles/MathematicaSyntaxFiles.html) in mathematica format.
 
-* Open a mathematica notebook and run the following mathematica code.(Here, we are assuming the name of downloaded test file to be testMath.m. This needs to be changed as per the situation.)
+* Open a mathematica notebook and run the following mathematica code.(Here, we are assuming the name of downloaded test file to be `testMath.m`. This needs to be changed as per the situation.)
 
 ```Mathematica
 stream = OpenWrite["test_1.m"];
@@ -78,7 +78,7 @@ WriteString[stream, Import["testMath.m", "HeldExpressions"] // FullForm];
 Close[stream1];
 ```
 
-The above codes write `FullForm` of test cases in `test_1.m`
+The above code writes `FullForm` of test cases in `test_1.m`
 
 #### Step 2
 
@@ -92,4 +92,4 @@ Open a python terminal and run the following code:
 
 The above code writes tests in sympy format in `parsed_tests.py`. File names in `generate_tests` should be changed as per the situation.
 
-Note: Current test suite in sympy is not all parsed through this above steps. But it works well and is tested for `special_functions`. `test_error_functions` in `test_special_functions.py` has been parsed through the above steps.
+Note: Current test suite in sympy is not all parsed through these above steps. But it works well and is tested for `special_functions`. `test_error_functions` in `test_special_functions.py` has been parsed through the above steps.
