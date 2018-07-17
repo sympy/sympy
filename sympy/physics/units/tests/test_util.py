@@ -132,8 +132,17 @@ def test_eval_simplify():
     assert (3*kilo*meter).simplify() == 3000*meter
     assert (4*kilo*meter/(2*kilometer)).simplify() == 2
     assert (4*kilometer**2/(kilo*meter)**2).simplify() == 4
-    assert (x*(8*kilo*newton*meter+y)).simplify() == x*(8000*meter*newton + y)
-    assert (foot*inch*(foot + inch)).simplify() == foot**2*(foot + inch)/12
-    assert (foot*inch*(foot*foot + inch*(foot+inch))).simplify() == foot**2*(foot**2 + inch*(foot + inch))/12
-    assert (2**(foot/inch*kilo/1000)*inch).simplify() == 4096*inch
-    assert (foot**2*inch + inch**2*foot).simplify() == foot**2*(foot + inch)/12
+
+
+def test_quantity_simplify():
+    from sympy.physics.units.util import quantity_simplify
+    from sympy.physics.units import kilo, foot
+    from sympy.core.symbol import symbols
+
+    x, y = symbols('x y')
+
+    assert quantity_simplify(x*(8*kilo*newton*meter + y)) == x*(8000*meter*newton + y)
+    assert quantity_simplify(foot*inch*(foot + inch)) == foot**2*(foot + inch)/12
+    assert quantity_simplify(foot*inch*(foot*foot + inch*(foot + inch))) == foot**2*(foot**2 + inch*(foot + inch))/12
+    assert quantity_simplify(2**(foot/inch*kilo/1000)*inch) == 4096*inch
+    assert quantity_simplify(foot**2*inch + inch**2*foot) == 13*foot**3/144
