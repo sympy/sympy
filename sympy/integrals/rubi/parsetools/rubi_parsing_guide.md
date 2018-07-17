@@ -1,4 +1,7 @@
 # Parsing Guide
+
+## Parsing Rules
+
 rubi is originally written and tested on mathematica. All code and tests in mathematica format is publicly available on it's [website](http://www.apmaths.uwo.ca/~arich/).
 
 The rubi code is parsed into sympy format in 2 steps:
@@ -7,6 +10,7 @@ The rubi code is parsed into sympy format in 2 steps:
 
 First the downvalues of rules are generated.
 * First download the rubi folder from rubi's site and open `rubi.nb`(name may vary from version to version).
+
 * Now run the following mathematica's code to generate the `DownValues` 
 
 ```Mathematica
@@ -53,3 +57,39 @@ Run the following code in python terminal:
 You can find the parsed rules. Also a file `constraints.py` containing all constraints.
 
 (Note : Be careful with the name of files. The output files name from step1 is exactly same as input files name in step2)
+
+-------------------------------------------------
+
+## Parsing Tests
+
+rubi contains a large set of test cases in mathematica format. Those need to be parsed in sympy format for testing. This is done in two steps.
+
+#### Step1
+
+In first step, we need to get the `FullForm` of tests.
+
+* Download test files from official rubi [website](http://www.apmaths.uwo.ca/~arich/IntegrationProblems/MathematicaSyntaxFiles/MathematicaSyntaxFiles.html) in mathematica format.
+
+* Open a mathematica notebook and run the following mathematica code.(Here, we are assuming the name of downloaded test file to be testMath.m. This needs to be changed as per the situation.)
+
+```Mathematica
+stream = OpenWrite["test_1.m"];
+WriteString[stream, Import["testMath.m", "HeldExpressions"] // FullForm];
+Close[stream1];
+```
+
+The above codes write `FullForm` of test cases in `test_1.m`
+
+#### Step 2
+
+Next, we need to parse `test_1.m` in sympy format.
+Open a python terminal and run the following code: 
+
+```python
+>>> from sympy.integrals.rubi.parsetools.generate_tests import generate_test_file
+>>> generate_test_file()
+```
+
+The above code writes tests in sympy format in `parsed_tests.py`. File names in `generate_tests` should be changed as per the situation.
+
+Note: Current test suite in sympy is not all parsed through this above steps. But it works well and is tested for `special_functions`. `test_error_functions` in `test_special_functions.py` has been parsed through the above steps.

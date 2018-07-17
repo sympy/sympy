@@ -1,15 +1,14 @@
 import sys
 from sympy.external import import_module
 matchpy = import_module("matchpy")
-
 if not matchpy:
-    #bin/test will not execute any tests now
     disabled = True
-
 if sys.version_info[:2] < (3, 6):
     disabled = True
 
-from sympy.integrals.rubi.utility_function import (
+if matchpy:
+    from matchpy import Pattern, ReplacementRule, CustomConstraint, is_match
+    from sympy.integrals.rubi.utility_function import (
         sympy_op_factory, Int, Sum, Set, With, Module, Scan, MapAnd, FalseQ,
         ZeroQ, NegativeQ, NonzeroQ, FreeQ, NFreeQ, List, Log, PositiveQ,
         PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ,
@@ -116,21 +115,24 @@ from sympy.integrals.rubi.utility_function import (
         TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist, Sum_doit, PolynomialQuotient, Floor,
         PolynomialRemainder, Factor, PolyLog, CosIntegral, SinIntegral, LogIntegral, SinhIntegral,
         CoshIntegral, Rule, Erf, PolyGamma, ExpIntegralEi, ExpIntegralE, LogGamma , UtilityOperator, Factorial,
-        Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ
+        Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, exp, log, Discriminant
     )
-from sympy import (Integral, Integral as Integrate, S, sqrt, And, Or, Integer, Float, Mod, I, Abs, simplify, Mul, Add, Pow)
-from sympy.integrals.rubi.symbol import WC
-from sympy.core.symbol import symbols, Symbol
-from sympy.functions import (sin, cos, tan, cot, csc, sec, sqrt, erf, exp, log)
-from sympy.functions.elementary.hyperbolic import (acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch)
-from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec)
-from sympy import pi as Pi
-from sympy.integrals.rubi.rubi import rubi_integrate
-a, b, c, d, e, f, m, n, x, u , k, p, r, s, t, i, j= symbols('a b c d e f m n x u k p r s t i j')
-A, B, C, D, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B C D a b c d e f g h y z m n p q u v w F', )
+    from sympy import (Integral, S, sqrt, And, Or, Integer, Float, Mod, I, Abs, simplify, Mul, Add, Pow)
+    from sympy.integrals.rubi.symbol import WC
+    from sympy.core.symbol import symbols, Symbol
+    from sympy.functions import (sin, cos, tan, cot, csc, sec, sqrt, erf)
+    from sympy.functions.elementary.hyperbolic import (acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch)
+    from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec, atan2)
+    from sympy import pi as Pi
 
+from sympy.integrals.rubi.rubi import rubi_integrate
+from sympy import Integral as Integrate, exp, log
+
+a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z = symbols('a b c d e f g h i j k l m n o p q r s t u v w x y z')
+A, B, C, F, G, H, J, K, L, M, N, O, P, Q, R, T, U, V, W, X, Y, Z = symbols('A B C F G H J K L M N O P Q R T U V W X Y Z')
 
 def test_error_functions():
+
     assert rubi_test(rubi_integrate(x**S(5)*Erf(b*x)**S(2), x), x, x**S(6)*Erf(b*x)**S(2)/S(6) - S(5)*Erf(b*x)**S(2)/(S(16)*b**S(6)) + x**S(4)*exp(-S(2)*b**S(2)*x**S(2))/(S(6)*Pi*b**S(2)) + S(7)*x**S(2)*exp(-S(2)*b**S(2)*x**S(2))/(S(12)*Pi*b**S(4)) + S(11)*exp(-S(2)*b**S(2)*x**S(2))/(S(12)*Pi*b**S(6)) + x**S(5)*Erf(b*x)*exp(-b**S(2)*x**S(2))/(S(3)*sqrt(Pi)*b) + S(5)*x**S(3)*Erf(b*x)*exp(-b**S(2)*x**S(2))/(S(6)*sqrt(Pi)*b**S(3)) + S(5)*x*Erf(b*x)*exp(-b**S(2)*x**S(2))/(S(4)*sqrt(Pi)*b**S(5)), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(x**S(4)*Erf(b*x)**S(2), x), x, x**S(5)*Erf(b*x)**S(2)/S(5) + x**S(3)*exp(-S(2)*b**S(2)*x**S(2))/(S(5)*Pi*b**S(2)) + S(11)*x*exp(-S(2)*b**S(2)*x**S(2))/(S(20)*Pi*b**S(4)) + S(2)*x**S(4)*Erf(b*x)*exp(-b**S(2)*x**S(2))/(S(5)*sqrt(Pi)*b) + S(4)*x**S(2)*Erf(b*x)*exp(-b**S(2)*x**S(2))/(S(5)*sqrt(Pi)*b**S(3)) + S(4)*Erf(b*x)*exp(-b**S(2)*x**S(2))/(S(5)*sqrt(Pi)*b**S(5)) - S(43)*sqrt(S(2))*Erf(sqrt(S(2))*b*x)/(S(80)*sqrt(Pi)*b**S(5)), expand=True, _diff=True, _numerical=True)
     assert rubi_test(rubi_integrate(x**S(3)*Erf(b*x)**S(2), x), x, x**S(4)*Erf(b*x)**S(2)/S(4) - S(3)*Erf(b*x)**S(2)/(S(16)*b**S(4)) + x**S(2)*exp(-S(2)*b**S(2)*x**S(2))/(S(4)*Pi*b**S(2)) + exp(-S(2)*b**S(2)*x**S(2))/(S(2)*Pi*b**S(4)) + x**S(3)*Erf(b*x)*exp(-b**S(2)*x**S(2))/(S(2)*sqrt(Pi)*b) + S(3)*x*Erf(b*x)*exp(-b**S(2)*x**S(2))/(S(4)*sqrt(Pi)*b**S(3)), expand=True, _diff=True, _numerical=True)
