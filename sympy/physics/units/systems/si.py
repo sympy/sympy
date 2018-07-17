@@ -21,7 +21,7 @@ from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 from sympy.physics.units.systems.mksa import MKSA, _mksa_dim
 
 derived_dims = (frequency, force, pressure, energy, power, charge, voltage,
-                capacitance, resistance, conductance, magnetic_flux,
+                capacitance, conductance, magnetic_flux,
                 magnetic_density, inductance, luminous_intensity)
 base_dims = (amount_of_substance, luminous_intensity, temperature)
 
