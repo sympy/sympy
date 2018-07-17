@@ -1,3 +1,8 @@
+'''
+This code is automatically generated. Never edit it manually.
+For details of generating the code see `rubi_parsing_guide.md` in `parsetools`.
+'''
+
 from sympy.external import import_module
 matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
@@ -133,166 +138,166 @@ def integrand_simplification(rubi):
     from sympy.integrals.rubi.constraints import cons1, cons2, cons3, cons4, cons5, cons6, cons7, cons8, cons9, cons10, cons11, cons12, cons13, cons14, cons15, cons16, cons17, cons18, cons19, cons20, cons21, cons22, cons23, cons24, cons25, cons26, cons27, cons28, cons29, cons30, cons31, cons32, cons33, cons34, cons35, cons36, cons37, cons38, cons39, cons40, cons41, cons42, cons43, cons44, cons45, cons46, cons47, cons48, cons49, cons50, cons51, cons52, cons53, cons54, cons55, cons56, cons57, cons58, cons59, cons60, cons61, cons62, cons63, cons64, cons65
 
     pattern1 = Pattern(Integral((a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*WC('u', S(1)), x_), cons2, cons3, cons4, cons5, cons1)
-    def replacement1(b, u, x, p, a, n):
+    def replacement1(p, b, u, n, x, a):
         rubi.append(1)
         return Int(u*(b*x**n)**p, x)
     rule1 = ReplacementRule(pattern1, replacement1)
     pattern2 = Pattern(Integral((a_ + x_**WC('j', S(1))*WC('c', S(1)) + x_**WC('n', S(1))*WC('b', S(1)))**WC('p', S(1))*WC('u', S(1)), x_), cons2, cons3, cons7, cons4, cons5, cons6, cons1)
-    def replacement2(b, c, u, x, j, p, a, n):
+    def replacement2(p, b, u, j, n, x, a, c):
         rubi.append(2)
         return Int(u*(b*x**n + c*x**(S(2)*n))**p, x)
     rule2 = ReplacementRule(pattern2, replacement2)
     pattern3 = Pattern(Integral((x_**WC('j', S(1))*WC('c', S(1)) + x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*WC('u', S(1)), x_), cons2, cons3, cons7, cons4, cons5, cons6, cons8)
-    def replacement3(b, n, c, x, j, p, a, u):
+    def replacement3(p, b, u, j, n, x, a, c):
         rubi.append(3)
         return Int(u*(a + c*x**(S(2)*n))**p, x)
     rule3 = ReplacementRule(pattern3, replacement3)
     pattern4 = Pattern(Integral((x_**WC('j', S(1))*WC('c', S(1)) + x_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1))*WC('u', S(1)), x_), cons2, cons3, cons7, cons4, cons5, cons6, cons9)
-    def replacement4(b, n, c, x, j, p, a, u):
+    def replacement4(p, b, u, j, n, x, a, c):
         rubi.append(4)
         return Int(u*(a + b*x**n)**p, x)
     rule4 = ReplacementRule(pattern4, replacement4)
     pattern5 = Pattern(Integral((v_*WC('a', S(1)) + v_*WC('b', S(1)) + WC('w', S(0)))**WC('p', S(1))*WC('u', S(1)), x_), cons2, cons3, cons10)
-    def replacement5(b, v, x, p, w, a, u):
+    def replacement5(p, b, u, x, a, v, w):
         rubi.append(5)
         return Int(u*(v*(a + b) + w)**p, x)
     rule5 = ReplacementRule(pattern5, replacement5)
     pattern6 = Pattern(Integral(Pm_**p_*WC('u', S(1)), x_), cons11, cons12, cons13)
-    def replacement6(Pm, x, p, u):
+    def replacement6(u, Pm, p, x):
         rubi.append(6)
         return Int(Pm**p*u, x)
     rule6 = ReplacementRule(pattern6, replacement6)
     pattern7 = Pattern(Integral(a_, x_), cons2, cons2)
-    def replacement7(x, a):
+    def replacement7(a, x):
         rubi.append(7)
-        return a*x
+        return Simp(a*x, x)
     rule7 = ReplacementRule(pattern7, replacement7)
     pattern8 = Pattern(Integral(a_*(b_ + x_*WC('c', S(1))), x_), cons2, cons3, cons7, cons14)
-    def replacement8(x, c, b, a):
+    def replacement8(a, c, b, x):
         rubi.append(8)
-        return a*(b + c*x)**S(2)/(S(2)*c)
+        return Simp(a*(b + c*x)**S(2)/(S(2)*c), x)
     rule8 = ReplacementRule(pattern8, replacement8)
     pattern9 = Pattern(Integral(-u_, x_))
-    def replacement9(x, u):
+    def replacement9(u, x):
         rubi.append(9)
-        return -Int(u, x)
+        return Dist(S(-1), Int(u, x), x)
     rule9 = ReplacementRule(pattern9, replacement9)
     pattern10 = Pattern(Integral(u_*Complex(S(0), a_), x_), cons2, cons15)
-    def replacement10(x, a, u):
+    def replacement10(a, u, x):
         rubi.append(10)
-        return Complex(S(0), a)*Int(u, x)
+        return Dist(Complex(S(0), a), Int(u, x), x)
     rule10 = ReplacementRule(pattern10, replacement10)
     pattern11 = Pattern(Integral(a_*u_, x_), cons2, cons2)
-    def replacement11(x, a, u):
+    def replacement11(a, u, x):
         rubi.append(11)
-        return a*Int(u, x)
+        return Dist(a, Int(u, x), x)
     rule11 = ReplacementRule(pattern11, replacement11)
     pattern12 = Pattern(Integral(u_, x_), cons16)
-    def replacement12(x, u):
+    def replacement12(u, x):
         rubi.append(12)
-        return IntSum(u, x)
+        return Simp(IntSum(u, x), x)
     rule12 = ReplacementRule(pattern12, replacement12)
     pattern13 = Pattern(Integral(v_**WC('m', S(1))*(b_*v_)**n_*WC('u', S(1)), x_), cons3, cons4, cons17)
-    def replacement13(b, v, u, x, m, n):
+    def replacement13(b, m, u, n, x, v):
         rubi.append(13)
-        return b**(-m)*Int(u*(b*v)**(m + n), x)
+        return Dist(b**(-m), Int(u*(b*v)**(m + n), x), x)
     rule13 = ReplacementRule(pattern13, replacement13)
     pattern14 = Pattern(Integral((v_*WC('a', S(1)))**m_*(v_*WC('b', S(1)))**n_*WC('u', S(1)), x_), cons2, cons3, cons21, cons18, cons19, cons20)
-    def replacement14(b, v, n, x, a, m, u):
+    def replacement14(b, m, u, n, x, a, v):
         rubi.append(14)
-        return a**(m + S(1)/2)*b**(n + S(-1)/2)*sqrt(b*v)*Int(u*v**(m + n), x)/sqrt(a*v)
+        return Dist(a**(m + S(1)/2)*b**(n + S(-1)/2)*sqrt(b*v)/sqrt(a*v), Int(u*v**(m + n), x), x)
     rule14 = ReplacementRule(pattern14, replacement14)
     pattern15 = Pattern(Integral((v_*WC('a', S(1)))**m_*(v_*WC('b', S(1)))**n_*WC('u', S(1)), x_), cons2, cons3, cons21, cons18, cons22, cons20)
-    def replacement15(b, v, n, x, a, m, u):
+    def replacement15(b, m, u, n, x, a, v):
         rubi.append(15)
-        return a**(m + S(-1)/2)*b**(n + S(1)/2)*sqrt(a*v)*Int(u*v**(m + n), x)/sqrt(b*v)
+        return Dist(a**(m + S(-1)/2)*b**(n + S(1)/2)*sqrt(a*v)/sqrt(b*v), Int(u*v**(m + n), x), x)
     rule15 = ReplacementRule(pattern15, replacement15)
     pattern16 = Pattern(Integral((v_*WC('a', S(1)))**m_*(v_*WC('b', S(1)))**n_*WC('u', S(1)), x_), cons2, cons3, cons21, cons4, cons18, cons23, cons20)
-    def replacement16(b, v, n, x, a, m, u):
+    def replacement16(b, m, u, n, x, a, v):
         rubi.append(16)
-        return a**(m + n)*(a*v)**(-n)*(b*v)**n*Int(u*v**(m + n), x)
+        return Dist(a**(m + n)*(a*v)**(-n)*(b*v)**n, Int(u*v**(m + n), x), x)
     rule16 = ReplacementRule(pattern16, replacement16)
     pattern17 = Pattern(Integral((v_*WC('a', S(1)))**m_*(v_*WC('b', S(1)))**n_*WC('u', S(1)), x_), cons2, cons3, cons21, cons4, cons18, cons23, cons24)
-    def replacement17(b, v, n, x, a, m, u):
+    def replacement17(b, m, u, n, x, a, v):
         rubi.append(17)
-        return a**(-IntPart(n))*b**IntPart(n)*(a*v)**(-FracPart(n))*(b*v)**FracPart(n)*Int(u*(a*v)**(m + n), x)
+        return Dist(a**(-IntPart(n))*b**IntPart(n)*(a*v)**(-FracPart(n))*(b*v)**FracPart(n), Int(u*(a*v)**(m + n), x), x)
     rule17 = ReplacementRule(pattern17, replacement17)
     pattern18 = Pattern(Integral((a_ + v_*WC('b', S(1)))**WC('m', S(1))*(c_ + v_*WC('d', S(1)))**WC('n', S(1))*WC('u', S(1)), x_), cons2, cons3, cons7, cons27, cons4, cons25, cons17, cons26)
-    def replacement18(b, v, d, u, c, x, a, m, n):
+    def replacement18(b, m, u, n, d, x, a, v, c):
         rubi.append(18)
-        return (b/d)**m*Int(u*(c + d*v)**(m + n), x)
+        return Dist((b/d)**m, Int(u*(c + d*v)**(m + n), x), x)
     rule18 = ReplacementRule(pattern18, replacement18)
     pattern19 = Pattern(Integral((a_ + v_*WC('b', S(1)))**m_*(c_ + v_*WC('d', S(1)))**n_*WC('u', S(1)), x_), cons2, cons3, cons7, cons27, cons21, cons4, cons25, cons28, cons29)
-    def replacement19(b, v, n, d, c, x, a, m, u):
+    def replacement19(b, m, u, n, d, x, a, v, c):
         rubi.append(19)
-        return (b/d)**m*Int(u*(c + d*v)**(m + n), x)
+        return Dist((b/d)**m, Int(u*(c + d*v)**(m + n), x), x)
     rule19 = ReplacementRule(pattern19, replacement19)
     pattern20 = Pattern(Integral((a_ + v_*WC('b', S(1)))**m_*(c_ + v_*WC('d', S(1)))**n_*WC('u', S(1)), x_), cons2, cons3, cons7, cons27, cons21, cons4, cons25, cons30)
-    def replacement20(b, v, n, d, c, x, a, m, u):
+    def replacement20(b, m, u, n, d, x, a, v, c):
         rubi.append(20)
-        return (a + b*v)**m*(c + d*v)**(-m)*Int(u*(c + d*v)**(m + n), x)
+        return Dist((a + b*v)**m*(c + d*v)**(-m), Int(u*(c + d*v)**(m + n), x), x)
     rule20 = ReplacementRule(pattern20, replacement20)
     pattern21 = Pattern(Integral((v_*WC('a', S(1)))**m_*(v_**S(2)*WC('c', S(1)) + v_*WC('b', S(1)))*WC('u', S(1)), x_), cons2, cons3, cons7, cons31, cons32)
-    def replacement21(b, v, c, x, a, m, u):
+    def replacement21(b, m, u, x, a, v, c):
         rubi.append(21)
-        return Int(u*(a*v)**(m + S(1))*(b + c*v), x)/a
+        return Dist(S(1)/a, Int(u*(a*v)**(m + S(1))*(b + c*v), x), x)
     rule21 = ReplacementRule(pattern21, replacement21)
     pattern22 = Pattern(Integral((a_ + v_*WC('b', S(1)))**m_*(v_**S(2)*WC('C', S(1)) + v_*WC('B', S(1)) + WC('A', S(0)))*WC('u', S(1)), x_), cons2, cons3, cons34, cons35, cons36, cons33, cons31, cons32)
-    def replacement22(b, v, x, A, B, C, a, m, u):
+    def replacement22(b, v, m, u, B, x, a, A, C):
         rubi.append(22)
-        return Int(u*(a + b*v)**(m + S(1))*Simp(B*b - C*a + C*b*v, x), x)/b**S(2)
+        return Dist(b**(S(-2)), Int(u*(a + b*v)**(m + S(1))*Simp(B*b - C*a + C*b*v, x), x), x)
     rule22 = ReplacementRule(pattern22, replacement22)
     pattern23 = Pattern(Integral((a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('m', S(1))*(c_ + x_**WC('q', S(1))*WC('d', S(1)))**WC('p', S(1))*WC('u', S(1)), x_), cons2, cons3, cons7, cons27, cons21, cons4, cons37, cons38, cons39, cons40)
-    def replacement23(b, d, u, x, c, p, q, a, m, n):
+    def replacement23(p, b, m, u, n, q, d, x, a, c):
         rubi.append(23)
-        return (d/a)**p*Int(u*x**(-n*p)*(a + b*x**n)**(m + p), x)
+        return Dist((d/a)**p, Int(u*x**(-n*p)*(a + b*x**n)**(m + p), x), x)
     rule23 = ReplacementRule(pattern23, replacement23)
     pattern24 = Pattern(Integral((a_ + x_**WC('n', S(1))*WC('b', S(1)))**WC('m', S(1))*(c_ + x_**j_*WC('d', S(1)))**WC('p', S(1))*WC('u', S(1)), x_), cons2, cons3, cons7, cons27, cons21, cons4, cons5, cons6, cons41, cons42, cons43, cons44)
-    def replacement24(b, d, u, x, c, j, p, a, m, n):
+    def replacement24(p, b, m, u, j, n, d, x, a, c):
         rubi.append(24)
-        return (-b**S(2)/d)**m*Int(u*(a - b*x**n)**(-m), x)
+        return Dist((-b**S(2)/d)**m, Int(u*(a - b*x**n)**(-m), x), x)
     rule24 = ReplacementRule(pattern24, replacement24)
     pattern25 = Pattern(Integral((a_ + x_**S(2)*WC('c', S(1)) + x_*WC('b', S(1)))**WC('p', S(1))*WC('u', S(1)), x_), cons2, cons3, cons7, cons45, cons38)
-    def replacement25(b, c, x, p, a, u):
+    def replacement25(p, b, u, x, a, c):
         rubi.append(25)
         return Int(S(2)**(-S(2)*p)*c**(-p)*u*(b + S(2)*c*x)**(S(2)*p), x)
     rule25 = ReplacementRule(pattern25, replacement25)
     pattern26 = Pattern(Integral((a_ + x_**n_*WC('b', S(1)) + x_**WC('n2', S(1))*WC('c', S(1)))**WC('p', S(1))*WC('u', S(1)), x_), cons2, cons3, cons7, cons4, cons46, cons45, cons38)
-    def replacement26(b, n2, n, c, x, p, a, u):
+    def replacement26(p, b, n2, u, n, x, a, c):
         rubi.append(26)
-        return c**(-p)*Int(u*(b/S(2) + c*x**n)**(S(2)*p), x)
+        return Dist(c**(-p), Int(u*(b/S(2) + c*x**n)**(S(2)*p), x), x)
     rule26 = ReplacementRule(pattern26, replacement26)
     pattern27 = Pattern(Integral((d_ + x_*WC('e', S(1)))*(x_**S(2)*WC('c', S(1)) + x_*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons7, cons27, cons48, cons5, cons47)
-    def replacement27(b, c, d, x, e, p, a):
+    def replacement27(p, b, e, d, x, a, c):
         rubi.append(27)
-        return d*Subst(Int(x**p, x), x, a + b*x + c*x**S(2))/b
+        return Dist(d/b, Subst(Int(x**p, x), x, a + b*x + c*x**S(2)), x)
     rule27 = ReplacementRule(pattern27, replacement27)
     pattern28 = Pattern(Integral((x_**WC('p', S(1))*WC('a', S(1)) + x_**WC('q', S(1))*WC('b', S(1)))**WC('m', S(1))*WC('u', S(1)), x_), cons2, cons3, cons5, cons50, cons17, cons49)
-    def replacement28(b, x, p, q, a, m, u):
+    def replacement28(p, b, m, u, q, x, a):
         rubi.append(28)
         return Int(u*x**(m*p)*(a + b*x**(-p + q))**m, x)
     rule28 = ReplacementRule(pattern28, replacement28)
     pattern29 = Pattern(Integral((x_**WC('p', S(1))*WC('a', S(1)) + x_**WC('q', S(1))*WC('b', S(1)) + x_**WC('r', S(1))*WC('c', S(1)))**WC('m', S(1))*WC('u', S(1)), x_), cons2, cons3, cons7, cons5, cons50, cons52, cons17, cons49, cons51)
-    def replacement29(b, c, x, p, q, m, a, r, u):
+    def replacement29(p, b, m, u, q, r, x, a, c):
         rubi.append(29)
         return Int(u*x**(m*p)*(a + b*x**(-p + q) + c*x**(-p + r))**m, x)
     rule29 = ReplacementRule(pattern29, replacement29)
     pattern30 = Pattern(Integral(x_**WC('m', S(1))/(a_ + x_**n_*WC('b', S(1))), x_), cons2, cons3, cons21, cons4, cons53)
-    def replacement30(b, x, a, m, n):
+    def replacement30(b, m, n, x, a):
         rubi.append(30)
-        return log(RemoveContent(a + b*x**n, x))/(b*n)
+        return Simp(log(RemoveContent(a + b*x**n, x))/(b*n), x)
     rule30 = ReplacementRule(pattern30, replacement30)
     pattern31 = Pattern(Integral(x_**WC('m', S(1))*(a_ + x_**n_*WC('b', S(1)))**p_, x_), cons2, cons3, cons21, cons4, cons5, cons53, cons54)
-    def replacement31(b, x, p, a, m, n):
+    def replacement31(p, b, m, n, x, a):
         rubi.append(31)
-        return (a + b*x**n)**(p + S(1))/(b*n*(p + S(1)))
+        return Simp((a + b*x**n)**(p + S(1))/(b*n*(p + S(1))), x)
     rule31 = ReplacementRule(pattern31, replacement31)
     pattern32 = Pattern(Integral(x_**WC('m', S(1))*(a1_ + x_**WC('n', S(1))*WC('b1', S(1)))**p_*(a2_ + x_**WC('n', S(1))*WC('b2', S(1)))**p_, x_), cons57, cons58, cons59, cons60, cons21, cons4, cons5, cons55, cons56, cons54)
-    def replacement32(a2, x, b2, a1, p, b1, m, n):
+    def replacement32(p, m, n, x, a2, b2, a1, b1):
         rubi.append(32)
-        return (a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*b1*b2*n*(p + S(1)))
+        return Simp((a1 + b1*x**n)**(p + S(1))*(a2 + b2*x**n)**(p + S(1))/(S(2)*b1*b2*n*(p + S(1))), x)
     rule32 = ReplacementRule(pattern32, replacement32)
-    def With33(b, Pm, x, p, Qm, a, n):
+    def With33(p, b, Qm, n, x, a, Pm):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         m = Expon(Pm, x)
@@ -300,13 +305,13 @@ def integrand_simplification(rubi):
             return True
         return False
     pattern33 = Pattern(Integral(Qm_*(Pm_**WC('n', S(1))*WC('b', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons4, cons5, cons11, cons61, CustomConstraint(With33))
-    def replacement33(b, Pm, x, p, Qm, a, n):
+    def replacement33(p, b, Qm, n, x, a, Pm):
 
         m = Expon(Pm, x)
         rubi.append(33)
-        return Coeff(Qm, x, m + S(-1))*Subst(Int((a + b*x**n)**p, x), x, Pm)/(m*Coeff(Pm, x, m))
+        return Dist(Coeff(Qm, x, m + S(-1))/(m*Coeff(Pm, x, m)), Subst(Int((a + b*x**n)**p, x), x, Pm), x)
     rule33 = ReplacementRule(pattern33, replacement33)
-    def With34(b, n2, c, Pm, x, p, Qm, a, n):
+    def With34(p, b, n2, Qm, n, x, a, c, Pm):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         m = Expon(Pm, x)
@@ -314,13 +319,13 @@ def integrand_simplification(rubi):
             return True
         return False
     pattern34 = Pattern(Integral(Qm_*(Pm_**WC('n', S(1))*WC('b', S(1)) + Pm_**WC('n2', S(1))*WC('c', S(1)) + WC('a', S(0)))**WC('p', S(1)), x_), cons2, cons3, cons7, cons4, cons5, cons46, cons11, cons61, CustomConstraint(With34))
-    def replacement34(b, n2, c, Pm, x, p, Qm, a, n):
+    def replacement34(p, b, n2, Qm, n, x, a, c, Pm):
 
         m = Expon(Pm, x)
         rubi.append(34)
-        return Coeff(Qm, x, m + S(-1))*Subst(Int((a + b*x**n + c*x**(S(2)*n))**p, x), x, Pm)/(m*Coeff(Pm, x, m))
+        return Dist(Coeff(Qm, x, m + S(-1))/(m*Coeff(Pm, x, m)), Subst(Int((a + b*x**n + c*x**(S(2)*n))**p, x), x, Pm), x)
     rule34 = ReplacementRule(pattern34, replacement34)
-    def With35(x, Pq, p, Qr, m, u):
+    def With35(p, m, u, x, Pq, Qr):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         gcd = PolyGCD(Pq, Qr, x)
@@ -328,13 +333,13 @@ def integrand_simplification(rubi):
             return True
         return False
     pattern35 = Pattern(Integral(Pq_**m_*Qr_**p_*WC('u', S(1)), x_), cons62, cons63, cons64, cons65, CustomConstraint(With35))
-    def replacement35(x, Pq, p, Qr, m, u):
+    def replacement35(p, m, u, x, Pq, Qr):
 
         gcd = PolyGCD(Pq, Qr, x)
         rubi.append(35)
         return Int(gcd**(m + p)*u*PolynomialQuotient(Pq, gcd, x)**m*PolynomialQuotient(Qr, gcd, x)**p, x)
     rule35 = ReplacementRule(pattern35, replacement35)
-    def With36(x, Pq, p, Qr, u):
+    def With36(p, u, x, Pq, Qr):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         gcd = PolyGCD(Pq, Qr, x)
@@ -342,7 +347,7 @@ def integrand_simplification(rubi):
             return True
         return False
     pattern36 = Pattern(Integral(Pq_*Qr_**p_*WC('u', S(1)), x_), cons63, cons64, cons65, CustomConstraint(With36))
-    def replacement36(x, Pq, p, Qr, u):
+    def replacement36(p, u, x, Pq, Qr):
 
         gcd = PolyGCD(Pq, Qr, x)
         rubi.append(36)

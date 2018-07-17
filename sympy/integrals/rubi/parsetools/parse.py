@@ -237,12 +237,12 @@ def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
     cons = ''
     for i in l:
         if isinstance(i, str):
-            r = '    return FreeQ({}, {})'.format(i, x)
+            r = '        return FreeQ({}, {})'.format(i, x)
             if r not in cons_dict.values():
                 cons_index += 1
-                c = '\ndef cons_f{}({}, {}):\n'.format(cons_index, i, x)
+                c = '\n    def cons_f{}({}, {}):\n'.format(cons_index, i, x)
                 c += r
-                c += '\n\ncons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+                c += '\n\n    cons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
                 cons_name = 'cons{}'.format(cons_index)
                 cons_dict[cons_name] = r
             else:
@@ -252,12 +252,12 @@ def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
         elif isinstance(i, list):
             s = list(set(get_free_symbols(i, symbols)))
             s = ', '.join(s)
-            r = '    return FreeQ({}, {})'.format(generate_sympy_from_parsed(i), x)
+            r = '        return FreeQ({}, {})'.format(generate_sympy_from_parsed(i), x)
             if r not in cons_dict.values():
                 cons_index += 1
-                c = '\ndef cons_f{}({}):\n'.format(cons_index, s)
+                c = '\n    def cons_f{}({}):\n'.format(cons_index, s)
                 c += r
-                c += '\n\ncons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+                c += '\n\n    cons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
                 cons_name = 'cons{}'.format(cons_index)
                 cons_dict[cons_name] = r
             else:
@@ -352,10 +352,10 @@ def set_matchq_in_constraint(a, cons_index):
             cons = r.args[1].args[1]
             pattern = rubi_printer(pattern, sympy_integers=True)
             pattern = setWC(pattern)
-            res = '    def _cons_f_{}({}):\n        return {}\n'.format(cons_index, ', '.join(free_symbols), cons)
-            res += '    _cons_{} = CustomConstraint(_cons_f_{})\n'.format(cons_index, cons_index)
-            res += '    pat = Pattern(UtilityOperator({}, x), _cons_{})\n'.format(pattern, cons_index)
-            res += '    result_matchq = is_match(UtilityOperator({}, x), pat)'.format(r.args[0])
+            res = '        def _cons_f_{}({}):\n            return {}\n'.format(cons_index, ', '.join(free_symbols), cons)
+            res += '        _cons_{} = CustomConstraint(_cons_f_{})\n'.format(cons_index, cons_index)
+            res += '        pat = Pattern(UtilityOperator({}, x), _cons_{})\n'.format(pattern, cons_index)
+            res += '        result_matchq = is_match(UtilityOperator({}, x), pat)'.format(r.args[0])
             return "result_matchq", res
 
         else:
@@ -377,21 +377,21 @@ def _divide_constriant(s, symbols, cons_index, cons_dict, cons_import):
     if r.has(Function('MatchQ')):
         match_res = set_matchq_in_constraint(s, cons_index)
         res = match_res[1]
-        res += '\n    return {}'.format(rubi_printer(sympify(generate_sympy_from_parsed(match_res[0]), locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not")}), sympy_integers = True))
+        res += '\n        return {}'.format(rubi_printer(sympify(generate_sympy_from_parsed(match_res[0]), locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not")}), sympy_integers = True))
 
     elif contains_diff_return_type(s):
-        res = '    try:\n        return {}\n    except (TypeError, AttributeError):\n        return False'.format(rubi_printer(r, sympy_integers=True))
+        res = '        try:\n            return {}\n        except (TypeError, AttributeError):\n            return False'.format(rubi_printer(r, sympy_integers=True))
     else:
-        res = '    return {}'.format(rubi_printer(r, sympy_integers=True))
+        res = '        return {}'.format(rubi_printer(r, sympy_integers=True))
 
     #res = '    return {}'.format(rubi_printer(sympify(generate_sympy_from_parsed(s),locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not")}), sympy_integers=True))
     if not res in cons_dict.values():
         cons_index += 1
-        cons = '\ndef cons_f{}({}):\n'.format(cons_index, ', '.join(lambda_symbols))
+        cons = '\n    def cons_f{}({}):\n'.format(cons_index, ', '.join(lambda_symbols))
         if 'x' in lambda_symbols:
-            cons += '    if isinstance(x, (int, Integer, float, Float)):\n        return False\n'
+            cons += '        if isinstance(x, (int, Integer, float, Float)):\n            return False\n'
         cons += res
-        cons += '\n\ncons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
+        cons += '\n\n    cons{} = CustomConstraint({})\n'.format(cons_index, 'cons_f{}'.format(cons_index))
         cons_name = 'cons{}'.format(cons_index)
         cons_dict[cons_name] = res
     else:
@@ -640,7 +640,7 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
     parsed = header + parsed
     return parsed, cons_index, cons, index
 
-def rubi_rule_parser(fullform, header=None, module_name='rubi_object', file = False):
+def rubi_rule_parser(fullform, header=None, module_name='rubi_object'):
     '''
     Parses rules in MatchPy format.
 
@@ -669,64 +669,24 @@ def rubi_rule_parser(fullform, header=None, module_name='rubi_object', file = Fa
     index = 0
     cons = ''
 
-    if not file:
-        for i in temporary_variable_replacement:
-            fullform = fullform.replace(i, temporary_variable_replacement[i])
-        # Permanently rename these variables
-        for i in permanent_variable_replacement:
-            fullform = fullform.replace(i, permanent_variable_replacement[i])
+    for i in temporary_variable_replacement:
+        fullform = fullform.replace(i, temporary_variable_replacement[i])
+    # Permanently rename these variables
+    for i in permanent_variable_replacement:
+        fullform = fullform.replace(i, permanent_variable_replacement[i])
 
-        rules = []
-        for i in parse_full_form(fullform): # separate all rules
-            if i[0] == 'RuleDelayed':
-                rules.append(i)
-        parsed = downvalues_rules(rules, header, cons_dict, cons_index, index)
-        result = parsed[0].strip() + '\n'
-        cons_index = parsed[1]
-        cons += parsed[2]
-        index = parsed[3]
-        # Replace temporary variables by actual values
-        for i in temporary_variable_replacement:
-            cons = cons.replace(temporary_variable_replacement[i], i)
-            result = result.replace(temporary_variable_replacement[i], i)
-        cons = "\n".join(header.split("\n")[:-2])+ '\n' + cons
-        return result, cons
-
-    input =['integrand_simplification.txt', 'linear_product.txt', 'quadratic_product.txt', 'binomial_product.txt', 'trinomial_product.txt', 'miscellaneous_algebra.txt', 'piecewise_linear.txt', 'exponential.txt', 'logarithms.txt', 'sine.txt', 'tangent.txt', 'secant.txt', 'miscellaneous_trig.txt', 'inverse_trig.txt', 'hyperbolic.txt', 'inverse_hyperbolic.txt', 'special_functions.txt', 'miscellanintegration.txt']
-    output =['integrand_simplification.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py', 'trinomial_products.py', 'miscellaneous_algebraic.py' ,'piecewise_linear.py', 'exponential.py', 'logarithms.py', 'sine.py', 'tangent.py', 'secant.py', 'miscellaneous_trig.py','inverse_trig.py', 'hyperbolic.py', 'inverse_hyperbolic.py', 'special_functions.py', 'miscellaneous_integration.py']
-    for k in range(0, 18):
-        module_name = output[k][0:-3]
-        path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        header = open(os.path.join(path_header, "header.py.txt"), "r").read()
-        header = header.format(module_name)
-        with open(input[k], 'r') as myfile:
-            fullform =myfile.read().replace('\n', '')
-        for i in temporary_variable_replacement:
-            fullform = fullform.replace(i, temporary_variable_replacement[i])
-        # Permanently rename these variables
-        for i in permanent_variable_replacement:
-            fullform = fullform.replace(i, permanent_variable_replacement[i])
-
-        rules = []
-        for i in parse_full_form(fullform): # separate all rules
-            if i[0] == 'RuleDelayed':
-                rules.append(i)
-        parsed = downvalues_rules(rules, header, cons_dict, cons_index, index)
-        result = parsed[0].strip() + '\n'
-        cons_index = parsed[1]
-        cons += parsed[2]
-        index = parsed[3]
-        # Replace temporary variables by actual values
-        for i in temporary_variable_replacement:
-            cons = cons.replace(temporary_variable_replacement[i], i)
-            result = result.replace(temporary_variable_replacement[i], i)
-
-        file = open(output[k],'w')
-        file.write(str(result))
-        file.close()
-
+    rules = []
+    for i in parse_full_form(fullform): # separate all rules
+        if i[0] == 'RuleDelayed':
+            rules.append(i)
+    parsed = downvalues_rules(rules, header, cons_dict, cons_index, index)
+    result = parsed[0].strip() + '\n'
+    cons_index = parsed[1]
+    cons += parsed[2]
+    index = parsed[3]
+    # Replace temporary variables by actual values
+    for i in temporary_variable_replacement:
+        cons = cons.replace(temporary_variable_replacement[i], i)
+        result = result.replace(temporary_variable_replacement[i], i)
     cons = "\n".join(header.split("\n")[:-2])+ '\n' + cons
-    constraints = open('constraints.py', 'w')
-    constraints.write(str(cons))
-    constraints.close()
-    return None
+    return result, cons

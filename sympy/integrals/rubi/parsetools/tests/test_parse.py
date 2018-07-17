@@ -42,10 +42,10 @@ from matchpy import Operation, CommutativeOperation
     result_constraint = '''
 from matchpy import Operation, CommutativeOperation
 
-def cons_f1(m):
-    return NonzeroQ(m + S(1))
+    def cons_f1(m):
+        return NonzeroQ(m + S(1))
 
-cons1 = CustomConstraint(cons_f1)
+    cons1 = CustomConstraint(cons_f1)
 '''
     assert len(result_rule.strip()) == len(rules.strip()) # failing randomly while using `result.strip() == rules`
     assert len(result_constraint.strip()) == len(constraint.strip())
@@ -68,7 +68,7 @@ def test_parse_freeq():
     l = ['a', 'b']
     x = 'x'
     symbols = ['x', 'a', 'b']
-    assert parse_freeq(l, x, 0, {}, [], symbols) == (', cons1, cons2', '\ndef cons_f1(a, x):\n    return FreeQ(a, x)\n\ncons1 = CustomConstraint(cons_f1)\n\ndef cons_f2(b, x):\n    return FreeQ(b, x)\n\ncons2 = CustomConstraint(cons_f2)\n', 2)
+    assert parse_freeq(l, x, 0, {}, [], symbols) == (', cons1, cons2', '\n    def cons_f1(a, x):\n        return FreeQ(a, x)\n\n    cons1 = CustomConstraint(cons_f1)\n\n    def cons_f2(b, x):\n        return FreeQ(b, x)\n\n    cons2 = CustomConstraint(cons_f2)\n', 2)
 
 def test_get_free_symbols():
     s = ['NonzeroQ', ['Plus', 'm', '1']]
@@ -77,7 +77,7 @@ def test_get_free_symbols():
 
 def test_divide_constraint():
     s = ['And', ['FreeQ', 'm', 'x'], ['NonzeroQ', ['Plus', 'm', '1']]]
-    assert divide_constraint(s, ['m', 'x'], 0, {}, []) == (', cons1', '\ndef cons_f1(m):\n    return NonzeroQ(m + S(1))\n\ncons1 = CustomConstraint(cons_f1)\n', 1)
+    assert divide_constraint(s, ['m', 'x'], 0, {}, []) == (', cons1', '\n    def cons_f1(m):\n        return NonzeroQ(m + S(1))\n\n    cons1 = CustomConstraint(cons_f1)\n', 1)
 
 def test_setWC():
     assert setWC('Integral(x_**WC(m, S(1)), x_)') == "Integral(x_**WC('m', S(1)), x_)"
@@ -104,8 +104,8 @@ def test_contains_diff_return_type():
     assert contains_diff_return_type(['Plus', ['BinomialDegree', 'u', 'x'], ['Times', '-1', ['BinomialDegree', 'z', 'x']]])
 
 def test_set_matchq_in_constraint():
-    expected = ('result_matchq', "    def _cons_f_1229(g, m):\n        return FreeQ(List(g, m), x)\n    _cons_1229 = CustomConstraint(_cons_f_1229)\n    pat = Pattern(UtilityOperator((x*WC('g', S(1)))**WC('m', S(1)), x), _cons_1229)\n    result_matchq = is_match(UtilityOperator(v, x), pat)")
-    expected1 = ('result_matchq', "    def _cons_f_1229(m, g):\n        return FreeQ(List(g, m), x)\n    _cons_1229 = CustomConstraint(_cons_f_1229)\n    pat = Pattern(UtilityOperator((x*WC('g', S(1)))**WC('m', S(1)), x), _cons_1229)\n    result_matchq = is_match(UtilityOperator(v, x), pat)")
+    expected = ('result_matchq', "        def _cons_f_1229(g, m):\n            return FreeQ(List(g, m), x)\n        _cons_1229 = CustomConstraint(_cons_f_1229)\n        pat = Pattern(UtilityOperator((x*WC('g', S(1)))**WC('m', S(1)), x), _cons_1229)\n        result_matchq = is_match(UtilityOperator(v, x), pat)")
+    expected1 = ('result_matchq', "        def _cons_f_1229(m, g):\n            return FreeQ(List(g, m), x)\n        _cons_1229 = CustomConstraint(_cons_f_1229)\n        pat = Pattern(UtilityOperator((x*WC('g', S(1)))**WC('m', S(1)), x), _cons_1229)\n        result_matchq = is_match(UtilityOperator(v, x), pat)")
     result = set_matchq_in_constraint(['MatchQ', 'v', ['Condition', ['Power', ['Times', ['Optional',\
         ['Pattern', 'g', ['Blank']]], 'x'], ['Optional', ['Pattern', 'm', ['Blank']]]], ['FreeQ', ['List', 'g', 'm'], 'x']]], 1229)
     assert result == expected1 or result == expected
