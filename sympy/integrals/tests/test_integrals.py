@@ -1,8 +1,8 @@
 from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
-    tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfi,
+    tanh, Derivative, diff, DiracDelta, Dummy, E, Ei, Eq, exp, erf, erfi,
     EulerGamma, Expr, factor, Function, I, im, Integral, integrate,
-    Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
+    Interval, Lambda, LambertW, limit, Limit, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
     symbols, sympify, tan, trigsimp, Tuple
@@ -10,6 +10,7 @@ from sympy import (
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.functions.elementary.integers import floor
 from sympy.integrals.risch import NonElementaryIntegral
+from sympy.integrals.integrals import cauchy_principal_value
 from sympy.physics import units
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
@@ -20,6 +21,16 @@ x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
 n = Symbol('n', integer=True)
 f = Function('f')
 
+def test_cauchy_principal_value():
+    f = log(x) / x
+    assert cauchy_principal_value(f,x) == -oo*I
+    assert cauchy_principal_value(f,y) == oo*sign(log(x)/x)
+    h = sin(x) / x
+    assert cauchy_principal_value(h,x) == pi
+    assert cauchy_principal_value(h,y) == oo*sign(sin(x)/x)
+    g = 1 / x
+    assert cauchy_principal_value(g,x) == -I*pi
+    assert cauchy_principal_value(g,y) == oo*sign(1/x)
 
 def diff_test(i):
     """Return the set of symbols, s, which were used in testing that
