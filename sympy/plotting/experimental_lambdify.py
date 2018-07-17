@@ -116,6 +116,8 @@ class vectorized_lambdify(object):
         np_old_err = np.seterr(invalid='raise')
         try:
             temp_args = (np.array(a, dtype=np.complex) for a in args)
+            self.lambda_func = experimental_lambdify(self.args, self.expr, use_evalf=True, complex_wrap_evalf=True)
+            self.vector_func = np.vectorize(self.lambda_func, otypes=[np.complex])
             results = self.vector_func(*temp_args)
             results = np.ma.masked_where(
                                 np.abs(results.imag) > 1e-7 * np.abs(results),

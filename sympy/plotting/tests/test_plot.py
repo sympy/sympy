@@ -11,7 +11,7 @@ from sympy.external import import_module
 from tempfile import NamedTemporaryFile
 import os
 import warnings
-
+import sympy
 unset_show()
 
 
@@ -189,6 +189,17 @@ def plot_and_save(name):
 
     # Multiple Contour plots with different range.
     p = plot_contour((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x**3 + y**3, (x, -3, 3), (y, -3, 3)))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+
+    # __call__ method from vectorised lamdify.py file. Tests for issue #10612
+    p = plot3d(sympy.atan2(y, x), (x, -1, 1), (y, -1, 1))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+    p = plot3d(sympy.atan2(y ** 2, x ** 2), (x, -2, 2), (y, -2, 2))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+    p = plot3d(sympy.atan2(cos(y), sin(x)), (x, -2, 2), (y, -2, 2))
     p.save(tmp_file('%s_contour_plot' % name))
     p._backend.close()
 
