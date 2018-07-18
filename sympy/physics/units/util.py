@@ -174,3 +174,22 @@ def quantity_simplify(expr):
             new_quantities.append(Mul.fromiter((
                 (ref*b.scale_factor)**p for b, p in bp)))
     return coeff*Mul.fromiter(new_quantities)
+
+
+def check_dimensions(expr):
+    """Return expr if there are not unitless values added to
+    dimensional quantities, else raise a ValueError."""
+    from sympy.solvers.solveset import _term_factors
+    # the case of adding a number to a dimensional quantity
+    # is ignored for the sake of SymPy core routines, so this
+    # function will raise an error now if such an addend is
+    # found
+    adds = expr.atoms(Add)
+    for a in adds:
+        con = any(ai.is_number for ai in a.args)
+        for ai in _term_factors(a):
+            if isinstance(ai, Pow):
+                ai = ai.base
+            if isinstance(ai, (Quantity, Dimension)) and con:
+                raise ValueError('dimensional mismatch in addends')
+    return expr

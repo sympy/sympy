@@ -5,6 +5,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import S, Symbol, sqrt
 from sympy.physics.units.dimensions import Dimension, length, time, dimsys_default
+from sympy.physics.units import foot
 from sympy.utilities.pytest import raises
 
 
@@ -65,17 +66,23 @@ def test_Dimension_properties():
 
 
 def test_Dimension_add_sub():
-    assert length + length == length
+    assert length + length == length + foot == foot + length == length
     assert length - length == length
     assert -length == length
 
-    raises(TypeError, lambda: length + 1)
-    raises(TypeError, lambda: length - 1)
     raises(ValueError, lambda: length + time)
     raises(ValueError, lambda: length - time)
 
+    # issue 14547 - only raise error for dimensional args; allow
+    # others to pass
+    x = Symbol('x')
+    assert (length + x).is_Add
+    assert (length + 1).is_Add
+
 
 def test_Dimension_mul_div_exp():
+    assert 2*length == length*2 == length
+
     velo = length / time
 
     assert (length * length) == length ** 2

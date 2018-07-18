@@ -18,6 +18,7 @@ import collections
 
 from sympy import Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict, default_sort_key
 from sympy.core.compatibility import reduce, string_types
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -150,20 +151,17 @@ class Dimension(Expr):
         dimsys_default._args = (dimsys_default.args[:2] + (Dict(d),))
 
     def __add__(self, other):
-        """Define the addition for Dimension.
+        from sympy.physics.units.quantities import Quantity
+        if isinstance(other, Basic) and other.has(Quantity):
+             other = Dimension(Quantity.get_dimensional_expr(other))
+        if self == other:
+            return self
+        elif isinstance(other, Dimension):
+            raise ValueError('mismatched dimensions of addends')
+        return super(Dimension, self).__add__(other)
 
-        Addition of dimension has a sense only if the second object is
-        the same dimension (we don't add length to time).
-        """
-
-        if not isinstance(other, Dimension):
-            raise TypeError("Only dimension can be added; '%s' is not valid"
-                            % type(other))
-        elif isinstance(other, Dimension) and self != other:
-            raise ValueError("Only dimension which are equal can be added; "
-                             "'%s' and '%s' are different" % (self, other))
-
-        return self
+    def __radd__(self, other):
+        return self + other
 
     def __sub__(self, other):
         # there is no notion of ordering (or magnitude) among dimension,
@@ -182,6 +180,9 @@ class Dimension(Expr):
             return self
 
         return Dimension(self.name*other.name)
+
+    def __rmul__(self, other):
+        return self*other
 
     def __div__(self, other):
         if not isinstance(other, Dimension):

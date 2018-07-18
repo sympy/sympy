@@ -6,14 +6,17 @@ import warnings
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy import Add, Mul, Pow, Tuple, pi, sin, sqrt, sstr, sympify
+from sympy import (Add, Mul, Pow, Tuple, pi, sin, sqrt, sstr, sympify,
+    symbols)
 from sympy.physics.units import (
     G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
     kilogram, kilometer, length, meter, mile, minute, newton, planck,
     planck_length, planck_mass, planck_temperature, planck_time, radians,
     second, speed_of_light, steradian, time)
 from sympy.physics.units.dimensions import dimsys_default
-from sympy.physics.units.util import convert_to, dim_simplify
+from sympy.physics.units.util import convert_to, dim_simplify, check_dimensions
+from sympy.utilities.pytest import raises
+
 
 
 def NS(e, n=15, **options):
@@ -146,3 +149,11 @@ def test_quantity_simplify():
     assert quantity_simplify(foot*inch*(foot*foot + inch*(foot + inch))) == foot**2*(foot**2 + inch*(foot + inch))/12
     assert quantity_simplify(2**(foot/inch*kilo/1000)*inch) == 4096*inch
     assert quantity_simplify(foot**2*inch + inch**2*foot) == 13*foot**3/144
+
+
+def test_check_dimensions():
+    x = symbols('x')
+    assert check_dimensions(inch + x) == inch + x
+    assert check_dimensions(length + x) == length + x
+    raises(ValueError, lambda: check_dimensions(inch + 1))
+    raises(ValueError, lambda: check_dimensions(length + 1))

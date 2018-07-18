@@ -318,7 +318,6 @@ def test_Quantity_derivative():
 
 
 def test_sum_of_incompatible_quantities():
-    raises(ValueError, lambda: meter + 1)
     raises(ValueError, lambda: meter + second)
     raises(ValueError, lambda: 2 * meter + second)
     raises(ValueError, lambda: 2 * meter + 3 * second)
@@ -461,5 +460,28 @@ def test_eval_subs():
     assert expr2.subs(units) == gravitational_constant*kilogram/meter**2
 
 
-def test_issue_14923():
+def test_issue_14932():
     assert (log(inch) - log(2)).simplify() == log(inch/2)
+    assert (log(inch) - log(foot)).simplify() == -log(12)
+    p = symbols('p', positive=True)
+    assert (log(inch) - log(p)).simplify() == log(inch/p)
+
+
+def test_issue_14547():
+    # the root issue is that an argument with dimensions should
+    # not raise an error when the the `arg - 1` calculation is
+    # performed in the assumptions system
+    from sympy.physics.units import foot, inch
+    from sympy import Eq
+    assert log(foot).is_zero is None
+    assert log(foot).is_positive is None
+    assert log(foot).is_nonnegative is None
+    assert log(foot).is_negative is None
+    assert log(foot).is_algebraic is None
+    assert log(foot).is_rational is None
+    # doesn't raise error
+    assert Eq(log(foot), log(inch)) is not None  # might be False or unevaluated
+
+    x = Symbol('x')
+    assert set((foot + 1).args) == set((foot, 1))
+    assert set((foot + x).args) == set((foot, x))
