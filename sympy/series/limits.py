@@ -97,6 +97,21 @@ def heuristics(e, z, z0, dir):
                 r.append(l)
         if r:
             rv = e.func(*r)
+            from sympy.calculus.util import AccumBounds
+            if rv is S.NaN and e.is_Mul and any(isinstance(rr, AccumBounds) for rr in r):
+                r2 = []
+                e2 = []
+                for ii in range(len(r)):
+                    if isinstance(r[ii], AccumBounds):
+                        r2.append(r[ii])
+                    else:
+                        e2.append(e.args[ii])
+
+                if len(e2) > 0:
+                    e3 = Mul(*e2).simplify()
+                    l = limit(e3, z, z0, dir)
+                    rv = l * Mul(*r2)
+
             if rv is S.NaN:
                 try:
                     rat_e = ratsimp(e)
