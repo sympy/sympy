@@ -483,5 +483,7 @@ def test_issue_14547():
     assert Eq(log(foot), log(inch)) is not None  # might be False or unevaluated
 
     x = Symbol('x')
-    assert set((foot + 1).args) == set((foot, 1))
-    assert set((foot + x).args) == set((foot, x))
+    e = foot + x
+    assert e.is_Add and set(e.args) == {foot, x}
+    e = foot + 1
+    assert e.is_Add and set(e.args) == {foot, 1}

@@ -76,8 +76,10 @@ def test_Dimension_add_sub():
     # issue 14547 - only raise error for dimensional args; allow
     # others to pass
     x = Symbol('x')
-    assert (length + x).is_Add
-    assert (length + 1).is_Add
+    e = length + x
+    assert e.is_Add and set(e.args) == {length, x}
+    e = length + 1
+    assert e.is_Add and set(e.args) == {length, 1}
 
 
 def test_Dimension_mul_div_exp():
