@@ -985,29 +985,7 @@ def _solveset(f, symbol, domain, flags={'tsolve_saw': []}, _check=False):
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
 
-            logarithmic_singularities = log_singularities(
-                orig_f, symbol, result, domain)
-            result -= logarithmic_singularities
-
     return result
-
-
-def log_singularities(f, symbol, result, domain):
-    singularities = S.EmptySet
-    if domain.is_subset(S.Reals):
-        if _is_logarithmic(f, symbol):
-            expr_args = list(_term_factors(f))
-            for res in result:
-                ok = True
-                for expr_arg in expr_args:
-                    if symbol in expr_arg.free_symbols:
-                        ans_arg = expr_arg.subs(symbol, res)
-                        if not ans_arg.is_real:
-                            ok = False
-                            break
-                if not ok:
-                    singularities += FiniteSet(res)
-    return singularities
 
 
 def _term_factors(f):
@@ -1183,7 +1161,7 @@ def _solve_log(f, symbol):
     An improved equation containg a single instance of log.
 
     `None`:
-        If the equation does not change.
+        If the equation does not changes.
 
     Examples
     ========
@@ -1498,7 +1476,7 @@ def _transolve(f, symbol, domain, flags={'tsolve_saw': []}):
         elif _is_logarithmic(simplified_equation, symbol):
             new_eq = _solve_log(simplified_equation, symbol)
 
-        if new_eq:
+        if new_eq is not None:
             result = _solveset(new_eq, symbol, domain, flags)
 
         return result

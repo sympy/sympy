@@ -1900,7 +1900,7 @@ def test_solve_expo():
 # logarithmic tests
 def test_logarithmic():
     assert solveset_real(log(x - 3) + log(x + 3), x) == FiniteSet(
-            sqrt(10))
+        -sqrt(10), sqrt(10))
     assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
     assert solveset_real(log(x + 3) + log(1 + 3/x) - 3, x) == FiniteSet(
         -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
@@ -1911,6 +1911,9 @@ def test_logarithmic():
         Intersection(S.Reals, FiniteSet(-sqrt(y**2 - y*exp(z)),
             sqrt(y**2 - y*exp(z)))) - \
         Intersection(S.Reals, FiniteSet(-sqrt(y**2), sqrt(y**2)))
+    assert solveset_real(
+        log(3*x) - log(-x + 1) - log(4*x + 1), x) == FiniteSet(-S(1)/2, S(1)/2)
+    assert solveset(log(x**y) - y*log(x), x, S.Reals) == S.Reals
 
 @XFAIL
 def test_uselogcombine_2():
@@ -1928,5 +1931,10 @@ def test_is_logarithmic():
     assert _is_logarithmic(sin(log(x)), x) is False
     assert _is_logarithmic(log(x) + log(x + 3), y) is False
     assert _is_logarithmic(x + y, x) is False
+
+
+def test_solve_log():
+    assert _solve_log(log(x**y) - y*log(x), x) == S.Zero
+    assert _solve_log(log(x)*log(y), x) is None
 
 # end of logarithmic tests
