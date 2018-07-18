@@ -287,6 +287,9 @@ def FreeQ(nodes, var):
         return not nodes.has(var)
 
 def NFreeQ(nodes, var):
+    ''' Note that in rubi 4.10.8 this function was not defined in `Integration Utility Functions.m`,
+    but was used in rules. So explicitly its returning `False`
+    '''
     return False
     # return not FreeQ(nodes, var)
 

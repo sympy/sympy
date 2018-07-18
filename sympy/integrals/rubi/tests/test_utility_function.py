@@ -13,13 +13,13 @@ from sympy.integrals.rubi.utility_function import (Int, Set, With, Module, Scan,
     EllipticE, EllipticF, ArcTan, ArcCot, ArcCoth, ArcTanh, ArcSin, ArcSinh, ArcCos, ArcCsc, ArcSec, ArcCsch, ArcSech, Sinh, Tanh, Cosh, Sech, Csch, Coth, LessEqual, Less, Greater, GreaterEqual, FractionQ, IntLinearcQ, Expand, IndependentQ, PowerQ, IntegerPowerQ, PositiveIntegerPowerQ, FractionalPowerQ, AtomQ, ExpQ, LogQ, Head, MemberQ, TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, Sin, Cos, Tan, Cot, Sec, Csc, HyperbolicQ, SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, InverseTrigQ, SinCosQ, SinhCoshQ, LeafCount, Numerator, NumberQ, NumericQ, Length, ListQ, Im, Re, InverseHyperbolicQ,
     InverseFunctionQ, TrigHyperbolicFreeQ, InverseFunctionFreeQ, RealQ, EqQ, FractionalPowerFreeQ, ComplexFreeQ, PolynomialQ, FactorSquareFree, PowerOfLinearQ, Exponent, QuadraticQ, LinearPairQ, BinomialParts, TrinomialParts, PolyQ, EvenQ, OddQ, PerfectSquareQ, NiceSqrtAuxQ, NiceSqrtQ, Together, PosAux, PosQ, CoefficientList, ReplaceAll, ExpandLinearProduct, GCD, ContentFactor, NumericFactor, NonnumericFactors, MakeAssocList, GensymSubst, KernelSubst, ExpandExpression, Apart, SmartApart, MatchQ, PolynomialQuotientRemainder, FreeFactors, NonfreeFactors, RemoveContentAux, RemoveContent, FreeTerms, NonfreeTerms, ExpandAlgebraicFunction, CollectReciprocals, ExpandCleanup, AlgebraicFunctionQ, Coeff, LeadTerm, RemainingTerms, LeadFactor, RemainingFactors, LeadBase, LeadDegree, Numer, Denom, hypergeom, Expon, MergeMonomials, PolynomialDivide, BinomialQ, TrinomialQ, GeneralizedBinomialQ, GeneralizedTrinomialQ, FactorSquareFreeList, PerfectPowerTest, SquareFreeFactorTest, RationalFunctionQ, RationalFunctionFactors, NonrationalFunctionFactors, Reverse, RationalFunctionExponents, RationalFunctionExpand, ExpandIntegrand, SimplerQ, SimplerSqrtQ, SumSimplerQ, BinomialDegree, TrinomialDegree, CancelCommonFactors, SimplerIntegrandQ, GeneralizedBinomialDegree, GeneralizedBinomialParts, GeneralizedTrinomialDegree, GeneralizedTrinomialParts, MonomialQ, MonomialSumQ, MinimumMonomialExponent, MonomialExponent, LinearMatchQ, PowerOfLinearMatchQ, QuadraticMatchQ, CubicMatchQ, BinomialMatchQ, TrinomialMatchQ, GeneralizedBinomialMatchQ, GeneralizedTrinomialMatchQ, QuotientOfLinearsMatchQ, PolynomialTermQ, PolynomialTerms, NonpolynomialTerms, PseudoBinomialParts, NormalizePseudoBinomial, PseudoBinomialPairQ, PseudoBinomialQ, PolynomialGCD, PolyGCD, AlgebraicFunctionFactors, NonalgebraicFunctionFactors, QuotientOfLinearsP, QuotientOfLinearsParts, QuotientOfLinearsQ, Flatten, Sort, AbsurdNumberQ, AbsurdNumberFactors, NonabsurdNumberFactors, SumSimplerAuxQ, Prepend, Drop, CombineExponents, FactorInteger, FactorAbsurdNumber, SubstForInverseFunction, SubstForFractionalPower, SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears, SubstForFractionalPowerQ, SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ, FractionalPowerSubexpressionQ, Apply, FactorNumericGcd, MergeableFactorQ, MergeFactor, MergeFactors, TrigSimplifyQ, TrigSimplify, TrigSimplifyRecur, Order, FactorOrder, Smallest, OrderedQ, MinimumDegree, PositiveFactors, Sign, NonpositiveFactors, PolynomialInAuxQ, PolynomialInQ, ExponentInAux, ExponentIn, PolynomialInSubstAux, PolynomialInSubst, Distrib, DistributeDegree, FunctionOfPower, DivideDegreesOfFactors, MonomialFactor, FullSimplify, FunctionOfLinearSubst, FunctionOfLinear, NormalizeIntegrand, NormalizeIntegrandAux, NormalizeIntegrandFactor, NormalizeIntegrandFactorBase, NormalizeTogether, NormalizeLeadTermSigns, AbsorbMinusSign, NormalizeSumFactors, SignOfFactor, NormalizePowerOfLinear, SimplifyIntegrand, SimplifyTerm, TogetherSimplify, SmartSimplify, SubstForExpn, ExpandToSum, UnifySum, UnifyTerms, UnifyTerm, CalculusQ, FunctionOfInverseLinear, PureFunctionOfSinhQ, PureFunctionOfTanhQ, PureFunctionOfCoshQ, IntegerQuotientQ, OddQuotientQ, EvenQuotientQ, FindTrigFactor, FunctionOfSinhQ, FunctionOfCoshQ, OddHyperbolicPowerQ, FunctionOfTanhQ, FunctionOfTanhWeight, FunctionOfHyperbolicQ, SmartNumerator, SmartDenominator, SubstForAux, ActivateTrig, ExpandTrig, TrigExpand, SubstForTrig, SubstForHyperbolic, InertTrigFreeQ, LCM, SubstForFractionalPowerOfLinear, FractionalPowerOfLinear, InverseFunctionOfLinear, InertTrigQ, InertReciprocalQ, DeactivateTrig, FixInertTrigFunction, DeactivateTrigAux, PowerOfInertTrigSumQ, PiecewiseLinearQ, KnownTrigIntegrandQ, KnownSineIntegrandQ, KnownTangentIntegrandQ, KnownCotangentIntegrandQ, KnownSecantIntegrandQ, TryPureTanSubst, TryTanhSubst, TryPureTanhSubst, AbsurdNumberGCD, AbsurdNumberGCDList, ExpandTrigExpand, ExpandTrigReduce, ExpandTrigReduceAux, NormalizeTrig, TrigToExp, ExpandTrigToExp, TrigReduce, FunctionOfTrig, AlgebraicTrigFunctionQ, FunctionOfHyperbolic, FunctionOfQ, FunctionOfExpnQ, PureFunctionOfSinQ, PureFunctionOfCosQ, PureFunctionOfTanQ, PureFunctionOfCotQ, FunctionOfCosQ, FunctionOfSinQ, OddTrigPowerQ, FunctionOfTanQ, FunctionOfTanWeight, FunctionOfTrigQ, FunctionOfDensePolynomialsQ, FunctionOfLog, PowerVariableExpn, PowerVariableDegree, PowerVariableSubst, EulerIntegrandQ, FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst, Divides, EasyDQ, ProductOfLinearPowersQ, Rt, NthRoot, AtomBaseQ, SumBaseQ, NegSumBaseQ, AllNegTermQ, SomeNegTermQ, TrigSquareQ, RtAux, TrigSquare, IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors, MostMainFactorPosition, FunctionOfExponentialQ, FunctionOfExponential, FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux, FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, rubi_test, If, IntQuadraticQ, IntBinomialQ, RectifyTangent, RectifyCotangent, Inequality, Condition, Simp, SimpHelp, SplitProduct, SplitSum, SubstFor, SubstForAux, FresnelS, FresnelC, Erfc, Erfi, Gamma, FunctionOfTrigOfLinearQ, ElementaryFunctionQ, Complex, UnsameQ, _SimpFixFactor,
     DerivativeDivides, SimpFixFactor, _FixSimplify, FixSimplify, _SimplifyAntiderivativeSum, SimplifyAntiderivativeSum, PureFunctionOfCothQ, _SimplifyAntiderivative, SimplifyAntiderivative, _TrigSimplifyAux, TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist, IntegralFreeQ, Sum_doit, log,
-    PolynomialRemainder, CoprimeQ, Distribute, ProductLog, Floor, PolyGamma, process_trig)
+    PolynomialRemainder, CoprimeQ, Distribute, ProductLog, Floor, PolyGamma, process_trig, replace_pow_exp)
 from sympy.core.symbol import symbols, S
-from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
+from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec, atan2
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch, acoth
 from sympy.functions import (sin, cos, tan, cot, sec, csc, sqrt, log as sym_log)
-from sympy import (I, E, pi, hyper, Add, Wild, simplify, Symbol, exp,
-    zoo, gamma, polylog, oo, polygamma)
+from sympy import (I, E, pi, hyper, Add, Wild, simplify, Symbol, exp, UnevaluatedExpr, Pow, li, Ei, expint,
+    Si, Ci, Shi, Chi, loggamma, zeta, zoo, gamma, polylog, oo, polygamma)
 from sympy import Integral, nsimplify, Min
 A, B, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B a b c d e f g h y z m n p q u v w F', real=True, imaginary=False)
 x = Symbol('x')
@@ -109,6 +109,11 @@ def test_Sqrt():
     assert Sqrt(x) == sqrt(x)
     assert Sqrt(25) == 5
 
+def test_Util_Coefficient():
+    from sympy.integrals.rubi.utility_function import Util_Coefficient
+    assert Util_Coefficient(a + b*x + c*x**3, x, a) == Util_Coefficient(a + b*x + c*x**3, x, a)
+    assert Util_Coefficient(a + b*x + c*x**3, x, 4).doit() == 0
+
 def test_Coefficient():
     assert Coefficient(7 + 2*x + 4*x**3, x, 1) == 2
     assert Coefficient(a + b*x + c*x**3, x, 0) == a
@@ -128,6 +133,7 @@ def test_Hypergeometric2F1():
 
 def test_ArcTan():
     assert ArcTan(x) == atan(x)
+    assert ArcTan(x, y) == atan2(x, y)
 
 def test_Not():
     a = 10
@@ -1769,6 +1775,11 @@ def test_ElementaryFunctionQ():
     assert ElementaryFunctionQ(sin(x + y))
     assert ElementaryFunctionQ(E**(x*a))
 
+def test_Util_Part():
+    from sympy.integrals.rubi.utility_function import Util_Part
+    assert Util_Part(1, a + b).doit() == a
+    assert Util_Part(c, a + b).doit() == Util_Part(c, a + b)
+
 def test_Part():
     assert Part([1, 2, 3], 1) == 1
     assert Part(a*b, 1) == a
@@ -1837,11 +1848,60 @@ def test_IntegralFreeQ():
     assert not IntegralFreeQ(Integral(a, x))
     assert IntegralFreeQ(a + b)
 
+def test_OneQ():
+    from sympy.integrals.rubi.utility_function import OneQ
+    assert OneQ(S(1))
+    assert not OneQ(S(2))
+
 def test_DerivativeDivides():
     assert not DerivativeDivides(x, x, x)
     assert not DerivativeDivides(a, x + y, b)
     assert DerivativeDivides(a + x, a, x) == a
     assert DerivativeDivides(a + b, x + y, b) == x + y
+
+def test_LogIntegral():
+    from sympy.integrals.rubi.utility_function import LogIntegral
+    assert LogIntegral(a) == li(a)
+
+def test_SinIntegral():
+    from sympy.integrals.rubi.utility_function import SinIntegral
+    assert SinIntegral(a) == Si(a)
+
+def test_CosIntegral():
+    from sympy.integrals.rubi.utility_function import CosIntegral
+    assert CosIntegral(a) == Ci(a)
+
+def test_SinhIntegral():
+    from sympy.integrals.rubi.utility_function import SinhIntegral
+    assert SinhIntegral(a) == Shi(a)
+
+def test_CoshIntegral():
+    from sympy.integrals.rubi.utility_function import CoshIntegral
+    assert CoshIntegral(a) == Chi(a)
+
+def test_ExpIntegralEi():
+    from sympy.integrals.rubi.utility_function import ExpIntegralEi
+    assert ExpIntegralEi(a) == Ei(a)
+
+def test_ExpIntegralE():
+    from sympy.integrals.rubi.utility_function import ExpIntegralE
+    assert ExpIntegralE(a, z) == expint(a, z)
+
+def test_LogGamma():
+    from sympy.integrals.rubi.utility_function import LogGamma
+    assert LogGamma(a) == loggamma(a)
+
+def test_Factorial():
+    from sympy.integrals.rubi.utility_function import Factorial
+    assert Factorial(S(5)) == 120
+
+def test_Zeta():
+    from sympy.integrals.rubi.utility_function import Zeta
+    assert Zeta(a, z) == zeta(a, z)
+
+def test_HypergeometricPFQ():
+    from sympy.integrals.rubi.utility_function import HypergeometricPFQ
+    assert HypergeometricPFQ([a, b], [c], z) == hyper([a, b], [c], z)
 
 def test_PolyGamma():
     assert PolyGamma(S(2), S(3)) == polygamma(2, 3)
@@ -1863,6 +1923,14 @@ def test_Floor():
     assert Floor(S(7.5)) == 7
     assert Floor(S(15.5), S(6)) == 12
 
+def test_Factor():
+    from sympy.integrals.rubi.utility_function import Factor
+    assert Factor(a*b + a*c) == a*(b + c)
+
+def test_Rule():
+    from sympy.integrals.rubi.utility_function import Rule
+    assert Rule(x, S(5)) == {x: 5}
+
 def test_Distribute():
     assert Distribute((a + b)*c + (a + b)*d, Add) == c*(a + b) + d*(a + b)
     assert Distribute((a + b)*(c + e), Add) == a*c + a*e + b*c + b*e
@@ -1870,6 +1938,11 @@ def test_Distribute():
 def test_CoprimeQ():
     assert CoprimeQ(S(7), S(5))
     assert not CoprimeQ(S(6), S(3))
+
+def test_Discriminant():
+    from sympy.integrals.rubi.utility_function import Discriminant
+    assert Discriminant(a*x**2 + b*x + c, x) == b**2 - 4*a*c
+    assert Discriminant(1/x, x) == Discriminant(1/x, x)
 
 def test_Sum_doit():
     assert Sum_doit(2*x + 2, [x, 0, 1.7]) == 6
@@ -1880,3 +1953,21 @@ def test_DeactivateTrig():
 def test_process_trig():
     assert process_trig(x*cot(x)) == x/tan(x)
     assert process_trig(coth(x)*csc(x)) == S(1)/(tanh(x)*sin(x))
+
+def test_replace_pow_exp():
+    from sympy.integrals.rubi.utility_function import exp as rubi_exp
+    assert replace_pow_exp(rubi_exp(S(5))) == exp(S(5))
+
+def test_rubi_unevaluated_expr():
+    from sympy.integrals.rubi.utility_function import rubi_unevaluated_expr
+    assert rubi_unevaluated_expr(a)*rubi_unevaluated_expr(b) == rubi_unevaluated_expr(b)*rubi_unevaluated_expr(a)
+
+def test_rubi_exp():
+    # class name in utility_function is `exp`. To avoid confusion `rubi_exp` has been used here
+    from sympy.integrals.rubi.utility_function import exp as rubi_exp
+    assert isinstance(rubi_exp(a), Pow)
+
+def test_rubi_log():
+    # class name in utility_function is `log`. To avoid confusion `rubi_log` has been used here
+    from sympy.integrals.rubi.utility_function import exp as rubi_exp, log as rubi_log
+    assert rubi_log(rubi_exp(S(a))) == a
