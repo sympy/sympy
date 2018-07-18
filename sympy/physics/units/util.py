@@ -132,7 +132,7 @@ def convert_to(expr, target_units):
 
 def quantity_simplify(expr):
     """Return an equivalent expression in which prefixes are replaced
-    with numerical values and products of related quantities are
+    with numerical values and all units of a given dimension are the
     unified in a canonical manner.
 
     Examples
@@ -143,37 +143,28 @@ def quantity_simplify(expr):
     >>> from sympy.physics.units import foot, inch
     >>> quantity_simplify(kilo*foot*inch)
     250*foot**2/3
+    >>> quantity_simplify(foot - 6*inch)
+    foot/2
     """
 
-    if expr.is_Atom:
+    if expr.is_Atom or not expr.has(Prefix, Quantity):
         return expr
 
-    if isinstance(expr, Prefix):
-        return expr.scale_factor
+    # replace all prefixes with numerical values
+    p = expr.atoms(Prefix)
+    expr = expr.xreplace({p: p.scale_factor for p in p})
 
-    expr = expr.func(*map(quantity_simplify, expr.args))
+    # replace all quantities of given dimension with a canonical
+    # quantity, chosen from those in the expression
+    d = sift(expr.atoms(Quantity), lambda i: i.dimension)
+    for k in d:
+        if len(d[k]) == 1:
+            continue
+        v = list(ordered(d[k]))
+        ref = v[0]/v[0].scale_factor
+        expr = expr.xreplace({vi: ref*vi.scale_factor for vi in v[1:]})
 
-    if not expr.is_Mul or not expr.has(Quantity):
-        return expr
-
-    args_pow = [arg.as_base_exp() for arg in expr.args]
-    quantity_pow, other_pow = sift(
-        args_pow, lambda x: isinstance(x[0], Quantity), binary=True)
-    coeff = Mul.fromiter([
-        Pow(b, e, evaluate=False) for b, e in other_pow])
-    quantity_pow_by_dim = sift(quantity_pow, lambda x: x[0].dimension)
-    new_quantities = []
-    for _, bp in quantity_pow_by_dim.items():
-        if len(bp) == 1:
-            new_quantities.append(bp[0][0]**bp[0][1])
-        else:
-            # just let reference quantity be the first quantity,
-            # picked from an ordered list
-            bp = list(ordered(bp))
-            ref = bp[0][0]/bp[0][0].scale_factor
-            new_quantities.append(Mul.fromiter((
-                (ref*b.scale_factor)**p for b, p in bp)))
-    return coeff*Mul.fromiter(new_quantities)
+    return expr
 
 
 def check_dimensions(expr):
