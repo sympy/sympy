@@ -853,7 +853,7 @@ def solve_decomposition(f, symbol, domain):
     return y_s
 
 
-def _solveset(f, symbol, domain, _check=False):
+def _solveset(f, symbol, domain, flags={'tsolve_saw': []}, _check=False):
     """Helper for solveset to return a result from an expression
     that has already been sympify'ed and is known to contain the
     given symbol."""
@@ -951,7 +951,7 @@ def _solveset(f, symbol, domain, _check=False):
                         result_rational = _solve_as_rational(equation, symbol, domain)
                         if isinstance(result_rational, ConditionSet):
                             # may be a transcendental type equation
-                            result += _transolve(equation, symbol, domain)
+                            result += _transolve(equation, symbol, domain, flags)
                         else:
                             result += result_rational
                 else:
@@ -1296,7 +1296,7 @@ def _is_logarithmic(f, symbol):
     return False
 
 
-def _transolve(f, symbol, domain):
+def _transolve(f, symbol, domain, flags={'tsolve_saw': []}):
     r"""
     Function to solve transcendental equations. It is a helper to
     `solveset` and should be used internally. `\_transolve`
@@ -1474,7 +1474,7 @@ def _transolve(f, symbol, domain):
       - What does the helper returns.
     """
 
-    def add_type(eq, symbol, domain):
+    def add_type(eq, symbol, domain, flags):
         """
         Helper for `_transolve` to handle equations of
         `Add` type, i.e. equations taking the form as
@@ -1499,9 +1499,14 @@ def _transolve(f, symbol, domain):
             new_eq = _solve_log(simplified_equation, symbol)
 
         if new_eq:
-            result = _solveset(new_eq, symbol, domain)
+            result = _solveset(new_eq, symbol, domain, flags)
 
         return result
+
+    if f in flags['tsolve_saw']:
+        return ConditionSet(symbol, Eq(f, 0), domain)
+    else:
+        flags['tsolve_saw'].append(f)
 
     unsolved_result = ConditionSet(symbol, Eq(f, 0), domain)
     result = unsolved_result
@@ -1516,7 +1521,7 @@ def _transolve(f, symbol, domain):
         equation = Add(lhs, -rhs, evaluate=False)
 
         if lhs.is_Add:
-            result = add_type(equation, symbol, domain)
+            result = add_type(equation, symbol, domain, flags)
     else:
         result = rhs_s
 
