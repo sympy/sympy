@@ -194,6 +194,8 @@ if matchpy:
 class Int(Function):
     @classmethod
     def eval(cls, expr, var):
+        if isinstance(expr, (int, Integer, float, Float)):
+            return S(expr)*var
         from sympy.integrals.rubi.rubi import util_rubi_integrate
         return util_rubi_integrate(expr, var)
 
@@ -2524,6 +2526,7 @@ def MonomialSumQ(u, x):
                 return False
         return True
 
+@doctest_depends_on(modules=('matchpy',))
 def MinimumMonomialExponent(u, x):
     """
     u is sum whose terms are monomials.  MinimumMonomialExponent(u, x) returns the exponent of the term having the smallest exponent

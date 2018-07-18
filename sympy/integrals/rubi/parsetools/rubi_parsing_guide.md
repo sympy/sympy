@@ -93,3 +93,10 @@ Open a python terminal and run the following code:
 The above code writes tests in sympy format in `parsed_tests.py`. File names in `generate_tests` should be changed as per the situation.
 
 Note: Current test suite in sympy is not all parsed through these above steps. But it works well and is tested for `special_functions`. `test_error_functions` in `test_special_functions.py` has been parsed through the above steps.
+
+-----------------------
+
+### References
+
+* [1] http://reference.wolfram.com/language/ref/FullForm.html
+* [2] http://reference.wolfram.com/language/ref/DownValues.html

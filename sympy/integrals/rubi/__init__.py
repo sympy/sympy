@@ -24,10 +24,10 @@ if correct rule is being applied by evaluating the same expression in Mathematic
 If the applied rule is same, then we need to check the `ReplacementRule` and
 the utility functions used in the `ReplacementRule`.
 
-Parsing Rules
-=============
-I have included the parser in /parsetools folder. The parser takes
-`FullForm[DownValues[]]` of Mathematica rules as input.
+Parsing Rules and Tests
+=======================
+Code for parsing rule and tests are included in sympy.
+They have been properly explained with steps in `rubi_parsing_guide.md` in parsetools.
 
 References
 ==========
