@@ -459,3 +459,7 @@ def test_eval_subs():
     expr2 = force/mass
     units = {force:gravitational_constant*kilogram**2/meter**2, mass:kilogram}
     assert expr2.subs(units) == gravitational_constant*kilogram/meter**2
+
+
+def test_issue_14923():
+    assert (log(inch) - log(2)).simplify() == log(inch/2)

@@ -407,28 +407,31 @@ class DimensionSystem(Basic):
         if name.is_Number:
             return {}
 
+        get_for_name = dimsys_default._get_dimensional_dependencies_for_name
+
         if name.is_Mul:
             ret = collections.defaultdict(int)
-            dicts = [dimsys_default._get_dimensional_dependencies_for_name(i) for i in name.args]
+            dicts = [get_for_name(i) for i in name.args]
             for d in dicts:
                 for k, v in d.items():
                     ret[k] += v
             return {k: v for (k, v) in ret.items() if v != 0}
 
         if name.is_Pow:
-            dim = dimsys_default._get_dimensional_dependencies_for_name(name.base)
+            dim = get_for_name(name.base)
             return {k: v*name.exp for (k, v) in dim.items()}
 
         if name.is_Function:
             args = (Dimension._from_dimensional_dependencies(
-                dimsys_default._get_dimensional_dependencies_for_name(arg)
-            ) for arg in name.args)
+                get_for_name(arg)) for arg in name.args)
             result = name.func(*args)
 
             if isinstance(result, Dimension):
                 return dimsys_default.get_dimensional_dependencies(result)
-            # TODO shall we consider a result that is not a dimension?
-            # return Dimension._get_dimensional_dependencies_for_name(result)
+            elif result.func == name.func:
+                return {}
+            else:
+                return get_for_name(result)
 
     def get_dimensional_dependencies(self, name, mark_dimensionless=False):
         if isinstance(name, Dimension):
