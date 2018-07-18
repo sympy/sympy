@@ -119,6 +119,7 @@ test_list = [
     '*ipython*',
 
     # antlr
+    'sympy/parsing/tests/test_autolev',
     'sympy/parsing/tests/test_latex',
 
     # matchpy
@@ -157,6 +158,7 @@ doctest_list = [
     '*ipython*',
 
     # antlr
+    'sympy/parsing/autolev',
     'sympy/parsing/latex',
 
     # matchpy

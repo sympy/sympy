@@ -669,9 +669,21 @@ def _doctest(*paths, **kwargs):
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
         "sympy/physics/unitsystems.py", # raises deprecation warning
+        "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
         "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
         "sympy/parsing/latex/_antlr/latexparser.py", # generated code
+        "sympy/parsing/autolev/test_examples/output.py", # generated code
     ])
+    # autolev parser tests
+    num = 12
+    for i in range (1, num+1):
+        blacklist.append("sympy/parsing/autolev/test_examples/ruletest" + str(i) + ".py")
+    blacklist.extend(["sympy/parsing/autolev/test_examples/mass_spring_damper.py",
+                      "sympy/parsing/autolev/test_examples/chaos_pendulum.py",
+                      "sympy/parsing/autolev/test_examples/double_pendulum.py",
+                      "sympy/parsing/autolev/test_examples/non_min_pendulum.py"])
 
     if import_module('numpy') is None:
         blacklist.extend([

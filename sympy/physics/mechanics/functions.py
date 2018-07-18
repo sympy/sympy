@@ -341,13 +341,14 @@ def potential_energy(*body):
             raise TypeError('*body must have only Particle or RigidBody')
     return pe_sys
 
+
 def gravity(acceleration, *bodies):
     """
     Returns a list of gravity forces given the acceleration
     due to gravity and any number of particles or rigidbodies.
 
-    Examples
-    ========
+    Example
+    =======
 
     >>> from sympy.physics.mechanics import ReferenceFrame, Point, Particle, outer, RigidBody
     >>> from sympy.physics.mechanics.functions import gravity
@@ -380,6 +381,55 @@ def gravity(acceleration, *bodies):
         gravity_force.append((point, e.mass*acceleration))
 
     return gravity_force
+
+
+def center_of_mass(point, *bodies):
+    """
+    Returns the position vector from the given point to the center of mass
+    of the given bodies(particles or rigidbodies).
+
+    Example
+    =======
+
+    >>> from sympy import symbols, S
+    >>> from sympy.physics.vector import Point
+    >>> from sympy.physics.mechanics import Particle, ReferenceFrame
+    >>> from sympy.physics.mechanics.functions import center_of_mass
+    >>> frame_a=ReferenceFrame('a')
+    >>> mu=symbols('mu', real=True)
+    >>> p1=Particle('p1', Point('p1_pt'), S(1))
+    >>> p2=Particle('p2', Point('p2_pt'), S(2))
+    >>> p3=Particle('p3', Point('p3_pt'), S(3))
+    >>> p4=Particle('p4', Point('p4_pt'), S(4))
+    >>> p5=Particle('p5', Point('p5_pt'), S(5))
+    >>> p6=Particle('p6', Point('p6_pt'), S(6))
+    >>> p7=Particle('p7', Point('p7_pt'), S(7))
+    >>> p8=Particle('p8', Point('p8_pt'), mu)
+    >>> p2.point.set_pos(p1.point, frame_a.x)
+    >>> p3.point.set_pos(p1.point, frame_a.x+frame_a.y)
+    >>> p4.point.set_pos(p1.point, frame_a.y)
+    >>> p5.point.set_pos(p1.point, frame_a.z)
+    >>> p6.point.set_pos(p1.point, frame_a.x+frame_a.z)
+    >>> p7.point.set_pos(p1.point, frame_a.x+frame_a.y+frame_a.z)
+    >>> p8.point.set_pos(p1.point, frame_a.y+frame_a.z)
+    >>> point_so=Point('so')
+    >>> point_so.set_pos(p1.point, center_of_mass(p1.point, p1, p2, p3, p4, p5, p6, p7, p8))
+    >>> point_so.pos_from(p1.point)
+    18/(mu + 28)*a.x + (mu + 14)/(mu + 28)*a.y + (mu + 18)/(mu + 28)*a.z
+    """
+    if not bodies:
+        raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
+
+    total_mass = 0
+    vec = Vector(0)
+    for i in bodies:
+        total_mass += i.mass
+        try:
+            vec += i.mass*i.masscenter.pos_from(point)
+        except AttributeError:
+            vec += i.mass*i.point.pos_from(point)
+    return vec/total_mass
+
 
 def Lagrangian(frame, *body):
     """Lagrangian of a multibody system.
