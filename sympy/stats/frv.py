@@ -208,6 +208,11 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
         return Lambda(t, sum(exp(I*k*t)*v for k, v in self.dict.items()))
 
     @property
+    def moment_generating_function(self):
+        t = Dummy('t', real=True)
+        return Lambda(t, sum(exp(k * t) * v for k, v in self.dict.items()))
+
+    @property
     def set(self):
         return list(self.dict.keys())
 
@@ -289,6 +294,13 @@ class FinitePSpace(PSpace):
         t = Dummy('t', real=True)
 
         return Lambda(t, sum(exp(I*k*t)*v for k,v in d.items()))
+
+    @cacheit
+    def compute_moment_generating_function(self, expr):
+        d = self.compute_density(expr)
+        t = Dummy('t', real=True)
+
+        return Lambda(t, sum(exp(k * t) * v for k, v in d.items()))
 
     def integrate(self, expr, rvs=None, **kwargs):
         rvs = rvs or self.values

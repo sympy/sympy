@@ -2,9 +2,9 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
         Poisson, Geometric, Logarithmic, NegativeBinomial, YuleSimon, Zeta)
 from sympy.abc import x
 
-from sympy import S, Sum, I, lambdify, re, im, log, simplify, zeta
+from sympy import S, Sum, I, lambdify, re, im, log, simplify, zeta, pi
 from sympy.stats import (P, E, variance, density, characteristic_function,
-        where)
+        where, moment_generating_function)
 
 from sympy.stats.rv import sample
 from sympy.stats.symbolic_probability import Probability
@@ -127,6 +127,27 @@ def test_precomputed_characteristic_functions():
     test_cf(Poisson('p', 5), 0, mpmath.inf)
     test_cf(YuleSimon('y', 5), 1, mpmath.inf)
     test_cf(Zeta('z', 5), 1, mpmath.inf)
+
+def test_moment_generating_functions():
+    t = S('t')
+
+    geometric_mgf = moment_generating_function(Geometric('g', S(1)/2))(t)
+    assert geometric_mgf.diff(t).subs(t, 0) == 2
+
+    logarithmic_mgf = moment_generating_function(Logarithmic('l', S(1)/2))(t)
+    assert logarithmic_mgf.diff(t).subs(t, 0) == 1/log(2)
+
+    negative_binomial_mgf = moment_generating_function(NegativeBinomial('n', 5, S(1)/3))(t)
+    assert negative_binomial_mgf.diff(t).subs(t, 0) == S(5)/2
+
+    poisson_mgf = moment_generating_function(Poisson('p', 5))(t)
+    assert poisson_mgf.diff(t).subs(t, 0) == 5
+
+    yule_simon_mgf = moment_generating_function(YuleSimon('y', 3))(t)
+    assert simplify(yule_simon_mgf.diff(t).subs(t, 0)) == S(3)/2
+
+    zeta_mgf = moment_generating_function(Zeta('z', 5))(t)
+    assert zeta_mgf.diff(t).subs(t, 0) == pi**4/(90*zeta(5))
 
 def test_Or():
     X = Geometric('X', S(1)/2)
