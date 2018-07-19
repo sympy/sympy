@@ -7,7 +7,7 @@ class PcGroup(FpGroup):
     Class implementing Polycyclic groups.
     To-do : Docstring completion.
             Add error and exception handling
-    The generators will be converted to equivalent forms on 
+    The generators will be converted to equivalent forms on
     another free group.
     The implementation for this methods will be similar to
     the coin change problem in DP.
@@ -114,7 +114,21 @@ class PcGroup(FpGroup):
         raise ValueError("Subword not found")
 
     def _find_relation(w, type):
-        '''Find the the approproate relation. To-do'''
+        '''Find the the approproate relation'''
+        if type == 0:
+            # It's a power relation
+            elem = w.letter_form_elm[0]
+            elem_index = self.pc_gens.index(elem)
+            exp = self.relative_orders(elem_index)
+            return elem**exp
+        else:
+            # It's a conjugate relation
+            elem_1 = w.letter_form_elm[0]
+            elem_2 = w.letter_form_elm[len(w)-1]
+            rel = elem_2**(elem_2.arr_form[0][1])*elem_1*elem_2
+            if rel in self.conjugate_relations:
+                return rel
+        return None
 
     def collected_word(self, w):
         uncollected_list = minimal_uncollected_subwords(w)
@@ -124,7 +138,7 @@ class PcGroup(FpGroup):
             l_index, h_index = self._find_index_range(elem, w)
             # if the subword is of the form `x**k`.
             if uncollected_list[elem][0] == 0:
-                relation = self._find_relation(elem)
+                relation = self._find_relation(elem, 0)
                 rel_val = self.power_relations[relation]
                 # the exponent of the relation
                 rel_base = rel_val.array_form[0][0]
@@ -136,7 +150,7 @@ class PcGroup(FpGroup):
                 new_subword = rel_base**r*rel_val**q
             # the subword is of the form x**k*y or x**k*y**-1
             else:
-                relation = self._find_relation(elem)
+                relation = self._find_relation(elem, 1)
                 rel_val = self.conjugate_relations[relation]
                 word_arr = elem.letter_form_elm
                 len_word_arr = len(word_arr)
