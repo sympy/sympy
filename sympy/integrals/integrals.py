@@ -28,7 +28,7 @@ from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
-from sympy.calculus import singularities
+
 
 
 class Integral(AddWithLimits):
