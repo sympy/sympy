@@ -3126,4 +3126,4 @@ def test_issue_14943():
         skip('NumPy must be available to test creating matrices from ndarrays')
 
     M = Matrix([[1,2], [3,4]])
-    assert len(array(M, dtype=float)) == 2
+    assert array(M, dtype=float).dtype.name == 'float64'
