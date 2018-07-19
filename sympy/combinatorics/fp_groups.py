@@ -544,6 +544,12 @@ class FpGroup(DefaultPrinting):
 
         return pc_series
 
+    def pc_group(self):
+        '''Returns a the corresponding Pc-Group'''
+        from sympy.combinatorics.pc_groups import PcGroup
+        polycyclic_series = self.compute_polycyclic_series()
+        # Consistent by default
+        return PcGroup(polycyclic_series)
 
 def subgroup_quotient(free_group, fp_grp, G, H):
     '''
@@ -587,6 +593,7 @@ def _subnormal_series(G):
         raise NotImplementedError("Subnormal series computation is"
                                     "only implemented for AbelianGroups")
     subnormal_series = [G]
+    free_group = G.free_group
     _next = G
     _next_order = _next.order()
     while not igcd(_next_order, totient(_next_order)) == 1:
@@ -596,7 +603,7 @@ def _subnormal_series(G):
         _next = _parent.subgroup(elem)
         # Injective homomorphism between `_next` which is defined
         # on another free_group and the parent group.
-        _homomorphism = homomorphism(_next, _parent, _next.generators[0], _parent.generaotrs[0], check=False)
+        _homomorphism = homomorphism(_next, _parent, _next.generators[0], _parent.generators[0], check=False)
         new_relators = _homomorphism(list(_next.relators))
         _next = FpGroup(free_group, new_relators)
         _next_order = _next.order()
@@ -1177,21 +1184,25 @@ def _simplification_technique_1(rels):
 ###############################################################################
 
 # Pg 175 [1]
-def define_schreier_generators(C, rel=False):
+def define_schreier_generators(C, homomorphism=False):
     '''
     Arguments:
     C -- Coset table.
-    rel -- When set to True, this returns a relation between subgroup generators
-           and the elements of the parent group.
+    homomorphism -- When set to True, this returns a relation between subgroup generators
+                  and the elements of the parent group.
     '''
     y = []
     gamma = 1
     f = C.fp_group
     X = f.generators
-    if rel:
+    if homomorphism:
         # `_gens` stores the elements of the parent group to
         # to which the schreier generators correspond to.
-        _gens = []
+        _gens = {}
+        # compute the schreier Traversal
+        traversal = []
+        for alpha in C.omega:
+            traversal.append(C.coset_representative(alpha))
     C.P = [[None]*len(C.A) for i in range(C.n)]
     for alpha, x in product(C.omega, C.A):
         beta = C.table[alpha][C.A_dict[x]]
@@ -1200,21 +1211,19 @@ def define_schreier_generators(C, rel=False):
             C.P[beta][C.A_dict_inv[x]] = "<identity>"
             gamma += 1
         elif x in X and C.P[alpha][C.A_dict[x]] is None:
-            if rel:
-                # The schreier generators are defined as
-                # coset_rep(alpha)*x = schrier_gen*coset_rep(beta)
-                rh = C.coset_representative(alpha)*x
-                lh_suffix = C.coset_representative(beta)
-                for i in range(1, len(rh)):
-                    if rh.subword(i, len(rh)) == lh_suffix:
-                        _gens.append(rh.subword(0, i))
             y_alpha_x = '%s_%s' % (x, alpha)
             y.append(y_alpha_x)
             C.P[alpha][C.A_dict[x]] = y_alpha_x
+            if homomorphism:
+                # The schreier generators are defined as
+                # coset_rep(alpha)*x = schrier_gen*coset_rep(beta)
+                rh = traversal(alpha)*x
+                lh_suffix = traversal(beta)
+                _gens[y_alpha_x] = rh*(lh_suffix)**-1
     grp_gens = list(free_group(', '.join(y)))
     C._schreier_free_group = grp_gens.pop(0)
     C._schreier_generators = grp_gens
-    if rel:
+    if homomorphism:
         C._schreier_gen_elem = _gens
     # replace all elements of P by, free group elements
     for i, j in product(range(len(C.P)), range(len(C.A))):
@@ -1338,13 +1347,14 @@ def elimination_technique_2(C):
     C._schreier_generators = gens
     return C._schreier_generators, C._reidemeister_relators
 
-def reidemeister_presentation(fp_grp, H, C=None ,rel=False):
+def reidemeister_presentation(fp_grp, H, C=None ,homomorphism=False):
     """
     fp_group: A finitely presented group, an instance of FpGroup
     H: A subgroup whose presentation is to be found, given as a list
     of words in generators of `fp_grp`
-    rel: When set to True, this computes the elements in the `fp_grp`
-         to which the shreier generators corresponf to.
+    homomorphism: When set to True, this computes the elements in the `fp_grp`
+                  to which the shreier generators correspond to and returns a
+                  homomorphism between the presentation and the parent group.
 
     Examples
     ========
@@ -1381,17 +1391,25 @@ def reidemeister_presentation(fp_grp, H, C=None ,rel=False):
     if not C:
         C = coset_enumeration_r(fp_grp, H)
     C.compress(); C.standardize()
-    define_schreier_generators(C, rel=rel)
+    define_schreier_generators(C, homomorphism=homomorphism)
     reidemeister_relators(C)
     gens, rels = C._schreier_generators, C._reidemeister_relators
-    # To-do change scherier generators correspondance to newset of gens.s
     gens, rels = simplify_presentation(gens, rels, change_gens=True)
 
     C.schreier_generators = tuple(gens)
     C.reidemeister_relators = tuple(rels)
-    if rel:
-        C.schreier_gen_elem = tuple(C._schreier_gen_elem)
-        return C.schreier_generators, C.reidemeister_relators, C.schreier_gen_elem
+    if homomorphism:
+        G = C.fp_group
+        if gens:
+            _G = FpGroup(g[0].group, rels)
+        else:
+            _G = FpGroup(free_group('')[0], [])
+        _gens = []
+        for gen in gens:
+            C.schreier_gen_elem[gen] = C._schreier_gen_elem[str(gen)]
+            _gens.append(C.schreier_gen_elem[gen])
+        _homomorphism = homomorphism(_G, G, _gens, gens)
+        return C.schreier_generators, C.reidemeister_relators, _homomorphism
 
     return C.schreier_generators, C.reidemeister_relators
 
