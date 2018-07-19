@@ -1,6 +1,7 @@
 from sympy import sympify, S, pi, sqrt, exp, Lambda, Indexed, Symbol, Gt
 from sympy.stats.rv import _value_check
-from sympy.stats.joint_rv import JointDistribution, JointPSpace
+from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
+    JointDistributionHandmade)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 
@@ -17,6 +18,71 @@ def multivariate_rv(cls, sym, *args):
     args = dist.args
     dist.check(*args)
     return JointPSpace(sym, dist).value
+
+def JointContinuousRV(symbols, pdf):
+    """
+    Create a Joint Random Variable where each of its component is conitinuous,
+    given the following:
+
+    -- a list/tuple of symbols
+    -- a probability density function
+
+    NOTE: As of now, the set for each component for a `JointContinuousRV` is
+    equal to the set of all integers, which can not be changed.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols exp, pi
+    >>> from sympy.stats.joint_rv_types import JointContinuousRV
+
+    >>> x, y = symbols("x y")
+    >>> pdf = exp(-x**2/2 + x - y**2/2 - 1/2)/(2*pi)
+
+    >>> N1 = JointContinuousRV((x, y), pdf) #Multivariate Normal distribution
+    >>> density(N1)
+    exp(-5)/(2*pi)
+    """
+    #TODO: Add support for sets provided by the user
+    pdf = Lambda(symbols, pdf)
+    _set = S.Reals**len(symbols)
+    dist = JointDistributionHandmade(pdf, _set)
+
+
+
+def JointDiscreteRV(symbols, pdf):
+    """
+    Create a Joint Random Variable where each of its component is discrete,
+    given the following:
+
+    -- a list/tuple of symbols
+    -- a probability density function
+
+    NOTE: As of now, the set for each component for a `JointContinuousRV` is
+    equal to the real line, which can not be changed.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols exp, pi
+    >>> from sympy.stats.joint_rv_types import JointContinuousRV
+
+    >>> x, y = symbols("x y")
+    >>> pdf = 2**x*3**y*exp(-5)/(factorial(x)*factorial(y))
+
+    >>> N1 = JointDiscreteRV((x, y), pdf)
+    >>> density(N1)
+    exp(-5)/(2*pi)
+    """
+    #TODO: Add support for sets provided by the user
+    pdf = Lambda(symbols, pdf)
+    _set = S.Integers**len(symbols)
+    dist = JointDistributionHandmade(pdf, _set)
+
 
 #-------------------------------------------------------------------------------
 # Multivariate Normal distribution ---------------------------------------------------------

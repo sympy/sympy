@@ -19,6 +19,7 @@ from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
      ProductDomain, RandomSymbol)
 from sympy.matrices import ImmutableMatrix
+
 class JointPSpace(ProductPSpace):
     """
     Represents a joint probability space. Represented using symbols for
@@ -30,7 +31,7 @@ class JointPSpace(ProductPSpace):
 
     @property
     def set(self):
-        return self.domain.set
+        return self.distribution.set
 
     @property
     def symbol(self):
@@ -126,6 +127,15 @@ class JointRandomSymbol(RandomSymbol):
         from sympy.stats.joint_rv import JointPSpace
         if isinstance(self.pspace, JointPSpace):
             return Indexed(self, key)
+
+class JointDistributionHandmade(JointDistribution, NamedArgsMixin):
+    _argnames = ('pdf',)
+
+    def pdf(self):
+        return self.args[0]
+
+    def set(self):
+        return self.args[1]
 
 def marginal_distribution(rv, *indices):
     """
