@@ -1418,7 +1418,7 @@ def cauchy_principal_value(func, sym, lower_limit = -oo, upper_limit = oo):
          |                  |                      |
          |                  |                      |
     p.v. | f(x)dx  = lim    | f(x)dx   +   lim     |
-         |          r -> 0  |             r -> 0   |
+         |          r -> 0+ |             r -> 0+  |
          |                  |                      |
          /                  /                     /
         /                  /                     /
@@ -1431,21 +1431,34 @@ def cauchy_principal_value(func, sym, lower_limit = -oo, upper_limit = oo):
     >>> from sympy.integrals.integrals import cauchy_principal_value
     >>> from sympy.calculus.singularities import singularities
     >>> x = symbols('x', real = True)
+
     >>> g = x + 1
     >>> cauchy_principal_value(g,x)
     oo
+
     >>> f = 1/(x**3)
     >>> singularities(f,x)
     {0}
+
     >>> cauchy_principal_value(f,x)
     0
+
     >>> cauchy_principal_value(f,x, -oo, 0)
     -oo
+
     >>> cauchy_principal_value(f,x, 0, oo)
     oo
+
     >>> cauchy_principal_value(f,x,1,2)
     3/8
+
     >>> cauchy_principal_value(f,x,-2,-1) + cauchy_principal_value(f,x,1,2)
+    0
+
+    >>> cauchy_principal_value(f,x,0.4,3)
+    3.06944444444444
+
+    >>> cauchy_principal_value(f,x,-3,-0.4) + cauchy_principal_value(f,x,0.4,3)
     0
 
 
@@ -1456,20 +1469,26 @@ def cauchy_principal_value(func, sym, lower_limit = -oo, upper_limit = oo):
     [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
     """
     from sympy.calculus import singularities
+
     r = Dummy('r')
+
     if (sym.is_real == False):
         raise ValueError('The variable with respect to which integration is to be done, should be real for '
                          'calculation of Cauchy Principal Value')
+
     else:
         if lower_limit == -oo and upper_limit == oo:
             I = integrate(func, (sym, -r, r))
             principle_value = limit(I, r, oo)
             return principle_value
+
         else:
             singularities_list = list(singularities(func, sym))
+
             for singular_element in range(len(singularities_list)):
                 if lower_limit < singularities_list[singular_element] < upper_limit:
                     break
+
                 else:
                     I = integrate(func, (sym, lower_limit, upper_limit))
                     return I
@@ -1477,6 +1496,7 @@ def cauchy_principal_value(func, sym, lower_limit = -oo, upper_limit = oo):
             if len(singularities_list) == 0:
                 I = integrate(func, (sym, lower_limit, upper_limit))
                 return I
+
             if len(singularities_list) == 1 and lower_limit < singularities_list[0] < upper_limit:
                 I = integrate(func, (sym, lower_limit, singularities_list[0] - r))
                 principle_value = 0
@@ -1484,9 +1504,11 @@ def cauchy_principal_value(func, sym, lower_limit = -oo, upper_limit = oo):
                 I = integrate(func, (sym, limit((singularities_list[0] + r), r, 0, '+'), upper_limit))
                 principle_value = principle_value + limit(I, r, 0)
                 return principle_value
+
             if len(singularities_list) == 1 and not(lower_limit < singularities_list[0] < upper_limit):
                 I = integrate(func, (sym, lower_limit, upper_limit))
                 return I
+
             else:
                 for singular_element in range(len(singularities_list)):
                     if lower_limit < singularities_list[singular_element] < upper_limit:
@@ -1495,12 +1517,14 @@ def cauchy_principal_value(func, sym, lower_limit = -oo, upper_limit = oo):
                             principle_value = 0
                             principle_value = principle_value + limit(I, r, 0)
                             return principle_value
+
                         else:
                             I = integrate(func, (
                                 sym, singularities_list[singular_element - 1] + r,
                                 singularities_list[singular_element] - r))
                             principle_value = principle_value + limit(I, r, 0)
                             return principle_value
+
                     else:
                         continue
 
