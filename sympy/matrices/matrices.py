@@ -1899,9 +1899,9 @@ class MatrixBase(MatrixDeprecated,
 
     __hash__ = None  # Mutable
 
-    def __array__(self):
+    def __array__(self, dtype=object):
         from .dense import matrix2numpy
-        return matrix2numpy(self)
+        return matrix2numpy(self, dtype=dtype)
 
     def __getattr__(self, attr):
         if attr in ('diff', 'integrate', 'limit'):
