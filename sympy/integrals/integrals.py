@@ -29,7 +29,6 @@ from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
 from sympy.calculus import singularities
-from sympy import I
 
 
 class Integral(AddWithLimits):
@@ -1408,21 +1407,22 @@ def integrate(*args, **kwargs):
 
 def cauchy_principal_value(func, sym, lower_limit = -oo, upper_limit = oo):
     """
-    Compute the Cauchy Principle Value of the definite integral of a real function on the entire real axis.
+    Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
+    on the real axis.
     In mathematics, the Cauchy principal value, is a method for assigning values to certain improper
     integrals which would otherwise be undefined.
-    Cauchy Principle Value is  defined as:
-          +oo               +r
-          /                  /
-         /                  /
-         |                  |
-         |                  |
-    p.v. | f(x)dx  = lim    | f(x)dx
-         |          r -> oo |
-         |                  |
-         /                  /
-        /                  /
-     -oo               -r
+    The Cauchy principal value of a finite integral of a function f about a point c with a <= c <= b is given by
+            b               c-r                       b
+          /                  /                      /
+         /                  /                      /
+         |                  |                      |
+         |                  |                      |
+    p.v. | f(x)dx  = lim    | f(x)dx   +   lim     |
+         |          r -> 0  |             r -> 0   |
+         |                  |                      |
+         /                  /                     /
+        /                  /                     /
+      a                 a                     c+r
 
     Examples
     ========
@@ -1437,12 +1437,16 @@ def cauchy_principal_value(func, sym, lower_limit = -oo, upper_limit = oo):
     >>> f = 1/(x**3)
     >>> singularities(f,x)
     {0}
-    >>> cauchy_principal_value(g,x)
+    >>> cauchy_principal_value(f,x)
     0
-    >>> cauchy_principal_value(g,x, -oo, 0)
+    >>> cauchy_principal_value(f,x, -oo, 0)
     -oo
-    >>> cauchy_principal_value(g,x, 0, oo)
+    >>> cauchy_principal_value(f,x, 0, oo)
     oo
+    >>> cauchy_principal_value(f,x,1,2)
+    3/8
+    >>> cauchy_principal_value(f,x,-2,-1) + cauchy_principal_value(f,x,1,2)
+    0
 
 
     See also
@@ -1451,31 +1455,54 @@ def cauchy_principal_value(func, sym, lower_limit = -oo, upper_limit = oo):
     [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
     [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
     """
-
+    from sympy.calculus import singularities
     r = Dummy('r')
-    if (sym.is_real == False) or (func.is_real == False):
-        raise ValueError("The function should be real valued for calculation of Cauchy Principle Value")
+    if (sym.is_real == False):
+        raise ValueError('The variable with respect to which integration is to be done, should be real for '
+                         'calculation of Cauchy Principal Value')
     else:
-        if lower_limit == -oo and upper_limit == oo :
+        if lower_limit == -oo and upper_limit == oo:
             I = integrate(func, (sym, -r, r))
             principle_value = limit(I, r, oo)
             return principle_value
         else:
             singularities_list = list(singularities(func, sym))
+            for singular_element in range(len(singularities_list)):
+                if lower_limit < singularities_list[singular_element] < upper_limit:
+                    break
+                else:
+                    I = integrate(func, (sym, lower_limit, upper_limit))
+                    return I
+
             if len(singularities_list) == 0:
+                I = integrate(func, (sym, lower_limit, upper_limit))
+                return I
+            if len(singularities_list) == 1 and lower_limit < singularities_list[0] < upper_limit:
+                I = integrate(func, (sym, lower_limit, singularities_list[0] - r))
+                principle_value = 0
+                principle_value = principle_value + limit(I, r, 0)
+                I = integrate(func, (sym, limit((singularities_list[0] + r), r, 0, '+'), upper_limit))
+                principle_value = principle_value + limit(I, r, 0)
+                return principle_value
+            if len(singularities_list) == 1 and not(lower_limit < singularities_list[0] < upper_limit):
                 I = integrate(func, (sym, lower_limit, upper_limit))
                 return I
             else:
                 for singular_element in range(len(singularities_list)):
-                    if singular_element == 0:
-                        I = integrate(func, (sym, lower_limit, singularities_list[singular_element] - r))
-                        principle_value = 0
-                        principle_value = principle_value + limit(I, r, 0)
-                        return principle_value
+                    if lower_limit < singularities_list[singular_element] < upper_limit:
+                        if singular_element == 0:
+                            I = integrate(func, (sym, lower_limit, singularities_list[singular_element] - r))
+                            principle_value = 0
+                            principle_value = principle_value + limit(I, r, 0)
+                            return principle_value
+                        else:
+                            I = integrate(func, (
+                                sym, singularities_list[singular_element - 1] + r,
+                                singularities_list[singular_element] - r))
+                            principle_value = principle_value + limit(I, r, 0)
+                            return principle_value
                     else:
-                        I = integrate(func, (sym, singularities_list[singular_element - 1] + r, singularities_list[singular_element] - r))
-                        principle_value = principle_value + limit(I, r, 0)
-                        return principle_value
+                        continue
 
 
 
