@@ -134,7 +134,8 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     >>> P(X>0)
     1/2
     """
-    pdf = Lambda(symbol, density)
+    pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
+    pdf = Lambda(symbol, pdf)
     dist = ContinuousDistributionHandmade(pdf, set)
     return SingleContinuousPSpace(symbol, dist).value
 

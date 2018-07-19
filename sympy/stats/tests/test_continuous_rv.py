@@ -165,6 +165,7 @@ def test_sample():
     assert sample(Z) in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val in Interval(0, oo)
+    assert density(Z)(-1) == 0
 
 
 def test_ContinuousRV():
