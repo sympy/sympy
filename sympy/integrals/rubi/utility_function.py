@@ -29,6 +29,10 @@ from random import randint
 from sympy.logic.boolalg import Or
 
 class rubi_unevaluated_expr(UnevaluatedExpr):
+    '''
+    This is needed to convert `exp` as `Pow`.
+    sympy's UnevaluatedExpr has an issue with `is_commutative`.
+    '''
     @property
     def is_commutative(self):
         from sympy.core.logic import fuzzy_and
@@ -36,11 +40,41 @@ class rubi_unevaluated_expr(UnevaluatedExpr):
 
 _E = rubi_unevaluated_expr(E)
 class exp(Function):
+    '''
+    sympy's exp is not identified as `Pow`. So it is not matched with `Pow`.
+    Like `a = exp(2)` is not identified as `Pow(E, 2)`. Rubi rules need it.
+    So, another exp has been created only for rubi module.
+
+    Examples
+    ========
+
+    >>> from sympy import Pow, exp as sym_exp
+    >>> isinstance(sym_exp(2), Pow)
+    False
+    >>> from sympy.integrals.rubi.utility_function import exp
+    >>> isinstance(exp(2), Pow)
+    True
+
+    '''
     @classmethod
     def eval(cls, *args):
         return Pow(_E, args[0])
 
 class log(Function):
+    '''
+    For rule matching different `exp` has been used. So for proper results,
+    `log` is modified little only for case when it encounters rubi's `exp`.
+    For other cases it is same.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import exp, log
+    >>> a = exp(2)
+    >>> log(a)
+    2
+
+    '''
     @classmethod
     def eval(cls, *args):
         if args[0].has(_E):
@@ -192,6 +226,9 @@ if matchpy:
     a, b, c, d, e = symbols('a b c d e')
 
 class Int(Function):
+    '''
+    Intgerates given `expr` by matching rubi rules. 
+    '''
     @classmethod
     def eval(cls, expr, var):
         if isinstance(expr, (int, Integer, float, Float)):
@@ -200,6 +237,20 @@ class Int(Function):
         return util_rubi_integrate(expr, var)
 
 def replace_pow_exp(z):
+    '''
+    This function converts back rubi's `exp` to general sympy's `exp`.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import exp as rubi_exp, replace_pow_exp
+    >>> expr = rubi_exp(5)
+    >>> expr
+    E**5
+    >>> replace_pow_exp(expr)
+    exp(5)
+
+    '''
     z = S(z)
     if z.has(_E):
         z = z.replace(_E, E)
@@ -6777,6 +6828,18 @@ def HypergeometricPFQ(a, b, c):
     return hyper(a, b, c)
 
 def Sum_doit(exp, args):
+    '''
+    This function perform summation using sympy's `Sum`.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import Sum_doit
+    >>> from sympy.abc import x
+    >>> Sum_doit(2*x + 2, [x, 0, 1.7])
+    6
+
+    '''
     exp = replace_pow_exp(exp)
     if not isinstance(args[2], (int, Integer)):
         new_args = [args[0], args[1], Floor(args[2])]
@@ -6848,6 +6911,23 @@ def Discriminant(a, b):
         return Function('Discriminant')(a, b)
 
 def process_trig(expr):
+    '''
+    This function processes trigonometric expressions such that all `cot` is
+    rewritten in terms of `tan`, `sec` in terms of `cos`, `csc` in terms of `sin` and
+    similarly for `coth`, `sech` and `csch`.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.rubi.utility_function import process_trig
+    >>> from sympy.abc import x
+    >>> from sympy import coth, cot, csc
+    >>> process_trig(x*cot(x))
+    x/tan(x)
+    >>> process_trig(coth(x)*csc(x))
+    1/(sin(x)*tanh(x))
+
+    '''
     expr = expr.replace(lambda x: isinstance(x, cot), lambda x: 1/tan(x.args[0]))
     expr = expr.replace(lambda x: isinstance(x, sec), lambda x: 1/cos(x.args[0]))
     expr = expr.replace(lambda x: isinstance(x, csc), lambda x: 1/sin(x.args[0]))
