@@ -115,6 +115,10 @@ f_diff_return_type = ['BinomialParts', 'BinomialDegree', 'TrinomialParts', 'Gene
     'FunctionOfHyperbolic', 'SplitSum']
 
 def contains_diff_return_type(a):
+    '''
+    This function returns whether an expression contains functions which have different return types in
+    diiferent cases.
+    '''
     if isinstance(a, list):
         for i in a:
             if contains_diff_return_type(i):
@@ -336,7 +340,7 @@ def get_free_symbols(s, symbols, free_symbols=[]):
 
 def set_matchq_in_constraint(a, cons_index):
     '''
-    Takes care of the case, when a pattern matching has to be done inside a constraint
+    Takes care of the case, when a pattern matching has to be done inside a constraint.
     '''
     lst = []
     res = ''
@@ -446,6 +450,9 @@ def setWC(string):
     return string
 
 def process_return_type(a1, L):
+    '''
+    Functions like `Set`, `With` and `CompoundExpression` has to be taken special care.
+    '''
     a = sympify(a1[1])
     x  =''
     processed = False
