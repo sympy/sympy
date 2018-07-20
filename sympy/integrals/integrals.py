@@ -1289,7 +1289,7 @@ class Integral(AddWithLimits):
         >>> Integral(f, (x, 1, 2)).principal_value()
         3/8
 
-        >>> Integral(f, (x, -2, 1)).principal_value() + Integral(f, (x, 1, 2)).principal_value()
+        >>> Integral(f, (x, -2, -1)).principal_value() + Integral(f, (x, 1, 2)).principal_value()
         0
 
         >>> Integral(f, (x, 0.4, 3)).principal_value()
