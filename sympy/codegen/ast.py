@@ -142,13 +142,13 @@ def _mk_Tuple(args):
     Create a Sympy Tuple object from an iterable, converting Python strings to
     AST strings.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
     args: iterable
         Arguments to :class:`sympy.Tuple`.
 
-    Returns:
-    ========
+    Returns
+    =======
     sympy.Tuple
     """
     args = [String(arg) if isinstance(arg, string_types) else arg for arg in args]
@@ -308,8 +308,8 @@ class Token(Basic):
     def kwargs(self, exclude=(), apply=None):
         """ Get instance's attributes as dict of keyword arguments.
 
-        Parameters:
-        ===========
+        Parameters
+        ==========
         exclude : collection of str
             Collection of keywords to exclude.
 

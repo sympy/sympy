@@ -129,7 +129,7 @@ def MultivariateT(syms, mu, sigma, v):
     """
     Creates a joint random variable with multivariate T-distribution.
 
-    Parameters:
+    Parameters
     ==========
 
     syms: list/tuple/set of symbols for identifying each component
@@ -137,7 +137,7 @@ def MultivariateT(syms, mu, sigma, v):
         dimensional location vector
     sigma: The shape matrix for the distribution
 
-    Returns:
+    Returns
     =======
 
     A random symbol
@@ -194,7 +194,7 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     Creates a bivariate joint random variable with multivariate Normal gamma
     distribution.
 
-    Parameters:
+    Parameters
     ==========
 
     syms: list/tuple/set of two symbols for identifying each component
@@ -203,7 +203,7 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     beta: a positive integer
     lamda: a positive integer
 
-    Returns:
+    Returns
     =======
 
     A random symbol
