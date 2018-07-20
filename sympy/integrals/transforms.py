@@ -809,7 +809,7 @@ class InverseMellinTransform(IntegralTransform):
     def _as_integral(self, F, s, x):
         from sympy import I
         c = self.__class__._c
-        return Integral(F*x**(-s), (s, c - I*oo, c + I*oo))
+        return Integral(F*x**(-s), (s, c - I*oo, c + I*oo))/(2*S.Pi*S.ImaginaryUnit)
 
 
 def inverse_mellin_transform(F, s, x, strip, **hints):
@@ -819,7 +819,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
     This can be defined as
 
-    .. math:: f(x) = \int_{c - i\infty}^{c + i\infty} x^{-s} F(s) \mathrm{d}s,
+    .. math:: f(x) = \frac{1}{2\pi i} \int_{c - i\infty}^{c + i\infty} x^{-s} F(s) \mathrm{d}s,
 
     for any `c` in the fundamental strip. Under certain regularity
     conditions on `F` and/or `f`,
