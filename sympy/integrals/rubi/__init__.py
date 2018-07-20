@@ -10,6 +10,49 @@ Rules are taken from Rubi version 4.10.8.
 
 Note: This module has dependency on MatchPy library.
 
+Basic Structure
+===============
+All rules in matchpy format are in rules folder. They are in separate files.
+While matching a pattern, there are constraints that need to be checked.
+These constraints are placed in a single file `constraints.py`.
+
+A complete rule look like this:
+
+```
+def cons_f1(m, x):
+    return FreeQ(m, x)
+cons1 = CustomConstraint(cons_f1)
+
+def cons_f2(m):
+    return NonzeroQ(m + S(1))
+cons2 = CustomConstraint(cons_f2)
+
+pattern1 = Pattern(Integral(x_**WC('m', S(1)), x_), cons1, cons2)
+def replacement1(m, x):
+    rubi.append(1)
+    return Simp(x**(m + S(1))/(m + S(1)), x)
+rule1 = ReplacementRule(pattern1, replacement1)
+```
+
+As seen in the above example, a rule has 3 parts
+1. Pattern with constraints. Expression is matched against this pattern.
+2. Replacement function, which gives the resulting expression with which the original expression has to be replaced with.
+3. rule, which combines pattern and replacement function.
+(For more details refer to matchpy documents)
+
+Note:
+The name of arguments of function for constraints and replacement should be taken care of.
+They need to be exactly same as wildcard in the `Pattern`. Like, in the above example,
+if `cons_f1` is written something like this:
+
+```
+def cons_f1(a, x):
+	return FreeQ(a, x)
+```
+This is not going to work because in the Pattern, `m` has been used as a wildcard. So only thing is
+naming of arguments matters.
+
+
 TODO
 ====
 * Use code generation to implement all rules.

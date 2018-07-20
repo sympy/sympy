@@ -242,6 +242,7 @@ def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
     for i in l:
         if isinstance(i, str):
             r = '        return FreeQ({}, {})'.format(i, x)
+            # First it checks if a constraint is already present in `cons_dict`, If yes, use it else create a new one.
             if r not in cons_dict.values():
                 cons_index += 1
                 c = '\n    def cons_f{}({}, {}):\n'.format(cons_index, i, x)
@@ -388,7 +389,7 @@ def _divide_constriant(s, symbols, cons_index, cons_dict, cons_import):
     else:
         res = '        return {}'.format(rubi_printer(r, sympy_integers=True))
 
-    #res = '    return {}'.format(rubi_printer(sympify(generate_sympy_from_parsed(s),locals={"Or": Function("Or"), "And": Function("And"), "Not":Function("Not")}), sympy_integers=True))
+    # First it checks if a constraint is already present in `cons_dict`, If yes, use it else create a new one.
     if not res in cons_dict.values():
         cons_index += 1
         cons = '\n    def cons_f{}({}):\n'.format(cons_index, ', '.join(lambda_symbols))
