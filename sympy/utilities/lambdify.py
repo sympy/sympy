@@ -741,8 +741,7 @@ class _EvaluatorPrinter(object):
 
         return argstrs, expr
 
-    @staticmethod
-    def _subexpr(expr, dummies_dict):
+    def _subexpr(self, expr, dummies_dict):
         from sympy.matrices import DeferredVector
         from sympy import sympify
 
@@ -752,13 +751,13 @@ class _EvaluatorPrinter(object):
             if isinstance(expr, DeferredVector):
                 pass
             elif isinstance(expr, dict):
-                k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
-                v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
+                k = [self._subexpr(sympify(a), dummies_dict) for a in expr.keys()]
+                v = [self._subexpr(sympify(a), dummies_dict) for a in expr.values()]
                 expr = dict(zip(k, v))
             elif isinstance(expr, tuple):
-                expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
+                expr = tuple(self._subexpr(sympify(a), dummies_dict) for a in expr)
             elif isinstance(expr, list):
-                expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
+                expr = [self._subexpr(sympify(a), dummies_dict) for a in expr]
         return expr
 
     def _print_funcargwrapping(self, args):
