@@ -1,4 +1,5 @@
-from sympy import sympify, S, pi, sqrt, exp, Lambda, Indexed, Symbol, Gt
+from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Symbol, Gt,
+    IndexedBase)
 from sympy.stats.rv import _value_check
 from sympy.stats.joint_rv import JointDistribution, JointPSpace
 from sympy.matrices import ImmutableMatrix
@@ -17,6 +18,44 @@ def multivariate_rv(cls, sym, *args):
     args = dist.args
     dist.check(*args)
     return JointPSpace(sym, dist).value
+
+def JointRV(symbol, pdf, _set=None):
+    """
+    Create a Joint Random Variable where each of its component is conitinuous,
+    given the following:
+
+    -- a symbol
+    -- a PDF in terms of indexed symbols of the symbol given
+     as the first argument
+
+    NOTE: As of now, the set for each component for a `JointRV` is
+    equal to the set of all integers, which can not be changed.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, exp, pi, Indexed, S
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv_types import JointRV
+
+    >>> x1, x2 = (Indexed('x', i) for i in (1, 2))
+    >>> pdf = exp(-x1**2/2 + x1 - x2**2/2 - S(1)/2)/(2*pi)
+
+    >>> N1 = JointRV('x', pdf) #Multivariate Normal distribution
+    >>> density(N1)(1, 2)
+    exp(-2)/(2*pi)
+    """
+    #TODO: Add support for sets provided by the user
+
+    symbol = sympify(symbol)
+    syms = tuple(i for i in pdf.free_symbols if isinstance(i, Indexed)
+        and i.base == IndexedBase(symbol))
+    pdf = Lambda(syms, pdf)
+    _set = S.Reals**len(syms)
+    dist = JointDistributionHandmade(pdf, _set)
+    return JointPSpace(symbol, dist).value
 
 #-------------------------------------------------------------------------------
 # Multivariate Normal distribution ---------------------------------------------------------

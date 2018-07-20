@@ -85,6 +85,8 @@ class JointDistribution(Basic, NamedArgsMixin):
     Contains methods for PDF, CDF, sampling, marginal densities, etc.
     """
 
+    _argnames = ('pdf', )
+
     def __new__(cls, *args):
         args = list(map(sympify, args))
         for i in range(len(args)):
@@ -126,6 +128,15 @@ class JointRandomSymbol(RandomSymbol):
         from sympy.stats.joint_rv import JointPSpace
         if isinstance(self.pspace, JointPSpace):
             return Indexed(self, key)
+
+class JointDistributionHandmade(JointDistribution, NamedArgsMixin):
+
+    _argnames = ('pdf',)
+    is_Continuous = True
+
+    @property
+    def set(self):
+        return self.args[1]
 
 def marginal_distribution(rv, *indices):
     """
