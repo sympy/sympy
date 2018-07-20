@@ -10,7 +10,7 @@ from sympy import (
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.functions.elementary.integers import floor
 from sympy.integrals.risch import NonElementaryIntegral
-from sympy.integrals.integrals import cauchy_principal_value
+from sympy.integrals.integrals import Integral
 from sympy.physics import units
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
