@@ -30,7 +30,6 @@ from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
 
 
-
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
@@ -1243,6 +1242,144 @@ class Integral(AddWithLimits):
                                     hold=True)
         return f
 
+    def cauchy_principal_value(self, sym, lower_limit=-oo, upper_limit=oo):
+        """
+        Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
+        on the real axis.
+        In mathematics, the Cauchy principal value, is a method for assigning values to certain improper
+        integrals which would otherwise be undefined.
+        The Cauchy principal value of a finite integral of a function f about a point c with a <= c <= b is given by
+                b               c-r                       b
+              /                  /                      /
+             /                  /                      /
+             |                  |                      |
+             |                  |                      |
+        p.v. | f(x)dx  = lim    | f(x)dx   +   lim     |
+             |          r -> 0+ |             r -> 0+  |
+             |                  |                      |
+             /                  /                     /
+            /                  /                     /
+          a                 a                     c+r
+
+        Examples
+        ========
+
+        >>> from sympy import Dummy, symbols, integrate, limit, oo
+        >>> from sympy.integrals.integrals import Integral
+        >>> from sympy.calculus.singularities import singularities
+        >>> x = symbols('x', real = True)
+
+        >>> g = x + 1
+        >>> Integral(g).cauchy_principal_value(x)
+        oo
+
+        >>> f = 1/(x**3)
+        >>> singularities(f,x)
+        {0}
+
+        >>> Integral(f).cauchy_principal_value(x)
+        0
+
+        >>> Integral(f).cauchy_principal_value(x, -oo, 0)
+        -oo
+
+        >>> Integral(f).cauchy_principal_value(x, 0, oo)
+        oo
+
+        >>> Integral(f).cauchy_principal_value(x, 1, 2)
+        3/8
+
+        >>> Integral(f).cauchy_principal_value(x,-2,-1) + Integral(f).cauchy_principal_value(x,1,2)
+        0
+
+        >>> Integral(f).cauchy_principal_value(x, 0.4, 3)
+        3.06944444444444
+
+        >>> Integral(f).cauchy_principal_value(x,-3,-0.4) + Integral(f).cauchy_principal_value(x, 0.4, 3)
+        0
+
+
+        See also
+        ========
+
+        [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
+        [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
+        """
+        from sympy.calculus import singularities
+
+        self.sym = sym
+        self.lower_limit = lower_limit
+        self.upper_limit = upper_limit
+
+        r = Dummy('r')
+
+        if (self.sym.is_real == False):
+            raise ValueError('The variable with respect to which integration is to be done, should be real for '
+                             'calculation of Cauchy Principal Value')
+
+        else:
+
+            if self.lower_limit == -oo and self.upper_limit == oo:
+                I = integrate(self.function, (self.sym, -r, r))
+                principle_value = limit(I, r, oo)
+                return principle_value
+
+            else:
+
+                singularities_list = list(singularities(self.function, self.sym))
+
+                for singular_element in range(len(singularities_list)):
+
+                    if self.lower_limit < singularities_list[singular_element] < self.upper_limit:
+                        break
+
+                    else:
+                        I = integrate(self.function, (self.sym, self.lower_limit, self.upper_limit))
+                        return I
+
+                if len(singularities_list) == 0:
+
+                    I = integrate(self.function, (self.sym, self.lower_limit, self.upper_limit))
+                    return I
+
+                if len(singularities_list) == 1 and self.lower_limit < singularities_list[0] < self.upper_limit:
+
+                    I = integrate(self.function, (self.sym, self.lower_limit, singularities_list[0] - r))
+                    principle_value = 0
+                    principle_value = principle_value + limit(I, r, 0)
+                    I = integrate(self.function, (self.sym, limit((singularities_list[0] + r), r, 0, '+'), self.upper_limit))
+                    principle_value = principle_value + limit(I, r, 0)
+                    return principle_value
+
+                if len(singularities_list) == 1 and not (self.lower_limit < singularities_list[0] < self.upper_limit):
+
+                    I = integrate(self.function, (self.sym, self.lower_limit, self.upper_limit))
+                    return I
+
+                else:
+
+                    for singular_element in range(len(singularities_list)):
+
+                        if self.lower_limit < singularities_list[singular_element] < self.upper_limit:
+
+                            if singular_element == 0:
+
+                                I = integrate(self.function, (self.sym, self.lower_limit, singularities_list[singular_element] - r))
+                                principle_value = 0
+                                principle_value = principle_value + limit(I, r, 0)
+                                return principle_value
+
+                            else:
+
+                                I = integrate(self.function, (
+                                    self.sym, singularities_list[singular_element - 1] + r,
+                                    singularities_list[singular_element] - r))
+                                principle_value = principle_value + limit(I, r, 0)
+                                return principle_value
+
+                        else:
+                            continue
+
 
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
@@ -1404,130 +1541,6 @@ def integrate(*args, **kwargs):
                              risch=risch, manual=manual)
     else:
         return integral
-
-def cauchy_principal_value(func, sym, lower_limit = -oo, upper_limit = oo):
-    """
-    Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
-    on the real axis.
-    In mathematics, the Cauchy principal value, is a method for assigning values to certain improper
-    integrals which would otherwise be undefined.
-    The Cauchy principal value of a finite integral of a function f about a point c with a <= c <= b is given by
-            b               c-r                       b
-          /                  /                      /
-         /                  /                      /
-         |                  |                      |
-         |                  |                      |
-    p.v. | f(x)dx  = lim    | f(x)dx   +   lim     |
-         |          r -> 0+ |             r -> 0+  |
-         |                  |                      |
-         /                  /                     /
-        /                  /                     /
-      a                 a                     c+r
-
-    Examples
-    ========
-
-    >>> from sympy import Dummy, symbols, integrate, limit, oo
-    >>> from sympy.integrals.integrals import cauchy_principal_value
-    >>> from sympy.calculus.singularities import singularities
-    >>> x = symbols('x', real = True)
-
-    >>> g = x + 1
-    >>> cauchy_principal_value(g,x)
-    oo
-
-    >>> f = 1/(x**3)
-    >>> singularities(f,x)
-    {0}
-
-    >>> cauchy_principal_value(f,x)
-    0
-
-    >>> cauchy_principal_value(f,x, -oo, 0)
-    -oo
-
-    >>> cauchy_principal_value(f,x, 0, oo)
-    oo
-
-    >>> cauchy_principal_value(f,x,1,2)
-    3/8
-
-    >>> cauchy_principal_value(f,x,-2,-1) + cauchy_principal_value(f,x,1,2)
-    0
-
-    >>> cauchy_principal_value(f,x,0.4,3)
-    3.06944444444444
-
-    >>> cauchy_principal_value(f,x,-3,-0.4) + cauchy_principal_value(f,x,0.4,3)
-    0
-
-
-    See also
-    ========
-
-    [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
-    [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
-    """
-    from sympy.calculus import singularities
-
-    r = Dummy('r')
-
-    if (sym.is_real == False):
-        raise ValueError('The variable with respect to which integration is to be done, should be real for '
-                         'calculation of Cauchy Principal Value')
-
-    else:
-        if lower_limit == -oo and upper_limit == oo:
-            I = integrate(func, (sym, -r, r))
-            principle_value = limit(I, r, oo)
-            return principle_value
-
-        else:
-            singularities_list = list(singularities(func, sym))
-
-            for singular_element in range(len(singularities_list)):
-                if lower_limit < singularities_list[singular_element] < upper_limit:
-                    break
-
-                else:
-                    I = integrate(func, (sym, lower_limit, upper_limit))
-                    return I
-
-            if len(singularities_list) == 0:
-                I = integrate(func, (sym, lower_limit, upper_limit))
-                return I
-
-            if len(singularities_list) == 1 and lower_limit < singularities_list[0] < upper_limit:
-                I = integrate(func, (sym, lower_limit, singularities_list[0] - r))
-                principle_value = 0
-                principle_value = principle_value + limit(I, r, 0)
-                I = integrate(func, (sym, limit((singularities_list[0] + r), r, 0, '+'), upper_limit))
-                principle_value = principle_value + limit(I, r, 0)
-                return principle_value
-
-            if len(singularities_list) == 1 and not(lower_limit < singularities_list[0] < upper_limit):
-                I = integrate(func, (sym, lower_limit, upper_limit))
-                return I
-
-            else:
-                for singular_element in range(len(singularities_list)):
-                    if lower_limit < singularities_list[singular_element] < upper_limit:
-                        if singular_element == 0:
-                            I = integrate(func, (sym, lower_limit, singularities_list[singular_element] - r))
-                            principle_value = 0
-                            principle_value = principle_value + limit(I, r, 0)
-                            return principle_value
-
-                        else:
-                            I = integrate(func, (
-                                sym, singularities_list[singular_element - 1] + r,
-                                singularities_list[singular_element] - r))
-                            principle_value = principle_value + limit(I, r, 0)
-                            return principle_value
-
-                    else:
-                        continue
-
 
 
 

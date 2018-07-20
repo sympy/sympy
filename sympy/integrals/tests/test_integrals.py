@@ -23,14 +23,24 @@ f = Function('f')
 
 def test_cauchy_principal_value():
     f = log(x) / x
-    assert cauchy_principal_value(f,x) == -oo*I
-    assert cauchy_principal_value(f,y) == oo*sign(log(x)/x)
+    assert Integral(f).cauchy_principal_value(x) == -oo*I
+    assert Integral(f).cauchy_principal_value(y) == oo*sign(log(x)/x)
     h = sin(x) / x
-    assert cauchy_principal_value(h,x) == pi
-    assert cauchy_principal_value(h,y) == oo*sign(sin(x)/x)
+    assert Integral(h).cauchy_principal_value(x) == pi
+    assert Integral(h).cauchy_principal_value(y) == oo*sign(sin(x)/x)
     g = 1 / x
-    assert cauchy_principal_value(g,x) == -I*pi
-    assert cauchy_principal_value(g,y) == oo*sign(1/x)
+    assert Integral(g).cauchy_principal_value(x) == -I*pi
+    assert Integral(g).cauchy_principal_value(y) == oo*sign(1/x)
+    l = 1 / ((x**3) - 1)
+    assert Integral(l).cauchy_principal_value(x) == -sqrt(3)*pi/3 - I*pi/3
+    assert Integral(l).cauchy_principal_value(x, -oo, 1) == -oo - I*pi/3
+    assert Integral(l).cauchy_principal_value(x, -3, -2) == -sqrt(3)*atan(5*sqrt(3)/3)/3 - log(4)/3 + log(3)/6 + log(7)/6 + sqrt(3)*pi/9
+    assert Integral(l).cauchy_principal_value(x, 2,3) == -sqrt(3) * atan(7 * sqrt(3) / 3) / 3 - log(13) / 6 + log(2) / 3 + log(7) / 6 + sqrt(3) * atan(5 * sqrt(3) / 3) / 3
+    k = 1 / (x - 4) * (x - 1)
+    assert Integral(k).cauchy_principal_value(x, -oo, -2) == oo + 3*I*pi
+    assert Integral(k).cauchy_principal_value(x, 5, oo) == oo
+    assert Integral(k).cauchy_principal_value(x, 4, oo) == oo
+
 
 def diff_test(i):
     """Return the set of symbols, s, which were used in testing that
