@@ -227,7 +227,7 @@ if matchpy:
 
 class Int(Function):
     '''
-    Intgerates given `expr` by matching rubi rules. 
+    Integrates given `expr` by matching rubi rules.
     '''
     @classmethod
     def eval(cls, expr, var):
