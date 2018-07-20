@@ -21,25 +21,30 @@ x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
 n = Symbol('n', integer=True)
 f = Function('f')
 
-def test_cauchy_principal_value():
+def test_principal_value():
+
     f = log(x) / x
-    assert Integral(f).cauchy_principal_value(x) == -oo*I
-    assert Integral(f).cauchy_principal_value(y) == oo*sign(log(x)/x)
+    assert Integral(f, (x, -oo, oo)).principal_value() == -oo*I
+    assert Integral(f, (y, -oo, oo)).principal_value() == oo*sign(log(x)/x)
+
     h = sin(x) / x
-    assert Integral(h).cauchy_principal_value(x) == pi
-    assert Integral(h).cauchy_principal_value(y) == oo*sign(sin(x)/x)
+    assert Integral(h, (x, -oo, oo)).principal_value() == pi
+    assert Integral(h, (y, -oo, oo)).principal_value() == oo*sign(sin(x)/x)
+
     g = 1 / x
-    assert Integral(g).cauchy_principal_value(x) == -I*pi
-    assert Integral(g).cauchy_principal_value(y) == oo*sign(1/x)
+    assert Integral(g, (x, -oo, oo)).principal_value() == -I*pi
+    assert Integral(g, (y, -oo, oo)).principal_value() == oo*sign(1/x)
+
     l = 1 / ((x**3) - 1)
-    assert Integral(l).cauchy_principal_value(x) == -sqrt(3)*pi/3 - I*pi/3
-    assert Integral(l).cauchy_principal_value(x, -oo, 1) == -oo - I*pi/3
-    assert Integral(l).cauchy_principal_value(x, -3, -2) == -sqrt(3)*atan(5*sqrt(3)/3)/3 - log(4)/3 + log(3)/6 + log(7)/6 + sqrt(3)*pi/9
-    assert Integral(l).cauchy_principal_value(x, 2,3) == -sqrt(3) * atan(7 * sqrt(3) / 3) / 3 - log(13) / 6 + log(2) / 3 + log(7) / 6 + sqrt(3) * atan(5 * sqrt(3) / 3) / 3
+    assert Integral(l, (x, -oo, oo)).principal_value() == -sqrt(3)*pi/3 - I*pi/3
+    assert Integral(l, (x, -oo, 1)).principal_value() == -oo - I*pi/3
+    assert Integral(l, (x, -3, -2)).principal_value() == -sqrt(3)*atan(5*sqrt(3)/3)/3 - log(4)/3 + log(3)/6 + log(7)/6 + sqrt(3)*pi/9
+    assert Integral(l, (x, 2, 3)).principal_value() == -sqrt(3) * atan(7 * sqrt(3) / 3) / 3 - log(13) / 6 + log(2) / 3 + log(7) / 6 + sqrt(3) * atan(5 * sqrt(3) / 3) / 3
+
     k = 1 / (x - 4) * (x - 1)
-    assert Integral(k).cauchy_principal_value(x, -oo, -2) == oo + 3*I*pi
-    assert Integral(k).cauchy_principal_value(x, 5, oo) == oo
-    assert Integral(k).cauchy_principal_value(x, 4, oo) == oo
+    assert Integral(k, (x, -oo, -2)).principal_value() == oo + 3*I*pi
+    assert Integral(k, (x, 5, oo)).principal_value() == oo
+    assert Integral(k, (x, 4, oo)).principal_value() == oo
 
 
 def diff_test(i):

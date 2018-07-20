@@ -1242,7 +1242,7 @@ class Integral(AddWithLimits):
                                     hold=True)
         return f
 
-    def cauchy_principal_value(self, sym, lower_limit=-oo, upper_limit=oo):
+    def principal_value(self):
         """
         Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
         on the real axis.
@@ -1270,32 +1270,32 @@ class Integral(AddWithLimits):
         >>> x = symbols('x', real = True)
 
         >>> g = x + 1
-        >>> Integral(g).cauchy_principal_value(x)
+        >>> Integral(g, (x, -oo, oo)).principal_value()
         oo
 
         >>> f = 1/(x**3)
         >>> singularities(f,x)
         {0}
 
-        >>> Integral(f).cauchy_principal_value(x)
+        >>> Integral(f, (x, -oo, oo)).principal_value()
         0
 
-        >>> Integral(f).cauchy_principal_value(x, -oo, 0)
+        >>> Integral(f, (x, -oo, 0)).principal_value()
         -oo
 
-        >>> Integral(f).cauchy_principal_value(x, 0, oo)
+        >>> Integral(f, (x, 0, oo)).principal_value()
         oo
 
-        >>> Integral(f).cauchy_principal_value(x, 1, 2)
+        >>> Integral(f, (x, 1, 2)).principal_value()
         3/8
 
-        >>> Integral(f).cauchy_principal_value(x,-2,-1) + Integral(f).cauchy_principal_value(x,1,2)
+        >>> Integral(f, (x, -2, 1)).principal_value() + Integral(f, (x, 1, 2)).principal_value()
         0
 
-        >>> Integral(f).cauchy_principal_value(x, 0.4, 3)
+        >>> Integral(f, (x, 0.4, 3)).principal_value()
         3.06944444444444
 
-        >>> Integral(f).cauchy_principal_value(x,-3,-0.4) + Integral(f).cauchy_principal_value(x, 0.4, 3)
+        >>> Integral(f, (x, -3, -0.4)).principal_value() + Integral(f, (x, 0.4, 3)).principal_value()
         0
 
 
@@ -1307,64 +1307,63 @@ class Integral(AddWithLimits):
         """
         from sympy.calculus import singularities
 
-        self.sym = sym
-        self.lower_limit = lower_limit
-        self.upper_limit = upper_limit
+        x, a, b = self.limits[0]
 
         r = Dummy('r')
 
-        if (self.sym.is_real == False):
+        if (x.is_real == False):
             raise ValueError('The variable with respect to which integration is to be done, should be real for '
                              'calculation of Cauchy Principal Value')
 
         else:
 
-            if self.lower_limit == -oo and self.upper_limit == oo:
-                I = integrate(self.function, (self.sym, -r, r))
+            if a == -oo and b == oo:
+
+                I = integrate(self.function, (x, -r, r))
                 principle_value = limit(I, r, oo)
                 return principle_value
 
             else:
 
-                singularities_list = list(singularities(self.function, self.sym))
+                singularities_list = list(singularities(self.function, x))
 
                 for singular_element in range(len(singularities_list)):
 
-                    if self.lower_limit < singularities_list[singular_element] < self.upper_limit:
+                    if a < singularities_list[singular_element] < b:
                         break
 
                     else:
-                        I = integrate(self.function, (self.sym, self.lower_limit, self.upper_limit))
+                        I = integrate(self.function, (x, a, b))
                         return I
 
                 if len(singularities_list) == 0:
 
-                    I = integrate(self.function, (self.sym, self.lower_limit, self.upper_limit))
+                    I = integrate(self.function, (x, a, b))
                     return I
 
-                if len(singularities_list) == 1 and self.lower_limit < singularities_list[0] < self.upper_limit:
+                if len(singularities_list) == 1 and a < singularities_list[0] < b:
 
-                    I = integrate(self.function, (self.sym, self.lower_limit, singularities_list[0] - r))
+                    I = integrate(self.function, (x, a, singularities_list[0] - r))
                     principle_value = 0
                     principle_value = principle_value + limit(I, r, 0)
-                    I = integrate(self.function, (self.sym, limit((singularities_list[0] + r), r, 0, '+'), self.upper_limit))
+                    I = integrate(self.function, (x, limit((singularities_list[0] + r), r, 0, '+'), b))
                     principle_value = principle_value + limit(I, r, 0)
                     return principle_value
 
-                if len(singularities_list) == 1 and not (self.lower_limit < singularities_list[0] < self.upper_limit):
+                if len(singularities_list) == 1 and not (a < singularities_list[0] < b):
 
-                    I = integrate(self.function, (self.sym, self.lower_limit, self.upper_limit))
+                    I = integrate(self.function, (x, a, b))
                     return I
 
                 else:
 
                     for singular_element in range(len(singularities_list)):
 
-                        if self.lower_limit < singularities_list[singular_element] < self.upper_limit:
+                        if a < singularities_list[singular_element] < b:
 
                             if singular_element == 0:
 
-                                I = integrate(self.function, (self.sym, self.lower_limit, singularities_list[singular_element] - r))
+                                I = integrate(self.function, (x, a, singularities_list[singular_element] - r))
                                 principle_value = 0
                                 principle_value = principle_value + limit(I, r, 0)
                                 return principle_value
@@ -1372,7 +1371,7 @@ class Integral(AddWithLimits):
                             else:
 
                                 I = integrate(self.function, (
-                                    self.sym, singularities_list[singular_element - 1] + r,
+                                    x, singularities_list[singular_element - 1] + r,
                                     singularities_list[singular_element] - r))
                                 principle_value = principle_value + limit(I, r, 0)
                                 return principle_value
