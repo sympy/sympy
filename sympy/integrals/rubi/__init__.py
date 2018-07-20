@@ -47,7 +47,7 @@ if `cons_f1` is written something like this:
 
 ```
 def cons_f1(a, x):
-	return FreeQ(a, x)
+    return FreeQ(a, x)
 ```
 This is not going to work because in the Pattern, `m` has been used as a wildcard. So only thing is
 naming of arguments matters.
