@@ -1,4 +1,5 @@
-from sympy import sympify, S, pi, sqrt, exp, Lambda, Indexed, Symbol, Gt
+from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Symbol, Gt,
+    IndexedBase)
 from sympy.stats.rv import _value_check
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
     JointDistributionHandmade)
@@ -19,15 +20,16 @@ def multivariate_rv(cls, sym, *args):
     dist.check(*args)
     return JointPSpace(sym, dist).value
 
-def JointContinuousRV(symbols, pdf):
+def JointRV(symbol, pdf, _set=None):
     """
     Create a Joint Random Variable where each of its component is conitinuous,
     given the following:
 
-    -- a list/tuple of symbols
-    -- a probability density function
+    -- a symbol
+    -- a PDF in terms of indexed symbols of the symbol given
+     as the first argument
 
-    NOTE: As of now, the set for each component for a `JointContinuousRV` is
+    NOTE: As of now, the set for each component for a `JointRV` is
     equal to the set of all integers, which can not be changed.
 
     Returns a RandomSymbol.
@@ -35,54 +37,26 @@ def JointContinuousRV(symbols, pdf):
     Examples
     ========
 
-    >>> from sympy import symbols exp, pi
-    >>> from sympy.stats.joint_rv_types import JointContinuousRV
+    >>> from sympy import symbols, exp, pi, Indexed, S
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv_types import JointRV
 
-    >>> x, y = symbols("x y")
-    >>> pdf = exp(-x**2/2 + x - y**2/2 - 1/2)/(2*pi)
+    >>> x1, x2 = (Indexed('x', i) for i in (1, 2))
+    >>> pdf = exp(-x1**2/2 + x1 - x2**2/2 - S(1)/2)/(2*pi)
 
-    >>> N1 = JointContinuousRV((x, y), pdf) #Multivariate Normal distribution
-    >>> density(N1)
-    exp(-5)/(2*pi)
+    >>> N1 = JointRV('x', pdf) #Multivariate Normal distribution
+    >>> density(N1)(1, 2)
+    exp(-2)/(2*pi)
     """
     #TODO: Add support for sets provided by the user
-    pdf = Lambda(symbols, pdf)
-    _set = S.Reals**len(symbols)
+
+    symbol = sympify(symbol)
+    syms = tuple(i for i in pdf.free_symbols if isinstance(i, Indexed)
+        and i.base == IndexedBase(symbol))
+    pdf = Lambda(syms, pdf)
+    _set = S.Reals**len(syms)
     dist = JointDistributionHandmade(pdf, _set)
-
-
-
-def JointDiscreteRV(symbols, pdf):
-    """
-    Create a Joint Random Variable where each of its component is discrete,
-    given the following:
-
-    -- a list/tuple of symbols
-    -- a probability density function
-
-    NOTE: As of now, the set for each component for a `JointContinuousRV` is
-    equal to the real line, which can not be changed.
-
-    Returns a RandomSymbol.
-
-    Examples
-    ========
-
-    >>> from sympy import symbols exp, pi
-    >>> from sympy.stats.joint_rv_types import JointContinuousRV
-
-    >>> x, y = symbols("x y")
-    >>> pdf = 2**x*3**y*exp(-5)/(factorial(x)*factorial(y))
-
-    >>> N1 = JointDiscreteRV((x, y), pdf)
-    >>> density(N1)
-    exp(-5)/(2*pi)
-    """
-    #TODO: Add support for sets provided by the user
-    pdf = Lambda(symbols, pdf)
-    _set = S.Integers**len(symbols)
-    dist = JointDistributionHandmade(pdf, _set)
-
+    return JointPSpace(symbol, dist).value
 
 #-------------------------------------------------------------------------------
 # Multivariate Normal distribution ---------------------------------------------------------
