@@ -587,7 +587,7 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
     rules = '['
     parsed = '\n\n'
     cons = ''
-    cons_import = []
+    cons_import = [] # it contains name of constraints that need to be imported for rules.
     for i in r:
         debug('parsing rule {}'.format(r.index(i) + 1))
         # Parse Pattern
@@ -620,6 +620,7 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
         cons+=constraint_def
         index += 1
 
+        # below are certain if - else condition depending on various situation that may be encountered
         if type(transformed) == Function('With') or type(transformed) == Function('Module'): # define separate function when With appears
             transformed, With_constraints, return_type = replaceWith(transformed, free_symbols, index)
             if return_type is None:
@@ -639,7 +640,6 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
             parsed += '\n    def replacement{}({}):\n        rubi.append({})\n        return '.format(index, ', '.join(free_symbols), index) + transformed
             parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
         rules += 'rule{}, '.format(index)
-        #parsed += 'rubi.add(rule{})\n\n'.format(index)
     rules += ']'
     parsed += '    return ' + rules +'\n'
 
@@ -669,13 +669,13 @@ def rubi_rule_parser(fullform, header=None, module_name='rubi_object'):
         header = open(os.path.join(path_header, "header.py.txt"), "r").read()
         header = header.format(module_name)
 
-    # Temporarily rename these variables because it
-    # can raise errors while sympifying
-    cons_dict = {}
-    cons_index =0
-    index = 0
+    cons_dict = {} # dict keeps track of constraints that has been encountered, thus avoids repetition of constraints.
+    cons_index =0 # for index of a constraint
+    index = 0 # indicates the number of a rule.
     cons = ''
 
+    # Temporarily rename these variables because it
+    # can raise errors while sympifying
     for i in temporary_variable_replacement:
         fullform = fullform.replace(i, temporary_variable_replacement[i])
     # Permanently rename these variables
