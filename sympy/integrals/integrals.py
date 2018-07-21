@@ -1316,16 +1316,7 @@ class Integral(AddWithLimits):
 
         r = Dummy('r')
 
-        singularities_list = list(singularities(self.function, x))
-
-        for singular_element in range(len(singularities_list)):
-
-            if a < singularities_list[singular_element] < b:
-                break
-
-            else:
-                I = integrate(self.function, (x, a, b))
-                return I
+        singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a < s < b]
 
         if len(singularities_list) == 0:
             if a == -oo and b == oo:
@@ -1336,18 +1327,13 @@ class Integral(AddWithLimits):
                 I = integrate(self.function, (x, a, b))
                 return I
 
-        if len(singularities_list) == 1 and a < singularities_list[0] < b:
+        if len(singularities_list) == 1:
             I = integrate(self.function, (x, a, singularities_list[0] - r))
             principle_value = 0
             principle_value = principle_value + limit(I, r, 0)
             I = integrate(self.function, (x, singularities_list[0] + r, b))
             principle_value = principle_value + limit(I, r, 0)
             return principle_value
-
-        if len(singularities_list) == 1 and not (a < singularities_list[0] < b):
-
-            I = integrate(self.function, (x, a, b))
-            return I
 
         else:
 
