@@ -28,7 +28,7 @@ def test_principal_value():
     assert Integral(g, (y, -oo, oo)).principal_value() == oo*sign(1/x)
 
     l = 1 / ((x**3) - 1)
-    assert Integral(l, (x, -oo, oo)).principal_value() == nan
+    assert Integral(l, (x, -oo, oo)).principal_value() == -oo
     assert Integral(l, (x, -oo, 1)).principal_value() == -oo - I*pi/3
     assert Integral(l, (x, -3, -2)).principal_value() == -sqrt(3)*atan(5*sqrt(3)/3)/3 - log(4)/3 + log(3)/6 + log(7)/6 + sqrt(3)*pi/9
     assert Integral(l, (x, 2, 3)).principal_value() == -sqrt(3) * atan(7 * sqrt(3) / 3) / 3 - log(13) / 6 + log(2) / 3 + log(7) / 6 + sqrt(3) * atan(5 * sqrt(3) / 3) / 3
