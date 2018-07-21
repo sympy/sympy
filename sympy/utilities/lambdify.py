@@ -218,7 +218,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     (1) Use one of the provided modules:
 
         >>> from sympy import sin, tan, gamma
-        >>> from sympy.utilities.lambdify import lambdastr
         >>> from sympy.abc import x, y
         >>> f = lambdify(x, sin(x), "math")
 
@@ -244,6 +243,28 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         >>> from numpy import array
         >>> f(array([1, 2, 3]), array([2, 3, 5]))
         [-2.18503986 -0.29100619 -0.8559934 ]
+
+        In the above examples, the generated functions can accept scalar
+        values or numpy arrays as arguments.  However, in some cases
+        the generated function relies on the input being a numpy array:
+
+        >>> from sympy import Piecewise
+        >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
+        >>> f(array([-1, 0, 1, 2]))
+        [-1.   0.   1.   0.5]
+        >>> f(0)
+        Traceback (most recent call last):
+            ...
+        ZeroDivisionError: division by zero
+
+        In such cases, the input should be wrapped in a numpy array:
+        >>> float(f(array([0])))
+        0.0
+
+        Or if numpy functionality is not required another module can be used:
+        >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "math")
+        >>> f(0)
+        0
 
     (3) Use a dictionary defining custom functions:
 
@@ -425,26 +446,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     # Create the function definition code and execute it
 
-    # For numpy lambdify, wrap all input arguments in arrays.
-    # If no arguments are strings, we can safely do this at
-    # code generation time.  Otherwise, apply a decorator to the
-    # generated function.
-    #
-    # This is a fix for gh-11306.
-    wrap_numpy_args = False
-    apply_numpy_decorator = False
-    if module_provided and _module_present('numpy',namespaces):
-        if any(isinstance(arg, str) for arg in args):
-            apply_numpy_decorator = True
-        else:
-            wrap_numpy_args = True
-
     funcname = '_lambdifygenerated'
 
-    if _module_present('numpy', namespaces):
-        funcprinter = _NumpyEvaluatorPrinter(
-                printer, dummify, wrap_numpy_args)
-    elif _module_present('tensorflow', namespaces):
+    if _module_present('tensorflow', namespaces):
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
@@ -462,16 +466,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     func = funclocals[funcname]
 
-    if apply_numpy_decorator:
-        def array_wrap(funcarg):
-            builtin_numerics = integer_types + (float, complex)
-            array = namespace['array']
-            @wraps(funcarg)
-            def wrapper(*argsx, **kwargsx):
-                newargs = [array(i) if isinstance(i, builtin_numerics) else i for i in argsx]
-                return funcarg(*newargs, **kwargsx)
-            return wrapper
-        func = array_wrap(func)
     # Apply the docstring
     sig = "func({0})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
@@ -747,8 +741,7 @@ class _EvaluatorPrinter(object):
 
         return argstrs, expr
 
-    @staticmethod
-    def _subexpr(expr, dummies_dict):
+    def _subexpr(self, expr, dummies_dict):
         from sympy.matrices import DeferredVector
         from sympy import sympify
 
@@ -758,13 +751,13 @@ class _EvaluatorPrinter(object):
             if isinstance(expr, DeferredVector):
                 pass
             elif isinstance(expr, dict):
-                k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
-                v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
+                k = [self._subexpr(sympify(a), dummies_dict) for a in expr.keys()]
+                v = [self._subexpr(sympify(a), dummies_dict) for a in expr.values()]
                 expr = dict(zip(k, v))
             elif isinstance(expr, tuple):
-                expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
+                expr = tuple(self._subexpr(sympify(a), dummies_dict) for a in expr)
             elif isinstance(expr, list):
-                expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
+                expr = [self._subexpr(sympify(a), dummies_dict) for a in expr]
         return expr
 
     def _print_funcargwrapping(self, args):
@@ -789,27 +782,6 @@ class _EvaluatorPrinter(object):
                 unpack_lhs(val) if iterable(val) else val for val in lvalues))
 
         return ['{} = {}'.format(unpack_lhs(unpackto), arg)]
-
-class _NumpyEvaluatorPrinter(_EvaluatorPrinter):
-    _numerics_def_stmt = 'builtin_numerics = ({}, float, complex)'.format(
-                        ', '.join(cls.__name__ for cls in integer_types))
-
-    def __init__(self, printer=None, dummify=False, wrapargs=True):
-        super(_NumpyEvaluatorPrinter, self).__init__(
-            printer=printer, dummify=dummify)
-
-        self._wrapargs = wrapargs
-
-    def _print_funcargwrapping(self, args):
-        if not self._wrapargs:
-            return []
-
-        lines = [self._numerics_def_stmt]
-
-        stmt = 'if isinstance({arg}, builtin_numerics): {arg} = array({arg})'
-        lines.extend(stmt.format(arg=arg) for arg in args)
-
-        return lines
 
 class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
     def _print_unpacking(self, lvalues, rvalue):

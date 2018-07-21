@@ -3816,7 +3816,7 @@ class PermutationGroup(Basic):
         return C.sylow_subgroup(p)
 
     def _block_verify(H, L, alpha):
-        delta = list(H.orbit(alpha))
+        delta = sorted(list(H.orbit(alpha)))
         H_gens = H.generators
         L_gens = L.generators
         # p[i] will be the number of the block
@@ -3852,7 +3852,7 @@ class PermutationGroup(Basic):
                     p[i_d] = sigma
                     rep = d
                     blocks[i_d] = rep
-                    newb = [d]
+                    newb = [rep]
                     for gamma in B[rho][1:]:
                         i_gamma = delta.index(gamma)
                         d = gamma^g

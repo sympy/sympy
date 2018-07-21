@@ -16,7 +16,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta, Mul)
+        DiracDelta, Mul, Indexed)
 from sympy.core.relational import Relational
 from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
@@ -270,6 +270,18 @@ class RandomSymbol(Expr):
 
 class ProductPSpace(PSpace):
     """
+    Abstract class for representing probability spaces with multiple random
+    variables.
+
+    See Also
+    ========
+    sympy.stats.rv.IndependentProductPSpace
+    sympy.stats.joint_rv.JointPSpace
+    """
+    pass
+
+class IndependentProductPSpace(ProductPSpace):
+    """
     A probability space resulting from the merger of two independent probability
     spaces.
 
@@ -321,11 +333,13 @@ class ProductPSpace(PSpace):
     def values(self):
         return sumsets(space.values for space in self.spaces)
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or self.values
         rvs = frozenset(rvs)
         for space in self.spaces:
-            expr = space.integrate(expr, rvs & space.values, **kwargs)
+            expr = space.integrate(expr, rvs & space.values, evaluate=False, **kwargs)
+        if evaluate and hasattr(expr, 'doit'):
+            return expr.doit(**kwargs)
         return expr
 
     @property
@@ -497,12 +511,11 @@ def pspace(expr):
     ========
 
     >>> from sympy.stats import pspace, Normal
-    >>> from sympy.stats.rv import ProductPSpace
+    >>> from sympy.stats.rv import IndependentProductPSpace
     >>> X = Normal('X', 0, 1)
     >>> pspace(2*X + 1) == X.pspace
     True
     """
-
     expr = sympify(expr)
     rvs = random_symbols(expr)
     if not rvs:
@@ -511,7 +524,7 @@ def pspace(expr):
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
     # Otherwise make a product space
-    return ProductPSpace(*[rv.pspace for rv in rvs])
+    return IndependentProductPSpace(*[rv.pspace for rv in rvs])
 
 
 def sumsets(sets):
@@ -590,7 +603,16 @@ def given(expr, condition=None, **kwargs):
         if isinstance(results, Intersection) and S.Reals in results.args:
             results = list(results.args[1])
 
-        return sum(expr.subs(rv, res) for res in results)
+        sums = 0
+        for res in results:
+            temp = expr.subs(rv, res)
+            if temp == True:
+                return True
+            if temp != False:
+                sums += expr.subs(rv, res)
+        if sums == 0:
+            return False
+        return sums
 
     # Get full probability space of both the expression and the condition
     fullspace = pspace(Tuple(expr, condition))
@@ -652,7 +674,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
                      for arg in expr.args])
 
     # Otherwise case is simple, pass work off to the ProbabilitySpace
-    result = pspace(expr).integrate(expr)
+    result = pspace(expr).integrate(expr, evaluate=evaluate, **kwargs)
     if evaluate and hasattr(result, 'doit'):
         return result.doit(**kwargs)
     else:
@@ -734,15 +756,19 @@ class Density(Basic):
             return None
 
     def doit(self, evaluate=True, **kwargs):
+        from sympy.stats.joint_rv import JointPSpace
         expr, condition = self.expr, self.condition
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
+        if isinstance(expr, RandomSymbol) and \
+            isinstance(expr.pspace, JointPSpace):
+            return expr.pspace.distribution
         if not random_symbols(expr):
             return Lambda(x, DiracDelta(x - expr))
         if (isinstance(expr, RandomSymbol) and
             hasattr(expr.pspace, 'distribution') and
-            isinstance(pspace(expr), SinglePSpace)):
+            isinstance(pspace(expr), (SinglePSpace))):
             return expr.pspace.distribution
         result = pspace(expr).compute_density(expr, **kwargs)
 
@@ -860,7 +886,7 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
 
     >>> Z = Poisson('Z', 2)
     >>> characteristic_function(Z)
-    Lambda(_t, Sum(2**_x*exp(-2)*exp(_t*_x*I)/factorial(_x), (_x, 0, oo)))
+    Lambda(_t, exp(2*exp(_t*I) - 2))
     """
     if condition is not None:
         return characteristic_function(given(expr, condition, **kwargs), **kwargs)
@@ -872,6 +898,16 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
     else:
         return result
 
+def moment_generating_function(expr, condition=None, evaluate=True, **kwargs):
+    if condition is not None:
+        return moment_generating_function(given(expr, condition, **kwargs), **kwargs)
+
+    result = pspace(expr).compute_moment_generating_function(expr, **kwargs)
+
+    if evaluate and hasattr(result, 'doit'):
+        return result.doit()
+    else:
+        return result
 
 def where(condition, given_condition=None, **kwargs):
     """

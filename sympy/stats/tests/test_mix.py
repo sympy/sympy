@@ -1,5 +1,5 @@
 from sympy.stats import Poisson, Beta, Exponential, P
-from sympy.stats.rv import pspace, ProductPSpace, density
+from sympy.stats.rv import pspace, IndependentProductPSpace, density
 from sympy.stats.drv_types import PoissonDistribution
 from sympy import Symbol, Eq, Ne
 
@@ -8,7 +8,7 @@ def test_density():
     l = Symbol('l', positive=True)
     rate = Beta(l, 2, 3)
     X = Poisson(x, rate)
-    assert isinstance(pspace(X), ProductPSpace)
+    assert isinstance(pspace(X), IndependentProductPSpace)
     assert density(X, Eq(rate, rate.symbol)) == PoissonDistribution(l)
 
 def test_mix_expression():

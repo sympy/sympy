@@ -469,12 +469,14 @@ def test_evalf_issue_939():
         integrate(1/(x**5 + 1), (x, 2, 4)), chop=True) == '0.0144361088886740'
 
 
-def test_double_integrals():
-    #double integral
-    assert NS(integrate(
+@XFAIL
+def test_failing_integrals():
+    #---
+    # Double integrals not implemented
+    assert NS(Integral(
         sqrt(x) + x*y, (x, 1, 2), (y, -1, 1)), 15) == '2.43790283299492'
     # double integral + zero detection
-    assert NS(integrate(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0'
+    assert NS(Integral(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0.0'
 
 
 def test_integrate_SingularityFunction():
@@ -537,7 +539,7 @@ def test_integrate_returns_piecewise():
     assert integrate(exp(n*x), x) == Piecewise(
         (exp(n*x)/n, Ne(n, 0)), (x, True))
     assert integrate(x*exp(n*x), x) == Piecewise(
-        ((n**2*x - n)*exp(n*x)/n**3, Ne(n**3, 0)), (x**2/2, True))
+        ((n*x - 1)*exp(n*x)/n**2, Ne(n**2, 0)), (x**2/2, True))
     assert integrate(x**(n*y), x) == Piecewise(
         (x**(n*y + 1)/(n*y + 1), Ne(n*y, -1)), (log(x), True))
     assert integrate(x**(n*y), y) == Piecewise(
@@ -1346,3 +1348,8 @@ def test_issue_14437():
 def test_issue_14470():
     assert integrate(1/sqrt(exp(x) + 1), x) == \
         log(-1 + 1/sqrt(exp(x) + 1)) - log(1 + 1/sqrt(exp(x) + 1))
+
+def test_issue_14877():
+    f = exp(1 - exp(x**2)*x + 2*x**2)*(2*x**3 + x)/(1 - exp(x**2)*x)**2
+    assert integrate(f, x) == \
+        -exp(2*x**2 - x*exp(x**2) + 1)/(x*exp(3*x**2) - exp(2*x**2))

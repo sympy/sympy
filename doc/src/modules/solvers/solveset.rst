@@ -591,6 +591,16 @@ nonlinsolve
 .. autofunction:: sympy.solvers.solveset.nonlinsolve
 
 
+transolve
+---------
+
+.. autofunction:: sympy.solvers.solveset._transolve
+
+.. autofunction:: sympy.solvers.solveset._is_exponential
+
+.. autofunction:: sympy.solvers.solveset._solve_expo
+
+
 Diophantine Equations (DEs)
 ---------------------------
 

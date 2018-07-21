@@ -210,7 +210,7 @@ def rubi_integrate(expr, var, showsteps=False):
 @doctest_depends_on(modules=('matchpy',))
 def get_matching_rule_definition(expr, var):
     '''
-    Returns the list or rules which match to `expr`.
+    Prints the list or rules which match to `expr`.
 
     Parameters
     ==========

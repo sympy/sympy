@@ -5,9 +5,9 @@ import collections
 import sys
 
 from sympy.core.basic import Basic, Atom, preorder_traversal, as_Basic
-from sympy.core.singleton import S, Singleton
+from sympy.core.singleton import S
 from sympy.core.symbol import symbols
-from sympy.core.compatibility import default_sort_key, with_metaclass
+from sympy.core.compatibility import default_sort_key
 
 from sympy import sin, Lambda, Q, cos, gamma, Tuple
 from sympy.functions.elementary.exponential import exp
@@ -139,32 +139,6 @@ def test_xreplace():
     raises(TypeError, lambda: b1.xreplace())
     raises(TypeError, lambda: b1.xreplace([b1, b2]))
 
-
-def test_Singleton():
-    global instantiated
-    instantiated = 0
-
-    class MySingleton(with_metaclass(Singleton, Basic)):
-        def __new__(cls):
-            global instantiated
-            instantiated += 1
-            return Basic.__new__(cls)
-
-    assert instantiated == 0
-    MySingleton() # force instantiation
-    assert instantiated == 1
-    assert MySingleton() is not Basic()
-    assert MySingleton() is MySingleton()
-    assert S.MySingleton is MySingleton()
-    assert instantiated == 1
-
-    class MySingleton_sub(MySingleton):
-        pass
-    assert instantiated == 1
-    MySingleton_sub()
-    assert instantiated == 2
-    assert MySingleton_sub() is not MySingleton()
-    assert MySingleton_sub() is MySingleton_sub()
 
 
 def test_preorder_traversal():

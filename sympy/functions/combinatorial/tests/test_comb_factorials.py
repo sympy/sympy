@@ -401,6 +401,11 @@ def test_binomial_Mod():
     p, q = 10**5 + 3, 10**9 + 33 # prime modulo
     r, s = 10**7 + 5, 33333333 # composite modulo
 
+    n, k, m = symbols('n k m')
+    assert (binomial(n, k) % q).subs({n: s, k: p}) == Mod(binomial(s, p), q)
+    assert (binomial(n, k) % m).subs({n: 8, k: 5, m: 13}) == 4
+    assert (binomial(9, k) % 7).subs(k, 2) == 1
+
     # Lucas Theorem
     assert Mod(binomial(156675, 4433, evaluate=False), p) == Mod(binomial(156675, 4433), p)
     assert Mod(binomial(123456, 43253, evaluate=False), p) == Mod(binomial(123456, 43253), p)

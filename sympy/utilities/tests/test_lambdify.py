@@ -26,6 +26,11 @@ numpy = import_module('numpy')
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 
+if tensorflow:
+    # Hide Tensorflow warnings
+    import os
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 w, x, y, z = symbols('w,x,y,z')
 
 #================== Test different arguments =======================
@@ -388,7 +393,8 @@ def test_python_div_zero_issue_11306():
     p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
     f = lambdify([x, y], p, modules='numpy')
     numpy.seterr(divide='ignore')
-    assert str(float(f(0,1))) == 'inf'
+    assert float(f(numpy.array([0]),numpy.array([0.5]))) == 0
+    assert str(float(f(numpy.array([0]),numpy.array([1])))) == 'inf'
     numpy.seterr(divide='warn')
 
 def test_issue9474():
@@ -877,3 +883,18 @@ def test_lambdify_inspect():
     # Test that inspect.getsource works but don't hard-code implementation
     # details
     assert 'x**2' in inspect.getsource(f)
+
+def test_issue_14941():
+    x, y = Dummy(), Dummy()
+
+    # test dict
+    f1 = lambdify([x, y], {x: 3, y: 3}, 'sympy')
+    assert f1(2, 3) == {2: 3, 3: 3}
+
+    # test tuple
+    f2 = lambdify([x, y], (y, x), 'sympy')
+    assert f2(2, 3) == (3, 2)
+
+    # test list
+    f3 = lambdify([x, y], [y, x], 'sympy')
+    assert f3(2, 3) == [3, 2]

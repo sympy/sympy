@@ -46,9 +46,9 @@ def test_as_integral():
         Integral(f(x)*exp(-2*I*pi*s*x), (x, -oo, oo))
     assert laplace_transform(f(x), x, s).rewrite('Integral') == \
         Integral(f(x)*exp(-s*x), (x, 0, oo))
-    assert str(inverse_mellin_transform(f(s), s, x, (a, b)).rewrite('Integral')) \
+    assert str(2*pi*I*inverse_mellin_transform(f(s), s, x, (a, b)).rewrite('Integral')) \
         == "Integral(x**(-s)*f(s), (s, _c - oo*I, _c + oo*I))"
-    assert str(inverse_laplace_transform(f(s), s, x).rewrite('Integral')) == \
+    assert str(2*pi*I*inverse_laplace_transform(f(s), s, x).rewrite('Integral')) == \
         "Integral(f(s)*exp(s*x), (s, _c - oo*I, _c + oo*I))"
     assert inverse_fourier_transform(f(s), s, x).rewrite('Integral') == \
         Integral(f(s)*exp(2*I*pi*s*x), (s, -oo, oo))

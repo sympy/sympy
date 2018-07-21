@@ -11,3 +11,4 @@ include LICENSE
 include TODO
 include AUTHORS
 include README.rst
+include bin/isympy

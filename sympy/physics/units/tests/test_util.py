@@ -115,20 +115,34 @@ def test_convert_to_tuples_of_quantities():
 
 
 def test_eval_simplify():
-    from sympy.physics.units import cm, mm, km, m, K, Quantity, kilo
+    from sympy.physics.units import cm, mm, km, m, K, Quantity, kilo, foot
     from sympy.simplify.simplify import simplify
     from sympy.core.symbol import symbols
     from sympy.utilities.pytest import raises
     from sympy.core.function import Lambda
 
-    x = symbols('x')
+    x, y = symbols('x y')
 
     assert ((cm/mm).simplify()) == 10
     assert ((km/m).simplify()) == 1000
     assert ((km/cm).simplify()) == 100000
     assert ((10*x*K*km**2/m/cm).simplify()) == 1000000000*x*kelvin
-    assert ((cm/km/m).simplify()) == 1/(100*kilometer)
+    assert ((cm/km/m).simplify()) == 1/(10000000*centimeter)
 
     assert (3*kilo*meter).simplify() == 3000*meter
     assert (4*kilo*meter/(2*kilometer)).simplify() == 2
     assert (4*kilometer**2/(kilo*meter)**2).simplify() == 4
+
+
+def test_quantity_simplify():
+    from sympy.physics.units.util import quantity_simplify
+    from sympy.physics.units import kilo, foot
+    from sympy.core.symbol import symbols
+
+    x, y = symbols('x y')
+
+    assert quantity_simplify(x*(8*kilo*newton*meter + y)) == x*(8000*meter*newton + y)
+    assert quantity_simplify(foot*inch*(foot + inch)) == foot**2*(foot + inch)/12
+    assert quantity_simplify(foot*inch*(foot*foot + inch*(foot + inch))) == foot**2*(foot**2 + inch*(foot + inch))/12
+    assert quantity_simplify(2**(foot/inch*kilo/1000)*inch) == 4096*inch
+    assert quantity_simplify(foot**2*inch + inch**2*foot) == 13*foot**3/144

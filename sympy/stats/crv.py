@@ -11,12 +11,11 @@ sympy.stats.frv
 from __future__ import print_function, division
 
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace,
-        NamedArgsMixin)
+        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import (Interval, Intersection, symbols, sympify, Dummy, Mul,
+from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S, exp, I, FiniteSet, Ne, Eq, Union)
+        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.polys.polyerrors import PolynomialError
@@ -241,10 +240,51 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
                 return cf
         return self.compute_characteristic_function(**kwargs)(t)
 
+    @cacheit
+    def compute_moment_generating_function(self, **kwargs):
+        """ Compute the moment generating function from the PDF
+
+        Returns a Lambda
+        """
+        x, t = symbols('x, t', real=True, cls=Dummy)
+        pdf = self.pdf(x)
+        mgf = integrate(exp(t * x) * pdf, (x, -oo, oo))
+        return Lambda(t, mgf)
+
+    def _moment_generating_function(self, t):
+        return None
+
+    def moment_generating_function(self, t, **kwargs):
+        """ Moment generating function """
+        if len(kwargs) == 0:
+
+            try:
+                mgf = self._moment_generating_function(t)
+                if mgf is not None:
+                    return mgf
+            except NotImplementedError:
+                return None
+        return self.compute_moment_generating_function(**kwargs)(t)
+
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
-        integral = Integral(expr * self.pdf(var), (var, self.set), **kwargs)
-        return integral.doit() if evaluate else integral
+        if evaluate:
+            try:
+                p = poly(expr, var)
+                t = Dummy('t', real=True)
+                mgf = self._moment_generating_function(t)
+                if mgf is None:
+                    return integrate(expr * self.pdf(var), (var, self.set), **kwargs)
+                deg = p.degree()
+                taylor = poly(series(mgf, t, 0, deg + 1).removeO(), t)
+                result = 0
+                for k in range(deg+1):
+                    result += p.coeff_monomial(var ** k) * taylor.coeff_monomial(t ** k) * factorial(k)
+                return result
+            except PolynomialError:
+                return integrate(expr * self.pdf(var), (var, self.set), **kwargs)
+        else:
+            return Integral(expr * self.pdf(var), (var, self.set), **kwargs)
 
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
@@ -272,7 +312,7 @@ class ContinuousPSpace(PSpace):
     def pdf(self):
         return self.density(*self.domain.symbols)
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
         if rvs is None:
             rvs = self.values
         else:
@@ -322,6 +362,16 @@ class ContinuousPSpace(PSpace):
         x, t = symbols('x, t', real=True, cls=Dummy)
         cf = integrate(exp(I*t*x)*d(x), (x, -oo, oo), **kwargs)
         return Lambda(t, cf)
+
+    @cacheit
+    def compute_moment_generating_function(self, expr, **kwargs):
+        if not self.domain.set.is_Interval:
+            raise NotImplementedError("Moment generating function of multivariate expressions not implemented")
+
+        d = self.compute_density(expr, **kwargs)
+        x, t = symbols('x, t', real=True, cls=Dummy)
+        mgf = integrate(exp(t * x) * d(x), (x, -oo, oo), **kwargs)
+        return Lambda(t, mgf)
 
     def probability(self, condition, **kwargs):
         z = Dummy('z', real=True, finite=True)
@@ -411,7 +461,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         """
         return {self.value: self.distribution.sample()}
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
@@ -420,7 +470,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
         x = self.value.symbol
         try:
-            return self.distribution.expectation(expr, x, evaluate=False, **kwargs)
+            return self.distribution.expectation(expr, x, evaluate=evaluate, **kwargs)
         except Exception:
             return Integral(expr * self.pdf, (x, self.set), **kwargs)
 
@@ -437,6 +487,13 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
         else:
             return ContinuousPSpace.compute_characteristic_function(self, expr, **kwargs)
+
+    def compute_moment_generating_function(self, expr, **kwargs):
+        if expr == self.value:
+            t = symbols("t", real=True, cls=Dummy)
+            return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))
+        else:
+            return ContinuousPSpace.compute_moment_generating_function(self, expr, **kwargs)
 
     def compute_density(self, expr, **kwargs):
         # http://en.wikipedia.org/wiki/Random_variable#Functions_of_random_variables
