@@ -824,46 +824,47 @@ class CosetTable(DefaultPrinting):
     ##############################
 
     def modified_define(self, alpha, x):
-        '''
-        Input: \alpha \epsilon \Omega, x \epsilon A*
+        r"""
+        Input: \alpha \in \Omega, x \in A*
 
         Summary
         =======
         Define a function p_p from from [1..n] to A* as
-        an additional component of the modifief coset table.
+        an additional component of the modified coset table.
 
         See Also
         ========
         define
-        '''
+
+        """
         self.define(alpha, x, modified=True)
 
     def modified_scan(self, alpha, w, y, fill=False):
-        '''
-        Input: \alpha \epsilon \Omega, w \epsilon A*, y \epsilon (YUY^-1)
+        r"""
+        Input: \alpha \in \Omega, w \in A*, y \in (YUY^-1)
         fill -- `modified_scan_and_fill` when set to True.
 
         See also
         =========
         scan
-        '''
+        """
         self.scan(alpha, w, y=y, fill=fill, modified=True)
 
     def modified_scan_and_fill(self, alpha, w, y):
         self.modified_scan(alpha, w, y, fill=True)
 
     def modified_rep(self, k):
-        '''
+        r"""
         Input: `k \in [0 \ldots n-1]`
 
         See also
         ========
         rep
-        '''
+        """
         self.rep(k, modified=True)
 
     def modified_merge(k, lamda, w, q):
-        '''
+        r"""
         Input
         =====
         'k', 'lamda' -- the two class representatives to be merged.
@@ -873,17 +874,17 @@ class CosetTable(DefaultPrinting):
         See also
         ========
         merge
-        '''
+        """
         self.merge(k, lamda, q, w=w, modified=True)
 
     def modified_coincidence(self, alpha, beta, w):
-        '''
-        Input: A coincident pair \alpha,\beta \epsilon \Omega, w∈ (Y∪Y^–1)
+        r"""
+        Input: A coincident pair \alpha,\beta \in \Omega, w \in (Y∪Y^–1)
 
         See also
         ========
         coincidence
-        '''
+        """
         self.coincidence(alpha, beta, w=w, modified=True)
 
 ###############################################################################
