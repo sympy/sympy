@@ -1307,8 +1307,8 @@ class Integral(AddWithLimits):
         See also
         ========
 
-        [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
-        [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
+        .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
+        .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
         from sympy.calculus import singularities
 
