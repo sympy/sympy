@@ -79,6 +79,11 @@ class CosetTable(DefaultPrinting):
         # the element is called a "deduction" which is the form (α, x) whenever
         # a value is assigned to α^x during a definition or "deduction process"
         self.deduction_stack = []
+        # Attributes for modified methods.
+        H = self.subgroup
+        self._grp = free_group(', ' .join(["a_%d" % i for i in range(len(H))]))[0]
+        self.P = [[None]*len(self.A)]
+        self.p_p = {}
 
     @property
     def omega(self):
@@ -149,13 +154,9 @@ class CosetTable(DefaultPrinting):
                     "%s cosets. Try with a greater value max number of cosets "
                     % self.coset_table_max_limit)
         table.append([None]*len(A))
+        self.P.append([None]*len(self.A))
         # beta is the new coset generated
         beta = len_table
-        if modified:
-            H = self.subgroup
-            self._grp = free_group(', ' .join(["a_%d" % i for i in range(len(H))]))[0]
-            self.P.append([None]*len(self.A))
-            self.p_p = []
         self.p.append(beta)
         table[alpha][self.A_dict[x]] = beta
         table[beta][self.A_dict_inv[x]] = alpha
@@ -163,6 +164,7 @@ class CosetTable(DefaultPrinting):
         if modified:
             self.P[alpha][self.A_dict[x]] = self._grp.identity
             self.P[beta][self.A_dict_inv[x]] = self._grp.identity
+            self.p_p[beta] = self._grp.identity
 
     def define_c(self, alpha, x):
         r"""
@@ -543,7 +545,6 @@ class CosetTable(DefaultPrinting):
         # behaves as a queue
         q = []
         if modified:
-            self.p_p[beta] = self._grp.identity
             self.modified_merge(alpha, beta, w, q)
         else:
             self.merge(alpha, beta, q)
