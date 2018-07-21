@@ -123,7 +123,7 @@ class CosetTable(DefaultPrinting):
         return not any(None in self.table[coset] for coset in self.omega)
 
     # Pg. 153 [1]
-    def define(self, alpha, x, modified=True):
+    def define(self, alpha, x, modified=False):
         r"""
         This routine is used in the relator-based strategy of Todd-Coxeter
         algorithm if some `\alpha^x` is undefined. We check whether there is
@@ -414,7 +414,7 @@ class CosetTable(DefaultPrinting):
             table[b][A_dict_inv[word[i]]] = f
         return True
 
-    def merge(self, k, lamda, q):
+    def merge(self, k, lamda, q, w=None, modified=False):
         """
         Input: 'k', 'lamda' being the two class representatives to be merged.
         =====
@@ -436,12 +436,21 @@ class CosetTable(DefaultPrinting):
 
         """
         p = self.p
-        phi = self.rep(k)
-        psi = self.rep(lamda)
+        if modified:
+            rep = self.modified_rep
+        else:
+            rep = self.rep
+        phi = rep(k)
+        psi = rep(lamda)
         if phi != psi:
             mu = min(phi, psi)
             v = max(phi, psi)
             p[v] = mu
+            if modified:
+                if v == phi:
+                    self.p_p[phi] =  self.p_p[k]**-1*w*self.p_p[lamda]
+                else:
+                    self.p_p[psi] = self.p_p[lamda]**-1*w**-1*self.p_p[k]
             q.append(v)
 
     def rep(self, k, modified=False):
@@ -548,13 +557,15 @@ class CosetTable(DefaultPrinting):
                     nu = self.rep(delta, modified=modified)
                     if table[mu][A_dict[x]] is not None:
                         if modified:
-                            v = self.p_p[delta]**-1*self.P[gamma][self.A_dict[x]]**-1*self.p_p[gamma]*self.P[mu][self.A_dict[x]]
+                            v = self.p_p[delta]**-1*self.P[gamma][self.A_dict[x]]**-1
+                            v = v*self.p_p[gamma]*self.P[mu][self.A_dict[x]]
                             self.modified_merge(nu, table[mu][self.A_dict[x]], v, q)
                         else:
                             self.merge(nu, table[mu][A_dict[x]], q)
                     elif table[nu][A_dict_inv[x]] is not None:
                         if modified:
-                            v = self.p_p[gamma]**-1*self.P[gamma][self.A_dict[x]]*self.p_p[delta]*self.P[mu][self.A_dict_inv[x]]
+                            v = self.p_p[gamma]**-1*self.P[gamma][self.A_dict[x]]
+                            v = v*self.p_p[delta]*self.P[mu][self.A_dict_inv[x]]
                             self.modified_merge(mu, table[nu][self.A_dict_inv[x]], v, q)
                         else:
                             self.merge(mu, table[nu][A_dict_inv[x]], q)
@@ -813,14 +824,27 @@ class CosetTable(DefaultPrinting):
 
     def modified_define(self, alpha, x):
         '''
-        Input:  ∈ , x∈A, with  x undefined.
+        Input: \alpha \epsilon \Omega, x \epsilon A*
+
+        Summary
+        =======
+        Define a function p_p from from [1..n] to A* as
+        an additional component of the modifief coset table.
+
+        See Also
+        ========
+        define
         '''
         self.define(alpha, x, modified=True)
 
     def modified_scan(self, alpha, w, y, fill=False):
         '''
-        Input: α∈Ω, w∈A*, y∈(Y∪Y-1)* with τ(α)w=G φ(y)τ(α).
-        Modified scan_and_fill if fill = True.
+        Input: \alpha \epsilon \Omega, w \epsilon A*, y \epsilon (YUY^-1)
+        fill -- `modified_scan_and_fill` when set to True.
+
+        See also
+        =========
+        scan
         '''
         self.scan(alpha, w, y=y, fill=fill, modified=True)
 
@@ -829,29 +853,35 @@ class CosetTable(DefaultPrinting):
 
     def modified_rep(self, k):
         '''
-        Input: C, κ∈Ω, , pP
+        Input: `k \in [0 \ldots n-1]`
+
+        See also
+        ========
+        rep
         '''
         self.rep(k, modified=True)
 
     def modified_merge(k, lamda, w, q):
         '''
-        Input: κ, λ∈Ω, w∈(Y∪Y–1)*withτ(κ)= φ(w)τ(λ), p_p, q,l GP
-        q is a queue of length l of elements to be deleted from Ω *
+        Input
+        =====
+        'k', 'lamda' -- the two class representatives to be merged.
+        q -- queue of length l of elements to be deleted from Ω *.
+        w -- Word in (YUY^-1)
+
+        See also
+        ========
+        merge
         '''
-        phi = self.modified_rep(k)
-        psi = self.modified_rep(lamda)
-        if phi > psi:
-            self.p[phi] = psi
-            self.p_p[phi] =  self.p_p[k]**-1*w*self.p_p[lamda]
-            q.append(phi)
-        elif phi < psi:
-            self.p[psi] = phi
-            self.p_p[psi] = self.p_p[lamda]**-1*w**-1*self.p_p[k]
-            q.append(psi)
+        self.merge(k, lamda, q, w=w, modified=True)
 
     def modified_coincidence(self, alpha, beta, w):
         '''
-        Input: A coincident pair α, ß∈Ω, w∈ (Y∪Y–1)*
+        Input: A coincident pair \alpha,\beta \epsilon \Omega, w∈ (Y∪Y^–1)
+
+        See also
+        ========
+        coincidence
         '''
         self.coincidence(alpha, beta, w=w, modified=True)
 
