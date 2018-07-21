@@ -37,7 +37,9 @@ rule1 = ReplacementRule(pattern1, replacement1)
 As seen in the above example, a rule has 3 parts
 1. Pattern with constraints. Expression is matched against this pattern.
 2. Replacement function, which gives the resulting expression with which the original expression has to be replaced with.
-3. rule, which combines pattern and replacement function.
+   There is also `rubi.append(1)`. This (rubi) is a list which keeps track of rules applied to an expression.
+   This can be accesed by `rules_applied` in `rubi.py`
+3. Rule, which combines pattern and replacement function.
 (For more details refer to matchpy documents)
 
 Note:
