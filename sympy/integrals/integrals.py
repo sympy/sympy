@@ -1248,18 +1248,6 @@ class Integral(AddWithLimits):
         on the real axis.
         In mathematics, the Cauchy principal value, is a method for assigning values to certain improper
         integrals which would otherwise be undefined.
-        The Cauchy principal value of a finite integral of a function f about a point c with a <= c <= b is given by
-                b               c-r                       b
-              /                  /                      /
-             /                  /                      /
-             |                  |                      |
-             |                  |                      |
-        p.v. | f(x)dx  = lim    | f(x)dx   +   lim     |
-             |          r -> 0+ |             r -> 0+  |
-             |                  |                      |
-             /                  /                     /
-            /                  /                     /
-          a                 a                     c+r
 
         Examples
         ========
