@@ -331,12 +331,11 @@ class CosetTable(DefaultPrinting):
         b = alpha
         j = r - 1
         b_p = y
-        f_p = None
         if modified:
             f_p = self._grp.identity
-        itr = 0
-        while fill or itr == 0:
-            itr += 1
+        flag = 0
+        while fill or flag == 0:
+            flag = 1
             while i <= j and table[f][A_dict[word[i]]] is not None:
                 if modified:
                     f_p = f_p*self.P[f][A_dict[word[i]]]
@@ -345,7 +344,7 @@ class CosetTable(DefaultPrinting):
             if i > j:
                 if f != b:
                     if modified:
-                        self.modified_coincidence(f, alpha, f_p**-1*y)
+                        self.modified_coincidence(f, b, f_p**-1*y)
                     else:
                         self.coincidence(f, b)
                 return
@@ -368,6 +367,7 @@ class CosetTable(DefaultPrinting):
                 if modified:
                     self.P[f][self.A_dict[word[i]]] = f_p**-1*b_p
                     self.P[b][self.A_dict_inv[word[i]]] = b_p**-1*f_p
+                return
             elif fill:
                 self.define(f, word[i], modified=modified)
             # otherwise scan is incomplete and yields no information
@@ -438,19 +438,16 @@ class CosetTable(DefaultPrinting):
 
         """
         p = self.p
-        if modified:
-            rep = self.modified_rep
-        else:
-            rep = self.rep
-        phi = rep(k)
-        psi = rep(lamda)
+        rep = self.rep
+        phi = rep(k, modified=modified)
+        psi = rep(lamda, modified=modified)
         if phi != psi:
             mu = min(phi, psi)
             v = max(phi, psi)
             p[v] = mu
             if modified:
                 if v == phi:
-                    self.p_p[phi] =  self.p_p[k]**-1*w*self.p_p[lamda]
+                    self.p_p[phi] = self.p_p[k]**-1*w*self.p_p[lamda]
                 else:
                     self.p_p[psi] = self.p_p[lamda]**-1*w**-1*self.p_p[k]
             q.append(v)
@@ -853,17 +850,7 @@ class CosetTable(DefaultPrinting):
     def modified_scan_and_fill(self, alpha, w, y):
         self.modified_scan(alpha, w, y, fill=True)
 
-    def modified_rep(self, k):
-        r"""
-        Input: `k \in [0 \ldots n-1]`
-
-        See also
-        ========
-        rep
-        """
-        self.rep(k, modified=True)
-
-    def modified_merge(k, lamda, w, q):
+    def modified_merge(self, k, lamda, w, q):
         r"""
         Input
         =====
@@ -876,6 +863,16 @@ class CosetTable(DefaultPrinting):
         merge
         """
         self.merge(k, lamda, q, w=w, modified=True)
+
+    def modified_rep(self, k):
+        r"""
+        Input: `k \in [0 \ldots n-1]`
+
+        See also
+        ========
+        rep
+        """
+        self.rep(k, modified=True)
 
     def modified_coincidence(self, alpha, beta, w):
         r"""
@@ -1045,12 +1042,13 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
     """
     # 1. Initialize a coset table C for < X|R >
     C = CosetTable(fp_grp, Y, max_cosets=max_cosets)
-    # Defines coset table methods.
-    _scan_and_fill = C.scan_and_fill
-    _define = C.define
+    # Define coset table methods.
     if modified:
         _scan_and_fill = C.modified_scan_and_fill
         _define = C.modified_define
+    else:
+        _scan_and_fill = C.scan_and_fill
+        _define = C.define
     if draft:
         C.table = draft.table[:]
         C.p = draft.p[:]
@@ -1058,14 +1056,20 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
     A_dict = C.A_dict
     A_dict_inv = C.A_dict_inv
     p = C.p
-    for w in Y:
-        _scan_and_fill(0, w)
+    for i in range(0, len(Y)):
+        if modified:
+            _scan_and_fill(0, Y[i], C._grp.generators[i])
+        else:
+            _scan_and_fill(0, Y[i])
     alpha = 0
     while alpha < C.n:
         if p[alpha] == alpha:
             try:
                 for w in R:
-                    _scan_and_fill(alpha, w)
+                    if modified:
+                        _scan_and_fill(alpha, w, C._grp.identity)
+                    else:
+                        _scan_and_fill(alpha, w)
                     # if α was eliminated during the scan then break
                     if p[alpha] < alpha:
                         break
