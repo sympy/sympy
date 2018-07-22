@@ -1142,15 +1142,16 @@ def _is_exponential(f, symbol):
     return False
 
 
-def _solve_log(f, symbol):
+def _solve_logarithm_reducable_to_single_instance(f, symbol):
     r"""
-    Helper to solve logarithmic equations.
+    Helper to solve logarithmic equations which are reducable
+    to a single instance of `log`.
 
     Parameters
     ==========
 
     f : Expr
-        The logarithmic equation to be solved
+        The logarithmic equation to be solved as an instance of `Eq`
 
     symbol : Symbol
         The variable in which the equation is solved
@@ -1158,18 +1159,16 @@ def _solve_log(f, symbol):
     Returns
     =======
 
-    An improved equation containg a single instance of log.
-
-    `None`:
-        If the equation does not changes.
+    An improved equation containing a single instance of log.
 
     Examples
     ========
 
-    >>> from sympy import symbols, S, log
-    >>> from sympy.solvers.solveset import _solve_log as solve_log
+    >>> from sympy import symbols, S, log, Eq
+    >>> from sympy.solvers.solveset import \
+    ... _solve_logarithm_reducable_to_single_instance as solve_log
     >>> x = symbols('x')
-    >>> f = log(x - 3) + log(x + 3)
+    >>> f = Eq(log(x - 3) + log(x + 3), 0)
     >>> solve_log(f, x)
     log((x - 3)*(x + 3))
 
@@ -1212,26 +1211,24 @@ def _solve_log(f, symbol):
     to exponents.
     """
 
-    lhs, rhs_s = invert_real(f, 0, symbol)
-    rhs = rhs_s.args[0]
-    new_f = None
-
+    lhs, rhs = f.lhs, f.rhs
     new_lhs = logcombine(lhs, force=True)
-    if new_lhs != lhs:
-        new_f = new_lhs - rhs
+    new_f = new_lhs - rhs
 
     return new_f
 
 
-def _is_logarithmic(f, symbol):
+def _is_logarithm_reducable_to_single_instance(f, symbol):
     r"""
-    Helper to check if the given equation is logarithmic or not.
+    Helper to check if the given equation can be reduced to a
+    single instance of log containing the variable to be solved.
+
 
     Parameters
     ==========
 
     f : Expr
-        The equation to be checked
+        The equation to be checked as an instance of `Eq`
 
     symbol : Symbol
         The variable in which the equation is checked
@@ -1239,38 +1236,30 @@ def _is_logarithmic(f, symbol):
     Returns
     =======
 
-    `True` if the equation is logarithmic otherwise `False`.
+    `True` if the equation is reducable otherwise `False`.
 
     Examples
     ========
 
-    >>> from sympy import symbols, tan, log
-    >>> from sympy.solvers.solveset import _is_logarithmic as check
+    >>> from sympy import symbols, tan, log, Eq
+    >>> from sympy.solvers.solveset import \
+    ... _is_logarithm_reducable_to_single_instance as check
     >>> x = symbols('x')
-    >>> check(log(x + 2) - log(x + 3), x)
+    >>> check(Eq(log(x + 2) - log(x + 3), 0), x)
     True
-    >>> check(tan(log(2*x)), x)
+    >>> check(Eq(tan(log(2*x)), 0), x)
     False
 
     * Philosophy behind the helper
 
-    The function extracts each term of the equation and checks if it
-    it is an instance of `log` w.r.t `symbol`
+    The function uses `logcombine` to see whether the equation
+    gets reduced to a single instance of `log`.
     """
-
-    def check_log(arg, symbol):
-        if isinstance(arg, log) and (
-                symbol in arg.free_symbols):
+    lhs, rhs = f.lhs, f.rhs
+    new_lhs = logcombine(lhs, force=True)
+    if new_lhs is not lhs:
+        if isinstance(new_lhs, log) and symbol in new_lhs.free_symbols:
             return True
-
-    expr_args = _term_factors(f)
-    for expr_arg in expr_args:
-        if check_log(expr_arg, symbol):
-            return True
-        if isinstance(expr_arg, Pow):
-            base = expr_arg.base
-            if check_log(base, symbol):
-                return True
     return False
 
 
@@ -1473,8 +1462,11 @@ def _transolve(f, symbol, domain, flags={'tsolve_saw': []}):
         elif _is_exponential(simplified_equation, symbol):
             new_eq = _solve_expo(simplified_equation, symbol)
         # check if it is logarithmic type equation
-        elif _is_logarithmic(simplified_equation, symbol):
-            new_eq = _solve_log(simplified_equation, symbol)
+        elif _is_logarithm_reducable_to_single_instance(
+                Eq(lhs, rhs), symbol):
+                new_eq = \
+                    _solve_logarithm_reducable_to_single_instance(
+                        Eq(lhs, rhs), symbol)
 
         if new_eq is not None:
             result = _solveset(new_eq, symbol, domain, flags)
