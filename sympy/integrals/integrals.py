@@ -1259,7 +1259,7 @@ class Integral(AddWithLimits):
 
         >>> g = x + 1
         >>> Integral(g, (x, -oo, oo)).principal_value()
-        oo
+        nan
 
         >>> f = 1/(x**3)
         >>> singularities(f,x)
@@ -1306,46 +1306,30 @@ class Integral(AddWithLimits):
 
         singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a < s < b]
 
+        f = self.function
+        F = integrate(f, x)
+
         if len(singularities_list) == 0:
-            if a == -oo and b == oo:
-                I = integrate(self.function, (x, -r, r))
-                principle_value = limit(I, r, oo)
-                return principle_value
-            else:
-                I = integrate(self.function, (x, a, b))
-                return I
+            I = limit(F, x, b, '-') - limit(F, x, a, '+')
+            return I
 
         if len(singularities_list) == 1:
-            I = integrate(self.function, (x, a, singularities_list[0] - r))
-            principle_value = 0
-            principle_value = principle_value + limit(I, r, 0)
-            I = integrate(self.function, (x, singularities_list[0] + r, b))
-            principle_value = principle_value + limit(I, r, 0)
-            return principle_value
+            I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a, '+')
+            I = I + limit(F, x, b, '-') - limit(F, x, limit((singularities_list[0] + r), r, 0, '+'), '+')
+            return I
 
         else:
-
             for singular_element in range(len(singularities_list)):
-
-                if a < singularities_list[singular_element] < b:
-
-                    if singular_element == 0:
-
-                        I = integrate(self.function, (x, a, singularities_list[singular_element] - r))
-                        principle_value = 0
-                        principle_value = principle_value + limit(I, r, 0)
-                        return principle_value
-
-                    else:
-
-                        I = integrate(self.function, (
-                            x, singularities_list[singular_element - 1] + r,
-                            singularities_list[singular_element] - r))
-                        principle_value = principle_value + limit(I, r, 0)
-                        return principle_value
-
+                if singular_element == 0:
+                    I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a, '+')
+                    return I
+                if singular_element == (len(singularities_list) - 1):
+                    I = I + limit(F, x, b, '-') - limit(F, x, limit((singularities_list[singular_element] + r), r, 0, '+'), '+')
+                    return I
                 else:
-                    continue
+                    I = I + limit(F, x, limit((singularities_list[singular_element] - r), r, 0, '+'), '-') - limit(F, x, limit((singularities_list[singular_element] + r), r, 0, '+'), '+')
+                    return I
+
 
 
 
