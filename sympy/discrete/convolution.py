@@ -360,8 +360,8 @@ def covering_product(a, b):
     The indices of each argument, considered as bit strings, correspond to
     subsets of a finite set.
 
-    The covering product of given sequences is a sequence which contains
-    sum of products of the elements of the given sequences grouped by
+    The covering product of given sequences is the sequence which contains
+    the sums of products of the elements of the given sequences grouped by
     bitwise OR of the corresponding indices.
 
     The sequence is automatically padded to the right with zeros, as the
@@ -430,9 +430,9 @@ def intersecting_product(a, b):
     The indices of each argument, considered as bit strings, correspond to
     subsets of a finite set.
 
-    The intersecting product of given sequences is a sequence which contains
-    sum of products of the elements of the given sequences grouped by
-    bitwise AND of the corresponding indices.
+    The intersecting product of given sequences is the sequence which
+    contains the sums of products of the elements of the given sequences
+    grouped by bitwise AND of the corresponding indices.
 
     The sequence is automatically padded to the right with zeros, as the
     definition of subset based on bitmasks (indices) requires the size of
