@@ -6745,6 +6745,146 @@ def LogIntegral(z):
     tx = symbols('tx')
     return Integral(1/log(tx),(tx, 0, z))
 
+
+'''
+Below this, all the utility functions are for version >= 4.15
+=============================
+'''
+
+def EveryQ(func, lst):
+    for i in lst:
+        if not func(i):
+            return False
+
+    return True
+
+def HalfIntegerQ(*args):
+    for i in args:
+        fraction = S(i).as_numer_denom()
+        if not (RationalQ(fraction[0]) and fraction[1] == S(2)):
+            return False
+    return True
+
+def StopFunctionQ(u):
+    if not u.is_Atom:
+        u = Head(u)
+    return u in [Pattern, If, Int, Integral]
+
+def CalculusFreeQ(u, x):
+    if AtomQ(u):
+        return True
+    elif CalculusQ(u) and u.args[1] == x:
+        return False
+    else:
+        for i in u.args:
+            if not CalculusFreeQ(i, x):
+                return False
+        return True
+
+def NeQ(u, v):
+    return not EqQ(u, v)
+
+def IGtQ(u, n):
+    return IntegerQ(u) and u > n
+
+def ILtQ(u, n):
+    return IntegerQ(u) and u < n
+
+def IGeQ(u, n):
+    return IntegerQ(u) and u >= n
+
+def ILeQ(u, n):
+    return IntegerQ[u] and u <= n
+
+def RealNumberQ(u):
+    return S(u).is_real
+
+def GtQ(u, v, w=None):
+    if w == None:
+        if RealNumberQ(u):
+            if RealNumberQ(v):
+                return u > v
+            else:
+                vn = N(Together(v))
+                return Head(vn).is_real and u > vn
+        else:
+            un = N(Together(u))
+            if Head(un).is_real:
+                if RealNumberQ(v):
+                    return un > v
+                else:
+                    vn = N(Together(v))
+                    return Head(vn).is_real and un > vn
+        return False
+    else:
+        return GtQ(u, v) and GtQ(v, w)
+
+def LtQ(u, v, w=None):
+    if w == None:
+        if RealNumberQ(u):
+            if RealNumberQ(v):
+                return u < v
+            else:
+                vn = N(Together(v))
+                return Head(vn).is_real and u < vn
+        else:
+            un = N(Together(u))
+            if Head(un).is_real:
+                if RealNumberQ(v):
+                    return un < v
+                else:
+                    vn = N(Together(v))
+                    return Head(vn).is_real and un < vn
+        return False
+    else:
+        return LtQ(u, v) and LtQ(v, w)
+
+def GeQ(u, v, w=None):
+    if w == None:
+        if RealNumberQ(u):
+            if RealNumberQ(v):
+                return u >= v
+            else:
+                vn = N(Together(v))
+                return Head(vn).is_real and u >= vn
+        else:
+            un = N(Together(u))
+            if Head(un).is_real:
+                if RealNumberQ(v):
+                    return un >= v
+                else:
+                    vn = N(Together(v))
+                    return Head(vn).is_real and un >= vn
+        return False
+    else:
+        return GeQ(u, v) and GeQ(v, w)
+
+
+def LeQ(u, v, w=None):
+    if w == None:
+        if RealNumberQ(u):
+            if RealNumberQ(v):
+                return u <= v
+            else:
+                vn = N(Together(v))
+                return Head(vn).is_real and u <= vn
+        else:
+            un = N(Together(u))
+            if Head(un).is_real:
+                if RealNumberQ(v):
+                    return un <= v
+                else:
+                    vn = N(Together(v))
+                    return Head(vn).is_real and un <= vn
+        return False
+    else:
+        return LeQ(u, v) and LeQ(v, w)
+
+def ProperPolyQ(u, x):
+    return PolyQ(u, x) and NeQ(Coeff(u, x, 0), 0)
+
+# ===========================
+
 if matchpy:
     TrigSimplifyAux_replacer = _TrigSimplifyAux()
     SimplifyAntiderivative_replacer = _SimplifyAntiderivative()
