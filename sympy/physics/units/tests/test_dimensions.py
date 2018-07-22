@@ -77,13 +77,21 @@ def test_Dimension_add_sub():
     # others to pass
     x = Symbol('x')
     e = length + x
-    assert e.is_Add and set(e.args) == {length, x}
+    assert e == x + length and e.is_Add and set(e.args) == {length, x}
     e = length + 1
-    assert e.is_Add and set(e.args) == {length, 1}
+    assert e == 1 + length == 1 - length == length + 1 and e.is_Add and set(e.args) == {length, 1}
 
 
 def test_Dimension_mul_div_exp():
-    assert 2*length == length*2 == length
+    assert 2*length == length*2 == length/2 == length
+    assert 2/length == 1/length
+    x = Symbol('x')
+    m = x*length
+    assert m == length*x and m.is_Mul and set(m.args) == {x, length}
+    d = x/length
+    assert d == x*length**-1 and d.is_Mul and set(d.args) == {x, 1/length}
+    d = length/x
+    assert d == length*x**-1 and d.is_Mul and set(d.args) == {1/x, length}
 
     velo = length / time
 

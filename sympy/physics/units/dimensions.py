@@ -20,6 +20,7 @@ from sympy import Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict, defau
 from sympy.core.compatibility import reduce, string_types
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
+from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
@@ -152,18 +153,26 @@ class Dimension(Expr):
 
     def __add__(self, other):
         from sympy.physics.units.quantities import Quantity
-        if isinstance(other, Basic) and other.has(Quantity):
-             other = Dimension(Quantity.get_dimensional_expr(other))
-        if self == other:
-            return self
-        elif isinstance(other, Dimension):
-            raise ValueError('mismatched dimensions of addends')
-        return super(Dimension, self).__add__(other)
+        other = sympify(other)
+        if isinstance(other, Basic):
+            if other.has(Quantity):
+                other = Dimension(Quantity.get_dimensional_expr(other))
+            if isinstance(other, Dimension):
+                if self == other:
+                    return self
+                raise ValueError('mismatched dimensions of addends')
+            return super(Dimension, self).__add__(other)
+        return self
 
     def __radd__(self, other):
         return self + other
 
     def __sub__(self, other):
+        # there is no notion of ordering (or magnitude) among dimension,
+        # subtraction is equivalent to addition when the operation is legal
+        return self + other
+
+    def __rsub__(self, other):
         # there is no notion of ordering (or magnitude) among dimension,
         # subtraction is equivalent to addition when the operation is legal
         return self + other
@@ -176,19 +185,22 @@ class Dimension(Expr):
         return Dimension(self.name**other)
 
     def __mul__(self, other):
-        if not isinstance(other, Dimension):
-            return self
-
-        return Dimension(self.name*other.name)
+        from sympy.physics.units.quantities import Quantity
+        if isinstance(other, Basic):
+            if other.has(Quantity):
+                other = Dimension(Quantity.get_dimensional_expr(other))
+            if isinstance(other, Dimension):
+                return Dimension(self.name*other.name)
+            if not other.free_symbols:
+                return self
+            return super(Dimension, self).__mul__(other)
+        return self
 
     def __rmul__(self, other):
         return self*other
 
     def __div__(self, other):
-        if not isinstance(other, Dimension):
-            return self
-
-        return Dimension(self.name/other.name)
+        return self*Pow(other, -1)
 
     def __rdiv__(self, other):
         return other * pow(self, -1)
