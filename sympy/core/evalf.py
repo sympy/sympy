@@ -1394,50 +1394,20 @@ class EvalfMixin(object):
         Notes
         =====
 
-        It is suggested to use expr.evalf(subs=...) over expr.subs(...).evalf()
-        or expr.evalf().subs(...) since expr.evalf(subs=...) avoids the loss of
-        significance caused due to naive substitution as the expression is run
-        through the evalf algorithm which takes into account, the various issues
-        that can cause loss of significance or precision. Naive substitution can
-        also include substitution of only a few rather than all symbols in the
-        expression.
-
-        Examples
-        ========
-
-        >>> import sympy
-        >>> from sympy.abc import x, y, z
-        >>> (x + y - z).subs({x: 1e100, y: 1, z: 1e100}) #case_1
-        0
-        >>> (x + y - z).evalf(subs={x: 1e100, y: 1, z: 1e100}) #case_2
-        1.00000000000000
-
-        In case_1, naive substitution evaluates 1e100 + 1 - 1e100 which loses 1 because of
-        the default precision setting. However, in case_2, the evalf algorithm takes care
-        of the significance.
-
-        When using Floats in a computation, precision errors may affect the
-        final result when the Float values are substituted into an expression.
-        The way to obtain an accurate result is to pass the desired values as
-        the subs argument when doing the evaluation. For example, adding
-        1e16 (a Float) to 1 will truncate to 1e16 and then subtracting 1e16
-        will give 0 -- that is the result obtained from the following when trying
-        to evaluate by simple substitution of values into the expression:
+        When Floats are naively substituted into an expression, precision errors
+        may adversely affect the result. For example, adding 1e16 (a Float) to 1
+        will truncate to 1e16; if 1e16 is then subtracted, the result will be 0.
+        That is exactly what happens in the following:
 
         >>> values = {x: 1e16, y: 1, z: 1e16}
         >>> (x + y - z).subs(values)
         0
 
-        If evalf is used and the desired values are sent as the
-        argument for subs, the correct value is obtained:
+        Using the subs argument for evalf is the accurate way to evaluate such an
+        expression:
 
         >>> (x + y - z).evalf(subs=values)
-        1.00000000000000
-
-        Using the subs argument for evalf is the accurate way to
-        evaluate an expression at a desired set of values when
-        precision errors may otherwise affect the calculation.
-
+        1
         """
         from sympy import Float, Number
         n = n if n is not None else 15
