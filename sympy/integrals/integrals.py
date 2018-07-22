@@ -1304,10 +1304,10 @@ class Integral(AddWithLimits):
         0
 
 
-        See also
-        ========
+        References
+        ==========
 
-        .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
+        .. [1] http://en.wikipedia.org/wiki/Cauchy_principal_value
         .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
         from sympy.calculus import singularities
