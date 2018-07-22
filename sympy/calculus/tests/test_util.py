@@ -359,3 +359,6 @@ def test_contains_AccumBounds():
         (cos(1)**2 + sin(1)**2 - 1) in AccumBounds(-1, 0))
     assert (-oo in AccumBounds(1, oo)) == S.true
     assert (oo in AccumBounds(-oo, 0)) == S.true
+
+    # issue 13159
+    assert Mul(0, AccumBounds(-1, 1)) == Mul(AccumBounds(-1, 1), 0) == 0
