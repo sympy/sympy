@@ -2,6 +2,7 @@
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.coset_table import (CosetTable,
                     coset_enumeration_r, coset_enumeration_c)
+from sympy.combinatorics.coset_table import modified_coset_enumeration_r
 from sympy.combinatorics.free_groups import free_group
 
 """
@@ -814,3 +815,9 @@ def test_modified_methods():
                     [identity, identity, identity, identity],
                     [a_1, a_1**-1, identity, a_1],
                     [a_0*a_1**-1, a_1*a_0**-1, a_1*a_0**-1, identity]]
+
+    # Modified coset enumeration test
+    f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
+    C = coset_enumeration_r(f, [x])
+    C_m = modified_coset_enumeration_r(f, [x])
+    assert C_m.table == C.table
