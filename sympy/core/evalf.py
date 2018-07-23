@@ -1408,7 +1408,7 @@ class EvalfMixin(object):
         expression:
 
         >>> (x + y - z).evalf(subs=values)
-        1
+        1.00000000000000
         """
         from sympy import Float, Number
         n = n if n is not None else 15
