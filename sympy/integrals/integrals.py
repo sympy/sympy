@@ -1302,55 +1302,56 @@ class Integral(AddWithLimits):
 
         x, a, b = self.limits[0]
 
-        if len(list(self.limits[0])) != 3:
+        if len(list(self.limits[0])) != 3 or len(self.limits) != 1:
             raise ValueError("You need to insert a variable, lower_limit, and upper_limit correctly to calculate "
                              "cauchy's principal value")
+
+        if not(a <= b and a.is_comparable and b.is_comparable):
+            raise ValueError("The lower_limit must be smaller than or equal to the upper_limit to calculate "
+                             "cauchy's principal value. Also, a and b need to be comparable.")
+
+        if a == b:
+            return 0
+        r = Dummy('r')
+
+        singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a < s < b]
+
+        f = self.function
+        F = integrate(f, x)
+
+        if F.has(Integral):
+            return self
         else:
-            if a <= b:
-                if a == b:
-                    return 0
-                else:
-                    r = Dummy('r')
+            if len(singularities_list) == 0:
+                I = limit(F, x, b) - limit(F, x, a)
+                return I
 
-                    singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a < s < b]
+            if len(singularities_list) == 1:
+                I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a)
+                I = I + limit(F, x, b) - limit(F, x, limit((singularities_list[0] + r), r, 0, '+'),
+                                               '+')
+                return I
 
-                    f = self.function
-                    F = integrate(f, x)
-
-                    if F.has(Integral):
-                        return self
-                    else:
-                        if len(singularities_list) == 0:
-                            I = limit(F, x, b) - limit(F, x, a)
-                            return I
-
-                        if len(singularities_list) == 1:
-                            I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a)
-                            I = I + limit(F, x, b) - limit(F, x, limit((singularities_list[0] + r), r, 0, '+'),
-                                                                '+')
-                            return I
-
-                        else:
-                            for singular_element in range(len(singularities_list)):
-                                if singular_element == 0:
-                                    I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a)
-                                    return I
-                                if singular_element == (len(singularities_list) - 1):
-                                    I = I + limit(F, x, b) - limit(F, x,
-                                                                        limit(
-                                                                            (singularities_list[singular_element] + r),
-                                                                            r,
-                                                                            0,
-                                                                            '+'), '+')
-                                    return I
-                                else:
-                                    I = I + limit(F, x, limit((singularities_list[singular_element] - r), r, 0, '+'),
-                                                  '-') - limit(
-                                        F, x, limit((singularities_list[singular_element] + r), r, 0, '+'), '+')
-                                    return I
             else:
-                raise ValueError("The lower_limit must be smaller than or equal to the upper_limit to calculate "
-                                 "cauchy's principal value")
+                for singular_element in range(len(singularities_list)):
+                    if singular_element == 0:
+                        I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a)
+                        return I
+                    if singular_element == (len(singularities_list) - 1):
+                        I = I + limit(F, x, b) - limit(F, x,
+                                                       limit(
+                                                           (singularities_list[singular_element] + r),
+                                                           r,
+                                                           0,
+                                                           '+'), '+')
+                        return I
+                    else:
+                        I = I + limit(F, x, limit((singularities_list[singular_element] - r), r, 0, '+'),
+                                      '-') - limit(
+                            F, x, limit((singularities_list[singular_element] + r), r, 0, '+'), '+')
+                        return I
+
+
 
 
 
