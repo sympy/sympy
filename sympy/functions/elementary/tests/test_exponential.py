@@ -210,7 +210,7 @@ def test_log_symbolic():
     assert log(x**y).expand() != y*log(x)
     assert log(x**y).expand(force=True) == y*log(x)
 
-    assert log(x, 2) == log(x)/log(2)
+    assert log(x, 2) == log(x, 2)
     assert log(E, 2) == 1/log(2)
 
     p, q = symbols('p,q', positive=True)
