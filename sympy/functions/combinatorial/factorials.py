@@ -361,9 +361,9 @@ class factorial2(CombinatorialFunction):
     negative integers as:
 
     .. math:: n!! = \begin{cases} 1 & n = 0 \\
-                    n*(n-2)*(n-4)*\cdots *1 & n\ positive\ odd \\
-                    n*(n-2)*(n-4)*\cdots *2 & n\ positive\ even \\
-                    (n+2)!!/(n+2) & n\ negative\ odd \end{cases}
+                    n*(n-2)*(n-4)*\cdots *1 & n\ \text{positive odd} \\
+                    n*(n-2)*(n-4)*\cdots *2 & n\ \text{positive even} \\
+                    (n+2)!!/(n+2) & n\ \text{negative odd} \end{cases}
 
     References
     ==========
@@ -611,7 +611,7 @@ class FallingFactorial(CombinatorialFunction):
     function arising in concrete mathematics, hypergeometric functions
     and series expansions. It is defined by
 
-    .. math:: ff(x,k) = x * (x-1) * \cdots * (x-k+1)
+    .. math:: ff(x,k) = x*(x-1)* \cdots *(x-k+1)
 
     where `x` can be arbitrary expression and `k` is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
@@ -786,7 +786,7 @@ class binomial(CombinatorialFunction):
     Rows of Pascal's triangle can be generated with the binomial function:
 
     >>> for N in range(8):
-    ...     print([ binomial(N, i) for i in range(N + 1)])
+    ...     print([binomial(N, i) for i in range(N + 1)])
     ...
     [1]
     [1, 1]
