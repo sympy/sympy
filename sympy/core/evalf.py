@@ -1399,6 +1399,7 @@ class EvalfMixin(object):
         will truncate to 1e16; if 1e16 is then subtracted, the result will be 0.
         That is exactly what happens in the following:
 
+        >>> from sympy.abc import x, y, z
         >>> values = {x: 1e16, y: 1, z: 1e16}
         >>> (x + y - z).subs(values)
         0
