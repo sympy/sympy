@@ -1290,7 +1290,10 @@ def hessian(f, varlist, constraints=[]):
 
 def jordan_cell(eigenval, n):
     """
-    Create a Jordan block:
+    Generates the jordan block when eigenvalue and dimension is specified.
+    A jordan block is a matrix composed of 0 elements everywhere except for
+    the diagonal, which is filled with eigenvalue, and for the super-diagonal,
+    which is filled with ones.
 
     Examples
     ========
@@ -1303,6 +1306,19 @@ def jordan_cell(eigenval, n):
     [0, x, 1, 0],
     [0, 0, x, 1],
     [0, 0, 0, x]])
+
+    >>> jordan_cell(2, 5)
+    Matrix([
+    [2, 1, 0, 0, 0],
+    [0, 2, 1, 0, 0],
+    [0, 0, 2, 1, 0],
+    [0, 0, 0, 2, 1],
+    [0, 0, 0, 0, 2]])
+
+    Reference
+    =========
+
+    https://en.wikipedia.org/wiki/Jordan_matrix
     """
     from .dense import Matrix
 

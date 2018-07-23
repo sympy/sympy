@@ -783,6 +783,9 @@ class MatrixSpecial(MatrixRequired):
         """Returns a Jordan block with the specified size
         and eigenvalue.  You may call `jordan_block` with
         two args (size, eigenvalue) or with keyword arguments.
+        A jordan block is a matrix composed of 0 elements everywhere
+        except for the diagonal, which is filled with eigenvalue,
+        and for the super-diagonal, which is filled with ones.
 
         kwargs
         ======
@@ -819,6 +822,11 @@ class MatrixSpecial(MatrixRequired):
         [0, x, 1, 0],
         [0, 0, x, 1],
         [0, 0, 0, x]])
+
+        Reference
+        =========
+
+        https://en.wikipedia.org/wiki/Jordan_matrix
         """
 
         klass = kwargs.get('cls', kls)
