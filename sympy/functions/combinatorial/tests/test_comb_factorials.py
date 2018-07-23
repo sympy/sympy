@@ -64,14 +64,6 @@ def test_rf_eval_apply():
     assert str(rf(18, x).subs({x: S(2)/3}).evalf()) == \
         '6.82615401311255'
 
-    import random
-    from mpmath import rf as mpmath_rf
-    for i in range(100):
-        x = -500 + 500 * random.random()
-        k = -500 + 500 * random.random()
-        assert (abs(mpmath_rf(x, k) - rf(x, k)) < 10**(-15))
-
-
 def test_ff_eval_apply():
     x, y = symbols('x,y')
     n, k = symbols('n k', integer=True)
@@ -131,13 +123,6 @@ def test_ff_eval_apply():
 
     assert str(ff(18, x).subs({x: S(2)/3}).evalf()) == \
         '6.91094012922343'
-
-    import random
-    from mpmath import ff as mpmath_ff
-    for i in range(100):
-        x = -500 + 500 * random.random()
-        k = -500 + 500 * random.random()
-        assert (abs(mpmath_ff(x, k) - ff(x, k)) < 10**(-15))
 
 def test_factorial():
     x = Symbol('x')
