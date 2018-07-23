@@ -1,4 +1,4 @@
-from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Symbol, Gt,
+from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
     IndexedBase)
 from sympy.stats.rv import _value_check
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -51,8 +51,9 @@ def JointRV(symbol, pdf, _set=None):
     #TODO: Add support for sets provided by the user
 
     symbol = sympify(symbol)
-    syms = tuple(i for i in pdf.free_symbols if isinstance(i, Indexed)
+    syms = list(i for i in pdf.free_symbols if isinstance(i, Indexed)
         and i.base == IndexedBase(symbol))
+    syms.sort(key = lambda index: index.args[1])
     pdf = Lambda(syms, pdf)
     _set = S.Reals**len(syms)
     dist = JointDistributionHandmade(pdf, _set)
@@ -88,7 +89,7 @@ class MultivariateNormalDistribution(JointDistribution):
                 x))[0]
 
     def marginal_distribution(self, indices, sym):
-        sym = ImmutableMatrix([Symbol(str(Indexed(sym, i))) for i in indices])
+        sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
         _mu, _sigma = self.mu, self.sigma
         k = len(self.mu)
         for i in range(k):
