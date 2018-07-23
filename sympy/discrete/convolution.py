@@ -1,5 +1,6 @@
 """
-Convolution (using FFT, NTT, FWHT), Subset Convolution
+Convolution (using **FFT**, **NTT**, **FWHT**), Subset Convolution,
+Covering Product, Intersecting Product
 """
 from __future__ import print_function, division
 
@@ -16,12 +17,11 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
     Performs convolution by determining the type of desired
     convolution using hints.
 
-    Exactly one of `dps`, `prime`, `dyadic`, `subset` arguments should be
-    specified explicitly for identifying the type of convolution, and the
-    argument `cycle` can be specified optionally.
+    Exactly one of ``dps``, ``prime``, ``dyadic``, ``subset`` arguments
+    should be specified explicitly for identifying the type of convolution,
+    and the argument ``cycle`` can be specified optionally.
 
-    For the default arguments, linear convolution is performed using
-    FFT.
+    For the default arguments, linear convolution is performed using **FFT**.
 
     Parameters
     ==========
@@ -32,13 +32,13 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
         Specifies the length for doing cyclic convolution.
     dps : Integer
         Specifies the number of decimal digits for precision for
-        performing FFT on the sequence.
+        performing **FFT** on the sequence.
     prime : Integer
-        Prime modulus of the form (m*2**k + 1) to be used for
-        performing NTT on the sequence.
+        Prime modulus of the form `(m 2^k + 1)` to be used for
+        performing **NTT** on the sequence.
     dyadic : bool
-        Identifies the convolution type as dyadic (XOR)
-        convolution, which is performed using FWHT.
+        Identifies the convolution type as dyadic (*bitwise-XOR*)
+        convolution, which is performed using **FWHT**.
     subset : bool
         Identifies the convolution type as subset convolution.
 
@@ -72,7 +72,8 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
 
     c = as_int(cycle)
     if c < 0:
-        raise ValueError("The length for cyclic convolution must be non-negative")
+        raise ValueError("The length for cyclic convolution "
+                        "must be non-negative")
 
     dyadic = True if dyadic else None
     subset = True if subset else None
@@ -128,7 +129,7 @@ def convolution_fft(a, b, dps=None):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Convolution_theorem
-    .. [1] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general)
+    .. [1] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general%29
 
     """
 
@@ -165,14 +166,13 @@ def convolution_ntt(a, b, prime):
     a, b : iterables
         The sequences for which convolution is performed.
     prime : Integer
-        Prime modulus of the form (m*2**k + 1) to be used for performing
-        NTT on the sequence.
+        Prime modulus of the form `(m 2^k + 1)` to be used for performing
+        **NTT** on the sequence.
 
     Examples
     ========
 
     >>> from sympy.discrete.convolution import convolution_ntt
-
     >>> convolution_ntt([2, 3], [4, 5], prime=19*2**10 + 1)
     [8, 22, 15]
     >>> convolution_ntt([2, 5], [6, 7, 3], prime=19*2**10 + 1)
@@ -184,7 +184,7 @@ def convolution_ntt(a, b, prime):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Convolution_theorem
-    .. [2] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general)
+    .. [2] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general%29
 
     """
 
@@ -213,10 +213,11 @@ def convolution_ntt(a, b, prime):
 
 def convolution_fwht(a, b):
     """
-    Performs dyadic (XOR) convolution using Fast Walsh Hadamard Transform.
+    Performs dyadic (*bitwise-XOR*) convolution using Fast Walsh Hadamard
+    Transform.
 
     The convolution is automatically padded to the right with zeros, as the
-    radix 2 FWHT requires the number of sample points to be a power of 2.
+    *radix-2 FWHT* requires the number of sample points to be a power of 2.
 
     Parameters
     ==========
@@ -360,9 +361,9 @@ def covering_product(a, b):
     The indices of each argument, considered as bit strings, correspond to
     subsets of a finite set.
 
-    The covering product of given sequences is the sequence which contains
-    the sums of products of the elements of the given sequences grouped by
-    bitwise OR of the corresponding indices.
+    The covering product of given sequences is a sequence which contains
+    sum of products of the elements of the given sequences grouped by
+    *bitwise-OR* of the corresponding indices.
 
     The sequence is automatically padded to the right with zeros, as the
     definition of subset based on bitmasks (indices) requires the size of
@@ -432,7 +433,7 @@ def intersecting_product(a, b):
 
     The intersecting product of given sequences is the sequence which
     contains the sums of products of the elements of the given sequences
-    grouped by bitwise AND of the corresponding indices.
+    grouped by *bitwise-AND* of the corresponding indices.
 
     The sequence is automatically padded to the right with zeros, as the
     definition of subset based on bitmasks (indices) requires the size of
