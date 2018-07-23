@@ -360,8 +360,8 @@ def covering_product(a, b):
     The indices of each argument, considered as bit strings, correspond to
     subsets of a finite set.
 
-    The covering product of given sequences is a sequence which contains
-    sum of products of the elements of the given sequences grouped by
+    The covering product of given sequences is the sequence which contains
+    the sums of products of the elements of the given sequences grouped by
     bitwise OR of the corresponding indices.
 
     The sequence is automatically padded to the right with zeros, as the
@@ -413,5 +413,75 @@ def covering_product(a, b):
     a, b = mobius_transform(a), mobius_transform(b)
     a = [expand_mul(x*y) for x, y in zip(a, b)]
     a = inverse_mobius_transform(a)
+
+    return a
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                            Intersecting Product                            #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+def intersecting_product(a, b):
+    """
+    Returns the intersecting product of given sequences.
+
+    The indices of each argument, considered as bit strings, correspond to
+    subsets of a finite set.
+
+    The intersecting product of given sequences is the sequence which
+    contains the sums of products of the elements of the given sequences
+    grouped by bitwise AND of the corresponding indices.
+
+    The sequence is automatically padded to the right with zeros, as the
+    definition of subset based on bitmasks (indices) requires the size of
+    sequence to be a power of 2.
+
+    Parameters
+    ==========
+
+    a, b : iterables
+        The sequences for which intersecting product is to be obtained.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, S, I, intersecting_product
+    >>> u, v, x, y, z = symbols('u v x y z')
+
+    >>> intersecting_product([u, v], [x, y])
+    [u*x + u*y + v*x, v*y]
+    >>> intersecting_product([u, v, x], [y, z])
+    [u*y + u*z + v*y + x*y + x*z, v*z, 0, 0]
+
+    >>> intersecting_product([1, S(2)/3], [3, 4 + 5*I])
+    [9 + 5*I, 8/3 + 10*I/3]
+    >>> intersecting_product([1, 3, S(5)/7], [7, 8])
+    [327/7, 24, 0, 0]
+
+    References
+    ==========
+
+    .. [1] https://people.csail.mit.edu/rrw/presentations/subset-conv.pdf
+
+    """
+
+    if not a or not b:
+        return []
+
+    a, b = a[:], b[:]
+    n = max(len(a), len(b))
+
+    if n&(n - 1): # not a power of 2
+        n = 2**n.bit_length()
+
+    # padding with zeros
+    a += [S.Zero]*(n - len(a))
+    b += [S.Zero]*(n - len(b))
+
+    a, b = mobius_transform(a, subset=False), mobius_transform(b, subset=False)
+    a = [expand_mul(x*y) for x, y in zip(a, b)]
+    a = inverse_mobius_transform(a, subset=False)
 
     return a
