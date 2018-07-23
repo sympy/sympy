@@ -1127,8 +1127,8 @@ class Beam_3d(Beam):
        While solving a beam bending problem, a user should choose its
        own sign convention and should stick to it. The results will
        automatically follow the chosen sign convention.
-
-    ref : http://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
+       This class assumes that any kind of distributed load/moment is
+       applied through out the span of a beam.
 
     Examples
     ========
@@ -1160,6 +1160,12 @@ class Beam_3d(Beam):
     [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
     + l*m*x**2/(4*E*I) - l*x**3*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
     + q*x**4/(24*E*I) + l*x*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G), 0]
+
+    References
+    ==========
+
+    .. [1] http://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
+
     """
 
     def __init__(self, length, elastic_modulus, shear_modulus , second_moment, area, variable=Symbol('x')):
@@ -1246,11 +1252,29 @@ class Beam_3d(Beam):
         """
         return self._moment_load_vector
 
-    def apply_load(self, value, dir="y"):
+    def apply_load(self, value, dir="y", order=0):
         """
         This method adds up the force load to a particular beam object.
+
+        Parameters
+        ==========
+        value : Sympifyable
+            The magnitude of an applied load.
+        dir : String
+            Axis along which load is applied.
+        order : Integer
+            The order of the applied load.
+            - For point loads, order=-1
+            - For constant distributed load, order=0
+            - For ramp loads, order=1
+            - For parabolic ramp loads, order=2
+            - ... so on.
         """
         value = sympify(value)
+        order = sympify(order)
+        if order == -1:
+            raise NotImplementedError("This class doesn't support point loads")
+
         if dir == "x":
             self._load_vector[0] += value
         elif dir == "y":
@@ -1258,11 +1282,29 @@ class Beam_3d(Beam):
         else:
             self._load_vector[2] += value
 
-    def apply_moment_load(self, value, dir="y"):
+    def apply_moment_load(self, value, dir="y", order=-1, end=None):
         """
         This method adds up the moment loads to a particular beam object.
+
+        Parameters
+        ==========
+        value : Sympifyable
+            The magnitude of an applied moment.
+        dir : String
+            Axis along which moment is applied.
+        order : Integer
+            The order of the applied load.
+            - For point moments, order=-2
+            - For constant distributed moment, order=-1
+            - For ramp moments, order=0
+            - For parabolic ramp moments, order=1
+            - ... so on.
         """
         value = sympify(value)
+        order = sympify(order)
+        if order == -2:
+            raise NotImplementedError("This class doesn't support point moments")
+
         if dir == "x":
             self._moment_load_vector[0] += value
         elif dir == "y":
