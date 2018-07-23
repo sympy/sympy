@@ -1321,35 +1321,34 @@ class Integral(AddWithLimits):
 
         if F.has(Integral):
             return self
+        if len(singularities_list) == 0:
+            I = limit(F, x, b) - limit(F, x, a)
+            return I
+
+        if len(singularities_list) == 1:
+            I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a)
+            I = I + limit(F, x, b) - limit(F, x, limit((singularities_list[0] + r), r, 0, '+'),
+                                           '+')
+            return I
+
         else:
-            if len(singularities_list) == 0:
-                I = limit(F, x, b) - limit(F, x, a)
-                return I
-
-            if len(singularities_list) == 1:
-                I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a)
-                I = I + limit(F, x, b) - limit(F, x, limit((singularities_list[0] + r), r, 0, '+'),
-                                               '+')
-                return I
-
-            else:
-                for singular_element in range(len(singularities_list)):
-                    if singular_element == 0:
-                        I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a)
-                        return I
-                    if singular_element == (len(singularities_list) - 1):
-                        I = I + limit(F, x, b) - limit(F, x,
-                                                       limit(
-                                                           (singularities_list[singular_element] + r),
-                                                           r,
-                                                           0,
-                                                           '+'), '+')
-                        return I
-                    else:
-                        I = I + limit(F, x, limit((singularities_list[singular_element] - r), r, 0, '+'),
-                                      '-') - limit(
-                            F, x, limit((singularities_list[singular_element] + r), r, 0, '+'), '+')
-                        return I
+            for singular_element in range(len(singularities_list)):
+                if singular_element == 0:
+                    I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a)
+                    return I
+                if singular_element == (len(singularities_list) - 1):
+                    I = I + limit(F, x, b) - limit(F, x,
+                                                   limit(
+                                                       (singularities_list[singular_element] + r),
+                                                       r,
+                                                       0,
+                                                       '+'), '+')
+                    return I
+                else:
+                    I = I + limit(F, x, limit((singularities_list[singular_element] - r), r, 0, '+'),
+                                  '-') - limit(
+                        F, x, limit((singularities_list[singular_element] + r), r, 0, '+'), '+')
+                    return I
 
 
 
