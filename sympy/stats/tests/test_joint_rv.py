@@ -1,4 +1,4 @@
-from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed, simplify, erf
+from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed, erf
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV
@@ -67,5 +67,4 @@ def test_JointRV():
     X = JointRV('x', pdf)
     density(X)(1, 2) == exp(-1)/(2*pi)
     assert isinstance(X.pspace.distribution, JointDistributionHandmade)
-    assert str(marginal_distribution(X, 0)(0)) == \
-     str(sqrt(2)*exp(-S(1)/2)*erf(sqrt(2)*x1/2)/(4*sqrt(pi)))
+    assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(-S(1)/2)/(2*sqrt(pi))
