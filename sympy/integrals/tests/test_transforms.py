@@ -583,6 +583,17 @@ def test_inverse_laplace_transform():
         Matrix([[exp(t)*Heaviside(t), 0], [0, exp(2*t)*Heaviside(t)]])
 
 
+def test_inverse_laplace_transform_delta():
+    from sympy import DiracDelta
+    ILT = inverse_laplace_transform
+    t = symbols('t')
+    assert ILT(2, s, t) == 2*DiracDelta(t)
+    assert ILT(2*exp(3*s) - 5*exp(-7*s), s, t) == \
+        2*DiracDelta(t + 3) - 5*DiracDelta(t - 7)
+    a = cos(sin(7)/2)
+    assert ILT(a*exp(-3*s), s, t) == a*DiracDelta(t - 3)
+
+
 def test_fourier_transform():
     from sympy import simplify, expand, expand_complex, factor, expand_trig
     FT = fourier_transform

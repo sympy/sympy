@@ -38,7 +38,7 @@ from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest, collect
 from sympy.simplify.fu import sincos_to_sum
 from sympy.logic.boolalg import And, Or, BooleanAtom
-from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.hyperbolic import \
@@ -2051,7 +2051,8 @@ def meijerint_inversion(f, x, t):
     if not _is_analytic(f, x):
         _debug('But expression is not analytic.')
         return None
-    # We filter out exponentials here. If we are given an Add this will not
+    # Exponentials correspond to shifts; we filter them out and then
+    # shift the result later.  If we are given an Add this will not
     # work, but the calling code will take care of that.
     shift = 0
     if f.is_Mul:
@@ -2090,6 +2091,11 @@ def meijerint_inversion(f, x, t):
                 newargs.append(arg)
         shift = Add(*exponentials)
         f = Mul(*newargs)
+
+    if f.is_number:
+        _debug('Expression is a number, returning delta')
+        res = f*DiracDelta(t + shift)
+        return Piecewise((res.subs(t, t_), True))
 
     gs = _rewrite1(f, x)
     if gs is not None:
