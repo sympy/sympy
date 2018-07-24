@@ -2055,6 +2055,11 @@ def meijerint_inversion(f, x, t):
     # shift the result later.  If we are given an Add this will not
     # work, but the calling code will take care of that.
     shift = 0
+
+    if f.func == exp:
+        # exp would work if written as a Mul
+        f = Mul(2, S.Half, f, evaluate=False)
+
     if f.is_Mul:
         args = list(f.args)
         newargs = []
