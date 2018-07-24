@@ -6924,7 +6924,7 @@ def InverseFunctionOfQuotientOfLinears(u, x):
 def NormalizeTrig(func, expr, b, x):
     from matchpy import match
     pattern = Pattern(UtilityOperator((pi*WC('n', S(1)) + WC('r', S(0)))*WC('m', S(1)) + WC('s', S(0))))
-    if is_match(expr, pattern):
+    if is_match(UtilityOperator(expr), pattern):
         mt =  next(match(UtilityOperator(expr), pattern))
         m = mt['m']
         n = mt['n']
@@ -6975,7 +6975,72 @@ def NormalizeTrig(func, expr, b, x):
         return func(m*n*pi+ m*r + s + b*x)
     return Function('NormalizeTrig')(func, expr, b, x)
 
-def NormalizeHyperbolic()
+def NormalizeHyperbolic(func, expr, b, x)
+    from matchpy import match
+    pattern = Pattern(UtilityOperator((pi*WC('n', S(1))*Complex(0, z_) + WC('r', S(0)))*WC('m', S(1)) + WC('s', S(0))))
+    if is_match(UtilityOperator(expr), pattern):
+        mt =  next(match(UtilityOperator(expr), pattern))
+        m = mt['m']
+        n = mt['n']
+        r = mt['r']
+        s = mt['s']
+        z = mt['z']
+        if m*n*z == S(1)/4 and NegQ(b):
+            if func == sinh:
+                return I*cosh(I*pi/S(4) - m*r - s - b*x)
+            elif func == cosh:
+                return -I*sinh(I*pi/S(4) - m*r - s - b*x)
+            elif func == tanh:
+                return -coth(I*pi/S(4) - m*r - s - b*x)
+            elif func == coth:
+                return -tanh(I*pi/S(4) - m*r - s - b*x)
+            elif func == sech:
+                return I*csch(I*pi/S(4) - m*r - s - b*x)
+            elif func == csch:
+                return -I*sech(I*pi/S(4) - m*r - s - b*x)
+        elif m*n*z == S(-1)/4:
+            if PosQ(b):
+                if func == sinh:
+                    return -I*cosh(I*pi/S(4) + m*r + s + b*x)
+                elif func == cosh:
+                    return -I*sinh(I*pi/S(4) + m*r + s + b*x)
+                elif func == tanh:
+                    return coth(I*pi/S(4) + m*r + s + b*x)
+                elif func == coth:
+                    return tanh(I*pi/S(4) + m*r + s + b*x)
+                elif func == sech:
+                    return I*csch(I*pi/S(4) + m*r + s + b*x)
+                elif func == csch:
+                    return I*sech(I*pi/S(4) + m*r + s + b*x)
+            else:
+                if func == sinh:
+                    return -sinh(I*pi/S(4) - m*r - s - b*x)
+                elif func == cosh:
+                    return cosh(I*pi/S(4) - m*r - s - b*x)
+                elif func == tanh:
+                    return -tanh(I*pi/S(4) - m*r - s - b*x)
+                elif func == coth:
+                    return -coth(I*pi/S(4) - m*r - s - b*x)
+                elif func == sech:
+                    return sech(I*pi/S(4) - m*r - s - b*x)
+                elif func == csch:
+                    return -csch(I*pi/S(4) - m*r - s - b*x)
+        else:
+            return func(m*n*z*I*pi + m*r + s + b*x)
+    return Function('NormalizeHyperbolic')(func, expr, b, x)
+
+def UnifyNegativeBaseFactors(u):
+    pattern = Pattern(UtilityOperator(v_**WC('n', S(1))*(-v_)**m_*WC('u', S(1))))
+    if is_match(UtilityOperator(u), pattern):
+        mt =  next(match(UtilityOperator(u), pattern))
+        v = mt['v']
+        n = mt['n']
+        u = mt['u']
+        m = mt['m']
+        if IntegerQ(n):
+            return UnifyNegativeBaseFactors((-1)**n*u*(-v)**(m + n))
+    return u
+
 # ===========================
 
 if matchpy:
