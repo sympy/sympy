@@ -1,5 +1,5 @@
 """
-Recurrence
+Recurrences
 """
 from __future__ import print_function, division
 
@@ -55,7 +55,7 @@ def linrec(coeffs, init, n):
     Examples
     ========
 
-    >>> from sympy.discrete.recurrence import linrec
+    >>> from sympy.discrete.recurrences import linrec
     >>> from sympy.abc import x, y, z
 
     >>> linrec(coeffs=[1, 1], init=[0, 1], n=10)

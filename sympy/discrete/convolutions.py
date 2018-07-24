@@ -116,7 +116,7 @@ def convolution_fft(a, b, dps=None):
     ========
 
     >>> from sympy import S, I
-    >>> from sympy.discrete.convolution import convolution_fft
+    >>> from sympy.discrete.convolutions import convolution_fft
 
     >>> convolution_fft([2, 3], [4, 5])
     [8, 22, 15]
@@ -172,7 +172,7 @@ def convolution_ntt(a, b, prime):
     Examples
     ========
 
-    >>> from sympy.discrete.convolution import convolution_ntt
+    >>> from sympy.discrete.convolutions import convolution_ntt
     >>> convolution_ntt([2, 3], [4, 5], prime=19*2**10 + 1)
     [8, 22, 15]
     >>> convolution_ntt([2, 5], [6, 7, 3], prime=19*2**10 + 1)
@@ -229,7 +229,7 @@ def convolution_fwht(a, b):
     ========
 
     >>> from sympy import symbols, S, I
-    >>> from sympy.discrete.convolution import convolution_fwht
+    >>> from sympy.discrete.convolutions import convolution_fwht
 
     >>> u, v, x, y = symbols('u v x y')
     >>> convolution_fwht([u, v], [x, y])
@@ -298,7 +298,7 @@ def convolution_subset(a, b):
     ========
 
     >>> from sympy import symbols, S, I
-    >>> from sympy.discrete.convolution import convolution_subset
+    >>> from sympy.discrete.convolutions import convolution_subset
     >>> u, v, x, y, z = symbols('u v x y z')
 
     >>> convolution_subset([u, v], [x, y])
