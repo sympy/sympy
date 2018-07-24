@@ -46,6 +46,7 @@ replacements = dict( # Mathematica equivalent functions in SymPy
         Plus="Add",
         Power="Pow",
         Log='log',
+        Exp='exp',
         Sqrt='sqrt',
         Cos='cos',
         Sin='sin',

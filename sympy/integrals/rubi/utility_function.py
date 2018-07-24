@@ -6910,6 +6910,12 @@ def Discriminant(a, b):
     except PolynomialError:
         return Function('Discriminant')(a, b)
 
+def Negative(x):
+    return x < S(0)
+
+def Quotient(m, n):
+    return Floor(m/n)
+
 def process_trig(expr):
     '''
     This function processes trigonometric expressions such that all `cot` is

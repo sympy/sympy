@@ -1950,6 +1950,15 @@ def test_Sum_doit():
 def test_DeactivateTrig():
     assert DeactivateTrig(sec(a + b*x), x) == sec(a + b*x)
 
+def test_Negative():
+    from sympy.integrals.rubi.utility_function import Negative
+    assert Negative(S(-2))
+    assert not Negative(S(0))
+
+def test_Quotient():
+    from sympy.integrals.rubi.utility_function import Quotient
+    assert Quotient(17, 5) == 3
+
 def test_process_trig():
     assert process_trig(x*cot(x)) == x/tan(x)
     assert process_trig(coth(x)*csc(x)) == S(1)/(tanh(x)*sin(x))

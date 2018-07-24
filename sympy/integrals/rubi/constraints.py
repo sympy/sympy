@@ -116,9 +116,11 @@ if matchpy:
         TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist, Sum_doit, PolynomialQuotient, Floor,
         PolynomialRemainder, Factor, PolyLog, CosIntegral, SinIntegral, LogIntegral, SinhIntegral,
         CoshIntegral, Rule, Erf, PolyGamma, ExpIntegralEi, ExpIntegralE, LogGamma , UtilityOperator, Factorial,
-        Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, exp, log, Discriminant
+        Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, exp, log, Discriminant,
+        Negative, Quotient
     )
-    from sympy import (Integral, S, sqrt, And, Or, Integer, Float, Mod, I, Abs, simplify, Mul, Add, Pow)
+    from sympy import (Integral, S, sqrt, And, Or, Integer, Float, Mod, I, Abs, simplify, Mul,
+    Add, Pow, sign, EulerGamma)
     from sympy.integrals.rubi.symbol import WC
     from sympy.core.symbol import symbols, Symbol
     from sympy.functions import (sin, cos, tan, cot, csc, sec, sqrt, erf)
@@ -129,7 +131,7 @@ if matchpy:
 
     A_, B_, C_, F_, G_, H_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, y_, z_ = [WC(i) for i in 'ABCFGHabcdefghijklmnpqrtuvswxyz']
     a1_, a2_, b1_, b2_, c1_, c2_, d1_, d2_, n1_, n2_, e1_, e2_, f1_, f2_, g1_, g2_, n1_, n2_, n3_, Pq_, Pm_, Px_, Qm_, Qr_, Qx_, jn_, mn_, non2_, RFx_, RGx_ = [WC(i) for i in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'n1', 'n2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2', 'n1', 'n2', 'n3', 'Pq', 'Pm', 'Px', 'Qm', 'Qr', 'Qx', 'jn', 'mn', 'non2', 'RFx', 'RGx']]
-    i, ii , Pqq, Q, R, r, C = symbols('i ii Pqq Q R r C_1')
+    i, ii , Pqq, Q, R, r, C, k, u = symbols('i ii Pqq Q R r C k u')
     _UseGamma = False
     ShowSteps = False
     StepCounter = None
@@ -160,7 +162,7 @@ if matchpy:
 
     cons5 = CustomConstraint(cons_f5)
 
-    def cons_f6(j, n):
+    def cons_f6(n, j):
         return ZeroQ(j - S(2)*n)
 
     cons6 = CustomConstraint(cons_f6)
@@ -180,14 +182,14 @@ if matchpy:
 
     cons9 = CustomConstraint(cons_f9)
 
-    def cons_f10(x, v):
+    def cons_f10(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return NFreeQ(v, x)
 
     cons10 = CustomConstraint(cons_f10)
 
-    def cons_f11(Pm, x):
+    def cons_f11(x, Pm):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolyQ(Pm, x)
@@ -204,7 +206,7 @@ if matchpy:
 
     cons13 = CustomConstraint(cons_f13)
 
-    def cons_f14(a, c, b, x):
+    def cons_f14(x, c, a, b):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c), x)
@@ -261,12 +263,12 @@ if matchpy:
 
     cons24 = CustomConstraint(cons_f24)
 
-    def cons_f25(a, c, b, d):
+    def cons_f25(d, c, b, a):
         return ZeroQ(-a*d + b*c)
 
     cons25 = CustomConstraint(cons_f25)
 
-    def cons_f26(b, n, d, x, a, c):
+    def cons_f26(b, d, c, n, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Or(Not(IntegerQ(n)), SimplerQ(c + d*x, a + b*x))
@@ -278,7 +280,7 @@ if matchpy:
 
     cons27 = CustomConstraint(cons_f27)
 
-    def cons_f28(b, d):
+    def cons_f28(d, b):
         return PositiveQ(b/d)
 
     cons28 = CustomConstraint(cons_f28)
@@ -288,7 +290,7 @@ if matchpy:
 
     cons29 = CustomConstraint(cons_f29)
 
-    def cons_f30(m, n, b, d):
+    def cons_f30(d, m, n, b):
         return Not(Or(IntegerQ(m), IntegerQ(n), PositiveQ(b/d)))
 
     cons30 = CustomConstraint(cons_f30)
@@ -303,7 +305,7 @@ if matchpy:
 
     cons32 = CustomConstraint(cons_f32)
 
-    def cons_f33(b, B, a, A, C):
+    def cons_f33(B, C, b, a, A):
         return ZeroQ(A*b**S(2) - B*a*b + C*a**S(2))
 
     cons33 = CustomConstraint(cons_f33)
@@ -323,7 +325,7 @@ if matchpy:
 
     cons36 = CustomConstraint(cons_f36)
 
-    def cons_f37(q, n):
+    def cons_f37(n, q):
         return ZeroQ(n + q)
 
     cons37 = CustomConstraint(cons_f37)
@@ -333,7 +335,7 @@ if matchpy:
 
     cons38 = CustomConstraint(cons_f38)
 
-    def cons_f39(a, c, b, d):
+    def cons_f39(d, a, c, b):
         return ZeroQ(a*c - b*d)
 
     cons39 = CustomConstraint(cons_f39)
@@ -348,7 +350,7 @@ if matchpy:
 
     cons41 = CustomConstraint(cons_f41)
 
-    def cons_f42(a, c, b, d):
+    def cons_f42(d, c, b, a):
         return ZeroQ(a**S(2)*d + b**S(2)*c)
 
     cons42 = CustomConstraint(cons_f42)
@@ -363,7 +365,7 @@ if matchpy:
 
     cons44 = CustomConstraint(cons_f44)
 
-    def cons_f45(a, c, b):
+    def cons_f45(c, a, b):
         return ZeroQ(-S(4)*a*c + b**S(2))
 
     cons45 = CustomConstraint(cons_f45)
@@ -373,7 +375,7 @@ if matchpy:
 
     cons46 = CustomConstraint(cons_f46)
 
-    def cons_f47(e, c, b, d):
+    def cons_f47(d, c, b, e):
         return ZeroQ(-b*e + S(2)*c*d)
 
     cons47 = CustomConstraint(cons_f47)
@@ -383,7 +385,7 @@ if matchpy:
 
     cons48 = CustomConstraint(cons_f48)
 
-    def cons_f49(q, p):
+    def cons_f49(p, q):
         return PosQ(-p + q)
 
     cons49 = CustomConstraint(cons_f49)
@@ -393,7 +395,7 @@ if matchpy:
 
     cons50 = CustomConstraint(cons_f50)
 
-    def cons_f51(r, p):
+    def cons_f51(p, r):
         return PosQ(-p + r)
 
     cons51 = CustomConstraint(cons_f51)
@@ -413,7 +415,7 @@ if matchpy:
 
     cons54 = CustomConstraint(cons_f54)
 
-    def cons_f55(a2, a1, b2, b1):
+    def cons_f55(b2, a2, a1, b1):
         return ZeroQ(a1*b2 + a2*b1)
 
     cons55 = CustomConstraint(cons_f55)
@@ -443,7 +445,7 @@ if matchpy:
 
     cons60 = CustomConstraint(cons_f60)
 
-    def cons_f61(Qm, x):
+    def cons_f61(x, Qm):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolyQ(Qm, x)
@@ -460,14 +462,14 @@ if matchpy:
 
     cons63 = CustomConstraint(cons_f63)
 
-    def cons_f64(Pq, x):
+    def cons_f64(x, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolyQ(Pq, x)
 
     cons64 = CustomConstraint(cons_f64)
 
-    def cons_f65(Qr, x):
+    def cons_f65(x, Qr):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolyQ(Qr, x)
@@ -479,33 +481,33 @@ if matchpy:
 
     cons66 = CustomConstraint(cons_f66)
 
-    def cons_f67(a, b, x):
+    def cons_f67(x, a, b):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b), x)
 
     cons67 = CustomConstraint(cons_f67)
 
-    def cons_f68(u, x):
+    def cons_f68(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return LinearQ(u, x)
 
     cons68 = CustomConstraint(cons_f68)
 
-    def cons_f69(u, x):
+    def cons_f69(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return NonzeroQ(u - x)
 
     cons69 = CustomConstraint(cons_f69)
 
-    def cons_f70(a, c, b, d):
+    def cons_f70(d, c, b, a):
         return ZeroQ(a*d + b*c)
 
     cons70 = CustomConstraint(cons_f70)
 
-    def cons_f71(a, c, b, d):
+    def cons_f71(d, c, b, a):
         return NonzeroQ(-a*d + b*c)
 
     cons71 = CustomConstraint(cons_f71)
@@ -525,7 +527,7 @@ if matchpy:
 
     cons74 = CustomConstraint(cons_f74)
 
-    def cons_f75(m, a, c):
+    def cons_f75(m, c, a):
         return Or(IntegerQ(m), And(PositiveQ(a), PositiveQ(c)))
 
     cons75 = CustomConstraint(cons_f75)
@@ -540,7 +542,7 @@ if matchpy:
 
     cons77 = CustomConstraint(cons_f77)
 
-    def cons_f78(a, c, b, d):
+    def cons_f78(d, c, a, b):
         return PosQ(b*d/(a*c))
 
     cons78 = CustomConstraint(cons_f78)
@@ -600,12 +602,12 @@ if matchpy:
 
     cons89 = CustomConstraint(cons_f89)
 
-    def cons_f90(a, c, b, d):
+    def cons_f90(d, c, b, a):
         return PosQ((-a*d + b*c)/b)
 
     cons90 = CustomConstraint(cons_f90)
 
-    def cons_f91(a, c, b, d):
+    def cons_f91(d, c, b, a):
         return NegQ((-a*d + b*c)/b)
 
     cons91 = CustomConstraint(cons_f91)
@@ -635,14 +637,14 @@ if matchpy:
 
     cons96 = CustomConstraint(cons_f96)
 
-    def cons_f97(b, m, n, d, x, a, c):
+    def cons_f97(m, b, d, c, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return IntLinearcQ(a, b, c, d, m, n, x)
 
     cons97 = CustomConstraint(cons_f97)
 
-    def cons_f98(a, c, n, m):
+    def cons_f98(m, a, n, c):
         return Not(And(Less(n, S(-1)), Or(ZeroQ(a), And(NonzeroQ(c), Less(m, n), IntegerQ(n)))))
 
     cons98 = CustomConstraint(cons_f98)
@@ -662,7 +664,7 @@ if matchpy:
 
     cons101 = CustomConstraint(cons_f101)
 
-    def cons_f102(b, d):
+    def cons_f102(d, b):
         return ZeroQ(b + d)
 
     cons102 = CustomConstraint(cons_f102)
@@ -672,7 +674,7 @@ if matchpy:
 
     cons103 = CustomConstraint(cons_f103)
 
-    def cons_f104(a, c, b, d):
+    def cons_f104(d, c, b, a):
         return PositiveQ(-a*d + b*c)
 
     cons104 = CustomConstraint(cons_f104)
@@ -682,7 +684,7 @@ if matchpy:
 
     cons105 = CustomConstraint(cons_f105)
 
-    def cons_f106(b, d):
+    def cons_f106(d, b):
         return ZeroQ(b - d)
 
     cons106 = CustomConstraint(cons_f106)
@@ -697,12 +699,12 @@ if matchpy:
 
     cons108 = CustomConstraint(cons_f108)
 
-    def cons_f109(b, d):
+    def cons_f109(d, b):
         return PosQ(d/b)
 
     cons109 = CustomConstraint(cons_f109)
 
-    def cons_f110(b, d):
+    def cons_f110(d, b):
         return NegQ(d/b)
 
     cons110 = CustomConstraint(cons_f110)
@@ -727,12 +729,12 @@ if matchpy:
 
     cons114 = CustomConstraint(cons_f114)
 
-    def cons_f115(c, n, b, d):
+    def cons_f115(d, c, n, b):
         return Or(IntegerQ(n), And(PositiveQ(c), Not(And(ZeroQ(n + S(1)/2), ZeroQ(c**S(2) - d**S(2)), PositiveQ(-d/(b*c))))))
 
     cons115 = CustomConstraint(cons_f115)
 
-    def cons_f116(m, c, b, d):
+    def cons_f116(d, c, m, b):
         return Or(IntegerQ(m), PositiveQ(-d/(b*c)))
 
     cons116 = CustomConstraint(cons_f116)
@@ -742,22 +744,22 @@ if matchpy:
 
     cons117 = CustomConstraint(cons_f117)
 
-    def cons_f118(c, b, d):
+    def cons_f118(d, c, b):
         return Not(PositiveQ(-d/(b*c)))
 
     cons118 = CustomConstraint(cons_f118)
 
-    def cons_f119(m, c, n, d):
+    def cons_f119(d, m, n, c):
         return Or(And(RationalQ(m), Not(And(ZeroQ(n + S(1)/2), ZeroQ(c**S(2) - d**S(2))))), Not(RationalQ(n)))
 
     cons119 = CustomConstraint(cons_f119)
 
-    def cons_f120(a, c, b, d):
+    def cons_f120(d, c, b, a):
         return PositiveQ(b/(-a*d + b*c))
 
     cons120 = CustomConstraint(cons_f120)
 
-    def cons_f121(b, m, n, d, a, c):
+    def cons_f121(m, b, d, c, n, a):
         return Or(RationalQ(m), Not(And(RationalQ(n), PositiveQ(-d/(-a*d + b*c)))))
 
     cons121 = CustomConstraint(cons_f121)
@@ -767,7 +769,7 @@ if matchpy:
 
     cons122 = CustomConstraint(cons_f122)
 
-    def cons_f123(u, x):
+    def cons_f123(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return NonzeroQ(Coefficient(u, x, S(0)))
@@ -784,12 +786,12 @@ if matchpy:
 
     cons125 = CustomConstraint(cons_f125)
 
-    def cons_f126(n, p):
+    def cons_f126(p, n):
         return NonzeroQ(n + p + S(2))
 
     cons126 = CustomConstraint(cons_f126)
 
-    def cons_f127(c, p, b, e, n, d, a, f):
+    def cons_f127(p, f, b, d, a, n, c, e):
         return ZeroQ(a*d*f*(n + p + S(2)) - b*(c*f*(p + S(1)) + d*e*(n + S(1))))
 
     cons127 = CustomConstraint(cons_f127)
@@ -799,42 +801,42 @@ if matchpy:
 
     cons128 = CustomConstraint(cons_f128)
 
-    def cons_f129(e, a, b, f):
+    def cons_f129(a, f, b, e):
         return ZeroQ(a*f + b*e)
 
     cons129 = CustomConstraint(cons_f129)
 
-    def cons_f130(n, p):
+    def cons_f130(p, n):
         return Not(And(NegativeIntegerQ(n + p + S(2)), Greater(n + S(2)*p, S(0))))
 
     cons130 = CustomConstraint(cons_f130)
 
-    def cons_f131(n, p):
+    def cons_f131(p, n):
         return Or(NonzeroQ(n + S(1)), Equal(p, S(1)))
 
     cons131 = CustomConstraint(cons_f131)
 
-    def cons_f132(e, a, b, f):
+    def cons_f132(a, f, b, e):
         return NonzeroQ(a*f + b*e)
 
     cons132 = CustomConstraint(cons_f132)
 
-    def cons_f133(p, b, e, n, d, a, f):
+    def cons_f133(p, f, b, d, a, n, e):
         return Or(Not(IntegerQ(n)), Less(S(5)*n + S(9)*p, S(0)), GreaterEqual(n + p + S(1), S(0)), And(GreaterEqual(n + p + S(2), S(0)), RationalQ(a, b, d, e, f)))
 
     cons133 = CustomConstraint(cons_f133)
 
-    def cons_f134(p, b, e, n, d, f, a, c):
+    def cons_f134(p, f, b, d, c, n, a, e):
         return Or(NegativeIntegerQ(n, p), ZeroQ(p + S(-1)), And(PositiveIntegerQ(p), Or(Not(IntegerQ(n)), LessEqual(S(5)*n + S(9)*p + S(10), S(0)), GreaterEqual(n + p + S(1), S(0)), And(GreaterEqual(n + p + S(2), S(0)), RationalQ(a, b, c, d, e, f)))))
 
     cons134 = CustomConstraint(cons_f134)
 
-    def cons_f135(n, p):
+    def cons_f135(p, n):
         return ZeroQ(n + p + S(2))
 
     cons135 = CustomConstraint(cons_f135)
 
-    def cons_f136(n, p):
+    def cons_f136(p, n):
         return Not(And(SumSimplerQ(n, S(1)), Not(SumSimplerQ(p, S(1)))))
 
     cons136 = CustomConstraint(cons_f136)
@@ -844,7 +846,7 @@ if matchpy:
 
     cons137 = CustomConstraint(cons_f137)
 
-    def cons_f138(e, c, n, p):
+    def cons_f138(p, n, c, e):
         return Or(Not(And(RationalQ(n), Less(n, S(-1)))), IntegerQ(p), Not(Or(IntegerQ(n), Not(Or(ZeroQ(e), Not(Or(ZeroQ(c), Less(p, n))))))))
 
     cons138 = CustomConstraint(cons_f138)
@@ -854,12 +856,12 @@ if matchpy:
 
     cons139 = CustomConstraint(cons_f139)
 
-    def cons_f140(n, p):
+    def cons_f140(p, n):
         return NonzeroQ(n + p + S(3))
 
     cons140 = CustomConstraint(cons_f140)
 
-    def cons_f141(c, p, b, e, n, d, a, f):
+    def cons_f141(p, f, b, d, a, n, c, e):
         return ZeroQ(-b*(c*f*(p + S(1)) + d*e*(n + S(1)))*(a*d*f*(n + p + S(4)) - b*(c*f*(p + S(2)) + d*e*(n + S(2)))) + d*f*(a**S(2)*d*f*(n + p + S(3)) - b*(a*(c*f*(p + S(1)) + d*e*(n + S(1))) + b*c*e))*(n + p + S(2)))
 
     cons141 = CustomConstraint(cons_f141)
@@ -909,24 +911,24 @@ if matchpy:
 
     cons150 = CustomConstraint(cons_f150)
 
-    def cons_f151(m, n, p):
+    def cons_f151(m, p, n):
         return Or(IntegerQ(p), And(Greater(m, S(0)), GreaterEqual(n, S(-1))))
 
     cons151 = CustomConstraint(cons_f151)
 
-    def cons_f152(n, p):
+    def cons_f152(p, n):
         return Or(And(RationalQ(n), Less(n, S(-1))), And(ZeroQ(n + p + S(3)), NonzeroQ(n + S(1)), Or(SumSimplerQ(n, S(1)), Not(SumSimplerQ(p, S(1))))))
 
     cons152 = CustomConstraint(cons_f152)
 
-    def cons_f153(b, e, d, f, a, x, c):
+    def cons_f153(f, b, d, c, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f), x)
 
     cons153 = CustomConstraint(cons_f153)
 
-    def cons_f154(c, b, e, d, a, f):
+    def cons_f154(f, b, d, c, a, e):
         return ZeroQ(S(2)*b*d*e - f*(a*d + b*c))
 
     cons154 = CustomConstraint(cons_f154)
@@ -936,7 +938,7 @@ if matchpy:
 
     cons155 = CustomConstraint(cons_f155)
 
-    def cons_f156(b, d, x, a, c):
+    def cons_f156(b, d, c, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return SimplerQ(a + b*x, c + d*x)
@@ -958,7 +960,7 @@ if matchpy:
 
     cons159 = CustomConstraint(cons_f159)
 
-    def cons_f160(c, p, b, m, e, n, d, a, f):
+    def cons_f160(p, m, f, b, d, a, c, n, e):
         return ZeroQ(a*d*f*(m + S(1)) + b*c*f*(n + S(1)) + b*d*e*(p + S(1)))
 
     cons160 = CustomConstraint(cons_f160)
@@ -1013,7 +1015,7 @@ if matchpy:
 
     cons170 = CustomConstraint(cons_f170)
 
-    def cons_f171(n, p):
+    def cons_f171(p, n):
         return Or(IntegerQ(n), IntegersQ(S(2)*n, S(2)*p))
 
     cons171 = CustomConstraint(cons_f171)
@@ -1028,17 +1030,17 @@ if matchpy:
 
     cons173 = CustomConstraint(cons_f173)
 
-    def cons_f174(e, f, c, d):
+    def cons_f174(d, c, f, e):
         return PositiveQ(-f/(-c*f + d*e))
 
     cons174 = CustomConstraint(cons_f174)
 
-    def cons_f175(e, f, c, d):
+    def cons_f175(d, c, f, e):
         return Not(PositiveQ(-f/(-c*f + d*e)))
 
     cons175 = CustomConstraint(cons_f175)
 
-    def cons_f176(e, c, d, f):
+    def cons_f176(d, c, f, e):
         return NonzeroQ(-c*f + d*e)
 
     cons176 = CustomConstraint(cons_f176)
@@ -1053,71 +1055,71 @@ if matchpy:
 
     cons178 = CustomConstraint(cons_f178)
 
-    def cons_f179(b, d):
+    def cons_f179(d, b):
         return Not(NegativeQ(-b/d))
 
     cons179 = CustomConstraint(cons_f179)
 
-    def cons_f180(b, d):
+    def cons_f180(d, b):
         return NegativeQ(-b/d)
 
     cons180 = CustomConstraint(cons_f180)
 
-    def cons_f181(e, c):
+    def cons_f181(c, e):
         return Not(And(PositiveQ(c), PositiveQ(e)))
 
     cons181 = CustomConstraint(cons_f181)
 
-    def cons_f182(e, a, b, f):
+    def cons_f182(a, f, b, e):
         return PositiveQ(b/(-a*f + b*e))
 
     cons182 = CustomConstraint(cons_f182)
 
-    def cons_f183(a, c, b, d):
+    def cons_f183(d, c, b, a):
         return Not(NegativeQ(-(-a*d + b*c)/d))
 
     cons183 = CustomConstraint(cons_f183)
 
-    def cons_f184(b, e, d, x, a, f, c):
+    def cons_f184(f, b, d, c, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(SimplerQ(c + d*x, a + b*x), PositiveQ(-d/(-a*d + b*c)), PositiveQ(d/(-c*f + d*e)), Not(NegativeQ((-a*d + b*c)/b))))
 
     cons184 = CustomConstraint(cons_f184)
 
-    def cons_f185(b, e, d, f, a, c):
+    def cons_f185(f, b, d, c, a, e):
         return Not(And(PositiveQ(b/(-a*d + b*c)), PositiveQ(b/(-a*f + b*e))))
 
     cons185 = CustomConstraint(cons_f185)
 
-    def cons_f186(f, b, d):
+    def cons_f186(d, f, b):
         return Or(PositiveQ(-b/d), NegativeQ(-b/f))
 
     cons186 = CustomConstraint(cons_f186)
 
-    def cons_f187(f, b, d):
+    def cons_f187(d, f, b):
         return Or(PosQ(-b/d), NegQ(-b/f))
 
     cons187 = CustomConstraint(cons_f187)
 
-    def cons_f188(b, e, x, a, f):
+    def cons_f188(f, b, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return SimplerQ(a + b*x, e + f*x)
 
     cons188 = CustomConstraint(cons_f188)
 
-    def cons_f189(b, e, d, f, a, c):
+    def cons_f189(f, b, d, c, a, e):
         return Or(PositiveQ(-(-a*d + b*c)/d), NegativeQ(-(-a*f + b*e)/f))
 
     cons189 = CustomConstraint(cons_f189)
 
-    def cons_f190(b, e, d, f, a, c):
+    def cons_f190(f, b, d, c, a, e):
         return Or(PosQ(-(-a*d + b*c)/d), NegQ(-(-a*f + b*e)/f))
 
     cons190 = CustomConstraint(cons_f190)
 
-    def cons_f191(b, e, d, f, a, c):
+    def cons_f191(f, b, d, c, a, e):
         return ZeroQ(-a*d*f - b*c*f + S(2)*b*d*e)
 
     cons191 = CustomConstraint(cons_f191)
@@ -1147,60 +1149,60 @@ if matchpy:
 
     cons196 = CustomConstraint(cons_f196)
 
-    def cons_f197(e, p):
+    def cons_f197(p, e):
         return Or(IntegerQ(p), PositiveQ(e))
 
     cons197 = CustomConstraint(cons_f197)
 
-    def cons_f198(c, b, d):
+    def cons_f198(d, c, b):
         return PositiveQ(-d/(b*c))
 
     cons198 = CustomConstraint(cons_f198)
 
-    def cons_f199(p, e, d, f, c):
+    def cons_f199(p, f, d, c, e):
         return Or(IntegerQ(p), PositiveQ(d/(-c*f + d*e)))
 
     cons199 = CustomConstraint(cons_f199)
 
-    def cons_f200(b, d, x, a, c):
+    def cons_f200(b, d, a, c, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(PositiveQ(d/(a*d - b*c)), SimplerQ(c + d*x, a + b*x)))
 
     cons200 = CustomConstraint(cons_f200)
 
-    def cons_f201(a, c, b, d):
+    def cons_f201(d, c, b, a):
         return Not(PositiveQ(b/(-a*d + b*c)))
 
     cons201 = CustomConstraint(cons_f201)
 
-    def cons_f202(b, d, x, a, c):
+    def cons_f202(b, d, c, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(SimplerQ(c + d*x, a + b*x))
 
     cons202 = CustomConstraint(cons_f202)
 
-    def cons_f203(b, e, d, f, a, x, c):
+    def cons_f203(f, b, d, a, c, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(PositiveQ(d/(a*d - b*c)), PositiveQ(d/(-c*f + d*e)), SimplerQ(c + d*x, a + b*x)))
 
     cons203 = CustomConstraint(cons_f203)
 
-    def cons_f204(c, b, e, d, x, a, f):
+    def cons_f204(f, b, d, c, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(PositiveQ(f/(a*f - b*e)), PositiveQ(f/(c*f - d*e)), SimplerQ(e + f*x, a + b*x)))
 
     cons204 = CustomConstraint(cons_f204)
 
-    def cons_f205(e, a, b, f):
+    def cons_f205(a, f, b, e):
         return Not(PositiveQ(b/(-a*f + b*e)))
 
     cons205 = CustomConstraint(cons_f205)
 
-    def cons_f206(b, e, x, a, f):
+    def cons_f206(f, b, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(SimplerQ(e + f*x, a + b*x))
@@ -1252,21 +1254,21 @@ if matchpy:
 
     cons215 = CustomConstraint(cons_f215)
 
-    def cons_f216(b, e, d, f, a, h, g, x, c):
+    def cons_f216(f, b, g, d, c, a, x, h, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g, h), x)
 
     cons216 = CustomConstraint(cons_f216)
 
-    def cons_f217(p, b, e, n, d, f, a, h, g, x, c):
+    def cons_f217(p, f, b, g, d, c, a, n, x, h, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g, h, n, p), x)
 
     cons217 = CustomConstraint(cons_f217)
 
-    def cons_f218(e, d, f, x, c):
+    def cons_f218(f, d, c, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return SimplerQ(c + d*x, e + f*x)
@@ -1278,7 +1280,7 @@ if matchpy:
 
     cons219 = CustomConstraint(cons_f219)
 
-    def cons_f220(q, p):
+    def cons_f220(p, q):
         return IntegersQ(p, q)
 
     cons220 = CustomConstraint(cons_f220)
@@ -1288,14 +1290,14 @@ if matchpy:
 
     cons221 = CustomConstraint(cons_f221)
 
-    def cons_f222(p, b, e, m, n, q, d, f, a, h, g, x, c):
+    def cons_f222(p, m, f, b, g, d, c, a, n, x, h, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g, h, m, n, p, q), x)
 
     cons222 = CustomConstraint(cons_f222)
 
-    def cons_f223(p, b, e, m, n, q, r, d, f, a, h, g, i, x, c):
+    def cons_f223(p, m, f, b, g, r, i, d, c, a, n, x, h, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g, h, i, m, n, p, q, r), x)
@@ -1312,17 +1314,17 @@ if matchpy:
 
     cons225 = CustomConstraint(cons_f225)
 
-    def cons_f226(a, c, b):
+    def cons_f226(c, a, b):
         return NonzeroQ(-S(4)*a*c + b**S(2))
 
     cons226 = CustomConstraint(cons_f226)
 
-    def cons_f227(a, c, b):
+    def cons_f227(c, a, b):
         return PerfectSquareQ(-S(4)*a*c + b**S(2))
 
     cons227 = CustomConstraint(cons_f227)
 
-    def cons_f228(a, c, b):
+    def cons_f228(c, a, b):
         return Not(PerfectSquareQ(-S(4)*a*c + b**S(2)))
 
     cons228 = CustomConstraint(cons_f228)
@@ -1337,17 +1339,17 @@ if matchpy:
 
     cons230 = CustomConstraint(cons_f230)
 
-    def cons_f231(a, c, b):
+    def cons_f231(c, a, b):
         return PosQ(-S(4)*a*c + b**S(2))
 
     cons231 = CustomConstraint(cons_f231)
 
-    def cons_f232(a, c, b):
+    def cons_f232(c, a, b):
         return PositiveQ(S(4)*a - b**S(2)/c)
 
     cons232 = CustomConstraint(cons_f232)
 
-    def cons_f233(c, b, x):
+    def cons_f233(x, c, b):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(b, c), x)
@@ -1379,7 +1381,7 @@ if matchpy:
 
     cons238 = CustomConstraint(cons_f238)
 
-    def cons_f239(e, c, b, d):
+    def cons_f239(d, c, b, e):
         return NonzeroQ(-b*e + S(2)*c*d)
 
     cons239 = CustomConstraint(cons_f239)
@@ -1464,17 +1466,17 @@ if matchpy:
 
     cons255 = CustomConstraint(cons_f255)
 
-    def cons_f256(b, e, d, a, c):
+    def cons_f256(b, d, c, a, e):
         return ZeroQ(a*e**S(2) - b*d*e + c*d**S(2))
 
     cons256 = CustomConstraint(cons_f256)
 
-    def cons_f257(a, c, e, d):
+    def cons_f257(d, c, e, a):
         return ZeroQ(a*e**S(2) + c*d**S(2))
 
     cons257 = CustomConstraint(cons_f257)
 
-    def cons_f258(a, m, p, d):
+    def cons_f258(d, m, a, p):
         return Or(IntegerQ(p), And(PositiveQ(a), PositiveQ(d), IntegerQ(m + p)))
 
     cons258 = CustomConstraint(cons_f258)
@@ -1559,7 +1561,7 @@ if matchpy:
 
     cons274 = CustomConstraint(cons_f274)
 
-    def cons_f275(a, c, b):
+    def cons_f275(c, b, a):
         return NegativeQ(c/(-S(4)*a*c + b**S(2)))
 
     cons275 = CustomConstraint(cons_f275)
@@ -1579,12 +1581,12 @@ if matchpy:
 
     cons278 = CustomConstraint(cons_f278)
 
-    def cons_f279(b, e, d, a, c):
+    def cons_f279(b, d, c, a, e):
         return NonzeroQ(a*e**S(2) - b*d*e + c*d**S(2))
 
     cons279 = CustomConstraint(cons_f279)
 
-    def cons_f280(a, c, e, d):
+    def cons_f280(d, c, e, a):
         return NonzeroQ(a*e**S(2) + c*d**S(2))
 
     cons280 = CustomConstraint(cons_f280)
@@ -1594,7 +1596,7 @@ if matchpy:
 
     cons281 = CustomConstraint(cons_f281)
 
-    def cons_f282(a, c, b):
+    def cons_f282(c, a, b):
         return NiceSqrtQ(-S(4)*a*c + b**S(2))
 
     cons282 = CustomConstraint(cons_f282)
@@ -1604,7 +1606,7 @@ if matchpy:
 
     cons283 = CustomConstraint(cons_f283)
 
-    def cons_f284(a, c, b):
+    def cons_f284(c, a, b):
         return Not(NiceSqrtQ(-S(4)*a*c + b**S(2)))
 
     cons284 = CustomConstraint(cons_f284)
@@ -1614,7 +1616,7 @@ if matchpy:
 
     cons285 = CustomConstraint(cons_f285)
 
-    def cons_f286(m, d):
+    def cons_f286(d, m):
         return Or(NonzeroQ(d), Greater(m, S(2)))
 
     cons286 = CustomConstraint(cons_f286)
@@ -1624,12 +1626,12 @@ if matchpy:
 
     cons287 = CustomConstraint(cons_f287)
 
-    def cons_f288(a, e, b, d):
+    def cons_f288(d, a, b, e):
         return ZeroQ(a*e + b*d)
 
     cons288 = CustomConstraint(cons_f288)
 
-    def cons_f289(e, c, b, d):
+    def cons_f289(d, c, b, e):
         return ZeroQ(b*e + c*d)
 
     cons289 = CustomConstraint(cons_f289)
@@ -1639,7 +1641,7 @@ if matchpy:
 
     cons290 = CustomConstraint(cons_f290)
 
-    def cons_f291(e, c, b, d):
+    def cons_f291(d, c, b, e):
         return NonzeroQ(-b*e + c*d)
 
     cons291 = CustomConstraint(cons_f291)
@@ -1669,7 +1671,7 @@ if matchpy:
 
     cons296 = CustomConstraint(cons_f296)
 
-    def cons_f297(e, d, x, a, c):
+    def cons_f297(d, a, c, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, c, d, e), x)
@@ -1686,14 +1688,14 @@ if matchpy:
 
     cons299 = CustomConstraint(cons_f299)
 
-    def cons_f300(p, b, e, m, d, x, a, c):
+    def cons_f300(p, m, b, d, c, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return IntQuadraticQ(a, b, c, d, e, m, p, x)
 
     cons300 = CustomConstraint(cons_f300)
 
-    def cons_f301(p, e, m, d, x, a, c):
+    def cons_f301(p, m, d, a, c, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return IntQuadraticQ(a, S(0), c, d, e, m, p, x)
@@ -1720,46 +1722,46 @@ if matchpy:
 
     cons305 = CustomConstraint(cons_f305)
 
-    def cons_f306(p, b, m, e, d, x, a, c):
+    def cons_f306(p, m, b, d, c, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Or(And(RationalQ(m), Less(m, S(-1)), IntQuadraticQ(a, b, c, d, e, m, p, x)), And(SumSimplerQ(m, S(1)), IntegerQ(p), NonzeroQ(m + S(1))), And(NegativeIntegerQ(m + S(2)*p + S(3)), NonzeroQ(m + S(1))))
 
     cons306 = CustomConstraint(cons_f306)
 
-    def cons_f307(p, m, e, d, x, a, c):
+    def cons_f307(p, m, d, c, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Or(And(RationalQ(m), Less(m, S(-1)), IntQuadraticQ(a, S(0), c, d, e, m, p, x)), And(SumSimplerQ(m, S(1)), IntegerQ(p), NonzeroQ(m + S(1))), And(NegativeIntegerQ(m + S(2)*p + S(3)), NonzeroQ(m + S(1))))
 
     cons307 = CustomConstraint(cons_f307)
 
-    def cons_f308(b, e, d, a, c):
+    def cons_f308(b, d, c, a, e):
         return ZeroQ(-S(3)*a*c*e**S(2) + b**S(2)*e**S(2) - b*c*d*e + c**S(2)*d**S(2))
 
     cons308 = CustomConstraint(cons_f308)
 
-    def cons_f309(e, c, b, d):
+    def cons_f309(d, c, b, e):
         return PosQ(c*e**S(2)*(-b*e + S(2)*c*d))
 
     cons309 = CustomConstraint(cons_f309)
 
-    def cons_f310(a, c, e, d):
+    def cons_f310(d, c, e, a):
         return ZeroQ(-S(3)*a*e**S(2) + c*d**S(2))
 
     cons310 = CustomConstraint(cons_f310)
 
-    def cons_f311(e, c, b, d):
+    def cons_f311(d, c, b, e):
         return NegQ(c*e**S(2)*(-b*e + S(2)*c*d))
 
     cons311 = CustomConstraint(cons_f311)
 
-    def cons_f312(b, e, d, a, c):
+    def cons_f312(b, d, c, a, e):
         return ZeroQ(S(9)*a*c*e**S(2) - S(2)*b**S(2)*e**S(2) - b*c*d*e + c**S(2)*d**S(2))
 
     cons312 = CustomConstraint(cons_f312)
 
-    def cons_f313(a, c, b):
+    def cons_f313(c, a, b):
         return Not(PositiveQ(S(4)*a - b**S(2)/c))
 
     cons313 = CustomConstraint(cons_f313)
@@ -1769,12 +1771,12 @@ if matchpy:
 
     cons314 = CustomConstraint(cons_f314)
 
-    def cons_f315(e, f, g, d):
+    def cons_f315(d, f, e, g):
         return NonzeroQ(-d*g + e*f)
 
     cons315 = CustomConstraint(cons_f315)
 
-    def cons_f316(c, g, b, f):
+    def cons_f316(c, f, b, g):
         return ZeroQ(-b*g + S(2)*c*f)
 
     cons316 = CustomConstraint(cons_f316)
@@ -1799,7 +1801,7 @@ if matchpy:
 
     cons320 = CustomConstraint(cons_f320)
 
-    def cons_f321(c, g, b, f):
+    def cons_f321(c, f, b, g):
         return NonzeroQ(-b*g + S(2)*c*f)
 
     cons321 = CustomConstraint(cons_f321)
@@ -1809,29 +1811,29 @@ if matchpy:
 
     cons322 = CustomConstraint(cons_f322)
 
-    def cons_f323(p, b, m, e, d, c):
+    def cons_f323(p, m, b, d, c, e):
         return Or(And(ZeroQ(m + S(2)*p + S(2)), NonzeroQ(m + S(1))), And(ZeroQ(-b*e + S(2)*c*d), NonzeroQ(m + S(-1))))
 
     cons323 = CustomConstraint(cons_f323)
 
-    def cons_f324(m, e, d, x, g, f):
+    def cons_f324(m, f, g, d, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(ZeroQ(m + S(-1)), SimplerQ(f + g*x, d + e*x)))
 
     cons324 = CustomConstraint(cons_f324)
 
-    def cons_f325(a, m, p, d):
+    def cons_f325(d, m, a, p):
         return Or(IntegerQ(p), And(PositiveQ(a), PositiveQ(d), ZeroQ(m + p)))
 
     cons325 = CustomConstraint(cons_f325)
 
-    def cons_f326(p, b, m, e, d, f, g, c):
+    def cons_f326(p, m, g, b, f, d, c, e):
         return ZeroQ(e*(p + S(1))*(-b*g + S(2)*c*f) + m*(c*e*f + g*(-b*e + c*d)))
 
     cons326 = CustomConstraint(cons_f326)
 
-    def cons_f327(p, m, e, d, g, f):
+    def cons_f327(p, m, f, g, d, e):
         return ZeroQ(S(2)*e*f*(p + S(1)) + m*(d*g + e*f))
 
     cons327 = CustomConstraint(cons_f327)
@@ -1846,7 +1848,7 @@ if matchpy:
 
     cons329 = CustomConstraint(cons_f329)
 
-    def cons_f330(a, f, g, c):
+    def cons_f330(f, a, g, c):
         return ZeroQ(a*g**S(2) + c*f**S(2))
 
     cons330 = CustomConstraint(cons_f330)
@@ -1861,12 +1863,12 @@ if matchpy:
 
     cons332 = CustomConstraint(cons_f332)
 
-    def cons_f333(n, p):
+    def cons_f333(p, n):
         return NegativeIntegerQ(n + S(2)*p)
 
     cons333 = CustomConstraint(cons_f333)
 
-    def cons_f334(b, e, d, f, g, c):
+    def cons_f334(f, g, b, d, c, e):
         return ZeroQ(-b*e*g + c*d*g + c*e*f)
 
     cons334 = CustomConstraint(cons_f334)
@@ -1876,7 +1878,7 @@ if matchpy:
 
     cons335 = CustomConstraint(cons_f335)
 
-    def cons_f336(e, f, g, d):
+    def cons_f336(d, f, e, g):
         return ZeroQ(d*g + e*f)
 
     cons336 = CustomConstraint(cons_f336)
@@ -1886,12 +1888,12 @@ if matchpy:
 
     cons337 = CustomConstraint(cons_f337)
 
-    def cons_f338(n, p):
+    def cons_f338(p, n):
         return RationalQ(n, p)
 
     cons338 = CustomConstraint(cons_f338)
 
-    def cons_f339(n, p):
+    def cons_f339(p, n):
         return Not(And(IntegerQ(n + p), LessEqual(n + p + S(2), S(0))))
 
     cons339 = CustomConstraint(cons_f339)
@@ -1901,12 +1903,12 @@ if matchpy:
 
     cons340 = CustomConstraint(cons_f340)
 
-    def cons_f341(n, p):
+    def cons_f341(p, n):
         return Not(And(IntegerQ(n + p), Less(n + p + S(2), S(0))))
 
     cons341 = CustomConstraint(cons_f341)
 
-    def cons_f342(n, p):
+    def cons_f342(p, n):
         return Or(IntegerQ(S(2)*p), IntegerQ(n))
 
     cons342 = CustomConstraint(cons_f342)
@@ -1916,12 +1918,12 @@ if matchpy:
 
     cons343 = CustomConstraint(cons_f343)
 
-    def cons_f344(p, b, e, n, d, f, g, c):
+    def cons_f344(p, g, b, f, d, c, n, e):
         return ZeroQ(b*e*g*(n + S(1)) - c*d*g*(S(2)*n + p + S(3)) + c*e*f*(p + S(1)))
 
     cons344 = CustomConstraint(cons_f344)
 
-    def cons_f345(p, e, n, d, g, f):
+    def cons_f345(p, f, g, d, n, e):
         return ZeroQ(-d*g*(S(2)*n + p + S(3)) + e*f*(p + S(1)))
 
     cons345 = CustomConstraint(cons_f345)
@@ -1946,32 +1948,32 @@ if matchpy:
 
     cons349 = CustomConstraint(cons_f349)
 
-    def cons_f350(c, b, e, d, a, g, f):
+    def cons_f350(f, b, g, d, c, a, e):
         return ZeroQ(-S(2)*a*e*g + b*(d*g + e*f) - S(2)*c*d*f)
 
     cons350 = CustomConstraint(cons_f350)
 
-    def cons_f351(e, d, f, a, g, c):
+    def cons_f351(f, g, d, c, a, e):
         return ZeroQ(a*e*g + c*d*f)
 
     cons351 = CustomConstraint(cons_f351)
 
-    def cons_f352(b, m, e, d, c):
+    def cons_f352(m, b, d, c, e):
         return Not(And(Equal(m, S(1)), Or(ZeroQ(d), ZeroQ(-b*e + S(2)*c*d))))
 
     cons352 = CustomConstraint(cons_f352)
 
-    def cons_f353(m, d):
+    def cons_f353(d, m):
         return Not(And(Equal(m, S(1)), ZeroQ(d)))
 
     cons353 = CustomConstraint(cons_f353)
 
-    def cons_f354(p, b, e, d, f, a, g, c):
+    def cons_f354(p, g, b, f, d, a, c, e):
         return ZeroQ(-S(2)*a*c*e*g + b**S(2)*e*g*(p + S(2)) + c*(S(2)*p + S(3))*(-b*(d*g + e*f) + S(2)*c*d*f))
 
     cons354 = CustomConstraint(cons_f354)
 
-    def cons_f355(p, e, d, f, a, g, c):
+    def cons_f355(p, g, f, d, a, c, e):
         return ZeroQ(a*e*g - c*d*f*(S(2)*p + S(3)))
 
     cons355 = CustomConstraint(cons_f355)
@@ -2016,17 +2018,17 @@ if matchpy:
 
     cons363 = CustomConstraint(cons_f363)
 
-    def cons_f364(p, b, m, e, d, f, a, g, c):
+    def cons_f364(p, m, f, b, g, d, c, a, e):
         return Or(And(Equal(m, S(2)), Equal(p, S(-3)), RationalQ(a, b, c, d, e, f, g)), Not(NegativeIntegerQ(m + S(2)*p + S(3))))
 
     cons364 = CustomConstraint(cons_f364)
 
-    def cons_f365(p, m, e, d, f, a, g, c):
+    def cons_f365(p, m, f, g, d, c, a, e):
         return Or(And(Equal(m, S(2)), Equal(p, S(-3)), RationalQ(a, c, d, e, f, g)), Not(NegativeIntegerQ(m + S(2)*p + S(3))))
 
     cons365 = CustomConstraint(cons_f365)
 
-    def cons_f366(m, e, d, x, g, f):
+    def cons_f366(m, f, g, d, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(Equal(m, S(1)), SimplerQ(d + e*x, f + g*x)))
@@ -2038,7 +2040,7 @@ if matchpy:
 
     cons367 = CustomConstraint(cons_f367)
 
-    def cons_f368(m, e, d, x, g, f):
+    def cons_f368(m, f, g, d, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(Equal(m, S(1)), SimplerQ(f + g*x, d + e*x)))
@@ -2050,29 +2052,29 @@ if matchpy:
 
     cons369 = CustomConstraint(cons_f369)
 
-    def cons_f370(b, e, d, a, c):
+    def cons_f370(b, d, c, a, e):
         return ZeroQ(S(4)*c*(a - d) - (b - e)**S(2))
 
     cons370 = CustomConstraint(cons_f370)
 
-    def cons_f371(b, e, d, a, g, f):
+    def cons_f371(f, b, g, d, a, e):
         return ZeroQ(e*f*(b - e) - S(2)*g*(-a*e + b*d))
 
     cons371 = CustomConstraint(cons_f371)
 
-    def cons_f372(a, e, b, d):
+    def cons_f372(d, a, b, e):
         return NonzeroQ(-a*e + b*d)
 
     cons372 = CustomConstraint(cons_f372)
 
-    def cons_f373(x, a, f, g, c):
+    def cons_f373(f, g, a, c, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, c, f, g), x)
 
     cons373 = CustomConstraint(cons_f373)
 
-    def cons_f374(e, f, a, x, g, c):
+    def cons_f374(f, g, a, c, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, c, e, f, g), x)
@@ -2084,58 +2086,58 @@ if matchpy:
 
     cons375 = CustomConstraint(cons_f375)
 
-    def cons_f376(n, p):
+    def cons_f376(p, n):
         return IntegersQ(n, p)
 
     cons376 = CustomConstraint(cons_f376)
 
-    def cons_f377(m, f, d):
+    def cons_f377(d, m, f):
         return Or(IntegerQ(m), And(PositiveQ(d), PositiveQ(f)))
 
     cons377 = CustomConstraint(cons_f377)
 
-    def cons_f378(m, n, p):
+    def cons_f378(m, p, n):
         return Or(IntegerQ(p), IntegersQ(m, n))
 
     cons378 = CustomConstraint(cons_f378)
 
-    def cons_f379(p, e, m, f, a, x, g, c):
+    def cons_f379(p, m, f, g, a, c, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, c, e, f, g, m, p), x)
 
     cons379 = CustomConstraint(cons_f379)
 
-    def cons_f380(p, b, e, m, n, d, f, a, x, g, c):
+    def cons_f380(p, m, f, b, g, d, c, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g, m, n, p), x)
 
     cons380 = CustomConstraint(cons_f380)
 
-    def cons_f381(p, e, m, n, d, f, a, x, g, c):
+    def cons_f381(p, m, f, g, d, a, c, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, c, d, e, f, g, m, n, p), x)
 
     cons381 = CustomConstraint(cons_f381)
 
-    def cons_f382(a, c, d, f):
+    def cons_f382(d, c, f, a):
         return ZeroQ(-a*f + c*d)
 
     cons382 = CustomConstraint(cons_f382)
 
-    def cons_f383(a, e, b, d):
+    def cons_f383(d, a, b, e):
         return ZeroQ(-a*e + b*d)
 
     cons383 = CustomConstraint(cons_f383)
 
-    def cons_f384(c, p, f):
+    def cons_f384(f, c, p):
         return Or(IntegerQ(p), PositiveQ(c/f))
 
     cons384 = CustomConstraint(cons_f384)
 
-    def cons_f385(c, b, e, q, d, x, a, f):
+    def cons_f385(f, b, d, a, c, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Or(Not(IntegerQ(q)), LessEqual(LeafCount(d + e*x + f*x**S(2)), LeafCount(a + b*x + c*x**S(2))))
@@ -2152,7 +2154,7 @@ if matchpy:
 
     cons387 = CustomConstraint(cons_f387)
 
-    def cons_f388(c, b, e, q, d, a, f):
+    def cons_f388(f, b, d, a, c, q, e):
         return ZeroQ(c*(-S(2)*d*f + e**S(2)*(q + S(2))) + f*(S(2)*q + S(3))*(S(2)*a*f - b*e))
 
     cons388 = CustomConstraint(cons_f388)
@@ -2167,12 +2169,12 @@ if matchpy:
 
     cons390 = CustomConstraint(cons_f390)
 
-    def cons_f391(c, e, q, d, a, f):
+    def cons_f391(f, d, a, c, q, e):
         return ZeroQ(S(2)*a*f**S(2)*(S(2)*q + S(3)) + c*(-S(2)*d*f + e**S(2)*(q + S(2))))
 
     cons391 = CustomConstraint(cons_f391)
 
-    def cons_f392(c, q, d, a, f):
+    def cons_f392(f, d, a, c, q):
         return ZeroQ(S(2)*a*f*q + S(3)*a*f - c*d)
 
     cons392 = CustomConstraint(cons_f392)
@@ -2182,7 +2184,7 @@ if matchpy:
 
     cons393 = CustomConstraint(cons_f393)
 
-    def cons_f394(e, f, d):
+    def cons_f394(d, f, e):
         return NonzeroQ(-S(4)*d*f + e**S(2))
 
     cons394 = CustomConstraint(cons_f394)
@@ -2197,17 +2199,17 @@ if matchpy:
 
     cons396 = CustomConstraint(cons_f396)
 
-    def cons_f397(c, b, e, q, d, a, f):
+    def cons_f397(f, b, d, a, c, q, e):
         return NonzeroQ(c*(-S(2)*d*f + e**S(2)*(q + S(2))) + f*(S(2)*q + S(3))*(S(2)*a*f - b*e))
 
     cons397 = CustomConstraint(cons_f397)
 
-    def cons_f398(c, e, q, d, a, f):
+    def cons_f398(f, d, a, c, q, e):
         return NonzeroQ(S(2)*a*f**S(2)*(S(2)*q + S(3)) + c*(-S(2)*d*f + e**S(2)*(q + S(2))))
 
     cons398 = CustomConstraint(cons_f398)
 
-    def cons_f399(c, q, d, a, f):
+    def cons_f399(f, d, a, c, q):
         return NonzeroQ(S(2)*a*f*q + S(3)*a*f - c*d)
 
     cons399 = CustomConstraint(cons_f399)
@@ -2222,7 +2224,7 @@ if matchpy:
 
     cons401 = CustomConstraint(cons_f401)
 
-    def cons_f402(q, p):
+    def cons_f402(p, q):
         return RationalQ(p, q)
 
     cons402 = CustomConstraint(cons_f402)
@@ -2232,42 +2234,42 @@ if matchpy:
 
     cons403 = CustomConstraint(cons_f403)
 
-    def cons_f404(b, e, d, f, a, c):
+    def cons_f404(f, b, d, c, a, e):
         return NonzeroQ(-(-a*e + b*d)*(-b*f + c*e) + (-a*f + c*d)**S(2))
 
     cons404 = CustomConstraint(cons_f404)
 
-    def cons_f405(q, p):
+    def cons_f405(p, q):
         return Not(And(Not(IntegerQ(p)), IntegerQ(q), Less(q, S(-1))))
 
     cons405 = CustomConstraint(cons_f405)
 
-    def cons_f406(b, d, f, a, c):
+    def cons_f406(f, b, d, c, a):
         return NonzeroQ(b**S(2)*d*f + (-a*f + c*d)**S(2))
 
     cons406 = CustomConstraint(cons_f406)
 
-    def cons_f407(e, d, f, a, c):
+    def cons_f407(f, d, a, c, e):
         return NonzeroQ(a*c*e**S(2) + (-a*f + c*d)**S(2))
 
     cons407 = CustomConstraint(cons_f407)
 
-    def cons_f408(q, p):
+    def cons_f408(p, q):
         return NonzeroQ(p + q)
 
     cons408 = CustomConstraint(cons_f408)
 
-    def cons_f409(q, p):
+    def cons_f409(p, q):
         return NonzeroQ(S(2)*p + S(2)*q + S(1))
 
     cons409 = CustomConstraint(cons_f409)
 
-    def cons_f410(e, c, b, f):
+    def cons_f410(c, f, b, e):
         return ZeroQ(-b*f + c*e)
 
     cons410 = CustomConstraint(cons_f410)
 
-    def cons_f411(e, c, b, f):
+    def cons_f411(c, f, b, e):
         return NonzeroQ(-b*f + c*e)
 
     cons411 = CustomConstraint(cons_f411)
@@ -2277,7 +2279,7 @@ if matchpy:
 
     cons412 = CustomConstraint(cons_f412)
 
-    def cons_f413(a, c, b):
+    def cons_f413(c, a, b):
         return NegQ(-S(4)*a*c + b**S(2))
 
     cons413 = CustomConstraint(cons_f413)
@@ -2287,71 +2289,71 @@ if matchpy:
 
     cons414 = CustomConstraint(cons_f414)
 
-    def cons_f415(p, b, e, q, d, f, a, x, c):
+    def cons_f415(p, f, b, d, c, a, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, p, q), x)
 
     cons415 = CustomConstraint(cons_f415)
 
-    def cons_f416(p, e, q, d, f, a, x, c):
+    def cons_f416(p, f, d, a, c, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, c, d, e, f, p, q), x)
 
     cons416 = CustomConstraint(cons_f416)
 
-    def cons_f417(b, h, a, g, c):
+    def cons_f417(g, b, c, a, h):
         return ZeroQ(a*h**S(2) - b*g*h + c*g**S(2))
 
     cons417 = CustomConstraint(cons_f417)
 
-    def cons_f418(e, d, f, a, h, g, c):
+    def cons_f418(g, f, d, c, a, h, e):
         return ZeroQ(a**S(2)*f*h**S(2) - a*c*e*g*h + c**S(2)*d*g**S(2))
 
     cons418 = CustomConstraint(cons_f418)
 
-    def cons_f419(a, c, g, h):
+    def cons_f419(h, c, g, a):
         return ZeroQ(a*h**S(2) + c*g**S(2))
 
     cons419 = CustomConstraint(cons_f419)
 
-    def cons_f420(d, f, a, h, g, c):
+    def cons_f420(f, g, d, c, a, h):
         return ZeroQ(a**S(2)*f*h**S(2) + c**S(2)*d*g**S(2))
 
     cons420 = CustomConstraint(cons_f420)
 
-    def cons_f421(b, e, f, a, c):
+    def cons_f421(f, b, c, a, e):
         return ZeroQ(a*f**S(2) - b*e*f + c*e**S(2))
 
     cons421 = CustomConstraint(cons_f421)
 
-    def cons_f422(e, c, a, f):
+    def cons_f422(c, f, e, a):
         return ZeroQ(a*f**S(2) + c*e**S(2))
 
     cons422 = CustomConstraint(cons_f422)
 
-    def cons_f423(c, p, b, m, e, h, g, f):
+    def cons_f423(p, m, f, b, g, c, h, e):
         return ZeroQ(b*f*h*(m + p + S(2)) + c*(-e*h*(m + S(2)*p + S(3)) + S(2)*f*g*(p + S(1))))
 
     cons423 = CustomConstraint(cons_f423)
 
-    def cons_f424(c, p, b, m, d, h, a, g, f):
+    def cons_f424(p, m, f, b, g, d, a, c, h):
         return ZeroQ(b*f*g*(p + S(1)) + h*(a*f*(m + S(1)) - c*d*(m + S(2)*p + S(3))))
 
     cons424 = CustomConstraint(cons_f424)
 
-    def cons_f425(p, e, m, f, h, g, c):
+    def cons_f425(p, m, f, g, c, h, e):
         return ZeroQ(c*(-e*h*(m + S(2)*p + S(3)) + S(2)*f*g*(p + S(1))))
 
     cons425 = CustomConstraint(cons_f425)
 
-    def cons_f426(p, m, d, f, h, a, c):
+    def cons_f426(p, m, f, d, a, c, h):
         return ZeroQ(h*(a*f*(m + S(1)) - c*d*(m + S(2)*p + S(3))))
 
     cons426 = CustomConstraint(cons_f426)
 
-    def cons_f427(c, p, b, m, h, g, f):
+    def cons_f427(p, m, f, b, g, c, h):
         return ZeroQ(b*f*h*(m + p + S(2)) + S(2)*c*f*g*(p + S(1)))
 
     cons427 = CustomConstraint(cons_f427)
@@ -2361,27 +2363,27 @@ if matchpy:
 
     cons428 = CustomConstraint(cons_f428)
 
-    def cons_f429(b, h, a, g, c):
+    def cons_f429(g, b, c, a, h):
         return NonzeroQ(a*h**S(2) - b*g*h + c*g**S(2))
 
     cons429 = CustomConstraint(cons_f429)
 
-    def cons_f430(a, c, g, h):
+    def cons_f430(h, c, g, a):
         return NonzeroQ(a*h**S(2) + c*g**S(2))
 
     cons430 = CustomConstraint(cons_f430)
 
-    def cons_f431(b, h, a, g, c):
+    def cons_f431(g, b, c, a, h):
         return NonzeroQ(c*g**S(2) - h*(-a*h + b*g))
 
     cons431 = CustomConstraint(cons_f431)
 
-    def cons_f432(q, p):
+    def cons_f432(p, q):
         return Or(Greater(p, S(0)), Greater(q, S(0)))
 
     cons432 = CustomConstraint(cons_f432)
 
-    def cons_f433(q, p):
+    def cons_f433(p, q):
         return NonzeroQ(p + q + S(1))
 
     cons433 = CustomConstraint(cons_f433)
@@ -2396,62 +2398,62 @@ if matchpy:
 
     cons435 = CustomConstraint(cons_f435)
 
-    def cons_f436(h, f, e, g):
+    def cons_f436(f, h, e, g):
         return ZeroQ(e*h - S(2)*f*g)
 
     cons436 = CustomConstraint(cons_f436)
 
-    def cons_f437(h, f, e, g):
+    def cons_f437(f, h, e, g):
         return NonzeroQ(e*h - S(2)*f*g)
 
     cons437 = CustomConstraint(cons_f437)
 
-    def cons_f438(h, g, e, d):
+    def cons_f438(d, h, e, g):
         return ZeroQ(S(2)*d*h - e*g)
 
     cons438 = CustomConstraint(cons_f438)
 
-    def cons_f439(h, g, e, d):
+    def cons_f439(d, h, e, g):
         return NonzeroQ(S(2)*d*h - e*g)
 
     cons439 = CustomConstraint(cons_f439)
 
-    def cons_f440(b, e, d, f, h, a, g, c):
+    def cons_f440(g, b, f, d, a, c, h, e):
         return ZeroQ(g**S(2)*(-b*f + c*e) - S(2)*g*h*(-a*f + c*d) + h**S(2)*(-a*e + b*d))
 
     cons440 = CustomConstraint(cons_f440)
 
-    def cons_f441(e, d, f, a, h, g, c):
+    def cons_f441(g, f, d, a, c, h, e):
         return ZeroQ(a*e*h**S(2) - c*e*g**S(2) + S(2)*g*h*(-a*f + c*d))
 
     cons441 = CustomConstraint(cons_f441)
 
-    def cons_f442(b, d, f, h, a, g, c):
+    def cons_f442(g, b, f, d, c, a, h):
         return ZeroQ(b*d*h**S(2) - b*f*g**S(2) - S(2)*g*h*(-a*f + c*d))
 
     cons442 = CustomConstraint(cons_f442)
 
-    def cons_f443(b, d, f, a, c):
+    def cons_f443(f, b, d, c, a):
         return ZeroQ(c**S(2)*d - f*(-S(3)*a*c + b**S(2)))
 
     cons443 = CustomConstraint(cons_f443)
 
-    def cons_f444(b, h, a, g, c):
+    def cons_f444(g, b, c, a, h):
         return ZeroQ(S(9)*a*c*h**S(2) - S(2)*b**S(2)*h**S(2) - b*c*g*h + c**S(2)*g**S(2))
 
     cons444 = CustomConstraint(cons_f444)
 
-    def cons_f445(h, c, g, b):
+    def cons_f445(c, h, b, g):
         return PositiveQ(-S(9)*c*h**S(2)/(-b*h + S(2)*c*g)**S(2))
 
     cons445 = CustomConstraint(cons_f445)
 
-    def cons_f446(a, c, d, f):
+    def cons_f446(d, c, f, a):
         return ZeroQ(S(3)*a*f + c*d)
 
     cons446 = CustomConstraint(cons_f446)
 
-    def cons_f447(a, c, g, h):
+    def cons_f447(h, c, g, a):
         return ZeroQ(S(9)*a*h**S(2) + c*g**S(2))
 
     cons447 = CustomConstraint(cons_f447)
@@ -2461,87 +2463,87 @@ if matchpy:
 
     cons448 = CustomConstraint(cons_f448)
 
-    def cons_f449(p, b, e, q, d, f, a, h, g, x, c):
+    def cons_f449(p, f, b, g, d, c, a, x, h, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g, h, p, q), x)
 
     cons449 = CustomConstraint(cons_f449)
 
-    def cons_f450(p, e, q, d, f, a, h, g, x, c):
+    def cons_f450(p, f, g, d, a, c, x, h, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, c, d, e, f, g, h, p, q), x)
 
     cons450 = CustomConstraint(cons_f450)
 
-    def cons_f451(z, x):
+    def cons_f451(x, z):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return LinearQ(z, x)
 
     cons451 = CustomConstraint(cons_f451)
 
-    def cons_f452(u, x, v):
+    def cons_f452(v, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return QuadraticQ(List(u, v), x)
 
     cons452 = CustomConstraint(cons_f452)
 
-    def cons_f453(z, u, v, x):
+    def cons_f453(x, z, u, v):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(LinearMatchQ(z, x), QuadraticMatchQ(List(u, v), x)))
 
     cons453 = CustomConstraint(cons_f453)
 
-    def cons_f454(q, p):
+    def cons_f454(p, q):
         return NonzeroQ(S(2)*p + S(2)*q + S(3))
 
     cons454 = CustomConstraint(cons_f454)
 
-    def cons_f455(p, b, e, q, d, f, a, B, x, A, C, c):
+    def cons_f455(B, C, p, f, b, d, c, a, A, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, A, B, C, p, q), x)
 
     cons455 = CustomConstraint(cons_f455)
 
-    def cons_f456(p, b, e, q, d, f, a, x, A, C, c):
+    def cons_f456(C, p, f, b, d, c, a, A, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, A, C, p, q), x)
 
     cons456 = CustomConstraint(cons_f456)
 
-    def cons_f457(p, e, q, d, f, a, B, x, A, C, c):
+    def cons_f457(B, C, p, f, d, a, c, A, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, c, d, e, f, A, B, C, p, q), x)
 
     cons457 = CustomConstraint(cons_f457)
 
-    def cons_f458(p, e, q, d, f, a, x, A, C, c):
+    def cons_f458(C, p, f, d, a, c, A, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, c, d, e, f, A, C, p, q), x)
 
     cons458 = CustomConstraint(cons_f458)
 
-    def cons_f459(n, p, b, x):
+    def cons_f459(x, p, n, b):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(b, n, p), x)
 
     cons459 = CustomConstraint(cons_f459)
 
-    def cons_f460(n, p):
+    def cons_f460(p, n):
         return ZeroQ(p + S(1) + S(1)/n)
 
     cons460 = CustomConstraint(cons_f460)
 
-    def cons_f461(n, p):
+    def cons_f461(p, n):
         return NegativeIntegerQ(p + S(1) + S(1)/n)
 
     cons461 = CustomConstraint(cons_f461)
@@ -2556,12 +2558,12 @@ if matchpy:
 
     cons463 = CustomConstraint(cons_f463)
 
-    def cons_f464(n, p):
+    def cons_f464(p, n):
         return PositiveIntegerQ(n, p)
 
     cons464 = CustomConstraint(cons_f464)
 
-    def cons_f465(n, p):
+    def cons_f465(p, n):
         return Or(IntegerQ(S(2)*p), And(Equal(n, S(2)), IntegerQ(S(4)*p)), And(Equal(n, S(2)), IntegerQ(S(3)*p)), Less(Denominator(p + S(1)/n), Denominator(p)))
 
     cons465 = CustomConstraint(cons_f465)
@@ -2674,12 +2676,12 @@ if matchpy:
 
     cons486 = CustomConstraint(cons_f486)
 
-    def cons_f487(n, p):
+    def cons_f487(p, n):
         return IntegerQ(p + S(1)/n)
 
     cons487 = CustomConstraint(cons_f487)
 
-    def cons_f488(n, p):
+    def cons_f488(p, n):
         return Less(Denominator(p + S(1)/n), Denominator(p))
 
     cons488 = CustomConstraint(cons_f488)
@@ -2694,7 +2696,7 @@ if matchpy:
 
     cons490 = CustomConstraint(cons_f490)
 
-    def cons_f491(n, p):
+    def cons_f491(p, n):
         return Not(NegativeIntegerQ(p + S(1)/n))
 
     cons491 = CustomConstraint(cons_f491)
@@ -2719,7 +2721,7 @@ if matchpy:
 
     cons495 = CustomConstraint(cons_f495)
 
-    def cons_f496(n, p):
+    def cons_f496(p, n):
         return Or(IntegerQ(S(2)*p), Less(Denominator(p + S(1)/n), Denominator(p)))
 
     cons496 = CustomConstraint(cons_f496)
@@ -2784,7 +2786,7 @@ if matchpy:
 
     cons508 = CustomConstraint(cons_f508)
 
-    def cons_f509(p, b, m, n, x, a, c):
+    def cons_f509(p, m, b, c, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return IntBinomialQ(a, b, c, n, m, p, x)
@@ -2796,7 +2798,7 @@ if matchpy:
 
     cons510 = CustomConstraint(cons_f510)
 
-    def cons_f511(p, m, n, x, a2, b2, c, a1, b1):
+    def cons_f511(a2, p, b2, m, b1, c, n, x, a1):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return IntBinomialQ(a1*a2, b1*b2, c, n, m, p, x)
@@ -2928,22 +2930,22 @@ if matchpy:
 
     cons536 = CustomConstraint(cons_f536)
 
-    def cons_f537(m, n, p):
+    def cons_f537(m, p, n):
         return IntegersQ(m, p + (m + S(1))/n)
 
     cons537 = CustomConstraint(cons_f537)
 
-    def cons_f538(m, n, p):
+    def cons_f538(m, p, n):
         return IntegersQ(m, p + (m + S(1))/(S(2)*n))
 
     cons538 = CustomConstraint(cons_f538)
 
-    def cons_f539(m, n, p):
+    def cons_f539(m, p, n):
         return Less(Denominator(p + (m + S(1))/n), Denominator(p))
 
     cons539 = CustomConstraint(cons_f539)
 
-    def cons_f540(m, n, p):
+    def cons_f540(m, p, n):
         return Less(Denominator(p + (m + S(1))/(S(2)*n)), Denominator(p))
 
     cons540 = CustomConstraint(cons_f540)
@@ -2973,12 +2975,12 @@ if matchpy:
 
     cons545 = CustomConstraint(cons_f545)
 
-    def cons_f546(m, n, p):
+    def cons_f546(m, p, n):
         return IntegerQ(p + (m + S(1))/n)
 
     cons546 = CustomConstraint(cons_f546)
 
-    def cons_f547(m, n, p):
+    def cons_f547(m, p, n):
         return IntegerQ(p + (m + S(1))/(S(2)*n))
 
     cons547 = CustomConstraint(cons_f547)
@@ -3003,68 +3005,68 @@ if matchpy:
 
     cons551 = CustomConstraint(cons_f551)
 
-    def cons_f552(x, v):
+    def cons_f552(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return LinearQ(v, x)
 
     cons552 = CustomConstraint(cons_f552)
 
-    def cons_f553(x, v):
+    def cons_f553(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return NonzeroQ(v - x)
 
     cons553 = CustomConstraint(cons_f553)
 
-    def cons_f554(u, x, v):
+    def cons_f554(v, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return LinearPairQ(u, v, x)
 
     cons554 = CustomConstraint(cons_f554)
 
-    def cons_f555(q, p):
+    def cons_f555(p, q):
         return PositiveIntegerQ(p, q)
 
     cons555 = CustomConstraint(cons_f555)
 
-    def cons_f556(n, p):
+    def cons_f556(p, n):
         return ZeroQ(n*p + S(1))
 
     cons556 = CustomConstraint(cons_f556)
 
-    def cons_f557(q, n, p):
+    def cons_f557(p, n, q):
         return ZeroQ(n*(p + q + S(1)) + S(1))
 
     cons557 = CustomConstraint(cons_f557)
 
-    def cons_f558(q, n, p):
+    def cons_f558(p, n, q):
         return ZeroQ(n*(p + q + S(2)) + S(1))
 
     cons558 = CustomConstraint(cons_f558)
 
-    def cons_f559(p, b, q, d, a, c):
+    def cons_f559(p, b, d, c, a, q):
         return ZeroQ(a*d*(p + S(1)) + b*c*(q + S(1)))
 
     cons559 = CustomConstraint(cons_f559)
 
-    def cons_f560(q, p):
+    def cons_f560(p, q):
         return Or(And(RationalQ(p), Less(p, S(-1))), Not(And(RationalQ(q), Less(q, S(-1)))))
 
     cons560 = CustomConstraint(cons_f560)
 
-    def cons_f561(p, b, n, d, a, c):
+    def cons_f561(p, b, d, c, a, n):
         return ZeroQ(a*d - b*c*(n*(p + S(1)) + S(1)))
 
     cons561 = CustomConstraint(cons_f561)
 
-    def cons_f562(n, p):
+    def cons_f562(p, n):
         return Or(And(RationalQ(p), Less(p, S(-1))), NegativeIntegerQ(p + S(1)/n))
 
     cons562 = CustomConstraint(cons_f562)
 
-    def cons_f563(n, p):
+    def cons_f563(p, n):
         return NonzeroQ(n*(p + S(1)) + S(1))
 
     cons563 = CustomConstraint(cons_f563)
@@ -3074,12 +3076,12 @@ if matchpy:
 
     cons564 = CustomConstraint(cons_f564)
 
-    def cons_f565(q, p):
+    def cons_f565(p, q):
         return GreaterEqual(p, -q)
 
     cons565 = CustomConstraint(cons_f565)
 
-    def cons_f566(a, c, b, d):
+    def cons_f566(d, c, b, a):
         return ZeroQ(S(3)*a*d + b*c)
 
     cons566 = CustomConstraint(cons_f566)
@@ -3114,7 +3116,7 @@ if matchpy:
 
     cons572 = CustomConstraint(cons_f572)
 
-    def cons_f573(c, d):
+    def cons_f573(d, c):
         return PosQ(d/c)
 
     cons573 = CustomConstraint(cons_f573)
@@ -3124,7 +3126,7 @@ if matchpy:
 
     cons574 = CustomConstraint(cons_f574)
 
-    def cons_f575(p, b, n, q, d, x, a, c):
+    def cons_f575(p, b, d, c, a, n, x, q):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return IntBinomialQ(a, b, c, d, n, p, q, x)
@@ -3136,12 +3138,12 @@ if matchpy:
 
     cons576 = CustomConstraint(cons_f576)
 
-    def cons_f577(q, p):
+    def cons_f577(p, q):
         return Greater(p + q, S(0))
 
     cons577 = CustomConstraint(cons_f577)
 
-    def cons_f578(q, n, p):
+    def cons_f578(p, n, q):
         return NonzeroQ(n*(p + q) + S(1))
 
     cons578 = CustomConstraint(cons_f578)
@@ -3151,22 +3153,22 @@ if matchpy:
 
     cons579 = CustomConstraint(cons_f579)
 
-    def cons_f580(a, c, b, d):
+    def cons_f580(d, c, a, b):
         return Not(SimplerSqrtQ(b/a, d/c))
 
     cons580 = CustomConstraint(cons_f580)
 
-    def cons_f581(c, d):
+    def cons_f581(d, c):
         return NegQ(d/c)
 
     cons581 = CustomConstraint(cons_f581)
 
-    def cons_f582(a, c, b, d):
+    def cons_f582(d, c, a, b):
         return Not(And(NegQ(b/a), SimplerSqrtQ(-b/a, -d/c)))
 
     cons582 = CustomConstraint(cons_f582)
 
-    def cons_f583(a, c, b, d):
+    def cons_f583(d, c, a, b):
         return PositiveQ(a - b*c/d)
 
     cons583 = CustomConstraint(cons_f583)
@@ -3176,7 +3178,7 @@ if matchpy:
 
     cons584 = CustomConstraint(cons_f584)
 
-    def cons_f585(n, mn):
+    def cons_f585(mn, n):
         return EqQ(mn, -n)
 
     cons585 = CustomConstraint(cons_f585)
@@ -3186,12 +3188,12 @@ if matchpy:
 
     cons586 = CustomConstraint(cons_f586)
 
-    def cons_f587(n, p):
+    def cons_f587(p, n):
         return Or(PosQ(n), Not(IntegerQ(p)))
 
     cons587 = CustomConstraint(cons_f587)
 
-    def cons_f588(u, x, v):
+    def cons_f588(v, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PseudoBinomialPairQ(u, v, x)
@@ -3203,7 +3205,7 @@ if matchpy:
 
     cons589 = CustomConstraint(cons_f589)
 
-    def cons_f590(p, m, u, x, v):
+    def cons_f590(v, p, u, m, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PseudoBinomialPairQ(u*x**(m/p), v, x)
@@ -3215,17 +3217,17 @@ if matchpy:
 
     cons591 = CustomConstraint(cons_f591)
 
-    def cons_f592(p, b, m, n, d, a, c):
+    def cons_f592(p, m, b, d, a, c, n):
         return ZeroQ(a*d*(m + S(1)) - b*c*(m + n*(p + S(1)) + S(1)))
 
     cons592 = CustomConstraint(cons_f592)
 
-    def cons_f593(non2, n):
+    def cons_f593(n, non2):
         return ZeroQ(-n/S(2) + non2)
 
     cons593 = CustomConstraint(cons_f593)
 
-    def cons_f594(p, m, n, d, a2, b2, c, a1, b1):
+    def cons_f594(a2, p, m, b2, b1, d, c, n, a1):
         return ZeroQ(a1*a2*d*(m + S(1)) - b1*b2*c*(m + n*(p + S(1)) + S(1)))
 
     cons594 = CustomConstraint(cons_f594)
@@ -3235,7 +3237,7 @@ if matchpy:
 
     cons595 = CustomConstraint(cons_f595)
 
-    def cons_f596(e, n):
+    def cons_f596(n, e):
         return Or(IntegerQ(n), PositiveQ(e))
 
     cons596 = CustomConstraint(cons_f596)
@@ -3265,7 +3267,7 @@ if matchpy:
 
     cons601 = CustomConstraint(cons_f601)
 
-    def cons_f602(m, n, p):
+    def cons_f602(m, p, n):
         return Or(IntegerQ(p), Not(RationalQ(m)), And(PositiveIntegerQ(n), NegativeIntegerQ(p + S(1)/2), LessEqual(S(-1), m, -n*(p + S(1)))))
 
     cons602 = CustomConstraint(cons_f602)
@@ -3285,7 +3287,7 @@ if matchpy:
 
     cons605 = CustomConstraint(cons_f605)
 
-    def cons_f606(m, q, p):
+    def cons_f606(m, p, q):
         return RationalQ(m, p, q)
 
     cons606 = CustomConstraint(cons_f606)
@@ -3295,7 +3297,7 @@ if matchpy:
 
     cons607 = CustomConstraint(cons_f607)
 
-    def cons_f608(p, b, e, m, n, q, d, x, a, c):
+    def cons_f608(p, m, b, d, c, a, n, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return IntBinomialQ(a, b, c, d, e, m, n, p, q, x)
@@ -3337,7 +3339,7 @@ if matchpy:
 
     cons615 = CustomConstraint(cons_f615)
 
-    def cons_f616(a, c, b, d):
+    def cons_f616(d, c, b, a):
         return ZeroQ(-a*d + S(4)*b*c)
 
     cons616 = CustomConstraint(cons_f616)
@@ -3362,12 +3364,12 @@ if matchpy:
 
     cons620 = CustomConstraint(cons_f620)
 
-    def cons_f621(b, n, d, a, c):
+    def cons_f621(b, d, c, a, n):
         return Not(And(EqQ(n, S(2)), SimplerSqrtQ(-b/a, -d/c)))
 
     cons621 = CustomConstraint(cons_f621)
 
-    def cons_f622(m, q, n, p):
+    def cons_f622(m, p, q, n):
         return IntegersQ(p + (m + S(1))/n, q)
 
     cons622 = CustomConstraint(cons_f622)
@@ -3377,7 +3379,7 @@ if matchpy:
 
     cons623 = CustomConstraint(cons_f623)
 
-    def cons_f624(m, q, p):
+    def cons_f624(m, p, q):
         return IntegersQ(m, p, q)
 
     cons624 = CustomConstraint(cons_f624)
@@ -3397,68 +3399,68 @@ if matchpy:
 
     cons627 = CustomConstraint(cons_f627)
 
-    def cons_f628(r, q, p):
+    def cons_f628(r, p, q):
         return PositiveIntegerQ(p, q, r)
 
     cons628 = CustomConstraint(cons_f628)
 
-    def cons_f629(b, e, n, d, f, a, x, c):
+    def cons_f629(f, b, d, c, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, n), x)
 
     cons629 = CustomConstraint(cons_f629)
 
-    def cons_f630(b, n, d, a, c):
+    def cons_f630(b, d, c, a, n):
         return Not(And(ZeroQ(n + S(-2)), Or(And(PosQ(b/a), PosQ(d/c)), And(NegQ(b/a), Or(PosQ(d/c), And(PositiveQ(a), Or(Not(PositiveQ(c)), SimplerSqrtQ(-b/a, -d/c))))))))
 
     cons630 = CustomConstraint(cons_f630)
 
-    def cons_f631(q, n, p):
+    def cons_f631(p, n, q):
         return NonzeroQ(n*(p + q + S(1)) + S(1))
 
     cons631 = CustomConstraint(cons_f631)
 
-    def cons_f632(p, b, e, n, d, f, a, x, c):
+    def cons_f632(p, f, b, d, c, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, p, n), x)
 
     cons632 = CustomConstraint(cons_f632)
 
-    def cons_f633(p, b, e, n, q, d, f, a, x, c):
+    def cons_f633(p, f, b, d, c, a, n, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, n, p, q), x)
 
     cons633 = CustomConstraint(cons_f633)
 
-    def cons_f634(c, d):
+    def cons_f634(d, c):
         return PositiveQ(d/c)
 
     cons634 = CustomConstraint(cons_f634)
 
-    def cons_f635(e, f):
+    def cons_f635(f, e):
         return PositiveQ(f/e)
 
     cons635 = CustomConstraint(cons_f635)
 
-    def cons_f636(e, c, d, f):
+    def cons_f636(d, c, f, e):
         return Not(SimplerSqrtQ(d/c, f/e))
 
     cons636 = CustomConstraint(cons_f636)
 
-    def cons_f637(e, f, c, d):
+    def cons_f637(d, c, f, e):
         return Not(SimplerSqrtQ(-f/e, -d/c))
 
     cons637 = CustomConstraint(cons_f637)
 
-    def cons_f638(e, f):
+    def cons_f638(f, e):
         return PosQ(f/e)
 
     cons638 = CustomConstraint(cons_f638)
 
-    def cons_f639(e, f, c, d):
+    def cons_f639(d, c, f, e):
         return Not(And(NegQ(f/e), SimplerSqrtQ(-f/e, -d/c)))
 
     cons639 = CustomConstraint(cons_f639)
@@ -3478,29 +3480,29 @@ if matchpy:
 
     cons642 = CustomConstraint(cons_f642)
 
-    def cons_f643(e, c, d, f):
+    def cons_f643(d, c, f, e):
         return PosQ((-c*f + d*e)/c)
 
     cons643 = CustomConstraint(cons_f643)
 
-    def cons_f644(e, c, d, f):
+    def cons_f644(d, c, f, e):
         return NegQ((-c*f + d*e)/c)
 
     cons644 = CustomConstraint(cons_f644)
 
-    def cons_f645(p, b, e, n, q, r, d, f, a, x, c):
+    def cons_f645(p, f, b, r, d, c, a, n, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, n, p, q, r), x)
 
     cons645 = CustomConstraint(cons_f645)
 
-    def cons_f646(u, v):
+    def cons_f646(v, u):
         return ZeroQ(u - v)
 
     cons646 = CustomConstraint(cons_f646)
 
-    def cons_f647(u, w):
+    def cons_f647(w, u):
         return ZeroQ(u - w)
 
     cons647 = CustomConstraint(cons_f647)
@@ -3550,22 +3552,22 @@ if matchpy:
 
     cons656 = CustomConstraint(cons_f656)
 
-    def cons_f657(r, q, p):
+    def cons_f657(r, p, q):
         return PositiveIntegerQ(p + S(2), q, r)
 
     cons657 = CustomConstraint(cons_f657)
 
-    def cons_f658(r, q, p):
+    def cons_f658(r, p, q):
         return IntegersQ(p, q, r)
 
     cons658 = CustomConstraint(cons_f658)
 
-    def cons_f659(b, e, q, d, f, a, c):
+    def cons_f659(f, b, d, c, a, q, e):
         return Not(And(Equal(q, S(1)), SimplerQ(-a*d + b*c, -a*f + b*e)))
 
     cons659 = CustomConstraint(cons_f659)
 
-    def cons_f660(c, e, q, n, d, x, f):
+    def cons_f660(f, d, c, n, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(Equal(q, S(1)), SimplerQ(e + f*x**n, c + d*x**n)))
@@ -3577,31 +3579,31 @@ if matchpy:
 
     cons661 = CustomConstraint(cons_f661)
 
-    def cons_f662(p, b, e, m, n, q, d, f, a, x, g, c):
+    def cons_f662(p, m, f, b, g, d, c, a, n, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g, m, n, p, q), x)
 
     cons662 = CustomConstraint(cons_f662)
 
-    def cons_f663(p, b, e, m, n, q, r, d, f, a, x, g, c):
+    def cons_f663(p, m, f, b, g, r, d, c, a, n, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g, m, n, p, q, r), x)
 
     cons663 = CustomConstraint(cons_f663)
 
-    def cons_f664(n, p):
+    def cons_f664(p, n):
         return ZeroQ(n*(S(2)*p + S(1)) + S(1))
 
     cons664 = CustomConstraint(cons_f664)
 
-    def cons_f665(n, p):
+    def cons_f665(p, n):
         return ZeroQ(S(2)*n*(p + S(1)) + S(1))
 
     cons665 = CustomConstraint(cons_f665)
 
-    def cons_f666(n, p):
+    def cons_f666(p, n):
         return Or(ZeroQ(S(2)*n*p + S(1)), ZeroQ(n*(S(2)*p + S(-1)) + S(1)))
 
     cons666 = CustomConstraint(cons_f666)
@@ -3616,27 +3618,27 @@ if matchpy:
 
     cons668 = CustomConstraint(cons_f668)
 
-    def cons_f669(n, p):
+    def cons_f669(p, n):
         return NonzeroQ(S(2)*n*p + S(1))
 
     cons669 = CustomConstraint(cons_f669)
 
-    def cons_f670(n, p):
+    def cons_f670(p, n):
         return NonzeroQ(n*(S(2)*p + S(-1)) + S(1))
 
     cons670 = CustomConstraint(cons_f670)
 
-    def cons_f671(n, p):
+    def cons_f671(p, n):
         return NonzeroQ(n*(S(2)*p + S(1)) + S(1))
 
     cons671 = CustomConstraint(cons_f671)
 
-    def cons_f672(n, p):
+    def cons_f672(p, n):
         return NonzeroQ(S(2)*n*(p + S(1)) + S(1))
 
     cons672 = CustomConstraint(cons_f672)
 
-    def cons_f673(n, p):
+    def cons_f673(p, n):
         return Or(IntegerQ(p), ZeroQ(n + S(-2)))
 
     cons673 = CustomConstraint(cons_f673)
@@ -3646,12 +3648,12 @@ if matchpy:
 
     cons674 = CustomConstraint(cons_f674)
 
-    def cons_f675(a, c, b):
+    def cons_f675(c, a, b):
         return PositiveQ(-S(4)*a*c + b**S(2))
 
     cons675 = CustomConstraint(cons_f675)
 
-    def cons_f676(a, c):
+    def cons_f676(c, a):
         return PositiveQ(c/a)
 
     cons676 = CustomConstraint(cons_f676)
@@ -3661,12 +3663,12 @@ if matchpy:
 
     cons677 = CustomConstraint(cons_f677)
 
-    def cons_f678(a, c):
+    def cons_f678(c, a):
         return PosQ(c/a)
 
     cons678 = CustomConstraint(cons_f678)
 
-    def cons_f679(a, c):
+    def cons_f679(c, a):
         return NegQ(c/a)
 
     cons679 = CustomConstraint(cons_f679)
@@ -3726,7 +3728,7 @@ if matchpy:
 
     cons690 = CustomConstraint(cons_f690)
 
-    def cons_f691(m, n, p):
+    def cons_f691(m, p, n):
         return Or(IntegerQ(S(2)*p), PositiveIntegerQ((m + S(1))/n))
 
     cons691 = CustomConstraint(cons_f691)
@@ -3741,7 +3743,7 @@ if matchpy:
 
     cons693 = CustomConstraint(cons_f693)
 
-    def cons_f694(m, n, p):
+    def cons_f694(m, p, n):
         return Or(IntegerQ(p), And(IntegerQ(S(2)*p), IntegerQ(m), Equal(n, S(2))))
 
     cons694 = CustomConstraint(cons_f694)
@@ -3751,7 +3753,7 @@ if matchpy:
 
     cons695 = CustomConstraint(cons_f695)
 
-    def cons_f696(a, c, b):
+    def cons_f696(c, a, b):
         return NegativeQ(-S(4)*a*c + b**S(2))
 
     cons696 = CustomConstraint(cons_f696)
@@ -3786,32 +3788,32 @@ if matchpy:
 
     cons702 = CustomConstraint(cons_f702)
 
-    def cons_f703(p, b, e, n, d, c):
+    def cons_f703(p, b, d, c, n, e):
         return ZeroQ(b*e*(n*p + S(1)) - c*d*(n*(S(2)*p + S(1)) + S(1)))
 
     cons703 = CustomConstraint(cons_f703)
 
-    def cons_f704(p, b, e, n, d, c):
+    def cons_f704(p, b, d, c, n, e):
         return NonzeroQ(b*e*(n*p + S(1)) - c*d*(n*(S(2)*p + S(1)) + S(1)))
 
     cons704 = CustomConstraint(cons_f704)
 
-    def cons_f705(a, c, e, d):
+    def cons_f705(d, c, e, a):
         return ZeroQ(-a*e**S(2) + c*d**S(2))
 
     cons705 = CustomConstraint(cons_f705)
 
-    def cons_f706(e, d):
+    def cons_f706(d, e):
         return PosQ(d*e)
 
     cons706 = CustomConstraint(cons_f706)
 
-    def cons_f707(e, d):
+    def cons_f707(d, e):
         return NegQ(d*e)
 
     cons707 = CustomConstraint(cons_f707)
 
-    def cons_f708(a, c, e, d):
+    def cons_f708(d, c, e, a):
         return NonzeroQ(-a*e**S(2) + c*d**S(2))
 
     cons708 = CustomConstraint(cons_f708)
@@ -3821,27 +3823,27 @@ if matchpy:
 
     cons709 = CustomConstraint(cons_f709)
 
-    def cons_f710(a, c, n):
+    def cons_f710(a, n, c):
         return Or(PosQ(a*c), Not(IntegerQ(n)))
 
     cons710 = CustomConstraint(cons_f710)
 
-    def cons_f711(b, e, d, a, c):
+    def cons_f711(b, d, c, a, e):
         return Or(PositiveQ(-b/c + S(2)*d/e), And(Not(NegativeQ(-b/c + S(2)*d/e)), ZeroQ(d - e*Rt(a/c, S(2)))))
 
     cons711 = CustomConstraint(cons_f711)
 
-    def cons_f712(a, c, b):
+    def cons_f712(c, a, b):
         return Not(PositiveQ(-S(4)*a*c + b**S(2)))
 
     cons712 = CustomConstraint(cons_f712)
 
-    def cons_f713(a, c, n, b):
+    def cons_f713(c, a, n, b):
         return Or(PosQ(-S(4)*a*c + b**S(2)), Not(PositiveIntegerQ(n/S(2))))
 
     cons713 = CustomConstraint(cons_f713)
 
-    def cons_f714(n, p):
+    def cons_f714(p, n):
         return NonzeroQ(S(2)*n*p + n + S(1))
 
     cons714 = CustomConstraint(cons_f714)
@@ -3851,7 +3853,7 @@ if matchpy:
 
     cons715 = CustomConstraint(cons_f715)
 
-    def cons_f716(q, n, p):
+    def cons_f716(p, n, q):
         return NonzeroQ(S(2)*n*p + n*q + S(1))
 
     cons716 = CustomConstraint(cons_f716)
@@ -3871,27 +3873,27 @@ if matchpy:
 
     cons719 = CustomConstraint(cons_f719)
 
-    def cons_f720(e, c, b, d):
+    def cons_f720(d, c, b, e):
         return ZeroQ(-b*e + c*d)
 
     cons720 = CustomConstraint(cons_f720)
 
-    def cons_f721(a, d):
+    def cons_f721(d, a):
         return Not(And(PositiveQ(a), PositiveQ(d)))
 
     cons721 = CustomConstraint(cons_f721)
 
-    def cons_f722(q, p, n):
+    def cons_f722(p, q, n):
         return Or(And(IntegersQ(p, q), Not(IntegerQ(n))), PositiveIntegerQ(p), And(PositiveIntegerQ(q), Not(IntegerQ(n))))
 
     cons722 = CustomConstraint(cons_f722)
 
-    def cons_f723(n, p):
+    def cons_f723(p, n):
         return Not(IntegersQ(n, S(2)*p))
 
     cons723 = CustomConstraint(cons_f723)
 
-    def cons_f724(q, n):
+    def cons_f724(n, q):
         return Not(IntegersQ(n, q))
 
     cons724 = CustomConstraint(cons_f724)
@@ -3916,12 +3918,12 @@ if matchpy:
 
     cons728 = CustomConstraint(cons_f728)
 
-    def cons_f729(e2, d1, d2, e1):
+    def cons_f729(e2, d2, d1, e1):
         return ZeroQ(d1*e2 + d2*e1)
 
     cons729 = CustomConstraint(cons_f729)
 
-    def cons_f730(q, d1, d2):
+    def cons_f730(d2, q, d1):
         return Or(IntegerQ(q), And(PositiveQ(d1), PositiveQ(d2)))
 
     cons730 = CustomConstraint(cons_f730)
@@ -3951,12 +3953,12 @@ if matchpy:
 
     cons735 = CustomConstraint(cons_f735)
 
-    def cons_f736(n, p):
+    def cons_f736(p, n):
         return Greater(S(2)*n*p, n + S(-1))
 
     cons736 = CustomConstraint(cons_f736)
 
-    def cons_f737(m, q, n, p):
+    def cons_f737(m, n, p, q):
         return NonzeroQ(m + S(2)*n*p + n*q + S(1))
 
     cons737 = CustomConstraint(cons_f737)
@@ -3976,12 +3978,12 @@ if matchpy:
 
     cons740 = CustomConstraint(cons_f740)
 
-    def cons_f741(e, d):
+    def cons_f741(d, e):
         return PositiveQ(d/e)
 
     cons741 = CustomConstraint(cons_f741)
 
-    def cons_f742(e, c, b, d):
+    def cons_f742(d, c, b, e):
         return PosQ(c*(-b*e + S(2)*c*d)/e)
 
     cons742 = CustomConstraint(cons_f742)
@@ -4011,7 +4013,7 @@ if matchpy:
 
     cons747 = CustomConstraint(cons_f747)
 
-    def cons_f748(q, p):
+    def cons_f748(p, q):
         return Or(PositiveIntegerQ(p), PositiveIntegerQ(q))
 
     cons748 = CustomConstraint(cons_f748)
@@ -4021,37 +4023,37 @@ if matchpy:
 
     cons749 = CustomConstraint(cons_f749)
 
-    def cons_f750(q, n):
+    def cons_f750(n, q):
         return ZeroQ(n - q)
 
     cons750 = CustomConstraint(cons_f750)
 
-    def cons_f751(r, n):
+    def cons_f751(n, r):
         return ZeroQ(-n + r)
 
     cons751 = CustomConstraint(cons_f751)
 
-    def cons_f752(q, r, n):
+    def cons_f752(n, r, q):
         return ZeroQ(-S(2)*n + q + r)
 
     cons752 = CustomConstraint(cons_f752)
 
-    def cons_f753(q, n):
+    def cons_f753(n, q):
         return PosQ(n - q)
 
     cons753 = CustomConstraint(cons_f753)
 
-    def cons_f754(q, n, p):
+    def cons_f754(p, q, n):
         return NonzeroQ(p*(S(2)*n - q) + S(1))
 
     cons754 = CustomConstraint(cons_f754)
 
-    def cons_f755(q, n):
+    def cons_f755(n, q):
         return ZeroQ(-n + q)
 
     cons755 = CustomConstraint(cons_f755)
 
-    def cons_f756(m, q, n):
+    def cons_f756(m, n, q):
         return Or(And(ZeroQ(m + S(-1)), ZeroQ(n + S(-3)), ZeroQ(q + S(-2))), And(Or(ZeroQ(m + S(1)/2), ZeroQ(m + S(-3)/2), ZeroQ(m + S(-1)/2), ZeroQ(m + S(-5)/2)), ZeroQ(n + S(-3)), ZeroQ(q + S(-1))))
 
     cons756 = CustomConstraint(cons_f756)
@@ -4061,12 +4063,12 @@ if matchpy:
 
     cons757 = CustomConstraint(cons_f757)
 
-    def cons_f758(q, n):
+    def cons_f758(n, q):
         return ZeroQ(-n + q + S(1))
 
     cons758 = CustomConstraint(cons_f758)
 
-    def cons_f759(r, n):
+    def cons_f759(n, r):
         return ZeroQ(-n + r + S(-1))
 
     cons759 = CustomConstraint(cons_f759)
@@ -4076,62 +4078,62 @@ if matchpy:
 
     cons760 = CustomConstraint(cons_f760)
 
-    def cons_f761(m, n, p):
+    def cons_f761(m, p, n):
         return Equal(m + p*(n + S(-1)) + S(-1), S(0))
 
     cons761 = CustomConstraint(cons_f761)
 
-    def cons_f762(m, q, p, n):
+    def cons_f762(m, p, q, n):
         return Equal(m + p*q + S(1), n - q)
 
     cons762 = CustomConstraint(cons_f762)
 
-    def cons_f763(m, q, p, n):
+    def cons_f763(m, p, q, n):
         return Greater(m + p*q + S(1), n - q)
 
     cons763 = CustomConstraint(cons_f763)
 
-    def cons_f764(m, q, n, p):
+    def cons_f764(m, p, q, n):
         return Unequal(m + p*(S(2)*n - q) + S(1), S(0))
 
     cons764 = CustomConstraint(cons_f764)
 
-    def cons_f765(m, q, p, n):
+    def cons_f765(m, p, q, n):
         return Unequal(m + p*q + (n - q)*(S(2)*p + S(-1)) + S(1), S(0))
 
     cons765 = CustomConstraint(cons_f765)
 
-    def cons_f766(m, q, p, n):
+    def cons_f766(m, p, q, n):
         return LessEqual(m + p*q + S(1), -n + q + S(1))
 
     cons766 = CustomConstraint(cons_f766)
 
-    def cons_f767(m, q, p):
+    def cons_f767(m, p, q):
         return NonzeroQ(m + p*q + S(1))
 
     cons767 = CustomConstraint(cons_f767)
 
-    def cons_f768(m, q, p, n):
+    def cons_f768(m, p, q, n):
         return Greater(m + p*q + S(1), -n + q)
 
     cons768 = CustomConstraint(cons_f768)
 
-    def cons_f769(m, q, p, n):
+    def cons_f769(m, p, q, n):
         return Equal(m + p*q + S(1), -(n - q)*(S(2)*p + S(3)))
 
     cons769 = CustomConstraint(cons_f769)
 
-    def cons_f770(m, q, p, n):
+    def cons_f770(m, p, q, n):
         return Greater(m + p*q + S(1), S(2)*n - S(2)*q)
 
     cons770 = CustomConstraint(cons_f770)
 
-    def cons_f771(m, q, p, n):
+    def cons_f771(m, p, q, n):
         return Less(m + p*q + S(1), n - q)
 
     cons771 = CustomConstraint(cons_f771)
 
-    def cons_f772(m, q, n, p):
+    def cons_f772(m, n, p, q):
         return Less(n - q, m + p*q + S(1), S(2)*n - S(2)*q)
 
     cons772 = CustomConstraint(cons_f772)
@@ -4141,32 +4143,32 @@ if matchpy:
 
     cons773 = CustomConstraint(cons_f773)
 
-    def cons_f774(m, q, p, n):
+    def cons_f774(m, p, q, n):
         return Equal(m + p*q + S(1), S(2)*n - S(2)*q)
 
     cons774 = CustomConstraint(cons_f774)
 
-    def cons_f775(m, q, p, n):
+    def cons_f775(m, p, q, n):
         return Equal(m + p*q + S(1), -S(2)*(n - q)*(p + S(1)))
 
     cons775 = CustomConstraint(cons_f775)
 
-    def cons_f776(m, q, p):
+    def cons_f776(m, p, q):
         return Less(m + p*q + S(1), S(0))
 
     cons776 = CustomConstraint(cons_f776)
 
-    def cons_f777(q, r, n):
+    def cons_f777(n, r, q):
         return ZeroQ(-n + q + r)
 
     cons777 = CustomConstraint(cons_f777)
 
-    def cons_f778(j, q, n):
+    def cons_f778(n, q, j):
         return ZeroQ(j - S(2)*n + q)
 
     cons778 = CustomConstraint(cons_f778)
 
-    def cons_f779(j, q, n):
+    def cons_f779(n, q, j):
         return ZeroQ(j - n + q)
 
     cons779 = CustomConstraint(cons_f779)
@@ -4181,47 +4183,47 @@ if matchpy:
 
     cons781 = CustomConstraint(cons_f781)
 
-    def cons_f782(q, p, n):
+    def cons_f782(p, q, n):
         return NonzeroQ(p*q + (n - q)*(S(2)*p + S(1)) + S(1))
 
     cons782 = CustomConstraint(cons_f782)
 
-    def cons_f783(m, q, p, n):
+    def cons_f783(m, p, q, n):
         return LessEqual(m + p*q, -n + q)
 
     cons783 = CustomConstraint(cons_f783)
 
-    def cons_f784(m, q, p):
+    def cons_f784(m, p, q):
         return Unequal(m + p*q + S(1), S(0))
 
     cons784 = CustomConstraint(cons_f784)
 
-    def cons_f785(m, q, p, n):
+    def cons_f785(m, p, q, n):
         return Unequal(m + p*q + (n - q)*(S(2)*p + S(1)) + S(1), S(0))
 
     cons785 = CustomConstraint(cons_f785)
 
-    def cons_f786(m, q, p, n):
+    def cons_f786(m, p, q, n):
         return Greater(m + p*q, n - q + S(-1))
 
     cons786 = CustomConstraint(cons_f786)
 
-    def cons_f787(m, q, p, n):
+    def cons_f787(m, p, q, n):
         return Greater(m + p*q, -n + q + S(-1))
 
     cons787 = CustomConstraint(cons_f787)
 
-    def cons_f788(m, q, p, n):
+    def cons_f788(m, p, q, n):
         return Less(m + p*q, n - q + S(-1))
 
     cons788 = CustomConstraint(cons_f788)
 
-    def cons_f789(m, q, p, n):
+    def cons_f789(m, p, q, n):
         return GreaterEqual(m + p*q, n - q + S(-1))
 
     cons789 = CustomConstraint(cons_f789)
 
-    def cons_f790(m, q, p, n):
+    def cons_f790(m, p, q, n):
         return Or(Inequality(S(-1), LessEqual, p, Less, S(0)), Equal(m + p*q + (n - q)*(S(2)*p + S(1)) + S(1), S(0)))
 
     cons790 = CustomConstraint(cons_f790)
@@ -4236,12 +4238,12 @@ if matchpy:
 
     cons792 = CustomConstraint(cons_f792)
 
-    def cons_f793(j, q, k):
+    def cons_f793(q, j, k):
         return ZeroQ(j - k + q)
 
     cons793 = CustomConstraint(cons_f793)
 
-    def cons_f794(j, n, k):
+    def cons_f794(n, j, k):
         return ZeroQ(j - S(2)*k + n)
 
     cons794 = CustomConstraint(cons_f794)
@@ -4261,12 +4263,12 @@ if matchpy:
 
     cons797 = CustomConstraint(cons_f797)
 
-    def cons_f798(q, n):
+    def cons_f798(n, q):
         return IntegerQ(n*q)
 
     cons798 = CustomConstraint(cons_f798)
 
-    def cons_f799(p, b, e, m, n, q, r, d, f, a, s, x, c):
+    def cons_f799(p, m, f, b, r, d, c, a, n, x, s, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, m, n, p, q, r, s), x)
@@ -4278,12 +4280,12 @@ if matchpy:
 
     cons800 = CustomConstraint(cons_f800)
 
-    def cons_f801(e, b, d):
+    def cons_f801(d, b, e):
         return PositiveQ(b*d*e)
 
     cons801 = CustomConstraint(cons_f801)
 
-    def cons_f802(a, c, b, d):
+    def cons_f802(d, c, b, a):
         return PositiveQ(-a*d/b + c)
 
     cons802 = CustomConstraint(cons_f802)
@@ -4293,7 +4295,7 @@ if matchpy:
 
     cons803 = CustomConstraint(cons_f803)
 
-    def cons_f804(u, x):
+    def cons_f804(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolynomialQ(u, x)
@@ -4305,7 +4307,7 @@ if matchpy:
 
     cons805 = CustomConstraint(cons_f805)
 
-    def cons_f806(p, b, n, x, a, c):
+    def cons_f806(p, b, c, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, n, p), x)
@@ -4322,126 +4324,126 @@ if matchpy:
 
     cons808 = CustomConstraint(cons_f808)
 
-    def cons_f809(u, x):
+    def cons_f809(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(LinearMatchQ(u, x))
 
     cons809 = CustomConstraint(cons_f809)
 
-    def cons_f810(u, x, v):
+    def cons_f810(v, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return LinearQ(List(u, v), x)
 
     cons810 = CustomConstraint(cons_f810)
 
-    def cons_f811(u, x, v):
+    def cons_f811(v, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(LinearMatchQ(List(u, v), x))
 
     cons811 = CustomConstraint(cons_f811)
 
-    def cons_f812(u, x, w, v):
+    def cons_f812(v, w, u, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return LinearQ(List(u, v, w), x)
 
     cons812 = CustomConstraint(cons_f812)
 
-    def cons_f813(u, x, w, v):
+    def cons_f813(v, w, u, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(LinearMatchQ(List(u, v, w), x))
 
     cons813 = CustomConstraint(cons_f813)
 
-    def cons_f814(u, z, x, v, w):
+    def cons_f814(v, z, w, u, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return LinearQ(List(u, v, w, z), x)
 
     cons814 = CustomConstraint(cons_f814)
 
-    def cons_f815(u, z, x, v, w):
+    def cons_f815(v, z, w, u, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(LinearMatchQ(List(u, v, w, z), x))
 
     cons815 = CustomConstraint(cons_f815)
 
-    def cons_f816(u, x):
+    def cons_f816(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return QuadraticQ(u, x)
 
     cons816 = CustomConstraint(cons_f816)
 
-    def cons_f817(u, x):
+    def cons_f817(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(QuadraticMatchQ(u, x))
 
     cons817 = CustomConstraint(cons_f817)
 
-    def cons_f818(x, v):
+    def cons_f818(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return QuadraticQ(v, x)
 
     cons818 = CustomConstraint(cons_f818)
 
-    def cons_f819(u, v, x):
+    def cons_f819(x, u, v):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(LinearMatchQ(u, x), QuadraticMatchQ(v, x)))
 
     cons819 = CustomConstraint(cons_f819)
 
-    def cons_f820(w, x):
+    def cons_f820(x, w):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return QuadraticQ(w, x)
 
     cons820 = CustomConstraint(cons_f820)
 
-    def cons_f821(u, x, w, v):
+    def cons_f821(v, x, w, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(LinearMatchQ(List(u, v), x), QuadraticMatchQ(w, x)))
 
     cons821 = CustomConstraint(cons_f821)
 
-    def cons_f822(u, x, v):
+    def cons_f822(v, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(QuadraticMatchQ(List(u, v), x))
 
     cons822 = CustomConstraint(cons_f822)
 
-    def cons_f823(u, x):
+    def cons_f823(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return BinomialQ(u, x)
 
     cons823 = CustomConstraint(cons_f823)
 
-    def cons_f824(u, x):
+    def cons_f824(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(BinomialMatchQ(u, x))
 
     cons824 = CustomConstraint(cons_f824)
 
-    def cons_f825(u, x, v):
+    def cons_f825(v, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return BinomialQ(List(u, v), x)
 
     cons825 = CustomConstraint(cons_f825)
 
-    def cons_f826(u, v, x):
+    def cons_f826(x, u, v):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         try:
@@ -4451,21 +4453,21 @@ if matchpy:
 
     cons826 = CustomConstraint(cons_f826)
 
-    def cons_f827(u, x, v):
+    def cons_f827(v, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(BinomialMatchQ(List(u, v), x))
 
     cons827 = CustomConstraint(cons_f827)
 
-    def cons_f828(u, x, w, v):
+    def cons_f828(v, w, u, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return BinomialQ(List(u, v, w), x)
 
     cons828 = CustomConstraint(cons_f828)
 
-    def cons_f829(u, w, x):
+    def cons_f829(x, w, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         try:
@@ -4475,21 +4477,21 @@ if matchpy:
 
     cons829 = CustomConstraint(cons_f829)
 
-    def cons_f830(u, x, w, v):
+    def cons_f830(v, w, u, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(BinomialMatchQ(List(u, v, w), x))
 
     cons830 = CustomConstraint(cons_f830)
 
-    def cons_f831(u, x, z, v):
+    def cons_f831(v, z, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return BinomialQ(List(u, v, z), x)
 
     cons831 = CustomConstraint(cons_f831)
 
-    def cons_f832(u, z, x):
+    def cons_f832(x, z, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         try:
@@ -4499,105 +4501,105 @@ if matchpy:
 
     cons832 = CustomConstraint(cons_f832)
 
-    def cons_f833(u, x, z, v):
+    def cons_f833(v, z, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(BinomialMatchQ(List(u, v, z), x))
 
     cons833 = CustomConstraint(cons_f833)
 
-    def cons_f834(u, x):
+    def cons_f834(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return GeneralizedBinomialQ(u, x)
 
     cons834 = CustomConstraint(cons_f834)
 
-    def cons_f835(u, x):
+    def cons_f835(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(GeneralizedBinomialMatchQ(u, x))
 
     cons835 = CustomConstraint(cons_f835)
 
-    def cons_f836(u, x):
+    def cons_f836(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return TrinomialQ(u, x)
 
     cons836 = CustomConstraint(cons_f836)
 
-    def cons_f837(u, x):
+    def cons_f837(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(TrinomialMatchQ(u, x))
 
     cons837 = CustomConstraint(cons_f837)
 
-    def cons_f838(x, v):
+    def cons_f838(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return TrinomialQ(v, x)
 
     cons838 = CustomConstraint(cons_f838)
 
-    def cons_f839(u, v, x):
+    def cons_f839(x, u, v):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(BinomialMatchQ(u, x), TrinomialMatchQ(v, x)))
 
     cons839 = CustomConstraint(cons_f839)
 
-    def cons_f840(x, v):
+    def cons_f840(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return BinomialQ(v, x)
 
     cons840 = CustomConstraint(cons_f840)
 
-    def cons_f841(u, v, x):
+    def cons_f841(x, u, v):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(BinomialMatchQ(u, x), BinomialMatchQ(v, x)))
 
     cons841 = CustomConstraint(cons_f841)
 
-    def cons_f842(z, x):
+    def cons_f842(x, z):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return BinomialQ(z, x)
 
     cons842 = CustomConstraint(cons_f842)
 
-    def cons_f843(z, u, x):
+    def cons_f843(x, z, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(BinomialMatchQ(z, x), TrinomialMatchQ(u, x)))
 
     cons843 = CustomConstraint(cons_f843)
 
-    def cons_f844(z, u, x):
+    def cons_f844(x, z, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(BinomialMatchQ(z, x), BinomialMatchQ(u, x)))
 
     cons844 = CustomConstraint(cons_f844)
 
-    def cons_f845(u, x):
+    def cons_f845(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return GeneralizedTrinomialQ(u, x)
 
     cons845 = CustomConstraint(cons_f845)
 
-    def cons_f846(u, x):
+    def cons_f846(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(GeneralizedTrinomialMatchQ(u, x))
 
     cons846 = CustomConstraint(cons_f846)
 
-    def cons_f847(z, u, x):
+    def cons_f847(x, z, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         try:
@@ -4607,19 +4609,19 @@ if matchpy:
 
     cons847 = CustomConstraint(cons_f847)
 
-    def cons_f848(z, u, x):
+    def cons_f848(x, z, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(BinomialMatchQ(z, x), GeneralizedTrinomialMatchQ(u, x)))
 
     cons848 = CustomConstraint(cons_f848)
 
-    def cons_f849(q, n):
+    def cons_f849(n, q):
         return ZeroQ(-n/S(4) + q)
 
     cons849 = CustomConstraint(cons_f849)
 
-    def cons_f850(r, n):
+    def cons_f850(n, r):
         return ZeroQ(-S(3)*n/S(4) + r)
 
     cons850 = CustomConstraint(cons_f850)
@@ -4629,7 +4631,7 @@ if matchpy:
 
     cons851 = CustomConstraint(cons_f851)
 
-    def cons_f852(e, c, a, h):
+    def cons_f852(c, h, e, a):
         return ZeroQ(a*h + c*e)
 
     cons852 = CustomConstraint(cons_f852)
@@ -4644,33 +4646,33 @@ if matchpy:
 
     cons854 = CustomConstraint(cons_f854)
 
-    def cons_f855(m, Pq, x):
+    def cons_f855(x, m, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolyQ(Pq, x**(m + S(1)))
 
     cons855 = CustomConstraint(cons_f855)
 
-    def cons_f856(n, Pq, x):
+    def cons_f856(x, n, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return NonzeroQ(Coeff(Pq, x, n + S(-1)))
 
     cons856 = CustomConstraint(cons_f856)
 
-    def cons_f857(n, p):
+    def cons_f857(p, n):
         return Or(PositiveIntegerQ(p), ZeroQ(n + S(-1)))
 
     cons857 = CustomConstraint(cons_f857)
 
-    def cons_f858(n, Pq, x):
+    def cons_f858(x, n, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolyQ(Pq, x**n)
 
     cons858 = CustomConstraint(cons_f858)
 
-    def cons_f859(Pq, x):
+    def cons_f859(x, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(Coeff(Pq, x, S(0)))
@@ -4682,171 +4684,171 @@ if matchpy:
 
     cons860 = CustomConstraint(cons_f860)
 
-    def cons_f861(m, Pq, x):
+    def cons_f861(x, m, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Less(m + Expon(Pq, x) + S(1), S(0))
 
     cons861 = CustomConstraint(cons_f861)
 
-    def cons_f862(n, Pq, x):
+    def cons_f862(x, n, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Less(Expon(Pq, x), n + S(-1))
 
     cons862 = CustomConstraint(cons_f862)
 
-    def cons_f863(a, g, b, d):
+    def cons_f863(d, a, g, b):
         return ZeroQ(a*g + b*d)
 
     cons863 = CustomConstraint(cons_f863)
 
-    def cons_f864(e, a, b, h):
+    def cons_f864(a, h, b, e):
         return ZeroQ(-S(3)*a*h + b*e)
 
     cons864 = CustomConstraint(cons_f864)
 
-    def cons_f865(a, A, b, B):
+    def cons_f865(B, a, b, A):
         return ZeroQ(-A**S(3)*b + B**S(3)*a)
 
     cons865 = CustomConstraint(cons_f865)
 
-    def cons_f866(a, A, b, B):
+    def cons_f866(B, a, b, A):
         return NonzeroQ(-A**S(3)*b + B**S(3)*a)
 
     cons866 = CustomConstraint(cons_f866)
 
-    def cons_f867(A, B, C):
+    def cons_f867(B, C, A):
         return ZeroQ(-A*C + B**S(2))
 
     cons867 = CustomConstraint(cons_f867)
 
-    def cons_f868(a, b, B, C):
+    def cons_f868(B, a, C, b):
         return ZeroQ(B**S(3)*b + C**S(3)*a)
 
     cons868 = CustomConstraint(cons_f868)
 
-    def cons_f869(b, B, a, A, C):
+    def cons_f869(B, C, b, a, A):
         return ZeroQ(A*b**(S(2)/3) - B*a**(S(1)/3)*b**(S(1)/3) - S(2)*C*a**(S(2)/3))
 
     cons869 = CustomConstraint(cons_f869)
 
-    def cons_f870(a, b, B, C):
+    def cons_f870(B, a, C, b):
         return ZeroQ(B*a**(S(1)/3)*b**(S(1)/3) + S(2)*C*a**(S(2)/3))
 
     cons870 = CustomConstraint(cons_f870)
 
-    def cons_f871(a, A, b, C):
+    def cons_f871(a, C, b, A):
         return ZeroQ(A*b**(S(2)/3) - S(2)*C*a**(S(2)/3))
 
     cons871 = CustomConstraint(cons_f871)
 
-    def cons_f872(b, B, a, A, C):
+    def cons_f872(B, C, b, a, A):
         return ZeroQ(A*(-b)**(S(2)/3) - B*(-a)**(S(1)/3)*(-b)**(S(1)/3) - S(2)*C*(-a)**(S(2)/3))
 
     cons872 = CustomConstraint(cons_f872)
 
-    def cons_f873(a, b, B, C):
+    def cons_f873(B, a, C, b):
         return ZeroQ(B*(-a)**(S(1)/3)*(-b)**(S(1)/3) + S(2)*C*(-a)**(S(2)/3))
 
     cons873 = CustomConstraint(cons_f873)
 
-    def cons_f874(a, A, b, C):
+    def cons_f874(a, C, b, A):
         return ZeroQ(A*(-b)**(S(2)/3) - S(2)*C*(-a)**(S(2)/3))
 
     cons874 = CustomConstraint(cons_f874)
 
-    def cons_f875(b, B, a, A, C):
+    def cons_f875(B, C, b, a, A):
         return ZeroQ(A*b**(S(2)/3) + B*b**(S(1)/3)*(-a)**(S(1)/3) - S(2)*C*(-a)**(S(2)/3))
 
     cons875 = CustomConstraint(cons_f875)
 
-    def cons_f876(a, b, B, C):
+    def cons_f876(B, a, C, b):
         return ZeroQ(B*b**(S(1)/3)*(-a)**(S(1)/3) - S(2)*C*(-a)**(S(2)/3))
 
     cons876 = CustomConstraint(cons_f876)
 
-    def cons_f877(a, A, b, C):
+    def cons_f877(a, C, b, A):
         return ZeroQ(A*b**(S(2)/3) - S(2)*C*(-a)**(S(2)/3))
 
     cons877 = CustomConstraint(cons_f877)
 
-    def cons_f878(b, B, a, A, C):
+    def cons_f878(B, C, b, a, A):
         return ZeroQ(A*(-b)**(S(2)/3) + B*a**(S(1)/3)*(-b)**(S(1)/3) - S(2)*C*a**(S(2)/3))
 
     cons878 = CustomConstraint(cons_f878)
 
-    def cons_f879(a, b, B, C):
+    def cons_f879(B, a, C, b):
         return ZeroQ(B*a**(S(1)/3)*(-b)**(S(1)/3) - S(2)*C*a**(S(2)/3))
 
     cons879 = CustomConstraint(cons_f879)
 
-    def cons_f880(a, A, b, C):
+    def cons_f880(a, C, b, A):
         return ZeroQ(A*(-b)**(S(2)/3) - S(2)*C*a**(S(2)/3))
 
     cons880 = CustomConstraint(cons_f880)
 
-    def cons_f881(b, B, a, A, C):
+    def cons_f881(B, C, b, a, A):
         return ZeroQ(A - B*(a/b)**(S(1)/3) - S(2)*C*(a/b)**(S(2)/3))
 
     cons881 = CustomConstraint(cons_f881)
 
-    def cons_f882(a, b, B, C):
+    def cons_f882(B, a, C, b):
         return ZeroQ(B*(a/b)**(S(1)/3) + S(2)*C*(a/b)**(S(2)/3))
 
     cons882 = CustomConstraint(cons_f882)
 
-    def cons_f883(a, A, b, C):
+    def cons_f883(a, C, b, A):
         return ZeroQ(A - S(2)*C*(a/b)**(S(2)/3))
 
     cons883 = CustomConstraint(cons_f883)
 
-    def cons_f884(b, B, a, A, C):
+    def cons_f884(B, C, b, a, A):
         return ZeroQ(A - B*Rt(a/b, S(3)) - S(2)*C*Rt(a/b, S(3))**S(2))
 
     cons884 = CustomConstraint(cons_f884)
 
-    def cons_f885(a, b, B, C):
+    def cons_f885(B, a, C, b):
         return ZeroQ(B*Rt(a/b, S(3)) + S(2)*C*Rt(a/b, S(3))**S(2))
 
     cons885 = CustomConstraint(cons_f885)
 
-    def cons_f886(a, A, b, C):
+    def cons_f886(a, C, b, A):
         return ZeroQ(A - S(2)*C*Rt(a/b, S(3))**S(2))
 
     cons886 = CustomConstraint(cons_f886)
 
-    def cons_f887(b, B, a, A, C):
+    def cons_f887(B, C, b, a, A):
         return ZeroQ(A + B*(-a/b)**(S(1)/3) - S(2)*C*(-a/b)**(S(2)/3))
 
     cons887 = CustomConstraint(cons_f887)
 
-    def cons_f888(a, b, B, C):
+    def cons_f888(B, a, C, b):
         return ZeroQ(B*(-a/b)**(S(1)/3) - S(2)*C*(-a/b)**(S(2)/3))
 
     cons888 = CustomConstraint(cons_f888)
 
-    def cons_f889(a, A, b, C):
+    def cons_f889(a, C, b, A):
         return ZeroQ(A - S(2)*C*(-a/b)**(S(2)/3))
 
     cons889 = CustomConstraint(cons_f889)
 
-    def cons_f890(b, B, a, A, C):
+    def cons_f890(B, C, b, a, A):
         return ZeroQ(A + B*Rt(-a/b, S(3)) - S(2)*C*Rt(-a/b, S(3))**S(2))
 
     cons890 = CustomConstraint(cons_f890)
 
-    def cons_f891(a, b, B, C):
+    def cons_f891(B, a, C, b):
         return ZeroQ(B*Rt(-a/b, S(3)) - S(2)*C*Rt(-a/b, S(3))**S(2))
 
     cons891 = CustomConstraint(cons_f891)
 
-    def cons_f892(a, A, b, C):
+    def cons_f892(a, C, b, A):
         return ZeroQ(A - S(2)*C*Rt(-a/b, S(3))**S(2))
 
     cons892 = CustomConstraint(cons_f892)
 
-    def cons_f893(a, A, b, B):
+    def cons_f893(B, a, b, A):
         return Or(ZeroQ(-A**S(3)*b + B**S(3)*a), Not(RationalQ(a/b)))
 
     cons893 = CustomConstraint(cons_f893)
@@ -4856,37 +4858,37 @@ if matchpy:
 
     cons894 = CustomConstraint(cons_f894)
 
-    def cons_f895(a, A, b, C):
+    def cons_f895(a, C, b, A):
         return Not(RationalQ(a, b, A, C))
 
     cons895 = CustomConstraint(cons_f895)
 
-    def cons_f896(b, B, a, A, C):
+    def cons_f896(B, C, b, a, A):
         return ZeroQ(A - B*(a/b)**(S(1)/3) + C*(a/b)**(S(2)/3))
 
     cons896 = CustomConstraint(cons_f896)
 
-    def cons_f897(a, b, B, C):
+    def cons_f897(B, a, C, b):
         return ZeroQ(B*(a/b)**(S(1)/3) - C*(a/b)**(S(2)/3))
 
     cons897 = CustomConstraint(cons_f897)
 
-    def cons_f898(a, A, b, C):
+    def cons_f898(a, C, b, A):
         return ZeroQ(A + C*(a/b)**(S(2)/3))
 
     cons898 = CustomConstraint(cons_f898)
 
-    def cons_f899(b, B, a, A, C):
+    def cons_f899(B, C, b, a, A):
         return ZeroQ(A + B*(-a/b)**(S(1)/3) + C*(-a/b)**(S(2)/3))
 
     cons899 = CustomConstraint(cons_f899)
 
-    def cons_f900(a, b, B, C):
+    def cons_f900(B, a, C, b):
         return ZeroQ(B*(-a/b)**(S(1)/3) + C*(-a/b)**(S(2)/3))
 
     cons900 = CustomConstraint(cons_f900)
 
-    def cons_f901(a, A, b, C):
+    def cons_f901(a, C, b, A):
         return ZeroQ(A + C*(-a/b)**(S(2)/3))
 
     cons901 = CustomConstraint(cons_f901)
@@ -4906,196 +4908,196 @@ if matchpy:
 
     cons904 = CustomConstraint(cons_f904)
 
-    def cons_f905(n, Pq, x):
+    def cons_f905(x, n, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Less(Expon(Pq, x), n)
 
     cons905 = CustomConstraint(cons_f905)
 
-    def cons_f906(a, c, b, d):
+    def cons_f906(d, c, b, a):
         return ZeroQ(c*Rt(b/a, S(3)) - d*(-sqrt(S(3)) + S(1)))
 
     cons906 = CustomConstraint(cons_f906)
 
-    def cons_f907(a, c, b, d):
+    def cons_f907(d, c, b, a):
         return NonzeroQ(c*Rt(b/a, S(3)) - d*(-sqrt(S(3)) + S(1)))
 
     cons907 = CustomConstraint(cons_f907)
 
-    def cons_f908(a, c, b, d):
+    def cons_f908(d, c, b, a):
         return ZeroQ(c*Rt(b/a, S(3)) - d*(S(1) + sqrt(S(3))))
 
     cons908 = CustomConstraint(cons_f908)
 
-    def cons_f909(a, c, b, d):
+    def cons_f909(d, c, b, a):
         return NonzeroQ(c*Rt(b/a, S(3)) - d*(S(1) + sqrt(S(3))))
 
     cons909 = CustomConstraint(cons_f909)
 
-    def cons_f910(a, c, b, d):
+    def cons_f910(d, c, a, b):
         return ZeroQ(S(2)*c*Rt(b/a, S(3))**S(2) - d*(-sqrt(S(3)) + S(1)))
 
     cons910 = CustomConstraint(cons_f910)
 
-    def cons_f911(a, c, b, d):
+    def cons_f911(d, c, a, b):
         return NonzeroQ(S(2)*c*Rt(b/a, S(3))**S(2) - d*(-sqrt(S(3)) + S(1)))
 
     cons911 = CustomConstraint(cons_f911)
 
-    def cons_f912(a, c, b, d):
+    def cons_f912(d, c, b, a):
         return ZeroQ(-a*d**S(4) + b*c**S(4))
 
     cons912 = CustomConstraint(cons_f912)
 
-    def cons_f913(a, c, b, d):
+    def cons_f913(d, c, b, a):
         return NonzeroQ(-a*d**S(4) + b*c**S(4))
 
     cons913 = CustomConstraint(cons_f913)
 
-    def cons_f914(Pq, x):
+    def cons_f914(x, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return NonzeroQ(Coeff(Pq, x, S(0)))
 
     cons914 = CustomConstraint(cons_f914)
 
-    def cons_f915(n, Pq, x):
+    def cons_f915(x, n, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(PolyQ(Pq, x**(n/S(2))))
 
     cons915 = CustomConstraint(cons_f915)
 
-    def cons_f916(n, Pq, x):
+    def cons_f916(x, n, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Equal(Expon(Pq, x), n + S(-1))
 
     cons916 = CustomConstraint(cons_f916)
 
-    def cons_f917(n, Pq, x):
+    def cons_f917(x, n, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return LessEqual(n + S(-1), Expon(Pq, x))
 
     cons917 = CustomConstraint(cons_f917)
 
-    def cons_f918(n, Pq, x):
+    def cons_f918(x, n, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Or(PolyQ(Pq, x), PolyQ(Pq, x**n))
 
     cons918 = CustomConstraint(cons_f918)
 
-    def cons_f919(n, Pq, v):
+    def cons_f919(v, n, Pq):
         return PolyQ(Pq, v**n)
 
     cons919 = CustomConstraint(cons_f919)
 
-    def cons_f920(p, b, e, n, d, f, a, c):
+    def cons_f920(p, f, b, d, a, c, n, e):
         return ZeroQ(a*c*f - e*(a*d + b*c)*(n*(p + S(1)) + S(1)))
 
     cons920 = CustomConstraint(cons_f920)
 
-    def cons_f921(p, b, e, n, d, a, g, c):
+    def cons_f921(p, g, b, d, a, c, n, e):
         return ZeroQ(a*c*g - b*d*e*(S(2)*n*(p + S(1)) + S(1)))
 
     cons921 = CustomConstraint(cons_f921)
 
-    def cons_f922(n, p):
+    def cons_f922(p, n):
         return ZeroQ(n*(p + S(1)) + S(1))
 
     cons922 = CustomConstraint(cons_f922)
 
-    def cons_f923(p, b, e, m, n, d, f, a, c):
+    def cons_f923(p, m, f, b, d, a, c, n, e):
         return ZeroQ(a*c*f*(m + S(1)) - e*(a*d + b*c)*(m + n*(p + S(1)) + S(1)))
 
     cons923 = CustomConstraint(cons_f923)
 
-    def cons_f924(p, b, m, e, n, d, a, g, c):
+    def cons_f924(p, m, g, b, d, a, c, n, e):
         return ZeroQ(a*c*g*(m + S(1)) - b*d*e*(m + S(2)*n*(p + S(1)) + S(1)))
 
     cons924 = CustomConstraint(cons_f924)
 
-    def cons_f925(Px, x):
+    def cons_f925(x, Px):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolynomialQ(Px, x)
 
     cons925 = CustomConstraint(cons_f925)
 
-    def cons_f926(p, b, e, n, d, a):
+    def cons_f926(p, b, d, a, n, e):
         return ZeroQ(a*e - b*d*(n*(p + S(1)) + S(1)))
 
     cons926 = CustomConstraint(cons_f926)
 
-    def cons_f927(c, p, n, d, a, f):
+    def cons_f927(p, f, d, a, c, n):
         return ZeroQ(a*f - c*d*(S(2)*n*(p + S(1)) + S(1)))
 
     cons927 = CustomConstraint(cons_f927)
 
-    def cons_f928(a, c, d, f):
+    def cons_f928(d, c, f, a):
         return ZeroQ(a*f + c*d)
 
     cons928 = CustomConstraint(cons_f928)
 
-    def cons_f929(p, b, m, e, n, d, a):
+    def cons_f929(p, m, b, d, a, n, e):
         return ZeroQ(a*e*(m + S(1)) - b*d*(m + n*(p + S(1)) + S(1)))
 
     cons929 = CustomConstraint(cons_f929)
 
-    def cons_f930(c, p, m, n, d, a, f):
+    def cons_f930(p, m, f, d, a, c, n):
         return ZeroQ(a*f*(m + S(1)) - c*d*(m + S(2)*n*(p + S(1)) + S(1)))
 
     cons930 = CustomConstraint(cons_f930)
 
-    def cons_f931(n, n3):
+    def cons_f931(n3, n):
         return ZeroQ(-S(3)*n + n3)
 
     cons931 = CustomConstraint(cons_f931)
 
-    def cons_f932(p, b, e, n, d, a, g, c):
+    def cons_f932(p, g, b, d, a, c, n, e):
         return ZeroQ(a**S(2)*g*(n + S(1)) - c*(a*e - b*d*(n*(p + S(1)) + S(1)))*(n*(S(2)*p + S(3)) + S(1)))
 
     cons932 = CustomConstraint(cons_f932)
 
-    def cons_f933(c, p, b, e, n, d, a, f):
+    def cons_f933(p, f, b, d, a, c, n, e):
         return ZeroQ(a**S(2)*f*(n + S(1)) - a*c*d*(n + S(1))*(S(2)*n*(p + S(1)) + S(1)) - b*(a*e - b*d*(n*(p + S(1)) + S(1)))*(n*(p + S(2)) + S(1)))
 
     cons933 = CustomConstraint(cons_f933)
 
-    def cons_f934(p, b, n, d, a, g, c):
+    def cons_f934(p, g, b, d, a, c, n):
         return ZeroQ(a**S(2)*g*(n + S(1)) + b*c*d*(n*(p + S(1)) + S(1))*(n*(S(2)*p + S(3)) + S(1)))
 
     cons934 = CustomConstraint(cons_f934)
 
-    def cons_f935(c, p, b, n, d, a, f):
+    def cons_f935(p, f, b, d, a, c, n):
         return ZeroQ(a**S(2)*f*(n + S(1)) - a*c*d*(n + S(1))*(S(2)*n*(p + S(1)) + S(1)) + b**S(2)*d*(n*(p + S(1)) + S(1))*(n*(p + S(2)) + S(1)))
 
     cons935 = CustomConstraint(cons_f935)
 
-    def cons_f936(p, b, e, n, d, a, c):
+    def cons_f936(p, b, d, a, n, c, e):
         return ZeroQ(a*c*d*(n + S(1))*(S(2)*n*(p + S(1)) + S(1)) + b*(a*e - b*d*(n*(p + S(1)) + S(1)))*(n*(p + S(2)) + S(1)))
 
     cons936 = CustomConstraint(cons_f936)
 
-    def cons_f937(p, b, n, d, a, c):
+    def cons_f937(p, b, d, a, n, c):
         return ZeroQ(a*c*d*(n + S(1))*(S(2)*n*(p + S(1)) + S(1)) - b**S(2)*d*(n*(p + S(1)) + S(1))*(n*(p + S(2)) + S(1)))
 
     cons937 = CustomConstraint(cons_f937)
 
-    def cons_f938(q, n):
+    def cons_f938(n, q):
         return ZeroQ(-n/S(2) + q)
 
     cons938 = CustomConstraint(cons_f938)
 
-    def cons_f939(r, n):
+    def cons_f939(n, r):
         return ZeroQ(-S(3)*n/S(2) + r)
 
     cons939 = CustomConstraint(cons_f939)
 
-    def cons_f940(s, n):
+    def cons_f940(n, s):
         return ZeroQ(-S(2)*n + s)
 
     cons940 = CustomConstraint(cons_f940)
@@ -5105,12 +5107,12 @@ if matchpy:
 
     cons941 = CustomConstraint(cons_f941)
 
-    def cons_f942(a, c, g, d):
+    def cons_f942(d, c, g, a):
         return ZeroQ(a*g + c*d)
 
     cons942 = CustomConstraint(cons_f942)
 
-    def cons_f943(e, c, a, h):
+    def cons_f943(c, h, e, a):
         return ZeroQ(-S(3)*a*h + c*e)
 
     cons943 = CustomConstraint(cons_f943)
@@ -5120,17 +5122,17 @@ if matchpy:
 
     cons944 = CustomConstraint(cons_f944)
 
-    def cons_f945(b, e, d, a, g, c):
+    def cons_f945(g, b, d, c, a, e):
         return ZeroQ(S(3)*a*g - S(2)*b*e + S(3)*c*d)
 
     cons945 = CustomConstraint(cons_f945)
 
-    def cons_f946(e, c, b, d):
+    def cons_f946(d, c, b, e):
         return ZeroQ(-S(2)*b*e + S(3)*c*d)
 
     cons946 = CustomConstraint(cons_f946)
 
-    def cons_f947(b, n, x, a, Pq, c):
+    def cons_f947(b, Pq, c, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Or(NiceSqrtQ(-S(4)*a*c + b**S(2)), Less(Expon(Pq, x), n))
@@ -5147,7 +5149,7 @@ if matchpy:
 
     cons949 = CustomConstraint(cons_f949)
 
-    def cons_f950(n, Pq, x):
+    def cons_f950(x, n, Pq):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(PolyQ(Pq, x**n))
@@ -5159,47 +5161,47 @@ if matchpy:
 
     cons951 = CustomConstraint(cons_f951)
 
-    def cons_f952(j, n):
+    def cons_f952(n, j):
         return NonzeroQ(-j + n)
 
     cons952 = CustomConstraint(cons_f952)
 
-    def cons_f953(j, n, p):
+    def cons_f953(p, j, n):
         return ZeroQ(j*p + j - n + S(1))
 
     cons953 = CustomConstraint(cons_f953)
 
-    def cons_f954(j, n, p):
+    def cons_f954(p, n, j):
         return NegativeIntegerQ((j - n*p - n + S(-1))/(j - n))
 
     cons954 = CustomConstraint(cons_f954)
 
-    def cons_f955(j, p):
+    def cons_f955(p, j):
         return NonzeroQ(j*p + S(1))
 
     cons955 = CustomConstraint(cons_f955)
 
-    def cons_f956(j, n, p):
+    def cons_f956(p, n, j):
         return RationalQ(j, n, p)
 
     cons956 = CustomConstraint(cons_f956)
 
-    def cons_f957(j, n):
+    def cons_f957(n, j):
         return Less(S(0), j, n)
 
     cons957 = CustomConstraint(cons_f957)
 
-    def cons_f958(j, p):
+    def cons_f958(p, j):
         return Less(j*p + S(1), S(0))
 
     cons958 = CustomConstraint(cons_f958)
 
-    def cons_f959(n, p):
+    def cons_f959(p, n):
         return NonzeroQ(n*p + S(1))
 
     cons959 = CustomConstraint(cons_f959)
 
-    def cons_f960(j, n, p):
+    def cons_f960(p, j, n):
         return Greater(j*p + S(1), -j + n)
 
     cons960 = CustomConstraint(cons_f960)
@@ -5209,7 +5211,7 @@ if matchpy:
 
     cons961 = CustomConstraint(cons_f961)
 
-    def cons_f962(j, p):
+    def cons_f962(p, j):
         return ZeroQ(j*p + S(1))
 
     cons962 = CustomConstraint(cons_f962)
@@ -5219,27 +5221,27 @@ if matchpy:
 
     cons963 = CustomConstraint(cons_f963)
 
-    def cons_f964(j, n):
+    def cons_f964(n, j):
         return RationalQ(j, n)
 
     cons964 = CustomConstraint(cons_f964)
 
-    def cons_f965(j, n):
+    def cons_f965(n, j):
         return Less(S(2)*n + S(-2), j, n)
 
     cons965 = CustomConstraint(cons_f965)
 
-    def cons_f966(j, n):
+    def cons_f966(n, j):
         return PosQ(-j + n)
 
     cons966 = CustomConstraint(cons_f966)
 
-    def cons_f967(j, n):
+    def cons_f967(n, j):
         return IntegerQ(j/n)
 
     cons967 = CustomConstraint(cons_f967)
 
-    def cons_f968(m, j, n, p):
+    def cons_f968(m, n, p, j):
         return ZeroQ(-j + m + n*p + n + S(1))
 
     cons968 = CustomConstraint(cons_f968)
@@ -5249,17 +5251,17 @@ if matchpy:
 
     cons969 = CustomConstraint(cons_f969)
 
-    def cons_f970(m, j, n, p):
+    def cons_f970(m, n, p, j):
         return NegativeIntegerQ((j - m - n*p - n + S(-1))/(j - n))
 
     cons970 = CustomConstraint(cons_f970)
 
-    def cons_f971(m, j, p):
+    def cons_f971(m, p, j):
         return NonzeroQ(j*p + m + S(1))
 
     cons971 = CustomConstraint(cons_f971)
 
-    def cons_f972(c, j, n):
+    def cons_f972(c, n, j):
         return Or(IntegersQ(j, n), PositiveQ(c))
 
     cons972 = CustomConstraint(cons_f972)
@@ -5269,32 +5271,32 @@ if matchpy:
 
     cons973 = CustomConstraint(cons_f973)
 
-    def cons_f974(m, j, n, p):
+    def cons_f974(m, n, p, j):
         return RationalQ(j, m, n, p)
 
     cons974 = CustomConstraint(cons_f974)
 
-    def cons_f975(m, j, p):
+    def cons_f975(m, p, j):
         return Less(j*p + m + S(1), S(0))
 
     cons975 = CustomConstraint(cons_f975)
 
-    def cons_f976(m, j, n, p):
+    def cons_f976(m, p, j, n):
         return Greater(j*p + m + S(1), -j + n)
 
     cons976 = CustomConstraint(cons_f976)
 
-    def cons_f977(m, j, n, p):
+    def cons_f977(m, p, j, n):
         return PositiveQ(j*p + j + m - n + S(1))
 
     cons977 = CustomConstraint(cons_f977)
 
-    def cons_f978(m, j, p):
+    def cons_f978(m, p, j):
         return NegativeQ(j*p + m + S(1))
 
     cons978 = CustomConstraint(cons_f978)
 
-    def cons_f979(m, j, p):
+    def cons_f979(m, p, j):
         return ZeroQ(j*p + m + S(1))
 
     cons979 = CustomConstraint(cons_f979)
@@ -5314,22 +5316,22 @@ if matchpy:
 
     cons982 = CustomConstraint(cons_f982)
 
-    def cons_f983(j, n, jn):
+    def cons_f983(n, jn, j):
         return ZeroQ(jn - j - n)
 
     cons983 = CustomConstraint(cons_f983)
 
-    def cons_f984(p, b, m, j, n, d, a, c):
+    def cons_f984(p, j, m, b, d, a, c, n):
         return ZeroQ(a*d*(j*p + m + S(1)) - b*c*(m + n + p*(j + n) + S(1)))
 
     cons984 = CustomConstraint(cons_f984)
 
-    def cons_f985(e, j):
+    def cons_f985(j, e):
         return Or(PositiveQ(e), IntegersQ(j))
 
     cons985 = CustomConstraint(cons_f985)
 
-    def cons_f986(m, j, p):
+    def cons_f986(m, p, j):
         return RationalQ(j, m, p)
 
     cons986 = CustomConstraint(cons_f986)
@@ -5339,32 +5341,32 @@ if matchpy:
 
     cons987 = CustomConstraint(cons_f987)
 
-    def cons_f988(e, j):
+    def cons_f988(j, e):
         return Or(PositiveQ(e), IntegerQ(j))
 
     cons988 = CustomConstraint(cons_f988)
 
-    def cons_f989(m, j, n, p):
+    def cons_f989(m, p, j, n):
         return Or(Less(j*p + m, S(-1)), And(IntegersQ(m + S(-1)/2, p + S(-1)/2), Less(p, S(0)), Less(m, -n*p + S(-1))))
 
     cons989 = CustomConstraint(cons_f989)
 
-    def cons_f990(e, j, n):
+    def cons_f990(n, j, e):
         return Or(PositiveQ(e), IntegersQ(j, n))
 
     cons990 = CustomConstraint(cons_f990)
 
-    def cons_f991(m, j, n, p):
+    def cons_f991(m, n, p, j):
         return NonzeroQ(j*p + m - n + S(1))
 
     cons991 = CustomConstraint(cons_f991)
 
-    def cons_f992(m, j, n, p):
+    def cons_f992(m, n, p, j):
         return NonzeroQ(m + n + p*(j + n) + S(1))
 
     cons992 = CustomConstraint(cons_f992)
 
-    def cons_f993(j, n):
+    def cons_f993(n, j):
         return Not(And(ZeroQ(n + S(-1)), ZeroQ(j + S(-1))))
 
     cons993 = CustomConstraint(cons_f993)
@@ -5379,83 +5381,83 @@ if matchpy:
 
     cons995 = CustomConstraint(cons_f995)
 
-    def cons_f996(j, n):
+    def cons_f996(n, j):
         return PositiveIntegerQ(j, n, j/n)
 
     cons996 = CustomConstraint(cons_f996)
 
-    def cons_f997(j, n):
+    def cons_f997(n, j):
         return PositiveIntegerQ(j, n)
 
     cons997 = CustomConstraint(cons_f997)
 
-    def cons_f998(j, n):
+    def cons_f998(n, j):
         return Less(j, n)
 
     cons998 = CustomConstraint(cons_f998)
 
-    def cons_f999(a, b, d):
+    def cons_f999(d, a, b):
         return ZeroQ(S(27)*a**S(2)*d + S(4)*b**S(3))
 
     cons999 = CustomConstraint(cons_f999)
 
-    def cons_f1000(a, b, d):
+    def cons_f1000(d, a, b):
         return NonzeroQ(S(27)*a**S(2)*d + S(4)*b**S(3))
 
     cons1000 = CustomConstraint(cons_f1000)
 
-    def cons_f1001(a, c, d):
+    def cons_f1001(d, c, a):
         return ZeroQ(S(27)*a*d**S(2) + S(4)*c**S(3))
 
     cons1001 = CustomConstraint(cons_f1001)
 
-    def cons_f1002(a, c, d):
+    def cons_f1002(d, c, a):
         return NonzeroQ(S(27)*a*d**S(2) + S(4)*c**S(3))
 
     cons1002 = CustomConstraint(cons_f1002)
 
-    def cons_f1003(c, b, d):
+    def cons_f1003(d, c, b):
         return ZeroQ(-S(3)*b*d + c**S(2))
 
     cons1003 = CustomConstraint(cons_f1003)
 
-    def cons_f1004(a, c, b):
+    def cons_f1004(c, a, b):
         return ZeroQ(-S(3)*a*c + b**S(2))
 
     cons1004 = CustomConstraint(cons_f1004)
 
-    def cons_f1005(a, c, b):
+    def cons_f1005(c, a, b):
         return NonzeroQ(-S(3)*a*c + b**S(2))
 
     cons1005 = CustomConstraint(cons_f1005)
 
-    def cons_f1006(c, b, d):
+    def cons_f1006(d, c, b):
         return NonzeroQ(-S(3)*b*d + c**S(2))
 
     cons1006 = CustomConstraint(cons_f1006)
 
-    def cons_f1007(u, x):
+    def cons_f1007(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolyQ(u, x, S(3))
 
     cons1007 = CustomConstraint(cons_f1007)
 
-    def cons_f1008(u, x):
+    def cons_f1008(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(CubicMatchQ(u, x))
 
     cons1008 = CustomConstraint(cons_f1008)
 
-    def cons_f1009(x, v):
+    def cons_f1009(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolyQ(v, x, S(3))
 
     cons1009 = CustomConstraint(cons_f1009)
 
-    def cons_f1010(u, v, x):
+    def cons_f1010(x, u, v):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(LinearMatchQ(u, x), CubicMatchQ(v, x)))
@@ -5477,7 +5479,7 @@ if matchpy:
 
     cons1013 = CustomConstraint(cons_f1013)
 
-    def cons_f1014(e, c, b, d):
+    def cons_f1014(d, c, b, e):
         return ZeroQ(S(8)*b*e**S(2) - S(4)*c*d*e + d**S(3))
 
     cons1014 = CustomConstraint(cons_f1014)
@@ -5492,36 +5494,36 @@ if matchpy:
 
     cons1016 = CustomConstraint(cons_f1016)
 
-    def cons_f1017(x, v):
+    def cons_f1017(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolynomialQ(v, x)
 
     cons1017 = CustomConstraint(cons_f1017)
 
-    def cons_f1018(x, v):
+    def cons_f1018(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Equal(Exponent(v, x), S(4))
 
     cons1018 = CustomConstraint(cons_f1018)
 
-    def cons_f1019(a, c, b, d):
+    def cons_f1019(d, c, a, b):
         return ZeroQ(S(8)*a**S(2)*d - S(4)*a*b*c + b**S(3))
 
     cons1019 = CustomConstraint(cons_f1019)
 
-    def cons_f1020(b, d):
+    def cons_f1020(d, b):
         return ZeroQ(-b + d)
 
     cons1020 = CustomConstraint(cons_f1020)
 
-    def cons_f1021(e, a):
+    def cons_f1021(a, e):
         return ZeroQ(-a + e)
 
     cons1021 = CustomConstraint(cons_f1021)
 
-    def cons_f1022(a, c, b, x):
+    def cons_f1022(x, c, a, b):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return SumQ(Factor(a*x**S(4) + a + b*x**S(3) + b*x + c*x**S(2)))
@@ -5533,180 +5535,180 @@ if matchpy:
 
     cons1023 = CustomConstraint(cons_f1023)
 
-    def cons_f1024(b, e, d, B, A, C, c):
+    def cons_f1024(B, C, e, b, d, c, A):
         return ZeroQ(B**S(2)*d - S(2)*B*(S(2)*A*e + C*c) + S(2)*C*(A*d + C*b))
 
     cons1024 = CustomConstraint(cons_f1024)
 
-    def cons_f1025(e, d, B, a, A, C, c):
+    def cons_f1025(B, C, e, d, c, a, A):
         return ZeroQ(-S(4)*A*B*C*d + S(4)*A*e*(S(2)*A*C + B**S(2)) - B**S(3)*d + S(2)*B**S(2)*C*c - S(8)*C**S(3)*a)
 
     cons1025 = CustomConstraint(cons_f1025)
 
-    def cons_f1026(e, d, B, A, C, c):
+    def cons_f1026(B, C, e, d, c, A):
         return PosQ(C*(C*(-S(4)*c*e + d**S(2)) + S(2)*e*(-S(4)*A*e + B*d)))
 
     cons1026 = CustomConstraint(cons_f1026)
 
-    def cons_f1027(A, b, d, C):
+    def cons_f1027(d, C, b, A):
         return ZeroQ(A*d + C*b)
 
     cons1027 = CustomConstraint(cons_f1027)
 
-    def cons_f1028(a, e, A, C):
+    def cons_f1028(a, C, e, A):
         return ZeroQ(-A**S(2)*e + C**S(2)*a)
 
     cons1028 = CustomConstraint(cons_f1028)
 
-    def cons_f1029(e, d, A, C, c):
+    def cons_f1029(C, d, c, A, e):
         return PosQ(C*(-S(8)*A*e**S(2) + C*(-S(4)*c*e + d**S(2))))
 
     cons1029 = CustomConstraint(cons_f1029)
 
-    def cons_f1030(e, d, B, A, C, c):
+    def cons_f1030(B, C, e, d, c, A):
         return NegQ(C*(C*(-S(4)*c*e + d**S(2)) + S(2)*e*(-S(4)*A*e + B*d)))
 
     cons1030 = CustomConstraint(cons_f1030)
 
-    def cons_f1031(e, d, A, C, c):
+    def cons_f1031(C, d, c, A, e):
         return NegQ(C*(-S(8)*A*e**S(2) + C*(-S(4)*c*e + d**S(2))))
 
     cons1031 = CustomConstraint(cons_f1031)
 
-    def cons_f1032(b, e, d, B, A, C, c, D):
+    def cons_f1032(B, C, b, D, d, c, A, e):
         return ZeroQ(S(4)*d*(-S(2)*B*e + D*c)**S(2) - S(4)*(-S(2)*B*e + D*c)*(-S(8)*A*e**S(2) - S(4)*C*c*e + S(2)*D*b*e + S(3)*D*c*d) + S(8)*(-S(4)*C*e + S(3)*D*d)*(-A*d*e - C*b*e + D*b*d))
 
     cons1032 = CustomConstraint(cons_f1032)
 
-    def cons_f1033(b, e, d, B, a, A, C, c, D):
+    def cons_f1033(B, C, b, D, d, c, a, A, e):
         return ZeroQ(S(8)*a*(-S(4)*C*e + S(3)*D*d)**S(3) - S(8)*c*(-S(2)*B*e + D*c)**S(2)*(-S(4)*C*e + S(3)*D*d) + S(8)*d*(-S(4)*A*e + D*b)*(-S(2)*B*e + D*c)*(-S(4)*C*e + S(3)*D*d) + S(8)*d*(-S(2)*B*e + D*c)**S(3) - S(4)*e*(-S(4)*A*e + D*b)*(S(2)*(-S(4)*A*e + D*b)*(-S(4)*C*e + S(3)*D*d) + S(4)*(-S(2)*B*e + D*c)**S(2)))
 
     cons1033 = CustomConstraint(cons_f1033)
 
-    def cons_f1034(b, e, d, A, c, D):
+    def cons_f1034(b, D, d, c, A, e):
         return ZeroQ(D**S(2)*c**S(2)*d - D*c*(-S(8)*A*e**S(2) - S(4)*C*c*e + S(2)*D*b*e + S(3)*D*c*d) + S(2)*(-S(4)*C*e + S(3)*D*d)*(-A*d*e - C*b*e + D*b*d))
 
     cons1034 = CustomConstraint(cons_f1034)
 
-    def cons_f1035(b, e, d, B, a, A, c, D):
+    def cons_f1035(B, e, b, D, d, a, c, A):
         return ZeroQ(S(54)*D**S(3)*a*d**S(3) - S(6)*D*c*d*(-S(2)*B*e + D*c)**S(2) + S(6)*D*d**S(2)*(-S(4)*A*e + D*b)*(-S(2)*B*e + D*c) + S(2)*d*(-S(2)*B*e + D*c)**S(3) - e*(-S(4)*A*e + D*b)*(S(6)*D*d*(-S(4)*A*e + D*b) + S(4)*(-S(2)*B*e + D*c)**S(2)))
 
     cons1035 = CustomConstraint(cons_f1035)
 
-    def cons_f1036(a, c, e, f):
+    def cons_f1036(a, f, c, e):
         return ZeroQ(a*e**S(2) - c*f**S(2))
 
     cons1036 = CustomConstraint(cons_f1036)
 
-    def cons_f1037(e, f, b, d):
+    def cons_f1037(d, f, b, e):
         return ZeroQ(b*e**S(2) - d*f**S(2))
 
     cons1037 = CustomConstraint(cons_f1037)
 
-    def cons_f1038(a, c, e, f):
+    def cons_f1038(a, f, c, e):
         return NonzeroQ(a*e**S(2) - c*f**S(2))
 
     cons1038 = CustomConstraint(cons_f1038)
 
-    def cons_f1039(e, f, b, d):
+    def cons_f1039(d, f, b, e):
         return NonzeroQ(b*e**S(2) - d*f**S(2))
 
     cons1039 = CustomConstraint(cons_f1039)
 
-    def cons_f1040(n, p):
+    def cons_f1040(p, n):
         return ZeroQ(-S(2)*n + p)
 
     cons1040 = CustomConstraint(cons_f1040)
 
-    def cons_f1041(c, b, d):
+    def cons_f1041(d, c, b):
         return ZeroQ(b*c**S(2) - d**S(2))
 
     cons1041 = CustomConstraint(cons_f1041)
 
-    def cons_f1042(c, b, d):
+    def cons_f1042(d, c, b):
         return NonzeroQ(b*c**S(2) - d**S(2))
 
     cons1042 = CustomConstraint(cons_f1042)
 
-    def cons_f1043(b, e, d, x, a, c):
+    def cons_f1043(b, d, c, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e), x)
 
     cons1043 = CustomConstraint(cons_f1043)
 
-    def cons_f1044(b, e, d, a, c):
+    def cons_f1044(b, d, c, a, e):
         return NonzeroQ(a*e**S(4) + b*d**S(2)*e**S(2) + c*d**S(4))
 
     cons1044 = CustomConstraint(cons_f1044)
 
-    def cons_f1045(e, c, b, d):
+    def cons_f1045(d, c, b, e):
         return ZeroQ(b*d*e**S(2) + S(2)*c*d**S(3))
 
     cons1045 = CustomConstraint(cons_f1045)
 
-    def cons_f1046(e, c, b, d):
+    def cons_f1046(d, c, b, e):
         return NonzeroQ(b*d*e**S(2) + S(2)*c*d**S(3))
 
     cons1046 = CustomConstraint(cons_f1046)
 
-    def cons_f1047(a, c, e, d):
+    def cons_f1047(d, c, e, a):
         return NonzeroQ(a*e**S(4) + c*d**S(4))
 
     cons1047 = CustomConstraint(cons_f1047)
 
-    def cons_f1048(e, A, d, B):
+    def cons_f1048(B, d, e, A):
         return ZeroQ(A*e + B*d)
 
     cons1048 = CustomConstraint(cons_f1048)
 
-    def cons_f1049(a, c, A, B):
+    def cons_f1049(B, a, c, A):
         return ZeroQ(A*c + B*a)
 
     cons1049 = CustomConstraint(cons_f1049)
 
-    def cons_f1050(a, c, e, d):
+    def cons_f1050(d, c, e, a):
         return ZeroQ(a*e + c*d)
 
     cons1050 = CustomConstraint(cons_f1050)
 
-    def cons_f1051(c, b, e, d, h, a, g, f):
+    def cons_f1051(g, f, b, d, c, a, h, e):
         return ZeroQ(-f**S(2)*(a*h**S(2) - b*g*h + c*g**S(2)) + (-d*h + e*g)**S(2))
 
     cons1051 = CustomConstraint(cons_f1051)
 
-    def cons_f1052(c, b, e, d, h, g, f):
+    def cons_f1052(g, f, b, d, c, h, e):
         return ZeroQ(-S(2)*d*e*h + S(2)*e**S(2)*g - f**S(2)*(-b*h + S(2)*c*g))
 
     cons1052 = CustomConstraint(cons_f1052)
 
-    def cons_f1053(u, j, x, v, f):
+    def cons_f1053(v, u, j, f, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(LinearMatchQ(u, x), QuadraticMatchQ(v, x), Or(ZeroQ(j), ZeroQ(f + S(-1)))))
 
     cons1053 = CustomConstraint(cons_f1053)
 
-    def cons_f1054(u, j, x, h, g, k, v, f):
+    def cons_f1054(v, u, j, k, g, f, x, h):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(-f**S(2)*k**S(2)*(g**S(2)*Coefficient(v, x, S(2)) - g*h*Coefficient(v, x, S(1)) + h**S(2)*Coefficient(v, x, S(0))) + (g*Coefficient(u, x, S(1)) - h*(f*j + Coefficient(u, x, S(0))))**S(2))
 
     cons1054 = CustomConstraint(cons_f1054)
 
-    def cons_f1055(e, c, f):
+    def cons_f1055(c, f, e):
         return ZeroQ(-c*f**S(2) + e**S(2))
 
     cons1055 = CustomConstraint(cons_f1055)
 
-    def cons_f1056(u, f, v, x):
+    def cons_f1056(x, f, u, v):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(-f**S(2)*Coefficient(v, x, S(2)) + Coefficient(u, x, S(1))**S(2))
 
     cons1056 = CustomConstraint(cons_f1056)
 
-    def cons_f1057(a, c, g, i):
+    def cons_f1057(c, g, a, i):
         return ZeroQ(-a*i + c*g)
 
     cons1057 = CustomConstraint(cons_f1057)
@@ -5721,83 +5723,83 @@ if matchpy:
 
     cons1059 = CustomConstraint(cons_f1059)
 
-    def cons_f1060(h, c, b, i):
+    def cons_f1060(c, h, b, i):
         return ZeroQ(-b*i + c*h)
 
     cons1060 = CustomConstraint(cons_f1060)
 
-    def cons_f1061(i, c):
+    def cons_f1061(c, i):
         return Not(PositiveQ(i/c))
 
     cons1061 = CustomConstraint(cons_f1061)
 
-    def cons_f1062(x, w, v):
+    def cons_f1062(v, w, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return QuadraticQ(List(v, w), x)
 
     cons1062 = CustomConstraint(cons_f1062)
 
-    def cons_f1063(u, j, x, v, f, w):
+    def cons_f1063(v, w, u, j, f, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(LinearMatchQ(u, x), QuadraticMatchQ(List(v, w), x), Or(ZeroQ(j), ZeroQ(f + S(-1)))))
 
     cons1063 = CustomConstraint(cons_f1063)
 
-    def cons_f1064(u, x, k, v, f):
+    def cons_f1064(v, u, k, f, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(-f**S(2)*k**S(2)*Coefficient(v, x, S(2)) + Coefficient(u, x, S(1))**S(2))
 
     cons1064 = CustomConstraint(cons_f1064)
 
-    def cons_f1065(n, p):
+    def cons_f1065(p, n):
         return ZeroQ(p - S(2)/n)
 
     cons1065 = CustomConstraint(cons_f1065)
 
-    def cons_f1066(a, c, b):
+    def cons_f1066(c, a, b):
         return ZeroQ(a**S(2) - b**S(2)*c)
 
     cons1066 = CustomConstraint(cons_f1066)
 
-    def cons_f1067(a, b, d):
+    def cons_f1067(d, a, b):
         return ZeroQ(a**S(2) - b**S(2)*d)
 
     cons1067 = CustomConstraint(cons_f1067)
 
-    def cons_f1068(a, c, b):
+    def cons_f1068(c, b, a):
         return ZeroQ(a + b**S(2)*c)
 
     cons1068 = CustomConstraint(cons_f1068)
 
-    def cons_f1069(e, c, a, b):
+    def cons_f1069(c, b, e, a):
         return ZeroQ(a + b**S(2)*c*e)
 
     cons1069 = CustomConstraint(cons_f1069)
 
-    def cons_f1070(c, b, d):
+    def cons_f1070(d, c, b):
         return ZeroQ(-b*d**S(2) + c**S(2))
 
     cons1070 = CustomConstraint(cons_f1070)
 
-    def cons_f1071(e, b):
+    def cons_f1071(b, e):
         return ZeroQ(-b**S(2) + e)
 
     cons1071 = CustomConstraint(cons_f1071)
 
-    def cons_f1072(a, c, b, d):
+    def cons_f1072(d, c, b, a):
         return ZeroQ(-a*d + b*c, S(0))
 
     cons1072 = CustomConstraint(cons_f1072)
 
-    def cons_f1073(n, d, B, a, A):
+    def cons_f1073(B, d, a, n, A):
         return ZeroQ(-A**S(2)*d*(n + S(-1))**S(2) + B**S(2)*a)
 
     cons1073 = CustomConstraint(cons_f1073)
 
-    def cons_f1074(n, d, B, A, c):
+    def cons_f1074(B, d, c, n, A):
         return ZeroQ(S(2)*A*d*(n + S(-1)) + B*c)
 
     cons1074 = CustomConstraint(cons_f1074)
@@ -5807,57 +5809,57 @@ if matchpy:
 
     cons1075 = CustomConstraint(cons_f1075)
 
-    def cons_f1076(m, n, B, d, a, A):
+    def cons_f1076(B, m, d, a, n, A):
         return ZeroQ(-A**S(2)*d*(m - n + S(1))**S(2) + B**S(2)*a*(m + S(1))**S(2))
 
     cons1076 = CustomConstraint(cons_f1076)
 
-    def cons_f1077(m, n, B, d, A, c):
+    def cons_f1077(B, m, d, c, n, A):
         return ZeroQ(-S(2)*A*d*(m - n + S(1)) + B*c*(m + S(1)))
 
     cons1077 = CustomConstraint(cons_f1077)
 
-    def cons_f1078(b, d, f, a, g, c):
+    def cons_f1078(f, b, g, d, c, a):
         return ZeroQ(-S(12)*a**S(3)*g**S(2) + a**S(2)*c*f**S(2) + S(2)*a*b*g*(a*f + S(3)*c*d) + S(9)*c**S(3)*d**S(2) - c*d*f*(S(6)*a*c + b**S(2)))
 
     cons1078 = CustomConstraint(cons_f1078)
 
-    def cons_f1079(b, e, d, f, a, g, c):
+    def cons_f1079(f, g, b, d, c, a, e):
         return ZeroQ(a**S(3)*c*f**S(2)*g + S(2)*a**S(3)*g**S(2)*(-S(6)*a*g + b*f) - S(3)*a**S(2)*c**S(2)*d*f*g + S(3)*c**S(4)*d**S(2)*e - c**S(3)*d*(-S(12)*a*d*g + a*e*f + S(2)*b*d*f))
 
     cons1079 = CustomConstraint(cons_f1079)
 
-    def cons_f1080(a, c, d, f):
+    def cons_f1080(d, c, f, a):
         return NonzeroQ(-a*f + S(3)*c*d)
 
     cons1080 = CustomConstraint(cons_f1080)
 
-    def cons_f1081(b, d, a, g, c):
+    def cons_f1081(g, b, d, c, a):
         return NonzeroQ(-S(2)*a**S(2)*g + b*c*d)
 
     cons1081 = CustomConstraint(cons_f1081)
 
-    def cons_f1082(b, d, f, a, g, c):
+    def cons_f1082(f, b, g, d, c, a):
         return NonzeroQ(S(4)*a**S(2)*g - a*b*f + b*c*d)
 
     cons1082 = CustomConstraint(cons_f1082)
 
-    def cons_f1083(b, d, f, a, g, c):
+    def cons_f1083(f, g, b, d, a, c):
         return PosQ((S(12)*a**S(2)*g**S(2) - a*c*f**S(2) + f*(-S(2)*a*b*g + S(3)*c**S(2)*d))/(c*g*(-a*f + S(3)*c*d)))
 
     cons1083 = CustomConstraint(cons_f1083)
 
-    def cons_f1084(d, f, a, g, c):
+    def cons_f1084(f, g, d, c, a):
         return ZeroQ(-S(12)*a**S(3)*g**S(2) + a**S(2)*c*f**S(2) - S(6)*a*c**S(2)*d*f + S(9)*c**S(3)*d**S(2))
 
     cons1084 = CustomConstraint(cons_f1084)
 
-    def cons_f1085(e, d, f, a, g, c):
+    def cons_f1085(f, g, d, c, a, e):
         return ZeroQ(-S(12)*a**S(4)*g**S(3) + a**S(3)*c*f**S(2)*g - S(3)*a**S(2)*c**S(2)*d*f*g - a*c**S(3)*d*(-S(12)*d*g + e*f) + S(3)*c**S(4)*d**S(2)*e)
 
     cons1085 = CustomConstraint(cons_f1085)
 
-    def cons_f1086(d, f, a, g, c):
+    def cons_f1086(f, g, d, a, c):
         return PosQ((S(12)*a**S(2)*g**S(2) - a*c*f**S(2) + S(3)*c**S(2)*d*f)/(c*g*(-a*f + S(3)*c*d)))
 
     cons1086 = CustomConstraint(cons_f1086)
@@ -5867,28 +5869,28 @@ if matchpy:
 
     cons1087 = CustomConstraint(cons_f1087)
 
-    def cons_f1088(u, v, x):
+    def cons_f1088(x, u, v):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(MonomialQ(u, x), BinomialQ(v, x)))
 
     cons1088 = CustomConstraint(cons_f1088)
 
-    def cons_f1089(u, v, x):
+    def cons_f1089(x, u, v):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(ZeroQ(Coefficient(u, x, S(0))), ZeroQ(Coefficient(v, x, S(0)))))
 
     cons1089 = CustomConstraint(cons_f1089)
 
-    def cons_f1090(u, x):
+    def cons_f1090(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PiecewiseLinearQ(u, x)
 
     cons1090 = CustomConstraint(cons_f1090)
 
-    def cons_f1091(u, x, v):
+    def cons_f1091(v, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PiecewiseLinearQ(u, v, x)
@@ -5920,7 +5922,7 @@ if matchpy:
 
     cons1096 = CustomConstraint(cons_f1096)
 
-    def cons_f1097(u, x):
+    def cons_f1097(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(LinearQ(u, x))
@@ -5937,47 +5939,47 @@ if matchpy:
 
     cons1099 = CustomConstraint(cons_f1099)
 
-    def cons_f1100(b, e, m, n, d, f, x, g, c, F):
+    def cons_f1100(m, f, b, g, d, c, n, x, F, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, b, c, d, e, f, g, m, n), x)
 
     cons1100 = CustomConstraint(cons_f1100)
 
-    def cons_f1101(u, x):
+    def cons_f1101(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PowerOfLinearQ(u, x)
 
     cons1101 = CustomConstraint(cons_f1101)
 
-    def cons_f1102(u, x, v):
+    def cons_f1102(v, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(LinearMatchQ(v, x), PowerOfLinearMatchQ(u, x)))
 
     cons1102 = CustomConstraint(cons_f1102)
 
-    def cons_f1103(p, b, e, m, n, d, f, a, x, g, c, F):
+    def cons_f1103(p, m, f, b, g, d, c, a, n, x, F, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, a, b, c, d, e, f, g, m, n, p), x)
 
     cons1103 = CustomConstraint(cons_f1103)
 
-    def cons_f1104(j, n, q, i, g, G, f, F):
+    def cons_f1104(j, f, g, i, G, n, F, q):
         return ZeroQ(f*g*n*log(F) - i*j*q*log(G))
 
     cons1104 = CustomConstraint(cons_f1104)
 
-    def cons_f1105(e, j, q, n, x, h, i, g, k, G, f, F):
+    def cons_f1105(e, j, k, g, f, i, G, n, x, h, q, F):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return NonzeroQ((G**(j*(h + i*x))*k)**q - (F**(g*(e + f*x)))**n)
 
     cons1105 = CustomConstraint(cons_f1105)
 
-    def cons_f1106(b, n, x, a, c, F):
+    def cons_f1106(b, c, a, n, x, F):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, a, b, c, n), x)
@@ -5989,36 +5991,36 @@ if matchpy:
 
     cons1107 = CustomConstraint(cons_f1107)
 
-    def cons_f1108(m, u, x, v, c, F, w):
+    def cons_f1108(v, w, u, m, c, x, F):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(-c*(-Coefficient(u, x, S(0))*Coefficient(w, x, S(1)) + Coefficient(u, x, S(1))*Coefficient(w, x, S(0)))*Coefficient(v, x, S(1))*log(F) + (m + S(1))*Coefficient(u, x, S(1))*Coefficient(w, x, S(1)))
 
     cons1108 = CustomConstraint(cons_f1108)
 
-    def cons_f1109(w, x):
+    def cons_f1109(x, w):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolynomialQ(w, x)
 
     cons1109 = CustomConstraint(cons_f1109)
 
-    def cons_f1110(e, f, n, h):
+    def cons_f1110(h, f, e, n):
         return ZeroQ(e - f*h*(n + S(1)))
 
     cons1110 = CustomConstraint(cons_f1110)
 
-    def cons_f1111(b, e, n, h, g, c, F):
+    def cons_f1111(g, b, c, n, h, F, e):
         return ZeroQ(-b*c*e*log(F) + g*h*(n + S(1)))
 
     cons1111 = CustomConstraint(cons_f1111)
 
-    def cons_f1112(e, m, n, h, f):
+    def cons_f1112(m, f, n, h, e):
         return ZeroQ(e*(m + S(1)) - f*h*(n + S(1)))
 
     cons1112 = CustomConstraint(cons_f1112)
 
-    def cons_f1113(b, d, x, a, c, F):
+    def cons_f1113(b, d, c, a, x, F):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, a, b, c, d), x)
@@ -6035,7 +6037,7 @@ if matchpy:
 
     cons1115 = CustomConstraint(cons_f1115)
 
-    def cons_f1116(e, c, d, f):
+    def cons_f1116(d, c, f, e):
         return ZeroQ(-c*f + d*e)
 
     cons1116 = CustomConstraint(cons_f1116)
@@ -6070,86 +6072,86 @@ if matchpy:
 
     cons1122 = CustomConstraint(cons_f1122)
 
-    def cons_f1123(f, d):
+    def cons_f1123(d, f):
         return NonzeroQ(-d + f)
 
     cons1123 = CustomConstraint(cons_f1123)
 
-    def cons_f1124(e, c):
+    def cons_f1124(c, e):
         return NonzeroQ(c*e)
 
     cons1124 = CustomConstraint(cons_f1124)
 
-    def cons_f1125(u, v, x):
+    def cons_f1125(x, u, v):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(LinearMatchQ(u, x), BinomialMatchQ(v, x)))
 
     cons1125 = CustomConstraint(cons_f1125)
 
-    def cons_f1126(x, v):
+    def cons_f1126(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PowerOfLinearQ(v, x)
 
     cons1126 = CustomConstraint(cons_f1126)
 
-    def cons_f1127(x, v):
+    def cons_f1127(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(PowerOfLinearMatchQ(v, x))
 
     cons1127 = CustomConstraint(cons_f1127)
 
-    def cons_f1128(h, c, g, d):
+    def cons_f1128(d, h, c, g):
         return ZeroQ(-c*h + d*g)
 
     cons1128 = CustomConstraint(cons_f1128)
 
-    def cons_f1129(h, c, g, d):
+    def cons_f1129(d, h, c, g):
         return NonzeroQ(-c*h + d*g)
 
     cons1129 = CustomConstraint(cons_f1129)
 
-    def cons_f1130(b, x, a, c, F):
+    def cons_f1130(b, c, a, x, F):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, a, b, c), x)
 
     cons1130 = CustomConstraint(cons_f1130)
 
-    def cons_f1131(x, v):
+    def cons_f1131(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(QuadraticMatchQ(v, x))
 
     cons1131 = CustomConstraint(cons_f1131)
 
-    def cons_f1132(e, c, b, d):
+    def cons_f1132(d, c, b, e):
         return ZeroQ(b*e - S(2)*c*d)
 
     cons1132 = CustomConstraint(cons_f1132)
 
-    def cons_f1133(e, c, b, d):
+    def cons_f1133(d, c, b, e):
         return NonzeroQ(b*e - S(2)*c*d)
 
     cons1133 = CustomConstraint(cons_f1133)
 
-    def cons_f1134(b, e, m, d, x, a, c, F):
+    def cons_f1134(m, b, d, c, a, x, F, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, a, b, c, d, e, m), x)
 
     cons1134 = CustomConstraint(cons_f1134)
 
-    def cons_f1135(e, d, x, v, c):
+    def cons_f1135(v, d, c, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(S(2)*e*(c + d*x) - v)
 
     cons1135 = CustomConstraint(cons_f1135)
 
-    def cons_f1136(b, e, n, d, f, a, h, g, x, G, c, F):
+    def cons_f1136(f, b, g, G, d, c, a, n, x, h, F, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, G, a, b, c, d, e, f, g, h, n), x)
@@ -6161,12 +6163,12 @@ if matchpy:
 
     cons1137 = CustomConstraint(cons_f1137)
 
-    def cons_f1138(e, d, h, g, G, F):
+    def cons_f1138(g, G, d, h, F, e):
         return Not(RationalQ(FullSimplify(g*h*log(G)/(d*e*log(F)))))
 
     cons1138 = CustomConstraint(cons_f1138)
 
-    def cons_f1139(b, e, r, n, d, f, a, h, g, s, t, x, G, c, F, H):
+    def cons_f1139(s, t, f, b, g, r, G, d, H, a, c, n, x, h, F, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, G, H, a, b, c, d, e, f, g, h, r, s, t, n), x)
@@ -6183,62 +6185,62 @@ if matchpy:
 
     cons1141 = CustomConstraint(cons_f1141)
 
-    def cons_f1142(e, n, d, h, g, G, F):
+    def cons_f1142(g, G, d, n, h, F, e):
         return ZeroQ(d*e*n*log(F) + g*h*log(G))
 
     cons1142 = CustomConstraint(cons_f1142)
 
-    def cons_f1143(e, d, t, h, g, G, s, F, H):
+    def cons_f1143(t, g, G, d, H, h, s, e, F):
         return Not(RationalQ(FullSimplify((g*h*log(G) + s*t*log(H))/(d*e*log(F)))))
 
     cons1143 = CustomConstraint(cons_f1143)
 
-    def cons_f1144(u, v):
+    def cons_f1144(v, u):
         return ZeroQ(-S(2)*u + v)
 
     cons1144 = CustomConstraint(cons_f1144)
 
-    def cons_f1145(c, v, d, x):
+    def cons_f1145(d, c, v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(c + d*x + v)
 
     cons1145 = CustomConstraint(cons_f1145)
 
-    def cons_f1146(w, x):
+    def cons_f1146(x, w):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return LinearQ(w, x)
 
     cons1146 = CustomConstraint(cons_f1146)
 
-    def cons_f1147(w, v):
+    def cons_f1147(v, w):
         return ZeroQ(v + w)
 
     cons1147 = CustomConstraint(cons_f1147)
 
-    def cons_f1148(x, w, v):
+    def cons_f1148(v, x, w):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return If(RationalQ(Coefficient(v, x, S(1))), Greater(Coefficient(v, x, S(1)), S(0)), Less(LeafCount(v), LeafCount(w)))
 
     cons1148 = CustomConstraint(cons_f1148)
 
-    def cons_f1149(b, e, n, d, x, a, g, c, F):
+    def cons_f1149(g, b, d, c, a, n, x, F, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, a, b, c, d, e, g, n), x)
 
     cons1149 = CustomConstraint(cons_f1149)
 
-    def cons_f1150(e, n, d, x, a, g, c, F):
+    def cons_f1150(g, d, a, c, n, x, F, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, a, c, d, e, g, n), x)
 
     cons1150 = CustomConstraint(cons_f1150)
 
-    def cons_f1151(a, F, b, x):
+    def cons_f1151(x, a, b, F):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, a, b), x)
@@ -6250,52 +6252,52 @@ if matchpy:
 
     cons1152 = CustomConstraint(cons_f1152)
 
-    def cons_f1153(u, x):
+    def cons_f1153(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FunctionOfExponentialQ(u, x)
 
     cons1153 = CustomConstraint(cons_f1153)
 
-    def cons_f1154(x, w, v):
+    def cons_f1154(v, w, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return LinearQ(List(v, w), x)
 
     cons1154 = CustomConstraint(cons_f1154)
 
-    def cons_f1155(x, w, v):
+    def cons_f1155(v, w, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Or(BinomialQ(v + w, x), And(PolynomialQ(v + w, x), LessEqual(Exponent(v + w, x), S(2))))
 
     cons1155 = CustomConstraint(cons_f1155)
 
-    def cons_f1156(p, e, q, d, f, x, c):
+    def cons_f1156(p, f, d, c, x, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(c, d, e, f, p, q), x)
 
     cons1156 = CustomConstraint(cons_f1156)
 
-    def cons_f1157(e, f, d, x):
+    def cons_f1157(d, x, f, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(d, e, f), x)
 
     cons1157 = CustomConstraint(cons_f1157)
 
-    def cons_f1158(q, p, b):
+    def cons_f1158(p, b, q):
         return PosQ(b*p*q)
 
     cons1158 = CustomConstraint(cons_f1158)
 
-    def cons_f1159(q, p, b):
+    def cons_f1159(p, b, q):
         return NegQ(b*p*q)
 
     cons1159 = CustomConstraint(cons_f1159)
 
-    def cons_f1160(e, f, g, h):
+    def cons_f1160(h, f, e, g):
         return ZeroQ(-e*h + f*g)
 
     cons1160 = CustomConstraint(cons_f1160)
@@ -6305,42 +6307,42 @@ if matchpy:
 
     cons1161 = CustomConstraint(cons_f1161)
 
-    def cons_f1162(h, f, p):
+    def cons_f1162(h, p, f):
         return Or(IntegerQ(p), PositiveQ(h/f))
 
     cons1162 = CustomConstraint(cons_f1162)
 
-    def cons_f1163(h, f, p):
+    def cons_f1163(h, p, f):
         return Not(Or(IntegerQ(p), PositiveQ(h/f)))
 
     cons1163 = CustomConstraint(cons_f1163)
 
-    def cons_f1164(m, q, p, b):
+    def cons_f1164(m, p, b, q):
         return PosQ((m + S(1))/(b*p*q))
 
     cons1164 = CustomConstraint(cons_f1164)
 
-    def cons_f1165(m, q, p, b):
+    def cons_f1165(m, p, b, q):
         return NegQ((m + S(1))/(b*p*q))
 
     cons1165 = CustomConstraint(cons_f1165)
 
-    def cons_f1166(e, f, h, g, c):
+    def cons_f1166(f, g, c, h, e):
         return ZeroQ(c*(-e*h + f*g) + h)
 
     cons1166 = CustomConstraint(cons_f1166)
 
-    def cons_f1167(e, f, h, g, c):
+    def cons_f1167(f, g, c, h, e):
         return NonzeroQ(c*(-e*h + f*g) + h)
 
     cons1167 = CustomConstraint(cons_f1167)
 
-    def cons_f1168(e, f, h, g, c):
+    def cons_f1168(f, g, c, h, e):
         return PositiveQ(c*(e - f*g/h))
 
     cons1168 = CustomConstraint(cons_f1168)
 
-    def cons_f1169(e, f, g, h):
+    def cons_f1169(h, f, e, g):
         return NonzeroQ(-e*h + f*g)
 
     cons1169 = CustomConstraint(cons_f1169)
@@ -6355,7 +6357,7 @@ if matchpy:
 
     cons1171 = CustomConstraint(cons_f1171)
 
-    def cons_f1172(c, e, j, i, f):
+    def cons_f1172(j, f, i, c, e):
         return ZeroQ(f*i + j*(c - e))
 
     cons1172 = CustomConstraint(cons_f1172)
@@ -6365,39 +6367,39 @@ if matchpy:
 
     cons1173 = CustomConstraint(cons_f1173)
 
-    def cons_f1174(p, b, e, j, m, n, q, d, f, a, h, g, i, x, c):
+    def cons_f1174(p, j, m, f, b, g, i, d, c, a, n, x, h, q, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g, h, i, j, m, n, p, q), x)
 
     cons1174 = CustomConstraint(cons_f1174)
 
-    def cons_f1175(e, f, g, h):
+    def cons_f1175(h, f, e, g):
         return ZeroQ(e**S(2)*h + f**S(2)*g)
 
     cons1175 = CustomConstraint(cons_f1175)
 
-    def cons_f1176(e, c):
+    def cons_f1176(c, e):
         return ZeroQ(c - S(2)*e)
 
     cons1176 = CustomConstraint(cons_f1176)
 
-    def cons_f1177(e, c):
+    def cons_f1177(c, e):
         return PositiveQ(c/(S(2)*e))
 
     cons1177 = CustomConstraint(cons_f1177)
 
-    def cons_f1178(e, c, a):
+    def cons_f1178(c, e, a):
         return Or(NonzeroQ(c - S(2)*e), NonzeroQ(a))
 
     cons1178 = CustomConstraint(cons_f1178)
 
-    def cons_f1179(e, i, h, g, f):
+    def cons_f1179(f, g, i, h, e):
         return ZeroQ(e**S(2)*i - e*f*h + f**S(2)*g)
 
     cons1179 = CustomConstraint(cons_f1179)
 
-    def cons_f1180(e, f, g, i):
+    def cons_f1180(i, f, e, g):
         return ZeroQ(e**S(2)*i + f**S(2)*g)
 
     cons1180 = CustomConstraint(cons_f1180)
@@ -6407,7 +6409,7 @@ if matchpy:
 
     cons1181 = CustomConstraint(cons_f1181)
 
-    def cons_f1182(h2, g1, h1, g2):
+    def cons_f1182(h2, h1, g1, g2):
         return ZeroQ(g1*h2 + g2*h1)
 
     cons1182 = CustomConstraint(cons_f1182)
@@ -6447,12 +6449,12 @@ if matchpy:
 
     cons1189 = CustomConstraint(cons_f1189)
 
-    def cons_f1190(j, h, i, g, k):
+    def cons_f1190(j, k, g, i, h):
         return ZeroQ(h - i*(-g*k + h*j))
 
     cons1190 = CustomConstraint(cons_f1190)
 
-    def cons_f1191(h, j, g, k):
+    def cons_f1191(h, k, j, g):
         return ZeroQ(-g*k + h*j)
 
     cons1191 = CustomConstraint(cons_f1191)
@@ -6467,44 +6469,44 @@ if matchpy:
 
     cons1193 = CustomConstraint(cons_f1193)
 
-    def cons_f1194(r, r1):
+    def cons_f1194(r1, r):
         return ZeroQ(-r + r1 + S(1))
 
     cons1194 = CustomConstraint(cons_f1194)
 
-    def cons_f1195(b, e, n, d, x, a, c):
+    def cons_f1195(b, d, c, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, n), x)
 
     cons1195 = CustomConstraint(cons_f1195)
 
-    def cons_f1196(n, mn):
+    def cons_f1196(mn, n):
         return ZeroQ(mn + n)
 
     cons1196 = CustomConstraint(cons_f1196)
 
-    def cons_f1197(b, e, d, a, c):
+    def cons_f1197(b, d, a, c, e):
         return ZeroQ(-a*c*d + b*c*e + d)
 
     cons1197 = CustomConstraint(cons_f1197)
 
-    def cons_f1198(RFx, x):
+    def cons_f1198(x, RFx):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return RationalFunctionQ(RFx, x)
 
     cons1198 = CustomConstraint(cons_f1198)
 
-    def cons_f1199(e, f, g):
+    def cons_f1199(f, e, g):
         return ZeroQ(-S(4)*e*g + f**S(2))
 
     cons1199 = CustomConstraint(cons_f1199)
 
-    def cons_f1200(p, q, d, x, v, c):
+    def cons_f1200(v, p, d, c, x, q):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1199(qq, cc, e, pp, f, dd):
+        def _cons_f_1199(pp, qq, f, cc, dd, e):
             return FreeQ(List(cc, dd, e, f, pp, qq), x)
         _cons_1199 = CustomConstraint(_cons_f_1199)
         pat = Pattern(UtilityOperator(((x*WC('f', S(1)) + WC('e', S(0)))**WC('pp', S(1))*WC('dd', S(1)))**WC('qq', S(1))*WC('cc', S(1)), x), _cons_1199)
@@ -6513,14 +6515,14 @@ if matchpy:
 
     cons1200 = CustomConstraint(cons_f1200)
 
-    def cons_f1201(p, b, n, q, r, x, a, c):
+    def cons_f1201(p, b, r, c, a, n, x, q):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, n, p, q, r), x)
 
     cons1201 = CustomConstraint(cons_f1201)
 
-    def cons_f1202(p, b, q, n, x, a, c):
+    def cons_f1202(p, b, a, n, c, x, q):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(SameQ(x**(n*p*q), a*(b*(c*x**n)**p)**q))
@@ -6537,27 +6539,27 @@ if matchpy:
 
     cons1204 = CustomConstraint(cons_f1204)
 
-    def cons_f1205(c, f, g, d):
+    def cons_f1205(d, c, f, g):
         return ZeroQ(-c*g + d*f)
 
     cons1205 = CustomConstraint(cons_f1205)
 
-    def cons_f1206(e, b, d):
+    def cons_f1206(d, b, e):
         return ZeroQ(-b*e + d)
 
     cons1206 = CustomConstraint(cons_f1206)
 
-    def cons_f1207(a, f, g, b):
+    def cons_f1207(a, f, b, g):
         return ZeroQ(-a*g + b*f)
 
     cons1207 = CustomConstraint(cons_f1207)
 
-    def cons_f1208(c, f, g, d):
+    def cons_f1208(d, c, f, g):
         return NonzeroQ(-c*g + d*f)
 
     cons1208 = CustomConstraint(cons_f1208)
 
-    def cons_f1209(a, f, g, b):
+    def cons_f1209(a, f, b, g):
         return NonzeroQ(-a*g + b*f)
 
     cons1209 = CustomConstraint(cons_f1209)
@@ -6567,95 +6569,95 @@ if matchpy:
 
     cons1210 = CustomConstraint(cons_f1210)
 
-    def cons_f1211(b, u, d, x, a, c):
+    def cons_f1211(u, b, d, c, a, x):
         return FreeQ(simplify(Mul(u, Add(c, Mul(d, x)), Pow(Add(a, Mul(b, x)), S(-1)))), x)
 
     cons1211 = CustomConstraint(cons_f1211)
 
-    def cons_f1212(b, e, d, f, a, g, c):
+    def cons_f1212(f, g, b, d, c, a, e):
         return ZeroQ(-c*g + d*f - e*(-a*g + b*f))
 
     cons1212 = CustomConstraint(cons_f1212)
 
-    def cons_f1213(c, f, g, d):
+    def cons_f1213(d, c, f, g):
         return ZeroQ(c**S(2)*g + d**S(2)*f)
 
     cons1213 = CustomConstraint(cons_f1213)
 
-    def cons_f1214(b, e, d, a, c):
+    def cons_f1214(b, d, c, a, e):
         return ZeroQ(-a*d*e - b*c*e + S(2)*c*d)
 
     cons1214 = CustomConstraint(cons_f1214)
 
-    def cons_f1215(d, f, h, g, c):
+    def cons_f1215(f, g, d, c, h):
         return ZeroQ(c**S(2)*h - c*d*g + d**S(2)*f)
 
     cons1215 = CustomConstraint(cons_f1215)
 
-    def cons_f1216(c, f, h, d):
+    def cons_f1216(d, h, c, f):
         return ZeroQ(c**S(2)*h + d**S(2)*f)
 
     cons1216 = CustomConstraint(cons_f1216)
 
-    def cons_f1217(b, u, d, x, a, v, c):
+    def cons_f1217(v, u, b, d, c, a, x):
         return FreeQ(simplify(Mul(u, Pow(Add(S(1), Mul(S(-1), v)), S(-1)))), x)
 
     cons1217 = CustomConstraint(cons_f1217)
 
-    def cons_f1218(b, u, d, x, a, v, c):
+    def cons_f1218(v, u, b, d, c, a, x):
         return FreeQ(simplify(Mul(u, Add(S(1), Mul(S(-1), v)))), x)
 
     cons1218 = CustomConstraint(cons_f1218)
 
-    def cons_f1219(b, u, d, x, a, v, c):
+    def cons_f1219(v, u, b, d, c, a, x):
         return FreeQ(simplify(Mul(u, Pow(v, S(-1)))), x)
 
     cons1219 = CustomConstraint(cons_f1219)
 
-    def cons_f1220(b, u, d, x, a, v, c):
+    def cons_f1220(v, u, b, d, c, a, x):
         return FreeQ(simplify(Mul(u, v)), x)
 
     cons1220 = CustomConstraint(cons_f1220)
 
-    def cons_f1221(c, b, d, a, h, f):
+    def cons_f1221(f, b, d, c, a, h):
         return ZeroQ(-a*c*h + b*d*f)
 
     cons1221 = CustomConstraint(cons_f1221)
 
-    def cons_f1222(b, d, h, a, g, c):
+    def cons_f1222(g, b, d, c, a, h):
         return ZeroQ(-a*d*h - b*c*h + b*d*g)
 
     cons1222 = CustomConstraint(cons_f1222)
 
-    def cons_f1223(x, v):
+    def cons_f1223(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return QuotientOfLinearsQ(v, x)
 
     cons1223 = CustomConstraint(cons_f1223)
 
-    def cons_f1224(x, v):
+    def cons_f1224(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(QuotientOfLinearsMatchQ(v, x))
 
     cons1224 = CustomConstraint(cons_f1224)
 
-    def cons_f1225(x, v):
+    def cons_f1225(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(BinomialMatchQ(v, x))
 
     cons1225 = CustomConstraint(cons_f1225)
 
-    def cons_f1226(p, b, e, n, d, f, a, x, g, c):
+    def cons_f1226(p, f, b, g, d, c, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g, n, p), x)
 
     cons1226 = CustomConstraint(cons_f1226)
 
-    def cons_f1227(p, b, e, d, f, a, x, g, c):
+    def cons_f1227(p, f, b, g, d, c, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g, p), x)
@@ -6672,7 +6674,7 @@ if matchpy:
 
     cons1229 = CustomConstraint(cons_f1229)
 
-    def cons_f1230(u, x):
+    def cons_f1230(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return InverseFunctionFreeQ(u, x)
@@ -6689,28 +6691,28 @@ if matchpy:
 
     cons1232 = CustomConstraint(cons_f1232)
 
-    def cons_f1233(RFx, x):
+    def cons_f1233(x, RFx):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(PolynomialQ(RFx, x))
 
     cons1233 = CustomConstraint(cons_f1233)
 
-    def cons_f1234(Qx, Px, x):
+    def cons_f1234(x, Qx, Px):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return QuadraticQ(List(Qx, Px), x)
 
     cons1234 = CustomConstraint(cons_f1234)
 
-    def cons_f1235(Qx, Px, x):
+    def cons_f1235(x, Qx, Px):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(D(Px/Qx, x))
 
     cons1235 = CustomConstraint(cons_f1235)
 
-    def cons_f1236(RGx, x):
+    def cons_f1236(x, RGx):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return RationalFunctionQ(RGx, x)
@@ -6722,7 +6724,7 @@ if matchpy:
 
     cons1237 = CustomConstraint(cons_f1237)
 
-    def cons_f1238(x, v):
+    def cons_f1238(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         def _cons_f_1237(m, g):
@@ -6734,14 +6736,14 @@ if matchpy:
 
     cons1238 = CustomConstraint(cons_f1238)
 
-    def cons_f1239(u, x):
+    def cons_f1239(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return RationalFunctionQ(D(u, x)/u, x)
 
     cons1239 = CustomConstraint(cons_f1239)
 
-    def cons_f1240(a, u, x):
+    def cons_f1240(x, a, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         try:
@@ -6751,40 +6753,40 @@ if matchpy:
 
     cons1240 = CustomConstraint(cons_f1240)
 
-    def cons_f1241(Qx, x):
+    def cons_f1241(x, Qx):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return QuadraticQ(Qx, x)
 
     cons1241 = CustomConstraint(cons_f1241)
 
-    def cons_f1242(x, v):
+    def cons_f1242(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return InverseFunctionFreeQ(v, x)
 
     cons1242 = CustomConstraint(cons_f1242)
 
-    def cons_f1243(w, x):
+    def cons_f1243(x, w):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return InverseFunctionFreeQ(w, x)
 
     cons1243 = CustomConstraint(cons_f1243)
 
-    def cons_f1244(p, b, n, x, a):
+    def cons_f1244(p, b, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, n, p), x)
 
     cons1244 = CustomConstraint(cons_f1244)
 
-    def cons_f1245(a, A, b, B):
+    def cons_f1245(B, a, b, A):
         return NonzeroQ(A*b - B*a)
 
     cons1245 = CustomConstraint(cons_f1245)
 
-    def cons_f1246(a, f, x):
+    def cons_f1246(x, a, f):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, f), x)
@@ -6796,14 +6798,14 @@ if matchpy:
 
     cons1247 = CustomConstraint(cons_f1247)
 
-    def cons_f1248(u, x):
+    def cons_f1248(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return AlgebraicFunctionQ(u, x)
 
     cons1248 = CustomConstraint(cons_f1248)
 
-    def cons_f1249(u, x):
+    def cons_f1249(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FunctionOfTrigOfLinearQ(u, x)
@@ -6830,7 +6832,7 @@ if matchpy:
 
     cons1253 = CustomConstraint(cons_f1253)
 
-    def cons_f1254(b, e, x, a, f):
+    def cons_f1254(f, b, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, e, f), x)
@@ -6847,12 +6849,12 @@ if matchpy:
 
     cons1256 = CustomConstraint(cons_f1256)
 
-    def cons_f1257(m, a, n, b):
+    def cons_f1257(m, n, b, a):
         return Or(RationalQ(n), And(Not(RationalQ(m)), Or(ZeroQ(b + S(-1)), NonzeroQ(a + S(-1)))))
 
     cons1257 = CustomConstraint(cons_f1257)
 
-    def cons_f1258(b, e, m, n, x, a, f):
+    def cons_f1258(m, f, b, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, e, f, m, n), x)
@@ -6869,28 +6871,28 @@ if matchpy:
 
     cons1260 = CustomConstraint(cons_f1260)
 
-    def cons_f1261(c, d, x):
+    def cons_f1261(d, c, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(c, d), x)
 
     cons1261 = CustomConstraint(cons_f1261)
 
-    def cons_f1262(c, x):
+    def cons_f1262(x, c):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(c, c), x)
 
     cons1262 = CustomConstraint(cons_f1262)
 
-    def cons_f1263(c, b, d, x):
+    def cons_f1263(d, c, b, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(b, c, d), x)
 
     cons1263 = CustomConstraint(cons_f1263)
 
-    def cons_f1264(b, d, x, a, c):
+    def cons_f1264(b, d, c, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d), x)
@@ -6937,7 +6939,7 @@ if matchpy:
 
     cons1272 = CustomConstraint(cons_f1272)
 
-    def cons_f1273(b, n, d, x, a, c):
+    def cons_f1273(b, d, c, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, n), x)
@@ -6949,7 +6951,7 @@ if matchpy:
 
     cons1274 = CustomConstraint(cons_f1274)
 
-    def cons_f1275(m, a, p, b):
+    def cons_f1275(m, p, b, a):
         return Or(GreaterEqual(p, S(-1)), Not(And(IntegerQ(m + S(1)/2), ZeroQ(a**S(2) - b**S(2)))))
 
     cons1275 = CustomConstraint(cons_f1275)
@@ -7114,7 +7116,7 @@ if matchpy:
 
     cons1307 = CustomConstraint(cons_f1307)
 
-    def cons_f1308(p, b, e, m, x, a, g, f):
+    def cons_f1308(p, m, f, b, g, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, e, f, g, m, p), x)
@@ -7166,14 +7168,14 @@ if matchpy:
 
     cons1317 = CustomConstraint(cons_f1317)
 
-    def cons_f1318(b, e, m, d, f, x, c):
+    def cons_f1318(m, f, b, d, c, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(b, c, d, e, f, m), x)
 
     cons1318 = CustomConstraint(cons_f1318)
 
-    def cons_f1319(b, m, d, a, c):
+    def cons_f1319(m, b, d, a, c):
         return ZeroQ(a*d*m + b*c*(m + S(1)))
 
     cons1319 = CustomConstraint(cons_f1319)
@@ -7188,17 +7190,17 @@ if matchpy:
 
     cons1321 = CustomConstraint(cons_f1321)
 
-    def cons_f1322(c, d):
+    def cons_f1322(d, c):
         return ZeroQ(c**S(2) - d**S(2))
 
     cons1322 = CustomConstraint(cons_f1322)
 
-    def cons_f1323(c, d):
+    def cons_f1323(d, c):
         return NonzeroQ(c**S(2) - d**S(2))
 
     cons1323 = CustomConstraint(cons_f1323)
 
-    def cons_f1324(m, c, n):
+    def cons_f1324(m, n, c):
         return Or(IntegersQ(S(2)*m, S(2)*n), IntegerQ(m + S(1)/2), And(IntegerQ(m), ZeroQ(c)))
 
     cons1324 = CustomConstraint(cons_f1324)
@@ -7208,7 +7210,7 @@ if matchpy:
 
     cons1325 = CustomConstraint(cons_f1325)
 
-    def cons_f1326(m, c, n):
+    def cons_f1326(m, n, c):
         return Or(IntegersQ(S(2)*m, S(2)*n), And(IntegerQ(m), ZeroQ(c)))
 
     cons1326 = CustomConstraint(cons_f1326)
@@ -7228,17 +7230,17 @@ if matchpy:
 
     cons1329 = CustomConstraint(cons_f1329)
 
-    def cons_f1330(a, b, d):
+    def cons_f1330(d, a, b):
         return ZeroQ(-a/b + d)
 
     cons1330 = CustomConstraint(cons_f1330)
 
-    def cons_f1331(b, d):
+    def cons_f1331(d, b):
         return PositiveQ(d/b)
 
     cons1331 = CustomConstraint(cons_f1331)
 
-    def cons_f1332(b, d):
+    def cons_f1332(d, b):
         return Not(PositiveQ(d/b))
 
     cons1332 = CustomConstraint(cons_f1332)
@@ -7253,7 +7255,7 @@ if matchpy:
 
     cons1334 = CustomConstraint(cons_f1334)
 
-    def cons_f1335(m, a, n, c):
+    def cons_f1335(m, n, c, a):
         return Not(And(IntegerQ(n), Greater(n, S(2)), Or(Not(IntegerQ(m)), And(ZeroQ(a), NonzeroQ(c)))))
 
     cons1335 = CustomConstraint(cons_f1335)
@@ -7263,32 +7265,32 @@ if matchpy:
 
     cons1336 = CustomConstraint(cons_f1336)
 
-    def cons_f1337(a, m, n):
+    def cons_f1337(m, a, n):
         return Or(And(ZeroQ(a), IntegerQ(m), Not(IntegerQ(n))), Not(And(IntegerQ(S(2)*n), Less(n, S(-1)), Or(And(IntegerQ(n), Not(IntegerQ(m))), ZeroQ(a)))))
 
     cons1337 = CustomConstraint(cons_f1337)
 
-    def cons_f1338(c, d):
+    def cons_f1338(d, c):
         return PositiveQ(c + d)
 
     cons1338 = CustomConstraint(cons_f1338)
 
-    def cons_f1339(c, d):
+    def cons_f1339(d, c):
         return PositiveQ(c - d)
 
     cons1339 = CustomConstraint(cons_f1339)
 
-    def cons_f1340(c, d):
+    def cons_f1340(d, c):
         return Not(PositiveQ(c + d))
 
     cons1340 = CustomConstraint(cons_f1340)
 
-    def cons_f1341(c, d):
+    def cons_f1341(d, c):
         return PositiveQ(c**S(2) - d**S(2))
 
     cons1341 = CustomConstraint(cons_f1341)
 
-    def cons_f1342(c, b, d):
+    def cons_f1342(d, c, b):
         return PosQ((c + d)/b)
 
     cons1342 = CustomConstraint(cons_f1342)
@@ -7298,17 +7300,17 @@ if matchpy:
 
     cons1343 = CustomConstraint(cons_f1343)
 
-    def cons_f1344(c, b, d):
+    def cons_f1344(d, c, b):
         return NegQ((c + d)/b)
 
     cons1344 = CustomConstraint(cons_f1344)
 
-    def cons_f1345(a, c, b, d):
+    def cons_f1345(d, c, a, b):
         return PosQ((a + b)/(c + d))
 
     cons1345 = CustomConstraint(cons_f1345)
 
-    def cons_f1346(a, c, b, d):
+    def cons_f1346(d, c, a, b):
         return NegQ((a + b)/(c + d))
 
     cons1346 = CustomConstraint(cons_f1346)
@@ -7323,7 +7325,7 @@ if matchpy:
 
     cons1348 = CustomConstraint(cons_f1348)
 
-    def cons_f1349(b, d):
+    def cons_f1349(d, b):
         return PositiveQ(b*d)
 
     cons1349 = CustomConstraint(cons_f1349)
@@ -7333,12 +7335,12 @@ if matchpy:
 
     cons1350 = CustomConstraint(cons_f1350)
 
-    def cons_f1351(b, d):
+    def cons_f1351(d, b):
         return Not(And(ZeroQ(d**S(2) + S(-1)), PositiveQ(b*d)))
 
     cons1351 = CustomConstraint(cons_f1351)
 
-    def cons_f1352(a, b, d):
+    def cons_f1352(d, a, b):
         return PosQ((a + b)/d)
 
     cons1352 = CustomConstraint(cons_f1352)
@@ -7348,17 +7350,17 @@ if matchpy:
 
     cons1353 = CustomConstraint(cons_f1353)
 
-    def cons_f1354(a, b, d):
+    def cons_f1354(d, a, b):
         return NegQ((a + b)/d)
 
     cons1354 = CustomConstraint(cons_f1354)
 
-    def cons_f1355(a, c, b, d):
+    def cons_f1355(d, c, b, a):
         return PosQ((c + d)/(a + b))
 
     cons1355 = CustomConstraint(cons_f1355)
 
-    def cons_f1356(a, c, b, d):
+    def cons_f1356(d, c, b, a):
         return NegQ((c + d)/(a + b))
 
     cons1356 = CustomConstraint(cons_f1356)
@@ -7378,24 +7380,24 @@ if matchpy:
 
     cons1359 = CustomConstraint(cons_f1359)
 
-    def cons_f1360(b, e, m, n, d, f, a, x, c):
+    def cons_f1360(m, f, b, d, c, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, m, n), x)
 
     cons1360 = CustomConstraint(cons_f1360)
 
-    def cons_f1361(a, n, p, b):
+    def cons_f1361(a, p, b, n):
         return Or(And(Less(p, S(0)), NonzeroQ(a**S(2) - b**S(2))), Less(S(0), n, p + S(-1)), Less(p + S(1), -n, S(2)*p + S(1)))
 
     cons1361 = CustomConstraint(cons_f1361)
 
-    def cons_f1362(n, p):
+    def cons_f1362(p, n):
         return Or(Less(S(0), n, p/S(2) + S(1)/2), Inequality(p, LessEqual, -n, Less, S(2)*p + S(-3)), Inequality(S(0), Less, n, LessEqual, -p))
 
     cons1362 = CustomConstraint(cons_f1362)
 
-    def cons_f1363(p, b, e, n, d, x, a, g, f):
+    def cons_f1363(p, f, b, g, d, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, d, e, f, g, n, p), x)
@@ -7407,7 +7409,7 @@ if matchpy:
 
     cons1364 = CustomConstraint(cons_f1364)
 
-    def cons_f1365(n, p):
+    def cons_f1365(p, n):
         return NonzeroQ(S(2)*n + p + S(1))
 
     cons1365 = CustomConstraint(cons_f1365)
@@ -7417,7 +7419,7 @@ if matchpy:
 
     cons1366 = CustomConstraint(cons_f1366)
 
-    def cons_f1367(m, n, p):
+    def cons_f1367(m, p, n):
         return Not(And(PositiveIntegerQ(n + p/S(2) + S(-1)/2), Greater(m - n, S(0))))
 
     cons1367 = CustomConstraint(cons_f1367)
@@ -7447,7 +7449,7 @@ if matchpy:
 
     cons1372 = CustomConstraint(cons_f1372)
 
-    def cons_f1373(p, b, m, d, a, c):
+    def cons_f1373(p, m, b, d, a, c):
         return ZeroQ(a*d*m + b*c*(m + p + S(1)))
 
     cons1373 = CustomConstraint(cons_f1373)
@@ -7492,7 +7494,7 @@ if matchpy:
 
     cons1381 = CustomConstraint(cons_f1381)
 
-    def cons_f1382(m, n, p):
+    def cons_f1382(m, p, n):
         return Or(And(Greater(m, S(0)), Greater(p, S(0)), Less(-m - p, n, S(-1))), And(Greater(m, S(2)), Less(p, S(0)), Greater(m + p/S(2), S(0))))
 
     cons1382 = CustomConstraint(cons_f1382)
@@ -7517,7 +7519,7 @@ if matchpy:
 
     cons1386 = CustomConstraint(cons_f1386)
 
-    def cons_f1387(n, p):
+    def cons_f1387(p, n):
         return Or(IntegerQ(p), PositiveIntegerQ(n))
 
     cons1387 = CustomConstraint(cons_f1387)
@@ -7582,22 +7584,22 @@ if matchpy:
 
     cons1399 = CustomConstraint(cons_f1399)
 
-    def cons_f1400(n, p):
+    def cons_f1400(p, n):
         return Or(Less(n, S(0)), PositiveIntegerQ(p + S(1)/2))
 
     cons1400 = CustomConstraint(cons_f1400)
 
-    def cons_f1401(n, p):
+    def cons_f1401(p, n):
         return IntegersQ(S(2)*n, S(2)*p)
 
     cons1401 = CustomConstraint(cons_f1401)
 
-    def cons_f1402(n, p):
+    def cons_f1402(p, n):
         return Or(LessEqual(n, S(-2)), And(Equal(n, S(-3)/2), Equal(p, S(3)/2)))
 
     cons1402 = CustomConstraint(cons_f1402)
 
-    def cons_f1403(n, p):
+    def cons_f1403(p, n):
         return Or(Less(n, S(-1)), And(Equal(p, S(3)/2), Equal(n, S(-1)/2)))
 
     cons1403 = CustomConstraint(cons_f1403)
@@ -7627,12 +7629,12 @@ if matchpy:
 
     cons1408 = CustomConstraint(cons_f1408)
 
-    def cons_f1409(a, c, b, d):
+    def cons_f1409(d, c, a, b):
         return Or(ZeroQ(a**S(2) - b**S(2)), ZeroQ(c**S(2) - d**S(2)))
 
     cons1409 = CustomConstraint(cons_f1409)
 
-    def cons_f1410(c, d):
+    def cons_f1410(d, c):
         return ZeroQ(-c + d)
 
     cons1410 = CustomConstraint(cons_f1410)
@@ -7642,17 +7644,17 @@ if matchpy:
 
     cons1411 = CustomConstraint(cons_f1411)
 
-    def cons_f1412(a, c, b, d):
+    def cons_f1412(d, c, b, a):
         return NonzeroQ(a*d + b*c)
 
     cons1412 = CustomConstraint(cons_f1412)
 
-    def cons_f1413(a, c, b, d):
+    def cons_f1413(d, c, a, b):
         return Or(NonzeroQ(a**S(2) - b**S(2)), NonzeroQ(c**S(2) - d**S(2)))
 
     cons1413 = CustomConstraint(cons_f1413)
 
-    def cons_f1414(n, p):
+    def cons_f1414(p, n):
         return ZeroQ(S(2)*n + p)
 
     cons1414 = CustomConstraint(cons_f1414)
@@ -7672,12 +7674,12 @@ if matchpy:
 
     cons1417 = CustomConstraint(cons_f1417)
 
-    def cons_f1418(a, A, b, B):
+    def cons_f1418(B, a, b, A):
         return ZeroQ(A*b + B*a)
 
     cons1418 = CustomConstraint(cons_f1418)
 
-    def cons_f1419(b, m, n, B, a, A):
+    def cons_f1419(B, m, b, a, n, A):
         return ZeroQ(A*b*(m + n + S(1)) + B*a*(m - n))
 
     cons1419 = CustomConstraint(cons_f1419)
@@ -7692,7 +7694,7 @@ if matchpy:
 
     cons1421 = CustomConstraint(cons_f1421)
 
-    def cons_f1422(b, m, n, d, B, a, A, c):
+    def cons_f1422(B, m, b, d, a, c, n, A):
         return ZeroQ(A*(a*d*m + b*c*(n + S(1))) - B*(a*c*m + b*d*(n + S(1))))
 
     cons1422 = CustomConstraint(cons_f1422)
@@ -7702,7 +7704,7 @@ if matchpy:
 
     cons1423 = CustomConstraint(cons_f1423)
 
-    def cons_f1424(b, n, d, B, a, A, c):
+    def cons_f1424(B, b, d, c, n, a, A):
         return ZeroQ(A*b*d*(S(2)*n + S(3)) - B*(-S(2)*a*d*(n + S(1)) + b*c))
 
     cons1424 = CustomConstraint(cons_f1424)
@@ -7712,22 +7714,22 @@ if matchpy:
 
     cons1425 = CustomConstraint(cons_f1425)
 
-    def cons_f1426(a, A, b, B):
+    def cons_f1426(B, a, b, A):
         return NonzeroQ(A*b + B*a)
 
     cons1426 = CustomConstraint(cons_f1426)
 
-    def cons_f1427(m, a, n, c):
+    def cons_f1427(m, n, c, a):
         return Not(And(IntegerQ(n), Greater(n, S(1)), Or(Not(IntegerQ(m)), And(ZeroQ(a), NonzeroQ(c)))))
 
     cons1427 = CustomConstraint(cons_f1427)
 
-    def cons_f1428(A, B):
+    def cons_f1428(B, A):
         return ZeroQ(A - B)
 
     cons1428 = CustomConstraint(cons_f1428)
 
-    def cons_f1429(A, B):
+    def cons_f1429(B, A):
         return NonzeroQ(A - B)
 
     cons1429 = CustomConstraint(cons_f1429)
@@ -7737,29 +7739,29 @@ if matchpy:
 
     cons1430 = CustomConstraint(cons_f1430)
 
-    def cons_f1431(b, e, m, B, x, C, f):
+    def cons_f1431(B, C, m, f, b, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(b, e, f, B, C, m), x)
 
     cons1431 = CustomConstraint(cons_f1431)
 
-    def cons_f1432(m, A, C):
+    def cons_f1432(m, C, A):
         return ZeroQ(A*(m + S(2)) + C*(m + S(1)))
 
     cons1432 = CustomConstraint(cons_f1432)
 
-    def cons_f1433(a, A, b, C):
+    def cons_f1433(a, C, b, A):
         return ZeroQ(A*b**S(2) + C*a**S(2))
 
     cons1433 = CustomConstraint(cons_f1433)
 
-    def cons_f1434(A, B, C):
+    def cons_f1434(B, C, A):
         return ZeroQ(A - B + C)
 
     cons1434 = CustomConstraint(cons_f1434)
 
-    def cons_f1435(A, C):
+    def cons_f1435(C, A):
         return ZeroQ(A + C)
 
     cons1435 = CustomConstraint(cons_f1435)
@@ -7774,7 +7776,7 @@ if matchpy:
 
     cons1437 = CustomConstraint(cons_f1437)
 
-    def cons_f1438(m, a, n, c):
+    def cons_f1438(m, n, c, a):
         return Not(And(IntegerQ(n), Greater(n, S(0)), Or(Not(IntegerQ(m)), And(ZeroQ(a), NonzeroQ(c)))))
 
     cons1438 = CustomConstraint(cons_f1438)
@@ -7824,7 +7826,7 @@ if matchpy:
 
     cons1447 = CustomConstraint(cons_f1447)
 
-    def cons_f1448(a, c, b):
+    def cons_f1448(c, a, b):
         return ZeroQ(a**S(2) - b**S(2) - c**S(2))
 
     cons1448 = CustomConstraint(cons_f1448)
@@ -7839,17 +7841,17 @@ if matchpy:
 
     cons1450 = CustomConstraint(cons_f1450)
 
-    def cons_f1451(a, c, b):
+    def cons_f1451(c, a, b):
         return PositiveQ(a + sqrt(b**S(2) + c**S(2)))
 
     cons1451 = CustomConstraint(cons_f1451)
 
-    def cons_f1452(a, c, b):
+    def cons_f1452(c, a, b):
         return NonzeroQ(a**S(2) - b**S(2) - c**S(2))
 
     cons1452 = CustomConstraint(cons_f1452)
 
-    def cons_f1453(a, c, b):
+    def cons_f1453(c, a, b):
         return Not(PositiveQ(a + sqrt(b**S(2) + c**S(2))))
 
     cons1453 = CustomConstraint(cons_f1453)
@@ -7874,102 +7876,102 @@ if matchpy:
 
     cons1457 = CustomConstraint(cons_f1457)
 
-    def cons_f1458(b, B, a, A, C, c):
+    def cons_f1458(B, C, b, c, a, A):
         return ZeroQ(A*(b**S(2) + c**S(2)) - a*(B*b + C*c))
 
     cons1458 = CustomConstraint(cons_f1458)
 
-    def cons_f1459(b, a, A, C, c):
+    def cons_f1459(C, b, c, a, A):
         return ZeroQ(A*(b**S(2) + c**S(2)) - C*a*c)
 
     cons1459 = CustomConstraint(cons_f1459)
 
-    def cons_f1460(b, B, a, A, c):
+    def cons_f1460(B, b, c, a, A):
         return ZeroQ(A*(b**S(2) + c**S(2)) - B*a*b)
 
     cons1460 = CustomConstraint(cons_f1460)
 
-    def cons_f1461(b, B, a, A, C, c):
+    def cons_f1461(B, C, b, c, a, A):
         return NonzeroQ(A*(b**S(2) + c**S(2)) - a*(B*b + C*c))
 
     cons1461 = CustomConstraint(cons_f1461)
 
-    def cons_f1462(b, a, A, C, c):
+    def cons_f1462(C, b, c, a, A):
         return NonzeroQ(A*(b**S(2) + c**S(2)) - C*a*c)
 
     cons1462 = CustomConstraint(cons_f1462)
 
-    def cons_f1463(b, B, a, A, c):
+    def cons_f1463(B, b, c, a, A):
         return NonzeroQ(A*(b**S(2) + c**S(2)) - B*a*b)
 
     cons1463 = CustomConstraint(cons_f1463)
 
-    def cons_f1464(b, n, B, a, A, C, c):
+    def cons_f1464(B, C, b, c, n, a, A):
         return ZeroQ(A*a*(n + S(1)) + n*(B*b + C*c))
 
     cons1464 = CustomConstraint(cons_f1464)
 
-    def cons_f1465(n, a, A, C, c):
+    def cons_f1465(C, c, a, n, A):
         return ZeroQ(A*a*(n + S(1)) + C*c*n)
 
     cons1465 = CustomConstraint(cons_f1465)
 
-    def cons_f1466(b, n, B, a, A):
+    def cons_f1466(B, b, a, n, A):
         return ZeroQ(A*a*(n + S(1)) + B*b*n)
 
     cons1466 = CustomConstraint(cons_f1466)
 
-    def cons_f1467(b, n, B, a, A, C, c):
+    def cons_f1467(B, C, b, c, n, a, A):
         return NonzeroQ(A*a*(n + S(1)) + n*(B*b + C*c))
 
     cons1467 = CustomConstraint(cons_f1467)
 
-    def cons_f1468(n, a, A, C, c):
+    def cons_f1468(C, c, a, n, A):
         return NonzeroQ(A*a*(n + S(1)) + C*c*n)
 
     cons1468 = CustomConstraint(cons_f1468)
 
-    def cons_f1469(b, n, B, a, A):
+    def cons_f1469(B, b, a, n, A):
         return NonzeroQ(A*a*(n + S(1)) + B*b*n)
 
     cons1469 = CustomConstraint(cons_f1469)
 
-    def cons_f1470(c, b, B, C):
+    def cons_f1470(B, c, C, b):
         return ZeroQ(B*b + C*c)
 
     cons1470 = CustomConstraint(cons_f1470)
 
-    def cons_f1471(c, b, B, C):
+    def cons_f1471(B, c, C, b):
         return ZeroQ(B*c - C*b)
 
     cons1471 = CustomConstraint(cons_f1471)
 
-    def cons_f1472(b, B, a, A, C, c):
+    def cons_f1472(B, C, b, c, a, A):
         return ZeroQ(A*a - B*b - C*c)
 
     cons1472 = CustomConstraint(cons_f1472)
 
-    def cons_f1473(a, c, A, C):
+    def cons_f1473(a, C, c, A):
         return ZeroQ(A*a - C*c)
 
     cons1473 = CustomConstraint(cons_f1473)
 
-    def cons_f1474(a, A, b, B):
+    def cons_f1474(B, a, b, A):
         return ZeroQ(A*a - B*b)
 
     cons1474 = CustomConstraint(cons_f1474)
 
-    def cons_f1475(b, B, a, A, C, c):
+    def cons_f1475(B, C, b, c, a, A):
         return NonzeroQ(A*a - B*b - C*c)
 
     cons1475 = CustomConstraint(cons_f1475)
 
-    def cons_f1476(a, c, A, C):
+    def cons_f1476(a, C, c, A):
         return NonzeroQ(A*a - C*c)
 
     cons1476 = CustomConstraint(cons_f1476)
 
-    def cons_f1477(a, A, b, B):
+    def cons_f1477(B, a, b, A):
         return NonzeroQ(A*a - B*b)
 
     cons1477 = CustomConstraint(cons_f1477)
@@ -8014,17 +8016,17 @@ if matchpy:
 
     cons1485 = CustomConstraint(cons_f1485)
 
-    def cons_f1486(q, p):
+    def cons_f1486(p, q):
         return Inequality(S(0), Less, p, LessEqual, q)
 
     cons1486 = CustomConstraint(cons_f1486)
 
-    def cons_f1487(q, p):
+    def cons_f1487(p, q):
         return Less(S(0), q, p)
 
     cons1487 = CustomConstraint(cons_f1487)
 
-    def cons_f1488(e, m, d, f, x, c):
+    def cons_f1488(m, f, d, c, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(c, d, e, f, m), x)
@@ -8036,7 +8038,7 @@ if matchpy:
 
     cons1489 = CustomConstraint(cons_f1489)
 
-    def cons_f1490(m, a, n, b):
+    def cons_f1490(m, n, b, a):
         return Or(Equal(n, S(1)), PositiveIntegerQ(m), NonzeroQ(a**S(2) - b**S(2)))
 
     cons1490 = CustomConstraint(cons_f1490)
@@ -8056,12 +8058,12 @@ if matchpy:
 
     cons1493 = CustomConstraint(cons_f1493)
 
-    def cons_f1494(n, p):
+    def cons_f1494(p, n):
         return Or(Equal(n, S(2)), Equal(p, S(-1)))
 
     cons1494 = CustomConstraint(cons_f1494)
 
-    def cons_f1495(p, b, n, d, x, a, c):
+    def cons_f1495(p, b, d, c, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, n, p), x)
@@ -8073,21 +8075,21 @@ if matchpy:
 
     cons1496 = CustomConstraint(cons_f1496)
 
-    def cons_f1497(p, b, e, m, n, d, x, a, c):
+    def cons_f1497(p, m, b, d, c, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, m, n, p), x)
 
     cons1497 = CustomConstraint(cons_f1497)
 
-    def cons_f1498(c, n, d, x):
+    def cons_f1498(d, c, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(c, d, n), x)
 
     cons1498 = CustomConstraint(cons_f1498)
 
-    def cons_f1499(n, d, x):
+    def cons_f1499(d, x, n):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(d, n), x)
@@ -8124,14 +8126,14 @@ if matchpy:
 
     cons1505 = CustomConstraint(cons_f1505)
 
-    def cons_f1506(e, m, n, d, x, c):
+    def cons_f1506(m, d, c, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(c, d, e, m, n), x)
 
     cons1506 = CustomConstraint(cons_f1506)
 
-    def cons_f1507(b, e, m, d, x, a, c):
+    def cons_f1507(m, b, d, c, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, m), x)
@@ -8208,7 +8210,7 @@ if matchpy:
 
     cons1521 = CustomConstraint(cons_f1521)
 
-    def cons_f1522(e, f, b, x):
+    def cons_f1522(x, f, b, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(b, e, f), x)
@@ -8225,22 +8227,22 @@ if matchpy:
 
     cons1524 = CustomConstraint(cons_f1524)
 
-    def cons_f1525(m, n, p):
+    def cons_f1525(m, p, n):
         return NonzeroQ(m*p + n + S(-1))
 
     cons1525 = CustomConstraint(cons_f1525)
 
-    def cons_f1526(m, n, p):
+    def cons_f1526(m, p, n):
         return IntegersQ(S(2)*m*p, S(2)*n)
 
     cons1526 = CustomConstraint(cons_f1526)
 
-    def cons_f1527(m, n, p):
+    def cons_f1527(m, p, n):
         return NonzeroQ(m*p + n + S(1))
 
     cons1527 = CustomConstraint(cons_f1527)
 
-    def cons_f1528(m, a, b):
+    def cons_f1528(m, b, a):
         return Or(IntegerQ(S(2)*m), NonzeroQ(a**S(2) + b**S(2)))
 
     cons1528 = CustomConstraint(cons_f1528)
@@ -8310,37 +8312,37 @@ if matchpy:
 
     cons1541 = CustomConstraint(cons_f1541)
 
-    def cons_f1542(a, c, b, d):
+    def cons_f1542(d, a, c, b):
         return ZeroQ(a*c + b*d)
 
     cons1542 = CustomConstraint(cons_f1542)
 
-    def cons_f1543(a, c, b, d):
+    def cons_f1543(d, a, c, b):
         return NonzeroQ(a*c + b*d)
 
     cons1543 = CustomConstraint(cons_f1543)
 
-    def cons_f1544(c, d):
+    def cons_f1544(d, c):
         return ZeroQ(c**S(2) + d**S(2))
 
     cons1544 = CustomConstraint(cons_f1544)
 
-    def cons_f1545(c, d):
+    def cons_f1545(d, c):
         return NonzeroQ(c**S(2) + d**S(2))
 
     cons1545 = CustomConstraint(cons_f1545)
 
-    def cons_f1546(a, c, b, d):
+    def cons_f1546(d, a, c, b):
         return ZeroQ(S(2)*a*c*d - b*(c**S(2) - d**S(2)))
 
     cons1546 = CustomConstraint(cons_f1546)
 
-    def cons_f1547(a, c, b, d):
+    def cons_f1547(d, a, c, b):
         return NonzeroQ(S(2)*a*c*d - b*(c**S(2) - d**S(2)))
 
     cons1547 = CustomConstraint(cons_f1547)
 
-    def cons_f1548(a, c, b, d):
+    def cons_f1548(d, c, a, b):
         return Or(PerfectSquareQ(a**S(2) + b**S(2)), RationalQ(a, b, c, d))
 
     cons1548 = CustomConstraint(cons_f1548)
@@ -8375,7 +8377,7 @@ if matchpy:
 
     cons1554 = CustomConstraint(cons_f1554)
 
-    def cons_f1555(m, c, n, a):
+    def cons_f1555(m, n, c, a):
         return Not(And(IntegerQ(n), Greater(n, S(2)), Or(Not(IntegerQ(m)), And(ZeroQ(c), NonzeroQ(a)))))
 
     cons1555 = CustomConstraint(cons_f1555)
@@ -8385,52 +8387,52 @@ if matchpy:
 
     cons1556 = CustomConstraint(cons_f1556)
 
-    def cons_f1557(m, c, n, a):
+    def cons_f1557(m, n, c, a):
         return Not(And(IntegerQ(n), Less(n, S(-1)), Or(Not(IntegerQ(m)), And(ZeroQ(c), NonzeroQ(a)))))
 
     cons1557 = CustomConstraint(cons_f1557)
 
-    def cons_f1558(A, B):
+    def cons_f1558(B, A):
         return ZeroQ(A**S(2) + B**S(2))
 
     cons1558 = CustomConstraint(cons_f1558)
 
-    def cons_f1559(A, B):
+    def cons_f1559(B, A):
         return NonzeroQ(A**S(2) + B**S(2))
 
     cons1559 = CustomConstraint(cons_f1559)
 
-    def cons_f1560(m, c, n, a):
+    def cons_f1560(m, n, c, a):
         return Not(And(IntegerQ(n), Greater(n, S(1)), Or(Not(IntegerQ(m)), And(ZeroQ(c), NonzeroQ(a)))))
 
     cons1560 = CustomConstraint(cons_f1560)
 
-    def cons_f1561(A, C):
+    def cons_f1561(C, A):
         return ZeroQ(A - C)
 
     cons1561 = CustomConstraint(cons_f1561)
 
-    def cons_f1562(b, B, a, A, C):
+    def cons_f1562(B, C, b, a, A):
         return NonzeroQ(A*b**S(2) - B*a*b + C*a**S(2))
 
     cons1562 = CustomConstraint(cons_f1562)
 
-    def cons_f1563(a, A, b, C):
+    def cons_f1563(a, C, b, A):
         return NonzeroQ(A*b**S(2) + C*a**S(2))
 
     cons1563 = CustomConstraint(cons_f1563)
 
-    def cons_f1564(b, B, a, A, C):
+    def cons_f1564(B, C, b, a, A):
         return ZeroQ(A*b - B*a - C*b)
 
     cons1564 = CustomConstraint(cons_f1564)
 
-    def cons_f1565(A, C):
+    def cons_f1565(C, A):
         return NonzeroQ(A - C)
 
     cons1565 = CustomConstraint(cons_f1565)
 
-    def cons_f1566(b, B, a, A, C):
+    def cons_f1566(B, C, b, a, A):
         return NonzeroQ(A*b - B*a - C*b)
 
     cons1566 = CustomConstraint(cons_f1566)
@@ -8440,7 +8442,7 @@ if matchpy:
 
     cons1567 = CustomConstraint(cons_f1567)
 
-    def cons_f1568(m, c, n, a):
+    def cons_f1568(m, n, c, a):
         return Not(And(IntegerQ(n), Greater(n, S(0)), Or(Not(IntegerQ(m)), And(ZeroQ(c), NonzeroQ(a)))))
 
     cons1568 = CustomConstraint(cons_f1568)
@@ -8450,7 +8452,7 @@ if matchpy:
 
     cons1569 = CustomConstraint(cons_f1569)
 
-    def cons_f1570(p, b, e, n, d, x, a, c):
+    def cons_f1570(p, b, d, c, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, n, p), x)
@@ -8477,14 +8479,14 @@ if matchpy:
 
     cons1574 = CustomConstraint(cons_f1574)
 
-    def cons_f1575(m, n, d, x, c):
+    def cons_f1575(m, d, c, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(c, d, m, n), x)
 
     cons1575 = CustomConstraint(cons_f1575)
 
-    def cons_f1576(p, b, m, n, d, x, a, c):
+    def cons_f1576(p, m, b, d, c, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, m, n, p), x)
@@ -8501,14 +8503,14 @@ if matchpy:
 
     cons1578 = CustomConstraint(cons_f1578)
 
-    def cons_f1579(b, n, x, a, c):
+    def cons_f1579(b, c, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, n), x)
 
     cons1579 = CustomConstraint(cons_f1579)
 
-    def cons_f1580(b, e, m, n, d, x, a, c):
+    def cons_f1580(m, b, d, c, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, m, n), x)
@@ -8545,19 +8547,19 @@ if matchpy:
 
     cons1586 = CustomConstraint(cons_f1586)
 
-    def cons_f1587(b, e, n, d, x, a, f):
+    def cons_f1587(f, b, d, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, d, e, f, n), x)
 
     cons1587 = CustomConstraint(cons_f1587)
 
-    def cons_f1588(a, b, d):
+    def cons_f1588(d, a, b):
         return PositiveQ(a*d/b)
 
     cons1588 = CustomConstraint(cons_f1588)
 
-    def cons_f1589(a, b, d):
+    def cons_f1589(d, a, b):
         return Not(PositiveQ(a*d/b))
 
     cons1589 = CustomConstraint(cons_f1589)
@@ -8577,7 +8579,7 @@ if matchpy:
 
     cons1592 = CustomConstraint(cons_f1592)
 
-    def cons_f1593(a, b, d):
+    def cons_f1593(d, a, b):
         return NegativeQ(a*d/b)
 
     cons1593 = CustomConstraint(cons_f1593)
@@ -8632,21 +8634,21 @@ if matchpy:
 
     cons1603 = CustomConstraint(cons_f1603)
 
-    def cons_f1604(b, e, m, n, d, x, a, f):
+    def cons_f1604(m, f, b, d, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, d, e, f, m, n), x)
 
     cons1604 = CustomConstraint(cons_f1604)
 
-    def cons_f1605(b, e, m, x, a, f):
+    def cons_f1605(m, f, b, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, e, f, m), x)
 
     cons1605 = CustomConstraint(cons_f1605)
 
-    def cons_f1606(a, m, p, b):
+    def cons_f1606(m, a, p, b):
         return Or(ZeroQ(a**S(2) - b**S(2)), IntegersQ(S(2)*m, p))
 
     cons1606 = CustomConstraint(cons_f1606)
@@ -8731,37 +8733,37 @@ if matchpy:
 
     cons1622 = CustomConstraint(cons_f1622)
 
-    def cons_f1623(b, m, B, a, A):
+    def cons_f1623(B, m, b, a, A):
         return ZeroQ(A*b*(m + S(1)) + B*a*m)
 
     cons1623 = CustomConstraint(cons_f1623)
 
-    def cons_f1624(b, m, B, a, A):
+    def cons_f1624(B, m, b, a, A):
         return NonzeroQ(A*b*(m + S(1)) + B*a*m)
 
     cons1624 = CustomConstraint(cons_f1624)
 
-    def cons_f1625(A, B):
+    def cons_f1625(B, A):
         return ZeroQ(A**S(2) - B**S(2))
 
     cons1625 = CustomConstraint(cons_f1625)
 
-    def cons_f1626(A, B):
+    def cons_f1626(B, A):
         return NonzeroQ(A**S(2) - B**S(2))
 
     cons1626 = CustomConstraint(cons_f1626)
 
-    def cons_f1627(b, m, n, B, a, A):
+    def cons_f1627(B, m, b, a, n, A):
         return ZeroQ(A*a*m - B*b*n)
 
     cons1627 = CustomConstraint(cons_f1627)
 
-    def cons_f1628(b, n, B, a, A):
+    def cons_f1628(B, b, a, n, A):
         return ZeroQ(A*b*(S(2)*n + S(1)) + S(2)*B*a*n)
 
     cons1628 = CustomConstraint(cons_f1628)
 
-    def cons_f1629(b, n, B, a, A):
+    def cons_f1629(B, b, a, n, A):
         return NonzeroQ(A*b*(S(2)*n + S(1)) + S(2)*B*a*n)
 
     cons1629 = CustomConstraint(cons_f1629)
@@ -8781,31 +8783,31 @@ if matchpy:
 
     cons1632 = CustomConstraint(cons_f1632)
 
-    def cons_f1633(m, A, C):
+    def cons_f1633(m, C, A):
         return ZeroQ(A*(m + S(1)) + C*m)
 
     cons1633 = CustomConstraint(cons_f1633)
 
-    def cons_f1634(m, A, C):
+    def cons_f1634(m, C, A):
         return NonzeroQ(A*(m + S(1)) + C*m)
 
     cons1634 = CustomConstraint(cons_f1634)
 
-    def cons_f1635(b, e, m, B, x, A, C, f):
+    def cons_f1635(B, C, e, m, f, b, x, A):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(b, e, f, A, B, C, m), x)
 
     cons1635 = CustomConstraint(cons_f1635)
 
-    def cons_f1636(b, e, B, x, a, A, C, f):
+    def cons_f1636(B, C, e, f, b, a, x, A):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, e, f, A, B, C), x)
 
     cons1636 = CustomConstraint(cons_f1636)
 
-    def cons_f1637(b, e, x, a, A, C, f):
+    def cons_f1637(C, e, f, b, a, x, A):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, e, f, A, C), x)
@@ -8827,21 +8829,21 @@ if matchpy:
 
     cons1640 = CustomConstraint(cons_f1640)
 
-    def cons_f1641(b, e, m, n, d, B, a, x, A, C, f):
+    def cons_f1641(B, C, m, f, b, d, a, n, A, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, d, e, f, A, B, C, m, n), x)
 
     cons1641 = CustomConstraint(cons_f1641)
 
-    def cons_f1642(b, e, m, n, d, x, a, A, C, f):
+    def cons_f1642(C, m, f, b, d, a, n, A, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, d, e, f, A, C, m, n), x)
 
     cons1642 = CustomConstraint(cons_f1642)
 
-    def cons_f1643(b, n, d, x, c):
+    def cons_f1643(b, d, c, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(b, c, d, n), x)
@@ -8858,14 +8860,14 @@ if matchpy:
 
     cons1645 = CustomConstraint(cons_f1645)
 
-    def cons_f1646(u, x):
+    def cons_f1646(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return KnownSineIntegrandQ(u, x)
 
     cons1646 = CustomConstraint(cons_f1646)
 
-    def cons_f1647(b, B, x, a, A, C):
+    def cons_f1647(B, C, b, a, x, A):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, A, B, C), x)
@@ -8882,33 +8884,33 @@ if matchpy:
 
     cons1649 = CustomConstraint(cons_f1649)
 
-    def cons_f1650(u, x):
+    def cons_f1650(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return KnownTangentIntegrandQ(u, x)
 
     cons1650 = CustomConstraint(cons_f1650)
 
-    def cons_f1651(u, x):
+    def cons_f1651(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return KnownCotangentIntegrandQ(u, x)
 
     cons1651 = CustomConstraint(cons_f1651)
 
-    def cons_f1652(u, x):
+    def cons_f1652(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return KnownSecantIntegrandQ(u, x)
 
     cons1652 = CustomConstraint(cons_f1652)
 
-    def cons_f1653(b, d):
+    def cons_f1653(d, b):
         return NonzeroQ(b**S(2) - d**S(2))
 
     cons1653 = CustomConstraint(cons_f1653)
 
-    def cons_f1654(b, d):
+    def cons_f1654(d, b):
         return ZeroQ(S(-2) + d/b)
 
     cons1654 = CustomConstraint(cons_f1654)
@@ -8933,7 +8935,7 @@ if matchpy:
 
     cons1658 = CustomConstraint(cons_f1658)
 
-    def cons_f1659(n, p):
+    def cons_f1659(p, n):
         return NonzeroQ(n + p + S(1))
 
     cons1659 = CustomConstraint(cons_f1659)
@@ -8953,7 +8955,7 @@ if matchpy:
 
     cons1662 = CustomConstraint(cons_f1662)
 
-    def cons_f1663(m, b, d):
+    def cons_f1663(d, m, b):
         return ZeroQ(-Abs(m + S(2)) + d/b)
 
     cons1663 = CustomConstraint(cons_f1663)
@@ -9043,12 +9045,12 @@ if matchpy:
 
     cons1680 = CustomConstraint(cons_f1680)
 
-    def cons_f1681(w, v):
+    def cons_f1681(v, w):
         return Or(Not(InertTrigFreeQ(v)), Not(InertTrigFreeQ(w)))
 
     cons1681 = CustomConstraint(cons_f1681)
 
-    def cons_f1682(u, x):
+    def cons_f1682(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         try:
@@ -9063,12 +9065,12 @@ if matchpy:
 
     cons1683 = CustomConstraint(cons_f1683)
 
-    def cons_f1684(n, p):
+    def cons_f1684(p, n):
         return Or(EvenQ(n), OddQ(p))
 
     cons1684 = CustomConstraint(cons_f1684)
 
-    def cons_f1685(n, p):
+    def cons_f1685(p, n):
         return Unequal(n, p)
 
     cons1685 = CustomConstraint(cons_f1685)
@@ -9083,7 +9085,7 @@ if matchpy:
 
     cons1687 = CustomConstraint(cons_f1687)
 
-    def cons_f1688(w, v):
+    def cons_f1688(v, w):
         return ZeroQ(v - w)
 
     cons1688 = CustomConstraint(cons_f1688)
@@ -9098,42 +9100,42 @@ if matchpy:
 
     cons1690 = CustomConstraint(cons_f1690)
 
-    def cons_f1691(b, d):
+    def cons_f1691(d, b):
         return PositiveIntegerQ(b/d + S(-1))
 
     cons1691 = CustomConstraint(cons_f1691)
 
-    def cons_f1692(e, c, F, b):
+    def cons_f1692(c, b, F, e):
         return NonzeroQ(b**S(2)*c**S(2)*log(F)**S(2) + e**S(2))
 
     cons1692 = CustomConstraint(cons_f1692)
 
-    def cons_f1693(b, e, n, c, F):
+    def cons_f1693(b, c, n, F, e):
         return NonzeroQ(b**S(2)*c**S(2)*log(F)**S(2) + e**S(2)*n**S(2))
 
     cons1693 = CustomConstraint(cons_f1693)
 
-    def cons_f1694(b, e, m, c, F):
+    def cons_f1694(m, b, c, F, e):
         return NonzeroQ(b**S(2)*c**S(2)*log(F)**S(2) + e**S(2)*m**S(2))
 
     cons1694 = CustomConstraint(cons_f1694)
 
-    def cons_f1695(b, e, n, c, F):
+    def cons_f1695(b, c, n, F, e):
         return ZeroQ(b**S(2)*c**S(2)*log(F)**S(2) + e**S(2)*(n + S(2))**S(2))
 
     cons1695 = CustomConstraint(cons_f1695)
 
-    def cons_f1696(b, e, n, c, F):
+    def cons_f1696(b, c, n, F, e):
         return NonzeroQ(b**S(2)*c**S(2)*log(F)**S(2) + e**S(2)*(n + S(2))**S(2))
 
     cons1696 = CustomConstraint(cons_f1696)
 
-    def cons_f1697(b, e, n, c, F):
+    def cons_f1697(b, c, n, F, e):
         return ZeroQ(b**S(2)*c**S(2)*log(F)**S(2) + e**S(2)*(n + S(-2))**S(2))
 
     cons1697 = CustomConstraint(cons_f1697)
 
-    def cons_f1698(b, e, n, c, F):
+    def cons_f1698(b, c, n, F, e):
         return NonzeroQ(b**S(2)*c**S(2)*log(F)**S(2) + e**S(2)*(n + S(-2))**S(2))
 
     cons1698 = CustomConstraint(cons_f1698)
@@ -9153,12 +9155,12 @@ if matchpy:
 
     cons1701 = CustomConstraint(cons_f1701)
 
-    def cons_f1702(h, f, g, i):
+    def cons_f1702(h, g, f, i):
         return ZeroQ(-f*i + g*h)
 
     cons1702 = CustomConstraint(cons_f1702)
 
-    def cons_f1703(h, f, g, i):
+    def cons_f1703(h, g, f, i):
         return ZeroQ(f*i + g*h)
 
     cons1703 = CustomConstraint(cons_f1703)
@@ -9173,26 +9175,26 @@ if matchpy:
 
     cons1705 = CustomConstraint(cons_f1705)
 
-    def cons_f1706(u, x):
+    def cons_f1706(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Or(LinearQ(u, x), PolyQ(u, x, S(2)))
 
     cons1706 = CustomConstraint(cons_f1706)
 
-    def cons_f1707(x, v):
+    def cons_f1707(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Or(LinearQ(v, x), PolyQ(v, x, S(2)))
 
     cons1707 = CustomConstraint(cons_f1707)
 
-    def cons_f1708(n, p, b):
+    def cons_f1708(p, n, b):
         return ZeroQ(b**S(2)*n**S(2)*(p + S(2))**S(2) + S(1))
 
     cons1708 = CustomConstraint(cons_f1708)
 
-    def cons_f1709(n, p, b):
+    def cons_f1709(p, n, b):
         return ZeroQ(b**S(2)*n**S(2)*p**S(2) + S(1))
 
     cons1709 = CustomConstraint(cons_f1709)
@@ -9202,22 +9204,22 @@ if matchpy:
 
     cons1710 = CustomConstraint(cons_f1710)
 
-    def cons_f1711(n, p, b):
+    def cons_f1711(p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*p**S(2) + S(1))
 
     cons1711 = CustomConstraint(cons_f1711)
 
-    def cons_f1712(n, p, b):
+    def cons_f1712(p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*(p + S(2))**S(2) + S(1))
 
     cons1712 = CustomConstraint(cons_f1712)
 
-    def cons_f1713(m, n, p, b):
+    def cons_f1713(m, p, n, b):
         return ZeroQ(b**S(2)*n**S(2)*(p + S(2))**S(2) + (m + S(1))**S(2))
 
     cons1713 = CustomConstraint(cons_f1713)
 
-    def cons_f1714(m, n, p, b):
+    def cons_f1714(m, p, n, b):
         return ZeroQ(b**S(2)*n**S(2)*p**S(2) + (m + S(1))**S(2))
 
     cons1714 = CustomConstraint(cons_f1714)
@@ -9227,12 +9229,12 @@ if matchpy:
 
     cons1715 = CustomConstraint(cons_f1715)
 
-    def cons_f1716(m, n, p, b):
+    def cons_f1716(m, p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*p**S(2) + (m + S(1))**S(2))
 
     cons1716 = CustomConstraint(cons_f1716)
 
-    def cons_f1717(m, n, p, b):
+    def cons_f1717(m, p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*(p + S(2))**S(2) + (m + S(1))**S(2))
 
     cons1717 = CustomConstraint(cons_f1717)
@@ -9242,7 +9244,7 @@ if matchpy:
 
     cons1718 = CustomConstraint(cons_f1718)
 
-    def cons_f1719(n, p, b):
+    def cons_f1719(p, n, b):
         return ZeroQ(b**S(2)*n**S(2)*(p + S(-2))**S(2) + S(1))
 
     cons1719 = CustomConstraint(cons_f1719)
@@ -9252,7 +9254,7 @@ if matchpy:
 
     cons1720 = CustomConstraint(cons_f1720)
 
-    def cons_f1721(n, p, b):
+    def cons_f1721(p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*(p + S(-2))**S(2) + S(1))
 
     cons1721 = CustomConstraint(cons_f1721)
@@ -9262,36 +9264,36 @@ if matchpy:
 
     cons1722 = CustomConstraint(cons_f1722)
 
-    def cons_f1723(m, n, p, b):
+    def cons_f1723(m, p, n, b):
         return ZeroQ(b**S(2)*n**S(2)*(p + S(-2))**S(2) + (m + S(1))**S(2))
 
     cons1723 = CustomConstraint(cons_f1723)
 
-    def cons_f1724(m, n, p, b):
+    def cons_f1724(m, p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*(p + S(-2))**S(2) + (m + S(1))**S(2))
 
     cons1724 = CustomConstraint(cons_f1724)
 
-    def cons_f1725(u, x):
+    def cons_f1725(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return QuotientOfLinearsQ(u, x)
 
     cons1725 = CustomConstraint(cons_f1725)
 
-    def cons_f1726(x, w, v):
+    def cons_f1726(v, x, w):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Or(And(PolynomialQ(v, x), PolynomialQ(w, x)), And(BinomialQ(List(v, w), x), IndependentQ(v/w, x)))
 
     cons1726 = CustomConstraint(cons_f1726)
 
-    def cons_f1727(m, q, p):
+    def cons_f1727(m, p, q):
         return PositiveIntegerQ(m, p, q)
 
     cons1727 = CustomConstraint(cons_f1727)
 
-    def cons_f1728(w, v):
+    def cons_f1728(v, w):
         return NonzeroQ(v - w)
 
     cons1728 = CustomConstraint(cons_f1728)
@@ -9316,7 +9318,7 @@ if matchpy:
 
     cons1732 = CustomConstraint(cons_f1732)
 
-    def cons_f1733(b, d):
+    def cons_f1733(d, b):
         return ZeroQ(b**S(2) - d**S(2))
 
     cons1733 = CustomConstraint(cons_f1733)
@@ -9331,14 +9333,14 @@ if matchpy:
 
     cons1735 = CustomConstraint(cons_f1735)
 
-    def cons_f1736(b, m, n, d, x, a, c):
+    def cons_f1736(m, b, d, c, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, m, n), x)
 
     cons1736 = CustomConstraint(cons_f1736)
 
-    def cons_f1737(e, c, d):
+    def cons_f1737(d, c, e):
         return ZeroQ(c**S(2)*d + e)
 
     cons1737 = CustomConstraint(cons_f1737)
@@ -9353,17 +9355,17 @@ if matchpy:
 
     cons1739 = CustomConstraint(cons_f1739)
 
-    def cons_f1740(p, d):
+    def cons_f1740(d, p):
         return Or(IntegerQ(p), PositiveQ(d))
 
     cons1740 = CustomConstraint(cons_f1740)
 
-    def cons_f1741(p, d):
+    def cons_f1741(d, p):
         return Not(Or(IntegerQ(p), PositiveQ(d)))
 
     cons1741 = CustomConstraint(cons_f1741)
 
-    def cons_f1742(e, c, d):
+    def cons_f1742(d, c, e):
         return NonzeroQ(c**S(2)*d + e)
 
     cons1742 = CustomConstraint(cons_f1742)
@@ -9373,12 +9375,12 @@ if matchpy:
 
     cons1743 = CustomConstraint(cons_f1743)
 
-    def cons_f1744(n, p):
+    def cons_f1744(p, n):
         return Or(Greater(p, S(0)), PositiveIntegerQ(n))
 
     cons1744 = CustomConstraint(cons_f1744)
 
-    def cons_f1745(c, g, f):
+    def cons_f1745(c, f, g):
         return ZeroQ(c**S(2)*f**S(2) - g**S(2))
 
     cons1745 = CustomConstraint(cons_f1745)
@@ -9398,7 +9400,7 @@ if matchpy:
 
     cons1748 = CustomConstraint(cons_f1748)
 
-    def cons_f1749(m, n, p):
+    def cons_f1749(m, p, n):
         return Or(IntegerQ(m), IntegerQ(p), Equal(n, S(1)))
 
     cons1749 = CustomConstraint(cons_f1749)
@@ -9433,7 +9435,7 @@ if matchpy:
 
     cons1755 = CustomConstraint(cons_f1755)
 
-    def cons_f1756(p, b, e, m, n, d, f, a, x, c):
+    def cons_f1756(p, m, f, b, d, c, a, n, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, m, n, p), x)
@@ -9445,7 +9447,7 @@ if matchpy:
 
     cons1757 = CustomConstraint(cons_f1757)
 
-    def cons_f1758(e, h, g, d):
+    def cons_f1758(d, h, g, e):
         return ZeroQ(-S(2)*d*h + e*g)
 
     cons1758 = CustomConstraint(cons_f1758)
@@ -9455,7 +9457,7 @@ if matchpy:
 
     cons1759 = CustomConstraint(cons_f1759)
 
-    def cons_f1760(m, n, p):
+    def cons_f1760(m, p, n):
         return Or(And(Equal(n, S(1)), Greater(p, S(-1))), Greater(p, S(0)), Equal(m, S(1)), And(Equal(m, S(2)), Less(p, S(-2))))
 
     cons1760 = CustomConstraint(cons_f1760)
@@ -9465,12 +9467,12 @@ if matchpy:
 
     cons1761 = CustomConstraint(cons_f1761)
 
-    def cons_f1762(d, c, A, B):
+    def cons_f1762(B, d, c, A):
         return ZeroQ(S(2)*A*c*d + B*(-c**S(2) + S(1)))
 
     cons1762 = CustomConstraint(cons_f1762)
 
-    def cons_f1763(c, d, B, C):
+    def cons_f1763(B, d, c, C):
         return ZeroQ(-B*d + S(2)*C*c)
 
     cons1763 = CustomConstraint(cons_f1763)
@@ -9480,21 +9482,21 @@ if matchpy:
 
     cons1764 = CustomConstraint(cons_f1764)
 
-    def cons_f1765(a, b, d, x):
+    def cons_f1765(d, a, b, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, d), x)
 
     cons1765 = CustomConstraint(cons_f1765)
 
-    def cons_f1766(b, m, n, x, a, c):
+    def cons_f1766(m, b, c, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, n, m), x)
 
     cons1766 = CustomConstraint(cons_f1766)
 
-    def cons_f1767(n, b, x):
+    def cons_f1767(x, n, b):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(b, n), x)
@@ -9506,24 +9508,24 @@ if matchpy:
 
     cons1768 = CustomConstraint(cons_f1768)
 
-    def cons_f1769(u, x):
+    def cons_f1769(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(FunctionOfExponentialQ(u, x))
 
     cons1769 = CustomConstraint(cons_f1769)
 
-    def cons_f1770(m, u, d, x, c):
+    def cons_f1770(u, m, d, c, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(FunctionOfQ((c + d*x)**(m + S(1)), u, x))
 
     cons1770 = CustomConstraint(cons_f1770)
 
-    def cons_f1771(x, v):
+    def cons_f1771(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1770(m, c, d):
+        def _cons_f_1770(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1770 = CustomConstraint(_cons_f_1770)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1770)
@@ -9532,10 +9534,10 @@ if matchpy:
 
     cons1771 = CustomConstraint(cons_f1771)
 
-    def cons_f1772(x, v):
+    def cons_f1772(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1771(m, c, d):
+        def _cons_f_1771(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1771 = CustomConstraint(_cons_f_1771)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1771)
@@ -9544,34 +9546,34 @@ if matchpy:
 
     cons1772 = CustomConstraint(cons_f1772)
 
-    def cons_f1773(e, c, d):
+    def cons_f1773(d, c, e):
         return ZeroQ(c**S(2)*d**S(2) + e**S(2))
 
     cons1773 = CustomConstraint(cons_f1773)
 
-    def cons_f1774(e, c, d):
+    def cons_f1774(d, c, e):
         return PositiveQ(I*c*d/e + S(1))
 
     cons1774 = CustomConstraint(cons_f1774)
 
-    def cons_f1775(e, c, d):
+    def cons_f1775(d, c, e):
         return NegativeQ(I*c*d/e + S(-1))
 
     cons1775 = CustomConstraint(cons_f1775)
 
-    def cons_f1776(e, c, d, x):
+    def cons_f1776(d, c, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(c, d, e), x)
 
     cons1776 = CustomConstraint(cons_f1776)
 
-    def cons_f1777(a, m, p):
+    def cons_f1777(m, a, p):
         return Or(Greater(p, S(0)), NonzeroQ(a), IntegerQ(m))
 
     cons1777 = CustomConstraint(cons_f1777)
 
-    def cons_f1778(e, c, d):
+    def cons_f1778(d, c, e):
         return ZeroQ(-c**S(2)*d + e)
 
     cons1778 = CustomConstraint(cons_f1778)
@@ -9621,35 +9623,35 @@ if matchpy:
 
     cons1787 = CustomConstraint(cons_f1787)
 
-    def cons_f1788(p, b, e, m, d, x, a, c):
+    def cons_f1788(p, m, b, d, c, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, m, p), x)
 
     cons1788 = CustomConstraint(cons_f1788)
 
-    def cons_f1789(c, u, x):
+    def cons_f1789(x, c, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(u**S(2) - (S(1) - S(2)*I/(c*x + I))**S(2))
 
     cons1789 = CustomConstraint(cons_f1789)
 
-    def cons_f1790(c, u, x):
+    def cons_f1790(x, c, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(u**S(2) - (S(1) - S(2)*I/(-c*x + I))**S(2))
 
     cons1790 = CustomConstraint(cons_f1790)
 
-    def cons_f1791(c, u, x):
+    def cons_f1791(x, c, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(-(S(1) - S(2)*I/(c*x + I))**S(2) + (-u + S(1))**S(2))
 
     cons1791 = CustomConstraint(cons_f1791)
 
-    def cons_f1792(c, u, x):
+    def cons_f1792(x, c, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(-(S(1) - S(2)*I/(-c*x + I))**S(2) + (-u + S(1))**S(2))
@@ -9666,12 +9668,12 @@ if matchpy:
 
     cons1794 = CustomConstraint(cons_f1794)
 
-    def cons_f1795(a, c, n, d):
+    def cons_f1795(d, a, n, c):
         return Not(And(Equal(n, S(2)), ZeroQ(-a**S(2)*c + d)))
 
     cons1795 = CustomConstraint(cons_f1795)
 
-    def cons_f1796(b, e, d, f, a, x, g, c):
+    def cons_f1796(f, b, g, d, c, a, x, e):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, e, f, g), x)
@@ -9683,7 +9685,7 @@ if matchpy:
 
     cons1797 = CustomConstraint(cons_f1797)
 
-    def cons_f1798(c, g, f):
+    def cons_f1798(f, c, g):
         return ZeroQ(-c**S(2)*f + g)
 
     cons1798 = CustomConstraint(cons_f1798)
@@ -9698,7 +9700,7 @@ if matchpy:
 
     cons1800 = CustomConstraint(cons_f1800)
 
-    def cons_f1801(a, c, d):
+    def cons_f1801(d, a, c):
         return ZeroQ(a**S(2)*c**S(2) + d**S(2))
 
     cons1801 = CustomConstraint(cons_f1801)
@@ -9713,7 +9715,7 @@ if matchpy:
 
     cons1803 = CustomConstraint(cons_f1803)
 
-    def cons_f1804(a, c, d):
+    def cons_f1804(d, c, a):
         return ZeroQ(a**S(2)*d**S(2) + c**S(2))
 
     cons1804 = CustomConstraint(cons_f1804)
@@ -9723,7 +9725,7 @@ if matchpy:
 
     cons1805 = CustomConstraint(cons_f1805)
 
-    def cons_f1806(a, c, d):
+    def cons_f1806(d, a, c):
         return ZeroQ(-a**S(2)*c + d)
 
     cons1806 = CustomConstraint(cons_f1806)
@@ -9733,7 +9735,7 @@ if matchpy:
 
     cons1807 = CustomConstraint(cons_f1807)
 
-    def cons_f1808(n, p):
+    def cons_f1808(p, n):
         return NonzeroQ(n**S(2) + S(4)*(p + S(1))**S(2))
 
     cons1808 = CustomConstraint(cons_f1808)
@@ -9743,7 +9745,7 @@ if matchpy:
 
     cons1809 = CustomConstraint(cons_f1809)
 
-    def cons_f1810(n, p):
+    def cons_f1810(p, n):
         return Not(IntegerQ(-I*n/S(2) + p))
 
     cons1810 = CustomConstraint(cons_f1810)
@@ -9758,7 +9760,7 @@ if matchpy:
 
     cons1812 = CustomConstraint(cons_f1812)
 
-    def cons_f1813(n, p):
+    def cons_f1813(p, n):
         return ZeroQ(n**S(2) - S(2)*p + S(-2))
 
     cons1813 = CustomConstraint(cons_f1813)
@@ -9768,7 +9770,7 @@ if matchpy:
 
     cons1814 = CustomConstraint(cons_f1814)
 
-    def cons_f1815(a, c, d):
+    def cons_f1815(d, c, a):
         return ZeroQ(-a**S(2)*d + c)
 
     cons1815 = CustomConstraint(cons_f1815)
@@ -9783,32 +9785,32 @@ if matchpy:
 
     cons1817 = CustomConstraint(cons_f1817)
 
-    def cons_f1818(a, e, b, d):
+    def cons_f1818(d, a, b, e):
         return ZeroQ(-S(2)*a*e + b*d)
 
     cons1818 = CustomConstraint(cons_f1818)
 
-    def cons_f1819(e, c, a, b):
+    def cons_f1819(c, b, e, a):
         return ZeroQ(b**S(2)*c - e*(a**S(2) + S(1)))
 
     cons1819 = CustomConstraint(cons_f1819)
 
-    def cons_f1820(a, c, p):
+    def cons_f1820(c, p, a):
         return Or(IntegerQ(p), PositiveQ(c/(a**S(2) + S(1))))
 
     cons1820 = CustomConstraint(cons_f1820)
 
-    def cons_f1821(a, c, p):
+    def cons_f1821(c, p, a):
         return Not(Or(IntegerQ(p), PositiveQ(c/(a**S(2) + S(1)))))
 
     cons1821 = CustomConstraint(cons_f1821)
 
-    def cons_f1822(n, p):
+    def cons_f1822(p, n):
         return Not(And(IntegerQ(p), EvenQ(I*n)))
 
     cons1822 = CustomConstraint(cons_f1822)
 
-    def cons_f1823(n, p):
+    def cons_f1823(p, n):
         return Not(And(Not(IntegerQ(p)), OddQ(I*n)))
 
     cons1823 = CustomConstraint(cons_f1823)
@@ -9823,7 +9825,7 @@ if matchpy:
 
     cons1825 = CustomConstraint(cons_f1825)
 
-    def cons_f1826(n, p):
+    def cons_f1826(p, n):
         return NonzeroQ(n**S(2) - S(2)*p + S(-2))
 
     cons1826 = CustomConstraint(cons_f1826)
@@ -9833,22 +9835,22 @@ if matchpy:
 
     cons1827 = CustomConstraint(cons_f1827)
 
-    def cons_f1828(n, p):
+    def cons_f1828(p, n):
         return IntegersQ(S(2)*p, I*n/S(2) + p)
 
     cons1828 = CustomConstraint(cons_f1828)
 
-    def cons_f1829(n, p):
+    def cons_f1829(p, n):
         return Not(IntegersQ(S(2)*p, I*n/S(2) + p))
 
     cons1829 = CustomConstraint(cons_f1829)
 
-    def cons_f1830(d, c, A, B):
+    def cons_f1830(B, d, c, A):
         return ZeroQ(-S(2)*A*c*d + B*(c**S(2) + S(1)))
 
     cons1830 = CustomConstraint(cons_f1830)
 
-    def cons_f1831(a, n, b, x):
+    def cons_f1831(x, a, n, b):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, n), x)
@@ -9865,7 +9867,7 @@ if matchpy:
 
     cons1833 = CustomConstraint(cons_f1833)
 
-    def cons_f1834(b, d, f, a, x, c):
+    def cons_f1834(f, b, d, c, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, f), x)
@@ -9882,22 +9884,22 @@ if matchpy:
 
     cons1836 = CustomConstraint(cons_f1836)
 
-    def cons_f1837(w, v):
+    def cons_f1837(v, w):
         return ZeroQ(-v**S(2) + w + S(-1))
 
     cons1837 = CustomConstraint(cons_f1837)
 
-    def cons_f1838(x, v):
+    def cons_f1838(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return NegQ(Discriminant(v, x))
 
     cons1838 = CustomConstraint(cons_f1838)
 
-    def cons_f1839(u, x):
+    def cons_f1839(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1838(f, r, w):
+        def _cons_f_1838(w, f, r):
             return FreeQ(f, x)
         _cons_1838 = CustomConstraint(_cons_f_1838)
         pat = Pattern(UtilityOperator(f_**w_*WC('r', S(1)), x), _cons_1838)
@@ -9906,10 +9908,10 @@ if matchpy:
 
     cons1839 = CustomConstraint(cons_f1839)
 
-    def cons_f1840(u, x):
+    def cons_f1840(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1839(f, r, w):
+        def _cons_f_1839(w, f, r):
             return FreeQ(f, x)
         _cons_1839 = CustomConstraint(_cons_f_1839)
         pat = Pattern(UtilityOperator(f_**w_*WC('r', S(1)), x), _cons_1839)
@@ -9918,37 +9920,37 @@ if matchpy:
 
     cons1840 = CustomConstraint(cons_f1840)
 
-    def cons_f1841(c, d):
+    def cons_f1841(d, c):
         return ZeroQ((c + I*d)**S(2) + S(1))
 
     cons1841 = CustomConstraint(cons_f1841)
 
-    def cons_f1842(c, d):
+    def cons_f1842(d, c):
         return ZeroQ((c - I*d)**S(2) + S(1))
 
     cons1842 = CustomConstraint(cons_f1842)
 
-    def cons_f1843(c, d):
+    def cons_f1843(d, c):
         return NonzeroQ((c + I*d)**S(2) + S(1))
 
     cons1843 = CustomConstraint(cons_f1843)
 
-    def cons_f1844(c, d):
+    def cons_f1844(d, c):
         return NonzeroQ((c - I*d)**S(2) + S(1))
 
     cons1844 = CustomConstraint(cons_f1844)
 
-    def cons_f1845(c, d):
+    def cons_f1845(d, c):
         return ZeroQ((c - d)**S(2) + S(1))
 
     cons1845 = CustomConstraint(cons_f1845)
 
-    def cons_f1846(c, d):
+    def cons_f1846(d, c):
         return NonzeroQ((c - d)**S(2) + S(1))
 
     cons1846 = CustomConstraint(cons_f1846)
 
-    def cons_f1847(m, u, x):
+    def cons_f1847(x, m, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         try:
@@ -9958,10 +9960,10 @@ if matchpy:
 
     cons1847 = CustomConstraint(cons_f1847)
 
-    def cons_f1848(x, v):
+    def cons_f1848(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1847(m, c, d):
+        def _cons_f_1847(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1847 = CustomConstraint(_cons_f_1847)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1847)
@@ -9970,7 +9972,7 @@ if matchpy:
 
     cons1848 = CustomConstraint(cons_f1848)
 
-    def cons_f1849(b, u, x, a, v):
+    def cons_f1849(v, u, b, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         try:
@@ -9980,10 +9982,10 @@ if matchpy:
 
     cons1849 = CustomConstraint(cons_f1849)
 
-    def cons_f1850(x, v):
+    def cons_f1850(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1849(m, c, d):
+        def _cons_f_1849(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1849 = CustomConstraint(_cons_f_1849)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1849)
@@ -9992,7 +9994,7 @@ if matchpy:
 
     cons1850 = CustomConstraint(cons_f1850)
 
-    def cons_f1851(b, u, x, a, v):
+    def cons_f1851(v, u, b, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         try:
@@ -10002,21 +10004,21 @@ if matchpy:
 
     cons1851 = CustomConstraint(cons_f1851)
 
-    def cons_f1852(a, x, b, v):
+    def cons_f1852(v, a, b, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(D(v/(a + b*x), x))
 
     cons1852 = CustomConstraint(cons_f1852)
 
-    def cons_f1853(a, b, w, x):
+    def cons_f1853(x, w, b, a):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(D(w/(a + b*x), x))
 
     cons1853 = CustomConstraint(cons_f1853)
 
-    def cons_f1854(b, m, n, x, a, c):
+    def cons_f1854(m, b, c, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, m, n), x)
@@ -10028,15 +10030,15 @@ if matchpy:
 
     cons1855 = CustomConstraint(cons_f1855)
 
-    def cons_f1856(e, d):
+    def cons_f1856(d, e):
         return Not(And(PositiveQ(e), Negative(d)))
 
     cons1856 = CustomConstraint(cons_f1856)
 
-    def cons_f1857(x, v):
+    def cons_f1857(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1856(m, c, d):
+        def _cons_f_1856(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1856 = CustomConstraint(_cons_f_1856)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1856)
@@ -10045,10 +10047,10 @@ if matchpy:
 
     cons1857 = CustomConstraint(cons_f1857)
 
-    def cons_f1858(x, v):
+    def cons_f1858(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1857(m, c, d):
+        def _cons_f_1857(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1857 = CustomConstraint(_cons_f_1857)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1857)
@@ -10057,7 +10059,7 @@ if matchpy:
 
     cons1858 = CustomConstraint(cons_f1858)
 
-    def cons_f1859(m, a, n, b):
+    def cons_f1859(m, n, b, a):
         return Or(Equal(n, S(1)), PositiveIntegerQ(m), NonzeroQ(a**S(2) + b**S(2)))
 
     cons1859 = CustomConstraint(cons_f1859)
@@ -10082,32 +10084,32 @@ if matchpy:
 
     cons1863 = CustomConstraint(cons_f1863)
 
-    def cons_f1864(e, c, F, b):
+    def cons_f1864(c, b, F, e):
         return NonzeroQ(-b**S(2)*c**S(2)*log(F)**S(2) + e**S(2))
 
     cons1864 = CustomConstraint(cons_f1864)
 
-    def cons_f1865(b, e, n, c, F):
+    def cons_f1865(b, c, n, F, e):
         return NonzeroQ(-b**S(2)*c**S(2)*log(F)**S(2) + e**S(2)*n**S(2))
 
     cons1865 = CustomConstraint(cons_f1865)
 
-    def cons_f1866(b, e, n, c, F):
+    def cons_f1866(b, c, n, F, e):
         return ZeroQ(-b**S(2)*c**S(2)*log(F)**S(2) + e**S(2)*(n + S(2))**S(2))
 
     cons1866 = CustomConstraint(cons_f1866)
 
-    def cons_f1867(b, e, n, c, F):
+    def cons_f1867(b, c, n, F, e):
         return NonzeroQ(-b**S(2)*c**S(2)*log(F)**S(2) + e**S(2)*(n + S(2))**S(2))
 
     cons1867 = CustomConstraint(cons_f1867)
 
-    def cons_f1868(b, e, n, c, F):
+    def cons_f1868(b, c, n, F, e):
         return ZeroQ(-b**S(2)*c**S(2)*log(F)**S(2) + e**S(2)*(n + S(-2))**S(2))
 
     cons1868 = CustomConstraint(cons_f1868)
 
-    def cons_f1869(b, e, n, c, F):
+    def cons_f1869(b, c, n, F, e):
         return NonzeroQ(-b**S(2)*c**S(2)*log(F)**S(2) + e**S(2)*(n + S(-2))**S(2))
 
     cons1869 = CustomConstraint(cons_f1869)
@@ -10127,12 +10129,12 @@ if matchpy:
 
     cons1872 = CustomConstraint(cons_f1872)
 
-    def cons_f1873(n, p, b):
+    def cons_f1873(p, n, b):
         return RationalQ(b, n, p)
 
     cons1873 = CustomConstraint(cons_f1873)
 
-    def cons_f1874(n, p, b):
+    def cons_f1874(p, n, b):
         return ZeroQ(b**S(2)*n**S(2)*(p + S(2))**S(2) + S(-1))
 
     cons1874 = CustomConstraint(cons_f1874)
@@ -10142,7 +10144,7 @@ if matchpy:
 
     cons1875 = CustomConstraint(cons_f1875)
 
-    def cons_f1876(n, p, b):
+    def cons_f1876(p, n, b):
         return ZeroQ(b**S(2)*n**S(2)*p**S(2) + S(-1))
 
     cons1876 = CustomConstraint(cons_f1876)
@@ -10152,22 +10154,22 @@ if matchpy:
 
     cons1877 = CustomConstraint(cons_f1877)
 
-    def cons_f1878(n, p, b):
+    def cons_f1878(p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*p**S(2) + S(-1))
 
     cons1878 = CustomConstraint(cons_f1878)
 
-    def cons_f1879(n, p, b):
+    def cons_f1879(p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*(p + S(2))**S(2) + S(-1))
 
     cons1879 = CustomConstraint(cons_f1879)
 
-    def cons_f1880(m, n, p, b):
+    def cons_f1880(m, p, n, b):
         return ZeroQ(b**S(2)*n**S(2)*(p + S(2))**S(2) - (m + S(1))**S(2))
 
     cons1880 = CustomConstraint(cons_f1880)
 
-    def cons_f1881(m, n, p, b):
+    def cons_f1881(m, p, n, b):
         return ZeroQ(b**S(2)*n**S(2)*p**S(2) - (m + S(1))**S(2))
 
     cons1881 = CustomConstraint(cons_f1881)
@@ -10177,12 +10179,12 @@ if matchpy:
 
     cons1882 = CustomConstraint(cons_f1882)
 
-    def cons_f1883(m, n, p, b):
+    def cons_f1883(m, p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*p**S(2) - (m + S(1))**S(2))
 
     cons1883 = CustomConstraint(cons_f1883)
 
-    def cons_f1884(m, n, p, b):
+    def cons_f1884(m, p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*(p + S(2))**S(2) - (m + S(1))**S(2))
 
     cons1884 = CustomConstraint(cons_f1884)
@@ -10192,17 +10194,17 @@ if matchpy:
 
     cons1885 = CustomConstraint(cons_f1885)
 
-    def cons_f1886(n, p, b):
+    def cons_f1886(p, n, b):
         return ZeroQ(b**S(2)*n**S(2)*(p + S(-2))**S(2) + S(-1))
 
     cons1886 = CustomConstraint(cons_f1886)
 
-    def cons_f1887(n, p, b):
+    def cons_f1887(p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*(p + S(-2))**S(2) + S(-1))
 
     cons1887 = CustomConstraint(cons_f1887)
 
-    def cons_f1888(m, n, p, b):
+    def cons_f1888(p, m, n, b):
         return RationalQ(b, m, n, p)
 
     cons1888 = CustomConstraint(cons_f1888)
@@ -10212,12 +10214,12 @@ if matchpy:
 
     cons1889 = CustomConstraint(cons_f1889)
 
-    def cons_f1890(m, n, p, b):
+    def cons_f1890(m, p, n, b):
         return NonzeroQ(b**S(2)*n**S(2)*(p + S(-2))**S(2) - (m + S(1))**S(2))
 
     cons1890 = CustomConstraint(cons_f1890)
 
-    def cons_f1891(a, A, b, B):
+    def cons_f1891(B, a, b, A):
         return ZeroQ(A*a + B*b)
 
     cons1891 = CustomConstraint(cons_f1891)
@@ -10242,29 +10244,29 @@ if matchpy:
 
     cons1895 = CustomConstraint(cons_f1895)
 
-    def cons_f1896(d1, d2):
+    def cons_f1896(d2, d1):
         return Not(And(PositiveQ(d1), NegativeQ(d2)))
 
     cons1896 = CustomConstraint(cons_f1896)
 
-    def cons_f1897(d1, d2):
+    def cons_f1897(d2, d1):
         return And(PositiveQ(d1), NegativeQ(d2))
 
     cons1897 = CustomConstraint(cons_f1897)
 
-    def cons_f1898(e, c, d):
+    def cons_f1898(d, c, e):
         return NonzeroQ(-c**S(2)*d + e)
 
     cons1898 = CustomConstraint(cons_f1898)
 
-    def cons_f1899(e2, p, b, n, d1, d2, x, a, e1, c):
+    def cons_f1899(d2, p, b, e2, c, a, n, d1, e1, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d1, e1, d2, e2, n, p), x)
 
     cons1899 = CustomConstraint(cons_f1899)
 
-    def cons_f1900(c, g, f):
+    def cons_f1900(c, f, g):
         return ZeroQ(c**S(2)*f**S(2) + g**S(2))
 
     cons1900 = CustomConstraint(cons_f1900)
@@ -10279,7 +10281,7 @@ if matchpy:
 
     cons1902 = CustomConstraint(cons_f1902)
 
-    def cons_f1903(e2, p, b, m, n, d1, d2, f, a, x, e1, c):
+    def cons_f1903(d2, p, m, f, b, e2, c, a, n, d1, e1, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d1, e1, d2, e2, f, m, n, p), x)
@@ -10291,10 +10293,10 @@ if matchpy:
 
     cons1904 = CustomConstraint(cons_f1904)
 
-    def cons_f1905(x, v):
+    def cons_f1905(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1904(m, c, d):
+        def _cons_f_1904(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1904 = CustomConstraint(_cons_f_1904)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1904)
@@ -10303,10 +10305,10 @@ if matchpy:
 
     cons1905 = CustomConstraint(cons_f1905)
 
-    def cons_f1906(x, v):
+    def cons_f1906(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1905(m, c, d):
+        def _cons_f_1905(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1905 = CustomConstraint(_cons_f_1905)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1905)
@@ -10315,85 +10317,85 @@ if matchpy:
 
     cons1906 = CustomConstraint(cons_f1906)
 
-    def cons_f1907(e, c, d):
+    def cons_f1907(d, c, e):
         return ZeroQ(c**S(2)*d**S(2) - e**S(2))
 
     cons1907 = CustomConstraint(cons_f1907)
 
-    def cons_f1908(e, c, d):
+    def cons_f1908(d, c, e):
         return PositiveQ(c*d/e + S(1))
 
     cons1908 = CustomConstraint(cons_f1908)
 
-    def cons_f1909(e, c, d):
+    def cons_f1909(d, c, e):
         return NegativeQ(c*d/e + S(-1))
 
     cons1909 = CustomConstraint(cons_f1909)
 
-    def cons_f1910(c, u, x):
+    def cons_f1910(x, c, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(u**S(2) - (S(1) - S(2)/(c*x + S(1)))**S(2))
 
     cons1910 = CustomConstraint(cons_f1910)
 
-    def cons_f1911(c, u, x):
+    def cons_f1911(x, c, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(u**S(2) - (S(1) - S(2)/(-c*x + S(1)))**S(2))
 
     cons1911 = CustomConstraint(cons_f1911)
 
-    def cons_f1912(c, u, x):
+    def cons_f1912(x, c, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(-(S(1) - S(2)/(c*x + S(1)))**S(2) + (-u + S(1))**S(2))
 
     cons1912 = CustomConstraint(cons_f1912)
 
-    def cons_f1913(c, u, x):
+    def cons_f1913(x, c, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return ZeroQ(-(S(1) - S(2)/(-c*x + S(1)))**S(2) + (-u + S(1))**S(2))
 
     cons1913 = CustomConstraint(cons_f1913)
 
-    def cons_f1914(a, c, n, d):
+    def cons_f1914(d, a, n, c):
         return Not(And(Equal(n, S(2)), ZeroQ(a**S(2)*c + d)))
 
     cons1914 = CustomConstraint(cons_f1914)
 
-    def cons_f1915(c, g, f):
+    def cons_f1915(c, f, g):
         return ZeroQ(c**S(2)*f + g)
 
     cons1915 = CustomConstraint(cons_f1915)
 
-    def cons_f1916(a, c, d):
+    def cons_f1916(d, a, c):
         return ZeroQ(a*c + d)
 
     cons1916 = CustomConstraint(cons_f1916)
 
-    def cons_f1917(n, p):
+    def cons_f1917(p, n):
         return Or(IntegerQ(p), ZeroQ(-n/S(2) + p), ZeroQ(-n/S(2) + p + S(-1)))
 
     cons1917 = CustomConstraint(cons_f1917)
 
-    def cons_f1918(a, c, d):
+    def cons_f1918(d, a, c):
         return ZeroQ(a**S(2)*c**S(2) - d**S(2))
 
     cons1918 = CustomConstraint(cons_f1918)
 
-    def cons_f1919(a, c, d):
+    def cons_f1919(d, c, a):
         return ZeroQ(-a**S(2)*d**S(2) + c**S(2))
 
     cons1919 = CustomConstraint(cons_f1919)
 
-    def cons_f1920(a, c, d):
+    def cons_f1920(d, a, c):
         return ZeroQ(a**S(2)*c + d)
 
     cons1920 = CustomConstraint(cons_f1920)
 
-    def cons_f1921(n, p):
+    def cons_f1921(p, n):
         return NonzeroQ(n**S(2) - S(4)*(p + S(1))**S(2))
 
     cons1921 = CustomConstraint(cons_f1921)
@@ -10408,7 +10410,7 @@ if matchpy:
 
     cons1923 = CustomConstraint(cons_f1923)
 
-    def cons_f1924(n, p):
+    def cons_f1924(p, n):
         return Not(IntegerQ(-n/S(2) + p))
 
     cons1924 = CustomConstraint(cons_f1924)
@@ -10423,62 +10425,62 @@ if matchpy:
 
     cons1926 = CustomConstraint(cons_f1926)
 
-    def cons_f1927(n, p):
+    def cons_f1927(p, n):
         return ZeroQ(n**S(2) + S(2)*p + S(2))
 
     cons1927 = CustomConstraint(cons_f1927)
 
-    def cons_f1928(a, c, d):
+    def cons_f1928(d, c, a):
         return ZeroQ(a**S(2)*d + c)
 
     cons1928 = CustomConstraint(cons_f1928)
 
-    def cons_f1929(e, c, a, b):
+    def cons_f1929(c, b, e, a):
         return ZeroQ(b**S(2)*c + e*(-a**S(2) + S(1)))
 
     cons1929 = CustomConstraint(cons_f1929)
 
-    def cons_f1930(a, c, p):
+    def cons_f1930(c, p, a):
         return Or(IntegerQ(p), PositiveQ(c/(-a**S(2) + S(1))))
 
     cons1930 = CustomConstraint(cons_f1930)
 
-    def cons_f1931(a, c, p):
+    def cons_f1931(c, p, a):
         return Not(Or(IntegerQ(p), PositiveQ(c/(-a**S(2) + S(1)))))
 
     cons1931 = CustomConstraint(cons_f1931)
 
-    def cons_f1932(n, p):
+    def cons_f1932(p, n):
         return ZeroQ(-n/S(2) + p)
 
     cons1932 = CustomConstraint(cons_f1932)
 
-    def cons_f1933(a, c, d):
+    def cons_f1933(d, c, a):
         return ZeroQ(a*d + c)
 
     cons1933 = CustomConstraint(cons_f1933)
 
-    def cons_f1934(m, n, p):
+    def cons_f1934(m, p, n):
         return Or(IntegerQ(p), ZeroQ(-n/S(2) + p), ZeroQ(-n/S(2) + p + S(-1)), Less(S(-5), m, S(-1)))
 
     cons1934 = CustomConstraint(cons_f1934)
 
-    def cons_f1935(n, p):
+    def cons_f1935(p, n):
         return Or(IntegerQ(p), Not(IntegerQ(n)))
 
     cons1935 = CustomConstraint(cons_f1935)
 
-    def cons_f1936(n, p):
+    def cons_f1936(p, n):
         return NonzeroQ(n**S(2) + S(2)*p + S(2))
 
     cons1936 = CustomConstraint(cons_f1936)
 
-    def cons_f1937(n, p):
+    def cons_f1937(p, n):
         return IntegersQ(S(2)*p, n/S(2) + p)
 
     cons1937 = CustomConstraint(cons_f1937)
 
-    def cons_f1938(n, p):
+    def cons_f1938(p, n):
         return Not(IntegersQ(S(2)*p, n/S(2) + p))
 
     cons1938 = CustomConstraint(cons_f1938)
@@ -10488,17 +10490,17 @@ if matchpy:
 
     cons1939 = CustomConstraint(cons_f1939)
 
-    def cons_f1940(x, v):
+    def cons_f1940(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PosQ(Discriminant(v, x))
 
     cons1940 = CustomConstraint(cons_f1940)
 
-    def cons_f1941(u, x):
+    def cons_f1941(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1940(f, r, w):
+        def _cons_f_1940(w, f, r):
             return FreeQ(f, x)
         _cons_1940 = CustomConstraint(_cons_f_1940)
         pat = Pattern(UtilityOperator(f_**w_*WC('r', S(1)), x), _cons_1940)
@@ -10507,10 +10509,10 @@ if matchpy:
 
     cons1941 = CustomConstraint(cons_f1941)
 
-    def cons_f1942(u, x):
+    def cons_f1942(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1941(f, r, w):
+        def _cons_f_1941(w, f, r):
             return FreeQ(f, x)
         _cons_1941 = CustomConstraint(_cons_f_1941)
         pat = Pattern(UtilityOperator(f_**w_*WC('r', S(1)), x), _cons_1941)
@@ -10519,40 +10521,40 @@ if matchpy:
 
     cons1942 = CustomConstraint(cons_f1942)
 
-    def cons_f1943(c, d):
+    def cons_f1943(d, c):
         return ZeroQ((c - d)**S(2) + S(-1))
 
     cons1943 = CustomConstraint(cons_f1943)
 
-    def cons_f1944(c, d):
+    def cons_f1944(d, c):
         return NonzeroQ((c - d)**S(2) + S(-1))
 
     cons1944 = CustomConstraint(cons_f1944)
 
-    def cons_f1945(c, d):
+    def cons_f1945(d, c):
         return ZeroQ((c + I*d)**S(2) + S(-1))
 
     cons1945 = CustomConstraint(cons_f1945)
 
-    def cons_f1946(c, d):
+    def cons_f1946(d, c):
         return ZeroQ((c - I*d)**S(2) + S(-1))
 
     cons1946 = CustomConstraint(cons_f1946)
 
-    def cons_f1947(c, d):
+    def cons_f1947(d, c):
         return NonzeroQ((c + I*d)**S(2) + S(-1))
 
     cons1947 = CustomConstraint(cons_f1947)
 
-    def cons_f1948(c, d):
+    def cons_f1948(d, c):
         return NonzeroQ((c - I*d)**S(2) + S(-1))
 
     cons1948 = CustomConstraint(cons_f1948)
 
-    def cons_f1949(x, v):
+    def cons_f1949(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1948(m, c, d):
+        def _cons_f_1948(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1948 = CustomConstraint(_cons_f_1948)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1948)
@@ -10561,7 +10563,7 @@ if matchpy:
 
     cons1949 = CustomConstraint(cons_f1949)
 
-    def cons_f1950(b, u, x, a, v):
+    def cons_f1950(v, u, b, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         try:
@@ -10571,10 +10573,10 @@ if matchpy:
 
     cons1950 = CustomConstraint(cons_f1950)
 
-    def cons_f1951(x, v):
+    def cons_f1951(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1950(m, c, d):
+        def _cons_f_1950(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1950 = CustomConstraint(_cons_f_1950)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1950)
@@ -10583,7 +10585,7 @@ if matchpy:
 
     cons1951 = CustomConstraint(cons_f1951)
 
-    def cons_f1952(b, u, x, a, v):
+    def cons_f1952(v, u, b, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         try:
@@ -10593,24 +10595,24 @@ if matchpy:
 
     cons1952 = CustomConstraint(cons_f1952)
 
-    def cons_f1953(a, p, x):
+    def cons_f1953(x, a, p):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, p), x)
 
     cons1953 = CustomConstraint(cons_f1953)
 
-    def cons_f1954(a, m, p, x):
+    def cons_f1954(x, m, a, p):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, m, p), x)
 
     cons1954 = CustomConstraint(cons_f1954)
 
-    def cons_f1955(x, v):
+    def cons_f1955(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1954(m, c, d):
+        def _cons_f_1954(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1954 = CustomConstraint(_cons_f_1954)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1954)
@@ -10619,10 +10621,10 @@ if matchpy:
 
     cons1955 = CustomConstraint(cons_f1955)
 
-    def cons_f1956(x, v):
+    def cons_f1956(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_1955(m, c, d):
+        def _cons_f_1955(d, m, c):
             return FreeQ(List(c, d, m), x)
         _cons_1955 = CustomConstraint(_cons_f_1955)
         pat = Pattern(UtilityOperator((x*WC('d', S(1)) + WC('c', S(0)))**WC('m', S(1)), x), _cons_1955)
@@ -10631,12 +10633,12 @@ if matchpy:
 
     cons1956 = CustomConstraint(cons_f1956)
 
-    def cons_f1957(b, d):
+    def cons_f1957(d, b):
         return ZeroQ(-b**S(2) + d)
 
     cons1957 = CustomConstraint(cons_f1957)
 
-    def cons_f1958(b, d):
+    def cons_f1958(d, b):
         return ZeroQ(b**S(2) + d)
 
     cons1958 = CustomConstraint(cons_f1958)
@@ -10711,7 +10713,7 @@ if matchpy:
 
     cons1972 = CustomConstraint(cons_f1972)
 
-    def cons_f1973(p, b, q, n, x, a):
+    def cons_f1973(p, b, a, n, x, q):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, n, p, q), x)
@@ -10728,58 +10730,58 @@ if matchpy:
 
     cons1975 = CustomConstraint(cons_f1975)
 
-    def cons_f1976(p, b, n, d, x, a, c, F):
+    def cons_f1976(p, b, d, c, a, n, x, F):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(F, a, b, c, d, n, p), x)
 
     cons1976 = CustomConstraint(cons_f1976)
 
-    def cons_f1977(n, p):
+    def cons_f1977(p, n):
         return Or(ZeroQ(n*(p + S(-1)) + S(1)), And(IntegerQ(p + S(-1)/2), ZeroQ(n*(p + S(-1)/2) + S(1))))
 
     cons1977 = CustomConstraint(cons_f1977)
 
-    def cons_f1978(n, p):
+    def cons_f1978(p, n):
         return Or(And(IntegerQ(p), ZeroQ(n*(p + S(1)) + S(1))), And(IntegerQ(p + S(-1)/2), ZeroQ(n*(p + S(1)/2) + S(1))))
 
     cons1978 = CustomConstraint(cons_f1978)
 
-    def cons_f1979(m, n, p):
+    def cons_f1979(m, p, n):
         return Or(And(IntegerQ(p + S(-1)/2), IntegerQ(S(2)*(m + n*p + S(1))/n), Greater((m + n*p + S(1))/n, S(0))), And(Not(IntegerQ(p + S(-1)/2)), IntegerQ((m + n*p + S(1))/n), GreaterEqual((m + n*p + S(1))/n, S(0))))
 
     cons1979 = CustomConstraint(cons_f1979)
 
-    def cons_f1980(m, n, p):
+    def cons_f1980(m, p, n):
         return Or(ZeroQ(m + S(1)), And(IntegerQ(p + S(-1)/2), IntegerQ(S(-1)/2 + (m + n*p + S(1))/n), Less((m + n*p + S(1))/n, S(0))), And(Not(IntegerQ(p + S(-1)/2)), IntegerQ((m + n*p + S(1))/n), Less((m + n*p + S(1))/n, S(0))))
 
     cons1980 = CustomConstraint(cons_f1980)
 
-    def cons_f1981(a, c, m, x):
+    def cons_f1981(x, m, a, c):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, c, m), x)
 
     cons1981 = CustomConstraint(cons_f1981)
 
-    def cons_f1982(p, b, d, x, a, c):
+    def cons_f1982(p, b, d, c, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, c, d, p), x)
 
     cons1982 = CustomConstraint(cons_f1982)
 
-    def cons_f1983(n, p):
+    def cons_f1983(p, n):
         return ZeroQ(n*(p + S(-1)) + S(1))
 
     cons1983 = CustomConstraint(cons_f1983)
 
-    def cons_f1984(n, p):
+    def cons_f1984(p, n):
         return ZeroQ(p + S(1)/n)
 
     cons1984 = CustomConstraint(cons_f1984)
 
-    def cons_f1985(n, p):
+    def cons_f1985(p, n):
         return ZeroQ(p + S(-1)/2 + S(1)/n)
 
     cons1985 = CustomConstraint(cons_f1985)
@@ -10794,31 +10796,31 @@ if matchpy:
 
     cons1987 = CustomConstraint(cons_f1987)
 
-    def cons_f1988(n, p):
+    def cons_f1988(p, n):
         return Greater(n*(p + S(-1)) + S(1), S(0))
 
     cons1988 = CustomConstraint(cons_f1988)
 
-    def cons_f1989(n, p):
+    def cons_f1989(p, n):
         return Less(n*p + S(1), S(0))
 
     cons1989 = CustomConstraint(cons_f1989)
 
-    def cons_f1990(a, d, x):
+    def cons_f1990(d, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, d), x)
 
     cons1990 = CustomConstraint(cons_f1990)
 
-    def cons_f1991(a, n, d, x):
+    def cons_f1991(d, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, d, n), x)
 
     cons1991 = CustomConstraint(cons_f1991)
 
-    def cons_f1992(p, n, d, x, a, c):
+    def cons_f1992(p, d, a, n, c, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, c, d, n, p), x)
@@ -10850,32 +10852,32 @@ if matchpy:
 
     cons1997 = CustomConstraint(cons_f1997)
 
-    def cons_f1998(m, n, p):
+    def cons_f1998(m, p, n):
         return RationalQ((m + n*p + S(1))/n)
 
     cons1998 = CustomConstraint(cons_f1998)
 
-    def cons_f1999(m, n, p):
+    def cons_f1999(m, p, n):
         return Greater((m + n*p + S(1))/n, S(1))
 
     cons1999 = CustomConstraint(cons_f1999)
 
-    def cons_f2000(m, n, p):
+    def cons_f2000(m, p, n):
         return Less((m + n*p + S(1))/n, S(0))
 
     cons2000 = CustomConstraint(cons_f2000)
 
-    def cons_f2001(u, x):
+    def cons_f2001(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FunctionOfQ(ProductLog(x), u, x)
 
     cons2001 = CustomConstraint(cons_f2001)
 
-    def cons_f2002(u, n, x):
+    def cons_f2002(x, n, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        def _cons_f_2001(n1, v):
+        def _cons_f_2001(v, n1):
             return ZeroQ(n - n1 - 1)
         _cons_2001 = CustomConstraint(_cons_f_2001)
         pat = Pattern(UtilityOperator(x**WC('n1', S(1))*WC('v', S(1)), x), _cons_2001)
@@ -10884,27 +10886,27 @@ if matchpy:
 
     cons2002 = CustomConstraint(cons_f2002)
 
-    def cons_f2003(e, g):
+    def cons_f2003(g, e):
         return ZeroQ(e + g)
 
     cons2003 = CustomConstraint(cons_f2003)
 
-    def cons_f2004(f, d):
+    def cons_f2004(d, f):
         return ZeroQ(d + f + S(-2))
 
     cons2004 = CustomConstraint(cons_f2004)
 
-    def cons_f2005(e, d, A, C, f):
+    def cons_f2005(C, f, d, A, e):
         return ZeroQ(A*e**S(2) + C*d*f)
 
     cons2005 = CustomConstraint(cons_f2005)
 
-    def cons_f2006(e, B, d, C):
+    def cons_f2006(d, B, C, e):
         return ZeroQ(-B*e + S(2)*C*(d + S(-1)))
 
     cons2006 = CustomConstraint(cons_f2006)
 
-    def cons_f2007(e, A, C):
+    def cons_f2007(C, e, A):
         return ZeroQ(A*e**S(2) + C)
 
     cons2007 = CustomConstraint(cons_f2007)
@@ -10914,7 +10916,7 @@ if matchpy:
 
     cons2008 = CustomConstraint(cons_f2008)
 
-    def cons_f2009(y, v):
+    def cons_f2009(v, y):
         return ZeroQ(-v + y)
 
     cons2009 = CustomConstraint(cons_f2009)
@@ -10929,19 +10931,19 @@ if matchpy:
 
     cons2011 = CustomConstraint(cons_f2011)
 
-    def cons_f2012(p, b, m, n, x, a):
+    def cons_f2012(p, m, b, a, n, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FreeQ(List(a, b, m, n, p), x)
 
     cons2012 = CustomConstraint(cons_f2012)
 
-    def cons_f2013(w, v):
+    def cons_f2013(v, w):
         return ZeroQ(-v + w)
 
     cons2013 = CustomConstraint(cons_f2013)
 
-    def cons_f2014(r, q, p):
+    def cons_f2014(r, p, q):
         return ZeroQ(p - q*(r + S(1)))
 
     cons2014 = CustomConstraint(cons_f2014)
@@ -10951,27 +10953,27 @@ if matchpy:
 
     cons2015 = CustomConstraint(cons_f2015)
 
-    def cons_f2016(r, p):
+    def cons_f2016(p, r):
         return IntegerQ(p/(r + S(1)))
 
     cons2016 = CustomConstraint(cons_f2016)
 
-    def cons_f2017(s, r, q, p):
+    def cons_f2017(r, p, s, q):
         return ZeroQ(p*(s + S(1)) - q*(r + S(1)))
 
     cons2017 = CustomConstraint(cons_f2017)
 
-    def cons_f2018(m, q, p):
+    def cons_f2018(m, p, q):
         return ZeroQ(p + q*(m*p + S(1)))
 
     cons2018 = CustomConstraint(cons_f2018)
 
-    def cons_f2019(m, r, q, p):
+    def cons_f2019(m, p, q, r):
         return ZeroQ(p + q*(m*p + r + S(1)))
 
     cons2019 = CustomConstraint(cons_f2019)
 
-    def cons_f2020(m, s, q, p):
+    def cons_f2020(m, p, s, q):
         return ZeroQ(p*(s + S(1)) + q*(m*p + S(1)))
 
     cons2020 = CustomConstraint(cons_f2020)
@@ -10986,97 +10988,97 @@ if matchpy:
 
     cons2022 = CustomConstraint(cons_f2022)
 
-    def cons_f2023(p, m, r, q, s):
+    def cons_f2023(p, m, r, s, q):
         return ZeroQ(p*(s + S(1)) + q*(m*p + r + S(1)))
 
     cons2023 = CustomConstraint(cons_f2023)
 
-    def cons_f2024(m, u, x):
+    def cons_f2024(x, m, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return FunctionOfQ(x**(m + S(1)), u, x)
 
     cons2024 = CustomConstraint(cons_f2024)
 
-    def cons_f2025(w, x):
+    def cons_f2025(x, w):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return NFreeQ(w, x)
 
     cons2025 = CustomConstraint(cons_f2025)
 
-    def cons_f2026(z, x):
+    def cons_f2026(x, z):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return NFreeQ(z, x)
 
     cons2026 = CustomConstraint(cons_f2026)
 
-    def cons_f2027(a, m):
+    def cons_f2027(m, a):
         return Not(And(EqQ(a, S(1)), EqQ(m, S(1))))
 
     cons2027 = CustomConstraint(cons_f2027)
 
-    def cons_f2028(m, x, v):
+    def cons_f2028(v, m, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(And(EqQ(v, x), EqQ(m, S(1))))
 
     cons2028 = CustomConstraint(cons_f2028)
 
-    def cons_f2029(u, x):
+    def cons_f2029(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(RationalFunctionQ(u, x))
 
     cons2029 = CustomConstraint(cons_f2029)
 
-    def cons_f2030(x, v):
+    def cons_f2030(v, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(LinearQ(v, x))
 
     cons2030 = CustomConstraint(cons_f2030)
 
-    def cons_f2031(s, r):
+    def cons_f2031(r, s):
         return PosQ(-r + s)
 
     cons2031 = CustomConstraint(cons_f2031)
 
-    def cons_f2032(u, x):
+    def cons_f2032(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Not(AlgebraicFunctionQ(u, x))
 
     cons2032 = CustomConstraint(cons_f2032)
 
-    def cons_f2033(m, u, x):
+    def cons_f2033(x, m, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return Or(Greater(m, S(0)), Not(AlgebraicFunctionQ(u, x)))
 
     cons2033 = CustomConstraint(cons_f2033)
 
-    def cons_f2034(u, x):
+    def cons_f2034(x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return EulerIntegrandQ(u, x)
 
     cons2034 = CustomConstraint(cons_f2034)
 
-    def cons_f2035(u, x, v):
+    def cons_f2035(v, x, u):
         if isinstance(x, (int, Integer, float, Float)):
             return False
         return PolynomialInQ(v, u, x)
 
     cons2035 = CustomConstraint(cons_f2035)
 
-    def cons_f2036(a, d):
+    def cons_f2036(d, a):
         return ZeroQ(a + d)
 
     cons2036 = CustomConstraint(cons_f2036)
 
-    def cons_f2037(q, p):
+    def cons_f2037(p, q):
         return ZeroQ(p + q)
 
     cons2037 = CustomConstraint(cons_f2037)
