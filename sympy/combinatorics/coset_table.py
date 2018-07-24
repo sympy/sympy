@@ -816,6 +816,17 @@ class CosetTable(DefaultPrinting):
             R_set.difference_update(r)
         return R_c_list
 
+    def coset_representative(self, coset):
+        '''
+        Compute the coset representative of a given coset.
+        To-do: Add examples
+        '''
+        for alpha, x in product(self.omega, self.A):
+            if self.table[alpha][self.A_dict[x]] == coset:
+                if alpha == 0:
+                    return x
+                return self.coset_representative(alpha)*x
+
     ##############################
     #      Modified Methods      #
     ##############################
