@@ -10,7 +10,7 @@ import mpmath.libmp as libmp
 from mpmath import (
     make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
 from mpmath import inf as mpmath_inf
-from mpmath.libmp import (from_int, from_man_exp, from_rational, from_float, 
+from mpmath.libmp import (from_int, from_man_exp, from_rational, from_float,
         fhalf, fnan, fnone, fone, fzero, mpf_abs, mpf_add,
         mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
         mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
@@ -1298,7 +1298,7 @@ def _create_evalf_table():
         Piecewise: evalf_piecewise,
 
         bernoulli: evalf_bernoulli,
-        rf: lambda expr, prec, options: (from_float(mp.rf(*expr.args)), None, prec, None), 
+        rf: lambda expr, prec, options: (from_float(mp.rf(*expr.args)), None, prec, None),
         ff: lambda expr, prec, options: (from_float(mp.ff(*expr.args)), None, prec, None),
     }
 
