@@ -54,9 +54,9 @@ from sympy import beta as beta_fn
 from sympy import cos, sin, exp, besseli, besselj, besselk
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
-from sympy.stats.rv import _value_check
+from sympy.stats.rv import _value_check, RandomSymbol
 from sympy.matrices import MatrixBase
-from sympy.stats.joint_rv_types import multivariate_rv
+from sympy.stats.joint_rv_types import multivariate_rv, JointRV
 from sympy.external import import_module
 import random
 
@@ -144,7 +144,10 @@ def rv(symbol, cls, args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
-    return SingleContinuousPSpace(symbol, dist).value
+    pspace = SingleContinuousPSpace(symbol, dist)
+    if any(isinstance(arg, RandomSymbol) for arg in args):
+        return JointRV(symbol, pspace.pdf)
+    return pspace.value
 
 ########################################
 # Continuous Probability Distributions #

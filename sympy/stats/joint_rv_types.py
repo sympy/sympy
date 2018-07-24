@@ -1,7 +1,8 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
     IndexedBase)
-from sympy.stats.rv import _value_check
-from sympy.stats.joint_rv import JointDistribution, JointPSpace
+from sympy.stats.rv import _value_check, random_symbols
+from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
+    JointDistributionHandmade, MarginalDistribution)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 
@@ -48,15 +49,20 @@ def JointRV(symbol, pdf, _set=None):
     exp(-2)/(2*pi)
     """
     #TODO: Add support for sets provided by the user
-
     symbol = sympify(symbol)
     syms = list(i for i in pdf.free_symbols if isinstance(i, Indexed)
         and i.base == IndexedBase(symbol))
     syms.sort(key = lambda index: index.args[1])
-    pdf = Lambda(syms, pdf)
     _set = S.Reals**len(syms)
+
+    pdf = Lambda(syms, pdf)
     dist = JointDistributionHandmade(pdf, _set)
-    return JointPSpace(symbol, dist).value
+    jrv = JointPSpace(symbol, dist).value
+    rvs = random_symbols(pdf)
+    if len(rvs) != 0:
+        dist = MarginalDistribution(pdf.expr, (jrv,))
+        return JointPSpace(symbol, dist).value
+    return jrv
 
 #-------------------------------------------------------------------------------
 # Multivariate Normal distribution ---------------------------------------------------------
