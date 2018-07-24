@@ -62,7 +62,7 @@ def test_rf_eval_apply():
         factorial(n + k - 1) / factorial(n - 1)
 
     assert str(rf(18, x).subs({x: S(2)/3}).evalf()) == \
-        '6.82615401311255'
+        '6.82615401311257'
 
     import random
     from mpmath import rf as mpmath_rf
@@ -130,7 +130,7 @@ def test_ff_eval_apply():
     assert ff(x, k).rewrite(binomial) == factorial(k) * binomial(x, k)
 
     assert str(ff(18, x).subs({x: S(2)/3}).evalf()) == \
-        '6.91094012922343'
+        '6.91094012922346'
 
     import random
     from mpmath import ff as mpmath_ff

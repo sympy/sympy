@@ -579,18 +579,6 @@ class RisingFactorial(CombinatorialFunction):
                                             r*(x - i),
                                             range(1, abs(int(k)) + 1), 1)
 
-    def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
-        if all(x.is_number for x in self.args):
-            x = self.args[0]._to_mpmath(prec)
-            k = self.args[1]._to_mpmath(prec)
-            with workprec(prec+4):
-                res = mp.rf(x, k)
-            return Expr._from_mpmath(res, prec)
-        else:
-            return self
-
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
         return gamma(x + k) / gamma(x)
@@ -720,18 +708,6 @@ class FallingFactorial(CombinatorialFunction):
                         else:
                             return 1/reduce(lambda r, i: r*(x + i),
                                             range(1, abs(int(k)) + 1), 1)
-
-    def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
-        if all(x.is_number for x in self.args):
-            x = self.args[0]._to_mpmath(prec)
-            k = self.args[1]._to_mpmath(prec)
-            with workprec(prec+4):
-                res = mp.ff(x, k)
-            return Expr._from_mpmath(res, prec)
-        else:
-            return self
 
     def _eval_rewrite_as_gamma(self, x, k):
         from sympy import gamma
