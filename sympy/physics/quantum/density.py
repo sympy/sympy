@@ -81,7 +81,7 @@ class Density(HermitianOperator):
         return Tuple(*[arg[1] for arg in self.args])
 
     def get_state(self, index):
-        """Return specfic state by index.
+        """Return specific state by index.
 
         Parameters
         ==========

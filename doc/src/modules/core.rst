@@ -58,6 +58,11 @@ Expr
 .. autoclass:: Expr
    :members:
 
+UnevaluatedExpr
+---------------
+.. autoclass:: UnevaluatedExpr
+   :members:
+
 AtomicExpr
 ----------
 .. autoclass:: AtomicExpr
@@ -218,6 +223,12 @@ GoldenRatio
 ^^^^^^^^^^^
 
 .. autoclass:: GoldenRatio
+   :members:
+
+TribonacciConstant
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: TribonacciConstant
    :members:
 
 power

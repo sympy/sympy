@@ -1,11 +1,11 @@
 .. _codegen_prose:
 
 ================================================
-Structural Details of Code Generation with Sympy
+Structural Details of Code Generation with SymPy
 ================================================
 
 Several submodules in SymPy allow one to generate directly compilable and
-executable code in a variety of different programming languages from Sympy
+executable code in a variety of different programming languages from SymPy
 expressions. In addition, there are functions that generate Python importable
 objects that can evaluate SymPy expressions very efficiently.
 
@@ -28,7 +28,7 @@ There are four main levels of abstractions::
 :mod:`sympy.utilities.autowrap` uses codegen, and codegen uses the code
 printers. :mod:`sympy.utilities.autowrap` does everything: it lets you go
 from SymPy expression to numerical function in the same Python process in one
-step. codegen is actual code generation, i.e., to compile and use later, or to
+step. Codegen is actual code generation, i.e., to compile and use later, or to
 include in some larger project.
 
 The code printers translate the SymPy objects into actual code, like ``abs(x)
@@ -56,22 +56,15 @@ Code printers (sympy.printing)
 ------------------------------
 
 This is where the meat of code generation is; the translation of SymPy
-expressions to specific languages. Supported languages are C
-(:py:func:`sympy.printing.ccode.ccode`), R 
-(:py:func:`sympy.printing.rcode.rcode`), Fortran 95
-(:py:func:`sympy.printing.fcode.fcode`), Javascript
-(:py:func:`sympy.printing.jscode.jscode`), Julia
-(:py:func:`sympy.printing.julia.julia_code`), Mathematica
-(:py:func:`sympy.printing.mathematica.mathematica_code`), Octave/Matlab
-(:py:func:`sympy.printing.octave.octave_code`), Python (print_python, which is
 actually more like a lightweight version of codegen for Python, and
+Python (:py:func:`sympy.printing.pycode.pycode`), and
 :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
 (like NumPy), and theano
 (:py:func:`sympy.printing.theanocode.theano_function`). The code printers are
 special cases of the other prints in SymPy (str printer, pretty printer, etc.).
 
 An important distinction is that the code printer has to deal with assignments
-(using the :class:`sympy.printing.codeprinter.Assignment` object).This serves as
+(using the :class:`sympy.codegen.ast.Assignment` object). This serves as
 building blocks for the code printers and hence the ``codegen`` module.  An
 example that shows the use of ``Assignment``::
 
@@ -94,9 +87,17 @@ Here is a simple example of printing a C version of a SymPy expression::
     ────────
       2⋅r
     >>> ccode(expr)
-    -1.0L/2.0L*Z*pow(e, 2)*k/r
-    >>> ccode(expr, assign_to="E")
-    E = -1.0L/2.0L*Z*pow(e, 2)*k/r;
+    -1.0/2.0*Z*pow(e, 2)*k/r
+    >>> from sympy.codegen.ast import real, float80
+    >>> ccode(expr, assign_to="E", type_aliases={real: float80})
+    E = -1.0L/2.0L*Z*powl(e, 2)*k/r;
+
+To generate code with some math functions provided by e.g. the C99 standard we need
+to import functions from :mod:`sympy.codegen.cfunctions`::
+
+    >>> from sympy.codegen.cfunctions import expm1
+    >>> ccode(expm1(x), standard='C99')
+    expm1(x)
 
 ``Piecewise`` expressions are converted into conditionals. If an ``assign_to``
 variable is provided an if statement is created, otherwise the ternary operator
@@ -186,7 +187,7 @@ how it works::
                  r
     >>> print(jscode(expr, assign_to="H_is"))
     H_is = I*S*gamma_1*gamma_2*k*(3*Math.pow(Math.cos(beta), 2) - 1)/Math.pow(r, 3);
-    >>> print(ccode(expr, assign_to="H_is"))
+    >>> print(ccode(expr, assign_to="H_is", standard='C89'))
     H_is = I*S*gamma_1*gamma_2*k*(3*pow(cos(beta), 2) - 1)/pow(r, 3);
     >>> print(fcode(expr, assign_to="H_is"))
           H_is = I*S*gamma_1*gamma_2*k*(3*cos(beta)**2 - 1)/r**3
@@ -194,6 +195,8 @@ how it works::
     H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3
     >>> print(octave_code(expr, assign_to="H_is"))
     H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3;
+    >>> print(rust_code(expr, assign_to="H_is"))
+    H_is = I*S*gamma_1*gamma_2*k*(3*beta.cos().powi(2) - 1)/r.powi(3);
     >>> print(mathematica_code(expr))
     I*S*gamma_1*gamma_2*k*(3*Cos[beta]^2 - 1)/r^3
 
@@ -219,7 +222,7 @@ For instance::
     >>> from sympy.utilities.codegen import codegen
     >>> length, breadth, height = symbols('length, breadth, height')
     >>> [(c_name, c_code), (h_name, c_header)] = \
-    ... codegen(('volume', length*breadth*height), "C", "test",
+    ... codegen(('volume', length*breadth*height), "C99", "test",
     ...         header=False, empty=False)
     >>> print(c_name)
     test.c
@@ -485,7 +488,7 @@ well automated and a SymPy user wishing to make use of this code generation
 should call the ``ufuncify`` function.
 
 ``ufuncify`` is the third method available with Autowrap module. It basically
-implies 'Universal functions' and follows an ideology set by Numpy. The main
+implies 'Universal functions' and follows an ideology set by NumPy. The main
 point of ufuncify as compared to autowrap is that it allows arrays as arguments
 and can operate in an element-by-element fashion. The core operation done
 element-wise is in accordance to Numpy's array broadcasting rules. See `this
@@ -516,8 +519,8 @@ Let us see an example for some quantitative analysis::
 The lambdify function translates SymPy expressions into Python functions,
 leveraging a variety of numerical libraries. By default lambdify relies on
 implementations in the ``math`` standard library. Naturally, Raw Python is
-faster than Sympy. However it also supports ``mpmath`` and most notably,
-``numpy``. Using the numpy library gives the generated function access to
+faster than SymPy. However it also supports ``mpmath`` and most notably,
+``numpy``. Using the NumPy library gives the generated function access to
 powerful vectorized ufuncs that are backed by compiled C code.
 
 Let us compare the speeds::
@@ -541,5 +544,77 @@ Let us compare the speeds::
 The options available with ufuncify are more or less the same as those
 available with ``autowrap``.
 
-There are other facilities available with Sympy to do efficient numeric
+There are other facilities available with SymPy to do efficient numeric
 computation. See :ref:`this<numeric_computation>` page for a comparison among them.
+
+
+Classes and functions for rewriting expressions (sympy.codegen.rewriting)
+-------------------------------------------------------------------------
+
+.. automodule:: sympy.codegen.rewriting
+   :members:
+
+Tools for simplifying expressions using approximations (sympy.codegen.approximations)
+-------------------------------------------------------------------------------------
+
+.. automodule:: sympy.codegen.approximations
+   :members:
+
+Classes for abstract syntax trees (sympy.codegen.ast)
+-----------------------------------------------------
+
+.. automodule:: sympy.codegen.ast
+   :members:
+
+Special C math functions (sympy.codegen.cfunctions)
+---------------------------------------------------
+
+.. automodule:: sympy.codegen.cfunctions
+   :members:
+
+C specific AST nodes (sympy.codegen.cnodes)
+-------------------------------------------
+
+.. automodule:: sympy.codegen.cnodes
+   :members:
+
+
+C++ specific AST nodes (sympy.codegen.cxxnodes)
+-----------------------------------------------
+
+.. automodule:: sympy.codegen.cxxnodes
+   :members:
+
+Fortran specific AST nodes (sympy.codegen.fnodes)
+-------------------------------------------------
+
+.. automodule:: sympy.codegen.fnodes
+   :members:
+
+
+Algorithms (sympy.codegen.algorithms)
+-------------------------------------
+
+.. automodule:: sympy.codegen.algorithms
+   :members:
+
+
+Python utilities (sympy.codegen.pyutils)
+----------------------------------------
+
+.. automodule:: sympy.codegen.pyutils
+   :members:
+
+
+C utilities (sympy.codegen.cutils)
+----------------------------------
+
+.. automodule:: sympy.codegen.cutils
+   :members:
+
+
+Fortran utilities (sympy.codegen.futils)
+----------------------------------------
+
+.. automodule:: sympy.codegen.futils
+   :members:

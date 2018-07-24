@@ -66,6 +66,13 @@ fibonacci
 .. autoclass:: sympy.functions.combinatorial.numbers.fibonacci
    :members:
 
+tribonacci
+----------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.tribonacci
+   :members:
+
+
 harmonic
 --------
 

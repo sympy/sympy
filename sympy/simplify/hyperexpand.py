@@ -462,6 +462,8 @@ def make_simp(z):
     def simp(expr):
         """ Efficiently simplify the rational function ``expr``. """
         numer, denom = expr.as_numer_denom()
+        numer = numer.expand()
+        # denom = denom.expand()  # is this needed?
         c, numer, denom = poly(numer, z).cancel(poly(denom, z))
         return c * numer.as_expr() / denom.as_expr()
 
@@ -940,7 +942,7 @@ class Operator(object):
     *not* blindly differentiate but instead use a different representation
     of the z*d/dz operator (see make_derivative_operator).
 
-    To subclass from this, define a __init__ method that initalises a
+    To subclass from this, define a __init__ method that initializes a
     self._poly variable. This variable stores a polynomial. By convention
     the generator is z*d/dz, and acts to the right of all coefficients.
 
@@ -1339,7 +1341,7 @@ class ReduceOrder(Operator):
         n = ai - bj
         if not n.is_Integer or n < 0:
             return None
-        if bj.is_integer and bj <= 0 and bj + n - 1 >= 0:
+        if bj.is_integer and bj.is_nonpositive:
             return None
 
         expr = Operator.__new__(cls)
@@ -1688,7 +1690,7 @@ def try_polynomial(func, z):
     al0 = [x for x in a0 if x <= 0]
     bl0 = [x for x in b0 if x <= 0]
 
-    if bl0:
+    if bl0 and all(a < bl0[-1] for a in al0):
         return oo
     if not al0:
         return None

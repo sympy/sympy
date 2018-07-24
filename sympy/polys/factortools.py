@@ -1191,7 +1191,7 @@ def dup_factor_list(f, K0):
         else:
             K0_inexact = None
 
-        if K0.has_Field:
+        if K0.is_Field:
             K = K0.get_ring()
 
             denom, f = dup_clear_denoms(f, K0, K)
@@ -1213,19 +1213,20 @@ def dup_factor_list(f, K0):
         else:  # pragma: no cover
             raise DomainError('factorization not supported over %s' % K0)
 
-        if K0.has_Field:
+        if K0.is_Field:
             for i, (f, k) in enumerate(factors):
                 factors[i] = (dup_convert(f, K, K0), k)
 
             coeff = K0.convert(coeff, K)
+            coeff = K0.quo(coeff, denom)
 
-            if K0_inexact is None:
-                coeff = coeff/denom
-            else:
+            if K0_inexact:
                 for i, (f, k) in enumerate(factors):
-                    f = dup_quo_ground(f, denom, K0)
+                    max_norm = dup_max_norm(f, K0)
+                    f = dup_quo_ground(f, max_norm, K0)
                     f = dup_convert(f, K0, K0_inexact)
                     factors[i] = (f, k)
+                    coeff = K0.mul(coeff, K0.pow(max_norm, k))
 
                 coeff = K0_inexact.convert(coeff, K0)
                 K0 = K0_inexact
@@ -1266,7 +1267,7 @@ def dmp_factor_list(f, u, K0):
         else:
             K0_inexact = None
 
-        if K0.has_Field:
+        if K0.is_Field:
             K = K0.get_ring()
 
             denom, f = dmp_clear_denoms(f, u, K0, K)
@@ -1292,19 +1293,20 @@ def dmp_factor_list(f, u, K0):
         else:  # pragma: no cover
             raise DomainError('factorization not supported over %s' % K0)
 
-        if K0.has_Field:
+        if K0.is_Field:
             for i, (f, k) in enumerate(factors):
                 factors[i] = (dmp_convert(f, u, K, K0), k)
 
             coeff = K0.convert(coeff, K)
+            coeff = K0.quo(coeff, denom)
 
-            if K0_inexact is None:
-                coeff = coeff/denom
-            else:
+            if K0_inexact:
                 for i, (f, k) in enumerate(factors):
-                    f = dmp_quo_ground(f, denom, u, K0)
+                    max_norm = dmp_max_norm(f, u, K0)
+                    f = dmp_quo_ground(f, max_norm, u, K0)
                     f = dmp_convert(f, u, K0, K0_inexact)
                     factors[i] = (f, k)
+                    coeff = K0.mul(coeff, K0.pow(max_norm, k))
 
                 coeff = K0_inexact.convert(coeff, K0)
                 K0 = K0_inexact

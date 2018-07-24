@@ -521,6 +521,8 @@ def test_Domain___eq__():
     assert (ZZ.frac_field(x, y) == QQ.frac_field(x, y)) is False
     assert (QQ.frac_field(x, y) == ZZ.frac_field(x, y)) is False
 
+    assert RealField()[x] == RR[x]
+
 
 def test_Domain__algebraic_field():
     alg = ZZ.algebraic_field(sqrt(2))
@@ -672,6 +674,15 @@ def test_ModularInteger():
     assert isinstance(a, F3.dtype) and a == 2
     a = F3(2)**2
     assert isinstance(a, F3.dtype) and a == 1
+
+    F7 = FF(7)
+
+    a = F7(3)**100000000000
+    assert isinstance(a, F7.dtype) and a == 4
+    a = F7(3)**-100000000000
+    assert isinstance(a, F7.dtype) and a == 2
+    a = F7(3)**S(2)
+    assert isinstance(a, F7.dtype) and a == 2
 
     assert bool(F3(3)) is False
     assert bool(F3(4)) is True

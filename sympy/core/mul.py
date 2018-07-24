@@ -12,6 +12,7 @@ from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .compatibility import reduce, range
 from .expr import Expr
+from .evaluate import global_distribute
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -173,11 +174,13 @@ class Mul(Expr, AssocOp):
         """
 
         from sympy.calculus.util import AccumBounds
+        from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
             a, b = seq
             if b.is_Rational:
                 a, b = b, a
+                seq = [a, b]
             assert not a is S.One
             if not a.is_zero and a.is_Rational:
                 r, b = b.as_coeff_Mul()
@@ -185,18 +188,15 @@ class Mul(Expr, AssocOp):
                     if r is not S.One:  # 2-arg hack
                         # leave the Mul as a Mul
                         rv = [cls(a*r, b, evaluate=False)], [], None
-                    elif b.is_commutative:
-                        if a is S.One:
-                            rv = [b], [], None
-                        else:
-                            r, b = b.as_coeff_Add()
-                            bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                            _addsort(bargs)
-                            ar = a*r
-                            if ar:
-                                bargs.insert(0, ar)
-                            bargs = [Add._from_args(bargs)]
-                            rv = bargs, [], None
+                    elif global_distribute[0] and b.is_commutative:
+                        r, b = b.as_coeff_Add()
+                        bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
+                        _addsort(bargs)
+                        ar = a*r
+                        if ar:
+                            bargs.insert(0, ar)
+                        bargs = [Add._from_args(bargs)]
+                        rv = bargs, [], None
             if rv:
                 return rv
 
@@ -270,6 +270,10 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif isinstance(o, AccumBounds):
+                coeff = o.__mul__(coeff)
+                continue
+
+            elif isinstance(o, MatrixExpr):
                 coeff = o.__mul__(coeff)
                 continue
 
@@ -420,6 +424,11 @@ class Mul(Expr, AssocOp):
             changed = False
             for b, e in c_powers:
                 if e.is_zero:
+                    # canceling out infinities yields NaN
+                    if (b.is_Add or b.is_Mul) and any(infty in b.args
+                        for infty in (S.ComplexInfinity, S.Infinity,
+                                      S.NegativeInfinity)):
+                        return [S.NaN], [], None
                     continue
                 if e is S.One:
                     if b.is_Number:
@@ -609,8 +618,8 @@ class Mul(Expr, AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if (not nc_part and len(c_part) == 2 and c_part[0].is_Number and
-                c_part[1].is_Add):
+        if (global_distribute[0] and not nc_part and len(c_part) == 2 and
+                c_part[0].is_Number and c_part[0].is_finite and c_part[1].is_Add):
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
@@ -625,6 +634,19 @@ class Mul(Expr, AssocOp):
         if e.is_Integer:
             return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
                 Pow(Mul._from_args(nc), e, evaluate=False)
+        if e.is_Rational and e.q == 2:
+            from sympy.core.power import integer_nthroot
+            from sympy.functions.elementary.complexes import sign
+            if b.is_imaginary:
+                a = b.as_real_imag()[1]
+                if a.is_Rational:
+                    n, d = abs(a/2).as_numer_denom()
+                    n, t = integer_nthroot(n, 2)
+                    if t:
+                        d, t = integer_nthroot(d, 2)
+                        if t:
+                            r = sympify(n)/d
+                            return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
 
         p = Pow(b, e, evaluate=False)
 
@@ -764,10 +786,11 @@ class Mul(Expr, AssocOp):
         coeffi = []
         addterms = S.One
         for a in self.args:
-            if a.is_real:
-                coeffr.append(a)
-            elif a.is_imaginary:
-                coeffi.append(a)
+            r, i = a.as_real_imag()
+            if i.is_zero:
+                coeffr.append(r)
+            elif r.is_zero:
+                coeffi.append(i*S.ImaginaryUnit)
             elif a.is_commutative:
                 # search for complex conjugate pairs:
                 for i, x in enumerate(other):
@@ -858,11 +881,12 @@ class Mul(Expr, AssocOp):
         else:
             plain = self.func(*plain)
             if sums:
+                deep = hints.get("deep", False)
                 terms = self.func._expandsums(sums)
                 args = []
                 for term in terms:
                     t = self.func(plain, term)
-                    if t.is_Mul and any(a.is_Add for a in t.args):
+                    if t.is_Mul and any(a.is_Add for a in t.args) and deep:
                         t = t._eval_expand_mul()
                     args.append(t)
                 return Add(*args)
@@ -876,8 +900,48 @@ class Mul(Expr, AssocOp):
         for i in range(len(args)):
             d = args[i].diff(s)
             if d:
-                terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))
-        return Add(*terms)
+                # Note: reduce is used in step of Mul as Mul is unable to
+                # handle subtypes and operation priority:
+                terms.append(reduce(lambda x, y: x*y, (args[:i] + [d] + args[i + 1:]), S.One))
+        return reduce(lambda x, y: x+y, terms, S.Zero)
+
+    @cacheit
+    def _eval_derivative_n_times(self, s, n):
+        # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
+        from sympy import Integer, factorial, prod, Dummy, symbols, Sum
+        args = [arg for arg in self.args if arg.free_symbols & s.free_symbols]
+        coeff_args = [arg for arg in self.args if arg not in args]
+        m = len(args)
+        if m == 1:
+            return args[0].diff((s, n))*Mul.fromiter(coeff_args)
+
+        if isinstance(n, (int, Integer)):
+            return super(Mul, self)._eval_derivative_n_times(s, n)
+
+            # Code not yet activated:
+            def sum_to_n(n, m):
+                if m == 1:
+                    yield (n,)
+                else:
+                    for x in range(n+1):
+                        for y in sum_to_n(n-x, m-1):
+                            yield (x,) + y
+            accum_sum = S.Zero
+            for kvals in sum_to_n(n, m):
+                part1 = factorial(n)/prod([factorial(k) for k in kvals])
+                part2 = prod([arg.diff((s, k)) for k, arg in zip(kvals, args)])
+                accum_sum += part1 * part2
+            return accum_sum * Mul.fromiter(coeff_args)
+
+        kvals = symbols("k1:%i" % m, cls=Dummy)
+        klast = n - sum(kvals)
+        result = Sum(
+            # better to use the multinomial?
+            factorial(n)/prod(map(factorial, kvals))/factorial(klast)*\
+            prod([args[t].diff((s, kvals[t])) for t in range(m-1)])*\
+            args[-1].diff((s, klast)),
+            *[(k, 0, n) for k in kvals])
+        return result*Mul.fromiter(coeff_args)
 
     def _eval_difference_delta(self, n, step):
         from sympy.series.limitseq import difference_delta as dd
@@ -1114,14 +1178,15 @@ class Mul(Expr, AssocOp):
         return self._eval_real_imag(True)
 
     def _eval_real_imag(self, real):
-        zero = one_neither = False
+        zero = False
+        t_not_re_im = None
 
         for t in self.args:
             if not t.is_complex:
                 return t.is_complex
-            elif t.is_imaginary:
+            elif t.is_imaginary:  # I
                 real = not real
-            elif t.is_real:
+            elif t.is_real:  # 2
                 if not zero:
                     z = t.is_zero
                     if not z and zero is False:
@@ -1131,15 +1196,24 @@ class Mul(Expr, AssocOp):
                             return True
                         return
             elif t.is_real is False:
-                if one_neither:
+                # symbolic or literal like `2 + I` or symbolic imaginary
+                if t_not_re_im:
                     return  # complex terms might cancel
-                one_neither = True
+                t_not_re_im = t
+            elif t.is_imaginary is False:  # symbolic like `2` or `2 + I`
+                if t_not_re_im:
+                    return  # complex terms might cancel
+                t_not_re_im = t
             else:
                 return
 
-        if one_neither:  # self is a+I*b or I*b
-            if real:
-                return zero  # real*self is like self: neither is real
+        if t_not_re_im:
+            if t_not_re_im.is_real is False:
+                if real:  # like 3
+                    return zero  # 3*(smthng like 2 + I or i) is not real
+            if t_not_re_im.is_imaginary is False:  # symbolic 2 or 2 + I
+                if not real:  # like I
+                    return zero  # I*(smthng like 2 or 2 + I) is not real
         elif zero is False:
             return real  # can't be trumped by 0
         elif real:
@@ -1293,28 +1367,12 @@ class Mul(Expr, AssocOp):
         elif is_integer is False:
             return False
 
-    def _eval_is_prime(self):
-        """
-        If product is a positive integer, multiplication
-        will never result in a prime number.
-        """
-        if self.is_number:
-            """
-            If input is a number that is not completely simplified.
-            e.g. Mul(sqrt(3), sqrt(3), evaluate=False)
-            So we manually evaluate it and return whether that is prime or not.
-            """
-            # Note: `doit()` was not used due to test failing (Infinite Recursion)
-            r = S.One
-            for arg in self.args:
-                r *= arg
-            return r.is_prime
-
+    def _eval_is_composite(self):
         if self.is_integer and self.is_positive:
             """
             Here we count the number of arguments that have a minimum value
             greater than two.
-            If there are more than one of such a symbol then the result is not prime.
+            If there are more than one of such a symbol then the result is composite.
             Else, the result cannot be determined.
             """
             number_of_args = 0 # count of symbols with minimum value greater than one
@@ -1323,7 +1381,7 @@ class Mul(Expr, AssocOp):
                     number_of_args += 1
 
             if number_of_args > 1:
-                return False
+                return True
 
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
@@ -1346,7 +1404,7 @@ class Mul(Expr, AssocOp):
             # a -1 base (see issue 6421); all we want here are the
             # true Pow or exp separated into base and exponent
             from sympy import exp
-            if a.is_Pow or a.func is exp:
+            if a.is_Pow or isinstance(a, exp):
                 return a.as_base_exp()
             return a, S.One
 
@@ -1487,7 +1545,7 @@ class Mul(Expr, AssocOp):
 
                 # the bases must be equivalent in succession, and
                 # the powers must be extractively compatible on the
-                # first and last factor but equal inbetween.
+                # first and last factor but equal in between.
 
                 rat = []
                 for j in range(take):

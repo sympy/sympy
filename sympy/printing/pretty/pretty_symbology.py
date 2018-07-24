@@ -573,7 +573,7 @@ def annotated(letter):
     }
     ascii_pics = {
         'F': (3, 0, 3, 0, ' _\n|_\n|\n'),
-        'G': (3, 0, 3, 1, ' __\n/__\n\_|')
+        'G': (3, 0, 3, 1, ' __\n/__\n\\_|')
     }
 
     if _use_unicode:

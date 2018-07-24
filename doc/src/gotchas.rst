@@ -20,7 +20,7 @@ remainder of the SymPy Docs, and the `official Python Tutorial <https://docs.pyt
 
 If you are already familiar with C or Java, you might also want to look
 at this `4 minute Python tutorial
-<http://www.nerdparadise.com/tech/python/4minutecrashcourse/>`_.
+<https://nerdparadise.com/programming/python4minutes/>`_.
 
 Ignore ``#doctest: +SKIP`` in the examples.  That has to do with
 internal testing of the examples.
@@ -334,9 +334,9 @@ you don't have to worry about this problem:
     3.142857142857143
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
-    >>> a = solve(7*x - 22, x)
+    >>> a = solve(7*x - 22, x)[0]
     >>> a
-    [22/7]
+    22/7
 
     The other solution is to put quotes around the expression
     and run it through S() (i.e., sympify it):
@@ -424,14 +424,14 @@ to evaluate them to 20 digits, a difference will become apparent:
     0.14285278320312500000
 
     It is important to realize that although a Float is being displayed in
-    decimal at aritrary precision, it is actually stored in binary. Once the
+    decimal at arbitrary precision, it is actually stored in binary. Once the
     Float is created, its binary information is set at the given precision.
     The accuracy of that value cannot be subsequently changed; so 1/7, at a
     precision of 3 digits, can be padded with binary zeros, but these will
     not make it a more accurate value of 1/7.
 
 If inexact, low-precision numbers are involved in a calculation with
-with higher precision values, the evalf engine will increase the precision
+higher precision values, the evalf engine will increase the precision
 of the low precision values and inexact results will be obtained. This is
 feature of calculations with limited precision:
 
@@ -465,7 +465,7 @@ There are three things that will help you obtain more precise numerical
 values for expressions:
 
     1) Pass the desired substitutions with the call to evaluate. By doing
-    the subs first, the ``Float`` values can not be updated as necessary. By
+    the subs first, the ``Float`` values cannot be updated as necessary. By
     passing the desired substitutions with the call to evalf the ability
     to re-evaluate as necessary is gained and the results are impressively
     better:
@@ -638,7 +638,7 @@ Tuples
 Parentheses ``()``, aside from changing operator precedence and their
 use in function calls, (like ``cos(x)``), are also used for tuples.  A
 ``tuple`` is identical to a :ref:`list <lists>`, except that it is not
-mutable.  That means that you can not change their values after they
+mutable.  That means that you cannot change their values after they
 have been created.  In general, you will not need tuples in SymPy, but
 sometimes it can be more convenient to type parentheses instead of
 square brackets.
@@ -648,7 +648,7 @@ square brackets.
     (1, 2, x)
     >>> t[0]
     1
-    >>> t[0] = 4  # Except you can not change them after they have been created
+    >>> t[0] = 4  # Except you cannot change them after they have been created
     Traceback (most recent call last):
       File "<console>", line 1, in <module>
     TypeError: 'tuple' object does not support item assignment
@@ -755,7 +755,8 @@ These will give you the function parameters and docstring for
 :func:`powsimp`.  The output will look something like this:
 
 .. module:: sympy.simplify.simplify
-.. autofunction:noindex: powsimp
+.. autofunction:: powsimp
+   :noindex:
 
 source()
 --------

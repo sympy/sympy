@@ -1,10 +1,12 @@
 import sympy
 import tempfile
 import os
+import warnings
 from sympy import symbols, Eq
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import skip
 
 numpy = import_module('numpy', min_module_version='1.6.1')
@@ -176,31 +178,85 @@ def test_ufuncify_f95_f2py():
 
 def test_wrap_twice_c_cython():
     has_module('Cython')
-    runtest_autowrap_twice('C', 'cython')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        runtest_autowrap_twice('C', 'cython')
 
 
 def test_autowrap_trace_C_Cython():
     has_module('Cython')
-    runtest_autowrap_trace('C', 'cython')
+    runtest_autowrap_trace('C99', 'cython')
 
 
 def test_autowrap_matrix_vector_C_cython():
     has_module('Cython')
-    runtest_autowrap_matrix_vector('C', 'cython')
+    runtest_autowrap_matrix_vector('C99', 'cython')
 
 
 def test_autowrap_matrix_matrix_C_cython():
     has_module('Cython')
-    runtest_autowrap_matrix_matrix('C', 'cython')
+    runtest_autowrap_matrix_matrix('C99', 'cython')
 
 
 def test_ufuncify_C_Cython():
     has_module('Cython')
-    runtest_ufuncify('C', 'cython')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        runtest_ufuncify('C99', 'cython')
 
 def test_issue_10274_C_cython():
     has_module('Cython')
-    runtest_issue_10274('C', 'cython')
+    runtest_issue_10274('C89', 'cython')
+
+
+def test_autowrap_custom_printer():
+    has_module('Cython')
+
+    from sympy import pi
+    from sympy.utilities.codegen import C99CodeGen
+    from sympy.printing.ccode import C99CodePrinter
+    from sympy.functions.elementary.exponential import exp
+
+    class PiPrinter(C99CodePrinter):
+        def _print_Pi(self, expr):
+            return "S_PI"
+
+    printer = PiPrinter()
+    gen = C99CodeGen(printer=printer)
+    gen.preprocessor_statements.append('#include "shortpi.h"')
+
+    expr = pi * a
+
+    expected = (
+        '#include "%s"\n'
+        '#include <math.h>\n'
+        '#include "shortpi.h"\n'
+        '\n'
+        'double autofunc(double a) {\n'
+        '\n'
+        '   double autofunc_result;\n'
+        '   autofunc_result = S_PI*a;\n'
+        '   return autofunc_result;\n'
+        '\n'
+        '}\n'
+    )
+
+    tmpdir = tempfile.mkdtemp()
+    # write a trivial header file to use in the generated code
+    open(os.path.join(tmpdir, 'shortpi.h'), 'w').write('#define S_PI 3.14')
+
+    func = autowrap(expr, backend='cython', tempdir=tmpdir, code_gen=gen)
+
+    assert func(4.2) == 3.14 * 4.2
+
+    # check that the generated code is correct
+    for filename in os.listdir(tmpdir):
+        if filename.startswith('wrapped_code') and filename.endswith('.c'):
+            with open(os.path.join(tmpdir, filename)) as f:
+                lines = f.readlines()
+                expected = expected % filename.replace('.c', '.h')
+                assert ''.join(lines[7:]) == expected
+
 
 # Numpy
 
@@ -208,4 +264,6 @@ def test_ufuncify_numpy():
     # This test doesn't use Cython, but if Cython works, then there is a valid
     # C compiler, which is needed.
     has_module('Cython')
-    runtest_ufuncify('C', 'numpy')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        runtest_ufuncify('C99', 'numpy')

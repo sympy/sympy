@@ -395,7 +395,7 @@ this will generate isympy.1 in the current directory. -->
 	</refsect1>
 	<refsect1 id="see_also">
 		<title>SEE ALSO</title>
-		<!-- In alpabetical order. -->
+		<!-- In alphabetical order. -->
 		<para><citerefentry>
 				<refentrytitle>ipython</refentrytitle>
 				<manvolnum>1</manvolnum>

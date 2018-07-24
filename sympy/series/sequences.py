@@ -294,7 +294,7 @@ class SeqBase(Basic):
                     range(start, stop, index.step or 1)]
 
     def find_linear_recurrence(self,n,d=None,gfvar=None):
-        """
+        r"""
         Finds the shortest linear recurrence that satisfies the first n
         terms of sequence of order `\leq` n/2 if possible.
         If d is specified, find shortest linear recurrence of order
@@ -419,7 +419,7 @@ class SeqExpr(SeqBase):
     >>> s.gen
     (1, 2, 3)
     >>> s.interval
-    [0, 10]
+    Interval(0, 10)
     >>> s.length
     11
 
@@ -760,7 +760,7 @@ class SeqExprOp(SeqBase):
     >>> s.gen
     (n**2, (1, 2, 3))
     >>> s.interval
-    [5, 10]
+    Interval(5, 10)
     >>> s.length
     6
 
@@ -910,7 +910,7 @@ class SeqAdd(SeqExprOp):
 
 
 class SeqMul(SeqExprOp):
-    """Represents term-wise multiplication of sequences.
+    r"""Represents term-wise multiplication of sequences.
 
     Handles multiplication of sequences only. For multiplication
     with other objects see :func:`SeqBase.coeff_mul`.

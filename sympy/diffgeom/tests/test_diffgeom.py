@@ -73,11 +73,31 @@ def test_differential():
 def test_products():
     assert TensorProduct(
         R2.dx, R2.dy)(R2.e_x, R2.e_y) == R2.dx(R2.e_x)*R2.dy(R2.e_y) == 1
-    assert WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y) == 1
     assert TensorProduct(R2.dx, R2.dy)(None, R2.e_y) == R2.dx
     assert TensorProduct(R2.dx, R2.dy)(R2.e_x, None) == R2.dy
     assert TensorProduct(R2.dx, R2.dy)(R2.e_x) == R2.dy
     assert TensorProduct(R2.x, R2.dx) == R2.x*R2.dx
+    assert TensorProduct(
+        R2.e_x, R2.e_y)(R2.x, R2.y) == R2.e_x(R2.x) * R2.e_y(R2.y) == 1
+    assert TensorProduct(R2.e_x, R2.e_y)(None, R2.y) == R2.e_x
+    assert TensorProduct(R2.e_x, R2.e_y)(R2.x, None) == R2.e_y
+    assert TensorProduct(R2.e_x, R2.e_y)(R2.x) == R2.e_y
+    assert TensorProduct(R2.x, R2.e_x) == R2.x * R2.e_x
+    assert TensorProduct(
+        R2.dx, R2.e_y)(R2.e_x, R2.y) == R2.dx(R2.e_x) * R2.e_y(R2.y) == 1
+    assert TensorProduct(R2.dx, R2.e_y)(None, R2.y) == R2.dx
+    assert TensorProduct(R2.dx, R2.e_y)(R2.e_x, None) == R2.e_y
+    assert TensorProduct(R2.dx, R2.e_y)(R2.e_x) == R2.e_y
+    assert TensorProduct(R2.x, R2.e_x) == R2.x * R2.e_x
+    assert TensorProduct(
+        R2.e_x, R2.dy)(R2.x, R2.e_y) == R2.e_x(R2.x) * R2.dy(R2.e_y) == 1
+    assert TensorProduct(R2.e_x, R2.dy)(None, R2.e_y) == R2.e_x
+    assert TensorProduct(R2.e_x, R2.dy)(R2.x, None) == R2.dy
+    assert TensorProduct(R2.e_x, R2.dy)(R2.x) == R2.dy
+    assert TensorProduct(R2.e_y,R2.e_x)(R2.x**2 + R2.y**2,R2.x**2 + R2.y**2) == 4*R2.x*R2.y
+
+    assert WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y) == 1
+    assert WedgeProduct(R2.e_x, R2.e_y)(R2.x, R2.y) == 1
 
 
 def test_lie_derivative():
@@ -126,6 +146,11 @@ def test_helpers_and_coordinate_dependent():
     twoform_not_sym = TensorProduct(R2.dx, R2.dx) + TensorProduct(R2.dx, R2.dy)
     twoform_not_TP = WedgeProduct(R2.dx, R2.dy)
 
+    one_vector = R2.e_x + R2.e_y
+    two_vector = TensorProduct(R2.e_x, R2.e_y)
+    three_vector = TensorProduct(R2.e_x, R2.e_y, R2.e_x)
+    two_wp = WedgeProduct(R2.e_x,R2.e_y)
+
     assert covariant_order(one_form) == 1
     assert covariant_order(two_form) == 2
     assert covariant_order(three_form) == 3
@@ -133,6 +158,11 @@ def test_helpers_and_coordinate_dependent():
     assert covariant_order(two_form + metric_ambig) == 2
     assert covariant_order(two_form + twoform_not_sym) == 2
     assert covariant_order(two_form + twoform_not_TP) == 2
+
+    assert contravariant_order(one_vector) == 1
+    assert contravariant_order(two_vector) == 2
+    assert contravariant_order(three_vector) == 3
+    assert contravariant_order(two_vector + two_wp) == 2
 
     raises(ValueError, lambda: covariant_order(misform_a))
     raises(ValueError, lambda: covariant_order(misform_b))
@@ -162,8 +192,6 @@ def test_correct_arguments():
     raises(ValueError, lambda: Differential(Differential(R2.e_x)))
 
     raises(ValueError, lambda: R2.dx(R2.x))
-
-    raises(ValueError, lambda: TensorProduct(R2.e_x, R2.dx))
 
     raises(ValueError, lambda: LieDerivative(R2.dx, R2.dx))
     raises(ValueError, lambda: LieDerivative(R2.x, R2.dx))

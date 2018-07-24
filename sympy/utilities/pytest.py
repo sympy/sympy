@@ -147,6 +147,7 @@ if not USE_PYTEST:
             func()
 
         func_wrapper = functools.update_wrapper(func_wrapper, func)
+        func_wrapper.__wrapped__ = func
         return func_wrapper
 
 else:

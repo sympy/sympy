@@ -1,6 +1,7 @@
 from sympy import I, symbols
 from sympy.physics.paulialgebra import Pauli
 from sympy.utilities.pytest import XFAIL
+from sympy.physics.quantum import TensorProduct
 
 sigma1 = Pauli(1)
 sigma2 = Pauli(2)
@@ -41,12 +42,13 @@ def test_evaluate_pauli_product():
     # Check issue 6471
     assert evaluate_pauli_product(-I*4*sigma1*sigma2) == 4*sigma3
 
-    # Acting on non-Mul objects should return the input
-    assert evaluate_pauli_product(1) == 1
-    # After consecutive multiplication, one or no Pauli should remain
-    assert evaluate_pauli_product(I*sigma1*sigma2*sigma1*sigma2) == -I
-    # Must respect non-commuting properties of other symbols
-    assert evaluate_pauli_product(I*sigma1*sigma2*tau1*sigma1*sigma3) == I*sigma3*tau1*sigma2
+    assert evaluate_pauli_product(
+        1 + I*sigma1*sigma2*sigma1*sigma2 + \
+        I*sigma1*sigma2*tau1*sigma1*sigma3 + \
+        ((tau1**2).subs(tau1, I*sigma1)) + \
+        sigma3*((tau1**2).subs(tau1, I*sigma1)) + \
+        TensorProduct(I*sigma1*sigma2*sigma1*sigma2, 1)
+    ) == 1 -I + I*sigma3*tau1*sigma2 - 1 - sigma3 - I*TensorProduct(1,1)
 
 
 @XFAIL

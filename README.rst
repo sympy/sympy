@@ -1,11 +1,9 @@
 SymPy
 =====
 
-|pypi version| |pypi download| |Build status| |Gitter Badge| |Zenodo Badge|
+|pypi version| |Build status| |Gitter Badge| |Zenodo Badge|
 
 .. |pypi version| image:: https://img.shields.io/pypi/v/sympy.svg
-   :target: https://pypi.python.org/pypi/sympy
-.. |pypi download| image:: https://img.shields.io/pypi/dm/sympy.svg
    :target: https://pypi.python.org/pypi/sympy
 .. |Build status| image:: https://secure.travis-ci.org/sympy/sympy.svg?branch=master
    :target: http://travis-ci.org/sympy/sympy
@@ -38,7 +36,10 @@ to ask us anything there. We have a very welcoming and helpful community.
 Download
 --------
 
-Get the latest version of SymPy from
+The recommended installation method is through Anaconda,
+https://www.anaconda.com/download/
+
+You can also get the latest version of SymPy from
 https://pypi.python.org/pypi/sympy/
 
 To get the git version do
@@ -135,15 +136,19 @@ Travis CI.
 
 To test pull requests, use `sympy-bot <https://github.com/sympy/sympy-bot>`_.
 
-Usage in Python 3
------------------
+Regenerate Experimental `\LaTeX` Parser/Lexer
+---------------------------------------------
+The parser and lexer generated with the `ANTLR4 <http://antlr4.org`_ toolchain
+in `sympy/parsing/latex/_antlr` and checked into the repo. Presently, most
+users should not need to regenerate these files, but if you plan to work on
+this feature, you will need the `antlr4` command line tool available. One way
+to get it is::
 
-SymPy also supports Python 3. If you want to install the latest version in
-Python 3, get the Python 3 tarball from
-https://pypi.python.org/pypi/sympy/
+    $ conda install -c conda-forge antlr=4.7
 
-To install the SymPy for Python 3, simply run the above commands with a Python
-3 interpreter.
+After making changes to `sympy/parsing/latex/LaTeX.g4`, run::
+
+    $ ./setup.py antlr
 
 Clean
 -----

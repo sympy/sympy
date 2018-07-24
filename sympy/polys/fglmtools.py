@@ -51,7 +51,7 @@ def matrix_fglm(F, ring, O_to):
             if g:
                 G.append(g)
         else:
-            # v is linearly independant from V
+            # v is linearly independent from V
             P = _update(s, _lambda, P)
             S.append(_incr_k(S[t[1]], t[0]))
             V.append(v)
@@ -103,7 +103,7 @@ def _update(s, _lambda, P):
 
 
 def _representing_matrices(basis, G, ring):
-    """
+    r"""
     Compute the matrices corresponding to the linear maps `m \mapsto
     x_i m` for all variables `x_i`.
     """
@@ -129,7 +129,7 @@ def _representing_matrices(basis, G, ring):
 
 
 def _basis(G, ring):
-    """
+    r"""
     Computes a list of monomials which are not divisible by the leading
     monomials wrt to ``O`` of ``G``. These monomials are a basis of
     `K[X_1, \ldots, X_n]/(G)`.

@@ -98,7 +98,7 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True)
         if repeat:
             expr_str += '_%s' % str(pos)
             arg_strs = [arg_str + '_%s' % str(pos + (i,)) for i, arg_str in enumerate(arg_strs)]
-        return ['"%s" -> "%s";'%(expr_str, arg_str) for arg_str in arg_strs]
+        return ['"%s" -> "%s";' % (expr_str, arg_str) for arg_str in arg_strs]
 
 template = \
 """digraph{

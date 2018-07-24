@@ -4,21 +4,28 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.compatibility import string_types
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.core.numbers import GoldenRatio
+from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
 from sympy.core.exprtools import factor_terms
+from sympy.simplify.ratsimp import ratsimp
+from sympy.polys import PolynomialError, factor
+from sympy.simplify.simplify import together
 
 def limit(e, z, z0, dir="+"):
     """
-    Compute the limit of e(z) at the point z0.
+    Compute the limit of ``e(z)`` at the point ``z0``.
 
-    z0 can be any expression, including oo and -oo.
+    ``z0`` can be any expression, including ``oo`` and ``-oo``.
 
-    For dir="+" (default) it calculates the limit from the right
-    (z->z0+) and for dir="-" the limit from the left (z->z0-).  For infinite
-    z0 (oo or -oo), the dir argument is determined from the direction
-    of the infinity (i.e., dir="-" for oo).
+    For ``dir="+-"`` it calculates the bi-directional limit; for
+    ``dir="+"`` (default) it calculates the limit from the right
+    (z->z0+) and for dir="-" the limit from the left (z->z0-).
+    For infinite ``z0`` (``oo`` or ``-oo``), the ``dir`` argument is
+    determined from the direction of the infinity (i.e.,
+    ``dir="-"`` for ``oo``).
 
     Examples
     ========
@@ -27,10 +34,15 @@ def limit(e, z, z0, dir="+"):
     >>> from sympy.abc import x
     >>> limit(sin(x)/x, x, 0)
     1
-    >>> limit(1/x, x, 0, dir="+")
+    >>> limit(1/x, x, 0) # default dir='+'
     oo
     >>> limit(1/x, x, 0, dir="-")
     -oo
+    >>> limit(1/x, x, 0, dir='+-')
+    Traceback (most recent call last):
+        ...
+    ValueError: The limit does not exist since left hand limit = -oo and right hand limit = oo
+
     >>> limit(1/x, x, oo)
     0
 
@@ -42,12 +54,22 @@ def limit(e, z, z0, dir="+"):
     Gruntz algorithm (see the gruntz() function).
     """
 
-    return Limit(e, z, z0, dir).doit(deep=False)
+    if dir == "+-":
+        llim = Limit(e, z, z0, dir="-").doit(deep=False)
+        rlim = Limit(e, z, z0, dir="+").doit(deep=False)
+        if llim == rlim:
+            return rlim
+        else:
+            # TODO: choose a better error?
+            raise ValueError("The limit does not exist since "
+                    "left hand limit = %s and right hand limit = %s"
+                    % (llim, rlim))
+    else:
+        return Limit(e, z, z0, dir).doit(deep=False)
 
 
 def heuristics(e, z, z0, dir):
     rv = None
-
     if abs(z0) is S.Infinity:
         rv = limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
         if isinstance(rv, Limit):
@@ -57,6 +79,15 @@ def heuristics(e, z, z0, dir):
         for a in e.args:
             l = limit(a, z, z0, dir)
             if l.has(S.Infinity) and l.is_finite is None:
+                if isinstance(e, Add):
+                    m = factor_terms(e)
+                    if not isinstance(m, Mul): # try together
+                        m = together(m)
+                    if not isinstance(m, Mul): # try factor if the previous methods failed
+                        m = factor(e)
+                    if isinstance(m, Mul):
+                        return heuristics(m, z, z0, dir)
+                    return
                 return
             elif isinstance(l, Limit):
                 return
@@ -67,8 +98,13 @@ def heuristics(e, z, z0, dir):
         if r:
             rv = e.func(*r)
             if rv is S.NaN:
-                return
-
+                try:
+                    rat_e = ratsimp(e)
+                except PolynomialError:
+                    return
+                if rat_e is S.NaN or rat_e == e:
+                    return
+                return limit(rat_e, z, z0, dir)
     return rv
 
 
@@ -100,10 +136,11 @@ class Limit(Expr):
         if isinstance(dir, string_types):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
-            raise TypeError("direction must be of type basestring or Symbol, not %s" % type(dir))
-        if str(dir) not in ('+', '-'):
-            raise ValueError(
-                "direction must be either '+' or '-', not %s" % dir)
+            raise TypeError("direction must be of type basestring or "
+                    "Symbol, not %s" % type(dir))
+        if str(dir) not in ('+', '-', '+-'):
+            raise ValueError("direction must be one of '+', '-' "
+                    "or '+-', not %s" % dir)
 
         obj = Expr.__new__(cls)
         obj._args = (e, z, z0, dir)
@@ -126,6 +163,10 @@ class Limit(Expr):
 
         e, z, z0, dir = self.args
 
+        if z0 is S.ComplexInfinity:
+            raise NotImplementedError("Limits at complex "
+                                    "infinity are not implemented")
+
         if hints.get('deep', True):
             e = e.doit(**hints)
             z = z.doit(**hints)
@@ -147,16 +188,19 @@ class Limit(Expr):
         if e.is_Mul:
             if abs(z0) is S.Infinity:
                 e = factor_terms(e)
+                e = e.rewrite(fibonacci, GoldenRatio)
                 ok = lambda w: (z in w.free_symbols and
                                 any(a.is_polynomial(z) or
                                     any(z in m.free_symbols and m.is_polynomial(z)
                                         for m in Mul.make_args(a))
                                     for a in Add.make_args(w)))
                 if all(ok(w) for w in e.as_numer_denom()):
-                    u = Dummy(positive=(z0 is S.Infinity))
-                    inve = e.subs(z, 1/u)
-                    r = limit(inve.as_leading_term(u), u,
-                              S.Zero, "+" if z0 is S.Infinity else "-")
+                    u = Dummy(positive=True)
+                    if z0 is S.NegativeInfinity:
+                        inve = e.subs(z, -1/u)
+                    else:
+                        inve = e.subs(z, 1/u)
+                    r = limit(inve.as_leading_term(u), u, S.Zero, "+")
                     if isinstance(r, Limit):
                         return self
                     else:

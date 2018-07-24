@@ -273,11 +273,7 @@ class CompositeMorphism(Morphism):
 
         normalised_components = Tuple()
 
-        # TODO: Fix the unpythonicity.
-        for i in range(len(components) - 1):
-            current = components[i]
-            following = components[i + 1]
-
+        for current, following in zip(components, components[1:]):
             if not isinstance(current, Morphism) or \
                     not isinstance(following, Morphism):
                 raise TypeError("All components must be morphisms.")
