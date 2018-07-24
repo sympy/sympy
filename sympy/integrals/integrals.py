@@ -1300,11 +1300,11 @@ class Integral(AddWithLimits):
         """
         from sympy.calculus import singularities
 
-        x, a, b = self.limits[0]
-
-        if len(list(self.limits[0])) != 3 or len(self.limits) != 1:
+        if len(self.limits) != 1 or len(list(self.limits[0])) != 3:
             raise ValueError("You need to insert a variable, lower_limit, and upper_limit correctly to calculate "
                              "cauchy's principal value")
+
+        x, a, b = self.limits[0]
 
         if not(a <= b and a.is_comparable and b.is_comparable):
             raise ValueError("The lower_limit must be smaller than or equal to the upper_limit to calculate "
