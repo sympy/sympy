@@ -2056,12 +2056,14 @@ def meijerint_inversion(f, x, t):
     # work, but the calling code will take care of that.
     shift = 0
 
-    if f.func == exp:
-        # exp would work if written as a Mul
-        f = Mul(2, S.Half, f, evaluate=False)
-
     if f.is_Mul:
         args = list(f.args)
+    elif isinstance(f, exp):
+        args = [f]
+    else:
+        args = None
+
+    if args:
         newargs = []
         exponentials = []
         while args:
