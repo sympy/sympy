@@ -6905,22 +6905,6 @@ def InverseFunctionOfQuotientOfLinears(u, x):
                 return tmp
     return False
 
-# def SubstForInverseFunctionOfQuotientOfLinears(u, x):
-#     tmp = InverseFunctionOfQuotientOfLinears(u, x)
-#     if AtomQ(tmp):
-#         return False
-#     else:
-#         h = InverseFunction()
-
-# SubstForInverseFunctionOfQuotientOfLinears[u_,x_Symbol] :=
-#   With[{tmp=InverseFunctionOfQuotientOfLinears[u,x]},
-#   If[AtomQ[tmp],
-#     False,
-#   With[{h=InverseFunction[Head[tmp]],lst=QuotientOfLinearsParts[tmp[[1]],x]},
-#   With[{a=lst[[1]],b=lst[[2]],c=lst[[3]],d=lst[[4]]},
-#   {SubstForInverseFunction[u,tmp,(-a+c*h[x])/(b-d*h[x]),x]*D[h[x],x]/(b-d*h[x])^2, tmp, b*c-a*d}]]]]
-
-
 def NormalizeTrig(func, expr, b, x):
     from matchpy import match
     pattern = Pattern(UtilityOperator((pi*WC('n', S(1)) + WC('r', S(0)))*WC('m', S(1)) + WC('s', S(0))))
@@ -6975,7 +6959,7 @@ def NormalizeTrig(func, expr, b, x):
         return func(m*n*pi+ m*r + s + b*x)
     return Function('NormalizeTrig')(func, expr, b, x)
 
-def NormalizeHyperbolic(func, expr, b, x)
+def NormalizeHyperbolic(func, expr, b, x):
     from matchpy import match
     pattern = Pattern(UtilityOperator((pi*WC('n', S(1))*Complex(0, z_) + WC('r', S(0)))*WC('m', S(1)) + WC('s', S(0))))
     if is_match(UtilityOperator(expr), pattern):
