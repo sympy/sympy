@@ -12,6 +12,7 @@ from sympy.functions import SingularityFunction, Piecewise
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
+from sympy.plotting import plot
 
 
 class Beam(object):
@@ -1115,6 +1116,75 @@ class Beam(object):
             return (points[deflections.index(max_def)], max_def)
         else:
             return None
+
+    def plot_shear_force(self, var={}):
+        shear_force = self.shear_force()
+        for sym in shear_force.atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in var:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in var:
+            length = var[self.length]
+        return plot(shear_force.subs(var), (self.variable, 0, length), title='Shear Force',
+                xlabel='position', ylabel='Value', line_color='c')
+
+    def plot_bending_moment(self, var={}):
+        bending_moment = self.bending_moment()
+        for sym in bending_moment.atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in var:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in var:
+            length = var[self.length]
+        return plot(bending_moment.subs(var), (self.variable, 0, length), title='Bending Moment',
+                xlabel='position', ylabel='Value', line_color='b')
+
+    def plot_slope(self, var={}):
+        slope = self.slope()
+        for sym in slope.atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in var:
+                raise ValueError("not enough var ")
+        if self.length in var:
+            length = var[self.length]
+        return plot(slope.subs(var), (self.variable, 0, length), title='Slope',
+                xlabel='position', ylabel='Value', line_color='m')
+
+    def plot_deflection(self, var={}):
+        deflection = self.deflection()
+        for sym in deflection.atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in var:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in var:
+            length = var[self.length]
+        return plot(deflection.subs(var), (self.variable, 0, length), title='Deflection',
+                xlabel='position', ylabel='Value', line_color='r')
+
+    def plot_all(self, var={}):
+        shear_force = self.shear_force()
+        deflection = self.deflection()
+        bending_moment = self.bending_moment()
+        for sym in deflection.atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in var:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in var:
+            length = var[self.length]
+        p = plot(shear_force.subs(var), bending_moment.subs(var), deflection.subs(var),
+                (self.variable, 0, length), show=False)
+        labels = ['Shear Force', 'Bending Moment', 'Deflection']
+        colors = ['c', 'b', 'r']
+        for n, line in enumerate(p):
+            line.label= labels[n]
+            line.line_color = colors[n]
+        p.legend = True
+        return p.show()
 
 
 
