@@ -853,7 +853,7 @@ def solve_decomposition(f, symbol, domain):
     return y_s
 
 
-def _solveset(f, symbol, domain, flags={'tsolve_saw': []}, _check=False):
+def _solveset(f, symbol, domain, _check=False):
     """Helper for solveset to return a result from an expression
     that has already been sympify'ed and is known to contain the
     given symbol."""
@@ -951,7 +951,7 @@ def _solveset(f, symbol, domain, flags={'tsolve_saw': []}, _check=False):
                         result_rational = _solve_as_rational(equation, symbol, domain)
                         if isinstance(result_rational, ConditionSet):
                             # may be a transcendental type equation
-                            result += _transolve(equation, symbol, domain, flags)
+                            result += _transolve(equation, symbol, domain)
                         else:
                             result += result_rational
                 else:
@@ -988,36 +988,6 @@ def _solveset(f, symbol, domain, flags={'tsolve_saw': []}, _check=False):
     return result
 
 
-def _term_factors(f):
-    """
-    Iterator to get the factors of all terms present
-    in the given equation.
-
-    Parameters
-    ==========
-
-    f : Expr
-        Equation that needs to be addressed
-
-    Returns
-    =======
-
-    Factors of all terms present in the equation.
-
-    Examples
-    ========
-
-    >>> from sympy import symbols
-    >>> from sympy.solvers.solveset import _term_factors
-    >>> x = symbols('x')
-    >>> list(_term_factors(-2 - x**2 + x*(x + 1)))
-    [-2, -1, x**2, x, x + 1]
-    """
-    for add_arg in Add.make_args(f):
-        for mul_arg in Mul.make_args(add_arg):
-            yield mul_arg
-
-
 def _solve_expo(f, symbol):
     r"""
     Helper function for solving (supported) exponential equations.
@@ -1035,22 +1005,6 @@ def _solve_expo(f, symbol):
     =======
 
     An equation in `log` form that `solveset` might better handle.
-
-    `None`:
-        If the equation is not of supported type
-
-    Notes
-    =====
-
-    Exponential equations are the sum of (currently) at most
-    two terms with one or both of them having a power with a
-    symbol-dependent exponent.
-
-    For example
-
-    .. math:: 5^{2x + 3} - 5^{3x - 1}
-
-    .. math:: 4^{5 - 9x} - e^{2 - x}
 
     Examples
     ========
@@ -1084,11 +1038,6 @@ def _solve_expo(f, symbol):
     This form can be easily handed by `solveset`.
     """
 
-    if not (isinstance(f, Add) and len(f.args) == 2):
-        # solving for the sum of more than two powers is possible
-        # but not yet implemented
-        return None
-
     lhs, rhs = list(ordered(f.args))
     log_type_equation = expand_log(log(lhs)) - expand_log(log(-rhs))
 
@@ -1098,6 +1047,16 @@ def _solve_expo(f, symbol):
 def _is_exponential(f, symbol):
     r"""
     Helper to check whether an equation is exponential or not.
+
+    Exponential equations are the sum of (currently) at most
+    two terms with one or both of them having a power with a
+    symbol-dependent exponent.
+
+    For example
+
+    .. math:: 5^{2x + 3} - 5^{3x - 1}
+
+    .. math:: 4^{5 - 9x} - e^{2 - x}
 
     Parameters
     ==========
@@ -1111,7 +1070,8 @@ def _is_exponential(f, symbol):
     Returns
     =======
 
-    `True` if the equation is in exponential form otherwise `False`.
+    `True` if the equation is exactly two term exponential form
+    otherwise `False`.
 
     Examples
     ========
@@ -1119,32 +1079,38 @@ def _is_exponential(f, symbol):
     >>> from sympy import symbols, cos, exp
     >>> from sympy.solvers.solveset import _is_exponential as check
     >>> x, y = symbols('x y')
-    >>> check(x**y - x, y)
-    True
+    >>> check(x**y - x**2, y)
+    False
     >>> check(x**y - x, x)
     False
-    >>> check(exp(x + 3), x)
+    >>> check(exp(x + 3) + 3**x, x)
     True
     >>> check(cos(2**x), x)
     False
 
     * Philosophy behind the helper
 
-    The function extracts each term of the equation and checks if it is
-    of exponential form w.r.t `symbol`.
+    The function checks for all two terms being in power form
+    with `symbol` in their exponents.
     """
 
-    expr_args = _term_factors(f)
-    for expr_arg in expr_args:
-        if isinstance(expr_arg, (Pow, exp)) and (
-                symbol in expr_arg.exp.free_symbols):
-            return True
-    return False
+    if not (isinstance(f, Add) and len(f.args) == 2):
+        # solving for the sum of more than two powers is possible
+        # but not yet implemented
+        return False
+
+    a, b = f.args
+    a_coeff, a_exp_term = a.as_independent(symbol)
+    b_coeff, b_exp_term = b.as_independent(symbol)
+
+    return all(isinstance(expr_arg, (Pow, exp)) and (
+                symbol in expr_arg.exp.free_symbols) for expr_arg in (
+                a_exp_term, b_exp_term))
 
 
-def _solve_logarithm_reducable_to_single_instance(f, symbol):
+def _solve_logarithm_reducible_to_single_instance(f, symbol):
     r"""
-    Helper to solve logarithmic equations which are reducable
+    Helper to solve logarithmic equations which are reducible
     to a single instance of `log`.
 
     Parameters
@@ -1166,7 +1132,7 @@ def _solve_logarithm_reducable_to_single_instance(f, symbol):
 
     >>> from sympy import symbols, S, log, Eq
     >>> from sympy.solvers.solveset import \
-    ... _solve_logarithm_reducable_to_single_instance as solve_log
+    ... _solve_logarithm_reducible_to_single_instance as solve_log
     >>> x = symbols('x')
     >>> f = Eq(log(x - 3) + log(x + 3), 0)
     >>> solve_log(f, x)
@@ -1218,11 +1184,21 @@ def _solve_logarithm_reducable_to_single_instance(f, symbol):
     return new_f
 
 
-def _is_logarithm_reducable_to_single_instance(f, symbol):
+def _is_logarithm_reducible_to_single_instance(f, symbol):
     r"""
-    Helper to check if the given equation can be reduced to a
-    single instance of log containing the variable to be solved.
+    Helper to check whether an equation is logarithmic or not.
 
+    Logarithmic equations are the equations that contains
+    `log` terms which can be reduced to a single log term or
+    a constant using various logarithmic identities.
+
+    For example:
+
+    .. math:: log(x) + log(x - 4)
+
+    can be reduced to:
+
+    .. math:: log(x(x - 4))
 
     Parameters
     ==========
@@ -1236,14 +1212,14 @@ def _is_logarithm_reducable_to_single_instance(f, symbol):
     Returns
     =======
 
-    `True` if the equation is reducable otherwise `False`.
+    `True` if the equation is reducible otherwise `False`.
 
     Examples
     ========
 
     >>> from sympy import symbols, tan, log, Eq
     >>> from sympy.solvers.solveset import \
-    ... _is_logarithm_reducable_to_single_instance as check
+    ... _is_logarithm_reducible_to_single_instance as check
     >>> x = symbols('x')
     >>> check(Eq(log(x + 2) - log(x + 3), 0), x)
     True
@@ -1257,13 +1233,12 @@ def _is_logarithm_reducable_to_single_instance(f, symbol):
     """
     lhs, rhs = f.lhs, f.rhs
     new_lhs = logcombine(lhs, force=True)
-    if new_lhs is not lhs:
-        if isinstance(new_lhs, log) and symbol in new_lhs.free_symbols:
-            return True
+    if new_lhs != lhs:
+        return True
     return False
 
 
-def _transolve(f, symbol, domain, flags={'tsolve_saw': []}):
+def _transolve(f, symbol, domain):
     r"""
     Function to solve transcendental equations. It is a helper to
     `solveset` and should be used internally. `\_transolve`
@@ -1441,7 +1416,7 @@ def _transolve(f, symbol, domain, flags={'tsolve_saw': []}):
       - What does the helper returns.
     """
 
-    def add_type(eq, symbol, domain, flags):
+    def add_type(eq, symbol, domain):
         """
         Helper for `_transolve` to handle equations of
         `Add` type, i.e. equations taking the form as
@@ -1462,21 +1437,16 @@ def _transolve(f, symbol, domain, flags={'tsolve_saw': []}):
         elif _is_exponential(simplified_equation, symbol):
             new_eq = _solve_expo(simplified_equation, symbol)
         # check if it is logarithmic type equation
-        elif _is_logarithm_reducable_to_single_instance(
+        elif _is_logarithm_reducible_to_single_instance(
                 Eq(lhs, rhs), symbol):
                 new_eq = \
-                    _solve_logarithm_reducable_to_single_instance(
+                    _solve_logarithm_reducible_to_single_instance(
                         Eq(lhs, rhs), symbol)
 
         if new_eq is not None:
-            result = _solveset(new_eq, symbol, domain, flags)
+            result = _solveset(new_eq, symbol, domain)
 
         return result
-
-    if f in flags['tsolve_saw']:
-        return ConditionSet(symbol, Eq(f, 0), domain)
-    else:
-        flags['tsolve_saw'].append(f)
 
     unsolved_result = ConditionSet(symbol, Eq(f, 0), domain)
     result = unsolved_result
@@ -1491,7 +1461,7 @@ def _transolve(f, symbol, domain, flags={'tsolve_saw': []}):
         equation = Add(lhs, -rhs, evaluate=False)
 
         if lhs.is_Add:
-            result = add_type(equation, symbol, domain, flags)
+            result = add_type(equation, symbol, domain)
     else:
         result = rhs_s
 
