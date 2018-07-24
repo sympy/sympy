@@ -3,9 +3,9 @@ from __future__ import print_function, division
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta, hyper, binomial,
                    Piecewise, floor)
-from sympy.stats.rv import _value_check
+from sympy.stats.rv import _value_check, RandomSymbol
+from sympy.stats.joint_rv_types import JointRV
 from sympy.stats import density
-from sympy.sets.sets import Interval
 import random
 
 __all__ = ['Geometric', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'YuleSimon', 'Zeta']
@@ -15,7 +15,10 @@ def rv(symbol, cls, *args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
-    return SingleDiscretePSpace(symbol, dist).value
+    pspace = SingleDiscretePSpace(symbol, dist)
+    if any(isinstance(arg, RandomSymbol) for arg in args):
+        return JointRV(symbol, pspace.pdf)
+    return pspace.value
 
 
 #-------------------------------------------------------------------------------

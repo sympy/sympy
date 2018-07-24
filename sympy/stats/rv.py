@@ -517,6 +517,8 @@ def pspace(expr):
     True
     """
     expr = sympify(expr)
+    if isinstance(expr, RandomSymbol) and expr.pspace != None:
+        return expr.pspace
     rvs = random_symbols(expr)
     if not rvs:
         raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
@@ -1213,6 +1215,9 @@ def pspace_independent(a, b):
     """
     a_symbols = set(pspace(b).symbols)
     b_symbols = set(pspace(a).symbols)
+
+    if len(set(random_symbols(a)).intersection(random_symbols(b))) != 0:
+        return False
 
     if len(a_symbols.intersection(b_symbols)) == 0:
         return True
