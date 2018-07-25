@@ -131,19 +131,19 @@ def marginal_distribution(rv, *indices):
     """
     Marginal distribution function of a joint random variable.
 
-    Parameters:
+    Parameters
     ==========
 
     rv: A random variable with a joint probability distribution.
     indices: component indices or the indexed random symbol
         for whom the joint distribution is to be calculated
 
-    Returns:
+    Returns
     =======
     A Lambda expression n `sym`.
 
-    Example:
-    =======
+    Examples
+    ========
     >>> from sympy.stats.crv_types import Normal
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
