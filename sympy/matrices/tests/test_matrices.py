@@ -3117,3 +3117,13 @@ def test_issue_14517():
     # test one random eigenvalue, the computation is a little slow
     test_ev = random.choice(list(ev.keys()))
     assert (M - test_ev*eye(4)).det() == 0
+
+def test_issue_14943():
+    # Test that __array__ accepts the optional dtype argument
+    try:
+        from numpy import array
+    except ImportError:
+        skip('NumPy must be available to test creating matrices from ndarrays')
+
+    M = Matrix([[1,2], [3,4]])
+    assert array(M, dtype=float).dtype.name == 'float64'
