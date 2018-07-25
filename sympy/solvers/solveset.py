@@ -26,7 +26,7 @@ from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
-                             piecewise_fold, Piecewise)
+                             piecewise_fold, Piecewise, LambertW)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
@@ -41,6 +41,7 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
+from sympy.solvers.bivariate import _solve_lambert, _filtered_gens
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols
 from sympy.calculus.util import periodicity, continuous_domain
@@ -271,6 +272,9 @@ def _invert_real(f, g_ys, symbol):
             for L in inv(f):
                 invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
             return _invert_real(f.args[0], invs, symbol)
+
+    if isinstance(f, LambertW):
+        return _invert_real(f.args[0], imageset(Lambda(n, n*exp(n)), g_ys), symbol)
 
     return (f, g_ys)
 
@@ -1325,6 +1329,18 @@ def _is_logarithmic(f, symbol):
     return rv
 
 
+def solve_as_lambert(f, symbol):
+    lhs, rhs = f.lhs, f.rhs
+    try:
+        poly = lhs.as_poly()
+        g = _filtered_gens(poly, symbol)
+
+        result = _solve_lambert(lhs - rhs, symbol, g)
+        return result
+    except NotImplementedError:
+        pass
+
+
 def _transolve(f, symbol, domain):
     r"""
     Function to solve transcendental equations. It is a helper to
@@ -1333,6 +1349,7 @@ def _transolve(f, symbol, domain):
 
         - Exponential equations
         - Logarithmic equations
+        - Lambert type equations
 
     Parameters
     ==========
