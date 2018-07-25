@@ -107,6 +107,48 @@ def test_print_builtin_option():
     # Python 2.7.5 + IPython 1.1.0 gives: '{pi: 3.14, n_i: 3}'
     assert text in ("{pi: 3.14, n_i: 3}", "{n_i: 3, pi: 3.14}")
 
+
+def test_builtin_containers():
+    # Initialize and setup IPython session
+    app = init_ipython_session()
+    app.run_cell("ip = get_ipython()")
+    app.run_cell("inst = ip.instance()")
+    app.run_cell("format = inst.display_formatter.format")
+    app.run_cell("inst.display_formatter.formatters['text/latex'].enabled = True")
+    app.run_cell("from sympy import init_printing, Matrix")
+    app.run_cell('init_printing(use_latex=True, use_unicode=False)')
+
+    # Make sure containers that shouldn't pretty print don't.
+    app.run_cell('a = format((True, False))')
+    app.run_cell('import sys')
+    app.run_cell('b = format(sys.flags)')
+    app.run_cell('c = format((Matrix([1, 2]),))')
+    # Deal with API change starting at IPython 1.0
+    if int(ipython.__version__.split(".")[0]) < 1:
+        assert app.user_ns['a']['text/plain'] ==  '(True, False)'
+        assert 'text/latex' not in app.user_ns['a']
+        assert app.user_ns['b']['text/plain'][:10] == 'sys.flags('
+        assert 'text/latex' not in app.user_ns['b']
+        assert app.user_ns['c']['text/plain'] == \
+"""\
+ [1]  \n\
+([ ],)
+ [2]  \
+"""
+        assert app.user_ns['c']['text/latex'] == '$$\\left ( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right]\\right )$$'
+    else:
+        assert app.user_ns['a'][0]['text/plain'] ==  '(True, False)'
+        assert 'text/latex' not in app.user_ns['a'][0]
+        assert app.user_ns['b'][0]['text/plain'][:10] == 'sys.flags('
+        assert 'text/latex' not in app.user_ns['b'][0]
+        assert app.user_ns['c'][0]['text/plain'] == \
+"""\
+ [1]  \n\
+([ ],)
+ [2]  \
+"""
+        assert app.user_ns['c'][0]['text/latex'] == '$$\\left ( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right]\\right )$$'
+
 def test_matplotlib_bad_latex():
     # Initialize and setup IPython session
     app = init_ipython_session()
