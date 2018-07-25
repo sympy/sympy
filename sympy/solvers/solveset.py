@@ -988,7 +988,7 @@ def _solveset(f, symbol, domain, _check=False):
     return result
 
 
-def _solve_expo(f, symbol):
+def _solve_two_term_expo(f, symbol):
     r"""
     Helper function for solving (supported) exponential equations.
 
@@ -1009,7 +1009,7 @@ def _solve_expo(f, symbol):
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import _solve_expo as solve_expo
+    >>> from sympy.solvers.solveset import _solve_two_term_expo as solve_expo
     >>> from sympy import symbols
     >>> x = symbols('x', real=True)
     >>> solve_expo(3**(2*x) - 2**(x + 3), x)
@@ -1044,10 +1044,8 @@ def _solve_expo(f, symbol):
     return log_type_equation
 
 
-def _is_exponential(f, symbol):
+def _is_two_term_exponential(f, symbol):
     r"""
-    Helper to check whether an equation is exponential or not.
-
     Exponential equations are the sum of (currently) at most
     two terms with one or both of them having a power with a
     symbol-dependent exponent.
@@ -1077,7 +1075,7 @@ def _is_exponential(f, symbol):
     ========
 
     >>> from sympy import symbols, cos, exp
-    >>> from sympy.solvers.solveset import _is_exponential as check
+    >>> from sympy.solvers.solveset import _is_two_term_exponential as check
     >>> x, y = symbols('x y')
     >>> check(x**y - x**2, y)
     False
@@ -1125,7 +1123,7 @@ def _solve_logarithm_reducible_to_single_instance(f, symbol):
     Returns
     =======
 
-    An improved equation containing a single instance of log.
+    A simpler equation containing a single instance of log.
 
     Examples
     ========
@@ -1186,8 +1184,6 @@ def _solve_logarithm_reducible_to_single_instance(f, symbol):
 
 def _is_logarithm_reducible_to_single_instance(f, symbol):
     r"""
-    Helper to check whether an equation is logarithmic or not.
-
     Logarithmic equations are the equations that contains
     `log` terms which can be reduced to a single log term or
     a constant using various logarithmic identities.
@@ -1233,9 +1229,7 @@ def _is_logarithm_reducible_to_single_instance(f, symbol):
     """
     lhs, rhs = f.lhs, f.rhs
     new_lhs = logcombine(lhs, force=True)
-    if new_lhs != lhs:
-        return True
-    return False
+    return new_lhs != lhs
 
 
 def _transolve(f, symbol, domain):
@@ -1381,8 +1375,8 @@ def _transolve(f, symbol, domain):
 
         def add_type(eq, x):
             ....
-            if _is_exponential(eq, x):
-                new_eq = _solve_expo(eq, x)
+            if _is_two_term_exponential(eq, x):
+                new_eq = _solve_two_term_expo(eq, x)
         ....
         if eq.is_Add:
             result = add_type(eq, x)
@@ -1434,14 +1428,12 @@ def _transolve(f, symbol, domain):
             new_eq = simplified_equation
 
         # check if it is exponential type equation
-        elif _is_exponential(simplified_equation, symbol):
-            new_eq = _solve_expo(simplified_equation, symbol)
+        elif _is_two_term_exponential(simplified_equation, symbol):
+            new_eq = _solve_two_term_expo(simplified_equation, symbol)
         # check if it is logarithmic type equation
-        elif _is_logarithm_reducible_to_single_instance(
-                Eq(lhs, rhs), symbol):
-                new_eq = \
-                    _solve_logarithm_reducible_to_single_instance(
-                        Eq(lhs, rhs), symbol)
+        elif _is_logarithm_reducible_to_single_instance(Eq(lhs, rhs), symbol):
+                new_eq = _solve_logarithm_reducible_to_single_instance(
+                    Eq(lhs, rhs), symbol)
 
         if new_eq is not None:
             result = _solveset(new_eq, symbol, domain)
