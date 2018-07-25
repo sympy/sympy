@@ -30,24 +30,24 @@ def linrec(coeffs, init, n):
     Then,
 
     .. math :: y(n) = \begin{cases} b_n & 0 \le n < k \\
-        y(n) = c_0 y(n-1) + c_1 y(n-2) + \ldots + c_{k-1} y(n-k) & n > k
+        y(n) = c_0 y(n-1) + c_1 y(n-2) + \cdots + c_{k-1} y(n-k) & n > k
         \end{cases}
 
     Let `x_0, x_1, \ldots, x_n` be a sequence and consider the transformation
     that maps each polynomial `f(x)` to `T(f(x))` where each power `x^i` is
     replaced by the corresponding value `x_i`. The sequence is then a solution
     of the recurrence if and only if `T(x^i p(x)) = 0` for each `i \ge 0` where
-    `p(x) = x^k - c_0 x^(k-1) - \ldots - c_{k-1}` is the characteristic
+    `p(x) = x^k - c_0 x^(k-1) - \cdots - c_{k-1}` is the characteristic
     polynomial.
 
     Then `T(f(x)p(x)) = 0` for each polynomial `f(x)` (as it is a linear
     combination of powers `x^i`). Now, if `x^n` is congruent to
-    `g(x) = a_0 x^0 + a_1 x^1 + \ldots + a_{k-1} x^{k-1}` modulo `p(x)`, then
+    `g(x) = a_0 x^0 + a_1 x^1 + \cdots + a_{k-1} x^{k-1}` modulo `p(x)`, then
     `T(x^n) = x_n` is equal to
-    `T(g(x)) = a_0 x_0 + a_1 x_1 + \ldots + a_{k-1} x_{k-1}`.
+    `T(g(x)) = a_0 x_0 + a_1 x_1 + \cdots + a_{k-1} x_{k-1}`.
 
     Computation of `x^n`,
-    given `x^k = c_0 x^{k-1} + c_1 x^{k-2} + \ldots + c_{k-1}`
+    given `x^k = c_0 x^{k-1} + c_1 x^{k-2} + \cdots + c_{k-1}`
     is performed using exponentiation by squaring (refer to [1]_) with
     an additional reduction step performed to retain only first `k` powers
     of `x` in the representation of `x^n`.
@@ -110,10 +110,10 @@ def linrec(coeffs, init, n):
         b += [S.Zero]*(k - len(b)) # remaining initial values default to zero
 
     def _square_and_reduce(u, offset):
-        # squares `(u_0 + u_1 x + u_2 x^2 + \ldots + u_{k-1} x^k)` (and
+        # squares `(u_0 + u_1 x + u_2 x^2 + \cdots + u_{k-1} x^k)` (and
         # multiplies by `x` if offset is 1) and reduces the above result of
         # length upto `2k` to `k` using the characteristic equation of the
-        # recurrence given by, `x^k = c_0 x^{k-1} + c_1 x^{k-2} + \ldots + c_{k-1}`
+        # recurrence given by, `x^k = c_0 x^{k-1} + c_1 x^{k-2} + \cdots + c_{k-1}`
 
         w = [S.Zero]*(2*len(u) - 1 + offset)
         for i, p in enumerate(u):
@@ -129,7 +129,7 @@ def linrec(coeffs, init, n):
     def _final_coeffs(n):
         # computes the final coefficient list - `cf` corresponding to the
         # point at which recurrence is to be evalauted - `n`, such that,
-        # `y(n) = cf_0 y(k-1) + cf_1 y(k-2) + \ldots + cf_{k-1} y(0)`
+        # `y(n) = cf_0 y(k-1) + cf_1 y(k-2) + \cdots + cf_{k-1} y(0)`
 
         if n < k:
             return [S.Zero]*n + [S.One] + [S.Zero]*(k - n - 1)

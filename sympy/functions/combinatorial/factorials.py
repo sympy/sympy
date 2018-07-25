@@ -361,8 +361,8 @@ class factorial2(CombinatorialFunction):
     negative integers as:
 
     .. math:: n!! = \begin{cases} 1 & n = 0 \\
-                    n(n-2)(n-4) \ldots 1 & n\ \text{positive odd} \\
-                    n(n-2)(n-4) \ldots 2 & n\ \text{positive even} \\
+                    n(n-2)(n-4) \cdots 1 & n\ \text{positive odd} \\
+                    n(n-2)(n-4) \cdots 2 & n\ \text{positive even} \\
                     (n+2)!!/(n+2) & n\ \text{negative odd} \end{cases}
 
     References
