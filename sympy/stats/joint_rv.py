@@ -19,6 +19,7 @@ from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
      ProductDomain, RandomSymbol, random_symbols)
 from sympy.matrices import ImmutableMatrix
+from sympy.core.containers import Tuple
 
 class JointPSpace(ProductPSpace):
     """
@@ -191,6 +192,7 @@ class MarginalDistribution(Basic):
 
     def __new__(cls, pdf, rvs):
         assert all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs)
+        rvs = Tuple.fromiter(rv for rv in rvs)
         return Basic.__new__(cls, pdf, rvs)
 
     def check(self):
@@ -205,7 +207,7 @@ class MarginalDistribution(Basic):
         rvs = self.args[1]
         return set([rv.pspace.symbol for rv in rvs])
 
-    def pdf(self, x):
+    def pdf(self, x, evaluate=True):
         expr = self.args[0]
         rvs = self.args[1]
         marginalise_out = [i for i in random_symbols(expr) if i not in self.args[1]]
@@ -214,18 +216,20 @@ class MarginalDistribution(Basic):
              and i not in rvs:
                 marginalise_out.append(i)
         syms = [i.pspace.symbol for i in self.args[1]]
-        return Lambda(syms, self.compute_pdf(expr, marginalise_out))(x)
+        return Lambda(syms, self.compute_pdf(expr, marginalise_out, evaluate))(x)
 
-    def compute_pdf(self, expr, rvs):
+    def compute_pdf(self, expr, rvs, evaluate):
         for rv in rvs:
             lpdf = 1
             if isinstance(rv, RandomSymbol):
                 lpdf = rv.pspace.pdf
             expr = self.marginalise_out(expr*lpdf, rv)
+        if evaluate and hasattr(expr, 'doit'):
+            return expr.doit()
         return expr
 
     def marginalise_out(self, expr, rv):
-        from sympy.concrete.summations import summation
+        from sympy.concrete.summations import Sum
         if isinstance(rv, RandomSymbol):
             dom = rv.pspace.set
         elif isinstance(rv, Indexed):
@@ -235,12 +239,12 @@ class MarginalDistribution(Basic):
         if rv.pspace.is_Continuous:
             #TODO: Modify to support integration
             #for all kinds of sets.
-            expr = integrate(expr, (rv.pspace.symbol, dom))
+            expr = Integral(expr, (rv.pspace.symbol, dom))
         elif rv.pspace.is_Discrete:
             #incorporate this into `Sum`/`summation`
             if dom in (S.Integers, S.Naturals, S.Naturals0):
                 dom = (dom.inf, dom.sup)
-            expr = summation(expr, (rv.pspace.symbol, dom))
+            expr = Sum(expr, (rv.pspace.symbol, dom))
         return expr
 
     def __call__(self, args):
