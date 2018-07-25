@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Test that only executable files have an executable bit set
 """
@@ -14,7 +15,7 @@ def test_executable(path):
         if os.access(path, os.X_OK):
             with open(path, 'r') as f:
                 if f.readline()[:2] != "#!":
-                    exn_msg = "Executable bit set for file path" + path
+                    exn_msg = "File at " + path + " either should not be executable or should have a shebang line"
                     raise SystemError(exn_msg)
     else:
         for file in os.listdir(path):
