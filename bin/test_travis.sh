@@ -33,7 +33,8 @@ if [[ "${TEST_SAGE}" == "true" ]]; then
 fi
 
 if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
-    python bin/test_external_imports.py;
+    python bin/test_external_imports.py
+    python bin/test_executable.py
 fi
 
 # We change directories to make sure that we test the installed version of
