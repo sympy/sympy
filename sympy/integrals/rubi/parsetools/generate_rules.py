@@ -7,7 +7,7 @@ from sympy.integrals.rubi.parsetools.parse import (parse_full_form, downvalues_r
 def generate_rules_from_downvalues():
     '''
     This function generate rules and saves in file. For more details,
-    see `rubi_parsing_guide.md` in `parsetools`.
+    see `sympy/integrals/rubi/parsetools/rubi_parsing_guide.md` in `parsetools`.
     '''
     cons_dict = {}
     cons_index =0

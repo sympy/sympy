@@ -72,7 +72,17 @@ the utility functions used in the `ReplacementRule`.
 Parsing Rules and Tests
 =======================
 Code for parsing rule and tests are included in sympy.
-They have been properly explained with steps in `rubi_parsing_guide.md` in parsetools.
+They have been properly explained with steps in `sympy/integrals/rubi/parsetools/rubi_parsing_guide.md`.
+
+Running Tests
+=============
+The tests for rubi in `rubi_tests` have been blacklisted as it takes a very long time to run all the tests.
+To run a test run the following in a python terminal:
+```
+>>> import sympy
+>>> sympy.test("rubi_tests", blacklist = []) # doctest: +SKIP
+```
+For specific tests like `test_sine.py` use this `sympy.test("rubi_tests/tests/test_sine.py", blacklist = [])`.
 
 References
 ==========
