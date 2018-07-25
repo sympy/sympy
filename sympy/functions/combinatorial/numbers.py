@@ -289,8 +289,13 @@ class bernoulli(Function):
 
     .. math :: B_n = \frac{A(n) - S(n)}{\binom{n+3}{n}}
 
-    where `A(n) = (n+3)/3` when `n \equiv 0` or `2 \pmod{6}`, `A(n) = -(n+3)/6`
-    when `n \equiv 4 \pmod{6}`, and:
+    where:
+
+    .. math :: A(n) = \begin{cases} \frac{n+3}{3} &
+        n \equiv 0\ \text{or}\ 2 \pmod{6} \\
+        -\frac{n+3}{6} & n \equiv 4 \pmod{6} \end{cases}
+
+    and:
 
     .. math :: S(n) = \sum_{k=1}^{[n/6]} \binom{n+3}{n-6k} B_{n-6k}
 

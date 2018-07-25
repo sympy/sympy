@@ -361,8 +361,8 @@ class factorial2(CombinatorialFunction):
     negative integers as:
 
     .. math:: n!! = \begin{cases} 1 & n = 0 \\
-                    n*(n-2)*(n-4)*\cdots *1 & n\ \text{positive odd} \\
-                    n*(n-2)*(n-4)*\cdots *2 & n\ \text{positive even} \\
+                    n(n-2)(n-4) \ldots 1 & n\ \text{positive odd} \\
+                    n(n-2)(n-4) \ldots 2 & n\ \text{positive even} \\
                     (n+2)!!/(n+2) & n\ \text{negative odd} \end{cases}
 
     References
@@ -477,14 +477,14 @@ class RisingFactorial(CombinatorialFunction):
     function arising in concrete mathematics, hypergeometric functions
     and series expansions. It is defined by:
 
-    .. math:: rf(x,k) = x*(x+1)* \cdots *(x+k-1)
+    .. math:: rf(x,k) = x \cdot (x+1) \cdots (x+k-1)
 
     where `x` can be arbitrary expression and `k` is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit http://mathworld.wolfram.com/RisingFactorial.html page.
 
     When `x` is a Poly instance of degree >= 1 with a single variable,
-    `rf(x,k) = x(y) * x(y+1) * \cdots * x(y+k-1)`, where `y` is the
+    `rf(x,k) = x(y) \cdot x(y+1) \cdots x(y+k-1)`, where `y` is the
     variable of `x`. This is as described in Peter Paule, "Greatest
     Factorial Factorization and Symbolic Summation", Journal of
     Symbolic Computation, vol. 20, pp. 235-268, 1995.
@@ -611,14 +611,14 @@ class FallingFactorial(CombinatorialFunction):
     function arising in concrete mathematics, hypergeometric functions
     and series expansions. It is defined by
 
-    .. math:: ff(x,k) = x*(x-1)* \cdots *(x-k+1)
+    .. math:: ff(x,k) = x \cdot (x-1) \cdots (x-k+1)
 
     where `x` can be arbitrary expression and `k` is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit http://mathworld.wolfram.com/FallingFactorial.html page.
 
     When `x` is a Poly instance of degree >= 1 with single variable,
-    `ff(x,k) = x(y) * x(y-1) * \cdots * x(y-k+1)`, where `y` is the
+    `ff(x,k) = x(y) \cdot x(y-1) \cdots x(y-k+1)`, where `y` is the
     variable of `x`. This is as described in Peter Paule, "Greatest
     Factorial Factorization and Symbolic Summation", Journal of
     Symbolic Computation, vol. 20, pp. 235-268, 1995.
@@ -750,7 +750,7 @@ class binomial(CombinatorialFunction):
     r"""Implementation of the binomial coefficient. It can be defined
     in two ways depending on its desired interpretation:
 
-    .. math:: \binom{n}{k} = \frac{n!}{k!(n-k)!}\ or\
+    .. math:: \binom{n}{k} = \frac{n!}{k!(n-k)!}\ \text{or}\
                 \binom{n}{k} = \frac{ff(n, k)}{k!}
 
     First, in a strict combinatorial sense it defines the
