@@ -1,4 +1,4 @@
-from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
+from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func, Product, Mul, Piecewise, Mod,
                    Eq, sqrt, Poly)
@@ -60,9 +60,6 @@ def test_rf_eval_apply():
     assert rf(x, k).rewrite(binomial) == factorial(k)*binomial(x + k - 1, k)
     assert rf(n, k).rewrite(factorial) == \
         factorial(n + k - 1) / factorial(n - 1)
-
-    assert str(rf(18, x).subs({x: S(2)/3}).evalf()) == \
-        '6.82615401311257'
 
     import random
     from mpmath import rf as mpmath_rf
@@ -129,15 +126,36 @@ def test_ff_eval_apply():
     assert ff(n, k).rewrite(factorial) == factorial(n) / factorial(n - k)
     assert ff(x, k).rewrite(binomial) == factorial(k) * binomial(x, k)
 
-    assert str(ff(18, x).subs({x: S(2)/3}).evalf()) == \
-        '6.91094012922346'
-
     import random
     from mpmath import ff as mpmath_ff
     for i in range(100):
         x = -500 + 500 * random.random()
         k = -500 + 500 * random.random()
         assert (abs(mpmath_ff(x, k) - ff(x, k)) < 10**(-15))
+
+
+def test_rf_ff_eval_hiprec():
+    maple = Float('6.9109401292234329956525265438452')
+    us = ff(18, S(2)/3).evalf(32)
+    assert abs(us - maple)/us < 1e-31
+
+    maple = Float('6.8261540131125511557924466355367')
+    us = rf(18, S(2)/3).evalf(32)
+    assert abs(us - maple)/us < 1e-31
+
+    maple = Float('34.007346127440197150854651814225')
+    us = rf(Float('4.4', 32), Float('2.2', 32));
+    assert abs(us - maple)/us < 1e-31
+
+
+def test_rf_lambdify_mpmath():
+    from sympy import lambdify
+    x, y = symbols('x,y')
+    f = lambdify((x,y), rf(x, y), 'mpmath')
+    maple = Float('34.007346127440197')
+    us = f(4.4, 2.2)
+    assert abs(us - maple)/us < 1e-15
+
 
 def test_factorial():
     x = Symbol('x')

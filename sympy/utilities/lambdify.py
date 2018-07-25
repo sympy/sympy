@@ -66,7 +66,9 @@ MPMATH_TRANSLATIONS = {
     "Shi": "shi",
     "Chi": "chi",
     "Si": "si",
-    "Ci": "ci"
+    "Ci": "ci",
+    "RisingFactorial": "rf",
+    "FallingFactorial": "ff",
 }
 
 NUMPY_TRANSLATIONS = {}
