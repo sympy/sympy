@@ -2099,10 +2099,17 @@ def meijerint_inversion(f, x, t):
         shift = Add(*exponentials)
         f = Mul(*newargs)
 
-    if f.is_number:
-        _debug('Expression is a number, returning delta')
+    if x not in f.free_symbols:
+        _debug('Expression consists of constant and exp shift:', f, shift)
+        from sympy import InverseLaplaceTransform, Eq, im
+        cond = Eq(im(shift), 0)
+        if shift.is_real == False:  # cond == False, issue #14978
+            _debug('but shift is nonreal, cannot be a Laplace transform')
+            return None
         res = f*DiracDelta(t + shift)
-        return Piecewise((res.subs(t, t_), True))
+        _debug('Result is a delta function, possibly conditional:', res, cond)
+        return Piecewise((res.subs(t, t_), cond),
+                         (InverseLaplaceTransform(f_.subs(t, t_), x, t_, None), True))
 
     gs = _rewrite1(f, x)
     if gs is not None:

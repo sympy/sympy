@@ -593,6 +593,9 @@ def test_inverse_laplace_transform_delta():
     a = cos(sin(7)/2)
     assert ILT(a*exp(-3*s), s, t) == a*DiracDelta(t - 3)
     assert ILT(exp(2*s), s, t) == DiracDelta(t + 2)
+    r = Symbol('r', real=True)
+    assert ILT(exp(r*s), s, t) == DiracDelta(t + r)
+    # TODO: what if r.is_real is None/False?  See meijerint_inversion
 
 
 def test_fourier_transform():
