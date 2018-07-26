@@ -121,6 +121,9 @@ class KanesMethod(object):
             u_auxiliary=None):
 
         """Please read the online documentation. """
+        if not q_ind:
+            q_ind = [dynamicsymbols('dummy_q')]
+            kd_eqs = [dynamicsymbols('dummy_kd')]
 
         if not isinstance(frame, ReferenceFrame):
             raise TypeError('An intertial ReferenceFrame must be supplied')
