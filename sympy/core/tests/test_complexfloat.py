@@ -547,3 +547,13 @@ def test_ComplexFloat_mul_x_trig():
     # pure real/imag should not cause recursion:
     sin(S(1+0j)*x)
     sin(S(0+1j)*x)
+
+
+def test_ComplexFloat_factor_terms():
+    from sympy import factor_terms
+    x = Symbol('x')
+    f = factor_terms(-x + S(-1-2j))
+    assert f.is_Mul and f.args[0] == -1
+    f = factor_terms(-x - S(1+2j))
+    assert f.is_Mul and f.args[0] == -1
+    assert not factor_terms(-x + S(1-2j)).is_Mul
