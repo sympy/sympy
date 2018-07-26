@@ -1639,7 +1639,7 @@ class ComplexFloat(Number):
         expt is symbolic object but not equal to NaN, 0, 1
         """
         if isinstance(expt, Number):
-            if isinstance(expt, Integer):
+            if expt.is_Integer:
                 prec = self._prec
                 (x, y) = mlib.mpc_pow_int(self._mpc_, expt.p, self._prec)
             elif expt.is_ComplexFloat:
