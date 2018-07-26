@@ -773,7 +773,8 @@ def test_issue_12996():
 
 def test_should_evalf():
     # This should not take forever to run (see #8506)
-    assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)
+    from sympy import ComplexFloat
+    assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), (sin, ComplexFloat))
 
 
 def test_Derivative_as_finite_difference():
