@@ -1,6 +1,7 @@
-from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sqrt, \
-    coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
-    Integer, O, exp, sech, sec, csch, asech, acsch, acos, asin, expand_mul
+from sympy import (symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log,
+    sqrt, coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth,
+    Integer, O, exp, sech, sec, csch, asech, acsch, acos, asin, expand_mul,
+    AccumBounds)
 
 from sympy.utilities.pytest import raises
 
@@ -272,6 +273,8 @@ def test_coth():
 
     assert coth(k*pi*I) == -cot(k*pi)*I
 
+    assert coth(log(tan(2))) == coth(log(-tan(2)))
+    assert coth(1 + I*pi/2) == tanh(1)
 
 def test_coth_series():
     x = Symbol('x')
@@ -473,10 +476,10 @@ def test_acosh():
     assert acosh(oo) == oo
     assert acosh(-oo) == oo
 
-    assert acosh(I*oo) == oo
-    assert acosh(-I*oo) == oo
+    assert acosh(I*oo) == oo + I*pi/2
+    assert acosh(-I*oo) == oo - I*pi/2
 
-    assert acosh(zoo) == oo
+    assert acosh(zoo) == zoo
 
     assert acosh(I) == log(I*(1 + sqrt(2)))
     assert acosh(-I) == log(-I*(1 + sqrt(2)))
@@ -528,7 +531,7 @@ def test_asech():
     # at infinites
     assert asech(oo) == I*pi/2
     assert asech(-oo) == I*pi/2
-    assert asech(zoo) == nan
+    assert asech(zoo) == I*AccumBounds(-pi/2, pi/2)
 
     assert asech(I) == log(1 + sqrt(2)) - I*pi/2
     assert asech(-I) == log(1 + sqrt(2)) + I*pi/2
@@ -668,7 +671,7 @@ def test_atanh():
     assert atanh(I*oo) == I*pi/2
     assert atanh(-I*oo) == -I*pi/2
 
-    assert atanh(zoo) == nan
+    assert atanh(zoo) == I*AccumBounds(-pi/2, pi/2)
 
     #properties
     assert atanh(-x) == -atanh(x)
@@ -935,3 +938,28 @@ def test_cosh_expansion():
     assert cosh(2*x).expand(trig=True) == cosh(x)**2 + sinh(x)**2
     assert cosh(3*x).expand(trig=True).expand() == \
         3*sinh(x)**2*cosh(x) + cosh(x)**3
+
+def test_real_assumptions():
+    z = Symbol('z', real=False)
+    assert sinh(z).is_real is None
+    assert cosh(z).is_real is None
+    assert tanh(z).is_real is None
+    assert sech(z).is_real is None
+    assert csch(z).is_real is None
+    assert coth(z).is_real is None
+
+def test_sign_assumptions():
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    assert sinh(n).is_negative is True
+    assert sinh(p).is_positive is True
+    assert cosh(n).is_positive is True
+    assert cosh(p).is_positive is True
+    assert tanh(n).is_negative is True
+    assert tanh(p).is_positive is True
+    assert csch(n).is_negative is True
+    assert csch(p).is_positive is True
+    assert sech(n).is_positive is True
+    assert sech(p).is_positive is True
+    assert coth(n).is_negative is True
+    assert coth(p).is_positive is True

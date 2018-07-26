@@ -37,10 +37,10 @@ $ACTIVITIES = [
     'copy_release_files',
     'compare_tar_against_git',
     'test_tarball27',
-    'test_tarball33',
     'test_tarball34',
     'test_tarball35',
     'test_tarball36',
+    'test_tarball37',
     'print_authors',
     'md5',
     # 'tag',
@@ -69,9 +69,11 @@ def mailmap_update():
 
 @activity
 def test_sympy():
-    with run_in_conda_env(['mpmath', 'matplotlib', 'numpy', 'scipy', 'theano',
+    with run_in_conda_env(['mpmath', 'matplotlib>=2.2', 'numpy', 'scipy', 'theano',
         'ipython', 'gmpy2', 'fastcache', 'symengine', 'libgfortran', 'libgcc',
-        'gcc', 'cython', 'tensorflow=0.12', 'llvmlite'], 'sympy-tests'):
+        'gcc', 'cython', 'tensorflow', 'llvmlite', 'wurlitzer', 'autowrap',
+        'python-symengine=0.3.*', 'numexpr', 'antlr-python-runtime>=4.7,<4.8',
+        'antlr>=4.7,<4.8'], 'sympy-tests'):
 
         ./setup.py test
 
@@ -116,10 +118,6 @@ def test_tarball27():
     test_tarball('2.7')
 
 @activity(deps={'source_tarball'})
-def test_tarball33():
-    test_tarball('3.3')
-
-@activity(deps={'source_tarball'})
 def test_tarball34():
     test_tarball('3.4')
 
@@ -130,6 +128,10 @@ def test_tarball35():
 @activity(deps={'source_tarball'})
 def test_tarball36():
     test_tarball('3.6')
+
+@activity(deps={'source_tarball'})
+def test_tarball37():
+    test_tarball('3.7')
 
 @activity(deps={'source_tarball'})
 def compare_tar_against_git():
@@ -218,7 +220,7 @@ def _md5(print_=True, local=False):
         print(out)
     return out
 
-@activity(deps={'mailmap_update', 'md5', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball33', 'test_tarball34', 'test_tarball35', 'test_tarball36', 'test_sympy'})
+@activity(deps={'mailmap_update', 'md5', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball34', 'test_tarball35', 'test_tarball36', 'test_sympy'})
 def release():
     pass
 
@@ -252,8 +254,8 @@ def test_tarball(py_version):
     Test that the tarball can be unpacked and installed, and that sympy
     imports in the install.
     """
-    if py_version not in {'2.7', '3.3', '3.4', '3.5', '3.6'}: # TODO: Add win32
-        raise ValueError("release must be one of 2.7, 3.3, 3.4, 3.5, or 3.6 not %s" % py_version)
+    if py_version not in {'2.7', '3.4', '3.5', '3.6', '3.7'}: # TODO: Add win32
+        raise ValueError("release must be one of 2.7, 3.4, 3.5, 3.6, or 3.7 not %s" % py_version)
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
@@ -263,7 +265,8 @@ def test_tarball(py_version):
         cd @("/root/{source-orig-notar}".format(**tarball_format))
         python setup.py install
         python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
-
+        python -m isympy --help
+        isympy --help
 
 def get_tarball_name(file):
     """
@@ -619,7 +622,7 @@ See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the
 {htmltable}
 
 **Note**: Do not download the **Source code (zip)** or the **Source code (tar.gz)**
-files below.
+files above.
 """
     out = out.format(shortversion=shortversion, htmltable=htmltable)
     print(blue("Here are the release notes to copy into the GitHub release "
@@ -982,10 +985,14 @@ git_whitelist = {
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
+    '.ci/blacklisted.json',
+    '.editorconfig',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Pull request template
     'PULL_REQUEST_TEMPLATE.md',
+    # Contributing guide
+    'CONTRIBUTING.md',
     # Nothing from bin/ should be shipped unless we intend to install it. Most
     # of this stuff is for development anyway. To run the tests from the
     # tarball, use setup.py test, or import sympy and run sympy.test() or
@@ -1008,13 +1015,14 @@ git_whitelist = {
     'bin/sympy_time.py',
     'bin/sympy_time_cache.py',
     'bin/test',
+    'bin/test_external_imports.py',
     'bin/test_import',
     'bin/test_import.py',
     'bin/test_isolated',
     'bin/test_setup.py',
     'bin/test_travis.sh',
     # The notebooks are not ready for shipping yet. They need to be cleaned
-    # up, and preferrably doctested.  See also
+    # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
     'examples/advanced/identitysearch_example.ipynb',
     'examples/beginner/plot_advanced.ipynb',
@@ -1031,6 +1039,10 @@ git_whitelist = {
     'examples/notebooks/sho1d_example.ipynb',
     'examples/notebooks/spin.ipynb',
     'examples/notebooks/trace.ipynb',
+    'examples/notebooks/Bezout_Dixon_resultant.ipynb',
+    'examples/notebooks/IntegrationOverPolytopes.ipynb',
+    'examples/notebooks/Macaulay_resultant.ipynb',
+    'examples/notebooks/Sylvester_resultant.ipynb',
     'examples/notebooks/README.txt',
     # This stuff :)
     'release/.gitignore',
@@ -1066,4 +1078,5 @@ tarball_whitelist = {
     'sympy.egg-info/requires.txt',
     'sympy.egg-info/top_level.txt',
     'sympy.egg-info/not-zip-safe',
+    'sympy.egg-info/entry_points.txt',
     }

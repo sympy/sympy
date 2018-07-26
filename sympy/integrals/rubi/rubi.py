@@ -1,6 +1,7 @@
 from sympy.external import import_module
 matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.core import Integer, Float
 import inspect, re
 
 if matchpy:
@@ -133,14 +134,14 @@ if matchpy:
     @doctest_depends_on(modules=('matchpy',))
     def rubi_object():
         '''
-        Returns rubi ManyToOneReplacer by adding all rules form different modules.
+        Returns rubi ManyToOneReplacer by adding all rules from different modules.
 
         Uncomment the lines to add integration capabilities of that module.
 
-        Currently, there are some issues with integrand_simplification, special_function,
-        derivative, miscellaneous_integration. Hence they are commented.
+        Currently, there are parsing issues with special_function,
+        derivative and miscellaneous_integration. Hence they are commented.
         '''
-        #from sympy.integrals.rubi.rules.integrand_simplification import integrand_simplification
+        from sympy.integrals.rubi.rules.integrand_simplification import integrand_simplification
         from sympy.integrals.rubi.rules.linear_products import linear_products
         from sympy.integrals.rubi.rules.quadratic_products import quadratic_products
         from sympy.integrals.rubi.rules.binomial_products import binomial_products
@@ -186,19 +187,19 @@ if matchpy:
 @doctest_depends_on(modules=('matchpy',))
 def rubi_integrate(expr, var, showsteps=False):
     '''
-    Rule based algorithm for integration. Integrates the expression by appling
+    Rule based algorithm for integration. Integrates the expression by applying
     transformation rules to the expression.
 
     Returns `Integrate` if an expression cannot be integrated.
 
     Parameters
     ==========
-    expr : intergand expression
+    expr : integrand expression
     var : variable of integration
 
     Returns Integral object if unable to integrate.
     '''
-    if isinstance(expr, int) or isinstance(expr, float):
+    if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
 
     result = rubi.replace(Integral(expr, var))
@@ -209,11 +210,11 @@ def rubi_integrate(expr, var, showsteps=False):
 @doctest_depends_on(modules=('matchpy',))
 def get_matching_rule_definition(expr, var):
     '''
-    Returns the list or rules which match to `expr`.
+    Prints the list or rules which match to `expr`.
 
     Parameters
     ==========
-    expr : intergand expression
+    expr : integrand expression
     var : variable of integration
     '''
     matcher = rubi.matcher

@@ -51,7 +51,7 @@ def matrix_fglm(F, ring, O_to):
             if g:
                 G.append(g)
         else:
-            # v is linearly independant from V
+            # v is linearly independent from V
             P = _update(s, _lambda, P)
             S.append(_incr_k(S[t[1]], t[0]))
             V.append(v)

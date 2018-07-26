@@ -7,6 +7,10 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      outer, potential_energy, msubs,
                                      find_dynamicsymbols)
 
+from sympy.physics.mechanics.functions import gravity
+from sympy.physics.vector.vector import Vector
+from sympy.utilities.pytest import raises
+
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 N = ReferenceFrame('N')
@@ -165,6 +169,32 @@ def test_find_dynamicsymbols():
     sol = {x, y.diff(), y, x.diff().diff(), z, z.diff()}
     assert find_dynamicsymbols(expr) == sol
     # Test finding all but those in sym_list
-    exclude = [x, y, z]
+    exclude_list = [x, y, z]
     sol = {y.diff(), x.diff().diff(), z.diff()}
-    assert find_dynamicsymbols(expr, exclude) == sol
+    assert find_dynamicsymbols(expr, exclude=exclude_list) == sol
+    # Test finding all dynamicsymbols in a vector with a given reference frame
+    d, e, f = dynamicsymbols('d, e, f')
+    A = ReferenceFrame('A')
+    v = d * A.x + e * A.y + f * A.z
+    sol = {d, e, f}
+    assert find_dynamicsymbols(v, reference_frame=A) == sol
+    # Test if a ValueError is raised on supplying only a vector as input
+    raises(ValueError, lambda: find_dynamicsymbols(v))
+
+def test_gravity():
+    N = ReferenceFrame('N')
+    m, M, g = symbols('m M g')
+    F1, F2 = dynamicsymbols('F1 F2')
+    po = Point('po')
+    pa = Particle('pa', po, m)
+    A = ReferenceFrame('A')
+    P = Point('P')
+    I = outer(A.x, A.x)
+    B = RigidBody('B', P, A, M, (I, P))
+    forceList = [(po, F1), (P, F2)]
+    forceList.extend(gravity(g*N.y, pa, B))
+    l = [(po, F1), (P, F2), (po, g*m*N.y), (P, g*M*N.y)]
+
+    for i in range(len(l)):
+        for j in range(len(l[i])):
+            assert forceList[i][j] == l[i][j]

@@ -10,7 +10,7 @@ from sympy.vector.operators import curl, divergence, gradient, Gradient, Diverge
 from sympy.vector.deloperator import Del
 from sympy.vector.functions import (is_conservative, is_solenoidal,
                                     scalar_potential, directional_derivative,
-                                    scalar_potential_difference)
+                                    laplacian, scalar_potential_difference)
 from sympy.utilities.pytest import raises
 
 C = CoordSys3D('C')
@@ -98,6 +98,22 @@ def test_del_operator():
     assert ((j & delop)(v)).doit() == j
     assert ((k & delop)(v)).doit() == k
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
+
+    # Tests for laplacian on scalar fields
+    assert laplacian(x*y*z) == S.Zero
+    assert laplacian(x**2) == S(2)
+    assert laplacian(x**2*y**2*z**2) == \
+                    2*y**2*z**2 + 2*x**2*z**2 + 2*x**2*y**2
+    A = CoordSys3D('A', transformation="spherical", variable_names=["r", "theta", "phi"])
+    B = CoordSys3D('B', transformation='cylindrical', variable_names=["r", "theta", "z"])
+    assert laplacian(A.r + A.theta + A.phi) == 2/A.r + cos(A.theta)/(A.r**2*sin(A.theta))
+    assert laplacian(B.r + B.theta + B.z) == 1/B.r
+
+    # Tests for laplacian on vector fields
+    assert laplacian(x*y*z*(i + j + k)) == Vector.zero
+    assert laplacian(x*y**2*z*(i + j + k)) == \
+                            2*x*z*i + 2*x*z*j + 2*x*z*k
+
 
 
 def test_product_rules():
@@ -250,14 +266,23 @@ def test_differential_operators_curvilinear_system():
            (sin(A.theta)*A.r + cos(A.theta)*A.r*A.theta)/(sin(A.theta)*A.r**2) + 9*A.phi + A.theta/sin(A.theta)
     assert divergence(Vector.zero) == 0
     assert divergence(0*A.i + 0*A.j + 0*A.k) == 0
-    # Test for cylindrical coordinate system and divergence
-    assert divergence(B.r*B.i + B.theta*B.j + B.z*B.k) == 2 + 1/B.theta
-    assert divergence(B.r*B.j + B.z*B.k) == 1
-    # Test for spherical coordinate system and divergence
+    # Test for spherical coordinate system and curl
     assert curl(A.r*A.i + A.theta*A.j + A.phi*A.k) == \
            (cos(A.theta)*A.phi/(sin(A.theta)*A.r))*A.i + (-A.phi/A.r)*A.j + A.theta/A.r*A.k
     assert curl(A.r*A.j + A.phi*A.k) == (cos(A.theta)*A.phi/(sin(A.theta)*A.r))*A.i + (-A.phi/A.r)*A.j + 2*A.k
 
+    # Test for cylindrical coordinate system and gradient
+    assert gradient(0*B.r + 0*B.theta+0*B.z) == Vector.zero
+    assert gradient(B.r*B.theta*B.z) == B.theta*B.z*B.i + B.z*B.j + B.r*B.theta*B.k
+    assert gradient(3*B.r) == 3*B.i
+    assert gradient(2*B.theta) == 2/B.r * B.j
+    assert gradient(4*B.z) == 4*B.k
+    # Test for cylindrical coordinate system and divergence
+    assert divergence(B.r*B.i + B.theta*B.j + B.z*B.k) == 3 + 1/B.r
+    assert divergence(B.r*B.j + B.z*B.k) == 1
+    # Test for cylindrical coordinate system and curl
+    assert curl(B.r*B.j + B.z*B.k) == 2*B.k
+    assert curl(3*B.i + 2/B.r*B.j + 4*B.k) == Vector.zero
 
 def test_mixed_coordinates():
     # gradient

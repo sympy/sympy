@@ -40,7 +40,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     instead.
 
     Looks for derivative of a function up to 4'th order (by default).
-    This can be overriden using order option.
+    This can be overridden using order option.
 
     Returns
     =======
@@ -70,7 +70,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
 
     By setting ``full=True``, range of admissible functions to be solved using
     ``rational_algorithm`` can be increased. This option should be used
-    carefully as it can signifcantly slow down the computation as ``doit`` is
+    carefully as it can significantly slow down the computation as ``doit`` is
     performed on the :class:`RootSum` object returned by the ``apart`` function.
     Use ``full=False`` whenever possible.
 
@@ -246,7 +246,7 @@ def exp_re(DE, r, k):
 
     >>> exp_re(-f(x) + Derivative(f(x)), r, k)
     -r(k) + r(k + 1)
-    >>> exp_re(Derivative(f(x), x) + Derivative(f(x), x, x), r, k)
+    >>> exp_re(Derivative(f(x), x) + Derivative(f(x), (x, 2)), r, k)
     r(k) + r(k + 1)
 
     See Also
@@ -262,7 +262,7 @@ def exp_re(DE, r, k):
     for t in Add.make_args(DE):
         coeff, d = t.as_independent(g)
         if isinstance(d, Derivative):
-            j = len(d.args) - 1
+            j = d.derivative_count
         else:
             j = 0
         if mini is None or j < mini:
@@ -293,7 +293,7 @@ def hyper_re(DE, r, k):
 
     >>> hyper_re(-f(x) + Derivative(f(x)), r, k)
     (k + 1)*r(k + 1) - r(k)
-    >>> hyper_re(-x*f(x) + Derivative(f(x), x, x), r, k)
+    >>> hyper_re(-x*f(x) + Derivative(f(x), (x, 2)), r, k)
     (k + 2)*(k + 3)*r(k + 3) - r(k)
 
     See Also
@@ -312,7 +312,7 @@ def hyper_re(DE, r, k):
         c, v = coeff.as_independent(x)
         l = v.as_coeff_exponent(x)[1]
         if isinstance(d, Derivative):
-            j = len(d.args[1:])
+            j = d.derivative_count
         else:
             j = 0
         RE += c * rf(k + 1 - l, j) * r(k + j - l)
@@ -401,7 +401,7 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
     from sympy.polys import lcm, roots
     from sympy.integrals import integrate
 
-    # tranformation - c
+    # transformation - c
     proots, qroots = roots(P, k), roots(Q, k)
     all_roots = dict(proots)
     all_roots.update(qroots)
@@ -1068,7 +1068,7 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
-    def integrate(self, x=None):
+    def integrate(self, x=None, **kwargs):
         """Integrate Formal Power Series.
 
         Examples

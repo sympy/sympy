@@ -47,7 +47,10 @@ class ReprPrinter(Printer):
 
     def _print_Add(self, expr, order=None):
         args = self._as_ordered_terms(expr, order=order)
+        nargs = len(args)
         args = map(self._print, args)
+        if nargs > 255:  # Issue #10259, Python < 3.7
+            return "Add(*[%s])" % ", ".join(args)
         return "Add(%s)" % ", ".join(args)
 
     def _print_Cycle(self, expr):
@@ -107,10 +110,10 @@ class ReprPrinter(Printer):
         _print_MatrixBase
 
     def _print_BooleanTrue(self, expr):
-        return "S.true"
+        return "true"
 
     def _print_BooleanFalse(self, expr):
-        return "S.false"
+        return "false"
 
     def _print_NaN(self, expr):
         return "nan"
@@ -122,7 +125,10 @@ class ReprPrinter(Printer):
         else:
             args = terms
 
+        nargs = len(args)
         args = map(self._print, args)
+        if nargs > 255:  # Issue #10259, Python < 3.7
+            return "Mul(*[%s])" % ", ".join(args)
         return "Mul(%s)" % ", ".join(args)
 
     def _print_Rational(self, expr):
@@ -202,6 +208,43 @@ class ReprPrinter(Printer):
         numer = self._print(numer_terms)
         denom = self._print(denom_terms)
         return "%s(%s, %s, %s)" % (frac.__class__.__name__, self._print(frac.field), numer, denom)
+
+    def _print_FractionField(self, domain):
+        cls = domain.__class__.__name__
+        field = self._print(domain.field)
+        return "%s(%s)" % (cls, field)
+
+    def _print_PolynomialRingBase(self, ring):
+        cls = ring.__class__.__name__
+        dom = self._print(ring.domain)
+        gens = ', '.join(map(self._print, ring.gens))
+        order = str(ring.order)
+        if order != ring.default_order:
+            orderstr = ", order=" + order
+        else:
+            orderstr = ""
+        return "%s(%s, %s%s)" % (cls, dom, gens, orderstr)
+
+    def _print_DMP(self, p):
+        cls = p.__class__.__name__
+        rep = self._print(p.rep)
+        dom = self._print(p.dom)
+        if p.ring is not None:
+            ringstr = ", ring=" + self._print(p.ring)
+        else:
+            ringstr = ""
+        return "%s(%s, %s%s)" % (cls, rep, dom, ringstr)
+
+    def _print_MonogenicFiniteExtension(self, ext):
+        # The expanded tree shown by srepr(ext.modulus)
+        # is not practical.
+        return "FiniteExtension(%s)" % str(ext.modulus)
+
+    def _print_ExtensionElement(self, f):
+        rep = self._print(f.rep)
+        ext = self._print(f.ext)
+        return "ExtElem(%s, %s)" % (rep, ext)
+
 
 def srepr(expr, **settings):
     """return expr in repr form"""

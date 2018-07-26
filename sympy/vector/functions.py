@@ -1,4 +1,5 @@
 from sympy.vector.coordsysrect import CoordSys3D
+from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
@@ -173,11 +174,41 @@ def directional_derivative(field, direction_vector):
         return S(0)
 
 
+def laplacian(expr):
+    """
+    Return the laplacian of the given field computed in terms of
+    the base scalars of the given coordinate system.
+
+    Parameters
+    ==========
+
+    expr : SymPy Expr or Vector
+        expr denotes a scalar or vector field.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D, laplacian
+    >>> R = CoordSys3D('R')
+    >>> f = R.x**2*R.y**5*R.z
+    >>> laplacian(f)
+    20*R.x**2*R.y**3*R.z + 2*R.y**5*R.z
+    >>> f = R.x**2*R.i + R.y**3*R.j + R.z**4*R.k
+    >>> laplacian(f)
+    2*R.i + 6*R.y*R.j + 12*R.z**2*R.k
+
+    """
+    delop = Del()
+    if expr.is_Vector:
+        return (gradient(divergence(expr)) - curl(curl(expr))).doit()
+    return delop.dot(delop(expr)).doit()
+
+
 def is_conservative(field):
     """
     Checks if a field is conservative.
 
-    Paramaters
+    Parameters
     ==========
 
     field : Vector
@@ -210,7 +241,7 @@ def is_solenoidal(field):
     """
     Checks if a field is solenoidal.
 
-    Paramaters
+    Parameters
     ==========
 
     field : Vector
@@ -443,7 +474,7 @@ def orthogonalize(*vlist, **kwargs):
     vlist : sequence of independent vectors to be made orthogonal.
 
     orthonormal : Optional parameter
-                  Set to True if the the vectors returned should be
+                  Set to True if the vectors returned should be
                   orthonormal.
                   Default: False
 

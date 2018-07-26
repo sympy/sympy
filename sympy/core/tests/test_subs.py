@@ -451,7 +451,7 @@ def test_add():
     assert ((x - 1)*y).subs(x + 1, t) == y*(t - 2)
     assert ((-x + 1)*y).subs(x + 1, t) == y*(-t + 2)
 
-    # this should work everytime:
+    # this should work every time:
     e = a**2 - b - c
     assert e.subs(Add(*e.args[:2]), d) == d + e.args[2]
     assert e.subs(a**2 - c, d) == d - b
@@ -487,7 +487,8 @@ def test_derivative_subs():
     y = Symbol('y')
     f = Function('f')
     assert Derivative(f(x), x).subs(f(x), y) != 0
-    assert Derivative(f(x), x).subs(f(x), y).subs(y, f(x)) == \
+    # need xreplace to put the function back, see #13803
+    assert Derivative(f(x), x).subs(f(x), y).xreplace({y: f(x)}) == \
         Derivative(f(x), x)
     # issues 5085, 5037
     assert cse(Derivative(f(x), x) + f(x))[1][0].has(Derivative)

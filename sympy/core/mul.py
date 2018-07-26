@@ -180,6 +180,7 @@ class Mul(Expr, AssocOp):
             a, b = seq
             if b.is_Rational:
                 a, b = b, a
+                seq = [a, b]
             assert not a is S.One
             if not a.is_zero and a.is_Rational:
                 r, b = b.as_coeff_Mul()
@@ -423,6 +424,11 @@ class Mul(Expr, AssocOp):
             changed = False
             for b, e in c_powers:
                 if e.is_zero:
+                    # canceling out infinities yields NaN
+                    if (b.is_Add or b.is_Mul) and any(infty in b.args
+                        for infty in (S.ComplexInfinity, S.Infinity,
+                                      S.NegativeInfinity)):
+                        return [S.NaN], [], None
                     continue
                 if e is S.One:
                     if b.is_Number:
@@ -619,8 +625,8 @@ class Mul(Expr, AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if (global_distribute[0] and not nc_part and len(c_part) == 2 and c_part[0].is_Number and
-                c_part[1].is_Add):
+        if (global_distribute[0] and not nc_part and len(c_part) == 2 and
+                c_part[0].is_Number and c_part[0].is_finite and c_part[1].is_Add):
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
@@ -901,8 +907,48 @@ class Mul(Expr, AssocOp):
         for i in range(len(args)):
             d = args[i].diff(s)
             if d:
-                terms.append(self.func(*(args[:i] + [d] + args[i + 1:])))
-        return Add(*terms)
+                # Note: reduce is used in step of Mul as Mul is unable to
+                # handle subtypes and operation priority:
+                terms.append(reduce(lambda x, y: x*y, (args[:i] + [d] + args[i + 1:]), S.One))
+        return reduce(lambda x, y: x+y, terms, S.Zero)
+
+    @cacheit
+    def _eval_derivative_n_times(self, s, n):
+        # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
+        from sympy import Integer, factorial, prod, Dummy, symbols, Sum
+        args = [arg for arg in self.args if arg.free_symbols & s.free_symbols]
+        coeff_args = [arg for arg in self.args if arg not in args]
+        m = len(args)
+        if m == 1:
+            return args[0].diff((s, n))*Mul.fromiter(coeff_args)
+
+        if isinstance(n, (int, Integer)):
+            return super(Mul, self)._eval_derivative_n_times(s, n)
+
+            # Code not yet activated:
+            def sum_to_n(n, m):
+                if m == 1:
+                    yield (n,)
+                else:
+                    for x in range(n+1):
+                        for y in sum_to_n(n-x, m-1):
+                            yield (x,) + y
+            accum_sum = S.Zero
+            for kvals in sum_to_n(n, m):
+                part1 = factorial(n)/prod([factorial(k) for k in kvals])
+                part2 = prod([arg.diff((s, k)) for k, arg in zip(kvals, args)])
+                accum_sum += part1 * part2
+            return accum_sum * Mul.fromiter(coeff_args)
+
+        kvals = symbols("k1:%i" % m, cls=Dummy)
+        klast = n - sum(kvals)
+        result = Sum(
+            # better to use the multinomial?
+            factorial(n)/prod(map(factorial, kvals))/factorial(klast)*\
+            prod([args[t].diff((s, kvals[t])) for t in range(m-1)])*\
+            args[-1].diff((s, klast)),
+            *[(k, 0, n) for k in kvals])
+        return result*Mul.fromiter(coeff_args)
 
     def _eval_difference_delta(self, n, step):
         from sympy.series.limitseq import difference_delta as dd
@@ -1365,7 +1411,7 @@ class Mul(Expr, AssocOp):
             # a -1 base (see issue 6421); all we want here are the
             # true Pow or exp separated into base and exponent
             from sympy import exp
-            if a.is_Pow or a.func is exp:
+            if a.is_Pow or isinstance(a, exp):
                 return a.as_base_exp()
             return a, S.One
 
@@ -1506,7 +1552,7 @@ class Mul(Expr, AssocOp):
 
                 # the bases must be equivalent in succession, and
                 # the powers must be extractively compatible on the
-                # first and last factor but equal inbetween.
+                # first and last factor but equal in between.
 
                 rat = []
                 for j in range(take):

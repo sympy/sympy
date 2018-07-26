@@ -106,6 +106,7 @@ class Poly(Expr):
 
     is_commutative = True
     is_Poly = True
+    _op_priority = 10.001
 
     def __new__(cls, rep, *gens, **args):
         """Create a new polynomial instance out of something useful. """
@@ -3072,6 +3073,41 @@ class Poly(Expr):
 
         return [(f.per(g), k) for g, k in result]
 
+    def norm(f):
+        """
+        Computes the product, ``Norm(f)``, of the conjugates of
+        a polynomial ``f`` defined over a number field ``K``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, sqrt
+        >>> from sympy.abc import x
+
+        >>> a, b = sqrt(2), sqrt(3)
+
+        A polynomial over a quadratic extension.
+        Two conjugates x - a and x + a.
+
+        >>> f = Poly(x - a, x, extension=a)
+        >>> f.norm()
+        Poly(x**2 - 2, x, domain='QQ')
+
+        A polynomial over a quartic extension.
+        Four conjugates x - a, x - a, x + a and x + a.
+
+        >>> f = Poly(x - a, x, extension=(a, b))
+        >>> f.norm()
+        Poly(x**4 - 4*x**2 + 4, x, domain='QQ')
+
+        """
+        if hasattr(f.rep, 'norm'):
+            r = f.rep.norm()
+        else:  # pragma: no cover
+            raise OperationNotSupported(f, 'norm')
+
+        return f.per(r)
+
     def sqf_norm(f):
         """
         Computes square-free norm of ``f``.
@@ -3246,13 +3282,13 @@ class Poly(Expr):
 
         For real roots the Vincent-Akritas-Strzebonski (VAS) continued fractions method is used.
 
-        References:
-        ===========
-           1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root
-           Isolation Methods . Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
-           2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the
-           Performance of the Continued Fractions Method Using new Bounds of Positive Roots. Nonlinear
-           Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
+        References
+        ==========
+        .. [#] Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root
+            Isolation Methods . Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
+        .. [#] Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the
+            Performance of the Continued Fractions Method Using new Bounds of Positive Roots. Nonlinear
+            Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
 
         Examples
         ========
@@ -3518,6 +3554,7 @@ class Poly(Expr):
         [-1.73205080756887729352744634151, 1.73205080756887729352744634151]
 
         """
+        from sympy.functions.elementary.complexes import sign
         if f.is_multivariate:
             raise MultivariatePolynomialError(
                 "can't compute numerical roots of %s" % f)
@@ -3556,7 +3593,7 @@ class Poly(Expr):
             # Mpmath puts real roots first, then complex ones (as does all_roots)
             # so we make sure this convention holds here, too.
             roots = list(map(sympify,
-                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, r.imag))))
+                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
         except NoConvergence:
             raise NoConvergence(
                 'convergence to root failed; try n < %s or maxsteps > %s' % (
@@ -5167,6 +5204,17 @@ def gcd_list(seq, *gens, **args):
 
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
+
+        # gcd for domain Q[irrational] (purely algebraic irrational)
+        if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
+            a = seq[-1]
+            lst = [ (a/elt).ratsimp() for elt in seq[:-1] ]
+            if all(frc.is_rational for frc in lst):
+                lc = 1
+                for frc in lst:
+                    lc = lcm(lc, frc.as_numer_denom()[0])
+                return a/lc
+
     except PolificationFailed as exc:
         result = try_non_polynomial_gcd(exc.exprs)
 
@@ -5222,6 +5270,14 @@ def gcd(f, g=None, *gens, **args):
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+
+        # gcd for domain Q[irrational] (purely algebraic irrational)
+        a, b = map(sympify, (f, g))
+        if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
+            frc = (a/b).ratsimp()
+            if frc.is_rational:
+                return a/frc.as_numer_denom()[0]
+
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
 
@@ -5280,6 +5336,17 @@ def lcm_list(seq, *gens, **args):
 
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
+
+        # lcm for domain Q[irrational] (purely algebraic irrational)
+        if len(seq) > 1 and all(elt.is_algebraic and elt.is_irrational for elt in seq):
+            a = seq[-1]
+            lst = [ (a/elt).ratsimp() for elt in seq[:-1] ]
+            if all(frc.is_rational for frc in lst):
+                lc = 1
+                for frc in lst:
+                    lc = lcm(lc, frc.as_numer_denom()[1])
+                return a*lc
+
     except PolificationFailed as exc:
         result = try_non_polynomial_lcm(exc.exprs)
 
@@ -5332,6 +5399,14 @@ def lcm(f, g=None, *gens, **args):
 
     try:
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+
+        # lcm for domain Q[irrational] (purely algebraic irrational)
+        a, b = map(sympify, (f, g))
+        if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
+            frc = (a/b).ratsimp()
+            if frc.is_rational:
+                return a*frc.as_numer_denom()[1]
+
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
 
@@ -6041,8 +6116,7 @@ def to_rational_coeffs(f):
                 func = c.func
             else:
                 args = [c]
-            sifted = sift(args, lambda z: z.is_rational)
-            c1, c2 = sifted[True], sifted[False]
+            c1, c2 = sift(args, lambda z: z.is_rational, binary=True)
             alpha = -func(*c2)/n
             f2 = f1.shift(alpha)
             return alpha, f2
@@ -6528,8 +6602,9 @@ def cancel(f, *gens, **args):
             raise PolynomialError(msg)
         # Handling of noncommutative and/or piecewise expressions
         if f.is_Add or f.is_Mul:
-            sifted = sift(f.args, lambda x: x.is_commutative is True and not x.has(Piecewise))
-            c, nc = sifted[True], sifted[False]
+            c, nc = sift(f.args, lambda x:
+                x.is_commutative is True and not x.has(Piecewise),
+                binary=True)
             nc = [cancel(i) for i in nc]
             return f.func(cancel(f.func._from_args(c)), *nc)
         else:
@@ -6988,7 +7063,8 @@ def poly(expr, *gens, **args):
             for factor in Mul.make_args(term):
                 if factor.is_Add:
                     poly_factors.append(_poly(factor, opt))
-                elif factor.is_Pow and factor.base.is_Add and factor.exp.is_Integer:
+                elif factor.is_Pow and factor.base.is_Add and \
+                        factor.exp.is_Integer and factor.exp >= 0:
                     poly_factors.append(
                         _poly(factor.base, opt).pow(factor.exp))
                 else:

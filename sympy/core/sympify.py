@@ -51,11 +51,33 @@ class CantSympify(object):
     pass
 
 
+def _convert_numpy_types(a):
+    """
+    Converts a numpy datatype input to an appropriate sympy type.
+    """
+    import numpy as np
+    if not isinstance(a, np.floating):
+        func = converter[complex] if np.iscomplex(a) else sympify
+        return func(np.asscalar(a))
+    else:
+        try:
+            from sympy.core.numbers import Float
+            prec = np.finfo(a).nmant + 1
+            # E.g. double precision means prec=53 but nmant=52
+            # Leading bit of mantissa is always 1, so is not stored
+            a = str(list(np.reshape(np.asarray(a),
+                                    (1, np.size(a)))[0]))[1:-1]
+            return Float(a, precision=prec)
+        except NotImplementedError:
+            raise SympifyError('Translation for numpy float : %s '
+                               'is not implemented' % a)
+
+
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         evaluate=None):
     """Converts an arbitrary expression to a type that can be used inside SymPy.
 
-    For example, it will convert Python ints into instance of sympy.Rational,
+    For example, it will convert Python ints into instances of sympy.Integer,
     floats into instances of sympy.Float, etc. It is also able to coerce symbolic
     expressions which inherit from Basic. This can be useful in cooperation
     with SAGE.
@@ -258,22 +280,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             return a
 
     # Support for basic numpy datatypes
+    # Note that this check exists to avoid importing NumPy when not necessary
     if type(a).__module__ == 'numpy':
         import numpy as np
         if np.isscalar(a):
-            if not isinstance(a, np.floating):
-                func = converter[complex] if np.iscomplex(a) else sympify
-                return func(np.asscalar(a))
-            else:
-                try:
-                    from sympy.core.numbers import Float
-                    prec = np.finfo(a).nmant
-                    a = str(list(np.reshape(np.asarray(a),
-                                            (1, np.size(a)))[0]))[1:-1]
-                    return Float(a, precision=prec)
-                except NotImplementedError:
-                    raise SympifyError('Translation for numpy float : %s '
-                                       'is not implemented' % a)
+            return _convert_numpy_types(a)
 
     try:
         return converter[cls](a)
@@ -292,6 +303,15 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     except AttributeError:
         pass
 
+    if not strict:
+        # Put numpy array conversion _before_ float/int, see
+        # <https://github.com/sympy/sympy/issues/13924>.
+        try:
+            from ..tensor.array import Array
+            return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
+        except AttributeError:
+            pass
+
     if not isinstance(a, string_types):
         for coerce in (float, int):
             try:
@@ -301,12 +321,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     if strict:
         raise SympifyError(a)
-
-    try:
-        from ..tensor.array import Array
-        return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
-    except AttributeError:
-        pass
 
     if iterable(a):
         try:

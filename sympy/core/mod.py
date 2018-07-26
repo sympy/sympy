@@ -93,20 +93,52 @@ class Mod(Function):
             return rv
 
         # denest
-        if p.func is cls:
+        if isinstance(p, cls):
             qinner = p.args[1]
             if qinner % q == 0:
                 return cls(p.args[0], q)
             elif (qinner*(q - qinner)).is_nonnegative:
                 # |qinner| < |q| and have same sign
                 return p
-        elif (-p).func is cls:
+        elif isinstance(-p, cls):
             qinner = (-p).args[1]
             if qinner % q == 0:
                 return cls(-(-p).args[0], q)
             elif (qinner*(q + qinner)).is_nonpositive:
                 # |qinner| < |q| and have different sign
                 return p
+        elif isinstance(p, Add):
+            # separating into modulus and non modulus
+            both_l = non_mod_l, mod_l = [], []
+            for arg in p.args:
+                both_l[isinstance(arg, cls)].append(arg)
+            # if q same for all
+            if mod_l and all(inner.args[1] == q for inner in mod_l):
+                net = Add(*non_mod_l) + Add(*[i.args[0] for i in mod_l])
+                return cls(net, q)
+
+        elif isinstance(p, Mul):
+            # separating into modulus and non modulus
+            both_l = non_mod_l, mod_l = [], []
+            for arg in p.args:
+                both_l[isinstance(arg, cls)].append(arg)
+
+            if mod_l and all(inner.args[1] == q for inner in mod_l):
+                # finding distributive term
+                non_mod_l = [cls(x, q) for x in non_mod_l]
+                mod = []
+                non_mod = []
+                for j in non_mod_l:
+                    if isinstance(j, cls):
+                        mod.append(j.args[0])
+                    else:
+                        non_mod.append(j)
+                prod_mod = Mul(*mod)
+                prod_non_mod = Mul(*non_mod)
+                prod_mod1 = Mul(*[i.args[0] for i in mod_l])
+                net = prod_mod1*prod_mod
+                return prod_non_mod*cls(net, q)
+
         # XXX other possibilities?
 
         # extract gcd; any further simplification should be done by the user

@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
-        sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, Integer,
+        sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, zoo, Integer,
         sign, im, nan, Dummy, factorial, comp, refine
 )
 from sympy.core.compatibility import long, range
@@ -185,6 +185,19 @@ def test_pow2():
 def test_pow3():
     assert sqrt(2)**3 == 2 * sqrt(2)
     assert sqrt(2)**3 == sqrt(8)
+
+
+def test_mod_pow():
+    for s, t, u, v in [(4, 13, 497, 445), (4, -3, 497, 365),
+            (3.2, 2.1, 1.9, 0.1031015682350942), (S(3)/2, 5, S(5)/6, S(3)/32)]:
+        assert pow(S(s), t, u) == v
+        assert pow(S(s), S(t), u) == v
+        assert pow(S(s), t, S(u)) == v
+        assert pow(S(s), S(t), S(u)) == v
+    assert pow(S(2), S(10000000000), S(3)) == 1
+    assert pow(x, y, z) == x**y%z
+    raises(TypeError, lambda: pow(S(4), "13", 497))
+    raises(TypeError, lambda: pow(S(4), 13, "497"))
 
 
 def test_pow_E():
@@ -1622,6 +1635,10 @@ def test_Mod():
 
     # modular exponentiation
     assert Mod(Pow(4, 13, evaluate=False), 497) == Mod(Pow(4, 13), 497)
+    assert Mod(Pow(2, 10000000000, evaluate=False), 3) == 1
+    assert Mod(Pow(32131231232, 9**10**6, evaluate=False),10**12) == pow(32131231232,9**10**6,10**12)
+    assert Mod(Pow(33284959323, 123**999, evaluate=False),11**13) == pow(33284959323,123**999,11**13)
+    assert Mod(Pow(78789849597, 333**555, evaluate=False),12**9) == pow(78789849597,333**555,12**9)
 
     # Wilson's theorem
     factorial(18042, evaluate=False) % 18043 == 18042
@@ -1640,6 +1657,12 @@ def test_Mod():
 
     # issue 10963
     assert (x**6000%400).args[1] == 400
+
+    #issue 13543
+    assert Mod(Mod(x + 1, 2) + 1 , 2) == Mod(x,2)
+
+    assert Mod(Mod(x + 2, 4)*(x + 4), 4) == Mod(x*(x + 2), 4)
+    assert Mod(Mod(x + 2, 4)*4, 4) == 0
 
 
 def test_Mod_is_integer():
@@ -1747,6 +1770,9 @@ def test_add_flatten():
     assert a + b == nan
     assert a - b == nan
     assert (1/a).simplify() == (1/b).simplify() == 0
+
+    a = Pow(2, 3, evaluate=False)
+    assert a + a == 16
 
 
 def test_issue_5160_6087_6089_6090():
@@ -1914,6 +1940,25 @@ def test_Mul_with_zero_infinite():
     assert e.is_positive is None
     assert e.is_hermitian is None
 
+def test_Mul_does_not_cancel_infinities():
+    a, b = symbols('a b')
+    assert ((zoo + 3*a)/(3*a + zoo)) is nan
+    assert ((b - oo)/(b - oo)) is nan
+    # issue 13904
+    expr = (1/(a+b) + 1/(a-b))/(1/(a+b) - 1/(a-b))
+    assert expr.subs(b, a) is nan
+
+
+def test_Mul_does_not_distribute_infinity():
+    a, b = symbols('a b')
+    assert ((1 + I)*oo).is_Mul
+    assert ((a + b)*(-oo)).is_Mul
+    assert ((a + 1)*zoo).is_Mul
+    assert ((1 + I)*oo).is_finite is False
+    z = (1 + I)*oo
+    assert ((1 - I)*z).expand() is oo
+
+
 def test_issue_8247_8354():
     from sympy import tan
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
@@ -1936,3 +1981,7 @@ def test_issue_8247_8354():
 def test_Add_is_zero():
     x, y = symbols('x y', zero=True)
     assert (x + y).is_zero
+
+
+def test_issue_14392():
+    assert (sin(zoo)**2).as_real_imag() == (nan, nan)

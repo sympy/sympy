@@ -12,22 +12,22 @@ from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import range, ordered
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
 from sympy.utilities.misc import filldedent, func_name
-from sympy.utilities.decorator import doctest_depends_on
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point2D, Point3D
 from .line import Line, LinearEntity
-from .util import _symbol, idiff
+from .util import idiff
 
 import random
 
@@ -96,22 +96,6 @@ class Ellipse(GeometrySet):
     >>> e2
     Ellipse(Point2D(3, 1), 3, 9/5)
 
-    Plotting:
-
-    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
-    >>> from sympy import Circle, Segment
-    >>> c1 = Circle(Point(0,0), 1)
-    >>> Plot(c1)                                # doctest: +SKIP
-    [0]: cos(t), sin(t), 'mode=parametric'
-    >>> p = Plot()                              # doctest: +SKIP
-    >>> p[0] = c1                               # doctest: +SKIP
-    >>> radius = Segment(c1.center, c1.random_point())
-    >>> p[1] = radius                           # doctest: +SKIP
-    >>> p                                       # doctest: +SKIP
-    [0]: cos(t), sin(t), 'mode=parametric'
-    [1]: t*cos(1.546086215036205357975518382),
-    t*sin(1.546086215036205357975518382), 'mode=parametric'
-
     """
 
     def __contains__(self, o):
@@ -150,7 +134,7 @@ class Ellipse(GeometrySet):
         if len(center) != 2:
             raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
 
-        if len(list(filter(None, (hradius, vradius, eccentricity)))) != 2:
+        if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError('Exactly two arguments of "hradius", '
                 '"vradius", and "eccentricity" must not be None."')
 
@@ -252,7 +236,7 @@ class Ellipse(GeometrySet):
         Point2D(3*cos(t), 2*sin(t))
 
         """
-        t = _symbol(parameter)
+        t = _symbol(parameter, real=True)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError(filldedent('Symbol %s already appears in object '
                 'and cannot be used as a parameter.' % t.name))
@@ -327,16 +311,17 @@ class Ellipse(GeometrySet):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.circumference
-        12*Integral(sqrt((-8*_x**2/9 + 1)/(-_x**2 + 1)), (_x, 0, 1))
+        12*elliptic_e(8/9)
 
         """
-        from sympy import Integral
         if self.eccentricity == 1:
-            return 2*pi*self.hradius
+            # degenerate
+            return 4 * self.major
+        elif self.eccentricity == 0:
+            # circle
+            return 2 * pi * self.hradius
         else:
-            x = Dummy('x', real=True)
-            return 4*self.major*Integral(
-                sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), (x, 0, 1))
+            return 4 * self.major * elliptic_e(self.eccentricity**2)
 
     @property
     def eccentricity(self):
@@ -442,8 +427,8 @@ class Ellipse(GeometrySet):
         y**2/4 + (x/3 - 1/3)**2 - 1
 
         """
-        x = _symbol(x)
-        y = _symbol(y)
+        x = _symbol(x, real=True)
+        y = _symbol(y, real=True)
         t1 = ((x - self.center.x) / self.hradius)**2
         t2 = ((y - self.center.y) / self.vradius)**2
         return t1 + t2 - 1
@@ -474,8 +459,8 @@ class Ellipse(GeometrySet):
         """
         if len(self.args) != 3:
             raise NotImplementedError('Evolute of arbitrary Ellipse is not supported.')
-        x = _symbol(x)
-        y = _symbol(y)
+        x = _symbol(x, real=True)
+        y = _symbol(y, real=True)
         t1 = (self.hradius*(x - self.center.x))**Rational(2, 3)
         t2 = (self.vradius*(y - self.center.y))**Rational(2, 3)
         return t1 + t2 - (self.hradius**2 - self.vradius**2)**Rational(2, 3)
@@ -1002,7 +987,7 @@ class Ellipse(GeometrySet):
         [t, -pi, pi]
 
         """
-        t = _symbol(parameter)
+        t = _symbol(parameter, real=True)
         return [t, -S.Pi, S.Pi]
 
     def random_point(self, seed=None):
@@ -1012,21 +997,6 @@ class Ellipse(GeometrySet):
         =======
 
         point : Point
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-        arbitrary_point : Returns parameterized point on ellipse
-
-        Notes
-        -----
-
-        A random point may not appear to be on the ellipse, ie, `p in e` may
-        return False. This is because the coordinates of the point will be
-        floating point values, and when these values are substituted into the
-        equation for the ellipse the result may not be zero because of floating
-        point rounding error.
 
         Examples
         ========
@@ -1038,36 +1008,32 @@ class Ellipse(GeometrySet):
         >>> p1 = e1.random_point(seed=0); p1.n(2)
         Point2D(2.1, 1.4)
 
-        The random_point method assures that the point will test as being
-        in the ellipse:
-
-        >>> p1 in e1
-        True
-
         Notes
         =====
 
-        An arbitrary_point with a random value of t substituted into it may
-        not test as being on the ellipse because the expression tested that
-        a point is on the ellipse doesn't simplify to zero and doesn't evaluate
-        exactly to zero:
+        When creating a random point, one may simply replace the
+        parameter with a random number. When doing so, however, the
+        random number should be made a Rational or else the point
+        may not test as being in the ellipse:
 
         >>> from sympy.abc import t
-        >>> e1.arbitrary_point(t)
+        >>> from sympy import Rational
+        >>> arb = e1.arbitrary_point(t); arb
         Point2D(3*cos(t), 2*sin(t))
-        >>> p2 = _.subs(t, 0.1)
-        >>> p2 in e1
+        >>> arb.subs(t, .1) in e1
         False
+        >>> arb.subs(t, Rational(.1)) in e1
+        True
+        >>> arb.subs(t, Rational('.1')) in e1
+        True
 
-        Note that arbitrary_point routine does not take this approach. A value
-        for cos(t) and sin(t) (not t) is substituted into the arbitrary point.
-        There is a small chance that this will give a point that will not
-        test as being in the ellipse, so the process is repeated (up to 10
-        times) until a valid point is obtained.
-
+        See Also
+        ========
+        sympy.geometry.point.Point
+        arbitrary_point : Returns parameterized point on ellipse
         """
         from sympy import sin, cos, Rational
-        t = _symbol('t')
+        t = _symbol('t', real=True)
         x, y = self.arbitrary_point(t).args
         # get a random value in [-1, 1) corresponding to cos(t)
         # and confirm that it will test as being in the ellipse
@@ -1075,15 +1041,11 @@ class Ellipse(GeometrySet):
             rng = random.Random(seed)
         else:
             rng = random
-        for i in range(10):  # should be enough?
-            # simplify this now or else the Float will turn s into a Float
-            c = 2*Rational(rng.random()) - 1
-            s = sqrt(1 - c**2)
-            p1 = Point(x.subs(cos(t), c), y.subs(sin(t), s))
-            if p1 in self:
-                return p1
-        raise GeometryError(
-            'Having problems generating a point in the ellipse.')
+        # simplify this now or else the Float will turn s into a Float
+        r = Rational(rng.random())
+        c = 2*r - 1
+        s = sqrt(1 - c**2)
+        return Point(x.subs(cos(t), c), y.subs(sin(t), s))
 
     def reflect(self, line):
         """Override GeometryEntity.reflect since the radius
@@ -1112,14 +1074,14 @@ class Ellipse(GeometrySet):
         zeros define the rotated ellipse is given.
 
         """
-        from .util import _uniquely_named_symbol
 
         if line.slope in (0, oo):
             c = self.center
             c = c.reflect(line)
             return self.func(c, -self.hradius, self.vradius)
         else:
-            x, y = [_uniquely_named_symbol(name, self, line) for name in 'xy']
+            x, y = [_uniquely_named_symbol(
+                name, (self, line), real=True) for name in 'xy']
             expr = self.equation(x, y)
             p = Point(x, y).reflect(line)
             result = expr.subs(zip((x, y), p.args
@@ -1175,7 +1137,7 @@ class Ellipse(GeometrySet):
         v = self.vradius
         return self.func(c.scale(x, y), hradius=h*x, vradius=v*y)
 
-    @doctest_depends_on(modules=('pyglet',))
+
     def tangent_lines(self, p):
         """Tangent lines between `p` and the ellipse.
 
@@ -1211,15 +1173,6 @@ class Ellipse(GeometrySet):
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.tangent_lines(Point(3, 0))
         [Line2D(Point2D(3, 0), Point2D(3, -12))]
-
-        >>> # This will plot an ellipse together with a tangent line.
-        >>> from sympy.plotting.pygletplot import PygletPlot as Plot
-        >>> from sympy import Point, Ellipse
-        >>> e = Ellipse(Point(0,0), 3, 2)
-        >>> t = e.tangent_lines(e.random_point())
-        >>> p = Plot()
-        >>> p[0] = e # doctest: +SKIP
-        >>> p[1] = t # doctest: +SKIP
 
         """
         p = Point(p, dim=2)
@@ -1289,6 +1242,55 @@ class Ellipse(GeometrySet):
 
         """
         return self.args[2]
+
+
+    def second_moment_of_area(self, point=None):
+        """Returns the second moment and product moment area of an ellipse.
+
+        Parameters
+        ==========
+
+        point : Point, two-tuple of sympifiable objects, or None(default=None)
+            point is the point about which second moment of area is to be found.
+            If "point=None" it will be calculated about the axis passing through the
+            centroid of the ellipse.
+
+        Returns
+        =======
+
+        I_xx, I_yy, I_xy : number or sympy expression
+            I_xx, I_yy are second moment of area of an ellise.
+            I_xy is product moment of area of an ellipse.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Ellipse
+        >>> p1 = Point(0, 0)
+        >>> e1 = Ellipse(p1, 3, 1)
+        >>> e1.second_moment_of_area()
+        (3*pi/4, 27*pi/4, 0)
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/List_of_second_moments_of_area
+
+        """
+
+        I_xx = (S.Pi*(self.hradius)*(self.vradius**3))/4
+        I_yy = (S.Pi*(self.hradius**3)*(self.vradius))/4
+        I_xy = 0
+
+        if point is None:
+            return I_xx, I_yy, I_xy
+
+        # parallel axis theorem
+        I_xx = I_xx + self.area*((point[1] - self.center.y)**2)
+        I_yy = I_yy + self.area*((point[0] - self.center.x)**2)
+        I_xy = I_xy + self.area*(point[0] - self.center.x)*(point[1] - self.center.y)
+
+        return I_xx, I_yy, I_xy
 
 
 class Circle(Ellipse):
@@ -1405,8 +1407,8 @@ class Circle(Ellipse):
         x**2 + y**2 - 25
 
         """
-        x = _symbol(x)
-        y = _symbol(y)
+        x = _symbol(x, real=True)
+        y = _symbol(y, real=True)
         t1 = (x - self.center.x)**2
         t2 = (y - self.center.y)**2
         return t1 + t2 - self.major**2

@@ -129,10 +129,10 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         (a + b)*Derivative(f(x), x)
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), f)
-        (a + b)*Derivative(f(x), x, x)
+        (a + b)*Derivative(f(x), (x, 2))
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
-        a*Derivative(f(x), x, x) + b*Derivative(f(x), x, x)
+        a*Derivative(f(x), (x, 2)) + b*Derivative(f(x), (x, 2))
 
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f)
         (a + b)*f(x) + (a + b)*Derivative(f(x), x)
@@ -140,7 +140,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     Or you can even match both derivative order and exponent at the same time::
 
         >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
-        (a + b)*Derivative(f(x), x, x)**2
+        (a + b)*Derivative(f(x), (x, 2))**2
 
     Finally, you can apply a function to each of the collected coefficients.
     For example you can factorize symbolic coefficients of polynomial::
@@ -240,7 +240,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                     rat_expo, sym_expo = coeff, tail
                 else:
                     sym_expo = expr.exp
-        elif expr.func is exp:
+        elif isinstance(expr, exp):
             arg = expr.args[0]
             if arg.is_Rational:
                 sexpr, rat_expo = S.Exp1, arg
@@ -526,6 +526,29 @@ def collect_const(expr, *vars, **kwargs):
     an Add expr. If ``vars`` is given then only those constants will be
     targeted. Although any Number can also be targeted, if this is not
     desired set ``Numbers=False`` and no Float or Rational will be collected.
+
+    Parameters
+    ==========
+
+    expr : sympy expression
+        This parameter defines the expression the expression from which
+        terms with similar coefficients are to be collected. A non-Add
+        expression is returned as it is.
+
+    vars : variable length collection of Numbers, optional
+        Specifies the constants to target for collection. Can be multiple in
+        number.
+
+    kwargs : ``Numbers`` is the only possible argument to pass.
+        Numbers (default=True) specifies to target all instance of
+        :class:`sympy.core.numbers.Number` class. If ``Numbers=False``, then
+        no Float or Rational will be collected.
+
+    Returns
+    =======
+
+    expr : Expr
+        Returns an expression with similar coefficient terms collected.
 
     Examples
     ========
@@ -965,7 +988,7 @@ def fraction(expr, exact=False):
     numer, denom = [], []
 
     for term in Mul.make_args(expr):
-        if term.is_commutative and (term.is_Pow or term.func is exp):
+        if term.is_commutative and (term.is_Pow or isinstance(term, exp)):
             b, ex = term.as_base_exp()
             if ex.is_negative:
                 if ex is S.NegativeOne:

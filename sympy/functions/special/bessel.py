@@ -1495,7 +1495,7 @@ class airyaiprime(AiryBase):
                 m = M[m]
                 # The transformation is in principle
                 # given by 03.07.16.0001.01 but note
-                # that there is an error in this formule.
+                # that there is an error in this formula.
                 # http://functions.wolfram.com/Bessel-TypeFunctions/AiryAiPrime/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
@@ -1651,7 +1651,7 @@ class airybiprime(AiryBase):
                 m = M[m]
                 # The transformation is in principle
                 # given by 03.08.16.0001.01 but note
-                # that there is an error in this formule.
+                # that there is an error in this formula.
                 # http://functions.wolfram.com/Bessel-TypeFunctions/AiryBiPrime/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]

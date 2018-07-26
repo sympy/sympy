@@ -107,12 +107,11 @@ matrix element ``M[i, j]`` as in the following diagram::
 
 from __future__ import print_function, division
 
-import collections
-
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core import Expr, Tuple, Symbol, sympify, S
-from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
+from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
+    range, Iterable)
 
 
 class IndexException(Exception):
@@ -136,7 +135,6 @@ class Indexed(Expr):
     """
     is_commutative = True
     is_Indexed = True
-    is_Symbol = True
     is_symbol = True
     is_Atom = True
 
@@ -153,7 +151,7 @@ class Indexed(Expr):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol, or IndexedBase as base."""))
         args = list(map(sympify, args))
-        if isinstance(base, (NDimArray, collections.Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
+        if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
             if len(args) == 1:
                 return base[args[0]]
             else:
@@ -306,9 +304,19 @@ class Indexed(Expr):
         indices = list(map(p.doprint, self.indices))
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
-    # @property
-    # def free_symbols(self):
-    #     return {self.base}
+    @property
+    def free_symbols(self):
+        base_free_symbols = self.base.free_symbols
+        indices_free_symbols = {
+            fs for i in self.indices for fs in i.free_symbols}
+        if base_free_symbols:
+            return {self} | base_free_symbols | indices_free_symbols
+        else:
+            return indices_free_symbols
+
+    @property
+    def expr_free_symbols(self):
+        return {self}
 
 
 class IndexedBase(Expr, NotIterable):
@@ -363,7 +371,6 @@ class IndexedBase(Expr, NotIterable):
 
     """
     is_commutative = True
-    is_Symbol = True
     is_symbol = True
     is_Atom = True
 
@@ -376,7 +383,7 @@ class IndexedBase(Expr, NotIterable):
             pass
         elif isinstance(label, (MatrixBase, NDimArray)):
             return label
-        elif isinstance(label, collections.Iterable):
+        elif isinstance(label, Iterable):
             return _sympify(label)
         else:
             label = _sympify(label)
@@ -554,7 +561,6 @@ class Idx(Expr):
     is_integer = True
     is_finite = True
     is_real = True
-    is_Symbol = True
     is_symbol = True
     is_Atom = True
     _diff_wrt = True

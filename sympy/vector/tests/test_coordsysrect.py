@@ -318,7 +318,7 @@ def test_lame_coefficients():
     a = CoordSys3D('a', 'cartesian')
     assert a.lame_coefficients() == (1, 1, 1)
     a = CoordSys3D('a', 'cylindrical')
-    assert a.lame_coefficients() == (1, a.theta, 1)
+    assert a.lame_coefficients() == (1, a.r, 1)
 
 
 def test_transformation_equations():
@@ -356,7 +356,7 @@ def test_transformation_equations():
         r*sin(theta),
         z
     )
-    assert a.lame_coefficients() == (1, a.theta, 1)
+    assert a.lame_coefficients() == (1, a.r, 1)
     assert a.transformation_from_parent_function()(x, y, z) == (sqrt(x**2 + y**2),
                             atan2(y, x), z)
 

@@ -501,7 +501,7 @@ class Dyadic(object):
         return out
 
     def subs(self, *args, **kwargs):
-        """Substituion on the Dyadic.
+        """Substitution on the Dyadic.
 
         Examples
         ========

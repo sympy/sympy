@@ -7,28 +7,24 @@ from sympy.external import import_module
 matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.functions.elementary.integers import floor, frac
-from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, gamma, polylog)
+from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, gamma)
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.polys.polytools import degree, Poly, quo, rem
-from sympy.simplify.simplify import fraction, simplify, cancel, factor, nthroot
-from sympy.core.expr import UnevaluatedExpr
+from sympy.simplify.simplify import fraction, simplify, cancel
 from sympy.core.sympify import sympify
 from sympy.utilities.iterables import postorder_traversal
-from sympy.core.expr import UnevaluatedExpr
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi
 from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.core.exprtools import factor_terms
 from sympy import (Basic, exp, polylog, N, Wild, factor, gcd, Sum, S, I, Mul,
-    Add, hyper, Symbol, symbols, sqf_list, sqf, Max, gcd, hyperexpand, trigsimp,
-    factorint, Min, Max, sign, E, expand_trig, poly, apart, lcm, And, Pow, pi,
-    zoo, oo, Integral)
+    Add, hyper, symbols, sqf_list, sqf, Max, factorint, Min, sign, E,
+    expand_trig, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr)
 from mpmath import appellf1
-from sympy.functions.special.elliptic_integrals import elliptic_k, elliptic_f, elliptic_e, elliptic_pi
-from sympy.polys.polytools import poly_from_expr
+from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
 from sympy.utilities.iterables import flatten
-from sympy.strategies import distribute
 from random import randint
+from sympy.logic.boolalg import Or
 
 if matchpy:
     from matchpy import Arity, Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer
@@ -162,7 +158,7 @@ if matchpy:
     a, b, c, d, e = symbols('a b c d e')
 
 def Int(expr, var):
-    from .rubi import rubi_integrate
+    from sympy.integrals.rubi.rubi import rubi_integrate
     return rubi_integrate(expr, var)
 
 def Set(expr, value):
@@ -758,6 +754,8 @@ def Numerator(u):
     return fraction(u)[0]
 
 def NumberQ(u):
+    if isinstance(u, (int, float)):
+        return True
     return u.is_number
 
 def NumericQ(u):
@@ -1824,7 +1822,7 @@ def TrinomialQ(u, x):
     """
     if ListQ(u):
         for i in u.args:
-            if Not(TrinomialQ(i, x, n)):
+            if Not(TrinomialQ(i, x)):
                 return False
         return True
 
@@ -2797,9 +2795,7 @@ def GeneralizedBinomialParts(expr, x):
         a = Wild('a', exclude=[x])
         b = Wild('b', exclude=[x])
         n = Wild('n', exclude=[x])
-        m = Wild('m', exclude=[x])
         q = Wild('q', exclude=[x])
-        u = Wild('u')
         Match = expr.match(a*x**q + b*x**n)
         if Match and PosQ(Match[q] - Match[n]):
             return [Match[b], Match[a], Match[q], Match[n]]
@@ -4174,7 +4170,7 @@ def OddHyperbolicPowerQ(u, v, x):
     if PowerQ(u):
         return OddQ(u.args[1]) and OddHyperbolicPowerQ(u.base, v, x)
     if ProductQ(u):
-        if Not(Eq(FreeFactors(u, x), 1)):
+        if Not(EqQ(FreeFactors(u, x), 1)):
             return OddHyperbolicPowerQ(NonfreeFactors(u, x), v, x)
         lst = []
         for i in u.args:
@@ -4184,7 +4180,7 @@ def OddHyperbolicPowerQ(u, v, x):
             return True
         return Length(lst)==1 and OddHyperbolicPowerQ(lst[0], v, x)
     if SumQ(u):
-        return All(OddHyperbolicPowerQ(i, v, x) for i in u.args)
+        return all(OddHyperbolicPowerQ(i, v, x) for i in u.args)
     return False
 
 def FunctionOfTanhQ(u, v, x):
@@ -4281,29 +4277,6 @@ def SmartDenominator(expr):
     elif ProductQ(expr):
         return Mul(*[SmartDenominator(i) for i in expr.args])
     return Denominator(expr)
-
-def SubstForAux(u, v, x):
-    # (* u is a function of v.  SubstForAux[u,v,x] returns u with v replaced by x. *)
-    if u == v:
-        return x
-    elif AtomQ(u):
-        if PowerQ(v):
-            if FreeQ(v.exp, x) and ZeroQ(u - v.base):
-                return x**(Simplify(1/v.exp))
-        return u
-    elif PowerQ(u):
-        if FreeQ(u.exp, x):
-            if ZeroQ(u.base - v):
-                return x**(u.exp)
-            elif PowerQ(v):
-                if FreeQ(v.exp, x) and ZeroQ(u.base - v.base):
-                    return x**Simplify(u.exp/v.exp)
-            return SubstForAux(u.base, v, x)**u.exp
-    if ProductQ(u) and Not(EqQ(FreeFactors(u, x), 1)):
-        return FreeFactors(u, x)*SubstForAux(NonfreeFactors(u, x), v, x)
-    elif ProductQ(u) and ProductQ(v):
-        return SubstForAux(First(u), First(v), x)
-    return u.func(*[SubstForAux(i, v, x) for i in u.args])
 
 def ActivateTrig(u):
     return u
@@ -4540,7 +4513,6 @@ def KnownTrigIntegrandQ(lst, u, x):
     A_ = Wild('A', exclude=[x])
     B_ = Wild('B', exclude=[x])
     C_ = Wild('C', exclude=[x])
-    F_ = Wild('F')
 
     match = u.match((a_ + b_*func_)**m_)
     if match:
@@ -5224,7 +5196,7 @@ def FunctionOfDensePolynomialsQ(u, x):
         return True
     if PolynomialQ(u, x):
         return Length(Exponent(u,x,List))>1
-    return all(FunctionOfDensePolynomialsQ(i, v, x) for i in u.args)
+    return all(FunctionOfDensePolynomialsQ(i, x) for i in u.args)
 
 def FunctionOfLog(u, *args):
     # If u (x) is equivalent to an expression of the form f (Log[a*x^n]), FunctionOfLog[u,x] returns
@@ -5339,7 +5311,7 @@ def EulerIntegrandQ(expr, x):
 
 def FunctionOfSquareRootOfQuadratic(u, *args):
     if len(args) == 1:
-        x == args[0]
+        x = args[0]
         a = Wild('a', exclude=[x])
         b = Wild('b', exclude=[x])
         n = Wild('n', exclude=[x, 0])
@@ -5422,6 +5394,36 @@ def Divides(y, u, x):
         return v
     else:
         return False
+
+def DerivativeDivides(y, u, x):
+    '''
+    If y not equal to x, y is easy to differentiate wrt x, and u divided by the derivative of y
+    is free of x, DerivativeDivides[y,u,x] returns the quotient; else it returns False.
+    '''
+    from matchpy import is_match
+    pattern0 = Pattern(Mul(a , b_), CustomConstraint(lambda a, b : FreeQ(a, b)))
+    def f1(y, u, x):
+        if PolynomialQ(y, x):
+            return PolynomialQ(u, x) and Exponent(u, x)==Exponent(y, x)-1
+        else:
+            return EasyDQ(y, x)
+
+    if is_match(y, pattern0):
+        return False
+
+    elif f1(y, u, x):
+        v = D(y ,x)
+        if EqQ(v, 0):
+            return False
+        else:
+            v = Simplify(u/v)
+            if FreeQ(v, x):
+                return v
+            else:
+                return False
+    else:
+        return False
+
 
 def EasyDQ(expr, x):
     # If u is easy to differentiate wrt x,  EasyDQ(u, x) returns True; else it returns False *)
@@ -5586,7 +5588,7 @@ def TrigSquare(u):
 def IntSum(u, x):
     # If u is free of x or of the form c*(a+b*x)^m, IntSum[u,x] returns the antiderivative of u wrt x;
     # else it returns d*Int[v,x] where d*v=u and d is free of x.
-    return Add(*[Int(i, x) for i in u.args])
+    return Add(*[Integral(i, x) for i in u.args])
     return Simp(FreeTerms(u, x)*x, x) + IntTerm(NonfreeTerms(u, x), x)
 
 def IntTerm(expr, x):
@@ -5607,7 +5609,8 @@ def IntTerm(expr, x):
             t += IntTerm(i, x)
         return t
     else:
-        return Dist(FreeFactors(u,x), Integral(NonfreeFactors(u,x), x), x)
+        u = expr
+        return Dist(FreeFactors(u,x), Integral(NonfreeFactors(u, x), x), x)
 
 def Map2(f, lst1, lst2):
     result = []
@@ -6091,7 +6094,7 @@ def SimpHelp(u, x):
                 w = i + w
         v = SmartSimplify(v)
         if SumQ(w):
-            w = Add(*[SimpHelp(i, x) for i in w])
+            w = Add(*[SimpHelp(i, x) for i in w.args])
         else:
             w = SimpHelp(w, x)
         return v + w
@@ -6200,7 +6203,6 @@ def Gamma(*args):
         a = args[0]
         return gamma(a)
     else:
-        print('gammainc is not implemented in SymPy')
         return S(0)
 
 def FunctionOfTrigOfLinearQ(u, x):
@@ -6300,7 +6302,7 @@ def _FixSimplify():
     replacer.add(rule7)
 
     pattern8 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(Add(a_, b_), WC('m', S(1))), Pow(Add(c_, d_), n_))), CustomConstraint(lambda m: IntegerQ(m)), CustomConstraint(lambda n: Not(IntegerQ(n))), CustomConstraint(lambda a, b, c, d: ZeroQ(Add(Mul(b, c), Mul(S(-1), Mul(a, d))))))
-    rule8 = ReplacementRule(pattern8, lambda a, n, c, b, d, m, w : With(List(Set(S('q'), Simplify(Mul(b, Pow(d, S(-1)))))), Condition(FixSimplify(Mul(w, Pow(S('q'), m), Pow(Add(c, d), Add(m, n)))))))
+    rule8 = ReplacementRule(pattern8, lambda a, n, c, b, d, m, w : With(List(Set(S('q'), Simplify(Mul(b, Pow(d, S(-1)))))), Condition(FixSimplify(Mul(w, Pow(S('q'), m), Pow(Add(c, d), Add(m, n)))), NonsumQ(S('q')))))
     replacer.add(rule8)
 
     pattern9 = Pattern(UtilityOperator(Mul(WC('w', S(1)), Pow(Add(Mul(WC('u', S(1)), Pow(a_, WC('m', S(1)))), Mul(WC('v', S(1)), Pow(a_, WC('n', S(1))))), WC('t', S(1))))), CustomConstraint(lambda a: Not(RationalQ(a))), CustomConstraint(lambda t: IntegerQ(t)), CustomConstraint(lambda n, m: RationalQ(m, n)), CustomConstraint(lambda n, m: Inequality(S(0), Less, m, LessEqual, n)))
@@ -6707,8 +6709,41 @@ def PolyLog(n, p, z=None):
 def D(f, x):
     return f.diff(x)
 
+def IntegralFreeQ(u):
+    return FreeQ(u, Integral)
+
 def Dist(u, v, x):
-    return Mul(u, v)
+    #Dist(u,v)Dreturns the sum of u times each term of v, provided v is free of Int
+    #return Mul(u, v)
+    w = Simp(u*x**2, x)/x**2
+    if u == 1:
+        return v
+    elif u == 0:
+        return 0
+    elif NumericFactor(u) < 0 and NumericFactor(-u) > 0:
+        return -Dist(-u, v, x)
+    elif SumQ(v):
+        return Add(*[Dist(u, i, x) for i in v.args])
+    elif IntegralFreeQ(v):
+        return Simp(u*v, x)
+    elif w != u and FreeQ(w, x) and w == Simp(w, x) and w == Simp(w*x**2, x)/x**2:
+        return Dist(w, v, x)
+    else:
+        return Simp(u*v, x)
+
+def PureFunctionOfCothQ(u, v, x):
+    # If u is a pure function of Coth[v], PureFunctionOfCothQ[u,v,x] returns True;
+    if AtomQ(u):
+        return u != x
+    elif CalculusQ(u):
+        return False
+    elif HyperbolicQ(u) and ZeroQ(u.args[0] - v):
+        return CothQ(u)
+    return all(PureFunctionOfCothQ(i, v, x) for i in u.args)
+
+def LogIntegral(z):
+    tx = symbols('tx')
+    return Integral(1/log(tx),(tx, 0, z))
 
 if matchpy:
     TrigSimplifyAux_replacer = _TrigSimplifyAux()

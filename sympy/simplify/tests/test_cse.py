@@ -265,8 +265,8 @@ def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
     assert cse([eq, Eq(x, z + 1), z - 2, (z + 1)*(x + 1)],
         postprocess=cse_main.cse_separate) == \
-        [[(x1, y + 1), (x2, z + 1), (x, x2), (x0, x + 1)],
-        [x0 + exp(x0/x1) + cos(x1), z - 2, x0*x2]]
+        [[(x0, y + 1), (x2, z + 1), (x, x2), (x1, x + 1)],
+        [x1 + exp(x1/x0) + cos(x0), z - 2, x1*x2]]
 
 
 def test_issue_4499():
@@ -285,11 +285,11 @@ def test_issue_4499():
         -2*a))
     c = cse(t)
     ans = (
-        [(x0, 2*a), (x1, -b), (x2, x1 + 1), (x3, x0 + x2), (x4, sqrt(z)), (x5,
-        B(x0 + x1, x4)), (x6, G(b)), (x7, G(x3)), (x8, -x0), (x9,
-        (x4/2)**(x8 + 1)), (x10, x6*x7*x9*B(b - 1, x4)), (x11, x6*x7*x9*B(b,
-        x4)), (x12, B(x3, x4))], [(a, a + S(1)/2, x0, b, x3, x10*x5,
-        x11*x4*x5, x10*x12*x4, x11*x12, 1, 0, S(1)/2, z/2, x2, b + x8, x8)])
+        [(x0, 2*a), (x1, -b), (x2, x0 + x1), (x3, x2 + 1), (x4, sqrt(z)), (x5,
+        B(b - 1, x4)), (x6, -x0), (x7, (x4/2)**(x6 + 1)*G(b)*G(x3)), (x8,
+        x7*B(x2, x4)), (x9, B(b, x4)), (x10, x7*B(x3, x4))],
+        [(a, a + 1/2, x0, b, x3, x5*x8, x4*x8*x9, x10*x4*x5, x10*x9,
+        1, 0, 1/2, z/2, x1 + 1, b + x6, x6)])
     assert ans == c
 
 
@@ -401,8 +401,8 @@ def test_issue_7840():
     expr = sympify(
         "Piecewise((Symbol('ON'), Equality(Symbol('mode'), Symbol('ON'))), \
         (Piecewise((Piecewise((Symbol('OFF'), StrictLessThan(Symbol('x'), \
-        Symbol('threshold'))), (Symbol('ON'), S.true)), Equality(Symbol('mode'), \
-        Symbol('AUTO'))), (Symbol('OFF'), S.true)), S.true))"
+        Symbol('threshold'))), (Symbol('ON'), true)), Equality(Symbol('mode'), \
+        Symbol('AUTO'))), (Symbol('OFF'), true)), true))"
     )
     substitutions, new_eqn = cse(expr)
     # this Piecewise should be exactly the same
@@ -521,3 +521,8 @@ def test_issue_13000():
     eq = x/(-4*x**2 + y**2)
     cse_eq = cse(eq)[1][0]
     assert cse_eq == eq
+
+
+def test_unevaluated_mul():
+    eq = Mul(x + y, x + y, evaluate=False)
+    assert cse(eq) == ([(x0, x + y)], [x0**2])

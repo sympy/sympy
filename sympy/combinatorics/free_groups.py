@@ -6,7 +6,6 @@ from sympy.core.compatibility import is_sequence, as_int, string_types
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
-from mpmath import isint
 from sympy.core import S
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
@@ -217,7 +216,7 @@ class FreeGroup(DefaultPrinting):
         return self is other
 
     def index(self, gen):
-        """Returns the index of the generator `gen` from ``(f_0, ..., f_(n-1))``.
+        """Return the index of the generator `gen` from ``(f_0, ..., f_(n-1))``.
 
         Examples
         ========
@@ -226,6 +225,8 @@ class FreeGroup(DefaultPrinting):
         >>> F, x, y = free_group("x, y")
         >>> F.index(y)
         1
+        >>> F.index(x)
+        0
 
         """
         if isinstance(gen, self.dtype):
@@ -234,7 +235,20 @@ class FreeGroup(DefaultPrinting):
             raise ValueError("expected a generator of Free Group %s, got %s" % (self, gen))
 
     def order(self):
-        """Returns the order of the free group."""
+        """Return the order of the free group.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> F.order()
+        oo
+
+        >>> free_group("")[0].order()
+        1
+
+        """
         if self.rank == 0:
             return 1
         else:
@@ -242,6 +256,18 @@ class FreeGroup(DefaultPrinting):
 
     @property
     def elements(self):
+        """
+        Return the elements of the free group.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> (z,) = free_group("")
+        >>> z.elements
+        {<identity>}
+
+        """
         if self.rank == 0:
             # A set containing Identity element of `FreeGroup` self is returned
             return {self.identity}
@@ -1208,7 +1234,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         `identity_cyclic_reduction`.
 
         When `removed` is `True`, return a tuple `(word, r)` where
-        self `r` is such that before the reductin the word was either
+        self `r` is such that before the reduction the word was either
         `r*word*r**-1`.
 
         Examples
@@ -1322,7 +1348,7 @@ def letter_form_to_array_form(array_form, group):
 
 def zero_mul_simp(l, index):
     """Used to combine two reduced words."""
-    while index >=0 and index < len(l) - 1 and l[index][0] is l[index + 1][0]:
+    while index >=0 and index < len(l) - 1 and l[index][0] == l[index + 1][0]:
         exp = l[index][1] + l[index + 1][1]
         base = l[index][0]
         l[index] = (base, exp)

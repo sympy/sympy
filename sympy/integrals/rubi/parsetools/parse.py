@@ -9,6 +9,18 @@ Parsed output is formatted into readable format by using `sympify` and print the
 expression using `sstr`. This replaces `And`, `Mul`, 'Pow' by their respective
 symbols.
 
+Mathematica
+===========
+
+To get the full form from Wolfram Mathematica, type:
+```
+ShowSteps = False
+Import["RubiLoader.m"]
+Export["output.txt", ToString@FullForm@DownValues@Int]
+```
+
+The file ``output.txt`` will then contain the rules in parseable format.
+
 References
 ==========
 [1] http://reference.wolfram.com/language/ref/FullForm.html
@@ -16,8 +28,11 @@ References
 [3] https://gist.github.com/Upabjojr/bc07c49262944f9c1eb0
 '''
 import re
+import os
+import inspect
 from sympy import sympify, Function, Set, Symbol
 from sympy.printing import sstr, StrPrinter
+from sympy.utilities.misc import debug
 
 replacements = dict( # Mathematica equivalent functions in SymPy
         Times="Mul",
@@ -73,29 +88,12 @@ permanent_variable_replacement = { # Permamenely rename these variables
     "$UseGamma": '_UseGamma',
 }
 
-default_header = '''
-from sympy.external import import_module
-matchpy = import_module("matchpy")
-from sympy.utilities.decorator import doctest_depends_on
+class RubiStrPrinter(StrPrinter):
+    def _print_Not(self, expr):
+        return "Not(%s)" % self._print(expr.args[0])
 
-if matchpy:
-    from matchpy import Pattern, ReplacementRule, CustomConstraint
-    from sympy.integrals.rubi.utility_function import (sympy_op_factory, Int, Sum, Set, With, Module, Scan, MapAnd, FalseQ, ZeroQ, NegativeQ, NonzeroQ, FreeQ, NFreeQ, List, Log, PositiveQ, PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ, ComplexNumberQ, PureComplexNumberQ, RealNumericQ, PositiveOrZeroQ, NegativeOrZeroQ, FractionOrNegativeQ, NegQ, Equal, Unequal, IntPart, FracPart, RationalQ, ProductQ, SumQ, NonsumQ, Subst, First, Rest, SqrtNumberQ, SqrtNumberSumQ, LinearQ, Sqrt, ArcCosh, Coefficient, Denominator, Hypergeometric2F1, Not, Simplify, FractionalPart, IntegerPart, AppellF1, EllipticPi, EllipticE, EllipticF, ArcTan, ArcCot, ArcCoth, ArcTanh, ArcSin, ArcSinh, ArcCos, ArcCsc, ArcSec, ArcCsch, ArcSech, Sinh, Tanh, Cosh, Sech, Csch, Coth, LessEqual, Less, Greater, GreaterEqual, FractionQ, IntLinearcQ, Expand, IndependentQ, PowerQ, IntegerPowerQ, PositiveIntegerPowerQ, FractionalPowerQ, AtomQ, ExpQ, LogQ, Head, MemberQ, TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, Sin, Cos, Tan, Cot, Sec, Csc, HyperbolicQ, SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, InverseTrigQ, SinCosQ, SinhCoshQ, LeafCount, Numerator, NumberQ, NumericQ, Length, ListQ, Im, Re, InverseHyperbolicQ, InverseFunctionQ, TrigHyperbolicFreeQ, InverseFunctionFreeQ, RealQ, EqQ, FractionalPowerFreeQ, ComplexFreeQ, PolynomialQ, FactorSquareFree, PowerOfLinearQ, Exponent, QuadraticQ, LinearPairQ, BinomialParts, TrinomialParts, PolyQ, EvenQ, OddQ, PerfectSquareQ, NiceSqrtAuxQ, NiceSqrtQ, Together, PosAux, PosQ, CoefficientList, ReplaceAll, ExpandLinearProduct, GCD, ContentFactor, NumericFactor, NonnumericFactors, MakeAssocList, GensymSubst, KernelSubst, ExpandExpression, Apart, SmartApart, MatchQ, PolynomialQuotientRemainder, FreeFactors, NonfreeFactors, RemoveContentAux, RemoveContent, FreeTerms, NonfreeTerms, ExpandAlgebraicFunction, CollectReciprocals, ExpandCleanup, AlgebraicFunctionQ, Coeff, LeadTerm, RemainingTerms, LeadFactor, RemainingFactors, LeadBase, LeadDegree, Numer, Denom, hypergeom, Expon, MergeMonomials, PolynomialDivide, BinomialQ, TrinomialQ, GeneralizedBinomialQ, GeneralizedTrinomialQ, FactorSquareFreeList, PerfectPowerTest, SquareFreeFactorTest, RationalFunctionQ, RationalFunctionFactors, NonrationalFunctionFactors, Reverse, RationalFunctionExponents, RationalFunctionExpand, ExpandIntegrand, SimplerQ, SimplerSqrtQ, SumSimplerQ, BinomialDegree, TrinomialDegree, CancelCommonFactors, SimplerIntegrandQ, GeneralizedBinomialDegree, GeneralizedBinomialParts, GeneralizedTrinomialDegree, GeneralizedTrinomialParts, MonomialQ, MonomialSumQ, MinimumMonomialExponent, MonomialExponent, LinearMatchQ, PowerOfLinearMatchQ, QuadraticMatchQ, CubicMatchQ, BinomialMatchQ, TrinomialMatchQ, GeneralizedBinomialMatchQ, GeneralizedTrinomialMatchQ, QuotientOfLinearsMatchQ, PolynomialTermQ, PolynomialTerms, NonpolynomialTerms, PseudoBinomialParts, NormalizePseudoBinomial, PseudoBinomialPairQ, PseudoBinomialQ, PolynomialGCD, PolyGCD, AlgebraicFunctionFactors, NonalgebraicFunctionFactors, QuotientOfLinearsP, QuotientOfLinearsParts, QuotientOfLinearsQ, Flatten, Sort, AbsurdNumberQ, AbsurdNumberFactors, NonabsurdNumberFactors, SumSimplerAuxQ, Prepend, Drop, CombineExponents, FactorInteger, FactorAbsurdNumber, SubstForInverseFunction, SubstForFractionalPower, SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears, SubstForFractionalPowerQ, SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ, FractionalPowerSubexpressionQ, Apply, FactorNumericGcd, MergeableFactorQ, MergeFactor, MergeFactors, TrigSimplifyQ, TrigSimplify, TrigSimplifyRecur, Order, FactorOrder, Smallest, OrderedQ, MinimumDegree, PositiveFactors, Sign, NonpositiveFactors, PolynomialInAuxQ, PolynomialInQ, ExponentInAux, ExponentIn, PolynomialInSubstAux, PolynomialInSubst, Distrib, DistributeDegree, FunctionOfPower, DivideDegreesOfFactors, MonomialFactor, FullSimplify, FunctionOfLinearSubst, FunctionOfLinear, NormalizeIntegrand, NormalizeIntegrandAux, NormalizeIntegrandFactor, NormalizeIntegrandFactorBase, NormalizeTogether, NormalizeLeadTermSigns, AbsorbMinusSign, NormalizeSumFactors, SignOfFactor, NormalizePowerOfLinear, SimplifyIntegrand, SimplifyTerm, TogetherSimplify, SmartSimplify, SubstForExpn, ExpandToSum, UnifySum, UnifyTerms, UnifyTerm, CalculusQ, FunctionOfInverseLinear, PureFunctionOfSinhQ, PureFunctionOfTanhQ, PureFunctionOfCoshQ, IntegerQuotientQ, OddQuotientQ, EvenQuotientQ, FindTrigFactor, FunctionOfSinhQ, FunctionOfCoshQ, OddHyperbolicPowerQ, FunctionOfTanhQ, FunctionOfTanhWeight, FunctionOfHyperbolicQ, SmartNumerator, SmartDenominator, SubstForAux, ActivateTrig, ExpandTrig, TrigExpand, SubstForTrig, SubstForHyperbolic, InertTrigFreeQ, LCM, SubstForFractionalPowerOfLinear, FractionalPowerOfLinear, InverseFunctionOfLinear, InertTrigQ, InertReciprocalQ, DeactivateTrig, FixInertTrigFunction, DeactivateTrigAux, PowerOfInertTrigSumQ, PiecewiseLinearQ, KnownTrigIntegrandQ, KnownSineIntegrandQ, KnownTangentIntegrandQ, KnownCotangentIntegrandQ, KnownSecantIntegrandQ, TryPureTanSubst, TryTanhSubst, TryPureTanhSubst, AbsurdNumberGCD, AbsurdNumberGCDList, ExpandTrigExpand, ExpandTrigReduce, ExpandTrigReduceAux, NormalizeTrig, TrigToExp, ExpandTrigToExp, TrigReduce, FunctionOfTrig, AlgebraicTrigFunctionQ, FunctionOfHyperbolic, FunctionOfQ, FunctionOfExpnQ, PureFunctionOfSinQ, PureFunctionOfCosQ, PureFunctionOfTanQ, PureFunctionOfCotQ, FunctionOfCosQ, FunctionOfSinQ, OddTrigPowerQ, FunctionOfTanQ, FunctionOfTanWeight, FunctionOfTrigQ, FunctionOfDensePolynomialsQ, FunctionOfLog, PowerVariableExpn, PowerVariableDegree, PowerVariableSubst, EulerIntegrandQ, FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst, Divides, EasyDQ, ProductOfLinearPowersQ, Rt, NthRoot, AtomBaseQ, SumBaseQ, NegSumBaseQ, AllNegTermQ, SomeNegTermQ, TrigSquareQ, RtAux, TrigSquare, IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors, MostMainFactorPosition, FunctionOfExponentialQ, FunctionOfExponential, FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux, FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, rubi_test, If, IntQuadraticQ, IntBinomialQ, RectifyTangent, RectifyCotangent, Inequality, Condition, Simp, SimpHelp, SplitProduct, SplitSum, SubstFor, SubstForAux, FresnelS, FresnelC, Erfc, Erfi, Gamma, FunctionOfTrigOfLinearQ, ElementaryFunctionQ, Complex, UnsameQ, _SimpFixFactor, SimpFixFactor, _FixSimplify, FixSimplify, _SimplifyAntiderivativeSum, SimplifyAntiderivativeSum, _SimplifyAntiderivative, SimplifyAntiderivative, _TrigSimplifyAux, TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist)
-    from sympy import Integral, S, sqrt
-    from sympy.integrals.rubi.symbol import WC
-    from sympy.core.symbol import symbols, Symbol
-    from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf, exp, log)
-    from sympy.functions.elementary.hyperbolic import (acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch)
-    from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec)
-    from sympy import pi as Pi
-
-    A_, B_, C_, F_, G_, H_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, y_, z_ = [WC(i) for i in 'ABCFGHabcdefghijklmnpqrtuvswxyz']
-    a1_, a2_, b1_, b2_, c1_, c2_, d1_, d2_, n1_, n2_, e1_, e2_, f1_, f2_, g1_, g2_, n1_, n2_, n3_, Pq_, Pm_, Px_, Qm_, Qr_, Qx_, jn_, mn_, non2_, RFx_, RGx_ = [WC(i) for i in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'n1', 'n2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2', 'n1', 'n2', 'n3', 'Pq', 'Pm', 'Px', 'Qm', 'Qr', 'Qx', 'jn', 'mn', 'non2', 'RFx', 'RGx']]
-
-    _UseGamma = False
-
-def rubi_object(rubi):
-'''
+def rubi_printer(expr, **settings):
+    return RubiStrPrinter(settings).doprint(expr)
 
 def parse_full_form(wmexpr):
     '''
@@ -276,7 +274,7 @@ def get_free_symbols(s, symbols, free_symbols=[]):
 def _divide_constriant(s, symbols):
     # Creates a CustomConstraint of the form `CustomConstraint(lambda a, x: FreeQ(a, x))`
     lambda_symbols = list(set(get_free_symbols(s, symbols, [])))
-    return 'CustomConstraint(lambda {}: {})'.format(', '.join(lambda_symbols), sstr(sympify(generate_sympy_from_parsed(s)), sympy_integers=True))
+    return 'CustomConstraint(lambda {}: {})'.format(', '.join(lambda_symbols), rubi_printer(sympify(generate_sympy_from_parsed(s)), sympy_integers=True))
 
 def divide_constraint(s, symbols):
     '''
@@ -317,14 +315,14 @@ def replaceWith(s, symbols, i):
     if type(s) == Function('With') or type(s) == Function('Module'):
         constraints = ', '
         result = '    def With{}({}):'.format(i, ', '.join(symbols))
-        if type(s.args[0]) == Function('List'): # get all local varibles of With and Module
+        if type(s.args[0]) == Function('List'): # get all local variables of With and Module
             L = list(s.args[0].args)
         else:
             L = [s.args[0]]
 
         for i in L: # define local variables
             if isinstance(i, Set):
-                result += '\n        {} = {}'.format(i.args[0], sstr(i.args[1], sympy_integers=True))
+                result += '\n        {} = {}'.format(i.args[0], rubi_printer(i.args[1], sympy_integers=True))
             elif isinstance(i, Symbol):
                 result += "\n        {} = Symbol('{}')".format(i, i)
 
@@ -332,19 +330,24 @@ def replaceWith(s, symbols, i):
             C = s.args[1]
             if isinstance(C.args[0], Set):
                 result += '\n        {} = {}'.format(C.args[0].args[0], C.args[0].args[1])
-            result += '\n        return {}'.format(sstr(C.args[1], sympy_integers=True))
+            result += '\n        return {}'.format(rubi_printer(C.args[1], sympy_integers=True))
             return result, constraints
         elif type(s.args[1]) == Function('Condition'):
             C = s.args[1]
             if len(C.args) == 2:
-                constraints += 'CustomConstraint(lambda {}: {})'.format(', '.join([str(i) for i in C.free_symbols]), sstr(C.args[1], sympy_integers=True))
-            result += '\n        return {}'.format(sstr(C.args[0], sympy_integers=True))
+                if all(j in symbols for j in [str(i) for i in C.free_symbols]):
+                    constraints += 'CustomConstraint(lambda {}: {})'.format(', '.join([str(i) for i in C.free_symbols]), rubi_printer(C.args[1], sympy_integers=True))
+                    result += '\n        return {}'.format(rubi_printer(C.args[0], sympy_integers=True))
+                else:
+                    result += '\n        if {}:'.format(rubi_printer(C.args[1], sympy_integers=True))
+                    result += '\n            return {}'.format(rubi_printer(C.args[0], sympy_integers=True))
+                    result += '\n        print("Unable to Integrate")'
             return result, constraints
 
-        result += '\n        return {}'.format(sstr(s.args[1], sympy_integers=True))
+        result += '\n        return {}'.format(rubi_printer(s.args[1], sympy_integers=True))
         return result, constraints
     else:
-        return sstr(s, sympy_integers=True), ''
+        return rubi_printer(s, sympy_integers=True), ''
 
 def downvalues_rules(r, parsed):
     '''
@@ -354,7 +357,7 @@ def downvalues_rules(r, parsed):
     res = []
     index = 0
     for i in r:
-        print('parsing rule {}'.format(r.index(i) + 1))
+        debug('parsing rule {}'.format(r.index(i) + 1))
         # Parse Pattern
         if i[1][1][0] == 'Condition':
             p = i[1][1][1].copy()
@@ -367,9 +370,9 @@ def downvalues_rules(r, parsed):
         free_symbols = list(set(free_symbols)) #remove common symbols
 
         # Parse Transformed Expression and Constraints
-        if i[2][0] == 'Condition': # parse rules without constraints seperately
-            constriant = divide_constraint(i[2][2], free_symbols) # seperate And constraints into indivdual constraints
-            FreeQ_vars, FreeQ_x = seperate_freeq(i[2][2].copy()) # seperate FreeQ into indivdual constraints
+        if i[2][0] == 'Condition': # parse rules without constraints separately
+            constriant = divide_constraint(i[2][2], free_symbols) # separate And constraints into individual constraints
+            FreeQ_vars, FreeQ_x = seperate_freeq(i[2][2].copy()) # separate FreeQ into individual constraints
             transformed = generate_sympy_from_parsed(i[2][1].copy(), symbols=free_symbols)
         else:
             constriant = ''
@@ -378,27 +381,27 @@ def downvalues_rules(r, parsed):
 
         FreeQ_constraint = parse_freeq(FreeQ_vars, FreeQ_x, free_symbols)
         pattern = sympify(pattern)
-        pattern = sstr(pattern, sympy_integers=True)
+        pattern = rubi_printer(pattern, sympy_integers=True)
         pattern = setWC(pattern)
         transformed = sympify(transformed)
 
         index += 1
-        if type(transformed) == Function('With') or type(transformed) == Function('Module'): # define seperate function when With appears
+        if type(transformed) == Function('With') or type(transformed) == Function('Module'): # define separate function when With appears
             transformed, With_constraints = replaceWith(transformed, free_symbols, index)
             parsed += '    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + With_constraints + ')'
             parsed += '\n{}'.format(transformed)
-            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', lambda ' + ', '.join(free_symbols) + ' : ' + 'With{}({})'.format(index, ', '.join(free_symbols)) + ')\n    '
+            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', lambda ' + ', '.join(free_symbols) + ' : ' + 'With{}({})'.format(index, ', '.join(free_symbols)) + ')\n    '
         else:
-            transformed = sstr(transformed, sympy_integers=True)
+            transformed = rubi_printer(transformed, sympy_integers=True)
             parsed += '    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
-            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + sstr(index, sympy_integers=True) + ', lambda ' + ', '.join(free_symbols) + ' : ' + transformed + ')\n    '
+            parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', lambda ' + ', '.join(free_symbols) + ' : ' + transformed + ')\n    '
         parsed += 'rubi.add(rule'+ str(index) +')\n\n'
 
     parsed += '    return rubi\n'
 
     return parsed
 
-def rubi_rule_parser(fullform, header=None):
+def rubi_rule_parser(fullform, header=None, module_name='rubi_object'):
     '''
     Parses rules in MatchPy format.
 
@@ -406,6 +409,7 @@ def rubi_rule_parser(fullform, header=None):
     ==========
     fullform : FullForm of the rule as string.
     header : Header imports for the file. Uses default imports if None.
+    module_name : name of RUBI module
 
     References
     ==========
@@ -413,16 +417,17 @@ def rubi_rule_parser(fullform, header=None):
     [2] http://reference.wolfram.com/language/ref/DownValues.html
     [3] https://gist.github.com/Upabjojr/bc07c49262944f9c1eb0
     '''
-    StrPrinter._print_Not = lambda self, expr: "Not(%s)" % self._print(expr.args[0])
 
-    if header == None: # use default header values
-        header = default_header
+    if header == None:  # use default header values
+        path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        header = open(os.path.join(path_header, "header.py.txt"), "r").read()
+        header = header.format(module_name)
 
     # Temporarily rename these variables because it
     # can raise errors while sympifying
     for i in temporary_variable_replacement:
         fullform = fullform.replace(i, temporary_variable_replacement[i])
-    # Permamenely rename these variables
+    # Permanently rename these variables
     for i in permanent_variable_replacement:
         fullform = fullform.replace(i, permanent_variable_replacement[i])
 
@@ -436,7 +441,5 @@ def rubi_rule_parser(fullform, header=None):
     # Replace temporary variables by actual values
     for i in temporary_variable_replacement:
         result = result.replace(temporary_variable_replacement[i], i)
-
-    StrPrinter._print_Not = lambda self, expr: "Not(%s)" % self._print(expr.args[0])
 
     return result

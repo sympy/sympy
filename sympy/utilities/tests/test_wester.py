@@ -14,7 +14,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     im, DiracDelta, chebyshevt, legendre_poly, polylog, series, O,
     atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc, sec,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, ZZ,
-    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
+    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt, Min,
     ask, refine, AlgebraicNumber, continued_fraction_iterator as cf_i,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
@@ -584,7 +584,7 @@ def test_H32():  # issue 6558
 
 
 def test_H33():
-    A, B, C = symbols('A, B, C', commutatative=False)
+    A, B, C = symbols('A, B, C', commutative=False)
     assert (Commutator(A, Commutator(B, C))
         + Commutator(B, Commutator(C, A))
         + Commutator(C, Commutator(A, B))).doit().expand() == 0
@@ -677,7 +677,7 @@ def test_J4():
 
 
 def test_J5():
-    assert polygamma(0, R(1, 3)) == -EulerGamma - pi/2*sqrt(R(1, 3)) - R(3, 2)*log(3)
+    assert polygamma(0, R(1, 3)) == -log(3) - sqrt(3)*pi/6 - EulerGamma - log(sqrt(3))
 
 
 def test_J6():
@@ -1082,7 +1082,7 @@ def test_M37():
 
 
 def test_M38():
-    variabes = vring("k1:50", vfield("a,b,c", ZZ).to_domain())
+    variables = vring("k1:50", vfield("a,b,c", ZZ).to_domain())
     system = [
         -b*k8/a + c*k8/a, -b*k11/a + c*k11/a, -b*k10/a + c*k10/a + k2, -k3 - b*k9/a + c*k9/a,
         -b*k14/a + c*k14/a, -b*k15/a + c*k15/a, -b*k18/a + c*k18/a - k2, -b*k17/a + c*k17/a,
@@ -1133,7 +1133,7 @@ def test_M38():
         k2:  0, k1:  0,
         k34: b/c*k42, k31: k39, k26: a/c*k42, k23: k39
     }
-    assert solve_lin_sys(system, variabes) == solution
+    assert solve_lin_sys(system, variables) == solution
 
 
 def test_M39():
@@ -2027,8 +2027,8 @@ def test_S4():
 
 def test_S5():
     n, k = symbols('n k', integer=True, positive=True)
-    assert (Product((2*k - 1)/(2*k), (k, 1, n)).doit().combsimp() ==
-            factorial(n - Rational(1, 2))/(sqrt(pi)*factorial(n)))
+    assert (Product((2*k - 1)/(2*k), (k, 1, n)).doit().gammasimp() ==
+            gamma(n + Rational(1, 2))/(sqrt(pi)*gamma(n + 1)))
 
 
 @SKIP("https://github.com/sympy/sympy/issues/7133")
@@ -2307,8 +2307,8 @@ def test_V1():
 
 
 def test_V2():
-    assert (integrate(Piecewise((-x, x < 0), (x, x >= 0)), x) ==
-            Piecewise((-x**2/2, x < 0), (x**2/2, x >= 0)))
+    assert integrate(Piecewise((-x, x < 0), (x, x >= 0)), x
+        ) == Piecewise((-x**2/2, x < 0), (x**2/2, True))
 
 
 def test_V3():
@@ -2570,10 +2570,9 @@ def test_W21():
 def test_W22():
     t, u = symbols('t u', real=True)
     s = Lambda(x, Piecewise((1, And(x >= 1, x <= 2)), (0, True)))
-    assert (integrate(s(t)*cos(t), (t, 0, u)) ==
-            Piecewise((sin(u) - sin(1), And(u <= 2, u >= 1)),
-                      (0, And(u <= 1, u >= -oo)),
-                      (-sin(1) + sin(2), True)))
+    assert integrate(s(t)*cos(t), (t, 0, u)) == Piecewise(
+        (0, u < 0),
+        (-sin(Min(1, u)) + sin(Min(2, u)), True))
 
 
 @XFAIL
@@ -2583,17 +2582,14 @@ def test_W23():
     r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
     assert r1.simplify() == pi*(-a + b)
 
+
 @SKIP("integrate raises RuntimeError: maximum recursion depth exceeded")
 @slow
 def test_W23b():
-    # this used to be test_W23.  Can't really split since r1 is needed
-    # in the second assert
+    # like W23 but limits are reversed
     a, b = symbols('a b', real=True, positive=True)
-    r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
-    assert r1.simplify() == pi*(-a + b)
-    # integrate raises RuntimeError: maximum recursion depth exceeded
     r2 = integrate(integrate(x/(x**2 + y**2), (y, -oo, oo)), (x, a, b))
-    assert r1 == r2
+    assert r2 == pi*(-a + b)
 
 
 @XFAIL
@@ -2612,8 +2608,9 @@ def test_W25():
     if ON_TRAVIS:
         skip("Too slow for travis.")
     a, x, y = symbols('a x y', real=True)
-    i1 = integrate(sin(a)*sin(y)/sqrt(1- sin(a)**2*sin(x)**2*sin(y)**2),
-                   (x, 0, pi/2))
+    i1 = integrate(
+        sin(a)*sin(y)/sqrt(1 - sin(a)**2*sin(x)**2*sin(y)**2),
+        (x, 0, pi/2))
     i2 = integrate(i1, (y, 0, pi/2))
     assert (i2 - pi*a/2).simplify() == 0
 

@@ -457,12 +457,12 @@ def test_minimal_block():
 
     P1 = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
     P2 = PermutationGroup(Permutation(0, 1, 2, 3, 4, 5), Permutation(1, 5)(2, 4))
-    assert P1.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
-    assert P2.minimal_block([0, 2]) == [0, 3, 0, 3, 0, 3]
+    assert P1.minimal_block([0, 2]) == [0, 1, 0, 1, 0, 1]
+    assert P2.minimal_block([0, 2]) == [0, 1, 0, 1, 0, 1]
 
 def test_minimal_blocks():
     P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
-    assert P.minimal_blocks() == [[0, 3, 0, 3, 0, 3], [0, 4, 5, 0, 4, 5]]
+    assert P.minimal_blocks() == [[0, 1, 0, 1, 0, 1], [0, 1, 2, 0, 1, 2]]
 
     P = SymmetricGroup(5)
     assert P.minimal_blocks() == [[0]*5]
@@ -843,6 +843,11 @@ def test_presentation():
         G = P.presentation()
         return G.order() == P.order()
 
+    def _strong_test(P):
+        G = P.strong_presentation()
+        chk = len(G.generators) == len(P.strong_gens)
+        return chk and G.order() == P.order()
+
     P = PermutationGroup(Permutation(0,1,5,2)(3,7,4,6), Permutation(0,3,5,4)(1,6,2,7))
     assert _test(P)
 
@@ -851,3 +856,17 @@ def test_presentation():
 
     P = SymmetricGroup(5)
     assert _test(P)
+
+    P = PermutationGroup([Permutation(0,3,1,2), Permutation(3)(0,1), Permutation(0,1)(2,3)])
+    G = P.strong_presentation()
+    assert _strong_test(P)
+
+    P = DihedralGroup(6)
+    G = P.strong_presentation()
+    assert _strong_test(P)
+
+    a = Permutation(0,1)(2,3)
+    b = Permutation(0,2)(3,1)
+    c = Permutation(4,5)
+    P = PermutationGroup(c, a, b)
+    assert _strong_test(P)

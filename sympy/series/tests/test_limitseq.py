@@ -82,6 +82,13 @@ def test_limit_seq():
     raises(ValueError, lambda: limit_seq(e * m))
 
 
+def test_alternating_sign():
+    assert limit_seq((-1)**n/n**2, n) == 0
+    assert limit_seq((-2)**(n+1)/(n + 3**n), n) == 0
+    assert limit_seq((2*n + (-1)**n)/(n + 1), n) == 2
+    assert limit_seq((-3)**n/(n + 3**n), n) is None
+
+
 @XFAIL
 def test_limit_seq_fail():
     # improve Summation algorithm or add ad-hoc criteria

@@ -22,7 +22,6 @@ from sympy.sets.fancysets import Range
 known_functions = {
     #"Abs": [(lambda x: not x.is_integer, "fabs")],
     "Abs": "abs",
-    "gamma": "gamma",
     "sin": "sin",
     "cos": "cos",
     "tan": "tan",
@@ -42,6 +41,13 @@ known_functions = {
     "floor": "floor",
     "ceiling": "ceiling",
     "sign": "sign",
+    "Max": "max",
+    "Min": "min",
+    "factorial": "factorial",
+    "gamma": "gamma",
+    "digamma": "digamma",
+    "trigamma": "trigamma",
+    "beta": "beta",
 }
 
 # These are the core reserved words in the R language. Taken from:
@@ -86,8 +92,9 @@ class RCodePrinter(CodePrinter):
         'reserved_word_suffix': '_',
     }
     _operators = {
-       'and':'&',
+       'and': '&',
         'or': '|',
+       'not': '!',
     }
 
     _relationals = {

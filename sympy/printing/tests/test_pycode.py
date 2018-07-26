@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function)
-from sympy.core import Expr, Mod, symbols
+
+from sympy.codegen import Assignment
+from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
 from sympy.core.numbers import pi
+from sympy.codegen.ast import none
+from sympy.external import import_module
 from sympy.logic import And, Or
-from sympy.functions import acos
+from sympy.functions import acos, Piecewise, sign
 from sympy.matrices import SparseMatrix
 from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter
@@ -24,6 +28,23 @@ def test_PythonCodePrinter():
     assert prntr.doprint(pi) == 'math.pi'
     assert prntr.module_imports == {'math': {'pi'}}
     assert prntr.doprint(acos(x)) == 'math.acos(x)'
+    assert prntr.doprint(Assignment(x, 2)) == 'x = 2'
+    assert prntr.doprint(Piecewise((1, Eq(x, 0)),
+                        (2, x>6))) == '((1) if (x == 0) else (2) if (x > 6) else None)'
+    assert prntr.doprint(Piecewise((2, Le(x, 0)),
+                        (3, Gt(x, 0)), evaluate=False)) == '((2) if (x <= 0) else'\
+                                                        ' (3) if (x > 0) else None)'
+    assert prntr.doprint(sign(x)) == '(0.0 if x == 0 else math.copysign(1, x))'
+
+
+def test_MpmathPrinter():
+    p = MpmathPrinter()
+    assert p.doprint(sign(x)) == 'mpmath.sign(x)'
+    assert p.doprint(Rational(1, 2)) == 'mpmath.mpf(1)/mpmath.mpf(2)'
+
+def test_NumPyPrinter():
+    p = NumPyPrinter()
+    assert p.doprint(sign(x)) == 'numpy.sign(x)'
 
 
 def test_SciPyPrinter():
@@ -57,3 +78,14 @@ def test_printmethod():
     obj = CustomPrintedObject()
     assert NumPyPrinter().doprint(obj) == 'numpy'
     assert MpmathPrinter().doprint(obj) == 'mpmath'
+
+
+def test_codegen_ast_nodes():
+    assert pycode(none) == 'None'
+
+
+def test_issue_14283():
+    prntr = PythonCodePrinter()
+
+    assert prntr.doprint(zoo) == "float('nan')"
+    assert prntr.doprint(-oo) == "float('-inf')"

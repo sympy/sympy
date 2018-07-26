@@ -4,19 +4,33 @@ from sympy.core import S, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
-from sympy.core.function import Application, Lambda, ArgumentIndexError
+from sympy.core.function import (Application, Lambda,
+    ArgumentIndexError)
 from sympy.core.expr import Expr
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.relational import Equality
+from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int, with_metaclass, range
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.functions.elementary.integers import floor
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Or
+
+def _minmax_as_Piecewise(op, *args):
+    # helper for Min/Max rewrite as Piecewise
+    from sympy.functions.elementary.piecewise import Piecewise
+    ec = []
+    for i, a in enumerate(args):
+        c = []
+        for j in range(i + 1, len(args)):
+            c.append(Relational(a, args[j], op))
+        ec.append((a, And(*c)))
+    return Piecewise(*ec)
+
 
 class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
@@ -47,10 +61,13 @@ Id = S.IdentityFunction
 ###############################################################################
 
 
-def sqrt(arg):
+def sqrt(arg, evaluate=None):
     """The square root function
 
     sqrt(x) -> Returns the principal square root of x.
+
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate
 
     Examples
     ========
@@ -112,12 +129,15 @@ def sqrt(arg):
     .. [2] http://en.wikipedia.org/wiki/Principal_value
     """
     # arg = sympify(arg) is handled by Pow
-    return Pow(arg, S.Half)
+    return Pow(arg, S.Half, evaluate=evaluate)
 
 
-def cbrt(arg):
-    """This function computes the principial cube root of `arg`, so
+def cbrt(arg, evaluate=None):
+    """This function computes the principal cube root of `arg`, so
     it's just a shortcut for `arg**Rational(1, 3)`.
+
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate.
 
     Examples
     ========
@@ -162,13 +182,15 @@ def cbrt(arg):
     * http://en.wikipedia.org/wiki/Principal_value
 
     """
-    return Pow(arg, Rational(1, 3))
+    return Pow(arg, Rational(1, 3), evaluate=evaluate)
 
 
-def root(arg, n, k=0):
+def root(arg, n, k=0, evaluate=None):
     """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
-    principle root (k=0).
+    principal root (k=0).
 
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate.
 
     Examples
     ========
@@ -217,7 +239,7 @@ def root(arg, n, k=0):
     >>> root(-8, 3)
     2*(-1)**(1/3)
 
-    The real_root function can be used to either make the principle
+    The real_root function can be used to either make the principal
     result real (or simply to return the real root directly):
 
     >>> from sympy import real_root
@@ -251,15 +273,18 @@ def root(arg, n, k=0):
     """
     n = sympify(n)
     if k:
-        return Pow(arg, S.One/n)*S.NegativeOne**(2*k/n)
-    return Pow(arg, 1/n)
+        return Mul(Pow(arg, S.One/n, evaluate=evaluate), S.NegativeOne**(2*k/n), evaluate=evaluate)
+    return Pow(arg, 1/n, evaluate=evaluate)
 
 
-def real_root(arg, n=None):
+def real_root(arg, n=None, evaluate=None):
     """Return the real nth-root of arg if possible. If n is omitted then
     all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
-    will only create a real root of a principle root -- the presence of
+    will only create a real root of a principal root -- the presence of
     other factors may cause the result to not be real.
+
+    The parameter evaluate determines if the expression should be evaluated.
+    If None, its value is taken from global_evaluate.
 
     Examples
     ========
@@ -274,7 +299,7 @@ def real_root(arg, n=None):
     >>> real_root(_)
     -2
 
-    If one creates a non-principle root and applies real_root, the
+    If one creates a non-principal root and applies real_root, the
     result will not be real (so use with caution):
 
     >>> root(-8, 3, 2)
@@ -290,24 +315,15 @@ def real_root(arg, n=None):
     sympy.core.power.integer_nthroot
     root, sqrt
     """
-    from sympy import im, Piecewise
+    from sympy.functions.elementary.complexes import Abs, im, sign
+    from sympy.functions.elementary.piecewise import Piecewise
     if n is not None:
-        try:
-            n = as_int(n)
-            arg = sympify(arg)
-            if arg.is_positive or arg.is_negative:
-                rv = root(arg, n)
-            else:
-                raise ValueError
-        except ValueError:
-            return root(arg, n)*Piecewise(
-                (S.One, ~Equality(im(arg), 0)),
-                (Pow(S.NegativeOne, S.One/n)**(2*floor(n/2)), And(
-                    Equality(n % 2, 1),
-                    arg < 0)),
-                (S.One, True))
-    else:
-        rv = sympify(arg)
+        return Piecewise(
+            (root(arg, n, evaluate=evaluate), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
+            (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate),
+            And(Eq(im(arg), S.Zero), Eq(Mod(n, 2), S.One))),
+            (root(arg, n, evaluate=evaluate), True))
+    rv = sympify(arg)
     n1pow = Transform(lambda x: -(-x.base)**x.exp,
                       lambda x:
                       x.is_Pow and
@@ -331,54 +347,163 @@ class MinMaxBase(Expr, LatticeOp):
         # first standard filter, for cls.zero and cls.identity
         # also reshape Max(a, Max(b, c)) to Max(a, b, c)
         try:
-            _args = frozenset(cls._new_args_filter(args))
+            args = frozenset(cls._new_args_filter(args))
         except ShortCircuit:
             return cls.zero
 
-        # second filter
-        # variant I: remove ones which can be removed
-        # args = cls._collapse_arguments(set(_args), **assumptions)
+        if assumptions.pop('evaluate', True):
+            # remove redundant args that are easily identified
+            args = cls._collapse_arguments(args, **assumptions)
 
-        # variant II: find local zeros
-        args = cls._find_localzeros(set(_args), **assumptions)
+        # find local zeros
+        args = cls._find_localzeros(args, **assumptions)
 
         if not args:
             return cls.identity
-        elif len(args) == 1:
-            return args.pop()
-        else:
-            # base creation
-            # XXX should _args be made canonical with sorting?
-            _args = frozenset(args)
-            obj = Expr.__new__(cls, _args, **assumptions)
-            obj._argset = _args
-            return obj
 
-    def _eval_simplify(self, ratio, measure):
-        # simplify Min(foo, y, Max(foo, x)) to Min(foo, y)
-        # Like And/Or, anything in common between the two
-        # is cause to eliminate the opposite arg.
-        cls = self.func
+        if len(args) == 1:
+            return list(args).pop()
+
+        # base creation
+        _args = frozenset(args)
+        obj = Expr.__new__(cls, _args, **assumptions)
+        obj._argset = _args
+        return obj
+
+    @classmethod
+    def _collapse_arguments(cls, args, **assumptions):
+        """Remove redundant args.
+
+        Examples
+        ========
+
+        >>> from sympy import Min, Max
+        >>> from sympy.abc import a, b, c, d, e
+
+        Any arg in parent that appears in any
+        parent-like function in any of the flat args
+        of parent can be removed from that sub-arg:
+
+        >>> Min(a, Max(b, Min(a, c, d)))
+        Min(a, Max(b, Min(c, d)))
+
+        If the arg of parent appears in an opposite-than parent
+        function in any of the flat args of parent that function
+        can be replaced with the arg:
+
+        >>> Min(a, Max(b, Min(c, d, Max(a, e))))
+        Min(a, Max(b, Min(a, c, d)))
+
+        """
+        from sympy.utilities.iterables import ordered
+        from sympy.utilities.iterables import sift
+        from sympy.simplify.simplify import walk
+
+        if not args:
+            return args
+        args = list(ordered(args))
         if cls == Min:
-            op = Max
-        elif cls == Max:
-            op = Min
+            other = Max
         else:
-            op = None
-        if op:
-            unnested = set()
-            nested = []
+            other = Min
+
+        # find global comparable max of Max and min of Min if a new
+        # value is being introduced in these args at position 0 of
+        # the ordered args
+        if args[0].is_number:
+            sifted = mins, maxs = [], []
+            for i in args:
+                for v in walk(i, Min, Max):
+                    if v.args[0].is_comparable:
+                        sifted[isinstance(v, Max)].append(v)
+            small = Min.identity
+            for i in mins:
+                v = i.args[0]
+                if v.is_number and (v < small) == True:
+                    small = v
+            big = Max.identity
+            for i in maxs:
+                v = i.args[0]
+                if v.is_number and (v > big) == True:
+                    big = v
+            # at the point when this function is called from __new__,
+            # there may be more than one numeric arg present since
+            # local zeros have not been handled yet, so look through
+            # more than the first arg
+            if cls == Min:
+                for i in range(len(args)):
+                    if not args[i].is_number:
+                        break
+                    if (args[i] < small) == True:
+                        small = args[i]
+            elif cls == Max:
+                for i in range(len(args)):
+                    if not args[i].is_number:
+                        break
+                    if (args[i] > big) == True:
+                        big = args[i]
+            T = None
+            if cls == Min:
+                if small != Min.identity:
+                    other = Max
+                    T = small
+            elif big != Max.identity:
+                other = Min
+                T = big
+            if T is not None:
+                # remove numerical redundancy
+                for i in range(len(args)):
+                    a = args[i]
+                    if isinstance(a, other):
+                        a0 = a.args[0]
+                        if ((a0 > T) if other == Max else (a0 < T)) == True:
+                            args[i] = cls.identity
+
+        # remove redundant symbolic args
+        def do(ai, a):
+            if not isinstance(ai, (Min, Max)):
+                return ai
+            cond = a in ai.args
+            if not cond:
+                return ai.func(*[do(i, a) for i in ai.args],
+                    evaluate=False)
+            if isinstance(ai, cls):
+                return ai.func(*[do(i, a) for i in ai.args if i != a],
+                    evaluate=False)
+            return a
+        for i, a in enumerate(args):
+            args[i + 1:] = [do(ai, a) for ai in args[i + 1:]]
+
+        # factor out common elements as for
+        # Min(Max(x, y), Max(x, z)) -> Max(x, Min(y, z))
+        # and vice versa when swapping Min/Max -- do this only for the
+        # easy case where all functions contain something in common;
+        # trying to find some optimal subset of args to modify takes
+        # too long
+        if len(args) > 1:
+            common = None
             remove = []
-            for a in self.args:
-                if isinstance(a, op):
-                    nested.append(a)
-                else:
-                    unnested.add(a)
-            N = len(nested) - 1
-            for i, n in enumerate(reversed(nested)):
-                if set(n.args) & unnested:
-                    nested.pop(N - i)
-            return cls(*(list(unnested) + nested))
+            sets = []
+            for i in range(len(args)):
+                a = args[i]
+                if not isinstance(a, other):
+                    continue
+                s = set(a.args)
+                common = s if common is None else (common & s)
+                if not common:
+                    break
+                sets.append(s)
+                remove.append(i)
+            if common:
+                sets = filter(None, [s - common for s in sets])
+                sets = [other(*s, evaluate=False) for s in sets]
+                for i in reversed(remove):
+                    args.pop(i)
+                oargs = [cls(*sets)] if sets else []
+                oargs.extend(common)
+                args.append(other(*oargs, evaluate=False))
+
+        return args
 
     @classmethod
     def _new_args_filter(cls, arg_sequence):
@@ -392,7 +517,9 @@ class MinMaxBase(Expr, LatticeOp):
         for arg in arg_sequence:
 
             # pre-filter, checking comparability of arguments
-            if (not isinstance(arg, Expr)) or (arg.is_real is False) or (arg is S.ComplexInfinity):
+            if not isinstance(arg, Expr) or arg.is_real is False or (
+                    arg.is_number and
+                    not arg.is_comparable):
                 raise ValueError("The argument '%s' is not comparable." % arg)
 
             if arg == cls.zero:
@@ -478,6 +605,12 @@ class MinMaxBase(Expr, LatticeOp):
                 df = Function.fdiff(self, i)
             l.append(df * da)
         return Add(*l)
+
+    def _eval_rewrite_as_Abs(self, *args):
+        from sympy.functions.elementary.complexes import Abs
+        s = (args[0] + self.func(*args[1:]))/2
+        d = abs(args[0] - self.func(*args[1:]))/2
+        return (s + d if isinstance(self, Max) else s - d).rewrite(Abs)
 
     def evalf(self, prec=None, **options):
         return self.func(*[a.evalf(prec, **options) for a in self.args])
@@ -614,6 +747,11 @@ class Max(MinMaxBase, Application):
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
+    def _eval_rewrite_as_Piecewise(self, *args):
+        is_real = all(i.is_real for i in args)
+        if is_real:
+            return _minmax_as_Piecewise('>=', *args)
+
     def _eval_is_positive(self):
         return fuzzy_or(a.is_positive for a in self.args)
 
@@ -673,6 +811,11 @@ class Min(MinMaxBase, Application):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
+
+    def _eval_rewrite_as_Piecewise(self, *args):
+        is_real = all(i.is_real for i in args)
+        if is_real:
+            return _minmax_as_Piecewise('<=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_and(a.is_positive for a in self.args)

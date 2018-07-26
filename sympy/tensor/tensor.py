@@ -37,7 +37,7 @@ from sympy import Matrix, Rational, prod, Integer
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, sympify, Add, S
-from sympy.core.compatibility import string_types, reduce, range
+from sympy.core.compatibility import string_types, reduce, range, SYMPY_INTS
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
@@ -1535,7 +1535,7 @@ class TensorIndexType(Basic):
     ``delta`` : ``Kronecker delta``
     ``epsilon`` : the ``Levi-Civita epsilon`` tensor
     ``dim``
-    ``dim_eps``
+    ``eps_dim``
     ``dummy_fmt``
     ``data`` : a property to add ``ndarray`` values, to work in a specified basis.
 
@@ -1723,7 +1723,7 @@ class TensorIndexType(Basic):
         return delta
 
     def get_epsilon(self):
-        if not isinstance(self._eps_dim, (int, Integer)):
+        if not isinstance(self._eps_dim, (SYMPY_INTS, Integer)):
             return None
         sym = TensorSymmetry(get_symmetric_group_sgs(self._eps_dim, 1))
         Sdim = TensorType([self]*self._eps_dim, sym)

@@ -461,7 +461,7 @@ class HolonomicFunction(object):
 
         # initial condition
         self.y0 = y0
-        # the point for initial conditions, defualt is zero.
+        # the point for initial conditions, default is zero.
         self.x0 = x0
         # differential operator L such that L.f = 0
         self.annihilator = annihilator
@@ -988,7 +988,7 @@ class HolonomicFunction(object):
         # until a non trivial solution is found
         while sol[0].is_zero:
 
-            # updating the coefficents Dx^i(f).Dx^j(g) for next degree
+            # updating the coefficients Dx^i(f).Dx^j(g) for next degree
             for i in range(a - 1, -1, -1):
                 for j in range(b - 1, -1, -1):
                     coeff_mul[i][j + 1] += coeff_mul[i][j]
@@ -1030,7 +1030,7 @@ class HolonomicFunction(object):
             # if both the conditions are at same point
             if self.x0 == other.x0:
 
-                # try to find more inital conditions
+                # try to find more initial conditions
                 y0_self = _extend_y0(self, sol_ann.order)
                 y0_other = _extend_y0(other, sol_ann.order)
                 # h(x0) = f(x0) * g(x0)
@@ -1222,10 +1222,10 @@ class HolonomicFunction(object):
 
             # check for linear relations
             system.append(coeffs)
-            sol_tuple = (Matrix(system).transpose()).gauss_jordan_solve(homogeneous)
-            sol = sol_tuple[0]
+            sol, taus = (Matrix(system).transpose()
+                ).gauss_jordan_solve(homogeneous)
 
-        tau = sol.atoms(Dummy).pop()
+        tau = list(taus)[0]
         sol = sol.subs(tau, 1)
         sol = _normalize(sol[0:], R, negative=False)
 
@@ -2565,7 +2565,7 @@ def _hyper_to_meijerg(func):
 
     z = func.args[2]
 
-    # paramters of the `meijerg` function.
+    # parameters of the `meijerg` function.
     an = (1 - i for i in ap)
     anp = ()
     bm = (S(0), )

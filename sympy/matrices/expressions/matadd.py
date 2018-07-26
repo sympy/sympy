@@ -40,7 +40,7 @@ class MatAdd(MatrixExpr, AssocOp):
     def shape(self):
         return self.args[0].shape
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, expand=None):
         return Add(*[arg._entry(i, j) for arg in self.args])
 
     def _eval_transpose(self):
@@ -60,6 +60,7 @@ class MatAdd(MatrixExpr, AssocOp):
         else:
             args = self.args
         return canonicalize(MatAdd(*args))
+
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):

@@ -148,7 +148,7 @@ class Order(Expr):
                 variables = list(map(sympify, args))
                 point = [S.Zero]*len(variables)
 
-        if not all(v.is_Symbol for v in variables):
+        if not all(v.is_symbol for v in variables):
             raise TypeError('Variables are not symbols, got %s' % variables)
 
         if len(list(uniq(variables))) != len(variables):
@@ -303,8 +303,8 @@ class Order(Expr):
         if order_symbols is None:
             order_symbols = self.args[1:]
         else:
-            if not all(o[1] == order_symbols[0][1] for o in order_symbols) and \
-               not all(p == self.point[0] for p in self.point):
+            if (not all(o[1] == order_symbols[0][1] for o in order_symbols) and
+                    not all(p == self.point[0] for p in self.point)):  # pragma: no cover
                 raise NotImplementedError('Order at points other than 0 '
                     'or oo not supported, got %s as a point.' % point)
             if order_symbols and order_symbols[0][1] != self.point[0]:
@@ -337,8 +337,8 @@ class Order(Expr):
         if expr is S.NaN:
             return False
         if expr.is_Order:
-            if not all(p == expr.point[0] for p in expr.point) and \
-               not all(p == self.point[0] for p in self.point):
+            if (not all(p == expr.point[0] for p in expr.point) and
+                   not all(p == self.point[0] for p in self.point)):  # pragma: no cover
                 raise NotImplementedError('Order at points other than 0 '
                     'or oo not supported, got %s as a point.' % point)
             else:
@@ -368,7 +368,7 @@ class Order(Expr):
                 common_symbols = expr.variables
             if not common_symbols:
                 return None
-            if (self.expr.is_Pow and self.expr.base.is_Symbol
+            if (self.expr.is_Pow and self.expr.base.is_symbol
                 and self.expr.exp.is_positive):
                 if expr.expr.is_Pow and self.expr.base == expr.expr.base:
                     return not (self.expr.exp-expr.expr.exp).is_positive
@@ -383,8 +383,8 @@ class Order(Expr):
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
             for s in common_symbols:
-                l = ratio.limit(s, point)
                 from sympy.series.limits import Limit
+                l = Limit(ratio, s, point).doit(heuristics=False)
                 if not isinstance(l, Limit):
                     l = l != 0
                 else:
@@ -395,7 +395,7 @@ class Order(Expr):
                     if r != l:
                         return
             return r
-        if (self.expr.is_Pow and self.expr.base.is_Symbol
+        if (self.expr.is_Pow and self.expr.base.is_symbol
             and self.expr.exp.is_positive):
             if expr.is_Pow and self.expr.base == expr.base:
                 return not (self.expr.exp-expr.exp).is_positive
@@ -421,7 +421,7 @@ class Order(Expr):
             i = self.variables.index(old)
             newvars = list(self.variables)
             newpt = list(self.point)
-            if new.is_Symbol:
+            if new.is_symbol:
                 newvars[i] = new
             else:
                 syms = new.free_symbols

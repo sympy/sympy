@@ -52,7 +52,7 @@ class TableForm(object):
                                 - "automatic" ... labels are 1, 2, 3, ...
 
                             Can be a list of labels for rows and columns:
-                            The lables for each dimension can be given
+                            The labels for each dimension can be given
                             as None, "automatic", or [l1, l2, ...] e.g.
                             ["automatic", None] will number the rows
 

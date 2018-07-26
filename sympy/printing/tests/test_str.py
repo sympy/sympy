@@ -1,13 +1,13 @@
 from __future__ import division
 
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
-    factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow, Rational, Float, Rel,
-    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
-    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
+    factorial, factorial2, Function, GoldenRatio, TribonacciConstant, I,
+    Integer, Integral, Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow,
+    Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
+    symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne)
-from sympy.core import Expr
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion)
+from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
@@ -19,7 +19,7 @@ from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
 from sympy import MatrixSymbol
 
-x, y, z, w = symbols('x,y,z,w')
+x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')
 
 
@@ -133,6 +133,10 @@ def test_GoldenRatio():
     assert str(GoldenRatio) == "GoldenRatio"
 
 
+def test_TribonacciConstant():
+    assert str(TribonacciConstant) == "TribonacciConstant"
+
+
 def test_ImaginaryUnit():
     assert str(I) == "I"
 
@@ -167,8 +171,8 @@ def test_Interval():
 
 def test_AccumBounds():
     a = Symbol('a', real=True)
-    assert str(AccumBounds(0, a)) == "<0, a>"
-    assert str(AccumBounds(0, 1)) == "<0, 1>"
+    assert str(AccumBounds(0, a)) == "AccumBounds(0, a)"
+    assert str(AccumBounds(0, 1)) == "AccumBounds(0, 1)"
 
 
 def test_Lambda():
@@ -214,6 +218,10 @@ def test_Mul():
     assert str(-2*x/3) == '-2*x/3'
     assert str(-1.0*x) == '-1.0*x'
     assert str(1.0*x) == '1.0*x'
+    # For issue 14160
+    assert str(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
+                                                evaluate=False)) == '-2*x/(y*y)'
+
 
     class CustomClass1(Expr):
         is_commutative = True
@@ -490,7 +498,11 @@ def test_Rational():
     assert str(2**Rational(1, 10**10)) == "2**(1/10000000000)"
 
     assert sstr(Rational(2, 3), sympy_integers=True) == "S(2)/3"
-    assert sstr(Symbol("x")**Rational(2, 3), sympy_integers=True) == "x**(S(2)/3)"
+    x = Symbol("x")
+    assert sstr(x**Rational(2, 3), sympy_integers=True) == "x**(S(2)/3)"
+    assert sstr(Eq(x, Rational(2, 3)), sympy_integers=True) == "Eq(x, S(2)/3)"
+    assert sstr(Limit(x, x, Rational(7, 2)), sympy_integers=True) == \
+        "Limit(x, x, S(7)/2)"
 
 
 def test_Float():
@@ -583,7 +595,18 @@ def test_tuple():
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
 
+def test_Quaternion_str_printer():
+    q = Quaternion(x, y, z, t)
+    assert str(q) == "x + y*i + z*j + t*k"
+    q = Quaternion(x,y,z,x*t)
+    assert str(q) == "x + y*i + z*j + t*x*k"
+    q = Quaternion(x,y,z,x+t)
+    assert str(q) == "x + y*i + z*j + (t + x)*k"
+
+
 def test_Quantity_str():
+    assert sstr(second, abbrev=True) == "s"
+    assert sstr(joule, abbrev=True) == "J"
     assert str(second) == "second"
     assert str(joule) == "joule"
 
@@ -750,7 +773,7 @@ def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
 
 def test_Complement():
-    assert str(Complement(S.Reals, S.Naturals)) == 'S.Reals \\ S.Naturals'
+    assert str(Complement(S.Reals, S.Naturals)) == 'Reals \\ Naturals'
 
 def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2, 3), Interval(3, 4),evaluate=False)) == \
@@ -773,4 +796,12 @@ def test_MatrixElement_printing():
     assert(str(3 * A[0, 0]) == "3*A[0, 0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert str(F) == "((-1)*B + A)[0, 0]"
+    assert str(F) == "(-B + A)[0, 0]"
+
+
+def test_MatrixSymbol_printing():
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+
+    assert str(A - A*B - B) == "-B - A*B + A"
+    assert str(A*B - (A+B)) == "-(A + B) + A*B"

@@ -496,7 +496,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     A search is made for factors next to even numbers having a power smoothness
     less than ``B``. Choosing a larger B increases the likelihood of finding a
     larger factor but takes longer. Whether a factor of n is found or not
-    depends on ``a`` and the power smoothness of the even mumber just less than
+    depends on ``a`` and the power smoothness of the even number just less than
     the factor p (hence the name p - 1).
 
     Although some discussion of what constitutes a good ``a`` some
@@ -797,7 +797,7 @@ def _factorint_small(factors, n, limit, fail_max):
             fails = 0
         else:
             fails += 1
-        # d = 6*(i+1) - 1
+        # d = 6*(i + 1) - 1
         d += 4
 
     return done(n, d)
@@ -957,7 +957,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         fac = factorint(n, limit=limit, use_trial=use_trial,
                            use_rho=use_rho, use_pm1=use_pm1,
                            verbose=verbose, visual=False, multiple=False)
-        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-1*fac[p])
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
                                for p in sorted(fac)), [])
         return factorlist
 
@@ -1002,27 +1002,29 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     assert use_trial or use_rho or use_pm1
 
-    # for unevaluated factorial, if n < 20!, direct computation is faster
-    # since it uses lookup table
     from sympy.functions.combinatorial.factorials import factorial
-    if isinstance(n, factorial) and n.args[0].is_Integer and n.args[0] >= 20:
-        x = n.args[0]
-        factors = {}
-        for p in sieve.primerange(2, x):
-            m = 0
-            d = p
-            q = x // p
-            while q != 0:
-                m += q
-                d *= p
-                q = x // d
-            factors[p] = m
-        if factors and verbose:
-            for k in sorted(factors):
-                print(factor_msg % (k, factors[k]))
-        if verbose:
-            print(complete_msg)
-        return factors
+    if isinstance(n, factorial):
+        x = as_int(n.args[0])
+        if x >= 20:
+            factors = {}
+            m = 2 # to initialize the if condition below
+            for p in sieve.primerange(2, x + 1):
+                if m > 1:
+                    m, q = 0, x // p
+                    while q != 0:
+                        m += q
+                        q //= p
+                factors[p] = m
+            if factors and verbose:
+                for k in sorted(factors):
+                    print(factor_msg % (k, factors[k]))
+            if verbose:
+                print(complete_msg)
+            return factors
+        else:
+            # if n < 20!, direct computation is faster
+            # since it uses a lookup table
+            n = n.func(x)
 
     n = as_int(n)
     if limit:
@@ -1108,7 +1110,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 b, fermat = integer_nthroot(b2, 2)
                 if fermat:
                     break
-                b2 += 2*a + 1  # equiv to (a+1)**2 - n
+                b2 += 2*a + 1  # equiv to (a + 1)**2 - n
                 a += 1
             if fermat:
                 if verbose:
@@ -1241,8 +1243,8 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     if multiple:
         fac = factorrat(rat, limit=limit, use_trial=use_trial,
                   use_rho=use_rho, use_pm1=use_pm1,
-                  verbose=verbose, visual=False,multiple=False)
-        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-1*fac[p])
+                  verbose=verbose, visual=False, multiple=False)
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
                                for p, _ in sorted(fac.items(),
                                                         key=lambda elem: elem[0]
                                                         if elem[1] > 0
@@ -1574,7 +1576,7 @@ def antidivisor_count(n):
     n = as_int(abs(n))
     if n <= 2:
         return 0
-    return divisor_count(2*n-1) + divisor_count(2*n+1) + \
+    return divisor_count(2*n - 1) + divisor_count(2*n + 1) + \
         divisor_count(n) - divisor_count(n, 2) - 5
 
 
@@ -1739,7 +1741,7 @@ class divisor_sigma(Function):
 
 def core(n, t=2):
     r"""
-    Calculate core(n,t) = `core_t(n)` of a positive integer n
+    Calculate core(n, t) = `core_t(n)` of a positive integer n
 
     ``core_2(n)`` is equal to the squarefree part of n
 
@@ -1756,7 +1758,7 @@ def core(n, t=2):
     Parameters
     ==========
 
-    t : core(n,t) calculates the t-th power free part of n
+    t : core(n, t) calculates the t-th power free part of n
 
         ``core(n, 2)`` is the squarefree part of ``n``
         ``core(n, 3)`` is the cubefree part of ``n``

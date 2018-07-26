@@ -182,12 +182,12 @@ def test_reserved_words():
 
 
 def test_ITE():
-    expr = ITE(x < 1, x, x + 2)
+    expr = ITE(x < 1, y, z)
     assert rust_code(expr) == (
             "if (x < 1) {\n"
-            "    x\n"
+            "    y\n"
             "} else {\n"
-            "    x + 2\n"
+            "    z\n"
             "}")
 
 

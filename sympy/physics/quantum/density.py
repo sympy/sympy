@@ -81,7 +81,7 @@ class Density(HermitianOperator):
         return Tuple(*[arg[1] for arg in self.args])
 
     def get_state(self, index):
-        """Return specfic state by index.
+        """Return specific state by index.
 
         Parameters
         ==========
@@ -267,7 +267,7 @@ def fidelity(state1, state2):
     The arguments provided to this function should be a square matrix or a
     Density object. If it is a square matrix, it is assumed to be diagonalizable.
 
-    Parameters:
+    Parameters
     ==========
 
     state1, state2 : a density matrix or Matrix

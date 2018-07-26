@@ -21,7 +21,7 @@ class matchpyWC(Wildcard, Symbol):
         return matchpyWC.__xnew__(cls, min_length, fixed_size, variable_name, optional, **assumptions)
 
     def __getnewargs__(self):
-        return (self.min_length, self.fixed_size, self.variable_name, self.optional)
+        return (self.min_count, self.fixed_size, self.variable_name, self.optional)
 
     @staticmethod
     def __xnew__(cls, min_length, fixed_size, variable_name=None, optional=None, **assumptions):
