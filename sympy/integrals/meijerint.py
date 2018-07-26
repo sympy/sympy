@@ -2054,7 +2054,7 @@ def meijerint_inversion(f, x, t):
     # Exponentials correspond to shifts; we filter them out and then
     # shift the result later.  If we are given an Add this will not
     # work, but the calling code will take care of that.
-    shift = 0
+    shift = S.Zero
 
     if f.is_Mul:
         args = list(f.args)
