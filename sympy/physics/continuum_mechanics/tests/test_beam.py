@@ -2,6 +2,7 @@ from sympy import Symbol, symbols, S
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise
 from sympy.utilities.pytest import raises
+from sympy.physics.units import meter, newton, kilo, giga, milli
 
 x = Symbol('x')
 y = Symbol('y')
@@ -194,6 +195,31 @@ def test_statically_indeterminate():
     p = b5.reaction_loads
     q = {R1: F/2, R2: F/2, M1: -F*l/8, M2: F*l/8}
     assert p == q
+
+
+def test_beam_units():
+    E = Symbol('E')
+    I = Symbol('I')
+    R1, R2 = symbols('R1, R2')
+
+    b = Beam(8*meter, 200*giga*newton/meter**2, 400*1000000*(milli*meter)**4)
+    b.apply_load(5*kilo*newton, 2*meter, -1)
+    b.apply_load(R1, 0*meter, -1)
+    b.apply_load(R2, 8*meter, -1)
+    b.apply_load(10*kilo*newton/meter, 4*meter, 0, end=8*meter)
+    b.bc_deflection = [(0*meter, 0*meter), (8*meter, 0*meter)]
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads == {R1: -13750*newton, R2: -31250*newton}
+
+    b = Beam(3*meter, E*newton/meter**2, I*meter**4)
+    b.apply_load(8*kilo*newton, 1*meter, -1)
+    b.apply_load(R1, 0*meter, -1)
+    b.apply_load(R2, 3*meter, -1)
+    b.apply_load(12*kilo*newton*meter, 2*meter, -2)
+    b.bc_deflection = [(0*meter, 0*meter), (3*meter, 0*meter)]
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads == {R1: -28000*newton/3, R2: 4000*newton/3}
+    assert b.deflection().subs(x, 1*meter) == 62000*meter/(9*E*I)
 
 
 def test_composite_beam():

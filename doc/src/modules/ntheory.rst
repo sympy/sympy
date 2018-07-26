@@ -63,21 +63,27 @@ Ntheory Functions Reference
 
 .. autofunction:: antidivisor_count
 
-.. autofunction:: totient
+.. autoclass:: totient
+    :members:
 
-.. autofunction:: reduced_totient
+.. autoclass:: reduced_totient
+    :members:
 
-.. autofunction:: divisor_sigma
+.. autoclass:: divisor_sigma
+    :members:
 
-.. autofunction:: udivisor_sigma
+.. autoclass:: udivisor_sigma
+    :members:
 
 .. autofunction:: core
 
 .. autofunction:: digits
 
-.. autofunction:: primenu
+.. autoclass:: primenu
+    :members:
 
-.. autofunction:: primeomega
+.. autoclass:: primeomega
+    :members:
 
 .. module:: sympy.ntheory.modular
 

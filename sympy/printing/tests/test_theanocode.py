@@ -1,8 +1,15 @@
+import logging
+
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, SKIP
 from sympy.core.compatibility import range
 
+theanologger = logging.getLogger('theano.configdefaults')
+theanologger.setLevel(logging.CRITICAL)
 theano = import_module('theano')
+theanologger.setLevel(logging.WARNING)
+
+
 if theano:
     import numpy as np
     ts = theano.scalar

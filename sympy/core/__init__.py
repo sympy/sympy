@@ -32,3 +32,4 @@ from .evaluate import evaluate
 Catalan = S.Catalan
 EulerGamma = S.EulerGamma
 GoldenRatio = S.GoldenRatio
+TribonacciConstant = S.TribonacciConstant

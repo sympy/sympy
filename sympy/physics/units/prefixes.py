@@ -29,6 +29,7 @@ class Prefix(Expr):
       class).
     """
     _op_priority = 13.0
+    is_commutative = True
 
     def __new__(cls, name, abbrev, exponent, base=sympify(10)):
 

@@ -1,4 +1,3 @@
-import collections
 import random
 import warnings
 
@@ -14,7 +13,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
-from sympy.core.compatibility import long, iterable, range
+from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
@@ -2634,7 +2633,7 @@ def test_hash():
         assert len(s) == 1 and s.pop() == cls.eye(1)
     # issue 3979
     for cls in classes[:2]:
-        assert not isinstance(cls.eye(1), collections.Hashable)
+        assert not isinstance(cls.eye(1), Hashable)
 
 
 @XFAIL
@@ -3118,3 +3117,13 @@ def test_issue_14517():
     # test one random eigenvalue, the computation is a little slow
     test_ev = random.choice(list(ev.keys()))
     assert (M - test_ev*eye(4)).det() == 0
+
+def test_issue_14943():
+    # Test that __array__ accepts the optional dtype argument
+    try:
+        from numpy import array
+    except ImportError:
+        skip('NumPy must be available to test creating matrices from ndarrays')
+
+    M = Matrix([[1,2], [3,4]])
+    assert array(M, dtype=float).dtype.name == 'float64'

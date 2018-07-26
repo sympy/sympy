@@ -1452,7 +1452,7 @@ def integrate_hyperexponential_polynomial(p, DE, z):
             iDta, iDtd = frac_in(iDt, DE.t, field=True)
             try:
                 va, vd = rischDE(iDta, iDtd, Poly(aa, DE.t), Poly(ad, DE.t), DE)
-                va, vd = frac_in((va, vd), t1)
+                va, vd = frac_in((va, vd), t1, cancel=True)
             except NonElementaryIntegralException:
                 b = False
             else:

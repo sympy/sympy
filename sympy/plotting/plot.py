@@ -25,13 +25,12 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 from __future__ import print_function, division
 
 import inspect
-from collections import Callable
 import warnings
 import sys
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, Callable
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
@@ -49,6 +48,9 @@ _show = True
 
 
 def unset_show():
+    """
+    Disable show(). For use in the tests.
+    """
     global _show
     _show = False
 
@@ -817,9 +819,8 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
 ### Contours
 class ContourSeries(BaseSeries):
     """Representation for a contour plot."""
-    #The code is mostly repetition of SurfaceOver2DRange.
-    #XXX: Presently not used in any of those functions.
-    #XXX: Add contour plot and use this seties.
+    # The code is mostly repetition of SurfaceOver2DRange.
+    # Presently used in contour_plot function
 
     is_contour = True
 
@@ -1031,6 +1032,8 @@ class MatplotlibBackend(BaseBackend):
         #self.fig.show()
         if _show:
             self.plt.show()
+        else:
+            self.close()
 
     def save(self, path):
         self.process_series()
@@ -1728,6 +1731,84 @@ def plot3d_parametric_surface(*args, **kwargs):
         plots.show()
     return plots
 
+def plot_contour(*args, **kwargs):
+    """
+    Draws contour plot of a function
+
+    Usage
+    =====
+
+    Single plot
+
+    ``plot_contour(expr, range_x, range_y, **kwargs)``
+
+    If the ranges are not specified, then a default range of (-10, 10) is used.
+
+    Multiple plot with the same range.
+
+    ``plot_contour(expr1, expr2, range_x, range_y, **kwargs)``
+
+    If the ranges are not specified, then a default range of (-10, 10) is used.
+
+    Multiple plots with different ranges.
+
+    ``plot_contour((expr1, range_x, range_y), (expr2, range_x, range_y), ..., **kwargs)``
+
+    Ranges have to be specified for every expression.
+
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
+
+    Arguments
+    =========
+
+    ``expr`` : Expression representing the function along x.
+
+    ``range_x``: (x, 0, 5), A 3-tuple denoting the range of the x
+    variable.
+
+    ``range_y``: (y, 0, 5), A 3-tuple denoting the range of the y
+     variable.
+
+    Keyword Arguments
+    =================
+
+    Arguments for ``ContourSeries`` class:
+
+    ``nb_of_points_x``: int. The x range is sampled uniformly at
+    ``nb_of_points_x`` of points.
+
+    ``nb_of_points_y``: int. The y range is sampled uniformly at
+    ``nb_of_points_y`` of points.
+
+    Aesthetics:
+
+    ``surface_color``: Function which returns a float. Specifies the color for
+    the surface of the plot. See ``sympy.plotting.Plot`` for more details.
+
+    If there are multiple plots, then the same series arguments are applied to
+    all the plots. If you want to set these options separately, you can index
+    the returned ``Plot`` object and set it.
+
+    Arguments for ``Plot`` class:
+
+    ``title`` : str. Title of the plot.
+
+    See Also
+    ========
+    Plot, ContourSeries
+    """
+
+    args = list(map(sympify, args))
+    show = kwargs.pop('show', True)
+    plot_expr = check_arguments(args, 1, 2)
+    series = [ContourSeries(*arg) for arg in plot_expr]
+    plot_contours = Plot(*series, **kwargs)
+    if len(plot_expr[0].free_symbols) > 2:
+        raise ValueError('Contour Plot cannot Plot for more than two variables.')
+    if show:
+        plot_contours.show()
+    return plot_contours
 
 def check_arguments(args, expr_len, nb_of_free_symbols):
     """
