@@ -1573,6 +1573,9 @@ class PrettyPrinter(Printer):
             if (a[i].is_Add and len(a) > 1) or (i != len(a) - 1 and
                     isinstance(a[i], (Integral, Piecewise, Product, Sum))):
                 a[i] = prettyForm(*self._print(a[i]).parens())
+            elif (a[i].is_ComplexFloat and len(a) > 1):
+                # XXX: why didn't it get this from precedence?
+                a[i] = prettyForm(*self._print(a[i]).parens())
             elif a[i].is_Relational:
                 a[i] = prettyForm(*self._print(a[i]).parens())
             else:
