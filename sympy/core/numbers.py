@@ -1179,9 +1179,9 @@ class Float(Number):
             c, e = other.as_coeff_Mul()
             if e is S.ImaginaryUnit:
                 return ComplexFloat(self, c)
-        if isinstance(other, ComplexFloat):
+        if other.is_ComplexFloat:
             return ComplexFloat(self) + other
-        if isinstance(other, Number) and global_evaluate[0]:
+        if other.is_Number and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
         return Number.__add__(self, other)
@@ -1194,9 +1194,9 @@ class Float(Number):
             c, e = other.as_coeff_Mul()
             if e is S.ImaginaryUnit:
                 return ComplexFloat(self, -c)
-        if isinstance(other, ComplexFloat):
+        if other.is_ComplexFloat:
             return ComplexFloat(self) - other
-        if isinstance(other, Number) and global_evaluate[0]:
+        if other.is_Number and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_sub(self._mpf_, rhs, prec, rnd), prec)
         return Number.__sub__(self, other)
@@ -1205,9 +1205,9 @@ class Float(Number):
     def __mul__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(0, self)
-        if isinstance(other, ComplexFloat):
+        if other.is_ComplexFloat:
             return ComplexFloat.__mul__(other, self)
-        if isinstance(other, Number) and global_evaluate[0]:
+        if other.is_Number and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mul__(self, other)
@@ -1216,9 +1216,9 @@ class Float(Number):
     def __div__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(0, -self)
-        if isinstance(other, ComplexFloat):
+        if other.is_ComplexFloat:
             return ComplexFloat.__div__(ComplexFloat(self), other)
-        if isinstance(other, Number) and other != 0 and global_evaluate[0]:
+        if other.is_Number and other != 0 and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
         return Number.__div__(self, other)
@@ -1639,7 +1639,7 @@ class ComplexFloat(Number):
         expt is symbolic object but not equal to NaN, 0, 1
         """
         if isinstance(expt, Number):
-            if isinstance(expt, Integer):
+            if expt.is_Integer:
                 prec = self._prec
                 (x, y) = mlib.mpc_pow_int(self._mpc_, expt.p, self._prec)
             elif expt.is_ComplexFloat:
@@ -1673,7 +1673,7 @@ class ComplexFloat(Number):
             other = _sympify(other)
         except SympifyError:
             return False    # sympy != other  -->  not ==
-        if isinstance(other, ComplexFloat):
+        if other.is_ComplexFloat:
             return self.real == other.real and \
                    self.imag == other.imag
         #return False
@@ -1694,11 +1694,11 @@ class ComplexFloat(Number):
             c, e = other.as_coeff_Mul()
             if e is S.ImaginaryUnit:
                 return ComplexFloat(self.real, self.imag + c)
-        if isinstance(other, ComplexFloat):
+        if other.is_ComplexFloat:
             prec = min(self._prec, other._prec)
             x, y = mlib.mpc_add(self._mpc_, other._mpc_, prec, rnd)
             return ComplexFloat._new((x, y), prec)
-        elif isinstance(other, Number) and other.is_real:
+        elif other.is_Number and other.is_real:
             r, prec = other._as_mpf_op(self._prec)
             x, y = mlib.mpc_add_mpf(self._mpc_, r, prec, rnd)
             return ComplexFloat._new((x, y), prec)
@@ -1712,11 +1712,11 @@ class ComplexFloat(Number):
             c, e = other.as_coeff_Mul()
             if e is S.ImaginaryUnit:
                 return ComplexFloat(self.real, self.imag - c)
-        if isinstance(other, ComplexFloat):
+        if other.is_ComplexFloat:
             prec = min(self._prec, other._prec)
             x, y = mlib.mpc_sub(self._mpc_, other._mpc_, prec, rnd)
             return ComplexFloat._new((x, y), prec)
-        if isinstance(other, Number) and other.is_real:
+        if other.is_Number and other.is_real:
             r, prec = other._as_mpf_op(self._prec)
             x, y = mlib.mpc_sub_mpf(self._mpc_, r, prec, rnd)
             return ComplexFloat._new((x, y), prec)
@@ -1726,11 +1726,11 @@ class ComplexFloat(Number):
     def __mul__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(-self.imag, self.real)
-        if isinstance(other, ComplexFloat):
+        if other.is_ComplexFloat:
             prec = min(self._prec, other._prec)
             x, y = mlib.mpc_mul(self._mpc_, other._mpc_, prec, rnd)
             return ComplexFloat._new((x, y), prec)
-        if isinstance(other, Number) and other.is_real:
+        if other.is_Number and other.is_real:
             r, prec = other._as_mpf_op(self._prec)
             x, y = mlib.mpc_mul_mpf(self._mpc_, r, prec, rnd)
             return ComplexFloat._new((x, y), prec)
@@ -1740,11 +1740,11 @@ class ComplexFloat(Number):
     def __div__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(self.imag, -self.real)
-        if isinstance(other, ComplexFloat):
+        if other.is_ComplexFloat:
             prec = min(self._prec, other._prec)
             x, y = mlib.mpc_div(self._mpc_, other._mpc_, prec, rnd)
             return ComplexFloat._new((x, y), prec)
-        if isinstance(other, Number) and other.is_real:
+        if other.is_Number and other.is_real:
             r, prec = other._as_mpf_op(self._prec)
             x, y = mlib.mpc_div_mpf(self._mpc_, r, prec, rnd)
             return ComplexFloat._new((x, y), prec)
