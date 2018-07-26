@@ -2,6 +2,7 @@ from sympy import Symbol, symbols, S
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise
 from sympy.utilities.pytest import raises
+from sympy.physics.units import meter, newton, kilo, giga, milli
 
 x = Symbol('x')
 y = Symbol('y')
@@ -196,6 +197,31 @@ def test_statically_indeterminate():
     assert p == q
 
 
+def test_beam_units():
+    E = Symbol('E')
+    I = Symbol('I')
+    R1, R2 = symbols('R1, R2')
+
+    b = Beam(8*meter, 200*giga*newton/meter**2, 400*1000000*(milli*meter)**4)
+    b.apply_load(5*kilo*newton, 2*meter, -1)
+    b.apply_load(R1, 0*meter, -1)
+    b.apply_load(R2, 8*meter, -1)
+    b.apply_load(10*kilo*newton/meter, 4*meter, 0, end=8*meter)
+    b.bc_deflection = [(0*meter, 0*meter), (8*meter, 0*meter)]
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads == {R1: -13750*newton, R2: -31250*newton}
+
+    b = Beam(3*meter, E*newton/meter**2, I*meter**4)
+    b.apply_load(8*kilo*newton, 1*meter, -1)
+    b.apply_load(R1, 0*meter, -1)
+    b.apply_load(R2, 3*meter, -1)
+    b.apply_load(12*kilo*newton*meter, 2*meter, -2)
+    b.bc_deflection = [(0*meter, 0*meter), (3*meter, 0*meter)]
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads == {R1: -28000*newton/3, R2: 4000*newton/3}
+    assert b.deflection().subs(x, 1*meter) == 62000*meter/(9*E*I)
+
+
 def test_composite_beam():
     E = Symbol('E')
     I = Symbol('I')
@@ -365,3 +391,22 @@ def test_max_deflection():
     b.apply_load(F*l/8, l, -2)
     b.apply_load(-F, l/2, -1)
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
+
+def test_Beam_3d():
+    from sympy.physics.continuum_mechanics.beam import Beam_3d
+    l, E, G, I, A = symbols('l, E, G, I, A')
+    b = Beam_3d(l, E, G, I, A)
+    b.apply_support(0, "fixed")
+    b.apply_support(l, "fixed")
+    m, q = symbols('m, q')
+    b.apply_load(q, dir="y")
+    b.apply_moment_load(m, dir="z")
+    b.solve_slope_deflection()
+
+    assert b.shear_force() == [0, -q*x, 0]
+    assert b.bending_moment() == [0, 0, -m*x + q*x**2/2]
+    assert b.deflection() == [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l**2*q - 2*A*G*l*m
+            + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I)) + l*m*x**2/(4*E*I) - l*x**3*(A*G*l**2*q
+            - 2*A*G*l*m + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I) + q*x**4/(24*E*I)
+            + l*x*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I))
+            - q*x**2/(2*A*G), 0]

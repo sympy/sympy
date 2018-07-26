@@ -1,6 +1,5 @@
 """
-Convolution (using FFT, NTT, FWHT), Subset Convolution,
-Covering Product, Intersecting Product
+Convolution (using FFT, NTT, FWHT), Subset Convolution
 """
 from __future__ import print_function, division
 
@@ -8,15 +7,20 @@ from sympy.core import S, sympify
 from sympy.core.compatibility import range, as_int, iterable
 from sympy.core.function import expand_mul
 from sympy.discrete.transforms import (
-    fft, ifft, ntt, intt, fwht, ifwht)
+    fft, ifft, ntt, intt, fwht, ifwht,
+    mobius_transform, inverse_mobius_transform)
 
 
-def convolution(a, b, **hints):
+def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
     """
     Performs convolution by determining the type of desired
     convolution using hints.
 
-    If no hints are given, linear convolution is performed using
+    Exactly one of `dps`, `prime`, `dyadic`, `subset` arguments should be
+    specified explicitly for identifying the type of convolution, and the
+    argument `cycle` can be specified optionally.
+
+    For the default arguments, linear convolution is performed using
     FFT.
 
     Parameters
@@ -24,22 +28,19 @@ def convolution(a, b, **hints):
 
     a, b : iterables
         The sequences for which convolution is performed.
-    hints : dict
-        Specifies the type of convolution to be performed.
-        The following hints can be given as keyword arguments.
-        dps : Integer
-            Specifies the number of decimal digits for precision for
-            performing FFT on the sequence.
-        prime : Integer
-            Prime modulus of the form (m*2**k + 1) to be used for
-            performing NTT on the sequence.
-        cycle : Integer
-            Specifies the length for doing cyclic convolution.
-        dyadic : bool
-            Identifies the convolution type as dyadic (XOR)
-            convolution, which is performed using FWHT.
-        subset : bool
-            Identifies the convolution type as subset convolution.
+    cycle : Integer
+        Specifies the length for doing cyclic convolution.
+    dps : Integer
+        Specifies the number of decimal digits for precision for
+        performing FFT on the sequence.
+    prime : Integer
+        Prime modulus of the form (m*2**k + 1) to be used for
+        performing NTT on the sequence.
+    dyadic : bool
+        Identifies the convolution type as dyadic (XOR)
+        convolution, which is performed using FWHT.
+    subset : bool
+        Identifies the convolution type as subset convolution.
 
     Examples
     ========
@@ -69,29 +70,18 @@ def convolution(a, b, **hints):
 
     """
 
-    fft = hints.pop('fft', None)
-    dps = hints.pop('dps', None)
-    p = hints.pop('prime', None)
-    c = as_int(hints.pop('cycle', 0))
-    dyadic = hints.pop('dyadic', None)
-    subset = hints.pop('subset', None)
-
+    c = as_int(cycle)
     if c < 0:
         raise ValueError("The length for cyclic convolution must be non-negative")
 
-    fft = True if fft else None
     dyadic = True if dyadic else None
     subset = True if subset else None
-    if sum(x is not None for x in (p, dps, dyadic, subset)) > 1 or \
-            sum(x is not None for x in (fft, dyadic, subset)) > 1:
-        raise TypeError("Ambiguity in determining the convolution type")
+    if sum(x is not None for x in (prime, dps, dyadic, subset)) > 1:
+        raise TypeError("Ambiguity in determining the type of convolution")
 
-    if p is not None:
-        ls = convolution_ntt(a, b, prime=p)
-        return ls if not c else [sum(ls[i::c]) % p for i in range(c)]
-
-    elif hints.pop('ntt', False):
-        raise TypeError("Prime modulus must be specified for performing NTT")
+    if prime is not None:
+        ls = convolution_ntt(a, b, prime=prime)
+        return ls if not c else [sum(ls[i::c]) % prime for i in range(c)]
 
     if dyadic:
         ls = convolution_fwht(a, b)
@@ -355,3 +345,143 @@ def convolution_subset(a, b):
         c[mask] += expand_mul(a[smask] * b[mask^smask])
 
     return c
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                              Covering Product                              #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+def covering_product(a, b):
+    """
+    Returns the covering product of given sequences.
+
+    The indices of each argument, considered as bit strings, correspond to
+    subsets of a finite set.
+
+    The covering product of given sequences is the sequence which contains
+    the sums of products of the elements of the given sequences grouped by
+    bitwise OR of the corresponding indices.
+
+    The sequence is automatically padded to the right with zeros, as the
+    definition of subset based on bitmasks (indices) requires the size of
+    sequence to be a power of 2.
+
+    Parameters
+    ==========
+
+    a, b : iterables
+        The sequences for which covering product is to be obtained.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, S, I, covering_product
+    >>> u, v, x, y, z = symbols('u v x y z')
+
+    >>> covering_product([u, v], [x, y])
+    [u*x, u*y + v*x + v*y]
+    >>> covering_product([u, v, x], [y, z])
+    [u*y, u*z + v*y + v*z, x*y, x*z]
+
+    >>> covering_product([1, S(2)/3], [3, 4 + 5*I])
+    [3, 26/3 + 25*I/3]
+    >>> covering_product([1, 3, S(5)/7], [7, 8])
+    [7, 53, 5, 40/7]
+
+    References
+    ==========
+
+    .. [1] https://people.csail.mit.edu/rrw/presentations/subset-conv.pdf
+
+    """
+
+    if not a or not b:
+        return []
+
+    a, b = a[:], b[:]
+    n = max(len(a), len(b))
+
+    if n&(n - 1): # not a power of 2
+        n = 2**n.bit_length()
+
+    # padding with zeros
+    a += [S.Zero]*(n - len(a))
+    b += [S.Zero]*(n - len(b))
+
+    a, b = mobius_transform(a), mobius_transform(b)
+    a = [expand_mul(x*y) for x, y in zip(a, b)]
+    a = inverse_mobius_transform(a)
+
+    return a
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                            Intersecting Product                            #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+def intersecting_product(a, b):
+    """
+    Returns the intersecting product of given sequences.
+
+    The indices of each argument, considered as bit strings, correspond to
+    subsets of a finite set.
+
+    The intersecting product of given sequences is the sequence which
+    contains the sums of products of the elements of the given sequences
+    grouped by bitwise AND of the corresponding indices.
+
+    The sequence is automatically padded to the right with zeros, as the
+    definition of subset based on bitmasks (indices) requires the size of
+    sequence to be a power of 2.
+
+    Parameters
+    ==========
+
+    a, b : iterables
+        The sequences for which intersecting product is to be obtained.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, S, I, intersecting_product
+    >>> u, v, x, y, z = symbols('u v x y z')
+
+    >>> intersecting_product([u, v], [x, y])
+    [u*x + u*y + v*x, v*y]
+    >>> intersecting_product([u, v, x], [y, z])
+    [u*y + u*z + v*y + x*y + x*z, v*z, 0, 0]
+
+    >>> intersecting_product([1, S(2)/3], [3, 4 + 5*I])
+    [9 + 5*I, 8/3 + 10*I/3]
+    >>> intersecting_product([1, 3, S(5)/7], [7, 8])
+    [327/7, 24, 0, 0]
+
+    References
+    ==========
+
+    .. [1] https://people.csail.mit.edu/rrw/presentations/subset-conv.pdf
+
+    """
+
+    if not a or not b:
+        return []
+
+    a, b = a[:], b[:]
+    n = max(len(a), len(b))
+
+    if n&(n - 1): # not a power of 2
+        n = 2**n.bit_length()
+
+    # padding with zeros
+    a += [S.Zero]*(n - len(a))
+    b += [S.Zero]*(n - len(b))
+
+    a, b = mobius_transform(a, subset=False), mobius_transform(b, subset=False)
+    a = [expand_mul(x*y) for x, y in zip(a, b)]
+    a = inverse_mobius_transform(a, subset=False)
+
+    return a

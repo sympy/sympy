@@ -1115,3 +1115,333 @@ class Beam(object):
             return (points[deflections.index(max_def)], max_def)
         else:
             return None
+
+
+
+class Beam_3d(Beam):
+    """
+    This class handles loads applied in any direction of a 3D space along
+    with unequal values of Second moment along different axes.
+
+    .. note::
+       While solving a beam bending problem, a user should choose its
+       own sign convention and should stick to it. The results will
+       automatically follow the chosen sign convention.
+       This class assumes that any kind of distributed load/moment is
+       applied through out the span of a beam.
+
+    Examples
+    ========
+    There is a beam of l meters long. A constant distributed load of magnitude q
+    is applied along y-axis from start till the end of beam. A constant distributed
+    moment of magnitude m is also applied along z-axis from start till the end of beam.
+    Beam is fixed at both of its end. So, deflection of the beam at the both ends
+    is restricted.
+
+    >>> from sympy.physics.continuum_mechanics.beam import Beam_3d
+    >>> from sympy import symbols
+    >>> l, E, G, I, A = symbols('l, E, G, I, A')
+    >>> b = Beam_3d(l, E, G, I, A)
+    >>> b.apply_support(0, "fixed")
+    >>> b.apply_support(l, "fixed")
+    >>> q, m = symbols('q, m')
+    >>> b.apply_load(q, dir="y")
+    >>> b.apply_moment_load(m, dir="z")
+    >>> b.shear_force()
+    [0, -q*x, 0]
+    >>> b.bending_moment()
+    [0, 0, -m*x + q*x**2/2]
+    >>> b.solve_slope_deflection()
+    >>> b.slope()
+    [0, 0, l*x*(-l*q + 3*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
+    + q*x**3/(6*E*I) + x**2*(-l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I))
+    - m)/(2*E*I)]
+    >>> b.deflection()
+    [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
+    + l*m*x**2/(4*E*I) - l*x**3*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
+    + q*x**4/(24*E*I) + l*x*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G), 0]
+
+    References
+    ==========
+
+    .. [1] http://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
+
+    """
+
+    def __init__(self, length, elastic_modulus, shear_modulus , second_moment, area, variable=Symbol('x')):
+        """Initializes the class.
+
+        Parameters
+        ==========
+        length : Sympifyable
+            A Symbol or value representing the Beam's length.
+        elastic_modulus : Sympifyable
+            A SymPy expression representing the Beam's Modulus of Elasticity.
+            It is a measure of the stiffness of the Beam material.
+        shear_modulus : Sympifyable
+            A SymPy expression representing the Beam's Modulus of rigidity.
+            It is a measure of rigidity of the Beam material.
+        second_moment : Sympifyable or list
+            A list of two elements having SymPy expression representing the
+            Beam's Second moment of area. First value represent Second moment
+            across y-axis and second across z-axis.
+            Single SymPy expression can be passed if both values are same
+        area : Sympifyable
+            A SymPy expression representing the Beam's cross-sectional area
+            in a plane prependicular to length of the Beam.
+        variable : Symbol, optional
+            A Symbol object that will be used as the variable along the beam
+            while representing the load, shear, moment, slope and deflection
+            curve. By default, it is set to ``Symbol('x')``.
+        """
+        self.length = length
+        self.elastic_modulus = elastic_modulus
+        self.shear_modulus = shear_modulus
+        self.second_moment = second_moment
+        self.area = area
+        self.variable = variable
+        self._boundary_conditions = {'deflection': [], 'slope': []}
+        self._load_vector = [0, 0, 0]
+        self._moment_load_vector = [0, 0, 0]
+        self._reaction_loads = {}
+        self._slope = [0, 0, 0]
+        self._deflection = [0, 0, 0]
+
+    @property
+    def shear_modulus(self):
+        """Young's Modulus of the Beam. """
+        return self._shear_modulus
+
+    @shear_modulus.setter
+    def shear_modulus(self, e):
+        self._shear_modulus = sympify(e)
+
+    @property
+    def second_moment(self):
+        """Second moment of area of the Beam. """
+        return self._second_moment
+
+    @second_moment.setter
+    def second_moment(self, i):
+        if isinstance(i, list):
+            i = [sympify(x) for x in i]
+            self._second_moment = i
+        else:
+            self._second_moment = sympify(i)
+
+    @property
+    def area(self):
+        """Cross-sectional area of the Beam. """
+        return self._area
+
+    @area.setter
+    def area(self, a):
+        self._area = sympify(a)
+
+    @property
+    def load_vector(self):
+        """
+        Returns a three element list representing the load vector.
+        """
+        return self._load_vector
+
+    @property
+    def moment_load_vector(self):
+        """
+        Returns a three element list representing moment loads on Beam.
+        """
+        return self._moment_load_vector
+
+    def apply_load(self, value, dir="y", order=0):
+        """
+        This method adds up the force load to a particular beam object.
+
+        Parameters
+        ==========
+        value : Sympifyable
+            The magnitude of an applied load.
+        dir : String
+            Axis along which load is applied.
+        order : Integer
+            The order of the applied load.
+            - For point loads, order=-1
+            - For constant distributed load, order=0
+            - For ramp loads, order=1
+            - For parabolic ramp loads, order=2
+            - ... so on.
+        """
+        value = sympify(value)
+        order = sympify(order)
+        if order == -1:
+            raise NotImplementedError("This class doesn't support point loads")
+
+        if dir == "x":
+            self._load_vector[0] += value
+        elif dir == "y":
+            self._load_vector[1] += value
+        else:
+            self._load_vector[2] += value
+
+    def apply_moment_load(self, value, dir="y", order=-1, end=None):
+        """
+        This method adds up the moment loads to a particular beam object.
+
+        Parameters
+        ==========
+        value : Sympifyable
+            The magnitude of an applied moment.
+        dir : String
+            Axis along which moment is applied.
+        order : Integer
+            The order of the applied load.
+            - For point moments, order=-2
+            - For constant distributed moment, order=-1
+            - For ramp moments, order=0
+            - For parabolic ramp moments, order=1
+            - ... so on.
+        """
+        value = sympify(value)
+        order = sympify(order)
+        if order == -2:
+            raise NotImplementedError("This class doesn't support point moments")
+
+        if dir == "x":
+            self._moment_load_vector[0] += value
+        elif dir == "y":
+            self._moment_load_vector[1] += value
+        else:
+            self._moment_load_vector[2] += value
+
+    def apply_support(self, loc, type="fixed"):
+        if type == "pin" or type == "roller":
+            reaction_load = Symbol('R_'+str(loc))
+            self._reaction_loads[reaction_load] = reaction_load
+            self.bc_deflection.append((loc, [0, 0, 0]))
+        else:
+            reaction_load = Symbol('R_'+str(loc))
+            reaction_moment = Symbol('M_'+str(loc))
+            self._reaction_loads[reaction_load] = [reaction_load, reaction_moment]
+            self.bc_deflection = [(loc, [0, 0, 0])]
+            self.bc_slope.append((loc, [0, 0, 0]))
+
+    def solve_for_reaction_loads(self, *reaction):
+        raise NotImplementedError("Beam_3d can't solve for"
+                       "reactional loads")
+
+    def shear_force(self):
+        """
+        Returns a list of three expressions which represents the shear force
+        curve of the Beam object along all three axes.
+        """
+        x = self.variable
+        q = self._load_vector
+        m = self._moment_load_vector
+        return [integrate(-q[0], x), integrate(-q[1], x), integrate(-q[2], x)]
+
+    def axial_force(self):
+        """
+        Returns expression of Axial shear force present inside the Beam object.
+        """
+        return self.shear_force()[0]
+
+    def bending_moment(self):
+        """
+        Returns a list of three expressions which represents the bending moment
+        curve of the Beam object along all three axes.
+        """
+        x = self.variable
+        q = self._load_vector
+        m = self._moment_load_vector
+        shear = self.shear_force()
+
+        return [integrate(-m[0], x), integrate(-m[1] + shear[2], x),
+                integrate(-m[2] - shear[1], x) ]
+
+    def torsional_moment():
+        """
+        Returns expression of Torsional moment present inside the Beam object.
+        """
+        return self.bending_moment()[0]
+
+    def solve_slope_deflection(self):
+        from sympy import dsolve, Function, Derivative, Eq
+        x = self.variable
+        l = self.length
+        E = self.elastic_modulus
+        G = self.shear_modulus
+        I = self.second_moment
+        if isinstance(I, list):
+            I_y, I_z = I[0], I[1]
+        else:
+            I_y = I_z = I
+        A = self.area
+        load = self._load_vector
+        moment = self._moment_load_vector
+        defl = Function('defl')
+        theta = Function('theta')
+
+        # Finding deflection along x-axis(and corresponding slope value by differentiating it)
+        # Equation used: Derivative(E*A*Derivative(def_x(x), x), x) + load_x = 0
+        eq = Derivative(E*A*Derivative(defl(x), x), x) + load[0]
+        def_x = dsolve(Eq(eq, 0), defl(x)).args[1]
+        # Solving constants originated from dsolve
+        C1 = Symbol('C1')
+        C2 = Symbol('C2')
+        constants = list((linsolve([def_x.subs(x, 0), def_x.subs(x, l)], C1, C2).args)[0])
+        def_x = def_x.subs({C1:constants[0], C2:constants[1]})
+        slope_x = def_x.diff(x)
+        self._deflection[0] = def_x
+        self._slope[0] = slope_x
+
+        # Finding deflection along y-axis and slope across z-axis. System of equation involved:
+        # 1: Derivative(E*I_z*Derivative(theta_z(x), x), x) + G*A*(Derivative(defl_y(x), x) - theta_z(x)) + moment_z = 0
+        # 2: Derivative(G*A*(Derivative(defl_y(x), x) - theta_z(x)), x) + load_y = 0
+        C_i = Symbol('C_i')
+        # Substitute value of `G*A*(Derivative(defl_y(x), x) - theta_z(x))` from (2) in (1)
+        eq1 = Derivative(E*I_z*Derivative(theta(x), x), x) + (integrate(-load[1], x) + C_i) + moment[2]
+        slope_z = dsolve(Eq(eq1, 0)).args[1]
+
+        # Solve for constants originated from using dsolve on eq1
+        constants = list((linsolve([slope_z.subs(x, 0), slope_z.subs(x, l)], C1, C2).args)[0])
+        slope_z = slope_z.subs({C1:constants[0], C2:constants[1]})
+
+        # Put value of slope obtained back in (2) to solve for `C_i` and find deflection across y-axis
+        eq2 = G*A*(Derivative(defl(x), x)) + load[1]*x - C_i - G*A*slope_z
+        def_y = dsolve(Eq(eq2, 0), defl(x)).args[1]
+        # Solve for constants originated from using dsolve on eq2
+        constants = list((linsolve([def_y.subs(x, 0), def_y.subs(x, l)], C1, C_i).args)[0])
+        self._deflection[1] = def_y.subs({C1:constants[0], C_i:constants[1]})
+        self._slope[2] = slope_z.subs(C_i, constants[1])
+
+        # Finding deflection along z-axis and slope across y-axis. System of equation involved:
+        # 1: Derivative(E*I_y*Derivative(theta_y(x), x), x) - G*A*(Derivative(defl_z(x), x) + theta_y(x)) + moment_y = 0
+        # 2: Derivative(G*A*(Derivative(defl_z(x), x) + theta_y(x)), x) + load_z = 0
+
+        # Substitute value of `G*A*(Derivative(defl_y(x), x) + theta_z(x))` from (2) in (1)
+        eq1 = Derivative(E*I_y*Derivative(theta(x), x), x) + (integrate(load[2], x) - C_i) + moment[1]
+        slope_y = dsolve(Eq(eq1, 0)).args[1]
+        # Solve for constants originated from using dsolve on eq1
+        constants = list((linsolve([slope_y.subs(x, 0), slope_y.subs(x, l)], C1, C2).args)[0])
+        slope_y = slope_y.subs({C1:constants[0], C2:constants[1]})
+
+        # Put value of slope obtained back in (2) to solve for `C_i` and find deflection across z-axis
+        eq2 = G*A*(Derivative(defl(x), x)) + load[2]*x - C_i + G*A*slope_y
+        def_z = dsolve(Eq(eq2,0)).args[1]
+        # Solve for constants originated from using dsolve on eq2
+        constants = list((linsolve([def_z.subs(x, 0), def_z.subs(x, l)], C1, C_i).args)[0])
+        self._deflection[2] = def_z.subs({C1:constants[0], C_i:constants[1]})
+        self._slope[1] = slope_y.subs(C_i, constants[1])
+
+    def slope(self):
+        """
+        Returns a three element list representing slope of deflection curve
+        along all the three axes.
+        """
+        return self._slope
+
+    def deflection(self):
+        """
+        Returns a three element list representing deflection curve along all
+        the three axes.
+        """
+        return self._deflection

@@ -121,23 +121,36 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
                 return cf
         return self.compute_characteristic_function(**kwargs)(t)
 
+    @cacheit
+    def compute_moment_generating_function(self, **kwargs):
+        x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
+        pdf = self.pdf(x)
+        mgf = summation(exp(t*x)*pdf, (x, self.set.inf, self.set.sup))
+        return Lambda(t, mgf)
+
+    def _moment_generating_function(self, t):
+        return None
+
+    def moment_generating_function(self, t, **kwargs):
+        if not kwargs:
+            mgf = self._moment_generating_function(t)
+            if mgf is not None:
+                return mgf
+        return self.compute_moment_generating_function(**kwargs)(t)
+
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
         # TODO: support discrete sets with non integer stepsizes
 
         if evaluate:
             try:
-                # note: in order for this algorithm to be valid,
-                #   the characteristic function must have continuous
-                #   derivatives up to the highest power of the variable in the expression
-
                 p = poly(expr, var)
 
                 t = Dummy('t', real=True)
 
-                cf = self.characteristic_function(t)
+                mgf = self.moment_generating_function(t)
                 deg = p.degree()
-                taylor = poly(series(cf.subs(t, t / I), t, 0, deg + 1).removeO(), t)
+                taylor = poly(series(mgf, t, 0, deg + 1).removeO(), t)
                 result = 0
                 for k in range(deg+1):
                     result += p.coeff_monomial(var ** k) * taylor.coeff_monomial(t ** k) * factorial(k)
@@ -316,5 +329,12 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
         if expr == self.value:
             t = symbols("t", real=True, cls=Dummy)
             return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
+        else:
+            raise NotImplementedError()
+
+    def compute_moment_generating_function(self, expr, **kwargs):
+        if expr == self.value:
+            t = symbols("t", real=True, cls=Dummy)
+            return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))
         else:
             raise NotImplementedError()

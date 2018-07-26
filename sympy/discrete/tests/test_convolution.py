@@ -5,7 +5,7 @@ from sympy.core import S, Symbol, symbols, I
 from sympy.core.compatibility import range
 from sympy.discrete.convolution import (
     convolution, convolution_fft, convolution_ntt, convolution_fwht,
-    convolution_subset)
+    convolution_subset, covering_product, intersecting_product)
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y
 
@@ -16,9 +16,9 @@ def test_convolution():
     c = [3, 5, 3, 7, 8]
     d = [1422, 6572, 3213, 5552]
 
-    assert convolution(a, b, fft=True) == convolution_fft(a, b)
-    assert convolution(a, b, dps=9, fft=True) == convolution_fft(a, b, dps=9)
-    assert convolution(a, d, fft=True, dps=7) == convolution_fft(d, a, dps=7)
+    assert convolution(a, b) == convolution_fft(a, b)
+    assert convolution(a, b, dps=9) == convolution_fft(a, b, dps=9)
+    assert convolution(a, d, dps=7) == convolution_fft(d, a, dps=7)
     assert convolution(a, d[1:], dps=3) == convolution_fft(d[1:], a, dps=3)
 
     # prime moduli of the form (m*2**k + 1), sequence length
@@ -27,35 +27,26 @@ def test_convolution():
     q = 19*2**10 + 1
 
     # ntt
-    assert convolution(d, b, ntt=True, prime=q) == convolution_ntt(b, d, prime=q)
+    assert convolution(d, b, prime=q) == convolution_ntt(b, d, prime=q)
     assert convolution(c, b, prime=p) == convolution_ntt(b, c, prime=p)
-    assert convolution(d, c, prime=p, ntt=True) == convolution_ntt(c, d, prime=p)
-    raises(TypeError, lambda: convolution(b, d, ntt=True))
-    raises(TypeError, lambda: convolution(b, d, ntt=True, cycle=0))
+    assert convolution(d, c, prime=p) == convolution_ntt(c, d, prime=p)
     raises(TypeError, lambda: convolution(b, d, dps=5, prime=q))
-    raises(TypeError, lambda: convolution(b, d, dps=6, ntt=True, prime=q))
-    raises(TypeError, lambda: convolution(b, d, fft=True, dps=7, ntt=True, prime=q))
-    # ntt is a specialized variant of fft, TypeError should not be raised
-    assert convolution(b, d, fft=True, ntt=True, prime=q) == \
-            convolution_ntt(b, d, prime=q)
+    raises(TypeError, lambda: convolution(b, d, dps=6, prime=q))
 
     # fwht
     assert convolution(a, b, dyadic=True) == convolution_fwht(a, b)
     assert convolution(a, b, dyadic=False) == convolution(a, b)
-    raises(TypeError, lambda: convolution(b, d, fft=True, dps=2, dyadic=True))
-    raises(TypeError, lambda: convolution(b, d, ntt=True, prime=p, dyadic=True))
-    raises(TypeError, lambda: convolution(b, d, fft=True, dyadic=True))
+    raises(TypeError, lambda: convolution(b, d, dps=2, dyadic=True))
+    raises(TypeError, lambda: convolution(b, d, prime=p, dyadic=True))
     raises(TypeError, lambda: convolution(a, b, dps=2, dyadic=True))
     raises(TypeError, lambda: convolution(b, c, prime=p, dyadic=True))
 
     # subset
     assert convolution(a, b, subset=True) == convolution_subset(a, b) == \
             convolution(a, b, subset=True, dyadic=False) == \
-                convolution(a, b, subset=True, fft=False) == \
-                    convolution(a, b, subset=True, fft=False, ntt=False)
+                convolution(a, b, subset=True)
     assert convolution(a, b, subset=False) == convolution(a, b)
     raises(TypeError, lambda: convolution(a, b, subset=True, dyadic=True))
-    raises(TypeError, lambda: convolution(b, c, subset=True, fft=True))
     raises(TypeError, lambda: convolution(c, d, subset=True, dps=6))
     raises(TypeError, lambda: convolution(a, c, subset=True, prime=q))
 
@@ -71,12 +62,6 @@ def test_cyclic_convolution():
                 convolution([1, 2, 3], [4, 5, 6])
 
     assert convolution([1, 2, 3], [4, 5, 6], cycle=3) == [31, 31, 28]
-
-    assert convolution(a, b, fft=True, cycle=4) == \
-            convolution(a, b, cycle=4)
-
-    assert convolution(a, b, fft=True, dps=3, cycle=4) == \
-            convolution(a, b, dps=3, cycle=4)
 
     a = [S(1)/3, S(7)/3, S(5)/9, S(2)/7, S(5)/8]
     b = [S(3)/5, S(4)/7, S(7)/8, S(8)/9]
@@ -295,3 +280,86 @@ def test_convolution_subset():
 
     raises(TypeError, lambda: convolution_subset(x, z))
     raises(TypeError, lambda: convolution_subset(S(7)/3, u))
+
+
+def test_covering_product():
+    assert covering_product([], []) == []
+    assert covering_product([], [S(1)/3]) == []
+    assert covering_product([6 + 3*I/7], [S(2)/3]) == [4 + 2*I/7]
+
+    a = [1, S(5)/8, sqrt(7), 4 + 9*I]
+    b = [66, 81, 95, 49, 37, 89, 17]
+    c = [3 + 2*I/3, 51 + 72*I, 7, S(7)/15, 91]
+
+    assert covering_product(a, b) == [66, 1383/8, 95 + 161*sqrt(7),
+                                        130*sqrt(7) + 1303 + 2619*I, 37,
+                                        671/4, 17 + 54*sqrt(7),
+                                        89*sqrt(7) + 4661/8 + 1287*I]
+
+    assert covering_product(b, c) == [198 + 44*I, 7740 + 10638*I,
+                                        1412 + 190*I/3, 42684/5 + 31202*I/3,
+                                        9484 + 74*I/3, 22163 + 27394*I/3,
+                                        10621 + 34*I/3, 90236/15 + 1224*I]
+
+    assert covering_product(a, c) == covering_product(c, a)
+    assert covering_product(b, c[:-1]) == [198 + 44*I, 7740 + 10638*I,
+                                         1412 + 190*I/3, 42684/5 + 31202*I/3,
+                                         111 + 74*I/3, 6693 + 27394*I/3,
+                                         429 + 34*I/3, 23351/15 + 1224*I]
+
+    assert covering_product(a, c[:-1]) == [3 + 2*I/3,
+                            339/4 + 1409*I/12, 7 + 10*sqrt(7) + 2*sqrt(7)*I/3,
+                            -403 + 772*sqrt(7)/15 + 72*sqrt(7)*I + 12658*I/15]
+
+    u, v, w, x, y, z = symbols('u v w x y z')
+
+    assert covering_product([u, v, w], [x, y]) == \
+                            [u*x, u*y + v*x + v*y, w*x, w*y]
+
+    assert covering_product([u, v, w, x], [y, z]) == \
+                            [u*y, u*z + v*y + v*z, w*y, w*z + x*y + x*z]
+
+    assert covering_product([u, v], [x, y, z]) == \
+                    covering_product([x, y, z], [u, v])
+
+    raises(TypeError, lambda: covering_product(x, z))
+    raises(TypeError, lambda: covering_product(S(7)/3, u))
+
+
+def test_intersecting_product():
+    assert intersecting_product([], []) == []
+    assert intersecting_product([], [S(1)/3]) == []
+    assert intersecting_product([6 + 3*I/7], [S(2)/3]) == [4 + 2*I/7]
+
+    a = [1, sqrt(5), S(3)/8 + 5*I, 4 + 7*I]
+    b = [67, 51, 65, 48, 36, 79, 27]
+    c = [3 + 2*I/5, 5 + 9*I, 7, S(7)/19, 13]
+
+    assert intersecting_product(a, b) == [195*sqrt(5) + 6979/S(8) + 1886*I,
+                                178*sqrt(5) + 520 + 910*I, 841/S(2) + 1344*I,
+                                192 + 336*I, 0, 0, 0, 0]
+
+    assert intersecting_product(b, c) == [128553/S(19) + 9521*I/5,
+                S(17820)/19 + 1602*I, S(19264)/19, S(336)/19, 1846, 0, 0, 0]
+
+    assert intersecting_product(a, c) == intersecting_product(c, a)
+    assert intersecting_product(b[1:], c[:-1]) == [64788/S(19) + 8622*I/5,
+                    12804/S(19) + 1152*I, 11508/S(19), 252/S(19), 0, 0, 0, 0]
+
+    assert intersecting_product(a, c[:-2]) == \
+                    [-99/S(5) + 10*sqrt(5) + 2*sqrt(5)*I/5 + 3021*I/40,
+                    -43 + 5*sqrt(5) + 9*sqrt(5)*I + 71*I, 245/S(8) + 84*I, 0]
+
+    u, v, w, x, y, z = symbols('u v w x y z')
+
+    assert intersecting_product([u, v, w], [x, y]) == \
+                            [u*x + u*y + v*x + w*x + w*y, v*y, 0, 0]
+
+    assert intersecting_product([u, v, w, x], [y, z]) == \
+                        [u*y + u*z + v*y + w*y + w*z + x*y, v*z + x*z, 0, 0]
+
+    assert intersecting_product([u, v], [x, y, z]) == \
+                    intersecting_product([x, y, z], [u, v])
+
+    raises(TypeError, lambda: intersecting_product(x, z))
+    raises(TypeError, lambda: intersecting_product(u, S(8)/3))

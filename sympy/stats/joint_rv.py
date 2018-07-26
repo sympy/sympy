@@ -18,8 +18,7 @@ from sympy.concrete.summations import Sum, summation
 from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
      ProductDomain, RandomSymbol)
-from sympy.core.containers import Tuple
-
+from sympy.matrices import ImmutableMatrix
 class JointPSpace(ProductPSpace):
     """
     Represents a joint probability space. Represented using symbols for
@@ -90,7 +89,7 @@ class JointDistribution(Basic, NamedArgsMixin):
         args = list(map(sympify, args))
         for i in range(len(args)):
             if isinstance(args[i], list):
-                args[i] = Tuple.fromiter(j for j in args[i])
+                args[i] = ImmutableMatrix(args[i])
         return Basic.__new__(cls, *args)
 
     @property
@@ -132,19 +131,19 @@ def marginal_distribution(rv, *indices):
     """
     Marginal distribution function of a joint random variable.
 
-    Parameters:
+    Parameters
     ==========
 
     rv: A random variable with a joint probability distribution.
     indices: component indices or the indexed random symbol
         for whom the joint distribution is to be calculated
 
-    Returns:
+    Returns
     =======
     A Lambda expression n `sym`.
 
-    Example:
-    =======
+    Examples
+    ========
     >>> from sympy.stats.crv_types import Normal
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
