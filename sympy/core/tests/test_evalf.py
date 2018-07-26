@@ -59,12 +59,7 @@ def test_evalf_complex():
     assert NS('E+pi*I', 15) == '2.71828182845905+3.14159265358979j'
     assert NS('pi * (3+4*I)', 15) == '9.42477796076938+12.5663706143592j'
     assert NS('I*(2+I)', 15) == '-1.00000000000000+2.00000000000000j'
-
-
-@XFAIL
-def test_evalf_complex_bug():
-    assert NS('(pi+E*I)*(E+pi*I)', 15) in ('0.e-15+17.25866050002j',
-              '0.e-17+17.25866050002j', '-0.e-17+17.25866050002j')
+    assert NS('(pi+E*I)*(E+pi*I)', 15) == '0.0+17.2586605000200j'
 
 
 def test_evalf_complex_powers():
