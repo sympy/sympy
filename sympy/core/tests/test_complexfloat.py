@@ -4,7 +4,6 @@ from sympy import (ComplexFloat, comp, Number, Rational, Symbol, Float, I, S,
 from sympy.utilities.pytest import XFAIL, raises
 import mpmath
 
-t = Symbol('t', real=False)
 
 def same_and_same_prec(a, b):
     # stricter matching for Floats
