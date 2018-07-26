@@ -129,7 +129,7 @@ def convolution_fft(a, b, dps=None):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Convolution_theorem
-    .. [1] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general%29
+    .. [2] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general%29
 
     """
 
@@ -246,7 +246,7 @@ def convolution_fwht(a, b):
     References
     ==========
 
-    .. [1] https://researchgate.net/publication/26511536_Walsh_-_Hadamard_Transformation_of_a_Convolution
+    .. [1] https://www.radioeng.cz/fulltexts/2002/02_03_40_42.pdf
     .. [2] https://en.wikipedia.org/wiki/Hadamard_transform
 
     """
