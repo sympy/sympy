@@ -127,20 +127,14 @@ class FpGroup(DefaultPrinting):
 
         Examples
         ========
-        >>> from sympy import S
-        >>> from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
-        ...                                    reidemeister_presentation, FpSubgroup)
+        >>> from sympy.combinatorics.fp_groups import (FpGroup, FpSubgroup)
         >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
         >>> H = [x*y, x**-1*y**-1*x*y*x]
-        >>> K,T = f.subgroup(H, homomorphism=True)
+        >>> K, T = f.subgroup(H, homomorphism=True)
         >>> T(K.generators)
         [x*y, x**-1*y**2*x**-1]
-        >>> T(K.generators[0]*K.generators[1])
-        x*y*x**-1*y**2*x**-1
-        >>> T(K.generators[0]*K.generators[1])
-        x*y*x**-1*y**2*x**-1
 
         '''
 
@@ -148,9 +142,10 @@ class FpGroup(DefaultPrinting):
             raise ValueError("Generators must be `FreeGroupElement`s")
         if not all([g.group == self.free_group for g in gens]):
                 raise ValueError("Given generators are not members of the group")
-        g, rels = reidemeister_presentation(self, gens, C=C)
         if homomorphism:
             g, rels, _gens = reidemeister_presentation(self, gens, C=C, homomorphism=True)
+        else:
+            g, rels = reidemeister_presentation(self, gens, C=C)
         if g:
             g = FpGroup(g[0].group, rels)
         else:

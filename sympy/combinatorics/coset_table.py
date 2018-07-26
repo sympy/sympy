@@ -827,8 +827,9 @@ class CosetTable(DefaultPrinting):
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
         >>> C = coset_enumeration_r(f, [x])
+        >>> C.compress()
         >>> C.table
-        [[0, 0, 1, 2], [1, 1, 2, 0], [2, 2, 0, 1], [None, 1, None, None], [1, 3, None, None]]
+        [[0, 0, 1, 2], [1, 1, 2, 0], [2, 2, 0, 1]]
         >>> C.coset_representative(0)
         <identity>
         >>> C.coset_representative(1)

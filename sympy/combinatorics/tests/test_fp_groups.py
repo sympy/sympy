@@ -171,10 +171,21 @@ def test_fp_subgroup():
     f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
     S = FpSubgroup(f, [x*y])
     assert (x*y)**-3 in S
+    K, T = f.subgroup([x*y], homomorphism=True)
+    assert T(K.generators) == [y*x**-1]
+    assert T.is_injective()
 
     S = FpSubgroup(F, [x**-1*y*x])
     assert x**-1*y**4*x in S
     assert x**-1*y**4*x**2 not in S
+    K, T = f.subgroup([x**-1*y*x], homomorphism=True)
+    assert T(K.generators[0]**3) == y**3
+    assert T.is_injective()
+
+    f = FpGroup(F, [x**3, y**5, (x*y)**2])
+    H = [x*y, x**-1*y**-1*x*y*x]
+    K, T = f.subgroup(H, homomorphism=True)
+    assert T.is_injective()
 
 def test_permutation_methods():
     from sympy.combinatorics.fp_groups import FpSubgroup
