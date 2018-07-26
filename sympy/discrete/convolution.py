@@ -49,7 +49,7 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
     >>> u, v, w, x, y, z = symbols('u v w x y z')
 
     >>> convolution([1 + 2*I, 4 + 3*I], [S(5)/4, 6], dps=3)
-    [1.25 + 2.5*I, 11.0 + 15.8*I, 24.0 + 18.0*I]
+    [1.25+2.5j, 11.0+15.8j, 24.0+18.0j]
     >>> convolution([1, 2, 3], [4, 5, 6], cycle=3)
     [31, 31, 28]
 
