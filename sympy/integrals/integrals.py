@@ -1266,12 +1266,7 @@ class Integral(AddWithLimits):
         {0}
 
         >>> Integral(f, (x, -oo, oo)).principal_value()
-        nan
-
-        This happens so because, the method principal_value returns -oo for Integral from -oo to 0
-        and +oo for Integral from 0 to oo. While adding both the Integrals i.e. -oo + oo we do not
-        get 0 (as we expect) but nan since sympy realises that -oo and +oo aren't actual numbers that
-        can be added/subtracted.
+        0.0
 
         >>> Integral(f, (x, -oo, 0)).principal_value()
         -oo
@@ -1299,6 +1294,10 @@ class Integral(AddWithLimits):
         .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
         from sympy.calculus import singularities
+        from sympy.utilities.lambdify import lambdastr
+        from sympy.parsing.sympy_parser import parse_expr
+        from mpmath import inf, quad, mp
+        mp.pretty = True
 
         if len(self.limits) != 1 or len(list(self.limits[0])) != 3:
             raise ValueError("You need to insert a variable, lower_limit, and upper_limit correctly to calculate "
@@ -1325,30 +1324,48 @@ class Integral(AddWithLimits):
             I = limit(F, x, b) - limit(F, x, a)
             return I
 
+        G = parse_expr(lambdastr(x, self.function))
+
         if len(singularities_list) == 1:
-            I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a)
-            I = I + limit(F, x, b) - limit(F, x, limit((singularities_list[0] + r), r, 0, '+'),
-                                           '+')
-            return I
+            if a == -oo and b == oo:
+                I = quad(G, [-inf, singularities_list[0]], method='tanh-sinh') + quad(G, [singularities_list[0], inf],
+                                                                                      method='tanh-sinh')
+                return I
+            if a == -oo and b != oo:
+                I = quad(G, [-inf, singularities_list[0]], method='tanh-sinh') + quad(G, [singularities_list[0], b],
+                                                                                      method='tanh-sinh')
+                return I
+            if a != -oo and b == oo:
+                I = quad(G, [a, singularities_list[0]], method='tanh-sinh') + quad(G, [singularities_list[0], inf],
+                                                                                      method='tanh-sinh')
+                return I
+            else:
+                I = quad(G, [a, singularities_list[0]], method='tanh-sinh') + quad(G, [singularities_list[0], b],
+                                                                                      method='tanh-sinh')
+                return I
+
 
         else:
             for singular_element in range(len(singularities_list)):
                 if singular_element == 0:
-                    I = limit(F, x, limit((singularities_list[0] - r), r, 0, '+'), '-') - limit(F, x, a)
-                    return I
+                    if a == -oo:
+                        I = quad(G, [-inf, singularities_list[0]], method='tanh-sinh')
+                        return I
+                    else:
+                        I = quad(G, [a, singularities_list[0]], method='tanh-sinh')
+                        return I
                 if singular_element == (len(singularities_list) - 1):
-                    I = I + limit(F, x, b) - limit(F, x,
-                                                   limit(
-                                                       (singularities_list[singular_element] + r),
-                                                       r,
-                                                       0,
-                                                       '+'), '+')
-                    return I
+                    if b == oo:
+                        I = I + quad(G, [singularities_list[singular_element], inf], method='tanh-sinh')
+                        return I
+                    else:
+                        I = I + quad(G, [singularities_list[singular_element], b], method='tanh-sinh')
+                        return I
                 else:
-                    I = I + limit(F, x, limit((singularities_list[singular_element] - r), r, 0, '+'),
-                                  '-') - limit(
-                        F, x, limit((singularities_list[singular_element] + r), r, 0, '+'), '+')
+                    I = I + quad(G, [ singularities_list[singular_element],
+                                     singularities_list[singular_element + 1] ], method='tanh-sinh')
                     return I
+
 
 
 
