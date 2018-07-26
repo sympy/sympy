@@ -1175,7 +1175,7 @@ class Float(Number):
     def __add__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(self, 1)
-        if other.is_Mul:
+        if isinstance(other, Mul):
             c, e = other.as_coeff_Mul()
             if e is S.ImaginaryUnit:
                 return ComplexFloat(self, c)
@@ -1190,7 +1190,7 @@ class Float(Number):
     def __sub__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(self, -1)
-        if other.is_Mul:
+        if isinstance(other, Mul):
             c, e = other.as_coeff_Mul()
             if e is S.ImaginaryUnit:
                 return ComplexFloat(self, -c)
@@ -1690,7 +1690,7 @@ class ComplexFloat(Number):
     def __add__(self, other):
         if other is S.ImaginaryUnit:
             return self + ComplexFloat(0, 1, self._prec)
-        if other.is_Mul:
+        if isinstance(other, Mul):
             c, e = other.as_coeff_Mul()
             if e is S.ImaginaryUnit:
                 return ComplexFloat(self.real, self.imag + c)
@@ -1708,7 +1708,7 @@ class ComplexFloat(Number):
     def __sub__(self, other):
         if other is S.ImaginaryUnit:
             return self - ComplexFloat(0, 1, self._prec)
-        if other.is_Mul:
+        if isinstance(other, Mul):
             c, e = other.as_coeff_Mul()
             if e is S.ImaginaryUnit:
                 return ComplexFloat(self.real, self.imag - c)
