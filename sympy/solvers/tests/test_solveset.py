@@ -39,7 +39,8 @@ from sympy.solvers.solveset import (
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_two_term_exponential,
-    _solve_two_term_expo, _is_logarithm_reducible_to_single_instance, _solve_logarithm_reducible_to_single_instance)
+    _solve_two_term_exponential, _is_logarithm_reducible_to_single_instance,
+    _solve_logarithm_reducible_to_single_instance)
 
 
 a = Symbol('a', real=True)
@@ -1877,13 +1878,14 @@ def test_is_two_term_exponential():
     assert _is_two_term_exponential(x**y - z, y) is False
     assert _is_two_term_exponential(2**x + 4**x - 1, x) is False
     assert _is_two_term_exponential(x**(y*z) - x, x) is False
+    assert _is_two_term_exponential(x**(2*x) - 3**x, x) is False
 
 
-def test_solve_two_term_expo():
-    assert _solve_two_term_expo(3**(2*x) - 2**(x + 3), x) == \
+def test_solve_two_term_exponential():
+    assert _solve_two_term_exponential(3**(2*x) - 2**(x + 3), x) == \
         2*x*log(3) - (x + 3)*log(2)
     y = symbols('y')
-    assert _solve_two_term_expo(2**y + 4**y, y) == \
+    assert _solve_two_term_exponential(2**y + 4**y, y) == \
         log(2**y) - log(-4**y)
 
 # end of exponential tests
@@ -1934,6 +1936,8 @@ def test_is_logarithm_reducible_to_single_instance():
         Eq(x + y, 0), x) is False
     assert _is_logarithm_reducible_to_single_instance(
         Eq(log(3*x) - log(1 - x), 4), x) is True
+    assert _is_logarithm_reducible_to_single_instance(
+        Eq(log(x) + log(y) + x, 0), x) is False
 
 
 def test_solve_logarithm_reducible_to_single_instance():

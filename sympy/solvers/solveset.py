@@ -988,7 +988,7 @@ def _solveset(f, symbol, domain, _check=False):
     return result
 
 
-def _solve_two_term_expo(f, symbol):
+def _solve_two_term_exponential(f, symbol):
     r"""
     Helper function for solving (supported) exponential equations.
 
@@ -1009,7 +1009,7 @@ def _solve_two_term_expo(f, symbol):
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import _solve_two_term_expo as solve_expo
+    >>> from sympy.solvers.solveset import _solve_two_term_exponential as solve_expo
     >>> from sympy import symbols
     >>> x = symbols('x', real=True)
     >>> solve_expo(3**(2*x) - 2**(x + 3), x)
@@ -1089,7 +1089,7 @@ def _is_two_term_exponential(f, symbol):
     * Philosophy behind the helper
 
     The function checks for all two terms being in power form
-    with `symbol` in their exponents.
+    with `symbol` in their exponents but not in their base.
     """
 
     if not (isinstance(f, Add) and len(f.args) == 2):
@@ -1102,8 +1102,9 @@ def _is_two_term_exponential(f, symbol):
     b_coeff, b_exp_term = b.as_independent(symbol)
 
     return all(isinstance(expr_arg, (Pow, exp)) and (
-                symbol in expr_arg.exp.free_symbols) for expr_arg in (
-                a_exp_term, b_exp_term))
+        symbol in expr_arg.exp.free_symbols and
+        symbol not in expr_arg.base.free_symbols)
+        for expr_arg in (a_exp_term, b_exp_term))
 
 
 def _solve_logarithm_reducible_to_single_instance(f, symbol):
@@ -1229,7 +1230,7 @@ def _is_logarithm_reducible_to_single_instance(f, symbol):
     """
     lhs, rhs = f.lhs, f.rhs
     new_lhs = logcombine(lhs, force=True)
-    return new_lhs != lhs
+    return new_lhs != lhs if isinstance(new_lhs, log) else new_lhs is S.Zero
 
 
 def _transolve(f, symbol, domain):
@@ -1376,7 +1377,7 @@ def _transolve(f, symbol, domain):
         def add_type(eq, x):
             ....
             if _is_two_term_exponential(eq, x):
-                new_eq = _solve_two_term_expo(eq, x)
+                new_eq = _solve_two_term_exponential(eq, x)
         ....
         if eq.is_Add:
             result = add_type(eq, x)
@@ -1429,7 +1430,7 @@ def _transolve(f, symbol, domain):
 
         # check if it is exponential type equation
         elif _is_two_term_exponential(simplified_equation, symbol):
-            new_eq = _solve_two_term_expo(simplified_equation, symbol)
+            new_eq = _solve_two_term_exponential(simplified_equation, symbol)
         # check if it is logarithmic type equation
         elif _is_logarithm_reducible_to_single_instance(Eq(lhs, rhs), symbol):
                 new_eq = _solve_logarithm_reducible_to_single_instance(
