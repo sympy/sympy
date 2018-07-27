@@ -13,6 +13,7 @@ from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot
+from sympy.utilities.decorator import doctest_depends_on
 
 
 class Beam(object):
@@ -1117,6 +1118,7 @@ class Beam(object):
         else:
             return None
 
+    @doctest_depends_on(modules=('matplotlib',))
     def plot_shear_force(self, var={}):
         """
         Returns a plot for Shear force present in the Beam object.
@@ -1150,7 +1152,9 @@ class Beam(object):
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.plot_shear_force()
         Plot object containing:
-        [0]: cartesian line: -13750*SingularityFunction(x, 0, 0) + 5000*SingularityFunction(x, 2, 0) + 10000*SingularityFunction(x, 4, 1) - 31250*SingularityFunction(x, 8, 0) - 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
+        [0]: cartesian line: -13750*SingularityFunction(x, 0, 0) + 5000*SingularityFunction(x, 2, 0)
+        + 10000*SingularityFunction(x, 4, 1) - 31250*SingularityFunction(x, 8, 0)
+        - 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
         """
         shear_force = self.shear_force()
         for sym in shear_force.atoms(Symbol):
@@ -1165,6 +1169,7 @@ class Beam(object):
         return plot(shear_force.subs(var), (self.variable, 0, length), title='Shear Force',
                 xlabel='position', ylabel='Value', line_color='g')
 
+    @doctest_depends_on(modules=('matplotlib',))
     def plot_bending_moment(self, var={}):
         """
         Returns a plot for Bending moment present in the Beam object.
@@ -1198,7 +1203,9 @@ class Beam(object):
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.plot_bending_moment()
         Plot object containing:
-        [0]: cartesian line: -13750*SingularityFunction(x, 0, 1) + 5000*SingularityFunction(x, 2, 1) + 5000*SingularityFunction(x, 4, 2) - 31250*SingularityFunction(x, 8, 1) - 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
+        [0]: cartesian line: -13750*SingularityFunction(x, 0, 1) + 5000*SingularityFunction(x, 2, 1)
+        + 5000*SingularityFunction(x, 4, 2) - 31250*SingularityFunction(x, 8, 1)
+        - 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
         """
         bending_moment = self.bending_moment()
         for sym in bending_moment.atoms(Symbol):
@@ -1213,6 +1220,7 @@ class Beam(object):
         return plot(bending_moment.subs(var), (self.variable, 0, length), title='Bending Moment',
                 xlabel='position', ylabel='Value', line_color='b')
 
+    @doctest_depends_on(modules=('matplotlib',))
     def plot_slope(self, var={}):
         """
         Returns a plot for slope of deflection curve of the Beam object.
@@ -1246,7 +1254,9 @@ class Beam(object):
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.plot_slope()
         Plot object containing:
-        [0]: cartesian line: -8.59375e-5*SingularityFunction(x, 0, 2) + 3.125e-5*SingularityFunction(x, 2, 2) + 2.08333333333333e-5*SingularityFunction(x, 4, 3) - 0.0001953125*SingularityFunction(x, 8, 2) - 2.08333333333333e-5*SingularityFunction(x, 8, 3) + 0.00138541666666667 for x over (0.0, 8.0)
+        [0]: cartesian line: -8.59375e-5*SingularityFunction(x, 0, 2) + 3.125e-5*SingularityFunction(x, 2, 2)
+        + 2.08333333333333e-5*SingularityFunction(x, 4, 3) - 0.0001953125*SingularityFunction(x, 8, 2)
+        - 2.08333333333333e-5*SingularityFunction(x, 8, 3) + 0.00138541666666667 for x over (0.0, 8.0)
         """
         slope = self.slope()
         for sym in slope.atoms(Symbol):
@@ -1261,6 +1271,7 @@ class Beam(object):
         return plot(slope.subs(var), (self.variable, 0, length), title='Slope',
                 xlabel='position', ylabel='Value', line_color='m')
 
+    @doctest_depends_on(modules=('matplotlib',))
     def plot_deflection(self, var={}):
         """
         Returns a plot for deflection curve of the Beam object.
@@ -1294,7 +1305,10 @@ class Beam(object):
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.plot_deflection()
         Plot object containing:
-        [0]: cartesian line: 0.00138541666666667*x - 2.86458333333333e-5*SingularityFunction(x, 0, 3) + 1.04166666666667e-5*SingularityFunction(x, 2, 3) + 5.20833333333333e-6*SingularityFunction(x, 4, 4) - 6.51041666666667e-5*SingularityFunction(x, 8, 3) - 5.20833333333333e-6*SingularityFunction(x, 8, 4) for x over (0.0, 8.0)
+        [0]: cartesian line: 0.00138541666666667*x - 2.86458333333333e-5*SingularityFunction(x, 0, 3)
+        + 1.04166666666667e-5*SingularityFunction(x, 2, 3) + 5.20833333333333e-6*SingularityFunction(x, 4, 4)
+        - 6.51041666666667e-5*SingularityFunction(x, 8, 3) - 5.20833333333333e-6*SingularityFunction(x, 8, 4)
+        for x over (0.0, 8.0)
         """
         deflection = self.deflection()
         for sym in deflection.atoms(Symbol):
@@ -1309,6 +1323,7 @@ class Beam(object):
         return plot(deflection.subs(var), (self.variable, 0, length), title='Deflection',
                 xlabel='position', ylabel='Value', line_color='r')
 
+    @doctest_depends_on(modules=('matplotlib',))
     def plot_all(self, var={}):
         """
         Returns a combined plot of Shear Force, Bending Moment and Deflection
@@ -1364,7 +1379,6 @@ class Beam(object):
             line.line_color = colors[n]
         p.legend = True
         return p.show()
-
 
 
 class Beam_3d(Beam):
