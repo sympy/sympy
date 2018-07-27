@@ -1340,20 +1340,19 @@ class Integral(AddWithLimits):
         else:
             for singular_element in range(len(singularities_list)):
                 if singular_element == 0:
-                    I = (F.subs(x, singularities_list[0] - r) - limit(F, x, a))
-                    return I
+                    Ia = (F.subs(x, singularities_list[0] - r) - limit(F, x, a))
+                    Ib = 0
                 if singular_element == (len(singularities_list) - 1):
                     I1 = limit(((limit(F, x, b) - (F.subs(x, singularities_list[singular_element] + r))).subs(
                         [(oo, n), (-oo, -n)]) + (F.subs(x, singularities_list[singular_element] - r) - F.subs(x,
                                                                                                               singularities_list[
                                                                                                                   singular_element - 1] + r)).subs(
                         [(oo, n), (-oo, -n)])), r, 0, '+')
-                    I = I.subs([(oo, n), (-oo, -n)]) + I1
+                    I = Ia.subs([(oo, n), (-oo, -n)]) + Ib.subs([(oo, n), (-oo, -n)]) + I1
                     return I.subs([(n, oo), (-n, -oo)])
                 else:
-                    I = I + (F.subs(x, singularities_list[singular_element] - r) - F.subs(x, singularities_list[
+                    Ib = (F.subs(x, singularities_list[singular_element] - r) - F.subs(x, singularities_list[
                         singular_element - 1] + r))
-                    return I
 
 
 
