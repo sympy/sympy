@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.external import import_module
 from sympy.printing.printer import Printer
 from sympy.core.compatibility import range, is_sequence
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 import sympy
 from functools import partial
 
@@ -376,7 +377,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     return {}
 
 
-def theano_function(inputs, outputs, **kwargs):
+def theano_function(inputs, outputs, squeeze=True, **kwargs):
     """ Create a Theano function from SymPy expressions.
 
     The inputs and outputs are converted to Theano variables using
@@ -389,8 +390,17 @@ def theano_function(inputs, outputs, **kwargs):
         Sequence of symbols which constitute the inputs of the function.
 
     outputs
-        Sequence of expressions which constitute the outputs(s) of the function.
-        The free symbols of each expression must be a subset of ``inputs``.
+        Expression or sequence of expressions which constitute the outputs(s) of
+        the function. The free symbols of each expression must be a subset of
+        ``inputs``.
+
+    squeeze : bool
+        If ``outputs`` is a sequence of length one, pass the printed value of
+        the lone element of the sequence to :func:`theano.function` instead of
+        the sequence itself. This has the effect of making a function which
+        returns a single array instead of a list containing one array. This
+        behavior is deprecated and the default value will be changed to False in
+        a future release. To get a function that returns a single
 
     cache : dict
        Cached Theano variables (see :attr:`.TheanoPrinter.cache`). Defaults to
@@ -436,13 +446,13 @@ def theano_function(inputs, outputs, **kwargs):
 
     A simple function with one input and one output:
 
-    >>> f1 = theano_function([x], [x**2 - 1])
+    >>> f1 = theano_function([x], x**2 - 1)
     >>> f1(3)
     array(8.0)
 
     A function with multiple inputs and one output:
 
-    >>> f2 = theano_function([x, y, z], [(x**z + y**z)**(1/z)])
+    >>> f2 = theano_function([x, y, z], (x**z + y**z)**(1/z))
     >>> f2(1, 2, 3)
     array(2.080083823051904)
 
@@ -452,14 +462,6 @@ def theano_function(inputs, outputs, **kwargs):
     >>> f3(2, 3)
     [array(13.0), array(-5.0)]
 
-    Returns
-    =======
-    theano.compile.function_module.Function
-        A callable object which takes values of ``inputs`` as positional
-        arguments and returns a list of output arrays for each of the expressions
-        in ``outputs``, unless the length of ``outputs`` is one in which case a
-        single array will be returned.
-
     See also
     ========
     theano.function
@@ -467,6 +469,16 @@ def theano_function(inputs, outputs, **kwargs):
     """
     if not theano:
         raise ImportError("theano is required for theano_function")
+
+    # Squeeze output sequence of length one
+    if squeeze and is_sequence(outputs) and len(outputs) == 1:
+        SymPyDeprecationWarning(
+            feature='theano_function() with squeeze=True',
+            issue=14986,
+            deprecated_since_version='1.2.1',
+            useinstead='a single expression as "outputs" (not a list)',
+        ).warn()
+        outputs = outputs[0]
 
     # Pop off non-theano keyword args
     cache = kwargs.pop('cache', {})
@@ -483,9 +495,10 @@ def theano_function(inputs, outputs, **kwargs):
     code = partial(theano_code, cache=cache, dtypes=dtypes,
                    broadcastables=broadcastables)
     tinputs  = list(map(code, inputs))
-    toutputs = list(map(code, outputs))
 
-    if len(toutputs) == 1:
-        toutputs = toutputs[0]
+    if is_sequence(outputs):
+        toutputs = list(map(code, outputs))
+    else:
+        toutputs = code(outputs)
 
     return theano.function(tinputs, toutputs, **kwargs)

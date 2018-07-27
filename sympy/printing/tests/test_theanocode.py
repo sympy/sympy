@@ -11,6 +11,7 @@ import logging
 
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, SKIP
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 theanologger = logging.getLogger('theano.configdefaults')
 theanologger.setLevel(logging.CRITICAL)
@@ -274,7 +275,7 @@ def test_Derivative():
 
 def test_theano_function_simple():
     """ Test theano_function() with single output. """
-    f = theano_function_([x, y], [x+y])
+    f = theano_function_([x, y], x+y)
     assert f(2, 3) == 5
 
 def test_theano_function_multi():
@@ -284,13 +285,42 @@ def test_theano_function_multi():
     assert o1 == 5
     assert o2 == -1
 
+def test_theano_function_squeeze():
+    """ Test theano_function() with list of length one as outputs.
+
+    The "squeeze" argument determines whether the created function will return a
+    single array or a list containing a single array in this condition. Current
+    default is squeeze=True, which is deprecated and will be removed in a future
+    release.
+    """
+    import warnings
+
+    # squeeze=True deprecated
+    raises(SymPyDeprecationWarning, lambda: theano_function_([x, y], [x+y]))
+    raises(SymPyDeprecationWarning, lambda: theano_function_([x, y], [x+y], squeeze=True))
+
+    # Test deprecated behavior
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=SymPyDeprecationWarning)
+
+        assert theano_function_([x, y], [x + y])(2, 3) == 5
+        assert theano_function_([x, y], [x + y], squeeze=True)(2, 3) == 5
+
+    # squeeze=false keeps as list
+    assert theano_function_([x, y], [x+y], squeeze=False)(2, 3) == [5]
+
+    # No deprecation warning when value doesn't actually matter
+    assert theano_function_([x, y], [x+y, x-y])(2, 3) == [5, -1]
+    assert theano_function_([x, y], [x+y, x-y], squeeze=True)(2, 3) == [5, -1]
+    assert theano_function_([x, y], [x+y, x-y], squeeze=False)(2, 3) == [5, -1]
+
 def test_theano_function_numpy():
     """ Test theano_function() vs Numpy implementation. """
-    f = theano_function_([x, y], [x+y], dim=1,
+    f = theano_function_([x, y], x+y, dim=1,
                          dtypes={x: 'float64', y: 'float64'})
     assert np.linalg.norm(f([1, 2], [3, 4]) - np.asarray([4, 6])) < 1e-9
 
-    f = theano_function_([x, y], [x+y], dtypes={x: 'float64', y: 'float64'},
+    f = theano_function_([x, y], x+y, dtypes={x: 'float64', y: 'float64'},
                                      dim=1)
     xx = np.arange(3).astype('float64')
     yy = 2*np.arange(3).astype('float64')
@@ -307,11 +337,11 @@ def test_theano_function_kwargs():
     Test passing additional kwargs from theano_function() to theano.function().
     """
     import numpy as np
-    f = theano_function_([x, y, z], [x+y], dim=1, on_unused_input='ignore',
+    f = theano_function_([x, y, z], x+y, dim=1, on_unused_input='ignore',
             dtypes={x: 'float64', y: 'float64', z: 'float64'})
     assert np.linalg.norm(f([1, 2], [3, 4], [0, 0]) - np.asarray([4, 6])) < 1e-9
 
-    f = theano_function_([x, y, z], [x+y],
+    f = theano_function_([x, y, z], x+y,
                         dtypes={x: 'float64', y: 'float64', z: 'float64'},
                         dim=1, on_unused_input='ignore')
     xx = np.arange(3).astype('float64')
@@ -324,7 +354,7 @@ def test_theano_function_bad_kwarg():
     Passing an unknown keyword argument to theano_function() should raise an
     exception.
     """
-    raises(Exception, lambda : theano_function_([x], [x+1], foobar=3))
+    raises(Exception, lambda : theano_function_([x], x+1, foobar=3))
 
 
 def test_slice():
@@ -395,8 +425,8 @@ def test_BlockMatrix_Inverse_execution():
     cutoutput = output.subs(dict(zip(inputs, cutinputs)))
 
     dtypes = dict(zip(inputs, [dtype]*len(inputs)))
-    f = theano_function_(inputs, [output], dtypes=dtypes, cache={})
-    fblocked = theano_function_(inputs, [sy.block_collapse(cutoutput)],
+    f = theano_function_(inputs, output, dtypes=dtypes, cache={})
+    fblocked = theano_function_(inputs, sy.block_collapse(cutoutput),
                                 dtypes=dtypes, cache={})
 
     ninputs = [np.random.rand(*x.shape).astype(dtype) for x in inputs]
