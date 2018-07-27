@@ -259,7 +259,7 @@ class RCodePrinter(CodePrinter):
 
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
-        op = expr.rel_op
+        op = expr.op
         rhs_code = self._print(expr.rhs)
         return "{0} {1} {2};".format(lhs_code, op, rhs_code)
 

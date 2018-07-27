@@ -2315,6 +2315,15 @@ class PrettyPrinter(Printer):
         else:
             return self.emptyPrinter(e)
 
+    def _print_AssignmentBase(self, e):
+
+        op = prettyForm(' ' + xsym(e.op) + ' ')
+
+        l = self._print(e.lhs)
+        r = self._print(e.rhs)
+        pform = prettyForm(*stringPict.next(l, op, r))
+        return pform
+
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
