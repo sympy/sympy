@@ -15,9 +15,6 @@ from sympy.physics import units
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
-from sympy.utilities.lambdify import lambdastr
-from sympy.parsing.sympy_parser import parse_expr
-from mpmath import inf, quad
 
 
 
@@ -28,14 +25,13 @@ f = Function('f')
 def test_principal_value():
 
     g = 1 / x
-    assert Integral(g, (x, -oo, oo)).principal_value() == 0.0
+    assert Integral(g, (x, -oo, oo)).principal_value() == nan
     assert Integral(g, (y, -oo, oo)).principal_value() == oo*sign(1/x)
     raises(ValueError, lambda: Integral(g, (x)).principal_value())
     raises(ValueError, lambda: Integral(g).principal_value())
 
     l = 1 / ((x**3) - 1)
-    assert Integral(l, (x, -oo, oo)).principal_value() == \
-           quad( parse_expr(lambdastr(x,l)) , [1, inf]) + quad( parse_expr(lambdastr(x,l)) , [-inf, 1])
+    assert Integral(l, (x, -oo, oo)).principal_value() == -sqrt(3)*pi/3
     assert Integral(l, (x, -oo, 1)).principal_value() == -oo - I*pi/3
     assert Integral(l, (x, -3, -2)).principal_value() == \
            -sqrt(3)*atan(5*sqrt(3)/3)/3 - 2*log(2)/3 + log(3)/6 + log(7)/6 + sqrt(3)*pi/9
