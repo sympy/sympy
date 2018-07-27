@@ -523,11 +523,15 @@ def subgroup_quotient(G, H, fp_group=None):
     # G is set to the parent `FpGroup`
     if not fp_group:
         fp_group = G
-    free_group = fp_group.free_group
+
+    if isinstance(G, list) and not fp_group:
+        raise ValueError("The fp_group must be"
+                            "defined when the group is a list")
+    free_group = fp_group.G
 
     if not isinstance(fp_group, FpGroup):
         raise ValueError("The parent group must be an instance"
-                                "of FpGroup")
+                                    "of FpGroup")
 
     if not (G.free_group == free_group
                 or H.free_group == free_group):
@@ -535,6 +539,7 @@ def subgroup_quotient(G, H, fp_group=None):
                             "to the same free group as that of the parent group")
 
     if isinstance(G, list):
+        # Todo - Set homomorphism to True after the merge
         g_gens, g_rels, _gens = reidemeister_presentation(fp_group, G, rel=True)
         _homomorphism = homomorphism(G, fp_group, g_gens, _gens, check=False)
         g_gens = _gens
@@ -544,6 +549,7 @@ def subgroup_quotient(G, H, fp_group=None):
         g_rels = G.relators
 
     if isinstance(H, list):
+        # Todo - Set homomorphism to True after the merge
         h_gens, h_rels, _gens = reidemeister_presentation(fp_group, H, rel=True)
         _homomorphism = homomorphism(H, fp_group, h_gens, _gens, check=False)
         h_gens = _gens
@@ -561,23 +567,12 @@ def subgroup_quotient(G, H, fp_group=None):
 
 def maximal_abelian_quotient(G):
     '''
-    Compute the Maximal abelian quitoent of an FpGroup
+    Compute the maximal abelian quotient of an FpGroup
     '''
     if not isinstance(G, FpGroup):
         raise ValueError("The group must be a finitely presented group")
 
-    _G, T = G._to_perm_group()
-
-    # Compute the commutator subgroup
-    _com_grp = _G.derived_series()
-    com_grp_gens = T.invert(_com_grp.generators)
-    # set homomorphism to True after the merge
-    com_subgroup, homomorphism = G.subgroup(com_grp_gens)
-
-    com_subgroup_rels = com_subgroup.relators
-    quotient_rels = homomorphism(com_subgroup_rels) + G.generators
-
-    return FpGroup(G.free_group, quotient_rels)
+    return subgroup_quotient(G, G.derived_subgroup())
 
 
 class FpSubgroup(DefaultPrinting):
