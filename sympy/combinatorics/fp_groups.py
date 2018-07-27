@@ -514,6 +514,71 @@ class FpGroup(DefaultPrinting):
         P, T = self._to_perm_group()
         return T.invert(P._elements)
 
+def subgroup_quotient(G, H, fp_group=None):
+    '''
+    Compute the quotient group G/H
+    where, H is the subgroup of G.
+    '''
+    # If no parent group is specified,
+    # G is set to the parent `FpGroup`
+    if not fp_group:
+        fp_group = G
+    free_group = fp_group.free_group
+
+    if not isinstance(fp_group, FpGroup):
+        raise ValueError("The parent group must be an instance"
+                                "of FpGroup")
+
+    if not (G.free_group == free_group
+                or H.free_group == free_group):
+        raise ValueError("The elements groups must belong to"
+                            "to the same free group as that of the parent group")
+
+    if isinstance(G, list):
+        g_gens, g_rels, _gens = reidemeister_presentation(fp_group, G, rel=True)
+        _homomorphism = homomorphism(G, fp_group, g_gens, _gens, check=False)
+        g_gens = _gens
+        g_rels = _homomorphism(g_rels)
+    else:
+        g_gens = G.generators
+        g_rels = G.relators
+
+    if isinstance(H, list):
+        h_gens, h_rels, _gens = reidemeister_presentation(fp_group, H, rel=True)
+        _homomorphism = homomorphism(H, fp_group, h_gens, _gens, check=False)
+        h_gens = _gens
+        h_rels = _homomorphism(h_rels)
+    else:
+        h_gens = H.generators
+        h_rels = H.relators
+
+    q_relators = g_gens + h_rels
+    q_group = FpGroup(free_group, q_relators)
+
+    # Return the quotient group with presentation
+    # <G.generators|q_realtors>
+    return q_group
+
+def maximal_abelian_quotient(G):
+    '''
+    Compute the Maximal abelian quitoent of an FpGroup
+    '''
+    if not isinstance(G, FpGroup):
+        raise ValueError("The group must be a finitely presented group")
+
+    _G, T = G._to_perm_group()
+
+    # Compute the commutator subgroup
+    _com_grp = _G.derived_series()
+    com_grp_gens = T.invert(_com_grp.generators)
+    # set homomorphism to True after the merge
+    com_subgroup, homomorphism = G.subgroup(com_grp_gens)
+
+    com_subgroup_rels = com_subgroup.relators
+    quotient_rels = homomorphism(com_subgroup_rels) + G.generators
+
+    return FpGroup(G.free_group, quotient_rels)
+
 
 class FpSubgroup(DefaultPrinting):
     '''
