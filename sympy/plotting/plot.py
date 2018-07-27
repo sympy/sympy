@@ -1048,6 +1048,8 @@ class TextBackend(BaseBackend):
         super(TextBackend, self).__init__(parent)
 
     def show(self):
+        if not _show:
+            return
         if len(self.parent._series) != 1:
             raise ValueError(
                 'The TextBackend supports only one graph per Plot.')

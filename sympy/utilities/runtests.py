@@ -738,6 +738,10 @@ def _doctest(*paths, **kwargs):
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
 
+    # Disable showing up of plots
+    from sympy.plotting.plot import unset_show
+    unset_show()
+
     # Show deprecation warnings
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
