@@ -878,7 +878,10 @@ class Basic(with_metaclass(ManagedProperties)):
                     si = sympify(si, strict=True)
                 except SympifyError:
                     if type(si) is str:
-                        si = Symbol(si)
+                        si_prev = si
+                        si = sympify(si)
+                        if not isinstance(si, Basic):
+                            si = Symbol(si_prev)
                     else:
                         # if it can't be sympified, skip it
                         sequence[i] = None
