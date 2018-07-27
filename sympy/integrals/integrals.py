@@ -1259,14 +1259,14 @@ class Integral(AddWithLimits):
 
         >>> g = x + 1
         >>> Integral(g, (x, -oo, oo)).principal_value()
-        nan
+        oo
 
         >>> f = 1/(x**3)
         >>> singularities(f,x)
         {0}
 
         >>> Integral(f, (x, -oo, oo)).principal_value()
-        0.0
+        0
 
         >>> Integral(f, (x, -oo, 0)).principal_value()
         -oo
@@ -1301,13 +1301,14 @@ class Integral(AddWithLimits):
 
         x, a, b = self.limits[0]
 
-        if not(a <= b and a.is_comparable and b.is_comparable):
+        if not(a.is_comparable and b.is_comparable and a <= b):
             raise ValueError("The lower_limit must be smaller than or equal to the upper_limit to calculate "
                              "cauchy's principal value. Also, a and b need to be comparable.")
 
         if a == b:
             return 0
         r = Dummy('r')
+        n = Dummy('n')
 
         singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a < s < b]
 
@@ -1317,13 +1318,23 @@ class Integral(AddWithLimits):
         if F.has(Integral):
             return self
         if len(singularities_list) == 0:
-            I = limit(F, x, b) - limit(F, x, a)
-            return I
+            if a is -oo and b is oo:
+                I = limit(F - F.subs(x, -x), x, oo)
+                return I
+            if a == -oo and b != oo:
+                I = limit(F, x, b, '-') - limit(F, x, a)
+                return I
+            if a != -oo and b == oo:
+                I = limit(F, x, b) - limit(F, x, a, '+')
+                return I
+            else:
+                I = limit(F, x, b, '-') - limit(F, x, a, '+')
+                return I
 
         if len(singularities_list) == 1:
-            I = limit((F.subs(x, singularities_list[0] - r) - limit(F, x, a)) + (
-                    limit(F, x, b) - F.subs(x, singularities_list[0] + r)), r, 0, '+')
-            return I
+            I = limit(((F.subs(x, singularities_list[0] - r) - limit(F, x, a)).subs([(oo, n), (-oo, -n)]) + (
+                    limit(F, x, b) - F.subs(x, singularities_list[0] + r)).subs([(oo, n), (-oo, -n)])), r, 0, '+')
+            return I.subs([(n, oo), (-n, -oo)])
 
 
         else:
@@ -1332,10 +1343,13 @@ class Integral(AddWithLimits):
                     I = (F.subs(x, singularities_list[0] - r) - limit(F, x, a))
                     return I
                 if singular_element == (len(singularities_list) - 1):
-                    I = I + limit(limit(F, x, b) - (F.subs(x, singularities_list[singular_element] + r)) + (
-                            F.subs(x, singularities_list[singular_element] - r) - F.subs(x, singularities_list[
-                            singular_element - 1] + r)), r, 0, '+')
-                    return I
+                    I1 = limit(((limit(F, x, b) - (F.subs(x, singularities_list[singular_element] + r))).subs(
+                        [(oo, n), (-oo, -n)]) + (F.subs(x, singularities_list[singular_element] - r) - F.subs(x,
+                                                                                                              singularities_list[
+                                                                                                                  singular_element - 1] + r)).subs(
+                        [(oo, n), (-oo, -n)])), r, 0, '+')
+                    I = I.subs([(oo, n), (-oo, -n)]) + I1
+                    return I.subs([(n, oo), (-n, -oo)])
                 else:
                     I = I + (F.subs(x, singularities_list[singular_element] - r) - F.subs(x, singularities_list[
                         singular_element - 1] + r))
