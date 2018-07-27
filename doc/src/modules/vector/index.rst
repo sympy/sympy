@@ -31,7 +31,7 @@ Vector API
     api/vectorfunctions.rst
 
 References for Vector
-================================
+=====================
 
 .. [Dyadics] http://en.wikipedia.org/wiki/Dyadics
 .. [DyadicProducts] http://en.wikipedia.org/wiki/Dyadic_product
