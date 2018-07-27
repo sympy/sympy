@@ -256,7 +256,7 @@ def test_CRootOf_evalf():
     # watch out for imaginary parts that don't want to evaluate
     assert str(RootOf(x**16 + 32*x**14 + 508*x**12 + 5440*x**10 +
         39510*x**8 + 204320*x**6 + 755548*x**4 + 1434496*x**2 +
-        877969, 10).n(2)) == '-3.4*I'
+        877969, 10).n(2)) == '0.0-3.4j'
     assert abs(RootOf(x**4 + 10*x**2 + 1, 0).n(2)) < 0.4
 
     # check reset and args
@@ -565,5 +565,5 @@ def test_eval_approx_relative():
     t[0]._reset()
     a = [i.eval_approx(2) for i in t]
     assert [str(i) for i in a] == [
-        '-0.10', '0.05 - 3.2*I', '0.05 + 3.2*I']
+        '-0.10', '0.05-3.2j', '0.05+3.2j']
     assert all(abs(((a[i] - t[i])/t[i]).n()) < 1e-2 for i in range(len(a)))
