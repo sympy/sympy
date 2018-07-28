@@ -52,7 +52,7 @@ def test_principal_value():
     assert Integral(d, (x, 0, oo)).principal_value() == oo
     assert Integral(d, (x, -oo, -1)).principal_value() == oo
     assert Integral(d, (x, 1, oo)).principal_value() == oo
-    assert Integral(d, (x, -1, oo)).principal_value() == nan
+    assert Integral(d, (x, -oo, oo)).principal_value() == oo - I*pi/2
     assert Integral(d, (x, 10, oo)).principal_value() == -atan(10)/2 + oo
     assert Integral(d, (x, -oo, -10)).principal_value() == -atan(10)/2 + oo - I*pi/2
     raises(ValueError, lambda: Integral(d, (x)).principal_value())

@@ -1347,9 +1347,10 @@ class Integral(AddWithLimits):
                         [(oo, n), (-oo, -n)]) + (F.subs(x, singularities_list[singular_element] - r) - F.subs(x,
                                                                                                               singularities_list[
                                                                                                                   singular_element - 1] + r)).subs(
-                        [(oo, n), (-oo, -n)])), r, 0, '+')
-                    I = Ia.subs([(oo, n), (-oo, -n)]) + Ib.subs([(oo, n), (-oo, -n)]) + I1
-                    return I.subs([(n, oo), (-n, -oo)])
+                        [(oo, n), (-oo, -n)]) + Ia.subs([(oo, n), (-oo, -n)]) + Ib.subs([(oo, n), (-oo, -n)])), r, 0,
+                               '+')
+                    I = I1.subs([(n, oo), (-n, -oo)])
+                    return I
                 else:
                     Ib = (F.subs(x, singularities_list[singular_element] - r) - F.subs(x, singularities_list[
                         singular_element - 1] + r))
