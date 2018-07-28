@@ -707,10 +707,6 @@ def _doctest(*paths, **kwargs):
             import matplotlib
             matplotlib.use('Agg')
 
-            # don't display matplotlib windows
-            from sympy.plotting.plot import unset_show
-            unset_show()
-
 
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
@@ -737,6 +733,10 @@ def _doctest(*paths, **kwargs):
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
+
+    # Disable showing up of plots
+    from sympy.plotting.plot import unset_show
+    unset_show()
 
     # Show deprecation warnings
     import warnings
