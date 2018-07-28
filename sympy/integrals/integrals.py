@@ -1321,12 +1321,6 @@ class Integral(AddWithLimits):
             if a is -oo and b is oo:
                 I = limit(F - F.subs(x, -x), x, oo)
                 return I
-            if a == -oo and b != oo:
-                I = limit(F, x, b, '-') - limit(F, x, a)
-                return I
-            if a != -oo and b == oo:
-                I = limit(F, x, b) - limit(F, x, a, '+')
-                return I
             else:
                 I = limit(F, x, b, '-') - limit(F, x, a, '+')
                 return I
