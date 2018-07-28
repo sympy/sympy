@@ -13,11 +13,15 @@ from __future__ import print_function, division
 
 # __all__ = ['marginal_distribution']
 
-from sympy import Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S
+from sympy import Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S, Dummy
 from sympy.concrete.summations import Sum, summation
 from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
      ProductDomain, RandomSymbol, random_symbols)
+from sympy.stats.crv import (ContinuousDistribution,
+    SingleContinuousDistribution, SingleContinuousPSpace)
+from sympy.stats.drv import (DiscreteDistribution, 
+    SingleDiscreteDistribution, SingleDiscretePSpace)
 from sympy.matrices import ImmutableMatrix
 from sympy.core.containers import Tuple
 
@@ -28,6 +32,10 @@ class JointPSpace(ProductPSpace):
     """
     def __new__(cls, sym, dist):
         sym = sympify(sym)
+        if isinstance(dist, SingleContinuousDistribution):
+            return SingleContinuousPSpace(sym, dist)
+        if isinstance(dist, SingleDiscreteDistribution):
+            return SingleDiscretePSpace(sym, dist)
         return Basic.__new__(cls, sym, dist)
 
     @property
@@ -190,10 +198,12 @@ def marginal_distribution(rv, *indices):
 
 class MarginalDistribution(Basic):
 
-    def __new__(cls, pdf, rvs):
+    def __new__(cls,dist, rvs):
         assert all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs)
         rvs = Tuple.fromiter(rv for rv in rvs)
-        return Basic.__new__(cls, pdf, rvs)
+        if not isinstance(dist, JointDistribution) and len(random_symbols(dist)) == 0:
+            return dist
+        return Basic.__new__(cls, dist, rvs)
 
     def check(self):
         pass
@@ -208,14 +218,21 @@ class MarginalDistribution(Basic):
         return set([rv.pspace.symbol for rv in rvs])
 
     def pdf(self, x, evaluate=True):
-        expr = self.args[0]
-        rvs = self.args[1]
+        expr, rvs = self.args[0], self.args[1]
         marginalise_out = [i for i in random_symbols(expr) if i not in self.args[1]]
+        syms = [i.pspace.symbol for i in self.args[1]]
         for i in expr.atoms(Indexed):
             if isinstance(i, Indexed) and isinstance(i.base, RandomSymbol)\
              and i not in rvs:
                 marginalise_out.append(i)
-        syms = [i.pspace.symbol for i in self.args[1]]
+        if isinstance(expr, (ContinuousDistribution, DiscreteDistribution)):
+            syms = (Dummy('x', real=True, finite=True), )
+            expr = expr.pdf(x)
+        elif isinstance(expr, JointDistribution):
+            count = len(expr.domain.args)
+            x = Dummy('x', real=True, finite=True)
+            syms = [Indexed(x, i) for i in count]
+            expr = expr.pdf(syms)
         return Lambda(syms, self.compute_pdf(expr, marginalise_out, evaluate))(x)
 
     def compute_pdf(self, expr, rvs, evaluate):
