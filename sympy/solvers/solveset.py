@@ -988,9 +988,48 @@ def _solveset(f, symbol, domain, _check=False):
     return result
 
 
-def _solve_two_term_exponential(f, symbol):
+def _term_factors(f):
+    """
+    Iterator to get the factors of all terms present
+    in the given equation.
+
+    Parameters
+    ==========
+    f : Expr
+        Equation that needs to be addressed
+
+    Returns
+    =======
+    Factors of all terms present in the equation.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.solvers.solveset import _term_factors
+    >>> x = symbols('x')
+    >>> list(_term_factors(-2 - x**2 + x*(x + 1)))
+    [-2, -1, x**2, x, x + 1]
+    """
+    for add_arg in Add.make_args(f):
+        for mul_arg in Mul.make_args(add_arg):
+            yield mul_arg
+
+
+
+def _solve_exponential(f, symbol):
     r"""
     Helper function for solving (supported) exponential equations.
+
+    Exponential equations are the sum of (currently) at most
+    two terms with one or both of them having a power with a
+    symbol-dependent exponent.
+
+    For example
+
+    .. math:: 5^{2x + 3} - 5^{3x - 1}
+
+    .. math:: 4^{5 - 9x} - e^{2 - x}
 
     Parameters
     ==========
@@ -1006,10 +1045,13 @@ def _solve_two_term_exponential(f, symbol):
 
     An equation in `log` form that `solveset` might better handle.
 
+    `None`:
+        If the equation is not of supported type
+
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import _solve_two_term_exponential as solve_expo
+    >>> from sympy.solvers.solveset import _solve_exponential as solve_expo
     >>> from sympy import symbols
     >>> x = symbols('x', real=True)
     >>> solve_expo(3**(2*x) - 2**(x + 3), x)
@@ -1037,6 +1079,10 @@ def _solve_two_term_exponential(f, symbol):
 
     This form can be easily handed by `solveset`.
     """
+    if not (isinstance(f, Add) and len(f.args) == 2):
+        # solving for the sum of more than two powers is possible
+        # but not yet implemented
+        return None
 
     lhs, rhs = list(ordered(f.args))
     log_type_equation = expand_log(log(lhs)) - expand_log(log(-rhs))
@@ -1044,17 +1090,9 @@ def _solve_two_term_exponential(f, symbol):
     return log_type_equation
 
 
-def _is_two_term_exponential(f, symbol):
+def _is_exponential(f, symbol):
     r"""
-    Exponential equations are the sum of (currently) at most
-    two terms with one or both of them having a power with a
-    symbol-dependent exponent.
-
-    For example
-
-    .. math:: 5^{2x + 3} - 5^{3x - 1}
-
-    .. math:: 4^{5 - 9x} - e^{2 - x}
+    Helper to check whether the equation is exponential or not.
 
     Parameters
     ==========
@@ -1075,7 +1113,7 @@ def _is_two_term_exponential(f, symbol):
     ========
 
     >>> from sympy import symbols, cos, exp
-    >>> from sympy.solvers.solveset import _is_two_term_exponential as check
+    >>> from sympy.solvers.solveset import _is_exponential as check
     >>> x, y = symbols('x y')
     >>> check(x**y - x**2, y)
     False
@@ -1088,23 +1126,19 @@ def _is_two_term_exponential(f, symbol):
 
     * Philosophy behind the helper
 
-    The function checks for all two terms being in power form
-    with `symbol` in their exponents but not in their base.
+    The function extracts each term of the equation and checks if it is
+    of exponential form w.r.t `symbol`.
     """
-
-    if not (isinstance(f, Add) and len(f.args) == 2):
-        # solving for the sum of more than two powers is possible
-        # but not yet implemented
-        return False
-
-    a, b = f.args
-    a_coeff, a_exp_term = a.as_independent(symbol)
-    b_coeff, b_exp_term = b.as_independent(symbol)
-
-    return all(isinstance(expr_arg, (Pow, exp)) and (
-        symbol in expr_arg.exp.free_symbols and
-        symbol not in expr_arg.base.free_symbols)
-        for expr_arg in (a_exp_term, b_exp_term))
+    expr_args = _term_factors(f)
+    for expr_arg in expr_args:
+        if (isinstance(expr_arg.evalf(), Number) or
+           (isinstance(expr_arg, Symbol) and expr_arg != symbol)):
+            continue
+        if not (isinstance(expr_arg, (Pow, exp)) and
+                (symbol in expr_arg.exp.free_symbols and
+                 symbol not in expr_arg.base.free_symbols)):
+            return False
+    return True
 
 
 def _solve_logarithm_reducible_to_single_instance(f, symbol):
@@ -1376,8 +1410,8 @@ def _transolve(f, symbol, domain):
 
         def add_type(eq, x):
             ....
-            if _is_two_term_exponential(eq, x):
-                new_eq = _solve_two_term_exponential(eq, x)
+            if _is_exponential(eq, x):
+                new_eq = _solve_exponential(eq, x)
         ....
         if eq.is_Add:
             result = add_type(eq, x)
@@ -1429,8 +1463,8 @@ def _transolve(f, symbol, domain):
             new_eq = simplified_equation
 
         # check if it is exponential type equation
-        elif _is_two_term_exponential(simplified_equation, symbol):
-            new_eq = _solve_two_term_exponential(simplified_equation, symbol)
+        elif _is_exponential(simplified_equation, symbol):
+            new_eq = _solve_exponential(simplified_equation, symbol)
         # check if it is logarithmic type equation
         elif _is_logarithm_reducible_to_single_instance(Eq(lhs, rhs), symbol):
                 new_eq = _solve_logarithm_reducible_to_single_instance(

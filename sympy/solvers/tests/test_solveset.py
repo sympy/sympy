@@ -38,8 +38,8 @@ from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
-    _is_finite_with_finite_vars, _transolve, _is_two_term_exponential,
-    _solve_two_term_exponential, _is_logarithm_reducible_to_single_instance,
+    _is_finite_with_finite_vars, _transolve, _is_exponential,
+    _solve_exponential, _is_logarithm_reducible_to_single_instance,
     _solve_logarithm_reducible_to_single_instance)
 
 
@@ -1827,6 +1827,7 @@ def test_expo_conditionset():
     f2 = (x + 2)**y*x - 3
     f3 = 2**x - exp(x) - 3
     f4 = log(x) - exp(x)
+    f5 = 2**x + 3**x - 5**x
 
     assert solveset(f1, x, S.Reals) == ConditionSet(
         x, Eq((exp(x) + 1)**x - 2, 0), S.Reals)
@@ -1836,6 +1837,8 @@ def test_expo_conditionset():
         x, Eq(2**x - exp(x) - 3, 0), S.Reals)
     assert solveset(f4, x, S.Reals) == ConditionSet(
         x, Eq(-exp(x) + log(x), 0), S.Reals)
+    assert solveset(f5, x, S.Reals) == ConditionSet(
+        x, Eq(2**x + 3**x - 5**x, 0), S.Reals)
 
 
 def test_exponential_symbols():
@@ -1869,24 +1872,28 @@ def test_solve_only_exp_2():
         FiniteSet(2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2))
 
 
-def test_is_two_term_exponential():
+def test_is_exponential():
     x, y, z = symbols('x y z')
 
-    assert _is_two_term_exponential(3**x - 2, x) is False
-    assert _is_two_term_exponential(5**x - 7**(2 - x), x) is True
-    assert _is_two_term_exponential(sin(2**x) - 4*x, x) is False
-    assert _is_two_term_exponential(x**y - z, y) is False
-    assert _is_two_term_exponential(2**x + 4**x - 1, x) is False
-    assert _is_two_term_exponential(x**(y*z) - x, x) is False
-    assert _is_two_term_exponential(x**(2*x) - 3**x, x) is False
+    assert _is_exponential(3**x - 2, x) is True
+    assert _is_exponential(5**x - 7**(2 - x), x) is True
+    assert _is_exponential(sin(2**x) - 4*x, x) is False
+    assert _is_exponential(x**y - z, y) is True
+    assert _is_exponential(x**y - z, x) is False
+    assert _is_exponential(2**x + 4**x - 1, x) is True
+    assert _is_exponential(x**(y*z) - x, x) is False
+    assert _is_exponential(x**(2*x) - 3**x, x) is False
+    assert _is_exponential(x**y - y*z, y) is False
+    assert _is_exponential(x**y - x*z, y) is True
 
 
-def test_solve_two_term_exponential():
-    assert _solve_two_term_exponential(3**(2*x) - 2**(x + 3), x) == \
+def test_solve_exponential():
+    assert _solve_exponential(3**(2*x) - 2**(x + 3), x) == \
         2*x*log(3) - (x + 3)*log(2)
     y = symbols('y')
-    assert _solve_two_term_exponential(2**y + 4**y, y) == \
+    assert _solve_exponential(2**y + 4**y, y) == \
         log(2**y) - log(-4**y)
+    assert _solve_exponential(2**x + 3**x - 5**x, x) is None
 
 # end of exponential tests
 

@@ -596,9 +596,9 @@ transolve
 
 .. autofunction:: sympy.solvers.solveset._transolve
 
-.. autofunction:: sympy.solvers.solveset._is_two_term_exponential
+.. autofunction:: sympy.solvers.solveset._is_exponential
 
-.. autofunction:: sympy.solvers.solveset._solve_two_term_exponential
+.. autofunction:: sympy.solvers.solveset._solve_exponential
 
 .. autofunction:: sympy.solvers.solveset._solve_logarithm_reducible_to_single_instance
 
