@@ -574,6 +574,40 @@ def maximal_abelian_quotient(G):
 
     return subgroup_quotient(G, G.derived_subgroup())
 
+def epimorphism_pgroup(F, G, n=None):
+    '''
+    Computes all possible epimorohisms from F onto G.
+    To-do - UPdate docstring
+            Add conjgacy class implemnetation
+    '''
+    if not isinstance(F, FpGroup):
+        raise ValueError("The group must be an FpGroup")
+    if not isinstance(G, FpGroup):
+        raise ValueError("The group must be an FpGroup")
+
+    g_order = G.order()
+    h_order = H.order()
+    _H, h_isomorphism = H._to_perm_group()
+
+    if g_order == S.infinity or h_order == S.infinity:
+        raise NotImplementedError("Epimorphism methods are not implemented for infinite groups.")
+
+    homomorphism_list =[]
+
+    gens = list(G.generators)
+    for subset in itertools.permutations(_H, len(gens)):
+        images = list(subset)
+        images.extend([_H.identity]*(len(G.generators)-len(images)))
+        _images = dict(zip(gens,images))
+        if _check_homomorphism(G, _H, _images):
+            if isinstance(H, FpGroup):
+                images = h_isomorphism.invert(images)
+            T =  homomorphism(G, H, G.generators, images, check=False)
+            if T.is_surjective():
+                homomorphism_list.append(T)
+
+    return homomorphism_list
+
 
 class FpSubgroup(DefaultPrinting):
     '''
