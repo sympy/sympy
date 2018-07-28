@@ -365,6 +365,8 @@ Theano Code printing
 
    .. autoattribute:: TheanoPrinter.printmethod
 
+.. autofunction:: sympy.printing.theanocode.theano_code
+
 .. autofunction:: sympy.printing.theanocode.theano_function
 
 Gtk
