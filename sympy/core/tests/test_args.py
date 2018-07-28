@@ -1046,6 +1046,19 @@ def test_sympy__stats__joint_rv__JointRandomSymbol():
     from sympy.stats.joint_rv import JointRandomSymbol
     assert _test_args(JointRandomSymbol(x))
 
+def test_sympy__stats__joint_rv__JointDistributionHandmade():
+    from sympy import Indexed
+    from sympy.stats.joint_rv import JointDistributionHandmade
+    x1, x2 = (Indexed('x', i) for i in (1, 2))
+    assert _test_args(JointDistributionHandmade(x1 + x2, S.Reals**2))
+
+
+def test_sympy__stats__joint_rv__MarginalDistribution():
+    from sympy.stats.rv import RandomSymbol
+    from sympy.stats.joint_rv import MarginalDistribution
+    r = RandomSymbol(S('r'))
+    assert _test_args(MarginalDistribution(r, (r,)))
+
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
     pass

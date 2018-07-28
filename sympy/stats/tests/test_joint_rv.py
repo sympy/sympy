@@ -1,6 +1,7 @@
-from sympy import symbols, pi, oo, S, exp, sqrt, besselk
+from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed, erf
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
+from sympy.stats.joint_rv_types import JointRV
 from sympy.stats.crv_types import Normal
 from sympy.utilities.pytest import raises
 from sympy.integrals.integrals import integrate
@@ -58,3 +59,12 @@ def test_JointPSpace_margial_distribution():
     assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
         8*polar_lift(x**2/2 + 1)**(5/2))
     assert integrate(marginal_distribution(T, 1)(x), (x, -oo, oo)) == 1
+
+def test_JointRV():
+    from sympy.stats.joint_rv import JointDistributionHandmade
+    x1, x2 = (Indexed('x', i) for i in (1, 2))
+    pdf = exp(-x1**2/2 + x1 - x2**2/2 - S(1)/2)/(2*pi)
+    X = JointRV('x', pdf)
+    density(X)(1, 2) == exp(-1)/(2*pi)
+    assert isinstance(X.pspace.distribution, JointDistributionHandmade)
+    assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(-S(1)/2)/(2*sqrt(pi))

@@ -1655,7 +1655,7 @@ class Lambda(Expr):
         from sympy.sets.sets import FiniteSet
         v = list(variables) if iterable(variables) else [variables]
         for i in v:
-            if not getattr(i, 'is_Symbol', False):
+            if not getattr(i, 'is_symbol', False):
                 raise TypeError('variable is not a symbol: %s' % i)
         if len(v) == 1 and v[0] == expr:
             return S.IdentityFunction

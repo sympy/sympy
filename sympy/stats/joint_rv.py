@@ -13,12 +13,14 @@ from __future__ import print_function, division
 
 # __all__ = ['marginal_distribution']
 
-from sympy import Basic, Lambda, sympify, Indexed, Symbol
+from sympy import Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S
 from sympy.concrete.summations import Sum, summation
 from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-     ProductDomain, RandomSymbol)
+     ProductDomain, RandomSymbol, random_symbols)
 from sympy.matrices import ImmutableMatrix
+from sympy.core.containers import Tuple
+
 class JointPSpace(ProductPSpace):
     """
     Represents a joint probability space. Represented using symbols for
@@ -30,7 +32,7 @@ class JointPSpace(ProductPSpace):
 
     @property
     def set(self):
-        return self.domain.set
+        return self.distribution.set
 
     @property
     def symbol(self):
@@ -47,25 +49,37 @@ class JointPSpace(ProductPSpace):
     @property
     def component_count(self):
         return len(self.distribution.set.args)
+    @property
+    def pdf(self):
+        sym = [Indexed(self.symbol, i) for i in range(self.component_count)]
+        return self.distribution(*sym)
 
-    def pdf(self, *args):
-        return self.distribution(*args)
+    def component_domain(self, index):
+        return self.set.args[index]
+
+    @property
+    def symbols(self):
+        return self.distribution.symbols
 
     def marginal_distribution(self, *indices):
         count = self.component_count
-        all_syms = [Symbol(str(Indexed(self.symbol, i))) for i in range(count)]
+        orig = [Indexed(self.symbol, i) for i in range(count)]
+        all_syms = [Symbol(str(i)) for i in orig]
+        replace_dict = dict(zip(all_syms, orig))
         sym = [Symbol(str(Indexed(self.symbol, i))) for i in indices]
         limits = list([i,] for i in all_syms if i not in sym)
-        for i in range(len(limits)):
+        index = 0
+        for i in range(count):
             if i not in indices:
-                limits[i].append(self.distribution.set.args[i])
-                limits[i] = tuple(limits[i])
+                limits[index].append(self.distribution.set.args[i])
+                limits[index] = tuple(limits[index])
+                index += 1
         limits = tuple(limits)
         if self.distribution.is_Continuous:
-            return Lambda(sym, integrate(self.distribution(*all_syms), limits))
-        if self.distribution.is_Discrete:
-            return Lambda(sym, summation(self.distribution(all_syms), limits))
-
+            f = Lambda(sym, integrate(self.distribution(*all_syms), limits))
+        elif self.distribution.is_Discrete:
+            f = Lambda(sym, summation(self.distribution(all_syms), limits))
+        return f.xreplace(replace_dict)
 
     def where(self, condition):
         raise NotImplementedError()
@@ -84,6 +98,8 @@ class JointDistribution(Basic, NamedArgsMixin):
     Represented by the random variables part of the joint distribution.
     Contains methods for PDF, CDF, sampling, marginal densities, etc.
     """
+
+    _argnames = ('pdf', )
 
     def __new__(cls, *args):
         args = list(map(sympify, args))
@@ -127,6 +143,15 @@ class JointRandomSymbol(RandomSymbol):
         if isinstance(self.pspace, JointPSpace):
             return Indexed(self, key)
 
+class JointDistributionHandmade(JointDistribution, NamedArgsMixin):
+
+    _argnames = ('pdf',)
+    is_Continuous = True
+
+    @property
+    def set(self):
+        return self.args[1]
+
 def marginal_distribution(rv, *indices):
     """
     Marginal distribution function of a joint random variable.
@@ -162,3 +187,65 @@ def marginal_distribution(rv, *indices):
     if hasattr(prob_space.distribution, 'marginal_distribution'):
         return prob_space.distribution.marginal_distribution(indices, rv.symbol)
     return prob_space.marginal_distribution(*indices)
+
+class MarginalDistribution(Basic):
+
+    def __new__(cls, pdf, rvs):
+        assert all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs)
+        rvs = Tuple.fromiter(rv for rv in rvs)
+        return Basic.__new__(cls, pdf, rvs)
+
+    def check(self):
+        pass
+
+    def set(self):
+        rvs = (i for i in random_symbols(self.args[1]))
+        return ProductSet((i.pspace.set for i in rvs))
+
+    @property
+    def symbols(self):
+        rvs = self.args[1]
+        return set([rv.pspace.symbol for rv in rvs])
+
+    def pdf(self, x, evaluate=True):
+        expr = self.args[0]
+        rvs = self.args[1]
+        marginalise_out = [i for i in random_symbols(expr) if i not in self.args[1]]
+        for i in expr.atoms(Indexed):
+            if isinstance(i, Indexed) and isinstance(i.base, RandomSymbol)\
+             and i not in rvs:
+                marginalise_out.append(i)
+        syms = [i.pspace.symbol for i in self.args[1]]
+        return Lambda(syms, self.compute_pdf(expr, marginalise_out, evaluate))(x)
+
+    def compute_pdf(self, expr, rvs, evaluate):
+        for rv in rvs:
+            lpdf = 1
+            if isinstance(rv, RandomSymbol):
+                lpdf = rv.pspace.pdf
+            expr = self.marginalise_out(expr*lpdf, rv)
+        if evaluate and hasattr(expr, 'doit'):
+            return expr.doit()
+        return expr
+
+    def marginalise_out(self, expr, rv):
+        from sympy.concrete.summations import Sum
+        if isinstance(rv, RandomSymbol):
+            dom = rv.pspace.set
+        elif isinstance(rv, Indexed):
+            dom = rv.base.component_domain(
+                rv.pspace.component_domain(rv.args[1]))
+        expr = expr.xreplace({rv: rv.pspace.symbol})
+        if rv.pspace.is_Continuous:
+            #TODO: Modify to support integration
+            #for all kinds of sets.
+            expr = Integral(expr, (rv.pspace.symbol, dom))
+        elif rv.pspace.is_Discrete:
+            #incorporate this into `Sum`/`summation`
+            if dom in (S.Integers, S.Naturals, S.Naturals0):
+                dom = (dom.inf, dom.sup)
+            expr = Sum(expr, (rv.pspace.symbol, dom))
+        return expr
+
+    def __call__(self, args):
+        return self.pdf(args)
