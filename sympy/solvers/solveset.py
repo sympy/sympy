@@ -1129,15 +1129,17 @@ def _is_exponential(f, symbol):
     The function extracts each term of the equation and checks if it is
     of exponential form w.r.t `symbol`.
     """
-    expr_args = _term_factors(f)
-    for expr_arg in expr_args:
+    rv = False
+    for expr_arg in _term_factors(f):
         if symbol not in expr_arg.free_symbols:
             continue
-        if not (isinstance(expr_arg, (Pow, exp)) and
-                (symbol in expr_arg.exp.free_symbols and
-                 symbol not in expr_arg.base.free_symbols)):
-            return False
-    return True
+        if (isinstance(expr_arg, Pow) and
+           symbol not in expr_arg.base.free_symbols or
+           isinstance(expr_arg, exp)):
+            rv = True  # symbol must be in exponent
+        else:
+            return False  # depended on symbol in non-exponential way
+    return rv
 
 
 def _solve_logarithm_reducible_to_single_instance(f, symbol):
