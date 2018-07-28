@@ -166,14 +166,12 @@ def test_order():
     f = FpGroup(free_group('')[0], [])
     assert f.order() == 1
 
-def _test_subgroup(K, T, S):
-    _gens = T(K.generators)
-    for elem in _gens:
-        assert elem in S
-    assert T.is_injective()
-    assert T.image().order() == S.order()
-
 def test_fp_subgroup():
+    def _test_subgroup(K, T, S):
+        _gens = T(K.generators)
+        assert all(elem in S for elem in _gens)
+        assert T.is_injective()
+        assert T.image().order() == S.order()
     F, x, y = free_group("x, y")
     f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
     S = FpSubgroup(f, [x*y])
