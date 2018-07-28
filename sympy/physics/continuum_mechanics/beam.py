@@ -13,7 +13,6 @@ from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot
-from sympy.utilities.decorator import doctest_depends_on
 
 
 class Beam(object):
@@ -1118,7 +1117,6 @@ class Beam(object):
         else:
             return None
 
-    @doctest_depends_on(modules=('matplotlib',))
     def plot_shear_force(self, var={}):
         """
         Returns a plot for Shear force present in the Beam object.
@@ -1169,7 +1167,6 @@ class Beam(object):
         return plot(shear_force.subs(var), (self.variable, 0, length), title='Shear Force',
                 xlabel='position', ylabel='Value', line_color='g')
 
-    @doctest_depends_on(modules=('matplotlib',))
     def plot_bending_moment(self, var={}):
         """
         Returns a plot for Bending moment present in the Beam object.
@@ -1220,7 +1217,6 @@ class Beam(object):
         return plot(bending_moment.subs(var), (self.variable, 0, length), title='Bending Moment',
                 xlabel='position', ylabel='Value', line_color='b')
 
-    @doctest_depends_on(modules=('matplotlib',))
     def plot_slope(self, var={}):
         """
         Returns a plot for slope of deflection curve of the Beam object.
@@ -1271,7 +1267,6 @@ class Beam(object):
         return plot(slope.subs(var), (self.variable, 0, length), title='Slope',
                 xlabel='position', ylabel='Value', line_color='m')
 
-    @doctest_depends_on(modules=('matplotlib',))
     def plot_deflection(self, var={}):
         """
         Returns a plot for deflection curve of the Beam object.
@@ -1323,7 +1318,6 @@ class Beam(object):
         return plot(deflection.subs(var), (self.variable, 0, length), title='Deflection',
                 xlabel='position', ylabel='Value', line_color='r')
 
-    @doctest_depends_on(modules=('matplotlib',))
     def plot_all(self, var={}):
         """
         Returns a combined plot of Shear Force, Bending Moment and Deflection
