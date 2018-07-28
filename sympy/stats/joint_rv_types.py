@@ -54,13 +54,12 @@ def JointRV(symbol, pdf, _set=None):
         and i.base == IndexedBase(symbol))
     syms.sort(key = lambda index: index.args[1])
     _set = S.Reals**len(syms)
-
     pdf = Lambda(syms, pdf)
     dist = JointDistributionHandmade(pdf, _set)
     jrv = JointPSpace(symbol, dist).value
     rvs = random_symbols(pdf)
     if len(rvs) != 0:
-        dist = MarginalDistribution(pdf.expr, (jrv,))
+        dist = MarginalDistribution(dist, (jrv,))
         return JointPSpace(symbol, dist).value
     return jrv
 
