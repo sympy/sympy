@@ -516,7 +516,7 @@ def _test(*paths, **kwargs):
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
     time_balance = kwargs.get('time_balance', True)
-    blacklist = kwargs.get('blacklist', [])
+    blacklist = kwargs.get('blacklist', ['sympy/integrals/rubi/rubi_tests/tests'])
     blacklist = convert_to_native_paths(blacklist)
     fast_threshold = kwargs.get('fast_threshold', None)
     slow_threshold = kwargs.get('slow_threshold', None)
@@ -675,6 +675,7 @@ def _doctest(*paths, **kwargs):
         "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
         "sympy/parsing/latex/_antlr/latexparser.py", # generated code
         "sympy/parsing/autolev/test_examples/output.py", # generated code
+        "sympy/integrals/rubi/rubi.py"
     ])
     # autolev parser tests
     num = 12
