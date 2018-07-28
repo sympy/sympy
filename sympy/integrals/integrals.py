@@ -1326,23 +1326,17 @@ class Integral(AddWithLimits):
                 return I
 
         if len(singularities_list) == 1:
-            I = limit(((F.subs(x, singularities_list[0] - r) - limit(F, x, a)).subs([(oo, n), (-oo, -n)]) + (
-                    limit(F, x, b) - F.subs(x, singularities_list[0] + r)).subs([(oo, n), (-oo, -n)])), r, 0, '+')
+            I = limit(((F.subs(x, singularities_list[0] - r)) - F.subs(x, singularities_list[0] + r)), r, 0, '+') - limit(F, x, a).subs([(oo, n), (-oo, -n)]) + limit(F, x, b).subs([(oo, n), (-oo, -n)])
             return I.subs([(n, oo), (-n, -oo)])
 
 
         else:
             for singular_element in range(len(singularities_list)):
                 if singular_element == 0:
-                    Ia = (F.subs(x, singularities_list[0] - r) - limit(F, x, a))
+                    Ia = (F.subs(x, singularities_list[0] - r) - limit(F, x, a).subs([(oo, n), (-oo, -n)]))
                     Ib = 0
                 if singular_element == (len(singularities_list) - 1):
-                    I1 = limit(((limit(F, x, b) - (F.subs(x, singularities_list[singular_element] + r))).subs(
-                        [(oo, n), (-oo, -n)]) + (F.subs(x, singularities_list[singular_element] - r) - F.subs(x,
-                                                                                                              singularities_list[
-                                                                                                                  singular_element - 1] + r)).subs(
-                        [(oo, n), (-oo, -n)]) + Ia.subs([(oo, n), (-oo, -n)]) + Ib.subs([(oo, n), (-oo, -n)])), r, 0,
-                               '+')
+                    I1 = limit((limit(F, x, b).subs([(oo, n), (-oo, -n)]) - (F.subs(x, singularities_list[singular_element] + r))) + (F.subs(x, singularities_list[singular_element] - r) - F.subs(x, singularities_list[singular_element - 1] + r)) + Ia + Ib, r, 0,'+')
                     I = I1.subs([(n, oo), (-n, -oo)])
                     return I
                 else:
