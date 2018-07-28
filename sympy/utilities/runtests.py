@@ -707,10 +707,6 @@ def _doctest(*paths, **kwargs):
             import matplotlib
             matplotlib.use('Agg')
 
-            # don't display matplotlib windows
-            from sympy.plotting.plot import unset_show
-            unset_show()
-
 
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
