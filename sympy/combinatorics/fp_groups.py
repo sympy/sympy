@@ -1248,7 +1248,7 @@ def elimination_technique_2(C):
     C._schreier_generators = gens
     return C._schreier_generators, C._reidemeister_relators
 
-def reidemeister_presentation(fp_grp, H, C=None, homomorphism=False, subgroup=False):
+def reidemeister_presentation(fp_grp, H, C=None, homomorphism=False):
     """
     fp_group: A finitely presented group, an instance of FpGroup
     H: A subgroup whose presentation is to be found, given as a list
@@ -1301,10 +1301,8 @@ def reidemeister_presentation(fp_grp, H, C=None, homomorphism=False, subgroup=Fa
 
     if homomorphism:
         _gens = []
-        C.schreier_gen_elem = {}
         for gen in gens:
-            C.schreier_gen_elem[gen] = C._schreier_gen_elem[str(gen)]
-            _gens.append(C.schreier_gen_elem[gen])
+            _gens.append(C._schreier_gen_elem[str(gen)])
         return C.schreier_generators, C.reidemeister_relators, _gens
 
     return C.schreier_generators, C.reidemeister_relators
