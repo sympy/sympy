@@ -1116,7 +1116,7 @@ def _is_exponential(f, symbol):
     >>> from sympy.solvers.solveset import _is_exponential as check
     >>> x, y = symbols('x y')
     >>> check(x**y - x**2, y)
-    False
+    True
     >>> check(x**y - x, x)
     False
     >>> check(exp(x + 3) + 3**x, x)
@@ -1131,8 +1131,7 @@ def _is_exponential(f, symbol):
     """
     expr_args = _term_factors(f)
     for expr_arg in expr_args:
-        if (isinstance(expr_arg.evalf(), Number) or
-           (isinstance(expr_arg, Symbol) and expr_arg != symbol)):
+        if symbol not in expr_arg.free_symbols:
             continue
         if not (isinstance(expr_arg, (Pow, exp)) and
                 (symbol in expr_arg.exp.free_symbols and

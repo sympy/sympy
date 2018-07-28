@@ -40,7 +40,7 @@ from sympy.solvers.solveset import (
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
     _solve_exponential, _is_logarithm_reducible_to_single_instance,
-    _solve_logarithm_reducible_to_single_instance)
+    _solve_logarithm_reducible_to_single_instance, _term_factors)
 
 
 a = Symbol('a', real=True)
