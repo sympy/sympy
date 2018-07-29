@@ -1,9 +1,9 @@
-from sympy.stats import Poisson, Beta, Exponential, P, simplify, sqrt, exp, pi
+from sympy.stats import Poisson, Beta, Exponential, P
 from sympy.stats.rv import pspace, density
 from sympy.stats.drv_types import PoissonDistribution
-from sympy.stats.crv import Normal
+from sympy.stats.crv_types import Normal
 from sympy.stats.joint_rv import JointPSpace
-from sympy import Symbol, Eq, Ne
+from sympy import Symbol, Eq, Ne, simplify, sqrt, exp, pi
 
 def test_density():
     x = Symbol('x')

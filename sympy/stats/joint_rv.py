@@ -20,7 +20,7 @@ from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
      ProductDomain, RandomSymbol, random_symbols, SingleDomain)
 from sympy.stats.crv import (ContinuousDistribution,
     SingleContinuousDistribution, SingleContinuousPSpace)
-from sympy.stats.drv import (DiscreteDistribution, 
+from sympy.stats.drv import (DiscreteDistribution,
     SingleDiscreteDistribution, SingleDiscretePSpace)
 from sympy.matrices import ImmutableMatrix
 from sympy.core.containers import Tuple
