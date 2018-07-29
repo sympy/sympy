@@ -307,32 +307,6 @@ _not_in_mpmath = 'log1p log2'.split()
 _in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
 _known_functions_mpmath = dict(_in_mpmath, **{
     'sign': 'sign',
-    #"Abs": "fabs",
-    "elliptic_k": "ellipk",
-    "elliptic_f": "ellipf",
-    "elliptic_e": "ellipe",
-    "elliptic_pi": "ellippi",
-    "ceiling": "ceil",
-    "chebyshevt": "chebyt",
-    "chebyshevu": "chebyu",
-    "E": "e",
-    "I": "j",
-    "ln": "log",
-    #"lowergamma":"lower_gamma",
-    "oo": "inf",
-    #"uppergamma":"upper_gamma",
-    "LambertW": "lambertw",
-    "MutableDenseMatrix": "matrix",
-    "ImmutableDenseMatrix": "matrix",
-    "conjugate": "conj",
-    "dirichlet_eta": "altzeta",
-    "Ei": "ei",
-    "Shi": "shi",
-    "Chi": "chi",
-    "Si": "si",
-    "Ci": "ci",
-    "RisingFactorial": "rf",
-    "FallingFactorial": "ff",
 })
 _known_constants_mpmath = {
     'Pi': 'pi'
