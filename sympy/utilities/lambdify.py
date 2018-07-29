@@ -20,6 +20,7 @@ from sympy.utilities.decorator import doctest_depends_on
 MATH = {}
 MPMATH = {}
 NUMPY = {}
+SCIPY = {}
 TENSORFLOW = {}
 SYMPY = {}
 NUMEXPR = {}
@@ -31,6 +32,7 @@ NUMEXPR = {}
 MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
+SCIPY_DEFAULT = {"I": 1j}
 TENSORFLOW_DEFAULT = {}
 SYMPY_DEFAULT = {}
 NUMEXPR_DEFAULT = {}
@@ -72,6 +74,7 @@ MPMATH_TRANSLATIONS = {
 }
 
 NUMPY_TRANSLATIONS = {}
+SCIPY_TRANSLATIONS = {}
 
 TENSORFLOW_TRANSLATIONS = {
     "Abs": "abs",
@@ -90,6 +93,7 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *",)),
+    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -360,14 +364,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         module_provided = False
 
         try:
-            _import("numpy")
+            _import("scipy")
         except ImportError:
-            # Use either numpy (if available) or python.math where possible.
-            # XXX: This leads to different behaviour on different systems and
-            #      might be the reason for irreproducible errors.
-            modules = ["math", "mpmath", "sympy"]
+            try:
+                _import("numpy")
+            except ImportError:
+                # Use either numpy (if available) or python.math where possible.
+                # XXX: This leads to different behaviour on different systems and
+                #      might be the reason for irreproducible errors.
+                modules = ["math", "mpmath", "sympy"]
+            else:
+                modules = ["numpy"]
         else:
-            modules = ["numpy"]
+            modules = ["scipy"]
 
     # Get the needed namespaces.
     namespaces = []
@@ -400,6 +409,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.pycode import MpmathPrinter as Printer
         elif _module_present('numpy', namespaces):
             from sympy.printing.pycode import NumPyPrinter as Printer
+        elif _module_present('scipy', namespaces):
+            from sympy.printing.pycode import SciPyPrinter as Printer
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer
         elif _module_present('tensorflow', namespaces):
