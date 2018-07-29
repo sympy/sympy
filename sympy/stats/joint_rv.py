@@ -79,7 +79,7 @@ class JointPSpace(ProductPSpace):
 
     @property
     def symbols(self):
-        return self.distribution.symbols
+        return self.domain.symbols
 
     def marginal_distribution(self, *indices):
         count = self.component_count
@@ -227,6 +227,21 @@ class CompoundDistribution(Basic, NamedArgsMixin):
     def latent_distributions(self):
         return random_symbols(self.args[0])
 
+    def pdf(self, x, evaluate=False):
+        dist = self.args[0]
+        z = Dummy('z')
+        if isinstance(dist, ContinuousDistribution):
+            rv = SingleContinuousPSpace(z, dist).value
+        elif isinstance(dist, DiscreteDistribution):
+            rv = SingleDiscretePSpace(z, dist).value
+        return MarginalDistribution(self, (rv,)).pdf(x, evaluate=evaluate)
+
+    def set(self):
+        return self.args[0].set
+
+    def __call__(self, *args):
+        return self.pdf(args)
+
 
 class MarginalDistribution(Basic):
 
@@ -264,10 +279,8 @@ class MarginalDistribution(Basic):
              and i not in rvs:
                 marginalise_out.append(i)
         if isinstance(expr, CompoundDistribution):
-            expr = expr.latent_distributions
-            syms = (Dummy('x', real=True, finite=True), )
-            _expr = 1
-            expr = Mul(*expr)
+            syms = Dummy('x', real=True)
+            expr = expr.args[0].pdf(syms)
         elif isinstance(expr, JointDistribution):
             count = len(expr.domain.args)
             x = Dummy('x', real=True, finite=True)

@@ -300,8 +300,10 @@ class IndependentProductPSpace(ProductPSpace):
         symbols = FiniteSet(*[val.symbol for val in rs_space_dict.keys()])
 
         # Overlapping symbols
-        from sympy.stats.joint_rv import MarginalDistribution
-        if len(symbols) < sum(len(space.symbols) for space in spaces if not isinstance(space.distribution, MarginalDistribution)):
+        from sympy.stats.joint_rv import MarginalDistribution, CompoundDistribution
+        if len(symbols) < sum(len(space.symbols) for space in spaces if not
+         isinstance(space.distribution, (
+            CompoundDistribution, MarginalDistribution))):
             raise ValueError("Overlapping Random Variables")
 
         if all(space.is_Finite for space in spaces):

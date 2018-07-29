@@ -147,8 +147,7 @@ def rv(symbol, cls, args):
     dist.check(*args)
     pspace = SingleContinuousPSpace(symbol, dist)
     if any(isinstance(arg, RandomSymbol) for arg in args):
-        dist = CompoundDistribution(dist)
-        pspace = JointPSpace(symbol, MarginalDistribution(dist, (pspace.value, )))
+        pspace = JointPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
 
 ########################################
