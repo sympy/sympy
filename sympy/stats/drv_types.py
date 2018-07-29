@@ -5,7 +5,7 @@ from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta,
                    Piecewise, floor)
 from sympy.stats.rv import _value_check, RandomSymbol
 from sympy.stats.joint_rv_types import JointRV
-from sympy.stats.joint_rv import MarginalDistribution, JointPSpace
+from sympy.stats.joint_rv import MarginalDistribution, JointPSpace, CompoundDistribution
 from sympy.stats import density
 import random
 
@@ -18,6 +18,7 @@ def rv(symbol, cls, *args):
     dist.check(*args)
     pspace = SingleDiscretePSpace(symbol, dist)
     if any(isinstance(arg, RandomSymbol) for arg in args):
+        dist = CompoundDistribution(dist)
         pspace = JointPSpace(symbol, MarginalDistribution(dist, (pspace.value, )))
     return pspace.value
 

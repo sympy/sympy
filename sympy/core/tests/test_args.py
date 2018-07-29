@@ -1059,6 +1059,13 @@ def test_sympy__stats__joint_rv__MarginalDistribution():
     r = RandomSymbol(S('r'))
     assert _test_args(MarginalDistribution(r, (r,)))
 
+
+def test_sympy__stats__joint_rv__CompoundDistribution():
+    from sympy.stats.joint_rv import CompoundDistribution
+    from sympy.stats.drv_types import PoissonDistribution
+    r = PoissonDistribution(x)
+    assert _test_args(CompoundDistribution(PoissonDistribution(r)))
+
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
     pass

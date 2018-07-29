@@ -2,7 +2,7 @@ from sympy.stats import Poisson, Beta, Exponential, P
 from sympy.stats.rv import pspace, density
 from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.crv_types import Normal
-from sympy.stats.joint_rv import JointPSpace
+from sympy.stats.joint_rv import JointPSpace, MarginalDistribution
 from sympy import Symbol, Eq, Ne, simplify, sqrt, exp, pi
 
 def test_density():
@@ -16,6 +16,12 @@ def test_density():
     N2 = Normal('N2', N1, 2)
     assert simplify(density(N2, Eq(N1, 1))(x)) == \
         sqrt(2)*exp(-(x - 1)**2/8)/(4*sqrt(pi))
+
+def test_compound_distribution():
+    Y = Poisson('Y', 1)
+    Z = Poisson('Z', Y)
+    assert isinstance(pspace(Z), JointPSpace)
+    assert isinstance(pspace(Z).distribution, MarginalDistribution)
 
 def test_mix_expression():
     Y, E = Poisson('Y', 1), Exponential('E', 1)

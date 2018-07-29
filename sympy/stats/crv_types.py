@@ -57,7 +57,7 @@ from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistributio
 from sympy.stats.rv import _value_check, RandomSymbol
 from sympy.matrices import MatrixBase
 from sympy.stats.joint_rv_types import multivariate_rv
-from sympy.stats.joint_rv import MarginalDistribution, JointPSpace
+from sympy.stats.joint_rv import MarginalDistribution, JointPSpace, CompoundDistribution
 from sympy.external import import_module
 import random
 
@@ -147,6 +147,7 @@ def rv(symbol, cls, args):
     dist.check(*args)
     pspace = SingleContinuousPSpace(symbol, dist)
     if any(isinstance(arg, RandomSymbol) for arg in args):
+        dist = CompoundDistribution(dist)
         pspace = JointPSpace(symbol, MarginalDistribution(dist, (pspace.value, )))
     return pspace.value
 

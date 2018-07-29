@@ -13,7 +13,8 @@ from __future__ import print_function, division
 
 # __all__ = ['marginal_distribution']
 
-from sympy import Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S, Dummy
+from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
+ Dummy, Mul)
 from sympy.concrete.summations import Sum, summation
 from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
@@ -207,6 +208,26 @@ def marginal_distribution(rv, *indices):
         return prob_space.distribution.marginal_distribution(indices, rv.symbol)
     return prob_space.marginal_distribution(*indices)
 
+
+class CompoundDistribution(Basic, NamedArgsMixin):
+    """
+    Represents a compound probability distribution.
+
+    Constructed using a single probability distribution with a parameter
+    distributed according to some given distribution.
+    """
+    def __new__(cls, dist):
+        assert isinstance(dist, (ContinuousDistribution, DiscreteDistribution))
+        _args = dist.args
+        if not any([isinstance(i, RandomSymbol) for i in _args]):
+            return dist
+        return Basic.__new__(cls, dist)
+
+    @property
+    def latent_distributions(self):
+        return random_symbols(self.args[0])
+
+
 class MarginalDistribution(Basic):
 
     def __new__(cls,dist, rvs):
@@ -242,9 +263,11 @@ class MarginalDistribution(Basic):
             if isinstance(i, Indexed) and isinstance(i.base, RandomSymbol)\
              and i not in rvs:
                 marginalise_out.append(i)
-        if isinstance(expr, (ContinuousDistribution, DiscreteDistribution)):
+        if isinstance(expr, CompoundDistribution):
+            expr = expr.latent_distributions
             syms = (Dummy('x', real=True, finite=True), )
-            expr = expr.pdf(*syms)
+            _expr = 1
+            expr = Mul(*expr)
         elif isinstance(expr, JointDistribution):
             count = len(expr.domain.args)
             x = Dummy('x', real=True, finite=True)
