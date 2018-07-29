@@ -1584,7 +1584,7 @@ def test_1st_homogeneous_coeff_ode3():
     sol = Eq(log(f(x)), C1 - Piecewise(
             (-acosh(f(x)/x), abs(f(x)**2)/x**2 > 1),
             (I*asin(f(x)/x), True)))
-    assert dsolve(eq, hint='1st_homogeneous_coeff_subs_indep_div_dep') == sol
+    assert simplify(dsolve(eq, hint='1st_homogeneous_coeff_subs_indep_div_dep') - sol) == 0
 
 
 def test_1st_homogeneous_coeff_corner_case():
