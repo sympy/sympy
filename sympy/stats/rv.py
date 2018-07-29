@@ -150,7 +150,7 @@ class PSpace(Basic):
 
     @property
     def values(self):
-        return frozenset(RandomSymbol(sym, self) for sym in self.domain.symbols)
+        return frozenset(RandomSymbol(sym, self) for sym in self.symbols)
 
     @property
     def symbols(self):
@@ -300,7 +300,8 @@ class IndependentProductPSpace(ProductPSpace):
         symbols = FiniteSet(*[val.symbol for val in rs_space_dict.keys()])
 
         # Overlapping symbols
-        if len(symbols) < sum(len(space.symbols) for space in spaces):
+        from sympy.stats.joint_rv import MarginalDistribution
+        if len(symbols) < sum(len(space.symbols) for space in spaces if not isinstance(space.distribution, MarginalDistribution)):
             raise ValueError("Overlapping Random Variables")
 
         if all(space.is_Finite for space in spaces):

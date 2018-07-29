@@ -17,7 +17,7 @@ from sympy import Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S, Dummy
 from sympy.concrete.summations import Sum, summation
 from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-     ProductDomain, RandomSymbol, random_symbols)
+     ProductDomain, RandomSymbol, random_symbols, SingleDomain)
 from sympy.stats.crv import (ContinuousDistribution,
     SingleContinuousDistribution, SingleContinuousPSpace)
 from sympy.stats.drv import (DiscreteDistribution, 
@@ -56,11 +56,22 @@ class JointPSpace(ProductPSpace):
 
     @property
     def component_count(self):
-        return len(self.distribution.set.args)
+        _set = self.distribution.set
+        if isinstance(_set, ProductSet):
+            return len(_set.args)
+        return 1
+
     @property
     def pdf(self):
         sym = [Indexed(self.symbol, i) for i in range(self.component_count)]
         return self.distribution(*sym)
+
+    @property
+    def domain(self):
+        rvs = random_symbols(self.distribution)
+        if len(rvs) == 0:
+            return SingleDomain(self.symbol, self.set)
+        return ProductDomain(*[rv.pspace.domain for rv in rvs])
 
     def component_domain(self, index):
         return self.set.args[index]
@@ -208,8 +219,14 @@ class MarginalDistribution(Basic):
     def check(self):
         pass
 
+    @property
     def set(self):
-        rvs = (i for i in random_symbols(self.args[1]))
+        rvs = [i for i in random_symbols(self.args[1])]
+        marginalise_out = [i for i in random_symbols(self.args[1]) \
+         if i not in self.args[1]]
+        for i in rvs:
+            if i in marginalise_out:
+                rvs.remove(i)
         return ProductSet((i.pspace.set for i in rvs))
 
     @property
@@ -217,7 +234,7 @@ class MarginalDistribution(Basic):
         rvs = self.args[1]
         return set([rv.pspace.symbol for rv in rvs])
 
-    def pdf(self, x, evaluate=True):
+    def pdf(self, x, evaluate=False):
         expr, rvs = self.args[0], self.args[1]
         marginalise_out = [i for i in random_symbols(expr) if i not in self.args[1]]
         syms = [i.pspace.symbol for i in self.args[1]]
@@ -227,13 +244,13 @@ class MarginalDistribution(Basic):
                 marginalise_out.append(i)
         if isinstance(expr, (ContinuousDistribution, DiscreteDistribution)):
             syms = (Dummy('x', real=True, finite=True), )
-            expr = expr.pdf(x)
+            expr = expr.pdf(*syms)
         elif isinstance(expr, JointDistribution):
             count = len(expr.domain.args)
             x = Dummy('x', real=True, finite=True)
             syms = [Indexed(x, i) for i in count]
             expr = expr.pdf(syms)
-        return Lambda(syms, self.compute_pdf(expr, marginalise_out, evaluate))(x)
+        return Lambda(syms, self.compute_pdf(expr, marginalise_out, evaluate))(*x)
 
     def compute_pdf(self, expr, rvs, evaluate):
         for rv in rvs:
@@ -264,5 +281,5 @@ class MarginalDistribution(Basic):
             expr = Sum(expr, (rv.pspace.symbol, dom))
         return expr
 
-    def __call__(self, args):
+    def __call__(self, *args):
         return self.pdf(args)
