@@ -1,4 +1,4 @@
-from sympy.combinatorics.free_groups import FreeGroupElement
+from sympy.combinatorics.free_groups import free_group, FreeGroupElement
 from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup, subgroup_quotient
 from sympy import sieve
 
@@ -15,13 +15,41 @@ class PcGroup(FpGroup):
     def __init__(self, pc_series, power_exponents=None):
         self.pc_series = pc_series
         self.fp_group = self.pc_series[0]
-        self.pc_gens = pcgs
+        self.pc_gens = self.compute_pcgs()
         self.rel_orders = self.relative_orders()
         if not power_exponents:
             self.power_exponents = self.relative_orders
         self.power_relations = {}
         self.conjugate_relations = {}
         self.relations = self.power_relations + self.conjugate_relations
+        # All the elements of the `pc_gens` will be replaces
+        # by the elements of another `FreeGroup`.
+        self.F, self.x, self.pc_gens_dict = self._pc_gens_dict()
+
+    def _pc_gens_dict(self):
+        '''
+        Map the `pc_gens` to a new set of generators of
+        another FreeGroup.
+        This is useful in the implementation of the collection
+        algorithm where a word is converted to a form
+        where each element in the word is a distince generator.
+
+        '''
+        len_pc_gens = len(self.pc_gens)
+        fr_grp_str = ""
+        for i in range(0, 3):
+            fr_grp_str = fr_grp_str + "x_" + str(i) + ", "
+        fr_grp_str = fr_grp_str[:-2]
+
+        # Define a few group on a new set of generators.
+        free_group = free_group(fr_grp_str)
+        F = free_group[0]
+        # New set of generators defined as an array.
+        x = [free_group[i] for i in range(1, len(free_group))]
+        for i in range(0, len_pc_gens):
+            dict[x[i]] = self.pc_gens[i]
+
+        return F, x, dict
 
     def compute_pcgs(self):
         pcgs = []
@@ -114,7 +142,7 @@ class PcGroup(FpGroup):
         raise ValueError("Subword not found")
 
     def _find_relation(w, type):
-        '''Find the the approproate relation'''
+        '''Find the approproate relation'''
         if type == 0:
             # It's a power relation
             elem = w.letter_form_elm[0]
