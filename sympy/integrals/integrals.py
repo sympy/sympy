@@ -630,7 +630,7 @@ class Integral(AddWithLimits):
                                        for f in integrals])
                         try:
                             evalued = Add(*others)._eval_interval(x, a, b)
-                            evalued_pw = Add(*piecewises)._eval_interval(x, a, b)
+                            evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a, b)
                             function = uneval + evalued + evalued_pw
                         except NotImplementedError:
                             # This can happen if _eval_interval depends in a
