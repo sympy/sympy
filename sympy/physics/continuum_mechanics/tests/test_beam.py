@@ -392,10 +392,10 @@ def test_max_deflection():
     b.apply_load(-F, l/2, -1)
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
 
-def test_Beam_3d():
-    from sympy.physics.continuum_mechanics.beam import Beam_3d
+def test_Beam3D():
+    from sympy.physics.continuum_mechanics.beam import Beam3D
     l, E, G, I, A = symbols('l, E, G, I, A')
-    b = Beam_3d(l, E, G, I, A)
+    b = Beam3D(l, E, G, I, A, x)
     b.apply_support(0, "fixed")
     b.apply_support(l, "fixed")
     m, q = symbols('m, q')

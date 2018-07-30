@@ -13,6 +13,7 @@ from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot
+from sympy.utilities.decorator import doctest_depends_on
 
 
 class Beam(object):
@@ -1117,13 +1118,13 @@ class Beam(object):
         else:
             return None
 
-    def plot_shear_force(self, var={}):
+    def plot_shear_force(self, subs={}):
         """
         Returns a plot for Shear force present in the Beam object.
 
         Parameters
         ==========
-        var : dictionary
+        subs : dictionary
             Python dictionary containing Symbols as key and their
             corresponding values.
 
@@ -1158,22 +1159,22 @@ class Beam(object):
         for sym in shear_force.atoms(Symbol):
             if sym == self.variable:
                 continue
-            if sym not in var:
+            if sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
-        if self.length in var:
-            length = var[self.length]
+        if self.length in subs:
+            length = subs[self.length]
         else:
             length = self.length
-        return plot(shear_force.subs(var), (self.variable, 0, length), title='Shear Force',
+        return plot(shear_force.subs(subs), (self.variable, 0, length), title='Shear Force',
                 xlabel='position', ylabel='Value', line_color='g')
 
-    def plot_bending_moment(self, var={}):
+    def plot_bending_moment(self, subs={}):
         """
         Returns a plot for Bending moment present in the Beam object.
 
         Parameters
         ==========
-        var : dictionary
+        subs : dictionary
             Python dictionary containing Symbols as key and their
             corresponding values.
 
@@ -1208,22 +1209,22 @@ class Beam(object):
         for sym in bending_moment.atoms(Symbol):
             if sym == self.variable:
                 continue
-            if sym not in var:
+            if sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
-        if self.length in var:
-            length = var[self.length]
+        if self.length in subs:
+            length = subs[self.length]
         else:
             length = self.length
-        return plot(bending_moment.subs(var), (self.variable, 0, length), title='Bending Moment',
+        return plot(bending_moment.subs(subs), (self.variable, 0, length), title='Bending Moment',
                 xlabel='position', ylabel='Value', line_color='b')
 
-    def plot_slope(self, var={}):
+    def plot_slope(self, subs={}):
         """
         Returns a plot for slope of deflection curve of the Beam object.
 
         Parameters
         ==========
-        var : dictionary
+        subs : dictionary
             Python dictionary containing Symbols as key and their
             corresponding values.
 
@@ -1258,22 +1259,22 @@ class Beam(object):
         for sym in slope.atoms(Symbol):
             if sym == self.variable:
                 continue
-            if sym not in var:
-                raise ValueError("not enough var ")
-        if self.length in var:
-            length = var[self.length]
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
         else:
             length = self.length
-        return plot(slope.subs(var), (self.variable, 0, length), title='Slope',
+        return plot(slope.subs(subs), (self.variable, 0, length), title='Slope',
                 xlabel='position', ylabel='Value', line_color='m')
 
-    def plot_deflection(self, var={}):
+    def plot_deflection(self, subs={}):
         """
         Returns a plot for deflection curve of the Beam object.
 
         Parameters
         ==========
-        var : dictionary
+        subs : dictionary
             Python dictionary containing Symbols as key and their
             corresponding values.
 
@@ -1309,25 +1310,30 @@ class Beam(object):
         for sym in deflection.atoms(Symbol):
             if sym == self.variable:
                 continue
-            if sym not in var:
+            if sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
-        if self.length in var:
-            length = var[self.length]
+        if self.length in subs:
+            length = subs[self.length]
         else:
             length = self.length
-        return plot(deflection.subs(var), (self.variable, 0, length), title='Deflection',
+        return plot(deflection.subs(subs), (self.variable, 0, length), title='Deflection',
                 xlabel='position', ylabel='Value', line_color='r')
 
-    def plot_all(self, var={}):
+    @doctest_depends_on(modules=('numpy', 'matplotlib',))
+    def plot_loading_results(self, subs={}):
         """
-        Returns a combined plot of Shear Force, Bending Moment and Deflection
-        of the Beam object.
+        Returns a `matplotlib.figure.Figure` object containing subplots of Shear Force,
+        Bending Moment, Slope and Deflection of the Beam object.
 
         Parameters
         ==========
-        var : dictionary
+        subs : dictionary
             Python dictionary containing Symbols as key and their
             corresponding values.
+
+        .. note::
+           This method only works if numpy and matplotlib libraries
+           are installed on the system.
 
         Examples
         ========
@@ -1350,32 +1356,51 @@ class Beam(object):
         >>> b.apply_load(10000, 4, 0, end=8)
         >>> b.bc_deflection = [(0, 0), (8, 0)]
         >>> b.solve_for_reaction_loads(R1, R2)
-        >>> b.plot_all()
+        >>> b.plot_loading_results()
+        Figure(640x480)
         """
-        shear_force = self.shear_force()
-        deflection = self.deflection()
-        bending_moment = self.bending_moment()
-        for sym in deflection.atoms(Symbol):
+        import matplotlib.pyplot as plt
+        from numpy import linspace
+        from sympy import lambdify
+
+        length = self.length
+        variable = self.variable
+        for sym in self.deflection().atoms(Symbol):
             if sym == self.variable:
                 continue
-            if sym not in var:
+            if sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
-        if self.length in var:
-            length = var[self.length]
+        if self.length in subs:
+            length = subs[self.length]
         else:
             length = self.length
-        p = plot(shear_force.subs(var), bending_moment.subs(var), deflection.subs(var),
-                (self.variable, 0, length), show=False)
-        labels = ['Shear Force', 'Bending Moment', 'Deflection']
-        colors = ['g', 'b', 'r']
-        for n, line in enumerate(p):
-            line.label= labels[n]
-            line.line_color = colors[n]
-        p.legend = True
-        return p.show()
+
+        # As we are using matplotlib directly in this method, we need to change SymPy methods
+        # to numpy functions.
+        shear = lambdify(variable, self.shear_force().subs(subs).rewrite(Piecewise), 'numpy')
+        moment = lambdify(variable, self.bending_moment().subs(subs).rewrite(Piecewise), 'numpy')
+        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise), 'numpy')
+        deflection = lambdify(variable, self.deflection().subs(subs).rewrite(Piecewise), 'numpy')
+
+        points = linspace(0, float(length))
+
+        # Creating a grid for subplots with 2 rows and 2 columns
+        fig, axs = plt.subplots(2, 2)
+        # axs is a 2D-numpy array containing axes
+        axs[0, 0].plot(points, shear(points), color='g')
+        axs[0, 0].set_title("Shear Force")
+        axs[0, 1].plot(points, moment(points), color='b')
+        axs[0, 1].set_title("Bending Moment")
+        axs[1, 0].plot(points, slope(points), color='m')
+        axs[1, 0].set_title("Slope")
+        axs[1, 1].plot(points, deflection(points), color='r')
+        axs[1, 1].set_title("Deflection")
+        fig.tight_layout()    # For better spacing between subplots
+
+        return fig
 
 
-class Beam_3d(Beam):
+class Beam3D(Beam):
     """
     This class handles loads applied in any direction of a 3D space along
     with unequal values of Second moment along different axes.
@@ -1395,10 +1420,10 @@ class Beam_3d(Beam):
     Beam is fixed at both of its end. So, deflection of the beam at the both ends
     is restricted.
 
-    >>> from sympy.physics.continuum_mechanics.beam import Beam_3d
+    >>> from sympy.physics.continuum_mechanics.beam import Beam3D
     >>> from sympy import symbols
     >>> l, E, G, I, A = symbols('l, E, G, I, A')
-    >>> b = Beam_3d(l, E, G, I, A)
+    >>> b = Beam3D(l, E, G, I, A)
     >>> b.apply_support(0, "fixed")
     >>> b.apply_support(l, "fixed")
     >>> q, m = symbols('q, m')
@@ -1425,7 +1450,7 @@ class Beam_3d(Beam):
 
     """
 
-    def __init__(self, length, elastic_modulus, shear_modulus , second_moment, area, variable=Symbol('x')):
+    def __init__(self, length, elastic_modulus, shear_modulus , second_moment, area, variable=Symbol('x', positive=True)):
         """Initializes the class.
 
         Parameters
@@ -1449,7 +1474,7 @@ class Beam_3d(Beam):
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
-            curve. By default, it is set to ``Symbol('x')``.
+            curve. By default, it is set to ``Symbol('x', positive=True)``.
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
@@ -1582,7 +1607,7 @@ class Beam_3d(Beam):
             self.bc_slope.append((loc, [0, 0, 0]))
 
     def solve_for_reaction_loads(self, *reaction):
-        raise NotImplementedError("Beam_3d can't solve for"
+        raise NotImplementedError("Beam3D can't solve for"
                        "reactional loads")
 
     def shear_force(self):
