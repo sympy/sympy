@@ -16,11 +16,11 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or)
+                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
 
 
 from sympy.stats.crv_types import NormalDistribution
-from sympy.stats.rv import IndependentProductPSpace
+from sympy.stats.joint_rv import JointPSpace
 
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.external import import_module
@@ -720,7 +720,7 @@ def test_random_parameters():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
-    assert isinstance(pspace(meas), IndependentProductPSpace)
+    assert isinstance(pspace(meas), JointPSpace)
     #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
     #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
 
@@ -735,7 +735,7 @@ def test_conjugate_priors():
     mu = Normal('mu', 2, 3)
     x = Normal('x', mu, 1)
     assert isinstance(simplify(density(mu, Eq(x, y), evaluate=False)(z)),
-            Integral)
+            Mul)
 
 
 def test_difficult_univariate():
