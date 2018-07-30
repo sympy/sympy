@@ -1309,6 +1309,7 @@ class Integral(AddWithLimits):
             return 0
         r = Dummy('r')
         n = Dummy('n')
+        u = Dummy('u')
 
         singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a < s < b]
 
@@ -1325,29 +1326,37 @@ class Integral(AddWithLimits):
                 I = limit(F, x, b, '-') - limit(F, x, a, '+')
                 return I
 
-        if len(singularities_list) == 1:
+        if len(singularities_list) == 1 and not(a is -oo and b is oo):
             I = limit(((F.subs(x, singularities_list[0] - r)) - F.subs(x, singularities_list[0] + r)), r, 0,
                       '+') - limit(F, x, a).subs([(oo, n), (-oo, -n)]) + limit(F, x, b).subs([(oo, n), (-oo, -n)])
             return I.subs([(n, oo), (-n, -oo)])
 
 
         else:
+            Iinf = 0
             for singular_element in range(len(singularities_list)):
-                if singular_element == 0:
-                    Ia = (F.subs(x, singularities_list[0] - r) - limit(F, x, a).subs([(oo, n), (-oo, -n)]))
-                    Ib = 0
-                if singular_element == (len(singularities_list) - 1):
-                    I1 = limit((limit(F, x, b).subs([(oo, n), (-oo, -n)]) - (
-                        F.subs(x, singularities_list[singular_element] + r))) + (
-                                       F.subs(x, singularities_list[singular_element] - r) - F.subs(x,
-                                                                                                    singularities_list[
-                                                                                                        singular_element - 1] + r)) + Ia + Ib,
-                               r, 0, '+')
-                    I = I1.subs([(n, oo), (-n, -oo)])
-                    return I
+                if a is -oo and b is oo:
+                    Iinf = Iinf + limit(((F.subs(x, singularities_list[singular_element] - r)) - F.subs(x,
+                                                                                                        singularities_list[
+                                                                                                            singular_element] + r)),
+                                        r, 0, '+') + limit(F.subs(x, u) - F.subs(x, -u), u, oo)
+                    return Iinf
                 else:
-                    Ib = (F.subs(x, singularities_list[singular_element] - r) - F.subs(x, singularities_list[
-                        singular_element - 1] + r))
+                    if singular_element == 0:
+                        Ia = (F.subs(x, singularities_list[0] - r) - limit(F, x, a).subs([(oo, n), (-oo, -n)]))
+                        Ib = 0
+                    if singular_element == (len(singularities_list) - 1):
+                        I1 = limit((limit(F, x, b).subs([(oo, n), (-oo, -n)]) - (
+                            F.subs(x, singularities_list[singular_element] + r))) + (
+                                           F.subs(x, singularities_list[singular_element] - r) - F.subs(x,
+                                                                                                        singularities_list[
+                                                                                                            singular_element - 1] + r)) + Ia + Ib,
+                                   r, 0, '+')
+                        I = I1.subs([(n, oo), (-n, -oo)])
+                        return I
+                    else:
+                        Ib = (F.subs(x, singularities_list[singular_element] - r) - F.subs(x, singularities_list[
+                            singular_element - 1] + r))
 
 
 

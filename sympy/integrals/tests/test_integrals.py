@@ -25,7 +25,7 @@ f = Function('f')
 def test_principal_value():
 
     g = 1 / x
-    assert Integral(g, (x, -oo, oo)).principal_value() == I*pi
+    assert Integral(g, (x, -oo, oo)).principal_value() == 0
     assert Integral(g, (y, -oo, oo)).principal_value() == oo*sign(1/x)
     raises(ValueError, lambda: Integral(g, (x)).principal_value())
     raises(ValueError, lambda: Integral(g).principal_value())
