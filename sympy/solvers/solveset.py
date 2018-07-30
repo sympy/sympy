@@ -1080,6 +1080,14 @@ def _solve_exponential(f, symbol):
     This form can be easily handed by `solveset`.
     """
     if not (isinstance(f, Add) and len(f.args) == 2):
+        # try factoring the equation;
+        # powdenest is used to try to get powers in the standard form
+        # for better factoring
+        simplified_equation = factor(powdenest(f))
+
+        if simplified_equation.is_Mul:
+            return simplified_equation
+
         # solving for the sum of more than two powers is possible
         # but not yet implemented
         return None
@@ -1318,7 +1326,7 @@ def _transolve(f, symbol, domain):
     >>> from sympy import symbols, S, pprint
     >>> x = symbols('x', real=True) # assumption added
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
-    {-log(375)/(-log(5) + 2*log(3))}
+    {-(log(3) + 3*log(5))/(-log(5) + 2*log(3))}
 
     How `\_transolve` works
     =======================
@@ -1455,17 +1463,10 @@ def _transolve(f, symbol, domain):
         """
         result = ConditionSet(symbol, Eq(eq, 0), domain)
         new_eq = None
-        # try factoring the equation;
-        # powdenest is used to try to get powers in the standard form
-        # for better factoring
-        simplified_equation = factor(powdenest(eq))
-
-        if simplified_equation.is_Mul:
-            new_eq = simplified_equation
 
         # check if it is exponential type equation
-        elif _is_exponential(simplified_equation, symbol):
-            new_eq = _solve_exponential(simplified_equation, symbol)
+        if _is_exponential(eq, symbol):
+            new_eq = _solve_exponential(eq, symbol)
         # check if it is logarithmic type equation
         elif _is_logarithm_reducible_to_single_instance(Eq(lhs, rhs), symbol):
                 new_eq = _solve_logarithm_reducible_to_single_instance(
@@ -1486,7 +1487,7 @@ def _transolve(f, symbol, domain):
     if isinstance(rhs_s, FiniteSet):
         assert (len(rhs_s.args)) == 1
         rhs = rhs_s.args[0]
-        equation = Add(lhs, -rhs, evaluate=False)
+        equation = lhs - rhs
 
         if lhs.is_Add:
             result = add_type(equation, symbol, domain)

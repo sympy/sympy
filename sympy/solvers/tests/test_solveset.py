@@ -1746,7 +1746,6 @@ def test_term_factors():
 #################### tests for transolve and its helpers ###############
 
 def test_transolve():
-    from sympy.abc import x
 
     assert _transolve(3**x, x, S.Reals) == S.EmptySet
     assert _transolve(3**x - 9**(x + 5), x, S.Reals) == FiniteSet(-10)
@@ -1776,7 +1775,7 @@ def test_exponential_real():
     assert solveset(e6, x, S.Reals) == FiniteSet(0)
     assert solveset(e7, x, S.Reals) == FiniteSet(2)
     assert solveset(e8, x, S.Reals) == FiniteSet(2)
-    assert solveset(e9, x, S.Reals) == FiniteSet(log(9*exp(4)/4)/5)
+    assert solveset(e9, x, S.Reals) == FiniteSet(-2*log(2)/5 + 2*log(3)/5 + S(4)/5)
 
     assert solveset_real(-9*exp(-2*x + 5) + 2**(x + 1), x) == FiniteSet(
         -((-5 - 2*log(3) + log(2))/(log(2) + 2)))
