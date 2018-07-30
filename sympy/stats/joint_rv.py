@@ -25,6 +25,8 @@ from sympy.stats.drv import (DiscreteDistribution,
     SingleDiscreteDistribution, SingleDiscretePSpace)
 from sympy.matrices import ImmutableMatrix
 from sympy.core.containers import Tuple
+from sympy.utilities.misc import filldedent
+
 
 class JointPSpace(ProductPSpace):
     """
@@ -58,9 +60,7 @@ class JointPSpace(ProductPSpace):
     @property
     def component_count(self):
         _set = self.distribution.set
-        if isinstance(_set, ProductSet):
-            return len(_set.args)
-        return 1
+        return len(_set.args) if isinstance(_set, ProductSet) else 1
 
     @property
     def pdf(self):
@@ -217,7 +217,10 @@ class CompoundDistribution(Basic, NamedArgsMixin):
     distributed according to some given distribution.
     """
     def __new__(cls, dist):
-        assert isinstance(dist, (ContinuousDistribution, DiscreteDistribution))
+        if not isinstance(dist, (ContinuousDistribution, DiscreteDistribution)):
+            raise ValueError(filldedent('''CompoundDistribution can only be
+             initialized from ContinuousDistribution or DiscreteDistribution
+             '''))
         _args = dist.args
         if not any([isinstance(i, RandomSymbol) for i in _args]):
             return dist
@@ -244,9 +247,19 @@ class CompoundDistribution(Basic, NamedArgsMixin):
 
 
 class MarginalDistribution(Basic):
+    """
+    Represents the marginal distribution of a joint probability space.
+
+    Initialised using a probability distribution and random variables(or
+    their indexed components) which should be a part of the resultant
+    distribution.
+    """
 
     def __new__(cls,dist, rvs):
-        assert all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs)
+        if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
+            raise ValueError(filldedent('''Marginal distribution can be
+             intitialised only in terms of random variables or indexed random
+             variables'''))
         rvs = Tuple.fromiter(rv for rv in rvs)
         if not isinstance(dist, JointDistribution) and len(random_symbols(dist)) == 0:
             return dist
