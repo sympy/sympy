@@ -1726,7 +1726,6 @@ def linear_eq_to_matrix(equations, *symbols):
         # append constant term (term free from symbols)
         coeff_list.append(-f.as_coeff_add(*symbols)[0])
 
-
         # Forming a new equation
         eq_new = 0
         i = 0
