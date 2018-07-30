@@ -8,7 +8,7 @@ transforms and convolutions of finite sequences.
 
 Since the discrete transforms can be used to reduce the computational complexity
 of discrete convolutions, therefore, convolutions module makes use of transforms
-module for efficienct computation (notable for long input sequences).
+module for efficient computation (notable for long input sequences).
 
 Transforms
 ----------
@@ -58,7 +58,7 @@ for discrete sequences.
 Convolution
 ^^^^^^^^^^^
 
-There is a general method for calculating the convolution of discrete
+This is a general method for calculating the convolution of discrete
 sequences, which internally calls one of the methods - ``convolution_fft``,
 ``convolution_ntt``, ``convolution_fwht``, ``convolution_subset``.
 
