@@ -1705,6 +1705,9 @@ def linear_eq_to_matrix(equations, *symbols):
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
+    # removing duplicates from symbols
+    symbols = list(set(symbols))
+
     M = Matrix([symbols])
     # initialize Matrix with symbols + 1 columns
     M = M.col_insert(len(symbols), Matrix([1]))
@@ -1722,6 +1725,26 @@ def linear_eq_to_matrix(equations, *symbols):
 
         # append constant term (term free from symbols)
         coeff_list.append(-f.as_coeff_add(*symbols)[0])
+
+
+        # Forming a new equation
+        eq_new = 0
+        i = 0
+        while i < len(coeff_list) - 1:
+            eq_new += symbols[i]*coeff_list[i]
+            i += 1
+        eq_new += coeff_list[-1]
+
+        # checking if equation is linear
+        # if it is not linear then raise error
+        if sympify(eq_new - equation) == 0:
+            free_symbs = []
+            for symbol in symbols:
+                free_symbs.append(symbol.free_symbols)
+            if len(set(free_symbs)) != len(symbols):
+                raise ValueError("Equation %s is not linear"%equation)
+        else:
+            raise ValueError("Equation %s is not linear"%equation)
 
         # insert equations coeff's into rows
         M = M.row_insert(row_no, Matrix([coeff_list]))
