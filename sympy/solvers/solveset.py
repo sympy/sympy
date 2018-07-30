@@ -20,7 +20,7 @@ from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log)
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
@@ -42,9 +42,10 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
-from sympy.utilities.iterables import numbered_symbols
+from sympy.utilities.iterables import numbered_symbols, uniq
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
+from sympy.core.function import diff, expand_mul
 
 from types import GeneratorType
 
@@ -1882,6 +1883,11 @@ def linear_eq_to_matrix(equations, *symbols):
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
+    free = set(symbols)
+    zero = dict(zip(symbols, [S.Zero]*len(symbols)))
+    if len(symbols) != len(free):
+        raise ValueError('Symbols must be unique.')
+
     M = Matrix([symbols])
     # initialize Matrix with symbols + 1 columns
     M = M.col_insert(len(symbols), Matrix([1]))
@@ -1897,8 +1903,12 @@ def linear_eq_to_matrix(equations, *symbols):
         for symbol in symbols:
             coeff_list.append(f.coeff(symbol))
 
-        # append constant term (term free from symbols)
-        coeff_list.append(-f.as_coeff_add(*symbols)[0])
+        # append constant term (term free from symbols);
+        coeff_list.append(-f.xreplace(zero))
+
+        # Checking linearity
+        if coeff_list[-1] is S.NaN or any(c.free_symbols & free for c in coeff_list):
+            raise ValueError('Equation %s may need simplification before processing here.'%(equation))
 
         # insert equations coeff's into rows
         M = M.row_insert(row_no, Matrix([coeff_list]))

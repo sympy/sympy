@@ -1591,6 +1591,15 @@ def test_issue_10397():
     assert solveset(sqrt(x), x, S.Complexes) == FiniteSet(0)
 
 
+def test_issue_14987():
+    raises(ValueError, lambda: linear_eq_to_matrix([x**2], x))
+    raises(ValueError, lambda: linear_eq_to_matrix([x*(-3/x + 1) + 2*y - a], [x, y]))
+    assert linear_eq_to_matrix([(x**2-3*x)/(x-3) - 3], x) == (Matrix([[0]]), Matrix([[3]]))
+    assert linear_eq_to_matrix([(x+1)**3-x**3-3*x**2 + 7], x) == (Matrix([[0]]), Matrix([[-8]]))
+    raises(ValueError, lambda: linear_eq_to_matrix([x*(1/x+1) + y], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix([(x + 1)*y], [x, y]))
+
+
 def test_simplification():
     eq = x + (a - b)/(-2*a + 2*b)
     assert solveset(eq, x) == FiniteSet(S.Half)
