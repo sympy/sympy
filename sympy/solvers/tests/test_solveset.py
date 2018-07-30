@@ -39,8 +39,8 @@ from sympy.solvers.solveset import (
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
-    _solve_exponential, _is_logarithm_reducible_to_single_instance,
-    _solve_logarithm_reducible_to_single_instance, _term_factors)
+    _solve_exponential, _is_logarithm,
+    _solve_logarithm, _term_factors)
 
 
 a = Symbol('a', real=True)
@@ -1930,33 +1930,24 @@ def test_uselogcombine_2():
     assert solveset_real(eq, x) == EmptySet()
 
 
-def test_is_logarithm_reducible_to_single_instance():
-    assert _is_logarithm_reducible_to_single_instance(
-        Eq(log(x), 0), x) is False
-    assert _is_logarithm_reducible_to_single_instance(
-        Eq(log(x), -3), x) is False
-    assert _is_logarithm_reducible_to_single_instance(
-        Eq(log(x)*log(y), 0), x) is True
-    assert _is_logarithm_reducible_to_single_instance(
-        Eq(log(x)**2, x), 0) is False
-    assert _is_logarithm_reducible_to_single_instance(
-        Eq(log(x - 3) + log(x + 3), 0), x) is True
-    assert _is_logarithm_reducible_to_single_instance(
-        Eq(log(x**y) - y*log(x), 0), x) is True
-    assert _is_logarithm_reducible_to_single_instance(
-        Eq(sin(log(x)), 0), x) is False
-    assert _is_logarithm_reducible_to_single_instance(
-        Eq(x + y, 0), x) is False
-    assert _is_logarithm_reducible_to_single_instance(
-        Eq(log(3*x) - log(1 - x), 4), x) is True
-    assert _is_logarithm_reducible_to_single_instance(
-        Eq(log(x) + log(y) + x, 0), x) is False
+def test_is_logarithm():
+    assert _is_logarithm(log(x), x) is True
+    assert _is_logarithm(log(x) - 3, x) is True
+    assert _is_logarithm(log(x)*log(y), x) is True
+    assert _is_logarithm(log(x)**2, x) is False
+    assert _is_logarithm(log(x - 3) + log(x + 3), x) is True
+    assert _is_logarithm(log(x**y) - y*log(x), x) is True
+    assert _is_logarithm(sin(log(x)), x) is False
+    assert _is_logarithm(x + y, x) is False
+    assert _is_logarithm(log(3*x) - log(1 - x) + 4, x) is True
+    assert _is_logarithm(log(x) + log(y) + x, x) is False
+    assert _is_logarithm(log(log(x - 3)) + log(x-3), x) is False  # it's a lambert
+    assert _is_logarithm(log(log(3) + x) + log(x), x) is True
+    assert _is_logarithm(log(x)*(y + 3) + log(x), y) is False
 
 
-def test_solve_logarithm_reducible_to_single_instance():
-    assert _solve_logarithm_reducible_to_single_instance(
-        Eq(log(x**y) - y*log(x), 0), x) == S.Zero
-    assert _solve_logarithm_reducible_to_single_instance(
-        Eq(log(x)*log(y), 0), x) == log(y**log(x))
+def test_solve_logarithm():
+    assert _solve_logarithm(Eq(log(x**y) - y*log(x), 0), x) == S.Zero
+    assert _solve_logarithm(Eq(log(x)*log(y), 0), x) == log(y**log(x))
 
 # end of logarithmic tests

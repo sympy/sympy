@@ -600,9 +600,9 @@ transolve
 
 .. autofunction:: sympy.solvers.solveset._solve_exponential
 
-.. autofunction:: sympy.solvers.solveset._solve_logarithm_reducible_to_single_instance
+.. autofunction:: sympy.solvers.solveset._solve_logarithm
 
-.. autofunction:: sympy.solvers.solveset._is_logarithm_reducible_to_single_instance
+.. autofunction:: sympy.solvers.solveset._is_logarithm
 
 
 Diophantine Equations (DEs)

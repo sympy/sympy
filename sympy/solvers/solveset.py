@@ -1150,10 +1150,22 @@ def _is_exponential(f, symbol):
     return rv
 
 
-def _solve_logarithm_reducible_to_single_instance(f, symbol):
+def _solve_logarithm(f, symbol):
     r"""
     Helper to solve logarithmic equations which are reducible
     to a single instance of `log`.
+
+    Logarithmic equations are (currently) the equations that contains
+    `log` terms which can be reduced to a single log term or
+    a constant using various logarithmic identities.
+
+    For example:
+
+    .. math:: log(x) + log(x - 4)
+
+    can be reduced to:
+
+    .. math:: log(x(x - 4))
 
     Parameters
     ==========
@@ -1174,7 +1186,7 @@ def _solve_logarithm_reducible_to_single_instance(f, symbol):
 
     >>> from sympy import symbols, S, log, Eq
     >>> from sympy.solvers.solveset import \
-    ... _solve_logarithm_reducible_to_single_instance as solve_log
+    ... _solve_logarithm as solve_log
     >>> x = symbols('x')
     >>> f = Eq(log(x - 3) + log(x + 3), 0)
     >>> solve_log(f, x)
@@ -1226,19 +1238,9 @@ def _solve_logarithm_reducible_to_single_instance(f, symbol):
     return new_f
 
 
-def _is_logarithm_reducible_to_single_instance(f, symbol):
+def _is_logarithm(f, symbol):
     r"""
-    Logarithmic equations are the equations that contains
-    `log` terms which can be reduced to a single log term or
-    a constant using various logarithmic identities.
-
-    For example:
-
-    .. math:: log(x) + log(x - 4)
-
-    can be reduced to:
-
-    .. math:: log(x(x - 4))
+    Helper to check whether the equation is logarithmic or not.
 
     Parameters
     ==========
@@ -1252,28 +1254,45 @@ def _is_logarithm_reducible_to_single_instance(f, symbol):
     Returns
     =======
 
-    `True` if the equation is reducible otherwise `False`.
+    `True` if the equation is logarithmic otherwise `False`.
 
     Examples
     ========
 
     >>> from sympy import symbols, tan, log, Eq
-    >>> from sympy.solvers.solveset import \
-    ... _is_logarithm_reducible_to_single_instance as check
+    >>> from sympy.solvers.solveset import _is_logarithm as check
     >>> x = symbols('x')
-    >>> check(Eq(log(x + 2) - log(x + 3), 0), x)
+    >>> check(log(x + 2) - log(x + 3), x)
     True
-    >>> check(Eq(tan(log(2*x)), 0), x)
+    >>> check(tan(log(2*x)), x)
     False
 
     * Philosophy behind the helper
 
-    The function uses `logcombine` to see whether the equation
-    gets reduced to a single instance of `log`.
+    The function extracts each term and checks whether it is
+    logarithmic w.r.t `symbol`.
     """
-    lhs, rhs = f.lhs, f.rhs
-    new_lhs = logcombine(lhs, force=True)
-    return new_lhs != lhs if isinstance(new_lhs, log) else new_lhs is S.Zero
+    rv = False
+    for term in Add.make_args(f):
+        saw_log = False
+        for term_arg in _term_factors(term):
+            if symbol not in term_arg.free_symbols:
+                continue
+            if isinstance(term_arg, log):
+                if not term_arg.args[0].has(log):
+                    if saw_log:
+                        return False  # more than one log in term
+                    saw_log = True
+                else:
+                    if _is_logarithm(term_arg.args[0], symbol):
+                        return False  # nested log
+                    else:
+                        saw_log = True
+            else:
+                return False  # depended on symbol in non-log way
+
+            rv = True
+    return rv
 
 
 def _transolve(f, symbol, domain):
@@ -1468,9 +1487,8 @@ def _transolve(f, symbol, domain):
         if _is_exponential(eq, symbol):
             new_eq = _solve_exponential(eq, symbol)
         # check if it is logarithmic type equation
-        elif _is_logarithm_reducible_to_single_instance(Eq(lhs, rhs), symbol):
-                new_eq = _solve_logarithm_reducible_to_single_instance(
-                    Eq(lhs, rhs), symbol)
+        elif _is_logarithm(eq, symbol):
+                new_eq = _solve_logarithm(Eq(lhs, rhs), symbol)
 
         if new_eq is not None:
             result = _solveset(new_eq, symbol, domain)
