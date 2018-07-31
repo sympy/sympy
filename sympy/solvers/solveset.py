@@ -1079,20 +1079,17 @@ def _solve_exponential(lhs, rhs, symbol):
 
     This form can be easily handed by `solveset`.
     """
-    if rhs != 0:
-        return
+    newlhs = powdenest(lhs)
+    if lhs != newlhs:
+        # it may also be advantageous to factor the new expr
+        return factor(newlhs - rhs)  # try again with _solveset
 
     if not (isinstance(lhs, Add) and len(lhs.args) == 2):
-        # try factoring the equation;
-        # powdenest is used to try to get powers in the standard form
-        # for better factoring
-        simplified_equation = factor(powdenest(lhs))
-
-        if simplified_equation.is_Mul:
-            return simplified_equation
-
         # solving for the sum of more than two powers is possible
         # but not yet implemented
+        return
+
+    if rhs != 0:
         return
 
     a, b = list(ordered(lhs.args))
