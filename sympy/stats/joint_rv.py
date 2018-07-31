@@ -230,20 +230,20 @@ class CompoundDistribution(Basic, NamedArgsMixin):
     def latent_distributions(self):
         return random_symbols(self.args[0])
 
-    def pdf(self, x, evaluate=False):
+    def pdf(self, *x):
         dist = self.args[0]
         z = Dummy('z')
         if isinstance(dist, ContinuousDistribution):
             rv = SingleContinuousPSpace(z, dist).value
         elif isinstance(dist, DiscreteDistribution):
             rv = SingleDiscretePSpace(z, dist).value
-        return MarginalDistribution(self, (rv,)).pdf(x, evaluate=evaluate)
+        return MarginalDistribution(self, (rv,)).pdf(*x)
 
     def set(self):
         return self.args[0].set
 
     def __call__(self, *args):
-        return self.pdf(args)
+        return self.pdf(*args)
 
 
 class MarginalDistribution(Basic):
@@ -283,7 +283,7 @@ class MarginalDistribution(Basic):
         rvs = self.args[1]
         return set([rv.pspace.symbol for rv in rvs])
 
-    def pdf(self, x, evaluate=False):
+    def pdf(self, *x):
         expr, rvs = self.args[0], self.args[1]
         marginalise_out = [i for i in random_symbols(expr) if i not in self.args[1]]
         syms = [i.pspace.symbol for i in self.args[1]]
@@ -298,17 +298,15 @@ class MarginalDistribution(Basic):
             count = len(expr.domain.args)
             x = Dummy('x', real=True, finite=True)
             syms = [Indexed(x, i) for i in count]
-            expr = expr.pdf(syms)
-        return Lambda(syms, self.compute_pdf(expr, marginalise_out, evaluate))(*x)
+            expr = expression.pdf(syms)
+        return Lambda(syms, self.compute_pdf(expr, marginalise_out))(*x)
 
-    def compute_pdf(self, expr, rvs, evaluate):
+    def compute_pdf(self, expr, rvs):
         for rv in rvs:
             lpdf = 1
             if isinstance(rv, RandomSymbol):
                 lpdf = rv.pspace.pdf
             expr = self.marginalise_out(expr*lpdf, rv)
-        if evaluate and hasattr(expr, 'doit'):
-            return expr.doit()
         return expr
 
     def marginalise_out(self, expr, rv):
@@ -331,4 +329,4 @@ class MarginalDistribution(Basic):
         return expr
 
     def __call__(self, *args):
-        return self.pdf(args)
+        return self.pdf(*args)
