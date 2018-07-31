@@ -79,7 +79,7 @@ def test_Dimension_add_sub():
     e = length + x
     assert e == x + length and e.is_Add and set(e.args) == {length, x}
     e = length + 1
-    assert e == 1 + length == 1 - length == length + 1 and e.is_Add and set(e.args) == {length, 1}
+    assert e == 1 + length == 1 - length and e.is_Add and set(e.args) == {length, 1}
 
 
 def test_Dimension_mul_div_exp():

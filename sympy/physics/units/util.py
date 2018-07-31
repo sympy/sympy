@@ -174,13 +174,26 @@ def check_dimensions(expr):
     # the case of adding a number to a dimensional quantity
     # is ignored for the sake of SymPy core routines, so this
     # function will raise an error now if such an addend is
-    # found
-    adds = expr.atoms(Add)
+    # found.
+    # Also, when doing substitutions, multiplicative constants
+    # might be introduced, so remove those now
+    adds = expr.atoms(Add) or (expr,)
+    reps = {}
     for a in adds:
-        con = any(ai.is_number for ai in a.args)
+        con = any(ai.is_number for ai in a.args) if a.is_Add else 0
         for ai in _term_factors(a):
             if isinstance(ai, Pow):
                 ai = ai.base
-            if isinstance(ai, (Quantity, Dimension)) and con:
-                raise ValueError('dimensional mismatch in addends')
-    return expr
+            if isinstance(ai, (Quantity, Dimension)):
+                if con:
+                    raise ValueError('dimensional mismatch in addends')
+                if isinstance(ai, Dimension):
+                    break
+        else:
+            continue
+        # there was a Dimension as a factor of this term: clear const
+        if a.is_Mul:
+            reps[a] = a.func(*[
+                i for i in a.args if not i.is_number])
+
+    return expr.xreplace(reps)
