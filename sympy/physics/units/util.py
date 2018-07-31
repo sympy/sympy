@@ -177,23 +177,36 @@ def check_dimensions(expr):
     # found.
     # Also, when doing substitutions, multiplicative constants
     # might be introduced, so remove those now
-    adds = expr.atoms(Add) or (expr,)
-    reps = {}
+    adds = expr.atoms(Add)
+    DIM_OF = dimsys_default.get_dimensional_dependencies
     for a in adds:
-        con = any(ai.is_number for ai in a.args) if a.is_Add else 0
-        for ai in _term_factors(a):
-            if isinstance(ai, Pow):
-                ai = ai.base
-            if isinstance(ai, (Quantity, Dimension)):
-                if con:
-                    raise ValueError('dimensional mismatch in addends')
-                if isinstance(ai, Dimension):
+        deset = set()
+        for ai in a.args:
+            if ai.is_number:
+                deset.add(())
+                continue
+            dims = []
+            skip = False
+            for i in Mul.make_args(ai):
+                if i.has(Quantity):
+                    i = Dimension(Quantity.get_dimensional_expr(i))
+                if i.has(Dimension):
+                    dims.extend(DIM_OF(i).items())
+                elif i.free_symbols:
+                    skip = True
                     break
-        else:
-            continue
-        # there was a Dimension as a factor of this term: clear const
-        if a.is_Mul:
-            reps[a] = a.func(*[
-                i for i in a.args if not i.is_number])
+            if not skip:
+                deset.add(tuple(sorted(dims)))
+                if len(deset) > 1:
+                    raise ValueError(
+                        "addends have incompatible dimensions")
+
+    # clear multiplicative constants on Dimensions which may be
+    # left after substitution
+    reps = {}
+    for m in expr.atoms(Mul):
+        if any(isinstance(i, Dimension) for i in m.args):
+            reps[m] = m.func(*[
+                i for i in m.args if not i.is_number])
 
     return expr.xreplace(reps)

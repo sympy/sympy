@@ -12,7 +12,7 @@ from sympy.physics.units import (
     G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
     kilogram, kilometer, length, meter, mile, minute, newton, planck,
     planck_length, planck_mass, planck_temperature, planck_time, radians,
-    second, speed_of_light, steradian, time)
+    second, speed_of_light, steradian, time, km)
 from sympy.physics.units.dimensions import dimsys_default
 from sympy.physics.units.util import convert_to, dim_simplify, check_dimensions
 from sympy.utilities.pytest import raises
@@ -159,3 +159,9 @@ def test_check_dimensions():
     assert check_dimensions((length + x).subs(x, length)) == length
     raises(ValueError, lambda: check_dimensions(inch + 1))
     raises(ValueError, lambda: check_dimensions(length + 1))
+    raises(ValueError, lambda: check_dimensions(length + time))
+    raises(ValueError, lambda: check_dimensions(meter + second))
+    raises(ValueError, lambda: check_dimensions(2 * meter + second))
+    raises(ValueError, lambda: check_dimensions(2 * meter + 3 * second))
+    raises(ValueError, lambda: check_dimensions(1 / second + 1 / meter))
+    raises(ValueError, lambda: check_dimensions(2 * meter*(mile + centimeter) + km))

@@ -247,31 +247,3 @@ class Quantity(AtomicExpr):
     def free_symbols(self):
         """Return free symbols from quantity."""
         return self.scale_factor.free_symbols
-
-
-def _Quantity_constructor_postprocessor_Add(expr):
-    # Construction postprocessor for the addition,
-    # checks for dimension mismatches of the addends, thus preventing
-    # expressions like `meter + second` to be created. For sake of
-    # core operations involving assumptions, the case of `unit + number`
-    # will be ignored.
-
-    deset = {
-        tuple(sorted(dimsys_default.get_dimensional_dependencies(
-            Dimension(Quantity.get_dimensional_expr(i))).items()))
-        for i in expr.args
-        if not i.free_symbols # do not raise if there are symbols
-                              # (free symbols could contain the units
-                              # corrections)
-        and not i.is_number
-    }
-    # If `deset` has more than one element, then some dimensions do not
-    # match in the sum:
-    if len(deset) > 1:
-        raise ValueError("summation of quantities of incompatible dimensions")
-    return expr
-
-
-Basic._constructor_postprocessor_mapping[Quantity] = {
-    "Add" : [_Quantity_constructor_postprocessor_Add],
-}

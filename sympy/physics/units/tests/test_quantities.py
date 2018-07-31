@@ -283,8 +283,7 @@ def test_issue_quart():
 
 
 def test_issue_5565():
-    raises(ValueError, lambda: m < s)
-    assert (m < km).is_Relational
+    assert (m < s).is_Relational
 
 
 def test_find_unit():
@@ -315,19 +314,6 @@ def test_Quantity_derivative():
     assert diff(x**3*meter**2, x) == 3*x**2*meter**2
     assert diff(meter, meter) == 1
     assert diff(meter**2, meter) == 2*meter
-
-
-def test_sum_of_incompatible_quantities():
-    raises(ValueError, lambda: meter + second)
-    raises(ValueError, lambda: 2 * meter + second)
-    raises(ValueError, lambda: 2 * meter + 3 * second)
-    raises(ValueError, lambda: 1 / second + 1 / meter)
-    raises(ValueError, lambda: 2 * meter*(mile + centimeter) + km)
-
-    expr = 2 * (mile + centimeter)/second + km/hour
-    assert expr in Basic._constructor_postprocessor_mapping
-    for i in expr.args:
-        assert i in Basic._constructor_postprocessor_mapping
 
 
 def test_quantity_postprocessing():
