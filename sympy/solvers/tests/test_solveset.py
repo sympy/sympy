@@ -39,7 +39,7 @@ from sympy.solvers.solveset import (
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
-    _solve_exponential, _is_logarithm,
+    _solve_exponential, _is_logarithmic,
     _solve_logarithm, _term_factors)
 
 
@@ -1761,9 +1761,8 @@ def test_exponential_real():
     e4 = exp(log(5)*x) - 2**x
     e5 = exp(x/y)*exp(-z/y) - 2
     e6 = 5**(x/2) - 2**(x/3)
-    e7 = 2**x + 4**x + 8**x - 84
-    e8 = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
-    e9 = -9*exp(-2*x + 5) + 4*exp(3*x + 1)
+    e7 = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
+    e8 = -9*exp(-2*x + 5) + 4*exp(3*x + 1)
 
     assert solveset(e1, x, S.Reals) == FiniteSet(
         -3*log(2)/(-2*log(3) + log(2)))
@@ -1774,8 +1773,7 @@ def test_exponential_real():
         S.Reals, FiniteSet(y*log(2*exp(z/y))))
     assert solveset(e6, x, S.Reals) == FiniteSet(0)
     assert solveset(e7, x, S.Reals) == FiniteSet(2)
-    assert solveset(e8, x, S.Reals) == FiniteSet(2)
-    assert solveset(e9, x, S.Reals) == FiniteSet(-2*log(2)/5 + 2*log(3)/5 + S(4)/5)
+    assert solveset(e8, x, S.Reals) == FiniteSet(-2*log(2)/5 + 2*log(3)/5 + S(4)/5)
 
     assert solveset_real(-9*exp(-2*x + 5) + 2**(x + 1), x) == FiniteSet(
         -((-5 - 2*log(3) + log(2))/(log(2) + 2)))
@@ -1824,6 +1822,12 @@ def test_exponential_complex():
     den = -2*log(2) + log(3)
     ans = imageset(Lambda(n, num/den), S.Integers)
     assert res == ans
+
+
+@XFAIL
+def test_other_exponential():
+    f = 2**x + 4**x + 8**x - 84
+    assert solveset_real(f, x) == FiniteSet(2)
 
 
 def test_expo_conditionset():
@@ -1881,6 +1885,7 @@ def test_solve_only_exp_2():
 def test_is_exponential():
     x, y, z = symbols('x y z')
 
+    assert _is_exponential(y, x) is False
     assert _is_exponential(3**x - 2, x) is True
     assert _is_exponential(5**x - 7**(2 - x), x) is True
     assert _is_exponential(sin(2**x) - 4*x, x) is False
@@ -1894,12 +1899,13 @@ def test_is_exponential():
 
 
 def test_solve_exponential():
-    assert _solve_exponential(3**(2*x) - 2**(x + 3), x) == \
+    assert _solve_exponential(3**(2*x) - 2**(x + 3), 0, x) == \
         2*x*log(3) - (x + 3)*log(2)
     y = symbols('y')
-    assert _solve_exponential(2**y + 4**y, y) == \
+    assert _solve_exponential(2**y + 4**y, 1, y) is None
+    assert _solve_exponential(2**y + 4**y, 0, y) == \
         log(2**y) - log(-4**y)
-    assert _solve_exponential(2**x + 3**x - 5**x, x) is None
+    assert _solve_exponential(2**x + 3**x - 5**x, 0, x) is None
 
 # end of exponential tests
 
@@ -1930,24 +1936,25 @@ def test_uselogcombine_2():
     assert solveset_real(eq, x) == EmptySet()
 
 
-def test_is_logarithm():
-    assert _is_logarithm(log(x), x) is True
-    assert _is_logarithm(log(x) - 3, x) is True
-    assert _is_logarithm(log(x)*log(y), x) is True
-    assert _is_logarithm(log(x)**2, x) is False
-    assert _is_logarithm(log(x - 3) + log(x + 3), x) is True
-    assert _is_logarithm(log(x**y) - y*log(x), x) is True
-    assert _is_logarithm(sin(log(x)), x) is False
-    assert _is_logarithm(x + y, x) is False
-    assert _is_logarithm(log(3*x) - log(1 - x) + 4, x) is True
-    assert _is_logarithm(log(x) + log(y) + x, x) is False
-    assert _is_logarithm(log(log(x - 3)) + log(x-3), x) is False  # it's a lambert
-    assert _is_logarithm(log(log(3) + x) + log(x), x) is True
-    assert _is_logarithm(log(x)*(y + 3) + log(x), y) is False
+def test_is_logarithmic():
+    assert _is_logarithmic(y, x) is False
+    assert _is_logarithmic(log(x), x) is True
+    assert _is_logarithmic(log(x) - 3, x) is True
+    assert _is_logarithmic(log(x)*log(y), x) is True
+    assert _is_logarithmic(log(x)**2, x) is False
+    assert _is_logarithmic(log(x - 3) + log(x + 3), x) is True
+    assert _is_logarithmic(log(x**y) - y*log(x), x) is True
+    assert _is_logarithmic(sin(log(x)), x) is False
+    assert _is_logarithmic(x + y, x) is False
+    assert _is_logarithmic(log(3*x) - log(1 - x) + 4, x) is True
+    assert _is_logarithmic(log(x) + log(y) + x, x) is False
+    assert _is_logarithmic(log(log(x - 3)) + log(x - 3), x) is True
+    assert _is_logarithmic(log(log(3) + x) + log(x), x) is True
+    assert _is_logarithmic(log(x)*(y + 3) + log(x), y) is False
 
 
 def test_solve_logarithm():
-    assert _solve_logarithm(Eq(log(x**y) - y*log(x), 0), x) == S.Zero
-    assert _solve_logarithm(Eq(log(x)*log(y), 0), x) == log(y**log(x))
+    assert _solve_logarithm(log(x**y) - y*log(x), 0, x) == S.Zero
+    assert _solve_logarithm(log(x)*log(y), 0, x) == log(y**log(x))
 
 # end of logarithmic tests

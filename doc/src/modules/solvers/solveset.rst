@@ -602,7 +602,7 @@ transolve
 
 .. autofunction:: sympy.solvers.solveset._solve_logarithm
 
-.. autofunction:: sympy.solvers.solveset._is_logarithm
+.. autofunction:: sympy.solvers.solveset._is_logarithmic
 
 
 Diophantine Equations (DEs)
