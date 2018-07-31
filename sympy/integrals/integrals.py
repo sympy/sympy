@@ -1328,12 +1328,13 @@ class Integral(AddWithLimits):
 
         if len(singularities_list) == 1 and not(a is -oo and b is oo):
             I = limit(((F.subs(x, singularities_list[0] - r)) - F.subs(x, singularities_list[0] + r)), r, 0,
-                      '+') - limit(F, x, a).subs([(oo, n), (-oo, -n)]) + limit(F, x, b).subs([(oo, n), (-oo, -n)])
-            return I.subs([(n, oo), (-n, -oo)])
+                      '+') - limit(F, x, a) + limit(F, x, b)
+            return I
 
 
         else:
             Iinf = 0
+            Ib = 0
             for singular_element in range(len(singularities_list)):
                 if a is -oo and b is oo:
                     Iinf = Iinf + limit(((F.subs(x, singularities_list[singular_element] - r)) - F.subs(x,
@@ -1343,19 +1344,17 @@ class Integral(AddWithLimits):
                     return Iinf
                 else:
                     if singular_element == 0:
-                        Ia = (F.subs(x, singularities_list[0] - r) - limit(F, x, a).subs([(oo, n), (-oo, -n)]))
-                        Ib = 0
+                        Ia = F.subs(x, singularities_list[0] - r) - limit(F, x, a)
                     if singular_element == (len(singularities_list) - 1):
-                        I1 = limit((limit(F, x, b).subs([(oo, n), (-oo, -n)]) - (
+                        I1 = limit((limit(F, x, b) - (
                             F.subs(x, singularities_list[singular_element] + r))) + (
                                            F.subs(x, singularities_list[singular_element] - r) - F.subs(x,
                                                                                                         singularities_list[
                                                                                                             singular_element - 1] + r)) + Ia + Ib,
                                    r, 0, '+')
-                        I = I1.subs([(n, oo), (-n, -oo)])
-                        return I
+                        return I1
                     else:
-                        Ib = (F.subs(x, singularities_list[singular_element] - r) - F.subs(x, singularities_list[
+                        Ib = Ib + (F.subs(x, singularities_list[singular_element] - r) - F.subs(x, singularities_list[
                             singular_element - 1] + r))
 
 
