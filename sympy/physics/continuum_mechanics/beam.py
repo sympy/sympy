@@ -1331,8 +1331,8 @@ class Beam(object):
     @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def plot_loading_results(self, subs=None):
         """
-        Returns a `matplotlib.figure.Figure` object containing subplots of Shear Force,
-        Bending Moment, Slope and Deflection of the Beam object.
+        Returns Axes object containing subplots of Shear Force, Bending Moment,
+        Slope and Deflection of the Beam object.
 
         Parameters
         ==========
@@ -1365,8 +1365,7 @@ class Beam(object):
         >>> b.apply_load(10000, 4, 0, end=8)
         >>> b.bc_deflection = [(0, 0), (8, 0)]
         >>> b.solve_for_reaction_loads(R1, R2)
-        >>> b.plot_loading_results()
-        Figure(640x480)
+        >>> axes = b.plot_loading_results()
         """
         from sympy import lambdify
         matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
@@ -1400,17 +1399,17 @@ class Beam(object):
         # Creating a grid for subplots with 2 rows and 2 columns
         fig, axs = plt.subplots(4, 1)
         # axs is a 2D-numpy array containing axes
-        axs[0].plot(points, shear(points), color='g')
+        axs[0].plot(points, shear(points))
         axs[0].set_title("Shear Force")
-        axs[1].plot(points, moment(points), color='b')
+        axs[1].plot(points, moment(points))
         axs[1].set_title("Bending Moment")
-        axs[2].plot(points, slope(points), color='m')
+        axs[2].plot(points, slope(points))
         axs[2].set_title("Slope")
-        axs[3].plot(points, deflection(points), color='r')
+        axs[3].plot(points, deflection(points))
         axs[3].set_title("Deflection")
         fig.tight_layout()    # For better spacing between subplots
 
-        return fig
+        return axs
 
 
 class Beam_3d(Beam):
