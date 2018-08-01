@@ -1732,15 +1732,16 @@ def linear_eq_to_matrix(equations, *symbols):
         while i < len(coeff_list) - 1:
             eq_new += symbols[i]*coeff_list[i]
             i += 1
-        eq_new += coeff_list[-1]
+        eq_new += (-coeff_list[-1])
 
         # checking if equation is linear
         # if it is not linear then raise error
         if sympify(eq_new - equation) == 0:
             free_symbs = []
             for symbol in symbols:
-                free_symbs.append(symbol.free_symbols)
-            if len(set(free_symbs)) != len(symbols):
+                for symb in symbol.free_symbols:
+                    free_symbs.append(symb)
+            if len(list(set(free_symbs))) != len(symbols):
                 raise ValueError("Equation %s is not linear"%equation)
         else:
             raise ValueError("Equation %s is not linear"%equation)
@@ -2828,4 +2829,3 @@ def nonlinsolve(system, *symbols):
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
         return result
-    
