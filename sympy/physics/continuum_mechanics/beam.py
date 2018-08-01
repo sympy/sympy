@@ -1040,9 +1040,12 @@ class Beam(object):
                     conditions.append(((prev_def + deflection_value), args[i][1]))
                     prev_def = deflection_value.subs(x, args[i][1].args[1])
                 return Piecewise(*conditions)
-            return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x)
+            C3 = Symbol('C3')
+            C4 = Symbol('C4')
+            return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x) + C3*x + C4
         elif not self._boundary_conditions['deflection']:
-            return integrate(self.slope(), x)
+            C4 = Symbol('C4')
+            return integrate(self.slope(), x) + C4
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
             if self._composite_type == "fixed":
                 args = I.args
