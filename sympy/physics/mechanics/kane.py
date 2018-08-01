@@ -638,7 +638,7 @@ class KanesMethod(object):
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self.u) + self._f_k
-        return -Matrix([f1, self._f_d, self._f_dnh])
+        return -Matrix([f1.subs(self.kindiffdict()), self._f_d.subs(self.kindiffdict()), self._f_dnh.subs(self.kindiffdict())])
 
     @property
     def q(self):

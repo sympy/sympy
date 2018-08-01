@@ -11,7 +11,7 @@ particle_p2=me.Particle('p2', me.Point('p2_pt'), sm.Symbol('m'))
 body_r_cm=me.Point('r_cm')
 body_r_f=me.ReferenceFrame('r_f')
 body_r=me.RigidBody('r', body_r_cm, body_r_f, sm.symbols('m'), (me.outer(body_r_f.x,body_r_f.x),body_r_cm))
-r_a = sm.Matrix([1,1,1,1,1,0,0,0,1]).reshape(3, 3)
+frame_a.orient(body_r_f, 'DCM', sm.Matrix([1,1,1,1,1,0,0,0,1]).reshape(3, 3))
 point_o=me.Point('o')
 m1=sm.symbols('m1')
 particle_p1.mass = m1

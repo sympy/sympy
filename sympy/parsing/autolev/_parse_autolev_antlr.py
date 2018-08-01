@@ -9,11 +9,11 @@ try:
                                  __import__kwargs={'fromlist': ['AutolevLexer']}).AutolevLexer
     AutolevListener = import_module('sympy.parsing.autolev._antlr.autolevlistener',
                                     __import__kwargs={'fromlist': ['AutolevListener']}).AutolevListener
-except Exception:
+except AttributeError:
     pass
 
 
-def parse_autolev(inp, output):
+def parse_autolev(input, output, include_pydy):
     antlr4 = import_module('antlr4', warn_not_installed=True)
     if not antlr4:
         raise ImportError("Autolev parsing requires the antlr4 python package,"
@@ -21,9 +21,9 @@ def parse_autolev(inp, output):
                           " antlr4-python3-runtime) or"
                           " conda (antlr-python-runtime)")
     try:
-        input_stream = antlr4.FileStream(inp)
+        input_stream = antlr4.FileStream(input)
     except Exception:
-        input_stream = antlr4.InputStream(inp)
+        input_stream = antlr4.InputStream(input)
 
     if AutolevListener:
         from ._listener_autolev_antlr import MyListener
@@ -31,7 +31,7 @@ def parse_autolev(inp, output):
         token_stream = antlr4.CommonTokenStream(lexer)
         parser = AutolevParser(token_stream)
         tree = parser.prog()
-        my_listener = MyListener(output)
+        my_listener = MyListener(output, include_pydy)
         walker = antlr4.ParseTreeWalker()
         walker.walk(my_listener, tree)
         if output == "list":

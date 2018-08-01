@@ -51,5 +51,5 @@ m[0,1]=5
 a = m[0, 1]*2
 force_ro = q1*frame_n.x
 torque_a = q2*frame_n.z
-force_ro = q2*frame_n.y
+force_ro = q1*frame_n.x + q2*frame_n.y
 f=force_ro*2

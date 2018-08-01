@@ -51,10 +51,14 @@ body_b2_cm.set_vel(frame_n, 0)
 body_b2_f=me.ReferenceFrame('b2_f')
 body_b2=me.RigidBody('b2', body_b2_cm, body_b2_f, sm.symbols('m'), (me.outer(body_b2_f.x,body_b2_f.x),body_b2_cm))
 g=sm.symbols('g', real=True)
+force_p1 = particle_p1.mass*(g*frame_n.x)
+force_p2 = particle_p2.mass*(g*frame_n.x)
+force_b1 = body_b1.mass*(g*frame_n.x)
+force_b2 = body_b2.mass*(g*frame_n.x)
 z = me.dynamicsymbols('z')
 v=x*frame_a.x+y*frame_a.z
 point_o.set_pos(point_p, x*frame_a.x+y*frame_a.y)
-v = (v).subs({eqn:sm.solve(eqn,x,y)[eqn], x:2*z, y:z})
-point_o.set_pos(point_p, (point_o.pos_from(point_p)).subs({eqn:sm.solve(eqn,x,y)[eqn], x:2*z, y:z}))
-force_o = x*y*frame_a.x
-force_p1 += x*y*frame_a.x
+v = (v).subs({x:2*z, y:z})
+point_o.set_pos(point_p, (point_o.pos_from(point_p)).subs({x:2*z, y:z}))
+force_o = -1*(x*y*frame_a.x)
+force_p1 = particle_p1.mass*(g*frame_n.x)+ x*y*frame_a.x

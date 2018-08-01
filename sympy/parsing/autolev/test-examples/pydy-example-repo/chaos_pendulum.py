@@ -39,6 +39,8 @@ ibyy = 1/12*mb*(w**2+h**2)
 ibzz = 1/12*mb*w**2
 body_a.inertia = (me.inertia(body_a_f, iaxx, iayy, iazz, 0, 0, 0), body_a_cm)
 body_b.inertia = (me.inertia(body_b_f, ibxx, ibyy, ibzz, 0, 0, 0), body_b_cm)
+force_a = body_a.mass*(g*frame_n.z)
+force_b = body_b.mass*(g*frame_n.z)
 kd_eqs = [thetad - omega, phid - alpha]
 forceList = [(body_a.masscenter,body_a.mass*(g*frame_n.z)), (body_b.masscenter,body_b.mass*(g*frame_n.z))]
 kane = me.KanesMethod(frame_n, q_ind=[theta,phi], u_ind=[omega, alpha], kd_eqs = kd_eqs)
@@ -51,3 +53,4 @@ initial_conditions={theta:np.deg2rad(90), phi:np.deg2rad(0.5), omega:0, alpha:0}
 times = np.linspace(0.0, 10, 10/0.02))
 
 y=sys.integrate()
+# Works

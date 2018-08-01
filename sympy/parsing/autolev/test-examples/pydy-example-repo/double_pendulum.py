@@ -23,6 +23,8 @@ particle_p.point.v2pt_theory(point_o,frame_n,frame_a)
 particle_r.point.v2pt_theory(particle_p.point,frame_n,frame_b)
 particle_p.mass = m
 particle_r.mass = m
+force_p = particle_p.mass*(g*frame_n.x)
+force_r = particle_r.mass*(g*frame_n.x)
 kd_eqs = [q1d - u1, q2d - u2]
 forceList = [(particle_p.point,particle_p.mass*(g*frame_n.x)), (particle_r.point,particle_r.mass*(g*frame_n.x))]
 kane = me.KanesMethod(frame_n, q_ind=[q1,q2], u_ind=[u1, u2], kd_eqs = kd_eqs)
@@ -35,3 +37,4 @@ initial_conditions={q1:.1, q2:.2, u1:0, u2:0},
 times = np.linspace(0.0, 10, 10/.01))
 
 y=sys.integrate()
+# Works
