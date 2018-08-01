@@ -595,7 +595,23 @@ def test_inverse_laplace_transform_delta():
     assert ILT(exp(2*s), s, t) == DiracDelta(t + 2)
     r = Symbol('r', real=True)
     assert ILT(exp(r*s), s, t) == DiracDelta(t + r)
-    # TODO: what if r.is_real is None/False?  See meijerint_inversion
+
+
+def test_inverse_laplace_transform_delta_cond():
+    from sympy import DiracDelta, Eq, im
+    ILT = inverse_laplace_transform
+    t = symbols('t')
+    r = Symbol('r', real=True)
+    assert ILT(exp(r*s), s, t, noconds=False) == (DiracDelta(t + r), True)
+    z = Symbol('z')
+    assert ILT(exp(z*s), s, t, noconds=False) == \
+        (DiracDelta(t + z), Eq(im(z), 0))
+    # inversion does not exist: verify it doesn't evaluate to DiracDelta
+    for z in (Symbol('z', real=False),
+              Symbol('z', imaginary=True, zero=False)):
+        f = ILT(exp(z*s), s, t, noconds=False)
+        f = f[0] if isinstance(f, tuple) else f
+        assert f.func != DiracDelta
 
 
 def test_fourier_transform():
