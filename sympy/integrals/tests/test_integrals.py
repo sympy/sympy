@@ -32,31 +32,19 @@ def test_principal_value():
 
     l = 1 / ((x**3) - 1)
     assert Integral(l, (x, -oo, oo)).principal_value() == -sqrt(3)*pi/3
-    assert Integral(l, (x, -oo, 1)).principal_value() == -oo - I*pi/3
-    assert Integral(l, (x, -3, -2)).principal_value() == \
-           -sqrt(3)*atan(5*sqrt(3)/3)/3 - 2*log(2)/3 + log(3)/6 + log(7)/6 + sqrt(3)*pi/9
-    assert Integral(l, (x, 2, 3)).principal_value() == \
-           -sqrt(3) * atan(7 * sqrt(3) / 3) / 3 - log(13) / 6 + log(2) / 3 + log(7) / 6 + \
-           sqrt(3) * atan(5 * sqrt(3) / 3) / 3
-    raises(ValueError, lambda: Integral(l, (x)).principal_value())
-    raises(ValueError, lambda: Integral(l).principal_value())
+    raises(ValueError, lambda: Integral(l, (x, -oo, 1)).principal_value())
 
-    k = 1 / (x - 4) * (x - 1)
-    assert Integral(k, (x, -oo, -2)).principal_value() == oo + 3*I*pi
-    assert Integral(k, (x, 5, oo)).principal_value() == oo
-    assert Integral(k, (x, 4, oo)).principal_value() == oo
-    raises(ValueError, lambda: Integral(k, (x)).principal_value())
-    raises(ValueError, lambda: Integral(k).principal_value())
+    d = 1/(x**2 - 1)
+    assert Integral(d, (x, -oo, oo)).principal_value() == 0
+    assert Integral(d, (x, -2, 2)).principal_value() == oo
 
-    d = (x ** 5) * (x - 1) / ((x ** 2 - 1) * (1 + x ** 2))
-    assert Integral(d, (x, 0, oo)).principal_value() == oo
-    assert Integral(d, (x, -oo, -1)).principal_value() == oo
-    assert Integral(d, (x, 1, oo)).principal_value() == oo
-    assert Integral(d, (x, -oo, oo)).principal_value() == oo - I*pi/2
-    assert Integral(d, (x, 10, oo)).principal_value() == -atan(10)/2 + oo
-    assert Integral(d, (x, -oo, -10)).principal_value() == -atan(10)/2 + oo - I*pi/2
-    raises(ValueError, lambda: Integral(d, (x)).principal_value())
-    raises(ValueError, lambda: Integral(d).principal_value())
+    s = x**2/(x**2 - 1)
+    assert Integral(s, (x, -oo, oo)).principal_value() == oo
+    assert Integral(s, (x, -2, 2)).principal_value() == oo
+
+    f = 1/((x ** 2 - 1) * (1 + x ** 2))
+    assert Integral(f, (x, -oo, oo)).principal_value() == -pi
+    assert Integral(f, (x, -2, 2)).principal_value() == oo
 
 
 def diff_test(i):

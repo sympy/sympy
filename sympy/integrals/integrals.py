@@ -1308,10 +1308,13 @@ class Integral(AddWithLimits):
         if a == b:
             return 0
         r = Dummy('r')
-        n = Dummy('n')
         u = Dummy('u')
 
-        singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a < s < b]
+        singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a <= s <= b]
+
+        for i in singularities_list:
+            if ((i is b) or (i is a)):
+                raise ValueError("The principal value is not defined in the given interval.")
 
         f = self.function
         F = integrate(f, x)
@@ -1341,7 +1344,8 @@ class Integral(AddWithLimits):
                                                                                                         singularities_list[
                                                                                                             singular_element] + r)),
                                         r, 0, '+') + limit(F.subs(x, u) - F.subs(x, -u), u, oo)
-                    return Iinf
+                    if singular_element == (len(singularities_list) - 1):
+                        return Iinf
                 else:
                     if singular_element == 0:
                         Ia = F.subs(x, singularities_list[0] - r) - limit(F, x, a)
