@@ -1329,7 +1329,7 @@ def _is_logarithmic(f, symbol):
     return rv
 
 
-def solve_as_lambert(f, symbol):
+def _solve_as_lambert(f, symbol):
     lhs, rhs = f.lhs, f.rhs
     try:
         poly = lhs.as_poly()
@@ -1535,7 +1535,19 @@ def _transolve(f, symbol, domain):
             result = _solve_exponential(lhs, rhs, symbol, domain)
         # check if it is logarithmic type equation
         elif _is_logarithmic(lhs, symbol):
+<<<<<<< 0afc73b007f59302c6c5eae8e388770c21cd35a7
             result = _solve_logarithm(lhs, rhs, symbol, domain)
+=======
+            new_eq = _solve_logarithm(lhs, rhs, symbol)
+
+        if new_eq is not None:
+            result = _solveset(new_eq, symbol, domain)
+        else:
+            # try solving as lambert before returning the result
+            ans = _solve_as_lambert(Eq(lhs, rhs), symbol)
+            if ans:
+                result = FiniteSet(*ans)
+>>>>>>> changes invocation of `solve_as_lambert`; added test that cannot be solved with current scenario;
 
         return result
 
@@ -1554,6 +1566,12 @@ def _transolve(f, symbol, domain):
     else:
         result = rhs_s
 
+<<<<<<< 0afc73b007f59302c6c5eae8e388770c21cd35a7
+=======
+    if isinstance(result, ConditionSet):
+        result = unsolved_result
+
+>>>>>>> changes invocation of `solve_as_lambert`; added test that cannot be solved with current scenario;
     return result
 
 
