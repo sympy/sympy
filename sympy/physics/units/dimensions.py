@@ -157,10 +157,8 @@ class Dimension(Expr):
         if isinstance(other, Basic):
             if other.has(Quantity):
                 other = Dimension(Quantity.get_dimensional_expr(other))
-            if isinstance(other, Dimension):
-                if self == other:
-                    return self
-                raise ValueError('mismatched dimensions of addends')
+            if isinstance(other, Dimension) and self == other:
+                return self
             return super(Dimension, self).__add__(other)
         return self
 

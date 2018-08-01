@@ -66,12 +66,13 @@ def test_Dimension_properties():
 
 
 def test_Dimension_add_sub():
-    assert length + length == length + foot == foot + length == length
+    assert length + length == length
     assert length - length == length
     assert -length == length
 
-    raises(ValueError, lambda: length + time)
-    raises(ValueError, lambda: length - time)
+    assert length + foot == foot + length == length
+    assert length - foot == foot - length == length
+    assert length + time == length - time != length
 
     # issue 14547 - only raise error for dimensional args; allow
     # others to pass
