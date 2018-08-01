@@ -1271,13 +1271,6 @@ class Integral(AddWithLimits):
         >>> Integral(f, (x, -10, oo)).principal_value() + Integral(f, (x, -oo, 10)).principal_value()
         0
 
-        >>> f = 1 / ((x**3) - 1)
-        
-        >>> Integral(f, (x, 1, oo)).principal_value()
-        ValueError: The principal value is not defined in the given interval due to singularity at 1.
-
-
-
         References
         ==========
 
