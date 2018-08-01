@@ -516,7 +516,7 @@ def _test(*paths, **kwargs):
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
     time_balance = kwargs.get('time_balance', True)
-    blacklist = kwargs.get('blacklist', [])
+    blacklist = kwargs.get('blacklist', ['sympy/integrals/rubi/rubi_tests/tests'])
     blacklist = convert_to_native_paths(blacklist)
     fast_threshold = kwargs.get('fast_threshold', None)
     slow_threshold = kwargs.get('slow_threshold', None)
@@ -669,9 +669,22 @@ def _doctest(*paths, **kwargs):
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
         "sympy/physics/unitsystems.py", # raises deprecation warning
+        "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
         "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
         "sympy/parsing/latex/_antlr/latexparser.py", # generated code
+        "sympy/parsing/autolev/test_examples/output.py", # generated code
+        "sympy/integrals/rubi/rubi.py"
     ])
+    # autolev parser tests
+    num = 12
+    for i in range (1, num+1):
+        blacklist.append("sympy/parsing/autolev/test_examples/ruletest" + str(i) + ".py")
+    blacklist.extend(["sympy/parsing/autolev/test_examples/mass_spring_damper.py",
+                      "sympy/parsing/autolev/test_examples/chaos_pendulum.py",
+                      "sympy/parsing/autolev/test_examples/double_pendulum.py",
+                      "sympy/parsing/autolev/test_examples/non_min_pendulum.py"])
 
     if import_module('numpy') is None:
         blacklist.extend([
@@ -694,10 +707,6 @@ def _doctest(*paths, **kwargs):
             # Use a non-windowed backend, so that the tests work on Travis
             import matplotlib
             matplotlib.use('Agg')
-
-            # don't display matplotlib windows
-            from sympy.plotting.plot import unset_show
-            unset_show()
 
 
     if import_module('pyglet') is None:
@@ -725,6 +734,10 @@ def _doctest(*paths, **kwargs):
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
+
+    # Disable showing up of plots
+    from sympy.plotting.plot import unset_show
+    unset_show()
 
     # Show deprecation warnings
     import warnings

@@ -6,6 +6,7 @@ recursive-include examples *.py README
 include sympy/utilities/mathml/data/*.xsl
 
 recursive-include sympy/parsing/latex *.g4 *.tokens *.interp *.txt
+recursive-include sympy/parsing/autolev *.g4 *.tokens *.interp *.txt *.al
 
 include LICENSE
 include TODO

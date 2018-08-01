@@ -1,7 +1,7 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
-        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise)
+        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError, _mexpand
@@ -175,6 +175,9 @@ def test_Lambda():
     assert Lambda(x, f(x))(x) == f(x)
     assert Lambda(x, x**2)(e(x)) == x**4
     assert e(e(x)) == x**4
+
+    x1, x2 = (Indexed('x', i) for i in (1, 2))
+    assert Lambda((x1, x2), x1 + x2)(x, y) == x + y
 
     assert Lambda((x, y), x + y).nargs == FiniteSet(2)
 

@@ -362,3 +362,6 @@ def test_contains_AccumBounds():
 
     # issue 13159
     assert Mul(0, AccumBounds(-1, 1)) == Mul(AccumBounds(-1, 1), 0) == 0
+    import itertools
+    for perm in itertools.permutations([0, AccumBounds(-1, 1), x]):
+        assert Mul(*perm) == 0
