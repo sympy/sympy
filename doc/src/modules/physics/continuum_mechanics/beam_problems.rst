@@ -51,6 +51,7 @@ point till 5 meters away from the start. A clockwise moment of 50 kN-m is
 applied at 5 meters away from the start of the beam. A downward point load
 of 12 kN is applied at the end.
 
+::
 
                                      12 KN
   \\\\|  8 KN/m                       ||
@@ -116,12 +117,14 @@ point. There are two simple supports below the beam. One at the end
 and another one at a distance of 10 meters from the start. The
 deflection is restricted at both the supports.
 
+::
 
   || 8 N                                       120 Nm
   \/______________________________________________|
   |_______________________________________________|
               /\                                 /\
   |------------|---------------------------------|
+      10 m                  20 m
 
 .. note::
 
@@ -173,14 +176,17 @@ hinged support at the end. A clockwise moment of 1.5 kN-m is applied at the mid
 of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m
 is applied from the mid till the end of the beam.
 
-                              ramp laod = 1 KN/m
-                            constant laod = 3 KN/m
+::
+
+                              ramp load = 1 KN/m
+                            constant load = 3 KN/m
                            |-----------------------|
                         1.5 KN-m               
-     ______________________|________________________
+   ______________________|________________________
   |_______________________________________________|
-   ooo                     |                       /\
+  ooo                    |                       /\
   |----------------------|-----------------------|
+          3.0 m                     3.0 m
 
 .. note::
 
@@ -239,12 +245,14 @@ to a distributed constant load of 10 KN/m from the starting point till
 2 meters away from it. Two pointloads of 20KN and 8KN are applied at
 5 meters and 7.5 meters away from the starting point respectively.
 
+::
+
                                  20KN         8KN
     10 KN/m                      ||           ||
   ||||||||||||||                 \/           \/
    _______________________________________________
   |_______________________________________________|
-        /\                                 OOO
+        /\                                  OOO
 
   |-----|------|-----------------|----------|--|--|
      1m    1m          3m              2m   .5m .5m
@@ -306,7 +314,9 @@ from it. A ramp load of 1 kN/m applied from the mid till the end of
 the beam. A point load of 12KN is also applied in same direction 4 meters
 away from start.
 
-                       ramp laod = 1 KN/m
+::
+
+                       ramp load = 1 KN/m
                        |---------------|
                           12 KN
   \\\\|  4 KN/m            ||
@@ -376,6 +386,8 @@ An overhanging beam of length 11 meters is subjected to a distributed constant
 load of 2 KN/m from 2 meters away from the starting point till 6 meters away
 from it. It is pinned at the starting point and is resting over a roller 8 meters
 away from that end. Also a clockwise moment of 5 KN-m is applied at the overhanging end.
+
+::
 
                  2 KN/m
             |||||||||||||||||                         5 KN-m
