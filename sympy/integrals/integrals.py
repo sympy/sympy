@@ -1258,33 +1258,24 @@ class Integral(AddWithLimits):
         >>> x = symbols('x')
 
         >>> g = x + 1
+
         >>> Integral(g, (x, -oo, oo)).principal_value()
         oo
 
-        >>> f = 1/(x**3)
-        >>> singularities(f,x)
-        {0}
+        >>> f = 1 / (x**3)
 
         >>> Integral(f, (x, -oo, oo)).principal_value()
         0
-
-        >>> Integral(f, (x, -oo, 0)).principal_value()
-        -oo
-
-        >>> Integral(f, (x, 0, oo)).principal_value()
-        oo
-
-        >>> Integral(f, (x, 1, 2)).principal_value()
-        3/8
-
-        >>> Integral(f, (x, -2, -1)).principal_value() + Integral(f, (x, 1, 2)).principal_value()
+        >>> Integral(f, (x, -10, 10)).principal_value()
+        0
+        >>> Integral(f, (x, -10, oo)).principal_value() + Integral(f, (x, -oo, 10)).principal_value()
         0
 
-        >>> Integral(f, (x, 0.4, 3)).principal_value()
-        3.06944444444444
+        >>> f = 1 / ((x**3) - 1)
+        
+        >>> Integral(f, (x, 1, oo)).principal_value()
+        ValueError: The principal value is not defined in the given interval due to singularity at 1.
 
-        >>> Integral(f, (x, -3, -0.4)).principal_value() + Integral(f, (x, 0.4, 3)).principal_value()
-        0
 
 
         References
@@ -1313,8 +1304,9 @@ class Integral(AddWithLimits):
         singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a <= s <= b]
 
         for i in singularities_list:
-            if ((i is b) or (i is a)):
-                raise ValueError("The principal value is not defined in the given interval.")
+            if ((i == b) or (i == a)):
+                raise ValueError(
+                    'The principal value is not defined in the given interval due to singularity at %d.' % (i))
 
         f = self.function
         F = integrate(f, x)
