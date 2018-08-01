@@ -83,6 +83,8 @@ def test_isomorphisms():
     assert check
     assert T(b*a*b**-1*a**-1*b**-1) == Permutation(0, 2, 3)
     assert T(b*a*b*a**-1*b**-1) == Permutation(0, 3, 2)
+    list = group_isomorphism(G, H, epimorphism=True, all=True)
+    assert all((elem[0].is_isomorphism() and elem[1].is_surjective()) for elem in list)
 
     # PermutationGroup -> PermutationGroup
     D = DihedralGroup(8)

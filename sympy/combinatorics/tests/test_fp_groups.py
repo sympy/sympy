@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy import S
-from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
-                                   reidemeister_presentation, FpSubgroup)
+from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups, reidemeister_presentation,
+                                                FpSubgroup, subgroup_quotient, maximal_abelian_quotient)
 from sympy.combinatorics.free_groups import free_group
 
 """
@@ -145,6 +145,23 @@ def test_subgroup_presentations():
     assert str(gens) == "(b_1, c_3)"
     assert len(rels) == 18
 
+def test_subgroup_quotient():
+    F, x, y = free_group("x, y")
+    f = FpGroup(F, [x**2, y**3, (x*y)**4])
+    T = subgroup_quotient(f, [x, y])
+    H = f.subgroup([x, y])
+    assert T.order() == f.order()/H.order()
+
+    f = FpGroup(F, [x**2, y**3, (x*y)**4])
+    T = subgroup_quotient(f, [x*y**2*x*y, y**2*x*y*x, y**-1])
+    H = f.subgroup([x*y**2*x*y, y**2*x*y*x, y**-1])
+    assert T.order() == f.order()/H.order()
+
+    F, x, y = free_group("x, y")
+    f = FpGroup(F, [x**2, y**3, (x*y)**4])
+    T = maximal_abelian_quotient(f)
+    assert T.is_abelian
+    assert T.order() == 2
 
 def test_order():
     from sympy import S

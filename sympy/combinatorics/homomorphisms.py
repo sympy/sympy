@@ -421,7 +421,7 @@ def block_homomorphism(group, blocks):
     H = GroupHomomorphism(group, codomain, images)
     return H
 
-def group_isomorphism(G, H, isomorphism=True):
+def group_isomorphism(G, H, isomorphism=True, epimorphism=False, all=False):
     '''
     Compute an isomorphism between 2 given groups.
 
@@ -431,6 +431,8 @@ def group_isomorphism(G, H, isomorphism=True):
         isomorphism (boolean) -- This is used to avoid the computation of homomorphism
                                  when the user only wants to check if there exists
                                  an isomorphism between the groups.
+        all (boolean) -- When set to True, this computes all the isomorphisms possible.
+        epimorphism (boolean) -- When set to True, this computes all possible epimorphisms.
 
     Returns:
     If isomorphism = False -- Returns a boolean.
@@ -495,33 +497,51 @@ def group_isomorphism(G, H, isomorphism=True):
             raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
         _H, h_isomorphism = H._to_perm_group()
 
-    if (g_order != h_order) or (G.is_abelian != H.is_abelian):
-        if not isomorphism:
-            return False
-        return (False, None)
+    if not epimorphism:
+        if (g_order != h_order) or (G.is_abelian != H.is_abelian):
+            if not isomorphism:
+                return False
+            return (False, None)
 
-    if not isomorphism:
-        # Two groups of the same cyclic numbered order
-        # are isomorphic to each other.
-        n = g_order
-        if (igcd(n, totient(n))) == 1:
-            return True
+        if not isomorphism:
+            # Two groups of the same cyclic numbered order
+            # are isomorphic to each other.
+            n = g_order
+            if (igcd(n, totient(n))) == 1:
+                return True
+    if all:
+        # Compute the list of all possible isomorphisms or epimorphism.
+        list_iso = []
+        if epimorphism:
+            list_epi = []
 
     # Match the generators of `G` with subsets of `_H`
     gens = list(G.generators)
     for subset in itertools.permutations(_H, len(gens)):
         images = list(subset)
         images.extend([_H.identity]*(len(G.generators)-len(images)))
-        _images = dict(zip(gens,images))
+        _images = dict(zip(gens, images))
         if _check_homomorphism(G, _H, _images):
             if isinstance(H, FpGroup):
                 images = h_isomorphism.invert(images)
             T =  homomorphism(G, H, G.generators, images, check=False)
             if T.is_isomorphism():
                 # It is a valid isomorphism
-                if not isomorphism:
-                    return True
-                return (True, T)
+                if not all:
+                    if not isomorphism:
+                        return True
+                    return (True, T)
+                else:
+                    list_iso.append(T)
+                    # If epimorphism return surjective along woth bijective
+                    if epimorphism:
+                        if T.is_surjective():
+                            list_epi.append(T)
+
+    if all:
+        if not epimorphism:
+            return list_iso
+        return list_iso, list_epi
 
     if not isomorphism:
         return False

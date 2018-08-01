@@ -516,9 +516,42 @@ class FpGroup(DefaultPrinting):
 
 def subgroup_quotient(G, H, fp_group=None):
     '''
-    Compute the quotient group G/H
-    where, H is the subgroup of G.
+    Compute the quotient group G/H.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
+    ...                                    reidemeister_presentation, FpSubgroup)
+    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics.fp_groups import subgroup_quotient, maximal_abelian_quotient
+
+    >>> F, x, y = free_group("x, y")
+    >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
+    >>> k = f.derived_series()
+    >>> T = subgroup_quotient(f, [x, y])
+    >>> H = f.subgroup([x, y])
+    >>> T.order() == f.order()/H.order()
+    True
+
+    >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
+    >>> k = f.derived_series()
+    >>> T = subgroup_quotient(f, [x*y**2*x*y, y**2*x*y*x, y**-1])
+    >>> H = f.subgroup([x*y**2*x*y, y**2*x*y*x, y**-1])
+    >>> T.order() == f.order()/H.order()
+    True
+
     '''
+    def _get_map(fp_group, F):
+        from sympy.combinatorics.homomorphisms import homomorphism
+        if isinstance(F, list):
+            K, T = fp_group.subgroup(F, homomorphism=True)
+            f_gens = T(K.generators)
+            f_rels = T(K.relators)
+        else:
+            f_gens = F.generators
+            f_rels = F.relators
+        return f_gens, f_rels
+
     # If no parent group is specified,
     # G is set to the parent `FpGroup`
     if not fp_group:
@@ -527,38 +560,25 @@ def subgroup_quotient(G, H, fp_group=None):
     if isinstance(G, list) and not fp_group:
         raise ValueError("The fp_group must be"
                             "defined when the group is a list")
-    free_group = fp_group.G
+    free_group = fp_group.free_group
 
     if not isinstance(fp_group, FpGroup):
         raise ValueError("The parent group must be an instance"
                                     "of FpGroup")
 
-    if not (G.free_group == free_group
-                or H.free_group == free_group):
-        raise ValueError("The elements groups must belong to"
-                            "to the same free group as that of the parent group")
+    if ((isinstance(G, list) and not all(elem in free_group for elem in G))
+        or (isinstance(G, FpGroup) and not (G.free_group == free_group))):
+            raise ValueError("The elements groups must belong to"
+                                    "to the same free group as that of the parent group")
+    if ((isinstance(H, list) and not all(elem in free_group for elem in H))
+        or (isinstance(H, FpGroup) and not (H.free_group == free_group))):
+            raise ValueError("The elements groups must belong to"
+                                    "to the same free group as that of the parent group")
 
-    if isinstance(G, list):
-        # Todo - Set homomorphism to True after the merge
-        g_gens, g_rels, _gens = reidemeister_presentation(fp_group, G, rel=True)
-        _homomorphism = homomorphism(G, fp_group, g_gens, _gens, check=False)
-        g_gens = _gens
-        g_rels = _homomorphism(g_rels)
-    else:
-        g_gens = G.generators
-        g_rels = G.relators
+    g_gens, g_rels = _get_map(fp_group, G)
+    h_gens, h_rels = _get_map(fp_group, H)
 
-    if isinstance(H, list):
-        # Todo - Set homomorphism to True after the merge
-        h_gens, h_rels, _gens = reidemeister_presentation(fp_group, H, rel=True)
-        _homomorphism = homomorphism(H, fp_group, h_gens, _gens, check=False)
-        h_gens = _gens
-        h_rels = _homomorphism(h_rels)
-    else:
-        h_gens = H.generators
-        h_rels = H.relators
-
-    q_relators = g_gens + h_rels
+    q_relators = list(g_rels) + list(h_gens)
     q_group = FpGroup(free_group, q_relators)
 
     # Return the quotient group with presentation
@@ -567,47 +587,34 @@ def subgroup_quotient(G, H, fp_group=None):
 
 def maximal_abelian_quotient(G):
     '''
-    Compute the maximal abelian quotient of an FpGroup
+    Compute the maximal abelian quotient of an FpGroup.
+    The quotient group G/[G,G] will be the largest
+    abelain quotient of `G`.
+    Here, [G, G] is the commutator subgroup.
+
+    See Also
+    ========
+    subgroup_quotient
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
+    ...                                    reidemeister_presentation, FpSubgroup)
+    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics.fp_groups import subgroup_quotient, maximal_abelian_quotient
+    >>> F, x, y = free_group("x, y")
+    >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
+    >>> T = maximal_abelian_quotient(f)
+    >>> T.order()
+    2
+    >>> T.is_abelian
+    True
+
     '''
     if not isinstance(G, FpGroup):
         raise ValueError("The group must be a finitely presented group")
 
     return subgroup_quotient(G, G.derived_subgroup())
-
-def epimorphism_pgroup(F, G, n=None):
-    '''
-    Computes all possible epimorohisms from F onto G.
-    To-do - UPdate docstring
-            Add conjgacy class implemnetation
-    '''
-    if not isinstance(F, FpGroup):
-        raise ValueError("The group must be an FpGroup")
-    if not isinstance(G, FpGroup):
-        raise ValueError("The group must be an FpGroup")
-
-    g_order = G.order()
-    h_order = H.order()
-    _H, h_isomorphism = H._to_perm_group()
-
-    if g_order == S.infinity or h_order == S.infinity:
-        raise NotImplementedError("Epimorphism methods are not implemented for infinite groups.")
-
-    homomorphism_list =[]
-
-    gens = list(G.generators)
-    for subset in itertools.permutations(_H, len(gens)):
-        images = list(subset)
-        images.extend([_H.identity]*(len(G.generators)-len(images)))
-        _images = dict(zip(gens,images))
-        if _check_homomorphism(G, _H, _images):
-            if isinstance(H, FpGroup):
-                images = h_isomorphism.invert(images)
-            T =  homomorphism(G, H, G.generators, images, check=False)
-            if T.is_surjective():
-                homomorphism_list.append(T)
-
-    return homomorphism_list
-
 
 class FpSubgroup(DefaultPrinting):
     '''
@@ -1388,7 +1395,8 @@ def reidemeister_presentation(fp_grp, H, C=None, homomorphism=False):
     define_schreier_generators(C, homomorphism=homomorphism)
     reidemeister_relators(C)
     gens, rels = C._schreier_generators, C._reidemeister_relators
-    gens, rels = simplify_presentation(gens, rels, change_gens=True)
+    if gens:
+        gens, rels = simplify_presentation(gens, rels, change_gens=True)
 
     C.schreier_generators = tuple(gens)
     C.reidemeister_relators = tuple(rels)
