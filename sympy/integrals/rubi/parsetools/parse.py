@@ -635,20 +635,20 @@ def downvalues_rules(r, header, cons_dict, cons_index, index):
                 parsed += '{}'.format(transformed)
                 parsed += '\n    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
                 parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', With{}'.format(index) + ')\n'
-                parsed +='\n    matcher.add(pattern{}, {})\n'.format(index, index)
+                parsed +='\n    if load_rule:\n        matcher.add(pattern{}, {})\n'.format(index, index)
             else:
 
                 parsed += '{}'.format(transformed)
                 parsed += '\n    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + With_constraints + ')'
                 parsed += '\n    def replacement{}({}):\n'.format(index, ', '.join(free_symbols)) + return_type[0] + '\n        rubi.append({})\n        return '.format(index) + return_type[1]
                 parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
-                parsed +='\n    matcher.add(pattern{}, {})\n'.format(index, index)
+                parsed +='\n    if load_rule:\n        matcher.add(pattern{}, {})\n'.format(index, index)
         else:
             transformed = rubi_printer(transformed, sympy_integers=True)
             parsed += '    pattern' + str(index) +' = Pattern(' + pattern + '' + FreeQ_constraint + '' + constriant + ')'
             parsed += '\n    def replacement{}({}):\n        rubi.append({})\n        return '.format(index, ', '.join(free_symbols), index) + transformed
             parsed += '\n    ' + 'rule' + str(index) +' = ReplacementRule(' + 'pattern' + rubi_printer(index, sympy_integers=True) + ', replacement{}'.format(index) + ')\n'
-            parsed +='\n    matcher.add(pattern{}, {})\n'.format(index, index)
+            parsed +='\n    if load_rule:\n        matcher.add(pattern{}, {})\n'.format(index, index)
         rules += 'rule{}, '.format(index)
     rules += ']'
     parsed += '    return matcher, ' + rules +'\n'

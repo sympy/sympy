@@ -178,7 +178,7 @@ if matchpy:
     register_operation_factory(Basic, sympy_op_factory)
 
     @doctest_depends_on(modules=('matchpy',))
-    def rubi_object():
+    def rubi_object(load_rule=False):
         '''
         Returns rubi ManyToOneReplacer by adding all rules from different modules.
 
@@ -211,12 +211,18 @@ if matchpy:
         from matchpy import ManyToOneMatcher
         matcher = ManyToOneMatcher()
 
-        # rules += integrand_simplification(rules_applied)
-        r = linear_products(rules_applied, matcher)
+        # r = integrand_simplification(rules_applied, matcher, load_rule)
+        # rules += r[1]
+        # matcher = r[0]
+        r = linear_products(rules_applied, matcher, load_rule)
         rules += r[1]
         matcher = r[0]
-        # rules += quadratic_products(rules_applied)
-        # rules += binomial_products(rules_applied)
+        # r = quadratic_products(rules_applied, matcher, load_rule)
+        # rules += r[1]
+        # matcher = r[0]
+        # r = binomial_products(rules_applied, matcher, load_rule)
+        # rules += r[1]
+        # matcher = r[0]
         # rules += trinomial_products(rules_applied)
         # rules += miscellaneous_algebraic(rules_applied)
         # rules += exponential(rules_applied)
@@ -235,7 +241,19 @@ if matchpy:
         return matcher, rules_applied, rules
     _E = rubi_unevaluated_expr(E)
     Integrate = Function('Integrate')
-    rubi, rules_applied, rules = rubi_object()
+    rubi, rules_applied, rules = rubi_object(False)
+
+def code_generated_int(expr, x):
+    from matchpy import replace_all
+    from sympy.integrals.rubi.generated import match_root
+    rule_num = []
+    for i, j in match_root(Integral(expr, x)):
+        rule_num.append(rules[i - 1])
+        break
+    if rule_num:
+        return replace_all(Integral(expr, x), rule_num)
+    else:
+        return Integrate(expr, x)
 
 def _has_cycle():
     if rules_applied.count(rules_applied[-1]) == 1:
@@ -320,15 +338,18 @@ def rubi_integrate(expr, var, showsteps=False):
         results = 0
         for ex in expr.args:
             rules_applied[:] = []
-            results += rubi.replace(Integral(ex, var))
+            results += code_generated_int(ex, var)
+            # results += rubi.replace(Integral(ex, var))
             rules_applied[:] = []
         return process_final_integral(results)
-
-    results = rubi.replace(Integral(expr, var), max_count = 10)
+    results = code_generated_int(expr, var)
+    # results = rubi.replace(Integral(expr, var), max_count = 10)
+    print(results)
     return process_final_integral(results)
 
 @doctest_depends_on(modules=('matchpy',))
 def util_rubi_integrate(expr, var, showsteps=False):
+    print(rules_applied)
     expr = process_trig(expr)
     expr = expr.replace(sym_exp, exp)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
@@ -338,7 +359,8 @@ def util_rubi_integrate(expr, var, showsteps=False):
     if len(rules_applied) > 10:
         if _has_cycle() or len(rules_applied) > 20:
             return Integrate(expr, var)
-    results = rubi.replace(Integral(expr, var), max_count = 10)
+    results = code_generated_int(expr, var)
+    # results = rubi.replace(Integral(expr, var), max_count = 10)
     rules_applied[:] = []
     return results
 
