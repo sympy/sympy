@@ -2103,7 +2103,7 @@ def meijerint_inversion(f, x, t):
         _debug('Expression consists of constant and exp shift:', f, shift)
         from sympy import InverseLaplaceTransform, Eq, im
         cond = Eq(im(shift), 0)
-        if shift.is_real == False:  # cond == False, issue #14978
+        if cond == False:
             _debug('but shift is nonreal, cannot be a Laplace transform')
             return None
         res = f*DiracDelta(t + shift)
