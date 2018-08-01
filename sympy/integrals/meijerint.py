@@ -2108,8 +2108,8 @@ def meijerint_inversion(f, x, t):
             return None
         res = f*DiracDelta(t + shift)
         _debug('Result is a delta function, possibly conditional:', res, cond)
-        return Piecewise((res.subs(t, t_), cond),
-                         (InverseLaplaceTransform(f_.subs(t, t_), x, t_, None), True))
+        # cond is True or Eq
+        return Piecewise((res.subs(t, t_), cond))
 
     gs = _rewrite1(f, x)
     if gs is not None:
