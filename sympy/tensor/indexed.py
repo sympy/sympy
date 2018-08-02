@@ -407,12 +407,12 @@ class IndexedBase(Expr, NotIterable):
         obj._shape = shape
         obj._offset = offset
         obj._strides = strides
-        obj.__name__ = str(label)
+        obj._name = str(label)
         return obj
 
     @property
     def name(self):
-        return self.__name__
+        return self._name
 
     def __getitem__(self, indices, **kw_args):
         if is_sequence(indices):
