@@ -7,8 +7,8 @@ transforms and convolutions of finite sequences.
 .. automodule:: sympy.discrete
 
 Since the discrete transforms can be used to reduce the computational complexity
-of discrete convolutions, therefore, convolutions module makes use of transforms
-module for efficient computation (notable for long input sequences).
+of the discrete convolutions, the ``convolutions`` module makes use of the
+``transforms`` module for efficient computation (notable for long input sequences).
 
 Transforms
 ----------
@@ -59,8 +59,8 @@ Convolution
 ^^^^^^^^^^^
 
 This is a general method for calculating the convolution of discrete
-sequences, which internally calls one of the methods - ``convolution_fft``,
-``convolution_ntt``, ``convolution_fwht``, ``convolution_subset``.
+sequences, which internally calls one of the methods ``convolution_fft``,
+``convolution_ntt``, ``convolution_fwht``, or ``convolution_subset``.
 
 .. autofunction:: convolution
 
