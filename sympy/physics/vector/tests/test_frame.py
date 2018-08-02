@@ -158,6 +158,23 @@ def test_dcm():
          cos(q1)*cos(q2)]])
 
 
+def test_w_diff_dcm():
+    from sympy.physics.vector import dot
+    a = ReferenceFrame('a')
+    b = ReferenceFrame('b')
+    c11, c12, c13, c21, c22, c23, c31, c32, c33 = dynamicsymbols('c11 c12 c13 c21 c22 c23 c31 c32 c33')
+    c11d, c12d, c13d, c21d, c22d, c23d, c31d, c32d, c33d = dynamicsymbols('c11 c12 c13 c21 c22 c23 c31 c32 c33', 1)
+    b.orient(a, 'DCM', Matrix([c11,c12,c13,c21,c22,c23,c31,c32,c33]).reshape(3, 3))
+    b1a=(b.x).express(a)
+    b2a=(b.y).express(a)
+    b3a=(b.z).express(a)
+    b.set_ang_vel(a, b.x*(dot((b3a).dt(a), b.y)) + b.y*(dot((b1a).dt(a), b.z)) +
+                     b.z*(dot((b2a).dt(a), b.x)))
+    expr = (c12*c13d + c22*c23d + c32*c33d)*b.x + (c13*c11d + c23*c21d + c33*c31d)*b.y +\
+           (c11*c12d + c21*c22d + c31*c32d)*b.z
+    assert b.ang_vel_in(a) - expr == 0
+
+
 def test_orientnew_respects_parent_class():
     class MyReferenceFrame(ReferenceFrame):
         pass
