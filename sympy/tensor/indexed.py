@@ -161,11 +161,7 @@ class Indexed(Expr):
 
     @property
     def name(self):
-        indices_str = "["
-        for index in self.args[1:-1]:
-            indices_str += str(index) + ","
-        indices_str += str(self.args[-1]) + "]"
-        return self.base.name + indices_str
+        return str(self)
 
     @property
     def _diff_wrt(self):
