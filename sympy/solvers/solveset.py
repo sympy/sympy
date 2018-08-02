@@ -38,11 +38,11 @@ from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.solvers.solvers import (checksol, denoms, unrad,
-    _simple_dens, recast_to_symbols)
+    _simple_dens, recast_to_symbols, solve_linear)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
-from sympy.utilities.iterables import numbered_symbols
+from sympy.utilities.iterables import numbered_symbols, uniq
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
@@ -1708,12 +1708,14 @@ def linear_eq_to_matrix(equations, *symbols, **options):
         symbols = symbols[0]
 
     # setting default value for check_linearity
-    if 'check_linearity' not in options:
-        options['check_linearity'] = False
+    check_linearity = options.get('check_linearity', False)
 
-    if options['check_linearity']:
+    if check_linearity:
         # removing duplicates from symbols
-        symbols = list(set(symbols))
+        symbs = uniq(symbols)
+        symbols = []
+        for syms in symbs:
+            symbols.append(syms)
 
     M = Matrix([symbols])
     # initialize Matrix with symbols + 1 columns
@@ -1733,7 +1735,7 @@ def linear_eq_to_matrix(equations, *symbols, **options):
         # append constant term (term free from symbols)
         coeff_list.append(-f.as_coeff_add(*symbols)[0])
 
-        if options['check_linearity']:
+        if check_linearity:
             # Forming a new equation
             eq_new = 0
             i = 0
@@ -1744,7 +1746,7 @@ def linear_eq_to_matrix(equations, *symbols, **options):
 
             # checking if equation is linear
             # if it is not linear then raise error
-            if sympify(eq_new - equation) == 0:
+            if solve_linear(eq_new - equation) == (0,1):
                 free_symbs = []
                 for symbol in symbols:
                     for symb in symbol.free_symbols:
