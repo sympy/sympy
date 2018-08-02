@@ -728,6 +728,12 @@ def test_dummification():
     raises(SyntaxError, lambda: lambdify(2 * F(t), 2 * F(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
 
+def test_curlyMatrixSymbol():
+    # Issue #15009
+    curlyv = sympy.MatrixSymbol("{v}", 2, 1)
+    lam = sympy.lambdify(curlyv, curlyv, dummify=True)
+    assert lam(1)==1
+
 def test_python_keywords():
     # Test for issue 7452. The automatic dummification should ensure use of
     # Python reserved keywords as symbol names will create valid lambda

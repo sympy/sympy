@@ -739,7 +739,14 @@ class _EvaluatorPrinter(object):
                 argstrs.append(self._argrepr(dummy))
                 expr = self._subexpr(expr, {arg: dummy})
             else:
-                argstrs.append(str(arg))
+                argrep = self._argrepr(arg)
+
+                if dummify:
+                    dummy = Dummy()
+                    argstrs.append(self._argrepr(dummy))
+                    expr = self._subexpr(expr, {arg: dummy})
+                else:
+                    argstrs.append(str(arg))
 
         return argstrs, expr
 
