@@ -2101,7 +2101,7 @@ def meijerint_inversion(f, x, t):
 
     if x not in f.free_symbols:
         _debug('Expression consists of constant and exp shift:', f, shift)
-        from sympy import InverseLaplaceTransform, Eq, im
+        from sympy import Eq, im
         cond = Eq(im(shift), 0)
         if cond == False:
             _debug('but shift is nonreal, cannot be a Laplace transform')
