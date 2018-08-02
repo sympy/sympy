@@ -898,7 +898,7 @@ def test_scipy_fns():
     single_arg_scipy_fns = [scipy.special.erf, scipy.special.erfc,
         scipy.special.factorial, scipy.special.gamma, scipy.special.gammaln,
         scipy.special.psi]
-
+    numpy.random.seed(0)
     for (sympy_fn, scipy_fn) in zip(single_arg_sympy_fns, single_arg_scipy_fns):
         test_values = 20 * numpy.random.rand(20)
         f = lambdify(x, sympy_fn(x), modules = "scipy")

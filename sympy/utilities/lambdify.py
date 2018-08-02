@@ -376,7 +376,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             else:
                 modules = ["numpy"]
         else:
-            modules = ["scipy"]
+            modules = ["scipy", "numpy"]
 
     # Get the needed namespaces.
     namespaces = []
@@ -407,10 +407,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if printer is None:
         if _module_present('mpmath', namespaces):
             from sympy.printing.pycode import MpmathPrinter as Printer
-        elif _module_present('numpy', namespaces):
-            from sympy.printing.pycode import NumPyPrinter as Printer
         elif _module_present('scipy', namespaces):
             from sympy.printing.pycode import SciPyPrinter as Printer
+        elif _module_present('numpy', namespaces):
+            from sympy.printing.pycode import NumPyPrinter as Printer
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer
         elif _module_present('tensorflow', namespaces):
