@@ -728,10 +728,12 @@ def test_dummification():
     raises(SyntaxError, lambda: lambdify(2 * F(t), 2 * F(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
 
-def test_curlyMatrixSymbol():
+def test_curly_matrix_symbol():
     # Issue #15009
     curlyv = sympy.MatrixSymbol("{v}", 2, 1)
-    lam = sympy.lambdify(curlyv, curlyv, dummify=True)
+    lam = lambdify(curlyv, curlyv)
+    assert lam(1)==1
+    lam = lambdify(curlyv, curlyv, dummify=True)
     assert lam(1)==1
 
 def test_python_keywords():
