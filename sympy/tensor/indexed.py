@@ -401,9 +401,9 @@ class IndexedBase(Expr, NotIterable):
         strides = kw_args.pop('strides', None)
 
         if shape is not None:
-            obj = Expr.__new__(cls, label, shape, **kw_args)
+            obj = Expr.__new__(cls, label, shape)
         else:
-            obj = Expr.__new__(cls, label, **kw_args)
+            obj = Expr.__new__(cls, label)
         obj._shape = shape
         obj._offset = offset
         obj._strides = strides
