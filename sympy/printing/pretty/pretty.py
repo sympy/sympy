@@ -1023,6 +1023,12 @@ class PrettyPrinter(Printer):
 
     def _print_Piecewise(self, pexpr):
 
+        if len(pexpr.args) == 0:
+            D = prettyForm('undefined')
+            D.baseline = D.height()//2
+            D.binding = prettyForm.OPEN
+            return D
+
         P = {}
         for n, ec in enumerate(pexpr.args):
             P[n, 0] = self._print(ec.expr)
