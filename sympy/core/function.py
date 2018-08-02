@@ -1362,7 +1362,7 @@ class Derivative(Expr):
         if len(symbol_part) > 0:
             sorted_vars.extend(sorted(symbol_part,
                                       key=lambda i: default_sort_key(i[0])))
-        return sorted_vars
+        return [Tuple(*i) for i in sorted_vars]
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative

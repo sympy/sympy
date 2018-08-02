@@ -648,6 +648,8 @@ def test_sort_variable():
 
     assert vsort(((y, 2), (x, 1), (y, 1), (x, 1))) == [(x, 1), (x, 1), (y, 2), (y, 1)]
 
+    assert isinstance(vsort([(x, 3), (y, 2), (z, 1)])[0], Tuple)
+
 def test_multiple_derivative():
     # Issue #15007
     assert f(x,y).diff(y,y,x,y,x) == Derivative(f(x, y), (x, 2), (y, 3))
