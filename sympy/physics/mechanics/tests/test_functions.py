@@ -203,7 +203,7 @@ def test_gravity():
 def test_center_of_mass():
     from sympy import symbols, S
     from sympy.physics.mechanics.functions import center_of_mass
-    frame_a = ReferenceFrame('a')
+    a = ReferenceFrame('a')
     m = symbols('m', real=True)
     p1 = Particle('p1', Point('p1_pt'), S(1))
     p2 = Particle('p2', Point('p2_pt'), S(2))
@@ -213,11 +213,11 @@ def test_center_of_mass():
     b_cm = Point('b_cm')
     mb = symbols('mb')
     b = RigidBody('b', b_cm, b_f, mb, (outer(b_f.x, b_f.x), b_cm))
-    p2.point.set_pos(p1.point, frame_a.x)
-    p3.point.set_pos(p1.point, frame_a.x + frame_a.y)
-    p4.point.set_pos(p1.point, frame_a.y)
-    b.masscenter.set_pos(p1.point, frame_a.y + frame_a.z)
+    p2.point.set_pos(p1.point, a.x)
+    p3.point.set_pos(p1.point, a.x + a.y)
+    p4.point.set_pos(p1.point, a.y)
+    b.masscenter.set_pos(p1.point, a.y + a.z)
     point_o=Point('o')
     point_o.set_pos(p1.point, center_of_mass(p1.point, p1, p2, p3, p4, b))
-    expr = 5/(m + mb + 6)*frame_a.x + (m + mb + 3)/(m + mb + 6)*frame_a.y + mb/(m + mb + 6)*frame_a.z
+    expr = 5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
     assert point_o.pos_from(p1.point)-expr == 0
