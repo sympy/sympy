@@ -36,15 +36,15 @@ def test_principal_value():
 
     d = 1/(x**2 - 1)
     assert Integral(d, (x, -oo, oo)).principal_value() == 0
-    assert Integral(d, (x, -2, 2)).principal_value() == oo
+    assert Integral(d, (x, -2, 2)).principal_value() == -log(3)
 
     s = x**2/(x**2 - 1)
     assert Integral(s, (x, -oo, oo)).principal_value() == oo
-    assert Integral(s, (x, -2, 2)).principal_value() == oo
+    assert Integral(s, (x, -2, 2)).principal_value() == -log(3) + 4
 
     f = 1/((x ** 2 - 1) * (1 + x ** 2))
     assert Integral(f, (x, -oo, oo)).principal_value() == -pi
-    assert Integral(f, (x, -2, 2)).principal_value() == oo
+    assert Integral(f, (x, -2, 2)).principal_value() == -atan(2) - log(3)/2
 
 
 def diff_test(i):
