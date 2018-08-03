@@ -1414,10 +1414,10 @@ def _transolve(f, symbol, domain):
     4) Faster Computation
 
     Solving equation via `\_transolve` is much faster as compared to
-    `\_tsolve`. In `solve` attempts are made computing every possibility
+    `\_tsolve`. In `solve`, attempts are made computing every possibility
     to get the solutions. This series of attempts makes solving a bit
-    slow. Whereas in `\_transolve` computation begins only when the
-    equation is identified of being a particular type.
+    slow. In `\_transolve`, computation begins only after a particular
+    type of equation is identified.
 
     How to add new class of equations
     =================================
@@ -1426,23 +1426,22 @@ def _transolve(f, symbol, domain):
 
     - Identify the type of the equations
 
-      Determine the type of the class of equations to which they belong,
+      Determine the type of the class of equations to which they belong:
       it could be of `Add`, `Pow`, etc. types. Separate internal functions
-      are used for each type, if it is already present include
-      identification and solving helpers within the routine otherwise add
-      a new internal function and then include identification and solving
-      helpers within it. Something like:
+      are used for each type. Write identification and solving helpers
+      and use them from within the routine for the given type of equation
+      (after adding it, if necessary). Something like:
 
       .. code-block:: python
 
-        def add_type(eq, x):
+        def add_type(lhs, rhs, x):
             ....
-            rhs, lhs = eq.as_independent(x)
-            if _is_exponential(eq, x):
+            if _is_exponential(lhs, x):
                 new_eq = _solve_exponential(lhs, rhs, x)
         ....
-        if eq.is_Add:
-            result = add_type(eq, x)
+        rhs, lhs = eq.as_independent(x)
+        if lhs.is_Add:
+            result = add_type(lhs, rhs, x)
 
     - Define the identification helper.
 
@@ -1464,13 +1463,12 @@ def _transolve(f, symbol, domain):
     - Add tests for each helper.
     - Add a docstring to your helper that describes the method
       implemented.
-      The following things needs to be included while writing the
-      documentation for the helpers:
+      The documentation of the helpers should identify:
 
-      - What is the purpose of the helper.
-      - How it solves and identifies the equation.
-      - Examples should be included with its proof of correctness.
-      - What does the helper returns.
+      - the purpose of the helper,
+      - the method used to identify and solve the equation,
+      - a proof of correctness
+      - the return values of the helpers
     """
 
     def add_type(lhs, rhs, symbol, domain):
