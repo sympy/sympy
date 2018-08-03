@@ -219,7 +219,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
     F = integrator(x**(s - 1) * f, x)
 
     if not F.has(Integral):
-        return _simplify(F.subs(s, s_), simplify), (-oo, oo), S(True)
+        return _simplify(F.subs(s, s_), simplify), (-oo, oo), S.true
 
     if not F.is_Piecewise:  # XXX can this work if integration gives continuous result now?
         raise IntegralTransformError('Mellin', f, 'could not compute integral')
@@ -235,7 +235,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
         """
         a = -oo
         b = oo
-        aux = S(True)
+        aux = S.true
         conds = conjuncts(to_cnf(cond))
         t = Dummy('t', real=True)
         for c in conds:
@@ -963,7 +963,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     F = integrate(exp(-s*t) * f, (t, 0, oo))
 
     if not F.has(Integral):
-        return _simplify(F.subs(s, s_), simplify), -oo, S(True)
+        return _simplify(F.subs(s, s_), simplify), -oo, S.true
 
     if not F.is_Piecewise:
         raise IntegralTransformError(
@@ -977,7 +977,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     def process_conds(conds):
         """ Turn ``conds`` into a strip and auxiliary conditions. """
         a = -oo
-        aux = S(True)
+        aux = S.true
         conds = conjuncts(to_cnf(conds))
         u = Dummy('u', real=True)
         p, q, w1, w2, w3, w4, w5 = symbols(
@@ -1167,7 +1167,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
                 raise IntegralTransformError('Inverse Laplace', f,
                                      'inversion integral of unrecognised form.')
         else:
-            cond = S(True)
+            cond = S.true
         f = f.replace(Piecewise, pw_simp)
 
     if f.is_Piecewise:
@@ -1295,7 +1295,7 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     F = integrate(a*f*exp(b*I*x*k), (x, -oo, oo))
 
     if not F.has(Integral):
-        return _simplify(F, simplify), S(True)
+        return _simplify(F, simplify), S.true
 
     integral_f = integrate(f, (x, -oo, oo))
     if integral_f in (-oo, oo, S.NaN) or integral_f.has(Integral):
@@ -1464,7 +1464,7 @@ def _sine_cosine_transform(f, x, k, a, b, K, name, simplify=True):
     F = integrate(a*f*K(b*x*k), (x, 0, oo))
 
     if not F.has(Integral):
-        return _simplify(F, simplify), S(True)
+        return _simplify(F, simplify), S.true
 
     if not F.is_Piecewise:
         raise IntegralTransformError(name, f, 'could not compute integral')
@@ -1732,7 +1732,7 @@ def _hankel_transform(f, r, k, nu, name, simplify=True):
     F = integrate(f*besselj(nu, k*r)*r, (r, 0, oo))
 
     if not F.has(Integral):
-        return _simplify(F, simplify), S(True)
+        return _simplify(F, simplify), S.true
 
     if not F.is_Piecewise:
         raise IntegralTransformError(name, f, 'could not compute integral')
