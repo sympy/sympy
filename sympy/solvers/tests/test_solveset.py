@@ -1866,6 +1866,10 @@ def test_exponential_symbols():
     assert solveset(exp(x/y)*exp(-z/y) - 2, y, S.Reals) == FiniteSet(
         (x - z)/log(2)) - FiniteSet(0)
 
+    a, b, x, y = symbols('a b x y')
+    assert solveset_real(a**x - b**x, x) == ConditionSet(
+        x, Eq(a**x - b**x, 0), S.Reals)
+
 
 @XFAIL
 def test_issue_10864():

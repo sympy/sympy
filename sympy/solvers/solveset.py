@@ -1096,9 +1096,14 @@ def _solve_exponential(lhs, rhs, symbol):
         return
 
     a, b = list(ordered(lhs.args))
-    log_type_equation = expand_log(log(a)) - expand_log(log(-b))
+    a_coeff, a_term = a.as_independent(symbol)
+    b_coeff, b_term = b.as_independent(symbol)
 
-    return log_type_equation
+    if all(term.base.is_positive and term.exp.is_real
+       for term in (a_term, b_term)):
+        log_type_equation = expand_log(log(a)) - expand_log(log(-b))
+        return log_type_equation
+    return
 
 
 def _is_exponential(f, symbol):
