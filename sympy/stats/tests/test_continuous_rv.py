@@ -259,6 +259,10 @@ def test_chi_squared():
 
     X = ChiSquared('x', k)
     assert density(X)(x) == 2**(-k/2)*x**(k/2 - 1)*exp(-x/2)/gamma(k/2)
+    assert cdf(X)(x) == Piecewise((lowergamma(k/2, x/2)/gamma(k/2), x >= 0), (0, True))
+
+    X = ChiSquared('x', 15)
+    assert cdf(X)(3) == -14873*sqrt(6)*exp(-S(3)/2)/(5005*sqrt(pi)) + erf(sqrt(6)/2)
 
 
 def test_dagum():
