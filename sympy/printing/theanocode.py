@@ -377,7 +377,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     return {}
 
 
-def theano_function(inputs, outputs, squeeze=True, **kwargs):
+def theano_function(inputs, outputs, squeeze=True, scalar=False, **kwargs):
     """ Create a Theano function from SymPy expressions.
 
     The inputs and outputs are converted to Theano variables using
@@ -401,6 +401,10 @@ def theano_function(inputs, outputs, squeeze=True, **kwargs):
         returns a single array instead of a list containing one array. This
         behavior is deprecated and the default value will be changed to False in
         a future release. To get a function that returns a single
+
+    scalar : bool
+        Convert 0-dimensional arrays in output to scalars. This will return a
+        Python wrapper function around the Theano function object.
 
     cache : dict
        Cached Theano variables (see :attr:`.TheanoPrinter.cache`). Defaults to
@@ -446,21 +450,21 @@ def theano_function(inputs, outputs, squeeze=True, **kwargs):
 
     A simple function with one input and one output:
 
-    >>> f1 = theano_function([x], x**2 - 1)
+    >>> f1 = theano_function([x], x**2 - 1, scalar=True)
     >>> f1(3)
-    array(8.0)
+    8.0
 
     A function with multiple inputs and one output:
 
-    >>> f2 = theano_function([x, y, z], (x**z + y**z)**(1/z))
-    >>> f2(1, 2, 3)
-    array(2.080083823051904)
+    >>> f2 = theano_function([x, y, z], (x**z + y**z)**(1/z), scalar=True)
+    >>> f2(3, 4, 2)
+    5.0
 
     A function with multiple inputs and multiple outputs:
 
-    >>> f3 = theano_function([x, y], [x**2 + y**2, x**2 - y**2])
+    >>> f3 = theano_function([x, y], [x**2 + y**2, x**2 - y**2], scalar=True)
     >>> f3(2, 3)
-    [array(13.0), array(-5.0)]
+    [13.0, -5.0]
 
     See also
     ========
@@ -496,9 +500,33 @@ def theano_function(inputs, outputs, squeeze=True, **kwargs):
                    broadcastables=broadcastables)
     tinputs  = list(map(code, inputs))
 
-    if is_sequence(outputs):
+    is_seq = is_sequence(outputs)
+    if is_seq:
         toutputs = list(map(code, outputs))
     else:
         toutputs = code(outputs)
 
-    return theano.function(tinputs, toutputs, **kwargs)
+    # Compile theano func
+    func = theano.function(tinputs, toutputs, **kwargs)
+
+    is_0d = [len(o.variable.broadcastable) == 0 for o in func.outputs]
+
+    # No wrapper required
+    if not scalar or not any(is_0d):
+        func.theano_function = func
+        return func
+
+    # Create wrapper to convert 0-dimensional outputs to scalars
+    def wrapper(*args):
+        out = func(*args)
+
+        if not is_seq:
+            return out[()]
+
+        else:
+            return [o[()] if is_0d[i] else o for i, o in enumerate(out)]
+
+    wrapper.__wrapped__ = func
+    wrapper.__doc__ = func.__doc__
+    wrapper.theano_function = func
+    return wrapper
