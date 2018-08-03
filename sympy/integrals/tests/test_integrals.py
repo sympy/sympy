@@ -43,8 +43,11 @@ def test_principal_value():
     assert Integral(s, (x, -2, 2)).principal_value() == -log(3) + 4
 
     f = 1/((x ** 2 - 1) * (1 + x ** 2))
-    assert Integral(f, (x, -oo, oo)).principal_value() == -pi
+    assert Integral(f, (x, -oo, oo)).principal_value() == -pi/2
     assert Integral(f, (x, -2, 2)).principal_value() == -atan(2) - log(3)/2
+
+    k = 1/(x**4 - 1)
+    assert Integral(1/(x**4 - 1), (x, -oo, oo)).principal_value() == -pi/2
 
 
 def diff_test(i):

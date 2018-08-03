@@ -1316,35 +1316,30 @@ class Integral(AddWithLimits):
 
         if len(singularities_list) == 1 and not(a is -oo and b is oo):
             I = limit(((F.subs(x, singularities_list[0] - r)) - F.subs(x, singularities_list[0] + r)), r, 0,
-                      '+') - limit(F, x, a) + limit(F, x, b)
+                      '+') - limit(F, x, a, '+') + limit(F, x, b, '-')
             return I
 
 
         else:
             if a is -oo and b is oo:
                 Iinf = 0
+                I_lim_subs = limit(F.subs(x, u) - F.subs(x, -u), u, oo)
                 for singular_element in range(len(singularities_list)):
                     Iinf = Iinf + limit(((F.subs(x, singularities_list[singular_element] - r)) - F.subs(x,
                                                                                                         singularities_list[
                                                                                                             singular_element] + r)),
-                                        r, 0, '+') + limit(F.subs(x, u) - F.subs(x, -u), u, oo)
-                return Iinf
+                                        r, 0, '+')
+                return Iinf + I_lim_subs
             else:
                 Ib = 0
-                Ia = F.subs(x, singularities_list[0] - r) - limit(F, x, a)
-                for singular_element in range(len(singularities_list)):
+                Ia = F.subs(x, singularities_list[0] - r) - limit(F, x, a, '+')
+                for singular_element in range(1, len(singularities_list) - 1):
                     Ib = Ib + (F.subs(x, singularities_list[singular_element] - r) - F.subs(x, singularities_list[
                         singular_element - 1] + r))
-                I1 = limit((limit(F, x, b) - (F.subs(x, singularities_list[len(singularities_list) - 1] + r))) + (
+                I1 = limit((limit(F, x, b, '-') - (F.subs(x, singularities_list[len(singularities_list) - 1] + r))) + (
                         F.subs(x, singularities_list[len(singularities_list) - 1] - r) - F.subs(x, singularities_list[
                         len(singularities_list) - 2] + r)) + Ia + Ib, r, 0, '+')
                 return I1
-
-
-
-
-
-
 
 
 def integrate(*args, **kwargs):
@@ -1507,7 +1502,6 @@ def integrate(*args, **kwargs):
                              risch=risch, manual=manual)
     else:
         return integral
-
 
 
 def line_integrate(field, curve, vars):
