@@ -1916,6 +1916,13 @@ def test_solve_lambert():
     assert solveset_real(3*x + log(4*x), x) == \
         FiniteSet(LambertW(Rational(3, 4))/3)
 
+    assert solveset_real(a/x + exp(x/2), x) == \
+        FiniteSet(2*LambertW(-a/2)) - FiniteSet(0)
+    assert solveset_real(x*exp(x) - 1, x) == FiniteSet(LambertW(1))
+    eq = (x*exp(x) - 3).subs(x, x*exp(x))
+    assert solveset_real(eq, x) == \
+        FiniteSet(LambertW(3*exp(-LambertW(3))))
+
 
 @XFAIL
 def test_other_solve_lambert_():
@@ -1925,12 +1932,6 @@ def test_other_solve_lambert_():
         Union(FiniteSet(0), Intersection(S.Reals, FiniteSet(exp(a/2))))
     assert solveset_real(log(log(x - 3)) + log(x-3), x) == FiniteSet(
         exp(LambertW(1)) + 3)
-    assert solveset_real(a/x + exp(x/2), x) == \
-        FiniteSet(2*LambertW(-a/2)) - FiniteSet(0)
-    assert solveset_real(x*exp(x) - 1, x) == FiniteSet(LambertW(1))
-    eq = (x*exp(x) - 3).subs(x, x*exp(x))
-    assert solveset_real(eq, x) == \
-        FiniteSet(LambertW(3*exp(-LambertW(3))))
 
 
 @XFAIL

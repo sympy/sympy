@@ -1329,8 +1329,12 @@ def _is_logarithmic(f, symbol):
     return rv
 
 
-def _solve_as_lambert(f, symbol):
-    lhs, rhs = f.lhs, f.rhs
+def _is_lambert(f, symbol):
+    return any(isinstance(arg, (Pow, exp, log)) for arg in _term_factors(f))
+
+
+def _solve_as_lambert(lhs, rhs, symbol):
+
     try:
         poly = lhs.as_poly()
         g = _filtered_gens(poly, symbol)
@@ -1542,9 +1546,10 @@ def _transolve(f, symbol, domain):
 
         if new_eq is not None:
             result = _solveset(new_eq, symbol, domain)
-        else:
+
+        elif _is_lambert(lhs, symbol):
             # try solving as lambert before returning the result
-            ans = _solve_as_lambert(Eq(lhs, rhs), symbol)
+            ans = _solve_as_lambert(lhs, rhs, symbol)
             if ans:
                 result = FiniteSet(*ans)
 >>>>>>> changes invocation of `solve_as_lambert`; added test that cannot be solved with current scenario;
@@ -1563,6 +1568,10 @@ def _transolve(f, symbol, domain):
 
         if lhs.is_Add:
             result = add_type(lhs, rhs, symbol, domain)
+        elif _is_lambert(lhs, symbol):
+            ans = _solve_as_lambert(lhs, rhs, symbol)
+            if ans:
+                result = FiniteSet(*ans)
     else:
         result = rhs_s
 
