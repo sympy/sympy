@@ -494,6 +494,14 @@ def test_cse_ignore():
     assert not any(y in sub.free_symbols for _, sub in subst2), "Sub-expressions containing y must be ignored"
     assert any(sub - sqrt(x + 1) == 0 for _, sub in subst2), "cse failed to identify sqrt(x + 1) as sub-expression"
 
+def test_cse_ignore_issue_15002():
+    l = [
+        w*exp(x)*exp(-z),
+        exp(y)*exp(x)*exp(-z)
+    ]
+    substs, reduced = cse(l, ignore=(x,))
+    rl = [e.subs(reversed(substs)) for e in reduced]
+    assert rl == l
 
 def test_cse__performance():
     import time
