@@ -979,16 +979,15 @@ class Beam(object):
             return Piecewise(*conditions)
 
         C3 = Symbol('C3')
-        slope_curve = integrate(self.bending_moment(), x) + C3
+        slope_curve = integrate(S(1)/(E*I)*self.bending_moment(), x) + C3
 
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
             eqs = slope_curve.subs(x, position) - value
             bc_eqs.append(eqs)
-
         constants = list(linsolve(bc_eqs, C3))
         slope_curve = slope_curve.subs({C3: constants[0][0]})
-        return S(1)/(E*I)*slope_curve
+        return slope_curve
 
     def deflection(self):
         """
@@ -1082,7 +1081,7 @@ class Beam(object):
             return Piecewise(*conditions)
 
         C4 = Symbol('C4')
-        deflection_curve = integrate((E*I)*self.slope(), x) + C4
+        deflection_curve = integrate(self.slope(), x) + C4
 
         bc_eqs = []
         for position, value in self._boundary_conditions['deflection']:
@@ -1091,7 +1090,7 @@ class Beam(object):
 
         constants = list(linsolve(bc_eqs, C4))
         deflection_curve = deflection_curve.subs({C4: constants[0][0]})
-        return S(1)/(E*I)*deflection_curve
+        return deflection_curve
 
     def max_deflection(self):
         """
