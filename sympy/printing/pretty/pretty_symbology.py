@@ -127,7 +127,7 @@ greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 # aliases
 greek_unicode['lambda'] = greek_unicode['lamda']
 greek_unicode['Lambda'] = greek_unicode['Lamda']
-greek_unicode['lerchphi'] = greek_unicode['phi']
+greek_unicode['lerchphi'] = greek_unicode['Phi']
 greek_unicode['Lerchphi'] = greek_unicode['Phi']
 greek_unicode['varsigma'] = u'\N{GREEK SMALL LETTER FINAL SIGMA}'
 
