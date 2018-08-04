@@ -1272,7 +1272,7 @@ class PrettyPrinter(Printer):
         from sympy.functions.special.error_functions import Chi
         return {KroneckerDelta: [greek_unicode['delta'], 'delta'],
                 gamma: [greek_unicode['Gamma'], 'Gamma'],
-                lerchphi: [greek_unicode['lerchphi'], 'lerchphi'],
+                lerchphi: [greek_unicode['Phi'], 'lerchphi'],
                 lowergamma: [greek_unicode['gamma'], 'gamma'],
                 beta: [greek_unicode['Beta'], 'B'],
                 DiracDelta: [greek_unicode['delta'], 'delta'],
