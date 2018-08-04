@@ -421,27 +421,31 @@ def block_homomorphism(group, blocks):
     H = GroupHomomorphism(group, codomain, images)
     return H
 
-def group_isomorphism(G, H, isomorphism=True, epimorphism=False, all=False):
+def find_homomorphism(G, H, injective=True, surjective=True, compute=True, all=False):
     '''
-    Compute an isomorphism between 2 given groups.
+    Compute an isomorphism/epimorphism/monomorphism between 2 given groups.
+    An isomorphism is computed when both injective and surjective are set to True.
 
     Arguments:
         G (a finite `FpGroup` or a `PermutationGroup`) -- First group
         H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
-        isomorphism (boolean) -- This is used to avoid the computation of homomorphism
-                                 when the user only wants to check if there exists
-                                 an isomorphism between the groups.
+        injective (boolean) -- When set to True, it compute the possible monomorphism
+        surjective (boolean) -- When set to True, this computes all possible epimorphisms.
+        check (boolean) -- When set to  False, This avoids the computation of
+                           homomorphism and only checks if there exists
+                           an isomorphism/epimorphism/monomorphism between the groups.
         all (boolean) -- When set to True, this computes all the isomorphisms possible.
-        epimorphism (boolean) -- When set to True, this computes all possible epimorphisms.
 
     Returns:
-    If isomorphism = False -- Returns a boolean.
-    If isomorphism = True  -- Returns a boolean and an isomorphism between `G` and `H`.
+    If compute = False -- Returns a boolean.
+    If compute = True  -- Returns a boolean and an isomorphism/epimorphism/monomorphism
+                        between `G` and `H`.
+    If all = True -- Returns all possible specified homomorphisms as a list.
 
     Summary:
-    Uses the approach suggested by Robert Tarjan to compute the isomorphism between two groups.
+    Uses the approach suggested by Robert Tarjan to compute the homomorphism between two groups.
     First, the generators of `G` are mapped to the elements of `H` and
-    we check if the mapping induces an isomorphism.
+    we check if the mapping induces an isomorphism/epimorphism/monomorphism.
 
     Examples
     ========
@@ -450,25 +454,29 @@ def group_isomorphism(G, H, isomorphism=True, epimorphism=False, all=False):
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup
-    >>> from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism
+    >>> from sympy.combinatorics.homomorphisms import homomorphism, find_homomorphism
     >>> from sympy.combinatorics.named_groups import DihedralGroup, AlternatingGroup
 
     >>> D = DihedralGroup(8)
     >>> p = Permutation(0, 1, 2, 3, 4, 5, 6, 7)
     >>> P = PermutationGroup(p)
-    >>> group_isomorphism(D, P)
+    >>> find_homomorphism(D, P)
     (False, None)
 
     >>> F, a, b = free_group("a, b")
     >>> G = FpGroup(F, [a**3, b**3, (a*b)**2])
     >>> H = AlternatingGroup(4)
-    >>> (check, T) = group_isomorphism(G, H)
+    >>> (check, T) = find_homomorphism(G, H)
     >>> check
     True
     >>> T(b*a*b**-1*a**-1*b**-1)
     (0 2 3)
 
     '''
+    if all:
+        # Compute the list of all possible isomorphisms/epimorphisms/monomorphisms.
+        list_hom = []
+
     if not isinstance(G, (PermutationGroup, FpGroup)):
         raise TypeError("The group must be a PermutationGroup or an FpGroup")
     if not isinstance(H, (PermutationGroup, FpGroup)):
@@ -480,7 +488,7 @@ def group_isomorphism(G, H, isomorphism=True, epimorphism=False, all=False):
         # Two infinite FpGroups with the same generators are isomorphic
         # when the relators are same but are ordered differently.
         if G.generators == H.generators and (G.relators).sort() == (H.relators).sort():
-            if not isomorphism:
+            if not compute:
                 return True
             return (True, homomorphism(G, H, G.generators, H.generators))
 
@@ -497,23 +505,23 @@ def group_isomorphism(G, H, isomorphism=True, epimorphism=False, all=False):
             raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
         _H, h_isomorphism = H._to_perm_group()
 
-    if not epimorphism:
-        if (g_order != h_order) or (G.is_abelian != H.is_abelian):
-            if not isomorphism:
+    if injective:
+        if (g_order != h_order) or not G.is_abelian and H.is_abelian:
+            if not compute:
+                return False
+            return (False, None)
+    if surjective:
+        if (g_order != h_order) or G.is_abelian and not H.is_abelian:
+            if not compute:
                 return False
             return (False, None)
 
-        if not isomorphism:
-            # Two groups of the same cyclic numbered order
-            # are isomorphic to each other.
-            n = g_order
-            if (igcd(n, totient(n))) == 1:
-                return True
-    if all:
-        # Compute the list of all possible isomorphisms or epimorphism.
-        list_iso = []
-        if epimorphism:
-            list_epi = []
+    if (injective and surjective) and not compute:
+        # Two groups of the same cyclic numbered order
+        # are isomorphic to each other.
+        n = g_order
+        if (igcd(n, totient(n))) == 1:
+            return True
 
     # Match the generators of `G` with subsets of `_H`
     gens = list(G.generators)
@@ -525,25 +533,18 @@ def group_isomorphism(G, H, isomorphism=True, epimorphism=False, all=False):
             if isinstance(H, FpGroup):
                 images = h_isomorphism.invert(images)
             T =  homomorphism(G, H, G.generators, images, check=False)
-            if T.is_isomorphism():
-                # It is a valid isomorphism
+            if ((injective and surjective and T.is_isomorphism()) or
+                    (injective and T.is_injective()) or (surjective and T.is_surjective())):
                 if not all:
-                    if not isomorphism:
+                    if not compute:
                         return True
-                    return (True, T)
-                else:
-                    list_iso.append(T)
-                    # If epimorphism return surjective along woth bijective
-                    if epimorphism:
-                        if T.is_surjective():
-                            list_epi.append(T)
+                    return True, T
+                list_hom.append(T)
 
     if all:
-        if not epimorphism:
-            return list_iso
-        return list_iso, list_epi
+        return list_hom
 
-    if not isomorphism:
+    if not compute:
         return False
     return (False, None)
 
@@ -557,4 +558,4 @@ def is_isomorphic(G, H):
 
     Returns -- boolean
     '''
-    return group_isomorphism(G, H, isomorphism=False)
+    return find_homomorphism(G, H, compute=False)
