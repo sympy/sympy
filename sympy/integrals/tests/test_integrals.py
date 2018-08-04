@@ -38,6 +38,10 @@ def test_principal_value():
     assert Integral(d, (x, -oo, oo)).principal_value() == 0
     assert Integral(d, (x, -2, 2)).principal_value() == -log(3)
 
+    v = x/(x**2 - 1)
+    assert Integral(v, (x, -oo, oo)).principal_value() == 0
+    assert Integral(v, (x, -2, 2)).principal_value() == 0
+
     s = x**2/(x**2 - 1)
     assert Integral(s, (x, -oo, oo)).principal_value() == oo
     assert Integral(s, (x, -2, 2)).principal_value() == -log(3) + 4
