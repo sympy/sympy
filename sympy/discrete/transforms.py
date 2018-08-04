@@ -77,6 +77,9 @@ def fft(seq, dps=None):
     The sequence is automatically padded to the right with zeros, as the
     *radix-2 FFT* requires the number of sample points to be a power of 2.
 
+    This method should be used with default arguments only for short sequences
+    as the complexity of expressions increases with the size of the sequence.
+
     Parameters
     ==========
 
@@ -104,11 +107,6 @@ def fft(seq, dps=None):
     [3.75, -0.5 - 0.75*I, -1.75, -0.5 + 0.75*I]
     >>> fft(_)
     [1.0, 7.0, 3.0, 4.0]
-
-    >>> fft([5])
-    [5]
-    >>> ifft([7])
-    [7]
 
     References
     ==========
@@ -141,7 +139,7 @@ def _number_theoretic_transform(seq, prime, inverse=False):
                         "for Number Theoretic Transform")
 
     p = as_int(prime)
-    if isprime(p) == False:
+    if isprime(p) is False:
         raise ValueError("Expected prime modulus for "
                         "Number Theoretic Transform")
 
@@ -324,7 +322,7 @@ ifwht.__doc__ = fwht.__doc__
 
 #----------------------------------------------------------------------------#
 #                                                                            #
-#                    Mobius Transform for Subset Lattice                     #
+#                    Möbius Transform for Subset Lattice                     #
 #                                                                            #
 #----------------------------------------------------------------------------#
 

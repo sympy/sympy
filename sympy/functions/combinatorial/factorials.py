@@ -220,7 +220,7 @@ class factorial(CombinatorialFunction):
                     # (n-1)! = 0 mod n)
                     if isprime:
                         return -1 % q
-                    elif isprime == False and (aq - 6).is_nonnegative:
+                    elif isprime is False and (aq - 6).is_nonnegative:
                         return 0
                 elif n.is_Integer and q.is_Integer:
                     n, d, aq = map(int, (n, d, aq))
@@ -876,10 +876,10 @@ class binomial(CombinatorialFunction):
         n, k = map(sympify, (n, k))
         d = n - k
         n_nonneg, n_isint = n.is_nonnegative, n.is_integer
-        if k.is_zero or ((n_nonneg or n_isint == False)
+        if k.is_zero or ((n_nonneg or n_isint is False)
                 and d.is_zero):
             return S.One
-        if (k - 1).is_zero or ((n_nonneg or n_isint == False)
+        if (k - 1).is_zero or ((n_nonneg or n_isint is False)
                 and (d - 1).is_zero):
             return n
         if k.is_integer:
@@ -888,7 +888,7 @@ class binomial(CombinatorialFunction):
             elif n.is_number:
                 res = cls._eval(n, k)
                 return res.expand(basic=True) if res else res
-        elif n_nonneg == False and n_isint:
+        elif n_nonneg is False and n_isint:
             # a special case when binomial evaluates to complex infinity
             return S.ComplexInfinity
         elif k.is_number:
