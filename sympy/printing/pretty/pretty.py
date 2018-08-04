@@ -1266,11 +1266,13 @@ class PrettyPrinter(Printer):
     def _special_function_classes(self):
         from sympy.functions.special.tensor_functions import KroneckerDelta
         from sympy.functions.special.gamma_functions import gamma, lowergamma
+        from sympy.functions.special.zeta_functions import lerchphi
         from sympy.functions.special.beta_functions import beta
         from sympy.functions.special.delta_functions import DiracDelta
         from sympy.functions.special.error_functions import Chi
         return {KroneckerDelta: [greek_unicode['delta'], 'delta'],
                 gamma: [greek_unicode['Gamma'], 'Gamma'],
+                lerchphi: [greek_unicode['lerchphi'], 'lerchphi'],
                 lowergamma: [greek_unicode['gamma'], 'gamma'],
                 beta: [greek_unicode['Beta'], 'B'],
                 DiracDelta: [greek_unicode['delta'], 'delta'],
@@ -1289,6 +1291,10 @@ class PrettyPrinter(Printer):
     def _print_GeometryEntity(self, expr):
         # GeometryEntity is based on Tuple but should not print like a Tuple
         return self.emptyPrinter(expr)
+
+    def _print_lerchphi(self, e):
+        func_name = greek_unicode['phi'] if self._use_unicode else 'L'
+        return self._print_Function(e, func_name=func_name)
 
     def _print_Lambda(self, e):
         vars, expr = e.args
