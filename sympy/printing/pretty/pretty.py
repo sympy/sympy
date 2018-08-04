@@ -1293,7 +1293,7 @@ class PrettyPrinter(Printer):
         return self.emptyPrinter(expr)
 
     def _print_lerchphi(self, e):
-        func_name = greek_unicode['phi'] if self._use_unicode else 'L'
+        func_name = greek_unicode['Phi'] if self._use_unicode else 'lerchphi'
         return self._print_Function(e, func_name=func_name)
 
     def _print_Lambda(self, e):
