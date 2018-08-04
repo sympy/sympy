@@ -400,10 +400,7 @@ def test_MatrixElement_printing():
     assert mcode(F) == "(-B + A)(1, 1)"
 
 
-def test_zeta_printing():
-    # test cases for issue #14820
-    x = Symbol('x')
-    n = Symbol('n')
+def test_zeta_printing_issue_14820():
 
     assert octave_code(zeta(x)) == 'zeta(x)'
-    assert octave_code(zeta(x, n)) == '% Not supported in Octave:\n% zeta\nzeta(x, n)'
+    assert octave_code(zeta(x, y)) == '% Not supported in Octave:\n% zeta\nzeta(x, y)'
