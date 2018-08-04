@@ -411,7 +411,7 @@ class BooleanFunction(Application, Boolean):
     """
     is_Boolean = True
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         return simplify_logic(self)
 
     # /// drop when Py2 is no longer supported
@@ -672,10 +672,10 @@ class Not(BooleanFunction):
         if isinstance(arg, GreaterThan):
             return StrictLessThan(*arg.args)
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         x = self.args[0]
         try:
-            x._eval_simplify(ratio, measure)
+            x._eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
         except:
             pass
         return self.func(x)

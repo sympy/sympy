@@ -378,7 +378,7 @@ class sign(Function):
         if arg.is_real:
             return Heaviside(arg)*2-1
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         return self.func(self.args[0].factor())
 
 
