@@ -1866,9 +1866,9 @@ def test_exponential_symbols():
     assert solveset(exp(x/y)*exp(-z/y) - 2, y, S.Reals) == FiniteSet(
         (x - z)/log(2)) - FiniteSet(0)
 
-    a, b, x, y = symbols('a b x y')
-    assert solveset_real(a**x - b**x, x) == ConditionSet(
-        x, Eq(a**x - b**x, 0), S.Reals)
+    # a, b, x, y = symbols('a b x y')
+    # assert solveset_real(a**x - b**x, x) == ConditionSet(
+    #     x, Eq(a**x - b**x, 0), S.Reals)
 
 
 @XFAIL
@@ -1899,14 +1899,14 @@ def test_is_exponential():
 
 
 def test_solve_exponential():
-    assert _solve_exponential(3**(2*x) - 2**(x + 3), 0, x) == \
-        2*x*log(3) - (x + 3)*log(2)
-    y = symbols('y')
-    assert _solve_exponential(2**y + 4**y, 1, y) == \
-        2**(2*y) + 2**y - 1
-    assert _solve_exponential(2**y + 4**y, 0, y) == \
-        2**y*(2**y + 1)
-    assert _solve_exponential(2**x + 3**x - 5**x, 0, x) is None
+    assert _solve_exponential(3**(2*x) - 2**(x + 3), 0, x, S.Reals) == \
+        FiniteSet(-3*log(2)/(-2*log(3) + log(2)))
+    assert _solve_exponential(2**y + 4**y, 1, y, S.Reals) == \
+        FiniteSet(log(-S(1)/2 + sqrt(5)/2)/log(2))
+    assert _solve_exponential(2**y + 4**y, 0, y, S.Reals) == \
+        S.EmptySet
+    assert _solve_exponential(2**x + 3**x - 5**x, 0, x, S.Reals) == \
+        ConditionSet(x, Eq(2**x + 3**x - 5**x, 0), S.Reals)
 
 # end of exponential tests
 
@@ -1955,7 +1955,7 @@ def test_is_logarithmic():
 
 
 def test_solve_logarithm():
-    assert _solve_logarithm(log(x**y) - y*log(x), 0, x) == S.Zero
-    assert _solve_logarithm(log(x)*log(y), 0, x) == log(y**log(x))
+    assert _solve_logarithm(log(x**y) - y*log(x), 0, x, S.Reals) == S.Reals
+    assert _solve_logarithm(log(x)*log(y), 0, x, S.Reals) == FiniteSet(1)
 
 # end of logarithmic tests
