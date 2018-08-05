@@ -1408,6 +1408,49 @@ def integrate(*args, **kwargs):
     else:
         return integral
 
+def cauchypv(func, sym):
+    """cauchypv(function, symbol)
+
+    Compute the Cauchy Principle Value of a difinite integral of a real function on the entire real axis.
+
+    Cauchy Principle Value is  defined as:
+
+          +oo               +r
+         /                  / 
+         |                  |
+         |                  |  
+    p.v. | f(x)dx  = lim    | f(x)dx
+         |          r -> oo |
+         |                  | 
+         /                  /
+          -oo               -r
+    Examples
+    ========
+    >>> from sympy import *
+    >>> x = symbols('x', real = True)
+    >>> f = x
+    >>> cauchypv(f,x)
+    >>> 0
+    >>> g = x + 1
+    >>> cauchypv(g,x)
+    >>> nan
+    
+    See also
+    =========
+    [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
+    [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
+    
+    """
+    r = Dummy('r')
+    check_for_sym = sym.is_real
+    check_for_func = func.is_real
+    if check_for_sym == False and check_for_func == False:
+        I = integrate(func,(sym,-r,r))
+        principle_value = limit(I,r,oo)
+        return principle_value
+    else:
+        raise ValueError("The function should be real valued for calculation of Cauchy Principle Value")
+
 
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)
