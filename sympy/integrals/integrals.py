@@ -1260,15 +1260,13 @@ class Integral(AddWithLimits):
         >>> from sympy.integrals.integrals import Integral
         >>> from sympy.calculus.singularities import singularities
         >>> x = symbols('x')
-        >>> g = x + 1
-        >>> Integral(g, (x, -oo, oo)).principal_value()
+        >>> Integral(x+1, (x, -oo, oo)).principal_value()
         oo
-        >>> f = 1 / (x**3)
-        >>> Integral(f, (x, -oo, oo)).principal_value()
+        >>> Integral(1/(x**3), (x, -oo, oo)).principal_value()
         0
-        >>> Integral(f, (x, -10, 10)).principal_value()
+        >>> Integral(1/(x**3), (x, -10, 10)).principal_value()
         0
-        >>> Integral(f, (x, -10, oo)).principal_value() + Integral(f, (x, -oo, 10)).principal_value()
+        >>> Integral(1/(x**3), (x, -10, oo)).principal_value() + Integral(f, (x, -oo, 10)).principal_value()
         0
 
         References
