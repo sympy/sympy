@@ -1286,12 +1286,12 @@ class Integral(AddWithLimits):
         if a == b:
             return 0
         r = Dummy('r')
+        f = self.function
         singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a <= s <= b]
         for i in singularities_list:
             if (i == b) or (i == a):
                 raise ValueError(
                     'The principal value is not defined in the given interval due to singularity at %d.' % (i))
-        f = self.function
         F = integrate(f, x, **kwargs)
         if F.has(Integral):
             return self
