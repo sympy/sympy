@@ -47,9 +47,6 @@ def test_principal_value():
     assert Integral(f, (x, -oo, oo)).principal_value() == -pi / 2
     assert Integral(f, (x, -2, 2)).principal_value() == -atan(2) - log(3) / 2
 
-    k = 1 / (x ** 4 - 1)
-    assert Integral(k, (x, -oo, oo)).principal_value() == -pi / 2
-
 def diff_test(i):
     """Return the set of symbols, s, which were used in testing that
     i.diff(s) agrees with i.doit().diff(s). If there is an error then

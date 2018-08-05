@@ -1269,6 +1269,7 @@ class Integral(AddWithLimits):
         0
         >>> Integral(f, (x, -10, oo)).principal_value() + Integral(f, (x, -oo, 10)).principal_value()
         0
+
         References
         ==========
         .. [1] http://en.wikipedia.org/wiki/Cauchy_principal_value
@@ -1296,14 +1297,11 @@ class Integral(AddWithLimits):
         if F.has(Integral):
             return self
         if a is -oo and b is oo:
-            if len(singularities_list) == 0:
-                I = limit(F - F.subs(x, -x), x, oo)
-            else:
-                I = limit(F.subs(x, u) - F.subs(x, -u), u, oo)
+            I = limit(F.subs(x, u) - F.subs(x, -u), u, oo)
         else:
             I = limit(F, x, b, '-') - limit(F, x, a, '+')
-        for s in range(len(singularities_list)):
-            I += limit(((F.subs(x, singularities_list[s] - r)) - F.subs(x, singularities_list[s] + r)), r, 0, '+')
+        for s in singularities_list:
+            I += limit(((F.subs(x, s - r)) - F.subs(x, s + r)), r, 0, '+')
         return I
 
 
