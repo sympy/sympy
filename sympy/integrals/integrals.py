@@ -1250,17 +1250,21 @@ class Integral(AddWithLimits):
         """
         Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
         on the real axis.
+
         In mathematics, the Cauchy principal value, is a method for assigning values to certain improper
         integrals which would otherwise be undefined.
+
         Examples
         ========
         >>> from sympy import Dummy, symbols, integrate, limit, oo
         >>> from sympy.integrals.integrals import Integral
         >>> from sympy.calculus.singularities import singularities
         >>> x = symbols('x')
+
         >>> g = x + 1
         >>> Integral(g, (x, -oo, oo)).principal_value()
         oo
+
         >>> f = 1 / (x**3)
         >>> Integral(f, (x, -oo, oo)).principal_value()
         0
@@ -1268,6 +1272,7 @@ class Integral(AddWithLimits):
         0
         >>> Integral(f, (x, -10, oo)).principal_value() + Integral(f, (x, -oo, 10)).principal_value()
         0
+        
         References
         ==========
         .. [1] http://en.wikipedia.org/wiki/Cauchy_principal_value
