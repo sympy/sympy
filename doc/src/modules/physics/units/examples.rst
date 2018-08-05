@@ -2,17 +2,17 @@
 Examples
 ========
 
-In the following sections we give few examples of what can be do with this
+In the following sections we give few examples of what can be done with this
 module.
 
 
 Dimensional analysis
 ====================
 
-We will start from the second Newton's law
+We will start from Newton's second law
 
 .. math::
-    m a = F
+    m * a = F
 
 where :math:`m, a` and :math:`F` are the mass, the acceleration and the force
 respectively. Knowing the dimensions of :math:`m` (:math:`M`) and :math:`a`
@@ -113,7 +113,7 @@ the outcoming result:
     224.662800523082*day
 
 We could also have the solar mass and the day as units coming from the
-astrophysical system, but I wanted to show how to create a unit that one needs.
+astrophysical system, but we wanted to show how to create a unit that one needs.
 
 We can see in this example that intermediate dimensions can be ill-defined,
 such as sqrt(G), but one should check that the final result - when all
