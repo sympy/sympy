@@ -401,6 +401,5 @@ def test_MatrixElement_printing():
 
 
 def test_zeta_printing_issue_14820():
-
     assert octave_code(zeta(x)) == 'zeta(x)'
     assert octave_code(zeta(x, y)) == '% Not supported in Octave:\n% zeta\nzeta(x, y)'
