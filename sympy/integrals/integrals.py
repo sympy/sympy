@@ -1246,6 +1246,89 @@ class Integral(AddWithLimits):
                                     hold=True)
         return f
 
+    def principal_value(self):
+        """
+        Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
+        on the real axis.
+        In mathematics, the Cauchy principal value, is a method for assigning values to certain improper
+        integrals which would otherwise be undefined.
+        Examples
+        ========
+        >>> from sympy import Dummy, symbols, integrate, limit, oo
+        >>> from sympy.integrals.integrals import Integral
+        >>> from sympy.calculus.singularities import singularities
+        >>> x = symbols('x')
+        >>> g = x + 1
+        >>> Integral(g, (x, -oo, oo)).principal_value()
+        oo
+        >>> f = 1 / (x**3)
+        >>> Integral(f, (x, -oo, oo)).principal_value()
+        0
+        >>> Integral(f, (x, -10, 10)).principal_value()
+        0
+        >>> Integral(f, (x, -10, oo)).principal_value() + Integral(f, (x, -oo, 10)).principal_value()
+        0
+        References
+        ==========
+        .. [1] http://en.wikipedia.org/wiki/Cauchy_principal_value
+        .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
+        """
+
+        from sympy.calculus import singularities
+
+        if len(self.limits) != 1 or len(list(self.limits[0])) != 3:
+            raise ValueError("You need to insert a variable, lower_limit, and upper_limit correctly to calculate "
+                             "cauchy's principal value")
+
+        x, a, b = self.limits[0]
+
+        if not (a.is_comparable and b.is_comparable and a <= b):
+            raise ValueError("The lower_limit must be smaller than or equal to the upper_limit to calculate "
+                             "cauchy's principal value. Also, a and b need to be comparable.")
+
+        if a == b:
+            return 0
+
+        r = Dummy('r')
+        u = Dummy('u')
+
+        singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a <= s <= b]
+
+        for i in singularities_list:
+            if ((i == b) or (i == a)):
+                raise ValueError(
+                    'The principal value is not defined in the given interval due to singularity at %d.' % (i))
+
+        f = self.function
+        F = integrate(f, x)
+
+        if F.has(Integral):
+            return self
+
+        if len(singularities_list) == 0:
+            if a is -oo and b is oo:
+                I = limit(F - F.subs(x, -x), x, oo)
+                return I
+            else:
+                I = limit(F, x, b, '-') - limit(F, x, a, '+')
+                return I
+
+        if len(singularities_list) == 1 and not (a is -oo and b is oo):
+            I = limit(((F.subs(x, singularities_list[0] - r)) - F.subs(x, singularities_list[0] + r)), r, 0,
+                      '+') - limit(F, x, a, '+') + limit(F, x, b, '-')
+            return I
+
+        else:
+            I = 0
+            for singular_element in range(len(singularities_list)):
+                I += limit(((F.subs(x, singularities_list[singular_element] - r)) - F.subs(x, singularities_list[
+                    singular_element] + r)), r, 0, '+')
+            if a is -oo and b is oo:
+                I1 = limit(F.subs(x, u) - F.subs(x, -u), u, oo)
+            else:
+                I1 = limit(F, x, b, '-') - limit(F, x, a, '+')
+            return I + I1
+
 
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
