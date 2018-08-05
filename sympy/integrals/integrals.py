@@ -1262,11 +1262,12 @@ class Integral(AddWithLimits):
         >>> x = symbols('x')
         >>> Integral(x+1, (x, -oo, oo)).principal_value()
         oo
-        >>> Integral(1/(x**3), (x, -oo, oo)).principal_value()
+        >>> f = 1 / (x**3)
+        >>> Integral(f, (x, -oo, oo)).principal_value()
         0
-        >>> Integral(1/(x**3), (x, -10, 10)).principal_value()
+        >>> Integral(f, (x, -10, 10)).principal_value()
         0
-        >>> Integral(1/(x**3), (x, -10, oo)).principal_value() + Integral(f, (x, -oo, 10)).principal_value()
+        >>> Integral(f, (x, -10, oo)).principal_value() + Integral(f, (x, -oo, 10)).principal_value()
         0
 
         References
