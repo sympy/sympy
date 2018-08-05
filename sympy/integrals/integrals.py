@@ -1255,6 +1255,7 @@ class Integral(AddWithLimits):
 
         Examples
         ========
+
         >>> from sympy import Dummy, symbols, integrate, limit, oo
         >>> from sympy.integrals.integrals import Integral
         >>> from sympy.calculus.singularities import singularities
@@ -1286,10 +1287,9 @@ class Integral(AddWithLimits):
         if a == b:
             return 0
         r = Dummy('r')
-        u = Dummy('u')
         singularities_list = [s for s in singularities(self.function, x) if s.is_comparable and a <= s <= b]
         for i in singularities_list:
-            if ((i == b) or (i == a)):
+            if (i == b) or (i == a):
                 raise ValueError(
                     'The principal value is not defined in the given interval due to singularity at %d.' % (i))
         f = self.function
@@ -1297,7 +1297,7 @@ class Integral(AddWithLimits):
         if F.has(Integral):
             return self
         if a is -oo and b is oo:
-            I = limit(F.subs(x, u) - F.subs(x, -u), u, oo)
+            I = limit(F - F.subs(x, -x), x, oo)
         else:
             I = limit(F, x, b, '-') - limit(F, x, a, '+')
         for s in singularities_list:
