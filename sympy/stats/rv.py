@@ -150,7 +150,7 @@ class PSpace(Basic):
 
     @property
     def values(self):
-        return frozenset(RandomSymbol(sym, self) for sym in self.domain.symbols)
+        return frozenset(RandomSymbol(sym, self) for sym in self.symbols)
 
     @property
     def symbols(self):
@@ -228,6 +228,7 @@ class RandomSymbol(Expr):
     """
 
     def __new__(cls, symbol, pspace=None):
+        from sympy.stats.joint_rv import JointRandomSymbol
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
@@ -235,6 +236,8 @@ class RandomSymbol(Expr):
             raise TypeError("symbol should be of type Symbol")
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
+        if cls == JointRandomSymbol and isinstance(pspace, SinglePSpace):
+            cls = RandomSymbol
         return Basic.__new__(cls, symbol, pspace)
 
     is_finite = True
@@ -297,7 +300,10 @@ class IndependentProductPSpace(ProductPSpace):
         symbols = FiniteSet(*[val.symbol for val in rs_space_dict.keys()])
 
         # Overlapping symbols
-        if len(symbols) < sum(len(space.symbols) for space in spaces):
+        from sympy.stats.joint_rv import MarginalDistribution, CompoundDistribution
+        if len(symbols) < sum(len(space.symbols) for space in spaces if not
+         isinstance(space.distribution, (
+            CompoundDistribution, MarginalDistribution))):
             raise ValueError("Overlapping Random Variables")
 
         if all(space.is_Finite for space in spaces):
@@ -517,6 +523,8 @@ def pspace(expr):
     True
     """
     expr = sympify(expr)
+    if isinstance(expr, RandomSymbol) and expr.pspace != None:
+        return expr.pspace
     rvs = random_symbols(expr)
     if not rvs:
         raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
@@ -1213,6 +1221,9 @@ def pspace_independent(a, b):
     """
     a_symbols = set(pspace(b).symbols)
     b_symbols = set(pspace(a).symbols)
+
+    if len(set(random_symbols(a)).intersection(random_symbols(b))) != 0:
+        return False
 
     if len(a_symbols.intersection(b_symbols)) == 0:
         return True

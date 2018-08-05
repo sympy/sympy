@@ -3,9 +3,9 @@ from __future__ import print_function, division
 from sympy import sqrt, pi, E, exp
 from sympy.core import S, Symbol, symbols, I
 from sympy.core.compatibility import range
-from sympy.discrete.convolution import (
+from sympy.discrete.convolutions import (
     convolution, convolution_fft, convolution_ntt, convolution_fwht,
-    convolution_subset, covering_product)
+    convolution_subset, covering_product, intersecting_product)
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y
 
@@ -324,3 +324,42 @@ def test_covering_product():
 
     raises(TypeError, lambda: covering_product(x, z))
     raises(TypeError, lambda: covering_product(S(7)/3, u))
+
+
+def test_intersecting_product():
+    assert intersecting_product([], []) == []
+    assert intersecting_product([], [S(1)/3]) == []
+    assert intersecting_product([6 + 3*I/7], [S(2)/3]) == [4 + 2*I/7]
+
+    a = [1, sqrt(5), S(3)/8 + 5*I, 4 + 7*I]
+    b = [67, 51, 65, 48, 36, 79, 27]
+    c = [3 + 2*I/5, 5 + 9*I, 7, S(7)/19, 13]
+
+    assert intersecting_product(a, b) == [195*sqrt(5) + 6979/S(8) + 1886*I,
+                                178*sqrt(5) + 520 + 910*I, 841/S(2) + 1344*I,
+                                192 + 336*I, 0, 0, 0, 0]
+
+    assert intersecting_product(b, c) == [128553/S(19) + 9521*I/5,
+                S(17820)/19 + 1602*I, S(19264)/19, S(336)/19, 1846, 0, 0, 0]
+
+    assert intersecting_product(a, c) == intersecting_product(c, a)
+    assert intersecting_product(b[1:], c[:-1]) == [64788/S(19) + 8622*I/5,
+                    12804/S(19) + 1152*I, 11508/S(19), 252/S(19), 0, 0, 0, 0]
+
+    assert intersecting_product(a, c[:-2]) == \
+                    [-99/S(5) + 10*sqrt(5) + 2*sqrt(5)*I/5 + 3021*I/40,
+                    -43 + 5*sqrt(5) + 9*sqrt(5)*I + 71*I, 245/S(8) + 84*I, 0]
+
+    u, v, w, x, y, z = symbols('u v w x y z')
+
+    assert intersecting_product([u, v, w], [x, y]) == \
+                            [u*x + u*y + v*x + w*x + w*y, v*y, 0, 0]
+
+    assert intersecting_product([u, v, w, x], [y, z]) == \
+                        [u*y + u*z + v*y + w*y + w*z + x*y, v*z + x*z, 0, 0]
+
+    assert intersecting_product([u, v], [x, y, z]) == \
+                    intersecting_product([x, y, z], [u, v])
+
+    raises(TypeError, lambda: intersecting_product(x, z))
+    raises(TypeError, lambda: intersecting_product(u, S(8)/3))

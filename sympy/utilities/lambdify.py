@@ -66,7 +66,9 @@ MPMATH_TRANSLATIONS = {
     "Shi": "shi",
     "Chi": "chi",
     "Si": "si",
-    "Ci": "ci"
+    "Ci": "ci",
+    "RisingFactorial": "rf",
+    "FallingFactorial": "ff",
 }
 
 NUMPY_TRANSLATIONS = {}
@@ -698,14 +700,13 @@ class _EvaluatorPrinter(object):
             return isinstance(ident, str) and cls._safe_ident_re.match(ident) \
                 and not (keyword.iskeyword(ident) or ident == 'None')
 
-
     def _preprocess(self, args, expr):
         """Preprocess args, expr to replace arguments that do not map
         to valid Python identifiers.
 
         Returns string form of args, and updated expr.
         """
-        from sympy import Dummy, Symbol, Function, flatten
+        from sympy import Dummy, Symbol, MatrixSymbol, Function, flatten
         from sympy.matrices import DeferredVector
 
         dummify = self._dummify
@@ -723,7 +724,7 @@ class _EvaluatorPrinter(object):
                 argstrs.append(nested_argstrs)
             elif isinstance(arg, DeferredVector):
                 argstrs.append(str(arg))
-            elif isinstance(arg, Symbol):
+            elif isinstance(arg, Symbol) or isinstance(arg, MatrixSymbol):
                 argrep = self._argrepr(arg)
 
                 if dummify or not self._is_safe_ident(argrep):
@@ -736,13 +737,16 @@ class _EvaluatorPrinter(object):
                 dummy = Dummy()
                 argstrs.append(self._argrepr(dummy))
                 expr = self._subexpr(expr, {arg: dummy})
+            elif dummify:
+                dummy = Dummy()
+                argstrs.append(self._argrepr(dummy))
+                expr = self._subexpr(expr, {arg: dummy})
             else:
                 argstrs.append(str(arg))
 
         return argstrs, expr
 
-    @staticmethod
-    def _subexpr(expr, dummies_dict):
+    def _subexpr(self, expr, dummies_dict):
         from sympy.matrices import DeferredVector
         from sympy import sympify
 
@@ -752,13 +756,13 @@ class _EvaluatorPrinter(object):
             if isinstance(expr, DeferredVector):
                 pass
             elif isinstance(expr, dict):
-                k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
-                v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
+                k = [self._subexpr(sympify(a), dummies_dict) for a in expr.keys()]
+                v = [self._subexpr(sympify(a), dummies_dict) for a in expr.values()]
                 expr = dict(zip(k, v))
             elif isinstance(expr, tuple):
-                expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
+                expr = tuple(self._subexpr(sympify(a), dummies_dict) for a in expr)
             elif isinstance(expr, list):
-                expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
+                expr = [self._subexpr(sympify(a), dummies_dict) for a in expr]
         return expr
 
     def _print_funcargwrapping(self, args):

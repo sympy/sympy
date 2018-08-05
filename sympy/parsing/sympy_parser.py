@@ -806,8 +806,8 @@ def convert_equals_signs(result, local_dict, global_dict):
     ========
     convert_equality_operators
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, convert_equals_signs)
