@@ -139,7 +139,7 @@ def _number_theoretic_transform(seq, prime, inverse=False):
                         "for Number Theoretic Transform")
 
     p = as_int(prime)
-    if isprime(p) is False:
+    if not isprime(p):
         raise ValueError("Expected prime modulus for "
                         "Number Theoretic Transform")
 
