@@ -2259,6 +2259,8 @@ def latex(expr, **settings):
     Not using a print statement for printing, results in double backslashes for
     latex commands since that's the way Python escapes backslashes in strings.
 
+    >>> from sympy import latex, Rational
+    >>> from sympy.abc import tau
     >>> latex((2*tau)**Rational(7,2))
     '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
     >>> print(latex((2*tau)**Rational(7,2)))
