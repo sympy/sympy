@@ -12,7 +12,7 @@ def test_ndim_array_initiation():
     arr_with_no_elements = ImmutableDenseNDimArray([], shape=(0,))
     assert len(arr_with_no_elements) == 0
     assert arr_with_no_elements.rank() == 1
-    
+
     arr_with_one_element = ImmutableDenseNDimArray([23])
     assert len(arr_with_one_element) == 1
     assert arr_with_one_element[0] == 23
