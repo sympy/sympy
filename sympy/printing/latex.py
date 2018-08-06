@@ -2264,7 +2264,7 @@ def latex(expr, **settings):
     >>> latex((2*tau)**Rational(7,2))
     '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
     >>> print(latex((2*tau)**Rational(7,2)))
-    '8 \sqrt{2} \tau^{\frac{7}{2}}'
+    8 \sqrt{2} \tau^{\frac{7}{2}}
 
     Examples
     ========
