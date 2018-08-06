@@ -1098,8 +1098,8 @@ def _solve_exponential(lhs, rhs, symbol, domain):
         return unsolved_result
 
     a, b = list(ordered(lhs.args))
-    a_term = a.as_independent(symbol)[1]
-    b_term = b.as_independent(symbol)[1]
+    a_coeff, a_term = a.as_independent(symbol)
+    b_coeff, b_term = b.as_independent(symbol)
 
     a_base, a_exp = a_term.base, a_term.exp
     b_base, b_exp = b_term.base, b_term.exp
@@ -1114,9 +1114,10 @@ def _solve_exponential(lhs, rhs, symbol, domain):
         Eq(im(b_exp), 0)
         ]) else False
 
-    return Piecewise(
-        (_solveset(expand_log(log(a)) - expand_log(log(-b)), symbol, domain), conditions),
-        (unsolved_result, True))
+    if conditions:
+        return _solveset(expand_log(log(a)) - expand_log(log(-b)), symbol, domain)
+
+    return unsolved_result
 
 
 def _is_exponential(f, symbol):
