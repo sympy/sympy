@@ -2331,7 +2331,7 @@ def latex(expr, **settings):
     >>> print(latex(asin(Rational(7,2)), inv_trig_style="power"))
     \sin^{-1}{\left (\frac{7}{2} \right )}
 
-    Matrix options::
+    Matrix options:
 
     >>> print(latex(Matrix(2, 1, [x, y])))
     \left[\begin{matrix}x\\y\end{matrix}\right]
@@ -2340,12 +2340,12 @@ def latex(expr, **settings):
     >>> print(latex(Matrix(2, 1, [x, y]), mat_delim="("))
     \left(\begin{matrix}x\\y\end{matrix}\right)
 
-    Custom printing of symbols::
+    Custom printing of symbols:
 
     >>> print(latex(x**2, symbol_names={x: 'x_i'}))
     x_i^{2}
 
-    Logarithms::
+    Logarithms:
 
     >>> print(latex(log(10)))
     \log{\left (10 \right )}
@@ -2364,5 +2364,6 @@ def latex(expr, **settings):
 
 
 def print_latex(expr, **settings):
-    """Prints LaTeX representation of the given expression."""
+    """Prints LaTeX representation of the given expression. Takes the same
+    settings as ``latex()``."""
     print(latex(expr, **settings))
