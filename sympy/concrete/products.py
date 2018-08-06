@@ -318,7 +318,7 @@ class Product(ExprWithIntLimits):
             else:
                 return f
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         from sympy.simplify.simplify import product_simplify
         return product_simplify(self)
 

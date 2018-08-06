@@ -302,7 +302,7 @@ class hyper(TupleParametersBase):
         c3 = And(re(e) >= 1, abs(z) < 1)
         return Or(c1, c2, c3)
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
 

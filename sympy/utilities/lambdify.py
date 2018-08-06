@@ -700,14 +700,13 @@ class _EvaluatorPrinter(object):
             return isinstance(ident, str) and cls._safe_ident_re.match(ident) \
                 and not (keyword.iskeyword(ident) or ident == 'None')
 
-
     def _preprocess(self, args, expr):
         """Preprocess args, expr to replace arguments that do not map
         to valid Python identifiers.
 
         Returns string form of args, and updated expr.
         """
-        from sympy import Dummy, Symbol, Function, flatten
+        from sympy import Dummy, Symbol, MatrixSymbol, Function, flatten
         from sympy.matrices import DeferredVector
 
         dummify = self._dummify
@@ -725,7 +724,7 @@ class _EvaluatorPrinter(object):
                 argstrs.append(nested_argstrs)
             elif isinstance(arg, DeferredVector):
                 argstrs.append(str(arg))
-            elif isinstance(arg, Symbol):
+            elif isinstance(arg, Symbol) or isinstance(arg, MatrixSymbol):
                 argrep = self._argrepr(arg)
 
                 if dummify or not self._is_safe_ident(argrep):
@@ -735,6 +734,10 @@ class _EvaluatorPrinter(object):
                 else:
                     argstrs.append(argrep)
             elif isinstance(arg, Function):
+                dummy = Dummy()
+                argstrs.append(self._argrepr(dummy))
+                expr = self._subexpr(expr, {arg: dummy})
+            elif dummify:
                 dummy = Dummy()
                 argstrs.append(self._argrepr(dummy))
                 expr = self._subexpr(expr, {arg: dummy})

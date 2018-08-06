@@ -1,5 +1,5 @@
 Logic Module
-===============
+============
 
 .. module:: sympy.logic
 
@@ -46,7 +46,7 @@ from their truth tables-
 .. autofunction:: sympy.logic.boolalg.POSform
 
 Boolean functions
------------------------
+-----------------
 
 .. autoclass:: sympy.logic.boolalg.BooleanTrue
 
@@ -94,7 +94,7 @@ simplest forms.
 Inference
 ---------
 
-.. module: sympy.logic.inference
+.. module:: sympy.logic.inference
 
 This module implements some inference routines in propositional logic.
 

@@ -518,7 +518,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     expr = sympify(expr)
 
     try:
-        return expr._eval_simplify(ratio=ratio, measure=measure)
+        return expr._eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
     except AttributeError:
         pass
 
@@ -537,7 +537,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
             return expr
 
     if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
-        return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational)
+        return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational, inverse=inverse)
                          for x in expr.args])
 
     if not expr.is_commutative:

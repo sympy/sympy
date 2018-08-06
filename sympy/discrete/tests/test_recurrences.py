@@ -4,7 +4,7 @@ from sympy import sqrt, Rational, fibonacci
 from sympy.core import S, symbols, I
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises
-from sympy.discrete.recurrence import linrec
+from sympy.discrete.recurrences import linrec
 
 def test_linrec():
     assert linrec(coeffs=[1, 1], init=[1, 1], n=20) == 10946

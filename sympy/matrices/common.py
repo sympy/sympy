@@ -1769,7 +1769,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: x.replace(F, G, map))
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         """Apply simplify to each element of the matrix.
 
         Examples
@@ -1783,7 +1783,8 @@ class MatrixOperations(MatrixRequired):
         >>> _.simplify()
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.simplify(ratio, measure))
+        return self.applyfunc(lambda x: x.simplify(ratio=ratio, measure=measure,
+                                                   rational=rational, inverse=inverse))
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.

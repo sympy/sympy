@@ -229,4 +229,3 @@ API reference
 -------------
 
 .. autofunction:: sympy.integrals.intpoly.polytope_integrate
-
