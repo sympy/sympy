@@ -153,13 +153,13 @@ class Piecewise(Function):
         3) any repeat of a previous condition is ignored
         3) any args past one with a true condition are dropped
 
-        If there are no args left, an empty Piecewise will be returned.
+        If there are no args left, a TypeError exception will be raised.
         If there is a single arg with a True condition, its
         corresponding expression will be returned.
         """
 
         if not _args:
-            return
+            raise TypeError("At least one (expr, cond) pair expected.")
 
         if len(_args) == 1 and _args[0][-1] == True:
             return _args[0][0]
@@ -797,13 +797,17 @@ class Piecewise(Function):
         # and avoiding invalid conditions that appear after a
         # True condition
         args = list(self.args)
+        args_exist = False
         for i, (e, c) in enumerate(args):
             c = c._subs(old, new)
             if c != False:
+                args_exist = True
                 e = e._subs(old, new)
             args[i] = (e, c)
             if c == True:
                 break
+        if not args_exist:
+            return Undefined
         return self.func(*args)
 
     def _eval_transpose(self):
