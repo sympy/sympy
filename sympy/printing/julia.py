@@ -418,7 +418,7 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_Piecewise(self, expr):
-        if len(expr.args) == 0 or expr.args[-1].cond != True:
+        if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
             raise ValueError("All Piecewise expressions must contain an "
