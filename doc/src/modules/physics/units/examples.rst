@@ -12,7 +12,7 @@ Dimensional analysis
 We will start from Newton's second law
 
 .. math::
-    m * a = F
+    m a = F
 
 where :math:`m, a` and :math:`F` are the mass, the acceleration and the force
 respectively. Knowing the dimensions of :math:`m` (:math:`M`) and :math:`a`
