@@ -1104,17 +1104,16 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     a_base, a_exp = a_term.base, a_term.exp
     b_base, b_exp = b_term.base, b_term.exp
 
-    from sympy.core.logic import fuzzy_and
     from sympy.functions.elementary.complexes import im
 
-    conditions = True if fuzzy_and([
+    conditions = And(
         a_base > 0,
         b_base > 0,
         Eq(im(a_exp), 0),
         Eq(im(b_exp), 0)
-        ]) else False
+        )
 
-    if conditions:
+    if conditions is S.true:
         return _solveset(expand_log(log(a)) - expand_log(log(-b)), symbol, domain)
 
     return unsolved_result
