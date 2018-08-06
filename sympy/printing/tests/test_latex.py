@@ -938,8 +938,6 @@ def test_mode():
 
 
 def test_latex_Piecewise():
-    p = Piecewise()
-    assert(latex(p)) == "\\text{undefined}"
     p = Piecewise((x, x < 1), (x**2, True))
     assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 1 \\\\x^{2} &" \
                        " \\text{otherwise} \\end{cases}"

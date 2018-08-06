@@ -3029,12 +3029,6 @@ def test_pretty_dotproduct():
 
 
 def test_pretty_piecewise():
-    expr = Piecewise()
-    ascii_str = "undefined"
-    ucode_str = u(ascii_str)
-    assert(pretty(expr) == ascii_str)
-    assert(upretty(expr) == ucode_str)
-
     expr = Piecewise((x, x < 1), (x**2, True))
     ascii_str = \
 """\

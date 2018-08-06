@@ -1387,9 +1387,6 @@ class LatexPrinter(Printer):
             charmap[expr.rel_op], self._print(expr.rhs))
 
     def _print_Piecewise(self, expr):
-        if len(expr.args) == 0:
-            return r"\text{undefined}"
-
         ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c))
                    for e, c in expr.args[:-1]]
         if expr.args[-1].cond == true:
