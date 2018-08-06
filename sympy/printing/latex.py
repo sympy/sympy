@@ -362,6 +362,18 @@ class LatexPrinter(Printer):
         else:
             return str_real
 
+
+    def _print_ComplexFloat(self, expr):
+        #return self._print(expr.real + expr.imag*I)
+        istr = self._print(S.ImaginaryUnit)
+        if expr.imag.is_negative:
+            return '%s - %s %s' % (self._print(expr.real),
+                                  self._print(-expr.imag), istr)
+        else:
+            return '%s + %s %s' % (self._print(expr.real),
+                                  self._print(expr.imag), istr)
+
+
     def _print_Cross(self, expr):
         vec1 = expr._expr1
         vec2 = expr._expr2
@@ -385,6 +397,7 @@ class LatexPrinter(Printer):
     def _print_Gradient(self, expr):
         func = expr._expr
         return r"\nabla\cdot %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+
 
     def _print_Mul(self, expr):
         from sympy.core.power import Pow

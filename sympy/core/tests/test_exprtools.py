@@ -128,6 +128,10 @@ def test_Factors():
         (Factors({x: x}), Factors({x: y + 1}))
 
 
+def test_Factors_ComplexFloat():
+    assert Factors(S(1+2j)*x) == Factors({S(1+2j): 1, x: 1})
+
+
 def test_Term():
     a = Term(4*x*y**2/z/t**3)
     b = Term(2*x**3*y**5/t**3)

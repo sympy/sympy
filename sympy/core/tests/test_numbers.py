@@ -1417,6 +1417,7 @@ def test_conversion_to_mpmath():
     assert mpmath.mpmathify(Integer(1)) == mpmath.mpf(1)
     assert mpmath.mpmathify(Rational(1, 2)) == mpmath.mpf(0.5)
     assert mpmath.mpmathify(Float('1.23', 15)) == mpmath.mpf('1.23')
+    assert mpmath.mpmathify(S(1 + 2j)) == mpmath.mpc(1 + 2j)
 
     assert mpmath.mpmathify(I) == mpmath.mpc(1j)
 

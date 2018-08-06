@@ -120,9 +120,9 @@ def test_exp_rewrite():
 
     n = Symbol('n', integer=True)
 
-    assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 4/5 + 2*I/5
+    assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == S(4)/5 + 2*I/5
     assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
-    assert Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(3/4 - sqrt(3)*I/4)
+    assert Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(S(3)/4 - sqrt(3)*I/4)
 
 
 def test_exp_leading_term():

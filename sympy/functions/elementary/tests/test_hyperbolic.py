@@ -498,8 +498,8 @@ def test_acosh():
     assert acosh((sqrt(5) + 1)/4) == I*pi/5
     assert acosh(-(sqrt(5) + 1)/4) == 4*I*pi/5
 
-    assert str(acosh(5*I).n(6)) == '2.31244 + 1.5708*I'
-    assert str(acosh(-5*I).n(6)) == '2.31244 - 1.5708*I'
+    assert str(acosh(5*I).n(6)) == '2.31244+1.5708j'
+    assert str(acosh(-5*I).n(6)) == '2.31244-1.5708j'
 
 
 def test_acosh_rewrite():
@@ -569,8 +569,8 @@ def test_asech():
     assert expand_mul(sech(asech((-sqrt(6) - sqrt(2)))) / ((-sqrt(6) - sqrt(2)))) == 1
 
     # numerical evaluation
-    assert str(asech(5*I).n(6)) == '0.19869 - 1.5708*I'
-    assert str(asech(-5*I).n(6)) == '0.19869 + 1.5708*I'
+    assert str(asech(5*I).n(6)) == '0.19869-1.5708j'
+    assert str(asech(-5*I).n(6)) == '0.19869+1.5708j'
 
 
 def test_asech_series():
@@ -639,8 +639,8 @@ def test_acsch():
     assert (csch(acsch(-I*sqrt(2 - 2/sqrt(5)))) / (-I*sqrt(2 - 2/sqrt(5)))).simplify() == 1
 
     # numerical evaluation
-    assert str(acsch(5*I+1).n(6)) == '0.0391819 - 0.193363*I'
-    assert str(acsch(-5*I+1).n(6)) == '0.0391819 + 0.193363*I'
+    assert str(acsch(5*I+1).n(6)) == '0.0391819-0.193363j'
+    assert str(acsch(-5*I+1).n(6)) == '0.0391819+0.193363j'
 
 
 def test_acsch_infinities():

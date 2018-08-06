@@ -100,15 +100,22 @@ def fft(seq, dps=None):
     >>> fft(_)
     [1, 2, 3, 4]
 
-    >>> ifft([1, 7, 3, 4], dps=15)
-    [3.75, -0.5 - 0.75*I, -1.75, -0.5 + 0.75*I]
-    >>> fft(_)
-    [1.0, 7.0, 3.0, 4.0]
-
     >>> fft([5])
     [5]
     >>> ifft([7])
     [7]
+
+    >>> ifft([1, 7, 3, 4], dps=15)
+    [3.75, -0.5-0.75j, -1.75, -0.5+0.75j]
+    >>> fft(_)
+    [1.0+0.0j, 7.0+0.0j, 3.0+0.0j, 4.0+0.0j]
+
+    Often a neglible imaginary component is created by these floating point
+    calculations.  It can be removed by taking the real part.
+
+    >>> from sympy import re
+    >>> [re(x) for x in _]
+    [1.0, 7.0, 3.0, 4.0]
 
     References
     ==========

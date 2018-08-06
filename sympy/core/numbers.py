@@ -550,13 +550,16 @@ class Number(AtomicExpr):
             return Rational(*obj)
         if isinstance(obj, (float, mpmath.mpf, decimal.Decimal)):
             return Float(obj)
+        if isinstance(obj, (complex, mpmath.mpc)):
+            return ComplexFloat(obj)
         if isinstance(obj, string_types):
             val = sympify(obj)
             if isinstance(val, Number):
                 return val
             else:
                 raise ValueError('String "%s" does not denote a Number' % obj)
-        msg = "expected str|int|long|float|Decimal|Number object but got %r"
+        msg = "expected str|int|long|float|complex|Decimal|Number object but got %r"
+
         raise TypeError(msg % type(obj).__name__)
 
     def invert(self, other, *gens, **args):
@@ -1170,6 +1173,14 @@ class Float(Number):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
+        if other is S.ImaginaryUnit:
+            return ComplexFloat(self, 1)
+        if isinstance(other, Mul):
+            c, e = other.as_coeff_Mul()
+            if e is S.ImaginaryUnit:
+                return ComplexFloat(self, c)
+        if isinstance(other, ComplexFloat):
+            return ComplexFloat(self) + other
         if isinstance(other, Number) and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
@@ -1177,6 +1188,14 @@ class Float(Number):
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
+        if other is S.ImaginaryUnit:
+            return ComplexFloat(self, -1)
+        if isinstance(other, Mul):
+            c, e = other.as_coeff_Mul()
+            if e is S.ImaginaryUnit:
+                return ComplexFloat(self, -c)
+        if isinstance(other, ComplexFloat):
+            return ComplexFloat(self) - other
         if isinstance(other, Number) and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_sub(self._mpf_, rhs, prec, rnd), prec)
@@ -1184,6 +1203,10 @@ class Float(Number):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
+        if other is S.ImaginaryUnit:
+            return ComplexFloat(0, self)
+        if isinstance(other, ComplexFloat):
+            return ComplexFloat.__mul__(other, self)
         if isinstance(other, Number) and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
@@ -1191,6 +1214,10 @@ class Float(Number):
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
+        if other is S.ImaginaryUnit:
+            return ComplexFloat(0, -self)
+        if isinstance(other, ComplexFloat):
+            return ComplexFloat.__div__(ComplexFloat(self), other)
         if isinstance(other, Number) and other != 0 and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
@@ -1243,16 +1270,15 @@ class Float(Number):
                     expt.p == 1 and expt.q % 2 and self.is_negative:
                 return Pow(S.NegativeOne, expt, evaluate=False)*(
                     -self)._eval_power(expt)
-            expt, prec = expt._as_mpf_op(self._prec)
+            if expt.is_ComplexFloat:
+                return ComplexFloat(self)**expt
+            mpfexpt, prec = expt._as_mpf_op(self._prec)
             mpfself = self._mpf_
             try:
-                y = mpf_pow(mpfself, expt, prec, rnd)
+                y = mpf_pow(mpfself, mpfexpt, prec, rnd)
                 return Float._new(y, prec)
             except mlib.ComplexResult:
-                re, im = mlib.mpc_pow(
-                    (mpfself, _mpf_zero), (expt, _mpf_zero), prec, rnd)
-                return Float._new(re, prec) + \
-                    Float._new(im, prec)*S.ImaginaryUnit
+                return ComplexFloat(self)**expt
 
     def __abs__(self):
         return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
@@ -1283,6 +1309,11 @@ class Float(Number):
             return other.__eq__(self)
         if other.is_Float:
             return bool(mlib.mpf_eq(self._mpf_, other._mpf_))
+        if other.is_ComplexFloat:
+            # TODO: currently ComplexFloat != Float, but Float does not behave that way
+            if other.is_real:
+                return self.__eq__(other.real)
+            return False
         if other.is_Number:
             # numbers should compare at the same precision;
             # all _as_mpf_val routines should be sure to abide
@@ -1383,6 +1414,359 @@ converter[float] = converter[decimal.Decimal] = Float
 
 # this is here to work nicely in Sage
 RealNumber = Float
+
+
+class ComplexFloat(Number):
+    """Represent a complex floating-point number of arbitrary precision.
+
+    Often ``ComplexFloat`` objects are created by arithmetic involving
+    ``Float`` objects (floating point numbers) that produces a complex
+    result.  For example:
+
+    >>> from sympy import S, Float, ComplexFloat, I
+    >>> z = S(11)/10 + Float("2.2")*I
+    >>> z
+    1.1+2.2j
+    >>> z.is_ComplexFloat
+    True
+
+    Note that result is printed in a way which resembles the Python native
+    ``complex`` type.  Contrast the result above with:
+
+    >>> z = 3 + 4*I
+    >>> z
+    3 + 4*I
+    >>> z.is_ComplexFloat
+    False
+    >>> z.evalf()
+    3.0+4.0j
+
+
+    Precision
+    =========
+
+    Complex calculations involving a high-precision ``Float`` and an exact
+    number such as an ``Integer`` or a ``Rational`` will result in a
+    ``ComplexFloat`` of similarly high precision.  For example:
+
+    >>> a = S.Pi.evalf(32)
+    >>> z = S(2)/3 + I*a
+    >>> z
+    0.66666666666666666666666666666667+3.1415926535897932384626433832795j
+
+    But be careful: when calculations involve multiple inexact floating point
+    numbers, the resulting ``ComplexFloat`` will typically inherit the
+    minimum precision of the inputs.  For example:
+
+    >>> Float(S(2)/3, 5) + I*a
+    0.66667+3.1416j
+    >>> 1.0/3 + I*a
+    0.3333333333333333+3.14159265358979j
+    >>> 1.1 + I*a
+    1.1+3.14159265358979j
+
+    *Warning* This behaviour is different from ``Float`` which currently
+    tries to convert everything to the higher precision, sometimes giving
+    results of misleading accuracy.
+
+    If you need careful control over the precision of a ``ComplexFloat``, you
+    can create one directly, specifying the number of significant digits
+    (using ``dps`` for decimal digits or ``prec`` for binary digits).  For
+    example, the following results each have precision equivalent to 24
+    significant digits:
+
+    >>> ComplexFloat("1.23", "3.45", dps=24)
+    1.23+3.45j
+    >>> ComplexFloat(S(1)/3, S(2)/3, dps=24)
+    0.333333333333333333333333+0.666666666666666666666667j
+    >>> ComplexFloat("1.23", S(2)/3, dps=24)
+    1.23+0.666666666666666666666667j
+
+    Directly passing Python-native ``float`` or ``complex`` inputs is
+    possible but is limited to about 16 digits of precision.  Combining these
+    with high-precision is not recommended:
+
+    >>> ComplexFloat(1.0/3, S(2)/3, dps=24)
+    0.333333333333333314829616+0.666666666666666666666667j
+    >>> ComplexFloat(((1.0+2.0j)/3), dps=24)
+    0.333333333333333314829616+0.666666666666666629659233j
+
+    """
+    __slots__ = ['real', 'imag']
+
+    # each Float represents many real numbers,
+    # both rational and irrational.
+    is_rational = None
+    is_irrational = None
+    is_number = True
+
+    is_complex = True
+
+    is_ComplexFloat = True
+
+    def __new__(cls, real, imag=None, dps=None, precision=None):
+        if dps is not None and precision is not None:
+                raise ValueError('Both decimal and binary precision supplied. '
+                                 'Can only pass one of them.')
+        if dps is not None:
+            prec = mlib.libmpf.dps_to_prec(dps)
+        else:
+            prec = precision
+
+        if imag is None:
+            if isinstance(real, string_types):
+                # Note: "1.2 + 3.4j" not supported
+                real = real.strip()
+                if real.endswith('j'):
+                    imag = Float(real[:-1])
+                    real = 0
+                else:
+                    real = Float(real)
+                    imag = 0
+            elif isinstance(real, tuple):  # TODO: quack quack
+                real, imag = real
+            else:
+                try:
+                    real, imag = real.real, real.imag
+                except AttributeError:
+                    real, imag = real.as_real_imag()
+        if prec is None:
+            if isinstance(real, Float) and isinstance(imag, Float):
+                # no checks done; assume precisions are as desired by user
+                pass
+            elif isinstance(real, Float):
+                prec = real._prec
+                imag = Float(imag, precision=prec)
+            elif isinstance(imag, Float):
+                prec = imag._prec
+                real = Float(real, precision=prec)
+            else:
+                real = Float(real)
+                imag = Float(imag)
+        else:
+            real = Float(real, precision=prec)
+            imag = Float(imag, precision=prec)
+        if real is S.NaN or imag is S.NaN:
+            return S.NaN
+        obj = Expr.__new__(cls)
+        obj.real = real
+        obj.imag = imag
+        return obj
+
+    @classmethod
+    def _new(cls, _mpc_, _prec):
+        re, im = _mpc_
+        if (re, im) == (_mpf_zero, _mpf_zero):
+            # Unlike the full ctor, return S.Zero instead of ComplexFloat(0,0)
+            # E.g., so "a = ComplexFloat(...); a - a" gives S.Zero not 0.0+0.0j
+            # (see also Float._new which also does this).
+            return S.Zero
+        obj = Expr.__new__(cls)
+        # TODO: be careful, gives S.Zero
+        obj.real = Float._new(re, _prec)
+        obj.imag = Float._new(im, _prec)
+        if obj.real is S.Zero:
+            obj.real = Float(0);
+            obj.real._prec = _prec
+        if obj.imag is S.Zero:
+            obj.imag = Float(0);
+            obj.imag._prec = _prec
+        return obj
+
+    @property
+    def _mpc_(self):
+        return (self.real._mpf_, self.imag._mpf_)
+
+    @property
+    def _prec(self):
+        return min(self.real._prec, self.imag._prec)
+
+    def _hashable_content(self):
+        return (self.real, self.imag)
+
+    def __hash__(self):
+        return super(ComplexFloat, self).__hash__()
+
+    @cacheit
+    def sort_key(self, order=None):
+        # TODO: how should these be sorted?
+        # after other Numbers, by real and then imag
+        return self.class_key(), (1, ()), (), self.real, self.imag
+        # mixed with other Numbers, by magnitude and argument?
+        #from sympy import arg
+        #return self.class_key(), (0, ()), (), abs(self), arg(self)
+
+
+    def _eval_is_real(self):
+        # TODO: see is_rational above
+        #return False if self.imag.is_nonzero else None
+        return self.imag.is_zero
+
+    def _eval_is_imaginary(self):
+        #return False if self.real.is_nonzero else None
+        return self.real.is_zero and self.imag.is_nonzero
+
+    def _eval_is_zero(self):
+        return self.real.is_zero and self.imag.is_zero
+
+    def as_real_imag(self, deep=True, **hints):
+        return (self.real, self.imag)
+
+    def __complex__(self):
+        return complex(float(self.real), float(self.imag))
+
+    def __float__(self):
+        raise TypeError("can't convert ComplexFloat to float")
+
+    def __int__(self):
+        raise TypeError("can't convert ComplexFloat to int")
+
+    __long__ = __int__
+
+    def floor(self):
+        r, i = mlib.mpc_floor(self._mpc_, self._prec)
+        return Integer(int(mlib.to_int(r))) + Integer(int(mlib.to_int(i)))*I
+
+    def ceiling(self):
+        r, i = mlib.mpc_ceil(self._mpc_, self._prec)
+        return Integer(int(mlib.to_int(r))) + Integer(int(mlib.to_int(i)))*I
+
+    def _eval_evalf(self, prec):
+        return ComplexFloat(self.real._eval_evalf(prec), self.imag._eval_evalf(prec))
+
+    def _eval_power(self, expt):
+        """
+        expt is symbolic object but not equal to NaN, 0, 1
+        """
+        if isinstance(expt, Number):
+            if expt.is_Integer:
+                prec = self._prec
+                (x, y) = mlib.mpc_pow_int(self._mpc_, expt.p, self._prec)
+            elif expt.is_ComplexFloat:
+                prec = min(self._prec, expt._prec)
+                (x, y) = mlib.mpc_pow(self._mpc_, expt._mpc_, prec)
+            elif expt.is_Float:
+                prec = min(self._prec, expt._prec)
+                (x, y) = mlib.mpc_pow_mpf(self._mpc_, expt._mpf_, prec)
+            else:
+                prec = self._prec
+                dps = prec_to_dps(prec)
+                (u, v) = expt.n(dps).as_real_imag()
+                expt_mpc = (u._as_mpf_val(u._prec), v._as_mpf_val(v._prec))
+                (x, y) = mlib.mpc_pow(self._mpc_, expt_mpc, prec)
+            return ComplexFloat._new((x, y), prec)
+        return None
+
+    def _eval_conjugate(self):
+        return ComplexFloat(self.real, -self.imag)
+
+    _eval_adjoint = _eval_conjugate
+
+    def _eval_Abs(self):
+        return Float._new(mlib.mpc_abs(self._mpc_, self._prec), self._prec)
+
+    def __neg__(self):
+        return ComplexFloat(-self.real, -self.imag)
+
+    def __eq__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy != other  -->  not ==
+        if isinstance(other, ComplexFloat):
+            return self.real == other.real and \
+                   self.imag == other.imag
+        #return False
+        # Try comparing across type.  I don't think this is good behaviour but
+        # for now it is consistent with Float's behaviour.  See discussion
+        # in https://github.com/sympy/sympy/issues/11707 for example.
+        r, i = other.as_real_imag()
+        return self.real == r and self.imag == i
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        if other is S.ImaginaryUnit:
+            return self + ComplexFloat(0, 1, self._prec)
+        if isinstance(other, Mul):
+            c, e = other.as_coeff_Mul()
+            if e is S.ImaginaryUnit:
+                return ComplexFloat(self.real, self.imag + c)
+        if isinstance(other, ComplexFloat):
+            prec = min(self._prec, other._prec)
+            x, y = mlib.mpc_add(self._mpc_, other._mpc_, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        elif isinstance(other, Number) and other.is_real:
+            r, prec = other._as_mpf_op(self._prec)
+            x, y = mlib.mpc_add_mpf(self._mpc_, r, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        return Expr.__add__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __sub__(self, other):
+        if other is S.ImaginaryUnit:
+            return self - ComplexFloat(0, 1, self._prec)
+        if isinstance(other, Mul):
+            c, e = other.as_coeff_Mul()
+            if e is S.ImaginaryUnit:
+                return ComplexFloat(self.real, self.imag - c)
+        if isinstance(other, ComplexFloat):
+            prec = min(self._prec, other._prec)
+            x, y = mlib.mpc_sub(self._mpc_, other._mpc_, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        if isinstance(other, Number) and other.is_real:
+            r, prec = other._as_mpf_op(self._prec)
+            x, y = mlib.mpc_sub_mpf(self._mpc_, r, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        return Expr.__sub__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __mul__(self, other):
+        if other is S.ImaginaryUnit:
+            return ComplexFloat(-self.imag, self.real)
+        if isinstance(other, ComplexFloat):
+            prec = min(self._prec, other._prec)
+            x, y = mlib.mpc_mul(self._mpc_, other._mpc_, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        if isinstance(other, Number) and other.is_real:
+            r, prec = other._as_mpf_op(self._prec)
+            x, y = mlib.mpc_mul_mpf(self._mpc_, r, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        return Number.__mul__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __div__(self, other):
+        if other is S.ImaginaryUnit:
+            return ComplexFloat(self.imag, -self.real)
+        if isinstance(other, ComplexFloat):
+            prec = min(self._prec, other._prec)
+            x, y = mlib.mpc_div(self._mpc_, other._mpc_, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        if isinstance(other, Number) and other.is_real:
+            r, prec = other._as_mpf_op(self._prec)
+            x, y = mlib.mpc_div_mpf(self._mpc_, r, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        return Number.__div__(self, other)
+
+    __truediv__ = __div__
+
+    @_sympifyit('other', NotImplemented)
+    def __mod__(self, other):
+        (u, v) = other.as_real_imag()
+        if v.is_zero:
+            return ComplexFloat(self.real % u, self.imag)
+        if u.is_zero:
+            return ComplexFloat(self.real, self.imag % v)
+        else:
+            return ComplexFloat(self.real % u, self.imag % v)
+
+    def __le__(self, other):
+        raise TypeError("Invalid comparison of complex %s" % self)
+    __ge__ = __le__
+    __lt__ = __le__
+    __gt__ = __le__
 
 
 class Rational(Number):
@@ -1588,7 +1972,7 @@ class Rational(Number):
             elif isinstance(other, Rational):
                 #TODO: this can probably be optimized more
                 return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
-            elif isinstance(other, Float):
+            elif isinstance(other, (Float, ComplexFloat)):
                 return other + self
             else:
                 return Number.__add__(self, other)
@@ -1614,7 +1998,7 @@ class Rational(Number):
                 return Rational(self.q*other.p - self.p, self.q, 1)
             elif isinstance(other, Rational):
                 return Rational(self.q*other.p - self.p*other.q, self.q*other.q)
-            elif isinstance(other, Float):
+            elif isinstance(other, (Float, ComplexFloat)):
                 return -self + other
             else:
                 return Number.__rsub__(self, other)
@@ -1626,7 +2010,7 @@ class Rational(Number):
                 return Rational(self.p*other.p, self.q, igcd(other.p, self.q))
             elif isinstance(other, Rational):
                 return Rational(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
-            elif isinstance(other, Float):
+            elif isinstance(other, (Float, ComplexFloat)):
                 return other*self
             else:
                 return Number.__mul__(self, other)
@@ -1643,7 +2027,7 @@ class Rational(Number):
                     return Rational(self.p, self.q*other.p, igcd(self.p, other.p))
             elif isinstance(other, Rational):
                 return Rational(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
-            elif isinstance(other, Float):
+            elif isinstance(other, (Float, ComplexFloat)):
                 return self*(1/other)
             else:
                 return Number.__div__(self, other)
@@ -1655,7 +2039,7 @@ class Rational(Number):
                 return Rational(other.p*self.q, self.p, igcd(self.p, other.p))
             elif isinstance(other, Rational):
                 return Rational(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
-            elif isinstance(other, Float):
+            elif isinstance(other, (Float, ComplexFloat)):
                 return other*(1/self)
             else:
                 return Number.__rdiv__(self, other)
@@ -1683,7 +2067,7 @@ class Rational(Number):
 
     def _eval_power(self, expt):
         if isinstance(expt, Number):
-            if isinstance(expt, Float):
+            if isinstance(expt, (Float, ComplexFloat)):
                 return self._eval_evalf(expt._prec)**expt
             if expt.is_negative:
                 # (3/4)**-2 -> (4/3)**2
@@ -2245,7 +2629,7 @@ class Integer(Rational):
             # (-2)**k --> 2**k
             if self.is_negative and expt.is_even:
                 return (-self)**expt
-        if isinstance(expt, Float):
+        if isinstance(expt, (Float, ComplexFloat)):
             # Rational knows how to exponentiate by a Float
             return super(Integer, self)._eval_power(expt)
         if not isinstance(expt, Rational):
@@ -3925,11 +4309,7 @@ def sympify_mpq(x):
 converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpq
 
 
-def sympify_complex(a):
-    real, imag = list(map(sympify, (a.real, a.imag)))
-    return real + S.ImaginaryUnit*imag
-
-converter[complex] = sympify_complex
+converter[complex] = ComplexFloat
 
 _intcache[0] = S.Zero
 _intcache[1] = S.One

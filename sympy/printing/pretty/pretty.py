@@ -86,6 +86,17 @@ class PrettyPrinter(Printer):
             full_prec = self._print_level == 1
         return prettyForm(sstr(e, full_prec=full_prec))
 
+    def _print_ComplexFloat(self, e):
+        pform = self._print(S.ImaginaryUnit)
+        if e.imag.is_negative:
+            # Note, copied from _print_Add
+            pform = prettyForm(*pform.left(self._print(-e.imag)))
+            p = stringPict.next(' - ', pform)
+            pform = prettyForm(binding=prettyForm.NEG, *p)
+        else:
+            pform = prettyForm(*pform.left(self._print(e.imag)))
+        return self._print(e.real) + pform
+
     def _print_Cross(self, e):
         vec1 = e._expr1
         vec2 = e._expr2
@@ -1561,6 +1572,9 @@ class PrettyPrinter(Printer):
         for i in range(0, len(a)):
             if (a[i].is_Add and len(a) > 1) or (i != len(a) - 1 and
                     isinstance(a[i], (Integral, Piecewise, Product, Sum))):
+                a[i] = prettyForm(*self._print(a[i]).parens())
+            elif (a[i].is_ComplexFloat and len(a) > 1):
+                # XXX: why didn't it get this from precedence?
                 a[i] = prettyForm(*self._print(a[i]).parens())
             elif a[i].is_Relational:
                 a[i] = prettyForm(*self._print(a[i]).parens())

@@ -655,7 +655,7 @@ class jn(SphericalBesselBase):
     >>> jn(nu, z).rewrite(bessely)
     (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-nu - 1/2, z)/2
     >>> jn(2, 5.2+0.3j).evalf(20)
-    0.099419756723640344491 - 0.054525080242173562897*I
+    0.099419756723640344491-0.054525080242173562897j
 
     See Also
     ========
@@ -716,7 +716,7 @@ class yn(SphericalBesselBase):
     >>> yn(nu, z).rewrite(bessely)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(nu + 1/2, z)/2
     >>> yn(2, 5.2+0.3j).evalf(20)
-    0.18525034196069722536 + 0.014895573969924817587*I
+    0.18525034196069722536+0.014895573969924817587j
 
     See Also
     ========

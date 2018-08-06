@@ -1410,7 +1410,7 @@ class EvalfMixin(object):
         >>> (x + y - z).evalf(subs=values)
         1.00000000000000
         """
-        from sympy import Float, Number
+        from sympy import Float, ComplexFloat, Number
         n = n if n is not None else 15
 
         if subs and is_sequence(subs):
@@ -1455,7 +1455,7 @@ class EvalfMixin(object):
         if im:
             p = max(min(prec, im_acc), 1)
             im = Float._new(im, p)
-            return re + im*S.ImaginaryUnit
+            return ComplexFloat(re, im)
         else:
             return re
 
@@ -1476,6 +1476,9 @@ class EvalfMixin(object):
         errmsg = "cannot convert to mpmath number"
         if allow_ints and self.is_Integer:
             return self.p
+        # TODO: just overwrite in ComplexFloat class?
+        if hasattr(self, '_mpc_'):
+            return make_mpc(self._mpc_)
         if hasattr(self, '_as_mpf_val'):
             return make_mpf(self._as_mpf_val(prec))
         try:

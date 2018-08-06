@@ -875,19 +875,13 @@ class euler(Function):
                     return Integer(res)
                 # Euler polynomial
                 else:
-                    from sympy.core.evalf import pure_complex
-                    reim = pure_complex(sym, or_real=True)
-                    # Evaluate polynomial numerically using mpmath
-                    if reim and all(a.is_Float or a.is_Integer for a in reim) \
-                            and any(a.is_Float for a in reim):
+                    if sym.is_Float or sym.is_ComplexFloat:
                         from mpmath import mp
                         from sympy import Expr
                         m = int(m)
-                        # XXX ComplexFloat (#12192) would be nice here, above
-                        prec = min([a._prec for a in reim if a.is_Float])
-                        with workprec(prec):
+                        with workprec(sym._prec):
                             res = mp.eulerpoly(m, sym)
-                        return Expr._from_mpmath(res, prec)
+                        return Expr._from_mpmath(res, sym._prec)
                     # Construct polynomial symbolically from definition
                     m, result = int(m), []
                     for k in range(m + 1):
@@ -1001,7 +995,7 @@ class catalan(Function):
     and evaluated with arbitrary precision:
 
     >>> catalan(I).evalf(20)
-    0.39764993382373624267 - 0.020884341620842555705*I
+    0.39764993382373624267-0.020884341620842555705j
 
     References
     ==========

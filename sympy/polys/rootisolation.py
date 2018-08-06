@@ -1802,7 +1802,7 @@ class ComplexInterval(object):
     the imaginary part lies within the range [9/8, 3/2]:
 
     >>> root.n(3)
-    0.0766 + 1.14*I
+    0.0766+1.14j
 
     The width of the ranges in the x and y directions on the complex
     plane are:
@@ -1909,9 +1909,9 @@ class ComplexInterval(object):
     part) but the imaginary part of ``close`` is larger than ``root``:
 
     >>> close.n(3)
-    0.0771 + 1.13*I
+    0.0771+1.13j
     >>> root.n(3)
-    0.0766 + 1.14*I
+    0.0766+1.14j
     """
 
     def __init__(self, a, b, I, Q, F1, F2, f1, f2, dom, conj=False):

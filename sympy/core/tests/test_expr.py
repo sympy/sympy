@@ -1029,6 +1029,10 @@ def test_extractions():
     assert (sqrt(x)).extract_multiplicatively(x) is None
     assert (sqrt(x)).extract_multiplicatively(1/x) is None
     assert x.extract_multiplicatively(-x) is None
+    assert Float(6.0).extract_multiplicatively(2) == Float(3.0)
+    assert Float(-6.0).extract_multiplicatively(-2) == Float(3.0)
+    assert Float(6.0).extract_multiplicatively(-2) is None
+    assert Float(0.0).extract_multiplicatively(2) == Float(0.0)
     assert (-2 - 4*I).extract_multiplicatively(-2) == 1 + 2*I
     assert (-2 - 4*I).extract_multiplicatively(3) is None
     assert (-2*x - 4*y - 8).extract_multiplicatively(-2) == x + 2*y + 4
@@ -1702,9 +1706,10 @@ def test_round():
     # equal unless we use string or compare components (which will
     # then coerce the floats to the same precision) or re-create
     # the floats
-    assert str((pi/10 + E*I).round(2)) == '0.31 + 2.72*I'
+    assert str((pi/10 + E*I).round(2)) == '0.31+2.72j'
     assert (pi/10 + E*I).round(2).as_real_imag() == (0.31, 2.72)
-    assert (pi/10 + E*I).round(2) == Float(0.31, 2) + I*Float(2.72, 3)
+    from sympy import ComplexFloat
+    assert (pi/10 + E*I).round(2) == ComplexFloat(Float(0.31, 2), Float(2.72, 3))
 
     # issue 6914
     assert (I**(I + 3)).round(3) == Float('-0.208', '')*I

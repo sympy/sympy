@@ -30,7 +30,7 @@ integer) as an argument to ``evalf`` or ``N``:
 Complex numbers are supported:
 
     >>> N(1/(pi + I), 20)
-    0.28902548222223624241 - 0.091999668350375232456*I
+    0.28902548222223624241-0.091999668350375232456j
 
 
 If the expression contains symbols or for some other reason cannot be evaluated

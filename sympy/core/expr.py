@@ -352,14 +352,11 @@ class Expr(Basic, EvalfMixin):
 
     @staticmethod
     def _from_mpmath(x, prec):
-        from sympy import Float
+        from sympy import Float, ComplexFloat
         if hasattr(x, "_mpf_"):
             return Float._new(x._mpf_, prec)
         elif hasattr(x, "_mpc_"):
-            re, im = x._mpc_
-            re = Float._new(re, prec)
-            im = Float._new(im, prec)*S.ImaginaryUnit
-            return re + im
+            return ComplexFloat._new(x._mpc_, prec)
         else:
             raise TypeError("expected mpmath number (mpf or mpc)")
 
@@ -434,11 +431,11 @@ class Expr(Basic, EvalfMixin):
         >>> from sympy import sqrt
         >>> from sympy.abc import x, y
         >>> x._random()                         # doctest: +SKIP
-        0.0392918155679172 + 0.916050214307199*I
+        0.0392918155679172+0.916050214307199j
         >>> x._random(2)                        # doctest: +SKIP
-        -0.77 - 0.87*I
+        -0.77-0.87j
         >>> (x + y/2)._random(2)                # doctest: +SKIP
-        -0.57 + 0.16*I
+        -0.57+0.16j
         >>> sqrt(2)._random(2)
         1.4
 
@@ -2062,12 +2059,28 @@ class Expr(Basic, EvalfMixin):
                 else:
                     return quotient
             elif self.is_Float:
+                if quotient is S.Zero and self.is_zero:
+                    # Float(0.0)/c gives S.Zero not 0.0
+                    return quotient
                 if not quotient.is_Float:
                     return None
                 elif self.is_positive and quotient.is_negative:
                     return None
                 else:
                     return quotient
+            elif self.is_ComplexFloat:
+                # special case, e.g., c = 2*I could be extracted
+                if self.is_imaginary:
+                    return Mul(self.imag, S.ImaginaryUnit,
+                               evaluate=False).extract_multiplicatively(c)
+                # otherwise treat it term-by-term (like an Add)
+                newreal = self.real.extract_multiplicatively(c)
+                if newreal is not None:
+                    newimag = self.imag.extract_multiplicatively(c)
+                    if newimag is not None:
+                        from sympy import ComplexFloat
+                        return ComplexFloat(newreal, newimag)
+                return None
         elif self.is_NumberSymbol or self.is_Symbol or self is S.ImaginaryUnit:
             if quotient.is_Mul and len(quotient.args) == 2:
                 if quotient.args[0].is_Integer and quotient.args[0].is_positive and quotient.args[1] == self:
@@ -3275,36 +3288,36 @@ class Expr(Basic, EvalfMixin):
         >>> pi.round(2)
         3.14
         >>> (2*pi + E*I).round()
-        6. + 3.*I
+        6.0+3.0j
 
         The round method has a chopping effect:
 
         >>> (2*pi + I/10).round()
-        6.
+        6.0+0.0j
         >>> (pi/10 + 2*I).round()
-        2.*I
+        0.0+2.0j
         >>> (pi/10 + E*I).round(2)
-        0.31 + 2.72*I
+        0.31+2.72j
 
         Notes
         =====
 
         Do not confuse the Python builtin function, round, with the
-        SymPy method of the same name. The former always returns a float
+        SymPy method of the same name. The former returns a float
         (or raises an error if applied to a complex value) while the
-        latter returns either a Number or a complex number:
+        latter always returns a Number (Float or ComplexFloat):
 
         >>> isinstance(round(S(123), -2), Number)
         False
         >>> isinstance(S(123).round(-2), Number)
         True
-        >>> isinstance((3*I).round(), Mul)
+        >>> isinstance((3*I).round(), Number)
         True
-        >>> isinstance((1 + 3*I).round(), Add)
+        >>> isinstance((1 + 3*I).round(), Number)
         True
 
         """
-        from sympy import Float
+        from sympy import Float, ComplexFloat
         x = self
         if not x.is_number:
             raise TypeError("can't round symbolic expression")
@@ -3317,7 +3330,7 @@ class Expr(Basic, EvalfMixin):
             return x
         if not x.is_real:
             i, r = x.as_real_imag()
-            return i.round(p) + S.ImaginaryUnit*r.round(p)
+            return ComplexFloat(i.round(p), r.round(p))
         if not x:
             return x
         p = int(p)

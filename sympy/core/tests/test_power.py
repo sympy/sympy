@@ -355,7 +355,7 @@ def test_issue_7638():
     assert sqrt(Pow(2*I, 5*S.Half)) != (2*I)**(5/S(4))
     p = symbols('p', positive=True)
     assert cbrt(p**2) == p**(2/S(3))
-    assert NS(((0.2 + 0.7*I)**(0.7 + 1.0*I))**(0.5 - 0.1*I), 1) == '0.4 + 0.2*I'
+    assert NS(((0.2 + 0.7*I)**(0.7 + 1.0*I))**(0.5 - 0.1*I), 1) == '0.4+0.2j'
     assert sqrt(1/(1 + I)) == sqrt(1 - I)/sqrt(2)  # or 1/sqrt(1 + I)
     e = 1/(1 - sqrt(2))
     assert sqrt(e) == I/sqrt(-1 + sqrt(2))

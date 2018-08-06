@@ -75,6 +75,7 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Pow = False
     is_Number = False
     is_Float = False
+    is_ComplexFloat = False
     is_Rational = False
     is_Integer = False
     is_NumberSymbol = False

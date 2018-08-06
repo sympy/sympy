@@ -144,6 +144,10 @@ class ReprPrinter(Printer):
         r = mlib.to_str(expr._mpf_, repr_dps(expr._prec))
         return "%s('%s', precision=%i)" % (expr.__class__.__name__, r, expr._prec)
 
+    def _print_ComplexFloat(self, expr):
+        return "%s(%s, %s)" % (expr.__class__.__name__, self._print(expr.real),
+                               self._print(expr.imag))
+
     def _print_Sum2(self, expr):
         return "Sum2(%s, (%s, %s, %s))" % (self._print(expr.f), self._print(expr.i),
                                            self._print(expr.a), self._print(expr.b))

@@ -332,11 +332,11 @@ class Factors(object):
         elif isinstance(factors, Number):
             n = factors
             factors = {}
-            if n < 0:
+            if not n.is_ComplexFloat and n < 0:
                 factors[S.NegativeOne] = S.One
                 n = -n
             if n is not S.One:
-                if n.is_Float or n.is_Integer or n is S.Infinity:
+                if n.is_Float or n.is_ComplexFloat or n.is_Integer or n is S.Infinity:
                     factors[n] = S.One
                 elif n.is_Rational:
                     # since we're processing Numbers, the denominator is
@@ -389,6 +389,9 @@ class Factors(object):
                         elif a == -1:
                             factors[-a] = S.One
                             factors[S.NegativeOne] = S.One
+                        elif a.is_ComplexFloat:
+                            # TODO: was this the right fix for -1.0*I becoming ComplexFloat?
+                            factors[a] = S.One
                         else:
                             raise ValueError('unexpected factor in i1: %s' % a)
 

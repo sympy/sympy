@@ -275,7 +275,7 @@ def roots_quartic(f):
 
         >>> # 4 complex roots: 1+-I*sqrt(3), 2+-I
         >>> sorted(str(tmp.evalf(n=2)) for tmp in r)
-        ['1.0 + 1.7*I', '1.0 - 1.7*I', '2.0 + 1.0*I', '2.0 - 1.0*I']
+        ['1.0+1.7j', '1.0-1.7j', '2.0+1.0j', '2.0-1.0j']
 
     References
     ==========

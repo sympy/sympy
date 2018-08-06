@@ -135,7 +135,7 @@ class Dagger(Expr):
                 if arg.is_Mul:
                     return Mul(*tuple(map(Dagger, reversed(arg.args))))
                 if arg.is_Number:
-                    return arg
+                    return arg.conjugate()
                 if arg.is_Pow:
                     return Pow(Dagger(arg.args[0]), arg.args[1])
                 if arg == I:

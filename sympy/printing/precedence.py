@@ -37,6 +37,7 @@ PRECEDENCE_VALUES = {
     "Not": PRECEDENCE["Not"],
     "Function" : PRECEDENCE["Func"],
     "NegativeInfinity": PRECEDENCE["Add"],
+    "ComplexFloat": PRECEDENCE["Add"],
     "MatAdd": PRECEDENCE["Add"],
     "MatMul": PRECEDENCE["Mul"],
     "MatPow": PRECEDENCE["Pow"],

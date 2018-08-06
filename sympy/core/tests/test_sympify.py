@@ -433,6 +433,10 @@ def test_S_sympify():
 
 def test_issue_4788():
     assert srepr(S(1.0 + 0J)) == srepr(S(1.0)) == srepr(Float(1.0))
+    # TODO: decide if we want S(1.0+0j) to give a Float or ComplexFloat
+    assert srepr(S(1.0)) == srepr(Float(1.0))
+    from sympy import ComplexFloat
+    assert srepr(S(1.0 + 0J)) == srepr(ComplexFloat(1.0, 0.0))
 
 
 def test_issue_4798_None():

@@ -2816,7 +2816,7 @@ def nsolve(*args, **kwargs):
 
     >>> from sympy import I
     >>> nsolve(x**2 + 2, I)
-    1.4142135623731*I
+    0.0+1.4142135623731j
 
     mpmath.findroot is used and you can find there more extensive
     documentation, especially concerning keyword parameters and

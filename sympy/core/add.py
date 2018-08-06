@@ -197,6 +197,12 @@ class Add(Expr, AssocOp):
             else:
                 terms[s] = c
 
+        # combine to ComplexFloat if we have 1.1 + 2*I + ...
+        if coeff.is_Float or coeff.is_ComplexFloat:
+            c = terms.pop(S.ImaginaryUnit, None)
+            if c:
+                coeff += c*S.ImaginaryUnit
+
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]
         newseq = []

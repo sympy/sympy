@@ -272,7 +272,7 @@ class StrPrinter(Printer):
         prec = precedence(expr)
 
         c, e = expr.as_coeff_Mul()
-        if c < 0:
+        if c.is_real and c < 0:
             expr = _keep_coeff(-c, e)
             sign = "-"
         else:
@@ -639,8 +639,18 @@ class StrPrinter(Printer):
             rv = rv[1:]
         return rv
 
-    def _print_Relational(self, expr):
+    def _print_ComplexFloat(self, expr):
+        istr = 'j'
+        #istr = '*' + self._print(S.ImaginaryUnit)
+        # TODO: could use _print_Float for Float-like first level behaviour
+        if expr.imag.is_negative:
+            return '%s-%s%s' % (self._print(expr.real),
+                                  self._print(-expr.imag), istr)
+        else:
+            return '%s+%s%s' % (self._print(expr.real),
+                                  self._print(expr.imag), istr)
 
+    def _print_Relational(self, expr):
         charmap = {
             "==": "Eq",
             "!=": "Ne",
