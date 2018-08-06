@@ -616,18 +616,22 @@ class Integral(AddWithLimits):
                                     args.append(g)
                             return Mul(*args)
 
-                        integrals, others = [], []
+                        integrals, others, piecewises = [], [], []
                         for f in Add.make_args(antideriv):
                             if any(is_indef_int(g, x)
                                    for g in Mul.make_args(f)):
                                 integrals.append(f)
+                            elif any(isinstance(g, Piecewise)
+                                     for g in Mul.make_args(f)):
+                                piecewises.append(piecewise_fold(f))
                             else:
                                 others.append(f)
                         uneval = Add(*[eval_factored(f, x, a, b)
                                        for f in integrals])
                         try:
                             evalued = Add(*others)._eval_interval(x, a, b)
-                            function = uneval + evalued
+                            evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a, b)
+                            function = uneval + evalued + evalued_pw
                         except NotImplementedError:
                             # This can happen if _eval_interval depends in a
                             # complicated way on limits that cannot be computed

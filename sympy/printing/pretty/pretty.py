@@ -825,7 +825,8 @@ class PrettyPrinter(Printer):
             if s is None:
                 s = pform     # First element
             else:
-                if S(item.args[0]).is_negative:
+                coeff = item.as_coeff_mmul()[0]
+                if _coeff_isneg(S(coeff)):
                     s = prettyForm(*stringPict.next(s, ' '))
                     pform = self._print(item)
                 else:
@@ -2313,6 +2314,15 @@ class PrettyPrinter(Printer):
             return pform
         else:
             return self.emptyPrinter(e)
+
+    def _print_AssignmentBase(self, e):
+
+        op = prettyForm(' ' + xsym(e.op) + ' ')
+
+        l = self._print(e.lhs)
+        r = self._print(e.rhs)
+        pform = prettyForm(*stringPict.next(l, op, r))
+        return pform
 
 
 def pretty(expr, **settings):

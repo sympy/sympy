@@ -388,12 +388,6 @@ def test_octave_expint():
     )
 
 
-def test_octave_zeta():
-    assert octave_code(zeta(x)) == 'zeta(x)'
-    n = Symbol('n')
-    assert octave_code(zeta(x, n)) != 'zeta(n, x)'
-
-
 def test_trick_indent_with_end_else_words():
     # words starting with "end" or "else" do not confuse the indenter
     t1 = S('endless');
@@ -479,3 +473,8 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert mcode(F) == "(-B + A)(1, 1)"
+
+
+def test_zeta_printing_issue_14820():
+    assert octave_code(zeta(x)) == 'zeta(x)'
+    assert octave_code(zeta(x, y)) == '% Not supported in Octave:\n% zeta\nzeta(x, y)'

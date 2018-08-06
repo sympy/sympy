@@ -2,7 +2,7 @@ from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log,
                    oo, LambertW, I, meijerg, exp_polar, Max, Piecewise, And)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
-from sympy.plotting.plot import unset_show
+from sympy.plotting.plot import unset_show, plot_contour
 from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.pytest import skip, raises
 from sympy.plotting.experimental_lambdify import lambdify
@@ -29,7 +29,12 @@ class TmpFileManager:
 
     @classmethod
     def cleanup(cls):
-        map(os.remove, cls.tmp_files)
+        for file in cls.tmp_files:
+            try:
+                os.remove(file)
+            except OSError:
+                # If the file doesn't exist, for instance, if the test failed.
+                pass
 
 def plot_and_save(name):
     tmp_file = TmpFileManager.tmp_file
@@ -170,6 +175,21 @@ def plot_and_save(name):
         (x*sin(z), x*cos(z), z, (x, -5, 5), (z, -5, 5)),
         (sin(x + y), cos(x - y), x - y, (x, -5, 5), (y, -5, 5)))
     p.save(tmp_file('%s_parametric_surface' % name))
+    p._backend.close()
+
+    # Single Contour plot.
+    p = plot_contour(sin(x)*sin(y), (x, -5, 5), (y, -5, 5))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+
+    # Multiple Contour plots with same range.
+    p = plot_contour(x**2 + y**2, x**3 + y**3, (x, -5, 5), (y, -5, 5))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+
+    # Multiple Contour plots with different range.
+    p = plot_contour((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x**3 + y**3, (x, -3, 3), (y, -3, 3)))
+    p.save(tmp_file('%s_contour_plot' % name))
     p._backend.close()
 
     ###

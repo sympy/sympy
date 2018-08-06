@@ -1,7 +1,7 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
-        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise)
+        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError, _mexpand
@@ -175,6 +175,9 @@ def test_Lambda():
     assert Lambda(x, f(x))(x) == f(x)
     assert Lambda(x, x**2)(e(x)) == x**4
     assert e(e(x)) == x**4
+
+    x1, x2 = (Indexed('x', i) for i in (1, 2))
+    assert Lambda((x1, x2), x1 + x2)(x, y) == x + y
 
     assert Lambda((x, y), x + y).nargs == FiniteSet(2)
 
@@ -628,18 +631,31 @@ def test_straight_line():
 
 
 def test_sort_variable():
-    vsort = Derivative._sort_variables
+    vsort = Derivative._sort_variable_count
 
-    assert vsort((x, y, z)) == [x, y, z]
-    assert vsort((h(x), g(x), f(x))) == [f(x), g(x), h(x)]
-    assert vsort((z, y, x, h(x), g(x), f(x))) == [x, y, z, f(x), g(x), h(x)]
-    assert vsort((x, f(x), y, f(y))) == [x, f(x), y, f(y)]
-    assert vsort((y, x, g(x), f(x), z, h(x), y, x)) == \
-        [x, y, f(x), g(x), z, h(x), x, y]
-    assert vsort((z, y, f(x), x, f(x), g(x))) == [y, z, f(x), x, f(x), g(x)]
-    assert vsort((z, y, f(x), x, f(x), g(x), z, z, y, x)) == \
-        [y, z, f(x), x, f(x), g(x), x, y, z, z]
+    assert vsort([(x, 3), (y, 2), (z, 1)]) == [(x, 3), (y, 2), (z, 1)]
 
+    assert vsort([(h(x), 1), (g(x), 1), (f(x), 1)]) == [(f(x), 1), (g(x), 1), (h(x), 1)]
+
+    assert vsort([(z, 1), (y, 2), (x, 3), (h(x), 1), (g(x), 1), (f(x), 1)]) == [(x, 3), (y, 2), (z, 1), (f(x), 1), (g(x), 1), (h(x), 1)]
+
+    assert vsort([(x, 1), (f(x), 1), (y, 1), (f(y), 1)]) == [(x, 1), (f(x), 1), (y, 1), (f(y), 1)]
+
+    assert vsort([(y, 1), (x, 2), (g(x), 1), (f(x), 1), (z, 1), (h(x), 1), (y, 2), (x, 1)]) == [(x, 2), (y, 1), (f(x), 1), (g(x), 1), (z, 1), (h(x), 1), (x, 1), (y, 2)]
+
+    assert vsort([(z, 1), (y, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)]) == [(y, 1), (z, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)]
+
+    assert vsort([(z, 1), (y, 2), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1),
+    (z, 2), (z, 1), (y, 1), (x, 1)]) == [(y, 2), (z, 1), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1), (x, 1), (y, 1), (z, 2), (z, 1)]
+
+
+    assert vsort(((y, 2), (x, 1), (y, 1), (x, 1))) == [(x, 1), (x, 1), (y, 2), (y, 1)]
+
+    assert isinstance(vsort([(x, 3), (y, 2), (z, 1)])[0], Tuple)
+
+def test_multiple_derivative():
+    # Issue #15007
+    assert f(x,y).diff(y,y,x,y,x) == Derivative(f(x, y), (x, 2), (y, 3))
 
 def test_unhandled():
     class MyExpr(Expr):

@@ -1581,9 +1581,9 @@ def test_1st_homogeneous_coeff_ode3():
     # test_1st_homogeneous_coeff_ode_check9 above. It has to compare string
     # expressions because u2 is a dummy variable.
     eq = f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x)
-    sol = Eq(log(f(x)), C1 - Piecewise(
-            (-acosh(f(x)/x), abs(f(x)**2)/x**2 > 1),
-            (I*asin(f(x)/x), True)))
+    sol = Eq(log(f(x)), C1 + Piecewise(
+            (acosh(f(x)/x), abs(f(x)**2)/x**2 > 1),
+            (-I*asin(f(x)/x), True)))
     assert dsolve(eq, hint='1st_homogeneous_coeff_subs_indep_div_dep') == sol
 
 
@@ -2608,13 +2608,13 @@ def test_issue_6989():
     k = Symbol('k')
     assert dsolve(f(x).diff(x) - x*exp(-k*x), f(x)) == Eq(f(x),
         C1 + Piecewise(
-            ((-k**2*x - k)*exp(-k*x)/k**3, Ne(k**3, 0)),
+            ((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
             (x**2/2, True)
         ))
     eq = -f(x).diff(x) + x*exp(-k*x)
     sol = dsolve(eq, f(x))
     actual_sol = Eq(f(x), Piecewise(
-        (C1 - x*exp(-k*x)/k - exp(-k*x)/k**2, Ne(k**3, 0)),
+        (C1 - x*exp(-k*x)/k - exp(-k*x)/k**2, Ne(k**2, 0)),
         (C1 + x**2/2, True)
     ))
     errstr = str(eq) + ' : ' + str(sol) + ' == ' + str(actual_sol)

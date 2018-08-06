@@ -739,7 +739,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         for k in range(0, self.cols):
             self[i, k], self[j, k] = self[j, k], self[i, k]
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         """Applies simplify to the elements of a matrix in place.
 
         This is a shortcut for M.applyfunc(lambda x: simplify(x, ratio, measure))
@@ -750,8 +750,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         sympy.simplify.simplify.simplify
         """
         for i in range(len(self._mat)):
-            self._mat[i] = _simplify(self._mat[i], ratio=ratio,
-                                     measure=measure)
+            self._mat[i] = _simplify(self._mat[i], ratio=ratio, measure=measure,
+                                     rational=rational, inverse=inverse)
 
     def zip_row_op(self, i, k, f):
         """In-place operation on row ``i`` using two-arg functor whose args are

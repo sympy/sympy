@@ -60,7 +60,7 @@ def plot_implicit_tests(name):
             assert "Adaptive meshing could not be applied" in str(i.message)
 
     with warnings.catch_warnings(record=True) as w:
-        plot_and_save(x**2 - 1, legend='An implicit plot')
+        plot_and_save(x**2 - 1, title='An implicit plot')
         for i in w:
             assert issubclass(i.category, UserWarning)
             assert 'No labelled objects found' in str(i.message)

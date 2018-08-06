@@ -3,6 +3,9 @@ This module contains functions to:
 
     - solve a single equation for a single variable, in any domain either real or complex.
 
+    - solve a single transcendental equation for a single variable in any domain either real or complex.
+      (currently supports solving in real domain only)
+
     - solve a system of linear equations with N variables and M equations.
 
     - solve a system of Non Linear Equations with N variables and M equations
@@ -10,14 +13,17 @@ This module contains functions to:
 from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
-from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
+from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
+                        Add)
 from sympy.core.containers import Tuple
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand_complex, AppliedUndef, Function)
+from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
+                                expand_log)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
+from sympy.simplify import powdenest
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold, Piecewise)
@@ -30,7 +36,7 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
 from sympy.sets.sets import Set
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
-                         RootOf)
+                         RootOf, factor)
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -119,14 +125,14 @@ def _invert(f_x, y, x, domain=S.Complexes):
     When does exp(x) == y?
 
     >>> invert_complex(exp(x), y, x)
-    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), S.Integers))
+    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers))
     >>> invert_real(exp(x), y, x)
-    (x, Intersection(S.Reals, {log(y)}))
+    (x, Intersection(Reals, {log(y)}))
 
     When does exp(x) == 1?
 
     >>> invert_complex(exp(x), 1, x)
-    (x, ImageSet(Lambda(_n, 2*_n*I*pi), S.Integers))
+    (x, ImageSet(Lambda(_n, 2*_n*I*pi), Integers))
     >>> invert_real(exp(x), 1, x)
     (x, {0})
 
@@ -232,16 +238,16 @@ def _invert_real(f, g_ys, symbol):
 
         if not base_has_sym:
             rhs = g_ys.args[0]
-            if base > S.Zero:
+            if base.is_positive:
                 return _invert_real(expo,
-                    imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
-            elif base < S.Zero:
+                    imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
+            elif base.is_negative:
                 from sympy.core.power import integer_log
                 s, b = integer_log(rhs, base)
                 if b:
-                    return expo, FiniteSet(s)
+                    return _invert_real(expo, FiniteSet(s), symbol)
             elif rhs is S.One:
-                #special case: 0**x - 1
+                # special case: 0**x - 1
                 return (expo, FiniteSet(0))
             return (expo, S.EmptySet)
 
@@ -786,11 +792,11 @@ def solve_decomposition(f, symbol, domain):
     >>> f2 = sin(x)**2 + 2*sin(x) + 1
     >>> pprint(sd(f2, x, S.Reals), use_unicode=False)
               3*pi
-    {2*n*pi + ---- | n in S.Integers}
+    {2*n*pi + ---- | n in Integers}
                2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi - 2 | n in S.Integers} U {2*n*pi - 2 + pi | n in S.Integers}
+    {2*n*pi - 2 | n in Integers} U {2*n*pi - 2 + pi | n in Integers}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -900,7 +906,6 @@ def _solveset(f, symbol, domain, _check=False):
             solns = solver(expr, symbol, in_set)
             result += solns
     elif isinstance(f, Eq):
-        from sympy.core import Add
         result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
 
     elif f.is_Relational:
@@ -943,7 +948,12 @@ def _solveset(f, symbol, domain, _check=False):
                     elif equation.has(Abs):
                         result += _solve_abs(f, symbol, domain)
                     else:
-                        result += _solve_as_rational(equation, symbol, domain)
+                        result_rational = _solve_as_rational(equation, symbol, domain)
+                        if isinstance(result_rational, ConditionSet):
+                            # may be a transcendental type equation
+                            result += _transolve(equation, symbol, domain)
+                        else:
+                            result += result_rational
                 else:
                     result += solver(equation, symbol)
 
@@ -974,6 +984,386 @@ def _solveset(f, symbol, domain, _check=False):
             result = FiniteSet(*[s for s in result
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
+
+    return result
+
+
+def _term_factors(f):
+    """
+    Iterator to get the factors of all terms present
+    in the given equation.
+
+    Parameters
+    ==========
+
+    f : Expr
+        Equation that needs to be addressed
+
+    Returns
+    =======
+
+    Factors of all terms present in the equation.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.solvers.solveset import _term_factors
+    >>> x = symbols('x')
+    >>> list(_term_factors(-2 - x**2 + x*(x + 1)))
+    [-2, -1, x**2, x, x + 1]
+    """
+    for add_arg in Add.make_args(f):
+        for mul_arg in Mul.make_args(add_arg):
+            yield mul_arg
+
+
+def _solve_expo(f, symbol):
+    r"""
+    Helper function for solving (supported) exponential equations.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The exponential equation to be solved
+
+    symbol : Symbol
+        The variable in which the equation is solved
+
+    Returns
+    =======
+
+    An equation in `log` form that `solveset` might better handle.
+
+    `None`:
+        If the equation is not of supported type
+
+    Notes
+    =====
+
+    Exponential equations are the sum of (currently) at most
+    two terms with one or both of them having a power with a
+    symbol-dependent exponent.
+
+    For example
+
+    .. math:: 5^{2x + 3} - 5^{3x - 1}
+
+    .. math:: 4^{5 - 9x} - e^{2 - x}
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import _solve_expo as solve_expo
+    >>> from sympy import symbols
+    >>> x = symbols('x', real=True)
+    >>> solve_expo(3**(2*x) - 2**(x + 3), x)
+    2*x*log(3) - (x + 3)*log(2)
+
+    * Proof of correctness of the method
+
+    The logarithm function is the inverse of the exponential function.
+    The defining relation between exponentiation and logarithm is:
+
+    .. math:: {log_b x} = y \enspace if \enspace b^y = x
+
+    Therefore if we are given an equation with exponent terms, we can
+    convert every term to its corresponding log form. This is achieved by
+    taking logarithms and expanding the equation using log identities
+    so that it can easily be handled by `solveset`.
+
+    For example:
+
+    .. math:: 3^{2x} = 2^{x + 3}
+
+    Taking log both sides will reduce the equation to
+
+    .. math:: (2x)*log(3) = (x + 3)*log(2)
+
+    This form can be easily handed by `solveset`.
+    """
+
+    if not (isinstance(f, Add) and len(f.args) == 2):
+        # solving for the sum of more than two powers is possible
+        # but not yet implemented
+        return None
+
+    lhs, rhs = list(ordered(f.args))
+    log_type_equation = expand_log(log(lhs)) - expand_log(log(-rhs))
+
+    return log_type_equation
+
+
+def _is_exponential(f, symbol):
+    r"""
+    Helper to check whether an equation is exponential or not.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The equation to be checked
+
+    symbol : Symbol
+        The variable in which the equation is checked
+
+    Returns
+    =======
+
+    `True` if the equation is in exponential form otherwise `False`.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, cos, exp
+    >>> from sympy.solvers.solveset import _is_exponential as check
+    >>> x, y = symbols('x y')
+    >>> check(x**y - x, y)
+    True
+    >>> check(x**y - x, x)
+    False
+    >>> check(exp(x + 3), x)
+    True
+    >>> check(cos(2**x), x)
+    False
+
+    * Philosophy behind the helper
+
+    The function extracts each term of the equation and checks if it is
+    of exponential form w.r.t `symbol`.
+    """
+
+    expr_args = _term_factors(f)
+    for expr_arg in expr_args:
+        if isinstance(expr_arg, (Pow, exp)) and (
+                symbol in expr_arg.exp.free_symbols):
+            return True
+    return False
+
+
+def _transolve(f, symbol, domain):
+    r"""
+    Function to solve transcendental equations. It is a helper to
+    `solveset` and should be used internally. `\_transolve`
+    currently supports the following class of equations:
+
+        - Exponential equations
+
+    Parameters
+    ==========
+
+    f : Any transcendental equation that needs to be solved.
+        This needs to be an expression, which is assumed
+        to be equal to 0.
+
+    symbol : The variable for which the equation is solved.
+        This needs to be of class `Symbol`.
+
+    domain : A set over which the equation is solved.
+        This needs to be of class `Set`.
+
+    Returns
+    =======
+
+    Set
+        A set of values for `symbol` for which `f` is equal to
+        zero. An `EmptySet` is returned if `f` does not have solutions
+        in respective domain. A `ConditionSet` is returned as unsolved
+        object if algorithms to evaluate complete solution are not
+        yet implemented.
+
+    How to use `\_transolve`
+    ========================
+
+    `\_transolve` should not be used as an independent function, because
+    it assumes that the equation (`f`) and the `symbol` comes from
+    `solveset` and might have undergone a few modification(s).
+    To use `\_transolve` as an independent function the equation (`f`)
+    and the `symbol` should be passed as they would have been by
+    `solveset`.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import _transolve as transolve
+    >>> from sympy.solvers.solvers import _tsolve as tsolve
+    >>> from sympy import symbols, S, pprint
+    >>> x = symbols('x', real=True) # assumption added
+    >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
+    {-log(375)/(-log(5) + 2*log(3))}
+
+    How `\_transolve` works
+    =======================
+
+    `\_transolve` uses two types of helper functions to solve equations
+    of a particular class:
+
+    Identifying helpers: To determine whether a given equation
+    belongs to a certain class of equation or not. Returns either
+    True or False.
+
+    Solving helpers: Once an equation is identified, a corresponding
+    helper either solves the equation or returns a form of the equation
+    that `solveset` might better be able to handle.
+
+    * Philosophy behind the module
+
+    The purpose of `\_transolve` is to take equations which are not
+    already polynomial in their generator(s) and to either recast them
+    as such through a valid transformation or to solve them outright.
+    A pair of helper functions for each class of supported
+    transcendental functions are employed for this purpose. One
+    identifies the transcendental form of an equation and the other
+    either solves it or recasts it into a tractable form that can be
+    solved by  `solveset`.
+    For example, an equation in the form `a*b**f(x) - c*d**g(x) = 0`
+    can be transformed to
+    `log(a) + f(x)*log(b) - log(c) - g(x)*log(d) = 0`
+    (under certain assumptions) and this can be solved with `solveset`
+    if `f(x)` and `g(x)` are in polynomial form.
+
+    How `\_transolve` is better than `\_tsolve`
+    ===========================================
+
+    1) Better output
+
+    `\_transolve` provides expressions in a more simplified form.
+
+    Consider a simple exponential equation
+
+    >>> f = 3**(2*x) - 2**(x + 3)
+    >>> pprint(transolve(f, x, S.Reals), use_unicode=False)
+        -3*log(2)
+    {------------------}
+     -2*log(3) + log(2)
+    >>> pprint(tsolve(f, x), use_unicode=False)
+         /   3     \
+         | --------|
+         | log(2/9)|
+    [-log\2         /]
+
+    2) Extensible
+
+    The API of `\_transolve` is designed such that it is easily
+    extensible, i.e. the code that solves a given class of
+    equations is encapsulated in a helper and not mixed in with
+    the code of \_transolve itself.
+
+    3) Modular
+
+    `\_transolve` is designed to be modular i.e, for every class of
+    equation a separate helper for identification and solving is
+    implemented. This makes it easy to change or modify any of the
+    method implemented directly in the helpers without interfering
+    with the actual structure of the API.
+
+    4) Faster Computation
+
+    Solving equation via `\_transolve` is much faster as compared to
+    `\_tsolve`. In `solve` attempts are made computing every possibility
+    to get the solutions. This series of attempts makes solving a bit
+    slow. Whereas in `\_transolve` computation begins only when the
+    equation is identified of being a particular type.
+
+    How to add new class of equations
+    =================================
+
+    Adding a new class of equation solver is a three-step procedure:
+
+    - Identify the type of the equations
+
+      Determine the type of the class of equations to which they belong,
+      it could be of `Add`, `Pow`, etc. types. Separate internal functions
+      are used for each type, if it is already present include
+      identification and solving helpers within the routine otherwise add
+      a new internal function and then include identification and solving
+      helpers within it. Something like:
+
+      .. code-block:: python
+
+        def add_type(eq, x):
+            ....
+            if _is_exponential(eq, x):
+                new_eq = _solve_expo(eq, x)
+        ....
+        if eq.is_Add:
+            result = add_type(eq, x)
+
+    - Define the identification helper.
+
+    - Define the solving helper.
+
+    Apart from this, a few other things needs to be taken care while
+    adding an equation solver:
+
+    - Naming conventions:
+      Name of the *identification* *helper* should be as
+      `\_is\_class` where `class` will be the name or abbreviation
+      of the class of equation. The *solving* *helper* will be named as
+      `\_solve\_class`.
+      For example: for exponential equations it becomes
+      `\_is\_exponential` and `\_solve\_expo`.
+    - The helpers should take two input parameters, the equation to be
+      checked and the variable for which a solution is being sought.
+    - Be sure to consider corner cases.
+    - Add tests for each helper.
+    - Add a docstring to your helper that describes the method
+      implemented.
+      The following things needs to be included while writing the
+      documentation for the helpers:
+
+      - What is the purpose of the helper.
+      - How it solves and identifies the equation.
+      - Examples should be included with its proof of correctness.
+      - What does the helper returns.
+    """
+
+    def add_type(eq, symbol, domain):
+        """
+        Helper for `_transolve` to handle equations of
+        `Add` type, i.e. equations taking the form as
+        `a*f(x) + b*g(x) + .... + c = 0`.
+        For example: 4**x + 8**x = 0
+        """
+        result = ConditionSet(symbol, Eq(eq, 0), domain)
+        new_eq = None
+        # try factoring the equation;
+        # powdenest is used to try to get powers in the standard form
+        # for better factoring
+        simplified_equation = factor(powdenest(eq))
+
+        if simplified_equation.is_Mul:
+            new_eq = simplified_equation
+
+        # check if it is exponential type equation
+        elif _is_exponential(simplified_equation, symbol):
+            new_eq = _solve_expo(simplified_equation, symbol)
+
+        if new_eq:
+            result = _solveset(new_eq, symbol, domain)
+
+        return result
+
+    unsolved_result = ConditionSet(symbol, Eq(f, 0), domain)
+    result = unsolved_result
+
+    # invert_complex handles the call to the desired inverter based
+    # on the domain specified.
+    lhs, rhs_s = invert_complex(f, 0, symbol, domain)
+
+    if isinstance(rhs_s, FiniteSet):
+        assert (len(rhs_s.args)) == 1
+        rhs = rhs_s.args[0]
+        equation = Add(lhs, -rhs, evaluate=False)
+
+        if lhs.is_Add:
+            result = add_type(equation, symbol, domain)
+    else:
+        result = rhs_s
+
+    if isinstance(result, ConditionSet):
+        result = unsolved_result
 
     return result
 
@@ -1042,11 +1432,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     >>> x = Symbol('x')
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
-    {2*n*I*pi | n in S.Integers}
+    {2*n*I*pi | n in Integers}
 
     >>> x = Symbol('x', real=True)
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
-    {2*n*I*pi | n in S.Integers}
+    {2*n*I*pi | n in Integers}
 
     * If you want to use `solveset` to solve the equation in the
       real domain, provide a real domain. (Using `solveset\_real`
@@ -1063,11 +1453,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
     but there may be some slight difference:
 
     >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
-    ({2*n*pi | n in S.Integers} \ {0}) U ({2*n*pi + pi | n in S.Integers} \ {0})
+    ({2*n*pi | n in Integers} \ {0}) U ({2*n*pi + pi | n in Integers} \ {0})
 
     >>> p = Symbol('p', positive=True)
     >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
-    {2*n*pi | n in S.Integers} U {2*n*pi + pi | n in S.Integers}
+    {2*n*pi | n in Integers} U {2*n*pi + pi | n in Integers}
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
@@ -1672,19 +2062,19 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
     {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) +
-        log(sin(2))), S.Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
-        Mod(log(sin(2)), 2*I*pi)), S.Integers), 2)}
+        log(sin(2))), Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
+        Mod(log(sin(2)), 2*I*pi)), Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
     {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
     (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
-    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), S.Integers),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), Integers),
     ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi +
-    Mod(-log(3), 2*I*pi)))), S.Integers)),
-    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), S.Integers),
+    Mod(-log(3), 2*I*pi)))), Integers)),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), Integers),
     ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi +
-        Mod(-log(3), 2*I*pi)))), S.Integers))}
+        Mod(-log(3), 2*I*pi)))), Integers))}
 
     """
 
@@ -2295,8 +2685,8 @@ def nonlinsolve(system, *symbols):
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
     {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) +
-        log(sin(2))), S.Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
-        Mod(log(sin(2)), 2*I*pi)), S.Integers), 2)}
+        log(sin(2))), Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
+        Mod(log(sin(2)), 2*I*pi)), Integers), 2)}
 
     3. If system is Non linear polynomial zero dimensional then it returns
     both solution (real and complex solutions, if present using

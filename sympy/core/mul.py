@@ -180,6 +180,7 @@ class Mul(Expr, AssocOp):
             a, b = seq
             if b.is_Rational:
                 a, b = b, a
+                seq = [a, b]
             assert not a is S.One
             if not a.is_zero and a.is_Rational:
                 r, b = b.as_coeff_Mul()
@@ -261,7 +262,7 @@ class Mul(Expr, AssocOp):
                 if o is S.NaN or coeff is S.ComplexInfinity and o is S.Zero:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
-                elif coeff.is_Number:  # it could be zoo
+                elif coeff.is_Number or isinstance(coeff, AccumBounds):  # it could be zoo
                     coeff *= o
                     if coeff is S.NaN:
                         # we know for sure the result will be nan

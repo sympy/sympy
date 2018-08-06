@@ -105,6 +105,7 @@ modules = [
     'sympy.integrals.benchmarks',
     'sympy.integrals.rubi',
     'sympy.integrals.rubi.parsetools',
+    'sympy.integrals.rubi.rubi_tests',
     'sympy.integrals.rubi.rules',
     'sympy.interactive',
     'sympy.liealgebras',
@@ -117,6 +118,9 @@ modules = [
     'sympy.multipledispatch',
     'sympy.ntheory',
     'sympy.parsing',
+    'sympy.parsing.autolev',
+    'sympy.parsing.autolev._antlr',
+    'sympy.parsing.autolev.test_examples',
     'sympy.parsing.latex',
     'sympy.parsing.latex._antlr',
     'sympy.physics',
@@ -152,10 +156,10 @@ modules = [
     'sympy.tensor.array',
     'sympy.unify',
     'sympy.utilities',
+    'sympy.utilities._compilation',
     'sympy.utilities.mathml',
     'sympy.vector',
 ]
-
 
 class audit(Command):
     """Audits SymPy's source code for following issues:
@@ -321,6 +325,7 @@ tests = [
     'sympy.geometry.tests',
     'sympy.holonomic.tests',
     'sympy.integrals.rubi.parsetools.tests',
+    'sympy.integrals.rubi.rubi_tests.tests',
     'sympy.integrals.rubi.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
@@ -358,6 +363,7 @@ tests = [
     'sympy.tensor.array.tests',
     'sympy.tensor.tests',
     'sympy.unify.tests',
+    'sympy.utilities._compilation.tests',
     'sympy.utilities.tests',
     'sympy.vector.tests',
 ]
@@ -390,8 +396,12 @@ if __name__ == '__main__':
           package_data={
               'sympy.utilities.mathml': ['data/*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
+              'sympy.parsing.autolev': ['*.txt', '*.g4'],
+              'sympy.parsing.autolev._antlr': ['*.interp', '*.tokens'],
+              'sympy.parsing.autolev.test_examples': ['*.al'],
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.parsing.latex._antlr': ['*.interp', '*.tokens'],
+              'sympy.integrals.rubi.parsetools': ['header.py.txt'],
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
