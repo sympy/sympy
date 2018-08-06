@@ -104,7 +104,7 @@ variables (taken from Wikipedia). The result should be 224.701 days.
     2*pi*venus_a**(3/2)/(sqrt(gravitational_constant)*sqrt(solar_mass))
 
 To convert to days, use the ``convert_to`` function (and possibly approximate
-the outcoming result:
+the outcoming result):
 
     >>> from sympy.physics.units import convert_to
     >>> convert_to(q, day)
