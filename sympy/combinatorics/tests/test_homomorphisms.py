@@ -1,6 +1,6 @@
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.combinatorics.homomorphisms import homomorphism, find_homomorphism, is_isomorphic
+from sympy.combinatorics.homomorphisms import homomorphism, find_homomorphism, is_isomorphic, group_isomorphism
 from sympy.combinatorics.free_groups import free_group
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.named_groups import AlternatingGroup, DihedralGroup, CyclicGroup
@@ -70,7 +70,7 @@ def test_find_homomorphism():
     H = FpGroup(F, [a**3, b**3, (a*b)**2])
     F, c, d = free_group("c, d")
     G = FpGroup(F, [c**3, d**3, (c*d)**2])
-    check, T =  find_homomorphism(G, H)
+    check, T =  group_isomorphism(G, H)
     assert check
     T(c**3*d**2) == a**3*b**2
 
@@ -79,13 +79,13 @@ def test_find_homomorphism():
     F, a, b = free_group("a, b")
     G = FpGroup(F, [a**3, b**3, (a*b)**2])
     H = AlternatingGroup(4)
-    check, T = find_homomorphism(G, H)
+    check, T = group_isomorphism(G, H)
     assert check
     assert T(b*a*b**-1*a**-1*b**-1) == Permutation(0, 2, 3)
     assert T(b*a*b*a**-1*b**-1) == Permutation(0, 3, 2)
     # Find all possible epimorphisms.
-    list = find_homomorphism(G, H, injective=False, all=True)
-    assert all(elem.is_surjective() for elem in list)
+    list_hom = find_homomorphism(G, H, surjective=True, all=True)
+    assert all(elem.is_surjective() for elem in list_hom)
 
     # PermutationGroup -> PermutationGroup
     D = DihedralGroup(8)

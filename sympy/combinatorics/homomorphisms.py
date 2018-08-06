@@ -352,7 +352,7 @@ def _check_homomorphism(domain, codomain, images):
                 # truth of equality otherwise
                 success = codomain.make_confluent()
                 s = codomain.equals(_image(r), identity)
-                if s in None and not success:
+                if s is None and not success:
                     raise RuntimeError("Can't determine if the images "
                         "define a homomorphism. Try increasing "
                         "the maximum number of rewriting rules "
@@ -421,31 +421,30 @@ def block_homomorphism(group, blocks):
     H = GroupHomomorphism(group, codomain, images)
     return H
 
-def find_homomorphism(G, H, injective=True, surjective=True, compute=True, all=False):
+def find_homomorphism(G, H, injective=False, surjective=False, compute=True, all=False):
     '''
-    Compute an isomorphism/epimorphism/monomorphism between 2 given groups.
+    Compute a homomorphism with required properties between 2 given groups.
     An isomorphism is computed when both injective and surjective are set to True.
 
     Arguments:
         G (a finite `FpGroup` or a `PermutationGroup`) -- First group
         H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
-        injective (boolean) -- When set to True, it compute the possible monomorphism
-        surjective (boolean) -- When set to True, this computes all possible epimorphisms.
-        check (boolean) -- When set to  False, This avoids the computation of
-                           homomorphism and only checks if there exists
-                           an isomorphism/epimorphism/monomorphism between the groups.
-        all (boolean) -- When set to True, this computes all the isomorphisms possible.
+        injective (boolean) -- compute a monomorphism, if possible
+        surjective (boolean) -- compute an epimorphism, if possible
+        compute (boolean) -- When set to False, check the existence of a homomorphism,
+                             avoiding computation where possible.
+        all (boolean) -- compute all possible homomorphisms with specified properties.
 
     Returns:
     If compute = False -- Returns a boolean.
-    If compute = True  -- Returns a boolean and an isomorphism/epimorphism/monomorphism
+    If compute = True  -- Returns a boolean and a homomorphism with required properties
                         between `G` and `H`.
     If all = True -- Returns all possible specified homomorphisms as a list.
 
     Summary:
-    Uses the approach suggested by Robert Tarjan to compute the homomorphism between two groups.
+    Uses the approach suggested by Robert Tarjan to compute a homomorphism between two groups.
     First, the generators of `G` are mapped to the elements of `H` and
-    we check if the mapping induces an isomorphism/epimorphism/monomorphism.
+    we check if the mapping induces a homomorphism with required properties.
 
     Examples
     ========
@@ -454,23 +453,21 @@ def find_homomorphism(G, H, injective=True, surjective=True, compute=True, all=F
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup
-    >>> from sympy.combinatorics.homomorphisms import homomorphism, find_homomorphism
+    >>> from sympy.combinatorics.homomorphisms import homomorphism, find_homomorphism, group_isomorphism
     >>> from sympy.combinatorics.named_groups import DihedralGroup, AlternatingGroup
 
     >>> D = DihedralGroup(8)
     >>> p = Permutation(0, 1, 2, 3, 4, 5, 6, 7)
     >>> P = PermutationGroup(p)
-    >>> find_homomorphism(D, P)
+    >>> find_homomorphism(D, P, injective=True, surjective=True)
     (False, None)
 
     >>> F, a, b = free_group("a, b")
     >>> G = FpGroup(F, [a**3, b**3, (a*b)**2])
     >>> H = AlternatingGroup(4)
-    >>> (check, T) = find_homomorphism(G, H)
-    >>> check
+    >>> list_hom = find_homomorphism(G, H, surjective=True, all=True)
+    >>> all(elem.is_surjective() for elem in list_hom)
     True
-    >>> T(b*a*b**-1*a**-1*b**-1)
-    (0 2 3)
 
     '''
     if all:
@@ -505,13 +502,18 @@ def find_homomorphism(G, H, injective=True, surjective=True, compute=True, all=F
             raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
         _H, h_isomorphism = H._to_perm_group()
 
-    if injective:
-        if (g_order != h_order) or not G.is_abelian and H.is_abelian:
+    if injective and surjective:
+        if (g_order != h_order) or (G.is_abelian != H.is_abelian):
             if not compute:
                 return False
             return (False, None)
-    if surjective:
-        if (g_order != h_order) or G.is_abelian and not H.is_abelian:
+    elif injective:
+        if not G.is_abelian and H.is_abelian:
+            if not compute:
+                return False
+            return (False, None)
+    elif surjective:
+        if G.is_abelian and not H.is_abelian:
             if not compute:
                 return False
             return (False, None)
@@ -533,8 +535,7 @@ def find_homomorphism(G, H, injective=True, surjective=True, compute=True, all=F
             if isinstance(H, FpGroup):
                 images = h_isomorphism.invert(images)
             T =  homomorphism(G, H, G.generators, images, check=False)
-            if ((injective and surjective and T.is_isomorphism()) or
-                    (injective and T.is_injective()) or (surjective and T.is_surjective())):
+            if (injective == T.is_injective()) or (surjective == T.is_surjective()):
                 if not all:
                     if not compute:
                         return True
@@ -548,6 +549,34 @@ def find_homomorphism(G, H, injective=True, surjective=True, compute=True, all=F
         return False
     return (False, None)
 
+def group_isomorphism(G, H, all=False):
+    '''
+    Compute an isomorphism(if possible) between 2 groups.
+
+    Arguments:
+        G (a finite `FpGroup` or a `PermutationGroup`) -- First group
+        H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
+        all (boolean) -- compute all possible isomorphism when set to True.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics.fp_groups import FpGroup
+    >>> from sympy.combinatorics.homomorphisms import group_isomorphism
+    >>> from sympy.combinatorics.named_groups import AlternatingGroup
+
+    >>> F, a, b = free_group("a, b")
+    >>> G = FpGroup(F, [a**3, b**3, (a*b)**2])
+    >>> H = AlternatingGroup(4)
+    >>> (check, T) = group_isomorphism(G, H)
+    >>> check
+    True
+    >>> T(b*a*b**-1*a**-1*b**-1)
+    (0 2 3)
+
+    '''
+    return find_homomorphism(G, H, injective=True, surjective=True, all=all)
+
 def is_isomorphic(G, H):
     '''
     Check if the groups are isomorphic to each other
@@ -558,4 +587,4 @@ def is_isomorphic(G, H):
 
     Returns -- boolean
     '''
-    return find_homomorphism(G, H, compute=False)
+    return find_homomorphism(G, H, injective=True, surjective=True ,compute=False)

@@ -210,6 +210,16 @@ def test_fp_subgroup():
     S = FpSubgroup(f, H)
     _test_subgroup(K, T, S)
 
+    f = FpGroup(F, [x**2, y**3, (x*y)**4])
+    G = [x, y]
+    H = [x*y**2*x*y, y**2*x*y*x, y**-1]
+    K, T = subgroup_quotient(G, H, parent_group=f, homomorphism=True)
+    assert T.domain == K
+    assert T(K.generators) == list(f.generators)
+    G = f.subgroup(G)
+    H = f.subgroup(H)
+    assert K.order() == G.order()/H.order()
+
 def test_permutation_methods():
     from sympy.combinatorics.fp_groups import FpSubgroup
     F, x, y = free_group("x, y")
