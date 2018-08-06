@@ -2275,7 +2275,7 @@ def latex(expr, **settings):
     >>> print(latex((2*tau)**Rational(7,2)))
     8 \sqrt{2} \tau^{\frac{7}{2}}
 
-    ``mode`` and `itex` options:
+    ``mode`` and ``itex`` options:
 
     >>> print(latex((2*mu)**Rational(7,2), mode='plain'))
     8 \sqrt{2} \mu^{\frac{7}{2}}
