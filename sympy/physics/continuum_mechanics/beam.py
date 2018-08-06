@@ -74,11 +74,13 @@ class Beam(object):
             A Symbol or value representing the Beam's length.
         elastic_modulus : Sympifyable
             A SymPy expression representing the Beam's Modulus of Elasticity.
-            It is a measure of the stiffness of the Beam material.
+            It is a measure of the stiffness of the Beam material. It can
+            also be a continuous function of position along the beam.
         second_moment : Sympifyable
             A SymPy expression representing the Beam's Second moment of area.
             It is a geometrical property of an area which reflects how its
-            points are distributed with respect to its neutral axis.
+            points are distributed with respect to its neutral axis. It can
+            also be a continuous function of position along the beam.
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
@@ -214,7 +216,8 @@ class Beam(object):
         """
         This method joins two beams to make a new composite beam system.
         Passed Beam class instance is attached to the right end of calling
-        object.
+        object. This method can be used to form beams having Discontinuous
+        values of Elastic modulus or Second moment.
 
         Parameters
         ==========
