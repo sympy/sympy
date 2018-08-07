@@ -1046,7 +1046,10 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     =======
 
     A set of solutions satisfying the given equation.
-    A `ConditionSet` if the equation is unsolvable.
+    A `ConditionSet` if the equation is unsolvable or
+    if the assumptions are not properly defined, in that case
+    a different style of `ConditionSet` is returned having the
+    solution(s) of the equation with the desired assumptions.
 
     Examples
     ========
@@ -1054,8 +1057,11 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     >>> from sympy.solvers.solveset import _solve_exponential as solve_expo
     >>> from sympy import symbols, S
     >>> x = symbols('x', real=True)
+    >>> a, b = symbols('a b')
     >>> solve_expo(2**x + 3**x - 5**x, 0, x, S.Reals)  # not solvable
     ConditionSet(x, Eq(2**x + 3**x - 5**x, 0), Reals)
+    >>> solve_expo(a**x - b**x, 0, x, S.Reals)  # solvable but incorrect assumptions
+    ConditionSet(x, (a > 0) & (b > 0), {0})
     >>> solve_expo(3**(2*x) - 2**(x + 3), 0, x, S.Reals)
     {-3*log(2)/(-2*log(3) + log(2))}
     >>> solve_expo(2**x - 4**x, 0, x, S.Reals)
@@ -1083,7 +1089,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     This form can be easily handed by `solveset`.
     """
-    unsolved_result = ConditionSet(symbol, Eq(lhs, rhs), domain)
+    unsolved_result = ConditionSet(symbol, Eq(lhs - rhs), domain)
     newlhs = powdenest(lhs)
     if lhs != newlhs:
         # it may also be advantageous to factor the new expr
@@ -1098,8 +1104,8 @@ def _solve_exponential(lhs, rhs, symbol, domain):
         return unsolved_result
 
     a, b = list(ordered(lhs.args))
-    a_coeff, a_term = a.as_independent(symbol)
-    b_coeff, b_term = b.as_independent(symbol)
+    a_term = a.as_independent(symbol)[1]
+    b_term = b.as_independent(symbol)[1]
 
     a_base, a_exp = a_term.base, a_term.exp
     b_base, b_exp = b_term.base, b_term.exp
@@ -1110,13 +1116,12 @@ def _solve_exponential(lhs, rhs, symbol, domain):
         a_base > 0,
         b_base > 0,
         Eq(im(a_exp), 0),
-        Eq(im(b_exp), 0)
-        )
+        Eq(im(b_exp), 0))
 
-    if conditions is S.true:
-        return _solveset(expand_log(log(a)) - expand_log(log(-b)), symbol, domain)
+    log_type_equation = expand_log(log(a), force=True) - expand_log(log(-b), force=True)
+    solutions = _solveset(log_type_equation, symbol, domain)
 
-    return unsolved_result
+    return ConditionSet(symbol, conditions, solutions)
 
 
 def _is_exponential(f, symbol):
@@ -1501,7 +1506,7 @@ def _transolve(f, symbol, domain):
         `a*f(x) + b*g(x) + .... = c`.
         For example: 4**x + 8**x = 0
         """
-        result = ConditionSet(symbol, Eq(lhs, rhs), domain)
+        result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
 
         # check if it is exponential type equation
         if _is_exponential(lhs, symbol):
@@ -1512,8 +1517,7 @@ def _transolve(f, symbol, domain):
 
         return result
 
-    unsolved_result = ConditionSet(symbol, Eq(f, 0), domain)
-    result = unsolved_result
+    result = ConditionSet(symbol, Eq(f, 0), domain)
 
     # invert_complex handles the call to the desired inverter based
     # on the domain specified.
@@ -1527,9 +1531,6 @@ def _transolve(f, symbol, domain):
             result = add_type(lhs, rhs, symbol, domain)
     else:
         result = rhs_s
-
-    if isinstance(result, ConditionSet):
-        result = unsolved_result
 
     return result
 
