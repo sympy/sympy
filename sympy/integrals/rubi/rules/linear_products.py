@@ -159,7 +159,7 @@ def linear_products(rubi, matcher):
         return Simp(log(RemoveContent(a + b*x, x))/b, x)
     rule39 = ReplacementRule(pattern39, replacement39)
 
-    # matcher.add(pattern39, 39)
+    matcher.add(pattern39, 39)
     # pattern40 = Pattern(Integral((x_*WC('b', S(1)) + WC('a', S(0)))**m_, x_), cons2, cons3, cons21, cons66)
     # def replacement40(x, m, a, b):
     #     rubi.append(40)

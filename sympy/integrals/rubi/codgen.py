@@ -62,12 +62,18 @@ from sympy.integrals.rubi.constraints import *
         f.write(code)
 
 from generated import match_root
-x = symbols('x')
-ex = Integral(x , x)
+x, a, b = symbols('x a b')
+ex = Integral(S(1)/x , x)
 for r, p in match_root(ex):
     print(r, p)
+    print("1/x matched")
 
 ex1 = Integral(x**2, x)
 for r, p in match_root(ex1):
     print(r, p)
+    print("x**2 matched")
 
+ex2 = Integral(S(1)/(a + b*x), x)
+for r, p in match_root(ex2):
+    print(r, p)
+    print("1/(a+b*x) matched")
