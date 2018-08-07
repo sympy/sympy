@@ -8,7 +8,7 @@ from sympy.core.numbers import ImaginaryUnit
 from sympy.core.sympify import _sympify
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_or, fuzzy_and
-from sympy.matrices.expressions import MatMul
+from sympy.matrices.expressions import (Identity, MatAdd, MatMul, MatrixExpr, ZeroMatrix)
 
 from sympy.functions.elementary.complexes import Abs
 
@@ -289,6 +289,22 @@ class ClassFactRegistry(MutableMapping):
     def __repr__(self):
         return repr(self.d)
 
+class CheckSquareMatrix(UnevaluatedOnFree):
+
+    def apply(self):
+        r, c = self.expr.shape
+        return Equivalent(self.args[0], r == c)
+
+class CheckEmptyMatrix(UnevaluatedOnFree):
+
+    def apply(self):
+        r, c = self.expr.shape
+        return Equivalent(self.args[0], r == 0 or c == 0)
+
+class CheckOneByOneMatrix(UnevaluatedOnFree):
+
+    def apply(self):
+        return Implies(self.expr.shape == (1, 1), self.args[0])
 
 fact_registry = ClassFactRegistry()
 
@@ -300,6 +316,17 @@ def register_fact(klass, fact, registry=fact_registry):
 for klass, fact in [
     (Mul, Equivalent(Q.zero, AnyArgs(Q.zero))),
     (MatMul, Implies(AllArgs(Q.square), Equivalent(Q.invertible, AllArgs(Q.invertible)))),
+    (MatAdd, Implies(AllArgs(Q.symmetric), Q.symmetric)),
+    (MatAdd, Implies(AllArgs(Q.diagonal), Q.diagonal)),
+    (MatMul, Implies(AllArgs(Q.diagonal), Q.diagonal)),
+    (MatrixExpr, CheckSquareMatrix(Q.square)),
+    (MatrixExpr, CheckOneByOneMatrix(Q.diagonal)),
+    (MatrixExpr, CheckEmptyMatrix(Q.empty_matrix)),
+    (ZeroMatrix, Q.zero_matrix),
+    (Identity, Q.diagonal),
+    # TODO: why are tests failing if these rules are moved to ask.py?
+    # (MatrixExpr, Implies(Q.empty_matrix & Q.square, Q.diagonal)),
+
     (Add, Implies(AllArgs(Q.positive), Q.positive)),
     (Add, Implies(AllArgs(Q.negative), Q.negative)),
     (Mul, Implies(AllArgs(Q.positive), Q.positive)),

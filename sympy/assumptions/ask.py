@@ -729,6 +729,36 @@ class AssumptionKeys(object):
         """
         return Predicate('is_true')
 
+    # XXX: empty_matrix or just empty?
+    @predicate_memo
+    def empty_matrix(self):
+        """
+        A matrix having at least one dimension equal to zero.
+
+        Examples
+        ========
+
+        >>> from sympy import Q, ask, MatrixSymbol
+        >>> X = MatrixSymbol('X', 0, 0)
+        >>> Y = MatrixSymbol('Y', 2, 0)
+        >>> Z = MatrixSymbol('Z', 2, 2)
+        >>> ask(Q.empty_matrix(X))
+        True
+        >>> ask(Q.empty_matrix(Z*Y))
+        True
+        >>> ask(Q.empty_matrix(Z))
+        False
+        """
+        return Predicate('empty_matrix')
+
+    # XXX: is zero_matrix predicat needed?
+    @predicate_memo
+    def zero_matrix(self):
+        """
+        Zero matrix.
+        """
+        return Predicate('zero_matrix')
+
     @predicate_memo
     def symmetric(self):
         """
@@ -1514,7 +1544,6 @@ def get_known_facts():
         Implies(Q.upper_triangular, Q.triangular),
         Implies(Q.triangular, Q.upper_triangular | Q.lower_triangular),
         Implies(Q.upper_triangular & Q.lower_triangular, Q.diagonal),
-        Implies(Q.diagonal, Q.symmetric),
         Implies(Q.unit_triangular, Q.triangular),
         Implies(Q.invertible, Q.fullrank),
         Implies(Q.invertible, Q.square),
@@ -1523,6 +1552,10 @@ def get_known_facts():
         Equivalent(Q.invertible, ~Q.singular),
         Implies(Q.integer_elements, Q.real_elements),
         Implies(Q.real_elements, Q.complex_elements),
+
+        Implies(Q.zero_matrix & Q.square, Q.diagonal),
+        Implies(Q.empty_matrix & Q.square, Q.diagonal),
+        Implies(Q.diagonal, Q.symmetric),
     )
 
 from sympy.assumptions.ask_generated import (

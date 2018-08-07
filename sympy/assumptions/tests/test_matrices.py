@@ -51,7 +51,9 @@ def test_symmetric():
     assert ask(Q.symmetric(Y.T*X*Y)) is None
     assert ask(Q.symmetric(Y.T*X*Y), Q.symmetric(X)) is True
     assert ask(Q.symmetric(X*X*X*X*X*X*X*X*X*X), Q.symmetric(X)) is True
-    assert ask(Q.symmetric(A1x1)) is True
+    assert ask(Q.symmetric(C0x0))
+    # assert ask(Q.scalar_matrix(A1x1)) is True
+    # assert ask(Q.symmetric(A1x1), Q.scalar_matrix(A1x1)) is True
     assert ask(Q.symmetric(A1x1 + B1x1)) is True
     assert ask(Q.symmetric(A1x1 * B1x1)) is True
     assert ask(Q.symmetric(V1.T*V1)) is True
@@ -126,6 +128,9 @@ def test_diagonal():
     assert ask(Q.diagonal(X), Q.lower_triangular(X) & Q.upper_triangular(X))
     assert ask(Q.symmetric(X), Q.diagonal(X))
     assert ask(Q.triangular(X), Q.diagonal(X))
+    
+    assert ask(Q.empty_matrix(C0x0) & Q.square(C0x0))
+    assert ask(Q.diagonal(A1x1))
     assert ask(Q.diagonal(C0x0))
     assert ask(Q.diagonal(A1x1))
     assert ask(Q.diagonal(A1x1 + B1x1))
