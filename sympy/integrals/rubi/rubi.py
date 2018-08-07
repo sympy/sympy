@@ -211,15 +211,15 @@ if matchpy:
         from matchpy import ManyToOneMatcher
         matcher = ManyToOneMatcher()
 
-        # r = integrand_simplification(rules_applied, matcher, load_rule)
-        # rules += r[1]
-        # matcher = r[0]
+        r = integrand_simplification(rules_applied, matcher, load_rule)
+        rules += r[1]
+        matcher = r[0]
         r = linear_products(rules_applied, matcher, load_rule)
         rules += r[1]
         matcher = r[0]
-        # r = quadratic_products(rules_applied, matcher, load_rule)
-        # rules += r[1]
-        # matcher = r[0]
+        r = quadratic_products(rules_applied, matcher, load_rule)
+        rules += r[1]
+        matcher = r[0]
         # r = binomial_products(rules_applied, matcher, load_rule)
         # rules += r[1]
         # matcher = r[0]
@@ -245,7 +245,7 @@ if matchpy:
 
 def code_generated_int(expr, x):
     from matchpy import replace_all
-    from sympy.integrals.rubi.generated import match_root
+    from sympy.integrals.rubi.generated_1 import match_root
     rule_num = []
     for i, j in match_root(Integral(expr, x)):
         rule_num.append(rules[i - 1])
@@ -349,7 +349,7 @@ def rubi_integrate(expr, var, showsteps=False):
 
 @doctest_depends_on(modules=('matchpy',))
 def util_rubi_integrate(expr, var, showsteps=False):
-    print(rules_applied)
+    # print(rules_applied)
     expr = process_trig(expr)
     expr = expr.replace(sym_exp, exp)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):

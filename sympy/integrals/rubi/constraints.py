@@ -244,7 +244,6 @@ if matchpy:
     cons20 = CustomConstraint(lambda m, n: cons_f20(m, n))
 
     def cons_f21(m, x):
-        print(m, x, "21")
         return FreeQ(m, x)
 
     cons21 = CustomConstraint(lambda m, x: cons_f21(m, x))
@@ -517,7 +516,6 @@ if matchpy:
     def cons_f67(b, a, x):
         if isinstance(x, (int, Integer, float, Float)):
             return False
-        print(a, b, x)
         return FreeQ(List(a, b), x)
 
     cons67 = CustomConstraint(lambda b, a, x: cons_f67(b, a, x))
