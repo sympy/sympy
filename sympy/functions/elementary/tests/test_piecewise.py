@@ -30,9 +30,12 @@ def test_piecewise():
         Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
-    #Empty Piecewise not accepted
+    # Empty Piecewise not accepted
     raises(TypeError, lambda: Piecewise())
     # False condition is never retained
+    assert Piecewise((2*x, x < 0), (x, False)) == \
+        Piecewise((2*x, x < 0), (x, False), evaluate=False) == \
+        Piecewise((2*x, x < 0))
     raises (TypeError, lambda: Piecewise((x, False)))
     raises(TypeError, lambda: Piecewise(x))
     assert Piecewise((x, 1)) == x  # 1 and 0 are accepted as True/False
@@ -86,7 +89,7 @@ def test_piecewise():
     assert Piecewise((1, Eq(x**2, -1)), (2, x < 0)).subs(x, I) == 1
 
     p6 = Piecewise((x, x > 0))
-    n = symbols('n', negative = True)
+    n = symbols('n', negative=True)
     assert p6.subs(x, n) == Undefined
 
     # Test evalf

@@ -71,7 +71,7 @@ class Piecewise(Function):
           If any of the evaluated conds are not determined explicitly False,
           e.g. x < 1, the function is returned in symbolic form.
         - If the function is evaluated at a place where all conditions are False,
-          a ValueError exception will be raised.
+          nan will be returned.
         - Pairs where the cond is explicitly False, will be removed.
 
     Examples
@@ -807,7 +807,7 @@ class Piecewise(Function):
             if c == True:
                 break
         if not args_exist:
-            return Undefined
+            args = ((Undefined, True),)
         return self.func(*args)
 
     def _eval_transpose(self):
