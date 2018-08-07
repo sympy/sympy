@@ -28,7 +28,7 @@ from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point2D, Point3D
 from .line import Line, LinearEntity
 from .util import idiff
-
+from sympy.core.symbol import var
 import random
 
 
@@ -432,6 +432,69 @@ class Ellipse(GeometrySet):
         t1 = ((x - self.center.x) / self.hradius)**2
         t2 = ((y - self.center.y) / self.vradius)**2
         return t1 + t2 - 1
+
+    def equation_using_slope(self, slope):
+        """
+        Returns the equation of an ellipse using the slope of major axis, along with hradius
+        and vradius.
+
+        Approach to the solution :
+
+        Let the center of the ellipse be at C=(xc,yc)
+        Let the major axis be the line that passes through C with a slope of s;
+        points on that line are given by the zeros of L(x,y) = y−yc − s*(x−xc).
+        Let the minor axis be the line perpendicular to L (and also passing through C);
+        points on that line are given by the zeros of l(x,y) = s*(y−yc) + (x−xc).
+
+        The ellipse is then defined by the zeros of
+        E(x,y) = L(x,y)**2/a + l(x,y)**2/b − 1
+
+        Requiring that the distance between the intersections of E and L be 2M identifies
+        b = M**2 * ( 1 + s**2 )
+
+        and similarly, requiring that the intersections between E and l be separated by 2m identifies
+        a = m**2 * ( 1 + s**2 )
+
+        So the general equation of the ellipse centered at (xc,yc) whose major axis (with radius of M)
+        is on a line with slope s, and whose minor axis has radius of m, is given by the solutions of:
+
+        ( ( y − yc ) − s ( x − xc ) )**2         ( s * ( y − yc ) + ( x − xc ) )**2
+        --------------------------------   +     ----------------------------------   =  1
+                m**2 * ( 1 + s**2 )                  M**2 * ( 1 + s**2 )
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Ellipse
+        >>> Ellipse(Point(1,0), 4, 2).equation_using_slope(1)
+        (-x + y + 1)**2/8 + (x + y - 1)**2/32 - 1
+
+        Reference
+        =========
+
+        https://math.stackexchange.com/questions/108270/what-is-the-equation-of-an-ellipse-hat-is-not-aligned-with-the-axis/646971
+        """
+
+        a, b, x, y, m, M, x_c, y_c, s = var('a,b,x,y,m,M,x_c,y_c,s')
+        x_c = self.center.x
+        y_c = self.center.y
+        len_semi_major = self.hradius
+        len_semi_minor = self.vradius
+        L = ((y - y_c) - s * (x - x_c)).subs(s, slope)
+        l = (s * (y - y_c) + (x - x_c)).subs(s, slope)
+
+        if idiff(L, y, x) == -1 / idiff(l, y, x):
+            E = L ** 2 / a + l ** 2 / b - 1
+            xy = (x, y)
+            sol = solve((E, L), *xy)
+            pts = [Point(x, y).subs(zip(xy, p)) for p in sol]
+            b = solve(pts[0].distance(pts[1]) - 2 * M, b)[0].subs([(M, len_semi_major), (s, slope)])
+            sol = solve((E, l), *xy)
+            pts = [Point(x, y).subs(zip(xy, p)) for p in sol]
+            a = solve(pts[0].distance(pts[1]) - 2 * m, a)[0].subs([(m, len_semi_minor), (s, slope)])
+            return ((L ** 2) / a) + ((l ** 2) / b) - 1
+        else:
+            raise ValueError("The equation for ellipse cannot be calculated.")
 
     def evolute(self, x='x', y='y'):
         """The equation of evolute of the ellipse.
