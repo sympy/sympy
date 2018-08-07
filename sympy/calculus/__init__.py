@@ -1,6 +1,4 @@
-"""Some calculus-related methods waiting to find a better place in the
-SymPy modules tree.
-"""
+"""Calculus-related methods."""
 
 from .euler import euler_equations
 from .singularities import (singularities, is_increasing,

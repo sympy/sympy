@@ -835,7 +835,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
 
     >>> eq = Eq(D(u(x, t), x, 2), D(u(x, t), t, 2))
     >>> pde_separate(eq, u(x, t), [X(x), T(t)], strategy='mul')
-    [Derivative(X(x), x, x)/X(x), Derivative(T(t), t, t)/T(t)]
+    [Derivative(X(x), (x, 2))/X(x), Derivative(T(t), (t, 2))/T(t)]
 
     See Also
     ========
@@ -848,7 +848,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     elif strategy == 'mul':
         do_add = False
     else:
-        assert ValueError('Unknown strategy: %s' % strategy)
+        raise ValueError('Unknown strategy: %s' % strategy)
 
     if isinstance(eq, Equality):
         if eq.rhs != 0:
@@ -940,7 +940,7 @@ def pde_separate_mul(eq, fun, sep):
 
     >>> eq = Eq(D(u(x, y), x, 2), D(u(x, y), y, 2))
     >>> pde_separate_mul(eq, u(x, y), [X(x), Y(y)])
-    [Derivative(X(x), x, x)/X(x), Derivative(Y(y), y, y)/Y(y)]
+    [Derivative(X(x), (x, 2))/X(x), Derivative(Y(y), (y, 2))/Y(y)]
 
     """
     return pde_separate(eq, fun, sep, strategy='mul')

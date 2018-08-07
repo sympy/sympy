@@ -797,12 +797,11 @@ class legendre(OrthogonalPolynomial):
             elif x == S.Infinity:
                 return S.Infinity
         else:
-            # n is a given fixed integer, evaluate into polynomial
+            # n is a given fixed integer, evaluate into polynomial;
+            # L_{-n}(x)  --->  L_{n-1}(x)
             if n.is_negative:
-                raise ValueError(
-                    "The index n must be nonnegative integer (got %r)" % n)
-            else:
-                return cls._eval_at_order(n, x)
+                n = -n - S.One
+            return cls._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:
@@ -935,7 +934,7 @@ class hermite(OrthogonalPolynomial):
     hermite(n, x) gives the nth Hermite polynomial in x, :math:`H_n(x)`
 
     The Hermite polynomials are orthogonal on :math:`(-\infty, \infty)`
-    with respect to the weight :math:`\exp\left(-\frac{x^2}{2}\right)`.
+    with respect to the weight :math:`\exp\left(-x^2\right)`.
 
     Examples
     ========

@@ -2,21 +2,17 @@
 
 from __future__ import print_function, division
 
-from .sympy_tokenize import \
-    generate_tokens, untokenize, TokenError, \
-    NUMBER, STRING, NAME, OP, ENDMARKER
+from tokenize import (generate_tokens, untokenize, TokenError,
+    NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN)
 
 from keyword import iskeyword
 
 import ast
-import re
 import unicodedata
 
 import sympy
 from sympy.core.compatibility import exec_, StringIO
 from sympy.core.basic import Basic
-
-_re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
 def _token_splittable(token):
     """
@@ -589,26 +585,24 @@ def lambda_notation(tokens, local_dict, global_dict):
 def factorial_notation(tokens, local_dict, global_dict):
     """Allows standard notation for factorial."""
     result = []
-    prevtoken = ''
+    nfactorial = 0
     for toknum, tokval in tokens:
-        if toknum == OP:
+        if toknum == ERRORTOKEN:
             op = tokval
-
-            if op == '!!':
-                if prevtoken == '!' or prevtoken == '!!':
-                    raise TokenError
-                result = _add_factorial_tokens('factorial2', result)
-            elif op == '!':
-                if prevtoken == '!' or prevtoken == '!!':
-                    raise TokenError
-                result = _add_factorial_tokens('factorial', result)
+            if op == '!':
+                nfactorial += 1
             else:
+                nfactorial = 0
                 result.append((OP, op))
         else:
+            if nfactorial == 1:
+                result = _add_factorial_tokens('factorial', result)
+            elif nfactorial == 2:
+                result = _add_factorial_tokens('factorial2', result)
+            elif nfactorial > 2:
+                raise TokenError
+            nfactorial = 0
             result.append((toknum, tokval))
-
-        prevtoken = tokval
-
     return result
 
 
@@ -626,16 +620,105 @@ def convert_xor(tokens, local_dict, global_dict):
 
     return result
 
+def repeated_decimals(tokens, local_dict, global_dict):
+    """
+    Allows 0.2[1] notation to represent the repeated decimal 0.2111... (19/90)
 
-def auto_number(tokens, local_dict, global_dict):
-    """Converts numeric literals to use SymPy equivalents.
-
-    Complex numbers use ``I``; integer literals use ``Integer``, float
-    literals use ``Float``, and repeating decimals use ``Rational``.
+    Run this before auto_number.
 
     """
     result = []
-    prevtoken = ''
+
+    def is_digit(s):
+        return all(i in '0123456789_' for i in s)
+
+    # num will running match any DECIMAL [ INTEGER ]
+    num = []
+    for toknum, tokval in tokens:
+        if toknum == NUMBER:
+            if (not num and '.' in tokval and 'e' not in tokval.lower() and
+                'j' not in tokval.lower()):
+                num.append((toknum, tokval))
+            elif is_digit(tokval)and  len(num) == 2:
+                num.append((toknum, tokval))
+            elif is_digit(tokval) and len(num) == 3 and is_digit(num[-1][1]):
+                # Python 2 tokenizes 00123 as '00', '123'
+                # Python 3 tokenizes 01289 as '012', '89'
+                num.append((toknum, tokval))
+            else:
+                num = []
+        elif toknum == OP:
+            if tokval == '[' and len(num) == 1:
+                num.append((OP, tokval))
+            elif tokval == ']' and len(num) >= 3:
+                num.append((OP, tokval))
+            elif tokval == '.' and not num:
+                # handle .[1]
+                num.append((NUMBER, '0.'))
+            else:
+                num = []
+        else:
+            num = []
+
+        result.append((toknum, tokval))
+
+        if num and num[-1][1] == ']':
+            # pre.post[repetend] = a + b/c + d/e where a = pre, b/c = post,
+            # and d/e = repetend
+            result = result[:-len(num)]
+            pre, post = num[0][1].split('.')
+            repetend = num[2][1]
+            if len(num) == 5:
+                repetend += num[3][1]
+
+            pre = pre.replace('_', '')
+            post = post.replace('_', '')
+            repetend = repetend.replace('_', '')
+
+            zeros = '0'*len(post)
+            post, repetends = [w.lstrip('0') for w in [post, repetend]]
+                                        # or else interpreted as octal
+
+            a = pre or '0'
+            b, c = post or '0', '1' + zeros
+            d, e = repetends, ('9'*len(repetend)) + zeros
+
+            seq = [
+                (OP, '('),
+                    (NAME, 'Integer'),
+                    (OP, '('),
+                        (NUMBER, a),
+                    (OP, ')'),
+                    (OP, '+'),
+                    (NAME, 'Rational'),
+                    (OP, '('),
+                        (NUMBER, b),
+                        (OP, ','),
+                        (NUMBER, c),
+                    (OP, ')'),
+                    (OP, '+'),
+                    (NAME, 'Rational'),
+                    (OP, '('),
+                        (NUMBER, d),
+                        (OP, ','),
+                        (NUMBER, e),
+                    (OP, ')'),
+                (OP, ')'),
+            ]
+            result.extend(seq)
+            num = []
+
+    return result
+
+def auto_number(tokens, local_dict, global_dict):
+    """
+    Converts numeric literals to use SymPy equivalents.
+
+    Complex numbers use ``I``, integer literals use ``Integer``, and float
+    literals use ``Float``.
+
+    """
+    result = []
 
     for toknum, tokval in tokens:
         if toknum == NUMBER:
@@ -648,35 +731,8 @@ def auto_number(tokens, local_dict, global_dict):
 
             if '.' in number or (('e' in number or 'E' in number) and
                     not (number.startswith('0x') or number.startswith('0X'))):
-                match = _re_repeated.match(number)
-
-                if match is not None:
-                    # Clear repeating decimals, e.g. 3.4[31] -> (3 + 4/10 + 31/990)
-                    pre, post, repetend = match.groups()
-
-                    zeros = '0'*len(post)
-                    post, repetends = [w.lstrip('0') for w in [post, repetend]]
-                                                # or else interpreted as octal
-
-                    a = pre or '0'
-                    b, c = post or '0', '1' + zeros
-                    d, e = repetends, ('9'*len(repetend)) + zeros
-
-                    seq = [
-                        (OP, '('),
-                        (NAME,
-                         'Integer'), (OP, '('), (NUMBER, a), (OP, ')'),
-                        (OP, '+'),
-                        (NAME, 'Rational'), (OP, '('), (
-                            NUMBER, b), (OP, ','), (NUMBER, c), (OP, ')'),
-                        (OP, '+'),
-                        (NAME, 'Rational'), (OP, '('), (
-                            NUMBER, d), (OP, ','), (NUMBER, e), (OP, ')'),
-                        (OP, ')'),
-                    ]
-                else:
-                    seq = [(NAME, 'Float'), (OP, '('),
-                           (NUMBER, repr(str(number))), (OP, ')')]
+                seq = [(NAME, 'Float'), (OP, '('),
+                    (NUMBER, repr(str(number))), (OP, ')')]
             else:
                 seq = [(NAME, 'Integer'), (OP, '('), (
                     NUMBER, number), (OP, ')')]
@@ -686,7 +742,6 @@ def auto_number(tokens, local_dict, global_dict):
             result.append((toknum, tokval))
 
     return result
-
 
 def rationalize(tokens, local_dict, global_dict):
     """Converts floats into ``Rational``. Run AFTER ``auto_number``."""
@@ -751,8 +806,8 @@ def convert_equals_signs(result, local_dict, global_dict):
     ========
     convert_equality_operators
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, convert_equals_signs)
@@ -776,7 +831,8 @@ def convert_equals_signs(result, local_dict, global_dict):
 #: Standard transformations for :func:`parse_expr`.
 #: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
-standard_transformations = (lambda_notation, auto_symbol, auto_number, factorial_notation)
+standard_transformations = (lambda_notation, auto_symbol, repeated_decimals, auto_number,
+    factorial_notation)
 
 
 def stringify_expr(s, local_dict, global_dict, transformations):
@@ -935,7 +991,13 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             if isinstance(node.left, ast.UnaryOp) and (isinstance(node.right, ast.UnaryOp) == 0) and sympy_class in ('Mul',):
                 left, right = right, left
             if isinstance(node.op, ast.Sub):
-                right = ast.UnaryOp(op=ast.USub(), operand=right)
+                right = ast.Call(
+                    func=ast.Name(id='Mul', ctx=ast.Load()),
+                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)), right],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    starargs=None,
+                    kwargs=None
+                )
             if isinstance(node.op, ast.Div):
                 if isinstance(node.left, ast.UnaryOp):
                     if isinstance(node.right,ast.UnaryOp):

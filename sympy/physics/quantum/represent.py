@@ -99,7 +99,7 @@ def represent(expr, **options):
     ========
 
     Here we subclass ``Operator`` and ``Ket`` to create the z-spin operator
-    and its spin 1/2 up eigenstate. By definining the ``_represent_SzOp``
+    and its spin 1/2 up eigenstate. By defining the ``_represent_SzOp``
     method, the ket can be represented in the z-spin basis.
 
     >>> from sympy.physics.quantum import Operator, represent, Ket

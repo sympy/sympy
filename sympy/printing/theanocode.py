@@ -122,7 +122,7 @@ class TheanoPrinter(Printer):
         else:
             return tt.stacklists([[self._print(arg, **kwargs) for arg in L]
                                          for L in X.tolist()])
-    _print_ImmutableMatrix = _print_DenseMatrix
+    _print_ImmutableMatrix = _print_ImmutableDenseMatrix = _print_DenseMatrix
 
     def _print_MatMul(self, expr, **kwargs):
         children = [self._print(arg, **kwargs) for arg in expr.args]

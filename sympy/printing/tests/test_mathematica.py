@@ -1,8 +1,8 @@
 from sympy.core import (S, pi, oo, symbols, Function,
-                        Rational, Integer, Tuple)
+                        Rational, Integer, Tuple, Derivative)
 from sympy.integrals import Integral
 from sympy.concrete import Sum
-from sympy.functions import exp, sin, cos
+from sympy.functions import exp, sin, cos, conjugate
 
 from sympy import mathematica_code as mcode
 
@@ -27,6 +27,7 @@ def test_Rational():
 def test_Function():
     assert mcode(f(x, y, z)) == "f[x, y, z]"
     assert mcode(sin(x) ** cos(x)) == "Sin[x]^Cos[x]"
+    assert mcode(conjugate(x)) == "Conjugate[x]"
 
 
 def test_Pow():
@@ -72,6 +73,14 @@ def test_Integral():
                           (y, -oo, oo))) == \
         "Hold[Integrate[Exp[-x^2 - y^2], {x, -Infinity, Infinity}, " \
         "{y, -Infinity, Infinity}]]"
+
+
+def test_Derivative():
+    assert mcode(Derivative(sin(x), x)) == "Hold[D[Sin[x], x]]"
+    assert mcode(Derivative(x, x)) == "Hold[D[x, x]]"
+    assert mcode(Derivative(sin(x)*y**4, x, 2)) == "Hold[D[y^4*Sin[x], {x, 2}]]"
+    assert mcode(Derivative(sin(x)*y**4, x, y, x)) == "Hold[D[y^4*Sin[x], x, y, x]]"
+    assert mcode(Derivative(sin(x)*y**4, x, y, 3, x)) == "Hold[D[y^4*Sin[x], x, {y, 3}, x]]"
 
 
 def test_Sum():

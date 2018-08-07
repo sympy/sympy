@@ -158,6 +158,7 @@ def test_radsimp_issue_3214():
 def test_collect_1():
     """Collect with respect to a Symbol"""
     x, y, z, n = symbols('x,y,z,n')
+    assert collect(1, x) == 1
     assert collect( x + y*x, x ) == x * (1 + y)
     assert collect( x + x**2, x ) == x + x**2
     assert collect( x**2 + y*x**2, x ) == (x**2)*(1 + y)
@@ -254,6 +255,10 @@ def test_collect_func():
         x**3: 1
     }
 
+    assert collect(f, x, factor, evaluate=False) == {
+        S.One: (a + 1)**3, x: 3*(a + 1)**2,
+        x**2: umul(S(3), a + 1), x**3: 1}
+
 
 def test_collect_order():
     a, b, x, t = symbols('a,b,x,t')
@@ -281,13 +286,6 @@ def test_rcollect():
     assert rcollect((x**2*y + x*y + x + y)/(x + y), y) == \
         (x + y*(1 + x + x**2))/(x + y)
     assert rcollect(sqrt(-((x + 1)*(y + 1))), z) == sqrt(-((x + 1)*(y + 1)))
-
-
-@XFAIL
-def test_collect_func_xfail():
-    # XXX: this test will pass when automatic constant distribution is removed (issue 4596)
-    assert collect(f, x, factor, evaluate=False) == {S.One: (a + 1)**3,
-                   x: 3*(a + 1)**2, x**2: 3*(a + 1), x**3: 1}
 
 
 @XFAIL
@@ -351,6 +349,19 @@ def test_collect_const():
     eq = (sqrt(15 + 5*sqrt(2))*x + sqrt(3 + sqrt(2))*y)*2
     assert collect_sqrt(eq + 2) == \
         2*sqrt(sqrt(2) + 3)*(sqrt(5)*x + y) + 2
+
+
+def test_issue_13143():
+    fx = f(x).diff(x)
+    e = f(x) + fx + f(x)*fx
+    # collect function before derivative
+    assert collect(e, Wild('w')) == f(x)*(fx + 1) + fx
+    e = f(x) + f(x)*fx + x*fx*f(x)
+    assert collect(e, fx) == (x*f(x) + f(x))*fx + f(x)
+    assert collect(e, f(x)) == (x*fx + fx + 1)*f(x)
+    e = f(x) + fx + f(x)*fx
+    assert collect(e, [f(x), fx]) == f(x)*(1 + fx) + fx
+    assert collect(e, [fx, f(x)]) == fx*(1 + f(x)) + f(x)
 
 
 def test_issue_6097():

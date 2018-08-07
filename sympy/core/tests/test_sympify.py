@@ -1,18 +1,25 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
+    Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range)
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.external import import_module
+from sympy.utilities.pytest import raises, XFAIL, skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
 from sympy.sets import FiniteSet, EmptySet
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+from sympy.external import import_module
 
 import mpmath
+from mpmath.rational import mpq
+
+
+numpy = import_module('numpy')
 
 
 def test_issue_3538():
@@ -109,6 +116,8 @@ def test_sympify_mpmath():
         mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) == False
 
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
+
+    assert sympify(mpq(1, 2)) == S.Half
 
 
 def test_sympify2():
@@ -391,11 +400,13 @@ def test_evaluate_false():
         '2 + 3': Add(2, 3, evaluate=False),
         '2**2 / 3': Mul(Pow(2, 2, evaluate=False), Pow(3, -1, evaluate=False), evaluate=False),
         '2 + 3 * 5': Add(2, Mul(3, 5, evaluate=False), evaluate=False),
-        '2 - 3 * 5': Add(2, -Mul(3, 5, evaluate=False), evaluate=False),
+        '2 - 3 * 5': Add(2, Mul(-1, Mul(3, 5,evaluate=False), evaluate=False), evaluate=False),
         '1 / 3': Mul(1, Pow(3, -1, evaluate=False), evaluate=False),
         'True | False': Or(True, False, evaluate=False),
         '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x**2/2, evaluate=False),
         '2 * 4 * 6 + 8': Add(Mul(2, 4, 6, evaluate=False), 8, evaluate=False),
+        '2 - 8 / 4': Add(2, Mul(-1, Mul(8, Pow(4, -1, evaluate=False), evaluate=False), evaluate=False), evaluate=False),
+        '2 - 2**2': Add(2, Mul(-1, Pow(2, 2, evaluate=False), evaluate=False), evaluate=False),
     }
     for case, result in cases.items():
         assert sympify(case, evaluate=False) == result
@@ -434,8 +445,7 @@ def test_issue_3218():
 
 def test_issue_4988_builtins():
     C = Symbol('C')
-    vars = {}
-    vars['C'] = C
+    vars = {'C': C}
     exp1 = sympify('C')
     assert exp1 == C  # Make sure it did not get mixed up with sympy.C
 
@@ -481,18 +491,48 @@ def test_issue_6540_6552():
 
 
 def test_issue_6046():
-    assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
+    assert str(S("Q & C", locals=_clash1)) == 'C & Q'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
     locals = {}
     exec_("from sympy.abc import Q, C", locals)
-    assert str(S('C&Q', locals)) == 'And(C, Q)'
+    assert str(S('C&Q', locals)) == 'C & Q'
 
 
 def test_issue_8821_highprec_from_str():
     s = str(pi.evalf(128))
     p = sympify(s)
     assert Abs(sin(p)) < 1e-127
+
+
+def test_issue_10295():
+    if not numpy:
+        skip("numpy not installed.")
+
+    A = numpy.array([[1, 3, -1],
+                     [0, 1, 7]])
+    sA = S(A)
+    assert sA.shape == (2, 3)
+    for (ri, ci), val in numpy.ndenumerate(A):
+        assert sA[ri, ci] == val
+
+    B = numpy.array([-7, x, 3*y**2])
+    sB = S(B)
+    assert B[0] == -7
+    assert B[1] == x
+    assert B[2] == 3*y**2
+
+    C = numpy.arange(0, 24)
+    C.resize(2,3,4)
+    sC = S(C)
+    assert sC[0, 0, 0].is_integer
+    assert sC[0, 0, 0] == 0
+
+    a1 = numpy.array([1, 2, 3])
+    a2 = numpy.array([i for i in range(24)])
+    a2.resize(2, 4, 3)
+    assert sympify(a1) == ImmutableDenseNDimArray([1, 2, 3])
+    assert sympify(a2) == ImmutableDenseNDimArray([i for i in range(24)], (2, 4, 3))
 
 
 def test_Range():
@@ -512,7 +552,66 @@ def test_sympify_set():
     assert sympify(set()) == EmptySet()
 
 
+def test_sympify_numpy():
+    if not numpy:
+        skip('numpy not installed. Abort numpy tests.')
+    np = numpy
+
+    def equal(x, y):
+        return x == y and type(x) == type(y)
+
+    assert sympify(np.bool_(1)) is S(True)
+    try:
+        assert equal(
+            sympify(np.int_(1234567891234567891)), S(1234567891234567891))
+        assert equal(
+            sympify(np.intp(1234567891234567891)), S(1234567891234567891))
+    except OverflowError:
+        # May fail on 32-bit systems: Python int too large to convert to C long
+        pass
+    assert equal(sympify(np.intc(1234567891)), S(1234567891))
+    assert equal(sympify(np.int8(-123)), S(-123))
+    assert equal(sympify(np.int16(-12345)), S(-12345))
+    assert equal(sympify(np.int32(-1234567891)), S(-1234567891))
+    assert equal(
+        sympify(np.int64(-1234567891234567891)), S(-1234567891234567891))
+    assert equal(sympify(np.uint8(123)), S(123))
+    assert equal(sympify(np.uint16(12345)), S(12345))
+    assert equal(sympify(np.uint32(1234567891)), S(1234567891))
+    assert equal(
+        sympify(np.uint64(1234567891234567891)), S(1234567891234567891))
+    assert equal(sympify(np.float32(1.123456)), Float(1.123456, precision=24))
+    assert equal(sympify(np.float64(1.1234567891234)),
+                Float(1.1234567891234, precision=53))
+    assert equal(sympify(np.longdouble(1.123456789)),
+                 Float(1.123456789, precision=80))
+    assert equal(sympify(np.complex64(1 + 2j)), S(1.0 + 2.0*I))
+    assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
+    assert equal(sympify(np.longcomplex(1 + 2j)), S(1.0 + 2.0*I))
+
+    try:
+        assert equal(sympify(np.float96(1.123456789)),
+                    Float(1.123456789, precision=80))
+    except AttributeError:  #float96 does not exist on all platforms
+        pass
+
+    try:
+        assert equal(sympify(np.float128(1.123456789123)),
+                    Float(1.123456789123, precision=80))
+    except AttributeError:  #float128 does not exist on all platforms
+        pass
+
+
 @XFAIL
 def test_sympify_rational_numbers_set():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify({'.3', '.2'}, rational=True) == FiniteSet(*ans)
+
+
+def test_issue_13924():
+    if not numpy:
+        skip("numpy not installed.")
+
+    a = sympify(numpy.array([1]))
+    assert isinstance(a, ImmutableDenseNDimArray)
+    assert a[0] == 1

@@ -72,7 +72,7 @@ class BasisDependent(Expr):
 
     n = evalf
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         """
         Implements the SymPy simplify routine for this quantity.
 
@@ -80,7 +80,8 @@ class BasisDependent(Expr):
         ========================
 
         """
-        simp_components = [simp(v, ratio, measure) * k for
+        simp_components = [simp(v, ratio=ratio, measure=measure,
+                           rational=rational, inverse=inverse) * k for
                            k, v in self.components.items()]
         return self._add_func(*simp_components)
 
@@ -100,8 +101,8 @@ class BasisDependent(Expr):
 
     trigsimp.__doc__ += tsimp.__doc__
 
-    def _eval_simplify(self, ratio, measure):
-        return self.simplify(ratio, measure)
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        return self.simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
 
     def _eval_trigsimp(self, **opts):
         return self.trigsimp(**opts)
@@ -198,8 +199,9 @@ class BasisDependentAdd(BasisDependent, Add):
             if arg == cls.zero:
                 continue
             # Else, update components accordingly
-            for x in arg.components:
-                components[x] = components.get(x, 0) + arg.components[x]
+            if hasattr(arg, "components"):
+                for x in arg.components:
+                    components[x] = components.get(x, 0) + arg.components[x]
 
         temp = list(components.keys())
         for x in temp:
@@ -232,9 +234,11 @@ class BasisDependentMul(BasisDependent, Mul):
     """
 
     def __new__(cls, *args, **options):
+        from sympy.vector import Cross, Dot, Curl, Gradient
         count = 0
         measure_number = S(1)
         zeroflag = False
+        extra_args = []
 
         # Determine the component and check arguments
         # Also keep a count to ensure two vectors aren't
@@ -252,6 +256,8 @@ class BasisDependentMul(BasisDependent, Mul):
             elif isinstance(arg, cls._add_func):
                 count += 1
                 expr = arg
+            elif isinstance(arg, (Cross, Dot, Curl, Gradient)):
+                extra_args.append(arg)
             else:
                 measure_number *= arg
         # Make sure incompatible types weren't multiplied
@@ -272,6 +278,7 @@ class BasisDependentMul(BasisDependent, Mul):
 
         obj = super(BasisDependentMul, cls).__new__(cls, measure_number,
                                                     expr._base_instance,
+                                                    *extra_args,
                                                     **options)
         if isinstance(obj, Add):
             return cls._add_func(*obj.args)

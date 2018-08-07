@@ -25,14 +25,12 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 from __future__ import print_function, division
 
 import inspect
-from collections import Callable
 import warnings
 import sys
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
-from sympy.core.compatibility import range
-from sympy.utilities.decorator import doctest_depends_on
+from sympy.core.compatibility import range, Callable
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
@@ -49,6 +47,9 @@ _show = True
 
 
 def unset_show():
+    """
+    Disable show(). For use in the tests.
+    """
     global _show
     _show = False
 
@@ -216,7 +217,6 @@ class Plot(object):
     def __delitem__(self, index):
         del self._series[index]
 
-    @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def append(self, arg):
         """Adds an element from a plot's series to an existing plot.
 
@@ -248,7 +248,6 @@ class Plot(object):
         else:
             raise TypeError('Must specify element of plot to append.')
 
-    @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def extend(self, arg):
         """Adds all series from another plot.
 
@@ -817,9 +816,8 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
 ### Contours
 class ContourSeries(BaseSeries):
     """Representation for a contour plot."""
-    #The code is mostly repetition of SurfaceOver2DRange.
-    #XXX: Presently not used in any of those functions.
-    #XXX: Add contour plot and use this seties.
+    # The code is mostly repetition of SurfaceOver2DRange.
+    # Presently used in contour_plot function
 
     is_contour = True
 
@@ -942,8 +940,7 @@ class MatplotlibBackend(BaseBackend):
                     colormap = ListedColormap(["white", s.line_color])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
-                        self.ax.contour(xarray, yarray, zarray,
-                                contours=(0, 0), fill=False, cmap=colormap)
+                        self.ax.contour(xarray, yarray, zarray, cmap=colormap)
                     else:
                         self.ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
@@ -1032,6 +1029,8 @@ class MatplotlibBackend(BaseBackend):
         #self.fig.show()
         if _show:
             self.plt.show()
+        else:
+            self.close()
 
     def save(self, path):
         self.process_series()
@@ -1046,6 +1045,8 @@ class TextBackend(BaseBackend):
         super(TextBackend, self).__init__(parent)
 
     def show(self):
+        if not _show:
+            return
         if len(self.parent._series) != 1:
             raise ValueError(
                 'The TextBackend supports only one graph per Plot.')
@@ -1082,12 +1083,12 @@ plot_backends = {
 
 def centers_of_segments(array):
     np = import_module('numpy')
-    return np.average(np.vstack((array[:-1], array[1:])), 0)
+    return np.mean(np.vstack((array[:-1], array[1:])), 0)
 
 
 def centers_of_faces(array):
     np = import_module('numpy')
-    return np.average(np.dstack((array[:-1, :-1],
+    return np.mean(np.dstack((array[:-1, :-1],
                                  array[1:, :-1],
                                  array[:-1, 1: ],
                                  array[:-1, :-1],
@@ -1138,7 +1139,6 @@ def _matplotlib_list(interval_list):
 # TODO: Add more plotting options for 3d plots.
 # TODO: Adaptive sampling for 3D plots.
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot(*args, **kwargs):
     """
     Plots a function of a single variable and returns an instance of
@@ -1296,7 +1296,6 @@ def plot(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot_parametric(*args, **kwargs):
     """
     Plots a 2D parametric plot.
@@ -1427,7 +1426,6 @@ def plot_parametric(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot3d_parametric_line(*args, **kwargs):
     """
     Plots a 3D parametric line plot.
@@ -1523,7 +1521,6 @@ def plot3d_parametric_line(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot3d(*args, **kwargs):
     """
     Plots a 3D surface plot.
@@ -1635,7 +1632,6 @@ def plot3d(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot3d_parametric_surface(*args, **kwargs):
     """
     Plots a 3D parametric surface plot.
@@ -1729,6 +1725,84 @@ def plot3d_parametric_surface(*args, **kwargs):
         plots.show()
     return plots
 
+def plot_contour(*args, **kwargs):
+    """
+    Draws contour plot of a function
+
+    Usage
+    =====
+
+    Single plot
+
+    ``plot_contour(expr, range_x, range_y, **kwargs)``
+
+    If the ranges are not specified, then a default range of (-10, 10) is used.
+
+    Multiple plot with the same range.
+
+    ``plot_contour(expr1, expr2, range_x, range_y, **kwargs)``
+
+    If the ranges are not specified, then a default range of (-10, 10) is used.
+
+    Multiple plots with different ranges.
+
+    ``plot_contour((expr1, range_x, range_y), (expr2, range_x, range_y), ..., **kwargs)``
+
+    Ranges have to be specified for every expression.
+
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
+
+    Arguments
+    =========
+
+    ``expr`` : Expression representing the function along x.
+
+    ``range_x``: (x, 0, 5), A 3-tuple denoting the range of the x
+    variable.
+
+    ``range_y``: (y, 0, 5), A 3-tuple denoting the range of the y
+     variable.
+
+    Keyword Arguments
+    =================
+
+    Arguments for ``ContourSeries`` class:
+
+    ``nb_of_points_x``: int. The x range is sampled uniformly at
+    ``nb_of_points_x`` of points.
+
+    ``nb_of_points_y``: int. The y range is sampled uniformly at
+    ``nb_of_points_y`` of points.
+
+    Aesthetics:
+
+    ``surface_color``: Function which returns a float. Specifies the color for
+    the surface of the plot. See ``sympy.plotting.Plot`` for more details.
+
+    If there are multiple plots, then the same series arguments are applied to
+    all the plots. If you want to set these options separately, you can index
+    the returned ``Plot`` object and set it.
+
+    Arguments for ``Plot`` class:
+
+    ``title`` : str. Title of the plot.
+
+    See Also
+    ========
+    Plot, ContourSeries
+    """
+
+    args = list(map(sympify, args))
+    show = kwargs.pop('show', True)
+    plot_expr = check_arguments(args, 1, 2)
+    series = [ContourSeries(*arg) for arg in plot_expr]
+    plot_contours = Plot(*series, **kwargs)
+    if len(plot_expr[0].free_symbols) > 2:
+        raise ValueError('Contour Plot cannot Plot for more than two variables.')
+    if show:
+        plot_contours.show()
+    return plot_contours
 
 def check_arguments(args, expr_len, nb_of_free_symbols):
     """
@@ -1809,7 +1883,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             for symbol in free_symbols:
                 ranges.append(Tuple(symbol) + default_range)
 
-            for i in range(len(free_symbols) - nb_of_free_symbols):
+            for i in range(nb_of_free_symbols - len(free_symbols)):
                 ranges.append(Tuple(Dummy()) + default_range)
             ranges = Tuple(*ranges)
             plots = [expr + ranges for expr in exprs]

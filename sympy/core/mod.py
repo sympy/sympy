@@ -36,11 +36,11 @@ class Mod(Function):
             to be less than or equal q.
             """
 
+            if q == S.Zero:
+                raise ZeroDivisionError("Modulo by zero")
             if p.is_infinite or q.is_infinite or p is nan or q is nan:
                 return nan
-            if (p == q or p == -q or
-                    p.is_Pow and p.exp.is_Integer and p.base == q or
-                    p.is_integer and q == 1):
+            if p == S.Zero or p == q or p == -q or (p.is_integer and q == 1):
                 return S.Zero
 
             if q.is_Number:
@@ -51,6 +51,11 @@ class Mod(Function):
                         return S.Zero
                     elif p.is_odd:
                         return S.One
+
+            if hasattr(p, '_eval_Mod'):
+                rv = getattr(p, '_eval_Mod')(q)
+                if rv is not None:
+                    return rv
 
             # by ratio
             r = p/q
@@ -66,24 +71,75 @@ class Mod(Function):
                     return rv
 
             # by difference
-            d = p - q
-            if d.is_negative:
-                if q.is_negative:
-                    return d
-                elif q.is_positive:
-                    return p
+            # -2|q| < p < 2|q|
+            d = abs(p)
+            for _ in range(2):
+                d -= abs(q)
+                if d.is_negative:
+                    if q.is_positive:
+                        if p.is_positive:
+                            return d + q
+                        elif p.is_negative:
+                            return -d
+                    elif q.is_negative:
+                        if p.is_positive:
+                            return d
+                        elif p.is_negative:
+                            return -d + q
+                    break
 
         rv = doit(p, q)
         if rv is not None:
             return rv
 
         # denest
-        if p.func is cls:
-            # easy
+        if isinstance(p, cls):
             qinner = p.args[1]
-            if qinner == q:
+            if qinner % q == 0:
+                return cls(p.args[0], q)
+            elif (qinner*(q - qinner)).is_nonnegative:
+                # |qinner| < |q| and have same sign
                 return p
-            # XXX other possibilities?
+        elif isinstance(-p, cls):
+            qinner = (-p).args[1]
+            if qinner % q == 0:
+                return cls(-(-p).args[0], q)
+            elif (qinner*(q + qinner)).is_nonpositive:
+                # |qinner| < |q| and have different sign
+                return p
+        elif isinstance(p, Add):
+            # separating into modulus and non modulus
+            both_l = non_mod_l, mod_l = [], []
+            for arg in p.args:
+                both_l[isinstance(arg, cls)].append(arg)
+            # if q same for all
+            if mod_l and all(inner.args[1] == q for inner in mod_l):
+                net = Add(*non_mod_l) + Add(*[i.args[0] for i in mod_l])
+                return cls(net, q)
+
+        elif isinstance(p, Mul):
+            # separating into modulus and non modulus
+            both_l = non_mod_l, mod_l = [], []
+            for arg in p.args:
+                both_l[isinstance(arg, cls)].append(arg)
+
+            if mod_l and all(inner.args[1] == q for inner in mod_l):
+                # finding distributive term
+                non_mod_l = [cls(x, q) for x in non_mod_l]
+                mod = []
+                non_mod = []
+                for j in non_mod_l:
+                    if isinstance(j, cls):
+                        mod.append(j.args[0])
+                    else:
+                        non_mod.append(j)
+                prod_mod = Mul(*mod)
+                prod_non_mod = Mul(*non_mod)
+                prod_mod1 = Mul(*[i.args[0] for i in mod_l])
+                net = prod_mod1*prod_mod
+                return prod_non_mod*cls(net, q)
+
+        # XXX other possibilities?
 
         # extract gcd; any further simplification should be done by the user
         G = gcd(p, q)

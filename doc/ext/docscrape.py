@@ -7,7 +7,10 @@ import inspect
 import textwrap
 import re
 import pydoc
-import collections
+try:
+    from collections.abc import Mapping
+except ImportError: # Python 2
+    from collections import Mapping
 import sys
 
 
@@ -87,7 +90,7 @@ class Reader(object):
         return not ''.join(self._str).strip()
 
 
-class NumpyDocString(collections.Mapping):
+class NumpyDocString(Mapping):
     def __init__(self, docstring, config={}):
         docstring = textwrap.dedent(docstring).split('\n')
 
@@ -219,7 +222,7 @@ class NumpyDocString(collections.Mapping):
                     return g[3], None
                 else:
                     return g[2], g[1]
-            raise ValueError("%s is not a item name" % text)
+            raise ValueError("%s is not an item name" % text)
 
         def push_item(name, rest):
             if not name:

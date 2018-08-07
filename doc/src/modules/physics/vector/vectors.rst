@@ -23,7 +23,7 @@ Vector Algebra
 
 Vector algebra is the first topic to be discussed.
 
-Two vectors are said to be equal if and only if (iff) they have the same same
+Two vectors are said to be equal if and only if (iff) they have the same
 magnitude and orientation.
 
 Vector Operations
@@ -778,6 +778,6 @@ method after creation. The direction cosine matrices are represented by SymPy's
 ``Matrix``, and are part of a dictionary where the keys are the
 ``ReferenceFrame`` and the value the ``Matrix``; these are set
 bi-directionally; in that when you orient ``A`` to ``N`` you are setting ``A``'s
-orientation dictionary to include ``N`` and its ``Matrix``, but also you also
-are setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
+orientation dictionary to include ``N`` and its ``Matrix``, but you are also
+setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
 (that DCM being the transpose of the other).

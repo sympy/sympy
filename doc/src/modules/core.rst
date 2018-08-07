@@ -15,7 +15,7 @@ assumptions
 .. automodule:: sympy.core.assumptions
 
 cache
--------
+-----
 .. module:: sympy.core.cache
 
 cacheit
@@ -46,7 +46,7 @@ singleton
 
 S
 ^
-.. autoclass:: S
+.. autoclass:: sympy.core.singleton.SingletonRegistry
    :members:
 
 expr
@@ -56,6 +56,11 @@ expr
 Expr
 ----
 .. autoclass:: Expr
+   :members:
+
+UnevaluatedExpr
+---------------
+.. autoclass:: UnevaluatedExpr
    :members:
 
 AtomicExpr
@@ -218,6 +223,12 @@ GoldenRatio
 ^^^^^^^^^^^
 
 .. autoclass:: GoldenRatio
+   :members:
+
+TribonacciConstant
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: TribonacciConstant
    :members:
 
 power

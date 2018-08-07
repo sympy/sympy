@@ -18,14 +18,12 @@ def show(computed, correct):
 
 def main():
     x = Symbol("x")
-    a = Symbol("a")
-    h = Symbol("h")
 
     show( limit(sqrt(x**2 - 5*x + 6) - x, x, oo), -Rational(5)/2 )
 
     show( limit(x*(sqrt(x**2 + 1) - x), x, oo), Rational(1)/2 )
 
-    show( limit(x - sqrt3(x**3 - 1), x, oo), Rational(0) )
+    show( limit(x - sqrt(x**3 - 1), x, oo), Rational(0) )
 
     show( limit(log(1 + exp(x))/x, x, -oo), Rational(0) )
 

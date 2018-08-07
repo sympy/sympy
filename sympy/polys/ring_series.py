@@ -562,7 +562,7 @@ def rs_series_inversion(p, x, prec):
     return r
 
 def _coefficient_t(p, t):
-    """Coefficient of `x\_i**j` in p, where ``t`` = (i, j)"""
+    r"""Coefficient of `x\_i**j` in p, where ``t`` = (i, j)"""
     i, j = t
     R = p.ring
     expv1 = [0]*R.ngens
@@ -575,7 +575,7 @@ def _coefficient_t(p, t):
     return p1
 
 def rs_series_reversion(p, x, n, y):
-    """
+    r"""
     Reversion of a series.
 
     ``p`` is a series with ``O(x**n)`` of the form `p = a*x + f(x)`
@@ -753,7 +753,7 @@ def rs_diff(p, x):
     for expv in p:
         if expv[n]:
             e = monomial_ldiv(expv, mn)
-            p1[e] = p[expv]*expv[n]
+            p1[e] = R.domain_new(p[expv]*expv[n])
     return p1
 
 def rs_integrate(p, x):
@@ -784,11 +784,11 @@ def rs_integrate(p, x):
 
     for expv in p:
         e = monomial_mul(expv, mn)
-        p1[e] = p[expv]/(expv[n] + 1)
+        p1[e] = R.domain_new(p[expv]/(expv[n] + 1))
     return p1
 
 def rs_fun(p, f, *args):
-    """
+    r"""
     Function of a multivariate series computed by substitution.
 
     The case with f method name is used to compute `rs\_tan` and `rs\_nth\_root`
@@ -843,7 +843,7 @@ def rs_fun(p, f, *args):
     return p1
 
 def mul_xin(p, i, n):
-    """
+    r"""
     Return `p*x_i**n`.
 
     `x\_i` is the ith variable in ``p``.
@@ -1010,10 +1010,9 @@ def rs_log(p, x, prec):
     R = p.ring
     if p == 1:
         return R.zero
-    if _has_constant_term(p, x):
+    c = _get_constant_term(p, x)
+    if c:
         const = 0
-        zm = R.zero_monom
-        c = p[zm]
         if c == 1:
             pass
         else:
@@ -1024,8 +1023,11 @@ def rs_log(p, x, prec):
                 try:
                     const = R(log(c_expr))
                 except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                        "this domain.")
+                    R = R.add_gens([log(c_expr)])
+                    p = p.set_ring(R)
+                    x = x.set_ring(R)
+                    c = c.set_ring(R)
+                    const = R(log(c_expr))
             else:
                 try:
                     const = R(log(c))
@@ -1079,7 +1081,7 @@ def rs_LambertW(p, x, prec):
         raise NotImplementedError
 
 def _exp1(p, x, prec):
-    """Helper function for `rs\_exp`. """
+    r"""Helper function for `rs\_exp`. """
     R = p.ring
     p1 = R(1)
     for precx in _giant_steps(prec):
@@ -1128,7 +1130,7 @@ def rs_exp(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy fuctions to evaluate the values of the cos/sin
+    # Makes use of sympy functions to evaluate the values of the cos/sin
     # of the constant term.
         return const*rs_exp(p1, x, prec)
 
@@ -1262,7 +1264,7 @@ def rs_asin(p, x, prec):
         raise NotImplementedError
 
 def _tan1(p, x, prec):
-    """
+    r"""
     Helper function of `rs\_tan`.
 
     Return the series expansion of tan of a univariate series using Newton's
@@ -1331,7 +1333,7 @@ def rs_tan(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy fuctions to evaluate the values of the cos/sin
+    # Makes use of sympy functions to evaluate the values of the cos/sin
     # of the constant term.
         t2 = rs_tan(p1, x, prec)
         t = rs_series_inversion(1 - const*t2, x, prec)
@@ -1429,7 +1431,7 @@ def rs_sin(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy cos, sin fuctions to evaluate the values of the
+    # Makes use of sympy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
         return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
 
@@ -1496,7 +1498,7 @@ def rs_cos(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy cos, sin fuctions to evaluate the values of the
+    # Makes use of sympy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
         p_cos = rs_cos(p1, x, prec)
         p_sin = rs_sin(p1, x, prec)
@@ -1522,7 +1524,7 @@ def rs_cos(p, x, prec):
     return rs_series_from_list(p, c, x, prec)
 
 def rs_cos_sin(p, x, prec):
-    """
+    r"""
     Return the tuple `(rs\_cos(p, x, prec)`, `rs\_sin(p, x, prec))`.
 
     Is faster than calling rs_cos and rs_sin separately
@@ -1659,7 +1661,7 @@ def rs_cosh(p, x, prec):
     return (t + t1)/2
 
 def _tanh(p, x, prec):
-    """
+    r"""
     Helper function of `rs\_tanh`
 
     Return the series expansion of tanh of a univariate series using Newton's
@@ -1840,7 +1842,8 @@ _convert_func = {
         'sin': 'rs_sin',
         'cos': 'rs_cos',
         'exp': 'rs_exp',
-        'tan': 'rs_tan'
+        'tan': 'rs_tan',
+        'log': 'rs_log'
         }
 
 def rs_min_pow(expr, series_rs, a):

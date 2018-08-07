@@ -80,7 +80,7 @@ def gen_poly(points, order, syms):
         raise ValueError("Must provide points")
     dim = len(points[0]) - 1
     if dim > len(syms):
-        raise ValueError("Must provide at lease %d symbols for the polynomial" % dim)
+        raise ValueError("Must provide at least %d symbols for the polynomial" % dim)
     V, tmp_syms, terms = vandermonde(order, dim)
     if num_pts < V.shape[0]:
         raise ValueError(

@@ -105,7 +105,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     ``diop_solve()``.
 
     Output of ``diophantine()`` is a set of tuples. The elements of the
-    tuple are the solutions for each variable in the the equation and
+    tuple are the solutions for each variable in the equation and
     are arranged according to the alphabetic ordering of the variables.
     e.g. For an equation with two variables, `a` and `b`, the first
     element of the tuple is the solution for `a` and the second for `b`.
@@ -992,9 +992,9 @@ def _diop_quadratic(var, coeff, t):
                     + (sqa*g*u**2 + D*u + sqa*F) // _c
 
                 for z0 in range(0, abs(_c)):
-                    if divisible(
-                            sqa*g*z0**2 + D*z0 + sqa*F,
-                            _c):
+                    # Check if the coefficients of y and x obtained are integers or not
+                    if (divisible(sqa*g*z0**2 + D*z0 + sqa*F, _c) and
+                            divisible(e*sqc**g*z0**2 + E*z0 + e*sqc*F, _c)):
                         sol.add((solve_x(z0), solve_y(z0)))
 
     # (3) Method used when B**2 - 4*A*C is a square, is described in p. 6 of the below paper
@@ -1401,7 +1401,7 @@ def _special_diop_DN(D, N):
 
 
 def cornacchia(a, b, m):
-    """
+    r"""
     Solves `ax^2 + by^2 = m` where `\gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
 
     Uses the algorithm due to Cornacchia. The method only finds primitive
@@ -1463,7 +1463,7 @@ def cornacchia(a, b, m):
 
 
 def PQa(P_0, Q_0, D):
-    """
+    r"""
     Returns useful information needed to solve the Pell equation.
 
     There are six sequences of integers defined related to the continued
@@ -1523,7 +1523,7 @@ def PQa(P_0, Q_0, D):
 
 
 def diop_bf_DN(D, N, t=symbols("t", integer=True)):
-    """
+    r"""
     Uses brute force to solve the equation, `x^2 - Dy^2 = N`.
 
     Mainly concerned with the generalized Pell equation which is the case when
@@ -1649,12 +1649,12 @@ def equivalent(u, v, r, s, D, N):
 
 
 def length(P, Q, D):
-    """
+    r"""
     Returns the (length of aperiodic part + length of periodic part) of
     continued fraction representation of `\\frac{P + \sqrt{D}}{Q}`.
 
     It is important to remember that this does NOT return the length of the
-    periodic part but the sum of the legths of the two parts as mentioned
+    periodic part but the sum of the lengths of the two parts as mentioned
     above.
 
     Usage
@@ -1966,7 +1966,7 @@ def _diop_ternary_quadratic(_var, coeff):
     # There are infinitely many solutions for the equation.
     # Ex: (0, 0, t), (0, t, 0), (t, 0, 0)
     # Equation can be re-written as y*(B*x + E*z) = -C*x*z and we can find rather
-    # unobviuos solutions. Set y = -C and B*x + E*z = x*z. The latter can be solved by
+    # unobvious solutions. Set y = -C and B*x + E*z = x*z. The latter can be solved by
     # using methods for binary quadratic diophantine equations. Let's select the
     # solution which minimizes |x| + |z|
 
@@ -2207,7 +2207,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
         return (None, None, None)
 
     if solution.count(0) >= 2:
-        # if there are 2 zeros the the equation reduces
+        # if there are 2 zeros the equation reduces
         # to k*X**2 == 0 where X is x, y, or z so X must
         # be zero, too. So there is only the trivial
         # solution.
@@ -2242,7 +2242,7 @@ def diop_ternary_quadratic_normal(eq):
 
     Here the coefficients `a`, `b`, and `c` should be non zero. Otherwise the
     equation will be a quadratic binary or univariate equation. If solvable,
-    returns a tuple `(x, y, z)` that satisifes the given equation. If the
+    returns a tuple `(x, y, z)` that satisfies the given equation. If the
     equation does not have integer solutions, `(None, None, None)` is returned.
 
     Usage
@@ -2290,7 +2290,7 @@ def _diop_ternary_quadratic_normal(var, coeff):
     A = -a_2*c_2
     B = -b_2*c_2
 
-    # If following two conditions are satisified then there are no solutions
+    # If following two conditions are satisfied then there are no solutions
     if A < 0 and B < 0:
         return (None, None, None)
 
@@ -2387,7 +2387,7 @@ def sqf_normal(a, b, c, steps=False):
 
 
 def square_factor(a):
-    """
+    r"""
     Returns an integer `c` s.t. `a = c^2k, \ c,k \in Z`. Here `k` is square
     free. `a` can be given as an integer or a dictionary of factors.
 
@@ -2550,7 +2550,7 @@ def descent(A, B):
 
 
 def gaussian_reduce(w, a, b):
-    """
+    r"""
     Returns a reduced solution `(x, z)` to the congruence
     `X^2 - aZ^2 \equiv 0 \ (mod \ b)` so that `x^2 + |a|z^2` is minimal.
 
@@ -2591,7 +2591,7 @@ def gaussian_reduce(w, a, b):
 
 
 def dot(u, v, w, a, b):
-    """
+    r"""
     Returns a special dot product of the vectors `u = (u_{1}, u_{2})` and
     `v = (v_{1}, v_{2})` which is defined in order to reduce solution of
     the congruence equation `X^2 - aZ^2 \equiv 0 \ (mod \ b)`.
@@ -2602,7 +2602,7 @@ def dot(u, v, w, a, b):
 
 
 def norm(u, w, a, b):
-    """
+    r"""
     Returns the norm of the vector `u = (u_{1}, u_{2})` under the dot product
     defined by `u \cdot v = (wu_{1} + bu_{2})(w*v_{1} + bv_{2}) + |a|*u_{1}*v_{1}`
     where `u = (u_{1}, u_{2})` and `v = (v_{1}, v_{2})`.
@@ -2612,7 +2612,7 @@ def norm(u, w, a, b):
 
 
 def holzer(x, y, z, a, b, c):
-    """
+    r"""
     Simplify the solution `(x, y, z)` of the equation
     `ax^2 + by^2 = cz^2` with `a, b, c > 0` and `z^2 \geq \mid ab \mid` to
     a new reduced solution `(x', y', z')` such that `z'^2 \leq \mid ab \mid`.
@@ -2740,7 +2740,7 @@ def _diop_general_pythagorean(var, coeff, t):
 
 
 def diop_general_sum_of_squares(eq, limit=1):
-    """
+    r"""
     Solves the equation `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`.
 
     Returns at most ``limit`` number of solutions.
@@ -2967,7 +2967,7 @@ def prime_as_sum_of_two_squares(p):
 
 
 def sum_of_three_squares(n):
-    """
+    r"""
     Returns a 3-tuple `(a, b, c)` such that `a^2 + b^2 + c^2 = n` and
     `a, b, c \geq 0`.
 
@@ -3046,7 +3046,7 @@ def sum_of_three_squares(n):
 
 
 def sum_of_four_squares(n):
-    """
+    r"""
     Returns a 4-tuple `(a, b, c, d)` such that `a^2 + b^2 + c^2 + d^2 = n`.
 
     Here `a, b, c, d \geq 0`.
@@ -3245,11 +3245,11 @@ def sum_of_squares(n, k, zeros=False):
     * if k > 4 then n can be partitioned and each partition can
       be written as a sum of 4 squares; if n is not evenly divisible
       by 4 then n can be written as a sum of squares only if the
-      an additional partition can be written as as sum of squares.
+      an additional partition can be written as sum of squares.
       For example, if k = 6 then n is partitioned into two parts,
       the first being written as a sum of 4 squares and the second
       being written as a sum of 2 squares -- which can only be
-      done if the contition above for k = 2 can be met, so this will
+      done if the condition above for k = 2 can be met, so this will
       automatically reject certain partitions of n.
 
     Examples

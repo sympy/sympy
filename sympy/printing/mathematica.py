@@ -30,6 +30,7 @@ known_functions = {
     "acoth": [(lambda x: True, "ArcCoth")],
     "asech": [(lambda x: True, "ArcSech")],
     "acsch": [(lambda x: True, "ArcCsch")],
+    "conjugate": [(lambda x: True, "Conjugate")],
 
 }
 
@@ -108,6 +109,11 @@ class MCodePrinter(CodePrinter):
 
     def _print_Sum(self, expr):
         return "Hold[Sum[" + ', '.join(self.doprint(a) for a in expr.args) + "]]"
+
+    def _print_Derivative(self, expr):
+        dexpr = expr.expr
+        dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
+        return "Hold[D[" + ', '.join(self.doprint(a) for a in [dexpr] + dvars) + "]]"
 
 
 def mathematica_code(expr, **settings):

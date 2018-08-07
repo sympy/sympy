@@ -134,7 +134,7 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
 
     """
 
-    def __new__(cls, iterable=None, shape=None, **kwargs):
+    def __new__(cls, iterable, shape=None, **kwargs):
         return cls._new(iterable, shape, **kwargs)
 
     @classmethod
@@ -149,11 +149,14 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
         self._shape = shape
         self._array = list(flat_list)
         self._rank = len(shape)
-        self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else 0
+        self._loop_size = functools.reduce(lambda x,y: x*y, shape, 1)
         return self
 
     def __setitem__(self, index, value):
         raise TypeError('immutable N-dim array')
+
+    def as_mutable(self):
+        return MutableDenseNDimArray(self)
 
 
 class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
@@ -193,3 +196,10 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         value = _sympify(value)
 
         self._array[index] = value
+
+    def as_immutable(self):
+        return ImmutableDenseNDimArray(self)
+
+    @property
+    def free_symbols(self):
+        return {i for j in self._array for i in j.free_symbols}

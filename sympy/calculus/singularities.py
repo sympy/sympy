@@ -18,20 +18,21 @@ the following function types in the given ``Interval``:
 from sympy.core.sympify import sympify
 from sympy.solvers.solveset import solveset
 from sympy.simplify import simplify
-from sympy import S
+from sympy import S, Symbol
 
 
-def singularities(expr, sym):
+def singularities(expression, symbol):
     """
-    Finds singularities for a function.
+    Find singularities of a given function.
+
     Currently supported functions are:
-    - univariate rational(real or complex) functions
+    - univariate rational (real or complex) functions
 
     Examples
     ========
 
     >>> from sympy.calculus.singularities import singularities
-    >>> from sympy import Symbol, I, sqrt
+    >>> from sympy import Symbol
     >>> x = Symbol('x', real=True)
     >>> y = Symbol('y', real=False)
     >>> singularities(x**2 + x + 1, x)
@@ -43,28 +44,60 @@ def singularities(expr, sym):
     >>> singularities(1/(y**3 + 1), y)
     {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
 
+    Notes
+    =====
+
+    This function does not find nonisolated singularities
+    nor does it find branch points of the expression.
+
     References
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Mathematical_singularity
 
     """
-    if not expr.is_rational_function(sym):
-        raise NotImplementedError("Algorithms finding singularities for"
-                                  " non rational functions are not yet"
-                                  " implemented")
+    if not expression.is_rational_function(symbol):
+        raise NotImplementedError(
+            "Algorithms finding singularities for non-rational"
+            " functions are not yet implemented."
+        )
     else:
-        return solveset(simplify(1/expr), sym)
+        domain = S.Reals if symbol.is_real else S.Complexes
+        return solveset(simplify(1 / expression), symbol, domain)
+
 
 ###########################################################################
 ###################### DIFFERENTIAL CALCULUS METHODS ######################
 ###########################################################################
 
 
-def is_increasing(f, interval=S.Reals, symbol=None):
+def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     """
-    Returns if a function is increasing or not, in the given
-    ``Interval``.
+    Helper function for functions checking function monotonicity.
+
+    It returns a boolean indicating whether the interval in which
+    the function's derivative satisfies given predicate is a superset
+    of the given interval.
+    """
+    expression = sympify(expression)
+    free = expression.free_symbols
+
+    if symbol is None:
+        if len(free) > 1:
+            raise NotImplementedError(
+                'The function has not yet been implemented'
+                ' for all multivariate expressions.'
+            )
+
+    x = symbol or (free.pop() if free else Symbol('x'))
+    derivative = expression.diff(x)
+    predicate_interval = solveset(predicate(derivative), x, S.Reals)
+    return interval.is_subset(predicate_interval)
+
+
+def is_increasing(expression, interval=S.Reals, symbol=None):
+    """
+    Return whether the function is increasing in the given interval.
 
     Examples
     ========
@@ -84,26 +117,12 @@ def is_increasing(f, interval=S.Reals, symbol=None):
     True
 
     """
-    f = sympify(f)
-    free_sym = f.free_symbols
-
-    if symbol is None:
-        if len(free_sym) > 1:
-            raise NotImplementedError('is_increasing has not yet been implemented '
-                                        'for all multivariate expressions')
-        if len(free_sym) == 0:
-            return True
-        symbol = free_sym.pop()
-
-    df = f.diff(symbol)
-    df_nonneg_interval = solveset(df >= 0, symbol, domain=S.Reals)
-    return interval.is_subset(df_nonneg_interval)
+    return monotonicity_helper(expression, lambda x: x >= 0, interval, symbol)
 
 
-def is_strictly_increasing(f, interval=S.Reals, symbol=None):
+def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
     """
-    Returns if a function is strictly increasing or not, in the given
-    ``Interval``.
+    Return whether the function is strictly increasing in the given interval.
 
     Examples
     ========
@@ -123,26 +142,12 @@ def is_strictly_increasing(f, interval=S.Reals, symbol=None):
     False
 
     """
-    f = sympify(f)
-    free_sym = f.free_symbols
-
-    if symbol is None:
-        if len(free_sym) > 1:
-            raise NotImplementedError('is_strictly_increasing has not yet been implemented '
-                                        'for all multivariate expressions')
-        elif len(free_sym) == 0:
-            return False
-        symbol = free_sym.pop()
-
-    df = f.diff(symbol)
-    df_pos_interval = solveset(df > 0, symbol, domain=S.Reals)
-    return interval.is_subset(df_pos_interval)
+    return monotonicity_helper(expression, lambda x: x > 0, interval, symbol)
 
 
-def is_decreasing(f, interval=S.Reals, symbol=None):
+def is_decreasing(expression, interval=S.Reals, symbol=None):
     """
-    Returns if a function is decreasing or not, in the given
-    ``Interval``.
+    Return whether the function is decreasing in the given interval.
 
     Examples
     ========
@@ -162,26 +167,12 @@ def is_decreasing(f, interval=S.Reals, symbol=None):
     False
 
     """
-    f = sympify(f)
-    free_sym = f.free_symbols
-
-    if symbol is None:
-        if len(free_sym) > 1:
-            raise NotImplementedError('is_decreasing has not yet been implemented '
-                                        'for all multivariate expressions')
-        elif len(free_sym) == 0:
-            return True
-        symbol = free_sym.pop()
-
-    df = f.diff(symbol)
-    df_nonpos_interval = solveset(df <= 0, symbol, domain=S.Reals)
-    return interval.is_subset(df_nonpos_interval)
+    return monotonicity_helper(expression, lambda x: x <= 0, interval, symbol)
 
 
-def is_strictly_decreasing(f, interval=S.Reals, symbol=None):
+def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     """
-    Returns if a function is strictly decreasing or not, in the given
-    ``Interval``.
+    Return whether the function is strictly decreasing in the given interval.
 
     Examples
     ========
@@ -199,26 +190,12 @@ def is_strictly_decreasing(f, interval=S.Reals, symbol=None):
     False
 
     """
-    f = sympify(f)
-    free_sym = f.free_symbols
-
-    if symbol is None:
-        if len(free_sym) > 1:
-            raise NotImplementedError('is_strictly_decreasing has not yet been implemented '
-                                        'for all multivariate expressions')
-        elif len(free_sym) == 0:
-            return False
-        symbol = free_sym.pop()
-
-    df = f.diff(symbol)
-    df_neg_interval = solveset(df < 0, symbol, domain=S.Reals)
-    return interval.is_subset(df_neg_interval)
+    return monotonicity_helper(expression, lambda x: x < 0, interval, symbol)
 
 
-def is_monotonic(f, interval=S.Reals, symbol=None):
+def is_monotonic(expression, interval=S.Reals, symbol=None):
     """
-    Returns if a function is monotonic or not, in the given
-    ``Interval``.
+    Return whether the function is monotonic in the given interval.
 
     Examples
     ========
@@ -238,15 +215,15 @@ def is_monotonic(f, interval=S.Reals, symbol=None):
     True
 
     """
-    from sympy.core.logic import fuzzy_or
-    f = sympify(f)
-    free_sym = f.free_symbols
+    expression = sympify(expression)
 
-    if symbol is None and len(free_sym) > 1:
-        raise NotImplementedError('is_monotonic has not yet been '
-                                'for all multivariate expressions')
+    free = expression.free_symbols
+    if symbol is None and len(free) > 1:
+        raise NotImplementedError(
+            'is_monotonic has not yet been implemented'
+            ' for all multivariate expressions.'
+        )
 
-    inc = is_increasing(f, interval, symbol)
-    dec = is_decreasing(f, interval, symbol)
-
-    return fuzzy_or([inc, dec])
+    x = symbol or (free.pop() if free else Symbol('x'))
+    turning_points = solveset(expression.diff(x), x, interval)
+    return interval.intersection(turning_points) is S.EmptySet
