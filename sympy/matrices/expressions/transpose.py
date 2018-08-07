@@ -21,13 +21,13 @@ class Transpose(MatrixExpr):
     >>> A = MatrixSymbol('A', 3, 5)
     >>> B = MatrixSymbol('B', 5, 3)
     >>> Transpose(A)
-    A'
+    A.T
     >>> A.T == transpose(A) == Transpose(A)
     True
     >>> Transpose(A*B)
-    (A*B)'
+    (A*B).T
     >>> transpose(A*B)
-    B'*A'
+    B.T*A.T
 
     """
     is_Transpose = True
@@ -50,8 +50,8 @@ class Transpose(MatrixExpr):
     def shape(self):
         return self.arg.shape[::-1]
 
-    def _entry(self, i, j):
-        return self.arg._entry(j, i)
+    def _entry(self, i, j, expand=False):
+        return self.arg._entry(j, i, expand=expand)
 
     def _eval_adjoint(self):
         return conjugate(self.arg)
@@ -84,7 +84,7 @@ def refine_Transpose(expr, assumptions):
     >>> from sympy import MatrixSymbol, Q, assuming, refine
     >>> X = MatrixSymbol('X', 2, 2)
     >>> X.T
-    X'
+    X.T
     >>> with assuming(Q.symmetric(X)):
     ...     print(refine(X.T))
     X

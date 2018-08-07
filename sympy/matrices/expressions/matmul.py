@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from sympy import Number
 from sympy.core import Mul, Basic, sympify, Add
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
@@ -35,6 +36,8 @@ class MatMul(MatrixExpr):
         factor, matrices = obj.as_coeff_matrices()
         if check:
             validate(*matrices)
+        if not matrices:
+            return factor
         return obj
 
     @property
@@ -43,24 +46,33 @@ class MatMul(MatrixExpr):
         return (matrices[0].rows, matrices[-1].cols)
 
     def _entry(self, i, j, expand=True):
+        from sympy import Dummy, Sum, Mul, ImmutableMatrix, Integer
+
         coeff, matrices = self.as_coeff_matrices()
 
         if len(matrices) == 1:  # situation like 2*X, matmul is just X
             return coeff * matrices[0][i, j]
 
-        head, tail = matrices[0], matrices[1:]
-        if len(tail) == 0:
-            raise ValueError("lenth of tail cannot be 0")
-        X = head
-        Y = MatMul(*tail)
+        indices = [None]*(len(matrices) + 1)
+        ind_ranges = [None]*(len(matrices) - 1)
+        indices[0] = i
+        indices[-1] = j
+        for i in range(1, len(matrices)):
+            indices[i] = Dummy("i_%i" % i)
+        for i, arg in enumerate(matrices[:-1]):
+            ind_ranges[i] = arg.shape[1] - 1
+        matrices = [arg[indices[i], indices[i+1]] for i, arg in enumerate(matrices)]
+        expr_in_sum = Mul.fromiter(matrices)
+        if any(v.has(ImmutableMatrix) for v in matrices):
+            expand = True
+        result = coeff*Sum(
+                expr_in_sum,
+                *zip(indices[1:-1], [0]*len(ind_ranges), ind_ranges)
+            )
 
-        from sympy.core.symbol import Dummy
-        from sympy.concrete.summations import Sum
-        from sympy.matrices import ImmutableMatrix
-        k = Dummy('k', integer=True)
-        if X.has(ImmutableMatrix) or Y.has(ImmutableMatrix):
-            return coeff*Add(*[X[i, k]*Y[k, j] for k in range(X.cols)])
-        result = Sum(coeff*X[i, k]*Y[k, j], (k, 0, X.cols - 1))
+        # Don't waste time in result.doit() if the sum bounds are symbolic
+        if not any(isinstance(v, (Integer, int)) for v in ind_ranges):
+            expand = False
         return result.doit() if expand else result
 
     def as_coeff_matrices(self):
@@ -83,8 +95,8 @@ class MatMul(MatrixExpr):
     def _eval_trace(self):
         factor, mmul = self.as_coeff_mmul()
         if factor != 1:
-            from .trace import Trace
-            return factor * Trace(mmul)
+            from .trace import trace
+            return factor * trace(mmul.doit())
         else:
             raise NotImplementedError("Can't simplify any further")
 
@@ -110,6 +122,16 @@ class MatMul(MatrixExpr):
         else:
             args = self.args
         return canonicalize(MatMul(*args))
+
+    # Needed for partial compatibility with Mul
+    def args_cnc(self, **kwargs):
+        coeff, matrices = self.as_coeff_matrices()
+        # I don't know how coeff could have noncommutative factors, but this
+        # handles it.
+        coeff_c, coeff_nc = coeff.args_cnc(**kwargs)
+
+        return coeff_c, coeff_nc + matrices
+
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
@@ -143,22 +165,22 @@ def merge_explicit(matmul):
     >>> C = Matrix([[1, 2], [3, 4]])
     >>> X = MatMul(A, B, C)
     >>> pprint(X)
-    A*[1  1]*[1  2]
-      [    ] [    ]
+      [1  1] [1  2]
+    A*[    ]*[    ]
       [1  1] [3  4]
     >>> pprint(merge_explicit(X))
-    A*[4  6]
-      [    ]
+      [4  6]
+    A*[    ]
       [4  6]
 
     >>> X = MatMul(B, A, C)
     >>> pprint(X)
-    [1  1]*A*[1  2]
-    [    ]   [    ]
+    [1  1]   [1  2]
+    [    ]*A*[    ]
     [1  1]   [3  4]
     >>> pprint(merge_explicit(X))
-    [1  1]*A*[1  2]
-    [    ]   [    ]
+    [1  1]   [1  2]
+    [    ]*A*[    ]
     [1  1]   [3  4]
     """
     if not any(isinstance(arg, MatrixBase) for arg in matmul.args):
@@ -166,7 +188,7 @@ def merge_explicit(matmul):
     newargs = []
     last = matmul.args[0]
     for arg in matmul.args[1:]:
-        if isinstance(arg, MatrixBase) and isinstance(last, MatrixBase):
+        if isinstance(arg, (MatrixBase, Number)) and isinstance(last, (MatrixBase, Number)):
             last = last * arg
         else:
             newargs.append(last)
@@ -242,14 +264,22 @@ def refine_MatMul(expr, assumptions):
     >>> X = MatrixSymbol('X', 2, 2)
     >>> expr = X * X.T
     >>> print(expr)
-    X*X'
+    X*X.T
     >>> with assuming(Q.orthogonal(X)):
     ...     print(refine(expr))
     I
     """
     newargs = []
-    last = expr.args[0]
-    for arg in expr.args[1:]:
+    exprargs = []
+
+    for args in expr.args:
+        if args.is_Matrix:
+            exprargs.append(args)
+        else:
+            newargs.append(args)
+
+    last = exprargs[0]
+    for arg in exprargs[1:]:
         if arg == last.T and ask(Q.orthogonal(arg), assumptions):
             last = Identity(arg.shape[0])
         elif arg == last.conjugate() and ask(Q.unitary(arg), assumptions):

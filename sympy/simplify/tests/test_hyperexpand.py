@@ -9,15 +9,14 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        hyperexpand, Hyper_Function, G_Function,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
-from sympy import hyper, I, S, meijerg, Piecewise
-from sympy.utilities.pytest import raises
+from sympy import hyper, I, S, meijerg, Piecewise, Tuple, Sum, binomial, Expr
 from sympy.abc import z, a, b, c
+from sympy.utilities.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
 from sympy.utilities.randtest import verify_numerically as tn
-from sympy.utilities.pytest import XFAIL, slow
 from sympy.core.compatibility import range
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
-                   gamma, sqrt, pi, erf, exp_polar)
+                   gamma, sqrt, pi, erf, exp_polar, Rational)
 
 
 def test_branch_bug():
@@ -39,6 +38,7 @@ def test_hyperexpand():
     assert hyperexpand(z*hyper([], [S('3/2')], -z**2/4)) == sin(z)
     assert hyperexpand(hyper([S('1/2'), S('1/2')], [S('3/2')], z**2)*z) \
         == asin(z)
+    assert isinstance(Sum(binomial(2, z)*z**2, (z, 0, a)).doit(), Expr)
 
 
 def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
@@ -49,8 +49,13 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     if not numerical:
         return True
     repl = {}
-    for n, a in enumerate(r.free_symbols - set([z])):
-        repl[a] = randcplx(n)/div
+    randsyms = r.free_symbols - {z}
+    while randsyms:
+        # Only randomly generated parameters are checked.
+        for n, a in enumerate(randsyms):
+            repl[a] = randcplx(n)/div
+        if not any([b.is_Integer and b <= 0 for b in Tuple(*bq).subs(repl)]):
+            break
     [a, b, c, d] = [2, -1, 3, 1]
     if lowerplane:
         [a, b, c, d] = [2, -2, 3, -1]
@@ -89,6 +94,7 @@ def test_polynomial():
     assert hyperexpand(hyper([-2], [-1], z)) == oo
     assert hyperexpand(hyper([0, 0], [-1], z)) == 1
     assert can_do([-5, -2, randcplx(), randcplx()], [-10, randcplx()])
+    assert hyperexpand(hyper((-1, 1), (-2,), z)) == 1 + z/2
 
 
 def test_hyperexpand_bases():
@@ -140,6 +146,7 @@ def randcplx(offset=-1):
     return _randrat() + I*_randrat() + I*(1 + offset)
 
 
+@slow
 def test_formulae():
     from sympy.simplify.hyperexpand import FormulaCollection
     formulae = FormulaCollection().formulae
@@ -214,7 +221,7 @@ def test_plan():
         devise_plan(Hyper_Function([2], []), Hyper_Function([S("1/2")], []), z)
 
     # We cannot use pi/(10000 + n) because polys is insanely slow.
-    a1, a2, b1 = map(lambda n: randcplx(n), range(3))
+    a1, a2, b1 = (randcplx(n) for n in range(3))
     b1 += 2*I
     h = hyper([a1, a2], [b1], z)
 
@@ -247,7 +254,7 @@ def test_plan_derivatives():
 
 
 def test_reduction_operators():
-    a1, a2, b1 = map(lambda n: randcplx(n), range(3))
+    a1, a2, b1 = (randcplx(n) for n in range(3))
     h = hyper([a1], [b1], z)
 
     assert ReduceOrder(2, 0) is None
@@ -273,7 +280,7 @@ def test_reduction_operators():
 
 
 def test_shift_operators():
-    a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
+    a1, a2, b1, b2, b3 = (randcplx(n) for n in range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
     raises(ValueError, lambda: ShiftA(0))
@@ -287,7 +294,7 @@ def test_shift_operators():
 
 
 def test_ushift_operators():
-    a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
+    a1, a2, b1, b2, b3 = (randcplx(n) for n in range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
     raises(ValueError, lambda: UnShiftA((1,), (), 0, z))
@@ -333,13 +340,14 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
         return True
 
     repl = {}
-    for n, a in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - set([z])):
+    for n, a in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - {z}):
         repl[a] = randcplx(n)
     return tn(meijerg(a1, a2, b1, b2, z).subs(repl), r.subs(repl), z)
 
 
+@slow
 def test_meijerg_expand():
-    from sympy import combsimp, simplify
+    from sympy import gammasimp, simplify
     # from mpmath docs
     assert hyperexpand(meijerg([[], []], [[0], []], -z)) == exp(z)
 
@@ -389,13 +397,18 @@ def test_meijerg_expand():
                   (meijerg([0, 2], [], [], [-1, 1], z), True))
 
     # Test that the simplest possible answer is returned:
-    assert combsimp(simplify(hyperexpand(
+    assert gammasimp(simplify(hyperexpand(
         meijerg([1], [1 - a], [-a/2, -a/2 + S(1)/2], [], 1/z)))) == \
         -2*sqrt(pi)*(sqrt(z + 1) + 1)**a/a
 
     # Test that hyper is returned
     assert hyperexpand(meijerg([1], [], [a], [0, 0], z)) == hyper(
         (a,), (a + 1, a + 1), z*exp_polar(I*pi))*z**a*gamma(a)/gamma(a + 1)**2
+
+    # Test place option
+    f = meijerg(((0, 1), ()), ((S(1)/2,), (0,)), z**2)
+    assert hyperexpand(f) == sqrt(pi)/sqrt(1 + z**(-2))
+    assert hyperexpand(f, place=0) == sqrt(pi)*z/sqrt(z**2 + 1)
 
 
 def test_meijerg_lookup():
@@ -431,13 +444,14 @@ def test_meijerg_expand_fail():
     assert can_do_meijer([S.Half], [], [-a, a], [0])
 
 
+@slow
 def test_meijerg():
     # carefully set up the parameters.
     # NOTE: this used to fail sometimes. I believe it is fixed, but if you
     #       hit an inexplicable test failure here, please let me know the seed.
-    a1, a2 = map(lambda n: randcplx() - 5*I - n*I, range(2))
-    b1, b2 = map(lambda n: randcplx() + 5*I + n*I, range(2))
-    b3, b4, b5, a3, a4, a5 = map(lambda n: randcplx(), range(6))
+    a1, a2 = (randcplx(n) - 5*I - n*I for n in range(2))
+    b1, b2 = (randcplx(n) + 5*I + n*I for n in range(2))
+    b3, b4, b5, a3, a4, a5 = (randcplx() for n in range(6))
     g = meijerg([a1], [a3, a4], [b1], [b3, b4], z)
 
     assert ReduceOrder.meijer_minus(3, 4) is None
@@ -463,16 +477,15 @@ def test_meijerg():
     bm = [b1, b2 + 1]
     niq, ops = reduce_order_meijer(G_Function(an, ap, bm, bq))
     assert niq.an == (a1,)
-    assert set(niq.ap) == set([a3, a4])
+    assert set(niq.ap) == {a3, a4}
     assert niq.bm == (b1,)
-    assert set(niq.bq) == set([b3, b4])
+    assert set(niq.bq) == {b3, b4}
     assert tn(apply_operators(g, ops, op), meijerg(an, ap, bm, bq, z), z)
 
 
 def test_meijerg_shift_operators():
     # carefully set up the parameters. XXX this still fails sometimes
-    a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = \
-        map(lambda n: randcplx(n), range(10))
+    a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = (randcplx(n) for n in range(10))
     g = meijerg([a1], [a3, a4], [b1], [b3, b4], z)
 
     assert tn(MeijerShiftA(b1).apply(g, op),
@@ -501,6 +514,7 @@ def test_meijerg_shift_operators():
         s.apply(g, op), meijerg([a1], [a3 + 1, a4], [b1], [b3, b4], z), z)
 
 
+@slow
 def test_meijerg_confluence():
     def t(m, a, b):
         from sympy import sympify, Piecewise
@@ -541,8 +555,17 @@ def test_meijerg_confluence():
     assert u([1, 1], [2, 2, 5], [1, 1, 6], [0])
 
 
+def test_meijerg_with_Floats():
+    # see issue #10681
+    from sympy import RR
+    f = meijerg(((3.0, 1), ()), ((S(3)/2,), (0,)), z)
+    a = -2.3632718012073
+    g = a*z**(S(3)/2)*hyper((-0.5, S(3)/2), (S(5)/2,), z*exp_polar(I*pi))
+    assert RR.almosteq((hyperexpand(f)/g).n(), 1.0, 1e-12)
+
+
 def test_lerchphi():
-    from sympy import combsimp, exp_polar, polylog, log, lerchphi
+    from sympy import gammasimp, exp_polar, polylog, log, lerchphi
     assert hyperexpand(hyper([1, a], [a + 1], z)/a) == lerchphi(z, 1, a)
     assert hyperexpand(
         hyper([1, a, a], [a + 1, a + 1], z)/a**2) == lerchphi(z, 2, a)
@@ -550,11 +573,11 @@ def test_lerchphi():
         lerchphi(z, 3, a)
     assert hyperexpand(hyper([1] + [a]*10, [a + 1]*10, z)/a**10) == \
         lerchphi(z, 10, a)
-    assert combsimp(hyperexpand(meijerg([0, 1 - a], [], [0],
+    assert gammasimp(hyperexpand(meijerg([0, 1 - a], [], [0],
         [-a], exp_polar(-I*pi)*z))) == lerchphi(z, 1, a)
-    assert combsimp(hyperexpand(meijerg([0, 1 - a, 1 - a], [], [0],
+    assert gammasimp(hyperexpand(meijerg([0, 1 - a, 1 - a], [], [0],
         [-a, -a], exp_polar(-I*pi)*z))) == lerchphi(z, 2, a)
-    assert combsimp(hyperexpand(meijerg([0, 1 - a, 1 - a, 1 - a], [], [0],
+    assert gammasimp(hyperexpand(meijerg([0, 1 - a, 1 - a, 1 - a], [], [0],
         [-a, -a, -a], exp_polar(-I*pi)*z))) == lerchphi(z, 3, a)
 
     assert hyperexpand(z*hyper([1, 1], [2], z)) == -log(1 + -z)
@@ -588,7 +611,7 @@ def test_lerchphi():
 
 def test_partial_simp():
     # First test that hypergeometric function formulae work.
-    a, b, c, d, e = map(lambda _: randcplx(), range(5))
+    a, b, c, d, e = (randcplx() for _ in range(5))
     for func in [Hyper_Function([a, b, c], [d, e]),
             Hyper_Function([], [a, b, c, d, e])]:
         f = build_hypergeometric_formula(func)
@@ -706,6 +729,10 @@ def test_prudnikov_2():
 
 @slow
 def test_prudnikov_3():
+    if ON_TRAVIS:
+        # See https://github.com/sympy/sympy/pull/12795
+        skip("Too slow for travis.")
+
     h = S.Half
     assert can_do([S(1)/4, S(3)/4], [h])
     assert can_do([S(1)/4, S(3)/4], [3*h])
@@ -820,7 +847,6 @@ def test_prudnikov_8():
                         assert can_do([a, b], [c, d])
 
 
-@slow
 def test_prudnikov_9():
     # 7.13.1 [we have a general formula ... so this is a bit pointless]
     for i in range(9):
@@ -854,7 +880,6 @@ def test_prudnikov_10():
     assert can_do([-S(1)/2], [S(1)/2, S(1)/2])  # shine-integral shi
 
 
-@slow
 def test_prudnikov_11():
     # 7.15
     assert can_do([a, a + S.Half], [2*a, b, 2*a - b])
@@ -888,6 +913,7 @@ def test_prudnikov_12():
     assert can_do([], [2, S(3)/2, S(3)/2])
 
 
+@slow
 def test_prudnikov_2F1():
     h = S.Half
     # Elliptic integrals
@@ -1010,3 +1036,10 @@ def test_prudnikov_fail_other():
 def test_bug():
     h = hyper([-1, 1], [z], -1)
     assert hyperexpand(h) == (z + 1)/z
+
+
+def test_omgissue_203():
+    h = hyper((-5, -3, -4), (-6, -6), 1)
+    assert hyperexpand(h) == Rational(1, 30)
+    h = hyper((-6, -7, -5), (-6, -6), 1)
+    assert hyperexpand(h) == -Rational(1, 6)

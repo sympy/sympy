@@ -11,25 +11,6 @@ from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 
 from sympy.abc import x, k, c, y, R, b, h, a, m
 
-import signal
-
-
-class TimeOutError(Exception):
-    pass
-
-
-def timeout(signum, frame, time):
-    raise TimeOutError("Timed out after %d seconds" % time)
-
-
-def run_with_timeout(test, time):
-    # Set the signal handler and a 5-second alarm
-    signal.signal(signal.SIGALRM, lambda s, f: timeout(s, f, time))
-    signal.alarm(time)
-    r = eval(test)
-    signal.alarm(0)          # Disable the alarm
-    return r
-
 
 @SKIP("Too slow for @slow")
 @XFAIL
@@ -110,6 +91,7 @@ def test_issue_4891():
 
 
 @XFAIL
+@slow
 def test_issue_1796a():
     assert not integrate(exp(2*b*x)*exp(-a*x**2), x).has(Integral)
 
@@ -138,20 +120,6 @@ def test_issue_4941():
 
 
 @XFAIL
-@slow
-def test_issue_4950():
-    # Problem is with exception
-    assert not integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x).has(Integral)
-
-
-@XFAIL
-@slow
-def test_issue_4968():
-    assert not integrate(sin(log(x**2))).has(Integral)
-
-
-@XFAIL
-@slow
 def test_issue_4992():
     # Nonelementary integral.  Requires hypergeometric/Meijer-G handling.
     assert not integrate(log(x) * x**(k - 1) * exp(-x) / gamma(k), (x, 0, oo)).has(Integral)

@@ -1,15 +1,15 @@
-from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh,
-                   hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
+from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh, sinc,
+                   hyperexpand, exp, simplify, sqrt, pi, erf, erfc, sin, cos,
                    exp_polar, polygamma, hyper, log, expand_func)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
         meijerint_definite, meijerint_inversion)
 from sympy.utilities import default_sort_key
+from sympy.utilities.pytest import slow
 from sympy.utilities.randtest import (verify_numerically,
         random_complex_number as randcplx)
 from sympy.core.compatibility import range
 from sympy.abc import x, y, a, b, c, d, s, t, z
-
 
 
 def test_rewrite_single():
@@ -116,6 +116,7 @@ def test_recursive():
         sqrt(pi)/2*(1 - erf(a + b + c))
 
 
+@slow
 def test_meijerint():
     from sympy import symbols, expand, arg
     s, t, mu = symbols('s t mu', real=True)
@@ -145,7 +146,7 @@ def test_meijerint():
     # Again, how about simplifications?
     sigma, mu = symbols('sigma mu', positive=True)
     i, c = meijerint_definite(exp(-((x - mu)/(2*sigma))**2), x, 0, oo)
-    assert simplify(i) == sqrt(pi)*sigma*(erf(mu/(2*sigma)) + 1)
+    assert simplify(i) == sqrt(pi)*sigma*(2 - erfc(mu/(2*sigma)))
     assert c == True
 
     i, _ = meijerint_definite(exp(-mu*x)*exp(sigma*x), x, 0, oo)
@@ -167,6 +168,7 @@ def test_meijerint():
     assert meijerint_definite(exp(-abs(2*x - 3)), x, -oo, oo) == (1, True)
     assert meijerint_definite(exp(-((x - mu)/sigma)**2/2)/sqrt(2*pi*sigma**2),
                               x, -oo, oo) == (1, True)
+    assert meijerint_definite(sinc(x)**2, x, -oo, oo) == (pi, True)
 
     # Test one of the extra conditions for 2 g-functinos
     assert meijerint_definite(exp(-x)*sin(x), x, 0, oo) == (S(1)/2, True)
@@ -284,6 +286,41 @@ def test_inversion():
     assert meijerint_inversion(exp(-s**2), s, t) is None
 
 
+def test_inversion_conditional_output():
+    from sympy import Symbol, InverseLaplaceTransform
+
+    a = Symbol('a', positive=True)
+    F = sqrt(pi/a)*exp(-2*sqrt(a)*sqrt(s))
+    f = meijerint_inversion(F, s, t)
+    assert not f.is_Piecewise
+
+    b = Symbol('b', real=True)
+    F = F.subs(a, b)
+    f2 = meijerint_inversion(F, s, t)
+    assert f2.is_Piecewise
+    # first piece is same as f
+    assert f2.args[0][0] == f.subs(a, b)
+    # last piece is an unevaluated transform
+    assert f2.args[-1][1]
+    ILT = InverseLaplaceTransform(F, s, t, None)
+    assert f2.args[-1][0] == ILT or f2.args[-1][0] == ILT.as_integral
+
+
+def test_inversion_exp_real_nonreal_shift():
+    from sympy import Symbol, DiracDelta
+    r = Symbol('r', real=True)
+    c = Symbol('c', real=False)
+    a = 1 + 2*I
+    z = Symbol('z')
+    assert not meijerint_inversion(exp(r*s), s, t).is_Piecewise
+    assert meijerint_inversion(exp(a*s), s, t) is None
+    assert meijerint_inversion(exp(c*s), s, t) is None
+    f = meijerint_inversion(exp(z*s), s, t)
+    assert f.is_Piecewise
+    assert isinstance(f.args[0][0], DiracDelta)
+
+
+@slow
 def test_lookup_table():
     from random import uniform, randrange
     from sympy import Add
@@ -318,7 +355,7 @@ def test_lookup_table():
 
 def test_branch_bug():
     from sympy import powdenest, lowergamma
-    # TODO combsimp cannot prove that the factor is unity
+    # TODO gammasimp cannot prove that the factor is unity
     assert powdenest(integrate(erf(x**3), x, meijerg=True).diff(x),
            polar=True) == 2*erf(x**3)*gamma(S(2)/3)/3/gamma(S(5)/3)
     assert integrate(erf(x**3), x, meijerg=True) == \
@@ -332,10 +369,11 @@ def test_linear_subs():
     assert integrate(besselj(1, x - 1), x, meijerg=True) == -besselj(0, 1 - x)
 
 
+@slow
 def test_probability():
     # various integrals from probability theory
     from sympy.abc import x, y
-    from sympy import symbols, Symbol, Abs, expand_mul, combsimp, powsimp, sin
+    from sympy import symbols, Symbol, Abs, expand_mul, gammasimp, powsimp, sin
     mu1, mu2 = symbols('mu1 mu2', real=True, nonzero=True, finite=True)
     sigma1, sigma2 = symbols('sigma1 sigma2', real=True, nonzero=True,
                              finite=True, positive=True)
@@ -404,10 +442,10 @@ def test_probability():
         /gamma(alpha)/gamma(beta)
     assert integrate(betadist, (x, 0, oo), meijerg=True) == 1
     i = integrate(x*betadist, (x, 0, oo), meijerg=True, conds='separate')
-    assert (combsimp(i[0]), i[1]) == (alpha/(beta - 1), 1 < beta)
+    assert (gammasimp(i[0]), i[1]) == (alpha/(beta - 1), 1 < beta)
     j = integrate(x**2*betadist, (x, 0, oo), meijerg=True, conds='separate')
     assert j[1] == (1 < beta - 1)
-    assert combsimp(j[0] - i[0]**2) == (alpha + beta - 1)*alpha \
+    assert gammasimp(j[0] - i[0]**2) == (alpha + beta - 1)*alpha \
         /(beta - 2)/(beta - 1)**2
 
     # Beta distribution
@@ -437,7 +475,7 @@ def test_probability():
     assert simplify(integrate(x*chisquared, (x, 0, oo), meijerg=True)) == k
     assert simplify(integrate(x**2*chisquared, (x, 0, oo), meijerg=True)) == \
         k*(k + 2)
-    assert combsimp(integrate(((x - k)/sqrt(2*k))**3*chisquared, (x, 0, oo),
+    assert gammasimp(integrate(((x - k)/sqrt(2*k))**3*chisquared, (x, 0, oo),
                     meijerg=True)) == 2*sqrt(2)/sqrt(k)
 
     # Dagum distribution
@@ -521,7 +559,7 @@ def test_probability():
 
     # misc tests
     k = Symbol('k', positive=True)
-    assert combsimp(expand_mul(integrate(log(x)*x**(k - 1)*exp(-x)/gamma(k),
+    assert gammasimp(expand_mul(integrate(log(x)*x**(k - 1)*exp(-x)/gamma(k),
                               (x, 0, oo)))) == polygamma(0, k)
 
 
@@ -607,7 +645,7 @@ def test_messy():
         log(S(1)/2 + sqrt(2)/2)
 
     assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
-        Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
+        Piecewise((-acosh(1/x), abs(x**(-2)) > 1), (I*asin(1/x), True))
 
 
 def test_issue_6122():
@@ -639,6 +677,38 @@ def test_issue_6860():
     assert meijerint_indefinite(x**x**x, x) is None
 
 
+def test_issue_7337():
+    f = meijerint_indefinite(x*sqrt(2*x + 3), x).together()
+    assert f == sqrt(2*x + 3)*(2*x**2 + x - 3)/5
+    assert f._eval_interval(x, S(-1), S(1)) == S(2)/5
+
+
 def test_issue_8368():
     assert meijerint_indefinite(cosh(x)*exp(-x*t), x) == (
         (-t - 1)*exp(x) + (-t + 1)*exp(-x))*exp(-t*x)/2/(t**2 - 1)
+
+
+def test_issue_10211():
+    from sympy.abc import h, w
+    assert integrate((1/sqrt(((y-x)**2 + h**2))**3), (x,0,w), (y,0,w)) == \
+        2*sqrt(1 + w**2/h**2)/h - 2/h
+
+
+def test_issue_11806():
+    from sympy import symbols
+    y, L = symbols('y L', positive=True)
+    assert integrate(1/sqrt(x**2 + y**2)**3, (x, -L, L)) == \
+        2*L/(y**2*sqrt(L**2 + y**2))
+
+def test_issue_10681():
+    from sympy import RR
+    from sympy.abc import R, r
+    f = integrate(r**2*(R**2-r**2)**0.5, r, meijerg=True)
+    g = (1.0/3)*R**1.0*r**3*hyper((-0.5, S(3)/2), (S(5)/2,),
+                                  r**2*exp_polar(2*I*pi)/R**2)
+    assert RR.almosteq((f/g).n(), 1.0, 1e-12)
+
+def test_issue_13536():
+    from sympy import Symbol
+    a = Symbol('a', real=True, positive=True)
+    assert integrate(1/x**2, (x, oo, a)) == -1/a

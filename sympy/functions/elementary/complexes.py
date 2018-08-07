@@ -1,17 +1,18 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C
-from sympy.core.compatibility import u
+from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
+from sympy.core.numbers import pi, I, oo
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.expr import Expr
-from sympy.core import Add, Mul
 from sympy.core.relational import Eq
-from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.trigonometric import atan2
+from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.functions.elementary.exponential import exp, exp_polar, log
+from sympy.functions.elementary.trigonometric import atan, atan2
+from sympy.functions.elementary.integers import ceiling
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -19,45 +20,48 @@ from sympy.functions.elementary.trigonometric import atan2
 
 
 class re(Function):
-    """Returns real part of expression. This function performs only
-       elementary analysis and so it will fail to decompose properly
-       more complicated expressions. If completely simplified result
-       is needed then use Basic.as_real_imag() or perform complex
-       expansion on instance of this function.
+    """
+    Returns real part of expression. This function performs only
+    elementary analysis and so it will fail to decompose properly
+    more complicated expressions. If completely simplified result
+    is needed then use Basic.as_real_imag() or perform complex
+    expansion on instance of this function.
 
-       >>> from sympy import re, im, I, E
-       >>> from sympy.abc import x, y
+    Examples
+    ========
 
-       >>> re(2*E)
-       2*E
+    >>> from sympy import re, im, I, E
+    >>> from sympy.abc import x, y
+    >>> re(2*E)
+    2*E
+    >>> re(2*I + 17)
+    17
+    >>> re(2*I)
+    0
+    >>> re(im(x) + x*I + 2)
+    2
 
-       >>> re(2*I + 17)
-       17
-
-       >>> re(2*I)
-       0
-
-       >>> re(im(x) + x*I + 2)
-       2
-
-       See Also
-       ========
-
-       im
+    See Also
+    ========
+    im
     """
 
     is_real = True
-    unbranched = True  # implicitely works on the projection to C
+    unbranched = True  # implicitly works on the projection to C
 
     @classmethod
     def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
+        elif arg is S.ComplexInfinity:
+            return S.NaN
         elif arg.is_real:
             return arg
         elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             return S.Zero
-        elif arg.is_Function and arg.func is conjugate:
+        elif arg.is_Matrix:
+            return arg.as_real_imag()[0]
+        elif arg.is_Function and isinstance(arg, conjugate):
             return re(arg.args[0])
         else:
 
@@ -82,14 +86,13 @@ class re(Function):
                         included.append(term)
 
             if len(args) != len(included):
-                a, b, c = map(lambda xs: Add(*xs),
-                    [included, reverted, excluded])
+                a, b, c = (Add(*xs) for xs in [included, reverted, excluded])
 
                 return cls(a) - im(b) + c
 
     def as_real_imag(self, deep=True, **hints):
         """
-        Returns the real number with a zero complex part.
+        Returns the real number with a zero imaginary part.
         """
         return (self, S.Zero)
 
@@ -101,10 +104,14 @@ class re(Function):
                 * im(Derivative(self.args[0], x, evaluate=True))
 
     def _eval_rewrite_as_im(self, arg):
-        return self.args[0] - im(self.args[0])
+        return self.args[0] - S.ImaginaryUnit*im(self.args[0])
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
+
+    def _eval_is_zero(self):
+        # is_imaginary implies nonzero
+        return fuzzy_or([self.args[0].is_imaginary, self.args[0].is_zero])
 
     def _sage_(self):
         import sage.all as sage
@@ -124,16 +131,12 @@ class im(Function):
 
     >>> from sympy import re, im, E, I
     >>> from sympy.abc import x, y
-
     >>> im(2*E)
     0
-
     >>> re(2*I + 17)
     17
-
     >>> im(x*I)
     re(x)
-
     >>> im(re(x) + y)
     im(y)
 
@@ -144,17 +147,21 @@ class im(Function):
     """
 
     is_real = True
-    unbranched = True  # implicitely works on the projection to C
+    unbranched = True  # implicitly works on the projection to C
 
     @classmethod
     def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
+        elif arg is S.ComplexInfinity:
+            return S.NaN
         elif arg.is_real:
             return S.Zero
         elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             return -S.ImaginaryUnit * arg
-        elif arg.is_Function and arg.func is conjugate:
+        elif arg.is_Matrix:
+            return arg.as_real_imag()[1]
+        elif arg.is_Function and isinstance(arg, conjugate):
             return -im(arg.args[0])
         else:
             included, reverted, excluded = [], [], []
@@ -178,8 +185,7 @@ class im(Function):
                         included.append(term)
 
             if len(args) != len(included):
-                a, b, c = map(lambda xs: Add(*xs),
-                    [included, reverted, excluded])
+                a, b, c = (Add(*xs) for xs in [included, reverted, excluded])
 
                 return cls(a) + re(b) + c
 
@@ -209,11 +215,13 @@ class im(Function):
         return sage.imag_part(self.args[0]._sage_())
 
     def _eval_rewrite_as_re(self, arg):
-        return self.args[0] - re(self.args[0])
+        return -S.ImaginaryUnit*(self.args[0] - re(self.args[0]))
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
 
+    def _eval_is_zero(self):
+        return self.args[0].is_real
 
 ###############################################################################
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
@@ -223,13 +231,13 @@ class sign(Function):
     """
     Returns the complex sign of an expression:
 
-    If the expresssion is real the sign will be:
+    If the expression is real the sign will be:
 
         * 1 if expression is positive
         * 0 if expression is equal to zero
         * -1 if expression is negative
 
-    If the expresssion is imaginary the sign will be:
+    If the expression is imaginary the sign will be:
 
         * I if im(expression) is positive
         * -I if im(expression) is negative
@@ -263,8 +271,8 @@ class sign(Function):
     is_finite = True
     is_complex = True
 
-    def doit(self):
-        if self.args[0].is_nonzero:
+    def doit(self, **hints):
+        if self.args[0].is_zero is False:
             return self.args[0] / Abs(self.args[0])
         return self
 
@@ -302,7 +310,7 @@ class sign(Function):
         if arg.is_negative:
             return S.NegativeOne
         if arg.is_Function:
-            if arg.func is sign:
+            if isinstance(arg, sign):
                 return arg
         if arg.is_imaginary:
             if arg.is_Pow and arg.exp is S.Half:
@@ -316,7 +324,7 @@ class sign(Function):
                 return -S.ImaginaryUnit
 
     def _eval_Abs(self):
-        if self.args[0].is_nonzero:
+        if fuzzy_not(self.args[0].is_zero):
             return S.One
 
     def _eval_conjugate(self):
@@ -351,8 +359,7 @@ class sign(Function):
 
     def _eval_power(self, other):
         if (
-            self.args[0].is_real and
-            self.args[0].is_nonzero and
+            fuzzy_not(self.args[0].is_zero) and
             other.is_integer and
             other.is_even
         ):
@@ -367,10 +374,11 @@ class sign(Function):
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
     def _eval_rewrite_as_Heaviside(self, arg):
+        from sympy.functions.special.delta_functions import Heaviside
         if arg.is_real:
-            return C.Heaviside(arg)*2-1
+            return Heaviside(arg)*2-1
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         return self.func(self.args[0].factor())
 
 
@@ -436,6 +444,8 @@ class Abs(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
+        from sympy.core.function import expand_mul
+
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
             if obj is not None:
@@ -449,7 +459,7 @@ class Abs(Function):
             unk = []
             for t in arg.args:
                 tnew = cls(t)
-                if tnew.func is cls:
+                if isinstance(tnew, cls):
                     unk.append(tnew.args[0])
                 else:
                     known.append(tnew)
@@ -458,6 +468,8 @@ class Abs(Function):
             return known*unk
         if arg is S.NaN:
             return S.NaN
+        if arg is S.ComplexInfinity:
+            return S.Infinity
         if arg.is_Pow:
             base, exponent = arg.as_base_exp()
             if base.is_real:
@@ -466,15 +478,28 @@ class Abs(Function):
                         return arg
                     if base is S.NegativeOne:
                         return S.One
-                    if base.func is cls and exponent is S.NegativeOne:
+                    if isinstance(base, cls) and exponent is S.NegativeOne:
                         return arg
                     return Abs(base)**exponent
-                if base.is_positive == True:
+                if base.is_nonnegative:
                     return base**re(exponent)
-                return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+                if base.is_negative:
+                    return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+                return
+            elif not base.has(Symbol): # complex base
+                # express base**exponent as exp(exponent*log(base))
+                a, b = log(base).as_real_imag()
+                z = a + I*b
+                return exp(re(exponent*z))
+
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
-        if arg.is_zero:  # it may be an Expr that is zero
+        if isinstance(arg, AppliedUndef):
+            return
+        if arg.is_Add and arg.has(S.Infinity, S.NegativeInfinity):
+            if any(a.is_infinite for a in arg.as_real_imag()):
+                return S.Infinity
+        if arg.is_zero:
             return S.Zero
         if arg.is_nonnegative:
             return arg
@@ -484,27 +509,33 @@ class Abs(Function):
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_nonnegative:
                 return arg2
-        if arg.is_Add:
-            if arg.has(S.Infinity, S.NegativeInfinity):
-                if any(a.is_infinite for a in arg.as_real_imag()):
-                    return S.Infinity
-            if arg.is_real is None and arg.is_imaginary is None:
-                if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
-                    from sympy import expand_mul
-                    return sqrt(expand_mul(arg*arg.conjugate()))
-        if arg.is_real is False and arg.is_imaginary is False:
-            from sympy import expand_mul
-            return sqrt(expand_mul(arg*arg.conjugate()))
+        # reject result if all new conjugates are just wrappers around
+        # an expression that was already in the arg
+        conj = signsimp(arg.conjugate(), evaluate=False)
+        new_conj = conj.atoms(conjugate) - arg.atoms(conjugate)
+        if new_conj and all(arg.has(i.args[0]) for i in new_conj):
+            return
+        if arg != conj and arg != -conj:
+            ignore = arg.atoms(Abs)
+            abs_free_arg = arg.xreplace({i: Dummy(real=True) for i in ignore})
+            unk = [a for a in abs_free_arg.free_symbols if a.is_real is None]
+            if not unk or not all(conj.has(conjugate(u)) for u in unk):
+                return sqrt(expand_mul(arg*conj))
 
     def _eval_is_integer(self):
         if self.args[0].is_real:
             return self.args[0].is_integer
 
     def _eval_is_nonzero(self):
-        return self._args[0].is_nonzero
+        return fuzzy_not(self._args[0].is_zero)
+
+    def _eval_is_zero(self):
+        return self._args[0].is_zero
 
     def _eval_is_positive(self):
-        return self.is_nonzero
+        is_z = self.is_zero
+        if is_z is not None:
+            return not is_z
 
     def _eval_is_rational(self):
         if self.args[0].is_real:
@@ -553,25 +584,44 @@ class Abs(Function):
     def _eval_rewrite_as_Heaviside(self, arg):
         # Note this only holds for real arg (since Heaviside is not defined
         # for complex arguments).
+        from sympy.functions.special.delta_functions import Heaviside
         if arg.is_real:
-            return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
+            return arg*(Heaviside(arg) - Heaviside(-arg))
 
     def _eval_rewrite_as_Piecewise(self, arg):
         if arg.is_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
 
     def _eval_rewrite_as_sign(self, arg):
-        return arg/C.sign(arg)
+        return arg/sign(arg)
 
 
 class arg(Function):
-    """Returns the argument (in radians) of a complex number"""
+    """
+    Returns the argument (in radians) of a complex number. For a positive
+    number, the argument is always 0.
+
+    Examples
+    ========
+
+    >>> from sympy.functions import arg
+    >>> from sympy import I, sqrt
+    >>> arg(2.0)
+    0
+    >>> arg(I)
+    pi/2
+    >>> arg(sqrt(2) + I*sqrt(2))
+    pi/4
+
+    """
 
     is_real = True
     is_finite = True
 
     @classmethod
     def eval(cls, arg):
+        if isinstance(arg, exp_polar):
+            return periodic_argument(arg, oo)
         if not arg.is_Atom:
             c, arg_ = factor_terms(arg).as_coeff_Mul()
             if arg_.is_Mul:
@@ -580,38 +630,52 @@ class arg(Function):
             arg_ = sign(c)*arg_
         else:
             arg_ = arg
-        x, y = re(arg_), im(arg_)
+        if arg_.atoms(AppliedUndef):
+            return
+        x, y = arg_.as_real_imag()
         rv = atan2(y, x)
-        if rv.is_number and not rv.atoms(AppliedUndef):
+        if rv.is_number:
             return rv
         if arg_ != arg:
             return cls(arg_, evaluate=False)
 
     def _eval_derivative(self, t):
-        x, y = re(self.args[0]), im(self.args[0])
+        x, y = self.args[0].as_real_imag()
         return (x * Derivative(y, t, evaluate=True) - y *
                     Derivative(x, t, evaluate=True)) / (x**2 + y**2)
 
     def _eval_rewrite_as_atan2(self, arg):
-        x, y = re(self.args[0]), im(self.args[0])
+        x, y = self.args[0].as_real_imag()
         return atan2(y, x)
+
 
 class conjugate(Function):
     """
-    Changes the sign of the imaginary part of a complex number.
+    Returns the `complex conjugate` Ref[1] of an argument.
+    In mathematics, the complex conjugate of a complex number
+    is given by changing the sign of the imaginary part.
+
+    Thus, the conjugate of the complex number
+    :math:`a + ib` (where a and b are real numbers) is :math:`a - ib`
 
     Examples
     ========
 
     >>> from sympy import conjugate, I
-
-    >>> conjugate(1 + I)
-    1 - I
+    >>> conjugate(2)
+    2
+    >>> conjugate(I)
+    -I
 
     See Also
     ========
 
     sign, Abs
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Complex_conjugation
     """
 
     @classmethod
@@ -688,7 +752,7 @@ class adjoint(Function):
 
     def _latex(self, printer, exp=None, *args):
         arg = printer._print(self.args[0])
-        tex = r'%s^{\dag}' % arg
+        tex = r'%s^{\dagger}' % arg
         if exp:
             tex = r'\left(%s\right)^{%s}' % (tex, printer._print(exp))
         return tex
@@ -697,7 +761,7 @@ class adjoint(Function):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if printer._use_unicode:
-            pform = pform**prettyForm(u('\N{DAGGER}'))
+            pform = pform**prettyForm(u'\N{DAGGER}')
         else:
             pform = pform**prettyForm('+')
         return pform
@@ -741,7 +805,7 @@ class polar_lift(Function):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import exp_polar, pi, I, arg as argument
+        from sympy.functions.elementary.complexes import arg as argument
         if arg.is_number:
             ar = argument(arg)
             # In general we want to affirm that something is known,
@@ -810,7 +874,6 @@ class periodic_argument(Function):
 
     @classmethod
     def _getunbranched(cls, ar):
-        from sympy import exp_polar, log, polar_lift
         if ar.is_Mul:
             args = ar.args
         else:
@@ -819,13 +882,13 @@ class periodic_argument(Function):
         for a in args:
             if not a.is_polar:
                 unbranched += arg(a)
-            elif a.func is exp_polar:
+            elif isinstance(a, exp_polar):
                 unbranched += a.exp.as_real_imag()[1]
             elif a.is_Pow:
                 re, im = a.exp.as_real_imag()
                 unbranched += re*unbranched_argument(
                     a.base) + im*log(abs(a.base))
-            elif a.func is polar_lift:
+            elif isinstance(a, polar_lift):
                 unbranched += arg(a.args[0])
             else:
                 return None
@@ -837,12 +900,11 @@ class periodic_argument(Function):
         # logarithm, and then reduce.
         # NOTE evidently this means it is a rather bad idea to use this with
         # period != 2*pi and non-polar numbers.
-        from sympy import ceiling, oo, atan2, atan, polar_lift, pi, Mul
         if not period.is_positive:
             return None
         if period == oo and isinstance(ar, principal_branch):
             return periodic_argument(*ar.args)
-        if ar.func is polar_lift and period >= 2*pi:
+        if isinstance(ar, polar_lift) and period >= 2*pi:
             return periodic_argument(ar.args[0], period)
         if ar.is_Mul:
             newargs = [x for x in ar.args if not x.is_positive]
@@ -851,7 +913,7 @@ class periodic_argument(Function):
         unbranched = cls._getunbranched(ar)
         if unbranched is None:
             return None
-        if unbranched.has(periodic_argument, atan2, arg, atan):
+        if unbranched.has(periodic_argument, atan2, atan):
             return None
         if period == oo:
             return unbranched
@@ -861,7 +923,6 @@ class periodic_argument(Function):
                 return unbranched - n
 
     def _eval_evalf(self, prec):
-        from sympy import ceiling, oo
         z, period = self.args
         if period == oo:
             unbranched = periodic_argument._getunbranched(z)
@@ -873,7 +934,6 @@ class periodic_argument(Function):
 
 
 def unbranched_argument(arg):
-    from sympy import oo
     return periodic_argument(arg, oo)
 
 
@@ -924,8 +984,13 @@ class principal_branch(Function):
                     return polar_lift(expr)
                 return expr
             pl = pl.replace(polar_lift, mr)
+            # Recompute unbranched argument
+            ub = periodic_argument(pl, oo)
             if not pl.has(polar_lift):
-                res = exp_polar(I*(barg - ub))*pl
+                if ub != barg:
+                    res = exp_polar(I*(barg - ub))*pl
+                else:
+                    res = pl
                 if not res.is_polar and not res.has(exp_polar):
                     res *= exp_polar(0)
                 return res
@@ -960,6 +1025,155 @@ class principal_branch(Function):
         if abs(p) > pi or p == -pi:
             return self  # Cannot evalf for this argument.
         return (abs(z)*exp(I*p))._eval_evalf(prec)
+
+
+def _polarify(eq, lift, pause=False):
+    from sympy import Integral
+    if eq.is_polar:
+        return eq
+    if eq.is_number and not pause:
+        return polar_lift(eq)
+    if isinstance(eq, Symbol) and not pause and lift:
+        return polar_lift(eq)
+    elif eq.is_Atom:
+        return eq
+    elif eq.is_Add:
+        r = eq.func(*[_polarify(arg, lift, pause=True) for arg in eq.args])
+        if lift:
+            return polar_lift(r)
+        return r
+    elif eq.is_Function:
+        return eq.func(*[_polarify(arg, lift, pause=False) for arg in eq.args])
+    elif isinstance(eq, Integral):
+        # Don't lift the integration variable
+        func = _polarify(eq.function, lift, pause=pause)
+        limits = []
+        for limit in eq.args[1:]:
+            var = _polarify(limit[0], lift=False, pause=pause)
+            rest = _polarify(limit[1:], lift=lift, pause=pause)
+            limits.append((var,) + rest)
+        return Integral(*((func,) + tuple(limits)))
+    else:
+        return eq.func(*[_polarify(arg, lift, pause=pause)
+                         if isinstance(arg, Expr) else arg for arg in eq.args])
+
+
+def polarify(eq, subs=True, lift=False):
+    """
+    Turn all numbers in eq into their polar equivalents (under the standard
+    choice of argument).
+
+    Note that no attempt is made to guess a formal convention of adding
+    polar numbers, expressions like 1 + x will generally not be altered.
+
+    Note also that this function does not promote exp(x) to exp_polar(x).
+
+    If ``subs`` is True, all symbols which are not already polar will be
+    substituted for polar dummies; in this case the function behaves much
+    like posify.
+
+    If ``lift`` is True, both addition statements and non-polar symbols are
+    changed to their polar_lift()ed versions.
+    Note that lift=True implies subs=False.
+
+    >>> from sympy import polarify, sin, I
+    >>> from sympy.abc import x, y
+    >>> expr = (-x)**y
+    >>> expr.expand()
+    (-x)**y
+    >>> polarify(expr)
+    ((_x*exp_polar(I*pi))**_y, {_x: x, _y: y})
+    >>> polarify(expr)[0].expand()
+    _x**_y*exp_polar(_y*I*pi)
+    >>> polarify(x, lift=True)
+    polar_lift(x)
+    >>> polarify(x*(1+y), lift=True)
+    polar_lift(x)*polar_lift(y + 1)
+
+    Adds are treated carefully:
+
+    >>> polarify(1 + sin((1 + I)*x))
+    (sin(_x*polar_lift(1 + I)) + 1, {_x: x})
+    """
+    if lift:
+        subs = False
+    eq = _polarify(sympify(eq), lift)
+    if not subs:
+        return eq
+    reps = {s: Dummy(s.name, polar=True) for s in eq.free_symbols}
+    eq = eq.subs(reps)
+    return eq, {r: s for s, r in reps.items()}
+
+
+def _unpolarify(eq, exponents_only, pause=False):
+    if not isinstance(eq, Basic) or eq.is_Atom:
+        return eq
+
+    if not pause:
+        if isinstance(eq, exp_polar):
+            return exp(_unpolarify(eq.exp, exponents_only))
+        if isinstance(eq, principal_branch) and eq.args[1] == 2*pi:
+            return _unpolarify(eq.args[0], exponents_only)
+        if (
+            eq.is_Add or eq.is_Mul or eq.is_Boolean or
+            eq.is_Relational and (
+                eq.rel_op in ('==', '!=') and 0 in eq.args or
+                eq.rel_op not in ('==', '!='))
+        ):
+            return eq.func(*[_unpolarify(x, exponents_only) for x in eq.args])
+        if isinstance(eq, polar_lift):
+            return _unpolarify(eq.args[0], exponents_only)
+
+    if eq.is_Pow:
+        expo = _unpolarify(eq.exp, exponents_only)
+        base = _unpolarify(eq.base, exponents_only,
+            not (expo.is_integer and not pause))
+        return base**expo
+
+    if eq.is_Function and getattr(eq.func, 'unbranched', False):
+        return eq.func(*[_unpolarify(x, exponents_only, exponents_only)
+            for x in eq.args])
+
+    return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
+
+
+def unpolarify(eq, subs={}, exponents_only=False):
+    """
+    If p denotes the projection from the Riemann surface of the logarithm to
+    the complex line, return a simplified version eq' of `eq` such that
+    p(eq') == p(eq).
+    Also apply the substitution subs in the end. (This is a convenience, since
+    ``unpolarify``, in a certain sense, undoes polarify.)
+
+    >>> from sympy import unpolarify, polar_lift, sin, I
+    >>> unpolarify(polar_lift(I + 2))
+    2 + I
+    >>> unpolarify(sin(polar_lift(I + 7)))
+    sin(7 + I)
+    """
+    if isinstance(eq, bool):
+        return eq
+
+    eq = sympify(eq)
+    if subs != {}:
+        return unpolarify(eq.subs(subs))
+    changed = True
+    pause = False
+    if exponents_only:
+        pause = True
+    while changed:
+        changed = False
+        res = _unpolarify(eq, exponents_only, pause)
+        if res != eq:
+            changed = True
+            eq = res
+        if isinstance(res, bool):
+            return res
+    # Finally, replacing Exp(0) by 1 is always correct.
+    # So is polar_lift(0) -> 0.
+    return res.subs({exp_polar(0): 1, polar_lift(0): 0})
+
+
 
 # /cyclic/
 from sympy.core import basic as _

@@ -1,12 +1,12 @@
 """ Riemann zeta and related function. """
 from __future__ import print_function, division
 
-from sympy.core import Function, S, C, sympify, pi
+from sympy.core import Function, S, sympify, pi, I
 from sympy.core.function import ArgumentIndexError
 from sympy.core.compatibility import range
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
-from sympy.functions.elementary.exponential import log
-
+from sympy.functions.elementary.exponential import log, exp_polar
+from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -160,7 +160,7 @@ class lerchphi(Function):
                   / (unpolarify(zet)**k*root)**m for k in range(n)])
 
         # TODO use minpoly instead of ad-hoc methods when issue 5888 is fixed
-        if z.func is exp and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
+        if isinstance(z, exp) and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
             # TODO reference?
             if z == -1:
                 p, q = S([1, 2])
@@ -244,7 +244,7 @@ class polylog(Function):
     >>> polylog(s, 1)
     zeta(s)
     >>> polylog(s, -1)
-    dirichlet_eta(s)
+    -dirichlet_eta(s)
 
     If :math:`s` is a negative integer, :math:`0` or :math:`1`, the
     polylogarithm can be expressed using elementary functions. This can be
@@ -253,7 +253,7 @@ class polylog(Function):
     >>> from sympy import expand_func
     >>> from sympy.abc import z
     >>> expand_func(polylog(1, z))
-    -log(z*exp_polar(-I*pi) + 1)
+    -log(-z + 1)
     >>> expand_func(polylog(0, z))
     z/(-z + 1)
 
@@ -271,12 +271,38 @@ class polylog(Function):
 
     @classmethod
     def eval(cls, s, z):
+        s, z = sympify((s, z))
         if z == 1:
             return zeta(s)
         elif z == -1:
-            return dirichlet_eta(s)
+            return -dirichlet_eta(s)
         elif z == 0:
-            return 0
+            return S.Zero
+        elif s == 2:
+            if z == S.Half:
+                return pi**2/12 - log(2)**2/2
+            elif z == 2:
+                return pi**2/4 - I*pi*log(2)
+            elif z == -(sqrt(5) - 1)/2:
+                return -pi**2/15 + log((sqrt(5)-1)/2)**2/2
+            elif z == -(sqrt(5) + 1)/2:
+                return -pi**2/10 - log((sqrt(5)+1)/2)**2
+            elif z == (3 - sqrt(5))/2:
+                return pi**2/15 - log((sqrt(5)-1)/2)**2
+            elif z == (sqrt(5) - 1)/2:
+                return pi**2/10 - log((sqrt(5)-1)/2)**2
+        # For s = 0 or -1 use explicit formulas to evaluate, but
+        # automatically expanding polylog(1, z) to -log(1-z) seems undesirable
+        # for summation methods based on hypergeometric functions
+        elif s == 0:
+            return z/(1 - z)
+        elif s == -1:
+            return z/(1 - z)**2
+        # polylog is branched, but not over the unit disk
+        from sympy.functions.elementary.complexes import (Abs, unpolarify,
+            polar_lift)
+        if z.has(exp_polar, polar_lift) and (Abs(z) <= S.One) == True:
+            return cls(s, unpolarify(z))
 
     def fdiff(self, argindex=1):
         s, z = self.args
@@ -291,7 +317,7 @@ class polylog(Function):
         from sympy import log, expand_mul, Dummy, exp_polar, I
         s, z = self.args
         if s == 1:
-            return -log(1 + exp_polar(-I*pi)*z)
+            return -log(1 - z)
         if s.is_Integer and s <= 0:
             u = Dummy('u')
             start = u/(1 - u)
@@ -433,26 +459,24 @@ class zeta(Function):
             elif z is S.Infinity:
                 return S.One
             elif z is S.Zero:
-                if a.is_negative:
-                    return S.Half - a - 1
-                else:
-                    return S.Half - a
+                return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity
-            elif z.is_Integer:
-                if a.is_Integer:
-                    if z.is_negative:
-                        zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
-                    elif z.is_even:
-                        B, F = bernoulli(z), factorial(z)
-                        zeta = 2**(z - 1) * abs(B) * pi**z / F
-                    else:
-                        return
+        if z.is_integer:
+            if a.is_Integer:
+                if z.is_negative:
+                    zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
+                elif z.is_even and z.is_positive:
+                    B, F = bernoulli(z), factorial(z)
+                    zeta = ((-1)**(z/2+1) * 2**(z - 1) * B * pi**z) / F
+                else:
+                    return
 
-                    if a.is_negative:
-                        return zeta + harmonic(abs(a), z)
-                    else:
-                        return zeta - harmonic(a - 1, z)
+                if a.is_negative:
+                    return zeta + harmonic(abs(a), z)
+                else:
+                    return zeta - harmonic(a - 1, z)
+
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
         if a != 1:
@@ -462,6 +486,11 @@ class zeta(Function):
 
     def _eval_rewrite_as_lerchphi(self, s, a=1):
         return lerchphi(1, s, a)
+
+    def _eval_is_finite(self):
+        arg_is_one = (self.args[0] - 1).is_zero
+        if arg_is_one is not None:
+            return not arg_is_one
 
     def fdiff(self, argindex=1):
         if len(self.args) == 2:
@@ -517,3 +546,60 @@ class dirichlet_eta(Function):
 
     def _eval_rewrite_as_zeta(self, s):
         return (1 - 2**(1 - s)) * zeta(s)
+
+
+class stieltjes(Function):
+    r"""Represents Stieltjes constants, :math:`\gamma_{k}` that occur in
+    Laurent Series expansion of the Riemann zeta function.
+
+    Examples
+    ========
+
+    >>> from sympy import stieltjes
+    >>> from sympy.abc import n, m
+    >>> stieltjes(n)
+    stieltjes(n)
+
+    zero'th stieltjes constant
+
+    >>> stieltjes(0)
+    EulerGamma
+    >>> stieltjes(0, 1)
+    EulerGamma
+
+    For generalized stieltjes constants
+
+    >>> stieltjes(n, m)
+    stieltjes(n, m)
+
+    Constants are only defined for integers >= 0
+
+    >>> stieltjes(-1)
+    zoo
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Stieltjes_constants
+    """
+
+    @classmethod
+    def eval(cls, n, a=None):
+        n = sympify(n)
+
+        if a != None:
+            a = sympify(a)
+            if a is S.NaN:
+                return S.NaN
+            if a.is_Integer and a.is_nonpositive:
+                return S.ComplexInfinity
+
+        if n.is_Number:
+            if n is S.NaN:
+                return S.NaN
+            elif n < 0:
+                return S.ComplexInfinity
+            elif not n.is_Integer:
+                return S.ComplexInfinity
+            elif n == 0 and a in [None, 1]:
+                return S.EulerGamma

@@ -129,6 +129,29 @@ def test_issue_5981():
     u = symbols('u')
     assert integrate(1/(u**2 + 1)) == atan(u)
 
+def test_issue_10488():
+    a,b,c,x = symbols('a b c x', real=True, positive=True)
+    assert integrate(x/(a*x+b),x) == x/a - b*log(a*x + b)/a**2
+
+
+def test_issues_8246_12050_13501_14080():
+    a = symbols('a', real=True)
+    assert integrate(a/(x**2 + a**2), x) == atan(x/a)
+    assert integrate(1/(x**2 + a**2), x) == atan(x/a)/a
+    assert integrate(1/(1 + a**2*x**2), x) == atan(a*x)/a
+
+
+def test_issue_6308():
+    k, a0 = symbols('k a0', real=True)
+    assert integrate((x**2 + 1 - k**2)/(x**2 + 1 + a0**2), x) == \
+        x - (a0**2 + k**2)*atan(x/sqrt(a0**2 + 1))/sqrt(a0**2 + 1)
+
+
+def test_issue_5907():
+    a = symbols('a', real=True)
+    assert integrate(1/(x**2 + a**2)**2, x) == \
+         x/(2*a**4 + 2*a**2*x**2) + atan(x/a)/(2*a**3)
+
 
 def test_log_to_atan():
     f, g = (Poly(x + S(1)/2, x, domain='QQ'), Poly(sqrt(3)/2, x, domain='EX'))

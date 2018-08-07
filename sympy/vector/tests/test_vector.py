@@ -1,14 +1,34 @@
 from sympy.simplify import simplify, trigsimp
 from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
-     sin, cos, Function, Integral, Derivative, diff, integrate
+     sin, cos, Function, Integral, Derivative, diff
 from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
      VectorMul, VectorZero
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
+from sympy.vector.vector import Cross, Dot, dot, cross
 
-C = CoordSysCartesian('C')
+C = CoordSys3D('C')
 
 i, j, k = C.base_vectors()
 a, b, c = symbols('a b c')
+
+
+def test_cross():
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
+    assert Cross(v1, v2) == Cross(C.x*C.i + C.z**2*C.j, C.x*C.i + C.y*C.j + C.z*C.k)
+    assert Cross(v1, v2).doit() == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
+    assert cross(v1, v2) == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
+    assert Cross(v1, v2) == -Cross(v2, v1)
+    assert Cross(v1, v2) + Cross(v2, v1) == Vector.zero
+
+
+def test_dot():
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
+    assert Dot(v1, v2) == Dot(C.x*C.i + C.z**2*C.j, C.x*C.i + C.y*C.j + C.z*C.k)
+    assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
+    assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
+    assert Dot(v1, v2) == Dot(v2, v1)
 
 
 def test_vector_sympy():
@@ -16,9 +36,6 @@ def test_vector_sympy():
     Test whether the Vector framework confirms to the hashing
     and equality testing properties of SymPy.
     """
-    i1 = BaseVector('i1', 0, C, ' ', ' ')
-    assert i1 == i
-    assert i1.__hash__() == i.__hash__()
     v1 = 3*j
     assert v1 == j*3
     assert v1.components == {j: 3}
@@ -187,6 +204,17 @@ def test_vector_cross():
     assert k ^ i == j
     assert k ^ j == -i
     assert k ^ k == Vector.zero
+
+
+def test_projection():
+    v1 = i + j + k
+    v2 = 3*i + 4*j
+    v3 = 0*i + 0*j
+    assert v1.projection(v1) == i + j + k
+    assert v1.projection(v2) == 7/3*C.i + 7/3*C.j + 7/3*C.k
+    assert v1.projection(v1, scalar=True) == 1
+    assert v1.projection(v2, scalar=True) == 7/3
+    assert v3.projection(v1) == Vector.zero
 
 
 def test_vector_diff_integrate():

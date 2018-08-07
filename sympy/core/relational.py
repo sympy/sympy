@@ -5,11 +5,10 @@ from .compatibility import ordered
 from .expr import Expr
 from .evalf import EvalfMixin
 from .function import _coeff_isneg
-from .symbol import Symbol
 from .sympify import _sympify
 from .evaluate import global_evaluate
 
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -20,6 +19,16 @@ __all__ = (
 
 # Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.
+
+def _canonical(cond):
+    # return a condition in which all relationals are canonical
+    try:
+        reps = dict([(r, r.canonical)
+            for r in cond.atoms(Relational)])
+        return cond.xreplace(reps)
+    except AttributeError:
+        return cond
+
 
 class Relational(Boolean, Expr, EvalfMixin):
     """Base class for all relation types.
@@ -39,7 +48,7 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
-    >>> Rel(y, x+x**2, '==')
+    >>> Rel(y, x + x**2, '==')
     Eq(y, x**2 + x)
 
     """
@@ -58,9 +67,31 @@ class Relational(Boolean, Expr, EvalfMixin):
         # corresponding to that operator and delegate to it
         try:
             cls = cls.ValidRelationOperator[rop]
-            return cls(lhs, rhs, **assumptions)
+            rv = cls(lhs, rhs, **assumptions)
+            # /// drop when Py2 is no longer supported
+            # validate that Booleans are not being used in a relational
+            # other than Eq/Ne;
+            if isinstance(rv, (Eq, Ne)):
+                pass
+            elif isinstance(rv, Relational):  # could it be otherwise?
+                from sympy.core.symbol import Symbol
+                from sympy.logic.boolalg import Boolean
+                from sympy.utilities.misc import filldedent
+                for a in rv.args:
+                    if isinstance(a, Symbol):
+                        continue
+                    if isinstance(a, Boolean):
+                        from sympy.utilities.misc import filldedent
+                        raise TypeError(filldedent('''
+                            A Boolean argument can only be used in
+                            Eq and Ne; all other relationals expect
+                            real expressions.
+                        '''))
+            # \\\
+            return rv
         except KeyError:
-            raise ValueError("Invalid relational operator symbol: %r" % rop)
+            raise ValueError(
+                "Invalid relational operator symbol: %r" % rop)
 
     @property
     def lhs(self):
@@ -99,30 +130,32 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     @property
     def canonical(self):
-        """Return a canonical form of the relational.
+        """Return a canonical form of the relational by putting a
+        Number on the rhs else ordering the args. No other
+        simplification is attempted.
 
-        The rules for the canonical form, in order of decreasing priority are:
-            1) Number on right if left is not a Number;
-            2) Symbol on the left;
-            3) Gt/Ge changed to Lt/Le;
-            4) Lt/Le are unchanged;
-            5) Eq and Ne get ordered args.
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> x < 2
+        x < 2
+        >>> _.reversed.canonical
+        x < 2
+        >>> (-y < x).canonical
+        x > -y
+        >>> (-y > x).canonical
+        x < -y
         """
+        args = self.args
         r = self
-        if r.func in (Ge, Gt):
+        if r.rhs.is_Number:
+            if r.lhs.is_Number and r.lhs > r.rhs:
+                r = r.reversed
+        elif r.lhs.is_Number:
             r = r.reversed
-        elif r.func in (Lt, Le):
-            pass
-        elif r.func in (Eq, Ne):
-            r = r.func(*ordered(r.args), evaluate=False)
-        else:
-            raise NotImplemented
-        if r.lhs.is_Number and not r.rhs.is_Number:
+        elif tuple(ordered(args)) != args:
             r = r.reversed
-        elif r.rhs.is_Symbol and not r.lhs.is_Symbol:
-            r = r.reversed
-        if _coeff_isneg(r.lhs):
-            r = r.reversed.func(-r.lhs, -r.rhs, evaluate=False)
         return r
 
     def equals(self, other, failing_expression=False):
@@ -137,14 +170,14 @@ class Relational(Boolean, Expr, EvalfMixin):
             if a.func in (Eq, Ne) or b.func in (Eq, Ne):
                 if a.func != b.func:
                     return False
-                l = a.lhs.equals(b.lhs, failing_expression=failing_expression)
-                r = a.rhs.equals(b.rhs, failing_expression=failing_expression)
+                l, r = [i.equals(j, failing_expression=failing_expression)
+                    for i, j in zip(a.args, b.args)]
                 if l is True:
                     return r
                 if r is True:
                     return l
-                lr = a.lhs.equals(b.rhs, failing_expression=failing_expression)
-                rl = a.rhs.equals(b.lhs, failing_expression=failing_expression)
+                lr, rl = [i.equals(j, failing_expression=failing_expression)
+                    for i, j in zip(a.args, b.reversed.args)]
                 if lr is True:
                     return rl
                 if rl is True:
@@ -170,27 +203,21 @@ class Relational(Boolean, Expr, EvalfMixin):
                     return r
                 return l
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         r = self
-        r = r.func(r.lhs.simplify(ratio=ratio, measure=measure),
-                   r.rhs.simplify(ratio=ratio, measure=measure))
-        if r not in (S.true, S.false):
-            if isinstance(r.lhs, Expr) and isinstance(r.rhs, Expr):
-                dif = r.lhs - r.rhs
-                # We want a Number to compare with zero and be sure to get a
-                # True/False answer.  Check if we can deduce that dif is
-                # definitively zero or non-zero.  If non-zero, replace with an
-                # approximation.  If .equals(0) gives None, cannot be deduced.
-                if not dif.has(Symbol):
-                    know = dif.equals(0)
-                    if know == True:
-                        dif = S.Zero
-                    elif know == False:
-                        dif = dif.evalf()
-                # Can definitively compare a Number to zero, if appropriate.
-                if dif.is_Number and (dif.is_real or r.func in (Eq, Ne)):
-                    # Always T/F (we never return an expression w/ the evalf)
-                    r = r.func._eval_relation(dif, S.Zero)
+        r = r.func(*[i.simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
+            for i in r.args])
+        if r.is_Relational:
+            dif = r.lhs - r.rhs
+            # replace dif with a valid Number that will
+            # allow a definitive comparison with 0
+            v = None
+            if dif.is_comparable:
+                v = dif.n(2)
+            elif dif.equals(0):  # XXX this is expensive
+                v = S.Zero
+            if v is not None:
+                r = r.func._eval_relation(v, S.Zero)
 
         r = r.canonical
         if measure(r) < ratio*measure(self):
@@ -203,33 +230,18 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     __bool__ = __nonzero__
 
-    def as_set(self):
-        """
-        Rewrites univariate inequality in terms of real sets
-
-        Examples
-        ========
-
-        >>> from sympy import Symbol, Eq
-        >>> x = Symbol('x', real=True)
-        >>> (x>0).as_set()
-        (0, oo)
-        >>> Eq(x, 0).as_set()
-        {0}
-
-        """
+    def _eval_as_set(self):
+        # self is univariate and periodicity(self, x) in (0, None)
         from sympy.solvers.inequalities import solve_univariate_inequality
         syms = self.free_symbols
+        assert len(syms) == 1
+        x = syms.pop()
+        return solve_univariate_inequality(self, x, relational=False)
 
-        if len(syms) == 1:
-            sym = syms.pop()
-        else:
-            raise NotImplementedError("Sorry, Relational.as_set procedure"
-                                      " is not yet implemented for"
-                                      " multivariate expressions")
-
-        return solve_univariate_inequality(self, sym, relational=False)
-
+    @property
+    def binary_symbols(self):
+        # override where necessary
+        return set()
 
 Rel = Relational
 
@@ -291,6 +303,11 @@ class Equality(Relational):
     is_Equality = True
 
     def __new__(cls, lhs, rhs=0, **options):
+        from sympy.core.add import Add
+        from sympy.core.logic import fuzzy_bool
+        from sympy.core.expr import _n2
+        from sympy.simplify.simplify import clear_coefficients
+
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
@@ -308,20 +325,77 @@ class Equality(Relational):
                     return r
             # If expressions have the same structure, they must be equal.
             if lhs == rhs:
-                return S.true
+                return S.true  # e.g. True == True
+            elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+                return S.false  # True != False
+            elif not (lhs.is_Symbol or rhs.is_Symbol) and (
+                    isinstance(lhs, Boolean) !=
+                    isinstance(rhs, Boolean)):
+                return S.false  # only Booleans can equal Booleans
 
-            # If appropriate, check if the difference evaluates.  Detect
-            # incompatibility such as lhs real and rhs not real.
-            if lhs.is_complex and rhs.is_complex:
-                r = (lhs - rhs).is_zero
-                if r is not None:
-                    return _sympify(r)
+            # check finiteness
+            fin = L, R = [i.is_finite for i in (lhs, rhs)]
+            if None not in fin:
+                if L != R:
+                    return S.false
+                if L is False:
+                    if lhs == -rhs:  # Eq(oo, -oo)
+                        return S.false
+                    return S.true
+            elif None in fin and False in fin:
+                return Relational.__new__(cls, lhs, rhs, **options)
+
+            if all(isinstance(i, Expr) for i in (lhs, rhs)):
+                # see if the difference evaluates
+                dif = lhs - rhs
+                z = dif.is_zero
+                if z is not None:
+                    if z is False and dif.is_commutative:  # issue 10728
+                        return S.false
+                    if z:
+                        return S.true
+                # evaluate numerically if possible
+                n2 = _n2(lhs, rhs)
+                if n2 is not None:
+                    return _sympify(n2 == 0)
+                # see if the ratio evaluates
+                n, d = dif.as_numer_denom()
+                rv = None
+                if n.is_zero:
+                    rv = d.is_nonzero
+                elif n.is_finite:
+                    if d.is_infinite:
+                        rv = S.true
+                    elif n.is_zero is False:
+                        rv = d.is_infinite
+                        if rv is None:
+                            # if the condition that makes the denominator infinite does not
+                            # make the original expression True then False can be returned
+                            l, r = clear_coefficients(d, S.Infinity)
+                            args = [_.subs(l, r) for _ in (lhs, rhs)]
+                            if args != [lhs, rhs]:
+                                rv = fuzzy_bool(Eq(*args))
+                                if rv is True:
+                                    rv = None
+                elif any(a.is_infinite for a in Add.make_args(n)):  # (inf or nan)/x != 0
+                    rv = S.false
+                if rv is not None:
+                    return _sympify(rv)
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
+
+    @property
+    def binary_symbols(self):
+        if S.true in self.args or S.false in self.args:
+            if self.lhs.is_Symbol:
+                return set([self.lhs])
+            elif self.rhs.is_Symbol:
+                return set([self.rhs])
+        return set()
 
 Eq = Equality
 
@@ -368,7 +442,7 @@ class Unequality(Relational):
 
         if evaluate:
             is_equal = Equality(lhs, rhs)
-            if is_equal == True or is_equal == False:
+            if isinstance(is_equal, BooleanAtom):
                 return ~is_equal
 
         return Relational.__new__(cls, lhs, rhs, **options)
@@ -376,6 +450,15 @@ class Unequality(Relational):
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs != rhs)
+
+    @property
+    def binary_symbols(self):
+        if S.true in self.args or S.false in self.args:
+            if self.lhs.is_Symbol:
+                return set([self.lhs])
+            elif self.rhs.is_Symbol:
+                return set([self.rhs])
+        return set()
 
 Ne = Unequality
 
@@ -519,12 +602,8 @@ class GreaterThan(_Greater):
     One generally does not instantiate these classes directly, but uses various
     convenience methods:
 
-    >>> e1 = Ge( x, 2 )      # Ge is a convenience wrapper
-    >>> print(e1)
-    x >= 2
-
-    >>> rels = Ge( x, 2 ), Gt( x, 2 ), Le( x, 2 ), Lt( x, 2 )
-    >>> print('%s\\n%s\\n%s\\n%s' % rels)
+    >>> for f in [Ge, Gt, Le, Lt]:  # convenience wrappers
+    ...     print(f(x, 2))
     x >= 2
     x > 2
     x <= 2
@@ -536,135 +615,133 @@ class GreaterThan(_Greater):
     littering the math with oddball function calls.  However there are certain
     (minor) caveats of which to be aware (search for 'gotcha', below).
 
-    >>> e2 = x >= 2
-    >>> print(e2)
+    >>> x >= 2
     x >= 2
-    >>> print("e1: %s,    e2: %s" % (e1, e2))
-    e1: x >= 2,    e2: x >= 2
-    >>> e1 == e2
+    >>> _ == Ge(x, 2)
     True
 
     However, it is also perfectly valid to instantiate a ``*Than`` class less
     succinctly and less conveniently:
 
-    >>> rels = Rel(x, 1, '>='), Relational(x, 1, '>='), GreaterThan(x, 1)
-    >>> print('%s\\n%s\\n%s' % rels)
-    x >= 1
-    x >= 1
-    x >= 1
-
-    >>> rels = Rel(x, 1, '>'), Relational(x, 1, '>'), StrictGreaterThan(x, 1)
-    >>> print('%s\\n%s\\n%s' % rels)
+    >>> Rel(x, 1, ">")
     x > 1
-    x > 1
+    >>> Relational(x, 1, ">")
     x > 1
 
-    >>> rels = Rel(x, 1, '<='), Relational(x, 1, '<='), LessThan(x, 1)
-    >>> print("%s\\n%s\\n%s" % rels)
+    >>> StrictGreaterThan(x, 1)
+    x > 1
+    >>> GreaterThan(x, 1)
+    x >= 1
+    >>> LessThan(x, 1)
     x <= 1
-    x <= 1
-    x <= 1
-
-    >>> rels = Rel(x, 1, '<'), Relational(x, 1, '<'), StrictLessThan(x, 1)
-    >>> print('%s\\n%s\\n%s' % rels)
-    x < 1
-    x < 1
+    >>> StrictLessThan(x, 1)
     x < 1
 
     Notes
     =====
 
-    There are a couple of "gotchas" when using Python's operators.
+    There are a couple of "gotchas" to be aware of when using Python's
+    operators.
 
-    The first enters the mix when comparing against a literal number as the lhs
-    argument.  Due to the order that Python decides to parse a statement, it may
-    not immediately find two objects comparable.  For example, to evaluate the
-    statement (1 < x), Python will first recognize the number 1 as a native
-    number, and then that x is *not* a native number.  At this point, because a
-    native Python number does not know how to compare itself with a SymPy object
-    Python will try the reflective operation, (x > 1).  Unfortunately, there is
-    no way available to SymPy to recognize this has happened, so the statement
-    (1 < x) will turn silently into (x > 1).
+    The first is that what your write is not always what you get:
 
-    >>> e1 = x >  1
-    >>> e2 = x >= 1
-    >>> e3 = x <  1
-    >>> e4 = x <= 1
-    >>> e5 = 1 >  x
-    >>> e6 = 1 >= x
-    >>> e7 = 1 <  x
-    >>> e8 = 1 <= x
-    >>> print("%s     %s\\n"*4 % (e1, e2, e3, e4, e5, e6, e7, e8))
-    x > 1     x >= 1
-    x < 1     x <= 1
-    x < 1     x <= 1
-    x > 1     x >= 1
+        >>> 1 < x
+        x > 1
 
-    If the order of the statement is important (for visual output to the
-    console, perhaps), one can work around this annoyance in a couple ways: (1)
-    "sympify" the literal before comparison, (2) use one of the wrappers, or (3)
-    use the less succinct methods described above:
+        Due to the order that Python parses a statement, it may
+        not immediately find two objects comparable.  When "1 < x"
+        is evaluated, Python recognizes that the number 1 is a native
+        number and that x is *not*.  Because a native Python number does
+        not know how to compare itself with a SymPy object
+        Python will try the reflective operation, "x > 1" and that is the
+        form that gets evaluated, hence returned.
 
-    >>> e1 = S(1) >  x
-    >>> e2 = S(1) >= x
-    >>> e3 = S(1) <  x
-    >>> e4 = S(1) <= x
-    >>> e5 = Gt(1, x)
-    >>> e6 = Ge(1, x)
-    >>> e7 = Lt(1, x)
-    >>> e8 = Le(1, x)
-    >>> print("%s     %s\\n"*4 % (e1, e2, e3, e4, e5, e6, e7, e8))
-    1 > x     1 >= x
-    1 < x     1 <= x
-    1 > x     1 >= x
-    1 < x     1 <= x
+        If the order of the statement is important (for visual output to
+        the console, perhaps), one can work around this annoyance in a
+        couple ways:
 
-    The other gotcha is with chained inequalities.  Occasionally, one may be
-    tempted to write statements like:
+        (1) "sympify" the literal before comparison
 
-    >>> e = x < y < z
-    Traceback (most recent call last):
-    ...
-    TypeError: symbolic boolean expression has no truth value.
+        >>> S(1) < x
+        1 < x
 
-    Due to an implementation detail or decision of Python [1]_, there is no way
-    for SymPy to reliably create that as a chained inequality.  To create a
-    chained inequality, the only method currently available is to make use of
-    And:
+        (2) use one of the wrappers or less succinct methods described
+        above
 
-    >>> e = And(x < y, y < z)
-    >>> type( e )
-    And
-    >>> e
-    And(x < y, y < z)
+        >>> Lt(1, x)
+        1 < x
+        >>> Relational(1, x, "<")
+        1 < x
 
-    Note that this is different than chaining an equality directly via use of
-    parenthesis (this is currently an open bug in SymPy [2]_):
+    The second gotcha involves writing equality tests between relationals
+    when one or both sides of the test involve a literal relational:
 
-    >>> e = (x < y) < z
-    >>> type( e )
-    <class 'sympy.core.relational.StrictLessThan'>
-    >>> e
-    (x < y) < z
+        >>> e = x < 1; e
+        x < 1
+        >>> e == e  # neither side is a literal
+        True
+        >>> e == x < 1  # expecting True, too
+        False
+        >>> e != x < 1  # expecting False
+        x < 1
+        >>> x < 1 != x < 1  # expecting False or the same thing as before
+        Traceback (most recent call last):
+        ...
+        TypeError: cannot determine truth value of Relational
 
-    Any code that explicitly relies on this latter functionality will not be
-    robust as this behaviour is completely wrong and will be corrected at some
-    point.  For the time being (circa Jan 2012), use And to create chained
-    inequalities.
+        The solution for this case is to wrap literal relationals in
+        parentheses:
+
+        >>> e == (x < 1)
+        True
+        >>> e != (x < 1)
+        False
+        >>> (x < 1) != (x < 1)
+        False
+
+    The third gotcha involves chained inequalities not involving
+    '==' or '!='. Occasionally, one may be tempted to write:
+
+        >>> e = x < y < z
+        Traceback (most recent call last):
+        ...
+        TypeError: symbolic boolean expression has no truth value.
+
+        Due to an implementation detail or decision of Python [1]_,
+        there is no way for SymPy to create a chained inequality with
+        that syntax so one must use And:
+
+        >>> e = And(x < y, y < z)
+        >>> type( e )
+        And
+        >>> e
+        (x < y) & (y < z)
+
+        Although this can also be done with the '&' operator, it cannot
+        be done with the 'and' operarator:
+
+        >>> (x < y) & (y < z)
+        (x < y) & (y < z)
+        >>> (x < y) and (y < z)
+        Traceback (most recent call last):
+        ...
+        TypeError: cannot determine truth value of Relational
 
     .. [1] This implementation detail is that Python provides no reliable
-       method to determine that a chained inequality is being built.  Chained
-       comparison operators are evaluated pairwise, using "and" logic (see
-       http://docs.python.org/2/reference/expressions.html#notin).  This is done
-       in an efficient way, so that each object being compared is only
-       evaluated once and the comparison can short-circuit.  For example, ``1
-       > 2 > 3`` is evaluated by Python as ``(1 > 2) and (2 > 3)``.  The
-       ``and`` operator coerces each side into a bool, returning the object
-       itself when it short-circuits.  The bool of the --Than operators
-       will raise TypeError on purpose, because SymPy cannot determine the
-       mathematical ordering of symbolic expressions.  Thus, if we were to
-       compute ``x > y > z``, with ``x``, ``y``, and ``z`` being Symbols,
-       Python converts the statement (roughly) into these steps:
+       method to determine that a chained inequality is being built.
+       Chained comparison operators are evaluated pairwise, using "and"
+       logic (see
+       http://docs.python.org/2/reference/expressions.html#notin). This
+       is done in an efficient way, so that each object being compared
+       is only evaluated once and the comparison can short-circuit. For
+       example, ``1 > 2 > 3`` is evaluated by Python as ``(1 > 2) and (2
+       > 3)``. The ``and`` operator coerces each side into a bool,
+       returning the object itself when it short-circuits. The bool of
+       the --Than operators will raise TypeError on purpose, because
+       SymPy cannot determine the mathematical ordering of symbolic
+       expressions. Thus, if we were to compute ``x > y > z``, with
+       ``x``, ``y``, and ``z`` being Symbols, Python converts the
+       statement (roughly) into these steps:
 
         (1) x > y > z
         (2) (x > y) and (y > z)
@@ -680,14 +757,6 @@ class GreaterThan(_Greater):
            control how it short circuits, so it is impossible to make something
            like ``x > y > z`` work.  There was a PEP to change this,
            :pep:`335`, but it was officially closed in March, 2012.
-
-    .. [2] For more information, see these two bug reports:
-
-       "Separate boolean and symbolic relationals"
-       `Issue 4986 <https://github.com/sympy/sympy/issues/4986>`_
-
-       "It right 0 < x < 1 ?"
-       `Issue 6059 <https://github.com/sympy/sympy/issues/6059>`_
 
     """
     __slots__ = ()

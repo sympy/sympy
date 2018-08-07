@@ -1,4 +1,4 @@
-from sympy import sin, cos, pi, zeros, ImmutableMatrix as Matrix
+from sympy import sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dynamicsymbols, time_derivative, express)
 
@@ -164,3 +164,106 @@ def test_orientnew_respects_parent_class():
     B = MyReferenceFrame('B')
     C = B.orientnew('C', 'Axis', [0, B.x])
     assert isinstance(C, MyReferenceFrame)
+
+
+def test_orientnew_respects_input_indices():
+    N = ReferenceFrame('N')
+    q1 = dynamicsymbols('q1')
+    A = N.orientnew('a', 'Axis', [q1, N.z])
+    #modify default indices:
+    minds = [x+'1' for x in N.indices]
+    B = N.orientnew('b', 'Axis', [q1, N.z], indices=minds)
+
+    assert N.indices == A.indices
+    assert B.indices == minds
+
+def test_orientnew_respects_input_latexs():
+    N = ReferenceFrame('N')
+    q1 = dynamicsymbols('q1')
+    A = N.orientnew('a', 'Axis', [q1, N.z])
+
+    #build default and alternate latex_vecs:
+    def_latex_vecs = [(r"\mathbf{\hat{%s}_%s}" % (A.name.lower(),
+                      A.indices[0])), (r"\mathbf{\hat{%s}_%s}" %
+                      (A.name.lower(), A.indices[1])),
+                      (r"\mathbf{\hat{%s}_%s}" % (A.name.lower(),
+                      A.indices[2]))]
+
+    name = 'b'
+    indices = [x+'1' for x in N.indices]
+    new_latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+                      indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
+                      (name.lower(), indices[1])),
+                      (r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+                      indices[2]))]
+
+    B = N.orientnew(name, 'Axis', [q1, N.z], latexs=new_latex_vecs)
+
+    assert A.latex_vecs == def_latex_vecs
+    assert B.latex_vecs == new_latex_vecs
+    assert B.indices != indices
+
+def test_orientnew_respects_input_variables():
+    N = ReferenceFrame('N')
+    q1 = dynamicsymbols('q1')
+    A = N.orientnew('a', 'Axis', [q1, N.z])
+
+    #build non-standard variable names
+    name = 'b'
+    new_variables = ['notb_'+x+'1' for x in N.indices]
+    B = N.orientnew(name, 'Axis', [q1, N.z], variables=new_variables)
+
+    for j,var in enumerate(A.varlist):
+        assert var.name == A.name + '_' + A.indices[j]
+
+    for j,var in enumerate(B.varlist):
+        assert var.name == new_variables[j]
+
+def test_issue_10348():
+    u = dynamicsymbols('u:3')
+    I = ReferenceFrame('I')
+    A = I.orientnew('A', 'space', u, 'XYZ')
+
+
+def test_issue_11503():
+    A = ReferenceFrame("A")
+    B = A.orientnew("B", "Axis", [35, A.y])
+    C = ReferenceFrame("C")
+    A.orient(C, "Axis", [70, C.z])
+
+
+def test_partial_velocity():
+
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+
+    u1, u2 = dynamicsymbols('u1, u2')
+
+    A.set_ang_vel(N, u1 * A.x + u2 * N.y)
+
+    assert N.partial_velocity(A, u1) == -A.x
+    assert N.partial_velocity(A, u1, u2) == (-A.x, -N.y)
+
+    assert A.partial_velocity(N, u1) == A.x
+    assert A.partial_velocity(N, u1, u2) == (A.x, N.y)
+
+    assert N.partial_velocity(N, u1) == 0
+    assert A.partial_velocity(A, u1) == 0
+
+
+def test_issue_11498():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+
+    # Identity transformation
+    A.orient(B, 'DCM', eye(3))
+    assert A.dcm(B) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    assert B.dcm(A) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+    # x -> y
+    # y -> -z
+    # z -> -x
+    A.orient(B, 'DCM', Matrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]))
+    assert B.dcm(A) == Matrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]])
+    assert A.dcm(B) == Matrix([[0, 0, -1], [1, 0, 0], [0, -1, 0]])
+    assert B.dcm(A).T == A.dcm(B)

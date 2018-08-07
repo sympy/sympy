@@ -250,7 +250,7 @@ RREF
 
 To put a matrix into reduced row echelon form, use ``rref``.  ``rref`` returns
 a tuple of two elements. The first is the reduced row echelon form, and the
-second is a list of indices of the pivot columns.
+second is a tuple of indices of the pivot columns.
 
     >>> M = Matrix([[1, 0, 1, 3], [2, 3, 4, 7], [-1, -3, -3, -4]])
     >>> M
@@ -260,14 +260,14 @@ second is a list of indices of the pivot columns.
     ⎢              ⎥
     ⎣-1  -3  -3  -4⎦
     >>> M.rref()
-    ⎛⎡1  0   1    3 ⎤, [0, 1]⎞
+    ⎛⎡1  0   1    3 ⎤        ⎞
     ⎜⎢              ⎥        ⎟
-    ⎜⎢0  1  2/3  1/3⎥        ⎟
+    ⎜⎢0  1  2/3  1/3⎥, (0, 1)⎟
     ⎜⎢              ⎥        ⎟
     ⎝⎣0  0   0    0 ⎦        ⎠
 
 .. Note:: The first element of the tuple returned by ``rref`` is of type
-   ``Matrix``. The second is of type ``list``.
+   ``Matrix``. The second is of type ``tuple``.
 
 Nullspace
 ---------
@@ -281,15 +281,35 @@ To find the nullspace of a matrix, use ``nullspace``. ``nullspace`` returns a
     ⎢              ⎥
     ⎣4  10  0  0  1⎦
     >>> M.nullspace()
-    ⎡⎡-15⎤, ⎡0⎤, ⎡ 1  ⎤⎤
+    ⎡⎡-15⎤  ⎡0⎤  ⎡ 1  ⎤⎤
     ⎢⎢   ⎥  ⎢ ⎥  ⎢    ⎥⎥
     ⎢⎢ 6 ⎥  ⎢0⎥  ⎢-1/2⎥⎥
     ⎢⎢   ⎥  ⎢ ⎥  ⎢    ⎥⎥
-    ⎢⎢ 1 ⎥  ⎢0⎥  ⎢ 0  ⎥⎥
+    ⎢⎢ 1 ⎥, ⎢0⎥, ⎢ 0  ⎥⎥
     ⎢⎢   ⎥  ⎢ ⎥  ⎢    ⎥⎥
     ⎢⎢ 0 ⎥  ⎢1⎥  ⎢ 0  ⎥⎥
     ⎢⎢   ⎥  ⎢ ⎥  ⎢    ⎥⎥
     ⎣⎣ 0 ⎦  ⎣0⎦  ⎣ 1  ⎦⎦
+
+Columnspace
+-----------
+
+To find the columnspace of a matrix, use ``columnspace``. ``columnspace`` returns a
+``list`` of column vectors that span the columnspace of the matrix.
+
+    >>> M = Matrix([[1, 1, 2], [2 ,1 , 3], [3 , 1, 4]])
+    >>> M
+    ⎡1  1  2⎤
+    ⎢       ⎥
+    ⎢2  1  3⎥
+    ⎢       ⎥
+    ⎣3  1  4⎦
+    >>> M.columnspace()
+    ⎡⎡1⎤  ⎡1⎤⎤
+    ⎢⎢ ⎥  ⎢ ⎥⎥
+    ⎢⎢2⎥, ⎢1⎥⎥
+    ⎢⎢ ⎥  ⎢ ⎥⎥
+    ⎣⎣3⎦  ⎣1⎦⎦
 
 Eigenvalues, Eigenvectors, and Diagonalization
 ----------------------------------------------
@@ -319,10 +339,10 @@ returns a list of tuples of the form ``(eigenvalue:algebraic multiplicity,
 [eigenvectors])``.
 
     >>> M.eigenvects()
-    ⎡⎛-2, 1, ⎡⎡0⎤⎤⎞, ⎛3, 1, ⎡⎡1⎤⎤⎞, ⎛5, 2, ⎡⎡1⎤, ⎡0 ⎤⎤⎞⎤
+    ⎡⎛       ⎡⎡0⎤⎤⎞  ⎛      ⎡⎡1⎤⎤⎞  ⎛      ⎡⎡1⎤  ⎡0 ⎤⎤⎞⎤
     ⎢⎜       ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥  ⎢  ⎥⎥⎟⎥
     ⎢⎜       ⎢⎢1⎥⎥⎟  ⎜      ⎢⎢1⎥⎥⎟  ⎜      ⎢⎢1⎥  ⎢-1⎥⎥⎟⎥
-    ⎢⎜       ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥  ⎢  ⎥⎥⎟⎥
+    ⎢⎜-2, 1, ⎢⎢ ⎥⎥⎟, ⎜3, 1, ⎢⎢ ⎥⎥⎟, ⎜5, 2, ⎢⎢ ⎥, ⎢  ⎥⎥⎟⎥
     ⎢⎜       ⎢⎢1⎥⎥⎟  ⎜      ⎢⎢1⎥⎥⎟  ⎜      ⎢⎢1⎥  ⎢0 ⎥⎥⎟⎥
     ⎢⎜       ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥  ⎢  ⎥⎥⎟⎥
     ⎣⎝       ⎣⎣1⎦⎦⎠  ⎝      ⎣⎣1⎦⎦⎠  ⎝      ⎣⎣0⎦  ⎣1 ⎦⎦⎠⎦

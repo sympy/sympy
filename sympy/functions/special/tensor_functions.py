@@ -3,9 +3,9 @@ from __future__ import print_function, division
 from sympy.core.function import Function
 from sympy.core import S, Integer
 from sympy.core.mul import prod
+from sympy.core.logic import fuzzy_not
 from sympy.utilities.iterables import (has_dups, default_sort_key)
-from sympy.core.compatibility import range
-from sympy.functions.elementary.complexes import Abs
+from sympy.core.compatibility import range, SYMPY_INTS
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -72,7 +72,7 @@ class LeviCivita(Function):
 
     @classmethod
     def eval(cls, *args):
-        if all(isinstance(a, (int, Integer)) for a in args):
+        if all(isinstance(a, (SYMPY_INTS, Integer)) for a in args):
             return eval_levicivita(*args)
         if has_dups(args):
             return S.Zero
@@ -155,16 +155,11 @@ class KroneckerDelta(Function):
         # indirect doctest
 
         """
-        if (i > j) is True:
-            return cls(j, i)
-
-        diff = Abs(i - j)
-        if diff == 0:
+        diff = i - j
+        if diff.is_zero:
             return S.One
-        elif diff.is_number:
+        elif fuzzy_not(diff.is_zero):
             return S.Zero
-        elif i != 0 and diff.is_nonzero:
-            return cls(0, diff.args[0])
 
         if i.assumptions0.get("below_fermi") and \
                 j.assumptions0.get("above_fermi"):
@@ -442,9 +437,9 @@ class KroneckerDelta(Function):
         else:
             return 0
 
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\delta'
+    @property
+    def indices(self):
+        return self.args[0:2]
 
     def _sage_(self):
         import sage.all as sage

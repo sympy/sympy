@@ -1,5 +1,5 @@
 from .cartan_type import Standard_Cartan
-from sympy.matrices import eye
+from sympy.core.backend import eye
 from sympy.core.compatibility import range
 
 class TypeD(Standard_Cartan):
@@ -11,11 +11,11 @@ class TypeD(Standard_Cartan):
 
 
     def dimension(self):
-        """
-        Return the dimension of the vector space
-        V underlying the Lie algebra
-        Example
+        """Dmension of the vector space V underlying the Lie algebra
+
+        Examples
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("D4")
         >>> c.dimension()
@@ -28,7 +28,7 @@ class TypeD(Standard_Cartan):
         """
         This is a method just to generate roots
         with a 1 iin the ith position and a -1
-        in the jth postion.
+        in the jth position.
 
         """
 
@@ -57,8 +57,9 @@ class TypeD(Standard_Cartan):
 
         This method returns the ith simple root for the D series.
 
-        Example
+        Examples
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("D4")
         >>> c.simple_root(2)
@@ -83,8 +84,9 @@ class TypeD(Standard_Cartan):
         by multiplying all the positive roots by -1 we
         get the negative roots.
 
-        Example
-        ======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
         >>> c.positive_roots()
@@ -121,8 +123,9 @@ class TypeD(Standard_Cartan):
         roots, (alpha[1], ...., alpha[l]).  Then the ijth
         entry of the Cartan matrix is (<alpha[i],alpha[j]>).
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType('D4')
         >>> c.cartan_matrix()

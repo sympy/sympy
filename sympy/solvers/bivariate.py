@@ -10,7 +10,8 @@ from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polytools import Poly, factor
 from sympy.core.function import _mexpand
-from sympy.simplify.simplify import (collect, separatevars)
+from sympy.simplify.simplify import separatevars
+from sympy.simplify.radsimp import collect
 from sympy.solvers.solvers import solve, _invert
 
 
@@ -26,10 +27,10 @@ def _filtered_gens(poly, symbol):
     >>> from sympy import Poly, exp
     >>> from sympy.abc import x
     >>> _filtered_gens(Poly(x + 1/x + exp(x)), x)
-    set([x, exp(x)])
+    {x, exp(x)}
 
     """
-    gens = set([g for g in poly.gens if symbol in g.free_symbols])
+    gens = {g for g in poly.gens if symbol in g.free_symbols}
     for g in list(gens):
         ag = 1/g
         if g in gens and ag in gens:
@@ -46,6 +47,9 @@ def _mostfunc(lhs, func, X=None):
     ``func`` can be a function (exp, log, etc...) or any other SymPy object,
     like Pow.
 
+    If ``X`` is not ``None``, then the function returns the term composed with the
+    most ``func`` having the specified variable.
+
     Examples
     ========
 
@@ -55,8 +59,8 @@ def _mostfunc(lhs, func, X=None):
     >>> from sympy.abc import x, y
     >>> _mostfunc(exp(x) + exp(exp(x) + 2), exp)
     exp(exp(x) + 2)
-    >>> _mostfunc(exp(x) + exp(exp(y) + 2), exp, x)
-    exp(x)
+    >>> _mostfunc(exp(x) + exp(exp(y) + 2), exp)
+    exp(exp(y) + 2)
     >>> _mostfunc(exp(x) + exp(exp(y) + 2), exp, x)
     exp(x)
     >>> _mostfunc(x, exp, x) is None
@@ -122,10 +126,10 @@ def _lambert(eq, x):
     if not mainlog:
         return []  # violated assumptions
     other = eq.subs(mainlog, 0)
-    if (-other).func is log:
+    if isinstance(-other, log):
         eq = (eq - other).subs(mainlog, mainlog.args[0])
         mainlog = mainlog.args[0]
-        if mainlog.func is not log:
+        if not isinstance(mainlog, log):
             return []  # violated assumptions
         other = -(-other).args[0]
         eq += other
@@ -206,7 +210,7 @@ def _solve_lambert(f, symbol, gens):
         rhs = log(rhs)
 
     lhs = factor(lhs, deep=True)
-    # make sure we are inverted as completely as possible
+    # make sure we have inverted as completely as possible
     r = Dummy()
     i, lhs = _invert(lhs - r, symbol)
     rhs = i.xreplace({r: rhs})

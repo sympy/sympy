@@ -1,30 +1,33 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-    I, erf, tan, asin, asinh, acos, Function, Derivative, diff, simplify, \
-    LambertW, Eq, Piecewise, Symbol, Add, ratsimp, Integral, Sum
+    I, erf, tan, asin, asinh, acos, atan, Function, Derivative, diff, simplify, \
+    LambertW, Eq, Ne, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
+    besselj, besselk, bessely, jn, tanh
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
 from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
-
+from sympy.integrals.integrals import integrate
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
 
 def test_components():
-    assert components(x*y, x) == set([x])
-    assert components(1/(x + y), x) == set([x])
-    assert components(sin(x), x) == set([sin(x), x])
+    assert components(x*y, x) == {x}
+    assert components(1/(x + y), x) == {x}
+    assert components(sin(x), x) == {sin(x), x}
     assert components(sin(x)*sqrt(log(x)), x) == \
-        set([log(x), sin(x), sqrt(log(x)), x])
+        {log(x), sin(x), sqrt(log(x)), x}
     assert components(x*sin(exp(x)*y), x) == \
-        set([sin(y*exp(x)), x, exp(x)])
+        {sin(y*exp(x)), x, exp(x)}
     assert components(x**Rational(17, 54)/sqrt(sin(x)), x) == \
-        set([sin(x), x**Rational(1, 54), sqrt(sin(x)), x])
+        {sin(x), x**Rational(1, 54), sqrt(sin(x)), x}
 
     assert components(f(x), x) == \
-        set([x, f(x)])
+        {x, f(x)}
     assert components(Derivative(f(x), x), x) == \
-        set([x, f(x), Derivative(f(x), x)])
+        {x, f(x), Derivative(f(x), x)}
     assert components(f(x)*diff(f(x), x), x) == \
-        set([x, f(x), Derivative(f(x), x), Derivative(f(x), x)])
+        {x, f(x), Derivative(f(x), x), Derivative(f(x), x)}
 
+def test_issue_10680():
+    assert isinstance(integrate(x**log(x**log(x**log(x))),x), Integral)
 
 def test_heurisch_polynomials():
     assert heurisch(1, x) == x
@@ -70,7 +73,6 @@ def test_heurisch_exp():
     assert heurisch(Integral(x**z*y, (y, 1, 2), (z, 2, 3)).function, x) == (x*x**z*y)/(z+1)
     assert heurisch(Sum(x**z, (z, 1, 2)).function, z) == x**z/log(x)
 
-
 def test_heurisch_trigonometric():
     assert heurisch(sin(x), x) == -cos(x)
     assert heurisch(pi*sin(x) + 1, x) == x - pi*cos(x)
@@ -96,6 +98,12 @@ def test_heurisch_trigonometric():
     assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - (sqrt(16 - x**2))*asin(x/4) \
         + (sqrt(16 - x**2))*acos(x/4) + x*asin(x/4)*acos(x/4)
 
+    assert heurisch(sin(x)/(cos(x)**2+1), x) == -atan(cos(x)) #fixes issue 13723
+    assert heurisch(1/(cos(x)+2), x) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3
+    assert heurisch(2*sin(x)*cos(x)/(sin(x)**4 + 1), x) == atan(sqrt(2)*sin(x)
+        - 1) - atan(sqrt(2)*sin(x) + 1)
+
+    assert heurisch(1/cosh(x), x) == 2*atan(tanh(x/2))
 
 def test_heurisch_hyperbolic():
     assert heurisch(sinh(x), x) == cosh(x)
@@ -122,8 +130,8 @@ def test_heurisch_radicals():
     assert heurisch(sin(y*sqrt(x)), x) == 2/y**2*sin(y*sqrt(x)) - \
         2*sqrt(x)*cos(y*sqrt(x))/y
     assert heurisch_wrapper(sin(y*sqrt(x)), x) == Piecewise(
-        (0, Eq(y, 0)),
-        (-2*sqrt(x)*cos(sqrt(x)*y)/y + 2*sin(sqrt(x)*y)/y**2, True))
+        (-2*sqrt(x)*cos(sqrt(x)*y)/y + 2*sin(sqrt(x)*y)/y**2, Ne(y, 0)),
+        (0, True))
     y = Symbol('y', positive=True)
     assert heurisch_wrapper(sin(y*sqrt(x)), x) == 2/y**2*sin(y*sqrt(x)) - \
         2*sqrt(x)*cos(y*sqrt(x))/y
@@ -143,12 +151,11 @@ def test_heurisch_symbolic_coeffs():
 def test_heurisch_symbolic_coeffs_1130():
     y = Symbol('y')
     assert heurisch_wrapper(1/(x**2 + y), x) == Piecewise(
-        (-1/x, Eq(y, 0)),
-        (-I*log(x - I*sqrt(y))/(2*sqrt(y)) + I*log(x + I*sqrt(y))/(2*sqrt(y)), True))
+        (-I*log(x - I*sqrt(y))/(2*sqrt(y))
+         + I*log(x + I*sqrt(y))/(2*sqrt(y)), Ne(y, 0)),
+        (-1/x, True))
     y = Symbol('y', positive=True)
-    assert heurisch_wrapper(1/(x**2 + y), x) in [I/sqrt(y)*log(x + sqrt(-y))/2 -
-    I/sqrt(y)*log(x - sqrt(-y))/2, I*log(x + I*sqrt(y)) /
-        (2*sqrt(y)) - I*log(x - I*sqrt(y))/(2*sqrt(y))]
+    assert heurisch_wrapper(1/(x**2 + y), x) == (atan(x/sqrt(y))/sqrt(y))
 
 
 def test_heurisch_hacking():
@@ -192,16 +199,15 @@ def test_heurisch_wrapper():
     f = 1/(y - x)
     assert heurisch_wrapper(f, x) == -log(x - y)
     f = 1/((y - x)*(y + x))
-    assert heurisch_wrapper(f, x) == \
-        Piecewise((1/x, Eq(y, 0)), (log(x + y)/2/y - log(x - y)/2/y, True))
+    assert heurisch_wrapper(f, x) == Piecewise(
+        (-log(x - y)/(2*y) + log(x + y)/(2*y), Ne(y, 0)), (1/x, True))
     # issue 6926
     f = sqrt(x**2/((y - x)*(y + x)))
     assert heurisch_wrapper(f, x) == x*sqrt(x**2)*sqrt(1/(-x**2 + y**2)) \
         - y**2*sqrt(x**2)*sqrt(1/(-x**2 + y**2))/x
 
 def test_issue_3609():
-    assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
-        I*log(log(x) - I)/2
+    assert heurisch(1/(x * (1 + log(x)**2)), x) == atan(log(x))
 
 ### These are examples from the Poor Man's Integrator
 ### http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/examples/
@@ -229,11 +235,12 @@ def test_pmint_trig():
 
 @slow # 8 seconds on 3.4 GHz
 def test_pmint_logexp():
-    f = (1 + x + x*exp(x))*(x + log(x) + exp(x) - 1)/(x + log(x) + exp(x))**2/x
-    g = log(x**2 + 2*x*exp(x) + 2*x*log(x) + exp(2*x) + 2*exp(x)*log(x) + log(x)**2)/2 + 1/(x + exp(x) + log(x))
+    if ON_TRAVIS:
+        # See https://github.com/sympy/sympy/pull/12795
+        skip("Too slow for travis.")
 
-    # TODO: Optimal solution is g = 1/(x + log(x) + exp(x)) + log(x + log(x) + exp(x)),
-    # but SymPy requires a lot of guidance to properly simplify heurisch() output.
+    f = (1 + x + x*exp(x))*(x + log(x) + exp(x) - 1)/(x + log(x) + exp(x))**2/x
+    g = log(x + exp(x) + log(x)) + 1/(x + exp(x) + log(x))
 
     assert ratsimp(heurisch(f, x)) == g
 
@@ -251,10 +258,7 @@ def test_pmint_LambertW():
 
     assert heurisch(f, x) == g
 
-@XFAIL
 def test_pmint_besselj():
-    # TODO: in both cases heurisch() gives None. Wrong besselj() derivative?
-
     f = besselj(nu + 1, x)/besselj(nu, x)
     g = nu*log(x) - log(besselj(nu, x))
 
@@ -262,6 +266,28 @@ def test_pmint_besselj():
 
     f = (nu*besselj(nu, x) - x*besselj(nu + 1, x))/x
     g = besselj(nu, x)
+
+    assert heurisch(f, x) == g
+
+    f = jn(nu + 1, x)/jn(nu, x)
+    g = nu*log(x) - log(jn(nu, x))
+
+    assert heurisch(f, x) == g
+
+@slow
+def test_pmint_bessel_products():
+    # Note: Derivatives of Bessel functions have many forms.
+    # Recurrence relations are needed for comparisons.
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+
+    f = x*besselj(nu, x)*bessely(nu, 2*x)
+    g = -2*x*besselj(nu, x)*bessely(nu - 1, 2*x)/3 + x*besselj(nu - 1, x)*bessely(nu, 2*x)/3
+
+    assert heurisch(f, x) == g
+
+    f = x*besselj(nu, x)*besselk(nu, 2*x)
+    g = -2*x*besselj(nu, x)*besselk(nu - 1, 2*x)/5 - x*besselj(nu - 1, x)*besselk(nu, 2*x)/5
 
     assert heurisch(f, x) == g
 

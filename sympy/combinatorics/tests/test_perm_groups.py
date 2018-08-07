@@ -1,5 +1,6 @@
 from sympy.core.compatibility import range
-from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.perm_groups import (PermutationGroup,
+    _orbit_transversal)
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
 from sympy.combinatorics.permutations import Permutation
@@ -8,6 +9,7 @@ from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
+from sympy.utilities.pytest import raises
 
 rmul = Permutation.rmul
 
@@ -59,6 +61,21 @@ def test_order():
     b = Permutation([2, 1, 3, 4, 5, 6, 7, 8, 9, 0])
     g = PermutationGroup([a, b])
     assert g.order() == 1814400
+    assert PermutationGroup().order() == 1
+
+
+def test_equality():
+    p_1 = Permutation(0, 1, 3)
+    p_2 = Permutation(0, 2, 3)
+    p_3 = Permutation(0, 1, 2)
+    p_4 = Permutation(0, 1, 3)
+    g_1 = PermutationGroup(p_1, p_2)
+    g_2 = PermutationGroup(p_3, p_4)
+    g_3 = PermutationGroup(p_2, p_1)
+
+    assert g_1 == g_2
+    assert g_1.generators != g_2.generators
+    assert g_1 == g_3
 
 
 def test_stabilizer():
@@ -165,6 +182,7 @@ def test_centralizer():
             if gp.degree == gp2.degree:
                 assert _verify_centralizer(gp, gp2)
 
+
 def test_coset_rank():
     gens_cube = [[1, 3, 5, 7, 0, 2, 4, 6], [1, 3, 0, 2, 5, 7, 4, 6]]
     gens = [Permutation(p) for p in gens_cube]
@@ -179,6 +197,7 @@ def test_coset_rank():
     assert G.coset_unrank(48) == None
     assert G.coset_unrank(G.coset_rank(gens[0])) == gens[0]
 
+
 def test_coset_factor():
     a = Permutation([0, 2, 1])
     G = PermutationGroup([a])
@@ -186,14 +205,15 @@ def test_coset_factor():
     assert not G.coset_factor(c)
     assert G.coset_rank(c) is None
 
-    a = Permutation([2,0,1,3,4,5])
-    b = Permutation([2,1,3,4,5,0])
+    a = Permutation([2, 0, 1, 3, 4, 5])
+    b = Permutation([2, 1, 3, 4, 5, 0])
     g = PermutationGroup([a, b])
     assert g.order() == 360
-    d = Permutation([1,0,2,3,4,5])
+    d = Permutation([1, 0, 2, 3, 4, 5])
     assert not g.coset_factor(d.array_form)
     assert not g.contains(d)
-    c = Permutation([1,0,2,3,5,4])
+    assert Permutation(2) in G
+    c = Permutation([1, 0, 2, 3, 5, 4])
     v = g.coset_factor(c, True)
     tr = g.basic_transversals
     p = Permutation.rmul(*[tr[i][v[i]] for i in range(len(g.base))])
@@ -202,16 +222,17 @@ def test_coset_factor():
     p = Permutation.rmul(*v)
     assert p == c
     assert g.contains(c)
-    G = PermutationGroup([Permutation([2,1,0])])
-    p = Permutation([1,0,2])
+    G = PermutationGroup([Permutation([2, 1, 0])])
+    p = Permutation([1, 0, 2])
     assert G.coset_factor(p) == []
+
 
 def test_orbits():
     a = Permutation([2, 0, 1])
     b = Permutation([2, 1, 0])
     g = PermutationGroup([a, b])
-    assert g.orbit(0) == set([0, 1, 2])
-    assert g.orbits() == [set([0, 1, 2])]
+    assert g.orbit(0) == {0, 1, 2}
+    assert g.orbits() == [{0, 1, 2}]
     assert g.is_transitive() and g.is_transitive(strict=False)
     assert g.orbit_transversal(0) == \
         [Permutation(
@@ -219,6 +240,15 @@ def test_orbits():
     assert g.orbit_transversal(0, True) == \
         [(0, Permutation([0, 1, 2])), (2, Permutation([2, 0, 1])),
         (1, Permutation([1, 2, 0]))]
+
+    G = DihedralGroup(6)
+    transversal, slps = _orbit_transversal(G.degree, G.generators, 0, True, slp=True)
+    for i, t in transversal:
+        slp = slps[i]
+        w = G.identity
+        for s in slp:
+            w = G.generators[s]*w
+        assert w == t
 
     a = Permutation(list(range(1, 100)) + [0])
     G = PermutationGroup([a])
@@ -254,6 +284,10 @@ def test_is_normal():
     assert G1.is_subgroup(G6)
     assert not G1.is_subgroup(G4)
     assert G2.is_subgroup(G4)
+    s4 = PermutationGroup(Permutation(0, 1, 2, 3), Permutation(3)(0, 1))
+    s6 = PermutationGroup(Permutation(0, 1, 2, 3, 5), Permutation(5)(0, 1))
+    assert s6.is_normal(s4, strict=False)
+    assert not s4.is_normal(s6, strict=False)
 
 
 def test_eq():
@@ -318,6 +352,7 @@ def test_rubik1():
 
     G = RubikGroup(2)
     assert G.order() == 3674160
+
 
 @XFAIL
 def test_rubik():
@@ -420,6 +455,20 @@ def test_minimal_block():
 
     assert Tetra.pgroup.minimal_block([0, 1]) == [0, 0, 0, 0]
 
+    P1 = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    P2 = PermutationGroup(Permutation(0, 1, 2, 3, 4, 5), Permutation(1, 5)(2, 4))
+    assert P1.minimal_block([0, 2]) == [0, 1, 0, 1, 0, 1]
+    assert P2.minimal_block([0, 2]) == [0, 1, 0, 1, 0, 1]
+
+def test_minimal_blocks():
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    assert P.minimal_blocks() == [[0, 1, 0, 1, 0, 1], [0, 1, 2, 0, 1, 2]]
+
+    P = SymmetricGroup(5)
+    assert P.minimal_blocks() == [[0]*5]
+
+    P = PermutationGroup(Permutation(0, 3))
+    assert P.minimal_blocks() == False
 
 def test_max_div():
     S = SymmetricGroup(10)
@@ -470,6 +519,7 @@ def test_schreier_sims_random():
                   Permutation([0, 2, 1])]
     assert D.schreier_sims_random([], D.generators, 2,
            _random_prec=_random_prec) == (base, strong_gens)
+
 
 def test_baseswap():
     S = SymmetricGroup(4)
@@ -686,3 +736,137 @@ def test_make_perm():
         Permutation([4, 7, 6, 5, 0, 3, 2, 1])
     assert cube.pgroup.make_perm(7, seed=list(range(7))) == \
         Permutation([6, 7, 3, 2, 5, 4, 0, 1])
+
+
+def test_elements():
+    p = Permutation(2, 3)
+    assert PermutationGroup(p).elements == {Permutation(3), Permutation(2, 3)}
+
+
+def test_is_group():
+    assert PermutationGroup(Permutation(1,2), Permutation(2,4)).is_group == True
+    assert SymmetricGroup(4).is_group == True
+
+
+def test_PermutationGroup():
+    assert PermutationGroup() == PermutationGroup(Permutation())
+
+def test_coset_transvesal():
+    G = AlternatingGroup(5)
+    H = PermutationGroup(Permutation(0,1,2),Permutation(1,2)(3,4))
+    assert G.coset_transversal(H) == \
+        [Permutation(4), Permutation(2, 3, 4), Permutation(2, 4, 3),
+         Permutation(1, 2, 4), Permutation(4)(1, 2, 3), Permutation(1, 3)(2, 4),
+         Permutation(0, 1, 2, 3, 4), Permutation(0, 1, 2, 4, 3),
+         Permutation(0, 1, 3, 2, 4), Permutation(0, 2, 4, 1, 3)]
+
+def test_coset_table():
+    G = PermutationGroup(Permutation(0,1,2,3), Permutation(0,1,2),
+         Permutation(0,4,2,7), Permutation(5,6), Permutation(0,7));
+    H = PermutationGroup(Permutation(0,1,2,3), Permutation(0,7))
+    assert G.coset_table(H) == \
+        [[0, 0, 0, 0, 1, 2, 3, 3, 0, 0], [4, 5, 2, 5, 6, 0, 7, 7, 1, 1],
+         [5, 4, 5, 1, 0, 6, 8, 8, 6, 6], [3, 3, 3, 3, 7, 8, 0, 0, 3, 3],
+         [2, 1, 4, 4, 4, 4, 9, 9, 4, 4], [1, 2, 1, 2, 5, 5, 10, 10, 5, 5],
+         [6, 6, 6, 6, 2, 1, 11, 11, 2, 2], [9, 10, 8, 10, 11, 3, 1, 1, 7, 7],
+         [10, 9, 10, 7, 3, 11, 2, 2, 11, 11], [8, 7, 9, 9, 9, 9, 4, 4, 9, 9],
+         [7, 8, 7, 8, 10, 10, 5, 5, 10, 10], [11, 11, 11, 11, 8, 7, 6, 6, 8, 8]]
+
+def test_subgroup():
+    G = PermutationGroup(Permutation(0,1,2), Permutation(0,2,3))
+    H = G.subgroup([Permutation(0,1,3)])
+    assert H.is_subgroup(G)
+
+def test_generator_product():
+    G = SymmetricGroup(5)
+    p = Permutation(0, 2, 3)(1, 4)
+    gens = G.generator_product(p)
+    assert all(g in G.strong_gens for g in gens)
+    w = G.identity
+    for g in gens:
+        w = g*w
+    assert w == p
+
+def test_sylow_subgroup():
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
+    S = P.sylow_subgroup(2)
+    assert S.order() == 4
+
+    P = DihedralGroup(12)
+    S = P.sylow_subgroup(3)
+    assert S.order() == 3
+
+    P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5), Permutation(0, 2))
+    S = P.sylow_subgroup(3)
+    assert S.order() == 9
+    S = P.sylow_subgroup(2)
+    assert S.order() == 8
+
+    P = SymmetricGroup(10)
+    S = P.sylow_subgroup(2)
+    assert S.order() == 256
+    S = P.sylow_subgroup(3)
+    assert S.order() == 81
+    S = P.sylow_subgroup(5)
+    assert S.order() == 25
+
+    # the length of the lower central series
+    # of a p-Sylow subgroup of Sym(n) grows with
+    # the highest exponent exp of p such
+    # that n >= p**exp
+    exp = 1
+    length = 0
+    for i in range(2, 9):
+        P = SymmetricGroup(i)
+        S = P.sylow_subgroup(2)
+        ls = S.lower_central_series()
+        if i // 2**exp > 0:
+            # length increases with exponent
+            assert len(ls) > length
+            length = len(ls)
+            exp += 1
+        else:
+            assert len(ls) == length
+
+    G = SymmetricGroup(100)
+    S = G.sylow_subgroup(3)
+    assert G.order() % S.order() == 0
+    assert G.order()/S.order() % 3 > 0
+
+    G = AlternatingGroup(100)
+    S = G.sylow_subgroup(2)
+    assert G.order() % S.order() == 0
+    assert G.order()/S.order() % 2 > 0
+
+def test_presentation():
+    def _test(P):
+        G = P.presentation()
+        return G.order() == P.order()
+
+    def _strong_test(P):
+        G = P.strong_presentation()
+        chk = len(G.generators) == len(P.strong_gens)
+        return chk and G.order() == P.order()
+
+    P = PermutationGroup(Permutation(0,1,5,2)(3,7,4,6), Permutation(0,3,5,4)(1,6,2,7))
+    assert _test(P)
+
+    P = AlternatingGroup(5)
+    assert _test(P)
+
+    P = SymmetricGroup(5)
+    assert _test(P)
+
+    P = PermutationGroup([Permutation(0,3,1,2), Permutation(3)(0,1), Permutation(0,1)(2,3)])
+    G = P.strong_presentation()
+    assert _strong_test(P)
+
+    P = DihedralGroup(6)
+    G = P.strong_presentation()
+    assert _strong_test(P)
+
+    a = Permutation(0,1)(2,3)
+    b = Permutation(0,2)(3,1)
+    c = Permutation(4,5)
+    P = PermutationGroup(c, a, b)
+    assert _strong_test(P)

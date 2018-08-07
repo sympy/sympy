@@ -15,7 +15,7 @@ SymPy logos
 
 SymPy has a collection of official logos, which can
 be generated from
-`sympy.svg <https://github.com/sympy/sympy/tree/master/doc/src/sympy.svg>`
+`sympy.svg <https://github.com/sympy/sympy/blob/master/doc/src/logo/sympy.svg>`_
 in your local copy of SymPy by::
 
     $ cd doc
@@ -23,16 +23,6 @@ in your local copy of SymPy by::
 
 The license of all the logos is the same as SymPy: BSD. See the LICENSE file in
 the trunk for more information.
-
-Projects using SymPy
---------------------
-
-This is an (incomplete) list of projects that use SymPy. If you use SymPy in
-your project, please let us know on our mailinglist_, so that we can add your
-project here as well.
-
-* `SfePy <http://sfepy.org/>`_ (simple finite elements in Python)
-* `Quameon <http://quameon.sourceforge.net/>`_ (Quantum Monte Carlo in Python)
 
 .. _mailinglist:        https://groups.google.com/forum/#!forum/sympy
 

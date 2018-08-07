@@ -1,7 +1,7 @@
-from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factorial,
-                   fibonacci, floor, Function, GoldenRatio, I, Integral,
-                   integrate, log, Mul, N, oo, pi, Pow, product, Product,
-                   Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol)
+from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp,
+    factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
+    integrate, log, Mul, N, oo, pi, Pow, product, Product,
+    Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath)
 from mpmath import inf, ninf
@@ -128,6 +128,8 @@ def test_evalf_logs():
     assert NS("log(3+pi*I)", 15) == '1.46877619736226 + 0.808448792630022*I'
     assert NS("log(pi*I)", 15) == '1.14472988584940 + 1.57079632679490*I'
     assert NS('log(-1 + 0.00001)', 2) == '-1.0e-5 + 3.1*I'
+    assert NS('log(100, 10, evaluate=False)', 15) == '2.00000000000000'
+    assert NS('-2*I*log(-(-1)**(S(1)/9))', 15) == '-5.58505360638185'
 
 
 def test_evalf_trig():
@@ -172,7 +174,7 @@ def test_evalf_ramanujan():
 def test_evalf_bugs():
     assert NS(sin(1) + exp(-10**10), 10) == NS(sin(1), 10)
     assert NS(exp(10**10) + sin(1), 10) == NS(exp(10**10), 10)
-    assert NS('log(1+1/10**50)', 20) == '1.0000000000000000000e-50'
+    assert NS('expand_log(log(1+1/10**50))', 20) == '1.0000000000000000000e-50'
     assert NS('log(10**100,10)', 10) == '100.0000000'
     assert NS('log(2)', 10) == '0.6931471806'
     assert NS(
@@ -206,29 +208,30 @@ def test_evalf_bugs():
     # >>> n = Some Number
     # n*nan, n/nan, n*inf, n/inf
     # n+nan, n-nan, n+inf, n-inf
-    assert (0*sin(oo)).n() == S.Zero
-    assert (0/sin(oo)).n() == S.Zero
     assert (0*E**(oo)).n() == S.NaN
     assert (0/E**(oo)).n() == S.Zero
 
-    assert (0+sin(oo)).n() == S.NaN
-    assert (0-sin(oo)).n() == S.NaN
     assert (0+E**(oo)).n() == S.Infinity
     assert (0-E**(oo)).n() == S.NegativeInfinity
 
-    assert (5*sin(oo)).n() == S.NaN
-    assert (5/sin(oo)).n() == S.NaN
     assert (5*E**(oo)).n() == S.Infinity
     assert (5/E**(oo)).n() == S.Zero
 
-    assert (5+sin(oo)).n() == S.NaN
-    assert (5-sin(oo)).n() == S.NaN
     assert (5+E**(oo)).n() == S.Infinity
     assert (5-E**(oo)).n() == S.NegativeInfinity
 
     #issue 7416
     assert as_mpmath(0.0, 10, {'chop': True}) == 0
 
+    #issue 5412
+    assert ((oo*I).n() == S.Infinity*I)
+    assert ((oo+oo*I).n() == S.Infinity + S.Infinity*I)
+
+    #issue 11518
+    assert NS(2*x**2.5, 5) == '2.0000*x**2.5000'
+
+    #issue 13076
+    assert NS(Mul(Max(0, y), x, evaluate=False).evalf()) == 'x*Max(0, y)'
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
@@ -250,7 +253,12 @@ def test_evalf_integer_parts():
     assert ceiling(x).evalf(subs={x: 3}) == 3
     assert ceiling(x).evalf(subs={x: 3*I}) == 3*I
     assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2 + 3*I
+    assert ceiling(x).evalf(subs={x: 3.}) == 3
+    assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
+    assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
 
+    assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
+    assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)
@@ -472,3 +480,48 @@ def test_issue_8853():
     assert get_integer_part(S.Half, 1, {}, True) == (1, 0)
     assert get_integer_part(-S.Half, -1, {}, True) == (-1, 0)
     assert get_integer_part(-S.Half, 1, {}, True) == (0, 0)
+
+
+def test_issue_9326():
+    from sympy import Dummy
+    d1 = Dummy('d')
+    d2 = Dummy('d')
+    e = d1 + d2
+    assert e.evalf(subs = {d1: 1, d2: 2}) == 3
+
+
+def test_issue_10323():
+    assert ceiling(sqrt(2**30 + 1)) == 2**15 + 1
+
+
+def test_AssocOp_Function():
+    # the first arg of Min is not comparable in the imaginary part
+    raises(ValueError, lambda: S('''
+    Min(-sqrt(3)*cos(pi/18)/6 + re(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
+    sqrt(3)*I/18)**(1/3)))/3 + sin(pi/18)/2 + 2 + I*(-cos(pi/18)/2 -
+    sqrt(3)*sin(pi/18)/6 + im(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
+    sqrt(3)*I/18)**(1/3)))/3), re(1/((-1/2 + sqrt(3)*I/2)*(1/6 +
+    sqrt(3)*I/18)**(1/3)))/3 - sqrt(3)*cos(pi/18)/6 - sin(pi/18)/2 + 2 +
+    I*(im(1/((-1/2 + sqrt(3)*I/2)*(1/6 + sqrt(3)*I/18)**(1/3)))/3 -
+    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))'''))
+    # if that is changed so a non-comparable number remains as
+    # an arg, then the Min/Max instantiation needs to be changed
+    # to watch out for non-comparable args when making simplifications
+    # and the following test should be added instead (with e being
+    # the sympified expression above):
+    # raises(ValueError, lambda: e._eval_evalf(2))
+
+
+def test_issue_10395():
+    eq = x*Max(0, y)
+    assert nfloat(eq) == eq
+    eq = x*Max(y, -1.1)
+    assert nfloat(eq) == eq
+    assert Max(y, 4).n() == Max(4.0, y)
+
+
+def test_issue_13098():
+    assert floor(log(S('9.'+'9'*20), 10)) == 0
+    assert ceiling(log(S('9.'+'9'*20), 10)) == 1
+    assert floor(log(20 - S('9.'+'9'*20), 10)) == 1
+    assert ceiling(log(20 - S('9.'+'9'*20), 10)) == 2

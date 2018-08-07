@@ -1,4 +1,4 @@
-from sympy import sin, cos, tan, pi, symbols, Matrix
+from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, zeros
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
                                      RigidBody, Vector)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
@@ -6,6 +6,10 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      kinetic_energy, linear_momentum,
                                      outer, potential_energy, msubs,
                                      find_dynamicsymbols)
+
+from sympy.physics.mechanics.functions import gravity
+from sympy.physics.vector.vector import Vector
+from sympy.utilities.pytest import raises
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -70,24 +74,27 @@ def test_linear_momentum():
 
 
 def test_angular_momentum_and_linear_momentum():
-    m, M, l1 = symbols('m M l1')
-    q1d = dynamicsymbols('q1d')
+    """A rod with length 2l, centroidal inertia I, and mass M along with a
+    particle of mass m fixed to the end of the rod rotate with an angular rate
+    of omega about point O which is fixed to the non-particle end of the rod.
+    The rod's reference frame is A and the inertial frame is N."""
+    m, M, l, I = symbols('m, M, l, I')
+    omega = dynamicsymbols('omega')
     N = ReferenceFrame('N')
-    O = Point('O')
-    O.set_vel(N, 0 * N.x)
-    Ac = O.locatenew('Ac', l1 * N.x)
-    P = Ac.locatenew('P', l1 * N.x)
     a = ReferenceFrame('a')
-    a.set_ang_vel(N, q1d * N.z)
+    O = Point('O')
+    Ac = O.locatenew('Ac', l * N.x)
+    P = Ac.locatenew('P', l * N.x)
+    O.set_vel(N, 0 * N.x)
+    a.set_ang_vel(N, omega * N.z)
     Ac.v2pt_theory(O, N, a)
     P.v2pt_theory(O, N, a)
     Pa = Particle('Pa', P, m)
-    I = outer(N.z, N.z)
-    A = RigidBody('A', Ac, a, M, (I, Ac))
-    assert linear_momentum(
-        N, A, Pa) == 2 * m * q1d* l1 * N.y + M * l1 * q1d * N.y
-    assert angular_momentum(
-        O, N, A, Pa) == 4 * m * q1d * l1**2 * N.z + q1d * N.z
+    A = RigidBody('A', Ac, a, M, (I * outer(N.z, N.z), Ac))
+    expected = 2 * m * omega * l * N.y + M * l * omega * N.y
+    assert linear_momentum(N, A, Pa) == expected
+    expected = (I + M * l**2 + 4 * m * l**2) * omega * N.z
+    assert angular_momentum(O, N, A, Pa) == expected
 
 
 def test_kinetic_energy():
@@ -105,8 +112,8 @@ def test_kinetic_energy():
     Pa = Particle('Pa', P, m)
     I = outer(N.z, N.z)
     A = RigidBody('A', Ac, a, M, (I, Ac))
-    assert 0 == kinetic_energy(N, Pa, A) - (M*l1**2*omega**2/2
-            + 2*l1**2*m*omega**2 + omega**2/2)
+    assert 0 == (kinetic_energy(N, Pa, A) - (M*l1**2*omega**2/2
+            + 2*l1**2*m*omega**2 + omega**2/2)).expand()
 
 
 def test_potential_energy():
@@ -124,8 +131,8 @@ def test_potential_energy():
     Pa = Particle('Pa', P, m)
     I = outer(N.z, N.z)
     A = RigidBody('A', Ac, a, M, (I, Ac))
-    Pa.set_potential_energy(m * g * h)
-    A.set_potential_energy(M * g * H)
+    Pa.potential_energy = m * g * h
+    A.potential_energy = M * g * H
     assert potential_energy(A, Pa) == m * g * h + M * g * H
 
 
@@ -143,6 +150,14 @@ def test_msubs():
     expr = cos(x + y)*tan(x + y) + b*x.diff()
     sd = {x: 0, y: pi/2, x.diff(): 1}
     assert msubs(expr, sd, smart=True) == b + 1
+    N = ReferenceFrame('N')
+    v = x*N.x + y*N.y
+    d = x*(N.x|N.x) + y*(N.y|N.y)
+    v_sol = 1*N.y
+    d_sol = 1*(N.y|N.y)
+    sd = {x: 0, y: 1}
+    assert msubs(v, sd) == v_sol
+    assert msubs(d, sd) == d_sol
 
 
 def test_find_dynamicsymbols():
@@ -151,9 +166,35 @@ def test_find_dynamicsymbols():
     expr = Matrix([[a*x + b, x*y.diff() + y],
                    [x.diff().diff(), z + sin(z.diff())]])
     # Test finding all dynamicsymbols
-    sol = set([x, y.diff(), y, x.diff().diff(), z, z.diff()])
+    sol = {x, y.diff(), y, x.diff().diff(), z, z.diff()}
     assert find_dynamicsymbols(expr) == sol
     # Test finding all but those in sym_list
-    exclude = [x, y, z]
-    sol = set([y.diff(), x.diff().diff(), z.diff()])
-    assert find_dynamicsymbols(expr, exclude) == sol
+    exclude_list = [x, y, z]
+    sol = {y.diff(), x.diff().diff(), z.diff()}
+    assert find_dynamicsymbols(expr, exclude=exclude_list) == sol
+    # Test finding all dynamicsymbols in a vector with a given reference frame
+    d, e, f = dynamicsymbols('d, e, f')
+    A = ReferenceFrame('A')
+    v = d * A.x + e * A.y + f * A.z
+    sol = {d, e, f}
+    assert find_dynamicsymbols(v, reference_frame=A) == sol
+    # Test if a ValueError is raised on supplying only a vector as input
+    raises(ValueError, lambda: find_dynamicsymbols(v))
+
+def test_gravity():
+    N = ReferenceFrame('N')
+    m, M, g = symbols('m M g')
+    F1, F2 = dynamicsymbols('F1 F2')
+    po = Point('po')
+    pa = Particle('pa', po, m)
+    A = ReferenceFrame('A')
+    P = Point('P')
+    I = outer(A.x, A.x)
+    B = RigidBody('B', P, A, M, (I, P))
+    forceList = [(po, F1), (P, F2)]
+    forceList.extend(gravity(g*N.y, pa, B))
+    l = [(po, F1), (P, F2), (po, g*m*N.y), (P, g*M*N.y)]
+
+    for i in range(len(l)):
+        for j in range(len(l[i])):
+            assert forceList[i][j] == l[i][j]

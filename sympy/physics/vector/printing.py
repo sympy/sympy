@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Derivative
-from sympy.core.compatibility import u
-from sympy.core.function import UndefinedFunction
+from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing
 from sympy.printing.conventions import split_super_sub
@@ -51,7 +50,8 @@ class VectorLatexPrinter(LatexPrinter):
         func = expr.func.__name__
         t = dynamicsymbols._t
 
-        if hasattr(self, '_print_' + func):
+        if hasattr(self, '_print_' + func) and \
+            not isinstance(type(expr), UndefinedFunction):
             return getattr(self, '_print_' + func)(expr, exp)
         elif isinstance(type(expr), UndefinedFunction) and (expr.args == (t,)):
 
@@ -121,10 +121,10 @@ class VectorLatexPrinter(LatexPrinter):
 
     def _print_Derivative(self, der_expr):
         from sympy.physics.vector.functions import dynamicsymbols
-        # make sure it is an the right form
+        # make sure it is in the right form
         der_expr = der_expr.doit()
         if not isinstance(der_expr, Derivative):
-            return self.doprint(der_expr)
+            return r"\left(%s\right)" % self.doprint(der_expr)
 
         # check if expr is a dynamicsymbol
         from sympy.core.function import AppliedUndef
@@ -132,7 +132,7 @@ class VectorLatexPrinter(LatexPrinter):
         expr = der_expr.expr
         red = expr.atoms(AppliedUndef)
         syms = der_expr.variables
-        test1 = not all([True for i in red if i.free_symbols == set([t])])
+        test1 = not all([True for i in red if i.free_symbols == {t}])
         test2 = not all([(t == i) for i in syms])
         if test1 or test2:
             return LatexPrinter().doprint(der_expr)
@@ -182,11 +182,11 @@ class VectorPrettyPrinter(PrettyPrinter):
         if len(pform.picture) > 1:
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
-        dots = {0 : u(""),
-                1 : u("\N{COMBINING DOT ABOVE}"),
-                2 : u("\N{COMBINING DIAERESIS}"),
-                3 : u("\N{COMBINING THREE DOTS ABOVE}"),
-                4 : u("\N{COMBINING FOUR DOTS ABOVE}")}
+        dots = {0 : u"",
+                1 : u"\N{COMBINING DOT ABOVE}",
+                2 : u"\N{COMBINING DIAERESIS}",
+                3 : u"\N{COMBINING THREE DOTS ABOVE}",
+                4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
         pic = d['picture'][0]

@@ -1,5 +1,5 @@
 from sympy import (
-    Symbol, diff, Derivative, Rational, roots, S, sqrt, hyper,
+    Symbol, Dummy, diff, Derivative, Rational, roots, S, sqrt, hyper,
     cos, gamma, conjugate, factorial, pi, oo, zoo, binomial, RisingFactorial,
     legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
     laguerre, assoc_laguerre, laguerre_poly, hermite, gegenbauer, jacobi, jacobi_normalized)
@@ -52,6 +52,9 @@ def test_jacobi():
            (jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)
                                     /((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1))))
 
+    raises(ValueError, lambda: jacobi(-2.1, a, b, x))
+    raises(ValueError, lambda: jacobi(Dummy(positive=True, integer=True), 1, 2, oo))
+
 
 def test_gegenbauer():
     n = Symbol("n")
@@ -88,7 +91,6 @@ def test_gegenbauer():
 
 
 def test_legendre():
-    raises(ValueError, lambda: legendre(-1, x))
     assert legendre(0, x) == 1
     assert legendre(1, x) == x
     assert legendre(2, x) == ((3*x**2 - 1)/2).expand()
@@ -103,6 +105,10 @@ def test_legendre():
     assert legendre(11, 1) == 1
     assert legendre(10, 0) != 0
     assert legendre(11, 0) == 0
+
+    assert legendre(-1, x) == 1
+    k = Symbol('k')
+    assert legendre(5 - k, x).subs(k, 2) == ((5*x**3 - 3*x)/2).expand()
 
     assert roots(legendre(4, x), x) == {
         sqrt(Rational(3, 7) - Rational(2, 35)*sqrt(30)): 1,
@@ -157,15 +163,12 @@ def test_assoc_legendre():
 
     assert Plm(n, 0, x) == legendre(n, x)
 
-    raises(ValueError, lambda: Plm(-1, 0, x))
-    raises(ValueError, lambda: Plm(0, 1, x))
-
     assert conjugate(assoc_legendre(n, m, x)) == \
         assoc_legendre(n, conjugate(m), conjugate(x))
+    raises(ValueError, lambda: Plm(0, 1, x))
 
 
 def test_chebyshev():
-
     assert chebyshevt(0, x) == 1
     assert chebyshevt(1, x) == x
     assert chebyshevt(2, x) == 2*x**2 - 1
@@ -239,6 +242,9 @@ def test_laguerre():
     assert laguerre(2, x) == x**2/2 - 2*x + 1
     assert laguerre(3, x) == -x**3/6 + 3*x**2/2 - 3*x + 1
 
+    X = laguerre(Rational(5,2), x)
+    assert isinstance(X, laguerre)
+
     X = laguerre(n, x)
     assert isinstance(X, laguerre)
 
@@ -247,6 +253,8 @@ def test_laguerre():
     assert conjugate(laguerre(n, x)) == laguerre(n, conjugate(x))
 
     assert diff(laguerre(n, x), x) == -assoc_laguerre(n - 1, 1, x)
+
+    raises(ValueError, lambda: laguerre(-2.1, x))
 
 
 def test_assoc_laguerre():
@@ -278,6 +286,8 @@ def test_assoc_laguerre():
 
     assert conjugate(assoc_laguerre(n, alpha, x)) == \
         assoc_laguerre(n, conjugate(alpha), conjugate(x))
+
+    raises(ValueError, lambda: assoc_laguerre(-2.1, alpha, x))
 
 
 @XFAIL

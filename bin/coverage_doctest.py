@@ -144,11 +144,11 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
                     print('  * ' + md)
             if c_idt:
                 # Use "# indirect doctest" in the docstring to
-                # supress this warning.
+                # suppress this warning.
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
                 for md in c_idt:
                     print('  * ' + md)
-                print('\n    Use \"# indirect doctest\" in the docstring to supress this warning')
+                print('\n    Use \"# indirect doctest\" in the docstring to suppress this warning')
             if c_sph:
                 print_header('Not imported into Sphinx', '-', not no_color and small_header_color)
                 for md in c_sph:
@@ -170,7 +170,7 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
                 for md in f_idt:
                     print('  * ' + md)
-                print('\n    Use \"# indirect doctest\" in the docstring to supress this warning')
+                print('\n    Use \"# indirect doctest\" in the docstring to suppress this warning')
             if f_sph:
                 print_header('Not imported into Sphinx', '-', not no_color and small_header_color)
                 for md in f_sph:
@@ -229,7 +229,7 @@ def _get_arg_list(name, fobj):
         arg_list.append(argspec.keywords)
 
     # Truncate long arguments
-    arg_list = map(lambda x: x[:trunc], arg_list)
+    arg_list = [x[:trunc] for x in arg_list]
 
     # Construct the parameter string (enclosed in brackets)
     str_param = "%s(%s)" % (name, ', '.join(arg_list))
@@ -396,7 +396,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
     contained. It then goes through each of the classes/functions to get
     the docstring and doctest coverage of the module. """
 
-    # Import the package and find membmers
+    # Import the package and find members
     m = None
     try:
         __import__(module_path)

@@ -43,7 +43,7 @@ def _cycle_permute(l):
     indices.append(len(l) + indices[0])
 
     # create sublist of items with first item as min_item and last_item
-    # in each of the sublist is item just before the next occurence of
+    # in each of the sublist is item just before the next occurrence of
     # minitem in the cycle formed.
     sublist = [[le[indices[i]:indices[i + 1]]] for i in
                range(len(indices) - 1)]
@@ -186,7 +186,7 @@ class Tr(Expr):
         pos : integer, if positive, shift-right, else shift-left
 
         Examples
-        =========
+        ========
 
         >>> from sympy.core.trace import Tr
         >>> from sympy import symbols

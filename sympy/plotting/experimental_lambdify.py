@@ -76,7 +76,7 @@ from sympy.utilities.iterables import numbered_symbols
 from sympy.external import import_module
 import warnings
 
-#TODO debuging output
+#TODO debugging output
 
 
 class vectorized_lambdify(object):
@@ -130,7 +130,7 @@ class vectorized_lambdify(object):
                       or 'negative dimensions are not allowed' in str(e)  # XXX
                       or 'sequence too large; must be smaller than 32' in str(e)))):  # XXX
                 # Almost all functions were translated to numpy, but some were
-                # left as sympy functions. They recieved an ndarray as an
+                # left as sympy functions. They received an ndarray as an
                 # argument and failed.
                 #   sin(ndarray(...)) raises "unhashable type"
                 #   Integral(x, (x, 0, ndarray(...))) raises "Invalid limits"
@@ -201,7 +201,7 @@ class lambdify(object):
             # hence it is not possible to specify all the exceptions that
             # are to be caught. Presently there are no cases for which the code
             # reaches this block other than ZeroDivisionError and complex
-            # comparision. Also the exception is caught only once. If the
+            # comparison. Also the exception is caught only once. If the
             # exception repeats itself,
             # then it is not caught and the corresponding error is raised.
             # XXX: Remove catching all exceptions once the plotting module
@@ -210,6 +210,9 @@ class lambdify(object):
                 return None
             elif isinstance(e, TypeError) and ('no ordering relation is'
                                                ' defined for complex numbers'
+                                               in str(e) or 'unorderable '
+                                               'types' in str(e) or "not "
+                                               "supported between instances of"
                                                in str(e)):
                 self.lambda_func = experimental_lambdify(self.args, self.expr,
                                                          use_evalf=True,
@@ -237,7 +240,7 @@ class lambdify(object):
 
 def experimental_lambdify(*args, **kwargs):
     l = Lambdifier(*args, **kwargs)
-    return l.lambda_func
+    return l
 
 
 class Lambdifier(object):
@@ -270,6 +273,9 @@ class Lambdifier(object):
         self.dict_str = self.get_dict_str()
         self.dict_fun = self.get_dict_fun()
         exprstr = str(expr)
+        # the & and | operators don't work on tuples, see discussion #12108
+        exprstr = exprstr.replace(" & "," and ").replace(" | "," or ")
+
         newexpr = self.tree2str_translate(self.str2tree(exprstr))
 
         # Constructing the namespaces
@@ -281,6 +287,7 @@ class Lambdifier(object):
         # and sympy_expression_namespace can not catch it.
         from sympy import sqrt
         namespace.update({'sqrt': sqrt})
+        namespace.update({'Eq': lambda x, y: x == y})
         # End workaround.
         if use_python_math:
             namespace.update({'math': __import__('math')})
@@ -301,8 +308,13 @@ class Lambdifier(object):
         if self.print_lambda:
             print(newexpr)
         eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
+        self.eval_str = eval_str
         exec_("from __future__ import division; MYNEWLAMBDA = %s" % eval_str, namespace)
         self.lambda_func = namespace['MYNEWLAMBDA']
+
+    def __call__(self, *args, **kwargs):
+        return self.lambda_func(*args, **kwargs)
+
 
     ##############################################################################
     # Dicts for translating from sympy to other modules
@@ -320,7 +332,7 @@ class Lambdifier(object):
     # Strings that should be translated
     builtin_not_functions = {
         'I': '1j',
-        'oo': '1e400',
+#        'oo': '1e400',
     }
 
     ###
@@ -487,7 +499,9 @@ class Lambdifier(object):
         Other expressions are (head_string, mid_tree, tail_str).
         Expressions that do not contain functions are directly returned.
 
-        Examples:
+        Examples
+        ========
+
         >>> from sympy.abc import x, y, z
         >>> from sympy import Integral, sin
         >>> from sympy.plotting.experimental_lambdify import Lambdifier
@@ -528,7 +542,9 @@ class Lambdifier(object):
     def tree2str(cls, tree):
         """Converts a tree to string without translations.
 
-        Examples:
+        Examples
+        ========
+
         >>> from sympy.abc import x, y, z
         >>> from sympy import Integral, sin
         >>> from sympy.plotting.experimental_lambdify import Lambdifier
@@ -581,7 +597,17 @@ class Lambdifier(object):
                 template = 'float(%s)' % template
             elif self.complex_wrap_evalf:
                 template = 'complex(%s)' % template
-            return template % (func_name, self.tree2str(argtree))
+
+            # Wrapping should only happen on the outermost expression, which
+            # is the only thing we know will be a number.
+            float_wrap_evalf = self.float_wrap_evalf
+            complex_wrap_evalf = self.complex_wrap_evalf
+            self.float_wrap_evalf = False
+            self.complex_wrap_evalf = False
+            ret =  template % (func_name, self.tree2str_translate(argtree))
+            self.float_wrap_evalf = float_wrap_evalf
+            self.complex_wrap_evalf = complex_wrap_evalf
+            return ret
 
     ##############################################################################
     # The namespace constructors
@@ -591,7 +617,7 @@ class Lambdifier(object):
     def sympy_expression_namespace(cls, expr):
         """Traverses the (func, args) tree of an expression and creates a sympy
         namespace. All other modules are imported only as a module name. That way
-        the namespace is not poluted and rests quite small. It probably causes much
+        the namespace is not polluted and rests quite small. It probably causes much
         more variable lookups and so it takes more time, but there are no tests on
         that for the moment."""
         if expr is None:

@@ -1,9 +1,9 @@
 from sympy import (
-    Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
+    Abs, adjoint, arg, atan, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
-    Interval, comp
-)
+    Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
+    ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda)
 from sympy.utilities.pytest import XFAIL, raises
 
 
@@ -69,8 +69,8 @@ def test_re():
     assert re((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
 
-    assert re(x).rewrite(im) == x - im(x)
-    assert (x + re(y)).rewrite(re, im) == x + y - im(y)
+    assert re(x).rewrite(im) == x - S.ImaginaryUnit*im(x)
+    assert (x + re(y)).rewrite(re, im) == x + y - S.ImaginaryUnit*im(y)
 
     a = Symbol('a', algebraic=True)
     t = Symbol('t', transcendental=True)
@@ -78,6 +78,34 @@ def test_re():
     assert re(a).is_algebraic
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
+
+    assert re(S.ComplexInfinity) == S.NaN
+
+    n, m, l = symbols('n m l')
+    A = MatrixSymbol('A',n,m)
+    assert re(A) == (S(1)/2) * (A + conjugate(A))
+
+    A = Matrix([[1 + 4*I,2],[0, -3*I]])
+    assert re(A) == Matrix([[1, 2],[0, 0]])
+
+    A = ImmutableMatrix([[1 + 3*I, 3-2*I],[0, 2*I]])
+    assert re(A) == ImmutableMatrix([[1, 3],[0, 0]])
+
+    X = SparseMatrix([[2*j + i*I for i in range(5)] for j in range(5)])
+    assert re(X) - Matrix([[0, 0, 0, 0, 0],
+                           [2, 2, 2, 2, 2],
+                           [4, 4, 4, 4, 4],
+                           [6, 6, 6, 6, 6],
+                           [8, 8, 8, 8, 8]]) == Matrix.zeros(5)
+
+    assert im(X) - Matrix([[0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4]]) == Matrix.zeros(5)
+
+    X = FunctionMatrix(3, 3, Lambda((n, m), n + m*I))
+    assert re(X) == Matrix([[0, 0, 0], [1, 1, 1], [2, 2, 2]])
 
 
 def test_im():
@@ -138,8 +166,8 @@ def test_im():
     assert im((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
 
-    assert im(x).rewrite(re) == x - re(x)
-    assert (x + im(y)).rewrite(im, re) == x + y - re(y)
+    assert im(x).rewrite(re) == -S.ImaginaryUnit * (x - re(x))
+    assert (x + im(y)).rewrite(im, re) == x - S.ImaginaryUnit * (y - re(y))
 
     a = Symbol('a', algebraic=True)
     t = Symbol('t', transcendental=True)
@@ -148,6 +176,26 @@ def test_im():
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
 
+    assert im(S.ComplexInfinity) == S.NaN
+
+    n, m, l = symbols('n m l')
+    A = MatrixSymbol('A',n,m)
+
+    assert im(A) == (S(1)/(2*I)) * (A - conjugate(A))
+
+    A = Matrix([[1 + 4*I, 2],[0, -3*I]])
+    assert im(A) == Matrix([[4, 0],[0, -3]])
+
+    A = ImmutableMatrix([[1 + 3*I, 3-2*I],[0, 2*I]])
+    assert im(A) == ImmutableMatrix([[3, -2],[0, 2]])
+
+    X = ImmutableSparseMatrix(
+            [[i*I + i for i in range(5)] for i in range(5)])
+    Y = SparseMatrix([[i for i in range(5)] for i in range(5)])
+    assert im(X).as_immutable() == Y
+
+    X = FunctionMatrix(3, 3, Lambda((n, m), n + m*I))
+    assert im(X) == Matrix([[0, 1, 2], [0, 1, 2], [0, 1, 2]])
 
 def test_sign():
     assert sign(1.2) == 1
@@ -202,9 +250,9 @@ def test_sign():
     assert conjugate(sign(x)) == sign(x)
 
     x = Symbol('x', nonzero=True)
-    assert sign(x).is_imaginary is None
-    assert sign(x).is_integer is None
-    assert sign(x).is_real is None
+    assert sign(x).is_imaginary is False
+    assert sign(x).is_integer is True
+    assert sign(x).is_real is True
     assert sign(x).is_zero is False
     assert sign(x).doit() == x / Abs(x)
     assert sign(Abs(x)) == 1
@@ -292,6 +340,9 @@ def test_as_real_imag():
     i = symbols('i', imaginary=True)
     assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
+    assert ((1 + I)/(1 - I)).as_real_imag() == (0, 1)
+    assert ((1 + I)**3/(1 - I)).as_real_imag() == (-2, 0)
+
 
 @XFAIL
 def test_sign_issue_3068():
@@ -300,7 +351,7 @@ def test_sign_issue_3068():
     assert (n - i).round() == 1  # doesn't hang
     assert sign(n - i) == 1
     # perhaps it's not possible to get the sign right when
-    # only 1 digit is being requested for this situtation;
+    # only 1 digit is being requested for this situation;
     # 2 digits works
     assert (n - x).n(1, subs={x: i}) > 0
     assert (n - x).n(2, subs={x: i}) > 0
@@ -318,6 +369,7 @@ def test_Abs():
     assert Abs(I) == 1
     assert Abs(-I) == 1
     assert Abs(nan) == nan
+    assert Abs(zoo) == oo
     assert Abs(I * pi) == pi
     assert Abs(-I * pi) == pi
     assert Abs(I * x) == Abs(x)
@@ -327,6 +379,7 @@ def test_Abs():
     assert Abs(2*pi*x*y) == 2*pi*Abs(x*y)
     assert Abs(conjugate(x)) == Abs(x)
     assert conjugate(Abs(x)) == Abs(x)
+    assert Abs(x).expand(complex=True) == sqrt(re(x)**2 + im(x)**2)
 
     a = Symbol('a', positive=True)
     assert Abs(2*pi*x*a) == 2*pi*a*Abs(x)
@@ -346,6 +399,12 @@ def test_Abs():
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
     assert Abs(x)**-3 == Abs(x)/(x**4)
     assert Abs(x**3) == x**2*Abs(x)
+    assert Abs(I**I) == exp(-pi/2)
+    assert Abs((4 + 5*I)**(6 + 7*I)) == 68921*exp(-7*atan(S(5)/4))
+    y = Symbol('y', real=True)
+    assert Abs(I**y) == 1
+    y = Symbol('y')
+    assert Abs(I**y) == exp(-pi*im(y)/2)
 
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)
@@ -470,6 +529,9 @@ def test_arg():
     assert arg(1 + I) == pi/4
     assert arg(-1 + I) == 3*pi/4
     assert arg(1 - I) == -pi/4
+    assert arg(exp_polar(4*pi*I)) == 4*pi
+    assert arg(exp_polar(-7*pi*I)) == -7*pi
+    assert arg(exp_polar(5 - 3*pi*I/4)) == -3*pi/4
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 
@@ -497,6 +559,11 @@ def test_arg():
     # keep it simple -- let the user do more advanced cancellation
     e = (p + 1) + I*(p**2 - 1)
     assert arg(e).args[0] == e
+
+    f = Function('f')
+    e = 2*x*(f(0) - 1) - 2*x*f(0)
+    assert arg(e) == arg(-2*x)
+    assert arg(f(0)).func == arg and arg(f(0)).args == (f(0),)
 
 
 def test_arg_rewrite():
@@ -604,6 +671,86 @@ def test_transpose():
     assert transpose(-x) == -transpose(x)
 
 
+def test_polarify():
+    from sympy import polar_lift, polarify
+    x = Symbol('x')
+    z = Symbol('z', polar=True)
+    f = Function('f')
+    ES = {}
+
+    assert polarify(-1) == (polar_lift(-1), ES)
+    assert polarify(1 + I) == (polar_lift(1 + I), ES)
+
+    assert polarify(exp(x), subs=False) == exp(x)
+    assert polarify(1 + x, subs=False) == 1 + x
+    assert polarify(f(I) + x, subs=False) == f(polar_lift(I)) + x
+
+    assert polarify(x, lift=True) == polar_lift(x)
+    assert polarify(z, lift=True) == z
+    assert polarify(f(x), lift=True) == f(polar_lift(x))
+    assert polarify(1 + x, lift=True) == polar_lift(1 + x)
+    assert polarify(1 + f(x), lift=True) == polar_lift(1 + f(polar_lift(x)))
+
+    newex, subs = polarify(f(x) + z)
+    assert newex.subs(subs) == f(x) + z
+
+    mu = Symbol("mu")
+    sigma = Symbol("sigma", positive=True)
+
+    # Make sure polarify(lift=True) doesn't try to lift the integration
+    # variable
+    assert polarify(
+        Integral(sqrt(2)*x*exp(-(-mu + x)**2/(2*sigma**2))/(2*sqrt(pi)*sigma),
+        (x, -oo, oo)), lift=True) == Integral(sqrt(2)*(sigma*exp_polar(0))**exp_polar(I*pi)*
+        exp((sigma*exp_polar(0))**(2*exp_polar(I*pi))*exp_polar(I*pi)*polar_lift(-mu + x)**
+        (2*exp_polar(0))/2)*exp_polar(0)*polar_lift(x)/(2*sqrt(pi)), (x, -oo, oo))
+
+
+def test_unpolarify():
+    from sympy import (exp_polar, polar_lift, exp, unpolarify,
+                       principal_branch)
+    from sympy import gamma, erf, sin, tanh, uppergamma, Eq, Ne
+    from sympy.abc import x
+    p = exp_polar(7*I) + 1
+    u = exp(7*I) + 1
+
+    assert unpolarify(1) == 1
+    assert unpolarify(p) == u
+    assert unpolarify(p**2) == u**2
+    assert unpolarify(p**x) == p**x
+    assert unpolarify(p*x) == u*x
+    assert unpolarify(p + x) == u + x
+    assert unpolarify(sqrt(sin(p))) == sqrt(sin(u))
+
+    # Test reduction to principal branch 2*pi.
+    t = principal_branch(x, 2*pi)
+    assert unpolarify(t) == x
+    assert unpolarify(sqrt(t)) == sqrt(t)
+
+    # Test exponents_only.
+    assert unpolarify(p**p, exponents_only=True) == p**u
+    assert unpolarify(uppergamma(x, p**p)) == uppergamma(x, p**u)
+
+    # Test functions.
+    assert unpolarify(sin(p)) == sin(u)
+    assert unpolarify(tanh(p)) == tanh(u)
+    assert unpolarify(gamma(p)) == gamma(u)
+    assert unpolarify(erf(p)) == erf(u)
+    assert unpolarify(uppergamma(x, p)) == uppergamma(x, p)
+
+    assert unpolarify(uppergamma(sin(p), sin(p + exp_polar(0)))) == \
+        uppergamma(sin(u), sin(u + 1))
+    assert unpolarify(uppergamma(polar_lift(0), 2*exp_polar(0))) == \
+        uppergamma(0, 2)
+
+    assert unpolarify(Eq(p, 0)) == Eq(u, 0)
+    assert unpolarify(Ne(p, 0)) == Ne(u, 0)
+    assert unpolarify(polar_lift(x) > 0) == (x > 0)
+
+    # Test bools
+    assert unpolarify(True) is True
+
+
 def test_issue_4035():
     x = Symbol('x')
     assert Abs(x).expand(trig=True) == Abs(x)
@@ -637,6 +784,20 @@ def test_derivatives_issue_4757():
     assert Abs(f(y)).diff(y).subs(f(y), 1 + y).doit() == -y/sqrt(1 - y**2)
     assert arg(f(y)).diff(y).subs(f(y), I + y**2).doit() == 2*y/(1 + y**4)
 
+
+def test_issue_11413():
+    from sympy import symbols, Matrix, simplify
+    v0 = Symbol('v0')
+    v1 = Symbol('v1')
+    v2 = Symbol('v2')
+    V = Matrix([[v0],[v1],[v2]])
+    U = V.normalized()
+    assert U == Matrix([
+    [v0/sqrt(Abs(v0)**2 + Abs(v1)**2 + Abs(v2)**2)],
+    [v1/sqrt(Abs(v0)**2 + Abs(v1)**2 + Abs(v2)**2)],
+    [v2/sqrt(Abs(v0)**2 + Abs(v1)**2 + Abs(v2)**2)]])
+    U.norm = sqrt(v0**2/(v0**2 + v1**2 + v2**2) + v1**2/(v0**2 + v1**2 + v2**2) + v2**2/(v0**2 + v1**2 + v2**2))
+    assert simplify(U.norm) == 1
 
 def test_periodic_argument():
     from sympy import (periodic_argument, unbranched_argument, oo,
@@ -690,6 +851,9 @@ def test_principal_branch():
     assert principal_branch(exp_polar(3*pi*I)*x, 2*pi) == \
         principal_branch(exp_polar(I*pi)*x, 2*pi)
     assert principal_branch(neg*exp_polar(pi*I), 2*pi) == neg*exp_polar(-I*pi)
+    # related to issue #14692
+    assert principal_branch(exp_polar(-I*pi/2)/polar_lift(neg), 2*pi) == \
+        exp_polar(-I*pi/2)/neg
 
     assert N_equals(principal_branch((1 + I)**2, 2*pi), 2*I)
     assert N_equals(principal_branch((1 + I)**2, 3*pi), 2*I)
@@ -715,3 +879,31 @@ def test_issue_6167_6151():
     assert sign(simplify(e)) == 1
     for xi in (111, 11, 1, S(1)/10):
         assert sign(e.subs(x, xi)) == 1
+
+
+def test_issue_14216():
+    from sympy.functions.elementary.complexes import unpolarify
+    A = MatrixSymbol("A", 2, 2)
+    assert unpolarify(A[0, 0]) == A[0, 0]
+    assert unpolarify(A[0, 0]*A[1, 0]) == A[0, 0]*A[1, 0]
+
+
+def test_issue_14238():
+    # doesn't cause recursion error
+    r = Symbol('r', real=True)
+    assert Abs(r + Piecewise((0, r > 0), (1 - r, True)))
+
+def test_zero_assumptions():
+    nr = Symbol('nonreal', real=False)
+    ni = Symbol('nonimaginary', imaginary=False)
+    # imaginary implies not zero
+    nzni = Symbol('nonzerononimaginary', zero=False, imaginary=False)
+
+    assert re(nr).is_zero is None
+    assert im(nr).is_zero is False
+
+    assert re(ni).is_zero is None
+    assert im(ni).is_zero is None
+
+    assert re(nzni).is_zero is False
+    assert im(nzni).is_zero is None

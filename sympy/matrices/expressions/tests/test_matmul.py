@@ -6,7 +6,7 @@ from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
-from sympy import refine, Q
+from sympy import refine, Q, Symbol
 
 n, m, l, k = symbols('n m l k', integer=True)
 A = MatrixSymbol('A', n, m)
@@ -25,7 +25,7 @@ def test_adjoint():
     MA = Matrix(2, 2, [1, 3, 2 - I, 4])
     assert adjoint(M) == MA
     assert adjoint(2*M) == 2*MA
-    assert adjoint(MatMul(2, M)) == MatMul(2, MA)
+    assert adjoint(MatMul(2, M)) == MatMul(2, MA).doit()
 
 
 def test_transpose():
@@ -37,7 +37,7 @@ def test_transpose():
     MT = Matrix(2, 2, [1, 3, 2 + I, 4])
     assert transpose(M) == MT
     assert transpose(2*M) == 2*MT
-    assert transpose(MatMul(2, M)) == MatMul(2, MT)
+    assert transpose(MatMul(2, M)) == MatMul(2, MT).doit()
 
 
 def test_factor_in_front():
@@ -99,6 +99,12 @@ def test_doit_deep_false_still_canonical():
             (2, C, Transpose(D*C)))
 
 
+def test_matmul_scalar_Matrix_doit():
+    # Issue 9053
+    X = Matrix([[1, 2], [3, 4]])
+    assert MatMul(2, X).doit() == 2*X
+
+
 def test_matmul_sympify():
     assert isinstance(MatMul(eye(1), eye(1)).args[0], Basic)
 
@@ -111,3 +117,21 @@ def test_collapse_MatrixBase():
 
 def test_refine():
     assert refine(C*C.T*D, Q.orthogonal(C)).doit() == D
+
+    kC = k*C
+    assert refine(kC*C.T, Q.orthogonal(C)).doit() == k*Identity(n)
+    assert refine(kC* kC.T, Q.orthogonal(C)).doit() == (k**2)*Identity(n)
+
+def test_matmul_no_matrices():
+    assert MatMul(1) == 1
+    assert MatMul(n, m) == n*m
+    assert not isinstance(MatMul(n, m), MatMul)
+
+def test_matmul_args_cnc():
+    a, b = symbols('a b', commutative=False)
+    assert MatMul(n, a, b, A, A.T).args_cnc() == ([n], [a, b, A, A.T])
+    assert MatMul(A, A.T).args_cnc() == ([1], [A, A.T])
+
+def test_issue_12950():
+    M = Matrix([[Symbol("x")]]) * MatrixSymbol("A", 1, 1)
+    assert MatrixSymbol("A", 1, 1).as_explicit()[0]*Symbol('x') == M.as_explicit()[0]

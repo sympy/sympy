@@ -5,6 +5,8 @@
 Welcome to SymPy's documentation!
 =================================
 
+A PDF version of these docs can be found `here <https://github.com/sympy/sympy/releases>`_.
+
 `SymPy <http://sympy.org>`_ is a Python library for symbolic mathematics.
 If you are new to SymPy, start with the :ref:`Tutorial <tutorial>`.
 
@@ -21,8 +23,9 @@ Contents:
    gotchas.rst
    guide.rst
    modules/index.rst
+   special_topics/index.rst
    python-comparisons.rst
    wiki.rst
    outreach.rst
    aboutus.rst
-   special_topics/index.rst
+   citing.rst

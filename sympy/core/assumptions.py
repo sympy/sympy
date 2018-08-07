@@ -66,8 +66,10 @@ Here follows a list of possible assumption names:
         divisor other than ``1`` or the number itself.  See [4]_.
 
     zero
+        object has the value of ``0``.
+
     nonzero
-        object is zero (not zero).
+        object is a real number that is not zero.
 
     rational
         object can have only values from the set
@@ -86,13 +88,13 @@ Here follows a list of possible assumption names:
 
     finite
     infinite
-        object absolute value is bounded (is value is
-        arbitrarily large).  See [7]_, [8]_, [9]_.
+        object absolute value is bounded (arbitrarily large).
+        See [7]_, [8]_, [9]_.
 
     negative
     nonnegative
-        object can have only negative (only
-        nonnegative) values [1]_.
+        object can have only negative (nonnegative)
+        values [1]_.
 
     positive
     nonpositive
@@ -108,7 +110,7 @@ Examples
 ========
 
     >>> from sympy import Symbol
-    >>> x = Symbol('x', real = True); x
+    >>> x = Symbol('x', real=True); x
     x
     >>> x.is_real
     True
@@ -152,7 +154,8 @@ from __future__ import print_function, division
 
 from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta
-from sympy.core.compatibility import integer_types, with_metaclass
+from sympy.core.compatibility import integer_types
+
 
 from random import shuffle
 
@@ -186,6 +189,7 @@ _assume_rules = FactRules([
 
     'prime          ->  integer & positive',
     'composite      ->  integer & positive & !prime',
+    '!composite     ->  !positive | !even | prime',
 
     'irrational     ==  real & !rational',
 
@@ -193,7 +197,7 @@ _assume_rules = FactRules([
 
     'infinite       ->  !finite',
     'noninteger     ==  real & !integer',
-    'nonzero        ==  !zero',
+    'nonzero        ==  real & !zero',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
@@ -211,7 +215,7 @@ class StdFactKB(FactKB):
     def __init__(self, facts=None):
         # save a copy of the facts dict
         if not facts:
-            self._generator = {};
+            self._generator = {}
         elif not isinstance(facts, FactKB):
             self._generator = facts.copy()
         else:
@@ -307,7 +311,7 @@ def _ask(fact, obj):
     return None
 
 
-class ManagedProperties(with_metaclass(BasicMeta, BasicMeta)):
+class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)

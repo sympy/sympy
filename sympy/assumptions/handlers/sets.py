@@ -17,6 +17,10 @@ class AskIntegerHandler(CommonHandler):
     """
 
     @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_integer
+
+    @staticmethod
     def _number(expr, assumptions):
         # helper method
         try:
@@ -70,18 +74,14 @@ class AskIntegerHandler(CommonHandler):
 
     int, Integer = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
-    Pi, Exp1, GoldenRatio, Infinity, NegativeInfinity, ImaginaryUnit = \
-        [staticmethod(CommonHandler.AlwaysFalse)]*6
+    Pi, Exp1, GoldenRatio, TribonacciConstant, Infinity, NegativeInfinity, ImaginaryUnit = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*7
 
     @staticmethod
     def Rational(expr, assumptions):
         # rationals with denominator one get
         # evaluated to Integers
         return False
-
-    @staticmethod
-    def Float(expr, assumptions):
-        return int(expr) == expr
 
     @staticmethod
     def Abs(expr, assumptions):
@@ -99,6 +99,11 @@ class AskRationalHandler(CommonHandler):
     Handler for Q.rational
     Test that an expression belongs to the field of rational numbers
     """
+
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_rational
 
     @staticmethod
     def Add(expr, assumptions):
@@ -127,11 +132,13 @@ class AskRationalHandler(CommonHandler):
             if ask(Q.prime(expr.base), assumptions):
                 return False
 
-    Rational, Float = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*2 # Float is finite-precision
 
-    ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio = \
-        [staticmethod(CommonHandler.AlwaysFalse)]*6
+    Rational = staticmethod(CommonHandler.AlwaysTrue)
+
+    Float = staticmethod(CommonHandler.AlwaysNone)
+
+    ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio, TribonacciConstant = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*7
 
     @staticmethod
     def exp(expr, assumptions):
@@ -157,6 +164,11 @@ class AskRationalHandler(CommonHandler):
 
 class AskIrrationalHandler(CommonHandler):
 
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_irrational
+
     @staticmethod
     def Basic(expr, assumptions):
         _real = ask(Q.real(expr), assumptions)
@@ -174,6 +186,10 @@ class AskRealHandler(CommonHandler):
     Handler for Q.real
     Test that an expression belongs to the field of real numbers
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_real
 
     @staticmethod
     def _number(expr, assumptions):
@@ -270,8 +286,8 @@ class AskRealHandler(CommonHandler):
                 elif ask(Q.negative(expr.base), assumptions):
                     return False
 
-    Rational, Float, Pi, Exp1, GoldenRatio, Abs, re, im = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*8
+    Rational, Float, Pi, Exp1, GoldenRatio, TribonacciConstant, Abs, re, im = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*9
 
     ImaginaryUnit, Infinity, NegativeInfinity = \
         [staticmethod(CommonHandler.AlwaysFalse)]*3
@@ -380,6 +396,10 @@ class AskComplexHandler(CommonHandler):
     """
 
     @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_complex
+
+    @staticmethod
     def Add(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex)
 
@@ -403,6 +423,10 @@ class AskImaginaryHandler(CommonHandler):
     Test that an expression belongs to the field of imaginary numbers,
     that is, numbers in the form x*I, where x is real
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_imaginary
 
     @staticmethod
     def _number(expr, assumptions):
@@ -621,8 +645,8 @@ class AskAlgebraicHandler(CommonHandler):
     def Rational(expr, assumptions):
         return expr.q != 0
 
-    Float, GoldenRatio, ImaginaryUnit, AlgebraicNumber = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*4
+    Float, GoldenRatio, TribonacciConstant, ImaginaryUnit, AlgebraicNumber = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*5
 
     Infinity, NegativeInfinity, ComplexInfinity, Pi, Exp1 = \
         [staticmethod(CommonHandler.AlwaysFalse)]*5

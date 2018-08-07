@@ -362,8 +362,8 @@ def bin_to_gray(bin_list):
     gray_to_bin
     """
     b = [bin_list[0]]
-    for i in range(0, len(bin_list) - 1):
-        b += str(int(bin_list[i]) ^ int(b[i - 1]))
+    for i in range(1, len(bin_list)):
+        b += str(int(bin_list[i]) ^ int(bin_list[i - 1]))
     return ''.join(b)
 
 
@@ -375,9 +375,9 @@ def get_subset_from_bitstring(super_set, bitstring):
     ========
 
     >>> from sympy.combinatorics.graycode import get_subset_from_bitstring
-    >>> get_subset_from_bitstring(['a','b','c','d'], '0011')
+    >>> get_subset_from_bitstring(['a', 'b', 'c', 'd'], '0011')
     ['c', 'd']
-    >>> get_subset_from_bitstring(['c','a','c','c'], '1100')
+    >>> get_subset_from_bitstring(['c', 'a', 'c', 'c'], '1100')
     ['c', 'a']
 
     See Also
@@ -398,10 +398,10 @@ def graycode_subsets(gray_code_set):
     ========
 
     >>> from sympy.combinatorics.graycode import graycode_subsets
-    >>> list(graycode_subsets(['a','b','c']))
+    >>> list(graycode_subsets(['a', 'b', 'c']))
     [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], \
     ['a', 'c'], ['a']]
-    >>> list(graycode_subsets(['a','b','c','c']))
+    >>> list(graycode_subsets(['a', 'b', 'c', 'c']))
     [[], ['c'], ['c', 'c'], ['c'], ['b', 'c'], ['b', 'c', 'c'], \
     ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], ['a', 'b', 'c', 'c'], \
     ['a', 'b', 'c'], ['a', 'c'], ['a', 'c', 'c'], ['a', 'c'], ['a']]

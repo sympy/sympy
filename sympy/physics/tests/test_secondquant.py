@@ -13,7 +13,8 @@ from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
                    Symbol, symbols)
 
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, slow
+from sympy.printing.latex import latex
 
 
 def test_PermutationOperator():
@@ -90,9 +91,10 @@ def test_operator():
 def test_create():
     i, j, n, m = symbols('i,j,n,m')
     o = Bd(i)
+    assert latex(o) == "b^\\dagger_{i}"
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Bd(0)
     assert o.apply_operator(BKet([n])) == sqrt(n + 1)*BKet([n + 1])
     o = Bd(n)
@@ -102,9 +104,10 @@ def test_create():
 def test_annihilate():
     i, j, n, m = symbols('i,j,n,m')
     o = B(i)
+    assert latex(o) == "b_{i}"
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = B(0)
     assert o.apply_operator(BKet([n])) == sqrt(n)*BKet([n - 1])
     o = B(n)
@@ -202,6 +205,7 @@ def test_matrix_elements():
         assert m[i + 1, i] == sqrt(i + 1)
 
 
+@slow
 def test_sho():
     n, m = symbols('n,m')
     h_n = Bd(n)*B(n)*(n + Rational(1, 2))
@@ -234,7 +238,7 @@ def test_commutation():
     c = Commutator(F(m), Fd(m))
     assert c == +1 - 2*NO(Fd(m)*F(m))
     c = Commutator(Fd(m), F(m))
-    assert c == -1 + 2*NO(Fd(m)*F(m))
+    assert c.expand() == -1 + 2*NO(Fd(m)*F(m))
 
     C = Commutator
     X, Y, Z = symbols('X,Y,Z', commutative=False)
@@ -257,7 +261,7 @@ def test_create_f():
     o = Fd(i)
     assert isinstance(o, CreateFermion)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Fd(1)
     assert o.apply_operator(FKet([n])) == FKet([1, n])
     assert o.apply_operator(FKet([n])) == -FKet([n, 1])
@@ -280,7 +284,7 @@ def test_annihilate_f():
     o = F(i)
     assert isinstance(o, AnnihilateFermion)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = F(1)
     assert o.apply_operator(FKet([1, n])) == FKet([n])
     assert o.apply_operator(FKet([n, 1])) == -FKet([n])
@@ -301,7 +305,7 @@ def test_create_b():
     o = Bd(i)
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Bd(0)
     assert o.apply_operator(BKet([n])) == sqrt(n + 1)*BKet([n + 1])
     o = Bd(n)
@@ -313,7 +317,7 @@ def test_annihilate_b():
     o = B(i)
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = B(0)
 
 
@@ -456,6 +460,29 @@ def test_contraction():
     assert restr.is_only_below_fermi
     restr = evaluate_deltas(contraction(F(p), Fd(q)))
     assert restr.is_only_above_fermi
+
+
+def test_evaluate_deltas():
+    i, j, k = symbols('i,j,k')
+
+    r = KroneckerDelta(i, j) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(i, k)
+
+    r = KroneckerDelta(i, 0) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(i, 0) * KroneckerDelta(j, k)
+
+    r = KroneckerDelta(1, j) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(1, k)
+
+    r = KroneckerDelta(j, 2) * KroneckerDelta(k, j)
+    assert evaluate_deltas(r) == KroneckerDelta(2, k)
+
+    r = KroneckerDelta(i, 0) * KroneckerDelta(i, j) * KroneckerDelta(j, 1)
+    assert evaluate_deltas(r) == 0
+
+    r = (KroneckerDelta(0, i) * KroneckerDelta(0, j)
+         * KroneckerDelta(1, j) * KroneckerDelta(1, j))
+    assert evaluate_deltas(r) == 0
 
 
 def test_Tensors():
@@ -1192,3 +1219,18 @@ def test_internal_external_pqrs_AT():
     ]
     for permut in exprs[1:]:
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
+
+def test_canonical_ordering_AntiSymmetricTensor():
+    v = symbols("v")
+    virtual_indices = ('c', 'd')
+    occupied_indices = ('k', 'l')
+
+    c, d = symbols(('c','d'), above_fermi=True,
+                                   cls=Dummy)
+    k, l = symbols(('k','l'), below_fermi=True,
+                                   cls=Dummy)
+
+    # formerly, the left gave either the left or the right
+    assert AntiSymmetricTensor(v, (k, l), (d, c)
+        ) == -AntiSymmetricTensor(v, (l, k), (d, c))

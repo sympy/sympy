@@ -40,7 +40,7 @@ def comb_w_rep(n, k):
 
 
 def vandermonde(order, dim=1, syms='a b c d'):
-    """Comptutes a Vandermonde matrix of given order and dimension.
+    """Computes a Vandermonde matrix of given order and dimension.
 
     Define syms to give beginning strings for temporary variables.
 
@@ -80,7 +80,7 @@ def gen_poly(points, order, syms):
         raise ValueError("Must provide points")
     dim = len(points[0]) - 1
     if dim > len(syms):
-        raise ValueError("Must provide at lease %d symbols for the polynomial" % dim)
+        raise ValueError("Must provide at least %d symbols for the polynomial" % dim)
     V, tmp_syms, terms = vandermonde(order, dim)
     if num_pts < V.shape[0]:
         raise ValueError(
@@ -118,7 +118,7 @@ def main():
     pprint(V)
 
     print('-'*79)
-    print("Computing the determinate and comparing to \sum_{0<i<j<=3}(a_j - a_i)")
+    print("Computing the determinant and comparing to \sum_{0<i<j<=3}(a_j - a_i)")
 
     det_sum = 1
     for j in range(order + 1):

@@ -34,7 +34,7 @@ def test_disc_on_an_incline_plane():
     # To construct the Lagrangian, 'L', of the disc, we determine its kinetic
     # and potential energies, T and U, respectively. L is defined as the
     # difference between T and U.
-    D.set_potential_energy(m * g * (l - y) * sin(alpha))
+    D.potential_energy = m * g * (l - y) * sin(alpha)
     L = Lagrangian(N, D)
 
     # We then create the list of generalized coordinates and constraint
@@ -43,7 +43,7 @@ def test_disc_on_an_incline_plane():
     # supply it the necessary arguments and generate the equations of motion.
     # The'rhs' method solves for the q_double_dots (i.e. the second derivative
     # with respect to time  of the generalized coordinates and the lagrange
-    # multiplers.
+    # multipliers.
     q = [y, theta]
     hol_coneqs = [y - R * theta]
     m = LagrangesMethod(L, q, hol_coneqs=hol_coneqs)
@@ -84,7 +84,7 @@ def test_simp_pen():
     # The 'Particle' which represents the bob is then created and its
     # Lagrangian generated.
     Pa = Particle('Pa', P, m)
-    Pa.set_potential_energy(- m * g * l * cos(q))
+    Pa.potential_energy = - m * g * l * cos(q)
     L = Lagrangian(N, Pa)
 
     # The 'LagrangesMethod' class is invoked to obtain equations of motion.
@@ -158,10 +158,10 @@ def test_dub_pen():
     ParP = Particle('ParP', P, m)
     ParR = Particle('ParR', R, m)
 
-    ParP.set_potential_energy(- m * g * l * cos(q1))
-    ParR.set_potential_energy(- m * g * l * cos(q1) - m * g * l * cos(q2))
+    ParP.potential_energy = - m * g * l * cos(q1)
+    ParR.potential_energy = - m * g * l * cos(q1) - m * g * l * cos(q2)
     L = Lagrangian(N, ParP, ParR)
-    lm = LagrangesMethod(L, [q1, q2])
+    lm = LagrangesMethod(L, [q1, q2], bodies=[ParP, ParR])
     lm.form_lagranges_equations()
 
     assert simplify(l*m*(2*g*sin(q1) + l*sin(q1)*sin(q2)*q2dd
@@ -170,6 +170,7 @@ def test_dub_pen():
     assert simplify(l*m*(g*sin(q2) + l*sin(q1)*sin(q2)*q1dd
         - l*sin(q1)*cos(q2)*q1d**2 + l*sin(q2)*cos(q1)*q1d**2
         + l*cos(q1)*cos(q2)*q1dd + l*q2dd) - lm.eom[1]) == 0
+    assert lm.bodies == [ParP, ParR]
 
 
 def test_rolling_disc():
@@ -207,7 +208,7 @@ def test_rolling_disc():
 
     # Finally we form the equations of motion, using the same steps we did
     # before. Supply the Lagrangian, the generalized speeds.
-    BodyD.set_potential_energy(- m * g * r * cos(q2))
+    BodyD.potential_energy = - m * g * r * cos(q2)
     Lag = Lagrangian(N, BodyD)
     q = [q1, q2, q3]
     q1 = Function('q1')
@@ -215,11 +216,11 @@ def test_rolling_disc():
     q3 = Function('q3')
     l = LagrangesMethod(Lag, q)
     l.form_lagranges_equations()
-    RHS = l.rhs()
+    RHS = l.rhs().as_mutable()
     RHS.simplify()
     t = symbols('t')
 
-    assert (l.mass_matrix[3:6] == [0, 5*m*r**2/4, 0])
+    assert tuple(l.mass_matrix[3:6]) == (0, 5*m*r**2/4, 0)
     assert RHS[4].simplify() == (
         (-8*g*sin(q2(t)) + r*(5*sin(2*q2(t))*Derivative(q1(t), t) +
         12*cos(q2(t))*Derivative(q3(t), t))*Derivative(q1(t), t))/(10*r))

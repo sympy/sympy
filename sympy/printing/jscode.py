@@ -10,8 +10,9 @@ Math object where possible.
 from __future__ import print_function, division
 
 from sympy.core import S
-from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.printing.precedence import precedence
+from sympy.codegen.ast import Assignment
+from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.core.compatibility import string_types, range
 
 
@@ -19,18 +20,26 @@ from sympy.core.compatibility import string_types, range
 # Used in JavascriptCodePrinter._print_Function(self)
 known_functions = {
     'Abs': 'Math.abs',
-    'sin': 'Math.sin',
-    'cos': 'Math.cos',
-    'tan': 'Math.tan',
     'acos': 'Math.acos',
+    'acosh': 'Math.acosh',
     'asin': 'Math.asin',
+    'asinh': 'Math.asinh',
     'atan': 'Math.atan',
     'atan2': 'Math.atan2',
+    'atanh': 'Math.atanh',
     'ceiling': 'Math.ceil',
-    'floor': 'Math.floor',
-    'sign': 'Math.sign',
+    'cos': 'Math.cos',
+    'cosh': 'Math.cosh',
     'exp': 'Math.exp',
+    'floor': 'Math.floor',
     'log': 'Math.log',
+    'Max': 'Math.max',
+    'Min': 'Math.min',
+    'sign': 'Math.sign',
+    'sin': 'Math.sin',
+    'sinh': 'Math.sinh',
+    'tan': 'Math.tan',
+    'tanh': 'Math.tanh',
 }
 
 
@@ -43,7 +52,7 @@ class JavascriptCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 15,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'contract': True
@@ -65,7 +74,7 @@ class JavascriptCodePrinter(CodePrinter):
         return "// {0}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "var {0} = {1};".format(name, value)
+        return "var {0} = {1};".format(name, value.evalf(self._settings['precision']))
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -93,6 +102,8 @@ class JavascriptCodePrinter(CodePrinter):
             return '1/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             return 'Math.sqrt(%s)' % self._print(expr.base)
+        elif expr.exp == S(1)/3:
+            return 'Math.cbrt(%s)' % self._print(expr.base)
         else:
             return 'Math.pow(%s, %s)' % (self._print(expr.base),
                                  self._print(expr.exp))
@@ -159,8 +170,9 @@ class JavascriptCodePrinter(CodePrinter):
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(expr.parent, expr.j +
-                expr.i*expr.parent.shape[1])
+        return "{0}[{1}]".format(self.parenthesize(expr.parent,
+            PRECEDENCE["Atom"], strict=True),
+            expr.j + expr.i*expr.parent.shape[1])
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

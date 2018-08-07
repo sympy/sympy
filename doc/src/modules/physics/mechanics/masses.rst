@@ -224,7 +224,7 @@ the reference frame is created and the kinematics are done. ::
   >> from sympy import symbols
   >> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
   >> from sympy.physics.mechanics import RigidBody, Particle, Point, outer
-  >> from symp.physics.mechanics import linear_momentum, angular_momentum
+  >> from sympy.physics.mechanics import linear_momentum, angular_momentum
   >> m, M, l1 = symbols('m M l1')
   >> q1d = dynamicsymbols('q1d')
   >> N = ReferenceFrame('N')
@@ -244,7 +244,7 @@ system consists of a particle Pa and a RigidBody A. ::
   >> I = outer(N.z, N.z)
   >> A = RigidBody('A', Ac, a, M, (I, Ac))
 
-Then one can either choose to evaluate the the momenta of individual components
+Then one can either choose to evaluate the momenta of individual components
 of the system or of the entire system itself. ::
 
   >> linear_momentum(N,A)
@@ -357,12 +357,12 @@ reference frame when calling the function. In other words the user is not
 limited to determining just inertial kinetic energy.
 
 For potential energies, the user must first specify the potential energy of
-every entity of the system using the :mod:`set_potential_energy` method. The
+every entity of the system using the :mod:`potential_energy` property. The
 potential energy of any number of entities comprising the system can then be
 determined: ::
 
-  >> Pa.set_potential_energy(m * g * h)
-  >> A.set_potential_energy(M * g * H)
+  >> Pa.potential_energy = m * g * h
+  >> A.potential_energy = M * g * H
   >> potential_energy(A, Pa)
   H*M*g + g*h*m
 

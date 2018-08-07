@@ -5,7 +5,12 @@ The dense matrix is stored as a list of lists
 """
 
 from sympy.core.compatibility import range
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+SymPyDeprecationWarning(
+    feature="densetools",
+    issue=12695,
+    deprecated_since_version="1.1").warn()
 
 def trace(matlist, K):
     """

@@ -14,9 +14,9 @@ argument. For example:
 $ bin/coverage_report.py sympy/logic
 
 runs only the tests in sympy/logic/ and reports only on the modules in
-sympy/logic/. You can also get a report on the parts of the whole sympy
-code covered by the tests in sympy/logic/ by following up the previous
-command with
+sympy/logic/. To also run slow tests use --slow option. You can also get a
+report on the parts of the whole sympy code covered by the tests in
+sympy/logic/ by following up the previous command with
 
 
 $ bin/coverage_report.py -c
@@ -60,10 +60,10 @@ def generate_covered_files(top_dir):
                 yield os.path.join(dirpath, filename)
 
 
-def make_report(source_dir, report_dir, use_cache=False):
-    #code adapted from /bin/test
-    bin_dir = os.path.abspath(os.path.dirname(__file__))         # bin/
-    sympy_top = os.path.split(bin_dir)[0]      # ../
+def make_report(source_dir, report_dir, use_cache=False, slow=False):
+    # code adapted from /bin/test
+    bin_dir = os.path.abspath(os.path.dirname(__file__))  # bin/
+    sympy_top = os.path.split(bin_dir)[0]  # ../
     sympy_dir = os.path.join(sympy_top, 'sympy')  # ../sympy/
     if os.path.isdir(sympy_dir):
         sys.path.insert(0, sympy_top)
@@ -80,6 +80,8 @@ def make_report(source_dir, report_dir, use_cache=False):
         cov.start()
         import sympy
         sympy.test(source_dir, subprocess=False)
+        if slow:
+            sympy.test(source_dir, subprocess=False, slow=slow)
         #sympy.doctest()  # coverage doesn't play well with doctests
         cov.stop()
         cov.save()
@@ -99,6 +101,8 @@ if __name__ == '__main__':
                       help='Use cached data.')
     parser.add_option('-d', '--report-dir', default='covhtml',
                       help='Directory to put the generated report in.')
+    parser.add_option("--slow", action="store_true", dest="slow",
+                      default=False, help="Run slow functions also.")
 
     options, args = parser.parse_args()
 

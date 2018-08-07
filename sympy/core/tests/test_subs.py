@@ -1,8 +1,10 @@
 from __future__ import division
-from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
-        abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul,
-        factor, nsimplify, zoo, Subs)
+from sympy import (
+    Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
+    Integer, Eq, symbols, Add, I, Float, log, Rational,
+    Lambda, atan2, cse, cot, tan, S, Tuple, Basic, Dict,
+    Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
+    AccumBounds, Matrix, zeros)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y, z
@@ -18,6 +20,28 @@ def test_subs():
     assert e == 2*x
     e = e.subs(x, n3)
     assert e == Rational(6)
+
+
+def test_subs_Matrix():
+    z = zeros(2)
+    assert (x*y).subs({x:z, y:0}) == z
+    assert (x*y).subs({y:z, x:0}) == 0
+    assert (x*y).subs({y:z, x:0}, simultaneous=True) == z
+    assert (x + y).subs({x: z, y: z}) == z
+
+
+def test_subs_AccumBounds():
+    e = x
+    e = e.subs(x, AccumBounds(1, 3))
+    assert e == AccumBounds(1, 3)
+
+    e = 2*x
+    e = e.subs(x, AccumBounds(1, 3))
+    assert e == AccumBounds(2, 6)
+
+    e = x + x**2
+    e = e.subs(x, AccumBounds(-1, 1))
+    assert e == AccumBounds(-1, 2)
 
 
 def test_trigonometric():
@@ -128,7 +152,7 @@ def test_dict_ambigous():   # see issue 3566
     assert e.subs({x: y, y: 2}) == 5
     # here, there are no obviously clashing keys or values
     # but the results depend on the order
-    assert exp(x/2 + y).subs(dict([(exp(y + 1), 2), (x, 2)])) == exp(y + 1)
+    assert exp(x/2 + y).subs({exp(y + 1): 2, x: 2}) == exp(y + 1)
 
 
 def test_deriv_sub_bug3():
@@ -141,7 +165,6 @@ def test_deriv_sub_bug3():
 
 def test_equality_subs1():
     f = Function('f')
-    x = abc.x
     eq = Eq(f(x)**2, x)
     res = Eq(Integer(16), x)
     assert eq.subs(f(x), 4) == res
@@ -149,7 +172,6 @@ def test_equality_subs1():
 
 def test_equality_subs2():
     f = Function('f')
-    x = abc.x
     eq = Eq(f(x)**2, 16)
     assert bool(eq.subs(f(x), 3)) is False
     assert bool(eq.subs(f(x), 4)) is True
@@ -278,6 +300,8 @@ def test_subs_commutative():
 
 def test_subs_noncommutative():
     w, x, y, z, L = symbols('w x y z L', commutative=False)
+    alpha = symbols('alpha', commutative=True)
+    someint = symbols('someint', commutative=True, integer=True)
 
     assert (x*y).subs(x*y, L) == L
     assert (w*y*x).subs(x*y, L) == w*y*x
@@ -291,6 +315,61 @@ def test_subs_noncommutative():
     assert (x*y**z).subs(z, L) == x*y**L
     assert (w*x*y*z*x*y).subs(x*y*z, L) == w*L*x*y
     assert (w*x*y*y*w*x*x*y*x*y*y*x*y).subs(x*y, L) == w*L*y*w*x*L**2*y*L
+
+    # Check fractional power substitutions. It should not do
+    # substitutions that choose a value for noncommutative log,
+    # or inverses that don't already appear in the expressions.
+    assert (x*x*x).subs(x*x, L) == L*x
+    assert (x*x*x*y*x*x*x*x).subs(x*x, L) == L*x*y*L**2
+    for p in range(1, 5):
+        for k in range(10):
+            assert (y * x**k).subs(x**p, L) == y * L**(k//p) * x**(k % p)
+    assert (x**(3/2)).subs(x**(1/2), L) == x**(3/2)
+    assert (x**(1/2)).subs(x**(1/2), L) == L
+    assert (x**(-1/2)).subs(x**(1/2), L) == x**(-1/2)
+    assert (x**(-1/2)).subs(x**(-1/2), L) == L
+
+    assert (x**(2*someint)).subs(x**someint, L) == L**2
+    assert (x**(2*someint + 3)).subs(x**someint, L) == L**2*x**3
+    assert (x**(3*someint + 3)).subs(x**someint, L) == L**3*x**3
+    assert (x**(3*someint)).subs(x**(2*someint), L) == L * x**someint
+    assert (x**(4*someint)).subs(x**(2*someint), L) == L**2
+    assert (x**(4*someint + 1)).subs(x**(2*someint), L) == L**2 * x
+    assert (x**(4*someint)).subs(x**(3*someint), L) == L * x**someint
+    assert (x**(4*someint + 1)).subs(x**(3*someint), L) == L * x**(someint + 1)
+
+    assert (x**(2*alpha)).subs(x**alpha, L) == x**(2*alpha)
+    assert (x**(2*alpha + 2)).subs(x**2, L) == x**(2*alpha + 2)
+    assert ((2*z)**alpha).subs(z**alpha, y) == (2*z)**alpha
+    assert (x**(2*someint*alpha)).subs(x**someint, L) == x**(2*someint*alpha)
+    assert (x**(2*someint + alpha)).subs(x**someint, L) == x**(2*someint + alpha)
+
+    # This could in principle be substituted, but is not currently
+    # because it requires recognizing that someint**2 is divisible by
+    # someint.
+    assert (x**(someint**2 + 3)).subs(x**someint, L) == x**(someint**2 + 3)
+
+    # alpha**z := exp(log(alpha) z) is usually well-defined
+    assert (4**z).subs(2**z, y) == y**2
+
+    # Negative powers
+    assert (x**(-1)).subs(x**3, L) == x**(-1)
+    assert (x**(-2)).subs(x**3, L) == x**(-2)
+    assert (x**(-3)).subs(x**3, L) == L**(-1)
+    assert (x**(-4)).subs(x**3, L) == L**(-1) * x**(-1)
+    assert (x**(-5)).subs(x**3, L) == L**(-1) * x**(-2)
+
+    assert (x**(-1)).subs(x**(-3), L) == x**(-1)
+    assert (x**(-2)).subs(x**(-3), L) == x**(-2)
+    assert (x**(-3)).subs(x**(-3), L) == L
+    assert (x**(-4)).subs(x**(-3), L) == L * x**(-1)
+    assert (x**(-5)).subs(x**(-3), L) == L * x**(-2)
+
+    assert (x**1).subs(x**(-3), L) == x
+    assert (x**2).subs(x**(-3), L) == x**2
+    assert (x**3).subs(x**(-3), L) == L**(-1)
+    assert (x**4).subs(x**(-3), L) == L**(-1) * x
+    assert (x**5).subs(x**(-3), L) == L**(-1) * x**2
 
 
 def test_subs_basic_funcs():
@@ -372,7 +451,7 @@ def test_add():
     assert ((x - 1)*y).subs(x + 1, t) == y*(t - 2)
     assert ((-x + 1)*y).subs(x + 1, t) == y*(-t + 2)
 
-    # this should work everytime:
+    # this should work every time:
     e = a**2 - b - c
     assert e.subs(Add(*e.args[:2]), d) == d + e.args[2]
     assert e.subs(a**2 - c, d) == d - b
@@ -408,32 +487,45 @@ def test_derivative_subs():
     y = Symbol('y')
     f = Function('f')
     assert Derivative(f(x), x).subs(f(x), y) != 0
-    assert Derivative(f(x), x).subs(f(x), y).subs(y, f(x)) == \
+    # need xreplace to put the function back, see #13803
+    assert Derivative(f(x), x).subs(f(x), y).xreplace({y: f(x)}) == \
         Derivative(f(x), x)
     # issues 5085, 5037
     assert cse(Derivative(f(x), x) + f(x))[1][0].has(Derivative)
     assert cse(Derivative(f(x, y), x) +
                Derivative(f(x, y), y))[1][0].has(Derivative)
 
+
 def test_derivative_subs2():
     x, y, z = symbols('x y z')
-    f, g = symbols('f g', cls=Function)
+    f_func, g_func = symbols('f g', cls=Function)
+    f, g = f_func(x, y, z), g_func(x, y, z)
     assert Derivative(f, x, y).subs(Derivative(f, x, y), g) == g
     assert Derivative(f, y, x).subs(Derivative(f, x, y), g) == g
     assert Derivative(f, x, y).subs(Derivative(f, x), g) == Derivative(g, y)
     assert Derivative(f, x, y).subs(Derivative(f, y), g) == Derivative(g, x)
-    assert (Derivative(f(x, y, z), x, y, z).subs(
-                Derivative(f(x, y, z), x, z), g) == Derivative(g, y))
-    assert (Derivative(f(x, y, z), x, y, z).subs(
-                Derivative(f(x, y, z), z, y), g) == Derivative(g, x))
-    assert (Derivative(f(x, y, z), x, y, z).subs(
-                Derivative(f(x, y, z), z, y, x), g) == g)
+    assert (Derivative(f, x, y, z).subs(
+                Derivative(f, x, z), g) == Derivative(g, y))
+    assert (Derivative(f, x, y, z).subs(
+                Derivative(f, z, y), g) == Derivative(g, x))
+    assert (Derivative(f, x, y, z).subs(
+                Derivative(f, z, y, x), g) == g)
+
+    # Issue 9135
+    assert (Derivative(f, x, x, y).subs(
+                Derivative(f, y, y), g) == Derivative(f, x, x, y))
+    assert (Derivative(f, x, y, y, z).subs(
+                Derivative(f, x, y, y, y), g) == Derivative(f, x, y, y, z))
+
+    assert Derivative(f, x, y).subs(Derivative(f_func(x), x, y), g) == Derivative(f, x, y)
+
 
 def test_derivative_subs3():
     x = Symbol('x')
     dex = Derivative(exp(x), x)
     assert Derivative(dex, x).subs(dex, exp(x)) == dex
     assert dex.subs(exp(x), dex) == Derivative(exp(x), x, x)
+
 
 def test_issue_5284():
     A, B = symbols('A B', commutative=False)
@@ -539,7 +631,6 @@ def test_issue_6158():
 
 
 def test_Function_subs():
-    from sympy.abc import x, y
     f, g, h, i = symbols('f g h i', cls=Function)
     p = Piecewise((g(f(x, y)), x < -1), (g(x), x <= 1))
     assert p.subs(g, h) == Piecewise((h(f(x, y)), x < -1), (h(x), x <= 1))
@@ -608,14 +699,14 @@ def test_mul2():
 
 def test_noncommutative_subs():
     x,y = symbols('x,y', commutative=False)
-    assert (x*y*x).subs([(x,x*y),(y,x)],simultaneous=True) == (x*y*x**2*y)
+    assert (x*y*x).subs([(x, x*y), (y, x)], simultaneous=True) == (x*y*x**2*y)
 
 
 def test_issue_2877():
     f = Float(2.0)
     assert (x + f).subs({f: 2}) == x + 2
 
-    def r(a,b,c):
+    def r(a, b, c):
         return factor(a*x**2 + b*x + c)
     e = r(5/6, 10, 5)
     assert nsimplify(e) == 5*x**2/6 + 10*x + 5
@@ -640,3 +731,52 @@ def test_issue_5217():
     assert z.subs(sub) == 1 - s
     assert q == 4*x**2*y**2
     assert q.subs(sub) == 2*y**2*s
+
+
+def test_issue_10829():
+    assert (4**x).subs(2**x, y) == y**2
+    assert (9**x).subs(3**x, y) == y**2
+
+
+def test_pow_eval_subs_no_cache():
+    # Tests pull request 9376 is working
+    from sympy.core.cache import clear_cache
+
+    s = 1/sqrt(x**2)
+    # This bug only appeared when the cache was turned off.
+    # We need to approximate running this test without the cache.
+    # This creates approximately the same situation.
+    clear_cache()
+
+    # This used to fail with a wrong result.
+    # It incorrectly returned 1/sqrt(x**2) before this pull request.
+    result = s.subs(sqrt(x**2), y)
+    assert result == 1/y
+
+
+def test_RootOf_issue_10092():
+    x = Symbol('x', real=True)
+    eq = x**3 - 17*x**2 + 81*x - 118
+    r = RootOf(eq, 0)
+    assert (x < r).subs(x, r) is S.false
+
+
+def test_issue_8886():
+    from sympy.physics.mechanics import ReferenceFrame as R
+    # if something can't be sympified we assume that it
+    # doesn't play well with SymPy and disallow the
+    # substitution
+    v = R('A').x
+    assert x.subs(x, v) == x
+    assert v.subs(v, x) == v
+    assert v.__eq__(x) is False
+
+
+def test_issue_12657():
+    # treat -oo like the atom that it is
+    reps = [(-oo, 1), (oo, 2)]
+    assert (x < -oo).subs(reps) == (x < 1)
+    assert (x < -oo).subs(list(reversed(reps))) == (x < 1)
+    reps = [(-oo, 2), (oo, 1)]
+    assert (x < oo).subs(reps) == (x < 1)
+    assert (x < oo).subs(list(reversed(reps))) == (x < 1)

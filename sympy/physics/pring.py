@@ -13,6 +13,7 @@ def wavefunction(n, x):
 
     Examples
     ========
+
     >>> from sympy.physics.pring import wavefunction, energy
     >>> from sympy import Symbol, integrate, pi
     >>> x=Symbol("x")

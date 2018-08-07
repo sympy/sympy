@@ -87,7 +87,7 @@ def apart(f, x=None, full=False, **options):
         # non-commutative
         if f.is_Mul:
             c, nc = f.args_cnc(split_1=False)
-            nc = f.func(*[apart(i, x=x, full=full, **_options) for i in nc])
+            nc = f.func(*nc)
             if c:
                 c = apart(f.func._from_args(c), x=x, full=full, **_options)
                 return c*nc
@@ -491,7 +491,7 @@ def assemble_partfrac_list(partial_list):
             func = Lambda(an, nu/de**ex)
             pfd += RootSum(r, func, auto=False, quadratic=False)
         else:
-            # Assemble in case the roots are given explicitely by a list of algebraic numbers
+            # Assemble in case the roots are given explicitly by a list of algebraic numbers
             for root in r:
                 pfd += nf(root)/df(root)**ex
 

@@ -1,8 +1,15 @@
+import logging
+
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, SKIP
 from sympy.core.compatibility import range
 
+theanologger = logging.getLogger('theano.configdefaults')
+theanologger.setLevel(logging.CRITICAL)
 theano = import_module('theano')
+theanologger.setLevel(logging.WARNING)
+
+
 if theano:
     import numpy as np
     ts = theano.scalar
@@ -174,8 +181,22 @@ def test_MatrixSlice():
 
     Y = X[1:2:3, 4:5:6]
     Yt = theano_code(Y)
-    assert tuple(Yt.owner.op.idx_list) == (slice(1,2,3), slice(4,5,6))
+    from theano.scalar import Scalar
+    from theano import Constant
+
+    s = Scalar('int64')
+    assert tuple(Yt.owner.op.idx_list) == (slice(s, s, s), slice(s, s, s))
     assert Yt.owner.inputs[0] == theano_code(X)
+    # == doesn't work in theano like it does in SymPy. You have to use
+    # equals.
+    assert [i.equals(j) for i, j in zip(Yt.owner.inputs[1:],[
+        Constant(s, 1),
+        Constant(s, 2),
+        Constant(s, 3),
+        Constant(s, 4),
+        Constant(s, 5),
+        Constant(s, 6),
+    ])]
 
     k = sympy.Symbol('k')
     kt = theano_code(k, dtypes={k: 'int32'})
@@ -229,7 +250,7 @@ def test_DenseMatrix():
         X = MatrixType([[sy.cos(t), -sy.sin(t)], [sy.sin(t), sy.cos(t)]])
         tX = theano_code(X)
         assert isinstance(tX, tt.TensorVariable)
-        assert tX.owner.op == tt.join
+        assert tX.owner.op == tt.join_
 
 def test_AppliedUndef():
     t = sy.Symbol('t')
@@ -261,6 +282,13 @@ def test_Piecewise():
     expr = sy.Piecewise((x, x < 0))
     result = theano_code(expr)
     expected = tt.switch(xt < 0, xt, np.nan)
+    assert theq(result, expected)
+
+    expr = sy.Piecewise((0, sy.And(x>0, x<2)), \
+        (x, sy.Or(x>2, x<0)))
+    result = theano_code(expr)
+    expected = tt.switch(tt.and_(xt>0,xt<2), 0, \
+        tt.switch(tt.or_(xt>2, xt<0), xt, np.nan))
     assert theq(result, expected)
 
 def test_Relationals():

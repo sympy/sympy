@@ -150,7 +150,7 @@ the cartesian product of finitely many `A`-modules, with this
 `A`-module structure, is the finite biproduct in the category of all
 `A`-modules. With infinitely many components, it is the direct product
 (but the infinite direct sum has to be constructed differently).) As usual,
-repeated product of the `A`-module `M` is denoted `M, M^2, M^3 \dots`, or
+repeated product of the `A`-module `M` is denoted `M, M^2, M^3 \ldots`, or
 `M^I` for arbitrary index sets `I`.
 
 An `A`-module `M` is called *free* if it is isomorphic to the `A`-module

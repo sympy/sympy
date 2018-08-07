@@ -26,7 +26,8 @@ def l2_norm(f, lim):
     x ...... the independent variable in f over which to integrate
     a, b ... the limits of the interval
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import Symbol
     >>> from gibbs_phenomenon import l2_norm
@@ -61,7 +62,8 @@ def l2_gram_schmidt(list, lim):
     """
     Orthonormalizes the "list" of functions using the Gram-Schmidt process.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import Symbol
     >>> from gibbs_phenomenon import l2_gram_schmidt
@@ -102,7 +104,7 @@ def msolve(f, x):
     """
     Finds the first root of f(x) to the left of 0.
 
-    The x0 and dx below are taylored to get the correct result for our
+    The x0 and dx below are tailored to get the correct result for our
     particular function --- the general solver often overshoots the first
     solution.
     """

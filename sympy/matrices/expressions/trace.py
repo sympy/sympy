@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy import Basic, Expr
+from sympy import Basic, Expr, sympify
+from sympy.matrices.matrices import MatrixBase
 from .matexpr import ShapeError
 
 
@@ -20,6 +21,8 @@ class Trace(Expr):
     is_Trace = True
 
     def __new__(cls, mat):
+        mat = sympify(mat)
+
         if not mat.is_Matrix:
             raise TypeError("input to Trace, %s, is not a matrix" % str(mat))
 
@@ -31,19 +34,37 @@ class Trace(Expr):
     def _eval_transpose(self):
         return self
 
+    def _eval_derivative(self, v):
+        from sympy import Dummy, MatrixExpr, Sum
+        if not isinstance(v, MatrixExpr):
+            return None
+
+        t1 = Dummy("t_1")
+        m = Dummy("m")
+        n = Dummy("n")
+        return MatrixExpr.from_index_summation(
+                Sum(self.args[0][t1, t1].diff(v[m, n]), (t1, 0, self.args[0].shape[0]-1)),
+                m
+            )
+
     @property
     def arg(self):
         return self.args[0]
 
     def doit(self, **kwargs):
         if kwargs.get('deep', True):
-            arg = self.arg.doit()
+            arg = self.arg.doit(**kwargs)
+            try:
+                return arg._eval_trace()
+            except (AttributeError, NotImplementedError):
+                return Trace(arg)
         else:
-            arg = self.arg
-        try:
-            return arg._eval_trace()
-        except (AttributeError, NotImplementedError):
-            return Trace(arg)
+            # _eval_trace would go too deep here
+            if isinstance(self.arg, MatrixBase):
+                return trace(self.arg)
+            else:
+                return Trace(self.arg)
+
 
     def _eval_rewrite_as_Sum(self):
         from sympy import Sum, Dummy

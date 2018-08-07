@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from .matexpr import MatrixExpr, ShapeError, Identity
+from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import range
 from sympy.matrices import MatrixBase
@@ -28,7 +28,7 @@ class MatPow(MatrixExpr):
     def shape(self):
         return self.base.shape
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         A = self.doit()
         if isinstance(A, MatPow):
             # We still have a MatPow, make an explicit MatMul out of it.
@@ -43,10 +43,10 @@ class MatPow(MatrixExpr):
             # T = A.base.as_explicit().inverse()
             # A = MatMul(*[T for k in range(-A.exp)])
             else:
-                raise NotImplementedError(("(%d, %d) entry" % (int(i), int(j)))
-                    + " of matrix power either not defined or not implemented")
+                # Leave the expression unevaluated:
+                from sympy.matrices.expressions.matexpr import MatrixElement
+                return MatrixElement(self, i, j)
         return A._entry(i, j)
-
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
@@ -56,14 +56,20 @@ class MatPow(MatrixExpr):
             args = self.args
         base = args[0]
         exp = args[1]
-        if isinstance(base, MatrixBase) and exp.is_number:
+        if exp.is_zero and base.is_square:
+            if isinstance(base, MatrixBase):
+                return base.func(Identity(base.shape[0]))
+            return Identity(base.shape[0])
+        elif isinstance(base, ZeroMatrix) and exp.is_negative:
+            raise ValueError("Matrix det == 0; not invertible.")
+        elif isinstance(base, (Identity, ZeroMatrix)):
+            return base
+        elif isinstance(base, MatrixBase) and exp.is_number:
             if exp is S.One:
                 return base
             return base**exp
         # Note: just evaluate cases we know, return unevaluated on others.
         # E.g., MatrixSymbol('x', n, m) to power 0 is not an error.
-        if exp.is_zero and base.is_square:
-            return Identity(base.shape[0])
         elif exp is S.One:
             return base
         return MatPow(base, exp)
