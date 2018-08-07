@@ -1,6 +1,7 @@
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.combinatorics.homomorphisms import homomorphism, find_homomorphism, is_isomorphic, group_isomorphism
+from sympy.combinatorics.homomorphisms import homomorphism, find_homomorphism
+from sympy.combinatorics.homomorphisms import is_isomorphic, group_isomorphism
 from sympy.combinatorics.free_groups import free_group
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.named_groups import AlternatingGroup, DihedralGroup, CyclicGroup

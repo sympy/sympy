@@ -502,18 +502,13 @@ def find_homomorphism(G, H, injective=False, surjective=False, compute=True, all
             raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
         _H, h_isomorphism = H._to_perm_group()
 
-    if injective and surjective:
-        if (g_order != h_order) or (G.is_abelian != H.is_abelian):
+    if injective:
+        if (h_order%g_order != 0) or not G.is_abelian and H.is_abelian:
             if not compute:
                 return False
             return (False, None)
-    elif injective:
-        if not G.is_abelian and H.is_abelian:
-            if not compute:
-                return False
-            return (False, None)
-    elif surjective:
-        if G.is_abelian and not H.is_abelian:
+    if surjective:
+        if (g_order%h_order != 0) or G.is_abelian and not H.is_abelian:
             if not compute:
                 return False
             return (False, None)
@@ -535,7 +530,7 @@ def find_homomorphism(G, H, injective=False, surjective=False, compute=True, all
             if isinstance(H, FpGroup):
                 images = h_isomorphism.invert(images)
             T =  homomorphism(G, H, G.generators, images, check=False)
-            if (injective == T.is_injective()) or (surjective == T.is_surjective()):
+            if (injective == T.is_injective()) and (surjective == T.is_surjective()):
                 if not all:
                     if not compute:
                         return True
@@ -551,12 +546,12 @@ def find_homomorphism(G, H, injective=False, surjective=False, compute=True, all
 
 def group_isomorphism(G, H, all=False):
     '''
-    Compute an isomorphism(if possible) between 2 groups.
+    Compute an isomorphism (if possible) between 2 groups.
 
     Arguments:
         G (a finite `FpGroup` or a `PermutationGroup`) -- First group
         H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
-        all (boolean) -- compute all possible isomorphism when set to True.
+        all (boolean) -- compute all possible isomorphisms when set to True.
 
     Examples
     ========
