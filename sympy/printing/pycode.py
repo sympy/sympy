@@ -45,6 +45,7 @@ _known_functions_math = {
     'hypot': 'hypot',
     'loggamma': 'lgamma',
     'log': 'log',
+    'ln': 'log',
     'log10': 'log10',
     'log1p': 'log1p',
     'log2': 'log2',
@@ -58,6 +59,7 @@ _known_functions_math = {
 _known_constants_math = {
     'Exp1': 'e',
     'Pi': 'pi',
+    'E': 'e'
     # Only in python >= 3.5:
     # 'Infinity': 'inf',
     # 'NaN': 'nan'
@@ -367,7 +369,7 @@ for k in _known_constants_mpmath:
     setattr(MpmathPrinter, '_print_%s' % k, _print_known_const)
 
 
-_not_in_numpy = 'erf erfc factorial gamma lgamma'.split()
+_not_in_numpy = 'erf erfc factorial gamma loggamma'.split()
 _in_numpy = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_numpy]
 _known_functions_numpy = dict(_in_numpy, **{
     'acos': 'arccos',
@@ -513,11 +515,20 @@ for k in NumPyPrinter._kc:
 _known_functions_scipy_special = {
     'erf': 'erf',
     'erfc': 'erfc',
+    'besselj': 'jn',
+    'bessely': 'yn',
+    'besseli': 'iv',
+    'besselk': 'kn',
+    'factorial': 'factorial',
     'gamma': 'gamma',
-    'loggamma': 'gammaln'
+    'loggamma': 'gammaln',
+    'digamma': 'psi',
+    'RisingFactorial': 'poch'
 }
 _known_constants_scipy_constants = {
-    'GoldenRatio': 'golden_ratio'
+    'GoldenRatio': 'golden_ratio',
+    'Pi': 'pi',
+    'E': 'e'
 }
 
 class SciPyPrinter(NumPyPrinter):
