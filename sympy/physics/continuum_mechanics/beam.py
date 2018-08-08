@@ -1394,7 +1394,7 @@ class Beam(object):
         slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise), 'numpy')
         deflection = lambdify(variable, self.deflection().subs(subs).rewrite(Piecewise), 'numpy')
 
-        points = linspace(0, float(length))
+        points = linspace(0, float(length), num=5*length)
 
         # Creating a grid for subplots with 2 rows and 2 columns
         fig, axs = plt.subplots(4, 1)
@@ -1407,8 +1407,8 @@ class Beam(object):
         axs[2].set_title("Slope")
         axs[3].plot(points, deflection(points))
         axs[3].set_title("Deflection")
-        fig.tight_layout()    # For better spacing between subplots
 
+        fig.tight_layout()    # For better spacing between subplots
         return axs
 
 
