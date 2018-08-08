@@ -323,6 +323,28 @@ class Ellipse(GeometrySet):
         else:
             return 4 * self.major * elliptic_e(self.eccentricity**2)
 
+    def Ellipse_Circumference(self):
+        """
+        Computes the circumference of an ellipse using length of semi-axes as a and b.
+        Require a >= 0 and b >= 0. This is much faster than the circumference method given above.
+        Relative accuracy is about 0.5 ** 53.
+        """
+
+        import math
+        x, y = max(self.hradius, self.vradius), min(self.hradius, self.vradius)
+        digits = 53
+        tol = math.sqrt(math.pow(0.5, digits))
+        if digits * y < tol * x:
+            return 4 * x
+        s = 0
+        m = 1
+        while x - y > tol * y:
+            x, y = 0.5 * (x + y), math.sqrt(x * y)
+            m *= 2
+            s += m * math.pow(x - y, 2)
+        return math.pi * (math.pow(self.hradius + self.vradius, 2) - s) / (x + y)
+
+
     @property
     def eccentricity(self):
         """The eccentricity of the ellipse.
