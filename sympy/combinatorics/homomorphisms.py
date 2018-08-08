@@ -503,12 +503,12 @@ def find_homomorphism(G, H, injective=False, surjective=False, compute=True, all
         _H, h_isomorphism = H._to_perm_group()
 
     if injective:
-        if (h_order%g_order != 0) or not G.is_abelian and H.is_abelian:
+        if (h_order % g_order != 0) or not G.is_abelian and H.is_abelian:
             if not compute:
                 return False
             return (False, None)
     if surjective:
-        if (g_order%h_order != 0) or G.is_abelian and not H.is_abelian:
+        if (g_order % h_order != 0) or G.is_abelian and not H.is_abelian:
             if not compute:
                 return False
             return (False, None)
