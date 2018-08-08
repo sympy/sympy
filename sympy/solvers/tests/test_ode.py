@@ -2926,9 +2926,13 @@ def test_dsolve_linsystem_symbol():
 
 def test_C1_function_9239():
     t = Symbol('t')
+    C1 = Function('C1')
+    C2 = Function('C2')
+    C3 = Symbol('C1')  # XXX: update these after
+    C4 = Symbol('C2')  # XXX: https://github.com/sympy/sympy/issues/15056
     eq = (Eq(diff(C1(t), t), 9*C2(t)), Eq(diff(C2(t), t), 12*C1(t)))
-    sol = [Eq(C1(t), 9*C1*exp(6*sqrt(3)*t) + 9*C2*exp(-6*sqrt(3)*t)),
-           Eq(C2(t), 6*sqrt(3)*C1*exp(6*sqrt(3)*t) - 6*sqrt(3)*C2*exp(-6*sqrt(3)*t))]
+    sol = [Eq(C1(t), 9*C3*exp(6*sqrt(3)*t) + 9*C4*exp(-6*sqrt(3)*t)),
+           Eq(C2(t), 6*sqrt(3)*C3*exp(6*sqrt(3)*t) - 6*sqrt(3)*C4*exp(-6*sqrt(3)*t))]
     s = dsolve(eq)
     assert s == sol
     s = [(l.lhs, l.rhs) for l in s]
