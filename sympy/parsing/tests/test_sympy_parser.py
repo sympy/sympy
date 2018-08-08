@@ -173,6 +173,13 @@ def test_convert_equals_signs():
     assert parse_expr("(2*y = x) = False",
         transformations=transformations) == Eq(Eq(2*y, x), False)
 
+
+def test_parse_function_issue_3539():
+    x = Symbol('x')
+    f = Function('f')
+    assert parse_expr('f(x)') == f(x)
+
+
 def test_unicode_names():
     if not PY3:
         skip("test_unicode_names can only pass in Python 3")
