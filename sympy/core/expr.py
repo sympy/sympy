@@ -3167,7 +3167,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.integrals import integrate
         return integrate(self, *args, **kwargs)
 
-    def simplify(self, ratio=1.7, measure=None):
+    def simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
         """See the simplify function in sympy.simplify"""
         from sympy.simplify import simplify
         from sympy.core.function import count_ops

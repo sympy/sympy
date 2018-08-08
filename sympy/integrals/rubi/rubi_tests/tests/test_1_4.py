@@ -17,9 +17,9 @@ from sympy.functions.elementary.hyperbolic import acosh as arccosh
 from sympy.functions.elementary.trigonometric import atan as arctan
 from sympy.functions.elementary.trigonometric import asin as arcsin
 from sympy.functions.elementary.trigonometric import acos as arccos
-from sympy.integrals.rubi.utility_function import EllipticE, EllipticF, EllipticPi, hypergeom, rubi_test
+from sympy.integrals.rubi.utility_function import EllipticE, EllipticF, EllipticPi, hypergeom, rubi_test, AppellF1
 from sympy import pi as Pi
-from sympy import S, hyper, I, simplify, exp_polar, symbols
+from sympy import S, hyper, I, simplify, exp_polar, symbols, Integral
 from sympy.utilities.pytest import XFAIL
 
 A, B, C, D, a, b, c, d, e, f, g, h, i, m, n, p, x, u = symbols('A B C D a b c d e f g h i m n p x u')
@@ -47,7 +47,6 @@ def test_1():
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True) or rubi_test(r, i[1], i[4], expand=True, _diff=True)
         else:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True)
-
 @XFAIL
 def test_2():
     test = [
@@ -57,15 +56,15 @@ def test_2():
         [(A + B*x)*(c + d*x)**n*(e + f*x)**p/(a + b*x), x, S(5), - (A*b - a*B)*(c + d*x)**(S(1) + n)*(e + f*x)**p*AppellF1(S(1) + n, S(1), - p, S(2) + n, b*(c + d*x)/(b*c - a*d), - f*(c + d*x)/(d*e - c*f))/(b*(b*c - a*d)*(S(1) + n)*(d*(e + f*x)/(d*e - c*f))**p) - B*(c + d*x)**(S(1) + n)*(e + f*x)**(S(1) + p)*hypergeom([S(1), S(2) + n + p], [S(2) + p], d*(e + f*x)/(d*e - c*f))/(b*(d*e - c*f)*(S(1) + p)), - (A*b - a*B)*(c + d*x)**(S(1) + n)*(e + f*x)**p*AppellF1(S(1) + n, - p, S(1), S(2) + n, - f*(c + d*x)/(d*e - c*f), b*(c + d*x)/(b*c - a*d))/(b*(b*c - a*d)*(S(1) + n)*(d*(e + f*x)/(d*e - c*f))**p) + B*(c + d*x)**(S(1) + n)*(e + f*x)**p*hypergeom([S(1) + n, - p], [S(2) + n], - f*(c + d*x)/(d*e - c*f))/(b*d*(S(1) + n)*(d*(e + f*x)/(d*e - c*f))**p)],
         [(c*i + d*i*x)/(sqrt(c + d*x)*sqrt(e + f*x)*sqrt(g + h*x)), x, S(3), S(2)*i*EllipticE(sqrt(h)*sqrt(e + f*x)/sqrt( - f*g + e*h), sqrt( - d*(f*g - e*h)/((d*e - c*f)*h)))*sqrt( - f*g + e*h)*sqrt(c + d*x)*sqrt(f*(g + h*x)/(f*g - e*h))/(f*sqrt(h)*sqrt( - f*(c + d*x)/(d*e - c*f))*sqrt(g + h*x))],
         [(a + b*x)**m*(c + d*x)**n*(e + f*x)**p, x, S(3), (a + b*x)**(S(1) + m)*(c + d*x)**n*(e + f*x)**p*AppellF1(S(1) + m, - n, - p, S(2) + m, - d*(a + b*x)/(b*c - a*d), - f*(a + b*x)/(b*e - a*f))/(b*(S(1) + m)*(b*(c + d*x)/(b*c - a*d))**n*(b*(e + f*x)/(b*e - a*f))**p)],
-        [(a + b*x)**m*(c + d*x)**n*(e + f*x)**p/(g + h*x), x, S(0), Integrate((a + b*x)**m*(c + d*x)**n*(e + f*x)**p/(g + h*x), x)]
+        [(a + b*x)**m*(c + d*x)**n*(e + f*x)**p/(g + h*x), x, S(0), Integral((a + b*x)**m*(c + d*x)**n*(e + f*x)**p/(g + h*x), x)],
         [x**S(3)*(S(1) + a*x)/(sqrt(a*x)*sqrt(S(1) - a*x)), x, S(8), - S(75)/S(128)*arcsin(S(1) - S(2)*a*x)/a**S(4) - S(25)/S(32)*(a*x)**(S(3)/S(2))*sqrt(S(1) - a*x)/a**S(4) - S(5)/S(8)*(a*x)**(S(5)/S(2))*sqrt(S(1) - a*x)/a**S(4) - S(1)/S(4)*(a*x)**(S(7)/S(2))*sqrt(S(1) - a*x)/a**S(4) - S(75)/S(64)*sqrt(a*x)*sqrt(S(1) - a*x)/a**S(4)],
     ]
-    for i in test:
-        r = rubi_integrate(i[0], i[1])
-        if len(i) == 5:
-            assert rubi_test(r, i[1], i[3], expand=True, _diff=True) or rubi_test(r, i[1], i[4], expand=True, _diff=True)
+    for index in test:
+        r = rubi_integrate(index[0], index[1])
+        if len(index) == 5:
+            assert rubi_test(r, index[1], index[3], expand=True, _diff=True) or rubi_test(r, index[1], index[4], expand=True, _diff=True)
         else:
-            assert rubi_test(r, i[1], i[3], expand=True, _diff=True)
+            assert rubi_test(r, index[1], index[3], expand=True, _diff=True)
 
 @XFAIL
 def test_numerical():

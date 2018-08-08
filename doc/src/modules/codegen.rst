@@ -66,19 +66,13 @@ special cases of the other prints in SymPy (str printer, pretty printer, etc.).
 An important distinction is that the code printer has to deal with assignments
 (using the :class:`sympy.codegen.ast.Assignment` object). This serves as
 building blocks for the code printers and hence the ``codegen`` module.  An
-example that shows the use of ``Assignment``::
+example that shows the use of ``Assignment`` in C code::
 
     >>> from sympy.codegen.ast import Assignment
-    >>> mat = Matrix([x, y, z]).T
-    >>> known_mat = MatrixSymbol('K', 1, 3)
-    >>> Assignment(known_mat, mat)
-    K := [x  y  z]
-    >>> Assignment(known_mat, mat).lhs
-    K
-    >>> Assignment(known_mat, mat).rhs
-    [x  y  z]
+    >>> print(ccode(Assignment(x, y + 1)))
+    x = y + 1;
 
-Here is a simple example of printing a C version of a SymPy expression::
+Here is another simple example of printing a C version of a SymPy expression::
 
     >>> expr = (Rational(-1, 2) * Z * k * (e**2) / r)
     >>> expr

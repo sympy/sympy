@@ -24,7 +24,7 @@ class DiscreteDistribution(Basic):
         return self.pdf(*args)
 
 
-class SingleDiscreteDistribution(Basic, NamedArgsMixin):
+class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     """ Discrete distribution of a single variable
 
     Serves as superclass for PoissonDistribution etc....

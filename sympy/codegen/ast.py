@@ -10,7 +10,8 @@ AST Type Tree
 ::
 
   *Basic*
-       |--->Assignment
+       |--->AssignmentBase
+       |             |--->Assignment
        |             |--->AugmentedAssignment
        |                                    |--->AddAugmentedAssignment
        |                                    |--->SubAugmentedAssignment
@@ -131,7 +132,7 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.compatibility import string_types
 from sympy.core.numbers import Float, Integer, oo
-from sympy.core.relational import Relational, Lt, Le, Ge, Gt
+from sympy.core.relational import Lt, Le, Ge, Gt
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.logic import true, false
 from sympy.utilities.iterables import iterable
@@ -387,7 +388,64 @@ class NoneToken(Token):
 none = NoneToken()
 
 
-class Assignment(Relational):
+class AssignmentBase(Basic):
+    """ Abstract base class for Assignment and AugmentedAssignment.
+
+    Attributes:
+    ===========
+
+    op : str
+        Symbol for assignment operator, e.g. "=", "+=", etc.
+    """
+
+    def __new__(cls, lhs, rhs):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+
+        cls._check_args(lhs, rhs)
+
+        return super(AssignmentBase, cls).__new__(cls, lhs, rhs)
+
+    @property
+    def lhs(self):
+        return self.args[0]
+
+    @property
+    def rhs(self):
+        return self.args[1]
+
+    @classmethod
+    def _check_args(cls, lhs, rhs):
+        """ Check arguments to __new__ and raise exception if any problems found.
+
+        Derived classes may wish to override this.
+        """
+        from sympy.matrices.expressions.matexpr import (
+            MatrixElement, MatrixSymbol)
+        from sympy.tensor.indexed import Indexed
+
+        # Tuple of things that can be on the lhs of an assignment
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable)
+        if not isinstance(lhs, assignable):
+            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+
+        # Indexed types implement shape, but don't define it until later. This
+        # causes issues in assignment validation. For now, matrices are defined
+        # as anything with a shape that is not an Indexed
+        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
+        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
+
+        # If lhs and rhs have same structure, then this assignment is ok
+        if lhs_is_mat:
+            if not rhs_is_mat:
+                raise ValueError("Cannot assign a scalar to a matrix.")
+            elif lhs.shape != rhs.shape:
+                raise ValueError("Dimensions of lhs and rhs don't align.")
+        elif rhs_is_mat and not lhs_is_mat:
+            raise ValueError("Cannot assign a matrix to a scalar.")
+
+
+class Assignment(AssignmentBase):
     """
     Represents variable assignment for code generation.
 
@@ -424,72 +482,54 @@ class Assignment(Relational):
     Assignment(A[0, 1], x)
     """
 
-    rel_op = ':='
-    __slots__ = []
-
-    def __new__(cls, lhs, rhs=0, **assumptions):
-        from sympy.matrices.expressions.matexpr import (
-            MatrixElement, MatrixSymbol)
-        from sympy.tensor.indexed import Indexed
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        # Indexed types implement shape, but don't define it until later. This
-        # causes issues in assignment validation. For now, matrices are defined
-        # as anything with a shape that is not an Indexed
-        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
-        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
-        # If lhs and rhs have same structure, then this assignment is ok
-        if lhs_is_mat:
-            if not rhs_is_mat:
-                raise ValueError("Cannot assign a scalar to a matrix.")
-            elif lhs.shape != rhs.shape:
-                raise ValueError("Dimensions of lhs and rhs don't align.")
-        elif rhs_is_mat and not lhs_is_mat:
-            raise ValueError("Cannot assign a matrix to a scalar.")
-        return Relational.__new__(cls, lhs, rhs, **assumptions)
-
-# XXX: This should be handled better
-Relational.ValidRelationOperator[':='] = Assignment
+    op = ':='
 
 
-class AugmentedAssignment(Assignment):
+class AugmentedAssignment(AssignmentBase):
     """
-    Base class for augmented assignments
+    Base class for augmented assignments.
+
+    Attributes:
+    ===========
+
+    binop : str
+       Symbol for binary operation being applied in the assignment, such as "+",
+       "*", etc.
     """
 
     @property
-    def rel_op(self):
-        return self._symbol + '='
+    def op(self):
+        return self.binop + '='
+
 
 class AddAugmentedAssignment(AugmentedAssignment):
-    _symbol = '+'
+    binop = '+'
 
 
 class SubAugmentedAssignment(AugmentedAssignment):
-    _symbol = '-'
+    binop = '-'
 
 
 class MulAugmentedAssignment(AugmentedAssignment):
-    _symbol = '*'
+    binop = '*'
 
 
 class DivAugmentedAssignment(AugmentedAssignment):
-    _symbol = '/'
+    binop = '/'
 
 
 class ModAugmentedAssignment(AugmentedAssignment):
-    _symbol = '%'
+    binop = '%'
 
 
-Relational.ValidRelationOperator['+='] = AddAugmentedAssignment
-Relational.ValidRelationOperator['-='] = SubAugmentedAssignment
-Relational.ValidRelationOperator['*='] = MulAugmentedAssignment
-Relational.ValidRelationOperator['/='] = DivAugmentedAssignment
-Relational.ValidRelationOperator['%='] = ModAugmentedAssignment
+# Mapping from binary op strings to AugmentedAssignment subclasses
+augassign_classes = {
+    cls.binop: cls for cls in [
+        AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
+        DivAugmentedAssignment, ModAugmentedAssignment
+    ]
+}
+
 
 def aug_assign(lhs, op, rhs):
     """
@@ -526,9 +566,9 @@ def aug_assign(lhs, op, rhs):
     >>> aug_assign(x, '+', y)
     AddAugmentedAssignment(x, y)
     """
-    if op + '=' not in Relational.ValidRelationOperator:
+    if op not in augassign_classes:
         raise ValueError("Unrecognized operator %s" % op)
-    return Relational.ValidRelationOperator[op + '='](lhs, rhs)
+    return augassign_classes[op](lhs, rhs)
 
 
 class CodeBlock(Basic):

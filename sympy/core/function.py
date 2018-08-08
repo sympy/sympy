@@ -1298,29 +1298,11 @@ class Derivative(Expr):
 
     @classmethod
     def _sort_variable_count(cls, varcounts):
-        """Like ``_sort_variables``, but acting on variable-count pairs.
-
-        Examples
-        ========
-
-        >>> from sympy import Derivative, Function, symbols
-        >>> vsort = Derivative._sort_variable_count
-        >>> x, y, z = symbols('x y z')
-        >>> f, g, h = symbols('f g h', cls=Function)
-
-        >>> vsort([(x, 1), (y, 2), (z, 1)])
-        [(x, 1), (y, 2), (z, 1)]
-
-        >>> vsort([(z, 1), (y, 1), (x, 1), (h(x), 1), (g(x), 1), (f(x), 1)])
-        [(x, 1), (y, 1), (z, 1), (f(x), 1), (g(x), 1), (h(x), 1)]
         """
-        d = dict(varcounts)
-        varsorted = cls._sort_variables([i for i, j in varcounts])
-        return [Tuple(var, d[var]) for var in varsorted]
+        Sort (variable, count) pairs by variable, but disallow sorting of non-symbols.
 
-    @classmethod
-    def _sort_variables(cls, vars):
-        """Sort variables, but disallow sorting of non-symbols.
+        The count is not sorted. It is kept in the same order as the input
+        after sorting by variable.
 
         When taking derivatives, the following rules usually hold:
 
@@ -1332,55 +1314,55 @@ class Derivative(Expr):
         ========
 
         >>> from sympy import Derivative, Function, symbols
-        >>> vsort = Derivative._sort_variables
+        >>> vsort = Derivative._sort_variable_count
         >>> x, y, z = symbols('x y z')
         >>> f, g, h = symbols('f g h', cls=Function)
 
-        >>> vsort((x,y,z))
-        [x, y, z]
+        >>> vsort([(x, 3), (y, 2), (z, 1)])
+        [(x, 3), (y, 2), (z, 1)]
 
-        >>> vsort((h(x),g(x),f(x)))
-        [f(x), g(x), h(x)]
+        >>> vsort([(h(x), 1), (g(x), 1), (f(x), 1)])
+        [(f(x), 1), (g(x), 1), (h(x), 1)]
 
-        >>> vsort((z,y,x,h(x),g(x),f(x)))
-        [x, y, z, f(x), g(x), h(x)]
+        >>> vsort([(z, 1), (y, 2), (x, 3), (h(x), 1), (g(x), 1), (f(x), 1)])
+        [(x, 3), (y, 2), (z, 1), (f(x), 1), (g(x), 1), (h(x), 1)]
 
-        >>> vsort((x,f(x),y,f(y)))
-        [x, f(x), y, f(y)]
+        >>> vsort([(x, 1), (f(x), 1), (y, 1), (f(y), 1)])
+        [(x, 1), (f(x), 1), (y, 1), (f(y), 1)]
 
-        >>> vsort((y,x,g(x),f(x),z,h(x),y,x))
-        [x, y, f(x), g(x), z, h(x), x, y]
+        >>> vsort([(y, 1), (x, 2), (g(x), 1), (f(x), 1), (z, 1), (h(x), 1), (y, 2), (x, 1)])
+        [(x, 2), (y, 1), (f(x), 1), (g(x), 1), (z, 1), (h(x), 1), (x, 1), (y, 2)]
 
-        >>> vsort((z,y,f(x),x,f(x),g(x)))
-        [y, z, f(x), x, f(x), g(x)]
+        >>> vsort([(z, 1), (y, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)])
+        [(y, 1), (z, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)]
 
-        >>> vsort((z,y,f(x),x,f(x),g(x),z,z,y,x))
-        [y, z, f(x), x, f(x), g(x), x, y, z, z]
+        >>> vsort([(z, 1), (y, 2), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1), (z, 2), (z, 1), (y, 1), (x, 1)])
+        [(y, 2), (z, 1), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1), (x, 1), (y, 1), (z, 2), (z, 1)]
+
         """
-
         sorted_vars = []
         symbol_part = []
         non_symbol_part = []
-        for v in vars:
+        for (v, c) in varcounts:
             if not v.is_symbol:
                 if len(symbol_part) > 0:
                     sorted_vars.extend(sorted(symbol_part,
-                                              key=default_sort_key))
+                                              key=lambda i: default_sort_key(i[0])))
                     symbol_part = []
-                non_symbol_part.append(v)
+                non_symbol_part.append((v, c))
             else:
                 if len(non_symbol_part) > 0:
                     sorted_vars.extend(sorted(non_symbol_part,
-                                              key=default_sort_key))
+                                              key=lambda i: default_sort_key(i[0])))
                     non_symbol_part = []
-                symbol_part.append(v)
+                symbol_part.append((v, c))
         if len(non_symbol_part) > 0:
             sorted_vars.extend(sorted(non_symbol_part,
-                                      key=default_sort_key))
+                                      key=lambda i: default_sort_key(i[0])))
         if len(symbol_part) > 0:
             sorted_vars.extend(sorted(symbol_part,
-                                      key=default_sort_key))
-        return sorted_vars
+                                      key=lambda i: default_sort_key(i[0])))
+        return [Tuple(*i) for i in sorted_vars]
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative
@@ -1655,7 +1637,7 @@ class Lambda(Expr):
         from sympy.sets.sets import FiniteSet
         v = list(variables) if iterable(variables) else [variables]
         for i in v:
-            if not getattr(i, 'is_Symbol', False):
+            if not getattr(i, 'is_symbol', False):
                 raise TypeError('variable is not a symbol: %s' % i)
         if len(v) == 1 and v[0] == expr:
             return S.IdentityFunction

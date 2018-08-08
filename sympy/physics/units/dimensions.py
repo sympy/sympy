@@ -18,7 +18,9 @@ import collections
 
 from sympy import Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict, default_sort_key
 from sympy.core.compatibility import reduce, string_types
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
+from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
@@ -150,22 +152,25 @@ class Dimension(Expr):
         dimsys_default._args = (dimsys_default.args[:2] + (Dict(d),))
 
     def __add__(self, other):
-        """Define the addition for Dimension.
-
-        Addition of dimension has a sense only if the second object is
-        the same dimension (we don't add length to time).
-        """
-
-        if not isinstance(other, Dimension):
-            raise TypeError("Only dimension can be added; '%s' is not valid"
-                            % type(other))
-        elif isinstance(other, Dimension) and self != other:
-            raise ValueError("Only dimension which are equal can be added; "
-                             "'%s' and '%s' are different" % (self, other))
-
+        from sympy.physics.units.quantities import Quantity
+        other = sympify(other)
+        if isinstance(other, Basic):
+            if other.has(Quantity):
+                other = Dimension(Quantity.get_dimensional_expr(other))
+            if isinstance(other, Dimension) and self == other:
+                return self
+            return super(Dimension, self).__add__(other)
         return self
 
+    def __radd__(self, other):
+        return self + other
+
     def __sub__(self, other):
+        # there is no notion of ordering (or magnitude) among dimension,
+        # subtraction is equivalent to addition when the operation is legal
+        return self + other
+
+    def __rsub__(self, other):
         # there is no notion of ordering (or magnitude) among dimension,
         # subtraction is equivalent to addition when the operation is legal
         return self + other
@@ -178,16 +183,22 @@ class Dimension(Expr):
         return Dimension(self.name**other)
 
     def __mul__(self, other):
-        if not isinstance(other, Dimension):
-            return self
+        from sympy.physics.units.quantities import Quantity
+        if isinstance(other, Basic):
+            if other.has(Quantity):
+                other = Dimension(Quantity.get_dimensional_expr(other))
+            if isinstance(other, Dimension):
+                return Dimension(self.name*other.name)
+            if not other.free_symbols:
+                return self
+            return super(Dimension, self).__mul__(other)
+        return self
 
-        return Dimension(self.name*other.name)
+    def __rmul__(self, other):
+        return self*other
 
     def __div__(self, other):
-        if not isinstance(other, Dimension):
-            return self
-
-        return Dimension(self.name/other.name)
+        return self*Pow(other, -1)
 
     def __rdiv__(self, other):
         return other * pow(self, -1)
@@ -407,28 +418,31 @@ class DimensionSystem(Basic):
         if name.is_Number:
             return {}
 
+        get_for_name = dimsys_default._get_dimensional_dependencies_for_name
+
         if name.is_Mul:
             ret = collections.defaultdict(int)
-            dicts = [dimsys_default._get_dimensional_dependencies_for_name(i) for i in name.args]
+            dicts = [get_for_name(i) for i in name.args]
             for d in dicts:
                 for k, v in d.items():
                     ret[k] += v
             return {k: v for (k, v) in ret.items() if v != 0}
 
         if name.is_Pow:
-            dim = dimsys_default._get_dimensional_dependencies_for_name(name.base)
+            dim = get_for_name(name.base)
             return {k: v*name.exp for (k, v) in dim.items()}
 
         if name.is_Function:
             args = (Dimension._from_dimensional_dependencies(
-                dimsys_default._get_dimensional_dependencies_for_name(arg)
-            ) for arg in name.args)
+                get_for_name(arg)) for arg in name.args)
             result = name.func(*args)
 
             if isinstance(result, Dimension):
                 return dimsys_default.get_dimensional_dependencies(result)
-            # TODO shall we consider a result that is not a dimension?
-            # return Dimension._get_dimensional_dependencies_for_name(result)
+            elif result.func == name.func:
+                return {}
+            else:
+                return get_for_name(result)
 
     def get_dimensional_dependencies(self, name, mark_dimensionless=False):
         if isinstance(name, Dimension):

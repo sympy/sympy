@@ -270,7 +270,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
-    def _eval_simplify(self, ratio=1.7, measure=None):
+    def _eval_simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
         from sympy.simplify.simplify import factor_sum, sum_combine
         from sympy.core.function import expand
         from sympy.core.mul import Mul
