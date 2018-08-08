@@ -2944,7 +2944,7 @@ def test_issue_10379():
 
 
 def test_issue_10867():
-    x, g = symbols('x g')
+    x = Symbol('x')
     v = Eq(g(x).diff(x).diff(x), (x-2)**2 + (x-3)**3)
     ans = Eq(g(x), C1 + C2*x + x**5/20 - 2*x**4/3 + 23*x**3/6 - 23*x**2/2)
     assert dsolve(v, g(x)) == ans

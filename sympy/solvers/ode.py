@@ -7536,6 +7536,8 @@ def _linear_2eq_order2_type10(x, y, t, r, eq):
 
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
+    # XXX: fix function=True with Function
+    # XXX: this code is untested: u(t) should be failing below
     u, v = symbols('u, v', function=True)
     T = Symbol('T')
     p = Wild('p', exclude=[t, t**2])
@@ -7957,6 +7959,7 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
     C1, C2 = get_numbered_constants(eq, num=2)
     n = Wild('n', exclude=[x(t),y(t)])
     f = Wild('f')
+    # XXX: fix function=True with Function
     u, v, phi = symbols('u, v, phi', function=True)
     r = eq[0].match(diff(x(t),t) - x(t)**n*f)
     g = ((diff(y(t),t) - eq[1])/r[f]).subs(y(t),v)
@@ -8002,6 +8005,7 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
     C1, C2 = get_numbered_constants(eq, num=2)
     n = Wild('n', exclude=[x(t),y(t)])
     f = Wild('f')
+    # XXX: fix function=True with Function
     u, v, phi = symbols('u, v, phi', function=True)
     r = eq[0].match(diff(x(t),t) - exp(n*x(t))*f)
     g = ((diff(y(t),t) - eq[1])/r[f]).subs(y(t),v)
