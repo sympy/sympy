@@ -330,3 +330,10 @@ class MarginalDistribution(Basic):
 
     def __call__(self, *args):
         return self.pdf(*args)
+
+class StochasticProcess(Basic, NamedArgsMixin):
+    """
+    Abstract class representing stochastic processes as a collect of joint
+    distributions.
+    """
+    pass

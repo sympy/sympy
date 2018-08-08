@@ -180,8 +180,8 @@ class SinglePSpace(PSpace):
     def __new__(cls, s, distribution):
         if isinstance(s, string_types):
             s = Symbol(s)
-        if not isinstance(s, Symbol):
-            raise TypeError("s should have been string or Symbol")
+        if not isinstance(s, (Symbol, Indexed)):
+            raise TypeError("s should have been string, Symbol or Indexed.")
         return Basic.__new__(cls, s, distribution)
 
     @property
@@ -232,7 +232,7 @@ class RandomSymbol(Expr):
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
-        if not isinstance(symbol, Symbol):
+        if not isinstance(symbol, (Symbol, Indexed)):
             raise TypeError("symbol should be of type Symbol")
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")

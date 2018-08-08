@@ -1,4 +1,4 @@
-from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed, erf
+from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV
