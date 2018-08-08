@@ -14,7 +14,7 @@ from __future__ import print_function, division
 # __all__ = ['marginal_distribution']
 
 from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
- Dummy, Mul)
+ Dummy)
 from sympy.concrete.summations import Sum, summation
 from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
@@ -74,32 +74,12 @@ class JointPSpace(ProductPSpace):
             return SingleDomain(self.symbol, self.set)
         return ProductDomain(*[rv.pspace.domain for rv in rvs])
 
-    def component_domain(self, index):
-        return self.set.args[index]
-
     @property
     def symbols(self):
         return self.domain.symbols
 
-    def marginal_distribution(self, *indices):
-        count = self.component_count
-        orig = [Indexed(self.symbol, i) for i in range(count)]
-        all_syms = [Symbol(str(i)) for i in orig]
-        replace_dict = dict(zip(all_syms, orig))
-        sym = [Symbol(str(Indexed(self.symbol, i))) for i in indices]
-        limits = list([i,] for i in all_syms if i not in sym)
-        index = 0
-        for i in range(count):
-            if i not in indices:
-                limits[index].append(self.distribution.set.args[i])
-                limits[index] = tuple(limits[index])
-                index += 1
-        limits = tuple(limits)
-        if self.distribution.is_Continuous:
-            f = Lambda(sym, integrate(self.distribution(*all_syms), limits))
-        elif self.distribution.is_Discrete:
-            f = Lambda(sym, summation(self.distribution(all_syms), limits))
-        return f.xreplace(replace_dict)
+    def component_domain(self, index):
+        return self.set.args[index]
 
     def where(self, condition):
         raise NotImplementedError()
@@ -198,7 +178,7 @@ def marginal_distribution(rv, *indices):
     """
     indices = list(indices)
     for i in range(len(indices)):
-        if isinstance(indices[i], Indexed):
+        if isinstance(indices[i], Indexed) and indices[i].base == rv:
             indices[i] = indices[i].args[1]
     prob_space = rv.pspace
     if indices == ():
@@ -206,7 +186,26 @@ def marginal_distribution(rv, *indices):
             "At least one component for marginal density is needed.")
     if hasattr(prob_space.distribution, 'marginal_distribution'):
         return prob_space.distribution.marginal_distribution(indices, rv.symbol)
-    return prob_space.marginal_distribution(*indices)
+    # return prob_space.marginal_distribution(*indices)
+    count = rv.pspace.component_count
+    orig = [Indexed(rv.symbol, i) for i in range(count)]
+    all_syms = [Symbol(str(i)) for i in orig]
+    replace_dict = dict(zip(all_syms, orig))
+    sym = [Symbol(str(Indexed(rv.symbol, i))) for i in indices]
+    limits = list([i,] for i in all_syms if i not in sym)
+    index = 0
+    for i in range(count):
+        if i not in indices:
+            limits[index].append(rv.pspace.distribution.set.args[i])
+            limits[index] = tuple(limits[index])
+            index += 1
+    limits = tuple(limits)
+    if rv.pspace.distribution.is_Continuous:
+        f = Lambda(sym, integrate(rv.pspace.distribution(*all_syms), limits))
+    elif rv.psace.distribution.is_Discrete:
+        f = Lambda(sym, summation(rv.pspace.distribution(all_syms), limits))
+    return f.xreplace(replace_dict)
+
 
 
 class CompoundDistribution(Basic, NamedArgsMixin):
@@ -232,12 +231,11 @@ class CompoundDistribution(Basic, NamedArgsMixin):
 
     def pdf(self, *x):
         dist = self.args[0]
-        z = Dummy('z')
-        if isinstance(dist, ContinuousDistribution):
-            rv = SingleContinuousPSpace(z, dist).value
-        elif isinstance(dist, DiscreteDistribution):
-            rv = SingleDiscretePSpace(z, dist).value
-        return MarginalDistribution(self, (rv,)).pdf(*x)
+        y = Dummy('y')
+        expr = dist.pdf(y)
+        if len(random_symbols(self.args[0])) == 0:
+            return expr
+        return Lambda(y, _compute_pdf(expr, self.latent_distributions))(*x)
 
     def set(self):
         return self.args[0].set
@@ -255,13 +253,14 @@ class MarginalDistribution(Basic):
     distribution.
     """
 
-    def __new__(cls,dist, rvs):
-        if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
-            raise ValueError(filldedent('''Marginal distribution can be
-             intitialised only in terms of random variables or indexed random
-             variables'''))
+    def __new__(cls, dist, rvs):
+        rvs = list(map(sympify, rvs))
+        if not all([rv.is_Integer for rv in rvs]):
+            raise ValueError(filldedent('''MarginalDistribution can only be initialized
+                from the indices of the joint distribution given.'''))
         rvs = Tuple.fromiter(rv for rv in rvs)
-        if not isinstance(dist, JointDistribution) and len(random_symbols(dist)) == 0:
+        if not isinstance(dist, JointDistribution) and\
+            len(random_symbols(dist)) == 0:
             return dist
         return Basic.__new__(cls, dist, rvs)
 
@@ -284,49 +283,61 @@ class MarginalDistribution(Basic):
         return set([rv.pspace.symbol for rv in rvs])
 
     def pdf(self, *x):
-        expr, rvs = self.args[0], self.args[1]
-        marginalise_out = [i for i in random_symbols(expr) if i not in self.args[1]]
-        syms = [i.pspace.symbol for i in self.args[1]]
-        for i in expr.atoms(Indexed):
-            if isinstance(i, Indexed) and isinstance(i.base, RandomSymbol)\
-             and i not in rvs:
-                marginalise_out.append(i)
-        if isinstance(expr, CompoundDistribution):
+        dist = self.args[0]
+        marginalise_out = [i for i in random_symbols(dist) if i not in\
+            self.args[1]]
+        if isinstance(dist, JointDistribution):
+            y = Dummy('y', real=True)
+            syms = [Indexed(y, i) for i in self.args[1]]
+            all_syms = [Indexed(y, i) for i in range(len(dist.set.args))]
+            dom = [i.pspace.set for i in marginalise_out]
+            marginalise_out.extend([i for i in all_syms if i not in syms])
+            expr = dist.pdf(*all_syms)
+            #Add domains for each component of the joint RV.
+            dom.extend([dist.set.args[i.args[1]] for i in marginalise_out])
+            for i in range(len(dom)):
+                if dom[i] in (S.Integers, S.Naturals, S.Naturals0):
+                    dom[i] = (dom.inf, dom.sup)
+            if dist.is_Continuous:
+                return Lambda(syms, Integral(expr, tuple(zip(marginalise_out, dom))))(*x)
+            elif dist.is_Discrete:
+                return Lambda(syms, Sum(expr, tuple(zip(marginalise_out, dom))))(*x)
+        if isinstance(dist, CompoundDistribution):
             syms = Dummy('x', real=True)
-            expr = expr.args[0].pdf(syms)
-        elif isinstance(expr, JointDistribution):
-            count = len(expr.domain.args)
-            x = Dummy('x', real=True, finite=True)
-            syms = [Indexed(x, i) for i in count]
-            expr = expression.pdf(syms)
-        return Lambda(syms, self.compute_pdf(expr, marginalise_out))(*x)
-
-    def compute_pdf(self, expr, rvs):
-        for rv in rvs:
-            lpdf = 1
-            if isinstance(rv, RandomSymbol):
-                lpdf = rv.pspace.pdf
-            expr = self.marginalise_out(expr*lpdf, rv)
-        return expr
-
-    def marginalise_out(self, expr, rv):
-        from sympy.concrete.summations import Sum
-        if isinstance(rv, RandomSymbol):
-            dom = rv.pspace.set
-        elif isinstance(rv, Indexed):
-            dom = rv.base.component_domain(
-                rv.pspace.component_domain(rv.args[1]))
-        expr = expr.xreplace({rv: rv.pspace.symbol})
-        if rv.pspace.is_Continuous:
-            #TODO: Modify to support integration
-            #for all kinds of sets.
-            expr = Integral(expr, (rv.pspace.symbol, dom))
-        elif rv.pspace.is_Discrete:
-            #incorporate this into `Sum`/`summation`
-            if dom in (S.Integers, S.Naturals, S.Naturals0):
-                dom = (dom.inf, dom.sup)
-            expr = Sum(expr, (rv.pspace.symbol, dom))
-        return expr
+            expr = dist.pdf(syms)
+        return Lambda(syms, _compute_pdf(expr, marginalise_out))(*x)
 
     def __call__(self, *args):
         return self.pdf(*args)
+
+def _compute_pdf(expr, rvs):
+    """
+    Internal method for computing the PDF of marginal/compound distributioins.
+    """
+    for rv in rvs:
+        lpdf = 1
+        if isinstance(rv, RandomSymbol):
+            lpdf = rv.pspace.pdf
+        expr = _marginalise_out(expr*lpdf, rv)
+    return expr
+
+def _marginalise_out(expr, rv):
+    """
+    Helper method for _compoute_pdf
+    """
+    from sympy.concrete.summations import Sum
+    if isinstance(rv, RandomSymbol):
+        dom = rv.pspace.set
+    elif isinstance(rv, Indexed):
+        dom = rv.base.pspace.component_domain(rv.args[1])
+    expr = expr.xreplace({rv: rv.pspace.symbol})
+    if rv.pspace.is_Continuous:
+        #TODO: Modify to support integration
+        #for all kinds of sets.
+        expr = Integral(expr, (rv.pspace.symbol, dom))
+    elif rv.pspace.is_Discrete:
+        #incorporate this into `Sum`/`summation`
+        if dom in (S.Integers, S.Naturals, S.Naturals0):
+            dom = (dom.inf, dom.sup)
+        expr = Sum(expr, (rv.pspace.symbol, dom))
+    return expr

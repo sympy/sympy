@@ -1054,10 +1054,10 @@ def test_sympy__stats__joint_rv__JointDistributionHandmade():
 
 
 def test_sympy__stats__joint_rv__MarginalDistribution():
-    from sympy.stats.rv import RandomSymbol
+    from sympy.stats.joint_rv_types import MultivariateNormalDistribution
     from sympy.stats.joint_rv import MarginalDistribution
-    r = RandomSymbol(S('r'))
-    assert _test_args(MarginalDistribution(r, (r,)))
+    N1 = MultivariateNormalDistribution('N1', [1, 0], [[1, 0], [0, 1]])
+    assert _test_args(MarginalDistribution(N1, (1,)))
 
 
 def test_sympy__stats__joint_rv__CompoundDistribution():
@@ -1065,6 +1065,7 @@ def test_sympy__stats__joint_rv__CompoundDistribution():
     from sympy.stats.drv_types import PoissonDistribution
     r = PoissonDistribution(x)
     assert _test_args(CompoundDistribution(PoissonDistribution(r)))
+
 
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():

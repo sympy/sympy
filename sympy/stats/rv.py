@@ -764,11 +764,14 @@ class Density(Basic):
             return None
 
     def doit(self, evaluate=True, **kwargs):
-        from sympy.stats.joint_rv import JointPSpace
+        from sympy.stats.joint_rv import JointPSpace, MarginalDistribution
         expr, condition = self.expr, self.condition
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
+        if isinstance(expr, Indexed) and isinstance(
+            expr.base.pspace, JointPSpace):
+            return MarginalDistribution(expr.base, (expr,))
         if isinstance(expr, RandomSymbol) and \
             isinstance(expr.pspace, JointPSpace):
             return expr.pspace.distribution

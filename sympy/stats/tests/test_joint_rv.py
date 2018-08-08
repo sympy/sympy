@@ -1,4 +1,4 @@
-from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed, erf
+from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV
@@ -68,3 +68,9 @@ def test_JointRV():
     assert density(X)(1, 2) == exp(-2)/(2*pi)
     assert isinstance(X.pspace.distribution, JointDistributionHandmade)
     assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(-S(1)/2)/(2*sqrt(pi))
+
+def test_MarginalDistribution():
+    from sympy.stats.joint_rv import MarginalDistribution
+    from sympy.stats.joint_rv_types import MultivariateNormalDistribution
+    N1 = MultivariateNormalDistribution(Matrix([0, 0]), Matrix([[1, 0], [0, 1]]))
+    assert MarginalDistribution(N1, (1,)).pdf(x).doit() == sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))

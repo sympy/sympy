@@ -3,7 +3,7 @@ from sympy.stats.rv import pspace, density
 from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.crv_types import Normal
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
-from sympy import S, Symbol, Eq, Ne, simplify, sqrt, exp, pi, Integral
+from sympy import Symbol, Eq, Ne, simplify, sqrt, exp, pi
 
 def test_density():
     x = Symbol('x')
