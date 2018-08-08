@@ -33,7 +33,7 @@ We first start with an Autolev code file.
 Let us take this example
 (Comments ``%`` have been included to show the Autolev responses):
 
-.. code-block:: null
+.. code-block:: none
 
    % double_pendulum.al
    %-------------------
