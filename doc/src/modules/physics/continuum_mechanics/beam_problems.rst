@@ -249,20 +249,18 @@ to a distributed constant load of 10 KN/m from the starting point till
 
 ::
 
-    10 KN/m
-  _____________                 20 KN         8 KN
-  | | | | | | |                  |             |
-  V V V V V V V                  V             V
-   _______________________________________________
+                                        ---> x     
+                                        |          
+                                        v y        
+    10 KN/m                                        
+  _____________                 20 KN         8 KN 
+  | | | | | | |                  |             |   
+  V V V V V V V                  V             V   
+   _______________________________________________ 
   |_______________________________________________|
-        /\                                  O
+        /\                                  O      
   |-----|------|-----------------|----------|--|--|
      1m    1m          3m              2m   .5m .5m
-
-.. note::
-
-    Using the sign convention of upward forces and clockwise moment
-    being positive.
 
 .. code:: pycon
 
@@ -318,9 +316,9 @@ away from start.
 
 ::
 
-                                       .
-                                     . |
-                           12 KN   . | |
+    ---> x                             .
+    |                                . |
+    v y                    12 KN   . | |
                              |   . | | |
                              V . | | | |
   \\\\|   4 KN/m             . | | | | |
@@ -332,11 +330,6 @@ away from start.
   \\\\|          :          :          :
   \\\\|----------|-----|----|----------|
           2.0 m     1m   1m      2.0 m
-
-.. note::
-
-    Using the sign convention of upward forces and clockwise moment
-    being positive.
 
 .. code:: pycon
 
@@ -394,20 +387,15 @@ away from that end. Also a clockwise moment of 5 KN-m is applied at the overhang
 
 ::
 
-                 2 KN/m
-             _________________
-             | | | | | | | | |
+                 2 KN/m                         ---> x         
+             _________________                  |              
+             | | | | | | | | |                  v y            
              V V V V V V V V V                        ⭯ 5 KN-m
-    ____________________________________________________|
-   O____________________________________________________|
-  / \                                   /\
-   |--------|----------------|----------|---------------|
-       2m           4m            2m            3m
-
-.. note::
-
-    Using the sign convention of upward forces and clockwise moment
-    being positive.
+    ____________________________________________________|      
+   O____________________________________________________|      
+  / \                                   /\                     
+   |--------|----------------|----------|---------------|      
+       2m           4m            2m            3m             
 
 .. code:: pycon
 
@@ -455,12 +443,15 @@ away from that end. Also a clockwise moment of 5 KN-m is applied at the overhang
 Example 7
 ---------
 
-There is a beam of length l, fixed at both ends. A concentrated point load
-of magnitude F is applied in downward direction at mid-point of the
+There is a beam of length ``l``, fixed at both ends. A concentrated point load
+of magnitude ``F`` is applied in downward direction at mid-point of the
 beam.
 
 ::
 
+                                        ^ y      
+                                        |        
+                                        ---> x   
   \\\\|                  F                  |\\\\
   \\\\|                  |                  |\\\\
   \\\\|                  V                  |\\\\
@@ -470,11 +461,6 @@ beam.
   \\\\|                  :                  |\\\\
   \\\\|------------------|------------------|\\\\
                l/2                l/2            
-
-.. note::
-
-    Using the sign convention of upward forces and clockwise moment
-    being positive.
 
 .. code:: pycon
 
@@ -540,27 +526,23 @@ beam.
 Example 8
 ---------
 
-There is a beam of length 4*l, having a hinge connector at the middle. It 
-is havig a fixed support at the start and also has two rollers at a distance 
-of l and 4*l from the starting point. A concentrated point load P is also 
-applied at a distance of 3*l from the starting point.
+There is a beam of length ``4*l``, having a hinge connector at the middle. It 
+is having a fixed support at the start and also has two rollers at a distance 
+of ``l`` and ``4*l`` from the starting point. A concentrated point load ``P`` is also 
+applied at a distance of ``3*l`` from the starting point.
 
 ::
 
-  \\\\|                                 P            
-  \\\\|                                 |            
-  \\\\|                                 V            
-  \\\\|_____________________ _______________________ 
-  \\\\|_____________________O_______________________|
-  \\\\|          /\                     :          /\
-  \\\\|         oooo                    :         oooo
-  \\\\|----------|-----------|----------|-----------|
-           l           l          l            l     
-
-.. note::
-
-    Using the sign convention of upward forces and clockwise moment
-    being positive.
+                                                     ---> x
+  \\\\|                                 P            |     
+  \\\\|                                 |            v y   
+  \\\\|                                 V                  
+  \\\\|_____________________ _______________________       
+  \\\\|_____________________O_______________________|      
+  \\\\|          /\                     :          /\      
+  \\\\|         oooo                    :         oooo     
+  \\\\|----------|-----------|----------|-----------|      
+           l           l          l            l           
 
 .. code:: pycon
 
@@ -636,25 +618,21 @@ Example 9
 ---------
 
 There is a cantilever beam of length 4 meters. For first 2 meters
-its moment of inertia is 1.5*I and I for the other end.
-A pointload of magnitude 4 N is applied from the top at its free end.
+its moment of inertia is ``1.5*I`` and ``I`` for the other end.
+A pointload of magnitude 20 N is applied from the top at its free end.
 
 ::
 
-  \\\\|                                  
-  \\\\|                               4 N
-  \\\\|________________                | 
-  \\\\|                |_______________V 
-  \\\\|      1.5*I      _______I_______| 
-  \\\\|________________|                 
-  \\\\|                                : 
-  \\\\|----------------|---------------| 
-             2.0 m            2.0 m      
-
-.. note::
-
-    Using the sign convention of upward forces and clockwise moment
-    being positive.
+                                             ---> x
+  \\\\|                                      |     
+  \\\\|                               20 N   v y   
+  \\\\|________________                |           
+  \\\\|                |_______________V           
+  \\\\|      1.5*I      _______I_______|           
+  \\\\|________________|                           
+  \\\\|                                :           
+  \\\\|----------------|---------------|           
+             2.0 m            2.0 m                
 
 .. code:: pycon
 
@@ -696,14 +674,16 @@ A pointload of magnitude 4 N is applied from the top at its free end.
 Example 10
 ----------
 
-A combined beam, with constant fkexural rigidity E*I, is formed by joining
-a Beam of length 2*l to the right of another Beam of length l. The whole beam
-is fixed at both of its both end. A point load of magnitude P is also applied
-from the top at a distance of 2*l from starting point.
+A combined beam, with constant flexural rigidity ``E*I``, is formed by joining
+a Beam of length ``2*l`` to the right of another Beam of length ``l``. The whole beam
+is fixed at both of its both end. A point load of magnitude ``P`` is also applied
+from the top at a distance of ``2*l`` from starting point.
 
 ::
 
-  \\\\|                         P           |\\\\
+                                        ---> x   
+                                        |        
+  \\\\|                         P       v y |\\\\
   \\\\|                         |           |\\\\
   \\\\|                         V           |\\\\
   \\\\|____________ ________________________|\\\\
@@ -712,11 +692,6 @@ from the top at a distance of 2*l from starting point.
   \\\\|            :            :           |\\\\
   \\\\|------------|------------|-----------|\\\\
            l            l            l           
-
-.. note::
-
-    Using the sign convention of upward forces and clockwise moment
-    being positive.
 
 .. code:: pycon
 
