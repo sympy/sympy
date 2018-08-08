@@ -134,7 +134,7 @@ class JointDistribution(Basic, NamedArgsMixin):
 
     @property
     def pdf(self, *args):
-        return self.density.args[1]
+        return self.args[0]
 
     def cdf(self, other):
         assert isinstance(other, dict)
@@ -336,4 +336,6 @@ class StochasticProcess(Basic, NamedArgsMixin):
     Abstract class representing stochastic processes as a collect of joint
     distributions.
     """
-    pass
+    def __new__(cls, *args):
+        args = list(map(sympify, args))
+        return Basic.__new__(cls, *args)

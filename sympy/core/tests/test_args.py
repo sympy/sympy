@@ -1066,6 +1066,16 @@ def test_sympy__stats__joint_rv__CompoundDistribution():
     r = PoissonDistribution(x)
     assert _test_args(CompoundDistribution(PoissonDistribution(r)))
 
+
+def test_sympy__stats__stochastic_process_types__BernoulliProcess():
+    from sympy.stats.stochastic_process_types import BernoulliProcess
+    assert _test_args(BernoulliProcess('x', S(1)/2, 1, 0))
+
+@SKIP("abstract class")
+def test_sympy__stats__joint_rv__StochasticProcess():
+    pass
+
+
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
     pass
