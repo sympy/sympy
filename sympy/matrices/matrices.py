@@ -1125,8 +1125,20 @@ class MatrixEigen(MatrixSubspaces):
             if any(v.has(Float) for v in mat):
                 mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
-        flags.pop('simplify', None)  # pop unsupported flag
-        eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
+        if mat.is_upper or mat.is_lower:
+            diagonal_entries = [mat[i, i] for i in range(mat.rows)]
+            multiple = flags.pop('multiple', False)
+            if multiple:
+                eigs = diagonal_entries
+            else:
+                eigs = {}
+                for diagonal_entry in diagonal_entries:
+                    if diagonal_entry not in eigs:
+                        eigs[diagonal_entry] = 0
+                    eigs[diagonal_entry] += 1
+        else:
+            flags.pop('simplify', None)  # pop unsupported flag
+            eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
 
         # make sure the algebraic multiplicty sums to the
         # size of the matrix
