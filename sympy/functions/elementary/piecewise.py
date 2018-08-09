@@ -120,6 +120,8 @@ class Piecewise(Function):
     is_Piecewise = True
 
     def __new__(cls, *args, **options):
+        if len(args) == 0:
+            raise TypeError("At least one (expr, cond) pair expected.")
         # (Try to) sympify args first
         newargs = []
         for ec in args:
@@ -153,13 +155,13 @@ class Piecewise(Function):
         3) any repeat of a previous condition is ignored
         3) any args past one with a true condition are dropped
 
-        If there are no args left, a TypeError exception will be raised.
+        If there are no args left, nan will be returned.
         If there is a single arg with a True condition, its
         corresponding expression will be returned.
         """
 
         if not _args:
-            raise TypeError("At least one (expr, cond) pair expected.")
+            return Undefined
 
         if len(_args) == 1 and _args[0][-1] == True:
             return _args[0][0]

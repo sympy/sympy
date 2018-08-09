@@ -30,13 +30,13 @@ def test_piecewise():
         Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
-    # Empty Piecewise not accepted
+    # Explicitly constructed empty Piecewise not accepted
     raises(TypeError, lambda: Piecewise())
     # False condition is never retained
     assert Piecewise((2*x, x < 0), (x, False)) == \
         Piecewise((2*x, x < 0), (x, False), evaluate=False) == \
         Piecewise((2*x, x < 0))
-    raises (TypeError, lambda: Piecewise((x, False)))
+    assert Piecewise((x, False)) == Undefined
     raises(TypeError, lambda: Piecewise(x))
     assert Piecewise((x, 1)) == x  # 1 and 0 are accepted as True/False
     raises(TypeError, lambda: Piecewise((x, 2)))
