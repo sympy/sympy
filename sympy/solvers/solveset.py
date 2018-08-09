@@ -41,7 +41,7 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
-from sympy.solvers.bivariate import _solve_lambert, _filtered_gens
+from sympy.solvers.bivariate import _solve_lambert, _filtered_gens, bivariate_type
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols
 from sympy.calculus.util import periodicity, continuous_domain
@@ -1333,16 +1333,59 @@ def _is_lambert(f, symbol):
     return any(isinstance(arg, (Pow, exp, log)) for arg in _term_factors(f))
 
 
-def _solve_as_lambert(lhs, rhs, symbol):
+def _solve_as_bivariate(lhs, rhs, symbol, domain):
+    poly = lhs.as_poly()
+    gens = _filtered_gens(poly, symbol)
+    if len(gens) == 2:
+        try:
+            gpu = bivariate_type(lhs - rhs, *gens)
+            if gpu is None:
+                raise NotImplementedError
+            g, p, u = gpu
+            inversion = _transolve(g - u, symbol, domain)
+            if inversion:
+                sol = _solveset(p, u, domain)
+                result = FiniteSet(*[i.subs(u, s)
+                                   for i in inversion for s in sol])
+
+            return result
+        except NotImplementedError:
+            pass
+
+
+def _solve_as_lambert(lhs, rhs, symbol, domain):
 
     try:
         poly = lhs.as_poly()
-        g = _filtered_gens(poly, symbol)
+        gens = _filtered_gens(poly, symbol)
 
-        result = _solve_lambert(lhs - rhs, symbol, g)
-        return result
+        return _solve_lambert(lhs - rhs, symbol, gens)
+
     except NotImplementedError:
         pass
+
+
+def _solve_as_lambert_bivariate(lhs, rhs, symbol, domain):
+
+    result = ConditionSet(symbol, Eq(lhs-rhs, 0), domain)
+
+    soln = _solve_as_lambert(lhs, rhs, symbol, domain)
+    if soln:
+        result = FiniteSet(*soln)
+    else:
+        # make symbol positive
+        u = Dummy('u', positive=True)
+        pos_lhs = lhs.subs({symbol: u})
+        soln = _solve_as_lambert(pos_lhs, rhs, u, domain)
+        if soln:
+            result = FiniteSet(*soln)
+        else:
+            # maybe bivariate type
+            soln = _solve_as_bivariate(lhs, rhs, symbol, domain)
+            if soln:
+                result = FiniteSet(*soln)
+
+    return result
 
 
 def _transolve(f, symbol, domain):
@@ -1539,20 +1582,11 @@ def _transolve(f, symbol, domain):
             result = _solve_exponential(lhs, rhs, symbol, domain)
         # check if it is logarithmic type equation
         elif _is_logarithmic(lhs, symbol):
-<<<<<<< 0afc73b007f59302c6c5eae8e388770c21cd35a7
             result = _solve_logarithm(lhs, rhs, symbol, domain)
-=======
-            new_eq = _solve_logarithm(lhs, rhs, symbol)
-
-        if new_eq is not None:
-            result = _solveset(new_eq, symbol, domain)
 
         elif _is_lambert(lhs, symbol):
-            # try solving as lambert before returning the result
-            ans = _solve_as_lambert(lhs, rhs, symbol)
-            if ans:
-                result = FiniteSet(*ans)
->>>>>>> changes invocation of `solve_as_lambert`; added test that cannot be solved with current scenario;
+            # maybe a last try to get solutions in form of lambert
+            result = _solve_as_lambert_bivariate(lhs, rhs, symbol, domain)
 
         return result
 
@@ -1569,18 +1603,11 @@ def _transolve(f, symbol, domain):
         if lhs.is_Add:
             result = add_type(lhs, rhs, symbol, domain)
         elif _is_lambert(lhs, symbol):
-            ans = _solve_as_lambert(lhs, rhs, symbol)
-            if ans:
-                result = FiniteSet(*ans)
+            # maybe a last try to get solutions in form of lambert
+            result = _solve_as_lambert_bivariate(lhs, rhs, symbol, domain)
     else:
         result = rhs_s
 
-<<<<<<< 0afc73b007f59302c6c5eae8e388770c21cd35a7
-=======
-    if isinstance(result, ConditionSet):
-        result = unsolved_result
-
->>>>>>> changes invocation of `solve_as_lambert`; added test that cannot be solved with current scenario;
     return result
 
 
