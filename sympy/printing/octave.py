@@ -497,15 +497,6 @@ class OctaveCodePrinter(CodePrinter):
                     lines.append("end")
             return "\n".join(lines)
 
-
-    def _print_zeta(self, expr):
-        if len(expr.args) == 1:
-            return "zeta(%s)" % self._print(expr.args[0])
-        else:
-            # Matlab two argument zeta is not equivalent to SymPy's
-            return self._print_not_supported(expr)
-
-
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
