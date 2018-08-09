@@ -497,6 +497,7 @@ class OctaveCodePrinter(CodePrinter):
                     lines.append("end")
             return "\n".join(lines)
 
+
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
