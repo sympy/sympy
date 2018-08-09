@@ -532,3 +532,8 @@ def test_issue_14456():
 
 def test_issue_14411():
     assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2)) == -oo
+
+
+def test_issue_9471():
+    assert limit(((27**(log(x, 3))) / x**3), x, oo) == 1
+    assert limit(((27**(log(x, 3) + 1)) / x**3), x, oo) == 27
