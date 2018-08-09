@@ -1869,6 +1869,7 @@ def test_exponential_symbols():
     a, b, x, y = symbols('a b x y')
     assert solveset_real(a**x - b**x, x) == ConditionSet(
         x, (a > 0) & (b > 0), FiniteSet(0))
+    assert solveset(a**x - b**x, x) == FiniteSet(0)
 
 
 @XFAIL

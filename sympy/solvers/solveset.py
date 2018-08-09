@@ -1112,11 +1112,13 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     from sympy.functions.elementary.complexes import im
 
-    conditions = And(
-        a_base > 0,
-        b_base > 0,
-        Eq(im(a_exp), 0),
-        Eq(im(b_exp), 0))
+    conditions = True
+    if domain.is_subset(S.Reals):
+        conditions = And(
+            a_base > 0,
+            b_base > 0,
+            Eq(im(a_exp), 0),
+            Eq(im(b_exp), 0))
 
     log_type_equation = expand_log(log(a), force=True) - expand_log(log(-b), force=True)
     solutions = _solveset(log_type_equation, symbol, domain)
