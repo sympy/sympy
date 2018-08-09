@@ -1776,3 +1776,11 @@ def test_issue_14041():
         r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
     assert latex((phid*thetad)**a*A_frame.x) == \
         r"\left(\dot{\phi} \dot{\theta}\right)^{a}\mathbf{\hat{a}_x}"
+
+
+def test_issue_9216():
+    expr_1 = Pow(1, -1, evaluate=False)
+    assert latex(expr_1) == r"1^{-1}"
+
+    expr_2 = Pow(1, Pow(1, -1, evaluate=False), evaluate=False)
+    assert latex(expr_2) == r"1^{1^{-1}}"
