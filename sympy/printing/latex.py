@@ -516,7 +516,7 @@ class LatexPrinter(Printer):
         elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_commutative:
             # special case for 1^(-1), issue 9216
             if expr.base == 1 and expr.exp == -1:
-                return r"%s^{%s}" %(expr.base, expr.exp)
+                return r"%s^{%s}" % (expr.base, expr.exp)
             # things like 1/x
             return self._print_Mul(expr)
         else:
