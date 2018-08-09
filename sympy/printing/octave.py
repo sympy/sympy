@@ -592,7 +592,7 @@ def octave_code(expr, assign_to=None, **settings):
 
     Matrices are supported using Octave inline notation.  When using
     ``assign_to`` with matrices, the name can be specified either as a string
-    or as a ``MatrixSymbol``.  The dimenions must align in the latter case.
+    or as a ``MatrixSymbol``.  The dimensions must align in the latter case.
 
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([[x**2, sin(x), ceiling(x)]])
