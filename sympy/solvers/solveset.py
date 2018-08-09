@@ -20,7 +20,7 @@ from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log)
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
@@ -1112,13 +1112,16 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     from sympy.functions.elementary.complexes import im
 
-    conditions = True
     if domain.is_subset(S.Reals):
         conditions = And(
             a_base > 0,
             b_base > 0,
             Eq(im(a_exp), 0),
             Eq(im(b_exp), 0))
+    else:
+        conditions = And(
+            Ne(a_base, 0),
+            Ne(b_base, 0))
 
     log_type_equation = expand_log(log(a), force=True) - expand_log(log(-b), force=True)
     solutions = _solveset(log_type_equation, symbol, domain)
