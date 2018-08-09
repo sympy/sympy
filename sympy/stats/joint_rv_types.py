@@ -55,6 +55,7 @@ def JointRV(symbol, pdf, _set=None):
 
     Returns
     ========
+
     A RandomSymbol.
 
     """
@@ -191,10 +192,8 @@ def MultivariateT(syms, mu, sigma, v):
     Parameters
     ==========
 
-    sym: A symbol/str for identifying the random variable. This can be
-        indexed to obtain each component of the joint probability space.
-    mu: A list/matrix consisting of k means,represents a k
-        dimensional location vector
+    syms: A symbol/str for identifying the random variable.
+    mu: A list/matrix representing the location vector
     sigma: The shape matrix for the distribution
 
     Examples
@@ -268,8 +267,7 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     Parameters
     ==========
 
-    sym: A symbol/str for identifying the random variable. This can be
-        indexed to obtain each component of the joint probability space.
+    syms: A symbol/str for identifying the random variable.
     mu: A real number, as the mean of the normal distribution
     alpha: a positive integer
     beta: a positive integer
