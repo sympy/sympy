@@ -468,17 +468,21 @@ class OctaveCodePrinter(CodePrinter):
                              "some condition.")
         lines = []
         if self._settings["inline"]:
-            # Express each (cond, expr) pair in a nested Horner form:
-            #   (condition) .* (expr) + (not cond) .* (<others>)
-            # Expressions that result in multiple statements won't work here.
-            ecpairs = ["({0}).*({1}) + (~({0})).*(".format
-                       (self._print(c), self._print(e))
-                       for e, c in expr.args[:-1]]
-            elast = "%s" % self._print(expr.args[-1].expr)
-            pw = " ...\n".join(ecpairs) + elast + ")"*len(ecpairs)
-            # Note: current need these outer brackets for 2*pw.  Would be
+            # This method uses the concept of vectors in octave
+            # All the expressions are stored in expression_vector
+            # All the conditions are stored in condition_vector
+            # find((condition_vector == 1)(1)) calculates the index of condition
+            # which is true. The correct expression is stored in the index of
+            # expression_vector found in the previous step
+            expression_vector = ""
+            condition_vector = ""
+            for t in expr.args:
+                expression_vector += "{0};".format(t[0])
+                condition_vector += "true" if t[1] == True else "{0};".format(t[1])
+            # Note: current need these outer brackets for 2*octave_expr.  Would be
             # nicer to teach parenthesize() to do this for us when needed!
-            return "(" + pw + ")"
+            octave_expr = "[" + expression_vector + "](find([" + condition_vector + "] == 1)(1))"
+            return "(" + octave_expr + ")"
         else:
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
