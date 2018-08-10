@@ -598,7 +598,11 @@ transolve
 
 .. autofunction:: sympy.solvers.solveset._is_exponential
 
-.. autofunction:: sympy.solvers.solveset._solve_expo
+.. autofunction:: sympy.solvers.solveset._solve_exponential
+
+.. autofunction:: sympy.solvers.solveset._solve_logarithm
+
+.. autofunction:: sympy.solvers.solveset._is_logarithmic
 
 
 Diophantine Equations (DEs)
