@@ -18,8 +18,8 @@ def test_Normal():
     assert density(m)(x, y) == density(p)(x, y)
     assert marginal_distribution(n, 0, 1)(1, 2) == 1/(2*pi)
     assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
-    N1 = Normal('N1', [1, 2], [[x, 0], [0, y]])
-    assert density(N1)(0, 0) == exp(-2/y - 1/(2*x))/(2*pi*sqrt(x*y))
+    N = Normal('N', [1, 2], [[x, 0], [0, y]])
+    assert density(N)(0, 0) == exp(-2/y - 1/(2*x))/(2*pi*sqrt(x*y))
 
     raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
 
