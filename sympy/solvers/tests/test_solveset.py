@@ -1587,6 +1587,13 @@ def test_issue_10397():
     assert solveset(sqrt(x), x, S.Complexes) == FiniteSet(0)
 
 
+def test_issue_14987:
+    try:
+        linear_eq_to_matrix([x**2], [x], check_linearity = True)
+    except ValueError as e:
+        assert str(e) == "Equation x**2 is not linear"
+
+
 def test_simplification():
     eq = x + (a - b)/(-2*a + 2*b)
     assert solveset(eq, x) == FiniteSet(S.Half)
