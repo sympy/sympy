@@ -1587,7 +1587,7 @@ def test_issue_10397():
     assert solveset(sqrt(x), x, S.Complexes) == FiniteSet(0)
 
 
-def test_issue_14987:
+def test_issue_14987():
     try:
         linear_eq_to_matrix([x**2], [x], check_linearity = True)
     except ValueError as e:
