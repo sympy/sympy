@@ -276,7 +276,7 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     Examples
     ========
 
-    >>> from sympy.stats.joint_rv_types import *
+    >>> from sympy.stats.joint_rv_types import NormalGamma
     >>> from sympy.stats import density
     >>> from sympy import symbols
 
