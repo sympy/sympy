@@ -12,7 +12,7 @@ from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import range, ordered
-from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
+from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol, symbols
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -28,7 +28,6 @@ from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point2D, Point3D
 from .line import Line, LinearEntity
 from .util import idiff
-from sympy.core.symbol import var
 import random
 
 
@@ -323,11 +322,22 @@ class Ellipse(GeometrySet):
         else:
             return 4 * self.major * elliptic_e(self.eccentricity**2)
 
-    def Ellipse_Circumference(self):
+    def ellipse_circumference(self):
         """
         Computes the circumference of an ellipse using length of semi-axes as a and b.
-        Require a >= 0 and b >= 0. This is much faster than the circumference method given above.
-        Relative accuracy is about 0.5 ** 53.
+        Require a >= 0 and b >= 0. This is much faster than the circumference method
+        given in the method circumference.
+        Relative accuracy is about 0.5 ** 53 and computes result numerically using
+        double precision.
+
+        Examples
+        ========
+        >>> from sympy import Ellipse, Point
+        >>> e = Ellipse(Point(0,0), 4, 3)
+        >>> e.ellipse_circumference()
+        22.1034921607095
+        >>> e.circumference.n()
+        22.1034921607095
         """
 
         import math
@@ -486,10 +496,10 @@ class Ellipse(GeometrySet):
 
         Examples
         ========
-
-        >>> from sympy import Point, Ellipse
-        >>> Ellipse(Point(1,0), 4, 2).equation_using_slope(1)
-        (-x + y + 1)**2/8 + (x + y - 1)**2/32 - 1
+        >>> from sympy import Ellipse, Point
+        >>> e = Ellipse(Point(0,0), 4, 3)
+        >>> e.equation_using_slope(2)
+        (-2*x + y)**2/45 + (x + 2*y)**2/80 - 1
 
         Reference
         =========
@@ -497,7 +507,7 @@ class Ellipse(GeometrySet):
         https://math.stackexchange.com/questions/108270/what-is-the-equation-of-an-ellipse-hat-is-not-aligned-with-the-axis/646971
         """
 
-        a, b, x, y, m, M, x_c, y_c, s = var('a,b,x,y,m,M,x_c,y_c,s')
+        a, b, x, y, m, M, x_c, y_c, s = symbols('a,b,x,y,m,M,x_c,y_c,s')
         x_c = self.center.x
         y_c = self.center.y
         len_semi_major = self.hradius
