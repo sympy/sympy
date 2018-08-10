@@ -45,6 +45,7 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols, uniq
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
+from sympy.core.function import diff
 
 from types import GeneratorType
 
@@ -1730,7 +1731,7 @@ def linear_eq_to_matrix(equations, *symbols, **options):
         # Extract coeff of symbols
         coeff_list = []
         for symbol in symbols:
-            coeff_list.append(f.coeff(symbol))
+            coeff_list.append(f.diff(symbol))
 
         # append constant term (term free from symbols)
         coeff_list.append(-f.as_coeff_add(*symbols)[0])
