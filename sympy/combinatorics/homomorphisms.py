@@ -436,10 +436,10 @@ def find_homomorphism(G, H, injective=False, surjective=False, compute=True, all
         all (boolean) -- compute all possible homomorphisms with specified properties.
 
     Returns:
-    If compute = False -- Returns a boolean.
-    If compute = True  -- Returns a boolean and a homomorphism with required properties
+    If compute = False -- Return a boolean.
+    If compute = True  -- Return a boolean and a homomorphism with required properties
                         between `G` and `H`.
-    If all = True -- Returns all possible specified homomorphisms as a list.
+    If all = True -- Return all possible specified homomorphisms as a list.
 
     Summary:
     Uses the approach suggested by Robert Tarjan to compute a homomorphism between two groups.
@@ -450,10 +450,9 @@ def find_homomorphism(G, H, injective=False, surjective=False, compute=True, all
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup
-    >>> from sympy.combinatorics.homomorphisms import homomorphism, find_homomorphism, group_isomorphism
+    >>> from sympy.combinatorics.homomorphisms import find_homomorphism, group_isomorphism
     >>> from sympy.combinatorics.named_groups import DihedralGroup, AlternatingGroup
 
     >>> D = DihedralGroup(8)

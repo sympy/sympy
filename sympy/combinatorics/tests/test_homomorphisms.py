@@ -87,6 +87,8 @@ def test_find_homomorphism():
     # Find all possible epimorphisms.
     list_hom = find_homomorphism(G, H, surjective=True, all=True)
     assert all(elem.is_surjective() for elem in list_hom)
+    check = find_homomorphism(G, H, injective=True, surjective=True, compute=False)
+    assert check
 
     # PermutationGroup -> PermutationGroup
     D = DihedralGroup(8)
@@ -101,5 +103,7 @@ def test_find_homomorphism():
     # Two groups of the same prime order are isomorphic to each other.
     G = FpGroup(F, [a, b**5])
     H = CyclicGroup(5)
+    list_hom = find_homomorphism(G, H, surjective=True, all=True)
+    assert all(elem.is_injective() for elem in list_hom)
     assert G.order() == H.order()
     assert is_isomorphic(G, H)
