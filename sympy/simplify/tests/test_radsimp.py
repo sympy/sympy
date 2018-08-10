@@ -352,6 +352,7 @@ def test_collect_const():
 
 
 def test_issue_13143():
+    f = Function('f')
     fx = f(x).diff(x)
     e = f(x) + fx + f(x)*fx
     # collect function before derivative
