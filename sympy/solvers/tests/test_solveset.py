@@ -962,6 +962,9 @@ def test_conditionset():
     assert solveset(Eq(sin(Abs(x)), x), x, domain=S.Reals
         ) == ConditionSet(x, Eq(-x + sin(Abs(x)), 0), S.Reals)
 
+    assert solveset(y**x-z, x, S.Reals) == \
+        ConditionSet(x, Eq(y**x - z, 0), Reals)
+
 
 @XFAIL
 def test_conditionset_equality():
@@ -1957,7 +1960,9 @@ def test_is_logarithmic():
 
 
 def test_solve_logarithm():
+    y = Symbol('y')
     assert _solve_logarithm(log(x**y) - y*log(x), 0, x, S.Reals) == S.Reals
+    y = Symbol('y', positive=True)
     assert _solve_logarithm(log(x)*log(y), 0, x, S.Reals) == FiniteSet(1)
 
 # end of logarithmic tests
