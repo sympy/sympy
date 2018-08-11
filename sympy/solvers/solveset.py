@@ -246,10 +246,15 @@ def _invert_real(f, g_ys, symbol):
                 s, b = integer_log(rhs, base)
                 if b:
                     return _invert_real(expo, FiniteSet(s), symbol)
-            elif rhs is S.One:
-                # special case: 0**x - 1
-                return (expo, FiniteSet(0))
-            return (expo, S.EmptySet)
+                else:
+                    return _invert_real(expo, S.EmptySet, symbol)
+            elif base.is_zero:
+                one = Eq(rhs, 1)
+                if one == S.true:
+                    # special case: 0**x - 1
+                    return _invert_real(expo, FiniteSet(0), symbol)
+                elif one == S.false:
+                    return _invert_real(expo, S.EmptySet, symbol)
 
 
     if isinstance(f, TrigonometricFunction):
@@ -1123,8 +1128,8 @@ def _solve_exponential(lhs, rhs, symbol, domain):
             Ne(a_base, 0),
             Ne(b_base, 0))
 
-    log_type_equation = expand_log(log(a), force=True) - expand_log(log(-b), force=True)
-    solutions = _solveset(log_type_equation, symbol, domain)
+    L, R = map(lambda i: expand_log(log(i), force=True), (a, -b))
+    solutions = _solveset(L - R, symbol, domain)
 
     return ConditionSet(symbol, conditions, solutions)
 
