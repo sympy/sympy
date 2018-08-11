@@ -136,4 +136,4 @@ if matchpy:
     ShowSteps = False
     StepCounter = None
 
-def {}(rubi):
+def {}(rubi, matcher):
