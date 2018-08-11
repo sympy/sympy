@@ -42,7 +42,7 @@ class JointPSpace(ProductPSpace):
         if isinstance(sym, string_types):
             sym = Symbol(sym)
         if not isinstance(sym, Symbol):
-                raise TypeError("s should have been string or Symbol")
+            raise TypeError("s should have been string or Symbol")
         return Basic.__new__(cls, sym, dist)
 
     @property
