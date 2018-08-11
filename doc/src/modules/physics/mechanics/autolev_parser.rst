@@ -21,7 +21,7 @@ in SymPy.
 The sections below shall discuss details of the parser like usage, gotchas,
 issues and future improvements.
 For a detailed comparison of Autolev and SymPy/PyDy you might want to look at
-the PyDy for Autolev Users guide.
+the :ref:`PyDy for Autolev Users guide <pydy_for_autolev_users>`.
 
 .. _usage:
 
@@ -147,7 +147,7 @@ statements demonstrate how to get responses similar to the ones in the
 Autolev file.
 Note that we need to use SymPy functions like ``.ang_vel_in()``, ``.dcm()``
 etc in many cases unlike directly printing out the variables like ``zero``.
-If you are completely new to SymPy mechanics, the PyDy for Autolev Users
+If you are completely new to SymPy mechanics, the :ref:`PyDy for Autolev Users guide <pydy_for_autolev_users>`
 guide should help. You might also have to use basic SymPy simplifications
 and manipulations like ``trigsimp()``, ``expand()``, ``evalf()`` etc for 
 getting outputs similar to Autolev.
