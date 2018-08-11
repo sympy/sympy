@@ -23,6 +23,7 @@ from sympy.stats.crv import (ContinuousDistribution,
     SingleContinuousDistribution, SingleContinuousPSpace)
 from sympy.stats.drv import (DiscreteDistribution,
     SingleDiscreteDistribution, SingleDiscretePSpace)
+from sympy.core.compatibility import string_types
 from sympy.matrices import ImmutableMatrix
 from sympy.core.containers import Tuple
 from sympy.utilities.misc import filldedent
@@ -34,11 +35,14 @@ class JointPSpace(ProductPSpace):
     each component and a distribution.
     """
     def __new__(cls, sym, dist):
-        sym = sympify(sym)
         if isinstance(dist, SingleContinuousDistribution):
             return SingleContinuousPSpace(sym, dist)
         if isinstance(dist, SingleDiscreteDistribution):
             return SingleDiscretePSpace(sym, dist)
+        if isinstance(sym, string_types):
+            sym = Symbol(sym)
+        if not isinstance(sym, Symbol):
+            raise TypeError("s should have been string or Symbol")
         return Basic.__new__(cls, sym, dist)
 
     @property
