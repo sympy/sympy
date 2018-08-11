@@ -154,7 +154,7 @@ getting outputs similar to Autolev.
 Refer to the `SymPy Tutorial <http://docs.sympy.org/latest/tutorial/index.html>`_
 to know more about these.
 
-.. _gotchas:
+.. _gotchas_autolev:
 
 Gotchas
 =======
