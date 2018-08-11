@@ -11,6 +11,7 @@ x, y, z, a, b = symbols('x y z a b')
 def test_Normal():
     m = Normal('A', [1, 2], [[1, 0], [0, 1]])
     assert density(m)(1, 2) == 1/(2*pi)
+    raises (ValueError, lambda:m[2])
     raises (ValueError,\
         lambda: Normal('M',[1, 2], [[0, 0], [0, 1]]))
     n = Normal('B', [1, 2, 3], [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
@@ -68,3 +69,11 @@ def test_JointRV():
     assert density(X)(1, 2) == exp(-2)/(2*pi)
     assert isinstance(X.pspace.distribution, JointDistributionHandmade)
     assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(-S(1)/2)/(2*sqrt(pi))
+
+def test_expectation():
+    from sympy import simplify
+    from sympy.stats import E
+    m = Normal('A', [x, y], [[1, 0], [0, 1]])
+    assert simplify(E(m[1])) == y
+    raises (NotImplementedError, lambda: E(m))
+    raises (NotImplementedError, lambda: E(m**2))
