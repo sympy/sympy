@@ -57,8 +57,8 @@ class Plane(GeometryEntity):
             p3 = Point(b, dim=3)
             if Point3D.are_collinear(p1, p2, p3):
                 raise ValueError('Enter three non-collinear points')
-            a = p1.direction_ratio(p2)
-            b = p1.direction_ratio(p3)
+            a = p1.direction_ratios(p2)
+            b = p1.direction_ratios(p3)
             normal_vector = tuple(Matrix(a).cross(Matrix(b)))
         else:
             a = kwargs.pop('normal_vector', a)
@@ -122,10 +122,10 @@ class Plane(GeometryEntity):
         from sympy.geometry.line import LinearEntity3D
         if isinstance(o, LinearEntity3D):
             a = Matrix(self.normal_vector)
-            b = Matrix(o.direction_ratio)
+            b = Matrix(o.direction_ratios)
             c = a.dot(b)
             d = sqrt(sum([i**2 for i in self.normal_vector]))
-            e = sqrt(sum([i**2 for i in o.direction_ratio]))
+            e = sqrt(sum([i**2 for i in o.direction_ratios]))
             return asin(c/(d*e))
         if isinstance(o, Plane):
             a = Matrix(self.normal_vector)
@@ -292,14 +292,14 @@ class Plane(GeometryEntity):
            return t
         if isinstance(o, LinearEntity3D):
             a, b = o.p1, self.p1
-            c = Matrix(a.direction_ratio(b))
+            c = Matrix(a.direction_ratios(b))
             d = Matrix(self.normal_vector)
             e = c.dot(d)
             f = sqrt(sum([i**2 for i in self.normal_vector]))
             return abs(e / f)
         if isinstance(o, Plane):
             a, b = o.p1, self.p1
-            c = Matrix(a.direction_ratio(b))
+            c = Matrix(a.direction_ratios(b))
             d = Matrix(self.normal_vector)
             e = c.dot(d)
             f = sqrt(sum([i**2 for i in self.normal_vector]))
@@ -349,7 +349,7 @@ class Plane(GeometryEntity):
         """
         x, y, z = [i if i else Symbol(j, real=True) for i, j in zip((x, y, z), 'xyz')]
         a = Point3D(x, y, z)
-        b = self.p1.direction_ratio(a)
+        b = self.p1.direction_ratios(a)
         c = self.normal_vector
         return (sum(i*j for i, j in zip(b, c)))
 
@@ -432,7 +432,7 @@ class Plane(GeometryEntity):
                 e = o.equation(x, y, z)
                 result = list(linsolve([d, e], x, y, z))[0]
                 for i in (x, y, z): result = result.subs(i, 0)
-                return [Line3D(Point3D(result), direction_ratio=c)]
+                return [Line3D(Point3D(result), direction_ratios=c)]
 
 
     def is_coplanar(self, o):
@@ -486,7 +486,7 @@ class Plane(GeometryEntity):
         """
         from sympy.geometry.line import LinearEntity3D
         if isinstance(l, LinearEntity3D):
-            a = l.direction_ratio
+            a = l.direction_ratios
             b = self.normal_vector
             c = sum([i*j for i, j in zip(a, b)])
             if c == 0:
@@ -527,7 +527,7 @@ class Plane(GeometryEntity):
         """
         from sympy.geometry.line import LinearEntity3D
         if isinstance(l, LinearEntity3D):
-            a = Matrix(l.direction_ratio)
+            a = Matrix(l.direction_ratios)
             b = Matrix(self.normal_vector)
             if a.cross(b).is_zero:
                 return True
@@ -631,7 +631,7 @@ class Plane(GeometryEntity):
 
         """
         a = self.normal_vector
-        return Line3D(pt, direction_ratio=a)
+        return Line3D(pt, direction_ratios=a)
 
     def perpendicular_plane(self, *pts):
         """
@@ -682,7 +682,7 @@ class Plane(GeometryEntity):
 
         p1, p2 = [Point(i, dim=3) for i in pts]
         l = Line3D(p1, p2)
-        n = Line3D(p1, direction_ratio=self.normal_vector)
+        n = Line3D(p1, direction_ratios=self.normal_vector)
         if l in n:  # XXX should an error be raised instead?
             # there are infinitely many perpendicular planes;
             x, y, z = self.normal_vector
