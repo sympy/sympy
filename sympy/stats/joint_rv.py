@@ -14,7 +14,7 @@ from __future__ import print_function, division
 # __all__ = ['marginal_distribution']
 
 from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
- Dummy, Mul, Le)
+ Dummy, Mul)
 from sympy.concrete.summations import Sum, summation
 from sympy.integrals.integrals import Integral, integrate
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
@@ -180,7 +180,7 @@ class JointRandomSymbol(RandomSymbol):
     def __getitem__(self, key):
         from sympy.stats.joint_rv import JointPSpace
         if isinstance(self.pspace, JointPSpace):
-            if Le(self.pspace.component_count, key):
+            if self.pspace.component_count <= key:
                 raise ValueError("Index keys for %s can only up to %s." %
                     (self.name, self.pspace.component_count - 1))
             return Indexed(self, key)
