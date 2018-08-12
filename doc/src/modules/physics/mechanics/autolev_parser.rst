@@ -457,7 +457,7 @@ Gotchas
   
   3. When it comes to inertia getters (``I_C_D>>`` used in an expression or
   ``INERTIA`` commands), these MUST be used with the ``EXPRESS`` command
-  to specifiy the frame as SymPy needs this information to compute the
+  to specify the frame as SymPy needs this information to compute the
   inertia dyadic.
 
   .. code-block:: none
