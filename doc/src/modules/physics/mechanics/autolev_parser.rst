@@ -584,7 +584,7 @@ of Ch4*, *Ch5* and *Ch6* (less important) ) would make the parser more complete.
 2. Fixing Issues
 ----------------
 The second thing to do would be to go about fixing the problems described 
-above in the :ref:`Gotchas <gotchas>` and :ref:`Limitations and Issues <issues>` 
+above in the :ref:`Gotchas <gotchas_autolev>` and :ref:`Limitations and Issues <issues>` 
 sections in order of priority and ease. Many of these require changes
 in the parser code while some of these are better fixed by adding some
 functionality to SymPy.
