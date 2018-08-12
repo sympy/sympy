@@ -344,7 +344,6 @@ def rubi_integrate(expr, var, showsteps=False):
         return process_final_integral(results)
     results = code_generated_int(expr, var)
     # results = rubi.replace(Integral(expr, var), max_count = 10)
-    print(results)
     return process_final_integral(results)
 
 @doctest_depends_on(modules=('matchpy',))
