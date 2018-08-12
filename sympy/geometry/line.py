@@ -427,7 +427,7 @@ class LinearEntity(GeometrySet):
         >>> l1.intersection(p3)
         [Point3D(7, 7, 7)]
         >>> l1 = Line3D(Point3D(4,19,12), Point3D(5,25,17))
-        >>> l2 = Line3D(Point3D(-3, -15, -19), direction_ratio=[2,8,8])
+        >>> l2 = Line3D(Point3D(-3, -15, -19), direction_ratios=[2,8,8])
         >>> l1.intersection(l2)
         [Point3D(1, 1, -3)]
         >>> p6, p7 = Point3D(0, 5, 2), Point3D(2, 6, 3)
@@ -1041,14 +1041,14 @@ class Line(LinearEntity):
     p1 : Point
     p2 : Point
     slope : sympy expression
-    direction_ratio : list
+    direction_ratios : list
 
     Notes
     =====
 
     `Line` will automatically subclass to `Line2D` or `Line3D` based
     on the dimension of `p1`.  The `slope` argument is only relevant
-    for `Line2D` and the `direction_ratio` argument is only relevant
+    for `Line2D` and the `direction_ratios` argument is only relevant
     for `Line3D`.
 
     See Also
@@ -2302,7 +2302,7 @@ class LinearEntity3D(LinearEntity):
 
     p1
     p2
-    direction_ratio
+    direction_ratios
     direction_cosine
     points
 
@@ -2325,7 +2325,7 @@ class LinearEntity3D(LinearEntity):
     ambient_dimension = 3
 
     @property
-    def direction_ratio(self):
+    def direction_ratios(self):
         """The direction ratio of a given line in 3D.
 
         See Also
@@ -2339,11 +2339,11 @@ class LinearEntity3D(LinearEntity):
         >>> from sympy import Point3D, Line3D
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(5, 3, 1)
         >>> l = Line3D(p1, p2)
-        >>> l.direction_ratio
+        >>> l.direction_ratios
         [5, 3, 1]
         """
         p1, p2 = self.points
-        return p1.direction_ratio(p2)
+        return p1.direction_ratios(p2)
 
     @property
     def direction_cosine(self):
@@ -2372,15 +2372,15 @@ class LinearEntity3D(LinearEntity):
 class Line3D(LinearEntity3D, Line):
     """An infinite 3D line in space.
 
-    A line is declared with two distinct points or a point and direction_ratio
-    as defined using keyword `direction_ratio`.
+    A line is declared with two distinct points or a point and direction_ratios
+    as defined using keyword `direction_ratios`.
 
     Parameters
     ==========
 
     p1 : Point3D
     pt : Point3D
-    direction_ratio : list
+    direction_ratios : list
 
     See Also
     ========
@@ -2401,20 +2401,20 @@ class Line3D(LinearEntity3D, Line):
     (Point3D(2, 3, 4), Point3D(3, 5, 1))
     """
 
-    def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
+    def __new__(cls, p1, pt=None, direction_ratios=[], **kwargs):
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
                 raise ValueError('if p1 is a LinearEntity, pt must be None.')
             p1, pt = p1.args
         else:
             p1 = Point(p1, dim=3)
-        if pt is not None and len(direction_ratio) == 0:
+        if pt is not None and len(direction_ratios) == 0:
             pt = Point(pt, dim=3)
-        elif len(direction_ratio) == 3 and pt is None:
-            pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
-                         p1.z + direction_ratio[2])
+        elif len(direction_ratios) == 3 and pt is None:
+            pt = Point3D(p1.x + direction_ratios[0], p1.y + direction_ratios[1],
+                         p1.z + direction_ratios[2])
         else:
-            raise ValueError('A 2nd Point or keyword "direction_ratio" must '
+            raise ValueError('A 2nd Point or keyword "direction_ratios" must '
                              'be used.')
 
         return LinearEntity3D.__new__(cls, p1, pt, **kwargs)
@@ -2458,7 +2458,7 @@ class Line3D(LinearEntity3D, Line):
         from sympy import solve
         x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, 'k')]
         p1, p2 = self.points
-        d1, d2, d3 = p1.direction_ratio(p2)
+        d1, d2, d3 = p1.direction_ratios(p2)
         x1, y1, z1 = p1
         v = (x, y, z)
         eqs = [-d1*k + x - x1, -d2*k + y - y1, -d3*k + z - z1]
@@ -2481,7 +2481,7 @@ class Ray3D(LinearEntity3D, Ray):
     p1 : Point3D
         The source of the Ray
     p2 : Point or a direction vector
-    direction_ratio: Determines the direction in which the Ray propagates.
+    direction_ratios: Determines the direction in which the Ray propagates.
 
 
     Attributes
@@ -2514,12 +2514,12 @@ class Ray3D(LinearEntity3D, Ray):
     oo
     >>> r.ydirection
     oo
-    >>> r.direction_ratio
+    >>> r.direction_ratios
     [1, 2, -4]
 
     """
 
-    def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
+    def __new__(cls, p1, pt=None, direction_ratios=[], **kwargs):
         from sympy.utilities.misc import filldedent
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
@@ -2527,14 +2527,14 @@ class Ray3D(LinearEntity3D, Ray):
             p1, pt = p1.args
         else:
             p1 = Point(p1, dim=3)
-        if pt is not None and len(direction_ratio) == 0:
+        if pt is not None and len(direction_ratios) == 0:
             pt = Point(pt, dim=3)
-        elif len(direction_ratio) == 3 and pt is None:
-            pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
-                         p1.z + direction_ratio[2])
+        elif len(direction_ratios) == 3 and pt is None:
+            pt = Point3D(p1.x + direction_ratios[0], p1.y + direction_ratios[1],
+                         p1.z + direction_ratios[2])
         else:
             raise ValueError(filldedent('''
-                A 2nd Point or keyword "direction_ratio" must be used.
+                A 2nd Point or keyword "direction_ratios" must be used.
             '''))
 
         return LinearEntity3D.__new__(cls, p1, pt, **kwargs)

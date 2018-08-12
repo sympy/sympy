@@ -71,7 +71,7 @@ def test_arbitrary_point():
            Point(t + 1, t + 1)
     assert Segment((1, 1), (2, 3)).arbitrary_point() == Point(1 + t, 1 + 2 * t)
     assert l1.perpendicular_segment(l1.arbitrary_point()) == l1.arbitrary_point()
-    assert Ray3D((1, 1, 1), direction_ratio=[1, 2, 3]).arbitrary_point() == \
+    assert Ray3D((1, 1, 1), direction_ratios=[1, 2, 3]).arbitrary_point() == \
            Point3D(t + 1, 2 * t + 1, 3 * t + 1)
     assert Segment3D(Point3D(0, 0, 0), Point3D(1, 1, 1)).midpoint == \
            Point3D(Rational(1, 2), Rational(1, 2), Rational(1, 2))
@@ -224,9 +224,9 @@ def test_basic_properties_3d():
 
     s1 = Segment3D(p1, p2)
 
-    assert Line3D((1, 1, 1), direction_ratio=[2, 3, 4]) == Line3D(Point3D(1, 1, 1), Point3D(3, 4, 5))
-    assert Line3D((1, 1, 1), direction_ratio=[1, 5, 7]) == Line3D(Point3D(1, 1, 1), Point3D(2, 6, 8))
-    assert Line3D((1, 1, 1), direction_ratio=[1, 2, 3]) == Line3D(Point3D(1, 1, 1), Point3D(2, 3, 4))
+    assert Line3D((1, 1, 1), direction_ratios=[2, 3, 4]) == Line3D(Point3D(1, 1, 1), Point3D(3, 4, 5))
+    assert Line3D((1, 1, 1), direction_ratios=[1, 5, 7]) == Line3D(Point3D(1, 1, 1), Point3D(2, 6, 8))
+    assert Line3D((1, 1, 1), direction_ratios=[1, 2, 3]) == Line3D(Point3D(1, 1, 1), Point3D(2, 3, 4))
     assert Line3D(Line3D(p1, Point3D(0, 1, 0))) == Line3D(p1, Point3D(0, 1, 0))
     assert Ray3D(Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))) == Ray3D(p1, Point3D(1, 0, 0))
     assert Line3D(p1, p2) != Line3D(p2, p1)
@@ -238,7 +238,7 @@ def test_basic_properties_3d():
     assert p1 in l1
     assert p1 not in l3
 
-    assert l1.direction_ratio == [1, 1, 1]
+    assert l1.direction_ratios == [1, 1, 1]
 
     assert s1.midpoint == Point3D(Rational(1, 2), Rational(1, 2), Rational(1, 2))
     # Test zdirection
@@ -690,9 +690,9 @@ def test_ray_generation():
                                                Point(2, 1 + tan(4.02 * pi)))
     assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + tan(5)))
 
-    assert Ray3D((1, 1, 1), direction_ratio=[4, 4, 4]) == Ray3D(Point3D(1, 1, 1), Point3D(5, 5, 5))
-    assert Ray3D((1, 1, 1), direction_ratio=[1, 2, 3]) == Ray3D(Point3D(1, 1, 1), Point3D(2, 3, 4))
-    assert Ray3D((1, 1, 1), direction_ratio=[1, 1, 1]) == Ray3D(Point3D(1, 1, 1), Point3D(2, 2, 2))
+    assert Ray3D((1, 1, 1), direction_ratios=[4, 4, 4]) == Ray3D(Point3D(1, 1, 1), Point3D(5, 5, 5))
+    assert Ray3D((1, 1, 1), direction_ratios=[1, 2, 3]) == Ray3D(Point3D(1, 1, 1), Point3D(2, 3, 4))
+    assert Ray3D((1, 1, 1), direction_ratios=[1, 1, 1]) == Ray3D(Point3D(1, 1, 1), Point3D(2, 2, 2))
 
 
 def test_symbolic_intersect():

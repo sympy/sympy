@@ -494,13 +494,6 @@ class Ellipse(GeometrySet):
         --------------------------------   +     ----------------------------------   =  1
                 m**2 * ( 1 + s**2 )                  M**2 * ( 1 + s**2 )
 
-        Examples
-        ========
-        >>> from sympy import Ellipse, Point
-        >>> e = Ellipse(Point(0,0), 4, 3)
-        >>> e.equation_using_slope(2)
-        (-2*x + y)**2/45 + (x + 2*y)**2/80 - 1
-
         Reference
         =========
 
