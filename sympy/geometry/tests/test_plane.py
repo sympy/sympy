@@ -182,13 +182,13 @@ def test_plane():
     assert pl8.intersection(Segment3D(p1, (21, 1, 0)))[0].equals(Segment3D(p1, (21, 1, 0)))
     assert pl8.intersection(Plane(p1, normal_vector=(0, 0, 112)))[0].equals(pl8)
     assert pl8.intersection(Plane(p1, normal_vector=(0, 12, 0)))[0].equals(
-        Line3D(p1, direction_ratio=(112 * pi, 0, 0)))
+        Line3D(p1, direction_ratios=(112 * pi, 0, 0)))
     assert pl8.intersection(Plane(p1, normal_vector=(11, 0, 1)))[0].equals(
-        Line3D(p1, direction_ratio=(0, -11, 0)))
+        Line3D(p1, direction_ratios=(0, -11, 0)))
     assert pl8.intersection(Plane(p1, normal_vector=(1, 0, 11)))[0].equals(
-        Line3D(p1, direction_ratio=(0, 11, 0)))
+        Line3D(p1, direction_ratios=(0, 11, 0)))
     assert pl8.intersection(Plane(p1, normal_vector=(-1, -1, -11)))[0].equals(
-        Line3D(p1, direction_ratio=(1, -1, 0)))
+        Line3D(p1, direction_ratios=(1, -1, 0)))
     assert pl3.random_point() in pl3
     assert len(pl8.intersection(Ray3D(Point3D(0, 2, 3), Point3D(1, 0, 3)))) is 0
     # check if two plane are equals
