@@ -3,7 +3,7 @@ from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV
 from sympy.stats.crv_types import Normal
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix
 x, y, z, a, b = symbols('x y z a b')
@@ -75,5 +75,9 @@ def test_expectation():
     from sympy.stats import E
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
     assert simplify(E(m[1])) == y
-    raises (NotImplementedError, lambda: E(m))
-    raises (NotImplementedError, lambda: E(m**2))
+
+@XFAIL
+def test_joint_vector_expectation():
+    from sympy.stats import E
+    m = Normal('A', [x, y], [[1, 0], [0, 1]])
+    assert E(m) == (x, y)
