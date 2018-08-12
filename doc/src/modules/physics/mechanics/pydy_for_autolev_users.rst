@@ -52,7 +52,7 @@ Some Key Differences
 +-----------------------------------+-----------------------------------+
 ||                                  ||                                  |
 | Autolev generates Matlab, C, or   | PyDy generates numerical Python,  |
-| Fortan code from a small set of   | C or Octave/Matlab code from a    |
+| Fortran code from a small set of  | C or Octave/Matlab code from a    |
 | symbolic mathematics.             | large set of symbolic mathematics |
 |                                   | created with SymPy. It also builds|
 |                                   | on the popular scientific Python  |
@@ -292,7 +292,7 @@ Mathematical Equivalents
 |                       |                       | computation related   |
 |                       |                       | to polynomials and    |
 |                       |                       | roots refer to        |
-|                       |                       | `mpmath calculus. <htt|
+|                       |                       | `mpmath/calculus. <htt|
 |                       |                       | p://docs.s            | 
 |                       |                       | ympy.org/0.7.6/module |
 |                       |                       | s/mpmath/calculus/pol |
@@ -300,7 +300,7 @@ Mathematical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``Solve(A, x1, x2)``  | ``sm.linsolve(A,      | For more information  |
 |                       | (x1, x2))``           | refer to              |   
-|                       |                       | `solvers solveset. <ht|
+|                       |                       | `solvers/solveset. <ht|
 | where A is an         | where A is an         | tp://docs.sympy.org/l |
 | augmented matrix that | augmented matrix      | atest/modules/solvers |
 | represents the linear |                       | /solveset.html>`_     |
@@ -384,7 +384,7 @@ Physical Equivalents
 |                       |                       |                       |
 |                       | Af.x, Af.y and Af.z   | For more information  |
 |                       | are equivalent to     | refer to              |
-|                       | A1>, A2> and A3>.     | `mechanics masses. <ht|
+|                       | A1>, A2> and A3>.     | `mechanics/masses. <ht|
 |                       |                       | tp://docs.sym         |
 |                       |                       | py.org/latest/modules |
 |                       |                       | /physics/mechanics/ma |
@@ -392,10 +392,10 @@ Physical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``Frames A``          | ``A =                 | For more information  |
 |                       | me.ReferenceFrame(‘A’ | refer to              |
-| ``V1> =               | )``                   | `physics vectors. <htt|
+| ``V1> =               | )``                   | `physics/vectors. <htt|
 | X1*A1> + X2*A2>``     |                       | p://docs.sympy        |
 |                       | ``v1 =                | .org/latest/modules/p |
-|                       | x1*A.x + x2*A.y``     | hysics/vector/vectors |
+|                       | x1*A.x + x2*A.y``     | hysics/vector/index   |
 |                       |                       | .html>`_              |
 +-----------------------+-----------------------+-----------------------+
 | ``Newtonian N``       | ``N =                 | SymPy doesn’t specify |
@@ -449,7 +449,7 @@ Physical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``vec> = P_O_Q>/L``   | ``vec  =              | For more information  |                
 |                       | (Qo.pos_from(O))/L``  | refer to              |
-| ``vec> =              |                       | `physics vectors. <htt|
+| ``vec> =              |                       | `physics/vectors. <htt|
 | u1*N1> + u2*N2>``     | ``vec =               | p://docs.sympy.org/   |
 |                       | u1*N.x + u2*N.y``     | latest/modules/       |
 | ``Cross(a>, b>)``     |                       | physics/vector/       |
@@ -544,7 +544,7 @@ Physical Equivalents
 | ``V2pts(A,B,P,Q)``    | ``Q.v2pt_theory(P, A, |                       |
 |                       | B)``                  |                       |
 +-----------------------+-----------------------+-----------------------+
-| ``A1pt(A,B,P,Q)` `    | ``Q.a1pt_theory(P, A, |                       |
+| ``A1pt(A,B,P,Q)``     | ``Q.a1pt_theory(P, A, |                       |
 |                       | B)``                  |                       |
 +-----------------------+-----------------------+-----------------------+
 | ``A2pts(A,B,P,Q)``    | ``Q.a2pt_theory(P, A, |                       |
@@ -600,7 +600,7 @@ Physical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``Constrain(...)``    | ``velocity_constraints| For more details      |
 |                       | = [...]``             | refer to              |
-|                       |                       | `mechanics kane <http |
+|                       |                       | `mechanics/kane <http |
 |                       | ``u_dependent =       | ://docs.sympy.or      |
 |                       | [...]``               | g/latest/modules/phys |
 |                       |                       | ics/mechanics/kane.ht |
@@ -614,7 +614,7 @@ Physical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``Fr()``              | ``KM = KanesMethod(f, | For more details      |
 | ``FrStar()``          | q_ind, u_ind, kd_eqs, | refer to              |
-|                       | q_dependent, configura| `mechanics kane <http |
+|                       | q_dependent, configura| `mechanics/kane <http |
 |                       | tion_constraints, u_de| ://docs.sympy.or      |
 |                       | pendent, velocity_cons| g/latest/modules/phys |
 |                       | traints, acceleration_| ics/mechanics/kane.ht |
@@ -722,7 +722,7 @@ Links
 `SymPy Documentation <http://docs.sympy.org/>`_
 
 `SymPy Physics Vector
-Dcumentation <http://docs.sympy.org/latest/modules/physics/vector/index.html>`_
+Documentation <http://docs.sympy.org/latest/modules/physics/vector/index.html>`_
 
 `SymPy Mechanics
 Documentation <http://docs.sympy.org/latest/modules/physics/mechanics/index.html>`_
