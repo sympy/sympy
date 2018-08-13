@@ -1630,7 +1630,7 @@ def solvify(f, symbol, domain):
 ###############################################################################
 
 
-def linear_eq_to_matrix(equations, *symbols, **options):
+def linear_eq_to_matrix(equations, *symbols):
     r"""
     Converts a given System of Equations into Matrix form.
     Here `equations` must be a linear system of equations in
@@ -1708,15 +1708,7 @@ def linear_eq_to_matrix(equations, *symbols, **options):
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
-    # setting default value for check_linearity
-    check_linearity = options.get('check_linearity', False)
-
-    if check_linearity:
-        # removing duplicates from symbols
-        symbs = uniq(symbols)
-        symbols = []
-        for syms in symbs:
-            symbols.append(syms)
+    symbols = list(uniq(symbols))
 
     M = Matrix([symbols])
     # initialize Matrix with symbols + 1 columns
@@ -1735,27 +1727,26 @@ def linear_eq_to_matrix(equations, *symbols, **options):
 
         # append constant term (term free from symbols)
         coeff_list.append(-f.as_coeff_add(*symbols)[0])
+        
+        # Forming a new equation
+        eq_new = 0
+        i = 0
+        while i < len(coeff_list) - 1:
+            eq_new += symbols[i]*coeff_list[i]
+            i += 1
+        eq_new += (-coeff_list[-1])
 
-        if check_linearity:
-            # Forming a new equation
-            eq_new = 0
-            i = 0
-            while i < len(coeff_list) - 1:
-                eq_new += symbols[i]*coeff_list[i]
-                i += 1
-            eq_new += (-coeff_list[-1])
-
-            # checking if equation is linear
-            # if it is not linear then raise error
-            if solve_linear(eq_new - equation) == (0,1):
-                free_symbs = []
-                for symbol in symbols:
-                    for symb in symbol.free_symbols:
-                        free_symbs.append(symb)
-                if len(list(set(free_symbs))) != len(symbols):
-                    raise ValueError("Equation %s is not linear"%equation)
-            else:
+        # checking if equation is linear
+        # if it is not linear then raise error
+        if solve_linear(eq_new - equation) == (0,1):
+            free_symbs = []
+            for symbol in symbols:
+                for symb in symbol.free_symbols:
+                    free_symbs.append(symb)
+            if len(list(set(free_symbs))) != len(symbols):
                 raise ValueError("Equation %s is not linear"%equation)
+        else:
+            raise ValueError("Equation %s is not linear"%equation)
 
         # insert equations coeff's into rows
         M = M.row_insert(row_no, Matrix([coeff_list]))
