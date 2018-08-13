@@ -12,7 +12,6 @@ from sympy.matrices.expressions.determinant import det
 # ]
 
 def multivariate_rv(cls, sym, *args):
-    sym = sympify(sym)
     args = list(map(sympify, args))
     dist = cls(*args)
     args = dist.args

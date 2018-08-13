@@ -142,6 +142,8 @@ def test_Beam():
     b3 = Beam(9, E, I)
     b3.apply_load(value=-2, start=2, order=2, end=3)
     b3.bc_slope.append((0, 2))
+    C3 = symbols('C3')
+    C4 = symbols('C4')
     p = b3.load
     q = - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
     assert p == q
@@ -152,7 +154,7 @@ def test_Beam():
 
     p = b3.deflection()
     q = 2*x - SingularityFunction(x, 2, 6)/180 + SingularityFunction(x, 3, 4)/12 + SingularityFunction(x, 3, 6)/180
-    assert p == q/(E*I)
+    assert p == q/(E*I) + C4
 
     b4 = Beam(4, E, I)
     b4.apply_load(-3, 0, 0, end=3)
@@ -163,15 +165,46 @@ def test_Beam():
 
     p = b4.slope()
     q = -3*SingularityFunction(x, 0, 3)/6 + 3*SingularityFunction(x, 3, 3)/6
-    assert p == q/(E*I)
+    assert p == q/(E*I) + C3
 
     p = b4.deflection()
     q = -3*SingularityFunction(x, 0, 4)/24 + 3*SingularityFunction(x, 3, 4)/24
-    assert p == q/(E*I)
+    assert p == q/(E*I) + C3*x + C4
 
     raises(ValueError, lambda: b4.apply_load(-3, 0, -1, end=3))
     with raises(TypeError):
         b4.variable = 1
+
+
+def test_insufficient_bconditions():
+    # Test cases when required number of boundary conditions
+    # are not provided to solve the integration constants.
+    L = symbols('L', positive=True)
+    E, I, P, a3, a4 = symbols('E I P a3 a4')
+
+    b = Beam(L, E, I, base_char='a')
+    b.apply_load(R2, L, -1)
+    b.apply_load(R1, 0, -1)
+    b.apply_load(-P, L/2, -1)
+    b.solve_for_reaction_loads(R1, R2)
+
+    p = b.slope()
+    q = P*SingularityFunction(x, 0, 2)/4 - P*SingularityFunction(x, L/2, 2)/2 + P*SingularityFunction(x, L, 2)/4
+    assert p == q/(E*I) + a3
+
+    p = b.deflection()
+    q = P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12
+    assert p == q/(E*I) + a3*x + a4
+
+    b.bc_deflection = [(0, 0)]
+    p = b.deflection()
+    q = a3*x + P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12
+    assert p == q/(E*I)
+
+    b.bc_deflection = [(0, 0), (L, 0)]
+    p = b.deflection()
+    q = -L**2*P*x/16 + P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12
+    assert p == q/(E*I)
 
 
 def test_statically_indeterminate():

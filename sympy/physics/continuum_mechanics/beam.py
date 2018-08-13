@@ -5,7 +5,7 @@ singularity functions in mechanics.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol, diff
+from sympy.core import S, Symbol, diff, symbols
 from sympy.solvers import linsolve
 from sympy.printing import sstr
 from sympy.functions import SingularityFunction, Piecewise
@@ -65,7 +65,7 @@ class Beam(object):
          + Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
     """
 
-    def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x')):
+    def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x'), base_char='C'):
         """Initializes the class.
 
         Parameters
@@ -83,11 +83,16 @@ class Beam(object):
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
+        base_char : String, optional
+            A String that will be used as base character to generate sequential
+            symbols for integration constants in cases where boundary conditions
+            are not sufficient to solve them.
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
         self.second_moment = second_moment
         self.variable = variable
+        self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
         self._applied_loads = []
@@ -1040,9 +1045,13 @@ class Beam(object):
                     conditions.append(((prev_def + deflection_value), args[i][1]))
                     prev_def = deflection_value.subs(x, args[i][1].args[1])
                 return Piecewise(*conditions)
-            return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x)
+            base_char = self._base_char
+            constants = symbols(base_char + '3:5')
+            return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
         elif not self._boundary_conditions['deflection']:
-            return integrate(self.slope(), x)
+            base_char = self._base_char
+            constant = symbols(base_char + '4')
+            return integrate(self.slope(), x) + constant
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
             if self._composite_type == "fixed":
                 args = I.args
@@ -1056,8 +1065,8 @@ class Beam(object):
                     conditions.append(((prev_def + deflection_value), args[i][1]))
                     prev_def = deflection_value.subs(x, args[i][1].args[1])
                 return Piecewise(*conditions)
-            C3 = Symbol('C3')
-            C4 = Symbol('C4')
+            base_char = self._base_char
+            C3, C4 = symbols(base_char + '3:5')    # Integration constants
             slope_curve = integrate(self.bending_moment(), x) + C3
             deflection_curve = integrate(slope_curve, x) + C4
             bc_eqs = []

@@ -3,7 +3,7 @@ from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV
 from sympy.stats.crv_types import Normal
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix
 x, y, z, a, b = symbols('x y z a b')
@@ -11,6 +11,7 @@ x, y, z, a, b = symbols('x y z a b')
 def test_Normal():
     m = Normal('A', [1, 2], [[1, 0], [0, 1]])
     assert density(m)(1, 2) == 1/(2*pi)
+    raises (ValueError, lambda:m[2])
     raises (ValueError,\
         lambda: Normal('M',[1, 2], [[0, 0], [0, 1]]))
     n = Normal('B', [1, 2, 3], [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
@@ -18,8 +19,8 @@ def test_Normal():
     assert density(m)(x, y) == density(p)(x, y)
     assert marginal_distribution(n, 0, 1)(1, 2) == 1/(2*pi)
     assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
-    N1 = Normal('N1', [1, 2], [[x, 0], [0, y]])
-    assert str(density(N1)(0, 0)) == "exp(-(4*x + y)/(2*x*y))/(2*pi*sqrt(x*y))"
+    N = Normal('N', [1, 2], [[x, 0], [0, y]])
+    assert density(N)(0, 0) == exp(-2/y - 1/(2*x))/(2*pi*sqrt(x*y))
 
     raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
 
@@ -74,3 +75,15 @@ def test_MarginalDistribution():
     from sympy.stats.joint_rv_types import MultivariateNormalDistribution
     N1 = MultivariateNormalDistribution(Matrix([0, 0]), Matrix([[1, 0], [0, 1]]))
     assert MarginalDistribution(N1, (1,)).pdf(x).doit() == sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))
+
+def test_expectation():
+    from sympy import simplify
+    from sympy.stats import E
+    m = Normal('A', [x, y], [[1, 0], [0, 1]])
+    assert simplify(E(m[1])) == y
+
+@XFAIL
+def test_joint_vector_expectation():
+    from sympy.stats import E
+    m = Normal('A', [x, y], [[1, 0], [0, 1]])
+    assert E(m) == (x, y)

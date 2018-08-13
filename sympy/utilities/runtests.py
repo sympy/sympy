@@ -662,6 +662,7 @@ def _doctest(*paths, **kwargs):
     split  = kwargs.get('split', None)
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
+        "doc/src/modules/physics/mechanics/autolev_parser.rst",
         "sympy/physics/gaussopt.py", # raises deprecation warning
         "sympy/galgebra.py", # raises ImportError
         "sympy/this.py", # Prints text to the terminal
