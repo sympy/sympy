@@ -959,3 +959,13 @@ def test_function_assumptions():
     # way UndefinedFunction.__new__ works.
     f_real2 = Function('f', is_real=True)
     assert f_real2(x).is_real is True
+
+
+def test_undef_fcn_float_issue_6938():
+    f = Function('ceil')
+    assert not f(0.3).is_number
+    f = Function('sin')
+    assert not f(0.3).is_number
+    assert not f(pi).evalf().is_number
+    x = Symbol('x')
+    assert not f(x).evalf(subs={x:1.2}).is_number
