@@ -530,8 +530,7 @@ def subgroup_quotient(G, H, parent_group=None, homomorphism=False):
     Returns
     =======
     * When `homomorphism = True`, quotient group along with the homomorphism
-    from the quotient to the parent_group whose image is isomorphic to G
-    when G is generated any set of elements of the parent_group
+    from the quotient to the parent_group whose image is isomorphic to G.
     * Only the quotient group in all other cases.
 
     Examples
@@ -553,10 +552,14 @@ def subgroup_quotient(G, H, parent_group=None, homomorphism=False):
 
     >>> G = [x, y]
     >>> H = [x*y**2*x*y, y**2*x*y*x, x*y*x]
-    >>> T = subgroup_quotient(G, H, parent_group=f)
+    >>> K, T = subgroup_quotient(G, H, parent_group=f, homomorphism=True)
     >>> G = f.subgroup(G)
     >>> H = f.subgroup(H)
-    >>> T.order() == G.order()/H.order()
+    >>> K.order() == G.order()/H.order()
+    True
+    >>> T(K.generators) == list(f.generators)
+    True
+    >>> T.domain == K
     True
 
     '''

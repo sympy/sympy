@@ -450,6 +450,7 @@ def find_homomorphism(G, H, injective=False, surjective=False, compute=True, all
     ========
 
     >>> from sympy.combinatorics import Permutation
+    >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup
     >>> from sympy.combinatorics.homomorphisms import find_homomorphism, group_isomorphism
