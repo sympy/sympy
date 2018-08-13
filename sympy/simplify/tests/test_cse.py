@@ -4,7 +4,7 @@ from operator import add
 
 from sympy import (
     Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
+    Matrix, MatrixBase, S, cos, sin, Eq, Function, Tuple, CRootOf,
     IndexedBase, Idx, Piecewise, O
 )
 from sympy.core.function import count_ops
@@ -80,7 +80,7 @@ def test_cse_single2():
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
     substs, reduced = cse(Matrix([[1]]))
-    assert isinstance(reduced[0], Matrix)
+    assert isinstance(reduced[0], MatrixBase)
 
 
 def test_cse_not_possible():
@@ -412,13 +412,15 @@ def test_issue_7840():
 
 
 def test_issue_8891():
-    for cls in (MutableDenseMatrix, MutableSparseMatrix,
-            ImmutableDenseMatrix, ImmutableSparseMatrix):
-        m = cls(2, 2, [x + y, 0, 0, 0])
+    for cls_input, cls_output in ((MutableDenseMatrix, ImmutableDenseMatrix),
+            (MutableSparseMatrix, ImmutableSparseMatrix),
+            (ImmutableDenseMatrix, ImmutableDenseMatrix),
+            (ImmutableSparseMatrix, ImmutableSparseMatrix)):
+        m = cls_input(2, 2, [x + y, 0, 0, 0])
         res = cse([x + y, m])
-        ans = ([(x0, x + y)], [x0, cls([[x0, 0], [0, 0]])])
+        ans = ([(x0, x + y)], [x0, cls_input([[x0, 0], [0, 0]])])
         assert res == ans
-        assert isinstance(res[1][-1], cls)
+        assert isinstance(res[1][-1], cls_output)
 
 
 def test_issue_11230():
@@ -534,3 +536,11 @@ def test_issue_13000():
 def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
+
+def test_issue_15082():
+    exprs = [1]
+    cse_eq = cse(exprs)[1][0]
+    assert cse_eq == 1
+    exprs = 1
+    cse_eq = cse(exprs)[1][0]
+    assert cse_eq == 1

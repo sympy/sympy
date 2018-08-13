@@ -656,7 +656,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     Examples
     ========
 
-    >>> from sympy import cse, SparseMatrix
+    >>> from sympy import cse, SparseMatrix, ImmutableSparseMatrix
     >>> from sympy.abc import x, y, z, w
     >>> cse(((w + x + y + z)*(w + y + z))/(w + x)**3)
     ([(x0, y + z), (x1, w + x)], [(w + x0)*(x0 + x1)/x1**3])
@@ -676,7 +676,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     Note: the type and mutability of input matrices is retained.
 
-    >>> isinstance(_[1][-1], SparseMatrix)
+    >>> isinstance(_[1][-1], ImmutableSparseMatrix)
     True
 
     The user may disallow substitutions containing certain symbols:
@@ -687,6 +687,13 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     """
     from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                                 SparseMatrix, ImmutableSparseMatrix)
+
+    from sympy.core.compatibility import string_types, NotIterable
+
+    if iterable(exprs, exclude=(string_types, dict, NotIterable, Basic, MatrixBase)):
+        exprs = list(exprs)
+
+    exprs = sympify(exprs)
 
     # Handle the case if just one expression was passed.
     if isinstance(exprs, (Basic, MatrixBase)):
