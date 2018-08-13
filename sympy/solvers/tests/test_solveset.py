@@ -1588,7 +1588,7 @@ def test_issue_10397():
 
 
 def test_issue_14987():
-    raises(ValueError, lambda: linear_eq_to_matrix([x**2], x, check_linearity = True))
+    raises(ValueError, lambda: linear_eq_to_matrix([x**2], x))
 
 
 def test_simplification():
