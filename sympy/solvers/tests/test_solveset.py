@@ -1588,10 +1588,7 @@ def test_issue_10397():
 
 
 def test_issue_14987():
-    try:
-        linear_eq_to_matrix([x**2], [x], check_linearity = True)
-    except ValueError as e:
-        assert str(e) == "Equation x**2 is not linear"
+    raises(ValueError, lambda: linear_eq_to_matrix([x**2], x, check_linearity = True))
 
 
 def test_simplification():
