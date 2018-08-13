@@ -361,11 +361,14 @@ def test_numpy_matrix():
     #Check that the types are arrays and matrices
     assert isinstance(f(1, 2, 3), numpy.ndarray)
 
-    # gh-15071 (not really a fix but a modified test case for the new syntax)
+    # gh-15071
     class dot(Function):
         pass
-    f_dot = lambdify(x, dot(x, Matrix([[2], [1], [0]])), [{'dot': numpy.dot}, 'numpy'])
-    assert numpy.all(f_dot(numpy.zeros((17, 3))) == 0)
+    f_dot1 = lambdify(x, dot(x, Matrix([[2], [1], [0]])), [{'dot': numpy.dot}, 'numpy'])
+    assert numpy.all(f_dot1(numpy.zeros((17, 3))) == 0)
+
+    f_dot2 = lambdify(x, dot(x, Matrix([[2], [1], [0]])))
+    assert numpy.all(f_dot2(numpy.zeros((17, 3))) == 0)
 
 def test_numpy_transpose():
     if not numpy:

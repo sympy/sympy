@@ -106,6 +106,12 @@ class PythonCodePrinter(CodePrinter):
         self.known_constants = dict(self._kc, **(settings or {}).get(
             'user_constants', {}))
 
+    def _print_not_supported(self, expr):
+        if expr.is_Function:
+            return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
+        else:
+            return super(PythonCodePrinter, self)._print_not_supported(expr)
+
     def _get_statement(self, codestring):
         return codestring
 
