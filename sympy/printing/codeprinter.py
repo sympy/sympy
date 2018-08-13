@@ -381,6 +381,8 @@ class CodePrinter(StrPrinter):
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
+        elif expr.is_Function:
+            return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
             return self._print_not_supported(expr)
 
@@ -489,11 +491,8 @@ class CodePrinter(StrPrinter):
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
     def _print_not_supported(self, expr):
-        if expr.is_Function:
-            return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
-        else:
-            self._not_supported.add(expr)
-            return self.emptyPrinter(expr)
+        self._not_supported.add(expr)
+        return self.emptyPrinter(expr)
 
     # The following can not be simply translated into C or Fortran
     _print_Basic = _print_not_supported
