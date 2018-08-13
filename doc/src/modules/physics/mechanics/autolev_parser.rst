@@ -208,7 +208,7 @@ Gotchas
 
 - When dealing with Matrices returned by functions, one must check the
   order of the values as they may not be the same as in Autolev. This is
-  especially the case for eigenvalues and eigenvetors.
+  especially the case for eigenvalues and eigenvectors.
   
   .. code-block:: none
 
@@ -344,7 +344,7 @@ Gotchas
 ------------------------------------------------------------------------
 
 - Need to change ``me.dynamicsymbols._t`` to ``me.dynamicsymbols('t')`` for
-  all occurences of it in the Kane's equations. For example have a look at
+  all occurrences of it in the Kane's equations. For example have a look at
   line 10 of this `spring damper example <https://github.com/sympy/sympy/blob/master/sympy/parsing/autolev/test_examples/mass_spring_damper.py>`_.
   This equation is used in forming the Kane's equations so we need to
   change ``me.dynamicsymbols._t`` to ``me.dynamicsymbols('t')`` in this case.
