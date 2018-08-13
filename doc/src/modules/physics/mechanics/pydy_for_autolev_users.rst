@@ -647,24 +647,24 @@ pass in the KanesMethod object to the System class along with the values
 for the constants, specifieds, initial conditions and time steps. The
 equations of motion can then be integrated. The plotting is achieved
 using matlplotlib. Here is an example from the `PyDy Documentation <http://www.pydy.org/documentation.html>`_
-on how it is done:
-::
-      from numpy import array, linspace, sin
-      from pydy.system import System
+on how it is done::
 
-      sys = System(kane,
-                  constants = {mass: 1.0, stiffness: 1.0,
-                               damping: 0.2, gravity: 9.8},
-                  specifieds = {force: lambda x, t: sin(t)},
-                  initial_conditions = {position: 0.1, speed:-1.0},
-                  times = linspace(0.0, 10.0, 1000))
+    from numpy import array, linspace, sin
+    from pydy.system import System
 
-      y = sys.integrate()
+    sys = System(kane,
+                 constants = {mass: 1.0, stiffness: 1.0,
+                              damping: 0.2, gravity: 9.8},
+                 specifieds = {force: lambda x, t: sin(t)},
+                 initial_conditions = {position: 0.1, speed:-1.0},
+                 times = linspace(0.0, 10.0, 1000))
 
-      import matplotlib.pyplot as plt
-      plt.plot(sys.times, y)
-      plt.legend((str(position), str(speed)))
-      plt.show()
+    y = sys.integrate()
+
+    import matplotlib.pyplot as plt
+    plt.plot(sys.times, y)
+    plt.legend((str(position), str(speed)))
+    plt.show()
 
 For information on all the things PyDy can accomplish refer to the 
 `PyDy Documentation <http://www.pydy.org/documentation.html>`_.
