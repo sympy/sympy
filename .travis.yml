@@ -259,6 +259,9 @@ install:
       then virtualenv -p /usr/bin/pypy ~/.venv;
            . ~/.venv/bin/activate;
     fi
+  # Once https://github.com/fredrik-johansson/mpmath/pull/403 is in a released
+  # version of mpmath remove this line.
+  - pip install mpmath
   # -We:invalid makes invalid escape sequences error in Python 3.6. See
   # -#12028.
   - |
