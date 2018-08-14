@@ -249,7 +249,7 @@ before_install:
             conda install matchpy;
         fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
-        pip list --format=legacy | grep "numpy" && pip uninstall -y numpy;
+        pip list | grep "numpy" && pip uninstall -y numpy;
     fi
 
 install:
