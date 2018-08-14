@@ -12,6 +12,9 @@ from sympy.functions import SingularityFunction, Piecewise
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
+from sympy.plotting import plot
+from sympy.external import import_module
+from sympy.utilities.decorator import doctest_depends_on
 
 
 class Beam(object):
@@ -1125,6 +1128,297 @@ class Beam(object):
         else:
             return None
 
+    def plot_shear_force(self, subs=None):
+        """
+        Returns a plot for Shear force present in the Beam object.
+
+        Parameters
+        ==========
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
+        is applied from half of the beam till the end. There are two simple supports
+        below the beam, one at the starting point and another at the ending point
+        of the beam. A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        Using the sign convention of downwards forces being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+        >>> b.apply_load(5000, 2, -1)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(R2, 8, -1)
+        >>> b.apply_load(10000, 4, 0, end=8)
+        >>> b.bc_deflection = [(0, 0), (8, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.plot_shear_force()
+        Plot object containing:
+        [0]: cartesian line: -13750*SingularityFunction(x, 0, 0) + 5000*SingularityFunction(x, 2, 0)
+        + 10000*SingularityFunction(x, 4, 1) - 31250*SingularityFunction(x, 8, 0)
+        - 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
+        """
+        shear_force = self.shear_force()
+        if subs is None:
+            subs = {}
+        for sym in shear_force.atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+        return plot(shear_force.subs(subs), (self.variable, 0, length), title='Shear Force',
+                xlabel='position', ylabel='Value', line_color='g')
+
+    def plot_bending_moment(self, subs=None):
+        """
+        Returns a plot for Bending moment present in the Beam object.
+
+        Parameters
+        ==========
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
+        is applied from half of the beam till the end. There are two simple supports
+        below the beam, one at the starting point and another at the ending point
+        of the beam. A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        Using the sign convention of downwards forces being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+        >>> b.apply_load(5000, 2, -1)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(R2, 8, -1)
+        >>> b.apply_load(10000, 4, 0, end=8)
+        >>> b.bc_deflection = [(0, 0), (8, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.plot_bending_moment()
+        Plot object containing:
+        [0]: cartesian line: -13750*SingularityFunction(x, 0, 1) + 5000*SingularityFunction(x, 2, 1)
+        + 5000*SingularityFunction(x, 4, 2) - 31250*SingularityFunction(x, 8, 1)
+        - 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
+        """
+        bending_moment = self.bending_moment()
+        if subs is None:
+            subs = {}
+        for sym in bending_moment.atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+        return plot(bending_moment.subs(subs), (self.variable, 0, length), title='Bending Moment',
+                xlabel='position', ylabel='Value', line_color='b')
+
+    def plot_slope(self, subs=None):
+        """
+        Returns a plot for slope of deflection curve of the Beam object.
+
+        Parameters
+        ==========
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
+        is applied from half of the beam till the end. There are two simple supports
+        below the beam, one at the starting point and another at the ending point
+        of the beam. A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        Using the sign convention of downwards forces being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+        >>> b.apply_load(5000, 2, -1)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(R2, 8, -1)
+        >>> b.apply_load(10000, 4, 0, end=8)
+        >>> b.bc_deflection = [(0, 0), (8, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.plot_slope()
+        Plot object containing:
+        [0]: cartesian line: -8.59375e-5*SingularityFunction(x, 0, 2) + 3.125e-5*SingularityFunction(x, 2, 2)
+        + 2.08333333333333e-5*SingularityFunction(x, 4, 3) - 0.0001953125*SingularityFunction(x, 8, 2)
+        - 2.08333333333333e-5*SingularityFunction(x, 8, 3) + 0.00138541666666667 for x over (0.0, 8.0)
+        """
+        slope = self.slope()
+        if subs is None:
+            subs = {}
+        for sym in slope.atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+        return plot(slope.subs(subs), (self.variable, 0, length), title='Slope',
+                xlabel='position', ylabel='Value', line_color='m')
+
+    def plot_deflection(self, subs=None):
+        """
+        Returns a plot for deflection curve of the Beam object.
+
+        Parameters
+        ==========
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
+        is applied from half of the beam till the end. There are two simple supports
+        below the beam, one at the starting point and another at the ending point
+        of the beam. A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        Using the sign convention of downwards forces being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+        >>> b.apply_load(5000, 2, -1)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(R2, 8, -1)
+        >>> b.apply_load(10000, 4, 0, end=8)
+        >>> b.bc_deflection = [(0, 0), (8, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.plot_deflection()
+        Plot object containing:
+        [0]: cartesian line: 0.00138541666666667*x - 2.86458333333333e-5*SingularityFunction(x, 0, 3)
+        + 1.04166666666667e-5*SingularityFunction(x, 2, 3) + 5.20833333333333e-6*SingularityFunction(x, 4, 4)
+        - 6.51041666666667e-5*SingularityFunction(x, 8, 3) - 5.20833333333333e-6*SingularityFunction(x, 8, 4)
+        for x over (0.0, 8.0)
+        """
+        deflection = self.deflection()
+        if subs is None:
+            subs = {}
+        for sym in deflection.atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+        return plot(deflection.subs(subs), (self.variable, 0, length), title='Deflection',
+                xlabel='position', ylabel='Value', line_color='r')
+
+    @doctest_depends_on(modules=('numpy', 'matplotlib',))
+    def plot_loading_results(self, subs=None):
+        """
+        Returns Axes object containing subplots of Shear Force, Bending Moment,
+        Slope and Deflection of the Beam object.
+
+        Parameters
+        ==========
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        .. note::
+           This method only works if numpy and matplotlib libraries
+           are installed on the system.
+
+        Examples
+        ========
+        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
+        is applied from half of the beam till the end. There are two simple supports
+        below the beam, one at the starting point and another at the ending point
+        of the beam. A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        Using the sign convention of downwards forces being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+        >>> b.apply_load(5000, 2, -1)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(R2, 8, -1)
+        >>> b.apply_load(10000, 4, 0, end=8)
+        >>> b.bc_deflection = [(0, 0), (8, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> axes = b.plot_loading_results()
+        """
+        from sympy import lambdify
+        matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
+        plt = matplotlib.pyplot
+        numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
+        linspace = numpy.linspace
+
+        length = self.length
+        variable = self.variable
+        if subs is None:
+            subs = {}
+        for sym in self.deflection().atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+
+        # As we are using matplotlib directly in this method, we need to change SymPy methods
+        # to numpy functions.
+        shear = lambdify(variable, self.shear_force().subs(subs).rewrite(Piecewise), 'numpy')
+        moment = lambdify(variable, self.bending_moment().subs(subs).rewrite(Piecewise), 'numpy')
+        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise), 'numpy')
+        deflection = lambdify(variable, self.deflection().subs(subs).rewrite(Piecewise), 'numpy')
+
+        points = linspace(0, float(length), num=5*length)
+
+        # Creating a grid for subplots with 2 rows and 2 columns
+        fig, axs = plt.subplots(4, 1)
+        # axs is a 2D-numpy array containing axes
+        axs[0].plot(points, shear(points))
+        axs[0].set_title("Shear Force")
+        axs[1].plot(points, moment(points))
+        axs[1].set_title("Bending Moment")
+        axs[2].plot(points, slope(points))
+        axs[2].set_title("Slope")
+        axs[3].plot(points, deflection(points))
+        axs[3].set_title("Deflection")
+
+        fig.tight_layout()    # For better spacing between subplots
+        return axs
 
 
 class Beam_3d(Beam):
