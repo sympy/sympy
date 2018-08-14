@@ -2199,18 +2199,18 @@ def translate(s):
         return s
 
 
-def latex(expr, fold_frac_powers=False, fold_func_brackets=False, \
-    fold_short_frac=None, inv_trig_style="abbreviated", \
-    itex=False, ln_notation=False, long_frac_ratio=None, \
-    mat_delim="[", mat_str=None, mode="plain", mul_symbol=None, \
+def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
+    fold_short_frac=None, inv_trig_style="abbreviated",
+    itex=False, ln_notation=False, long_frac_ratio=None,
+    mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
     order=None, symbol_names={}):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
     ==========
-    fold_frac_powers : boolean, optional (default = False)
+    fold_frac_powers : boolean, optional
         Emit ``^{p/q}`` instead of ``^{\frac{p}{q}}`` for fractional powers.
-    fold_func_brackets : boolean, optional (default = False)
+    fold_func_brackets : boolean, optional
         Fold function brackets where applicable.
     fold_short_frac : boolean, optional
         Emit ``p / q`` instead of ``\frac{p}{q}`` when the denominator is
@@ -2219,10 +2219,10 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False, \
     inv_trig_style : string, optional
         How inverse trig functions should be displayed. Can be one of
         ``abbreviated``, ``full``, or ``power``. Defaults to ``abbreviated``.
-    itex : boolean, optional (default = False)
+    itex : boolean, optional
         Specifies if itex-specific syntax is used, including emitting
         ``$$...$$``.
-    ln_notation : boolean, optional (default = False)
+    ln_notation : boolean, optional
         If set to ``True``, ``\ln`` is used instead of default ``\log``.
     long_frac_ratio : float or None, optional
         The allowed ratio of the width of the numerator to the width of the
@@ -2231,11 +2231,11 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False, \
     mat_delim : string, optional
         The delimiter to wrap around matrices. Can be one of ``[``, ``(``, or
         the empty string. Defaults to ``[``.
-    mat_str : string, optional (default = None)
+    mat_str : string, optional
         Which matrix environment string to emit. ``smallmatrix``, ``matrix``,
         ``array``, etc. Defaults to ``smallmatrix`` for inline mode, ``matrix``
         for matrices of no more than 10 columns, and ``array`` otherwise.
-    mode: string, optional (default = "plain")
+    mode: string, optional
         Specifies how the generated code will be delimited. ``mode`` can be one
         of ``plain``, ``inline``, ``equation`` or ``equation*``.  If ``mode``
         is set to ``plain``, then the resulting code will not be delimited at
@@ -2245,16 +2245,16 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False, \
         or ``equation*`` environment (remember to import ``amsmath`` for
         ``equation*``), unless the ``itex`` option is set. In the latter case,
         the ``$$...$$`` syntax is used.
-    mul_symbol : string or None, optional (default = None)
+    mul_symbol : string or None, optional
         The symbol to use for multiplication. Can be one of ``None``, ``ldot``,
         ``dot``, or ``times``.
-    order: string, optional (default = None)
+    order: string, optional
         Any of the supported monomial orderings (currently ``lex``, ``grlex``,
         or ``grevlex``), ``old``, and ``none``. This parameter does nothing for
         Mul objects. Setting order to ``old`` uses the compatibility ordering
         for Add defined in Printer. For very large expressions, set the
         ``order`` keyword to ``none`` if speed is a concern.
-    symbol_names : dictionary of strings mapped to symbols, optional (default = {})
+    symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.
 
     Notes
