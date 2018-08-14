@@ -53,7 +53,8 @@ class CodePrinter(StrPrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'human': True,
-        'inline': False
+        'inline': False,
+        'allow_unknown_functions': True,
     }
 
     def __init__(self, settings=None):
@@ -381,7 +382,7 @@ class CodePrinter(StrPrinter):
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
-        elif expr.is_Function:
+        elif expr.is_Function and self._settings.get('allow_unknown_functions', True):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
             return self._print_not_supported(expr)

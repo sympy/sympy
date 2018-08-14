@@ -168,6 +168,7 @@ class C89CodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': True,
         'contract': True,
         'dereference': set(),
         'error_on_reserved': False,
