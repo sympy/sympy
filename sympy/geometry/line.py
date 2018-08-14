@@ -20,6 +20,7 @@ from __future__ import division, print_function
 
 import warnings
 
+from sympy import solve, diff
 from sympy.core import S, sympify
 from sympy.core.compatibility import ordered
 from sympy.core.numbers import Rational
@@ -34,7 +35,7 @@ from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.sets import Intersection
 from sympy.matrices import Matrix
-
+from sympy.polys.polytools import poly, degree, LC
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
 from sympy.utilities.misc import Undecidable, filldedent
@@ -1101,6 +1102,35 @@ class Line(LinearEntity):
         elif dim == 3:
             return Line3D(p1, p2, **kwargs)
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
+
+    def object_from_equation(self):
+        """Returns a Line object from the equation of a Line given as input.
+        If the equation of the line is ax + by + c = 0, then
+        the input has to be of the following format: ax + by + c
+
+        Examples
+        ========
+
+        >>> from sympy import Line
+        >>> from sympy.abc import x, y
+        >>> Line.object_from_equation(3*x + y + 18)
+        Line2D(Point2D(0, 0), Point2D(1, -3))
+        """
+
+        from sympy.abc import x, y
+
+        if len(solve(self, y)) == 0:
+            if len(solve(self, x)) != 0:
+                if degree(poly(self, x)) == 1:
+                    x_intercept = solve(self, x)[0]
+                    p1 = Point(x_intercept, 0)
+                    p2 = Point(x_intercept, 1)
+                    return Line(p1, p2)
+        else:
+            slope = diff(LC(poly(solve(self, y)[0], y)), x)
+            p1 = (0, slope * 0)
+            p2 = (1, slope * 1)
+            return Line(p1, p2)
 
     def contains(self, other):
         """
