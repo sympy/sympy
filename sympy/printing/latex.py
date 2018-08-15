@@ -2199,7 +2199,11 @@ def translate(s):
         return s
 
 
-def latex(expr, **settings):
+def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
+    fold_short_frac=None, inv_trig_style="abbreviated",
+    itex=False, ln_notation=False, long_frac_ratio=None,
+    mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
+    order=None, symbol_names=None):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2359,6 +2363,24 @@ def latex(expr, **settings):
     $\left [ 2 / x, \quad y\right ]$
 
     """
+    if symbol_names is None:
+        symbol_names = {}
+
+    settings = {
+        'fold_frac_powers' : fold_frac_powers,
+        'fold_func_brackets' : fold_func_brackets,
+        'fold_short_frac' : fold_short_frac,
+        'inv_trig_style' : inv_trig_style,
+        'itex' : itex,
+        'ln_notation' : ln_notation,
+        'long_frac_ratio' : long_frac_ratio,
+        'mat_delim' : mat_delim,
+        'mat_str' : mat_str,
+        'mode' : mode,
+        'mul_symbol' : mul_symbol,
+        'order' : order,
+        'symbol_names' : symbol_names,
+    }
 
     return LatexPrinter(settings).doprint(expr)
 
