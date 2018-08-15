@@ -509,11 +509,12 @@ class Function(Application, Expr):
             return False
 
     def _eval_evalf(self, prec):
-        if isinstance(self.func, UndefinedFunction):
-            return
         # Lookup mpmath function based on name
-        fname = self.func.__name__
         try:
+            if isinstance(self.func, UndefinedFunction):
+                # Shouldn't lookup in mpmath but might have ._imp_
+                raise AttributeError
+            fname = self.func.__name__
             if not hasattr(mpmath, fname):
                 from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
                 fname = MPMATH_TRANSLATIONS[fname]
