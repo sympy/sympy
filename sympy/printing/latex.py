@@ -2363,6 +2363,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     $\left [ 2 / x, \quad y\right ]$
 
     """
+    if symbol_names is None:
+        symbol_names = {}
+
     settings = {
         'fold_frac_powers' : fold_frac_powers,
         'fold_func_brackets' : fold_func_brackets,
