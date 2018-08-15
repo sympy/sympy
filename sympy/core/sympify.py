@@ -51,14 +51,16 @@ class CantSympify(object):
     pass
 
 
-def _convert_numpy_types(a):
+def _convert_numpy_types(a, **sympify_args):
     """
     Converts a numpy datatype input to an appropriate sympy type.
     """
     import numpy as np
     if not isinstance(a, np.floating):
-        func = converter[complex] if np.iscomplex(a) else sympify
-        return func(np.asscalar(a))
+        if np.iscomplex(a):
+            return converter[complex](np.asscalar(a))
+        else:
+            return sympify(np.asscalar(a), **sympify_args)
     else:
         try:
             from sympy.core.numbers import Float
@@ -284,7 +286,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if type(a).__module__ == 'numpy':
         import numpy as np
         if np.isscalar(a):
-            return _convert_numpy_types(a)
+            return _convert_numpy_types(a, locals=locals,
+                convert_xor=convert_xor, strict=strict, rational=rational,
+                evaluate=evaluate)
 
     try:
         return converter[cls](a)
