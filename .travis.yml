@@ -268,7 +268,7 @@ install:
     if [[ "${TEST_SETUP}" == "true" ]]; then
       # The install cycle below is to test installation on systems without
       # setuptools.
-      virtualenv ~/.venv-no-setuptools;
+      virtualenv --always-copy ~/.venv-no-setuptools;
       . ~/.venv-no-setuptools/bin/activate;
       pip install mpmath;
       pip uninstall -y setuptools;
