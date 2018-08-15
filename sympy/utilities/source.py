@@ -7,7 +7,7 @@ from sympy.core.decorators import deprecated
 
 import inspect
 
-@deprecated(useinstead="??", issue=14908, deprecated_since_version="1.3")
+@deprecated(useinstead="?? in IPython/Jupyter or inspect.getsource", issue=14905, deprecated_since_version="1.3")
 def source(object):
     """
     Prints the source code of a given object.
