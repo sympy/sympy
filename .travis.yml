@@ -269,11 +269,9 @@ install:
       # The install cycle below is to test installation on systems without
       # setuptools.
       virtualenv --always-copy ~/.venv-no-setuptools;
-      . ~/.venv-no-setuptools/bin/activate;
-      pip install mpmath;
-      pip uninstall -y setuptools;
-      python -We:invalid setup.py install;
-      deactivate;
+      ~/.venv-no-setuptools/bin/pip install mpmath;
+      ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
+      ~/.venv-no-setuptools/bin/python -We:invalid setup.py install;
     fi
     python -We:invalid -m compileall -f sympy/;
     python -We:invalid setup.py install;
