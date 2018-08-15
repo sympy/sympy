@@ -2203,7 +2203,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     fold_short_frac=None, inv_trig_style="abbreviated",
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-    order=None, symbol_names={}):
+    order=None, symbol_names=None):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
