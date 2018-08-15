@@ -511,7 +511,7 @@ def implicit_multiplication_application(result, local_dict, global_dict):
 
 
 def auto_symbol(tokens, local_dict, global_dict):
-    """Inserts calls to ``Symbol`` for undefined variables."""
+    """Inserts calls to ``Symbol``/``Function`` for undefined variables."""
     result = []
     prevTok = (None, None)
 
