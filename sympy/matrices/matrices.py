@@ -1118,16 +1118,19 @@ class MatrixEigen(MatrixSubspaces):
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
         """
+        rational = flags.pop('rational', True)
+        multiple = flags.pop('multiple', False)
+        simplify = flags.pop('simplify', None)  # pop unsupported flag
+
         mat = self
         if not mat:
             return {}
-        if flags.pop('rational', True):
+        if rational:
             if any(v.has(Float) for v in mat):
                 mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
         if mat.is_upper or mat.is_lower:
             diagonal_entries = [mat[i, i] for i in range(mat.rows)]
-            multiple = flags.pop('multiple', False)
             if multiple:
                 eigs = diagonal_entries
             else:
@@ -1137,7 +1140,6 @@ class MatrixEigen(MatrixSubspaces):
                         eigs[diagonal_entry] = 0
                     eigs[diagonal_entry] += 1
         else:
-            flags.pop('simplify', None)  # pop unsupported flag
             eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
 
         # make sure the algebraic multiplicty sums to the
@@ -1173,12 +1175,12 @@ class MatrixEigen(MatrixSubspaces):
         from sympy.matrices import eye
 
         simplify = flags.get('simplify', True)
-        if not isinstance(simplify, FunctionType):
-            simpfunc = _simplify if simplify else lambda x: x
         primitive = flags.get('simplify', False)
         chop = flags.pop('chop', False)
+        multiple = flags.pop('multiple', None)  # remove this if it's there
 
-        flags.pop('multiple', None)  # remove this if it's there
+        if not isinstance(simplify, FunctionType):
+            simpfunc = _simplify if simplify else lambda x: x
 
         mat = self
         # roots doesn't like Floats, so replace them with Rationals
