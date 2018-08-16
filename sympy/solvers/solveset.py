@@ -1727,10 +1727,13 @@ def linear_eq_to_matrix(equations, *symbols):
             newf = f.xreplace({symbol: 0})
             if newf is S.NaN:
                 i, d = f.as_independent(symbol)
-                f = f.func(i, expand_mul(d).xreplace({symbol: 0}))
+                newf = f.func(i, expand_mul(d).xreplace({symbol: 0}))
+            f = newf
 
-        # append constant term (term free from symbols)
-        coeff_list.append(-f.as_coeff_add(*symbols)[0])
+        # append constant term (term free from symbols); at
+        # this point, all symbols of interest have been replaced
+        # with 0 so whatever remains is the constant
+        coeff_list.append(-f)
 
         # insert equations coeff's into rows
         M = M.row_insert(row_no, Matrix([coeff_list]))
