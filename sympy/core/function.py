@@ -401,20 +401,10 @@ class Function(Application, Expr):
 
     @property
     def _diff_wrt(self):
-        """Allow derivatives wrt functions.
-
-        Examples
-        ========
-
-        >>> from sympy import Function, Symbol
-        >>> f = Function('f')
-        >>> x = Symbol('x')
-        >>> f(x)._diff_wrt
-        True
-
         """
-        return True
-
+        Don't allow derivatives wrt defined functions.
+        """
+        return False
     @cacheit
     def __new__(cls, *args, **options):
         # Handle calls like Function('f')
@@ -800,6 +790,21 @@ class AppliedUndef(Function):
         func = sage.function(fname)(*args)
         return func
 
+    @property
+    def _diff_wrt(self):
+        """
+        Allow derivatives wrt to undefined functions.
+        Examples
+        ========
+
+        >>> from sympy import Function, Symbol
+        >>> f = Function('f')
+        >>> x = Symbol('x')
+        >>> f(x)._diff_wrt
+        True
+        """
+        return True
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
@@ -925,8 +930,10 @@ class Derivative(Expr):
     automatically simplified in a fairly conservative fashion unless the
     keyword ``simplify`` is set to False.
 
-        >>> from sympy import sqrt, diff
-        >>> from sympy.abc import x
+        >>> from sympy import cos, sin, sqrt, diff, symbols
+        >>> from sympy.abc import x, y, z
+        >>> f, g = symbols('f g', cls=Function)
+
         >>> e = sqrt((x + 1)**2 + x)
         >>> diff(e, (x, 5), simplify=False).count_ops()
         136
@@ -935,7 +942,7 @@ class Derivative(Expr):
 
     Ordering of variables:
 
-    If evaluate is set to True and the expression can not be evaluated, the
+    If evaluate is set to True and the expression cannot be evaluated, the
     list of differentiation symbols will be sorted, that is, the expression is
     assumed to have continuous derivatives up to the order asked. This sorting
     assumes that derivatives wrt Symbols commute, derivatives wrt non-Symbols
@@ -947,83 +954,21 @@ class Derivative(Expr):
     This class also allows derivatives wrt non-Symbols that have _diff_wrt
     set to True, such as Function and Derivative. When a derivative wrt a non-
     Symbol is attempted, the non-Symbol is temporarily converted to a Symbol
-    while the differentiation is performed.
+    while the differentiation is performed:
 
-    Note that this may seem strange, that Derivative allows things like
-    f(g(x)).diff(g(x)), or even f(cos(x)).diff(cos(x)).  The motivation for
-    allowing this syntax is to make it easier to work with variational calculus
-    (i.e., the Euler-Lagrange method).  The best way to understand this is that
-    the action of derivative with respect to a non-Symbol is defined by the
-    above description:  the object is substituted for a Symbol and the
-    derivative is taken with respect to that.  This action is only allowed for
-    objects for which this can be done unambiguously, for example Function and
-    Derivative objects.  Note that this leads to what may appear to be
-    mathematically inconsistent results.  For example::
+        >>> f(x).diff(f(x)) == x.diff(x)
+        True
 
-        >>> from sympy import cos, sin, sqrt
-        >>> from sympy.abc import x
-        >>> (2*cos(x)).diff(cos(x))
-        2
-        >>> (2*sqrt(1 - sin(x)**2)).diff(cos(x))
-        0
-
-    This appears wrong because in fact 2*cos(x) and 2*sqrt(1 - sin(x)**2) are
-    identically equal.  However this is the wrong way to think of this.  Think
-    of it instead as if we have something like this::
-
-        >>> from sympy.abc import c, s, u, x
-        >>> def F(u):
-        ...     return 2*u
-        ...
-        >>> def G(u):
-        ...     return 2*sqrt(1 - u**2)
-        ...
-        >>> F(cos(x))
-        2*cos(x)
-        >>> G(sin(x))
-        2*sqrt(-sin(x)**2 + 1)
-        >>> F(c).diff(c)
-        2
-        >>> F(cos(x)).diff(cos(x))
-        2
-        >>> G(s).diff(c)
-        0
-        >>> G(sin(x)).diff(cos(x))
-        0
-
-    Here, the Symbols c and s act just like the functions cos(x) and sin(x),
-    respectively. Think of 2*cos(x) as f(c).subs(c, cos(x)) (or f(c) *at*
-    c = cos(x)) and 2*sqrt(1 - sin(x)**2) as g(s).subs(s, sin(x)) (or g(s) *at*
-    s = sin(x)), where f(u) == 2*u and g(u) == 2*sqrt(1 - u**2).  Here, we
-    define the function first and evaluate it at the function, but we can
-    actually unambiguously do this in reverse in SymPy, because
-    expr.subs(Function, Symbol) is well-defined:  just structurally replace the
-    function everywhere it appears in the expression.
-
-    This is the same notational convenience used in the Euler-Lagrange method
-    when one says F(t, f(t), f'(t)).diff(f(t)).  What is actually meant is
-    that the expression in question is represented by some F(t, u, v) at u =
-    f(t) and v = f'(t), and F(t, f(t), f'(t)).diff(f(t)) simply means F(t, u,
-    v).diff(u) at u = f(t).
-
-    We do not allow derivatives to be taken with respect to expressions where this
-    is not so well defined.  For example, we do not allow expr.diff(x*y)
-    because there are multiple ways of structurally defining where x*y appears
-    in an expression, some of which may surprise the reader (for example, a
-    very strict definition would have that (x*y*z).diff(x*y) == 0).
-
-        >>> from sympy.abc import x, y, z
-        >>> (x*y*z).diff(x*y)
-        Traceback (most recent call last):
-        ...
-        ValueError: Can't differentiate wrt the variable: x*y, 1
+    The motivation for allowing this syntax is to make it easier to work
+    with variational calculus. In the Euler-Lagrange method when one writes
+    F(t, f(t), f'(t)).diff(f(t)) what is actually meant is that the expression
+    in question is represented by some F(t, u, v) at u = f(t) and v = f'(t),
+    so F(t, f(t), f'(t)).diff(f(t)) simply means F(t, u, v).diff(u) at u = f(t).
 
     Note that this definition also fits in nicely with the definition of the
     chain rule.  Note how the chain rule in SymPy is defined using unevaluated
     Subs objects::
 
-        >>> from sympy import symbols, Function
-        >>> f, g = symbols('f g', cls=Function)
         >>> f(2*g(x)).diff(x)
         2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
                                               (_xi_1,), (2*g(x),))
@@ -1031,9 +976,23 @@ class Derivative(Expr):
         Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
                                             (_xi_1,), (g(x),))
 
-    Finally, note that, to be consistent with variational calculus, and to
-    ensure that the definition of substituting a Function for a Symbol in an
-    expression is well-defined, derivatives of functions are assumed to not be
+    We do not allow derivatives to be taken with respect to expressions where
+    this is not so well defined. For example, we do not allow expr.diff(x*y)
+    because there are multiple ways of structurally defining where x*y appears
+    in an expression, some of which may surprise the reader (for example, a
+    very strict definition would have that (x*y*z).diff(x*y) == 0).
+
+        >>> (x*y*z).diff(x*y)
+        Traceback (most recent call last):
+        ...
+        ValueError: Can't calculate 1st derivative wrt x*y.
+
+    Differentiation with respect to a defined function like cos(x) raises
+    a ValueError, too.
+
+    Finally, to be consistent with variational calculus (and to ensure that the
+    definition of substituting a Function for a Symbol in an expression is
+    well-defined) derivatives of functions are assumed to not be
     related to the function.  In other words, we have::
 
         >>> from sympy import diff
@@ -1047,7 +1006,7 @@ class Derivative(Expr):
         >>> diff(f(x), x, 1).diff(diff(f(x), x, 2))
         0
 
-    Note, any class can allow derivatives to be taken with respect to itself.
+    Note: any class can allow derivatives to be taken with respect to itself.
     See the docstring of Expr._diff_wrt.
 
     Examples

@@ -791,6 +791,9 @@ def test_should_evalf():
     # This should not take forever to run (see #8506)
     assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)
 
+def test_issue_7027():
+    raises(ValueError, lambda: diff(2*cos(x), cos(x)))
+    raises(ValueError, lambda: diff(x, re(x)))
 
 def test_Derivative_as_finite_difference():
     # Central 1st derivative at gridpoint
