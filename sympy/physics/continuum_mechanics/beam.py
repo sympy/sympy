@@ -253,9 +253,9 @@ class Beam(object):
         >>> b.load
         80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
         >>> b.slope()
-        Piecewise((0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) +
-        10*SingularityFunction(x, 4, 2))/(E*I), x <= 2), (((80*SingularityFunction(x, 0, 1) -
-        10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))/I - 120/I)/E + 80.0/(E*I), x <= 4))
+        (((80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))/I - 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
+        + 0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
+        - 0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -550,15 +550,15 @@ class Beam(object):
         >>> b.reaction_loads
         {A1: -5*P/18, A2: -13*P/18, M1: 5*P*l/18, M2: -4*P*l/9}
         >>> b.slope()
-        Piecewise(((5*P*l*SingularityFunction(x, 0, 1)/18 - 5*P*SingularityFunction(x, 0, 2)/36
-        + 5*P*SingularityFunction(x, l, 2)/36)/(E*I), l >= x), ((P*l**2/18 - 4*P*l*SingularityFunction(-l +
-        x, 2*l, 1)/9 - 5*P*SingularityFunction(-l + x, 0, 2)/36 + P*SingularityFunction(-l + x, l, 2)/2
-        - 13*P*SingularityFunction(-l + x, 2*l, 2)/36)/(E*I), x < 3*l))
+        (5*P*l*SingularityFunction(x, 0, 1)/18 - 5*P*SingularityFunction(x, 0, 2)/36 + 5*P*SingularityFunction(x, l, 2)/36)*SingularityFunction(x, 0, 0)/(E*I)
+        - (5*P*l*SingularityFunction(x, 0, 1)/18 - 5*P*SingularityFunction(x, 0, 2)/36 + 5*P*SingularityFunction(x, l, 2)/36)*SingularityFunction(x, l, 0)/(E*I)
+        + (P*l**2/18 - 4*P*l*SingularityFunction(-l + x, 2*l, 1)/9 - 5*P*SingularityFunction(-l + x, 0, 2)/36 + P*SingularityFunction(-l + x, l, 2)/2
+        - 13*P*SingularityFunction(-l + x, 2*l, 2)/36)*SingularityFunction(x, l, 0)/(E*I)
         >>> b.deflection()
-        Piecewise(((5*P*l*SingularityFunction(x, 0, 2)/36 - 5*P*SingularityFunction(x, 0, 3)/108
-        + 5*P*SingularityFunction(x, l, 3)/108)/(E*I), l >= x), ((5*P*l**3/54 + P*l**2*(-l + x)/18
-        - 2*P*l*SingularityFunction(-l + x, 2*l, 2)/9 - 5*P*SingularityFunction(-l + x, 0, 3)/108
-        + P*SingularityFunction(-l + x, l, 3)/6 - 13*P*SingularityFunction(-l + x, 2*l, 3)/108)/(E*I), x < 3*l))
+        (5*P*l*SingularityFunction(x, 0, 2)/36 - 5*P*SingularityFunction(x, 0, 3)/108 + 5*P*SingularityFunction(x, l, 3)/108)*SingularityFunction(x, 0, 0)/(E*I)
+        - (5*P*l*SingularityFunction(x, 0, 2)/36 - 5*P*SingularityFunction(x, 0, 3)/108 + 5*P*SingularityFunction(x, l, 3)/108)*SingularityFunction(x, l, 0)/(E*I)
+        + (5*P*l**3/54 + P*l**2*(-l + x)/18 - 2*P*l*SingularityFunction(-l + x, 2*l, 2)/9 - 5*P*SingularityFunction(-l + x, 0, 3)/108 + P*SingularityFunction(-l + x, l, 3)/6
+        - 13*P*SingularityFunction(-l + x, 2*l, 3)/108)*SingularityFunction(x, l, 0)/(E*I)
         """
         x = self.variable
         l = self._hinge_position
@@ -646,8 +646,8 @@ class Beam(object):
         slope_2 = slope_2.subs({x: x-l, C3: constants[0][2], h:constants[0][4]}).subs(self._reaction_loads)
         def_2 = def_2.subs({x: x-l,C3: constants[0][2], C4: constants[0][3], h:constants[0][4]}).subs(self._reaction_loads)
 
-        self._hinge_beam_slope = Piecewise((slope_1, x<=l), (slope_2, x<self.length))
-        self._hinge_beam_deflection = Piecewise((def_1, x<=l), (def_2, x<self.length))
+        self._hinge_beam_slope = slope_1*SingularityFunction(x, 0, 0) - slope_1*SingularityFunction(x, l, 0) + slope_2*SingularityFunction(x, l, 0)
+        self._hinge_beam_deflection = def_1*SingularityFunction(x, 0, 0) - def_1*SingularityFunction(x, l, 0) + def_2*SingularityFunction(x, l, 0)
 
     def solve_for_reaction_loads(self, *reactions):
         """
@@ -972,6 +972,7 @@ class Beam(object):
             return diff(self.deflection(), x)
         if self._composite_type == "fixed":
             args = I.args
+            slope = 0
             conditions = []
             prev_slope = 0
             prev_end = 0
@@ -979,9 +980,13 @@ class Beam(object):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
                 slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
-                conditions.append((prev_slope + slope_value, args[i][1]))
+                if i != len(args) - 1:
+                    slope += (prev_slope + slope_value)*SingularityFunction(x, prev_end, 0) - \
+                        (prev_slope + slope_value)*SingularityFunction(x, args[i][1].args[1], 0)
+                else:
+                    slope += (prev_slope + slope_value)*SingularityFunction(x, prev_end, 0)
                 prev_slope = slope_value.subs(x, args[i][1].args[1])
-            return Piecewise(*conditions)
+            return slope
 
         C3 = Symbol('C3')
         slope_curve = integrate(self.bending_moment(), x) + C3
@@ -1036,15 +1041,24 @@ class Beam(object):
             if self._composite_type == "fixed":
                 args = I.args
                 conditions = []
+                prev_slope = 0
                 prev_def = 0
                 prev_end = 0
+                deflection = 0
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
-                    conditions.append(((prev_def + deflection_value), args[i][1]))
+                    slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    recent_segment_slope = prev_slope + slope_value
+                    deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
+                    if i != len(args) - 1:
+                        deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0) \
+                            - (prev_def + deflection_value)*SingularityFunction(x, args[i][1].args[1], 0)
+                    else:
+                        deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0)
+                    prev_slope = slope_value.subs(x, args[i][1].args[1])
                     prev_def = deflection_value.subs(x, args[i][1].args[1])
-                return Piecewise(*conditions)
+                return deflection
             base_char = self._base_char
             constants = symbols(base_char + '3:5')
             return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
@@ -1056,15 +1070,24 @@ class Beam(object):
             if self._composite_type == "fixed":
                 args = I.args
                 conditions = []
+                prev_slope = 0
                 prev_def = 0
                 prev_end = 0
+                deflection = 0
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
-                    conditions.append(((prev_def + deflection_value), args[i][1]))
+                    slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    recent_segment_slope = prev_slope + slope_value
+                    deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
+                    if i != len(args) - 1:
+                        deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0) \
+                            - (prev_def + deflection_value)*SingularityFunction(x, args[i][1].args[1], 0)
+                    else:
+                        deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0)
+                    prev_slope = slope_value.subs(x, args[i][1].args[1])
                     prev_def = deflection_value.subs(x, args[i][1].args[1])
-                return Piecewise(*conditions)
+                return deflection
             base_char = self._base_char
             C3, C4 = symbols(base_char + '3:5')    # Integration constants
             slope_curve = integrate(self.bending_moment(), x) + C3
@@ -1080,15 +1103,24 @@ class Beam(object):
         if self._composite_type == "fixed":
             args = I.args
             conditions = []
+            prev_slope = 0
             prev_def = 0
             prev_end = 0
+            deflection = 0
             for i in range(len(args)):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
-                deflection_value = integrate(self.slope().args[i][0], (x, prev_end, x))
-                conditions.append(((prev_def + deflection_value), args[i][1]))
+                slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                recent_segment_slope = prev_slope + slope_value
+                deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
+                if i != len(args) - 1:
+                    deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0) \
+                        - (prev_def + deflection_value)*SingularityFunction(x, args[i][1].args[1], 0)
+                else:
+                    deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0)
+                prev_slope = slope_value.subs(x, args[i][1].args[1])
                 prev_def = deflection_value.subs(x, args[i][1].args[1])
-            return Piecewise(*conditions)
+            return deflection
 
         C4 = Symbol('C4')
         deflection_curve = integrate((E*I)*self.slope(), x) + C4
