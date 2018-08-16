@@ -2508,7 +2508,7 @@ def test_exact_enhancement():
 
 def test_separable_reduced():
     f = Function('f')
-    x = Symbol('x') # BUG: if x is real, a more complex solution is returned!
+    x = Symbol('x')
     df = f(x).diff(x)
     eq = (x / f(x))*df  + tan(x**2*f(x) / (x**2*f(x) - 1))
     assert classify_ode(eq) == ('separable_reduced', 'lie_group',
@@ -2522,15 +2522,11 @@ def test_separable_reduced():
     assert sol.rhs == C1 + log(x)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
-    # this is the equation that does not like x to be real
     eq = f(x).diff(x) + (f(x) / (x**4*f(x) - x))
     assert classify_ode(eq) == ('separable_reduced', 'lie_group',
         'separable_reduced_Integral')
-    # generates PolynomialError in solve attempt
     sol = dsolve(eq, hint = 'separable_reduced')
-    assert sol.lhs - sol.rhs == \
-        log(x**3*f(x))/4 + log(x**3*f(x) - S(4)/3)/12 - C1 - log(x)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+    assert len(sol) == 4
 
     eq = x*df + f(x)*(x**2*f(x))
     sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
