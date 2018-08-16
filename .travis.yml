@@ -270,10 +270,10 @@ install:
       # setuptools.
       virtualenv --no-setuptools ~/.venv-no-setuptools;
       ~/.venv-no-setuptools/bin/pip install mpmath;
-      ~/.venv-no-setuptools/bin/python -We:invalid setup.py install;
+      ~/.venv-no-setuptools/bin/python -We:invalid setup.py install -q;
     fi
     python -We:invalid -m compileall -f sympy/;
-    python -We:invalid setup.py install;
+    python -We:invalid setup.py install -q;
     pip list --format=columns;
 
 script:
