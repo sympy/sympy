@@ -38,7 +38,7 @@ from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.solvers.solvers import (checksol, denoms, unrad,
-    _simple_dens, recast_to_symbols, solve_linear)
+    _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -1636,9 +1636,7 @@ def linear_eq_to_matrix(equations, *symbols):
     Here `equations` must be a linear system of equations in
     `symbols`. The order of symbols in input `symbols` will
     determine the order of coefficients in the returned
-    Matrix. The `options` takes `check_linearity = True`
-    if linearity of the equation is to be confirmed. By default,
-    `check_linearity = False`.
+    Matrix.
 
     The Matrix form corresponds to the augmented matrix form.
     For example:
