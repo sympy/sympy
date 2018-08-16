@@ -268,8 +268,9 @@ install:
     if [[ "${TEST_SETUP}" == "true" ]]; then
       # The install cycle below is to test installation on systems without
       # setuptools.
-      virtualenv --no-setuptools ~/.venv-no-setuptools;
+      virtualenv ~/.venv-no-setuptools;
       ~/.venv-no-setuptools/bin/pip install mpmath;
+      ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
       ~/.venv-no-setuptools/bin/python -We:invalid setup.py install -q;
     fi
     python -We:invalid -m compileall -f sympy/;
