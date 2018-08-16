@@ -19,7 +19,7 @@ from sympy.core.containers import Tuple
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log)
+                                expand_log, expand_mul)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
@@ -1724,29 +1724,15 @@ def linear_eq_to_matrix(equations, *symbols):
         coeff_list = []
         for symbol in symbols:
             coeff_list.append(f.diff(symbol))
+            if coeff_list[-1].free_symbols & set(symbols):
+                raise ValueError('Equation %s is not linear'%(equation))
+            newf = f.xreplace({symbol: 0})
+            if newf is S.NaN:
+                i, d = f.as_independent(symbol)
+                f = f.func(i, expand_mul(d).xreplace({symbol: 0}))
 
         # append constant term (term free from symbols)
         coeff_list.append(-f.as_coeff_add(*symbols)[0])
-        
-        # Forming a new equation
-        eq_new = 0
-        i = 0
-        while i < len(coeff_list) - 1:
-            eq_new += symbols[i]*coeff_list[i]
-            i += 1
-        eq_new += (-coeff_list[-1])
-
-        # checking if equation is linear
-        # if it is not linear then raise error
-        if solve_linear(eq_new - equation) == (0,1):
-            free_symbs = []
-            for symbol in symbols:
-                for symb in symbol.free_symbols:
-                    free_symbs.append(symb)
-            if len(list(set(free_symbs))) != len(symbols):
-                raise ValueError("Equation %s is not linear"%equation)
-        else:
-            raise ValueError("Equation %s is not linear"%equation)
 
         # insert equations coeff's into rows
         M = M.row_insert(row_no, Matrix([coeff_list]))
