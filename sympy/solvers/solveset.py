@@ -1724,11 +1724,11 @@ def linear_eq_to_matrix(equations, *symbols):
             coeff_list.append(f.diff(symbol))
             if coeff_list[-1].free_symbols & set(symbols):
                 raise ValueError('Equation %s is not linear'%(equation))
-            newf = f.xreplace({symbol: 0})
+            newf = f.xreplace({symbol: S.Zero})
             if newf is S.NaN:
                 i, d = f.as_independent(symbol)
-                newf = f.func(i, expand_mul(d).xreplace({symbol: 0}))
-            f = sympify(newf)
+                newf = f.func(i, expand_mul(d).xreplace({symbol: S.Zero}))
+            f = newf
 
         # append constant term (term free from symbols); at
         # this point, all symbols of interest have been replaced
