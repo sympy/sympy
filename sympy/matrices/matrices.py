@@ -2,26 +2,24 @@ from __future__ import print_function, division
 
 from mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.assumptions.refine import refine
 from sympy.core.add import Add
-from sympy.core.basic import Basic, Atom
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
 from sympy.core.power import Pow
 from sympy.core.symbol import (Symbol, Dummy, symbols,
     _uniquely_named_symbol)
-from sympy.core.numbers import Integer, ilcm, mod_inverse, Float
+from sympy.core.numbers import Integer, mod_inverse, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions import Abs, exp, factorial
-from sympy.polys import PurePoly, roots, cancel, gcd
+from sympy.functions import exp, factorial
+from sympy.polys import PurePoly, roots, cancel
 from sympy.printing import sstr
-from sympy.simplify import simplify as _simplify, signsimp, nsimplify
+from sympy.simplify import simplify as _simplify, nsimplify
 from sympy.core.compatibility import reduce, as_int, string_types, Callable
 
 from sympy.utilities.iterables import flatten, numbered_symbols
-from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import (is_sequence, default_sort_key, range,
     NotIterable)
 
@@ -29,7 +27,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
-from .common import (a2idx, classof, MatrixError, ShapeError,
+from .common import (a2idx, MatrixError, ShapeError,
         NonSquareMatrixError, MatrixCommon)
 
 
