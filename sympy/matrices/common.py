@@ -2292,12 +2292,12 @@ def a2idx(j, n=None):
         try:
             j = j.__index__()
         except AttributeError:
-            raise IndexError("Invalid index a[%r]" % (j,))
+            raise IndexError("Invalid index a[%r]" % j)
     if n is not None:
         if j < 0:
             j += n
         if not (j >= 0 and j < n):
-            raise IndexError("Index out of range: a[%s]" % (j,))
+            raise IndexError("Index out of range: a[%s]" % j)
     return int(j)
 
 
@@ -2322,7 +2322,7 @@ def classof(A, B):
             return A.__class__
         else:
             return B.__class__
-    except Exception:
+    except AttributeError:
         pass
     try:
         import numpy
@@ -2330,6 +2330,6 @@ def classof(A, B):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except Exception:
+    except AttributeError:
         pass
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
