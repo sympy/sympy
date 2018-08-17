@@ -670,11 +670,6 @@ def test_unhandled():
     assert diff(expr, f(x), x) == Derivative(expr, f(x), x)
 
 
-def test_issue_4711():
-    x = Symbol("x")
-    assert Symbol('f')(x) == f(x)
-
-
 def test_nfloat():
     from sympy.core.basic import _aresame
     from sympy.polys.rootoftools import rootof
@@ -709,7 +704,8 @@ def test_nfloat():
 
 
 def test_issue_7068():
-    from sympy.abc import a, b, f
+    from sympy.abc import a, b
+    f = Function('f')
     y1 = Dummy('y')
     y2 = Dummy('y')
     func1 = f(a + y1 * b)
