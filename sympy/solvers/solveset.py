@@ -1728,9 +1728,7 @@ def linear_eq_to_matrix(equations, *symbols):
             if newf is S.NaN:
                 i, d = f.as_independent(symbol)
                 newf = f.func(i, expand_mul(d).xreplace({symbol: 0}))
-            f = newf
-            if f == 0:
-                break
+            f = sympify(newf)
 
         # append constant term (term free from symbols); at
         # this point, all symbols of interest have been replaced
