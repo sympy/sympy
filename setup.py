@@ -396,11 +396,9 @@ if __name__ == '__main__':
           package_data={
               'sympy.utilities.mathml': ['data/*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
-              'sympy.parsing.autolev': ['*.txt', '*.g4'],
-              'sympy.parsing.autolev._antlr': ['*.interp', '*.tokens'],
+              'sympy.parsing.autolev': ['*.g4'],
               'sympy.parsing.autolev.test_examples': ['*.al'],
               'sympy.parsing.latex': ['*.txt', '*.g4'],
-              'sympy.parsing.latex._antlr': ['*.interp', '*.tokens'],
               'sympy.integrals.rubi.parsetools': ['header.py.txt'],
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
