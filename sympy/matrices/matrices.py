@@ -2929,6 +2929,7 @@ class MatrixBase(MatrixDeprecated,
 
         key2ij
         """
+        from sympy.matrices.common import a2idx # Remove this line after deprecation of a2idx from matrices.py
 
         islice, jslice = [isinstance(k, slice) for k in keys]
         if islice:
@@ -2959,6 +2960,8 @@ class MatrixBase(MatrixDeprecated,
 
         key2bounds
         """
+        from sympy.matrices.common import a2idx # Remove this line after deprecation of a2idx from matrices.py
+		
         if is_sequence(key):
             if not len(key) == 2:
                 raise TypeError('key must be a sequence of length 2')
