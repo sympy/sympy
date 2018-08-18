@@ -516,8 +516,6 @@ Matrix Exceptions Reference
 Matrix Functions Reference
 --------------------------
 
-.. autofunction:: classof
-
 .. autofunction:: sympy.matrices.dense.matrix_multiply_elementwise
 
 .. autofunction:: sympy.matrices.dense.zeros
