@@ -2311,7 +2311,7 @@ def classof(A, B):
     ========
 
     >>> from sympy import Matrix, ImmutableMatrix
-    >>> from sympy.matrices.matrices import classof
+    >>> from sympy.matrices.common import classof
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
@@ -2322,7 +2322,7 @@ def classof(A, B):
             return A.__class__
         else:
             return B.__class__
-    except Exception:
+    except AttributeError:
         pass
     try:
         import numpy
@@ -2330,6 +2330,6 @@ def classof(A, B):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except Exception:
+    except (AttributeError, ImportError):
         pass
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
