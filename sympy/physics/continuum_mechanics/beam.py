@@ -1257,7 +1257,7 @@ class Beam3D(Beam):
     def boundary_conditions(self):
         """
         Returns a dictionary of boundary conditions applied on the beam.
-        The dictionary has two kewwords namely slope and deflection.
+        The dictionary has two keywords namely slope and deflection.
         The value of each keyword is a list of tuple, where each tuple
         contains loaction and value of a boundary condition in the format
         (location, value). Further each value is a list corresponding to
