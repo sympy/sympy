@@ -3155,3 +3155,10 @@ def test_issue_8240():
     assert len(eigenvals) == 3
     assert eigenvals.count(x) == 2
     assert eigenvals.count(y) == 1
+
+def test_issue_15086():
+    M = Matrix([[x, x, 0, 0], [x, 0, x, 0], [0, x, x, 0], [0, 0, x, x]])
+    to_poly = lambda e: Poly(e, x)
+    N = M.applyfunc(to_poly)
+    assert N.det(method="berkowitz") == Poly(M.det())
+    assert M.det(method="berkowitz") == M.det()

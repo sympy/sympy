@@ -184,13 +184,14 @@ class DenseMatrix(MatrixBase):
             # cache self._mat and other._mat for performance
             mat = self._mat
             other_mat = other._mat
+            poly = any(i.is_Poly for i in mat)
             for i in range(len(new_mat)):
                 row, col = i // new_mat_cols, i % new_mat_cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
                 col_indices = range(col, other_len, other_cols)
                 vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
                 try:
-                    new_mat[i] = Add(*vec)
+                    new_mat[i] = sum(vec, S.Zero) if poly else Add(*vec)
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
