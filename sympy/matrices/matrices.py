@@ -31,7 +31,7 @@ from types import FunctionType
 
 from .common import (a2idx, classof, MatrixError, ShapeError,
         NonSquareMatrixError, MatrixCommon)
-		
+
 from sympy.core.decorators import deprecated
 
 
