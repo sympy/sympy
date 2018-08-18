@@ -31,6 +31,8 @@ from types import FunctionType
 
 from .common import (a2idx, classof, MatrixError, ShapeError,
         NonSquareMatrixError, MatrixCommon)
+		
+from sympy.core.decorators import deprecated
 
 
 def _iszero(x):
@@ -4104,6 +4106,23 @@ class MatrixBase(MatrixDeprecated,
                     v[count] = self[i, j]
                     count += 1
         return v
+
+@deprecated(
+    issue=15109,
+    useinstead="from sympy.matrices.common import classof",
+    deprecated_since_version="1.3")
+def classof(A, B):
+	from sympy.matrices.common import classof
+	return classof(A, B)
+
+@deprecated(
+    issue=15109,
+    deprecated_since_version="1.3",
+    useinstead="from sympy.matrices.common import a2idx")
+def a2idx(j, n=None):
+	from sympy.matrices.common import a2idx
+	return a2idx(j, n)
+
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     """ Find the lowest index of an item in `col` that is
