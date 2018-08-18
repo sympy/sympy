@@ -1,4 +1,4 @@
-from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, zeros
+from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, zeros, S
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
                                      RigidBody, Vector)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
@@ -7,7 +7,7 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      outer, potential_energy, msubs,
                                      find_dynamicsymbols)
 
-from sympy.physics.mechanics.functions import gravity
+from sympy.physics.mechanics.functions import gravity, center_of_mass
 from sympy.physics.vector.vector import Vector
 from sympy.utilities.pytest import raises
 
@@ -181,6 +181,7 @@ def test_find_dynamicsymbols():
     # Test if a ValueError is raised on supplying only a vector as input
     raises(ValueError, lambda: find_dynamicsymbols(v))
 
+
 def test_gravity():
     N = ReferenceFrame('N')
     m, M, g = symbols('m M g')
@@ -201,8 +202,6 @@ def test_gravity():
 
 
 def test_center_of_mass():
-    from sympy import symbols, S
-    from sympy.physics.mechanics.functions import center_of_mass
     a = ReferenceFrame('a')
     m = symbols('m', real=True)
     p1 = Particle('p1', Point('p1_pt'), S(1))

@@ -1,6 +1,6 @@
 from sympy import sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
-                                  dynamicsymbols, time_derivative, express)
+                                  dynamicsymbols, time_derivative, express, dot)
 
 Vector.simp = True
 
@@ -159,7 +159,6 @@ def test_dcm():
 
 
 def test_w_diff_dcm():
-    from sympy.physics.vector import dot
     a = ReferenceFrame('a')
     b = ReferenceFrame('b')
     c11, c12, c13, c21, c22, c23, c31, c32, c33 = dynamicsymbols('c11 c12 c13 c21 c22 c23 c31 c32 c33')
@@ -170,8 +169,8 @@ def test_w_diff_dcm():
     b3a=(b.z).express(a)
     b.set_ang_vel(a, b.x*(dot((b3a).dt(a), b.y)) + b.y*(dot((b1a).dt(a), b.z)) +
                      b.z*(dot((b2a).dt(a), b.x)))
-    expr = (c12*c13d + c22*c23d + c32*c33d)*b.x + (c13*c11d + c23*c21d + c33*c31d)*b.y +\
-           (c11*c12d + c21*c22d + c31*c32d)*b.z
+    expr = ((c12*c13d + c22*c23d + c32*c33d)*b.x + (c13*c11d + c23*c21d + c33*c31d)*b.y +
+           (c11*c12d + c21*c22d + c31*c32d)*b.z)
     assert b.ang_vel_in(a) - expr == 0
 
 
