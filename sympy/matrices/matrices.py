@@ -2929,7 +2929,7 @@ class MatrixBase(MatrixDeprecated,
 
         key2ij
         """
-        from sympy.matrices.common import a2idx # Remove this line after deprecation of a2idx from matrices.py
+        from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
 
         islice, jslice = [isinstance(k, slice) for k in keys]
         if islice:
@@ -2938,7 +2938,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 rlo, rhi = keys[0].indices(self.rows)[:2]
         else:
-            rlo = a2idx(keys[0], self.rows)
+            rlo = a2idx_(keys[0], self.rows)
             rhi = rlo + 1
         if jslice:
             if not self.cols:
@@ -2946,7 +2946,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 clo, chi = keys[1].indices(self.cols)[:2]
         else:
-            clo = a2idx(keys[1], self.cols)
+            clo = a2idx_(keys[1], self.cols)
             chi = clo + 1
         return rlo, rhi, clo, chi
 
@@ -2960,17 +2960,17 @@ class MatrixBase(MatrixDeprecated,
 
         key2bounds
         """
-        from sympy.matrices.common import a2idx # Remove this line after deprecation of a2idx from matrices.py
+        from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
 		
         if is_sequence(key):
             if not len(key) == 2:
                 raise TypeError('key must be a sequence of length 2')
-            return [a2idx(i, n) if not isinstance(i, slice) else i
+            return [a2idx_(i, n) if not isinstance(i, slice) else i
                     for i, n in zip(key, self.shape)]
         elif isinstance(key, slice):
             return key.indices(len(self))[:2]
         else:
-            return divmod(a2idx(key, len(self)), self.cols)
+            return divmod(a2idx_(key, len(self)), self.cols)
 
     def LDLdecomposition(self):
         """Returns the LDL Decomposition (L, D) of matrix A,
@@ -4115,16 +4115,16 @@ class MatrixBase(MatrixDeprecated,
     useinstead="from sympy.matrices.common import classof",
     deprecated_since_version="1.3")
 def classof(A, B):
-	from sympy.matrices.common import classof
-	return classof(A, B)
+	from sympy.matrices.common import classof as classof_
+	return classof_(A, B)
 
 @deprecated(
     issue=15109,
     deprecated_since_version="1.3",
     useinstead="from sympy.matrices.common import a2idx")
 def a2idx(j, n=None):
-	from sympy.matrices.common import a2idx
-	return a2idx(j, n)
+	from sympy.matrices.common import a2idx as a2idx_
+	return a2idx_(j, n)
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
