@@ -2961,7 +2961,7 @@ class MatrixBase(MatrixDeprecated,
         key2bounds
         """
         from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
-		
+
         if is_sequence(key):
             if not len(key) == 2:
                 raise TypeError('key must be a sequence of length 2')
@@ -4115,16 +4115,16 @@ class MatrixBase(MatrixDeprecated,
     useinstead="from sympy.matrices.common import classof",
     deprecated_since_version="1.3")
 def classof(A, B):
-	from sympy.matrices.common import classof as classof_
-	return classof_(A, B)
+    from sympy.matrices.common import classof as classof_
+    return classof_(A, B)
 
 @deprecated(
     issue=15109,
     deprecated_since_version="1.3",
     useinstead="from sympy.matrices.common import a2idx")
 def a2idx(j, n=None):
-	from sympy.matrices.common import a2idx as a2idx_
-	return a2idx_(j, n)
+    from sympy.matrices.common import a2idx as a2idx_
+    return a2idx_(j, n)
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
