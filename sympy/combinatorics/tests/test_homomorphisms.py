@@ -69,26 +69,29 @@ def test_find_homomorphism():
     # Trivial Case
     # FpGroup -> FpGroup
     H = FpGroup(F, [a**3, b**3, (a*b)**2])
-    F, c, d = free_group("c, d")
-    G = FpGroup(F, [c**3, d**3, (c*d)**2])
+    G = FpGroup(E, [c**3, d**3, (c*d)**2])
     check, T =  group_isomorphism(G, H)
     assert check
     T(c**3*d**2) == a**3*b**2
 
     # FpGroup -> PermutationGroup
     # FpGroup is converted to the equivalent isomorphic group.
-    F, a, b = free_group("a, b")
     G = FpGroup(F, [a**3, b**3, (a*b)**2])
     H = AlternatingGroup(4)
     check, T = group_isomorphism(G, H)
     assert check
     assert T(b*a*b**-1*a**-1*b**-1) == Permutation(0, 2, 3)
     assert T(b*a*b*a**-1*b**-1) == Permutation(0, 3, 2)
-    # Find all possible epimorphisms.
+
+    G = FpGroup(F, [a**2, b**8, a*b*a**-1*b])
+    H = FpGroup(F, [a**4, b**2, a*b*a**-1*b])
+    check = find_homomorphism(G, H, injective=True, compute=False)
+    assert not check
+
+    G = FpGroup(F, [a*b*a**-1*b**-1, b**5, a**4])
+    H = FpGroup(F, [a**3, b**2, (a*b)**5])
     list_hom = find_homomorphism(G, H, injective=True, all=True)
     assert all(elem.is_injective() for elem in list_hom)
-    check = find_homomorphism(G, H, injective=True, surjective=True, compute=False)
-    assert check
 
     # PermutationGroup -> PermutationGroup
     D = DihedralGroup(8)

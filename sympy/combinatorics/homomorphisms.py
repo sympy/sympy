@@ -484,7 +484,9 @@ def find_homomorphism(G, H, injective=False, surjective=False, compute=True, all
         H = simplify_presentation(H)
         # Two infinite FpGroups with the same generators are isomorphic
         # when the relators are same but are ordered differently.
-        if G.generators == H.generators and (G.relators).sort() == (H.relators).sort():
+        (G.relators).sort()
+        (H.relators).sort()
+        if G.generators == H.generators and (G.relators) == (H.relators):
             if not compute:
                 return True
             return (True, homomorphism(G, H, G.generators, H.generators))
@@ -503,12 +505,12 @@ def find_homomorphism(G, H, injective=False, surjective=False, compute=True, all
         _H, h_isomorphism = H._to_perm_group()
 
     if injective:
-        if (h_order % g_order != 0) or not G.is_abelian and H.is_abelian:
+        if (h_order % g_order != 0) or (not G.is_abelian and H.is_abelian):
             if not compute:
                 return False
             return (False, None)
     if surjective:
-        if (g_order % h_order != 0) or G.is_abelian and not H.is_abelian:
+        if (g_order % h_order != 0) or (G.is_abelian and not H.is_abelian):
             if not compute:
                 return False
             return (False, None)
@@ -582,4 +584,4 @@ def is_isomorphic(G, H):
 
     Returns -- boolean
     '''
-    return find_homomorphism(G, H, injective=True, surjective=True ,compute=False)
+    return find_homomorphism(G, H, injective=True, surjective=True, compute=False)

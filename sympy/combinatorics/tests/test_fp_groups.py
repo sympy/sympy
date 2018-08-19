@@ -157,16 +157,13 @@ def test_subgroup_quotient():
     H = f.subgroup([x*y**2*x*y, y**2*x*y*x, y**-1])
     assert T.order() == f.order()/H.order()
 
-    G = [x, y]
+    G = [x, y**2]
     H = [x*y**2*x*y, y**2*x*y*x, y**-1]
     K, T = subgroup_quotient(G, H, parent_group=f, homomorphism=True)
-    assert T.domain == K
-    assert T(K.generators) == list(f.generators)
     G = f.subgroup(G)
     H = f.subgroup(H)
     assert K.order() == G.order()/H.order()
 
-    F, x, y = free_group("x, y")
     T = maximal_abelian_quotient(f)
     assert T.is_abelian
     assert T.order() == 2
