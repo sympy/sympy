@@ -2303,7 +2303,7 @@ class LinearEntity3D(LinearEntity):
     p1
     p2
     direction_ratios
-    direction_cosine
+    direction_cosines
     points
 
     Notes
@@ -2346,7 +2346,7 @@ class LinearEntity3D(LinearEntity):
         return p1.direction_ratios(p2)
 
     @property
-    def direction_cosine(self):
+    def direction_cosines(self):
         """The normalized direction ratio of a given line in 3D.
 
         See Also
@@ -2360,13 +2360,13 @@ class LinearEntity3D(LinearEntity):
         >>> from sympy import Point3D, Line3D
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(5, 3, 1)
         >>> l = Line3D(p1, p2)
-        >>> l.direction_cosine
+        >>> l.direction_cosines
         [sqrt(35)/7, 3*sqrt(35)/35, sqrt(35)/35]
         >>> sum(i**2 for i in _)
         1
         """
         p1, p2 = self.points
-        return p1.direction_cosine(p2)
+        return p1.direction_cosines(p2)
 
 
 class Line3D(LinearEntity3D, Line):

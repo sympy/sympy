@@ -8,6 +8,7 @@ Contains
 
 from __future__ import division, print_function
 
+from sympy import N
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
@@ -340,19 +341,18 @@ class Ellipse(GeometrySet):
         22.1034921607095
         """
 
-        import math
         x, y = max(self.hradius, self.vradius), min(self.hradius, self.vradius)
         digits = 53
-        tol = math.sqrt(math.pow(0.5, digits))
+        tol = sqrt(pow(0.5, digits))
         if digits * y < tol * x:
             return 4 * x
         s = 0
         m = 1
         while x - y > tol * y:
-            x, y = 0.5 * (x + y), math.sqrt(x * y)
+            x, y = 0.5 * (x + y), sqrt(x * y)
             m *= 2
-            s += m * math.pow(x - y, 2)
-        return math.pi * (math.pow(self.hradius + self.vradius, 2) - s) / (x + y)
+            s += m * pow(x - y, 2)
+        return N(pi * (pow(self.hradius + self.vradius, 2) - s) / (x + y))
 
 
     @property
@@ -493,11 +493,6 @@ class Ellipse(GeometrySet):
         ( ( y − yc ) − s ( x − xc ) )**2         ( s * ( y − yc ) + ( x − xc ) )**2
         --------------------------------   +     ----------------------------------   =  1
                 m**2 * ( 1 + s**2 )                  M**2 * ( 1 + s**2 )
-
-        Reference
-        =========
-
-        https://math.stackexchange.com/questions/108270/what-is-the-equation-of-an-ellipse-hat-is-not-aligned-with-the-axis/646971
         """
 
         a, b, x, y, m, M, x_c, y_c, s = symbols('a,b,x,y,m,M,x_c,y_c,s')
