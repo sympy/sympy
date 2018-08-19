@@ -1389,8 +1389,8 @@ class Circle(Ellipse):
                 center = Point(center_x, center_y)
                 r_square = expand(lead_x_coeff * (x - center_x) ** 2) + expand(
                     lead_y_coeff * (y - center_y) ** 2) - equation
-                radius = sqrt(r_square / lead_x_coeff)
-                if (r_square / lead_x_coeff) >= 0:
+                if (r_square / lead_x_coeff).is_nonnegative:
+                    radius = sqrt(r_square / lead_x_coeff)
                     return Circle(center, radius)
                 else:
                     raise GeometryError("The given equation of circle has an imaginary radius")
