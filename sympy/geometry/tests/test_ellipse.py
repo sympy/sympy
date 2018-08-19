@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import Dummy, Rational, S, Symbol, symbols, pi, sqrt, oo
+from sympy import Dummy, Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D
 from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
@@ -8,6 +8,18 @@ from sympy.integrals.integrals import Integral
 from sympy.utilities.pytest import raises, slow
 from sympy import integrate
 from sympy.functions.special.elliptic_integrals import elliptic_e
+
+def test_object_from_equation():
+    from sympy.abc import x, y
+    assert Circle.object_from_equation(x ** 2 + y ** 2 + 3 * x + 4 * y - 8), Circle(Point2D(-3 / 2, -2), sqrt(57) / 2)
+    assert Circle.object_from_equation(x ** 2 + y ** 2 + 6 * x + 8 * y + 25), Circle(Point2D(-3, -4), 0)
+    assert Circle.object_from_equation(x ** 2 + y ** 2 - 25), Circle(Point2D(0, 0), 5)
+    assert Circle.object_from_equation(x ** 2 + y ** 2), Circle(Point2D(0, 0), 0)
+    assert Circle.object_from_equation(x ** 2 + y ** 2 + 6 * x + 8), Circle(Point2D(-3, 0), 1)
+    assert Circle.object_from_equation(x ** 2 + y ** 2 + 6 * y + 8), Circle(Point2D(0, -3), 1)
+    raises(GeometryError, lambda: Circle.object_from_equation(x ** 2 + y ** 2 + 3 * x + 4 * y + 26))
+    raises(GeometryError, lambda: Circle.object_from_equation(x ** 2 + y ** 2 + 25))
+    raises(GeometryError, lambda: Circle.object_from_equation(x ** 2 + 6 * y + 8))
 
 
 def test_ellipse_geom():

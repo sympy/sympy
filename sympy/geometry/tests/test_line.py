@@ -38,6 +38,17 @@ warnings.showwarning = warn_with_traceback
 warnings.simplefilter('always', UserWarning)  # make sure to show warnings every time they occur
 
 
+def test_object_from_equation():
+    from sympy.abc import x, y
+    assert Line.object_from_equation(3*x + y + 18), Line2D(Point2D(0, 0), Point2D(1, -3))
+    assert Line.object_from_equation(3*x + y), Line2D(Point2D(0, 0), Point2D(1, -3))
+    assert Line.object_from_equation(x + y), Line2D(Point2D(0, 0), Point2D(1, -1))
+    assert Line.object_from_equation(x), Line2D(Point2D(0, 0), Point2D(0, 1))
+    assert Line.object_from_equation(y), Line2D(Point2D(0, 0), Point2D(1, 0))
+    assert Line.object_from_equation(x/y), Line2D(Point2D(0, 0), Point2D(0, 1))
+    assert Line.object_from_equation(y/x), Line2D(Point2D(0, 0), Point2D(1, 0))
+
+
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
     t_float = Float("1.0E-10")

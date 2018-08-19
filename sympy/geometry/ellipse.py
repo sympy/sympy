@@ -13,7 +13,7 @@ from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import range, ordered
-from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
+from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol, var
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -1357,7 +1357,8 @@ class Circle(Ellipse):
 
         raise GeometryError("Circle.__new__ received unknown arguments")
 
-    def object_from_equation(self):
+    @classmethod
+    def object_from_equation(self, equation):
         """Returns a Circle object from an equation of circle given as input.
         If the equation of the circle is ax**2 + by**2 + gx + hy + c = 0, then
         the input has to be of the following format: ax**2 + by**2 + gx + hy + c
@@ -1368,34 +1369,36 @@ class Circle(Ellipse):
         >>> from sympy import Circle
         >>> from sympy.abc import x, y
         >>> Circle.object_from_equation(x**2 + y**2 + 3*x + 4*y - 8)
-        Circle(Point2D(-3/2, -2), 3.77491721763537)
+        Circle(Point2D(-3/2, -2), sqrt(57)/2)
 
         """
 
-        from sympy.abc import x, y
-        poly_x = poly(self, x)
-        poly_y = poly(self, y)
-        deg_x = degree(poly_x)
-        deg_y = degree(poly_y)
-        lead_x_coeff = LC(poly_x)
-        lead_y_coeff = LC(poly_y)
+        x = var('x')
+        y = var('y')
+        if x in list(equation.free_symbols) or y in list(equation.free_symbols):
+            poly_x = poly(equation, x)
+            poly_y = poly(equation, y)
+            deg_x = degree(poly_x)
+            deg_y = degree(poly_y)
+            lead_x_coeff = LC(poly_x)
+            lead_y_coeff = LC(poly_y)
 
-        if deg_x == 2 and deg_y == 2:
-            if lead_x_coeff == lead_y_coeff:
-                center_x = solve(diff(self, x))[0]
-                center_y = solve(diff(self, y))[0]
+            if lead_x_coeff == lead_y_coeff and (deg_x == 2 and deg_y == 2):
+                center_x = solve(diff(equation, x))[0]
+                center_y = solve(diff(equation, y))[0]
                 center = Point(center_x, center_y)
                 r_square = expand(lead_x_coeff * (x - center_x) ** 2) + expand(
-                    lead_y_coeff * (y - center_y) ** 2) - self
-                radius = (r_square / lead_x_coeff) ** 0.5
-                if radius.is_real:
+                    lead_y_coeff * (y - center_y) ** 2) - equation
+                radius = sqrt(r_square / lead_x_coeff)
+                if (r_square / lead_x_coeff) >= 0:
                     return Circle(center, radius)
                 else:
                     raise GeometryError("The given equation of circle has an imaginary radius")
             else:
-                raise GeometryError("The given equation is not that of a circle")
+                raise GeometryError("The given equation does not represent a circle")
         else:
-            raise GeometryError("The given equation is not that of a circle")
+            raise GeometryError(
+                "The equation must be in terms of x and/or y. Look at the documentation for input format")
 
     @property
     def circumference(self):
