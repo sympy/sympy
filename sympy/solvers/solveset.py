@@ -1336,21 +1336,19 @@ def _is_lambert(f, symbol):
 def _solve_as_bivariate(lhs, rhs, symbol, domain):
     poly = lhs.as_poly()
     gens = _filtered_gens(poly, symbol)
-    if len(gens) == 2:
-        try:
-            gpu = bivariate_type(lhs - rhs, *gens)
-            if gpu is None:
-                raise NotImplementedError
-            g, p, u = gpu
-            inversion = _transolve(g - u, symbol, domain)
-            if inversion:
-                sol = _solveset(p, u, domain)
-                result = FiniteSet(*[i.subs(u, s)
-                                   for i in inversion for s in sol])
 
-            return result
-        except NotImplementedError:
-            pass
+    if len(gens) == 2:
+        gpu = bivariate_type(lhs - rhs, *gens)
+        if gpu is None:
+            return
+        g, p, u = gpu
+        inversion = _transolve(g - u, symbol, domain)
+        if inversion:
+            sol = _solveset(p, u, domain)
+            return FiniteSet(*[i.subs(u, s)
+                               for i in inversion for s in sol])
+
+    return
 
 
 def _solve_as_lambert(lhs, rhs, symbol, domain):
@@ -1367,23 +1365,21 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
 
 def _solve_as_lambert_bivariate(lhs, rhs, symbol, domain):
 
-    result = ConditionSet(symbol, Eq(lhs-rhs, 0), domain)
+    result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
 
     soln = _solve_as_lambert(lhs, rhs, symbol, domain)
-    if soln:
-        result = FiniteSet(*soln)
-    else:
+    if not soln:
         # make symbol positive
         u = Dummy('u', positive=True)
         pos_lhs = lhs.subs({symbol: u})
-        soln = _solve_as_lambert(pos_lhs, rhs, u, domain)
-        if soln:
-            result = FiniteSet(*soln)
-        else:
-            # maybe bivariate type
+        dom = Intersection(domain, Interval(0, oo))
+        soln = _solve_as_lambert(pos_lhs, rhs, u, dom)
+
+        if not soln:
             soln = _solve_as_bivariate(lhs, rhs, symbol, domain)
-            if soln:
-                result = FiniteSet(*soln)
+
+    if soln:
+        result = FiniteSet(*soln)
 
     return result
 
@@ -1552,7 +1548,7 @@ def _transolve(f, symbol, domain):
       `\_solve\_class`.
       For example: for exponential equations it becomes
       `\_is\_exponential` and `\_solve\_expo`.
-    - The `identifying helpers`should take two input parameters,
+    - The `identifying helpers` should take two input parameters,
       the equation to be checked and the variable for which a solution
       is being sought, while `solving helpers` would require an additional
       domain parameter.
