@@ -1,22 +1,22 @@
-.. _pydy_for_autolev_users:
+.. _sympy_mechanics_for_autolev_users:
 
-======================
-PyDy for Autolev Users
-======================
+=================================
+SymPy Mechanics for Autolev Users
+=================================
 
 Introduction
-----------------
+------------
 
 Autolev (now superseded by MotionGenesis) is a domain specific programming
 language which is used for symbolic multibody dynamics. The SymPy mechanics
 module now has enough power and functionality to be a fully featured symbolic 
 dynamics module. The PyDy package extends the SymPy output to the numerical
-domain for simulation, analyses and visualization. Autolev and PyDy have
+domain for simulation, analyses and visualization. Autolev and SymPy Mechanics have
 a lot in common but there are also many differences between them.
 This page shall expand upon their differences. It is meant to be a go-to
-reference for Autolev users who want to transition to PyDy.
+reference for Autolev users who want to transition to SymPy Mechanics.
 
-It would be nice to have a basic understanding of SymPy and PyDy before
+It would be nice to have a basic understanding of SymPy and SymPy Mechanics before
 going over this page.
 If you are completely new to Python, you can check out the official
 `Python Tutorial <https://docs.python.org/3/tutorial/>`_.
@@ -32,13 +32,13 @@ Some Key Differences
 ------------------------
 
 +-----------------------------------+-----------------------------------+
-|          **Autolev**              |             **PyDy**              |            
+|          **Autolev**              |         **SymPy Mechanics**       |            
 +===================================+===================================+
 ||                                  ||                                  | 
-| Autolev is a domain specific      | PyDy is a library written in the  |
+| Autolev is a domain specific      | SymPy is a library written in the |
 | programming language designed to  | general purpose language Python.  |
 | perform multibody dynamics. Since | Although Autolev's code is more   |
-| it is a language of its own, it   | compact, PyDy (by virtue of being |
+| it is a language of its own, it   | compact, SymPy (by virtue of being|
 | has a very rigid language         | an add on to Python) is more      |
 | specification. It predefines,     | flexible. The users have more     |
 | assumes and computes              | control over what they can do. For|
@@ -51,7 +51,7 @@ Some Key Differences
 |                                   | a big plus.                       |
 +-----------------------------------+-----------------------------------+
 ||                                  ||                                  |
-| Autolev generates Matlab, C, or   | PyDy generates numerical Python,  |
+| Autolev generates Matlab, C, or   | SymPy generates numerical Python, |
 | Fortran code from a small set of  | C or Octave/Matlab code from a    |
 | symbolic mathematics.             | large set of symbolic mathematics |
 |                                   | created with SymPy. It also builds|
@@ -66,20 +66,20 @@ Some Key Differences
 | a sequence is found using a[1].   | a sequence is found using a[0].   |
 +-----------------------------------+-----------------------------------+
 ||                                  ||                                  |
-| Autolev is case insensitive.      | PyDy code being Python code is    |
+| Autolev is case insensitive.      | SymPy code being Python code is   |
 |                                   | case sensitive.                   |
 +-----------------------------------+-----------------------------------+
 ||                                  ||                                  |
-| One can define their own commands | PyDy code is Python code, so one  |
+| One can define their own commands | SymPy code is Python code, so one |
 | in Autolev by making .R and .A    | can define functions in their     |
 | files which can be used in their  | code. This is a lot more          |
 | programs.                         | convenient.                       |
 +-----------------------------------+-----------------------------------+
 ||                                  ||                                  |
-| Autolev is proprietary.           | PyDy is open source.              |
+| Autolev is proprietary.           | SymPy is open source.             |
 +-----------------------------------+-----------------------------------+
 
-Rough Autolev-PyDy Equivalents
+Rough Autolev-SymPy Equivalents
 ----------------------------------
 
 The tables below give rough equivalents for some common Autolev
@@ -100,7 +100,7 @@ Mathematical Equivalents
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +-----------------------+-----------------------+-----------------------+
-| **Autolev**           | **PyDy**              | **Notes**             |
+| **Autolev**           | **SymPy**             | **Notes**             |
 +=======================+=======================+=======================+
 ||                      ||                      ||                      |
 | ``Constants A, B``    | ``a, b =              | Note that the names   |
@@ -363,7 +363,7 @@ Physical Equivalents
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 +-----------------------+-----------------------+-----------------------+
-| **Autolev**           | **PyDy**              | **Notes**             |
+| **Autolev**           | **SymPy**             | **Notes**             |
 +=======================+=======================+=======================+
 | ``Bodies A``          | ``m =sm.symbols(‘m’)``| The 4th and 5th       |
 |                       |                       | arguments are for the |
