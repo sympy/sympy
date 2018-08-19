@@ -40,13 +40,13 @@ warnings.simplefilter('always', UserWarning)  # make sure to show warnings every
 
 def test_object_from_equation():
     from sympy.abc import x, y
-    assert Line.object_from_equation(3*x + y + 18), Line2D(Point2D(0, 0), Point2D(1, -3))
-    assert Line.object_from_equation(3*x + y), Line2D(Point2D(0, 0), Point2D(1, -3))
-    assert Line.object_from_equation(x + y), Line2D(Point2D(0, 0), Point2D(1, -1))
-    assert Line.object_from_equation(x), Line2D(Point2D(0, 0), Point2D(0, 1))
-    assert Line.object_from_equation(y), Line2D(Point2D(0, 0), Point2D(1, 0))
-    assert Line.object_from_equation(x/y), Line2D(Point2D(0, 0), Point2D(0, 1))
-    assert Line.object_from_equation(y/x), Line2D(Point2D(0, 0), Point2D(1, 0))
+    assert Line.object_from_equation(3*x + y + 18) == Line2D(Point2D(0, 0), Point2D(1, -3))
+    assert Line.object_from_equation(3*x + y) == Line2D(Point2D(0, 0), Point2D(1, -3))
+    assert Line.object_from_equation(x + y) == Line2D(Point2D(0, 0), Point2D(1, -1))
+    assert Line.object_from_equation(x) == Line2D(Point2D(0, 0), Point2D(0, 1))
+    assert Line.object_from_equation(y) == Line2D(Point2D(0, 0), Point2D(1, 0))
+    assert Line.object_from_equation(x/y) == Line2D(Point2D(0, 0), Point2D(0, 1))
+    assert Line.object_from_equation(y/x) == Line2D(Point2D(0, 0), Point2D(1, 0))
 
 
 def feq(a, b):
@@ -63,7 +63,7 @@ def test_angle_between():
                                   Line(Point(0, 0), Point(5, 0))).evalf(), pi.evalf() / 4)
     assert Line(a, o).angle_between(Line(b, o)) == pi / 2
     assert Line3D.angle_between(Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1)),
-                                Line3D(Point3D(0, 0, 0), Point3D(5, 0, 0))), acos(sqrt(3) / 3)
+                                Line3D(Point3D(0, 0, 0), Point3D(5, 0, 0))) == acos(sqrt(3) / 3)
 
 
 def test_closing_angle():
