@@ -1,5 +1,6 @@
 import collections
 import sys
+import warnings
 
 from sympy.external import import_module
 
@@ -572,6 +573,14 @@ if AutolevListener:
         def exitId(self, ctx):
             # Tree annotation for ID which is a labeled subrule of the parser rule expr.
             # A_C
+            python_keywords = ["and", "as", "assert", "break", "class", "continue", "def", "del", "elif", "else", "except",\
+            "exec", "finally", "for", "from", "global", "if", "import", "in", "is", "lambda", "not", "or", "pass", "print",\
+            "raise", "return", "try", "while", "with", "yield"]
+
+            if ctx.ID().getText().lower() in python_keywords:
+                warnings.warn("Python keywords must not be used as identifiers. Please refer to the list of keywords at https://docs.python.org/2.5/ref/keywords.html",
+                SyntaxWarning)
+
             if "_" in ctx.ID().getText() and ctx.ID().getText().count('_') == 1:
                 e1, e2 = ctx.ID().getText().lower().split('_')
                 try:
