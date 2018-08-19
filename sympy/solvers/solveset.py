@@ -1329,56 +1329,80 @@ def _is_logarithmic(f, symbol):
     return rv
 
 
-def _is_lambert(f, symbol):
-    return any(isinstance(arg, (Pow, exp, log)) for arg in _term_factors(f))
+def _is_bivariate(f, symbol):
+    r"""
+    Helper to check if the equation takes bivariate form.
+    If the equation has exactly two generators then we can
+    say it to be in bivariate form.
+    """
+    poly = f.as_poly()
+    gens = _filtered_gens(poly, symbol)
+
+    return True if len(gens) == 2 else False
 
 
 def _solve_as_bivariate(lhs, rhs, symbol, domain):
+    r"""
+    Helper solver to solve equations of bivariate form.
+    """
+    result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
+
     poly = lhs.as_poly()
     gens = _filtered_gens(poly, symbol)
-
-    if len(gens) == 2:
-        gpu = bivariate_type(lhs - rhs, *gens)
-        if gpu is None:
-            return
+    gpu = bivariate_type(lhs - rhs, *gens)
+    if gpu is not None:
         g, p, u = gpu
         inversion = _transolve(g - u, symbol, domain)
         if inversion:
             sol = _solveset(p, u, domain)
-            return FiniteSet(*[i.subs(u, s)
+            result = FiniteSet(*[i.subs(u, s)
                                for i in inversion for s in sol])
 
-    return
+    return result
 
 
-def _solve_as_lambert(lhs, rhs, symbol, domain):
+def _is_lambert(f, symbol):
+    r"""
+    Helper to check whether an equation is of lambert type.
+    Equations containing `Pow`, `log` or `exp` terms are currently checked
+    for having lambert solutions
+    """
+    return any(isinstance(arg, (Pow, exp, log)) for arg in _term_factors(f))
 
+
+def _compute_lambert_solutions(lhs, rhs, symbol):
+    """
+    Computes the lambert solutions. Returns `None` if it
+    fails doing so.
+    """
     try:
         poly = lhs.as_poly()
         gens = _filtered_gens(poly, symbol)
 
         return _solve_lambert(lhs - rhs, symbol, gens)
-
     except NotImplementedError:
         pass
 
 
-def _solve_as_lambert_bivariate(lhs, rhs, symbol, domain):
-
+def _solve_as_lambert(lhs, rhs, symbol, domain):
+    r"""
+    Helper solver to handle equations having LambertW solutions.
+    First tries to solve equation directly, if unsuccessful
+    attempts to find the solutions by making the `symbol` positive.
+    The second attempt modifies the `domain` having only posiive values.
+    """
     result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
 
-    soln = _solve_as_lambert(lhs, rhs, symbol, domain)
-    if not soln:
-        # make symbol positive
+    soln = _compute_lambert_solutions(lhs, rhs, symbol)
+    if soln is None:
+        # try with positive `symbol`
         u = Dummy('u', positive=True)
         pos_lhs = lhs.subs({symbol: u})
         dom = Intersection(domain, Interval(0, oo))
-        soln = _solve_as_lambert(pos_lhs, rhs, u, dom)
-
-        if not soln:
-            soln = _solve_as_bivariate(lhs, rhs, symbol, domain)
-
-    if soln:
+        soln = _compute_lambert_solutions(pos_lhs, rhs, u)
+        if soln:
+            result = Intersection(FiniteSet(*soln), dom)
+    else:
         result = FiniteSet(*soln)
 
     return result
@@ -1581,8 +1605,11 @@ def _transolve(f, symbol, domain):
             result = _solve_logarithm(lhs, rhs, symbol, domain)
 
         elif _is_lambert(lhs, symbol):
-            # maybe a last try to get solutions in form of lambert
-            result = _solve_as_lambert_bivariate(lhs, rhs, symbol, domain)
+            # try to get solutions in form of lambert
+            result = _solve_as_lambert(lhs, rhs, symbol, domain)
+            if isinstance(result, ConditionSet):
+                if _is_bivariate(lhs, symbol):
+                    result = _solve_as_bivariate(lhs, rhs, symbol, domain)
 
         return result
 
@@ -1599,8 +1626,11 @@ def _transolve(f, symbol, domain):
         if lhs.is_Add:
             result = add_type(lhs, rhs, symbol, domain)
         elif _is_lambert(lhs, symbol):
-            # maybe a last try to get solutions in form of lambert
-            result = _solve_as_lambert_bivariate(lhs, rhs, symbol, domain)
+            # try to get solutions in form of lambert
+            result = _solve_as_lambert(lhs, rhs, symbol, domain)
+            if isinstance(result, ConditionSet):
+                if _is_bivariate(lhs, symbol):
+                    result = _solve_as_bivariate(lhs, rhs, symbol, domain)
     else:
         result = rhs_s
 

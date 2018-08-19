@@ -1923,17 +1923,23 @@ def test_solve_lambert():
     assert solveset_real(eq, x) == \
         FiniteSet(LambertW(3*exp(-LambertW(3))))
 
-    assert solveset_real((a/x + exp(x/2)).diff(x), x) == \
-        FiniteSet(4*LambertW(sqrt(2)*sqrt(a)/4)) - FiniteSet(0)
-
     assert solveset_real(x*log(x) + 3*x + 1, x) == \
-        FiniteSet(exp(-3 + LambertW(-exp(3))))
+        Intersection(Interval(0, oo), FiniteSet(exp(-3 + LambertW(-exp(3)))))
     # issue 4271
-    assert solveset_real((a/x + exp(x/2)).diff(x, 2), x) == FiniteSet(
-        6*LambertW((-a)**(S(1)/3)/3)) - FiniteSet(0)
+    assert solveset_real((a/x + exp(x/2)).diff(x, 2), x) == Intersection(
+        Interval(0, oo), FiniteSet(6*LambertW((-a)**(S(1)/3)/3))) - FiniteSet(0)
     assert solveset_real(x**3 - 3**x, x) == FiniteSet(
         -3*LambertW(-log(3)/3)/log(3), -3*LambertW(-log(3)/3, -1)/log(3))
     assert solveset_real(x**2 - 2**x, x) == solveset_real(-x**2 + 2**x, x)
+
+    assert solveset_real((a/x + exp(x/2)).diff(x), x) == \
+        Intersection(Interval(0, oo),
+            FiniteSet(4*LambertW(sqrt(2)*sqrt(a)/4))) - FiniteSet(0)
+    a = -1
+    assert solveset_real((a/x + exp(x/2)).diff(x), x) == S.EmptySet
+    a = 1
+    assert solveset_real((a/x + exp(x/2)).diff(x), x) == FiniteSet(
+        4*LambertW(sqrt(2)/4))
 
 
 @XFAIL
