@@ -29,7 +29,7 @@ def _unique_and_repeated(inds):
     Returns the unique and repeated indices. Also note, from the examples given below
     that the order of indices is maintained as given in the input.
 
-    Examples :
+    Examples
     ========
 
     >>> from sympy.tensor.index_methods import _unique_and_repeated
@@ -52,7 +52,7 @@ def _remove_repeated(inds):
     Returns a set of the unique objects and a tuple of all that have been
     removed.
 
-    Examples :
+    Examples
     ========
 
     >>> from sympy.tensor.index_methods import _remove_repeated

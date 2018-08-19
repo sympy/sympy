@@ -652,11 +652,15 @@ class log(Function):
 
         return self.func(arg)
 
-    def _eval_simplify(self, ratio, measure):
-        from sympy.simplify.simplify import expand_log, simplify
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        from sympy.simplify.simplify import expand_log, simplify, inversecombine
         if (len(self.args) == 2):
-            return simplify(self.func(*self.args), ratio=ratio, measure=measure)
-        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
+            return simplify(self.func(*self.args), ratio=ratio, measure=measure,
+                            rational=rational, inverse=inverse)
+        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure,
+                         rational=rational, inverse=inverse))
+        if inverse:
+            expr = inversecombine(expr)
         expr = expand_log(expr, deep=True)
         return min([expr, self], key=measure)
 

@@ -20,6 +20,7 @@ from sympy.utilities.decorator import doctest_depends_on
 MATH = {}
 MPMATH = {}
 NUMPY = {}
+SCIPY = {}
 TENSORFLOW = {}
 SYMPY = {}
 NUMEXPR = {}
@@ -31,6 +32,7 @@ NUMEXPR = {}
 MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
+SCIPY_DEFAULT = {"I": 1j}
 TENSORFLOW_DEFAULT = {}
 SYMPY_DEFAULT = {}
 NUMEXPR_DEFAULT = {}
@@ -66,10 +68,13 @@ MPMATH_TRANSLATIONS = {
     "Shi": "shi",
     "Chi": "chi",
     "Si": "si",
-    "Ci": "ci"
+    "Ci": "ci",
+    "RisingFactorial": "rf",
+    "FallingFactorial": "ff",
 }
 
 NUMPY_TRANSLATIONS = {}
+SCIPY_TRANSLATIONS = {}
 
 TENSORFLOW_TRANSLATIONS = {
     "Abs": "abs",
@@ -88,6 +93,7 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *",)),
+    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -358,14 +364,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         module_provided = False
 
         try:
-            _import("numpy")
+            _import("scipy")
         except ImportError:
-            # Use either numpy (if available) or python.math where possible.
-            # XXX: This leads to different behaviour on different systems and
-            #      might be the reason for irreproducible errors.
-            modules = ["math", "mpmath", "sympy"]
+            try:
+                _import("numpy")
+            except ImportError:
+                # Use either numpy (if available) or python.math where possible.
+                # XXX: This leads to different behaviour on different systems and
+                #      might be the reason for irreproducible errors.
+                modules = ["math", "mpmath", "sympy"]
+            else:
+                modules = ["numpy"]
         else:
-            modules = ["numpy"]
+            modules = ["scipy", "numpy"]
 
     # Get the needed namespaces.
     namespaces = []
@@ -396,6 +407,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if printer is None:
         if _module_present('mpmath', namespaces):
             from sympy.printing.pycode import MpmathPrinter as Printer
+        elif _module_present('scipy', namespaces):
+            from sympy.printing.pycode import SciPyPrinter as Printer
         elif _module_present('numpy', namespaces):
             from sympy.printing.pycode import NumPyPrinter as Printer
         elif _module_present('numexpr', namespaces):
@@ -698,14 +711,13 @@ class _EvaluatorPrinter(object):
             return isinstance(ident, str) and cls._safe_ident_re.match(ident) \
                 and not (keyword.iskeyword(ident) or ident == 'None')
 
-
     def _preprocess(self, args, expr):
         """Preprocess args, expr to replace arguments that do not map
         to valid Python identifiers.
 
         Returns string form of args, and updated expr.
         """
-        from sympy import Dummy, Symbol, Function, flatten
+        from sympy import Dummy, Symbol, MatrixSymbol, Function, flatten
         from sympy.matrices import DeferredVector
 
         dummify = self._dummify
@@ -723,7 +735,7 @@ class _EvaluatorPrinter(object):
                 argstrs.append(nested_argstrs)
             elif isinstance(arg, DeferredVector):
                 argstrs.append(str(arg))
-            elif isinstance(arg, Symbol):
+            elif isinstance(arg, Symbol) or isinstance(arg, MatrixSymbol):
                 argrep = self._argrepr(arg)
 
                 if dummify or not self._is_safe_ident(argrep):
@@ -736,13 +748,16 @@ class _EvaluatorPrinter(object):
                 dummy = Dummy()
                 argstrs.append(self._argrepr(dummy))
                 expr = self._subexpr(expr, {arg: dummy})
+            elif dummify:
+                dummy = Dummy()
+                argstrs.append(self._argrepr(dummy))
+                expr = self._subexpr(expr, {arg: dummy})
             else:
                 argstrs.append(str(arg))
 
         return argstrs, expr
 
-    @staticmethod
-    def _subexpr(expr, dummies_dict):
+    def _subexpr(self, expr, dummies_dict):
         from sympy.matrices import DeferredVector
         from sympy import sympify
 
@@ -752,13 +767,13 @@ class _EvaluatorPrinter(object):
             if isinstance(expr, DeferredVector):
                 pass
             elif isinstance(expr, dict):
-                k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
-                v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
+                k = [self._subexpr(sympify(a), dummies_dict) for a in expr.keys()]
+                v = [self._subexpr(sympify(a), dummies_dict) for a in expr.values()]
                 expr = dict(zip(k, v))
             elif isinstance(expr, tuple):
-                expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
+                expr = tuple(self._subexpr(sympify(a), dummies_dict) for a in expr)
             elif isinstance(expr, list):
-                expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
+                expr = [self._subexpr(sympify(a), dummies_dict) for a in expr]
         return expr
 
     def _print_funcargwrapping(self, args):

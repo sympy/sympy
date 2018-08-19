@@ -2,26 +2,24 @@ from __future__ import print_function, division
 
 from mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.assumptions.refine import refine
 from sympy.core.add import Add
-from sympy.core.basic import Basic, Atom
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
 from sympy.core.power import Pow
 from sympy.core.symbol import (Symbol, Dummy, symbols,
     _uniquely_named_symbol)
-from sympy.core.numbers import Integer, ilcm, mod_inverse, Float
+from sympy.core.numbers import Integer, mod_inverse, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions import Abs, exp, factorial
-from sympy.polys import PurePoly, roots, cancel, gcd
+from sympy.functions import exp, factorial
+from sympy.polys import PurePoly, roots, cancel
 from sympy.printing import sstr
-from sympy.simplify import simplify as _simplify, signsimp, nsimplify
+from sympy.simplify import simplify as _simplify, nsimplify
 from sympy.core.compatibility import reduce, as_int, string_types, Callable
 
 from sympy.utilities.iterables import flatten, numbered_symbols
-from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import (is_sequence, default_sort_key, range,
     NotIterable)
 
@@ -29,8 +27,10 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
-from .common import (a2idx, classof, MatrixError, ShapeError,
+from .common import (a2idx, MatrixError, ShapeError,
         NonSquareMatrixError, MatrixCommon)
+
+from sympy.core.decorators import deprecated
 
 
 def _iszero(x):
@@ -1125,8 +1125,20 @@ class MatrixEigen(MatrixSubspaces):
             if any(v.has(Float) for v in mat):
                 mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
-        flags.pop('simplify', None)  # pop unsupported flag
-        eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
+        if mat.is_upper or mat.is_lower:
+            diagonal_entries = [mat[i, i] for i in range(mat.rows)]
+            multiple = flags.pop('multiple', False)
+            if multiple:
+                eigs = diagonal_entries
+            else:
+                eigs = {}
+                for diagonal_entry in diagonal_entries:
+                    if diagonal_entry not in eigs:
+                        eigs[diagonal_entry] = 0
+                    eigs[diagonal_entry] += 1
+        else:
+            flags.pop('simplify', None)  # pop unsupported flag
+            eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
 
         # make sure the algebraic multiplicty sums to the
         # size of the matrix
@@ -1899,9 +1911,9 @@ class MatrixBase(MatrixDeprecated,
 
     __hash__ = None  # Mutable
 
-    def __array__(self):
+    def __array__(self, dtype=object):
         from .dense import matrix2numpy
-        return matrix2numpy(self)
+        return matrix2numpy(self, dtype=dtype)
 
     def __getattr__(self, attr):
         if attr in ('diff', 'integrate', 'limit'):
@@ -2915,6 +2927,7 @@ class MatrixBase(MatrixDeprecated,
 
         key2ij
         """
+        from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
 
         islice, jslice = [isinstance(k, slice) for k in keys]
         if islice:
@@ -2923,7 +2936,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 rlo, rhi = keys[0].indices(self.rows)[:2]
         else:
-            rlo = a2idx(keys[0], self.rows)
+            rlo = a2idx_(keys[0], self.rows)
             rhi = rlo + 1
         if jslice:
             if not self.cols:
@@ -2931,7 +2944,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 clo, chi = keys[1].indices(self.cols)[:2]
         else:
-            clo = a2idx(keys[1], self.cols)
+            clo = a2idx_(keys[1], self.cols)
             chi = clo + 1
         return rlo, rhi, clo, chi
 
@@ -2945,15 +2958,17 @@ class MatrixBase(MatrixDeprecated,
 
         key2bounds
         """
+        from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
+
         if is_sequence(key):
             if not len(key) == 2:
                 raise TypeError('key must be a sequence of length 2')
-            return [a2idx(i, n) if not isinstance(i, slice) else i
+            return [a2idx_(i, n) if not isinstance(i, slice) else i
                     for i, n in zip(key, self.shape)]
         elif isinstance(key, slice):
             return key.indices(len(self))[:2]
         else:
-            return divmod(a2idx(key, len(self)), self.cols)
+            return divmod(a2idx_(key, len(self)), self.cols)
 
     def LDLdecomposition(self):
         """Returns the LDL Decomposition (L, D) of matrix A,
@@ -4093,54 +4108,21 @@ class MatrixBase(MatrixDeprecated,
                     count += 1
         return v
 
-
+@deprecated(
+    issue=15109,
+    useinstead="from sympy.matrices.common import classof",
+    deprecated_since_version="1.3")
 def classof(A, B):
-    """
-    Get the type of the result when combining matrices of different types.
+    from sympy.matrices.common import classof as classof_
+    return classof_(A, B)
 
-    Currently the strategy is that immutability is contagious.
-
-    Examples
-    ========
-
-    >>> from sympy import Matrix, ImmutableMatrix
-    >>> from sympy.matrices.matrices import classof
-    >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
-    >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
-    >>> classof(M, IM)
-    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
-    """
-    try:
-        if A._class_priority > B._class_priority:
-            return A.__class__
-        else:
-            return B.__class__
-    except AttributeError:
-        pass
-    try:
-        import numpy
-        if isinstance(A, numpy.ndarray):
-            return B.__class__
-        if isinstance(B, numpy.ndarray):
-            return A.__class__
-    except (AttributeError, ImportError):
-        pass
-    raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
-
-
+@deprecated(
+    issue=15109,
+    deprecated_since_version="1.3",
+    useinstead="from sympy.matrices.common import a2idx")
 def a2idx(j, n=None):
-    """Return integer after making positive and validating against n."""
-    if type(j) is not int:
-        try:
-            j = j.__index__()
-        except AttributeError:
-            raise IndexError("Invalid index a[%r]" % (j,))
-    if n is not None:
-        if j < 0:
-            j += n
-        if not (j >= 0 and j < n):
-            raise IndexError("Index out of range: a[%s]" % j)
-    return int(j)
+    from sympy.matrices.common import a2idx as a2idx_
+    return a2idx_(j, n)
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):

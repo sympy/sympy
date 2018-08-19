@@ -1898,7 +1898,7 @@ def test_inf():
 
 
 def test_issue_12448():
-    f = Symbol('f')
+    f = Function('f')
     fun = [f(i) for i in range(15)]
     sym = symbols('x:15')
     reps = dict(zip(fun, sym))
@@ -1969,3 +1969,8 @@ def test_issue_14721():
         h, h/a + 1/b**2 - 2, -h/2 + 1/b**2 - 2], a, h, b) == [
         (a, 0, -sqrt(2)/2), (a, 0, sqrt(2)/2)]
     assert solve((a + b**2 - 1, a + b**2 - 2)) == []
+
+def test_issue_14779():
+    x = symbols('x', real=True)
+    assert solve(sqrt(x**4 - 130*x**2 + 1089) + sqrt(x**4 - 130*x**2
+                 + 3969) - 96*Abs(x)/x,x) == [sqrt(130)]

@@ -6,7 +6,7 @@ Debian/Ubuntu
 
 To make the html documentation, install the prerequisites::
 
-    apt-get install python-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x
+    apt-get install python-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
 
 and do::
 
@@ -21,7 +21,7 @@ Fedora
 
 Fedora (and maybe other RPM based distributions), install the prerequisites::
 
-    dnf install python3-sphinx librsvg2 ImageMagick docbook2X texlive-dvipng-bin texlive-scheme-medium librsvg2-tools 
+    dnf install python3-sphinx librsvg2 ImageMagick docbook2X texlive-dvipng-bin texlive-scheme-medium librsvg2-tools
 
 After that, run::
 

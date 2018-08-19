@@ -2,9 +2,9 @@ import collections
 import random
 
 from sympy import (
-    Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
-    sympify, trigsimp, tan, sstr, diff)
+    Abs, Add, E, Float, Function, I, Integer, Max, Min, N, Poly, Pow, PurePoly,
+    Rational, S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt,
+    symbols, sympify, trigsimp, tan, sstr, diff)
 from sympy.matrices.common import (ShapeError, MatrixError, NonSquareMatrixError,
     _MinimalMatrix, MatrixShaping, MatrixProperties, MatrixOperations, MatrixArithmetic,
     MatrixSpecial)
@@ -498,7 +498,6 @@ def test_refine():
 
 
 def test_replace():
-    from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
     K = OperationsOnlyMatrix(2, 2, lambda i, j: G(i+j))
     M = OperationsOnlyMatrix(2, 2, lambda i, j: F(i+j))
@@ -507,7 +506,6 @@ def test_replace():
 
 
 def test_replace_map():
-    from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
     K = OperationsOnlyMatrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}), (G(1), {F(1) \
                                                                               : G(1)}), (G(2), {F(2): G(2)})])
@@ -517,7 +515,8 @@ def test_replace_map():
 
 
 def test_simplify():
-    f, n = symbols('f, n')
+    n = Symbol('n')
+    f = Function('f')
 
     M = OperationsOnlyMatrix([[            1/x + 1/y,                 (x + x*y) / x  ],
                 [ (f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n) / pi ]])

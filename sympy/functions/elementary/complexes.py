@@ -9,7 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.functions.elementary.exponential import exp, exp_polar, log
 from sympy.functions.elementary.trigonometric import atan, atan2
 from sympy.functions.elementary.integers import ceiling
@@ -108,6 +108,10 @@ class re(Function):
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
+
+    def _eval_is_zero(self):
+        # is_imaginary implies nonzero
+        return fuzzy_or([self.args[0].is_imaginary, self.args[0].is_zero])
 
     def _sage_(self):
         import sage.all as sage
@@ -216,6 +220,8 @@ class im(Function):
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
 
+    def _eval_is_zero(self):
+        return self.args[0].is_real
 
 ###############################################################################
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
@@ -372,7 +378,7 @@ class sign(Function):
         if arg.is_real:
             return Heaviside(arg)*2-1
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         return self.func(self.args[0].factor())
 
 

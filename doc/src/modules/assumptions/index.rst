@@ -1,5 +1,5 @@
 ==================
-Assumptions module
+Assumptions Module
 ==================
 
 .. automodule:: sympy.assumptions
