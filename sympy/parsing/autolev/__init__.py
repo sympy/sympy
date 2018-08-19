@@ -1,28 +1,24 @@
 from sympy.external import import_module
 
 
-def parse_autolev(input, output=None, include_pydy=False):
+def parse_autolev(autolev_code, include_numeric=False):
     """Parses Autolev code (version 4.1) to SymPy code.
 
     Parameters
-    ----------
-    input: str
-         1. Can be the name of a file containing Autolev code.
-         2. Can be a string containing Autolev code.
+    =========
+    autolev_code : str, any object with a readlines() method (such as a file handle or StringIO)
+        Autolev code...
+    include_numeric : boolean, optional
+        If True NumPy, PyDy, or other numeric code is included for numeric evaluation lines in the Autolev code.
 
-    output: str
-          1. Can be the name of an output file to which the SymPy code should be written to.
-          2. Can be the string "list". In this it returns a list containing the SymPy code.
-             Each element in the list corresponds to one line of code.
-          3. If nothing is passed in the parsed code is printed out to stdout.
-
-    include_pydy: boolean
-                The parser will output PyDy ode integration code (if the Autolev code calls for it)
-                if this is set to True. It is set to False by default.
+    Returns
+    =======
+    sympy_code : str
+        Equivalent sympy and/or numpy/pydy code as the input code.
 
 
     Example (Double Pendulum)
-    -------
+    =========================
     Suppose this is the file we need to parse:
     ------------FILE--------------
     % double_pendulum.al
@@ -52,10 +48,8 @@ def parse_autolev(input, output=None, include_pydy=False):
     INPUT TFINAL=10, INTEGSTP=.01
     CODE DYNAMICS() some_filename.c
     ------------FILE--------------
-    Here parse_autolev() is used without passing in a parameter for the output file
-    so it defaults to stdout.
     >>> from sympy.parsing.autolev import parse_autolev  # doctest: +SKIP
-    >>> parse_autolev("double_pendulum.al", include_pydy=True)  # doctest: +SKIP
+    >>> print(parse_autolev(open("double_pendulum.al"), include_numeric=True))  # doctest: +SKIP
     import sympy.physics.mechanics as me
     import sympy as sm
     import math as m
@@ -102,4 +96,4 @@ def parse_autolev(input, output=None, include_pydy=False):
         __import__kwargs={'fromlist': ['X']})
 
     if _autolev is not None:
-        return _autolev.parse_autolev(input, output, include_pydy)
+        return _autolev.parse_autolev(autolev_code, include_numeric)

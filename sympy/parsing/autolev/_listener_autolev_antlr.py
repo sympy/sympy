@@ -399,7 +399,7 @@ def writeImaginary(self, ctx):
 
 if AutolevListener:
     class MyListener(AutolevListener):
-        def __init__(self, output=None, include_pydy=False):
+        def __init__(self, include_numeric=False):
             # Stores data in tree nodes(tree annotation). Especially useful for expr reconstruction.
             self.tree_property = {}
 
@@ -432,31 +432,17 @@ if AutolevListener:
             self.vector_expr = []
             self.fr_expr = []
 
-            # The second parameter of parse_autolev(input, output).
-            # Can be None, the name of an output file or "list".
-            self.output = output
-
-            # This list will store the SymPy code. Each element represents one line of code.
-            # This list is returned by parse_autolev if "list" is passed in for the second parameter.
             self.output_code = []
 
             # Stores the variables and their rhs for substituting upon the Autolev command EXPLICIT.
             self.explicit = collections.OrderedDict()
 
             # Write code to import common dependencies.
-            if self.output:
-                if self.output == "list":
-                    self.output_code.append("import sympy.physics.mechanics as me")
-                    self.output_code.append("import sympy as sm")
-                    self.output_code.append("import math as m")
-                    self.output_code.append("import numpy as np")
-                    self.output_code.append("")
-
-                else:
-                    self.file = open(self.output, "w")
-                    self.file.write("import sympy.physics.mechanics as me\nimport sympy as sm\nimport math as m\nimport numpy as np\n\n")
-            else:
-                sys.stdout.write("import sympy.physics.mechanics as me\nimport sympy as sm\nimport math as m\nimport numpy as np\n\n")
+            self.output_code.append("import sympy.physics.mechanics as me\n")
+            self.output_code.append("import sympy as sm\n")
+            self.output_code.append("import math as m\n")
+            self.output_code.append("import numpy as np\n")
+            self.output_code.append("\n")
 
             # Just a store for the max degree variable in a line.
             self.maxDegree = 0
@@ -492,16 +478,10 @@ if AutolevListener:
             self.t = False
 
             # PyDy ode code will be included only if this flag is set to True.
-            self.include_pydy = include_pydy
+            self.include_numeric = include_numeric
 
         def write(self, string):
-            if self.output:
-                if self.output == "list":
-                    self.output_code.append(string.rstrip())
-                else:
-                    self.file.write(string)
-            else:
-                sys.stdout.write(string)
+            self.output_code.append(string)
 
         def getValue(self, node):
             return self.tree_property[node]
@@ -1669,7 +1649,7 @@ if AutolevListener:
                 self.write("print(sm.nsolve(matrix_list," + "(" + ",".join(e) + ")" +
                            ",(" + ",".join(guess) + ")" + "))\n")
 
-            elif ctx.functionCall().getChild(0).getText().lower() in ["ode", "dynamics"] and self.include_pydy:
+            elif ctx.functionCall().getChild(0).getText().lower() in ["ode", "dynamics"] and self.include_numeric:
                 if self.kane_type == "no_args":
                     for i in self.symbol_table.keys():
                         try:

@@ -15,27 +15,18 @@ def _test_examples(in_filename, out_filename, test_name=""):
     dir_path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
     in_file_path = os.path.join(dir_path, 'autolev', 'test-examples', in_filename)
     correct_file_path = os.path.join(dir_path, 'autolev', 'test-examples', out_filename)
-    out_file_path = os.path.join(dir_path, 'autolev', 'test-examples', 'output.py')
 
-    parse_autolev(in_file_path, out_file_path, include_pydy=True)
-    #parse_autolev(in_file_path, correct_file_path, include_pydy=True)
-    with open(out_file_path) as f1, open(correct_file_path) as f2:
-            if sys.version_info > (3, 0):
-                for idx, (lineA, lineB) in enumerate(itertools.zip_longest(f1, f2)):
-                    if lineB.startswith("#"):
-                        break
-                    try:
-                        assert lineA.rstrip() == lineB.rstrip()
-                    except Exception:
-                        raise AssertionError('mismatch in ' + test_name + ' in line no: {0}'.format(idx+1))
-            else:
-                for idx, (lineA, lineB) in enumerate(itertools.izip_longest(f1, f2)):
-                    if lineB.startswith("#"):
-                        break
-                    try:
-                        assert lineA.rstrip() == lineB.rstrip()
-                    except Exception:
-                        raise AssertionError('mismatch in ' + test_name + ' in line no: {0}'.format(idx+1))
+    generated_code = parse_autolev(open(in_file_path), include_numeric=True)
+
+    with open(correct_file_path) as f:
+        for idx, line1 in enumerate(f):
+            if line1.startswith("#"):
+                break
+            try:
+               line2 = generated_code.split('\n')[idx]
+               assert line1.rstrip() == line2.rstrip()
+            except Exception:
+                raise AssertionError('mismatch in ' + test_name + ' in line no: {0}'.format(idx+1))
 
 
 def test_rule_tests():

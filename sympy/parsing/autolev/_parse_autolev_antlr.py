@@ -13,7 +13,7 @@ except AttributeError:
     pass
 
 
-def parse_autolev(input, output, include_pydy):
+def parse_autolev(autolev_code, include_numeric):
     antlr4 = import_module('antlr4', warn_not_installed=True)
     if not antlr4:
         raise ImportError("Autolev parsing requires the antlr4 python package,"
@@ -21,9 +21,10 @@ def parse_autolev(input, output, include_pydy):
                           " antlr4-python3-runtime) or"
                           " conda (antlr-python-runtime)")
     try:
-        input_stream = antlr4.FileStream(input)
+        l = autolev_code.readlines()
+        input_stream = antlr4.InputStream("".join(l))
     except Exception:
-        input_stream = antlr4.InputStream(input)
+        input_stream = antlr4.InputStream(autolev_code)
 
     if AutolevListener:
         from ._listener_autolev_antlr import MyListener
@@ -31,8 +32,7 @@ def parse_autolev(input, output, include_pydy):
         token_stream = antlr4.CommonTokenStream(lexer)
         parser = AutolevParser(token_stream)
         tree = parser.prog()
-        my_listener = MyListener(output, include_pydy)
+        my_listener = MyListener(include_numeric)
         walker = antlr4.ParseTreeWalker()
         walker.walk(my_listener, tree)
-        if output == "list":
-            return my_listener.output_code
+        return "".join(my_listener.output_code)
