@@ -352,7 +352,7 @@ Gotchas
   by itself.
   
   The problem is that PyDy's System class does not accept
-  ``dynamicsymbols._t`` as a specified. 
+  ``dynamicsymbols._t`` as a specified. Refer to issue `#396 <https://github.com/pydy/pydy/issues/396>`_.
   This change is not actually ideal so a better solution should be figured
   out in the future.
 
