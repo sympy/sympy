@@ -82,6 +82,7 @@ Guide to Mechanics
     advanced.rst
     reference.rst
     autolev_parser.rst
+    pydy_for_autolev_users.rst
 
 Mechanics API
 =============

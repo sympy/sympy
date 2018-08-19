@@ -503,3 +503,94 @@ Gotchas
   in the source code. Search for "<command>" to verify this. Looking at the
   code for the specific command will also give an idea about what form it
   is expected to work in.
+
+.. _issues:
+
+Limitations and Issues
+======================
+
+- A lot of the issues have already been discussed in the Gotchas section.
+  Some of these are:
+
+  - Vector names coinciding with scalar names are overwritten in Python.
+  - Some convenient variable declarations aren't parsed.
+  - Some convenient forms of functions to return matrices aren't parsed.
+  - Settings aren't parsed.
+  - symbols and rhs expressions work very differently in Python which might
+    cause undesirable results.
+  - Dictionary indexing for the parsed code of the ``SOLVE`` command is 
+    not proper in many cases.
+  - Need to change ``dynamicsymbols._t`` to ``dynamicsymbols('t')`` for the
+    PyDy simulation code to work properly.
+
+Here are some other ones:
+
+- Eigenvectors do not seem to work as expected. The values in Autolev and SymPy
+  are not the same in many cases.
+
+- Block matrices aren't parsed by the parser. It would actually be easier
+  to make a change in SymPy to allow matrices to accept other matrices for
+  arguments.
+
+- The SymPy equivalent of the ``TAYLOR`` command ``.series()`` does not work
+  with ``dynamicsymbols()``.
+
+- Only ``DEPENDENT`` constraints are currently parsed. Need to parse
+  ``AUXILIARY`` constraints as well. This should be done soon as it isn't
+  very difficult.
+
+- None of the energy and momentum functions are parsed right now. It would
+  be nice to get these working as well. Some changes should probably be made
+  to SymPy. For instance, SymPy doesn't have a function equivalent to ``NICHECK()``.
+
+- The numerical integration parts work properly only in the case of the
+  ``KANE`` command with no arguments. Things like ``KANE(F1,F2)`` do not currently
+  work.
+
+- Also, the PyDy numerical simulation code works only for cases where the
+  matrix say ``ZERO = FR() + FRSTAR()`` is solved for. It doesn't work well when the
+  matrix has some other equations plugged in as well. One hurdle
+  faced in achieving this was that PyDy's System class automatically takes
+  in the ``forcing_full`` and ``mass_matrix_full`` and solves them without giving the
+  user the flexibility to specify the equations. It would be nice to add
+  this functionality to the System class.
+
+
+.. _future_improvements:
+
+Future Improvements
+===================
+
+1. Completing Dynamics Online
+-----------------------------
+The parser has been built by referring to and parsing codes from the
+`Autolev Tutorial <http://web.mae.ufl.edu/~fregly/PDFs/autolev_tutorial.pdf>`_
+and the book *Dynamics Online: Theory and Implementation Using Autolev*.
+Basically, the process involved going through each of these codes,
+validating the parser results and improving the rules if required
+to make sure the codes parsed well.
+
+The parsed codes of these are available on GitLab `here <https://gitlab.com/sympy/autolev-test-examples>`_.
+The repo is private so access needs to be requested.
+As of now, most codes till Chapter 4 of *Dynamics Online* have been parsed. 
+
+Completing all the remaining codes of the book (namely, *2-10*, *2-11*, *rest
+of Ch4*, *Ch5* and *Ch6* (less important) ) would make the parser more complete.
+
+
+2. Fixing Issues
+----------------
+The second thing to do would be to go about fixing the problems described 
+above in the :ref:`Gotchas <gotchas_autolev>` and :ref:`Limitations and Issues <issues>` 
+sections in order of priority and ease. Many of these require changes
+in the parser code while some of these are better fixed by adding some
+functionality to SymPy.
+
+
+3. Switching to an AST
+----------------------
+The parser is currently built using a kind of Concrete Syntax Tree (CST) 
+using the `ANTLR <http://www.antlr.org/>`_ framework. It would be ideal to switch from a CST to an
+Abstract Syntax Tree (AST). This way, the parser code will be independent
+of the ANTLR grammar which makes it a lot more flexible. It would also be
+easier to make changes to the grammar and the rules of the parser.
