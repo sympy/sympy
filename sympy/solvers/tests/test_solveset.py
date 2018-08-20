@@ -1589,7 +1589,7 @@ def test_issue_10397():
 
 def test_issue_14987():
     raises(ValueError, lambda: linear_eq_to_matrix([x**2], x))
-    assert linear_eq_to_matrix([x*(-3/x + 1) + 2*y - a], [x, y]) == (Matrix([[1, 2]]), Matrix([[a + 3]]))
+    raises(ValueError, lambda: linear_eq_to_matrix([x*(-3/x + 1) + 2*y - a], [x, y]))
 
 
 def test_simplification():
