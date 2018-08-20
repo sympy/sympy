@@ -1706,7 +1706,10 @@ def linear_eq_to_matrix(equations, *symbols):
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
-    symbols = list(uniq(symbols))
+    free = set(symbols)
+    zero = dict(zip(symbols, [S.Zero]*len(symbols)))
+    if len(symbols) != len(free):
+        raise ValueError('Symbols must be unique.')
 
     M = Matrix([symbols])
     # initialize Matrix with symbols + 1 columns
@@ -1721,19 +1724,14 @@ def linear_eq_to_matrix(equations, *symbols):
         # Extract coeff of symbols
         coeff_list = []
         for symbol in symbols:
-            coeff_list.append(f.diff(symbol))
-            if coeff_list[-1].free_symbols & set(symbols):
-                raise ValueError('Equation %s is not linear'%(equation))
-            newf = f.xreplace({symbol: S.Zero})
-            if newf is S.NaN:
-                i, d = f.as_independent(symbol)
-                newf = f.func(i, expand_mul(d).xreplace({symbol: S.Zero}))
-            f = newf
+            coeff_list.append(f.coeff(symbol))
 
-        # append constant term (term free from symbols); at
-        # this point, all symbols of interest have been replaced
-        # with 0 so whatever remains is the constant
-        coeff_list.append(-f)
+        # append constant term (term free from symbols);
+        coeff_list.append(-f.xreplace(zero))
+
+        # Checking linearity
+        if coeff_list[-1] is S.NaN or any(c.free_symbols & free for c in coeff_list):
+            raise ValueError('Equation %s may need simplification before processing here.'%(equation))
 
         # insert equations coeff's into rows
         M = M.row_insert(row_no, Matrix([coeff_list]))
