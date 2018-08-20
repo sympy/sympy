@@ -322,7 +322,7 @@ class ExprWithLimits(Expr):
         change_index : Perform mapping on the sum and product dummy variables
 
         """
-        from sympy.core.function import AppliedUndef, UndefinedFunction
+        from sympy.core.function import AppliedUndef, UndefinedFunction, FunctionClass
         func, limits = self.function, list(self.limits)
 
         # If one of the expressions we are replacing is used as a func index
@@ -336,19 +336,42 @@ class ExprWithLimits(Expr):
         # Reorder limits to match standard mathematical practice for scoping
         limits.reverse()
 
+        # in response to https://github.com/sympy/sympy/issues/14796
+        # If old or new is an instance of FunctionClass, then
+        # it has no free_symbols or args or atoms, so the code
+        # breaks. I'm assuming in those cases, it is okay to treat
+        # it as if all three lists are empty lists.
+
+        # This change should allow the following:::
+        # f, g = symbols("f g", cls=Function)
+        # x = symbols("x")
+        # expr = Integral(f(x), (x, 0, 1))
+        # expr.subs(f,g)
+
+        if isinstance(old, FunctionClass):
+            old_syms = set([])
+            old_args = set([])
+        else:
+            old_syms = old.free_symbols
+            old_args = set(old.args)
+        if isinstance(new, FunctionClass):
+            new_atoms = set([])
+        else:
+            new_atoms = set(new.atoms(Symbol))
+
         if not isinstance(old, Symbol) or \
-                old.free_symbols.intersection(self.free_symbols):
+                old_syms.intersection(self.free_symbols):
             sub_into_func = True
             for i, xab in enumerate(limits):
                 if 1 == len(xab) and old == xab[0]:
                     xab = (old, old)
                 limits[i] = Tuple(xab[0], *[l._subs(old, new) for l in xab[1:]])
-                if len(xab[0].free_symbols.intersection(old.free_symbols)) != 0:
+                if len(xab[0].free_symbols.intersection(old_syms)) != 0:
                     sub_into_func = False
                     break
             if isinstance(old, AppliedUndef) or isinstance(old, UndefinedFunction):
-                sy2 = set(self.variables).intersection(set(new.atoms(Symbol)))
-                sy1 = set(self.variables).intersection(set(old.args))
+                sy2 = set(self.variables).intersection(new_atoms)
+                sy1 = set(self.variables).intersection(old_args)
                 if not sy2.issubset(sy1):
                     raise ValueError(
                         "substitution can not create dummy dependencies")
