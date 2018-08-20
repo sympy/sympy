@@ -1104,36 +1104,36 @@ class Line(LinearEntity):
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     @classmethod
-    def object_from_equation(self, equation):
+    def object_from_equation(self, equation, x='x', y='y'):
         """Returns a Line object from the equation of a Line given as input.
         If the equation of the line is ax + by + c = 0, then
-        the input has to be of the following format: ax + by + c
+        the input has to be of the following format: ax + by + c.
+        The input can also be given in terms of some other variable other than x
+        and/or y, but then they need to be specified as an additional argument.
 
         Examples
         ========
 
         >>> from sympy import Line
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x, y, a, b
         >>> Line.object_from_equation(3*x + y + 18)
+        Line2D(Point2D(0, 0), Point2D(1, -3))
+        >>> Line.object_from_equation(3*a + b + 18, x = 'a', y = 'b')
         Line2D(Point2D(0, 0), Point2D(1, -3))
         """
 
-        x = var('x')
-        y = var('y')
-        if x in list(equation.free_symbols) or y in list(equation.free_symbols):
-            if (len(solve(equation, y)) == 0) and (len(solve(equation, x)) != 0) and (degree(poly(equation, x)) == 1):
-                x_intercept = solve(equation, x)[0]
-                p1 = Point(x_intercept, 0)
-                p2 = Point(x_intercept, 1)
-                return Line(p1, p2)
-            else:
-                slope = diff(LC(poly(solve(equation, y)[0], y)), x)
-                p1 = (0, slope * 0)
-                p2 = (1, slope * 1)
-                return Line(p1, p2)
+        x = var(x)
+        y = var(y)
+        if (len(solve(equation, y)) == 0) and (len(solve(equation, x)) != 0) and (degree(poly(equation, x)) == 1):
+            x_intercept = solve(equation, x)[0]
+            p1 = Point(x_intercept, 0)
+            p2 = Point(x_intercept, 1)
+            return Line(p1, p2)
         else:
-            raise GeometryError(
-                "The equation must be in terms of x and/or y. Look at the documentation for input format")
+            slope = diff(LC(poly(solve(equation, y)[0], y)), x)
+            p1 = (0, slope * 0)
+            p2 = (1, slope * 1)
+            return Line(p1, p2)
 
     def contains(self, other):
         """
