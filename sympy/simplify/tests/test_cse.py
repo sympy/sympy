@@ -84,6 +84,8 @@ def test_cse_single2():
     substs, reduced = cse(Matrix([[1]]))
     assert isinstance(reduced[0], Matrix)
 
+    subst42, (red42,) = cse(42)  # issue 15082
+    assert len(subst42) == 0 and red42 == 42
 
 def test_cse_not_possible():
     # No substitution possible.
