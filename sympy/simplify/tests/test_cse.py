@@ -72,6 +72,8 @@ def test_cse_single():
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
 
+    subst42, (red42,) = cse([42])  # issue_15082
+    assert len(subst42) == 0 and red42 == 42
 
 def test_cse_single2():
     # Simple substitution, test for being able to pass the expression directly
