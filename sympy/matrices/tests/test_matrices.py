@@ -1054,6 +1054,13 @@ def test_eigen():
     assert Matrix([]).eigenvals() == {}
     assert Matrix([]).eigenvects() == []
 
+    # issue 15119
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2], [0, 4], [0, 0]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0], [3, 4], [5, 6]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals(error_when_incomplete = False))
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals(error_when_incomplete = False))
 
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
