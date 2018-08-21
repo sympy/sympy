@@ -661,6 +661,8 @@ class MatrixSymbol(MatrixExpr):
 
     def __new__(cls, name, n, m):
         n, m = _sympify(n), _sympify(m)
+        if isinstance(name, string_types):
+            name = Symbol(name)
         obj = Basic.__new__(cls, name, n, m)
         return obj
 
@@ -673,7 +675,7 @@ class MatrixSymbol(MatrixExpr):
 
     @property
     def name(self):
-        return self.args[0]
+        return self.args[0].name
 
     def _eval_subs(self, old, new):
         # only do substitutions in shape
