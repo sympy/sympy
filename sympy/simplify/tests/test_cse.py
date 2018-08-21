@@ -74,6 +74,9 @@ def test_cse_single():
 
     subst42, (red42,) = cse([42])  # issue_15082
     assert len(subst42) == 0 and red42 == 42
+    subst_half, (red_half,) = cse([0.5])
+    assert len(subst_half) == 0 and red_half == 0.5
+
 
 def test_cse_single2():
     # Simple substitution, test for being able to pass the expression directly
@@ -84,6 +87,10 @@ def test_cse_single2():
     substs, reduced = cse(Matrix([[1]]))
     assert isinstance(reduced[0], Matrix)
 
+    subst42, (red42,) = cse(42)  # issue 15082
+    assert len(subst42) == 0 and red42 == 42
+    subst_half, (red_half,) = cse(0.5)  # issue 15082
+    assert len(subst_half) == 0 and red_half == 0.5
 
 def test_cse_not_possible():
     # No substitution possible.
