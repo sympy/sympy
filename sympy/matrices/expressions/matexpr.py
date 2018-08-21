@@ -207,7 +207,7 @@ class MatrixExpr(Expr):
 
         # Convert to the index-summation notation, perform the derivative, then
         # reconvert it back to matrix expression.
-        from sympy import symbols, Dummy, Lambda, Trace
+        from sympy import symbols, Dummy, Trace, Sum
         i, j, m, n = symbols("i j m n", cls=Dummy)
         M = self._entry(i, j, expand=False)
 
