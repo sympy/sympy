@@ -3,6 +3,7 @@ from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log
 from sympy.utilities.pytest import raises
 from sympy.physics.units import meter, newton, kilo, giga, milli
+from sympy.physics.continuum_mechanics.beam import Beam3D
 
 x = Symbol('x')
 y = Symbol('y')
@@ -457,15 +458,16 @@ def test_max_deflection():
     b.apply_load(-F, l/2, -1)
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
 
-def test_Beam_3d():
-    from sympy.physics.continuum_mechanics.beam import Beam_3d
+def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')
-    b = Beam_3d(l, E, G, I, A)
-    b.apply_support(0, "fixed")
-    b.apply_support(l, "fixed")
+    R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+
+    b = Beam3D(l, E, G, I, A)
     m, q = symbols('m, q')
-    b.apply_load(q, dir="y")
-    b.apply_moment_load(m, dir="z")
+    b.apply_load(q, 0, 0, dir="y")
+    b.apply_moment_load(m, 0, 0, dir="z")
+    b.bc_slope = [(0, [0, 0, 0]), (l, [0, 0, 0])]
+    b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     b.solve_slope_deflection()
 
     assert b.shear_force() == [0, -q*x, 0]
@@ -475,3 +477,28 @@ def test_Beam_3d():
             - 2*A*G*l*m + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I) + q*x**4/(24*E*I)
             + l*x*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I))
             - q*x**2/(2*A*G), 0]
+
+
+    b2 = Beam3D(30, E, G, I, A, x)
+    b2.apply_load(50, start=0, order=0, dir="y")
+    b2.bc_deflection = [(0, [0, 0, 0]), (30, [0, 0, 0])]
+    b2.apply_load(R1, start=0, order=-1, dir="y")
+    b2.apply_load(R2, start=30, order=-1, dir="y")
+    b2.solve_for_reaction_loads(R1, R2)
+    assert b2.reaction_loads == {R1: -750, R2: -750}
+
+    b2.solve_slope_deflection()
+    assert b2.slope() == [0, 0, 25*x**3/(3*E*I) - 375*x**2/(E*I) + 3750*x/(E*I)]
+    assert b2.deflection() == [0, 25*x**4/(12*E*I) - 125*x**3/(E*I) + 1875*x**2/(E*I)
+                        - 25*x**2/(A*G) + 750*x/(A*G), 0]
+
+    # Test for solve_for_reaction_loads
+    b3 = Beam3D(30, E, G, I, A, x)
+    b3.apply_load(8, start=0, order=0, dir="y")
+    b3.apply_load(9*x, start=0, order=0, dir="z")
+    b3.apply_load(R1, start=0, order=-1, dir="y")
+    b3.apply_load(R2, start=30, order=-1, dir="y")
+    b3.apply_load(R3, start=0, order=-1, dir="z")
+    b3.apply_load(R4, start=30, order=-1, dir="z")
+    b3.solve_for_reaction_loads(R1, R2, R3, R4)
+    assert b3.reaction_loads == {R1: -120, R2: -120, R3: -1350, R4: -2700}

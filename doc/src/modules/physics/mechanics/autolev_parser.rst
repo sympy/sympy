@@ -20,8 +20,8 @@ in SymPy.
 
 The sections below shall discuss details of the parser like usage, gotchas,
 issues and future improvements.
-For a detailed comparison of Autolev and SymPy/PyDy you might want to look at
-the PyDy for Autolev Users guide.
+For a detailed comparison of Autolev and SymPy Mechanics you might want to look at
+the :ref:`SymPy Mechanics for Autolev Users guide <sympy_mechanics_for_autolev_users>`.
 
 .. _usage:
 
@@ -79,15 +79,12 @@ Let us take this example
 The parser can be used as follows::
 
     >>> from sympy.parsing.autolev import parse_autolev
-    >>> parse_autolev('double_pendulum.al', 'double_pendulum.py', include_pydy=True)
-    # The second parameter (to specify the output file) is optional. The
-    # default action is to print the output code to stdout.
-    #
+    >>> sympy_code = parse_autolev(open('double_pendulum.al'), include_numeric=True)
+
     # The include_pydy flag is False by default. Setting it to True will
-    # allow the PyDy code to be outputed if applicable.
+    # enable PyDy simulation code to be outputed if applicable.
 
-This is the parsed code in ``double_pendulum.py``::
-
+    >>> print(sympy_code)
     import sympy.physics.mechanics as me
     import sympy as sm
     import math as m
@@ -147,7 +144,7 @@ statements demonstrate how to get responses similar to the ones in the
 Autolev file.
 Note that we need to use SymPy functions like ``.ang_vel_in()``, ``.dcm()``
 etc in many cases unlike directly printing out the variables like ``zero``.
-If you are completely new to SymPy mechanics, the PyDy for Autolev Users
+If you are completely new to SymPy mechanics, the :ref:`SymPy Mechanics for Autolev Users guide <sympy_mechanics_for_autolev_users>`
 guide should help. You might also have to use basic SymPy simplifications
 and manipulations like ``trigsimp()``, ``expand()``, ``evalf()`` etc for 
 getting outputs similar to Autolev.
@@ -164,14 +161,14 @@ Gotchas
 
   .. code-block:: none
 
-     Autolev Code
-     ------------
+     %Autolev Code
+     %------------
      LAMBDA = EIG(M)
 
   .. code-block:: python
 
-     SymPy Code
-     ----------
+     #SymPy Code
+     #----------
      lambda = sm.Matrix([i.evalf() for i in (m).eigenvals().keys()])
 
 ------------------------------------------------------------------------
@@ -184,8 +181,8 @@ Gotchas
 
   .. code-block:: none
 
-     Autolev Code
-     ------------
+     %Autolev Code
+     %------------
      VARIABLES X,Y
      FRAMES A
      A> = X*A1> + Y*A2>
@@ -193,8 +190,8 @@ Gotchas
 
   .. code-block:: python
 
-     SymPy Code
-     ----------
+     #SymPy Code
+     #----------
      x, y = me.dynamicsymbols('x y')
      frame_a = me.ReferenceFrame('a')
      a = x*frame_a.x + y*frame_a.y
@@ -208,12 +205,12 @@ Gotchas
 
 - When dealing with Matrices returned by functions, one must check the
   order of the values as they may not be the same as in Autolev. This is
-  especially the case for eigenvalues and eigenvetors.
+  especially the case for eigenvalues and eigenvectors.
   
   .. code-block:: none
 
-     Autolev Code
-     ------------
+     %Autolev Code
+     %------------
      EIG(M, E1, E2)
      % -> [5; 14; 13]
      E2ROW = ROWS(E2, 1)
@@ -221,8 +218,8 @@ Gotchas
 
   .. code-block:: python
 
-     SymPy Code
-     ---------- 
+     #SymPy Code
+     #---------- 
      e1 = sm.Matrix([i.evalf() for i in m.eigenvals().keys()])
      # sm.Matrix([5;13;14]) different order
      e2 = sm.Matrix([i[2][0].evalf() for i in m.eigenvects()]).reshape(m.shape[0], m.shape[1])
@@ -245,15 +242,15 @@ Gotchas
 
   .. code-block:: none
 
-     Autolev Code
-     ------------
+     %Autolev Code
+     %------------
      A> = Q1*A1> + Q2*A2>
      B> = EVALUATE(A>, Q1:30*UNITS(DEG,RAD))
 
   .. code-block:: python
   
-     SymPy Code
-     ----------
+     #SymPy Code
+     #----------
      a = q1*a.frame_a.x + q2*frame_a.y
      b = a.subs({q1:30*0.0174533})
      # b = a.subs({q1:np.deg2rad(30)}
@@ -293,8 +290,8 @@ Gotchas
 
   .. code-block:: none
 
-     Autolev Code
-     ------------
+     %Autolev Code
+     %------------
      % COEF([E1;E2],[U1,U2,U3])
      M = [COEF(E1,U1),COEF(E1,U2),COEF(E1,U3) &
          ;COEF(E2,U1),COEF(E2,U2),COEF(E2,U3)]    
@@ -318,8 +315,8 @@ Gotchas
 
   .. code-block:: none
 
-     Autolev Code
-     ------------
+     %Autolev Code
+     %------------
      MOTIONVARIABLES' Q{2}', U{2}'
      % ----- OTHER LINES ----
      Q1' = U1
@@ -329,8 +326,8 @@ Gotchas
 
   .. code-block:: python
 
-     SymPy Code
-     ----------
+     #SymPy Code
+     #----------
      q1, q2, u1, u2 = me.dynamicsymbols('q1 q2 u1 u2')
      q1d, q2d, u1d, u2d = me.dynamicsymbols('q1 q2 u1 u2', 1)
      
@@ -344,7 +341,7 @@ Gotchas
 ------------------------------------------------------------------------
 
 - Need to change ``me.dynamicsymbols._t`` to ``me.dynamicsymbols('t')`` for
-  all occurences of it in the Kane's equations. For example have a look at
+  all occurrences of it in the Kane's equations. For example have a look at
   line 10 of this `spring damper example <https://github.com/sympy/sympy/blob/master/sympy/parsing/autolev/test_examples/mass_spring_damper.py>`_.
   This equation is used in forming the Kane's equations so we need to
   change ``me.dynamicsymbols._t`` to ``me.dynamicsymbols('t')`` in this case.
@@ -355,7 +352,7 @@ Gotchas
   by itself.
   
   The problem is that PyDy's System class does not accept
-  ``dynamicsymbols._t`` as a specified. 
+  ``dynamicsymbols._t`` as a specified. Refer to issue `#396 <https://github.com/pydy/pydy/issues/396>`_.
   This change is not actually ideal so a better solution should be figured
   out in the future.
 
@@ -381,8 +378,8 @@ Gotchas
 
   .. code-block:: none
 
-     Autolev Code
-     ------------
+     %Autolev Code
+     %------------
      VARIABLES X, Y
      E = X + Y
      X = 2*Y
@@ -398,8 +395,8 @@ Gotchas
 
   .. code-block:: python
 
-     SymPy Code
-     ----------
+     #SymPy Code
+     #----------
      x,y = me.dynamicsymbols('x y')
      e = x + y  # No symbol is made out of 'e'
      
@@ -424,15 +421,15 @@ Gotchas
 
   .. code-block:: none
 
-     Autolev Code
-     ------------
+     %Autolev Code
+     %------------
      SOLVE(ZERO,X,Y)
      A = RHS(X)*2 + RHS(Y)
 
   .. code-block:: python
 
-     SymPy Code
-     ----------
+     #SymPy Code
+     #----------
      print(sm.solve(zero,x,y))
      # Behind the scenes the rhs of x
      # is set to sm.solve(zero,x,y)[x].
@@ -462,8 +459,8 @@ Gotchas
 
   .. code-block:: none
 
-     Autolev Code
-     ------------
+     %Autolev Code
+     %------------
      INERTIA B,I1,I2,I3
      I_B_BO>> = X*A1>*A1> + Y*A2>*A2>  % Parser will set the inertia of B
      I_P_Q>> = X*A1>*A1> + Y^2*A2>*A2> % Parser just parses it as i_p_q = expr
@@ -493,8 +490,8 @@ Gotchas
 
   .. code-block:: none
 
-     Autolev Code
-     ------------
+     %Autolev Code
+     %------------
      P_SO_O> = X*A1>
      INERTIA S_(O) I1,I2,I3
 

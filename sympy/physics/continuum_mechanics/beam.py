@@ -1455,7 +1455,7 @@ class Beam(object):
         return axs
 
 
-class Beam_3d(Beam):
+class Beam3D(Beam):
     """
     This class handles loads applied in any direction of a 3D space along
     with unequal values of Second moment along different axes.
@@ -1475,19 +1475,19 @@ class Beam_3d(Beam):
     Beam is fixed at both of its end. So, deflection of the beam at the both ends
     is restricted.
 
-    >>> from sympy.physics.continuum_mechanics.beam import Beam_3d
+    >>> from sympy.physics.continuum_mechanics.beam import Beam3D
     >>> from sympy import symbols
     >>> l, E, G, I, A = symbols('l, E, G, I, A')
-    >>> b = Beam_3d(l, E, G, I, A)
-    >>> b.apply_support(0, "fixed")
-    >>> b.apply_support(l, "fixed")
+    >>> b = Beam3D(l, E, G, I, A)
     >>> q, m = symbols('q, m')
-    >>> b.apply_load(q, dir="y")
-    >>> b.apply_moment_load(m, dir="z")
+    >>> b.apply_load(q, 0, 0, dir="y")
+    >>> b.apply_moment_load(m, 0, -1, dir="z")
     >>> b.shear_force()
     [0, -q*x, 0]
     >>> b.bending_moment()
     [0, 0, -m*x + q*x**2/2]
+    >>> b.bc_slope = [(0, [0, 0, 0]), (l, [0, 0, 0])]
+    >>> b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.solve_slope_deflection()
     >>> b.slope()
     [0, 0, l*x*(-l*q + 3*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
@@ -1540,6 +1540,7 @@ class Beam_3d(Beam):
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load_vector = [0, 0, 0]
         self._moment_load_vector = [0, 0, 0]
+        self._load_Singularity = [0, 0, 0]
         self._reaction_loads = {}
         self._slope = [0, 0, 0]
         self._deflection = [0, 0, 0]
@@ -1589,7 +1590,38 @@ class Beam_3d(Beam):
         """
         return self._moment_load_vector
 
-    def apply_load(self, value, dir="y", order=0):
+    @property
+    def boundary_conditions(self):
+        """
+        Returns a dictionary of boundary conditions applied on the beam.
+        The dictionary has two keywords namely slope and deflection.
+        The value of each keyword is a list of tuple, where each tuple
+        contains loaction and value of a boundary condition in the format
+        (location, value). Further each value is a list corresponding to
+        slope or deflection(s) values along three axes at that location.
+
+        Examples
+        ========
+        There is a beam of length 4 meters. The slope at 0 should be 4 along
+        the x-axis and 0 along others. At the other end of beam, deflection
+        along all the three axes should be zero.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+        >>> from sympy import symbols
+        >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+        >>> b = Beam3D(30, E, G, I, A, x)
+        >>> b.bc_slope = [(0, (4, 0, 0))]
+        >>> b.bc_deflection = [(4, [0, 0, 0])]
+        >>> b.boundary_conditions
+        {'deflection': [(4, [0, 0, 0])], 'slope': [(0, (4, 0, 0))]}
+
+        Here the deflection of the beam should be ``0`` along all the three axes at ``4``.
+        Similarly, the slope of the beam should be ``4`` along x-axis and ``0``
+        along y and z axis at ``0``.
+        """
+        return self._boundary_conditions
+
+    def apply_load(self, value, start, order, dir="y"):
         """
         This method adds up the force load to a particular beam object.
 
@@ -1607,19 +1639,27 @@ class Beam_3d(Beam):
             - For parabolic ramp loads, order=2
             - ... so on.
         """
+        x = self.variable
         value = sympify(value)
+        start = sympify(start)
         order = sympify(order)
-        if order == -1:
-            raise NotImplementedError("This class doesn't support point loads")
 
         if dir == "x":
-            self._load_vector[0] += value
-        elif dir == "y":
-            self._load_vector[1] += value
-        else:
-            self._load_vector[2] += value
+            if not order == -1:
+                self._load_vector[0] += value
+            self._load_Singularity[0] += value*SingularityFunction(x, start, order)
 
-    def apply_moment_load(self, value, dir="y", order=-1, end=None):
+        elif dir == "y":
+            if not order == -1:
+                self._load_vector[1] += value
+            self._load_Singularity[1] += value*SingularityFunction(x, start, order)
+
+        else:
+            if not order == -1:
+                self._load_vector[2] += value
+            self._load_Singularity[2] += value*SingularityFunction(x, start, order)
+
+    def apply_moment_load(self, value, start, order, dir="y"):
         """
         This method adds up the moment loads to a particular beam object.
 
@@ -1637,17 +1677,23 @@ class Beam_3d(Beam):
             - For parabolic ramp moments, order=1
             - ... so on.
         """
+        x = self.variable
         value = sympify(value)
+        start = sympify(start)
         order = sympify(order)
-        if order == -2:
-            raise NotImplementedError("This class doesn't support point moments")
 
         if dir == "x":
-            self._moment_load_vector[0] += value
+            if not order == -2:
+                self._moment_load_vector[0] += value
+            self._load_Singularity[0] += value*SingularityFunction(x, start, order)
         elif dir == "y":
-            self._moment_load_vector[1] += value
+            if not order == -2:
+                self._moment_load_vector[1] += value
+            self._load_Singularity[0] += value*SingularityFunction(x, start, order)
         else:
-            self._moment_load_vector[2] += value
+            if not order == -2:
+                self._moment_load_vector[2] += value
+            self._load_Singularity[0] += value*SingularityFunction(x, start, order)
 
     def apply_support(self, loc, type="fixed"):
         if type == "pin" or type == "roller":
@@ -1662,8 +1708,53 @@ class Beam_3d(Beam):
             self.bc_slope.append((loc, [0, 0, 0]))
 
     def solve_for_reaction_loads(self, *reaction):
-        raise NotImplementedError("Beam_3d can't solve for"
-                       "reactional loads")
+        """
+        Solves for the reaction forces.
+
+        Examples
+        ========
+        There is a beam of length 30 meters. It it supported by rollers at
+        of its end. A constant distributed load of magnitude 8 N is applied
+        from start till its end along y-axis. Another linear load having
+        slope equal to 9 is applied along z-axis.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+        >>> from sympy import symbols
+        >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+        >>> b = Beam3D(30, E, G, I, A, x)
+        >>> b.apply_load(8, start=0, order=0, dir="y")
+        >>> b.apply_load(9*x, start=0, order=0, dir="z")
+        >>> b.bc_deflection = [(0, [0, 0, 0]), (30, [0, 0, 0])]
+        >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+        >>> b.apply_load(R1, start=0, order=-1, dir="y")
+        >>> b.apply_load(R2, start=30, order=-1, dir="y")
+        >>> b.apply_load(R3, start=0, order=-1, dir="z")
+        >>> b.apply_load(R4, start=30, order=-1, dir="z")
+        >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+        >>> b.reaction_loads
+        {R1: -120, R2: -120, R3: -1350, R4: -2700}
+        """
+        x = self.variable
+        l=self.length
+        q = self._load_Singularity
+        m = self._moment_load_vector
+        shear_curves = [integrate(load, x) for load in q]
+        moment_curves = [integrate(shear, x) for shear in shear_curves]
+        for i in range(3):
+            react = [r for r in reaction if (shear_curves[i].has(r) or moment_curves[i].has(r))]
+            if len(react) == 0:
+                continue
+            shear_curve = limit(shear_curves[i], x, l)
+            moment_curve = limit(moment_curves[i], x, l)
+            sol = list((linsolve([shear_curve, moment_curve], react).args)[0])
+            sol_dict = dict(zip(react, sol))
+            reaction_loads = self._reaction_loads
+            # Check if any of the evaluated rection exists in another direction
+            # and if it exists then it should have same value.
+            for key in sol_dict:
+                if key in reaction_loads and sol_dict[key] != reaction_loads[key]:
+                    raise ValueError("Ambiguous solution for %s in different directions." % key)
+            self._reaction_loads.update(sol_dict)
 
     def shear_force(self):
         """
