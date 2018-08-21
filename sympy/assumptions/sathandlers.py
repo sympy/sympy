@@ -1,8 +1,9 @@
 from __future__ import print_function, division
 
-from collections import MutableMapping, defaultdict
+from collections import defaultdict
 
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
+from sympy.core.compatibility import MutableMapping
 from sympy.core.numbers import ImaginaryUnit
 from sympy.core.sympify import _sympify
 from sympy.core.rules import Transform

@@ -4,9 +4,9 @@ from sympy import (
     Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
     expand_func, diff, EulerGamma, cancel, re, im, Product)
 from sympy.functions import (
-    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, genocchi,
-    binomial, gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial,
-    sin, cos, cot, zeta)
+    bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
+    genocchi, partition, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    trigamma, polygamma, factorial, sin, cos, cot, zeta)
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
@@ -77,6 +77,33 @@ def test_fibonacci():
     assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
 
 
+def test_tribonacci():
+    assert [tribonacci(n) for n in range(8)] == [0, 1, 1, 2, 4, 7, 13, 24]
+    assert tribonacci(100) == 98079530178586034536500564
+
+    assert tribonacci(0, x) == 0
+    assert tribonacci(1, x) == 1
+    assert tribonacci(2, x) == x**2
+    assert tribonacci(3, x) == x**4 + x
+    assert tribonacci(4, x) == x**6 + 2*x**3 + 1
+    assert tribonacci(5, x) == x**8 + 3*x**5 + 3*x**2
+
+    n = Dummy('n')
+    assert tribonacci(n).limit(n, S.Infinity) == S.Infinity
+
+    w = (-1 + S.ImaginaryUnit * sqrt(3)) / 2
+    a = (1 + cbrt(19 + 3*sqrt(33)) + cbrt(19 - 3*sqrt(33))) / 3
+    b = (1 + w*cbrt(19 + 3*sqrt(33)) + w**2*cbrt(19 - 3*sqrt(33))) / 3
+    c = (1 + w**2*cbrt(19 + 3*sqrt(33)) + w*cbrt(19 - 3*sqrt(33))) / 3
+    assert tribonacci(n).rewrite(sqrt) == \
+      (a**(n + 1)/((a - b)*(a - c))
+      + b**(n + 1)/((b - a)*(b - c))
+      + c**(n + 1)/((c - a)*(c - b)))
+    assert tribonacci(n).rewrite(sqrt).subs(n, 4).simplify() == tribonacci(4)
+    assert tribonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
+        tribonacci(10)
+
+
 def test_bell():
     assert [bell(n) for n in range(8)] == [1, 1, 2, 5, 15, 52, 203, 877]
 
@@ -122,6 +149,7 @@ def test_bell():
 
 def test_harmonic():
     n = Symbol("n")
+    m = Symbol("m")
 
     assert harmonic(n, 0) == n
     assert harmonic(n).evalf() == harmonic(n)
@@ -150,6 +178,8 @@ def test_harmonic():
     assert harmonic(oo, 1) == oo
     assert harmonic(oo, 2) == (pi**2)/6
     assert harmonic(oo, 3) == zeta(3)
+
+    assert harmonic(0, m) == 0
 
 
 def test_harmonic_rational():
@@ -216,7 +246,7 @@ def test_harmonic_rational():
     for h, a in zip(H, A):
         e = expand_func(h).doit()
         assert cancel(e/a) == 1
-        assert h.n() == a.n()
+        assert abs(h.n() - a.n()) < 1e-12
 
 
 def test_harmonic_evalf():
@@ -395,6 +425,26 @@ def test_genocchi():
     assert genocchi(4 * n - 2).is_negative
 
 
+def test_partition():
+    partition_nums = [1, 1, 2, 3, 5, 7, 11, 15, 22]
+    for n, p in enumerate(partition_nums):
+        assert partition(n) == p
+
+    x = Symbol('x')
+    y = Symbol('y', real=True)
+    m = Symbol('m', integer=True)
+    n = Symbol('n', integer=True, negative=True)
+    p = Symbol('p', integer=True, nonnegative=True)
+    assert partition(m).is_integer
+    assert not partition(m).is_negative
+    assert partition(m).is_nonnegative
+    assert partition(n).is_zero
+    assert partition(p).is_positive
+    assert partition(x).subs(x, 7) == 15
+    assert partition(y).subs(y, 8) == 22
+    raises(ValueError, lambda: partition(S(5)/4))
+
+
 def test_nC_nP_nT():
     from sympy.utilities.iterables import (
         multiset_permutations, multiset_combinations, multiset_partitions,
@@ -550,6 +600,16 @@ def test_nC_nP_nT():
     t = (3, 9, 4, 6, 6, 5, 5, 2, 10, 4)
     assert sum(_AOP_product(t)[i] for i in range(55)) == 58212000
     raises(ValueError, lambda: _multiset_histogram({1:'a'}))
+
+
+def test_PR_14617():
+    from sympy.functions.combinatorial.numbers import nT
+    for n in (0, []):
+        for k in (-1, 0, 1):
+            if k == 0:
+                assert nT(n, k) == 1
+            else:
+                assert nT(n, k) == 0
 
 
 def test_issue_8496():

@@ -3,6 +3,7 @@ import warnings
 
 from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
+from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
@@ -312,7 +313,7 @@ def test_root():
     assert root(x, n) == x**(1/n)
     assert root(x, -n) == x**(-1/n)
 
-    assert root(x, n, k) == x**(1/n)*(-1)**(2*k/n)
+    assert root(x, n, k) == (-1)**(2*k/n)*x**(1/n)
 
 
 def test_real_root():
@@ -368,6 +369,24 @@ def test_rewrite_MaxMin_as_Heaviside():
         x*Heaviside(-2*x)*Heaviside(-x - 2) - \
         x*Heaviside(2*x)*Heaviside(x - 2) \
         - 2*Heaviside(-x + 2)*Heaviside(x + 2)
+
+
+def test_rewrite_MaxMin_as_Piecewise():
+    from sympy import symbols, Piecewise
+    x, y, z, a, b = symbols('x y z a b', real=True)
+    vx, vy, va = symbols('vx vy va')
+    assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a >= b), (b, True))
+    assert Max(x, y, z).rewrite(Piecewise) == Piecewise((x, (x >= y) & (x >= z)), (y, y >= z), (z, True))
+    assert Max(x, y, a, b).rewrite(Piecewise) == Piecewise((a, (a >= b) & (a >= x) & (a >= y)),
+        (b, (b >= x) & (b >= y)), (x, x >= y), (y, True))
+    assert Min(a, b).rewrite(Piecewise) == Piecewise((a, a <= b), (b, True))
+    assert Min(x, y, z).rewrite(Piecewise) == Piecewise((x, (x <= y) & (x <= z)), (y, y <= z), (z, True))
+    assert Min(x,  y, a, b).rewrite(Piecewise) ==  Piecewise((a, (a <= b) & (a <= x) & (a <= y)),
+        (b, (b <= x) & (b <= y)), (x, x <= y), (y, True))
+
+    # Piecewise rewriting of Min/Max does not takes place for non-real arguments
+    assert Max(vx, vy).rewrite(Piecewise) == Max(vx, vy)
+    assert Min(va, vx, vy).rewrite(Piecewise) == Min(va, vx, vy)
 
 
 def test_issue_11099():
@@ -427,3 +446,15 @@ def test_rewrite_as_Abs():
     test(Max(x, y))
     test(Min(x, y, z))
     test(Min(Max(w, x), Max(y, z)))
+
+def test_issue_14000():
+    assert isinstance(sqrt(4, evaluate=False), Pow) == True
+    assert isinstance(cbrt(3.5, evaluate=False), Pow) == True
+    assert isinstance(root(16, 4, evaluate=False), Pow) == True
+
+    assert sqrt(4, evaluate=False) == Pow(4, S.Half, evaluate=False)
+    assert cbrt(3.5, evaluate=False) == Pow(3.5, Rational(1, 3), evaluate=False)
+    assert root(4, 2, evaluate=False) == Pow(4, Rational(1, 2), evaluate=False)
+
+    assert root(16, 4, 2, evaluate=False).has(Pow) == True
+    assert real_root(-8, 3, evaluate=False).has(Pow) == True

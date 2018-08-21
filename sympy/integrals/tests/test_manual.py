@@ -1,10 +1,11 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Integral, integrate, pi, Dummy, Derivative,
-                   diff, I, sqrt, erf, Piecewise, Eq, symbols, Rational,
+                   diff, I, sqrt, erf, Piecewise, Eq, Ne, symbols, Rational,
                    And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
-                   Function)
-from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
-    _parts_rule
+                   Function, jacobi, gegenbauer, chebyshevt, chebyshevu,
+                   legendre, hermite, laguerre, assoc_laguerre)
+from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
+    _parts_rule)
 
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
 f = Function('f')
@@ -48,6 +49,8 @@ def test_manualintegrate_parts():
     assert manualintegrate((3*x**2 + 5) * exp(x), x) == \
         3*x**2*exp(x) - 6*x*exp(x) + 11*exp(x)
     assert manualintegrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
+    # Make sure _parts_rule does not go into an infinite loop here
+    assert manualintegrate(log(1/x)/(x + 1), x).has(Integral)
 
     # Make sure _parts_rule doesn't pick u = constant but can pick dv =
     # constant if necessary, e.g. for integrate(atan(x))
@@ -73,6 +76,9 @@ def test_manualintegrate_trigonometry():
 
     assert manualintegrate(x * sec(x**2), x) == log(tan(x**2) + sec(x**2))/2
     assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
+    assert manualintegrate(cos(3*x)*sec(x), x) == -x + sin(2*x)
+    assert manualintegrate(sin(3*x)*sec(x), x) == \
+        -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
 
 
 def test_manualintegrate_trigpowers():
@@ -207,20 +213,50 @@ def test_manualintegrate_Heaviside():
             (cos(4*y/3) - cos(x + y))*Heaviside(3*x - y)
 
 
+def test_manualintegrate_orthogonal_poly():
+    n = symbols('n')
+    a, b = 7, S(5)/3
+    polys = [jacobi(n, a, b, x), gegenbauer(n, a, x), chebyshevt(n, x),
+        chebyshevu(n, x), legendre(n, x), hermite(n, x), laguerre(n, x),
+        assoc_laguerre(n, a, x)]
+    for p in polys:
+        integral = manualintegrate(p, x)
+        for deg in [-2, -1, 0, 1, 3, 5, 8]:
+            # some accept negative "degree", some do not
+            try:
+                p_subbed = p.subs(n, deg)
+            except ValueError:
+                continue
+            assert (integral.subs(n, deg).diff(x) - p_subbed).expand() == 0
+
+        # can also integrate simple expressions with these polynomials
+        q = x*p.subs(x, 2*x + 1)
+        integral = manualintegrate(q, x)
+        for deg in [2, 4, 7]:
+            assert (integral.subs(n, deg).diff(x) - q.subs(n, deg)).expand() == 0
+
+        # cannot integrate with respect to any other parameter
+        t = symbols('t')
+        for i in range(len(p.args) - 1):
+            new_args = list(p.args)
+            new_args[i] = t
+            assert isinstance(manualintegrate(p.func(*new_args), t), Integral)
+
 def test_issue_6799():
     r, x, phi = map(Symbol, 'r x phi'.split())
     n = Symbol('n', integer=True, positive=True)
 
     integrand = (cos(n*(x-phi))*cos(n*x))
     limits = (x, -pi, pi)
-    assert manualintegrate(integrand, x).has(Integral)
-    assert r * integrate(integrand.expand(trig=True), limits) / pi == r * cos(n * phi)
+    assert manualintegrate(integrand, x) == \
+        ((n*x/2 + sin(2*n*x)/4)*cos(n*phi) - sin(n*phi)*cos(n*x)**2/2)/n
+    assert r * integrate(integrand, limits).trigsimp() / pi == r * cos(n * phi)
     assert not integrate(integrand, limits).has(Dummy)
 
 
 def test_issue_12251():
     assert manualintegrate(x**y, x) == Piecewise(
-        (log(x), Eq(y, -1)), (x**(y + 1)/(y + 1), True))
+        (x**(y + 1)/(y + 1), Ne(y, -1)), (log(x), True))
 
 
 def test_issue_3796():
@@ -238,16 +274,16 @@ def test_manual_true():
 def test_issue_6746():
     y = Symbol('y')
     n = Symbol('n')
-    assert manualintegrate(y**x, x) == \
-        Piecewise((x, Eq(log(y), 0)), (y**x/log(y), True))
-    assert manualintegrate(y**(n*x), x) == \
-        Piecewise(
-            (x, Eq(n, 0)),
-            (Piecewise(
-                (n*x, Eq(log(y), 0)),
-                (y**(n*x)/log(y), True))/n, True))
-    assert manualintegrate(exp(n*x), x) == \
-        Piecewise((x, Eq(n, 0)), (exp(n*x)/n, True))
+    assert manualintegrate(y**x, x) == Piecewise(
+        (y**x/log(y), Ne(log(y), 0)), (x, True))
+    assert manualintegrate(y**(n*x), x) == Piecewise(
+        (Piecewise(
+            (y**(n*x)/log(y), Ne(log(y), 0)),
+            (n*x, True)
+        )/n, Ne(n, 0)),
+        (x, True))
+    assert manualintegrate(exp(n*x), x) == Piecewise(
+        (exp(n*x)/n, Ne(n, 0)), (x, True))
 
     y = Symbol('y', positive=True)
     assert manualintegrate((y + 1)**x, x) == (y + 1)**x/log(y + 1)
@@ -255,8 +291,8 @@ def test_issue_6746():
     assert manualintegrate((y + 1)**x, x) == x
     y = Symbol('y')
     n = Symbol('n', nonzero=True)
-    assert manualintegrate(y**(n*x), x) == \
-        Piecewise((n*x, Eq(log(y), 0)), (y**(n*x)/log(y), True))/n
+    assert manualintegrate(y**(n*x), x) == Piecewise(
+        (y**(n*x)/log(y), Ne(log(y), 0)), (n*x, True))/n
     y = Symbol('y', positive=True)
     assert manualintegrate((y + 1)**(n*x), x) == \
         (y + 1)**(n*x)/(n*log(y + 1))
@@ -346,3 +382,7 @@ def test_issue_12641():
 
 def test_issue_13297():
     assert manualintegrate(sin(x) * cos(x)**5, x) == -cos(x)**6 / 6
+
+def test_issue_14470():
+    assert manualintegrate(1/(x*sqrt(x + 1)), x) == \
+        log(-1 + 1/sqrt(x + 1)) - log(1 + 1/sqrt(x + 1))

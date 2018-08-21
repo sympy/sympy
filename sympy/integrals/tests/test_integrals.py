@@ -1,24 +1,51 @@
 from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
-    tanh, Derivative, diff, DiracDelta, E, Eq, exp, erf, erfi,
+    tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfi,
     EulerGamma, Expr, factor, Function, I, im, Integral, integrate,
     Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
-    Ne, O, oo, pi, Piecewise, polar_lift, Poly, Rational, re, S, sign,
-    simplify, sin, SingularityFunction, sqrt, sstr, Sum, Symbol,
+    Ne, O, oo, pi, Piecewise, polar_lift, Poly, Rational, re, S, Si, sign,
+    simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
     symbols, sympify, tan, trigsimp, Tuple
 )
 from sympy.functions.elementary.complexes import periodic_argument
+from sympy.functions.elementary.integers import floor
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
-
+from sympy.integrals.integrals import Integral
 
 x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
 n = Symbol('n', integer=True)
 f = Function('f')
 
+def test_principal_value():
+    g = 1 / x
+    assert Integral(g, (x, -oo, oo)).principal_value() == 0
+    assert Integral(g, (y, -oo, oo)).principal_value() == oo * sign(1 / x)
+    raises(ValueError, lambda: Integral(g, (x)).principal_value())
+    raises(ValueError, lambda: Integral(g).principal_value())
+
+    l = 1 / ((x ** 3) - 1)
+    assert Integral(l, (x, -oo, oo)).principal_value() == -sqrt(3)*pi/3
+    raises(ValueError, lambda: Integral(l, (x, -oo, 1)).principal_value())
+
+    d = 1 / (x ** 2 - 1)
+    assert Integral(d, (x, -oo, oo)).principal_value() == 0
+    assert Integral(d, (x, -2, 2)).principal_value() == -log(3)
+
+    v = x / (x ** 2 - 1)
+    assert Integral(v, (x, -oo, oo)).principal_value() == 0
+    assert Integral(v, (x, -2, 2)).principal_value() == 0
+
+    s = x ** 2 / (x ** 2 - 1)
+    assert Integral(s, (x, -oo, oo)).principal_value() == oo
+    assert Integral(s, (x, -2, 2)).principal_value() == -log(3) + 4
+
+    f = 1 / ((x ** 2 - 1) * (1 + x ** 2))
+    assert Integral(f, (x, -oo, oo)).principal_value() == -pi / 2
+    assert Integral(f, (x, -2, 2)).principal_value() == -atan(2) - log(3) / 2
 
 def diff_test(i):
     """Return the set of symbols, s, which were used in testing that
@@ -50,6 +77,12 @@ def test_constructor():
 
     s5 = Integral(n, (n, Interval(1, 2)))
     assert s5.limits == (Tuple(n, 1, 2),)
+
+    # Testing constructor with inequalities:
+    s6 = Integral(n, n > 10)
+    assert s6.limits == (Tuple(n, 10, oo),)
+    s7 = Integral(n, (n > 2) & (n < 5))
+    assert s7.limits == (Tuple(n, 2, 5),)
 
 
 def test_basics():
@@ -249,12 +282,12 @@ def test_issue_3618():
 
 def test_issue_3623():
     assert integrate(cos((n + 1)*x), x) == Piecewise(
-        (x, Eq(n + 1, 0)), (sin((n + 1)*x)/(n + 1), True))
+        (sin(x*(n + 1))/(n + 1), Ne(n + 1, 0)), (x, True))
     assert integrate(cos((n - 1)*x), x) == Piecewise(
-        (x, Eq(n - 1, 0)), (sin((n - 1)*x)/(n - 1), True))
+        (sin(x*(n - 1))/(n - 1), Ne(n - 1, 0)), (x, True))
     assert integrate(cos((n + 1)*x) + cos((n - 1)*x), x) == \
-        Piecewise((x, Eq(n + 1, 0)), (sin((n + 1)*x)/(n + 1), True)) + \
-        Piecewise((x, Eq(n - 1, 0)), (sin((n - 1)*x)/(n - 1), True))
+        Piecewise((sin(x*(n - 1))/(n - 1), Ne(n - 1, 0)), (x, True)) + \
+        Piecewise((sin(x*(n + 1))/(n + 1), Ne(n + 1, 0)), (x, True))
 
 
 def test_issue_3664():
@@ -288,6 +321,7 @@ def test_transcendental_functions():
 
 def test_log_polylog():
     assert integrate(log(1 - x)/x, (x, 0, 1)) == -pi**2/6
+    assert integrate(log(x)*(1 - x)**(-1), (x, 0, 1)) == -pi**2/6
 
 
 def test_issue_3740():
@@ -315,6 +349,22 @@ def test_issue_7450():
     assert re(ans) == S.Half and im(ans) == -S.Half
 
 
+def test_issue_8623():
+    assert integrate((1 + cos(2*x)) / (3 - 2*cos(2*x)), (x, 0, pi)) == -pi/2 + sqrt(5)*pi/2
+    assert integrate((1 + cos(2*x))/(3 - 2*cos(2*x))) == -x/2 + sqrt(5)*(atan(sqrt(5)*tan(x)) + \
+        pi*floor((x - pi/2)/pi))/2
+
+
+def test_issue_9569():
+    assert integrate(1 / (2 - cos(x)), (x, 0, pi)) == pi/sqrt(3)
+    assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)) + pi*floor((x/2 - pi/2)/pi))/3
+
+
+def test_issue_13749():
+    assert integrate(1 / (2 + cos(x)), (x, 0, pi)) == pi/sqrt(3)
+    assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 - pi/2)/pi))/3
+
+
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
 
@@ -335,6 +385,8 @@ def test_integrate_functions():
 def test_integrate_derivatives():
     assert integrate(Derivative(f(x), x), x) == f(x)
     assert integrate(Derivative(f(y), y), x) == x*Derivative(f(y), y)
+    assert integrate(Derivative(f(x), x)**2, x) == \
+        Integral(Derivative(f(x), x)**2, x)
 
 
 def test_transform():
@@ -443,12 +495,14 @@ def test_evalf_issue_939():
         integrate(1/(x**5 + 1), (x, 2, 4)), chop=True) == '0.0144361088886740'
 
 
-def test_double_integrals():
-    #double integral
-    assert NS(integrate(
+@XFAIL
+def test_failing_integrals():
+    #---
+    # Double integrals not implemented
+    assert NS(Integral(
         sqrt(x) + x*y, (x, 1, 2), (y, -1, 1)), 15) == '2.43790283299492'
     # double integral + zero detection
-    assert NS(integrate(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0'
+    assert NS(Integral(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0.0'
 
 
 def test_integrate_SingularityFunction():
@@ -505,34 +559,34 @@ def test_integrate_DiracDelta_fails():
 
 def test_integrate_returns_piecewise():
     assert integrate(x**y, x) == Piecewise(
-        (log(x), Eq(y, -1)), (x**(y + 1)/(y + 1), True))
+        (x**(y + 1)/(y + 1), Ne(y, -1)), (log(x), True))
     assert integrate(x**y, y) == Piecewise(
-        (y, Eq(log(x), 0)), (x**y/log(x), True))
+        (x**y/log(x), Ne(log(x), 0)), (y, True))
     assert integrate(exp(n*x), x) == Piecewise(
-        (x, Eq(n, 0)), (exp(n*x)/n, True))
+        (exp(n*x)/n, Ne(n, 0)), (x, True))
     assert integrate(x*exp(n*x), x) == Piecewise(
-        (x**2/2, Eq(n**3, 0)), ((x*n**2 - n)*exp(n*x)/n**3, True))
+        ((n*x - 1)*exp(n*x)/n**2, Ne(n**2, 0)), (x**2/2, True))
     assert integrate(x**(n*y), x) == Piecewise(
-        (log(x), Eq(n*y, -1)), (x**(n*y + 1)/(n*y + 1), True))
+        (x**(n*y + 1)/(n*y + 1), Ne(n*y, -1)), (log(x), True))
     assert integrate(x**(n*y), y) == Piecewise(
-        (y, Eq(n*log(x), 0)), (x**(n*y)/(n*log(x)), True))
+        (x**(n*y)/(n*log(x)), Ne(n*log(x), 0)), (y, True))
     assert integrate(cos(n*x), x) == Piecewise(
-        (x, Eq(n, 0)), (sin(n*x)/n, True))
+        (sin(n*x)/n, Ne(n, 0)), (x, True))
     assert integrate(cos(n*x)**2, x) == Piecewise(
-        (x, Eq(n, 0)), ((n*x/2 + sin(n*x)*cos(n*x)/2)/n, True))
+        ((n*x/2 + sin(n*x)*cos(n*x)/2)/n, Ne(n, 0)), (x, True))
     assert integrate(x*cos(n*x), x) == Piecewise(
-        (x**2/2, Eq(n, 0)), (x*sin(n*x)/n + cos(n*x)/n**2, True))
+        (x*sin(n*x)/n + cos(n*x)/n**2, Ne(n, 0)), (x**2/2, True))
     assert integrate(sin(n*x), x) == Piecewise(
-        (0, Eq(n, 0)), (-cos(n*x)/n, True))
+        (-cos(n*x)/n, Ne(n, 0)), (0, True))
     assert integrate(sin(n*x)**2, x) == Piecewise(
-        (0, Eq(n, 0)), ((n*x/2 - sin(n*x)*cos(n*x)/2)/n, True))
+        ((n*x/2 - sin(n*x)*cos(n*x)/2)/n, Ne(n, 0)), (0, True))
     assert integrate(x*sin(n*x), x) == Piecewise(
-        (0, Eq(n, 0)), (-x*cos(n*x)/n + sin(n*x)/n**2, True))
-    assert integrate(exp(x*y),(x,0,z)) == Piecewise( \
-        (z, Eq(y,0)), (exp(y*z)/y - 1/y, True))
-
+        (-x*cos(n*x)/n + sin(n*x)/n**2, Ne(n, 0)), (0, True))
+    assert integrate(exp(x*y), (x, 0, z)) == Piecewise(
+        (exp(y*z)/y - 1/y, (y > -oo) & (y < oo) & Ne(y, 0)), (z, True))
 
 def test_integrate_max_min():
+    x = symbols('x', real=True)
     assert integrate(Min(x, 2), (x, 0, 3)) == 4
     assert integrate(Max(x**2, x**3), (x, 0, 2)) == S(49)/12
     assert integrate(Min(exp(x), exp(-x))**2, x) == Piecewise( \
@@ -683,10 +737,13 @@ def test_as_sum_midpoint1():
 
 def test_as_sum_midpoint2():
     e = Integral((x + y)**2, (x, 0, 1))
+    n = Symbol('n', positive=True, integer=True)
     assert e.as_sum(1, method="midpoint").expand() == S(1)/4 + y + y**2
     assert e.as_sum(2, method="midpoint").expand() == S(5)/16 + y + y**2
     assert e.as_sum(3, method="midpoint").expand() == S(35)/108 + y + y**2
     assert e.as_sum(4, method="midpoint").expand() == S(21)/64 + y + y**2
+    assert e.as_sum(n, method="midpoint").expand() == \
+        y**2 + y + 1/3 - 1/(12*n**2)
 
 
 def test_as_sum_left():
@@ -695,7 +752,9 @@ def test_as_sum_left():
     assert e.as_sum(2, method="left").expand() == S(1)/8 + y/2 + y**2
     assert e.as_sum(3, method="left").expand() == S(5)/27 + 2*y/3 + y**2
     assert e.as_sum(4, method="left").expand() == S(7)/32 + 3*y/4 + y**2
-
+    assert e.as_sum(n, method="left").expand() == \
+        y**2 + y + S(1)/3 - y/n - 1/(2*n) + 1/(6*n**2)
+    assert e.as_sum(10, method="left", evaluate=False).has(Sum)
 
 def test_as_sum_right():
     e = Integral((x + y)**2, (x, 0, 1))
@@ -703,15 +762,27 @@ def test_as_sum_right():
     assert e.as_sum(2, method="right").expand() == S(5)/8 + 3*y/2 + y**2
     assert e.as_sum(3, method="right").expand() == S(14)/27 + 4*y/3 + y**2
     assert e.as_sum(4, method="right").expand() == S(15)/32 + 5*y/4 + y**2
+    assert e.as_sum(n, method="right").expand() == \
+        y**2 + y + S(1)/3 + y/n + 1/(2*n) + 1/(6*n**2)
 
+
+def test_as_sum_trapezoid():
+    e = Integral((x + y)**2, (x, 0, 1))
+    assert e.as_sum(1, method="trapezoid").expand() == y**2 + y + S(1)/2
+    assert e.as_sum(2, method="trapezoid").expand() == y**2 + y + S(3)/8
+    assert e.as_sum(3, method="trapezoid").expand() == y**2 + y + S(19)/54
+    assert e.as_sum(4, method="trapezoid").expand() == y**2 + y + S(11)/32
+    assert e.as_sum(n, method="trapezoid").expand() == \
+        y**2 + y + S(1)/3 + 1/(6*n**2)
+    assert Integral(sign(x), (x, 0, 1)).as_sum(1, 'trapezoid') == S(1)/2
 
 def test_as_sum_raises():
     e = Integral((x + y)**2, (x, 0, 1))
     raises(ValueError, lambda: e.as_sum(-1))
     raises(ValueError, lambda: e.as_sum(0))
     raises(ValueError, lambda: Integral(x).as_sum(3))
-    raises(NotImplementedError, lambda: e.as_sum(oo))
-    raises(NotImplementedError, lambda: e.as_sum(3, method='xxxx2'))
+    raises(ValueError, lambda: e.as_sum(oo))
+    raises(ValueError, lambda: e.as_sum(3, method='xxxx2'))
 
 
 def test_nested_doit():
@@ -842,6 +913,14 @@ def test_series():
     i = Integral(cos(x), (x, x))
     e = i.lseries(x)
     assert i.nseries(x, n=8).removeO() == Add(*[next(e) for j in range(4)])
+
+
+def test_trig_nonelementary_integrals():
+    x = Symbol('x')
+    assert integrate((1 + sin(x))/x, x) == log(x) + Si(x)
+    # next one comes out as log(x) + log(x**2)/2 + Ci(x)
+    # so not hardcoding this log ugliness
+    assert integrate((cos(x) + 2)/x, x).has(Ci)
 
 
 def test_issue_4403():
@@ -1105,6 +1184,18 @@ def test_powers():
     assert integrate(2**x + 3**x, x) == 2**x/log(2) + 3**x/log(3)
 
 
+def test_manual_option():
+    raises(ValueError, lambda: integrate(1/x, x, manual=True, meijerg=True))
+    # an example of a function that manual integration cannot handle
+    assert integrate(exp(x**2), x, manual=True) == Integral(exp(x**2), x)
+
+
+def test_meijerg_option():
+    raises(ValueError, lambda: integrate(1/x, x, meijerg=True, risch=True))
+    # an example of a function that meijerg integration cannot handle
+    assert integrate(tan(x), x, meijerg=True) == Integral(tan(x), x)
+
+
 def test_risch_option():
     # risch=True only allowed on indefinite integrals
     raises(ValueError, lambda: integrate(1/log(x), (x, 0, oo), risch=True))
@@ -1134,7 +1225,7 @@ def test_issue_4803():
 
 
 def test_issue_4234():
-    assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x) / sqrt(1 + tan(x)**2)
+    assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x)/sqrt(1 + tan(x)**2)
 
 
 def test_issue_4492():
@@ -1196,6 +1287,10 @@ def test_issue_8901():
     assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
 
+def test_issue_8945():
+    assert integrate(sin(x)**3/x, (x, 0, 1)) == -Si(3)/4 + 3*Si(1)/4
+    assert integrate(sin(x)**3/x, (x, 0, oo)) == pi/4
+    assert integrate(cos(x)**2/x**2, x) == -Si(2*x) - cos(2*x)/(2*x) - 1/(2*x)
 
 @slow
 def test_issue_7130():
@@ -1210,6 +1305,10 @@ def test_issue_10567():
     vt = Matrix([a*t, b, c])
     assert integrate(vt, t) == Integral(vt, t).doit()
     assert integrate(vt, t) == Matrix([[a*t**2/2], [b*t], [c*t]])
+
+def test_issue_11856():
+    t = symbols('t')
+    assert integrate(sinc(pi*t), t) == Si(pi*t)/pi
 
 def test_issue_4950():
     assert integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) ==\
@@ -1238,3 +1337,54 @@ def test_issue_12645():
 
 def test_issue_12677():
     assert integrate(sin(x) / (cos(x)**3) , (x, 0, pi/6)) == Rational(1,6)
+
+def test_issue_14064():
+    assert integrate(1/cosh(x), (x, 0, oo)) == pi/2
+
+def test_issue_14027():
+    assert integrate(1/(1 + exp(x - S(1)/2)/(1 + exp(x))), x) == \
+        x - exp(S(1)/2)*log(exp(x) + exp(S(1)/2)/(1 + exp(S(1)/2)))/(exp(S(1)/2) + E)
+
+def test_issue_8170():
+    assert integrate(tan(x), (x, 0, pi/2)) == S.Infinity
+
+def test_issue_8440_14040():
+    assert integrate(1/x, (x, -1, 1)) == S.NaN
+    assert integrate(1/(x + 1), (x, -2, 3)) == S.NaN
+
+def test_issue_14096():
+    assert integrate(1/(x + y)**2, (x, 0, 1)) == -1/(y + 1) + 1/y
+    assert integrate(1/(1 + x + y + z)**2, (x, 0, 1), (y, 0, 1), (z, 0, 1)) == \
+        -4*log(4) - 6*log(2) + 9*log(3)
+
+def test_issue_14144():
+    assert Abs(integrate(1/sqrt(1 - x**3), (x, 0, 1)).n() - 1.402182) < 1e-6
+    assert Abs(integrate(sqrt(1 - x**3), (x, 0, 1)).n() - 0.841309) < 1e-6
+
+def test_issue_14375():
+    # This raised a TypeError. The antiderivative has exp_polar, which
+    # may be possible to unpolarify, so the exact output is not asserted here.
+    assert integrate(exp(I*x)*log(x), x).has(Ei)
+
+def test_issue_14437():
+    f = Function('f')(x, y, z)
+    assert integrate(f, (x, 0, 1), (y, 0, 2), (z, 0, 3)) == \
+                Integral(f, (x, 0, 1), (y, 0, 2), (z, 0, 3))
+
+def test_issue_14470():
+    assert integrate(1/sqrt(exp(x) + 1), x) == \
+        log(-1 + 1/sqrt(exp(x) + 1)) - log(1 + 1/sqrt(exp(x) + 1))
+
+def test_issue_14877():
+    f = exp(1 - exp(x**2)*x + 2*x**2)*(2*x**3 + x)/(1 - exp(x**2)*x)**2
+    assert integrate(f, x) == \
+        -exp(2*x**2 - x*exp(x**2) + 1)/(x*exp(3*x**2) - exp(2*x**2))
+
+def test_issue_14782():
+    f = sqrt(-x**2 + 1)*(-x**2 + x)
+    assert integrate(f, [x, -1, 1]) == - pi / 8
+    assert integrate(f, [x, 0, 1]) == S(1) / 3 - pi / 16
+
+def test_issue_12081():
+    f = x**(-S(3)/2)*exp(-x)
+    assert integrate(f, [x, 0, oo]) == oo

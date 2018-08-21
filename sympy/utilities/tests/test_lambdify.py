@@ -1,6 +1,7 @@
 from distutils.version import LooseVersion as V
 from itertools import product
 import math
+import inspect
 
 import mpmath
 from sympy.utilities.pytest import XFAIL, raises
@@ -8,7 +9,8 @@ from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy)
+    DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
+    digamma, RisingFactorial, besselj, bessely, besseli, besselk)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -22,8 +24,15 @@ import sympy
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
+scipy = import_module('scipy')
+scipy_special = import_module('scipy.special')
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
+
+if tensorflow:
+    # Hide Tensorflow warnings
+    import os
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 w, x, y, z = symbols('w,x,y,z')
 
@@ -45,6 +54,17 @@ def test_list_args():
     f = lambdify([x, y], x + y)
     assert f(1, 2) == 3
 
+def test_nested_args():
+    f1 = lambdify([[w, x]], [w, x])
+    assert f1([91, 2]) == [91, 2]
+    raises(TypeError, lambda: f1(1, 2))
+
+    f2 = lambdify([(w, x), (y, z)], [w, x, y, z])
+    assert f2((18, 12), (73, 4)) == [18, 12, 73, 4]
+    raises(TypeError, lambda: f2(3, 4))
+
+    f3 = lambdify([w, [[[x]], y], z], [w, x, y, z])
+    assert f3(10, [[[52]], 31], 44) == [10, 52, 31, 44]
 
 def test_str_args():
     f = lambdify('x,y,z', 'z,y,x')
@@ -167,6 +187,15 @@ def test_numpy_transl():
     for sym, nump in NUMPY_TRANSLATIONS.items():
         assert sym in sympy.__dict__
         assert nump in numpy.__dict__
+
+def test_scipy_transl():
+    if not scipy:
+        skip("scipy not installed.")
+
+    from sympy.utilities.lambdify import SCIPY_TRANSLATIONS
+    for sym, scip in SCIPY_TRANSLATIONS.items():
+        assert sym in sympy.__dict__
+        assert scip in scipy.__dict__ or scip in scipy.special.__dict__
 
 def test_tensorflow_transl():
     if not tensorflow:
@@ -376,7 +405,8 @@ def test_python_div_zero_issue_11306():
     p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
     f = lambdify([x, y], p, modules='numpy')
     numpy.seterr(divide='ignore')
-    assert str(float(f(0,1))) == 'inf'
+    assert float(f(numpy.array([0]),numpy.array([0.5]))) == 0
+    assert str(float(f(numpy.array([0]),numpy.array([1])))) == 'inf'
     numpy.seterr(divide='warn')
 
 def test_issue9474():
@@ -609,6 +639,13 @@ def test_namespace_order():
     assert if1(1) == 'first f'
 
 
+def test_namespace_type():
+    # lambdify had a bug where it would reject modules of type unicode
+    # on Python 2.
+    x = sympy.Symbol('x')
+    lambdify(x, x, modules=u'math')
+
+
 def test_imps():
     # Here we check if the default returned functions are anonymous - in
     # the sense that we can have more than one function with the same name
@@ -702,6 +739,14 @@ def test_dummification():
     raises(SyntaxError, lambda: lambdify(F(t) * G(t), F(t) * G(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 2 * F(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
+
+def test_curly_matrix_symbol():
+    # Issue #15009
+    curlyv = sympy.MatrixSymbol("{v}", 2, 1)
+    lam = lambdify(curlyv, curlyv)
+    assert lam(1)==1
+    lam = lambdify(curlyv, curlyv, dummify=True)
+    assert lam(1)==1
 
 def test_python_keywords():
     # Test for issue 7452. The automatic dummification should ensure use of
@@ -803,6 +848,16 @@ def test_issue_12173():
     assert exp1 == uppergamma(1, 2).evalf()
     assert exp2 == lowergamma(1, 2).evalf()
 
+def test_issue_13642():
+    if not numpy:
+        skip("numpy not installed")
+    f = lambdify(x, sinc(x))
+    assert Abs(f(1) - sinc(1)).n() < 1e-15
+
+def test_sinc_mpmath():
+    f = lambdify(x, sinc(x), "mpmath")
+    assert Abs(f(1) - sinc(1)).n() < 1e-15
+
 def test_lambdify_dummy_arg():
     d1 = Dummy()
     f1 = lambdify(d1, d1 + 1, dummify=False)
@@ -812,3 +867,83 @@ def test_lambdify_dummy_arg():
     d2 = Dummy('x')
     f2 = lambdify(d2, d2 + 1)
     assert f2(2) == 3
+    f3 = lambdify([[d2]], d2 + 1)
+    assert f3([2]) == 3
+
+def test_lambdify_mixed_symbol_dummy_args():
+    d = Dummy()
+    # Contrived example of name clash
+    dsym = symbols(str(d))
+    f = lambdify([d, dsym], d - dsym)
+    assert f(4, 1) == 3
+
+def test_numpy_array_arg():
+    # Test for issue 14655 (numpy part)
+    if not numpy:
+        skip("numpy not installed")
+
+    f = lambdify([[x, y]], x*x + y, 'numpy')
+
+    assert f(numpy.array([2.0, 1.0])) == 5
+
+def test_tensorflow_array_arg():
+    # Test for issue 14655 (tensorflow part)
+    if not tensorflow:
+        skip("tensorflow not installed.")
+
+    f = lambdify([[x, y]], x*x + y, 'tensorflow')
+
+    fcall = f(tensorflow.constant([2.0, 1.0]))
+
+    s = tensorflow.Session()
+    assert s.run(fcall) == 5
+
+def test_scipy_fns():
+    if not scipy:
+        skip("scipy not installed")
+
+    single_arg_sympy_fns = [erf, erfc, factorial, gamma, loggamma, digamma]
+    single_arg_scipy_fns = [scipy.special.erf, scipy.special.erfc,
+        scipy.special.factorial, scipy.special.gamma, scipy.special.gammaln,
+        scipy.special.psi]
+    numpy.random.seed(0)
+    for (sympy_fn, scipy_fn) in zip(single_arg_sympy_fns, single_arg_scipy_fns):
+        test_values = 20 * numpy.random.rand(20)
+        f = lambdify(x, sympy_fn(x), modules = "scipy")
+        assert numpy.all(abs(f(test_values) - scipy_fn(test_values)) < 1e-15)
+
+    double_arg_sympy_fns = [RisingFactorial, besselj, bessely, besseli,
+        besselk]
+    double_arg_scipy_fns = [scipy.special.poch, scipy.special.jn,
+        scipy.special.yn, scipy.special.iv, scipy.special.kn]
+
+    #suppress scipy warnings
+    import warnings
+    warnings.filterwarnings('ignore', '.*floating point number truncated*')
+
+    for (sympy_fn, scipy_fn) in zip(double_arg_sympy_fns, double_arg_scipy_fns):
+        for i in range(20):
+            test_values = 20 * numpy.random.rand(2)
+            f = lambdify((x,y), sympy_fn(x,y), modules = "scipy")
+            assert abs(f(*test_values) - scipy_fn(*test_values)) < 1e-15
+
+def test_lambdify_inspect():
+    f = lambdify(x, x**2)
+    # Test that inspect.getsource works but don't hard-code implementation
+    # details
+    assert 'x**2' in inspect.getsource(f)
+
+def test_issue_14941():
+    x, y = Dummy(), Dummy()
+
+    # test dict
+    f1 = lambdify([x, y], {x: 3, y: 3}, 'sympy')
+    assert f1(2, 3) == {2: 3, 3: 3}
+
+    # test tuple
+    f2 = lambdify([x, y], (y, x), 'sympy')
+    assert f2(2, 3) == (3, 2)
+
+    # test list
+    f3 = lambdify([x, y], [y, x], 'sympy')
+    assert f3(2, 3) == [3, 2]

@@ -5,6 +5,7 @@ from __future__ import print_function, division
 import sys
 import os
 import re as _re
+import struct
 from textwrap import fill, dedent
 from sympy.core.compatibility import get_function_name, range
 
@@ -104,13 +105,7 @@ def rawlines(s):
         else:
             return "dedent('''\\\n    %s''')" % rv
 
-size = getattr(sys, "maxint", None)
-if size is None:  # Python 3 doesn't have maxint
-    size = sys.maxsize
-if size > 2**32:
-    ARCH = "64-bit"
-else:
-    ARCH = "32-bit"
+ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
 
 # XXX: PyPy doesn't support hash randomization

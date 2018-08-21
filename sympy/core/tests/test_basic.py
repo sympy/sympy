@@ -5,14 +5,12 @@ import collections
 import sys
 
 from sympy.core.basic import Basic, Atom, preorder_traversal, as_Basic
-from sympy.core.singleton import S, Singleton
+from sympy.core.singleton import S
 from sympy.core.symbol import symbols
-from sympy.core.compatibility import default_sort_key, with_metaclass
+from sympy.core.compatibility import default_sort_key
 
 from sympy import sin, Lambda, Q, cos, gamma, Tuple
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.pytest import raises
 from sympy.core import I, pi
 
@@ -142,32 +140,6 @@ def test_xreplace():
     raises(TypeError, lambda: b1.xreplace([b1, b2]))
 
 
-def test_Singleton():
-    global instantiated
-    instantiated = 0
-
-    class MySingleton(with_metaclass(Singleton, Basic)):
-        def __new__(cls):
-            global instantiated
-            instantiated += 1
-            return Basic.__new__(cls)
-
-    assert instantiated == 0
-    MySingleton() # force instantiation
-    assert instantiated == 1
-    assert MySingleton() is not Basic()
-    assert MySingleton() is MySingleton()
-    assert S.MySingleton is MySingleton()
-    assert instantiated == 1
-
-    class MySingleton_sub(MySingleton):
-        pass
-    assert instantiated == 1
-    MySingleton_sub()
-    assert instantiated == 2
-    assert MySingleton_sub() is not MySingleton()
-    assert MySingleton_sub() is MySingleton_sub()
-
 
 def test_preorder_traversal():
     expr = Basic(b21, b3)
@@ -227,14 +199,6 @@ def test_rewrite():
     assert f1.rewrite([cos],sin) == sin(x) + sin(x + pi/2, evaluate=False)
     f2 = sin(x) + cos(y)/gamma(z)
     assert f2.rewrite(sin,exp) == -I*(exp(I*x) - exp(-I*x))/2 + cos(y)/gamma(z)
-    assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a >= b), (b, True))
-    assert Max(x, y, z).rewrite(Piecewise) == Piecewise((x, (x >= y) & (x >= z)), (y, y >= z), (z, True))
-    assert Max(x, y, a, b).rewrite(Piecewise) == Piecewise((a, (a >= b) & (a >= x) & (a >= y)),
-        (b, (b >= x) & (b >= y)), (x, x >= y), (y, True))
-    assert Min(a, b).rewrite(Piecewise) == Piecewise((a, a <= b), (b, True))
-    assert Min(x, y, z).rewrite(Piecewise) == Piecewise((x, (x <= y) & (x <= z)), (y, y <= z), (z, True))
-    assert Min(x,  y, a, b).rewrite(Piecewise) ==  Piecewise((a, (a <= b) & (a <= x) & (a <= y)),
-        (b, (b <= x) & (b <= y)), (x, x <= y), (y, True))
 
 
 def test_literal_evalf_is_number_is_zero_is_comparable():

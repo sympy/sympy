@@ -15,7 +15,8 @@ sympy.stats.rv_interface
 from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-        Equality, Lambda, DiracDelta, sympify)
+        Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
+        DiracDelta, Mul, Indexed)
 from sympy.core.relational import Relational
 from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
@@ -37,6 +38,7 @@ class RandomDomain(Basic):
     is_ProductDomain = False
     is_Finite = False
     is_Continuous = False
+    is_Discrete = False
 
     def __new__(cls, symbols, *args):
         symbols = FiniteSet(*symbols)
@@ -135,6 +137,7 @@ class PSpace(Basic):
 
     is_Finite = None
     is_Continuous = None
+    is_Discrete = None
     is_real = None
 
     @property
@@ -147,7 +150,7 @@ class PSpace(Basic):
 
     @property
     def values(self):
-        return frozenset(RandomSymbol(sym, self) for sym in self.domain.symbols)
+        return frozenset(RandomSymbol(sym, self) for sym in self.symbols)
 
     @property
     def symbols(self):
@@ -225,6 +228,7 @@ class RandomSymbol(Expr):
     """
 
     def __new__(cls, symbol, pspace=None):
+        from sympy.stats.joint_rv import JointRandomSymbol
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
@@ -232,6 +236,8 @@ class RandomSymbol(Expr):
             raise TypeError("symbol should be of type Symbol")
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
+        if cls == JointRandomSymbol and isinstance(pspace, SinglePSpace):
+            cls = RandomSymbol
         return Basic.__new__(cls, symbol, pspace)
 
     is_finite = True
@@ -267,6 +273,18 @@ class RandomSymbol(Expr):
 
 class ProductPSpace(PSpace):
     """
+    Abstract class for representing probability spaces with multiple random
+    variables.
+
+    See Also
+    ========
+    sympy.stats.rv.IndependentProductPSpace
+    sympy.stats.joint_rv.JointPSpace
+    """
+    pass
+
+class IndependentProductPSpace(ProductPSpace):
+    """
     A probability space resulting from the merger of two independent probability
     spaces.
 
@@ -282,19 +300,24 @@ class ProductPSpace(PSpace):
         symbols = FiniteSet(*[val.symbol for val in rs_space_dict.keys()])
 
         # Overlapping symbols
-        if len(symbols) < sum(len(space.symbols) for space in spaces):
+        from sympy.stats.joint_rv import MarginalDistribution, CompoundDistribution
+        if len(symbols) < sum(len(space.symbols) for space in spaces if not
+         isinstance(space.distribution, (
+            CompoundDistribution, MarginalDistribution))):
             raise ValueError("Overlapping Random Variables")
 
         if all(space.is_Finite for space in spaces):
             from sympy.stats.frv import ProductFinitePSpace
             cls = ProductFinitePSpace
-        if all(space.is_Continuous for space in spaces):
-            from sympy.stats.crv import ProductContinuousPSpace
-            cls = ProductContinuousPSpace
 
         obj = Basic.__new__(cls, *FiniteSet(*spaces))
 
         return obj
+
+    @property
+    def pdf(self):
+        p = Mul(*[space.pdf for space in self.spaces])
+        return p.subs(dict((rv, rv.symbol) for rv in self.values))
 
     @property
     def rs_space_dict(self):
@@ -316,11 +339,13 @@ class ProductPSpace(PSpace):
     def values(self):
         return sumsets(space.values for space in self.spaces)
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or self.values
         rvs = frozenset(rvs)
         for space in self.spaces:
-            expr = space.integrate(expr, rvs & space.values, **kwargs)
+            expr = space.integrate(expr, rvs & space.values, evaluate=False, **kwargs)
+        if evaluate and hasattr(expr, 'doit'):
+            return expr.doit(**kwargs)
         return expr
 
     @property
@@ -335,6 +360,72 @@ class ProductPSpace(PSpace):
         return dict([(k, v) for space in self.spaces
             for k, v in space.sample().items()])
 
+    def probability(self, condition, **kwargs):
+        cond_inv = False
+        if isinstance(condition, Ne):
+            condition = Eq(condition.args[0], condition.args[1])
+            cond_inv = True
+        expr = condition.lhs - condition.rhs
+        rvs = random_symbols(expr)
+        z = Dummy('z', real=True, Finite=True)
+        dens = self.compute_density(expr)
+        if any([pspace(rv).is_Continuous for rv in rvs]):
+            from sympy.stats.crv import (ContinuousDistributionHandmade,
+                SingleContinuousPSpace)
+            if expr in self.values:
+                # Marginalize all other random symbols out of the density
+                randomsymbols = tuple(set(self.values) - frozenset([expr]))
+                symbols = tuple(rs.symbol for rs in randomsymbols)
+                pdf = self.domain.integrate(self.pdf, symbols, **kwargs)
+                return Lambda(expr.symbol, pdf)
+            dens = ContinuousDistributionHandmade(dens)
+            space = SingleContinuousPSpace(z, dens)
+            result = space.probability(condition.__class__(space.value, 0))
+        else:
+            from sympy.stats.drv import (DiscreteDistributionHandmade,
+                SingleDiscretePSpace)
+            dens = DiscreteDistributionHandmade(dens)
+            space = SingleDiscretePSpace(z, dens)
+            result = space.probability(condition.__class__(space.value, 0))
+        return result if not cond_inv else S.One - result
+
+    def compute_density(self, expr, **kwargs):
+        z = Dummy('z', real=True, finite=True)
+        rvs = random_symbols(expr)
+        if any(pspace(rv).is_Continuous for rv in rvs):
+            expr = self.integrate(DiracDelta(expr - z),
+             **kwargs)
+        else:
+            expr = self.integrate(KroneckerDelta(expr, z),
+             **kwargs)
+        return Lambda(z, expr)
+
+    def compute_cdf(self, expr, **kwargs):
+        raise ValueError("CDF not well defined on multivariate expressions")
+
+    def conditional_space(self, condition, normalize=True, **kwargs):
+        rvs = random_symbols(condition)
+        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        if any([pspace(rv).is_Continuous for rv in rvs]):
+            from sympy.stats.crv import (ConditionalContinuousDomain,
+                ContinuousPSpace)
+            space = ContinuousPSpace
+            domain = ConditionalContinuousDomain(self.domain, condition)
+        elif any([pspace(rv).is_Discrete for rv in rvs]):
+            from sympy.stats.drv import (ConditionalDiscreteDomain,
+                DiscretePSpace)
+            space = DiscretePSpace
+            domain = ConditionalDiscreteDomain(self.domain, condition)
+        elif all([pspace(rv).is_Finite for rv in rvs]):
+            from sympy.stats.frv import FinitePSpace
+            return FinitePSpace.conditional_space(self, condition)
+        if normalize:
+            replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
+            norm = domain.integrate(self.pdf, **kwargs)
+            pdf = self.pdf / norm.xreplace(replacement)
+            density = Lambda(domain.symbols, pdf)
+
+        return space(domain, density)
 
 class ProductDomain(RandomDomain):
     """
@@ -365,6 +456,9 @@ class ProductDomain(RandomDomain):
         if all(domain.is_Continuous for domain in domains2):
             from sympy.stats.crv import ProductContinuousDomain
             cls = ProductContinuousDomain
+        if all(domain.is_Discrete for domain in domains2):
+            from sympy.stats.drv import ProductDiscreteDomain
+            cls = ProductDiscreteDomain
 
         return Basic.__new__(cls, *domains2)
 
@@ -423,13 +517,14 @@ def pspace(expr):
     ========
 
     >>> from sympy.stats import pspace, Normal
-    >>> from sympy.stats.rv import ProductPSpace
+    >>> from sympy.stats.rv import IndependentProductPSpace
     >>> X = Normal('X', 0, 1)
     >>> pspace(2*X + 1) == X.pspace
     True
     """
-
     expr = sympify(expr)
+    if isinstance(expr, RandomSymbol) and expr.pspace != None:
+        return expr.pspace
     rvs = random_symbols(expr)
     if not rvs:
         raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
@@ -437,7 +532,7 @@ def pspace(expr):
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
     # Otherwise make a product space
-    return ProductPSpace(*[rv.pspace for rv in rvs])
+    return IndependentProductPSpace(*[rv.pspace for rv in rvs])
 
 
 def sumsets(sets):
@@ -516,7 +611,16 @@ def given(expr, condition=None, **kwargs):
         if isinstance(results, Intersection) and S.Reals in results.args:
             results = list(results.args[1])
 
-        return sum(expr.subs(rv, res) for res in results)
+        sums = 0
+        for res in results:
+            temp = expr.subs(rv, res)
+            if temp == True:
+                return True
+            if temp != False:
+                sums += expr.subs(rv, res)
+        if sums == 0:
+            return False
+        return sums
 
     # Get full probability space of both the expression and the condition
     fullspace = pspace(Tuple(expr, condition))
@@ -578,7 +682,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
                      for arg in expr.args])
 
     # Otherwise case is simple, pass work off to the ProbabilitySpace
-    result = pspace(expr).integrate(expr)
+    result = pspace(expr).integrate(expr, evaluate=evaluate, **kwargs)
     if evaluate and hasattr(result, 'doit'):
         return result.doit(**kwargs)
     else:
@@ -660,15 +764,19 @@ class Density(Basic):
             return None
 
     def doit(self, evaluate=True, **kwargs):
+        from sympy.stats.joint_rv import JointPSpace
         expr, condition = self.expr, self.condition
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
+        if isinstance(expr, RandomSymbol) and \
+            isinstance(expr.pspace, JointPSpace):
+            return expr.pspace.distribution
         if not random_symbols(expr):
             return Lambda(x, DiracDelta(x - expr))
         if (isinstance(expr, RandomSymbol) and
             hasattr(expr.pspace, 'distribution') and
-            isinstance(pspace(expr), SinglePSpace)):
+            isinstance(pspace(expr), (SinglePSpace))):
             return expr.pspace.distribution
         result = pspace(expr).compute_density(expr, **kwargs)
 
@@ -786,7 +894,7 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
 
     >>> Z = Poisson('Z', 2)
     >>> characteristic_function(Z)
-    Lambda(_t, Sum(2**_x*exp(-2)*exp(_t*_x*I)/factorial(_x), (_x, 0, oo)))
+    Lambda(_t, exp(2*exp(_t*I) - 2))
     """
     if condition is not None:
         return characteristic_function(given(expr, condition, **kwargs), **kwargs)
@@ -798,6 +906,16 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
     else:
         return result
 
+def moment_generating_function(expr, condition=None, evaluate=True, **kwargs):
+    if condition is not None:
+        return moment_generating_function(given(expr, condition, **kwargs), **kwargs)
+
+    result = pspace(expr).compute_moment_generating_function(expr, **kwargs)
+
+    if evaluate and hasattr(result, 'doit'):
+        return result.doit()
+    else:
+        return result
 
 def where(condition, given_condition=None, **kwargs):
     """
@@ -1103,6 +1221,9 @@ def pspace_independent(a, b):
     """
     a_symbols = set(pspace(b).symbols)
     b_symbols = set(pspace(a).symbols)
+
+    if len(set(random_symbols(a)).intersection(random_symbols(b))) != 0:
+        return False
 
     if len(a_symbols.intersection(b_symbols)) == 0:
         return True

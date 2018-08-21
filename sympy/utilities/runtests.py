@@ -31,9 +31,10 @@ import random
 import subprocess
 import signal
 import stat
+import tempfile
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import exec_, PY3, string_types, range
+from sympy.core.compatibility import exec_, PY3, string_types, range, unwrap
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -67,6 +68,10 @@ class Skipped(Exception):
 
 class TimeOutError(Exception):
     pass
+
+class DependencyError(Exception):
+    pass
+
 
 # add more flags ??
 future_flags = division.compiler_flag
@@ -120,7 +125,7 @@ def convert_to_native_paths(lst):
             if pos != -1:
                 if rv[pos + 1] != '\\':
                     rv = rv[:pos + 1] + '\\' + rv[pos + 1:]
-        newlst.append(sys_normcase(rv))
+        newlst.append(os.path.normcase(rv))
     return newlst
 
 
@@ -129,21 +134,10 @@ def get_sympy_dir():
     Returns the root sympy directory and set the global value
     indicating whether the system is case sensitive or not.
     """
-    global sys_case_insensitive
-
     this_file = os.path.abspath(__file__)
     sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
     sympy_dir = os.path.normpath(sympy_dir)
-    sys_case_insensitive = (os.path.isdir(sympy_dir) and
-                            os.path.isdir(sympy_dir.lower()) and
-                            os.path.isdir(sympy_dir.upper()))
-    return sys_normcase(sympy_dir)
-
-
-def sys_normcase(f):
-    if sys_case_insensitive:  # global defined after call to get_sympy_dir()
-        return f.lower()
-    return f
+    return os.path.normcase(sympy_dir)
 
 
 def setup_pprint():
@@ -522,7 +516,7 @@ def _test(*paths, **kwargs):
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
     time_balance = kwargs.get('time_balance', True)
-    blacklist = kwargs.get('blacklist', [])
+    blacklist = kwargs.get('blacklist', ['sympy/integrals/rubi/rubi_tests/tests'])
     blacklist = convert_to_native_paths(blacklist)
     fast_threshold = kwargs.get('fast_threshold', None)
     slow_threshold = kwargs.get('slow_threshold', None)
@@ -668,6 +662,7 @@ def _doctest(*paths, **kwargs):
     split  = kwargs.get('split', None)
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
+        "doc/src/modules/physics/mechanics/autolev_parser.rst",
         "sympy/physics/gaussopt.py", # raises deprecation warning
         "sympy/galgebra.py", # raises ImportError
         "sympy/this.py", # Prints text to the terminal
@@ -675,7 +670,22 @@ def _doctest(*paths, **kwargs):
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
         "sympy/physics/unitsystems.py", # raises deprecation warning
+        "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
+        "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
+        "sympy/parsing/latex/_antlr/latexparser.py", # generated code
+        "sympy/parsing/autolev/test_examples/output.py", # generated code
+        "sympy/integrals/rubi/rubi.py"
     ])
+    # autolev parser tests
+    num = 12
+    for i in range (1, num+1):
+        blacklist.append("sympy/parsing/autolev/test_examples/ruletest" + str(i) + ".py")
+    blacklist.extend(["sympy/parsing/autolev/test_examples/mass_spring_damper.py",
+                      "sympy/parsing/autolev/test_examples/chaos_pendulum.py",
+                      "sympy/parsing/autolev/test_examples/double_pendulum.py",
+                      "sympy/parsing/autolev/test_examples/non_min_pendulum.py"])
 
     if import_module('numpy') is None:
         blacklist.extend([
@@ -698,10 +708,6 @@ def _doctest(*paths, **kwargs):
             # Use a non-windowed backend, so that the tests work on Travis
             import matplotlib
             matplotlib.use('Agg')
-
-            # don't display matplotlib windows
-            from sympy.plotting.plot import unset_show
-            unset_show()
 
 
     if import_module('pyglet') is None:
@@ -729,6 +735,10 @@ def _doctest(*paths, **kwargs):
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
+
+    # Disable showing up of plots
+    from sympy.plotting.plot import unset_show
+    unset_show()
 
     # Show deprecation warnings
     import warnings
@@ -1292,7 +1302,7 @@ class SymPyTests(object):
         for path, folders, files in os.walk(dir):
             g.extend([os.path.join(path, f) for f in files if fnmatch(f, pat)])
 
-        return sorted([sys_normcase(gi) for gi in g])
+        return sorted([os.path.normcase(gi) for gi in g])
 
 
 class SymPyDocTests(object):
@@ -1363,10 +1373,10 @@ class SymPyDocTests(object):
 
             # check if there are external dependencies which need to be met
             if '_doctest_depends_on' in test.globs:
-                has_dependencies = self._process_dependencies(test.globs['_doctest_depends_on'])
-                if has_dependencies is not True:
-                    # has_dependencies is either True or a message
-                    self._reporter.test_skip(v="\n" + has_dependencies)
+                try:
+                    self._check_dependencies(**test.globs['_doctest_depends_on'])
+                except DependencyError as e:
+                    self._reporter.test_skip(v="\n" + str(e))
                     continue
 
             if self._reporter._verbose:
@@ -1435,76 +1445,60 @@ class SymPyDocTests(object):
             # skip files that are not importable (i.e. missing __init__.py)
             g = [x for x in g if importable(x)]
 
-        return [sys_normcase(gi) for gi in g]
+        return [os.path.normcase(gi) for gi in g]
 
-    def _process_dependencies(self, deps):
+    def _check_dependencies(self,
+                            executables=(),
+                            modules=(),
+                            disable_viewers=()):
         """
-        Returns ``False`` if some dependencies are not met and the test should be
-        skipped otherwise returns ``True``.
+        Checks if the dependencies for the test are installed.
+
+        Raises ``DependencyError`` it at least one dependency is not installed.
         """
-        executables = deps.get('exe', None)
-        moduledeps = deps.get('modules', None)
-        viewers = deps.get('disable_viewers', None)
-        pyglet = deps.get('pyglet', None)
 
-        # print deps
+        for executable in executables:
+            if not find_executable(executable):
+                raise DependencyError("Could not find %s" % executable)
 
-        if executables is not None:
-            for ex in executables:
-                found = find_executable(ex)
-                if found is None:
-                    return "Could not find %s" % ex
-        if moduledeps is not None:
-            for extmod in moduledeps:
-                if extmod == 'matplotlib':
-                    matplotlib = import_module(
-                        'matplotlib',
-                        __import__kwargs={'fromlist':
-                                          ['pyplot', 'cm', 'collections']},
-                        min_module_version='1.0.0', catch=(RuntimeError,))
-                    if matplotlib is not None:
-                        pass
-                    else:
-                        return "Could not import matplotlib"
-                else:
-                    # TODO min version support
-                    mod = import_module(extmod)
-                    if mod is not None:
-                        version = "unknown"
-                        if hasattr(mod, '__version__'):
-                            version = mod.__version__
-                    else:
-                        return "Could not import %s" % mod
-        if viewers is not None:
-            import tempfile
+        for module in modules:
+            if module == 'matplotlib':
+                matplotlib = import_module(
+                    'matplotlib',
+                    __import__kwargs={'fromlist':
+                                      ['pyplot', 'cm', 'collections']},
+                    min_module_version='1.0.0', catch=(RuntimeError,))
+                if matplotlib is None:
+                    raise DependencyError("Could not import matplotlib")
+            else:
+                if not import_module(module):
+                    raise DependencyError("Could not import %s" % module)
+
+        if disable_viewers:
             tempdir = tempfile.mkdtemp()
             os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
 
-            if PY3:
-                vw = '#!/usr/bin/env python3\n' \
-                     'import sys\n' \
-                     'if len(sys.argv) <= 1:\n' \
-                     '    exit("wrong number of args")\n'
-            else:
-                vw = '#!/usr/bin/env python\n' \
-                     'import sys\n' \
-                     'if len(sys.argv) <= 1:\n' \
-                     '    exit("wrong number of args")\n'
+            vw = ('#!/usr/bin/env {}\n'
+                  'import sys\n'
+                  'if len(sys.argv) <= 1:\n'
+                  '    exit("wrong number of args")\n').format(
+                      'python3' if PY3 else 'python')
 
-            for viewer in viewers:
+            for viewer in disable_viewers:
                 with open(os.path.join(tempdir, viewer), 'w') as fh:
                     fh.write(vw)
 
                 # make the file executable
                 os.chmod(os.path.join(tempdir, viewer),
                          stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR)
-        if pyglet:
+
+        if 'pyglet' in modules:
             # monkey-patch pyglet s.t. it does not open a window during
             # doctesting
             import pyglet
             class DummyWindow(object):
                 def __init__(self, *args, **kwargs):
-                    self.has_exit=True
+                    self.has_exit = True
                     self.width = 600
                     self.height = 400
 
@@ -1522,7 +1516,6 @@ class SymPyDocTests(object):
 
             pyglet.window.Window = DummyWindow
 
-        return True
 
 class SymPyDocTestFinder(DocTestFinder):
     """
@@ -1532,11 +1525,10 @@ class SymPyDocTestFinder(DocTestFinder):
     object types: modules, functions, classes, methods, staticmethods,
     classmethods, and properties.
 
-    Modified from doctest's version by looking harder for code in the
-    case that it looks like the the code comes from a different module.
-    In the case of decorated functions (e.g. @vectorize) they appear
-    to come from a different module (e.g. multidemensional) even though
-    their code is not there.
+    Modified from doctest's version to look harder for code that
+    appears comes from a different module. For example, the @vectorize
+    decorator makes it look like functions come from multidimensional.py
+    even though their code exists elsewhere.
     """
 
     def _find(self, tests, obj, name, module, source_lines, globs, seen):
@@ -1603,6 +1595,7 @@ class SymPyDocTestFinder(DocTestFinder):
                 self._find(tests, val, valname, module, source_lines,
                            globs, seen)
 
+
         # Look for tests in a class's contained objects.
         if inspect.isclass(obj):
             for valname, val in obj.__dict__.items():
@@ -1612,10 +1605,12 @@ class SymPyDocTestFinder(DocTestFinder):
                 if isinstance(val, classmethod):
                     val = getattr(obj, valname).__func__
 
+
                 # Recurse to methods, properties, and nested classes.
-                if (inspect.isfunction(val) or
+                if ((inspect.isfunction(unwrap(val)) or
                         inspect.isclass(val) or
-                        isinstance(val, property)):
+                        isinstance(val, property)) and
+                    self._from_module(module, val)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
                     if isinstance(val, property):
@@ -1683,6 +1678,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Find the docstring's location in the file.
         if lineno is None:
+            obj = unwrap(obj)
             # handling of properties is not implemented in _find_lineno so do
             # it here
             if hasattr(obj, 'func_closure') and obj.func_closure is not None:
@@ -1704,10 +1700,7 @@ class SymPyDocTestFinder(DocTestFinder):
             if filename[-4:] in (".pyc", ".pyo"):
                 filename = filename[:-1]
 
-        if hasattr(obj, '_doctest_depends_on'):
-            globs['_doctest_depends_on'] = obj._doctest_depends_on
-        else:
-            globs['_doctest_depends_on'] = {}
+        globs['_doctest_depends_on'] = getattr(obj, '_doctest_depends_on', {})
 
         return self._parser.get_doctest(docstring, globs, name,
                                         filename, lineno)
@@ -1915,6 +1908,8 @@ class PyTestReporter(Reporter):
         self._terminal_width = None
         self._default_width = 80
         self._split = split
+        self._active_file = ''
+        self._active_f = None
 
         # TODO: Should these be protected?
         self.slow_test_functions = []
@@ -2096,12 +2091,9 @@ class PyTestReporter(Reporter):
         self.write(t + "\n")
 
     def write_exception(self, e, val, tb):
-        t = traceback.extract_tb(tb)
         # remove the first item, as that is always runtests.py
-        t = t[1:]
-        t = traceback.format_list(t)
-        self.write("".join(t))
-        t = traceback.format_exception_only(e, val)
+        tb = tb.tb_next
+        t = traceback.format_exception(e, val, tb)
         self.write("".join(t))
 
     def start(self, seed=None, msg="test process starts"):

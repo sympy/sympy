@@ -10,6 +10,8 @@ from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import BooleanFunction
 from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
 from sympy.utilities import flatten
@@ -75,6 +77,10 @@ def _process_limits(*symbols):
     limits = []
     orientation = 1
     for V in symbols:
+        if isinstance(V, (Relational, BooleanFunction)):
+            variable = V.atoms(Symbol).pop()
+            V = (variable, V.as_set())
+
         if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
             if isinstance(V, Idx):
                 if V.lower is None or V.upper is None:
@@ -411,7 +417,7 @@ class AddWithLimits(ExprWithLimits):
                 return Mul(*out[True])*self.func(Mul(*out[False]), \
                     *self.limits)
         else:
-            summand = self.func(self.function, self.limits[0:-1]).factor()
+            summand = self.func(self.function, *self.limits[0:-1]).factor()
             if not summand.has(self.variables[-1]):
                 return self.func(1, [self.limits[-1]]).doit()*summand
             elif isinstance(summand, Mul):

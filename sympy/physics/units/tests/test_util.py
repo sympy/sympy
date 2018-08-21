@@ -6,14 +6,17 @@ import warnings
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy import Add, Mul, Pow, Tuple, pi, sin, sqrt, sstr, sympify
+from sympy import (Add, Mul, Pow, Tuple, pi, sin, sqrt, sstr, sympify,
+    symbols)
 from sympy.physics.units import (
     G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
     kilogram, kilometer, length, meter, mile, minute, newton, planck,
     planck_length, planck_mass, planck_temperature, planck_time, radians,
-    second, speed_of_light, steradian, time)
+    second, speed_of_light, steradian, time, km)
 from sympy.physics.units.dimensions import dimsys_default
-from sympy.physics.units.util import convert_to, dim_simplify
+from sympy.physics.units.util import convert_to, dim_simplify, check_dimensions
+from sympy.utilities.pytest import raises
+
 
 
 def NS(e, n=15, **options):
@@ -112,3 +115,53 @@ def test_convert_to_tuples_of_quantities():
     assert NS(convert_to(planck_time, second), n=6) == '5.39116e-44*second'
     assert NS(convert_to(planck_temperature, kelvin), n=7) == '1.416809e+32*kelvin'
     assert NS(convert_to(convert_to(meter, [G, speed_of_light, planck]), meter), n=10) == '1.000000000*meter'
+
+
+def test_eval_simplify():
+    from sympy.physics.units import cm, mm, km, m, K, Quantity, kilo, foot
+    from sympy.simplify.simplify import simplify
+    from sympy.core.symbol import symbols
+    from sympy.utilities.pytest import raises
+    from sympy.core.function import Lambda
+
+    x, y = symbols('x y')
+
+    assert ((cm/mm).simplify()) == 10
+    assert ((km/m).simplify()) == 1000
+    assert ((km/cm).simplify()) == 100000
+    assert ((10*x*K*km**2/m/cm).simplify()) == 1000000000*x*kelvin
+    assert ((cm/km/m).simplify()) == 1/(10000000*centimeter)
+
+    assert (3*kilo*meter).simplify() == 3000*meter
+    assert (4*kilo*meter/(2*kilometer)).simplify() == 2
+    assert (4*kilometer**2/(kilo*meter)**2).simplify() == 4
+
+
+def test_quantity_simplify():
+    from sympy.physics.units.util import quantity_simplify
+    from sympy.physics.units import kilo, foot
+    from sympy.core.symbol import symbols
+
+    x, y = symbols('x y')
+
+    assert quantity_simplify(x*(8*kilo*newton*meter + y)) == x*(8000*meter*newton + y)
+    assert quantity_simplify(foot*inch*(foot + inch)) == foot**2*(foot + foot/12)/12
+    assert quantity_simplify(foot*inch*(foot*foot + inch*(foot + inch))) == foot**2*(foot**2 + foot/12*(foot + foot/12))/12
+    assert quantity_simplify(2**(foot/inch*kilo/1000)*inch) == 4096*foot/12
+    assert quantity_simplify(foot**2*inch + inch**2*foot) == 13*foot**3/144
+
+
+def test_check_dimensions():
+    x = symbols('x')
+    assert check_dimensions(inch + x) == inch + x
+    assert check_dimensions(length + x) == length + x
+    # after subs we get 2*length; check will clear the constant
+    assert check_dimensions((length + x).subs(x, length)) == length
+    raises(ValueError, lambda: check_dimensions(inch + 1))
+    raises(ValueError, lambda: check_dimensions(length + 1))
+    raises(ValueError, lambda: check_dimensions(length + time))
+    raises(ValueError, lambda: check_dimensions(meter + second))
+    raises(ValueError, lambda: check_dimensions(2 * meter + second))
+    raises(ValueError, lambda: check_dimensions(2 * meter + 3 * second))
+    raises(ValueError, lambda: check_dimensions(1 / second + 1 / meter))
+    raises(ValueError, lambda: check_dimensions(2 * meter*(mile + centimeter) + km))

@@ -1,6 +1,6 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
                    SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx, sqrt,
-                   fibonacci)
+                   fibonacci, tribonacci)
 from sympy.series.sequences import SeqExpr, SeqExprOp
 from sympy.utilities.pytest import raises
 
@@ -276,3 +276,5 @@ def test_find_linear_recurrence():
     == ([19/2, -20, 27/2], (-31*x**2 + 32*x - 4)/(27*x**3 - 40*x**2 + 19*x -2))
     assert sequence(fibonacci(n)).find_linear_recurrence(30,gfvar=x) \
     == ([1, 1], -x/(x**2 + x - 1))
+    assert sequence(tribonacci(n)).find_linear_recurrence(30,gfvar=x) \
+    ==  ([1, 1, 1], -x/(x**3 + x**2 + x - 1))

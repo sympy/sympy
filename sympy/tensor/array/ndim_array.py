@@ -1,8 +1,7 @@
 from __future__ import print_function, division
-import collections
 
 from sympy import Basic
-from sympy.core.compatibility import SYMPY_INTS
+from sympy.core.compatibility import SYMPY_INTS, Iterable
 
 
 class NDimArray(object):
@@ -104,13 +103,13 @@ class NDimArray(object):
 
     def _setter_iterable_check(self, value):
         from sympy.matrices.matrices import MatrixBase
-        if isinstance(value, (collections.Iterable, MatrixBase, NDimArray)):
+        if isinstance(value, (Iterable, MatrixBase, NDimArray)):
             raise NotImplementedError
 
     @classmethod
     def _scan_iterable_shape(cls, iterable):
         def f(pointer):
-            if not isinstance(pointer, collections.Iterable):
+            if not isinstance(pointer, Iterable):
                 return [pointer], ()
 
             result = []
@@ -135,7 +134,7 @@ class NDimArray(object):
             shape = iterable.shape
             iterable = list(iterable)
         # Construct N-dim array from an iterable (numpy arrays included):
-        elif shape is None and isinstance(iterable, collections.Iterable):
+        elif shape is None and isinstance(iterable, Iterable):
             iterable, shape = cls._scan_iterable_shape(iterable)
 
         # Construct N-dim array from a Matrix:
@@ -226,11 +225,26 @@ class NDimArray(object):
         from sympy import Derivative
         return Derivative(self.as_immutable(), *args, evaluate=True)
 
+    def _accept_eval_derivative(self, s):
+        return s._visit_eval_derivative_array(self)
+
+    def _visit_eval_derivative_scalar(self, base):
+        # Types are (base: scalar, self: array)
+        return self.applyfunc(lambda x: base.diff(x))
+
+    def _visit_eval_derivative_array(self, base):
+        # Types are (base: array/matrix, self: array)
+        from sympy import derive_by_array
+        return derive_by_array(base, self)
+
+    def _eval_derivative_n_times(self, s, n):
+        return Basic._eval_derivative_n_times(self, s, n)
+
     def _eval_derivative(self, arg):
         from sympy import derive_by_array
         from sympy import Derivative, Tuple
         from sympy.matrices.common import MatrixCommon
-        if isinstance(arg, (collections.Iterable, Tuple, MatrixCommon, NDimArray)):
+        if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):
             return derive_by_array(self, arg)
         else:
             return self.applyfunc(lambda x: x.diff(arg))
@@ -327,7 +341,7 @@ class NDimArray(object):
     def __mul__(self, other):
         from sympy.matrices.matrices import MatrixBase
 
-        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
+        if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [i*other for i in self]
@@ -336,7 +350,7 @@ class NDimArray(object):
     def __rmul__(self, other):
         from sympy.matrices.matrices import MatrixBase
 
-        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
+        if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [other*i for i in self]
@@ -345,7 +359,7 @@ class NDimArray(object):
     def __div__(self, other):
         from sympy.matrices.matrices import MatrixBase
 
-        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
+        if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected")
         other = sympify(other)
         result_list = [i/other for i in self]
@@ -388,12 +402,6 @@ class NDimArray(object):
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
-
-    def _eval_diff(self, *args, **kwargs):
-        if kwargs.pop("evaluate", True):
-            return self.diff(*args)
-        else:
-            return Derivative(self, *args, **kwargs)
 
     def _eval_transpose(self):
         if self.rank() != 2:

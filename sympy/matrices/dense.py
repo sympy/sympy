@@ -7,18 +7,19 @@ from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range, reduce
-from sympy.core.function import count_ops
+from sympy.core.function import count_ops, expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
-from sympy.matrices.matrices import (MatrixBase,
-                                     ShapeError, a2idx, classof)
+from sympy.matrices.matrices import MatrixBase, ShapeError
+from sympy.matrices.common import a2idx, classof
 
 def _iszero(x):
     """Returns True if x is zero."""
@@ -131,14 +132,19 @@ class DenseMatrix(MatrixBase):
     def _cholesky(self):
         """Helper function of cholesky.
         Without the error checks.
-        To be used privately. """
+        To be used privately.
+        Implements the Cholesky-Banachiewicz algorithm.
+        """
         L = zeros(self.rows, self.rows)
         for i in range(self.rows):
             for j in range(i):
-                L[i, j] = (1 / L[j, j])*(self[i, j] -
-                                         sum(L[i, k]*L[j, k] for k in range(j)))
-            L[i, i] = sqrt(self[i, i] -
-                           sum(L[i, k]**2 for k in range(i)))
+                L[i, j] = (1 / L[j, j])*expand_mul(self[i, j] -
+                    sum(L[i, k]*L[j, k].conjugate() for k in range(j)))
+            Lii2 = expand_mul(self[i, i] -
+                sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
+            if Lii2.is_positive is False:
+                raise ValueError("Matrix must be positive-definite")
+            L[i, i] = sqrt(Lii2)
         return self._new(L)
 
     def _diagonal_solve(self, rhs):
@@ -286,14 +292,17 @@ class DenseMatrix(MatrixBase):
         Without the error checks.
         To be used privately.
         """
+        # https://en.wikipedia.org/wiki/Cholesky_decomposition#LDL_decomposition_2
         D = zeros(self.rows, self.rows)
         L = eye(self.rows)
         for i in range(self.rows):
             for j in range(i):
-                L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
-                    L[i, k]*L[j, k]*D[k, k] for k in range(j)))
-            D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k]
-                                       for k in range(i))
+                L[i, j] = (1 / D[j, j])*expand_mul(self[i, j] - sum(
+                    L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j)))
+            D[i, i] = expand_mul(self[i, i] -
+                sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
+            if D[i, i].is_positive is False:
+                raise ValueError("Matrix must be positive-definite")
         return self._new(L), self._new(D)
 
     def _lower_triangular_solve(self, rhs):
@@ -730,7 +739,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         for k in range(0, self.cols):
             self[i, k], self[j, k] = self[j, k], self[i, k]
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         """Applies simplify to the elements of a matrix in place.
 
         This is a shortcut for M.applyfunc(lambda x: simplify(x, ratio, measure))
@@ -741,8 +750,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         sympy.simplify.simplify.simplify
         """
         for i in range(len(self._mat)):
-            self._mat[i] = _simplify(self._mat[i], ratio=ratio,
-                                     measure=measure)
+            self._mat[i] = _simplify(self._mat[i], ratio=ratio, measure=measure,
+                                     rational=rational, inverse=inverse)
 
     def zip_row_op(self, i, k, f):
         """In-place operation on row ``i`` using two-arg functor whose args are

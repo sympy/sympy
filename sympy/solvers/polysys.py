@@ -9,6 +9,7 @@ from sympy.polys.polyerrors import (ComputationFailed,
     PolificationFailed, CoercionFailed, PolynomialError)
 from sympy.simplify import rcollect
 from sympy.utilities import default_sort_key, postfixes
+from sympy.utilities.misc import filldedent
 
 
 class SolveFailed(Exception):
@@ -194,7 +195,10 @@ def solve_generic(polys, opt):
         if len(univariate) == 1:
             f = univariate.pop()
         else:
-            raise NotImplementedError("only zero-dimensional systems supported (finite number of solutions)")
+            raise NotImplementedError(filldedent('''
+                only zero-dimensional systems supported
+                (finite number of solutions)
+                '''))
 
         gens = f.gens
         gen = gens[-1]
@@ -222,6 +226,11 @@ def solve_generic(polys, opt):
             for solution in _solve_reduced_system(new_system, new_gens):
                 solutions.append(solution + (zero,))
 
+        if solutions and len(solutions[0]) != len(gens):
+            raise NotImplementedError(filldedent('''
+                only zero-dimensional systems supported
+                (finite number of solutions)
+                '''))
         return solutions
 
     try:

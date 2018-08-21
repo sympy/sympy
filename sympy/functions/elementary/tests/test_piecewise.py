@@ -2,8 +2,8 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, ITE,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
-    factor_terms, DiracDelta, Heaviside)
+    cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
+    factor_terms, DiracDelta, Heaviside, Add, Mul, factorial)
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -30,9 +30,13 @@ def test_piecewise():
         Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
+    # Explicitly constructed empty Piecewise not accepted
+    raises(TypeError, lambda: Piecewise())
     # False condition is never retained
-    assert Piecewise((x, False)) == Piecewise(
-        (x, False), evaluate=False) == Piecewise()
+    assert Piecewise((2*x, x < 0), (x, False)) == \
+        Piecewise((2*x, x < 0), (x, False), evaluate=False) == \
+        Piecewise((2*x, x < 0))
+    assert Piecewise((x, False)) == Undefined
     raises(TypeError, lambda: Piecewise(x))
     assert Piecewise((x, 1)) == x  # 1 and 0 are accepted as True/False
     raises(TypeError, lambda: Piecewise((x, 2)))
@@ -84,11 +88,16 @@ def test_piecewise():
         ).subs(x, 1) == Piecewise((-1, y < 1), (2, True))
     assert Piecewise((1, Eq(x**2, -1)), (2, x < 0)).subs(x, I) == 1
 
+    p6 = Piecewise((x, x > 0))
+    n = symbols('n', negative=True)
+    assert p6.subs(x, n) == Undefined
+
     # Test evalf
     assert p.evalf() == p
     assert p.evalf(subs={x: -2}) == -1
     assert p.evalf(subs={x: -1}) == 1
     assert p.evalf(subs={x: 1}) == log(1)
+    assert p6.evalf(subs={x: -5}) == Undefined
 
     # Test doit
     f_int = Piecewise((Integral(x, (x, 0, 1)), x < 1))
@@ -201,6 +210,7 @@ def test_piecewise_integrate1b():
 
 
 def test_piecewise_integrate1c():
+    y = symbols('y', real=True)
     for i, g in enumerate([
         Piecewise((1 - x, Interval(0, 1).contains(x)),
             (1 + x, Interval(-1, 0).contains(x)), (0, True)),
@@ -854,13 +864,12 @@ def test_issue_12557():
     True))*cos(_n*x)/pi, (_n, 1, oo)), SeqFormula(0, (_k, 1, oo))))
     '''
     x = symbols("x", real=True)
-    k = symbols('k', integer=True)
+    k = symbols('k', integer=True, finite=True)
     abs2 = lambda x: Piecewise((-x, x <= 0), (x, x > 0))
     assert integrate(abs2(x), (x, -pi, pi)) == pi**2
     func = cos(k*x)*sqrt(x**2)
-    assert factor_terms(integrate(func, (x, -pi, pi))) == Piecewise(
-        (pi**2, Eq(k, 0)), (((-1)**k - 1)/k**2*2, True))
-
+    assert integrate(func, (x, -pi, pi)) == Piecewise(
+        (2*(-1)**k/k**2 - 2/k**2, Ne(k, 0)), (pi**2, True))
 
 def test_issue_6900():
     from itertools import permutations
@@ -929,13 +938,19 @@ def test_issue_4313():
 
 
 def test__intervals():
-    assert Piecewise((x + 2, Eq(x, 3)))._intervals(x) == [(3, 3, 5, 0)]
+    assert Piecewise((x + 2, Eq(x, 3)))._intervals(x) == []
     assert Piecewise(
         (1, x > x + 1),
         (Piecewise((1, x < x + 1)), 2*x < 2*x + 1),
         (1, True))._intervals(x) == [(-oo, oo, 1, 1)]
     assert Piecewise((1, Ne(x, I)), (0, True))._intervals(x) == [
         (-oo, oo, 1, 0)]
+    assert Piecewise((-cos(x), sin(x) >= 0), (cos(x), True)
+        )._intervals(x) == [(0, pi, -cos(x), 0), (-oo, oo, cos(x), 1)]
+    # the following tests that duplicates are removed and that non-Eq
+    # generated zero-width intervals are removed
+    assert Piecewise((1, Abs(x**(-2)) > 1), (0, True)
+        )._intervals(x) == [(-1, 0, 1, 0), (0, 1, 1, 0), (-oo, oo, 0, 1)]
 
 
 def test_containment():
@@ -1070,3 +1085,30 @@ def test_Piecewise_rewrite_as_ITE():
     # used to detect this
     raises(NotImplementedError, lambda: _ITE((x, x < y), (y, x >= a)))
     raises(ValueError, lambda: _ITE((a, x < 2), (b, x > 3)))
+
+
+def test_issue_14052():
+    assert integrate(abs(sin(x)), (x, 0, 2*pi)) == 4
+
+
+def test_issue_14240():
+    assert piecewise_fold(
+        Piecewise((1, a), (2, b), (4, True)) +
+        Piecewise((8, a), (16, True))
+        ) == Piecewise((9, a), (18, b), (20, True))
+    assert piecewise_fold(
+        Piecewise((2, a), (3, b), (5, True)) *
+        Piecewise((7, a), (11, True))
+        ) == Piecewise((14, a), (33, b), (55, True))
+    # these will hang if naive folding is used
+    assert piecewise_fold(Add(*[
+        Piecewise((i, a), (0, True)) for i in range(40)])
+        ) == Piecewise((780, a), (0, True))
+    assert piecewise_fold(Mul(*[
+        Piecewise((i, a), (0, True)) for i in range(1, 41)])
+        ) == Piecewise((factorial(40), a), (0, True))
+
+def test_issue_14787():
+    x = Symbol('x')
+    f = Piecewise((x, x < 1), ((S(58) / 7), True))
+    assert str(f.evalf()) == "Piecewise((x, x < 1), (8.28571428571429, True))"

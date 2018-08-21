@@ -1,14 +1,15 @@
 from __future__ import division
 
-from sympy import Dummy, Rational, S, Symbol, pi, sqrt, oo
+from sympy import Dummy, Rational, S, Symbol, symbols, pi, sqrt, oo
 from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
 from sympy.integrals.integrals import Integral
 from sympy.utilities.pytest import raises, slow
+from sympy import integrate
+from sympy.functions.special.elliptic_integrals import elliptic_e
 
 
-@slow
 def test_ellipse_geom():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
@@ -51,7 +52,7 @@ def test_ellipse_geom():
     assert e3.circumference == 2*pi*y1
     assert e1.plot_interval() == e2.plot_interval() == [t, -pi, pi]
     assert e1.plot_interval(x) == e2.plot_interval(x) == [x, -pi, pi]
-    assert Ellipse(None, 1, None, 1).circumference == 2*pi
+
     assert c1.minor == 1
     assert c1.major == 1
     assert c1.hradius == 1
@@ -74,14 +75,6 @@ def test_ellipse_geom():
     assert e1.encloses(RegularPolygon(p1, 0.5, 3)) is True
     assert e1.encloses(RegularPolygon(p1, 5, 3)) is False
     assert e1.encloses(RegularPolygon(p2, 5, 3)) is False
-
-    # with generic symbols, the hradius is assumed to contain the major radius
-    M = Symbol('M')
-    m = Symbol('m')
-    c = Ellipse(p1, M, m).circumference
-    _x = c.atoms(Dummy).pop()
-    assert c == 4*M*Integral(
-        sqrt((1 - _x**2*(M**2 - m**2)/M**2)/(1 - _x**2)), (_x, 0, 1))
 
     assert e2.arbitrary_point() in e2
 
@@ -288,6 +281,22 @@ def test_ellipse_geom():
     assert cir.rotate(pi/3, Point(0, 1)) == Circle(Point(1/2 + sqrt(3)/2, 1/2 + sqrt(3)/2), 1)
 
 
+def test_construction():
+    e1 = Ellipse(hradius=2, vradius=1, eccentricity=None)
+    assert e1.eccentricity == sqrt(3)/2
+
+    e2 = Ellipse(hradius=2, vradius=None, eccentricity=sqrt(3)/2)
+    assert e2.vradius == 1
+
+    e3 = Ellipse(hradius=None, vradius=1, eccentricity=sqrt(3)/2)
+    assert e3.hradius == 2
+
+    # filter(None, iterator) filters out anything falsey, including 0
+    # eccentricity would be filtered out in this case and the constructor would throw an error
+    e4 = Ellipse(Point(0, 0), hradius=1, eccentricity=0)
+    assert e4.vradius == 1
+
+
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
     e3 = Ellipse(Point(0, 0), y1, y1)
@@ -392,3 +401,30 @@ def test_parameter_value():
     e = Ellipse(Point(0, 0), 3, 5)
     assert e.parameter_value((3, 0), t) == {t: 0}
     raises(ValueError, lambda: e.parameter_value((4, 0), t))
+
+def test_second_moment_of_area():
+    x, y = symbols('x, y')
+    e = Ellipse(Point(0, 0), 5, 4)
+    I_yy = 2*4*integrate(sqrt(25 - x**2)*x**2, (x, -5, 5))/5
+    I_xx = 2*5*integrate(sqrt(16 - y**2)*y**2, (y, -4, 4))/4
+    Y = 3*sqrt(1 - x**2/5**2)
+    I_xy = integrate(integrate(y, (y, -Y, Y))*x, (x, -5, 5))
+    assert I_yy == e.second_moment_of_area()[1]
+    assert I_xx == e.second_moment_of_area()[0]
+    assert I_xy == e.second_moment_of_area()[2]
+
+def test_circumference():
+    M = Symbol('M')
+    m = Symbol('m')
+    assert Ellipse(Point(0, 0), M, m).circumference == 4 * M * elliptic_e((M ** 2 - m ** 2) / M**2)
+
+    assert Ellipse(Point(0, 0), 5, 4).circumference == 20 * elliptic_e(S(9) / 25)
+
+    # degenerate ellipse
+    assert Ellipse(None, 1, None, 1).circumference == 4
+
+    # circle
+    assert Ellipse(None, 1, None, 0).circumference == 2*pi
+
+    # test numerically
+    assert abs(Ellipse(None, hradius=5, vradius=3).circumference.evalf(16) - 25.52699886339813) < 1e-10

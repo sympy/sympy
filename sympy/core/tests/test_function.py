@@ -1,7 +1,7 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
-        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise)
+        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError, _mexpand
@@ -175,6 +175,9 @@ def test_Lambda():
     assert Lambda(x, f(x))(x) == f(x)
     assert Lambda(x, x**2)(e(x)) == x**4
     assert e(e(x)) == x**4
+
+    x1, x2 = (Indexed('x', i) for i in (1, 2))
+    assert Lambda((x1, x2), x1 + x2)(x, y) == x + y
 
     assert Lambda((x, y), x + y).nargs == FiniteSet(2)
 
@@ -555,11 +558,36 @@ def test_diff_wrt():
     assert f(
         sin(x)).diff(x) == Subs(Derivative(f(x), x), (x,), (sin(x),))*cos(x)
 
-    assert diff(f(g(x)), g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
+    assert diff(f(g(x)), g(x)) == Derivative(f(g(x)), g(x))
 
 
 def test_diff_wrt_func_subs():
     assert f(g(x)).diff(x).subs(g, Lambda(x, 2*x)).doit() == f(2*x).diff(x)
+
+
+def test_subs_in_derivative():
+    expr = sin(x*exp(y))
+    u = Function('u')
+    v = Function('v')
+    assert Derivative(expr, y).subs(y, x).doit() == \
+        Derivative(expr, y).doit().subs(y, x)
+    assert Derivative(f(x, y), y).subs(y, x) == Subs(Derivative(f(x, y), y), y, x)
+    assert Derivative(f(x, y), y).subs(x, y) == Subs(Derivative(f(x, y), y), x, y)
+    assert Derivative(f(x, y), y).subs(y, g(x, y)) == Subs(Derivative(f(x, y), y), y, g(x, y))
+    assert Derivative(f(x, y), y).subs(x, g(x, y)) == Subs(Derivative(f(x, y), y), x, g(x, y))
+    assert Derivative(f(u(x), h(y)), h(y)).subs(h(y), g(x, y)) == \
+        Subs(Derivative(f(u(x), h(y)), h(y)), h(y), g(x, y))
+    assert Derivative(f(x, y), y).subs(y, z) == Derivative(f(x, z), z)
+    assert Derivative(f(x, y), y).subs(y, g(y)) == Derivative(f(x, g(y)), g(y))
+    assert Derivative(f(g(x), h(y)), h(y)).subs(h(y), u(y)) == \
+        Derivative(f(g(x), u(y)), u(y))
+    # Issue 13791. No comparison (it's a long formula) but this used to raise an exception.
+    assert isinstance(v(x, y, u(x, y)).diff(y).diff(x).diff(y), Expr)
+    # This is also related to issues 13791 and 13795
+    F = Lambda((x, y), exp(2*x + 3*y))
+    abstract = f(x, f(x, x)).diff(x, 2)
+    concrete = F(x, F(x, x)).diff(x, 2)
+    assert (abstract.replace(f, F).doit() - concrete).simplify() == 0
 
 
 def test_diff_wrt_not_allowed():
@@ -603,18 +631,31 @@ def test_straight_line():
 
 
 def test_sort_variable():
-    vsort = Derivative._sort_variables
+    vsort = Derivative._sort_variable_count
 
-    assert vsort((x, y, z)) == [x, y, z]
-    assert vsort((h(x), g(x), f(x))) == [f(x), g(x), h(x)]
-    assert vsort((z, y, x, h(x), g(x), f(x))) == [x, y, z, f(x), g(x), h(x)]
-    assert vsort((x, f(x), y, f(y))) == [x, f(x), y, f(y)]
-    assert vsort((y, x, g(x), f(x), z, h(x), y, x)) == \
-        [x, y, f(x), g(x), z, h(x), x, y]
-    assert vsort((z, y, f(x), x, f(x), g(x))) == [y, z, f(x), x, f(x), g(x)]
-    assert vsort((z, y, f(x), x, f(x), g(x), z, z, y, x)) == \
-        [y, z, f(x), x, f(x), g(x), x, y, z, z]
+    assert vsort([(x, 3), (y, 2), (z, 1)]) == [(x, 3), (y, 2), (z, 1)]
 
+    assert vsort([(h(x), 1), (g(x), 1), (f(x), 1)]) == [(f(x), 1), (g(x), 1), (h(x), 1)]
+
+    assert vsort([(z, 1), (y, 2), (x, 3), (h(x), 1), (g(x), 1), (f(x), 1)]) == [(x, 3), (y, 2), (z, 1), (f(x), 1), (g(x), 1), (h(x), 1)]
+
+    assert vsort([(x, 1), (f(x), 1), (y, 1), (f(y), 1)]) == [(x, 1), (f(x), 1), (y, 1), (f(y), 1)]
+
+    assert vsort([(y, 1), (x, 2), (g(x), 1), (f(x), 1), (z, 1), (h(x), 1), (y, 2), (x, 1)]) == [(x, 2), (y, 1), (f(x), 1), (g(x), 1), (z, 1), (h(x), 1), (x, 1), (y, 2)]
+
+    assert vsort([(z, 1), (y, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)]) == [(y, 1), (z, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)]
+
+    assert vsort([(z, 1), (y, 2), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1),
+    (z, 2), (z, 1), (y, 1), (x, 1)]) == [(y, 2), (z, 1), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1), (x, 1), (y, 1), (z, 2), (z, 1)]
+
+
+    assert vsort(((y, 2), (x, 1), (y, 1), (x, 1))) == [(x, 1), (x, 1), (y, 2), (y, 1)]
+
+    assert isinstance(vsort([(x, 3), (y, 2), (z, 1)])[0], Tuple)
+
+def test_multiple_derivative():
+    # Issue #15007
+    assert f(x,y).diff(y,y,x,y,x) == Derivative(f(x, y), (x, 2), (y, 3))
 
 def test_unhandled():
     class MyExpr(Expr):
@@ -627,11 +668,6 @@ def test_unhandled():
     expr = MyExpr(x, y, z)
     assert diff(expr, x, y, f(x), z) == Derivative(expr, f(x), z)
     assert diff(expr, f(x), x) == Derivative(expr, f(x), x)
-
-
-def test_issue_4711():
-    x = Symbol("x")
-    assert Symbol('f')(x) == f(x)
 
 
 def test_nfloat():
@@ -668,7 +704,8 @@ def test_nfloat():
 
 
 def test_issue_7068():
-    from sympy.abc import a, b, f
+    from sympy.abc import a, b
+    f = Function('f')
     y1 = Dummy('y')
     y2 = Dummy('y')
     func1 = f(a + y1 * b)
@@ -863,7 +900,7 @@ def test_issue_12005():
     assert e4.diff(y) == S.Zero
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
-    assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
+    assert f(g(x)).diff(g(x), g(x)) == Derivative(f(g(x)), g(x), g(x))
 
 def test_issue_13843():
     x = symbols('x')
@@ -873,6 +910,12 @@ def test_issue_13843():
     assert Derivative(Derivative(f(x), (x, m+5)), (x, n+3)) == Derivative(f(x), (x, m + n + 8))
 
     assert Derivative(f(x), (x, n)).doit() == Derivative(f(x), (x, n))
+
+
+def test_issue_13873():
+    from sympy.abc import x
+    assert sin(x).diff((x, -1)).is_Derivative
+
 
 def test_order_could_be_zero():
     x, y = symbols('x, y')
@@ -912,3 +955,13 @@ def test_function_assumptions():
     # way UndefinedFunction.__new__ works.
     f_real2 = Function('f', is_real=True)
     assert f_real2(x).is_real is True
+
+
+def test_undef_fcn_float_issue_6938():
+    f = Function('ceil')
+    assert not f(0.3).is_number
+    f = Function('sin')
+    assert not f(0.3).is_number
+    assert not f(pi).evalf().is_number
+    x = Symbol('x')
+    assert not f(x).evalf(subs={x:1.2}).is_number

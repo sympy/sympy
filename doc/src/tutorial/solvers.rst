@@ -147,7 +147,7 @@ infinitely many solutions is said to be positive-dimensional):
 
    ``solve`` can be used for such cases:
 
-   >>> solve([x**2 - y**2/exp(x)], [x, y])
+   >>> solve([x**2 - y**2/exp(x)], [x, y], dict=True)
    ⎡⎧             ⎛y⎞⎫⎤
    ⎢⎨x: 2⋅LambertW⎜─⎟⎬⎥
    ⎣⎩             ⎝2⎠⎭⎦

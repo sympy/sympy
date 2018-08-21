@@ -229,6 +229,7 @@ def test_Indexed_subs():
 def test_Indexed_properties():
     i, j = symbols('i j', integer=True)
     A = Indexed('A', i, j)
+    assert A.name == 'A[i, j]'
     assert A.rank == 2
     assert A.indices == (i, j)
     assert A.base == IndexedBase('A')

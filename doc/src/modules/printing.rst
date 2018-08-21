@@ -426,16 +426,29 @@ MathMLPrinter
 
 This class is responsible for MathML printing. See ``sympy.printing.mathml``.
 
-More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
+More info on mathml : http://www.w3.org/TR/MathML2
 
-.. autoclass:: MathMLPrinter
+.. autoclass:: MathMLPrinterBase
+
+.. autoclass:: MathMLContentPrinter
    :members:
 
-   .. autoattribute:: MathMLPrinter.printmethod
+   .. autoattribute:: MathMLContentPrinter.printmethod
+
+.. autoclass:: MathMLPresentationPrinter
+   :members:
+
+   .. autoattribute:: MathMLPresentationPrinter.printmethod
 
 .. autofunction:: mathml
 
 .. autofunction:: print_mathml
+
+PythonCodePrinter
+-----------------
+
+.. automodule:: sympy.printing.pycode
+    :members:
 
 PythonPrinter
 -------------

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Derivative
-from sympy.core.function import UndefinedFunction
+from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing
 from sympy.printing.conventions import split_super_sub
@@ -50,7 +50,8 @@ class VectorLatexPrinter(LatexPrinter):
         func = expr.func.__name__
         t = dynamicsymbols._t
 
-        if hasattr(self, '_print_' + func):
+        if hasattr(self, '_print_' + func) and \
+            not isinstance(type(expr), UndefinedFunction):
             return getattr(self, '_print_' + func)(expr, exp)
         elif isinstance(type(expr), UndefinedFunction) and (expr.args == (t,)):
 
@@ -150,13 +151,6 @@ class VectorLatexPrinter(LatexPrinter):
         if len(base_split) is not 1:
             base += '_' + base_split[1]
         return base
-
-    def parenthesize(self, item, level, strict=False):
-        item_latex = self._print(item)
-        if item_latex.startswith(r"\dot") or item_latex.startswith(r"\ddot") or item_latex.startswith(r"\dddot"):
-            return self._print(item)
-        else:
-            return LatexPrinter.parenthesize(self, item, level, strict)
 
 
 class VectorPrettyPrinter(PrettyPrinter):

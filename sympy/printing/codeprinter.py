@@ -35,6 +35,7 @@ class AssignmentError(Exception):
     """
     pass
 
+
 class CodePrinter(StrPrinter):
     """
     The base class for code-printing subclasses.
@@ -58,7 +59,6 @@ class CodePrinter(StrPrinter):
     def __init__(self, settings=None):
 
         super(CodePrinter, self).__init__(settings=settings)
-
         if not hasattr(self, 'reserved_words'):
             self.reserved_words = set()
 
@@ -282,6 +282,15 @@ class CodePrinter(StrPrinter):
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
 
+    def _print_String(self, string):
+        return str(string)
+
+    def _print_QuotedString(self, arg):
+        return '"%s"' % arg.text
+
+    def _print_Comment(self, string):
+        return self._get_comment(str(string))
+
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -318,6 +327,26 @@ class CodePrinter(StrPrinter):
             rhs_code = self._print(rhs)
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
 
+    def _print_AugmentedAssignment(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        return self._get_statement("{0} {1} {2}".format(
+            *map(lambda arg: self._print(arg),
+                 [lhs_code, expr.op, rhs_code])))
+
+    def _print_FunctionCall(self, expr):
+        return '%s(%s)' % (
+            expr.name,
+            ', '.join(map(lambda arg: self._print(arg),
+                          expr.function_args)))
+
+    def _print_Variable(self, expr):
+        return self._print(expr.symbol)
+
+    def _print_Statement(self, expr):
+        arg, = expr.args
+        return self._get_statement(self._print(arg))
+
     def _print_Symbol(self, expr):
 
         name = super(CodePrinter, self)._print_Symbol(expr)
@@ -331,7 +360,7 @@ class CodePrinter(StrPrinter):
         else:
             return name
 
-    def _print_Function(self, expr, **kwargs):
+    def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
             func = None
@@ -343,7 +372,7 @@ class CodePrinter(StrPrinter):
                         break
             if func is not None:
                 try:
-                    return func(self, *[self.parenthesize(item, 0) for item in expr.args], **kwargs)
+                    return func(self, *[self.parenthesize(item, 0) for item in expr.args])
                 except TypeError:
                     try:
                         return func(*[self.parenthesize(item, 0) for item in expr.args])
@@ -372,6 +401,8 @@ class CodePrinter(StrPrinter):
     def _print_EulerGamma(self, expr):
         return self._print_NumberSymbol(expr)
     def _print_GoldenRatio(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_TribonacciConstant(self, expr):
         return self._print_NumberSymbol(expr)
     def _print_Exp1(self, expr):
         return self._print_NumberSymbol(expr)
@@ -420,6 +451,8 @@ class CodePrinter(StrPrinter):
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
+        pow_paren = []  # Will collect all pow with more than one base element and exp = -1
+
         if self.order not in ('old', 'none'):
             args = expr.as_ordered_factors()
         else:
@@ -432,6 +465,8 @@ class CodePrinter(StrPrinter):
                 if item.exp != -1:
                     b.append(Pow(item.base, -item.exp, evaluate=False))
                 else:
+                    if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
+                        pow_paren.append(item)
                     b.append(Pow(item.base, -item.exp))
             else:
                 a.append(item)
@@ -440,6 +475,11 @@ class CodePrinter(StrPrinter):
 
         a_str = [self.parenthesize(x, prec) for x in a]
         b_str = [self.parenthesize(x, prec) for x in b]
+
+        # To parenthesize Pow with exp = -1 and having more than one Symbol
+        for item in pow_paren:
+            if item.base in b:
+                b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
 
         if len(b) == 0:
             return sign + '*'.join(a_str)

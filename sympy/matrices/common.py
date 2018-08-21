@@ -6,7 +6,6 @@ etc.).
 
 from __future__ import print_function, division
 
-import collections
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
@@ -15,7 +14,7 @@ from sympy.core.function import count_ops
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, range, \
-    NotIterable
+    NotIterable, Iterable
 
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
@@ -25,7 +24,7 @@ from sympy.assumptions.refine import refine
 from sympy.core.decorators import call_highest_priority
 
 from types import FunctionType
-
+from collections import defaultdict
 
 class MatrixError(Exception):
     pass
@@ -741,7 +740,7 @@ class MatrixSpecial(MatrixRequired):
                                                                          diag_rows, diag_cols))
 
         # fill a default dict with the diagonal entries
-        diag_entries = collections.defaultdict(lambda: S.Zero)
+        diag_entries = defaultdict(lambda: S.Zero)
         row_pos, col_pos = 0, 0
         for m in args:
             if hasattr(m, 'rows'):
@@ -1770,7 +1769,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: x.replace(F, G, map))
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         """Apply simplify to each element of the matrix.
 
         Examples
@@ -1784,7 +1783,8 @@ class MatrixOperations(MatrixRequired):
         >>> _.simplify()
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.simplify(ratio, measure))
+        return self.applyfunc(lambda x: x.simplify(ratio=ratio, measure=measure,
+                                                   rational=rational, inverse=inverse))
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
@@ -1938,6 +1938,10 @@ class MatrixArithmetic(MatrixRequired):
     def _eval_scalar_rmul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
+    def _eval_Mod(self, other):
+        from sympy import Mod
+        return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
+
     # python arithmetic functions
     def __abs__(self):
         """Returns a new matrix with entry-wise absolute values."""
@@ -2023,7 +2027,7 @@ class MatrixArithmetic(MatrixRequired):
             return MatrixArithmetic._eval_matrix_mul(self, other)
 
         # if 'other' is not iterable then scalar multiplication.
-        if not isinstance(other, collections.Iterable):
+        if not isinstance(other, Iterable):
             try:
                 return self._eval_scalar_mul(other)
             except TypeError:
@@ -2095,7 +2099,7 @@ class MatrixArithmetic(MatrixRequired):
             return MatrixArithmetic._eval_matrix_rmul(self, other)
 
         # if 'other' is not iterable then scalar multiplication.
-        if not isinstance(other, collections.Iterable):
+        if not isinstance(other, Iterable):
             try:
                 return self._eval_scalar_rmul(other)
             except TypeError:
@@ -2307,7 +2311,7 @@ def classof(A, B):
     ========
 
     >>> from sympy import Matrix, ImmutableMatrix
-    >>> from sympy.matrices.matrices import classof
+    >>> from sympy.matrices.common import classof
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
@@ -2318,7 +2322,7 @@ def classof(A, B):
             return A.__class__
         else:
             return B.__class__
-    except Exception:
+    except AttributeError:
         pass
     try:
         import numpy
@@ -2326,6 +2330,6 @@ def classof(A, B):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except Exception:
+    except (AttributeError, ImportError):
         pass
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))

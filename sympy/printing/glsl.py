@@ -190,7 +190,7 @@ class GLSLPrinter(CodePrinter):
             close_lines.append("}")
         return open_lines, close_lines
 
-    def _print_Function_with_args(self, func, *args):
+    def _print_Function_with_args(self, func, func_args):
         if func in self.known_functions:
             cond_func = self.known_functions[func]
             func = None
@@ -202,12 +202,12 @@ class GLSLPrinter(CodePrinter):
                         break
             if func is not None:
                 try:
-                    return func(*[self.parenthesize(item, 0) for item in args])
+                    return func(*[self.parenthesize(item, 0) for item in func_args])
                 except TypeError:
-                    return "%s(%s)" % (func, self.stringify(args, ", "))
+                    return "%s(%s)" % (func, self.stringify(func_args, ", "))
         elif isinstance(func, Lambda):
             # inlined function
-            return self._print(func(*args))
+            return self._print(func(*func_args))
         else:
             return self._print_not_supported(func)
 
@@ -238,7 +238,8 @@ class GLSLPrinter(CodePrinter):
             # operators. This has the downside that inline operators will
             # not work for statements that span multiple lines (Matrix or
             # Indexed expressions).
-            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
+            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c),
+                                               self._print(e))
                     for e, c in expr.args[:-1]]
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
@@ -254,7 +255,8 @@ class GLSLPrinter(CodePrinter):
         for i in reversed(range(expr.rank)):
             elem += expr.indices[i]*offset
             offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
+        return "%s[%s]" % (self._print(expr.base.label),
+                           self._print(elem))
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
@@ -268,7 +270,10 @@ class GLSLPrinter(CodePrinter):
             except TypeError:
                 e = self._print(expr.exp)
             # return self.known_functions['pow']+'(%s, %s)' % (self._print(expr.base),e)
-            return self._print_Function_with_args('pow',self._print(expr.base),e)
+            return self._print_Function_with_args('pow', (
+                self._print(expr.base),
+                e
+            ))
 
     def _print_int(self, expr):
         return str(float(expr))
@@ -278,14 +283,14 @@ class GLSLPrinter(CodePrinter):
 
     def _print_Add(self, expr, order=None):
         if(self._settings['use_operators']):
-            return CodePrinter._print_Add(self,expr,order)
+            return CodePrinter._print_Add(self, expr, order=order)
 
         terms = expr.as_ordered_terms()
 
         def partition(p,l):
             return reduce(lambda x, y: (x[0]+[y], x[1]) if p(y) else (x[0], x[1]+[y]), l,  ([], []))
         def add(a,b):
-            return self._print_Function_with_args('add',a,b)
+            return self._print_Function_with_args('add', (a, b))
             # return self.known_functions['add']+'(%s, %s)' % (a,b)
         neg, pos = partition(lambda arg: _coeff_isneg(arg), terms)
         s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
@@ -293,19 +298,19 @@ class GLSLPrinter(CodePrinter):
             # sum the absolute values of the negative terms
             neg = reduce(lambda a,b: add(a,b), map(lambda n: self._print(-n),neg))
             # then subtract them from the positive terms
-            s = self._print_Function_with_args('sub',pos,neg)
+            s = self._print_Function_with_args('sub', (pos,neg))
             # s = self.known_functions['sub']+'(%s, %s)' % (pos,neg)
         return s
 
-    def _print_Mul(self, expr, order=None):
+    def _print_Mul(self, expr, **kwargs):
         if(self._settings['use_operators']):
-            return CodePrinter._print_Mul(self,expr)
+            return CodePrinter._print_Mul(self, expr, **kwargs)
         terms = expr.as_ordered_factors()
         def mul(a,b):
             # return self.known_functions['mul']+'(%s, %s)' % (a,b)
-            return self._print_Function_with_args('mul',a,b)
+            return self._print_Function_with_args('mul', (a,b))
 
-        s = reduce(lambda a,b: mul(a,b), map(lambda t: self._print(t),terms))
+        s = reduce(lambda a,b: mul(a,b), map(lambda t: self._print(t), terms))
         return s
 
 def glsl_code(expr,assign_to=None,**settings):

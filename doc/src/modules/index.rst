@@ -21,6 +21,7 @@ access any SymPy module, or use the list below:
    ntheory.rst
    crypto.rst
    concrete.rst
+   discrete.rst
    evalf.rst
    codegen.rst
    numeric-computation.rst
