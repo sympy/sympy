@@ -15,8 +15,8 @@ def _test_examples(in_filename, out_filename, test_name=""):
     dir_path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
     in_file_path = os.path.join(dir_path, 'autolev', 'test-examples', in_filename)
     correct_file_path = os.path.join(dir_path, 'autolev', 'test-examples', out_filename)
-
-    generated_code = parse_autolev(open(in_file_path), include_numeric=True)
+    with open(in_file_path) as f:
+        generated_code = parse_autolev(f, include_numeric=True)
 
     with open(correct_file_path) as f:
         for idx, line1 in enumerate(f):

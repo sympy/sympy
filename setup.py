@@ -398,7 +398,7 @@ if __name__ == '__main__':
               'sympy.utilities.mathml': ['data/*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
               'sympy.parsing.autolev': ['*.g4'],
-              'sympy.parsing.autolev.test_examples': ['*.al'],
+              'sympy.parsing.autolev.test-examples': ['*.al'],
               'sympy.parsing.autolev.test-examples.pydy-example-repo': ['*.al'],
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.integrals.rubi.parsetools': ['header.py.txt'],
