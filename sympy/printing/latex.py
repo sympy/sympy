@@ -607,8 +607,11 @@ class LatexPrinter(Printer):
         return outstr
 
     def _print_Indexed(self, expr):
-        tex = self._print(expr.base)+'_{%s}' % ','.join(
-            map(self._print, expr.indices))
+        tex_base = self._print(expr.base)
+        if re.search(r'_\{.\}$', tex_base) is not None: 
+        	tex_base = '{'+tex_base+'}'
+        tex = tex_base+'_{%s}' % ','.join(
+        	map(self._print, expr.indices))
         return tex
 
     def _print_IndexedBase(self, expr):
