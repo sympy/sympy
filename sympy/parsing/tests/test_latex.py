@@ -261,28 +261,3 @@ def test_failing_not_parseable():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str)
-
-
-def test_antlr_generation():
-    """ Does rebuilding the parser create the same content as
-        what is checked in?
-    """
-    if not check_antlr_version():
-        return skip('antlr4 not available, skipping')
-
-    tmpdir = tempfile.mkdtemp()
-
-    try:
-        build_parser(tmpdir)
-
-        for filename in sorted(glob.glob(os.path.join(tmpdir, "*.*"))):
-            base = os.path.basename(filename)
-            with open(filename) as generated:
-                with open(os.path.join(dir_latex_antlr, base)) as checked_in:
-                    diff = difflib.context_diff(
-                        checked_in.readlines(),
-                        generated.readlines()
-                    )
-                    assert list(diff) == [], "{} not the same".format(base)
-    finally:
-        shutil.rmtree(tmpdir)
