@@ -1028,10 +1028,10 @@ def test_linear_eq_to_matrix():
 
     # Pure symbolic coefficients
     from sympy.abc import a, b, c, d, e, f, g, h, i, j, k, l
-    eqns3 = [a*x + b*y + c*z - d, e*x + f*y + g*z - h, i*x + j*y + k*z - l]
+    eqns3 = [a*b*x + b*y + c*z - d, e*x + d*x + f*y + g*z - h, i*x + j*y + k*z - l]
     A, B = linear_eq_to_matrix(eqns3, x, y, z)
-    assert A == Matrix([[a, b, c], [e, f, g], [i, j, k]])
-    assert B == Matrix([[d], [h], [l]])
+    assert A == Matrix([[a*b, b, c], [e, f, g], [i, j, k]])
+    assert B == Matrix([[d + e], [h], [l]])
 
     # raise ValueError if no symbols are given
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3))
@@ -1590,8 +1590,8 @@ def test_issue_10397():
 def test_issue_14987():
     raises(ValueError, lambda: linear_eq_to_matrix([x**2], x))
     raises(ValueError, lambda: linear_eq_to_matrix([x*(-3/x + 1) + 2*y - a], [x, y]))
-    assert linear_eq_to_matrix([(x**2-3*x)/(x-3) - 3], x) == (Matrix([[0]]), Matrix([[3]]))
-    assert linear_eq_to_matrix([(x+1)**3-x**3-3*x**2 + 7], x) == (Matrix([[0]]), Matrix([[-8]]))
+    raises(ValueError, lambda: linear_eq_to_matrix([(x**2-3*x)/(x-3) - 3], x))
+    raises(ValueError, lambda: linear_eq_to_matrix([(x+1)**3-x**3-3*x**2 + 7], x))
     raises(ValueError, lambda: linear_eq_to_matrix([x*(1/x+1) + y], [x, y]))
     raises(ValueError, lambda: linear_eq_to_matrix([(x + 1)*y], [x, y]))
 
