@@ -45,7 +45,6 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols, has_dups
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
-from sympy.core.function import diff, expand_mul
 
 from types import GeneratorType
 
