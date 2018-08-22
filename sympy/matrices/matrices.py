@@ -1118,7 +1118,7 @@ class MatrixEigen(MatrixSubspaces):
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
         """
-        simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
+        simplify = flags.get('simplify', _simplify) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
 
         mat = self
@@ -1144,7 +1144,7 @@ class MatrixEigen(MatrixSubspaces):
                     eigs[diagonal_entry] += 1
         else:
             flags.pop('simplify', None)  # pop unsupported flag
-            eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
+            eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify), **flags)
 
         # make sure the algebraic multiplicty sums to the
         # size of the matrix
@@ -1160,9 +1160,9 @@ class MatrixEigen(MatrixSubspaces):
             # With 'multiple' flag set true, simplify() will be mapped for the list
             # Otherwise, simplify() will be mapped for the keys of the dictionary
             if not multiple:
-                return dict(map(lambda item: (_simplify(item[0]), item[1]), eigs.items()))
+                return dict(map(lambda item: (simplify(item[0]), item[1]), eigs.items()))
             else:
-                return list(map(lambda item: _simplify(item), eigs))
+                return list(map(lambda item: simplify(item), eigs))
 
     def eigenvects(self, error_when_incomplete=True, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
