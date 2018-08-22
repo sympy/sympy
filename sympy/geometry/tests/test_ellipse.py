@@ -24,6 +24,7 @@ def test_object_from_equation():
     raises(GeometryError, lambda: Circle.object_from_equation(x ** 2 + y ** 2 + 25))
     raises(GeometryError, lambda: Circle.object_from_equation(a ** 2 + b ** 2 + 25, x='a', y='b'))
     raises(GeometryError, lambda: Circle.object_from_equation(x ** 2 + 6 * y + 8))
+    raises(ValueError, lambda: Circle.object_from_equation(a**2 + b**2 + 3*a + 4*b - 8))
 
 
 def test_ellipse_geom():
