@@ -1152,7 +1152,17 @@ class MatrixEigen(MatrixSubspaces):
             isinstance(eigs, dict) else len(eigs)) != self.cols:
             raise MatrixError("Could not compute eigenvalues for {}".format(self))
 
-        return eigs
+        # Since 'simplify' flag is unsupported in roots()
+        # simplify() function will be applied once at the end of the routine.
+        if not simplify:
+            return eigs
+        else:
+            # With 'multiple' flag set true, simplify() will be mapped for the list
+            # Otherwise, simplify() will be mapped for the keys of the dictionary
+            if not multiple:
+                return dict(map(lambda item: (_simplify(item[0]), item[1]), eigs.items()))
+            else:
+                return list(map(lambda item: _simplify(item), eigs))
 
     def eigenvects(self, error_when_incomplete=True, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
