@@ -1118,6 +1118,8 @@ class MatrixEigen(MatrixSubspaces):
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
         """
+        simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
+
         mat = self
         if not mat:
             return {}
