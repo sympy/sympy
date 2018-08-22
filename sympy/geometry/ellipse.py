@@ -120,8 +120,7 @@ class Ellipse(GeometrySet):
         return super(Ellipse, self).__hash__()
 
     def __new__(
-        cls, center=None, hradius=None, vradius=None, eccentricity=None,
-        **kwargs):
+        cls, center=None, hradius=None, vradius=None, eccentricity=None, **kwargs):
         hradius = sympify(hradius)
         vradius = sympify(vradius)
 
@@ -136,14 +135,13 @@ class Ellipse(GeometrySet):
             raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
 
         if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
-            raise ValueError('Exactly two arguments of "hradius", '
-                             '"vradius", and "eccentricity" must not be None."')
+            raise ValueError('Exactly two arguments of "hradius", "vradius", and "eccentricity" must not be None."')
 
         if eccentricity is not None:
             if hradius is None:
-                hradius = vradius / sqrt(1 - eccentricity ** 2)
+                hradius = vradius / sqrt(1 - eccentricity**2)
             elif vradius is None:
-                vradius = hradius * sqrt(1 - eccentricity ** 2)
+                vradius = hradius * sqrt(1 - eccentricity**2)
 
         if hradius == vradius:
             return Circle(center, hradius, **kwargs)
@@ -241,8 +239,8 @@ class Ellipse(GeometrySet):
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError(filldedent('Symbol %s already appears in object '
                                         'and cannot be used as a parameter.' % t.name))
-        return Point(self.center.x + self.hradius * cos(t),
-                     self.center.y + self.vradius * sin(t))
+        return Point(self.center.x + self.hradius*cos(t),
+                     self.center.y + self.vradius*sin(t))
 
     @property
     def area(self):
@@ -317,12 +315,12 @@ class Ellipse(GeometrySet):
         """
         if self.eccentricity == 1:
             # degenerate
-            return 4 * self.major
+            return 4*self.major
         elif self.eccentricity == 0:
             # circle
-            return 2 * pi * self.hradius
+            return 2*pi*self.hradius
         else:
-            return 4 * self.major * elliptic_e(self.eccentricity ** 2)
+            return 4*self.major*elliptic_e(self.eccentricity**2)
 
     @property
     def eccentricity(self):
@@ -392,7 +390,7 @@ class Ellipse(GeometrySet):
             # (which is the same as the major axis length) then p is inside
             # the ellipse
             h1, h2 = [f.distance(p) for f in self.foci]
-            test = 2 * self.major - (h1 + h2)
+            test = 2*self.major - (h1 + h2)
         else:
             test = self.radius - self.center.distance(p)
 
@@ -430,8 +428,8 @@ class Ellipse(GeometrySet):
         """
         x = _symbol(x, real=True)
         y = _symbol(y, real=True)
-        t1 = ((x - self.center.x) / self.hradius) ** 2
-        t2 = ((y - self.center.y) / self.vradius) ** 2
+        t1 = ((x - self.center.x) / self.hradius)**2
+        t2 = ((y - self.center.y) / self.vradius)**2
         return t1 + t2 - 1
 
     def evolute(self, x='x', y='y'):
@@ -462,9 +460,9 @@ class Ellipse(GeometrySet):
             raise NotImplementedError('Evolute of arbitrary Ellipse is not supported.')
         x = _symbol(x, real=True)
         y = _symbol(y, real=True)
-        t1 = (self.hradius * (x - self.center.x)) ** Rational(2, 3)
-        t2 = (self.vradius * (y - self.center.y)) ** Rational(2, 3)
-        return t1 + t2 - (self.hradius ** 2 - self.vradius ** 2) ** Rational(2, 3)
+        t1 = (self.hradius*(x - self.center.x))**Rational(2, 3)
+        t2 = (self.vradius*(y - self.center.y))**Rational(2, 3)
+        return t1 + t2 - (self.hradius**2 - self.vradius**2)**Rational(2, 3)
 
     @property
     def foci(self):
@@ -503,7 +501,7 @@ class Ellipse(GeometrySet):
 
         # calculate focus distance manually, since focus_distance calls this
         # routine
-        fd = sqrt(self.major ** 2 - self.minor ** 2)
+        fd = sqrt(self.major**2 - self.minor**2)
         if hr == self.minor:
             # foci on the y-axis
             return (c + Point(0, -fd), c + Point(0, fd))
@@ -1041,8 +1039,8 @@ class Ellipse(GeometrySet):
             rng = random
         # simplify this now or else the Float will turn s into a Float
         r = Rational(rng.random())
-        c = 2 * r - 1
-        s = sqrt(1 - c ** 2)
+        c = 2*r - 1
+        s = sqrt(1 - c**2)
         return Point(x.subs(cos(t), c), y.subs(sin(t), s))
 
     def reflect(self, line):
@@ -1108,7 +1106,7 @@ class Ellipse(GeometrySet):
             return self.func(self.center.rotate(angle, pt), self.hradius)
         if (angle / S.Pi).is_integer:
             return super(Ellipse, self).rotate(angle, pt)
-        if (2 * angle / S.Pi).is_integer:
+        if (2*angle / S.Pi).is_integer:
             return self.func(self.center.rotate(angle, pt), self.vradius, self.hradius)
         # XXX see https://github.com/sympy/sympy/issues/2815 for general ellipes
         raise NotImplementedError('Only rotations of pi/2 are currently supported for Ellipse.')
@@ -1132,7 +1130,7 @@ class Ellipse(GeometrySet):
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         h = self.hradius
         v = self.vradius
-        return self.func(c.scale(x, y), hradius=h * x, vradius=v * y)
+        return self.func(c.scale(x, y), hradius=h*x, vradius=v*y)
 
     def tangent_lines(self, p):
         """Tangent lines between `p` and the ellipse.
@@ -1177,8 +1175,8 @@ class Ellipse(GeometrySet):
 
         if p in self:
             delta = self.center - p
-            rise = (self.vradius ** 2) * delta.x
-            run = -(self.hradius ** 2) * delta.y
+            rise = (self.vradius**2)*delta.x
+            run = -(self.hradius**2)*delta.y
             p2 = Point(simplify(p.x + run),
                        simplify(p.y + rise))
             return [Line(p, p2)]
@@ -1186,7 +1184,7 @@ class Ellipse(GeometrySet):
             if len(self.foci) == 2:
                 f1, f2 = self.foci
                 maj = self.hradius
-                test = (2 * maj -
+                test = (2*maj -
                         Point.distance(f1, p) -
                         Point.distance(f2, p))
             else:
@@ -1273,17 +1271,17 @@ class Ellipse(GeometrySet):
 
         """
 
-        I_xx = (S.Pi * (self.hradius) * (self.vradius ** 3)) / 4
-        I_yy = (S.Pi * (self.hradius ** 3) * (self.vradius)) / 4
+        I_xx = (S.Pi*(self.hradius)*(self.vradius**3)) / 4
+        I_yy = (S.Pi*(self.hradius**3)*(self.vradius)) / 4
         I_xy = 0
 
         if point is None:
             return I_xx, I_yy, I_xy
 
         # parallel axis theorem
-        I_xx = I_xx + self.area * ((point[1] - self.center.y) ** 2)
-        I_yy = I_yy + self.area * ((point[0] - self.center.x) ** 2)
-        I_xy = I_xy + self.area * (point[0] - self.center.x) * (point[1] - self.center.y)
+        I_xx = I_xx + self.area*((point[1] - self.center.y)**2)
+        I_yy = I_yy + self.area*((point[0] - self.center.x)**2)
+        I_xy = I_xy + self.area*(point[0] - self.center.x)*(point[1] - self.center.y)
 
         return I_xx, I_yy, I_xy
 
@@ -1456,9 +1454,9 @@ class Circle(Ellipse):
         """
         x = _symbol(x, real=True)
         y = _symbol(y, real=True)
-        t1 = (x - self.center.x) ** 2
-        t2 = (y - self.center.y) ** 2
-        return t1 + t2 - self.major ** 2
+        t1 = (x - self.center.x)**2
+        t2 = (y - self.center.y)**2
+        return t1 + t2 - self.major**2
 
     def intersection(self, o):
         """The intersection of this circle with another geometrical entity.
@@ -1552,9 +1550,9 @@ class Circle(Ellipse):
         c = c.scale(x, y)
         x, y = [abs(i) for i in (x, y)]
         if x == y:
-            return self.func(c, x * self.radius)
+            return self.func(c, x*self.radius)
         h = v = self.radius
-        return Ellipse(c, hradius=h * x, vradius=v * y)
+        return Ellipse(c, hradius=h*x, vradius=v*y)
 
     @property
     def vradius(self):

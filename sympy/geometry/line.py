@@ -1122,8 +1122,17 @@ class Line(LinearEntity):
         Line2D(Point2D(0, 0), Point2D(1, -3))
         """
 
-        x = var(x)
-        y = var(y)
+        def find(x, equation):
+            free = equation.free_symbols
+            xs = [i for i in free if (i.name if type(x) is str else i) == x]
+            if not xs:
+                raise ValueError('could not find %s' % x)
+            if len(xs) != 1:
+                raise ValueError('ambiguous %s' % x)
+            return xs[0]
+
+        x = find(x, equation)
+        y = find(y, equation)
         if (len(solve(equation, y)) == 0) and (len(solve(equation, x)) != 0) and (degree(poly(equation, x)) == 1):
             x_intercept = solve(equation, x)[0]
             p1 = Point(x_intercept, 0)
