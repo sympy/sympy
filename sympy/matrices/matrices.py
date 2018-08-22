@@ -1119,6 +1119,7 @@ class MatrixEigen(MatrixSubspaces):
         routine. If this is not desired, set flag ``rational`` to False.
         """
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
+        multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
 
         mat = self
         if not mat:
@@ -1132,7 +1133,7 @@ class MatrixEigen(MatrixSubspaces):
                 raise NonSquareMatrixError()
 
             diagonal_entries = [mat[i, i] for i in range(mat.rows)]
-            multiple = flags.pop('multiple', False)
+
             if multiple:
                 eigs = diagonal_entries
             else:
