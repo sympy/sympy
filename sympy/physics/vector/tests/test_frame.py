@@ -158,6 +158,11 @@ def test_dcm():
          cos(q1)*cos(q2)]])
 
 
+# This test has been added to test the _w_diff_dcm() function
+# for which a test was previously not included.
+# Also note that the _w_diff_dcm() function was changed as part of
+# PR #14758 as it was observed to be giving incorrect results
+# when compared with Autolev results.
 def test_w_diff_dcm():
     a = ReferenceFrame('a')
     b = ReferenceFrame('b')

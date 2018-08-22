@@ -200,7 +200,9 @@ def test_gravity():
         for j in range(len(l[i])):
             assert forceList[i][j] == l[i][j]
 
-
+# This function tests the center_of_mass() function
+# that was added in PR #14758 to compute the center of
+# mass of a system of bodies.
 def test_center_of_mass():
     a = ReferenceFrame('a')
     m = symbols('m', real=True)
