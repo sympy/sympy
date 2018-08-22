@@ -42,7 +42,7 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
-from sympy.utilities.iterables import numbered_symbols, uniq
+from sympy.utilities.iterables import numbered_symbols, has_dups
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 from sympy.core.function import diff, expand_mul
@@ -1636,7 +1636,10 @@ def linear_eq_to_matrix(equations, *symbols):
     Here `equations` must be a linear system of equations in
     `symbols`. The order of symbols in input `symbols` will
     determine the order of coefficients in the returned
-    Matrix.
+    Matrix. No simplification of the equations is performed
+    other than converting `Eq(a, b) -> a - b` so equations
+    that might be linear after simplification will raise
+    an error.
 
     The Matrix form corresponds to the augmented matrix form.
     For example:
@@ -1652,6 +1655,13 @@ def linear_eq_to_matrix(equations, *symbols):
          [ 4  2  3 ]          [ 1 ]
      A = [ 3  1  1 ]   b  =   [-6 ]
          [ 2  4  9 ]          [ 2 ]
+
+    Raises
+    ======
+
+    ValueError
+        The equations are not linear in symbols given.
+        The symbols are not given or are not unique.
 
     Examples
     ========
@@ -1686,60 +1696,86 @@ def linear_eq_to_matrix(equations, *symbols):
     * Symbolic coefficients are also supported
 
     >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
-    >>> eqns = [a*x + b*y - c, d*x + e*y - f]
+    >>> eqns = [a*b*x + b*y - c, b*x + d*x + e*y - f]
     >>> A, B = linear_eq_to_matrix(eqns, x, y)
     >>> A
     Matrix([
-    [a, b],
-    [d, e]])
+    [  a*b, b],
+    [b + d, e]])
     >>> B
     Matrix([
     [c],
     [f]])
 
     """
-
     if not symbols:
-        raise ValueError('Symbols must be given, for which coefficients \
-                         are to be found.')
+        raise ValueError(filldedent('''
+            Symbols must be given, for which coefficients
+            are to be found.
+            '''))
 
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
-    free = set(symbols)
-    zero = dict(zip(symbols, [S.Zero]*len(symbols)))
-    if len(symbols) != len(free):
-        raise ValueError('Symbols must be unique.')
+    if has_dups(symbols):
+        raise ValueError(filldedent('''
+            Symbols must be unique.
+            '''))
 
-    M = Matrix([symbols])
     # initialize Matrix with symbols + 1 columns
+    M = Matrix([symbols])
     M = M.col_insert(len(symbols), Matrix([1]))
-    row_no = 1
 
-    for equation in equations:
+    for row_no, equation in enumerate(equations):
         f = sympify(equation)
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
 
-        # Extract coeff of symbols
-        coeff_list = []
-        for symbol in symbols:
-            coeff_list.append(f.coeff(symbol))
+        # initialize args for each coeff to empty
+        coeff_list = [[] for s in symbols]
 
-        # append constant term (term free from symbols);
-        coeff_list.append(-f.xreplace(zero))
+        # get pointers for locations of symbols
+        ix = dict(zip(symbols, range(len(symbols))))
 
-        # Checking linearity
-        if coeff_list[-1] is S.NaN or any(c.free_symbols & free for c in coeff_list):
-            raise ValueError('Equation %s may need simplification before processing here.'%(equation))
+        # separate into terms
+        # e.g. (x + 2*y + x*y + 4*x**3 + 6).as_coeff_add(x,y)
+        # (6, (x, 2*y, 4*x**3, x*y))
+        const, terms = f.as_coeff_add(*symbols)
 
-        # insert equations coeff's into rows
-        M = M.row_insert(row_no, Matrix([coeff_list]))
-        row_no += 1
+        # store constant term
+        coeff_list.append([-const])  # 6 as -6
+
+        # collect coefficients of symbols
+        valid_form = False
+        for t in terms:
+            c, factors = t.as_coeff_mul(*symbols)
+            if len(factors) != 1:
+                # e.g. x*y -> (1, (x, y))
+                break
+            if factors[0] not in symbols:
+                # e.g. x**3 -> (1, (x**3,))
+                break
+            coeff_list[ix[factors[0]]].append(c)
+        else:
+            valid_form = True
+
+        # check if all equations were in valid form
+        if not valid_form:
+            __ = (t, symbols)
+            raise ValueError(filldedent('''
+                The term %s is nonlinear in %s
+                ''' % __))
+
+        # rebuild coefficients
+        coeff_list = [Add(*i) for i in coeff_list]
+
+        # insert coefficients as a row in M
+        M = M.row_insert(row_no + 1, Matrix([coeff_list]))
 
     # delete the initialized (Ist) trivial row
     M.row_del(0)
     A, b = M[:, :-1], M[:, -1:]
+
     return A, b
 
 
