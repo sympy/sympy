@@ -101,8 +101,8 @@ def test_matrix():
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 2, 2)
     Z = MatrixSymbol('Z', 2, 3)
-    assert list(unify(X, Y, {}, variables=[n, 'X'])) == [{'X': 'Y', n: 2}]
-    assert list(unify(X, Z, {}, variables=[n, 'X'])) == []
+    assert list(unify(X, Y, {}, variables=[n, Symbol('X')])) == [{Symbol('X'): Symbol('Y'), n: 2}]
+    assert list(unify(X, Z, {}, variables=[n, Symbol('X')])) == []
 
 def test_non_frankenAdds():
     # the is_commutative property used to fail because of Basic.__new__
