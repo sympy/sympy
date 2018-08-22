@@ -1126,6 +1126,9 @@ class MatrixEigen(MatrixSubspaces):
                 mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
         if mat.is_upper or mat.is_lower:
+            if not self.is_square:
+                raise NonSquareMatrixError()
+
             diagonal_entries = [mat[i, i] for i in range(mat.rows)]
             multiple = flags.pop('multiple', False)
             if multiple:
