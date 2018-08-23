@@ -19,7 +19,7 @@ from sympy.core.containers import Tuple
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log)
+                                expand_log, _mexpand)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
@@ -1666,46 +1666,45 @@ def linear_eq_to_matrix(equations, *symbols):
     ========
 
     >>> from sympy import linear_eq_to_matrix, symbols
-    >>> x, y, z = symbols('x, y, z')
-    >>> eqns = [x + 2*y + 3*z - 1, 3*x + y + z + 6, 2*x + 4*y + 9*z - 2]
+    >>> c, x, y, z = symbols('c, x, y, z')
+
+    The coefficients (numerical or symbolic) of the symbols will
+    be returned as matrices:
+
+    >>> eqns = [c*x + z - 1 - c, y + z, x - y]
     >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
     >>> A
     Matrix([
-    [1, 2, 3],
-    [3, 1, 1],
-    [2, 4, 9]])
-    >>> b
-    Matrix([
-    [ 1],
-    [-6],
-    [ 2]])
-    >>> eqns = [x + z - 1, y + z, x - y]
-    >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
-    >>> A
-    Matrix([
-    [1,  0, 1],
+    [c,  0, 1],
     [0,  1, 1],
     [1, -1, 0]])
     >>> b
     Matrix([
-    [1],
-    [0],
-    [0]])
+    [c + 1],
+    [    0],
+    [    0]])
 
-    * Symbolic coefficients are also supported
+    This routine does not simplify expressions. For example, consider
+    the nonlinear equations.
 
-    >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
-    >>> eqns = [a*b*x + b*y - c, b*x + d*x + e*y - f]
-    >>> A, B = linear_eq_to_matrix(eqns, x, y)
-    >>> A
-    Matrix([
-    [  a*b, b],
-    [b + d, e]])
-    >>> B
-    Matrix([
-    [c],
-    [f]])
+    >>> eqns = [
+    ...     (x**2 - 3*x)/(x - 3) - 3,
+    ...     y**2 - 3*y - y*(y - 4) + x - 4]
+    >>> linear_eq_to_matrix(eqns, [x, y])
+    Traceback (most recent call last):
+    ...
+    ValueError:
+    The term (x**2 - 3*x)/(x - 3) is nonlinear in {x, y}
 
+    Simplifying these equations will discard the removable singularity
+    in the first and reveal the linear structure of the second.
+
+    >>> [e.simplify() for e in eqns]
+    [x - 3, x + y - 4]
+
+    Any needed simplification (expansion, factoring, etc...) needed
+    to make the equations linear must be done before calling this
+    routine.
     """
     if not symbols:
         raise ValueError(filldedent('''
@@ -1715,6 +1714,9 @@ def linear_eq_to_matrix(equations, *symbols):
 
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
+
+    if not hasattr(equations, '__iter__'):
+        equations = [equations]
 
     if has_dups(symbols):
         raise ValueError(filldedent('''
@@ -1760,7 +1762,7 @@ def linear_eq_to_matrix(equations, *symbols):
 
         # check if all equations were in valid form
         if not valid_form:
-            __ = (t, symbols)
+            __ = (t, set(symbols))
             raise ValueError(filldedent('''
                 The term %s is nonlinear in %s
                 ''' % __))
@@ -1921,6 +1923,16 @@ def linsolve(system, *symbols):
     >>> linsolve([], x)
     EmptySet()
 
+    * Although removable singularities and nonlinearity
+      will not raise an error, non-linear systems will:
+
+    >>> linsolve([x*(1/x - 1), (y - 1)**2 - y**2 + 1], x, y)
+    {(1, 1)}
+    >>> linsolve([x**2 - 1], x)
+    Traceback (most recent call last):
+    ...
+    ValueError:
+    The term x**2 is nonlinear in {x}
     """
     if not system:
         return S.EmptySet
@@ -1950,19 +1962,7 @@ def linsolve(system, *symbols):
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
                 '''))
-            system = list(system)
-            for i, eq in enumerate(system):
-                try:
-                    # since we are checking it, we might as well take the
-                    # expanded expr that it will give
-                    system[i] = Poly(eq, symbols).as_expr()
-                    if any (degree(eq, sym) > 1 for sym in symbols):
-                        raise PolynomialError
-                except PolynomialError:
-                    raise ValueError(filldedent('''
-                        %s contains non-linear terms in the
-                        variables to be evaluated
-                    ''') % eq)
+            system = [_mexpand(i, recursive=True) for i in system]
             system, symbols, swap = recast_to_symbols(system, symbols)
             A, b = linear_eq_to_matrix(system, symbols)
             syms_needed_msg = 'free symbols in the equations provided'
