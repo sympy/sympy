@@ -132,7 +132,7 @@ def convert_to(expr, target_units):
 
 def quantity_simplify(expr):
     """Return an equivalent expression in which prefixes are replaced
-    with numerical values and products of related quantities are
+    with numerical values and all units of a given dimension are the
     unified in a canonical manner.
 
     Examples
@@ -143,34 +143,70 @@ def quantity_simplify(expr):
     >>> from sympy.physics.units import foot, inch
     >>> quantity_simplify(kilo*foot*inch)
     250*foot**2/3
+    >>> quantity_simplify(foot - 6*inch)
+    foot/2
     """
 
-    if expr.is_Atom:
+    if expr.is_Atom or not expr.has(Prefix, Quantity):
         return expr
 
-    if isinstance(expr, Prefix):
-        return expr.scale_factor
+    # replace all prefixes with numerical values
+    p = expr.atoms(Prefix)
+    expr = expr.xreplace({p: p.scale_factor for p in p})
 
-    expr = expr.func(*map(quantity_simplify, expr.args))
+    # replace all quantities of given dimension with a canonical
+    # quantity, chosen from those in the expression
+    d = sift(expr.atoms(Quantity), lambda i: i.dimension)
+    for k in d:
+        if len(d[k]) == 1:
+            continue
+        v = list(ordered(d[k]))
+        ref = v[0]/v[0].scale_factor
+        expr = expr.xreplace({vi: ref*vi.scale_factor for vi in v[1:]})
 
-    if not expr.is_Mul or not expr.has(Quantity):
-        return expr
+    return expr
 
-    args_pow = [arg.as_base_exp() for arg in expr.args]
-    quantity_pow, other_pow = sift(
-        args_pow, lambda x: isinstance(x[0], Quantity), binary=True)
-    coeff = Mul.fromiter([
-        Pow(b, e, evaluate=False) for b, e in other_pow])
-    quantity_pow_by_dim = sift(quantity_pow, lambda x: x[0].dimension)
-    new_quantities = []
-    for _, bp in quantity_pow_by_dim.items():
-        if len(bp) == 1:
-            new_quantities.append(bp[0][0]**bp[0][1])
-        else:
-            # just let reference quantity be the first quantity,
-            # picked from an ordered list
-            bp = list(ordered(bp))
-            ref = bp[0][0]/bp[0][0].scale_factor
-            new_quantities.append(Mul.fromiter((
-                (ref*b.scale_factor)**p for b, p in bp)))
-    return coeff*Mul.fromiter(new_quantities)
+
+def check_dimensions(expr):
+    """Return expr if there are not unitless values added to
+    dimensional quantities, else raise a ValueError."""
+    from sympy.solvers.solveset import _term_factors
+    # the case of adding a number to a dimensional quantity
+    # is ignored for the sake of SymPy core routines, so this
+    # function will raise an error now if such an addend is
+    # found.
+    # Also, when doing substitutions, multiplicative constants
+    # might be introduced, so remove those now
+    adds = expr.atoms(Add)
+    DIM_OF = dimsys_default.get_dimensional_dependencies
+    for a in adds:
+        deset = set()
+        for ai in a.args:
+            if ai.is_number:
+                deset.add(())
+                continue
+            dims = []
+            skip = False
+            for i in Mul.make_args(ai):
+                if i.has(Quantity):
+                    i = Dimension(Quantity.get_dimensional_expr(i))
+                if i.has(Dimension):
+                    dims.extend(DIM_OF(i).items())
+                elif i.free_symbols:
+                    skip = True
+                    break
+            if not skip:
+                deset.add(tuple(sorted(dims)))
+                if len(deset) > 1:
+                    raise ValueError(
+                        "addends have incompatible dimensions")
+
+    # clear multiplicative constants on Dimensions which may be
+    # left after substitution
+    reps = {}
+    for m in expr.atoms(Mul):
+        if any(isinstance(i, Dimension) for i in m.args):
+            reps[m] = m.func(*[
+                i for i in m.args if not i.is_number])
+
+    return expr.xreplace(reps)

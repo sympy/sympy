@@ -54,9 +54,10 @@ from sympy import beta as beta_fn
 from sympy import cos, sin, exp, besseli, besselj, besselk
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
-from sympy.stats.rv import _value_check
+from sympy.stats.rv import _value_check, RandomSymbol
 from sympy.matrices import MatrixBase
 from sympy.stats.joint_rv_types import multivariate_rv
+from sympy.stats.joint_rv import MarginalDistribution, JointPSpace, CompoundDistribution
 from sympy.external import import_module
 import random
 
@@ -144,7 +145,10 @@ def rv(symbol, cls, args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
-    return SingleContinuousPSpace(symbol, dist).value
+    pspace = SingleContinuousPSpace(symbol, dist)
+    if any(isinstance(arg, RandomSymbol) for arg in args):
+        pspace = JointPSpace(symbol, CompoundDistribution(dist))
+    return pspace.value
 
 ########################################
 # Continuous Probability Distributions #
@@ -2055,13 +2059,12 @@ def Normal(name, mean, std):
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> pprint(density(m)(y, z))
-              2          2
-             y    y*z   z
-           - -- + --- - -- + z - 1
-      ___    3     3    3
+           /  y   1\ /2*y   z\   /  z    \ /  y   2*z    \
+           |- - + -|*|--- - -| + |- - + 1|*|- - + --- - 1|
+      ___  \  2   2/ \ 3    3/   \  2    / \  3    3     /
     \/ 3 *e
-    ------------------------------
-                 6*pi
+    ------------------------------------------------------
+                             6*pi
 
     >>> marginal_distribution(m, m[0])(1)
      1/(2*sqrt(pi))

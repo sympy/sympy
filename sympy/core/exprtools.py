@@ -1176,7 +1176,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
         if p.is_Add:
             list_args = [do(a) for a in Add.make_args(p)]
             # get a common negative (if there) which gcd_terms does not remove
-            if all(a.as_coeff_Mul()[0] < 0 for a in list_args):
+            if all(a.as_coeff_Mul()[0].extract_multiplicatively(-1) is not None
+                   for a in list_args):
                 cont = -cont
                 list_args = [-a for a in list_args]
             # watch out for exp(-(x+2)) which gcd_terms will change to exp(-x-2)

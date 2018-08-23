@@ -3,10 +3,11 @@ This module adds several functions for interactive source code inspection.
 """
 
 from __future__ import print_function, division
+from sympy.core.decorators import deprecated
 
 import inspect
 
-
+@deprecated(useinstead="?? in IPython/Jupyter or inspect.getsource", issue=14905, deprecated_since_version="1.3")
 def source(object):
     """
     Prints the source code of a given object.

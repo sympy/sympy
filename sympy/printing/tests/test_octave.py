@@ -2,7 +2,7 @@ from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
 from sympy.functions import (Piecewise, sqrt, ceiling, exp, sin, cos, LambertW,
-                             sinc, Max, Min, arg, im, re)
+                             sinc, Max, Min, arg, im, re, zeta)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -398,3 +398,8 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert mcode(F) == "(-B + A)(1, 1)"
+
+
+def test_zeta_printing_issue_14820():
+    assert octave_code(zeta(x)) == 'zeta(x)'
+    assert octave_code(zeta(x, y)) == '% Not supported in Octave:\n% zeta\nzeta(x, y)'

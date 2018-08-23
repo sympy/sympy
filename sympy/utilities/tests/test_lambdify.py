@@ -9,7 +9,8 @@ from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy, sinc)
+    DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
+    digamma, RisingFactorial, besselj, bessely, besseli, besselk)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -23,6 +24,8 @@ import sympy
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
+scipy = import_module('scipy')
+scipy_special = import_module('scipy.special')
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 
@@ -184,6 +187,15 @@ def test_numpy_transl():
     for sym, nump in NUMPY_TRANSLATIONS.items():
         assert sym in sympy.__dict__
         assert nump in numpy.__dict__
+
+def test_scipy_transl():
+    if not scipy:
+        skip("scipy not installed.")
+
+    from sympy.utilities.lambdify import SCIPY_TRANSLATIONS
+    for sym, scip in SCIPY_TRANSLATIONS.items():
+        assert sym in sympy.__dict__
+        assert scip in scipy.__dict__ or scip in scipy.special.__dict__
 
 def test_tensorflow_transl():
     if not tensorflow:
@@ -728,6 +740,14 @@ def test_dummification():
     raises(SyntaxError, lambda: lambdify(2 * F(t), 2 * F(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
 
+def test_curly_matrix_symbol():
+    # Issue #15009
+    curlyv = sympy.MatrixSymbol("{v}", 2, 1)
+    lam = lambdify(curlyv, curlyv)
+    assert lam(1)==1
+    lam = lambdify(curlyv, curlyv, dummify=True)
+    assert lam(1)==1
+
 def test_python_keywords():
     # Test for issue 7452. The automatic dummification should ensure use of
     # Python reserved keywords as symbol names will create valid lambda
@@ -877,6 +897,35 @@ def test_tensorflow_array_arg():
 
     s = tensorflow.Session()
     assert s.run(fcall) == 5
+
+def test_scipy_fns():
+    if not scipy:
+        skip("scipy not installed")
+
+    single_arg_sympy_fns = [erf, erfc, factorial, gamma, loggamma, digamma]
+    single_arg_scipy_fns = [scipy.special.erf, scipy.special.erfc,
+        scipy.special.factorial, scipy.special.gamma, scipy.special.gammaln,
+        scipy.special.psi]
+    numpy.random.seed(0)
+    for (sympy_fn, scipy_fn) in zip(single_arg_sympy_fns, single_arg_scipy_fns):
+        test_values = 20 * numpy.random.rand(20)
+        f = lambdify(x, sympy_fn(x), modules = "scipy")
+        assert numpy.all(abs(f(test_values) - scipy_fn(test_values)) < 1e-15)
+
+    double_arg_sympy_fns = [RisingFactorial, besselj, bessely, besseli,
+        besselk]
+    double_arg_scipy_fns = [scipy.special.poch, scipy.special.jn,
+        scipy.special.yn, scipy.special.iv, scipy.special.kn]
+
+    #suppress scipy warnings
+    import warnings
+    warnings.filterwarnings('ignore', '.*floating point number truncated*')
+
+    for (sympy_fn, scipy_fn) in zip(double_arg_sympy_fns, double_arg_scipy_fns):
+        for i in range(20):
+            test_values = 20 * numpy.random.rand(2)
+            f = lambdify((x,y), sympy_fn(x,y), modules = "scipy")
+            assert abs(f(*test_values) - scipy_fn(*test_values)) < 1e-15
 
 def test_lambdify_inspect():
     f = lambdify(x, x**2)

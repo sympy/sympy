@@ -1769,7 +1769,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: x.replace(F, G, map))
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         """Apply simplify to each element of the matrix.
 
         Examples
@@ -1783,7 +1783,8 @@ class MatrixOperations(MatrixRequired):
         >>> _.simplify()
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.simplify(ratio, measure))
+        return self.applyfunc(lambda x: x.simplify(ratio=ratio, measure=measure,
+                                                   rational=rational, inverse=inverse))
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
@@ -2310,7 +2311,7 @@ def classof(A, B):
     ========
 
     >>> from sympy import Matrix, ImmutableMatrix
-    >>> from sympy.matrices.matrices import classof
+    >>> from sympy.matrices.common import classof
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
@@ -2321,7 +2322,7 @@ def classof(A, B):
             return A.__class__
         else:
             return B.__class__
-    except Exception:
+    except AttributeError:
         pass
     try:
         import numpy
@@ -2329,6 +2330,6 @@ def classof(A, B):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except Exception:
+    except (AttributeError, ImportError):
         pass
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))

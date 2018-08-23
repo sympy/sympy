@@ -137,6 +137,12 @@ def test_sympy__assumptions__sathandlers__CheckIsPrime():
     assert _test_args(CheckIsPrime(Q.positive))
     assert _test_args(CheckIsPrime(Q.positive(5)))
 
+
+@SKIP("abstract Class")
+def test_sympy__codegen__ast__AssignmentBase():
+    from sympy.codegen.ast import AssignmentBase
+    assert _test_args(AssignmentBase(x, 1))
+
 @SKIP("abstract Class")
 def test_sympy__codegen__ast__AugmentedAssignment():
     from sympy.codegen.ast import AugmentedAssignment
@@ -1039,6 +1045,26 @@ def test_sympy__stats__joint_rv__JointPSpace():
 def test_sympy__stats__joint_rv__JointRandomSymbol():
     from sympy.stats.joint_rv import JointRandomSymbol
     assert _test_args(JointRandomSymbol(x))
+
+def test_sympy__stats__joint_rv__JointDistributionHandmade():
+    from sympy import Indexed
+    from sympy.stats.joint_rv import JointDistributionHandmade
+    x1, x2 = (Indexed('x', i) for i in (1, 2))
+    assert _test_args(JointDistributionHandmade(x1 + x2, S.Reals**2))
+
+
+def test_sympy__stats__joint_rv__MarginalDistribution():
+    from sympy.stats.rv import RandomSymbol
+    from sympy.stats.joint_rv import MarginalDistribution
+    r = RandomSymbol(S('r'))
+    assert _test_args(MarginalDistribution(r, (r,)))
+
+
+def test_sympy__stats__joint_rv__CompoundDistribution():
+    from sympy.stats.joint_rv import CompoundDistribution
+    from sympy.stats.drv_types import PoissonDistribution
+    r = PoissonDistribution(x)
+    assert _test_args(CompoundDistribution(PoissonDistribution(r)))
 
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
@@ -4472,3 +4498,42 @@ def test_sympy__physics__wigner__Wigner3j():
 def test_sympy__integrals__rubi__symbol__matchpyWC():
     from sympy.integrals.rubi.symbol import matchpyWC
     assert _test_args(matchpyWC(1, True, 'a'))
+
+def test_sympy__integrals__rubi__utility_function__rubi_unevaluated_expr():
+    from sympy.integrals.rubi.utility_function import rubi_unevaluated_expr
+    a = symbols('a')
+    assert _test_args(rubi_unevaluated_expr(a))
+
+def test_sympy__integrals__rubi__utility_function__exp():
+    from sympy.integrals.rubi.utility_function import exp
+    assert _test_args(exp(5))
+
+def test_sympy__integrals__rubi__utility_function__log():
+    from sympy.integrals.rubi.utility_function import log
+    assert _test_args(log(5))
+
+def test_sympy__integrals__rubi__utility_function__Int():
+    from sympy.integrals.rubi.utility_function import Int
+    assert _test_args(Int(5, x))
+
+def test_sympy__integrals__rubi__utility_function__Util_Coefficient():
+    from sympy.integrals.rubi.utility_function import Util_Coefficient
+    a, x = symbols('a x')
+    assert _test_args(Util_Coefficient(a, x))
+
+def test_sympy__integrals__rubi__utility_function__Gamma():
+    from sympy.integrals.rubi.utility_function import Gamma
+    assert _test_args(Gamma(5))
+
+def test_sympy__integrals__rubi__utility_function__Util_Part():
+    from sympy.integrals.rubi.utility_function import Util_Part
+    a, b = symbols('a b')
+    assert _test_args(Util_Part(a + b, 0))
+
+def test_sympy__integrals__rubi__utility_function__PolyGamma():
+    from sympy.integrals.rubi.utility_function import PolyGamma
+    assert _test_args(PolyGamma(1, 1))
+
+def test_sympy__integrals__rubi__utility_function__ProductLog():
+    from sympy.integrals.rubi.utility_function import ProductLog
+    assert _test_args(ProductLog(1))

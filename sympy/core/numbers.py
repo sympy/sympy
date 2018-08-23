@@ -2455,7 +2455,7 @@ class AlgebraicNumber(Expr):
 
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         from sympy.polys import CRootOf, minpoly
 
         for r in [r for r in self.minpoly.all_roots() if r.func != CRootOf]:

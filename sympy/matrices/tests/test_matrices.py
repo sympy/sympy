@@ -1054,6 +1054,13 @@ def test_eigen():
     assert Matrix([]).eigenvals() == {}
     assert Matrix([]).eigenvects() == []
 
+    # issue 15119
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2], [0, 4], [0, 0]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0], [3, 4], [5, 6]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals(error_when_incomplete = False))
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals(error_when_incomplete = False))
 
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
@@ -1078,7 +1085,8 @@ def test_xreplace():
         assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).xreplace({1: 2})
 
 def test_simplify():
-    f, n = symbols('f, n')
+    n = Symbol('n')
+    f = Function('f')
 
     M = Matrix([[            1/x + 1/y,                 (x + x*y) / x  ],
                 [ (f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n) / pi ]])
@@ -3117,3 +3125,41 @@ def test_issue_14517():
     # test one random eigenvalue, the computation is a little slow
     test_ev = random.choice(list(ev.keys()))
     assert (M - test_ev*eye(4)).det() == 0
+
+def test_issue_14943():
+    # Test that __array__ accepts the optional dtype argument
+    try:
+        from numpy import array
+    except ImportError:
+        skip('NumPy must be available to test creating matrices from ndarrays')
+
+    M = Matrix([[1,2], [3,4]])
+    assert array(M, dtype=float).dtype.name == 'float64'
+
+def test_issue_8240():
+    # Eigenvalues of large triangular matrices
+    n = 200
+
+    diagonal_variables = [Symbol('x%s' % i) for i in range(n)]
+    M = [[0 for i in range(n)] for j in range(n)]
+    for i in range(n):
+        M[i][i] = diagonal_variables[i]
+    M = Matrix(M)
+
+    eigenvals = M.eigenvals()
+    assert len(eigenvals) == n
+    for i in range(n):
+        assert eigenvals[diagonal_variables[i]] == 1
+
+    eigenvals = M.eigenvals(multiple=True)
+    assert set(eigenvals) == set(diagonal_variables)
+
+    # with multiplicity
+    M = Matrix([[x, 0, 0], [1, y, 0], [2, 3, x]])
+    eigenvals = M.eigenvals()
+    assert eigenvals == {x: 2, y: 1}
+
+    eigenvals = M.eigenvals(multiple=True)
+    assert len(eigenvals) == 3
+    assert eigenvals.count(x) == 2
+    assert eigenvals.count(y) == 1

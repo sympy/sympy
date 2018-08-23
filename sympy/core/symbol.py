@@ -264,10 +264,6 @@ class Symbol(AtomicExpr, Boolean):
         """Return a Dummy having the same name and same assumptions as self."""
         return Dummy(self.name, **self._assumptions.generator)
 
-    def __call__(self, *args):
-        from .function import Function
-        return Function(self.name)(*args)
-
     def as_real_imag(self, deep=True, **hints):
         from sympy import im, re
         if hints.get('ignore') == self:
@@ -479,9 +475,6 @@ class Wild(Symbol):
         repl_dict = repl_dict.copy()
         repl_dict[self] = expr
         return repl_dict
-
-    def __call__(self, *args, **kwargs):
-        raise TypeError("'%s' object is not callable" % type(self).__name__)
 
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')

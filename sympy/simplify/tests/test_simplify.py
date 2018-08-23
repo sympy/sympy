@@ -32,7 +32,8 @@ def test_factorial_simplify():
 
 
 def test_simplify_expr():
-    x, y, z, k, n, m, w, f, s, A = symbols('x,y,z,k,n,m,w,f,s,A')
+    x, y, z, k, n, m, w, s, A = symbols('x,y,z,k,n,m,w,s,A')
+    f = Function('f')
 
     assert all(simplify(tmp) == tmp for tmp in [I, E, oo, x, -x, -oo, -E, -I])
 
@@ -67,6 +68,7 @@ def test_simplify_expr():
     e = integrate(x/(x**2 + 3*x + 1), x).diff(x)
     assert simplify(e) == x/(x**2 + 3*x + 1)
 
+    f = Symbol('f')
     A = Matrix([[2*k - m*w**2, -k], [-k, k - m*w**2]]).inv()
     assert simplify((A*Matrix([0, f]))[1]) == \
         -f*(2*k - m*w**2)/(k**2 - (k - m*w**2)*(2*k - m*w**2))
@@ -707,6 +709,10 @@ def test_simplify_function_inverse():
     assert simplify(f(g(sin(x)**2 + cos(x)**2)), inverse=True) == 1
     assert simplify(f(g(x, y)), inverse=True) == f(g(x, y))
     assert simplify(2*asin(sin(3*x)), inverse=True) == 6*x
+    assert simplify(log(exp(x))) == log(exp(x))
+    assert simplify(log(exp(x)), inverse=True) == x
+    assert simplify(log(exp(x), 2), inverse=True) == x/log(2)
+    assert simplify(log(exp(x), 2, evaluate=False), inverse=True) == x/log(2)
 
 
 def test_clear_coefficients():

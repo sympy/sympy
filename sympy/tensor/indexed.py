@@ -160,6 +160,10 @@ class Indexed(Expr):
         return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
+    def name(self):
+        return str(self)
+
+    @property
     def _diff_wrt(self):
         """Allow derivatives with respect to an ``Indexed`` object."""
         return True
@@ -397,13 +401,18 @@ class IndexedBase(Expr, NotIterable):
         strides = kw_args.pop('strides', None)
 
         if shape is not None:
-            obj = Expr.__new__(cls, label, shape, **kw_args)
+            obj = Expr.__new__(cls, label, shape)
         else:
-            obj = Expr.__new__(cls, label, **kw_args)
+            obj = Expr.__new__(cls, label)
         obj._shape = shape
         obj._offset = offset
         obj._strides = strides
+        obj._name = str(label)
         return obj
+
+    @property
+    def name(self):
+        return self._name
 
     def __getitem__(self, indices, **kw_args):
         if is_sequence(indices):

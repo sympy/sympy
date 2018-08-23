@@ -239,8 +239,8 @@ def sylvester(f, g, x, method = 1):
       Applications of these Matrices can be found in the references below.
       Especially, for applications of sylvester2, see the first reference!!
 
-      References:
-      ===========
+      References
+      ==========
       1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``On a Theorem
       by Van Vleck Regarding Sturm Sequences. Serdica Journal of Computing,
       Vol. 7, No 4, 101–134, 2013.
@@ -364,8 +364,8 @@ def bezout(p, q, x, method='bz'):
 
     where backward_eye() is the backward identity function.
 
-    References:
-    ===========
+    References
+    ==========
     1. G.M.Diaz-Toca,L.Gonzalez-Vega: Various New Expressions for Subresultants
     and Their Applications. Appl. Algebra in Engin., Communic. and Comp.,
     Vol. 15, 233–266, 2004.
@@ -480,8 +480,8 @@ def subresultants_bezout(p, q, x):
     If the subresultant prs is complete, then the output coincides
     with the Euclidean sequence of the polynomials p, q.
 
-    References:
-    ===========
+    References
+    ==========
     1. G.M.Diaz-Toca,L.Gonzalez-Vega: Various New Expressions for Subresultants
     and Their Applications. Appl. Algebra in Engin., Communic. and Comp.,
     Vol. 15, 233–266, 2004.
@@ -551,8 +551,8 @@ def modified_subresultants_bezout(p, q, x):
     If the modified subresultant prs is complete, and LC( p ) > 0, the output
     coincides with the (generalized) Sturm's sequence of the polynomials p, q.
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Sturm Sequences
     and Modified Subresultant Polynomial Remainder Sequences.''
     Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
@@ -643,8 +643,8 @@ def sturm_pg(p, q, x, method=0):
     subresultants with the help of the Pell-Gordon Theorem of 1917.
     See also the function euclid_pg(p, q, x).
 
-    References:
-    ===========
+    References
+    ==========
     1. Pell A. J., R. L. Gordon. The Modified Remainders Obtained in Finding
     the Highest Common Factor of Two Polynomials. Annals of MatheMatics,
     Second Series, 18 (1917), No. 4, 188–193.
@@ -753,8 +753,8 @@ def sturm_q(p, q, x):
 
         (b) the subresultant prs (reference 3).
 
-    References:
-    ===========
+    References
+    ==========
     1. Pell A. J., R. L. Gordon. The Modified Remainders Obtained in Finding
     the Highest Common Factor of Two Polynomials. Annals of MatheMatics,
     Second Series, 18 (1917), No. 4, 188–193.
@@ -853,8 +853,8 @@ def sturm_amv(p, q, x, method=0):
     Abs( LC(p)**( deg(p)- deg(q)) ) to make them modified subresultants.
     See also the function sturm_pg(p, q, x).
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
     on the Theory of Subresultants.'' Submitted for publication.
 
@@ -940,8 +940,8 @@ def euclid_pg(p, q, x):
     see Lemma 1 in the 1st reference or Theorem 3 in the 2nd reference as well as
     the function sturm_pg(p, q, x).
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
     on the Theory of Subresultants.'' Submitted for publication.
 
@@ -1008,8 +1008,8 @@ def euclid_q(p, q, x):
 
         (b) the subresultant polynomial remainder sequence (references 3).
 
-    References:
-    ===========
+    References
+    ==========
     1. Pell A. J., R. L. Gordon. The Modified Remainders Obtained in Finding
     the Highest Common Factor of Two Polynomials. Annals of MatheMatics,
     Second Series, 18 (1917), No. 4, 188–193.
@@ -1092,8 +1092,8 @@ def euclid_amv(f, g, x):
     computed this way become subresultants with the help of the
     Collins-Brown-Traub formula for coefficient reduction.
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
     on the Theory of Subresultants.'' Submitted for publication.
 
@@ -1165,8 +1165,8 @@ def modified_subresultants_pg(p, q, x):
     If the ``modified'' subresultant prs is complete, and LC( p ) > 0, it coincides
     with the (generalized) Sturm sequence of the polynomials p, q.
 
-    References:
-    ===========
+    References
+    ==========
     1. Pell A. J., R. L. Gordon. The Modified Remainders Obtained in Finding
     the Highest Common Factor of Two Polynomials. Annals of MatheMatics,
     Second Series, 18 (1917), No. 4, 188–193.
@@ -1350,8 +1350,8 @@ def subresultants_pg(p, q, x):
     If the subresultant prs is complete, then it coincides with the
     Euclidean sequence of the polynomials p, q.
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ‘‘On the Remainders
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
     Serdica Journal of Computing, to appear.
@@ -1415,8 +1415,8 @@ def subresultants_amv_q(p, q, x):
     If the subresultant prs is complete, then it coincides with the
     Euclidean sequence of the polynomials p, q.
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
     on the Theory of Subresultants.'' Submitted for publication.
 
@@ -1538,8 +1538,8 @@ def rem_z(p, q, x):
     Sturmian prs of p, q, on one hand, and the subresultant prs of p, q,
     on the other.
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``On the Remainders
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
     Serdica Journal of Computing, to appear.
@@ -1593,8 +1593,8 @@ def subresultants_amv(f, g, x):
     If the subresultant prs is complete, then it coincides with the
     Euclidean sequence of the polynomials p, q.
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
     on the Theory of Subresultants.'' Submitted for publication.
 
@@ -1733,8 +1733,8 @@ def modified_subresultants_amv(p, q, x):
     If the modified subresultant prs is complete, and LC( p ) > 0, it coincides
     with the (generalized) Sturm's sequence of the polynomials p, q.
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ‘‘On the Remainders
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
     Serdica Journal of Computing, to appear.
@@ -1798,8 +1798,8 @@ def correct_sign(deg_f, deg_g, s1, rdel, cdel):
     it is the number of columns to be deleted --- starting with the last column
     forming the square matrix --- from the matrix resulting after the row deletions.
 
-    References:
-    ===========
+    References
+    ==========
     Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Sturm Sequences
     and Modified Subresultant Polynomial Remainder Sequences.''
     Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
@@ -1845,8 +1845,8 @@ def subresultants_rem(p, q, x):
     If the subresultant prs is complete, then it coincides with the
     Euclidean sequence of the polynomials p, q.
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G.:``Three New Methods for Computing Subresultant
     Polynomial Remainder Sequences (PRS’s).'' Serdica Journal of Computing,
     to appear.
@@ -1905,8 +1905,8 @@ def pivot(M, i, j):
     be zeroed, if they are not already 0, according to
     Dodgson-Bareiss' integer preserving transformations.
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G.: ``A new method for computing polynomial greatest
     common divisors and polynomial remainder sequences.''
     Numerische MatheMatik 52, 119-127, 1988.
@@ -2078,8 +2078,8 @@ def subresultants_vv(p, q, x, method = 0):
             of the last rows in s2 will remain unprocessed;
         (b) if deg(p) - deg(q) == 0, p will not appear in the final matrix.
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G.: ``A new method for computing polynomial greatest
     common divisors and polynomial remainder sequences.''
     Numerische MatheMatik 52, 119-127, 1988.
@@ -2218,8 +2218,8 @@ def subresultants_vv_2(p, q, x):
     If the subresultant prs is complete, then it coincides with the
     Euclidean sequence of the polynomials p, q.
 
-    References:
-    ===========
+    References
+    ==========
     1. Akritas, A. G.: ``A new method for computing polynomial greatest
     common divisors and polynomial remainder sequences.''
     Numerische MatheMatik 52, 119-127, 1988.
