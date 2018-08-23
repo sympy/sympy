@@ -34,78 +34,47 @@ def test_linear_2eq_order1():
     eq1 = (Eq(diff(x(t),t), 9*y(t)), Eq(diff(y(t),t), 12*x(t)))
     sol1 = [Eq(x(t), 9*C1*exp(6*sqrt(3)*t) + 9*C2*exp(-6*sqrt(3)*t)), \
     Eq(y(t), 6*sqrt(3)*C1*exp(6*sqrt(3)*t) - 6*sqrt(3)*C2*exp(-6*sqrt(3)*t))]
-    s = dsolve(eq1)
-    assert s == sol1
-    s = [(l.lhs, l.rhs) for l in s]
-    assert eq1[0].subs(s).doit().simplify()
-    assert eq1[1].subs(s).doit().simplify()
+    assert checksysodesol(eq1, sol1) == (True, [0, 0])
 
     eq2 = (Eq(diff(x(t),t), 2*x(t) + 4*y(t)), Eq(diff(y(t),t), 12*x(t) + 41*y(t)))
     sol2 = [Eq(x(t), 4*C1*exp(t*(sqrt(1713)/2 + 43/2)) + 4*C2*exp(t*(-sqrt(1713)/2 + 43/2))), \
     Eq(y(t), C1*(39/2 + sqrt(1713)/2)*exp(t*(sqrt(1713)/2 + 43/2)) + \
     C2*(-sqrt(1713)/2 + 39/2)*exp(t*(-sqrt(1713)/2 + 43/2)))]
-    s = dsolve(eq2)
-    assert s == sol2
-    s = [(l.lhs, l.rhs) for l in s]
-    assert eq2[0].subs(s).doit().simplify()
-    assert eq2[1].subs(s).doit().simplify()
+    assert checksysodesol(eq2, sol2) == (True, [0, 0])
 
     eq3 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
     sol3 = [Eq(x(t), (C1*cos(sqrt(7)*t/2) + C2*sin(sqrt(7)*t/2))*exp(3*t/2)), \
     Eq(y(t), (C1*(-sqrt(7)*sin(sqrt(7)*t/2)/2 + cos(sqrt(7)*t/2)/2) + \
     C2*(sin(sqrt(7)*t/2)/2 + sqrt(7)*cos(sqrt(7)*t/2)/2))*exp(3*t/2))]
-    s = dsolve(eq3)
-    assert s == sol3
-    s = [(l.lhs, l.rhs) for l in s]
-    assert eq3[0].subs(s).doit().simplify()
-    assert eq3[1].subs(s).doit().simplify()
+    assert checksysodesol(eq3, sol3) == (True, [0, 0])
 
     eq4 = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
     sol4 = [Eq(x(t), C1*exp(t*(sqrt(6) + 3)) + C2*exp(t*(-sqrt(6) + 3)) - S(22)/3), \
     Eq(y(t), C1*(2 + sqrt(6))*exp(t*(sqrt(6) + 3)) + C2*(-sqrt(6) + 2)*exp(t*(-sqrt(6) + 3)) - S(5)/3)]
-    s = dsolve(eq4)
-    assert s == sol4
-    s = [(l.lhs, l.rhs) for l in s]
-    assert eq4[0].subs(s).doit().simplify()
-    assert eq4[1].subs(s).doit().simplify()
+    assert checksysodesol(eq4, sol4) == (True, [0, 0])
 
     eq5 = (Eq(diff(x(t),t), x(t) + y(t) + 81), Eq(diff(y(t),t), -2*x(t) + y(t) + 23))
     sol5 = [Eq(x(t), (C1*cos(sqrt(2)*t) + C2*sin(sqrt(2)*t))*exp(t) - S(58)/3), \
     Eq(y(t), (-sqrt(2)*C1*sin(sqrt(2)*t) + sqrt(2)*C2*cos(sqrt(2)*t))*exp(t) - S(185)/3)]
-    s = dsolve(eq5)
-    assert s == sol5
-    s = [(l.lhs, l.rhs) for l in s]
-    assert eq5[0].subs(s).doit().simplify()
-    assert eq5[1].subs(s).doit().simplify()
+    assert checksysodesol(eq5, sol5) == (True, [0, 0])
 
     eq6 = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
-    sol6 = [Eq(x(t), (C1*exp(Integral(2, t)) + C2*exp(-Integral(2, t)))*exp(Integral(5*t, t))), \
-    Eq(y(t), (C1*exp(Integral(2, t)) - C2*exp(-Integral(2, t)))*exp(Integral(5*t, t)))]
+    sol6 = [Eq(x(t), (C1*exp(2*t) + C2*exp(-2*t))*exp(2.5*t**2)), \
+    Eq(y(t), (C1*exp(2*t) - C2*exp(-2*t))*exp(2.5*t**2))]
     s = dsolve(eq6)
-    assert s == sol6
-    s = [(l.lhs, l.rhs) for l in s]
-    assert eq6[0].subs(s).doit().simplify()
-    assert eq6[1].subs(s).doit().simplify()
+    assert checksysodesol(eq6, sol6) == (True, [0, 0])
 
     eq7 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
-    sol7 = [Eq(x(t), (C1*cos(Integral(t**2, t)) + C2*sin(Integral(t**2, t)))*exp(Integral(5*t, t))), \
-    Eq(y(t), (-C1*sin(Integral(t**2, t)) + C2*cos(Integral(t**2, t)))*exp(Integral(5*t, t)))]
-    s = dsolve(eq7)
-    assert s == sol7
-    s = [(l.lhs, l.rhs) for l in s]
-    assert eq7[0].subs(s).doit().simplify()
-    assert eq7[1].subs(s).doit().simplify()
+    sol7 = [Eq(x(t), (C1*cos((t**3)/3) + C2*sin((t**3)/3))*exp(2.5*t**2)), \
+    Eq(y(t), (-C1*sin((t**3)/3) + C2*cos((t**3)/3))*exp(2.5*t**2))]
+    assert checksysodesol(eq7, sol7) == (True, [0, 0])
 
     eq8 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + (5*t+9*t**2)*y(t)))
-    sol8 = [Eq(x(t), (C1*exp((sqrt(77)/2 + 9/2)*Integral(t**2, t)) + \
-    C2*exp((-sqrt(77)/2 + 9/2)*Integral(t**2, t)))*exp(Integral(5*t, t))), \
-    Eq(y(t), (C1*(sqrt(77)/2 + 9/2)*exp((sqrt(77)/2 + 9/2)*Integral(t**2, t)) + \
-    C2*(-sqrt(77)/2 + 9/2)*exp((-sqrt(77)/2 + 9/2)*Integral(t**2, t)))*exp(Integral(5*t, t)))]
-    s = dsolve(eq8)
-    assert s == sol8
-    s = [(l.lhs, l.rhs) for l in s]
-    assert eq8[0].subs(s).doit().simplify()
-    assert eq8[1].subs(s).doit().simplify()
+    sol8 = [Eq(x(t), (C1*exp((sqrt(77)/2 + 9/2)*(t**3)/3) + \
+    C2*exp((-sqrt(77)/2 + 9/2)*(t**3)/3))*exp(2.5*t**2)), \
+    Eq(y(t), (C1*(sqrt(77)/2 + 9/2)*exp((sqrt(77)/2 + 9/2)*(t**3)/3) + \
+    C2*(-sqrt(77)/2 + 9/2)*exp((-sqrt(77)/2 + 9/2)*(t**3)/3))*exp(2.5*t**2))]
+    assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
     eq10 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), (1-t**2)*x(t) + (5*t+9*t**2)*y(t)))
     sol10 = [Eq(x(t), C1*x0(t) + C2*x0(t)*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0(t)**2, t)), \
