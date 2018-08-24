@@ -399,7 +399,7 @@ class MatrixExpr(Expr):
         return 1, MatMul(self)
 
     @staticmethod
-    def from_index_summation(expr, first_index=None, last_index=None):
+    def from_index_summation(expr, first_index=None, last_index=None, dimensions=None):
         r"""
         Parse expression of matrices with explicitly summed indices into a
         matrix expression without indices, if possible.
@@ -548,7 +548,11 @@ class MatrixExpr(Expr):
                 return [(MatrixElement(Add.fromiter(v), *k), k) for k, v in d.items()]
             elif isinstance(expr, KroneckerDelta):
                 i1, i2 = expr.args
-                return [(MatrixElement(S.One, i1, i2), (i1, i2))]
+                if dimensions is not None:
+                    identity = Identity(dimensions[0])
+                else:
+                    identity = S.One
+                return [(MatrixElement(identity, i1, i2), (i1, i2))]
             elif isinstance(expr, MatrixElement):
                 matrix_symbol, i1, i2 = expr.args
                 if i1 in index_ranges:
