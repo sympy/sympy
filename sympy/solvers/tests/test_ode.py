@@ -37,9 +37,9 @@ def test_linear_2eq_order1():
     assert checksysodesol(eq1, sol1) == (True, [0, 0])
 
     eq2 = (Eq(diff(x(t),t), 2*x(t) + 4*y(t)), Eq(diff(y(t),t), 12*x(t) + 41*y(t)))
-    sol2 = [Eq(x(t), 4*C1*exp(t*(sqrt(1713)/2 + 43/2)) + 4*C2*exp(t*(-sqrt(1713)/2 + 43/2))), \
-    Eq(y(t), C1*(39/2 + sqrt(1713)/2)*exp(t*(sqrt(1713)/2 + 43/2)) + \
-    C2*(-sqrt(1713)/2 + 39/2)*exp(t*(-sqrt(1713)/2 + 43/2)))]
+    sol2 = [Eq(x(t), 4*C1*exp(t*(sqrt(1713)/2 + S(43)/2)) + 4*C2*exp(t*(-sqrt(1713)/2 + S(43)/2))), \
+    Eq(y(t), C1*(S(39)/2 + sqrt(1713)/2)*exp(t*(sqrt(1713)/2 + S(43)/2)) + \
+    C2*(-sqrt(1713)/2 + S(39)/2)*exp(t*(-sqrt(1713)/2 + S(43)/2)))]
     assert checksysodesol(eq2, sol2) == (True, [0, 0])
 
     eq3 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
@@ -59,21 +59,21 @@ def test_linear_2eq_order1():
     assert checksysodesol(eq5, sol5) == (True, [0, 0])
 
     eq6 = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
-    sol6 = [Eq(x(t), (C1*exp(2*t) + C2*exp(-2*t))*exp(2.5*t**2)), \
-    Eq(y(t), (C1*exp(2*t) - C2*exp(-2*t))*exp(2.5*t**2))]
+    sol6 = [Eq(x(t), (C1*exp(2*t) + C2*exp(-2*t))*exp(S(5)/2*t**2)), \
+    Eq(y(t), (C1*exp(2*t) - C2*exp(-2*t))*exp(S(5)/2*t**2))]
     s = dsolve(eq6)
     assert checksysodesol(eq6, sol6) == (True, [0, 0])
 
     eq7 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
-    sol7 = [Eq(x(t), (C1*cos((t**3)/3) + C2*sin((t**3)/3))*exp(2.5*t**2)), \
-    Eq(y(t), (-C1*sin((t**3)/3) + C2*cos((t**3)/3))*exp(2.5*t**2))]
+    sol7 = [Eq(x(t), (C1*cos((t**3)/3) + C2*sin((t**3)/3))*exp(S(5)/2*t**2)), \
+    Eq(y(t), (-C1*sin((t**3)/3) + C2*cos((t**3)/3))*exp(S(5)/2*t**2))]
     assert checksysodesol(eq7, sol7) == (True, [0, 0])
 
     eq8 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + (5*t+9*t**2)*y(t)))
-    sol8 = [Eq(x(t), (C1*exp((sqrt(77)/2 + 9/2)*(t**3)/3) + \
-    C2*exp((-sqrt(77)/2 + 9/2)*(t**3)/3))*exp(2.5*t**2)), \
-    Eq(y(t), (C1*(sqrt(77)/2 + 9/2)*exp((sqrt(77)/2 + 9/2)*(t**3)/3) + \
-    C2*(-sqrt(77)/2 + 9/2)*exp((-sqrt(77)/2 + 9/2)*(t**3)/3))*exp(2.5*t**2))]
+    sol8 = [Eq(x(t), (C1*exp((sqrt(77)/2 + S(9)/2)*(t**3)/3) + \
+    C2*exp((-sqrt(77)/2 + S(9)/2)*(t**3)/3))*exp(S(5)/2*t**2)), \
+    Eq(y(t), (C1*(sqrt(77)/2 + S(9)/2)*exp((sqrt(77)/2 + S(9)/2)*(t**3)/3) + \
+    C2*(-sqrt(77)/2 + S(9)/2)*exp((-sqrt(77)/2 + S(9)/2)*(t**3)/3))*exp(S(5)/2*t**2))]
     assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
     eq10 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), (1-t**2)*x(t) + (5*t+9*t**2)*y(t)))
