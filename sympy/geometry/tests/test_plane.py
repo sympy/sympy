@@ -22,9 +22,11 @@ def test_plane():
     pl9 = Plane(p1, normal_vector=(0, 12, 0))
     pl10 = Plane(p1, normal_vector=(-2, 0, 0))
     pl11 = Plane(p2, normal_vector=(0, 0, 1))
+    pl12 = Plane(p1, normal_vector=(1, 1, 1))
     l1 = Line3D(Point3D(5, 0, 0), Point3D(1, -1, 1))
     l2 = Line3D(Point3D(0, -2, 0), Point3D(3, 1, 1))
     l3 = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
+    s1 = Segment3D(Point3D(0, 0, 1), Point3D(0, 0, 2))
 
     assert Plane(p1, p2, p3) != Plane(p1, p3, p2)
     assert Plane(p1, p2, p3).is_coplanar(Plane(p1, p3, p2))
@@ -197,6 +199,9 @@ def test_plane():
     assert pl8.equals(pl8)
     assert pl8.equals(Plane(p1, normal_vector=(0, 0, -12)))
     assert pl8.equals(Plane(p1, normal_vector=(0, 0, -12*sqrt(3))))
+
+    # issue 15069
+    assert pl12.intersection(s1) == []
 
     # issue 8570
     l2 = Line3D(Point3D(S(50000004459633)/5000000000000,
