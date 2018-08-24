@@ -1095,6 +1095,7 @@ class Line(LinearEntity):
     x
 
     >>> # a circle object is returned
+    >>> from sympy.abc import x, y, a, b
     >>> Line(equation=3 * x + y + 18)
     Line2D(Point2D(0, 0), Point2D(1, -3))
     >>> Line(equation=3 * a + b + 18, x='a', y='b')

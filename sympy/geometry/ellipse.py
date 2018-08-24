@@ -1342,6 +1342,7 @@ class Circle(Ellipse):
     (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point2D(1/2, 1/2))
 
     >>> # a circle object is returned
+    >>> from sympy.abc import x, y, a, b
     >>> Circle(equation = x ** 2 + y ** 2 - 25)
     Circle(Point2D(0, 0), 5)
     >>> Circle(equation = a ** 2 + b ** 2 - 25, x='a', y='b')
