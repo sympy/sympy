@@ -11,20 +11,20 @@ from sympy.functions.special.elliptic_integrals import elliptic_e
 
 def test_object_from_equation():
     from sympy.abc import x, y, a, b
-    assert Circle.object_from_equation(x ** 2 + y ** 2 + 3 * x + 4 * y - 8) == Circle(Point2D(S(-3) / 2, -2),
+    assert Circle(equation=x ** 2 + y ** 2 + 3 * x + 4 * y - 8) == Circle(Point2D(S(-3) / 2, -2),
                                                                                       sqrt(57) / 2)
-    assert Circle.object_from_equation(x ** 2 + y ** 2 + 6 * x + 8 * y + 25) == Circle(Point2D(-3, -4), 0)
-    assert Circle.object_from_equation(a ** 2 + b ** 2 + 6 * a + 8 * b + 25, x='a', y='b') == Circle(Point2D(-3, -4), 0)
-    assert Circle.object_from_equation(x ** 2 + y ** 2 - 25) == Circle(Point2D(0, 0), 5)
-    assert Circle.object_from_equation(x ** 2 + y ** 2) == Circle(Point2D(0, 0), 0)
-    assert Circle.object_from_equation(a ** 2 + b ** 2, x='a', y='b') == Circle(Point2D(0, 0), 0)
-    assert Circle.object_from_equation(x ** 2 + y ** 2 + 6 * x + 8) == Circle(Point2D(-3, 0), 1)
-    assert Circle.object_from_equation(x ** 2 + y ** 2 + 6 * y + 8) == Circle(Point2D(0, -3), 1)
-    raises(GeometryError, lambda: Circle.object_from_equation(x ** 2 + y ** 2 + 3 * x + 4 * y + 26))
-    raises(GeometryError, lambda: Circle.object_from_equation(x ** 2 + y ** 2 + 25))
-    raises(GeometryError, lambda: Circle.object_from_equation(a ** 2 + b ** 2 + 25, x='a', y='b'))
-    raises(GeometryError, lambda: Circle.object_from_equation(x ** 2 + 6 * y + 8))
-    raises(ValueError, lambda: Circle.object_from_equation(a**2 + b**2 + 3*a + 4*b - 8))
+    assert Circle(equation=x ** 2 + y ** 2 + 6 * x + 8 * y + 25) == Circle(Point2D(-3, -4), 0)
+    assert Circle(equation=a ** 2 + b ** 2 + 6 * a + 8 * b + 25, x='a', y='b') == Circle(Point2D(-3, -4), 0)
+    assert Circle(equation=x ** 2 + y ** 2 - 25) == Circle(Point2D(0, 0), 5)
+    assert Circle(equation=x ** 2 + y ** 2) == Circle(Point2D(0, 0), 0)
+    assert Circle(equation=a ** 2 + b ** 2, x='a', y='b') == Circle(Point2D(0, 0), 0)
+    assert Circle(equation=x ** 2 + y ** 2 + 6 * x + 8) == Circle(Point2D(-3, 0), 1)
+    assert Circle(equation=x ** 2 + y ** 2 + 6 * y + 8) == Circle(Point2D(0, -3), 1)
+    raises(GeometryError, lambda: Circle(equation=x ** 2 + y ** 2 + 3 * x + 4 * y + 26))
+    raises(GeometryError, lambda: Circle(equation=x ** 2 + y ** 2 + 25))
+    raises(GeometryError, lambda: Circle(equation=a ** 2 + b ** 2 + 25, x='a', y='b'))
+    raises(GeometryError, lambda: Circle(equation=x ** 2 + 6 * y + 8))
+    raises(ValueError, lambda: Circle(equation=a**2 + b**2 + 3*a + 4*b - 8))
 
 
 def test_ellipse_geom():

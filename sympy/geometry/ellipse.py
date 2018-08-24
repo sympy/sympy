@@ -1313,6 +1313,15 @@ class Circle(Ellipse):
         When trying to construct circle from three collinear points.
         When trying to construct circle from incorrect parameters.
 
+    If the equation of a circle, whose circle object is needed, is
+    ax**2 + by**2 + gx + hy + c = 0, then the input has to be of
+    the following format:
+
+    Circle(equation = ax**2 + by**2 + gx + hy + c)
+
+    The input can also be given in terms of some other variable other than x
+    and/or y, but then they need to be specified as an additional argument.
+
     See Also
     ========
 
@@ -1332,9 +1341,15 @@ class Circle(Ellipse):
     >>> c2.hradius, c2.vradius, c2.radius, c2.center
     (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point2D(1/2, 1/2))
 
+    >>> # a circle object is returned
+    >>> Circle(equation = x ** 2 + y ** 2 - 25)
+    Circle(Point2D(0, 0), 5)
+    >>> Circle(equation = a ** 2 + b ** 2 - 25, x='a', y='b')
+    Circle(Point2D(0, 0), 5)
+
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, equation=None, x='x', y='y', **kwargs):
         c, r = None, None
         if len(args) == 3:
             args = [Point(a, dim=2) for a in args]
@@ -1350,62 +1365,45 @@ class Circle(Ellipse):
             c = Point(args[0], dim=2)
             r = sympify(args[1])
 
+        if equation is not None:
+
+            def find(x, equation):
+                free = equation.free_symbols
+                xs = [i for i in free if (i.name if type(x) is str else i) == x]
+                if not xs:
+                    raise ValueError('could not find %s' % x)
+                if len(xs) != 1:
+                    raise ValueError('ambiguous %s' % x)
+                return xs[0]
+
+            x = find(x, equation)
+            y = find(y, equation)
+            poly_x = poly(equation, x)
+            poly_y = poly(equation, y)
+            deg_x = degree(poly_x)
+            deg_y = degree(poly_y)
+            lead_x_coeff = LC(poly_x)
+            lead_y_coeff = LC(poly_y)
+
+            if lead_x_coeff == lead_y_coeff and (deg_x == 2 and deg_y == 2):
+                center_x = solve(diff(equation, x))[0]
+                center_y = solve(diff(equation, y))[0]
+                center = Point(center_x, center_y)
+                r_square = expand(lead_x_coeff * (x - center_x) ** 2) + expand(
+                    lead_y_coeff * (y - center_y) ** 2) - equation
+                if (r_square / lead_x_coeff).is_nonnegative:
+                    radius = sqrt(r_square / lead_x_coeff)
+                    return Circle(center, radius)
+                else:
+                    raise GeometryError("The given equation of circle has an imaginary radius")
+            else:
+                raise GeometryError("The given equation does not represent a circle")
+
         if not (c is None or r is None):
             return GeometryEntity.__new__(cls, c, r, **kwargs)
 
         raise GeometryError("Circle.__new__ received unknown arguments")
 
-    @classmethod
-    def object_from_equation(self, equation, x='x', y='y'):
-        """Returns a Circle object from an equation of circle given as input.
-        If the equation of the circle is ax**2 + by**2 + gx + hy + c = 0, then
-        the input has to be of the following format: ax**2 + by**2 + gx + hy + c.
-        The input can also be given in terms of some other variable other than x
-        and/or y, but then they need to be specified as an additional argument.
-
-        Examples
-        ========
-
-        >>> from sympy import Circle
-        >>> from sympy.abc import x, y, a, b
-        >>> Circle.object_from_equation(x**2 + y**2 + 3*x + 4*y - 8)
-        Circle(Point2D(-3/2, -2), sqrt(57)/2)
-        >>> Circle.object_from_equation(a**2 + b**2 + 3*a + 4*b - 8, x='a', y='b')
-        Circle(Point2D(-3/2, -2), sqrt(57)/2)
-
-        """
-
-        def find(x, equation):
-            free = equation.free_symbols
-            xs = [i for i in free if (i.name if type(x) is str else i) == x]
-            if not xs:
-                raise ValueError('could not find %s' % x)
-            if len(xs) != 1:
-                raise ValueError('ambiguous %s' % x)
-            return xs[0]
-
-        x = find(x, equation)
-        y = find(y, equation)
-        poly_x = poly(equation, x)
-        poly_y = poly(equation, y)
-        deg_x = degree(poly_x)
-        deg_y = degree(poly_y)
-        lead_x_coeff = LC(poly_x)
-        lead_y_coeff = LC(poly_y)
-
-        if lead_x_coeff == lead_y_coeff and (deg_x == 2 and deg_y == 2):
-            center_x = solve(diff(equation, x))[0]
-            center_y = solve(diff(equation, y))[0]
-            center = Point(center_x, center_y)
-            r_square = expand(lead_x_coeff * (x - center_x) ** 2) + expand(
-                lead_y_coeff * (y - center_y) ** 2) - equation
-            if (r_square / lead_x_coeff).is_nonnegative:
-                radius = sqrt(r_square / lead_x_coeff)
-                return Circle(center, radius)
-            else:
-                raise GeometryError("The given equation of circle has an imaginary radius")
-        else:
-            raise GeometryError("The given equation does not represent a circle")
 
     @property
     def circumference(self):

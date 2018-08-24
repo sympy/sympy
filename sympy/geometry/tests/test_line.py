@@ -40,16 +40,16 @@ warnings.simplefilter('always', UserWarning)  # make sure to show warnings every
 
 def test_object_from_equation():
     from sympy.abc import x, y, a, b
-    assert Line.object_from_equation(3 * x + y + 18) == Line2D(Point2D(0, 0), Point2D(1, -3))
-    assert Line.object_from_equation(3 * a + b + 18, x='a', y='b') == Line2D(Point2D(0, 0), Point2D(1, -3))
-    assert Line.object_from_equation(3 * x + y) == Line2D(Point2D(0, 0), Point2D(1, -3))
-    assert Line.object_from_equation(x + y) == Line2D(Point2D(0, 0), Point2D(1, -1))
-    raises(ValueError, lambda: Line.object_from_equation(x))
-    raises(ValueError, lambda: Line.object_from_equation(y))
-    assert Line.object_from_equation(x / y) == Line2D(Point2D(0, 0), Point2D(0, 1))
-    assert Line.object_from_equation(a / b, x='a', y='b') == Line2D(Point2D(0, 0), Point2D(0, 1))
-    assert Line.object_from_equation(y / x) == Line2D(Point2D(0, 0), Point2D(1, 0))
-    assert Line.object_from_equation(b / a, x='a', y='b') == Line2D(Point2D(0, 0), Point2D(1, 0))
+    assert Line(equation=3 * x + y + 18) == Line2D(Point2D(0, 0), Point2D(1, -3))
+    assert Line(equation=3 * a + b + 18, x='a', y='b') == Line2D(Point2D(0, 0), Point2D(1, -3))
+    assert Line(equation=3 * x + y) == Line2D(Point2D(0, 0), Point2D(1, -3))
+    assert Line(equation=x + y) == Line2D(Point2D(0, 0), Point2D(1, -1))
+    raises(ValueError, lambda: Line(equation=x))
+    raises(ValueError, lambda: Line(equation=y))
+    assert Line(equation=x / y) == Line2D(Point2D(0, 0), Point2D(0, 1))
+    assert Line(equation=a / b, x='a', y='b') == Line2D(Point2D(0, 0), Point2D(0, 1))
+    assert Line(equation=y / x) == Line2D(Point2D(0, 0), Point2D(1, 0))
+    assert Line(equation=b / a, x='a', y='b') == Line2D(Point2D(0, 0), Point2D(1, 0))
 
 
 def feq(a, b):
