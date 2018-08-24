@@ -101,32 +101,20 @@ def test_linear_2eq_order1_type2_degen():
     e = [Eq(diff(f(x), x), f(x) + 5),
          Eq(diff(g(x), x), f(x) + 7)]
     s1 = [Eq(f(x), C1*exp(x) - 5), Eq(g(x), C1*exp(x) - C2 + 2*x - 5)]
-    s = dsolve(e)
-    assert s == s1
-    s = [(l.lhs, l.rhs) for l in s]
-    assert e[0].subs(s).doit()
-    assert e[1].subs(s).doit()
+    assert checksysodesol(e, s1) == (True, [0, 0])
 
 
 def test_dsolve_linear_2eq_order1_diag_triangular():
     e = [Eq(diff(f(x), x), f(x)),
          Eq(diff(g(x), x), g(x))]
     s1 = [Eq(f(x), C1*exp(x)), Eq(g(x), C2*exp(x))]
-    s = dsolve(e)
-    assert s == s1
-    s = [(l.lhs, l.rhs) for l in s]
-    assert e[0].subs(s).doit()
-    assert e[1].subs(s).doit()
+    assert checksysodesol(e, s1) == (True, [0, 0])
 
     e = [Eq(diff(f(x), x), 2*f(x)),
          Eq(diff(g(x), x), 3*f(x) + 7*g(x))]
     s1 = [Eq(f(x), -5*C2*exp(2*x)),
           Eq(g(x), 5*C1*exp(7*x) + 3*C2*exp(2*x))]
-    s = dsolve(e)
-    assert s == s1
-    s = [(l.lhs, l.rhs) for l in s]
-    assert e[0].subs(s).doit()
-    assert e[1].subs(s).doit()
+    assert checksysodesol(e, s1) == (True, [0, 0])
 
 
 def test_sysode_linear_2eq_order1_type1_D_lt_0():
@@ -134,21 +122,16 @@ def test_sysode_linear_2eq_order1_type1_D_lt_0():
          Eq(diff(g(x), x), -4*I*g(x))]
     s1 = [Eq(f(x), -4*C1*exp(-4*I*x) - 4*C2*exp(-9*I*x)), \
     Eq(g(x), 5*I*C1*exp(-4*I*x))]
-    s = dsolve(e)
-    s = [(l.lhs, l.rhs) for l in s]
-    assert e[0].subs(s).doit().simplify()
-    assert e[1].subs(s).doit().simplify()
+    assert checksysodesol(e, s1) == (True, [0, 0])
+
 
 
 def test_sysode_linear_2eq_order1_type1_D_lt_0_b_eq_0():
     e = [Eq(diff(f(x), x), -9*I*f(x)),
          Eq(diff(g(x), x), -4*I*g(x))]
     s1 = [Eq(f(x), -5*I*C2*exp(-9*I*x)), Eq(g(x), 5*I*C1*exp(-4*I*x))]
-    s = dsolve(e)
-    assert s == s1
-    s = [(l.lhs, l.rhs) for l in s]
-    assert e[0].subs(s).doit().simplify()
-    assert e[1].subs(s).doit().simplify()
+    assert checksysodesol(e, s1) == (True, [0, 0])
+
 
 
 def test_sysode_linear_2eq_order1_many_zeros():
@@ -170,11 +153,8 @@ def test_sysode_linear_2eq_order1_many_zeros():
     for r, sol in zip(corner_cases, s1):
         eq = [Eq(diff(f(t), t), r[0]*f(t) + r[1]*g(t)),
               Eq(diff(g(t), t), r[2]*f(t) + r[3]*g(t))]
-        s = dsolve(eq)
-        assert s == sol
-        s = [(l.lhs, l.rhs) for l in s]
-        assert eq[0].subs(s).doit().simplify()
-        assert eq[1].subs(s).doit().simplify()
+        assert checksysodesol(eq, sol) == (True, [0, 0])
+
 
 
 def test_dsolve_linsystem_symbol_piecewise():
@@ -2882,11 +2862,8 @@ def test_dsolve_linsystem_symbol():
     eq1 = (Eq(diff(f(x), x), -eps*g(x)), Eq(diff(g(x), x), eps*f(x)))
     sol1 = [Eq(f(x), -C1*eps*cos(eps*x) - C2*eps*sin(eps*x)),
             Eq(g(x), -C1*eps*sin(eps*x) + C2*eps*cos(eps*x))]
-    s = dsolve(eq1)
-    assert s == sol1
-    s = [(l.lhs, l.rhs) for l in s]
-    assert eq1[0].subs(s).doit().simplify()
-    assert eq1[1].subs(s).doit().simplify()
+    assert checksysodesol(eq1, sol1) == (True, [0, 0])
+
 
 
 def test_C1_function_9239():
@@ -2898,11 +2875,8 @@ def test_C1_function_9239():
     eq = (Eq(diff(C1(t), t), 9*C2(t)), Eq(diff(C2(t), t), 12*C1(t)))
     sol = [Eq(C1(t), 9*C3*exp(6*sqrt(3)*t) + 9*C4*exp(-6*sqrt(3)*t)),
            Eq(C2(t), 6*sqrt(3)*C3*exp(6*sqrt(3)*t) - 6*sqrt(3)*C4*exp(-6*sqrt(3)*t))]
-    s = dsolve(eq)
-    assert s == sol
-    s = [(l.lhs, l.rhs) for l in s]
-    assert eq[0].subs(s).doit().simplify()
-    assert eq[1].subs(s).doit().simplify()
+    assert checksysodesol(eq, sol) == (True, [0, 0])
+
 
 
 def test_issue_10379():
