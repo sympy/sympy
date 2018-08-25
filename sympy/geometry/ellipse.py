@@ -498,20 +498,12 @@ class Ellipse(GeometrySet):
         a, b, x, y, m, M, x_c, y_c, s = symbols('a,b,x,y,m,M,x_c,y_c,s')
         x_c = self.center.x
         y_c = self.center.y
-        len_semi_major = self.hradius
-        len_semi_minor = self.vradius
         L = ((y - y_c) - s * (x - x_c)).subs(s, slope)
         l = (s * (y - y_c) + (x - x_c)).subs(s, slope)
 
         if idiff(L, y, x) == -1 / idiff(l, y, x):
-            E = L ** 2 / a + l ** 2 / b - 1
-            xy = (x, y)
-            sol = solve((E, L), *xy)
-            pts = [Point(x, y).subs(zip(xy, p)) for p in sol]
-            b = solve(pts[0].distance(pts[1]) - 2 * M, b)[0].subs([(M, len_semi_major), (s, slope)])
-            sol = solve((E, l), *xy)
-            pts = [Point(x, y).subs(zip(xy, p)) for p in sol]
-            a = solve(pts[0].distance(pts[1]) - 2 * m, a)[0].subs([(m, len_semi_minor), (s, slope)])
+            a = self.vradius**2*(1 + slope**2)
+            b = self.hradius**2*(1 + slope**2)
             return ((L ** 2) / a) + ((l ** 2) / b) - 1
         else:
             raise ValueError("The equation for ellipse cannot be calculated.")
