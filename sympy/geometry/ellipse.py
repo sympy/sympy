@@ -478,21 +478,17 @@ class Ellipse(GeometrySet):
         Let the minor axis be the line perpendicular to L (and also passing through C);
         points on that line are given by the zeros of l(x,y) = s*(y−yc) + (x−xc).
 
-        The ellipse is then defined by the zeros of
-        E(x,y) = L(x,y)**2/a + l(x,y)**2/b − 1
-
         Requiring that the distance between the intersections of E and L be 2M identifies
-        b = M**2 * ( 1 + s**2 )
+        b = M**2*(1 + s**2)
 
         and similarly, requiring that the intersections between E and l be separated by 2m identifies
-        a = m**2 * ( 1 + s**2 )
+        a = m**2*(1 + s**2)
 
         So the general equation of the ellipse centered at (xc,yc) whose major axis (with radius of M)
         is on a line with slope s, and whose minor axis has radius of m, is given by the solutions of:
 
-        ( ( y − yc ) − s ( x − xc ) )**2         ( s * ( y − yc ) + ( x − xc ) )**2
-        --------------------------------   +     ----------------------------------   =  1
-                m**2 * ( 1 + s**2 )                  M**2 * ( 1 + s**2 )
+        The ellipse is then defined by the zeros of
+        E(x,y) = L(x,y)**2/a + l(x,y)**2/b − 1
         """
 
         a, b, x, y, m, M, x_c, y_c, s = symbols('a,b,x,y,m,M,x_c,y_c,s')
