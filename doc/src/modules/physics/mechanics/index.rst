@@ -81,6 +81,8 @@ Guide to Mechanics
     examples.rst
     advanced.rst
     reference.rst
+    autolev_parser.rst
+    sympy_mechanics_for_autolev_users.rst
 
 Mechanics API
 =============

@@ -126,10 +126,10 @@ def _lambert(eq, x):
     if not mainlog:
         return []  # violated assumptions
     other = eq.subs(mainlog, 0)
-    if (-other).func is log:
+    if isinstance(-other, log):
         eq = (eq - other).subs(mainlog, mainlog.args[0])
         mainlog = mainlog.args[0]
-        if mainlog.func is not log:
+        if not isinstance(mainlog, log):
             return []  # violated assumptions
         other = -(-other).args[0]
         eq += other
@@ -210,7 +210,7 @@ def _solve_lambert(f, symbol, gens):
         rhs = log(rhs)
 
     lhs = factor(lhs, deep=True)
-    # make sure we are inverted as completely as possible
+    # make sure we have inverted as completely as possible
     r = Dummy()
     i, lhs = _invert(lhs - r, symbol)
     rhs = i.xreplace({r: rhs})

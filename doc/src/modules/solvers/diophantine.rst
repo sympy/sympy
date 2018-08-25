@@ -169,7 +169,7 @@ set()
 {(t_0, -t_0), (t_0, -t_0 + 3)}
 
 The most interesting case is when `\Delta > 0` and it is not a perfect square.
-In this case, the equation has either no solutions or an infinte number of
+In this case, the equation has either no solutions or an infinite number of
 solutions. Consider the below cases where `\Delta = 8`.
 
 >>> diophantine(x**2 - 4*x*y + 2*y**2 - 3*x + 7*y - 5)

@@ -18,6 +18,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
 
     is_IntegerRing = is_ZZ = True
     is_Numerical = True
+    is_PID = True
 
     has_assoc_Ring = True
     has_assoc_Field = True

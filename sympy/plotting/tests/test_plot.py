@@ -1,36 +1,16 @@
 from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log,
-                   oo, LambertW, I, meijerg, exp_polar, Max, Piecewise)
+                   oo, LambertW, I, meijerg, exp_polar, Max, Piecewise, And)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
-from sympy.plotting.plot import unset_show
+from sympy.plotting.plot import unset_show, plot_contour
 from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.pytest import skip, raises
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
-from sympy.core.decorators import wraps
 
 from tempfile import NamedTemporaryFile
 import os
-import sys
 import warnings
-
-class MockPrint(object):
-
-    def write(self, s):
-        pass
-
-    def flush(self):
-        pass
-
-    encoding = 'utf-8'
-
-def disable_print(func, *args, **kwargs):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        sys.stdout = MockPrint()
-        func(*args, **kwargs)
-        sys.stdout = sys.__stdout__
-    return wrapper
 
 unset_show()
 
@@ -49,7 +29,12 @@ class TmpFileManager:
 
     @classmethod
     def cleanup(cls):
-        map(os.remove, cls.tmp_files)
+        for file in cls.tmp_files:
+            try:
+                os.remove(file)
+            except OSError:
+                # If the file doesn't exist, for instance, if the test failed.
+                pass
 
 def plot_and_save(name):
     tmp_file = TmpFileManager.tmp_file
@@ -98,8 +83,27 @@ def plot_and_save(name):
 
     raises(ValueError, lambda: plot(x, y))
 
-    p = plot(Piecewise((1, x > 0), (0, True)),(x,-1,1))
+    #Piecewise plots
+    p = plot(Piecewise((1, x > 0), (0, True)), (x, -1, 1))
     p.save(tmp_file('%s_plot_piecewise' % name))
+    p._backend.close()
+
+    p = plot(Piecewise((x, x < 1), (x**2, True)), (x, -3, 3))
+    p.save(tmp_file('%s_plot_piecewise_2' % name))
+    p._backend.close()
+
+    # test issue 7471
+    p1 = plot(x)
+    p2 = plot(3)
+    p1.extend(p2)
+    p.save(tmp_file('%s_horizontal_line' % name))
+    p._backend.close()
+
+    # test issue 10925
+    f = Piecewise((-1, x < -1), (x, And(-1 <= x, x < 0)), \
+        (x**2, And(0 <= x, x < 1)), (x**3, x >= 1))
+    p = plot(f, (x, -3, 3))
+    p.save(tmp_file('%s_plot_piecewise_3' % name))
     p._backend.close()
 
     #parametric 2d plots.
@@ -171,6 +175,21 @@ def plot_and_save(name):
         (x*sin(z), x*cos(z), z, (x, -5, 5), (z, -5, 5)),
         (sin(x + y), cos(x - y), x - y, (x, -5, 5), (y, -5, 5)))
     p.save(tmp_file('%s_parametric_surface' % name))
+    p._backend.close()
+
+    # Single Contour plot.
+    p = plot_contour(sin(x)*sin(y), (x, -5, 5), (y, -5, 5))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+
+    # Multiple Contour plots with same range.
+    p = plot_contour(x**2 + y**2, x**3 + y**3, (x, -5, 5), (y, -5, 5))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+
+    # Multiple Contour plots with different range.
+    p = plot_contour((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x**3 + y**3, (x, -3, 3), (y, -3, 3)))
+    p.save(tmp_file('%s_contour_plot' % name))
     p._backend.close()
 
     ###
@@ -245,9 +264,9 @@ def plot_and_save(name):
         p.save(tmp_file('%s_advanced_integral' % name))
         p._backend.close()
         # Make sure no other warnings were raised
-        assert len(w) == 1
-        assert issubclass(w[-1].category, UserWarning)
-        assert "The evaluation of the expression is problematic" in str(w[0].message)
+        for i in w:
+            assert issubclass(i.category, UserWarning)
+            assert "The evaluation of the expression is problematic" in str(i.message)
 
     s = Sum(1/x**y, (x, 1, oo))
     p = plot(s, (y, 2, 10))
@@ -300,8 +319,12 @@ def test_experimental_lambify():
     f = lambdify([x], x + 1)
     assert f(1) == 2
 
-@disable_print
+
 def test_append_issue_7140():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
     x = Symbol('x')
     p1 = plot(x)
     p2 = plot(x**2)

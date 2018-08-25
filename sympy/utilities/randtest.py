@@ -13,17 +13,21 @@ from sympy.core.symbol import Symbol
 from sympy.core.compatibility import is_sequence, as_int
 
 
-def random_complex_number(a=2, b=-1, c=3, d=1, rational=False):
+def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
     """
     Return a random complex number.
 
     To reduce chance of hitting branch cuts or anything, we guarantee
     b <= Im z <= d, a <= Re z <= c
+
+    When rational is True, a rational approximation to a random number
+    is obtained within specified tolerance, if any.
     """
     A, B = uniform(a, c), uniform(b, d)
     if not rational:
         return A + I*B
-    return nsimplify(A, rational=True) + I*nsimplify(B, rational=True)
+    return (nsimplify(A, rational=True, tolerance=tolerance) +
+        I*nsimplify(B, rational=True, tolerance=tolerance))
 
 
 def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):

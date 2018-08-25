@@ -2,23 +2,28 @@ from __future__ import print_function, division
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, Function
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
 from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.polys import apart, PolynomialError
-from sympy.solvers import solve
 from sympy.series.limits import limit
 from sympy.series.order import O
+from sympy.sets.sets import FiniteSet
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.powsimp import powsimp
+from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
-from sympy.tensor.indexed import Idx
-
+from sympy.calculus.util import AccumulationBounds
+import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
@@ -265,7 +270,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
-    def _eval_simplify(self, ratio=1.7, measure=None):
+    def _eval_simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
         from sympy.simplify.simplify import factor_sum, sum_combine
         from sympy.core.function import expand
         from sympy.core.mul import Mul
@@ -376,7 +381,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Product.is_convergent()
         """
         from sympy import Interval, Integral, Limit, log, symbols, Ge, Gt, simplify
-        p, q = symbols('p q', cls=Wild)
+        p, q, r = symbols('p q r', cls=Wild)
 
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
@@ -400,13 +405,19 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             lower_limit = -upper_limit
             upper_limit = S.Infinity
 
+        sym_ = Dummy(sym.name, integer=True, positive=True)
+        sequence_term = sequence_term.xreplace({sym: sym_})
+        sym = sym_
+
         interval = Interval(lower_limit, upper_limit)
 
         # Piecewise function handle
         if sequence_term.is_Piecewise:
-            for func_cond in sequence_term.args:
-                if func_cond[1].func is Ge or func_cond[1].func is Gt or func_cond[1] == True:
-                    return Sum(func_cond[0], (sym, lower_limit, upper_limit)).is_convergent()
+            for func, cond in sequence_term.args:
+                # see if it represents something going to oo
+                if cond == True or cond.as_set().sup is S.Infinity:
+                    s = Sum(func, (sym, lower_limit, upper_limit))
+                    return s.is_convergent()
             return S.true
 
         ###  -------- Divergence test ----------- ###
@@ -431,72 +442,111 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if p1_series_test is not None:
             if p1_series_test[p] < -1:
                 return S.true
-            if p1_series_test[p] > -1:
+            if p1_series_test[p] >= -1:
                 return S.false
 
         p2_series_test = order.expr.match((1/sym)**p)
         if p2_series_test is not None:
             if p2_series_test[p] > 1:
                 return S.true
-            if p2_series_test[p] < 1:
+            if p2_series_test[p] <= 1:
                 return S.false
+
+        ### ------------- comparison test ------------- ###
+        # 1/(n**p*log(n)**q*log(log(n))**r) comparison
+        n_log_test = order.expr.match(1/(sym**p*log(sym)**q*log(log(sym))**r))
+        if n_log_test is not None:
+            if (n_log_test[p] > 1 or
+                (n_log_test[p] == 1 and n_log_test[q] > 1) or
+                (n_log_test[p] == n_log_test[q] == 1 and n_log_test[r] > 1)):
+                    return S.true
+            return S.false
+
+        ### ------------- Limit comparison test -----------###
+        # (1/n) comparison
+        try:
+            lim_comp = limit(sym*sequence_term, sym, S.Infinity)
+            if lim_comp.is_number and lim_comp > 0:
+                    return S.false
+        except NotImplementedError:
+            pass
+
+        ### ----------- ratio test ---------------- ###
+        next_sequence_term = sequence_term.xreplace({sym: sym + 1})
+        ratio = combsimp(powsimp(next_sequence_term/sequence_term))
+        try:
+            lim_ratio = limit(ratio, sym, upper_limit)
+            if lim_ratio.is_number:
+                if abs(lim_ratio) > 1:
+                    return S.false
+                if abs(lim_ratio) < 1:
+                    return S.true
+        except NotImplementedError:
+            pass
 
         ### ----------- root test ---------------- ###
         lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
-        lim_evaluated = lim.doit()
-        if lim_evaluated.is_number:
-            if lim_evaluated < 1:
-                return S.true
-            if lim_evaluated > 1:
-                return S.false
+        try:
+            lim_evaluated = lim.doit()
+            if lim_evaluated.is_number:
+                if lim_evaluated < 1:
+                    return S.true
+                if lim_evaluated > 1:
+                    return S.false
+        except NotImplementedError:
+            pass
 
         ### ------------- alternating series test ----------- ###
         dict_val = sequence_term.match((-1)**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
 
-        ### ------------- comparison test ------------- ###
-        # (1/log(n)**p) comparison
-        log_test = order.expr.match(1/(log(sym)**p))
-        if log_test is not None:
-            return S.false
-
-        # (1/(n*log(n)**p)) comparison
-        log_n_test = order.expr.match(1/(sym*(log(sym))**p))
-        if log_n_test is not None:
-            if log_n_test[p] > 1:
-                return S.true
-            return S.false
-
-        # (1/(n*log(n)*log(log(n))*p)) comparison
-        log_log_n_test = order.expr.match(1/(sym*(log(sym)*log(log(sym))**p)))
-        if log_log_n_test is not None:
-            if log_log_n_test[p] > 1:
-                return S.true
-            return S.false
-
-        # (1/(n**p*log(n))) comparison
-        n_log_test = order.expr.match(1/(sym**p*log(sym)))
-        if n_log_test is not None:
-            if n_log_test[p] > 1:
-                return S.true
-            return S.false
 
         ### ------------- integral test -------------- ###
-        if is_decreasing(sequence_term, interval):
-            integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
-            try:
-                integral_val_evaluated = integral_val.doit()
-                if integral_val_evaluated.is_number:
-                    return S(integral_val_evaluated.is_finite)
-            except NotImplementedError:
-                pass
+        check_interval = None
+        maxima = solveset(sequence_term.diff(sym), sym, interval)
+        if not maxima:
+            check_interval = interval
+        elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:
+            check_interval = Interval(maxima.sup, interval.sup)
+        if (check_interval is not None and
+            (is_decreasing(sequence_term, check_interval) or
+            is_decreasing(-sequence_term, check_interval))):
+                integral_val = Integral(
+                    sequence_term, (sym, lower_limit, upper_limit))
+                try:
+                    integral_val_evaluated = integral_val.doit()
+                    if integral_val_evaluated.is_number:
+                        return S(integral_val_evaluated.is_finite)
+                except NotImplementedError:
+                    pass
 
-        ### -------------- Dirichlet tests -------------- ###
+        ### ----- Dirichlet and bounded times convergent tests ----- ###
+        # TODO
+        #
+        # Dirichlet_test
+        # https://en.wikipedia.org/wiki/Dirichlet%27s_test
+        #
+        # Bounded times convergent test
+        # It is based on comparison theorems for series.
+        # In particular, if the general term of a series can
+        # be written as a product of two terms a_n and b_n
+        # and if a_n is bounded and if Sum(b_n) is absolutely
+        # convergent, then the original series Sum(a_n * b_n)
+        # is absolutely convergent and so convergent.
+        #
+        # The following code can grows like 2**n where n is the
+        # number of args in order.expr
+        # Possibly combined with the potentially slow checks
+        # inside the loop, could make this test extremely slow
+        # for larger summation expressions.
+
         if order.expr.is_Mul:
-            a_n, b_n = order.expr.args[0], order.expr.args[1]
-            m = Dummy('m', integer=True)
+            args = order.expr.args
+            argset = set(args)
 
+            ### -------------- Dirichlet tests -------------- ###
+            m = Dummy('m', integer=True)
             def _dirichlet_test(g_n):
                 try:
                     ing_val = limit(Sum(g_n, (sym, interval.inf, m)).doit(), m, S.Infinity)
@@ -505,16 +555,34 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 except NotImplementedError:
                     pass
 
-            if is_decreasing(a_n, interval):
-                dirich1 = _dirichlet_test(b_n)
-                if dirich1 is not None:
-                    return dirich1
+            ### -------- bounded times convergent test ---------###
+            def _bounded_convergent_test(g1_n, g2_n):
+                try:
+                    lim_val = limit(g1_n, sym, upper_limit)
+                    if lim_val.is_finite or (isinstance(lim_val, AccumulationBounds)
+                                             and (lim_val.max - lim_val.min).is_finite):
+                        if Sum(g2_n, (sym, lower_limit, upper_limit)).is_absolutely_convergent():
+                            return S.true
+                except NotImplementedError:
+                    pass
 
-            if is_decreasing(b_n, interval):
-                dirich2 = _dirichlet_test(a_n)
-                if dirich2 is not None:
-                    return dirich2
+            for n in range(1, len(argset)):
+                for a_tuple in itertools.combinations(args, n):
+                    b_set = argset - set(a_tuple)
+                    a_n = Mul(*a_tuple)
+                    b_n = Mul(*b_set)
 
+                    if is_decreasing(a_n, interval):
+                        dirich = _dirichlet_test(b_n)
+                        if dirich is not None:
+                            return dirich
+
+                    bc_test = _bounded_convergent_test(a_n, b_n)
+                    if bc_test is not None:
+                        return bc_test
+
+        _sym = self.limits[0][0]
+        sequence_term = sequence_term.xreplace({sym: _sym})
         raise NotImplementedError("The algorithm to find the Sum convergence of %s "
                                   "is not yet implemented" % (sequence_term))
 
@@ -963,8 +1031,16 @@ def eval_sum_symbolic(f, limits):
         c1 = Wild('c1', exclude=[i])
         c2 = Wild('c2', exclude=[i])
         c3 = Wild('c3', exclude=[i])
+        wexp = Wild('wexp')
 
-        e = f.match(c1**(c2*i + c3))
+        # Here we first attempt powsimp on f for easier matching with the
+        # exponential pattern, and attempt expansion on the exponent for easier
+        # matching with the linear pattern.
+        e = f.powsimp().match(c1 ** wexp)
+        if e is not None:
+            e_exp = e.pop(wexp).expand().match(c2*i + c3)
+            if e_exp is not None:
+                e.update(e_exp)
 
         if e is not None:
             p = (c1**c3).subs(e)
@@ -980,7 +1056,13 @@ def eval_sum_symbolic(f, limits):
         if not r in (None, S.NaN):
             return r
 
-    return eval_sum_hyper(f_orig, (i, a, b))
+    h = eval_sum_hyper(f_orig, (i, a, b))
+    if h is not None:
+        return h
+
+    factored = f_orig.factor()
+    if factored != f_orig:
+        return eval_sum_symbolic(factored, (i, a, b))
 
 
 def _eval_sum_hyper(f, i, a):

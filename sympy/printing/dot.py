@@ -1,7 +1,12 @@
 from __future__ import print_function, division
 
-from sympy import (Basic, Expr, Symbol, Integer, Rational, Float,
-    default_sort_key, Add, Mul)
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.core.symbol import Symbol
+from sympy.core.numbers import Integer, Rational, Float
+from sympy.core.compatibility import default_sort_key
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 
 __all__ = ['dotprint']
 
@@ -98,7 +103,7 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True)
         if repeat:
             expr_str += '_%s' % str(pos)
             arg_strs = [arg_str + '_%s' % str(pos + (i,)) for i, arg_str in enumerate(arg_strs)]
-        return ['"%s" -> "%s";'%(expr_str, arg_str) for arg_str in arg_strs]
+        return ['"%s" -> "%s";' % (expr_str, arg_str) for arg_str in arg_strs]
 
 template = \
 """digraph{

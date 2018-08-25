@@ -14,7 +14,7 @@ from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
@@ -22,7 +22,6 @@ from sympy.sets.fancysets import Range
 known_functions = {
     #"Abs": [(lambda x: not x.is_integer, "fabs")],
     "Abs": "abs",
-    "gamma": "gamma",
     "sin": "sin",
     "cos": "cos",
     "tan": "tan",
@@ -42,6 +41,13 @@ known_functions = {
     "floor": "floor",
     "ceiling": "ceiling",
     "sign": "sign",
+    "Max": "max",
+    "Min": "min",
+    "factorial": "factorial",
+    "gamma": "gamma",
+    "digamma": "digamma",
+    "trigamma": "trigamma",
+    "beta": "beta",
 }
 
 # These are the core reserved words in the R language. Taken from:
@@ -86,8 +92,9 @@ class RCodePrinter(CodePrinter):
         'reserved_word_suffix': '_',
     }
     _operators = {
-       'and':'&',
+       'and': '&',
         'or': '|',
+       'not': '!',
     }
 
     _relationals = {
@@ -226,8 +233,8 @@ class RCodePrinter(CodePrinter):
         return self._print(_piecewise)
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(expr.parent, expr.j +
-                expr.i*expr.parent.shape[1])
+        return "{0}[{1}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
+            strict=True), expr.j + expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
         name = super(RCodePrinter, self)._print_Symbol(expr)
@@ -252,7 +259,7 @@ class RCodePrinter(CodePrinter):
 
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
-        op = expr.rel_op
+        op = expr.op
         rhs_code = self._print(expr.rhs)
         return "{0} {1} {2};".format(lhs_code, op, rhs_code)
 

@@ -119,7 +119,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             return f.ex == f.__class__(g).ex
 
         def __ne__(f, g):
-            return not f.__eq__(g)
+            return not f == g
 
         def __nonzero__(f):
             return f.ex != 0

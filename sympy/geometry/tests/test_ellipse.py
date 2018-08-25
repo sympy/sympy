@@ -1,14 +1,15 @@
 from __future__ import division
 
-from sympy import Dummy, Rational, S, Symbol, pi, sqrt, oo
+from sympy import Dummy, Rational, S, Symbol, symbols, pi, sqrt, oo
 from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
 from sympy.integrals.integrals import Integral
 from sympy.utilities.pytest import raises, slow
+from sympy import integrate
+from sympy.functions.special.elliptic_integrals import elliptic_e
 
 
-@slow
 def test_ellipse_geom():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
@@ -25,6 +26,7 @@ def test_ellipse_geom():
     c1 = Circle(p1, 1)
     c2 = Circle(p2, 1)
     c3 = Circle(Point(sqrt(2), sqrt(2)), 1)
+    l1 = Line(p1, p2)
 
     # Test creation with three points
     cen, rad = Point(3*half, 2), 5*half
@@ -39,6 +41,7 @@ def test_ellipse_geom():
     assert Ellipse(None, 1, 1).center == Point(0, 0)
     assert e1 == c1
     assert e1 != e2
+    assert e1 != l1
     assert p4 in e1
     assert p2 not in e2
     assert e1.area == pi
@@ -49,7 +52,7 @@ def test_ellipse_geom():
     assert e3.circumference == 2*pi*y1
     assert e1.plot_interval() == e2.plot_interval() == [t, -pi, pi]
     assert e1.plot_interval(x) == e2.plot_interval(x) == [x, -pi, pi]
-    assert Ellipse(None, 1, None, 1).circumference == 2*pi
+
     assert c1.minor == 1
     assert c1.major == 1
     assert c1.hradius == 1
@@ -73,14 +76,6 @@ def test_ellipse_geom():
     assert e1.encloses(RegularPolygon(p1, 5, 3)) is False
     assert e1.encloses(RegularPolygon(p2, 5, 3)) is False
 
-    # with generic symbols, the hradius is assumed to contain the major radius
-    M = Symbol('M')
-    m = Symbol('m')
-    c = Ellipse(p1, M, m).circumference
-    _x = c.atoms(Dummy).pop()
-    assert c == 4*M*Integral(
-        sqrt((1 - _x**2*(M**2 - m**2)/M**2)/(1 - _x**2)), (_x, 0, 1))
-
     assert e2.arbitrary_point() in e2
 
     # Foci
@@ -102,7 +97,7 @@ def test_ellipse_geom():
     assert e2.is_tangent(Line(p1_3, p2 + Point(half, 1)))
     assert c1.is_tangent(Line(p1_1, Point(0, sqrt(2))))
     assert e1.is_tangent(Line(Point(0, 0), Point(1, 1))) is False
-    assert c1.is_tangent(e1) is False
+    assert c1.is_tangent(e1) is True
     assert c1.is_tangent(Ellipse(Point(2, 0), 1, 1)) is True
     assert c1.is_tangent(
         Polygon(Point(1, 1), Point(1, -1), Point(2, 0))) is True
@@ -155,8 +150,6 @@ def test_ellipse_geom():
     e = Ellipse((0, 0), x, 1)
     assert e.normal_lines((x + 1, 0)) == [Line(Point(0, 0), Point(1, 0))]
     raises(NotImplementedError, lambda: e.normal_lines((x + 1, 1)))
-
-
     # Properties
     major = 3
     minor = 1
@@ -166,6 +159,7 @@ def test_ellipse_geom():
     assert e4.eccentricity == ecc
     assert e4.periapsis == major*(1 - ecc)
     assert e4.apoapsis == major*(1 + ecc)
+    assert e4.semilatus_rectum == major*(1 - ecc ** 2)
     # independent of orientation
     e4 = Ellipse(p2, major, minor)
     assert e4.focus_distance == sqrt(major**2 - minor**2)
@@ -193,10 +187,19 @@ def test_ellipse_geom():
     assert e1.intersection(Circle(Point(0, 2), 1)) == [Point(0, 1)]
     assert e1.intersection(Circle(Point(5, 0), 1)) == []
     assert e1.intersection(Ellipse(Point(2, 0), 1, 1)) == [Point(1, 0)]
-    assert e1.intersection(Ellipse(Point(5, 0), 1, 1,)) == []
+    assert e1.intersection(Ellipse(Point(5, 0), 1, 1)) == []
     assert e1.intersection(Point(2, 0)) == []
     assert e1.intersection(e1) == e1
-
+    assert intersection(Ellipse(Point(0, 0), 2, 1), Ellipse(Point(3, 0), 1, 2)) == [Point(2, 0)]
+    assert intersection(Circle(Point(0, 0), 2), Circle(Point(3, 0), 1)) == [Point(2, 0)]
+    assert intersection(Circle(Point(0, 0), 2), Circle(Point(7, 0), 1)) == []
+    assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 1, 0.2)) == [Point(5, 0)]
+    assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 0.999, 0.2)) == []
+    assert Circle((0, 0), 1/2).intersection(
+        Triangle((-1, 0), (1, 0), (0, 1))) == [
+        Point(-1/2, 0), Point(1/2, 0)]
+    raises(TypeError, lambda: intersection(e2, Line((0, 0, 0), (0, 0, 1))))
+    raises(TypeError, lambda: intersection(e2, Rational(12)))
     # some special case intersections
     csmall = Circle(p1, 3)
     cbig = Circle(p1, 5)
@@ -277,6 +280,23 @@ def test_ellipse_geom():
     assert cir.rotate(pi/3, Point(1, 0)) == Circle(Point(1, 0), 1)
     assert cir.rotate(pi/3, Point(0, 1)) == Circle(Point(1/2 + sqrt(3)/2, 1/2 + sqrt(3)/2), 1)
 
+
+def test_construction():
+    e1 = Ellipse(hradius=2, vradius=1, eccentricity=None)
+    assert e1.eccentricity == sqrt(3)/2
+
+    e2 = Ellipse(hradius=2, vradius=None, eccentricity=sqrt(3)/2)
+    assert e2.vradius == 1
+
+    e3 = Ellipse(hradius=None, vradius=1, eccentricity=sqrt(3)/2)
+    assert e3.hradius == 2
+
+    # filter(None, iterator) filters out anything falsey, including 0
+    # eccentricity would be filtered out in this case and the constructor would throw an error
+    e4 = Ellipse(Point(0, 0), hradius=1, eccentricity=0)
+    assert e4.vradius == 1
+
+
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
     e3 = Ellipse(Point(0, 0), y1, y1)
@@ -312,8 +332,9 @@ def test_transform():
     assert Circle((0, 0), 2).scale(3, 3) == \
         Circle((0, 0), 6)
 
+
 def test_bounds():
-    e1 = Ellipse(Point(0,0), 3, 5)
+    e1 = Ellipse(Point(0, 0), 3, 5)
     e2 = Ellipse(Point(2, -2), 7, 7)
     c1 = Circle(Point(2, -2), 7)
     c2 = Circle(Point(-2, 0), Point(0, 2), Point(2, 0))
@@ -321,6 +342,7 @@ def test_bounds():
     assert e2.bounds == (-5, -9, 9, 5)
     assert c1.bounds == (-5, -9, 9, 5)
     assert c2.bounds == (-2, -2, 2, 2)
+
 
 def test_reflect():
     b = Symbol('b')
@@ -332,3 +354,77 @@ def test_reflect():
     assert e.area == -e.reflect(Line((1, 0), slope=0)).area
     assert e.area == -e.reflect(Line((1, 0), slope=oo)).area
     raises(NotImplementedError, lambda: e.reflect(Line((1, 0), slope=m)))
+
+
+def test_is_tangent():
+    e1 = Ellipse(Point(0, 0), 3, 5)
+    c1 = Circle(Point(2, -2), 7)
+    assert e1.is_tangent(Point(0, 0)) is False
+    assert e1.is_tangent(Point(3, 0)) is False
+    assert e1.is_tangent(e1) is True
+    assert e1.is_tangent(Ellipse((0, 0), 1, 2)) is False
+    assert e1.is_tangent(Ellipse((0, 0), 3, 2)) is True
+    assert c1.is_tangent(Ellipse((2, -2), 7, 1)) is True
+    assert c1.is_tangent(Circle((11, -2), 2)) is True
+    assert c1.is_tangent(Circle((7, -2), 2)) is True
+    assert c1.is_tangent(Ray((-5, -2), (-15, -20))) is False
+    assert c1.is_tangent(Ray((-3, -2), (-15, -20))) is False
+    assert c1.is_tangent(Ray((-3, -22), (15, 20))) is False
+    assert c1.is_tangent(Ray((9, 20), (9, -20))) is True
+    assert e1.is_tangent(Segment((2, 2), (-7, 7))) is False
+    assert e1.is_tangent(Segment((0, 0), (1, 2))) is False
+    assert c1.is_tangent(Segment((0, 0), (-5, -2))) is False
+    assert e1.is_tangent(Segment((3, 0), (12, 12))) is False
+    assert e1.is_tangent(Segment((12, 12), (3, 0))) is False
+    assert e1.is_tangent(Segment((-3, 0), (3, 0))) is False
+    assert e1.is_tangent(Segment((-3, 5), (3, 5))) is True
+    assert e1.is_tangent(Line((0, 0), (1, 1))) is False
+    assert e1.is_tangent(Line((-3, 0), (-2.99, -0.001))) is False
+    assert e1.is_tangent(Line((-3, 0), (-3, 1))) is True
+    assert e1.is_tangent(Polygon((0, 0), (5, 5), (5, -5))) is False
+    assert e1.is_tangent(Polygon((-100, -50), (-40, -334), (-70, -52))) is False
+    assert e1.is_tangent(Polygon((-3, 0), (3, 0), (0, 1))) is False
+    assert e1.is_tangent(Polygon((-3, 0), (3, 0), (0, 5))) is False
+    assert e1.is_tangent(Polygon((-3, 0), (0, -5), (3, 0), (0, 5))) is False
+    assert e1.is_tangent(Polygon((-3, -5), (-3, 5), (3, 5), (3, -5))) is True
+    assert c1.is_tangent(Polygon((-3, -5), (-3, 5), (3, 5), (3, -5))) is False
+    assert e1.is_tangent(Polygon((0, 0), (3, 0), (7, 7), (0, 5))) is False
+    assert e1.is_tangent(Polygon((3, 12), (3, -12), (6, 5))) is True
+    assert e1.is_tangent(Polygon((3, 12), (3, -12), (0, -5), (0, 5))) is False
+    assert e1.is_tangent(Polygon((3, 0), (5, 7), (6, -5))) is False
+    raises(TypeError, lambda: e1.is_tangent(Point(0, 0, 0)))
+    raises(TypeError, lambda: e1.is_tangent(Rational(5)))
+
+
+def test_parameter_value():
+    t = Symbol('t')
+    e = Ellipse(Point(0, 0), 3, 5)
+    assert e.parameter_value((3, 0), t) == {t: 0}
+    raises(ValueError, lambda: e.parameter_value((4, 0), t))
+
+def test_second_moment_of_area():
+    x, y = symbols('x, y')
+    e = Ellipse(Point(0, 0), 5, 4)
+    I_yy = 2*4*integrate(sqrt(25 - x**2)*x**2, (x, -5, 5))/5
+    I_xx = 2*5*integrate(sqrt(16 - y**2)*y**2, (y, -4, 4))/4
+    Y = 3*sqrt(1 - x**2/5**2)
+    I_xy = integrate(integrate(y, (y, -Y, Y))*x, (x, -5, 5))
+    assert I_yy == e.second_moment_of_area()[1]
+    assert I_xx == e.second_moment_of_area()[0]
+    assert I_xy == e.second_moment_of_area()[2]
+
+def test_circumference():
+    M = Symbol('M')
+    m = Symbol('m')
+    assert Ellipse(Point(0, 0), M, m).circumference == 4 * M * elliptic_e((M ** 2 - m ** 2) / M**2)
+
+    assert Ellipse(Point(0, 0), 5, 4).circumference == 20 * elliptic_e(S(9) / 25)
+
+    # degenerate ellipse
+    assert Ellipse(None, 1, None, 1).circumference == 4
+
+    # circle
+    assert Ellipse(None, 1, None, 0).circumference == 2*pi
+
+    # test numerically
+    assert abs(Ellipse(None, hradius=5, vradius=3).circumference.evalf(16) - 25.52699886339813) < 1e-10

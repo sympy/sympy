@@ -384,8 +384,11 @@ def test_monotonic_sign():
     assert F(-x) is None
     assert F(Dummy(prime=True)) == 2
     assert F(Dummy(prime=True, odd=True)) == 3
+    assert F(Dummy(composite=True)) == 4
+    assert F(Dummy(composite=True, odd=True)) == 9
     assert F(Dummy(positive=True, integer=True)) == 1
     assert F(Dummy(positive=True, even=True)) == 2
+    assert F(Dummy(positive=True, even=True, prime=False)) == 4
     assert F(Dummy(negative=True, integer=True)) == -1
     assert F(Dummy(negative=True, even=True)) == -2
     assert F(Dummy(zero=True)) == 0

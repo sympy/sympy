@@ -280,7 +280,7 @@ def find_unit_clause(clauses, model):
             sym = literal_symbol(literal)
             if sym not in model:
                 num_not_in_model += 1
-                P, value = sym, not (literal.func is Not)
+                P, value = sym, not isinstance(literal, Not)
         if num_not_in_model == 1:
             return P, value
     return None, None

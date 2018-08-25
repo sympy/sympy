@@ -2,38 +2,43 @@
 
 from __future__ import print_function, division
 
+from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
-from sympy.core import S, Mul, Tuple, sympify
+from sympy.core import Mul, S, Tuple, sympify
 from sympy.core.compatibility import exec_, iterable, range
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.utilities import public
 
 @public
-def itermonomials(variables, degree):
+def itermonomials(variables, max_degree, min_degree = 0):
     r"""
-    Generate a set of monomials of the given total degree or less.
+    Generate a set of monomials of the degree greater than or equal
+    to `min_degree` and less than or equal to `max_degree`.
 
-    Given a set of variables `V` and a total degree `N` generate
-    a set of monomials of degree at most `N`. The total number of
-    monomials is huge and is given by the following formula:
+    Given a set of variables `V` and a min_degree `N` and a max_degree `M`
+    generate a set of monomials of degree less than or equal to `N` and greater
+    than or equal to `M`. The total number of monomials in commutative
+    variables is huge and is given by the following formula if `M = 0`:
 
     .. math::
 
         \frac{(\#V + N)!}{\#V! N!}
 
     For example if we would like to generate a dense polynomial of
-    a total degree `N = 50` in 5 variables, assuming that exponents
-    and all of coefficients are 32-bit long and stored in an array we
-    would need almost 80 GiB of memory! Fortunately most polynomials,
-    that we will encounter, are sparse.
+    a total degree `N = 50` and `M = 0`, which is the worst case, in 5
+    variables, assuming that exponents and all of coefficients are 32-bit long
+    and stored in an array we would need almost 80 GiB of memory! Fortunately
+    most polynomials, that we will encounter, are sparse.
 
     Examples
     ========
 
-    Consider monomials in variables `x` and `y`::
+    Consider monomials in commutative variables `x` and `y`
+    and non-commutative variables `a` and `b`::
 
+        >>> from sympy import symbols
         >>> from sympy.polys.monomials import itermonomials
         >>> from sympy.polys.orderings import monomial_key
         >>> from sympy.abc import x, y
@@ -44,18 +49,45 @@ def itermonomials(variables, degree):
         >>> sorted(itermonomials([x, y], 3), key=monomial_key('grlex', [y, x]))
         [1, x, y, x**2, x*y, y**2, x**3, x**2*y, x*y**2, y**3]
 
+        >>> a, b = symbols('a, b', commutative=False)
+        >>> itermonomials([a, b, x], 2)
+        {1, a, a**2, b, b**2, x, x**2, a*b, b*a, x*a, x*b}
+
+        >>> sorted(itermonomials([x, y], 2, 1), key=monomial_key('grlex', [y, x]))
+        [x, y, x**2, x*y, y**2]
+
+
     """
-    if not variables:
-        return set([S.One])
+    if max_degree < 0 or min_degree > max_degree:
+        return set()
+    if not variables or max_degree == 0:
+        return {S(1)}
+    # Force to list in case of passed tuple or other incompatible collection
+    variables = list(variables) + [S(1)]
+    if all(variable.is_commutative for variable in variables):
+        monomials_list_comm = []
+        for item in combinations_with_replacement(variables, max_degree):
+            powers = dict()
+            for variable in variables:
+                powers[variable] = 0
+            for variable in item:
+                if variable != 1:
+                    powers[variable] += 1
+            if max(powers.values()) >= min_degree:
+                monomials_list_comm.append(Mul(*item))
+        return set(monomials_list_comm)
     else:
-        x, tail = variables[0], variables[1:]
-
-        monoms = itermonomials(tail, degree)
-
-        for i in range(1, degree + 1):
-            monoms |= set([ x**i * m for m in itermonomials(tail, degree - i) ])
-
-        return monoms
+        monomials_list_non_comm = []
+        for item in product(variables, repeat=max_degree):
+            powers = dict()
+            for variable in variables:
+                powers[variable] = 0
+            for variable in item:
+                if variable != 1:
+                    powers[variable] += 1
+            if max(powers.values()) >= min_degree:
+                monomials_list_non_comm.append(Mul(*item))
+        return set(monomials_list_non_comm)
 
 def monomial_count(V, N):
     r"""
@@ -264,7 +296,7 @@ def term_div(a, b, domain):
 
     monom = monomial_div(a_lm, b_lm)
 
-    if domain.has_Field:
+    if domain.is_Field:
         if monom is not None:
             return monom, domain.quo(a_lc, b_lc)
         else:
@@ -446,7 +478,7 @@ class Monomial(PicklableWithSlots):
         return self.exponents == exponents
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def __mul__(self, other):
         if isinstance(other, Monomial):

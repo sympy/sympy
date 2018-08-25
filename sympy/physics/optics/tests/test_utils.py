@@ -1,8 +1,8 @@
 from __future__ import division
 
 from sympy.physics.optics.utils import (refraction_angle, deviation,
-    lens_makers_formula, mirror_formula, lens_formula,
-    hyperfocal_distance)
+    brewster_angle, lens_makers_formula, mirror_formula, lens_formula,
+    hyperfocal_distance, transverse_magnification)
 from sympy.physics.optics.medium import Medium
 from sympy.physics.units import e0
 
@@ -80,6 +80,12 @@ def test_deviation():
     assert deviation([-1, -1, -1], 1, 1, normal=[0, 0, 1]) == 0
 
 
+def test_brewster_angle():
+    m1 = Medium('m1', permittivity=e0, n=1)
+    m2 = Medium('m2', permittivity=e0, n=1.33)
+    assert round(brewster_angle(m1, m2), 2) == 0.93
+
+
 def test_lens_makers_formula():
     n1, n2 = symbols('n1, n2')
     m1 = Medium('m1', permittivity=e0, n=1)
@@ -110,3 +116,8 @@ def test_hyperfocal_distance():
     f, N, c = symbols('f, N, c')
     assert hyperfocal_distance(f=f, N=N, c=c) == f**2/(N*c)
     assert round(hyperfocal_distance(f=0.5, N=8, c=0.0033), 2) == 9.47
+
+def test_transverse_magnification():
+    si, so = symbols('si, so')
+    assert transverse_magnification(si, so) == -si/so
+    assert transverse_magnification(30, 15) == -2

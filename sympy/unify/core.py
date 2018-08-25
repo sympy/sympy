@@ -24,7 +24,7 @@ from sympy.core.compatibility import range
 class Compound(object):
     """ A little class to represent an interior node in the tree
 
-    This is analagous to SymPy.Basic for non-Atoms
+    This is analogous to SymPy.Basic for non-Atoms
     """
     def __init__(self, op, args):
         self.op = op

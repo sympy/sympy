@@ -1,8 +1,15 @@
+import logging
+
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, SKIP
 from sympy.core.compatibility import range
 
+theanologger = logging.getLogger('theano.configdefaults')
+theanologger.setLevel(logging.CRITICAL)
 theano = import_module('theano')
+theanologger.setLevel(logging.WARNING)
+
+
 if theano:
     import numpy as np
     ts = theano.scalar
@@ -243,7 +250,7 @@ def test_DenseMatrix():
         X = MatrixType([[sy.cos(t), -sy.sin(t)], [sy.sin(t), sy.cos(t)]])
         tX = theano_code(X)
         assert isinstance(tX, tt.TensorVariable)
-        assert tX.owner.op == tt.join
+        assert tX.owner.op == tt.join_
 
 def test_AppliedUndef():
     t = sy.Symbol('t')

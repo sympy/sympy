@@ -1283,7 +1283,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return True
         if Not(key) in known_facts_dict[local_facts]:
             return False
-    elif (local_facts.func is And and
+    elif (isinstance(local_facts, And) and
             all(k in known_facts_dict for k in local_facts.args)):
         for assum in local_facts.args:
             if assum.is_Atom:
@@ -1291,13 +1291,13 @@ def ask(proposition, assumptions=True, context=global_assumptions):
                     return True
                 if Not(key) in known_facts_dict[assum]:
                     return False
-            elif assum.func is Not and assum.args[0].is_Atom:
+            elif isinstance(assum, Not) and assum.args[0].is_Atom:
                 if key in known_facts_dict[assum]:
                     return False
                 if Not(key) in known_facts_dict[assum]:
                     return True
     elif (isinstance(key, Predicate) and
-            local_facts.func is Not and local_facts.args[0].is_Atom):
+            isinstance(local_facts, Not) and local_facts.args[0].is_Atom):
         if local_facts.args[0] in known_facts_dict[key]:
             return False
 
@@ -1328,7 +1328,7 @@ def register_handler(key, handler):
         >>> from sympy.assumptions import register_handler, ask, Q
         >>> from sympy.assumptions.handlers import AskHandler
         >>> class MersenneHandler(AskHandler):
-        ...     # Mersenne numbers are in the form 2**n + 1, n integer
+        ...     # Mersenne numbers are in the form 2**n - 1, n integer
         ...     @staticmethod
         ...     def Integer(expr, assumptions):
         ...         from sympy import log

@@ -102,22 +102,39 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         If o is a container type, this is True if and only if every element of
         o can be printed with LaTeX.
         """
-        from sympy import Basic
-        from sympy.matrices import MatrixBase
-        from sympy.physics.vector import Vector, Dyadic
-        if isinstance(o, (list, tuple, set, frozenset)):
-            return all(_can_print_latex(i) for i in o)
-        elif isinstance(o, dict):
-            return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
-        elif isinstance(o, bool):
+
+        try:
+            from sympy import Basic
+            from sympy.matrices import MatrixBase
+            from sympy.physics.vector import Vector, Dyadic
+            from sympy.tensor.array import NDimArray
+            # If you're adding another type, make sure you add it to printable_types
+            # later in this file as well
+
+            builtin_types = (list, tuple, set, frozenset)
+            if isinstance(o, builtin_types):
+                # If the object is a custom subclass with a custom str or
+                # repr, use that instead.
+                if (type(o).__str__ not in (i.__str__ for i in builtin_types) or
+                    type(o).__repr__ not in (i.__repr__ for i in builtin_types)):
+                    return False
+                return all(_can_print_latex(i) for i in o)
+            elif isinstance(o, dict):
+                return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
+            elif isinstance(o, bool):
+                return False
+            # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
+            # to use here, than these explicit imports.
+            elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic, NDimArray)):
+                return True
+            elif isinstance(o, (float, integer_types)) and print_builtin:
+                return True
             return False
-        # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
-        # to use here, than these explicit imports.
-        elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic)):
-            return True
-        elif isinstance(o, (float, integer_types)) and print_builtin:
-            return True
-        return False
+        except RuntimeError:
+            return False
+            # This is in case maximum recursion depth is reached.
+            # Since RecursionError is for versions of Python 3.5+
+            # so this is to guard against RecursionError for older versions.
 
     def _print_latex_png(o):
         """
@@ -149,7 +166,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         if _can_print_latex(o):
             s = latex(o, mode='plain', **settings)
-            s = s.replace(r'\dag', r'\dagger')
             s = s.strip('$')
             return '$$%s$$' % s
 
@@ -176,8 +192,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
         from sympy.physics.vector import Vector, Dyadic
+        from sympy.tensor.array import NDimArray
+
         printable_types = [Basic, MatrixBase, float, tuple, list, set,
-                frozenset, dict, Vector, Dyadic] + list(integer_types)
+                frozenset, dict, Vector, Dyadic, NDimArray] + list(integer_types)
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
@@ -242,7 +260,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   latex_mode='equation*', print_builtin=True,
                   str_printer=None, pretty_printer=None,
                   latex_printer=None, **settings):
-    """
+    r"""
     Initializes pretty-printer depending on the environment.
 
     Parameters

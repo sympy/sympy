@@ -1,11 +1,11 @@
-from sympy.core import symbols, Symbol, Tuple, oo
+from sympy.core import symbols, Symbol, Tuple, oo, Dummy
 from sympy.core.compatibility import iterable, range
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises, XFAIL
 
 # import test:
 from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
-    GreaterThan, StrictLessThan
+    GreaterThan, StrictLessThan, Range, Array, Subs, Function, KroneckerDelta, Derivative
 
 
 def test_Idx_construction():
@@ -14,7 +14,7 @@ def test_Idx_construction():
     assert Idx(i, a) == Idx(i, (0, a - 1))
     assert Idx(i, oo) == Idx(i, (0, oo))
 
-    x = symbols('x')
+    x = symbols('x', integer=False)
     raises(TypeError, lambda: Idx(x))
     raises(TypeError, lambda: Idx(0.5))
     raises(TypeError, lambda: Idx(i, x))
@@ -207,6 +207,7 @@ def test_Indexed_constructor():
     assert A == Indexed(IndexedBase('A'), i, j)
     raises(TypeError, lambda: Indexed(A, i, j))
     raises(IndexException, lambda: Indexed("A"))
+    assert A.free_symbols == {A, A.base.label, i, j}
 
 
 def test_Indexed_func_args():
@@ -228,6 +229,7 @@ def test_Indexed_subs():
 def test_Indexed_properties():
     i, j = symbols('i j', integer=True)
     A = Indexed('A', i, j)
+    assert A.name == 'A[i, j]'
     assert A.rank == 2
     assert A.indices == (i, j)
     assert A.base == IndexedBase('A')
@@ -353,3 +355,84 @@ def test_indexed_is_constant():
     assert not A[1+2*i, k].is_constant(i)
     assert A[1+2*i, k].is_constant(j)
     assert not A[1+2*i, k].is_constant(k)
+
+
+def test_issue_12533():
+    d = IndexedBase('d')
+    assert IndexedBase(range(5)) == Range(0, 5, 1)
+    assert d[0].subs(Symbol("d"), range(5)) == 0
+    assert d[0].subs(d, range(5)) == 0
+    assert d[1].subs(d, range(5)) == 1
+    assert Indexed(Range(5), 2) == 2
+
+
+def test_issue_12780():
+    n = symbols("n")
+    i = Idx("i", (0, n))
+    raises(TypeError, lambda: i.subs(n, 1.5))
+
+
+def test_Subs_with_Indexed():
+    A = IndexedBase("A")
+    i, j, k = symbols("i,j,k")
+    x, y, z = symbols("x,y,z")
+    f = Function("f")
+
+    assert Subs(A[i], A[i], A[j]).diff(A[j]) == 1
+    assert Subs(A[i], A[i], x).diff(A[i]) == 0
+    assert Subs(A[i], A[i], x).diff(A[j]) == 0
+    assert Subs(A[i], A[i], x).diff(x) == 1
+    assert Subs(A[i], A[i], x).diff(y) == 0
+    assert Subs(A[i], A[i], A[j]).diff(A[k]) == KroneckerDelta(j, k)
+    assert Subs(x, x, A[i]).diff(A[j]) == KroneckerDelta(i, j)
+    assert Subs(f(A[i]), A[i], x).diff(A[j]) == 0
+    assert Subs(f(A[i]), A[i], A[k]).diff(A[j]) == Derivative(f(A[k]), A[k])*KroneckerDelta(j, k)
+    assert Subs(x, x, A[i]**2).diff(A[j]) == 2*KroneckerDelta(i, j)*A[i]
+    assert Subs(A[i], A[i], A[j]**2).diff(A[k]) == 2*KroneckerDelta(j, k)*A[j]
+
+    assert Subs(A[i]*x, x, A[i]).diff(A[i]) == 2*A[i]
+    assert Subs(A[i]*x, x, A[i]).diff(A[j]) == 2*A[i]*KroneckerDelta(i, j)
+    assert Subs(A[i]*x, x, A[j]).diff(A[i]) == A[j] + A[i]*KroneckerDelta(i, j)
+    assert Subs(A[i]*x, x, A[j]).diff(A[j]) == A[i] + A[j]*KroneckerDelta(i, j)
+    assert Subs(A[i]*x, x, A[i]).diff(A[k]) == 2*A[i]*KroneckerDelta(i, k)
+    assert Subs(A[i]*x, x, A[j]).diff(A[k]) == KroneckerDelta(i, k)*A[j] + KroneckerDelta(j, k)*A[i]
+
+    assert Subs(A[i]*x, A[i], x).diff(A[i]) == 0
+    assert Subs(A[i]*x, A[i], x).diff(A[j]) == 0
+    assert Subs(A[i]*x, A[j], x).diff(A[i]) == x
+    assert Subs(A[i]*x, A[j], x).diff(A[j]) == x*KroneckerDelta(i, j)
+    assert Subs(A[i]*x, A[i], x).diff(A[k]) == 0
+    assert Subs(A[i]*x, A[j], x).diff(A[k]) == x*KroneckerDelta(i, k)
+
+
+def test_complicated_derivative_with_Indexed():
+    x, y = symbols("x,y", cls=IndexedBase)
+    sigma = symbols("sigma")
+    i, j, k = symbols("i,j,k")
+    m0,m1,m2,m3,m4,m5 = symbols("m0:6")
+    f = Function("f")
+
+    expr = f((x[i] - y[i])**2/sigma)
+    _xi_1 = symbols("xi_1", cls=Dummy)
+    assert expr.diff(x[m0]).dummy_eq(
+        (x[i] - y[i])*KroneckerDelta(i, m0)*\
+        2*Subs(
+            Derivative(f(_xi_1), _xi_1),
+            (_xi_1,),
+            ((x[i] - y[i])**2/sigma,)
+        )/sigma
+    )
+    assert expr.diff(x[m0]).diff(x[m1]).dummy_eq(
+        2*KroneckerDelta(i, m0)*\
+        KroneckerDelta(i, m1)*Subs(
+            Derivative(f(_xi_1), _xi_1),
+            (_xi_1,),
+            ((x[i] - y[i])**2/sigma,)
+         )/sigma + \
+        4*(x[i] - y[i])**2*KroneckerDelta(i, m0)*KroneckerDelta(i, m1)*\
+        Subs(
+            Derivative(f(_xi_1), _xi_1, _xi_1),
+            (_xi_1,),
+            ((x[i] - y[i])**2/sigma,)
+        )/sigma**2
+    )

@@ -114,11 +114,6 @@ class Point(GeometryEntity):
 
         # unpack into coords
         coords = args[0] if len(args) == 1 else args
-        # A point where only `dim` is specified is initialized
-        # to zeros.
-        if len(coords) == 0 and kwargs.get('dim', None):
-            coords = (S.Zero,)*kwargs.get('dim')
-
 
         # check args and handle quickly handle Point instances
         if isinstance(coords, Point):
@@ -132,6 +127,10 @@ class Point(GeometryEntity):
             raise TypeError(filldedent('''
                 Expecting sequence of coordinates, not `{}`'''
                                        .format(func_name(coords))))
+        # A point where only `dim` is specified is initialized
+        # to zeros.
+        if len(coords) == 0 and kwargs.get('dim', None):
+            coords = (S.Zero,)*kwargs.get('dim')
 
         coords = Tuple(*coords)
         dim = kwargs.get('dim', len(coords))

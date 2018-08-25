@@ -45,9 +45,9 @@ class BlockMatrix(MatrixExpr):
 
     """
     def __new__(cls, *args):
-        from sympy.matrices.immutable import ImmutableMatrix
+        from sympy.matrices.immutable import ImmutableDenseMatrix
         args = map(sympify, args)
-        mat = ImmutableMatrix(*args)
+        mat = ImmutableDenseMatrix(*args)
 
         obj = Basic.__new__(cls, mat)
         return obj
@@ -217,12 +217,12 @@ class BlockDiagMatrix(BlockMatrix):
 
     @property
     def blocks(self):
-        from sympy.matrices.immutable import ImmutableMatrix
+        from sympy.matrices.immutable import ImmutableDenseMatrix
         mats = self.args
         data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
                         for j in range(len(mats))]
                         for i in range(len(mats))]
-        return ImmutableMatrix(data)
+        return ImmutableDenseMatrix(data)
 
     @property
     def shape(self):
