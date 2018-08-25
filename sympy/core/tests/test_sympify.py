@@ -481,6 +481,8 @@ def test_kernS():
     assert kernS(['2*(x + y)*y', ('2*(x + y)*y',)]) == [e, (e,)]
     assert kernS('-(2*sin(x)**2 + 2*sin(x)*cos(x))*y/2') == \
         -y*(2*sin(x)**2 + 2*sin(x)*cos(x))/2
+    # issue 15132
+    assert kernS('(1 - F)/(1 - F*(1-K))') == kernS('(1-F)/(1-(1-K)*F)')
 
 
 def test_issue_6540_6552():

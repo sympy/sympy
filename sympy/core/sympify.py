@@ -445,15 +445,16 @@ def kernS(s):
             kern2 += "_"
         # step 1:  -(...)  -->  kern-kern*(...)
         target = r'%s-%s*(' % (kern, kern)
+        final = r'-(%s*(' % kern
         s = re.sub(r'- *\(', target, s)
         # step 2: double the matching closing parenthesis
-        # kern-kern*(...)  -->  kern-kern*(...)kern2
+        # kern-kern*(...)  -->  kern-kern*(...kern2)
         i = nest = 0
         while True:
             j = s.find(target, i)
             if j == -1:
                 break
-            j = s.find('(')
+            j = s.find('(', j + len(target) - 1)
             for j in range(j, len(s)):
                 if s[j] == "(":
                     nest += 1
@@ -462,10 +463,10 @@ def kernS(s):
                 if nest == 0:
                     break
             s = s[:j] + kern2 + s[j:]
-            i = j
+            i = j + len(kern2) + 1
         # step 3: put in the parentheses
         # kern-kern*(...)kern2  -->  (-kern*(...))
-        s = s.replace(target, target.replace(kern, "(", 1))
+        s = s.replace(target, final)
         s = s.replace(kern2, ')')
         hit = kern in s
 
