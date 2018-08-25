@@ -56,6 +56,7 @@ if theano:
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
+            sympy.MatPow: tt.pow
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
             sympy.Trace: tlinalg.trace,
             sympy.Determinant : tlinalg.det,
