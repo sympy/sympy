@@ -1609,7 +1609,7 @@ def nc_simplify(expr, deep=True):
         _Add, _Mul, _Pow, _Symbol = MatAdd, MatMul, MatPow, MatrixSymbol
     else:
         _Add, _Mul, _Pow, _Symbol = Add, Mul, Pow, Symbol
-    if not isinstance(expr, (_Add, _Mul, _Pow)):
+    if not isinstance(expr, (_Add, _Mul, _Pow)) or expr.is_commutative:
         return expr
     args = expr.args[:]
     if isinstance(expr, _Pow):
