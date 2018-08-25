@@ -85,4 +85,4 @@ def test_matrix_derivative_with_inverse():
 
     # Cookbook example 64:
     expr = Trace(Inverse(X + A))
-    assert expr.diff(X) == -(Inverse(X + A)*Inverse(X + A)).T
+    assert expr.diff(X) == -(Inverse(X + A)).T**2

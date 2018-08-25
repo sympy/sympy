@@ -1533,7 +1533,8 @@ def nc_simplify(expr, deep=True):
     (a*b*a*b)**2*(a*c)**2
 
     '''
-
+    from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
+                                                MatPow, MatrixSymbol)
     # =========== Auxiliary functions ========================
     def _overlaps(args):
         # Calculate a list of lists m such that m[i][j] contains the lengths
@@ -1569,32 +1570,64 @@ def nc_simplify(expr, deep=True):
         inverses = []
         args = []
         for arg in _args:
-            if isinstance(arg, Pow) and arg.args[1] < 0:
+            if isinstance(arg, _Pow) and arg.args[1] < 0:
                 inverses = [arg**-1] + inverses
                 inv_tot += 1
             else:
-                if inverses:
-                    args.append(Pow(Mul(*inverses), -1))
+                if len(inverses) == 1:
+                    args.append(inverses[0]**-1)
+                elif len(inverses) > 1:
+                    args.append(_Pow(_Mul(*inverses), -1))
                     inv_tot -= len(inverses) - 1
                 inverses = []
                 args.append(arg)
         if inverses:
-            args.append(Pow(Mul(*inverses), -1))
+            args.append(_Pow(_Mul(*inverses), -1))
             inv_tot -= len(inverses) - 1
         return inv_tot, tuple(args)
+
+    def get_score(s):
+        # compute the number of arguments of s
+        # (including in nested expressions) overall
+        # but ignore exponents
+        if isinstance(s, _Pow):
+            return get_score(s.args[0])
+        elif isinstance(s, (_Add, _Mul)):
+            return sum([get_score(a) for a in s.args])
+        return 1
+
+    def compare(s, alt_s):
+        # compare two possible simplifications and return a
+        # "better" one
+        if s != alt_s and get_score(alt_s) < get_score(s):
+            return alt_s
+        return s
     # ========================================================
 
-
-    if not isinstance(expr, (Add, Mul, Pow)):
+    if isinstance(expr, MatrixExpr):
+        expr = expr.doit(inv_expand=False)
+        _Add, _Mul, _Pow, _Symbol = MatAdd, MatMul, MatPow, MatrixSymbol
+    else:
+        _Add, _Mul, _Pow, _Symbol = Add, Mul, Pow, Symbol
+    if not isinstance(expr, (_Add, _Mul, _Pow)):
         return expr
     args = expr.args[:]
-    if isinstance(expr, Pow):
+    if isinstance(expr, _Pow):
         if deep:
-            return Pow(nc_simplify(args[0]), args[1])
+            return _Pow(nc_simplify(args[0]), args[1]).doit()
         else:
             return expr
-    elif isinstance(expr, Add):
-        return Add(*[nc_simplify(a, deep=deep) for a in args])
+    elif isinstance(expr, _Add):
+        return _Add(*[nc_simplify(a, deep=deep) for a in args]).doit()
+    else:
+        # get the non-commutative part
+        com_coeff = 1
+        i = 0
+        while args[i].is_commutative:
+            com_coeff *= args[i]
+            i += 1
+        if com_coeff != 1:
+            return com_coeff*nc_simplify(expr/com_coeff, deep=deep)
 
     inv_tot, args = _reduce_inverses(args)
     # if most arguments are negative, work with the inverse
@@ -1641,7 +1674,8 @@ def nc_simplify(expr, deep=True):
             # no subterm is repeated at this stage, at least as
             # far as the arguments are concerned - there may be
             # a repetition if powers are taken into account
-            if isinstance(args[i], Pow) and len(args[i].args[0].args) > 0:
+            if (isinstance(args[i], _Pow) and
+                            not isinstance(args[i].args[0], _Symbol)):
                 subterm = args[i].args[0].args
                 l = len(subterm)
                 if args[i-l:i] == subterm:
@@ -1675,7 +1709,7 @@ def nc_simplify(expr, deep=True):
             if l in m[end-1][0]:
                 p += 1
                 end += l
-            elif isinstance(args[end], Pow) and args[end].args[0].args == subterm:
+            elif isinstance(args[end], _Pow) and args[end].args[0].args == subterm:
                 # for cases like a*b*a*b*(a*b)**2*a*b
                 p += args[end].args[1]
                 end += 1
@@ -1689,13 +1723,13 @@ def nc_simplify(expr, deep=True):
         pre_exp = 0
         pre_arg = 1
         if start - l >= 0 and args[start-l+1:start] == subterm[1:]:
-            if isinstance(subterm[0], Pow):
+            if isinstance(subterm[0], _Pow):
                 pre_arg = subterm[0].args[0]
                 exp = subterm[0].args[1]
             else:
                 pre_arg = subterm[0]
                 exp = 1
-            if isinstance(args[start-l], Pow) and args[start-l].args[0] == pre_arg:
+            if isinstance(args[start-l], _Pow) and args[start-l].args[0] == pre_arg:
                 pre_exp = args[start-l].args[1] - exp
                 start -= l
                 p += 1
@@ -1707,13 +1741,13 @@ def nc_simplify(expr, deep=True):
         post_exp = 0
         post_arg = 1
         if end + l - 1 < len(args) and args[end:end+l-1] == subterm[:-1]:
-            if isinstance(subterm[-1], Pow):
+            if isinstance(subterm[-1], _Pow):
                 post_arg = subterm[-1].args[0]
                 exp = subterm[-1].args[1]
             else:
                 post_arg = subterm[-1]
                 exp = 1
-            if isinstance(args[end+l-1], Pow) and args[end+l-1].args[0] == post_arg:
+            if isinstance(args[end+l-1], _Pow) and args[end+l-1].args[0] == post_arg:
                 post_exp = args[end+l-1].args[1] - exp
                 end += l
                 p += 1
@@ -1735,7 +1769,7 @@ def nc_simplify(expr, deep=True):
             exp = exp/2
             _pre_exp = 1
             _post_exp = 1
-            if isinstance(args[start-1], Pow) and args[start-1].args[0] == post_arg:
+            if isinstance(args[start-1], _Pow) and args[start-1].args[0] == post_arg:
                 _post_exp = post_exp + exp
                 _pre_exp = args[start-1].args[1] - exp
             elif args[start-1] == post_arg:
@@ -1760,21 +1794,31 @@ def nc_simplify(expr, deep=True):
 
         if simp_coeff > max_simp_coeff:
             max_simp_coeff = simp_coeff
-            simp = (start, Mul(*subterm), p, end, l)
+            simp = (start, _Mul(*subterm), p, end, l)
             pre = pre_arg**pre_exp
             post = post_arg**post_exp
 
     if simp:
-        subterm = Pow(nc_simplify(simp[1], deep=deep), simp[2])
-        pre = nc_simplify(Mul(*args[:simp[0]])*pre, deep=deep)
-        post = post*nc_simplify(Mul(*args[simp[3]:]), deep=deep)
+        subterm = _Pow(nc_simplify(simp[1], deep=deep), simp[2])
+        pre = nc_simplify(_Mul(*args[:simp[0]])*pre, deep=deep)
+        post = post*nc_simplify(_Mul(*args[simp[3]:]), deep=deep)
         simp = pre*subterm*post
         if pre != 1 or post != 1:
             # new simplifications may be possible but no need
             # to recurse over arguments
             simp = nc_simplify(simp, deep=False)
     else:
-        simp = Mul(*args)
+        simp = _Mul(*args)
+
     if invert:
-        simp = simp**-1
+        simp = _Pow(simp, -1)
+
+    # see if factor(expr) is simplified better
+    if not isinstance(expr, MatrixExpr):
+        f_expr = factor(expr)
+        if f_expr != expr:
+            alt_simp = nc_simplify(f_expr, deep=deep)
+            simp = compare(simp, alt_simp)
+    else:
+        simp = simp.doit(inv_expand=False)
     return simp

@@ -131,13 +131,11 @@ class MatrixExpr(Expr):
             raise ShapeError("Power of non-square matrix %s" % self)
         elif self.is_Identity:
             return self
-        elif other is S.NegativeOne:
-            return Inverse(self)
         elif other is S.Zero:
             return Identity(self.rows)
         elif other is S.One:
             return self
-        return MatPow(self, other)
+        return MatPow(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')

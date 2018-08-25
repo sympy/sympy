@@ -64,7 +64,7 @@ def test_doit_nonsquare_MatrixSymbol():
 def test_doit_square_MatrixSymbol_symsize():
     assert MatPow(C, 0).doit() == Identity(n)
     assert MatPow(C, 1).doit() == C
-    for r in [2, -1, pi]:
+    for r in [2, pi]:
         assert MatPow(C, r).doit() == MatPow(C, r)
 
 
