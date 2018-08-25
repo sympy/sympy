@@ -1126,7 +1126,7 @@ class MatrixEigen(MatrixSubspaces):
             simpfunc_2 = simplify
         else:
             if simplify:
-                simpfunc_1 = lambda x: x
+                simpfunc_1 = _simplify
                 simpfunc_2 = _simplify
             else:
                 simpfunc_1 = _simplify
