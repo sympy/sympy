@@ -1120,7 +1120,7 @@ class MatrixEigen(MatrixSubspaces):
             simplification method in every routine.
             If simplify is set to False, it will skip simplification in this
             particular routine to save computation resources.
-            If you pass a function to simplify, it will attempt to apply 
+            If you pass a function to simplify, it will attempt to apply
             the partucular function as simplification method.
 
         Since the roots routine doesn't always work well with Floats,
