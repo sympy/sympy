@@ -341,19 +341,19 @@ def test_linear_3eq_order1():
     eq1 = (Eq(diff(x(t),t), 21*x(t)), Eq(diff(y(t),t), 17*x(t)+3*y(t)), Eq(diff(z(t),t), 5*x(t)+7*y(t)+9*z(t)))
     sol1 = [Eq(x(t), C1*exp(21*t)), Eq(y(t), 17*C1*exp(21*t)/18 + C2*exp(3*t)), \
     Eq(z(t), 209*C1*exp(21*t)/216 - 7*C2*exp(3*t)/6 + C3*exp(9*t))]
-    assert dsolve(eq1) == sol1
+    assert checksysodesol(eq1, sol1) == (True, [0, 0, 0]) 
 
     eq2 = (Eq(diff(x(t),t),3*y(t)-11*z(t)),Eq(diff(y(t),t),7*z(t)-3*x(t)),Eq(diff(z(t),t),11*x(t)-7*y(t)))
     sol2 = [Eq(x(t), 7*C0 + sqrt(179)*C1*cos(sqrt(179)*t) + (77*C1/3 + 130*C2/3)*sin(sqrt(179)*t)), \
     Eq(y(t), 11*C0 + sqrt(179)*C2*cos(sqrt(179)*t) + (-58*C1/3 - 77*C2/3)*sin(sqrt(179)*t)), \
     Eq(z(t), 3*C0 + sqrt(179)*(-7*C1/3 - 11*C2/3)*cos(sqrt(179)*t) + (11*C1 - 7*C2)*sin(sqrt(179)*t))]
-    assert dsolve(eq2) == sol2
+    assert checksysodesol(eq2, sol2) == (True, [0, 0, 0])
 
     eq3 = (Eq(3*diff(x(t),t),4*5*(y(t)-z(t))),Eq(4*diff(y(t),t),3*5*(z(t)-x(t))),Eq(5*diff(z(t),t),3*4*(x(t)-y(t))))
     sol3 = [Eq(x(t), C0 + 5*sqrt(2)*C1*cos(5*sqrt(2)*t) + (12*C1/5 + 164*C2/15)*sin(5*sqrt(2)*t)), \
     Eq(y(t), C0 + 5*sqrt(2)*C2*cos(5*sqrt(2)*t) + (-51*C1/10 - 12*C2/5)*sin(5*sqrt(2)*t)), \
     Eq(z(t), C0 + 5*sqrt(2)*(-9*C1/25 - 16*C2/25)*cos(5*sqrt(2)*t) + (12*C1/5 - 12*C2/5)*sin(5*sqrt(2)*t))]
-    assert dsolve(eq3) == sol3
+    assert checksysodesol(eq3, sol3) == (True, [0, 0, 0])
 
     f = t**3 + log(t)
     g = t**2 + sin(t)
@@ -371,13 +371,13 @@ def test_linear_3eq_order1():
     sol5 = [Eq(x(t), C1*exp(2*t) + C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t)/2 + C3*t*exp(2*t) + C3*exp(2*t)), \
     Eq(y(t), C1*exp(2*t) + C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t)/2 + C3*t*exp(2*t)), \
     Eq(z(t), 2*C1*exp(2*t) + 2*C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t) + C3*t*exp(2*t) + C3*exp(2*t))]
-    assert dsolve(eq5) == sol5
+    assert checksysodesol(eq5, sol5) == (True, [0, 0, 0])
 
     eq6 = (Eq(diff(x(t),t),4*x(t) - y(t) - 2*z(t)),Eq(diff(y(t),t),2*x(t) + y(t)- 2*z(t)),Eq(diff(z(t),t),5*x(t)-3*z(t)))
     sol6 = [Eq(x(t), C1*exp(2*t) + C2*(-sin(t)/5 + 3*cos(t)/5) + C3*(3*sin(t)/5 + cos(t)/5)),
             Eq(y(t), C2*(-sin(t)/5 + 3*cos(t)/5) + C3*(3*sin(t)/5 + cos(t)/5)),
             Eq(z(t), C1*exp(2*t) + C2*cos(t) + C3*sin(t))]
-    assert dsolve(eq6) == sol6
+    assert checksysodesol(eq6, sol6) == (True, [0, 0, 0])
 
 
 def test_linear_3eq_order1_nonhomog():
@@ -394,8 +394,7 @@ def test_linear_3eq_order1_diagonal():
          Eq(diff(g(x), x), g(x)),
          Eq(diff(h(x), x), h(x))]
     s1 = [Eq(f(x), C1*exp(x)), Eq(g(x), C2*exp(x)), Eq(h(x), C3*exp(x))]
-    s = dsolve(e)
-    assert s == s1
+    assert checksysodesol(e, s1) == (True, [0, 0])
 
 
 def test_nonlinear_2eq_order1():
@@ -411,7 +410,7 @@ def test_nonlinear_2eq_order1():
         Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)),
         Eq(x(t), C1*exp(I/(-1/(4*C2 + 4*t))**(S(1)/4))),
         Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
-    assert dsolve(eq1) == sol1
+    assert checksysodesol(eq1, sol1) == (True, [0, 0])
 
     eq2 = (Eq(diff(x(t),t), exp(3*x(t))*y(t)**3),Eq(diff(y(t),t), y(t)**5))
     sol2 = [
@@ -423,7 +422,7 @@ def test_nonlinear_2eq_order1():
         Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)),
         Eq(x(t), -log(C1 - 3*I/(-1/(4*C2 + 4*t))**(S(1)/4))/3),
         Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
-    assert dsolve(eq2) == sol2
+    assert checksysodesol(eq2, sol2) == (True, [0, 0])
 
     eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
     tt = S(2)/3
@@ -438,7 +437,7 @@ def test_nonlinear_2eq_order1():
 
     eq5 = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
     sol5 = set([Eq(x(t), C1*C2 + C1*t), Eq(y(t), C2**2 + C2*t)])
-    assert dsolve(eq5) == sol5
+    assert checksysodesol(eq5, sol5) == (True, [0, 0])
 
     eq6 = (Eq(diff(x(t),t),x(t)**2*y(t)**3), Eq(diff(y(t),t),y(t)**5))
     sol6 = [
@@ -450,8 +449,7 @@ def test_nonlinear_2eq_order1():
         Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)),
         Eq(x(t), 1/(C1 - I/(-1/(4*C2 + 4*t))**(S(1)/4))),
         Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
-    assert dsolve(eq6) == sol6
-
+    assert checksysodesol(eq6, sol6) == (True, [0, 0])
 
 def test_checksysodesol():
     x, y, z = symbols('x, y, z', cls=Function)
@@ -1655,36 +1653,36 @@ def test_nth_linear_constant_coeff_homogeneous():
     sol28s = constant_renumber(sol28, 'C', 1, 3)
     sol29s = constant_renumber(sol29, 'C', 1, 4)
     sol30s = constant_renumber(sol30, 'C', 1, 5)
-    assert dsolve(eq1) in (sol1, sol1s)
-    assert dsolve(eq2) in (sol2, sol2s)
-    assert dsolve(eq3) in (sol3, sol3s)
-    assert dsolve(eq4) in (sol4, sol4s)
-    assert dsolve(eq5) in (sol5, sol5s)
-    assert dsolve(eq6) in (sol6, sol6s)
-    assert dsolve(eq7) in (sol7, sol7s)
-    assert dsolve(eq8) in (sol8, sol8s)
-    assert dsolve(eq9) in (sol9, sol9s)
-    assert dsolve(eq10) in (sol10, sol10s)
-    assert dsolve(eq11) in (sol11, sol11s)
-    assert dsolve(eq12) in (sol12, sol12s)
-    assert dsolve(eq13) in (sol13, sol13s)
-    assert dsolve(eq14) in (sol14, sol14s)
-    assert dsolve(eq15) in (sol15, sol15s)
-    assert dsolve(eq16) in (sol16, sol16s)
-    assert dsolve(eq17) in (sol17, sol17s)
-    assert dsolve(eq18) in (sol18, sol18s)
-    assert dsolve(eq19) in (sol19, sol19s)
-    assert dsolve(eq20) in (sol20, sol20s)
-    assert dsolve(eq21) in (sol21, sol21s)
-    assert dsolve(eq22) in (sol22, sol22s)
-    assert dsolve(eq23) in (sol23, sol23s)
-    assert dsolve(eq24) in (sol24, sol24s)
-    assert dsolve(eq25) in (sol25, sol25s)
-    assert dsolve(eq26) in (sol26, sol26s)
-    assert dsolve(eq27) in (sol27, sol27s)
-    assert dsolve(eq28) in (sol28, sol28s)
-    assert dsolve(eq29) in (sol29, sol29s)
-    assert dsolve(eq30) in (sol30, sol30s)
+    assert checksysodesol(eq1,sol1) == True or checksysodesol(eq1,sol1s) == True
+    assert checksysodesol(eq2,sol2) == True or checksysodesol(eq2,sol2s) == True
+    assert checksysodesol(eq3,sol3) == True or checksysodesol(eq3,sol3s) == True
+    assert checksysodesol(eq4,sol4) == True or checksysodesol(eq4,sol4s) == True
+    assert checksysodesol(eq5,sol5) == True or checksysodesol(eq5,sol5s) == True
+    assert checksysodesol(eq6,sol6) == True or checksysodesol(eq6,sol6s) == True
+    assert checksysodesol(eq7,sol7) == True or checksysodesol(eq8,sol8s) == True
+    assert checksysodesol(eq8,sol8) == True or checksysodesol(eq8,sol8s) == True
+    assert checksysodesol(eq9,sol9) == True or checksysodesol(eq9,sol9s) == True
+    assert checksysodesol(eq10,sol10) == True or checksysodesol(eq10,sol10s) == True
+    assert checksysodesol(eq11,sol11) == True or checksysodesol(eq11,sol11s) == True
+    assert checksysodesol(eq12,sol12) == True or checksysodesol(eq12,sol12s) == True
+    assert checksysodesol(eq13,sol13) == True or checksysodesol(eq13,sol13s) == True
+    assert checksysodesol(eq14,sol14) == True or checksysodesol(eq14,sol14s) == True
+    assert checksysodesol(eq15,sol15) == True or checksysodesol(eq15,sol15s) == True
+    assert checksysodesol(eq16,sol16) == True or checksysodesol(eq16,sol16s) == True
+    assert checksysodesol(eq17,sol17) == True or checksysodesol(eq17,sol17s) == True
+    assert checksysodesol(eq18,sol18) == True or checksysodesol(eq18,sol18s) == True
+    assert checksysodesol(eq19,sol19) == True or checksysodesol(eq19,sol19s) == True
+    assert checksysodesol(eq20,sol20) == True or checksysodesol(eq20,sol20s) == True
+    assert checksysodesol(eq21,sol21) == True or checksysodesol(eq21,sol21s) == True
+    assert checksysodesol(eq22,sol22) == True or checksysodesol(eq22,sol22s) == True
+    assert checksysodesol(eq23,sol23) == True or checksysodesol(eq23,sol23s) == True
+    assert checksysodesol(eq24,sol24) == True or checksysodesol(eq24,sol24s) == True
+    assert checksysodesol(eq25,sol25) == True or checksysodesol(eq25,sol25s) == True
+    assert checksysodesol(eq26,sol26) == True or checksysodesol(eq26,sol26s) == True
+    assert checksysodesol(eq27,sol27) == True or checksysodesol(eq27,sol27s) == True
+    assert checksysodesol(eq28,sol28) == True or checksysodesol(eq28,sol28s) == True
+    assert checksysodesol(eq29,sol29) == True or checksysodesol(eq29,sol29s) == True
+    assert checksysodesol(eq30,sol30) == True or checksysodesol(eq30,sol30s) == True
     assert checkodesol(eq1, sol1, order=2, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=2, solve_for_func=False)[0]
