@@ -1114,6 +1114,15 @@ class MatrixEigen(MatrixSubspaces):
             Raise an error when not all eigenvalues are computed. This is
             caused by ``roots`` not returning a full list of eigenvalues.
 
+        simplify : bool or function
+            If simplify is set to True, it attempts to return the most
+            simplified form of expressions returned by applying default
+            simplification method in every routine.
+            If simplify is set to False, it will skip simplification in this
+            particular routine to save computation resources.
+            If you pass a function to simplify, it will attempt to apply 
+            the partucular function as simplification method.
+
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
