@@ -465,6 +465,50 @@ class Ellipse(GeometrySet):
         t2 = (self.vradius*(y - self.center.y))**Rational(2, 3)
         return t1 + t2 - (self.hradius**2 - self.vradius**2)**Rational(2, 3)
 
+    def director_circle(self, x='x', y='y'):
+        """Returns the equation for the director circle of an ellipse.
+
+        Raises :
+        =============
+        NotImplementedError : When the number of arguments is less than what is expected.
+
+        References :
+        =============
+        https://en.wikipedia.org/wiki/Director_circle
+
+        Input Parameters :
+        =============
+
+        str x : Default value is 'x'. Default argument, need not be given.
+        str y : Default value is 'y'. Default argument, need not be given.
+
+        Returns :
+        =============
+        A sympy expression for director circle of the defined ellipse.
+
+        Usage :
+        =============
+        Example 1 :
+        >>> from sympy import Ellipse, Point
+        >>> ellipse = Ellipse(Point(0, 0), 5, 1)
+        >>> ellipse.director_circle
+        >>> x**2 + y**2 - 26
+
+        Example 2:
+        >>> from sympy import Ellipse, Point
+        >>> ellipse = Ellipse(Point(2, 3), 2, 3)
+        >>> ellipse.director_circle
+        >>> (x - 2)**2 + (y - 3)**2 - 13
+        """
+        if (self.args) != 3:
+            raise NotImplementedError("The director circle of the ellipse is not supported")
+        x = _symbol(x, real=True)
+        y = _symbol(y, real=True)
+        t1 = (x - self.center.x)**2
+        t2 = (y - self.center.y)**2
+        dc_radius = self.hradius**2 + self.vradius**2
+        return  t1 + t2 - (dc_radius)
+
     @property
     def foci(self):
         """The foci of the ellipse.
