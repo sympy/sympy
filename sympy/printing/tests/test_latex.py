@@ -522,9 +522,9 @@ def test_latex_indexed():
     Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
     symbol_latex = latex(Psi_symbol * conjugate(Psi_symbol))
     indexed_latex = latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
-    # \\overline{\\Psi_{0}} \\Psi_{0}   vs.   \\Psi_{0} \\overline{\\Psi_{0}}
-    assert symbol_latex.split() == indexed_latex.split() \
-        or symbol_latex.split() == indexed_latex.split()[::-1]
+    # \\overline{{\\Psi}_{0}} {\\Psi}_{0}   vs.   \\Psi_{0} \\overline{\\Psi_{0}}
+    assert symbol_latex=='\\Psi_{0} \\overline{\\Psi_{0}}' \
+        or indexed_latex=='\\overline{{\\Psi}_{0}} {\\Psi}_{0}'
 
     # Symbol('gamma') gives r'\gamma'
     assert latex(IndexedBase('gamma')) == r'\gamma'
