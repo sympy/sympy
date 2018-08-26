@@ -1,13 +1,9 @@
 """Elliptical geometrical entities.
-
 Contains
 * Ellipse
 * Circle
-
-"""
-
+""
 from __future__ import division, print_function
-
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
@@ -49,7 +45,6 @@ class Ellipse(GeometrySet):
     Attributes
     ==========
 
-    center
     hradius
     vradius
     area
