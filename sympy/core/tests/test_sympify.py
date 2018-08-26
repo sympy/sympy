@@ -482,7 +482,12 @@ def test_kernS():
     assert kernS('-(2*sin(x)**2 + 2*sin(x)*cos(x))*y/2') == \
         -y*(2*sin(x)**2 + 2*sin(x)*cos(x))/2
     # issue 15132
-    assert kernS('(1 - F)/(1 - F*(1-K))') == kernS('(1-F)/(1-(1-K)*F)')
+    assert kernS('(1 - x)/(1 - x*(1-y))') == kernS('(1-x)/(1-(1-y)*x)')
+    assert kernS('(1-2**-(4+1)*(1-y)*x)') == (1 - x*(1 - y)/32)
+    assert kernS('(1-2**(4+1)*(1-y)*x)') == (1 - 32*x*(1 - y))
+    assert kernS('(1-2.*(1-y)*x)') == 1 - 2.*x*(1 - y)
+    one = kernS('x - (x - 1)')
+    assert one != 1 and one.expand() == 1
 
 
 def test_issue_6540_6552():
