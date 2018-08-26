@@ -49,7 +49,6 @@ class Ellipse(GeometrySet):
     Attributes
     ==========
 
-    center
     hradius
     vradius
     area
