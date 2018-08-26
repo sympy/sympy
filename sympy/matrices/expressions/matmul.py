@@ -236,7 +236,23 @@ def factor_in_front(mul):
         return newmul(factor, *matrices)
     return mul
 
-rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
+def expand_neg(mul):
+    """
+    expand factor -1
+    e.g. -(-A + B) -> A - B
+
+    This is helpful for e.g. -(-A + B) + A - B = 0
+    """
+    factor, matrices = mul.as_coeff_matrices()
+    if factor == -1:
+        len_matrices = len(matrices)
+        for i in range(len_matrices):
+            if matrices[i].is_MatAdd:
+                matrices[i] = Add(*tuple(-arg for arg in matrices[i].args))
+                return newmul(*matrices)
+    return mul
+
+rules = (expand_neg, any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
          merge_explicit, factor_in_front, flatten)
 
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
