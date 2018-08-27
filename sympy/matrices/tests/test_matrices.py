@@ -2364,9 +2364,6 @@ def test_row_and_column_insert_for_indices():
     V = Matrix([[10, 10, 10]])
 
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    assert M.col_insert(-1, V) == Matrix([[1, 2, 10, 3], [2, 3, 10, 4], [3, 4, 10, 5]])
-
-    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     assert M.col_insert(0, V) == Matrix([[10, 1, 2, 3], [10, 2, 3, 4], [10, 3, 4, 5]])
 
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
