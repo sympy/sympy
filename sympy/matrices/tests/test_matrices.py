@@ -1069,6 +1069,11 @@ def test_eigen():
     assert count_ops(m.eigenvals(simplify = False)) > count_ops(m.eigenvals(simplify = True))
     assert count_ops(m.eigenvals(simplify = lambda x: x)) > count_ops(m.eigenvals(simplify = True))
 
+    assert isinstance(m.eigenvals(simplify = True, multiple=False), dict)
+    assert isinstance(m.eigenvals(simplify = True, multiple=True), list)
+    assert isinstance(m.eigenvals(simplify = lambda x: x, multiple=False), dict)
+    assert isinstance(m.eigenvals(simplify = lambda x: x, multiple=True), list)
+
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
     assert Matrix([[x, 2], [x + y, 4]]).subs([[x, -1], [y, -2]]) == \
