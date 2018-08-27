@@ -203,12 +203,11 @@ class MatrixShaping(MatrixRequired):
         if not self:
             return type(self)(other)
 
+        i = pos
         if pos < 0:
             pos = self.cols + pos
-        if pos < 0:
-            pos = 0
-        elif pos > self.cols:
-            pos = self.cols
+        if pos < 0 or pos > self.cols:
+            raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s" % (i, self.cols, self.cols))
 
         if self.rows != other.rows:
             raise ShapeError(
@@ -440,12 +439,11 @@ class MatrixShaping(MatrixRequired):
         if not self:
             return self._new(other)
 
+        i = pos
         if pos < 0:
             pos = self.rows + pos
-        if pos < 0:
-            pos = 0
-        elif pos > self.rows:
-            pos = self.rows
+        if pos < 0 or pos > self.rows:
+            raise IndexError("Index out of bounds: 'pos = %s', valid -%s <= pos <= %s" % (i, self.rows, self.rows))
 
         if self.cols != other.cols:
             raise ShapeError(
