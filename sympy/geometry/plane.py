@@ -416,9 +416,9 @@ class Plane(GeometryEntity):
                     return []
                 else:
                     p = a.subs(t, c[0])
-                    if p not in self:
+                    if p not in o:
                         return []  # e.g. a segment might not intersect a plane
-                    return [x for x in [p] if x in o]
+                    return [p]
         if isinstance(o, Plane):
             if self.equals(o):
                 return [self]
