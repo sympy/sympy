@@ -1,6 +1,6 @@
 from sympy import (
     Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
-    FiniteSet, Float, FourierTransform, Function,Indexed, IndexedBase, Integral,
+    FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
     Interval, InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
