@@ -1173,9 +1173,9 @@ class MatrixEigen(MatrixSubspaces):
         # With 'multiple' flag set true, simplify() will be mapped for the list
         # Otherwise, simplify() will be mapped for the keys of the dictionary
         if not multiple:
-            return dict(map(lambda item: (simplify(item[0]), item[1]), eigs.items()))
+            return {simplify(key): value for key, value in eigs.items()}
         else:
-            return list(map(simplify, eigs))
+            return [simplify(value) for value in eigs]
 
     def eigenvects(self, error_when_incomplete=True, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
