@@ -10,8 +10,8 @@ from sympy.core.mul import Mul
 
 __all__ = ['dotprint']
 
-default_styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
-          (Expr,  {'color': 'black'})]
+default_styles = ((Basic, {'color': 'blue', 'shape': 'ellipse'}),
+          (Expr,  {'color': 'black'}))
 
 
 sort_classes = (Add, Mul)
