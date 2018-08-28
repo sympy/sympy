@@ -1130,17 +1130,6 @@ class MatrixEigen(MatrixSubspaces):
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
 
-        if isinstance(simplify, FunctionType):
-            simpfunc_1 = simplify
-            simpfunc_2 = simplify
-        else:
-            if simplify:
-                simpfunc_1 = _simplify
-                simpfunc_2 = _simplify
-            else:
-                simpfunc_1 = _simplify
-                simpfunc_2 = lambda x: x
-
         mat = self
         if not mat:
             return {}
@@ -1164,7 +1153,7 @@ class MatrixEigen(MatrixSubspaces):
                     eigs[diagonal_entry] += 1
         else:
             flags.pop('simplify', None)  # pop unsupported flag
-            eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simpfunc_1), **flags)
+            eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify if isinstance(simplify, FunctionType) else _simplify), **flags)
 
         # make sure the algebraic multiplicty sums to the
         # size of the matrix
@@ -1176,13 +1165,14 @@ class MatrixEigen(MatrixSubspaces):
         # simplify() function will be applied once at the end of the routine.
         if not simplify:
             return eigs
+        if not isinstance(simplify, FunctionType):
+            simplify = _simplify
+        # With 'multiple' flag set true, simplify() will be mapped for the list
+        # Otherwise, simplify() will be mapped for the keys of the dictionary
+        if not multiple:
+            return dict(map(lambda item: (simplify(item[0]), item[1]), eigs.items()))
         else:
-            # With 'multiple' flag set true, simplify() will be mapped for the list
-            # Otherwise, simplify() will be mapped for the keys of the dictionary
-            if not multiple:
-                return dict(map(lambda item: (simpfunc_2(item[0]), item[1]), eigs.items()))
-            else:
-                return list(map(lambda item: simpfunc_2(item), eigs))
+            return list(map(lambda item: simplify(item), eigs))
 
     def eigenvects(self, error_when_incomplete=True, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
