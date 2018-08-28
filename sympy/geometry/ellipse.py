@@ -464,6 +464,40 @@ class Ellipse(GeometrySet):
         t1 = (self.hradius*(x - self.center.x))**Rational(2, 3)
         t2 = (self.vradius*(y - self.center.y))**Rational(2, 3)
         return t1 + t2 - (self.hradius**2 - self.vradius**2)**Rational(2, 3)
+    
+    @property
+    def director_circle(self):
+        """
+        Returns the equation for the director circle of the Ellipse.
+       
+        In geometry, the director circle of conic (also called the orthoptic circle or Fermat–Apollonius circle)
+        is a circle consisting of all points where two perpendicular tangent lines to the conic cross each other.
+        
+        Returns
+        =======
+        
+        A sympy expression for director circle of the defined Ellipse.
+        
+        Examples
+        ========
+        
+        >>> from sympy import Ellipse, Point
+        >>> ellipse = Ellipse(Point(1, 1), 3, 1)
+        >>> ellipse.director_circle
+        >>> (x-1)**2 + (y-1)**2 - 10
+        
+        References
+        ==========
+        
+        [1] https://en.wikipedia.org/wiki/Director_circle
+        
+        """
+        x = _symbol("x", real=True)
+        y = _symbol("y", real=True)
+        j1 = (x - self.center.x)**2
+        j2 = (y - self.center.y)**2
+        dc_radius = self.hradius**2 + self.vradius**2
+        return  j1 + j2 - (dc_radius)
 
     @property
     def foci(self):
