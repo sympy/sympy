@@ -1153,7 +1153,10 @@ class MatrixEigen(MatrixSubspaces):
                     eigs[diagonal_entry] += 1
         else:
             flags.pop('simplify', None)  # pop unsupported flag
-            eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify if isinstance(simplify, FunctionType) else _simplify), **flags)
+            if isinstance(simplify, FunctionType):
+                eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify), **flags)
+            else:
+                eigs = roots(mat.charpoly(x=Dummy('x'), simplify=_simplify), **flags)
 
         # make sure the algebraic multiplicty sums to the
         # size of the matrix
