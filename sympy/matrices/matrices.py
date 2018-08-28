@@ -1175,7 +1175,7 @@ class MatrixEigen(MatrixSubspaces):
         if not multiple:
             return dict(map(lambda item: (simplify(item[0]), item[1]), eigs.items()))
         else:
-            return list(map(lambda item: simplify(item), eigs))
+            return list(map(simplify, eigs))
 
     def eigenvects(self, error_when_incomplete=True, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
