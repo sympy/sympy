@@ -610,7 +610,8 @@ class LatexPrinter(Printer):
         return outstr
 
     def _print_Indexed(self, expr):
-        tex = self._print(expr.base)+'_{%s}' % ','.join(
+        tex_base = self._print(expr.base)
+        tex = '{'+tex_base+'}'+'_{%s}' % ','.join(
             map(self._print, expr.indices))
         return tex
 
