@@ -492,8 +492,8 @@ class Ellipse(GeometrySet):
         [1] https://en.wikipedia.org/wiki/Director_circle
         
         """
-        x = _symbol(x, real=True)
-        y = _symbol(y, real=True)
+        x = _symbol("x", real=True)
+        y = _symbol("y", real=True)
         j1 = (x - self.center.x)**2
         j2 = (y - self.center.y)**2
         dc_radius = self.hradius**2 + self.vradius**2
