@@ -142,6 +142,7 @@ def get_sympy_dir():
 
 def setup_pprint():
     from sympy import pprint_use_unicode, init_printing
+    import sympy.interactive.printing as interactive_printing
 
     # force pprint to be in ascii mode in doctests
     pprint_use_unicode(False)
@@ -149,6 +150,8 @@ def setup_pprint():
     # hook our nice, hash-stable strprinter
     init_printing(pretty_print=False)
 
+    # Prevent init_printing() in doctests from affecting other doctests
+    interactive_printing.NO_GLOBAL = True
 
 def run_in_subprocess_with_hash_randomization(
         function, function_args=(),
@@ -811,13 +814,13 @@ def _doctest(*paths, **kwargs):
     if split:
         matched = split_list(matched, split)
 
-    setup_pprint()
     first_report = True
     for rst_file in matched:
         if not os.path.isfile(rst_file):
             continue
         old_displayhook = sys.displayhook
         try:
+            setup_pprint()
             out = sympytestfile(
                 rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
@@ -826,6 +829,10 @@ def _doctest(*paths, **kwargs):
             # make sure we return to the original displayhook in case some
             # doctest has changed that
             sys.displayhook = old_displayhook
+            # The NO_GLOBAL flag overrides the no_global flag to init_printing
+            # if True
+            import sympy.interactive.printing as interactive_printing
+            interactive_printing.NO_GLOBAL = False
 
         rstfailed, tested = out
         if tested:
@@ -1334,6 +1341,7 @@ class SymPyDocTests(object):
         clear_cache()
 
         from sympy.core.compatibility import StringIO
+        import sympy.interactive.printing as interactive_printing
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
@@ -1356,6 +1364,7 @@ class SymPyDocTests(object):
         finally:
             if rel_name.startswith("examples"):
                 del sys.path[0]
+            interactive_printing.NO_GLOBAL = False
 
         tests = [test for test in tests if len(test.examples) > 0]
         # By default tests are sorted by alphabetical order by function name.
