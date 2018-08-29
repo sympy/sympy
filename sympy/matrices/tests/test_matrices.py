@@ -2328,7 +2328,7 @@ def test_col_join():
 
 def test_row_insert():
     r4 = Matrix([[4, 4, 4]])
-    for i in range(-3, 3):
+    for i in range(-4, 5):
         l = [1, 0, 0]
         l.insert(i, 4)
         assert flatten(eye(3).row_insert(i, r4).col(0).tolist()) == l
@@ -2336,7 +2336,7 @@ def test_row_insert():
 
 def test_col_insert():
     c4 = Matrix([4, 4, 4])
-    for i in range(-3, 3):
+    for i in range(-4, 5):
         l = [0, 0, 0]
         l.insert(i, 4)
         assert flatten(zeros(3).col_insert(i, c4).row(0).tolist()) == l
@@ -2351,13 +2351,13 @@ def test_row_and_column_insert_for_indices():
     assert M.row_insert(3, V) == Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5], [10, 10, 10]])
 
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    raises(IndexError, lambda: M.row_insert(4, V))
+    raises(IndexError, lambda: M.row_insert(4.7, V))
 
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     assert M.row_insert(-1, V) == Matrix([[1, 2, 3], [2, 3, 4], [10, 10, 10], [3, 4, 5]])
 
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    raises(IndexError, lambda: M.row_insert(-4, V))
+    raises(IndexError, lambda: M.row_insert(2.8, V))
 
     # for column insert
 
@@ -2370,7 +2370,7 @@ def test_row_and_column_insert_for_indices():
     assert M.col_insert(0, V) == Matrix([[10, 1, 2, 3], [10, 2, 3, 4], [10, 3, 4, 5]])
 
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    raises(IndexError, lambda: M.col_insert(-4, V))
+    raises(IndexError, lambda: M.col_insert(-4.2, V))
 
 
 def test_normalized():
