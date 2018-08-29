@@ -44,9 +44,9 @@ A_E_F>=EXPRESS(DT(V_E_F>,F),D)\
     l = {}
     exec(sympy_input, g, l)
 
-    p_o_e = l['point_o'].pos_from(l['point_e']).express(l['frame_d'])
-    v_e_f = l['point_e'].vel(l['frame_f']).express(l['frame_d'])
-    a_e_f = l['point_e'].acc(l['frame_f']).express(l['frame_d'])
+    p_o_e = l['point_o'].pos_from(l['point_e'])
+    v_e_f = l['point_e'].vel(l['frame_f'])
+    a_e_f = l['point_e'].acc(l['frame_f'])
 
     # NOTE : The Autolev outputs above were manually transformed into
     # equivalent SymPy physics vector expressions. Would be nice to automate
