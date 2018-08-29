@@ -259,10 +259,17 @@ to introduce the names of user-defined functions in the Fortran expression.
     >>> print(fcode(1 - gamma(x)**2, user_functions={'gamma': 'mygamma'}))
           -mygamma(x)**2 + 1
 
-However, when the user_functions argument is not provided, ``fcode`` attempts to
-use a reasonable default and adds a comment to inform the user of the issue.
+However, when the user_functions argument is not provided, ``fcode`` will
+generate code which assumes that a function of the same name will be provided
+by the user:
 
     >>> print(fcode(1 - gamma(x)**2))
+          -gamma(x)**2 + 1
+
+If this assumption is considered too optimistic, the printer can be configured
+to add a comment to inform the user of the issue.
+
+    >>> print(fcode(1 - gamma(x)**2, allow_unknown_functions=False))
     C     Not supported in Fortran:
     C     gamma
           -gamma(x)**2 + 1
@@ -274,7 +281,7 @@ return value is a three-tuple containing: (i) a set of number symbols that must
 be defined as 'Fortran parameters', (ii) a list functions that cannot be
 translated in pure Fortran and (iii) a string of Fortran code. A few examples:
 
-    >>> fcode(1 - gamma(x)**2, human=False)
+    >>> fcode(1 - gamma(x)**2, human=False, allow_unknown_functions=False)
     (set(), {gamma(x)}, '      -gamma(x)**2 + 1')
     >>> fcode(1 - sin(x)**2, human=False)
     (set(), set(), '      -sin(x)**2 + 1')

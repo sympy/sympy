@@ -62,6 +62,7 @@ class JuliaCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': True,
         'contract': True,
         'inline': True,
     }
