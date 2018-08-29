@@ -1459,7 +1459,7 @@ def wronskian(functions, var, method='bareiss'):
     if n == 0:
         return 1
     W = Matrix(n, n, lambda i, j: functions[i].diff(var, j))
-    return W.det(method)
+    return W.det(method=method)
 
 
 def zeros(*args, **kwargs):

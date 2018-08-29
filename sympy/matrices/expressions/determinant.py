@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy import Basic, Expr, S, sympify
 from .matexpr import ShapeError
+from sympy.matrices.expressions.matexpr import MatrixExpr
 
 
 class Determinant(Expr):
@@ -32,14 +33,20 @@ class Determinant(Expr):
     def arg(self):
         return self.args[0]
 
-    def doit(self, expand=False):
+    def doit(self, **kwargs):
         try:
-            return self.arg._eval_determinant()
+            return self.arg._eval_determinant(**kwargs)
         except (AttributeError, NotImplementedError):
             return self
 
-def det(matexpr):
-    """ Matrix Determinant
+def det(matexpr, **kwargs):
+    """ Matrix Determinant.
+
+    Possible 'kwargs' are:
+    method : string, optional (default='bareiss')
+        specifies the algorithm to be used for computing the algorithm.
+        It must be one of 'bareiss', 'lu' or 'berkowitz'.
+        ``method`` is only applicable for a concrete matrix.
 
     >>> from sympy import MatrixSymbol, det, eye
     >>> A = MatrixSymbol('A', 3, 3)
@@ -50,7 +57,11 @@ def det(matexpr):
     1
     """
 
-    return Determinant(matexpr).doit()
+    if isinstance(matexpr, MatrixExpr) and kwargs:
+        raise ValueError(
+            "Keyword arguments not supported for matrix expressions.")
+
+    return Determinant(matexpr).doit(**kwargs)
 
 
 from sympy.assumptions.ask import ask, Q

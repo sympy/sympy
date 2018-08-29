@@ -270,10 +270,10 @@ class MatrixDeterminant(MatrixCommon):
         # return det(P)*det(U)
         return det
 
-    def _eval_determinant(self):
+    def _eval_determinant(self, **kwargs):
         """Assumed to exist by matrix expressions; If we subclass
         MatrixDeterminant, we can fully evaluate determinants."""
-        return self.det()
+        return self.det(**kwargs)
 
     def adjugate(self, method="berkowitz"):
         """Returns the adjugate, or classical adjoint, of

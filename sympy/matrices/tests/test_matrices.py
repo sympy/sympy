@@ -1949,7 +1949,7 @@ def test_errors():
     raises(IndexError, lambda: eye(3)[5, 2])
     raises(IndexError, lambda: eye(3)[2, 5])
     M = Matrix(((1, 2, 3, 4), (5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16)))
-    raises(ValueError, lambda: M.det('method=LU_decomposition()'))
+    raises(ValueError, lambda: M.det(method='LU_decomposition()'))
 
 
 def test_len():
