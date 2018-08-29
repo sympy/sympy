@@ -56,7 +56,6 @@ if theano:
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
-            sympy.MatPow: tt.pow,
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
             sympy.Trace: tlinalg.trace,
             sympy.Determinant : tlinalg.det,
@@ -130,6 +129,14 @@ class TheanoPrinter(Printer):
         result = children[0]
         for child in children[1:]:
             result = tt.dot(result, child)
+        return result
+
+    def _print_MatPow(self, expr, **kwargs):
+        children = [self._print(arg, **kwargs) for arg in expr.args]
+        result = 1
+        if isinstance(children[1], int):
+            for i in range(children[1]):
+                result = tt.dot(result, children[0])
         return result
 
     def _print_MatrixSlice(self, expr, **kwargs):

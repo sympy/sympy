@@ -1535,6 +1535,7 @@ def nc_simplify(expr, deep=True):
     '''
     from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
                                                 MatPow, MatrixSymbol)
+    from sympy.core.exprtools import factor_nc
     # =========== Auxiliary functions ========================
     def _overlaps(args):
         # Calculate a list of lists m such that m[i][j] contains the lengths
@@ -1813,9 +1814,9 @@ def nc_simplify(expr, deep=True):
     if invert:
         simp = _Pow(simp, -1)
 
-    # see if factor(expr) is simplified better
+    # see if factor_nc(expr) is simplified better
     if not isinstance(expr, MatrixExpr):
-        f_expr = factor(expr)
+        f_expr = factor_nc(expr)
         if f_expr != expr:
             alt_simp = nc_simplify(f_expr, deep=deep)
             simp = compare(simp, alt_simp)
