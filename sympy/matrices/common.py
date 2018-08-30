@@ -203,11 +203,7 @@ class MatrixShaping(MatrixRequired):
         if not self:
             return type(self)(other)
 
-        try:
-            as_int(pos)
-        except ValueError:
-            raise TypeError("Index is not an integer: 'pos = %s', valid : %s must be an integer" % (
-            pos, pos))
+        pos = as_int(pos)
 
         if pos < 0:
             pos = self.cols + pos
