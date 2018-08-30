@@ -1940,9 +1940,9 @@ def test_errors():
     raises(ValueError, lambda: M.det('method=LU_decomposition()'))
     V = Matrix([[10, 10, 10]])
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    raises(TypeError, lambda: M.row_insert(4.7, V))
+    raises(ValueError, lambda: M.row_insert(4.7, V))
     M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    raises(TypeError, lambda: M.col_insert(-4.2, V))
+    raises(ValueError, lambda: M.col_insert(-4.2, V))
 
 def test_len():
     assert len(Matrix()) == 0
