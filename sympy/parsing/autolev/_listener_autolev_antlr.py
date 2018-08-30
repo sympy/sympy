@@ -52,7 +52,7 @@ def declare_frames(self, ctx, i, j=None):
     self.symbol_table.update({name1 + "3>": name2 + ".z"})
 
     self.type2.update({name1: "frame"})
-    self.write(name2 + "=" + "me.ReferenceFrame('" + name1 + "')\n")
+    self.write(name2 + " = " + "me.ReferenceFrame('" + name1 + "')\n")
 
 def declare_points(self, ctx, i, j=None):
     if "{" in ctx.getText():
@@ -67,7 +67,7 @@ def declare_points(self, ctx, i, j=None):
 
     self.symbol_table2.update({name1: name2})
     self.type2.update({name1: "point"})
-    self.write(name2 + "=" + "me.Point('" + name1 + "')\n")
+    self.write(name2 + " = " + "me.Point('" + name1 + "')\n")
 
 def declare_particles(self, ctx, i, j=None):
     if "{" in ctx.getText():
@@ -83,7 +83,7 @@ def declare_particles(self, ctx, i, j=None):
     self.symbol_table2.update({name1: name2})
     self.type2.update({name1: "particle"})
     self.bodies.update({name1: name2})
-    self.write(name2 + "=" + "me.Particle('" + name1 + "', " + "me.Point('" +
+    self.write(name2 + " = " + "me.Particle('" + name1 + "', " + "me.Point('" +
                 name1 + "_pt" + "'), " + "sm.Symbol('m'))\n")
 
 def declare_bodies(self, ctx, i, j=None):
@@ -109,13 +109,13 @@ def declare_bodies(self, ctx, i, j=None):
     self.type2.update({name1: "bodies"})
     self.type2.update({name1+"o": "point"})
 
-    self.write(masscenter + "=" + "me.Point('" + name1 + "_cm" + "')\n")
+    self.write(masscenter + " = " + "me.Point('" + name1 + "_cm" + "')\n")
     if self.newtonian:
         self.write(masscenter + ".set_vel(" + self.newtonian + ", " + "0)\n")
-    self.write(refFrame + "=" + "me.ReferenceFrame('" + name1 + "_f" + "')\n")
+    self.write(refFrame + " = " + "me.ReferenceFrame('" + name1 + "_f" + "')\n")
     # We set a dummy mass and inertia here.
     # They will be reset using the setters later in the code anyway.
-    self.write(name2 + "=" + "me.RigidBody('" + name1 + "', " + masscenter + ", " +
+    self.write(name2 + " = " + "me.RigidBody('" + name1 + "', " + masscenter + ", " +
                 refFrame + ", " + "sm.symbols('m'), (me.outer(" + refFrame +
                 ".x," + refFrame + ".x)," + masscenter + "))\n")
 
@@ -250,15 +250,15 @@ def writeConstants(self, ctx):
         real = ", real=True"
 
     if l1:
-        a = ", ".join(l1) + "=" + "sm.symbols(" + "'" +\
+        a = ", ".join(l1) + " = " + "sm.symbols(" + "'" +\
             " ".join(l1) + "'" + real + ")\n"
         self.write(a)
     if l2:
-        a = ", ".join(l2) + "=" + "sm.symbols(" + "'" +\
+        a = ", ".join(l2) + " = " + "sm.symbols(" + "'" +\
             " ".join(l2) + "'" + real + ", nonnegative=True)\n"
         self.write(a)
     if l3:
-        a = ", ".join(l3) + "=" + "sm.symbols(" + "'" + \
+        a = ", ".join(l3) + " = " + "sm.symbols(" + "'" + \
             " ".join(l3) + "'" + real + ", nonpositive=True)\n"
         self.write(a)
     self.var_list = []
@@ -1205,7 +1205,7 @@ if AutolevListener:
                                 elif self.sign[self.symbol_table[i.lower()]] == 1:
                                     name = "u_" + self.symbol_table[i.lower()]
                                     self.symbol_table.update({name: name})
-                                    self.write(name + "=" + "me.dynamicsymbols('" + name + "')\n")
+                                    self.write(name + " = " + "me.dynamicsymbols('" + name + "')\n")
                                     if self.symbol_table[i.lower()] not in self.dependent_variables:
                                         self.u_ind.append(name)
                                         self.kd_equivalents.update({name: self.symbol_table[i.lower()]})
@@ -1383,7 +1383,7 @@ if AutolevListener:
             if ctx.equals().getText() in ["=", "+=", "-=", "*=", "/="]:
                 equals = ctx.equals().getText()
             elif ctx.equals().getText() == ":=":
-                equals = "="
+                equals = " = "
             elif ctx.equals().getText() == "^=":
                 equals = "**="
 
@@ -1443,7 +1443,7 @@ if AutolevListener:
                 if ctx.equals().getText() in ["=", "+=", "-=", "*=", "/="]:
                     equals = ctx.equals().getText()
                 elif ctx.equals().getText() == ":=":
-                    equals = "="
+                    equals = " = "
                 elif ctx.equals().getText() == "^=":
                     equals = "**="
 
@@ -1454,7 +1454,7 @@ if AutolevListener:
                     if ctx.index().getChild(0).getText() == "1":
                         self.type.update({text: "matrix"})
                         self.symbol_table.update({text: text})
-                        self.write(text + "=" + "sm.Matrix([[0]])\n")
+                        self.write(text + " = " + "sm.Matrix([[0]])\n")
                         self.write(text + "[0] = " + self.getValue(ctx.expr()) + "\n")
                     else:
                         # m = m.row_insert(m.shape[0], sm.Matrix([[0]]))
@@ -1801,7 +1801,7 @@ if AutolevListener:
                     symbol = self.symbol_table[ctx.expr(0).getText().lower()]
 
                     if ctx.expr(0) in self.matrix_expr or (expr in self.type.keys() and self.type[expr] == "matrix"):
-                        self.write(symbol + "=" + "sm.Matrix([i.collect(" + self.getValue(ctx.expr(2)) +
+                        self.write(symbol + " = " + "sm.Matrix([i.collect(" + self.getValue(ctx.expr(2)) +
                                    ")" + "for i in " + expr + "])" +
                                    ".reshape((" + expr + ").shape[0], " + "(" + expr + ").shape[1])\n")
                     else:
@@ -1869,7 +1869,7 @@ if AutolevListener:
                         v1 = self.symbol_table2[vec[1]]
                         v2 = self.symbol_table2[vec[2]]
                         if vec[0] == "p":
-                            self.write(v2 + ".set_pos(" + v1 + ", " + "(" + self.getValue(ctx.expr(0)) +
+                            self.write(v1 + ".set_pos(" + v2 + ", " + "(" + self.getValue(ctx.expr(0)) +
                                     ")" + ".express(" + self.symbol_table2[ctx.expr(1).getText().lower()] + f + "))\n")
                         elif vec[0] == "v":
                             self.write(v1 + ".set_vel(" + v2 + ", " + "(" + self.getValue(ctx.expr(0)) +
@@ -2025,7 +2025,7 @@ if AutolevListener:
                 else:
                     e = self.getValue(ctx.expr().expr(1))
                 self.symbol_table.update({ctx.expr().expr(0).getText().lower(): ctx.expr().expr(0).getText().lower()})
-                self.write(ctx.expr().expr(0).getText().lower() + "=" + e + "\n")
+                self.write(ctx.expr().expr(0).getText().lower() + " = " + e + "\n")
                 mass = ctx.expr().expr(0).getText().lower()
             else:
                 try:
@@ -2037,7 +2037,7 @@ if AutolevListener:
                     a_text = ctx.expr().getText().lower()
                     self.symbol_table.update({a_text: a_text})
                     self.type.update({a_text: "constants"})
-                    self.write(a_text + "=" + "sm.symbols('" + a_text + "')\n")
+                    self.write(a_text + " = " + "sm.symbols('" + a_text + "')\n")
                     mass = a_text
 
             self.write(particle + ".mass = " + mass + "\n")

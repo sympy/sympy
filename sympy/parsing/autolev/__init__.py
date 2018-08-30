@@ -6,8 +6,7 @@ def parse_autolev(autolev_code, include_numeric=False):
 
     Parameters
     =========
-    autolev_code : str, any object with a readlines() method (such as a file handle or StringIO)
-        Autolev code...
+    autolev_code : Can be an str or any object with a readlines() method (such as a file handle or StringIO).
     include_numeric : boolean, optional
         If True NumPy, PyDy, or other numeric code is included for numeric evaluation lines in the Autolev code.
 
@@ -19,55 +18,51 @@ def parse_autolev(autolev_code, include_numeric=False):
 
     Example (Double Pendulum)
     =========================
-    Suppose this is the file we need to parse:
-    ------------FILE--------------
-    % double_pendulum.al
-    MOTIONVARIABLES' Q{2}', U{2}'
-    CONSTANTS L,M,G
-    NEWTONIAN N
-    FRAMES A,B
-    SIMPROT(N, A, 3, Q1)
-    SIMPROT(N, B, 3, Q2)
-    W_A_N>=U1*N3>
-    W_B_N>=U2*N3>
-    POINT O
-    PARTICLES P,R
-    P_O_P> = L*A1>
-    P_P_R> = L*B1>
-    V_O_N> = 0>
-    V2PTS(N, A, O, P)
-    V2PTS(N, B, P, R)
-    MASS P=M, R=M
-    Q1' = U1
-    Q2' = U2
-    GRAVITY(G*N1>)
-    ZERO = FR() + FRSTAR()
-    KANE()
-    INPUT M=1,G=9.81,L=1
-    INPUT Q1=.1,Q2=.2,U1=0,U2=0
-    INPUT TFINAL=10, INTEGSTP=.01
-    CODE DYNAMICS() some_filename.c
-    ------------FILE--------------
-    >>> from sympy.parsing.autolev import parse_autolev  # doctest: +SKIP
-    >>> print(parse_autolev(open("double_pendulum.al"), include_numeric=True))  # doctest: +SKIP
+    >>> my_al_text = "MOTIONVARIABLES' Q{2}', U{2}'\\n\\
+    ... CONSTANTS L,M,G\\n\\
+    ... NEWTONIAN N\\n\\
+    ... FRAMES A,B\\n\\
+    ... SIMPROT(N, A, 3, Q1)\\n\\
+    ... SIMPROT(N, B, 3, Q2)\\n\\
+    ... W_A_N>=U1*N3>\\n\\
+    ... W_B_N>=U2*N3>\\n\\
+    ... POINT O\\n\\
+    ... PARTICLES P,R\\n\\
+    ... P_O_P> = L*A1>\\n\\
+    ... P_P_R> = L*B1>\\n\\
+    ... V_O_N> = 0>\\n\\
+    ... V2PTS(N, A, O, P)\\n\\
+    ... V2PTS(N, B, P, R)\\n\\
+    ... MASS P=M, R=M\\n\\
+    ... Q1' = U1\\n\\
+    ... Q2' = U2\\n\\
+    ... GRAVITY(G*N1>)\\n\\
+    ... ZERO = FR() + FRSTAR()\\n\\
+    ... KANE()\\n\\
+    ... INPUT M=1,G=9.81,L=1\\n\\
+    ... INPUT Q1=.1,Q2=.2,U1=0,U2=0\\n\\
+    ... INPUT TFINAL=10, INTEGSTP=.01\\n\\
+    ... CODE DYNAMICS() some_filename.c"
+    >>> from sympy.parsing.autolev import parse_autolev # doctest: +SKIP
+    >>> print(parse_autolev(my_al_text, include_numeric=True)) # doctest: +SKIP
     import sympy.physics.mechanics as me
     import sympy as sm
     import math as m
     import numpy as np
-
+    <BLANKLINE>
     q1, q2, u1, u2 = me.dynamicsymbols('q1 q2 u1 u2')
     q1d, q2d, u1d, u2d = me.dynamicsymbols('q1 q2 u1 u2', 1)
-    l, m, g=sm.symbols('l m g', real=True)
-    frame_n=me.ReferenceFrame('n')
-    frame_a=me.ReferenceFrame('a')
-    frame_b=me.ReferenceFrame('b')
+    l, m, g = sm.symbols('l m g', real=True)
+    frame_n = me.ReferenceFrame('n')
+    frame_a = me.ReferenceFrame('a')
+    frame_b = me.ReferenceFrame('b')
     frame_a.orient(frame_n, 'Axis', [q1, frame_n.z])
     frame_b.orient(frame_n, 'Axis', [q2, frame_n.z])
     frame_a.set_ang_vel(frame_n, u1*frame_n.z)
     frame_b.set_ang_vel(frame_n, u2*frame_n.z)
-    point_o=me.Point('o')
-    particle_p=me.Particle('p', me.Point('p_pt'), sm.Symbol('m'))
-    particle_r=me.Particle('r', me.Point('r_pt'), sm.Symbol('m'))
+    point_o = me.Point('o')
+    particle_p = me.Particle('p', me.Point('p_pt'), sm.Symbol('m'))
+    particle_r = me.Particle('r', me.Point('r_pt'), sm.Symbol('m'))
     particle_p.point.set_pos(point_o, l*frame_a.x)
     particle_r.point.set_pos(particle_p.point, l*frame_b.x)
     point_o.set_vel(frame_n, 0)
@@ -87,8 +82,9 @@ def parse_autolev(autolev_code, include_numeric=False):
     specifieds={},
     initial_conditions={q1:.1, q2:.2, u1:0, u2:0},
     times = np.linspace(0.0, 10, 10/.01))
-
+    <BLANKLINE>
     y=sys.integrate()
+    <BLANKLINE>
     """
 
     _autolev = import_module(
