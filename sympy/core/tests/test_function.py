@@ -5,6 +5,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError, _mexpand
+from sympy.core.sympify import sympify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import subsets, variations
@@ -965,3 +966,23 @@ def test_undef_fcn_float_issue_6938():
     assert not f(pi).evalf().is_number
     x = Symbol('x')
     assert not f(x).evalf(subs={x:1.2}).is_number
+
+def test_undefined_function_eval():
+    # Issue 15170. Make sure UndefinedFunction with eval defined works
+    # properly. The issue there was that the hash was determined before _nargs
+    # was set, which is included in the hash, hence changing the hash. The
+    # class is added to sympy.core.core.all_classes before the hash is
+    # changed, meaning "temp in all_classes" would fail, causing sympify(temp(t))
+    # to give a new class. We will eventually remove all_classes, but make
+    # sure this continues to work.
+
+    fdiff = lambda self, argindex=1: cos(self.args[argindex - 1])
+    eval = classmethod(lambda cls, t: None)
+    _imp_ = classmethod(lambda cls, t: sin(t))
+
+    temp = Function('temp', fdiff=fdiff, eval=eval, _imp_=_imp_)
+
+    expr = temp(t)
+    assert sympify(expr) == expr
+    assert type(sympify(expr)).fdiff == fdiff
+    assert expr.diff(t) == cos(t)
