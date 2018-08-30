@@ -932,7 +932,7 @@ class MatrixSubspaces(MatrixReductions):
 
         return [self.col(i) for i in pivots]
 
-    def nullspace(self, iszerofunc=_iszero, simplify=False):
+    def nullspace(self, simplify=False, iszerofunc=_iszero):
         """Returns list of vectors (Matrix objects) that span nullspace of self
 
         Examples
