@@ -18,31 +18,32 @@ def parse_autolev(autolev_code, include_numeric=False):
 
     Example (Double Pendulum)
     =========================
-    >>> my_al_text = "MOTIONVARIABLES' Q{2}', U{2}'\\n\\
-    ... CONSTANTS L,M,G\\n\\
-    ... NEWTONIAN N\\n\\
-    ... FRAMES A,B\\n\\
-    ... SIMPROT(N, A, 3, Q1)\\n\\
-    ... SIMPROT(N, B, 3, Q2)\\n\\
-    ... W_A_N>=U1*N3>\\n\\
-    ... W_B_N>=U2*N3>\\n\\
-    ... POINT O\\n\\
-    ... PARTICLES P,R\\n\\
-    ... P_O_P> = L*A1>\\n\\
-    ... P_P_R> = L*B1>\\n\\
-    ... V_O_N> = 0>\\n\\
-    ... V2PTS(N, A, O, P)\\n\\
-    ... V2PTS(N, B, P, R)\\n\\
-    ... MASS P=M, R=M\\n\\
-    ... Q1' = U1\\n\\
-    ... Q2' = U2\\n\\
-    ... GRAVITY(G*N1>)\\n\\
-    ... ZERO = FR() + FRSTAR()\\n\\
-    ... KANE()\\n\\
-    ... INPUT M=1,G=9.81,L=1\\n\\
-    ... INPUT Q1=.1,Q2=.2,U1=0,U2=0\\n\\
-    ... INPUT TFINAL=10, INTEGSTP=.01\\n\\
-    ... CODE DYNAMICS() some_filename.c"
+    >>> my_al_text = ("MOTIONVARIABLES' Q{2}', U{2}'",
+    ... "CONSTANTS L,M,G",
+    ... "NEWTONIAN N",
+    ... "FRAMES A,B",
+    ... "SIMPROT(N, A, 3, Q1)",
+    ... "SIMPROT(N, B, 3, Q2)",
+    ... "W_A_N>=U1*N3>",
+    ... "W_B_N>=U2*N3>",
+    ... "POINT O",
+    ... "PARTICLES P,R",
+    ... "P_O_P> = L*A1>",
+    ... "P_P_R> = L*B1>",
+    ... "V_O_N> = 0>",
+    ... "V2PTS(N, A, O, P)",
+    ... "V2PTS(N, B, P, R)",
+    ... "MASS P=M, R=M",
+    ... "Q1' = U1",
+    ... "Q2' = U2",
+    ... "GRAVITY(G*N1>)",
+    ... "ZERO = FR() + FRSTAR()",
+    ... "KANE()",
+    ... "INPUT M=1,G=9.81,L=1",
+    ... "INPUT Q1=.1,Q2=.2,U1=0,U2=0",
+    ... "INPUT TFINAL=10, INTEGSTP=.01",
+    ... "CODE DYNAMICS() some_filename.c")
+    >>> my_al_text = '\\n'.join(my_al_text)
     >>> from sympy.parsing.autolev import parse_autolev # doctest: +SKIP
     >>> print(parse_autolev(my_al_text, include_numeric=True)) # doctest: +SKIP
     import sympy.physics.mechanics as me
