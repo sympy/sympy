@@ -14,6 +14,8 @@ from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
 
+from sympy.external import import_module
+
 __all__ = ['KanesMethod']
 
 
@@ -629,10 +631,13 @@ class KanesMethod(object):
         """The forcing vector of the system."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
-        try:
-            return -Matrix([self._f_d.xreplace(self.kindiffdict()), self._f_dnh.xreplace(self.kindiffdict())])
-        except Exception:
-            return -Matrix([self._f_d.subs(self.kindiffdict()), self._f_dnh.subs(self.kindiffdict())])
+
+        symengine = import_module('symengine')
+        if symengine:
+            method = 'subs'
+        else:
+            method = 'xreplace'
+        return -Matrix([getattr(self._f_d, method)(self.kindiffdict()), getattr(self._f_dnh, method)(self.kindiffdict())])
 
     @property
     def forcing_full(self):
@@ -641,10 +646,13 @@ class KanesMethod(object):
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self.u) + self._f_k
-        try:
-            return -Matrix([f1.xreplace(self.kindiffdict()), self._f_d.xreplace(self.kindiffdict()), self._f_dnh.xreplace(self.kindiffdict())])
-        except Exception:
-            return -Matrix([f1.subs(self.kindiffdict()), self._f_d.subs(self.kindiffdict()), self._f_dnh.subs(self.kindiffdict())])
+
+        symengine = import_module('symengine')
+        if symengine:
+            method = 'subs'
+        else:
+            method = 'xreplace'
+        return -Matrix([getattr(f1, method)(self.kindiffdict()), getattr(self._f_d, method)(self.kindiffdict()), getattr(self._f_dnh, method)(self.kindiffdict())])
 
     @property
     def q(self):
