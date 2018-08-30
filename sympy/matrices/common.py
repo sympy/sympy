@@ -206,21 +206,21 @@ class MatrixShaping(MatrixRequired):
         try:
             as_int(pos)
         except ValueError:
-            raise IndexError("Index is not an integer: 'pos = %s', valid : %s must be an integer" % (
+            raise TypeError("Index is not an integer: 'pos = %s', valid : %s must be an integer" % (
             pos, pos))
-        else:
-            if pos < 0:
-                pos = self.cols + pos
-            if pos < 0:
-                pos = 0
-            elif pos > self.cols:
-                pos = self.cols
 
-            if self.rows != other.rows:
-                raise ShapeError(
-                    "`self` and `other` must have the same number of rows.")
+        if pos < 0:
+            pos = self.cols + pos
+        if pos < 0:
+            pos = 0
+        elif pos > self.cols:
+            pos = self.cols
 
-            return self._eval_col_insert(pos, other)
+        if self.rows != other.rows:
+            raise ShapeError(
+                "`self` and `other` must have the same number of rows.")
+
+        return self._eval_col_insert(pos, other)
 
     def col_join(self, other):
         """Concatenates two matrices along self's last and other's first row.
@@ -449,21 +449,21 @@ class MatrixShaping(MatrixRequired):
         try:
             as_int(pos)
         except ValueError:
-            raise IndexError("Index is not an integer: 'pos = %s', valid : %s must be an integer" % (
+            raise TypeError("Index is not an integer: 'pos = %s', valid : %s must be an integer" % (
                 pos, pos))
-        else:
-            if pos < 0:
-                pos = self.rows + pos
-            if pos < 0:
-                pos = 0
-            elif pos > self.rows:
-                pos = self.rows
 
-            if self.cols != other.cols:
-                raise ShapeError(
-                    "`self` and `other` must have the same number of columns.")
+        if pos < 0:
+            pos = self.rows + pos
+        if pos < 0:
+            pos = 0
+        elif pos > self.rows:
+            pos = self.rows
 
-            return self._eval_row_insert(pos, other)
+        if self.cols != other.cols:
+            raise ShapeError(
+                "`self` and `other` must have the same number of columns.")
+
+        return self._eval_row_insert(pos, other)
 
     def row_join(self, other):
         """Concatenates two matrices along self's last and rhs's first column

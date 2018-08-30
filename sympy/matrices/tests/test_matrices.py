@@ -1938,7 +1938,11 @@ def test_errors():
     raises(IndexError, lambda: eye(3)[2, 5])
     M = Matrix(((1, 2, 3, 4), (5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16)))
     raises(ValueError, lambda: M.det('method=LU_decomposition()'))
-
+    V = Matrix([[10, 10, 10]])
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(TypeError, lambda: M.row_insert(4.7, V))
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(TypeError, lambda: M.col_insert(-4.2, V))
 
 def test_len():
     assert len(Matrix()) == 0
@@ -2340,37 +2344,6 @@ def test_col_insert():
         l = [0, 0, 0]
         l.insert(i, 4)
         assert flatten(zeros(3).col_insert(i, c4).row(0).tolist()) == l
-
-def test_row_and_column_insert_for_indices():
-    V = Matrix([[10, 10, 10]])
-
-    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    assert M.row_insert(1, V) == Matrix([[1, 2, 3], [10, 10, 10], [2, 3, 4], [3, 4, 5]])
-
-    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    assert M.row_insert(3, V) == Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5], [10, 10, 10]])
-
-    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    raises(IndexError, lambda: M.row_insert(4.7, V))
-
-    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    assert M.row_insert(-1, V) == Matrix([[1, 2, 3], [2, 3, 4], [10, 10, 10], [3, 4, 5]])
-
-    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    raises(IndexError, lambda: M.row_insert(2.8, V))
-
-    # for column insert
-
-    V = Matrix([10, 10, 10])
-
-    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    assert M.col_insert(-1, V) == Matrix([[1, 2, 10, 3], [2, 3, 10, 4], [3, 4, 10, 5]])
-
-    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    assert M.col_insert(0, V) == Matrix([[10, 1, 2, 3], [10, 2, 3, 4], [10, 3, 4, 5]])
-
-    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
-    raises(IndexError, lambda: M.col_insert(-4.2, V))
 
 
 def test_normalized():
