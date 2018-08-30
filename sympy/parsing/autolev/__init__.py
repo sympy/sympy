@@ -1,6 +1,7 @@
 from sympy.external import import_module
+from sympy.utilities.decorator import doctest_depends_on
 
-
+@doctest_depends_on(modules=('antlr',))
 def parse_autolev(autolev_code, include_numeric=False):
     """Parses Autolev code (version 4.1) to SymPy code.
 
@@ -44,8 +45,8 @@ def parse_autolev(autolev_code, include_numeric=False):
     ... "INPUT TFINAL=10, INTEGSTP=.01",
     ... "CODE DYNAMICS() some_filename.c")
     >>> my_al_text = '\\n'.join(my_al_text)
-    >>> from sympy.parsing.autolev import parse_autolev # doctest: +SKIP
-    >>> print(parse_autolev(my_al_text, include_numeric=True)) # doctest: +SKIP
+    >>> from sympy.parsing.autolev import parse_autolev
+    >>> print(parse_autolev(my_al_text, include_numeric=True))
     import sympy.physics.mechanics as me
     import sympy as sm
     import math as m
