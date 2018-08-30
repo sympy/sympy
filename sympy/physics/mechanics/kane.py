@@ -629,7 +629,10 @@ class KanesMethod(object):
         """The forcing vector of the system."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
-        return -Matrix([self._f_d, self._f_dnh])
+        try:
+            return -Matrix([self._f_d.xreplace(self.kindiffdict()), self._f_dnh.xreplace(self.kindiffdict())])
+        except Exception:
+            return -Matrix([self._f_d.subs(self.kindiffdict()), self._f_dnh.subs(self.kindiffdict())])
 
     @property
     def forcing_full(self):
@@ -638,7 +641,10 @@ class KanesMethod(object):
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self.u) + self._f_k
-        return -Matrix([f1.subs(self.kindiffdict()), self._f_d.subs(self.kindiffdict()), self._f_dnh.subs(self.kindiffdict())])
+        try:
+            return -Matrix([f1.xreplace(self.kindiffdict()), self._f_d.xreplace(self.kindiffdict()), self._f_dnh.xreplace(self.kindiffdict())])
+        except Exception:
+            return -Matrix([f1.subs(self.kindiffdict()), self._f_d.subs(self.kindiffdict()), self._f_dnh.subs(self.kindiffdict())])
 
     @property
     def q(self):
