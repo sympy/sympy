@@ -1792,9 +1792,10 @@ class ComplexInterval(object):
     Examples
     ========
 
-    >>> from sympy import RootOf, Rational, S
+    >>> from sympy import CRootOf, Rational, S
     >>> from sympy.abc import x
-    >>> root = RootOf(x**10 - 2*x + 3, 9)
+    >>> CRootOf.clear_cache()
+    >>> root = CRootOf(x**10 - 2*x + 3, 9)
     >>> i = root._get_interval(); i
     (3/64, 3/32) x (9/8, 75/64)
 
@@ -1887,7 +1888,7 @@ class ComplexInterval(object):
 
     The following interval j is not disjoint from i:
 
-    >>> close = RootOf(x**10 - 2*x + 300/S(101), 9)
+    >>> close = CRootOf(x**10 - 2*x + 300/S(101), 9)
     >>> j = close._get_interval(); j
     (75/1616, 75/808) x (225/202, 1875/1616)
     >>> i.is_disjoint(j)
