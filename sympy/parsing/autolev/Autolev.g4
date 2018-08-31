@@ -52,7 +52,8 @@ settings:   ID (EXP|ID|FLOAT|INT)?;
 
 units:     UnitSystem ID (',' ID)*;
 inputs:    Input inputs2 (',' inputs2)*;
-inputs2:   ID '=' expr expr?;
+id_diff:   ID diff?;
+inputs2:   id_diff '=' expr expr?;
 outputs:   Output outputs2 (',' outputs2)*;
 outputs2:  expr expr?;
 codegen:   ID functionCall ('['matrixInOutput (',' matrixInOutput)*']')? ID'.'ID;
