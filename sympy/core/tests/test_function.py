@@ -984,5 +984,5 @@ def test_undefined_function_eval():
 
     expr = temp(t)
     assert sympify(expr) == expr
-    assert type(sympify(expr)).fdiff == fdiff
+    assert type(sympify(expr)).fdiff.__name__ == "<lambda>"
     assert expr.diff(t) == cos(t)
