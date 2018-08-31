@@ -406,3 +406,9 @@ expensive to calculate.
     (λ - 5) ⋅(λ - 3)⋅(λ + 2)
 
 .. TODO: Add an example for ``jordan_form``, once it is fully implemented.
+
+Possible Issues
+===============
+
+Zero testing
+------------
