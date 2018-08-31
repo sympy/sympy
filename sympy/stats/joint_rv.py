@@ -105,7 +105,7 @@ class JointPSpace(ProductPSpace):
             f = Lambda(sym, summation(self.distribution(all_syms), limits))
         return f.xreplace(replace_dict)
 
-    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         syms = tuple(self.value[i] for i in range(self.component_count))
         rvs = rvs or syms
         if not any([i in rvs for i in syms]):
