@@ -46,7 +46,7 @@ A_E_F>=EXPRESS(DT(V_E_F>,F),D)\
     exec(sympy_input, g, l)
 
     w_c_f = l['frame_c'].ang_vel_in(l['frame_f'])
-    p_o_e = l['point_o'].pos_from(l['point_e'])
+    p_o_e = l['point_e'].pos_from(l['point_o'])
     v_e_f = l['point_e'].vel(l['frame_f'])
     a_e_f = l['point_e'].acc(l['frame_f'])
 
@@ -59,7 +59,7 @@ A_E_F>=EXPRESS(DT(V_E_F>,F),D)\
 
     assert (w_c_f - expected_w_c_f).simplify() == 0
 
-    expected_p_o_e = (-l['l']*cos(l['dc'])*l['frame_d'].z +
+    expected_p_o_e = (-l['l']*cos(l['dc'])*l['frame_d'].x +
                       l['r']*l['frame_d'].y +
                       l['l']*sin(l['dc'])*l['frame_d'].z)
 
