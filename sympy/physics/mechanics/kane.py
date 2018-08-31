@@ -137,6 +137,8 @@ class KanesMethod(object):
         self._forcelist = None
         self._bodylist = None
 
+        self.sub_kin_diffs = None
+
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
         self._initialize_kindiffeq_matrices(kd_eqs)
@@ -504,7 +506,7 @@ class KanesMethod(object):
         result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)
 
-    def kanes_equations(self, bodies, loads=None):
+    def kanes_equations(self, bodies, loads=None, sub_kin_diffs=True):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
         Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
@@ -526,6 +528,9 @@ class KanesMethod(object):
             Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
         """
+        if sub_kin_diffs:
+            self.sub_kin_diffs = True
+
         if (bodies is None and loads != None) or isinstance(bodies[0], tuple):
             # This switches the order if they use the old way.
             bodies, loads = loads, bodies
@@ -631,13 +636,16 @@ class KanesMethod(object):
         """The forcing vector of the system."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
-
-        symengine = import_module('symengine')
-        if symengine:
-            method = 'subs'
+        if self.sub_kin_diffs:
+            symengine = import_module('symengine')
+            if symengine:
+                method = 'subs'
+            else:
+                method = 'xreplace'
+            return -Matrix([getattr(self._f_d, method)(self.kindiffdict()), getattr(self._f_dnh, method)(self.kindiffdict())])
         else:
-            method = 'xreplace'
-        return -Matrix([getattr(self._f_d, method)(self.kindiffdict()), getattr(self._f_dnh, method)(self.kindiffdict())])
+            return -Matrix([self._f_d, self._f_dnh])
+
 
     @property
     def forcing_full(self):
@@ -646,13 +654,15 @@ class KanesMethod(object):
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self.u) + self._f_k
-
-        symengine = import_module('symengine')
-        if symengine:
-            method = 'subs'
+        if self.sub_kin_diffs:
+            symengine = import_module('symengine')
+            if symengine:
+                method = 'subs'
+            else:
+                method = 'xreplace'
+            return -Matrix([getattr(f1, method)(self.kindiffdict()), getattr(self._f_d, method)(self.kindiffdict()), getattr(self._f_dnh, method)(self.kindiffdict())])
         else:
-            method = 'xreplace'
-        return -Matrix([getattr(f1, method)(self.kindiffdict()), getattr(self._f_d, method)(self.kindiffdict()), getattr(self._f_dnh, method)(self.kindiffdict())])
+            return -Matrix([f1, self._f_d, self._f_dnh])
 
     @property
     def q(self):
