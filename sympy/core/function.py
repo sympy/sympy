@@ -161,7 +161,7 @@ class FunctionClass(ManagedProperties):
             nargs = (as_int(nargs),)
         cls._nargs = nargs
 
-        super(FunctionClass, cls).__init__(args, kwargs)
+        super(FunctionClass, cls).__init__(*args, **kwargs)
 
     @property
     def __signature__(self):
