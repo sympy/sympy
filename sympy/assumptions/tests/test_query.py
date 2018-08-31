@@ -2020,7 +2020,7 @@ def test_incompatible_resolutors():
             return None
     register_handler('prime', InconclusiveHandler)
     assert ask(Q.prime(3)) is True
-
+    remove_handler('prime', InconclusiveHandler)
 
 def test_key_extensibility():
     """test that you can add keys to the ask system at runtime"""
