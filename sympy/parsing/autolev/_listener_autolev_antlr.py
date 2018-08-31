@@ -1869,7 +1869,7 @@ if AutolevListener:
                         v1 = self.symbol_table2[vec[1]]
                         v2 = self.symbol_table2[vec[2]]
                         if vec[0] == "p":
-                            self.write(v1 + ".set_pos(" + v2 + ", " + "(" + self.getValue(ctx.expr(0)) +
+                            self.write(v2 + ".set_pos(" + v1 + ", " + "(" + self.getValue(ctx.expr(0)) +
                                     ")" + ".express(" + self.symbol_table2[ctx.expr(1).getText().lower()] + f + "))\n")
                         elif vec[0] == "v":
                             self.write(v1 + ".set_vel(" + v2 + ", " + "(" + self.getValue(ctx.expr(0)) +
