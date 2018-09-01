@@ -409,8 +409,8 @@ def g_bbht_search(qstate, oracle):
     G-BBHT-Search for a orcale that returns 1 for a unkown number of statesbetween 5 - 15::
 
         >>> from sympy.physics.quantum.grover import random_oracle, superposition_basis, g_bbht_search
-        >>> basis_states = superposition_basis(5)
-        >>> oracle = random_oracle(5, min_img=5, max_img=15, q_type="bin")
+        >>> basis_states = superposition_basis(4)
+        >>> oracle = random_oracle(4, min_img=5, max_img=15, q_type="bin")
         >>> x = g_bbht_search(basis_states, oracle)[0]
         >>> oracle.search_function(x)
         True
