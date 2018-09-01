@@ -425,7 +425,7 @@ to be accurate in some limited domain of symbolic expressions,
 and any complicated expressions which are beyond its decidability are tested as ``None``,
 which are mostly treated as logically equivalent to ``False`` in SymPy's policy.
 
-Currently, the methods relying on zero testing procedures are as followings.
+Currently, the methods using zero testing procedures are as followings.
 
 ``echelon_form`` , ``is_echelon`` , ``rank`` , ``rref`` , ``nullspace`` , ``eigenvects`` ,
 ``inverse_ADJ`` , ``inverse_GE`` , ``inverse_LU`` , ``LUdecomposition`` , ``LUdecomposition_Simple`` ,
@@ -470,4 +470,27 @@ by injecting a custom zero test which can print out warnings.
 
 In this case, ``(-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2`` should yield zero,
 but the zero testing had failed to catch.
-So you should use a more stronger zero test for workaround.
+So you should introduce a stronger zero test for workaround.
+For this specific example, rewriting to exponentials and simplifying would make zero test stronger for hyperbolics,
+while being harmless to other polynomials or transcendental functions.
+
+    >>> def my_iszero(x):
+    ...     try:
+    ...         result = x.rewrite(exp).simplify().is_zero
+    ...     except AttributeError:
+    ...         result = None
+    ...
+    ...     # Warnings if evaluated into None
+    ...     if result == None:
+    ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
+    ...     return result
+    ...
+    >>> m.nullspace(iszerofunc=my_iszero)
+    __main__:9: UserWarning: Zero testing of -2*cosh(q/3) - exp(-q) evaluated into None
+    [Matrix([
+    [(-(-exp(q) - 2*cosh(q/3))*exp(-q) + 4*cosh(q/3)**2 - 1)/(2*(4*cosh(q/3)**2 - 1)*cosh(q/3))],
+    [                                             -(-exp(q) - 2*cosh(q/3))/(4*cosh(q/3)**2 - 1)],
+    [                                                                                         1]])]
+
+You can clearly see ``nullspace`` returning accurate symbolic result by solving zero testing,
+as you clearly see the only undertested one ``-2*cosh(q/3) - exp(-q)`` is not zero.
