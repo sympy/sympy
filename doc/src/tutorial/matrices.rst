@@ -419,3 +419,8 @@ is actually zero, might not have been evaluated into zero during the evaluation
 process, the untested zero can possibly bring issues in finding pivots for
 gaussian elimination, or deciding whether the matrix is inversible, or any
 other higher level functions which relies on the former procedures.
+
+Currently, the SymPy's default method of zero testing ``_iszero`` is only guaranteed
+to be accurate in limited domain of symbolic expressions, and any complicated expressions
+which are beyond its decidability are tested as ``None``s, which are mostly treated as
+same as ``False`` in SymPy's policies.
