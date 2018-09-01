@@ -410,5 +410,12 @@ expensive to calculate.
 Possible Issues
 ===============
 
-Zero testing
+Zero Testing
 ------------
+
+One of the most common issues that can cause your matrix operations to yield
+wrong answer would be from zero testing. If some symbolic expressions, which
+is actually zero, might not have been evaluated into zero during the evaluation
+process, the untested zero can possibly bring issues in finding pivots for
+gaussian elimination, or deciding whether the matrix is inversible, or any
+other higher level functions which relies on the former procedures.
