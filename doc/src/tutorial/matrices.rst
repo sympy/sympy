@@ -425,7 +425,7 @@ to be accurate in some limited domain of symbolic expressions,
 and any complicated expressions which are beyond its decidability are tested as ``None``,
 which are mostly treated as logically equivalent to ``False`` in SymPy's policy.
 
-Currently, the methods which relies on zero testing procedures is as followings.
+Currently, the methods relying on zero testing procedures are as followings.
 
 ``echelon_form`` , ``is_echelon`` , ``rank`` , ``rref`` , ``nullspace`` , ``eigenvects`` ,
 ``inverse_ADJ`` , ``inverse_GE`` , ``inverse_LU`` , ``LUdecomposition`` , ``LUdecomposition_Simple`` ,
@@ -443,4 +443,27 @@ Here is an example of solving an issue caused by undertested zero.
     ... [      exp(q), -2*cosh(q/3),            1],
     ... [           1,            1, -2*cosh(q/3)]])
     >>> m.nullspace()
+    []
+
+You can trace down which expression is underevaluated,
+by injecting a custom zero test which can print out warnings.
+
+    >>> import warnings
+    >>>
+    >>> def my_iszero(x):
+    ...     try:
+    ...         result = x.is_zero
+    ...     except AttributeError:
+    ...         result = None
+    ...
+    ...     # Warnings if evaluated into None
+    ...     if result == None:
+    ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
+    ...     return result
+    ...
+    >>> m.nullspace(iszerofunc=my_iszero)
+    __main__:9: UserWarning: Zero testing of 4*cosh(q/3)**2 - 1 evaluated into None
+    __main__:9: UserWarning: Zero testing of (-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2 evaluated into None
+    __main__:9: UserWarning: Zero testing of 2*exp(q)*cosh(q/3) - 16*cosh(q/3)**4 + 12*cosh(q/3)**2 + 2*exp(-q)*cosh(q/3) evaluated into None
+    __main__:9: UserWarning: Zero testing of -(4*cosh(q/3)**2 - 1)*exp(-q) - 2*cosh(q/3) - exp(-q) evaluated into None
     []
