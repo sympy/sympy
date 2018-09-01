@@ -1950,7 +1950,11 @@ def test_errors():
     raises(IndexError, lambda: eye(3)[2, 5])
     M = Matrix(((1, 2, 3, 4), (5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16)))
     raises(ValueError, lambda: M.det('method=LU_decomposition()'))
-
+    V = Matrix([[10, 10, 10]])
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(ValueError, lambda: M.row_insert(4.7, V))
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(ValueError, lambda: M.col_insert(-4.2, V))
 
 def test_len():
     assert len(Matrix()) == 0
