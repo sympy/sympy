@@ -329,33 +329,33 @@ def apply_grover(oracle, nqubits, iterations=None):
 def random_oracle(nqubits, min_img=1, max_img=1, q_type='bin'):
     """Create a random OracleGate under the given parameter
 
-        Parameters
-        ==========
+    Parameters
+    ==========
 
-        nqubits : int
-            The number of qubits for OracleGate
-        min_pic : int
-            Minimum number of invers images that are mapped to 1
-        max_pic : int
-            Maximum number of invers images that are mapped to 1
-        q_type : OracleGate
-            Type of the Qubits that the oracle should be applied on.
-            Can be 'bin' for binary (Qubit()) or 'int' for integer (IntQubit()).
+    nqubits : int
+        The number of qubits for OracleGate
+    min_pic : int
+        Minimum number of invers images that are mapped to 1
+    max_pic : int
+        Maximum number of invers images that are mapped to 1
+    q_type : OracleGate
+        Type of the Qubits that the oracle should be applied on.
+        Can be 'bin' for binary (Qubit()) or 'int' for integer (IntQubit()).
 
-        Returns
-        =======
+    Returns
+    =======
 
-        OracleGate : random OracleGate under the given parameter
+    OracleGate : random OracleGate under the given parameter
 
-        Examples
-        ========
+    Examples
+    ========
 
-        Generate random OracleGate that outputs 1 for 2-4 inputs::
+    Generate random OracleGate that outputs 1 for 2-4 inputs::
 
-            >>> from sympy.physics.quantum.grover import random_oracle
-            >>> oracle = random_oracle(4, min_img=2, max_img=4, q_type="bin")
+        >>> from sympy.physics.quantum.grover import random_oracle
+        >>> oracle = random_oracle(4, min_img=2, max_img=4, q_type="bin")
 
-        """
+    """
     if q_type != 'bin' and q_type != 'int':
         raise QuantumError("q_type must be 'int' or 'bin'")
 
@@ -386,34 +386,35 @@ def g_bbht_search(qstate, oracle):
     G-BBHT-Search is an algorithm based on Grover's algorithm,
     but designed for an unknown oracle function that returns 1
     for an unknown number of qubit states. Its based on this
-    paper: Boyer, M., Brassard, G., Høyer, P., & Tapp, A. (1998).
-    Tight bounds on quantum searching. Fortschritte der Physik:
-    Progress of Physics, 46(4‐5), 493-505.
+    paper: Boyer, M., Brassard, G., Hoyer, P.,  Tapp, A. (1998).
+    Tight bounds on quantum searching: Progress of Physics,
+    46(4-5), 493-505.
 
-        Parameters
-        ==========
+    Parameters
+    ==========
 
-        qstate : Qubit
-            State the G-BBHT-Search should be applied on
-        oracle : OracleGate
-            The black box operator that flips the sign of the desired basis qubits.
+    qstate : Qubit
+        State the G-BBHT-Search should be applied on
+    oracle : OracleGate
+        The black box operator that flips the sign of the desired basis qubits.
 
-        Returns
-        =======
+    Returns
+    =======
 
-        (Qubit, int) : (single Qubit that fullfilles oracle, numberof grover iterations applied)
+    (Qubit, int) : (single Qubit that fullfilles oracle, numberof grover iterations applied)
 
-        Examples
-        ========
+    Examples
+    ========
 
-        G-BBHT-Search for a orcale that returns 1 for a unkown number of statesbetween 5 - 15::
+    G-BBHT-Search for a orcale that returns 1 for a unkown number of statesbetween 5 - 15::
 
-            >>> basis_states = superposition_basis(5)
-            >>> oracle = random_oracle(5, min_img=5, max_img=15, q_type="bin")
-            >>> g_bbht_search(basis_states, oracle)
-            (|00111>, 1)
+        >>> from sympy.physics.quantum.grover import random_oracle, superposition_basis, g_bbht_search
+        >>> basis_states = superposition_basis(5)
+        >>> oracle = random_oracle(5, min_img=5, max_img=15, q_type="bin")
+        >>> g_bbht_search(basis_states, oracle)
+        (|00111>, 1)
 
-        """
+    """
     import random
     import math
     from sympy.physics.quantum.qubit import measure_all_oneshot
@@ -423,7 +424,7 @@ def g_bbht_search(qstate, oracle):
     count_grover_iterations = 0
 
     while True:
-        for _ in range(random.choice(list(range(0, math.ceil(max_iterations))))):
+        for _ in range(random.choice(list(range(0, int(math.ceil(max_iterations)))))):
             count_grover_iterations += 1
             qstate = qapply(grover_iteration(qstate, oracle))
 
