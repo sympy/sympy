@@ -414,7 +414,7 @@ Zero Testing
 ------------
 
 If your matrix operations are failing or evaluating wrong answers, one of the common reasons would be originating from zero testing.
-If some of the  expressions during the evaluation is not properly zero-tested,
+If there is any expression during the evaluation process not properly zero-tested,
 the undertested zero can possibly bring issues in finding pivots for gaussian elimination,
 or deciding whether the matrix is inversible,
 or any other higher level functions which relies on the prior procedures.
@@ -423,3 +423,20 @@ Currently, the SymPy's default method of zero testing ``_iszero`` is only guaran
 to be accurate in some limited domain of symbolic expressions,
 and any complicated expressions which are beyond its decidability are tested as ``None``,
 which are mostly treated as logically equivalent to ``False`` in SymPy's policy.
+
+Currently, the methods which relies on zero testing procedures is as followings,
+and they have property ``iszerofunc`` opened for user to specify a possibly stronger zero test,
+while they are automatically mapped with default ``_iszero`` , which uses speed oriented approach.
+
+``echelon_form`` , ``is_echelon`` , ``rank`` , ``rref`` , ``nullspace`` , ``eigenvects`` ,
+``inverse_ADJ`` , ``inverse_GE`` , ``inverse_LU`` , ``LUdecomposition`` , ``LUdecomposition_Simple`` ,
+``LUsolve`` 
+
+    >>> from sympy import *
+    >>> q = Symbol("q", positive = True)
+    >>> m = Matrix([
+    ... [-2*cosh(q/3),      exp(-q),            1],
+    ... [      exp(q), -2*cosh(q/3),            1],
+    ... [           1,            1, -2*cosh(q/3)]])
+    >>> m.nullspace()
+    []
