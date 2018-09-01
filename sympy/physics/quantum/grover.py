@@ -3,8 +3,6 @@
 Todo:
 
 * W gate construction (or perhaps -W gate based on Mermin's book)
-* Generalize the algorithm for an unknown function that returns 1 on multiple
-  qubit states, not just one.
 * Implement _represent_ZGate in OracleGate
 """
 
@@ -18,14 +16,16 @@ from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.operator import UnitaryOperator
 from sympy.physics.quantum.gate import Gate
-from sympy.physics.quantum.qubit import IntQubit
+from sympy.physics.quantum.qubit import IntQubit, Qubit
 
 __all__ = [
     'OracleGate',
     'WGate',
     'superposition_basis',
     'grover_iteration',
-    'apply_grover'
+    'apply_grover',
+    'random_oracle',
+    'g_bbht_search'
 ]
 
 
@@ -324,3 +324,110 @@ def apply_grover(oracle, nqubits, iterations=None):
         iterated = qapply(iterated)
 
     return iterated
+
+
+def random_oracle(nqubits, min_img=1, max_img=1, q_type='bin'):
+    """Create a random OracleGate under the given parameter
+
+        Parameters
+        ==========
+
+        nqubits : int
+            The number of qubits for OracleGate
+        min_pic : int
+            Minimum number of invers images that are mapped to 1
+        max_pic : int
+            Maximum number of invers images that are mapped to 1
+        q_type : OracleGate
+            Type of the Qubits that the oracle should be applied on.
+            Can be 'bin' for binary (Qubit()) or 'int' for integer (IntQubit()).
+
+        Returns
+        =======
+
+        OracleGate : random OracleGate under the given parameter
+
+        Examples
+        ========
+
+        Generate random OracleGate that outputs 1 for 2-4 inputs::
+
+            >>> from sympy.physics.quantum.grover import random_oracle
+            >>> oracle = random_oracle(4, min_img=2, max_img=4, q_type="bin")
+
+        """
+    if q_type != 'bin' and q_type != 'int':
+        raise QuantumError("q_type must be 'int' or 'bin'")
+
+    if min_img < 1 or max_img < 1:
+        raise QuantumError("min_pic, max_pic must be > 0")
+
+    if min_img > max_img:
+        raise QuantumError("max_pic must be >= min_pic")
+
+    if min_img >= 2 ** nqubits or max_img > 2 ** nqubits:
+        raise QuantumError("min_pic must be < 2**nqubits and max_pic must be <= 2**nqubits")
+
+    import random
+
+    integers = list(range(nqubits ** 2))
+    pics = random.randint(min_img, max_img)
+    if q_type == "int":
+        items = [IntQubit(integers.pop(integers.index(random.choice(integers))), nqubits) for _ in range(pics)]
+    else:
+        items = [Qubit(IntQubit(integers.pop(integers.index(random.choice(integers))), nqubits)) for _ in range(pics)]
+
+    return OracleGate(nqubits, lambda qubits: qubits in items)
+
+
+def g_bbht_search(qstate, oracle):
+    """G-BBHT-Search
+
+    G-BBHT-Search is an algorithm based on Grover's algorithm,
+    but designed for an unknown oracle function that returns 1
+    for an unknown number of qubit states. Its based on this
+    paper: Boyer, M., Brassard, G., Høyer, P., & Tapp, A. (1998).
+    Tight bounds on quantum searching. Fortschritte der Physik:
+    Progress of Physics, 46(4‐5), 493-505.
+
+        Parameters
+        ==========
+
+        qstate : Qubit
+            State the G-BBHT-Search should be applied on
+        oracle : OracleGate
+            The black box operator that flips the sign of the desired basis qubits.
+
+        Returns
+        =======
+
+        (Qubit, int) : (single Qubit that fullfilles oracle, numberof grover iterations applied)
+
+        Examples
+        ========
+
+        G-BBHT-Search for a orcale that returns 1 for a unkown number of statesbetween 5 - 15::
+
+            >>> basis_states = superposition_basis(5)
+            >>> oracle = random_oracle(5, min_img=5, max_img=15, q_type="bin")
+            >>> g_bbht_search(basis_states, oracle)
+            (|00111>, 1)
+
+        """
+    import random
+    import math
+    from sympy.physics.quantum.qubit import measure_all_oneshot
+
+    max_iterations = 1
+    factor_iterations = 6 / 5
+    count_grover_iterations = 0
+
+    while True:
+        for _ in range(random.choice(list(range(0, math.ceil(max_iterations))))):
+            count_grover_iterations += 1
+            qstate = qapply(grover_iteration(qstate, oracle))
+
+        measure = measure_all_oneshot(qstate)
+        max_iterations *= factor_iterations
+        if oracle.search_function(measure) is True:
+            return measure, count_grover_iterations

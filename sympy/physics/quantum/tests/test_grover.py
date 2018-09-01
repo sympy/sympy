@@ -3,7 +3,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import IntQubit
 from sympy.physics.quantum.grover import (apply_grover, superposition_basis,
-        OracleGate, grover_iteration, WGate)
+        OracleGate, grover_iteration, WGate, random_oracle, g_bbht_search)
 
 
 def return_one_on_two(qubits):
@@ -80,6 +80,11 @@ def test_grover_iteration_2():
     expected = (-13*basis_states)/64 + 264*IntQubit(2, numqubits)/256
     assert qapply(expected) == iterated
 
+def test_g_bbht_search(nqubits=5):
+    basis_states = superposition_basis(nqubits)
+    oracle = random_oracle(nqubits, min_img=5, max_img=15, q_type="bin")
+    x = g_bbht_search(basis_states, oracle)[0]
+    assert oracle.search_function(x) == 1
 
 def test_grover():
     nqubits = 2
