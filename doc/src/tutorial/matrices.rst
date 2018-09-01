@@ -413,13 +413,13 @@ Possible Issues
 Zero Testing
 ------------
 
-If your matrix operations fail or evaluate wrong answer, one of the common reasons would be from zero testing.
-If some expressions during evaluation is not properly zero-tested,
-the untested zero can possibly bring issues in finding pivots for gaussian elimination,
+If your matrix operations are failing or evaluating wrong answers, one of the common reasons would be originating from zero testing.
+If some of the  expressions during the evaluation is not properly zero-tested,
+the undertested zero can possibly bring issues in finding pivots for gaussian elimination,
 or deciding whether the matrix is inversible,
 or any other higher level functions which relies on the prior procedures.
 
 Currently, the SymPy's default method of zero testing ``_iszero`` is only guaranteed
 to be accurate in some limited domain of symbolic expressions,
 and any complicated expressions which are beyond its decidability are tested as ``None``,
-which are mostly treated as logically same as ``False`` in SymPy's policies.
+which are mostly treated as logically equivalent to ``False`` in SymPy's policy.
