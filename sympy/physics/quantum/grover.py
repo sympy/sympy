@@ -411,8 +411,9 @@ def g_bbht_search(qstate, oracle):
         >>> from sympy.physics.quantum.grover import random_oracle, superposition_basis, g_bbht_search
         >>> basis_states = superposition_basis(5)
         >>> oracle = random_oracle(5, min_img=5, max_img=15, q_type="bin")
-        >>> g_bbht_search(basis_states, oracle)
-        (|00111>, 1)
+        >>> x = g_bbht_search(basis_states, oracle)[0]
+        >>> oracle.search_function(x)
+        True
 
     """
     import random
