@@ -445,7 +445,7 @@ Here is an example of solving an issue caused by undertested zero.
     >>> m.nullspace()
     []
 
-You can trace down which expression is underevaluated,
+You can trace down which expression is being underevaluated,
 by injecting a custom zero test which can print out warnings.
 
     >>> import warnings
@@ -467,3 +467,7 @@ by injecting a custom zero test which can print out warnings.
     __main__:9: UserWarning: Zero testing of 2*exp(q)*cosh(q/3) - 16*cosh(q/3)**4 + 12*cosh(q/3)**2 + 2*exp(-q)*cosh(q/3) evaluated into None
     __main__:9: UserWarning: Zero testing of -(4*cosh(q/3)**2 - 1)*exp(-q) - 2*cosh(q/3) - exp(-q) evaluated into None
     []
+
+In this case, ``(-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2`` should yield zero,
+but the zero testing had failed to catch.
+So you should use a more stronger zero test for workaround.
