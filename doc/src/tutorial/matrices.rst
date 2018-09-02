@@ -422,17 +422,17 @@ or any high level functions which relies on the prior procedures.
 
 Currently, the SymPy's default method of zero testing ``_iszero`` is only guaranteed
 to be accurate in some limited domain of numerics and symbols,
-and any complicated expressions which are beyond its decidability are tested as ``None``,
-which behaves similar to logical ``False``.
+and any complicated expressions beyond its decidability are treated as ``None``,
+which behaves similarly to logical ``False``.
 
-The methods using zero testing procedures are as followings.
+The list of methods using zero testing procedures are as followings.
 
 ``echelon_form`` , ``is_echelon`` , ``rank`` , ``rref`` , ``nullspace`` , ``eigenvects`` ,
 ``inverse_ADJ`` , ``inverse_GE`` , ``inverse_LU`` , ``LUdecomposition`` , ``LUdecomposition_Simple`` ,
 ``LUsolve`` 
 
 They have property ``iszerofunc`` opened up for user to specify zero testing method,
-which can accept any function with single input and boolean output
+which can accept any function with single input and boolean output,
 while being defaulted with ``_iszero``.
 
 Here is an example of solving an issue caused by undertested zero.
@@ -493,7 +493,7 @@ while being harmless to other polynomials or transcendental functions.
     [                                             -(-exp(q) - 2*cosh(q/3))/(4*cosh(q/3)**2 - 1)],
     [                                                                                         1]])]
 
-You can clearly see ``nullspace`` returning proper result, after injecting alternate zero test.
+You can clearly see ``nullspace`` returning proper result, after injecting an alternative zero test.
 
 Note that this approach is only valid for some limited cases of matrices containing only numerics, hyperbolics, and exponentials.
 For other matrices, you should use different method opted for their domains.
@@ -503,8 +503,12 @@ or using random numeric testing, with tradeoff of accuracy.
 
 If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities, 
 it's because of the constant problem stateing that zero testing is undecidable,
-and not only SymPy, but other computer algebra systems also face the same fundamental issue.
+and not only the SymPy, but also other computer algebra systems are currently facing the same fundamental issue.
 
 However, discovery of any zero test failings can provide some good examples to improve SymPy,
 so if you have encountered one, you can report the issue to
-SymPy issue tracker to get detailed help from the community.
+SymPy issue tracker [#sympyissues-fn] to get detailed help from the community.
+
+.. rubric:: Footnotes
+
+.. [#sympyissues-fn] https://github.com/sympy/sympy/issues
