@@ -503,12 +503,18 @@ or using random numeric testing, with tradeoff of accuracy.
 
 If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities, 
 it's because of the constant problem stateing that zero testing is undecidable,
-and not only the SymPy, but also other computer algebra systems are currently facing the same fundamental issue.
+and not only the SymPy, but also other computer algebra systems
+[#matlabzero-fn]_ [#mathematicazero-fn]_
+are currently facing the same fundamental issue.
 
 However, discovery of any zero test failings can provide some good examples to improve SymPy,
 so if you have encountered one, you can report the issue to
-SymPy issue tracker [#sympyissues-fn] to get detailed help from the community.
+SymPy issue tracker [#sympyissues-fn]_ to get detailed help from the community.
 
 .. rubric:: Footnotes
+
+.. [#mathematicazero-fn] https://reference.wolfram.com/language/ref/PossibleZeroQ.html
+
+.. [#matlabzero-fn] https://www.mathworks.com/help/symbolic/mupad_ref/iszero.html
 
 .. [#sympyissues-fn] https://github.com/sympy/sympy/issues
