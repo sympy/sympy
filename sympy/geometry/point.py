@@ -575,10 +575,7 @@ class Point(GeometryEntity):
         False
 
         """
-        points = args
-        points = Point._normalize_dimension(*[Point(i) for i in points])
-        points = list(uniq(points))
-        return Point.affine_rank(*points) <= 1
+        return args[0].is_collinear(*args[1:])
 
     def is_concyclic(self, *args):
         """Do `self` and the given sequence of points lie in a circle?
