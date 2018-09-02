@@ -415,7 +415,7 @@ Zero Testing
 
 If your matrix operations are failing or returning wrong answers,
 one of the common reasons would be zero testing.
-If there an expression not properly zero-tested,
+If there is an expression not properly zero-tested,
 it can possibly bring issues in finding pivots for gaussian elimination,
 or deciding whether the matrix is inversible,
 or any high level functions which relies on the prior procedures.
@@ -425,13 +425,14 @@ to be accurate in some limited domain of numerics and symbols,
 and any complicated expressions which are beyond its decidability are tested as ``None``,
 which behaves similar to logical ``False``.
 
-Currently, the methods using zero testing procedures are as followings.
+The methods using zero testing procedures are as followings.
 
 ``echelon_form`` , ``is_echelon`` , ``rank`` , ``rref`` , ``nullspace`` , ``eigenvects`` ,
 ``inverse_ADJ`` , ``inverse_GE`` , ``inverse_LU`` , ``LUdecomposition`` , ``LUdecomposition_Simple`` ,
 ``LUsolve`` 
 
 They have property ``iszerofunc`` opened up for user to specify zero testing method,
+which can accept any function with single input and boolean output
 while being defaulted with ``_iszero``.
 
 Here is an example of solving an issue caused by undertested zero.
@@ -471,7 +472,7 @@ by injecting a custom zero test with warnings enabled.
 In this case, ``(-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2`` should yield zero,
 but the zero testing had failed to catch.
 So you should introduce a stronger zero test for workaround.
-For this specific example, rewriting to exponentials and simplifying would make zero test stronger for hyperbolics,
+For this specific example, rewriting to exponentials and applying simplify would make zero test stronger for hyperbolics,
 while being harmless to other polynomials or transcendental functions.
 
     >>> def my_iszero(x):
@@ -492,10 +493,9 @@ while being harmless to other polynomials or transcendental functions.
     [                                             -(-exp(q) - 2*cosh(q/3))/(4*cosh(q/3)**2 - 1)],
     [                                                                                         1]])]
 
-You can clearly see ``nullspace`` returning proper result
+You can clearly see ``nullspace`` returning proper result, after modifying zero test.
 
-Note that this approach is only valid for the exact problem,
-or for some matrices containing only numerics, hyperbolics, and exponentials.
+Note that this approach is only valid for some limited cases of matrices containing only numerics, hyperbolics, and exponentials.
 For other matrices, you should use method opted for their domains.
 
 Possible suggestions would be either taking advantage of rewriting and simplifying, with tradeoff of speed,
@@ -505,6 +505,6 @@ If you wonder why there is no generic algorithm for zero testing that can work w
 the [constant problem](https://en.wikipedia.org/wiki/Constant_problem) states that zero is undecidable,
 posing as a great fundamental issue to SymPy and other computer algebra systems.
 
-However, discovering any cases of zero test failings can provide good examples to improve SymPy,
-so if you encounter one, you can report the issue to
-[SymPy issue tracker](https://github.com/sympy/sympy) for further help from the community.
+However, discovery of any zero test failings can provide some good examples to improve SymPy,
+so if you have encountered one, you can report the issue to
+[SymPy issue tracker](https://github.com/sympy/sympy) to get detailed help from the community.
