@@ -471,7 +471,7 @@ by injecting a custom zero test with warnings enabled.
 
 In this case, ``(-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2`` should yield zero,
 but the zero testing had failed to catch.
-So you should introduce a stronger zero test for workaround.
+possibly meaning that a stronger zero test should be introduced.
 For this specific example, rewriting to exponentials and applying simplify would make zero test stronger for hyperbolics,
 while being harmless to other polynomials or transcendental functions.
 
@@ -493,18 +493,18 @@ while being harmless to other polynomials or transcendental functions.
     [                                             -(-exp(q) - 2*cosh(q/3))/(4*cosh(q/3)**2 - 1)],
     [                                                                                         1]])]
 
-You can clearly see ``nullspace`` returning proper result, after modifying zero test.
+You can clearly see ``nullspace`` returning proper result, after injecting alternate zero test.
 
 Note that this approach is only valid for some limited cases of matrices containing only numerics, hyperbolics, and exponentials.
-For other matrices, you should use method opted for their domains.
+For other matrices, you should use different method opted for their domains.
 
 Possible suggestions would be either taking advantage of rewriting and simplifying, with tradeoff of speed,
 or using random numeric testing, with tradeoff of accuracy.
 
-If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities,
-the [constant problem](https://en.wikipedia.org/wiki/Constant_problem) states that zero is undecidable,
-posing as a great fundamental issue to SymPy and other computer algebra systems.
+If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities, 
+it's because of the constant problem stateing that zero testing is undecidable,
+and not only SymPy, but other computer algebra systems also face the same fundamental issue.
 
 However, discovery of any zero test failings can provide some good examples to improve SymPy,
 so if you have encountered one, you can report the issue to
-[SymPy issue tracker](https://github.com/sympy/sympy) to get detailed help from the community.
+SymPy issue tracker to get detailed help from the community.
