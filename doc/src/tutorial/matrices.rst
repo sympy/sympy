@@ -499,8 +499,8 @@ You can clearly see ``nullspace`` returning proper result, after injecting an al
 Note that this approach is only valid for some limited cases of matrices containing only numerics, hyperbolics, and exponentials.
 For other matrices, you should use different method opted for their domains.
 
-Possible suggestions would be either taking advantage of rewriting and simplifying, with tradeoff of speed,
-or using random numeric testing, with tradeoff of accuracy.
+Possible suggestions would be either taking advantage of rewriting and simplifying, with tradeoff of speed [#zerotestsimplifysolution-fn]_ ,
+or using random numeric testing, with tradeoff of accuracy [#zerotestnumerictestsolution-fn]_ .
 
 If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities,
 it's because of the constant problem stateing that zero testing is undecidable,
@@ -516,7 +516,11 @@ SymPy issue tracker [#sympyissues-fn]_ to get detailed help from the community.
 
 .. [#zerotestexampleidea-fn] Inspired by https://gitter.im/sympy/sympy?at=5b7c3e8ee5b40332abdb206c
 
-.. [#zerotestexamplediscovery-fn]  Discovered from https://github.com/sympy/sympy/issues/15141
+.. [#zerotestexamplediscovery-fn] Discovered from https://github.com/sympy/sympy/issues/15141
+
+.. [#zerotestsimplifysolution-fn] Suggested from https://github.com/sympy/sympy/issues/10120
+
+.. [#zerotestnumerictestsolution-fn] Suggested from https://github.com/sympy/sympy/issues/10279
 
 .. [#mathematicazero-fn] How mathematica tests zero https://reference.wolfram.com/language/ref/PossibleZeroQ.html
 
