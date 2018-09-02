@@ -436,6 +436,7 @@ which can accept any function with single input and boolean output,
 while being defaulted with ``_iszero``.
 
 Here is an example of solving an issue caused by undertested zero.
+[zerotestexample-fn]_
 
     >>> from sympy import *
     >>> q = Symbol("q", positive = True)
@@ -504,7 +505,7 @@ or using random numeric testing, with tradeoff of accuracy.
 If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities, 
 it's because of the constant problem stateing that zero testing is undecidable,
 and not only the SymPy, but also other computer algebra systems
-[#matlabzero-fn]_ [#mathematicazero-fn]_
+[#mathematicazero-fn]_ [#matlabzero-fn]_
 are currently facing the same fundamental issue.
 
 However, discovery of any zero test failings can provide some good examples to improve SymPy,
@@ -513,8 +514,11 @@ SymPy issue tracker [#sympyissues-fn]_ to get detailed help from the community.
 
 .. rubric:: Footnotes
 
-.. [#mathematicazero-fn] https://reference.wolfram.com/language/ref/PossibleZeroQ.html
+.. [zerotestexample-fn] Inspired by https://gitter.im/sympy/sympy?at=5b7c3e8ee5b40332abdb206c
+  Discovered from https://github.com/sympy/sympy/issues/15141
 
-.. [#matlabzero-fn] https://www.mathworks.com/help/symbolic/mupad_ref/iszero.html
+.. [#mathematicazero-fn] How mathematica tests zero https://reference.wolfram.com/language/ref/PossibleZeroQ.html
+
+.. [#matlabzero-fn] How matlab tests zero https://www.mathworks.com/help/symbolic/mupad_ref/iszero.html
 
 .. [#sympyissues-fn] https://github.com/sympy/sympy/issues
