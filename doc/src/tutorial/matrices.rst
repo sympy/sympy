@@ -414,7 +414,7 @@ Zero Testing
 ------------
 
 If your matrix operations are failing or returning wrong answers,
-one of the common reasons would be zero testing.
+the common reasons would likely be from zero testing.
 If there is an expression not properly zero-tested,
 it can possibly bring issues in finding pivots for gaussian elimination,
 or deciding whether the matrix is inversible,
@@ -503,7 +503,7 @@ Possible suggestions would be either taking advantage of rewriting and simplifyi
 or using random numeric testing, with tradeoff of accuracy [#zerotestnumerictestsolution-fn]_ .
 
 If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities,
-it's because of the constant problem stateing that zero testing is undecidable,
+it's because of the constant problem stateing that zero testing is undecidable [#constantproblemwikilink-fn]_ ,
 and not only the SymPy, but also other computer algebra systems
 [#mathematicazero-fn]_ [#matlabzero-fn]_
 are currently facing the same fundamental issue.
@@ -521,6 +521,8 @@ SymPy issue tracker [#sympyissues-fn]_ to get detailed help from the community.
 .. [#zerotestsimplifysolution-fn] Suggested from https://github.com/sympy/sympy/issues/10120
 
 .. [#zerotestnumerictestsolution-fn] Suggested from https://github.com/sympy/sympy/issues/10279
+
+.. [#constantproblemwikilink-fn] https://en.wikipedia.org/wiki/Constant_problem
 
 .. [#mathematicazero-fn] How mathematica tests zero https://reference.wolfram.com/language/ref/PossibleZeroQ.html
 
