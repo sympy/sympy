@@ -413,17 +413,17 @@ Possible Issues
 Zero Testing
 ------------
 
-If your matrix operations are failing or evaluating wrong answers,
-one of the common reasons would be originating from zero testing.
-If there is any expression during the evaluation process not properly zero-tested,
-the undertested zero can possibly bring issues in finding pivots for gaussian elimination,
+If your matrix operations are failing or returning wrong answers,
+one of the common reasons would be zero testing.
+If there an expression not properly zero-tested,
+it can possibly bring issues in finding pivots for gaussian elimination,
 or deciding whether the matrix is inversible,
-or any other higher level functions which relies on the prior procedures.
+or any high level functions which relies on the prior procedures.
 
 Currently, the SymPy's default method of zero testing ``_iszero`` is only guaranteed
-to be accurate in some limited domain of symbolic expressions,
+to be accurate in some limited domain of numerics and symbols,
 and any complicated expressions which are beyond its decidability are tested as ``None``,
-which are mostly treated as logically equivalent to ``False`` in SymPy's policy.
+which behaves similar to logical ``False``.
 
 Currently, the methods using zero testing procedures are as followings.
 
@@ -446,7 +446,7 @@ Here is an example of solving an issue caused by undertested zero.
     []
 
 You can trace down which expression is being underevaluated,
-by injecting a custom zero test which can print out warnings.
+by injecting a custom zero test with warnings enabled.
 
     >>> import warnings
     >>>
@@ -492,5 +492,19 @@ while being harmless to other polynomials or transcendental functions.
     [                                             -(-exp(q) - 2*cosh(q/3))/(4*cosh(q/3)**2 - 1)],
     [                                                                                         1]])]
 
-You can clearly see ``nullspace`` returning accurate symbolic result by solving zero testing,
-as you clearly see the only undertested one ``-2*cosh(q/3) - exp(-q)`` is not zero.
+You can clearly see ``nullspace`` returning proper result
+
+Note that this approach is only valid for the exact problem,
+or for some matrices containing only numerics, hyperbolics, and exponentials.
+For other matrices, you should use method opted for their domains.
+
+Possible suggestions would be either taking advantage of rewriting and simplifying, with tradeoff of speed,
+or using random numeric testing, with tradeoff of accuracy.
+
+If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities,
+the [constant problem](https://en.wikipedia.org/wiki/Constant_problem) states that zero is undecidable,
+posing as a great fundamental issue to SymPy and other computer algebra systems.
+
+However, discovering any cases of zero test failings can provide good examples to improve SymPy,
+so if you encounter one, you can report the issue to
+[SymPy issue tracker](https://github.com/sympy/sympy) for further help from the community.
