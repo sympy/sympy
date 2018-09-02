@@ -429,14 +429,14 @@ The list of methods using zero testing procedures are as followings.
 
 ``echelon_form`` , ``is_echelon`` , ``rank`` , ``rref`` , ``nullspace`` , ``eigenvects`` ,
 ``inverse_ADJ`` , ``inverse_GE`` , ``inverse_LU`` , ``LUdecomposition`` , ``LUdecomposition_Simple`` ,
-``LUsolve`` 
+``LUsolve``
 
 They have property ``iszerofunc`` opened up for user to specify zero testing method,
 which can accept any function with single input and boolean output,
 while being defaulted with ``_iszero``.
 
 Here is an example of solving an issue caused by undertested zero.
-[zerotestexample-fn]_
+[#zerotestexampleidea-fn]_ [#zerotestexamplediscovery-fn]_
 
     >>> from sympy import *
     >>> q = Symbol("q", positive = True)
@@ -502,7 +502,7 @@ For other matrices, you should use different method opted for their domains.
 Possible suggestions would be either taking advantage of rewriting and simplifying, with tradeoff of speed,
 or using random numeric testing, with tradeoff of accuracy.
 
-If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities, 
+If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities,
 it's because of the constant problem stateing that zero testing is undecidable,
 and not only the SymPy, but also other computer algebra systems
 [#mathematicazero-fn]_ [#matlabzero-fn]_
@@ -514,8 +514,9 @@ SymPy issue tracker [#sympyissues-fn]_ to get detailed help from the community.
 
 .. rubric:: Footnotes
 
-.. [zerotestexample-fn] Inspired by https://gitter.im/sympy/sympy?at=5b7c3e8ee5b40332abdb206c
-  Discovered from https://github.com/sympy/sympy/issues/15141
+.. [#zerotestexampleidea-fn] Inspired by https://gitter.im/sympy/sympy?at=5b7c3e8ee5b40332abdb206c
+
+.. [#zerotestexamplediscovery-fn]  Discovered from https://github.com/sympy/sympy/issues/15141
 
 .. [#mathematicazero-fn] How mathematica tests zero https://reference.wolfram.com/language/ref/PossibleZeroQ.html
 
