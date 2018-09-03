@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
 from sympy.core.singleton import S, Singleton
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.compatibility import (range, integer_types, with_metaclass,
                                       is_sequence, iterable, ordered)
 from sympy.core.decorators import call_highest_priority
@@ -11,6 +11,7 @@ from sympy.core.cache import cacheit
 from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
 from sympy.core.evaluate import global_evaluate
+from sympy.core.numbers import oo
 from sympy.polys import lcm, factor
 from sympy.sets.sets import Interval, Intersection
 from sympy.utilities.iterables import flatten
@@ -709,6 +710,134 @@ class SeqFormula(SeqExpr):
         coeff = sympify(coeff)
         formula = self.formula * coeff
         return SeqFormula(formula, self.args[1])
+
+
+class RecursiveSeq(SeqBase):
+
+    """A finite degree recursive sequence.
+
+    That is, a sequence a(n) that depends on a fixed, finite number of its
+    previous values. The general form is
+
+        a(n) = f(a(n - 1), a(n - 2), ..., a(n - d))
+
+    for some fixed, positive integer d, where f is some function defined by a
+    SymPy expression.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, symbols
+    >>> from sympy.series.sequences import RecursiveSeq
+
+    >>> y = Function("y")
+    >>> n = symbols("n")
+    >>> fib = RecursiveSeq([0, 1], y(n), y(n - 1) + y(n - 2))
+
+    For value at a particular point
+
+    >>> fib.coeff(3)
+    2
+
+    supports slicing
+
+    >>> fib[:6]
+    [0, 1, 1, 2, 3, 5]
+
+    inspect recurrence
+
+    >>> fib.recurrence
+    y(n - 2) + y(n - 1)
+
+    automatically determine degree
+
+    >>> fib.degree
+    2
+
+    See Also
+    ========
+
+    sympy.series.sequences.SeqFormula
+
+    """
+
+    def __init__(self, initial, y, recurrence, start=0, stop=oo):
+        n = y.args[0]
+        y = y.func
+        k = Wild("k", exclude=(n,))
+        degree = -oo
+
+        # Find all applications of y in the recurrence and check that:
+        #   1. The function y is only being used with a single argument; and
+        #   2. All arguments are n + k for constant negative integers k.
+
+        prev_ys = recurrence.find(y)
+        for prev_y in prev_ys:
+            if len(prev_y.args) != 1:
+                raise TypeError("Recurrence should be in a single variable")
+
+            shift = prev_y.args[0].match(n + k)[k]
+            if not (shift.is_constant() and shift.is_integer and shift < 0):
+                raise TypeError("Recurrence should have constant,"
+                                " negative, integer shifts"
+                                " (found {})".format(prev_y))
+
+            if -shift > degree:
+                degree = -shift
+
+        if len(initial) != degree:
+            raise ValueError("Number of initial terms must equal degree")
+
+        self.degree = degree
+        self.y = y
+        self.n = n
+        self.k = k
+
+        self.recurrence = recurrence
+        self._start = start
+        self._stop = stop
+        self._interval = (start, stop)
+
+        initial = [sympify(x) for x in initial]
+
+        self.initial = initial
+        self.cache = {y(start + k): init for k, init in enumerate(self.initial)}
+
+    @property
+    def start(self):
+        """The starting point of the sequence. This point is included"""
+        return self._start
+
+    @property
+    def stop(self):
+        """The ending point of the sequence. This point is included"""
+        return self._stop
+
+    @property
+    def interval(self):
+        """Interval on which sequence is defined."""
+        return (self._start, self._stop)
+
+    def _eval_coeff(self, index):
+        if index < len(self.cache):
+            return self.cache[self.y(index)]
+
+        for current in range(len(self.cache), index + 1):
+            # Use xreplace over subs for performance.
+            # See issue #10697.
+            current_recurrence = self.recurrence.xreplace({self.n: current})
+            new_term = current_recurrence.xreplace(self.cache)
+
+            self.cache[self.y(current)] = new_term
+
+        return self.cache[self.y(current)]
+
+    @property
+    def gen(self):
+        index = self._start
+        while True:
+            yield self._eval_coeff(index)
+            index += 1
 
 
 def sequence(seq, limits=None):
