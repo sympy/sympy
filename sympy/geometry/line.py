@@ -1106,9 +1106,9 @@ class Line(LinearEntity):
 
         if kwargs.get('equation', None) is not None:
 
+            x = kwargs.get('x', 'x')
+            y = kwargs.get('y', 'y')
             equation = kwargs['equation']
-            x = kwargs['x']
-            y = kwargs['y']
 
             def find(x_, equation_):
                 free = equation_.free_symbols

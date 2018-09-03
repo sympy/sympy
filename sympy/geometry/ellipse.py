@@ -1343,7 +1343,7 @@ class Circle(Ellipse):
 
     >>> # a circle object is returned
     >>> from sympy.abc import x, y, a, b
-    >>> Circle(equation = x ** 2 + y ** 2 - 25, x='x', y='y')
+    >>> Circle(equation = x ** 2 + y ** 2 - 25)
     Circle(Point2D(0, 0), 5)
     >>> Circle(equation = a ** 2 + b ** 2 - 25, x='a', y='b')
     Circle(Point2D(0, 0), 5)
@@ -1368,9 +1368,9 @@ class Circle(Ellipse):
 
         if kwargs.get('equation', None) is not None:
 
+            x = kwargs.get('x', 'x')
+            y = kwargs.get('y', 'y')
             equation = kwargs['equation']
-            x = kwargs['x']
-            y = kwargs['y']
 
             def find(x_, equation_):
                 free = equation_.free_symbols
