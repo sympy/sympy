@@ -732,7 +732,7 @@ class RecursiveSeq(SeqBase):
 
     >>> y = Function("y")
     >>> n = symbols("n")
-    >>> fib = RecursiveSeq([0, 1], y(n), y(n - 1) + y(n - 2))
+    >>> fib = RecursiveSeq((0, 1), y(n), y(n - 1) + y(n - 2))
 
     For value at a particular point
 
@@ -788,7 +788,7 @@ class RecursiveSeq(SeqBase):
         if len(initial) != degree:
             raise ValueError("Number of initial terms must equal degree")
 
-        self.degree = degree
+        self.degree = S(degree)
         self.y = y
         self.n = n
         self.k = k
