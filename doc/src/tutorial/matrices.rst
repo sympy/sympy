@@ -489,10 +489,23 @@ while being harmless to other polynomials or transcendental functions.
     ...
     >>> m.nullspace(iszerofunc=my_iszero)
     __main__:9: UserWarning: Zero testing of -2*cosh(q/3) - exp(-q) evaluated into None
-    [Matrix([
-    [(-(-exp(q) - 2*cosh(q/3))*exp(-q) + 4*cosh(q/3)**2 - 1)/(2*(4*cosh(q/3)**2 - 1)*cosh(q/3))],
-    [                                             -(-exp(q) - 2*cosh(q/3))/(4*cosh(q/3)**2 - 1)],
-    [                                                                                         1]])]
+    ⎡⎡  ⎛   q         ⎛q⎞⎞  -q         2⎛q⎞    ⎤⎤
+    ⎢⎢- ⎜- ℯ  - 2⋅cosh⎜─⎟⎟⋅ℯ   + 4⋅cosh ⎜─⎟ - 1⎥⎥
+    ⎢⎢  ⎝             ⎝3⎠⎠              ⎝3⎠    ⎥⎥
+    ⎢⎢─────────────────────────────────────────⎥⎥
+    ⎢⎢          ⎛      2⎛q⎞    ⎞     ⎛q⎞       ⎥⎥
+    ⎢⎢        2⋅⎜4⋅cosh ⎜─⎟ - 1⎟⋅cosh⎜─⎟       ⎥⎥
+    ⎢⎢          ⎝       ⎝3⎠    ⎠     ⎝3⎠       ⎥⎥
+    ⎢⎢                                         ⎥⎥
+    ⎢⎢           ⎛   q         ⎛q⎞⎞            ⎥⎥
+    ⎢⎢          -⎜- ℯ  - 2⋅cosh⎜─⎟⎟            ⎥⎥
+    ⎢⎢           ⎝             ⎝3⎠⎠            ⎥⎥
+    ⎢⎢          ────────────────────           ⎥⎥
+    ⎢⎢                   2⎛q⎞                  ⎥⎥
+    ⎢⎢             4⋅cosh ⎜─⎟ - 1              ⎥⎥
+    ⎢⎢                    ⎝3⎠                  ⎥⎥
+    ⎢⎢                                         ⎥⎥
+    ⎣⎣                    1                    ⎦⎦
 
 You can clearly see ``nullspace`` returning proper result, after injecting an alternative zero test.
 
