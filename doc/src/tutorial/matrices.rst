@@ -471,7 +471,7 @@ by injecting a custom zero test with warnings enabled.
     []
 
 In this case,
- ``(-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2``
+``(-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2``
 should yield zero, but the zero testing had failed to catch.
 possibly meaning that a stronger zero test should be introduced.
 For this specific example, rewriting to exponentials and applying simplify would
