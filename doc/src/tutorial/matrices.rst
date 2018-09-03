@@ -463,11 +463,11 @@ by injecting a custom zero test with warnings enabled.
     ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
     ...     return result
     ...
-    >>> m.nullspace(iszerofunc=my_iszero)
-    __main__:9: UserWarning: Zero testing of 4*cosh(q/3)**2 - 1 evaluated into None # doctest: +SKIP
-    __main__:9: UserWarning: Zero testing of (-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2 evaluated into None # doctest: +SKIP
-    __main__:9: UserWarning: Zero testing of 2*exp(q)*cosh(q/3) - 16*cosh(q/3)**4 + 12*cosh(q/3)**2 + 2*exp(-q)*cosh(q/3) evaluated into None # doctest: +SKIP
-    __main__:9: UserWarning: Zero testing of -(4*cosh(q/3)**2 - 1)*exp(-q) - 2*cosh(q/3) - exp(-q) evaluated into None # doctest: +SKIP
+    >>> m.nullspace(iszerofunc=my_iszero) # doctest: +SKIP
+    __main__:9: UserWarning: Zero testing of 4*cosh(q/3)**2 - 1 evaluated into None
+    __main__:9: UserWarning: Zero testing of (-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2 evaluated into None
+    __main__:9: UserWarning: Zero testing of 2*exp(q)*cosh(q/3) - 16*cosh(q/3)**4 + 12*cosh(q/3)**2 + 2*exp(-q)*cosh(q/3) evaluated into None
+    __main__:9: UserWarning: Zero testing of -(4*cosh(q/3)**2 - 1)*exp(-q) - 2*cosh(q/3) - exp(-q) evaluated into None
     []
 
 In this case, ``(-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2`` should yield zero,
@@ -487,8 +487,8 @@ while being harmless to other polynomials or transcendental functions.
     ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
     ...     return result
     ...
-    >>> m.nullspace(iszerofunc=my_iszero)
-    __main__:9: UserWarning: Zero testing of -2*cosh(q/3) - exp(-q) evaluated into None # doctest: +SKIP
+    >>> m.nullspace(iszerofunc=my_iszero) # doctest: +SKIP
+    __main__:9: UserWarning: Zero testing of -2*cosh(q/3) - exp(-q) evaluated into None
     ⎡⎡  ⎛   q         ⎛q⎞⎞  -q         2⎛q⎞    ⎤⎤
     ⎢⎢- ⎜- ℯ  - 2⋅cosh⎜─⎟⎟⋅ℯ   + 4⋅cosh ⎜─⎟ - 1⎥⎥
     ⎢⎢  ⎝             ⎝3⎠⎠              ⎝3⎠    ⎥⎥
