@@ -420,19 +420,19 @@ it can possibly bring issues in finding pivots for gaussian elimination,
 or deciding whether the matrix is inversible,
 or any high level functions which relies on the prior procedures.
 
-Currently, the SymPy's default method of zero testing ``_iszero`` is only guaranteed
-to be accurate in some limited domain of numerics and symbols,
+Currently, the SymPy's default method of zero testing ``_iszero`` is only
+guaranteed to be accurate in some limited domain of numerics and symbols,
 and any complicated expressions beyond its decidability are treated as ``None``,
 which behaves similarly to logical ``False``.
 
 The list of methods using zero testing procedures are as followings.
 
-``echelon_form`` , ``is_echelon`` , ``rank`` , ``rref`` , ``nullspace`` , ``eigenvects`` ,
-``inverse_ADJ`` , ``inverse_GE`` , ``inverse_LU`` , ``LUdecomposition`` , ``LUdecomposition_Simple`` ,
-``LUsolve``
+``echelon_form`` , ``is_echelon`` , ``rank`` , ``rref`` , ``nullspace`` ,
+``eigenvects`` , ``inverse_ADJ`` , ``inverse_GE`` , ``inverse_LU`` ,
+``LUdecomposition`` , ``LUdecomposition_Simple`` , ``LUsolve``
 
-They have property ``iszerofunc`` opened up for user to specify zero testing method,
-which can accept any function with single input and boolean output,
+They have property ``iszerofunc`` opened up for user to specify zero testing
+method, which can accept any function with single input and boolean output,
 while being defaulted with ``_iszero``.
 
 Here is an example of solving an issue caused by undertested zero.
@@ -470,10 +470,12 @@ by injecting a custom zero test with warnings enabled.
     __main__:9: UserWarning: Zero testing of -(4*cosh(q/3)**2 - 1)*exp(-q) - 2*cosh(q/3) - exp(-q) evaluated into None
     []
 
-In this case, ``(-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2`` should yield zero,
-but the zero testing had failed to catch.
+In this case,
+ ``(-exp(q) - 2*cosh(q/3))*(-2*cosh(q/3) - exp(-q)) - (4*cosh(q/3)**2 - 1)**2``
+should yield zero, but the zero testing had failed to catch.
 possibly meaning that a stronger zero test should be introduced.
-For this specific example, rewriting to exponentials and applying simplify would make zero test stronger for hyperbolics,
+For this specific example, rewriting to exponentials and applying simplify would
+make zero test stronger for hyperbolics,
 while being harmless to other polynomials or transcendental functions.
 
     >>> def my_iszero(x):
@@ -507,21 +509,28 @@ while being harmless to other polynomials or transcendental functions.
     ⎢⎢                                         ⎥⎥
     ⎣⎣                    1                    ⎦⎦
 
-You can clearly see ``nullspace`` returning proper result, after injecting an alternative zero test.
+You can clearly see ``nullspace`` returning proper result, after injecting an
+alternative zero test.
 
-Note that this approach is only valid for some limited cases of matrices containing only numerics, hyperbolics, and exponentials.
+Note that this approach is only valid for some limited cases of matrices
+containing only numerics, hyperbolics, and exponentials.
 For other matrices, you should use different method opted for their domains.
 
-Possible suggestions would be either taking advantage of rewriting and simplifying, with tradeoff of speed [#zerotestsimplifysolution-fn]_ ,
-or using random numeric testing, with tradeoff of accuracy [#zerotestnumerictestsolution-fn]_ .
+Possible suggestions would be either taking advantage of rewriting and
+simplifying, with tradeoff of speed [#zerotestsimplifysolution-fn]_ ,
+or using random numeric testing, with tradeoff of accuracy
+[#zerotestnumerictestsolution-fn]_ .
 
-If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities,
-it's because of the constant problem stating that zero testing is undecidable [#constantproblemwikilink-fn]_ ,
+If you wonder why there is no generic algorithm for zero testing that can work
+with any symbolic entities,
+it's because of the constant problem stating that zero testing is undecidable
+[#constantproblemwikilink-fn]_ ,
 and not only the SymPy, but also other computer algebra systems
 [#mathematicazero-fn]_ [#matlabzero-fn]_
 would face the same fundamental issue.
 
-However, discovery of any zero test failings can provide some good examples to improve SymPy,
+However, discovery of any zero test failings can provide some good examples to
+improve SymPy,
 so if you have encountered one, you can report the issue to
 SymPy issue tracker [#sympyissues-fn]_ to get detailed help from the community.
 
