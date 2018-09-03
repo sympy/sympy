@@ -516,10 +516,10 @@ Possible suggestions would be either taking advantage of rewriting and simplifyi
 or using random numeric testing, with tradeoff of accuracy [#zerotestnumerictestsolution-fn]_ .
 
 If you wonder why there is no generic algorithm for zero testing that can work with any symbolic entities,
-it's because of the constant problem stateing that zero testing is undecidable [#constantproblemwikilink-fn]_ ,
+it's because of the constant problem stating that zero testing is undecidable [#constantproblemwikilink-fn]_ ,
 and not only the SymPy, but also other computer algebra systems
 [#mathematicazero-fn]_ [#matlabzero-fn]_
-are currently facing the same fundamental issue.
+would face the same fundamental issue.
 
 However, discovery of any zero test failings can provide some good examples to improve SymPy,
 so if you have encountered one, you can report the issue to
