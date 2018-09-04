@@ -300,6 +300,13 @@ def plot_and_save_4(name):
     p.save(tmp_file('%s_advanced_fin_sum' % name))
     p._backend.close()
 
+def plot_and_save_5(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+
     ###
     # Test expressions that can not be translated to np and generate complex
     # results.
@@ -356,6 +363,18 @@ def test_matplotlib_4():
     if matplotlib:
         try:
             plot_and_save_4('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_5():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_5('test')
         finally:
             # clean up
             TmpFileManager.cleanup()
