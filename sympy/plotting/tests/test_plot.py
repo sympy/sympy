@@ -106,7 +106,7 @@ def plot_and_save_1(name):
     p.save(tmp_file('%s_plot_piecewise_3' % name))
     p._backend.close()
 
-def plot_and_save(name):
+def plot_and_save_2(name):
     tmp_file = TmpFileManager.tmp_file
 
     x = Symbol('x')
@@ -198,6 +198,13 @@ def plot_and_save(name):
     p = plot_contour((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x**3 + y**3, (x, -3, 3), (y, -3, 3)))
     p.save(tmp_file('%s_contour_plot' % name))
     p._backend.close()
+
+def plot_and_save(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
 
     ###
     # Examples from the 'colors' notebook
