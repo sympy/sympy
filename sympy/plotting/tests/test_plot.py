@@ -350,12 +350,12 @@ def test_matplotlib_3():
     else:
         skip("Matplotlib not the default backend")
 
-def test_matplotlib():
+def test_matplotlib_4():
 
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
         try:
-            plot_and_save('test')
+            plot_and_save_4('test')
         finally:
             # clean up
             TmpFileManager.cleanup()
