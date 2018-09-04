@@ -761,7 +761,7 @@ class RecursiveSeq(SeqBase):
 
     """
 
-    def __init__(self, initial, y, recurrence, start=0, stop=oo):
+    def __new__(cls, initial, y, recurrence, start=0, stop=oo):
         n = y.args[0]
         y = y.func
         k = Wild("k", exclude=(n,))
@@ -788,20 +788,23 @@ class RecursiveSeq(SeqBase):
         if len(initial) != degree:
             raise ValueError("Number of initial terms must equal degree")
 
-        self.degree = S(degree)
-        self.y = y
-        self.n = n
-        self.k = k
+        degree = S(degree)
+        start = sympify(start)
+        stop = sympify(stop)
 
-        self.recurrence = recurrence
-        self._start = start
-        self._stop = stop
-        self._interval = (start, stop)
+        initial = Tuple(*(sympify(x) for x in initial))
 
-        initial = [sympify(x) for x in initial]
+        seq = Basic.__new__(cls, initial, y(n), recurrence, start, stop)
 
-        self.initial = initial
-        self.cache = {y(start + k): init for k, init in enumerate(self.initial)}
+        seq.cache = {y(start + k): init for k, init in enumerate(initial)}
+        seq._start = start
+        seq._stop = stop
+        seq.degree = degree
+        seq.y = y
+        seq.n = n
+        seq.recurrence = recurrence
+
+        return seq
 
     @property
     def start(self):
