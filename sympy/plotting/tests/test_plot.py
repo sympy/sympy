@@ -262,7 +262,7 @@ def plot_and_save_3(name):
     p.save(tmp_file('%s_colors_param_surf_arity3' % name))
     p._backend.close()
 
-def plot_and_save(name):
+def plot_and_save_4(name):
     tmp_file = TmpFileManager.tmp_file
 
     x = Symbol('x')
