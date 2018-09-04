@@ -199,7 +199,7 @@ def plot_and_save_2(name):
     p.save(tmp_file('%s_contour_plot' % name))
     p._backend.close()
 
-def plot_and_save(name):
+def plot_and_save_3(name):
     tmp_file = TmpFileManager.tmp_file
 
     x = Symbol('x')
@@ -261,6 +261,13 @@ def plot_and_save(name):
     p[0].surface_color = lambdify_((x, y, z), sqrt(x**2 + y**2 + z**2))
     p.save(tmp_file('%s_colors_param_surf_arity3' % name))
     p._backend.close()
+
+def plot_and_save(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
 
     ###
     # Examples from the 'advanced' notebook
