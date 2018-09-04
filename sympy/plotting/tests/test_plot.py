@@ -36,7 +36,7 @@ class TmpFileManager:
                 # If the file doesn't exist, for instance, if the test failed.
                 pass
 
-def plot_and_save(name):
+def plot_and_save_1(name):
     tmp_file = TmpFileManager.tmp_file
 
     x = Symbol('x')
@@ -105,6 +105,13 @@ def plot_and_save(name):
     p = plot(f, (x, -3, 3))
     p.save(tmp_file('%s_plot_piecewise_3' % name))
     p._backend.close()
+
+def plot_and_save(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
 
     #parametric 2d plots.
     #Single plot with default range.
