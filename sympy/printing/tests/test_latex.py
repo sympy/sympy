@@ -1,6 +1,6 @@
 from sympy import (
     Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
-    FiniteSet, Float, FourierTransform, Function, IndexedBase, Integral,
+    FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
     Interval, InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
@@ -522,11 +522,12 @@ def test_latex_indexed():
     Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
     symbol_latex = latex(Psi_symbol * conjugate(Psi_symbol))
     indexed_latex = latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
-    # \\overline{\\Psi_{0}} \\Psi_{0}   vs.   \\Psi_{0} \\overline{\\Psi_{0}}
-    assert symbol_latex.split() == indexed_latex.split() \
-        or symbol_latex.split() == indexed_latex.split()[::-1]
+    # \\overline{{\\Psi}_{0}} {\\Psi}_{0}   vs.   \\Psi_{0} \\overline{\\Psi_{0}}
+    assert symbol_latex == '\\Psi_{0} \\overline{\\Psi_{0}}'
+    assert indexed_latex == '\\overline{{\\Psi}_{0}} {\\Psi}_{0}'
 
     # Symbol('gamma') gives r'\gamma'
+    assert latex(Indexed('x1',Symbol('i'))) == '{x_{1}}_{i}'
     assert latex(IndexedBase('gamma')) == r'\gamma'
     assert latex(IndexedBase('a b')) == 'a b'
     assert latex(IndexedBase('a_b')) == 'a_{b}'
@@ -1776,3 +1777,17 @@ def test_issue_14041():
         r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
     assert latex((phid*thetad)**a*A_frame.x) == \
         r"\left(\dot{\phi} \dot{\theta}\right)^{a}\mathbf{\hat{a}_x}"
+
+
+def test_issue_9216():
+    expr_1 = Pow(1, -1, evaluate=False)
+    assert latex(expr_1) == r"1^{-1}"
+
+    expr_2 = Pow(1, Pow(1, -1, evaluate=False), evaluate=False)
+    assert latex(expr_2) == r"1^{1^{-1}}"
+
+    expr_3 = Pow(3, -2, evaluate=False)
+    assert latex(expr_3) == r"\frac{1}{9}"
+
+    expr_4 = Pow(1, -2, evaluate=False)
+    assert latex(expr_4) == r"1^{-2}"

@@ -203,6 +203,8 @@ class MatrixShaping(MatrixRequired):
         if not self:
             return type(self)(other)
 
+        pos = as_int(pos)
+
         if pos < 0:
             pos = self.cols + pos
         if pos < 0:
@@ -212,7 +214,7 @@ class MatrixShaping(MatrixRequired):
 
         if self.rows != other.rows:
             raise ShapeError(
-                "self and other must have the same number of rows.")
+                "`self` and `other` must have the same number of rows.")
 
         return self._eval_col_insert(pos, other)
 
@@ -439,6 +441,8 @@ class MatrixShaping(MatrixRequired):
         # Allows you to build a matrix even if it is null matrix
         if not self:
             return self._new(other)
+
+        pos = as_int(pos)
 
         if pos < 0:
             pos = self.rows + pos

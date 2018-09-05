@@ -688,6 +688,9 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                                 SparseMatrix, ImmutableSparseMatrix)
 
+    if isinstance(exprs, (int, float)):
+        exprs = sympify(exprs)
+
     # Handle the case if just one expression was passed.
     if isinstance(exprs, (Basic, MatrixBase)):
         exprs = [exprs]

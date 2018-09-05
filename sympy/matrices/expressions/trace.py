@@ -44,7 +44,8 @@ class Trace(Expr):
         n = Dummy("n")
         return MatrixExpr.from_index_summation(
                 Sum(self.args[0][t1, t1].diff(v[m, n]), (t1, 0, self.args[0].shape[0]-1)),
-                m
+                m,
+                dimensions=(v.args[1:])
             )
 
     @property

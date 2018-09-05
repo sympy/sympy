@@ -47,6 +47,7 @@ class MCodePrinter(CodePrinter):
         'precision': 15,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': True,
     }
 
     _number_symbols = set()

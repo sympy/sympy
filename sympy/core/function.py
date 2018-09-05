@@ -145,7 +145,6 @@ class FunctionClass(ManagedProperties):
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
         nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', _getnargs(cls)))
-        super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
@@ -161,6 +160,8 @@ class FunctionClass(ManagedProperties):
         elif nargs is not None:
             nargs = (as_int(nargs),)
         cls._nargs = nargs
+
+        super(FunctionClass, cls).__init__(*args, **kwargs)
 
     @property
     def __signature__(self):
