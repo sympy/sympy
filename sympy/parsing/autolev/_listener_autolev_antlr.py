@@ -19,9 +19,9 @@ def strfunc(z):
     if z == 0:
         return ""
     elif z == 1:
-        return "d"
+        return "_d"
     else:
-        return "d" * str(z)
+        return "_d" * str(z)
 
 def declare_phy_entities(self, ctx, phy_type, i, j=None):
     if phy_type in ("frame", "newtonian"):
@@ -744,7 +744,7 @@ if AutolevListener:
                                   ", " + self.getValue(ch.expr(1)) + ")")
 
             # D(y, x)
-            elif func_name == "_d":
+            elif func_name == "d":
                 expr = self.getValue(ch.expr(0))
                 if ch.expr(0) in self.matrix_expr or (expr in self.type.keys() and self.type[expr] == "matrix"):
                     self.matrix_expr.append(ctx)
