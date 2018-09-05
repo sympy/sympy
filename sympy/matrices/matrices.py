@@ -932,7 +932,7 @@ class MatrixSubspaces(MatrixReductions):
 
         return [self.col(i) for i in pivots]
 
-    def nullspace(self, simplify=False):
+    def nullspace(self, simplify=False, iszerofunc=_iszero):
         """Returns list of vectors (Matrix objects) that span nullspace of self
 
         Examples
@@ -958,7 +958,7 @@ class MatrixSubspaces(MatrixReductions):
         rowspace
         """
 
-        reduced, pivots = self.rref(simplify=simplify)
+        reduced, pivots = self.rref(iszerofunc=iszerofunc, simplify=simplify)
 
         free_vars = [i for i in range(self.cols) if i not in pivots]
 
@@ -1114,10 +1114,22 @@ class MatrixEigen(MatrixSubspaces):
             Raise an error when not all eigenvalues are computed. This is
             caused by ``roots`` not returning a full list of eigenvalues.
 
+        simplify : bool or function
+            If simplify is set to True, it attempts to return the most
+            simplified form of expressions returned by applying default
+            simplification method in every routine.
+            If simplify is set to False, it will skip simplification in this
+            particular routine to save computation resources.
+            If you pass a function to simplify, it will attempt to apply
+            the particular function as simplification method.
+
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
         """
+        simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
+        multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
+
         mat = self
         if not mat:
             return {}
@@ -1130,7 +1142,7 @@ class MatrixEigen(MatrixSubspaces):
                 raise NonSquareMatrixError()
 
             diagonal_entries = [mat[i, i] for i in range(mat.rows)]
-            multiple = flags.pop('multiple', False)
+
             if multiple:
                 eigs = diagonal_entries
             else:
@@ -1141,7 +1153,10 @@ class MatrixEigen(MatrixSubspaces):
                     eigs[diagonal_entry] += 1
         else:
             flags.pop('simplify', None)  # pop unsupported flag
-            eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
+            if isinstance(simplify, FunctionType):
+                eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify), **flags)
+            else:
+                eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
 
         # make sure the algebraic multiplicty sums to the
         # size of the matrix
@@ -1149,9 +1164,20 @@ class MatrixEigen(MatrixSubspaces):
             isinstance(eigs, dict) else len(eigs)) != self.cols:
             raise MatrixError("Could not compute eigenvalues for {}".format(self))
 
-        return eigs
+        # Since 'simplify' flag is unsupported in roots()
+        # simplify() function will be applied once at the end of the routine.
+        if not simplify:
+            return eigs
+        if not isinstance(simplify, FunctionType):
+            simplify = _simplify
+        # With 'multiple' flag set true, simplify() will be mapped for the list
+        # Otherwise, simplify() will be mapped for the keys of the dictionary
+        if not multiple:
+            return {simplify(key): value for key, value in eigs.items()}
+        else:
+            return [simplify(value) for value in eigs]
 
-    def eigenvects(self, error_when_incomplete=True, **flags):
+    def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
 
         The flag ``simplify`` has two effects:
@@ -1192,12 +1218,12 @@ class MatrixEigen(MatrixSubspaces):
         def eigenspace(eigenval):
             """Get a basis for the eigenspace for a particular eigenvalue"""
             m = mat - self.eye(mat.rows) * eigenval
-            ret = m.nullspace()
+            ret = m.nullspace(iszerofunc=iszerofunc)
             # the nullspace for a real eigenvalue should be
             # non-trivial.  If we didn't find an eigenvector, try once
             # more a little harder
             if len(ret) == 0 and simplify:
-                ret = m.nullspace(simplify=True)
+                ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
             if len(ret) == 0:
                 raise NotImplementedError(
                         "Can't evaluate eigenvector for eigenvalue %s" % eigenval)

@@ -520,6 +520,7 @@ def test_pure_key_dict():
 
 
 def test_eval_approx_relative():
+    CRootOf.clear_cache()
     t = [CRootOf(x**3 + 10*x + 1, i) for i in range(3)]
     assert [i.eval_rational(1e-1) for i in t] == [
         -21/220, 15/256 - 805*I/256, 15/256 + 805*I/256]

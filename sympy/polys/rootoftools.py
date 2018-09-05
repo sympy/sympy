@@ -188,6 +188,7 @@ class ComplexRootOf(RootOf):
     CRootOf is a way to reference a particular root of a
     polynomial. If there is a rational root, it will be returned:
 
+    >>> CRootOf.clear_cache()  # for doctest reproducibility
     >>> CRootOf(x**2 - 4, 0)
     -2
 
@@ -722,6 +723,23 @@ class ComplexRootOf(RootOf):
             roots.append(coeff*cls._postprocess_root(root, radicals))
 
         return roots
+
+    @classmethod
+    def clear_cache(cls):
+        """Reset cache for reals and complexes.
+
+        The intervals used to approximate a root instance are updated
+        as needed. When a request is made to see the intervals, the
+        most current values are shown. `clear_cache` will reset all
+        CRootOf instances back to their original state.
+
+        See Also
+        ========
+        _reset
+        """
+        global _reals_cache, _complexes_cache
+        _reals_cache = _pure_key_dict()
+        _complexes_cache = _pure_key_dict()
 
     def _get_interval(self):
         """Internal function for retrieving isolation interval from cache. """

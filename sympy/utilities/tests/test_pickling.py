@@ -148,9 +148,9 @@ def test_core_undefinedfunctions():
     f = Function("f")
     # Full XFAILed test below
     exclude = list(range(5))
-    if sys.version_info < (3,):
-        # https://github.com/cloudpipe/cloudpickle/issues/65
-        exclude.append(cloudpickle)
+    # https://github.com/cloudpipe/cloudpickle/issues/65
+    # https://github.com/cloudpipe/cloudpickle/issues/190
+    exclude.append(cloudpickle)
     check(f, exclude=exclude)
 
 @XFAIL

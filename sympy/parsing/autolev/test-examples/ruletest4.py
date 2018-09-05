@@ -3,8 +3,8 @@ import sympy as sm
 import math as m
 import numpy as np
 
-frame_a=me.ReferenceFrame('a')
-frame_b=me.ReferenceFrame('b')
+frame_a = me.ReferenceFrame('a')
+frame_b = me.ReferenceFrame('b')
 q1, q2, q3 = me.dynamicsymbols('q1 q2 q3')
 frame_b.orient(frame_a, 'Axis', [q3, frame_a.x])
 dcm = frame_a.dcm(frame_b)
