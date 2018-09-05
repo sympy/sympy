@@ -289,6 +289,13 @@ def plot_and_save_4(name):
             assert issubclass(i.category, UserWarning)
             assert "The evaluation of the expression is problematic" in str(i.message)
 
+def plot_and_save_5(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+
     s = Sum(1/x**y, (x, 1, oo))
     p = plot(s, (y, 2, 10))
     p.save(tmp_file('%s_advanced_inf_sum' % name))
@@ -363,6 +370,18 @@ def test_matplotlib_4():
     if matplotlib:
         try:
             plot_and_save_4('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_5():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_5('test')
         finally:
             # clean up
             TmpFileManager.cleanup()
