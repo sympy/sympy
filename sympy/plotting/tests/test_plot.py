@@ -300,7 +300,7 @@ def plot_and_save_4(name):
     p.save(tmp_file('%s_advanced_fin_sum' % name))
     p._backend.close()
 
-def plot_and_save_5(name):
+def plot_and_save_6(name):
     tmp_file = TmpFileManager.tmp_file
 
     x = Symbol('x')
@@ -369,12 +369,12 @@ def test_matplotlib_4():
     else:
         skip("Matplotlib not the default backend")
 
-def test_matplotlib_5():
+def test_matplotlib_6():
 
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
         try:
-            plot_and_save_5('test')
+            plot_and_save_6('test')
         finally:
             # clean up
             TmpFileManager.cleanup()
