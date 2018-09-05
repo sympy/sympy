@@ -46,6 +46,7 @@ A_E_F>=EXPRESS(DT(V_E_F>,F),D)\
     exec(sympy_input, g, l)
 
     w_c_f = l['frame_c'].ang_vel_in(l['frame_f'])
+    # P_O_E> means "the position of point E wrt to point O"
     p_o_e = l['point_e'].pos_from(l['point_o'])
     v_e_f = l['point_e'].vel(l['frame_f'])
     a_e_f = l['point_e'].acc(l['frame_f'])
@@ -63,8 +64,6 @@ A_E_F>=EXPRESS(DT(V_E_F>,F),D)\
                       l['r']*l['frame_d'].y +
                       l['l']*sin(l['dc'])*l['frame_d'].z)
 
-    # TODO : This test fails because the parser seems to output incorrect code.
-    # P_O_E> means "the position of point O wrt to point E" (I think).
     assert (p_o_e - expected_p_o_e).simplify() == 0
 
     expected_v_e_f = (l['l']*sin(l['dc'])*l['dc'].diff()*l['frame_d'].x -
