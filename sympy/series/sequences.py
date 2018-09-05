@@ -12,6 +12,7 @@ from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
 from sympy.core.evaluate import global_evaluate
 from sympy.core.numbers import oo
+from sympy.core.relational import Eq
 from sympy.polys import lcm, factor
 from sympy.sets.sets import Interval, Intersection
 from sympy.utilities.iterables import flatten
@@ -724,6 +725,24 @@ class RecursiveSeq(SeqBase):
     for some fixed, positive integer d, where f is some function defined by a
     SymPy expression.
 
+    Parameters
+    ==========
+
+    initial : iterable with length equal to the degree of the recurrence
+        The initial values of the recurrence.
+
+    y : function with argument
+        The name of the recursively defined sequence, e.g., :code:`y(n)`.
+
+    recurrence : SymPy expression defining recurrence
+        This is *not* an equality, only the expression that the nth term is
+        equal to. For example, if :code:`a(n) = f(a(n - 1), ..., a(n - d))`,
+        then the expression should be :code:`f(a(n - 1), ..., a(n - d))`.
+
+    start : start value of sequence (inclusive)
+
+    stop : stop value of sequence (inclusive)
+
     Examples
     ========
 
@@ -747,7 +766,7 @@ class RecursiveSeq(SeqBase):
     inspect recurrence
 
     >>> fib.recurrence
-    y(n - 2) + y(n - 1)
+    Eq(y(n), y(n - 2) + y(n - 1))
 
     automatically determine degree
 
@@ -802,7 +821,7 @@ class RecursiveSeq(SeqBase):
         seq.degree = degree
         seq.y = y
         seq.n = n
-        seq.recurrence = recurrence
+        seq._recurrence = recurrence
 
         return seq
 
@@ -828,7 +847,7 @@ class RecursiveSeq(SeqBase):
         for current in range(len(self.cache), index + 1):
             # Use xreplace over subs for performance.
             # See issue #10697.
-            current_recurrence = self.recurrence.xreplace({self.n: current})
+            current_recurrence = self._recurrence.xreplace({self.n: current})
             new_term = current_recurrence.xreplace(self.cache)
 
             self.cache[self.y(current)] = new_term
@@ -841,6 +860,11 @@ class RecursiveSeq(SeqBase):
         while True:
             yield self._eval_coeff(index)
             index += 1
+
+    @property
+    def recurrence(self):
+        """Equation defining recurrence."""
+        return Eq(self.y(self.n), self._recurrence)
 
 
 def sequence(seq, limits=None):
