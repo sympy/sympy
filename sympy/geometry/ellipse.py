@@ -538,7 +538,7 @@ class Ellipse(GeometrySet):
         """
         return Point.distance(self.center, self.foci[0])
    
-    @property
+    @feature
     def auxiliary_circle(self, x='x', y='y'):
         """The equation of auxiliary circle of the ellipse.
         
