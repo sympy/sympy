@@ -1536,6 +1536,13 @@ def nc_simplify(expr, deep=True):
     from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
                                                 MatPow, MatrixSymbol)
     from sympy.core.exprtools import factor_nc
+
+    if isinstance(expr, MatrixExpr):
+        expr = expr.doit(inv_expand=False)
+        _Add, _Mul, _Pow, _Symbol = MatAdd, MatMul, MatPow, MatrixSymbol
+    else:
+        _Add, _Mul, _Pow, _Symbol = Add, Mul, Pow, Symbol
+
     # =========== Auxiliary functions ========================
     def _overlaps(args):
         # Calculate a list of lists m such that m[i][j] contains the lengths
@@ -1605,11 +1612,6 @@ def nc_simplify(expr, deep=True):
         return s
     # ========================================================
 
-    if isinstance(expr, MatrixExpr):
-        expr = expr.doit(inv_expand=False)
-        _Add, _Mul, _Pow, _Symbol = MatAdd, MatMul, MatPow, MatrixSymbol
-    else:
-        _Add, _Mul, _Pow, _Symbol = Add, Mul, Pow, Symbol
     if not isinstance(expr, (_Add, _Mul, _Pow)) or expr.is_commutative:
         return expr
     args = expr.args[:]
@@ -1622,11 +1624,8 @@ def nc_simplify(expr, deep=True):
         return _Add(*[nc_simplify(a, deep=deep) for a in args]).doit()
     else:
         # get the non-commutative part
-        com_coeff = 1
-        i = 0
-        while args[i].is_commutative:
-            com_coeff *= args[i]
-            i += 1
+        c_args, args = expr.args_cnc()
+        com_coeff = Mul(*c_args)
         if com_coeff != 1:
             return com_coeff*nc_simplify(expr/com_coeff, deep=deep)
 

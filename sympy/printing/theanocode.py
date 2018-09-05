@@ -134,7 +134,7 @@ class TheanoPrinter(Printer):
     def _print_MatPow(self, expr, **kwargs):
         children = [self._print(arg, **kwargs) for arg in expr.args]
         result = 1
-        if isinstance(children[1], int):
+        if isinstance(children[1], int) and children[1] > 0:
             for i in range(children[1]):
                 result = tt.dot(result, children[0])
         return result
