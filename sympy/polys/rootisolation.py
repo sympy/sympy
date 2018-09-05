@@ -1794,7 +1794,7 @@ class ComplexInterval(object):
 
     >>> from sympy import CRootOf, Rational, S
     >>> from sympy.abc import x
-    >>> CRootOf.clear_cache()
+    >>> CRootOf.clear_cache()  # for doctest reproducibility
     >>> root = CRootOf(x**10 - 2*x + 3, 9)
     >>> i = root._get_interval(); i
     (3/64, 3/32) x (9/8, 75/64)
