@@ -21,7 +21,7 @@ def strfunc(z):
     elif z == 1:
         return "_d"
     else:
-        return "_d" * str(z)
+        return "_d" * z
 
 def declare_phy_entities(self, ctx, phy_type, i, j=None):
     if phy_type in ("frame", "newtonian"):
