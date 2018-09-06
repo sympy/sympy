@@ -252,6 +252,8 @@ def _is_ipython(shell):
             return False
     return isinstance(shell, InteractiveShell)
 
+# Used by the doctester to override the default for no_global
+NO_GLOBAL = False
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
@@ -414,7 +416,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                     debug("init_printing: Setting use_latex to True")
                     use_latex = True
 
-    if not no_global:
+    if not NO_GLOBAL and not no_global:
         Printer.set_global_settings(order=order, use_unicode=use_unicode,
                                     wrap_line=wrap_line, num_columns=num_columns)
     else:
