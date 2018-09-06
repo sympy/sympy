@@ -36,7 +36,7 @@ class TmpFileManager:
                 # If the file doesn't exist, for instance, if the test failed.
                 pass
 
-def plot_and_save(name):
+def plot_and_save_1(name):
     tmp_file = TmpFileManager.tmp_file
 
     x = Symbol('x')
@@ -105,6 +105,13 @@ def plot_and_save(name):
     p = plot(f, (x, -3, 3))
     p.save(tmp_file('%s_plot_piecewise_3' % name))
     p._backend.close()
+
+def plot_and_save_2(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
 
     #parametric 2d plots.
     #Single plot with default range.
@@ -192,6 +199,13 @@ def plot_and_save(name):
     p.save(tmp_file('%s_contour_plot' % name))
     p._backend.close()
 
+def plot_and_save_3(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+
     ###
     # Examples from the 'colors' notebook
     ###
@@ -248,6 +262,13 @@ def plot_and_save(name):
     p.save(tmp_file('%s_colors_param_surf_arity3' % name))
     p._backend.close()
 
+def plot_and_save_4(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+
     ###
     # Examples from the 'advanced' notebook
     ###
@@ -268,6 +289,13 @@ def plot_and_save(name):
             assert issubclass(i.category, UserWarning)
             assert "The evaluation of the expression is problematic" in str(i.message)
 
+def plot_and_save_5(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+
     s = Sum(1/x**y, (x, 1, oo))
     p = plot(s, (y, 2, 10))
     p.save(tmp_file('%s_advanced_inf_sum' % name))
@@ -278,6 +306,13 @@ def plot_and_save(name):
     p[0].steps = True
     p.save(tmp_file('%s_advanced_fin_sum' % name))
     p._backend.close()
+
+def plot_and_save_6(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
 
     ###
     # Test expressions that can not be translated to np and generate complex
@@ -293,12 +328,72 @@ def plot_and_save(name):
             + meijerg(((1/2,), ()), ((5, 0, 1/2), ()),
                 5*x**2 * exp_polar(I*pi)/2)) / (48 * pi), (x, 1e-6, 1e-2)).save(tmp_file())
 
-def test_matplotlib():
+def test_matplotlib_1():
 
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
         try:
-            plot_and_save('test')
+            plot_and_save_1('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_2():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_2('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_3():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_3('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_4():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_4('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_5():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_5('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_6():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_6('test')
         finally:
             # clean up
             TmpFileManager.cleanup()
