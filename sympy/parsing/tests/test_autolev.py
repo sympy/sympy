@@ -26,7 +26,7 @@ def _test_examples(in_filename, out_filename, test_name=""):
                line2 = generated_code.split('\n')[idx]
                assert line1.rstrip() == line2.rstrip()
             except Exception:
-                raise AssertionError('mismatch in ' + test_name + ' in line no: {0}'.format(idx+1))                
+                raise AssertionError('mismatch in ' + test_name + ' in line no: {0}'.format(idx+1))
 def test_rule_tests():
     l = ["ruletest1", "ruletest2", "ruletest3", "ruletest4", "ruletest5", "ruletest6",\
          "ruletest7", "ruletest8", "ruletest9", "ruletest10", "ruletest11", "ruletest12"]
