@@ -1317,7 +1317,7 @@ class Circle(Ellipse):
     ax**2 + by**2 + gx + hy + c = 0, then the input has to be of
     the following format:
 
-    Circle(equation = ax**2 + by**2 + gx + hy + c, x='x', y='y')
+    Circle(equation = ax**2 + by**2 + gx + hy + c)
 
     The input can also be given in terms of some other variable other than x
     and/or y, but then they need to be specified in the additional argument.
