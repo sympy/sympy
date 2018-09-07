@@ -749,14 +749,31 @@ class RecursiveSeq(SeqBase):
     >>> y = Function("y")
     >>> n = symbols("n")
     >>> fib = RecursiveSeq(y(n - 1) + y(n - 2), y(n), [0, 1])
+
     >>> fib.coeff(3) # Value at a particular point
     2
+
     >>> fib[:6] # supports slicing
     [0, 1, 1, 2, 3, 5]
+
     >>> fib.recurrence # inspect recurrence
     Eq(y(n), y(n - 2) + y(n - 1))
+
     >>> fib.degree # automatically determine degree
     2
+
+    >>> for x in zip(range(10), fib): # supports iteration
+    ...     print(x)
+    (0, 0)
+    (1, 1)
+    (2, 1)
+    (3, 2)
+    (4, 3)
+    (5, 5)
+    (6, 8)
+    (7, 13)
+    (8, 21)
+    (9, 34)
 
     See Also
     ========
@@ -845,8 +862,7 @@ class RecursiveSeq(SeqBase):
 
         return self.cache[self.y(self._start + current)]
 
-    @property
-    def gen(self):
+    def __iter__(self):
         index = self._start
         while True:
             yield self._eval_coeff(index)
