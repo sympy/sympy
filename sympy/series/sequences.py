@@ -714,7 +714,6 @@ class SeqFormula(SeqExpr):
 
 
 class RecursiveSeq(SeqBase):
-
     """A finite degree recursive sequence.
 
     That is, a sequence a(n) that depends on a fixed, finite number of its
@@ -748,29 +747,16 @@ class RecursiveSeq(SeqBase):
 
     >>> from sympy import Function, symbols
     >>> from sympy.series.sequences import RecursiveSeq
-
     >>> y = Function("y")
     >>> n = symbols("n")
     >>> fib = RecursiveSeq((0, 1), y(n), y(n - 1) + y(n - 2))
-
-    For value at a particular point
-
-    >>> fib.coeff(3)
+    >>> fib.coeff(3) # Value at a particular point
     2
-
-    supports slicing
-
-    >>> fib[:6]
+    >>> fib[:6] # supports slicing
     [0, 1, 1, 2, 3, 5]
-
-    inspect recurrence
-
-    >>> fib.recurrence
+    >>> fib.recurrence # inspect recurrence
     Eq(y(n), y(n - 2) + y(n - 1))
-
-    automatically determine degree
-
-    >>> fib.degree
+    >>> fib.degree # automatically determine degree
     2
 
     See Also
