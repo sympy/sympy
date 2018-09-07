@@ -1353,7 +1353,11 @@ class Circle(Ellipse):
     def __new__(cls, circle_eq_or_pt, *args, **kwargs):
         # print(cls)
         print(circle_eq_or_pt)
+
         if isinstance(circle_eq_or_pt, Point):
+            args.add(circle_eq_or_pt)
+            circle_eq_or_pt=None
+        if circle_eq_or_pt is None:
             c, r = None, None
             if len(args) == 3:
                 args = [Point(a, dim=2) for a in args]
