@@ -741,8 +741,6 @@ class RecursiveSeq(SeqBase):
 
     start : start value of sequence (inclusive)
 
-    stop : stop value of sequence (inclusive)
-
     Examples
     ========
 
@@ -767,7 +765,7 @@ class RecursiveSeq(SeqBase):
 
     """
 
-    def __new__(cls, recurrence, y, initial=None, start=0, stop=oo):
+    def __new__(cls, recurrence, y, initial=None, start=0):
         if not isinstance(y, Function):
             raise TypeError("recurrence sequence must be a function"
                             " (found {})".format(y))
@@ -803,15 +801,13 @@ class RecursiveSeq(SeqBase):
 
         degree = Integer(degree)
         start = sympify(start)
-        stop = sympify(stop)
 
         initial = Tuple(*(sympify(x) for x in initial))
 
-        seq = Basic.__new__(cls, recurrence, y(n), initial, start, stop)
+        seq = Basic.__new__(cls, recurrence, y(n), initial, start)
 
         seq.cache = {y(start + k): init for k, init in enumerate(initial)}
         seq._start = start
-        seq._stop = stop
         seq.degree = degree
         seq.y = y
         seq.n = n
@@ -826,13 +822,13 @@ class RecursiveSeq(SeqBase):
 
     @property
     def stop(self):
-        """The ending point of the sequence. This point is included"""
-        return self._stop
+        """The ending point of the sequence. (oo)"""
+        return oo
 
     @property
     def interval(self):
         """Interval on which sequence is defined."""
-        return (self._start, self._stop)
+        return (self._start, oo)
 
     def _eval_coeff(self, index):
         if index - self._start < len(self.cache):
