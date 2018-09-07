@@ -835,18 +835,19 @@ class RecursiveSeq(SeqBase):
         return (self._start, self._stop)
 
     def _eval_coeff(self, index):
-        if index < len(self.cache):
+        if index - self._start < len(self.cache):
             return self.cache[self.y(index)]
 
         for current in range(len(self.cache), index + 1):
             # Use xreplace over subs for performance.
             # See issue #10697.
-            current_recurrence = self._recurrence.xreplace({self.n: current})
+            seq_index = self._start + current
+            current_recurrence = self._recurrence.xreplace({self.n: seq_index})
             new_term = current_recurrence.xreplace(self.cache)
 
-            self.cache[self.y(current)] = new_term
+            self.cache[self.y(seq_index)] = new_term
 
-        return self.cache[self.y(current)]
+        return self.cache[self.y(self._start + current)]
 
     @property
     def gen(self):
