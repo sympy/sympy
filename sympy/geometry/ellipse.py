@@ -1350,27 +1350,33 @@ class Circle(Ellipse):
 
     """
 
-    def __new__(cls, *args, **kwargs):
-        c, r = None, None
-        if len(args) == 3:
-            args = [Point(a, dim=2) for a in args]
-            if Point.is_collinear(*args):
-                raise GeometryError(
-                    "Cannot construct a circle from three collinear points")
-            from .polygon import Triangle
-            t = Triangle(*args)
-            c = t.circumcenter
-            r = t.circumradius
-        elif len(args) == 2:
-            # Assume (center, radius) pair
-            c = Point(args[0], dim=2)
-            r = sympify(args[1])
+    def __new__(cls, circle_eq_or_pt, *args, **kwargs):
+        # print(cls)
+        print(circle_eq_or_pt)
+        if isinstance(circle_eq_or_pt, Point):
+            c, r = None, None
+            if len(args) == 3:
+                args = [Point(a, dim=2) for a in args]
+                if Point.is_collinear(*args):
+                    raise GeometryError(
+                        "Cannot construct a circle from three collinear points")
+                from .polygon import Triangle
+                t = Triangle(*args)
+                c = t.circumcenter
+                r = t.circumradius
+            elif len(args) == 2:
+                # Assume (center, radius) pair
+                c = Point(args[0], dim=2)
+                r = sympify(args[1])
 
-        if kwargs.get('equation', None) is not None:
+            if not (c is None or r is None):
+                return GeometryEntity.__new__(cls, c, r, **kwargs)
 
+            raise GeometryError("Circle.__new__ received unknown arguments")
+        else:
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
-            equation = kwargs['equation']
+            equation = circle_eq_or_pt
 
             def find(x_, equation_):
                 free = equation_.free_symbols
@@ -1404,10 +1410,9 @@ class Circle(Ellipse):
             else:
                 raise GeometryError("The given equation does not represent a circle")
 
-        if not (c is None or r is None):
-            return GeometryEntity.__new__(cls, c, r, **kwargs)
 
-        raise GeometryError("Circle.__new__ received unknown arguments")
+
+
 
 
     @property
