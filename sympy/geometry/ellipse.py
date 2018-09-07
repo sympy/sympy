@@ -1317,7 +1317,7 @@ class Circle(Ellipse):
     ax**2 + by**2 + gx + hy + c = 0, then the input has to be of
     the following format:
 
-    Circle(equation = ax**2 + by**2 + gx + hy + c)
+    Circle(ax**2 + by**2 + gx + hy + c)
 
     The input can also be given in terms of some other variable other than x
     and/or y, but then they need to be specified in the additional argument.
@@ -1343,21 +1343,16 @@ class Circle(Ellipse):
 
     >>> # a circle object is returned
     >>> from sympy.abc import x, y, a, b
-    >>> Circle(equation = x ** 2 + y ** 2 - 25)
+    >>> Circle(x ** 2 + y ** 2 - 25)
     Circle(Point2D(0, 0), 5)
-    >>> Circle(equation = a ** 2 + b ** 2 - 25, x='a', y='b')
+    >>> Circle(a ** 2 + b ** 2 - 25, x='a', y='b')
     Circle(Point2D(0, 0), 5)
 
     """
 
-    def __new__(cls, circle_eq_or_pt, *args, **kwargs):
-        # print(cls)
-        print(circle_eq_or_pt)
+    def __new__(cls, *args, **kwargs):
 
-        if isinstance(circle_eq_or_pt, Point):
-            args.add(circle_eq_or_pt)
-            circle_eq_or_pt=None
-        if circle_eq_or_pt is None:
+        if len(args) != 1:
             c, r = None, None
             if len(args) == 3:
                 args = [Point(a, dim=2) for a in args]
@@ -1380,7 +1375,7 @@ class Circle(Ellipse):
         else:
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
-            equation = circle_eq_or_pt
+            equation = args[0]
 
             def find(x_, equation_):
                 free = equation_.free_symbols
