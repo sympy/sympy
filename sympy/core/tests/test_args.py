@@ -3719,7 +3719,8 @@ def test_sympy__series__sequences__RecursiveSeq():
     from sympy.series.sequences import RecursiveSeq
     y = Function("y")
     n = symbols("n")
-    assert _test_args(RecursiveSeq((0, 1), y(n), y(n - 1) + y(n - 2)))
+    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y(n), (0, 1)))
+    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y(n)))
 
 
 def test_sympy__series__sequences__SeqExprOp():

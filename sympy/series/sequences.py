@@ -728,16 +728,16 @@ class RecursiveSeq(SeqBase):
     Parameters
     ==========
 
-    initial : iterable with length equal to the degree of the recurrence
-        The initial values of the recurrence.
-
-    y : function with argument
-        The name of the recursively defined sequence, e.g., :code:`y(n)`.
-
     recurrence : SymPy expression defining recurrence
         This is *not* an equality, only the expression that the nth term is
         equal to. For example, if :code:`a(n) = f(a(n - 1), ..., a(n - d))`,
         then the expression should be :code:`f(a(n - 1), ..., a(n - d))`.
+
+    y : function with argument
+        The name of the recursively defined sequence, e.g., :code:`y(n)`.
+
+    initial : iterable with length equal to the degree of the recurrence
+        The initial values of the recurrence.
 
     start : start value of sequence (inclusive)
 
@@ -750,7 +750,7 @@ class RecursiveSeq(SeqBase):
     >>> from sympy.series.sequences import RecursiveSeq
     >>> y = Function("y")
     >>> n = symbols("n")
-    >>> fib = RecursiveSeq((0, 1), y(n), y(n - 1) + y(n - 2))
+    >>> fib = RecursiveSeq(y(n - 1) + y(n - 2), y(n), [0, 1])
     >>> fib.coeff(3) # Value at a particular point
     2
     >>> fib[:6] # supports slicing
@@ -767,7 +767,7 @@ class RecursiveSeq(SeqBase):
 
     """
 
-    def __new__(cls, initial, y, recurrence, start=0, stop=oo):
+    def __new__(cls, recurrence, y, initial=None, start=0, stop=oo):
         if not isinstance(y, Function):
             raise TypeError("recurrence sequence must be a function"
                             " (found {})".format(y))
@@ -795,6 +795,9 @@ class RecursiveSeq(SeqBase):
             if -shift > degree:
                 degree = -shift
 
+        if not initial:
+            initial = [Dummy("c_{}".format(k)) for k in range(degree)]
+
         if len(initial) != degree:
             raise ValueError("Number of initial terms must equal degree")
 
@@ -804,7 +807,7 @@ class RecursiveSeq(SeqBase):
 
         initial = Tuple(*(sympify(x) for x in initial))
 
-        seq = Basic.__new__(cls, initial, y(n), recurrence, start, stop)
+        seq = Basic.__new__(cls, recurrence, y(n), initial, start, stop)
 
         seq.cache = {y(start + k): init for k, init in enumerate(initial)}
         seq._start = start
