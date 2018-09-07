@@ -437,7 +437,6 @@ class MatrixShaping(MatrixRequired):
         row
         col_insert
         """
-        from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
             return self._new(other)
