@@ -4,6 +4,7 @@ from sympy.core.basic import Basic
 from sympy.core.mul import Mul
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.function import Function
 from sympy.core.compatibility import (range, integer_types, with_metaclass,
                                       is_sequence, iterable, ordered)
 from sympy.core.decorators import call_highest_priority
@@ -11,7 +12,7 @@ from sympy.core.cache import cacheit
 from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
 from sympy.core.evaluate import global_evaluate
-from sympy.core.numbers import oo
+from sympy.core.numbers import Integer, oo
 from sympy.core.relational import Eq
 from sympy.polys import lcm, factor
 from sympy.sets.sets import Interval, Intersection
@@ -767,10 +768,14 @@ class RecursiveSeq(SeqBase):
     """
 
     def __new__(cls, initial, y, recurrence, start=0, stop=oo):
+        if not isinstance(y, Function):
+            raise TypeError("recurrence sequence must be a function"
+                            " (found {})".format(y))
+
         n = y.args[0]
         y = y.func
         k = Wild("k", exclude=(n,))
-        degree = -oo
+        degree = 0
 
         # Find all applications of y in the recurrence and check that:
         #   1. The function y is only being used with a single argument; and
@@ -793,7 +798,7 @@ class RecursiveSeq(SeqBase):
         if len(initial) != degree:
             raise ValueError("Number of initial terms must equal degree")
 
-        degree = S(degree)
+        degree = Integer(degree)
         start = sympify(start)
         stop = sympify(stop)
 
