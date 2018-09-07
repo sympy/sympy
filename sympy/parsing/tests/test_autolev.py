@@ -26,7 +26,6 @@ def _test_examples(in_filename, out_filename, test_name=""):
     with open(correct_file_path,"w") as f:
         f.write(generated_code)
 def test_rule_tests():
-    
     l = ["ruletest1", "ruletest2", "ruletest3", "ruletest4", "ruletest5",
          "ruletest6", "ruletest7", "ruletest8", "ruletest9", "ruletest10",
          "ruletest11", "ruletest12"]
