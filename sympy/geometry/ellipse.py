@@ -565,7 +565,7 @@ class Ellipse(GeometrySet):
         >>> from sympy import Ellipse, Point
         >>> ellipse = Ellipse(Point(2, 4), 9, 1)
         >>> ellipse.auxiliary_circle()
-        (x - 2)**2 + (y - 4)**2 - 9
+        (x - 2)**2 + (y - 4)**2 - 81
         """
         x = _symbol(x)
         y = _symbol(y)
