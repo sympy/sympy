@@ -823,7 +823,7 @@ class RecursiveSeq(SeqBase):
 
         initial = Tuple(*(sympify(x) for x in initial))
 
-        seq = Basic.__new__(cls, recurrence, y, n, initial, start)
+        seq = Basic.__new__(cls, recurrence, y(n), initial, start)
 
         seq.cache = {y(start + k): init for k, init in enumerate(initial)}
         seq._start = start
