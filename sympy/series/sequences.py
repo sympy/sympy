@@ -12,7 +12,7 @@ from sympy.core.cache import cacheit
 from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
 from sympy.core.evaluate import global_evaluate
-from sympy.core.numbers import Integer, oo
+from sympy.core.numbers import Integer
 from sympy.core.relational import Eq
 from sympy.polys import lcm, factor
 from sympy.sets.sets import Interval, Intersection
@@ -842,12 +842,12 @@ class RecursiveSeq(SeqBase):
     @property
     def stop(self):
         """The ending point of the sequence. (oo)"""
-        return oo
+        return S.Infinity
 
     @property
     def interval(self):
         """Interval on which sequence is defined."""
-        return (self._start, oo)
+        return (self._start, S.Infinity)
 
     def _eval_coeff(self, index):
         if index - self._start < len(self.cache):
