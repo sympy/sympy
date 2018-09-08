@@ -4,7 +4,7 @@ from sympy.core.basic import Basic
 from sympy.core.mul import Mul
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import Dummy, Symbol, Wild
-from sympy.core.function import Function
+from sympy.core.function import UndefinedFunction
 from sympy.core.compatibility import (range, integer_types, with_metaclass,
                                       is_sequence, iterable, ordered)
 from sympy.core.decorators import call_highest_priority
@@ -748,7 +748,7 @@ class RecursiveSeq(SeqBase):
     >>> from sympy.series.sequences import RecursiveSeq
     >>> y = Function("y")
     >>> n = symbols("n")
-    >>> fib = RecursiveSeq(y(n - 1) + y(n - 2), y(n), [0, 1])
+    >>> fib = RecursiveSeq(y(n - 1) + y(n - 2), y, n, [0, 1])
 
     >>> fib.coeff(3) # Value at a particular point
     2
@@ -782,13 +782,15 @@ class RecursiveSeq(SeqBase):
 
     """
 
-    def __new__(cls, recurrence, y, initial=None, start=0):
-        if not isinstance(y, Function):
-            raise TypeError("recurrence sequence must be a function"
-                            " (found {})".format(y))
+    def __new__(cls, recurrence, y, n, initial=None, start=0):
+        if not isinstance(y, UndefinedFunction):
+            raise TypeError("recurrence sequence must be an undefined function"
+                            ", found `{}`".format(y))
 
-        n = y.args[0]
-        y = y.func
+        if not isinstance(n, Basic) or not n.is_symbol:
+            raise TypeError("recurrence variable must be a symbol"
+                            ", found `{}`".format(n))
+
         k = Wild("k", exclude=(n,))
         degree = 0
 
@@ -821,7 +823,7 @@ class RecursiveSeq(SeqBase):
 
         initial = Tuple(*(sympify(x) for x in initial))
 
-        seq = Basic.__new__(cls, recurrence, y(n), initial, start)
+        seq = Basic.__new__(cls, recurrence, y, n, initial, start)
 
         seq.cache = {y(start + k): init for k, init in enumerate(initial)}
         seq._start = start
