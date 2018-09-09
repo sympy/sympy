@@ -19,9 +19,9 @@ def strfunc(z):
     if z == 0:
         return ""
     elif z == 1:
-        return "d"
+        return "_d"
     else:
-        return "d" * z
+        return "_" + "d" * z
 
 def declare_phy_entities(self, ctx, phy_type, i, j=None):
     if phy_type in ("frame", "newtonian"):
