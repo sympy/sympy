@@ -33,8 +33,6 @@ def _test_examples(in_filename, out_filename, test_name=""):
             except Exception:
                 msg = 'mismatch in ' + test_name + ' in line no: {0}'
                 raise AssertionError(msg.format(idx+1))
-
-
 def test_rule_tests():
 
     l = ["ruletest1", "ruletest2", "ruletest3", "ruletest4", "ruletest5",
