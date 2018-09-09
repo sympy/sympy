@@ -1862,7 +1862,7 @@ def linear_eq_to_matrix(equations, *symbols):
     [    0]])
 
     This routine does not simplify expressions and will raise an error
-    if nonlinear equations are encountered:
+    if the equations are nonlinear in the given symbols:
 
     >>> eqns = [
     ...     (x**2 - 3*x)/(x - 3) - 3,
@@ -1885,7 +1885,6 @@ def linear_eq_to_matrix(equations, *symbols):
     [1, 1]]), Matrix([
     [3],
     [4]]))
-    
 
     Any simplification (expansion, factoring, etc...) needed
     to make the equations linear must be done before calling this
@@ -1945,7 +1944,7 @@ def linear_eq_to_matrix(equations, *symbols):
                 # e.g. x*y -> (1, (x, y))
                 break
             if factors[0] not in symbols:
-                # e.g. x**3 -> (1, (x**3,))
+                # e.g. x**3 -> (1, (x**3,)) or x + 1 -> (1, (x + 1,))
                 break
             coeff_list[ix[factors[0]]].append(c)
         else:
