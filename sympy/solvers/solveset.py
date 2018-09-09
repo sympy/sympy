@@ -34,7 +34,7 @@ from sympy.logic.boolalg import And
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set
-from sympy.matrices import Matrix
+from sympy.matrices import Matrix, MatrixBase
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.solvers.solvers import (checksol, denoms, unrad,
@@ -1861,8 +1861,8 @@ def linear_eq_to_matrix(equations, *symbols):
     [    0],
     [    0]])
 
-    This routine does not simplify expressions. For example, consider
-    the nonlinear equations.
+    This routine does not simplify expressions and will raise an error
+    if nonlinear equations are encountered:
 
     >>> eqns = [
     ...     (x**2 - 3*x)/(x - 3) - 3,
@@ -1874,12 +1874,20 @@ def linear_eq_to_matrix(equations, *symbols):
     The term (x**2 - 3*x)/(x - 3) is nonlinear in {x, y}
 
     Simplifying these equations will discard the removable singularity
-    in the first and reveal the linear structure of the second.
+    in the first, reveal the linear structure of the second, and allow
+    a solution to be returned:
 
     >>> [e.simplify() for e in eqns]
     [x - 3, x + y - 4]
+    >>> linear_eq_to_matrix(_, [x, y])
+    (Matrix([
+    [1, 0],
+    [1, 1]]), Matrix([
+    [3],
+    [4]]))
+    
 
-    Any needed simplification (expansion, factoring, etc...) needed
+    Any simplification (expansion, factoring, etc...) needed
     to make the equations linear must be done before calling this
     routine.
     """
@@ -1892,8 +1900,15 @@ def linear_eq_to_matrix(equations, *symbols):
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
-    if not hasattr(equations, '__iter__'):
+    equations = sympify(equations)
+    if isinstance(equations, MatrixBase):
+        equations = list(equations)
+    elif isinstance(equations, Expr):
         equations = [equations]
+    elif not is_sequence(equations):
+        raise ValueError(filldedent('''
+            Equation(s) must be given as a sequence, Expr or Matrix.
+            '''))
 
     if has_dups(symbols):
         raise ValueError(filldedent('''
@@ -1904,8 +1919,7 @@ def linear_eq_to_matrix(equations, *symbols):
     M = Matrix([symbols])
     M = M.col_insert(len(symbols), Matrix([1]))
 
-    for row_no, equation in enumerate(equations):
-        f = sympify(equation)
+    for row_no, f in enumerate(equations):
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
 
