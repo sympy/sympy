@@ -426,11 +426,11 @@ class MatrixDeterminant(MatrixCommon):
                    - self[0, 1] * self[1, 0] * self[2, 2])
 
         if method == "bareiss":
-            return self._eval_det_bareiss()
+            return self._eval_det_bareiss(iszerofunc=_is_zero_after_expand_mul)
         elif method == "berkowitz":
             return self._eval_det_berkowitz()
         elif method == "lu":
-            return self._eval_det_lu()
+            return self._eval_det_lu(iszerofunc=_iszero)
 
     def minor(self, i, j, method="berkowitz"):
         """Return the (i,j) minor of `self`.  That is,
