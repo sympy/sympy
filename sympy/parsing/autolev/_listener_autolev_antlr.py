@@ -19,9 +19,9 @@ def strfunc(z):
     if z == 0:
         return ""
     elif z == 1:
-        return "_d"
+        return "d"
     else:
-        return "_d" * z
+        return "d" * z
 
 def declare_phy_entities(self, ctx, phy_type, i, j=None):
     if phy_type in ("frame", "newtonian"):
@@ -372,10 +372,8 @@ def writeVariables(self, ctx):
             for k in list(filter(lambda x: self.sign[x] == i, self.var_list)):
                 if i == 0:
                     l.append(k)
-                if i == 1:
-                    l.append(k[:-1])
-                if i > 1:
-                    l.append(k[:-2])
+                if i >= 1:
+                    l.append(k[:-(i+1)])
             a = ", ".join(list(filter(lambda x: self.sign[x] == i, self.var_list))) + " = " +\
                 "_me.dynamicsymbols(" + "'" + " ".join(l) + "'" + t + j + ")\n"
             l = []
