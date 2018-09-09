@@ -1104,7 +1104,7 @@ class Line(LinearEntity):
 
     def __new__(cls, *args, **kwargs):
 
-        if isinstance(args[0], tuple):
+        if isinstance(args[0], tuple) or isinstance(args[0], list) or isinstance(args[0], Point) or isinstance(args[0], LinearEntity):
             if len(args) > 0:
                 p1 = args[0]
                 if len(args) > 1:
@@ -1128,7 +1128,6 @@ class Line(LinearEntity):
                     return Line3D(p1, p2, **kwargs)
                 return LinearEntity.__new__(cls, p1, p2, **kwargs)
         else:
-
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
             equation = args[0]

@@ -1352,7 +1352,7 @@ class Circle(Ellipse):
 
     def __new__(cls, *args, **kwargs):
 
-        if len(args) != 1:
+        if len(args) != 1 or isinstance(args[0], Point):
             c, r = None, None
             if len(args) == 3:
                 args = [Point(a, dim=2) for a in args]
