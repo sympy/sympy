@@ -383,7 +383,7 @@ class MatrixDeterminant(MatrixCommon):
         return self._new(self.rows, self.cols,
                          lambda i, j: self.cofactor(i, j, method))
 
-    def det(self, method="bareiss"):
+    def det(self, method="bareiss", iszerofunc=None):
         """Computes the determinant of a matrix.  If the matrix
         is at most 3x3, a hard-coded formula is used.
         Otherwise, the determinant using the method `method`.
@@ -403,6 +403,7 @@ class MatrixDeterminant(MatrixCommon):
             method = "lu"
         if method not in ("bareiss", "berkowitz", "lu"):
             raise ValueError("Determinant method '%s' unrecognized" % method)
+
 
         # if methods were made internal and all determinant calculations
         # passed through here, then these lines could be factored out of
@@ -426,11 +427,13 @@ class MatrixDeterminant(MatrixCommon):
                    - self[0, 1] * self[1, 0] * self[2, 2])
 
         if method == "bareiss":
-            return self._eval_det_bareiss(iszerofunc=_is_zero_after_expand_mul)
+            iszerofunc = _is_zero_after_expand_mul if iszerofunc is None else iszerofunc
+            return self._eval_det_bareiss(iszerofunc=iszerofunc)
         elif method == "berkowitz":
             return self._eval_det_berkowitz()
         elif method == "lu":
-            return self._eval_det_lu(iszerofunc=_iszero)
+            iszerofunc = _iszero if iszerofunc is None else iszerofunc
+            return self._eval_det_lu(iszerofunc=iszerofunc)
 
     def minor(self, i, j, method="berkowitz"):
         """Return the (i,j) minor of `self`.  That is,
