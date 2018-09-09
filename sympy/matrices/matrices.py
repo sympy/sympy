@@ -404,6 +404,13 @@ class MatrixDeterminant(MatrixCommon):
         if method not in ("bareiss", "berkowitz", "lu"):
             raise ValueError("Determinant method '%s' unrecognized" % method)
 
+        if iszerofunc is None:
+            if method == "bareiss":
+                iszerofunc = _is_zero_after_expand_mul
+            elif method == "lu":
+                iszerofunc = _iszero
+        elif not isinstance(iszerofunc, FunctionType):
+            raise ValueError("Zero testing method '%s' unrecognized" % iszerofunc)
 
         # if methods were made internal and all determinant calculations
         # passed through here, then these lines could be factored out of
@@ -427,12 +434,10 @@ class MatrixDeterminant(MatrixCommon):
                    - self[0, 1] * self[1, 0] * self[2, 2])
 
         if method == "bareiss":
-            iszerofunc = _is_zero_after_expand_mul if iszerofunc is None else iszerofunc
             return self._eval_det_bareiss(iszerofunc=iszerofunc)
         elif method == "berkowitz":
             return self._eval_det_berkowitz()
         elif method == "lu":
-            iszerofunc = _iszero if iszerofunc is None else iszerofunc
             return self._eval_det_lu(iszerofunc=iszerofunc)
 
     def minor(self, i, j, method="berkowitz"):
