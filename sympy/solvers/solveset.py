@@ -1493,7 +1493,7 @@ def _transolve(f, symbol, domain):
       `\_solve\_class`.
       For example: for exponential equations it becomes
       `\_is\_exponential` and `\_solve\_expo`.
-    - The `identifying helpers`should take two input parameters,
+    - The `identifying helpers` should take two input parameters,
       the equation to be checked and the variable for which a solution
       is being sought, while `solving helpers` would require an additional
       domain parameter.
