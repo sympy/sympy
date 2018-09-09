@@ -1020,7 +1020,7 @@ def test_abs_invert_solvify():
 def test_linear_eq_to_matrix():
     x, y, z = symbols('x, y, z')
     a, b, c, d, e, f, g, h, i, j, k, l = symbols('a:l')
-    
+
     eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
     eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
 
