@@ -23,8 +23,16 @@ def _test_examples(in_filename, out_filename, test_name=""):
     with open(in_file_path) as f:
         generated_code = parse_autolev(f, include_numeric=True)
 
-    with open(correct_file_path,"w") as f:
-        f.write(generated_code)
+    with open(correct_file_path) as f:
+        for idx, line1 in enumerate(f):
+            if line1.startswith("#"):
+                break
+            try:
+                line2 = generated_code.split('\n')[idx]
+                assert line1.rstrip() == line2.rstrip()
+            except Exception:
+                msg = 'mismatch in ' + test_name + ' in line no: {0}'
+                raise AssertionError(msg.format(idx+1))
 def test_rule_tests():
 
     l = ["ruletest1", "ruletest2", "ruletest3", "ruletest4", "ruletest5",
