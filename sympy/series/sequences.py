@@ -733,8 +733,13 @@ class RecursiveSeq(SeqBase):
         equal to. For example, if :code:`a(n) = f(a(n - 1), ..., a(n - d))`,
         then the expression should be :code:`f(a(n - 1), ..., a(n - d))`.
 
-    y : function with argument
-        The name of the recursively defined sequence, e.g., :code:`y(n)`.
+    y : function
+        The name of the recursively defined sequence without argument, e.g.,
+        :code:`y` if the recurrence function is :code:`y(n)`.
+
+    n : symbolic argument
+        The name of the variable that the recurrence is in, e.g., :code:`n` if
+        the recurrence function is :code:`y(n)`.
 
     initial : iterable with length equal to the degree of the recurrence
         The initial values of the recurrence.
