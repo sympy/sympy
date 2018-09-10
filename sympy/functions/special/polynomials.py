@@ -198,7 +198,7 @@ class jacobi(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, a, b, x):
+    def _eval_rewrite_as_polynomial(self, n, a, b, x, **kwargs):
         from sympy import Sum
         # Make sure n \in N
         if n.is_negative or n.is_integer is False:
@@ -405,7 +405,7 @@ class gegenbauer(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, a, x):
+    def _eval_rewrite_as_polynomial(self, n, a, x, **kwargs):
         from sympy import Sum
         k = Dummy("k")
         kern = ((-1)**k * RisingFactorial(a, n - k) * (2*x)**(n - 2*k) /
@@ -522,7 +522,7 @@ class chebyshevt(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x):
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
         from sympy import Sum
         k = Dummy("k")
         kern = binomial(n, 2*k) * (x**2 - 1)**k * x**(n - 2*k)
@@ -636,7 +636,7 @@ class chebyshevu(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x):
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
         from sympy import Sum
         k = Dummy("k")
         kern = S.NegativeOne**k * factorial(
@@ -815,7 +815,7 @@ class legendre(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x):
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
         from sympy import Sum
         k = Dummy("k")
         kern = (-1)**k*binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
@@ -913,7 +913,7 @@ class assoc_legendre(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, m, x):
+    def _eval_rewrite_as_polynomial(self, n, m, x, **kwargs):
         from sympy import Sum
         k = Dummy("k")
         kern = factorial(2*n - 2*k)/(2**n*factorial(n - k)*factorial(
@@ -1010,7 +1010,7 @@ class hermite(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x):
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
         from sympy import Sum
         k = Dummy("k")
         kern = (-1)**k / (factorial(k)*factorial(n - 2*k)) * (2*x)**(n - 2*k)
@@ -1112,7 +1112,7 @@ class laguerre(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x):
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
         from sympy import Sum
         # Make sure n \in N_0
         if n.is_negative or n.is_integer is False:
@@ -1230,7 +1230,7 @@ class assoc_laguerre(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x):
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
         from sympy import Sum
         # Make sure n \in N_0
         if n.is_negative or n.is_integer is False:

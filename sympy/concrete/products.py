@@ -193,7 +193,7 @@ class Product(ExprWithIntLimits):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
 
-    def _eval_rewrite_as_Sum(self, *args):
+    def _eval_rewrite_as_Sum(self, *args, **kwargs):
         from sympy.concrete.summations import Sum
         return exp(Sum(log(self.function), *self.limits))
 
