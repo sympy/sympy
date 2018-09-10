@@ -400,7 +400,7 @@ def writeImaginary(self, ctx):
 
 if AutolevListener:
     class MyListener(AutolevListener):
-        def __init__(self, include_numeric=False):
+        def __init__(self, include_numeric=False, numpy_import=False):
             # Stores data in tree nodes(tree annotation). Especially useful for expr reconstruction.
             self.tree_property = {}
 
@@ -438,11 +438,15 @@ if AutolevListener:
             # Stores the variables and their rhs for substituting upon the Autolev command EXPLICIT.
             self.explicit = collections.OrderedDict()
 
+            # Boolean which decides whether a numpy import is required
+            self.numpy_import = numpy_import
+
             # Write code to import common dependencies.
             self.output_code.append("import sympy.physics.mechanics as me\n")
             self.output_code.append("import sympy as sm\n")
-            self.output_code.append("import math as m\n")
-            self.output_code.append("import numpy as np\n")
+
+            if self.numpy_import:
+                self.output_code.append("import numpy as np\n")
             self.output_code.append("\n")
 
             # Just a store for the max degree variable in a line.
