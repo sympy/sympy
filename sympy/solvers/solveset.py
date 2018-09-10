@@ -2173,7 +2173,9 @@ def linsolve(system, *symbols):
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
                 '''))
-            system = [_mexpand(i, recursive=True) for i in system]
+            system = [
+                _mexpand(i.lhs - i.rhs if isinstance(i, Eq) else i,
+                recursive=True) for i in system]
             system, symbols, swap = recast_to_symbols(system, symbols)
             A, b = linear_eq_to_matrix(system, symbols)
             syms_needed_msg = 'free symbols in the equations provided'

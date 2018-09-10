@@ -1146,6 +1146,13 @@ def test_linsolve():
     Eqns = [8*kilo*newton + x + y, 28*kilo*newton*meter + 3*x*meter]
     assert linsolve(Eqns, x, y) == {(-28000*newton/3, 4000*newton/3)}
 
+    # linsolve fully expands expressions, so removable singularities
+    # and other nonlinearity does not raise an error
+    assert linsolve([Eq(x, x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
+
 
 def test_solve_decomposition():
     x = Symbol('x')
@@ -1605,12 +1612,24 @@ def test_issue_10397():
 
 
 def test_issue_14987():
-    raises(ValueError, lambda: linear_eq_to_matrix([x**2], x))
-    raises(ValueError, lambda: linear_eq_to_matrix([x*(-3/x + 1) + 2*y - a], [x, y]))
-    raises(ValueError, lambda: linear_eq_to_matrix([(x**2-3*x)/(x-3) - 3], x))
-    raises(ValueError, lambda: linear_eq_to_matrix([(x+1)**3-x**3-3*x**2 + 7], x))
-    raises(ValueError, lambda: linear_eq_to_matrix([x*(1/x+1) + y], [x, y]))
-    raises(ValueError, lambda: linear_eq_to_matrix([(x + 1)*y], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x**2], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x*(-3/x + 1) + 2*y - a], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x**2 - 3*x)/(x - 3) - 3], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x + 1)**3 - x**3 - 3*x**2 + 7], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x*(1/x + 1) + y], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x + 1)*y], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(1/x, 1/x + y)], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(y/x, y/x + y)], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(x*(x + 1), x**2 + y)], [x, y]))
 
 
 def test_simplification():
