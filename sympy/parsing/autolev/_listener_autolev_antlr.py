@@ -1633,6 +1633,7 @@ if AutolevListener:
             elif ctx.functionCall().getChild(0).getText().lower() == "nonlinear":
                 e = []
                 d = []
+                self.numpy_import = True
                 guess = []
                 for i in range(1, (ctx.functionCall().getChildCount()-2)//2):
                     a = self.getValue(ctx.functionCall().expr(i))
@@ -1671,6 +1672,7 @@ if AutolevListener:
                         except Exception:
                             pass
                     q_add_u = self.q_ind + self.q_dep + self.u_ind + self.u_dep
+                    self.numpy_import=True
                     x0 = []
                     for i in q_add_u:
                         try:
@@ -1854,6 +1856,7 @@ if AutolevListener:
                         value = self.getValue(ctx.expr(3))
                     else:
                         if ctx.expr(3) in self.numeric_expr:
+                            self.numpy_import = True
                             value = "np.deg2rad(" + self.getValue(ctx.expr(3)) + ")"
                         else:
                             value = self.getValue(ctx.expr(3))

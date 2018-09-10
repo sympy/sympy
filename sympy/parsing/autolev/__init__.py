@@ -47,10 +47,9 @@ def parse_autolev(autolev_code, include_numeric=False, numpy_import=False):
     ... "CODE DYNAMICS() some_filename.c")
     >>> my_al_text = '\\n'.join(my_al_text)
     >>> from sympy.parsing.autolev import parse_autolev
-    >>> print(parse_autolev(my_al_text, include_numeric=True))
+    >>> print(parse_autolev(my_al_text, include_numeric=True, numpy_import=True))
     import sympy.physics.mechanics as me
     import sympy as sm
-    import math as m
     import numpy as np
     <BLANKLINE>
     q1, q2, u1, u2 = me.dynamicsymbols('q1 q2 u1 u2')
