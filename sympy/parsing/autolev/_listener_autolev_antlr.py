@@ -400,7 +400,7 @@ def writeImaginary(self, ctx):
 
 if AutolevListener:
     class MyListener(AutolevListener):
-        def __init__(self, include_numeric=False, numpy_import=False):
+        def __init__(self, include_numeric=False):
             # Stores data in tree nodes(tree annotation). Especially useful for expr reconstruction.
             self.tree_property = {}
 
@@ -438,14 +438,14 @@ if AutolevListener:
             # Stores the variables and their rhs for substituting upon the Autolev command EXPLICIT.
             self.explicit = collections.OrderedDict()
 
-            # Boolean which decides whether a numpy import is required
-            self.numpy_import = numpy_import
+            # PyDy ode code will be included only if this flag is set to True.
+            self.include_numeric = include_numeric
 
             # Write code to import common dependencies.
             self.output_code.append("import sympy.physics.mechanics as me\n")
             self.output_code.append("import sympy as sm\n")
 
-            if self.numpy_import:
+            if self.include_numeric:
                 self.output_code.append("import numpy as np\n")
             self.output_code.append("\n")
 
@@ -481,9 +481,6 @@ if AutolevListener:
             self.inertia_point = collections.OrderedDict()
             self.kane_parsed = False
             self.t = False
-
-            # PyDy ode code will be included only if this flag is set to True.
-            self.include_numeric = include_numeric
 
         def write(self, string):
             self.output_code.append(string)
@@ -1633,7 +1630,6 @@ if AutolevListener:
             elif ctx.functionCall().getChild(0).getText().lower() == "nonlinear":
                 e = []
                 d = []
-                self.numpy_import = True
                 guess = []
                 for i in range(1, (ctx.functionCall().getChildCount()-2)//2):
                     a = self.getValue(ctx.functionCall().expr(i))
@@ -1647,12 +1643,12 @@ if AutolevListener:
                             j = self.inputs[i]
                             z = ""
                         if i not in e:
-                            if z == "deg":
+                            if z == "deg" and self.include_numeric:
                                 d.append(i + ":" + "np.deg2rad(" + j + ")")
                             else:
                                 d.append(i + ":" + j)
                         else:
-                            if z == "deg":
+                            if z == "deg" and self.include_numeric:
                                 guess.append("np.deg2rad(" + j + ")")
                             else:
                                 guess.append(j)
@@ -1672,7 +1668,6 @@ if AutolevListener:
                         except Exception:
                             pass
                     q_add_u = self.q_ind + self.q_dep + self.u_ind + self.u_dep
-                    self.numpy_import=True
                     x0 = []
                     for i in q_add_u:
                         try:
@@ -1855,8 +1850,7 @@ if AutolevListener:
                     if "degrees" in self.settings.keys() and self.settings["degrees"] == "off":
                         value = self.getValue(ctx.expr(3))
                     else:
-                        if ctx.expr(3) in self.numeric_expr:
-                            self.numpy_import = True
+                        if (ctx.expr(3) in self.numeric_expr) and self.include_numeric:
                             value = "np.deg2rad(" + self.getValue(ctx.expr(3)) + ")"
                         else:
                             value = self.getValue(ctx.expr(3))

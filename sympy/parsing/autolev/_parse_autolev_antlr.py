@@ -13,7 +13,7 @@ except AttributeError:
     pass
 
 
-def parse_autolev(autolev_code, include_numeric, numpy_import):
+def parse_autolev(autolev_code, include_numeric):
     antlr4 = import_module('antlr4', warn_not_installed=True)
     if not antlr4:
         raise ImportError("Autolev parsing requires the antlr4 python package,"
