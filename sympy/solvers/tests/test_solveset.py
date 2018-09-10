@@ -1038,9 +1038,15 @@ def test_linear_eq_to_matrix():
     assert A == Matrix([[a*b, b, c], [d + e, f, g], [i, j, k]])
     assert B == Matrix([[d], [h], [l]])
 
-    # raise ValueError if no symbols are given or duplicates are given
+    # raise ValueError if
+    # 1) no symbols are given
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3))
+    # 2) there are duplicates
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, x, y]))
+    # 3) there are non-symbols
+    raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, 1/a, y]))
+    # 4) a nonlinear term is detected in the original expression
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x)))
 
     assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
     assert linear_eq_to_matrix(Matrix(
