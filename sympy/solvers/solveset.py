@@ -1828,7 +1828,7 @@ def linear_coeffs(eq, *syms):
     {0: y*(2*z + 3), x: 3*y*z + 1}
 
     But if there are nonlinear or cross terms -- even if they would
-    cancel after simplification-- an error is raised so the situation
+    cancel after simplification -- an error is raised so the situation
     does not pass silently past the caller's attention:
 
     >>> eq = 1/x*(x - 1) + 1/x
@@ -1959,9 +1959,7 @@ def linear_eq_to_matrix(equations, *symbols):
             ''' % i))
 
     if has_dups(symbols):
-        raise ValueError(filldedent('''
-            Symbols must be unique.
-            '''))
+        raise ValueError('Symbols must be unique')
 
     equations = sympify(equations)
     if isinstance(equations, MatrixBase):
@@ -2134,8 +2132,8 @@ def linsolve(system, *symbols):
     >>> linsolve([], x)
     EmptySet()
 
-    * Although removable singularities and nonlinearity
-      will not raise an error, non-linear systems will:
+    * An error is raised if, after expansion, any nonlinearity
+      is detected:
 
     >>> linsolve([x*(1/x - 1), (y - 1)**2 - y**2 + 1], x, y)
     {(1, 1)}
