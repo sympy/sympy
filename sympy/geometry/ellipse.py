@@ -8,7 +8,7 @@ Contains
 
 from __future__ import division, print_function
 
-from sympy import diff, expand
+from sympy import diff, expand, Expr
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
@@ -1352,27 +1352,7 @@ class Circle(Ellipse):
 
     def __new__(cls, *args, **kwargs):
 
-        if len(args) != 1 or isinstance(args[0], Point):
-            c, r = None, None
-            if len(args) == 3:
-                args = [Point(a, dim=2) for a in args]
-                if Point.is_collinear(*args):
-                    raise GeometryError(
-                        "Cannot construct a circle from three collinear points")
-                from .polygon import Triangle
-                t = Triangle(*args)
-                c = t.circumcenter
-                r = t.circumradius
-            elif len(args) == 2:
-                # Assume (center, radius) pair
-                c = Point(args[0], dim=2)
-                r = sympify(args[1])
-
-            if not (c is None or r is None):
-                return GeometryEntity.__new__(cls, c, r, **kwargs)
-
-            raise GeometryError("Circle.__new__ received unknown arguments")
-        else:
+        if len(args) == 1 and isinstance(args[0], Expr):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
             equation = args[0]
@@ -1408,6 +1388,26 @@ class Circle(Ellipse):
                     raise GeometryError("The given equation of circle has an imaginary radius")
             else:
                 raise GeometryError("The given equation does not represent a circle")
+        else:
+            c, r = None, None
+            if len(args) == 3:
+                args = [Point(a, dim=2) for a in args]
+                if Point.is_collinear(*args):
+                    raise GeometryError(
+                        "Cannot construct a circle from three collinear points")
+                from .polygon import Triangle
+                t = Triangle(*args)
+                c = t.circumcenter
+                r = t.circumradius
+            elif len(args) == 2:
+                # Assume (center, radius) pair
+                c = Point(args[0], dim=2)
+                r = sympify(args[1])
+
+            if not (c is None or r is None):
+                return GeometryEntity.__new__(cls, c, r, **kwargs)
+
+            raise GeometryError("Circle.__new__ received unknown arguments")
 
 
 
