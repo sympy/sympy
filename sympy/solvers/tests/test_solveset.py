@@ -1049,6 +1049,9 @@ def test_linear_eq_to_matrix():
     raises(ValueError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x)))
 
     assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
+    # issue 15195
+    assert linear_eq_to_matrix(x + y*(z*(3*x + 2) + 3), x) == (
+        Matrix([[3*y*z + 1]]), Matrix([[-y*(2*z + 3)]]))
     assert linear_eq_to_matrix(Matrix(
         [[a*x + b*y - 7], [5*x + 6*y - c]]), x, y) == (
         Matrix([[a, b], [5, 6]]), Matrix([[7], [c]]))
