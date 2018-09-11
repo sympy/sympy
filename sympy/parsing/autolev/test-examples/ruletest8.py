@@ -5,7 +5,7 @@ import numpy as _np
 
 frame_a = _me.ReferenceFrame('a')
 c1, c2, c3 = _sm.symbols('c1 c2 c3', real=True)
-a=_me.inertia(frame_a, 1, 1, 1)
+a = _me.inertia(frame_a, 1, 1, 1)
 particle_p1 = _me.Particle('p1', _me.Point('p1_pt'), _sm.Symbol('m'))
 particle_p2 = _me.Particle('p2', _me.Point('p2_pt'), _sm.Symbol('m'))
 body_r_cm = _me.Point('r_cm')
