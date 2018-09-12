@@ -543,7 +543,7 @@ class BaseVectorField(AtomicExpr):
      d
     ---(g(x0, y0))
     dy0
-    >>> pprint(v(s_field).rcall(point_p).doit())
+    >>> pprint(v(s_field).rcall(point_p))
     /  d                           \|
     |-----(g(r0*cos(theta0), xi_2))||
     \dxi_2                         /|xi_2=r0*sin(theta0)
@@ -595,7 +595,7 @@ class BaseVectorField(AtomicExpr):
         # Remove the dummies
         result = d_result.subs(list(zip(d_funcs, base_scalars)))
         result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
-        return result.doit()  # XXX doit for the Subs instances
+        return result.doit()
 
 
 class Commutator(Expr):
@@ -628,7 +628,7 @@ class Commutator(Expr):
     >>> c_xr
     Commutator(e_x, e_r)
 
-    >>> simplify(c_xr(R2.y**2).doit())
+    >>> simplify(c_xr(R2.y**2))
     -2*y**2*cos(theta)/(x**2 + y**2)
 
     """
@@ -944,7 +944,7 @@ class LieDerivative(Expr):
     >>> tp = TensorProduct(R2.dx, R2.dy)
     >>> LieDerivative(R2.e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
-    >>> LieDerivative(R2.e_x, tp).doit()
+    >>> LieDerivative(R2.e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
     """
     def __new__(cls, v_field, expr):
@@ -1039,7 +1039,9 @@ class BaseCovarDerivativeOp(Expr):
         to_subs = [wrt_vector(d) for d in d_funcs]
         result = d_result.subs(list(zip(to_subs, derivs)))
 
-        return result  # TODO .doit() # XXX doit for the Subs instances
+        # Remove the dummies
+        result = result.subs(list(zip(d_funcs, vectors)))
+        return result.doit()
 
 
 class CovarDerivativeOp(Expr):

@@ -286,6 +286,14 @@ def test_Subs():
 
     assert f(x).diff(x).subs(x, 0).subs(x, y) == f(x).diff(x).subs(x, 0)
     assert (x*f(x).diff(x).subs(x, 0)).subs(x, y) == y*f(x).diff(x).subs(x, 0)
+    assert Subs(Derivative(g(x)**2, g(x), x), g(x), exp(x)
+        ).doit() == 2*exp(x)
+    assert Subs(Derivative(g(x)**2, g(x), x), g(x), exp(x)
+        ).doit(deep=False) == 2*Derivative(exp(x), x)
+
+    assert Derivative(f(x, g(x)), x).doit() == Derivative(g(x), x
+        )*Subs(Derivative(f(x, y), y), y, g(x)
+        ) + Subs(Derivative(f(y, g(x)), y), y, x)
 
 
 @XFAIL
@@ -1033,6 +1041,7 @@ def test_undef_fcn_float_issue_6938():
     x = Symbol('x')
     assert not f(x).evalf(subs={x:1.2}).is_number
 
+
 def test_undefined_function_eval():
     # Issue 15170. Make sure UndefinedFunction with eval defined works
     # properly. The issue there was that the hash was determined before _nargs
@@ -1068,3 +1077,7 @@ def test_issue_15241():
     assert (G + y*Gy).diff(Gy, y) == 1
     assert (y*G + y*Gy*G).diff(G, y) == y*Gy.diff(y) + Gy + 1
     assert (y*G + y*Gy*G).diff(y, G) == y*Gy.diff(y) + Gy + 1
+
+
+def test_issue_15266():
+    assert Subs(Derivative(f(y), x, y), y, g(x)).doit() != 0

@@ -1858,14 +1858,71 @@ class Subs(Expr):
             break
 
         obj = Expr.__new__(cls, expr, Tuple(*variables), point)
-        obj._expr = expr.subs(reps)
+        obj._expr = expr.xreplace(dict(reps))
         return obj
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative
 
-    def doit(self):
-        return self.expr.doit().subs(list(zip(self.variables, self.point)))
+    def doit(self, **hints):
+        e, v, p = self.args
+
+        # remove self mappings
+        for i, (vi, pi) in enumerate(zip(v, p)):
+            if vi == pi:
+                v = v[:i] + v[i + 1:]
+                p = p[:i] + p[i + 1:]
+        if not v:
+            return self.expr
+
+        if isinstance(e, Derivative):
+            # apply functions first, e.g. f -> cos
+            for i, vi in enumerate(v):
+                if isinstance(vi, FunctionClass):
+                    e = e.subs(vi, p[i])
+            # do Subs that aren't related to differentiation
+            undone = []
+            for vi, pi in zip(v, p):
+                if vi not in e._wrt_variables:
+                    e = e.subs(vi, pi)
+                else:
+                    undone.append((vi, pi))
+            if isinstance(e, Derivative):
+                # do Subs that aren't related to differentiation
+                undone2 = []
+                D = Dummy()
+                for vi, pi in undone:
+                    if D not in e.xreplace({vi: D}).free_symbols:
+                        e = e.subs(vi, pi)
+                    else:
+                        undone2.append((vi, pi))
+                undone = undone2
+                # differentiate wrt variables that are present
+                wrt = []
+                D = Dummy()
+                expr = e.expr
+                free = expr.free_symbols
+                for vi, ci in e.variable_count:
+                    if isinstance(vi, Symbol) and vi in free:
+                        expr = expr.diff((vi, ci))
+                    elif D in expr.subs(vi, D).free_symbols:
+                        expr = expr.diff((vi, ci))
+                    else:
+                        wrt.append((vi, ci))
+                # inject remaining subs
+                rv = expr.subs(undone)
+                # do remaining differentiation *in order given*
+                for vc in wrt:
+                    rv = rv.diff(vc)
+            else:
+                # inject remaining subs
+                rv = e.subs(undone)
+        else:
+            rv = e.doit(**hints).subs(list(zip(v, p)))
+
+        if hints.get('deep', True) and rv != self:
+            rv = rv.doit(**hints)
+        return rv
 
     def evalf(self, prec=None, **options):
         return self.doit().evalf(prec, **options)
