@@ -43,7 +43,7 @@ force_a = body_a.mass*(g*frame_n.z)
 force_b = body_b.mass*(g*frame_n.z)
 kd_eqs = [theta_d - omega, phi_d - alpha]
 forceList = [(body_a.masscenter,body_a.mass*(g*frame_n.z)), (body_b.masscenter,body_b.mass*(g*frame_n.z))]
-kane = _me.KanesMethod(frame_n, q_ind=[theta,phi], u_ind=[omega, alpha], kd_eqs=kd_eqs)
+kane = _me.KanesMethod(frame_n, q_ind=[theta,phi], u_ind=[omega, alpha], kd_eqs = kd_eqs)
 fr, frstar = kane.kanes_equations([body_a, body_b], forceList)
 zero = fr+frstar
 from pydy.system import System
