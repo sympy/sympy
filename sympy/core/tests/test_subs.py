@@ -780,3 +780,27 @@ def test_issue_12657():
     reps = [(-oo, 2), (oo, 1)]
     assert (x < oo).subs(reps) == (x < 1)
     assert (x < oo).subs(list(reversed(reps))) == (x < 1)
+
+
+def test_recurse_Application_args():
+    F = Lambda((x, y), exp(2*x + 3*y))
+    f = Function('f')
+    A = f(x, f(x, x))
+    C = F(x, F(x, x))
+    assert A.subs(f, F) == A.replace(f, F) == C
+
+
+def test_Subs_subs():
+    assert Subs(x*y, x, x).subs(x, y) == Subs(x*y, x, y)
+    assert Subs(x*y, x, x + 1).subs(x, y) == \
+        Subs(x*y, x, y + 1)
+    assert Subs(x*y, y, x + 1).subs(x, y) == \
+        Subs(y**2, y, y + 1)
+    a = Subs(x*y*z, (y, x, z), (x + 1, x + z, x))
+    b = Subs(x*y*z, (y, x, z), (x + 1, y + z, y))
+    assert a.subs(x, y) == b and \
+        a.doit().subs(x, y) == a.subs(x, y).doit()
+    f = Function('f')
+    g = Function('g')
+    assert Subs(2*f(x, y) + g(x), f(x, y), 1).subs(y, 2) == Subs(
+        2*f(x, y) + g(x), (f(x, y), y), (1, 2))
