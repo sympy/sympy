@@ -361,7 +361,19 @@ def test_piecewise_simplify():
     p = Piecewise(((x**2 + 1)/x**2, Eq(x*(1 + x) - x**2, 0)),
                   ((-1)**x*(-1), True))
     assert p.simplify() == \
-        Piecewise((1 + 1/x**2, Eq(x, 0)), ((-1)**(x + 1), True))
+        Piecewise((zoo, Eq(x, 0)), ((-1)**(x + 1), True))
+    # simplify when there are Eq in conditions
+    assert Piecewise(
+        (a, And(Eq(a, 0), Eq(a + b, 0))), (1, True)).simplify(
+        ) == Piecewise(
+        (0, And(Eq(a, 0), Eq(b, 0))), (1, True))
+    assert Piecewise((2*x*factorial(a)/(factorial(y)*factorial(-y + a)),
+        Eq(y, 0) & Eq(-y + a, 0)), (2*factorial(a)/(factorial(y)*factorial(-y
+        + a)), Eq(y, 0) & Eq(-y + a, 1)), (0, True)).simplify(
+        ) == Piecewise(
+            (2*x, And(Eq(a, 0), Eq(y, 0))),
+            (2, And(Eq(a, 1), Eq(y, 0))),
+            (0, True))
 
 
 def test_piecewise_solve():
@@ -453,6 +465,11 @@ def test_piecewise_fold():
 
     assert piecewise_fold(Piecewise((x, ITE(x > 0, y < 1, y > 1)))
         ) == Piecewise((x, ((x <= 0) | (y < 1)) & ((x > 0) | (y > 1))))
+
+    a, b = (Piecewise((2, Eq(x, 0)), (0, True)),
+        Piecewise((x, Eq(-x + y, 0)), (1, Eq(-x + y, 1)), (0, True)))
+    assert piecewise_fold(Mul(a, b, evaluate=False)
+        ) == piecewise_fold(Mul(b, a, evaluate=False))
 
 
 def test_piecewise_fold_piecewise_in_cond():
