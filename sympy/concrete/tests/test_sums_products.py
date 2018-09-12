@@ -3,7 +3,7 @@ from sympy import (
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod)
+    Indexed, Idx, IndexedBase, prod, Dummy)
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -614,7 +614,7 @@ def test_Sum_interface():
     raises(ValueError, lambda: summation(1))
 
 
-def test_eval_diff():
+def test_diff():
     assert Sum(x, (x, 1, 2)).diff(x) == 0
     assert Sum(x*y, (x, 1, 2)).diff(x) == 0
     assert Sum(x*y, (y, 1, 2)).diff(x) == Sum(y, (y, 1, 2))
@@ -1049,3 +1049,13 @@ def test_issue_14640():
     s = Sum(i*(a**(n - i) - b**(n - i))/(a - b), (i, 0, n)).doit()
     assert not s.has(Sum)
     assert s.subs({a: 2, b: 3, n: 5}) == 122
+
+
+def test_Sum_dummy_eq():
+    assert Sum(x, (x, a, b)).dummy_eq(Sum(x, (x, a, b)))
+    d = Dummy()
+    assert Sum(x, (x, a, d)).dummy_eq(Sum(x, (x, a, c)), c)
+    assert not Sum(x, (x, a, d)).dummy_eq(Sum(x, (x, a, c)))
+    assert Sum(x, (x, a, c)).dummy_eq(Sum(y, (y, a, c)))
+    assert Sum(x, (x, a, d)).dummy_eq(Sum(y, (y, a, c)), c)
+    assert not Sum(x, (x, a, d)).dummy_eq(Sum(y, (y, a, c)))
