@@ -548,7 +548,7 @@ class Ellipse(GeometrySet):
             Label for the x-axis. Default value is 'x'.
         y : str, optional
             Label for the y-axis. Default value is 'y'.
-               
+            
         Returns
         =======
         
@@ -558,10 +558,10 @@ class Ellipse(GeometrySet):
         ==========
         
         http://mathworld.wolfram.com/AuxiliaryCircle.html
-              
+        
         Examples
         ========
-     
+        
         >>> from sympy import Ellipse, Point
         >>> ellipse = Ellipse(Point(2, 4), 9, 1)
         >>> ellipse.auxiliary_circle()
@@ -570,7 +570,7 @@ class Ellipse(GeometrySet):
         x = _symbol(x)
         y = _symbol(y)
         return (x - self.center.x)**2 + (y - self.center.y)**2 - self.hradius**2
-
+    
     @property
     def hradius(self):
         """The horizontal radius of the ellipse.
