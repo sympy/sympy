@@ -361,6 +361,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == 0
     assert M.det(method="berkowitz") == 0
+    assert M.det(method="lu") == 0
 
     M = Matrix(( (3, 2, 0, 0, 0),
                  (0, 3, 2, 0, 0),
