@@ -1019,26 +1019,42 @@ def test_abs_invert_solvify():
 
 def test_linear_eq_to_matrix():
     x, y, z = symbols('x, y, z')
+    a, b, c, d, e, f, g, h, i, j, k, l = symbols('a:l')
+
     eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
     eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
 
-    A, b = linear_eq_to_matrix(eqns1, x, y, z)
+    A, B = linear_eq_to_matrix(eqns1, x, y, z)
     assert A == Matrix([[2, 1, -2], [1, -1, -1], [1, 1, 3]])
-    assert b == Matrix([[3], [0], [12]])
+    assert B == Matrix([[3], [0], [12]])
 
-    A, b = linear_eq_to_matrix(eqns2, x, y, z)
+    A, B = linear_eq_to_matrix(eqns2, x, y, z)
     assert A == Matrix([[3, 2, -1], [2, -2, 4], [-2, 1, -2]])
-    assert b == Matrix([[1], [-2], [0]])
+    assert B == Matrix([[1], [-2], [0]])
 
     # Pure symbolic coefficients
-    from sympy.abc import a, b, c, d, e, f, g, h, i, j, k, l
-    eqns3 = [a*x + b*y + c*z - d, e*x + f*y + g*z - h, i*x + j*y + k*z - l]
+    eqns3 = [a*b*x + b*y + c*z - d, e*x + d*x + f*y + g*z - h, i*x + j*y + k*z - l]
     A, B = linear_eq_to_matrix(eqns3, x, y, z)
-    assert A == Matrix([[a, b, c], [e, f, g], [i, j, k]])
+    assert A == Matrix([[a*b, b, c], [d + e, f, g], [i, j, k]])
     assert B == Matrix([[d], [h], [l]])
 
-    # raise ValueError if no symbols are given
+    # raise ValueError if
+    # 1) no symbols are given
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3))
+    # 2) there are duplicates
+    raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, x, y]))
+    # 3) there are non-symbols
+    raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, 1/a, y]))
+    # 4) a nonlinear term is detected in the original expression
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x)))
+
+    assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
+    # issue 15195
+    assert linear_eq_to_matrix(x + y*(z*(3*x + 2) + 3), x) == (
+        Matrix([[3*y*z + 1]]), Matrix([[-y*(2*z + 3)]]))
+    assert linear_eq_to_matrix(Matrix(
+        [[a*x + b*y - 7], [5*x + 6*y - c]]), x, y) == (
+        Matrix([[a, b], [5, 6]]), Matrix([[7], [c]]))
 
 
 def test_linsolve():
@@ -1132,6 +1148,13 @@ def test_linsolve():
     from sympy.physics.units import meter, newton, kilo
     Eqns = [8*kilo*newton + x + y, 28*kilo*newton*meter + 3*x*meter]
     assert linsolve(Eqns, x, y) == {(-28000*newton/3, 4000*newton/3)}
+
+    # linsolve fully expands expressions, so removable singularities
+    # and other nonlinearity does not raise an error
+    assert linsolve([Eq(x, x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
 
 
 def test_solve_decomposition():
@@ -1589,6 +1612,27 @@ def test_issue_9913():
 
 def test_issue_10397():
     assert solveset(sqrt(x), x, S.Complexes) == FiniteSet(0)
+
+
+def test_issue_14987():
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x**2], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x*(-3/x + 1) + 2*y - a], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x**2 - 3*x)/(x - 3) - 3], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x + 1)**3 - x**3 - 3*x**2 + 7], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x*(1/x + 1) + y], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x + 1)*y], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(1/x, 1/x + y)], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(y/x, y/x + y)], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(x*(x + 1), x**2 + y)], [x, y]))
 
 
 def test_simplification():
