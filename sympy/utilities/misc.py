@@ -7,7 +7,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from sympy.core.compatibility import get_function_name, range
+from sympy.core.compatibility import get_function_name, range, as_int
 
 
 
@@ -421,3 +421,30 @@ def translate(s, a, b=None, c=None):
             s = s.translate(dict(
                 [(i, ord(c)) for i, c in enumerate(table)]))
         return s
+
+
+def ordinal(num):
+    """Return ordinal number string of num, e.g. 1 becomes 1st.
+    """
+    # modified from https://codereview.stackexchange.com/questions/41298/producing-ordinal-numbers
+    n = as_int(num)
+    if n < 0:
+        return '-%s' % ordinal(-n)
+    if n == 0 or 4 <= n <= 20:
+        suffix = 'th'
+    elif n == 1 or (n % 10) == 1:
+        suffix = 'st'
+    elif n == 2 or (n % 10) == 2:
+        suffix = 'nd'
+    elif n == 3 or (n % 10) == 3:
+        suffix = 'rd'
+    elif n < 101:
+        suffix = 'th'
+    else:
+        suffix = ordinal(n % 100)
+        if len(suffix) == 3:
+            # e.g. 103 -> 3rd
+            # so add other 0 back
+            suffix = '0' + suffix
+        n = str(n)[:-2]
+    return str(n) + suffix
