@@ -4,9 +4,11 @@ of Basic or Atom."""
 import collections
 import sys
 
-from sympy.core.basic import Basic, Atom, preorder_traversal, as_Basic
+from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
+    _atomic)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
+from sympy.core.function import Function
 from sympy.core.compatibility import default_sort_key
 
 from sympy import sin, Lambda, Q, cos, gamma, Tuple
@@ -235,3 +237,10 @@ def test_as_Basic():
     assert as_Basic(1) is S.One
     assert as_Basic(()) == Tuple()
     raises(TypeError, lambda: as_Basic([]))
+
+
+def test_atomic():
+    g, h = map(Function, 'gh')
+    x = symbols('x')
+    assert _atomic(g(x + h(x))) == {g(x + h(x))}
+    assert _atomic(g(x + h(x)), recursive=True) == {h(x), x, g(x + h(x))}
