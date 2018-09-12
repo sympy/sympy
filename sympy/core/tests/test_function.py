@@ -316,23 +316,24 @@ def test_function_comparable_infinities():
 def test_deriv1():
     # These all requre derivatives evaluated at a point (issue 4719) to work.
     # See issue 4624
-    assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), Tuple(x), Tuple(2*x))
+    assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), x, 2*x)
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
-    assert (
-        f(2*x)**3).diff(x) == 6*f(2*x)**2*Subs(Derivative(f(x), x), Tuple(x),
-            Tuple(2*x))
+    assert (f(2*x)**3).diff(x) == 6*f(2*x)**2*Subs(
+        Derivative(f(x), x), x, 2*x)
 
-    assert f(2 + x).diff(x) == Subs(Derivative(f(x), x), Tuple(x), Tuple(x + 2))
-    assert f(2 + 3*x).diff(x) == 3*Subs(Derivative(f(x), x), Tuple(x),
-            Tuple(3*x + 2))
-    assert f(3*sin(x)).diff(x) == 3*cos(x)*Subs(Derivative(f(x), x),
-            Tuple(x), Tuple(3*sin(x)))
+    assert f(2 + x).diff(x) == Subs(Derivative(f(x), x), x, x + 2)
+    assert f(2 + 3*x).diff(x) == 3*Subs(
+        Derivative(f(x), x), x, 3*x + 2)
+    assert f(3*sin(x)).diff(x) == 3*cos(x)*Subs(
+        Derivative(f(x), x), x, 3*sin(x))
 
     # See issue 8510
-    assert f(x, x + z).diff(x) == Subs(Derivative(f(y, x + z), y), Tuple(y), Tuple(x)) \
-            + Subs(Derivative(f(x, y), y), Tuple(y), Tuple(x + z))
-    assert f(x, x**2).diff(x) == Subs(Derivative(f(y, x**2), y), Tuple(y), Tuple(x)) \
-            + 2*x*Subs(Derivative(f(x, y), y), Tuple(y), Tuple(x**2))
+    assert f(x, x + z).diff(x) == (
+        Subs(Derivative(f(y, x + z), y), y, x) +
+        Subs(Derivative(f(x, y), y), y, x + z))
+    assert f(x, x**2).diff(x) == (
+        2*x*Subs(Derivative(f(x, y), y), y, x**2) +
+        Subs(Derivative(f(y, x**2), y), y, x))
 
 
 def test_deriv2():
@@ -552,12 +553,14 @@ def test_diff_wrt():
 
     # Chain rule cases
     assert f(g(x)).diff(x) == \
-        Subs(Derivative(f(x), x), (x,), (g(x),))*Derivative(g(x), x)
-    assert diff(f(g(x), h(x)), x) == \
-        Subs(Derivative(f(y, h(x)), y), (y,), (g(x),))*Derivative(g(x), x) + \
-        Subs(Derivative(f(g(x), y), y), (y,), (h(x),))*Derivative(h(x), x)
+        Derivative(g(x), x)*Subs(Derivative(f(y), y), y, g(x))
+    assert diff(f(g(x), h(y)), x) == \
+        Derivative(g(x), x)*Subs(Derivative(f(x, h(y)), x), x, g(x))
+    assert diff(f(g(x), h(x)), x) == (
+        Subs(Derivative(f(y, h(x)), y), y, g(x))*Derivative(g(x), x) +
+        Subs(Derivative(f(g(x), y), y), y, h(x))*Derivative(h(x), x))
     assert f(
-        sin(x)).diff(x) == Subs(Derivative(f(x), x), (x,), (sin(x),))*cos(x)
+        sin(x)).diff(x) == Subs(Derivative(f(x), x), x, sin(x))*cos(x)
 
     assert diff(f(g(x)), g(x)) == Derivative(f(g(x)), g(x))
 
@@ -722,15 +725,14 @@ def test_issue_7068():
 def test_issue_7231():
     from sympy.abc import a
     ans1 = f(x).series(x, a)
-    _xi_1 = ans1.atoms(Dummy).pop()
-    res = (f(a) + (-a + x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (a,)) +
-           (-a + x)**2*Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), (a,))/2 +
-           (-a + x)**3*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1),
-                            (_xi_1,), (a,))/6 +
-           (-a + x)**4*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1),
-                            (_xi_1,), (a,))/24 +
-           (-a + x)**5*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1, _xi_1),
-                            (_xi_1,), (a,))/120 + O((-a + x)**6, (x, a)))
+    res = (f(a) + (-a + x)*Subs(Derivative(f(y), y), y, a) +
+           (-a + x)**2*Subs(Derivative(f(y), y, y), y, a)/2 +
+           (-a + x)**3*Subs(Derivative(f(y), y, y, y),
+                            y, a)/6 +
+           (-a + x)**4*Subs(Derivative(f(y), y, y, y, y),
+                            y, a)/24 +
+           (-a + x)**5*Subs(Derivative(f(y), y, y, y, y, y),
+                            y, a)/120 + O((-a + x)**6, (x, a)))
     assert res == ans1
     ans2 = f(x).series(x, a)
     assert res == ans2
@@ -891,17 +893,18 @@ def test_issue_11159():
 
 
 def test_issue_12005():
-    e1 = Subs(Derivative(f(x), x), (x,), (x,))
+    e1 = Subs(Derivative(f(x), x), x, x)
     assert e1.diff(x) == Derivative(f(x), x, x)
-    e2 = Subs(Derivative(f(x), x), (x,), (x**2 + 1,))
-    assert e2.diff(x) == 2*x*Subs(Derivative(f(x), x, x), (x,), (x**2 + 1,))
-    e3 = Subs(Derivative(f(x) + y**2 - y, y), (y,), (y**2,))
+    e2 = Subs(Derivative(f(x), x), x, x**2 + 1)
+    assert e2.diff(x) == 2*x*Subs(Derivative(f(x), x, x), x, x**2 + 1)
+    e3 = Subs(Derivative(f(x) + y**2 - y, y), y, y**2)
     assert e3.diff(y) == 4*y
-    e4 = Subs(Derivative(f(x + y), y), (y,), (x**2))
+    e4 = Subs(Derivative(f(x + y), y), y, (x**2))
     assert e4.diff(y) == S.Zero
     e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
     assert e5.diff(x) == Derivative(f(x), x, x)
     assert f(g(x)).diff(g(x), g(x)) == Derivative(f(g(x)), g(x), g(x))
+
 
 def test_issue_13843():
     x = symbols('x')

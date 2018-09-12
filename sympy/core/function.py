@@ -1742,7 +1742,7 @@ class Subs(Expr):
     >>> f = Function('f')
     >>> e = Subs(f(x).diff(x), x, y)
     >>> e.subs(y, 0)
-    Subs(Derivative(f(x), x), (x,), (0,))
+    Subs(Derivative(f(x), x), x, 0)
     >>> e.subs(f, sin).doit()
     cos(y)
 

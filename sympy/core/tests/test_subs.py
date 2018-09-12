@@ -647,7 +647,7 @@ def test_simultaneous_subs():
     assert (x/y).subs(reps, simultaneous=True) == \
         (y/x).subs(reps, simultaneous=True)
     assert Derivative(x, y, z).subs(reps, simultaneous=True) == \
-        Subs(Derivative(0, y, z), (y,), (0,))
+        Subs(Derivative(0, y, z), y, 0)
 
 
 def test_issue_6419_6421():

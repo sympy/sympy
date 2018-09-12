@@ -161,18 +161,15 @@ def test_dsolve_linsystem_symbol_piecewise():
     u = Symbol('u')
     eq = (Eq(diff(f(x), x), 2*f(x) + g(x)),
            Eq(diff(g(x), x), u*f(x)))
-    s1 = [
-        Eq(f(x), Piecewise((C1*exp(x*(sqrt(4*u + 4)/2 + 1))
-            + C2*exp(x*(-sqrt(4*u + 4)/2 + 1)), Ne(4*u + 4, 0)),
-            ((C1 + C2*(x + Piecewise((0, Eq(sqrt(4*u + 4)/2 + 1, 2)),
-            (1/(-sqrt(4*u + 4)/2 + 1), True))))*exp(x*(sqrt(4*u + 4)/2 + 1)),
-            True))),
-        Eq(g(x), Piecewise((C1*(sqrt(4*u + 4)/2 - 1)*exp(x*(sqrt(4*u + 4)/2 + 1))
-            + C2*(-sqrt(4*u + 4)/2 - 1)*exp(x*(-sqrt(4*u + 4)/2 + 1)),
-            Ne(4*u + 4, 0)), ((C1*(sqrt(4*u + 4)/2 - 1) + C2*(x*(sqrt(4*u + 4)/2 - 1)
-            + Piecewise((1, Eq(sqrt(4*u + 4)/2 + 1, 2)),
-            (0, True))))*exp(x*(sqrt(4*u + 4)/2 + 1)), True)))
-    ]
+    s1 = [Eq(f(x), Piecewise((C1*exp(x*(sqrt(4*u + 4)/2 + 1)) +
+        C2*exp(x*(-sqrt(4*u + 4)/2 + 1)), Ne(4*u + 4, 0)), ((C1 + C2*(x +
+        Piecewise((0, Eq(sqrt(4*u + 4)/2 + 1, 2)), (1/(-sqrt(4*u + 4)/2 + 1),
+        True))))*exp(x*(sqrt(4*u + 4)/2 + 1)), True))), Eq(g(x),
+        Piecewise((C1*(sqrt(4*u + 4)/2 - 1)*exp(x*(sqrt(4*u + 4)/2 + 1)) +
+        C2*(-sqrt(4*u + 4)/2 - 1)*exp(x*(-sqrt(4*u + 4)/2 + 1)), Ne(4*u + 4,
+        0)), ((C1*(sqrt(4*u + 4)/2 - 1) + C2*(x*(sqrt(4*u + 4)/2 - 1) +
+        Piecewise((1, Eq(sqrt(4*u + 4)/2 + 1, 2)), (0,
+        True))))*exp(x*(sqrt(4*u + 4)/2 + 1)), True)))]
     s = dsolve(eq)
     assert s == s1
     s = [(l.lhs, l.rhs) for l in s]
@@ -2896,7 +2893,7 @@ def test_issue_10867():
 def test_issue_11290():
     sol_1 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact_Integral')
     sol_0 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact')
-    assert str(sol_1)== "Eq(Subs(Integral(_y**2 - x*sin(_y) - Integral(-sin(_y), x), _y) + Integral(cos(_y), x), (_y,), (f(x),)), C1)"
+    assert str(sol_1)== "Eq(Subs(Integral(_y**2 - x*sin(_y) - Integral(-sin(_y), x), _y) + Integral(cos(_y), x), _y, f(x)), C1)"
     assert sol_1.doit() == sol_0
 
 
