@@ -241,7 +241,7 @@ before_install:
         conda clean --all;
         if [[ "$TEST_SAGE" == "true" ]]; then
             # Use a separate environment because sage downgrades matplotlib
-            conda create -n sage sage=8.1;
+            conda create -n sage sage;
             conda remove -n sage --force sympy;
             conda clean --all;
         fi
