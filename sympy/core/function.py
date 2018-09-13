@@ -1469,13 +1469,24 @@ class Derivative(Expr):
         return self._args[0]
 
     @property
+    def _wrt_variables(self):
+        # return the variables of differentiation without
+        # respect to the type of count (int or symbolic)
+        return [i[0] for i in self.variable_count]
+
+    @property
     def variables(self):
-        # TODO: deprecate?
+        # TODO: deprecate?  YES, make this 'enumerated_variables' and
+        #       name _wrt_variables as variables
         # TODO: support for `d^n`?
         rv = []
         for v, count in self.variable_count:
-            if count.is_Integer:
-                rv.extend([v]*count)
+            if not count.is_Integer:
+                raise TypeError(filldedent('''
+                Cannot give expansion for symbolic count. If you just
+                want a list of all variables of differentiation, use
+                _wrt_variables.'''))
+            rv.extend([v]*count)
         return tuple(rv)
 
     @property
