@@ -33,7 +33,7 @@ from __future__ import print_function, division
 
 from .add import Add
 from .assumptions import ManagedProperties, _assume_defined
-from .basic import Basic
+from .basic import Basic, _atomic
 from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered, Iterable
 from .decorators import _sympifyit
@@ -176,6 +176,10 @@ class FunctionClass(ManagedProperties):
 
         # TODO: Look at nargs
         return signature(self.eval)
+
+    @property
+    def free_symbols(self):
+        return set()
 
     @property
     def nargs(self):
@@ -400,19 +404,7 @@ class Function(Application, Expr):
 
     @property
     def _diff_wrt(self):
-        """Allow derivatives wrt functions.
-
-        Examples
-        ========
-
-        >>> from sympy import Function, Symbol
-        >>> f = Function('f')
-        >>> x = Symbol('x')
-        >>> f(x)._diff_wrt
-        True
-
-        """
-        return True
+        return False
 
     @cacheit
     def __new__(cls, *args, **options):
@@ -711,22 +703,31 @@ class Function(Application, Expr):
         """
         if not (1 <= argindex <= len(self.args)):
             raise ArgumentIndexError(self, argindex)
-
-        if self.args[argindex - 1].is_Symbol:
-            for i in range(len(self.args)):
-                if i == argindex - 1:
-                    continue
-                # See issue 8510
-                if self.args[argindex - 1] in self.args[i].free_symbols:
-                    break
+        ix = argindex - 1
+        A = self.args[ix]
+        if A._diff_wrt:
+            if len(self.args) == 1:
+                return Derivative(self, A)
+            if A.is_Symbol:
+                for i, v in enumerate(self.args):
+                    if i != ix and A in v.free_symbols:
+                        # it can't be in any other argument's free symbols
+                        # issue 8510
+                        break
+                else:
+                    return Derivative(self, A)
             else:
-                return Derivative(self, self.args[argindex - 1], evaluate=False)
-        # See issue 4624 and issue 4719 and issue 5600
-        arg_dummy = Dummy('xi_%i' % argindex, dummy_index=hash(self.args[argindex - 1]))
-        new_args = [arg for arg in self.args]
-        new_args[argindex-1] = arg_dummy
-        return Subs(Derivative(self.func(*new_args), arg_dummy),
-            arg_dummy, self.args[argindex - 1])
+                free = A.free_symbols
+                for i, a in enumerate(self.args):
+                    if ix != i and a.free_symbols & free:
+                        break
+                else:
+                    # there is no possible interaction bewtween args
+                    return Derivative(self, A)
+        # See issue 4624 and issue 4719, 5600 and 8510
+        D = Dummy('xi_%i' % argindex, dummy_index=hash(A))
+        args = self.args[:ix] + (D,) + self.args[ix + 1:]
+        return Subs(Derivative(self.func(*args), D), D, A)
 
     def _eval_as_leading_term(self, x):
         """Stub that should be overridden by new Functions to return
@@ -799,6 +800,25 @@ class AppliedUndef(Function):
         args = [arg._sage_() for arg in self.args]
         func = sage.function(fname)(*args)
         return func
+
+    @property
+    def _diff_wrt(self):
+        """
+        Allow derivatives wrt to undefined functions.
+
+        Examples
+        ========
+
+        >>> from sympy import Function, Symbol
+        >>> f = Function('f')
+        >>> x = Symbol('x')
+        >>> f(x)._diff_wrt
+        True
+        >>> f(x).diff(x)
+        Derivative(f(x), x)
+        """
+        return True
+
 
 class UndefinedFunction(FunctionClass):
     """
@@ -1082,23 +1102,25 @@ class Derivative(Expr):
 
     @property
     def _diff_wrt(self):
-        """Allow derivatives wrt Derivatives if it contains a function.
+        """An expression may be differentiated wrt a Derivative if the
+        expression of the Derivative can be used as a differentiation
+        variable.
 
         Examples
         ========
 
-            >>> from sympy import Function, Symbol, Derivative
-            >>> f = Function('f')
-            >>> x = Symbol('x')
-            >>> Derivative(f(x),x)._diff_wrt
-            True
-            >>> Derivative(x**2,x)._diff_wrt
-            False
+        >>> from sympy import Function, Derivative, cos
+        >>> from sympy.abc import x
+        >>> f = Function('f')
+
+        >>> Derivative(f(x), x)._diff_wrt
+        True
+        >>> Derivative(cos(x), x)._diff_wrt
+        False
+        >>> Derivative(x + 1, x)._diff_wrt
+        False
         """
-        if self.expr.is_Function:
-            return True
-        else:
-            return False
+        return self.expr._diff_wrt
 
     def __new__(cls, expr, *variables, **kwargs):
 
@@ -1293,9 +1315,10 @@ class Derivative(Expr):
             expr = factor_terms(signsimp(expr))
         return expr
 
-    @classmethod
-    def _remove_derived_once(cls, v):
-        return [i[0] if i[1] == 1 else i for i in v]
+    @property
+    def canonical(cls):
+        return cls.func(cls.expr,
+            *Derivative._sort_variable_count(cls.variable_count))
 
     @classmethod
     def _sort_variable_count(cls, vc):
@@ -1502,44 +1525,92 @@ class Derivative(Expr):
         return self.expr.free_symbols
 
     def _eval_subs(self, old, new):
-        if old in self.variables and not new._diff_wrt:
-            # issue 4719
-            return Subs(self, old, new)
+        if old in self._wrt_variables:
+            # quick exit case
+            if not getattr(new, '_diff_wrt', False):
+                if isinstance(old, Symbol):
+                    # don't introduce a new symbol if the old will do
+                    return Subs(self, old, new)
+                else:
+                    xi = Dummy('xi')
+                    return Subs(self.xreplace({old: xi}), xi, new)
+
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
         if old.is_Derivative and old.expr == self.expr:
-            # Check if canonical order of variables is equal.
-            old_vars = Counter(dict(reversed(old.variable_count)))
-            self_vars = Counter(dict(reversed(self.variable_count)))
-            if old_vars == self_vars:
+            if self.canonical == old.canonical:
                 return new
 
             # collections.Counter doesn't have __le__
             def _subset(a, b):
                 return all((a[i] <= b[i]) == True for i in a)
 
+            old_vars = Counter(dict(reversed(old.variable_count)))
+            self_vars = Counter(dict(reversed(self.variable_count)))
             if _subset(old_vars, self_vars):
-                return Derivative(new, *(self_vars - old_vars).items())
+                return Derivative(new, *(self_vars - old_vars).items()).canonical
 
-        # Check whether the substitution (old, new) cannot be done inside
-        # Derivative(expr, vars). Disallowed:
-        # (1) changing expr by introducing a variable among vars
-        # (2) changing vars by introducing a variable contained in expr
-        old_symbols = (old.free_symbols if isinstance(old.free_symbols, set)
-            else set())
-        new_symbols = (new.free_symbols if isinstance(new.free_symbols, set)
-            else set())
-        introduced_symbols = new_symbols - old_symbols
-        args_subbed = tuple(x._subs(old, new) for x in self.args)
-        if ((self.args[0] != args_subbed[0] and
-            len(set(self.variables) & introduced_symbols) > 0
-            ) or
-            (self.args[1:] != args_subbed[1:] and
-            len(self.free_symbols & introduced_symbols) > 0
-            )):
-            return Subs(self, old, new)
-        else:
-            return Derivative(*args_subbed)
+        # The substitution (old, new) cannot be done inside
+        # Derivative(expr, vars) for a variety of reasons
+        # as handled below.
+
+        args = list(self.args)
+        newargs = list(x._subs(old, new) for x in args)
+
+        if args[0] == old:  # complete replacement of self.expr
+            # we already checked that the new is valid so we know
+            # it won't be a problem should it appear in variables
+            return Derivative(*newargs)
+
+        if newargs[0] != args[0]:  # expression changed
+            # (1) can't change expr by introducing something
+            # that already appears in self._wrt_variables
+            # e.g.
+            # for Derivative(f(x, g(y)), y), x cannot be replaced with
+            # anything that has y in it; for f(g(x), g(y)).diff(g(y))
+            # g(x) cannot be replaced with anything that has g(y)
+            for vi in self._wrt_variables:
+                if newargs[0].count(vi) > args[0].count(vi):
+                    return Subs(self, old, new)
+
+        viter = ((i, j) for ((i,_), (j,_)) in zip(newargs[1:], args[1:]))
+        if any(i != j for i, j in viter):  # a wrt-variable change
+            # (2) can't change vars by introducing a variable
+            # that is contained in expr, e.g.
+            # for Derivative(f(z, g(h(x), y)), y), y cannot be changed to
+            # x, h(x), or g(h(x), y)
+            for a in _atomic(self.expr, recursive=True):
+                for i in range(1, len(newargs)):
+                    vi, _ = newargs[i]
+                    if a == vi and vi != args[i][0]:
+                        return Subs(self, old, new)
+            # more arg-wise checks
+            vc = newargs[1:]
+            oldv = self._wrt_variables
+            newe = self.expr
+            subs = []
+            for i, (vi, ci) in enumerate(vc):
+                if not vi._diff_wrt:
+                    # (3) invalid differentiation expression so
+                    # create a replacement dummy
+                    xi = Dummy('xi_%i' % i)
+                    # replace the old valid variable with the dummy
+                    # in the expression
+                    newe = newe.xreplace({oldv[i]: xi})
+                    # and replace the bad variable with the dummy
+                    vc[i] = (xi, ci)
+                    # and record the dummy with the new (invalid)
+                    # differentiation expression
+                    subs.append((xi, vi))
+
+            if subs:
+                # handle any residual substitution in the expression
+                newe = newe._subs(old, new)
+                # return the Subs-wrapped derivative
+                return Subs(Derivative(newe, *vc), *zip(*subs))
+
+        # everything was ok
+        return Derivative(*newargs)
 
     def _eval_lseries(self, x, logx):
         dx = self.variables

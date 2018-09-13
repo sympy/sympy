@@ -206,6 +206,10 @@ def test_Lambda_symbols():
     assert Lambda((), x*y).free_symbols == {x,y}
 
 
+def test_functionclas_symbols():
+    assert f.free_symbols == set()
+
+
 def test_Lambda_arguments():
     raises(TypeError, lambda: Lambda(x, 2*x)(x, y))
     raises(TypeError, lambda: Lambda((x, y), x + y)(x))
@@ -594,10 +598,10 @@ def test_subs_in_derivative():
         Derivative(expr, y).doit().subs(y, x)
     assert Derivative(f(x, y), y).subs(y, x) == Subs(Derivative(f(x, y), y), y, x)
     assert Derivative(f(x, y), y).subs(x, y) == Subs(Derivative(f(x, y), y), x, y)
-    assert Derivative(f(x, y), y).subs(y, g(x, y)) == Subs(Derivative(f(x, y), y), y, g(x, y))
+    assert Derivative(f(x, y), y).subs(y, g(x, y)) == Subs(Derivative(f(x, y), y), y, g(x, y)).doit()
     assert Derivative(f(x, y), y).subs(x, g(x, y)) == Subs(Derivative(f(x, y), y), x, g(x, y))
     assert Derivative(f(u(x), h(y)), h(y)).subs(h(y), g(x, y)) == \
-        Subs(Derivative(f(u(x), h(y)), h(y)), h(y), g(x, y))
+        Subs(Derivative(f(u(x), h(y)), h(y)), h(y), g(x, y)).doit()
     assert Derivative(f(x, y), y).subs(y, z) == Derivative(f(x, z), z)
     assert Derivative(f(x, y), y).subs(y, g(y)) == Derivative(f(x, g(y)), g(y))
     assert Derivative(f(g(x), h(y)), h(y)).subs(h(y), u(y)) == \
@@ -612,9 +616,10 @@ def test_subs_in_derivative():
 
 
 def test_diff_wrt_not_allowed():
-    raises(ValueError, lambda: diff(sin(x**2), x**2))
-    raises(ValueError, lambda: diff(exp(x*y), x*y))
-    raises(ValueError, lambda: diff(1 + x, 1 + x))
+    # issue 7027 included
+    for wrt in (
+            cos(x), re(x), Derivative(cos(x), x), x**2, x*y, 1 + x):
+        raises(ValueError, lambda: diff(f(x), wrt))
 
 
 def test_klein_gordon_lagrangian():
