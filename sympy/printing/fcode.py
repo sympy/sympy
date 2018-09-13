@@ -60,7 +60,7 @@ known_functions = {
     "conjugate": "conjg",
     "Max": "max",
     "Min": "min",
-    "Mod": "mod",
+    "Mod": "modulo",
 }
 
 

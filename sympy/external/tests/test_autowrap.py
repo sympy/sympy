@@ -146,7 +146,7 @@ def runtest_issue_10274(language, backend):
 def test_issue_14230():
     has_module('f2py')
     x, y = symbols('x, y')
-    expr = Mod(x, 2) - Mod(y, 2)
+    expr = Mod(x, 2) - Mod(y, -2)
     f = autowrap(expr, args=[x, y])
     exp_res = float(expr.xreplace({x: 3.5, y: 2.7}).evalf())
     assert abs(f(3.5, 2.7) - exp_res) < 1e-14
