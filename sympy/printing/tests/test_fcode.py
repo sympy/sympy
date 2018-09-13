@@ -1,6 +1,8 @@
 from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
-    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq,
-    Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda, sign)
+                   factorial, Integral, Piecewise, Add, diff, symbols, S,
+                   Float, Dummy, Eq, Range, Catalan, EulerGamma, E,
+                   GoldenRatio, I, pi, Function, Rational, Integer, Lambda,
+                   sign, Mod)
 
 from sympy.codegen import For, Assignment, aug_assign
 from sympy.codegen.ast import Declaration, Type, Variable, float32, float64, value_const, real, bool_, While
@@ -74,6 +76,8 @@ def test_fcode_Float():
 def test_fcode_functions():
     x, y = symbols('x,y')
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
+    assert fcode(Mod(x, y)) == "      mod(x, y)"
+    assert fcode(x % y) == "      mod(x, y)"
 
 
 def test_case():

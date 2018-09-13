@@ -59,7 +59,8 @@ known_functions = {
     "Abs": "abs",
     "conjugate": "conjg",
     "Max": "max",
-    "Min": "min"
+    "Min": "min",
+    "Mod": "mod",
 }
 
 
