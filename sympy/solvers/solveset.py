@@ -1080,9 +1080,9 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     .. math:: {\log_b x} = y \enspace if \enspace b^y = x
 
     Therefore if we are given an equation with exponent terms, we can
-    convert every term to its corresponding log form. This is achieved by
-    taking logarithms and expanding the equation using log identities
-    so that it can easily be handled by `solveset`.
+    convert every term to its corresponding logarithmic form. This is
+    achieved by taking logarithms and expanding the equation using
+    logarithmic identities so that it can easily be handled by ``solveset``.
 
     For example:
 
@@ -1092,7 +1092,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     .. math:: (2x)\log(3) = (x + 3)\log(2)
 
-    This form can be easily handed by `solveset`.
+    This form can be easily handed by ``solveset``.
     """
     unsolved_result = ConditionSet(symbol, Eq(lhs - rhs), domain)
     newlhs = powdenest(lhs)
@@ -1136,8 +1136,8 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
 def _is_exponential(f, symbol):
     r"""
-    Return True if one or more terms contain symbol only in exponents,
-    else False.
+    Returns ``True`` if one or more terms contain ``symbol`` only in
+    exponents, else ``False``.
 
     Parameters
     ==========
@@ -1186,15 +1186,15 @@ def _is_exponential(f, symbol):
 def _solve_logarithm(lhs, rhs, symbol, domain):
     r"""
     Helper to solve logarithmic equations which are reducible
-    to a single instance of `log`.
+    to a single instance of `\log`.
 
     Logarithmic equations are (currently) the equations that contains
-    `log` terms which can be reduced to a single log-term or
+    `\log` terms which can be reduced to a single `\log` term or
     a constant using various logarithmic identities.
 
     For example:
 
-    .. math:: \log(x) + log(x - 4)
+    .. math:: \log(x) + \log(x - 4)
 
     can be reduced to:
 
@@ -1232,7 +1232,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
 
     A logarithm is another way to write exponent and is defined by
 
-    .. math:: {log_b x} = y \enspace if \enspace b^y = x
+    .. math:: {\log_b x} = y \enspace if \enspace b^y = x
 
     When one side of the equation contains a single logarithm, the
     equation can be solved by rewriting the equation as an equivalent
@@ -1242,26 +1242,26 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
 
     Take for example
 
-    .. math:: \log(2*x) - 15 = 0
+    .. math:: \log(2x) - 15 = 0
 
     contains single logarithm, therefore we can directly rewrite it to
     exponential form as
 
-    .. math:: x = e^{15/2}
+    .. math:: x = \frac{e^{15}}{2}
 
     But if the equation has more than one logarithm as
 
     .. math:: \log(x - 3) + \log(x + 3) = 0
 
-    we use log identities to convert into a reduced form
+    we use logarithmic identities to convert it into a reduced form
 
     Using,
 
-    .. math:: \log(a) + \log(b) = \log(a*b)
+    .. math:: \log(a) + \log(b) = \log(ab)
 
-    therefore the equation becomes,
+    the equation becomes,
 
-    .. math:: \log((x - 3)*(x  + 3))
+    .. math:: \log((x - 3)(x + 3))
 
     This equation contains one logarithm and can be solved by rewriting
     to exponents.
@@ -1274,8 +1274,8 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
 
 def _is_logarithmic(f, symbol):
     r"""
-    Return True if the equation is in the form
-    `a\log(f(x)) + b\log(g(x)) + ... + c` else False.
+    Returns ``True`` if the equation is in the form
+    `a\log(f(x)) + b\log(g(x)) + ... + c` else ``False``.
 
     Parameters
     ==========
@@ -1311,7 +1311,7 @@ def _is_logarithmic(f, symbol):
     * Philosophy behind the helper
 
     The function extracts each term and checks whether it is
-    logarithmic w.r.t `symbol`.
+    logarithmic w.r.t ``symbol``.
     """
     rv = False
     for term in Add.make_args(f):
@@ -1333,7 +1333,7 @@ def _is_logarithmic(f, symbol):
 def _transolve(f, symbol, domain):
     r"""
     Function to solve transcendental equations. It is a helper to
-    ``solveset`` and should be used internally. ``transolve``
+    ``solveset`` and should be used internally. ``_transolve``
     currently supports the following class of equations:
 
         - Exponential equations
@@ -1344,13 +1344,13 @@ def _transolve(f, symbol, domain):
 
     f : Any transcendental equation that needs to be solved.
         This needs to be an expression, which is assumed
-        to be equal to 0.
+        to be equal to ``0``.
 
     symbol : The variable for which the equation is solved.
-        This needs to be of class `Symbol`.
+        This needs to be of class ``Symbol``.
 
     domain : A set over which the equation is solved.
-        This needs to be of class `Set`.
+        This needs to be of class ``Set``.
 
     Returns
     =======
@@ -1362,13 +1362,13 @@ def _transolve(f, symbol, domain):
         object if algorithms to evaluate complete solution are not
         yet implemented.
 
-    How to use ``transolve``
-    ========================
+    How to use ``_transolve``
+    =========================
 
-    ``transolve`` should not be used as an independent function, because
+    ``_transolve`` should not be used as an independent function, because
     it assumes that the equation (``f``) and the ``symbol`` comes from
     ``solveset`` and might have undergone a few modification(s).
-    To use ``transolve`` as an independent function the equation (``f``)
+    To use ``_transolve`` as an independent function the equation (``f``)
     and the ``symbol`` should be passed as they would have been by
     ``solveset``.
 
@@ -1382,23 +1382,23 @@ def _transolve(f, symbol, domain):
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
     {-(log(3) + 3*log(5))/(-log(5) + 2*log(3))}
 
-    How ``transolve`` works
-    =======================
+    How ``_transolve`` works
+    ========================
 
-    ``transolve`` uses two types of helper functions to solve equations
+    ``_transolve`` uses two types of helper functions to solve equations
     of a particular class:
 
     Identifying helpers: To determine whether a given equation
     belongs to a certain class of equation or not. Returns either
-    True or False.
+    ``True`` or ``False``.
 
     Solving helpers: Once an equation is identified, a corresponding
     helper either solves the equation or returns a form of the equation
-    that `solveset` might better be able to handle.
+    that ``solveset`` might better be able to handle.
 
     * Philosophy behind the module
 
-    The purpose of ``transolve`` is to take equations which are not
+    The purpose of ``_transolve`` is to take equations which are not
     already polynomial in their generator(s) and to either recast them
     as such through a valid transformation or to solve them outright.
     A pair of helper functions for each class of supported
@@ -1409,15 +1409,15 @@ def _transolve(f, symbol, domain):
     For example, an equation in the form `ab^{f(x)} - cd^{g(x)} = 0`
     can be transformed to
     `\log(a) + f(x)\log(b) - \log(c) - g(x)\log(d) = 0`
-    (under certain assumptions) and this can be solved with `solveset`
+    (under certain assumptions) and this can be solved with ``solveset``
     if `f(x)` and `g(x)` are in polynomial form.
 
-    How ``transolve`` is better than ``tsolve``
-    ===========================================
+    How ``_transolve`` is better than ``_tsolve``
+    =============================================
 
     1) Better output
 
-    ``transolve`` provides expressions in a more simplified form.
+    ``_transolve`` provides expressions in a more simplified form.
 
     Consider a simple exponential equation
 
@@ -1434,14 +1434,14 @@ def _transolve(f, symbol, domain):
 
     2) Extensible
 
-    The API of ``transolve`` is designed such that it is easily
+    The API of ``_transolve`` is designed such that it is easily
     extensible, i.e. the code that solves a given class of
     equations is encapsulated in a helper and not mixed in with
-    the code of ``transolve`` itself.
+    the code of ``_transolve`` itself.
 
     3) Modular
 
-    ``transolve`` is designed to be modular i.e, for every class of
+    ``_transolve`` is designed to be modular i.e, for every class of
     equation a separate helper for identification and solving is
     implemented. This makes it easy to change or modify any of the
     method implemented directly in the helpers without interfering
@@ -1449,10 +1449,10 @@ def _transolve(f, symbol, domain):
 
     4) Faster Computation
 
-    Solving equation via ``transolve`` is much faster as compared to
-    ``tsolve``. In `solve`, attempts are made computing every possibility
+    Solving equation via ``_transolve`` is much faster as compared to
+    ``_tsolve``. In ``solve``, attempts are made computing every possibility
     to get the solutions. This series of attempts makes solving a bit
-    slow. In ``transolve``, computation begins only after a particular
+    slow. In ``_transolve``, computation begins only after a particular
     type of equation is identified.
 
     How to add new class of equations
@@ -1487,15 +1487,15 @@ def _transolve(f, symbol, domain):
     adding an equation solver:
 
     - Naming conventions:
-      Name of the ``identification helper`` should be as
-      ``_is_class`` where ``class`` will be the name or abbreviation
-      of the class of equation. The ``solving helper`` will be named as
+      Name of the identification helper should be as
+      ``_is_class`` where class will be the name or abbreviation
+      of the class of equation. The solving helper will be named as
       ``_solve_class``.
       For example: for exponential equations it becomes
       ``_is_exponential`` and ``_solve_expo``.
-    - The ``identifying helpers`` should take two input parameters,
+    - The identifying helpers should take two input parameters,
       the equation to be checked and the variable for which a solution
-      is being sought, while ``solving helpers`` would require an additional
+      is being sought, while solving helpers would require an additional
       domain parameter.
     - Be sure to consider corner cases.
     - Add tests for each helper.
@@ -1512,7 +1512,7 @@ def _transolve(f, symbol, domain):
     def add_type(lhs, rhs, symbol, domain):
         """
         Helper for ``_transolve`` to handle equations of
-        `Add` type, i.e. equations taking the form as
+        ``Add`` type, i.e. equations taking the form as
         `a*f(x) + b*g(x) + .... = c`.
         For example: 4**x + 8**x = 0
         """
@@ -1616,7 +1616,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     {2*n*I*pi | n in Integers}
 
     * If you want to use `solveset` to solve the equation in the
-      real domain, provide a real domain. (Using `solveset`real`
+      real domain, provide a real domain. (Using ``solveset_real``
       does this automatically.)
 
     >>> R = S.Reals
