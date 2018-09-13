@@ -144,7 +144,7 @@ def runtest_issue_10274(language, backend):
 
 
 def test_issue_14230():
-
+    has_module('f2py')
     x, y = symbols('x, y')
     expr = Mod(x, 2) - Mod(y, 2)
     f = autowrap(expr, args=[x, y])
