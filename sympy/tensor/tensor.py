@@ -36,7 +36,7 @@ import itertools
 from sympy import Matrix, Rational, prod, Integer
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
-from sympy.core import Basic, sympify, Add, S
+from sympy.core import Basic, sympify, Add, Mul, S
 from sympy.core.compatibility import string_types, reduce, range, SYMPY_INTS
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
@@ -2715,7 +2715,7 @@ class TensExpr(Basic):
         return recursor(self, ())
 
 
-class TensAdd(TensExpr):
+class TensAdd(TensExpr, Add):
     """
     Sum of tensors
 
@@ -3131,6 +3131,7 @@ class Tensor(TensExpr):
         is_canon_bp = kw_args.pop('is_canon_bp', False)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
         obj._index_structure = _IndexStructure.from_indices(*indices)
+        obj._free_indices_set = set(obj._index_structure.get_free_indices())
         if tensor_head.rank != len(indices):
             raise ValueError("wrong number of indices")
         obj._indices = indices
@@ -3434,7 +3435,7 @@ class Tensor(TensExpr):
         return self.contract_metric(metric)
 
 
-class TensMul(TensExpr):
+class TensMul(TensExpr, Mul):
     """
     Product of tensors
 
@@ -3509,132 +3510,85 @@ class TensMul(TensExpr):
         obj._ext_rank = len(obj._index_structure.free) + 2*len(obj._index_structure.dum)
         obj._coeff = coeff
         obj._is_canon_bp = is_canon_bp
+        obj._free_indices_set = set(obj._index_structure.get_free_indices())
+        obj._dummy_indices_set = set(obj._index_structure.dum)
         return obj
 
     @staticmethod
     def _tensMul_contract_indices(args):
-        f_ext_rank = 0
-        free = []
-        dum = []
+        args_indices = [get_indices(arg) for arg in args]
+        replacements = [{} for arg in args]
+        free2pos1 = {}
+        free2pos2 = {}
+        dummy_data = []
+        indices = []
 
-        index_up = lambda u: u if u.is_up else -u
+        #_index_order = all([_has_index_order(arg) for arg in args])
 
-        indices = list(itertools.chain(*[get_indices(arg) for arg in args]))
+        cdt = defaultdict(int)
 
-        def standardize_matrix_free_indices(arg):
-            type_counter = defaultdict(int)
-            indices = arg.get_indices()
-            arg = arg._set_indices(*indices)
-            return arg
+        def dummy_fmt_gen(tensor_index_type):
+            fmt = tensor_index_type.dummy_fmt
+            nd = cdt[tensor_index_type]
+            cdt[tensor_index_type] += 1
+            return fmt % nd
 
-        for arg in args:
+        # Notation for positions (to better understand the code):
+        # `pos1`: position in the `args`.
+        # `pos2`: position in the indices.
+
+        # Example:
+        # A(i, j)*B(k, m, n)*C(p)
+        # `pos1` of `n` is 1 because it's in `B` (second `args` of TensMul).
+        # `pos2` of `n` is 4 because it's the fifth overall index.
+
+        # Counter for the index position wrt the whole expression:
+        pos2 = 0
+
+        for pos1, arg in enumerate(args):
             if not isinstance(arg, TensExpr):
                 continue
 
-            arg = standardize_matrix_free_indices(arg)
-
-            free_dict1 = dict([(index_up(i), (pos, i)) for i, pos in free])
-            free_dict2 = dict([(index_up(i), (pos, i)) for i, pos in arg.free])
-
-            mat_dict1 = dict([(i, pos) for i, pos in free])
-            mat_dict2 = dict([(i, pos) for i, pos in arg.free])
-
-            # Get a set containing all indices to contract in upper form:
-            indices_to_contract = set(free_dict1.keys()) & set(free_dict2.keys())
-
-            for name in indices_to_contract:
-                ipos1, ind1 = free_dict1[name]
-                ipos2, ind2 = free_dict2[name]
-                ipos2pf = ipos2 + f_ext_rank
-                if ind1.is_up == ind2.is_up:
-                    raise ValueError('wrong index construction {0}'.format(ind1))
-                # Create a new dummy indices pair:
-                if ind1.is_up:
-                    new_dummy = (ipos1, ipos2pf)
+            for index_pos, index in enumerate(args_indices[pos1]):
+                if not isinstance(index, TensorIndex):
+                    raise TypeError("expected TensorIndex")
+                if -index in free2pos1:
+                    # Dummy index detected:
+                    other_pos1 = free2pos1.pop(-index)
+                    other_pos2 = free2pos2.pop(-index)
+                    if index.is_up:
+                        dummy_data.append((index, pos1, other_pos1, pos2, other_pos2))
+                    else:
+                        dummy_data.append((-index, other_pos1, pos1, other_pos2, pos2))
+                    indices.append(None)
+                elif index in free2pos1:
+                    raise ValueError("Repeated index: %s" % index)
                 else:
-                    new_dummy = (ipos2pf, ipos1)
-                dum.append(new_dummy)
+                    free2pos1[index] = pos1
+                    free2pos2[index] = pos2
+                    indices.append(index)
+                pos2 += 1
 
-            # Matrix indices check:
-            mat_keys1 = set(mat_dict1.keys())
-            mat_keys2 = set(mat_dict2.keys())
+        free = [(i, p) for (i, p) in free2pos2.items()]
+        free_names = [i.name for i in free2pos2.keys()]
 
-            mat_types_map1 = defaultdict(set)
-            mat_types_map2 = defaultdict(set)
+        dummy_data.sort(key=lambda x: x[3])
 
-            for (i, pos) in mat_dict1.items():
-                mat_types_map1[i.tensor_index_type].add(i)
-            for (i, pos) in mat_dict2.items():
-                mat_types_map2[i.tensor_index_type].add(i)
+        for old_index, pos1cov, pos1contra, pos2cov, pos2contra in dummy_data:
+            index_type = old_index.tensor_index_type
+            while True:
+                dummy_name = dummy_fmt_gen(index_type)
+                if dummy_name not in free_names:
+                    break
+            dummy = TensorIndex(dummy_name, index_type, True)
+            replacements[pos1cov][old_index] = dummy
+            replacements[pos1contra][-old_index] = -dummy
+            indices[pos2cov] = dummy
+            indices[pos2contra] = -dummy
 
-            mat_contraction = mat_keys1 & mat_keys2
-            mat_skip = set([])
-            mat_free = []
-
-            # Contraction of matrix indices is a bit more complicated,
-            # because it is governed by more complicated rules:
-            for mi in mat_contraction:
-                if not mi.is_up:
-                    continue
-
-                mat_types_map1[mi.tensor_index_type].discard(mi)
-                mat_types_map2[mi.tensor_index_type].discard(mi)
-
-                negmi1 = mat_types_map1[mi.tensor_index_type].pop() if mat_types_map1[mi.tensor_index_type] else None
-                negmi2 = mat_types_map2[mi.tensor_index_type].pop() if mat_types_map2[mi.tensor_index_type] else None
-
-                mat_skip.update([mi, negmi1, negmi2])
-
-                ipos1 = mat_dict1[mi]
-                ipos2 = mat_dict2[mi]
-                ipos2pf = ipos2 + f_ext_rank
-
-                # Case A(m0)*B(m0) ==> A(-D)*B(D):
-                if (negmi1 not in mat_keys1) and (negmi2 not in mat_keys2):
-                    dum.append((ipos2pf, ipos1))
-                # Case A(m0, -m1)*B(m0) ==> A(m0, -D)*B(D):
-                elif (negmi1 in mat_keys1) and (negmi2 not in mat_keys2):
-                    mpos1 = mat_dict1[negmi1]
-                    dum.append((ipos2pf, mpos1))
-                    mat_free.append((mi, ipos1))
-                    indices[ipos1] = mi
-                # Case A(m0)*B(m0, -m1) ==> A(-D)*B(D, m0):
-                elif (negmi1 not in mat_keys1) and (negmi2 in mat_keys2):
-                    mpos2 = mat_dict2[negmi2]
-                    dum.append((ipos2pf, ipos1))
-                    mat_free.append((mi, f_ext_rank + mpos2))
-                    indices[f_ext_rank + mpos2] = mi
-                # Case A(m0, -m1)*B(m0, -m1) ==> A(m0, -D)*B(D, -m1):
-                elif (negmi1 in mat_keys1) and (negmi2 in mat_keys2):
-                    mpos1 = mat_dict1[negmi1]
-                    mpos2 = mat_dict2[negmi2]
-                    dum.append((ipos2pf, mpos1))
-                    mat_free.append((mi, ipos1))
-                    mat_free.append((negmi2, f_ext_rank + mpos2))
-
-            # Update values to the cumulative data structures:
-            free = [(ind, i) for ind, i in free if index_up(ind) not in indices_to_contract
-                        and ind not in mat_skip]
-            free.extend([(ind, i + f_ext_rank) for ind, i in arg.free if index_up(ind) not in indices_to_contract
-                        and ind not in mat_skip])
-            free.extend(mat_free)
-            dum.extend([(i1 + f_ext_rank, i2 + f_ext_rank) for i1, i2 in arg.dum])
-            f_ext_rank += arg.ext_rank
-
-        # rename contracted indices:
-        indices = _IndexStructure._replace_dummy_names(indices, free, dum)
-
-        # Let's replace these names in the args:
-        pos = 0
-        newargs = []
-        for arg in args:
-            if isinstance(arg, TensExpr):
-                newargs.append(arg._set_indices(*indices[pos:pos+arg.ext_rank]))
-                pos += arg.ext_rank
-            else:
-                newargs.append(arg)
-
-        return newargs, indices, free, dum
+        args = [arg.xreplace(repl) for arg, repl in zip(args, replacements)]
+        dummy_pairs2 = [(p2a, p2b) for (i, p1a, p1b, p2a, p2b) in dummy_data]
+        return args, indices, free, dummy_pairs2
 
     @staticmethod
     def _get_components_from_args(args):
