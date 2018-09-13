@@ -69,6 +69,7 @@ def limit(e, z, z0, dir="+"):
 
 
 def heuristics(e, z, z0, dir):
+    from sympy.calculus.util import AccumBounds
     rv = None
     if abs(z0) is S.Infinity:
         rv = limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
@@ -97,7 +98,6 @@ def heuristics(e, z, z0, dir):
                 r.append(l)
         if r:
             rv = e.func(*r)
-            from sympy.calculus.util import AccumBounds
             if rv is S.NaN and e.is_Mul and any(isinstance(rr, AccumBounds) for rr in r):
                 r2 = []
                 e2 = []
