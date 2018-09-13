@@ -1077,7 +1077,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     The logarithm function is the inverse of the exponential function.
     The defining relation between exponentiation and logarithm is:
 
-    .. math:: {log_b x} = y \enspace if \enspace b^y = x
+    .. math:: {\log_b x} = y \enspace if \enspace b^y = x
 
     Therefore if we are given an equation with exponent terms, we can
     convert every term to its corresponding log form. This is achieved by
@@ -1090,7 +1090,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     Taking log both sides will reduce the equation to
 
-    .. math:: (2x)*log(3) = (x + 3)*log(2)
+    .. math:: (2x)\log(3) = (x + 3)\log(2)
 
     This form can be easily handed by `solveset`.
     """
@@ -1194,11 +1194,11 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
 
     For example:
 
-    .. math:: log(x) + log(x - 4)
+    .. math:: \log(x) + log(x - 4)
 
     can be reduced to:
 
-    .. math:: log(x(x - 4))
+    .. math:: \log(x(x - 4))
 
     Parameters
     ==========
@@ -1242,26 +1242,26 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
 
     Take for example
 
-    .. math:: log(2*x) - 15 = 0
+    .. math:: \log(2*x) - 15 = 0
 
     contains single logarithm, therefore we can directly rewrite it to
     exponential form as
 
-    .. math:: x = exp(15)/2
+    .. math:: x = e^{15/2}
 
     But if the equation has more than one logarithm as
 
-    .. math:: log(x - 3) + log(x + 3) = 0
+    .. math:: \log(x - 3) + \log(x + 3) = 0
 
     we use log identities to convert into a reduced form
 
     Using,
 
-    .. math:: log(a) + log(b) = log(a*b)
+    .. math:: \log(a) + \log(b) = \log(a*b)
 
     therefore the equation becomes,
 
-    .. math:: log((x - 3)*(x  + 3))
+    .. math:: \log((x - 3)*(x  + 3))
 
     This equation contains one logarithm and can be solved by rewriting
     to exponents.
@@ -1275,7 +1275,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
 def _is_logarithmic(f, symbol):
     r"""
     Return True if the equation is in the form
-    `a*log(f(x)) + b*log(g(x)) + ... + c` else False.
+    `a\log(f(x)) + b\log(g(x)) + ... + c` else False.
 
     Parameters
     ==========
@@ -1406,9 +1406,9 @@ def _transolve(f, symbol, domain):
     identifies the transcendental form of an equation and the other
     either solves it or recasts it into a tractable form that can be
     solved by  ``solveset``.
-    For example, an equation in the form `a*b**f(x) - c*d**g(x) = 0`
+    For example, an equation in the form `ab^{f(x)} - cd^{g(x)} = 0`
     can be transformed to
-    `log(a) + f(x)*log(b) - log(c) - g(x)*log(d) = 0`
+    `\log(a) + f(x)\log(b) - \log(c) - g(x)\log(d) = 0`
     (under certain assumptions) and this can be solved with `solveset`
     if `f(x)` and `g(x)` are in polynomial form.
 
