@@ -76,8 +76,8 @@ def test_fcode_Float():
 def test_fcode_functions():
     x, y = symbols('x,y')
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
-    assert fcode(Mod(x, y)) == "      mod(x, y)"
-    assert fcode(x % y) == "      mod(x, y)"
+    assert fcode(Mod(x, y)) == "      modulo(x, y)"
+    assert fcode(x % y) == "      modulo(x, y)"
 
 
 def test_case():
