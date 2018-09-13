@@ -537,40 +537,39 @@ class Ellipse(GeometrySet):
 
         """
         return Point.distance(self.center, self.foci[0])
-    
-    def auxiliary_circle(self, x='x', y='y'):
-        """The equation of auxiliary circle of the ellipse.
-        
-        Parameters
-        ==========
-        
-        x : str, optional
-            Label for the x-axis. Default value is 'x'.
-        y : str, optional
-            Label for the y-axis. Default value is 'y'.
-            
-        Returns
-        =======
-        
-        equation : sympy expression
-        
-        References
-        ==========
-        
-        http://mathworld.wolfram.com/AuxiliaryCircle.html
-        
-        Examples
-        ========
-        
-        >>> from sympy import Ellipse, Point
-        >>> ellipse = Ellipse(Point(2, 4), 9, 1)
-        >>> ellipse.auxiliary_circle()
-        (x - 2)**2 + (y - 4)**2 - 81
-        """
-        x = _symbol(x)
-        y = _symbol(y)
-        return (x - self.center.x)**2 + (y - self.center.y)**2 - self.hradius**2
-    
+
+def auxiliary_circle(self, x='x', y='y'):
+"""
+The equation of auxiliary circle of the ellipse.
+
+Parameters
+==========
+x : str, optional Label for the x-axis. Default value is 'x'.
+y : str, optional Label for the y-axis. Default value is 'y'.
+
+Returns
+=======
+
+equation : sympy expression
+
+References
+==========
+
+http://mathworld.wolfram.com/AuxiliaryCircle.html
+
+Examples
+========
+
+>>> from sympy import Ellipse, Point
+>>> ellipse = Ellipse(Point(2, 4), 9, 1)
+>>> ellipse.auxiliary_circle()
+(x - 2)**2 + (y - 4)**2 - 81
+
+"""
+x = _symbol(x)
+y = _symbol(y)
+return (x - self.center.x)**2 + (y - self.center.y)**2 - self.hradius**2
+
     @property
     def hradius(self):
         """The horizontal radius of the ellipse.
