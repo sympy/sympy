@@ -62,6 +62,8 @@ information on each (run ``help(ode)``):
   - 2nd order Liouville differential equations.
   - Power series solutions for second order differential equations
     at ordinary and regular singular points.
+  - `n`\th order differential equation that can be solved with algebraic
+    rearrangement and integration.
   - `n`\th order linear homogeneous differential equation with constant
     coefficients.
   - `n`\th order linear inhomogeneous differential equation with constant
@@ -283,6 +285,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: ``best``, and ``all_Integral`` meta-hints should not be included in this
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
+    "nth_algebraic",
     "separable",
     "1st_exact",
     "1st_linear",
@@ -305,6 +308,7 @@ allhints = (
     "Liouville",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
+    "nth_algebraic_Integral",
     "separable_Integral",
     "1st_exact_Integral",
     "1st_linear_Integral",
@@ -1339,6 +1343,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
 
     if order > 0:
+        # Any ODE that can be solved with a combination of algebra and
+        # integrals e.g.:
+        # d^3/dx^3(x y) = F(x)
+        r = _nth_algebraic_match(reduced_eq, func)
+        if r['solutions']:
+            matching_hints['nth_algebraic'] = r
+            matching_hints['nth_algebraic_Integral'] = r
+
         # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
 
@@ -3967,6 +3979,59 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
             frobdict[numsyms[i]] = -num/(indicial.subs(d, m+i))
 
     return frobdict
+
+def dsolve_algebraic(eqn, fx):
+
+    def replace(eqn, var):
+        def expand_diffx(*args):
+            differand, diffs = args[0], args[1:]
+            toreplace = differand
+            for v, n in diffs:
+                for _ in range(n):
+                    if v == var:
+                        toreplace = diffx(toreplace)
+                    else:
+                        toreplace = Derivative(toreplace, v)
+            return toreplace
+        return eqn.replace(Derivative, expand_diffx)
+
+    def unreplace(eqn, var):
+        return eqn.replace(diffx, lambda e: Derivative(e, var))
+
+    # Each integration should generate a different constant
+    constants = iter(numbered_symbols(prefix='C', cls=Symbol, start=1))
+    constant = lambda: next(constants, None)
+
+    # Like Derivative but "invertible"
+    class diffx(Function):
+        def inverse(self):
+            # We mustn't use integrate here because fx has been replaced by _t
+            # in the equation so integrals will not be correct while solve is
+            # still working.
+            return lambda expr: Integral(expr, var) + constant()
+
+    # The independent variable
+    var = fx.args[0]
+    subs_eqn = replace(eqn, var)
+    try:
+        solns = solve(subs_eqn, fx)
+    except NotImplementedError:
+        return []
+
+    solns = [unreplace(soln, var) for soln in solns]
+    solns = [Equality(fx, soln) for soln in solns]
+    return solns
+
+def _nth_algebraic_match(eq, func):
+    solns = dsolve_algebraic(eq, func)
+    return {'solutions':solns}
+
+def ode_nth_algebraic(eq, func, order, match):
+    solns = match['solutions']
+    if len(solns) == 1:
+        return solns[0]
+    else:
+        return solns
 
 def _nth_linear_match(eq, func, order):
     r"""
