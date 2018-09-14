@@ -170,7 +170,7 @@ class MatrixDeterminant(MatrixCommon):
         submat, toeplitz = self._eval_berkowitz_toeplitz_matrix()
         return toeplitz * submat._eval_berkowitz_vector()
 
-    def _eval_det_bareiss(self):
+    def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul):
         """Compute matrix determinant using Bareiss' fraction-free
         algorithm which is an extension of the well known Gaussian
         elimination method. This approach is best suited for dense
@@ -195,7 +195,7 @@ class MatrixDeterminant(MatrixCommon):
             # the computation by the factor of 2.5 in one test.
             # Relevant issues: #10279 and #13877.
             pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
-                                         iszerofunc=_is_zero_after_expand_mul)
+                                         iszerofunc=iszerofunc)
             if pivot_pos == None:
                 return S.Zero
 
@@ -383,7 +383,7 @@ class MatrixDeterminant(MatrixCommon):
         return self._new(self.rows, self.cols,
                          lambda i, j: self.cofactor(i, j, method))
 
-    def det(self, method="bareiss"):
+    def det(self, method="bareiss", iszerofunc=None):
         """Computes the determinant of a matrix.  If the matrix
         is at most 3x3, a hard-coded formula is used.
         Otherwise, the determinant using the method `method`.
@@ -403,6 +403,14 @@ class MatrixDeterminant(MatrixCommon):
             method = "lu"
         if method not in ("bareiss", "berkowitz", "lu"):
             raise ValueError("Determinant method '%s' unrecognized" % method)
+
+        if iszerofunc is None:
+            if method == "bareiss":
+                iszerofunc = _is_zero_after_expand_mul
+            elif method == "lu":
+                iszerofunc = _iszero
+        elif not isinstance(iszerofunc, FunctionType):
+            raise ValueError("Zero testing method '%s' unrecognized" % iszerofunc)
 
         # if methods were made internal and all determinant calculations
         # passed through here, then these lines could be factored out of
@@ -426,11 +434,11 @@ class MatrixDeterminant(MatrixCommon):
                    - self[0, 1] * self[1, 0] * self[2, 2])
 
         if method == "bareiss":
-            return self._eval_det_bareiss()
+            return self._eval_det_bareiss(iszerofunc=iszerofunc)
         elif method == "berkowitz":
             return self._eval_det_berkowitz()
         elif method == "lu":
-            return self._eval_det_lu()
+            return self._eval_det_lu(iszerofunc=iszerofunc)
 
     def minor(self, i, j, method="berkowitz"):
         """Return the (i,j) minor of `self`.  That is,
