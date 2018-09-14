@@ -1236,7 +1236,7 @@ if AutolevListener:
                 else:
                     u_dep_text = ""
                 if self.dependent_variables:
-                    velocity_constraints_text = ", velocity_constraints = velocity_constraints"
+                    velocity_constraints_text = ", velocity_constraints=velocity_constraints"
                 else:
                     velocity_constraints_text = ""
                 if ctx.parentCtx not in self.fr_expr:
@@ -1245,7 +1245,7 @@ if AutolevListener:
                     self.write("kane = _me.KanesMethod(" + self.newtonian + ", " + "q_ind=[" +
                             ",".join(self.q_ind) + "], " + "u_ind=[" +
                             ", ".join(self.u_ind) + "]" + u_dep_text + ", " +
-                            "kd_eqs = kd_eqs" + velocity_constraints_text + ")\n")
+                            "kd_eqs=kd_eqs" + velocity_constraints_text + ")\n")
                     self.write("fr, frstar = kane." + "kanes_equations([" +
                                 ", ".join(self.bodies.values()) + "], forceList)\n")
                     self.fr_expr.append(ctx.parentCtx)

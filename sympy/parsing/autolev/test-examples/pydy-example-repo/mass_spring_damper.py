@@ -19,7 +19,7 @@ force_magnitude = m*g-k*position-b*speed+force
 force_block = (force_magnitude*frame_ceiling.x).subs({position_d:speed})
 kd_eqs = [position_d - speed]
 forceList = [(particle_block.point,(force_magnitude*frame_ceiling.x).subs({position_d:speed}))]
-kane = _me.KanesMethod(frame_ceiling, q_ind=[position], u_ind=[speed], kd_eqs = kd_eqs)
+kane = _me.KanesMethod(frame_ceiling, q_ind=[position], u_ind=[speed], kd_eqs=kd_eqs)
 fr, frstar = kane.kanes_equations([particle_block], forceList)
 zero = fr+frstar
 from pydy.system import System

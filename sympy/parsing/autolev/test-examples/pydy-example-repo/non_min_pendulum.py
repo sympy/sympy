@@ -26,7 +26,7 @@ u_q1_d = _me.dynamicsymbols('u_q1_d')
 u_q2_d = _me.dynamicsymbols('u_q2_d')
 kd_eqs = [q1_d-u_q1_d, q2_d-u_q2_d]
 forceList = [(particle_p.point,particle_p.mass*(g*frame_n.x))]
-kane = _me.KanesMethod(frame_n, q_ind=[q1,q2], u_ind=[u_q2_d], u_dependent=[u_q1_d], kd_eqs = kd_eqs, velocity_constraints = velocity_constraints)
+kane = _me.KanesMethod(frame_n, q_ind=[q1,q2], u_ind=[u_q2_d], u_dependent=[u_q1_d], kd_eqs=kd_eqs, velocity_constraints=velocity_constraints)
 fr, frstar = kane.kanes_equations([particle_p], forceList)
 zero = fr+frstar
 f_c = point_pn.pos_from(particle_p.point).magnitude()-l

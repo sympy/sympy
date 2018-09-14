@@ -27,7 +27,7 @@ force_p = particle_p.mass*(g*frame_n.x)
 force_r = particle_r.mass*(g*frame_n.x)
 kd_eqs = [q1_d - u1, q2_d - u2]
 forceList = [(particle_p.point,particle_p.mass*(g*frame_n.x)), (particle_r.point,particle_r.mass*(g*frame_n.x))]
-kane = _me.KanesMethod(frame_n, q_ind=[q1,q2], u_ind=[u1, u2], kd_eqs = kd_eqs)
+kane = _me.KanesMethod(frame_n, q_ind=[q1,q2], u_ind=[u1, u2], kd_eqs=kd_eqs)
 fr, frstar = kane.kanes_equations([particle_p, particle_r], forceList)
 zero = fr+frstar
 from pydy.system import System
