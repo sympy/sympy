@@ -1857,13 +1857,7 @@ class Subs(Expr):
     def __eq__(self, other):
         if not isinstance(other, Subs):
             return False
-        s = self._hashable_content()
-        o = other._hashable_content()
-        if len(s) != len(o):
-            return False
-        if s[0] != o[0]:
-            return False
-        return s[1:] == o[1:]
+        return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
         return not(self == other)
