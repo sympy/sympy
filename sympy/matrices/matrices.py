@@ -390,7 +390,7 @@ class MatrixDeterminant(MatrixCommon):
 
 
         Possible values for "method":
-          bareis
+          bareiss
           berkowitz
           lu
         """
