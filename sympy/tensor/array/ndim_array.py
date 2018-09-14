@@ -209,7 +209,7 @@ class NDimArray(object):
         """
         return self._rank
 
-    def diff(self, *args):
+    def diff(self, *args, **kwargs):
         """
         Calculate the derivative of each element in the array.
 
@@ -224,7 +224,8 @@ class NDimArray(object):
 
         """
         from sympy import Derivative
-        return Derivative(self.as_immutable(), *args, evaluate=True)
+        kwargs.setdefault('evaluate', True)
+        return Derivative(self.as_immutable(), *args, **kwargs)
 
     def _accept_eval_derivative(self, s):
         return s._visit_eval_derivative_array(self)

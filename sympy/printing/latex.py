@@ -726,7 +726,7 @@ class LatexPrinter(Printer):
         '''
         func = expr.func.__name__
         if hasattr(self, '_print_' + func) and \
-            not isinstance(expr.func, UndefinedFunction):
+            not isinstance(expr, AppliedUndef):
             return getattr(self, '_print_' + func)(expr, exp)
         else:
             args = [ str(self._print(arg)) for arg in expr.args ]

@@ -834,7 +834,7 @@ class HolonomicFunction(object):
 
         return HolonomicFunction(self.annihilator * D, self.x)
 
-    def diff(self, *args):
+    def diff(self, *args, **kwargs):
         r"""
         Differentiation of the given Holonomic function.
 
@@ -856,7 +856,7 @@ class HolonomicFunction(object):
 
         .integrate()
         """
-
+        kwargs.setdefault('evaluate', True)
         if args:
             if args[0] != self.x:
                 return S(0)
