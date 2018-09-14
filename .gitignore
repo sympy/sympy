@@ -69,3 +69,8 @@ sample.tex
 # IPython Notebook Checkpoints
 .ipynb_checkpoints/
 
+# pytest cache folder
+.*cache
+
+# pytest related data file for slow tests
+.ci/durations.log

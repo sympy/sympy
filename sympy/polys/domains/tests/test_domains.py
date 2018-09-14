@@ -11,7 +11,6 @@ from sympy.polys.fields import field
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
-    GeneratorsNeeded,
     GeneratorsError,
     CoercionFailed,
     NotInvertible,
@@ -483,11 +482,13 @@ def test_Domain_convert():
 
 
 def test_PolynomialRing__init():
-    raises(GeneratorsNeeded, lambda: ZZ.poly_ring())
+    R, = ring("", ZZ)
+    assert ZZ.poly_ring() == R.to_domain()
 
 
 def test_FractionField__init():
-    raises(GeneratorsNeeded, lambda: ZZ.frac_field())
+    F, = field("", ZZ)
+    assert ZZ.frac_field() == F.to_domain()
 
 
 def test_inject():
@@ -519,6 +520,8 @@ def test_Domain___eq__():
 
     assert (ZZ.frac_field(x, y) == QQ.frac_field(x, y)) is False
     assert (QQ.frac_field(x, y) == ZZ.frac_field(x, y)) is False
+
+    assert RealField()[x] == RR[x]
 
 
 def test_Domain__algebraic_field():
@@ -671,6 +674,15 @@ def test_ModularInteger():
     assert isinstance(a, F3.dtype) and a == 2
     a = F3(2)**2
     assert isinstance(a, F3.dtype) and a == 1
+
+    F7 = FF(7)
+
+    a = F7(3)**100000000000
+    assert isinstance(a, F7.dtype) and a == 4
+    a = F7(3)**-100000000000
+    assert isinstance(a, F7.dtype) and a == 2
+    a = F7(3)**S(2)
+    assert isinstance(a, F7.dtype) and a == 2
 
     assert bool(F3(3)) is False
     assert bool(F3(4)) is True

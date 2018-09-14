@@ -1,11 +1,9 @@
 SymPy
 =====
 
-|pypi version| |pypi download| |Build status| |Gitter Badge| |Zenodo Badge|
+|pypi version| |Build status| |Gitter Badge| |Zenodo Badge|
 
 .. |pypi version| image:: https://img.shields.io/pypi/v/sympy.svg
-   :target: https://pypi.python.org/pypi/sympy
-.. |pypi download| image:: https://img.shields.io/pypi/dm/sympy.svg
    :target: https://pypi.python.org/pypi/sympy
 .. |Build status| image:: https://secure.travis-ci.org/sympy/sympy.svg?branch=master
    :target: http://travis-ci.org/sympy/sympy
@@ -38,7 +36,10 @@ to ask us anything there. We have a very welcoming and helpful community.
 Download
 --------
 
-Get the latest version of SymPy from
+The recommended installation method is through Anaconda,
+https://www.anaconda.com/download/
+
+You can also get the latest version of SymPy from
 https://pypi.python.org/pypi/sympy/
 
 To get the git version do
@@ -90,7 +91,7 @@ if SymPy is installed.
 Installation
 ------------
 
-SymPy has a hard dependency on the `mpmath <http://mpmath.org/>`
+SymPy has a hard dependency on the `mpmath <http://mpmath.org/>`_
 library (version >= 0.19).  You should install it first, please refer to
 the mpmath installation guide:
 
@@ -135,15 +136,20 @@ Travis CI.
 
 To test pull requests, use `sympy-bot <https://github.com/sympy/sympy-bot>`_.
 
-Usage in Python 3
------------------
+Regenerate Experimental `\LaTeX` Parser/Lexer
+---------------------------------------------
 
-SymPy also supports Python 3. If you want to install the latest version in
-Python 3, get the Python 3 tarball from
-https://pypi.python.org/pypi/sympy/
+The parser and lexer generated with the `ANTLR4 <http://antlr4.org>`_ toolchain
+in `sympy/parsing/latex/_antlr` and checked into the repo. Presently, most
+users should not need to regenerate these files, but if you plan to work on
+this feature, you will need the `antlr4` command line tool available. One way
+to get it is::
 
-To install the SymPy for Python 3, simply run the above commands with a Python
-3 interpreter.
+    $ conda install -c conda-forge antlr=4.7
+
+After making changes to `sympy/parsing/latex/LaTeX.g4`, run::
+
+    $ ./setup.py antlr
 
 Clean
 -----
@@ -223,18 +229,34 @@ will show the top developers from the last year.
 Citation
 --------
 
-To cite SymPy in publications use::
+To cite SymPy in publications use
 
-    SymPy Development Team (2016). SymPy: Python library for symbolic mathematics
-    URL http://www.sympy.org.
+    Meurer A, Smith CP, Paprocki M, Čertík O, Kirpichev SB, Rocklin M, Kumar A,
+    Ivanov S, Moore JK, Singh S, Rathnayake T, Vig S, Granger BE, Muller RP,
+    Bonazzi F, Gupta H, Vats S, Johansson F, Pedregosa F, Curry MJ, Terrel AR,
+    Roučka Š, Saboo A, Fernando I, Kulal S, Cimrman R, Scopatz A. (2017) SymPy:
+    symbolic computing in Python. *PeerJ Computer Science* 3:e103
+    https://doi.org/10.7717/peerj-cs.103
 
-A BibTeX entry for LaTeX users is::
+A BibTeX entry for LaTeX users is
 
-    @Manual{,
-    title = {SymPy: Python library for symbolic mathematics},
-    author = {{SymPy Development Team}},
-    year = {2016},
-    url = {http://www.sympy.org},
+.. code-block:: none
+
+    @article{10.7717/peerj-cs.103,
+     title = {SymPy: symbolic computing in Python},
+     author = {Meurer, Aaron and Smith, Christopher P. and Paprocki, Mateusz and \v{C}ert\'{i}k, Ond\v{r}ej and Kirpichev, Sergey B. and Rocklin, Matthew and Kumar, AMiT and Ivanov, Sergiu and Moore, Jason K. and Singh, Sartaj and Rathnayake, Thilina and Vig, Sean and Granger, Brian E. and Muller, Richard P. and Bonazzi, Francesco and Gupta, Harsh and Vats, Shivam and Johansson, Fredrik and Pedregosa, Fabian and Curry, Matthew J. and Terrel, Andy R. and Rou\v{c}ka, \v{S}t\v{e}p\'{a}n and Saboo, Ashutosh and Fernando, Isuru and Kulal, Sumith and Cimrman, Robert and Scopatz, Anthony},
+     year = 2017,
+     month = jan,
+     keywords = {Python, Computer algebra system, Symbolics},
+     abstract = {
+                SymPy is an open source computer algebra system written in pure Python. It is built with a focus on extensibility and ease of use, through both interactive and programmatic applications. These characteristics have led SymPy to become a popular symbolic library for the scientific Python ecosystem. This paper presents the architecture of SymPy, a description of its features, and a discussion of select submodules. The supplementary material provide additional examples and further outline details of the architecture and features of SymPy.
+             },
+     volume = 3,
+     pages = {e103},
+     journal = {PeerJ Computer Science},
+     issn = {2376-5992},
+     url = {https://doi.org/10.7717/peerj-cs.103},
+     doi = {10.7717/peerj-cs.103}
     }
 
 SymPy is BSD licensed, so you are free to use it whatever you like, be it

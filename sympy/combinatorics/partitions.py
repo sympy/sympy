@@ -303,7 +303,7 @@ class IntegerPartition(Basic):
 
         The partition can be given as a list of positive integers or a
         dictionary of (integer, multiplicity) items. If the partition is
-        preceeded by an integer an error will be raised if the partition
+        preceded by an integer an error will be raised if the partition
         does not sum to that given integer.
 
         Examples
@@ -318,7 +318,7 @@ class IntegerPartition(Basic):
         >>> IntegerPartition({1:3, 2:1})
         IntegerPartition(5, (2, 1, 1, 1))
 
-        If the value that the partion should sum to is given first, a check
+        If the value that the partition should sum to is given first, a check
         will be made to see n error will be raised if there is a discrepancy:
 
         >>> IntegerPartition(10, [5, 4, 3, 1])

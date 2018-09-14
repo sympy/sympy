@@ -40,16 +40,19 @@ class DiracDelta(Function):
 
     DiracDelta function has the following properties:
 
-    1) ``diff(Heaviside(x),x) = DiracDelta(x)``
-    2) ``integrate(DiracDelta(x-a)*f(x),(x,-oo,oo)) = f(a)`` and
-       ``integrate(DiracDelta(x-a)*f(x),(x,a-e,a+e)) = f(a)``
+    1) ``diff(Heaviside(x), x) = DiracDelta(x)``
+    2) ``integrate(DiracDelta(x - a)*f(x),(x, -oo, oo)) = f(a)`` and
+       ``integrate(DiracDelta(x - a)*f(x),(x, a - e, a + e)) = f(a)``
     3) ``DiracDelta(x) = 0`` for all ``x != 0``
-    4) ``DiracDelta(g(x)) = Sum_i(DiracDelta(x-x_i)/abs(g'(x_i)))``
+    4) ``DiracDelta(g(x)) = Sum_i(DiracDelta(x - x_i)/abs(g'(x_i)))``
        Where ``x_i``-s are the roots of ``g``
+    5) ``DiracDelta(-x) = DiracDelta(x)``
 
     Derivatives of ``k``-th order of DiracDelta have the following property:
 
-    5) ``DiracDelta(x,k) = 0``, for all ``x != 0``
+    6) ``DiracDelta(x, k) = 0``, for all ``x != 0``
+    7) ``DiracDelta(-x, k) = -DiracDelta(x, k)`` for odd ``k``
+    8) ``DiracDelta(-x, k) = DiracDelta(x, k)`` for even ``k``
 
     Examples
     ========
@@ -156,13 +159,13 @@ class DiracDelta(Function):
         >>> DiracDelta(x)
         DiracDelta(x)
 
-        >>> DiracDelta(x,1)
-        DiracDelta(x, 1)
+        >>> DiracDelta(-x, 1)
+        -DiracDelta(x, 1)
 
         >>> DiracDelta(1)
         0
 
-        >>> DiracDelta(5,1)
+        >>> DiracDelta(5, 1)
         0
 
         >>> DiracDelta(0)
@@ -191,12 +194,23 @@ class DiracDelta(Function):
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
-        if arg.is_positive or arg.is_negative:
+        if arg.is_nonzero:
             return S.Zero
         if fuzzy_not(im(arg).is_zero):
-            raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
+            raise ValueError(filldedent('''
+                Function defined only for Real Values.
+                Complex part: %s  found in %s .''' % (
+                repr(im(arg)), repr(arg))))
+        c, nc = arg.args_cnc()
+        if c and c[0] == -1:
+            # keep this fast and simple instead of using
+            # could_extract_minus_sign
+            if k % 2 == 1:
+                return -cls(-arg, k)
+            elif k % 2 == 0:
+                return cls(-arg, k) if k else cls(-arg)
 
-    @deprecated(useinstead="expand(diracdelta=True, wrt=x)", deprecated_since_version="1.0.1")
+    @deprecated(useinstead="expand(diracdelta=True, wrt=x)", issue=12859, deprecated_since_version="1.1")
     def simplify(self, x):
         return self.expand(diracdelta=True, wrt=x)
 
@@ -346,15 +360,11 @@ class DiracDelta(Function):
                 return SingularityFunction(x, solve(args[0], x)[0], -1)
             return SingularityFunction(x, solve(args[0], x)[0], -args[1] - 1)
         else:
-            # I dont know how to handle the case for DiracDelta expressions
+            # I don't know how to handle the case for DiracDelta expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
-                rewrite(SingularityFunction) doesn't support arguments with more that 1 variable.'''))
-
-
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\delta'
+                rewrite(SingularityFunction) doesn't support
+                arguments with more that 1 variable.'''))
 
     def _sage_(self):
         import sage.all as sage
@@ -369,15 +379,15 @@ class DiracDelta(Function):
 class Heaviside(Function):
     """Heaviside Piecewise function
 
-    Heaviside function has the following properties [*]_:
+    Heaviside function has the following properties [1]_:
 
     1) ``diff(Heaviside(x),x) = DiracDelta(x)``
                         ``( 0, if x < 0``
-    2) ``Heaviside(x) = < ( undefined if x==0 [*]``
+    2) ``Heaviside(x) = < ( undefined if x==0 [1]``
                         ``( 1, if x > 0``
     3) ``Max(0,x).diff(x) = Heaviside(x)``
 
-    .. [*] Regarding to the value at 0, Mathematica defines ``H(0) = 1``,
+    .. [1] Regarding to the value at 0, Mathematica defines ``H(0) = 1``,
            but Maple uses ``H(0) = undefined``.  Different application areas
            may have specific conventions.  For example, in control theory, it
            is common practice to assume ``H(0) == 0`` to match the Laplace
@@ -407,8 +417,8 @@ class Heaviside(Function):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/HeavisideStepFunction.html
-    .. [2] http://dlmf.nist.gov/1.16#iv
+    .. [2] http://mathworld.wolfram.com/HeavisideStepFunction.html
+    .. [3] http://dlmf.nist.gov/1.16#iv
 
     """
 
@@ -591,10 +601,11 @@ class Heaviside(Function):
             # ((x - 5)**3*Heaviside(x - 5)).rewrite(SingularityFunction) should output
             # SingularityFunction(x, 5, 0) instead of (x - 5)**3*SingularityFunction(x, 5, 0)
         else:
-            # I dont know how to handle the case for Heaviside expressions
+            # I don't know how to handle the case for Heaviside expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
-                rewrite(SingularityFunction) doesn't support arguments with more that 1 variable.'''))
+                rewrite(SingularityFunction) doesn't
+                support arguments with more that 1 variable.'''))
 
     def _sage_(self):
         import sage.all as sage

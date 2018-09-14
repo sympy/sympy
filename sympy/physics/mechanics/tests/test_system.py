@@ -1,4 +1,5 @@
-from sympy import symbols, Matrix, atan, simplify, zeros
+from sympy.core.backend import symbols, Matrix, atan, zeros
+from sympy import simplify
 from sympy.physics.mechanics import (dynamicsymbols, Particle, Point,
                                      ReferenceFrame, SymbolicSystem)
 from sympy.utilities.pytest import raises
@@ -194,8 +195,8 @@ def test_property_attributes():
 
 def test_not_specified_errors():
     """This test will cover errors that arise from trying to access attributes
-    that were not specificed upon object creation or were specified on creation
-    and the user trys to recalculate them."""
+    that were not specified upon object creation or were specified on creation
+    and the user tries to recalculate them."""
     # Trying to access form 2 when form 1 given
     # Trying to access form 3 when form 2 given
 

@@ -355,17 +355,17 @@ def PolynomialRing(dom, *gens, **opts):
     Create a generalized multivariate polynomial ring.
 
     A generalized polynomial ring is defined by a ground field `K`, a set
-    of generators (typically `x_1, \dots, x_n`) and a monomial order `<`.
+    of generators (typically `x_1, \ldots, x_n`) and a monomial order `<`.
     The monomial order can be global, local or mixed. In any case it induces
     a total ordering on the monomials, and there exists for every (non-zero)
-    polynomial `f \in K[x_1, \dots, x_n]` a well-defined "leading monomial"
+    polynomial `f \in K[x_1, \ldots, x_n]` a well-defined "leading monomial"
     `LM(f) = LM(f, >)`. One can then define a multiplicative subset
-    `S = S_> = \{f \in K[x_1, \dots, x_n] | LM(f) = 1\}`. The generalized
+    `S = S_> = \{f \in K[x_1, \ldots, x_n] | LM(f) = 1\}`. The generalized
     polynomial ring corresponding to the monomial order is
-    `R = S^{-1}K[x_1, \dots, x_n]`.
+    `R = S^{-1}K[x_1, \ldots, x_n]`.
 
     If `>` is a so-called global order, that is `1` is the smallest monomial,
-    then we just have `S = K` and `R = K[x_1, \dots, x_n]`.
+    then we just have `S = K` and `R = K[x_1, \ldots, x_n]`.
 
     Examples
     ========

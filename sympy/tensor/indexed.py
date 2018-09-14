@@ -1,4 +1,4 @@
-"""Module that defines indexed objects
+r"""Module that defines indexed objects
 
 The classes ``IndexedBase``, ``Indexed``, and ``Idx`` represent a
 matrix element ``M[i, j]`` as in the following diagram::
@@ -79,9 +79,9 @@ matrix element ``M[i, j]`` as in the following diagram::
 
     >>> from sympy.tensor import get_indices, get_contraction_structure
     >>> get_indices(A[i, j, j])
-    (set([i]), {})
+    ({i}, {})
     >>> get_contraction_structure(A[i, j, j])
-    {(j,): set([A[i, j, j]])}
+    {(j,): {A[i, j, j]}}
 
     See the appropriate docstrings for a detailed explanation of the output.
 
@@ -107,9 +107,11 @@ matrix element ``M[i, j]`` as in the following diagram::
 
 from __future__ import print_function, division
 
+from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core import Expr, Tuple, Symbol, sympify, S
-from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
+from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
+    range, Iterable)
 
 
 class IndexException(Exception):
@@ -133,11 +135,13 @@ class Indexed(Expr):
     """
     is_commutative = True
     is_Indexed = True
-    is_Symbol = True
+    is_symbol = True
     is_Atom = True
 
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
+        from sympy.tensor.array.ndim_array import NDimArray
+        from sympy.matrices.matrices import MatrixBase
 
         if not args:
             raise IndexException("Indexed needs at least one index.")
@@ -147,7 +151,17 @@ class Indexed(Expr):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol, or IndexedBase as base."""))
         args = list(map(sympify, args))
+        if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
+            if len(args) == 1:
+                return base[args[0]]
+            else:
+                return base[args]
+
         return Expr.__new__(cls, base, *args, **kw_args)
+
+    @property
+    def name(self):
+        return str(self)
 
     @property
     def _diff_wrt(self):
@@ -155,6 +169,8 @@ class Indexed(Expr):
         return True
 
     def _eval_derivative(self, wrt):
+        from sympy.tensor.array.ndim_array import NDimArray
+
         if isinstance(wrt, Indexed) and wrt.base == self.base:
             if len(self.indices) != len(wrt.indices):
                 msg = "Different # of indices: d({!s})/d({!s})".format(self,
@@ -164,7 +180,12 @@ class Indexed(Expr):
             for index1, index2 in zip(self.indices, wrt.indices):
                 result *= KroneckerDelta(index1, index2)
             return result
+        elif isinstance(self.base, NDimArray):
+            from sympy.tensor.array import derive_by_array
+            return Indexed(derive_by_array(self.base, wrt), *self.args[1:])
         else:
+            if Tuple(self.indices).has(wrt):
+                return S.NaN
             return S.Zero
 
     @property
@@ -287,9 +308,19 @@ class Indexed(Expr):
         indices = list(map(p.doprint, self.indices))
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
-    # @property
-    # def free_symbols(self):
-    #     return {self.base}
+    @property
+    def free_symbols(self):
+        base_free_symbols = self.base.free_symbols
+        indices_free_symbols = {
+            fs for i in self.indices for fs in i.free_symbols}
+        if base_free_symbols:
+            return {self} | base_free_symbols | indices_free_symbols
+        else:
+            return indices_free_symbols
+
+    @property
+    def expr_free_symbols(self):
+        return {self}
 
 
 class IndexedBase(Expr, NotIterable):
@@ -344,28 +375,44 @@ class IndexedBase(Expr, NotIterable):
 
     """
     is_commutative = True
-    is_Symbol = True
+    is_symbol = True
     is_Atom = True
 
     def __new__(cls, label, shape=None, **kw_args):
+        from sympy import MatrixBase, NDimArray
+
         if isinstance(label, string_types):
             label = Symbol(label)
         elif isinstance(label, Symbol):
             pass
+        elif isinstance(label, (MatrixBase, NDimArray)):
+            return label
+        elif isinstance(label, Iterable):
+            return _sympify(label)
         else:
-            raise TypeError("Base label should be a string or Symbol.")
+            label = _sympify(label)
 
         if is_sequence(shape):
             shape = Tuple(*shape)
         elif shape is not None:
             shape = Tuple(shape)
 
+        offset = kw_args.pop('offset', S.Zero)
+        strides = kw_args.pop('strides', None)
+
         if shape is not None:
-            obj = Expr.__new__(cls, label, shape, **kw_args)
+            obj = Expr.__new__(cls, label, shape)
         else:
-            obj = Expr.__new__(cls, label, **kw_args)
+            obj = Expr.__new__(cls, label)
         obj._shape = shape
+        obj._offset = offset
+        obj._strides = strides
+        obj._name = str(label)
         return obj
+
+    @property
+    def name(self):
+        return self._name
 
     def __getitem__(self, indices, **kw_args):
         if is_sequence(indices):
@@ -406,6 +453,45 @@ class IndexedBase(Expr, NotIterable):
         return self._shape
 
     @property
+    def strides(self):
+        """Returns the strided scheme for the ``IndexedBase`` object.
+
+        Normally this is a tuple denoting the number of
+        steps to take in the respective dimension when traversing
+        an array. For code generation purposes strides='C' and
+        strides='F' can also be used.
+
+        strides='C' would mean that code printer would unroll
+        in row-major order and 'F' means unroll in column major
+        order.
+
+        """
+
+        return self._strides
+
+    @property
+    def offset(self):
+        """Returns the offset for the ``IndexedBase`` object.
+
+        This is the value added to the resulting index when the
+        2D Indexed object is unrolled to a 1D form. Used in code
+        generation.
+
+        Examples
+        ==========
+        >>> from sympy.printing import ccode
+        >>> from sympy.tensor import IndexedBase, Idx
+        >>> from sympy import symbols
+        >>> l, m, n, o = symbols('l m n o', integer=True)
+        >>> A = IndexedBase('A', strides=(l, m, n), offset=o)
+        >>> i, j, k = map(Idx, 'ijk')
+        >>> ccode(A[i, j, k])
+        'A[l*i + m*j + n*k + o]'
+
+        """
+        return self._offset
+
+    @property
     def label(self):
         """Returns the label of the ``IndexedBase`` object.
 
@@ -440,11 +526,9 @@ class Idx(Expr):
         * ``tuple``: The two elements are interpreted as the lower and upper
           bounds of the range, respectively.
 
-    Note: the ``Idx`` constructor is rather pedantic in that it only accepts
-    integer arguments.  The only exception is that you can use ``-oo`` and
-    ``oo`` to specify an unbounded range.  For all other cases, both label and
-    bounds must be declared as integers, e.g. if ``n`` is given as an argument
-    then ``n.is_integer`` must return ``True``.
+    Note: bounds of the range are assumed to be either integer or infinite (oo
+    and -oo are allowed to specify an unbounded range). If ``n`` is given as a
+    bound, then ``n.is_integer`` must not return false.
 
     For convenience, if the label is given as a string it is automatically
     converted to an integer symbol.  (Note: this conversion is not done for
@@ -486,7 +570,7 @@ class Idx(Expr):
     is_integer = True
     is_finite = True
     is_real = True
-    is_Symbol = True
+    is_symbol = True
     is_Atom = True
     _diff_wrt = True
 
@@ -510,7 +594,7 @@ class Idx(Expr):
                 raise ValueError(filldedent("""
                     Idx range tuple must have length 2, but got %s""" % len(range)))
             for bound in range:
-                if not (bound.is_integer or abs(bound) is S.Infinity):
+                if bound.is_integer is False:
                     raise TypeError("Idx object requires integer bounds.")
             args = label, Tuple(*range)
         elif isinstance(range, Expr):
@@ -597,3 +681,59 @@ class Idx(Expr):
     @property
     def free_symbols(self):
         return {self}
+
+    def __le__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.upper is not None and (self.upper <= other_lower) == True:
+            return True
+        if self.lower is not None and (self.lower > other_upper) == True:
+            return False
+        return super(Idx, self).__le__(other)
+
+    def __ge__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.lower is not None and (self.lower >= other_upper) == True:
+            return True
+        if self.upper is not None and (self.upper < other_lower) == True:
+            return False
+        return super(Idx, self).__ge__(other)
+
+    def __lt__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.upper is not None and (self.upper < other_lower) == True:
+            return True
+        if self.lower is not None and (self.lower >= other_upper) == True:
+            return False
+        return super(Idx, self).__lt__(other)
+
+    def __gt__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.lower is not None and (self.lower > other_upper) == True:
+            return True
+        if self.upper is not None and (self.upper <= other_lower) == True:
+            return False
+        return super(Idx, self).__gt__(other)

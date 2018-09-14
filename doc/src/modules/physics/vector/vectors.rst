@@ -23,7 +23,7 @@ Vector Algebra
 
 Vector algebra is the first topic to be discussed.
 
-Two vectors are said to be equal if and only if (iff) they have the same same
+Two vectors are said to be equal if and only if (iff) they have the same
 magnitude and orientation.
 
 Vector Operations
@@ -629,7 +629,7 @@ relationship between the two frames has been defined. ::
 
   >>> A = ReferenceFrame('A')
   >>> A.x + N.x
-  A.x + N.x
+  N.x + A.x
 
 If we want to do vector multiplication, first we have to define and
 orientation. The ``orient`` method of ``ReferenceFrame`` provides that
@@ -740,7 +740,7 @@ provided in. This remains true for vectors with components made of basis
 vectors from multiple frames: ::
 
   >>> (B.y*q2 + B.z + q2*N.x).diff(q2, N)
-  B.y + N.x
+  N.x + B.y
 
 
 How Vectors are Coded
@@ -778,6 +778,6 @@ method after creation. The direction cosine matrices are represented by SymPy's
 ``Matrix``, and are part of a dictionary where the keys are the
 ``ReferenceFrame`` and the value the ``Matrix``; these are set
 bi-directionally; in that when you orient ``A`` to ``N`` you are setting ``A``'s
-orientation dictionary to include ``N`` and its ``Matrix``, but also you also
-are setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
+orientation dictionary to include ``N`` and its ``Matrix``, but you are also
+setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
 (that DCM being the transpose of the other).

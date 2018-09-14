@@ -138,7 +138,7 @@ Level zero contains the bulk code of the polynomial manipulation module.
 Manipulation of dense, multivariate polynomials
 ***********************************************
 
-These functions can be used to manipulate polynomials in `K[X_0, \dots, X_u]`.
+These functions can be used to manipulate polynomials in `K[X_0, \ldots, X_u]`.
 Functions for manipulating multivariate polynomials in the dense representation
 have the prefix ``dmp_``. Functions which only apply to univariate polynomials
 (i.e. `u = 0`)
@@ -372,7 +372,7 @@ rudimentary low-level support for finitely generated free modules. This is
 mainly used for Groebner basis computations (see there), so manipulation
 functions are only provided to the extend needed. They carry the prefix
 ``sdm_``. Note that in examples, the generators of the free module are called
-`f_1, f_2, \dots`.
+`f_1, f_2, \ldots`.
 
 .. currentmodule:: sympy.polys.distributedmodules
 
@@ -577,7 +577,7 @@ This construction of subresultants applies to any `j` between
 `\deg(S_j(f,g)) < j`.
 
 The properties of subresultants are as follows. Let `n_0 = \deg(f)`,
-`n_1 = \deg(g)`, `n_2, \dots, n_k` be the decreasing sequence of
+`n_1 = \deg(g)`, `n_2, \ldots, n_k` be the decreasing sequence of
 degrees of polynomials in a remainder sequence.
 Let `0 \le j \le n_1`; then
 

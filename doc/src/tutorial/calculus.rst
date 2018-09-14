@@ -81,6 +81,18 @@ know how to compute the derivative of an expression (for example, if it
 contains an undefined function, which are described in the :ref:`Solving
 Differential Equations <tutorial-dsolve>` section).
 
+Derivatives of unspecified order can be created using tuple ``(x, n)`` where
+``n`` is the order of the derivative with respect to ``x``.
+
+    >>> m, n, a, b = symbols('m n a b')
+    >>> expr = (a*x + b)**m
+    >>> expr.diff((x, n))
+      n
+     ∂ ⎛         m⎞
+    ───⎝(a⋅x + b) ⎠
+      n
+    ∂x
+
 Integrals
 =========
 
@@ -323,13 +335,15 @@ the ``differentiate_finite`` function:
 
     >>> f, g = symbols('f g', cls=Function)
     >>> differentiate_finite(f(x)*g(x))
+    -f(x - 1/2)⋅g(x - 1/2) + f(x + 1/2)⋅g(x + 1/2)
+
+If we want to expand the intermediate derivative we may pass the
+flag ``evaluate=True``:
+
+    >>> differentiate_finite(f(x)*g(x), evaluate=True)
     (-f(x - 1/2) + f(x + 1/2))⋅g(x) + (-g(x - 1/2) + g(x + 1/2))⋅f(x)
 
-If we don't want to expand the intermediate derivative we may pass the
-flag ``evaluate=False``:
-
-    >>> differentiate_finite(f(x)*g(x), evaluate=False)
-    -f(x - 1/2)⋅g(x - 1/2) + f(x + 1/2)⋅g(x + 1/2)
+This form however does not respect the product rule.
 
 If you already have a ``Derivative`` instance, you can use the
 ``as_finite_difference`` method to generate approximations of the

@@ -1,4 +1,4 @@
-from sympy import symbols
+from sympy.core.backend import symbols
 from sympy.physics.mechanics import dynamicsymbols
 from sympy.physics.mechanics import ReferenceFrame, Point, Particle
 from sympy.physics.mechanics import LagrangesMethod, Lagrangian

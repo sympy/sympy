@@ -1,5 +1,11 @@
-from sympy.utilities.source import get_mod_func, get_class
+from sympy.utilities.source import get_mod_func, get_class, source
+from sympy.utilities.pytest import raises
+from sympy import point
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+def test_source():
+    with raises(SymPyDeprecationWarning):
+        source(point)
 
 def test_get_mod_func():
     assert get_mod_func(

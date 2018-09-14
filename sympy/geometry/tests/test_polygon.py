@@ -1,13 +1,14 @@
 from __future__ import division
 import warnings
 
-from sympy import Abs, Rational, Float, S, Symbol, cos, pi, sqrt, oo
+from sympy import Abs, Rational, Float, S, Symbol, symbols, cos, pi, sqrt, oo
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
                             convex_hull, intersection, Line)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import verify_numerically
 from sympy.geometry.polygon import rad, deg
+from sympy import integrate
 
 
 def feq(a, b):
@@ -15,7 +16,7 @@ def feq(a, b):
     t_float = Float("1.0E-10")
     return -t_float < a - b < t_float
 
-
+@slow
 def test_polygon():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
@@ -29,7 +30,6 @@ def test_polygon():
     # 2 "remove folded" tests
     assert Polygon(a, Point(3, 0), b, c) == t
     assert Polygon(a, b, Point(3, -1), b, c) == t
-    raises(GeometryError, lambda: Polygon((0, 0), (1, 0), (0, 1), (1, 1)))
     # remove multiple collinear points
     assert Polygon(Point(-4, 15), Point(-11, 15), Point(-15, 15),
         Point(-15, 33/5), Point(-15, -87/10), Point(-15, -15),
@@ -68,6 +68,8 @@ def test_polygon():
     assert p1.perimeter == 5 + 2*sqrt(10) + sqrt(29) + sqrt(8)
     assert p1.area == 22
     assert not p1.is_convex()
+    assert Polygon((-1, 1), (2, -1), (2, 1), (-1, -1), (3, 0)
+        ).is_convex() is False
     # ensure convex for both CW and CCW point specification
     assert p3.is_convex()
     assert p4.is_convex()
@@ -102,7 +104,7 @@ def test_polygon():
         Point(0, 0)
     raises(ValueError, lambda: Polygon(
         Point(x, 0), Point(0, y), Point(x, y)).arbitrary_point('x'))
-    assert p6.intersection(r) == [Point(-9, 33/5), Point(-9, -84/13)]
+    assert p6.intersection(r) == [Point(-9, -84/13), Point(-9, 33/5)]
     #
     # Regular polygon
     #
@@ -217,6 +219,9 @@ def test_polygon():
     assert t2.inradius == t2.incircle.radius == 5*sqrt(3)/6
     assert t3.inradius == t3.incircle.radius == x1**2/((2 + sqrt(2))*Abs(x1))
 
+    # Exradius
+    assert t1.exradii[t1.sides[2]] == 5*sqrt(2)/2
+
     # Circumcircle
     assert t1.circumcircle.center == Point(2.5, 2.5)
 
@@ -235,7 +240,7 @@ def test_polygon():
     # Perpendicular
     altitudes = t1.altitudes
     assert altitudes[p1] == Segment(p1, Point(Rational(5, 2), Rational(5, 2)))
-    assert altitudes[p2] == s1[0]
+    assert altitudes[p2].equals(s1[0])
     assert altitudes[p3] == s1[2]
     assert t1.orthocenter == p1
     t = S('''Triangle(
@@ -376,3 +381,82 @@ def test_eulerline():
         == Point2D(5, 5*sqrt(3)/3)
     assert Triangle(Point(4, -6), Point(4, -1), Point(-3, 3)).eulerline \
         == Line(Point2D(64/7, 3), Point2D(-29/14, -7/2))
+
+
+def test_intersection():
+    poly1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
+    poly2 = Polygon(Point(0, 1), Point(-5, 0),
+                    Point(0, -4), Point(0, 1/5), Point(1/2, -0.1), Point(1,0), Point(0, 1))
+
+    assert poly1.intersection(poly2) == [Point2D(1/3, 0),
+        Segment(Point(0, 1/5), Point(0, 0)),
+        Segment(Point(1, 0), Point(0, 1))]
+    assert poly2.intersection(poly1) == [Point(1/3, 0),
+        Segment(Point(0, 0), Point(0, 1/5)),
+        Segment(Point(1, 0), Point(0, 1))]
+    assert poly1.intersection(Point(0, 0)) == [Point(0, 0)]
+    assert poly1.intersection(Point(-12,  -43)) == []
+    assert poly2.intersection(Line((-12, 0), (12, 0))) == [Point(-5, 0), Point(0, 0),
+                                                           Point(1/3, 0), Point(1, 0)]
+    assert poly2.intersection(Line((-12, 12), (12, 12))) == []
+    assert poly2.intersection(Ray((-3,4), (1,0))) == [Segment(Point(1, 0), Point(0, 1))]
+    assert poly2.intersection(Circle((0, -1), 1)) == [Point(0, -2), Point(0, 0)]
+    assert poly1.intersection(poly1) == [Segment(Point(0, 0), Point(1, 0)),
+        Segment(Point(0, 1), Point(0, 0)), Segment(Point(1, 0), Point(0, 1))]
+    assert poly2.intersection(poly2) == [Segment(Point(-5, 0), Point(0, -4)),
+        Segment(Point(0, -4), Point(0, 1/5)), Segment(Point(0, 1/5), Point(1/2, -1/10)),
+        Segment(Point(0, 1), Point(-5, 0)), Segment(Point(1/2, -1/10), Point(1, 0)),
+        Segment(Point(1, 0), Point(0, 1))]
+    assert poly2.intersection(Triangle(Point(0, 1), Point(1, 0), Point(-1, 1))) == [Point(-5/7, 6/7),
+                                                                                    Segment(Point2D(0, 1), Point(1, 0))]
+    assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []
+
+
+def test_parameter_value():
+    t = Symbol('t')
+    sq = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
+    assert sq.parameter_value((0.5, 1), t) == {t: 3/8}
+    q = Polygon((0, 0), (2, 1), (2, 4), (4, 0))
+    assert q.parameter_value((4, 0), t) == {t: -6 + 3*sqrt(5)}  # ~= 0.708
+    raises(ValueError, lambda: sq.parameter_value((5, 6), t))
+
+
+def test_issue_12966():
+    poly = Polygon(Point(0, 0), Point(0, 10), Point(5, 10), Point(5, 5),
+        Point(10, 5), Point(10, 0))
+    t = Symbol('t')
+    pt = poly.arbitrary_point(t)
+    DELTA = 5/poly.perimeter
+    assert [pt.subs(t, DELTA*i) for i in range(int(1/DELTA))] == [
+        Point(0, 0), Point(0, 5), Point(0, 10), Point(5, 10),
+        Point(5, 5), Point(10, 5), Point(10, 0), Point(5, 0)]
+
+
+def test_second_moment_of_area():
+    x, y = symbols('x, y')
+    # triangle
+    p1, p2, p3 = [(0, 0), (4, 0), (0, 2)]
+    p = (0, 0)
+    # equation of hypotenuse
+    eq_y = (1-x/4)*2
+    I_yy = integrate((x**2) * (integrate(1, (y, 0, eq_y))), (x, 0, 4))
+    I_xx = integrate(1 * (integrate(y**2, (y, 0, eq_y))), (x, 0, 4))
+    I_xy = integrate(x * (integrate(y, (y, 0, eq_y))), (x, 0, 4))
+
+    triangle = Polygon(p1, p2, p3)
+
+    assert (I_xx - triangle.second_moment_of_area(p)[0]) == 0
+    assert (I_yy - triangle.second_moment_of_area(p)[1]) == 0
+    assert (I_xy - triangle.second_moment_of_area(p)[2]) == 0
+
+    # rectangle
+    p1, p2, p3, p4=[(0, 0), (4, 0), (4, 2), (0, 2)]
+    I_yy = integrate((x**2) * integrate(1, (y, 0, 2)), (x, 0, 4))
+    I_xx = integrate(1 * integrate(y**2, (y, 0, 2)), (x, 0, 4))
+    I_xy = integrate(x * integrate(y, (y, 0, 2)), (x, 0, 4))
+
+    rectangle = Polygon(p1, p2, p3, p4)
+
+    assert (I_xx - rectangle.second_moment_of_area(p)[0]) == 0
+    assert (I_yy - rectangle.second_moment_of_area(p)[1]) == 0
+    assert (I_xy - rectangle.second_moment_of_area(p)[2]) == 0

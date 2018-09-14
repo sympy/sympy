@@ -1,5 +1,6 @@
 from sympy.combinatorics.graycode import (GrayCode, bin_to_gray,
-    random_bitstring, get_subset_from_bitstring, graycode_subsets)
+    random_bitstring, get_subset_from_bitstring, graycode_subsets,
+    gray_to_bin)
 
 
 def test_graycode():
@@ -55,3 +56,9 @@ def test_graycode():
     assert list(graycode_subsets(['a', 'b', 'c'])) == \
         [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'],
     ['a', 'c'], ['a']]
+
+def test_live_issue_117():
+    assert bin_to_gray('0100') == '0110'
+    assert bin_to_gray('0101') == '0111'
+    for bits in ('0100', '0101'):
+        assert gray_to_bin(bin_to_gray(bits)) == bits

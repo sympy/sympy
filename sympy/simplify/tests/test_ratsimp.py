@@ -1,4 +1,4 @@
-from sympy import ratsimpmodprime, ratsimp, Rational, sqrt, pi, log, erf
+from sympy import ratsimpmodprime, ratsimp, Rational, sqrt, pi, log, erf, GF
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -67,3 +67,7 @@ def test_ratsimpmodprime():
     # Test a bug where denominators would be dropped
     assert ratsimpmodprime(x, [y - 2*x], order='lex') == \
         y/2
+
+    a = (x**5 + 2*x**4 + 2*x**3 + 2*x**2 + x + 2/x + x**(-2))
+    assert ratsimpmodprime(a, [x + 1], domain=GF(2)) == 1
+    assert ratsimpmodprime(a, [x + 1], domain=GF(3)) == -1

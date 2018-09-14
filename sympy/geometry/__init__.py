@@ -6,19 +6,13 @@ perform simple informational queries.
 Usage:
 ======
 
-
-Notes:
-======
-    Currently the geometry module supports 2-dimensional
-    and 3 -dimensional Euclidean space.
-
 Examples
 ========
 
 """
 from sympy.geometry.point import Point, Point2D, Point3D
-from sympy.geometry.line import Line, Ray, Segment
-from sympy.geometry.line3d import Line3D, Segment3D, Ray3D
+from sympy.geometry.line import Line, Ray, Segment, Line2D, Segment2D, Ray2D, \
+    Line3D, Segment3D, Ray3D
 from sympy.geometry.plane import Plane
 from sympy.geometry.ellipse import Ellipse, Circle
 from sympy.geometry.polygon import Polygon, RegularPolygon, Triangle, rad, deg

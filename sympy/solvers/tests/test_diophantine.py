@@ -19,6 +19,9 @@ from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
 from sympy.utilities import default_sort_key
 
 from sympy.utilities.pytest import slow, raises, XFAIL
+from sympy.utilities.iterables import (
+        permute_signs,
+        signed_permutations)
 
 a, b, c, d, p, q, x, y, z, w, t, u, v, X, Y, Z = symbols(
     "a, b, c, d, p, q, x, y, z, w, t, u, v, X, Y, Z", integer=True)
@@ -121,7 +124,7 @@ def test_quadratic_elliptical_case():
     assert diop_solve(x**2 + y**2 + 2*x + 2*y + 2) == set([(-1, -1)])
     #assert diop_solve(15*x**2 - 9*x*y + 14*y**2 - 23*x - 14*y - 4950) == set([(-15, 6)])
     assert diop_solve(10*x**2 + 12*x*y + 12*y**2 - 34) == \
-        set([(1, -2), (-1, -1),(1, 1), (-1, 2)])
+        set([(-1, -1), (-1, 2), (1, -2), (1, 1)])
 
 
 def test_quadratic_parabolic_case():
@@ -129,6 +132,7 @@ def test_quadratic_parabolic_case():
     assert check_solutions(8*x**2 - 24*x*y + 18*y**2 + 5*x + 7*y + 16)
     assert check_solutions(8*x**2 - 24*x*y + 18*y**2 + 6*x + 12*y - 6)
     assert check_solutions(8*x**2 + 24*x*y + 18*y**2 + 4*x + 6*y - 7)
+    assert check_solutions(-4*x**2 + 4*x*y - y**2 + 2*x - 3)
     assert check_solutions(x**2 + 2*x*y + y**2 + 2*x + 2*y + 1)
     assert check_solutions(x**2 - 2*x*y + y**2 + 2*x + 2*y + 1)
     assert check_solutions(y**2 - 41*x + 40)
@@ -199,8 +203,8 @@ def test_DN():
 
     # When equation is x**2 + y**2 = N
     # Solutions are interchangeable
-    assert diop_DN(-1, 5) == [(1, 2)]
-    assert diop_DN(-1, 169) == [(5, 12), (0, 13)]
+    assert diop_DN(-1, 5) == [(2, 1), (1, 2)]
+    assert diop_DN(-1, 169) == [(12, 5), (5, 12), (13, 0), (0, 13)]
 
     # D > 0 and D is not a square
 
@@ -486,7 +490,12 @@ def test_diophantine():
 
     assert diophantine(x - y) == diophantine(Eq(x, y))
     assert diophantine(3*x*pi - 2*y*pi) == set([(2*t_0, 3*t_0)])
-    assert diophantine(x**2 + y**2 + z**2 - 14) == set([(1, 2, 3)])
+    eq = x**2 + y**2 + z**2 - 14
+    base_sol = set([(1, 2, 3)])
+    assert diophantine(eq) == base_sol
+    complete_soln = set(signed_permutations(base_sol.pop()))
+    assert diophantine(eq, permute=True) == complete_soln
+
     assert diophantine(x**2 + 15*x/14 - 3) == set()
     # test issue 11049
     eq = 92*x**2 - 99*y**2 - z**2
@@ -558,14 +567,18 @@ def test_diop_general_sum_of_squares_quick():
     # issue 11016
     var = symbols(':5') + (symbols('6', negative=True),)
     eq = Add(*[i**2 for i in var]) - 112
-    assert diophantine(eq) == set(
-        [(0, 1, 1, 5, 6, -7), (1, 1, 1, 3, 6, -8), (2, 3, 3, 4,
-        5, -7), (0, 1, 1, 1, 3, -10), (0, 0, 4, 4, 4, -8), (1, 2, 3,
-        3, 5, -8), (0, 1, 2, 3, 7, -7), (2, 2, 4, 4, 6, -6), (1, 1,
-        3, 4, 6, -7), (0, 2, 3, 3, 3, -9), (0, 0, 2, 2, 2, -10), (1,
-        1, 2, 3, 4, -9), (0, 1, 1, 2, 5, -9), (0, 0, 2, 6, 6, -6),
-        (1, 3, 4, 5, 5, -6), (0, 2, 2, 2, 6, -8), (0, 3, 3, 3, 6,
-        -7), (0, 2, 3, 5, 5, -7), (0, 1, 5, 5, 5, -6)])
+
+    base_soln = set(
+        [(0, 1, 1, 5, 6, -7), (1, 1, 1, 3, 6, -8), (2, 3, 3, 4, 5, -7),
+            (0, 1, 1, 1, 3, -10), (0, 0, 4, 4, 4, -8), (1, 2, 3, 3, 5, -8),
+            (0, 1, 2, 3, 7, -7), (2, 2, 4, 4, 6, -6), (1, 1, 3, 4, 6, -7),
+            (0, 2, 3, 3, 3, -9), (0, 0, 2, 2, 2, -10), (1, 1, 2, 3, 4, -9),
+            (0, 1, 1, 2, 5, -9), (0, 0, 2, 6, 6, -6), (1, 3, 4, 5, 5, -6),
+            (0, 2, 2, 2, 6, -8), (0, 3, 3, 3, 6, -7), (0, 2, 3, 5, 5, -7),
+            (0, 1, 5, 5, 5, -6)])
+    assert diophantine(eq) == base_soln
+    assert len(diophantine(eq, permute=True)) == 196800
+
     # handle negated squares with signsimp
     assert diophantine(12 - x**2 - y**2 - z**2) == set([(2, 2, 2)])
     # diophantine handles simplification, so classify_diop should
@@ -722,7 +735,7 @@ def test_diopcoverage():
     assert base_solution_linear(4, 8, 12, t=None) == tuple(_.subs(t, 0) for _ in ans)
 
     assert cornacchia(1, 1, 20) is None
-    assert cornacchia(1, 1, 5) == set([(1, 2)])
+    assert cornacchia(1, 1, 5) == set([(2, 1)])
     assert cornacchia(1, 2, 17) == set([(3, 2)])
 
     raises(ValueError, lambda: reconstruct(4, 20, 1))
@@ -750,6 +763,8 @@ def test_diopcoverage():
     # it's ok if these pass some day when the solvers are implemented
     raises(NotImplementedError, lambda: diophantine(x**2 + y**2 + x*y + 2*y*z - 12))
     raises(NotImplementedError, lambda: diophantine(x**3 + y**2))
+    assert diop_quadratic(x**2 + y**2 - 1**2 - 3**4) == \
+        set([(-9, -1), (-9, 1), (-1, -9), (-1, 9), (1, -9), (1, 9), (9, -1), (9, 1)])
 
 
 def test_holzer():
@@ -865,6 +880,27 @@ def test__can_do_sum_of_squares():
     assert _can_do_sum_of_squares(1, 2)
     assert _can_do_sum_of_squares(2, 2)
     assert _can_do_sum_of_squares(3, 2) is False
+
+
+def test_diophantine_permute_sign():
+    from sympy.abc import a, b, c, d, e
+    eq = a**4 + b**4 - (2**4 + 3**4)
+    base_sol = set([(2, 3)])
+    assert diophantine(eq) == base_sol
+    complete_soln = set(signed_permutations(base_sol.pop()))
+    assert diophantine(eq, permute=True) == complete_soln
+
+    eq = a**2 + b**2 + c**2 + d**2 + e**2 - 234
+    assert len(diophantine(eq)) == 35
+    assert len(diophantine(eq, permute=True)) == 62000
+    soln = set([(-1, -1), (-1, 2), (1, -2), (1, 1)])
+    assert diophantine(10*x**2 + 12*x*y + 12*y**2 - 34, permute=True) == soln
+
+
+@XFAIL
+def test_not_implemented():
+    eq = x**2 + y**4 - 1**2 - 3**4
+    assert diophantine(eq, syms=[x, y]) == set([(9, 1), (1, 3)])
 
 
 def test_issue_9538():

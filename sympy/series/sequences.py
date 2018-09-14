@@ -3,7 +3,8 @@ from __future__ import print_function, division
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
 from sympy.core.singleton import S, Singleton
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.function import UndefinedFunction
 from sympy.core.compatibility import (range, integer_types, with_metaclass,
                                       is_sequence, iterable, ordered)
 from sympy.core.decorators import call_highest_priority
@@ -11,6 +12,8 @@ from sympy.core.cache import cacheit
 from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
 from sympy.core.evaluate import global_evaluate
+from sympy.core.numbers import Integer
+from sympy.core.relational import Eq
 from sympy.polys import lcm, factor
 from sympy.sets.sets import Interval, Intersection
 from sympy.utilities.iterables import flatten
@@ -93,7 +96,7 @@ class SeqBase(Basic):
         >>> from sympy import SeqFormula
         >>> from sympy.abc import n, m
         >>> SeqFormula(m*n**2, (n, 0, 5)).free_symbols
-        set([m])
+        {m}
         """
         return (set(j for i in self.args for j in i.free_symbols
                    .difference(self.variables)))
@@ -294,7 +297,7 @@ class SeqBase(Basic):
                     range(start, stop, index.step or 1)]
 
     def find_linear_recurrence(self,n,d=None,gfvar=None):
-        """
+        r"""
         Finds the shortest linear recurrence that satisfies the first n
         terms of sequence of order `\leq` n/2 if possible.
         If d is specified, find shortest linear recurrence of order
@@ -419,7 +422,7 @@ class SeqExpr(SeqBase):
     >>> s.gen
     (1, 2, 3)
     >>> s.interval
-    [0, 10]
+    Interval(0, 10)
     >>> s.length
     11
 
@@ -711,6 +714,173 @@ class SeqFormula(SeqExpr):
         return SeqFormula(formula, self.args[1])
 
 
+class RecursiveSeq(SeqBase):
+    """A finite degree recursive sequence.
+
+    That is, a sequence a(n) that depends on a fixed, finite number of its
+    previous values. The general form is
+
+        a(n) = f(a(n - 1), a(n - 2), ..., a(n - d))
+
+    for some fixed, positive integer d, where f is some function defined by a
+    SymPy expression.
+
+    Parameters
+    ==========
+
+    recurrence : SymPy expression defining recurrence
+        This is *not* an equality, only the expression that the nth term is
+        equal to. For example, if :code:`a(n) = f(a(n - 1), ..., a(n - d))`,
+        then the expression should be :code:`f(a(n - 1), ..., a(n - d))`.
+
+    y : function
+        The name of the recursively defined sequence without argument, e.g.,
+        :code:`y` if the recurrence function is :code:`y(n)`.
+
+    n : symbolic argument
+        The name of the variable that the recurrence is in, e.g., :code:`n` if
+        the recurrence function is :code:`y(n)`.
+
+    initial : iterable with length equal to the degree of the recurrence
+        The initial values of the recurrence.
+
+    start : start value of sequence (inclusive)
+
+    Examples
+    ========
+
+    >>> from sympy import Function, symbols
+    >>> from sympy.series.sequences import RecursiveSeq
+    >>> y = Function("y")
+    >>> n = symbols("n")
+    >>> fib = RecursiveSeq(y(n - 1) + y(n - 2), y, n, [0, 1])
+
+    >>> fib.coeff(3) # Value at a particular point
+    2
+
+    >>> fib[:6] # supports slicing
+    [0, 1, 1, 2, 3, 5]
+
+    >>> fib.recurrence # inspect recurrence
+    Eq(y(n), y(n - 2) + y(n - 1))
+
+    >>> fib.degree # automatically determine degree
+    2
+
+    >>> for x in zip(range(10), fib): # supports iteration
+    ...     print(x)
+    (0, 0)
+    (1, 1)
+    (2, 1)
+    (3, 2)
+    (4, 3)
+    (5, 5)
+    (6, 8)
+    (7, 13)
+    (8, 21)
+    (9, 34)
+
+    See Also
+    ========
+
+    sympy.series.sequences.SeqFormula
+
+    """
+
+    def __new__(cls, recurrence, y, n, initial=None, start=0):
+        if not isinstance(y, UndefinedFunction):
+            raise TypeError("recurrence sequence must be an undefined function"
+                            ", found `{}`".format(y))
+
+        if not isinstance(n, Basic) or not n.is_symbol:
+            raise TypeError("recurrence variable must be a symbol"
+                            ", found `{}`".format(n))
+
+        k = Wild("k", exclude=(n,))
+        degree = 0
+
+        # Find all applications of y in the recurrence and check that:
+        #   1. The function y is only being used with a single argument; and
+        #   2. All arguments are n + k for constant negative integers k.
+
+        prev_ys = recurrence.find(y)
+        for prev_y in prev_ys:
+            if len(prev_y.args) != 1:
+                raise TypeError("Recurrence should be in a single variable")
+
+            shift = prev_y.args[0].match(n + k)[k]
+            if not (shift.is_constant() and shift.is_integer and shift < 0):
+                raise TypeError("Recurrence should have constant,"
+                                " negative, integer shifts"
+                                " (found {})".format(prev_y))
+
+            if -shift > degree:
+                degree = -shift
+
+        if not initial:
+            initial = [Dummy("c_{}".format(k)) for k in range(degree)]
+
+        if len(initial) != degree:
+            raise ValueError("Number of initial terms must equal degree")
+
+        degree = Integer(degree)
+        start = sympify(start)
+
+        initial = Tuple(*(sympify(x) for x in initial))
+
+        seq = Basic.__new__(cls, recurrence, y(n), initial, start)
+
+        seq.cache = {y(start + k): init for k, init in enumerate(initial)}
+        seq._start = start
+        seq.degree = degree
+        seq.y = y
+        seq.n = n
+        seq._recurrence = recurrence
+
+        return seq
+
+    @property
+    def start(self):
+        """The starting point of the sequence. This point is included"""
+        return self._start
+
+    @property
+    def stop(self):
+        """The ending point of the sequence. (oo)"""
+        return S.Infinity
+
+    @property
+    def interval(self):
+        """Interval on which sequence is defined."""
+        return (self._start, S.Infinity)
+
+    def _eval_coeff(self, index):
+        if index - self._start < len(self.cache):
+            return self.cache[self.y(index)]
+
+        for current in range(len(self.cache), index + 1):
+            # Use xreplace over subs for performance.
+            # See issue #10697.
+            seq_index = self._start + current
+            current_recurrence = self._recurrence.xreplace({self.n: seq_index})
+            new_term = current_recurrence.xreplace(self.cache)
+
+            self.cache[self.y(seq_index)] = new_term
+
+        return self.cache[self.y(self._start + current)]
+
+    def __iter__(self):
+        index = self._start
+        while True:
+            yield self._eval_coeff(index)
+            index += 1
+
+    @property
+    def recurrence(self):
+        """Equation defining recurrence."""
+        return Eq(self.y(self.n), self._recurrence)
+
+
 def sequence(seq, limits=None):
     """Returns appropriate sequence object.
 
@@ -760,7 +930,7 @@ class SeqExprOp(SeqBase):
     >>> s.gen
     (n**2, (1, 2, 3))
     >>> s.interval
-    [5, 10]
+    Interval(5, 10)
     >>> s.length
     6
 
@@ -910,7 +1080,7 @@ class SeqAdd(SeqExprOp):
 
 
 class SeqMul(SeqExprOp):
-    """Represents term-wise multiplication of sequences.
+    r"""Represents term-wise multiplication of sequences.
 
     Handles multiplication of sequences only. For multiplication
     with other objects see :func:`SeqBase.coeff_mul`.

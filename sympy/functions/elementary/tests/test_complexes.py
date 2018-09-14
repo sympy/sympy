@@ -1,8 +1,9 @@
 from sympy import (
-    Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
+    Abs, adjoint, arg, atan, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
-    Interval, comp, Integral)
+    Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
+    ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda)
 from sympy.utilities.pytest import XFAIL, raises
 
 
@@ -80,6 +81,32 @@ def test_re():
 
     assert re(S.ComplexInfinity) == S.NaN
 
+    n, m, l = symbols('n m l')
+    A = MatrixSymbol('A',n,m)
+    assert re(A) == (S(1)/2) * (A + conjugate(A))
+
+    A = Matrix([[1 + 4*I,2],[0, -3*I]])
+    assert re(A) == Matrix([[1, 2],[0, 0]])
+
+    A = ImmutableMatrix([[1 + 3*I, 3-2*I],[0, 2*I]])
+    assert re(A) == ImmutableMatrix([[1, 3],[0, 0]])
+
+    X = SparseMatrix([[2*j + i*I for i in range(5)] for j in range(5)])
+    assert re(X) - Matrix([[0, 0, 0, 0, 0],
+                           [2, 2, 2, 2, 2],
+                           [4, 4, 4, 4, 4],
+                           [6, 6, 6, 6, 6],
+                           [8, 8, 8, 8, 8]]) == Matrix.zeros(5)
+
+    assert im(X) - Matrix([[0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4]]) == Matrix.zeros(5)
+
+    X = FunctionMatrix(3, 3, Lambda((n, m), n + m*I))
+    assert re(X) == Matrix([[0, 0, 0], [1, 1, 1], [2, 2, 2]])
+
 
 def test_im():
     x, y = symbols('x,y')
@@ -151,6 +178,24 @@ def test_im():
 
     assert im(S.ComplexInfinity) == S.NaN
 
+    n, m, l = symbols('n m l')
+    A = MatrixSymbol('A',n,m)
+
+    assert im(A) == (S(1)/(2*I)) * (A - conjugate(A))
+
+    A = Matrix([[1 + 4*I, 2],[0, -3*I]])
+    assert im(A) == Matrix([[4, 0],[0, -3]])
+
+    A = ImmutableMatrix([[1 + 3*I, 3-2*I],[0, 2*I]])
+    assert im(A) == ImmutableMatrix([[3, -2],[0, 2]])
+
+    X = ImmutableSparseMatrix(
+            [[i*I + i for i in range(5)] for i in range(5)])
+    Y = SparseMatrix([[i for i in range(5)] for i in range(5)])
+    assert im(X).as_immutable() == Y
+
+    X = FunctionMatrix(3, 3, Lambda((n, m), n + m*I))
+    assert im(X) == Matrix([[0, 1, 2], [0, 1, 2], [0, 1, 2]])
 
 def test_sign():
     assert sign(1.2) == 1
@@ -295,6 +340,9 @@ def test_as_real_imag():
     i = symbols('i', imaginary=True)
     assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
+    assert ((1 + I)/(1 - I)).as_real_imag() == (0, 1)
+    assert ((1 + I)**3/(1 - I)).as_real_imag() == (-2, 0)
+
 
 @XFAIL
 def test_sign_issue_3068():
@@ -303,7 +351,7 @@ def test_sign_issue_3068():
     assert (n - i).round() == 1  # doesn't hang
     assert sign(n - i) == 1
     # perhaps it's not possible to get the sign right when
-    # only 1 digit is being requested for this situtation;
+    # only 1 digit is being requested for this situation;
     # 2 digits works
     assert (n - x).n(1, subs={x: i}) > 0
     assert (n - x).n(2, subs={x: i}) > 0
@@ -321,6 +369,7 @@ def test_Abs():
     assert Abs(I) == 1
     assert Abs(-I) == 1
     assert Abs(nan) == nan
+    assert Abs(zoo) == oo
     assert Abs(I * pi) == pi
     assert Abs(-I * pi) == pi
     assert Abs(I * x) == Abs(x)
@@ -350,6 +399,12 @@ def test_Abs():
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
     assert Abs(x)**-3 == Abs(x)/(x**4)
     assert Abs(x**3) == x**2*Abs(x)
+    assert Abs(I**I) == exp(-pi/2)
+    assert Abs((4 + 5*I)**(6 + 7*I)) == 68921*exp(-7*atan(S(5)/4))
+    y = Symbol('y', real=True)
+    assert Abs(I**y) == 1
+    y = Symbol('y')
+    assert Abs(I**y) == exp(-pi*im(y)/2)
 
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)
@@ -474,6 +529,9 @@ def test_arg():
     assert arg(1 + I) == pi/4
     assert arg(-1 + I) == 3*pi/4
     assert arg(1 - I) == -pi/4
+    assert arg(exp_polar(4*pi*I)) == 4*pi
+    assert arg(exp_polar(-7*pi*I)) == -7*pi
+    assert arg(exp_polar(5 - 3*pi*I/4)) == -3*pi/4
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 
@@ -793,6 +851,9 @@ def test_principal_branch():
     assert principal_branch(exp_polar(3*pi*I)*x, 2*pi) == \
         principal_branch(exp_polar(I*pi)*x, 2*pi)
     assert principal_branch(neg*exp_polar(pi*I), 2*pi) == neg*exp_polar(-I*pi)
+    # related to issue #14692
+    assert principal_branch(exp_polar(-I*pi/2)/polar_lift(neg), 2*pi) == \
+        exp_polar(-I*pi/2)/neg
 
     assert N_equals(principal_branch((1 + I)**2, 2*pi), 2*I)
     assert N_equals(principal_branch((1 + I)**2, 3*pi), 2*I)
@@ -818,3 +879,31 @@ def test_issue_6167_6151():
     assert sign(simplify(e)) == 1
     for xi in (111, 11, 1, S(1)/10):
         assert sign(e.subs(x, xi)) == 1
+
+
+def test_issue_14216():
+    from sympy.functions.elementary.complexes import unpolarify
+    A = MatrixSymbol("A", 2, 2)
+    assert unpolarify(A[0, 0]) == A[0, 0]
+    assert unpolarify(A[0, 0]*A[1, 0]) == A[0, 0]*A[1, 0]
+
+
+def test_issue_14238():
+    # doesn't cause recursion error
+    r = Symbol('r', real=True)
+    assert Abs(r + Piecewise((0, r > 0), (1 - r, True)))
+
+def test_zero_assumptions():
+    nr = Symbol('nonreal', real=False)
+    ni = Symbol('nonimaginary', imaginary=False)
+    # imaginary implies not zero
+    nzni = Symbol('nonzerononimaginary', zero=False, imaginary=False)
+
+    assert re(nr).is_zero is None
+    assert im(nr).is_zero is False
+
+    assert re(ni).is_zero is None
+    assert im(ni).is_zero is None
+
+    assert re(nzni).is_zero is False
+    assert im(nzni).is_zero is None

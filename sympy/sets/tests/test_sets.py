@@ -3,7 +3,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, signsimp, Range)
+    Matrix, signsimp, Range, Add, symbols)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -27,6 +27,9 @@ def test_imageset():
     assert imageset(x, y, ints) == FiniteSet(y)
     assert (str(imageset(lambda y: x + y, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
+    x1, x2 = symbols("x1, x2")
+    assert imageset(lambda x,y: Add(x,y), Interval(1,2), Interval(2, 3)) == \
+        ImageSet(Lambda((x1, x2), x1+x2), Interval(1,2), Interval(2,3))
 
 
 def test_interval_arguments():
@@ -35,6 +38,8 @@ def test_interval_arguments():
     assert Interval(-oo, 0) == Interval(-oo, 0, True, False)
     assert Interval(-oo, 0).left_open is true
     assert Interval(oo, -oo) == S.EmptySet
+    assert Interval(oo, oo) == S.EmptySet
+    assert Interval(-oo, -oo) == S.EmptySet
 
     assert isinstance(Interval(1, 1), FiniteSet)
     e = Sum(x, (x, 1, 3))
@@ -185,6 +190,10 @@ def test_Complement():
 
     assert S.Reals - Union(S.Naturals, FiniteSet(pi)) == \
             Intersection(S.Reals - S.Naturals, S.Reals - FiniteSet(pi))
+    # issue 12712
+    assert Complement(FiniteSet(x, y, 2), Interval(-10, 10)) == \
+            Complement(FiniteSet(x, y), Interval(-10, 10))
+
 
 def test_complement():
     assert Interval(0, 1).complement(S.Reals) == \
@@ -246,7 +255,7 @@ def test_intersect():
     assert Interval(0, 2).intersect(Union(Interval(0, 1), Interval(2, 3))) == \
         Union(Interval(0, 1), Interval(2, 2))
 
-    assert FiniteSet(1, 2)._intersect((1, 2, 3)) == FiniteSet(1, 2)
+    assert FiniteSet(1, 2).intersect(FiniteSet(1, 2, 3)) == FiniteSet(1, 2)
     assert FiniteSet(1, 2, x).intersect(FiniteSet(x)) == FiniteSet(x)
     assert FiniteSet('ham', 'eggs').intersect(FiniteSet('ham')) == \
         FiniteSet('ham')
@@ -309,6 +318,8 @@ def test_intersection():
 
     assert Intersection(S.Complexes, FiniteSet(S.ComplexInfinity)) == S.EmptySet
 
+    # issue 12178
+    assert Intersection() == S.UniversalSet
 
 def test_issue_9623():
     n = Symbol('n')
@@ -961,6 +972,8 @@ def test_issue_Symbol_inter():
     assert Intersection(FiniteSet(x**2, 1, sin(x)), FiniteSet(x**2, 2, sin(x)), r) == \
         Intersection(r, FiniteSet(x**2, sin(x)))
 
+def test_issue_11827():
+    assert S.Naturals0**4
 
 def test_issue_10113():
     f = x**2/(x**2 - 4)

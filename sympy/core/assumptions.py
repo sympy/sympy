@@ -189,6 +189,7 @@ _assume_rules = FactRules([
 
     'prime          ->  integer & positive',
     'composite      ->  integer & positive & !prime',
+    '!composite     ->  !positive | !even | prime',
 
     'irrational     ==  real & !rational',
 
@@ -214,7 +215,7 @@ class StdFactKB(FactKB):
     def __init__(self, facts=None):
         # save a copy of the facts dict
         if not facts:
-            self._generator = {};
+            self._generator = {}
         elif not isinstance(facts, FactKB):
             self._generator = facts.copy()
         else:

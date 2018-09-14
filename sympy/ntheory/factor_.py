@@ -17,6 +17,7 @@ from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.singleton import S
 from sympy.core.function import Function
+from sympy.core.expr import Expr
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -166,7 +167,7 @@ def trailing(n):
     >>> trailing(63)
     0
     """
-    n = int(n)
+    n = abs(int(n))
     if not n:
         return 0
     low_byte = n & 0xff
@@ -495,7 +496,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     A search is made for factors next to even numbers having a power smoothness
     less than ``B``. Choosing a larger B increases the likelihood of finding a
     larger factor but takes longer. Whether a factor of n is found or not
-    depends on ``a`` and the power smoothness of the even mumber just less than
+    depends on ``a`` and the power smoothness of the even number just less than
     the factor p (hence the name p - 1).
 
     Although some discussion of what constitutes a good ``a`` some
@@ -536,7 +537,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         ...
         >>> set([igcd(pow(a, M, n) - 1, n) for a in range(2, 256) if
         ...      igcd(pow(a, M, n) - 1, n) != n])
-        set([1009])
+        {1009}
 
     But does aM % d for every divisor of n give 1?
 
@@ -796,14 +797,14 @@ def _factorint_small(factors, n, limit, fail_max):
             fails = 0
         else:
             fails += 1
-        # d = 6*(i+1) - 1
+        # d = 6*(i + 1) - 1
         d += 4
 
     return done(n, d)
 
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-              verbose=False, visual=None):
+              verbose=False, visual=None, multiple=False):
     r"""
     Given a positive integer ``n``, ``factorint(n)`` returns a dict containing
     the prime factors of ``n`` as keys and their respective multiplicities
@@ -849,6 +850,14 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     >>> factorint(3*101**7, limit=5)
     {3: 1, 101: 7}
+
+    List of Factors:
+
+    If ``multiple`` is set to ``True`` then a list containing the
+    prime factors including multiplicities is returned.
+
+    >>> factorint(24, multiple=True)
+    [2, 2, 2, 3]
 
     Visual Factorization:
 
@@ -933,6 +942,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     ``factorint`` also periodically checks if the remaining part is
     a prime number or a perfect power, and in those cases stops.
 
+    For unevaluated factorial, it uses Legendre's formula(theorem).
+
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
 
@@ -942,6 +953,14 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     smoothness, smoothness_p, divisors
 
     """
+    if multiple:
+        fac = factorint(n, limit=limit, use_trial=use_trial,
+                           use_rho=use_rho, use_pm1=use_pm1,
+                           verbose=verbose, visual=False, multiple=False)
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
+                               for p in sorted(fac)), [])
+        return factorlist
+
     factordict = {}
     if visual and not isinstance(n, Mul) and not isinstance(n, dict):
         factordict = factorint(n, limit=limit, use_trial=use_trial,
@@ -982,6 +1001,30 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         return factordict
 
     assert use_trial or use_rho or use_pm1
+
+    from sympy.functions.combinatorial.factorials import factorial
+    if isinstance(n, factorial):
+        x = as_int(n.args[0])
+        if x >= 20:
+            factors = {}
+            m = 2 # to initialize the if condition below
+            for p in sieve.primerange(2, x + 1):
+                if m > 1:
+                    m, q = 0, x // p
+                    while q != 0:
+                        m += q
+                        q //= p
+                factors[p] = m
+            if factors and verbose:
+                for k in sorted(factors):
+                    print(factor_msg % (k, factors[k]))
+            if verbose:
+                print(complete_msg)
+            return factors
+        else:
+            # if n < 20!, direct computation is faster
+            # since it uses a lookup table
+            n = n.func(x)
 
     n = as_int(n)
     if limit:
@@ -1067,7 +1110,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 b, fermat = integer_nthroot(b2, 2)
                 if fermat:
                     break
-                b2 += 2*a + 1  # equiv to (a+1)**2 - n
+                b2 += 2*a + 1  # equiv to (a + 1)**2 - n
                 a += 1
             if fermat:
                 if verbose:
@@ -1172,7 +1215,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
 
 def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-              verbose=False, visual=None):
+              verbose=False, visual=None, multiple=False):
     r"""
     Given a Rational ``r``, ``factorrat(r)`` returns a dict containing
     the prime factors of ``r`` as keys and their respective multiplicities
@@ -1193,9 +1236,21 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         - ``use_rho``: Toggle use of Pollard's rho method
         - ``use_pm1``: Toggle use of Pollard's p-1 method
         - ``verbose``: Toggle detailed printing of progress
+        - ``multiple``: Toggle returning a list of factors or dict
         - ``visual``: Toggle product form of output
     """
     from collections import defaultdict
+    if multiple:
+        fac = factorrat(rat, limit=limit, use_trial=use_trial,
+                  use_rho=use_rho, use_pm1=use_pm1,
+                  verbose=verbose, visual=False, multiple=False)
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
+                               for p, _ in sorted(fac.items(),
+                                                        key=lambda elem: elem[0]
+                                                        if elem[1] > 0
+                                                        else 1/elem[0])), [])
+        return factorlist
+
     f = factorint(rat.p, limit=limit, use_trial=use_trial,
                   use_rho=use_rho, use_pm1=use_pm1,
                   verbose=verbose).copy()
@@ -1521,12 +1576,12 @@ def antidivisor_count(n):
     n = as_int(abs(n))
     if n <= 2:
         return 0
-    return divisor_count(2*n-1) + divisor_count(2*n+1) + \
+    return divisor_count(2*n - 1) + divisor_count(2*n + 1) + \
         divisor_count(n) - divisor_count(n, 2) - 5
 
 
 class totient(Function):
-    """
+    r"""
     Calculate the Euler totient function phi(n)
 
     ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
@@ -1563,13 +1618,15 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+        elif not isinstance(n, Expr) or (n.is_integer is False) or (n.is_positive is False):
+            raise ValueError("n must be a positive integer")
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
 
 
 class reduced_totient(Function):
-    """
+    r"""
     Calculate the Carmichael reduced totient function lambda(n)
 
     ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
@@ -1617,7 +1674,7 @@ class reduced_totient(Function):
 
 
 class divisor_sigma(Function):
-    """
+    r"""
     Calculate the divisor function `\sigma_k(n)` for positive integer n
 
     ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
@@ -1683,8 +1740,8 @@ class divisor_sigma(Function):
 
 
 def core(n, t=2):
-    """
-    Calculate core(n,t) = `core_t(n)` of a positive integer n
+    r"""
+    Calculate core(n, t) = `core_t(n)` of a positive integer n
 
     ``core_2(n)`` is equal to the squarefree part of n
 
@@ -1701,7 +1758,7 @@ def core(n, t=2):
     Parameters
     ==========
 
-    t : core(n,t) calculates the t-th power free part of n
+    t : core(n, t) calculates the t-th power free part of n
 
         ``core(n, 2)`` is the squarefree part of ``n``
         ``core(n, 3)`` is the cubefree part of ``n``
@@ -1780,7 +1837,7 @@ def digits(n, b=10):
 
 
 class udivisor_sigma(Function):
-    """
+    r"""
     Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
 
     ``udivisor_sigma(n, k)`` is equal to ``sum([x**k for x in udivisors(n)])``

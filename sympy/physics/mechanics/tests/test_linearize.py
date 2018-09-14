@@ -1,6 +1,7 @@
 from __future__ import division
 import warnings
-from sympy import symbols, Matrix, solve, simplify, cos, sin, atan, sqrt
+from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt
+from sympy import solve, simplify
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
@@ -166,7 +167,7 @@ def test_linearize_pendulum_kane_minimal():
         (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
 
     # Linearize
-    A, B, inp_vec = KM.linearize(A_and_B=True, new_method=True, simplify=True)
+    A, B, inp_vec = KM.linearize(A_and_B=True, simplify=True)
 
     assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
@@ -232,9 +233,9 @@ def test_linearize_pendulum_kane_nonminimal():
     ud_op = {u1d: 0, u2d: 0}
 
     A, B, inp_vec = KM.linearize(op_point=[q_op, u_op, ud_op], A_and_B=True,
-            new_method=True, simplify=True)
+                                 simplify=True)
 
-    assert A == Matrix([[0, 1], [-9.8/L, 0]])
+    assert A.expand() == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
 
 def test_linearize_pendulum_lagrange_minimal():

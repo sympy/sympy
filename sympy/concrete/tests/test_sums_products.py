@@ -255,6 +255,39 @@ def test_geometric_sums():
     #issue 9908:
     assert Sum(1/(n**3 - 1), (n, -oo, -2)).doit() == summation(1/(n**3 - 1), (n, -oo, -2))
 
+    #issue 11642:
+    result = Sum(0.5**n, (n, 1, oo)).doit()
+    assert result == 1
+    assert result.is_Float
+
+    result = Sum(0.25**n, (n, 1, oo)).doit()
+    assert result == S(1)/3
+    assert result.is_Float
+
+    result = Sum(0.99999**n, (n, 1, oo)).doit()
+    assert result == 99999
+    assert result.is_Float
+
+    result = Sum(Rational(1, 2)**n, (n, 1, oo)).doit()
+    assert result == 1
+    assert not result.is_Float
+
+    result = Sum(Rational(3, 5)**n, (n, 1, oo)).doit()
+    assert result == S(3)/2
+    assert not result.is_Float
+
+    assert Sum(1.0**n, (n, 1, oo)).doit() == oo
+    assert Sum(2.43**n, (n, 1, oo)).doit() == oo
+
+    # Issue 13979:
+    i, k, q = symbols('i k q', integer=True)
+    result = summation(
+        exp(-2*I*pi*k*i/n) * exp(2*I*pi*q*i/n) / n, (i, 0, n - 1)
+    )
+    assert result.simplify() == Piecewise(
+            (1, Eq(exp(2*I*pi*(-k + q)/n), 1)), (0, True)
+    )
+
 
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
@@ -447,8 +480,7 @@ def test_wallis_product():
     # can factor simple rational expressions
     A = Product(4*n**2 / (4*n**2 - 1), (n, 1, b))
     B = Product((2*n)*(2*n)/(2*n - 1)/(2*n + 1), (n, 1, b))
-    half = Rational(1, 2)
-    R = pi/2 * factorial(b)**2 / factorial(b - half) / factorial(b + half)
+    R = pi*gamma(b + 1)**2/(2*gamma(b + S(1)/2)*gamma(b + S(3)/2))
     assert simplify(A.doit()) == R
     assert simplify(B.doit()) == R
     # This one should eventually also be doable (Euler's product formula for sin)
@@ -494,7 +526,6 @@ def test_function_subs():
     raises(ValueError, lambda: S.subs(f(y),x+y) )
     S = Sum(x*log(y),(x,0,oo),(y,0,oo))
     assert S.subs(log(y),y) == S
-    f = Symbol('f')
     S = Sum(x*f(y),(x,0,oo),(y,0,oo))
     assert S.subs(f(y),y) == Sum(x*y,(x,0,oo),(y,0,oo))
 
@@ -522,6 +553,7 @@ def test_equality():
 
 
 def test_Sum_doit():
+    f = Function('f')
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit() == a**3
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit(deep=False) == \
         3*Integral(a**2)
@@ -702,34 +734,51 @@ def test_simplify():
     y, t, v = symbols('y, t, v')
 
     assert simplify(Sum(x*y, (x, n, m), (y, a, k)) + \
-        Sum(y, (x, n, m), (y, a, k))) == Sum(x*y + y, (x, n, m), (y, a, k))
+        Sum(y, (x, n, m), (y, a, k))) == Sum(y * (x + 1), (x, n, m), (y, a, k))
     assert simplify(Sum(x, (x, n, m)) + Sum(x, (x, m + 1, a))) == \
         Sum(x, (x, n, a))
     assert simplify(Sum(x, (x, k + 1, a)) + Sum(x, (x, n, k))) == \
         Sum(x, (x, n, a))
     assert simplify(Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))) == \
-        Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))
+        Sum(x, (x, n, a)) + Sum(1, (x, n, k))
     assert simplify(Sum(x, (x, 0, 3)) * 3 + 3 * Sum(x, (x, 4, 6)) + \
-        4 * Sum(z, (z, 0, 1))) == Sum(4*z, (z, 0, 1)) + Sum(3*x, (x, 0, 6))
+        4 * Sum(z, (z, 0, 1))) == 4*Sum(z, (z, 0, 1)) + 3*Sum(x, (x, 0, 6))
     assert simplify(3*Sum(x**2, (x, a, b)) + Sum(x, (x, a, b))) == \
-        Sum(3*x**2 + x, (x, a, b))
+        Sum(x*(3*x + 1), (x, a, b))
     assert simplify(Sum(x**3, (x, n, k)) * 3 + 3 * Sum(x, (x, n, k)) + \
         4 * y * Sum(z, (z, n, k))) + 1 == \
-            y*Sum(4*z, (z, n, k)) + Sum(3*x**3 + 3*x, (x, n, k)) + 1
+            4*y*Sum(z, (z, n, k)) + 3*Sum(x**3 + x, (x, n, k)) + 1
     assert simplify(Sum(x, (x, a, b)) + 1 + Sum(x, (x, b + 1, c))) == \
         1 + Sum(x, (x, a, c))
     assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + \
-        Sum(x, (t, b+1, c))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+        Sum(x, (t, b+1, c))) == x * Sum(1, (t, a, c)) + y * Sum(1, (t, a, b))
     assert simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + \
-        Sum(y, (t, a, b))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+        Sum(y, (t, a, b))) == x * Sum(1, (t, a, c)) + y * Sum(1, (t, a, b))
     assert simplify(Sum(x, (t, a, b)) + 2 * Sum(x, (t, b+1, c))) == \
         simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + Sum(x, (t, b+1, c)))
     assert simplify(Sum(x, (x, a, b))*Sum(x**2, (x, a, b))) == \
         Sum(x, (x, a, b)) * Sum(x**2, (x, a, b))
     assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + Sum(z, (t, a, b))) \
-        == Sum(x + y + z, (t, a, b))          # issue 8596
+        == (x + y + z) * Sum(1, (t, a, b))          # issue 8596
     assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + Sum(z, (t, a, b)) + \
-        Sum(v, (t, a, b))) == Sum(x + y + z + v, (t, a, b))  # issue 8596
+        Sum(v, (t, a, b))) == (x + y + z + v) * Sum(1, (t, a, b))  # issue 8596
+    assert simplify(Sum(x * y, (x, a, b)) / (3 * y)) == \
+        (Sum(x, (x, a, b)) / 3)
+    assert simplify(Sum(Function('f')(x) * y * z, (x, a, b)) / (y * z)) \
+        == Sum(Function('f')(x), (x, a, b))
+    assert simplify(Sum(c * x, (x, a, b)) - c * Sum(x, (x, a, b))) == 0
+    assert simplify(c * (Sum(x, (x, a, b))  + y)) == c * (y + Sum(x, (x, a, b)))
+    assert simplify(c * (Sum(x, (x, a, b)) + y * Sum(x, (x, a, b)))) == \
+        c * (y + 1) * Sum(x, (x, a, b))
+    assert simplify(Sum(Sum(c * x, (x, a, b)), (y, a, b))) == \
+                c * Sum(x, (x, a, b), (y, a, b))
+    assert simplify(Sum((3 + y) * Sum(c * x, (x, a, b)), (y, a, b))) == \
+                c * Sum((3 + y), (y, a, b)) * Sum(x, (x, a, b))
+    assert simplify(Sum((3 + t) * Sum(c * t, (x, a, b)), (y, a, b))) == \
+                c*t*(t + 3)*Sum(1, (x, a, b))*Sum(1, (y, a, b))
+    assert simplify(Sum(Sum(d * t, (x, a, b - 1)) + \
+                Sum(d * t, (x, b, c)), (t, a, b))) == \
+                    d * Sum(1, (x, a, c)) * Sum(t, (t, a, b))
 
 
 def test_change_index():
@@ -826,6 +875,7 @@ def test_factor_expand_subs():
 
 
 def test_distribution_over_equality():
+    f = Function('f')
     assert Product(Eq(x*2, f(x)), (x, 1, 3)).doit() == Eq(48, f(1)*f(2)*f(3))
     assert Sum(Eq(f(x), x**2), (x, 0, y)) == \
         Eq(Sum(f(x), (x, 0, y)), Sum(x**2, (x, 0, y)))
@@ -839,7 +889,7 @@ def test_issue_2787():
     res = s.doit().simplify()
     assert res == Piecewise(
         (n*p, p/Abs(p - 1) <= 1),
-        (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)),
+        ((-p + 1)**n*Sum(k*p**k*(-p + 1)**(-k)*binomial(n, k), (k, 0, n)),
         True))
 
 
@@ -887,7 +937,6 @@ def test_is_convergent():
 
     # root test --
     assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
-    assert Sum(2**n/factorial(n), (n, 1, oo)).is_convergent() is S.true
 
     # integral test --
 
@@ -895,6 +944,7 @@ def test_is_convergent():
     assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() is S.true
     assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() is S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(sqrt(n)*sqrt(n)), (n, 2, oo)).is_convergent() is S.false
 
     # comparison test --
     assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
@@ -906,6 +956,9 @@ def test_is_convergent():
     assert Sum(1/(n*log(n)*log(log(n))), (n, 5, oo)).is_convergent() is S.false
     assert Sum((n - 1)/(n*log(n)**3), (n, 3, oo)).is_convergent() is S.false
     assert Sum(2/(n**2*log(n)), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(n*sqrt(log(n))*log(log(n))), (n, 100, oo)).is_convergent() is S.false
+    assert Sum(log(log(n))/(n*log(n)**2), (n, 100, oo)).is_convergent() is S.true
+    assert Sum(log(n)/n**2, (n, 5, oo)).is_convergent() is S.true
 
     # alternating series tests --
     assert Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() is S.true
@@ -921,7 +974,16 @@ def test_is_convergent():
     f = Piecewise((n**(-2), n <= 1), (n**2, n > 1))
     assert Sum(f, (n, 1, oo)).is_convergent() is S.false
     assert Sum(f, (n, -oo, oo)).is_convergent() is S.false
-    assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
+    #assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
+
+    # integral test
+
+    assert Sum(log(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(-log(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    # the following function has maxima located at (x, y) =
+    # (1.2, 0.43), (3.0, -0.25) and (6.8, 0.050)
+    eq = (x - 2)*(x**2 - 6*x + 4)*exp(-x)
+    assert Sum(eq, (x, 1, oo)).is_convergent() is S.true
 
 
 def test_is_absolutely_convergent():
@@ -931,10 +993,6 @@ def test_is_absolutely_convergent():
 
 @XFAIL
 def test_convergent_failing():
-    assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-    assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-    # is_decreasing is not handling "is_decreasing(1)", so raises error
-
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
@@ -954,3 +1012,40 @@ def test_issue_10156():
     e = 2*y*Sum(2*cx*x**2, (x, 1, 9))
     assert e.factor() == \
         8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))
+
+
+def test_issue_14112():
+    assert Sum((-1)**n/sqrt(n), (n, 1, oo)).is_absolutely_convergent() is S.false
+    assert Sum((-1)**(2*n)/n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum((-2)**n + (-3)**n, (n, 1, oo)).is_convergent() is S.false
+
+
+def test_sin_times_absolutely_convergent():
+    assert Sum(sin(n) / n**3, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(sin(n) * log(n) / n**3, (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_14111():
+    assert Sum(1/log(log(n)), (n, 22, oo)).is_convergent() is S.false
+
+
+def test_issue_14484():
+    raises(NotImplementedError, lambda: Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent())
+
+
+def test_issue_14640():
+    i, n = symbols("i n", integer=True)
+    a, b, c = symbols("a b c")
+
+    assert Sum(a**-i/(a - b), (i, 0, n)).doit() == Sum(
+        1/(a*a**i - a**i*b), (i, 0, n)).doit() == Piecewise(
+            (n + 1, Eq(1/a, 1)),
+            ((-a**(-n - 1) + 1)/(1 - 1/a), True))/(a - b)
+
+    assert Sum((b*a**i - c*a**i)**-2, (i, 0, n)).doit() == Piecewise(
+        (n + 1, Eq(a**(-2), 1)),
+        ((-a**(-2*n - 2) + 1)/(1 - 1/a**2), True))/(b - c)**2
+
+    s = Sum(i*(a**(n - i) - b**(n - i))/(a - b), (i, 0, n)).doit()
+    assert not s.has(Sum)
+    assert s.subs({a: 2, b: 3, n: 5}) == 122

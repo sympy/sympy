@@ -1,4 +1,4 @@
-from sympy import eye, Matrix, zeros
+from sympy.core.backend import eye, Matrix, zeros
 from sympy.physics.mechanics import dynamicsymbols
 from sympy.physics.mechanics.functions import find_dynamicsymbols
 
@@ -44,9 +44,10 @@ class SymbolicSystem(object):
 
         coord_states : ordered iterable of functions of time
             This input will either be a collection of the coordinates or states
-            of the system depending on whether or not the speeds are also given.
-            If speeds are specified this input will be assumed to be the
-            coordinates otherwise this input will be assumed to be the states.
+            of the system depending on whether or not the speeds are also
+            given. If speeds are specified this input will be assumed to
+            be the coordinates otherwise this input will be assumed to
+            be the states.
 
         right_hand_side : Matrix
             This variable is the right hand side of the equations of motion in
@@ -55,14 +56,15 @@ class SymbolicSystem(object):
 
         speeds : ordered iterable of functions of time, optional
             This is a collection of the generalized speeds of the system. If
-            given it will be assumed that the first argument (coord_states) will
-            represent the generalized coordinates of the system.
+            given it will be assumed that the first argument (coord_states)
+            will represent the generalized coordinates of the system.
 
         mass_matrix : Matrix, optional
             The matrix of the implicit forms of the equations of motion (forms
             [2] and [3]). The distinction between the forms is determined by
-            whether or not the coordinate derivatives are passed in. If they are
-            given form [3] will be assumed otherwise form [2] is assumed.
+            whether or not the coordinate derivatives are passed in. If
+            they are given form [3] will be assumed otherwise form [2] is
+            assumed.
 
         coordinate_derivatives : Matrix, optional
             The right hand side of the kinematical equations in explicit form.
@@ -115,11 +117,12 @@ class SymbolicSystem(object):
 
     alg_con : List
         This list contains the indices of the algebraic constraints in the
-        combined equations of motion. The presence of these constraints requires
-        that a DAE solver be used instead of an ODE solver. If the system is
-        given in form [3] the alg_con variable will be adjusted such that it is
-        a representation of the combined kinematics and dynamics thus make sure
-        it always matches the mass matrix entered.
+        combined equations of motion. The presence of these constraints
+        requires that a DAE solver be used instead of an ODE solver.
+        If the system is given in form [3] the alg_con variable will be
+        adjusted such that it is a representation of the combined kinematics
+        and dynamics thus make sure it always matches the mass matrix
+        entered.
 
     dyn_implicit_mat : Matrix, shape(m, m)
         This is the M matrix in form [3] of the equations of motion (the mass
@@ -131,11 +134,12 @@ class SymbolicSystem(object):
         hand side of the dynamical equations of motion in implicit form).
 
     comb_implicit_mat : Matrix, shape(o, o)
-        This is the M matrix in form [2] of the equations of motion. This matrix
-        contains a block diagonal structure where the top left block (the first
-        rows) represent the matrix in the implicit form of the kinematical
-        equations and the bottom right block (the last rows) represent the
-        matrix in the implicit form of the dynamical equations.
+        This is the M matrix in form [2] of the equations of motion.
+        This matrix contains a block diagonal structure where the top
+        left block (the first rows) represent the matrix in the
+        implicit form of the kinematical equations and the bottom right
+        block (the last rows) represent the matrix in the implicit form
+        of the dynamical equations.
 
     comb_implicit_rhs : Matrix, shape(o, 1)
         This is the F vector in form [2] of the equations of motion. The top
@@ -153,9 +157,9 @@ class SymbolicSystem(object):
         equations of motion as can be seen in form [3] (the G matrix).
 
     output_eqns : Dictionary
-        If output equations were given they are stored in a dictionary where the
-        key corresponds to the name given for the specific equation and the
-        value is the equation itself in symbolic form
+        If output equations were given they are stored in a dictionary where
+        the key corresponds to the name given for the specific equation and
+        the value is the equation itself in symbolic form
 
     bodies : Tuple
         If the bodies in the system were given they are stored in a tuple for

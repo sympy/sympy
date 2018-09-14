@@ -9,29 +9,29 @@ class CartanType_generator(Basic):
     """
     def __call__(self, *args):
         c = args[0]
-        c = list(c)
+        if type(c) == list:
+            letter, n = c[0], int(c[1])
+        elif type(c) == str:
+            letter, n = c[0], int(c[1:])
+        else:
+            raise TypeError("Argument must be a string (e.g. 'A3') or a list (e.g. ['A', 3])")
 
-        letter, n = c[0], int(c[1])
         if n < 0:
             raise ValueError("Lie algebra rank cannot be negative")
         if letter == "A":
-            if n >= 0:
-                from . import type_a
-                return type_a.TypeA(n)
+            from . import type_a
+            return type_a.TypeA(n)
         if letter == "B":
-            if n >= 0:
-                from . import type_b
-                return type_b.TypeB(n)
+            from . import type_b
+            return type_b.TypeB(n)
 
         if letter == "C":
-            if n >= 0:
-                from . import type_c
-                return type_c.TypeC(n)
+            from . import type_c
+            return type_c.TypeC(n)
 
         if letter == "D":
-            if n >= 0:
-                from . import type_d
-                return type_d.TypeD(n)
+            from . import type_d
+            return type_d.TypeD(n)
 
         if letter == "E":
             if n >= 6 and n <= 8:

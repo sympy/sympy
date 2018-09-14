@@ -5,6 +5,7 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
+from sympy.core.exprtools import factor_terms
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
@@ -207,7 +208,6 @@ class Product(ExprWithIntLimits):
 
     def doit(self, **hints):
         f = self.function
-
         for index, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
@@ -276,12 +276,9 @@ class Product(ExprWithIntLimits):
             return poly.LC()**(n - a + 1) * A * B
 
         elif term.is_Add:
-            p, q = term.as_numer_denom()
-
-            p = self._eval_product(p, (k, a, n))
-            q = self._eval_product(q, (k, a, n))
-
-            return p / q
+            factored = factor_terms(term, fraction=True)
+            if factored.is_Mul:
+                return self._eval_product(factored, (k, a, n))
 
         elif term.is_Mul:
             exclude, include = [], []
@@ -321,7 +318,7 @@ class Product(ExprWithIntLimits):
             else:
                 return f
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         from sympy.simplify.simplify import product_simplify
         return product_simplify(self)
 

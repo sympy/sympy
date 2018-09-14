@@ -16,7 +16,7 @@ element values after the object has been constructed.
 
 Array construction can detect the shape of nested lists and tuples:
 
->>> from sympy.tensor.array import Array
+>>> from sympy import Array
 >>> a1 = Array([[1, 2], [3, 4], [5, 6]])
 >>> a1
 [[1, 2], [3, 4], [5, 6]]
@@ -95,7 +95,7 @@ creates the combined array `P = A \otimes B` defined as
 
 It is available through ``tensorproduct(...)``:
 
->>> from sympy.tensor.array import Array, tensorproduct
+>>> from sympy import Array, tensorproduct
 >>> from sympy.abc import x,y,z,t
 >>> A = Array([x, y, z, t])
 >>> B = Array([1, 2, 3, 4])
@@ -122,7 +122,7 @@ positions `a` and `b` means
 Remember that Python indexing is zero starting, to contract the a-th and b-th
 axes it is therefore necessary to specify `a-1` and `b-1`
 
->>> from sympy.tensor.array import tensorcontraction
+>>> from sympy import tensorcontraction
 >>> C = Array([[x, y], [z, t]])
 
 The matrix trace is equivalent to the contraction of a rank-2 array:
@@ -172,9 +172,9 @@ the derivative of arrays will return a new array `B` defined by
 
 The function ``derive_by_array`` performs such an operation:
 
->>> from sympy.tensor.array import Array, tensorcontraction, derive_by_array
+>>> from sympy import derive_by_array
 >>> from sympy.abc import x, y, z, t
->>> from sympy import sin, exp, symbols, Function
+>>> from sympy import sin, exp
 
 With scalars, it behaves exactly as the ordinary derivative:
 
@@ -200,11 +200,9 @@ z*cos(y*z) + exp(x)
 
 """
 
-from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray
-from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray
+from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray, DenseNDimArray
+from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray, SparseNDimArray
+from .ndim_array import NDimArray
 from .arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims
 
 Array = ImmutableDenseNDimArray
-NDimArray = ImmutableDenseNDimArray
-DenseNDimArray = ImmutableDenseNDimArray
-SparseNDimArray = ImmutableSparseNDimArray

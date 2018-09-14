@@ -15,7 +15,7 @@ import sys
 import sympy
 
 # If your extensions are in another directory, add it here.
-sys.path = ['../sympy', 'ext'] + sys.path
+sys.path = ['ext'] + sys.path
 
 # General configuration
 # ---------------------
@@ -28,11 +28,14 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
 
+# To stop docstrings inheritance.
+autodoc_inherit_docstrings = False
+
 # MathJax file, which is free to use.  See http://www.mathjax.org/docs/2.0/start.html
-mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
+mathjax_path = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['.templates']
+templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -40,9 +43,11 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
+suppress_warnings = ['ref.citation', 'ref.footnote']
+
 # General substitutions.
 project = 'SymPy'
-copyright = '2016 SymPy Development Team'
+copyright = '2018 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -92,6 +97,8 @@ html_static_path = ['_static']
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 html_last_updated_fmt = '%b %d, %Y'
+
+html_theme = 'classic'
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'

@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
-from sympy import (sympify, diff, sin, cos, Matrix, Symbol, integrate,
-                   trigsimp, Function, symbols)
-from sympy.core.basic import S
+from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
+                                Function, S, Symbol)
+from sympy import integrate, trigsimp
 from sympy.core.compatibility import reduce
 from .vector import Vector, _check_vector
 from .frame import CoordinateSym, _check_frame
@@ -188,14 +188,15 @@ def time_derivative(expr, frame, order=1):
         raise ValueError("Unsupported value of order entered")
 
     if isinstance(expr, Vector):
-        outvec = Vector(0)
+        outlist = []
         for i, v in enumerate(expr.args):
             if v[1] == frame:
-                outvec += Vector([(express(v[0], frame,
-                                           variables=True).diff(t), frame)])
+                outlist += [(express(v[0], frame,
+                                           variables=True).diff(t), frame)]
             else:
-                outvec += time_derivative(Vector([v]), v[1]) + \
-                    (v[1].ang_vel_in(frame) ^ Vector([v]))
+                outlist += (time_derivative(Vector([v]), v[1]) + \
+                    (v[1].ang_vel_in(frame) ^ Vector([v]))).args
+        outvec = Vector(outlist)
         return time_derivative(outvec, frame, order - 1)
 
     if isinstance(expr, Dyadic):
@@ -274,9 +275,11 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         if len(coords) != 3:
             raise ValueError('Need 3 coordinates for body or space')
         # Actual hard-coded kinematic differential equations
+        w1, w2, w3 = speeds
+        if w1 == w2 == w3 == 0:
+            return [S.Zero]*3
         q1, q2, q3 = coords
         q1d, q2d, q3d = [diff(i, dynamicsymbols._t) for i in coords]
-        w1, w2, w3 = speeds
         s1, s2, s3 = [sin(q1), sin(q2), sin(q3)]
         c1, c2, c3 = [cos(q1), cos(q2), cos(q3)]
         if rot_type.lower() == 'body':
@@ -599,7 +602,6 @@ def dynamicsymbols(names, level=0):
     Derivative(q1(t), t)
 
     """
-
     esses = symbols(names, cls=Function)
     t = dynamicsymbols._t
     if iterable(esses):

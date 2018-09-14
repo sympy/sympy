@@ -10,7 +10,8 @@ from sympy.core.mul import Mul
 from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
-        sinh, cosh, asinh, acosh, atanh, acoth)
+        sinh, cosh, asinh, acosh, atanh, acoth, Abs)
+from sympy.utilities.iterables import default_sort_key
 
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
@@ -75,12 +76,12 @@ class hyper(TupleParametersBase):
     :math:`b_q`. It also has an argument :math:`z`. The series definition is
 
     .. math ::
-        {}_pF_q\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
+        {}_pF_q\left(\begin{matrix} a_1, \cdots, a_p \\ b_1, \cdots, b_q \end{matrix}
                      \middle| z \right)
-        = \sum_{n=0}^\infty \frac{(a_1)_n \dots (a_p)_n}{(b_1)_n \dots (b_q)_n}
+        = \sum_{n=0}^\infty \frac{(a_1)_n \cdots (a_p)_n}{(b_1)_n \cdots (b_q)_n}
                             \frac{z^n}{n!},
 
-    where :math:`(a)_n = (a)(a+1)\dots(a+n-1)` denotes the rising factorial.
+    where :math:`(a)_n = (a)(a+1)\cdots(a+n-1)` denotes the rising factorial.
 
     If one of the :math:`b_q` is a non-positive integer then the series is
     undefined unless one of the `a_p` is a larger (i.e. smaller in
@@ -184,7 +185,7 @@ class hyper(TupleParametersBase):
     @classmethod
     def eval(cls, ap, bq, z):
         from sympy import unpolarify
-        if len(ap) <= len(bq):
+        if len(ap) <= len(bq) or (len(ap) == len(bq) + 1 and (Abs(z) <= 1) == True):
             nz = unpolarify(z)
             if z != nz:
                 return hyper(ap, bq, nz)
@@ -301,7 +302,7 @@ class hyper(TupleParametersBase):
         c3 = And(re(e) >= 1, abs(z) < 1)
         return Or(c1, c2, c3)
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
 
@@ -320,16 +321,16 @@ class meijerg(TupleParametersBase):
 
     The Meijer G-function depends on four sets of parameters. There are
     "*numerator parameters*"
-    :math:`a_1, \dots, a_n` and :math:`a_{n+1}, \dots, a_p`, and there are
+    :math:`a_1, \ldots, a_n` and :math:`a_{n+1}, \ldots, a_p`, and there are
     "*denominator parameters*"
-    :math:`b_1, \dots, b_m` and :math:`b_{m+1}, \dots, b_q`.
+    :math:`b_1, \ldots, b_m` and :math:`b_{m+1}, \ldots, b_q`.
     Confusingly, it is traditionally denoted as follows (note the position
     of `m`, `n`, `p`, `q`, and how they relate to the lengths of the four
     parameter vectors):
 
     .. math ::
-        G_{p,q}^{m,n} \left(\begin{matrix}a_1, \dots, a_n & a_{n+1}, \dots, a_p \\
-                                        b_1, \dots, b_m & b_{m+1}, \dots, b_q
+        G_{p,q}^{m,n} \left(\begin{matrix}a_1, \cdots, a_n & a_{n+1}, \cdots, a_p \\
+                                        b_1, \cdots, b_m & b_{m+1}, \cdots, b_q
                           \end{matrix} \middle| z \right).
 
     However, in sympy the four parameter vectors are always available
@@ -704,6 +705,11 @@ class meijerg(TupleParametersBase):
             c.f. references. """
         return len(self.bm) + len(self.an) - S(len(self.ap) + len(self.bq))/2
 
+    @property
+    def is_number(self):
+        """ Returns true if expression has numeric data only. """
+        return not self.free_symbols
+
 
 class HyperRep(Function):
     """
@@ -1038,3 +1044,42 @@ class HyperRep_sinasin(HyperRep):
     @classmethod
     def _expr_big_minus(cls, a, z, n):
         return -1/sqrt(1 + 1/z)*sinh(2*a*asinh(sqrt(z)) + 2*a*pi*I*n)
+
+class appellf1(Function):
+    r"""
+    This is the Appell hypergeometric function of two variables as:
+    .. math ::
+        F_1(a,b_1,b_2,c,x,y) = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
+        \frac{(a)_{m+n} (b_1)_m (b_2)_n}{(c)_{m+n}}
+        \frac{x^m y^n}{m! n!}.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Appell_series
+    .. [2] http://functions.wolfram.com/HypergeometricFunctions/AppellF1/
+
+    """
+
+    @classmethod
+    def eval(cls, a, b1, b2, c, x, y):
+        if default_sort_key(b1) > default_sort_key(b2):
+            b1, b2 = b2, b1
+            x, y = y, x
+            return cls(a, b1, b2, c, x, y)
+        elif b1 == b2 and default_sort_key(x) > default_sort_key(y):
+            x, y = y, x
+            return cls(a, b1, b2, c, x, y)
+        if x == 0 and y == 0:
+            return S.One
+
+    def fdiff(self, argindex=5):
+        a, b1, b2, c, x, y = self.args
+        if argindex == 5:
+            return (a*b1/c)*appellf1(a + 1, b1 + 1, b2, c + 1, x, y)
+        elif argindex == 6:
+            return (a*b2/c)*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)
+        elif argindex in (1, 2, 3, 4):
+            return Derivative(self, self.args[argindex-1])
+        else:
+            raise ArgumentIndexError(self, argindex)

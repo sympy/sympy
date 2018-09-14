@@ -1,15 +1,14 @@
 import itertools
 
-import collections
+from sympy import S, Tuple, diff
 
-from sympy import S, Tuple, MatrixBase, transpose
-from sympy import S, Tuple, diff, MatrixBase
-
+from sympy.core.compatibility import Iterable
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
 
-
 def _arrayfy(a):
+    from sympy.matrices import MatrixBase
+
     if isinstance(a, NDimArray):
         return a
     if isinstance(a, (MatrixBase, list, tuple, Tuple)):
@@ -70,7 +69,7 @@ def tensorcontraction(array, *contraction_axes):
     Examples
     ========
 
-    >>> from sympy.tensor.array import Array, tensorcontraction
+    >>> from sympy import Array, tensorcontraction
     >>> from sympy import Matrix, eye
     >>> tensorcontraction(eye(3), (0, 1))
     3
@@ -83,7 +82,7 @@ def tensorcontraction(array, *contraction_axes):
     Matrix multiplication may be emulated with a proper combination of
     ``tensorcontraction`` and ``tensorproduct``
 
-    >>> from sympy.tensor.array import tensorproduct
+    >>> from sympy import tensorproduct
     >>> from sympy.abc import a,b,c,d,e,f,g,h
     >>> m1 = Matrix([[a, b], [c, d]])
     >>> m2 = Matrix([[e, f], [g, h]])
@@ -102,7 +101,7 @@ def tensorcontraction(array, *contraction_axes):
     # Verify contraction_axes:
     taken_dims = set([])
     for axes_group in contraction_axes:
-        if not isinstance(axes_group, collections.Iterable):
+        if not isinstance(axes_group, Iterable):
             raise ValueError("collections of contraction axes expected")
 
         dim = array.shape[axes_group[0]]
@@ -177,7 +176,7 @@ def derive_by_array(expr, dx):
     Examples
     ========
 
-    >>> from sympy.tensor.array import derive_by_array
+    >>> from sympy import derive_by_array
     >>> from sympy.abc import x, y, z, t
     >>> from sympy import cos
     >>> derive_by_array(cos(x*t), x)
@@ -188,7 +187,8 @@ def derive_by_array(expr, dx):
     [[[1, 0], [0, 2*y*z]], [[0, y**2], [0, 0]]]
 
     """
-    array_types = (collections.Iterable, MatrixBase, NDimArray)
+    from sympy.matrices import MatrixBase
+    array_types = (Iterable, MatrixBase, NDimArray)
 
     if isinstance(dx, array_types):
         dx = ImmutableDenseNDimArray(dx)
@@ -221,7 +221,7 @@ def permutedims(expr, perm):
 
     >>> from sympy.abc import x, y, z, t
     >>> from sympy import sin
-    >>> from sympy.tensor.array import Array, permutedims
+    >>> from sympy import Array, permutedims
     >>> a = Array([[x, y, z], [t, sin(x), 0]])
     >>> a
     [[x, y, z], [t, sin(x), 0]]
@@ -271,4 +271,4 @@ def permutedims(expr, perm):
 
     new_shape = perm(expr.shape)
 
-    return expr.func(new_array, new_shape)
+    return type(expr)(new_array, new_shape)
