@@ -1886,9 +1886,11 @@ def test_errors():
     raises(ValueError,
         lambda: Matrix([[1, 2], [3, 4]]).det(method='Not a real method'))
     raises(ValueError,
-        lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).det(iszerofunc="Not function"))
+        lambda: Matrix([[1, 2, 3, 4], [5, 6, 7, 8],
+        [9, 10, 11, 12], [13, 14, 15, 16]]).det(iszerofunc="Not function"))
     raises(ValueError,
-        lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).det(iszerofunc=False))
+        lambda: Matrix([[1, 2, 3, 4], [5, 6, 7, 8],
+        [9, 10, 11, 12], [13, 14, 15, 16]]).det(iszerofunc=False))
     raises(ValueError,
         lambda: hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]])))
     raises(ValueError, lambda: hessian(Matrix([[1, 2], [3, 4]]), []))
