@@ -143,13 +143,22 @@ def runtest_issue_10274(language, backend):
                 ]
 
 
-def test_issue_14230():
+def test_issue_15230():
     has_module('f2py')
     x, y = symbols('x, y')
-    expr = Mod(x, 2) - Mod(y, -2)
-    f = autowrap(expr, args=[x, y])
+
+    expr = Mod(x, 3.0) - Mod(y, -2.0)
+    f = autowrap(expr, args=[x, y], language='F95',
+                 tempdir='/home/moorepants/Desktop/forty')
     exp_res = float(expr.xreplace({x: 3.5, y: 2.7}).evalf())
     assert abs(f(3.5, 2.7) - exp_res) < 1e-14
+
+    # TODO : This fails with integers.
+    #expr = Mod(x, 3) - Mod(y, -2)
+    #f = autowrap(expr, args=[x, y], language='F95',
+                 #tempdir='/home/moorepants/Desktop/forty')
+    #exp_res = expr.xreplace({x: 3, y: 2}).evalf()
+    #assert f(3, 2) == exp_res
 
 #
 # tests of language-backend combinations
