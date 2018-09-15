@@ -1026,11 +1026,9 @@ class Derivative(Expr):
         >>> from sympy import symbols, Function
         >>> f, g = symbols('f g', cls=Function)
         >>> f(2*g(x)).diff(x)
-        2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
-                                              (_xi_1,), (2*g(x),))
+        2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), _xi_1, 2*g(x))
         >>> f(g(x)).diff(x)
-        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
-                                            (_xi_1,), (g(x),))
+        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), _xi_1, g(x))
 
     Finally, note that, to be consistent with variational calculus, and to
     ensure that the definition of substituting a Function for a Symbol in an
@@ -1076,8 +1074,7 @@ class Derivative(Expr):
         >>> Derivative(f(x)**2, f(x), evaluate=True)
         2*f(x)
         >>> Derivative(f(g(x)), x, evaluate=True)
-        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
-                                            (_xi_1,), (g(x),))
+        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), _xi_1, g(x))
 
     """
 
