@@ -55,9 +55,9 @@ and then you can run 'make html' to build.
 If you want to change directory in your prompt to your working folder of sympy
 in windows file system, you can prepend 'cd /mnt/' to your file path in windows,
 and run in your shell to navigate to the folder.
-(Also note that linux uses '/' instead of '\' for path)
+(Also note that linux uses '/' instead of '\\' for path)
 
-This method would provide better compatability than cygwin or msys2,
+This method would provide better compatibility than cygwin or msys2,
 and more convenience than a virtual machine, if you partially need linux
 environment for your workflow.
 
