@@ -41,19 +41,19 @@ Windows 10
 Some dependencies like dvipng or docbook2x are not available for windows.
 
 For Windows 10, however, the Windows Subsystem for Linux is available, and you
-can install Ubuntu shell on top of it after following up the tutorial below.
+can install Ubuntu shell on top of it after following up the tutorial below::
 
     https://github.com/MicrosoftDocs/WSL/blob/live/WSL/install-win10.md
 
-In your command prompt, simply run `ubuntu` to transfer to linux terminal,
+In your command prompt, simply run 'ubuntu' to transfer to linux terminal,
 and follow up the Debian/Ubuntu tutorial above to install all the dependencies,
-and then you can run `make html` to build.
-(Note that you would also have to install `make` via `apt-get install make`)
+and then you can run 'make html' to build.
+(Note that you would also have to install 'make' via 'apt-get install make')
 
 If you want to change directory in your prompt to your working folder of sympy
-in windows file system, you can prepend `cd /mnt/` to your file path in windows,
+in windows file system, you can prepend 'cd /mnt/' to your file path in windows,
 and run in your shell to navigate to the folder.
-(Also note that linux uses `/` instead of `\` for path)
+(Also note that linux uses '/' instead of '\' for path)
 
 This method would provide better compatability than cygwin or msys2,
 and more convenience than a virtual machine, if you partially need linux
