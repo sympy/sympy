@@ -1368,26 +1368,27 @@ class Circle(Ellipse):
 
             x = find(x, equation)
             y = find(y, equation)
-            poly_x = poly(equation, x)
-            poly_y = poly(equation, y)
-            deg_x = degree(poly_x)
-            deg_y = degree(poly_y)
-            lead_x_coeff = LC(poly_x)
-            lead_y_coeff = LC(poly_y)
 
-            if lead_x_coeff == lead_y_coeff and (deg_x == 2 and deg_y == 2):
+            try:
                 center_x = solve(diff(equation, x))[0]
                 center_y = solve(diff(equation, y))[0]
-                center = Point(center_x, center_y)
-                r_square = expand(lead_x_coeff * (x - center_x) ** 2) + expand(
-                    lead_y_coeff * (y - center_y) ** 2) - equation
-                if (r_square / lead_x_coeff).is_nonnegative:
-                    radius = sqrt(r_square / lead_x_coeff)
+            except IndexError:
+                raise GeometryError("The given equation is not that of a circle.")
+
+            center = Point(center_x, center_y)
+            constant_term = equation.subs([(x, 0), (y, 0)])
+            r_square = (center_x ** 2) + (center_y ** 2) - constant_term
+            new_equation = (x - center_x) ** 2 + (y - center_y) ** 2 - r_square
+
+            if r_square.is_nonnegative:
+                radius = sqrt(r_square)
+                if Poly(equation) == Poly(new_equation):
                     return Circle(center, radius)
                 else:
-                    raise GeometryError("The given equation of circle has an imaginary radius")
+                    raise GeometryError("The given equation is not that of a circle.")
             else:
-                raise GeometryError("The given equation does not represent a circle")
+                raise GeometryError("The given equation of circle has an imaginary radius")
+
         else:
             c, r = None, None
             if len(args) == 3:
