@@ -41,9 +41,9 @@ Windows 10
 Some dependencies like dvipng or docbook2x are not available for windows.
 
 For Windows 10, however, the Windows Subsystem for Linux is available, and you
-can install Ubuntu shell on top of it after following up the tutorial below::
+can install Ubuntu shell on top of it after following up the tutorial below
 
-    https://github.com/MicrosoftDocs/WSL/blob/live/WSL/install-win10.md
+https://github.com/MicrosoftDocs/WSL/blob/live/WSL/install-win10.md
 
 In your command prompt, simply run 'ubuntu' to transfer to linux terminal,
 and follow up the Debian/Ubuntu tutorial above to install all the dependencies,
