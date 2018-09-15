@@ -312,7 +312,7 @@ class FCodePrinter(CodePrinter):
         if self._settings['standard'] in [66, 77]:
             msg = ("Python % operator and SymPy's Mod() function are not "
                    "supported by Fortran 66 or 77 standards.")
-            raise ValueError(msg)
+            raise NotImplementedError(msg)
         else:
             x, y = expr.args
             return "      modulo({}, {})".format(self._print(x), self._print(y))

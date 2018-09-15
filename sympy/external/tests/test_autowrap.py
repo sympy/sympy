@@ -155,8 +155,7 @@ def test_issue_15230():
     x, y = symbols('x, y', integer=True)
     expr = Mod(x, 3) - Mod(y, -2)
     f = autowrap(expr, args=[x, y], language='F95')
-    exp_res = expr.xreplace({x: 3, y: 2}).evalf()
-    assert f(3, 2) == exp_res
+    assert f(3, 2) == expr.xreplace({x: 3, y: 2})
 
 #
 # tests of language-backend combinations
