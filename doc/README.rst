@@ -38,10 +38,12 @@ And view it at::
 Windows 10
 ----------
 
-Some dependencies like dvipng or docbook2x are not available for windows.
+Making your sphinx build successful on the Windows system is tricky because of
+some dependencies like dvipng or docbook2x not available.
 
-For Windows 10, however, the Windows Subsystem for Linux is available, and you
-can install Ubuntu shell on top of it after following up the tutorial below
+For Windows 10, however, the Windows Subsystem for Linux can be a possible
+workaround solution, and you can install Ubuntu shell on your Windows system
+after following up the tutorial below
 
 https://github.com/MicrosoftDocs/WSL/blob/live/WSL/install-win10.md
 
@@ -57,6 +59,6 @@ and run in your shell to navigate to the folder.
 
 This method would provide better compatability than cygwin or msys2,
 and more convenience than a virtual machine, if you partially need linux
-environment for your work.
+environment for your workflow.
 
 However this method is only viable for Windows 10 64-bit users.
