@@ -414,24 +414,8 @@ class StrPrinter(Printer):
         return expr._print()
 
     def _print_TensMul(self, expr):
-        args = expr.args
-        get_str = lambda arg: str(arg) if arg.is_Atom or isinstance(arg, TensExpr) else ("(%s)" % str(arg))
-
-        if not args:
-            # no arguments is equivalent to "1", i.e. TensMul().
-            # If tensors are constructed correctly, this should never occur.
-            return "1"
-
-        if (expr.coeff < 0) == True:
-            # expressions like "-A(a)"
-            sign = "-"
-            if expr.coeff == S.NegativeOne:
-                args = args[1:]
-            else:
-                args = (-expr.coeff,) + args[1:]
-        else:
-            sign = ""
         # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
+        sign, args = expr._get_args_for_traditional_printer()
         return sign + "*".join(
             [self.parenthesize(arg, precedence(expr)) for arg in args]
         )

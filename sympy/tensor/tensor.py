@@ -3855,6 +3855,19 @@ class TensMul(TensExpr, AssocOp):
     __truediv__ = __div__
     __truerdiv__ = __rdiv__
 
+    def _get_args_for_traditional_printer(self):
+        args = list(self.args)
+        if (self.coeff < 0) == True:
+            # expressions like "-A(a)"
+            sign = "-"
+            if self.coeff == S.NegativeOne:
+                args = args[1:]
+            else:
+                args[0] = -args[0]
+        else:
+            sign = ""
+        return sign, args
+
     def _sort_args_for_sorted_components(self):
         """
         Returns the ``args`` sorted according to the components commutation
