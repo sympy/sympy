@@ -1802,43 +1802,43 @@ def test_latex_printer_tensor():
     K = tensorhead("K", [L, L, L, L], [[1], [1], [1], [1]])
 
     expr = A(i)
-    assert latex(expr) == "A^{i}"
+    assert latex(expr) == "A{}^{i}"
 
     expr = A(i0)
-    assert latex(expr) == "A^{i_{0}}"
+    assert latex(expr) == "A{}^{i_{0}}"
 
     expr = A(-i)
-    assert latex(expr) == "A_{i}"
+    assert latex(expr) == "A{}_{i}"
 
     expr = -3*A(i)
-    assert latex(expr) == r"-3A^{i}"
+    assert latex(expr) == r"-3A{}^{i}"
 
     expr = K(i, j, -k, -i0)
-    assert latex(expr) == "K^{ij}_{ki_{0}}"
+    assert latex(expr) == "K{}^{ij}{}_{ki_{0}}"
 
     expr = K(i, -j, -k, i0)
-    assert latex(expr) == "K^{i}_{jk}^{i_{0}}"
+    assert latex(expr) == "K{}^{i}{}_{jk}{}^{i_{0}}"
 
     expr = K(i, -j, k, -i0)
-    assert latex(expr) == "K^{i}_{j}^{k}_{i_{0}}"
+    assert latex(expr) == "K{}^{i}{}_{j}{}^{k}{}_{i_{0}}"
 
     expr = H(i, -j)
-    assert latex(expr) == "H^{i}_{j}"
+    assert latex(expr) == "H{}^{i}{}_{j}"
 
     expr = H(i, j)
-    assert latex(expr) == "H^{ij}"
+    assert latex(expr) == "H{}^{ij}"
 
     expr = H(-i, -j)
-    assert latex(expr) == "H_{ij}"
+    assert latex(expr) == "H{}_{ij}"
 
     expr = (1+x)*A(i)
-    assert latex(expr) == r"\left(x + 1\right)A^{i}"
+    assert latex(expr) == r"\left(x + 1\right)A{}^{i}"
 
     expr = H(i, -i)
-    assert latex(expr) == "H^{L_{0}}_{L_{0}}"
+    assert latex(expr) == "H{}^{L_{0}}{}_{L_{0}}"
 
     expr = H(i, -j)*A(j)*B(k)
-    assert latex(expr) == "H^{i}_{L_{0}}A^{L_{0}}B^{k}"
+    assert latex(expr) == "H{}^{i}{}_{L_{0}}A{}^{L_{0}}B{}^{k}"
 
     expr = A(i) + 3*B(i)
-    assert latex(expr) == "3B^{i} + A^{i}"
+    assert latex(expr) == "3B{}^{i} + A{}^{i}"

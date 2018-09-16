@@ -1603,9 +1603,9 @@ class LatexPrinter(Printer):
                 if last_valence is not None:
                     out_str += "}"
                 if index.is_up:
-                    out_str += "^{"
+                    out_str += "{}^{"
                 else:
-                    out_str += "_{"
+                    out_str += "{}_{"
             out_str += self._print(index)
             last_valence = new_valence
         if last_valence is not None:
