@@ -374,6 +374,15 @@ def test_octave_not_supported():
     )
 
 
+def test_octave_not_supported_not_on_whitelist():
+    from sympy import assoc_laguerre
+    assert mcode(assoc_laguerre(x, y, z)) == (
+        "% Not supported in Octave:\n"
+        "% assoc_laguerre\n"
+        "assoc_laguerre(x, y, z)"
+    )
+
+
 def test_octave_expint():
     assert mcode(expint(1, x)) == "expint(x)"
     assert mcode(expint(2, x)) == (

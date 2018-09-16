@@ -1799,6 +1799,7 @@ def test_latex_printer_tensor():
     i0 = tensor_indices("i_0", L)
     A, B, C, D = tensorhead("A B C D", [L], [[1]])
     H = tensorhead("H", [L, L], [[1], [1]])
+    K = tensorhead("K", [L, L, L, L], [[1], [1], [1], [1]])
 
     expr = A(i)
     assert latex(expr) == "A^{i}"
@@ -1809,8 +1810,26 @@ def test_latex_printer_tensor():
     expr = A(-i)
     assert latex(expr) == "A_{i}"
 
+    expr = -3*A(i)
+    assert latex(expr) == r"-3A^{i}"
+
+    expr = K(i, j, -k, -i0)
+    assert latex(expr) == "K^{ij}_{ki_{0}}"
+
+    expr = K(i, -j, -k, i0)
+    assert latex(expr) == "K^{i}_{jk}^{i_{0}}"
+
+    expr = K(i, -j, k, -i0)
+    assert latex(expr) == "K^{i}_{j}^{k}_{i_{0}}"
+
     expr = H(i, -j)
     assert latex(expr) == "H^{i}_{j}"
+
+    expr = H(i, j)
+    assert latex(expr) == "H^{ij}"
+
+    expr = H(-i, -j)
+    assert latex(expr) == "H_{ij}"
 
     expr = (1+x)*A(i)
     assert latex(expr) == r"\left(x + 1\right)A^{i}"

@@ -9,8 +9,8 @@ from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
-    TensorManager, TensExpr, TIDS, TensorHead
-from sympy.utilities.pytest import raises
+    TensorManager, TensExpr, TIDS, TensorHead, canon_bp
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import range
 
 
@@ -549,8 +549,14 @@ def test_add1():
     assert TensAdd(t1).equals(t1)
     t2a = B(d0,a) + A(d0, a)
     t2 = A(b,-d0)*t2a
+    assert str(t2) == 'A(b, -L_0)*(A(L_0, a) + B(L_0, a))'
+    t2 = t2.expand()
+    assert str(t2) == 'A(b, -L_0)*A(L_0, a) + A(b, -L_0)*B(L_0, a)'
+    t2 = t2.canon_bp()
     assert str(t2) == 'A(a, L_0)*A(b, -L_0) + A(b, L_0)*B(a, -L_0)'
     t2b = t2 + t1
+    assert str(t2b) == 'A(a, L_0)*A(b, -L_0) + A(b, -L_0)*B(L_0, a) + A(b, L_0)*B(a, -L_0)'
+    t2b = t2b.canon_bp()
     assert str(t2b) == '2*A(b, L_0)*B(a, -L_0) + A(a, L_0)*A(b, -L_0)'
     p, q, r = tensorhead('p,q,r', [Lorentz], [[1]])
     t = q(d0)*2
@@ -563,22 +569,31 @@ def test_add1():
     assert str(t2) == '2*q(-d0) + p(-d0)'
     t1 = p(d0)
     t3 = t1*t2
+    assert str(t3) == 'p(L_0)*(2*q(-L_0) + p(-L_0))'
+    t3 = t3.expand()
     assert str(t3) == '2*p(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
     t3 = t2*t1
+    t3 = t3.expand()
+    assert str(t3) == '2*q(-L_0)*p(L_0) + p(-L_0)*p(L_0)'
+    t3 = t3.canon_bp()
     assert str(t3) == '2*p(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
     t1 = p(d0) + 2*q(d0)
     t3 = t1*t2
+    t3 = t3.canon_bp()
     assert str(t3) == '4*p(L_0)*q(-L_0) + 4*q(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
     t1 = p(d0) - 2*q(d0)
     assert str(t1) == '-2*q(d0) + p(d0)'
     t2 = p(-d0) + 2*q(-d0)
     t3 = t1*t2
+    t3 = t3.canon_bp()
     assert t3 == p(d0)*p(-d0) - 4*q(d0)*q(-d0)
     t = p(i)*p(j)*(p(k) + q(k)) + p(i)*(p(j) + q(j))*(p(k) - 3*q(k))
+    t = t.canon_bp()
     assert t == 2*p(i)*p(j)*p(k) - 2*p(i)*p(j)*q(k) + p(i)*p(k)*q(j) - 3*p(i)*q(j)*q(k)
     t1 = (p(i) + q(i) + 2*r(i))*(p(j) - q(j))
     t2 = (p(j) + q(j) + 2*r(j))*(p(i) - q(i))
     t = t1 + t2
+    t = t.canon_bp()
     assert t == 2*p(i)*p(j) + 2*p(i)*r(j) + 2*p(j)*r(i) - 2*q(i)*q(j) - 2*q(i)*r(j) - 2*q(j)*r(i)
     t = p(i)*q(j)/2
     assert 2*t == p(i)*q(j)
@@ -586,9 +601,13 @@ def test_add1():
     assert 2*t == p(i) + q(i)
 
     t = S.One - p(i)*p(-i)
-    assert (t + p(-j)*p(j)).equals(1)
+    t = t.canon_bp()
+    tz1 = t + p(-j)*p(j)
+    assert tz1 != 1
+    tz1 = tz1.canon_bp()
+    assert tz1.equals(1)
     t = S.One + p(i)*p(-i)
-    assert (t - p(-j)*p(j)).equals(1)
+    assert (t - p(-j)*p(j)).canon_bp().equals(1)
 
     t = A(a, b) + B(a, b)
     assert t.rank == 2
@@ -638,11 +657,14 @@ def test_add2():
     A = tensorhead('A', [Lorentz]*3, [[3]])
     t1 = 2*R(m, n, p, q) - R(m, q, n, p) + R(m, p, n, q)
     t2 = t1*A(-n, -p, -q)
+    t2 = t2.canon_bp()
     assert t2 == 0
     t1 = S(2)/3*R(m,n,p,q) - S(1)/3*R(m,q,n,p) + S(1)/3*R(m,p,n,q)
     t2 = t1*A(-n, -p, -q)
+    t2 = t2.canon_bp()
     assert t2 == 0
     t = A(m, -m, n) + A(n, p, -p)
+    t = t.canon_bp()
     assert t == 0
 
 def test_add3():
@@ -703,7 +725,7 @@ def test_mul():
     C = typ('C')
     assert str(C()) == 'C'
     assert str(t) == '1'
-    assert t.split()[0] == t
+    assert t == 1
     raises(ValueError, lambda: TIDS.free_dum_from_indices(a, a))
     raises(ValueError, lambda: TIDS.free_dum_from_indices(-a, -a))
     raises(ValueError, lambda: A(a, b)*A(a, c))
@@ -746,7 +768,7 @@ def test_substitute_indices():
     assert _is_equal(asc1, A(i, -i) + B(i, -i))
 
     assert A(i, -i) == A(i, -i)()
-    assert A(i, -i) + B(-j, j) == ((A(i, -i) + B(i, -i)))()
+    assert canon_bp(A(i, -i) + B(-j, j) - (A(i, -i) + B(i, -i))()) == 0
     assert _is_equal(A(i, j)*B(-j, k), (A(m, -j)*B(j, n))(i, k))
     raises(ValueError, lambda: A(i, -i)(j, k))
 
@@ -780,6 +802,7 @@ def test_riemann_cyclic():
     t1 = riemann_cyclic(t)
     assert t1 == 0
 
+@XFAIL
 def test_div():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     m0,m1,m2,m3 = tensor_indices('m0:4', Lorentz)
@@ -875,7 +898,7 @@ def test_contract_metric2():
     t = t1*t2
     t = t.contract_metric(g)
     t1 = (1 - 2*D)*p(a)*p(-a)*q(b)*q(-b) + p(a)*q(-a)*p(b)*q(-b)
-    assert t == t1
+    assert canon_bp(t - t1) == 0
 
     t = g(a,b)*g(c,d)*g(-b,-c)
     t1 = t.contract_metric(g)
@@ -939,6 +962,7 @@ def test_metric_contract3():
 
     t = C(a0,a1)*B(-a1,-a0)
     t1 = t.contract_metric(C)
+    t1 = t1.canon_bp()
     assert _is_equal(t1, B(a0, -a0))
 
     t = C(a1,a0)*B(-a1,-a0)
@@ -1071,7 +1095,7 @@ def test_contract_delta1():
 
     t = P1(a, -b, e, -f)*P1(f, -e, d, -c)
     t1 = t.contract_delta(delta)
-    assert t1 == P1(a, -b, d, -c)
+    assert canon_bp(t1 - P1(a, -b, d, -c)) == 0
 
     t = P2(a, -b, e, -f)*P2(f, -e, d, -c)
     t1 = t.contract_delta(delta)
@@ -1094,10 +1118,10 @@ def test_fun():
     p, q = tensorhead('p q', [Lorentz], [[1]])
     t = q(c)*p(a)*q(b) + g(a,b)*g(c,d)*q(-d)
     assert t(a,b,c) == t
-    assert t - t(b,a,c) == q(c)*p(a)*q(b) - q(c)*p(b)*q(a)
+    assert canon_bp(t - t(b,a,c) - q(c)*p(a)*q(b) + q(c)*p(b)*q(a)) == 0
     assert t(b,c,d) == q(d)*p(b)*q(c) + g(b,c)*g(d,e)*q(-e)
     t1 = t.fun_eval((a,b),(b,a))
-    assert t1 == q(c)*p(b)*q(a) + g(a,b)*g(c,d)*q(-d)
+    assert canon_bp(t1 - q(c)*p(b)*q(a) - g(a,b)*g(c,d)*q(-d)) == 0
 
     # check that g_{a b; c} = 0
     # example taken from  L. Brewin
@@ -1131,7 +1155,7 @@ def test_TensorManager():
     psh = GH(ih)*ph(-ih)
     t = ps + psh
     t1 = t*t
-    assert t1 == ps*ps + 2*ps*psh + psh*psh
+    assert canon_bp(t1 - ps*ps - 2*ps*psh - psh*psh) == 0
     qs = G(i)*q(-i)
     qsh = GH(ih)*qh(-ih)
     assert _is_equal(ps*qsh, qsh*ps)
@@ -1552,11 +1576,8 @@ def test_valued_canon_bp_swapaxes():
 
 def test_pprint():
     Lorentz = TensorIndexType('Lorentz')
-    i0, i1, i2, i3, i4 = tensor_indices('i0:5', Lorentz)
     A = tensorhead('A', [Lorentz], [[1]])
-
     assert pretty(A) == "A(Lorentz)"
-    assert pretty(A(i0)) == "A(i0)"
 
 
 def test_valued_components_with_wrong_symmetry():

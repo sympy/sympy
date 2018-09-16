@@ -283,6 +283,7 @@ def test_bool_map():
     function2 = SOPform([a,b,c],[[1, 0, 1], [1, 0, 0]])
     assert bool_map(function1, function2) == \
         (function1, {y: a, z: b})
+    assert bool_map(Xor(x, y), ~Xor(x, y)) == False
 
 
 def test_bool_symbol():

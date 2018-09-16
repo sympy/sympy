@@ -1596,33 +1596,34 @@ class LatexPrinter(Printer):
         name = expr.args[0].args[0]
         indices = expr.get_indices()
         out_str = self._print(name)
+        last_valence = None
         for index in indices:
-            if index.is_up:
-                out_str += "^"
-            else:
-                out_str += "_"
-            out_str += "{%s}" % self._print(index)
+            new_valence = index.is_up
+            if last_valence != new_valence:
+                if last_valence is not None:
+                    out_str += "}"
+                if index.is_up:
+                    out_str += "^{"
+                else:
+                    out_str += "_{"
+            out_str += self._print(index)
+            last_valence = new_valence
+        if last_valence is not None:
+            out_str += "}"
         return out_str
 
     def _print_TensMul(self, expr):
-        args = expr.args
-
-        if not args:
-            # no arguments is equivalent to "1", i.e. TensMul().
-            # If tensors are constructed correctly, this should never occur.
-            return "1"
-        if expr.coeff == S.NegativeOne:
-            # expressions like "-A(a)"
-            return "-"+"".join([self._print(arg) for arg in args[1:]])
-
         # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
-        return "".join([self.parenthesize(arg, PRECEDENCE["Mul"]) for arg in expr.args])
+        sign, args = expr._get_args_for_traditional_printer()
+        return sign + "".join(
+            [self.parenthesize(arg, precedence(expr)) for arg in args]
+        )
 
     def _print_TensAdd(self, expr):
         a = []
         args = expr.args
         for x in args:
-            a.append(self._print(x))
+            a.append(self.parenthesize(x, precedence(expr)))
         a.sort()
         s = ' + '.join(a)
         s = s.replace('+ -', '- ')
