@@ -2530,10 +2530,38 @@ class TensExpr(Expr):
         raise NotImplementedError
 
     def __mul__(self, other):
-        raise NotImplementedError
+        """
+        Multiply two tensors using Einstein summation convention.
+
+        If the two tensors have an index in common, one contravariant
+        and the other covariant, in their product the indices are summed
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
+        >>> g = Lorentz.metric
+        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
+        >>> t1 = p(m0)
+        >>> t2 = q(-m0)
+        >>> t1*t2
+        p(L_0)*q(-L_0)
+        """
+        return TensMul(self, other).doit()
 
     def __rmul__(self, other):
-        raise NotImplementedError
+        return TensMul(other, self).doit()
+
+    def __div__(self, other):
+        other = sympify(other)
+        if isinstance(other, TensExpr):
+            raise ValueError('cannot divide by a tensor')
+        return TensMul(*(self.args + (S.One/other,)), is_canon_bp=self._is_canon_bp).doit()
+
+    def __rdiv__(self, other):
+        raise ValueError('cannot divide by a tensor')
 
     def __pow__(self, other):
         if self.data is None:
@@ -2554,12 +2582,6 @@ class TensExpr(Expr):
 
     def __rpow__(self, other):
         raise NotImplementedError
-
-    def __div__(self, other):
-        raise NotImplementedError
-
-    def __rdiv__(self, other):
-        raise NotImplementedError()
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
@@ -2585,7 +2607,7 @@ class TensExpr(Expr):
         expr = self.xreplace(dict(index_tuples))
         expr = expr.replace(lambda x: isinstance(x, Tensor), lambda x: x.args[0](*x.args[1]))
         # For some reason, `TensMul` gets replaced by `Mul`, correct it:
-        expr = expr.replace(lambda x: isinstance(x, (Mul, TensMul)), lambda x: TensMul(*x.args))
+        expr = expr.replace(lambda x: isinstance(x, (Mul, TensMul)), lambda x: TensMul(*x.args).doit())
         return expr
 
     def get_matrix(self):
@@ -2870,7 +2892,7 @@ class TensAdd(TensExpr, AssocOp):
             # needs an implementation similar to .as_coeff_Mul()
             terms_dict[arg.nocoeff].append(arg.coeff)
 
-        new_args = [TensMul(Add(*coeff), t) for t, coeff in terms_dict.items() if Add(*coeff) != 0]
+        new_args = [TensMul(Add(*coeff), t).doit() for t, coeff in terms_dict.items() if Add(*coeff) != 0]
         if isinstance(scalars, Add):
             new_args = list(scalars.args) + new_args
         elif scalars != 0:
@@ -2973,26 +2995,8 @@ class TensAdd(TensExpr, AssocOp):
     def __rsub__(self, other):
         return TensAdd(other, -self)
 
-    def __mul__(self, other):
-        return TensAdd(*(x*other for x in self.args))
-
-    def __rmul__(self, other):
-        return self*other
-
-    def __div__(self, other):
-        other = sympify(other)
-        if isinstance(other, TensExpr):
-            raise ValueError('cannot divide by a tensor')
-        return TensAdd(*(x/other for x in self.args))
-
-    def __rdiv__(self, other):
-        raise ValueError('cannot divide by a tensor')
-
     def __getitem__(self, item):
         return self.data[item]
-
-    __truediv__ = __div__
-    __truerdiv__ = __rdiv__
 
     def contract_delta(self, delta):
         args = [x.contract_delta(delta) for x in self.args]
@@ -3343,20 +3347,6 @@ class Tensor(TensExpr):
         if self.metric in _tensor_data_substitution_dict:
             del _tensor_data_substitution_dict[self.metric]
 
-    def __mul__(self, other):
-        return TensMul(self, other)
-
-    def __rmul__(self, other):
-        return TensMul(other, self)
-
-    def __div__(self, other):
-        if isinstance(other, TensExpr):
-            raise ValueError('cannot divide by a tensor')
-        return TensMul(self, S.One/other, is_canon_bp=self.is_canon_bp)
-
-    def __rdiv__(self, other):
-        raise ValueError('cannot divide by a tensor')
-
     def __add__(self, other):
         return TensAdd(self, other)
 
@@ -3369,11 +3359,8 @@ class Tensor(TensExpr):
     def __rsub__(self, other):
         return TensAdd(other, self)
 
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
-
     def __neg__(self):
-        return TensMul(S.NegativeOne, self, is_canon_bp=self._is_canon_bp)
+        return TensMul(S.NegativeOne, self, is_canon_bp=self._is_canon_bp).doit()
 
     def _print(self):
         indices = [str(ind) for ind in self.indices]
@@ -3475,41 +3462,11 @@ class TensMul(TensExpr, AssocOp):
     identity = S.One
 
     def __new__(cls, *args, **kw_args):
-
         is_canon_bp = kw_args.get('is_canon_bp', False)
         args = list(map(_sympify, args))
-
-        # Flatten:
-        args = [i for arg in args for i in (arg.args if isinstance(arg, (TensMul, Mul)) else [arg])]
-
-        args = [arg for arg in args if arg != cls.identity]
-
-        # Extract non-tensor coefficients:
-        coeff = reduce(lambda a, b: a*b, [arg for arg in args if not isinstance(arg, TensExpr)], S.One)
-        args = [arg for arg in args if isinstance(arg, TensExpr)]
-
-        if len(args) == 0:
-            return coeff
-
-        if coeff != cls.identity:
-            args = [coeff] + args
-
-        if len(args) == 1:
-            return args[0]
-
-        args, indices, free, dum = TensMul._tensMul_contract_indices(args)
-
-        # Data for indices:
-        index_types = [i.tensor_index_type for i in indices]
-        index_structure = _IndexStructure(free, dum, index_types, indices, canon_bp=is_canon_bp)
-
         obj = TensExpr.__new__(cls, *args)
-
-        obj._index_types = index_types
-        obj._index_structure = index_structure
-        obj._ext_rank = len(obj._index_structure.free) + 2*len(obj._index_structure.dum)
-        obj._coeff = coeff
         obj._is_canon_bp = is_canon_bp
+        obj._coeff = S.One
         return obj
 
     @staticmethod
@@ -3615,11 +3572,51 @@ class TensMul(TensExpr, AssocOp):
             ind_pos += arg.ext_rank
             args[i] = Tensor(arg.component, indices[prev_pos:ind_pos])
 
+    def doit(self, **kwargs):
+        is_canon_bp = self._is_canon_bp
+        deep = kwargs.get('deep', True)
+        if deep:
+            args = [arg.doit(**kwargs) for arg in self.args]
+        else:
+            args = self.args
+
+        # Flatten:
+        args = [i for arg in args for i in (arg.args if isinstance(arg, (TensMul, Mul)) else [arg])]
+
+        args = [arg for arg in args if arg != self.identity]
+
+        # Extract non-tensor coefficients:
+        coeff = reduce(lambda a, b: a*b, [arg for arg in args if not isinstance(arg, TensExpr)], S.One)
+        args = [arg for arg in args if isinstance(arg, TensExpr)]
+
+        if len(args) == 0:
+            return coeff
+
+        if coeff != self.identity:
+            args = [coeff] + args
+
+        if len(args) == 1:
+            return args[0]
+
+        args, indices, free, dum = TensMul._tensMul_contract_indices(args)
+
+        # Data for indices:
+        index_types = [i.tensor_index_type for i in indices]
+        index_structure = _IndexStructure(free, dum, index_types, indices, canon_bp=is_canon_bp)
+
+        obj = self.func(*args)
+        obj._index_types = index_types
+        obj._index_structure = index_structure
+        obj._ext_rank = len(obj._index_structure.free) + 2*len(obj._index_structure.dum)
+        obj._coeff = coeff
+        obj._is_canon_bp = is_canon_bp
+        return obj
+
     # TODO: this method should be private
     # TODO: should this method be renamed _from_components_free_dum ?
     @staticmethod
     def from_data(coeff, components, free, dum, **kw_args):
-        return TensMul(coeff, *TensMul._get_tensors_from_components_free_dum(components, free, dum), **kw_args)
+        return TensMul(coeff, *TensMul._get_tensors_from_components_free_dum(components, free, dum), **kw_args).doit()
 
     @staticmethod
     def _get_tensors_from_components_free_dum(components, free, dum):
@@ -3802,7 +3799,7 @@ class TensMul(TensExpr, AssocOp):
         # `Expr.expand`.
         args = [arg.expand() for arg in self.args]
         args1 = [arg.args if isinstance(arg, (Add, TensAdd)) else (arg,) for arg in args]
-        return TensAdd(*[TensMul(*i) for i in itertools.product(*args1)])
+        return TensAdd(*[TensMul(*i).doit() for i in itertools.product(*args1)])
 
     def __add__(self, other):
         return TensAdd(self, other)
@@ -3816,45 +3813,8 @@ class TensMul(TensExpr, AssocOp):
     def __rsub__(self, other):
         return TensAdd(other, -self)
 
-    def __mul__(self, other):
-        """
-        Multiply two tensors using Einstein summation convention.
-
-        If the two tensors have an index in common, one contravariant
-        and the other covariant, in their product the indices are summed
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> g = Lorentz.metric
-        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
-        >>> t1 = p(m0)
-        >>> t2 = q(-m0)
-        >>> t1*t2
-        p(L_0)*q(-L_0)
-        """
-        return TensMul(self, other)
-
-    def __rmul__(self, other):
-        return TensMul(other, self)
-
-    def __div__(self, other):
-        other = sympify(other)
-        if isinstance(other, TensExpr):
-            raise ValueError('cannot divide by a tensor')
-        return TensMul(*(self.args + (S.One/other,)), is_canon_bp=self._is_canon_bp)
-
-    def __rdiv__(self, other):
-        raise ValueError('cannot divide by a tensor')
-
     def __getitem__(self, item):
         return self.data[item]
-
-    __truediv__ = __div__
-    __truerdiv__ = __rdiv__
 
     def _sort_args_for_sorted_components(self):
         """
@@ -3889,7 +3849,7 @@ class TensMul(TensExpr, AssocOp):
         """
         Returns a tensor product with sorted components.
         """
-        return TensMul(*self._sort_args_for_sorted_components())
+        return TensMul(*self._sort_args_for_sorted_components()).doit()
 
     def perm2tensor(self, g, is_canon_bp=False):
         """
@@ -4107,7 +4067,7 @@ class TensMul(TensExpr, AssocOp):
         free = [(ind, p - shifts[pos_map[p]]) for (ind, p) in free if pos_map[p] not in elim]
         dum = [(p0 - shifts[pos_map[p0]], p1 - shifts[pos_map[p1]]) for i, (p0, p1) in enumerate(dum) if pos_map[p0] not in elim and pos_map[p1] not in elim]
 
-        res = sign*TensMul(*args)
+        res = sign*TensMul(*args).doit()
         if not isinstance(res, TensExpr):
             return res
         im = _IndexStructure.from_components_free_dum(res.components, free, dum)
@@ -4130,7 +4090,7 @@ class TensMul(TensExpr, AssocOp):
             ext_rank = arg.ext_rank
             args[i] = arg._set_indices(*indices[pos:pos+ext_rank])
             pos += ext_rank
-        return TensMul(*args, is_canon_bp=is_canon_bp)
+        return TensMul(*args, is_canon_bp=is_canon_bp).doit()
 
     @staticmethod
     def _index_replacement_for_contract_metric(args, free, dum):
