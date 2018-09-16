@@ -2930,17 +2930,24 @@ def test_nth_algebraic():
     assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
     assert sol == dsolve(eqn, f(x))
 
+def test_nth_algebraic_remove_redundant_solutions():
+    eqn = f(x)*f(x).diff(x)
+    soln = Eq(f(x), C1)
+    assert soln == dsolve(eqn, f(x))
+
 #
 # These tests can be combined with the above test if they get fixed
 # so that dsolve actually works in all these cases.
 #
 
-# This is a problem with nth_algebraic that should be fixed...
+# Fails due to division by f(x) eliminating the solution before nth_algebraic
+# is called.
 @XFAIL
-def test_nth_algebraic_redundant_solutions():
-    eqn = f(x)*f(x).diff(x)
-    soln = Eq(f(x), C1)
-    assert soln == dsolve(eqn, f(x))
+def test_nth_algebraic_find_multiple1():
+    eqn = f(x) + f(x)*f(x).diff(x)
+    solns = [Eq(f(x), 0),
+             Eq(f(x), C1 - x)]
+    assert set(solns) == set(dsolve(eqn, f(x)))
 
 # prep = True breaks this
 def test_nth_algebraic_noprep1():
@@ -2974,15 +2981,6 @@ def test_2nd_order_substitution():
     eqn = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
     sol = Eq(f(x), C1 + C2*log(x) + exp(x) + Ei(x))
     assert sol == dsolve(eqn, f(x))
-
-# Fails due to division by f(x) eliminating the solution before nth_algebraic
-# is called.
-@XFAIL
-def test_nth_algebraic_find_multiple1():
-    eqn = f(x) + f(x)*f(x).diff(x)
-    solns = [Eq(f(x), 0),
-             Eq(f(x), C1 - x)]
-    assert set(solns) == set(dsolve(eqn, f(x)))
 
 # This needs a combination of solutions from nth_algebraic and some other
 # method from dsolve
