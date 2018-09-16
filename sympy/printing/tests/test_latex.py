@@ -1801,6 +1801,9 @@ def test_latex_printer_tensor():
     H = tensorhead("H", [L, L], [[1], [1]])
     K = tensorhead("K", [L, L, L, L], [[1], [1], [1], [1]])
 
+    assert latex(i) == "{}^{i}"
+    assert latex(-i) == "{}_{i}"
+
     expr = A(i)
     assert latex(expr) == "A{}^{i}"
 

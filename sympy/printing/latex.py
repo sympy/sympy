@@ -1606,7 +1606,7 @@ class LatexPrinter(Printer):
                     out_str += "{}^{"
                 else:
                     out_str += "{}_{"
-            out_str += self._print(index)
+            out_str += self._print(index.args[0])
             last_valence = new_valence
         if last_valence is not None:
             out_str += "}"
@@ -1630,6 +1630,10 @@ class LatexPrinter(Printer):
         return s
 
     def _print_TensorIndex(self, expr):
+        return "{}%s{%s}" % (
+            "^" if expr.is_up else "_",
+            self._print(expr.args[0])
+        )
         return self._print(expr.args[0])
 
     def _print_tuple(self, expr):
