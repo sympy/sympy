@@ -1069,6 +1069,9 @@ class PrettyPrinter(Printer):
         ]
         return prettyForm.__add__(*args)
 
+    def _print_TensorIndex(self, expr):
+        return self._print(expr.args[0])
+
     def _print_Piecewise(self, pexpr):
 
         P = {}

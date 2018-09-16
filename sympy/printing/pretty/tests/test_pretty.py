@@ -6159,6 +6159,7 @@ def test_vector_expr_pretty_printing():
 def test_pretty_print_tensor_expr():
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
+    i0 = tensor_indices("i_0", L)
     A, B, C, D = tensorhead("A B C D", [L], [[1]])
     H = tensorhead("H", [L, L], [[1], [1]])
 
@@ -6172,6 +6173,20 @@ A \
 u("""\
  i\n\
 A \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(i0)
+    ascii_str = \
+"""\
+ i_0\n\
+A   \
+"""
+    ucode_str = \
+u("""\
+ i₀\n\
+A  \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
