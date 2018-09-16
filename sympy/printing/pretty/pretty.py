@@ -1075,7 +1075,10 @@ class PrettyPrinter(Printer):
         return prettyForm.__add__(*args)
 
     def _print_TensorIndex(self, expr):
-        return self._print(expr.args[0])
+        sym = expr.args[0]
+        if not expr.is_up:
+            sym = -sym
+        return self._print(sym)
 
     def _print_Piecewise(self, pexpr):
 

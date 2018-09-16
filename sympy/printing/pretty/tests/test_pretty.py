@@ -6163,6 +6163,18 @@ def test_pretty_print_tensor_expr():
     A, B, C, D = tensorhead("A B C D", [L], [[1]])
     H = tensorhead("H", [L, L], [[1], [1]])
 
+    expr = -i
+    ascii_str = \
+"""\
+-i\
+"""
+    ucode_str = \
+u("""\
+-i\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
     expr = A(i)
     ascii_str = \
 """\
