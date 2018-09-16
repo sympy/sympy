@@ -517,19 +517,18 @@ def test_TensExpr():
     raises(ValueError, lambda: S.One/(A(c, d) + g(c, d)))
     raises(ValueError, lambda: A(a, b) + A(a, c))
     t = A(a, b) + B(a, b)
-    raises(NotImplementedError, lambda: TensExpr.__mul__(t, 'a'))
-    raises(NotImplementedError, lambda: TensExpr.__add__(t, 'a'))
-    raises(NotImplementedError, lambda: TensExpr.__radd__(t, 'a'))
-    raises(NotImplementedError, lambda: TensExpr.__sub__(t, 'a'))
-    raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
-    raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
-    raises(NotImplementedError, lambda: TensExpr.__rdiv__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__mul__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__add__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__radd__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__sub__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__rdiv__(t, 'a'))
     raises(ValueError, lambda: A(a, b)**2)
     raises(NotImplementedError, lambda: 2**A(a, b))
     raises(NotImplementedError, lambda: abs(A(a, b)))
 
 def test_TensorHead():
-    assert TensAdd() == 0
     # simple example of algebraic expression
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a,b = tensor_indices('a,b', Lorentz)
@@ -539,7 +538,8 @@ def test_TensorHead():
     assert A.symmetry == tensorsymmetry([1]*2)
 
 def test_add1():
-    assert TensAdd() == 0
+    assert TensAdd().args == ()
+    assert TensAdd().doit() == 0
     # simple example of algebraic expression
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a,b,d0,d1,i,j,k = tensor_indices('a,b,d0,d1,i,j,k', Lorentz)
@@ -615,7 +615,7 @@ def test_add1():
     assert t1 == 0
     t = 1 - (A(a, -a) + B(a, -a))
     t1 = 1 + (A(a, -a) + B(a, -a))
-    assert (t + t1).equals(2)
+    assert (t + t1).expand().equals(2)
     t2 = 1 + A(a, -a)
     assert t1 != t2
     assert t2 != TensMul.from_data(0, [], [], [])
