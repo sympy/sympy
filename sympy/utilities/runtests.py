@@ -145,13 +145,14 @@ def setup_pprint():
     import sympy.interactive.printing as interactive_printing
 
     # force pprint to be in ascii mode in doctests
-    pprint_use_unicode(False)
+    use_unicode_prev = pprint_use_unicode(False)
 
     # hook our nice, hash-stable strprinter
     init_printing(pretty_print=False)
 
     # Prevent init_printing() in doctests from affecting other doctests
     interactive_printing.NO_GLOBAL = True
+    return use_unicode_prev
 
 def run_in_subprocess_with_hash_randomization(
         function, function_args=(),
@@ -657,6 +658,8 @@ def _doctest(*paths, **kwargs):
     Returns 0 if tests passed and 1 if they failed.  See the docstrings of
     ``doctest()`` and ``test()`` for more information.
     """
+    from sympy import pprint_use_unicode
+
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
     colors = kwargs.get("colors", True)
@@ -822,7 +825,7 @@ def _doctest(*paths, **kwargs):
             continue
         old_displayhook = sys.displayhook
         try:
-            setup_pprint()
+            use_unicode_prev = setup_pprint()
             out = sympytestfile(
                 rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
@@ -835,6 +838,7 @@ def _doctest(*paths, **kwargs):
             # if True
             import sympy.interactive.printing as interactive_printing
             interactive_printing.NO_GLOBAL = False
+            pprint_use_unicode(use_unicode_prev)
 
         rstfailed, tested = out
         if tested:
@@ -1344,6 +1348,7 @@ class SymPyDocTests(object):
 
         from sympy.core.compatibility import StringIO
         import sympy.interactive.printing as interactive_printing
+        from sympy import pprint_use_unicode
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
@@ -1354,7 +1359,6 @@ class SymPyDocTests(object):
             # So we have to temporarily extend sys.path to import them
             sys.path.insert(0, dirname)
             module = file[:-3]  # remove ".py"
-        setup_pprint()
         try:
             module = pdoctest._normalize_module(module)
             tests = SymPyDocTestFinder().find(module)
@@ -1366,7 +1370,6 @@ class SymPyDocTests(object):
         finally:
             if rel_name.startswith("examples"):
                 del sys.path[0]
-            interactive_printing.NO_GLOBAL = False
 
         tests = [test for test in tests if len(test.examples) > 0]
         # By default tests are sorted by alphabetical order by function name.
@@ -1412,6 +1415,10 @@ class SymPyDocTests(object):
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
             test.globs['print_function'] = print_function
+
+            old_displayhook = sys.displayhook
+            use_unicode_prev = setup_pprint()
+
             try:
                 f, t = runner.run(test, compileflags=future_flags,
                                   out=new.write, clear_globs=False)
@@ -1423,6 +1430,10 @@ class SymPyDocTests(object):
                 self._reporter.doctest_fail(test.name, new.getvalue())
             else:
                 self._reporter.test_pass()
+                sys.displayhook = old_displayhook
+                interactive_printing.NO_GLOBAL = False
+                pprint_use_unicode(use_unicode_prev)
+
         self._reporter.leaving_filename()
 
     def get_test_files(self, dir, pat='*.py', init_only=True):

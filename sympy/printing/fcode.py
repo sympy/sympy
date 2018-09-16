@@ -98,7 +98,7 @@ class FCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
-        'allow_unknown_functions': True,
+        'allow_unknown_functions': False,
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,

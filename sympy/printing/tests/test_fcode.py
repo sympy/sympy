@@ -168,10 +168,10 @@ def test_implicit():
 def test_not_fortran():
     x = symbols('x')
     g = Function('g')
-    gamma_f = fcode(gamma(x), allow_unknown_functions=False)
+    gamma_f = fcode(gamma(x))
     assert gamma_f == "C     Not supported in Fortran:\nC     gamma\n      gamma(x)"
     assert fcode(Integral(sin(x))) == "C     Not supported in Fortran:\nC     Integral\n      Integral(sin(x), x)"
-    assert fcode(g(x), allow_unknown_functions=False) == "C     Not supported in Fortran:\nC     g\n      g(x)"
+    assert fcode(g(x)) == "C     Not supported in Fortran:\nC     g\n      g(x)"
 
 
 def test_user_functions():

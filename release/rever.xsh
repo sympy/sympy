@@ -1016,6 +1016,7 @@ git_whitelist = {
     'bin/sympy_time_cache.py',
     'bin/test',
     'bin/test_external_imports.py',
+    'bin/test_executable.py',
     'bin/test_import',
     'bin/test_import.py',
     'bin/test_isolated',

@@ -425,6 +425,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 for k in m:
                     user_functions[k] = k
         printer = Printer({'fully_qualified_modules': False, 'inline': True,
+                           'allow_unknown_functions': True,
                            'user_functions': user_functions})
 
     # Get the names of the args, for creating a docstring
