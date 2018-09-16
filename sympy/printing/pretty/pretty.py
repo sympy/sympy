@@ -1021,6 +1021,57 @@ class PrettyPrinter(Printer):
     _print_MutableDenseNDimArray = _print_NDimArray
     _print_MutableSparseNDimArray = _print_NDimArray
 
+    def _print_Tensor(self, expr):
+        name = expr.args[0].name
+        indices = expr.get_indices()
+
+        center = stringPict(name)
+        top = stringPict(" "*center.width())
+        bot = stringPict(" "*center.width())
+
+        no_top = True
+        no_bot = True
+
+        for i, index in enumerate(indices):
+            indpic = self._print(index.args[0])
+            if index.is_up:
+                no_top = False
+                top = stringPict(*top.right(indpic))
+                center = stringPict(*center.right(" "*indpic.width()))
+                bot = stringPict(*bot.right(" "*indpic.width()))
+            else:
+                no_bot = False
+                bot = stringPict(*bot.right(indpic))
+                center = stringPict(*center.right(" "*indpic.width()))
+                top = stringPict(*top.right(" "*indpic.width()))
+
+        if not no_top:
+            pict = prettyForm(*center.above(top))
+        else:
+            pict = center
+        if not no_bot:
+            pict = prettyForm(*pict.below(bot))
+        return pict
+
+    def _print_TensMul(self, expr):
+        args = [
+            prettyForm(*self._print(i).parens()) if
+            precedence_traditional(i) < PRECEDENCE["Mul"] else self._print(i)
+            for i in expr.args
+        ]
+        return prettyForm.__mul__(*args)
+
+    def _print_TensAdd(self, expr):
+        args = [
+            prettyForm(*self._print(i).parens()) if
+            precedence_traditional(i) < PRECEDENCE["Mul"] else self._print(i)
+            for i in expr.args
+        ]
+        return prettyForm.__add__(*args)
+
+    def _print_TensorIndex(self, expr):
+        return self._print(expr.args[0])
+
     def _print_Piecewise(self, pexpr):
 
         P = {}

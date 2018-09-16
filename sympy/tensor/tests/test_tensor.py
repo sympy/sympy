@@ -1576,11 +1576,8 @@ def test_valued_canon_bp_swapaxes():
 
 def test_pprint():
     Lorentz = TensorIndexType('Lorentz')
-    i0, i1, i2, i3, i4 = tensor_indices('i0:5', Lorentz)
     A = tensorhead('A', [Lorentz], [[1]])
-
     assert pretty(A) == "A(Lorentz)"
-    assert pretty(A(i0)) == "A(i0)"
 
 
 def test_valued_components_with_wrong_symmetry():
