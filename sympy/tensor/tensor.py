@@ -2423,8 +2423,8 @@ class TensorHead(Basic):
         A(a, -b)
 
         """
-        tensor = Tensor._new_with_dummy_replacement(self, indices, **kw_args)
-        return tensor
+        tensor = Tensor(self, indices, **kw_args)
+        return tensor.doit()
 
     def __pow__(self, other):
         if self.data is None:
@@ -2878,7 +2878,10 @@ class TensAdd(TensExpr, AssocOp):
         return new_args
 
     def get_indices(self):
-        return {i for arg in self.args if isinstance(arg, TensExpr) for i in get_indices(arg)}
+        indices = []
+        for arg in self.args:
+            indices.extend([i for i in get_indices(arg) if i not in indices])
+        return indices
 
     @property
     def rank(self):
@@ -3145,11 +3148,9 @@ class Tensor(TensExpr):
             index_map[idx] = (indices.index(idx),)
         return index_map
 
-    @staticmethod
-    def _new_with_dummy_replacement(tensor_head, indices, **kw_args):
-        index_structure = _IndexStructure.from_indices(*indices)
-        indices = index_structure.get_indices()
-        return Tensor(tensor_head, indices, **kw_args)
+    def doit(self, **kwargs):
+        args, indices, free, dum = TensMul._tensMul_contract_indices([self])
+        return args[0]
 
     def _set_new_index_structure(self, im, is_canon_bp=False):
         indices = im.get_indices()
@@ -3273,7 +3274,7 @@ class Tensor(TensExpr):
         """
         Get a list of indices, corresponding to those of the tensor.
         """
-        return self._index_structure.get_indices()
+        return list(self.args[1])
 
     def get_free_indices(self):
         """
