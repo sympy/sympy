@@ -4223,21 +4223,6 @@ class TensMul(TensExpr):
             return t.func(*t.args)
         return t
 
-    def _print(self):
-        args = self.args
-        get_str = lambda arg: str(arg) if arg.is_Atom or isinstance(arg, TensExpr) else ("(%s)" % str(arg))
-
-        if not args:
-            # no arguments is equivalent to "1", i.e. TensMul().
-            # If tensors are constructed correctly, this should never occur.
-            return "1"
-        if self.coeff == S.NegativeOne:
-            # expressions like "-A(a)"
-            return "-"+"*".join([get_str(arg) for arg in args[1:]])
-
-        # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
-        return "*".join([get_str(arg) for arg in self.args])
-
     @property
     def data(self):
         dat = _tensor_data_substitution_dict[self]

@@ -786,7 +786,7 @@ def test_div():
     R = tensorhead('R', [Lorentz]*4, [[2, 2]])
     t = R(m0,m1,-m1,m3)
     t1 = t/S(4)
-    assert str(t1) == '1/4*R(m0, L_0, -L_0, m3)'
+    assert str(t1) == '(1/4)*R(m0, L_0, -L_0, m3)'
     t = t.canon_bp()
     assert not t1._is_canon_bp
     t1 = t*4

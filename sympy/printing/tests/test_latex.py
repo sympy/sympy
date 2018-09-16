@@ -1791,3 +1791,35 @@ def test_issue_9216():
 
     expr_4 = Pow(1, -2, evaluate=False)
     assert latex(expr_4) == r"1^{-2}"
+
+def test_latex_printer_tensor():
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    L = TensorIndexType("L")
+    i, j, k = tensor_indices("i j k", L)
+    i0 = tensor_indices("i_0", L)
+    A, B, C, D = tensorhead("A B C D", [L], [[1]])
+    H = tensorhead("H", [L, L], [[1], [1]])
+
+    expr = A(i)
+    assert latex(expr) == "A^{i}"
+
+    expr = A(i0)
+    assert latex(expr) == "A^{i_{0}}"
+
+    expr = A(-i)
+    assert latex(expr) == "A_{i}"
+
+    expr = H(i, -j)
+    assert latex(expr) == "H^{i}_{j}"
+
+    expr = (1+x)*A(i)
+    assert latex(expr) == r"\left(x + 1\right)A^{i}"
+
+    expr = H(i, -i)
+    assert latex(expr) == "H^{L_{0}}_{L_{0}}"
+
+    expr = H(i, -j)*A(j)*B(k)
+    assert latex(expr) == "H^{i}_{L_{0}}A^{L_{0}}B^{k}"
+
+    expr = A(i) + 3*B(i)
+    assert latex(expr) == "3B^{i} + A^{i}"
