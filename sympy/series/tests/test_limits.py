@@ -532,3 +532,6 @@ def test_issue_14456():
 
 def test_issue_14411():
     assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2)) == -oo
+
+def test_issue_14574():
+    assert limit(sqrt(x)*cos(x - x**2) / (x + 1), x, oo) == 0

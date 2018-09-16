@@ -6205,6 +6205,20 @@ A \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = -3*A(-i)
+    ascii_str = \
+"""\
+-3*A \n\
+    i\
+"""
+    ucode_str = \
+u("""\
+-3⋅A \n\
+    i\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
     expr = H(i, -j)
     ascii_str = \
 """\
@@ -6249,6 +6263,20 @@ u("""\
  i    L₀  k\n\
 H   ⋅A  ⋅B \n\
   L₀       \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = (1+x)*A(i)
+    ascii_str = \
+"""\
+         i\n\
+(x + 1)*A \
+"""
+    ucode_str = \
+u("""\
+         i\n\
+(x + 1)⋅A \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str

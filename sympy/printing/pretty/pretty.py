@@ -1054,12 +1054,17 @@ class PrettyPrinter(Printer):
         return pict
 
     def _print_TensMul(self, expr):
+        sign, args = expr._get_args_for_traditional_printer()
         args = [
             prettyForm(*self._print(i).parens()) if
             precedence_traditional(i) < PRECEDENCE["Mul"] else self._print(i)
-            for i in expr.args
+            for i in args
         ]
-        return prettyForm.__mul__(*args)
+        pform = prettyForm.__mul__(*args)
+        if sign:
+            return prettyForm(*pform.left(sign))
+        else:
+            return pform
 
     def _print_TensAdd(self, expr):
         args = [
