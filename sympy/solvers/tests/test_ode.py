@@ -2930,10 +2930,28 @@ def test_nth_algebraic():
     assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
     assert sol == dsolve(eqn, f(x))
 
-def test_nth_algebraic_remove_redundant_solutions():
+def test_nth_algebraic_redundant_solutions():
+    # This one has a redundant solution that should be removed
     eqn = f(x)*f(x).diff(x)
     soln = Eq(f(x), C1)
+    assert soln == dsolve(eqn, f(x), hint='nth_algebraic')
     assert soln == dsolve(eqn, f(x))
+
+    # This has two integral solutions and no algebraic solutions
+    eqn = (diff(f(x)) - x)*(diff(f(x)) + x)
+    sol = [Eq(f(x), C1 - x**2/2), Eq(f(x), C1 + x**2/2)]
+    assert set(sol) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
+    assert set(sol) == set(dsolve(eqn, f(x)))
+
+    # This one doesn't work with dsolve at the time of writing but the
+    # redundancy checking code should not remove the algebraic solution.
+    from sympy.solvers.ode import _nth_algebraic_remove_redundant_solutions
+    eqn = f(x) + f(x)*f(x).diff(x)
+    solns = [Eq(f(x), 0),
+             Eq(f(x), C1 - x)]
+    solns_final =  _nth_algebraic_remove_redundant_solutions(eqn, solns, 1, x)
+    assert set(solns) == set(solns_final)
+
 
 #
 # These tests can be combined with the above test if they get fixed
