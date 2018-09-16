@@ -4025,7 +4025,7 @@ def _nth_algebraic_match(eq, func):
     try:
         solns = solve(subs_eqn, func)
     except NotImplementedError:
-        return []
+        solns = []
 
     solns = [unreplace(soln, var) for soln in solns]
     solns = [Equality(func, soln) for soln in solns]
