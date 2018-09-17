@@ -481,11 +481,11 @@ class Ellipse(GeometrySet):
         Requiring that the distance between the intersections of E and L be 2M identifies
         b = M**2*(1 + s**2)
 
-        and similarly, requiring that the intersections between E and L be separated by 2m identifies
+        and similarly, requiring that the intersections between E and l be separated by 2m identifies
         a = m**2*(1 + s**2)
 
         So the points that are on an ellipse centered at (xc,yc) whose major axis (with radius of M)
-        is on a line with slope s, and whose minor axis has radius of m, are given be the zeros of:
+        is on a line with slope s, and whose minor axis has radius of m, are given by the zeros of:
 
         E(x,y) = L(x,y)**2/a + l(x,y)**2/b − 1
 
