@@ -1,6 +1,6 @@
-from sympy import Matrix, eye, Integer
+from sympy import Matrix, eye, Integer, expand
 from sympy.combinatorics import Permutation
-from sympy.core import S, Rational, Symbol, Basic
+from sympy.core import S, Rational, Symbol, Basic, Add
 from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -1780,3 +1780,58 @@ def test_index_iteration():
     assert e4.get_free_indices() == [i0, i2]
     assert e5.get_indices() == [L0, L1, -L0, -L1]
     assert e5.get_free_indices() == []
+
+
+def test_tensor_expand():
+    L = TensorIndexType("L")
+
+    i, j, k = tensor_indices("i j k", L)
+    i0 = tensor_indices("i0", L)
+    L_0 = TensorIndex("L_0", L)
+    L_1 = TensorIndex("L_1", L)
+
+    A, B, C, D = tensorhead("A B C D", [L], [[1]])
+    H = tensorhead("H", [L, L], [[1], [1]])
+
+    assert isinstance(Add(A(i), B(i)), TensAdd)
+    assert isinstance(expand(A(i)+B(i)), TensAdd)
+
+    expr = A(i)*(A(-i)+B(-i))
+    assert expr.args == (A(L_0), A(-L_0) + B(-L_0))
+    assert expr != A(i)*A(-i) + A(i)*B(-i)
+    assert expr.expand() == A(i)*A(-i) + A(i)*B(-i)
+    assert str(expr) == "A(L_0)*(A(-L_0) + B(-L_0))"
+
+    expr = A(i)*A(j) + A(i)*B(j)
+    assert str(expr) == "A(i)*A(j) + A(i)*B(j)"
+
+    expr = A(-i)*(A(i)*A(j) + A(i)*B(j)*C(k)*C(-k))
+    assert expr != A(-i)*A(i)*A(j) + A(-i)*A(i)*B(j)*C(k)*C(-k)
+    assert expr.expand() == A(-i)*A(i)*A(j) + A(-i)*A(i)*B(j)*C(k)*C(-k)
+    assert str(expr) == "A(-L_0)*(A(L_0)*A(j) + A(L_0)*B(j)*C(L_1)*C(-L_1))"
+    assert str(expr.canon_bp()) == 'A(L_0)*A(-L_0)*B(j)*C(L_1)*C(-L_1) + A(j)*A(L_0)*A(-L_0)'
+
+    expr = A(-i)*(2*A(i)*A(j) + A(i)*B(j))
+    assert expr.expand() == 2*A(-i)*A(i)*A(j) + A(-i)*A(i)*B(j)
+
+    expr = 2*A(i)*A(-i)
+    assert expr.coeff == 2
+
+    expr = A(i)*(B(j)*C(k) + C(j)*(A(k) + D(k)))
+    assert str(expr) == "A(i)*(B(j)*C(k) + C(j)*(A(k) + D(k)))"
+    assert str(expr.expand()) == "A(i)*B(j)*C(k) + A(i)*C(j)*A(k) + A(i)*C(j)*D(k)"
+
+    assert isinstance(TensMul(3), TensMul)
+    tm = TensMul(3).doit()
+    assert tm == 3
+    assert isinstance(tm, Integer)
+
+    p1 = B(j)*B(-j) + B(j)*C(-j)
+    p2 = C(-i)*p1
+    p3 = A(i)*p2
+
+    expr = A(i)*(B(-i) + C(-i)*(B(j)*B(-j) + B(j)*C(-j)))
+    assert expr.expand() == A(i)*B(-i) + A(i)*C(-i)*B(j)*B(-j) + A(i)*C(-i)*B(j)*C(-j)
+
+    expr = C(-i)*(B(j)*B(-j) + B(j)*C(-j))
+    assert expr.expand() == C(-i)*B(j)*B(-j) + C(-i)*B(j)*C(-j)
