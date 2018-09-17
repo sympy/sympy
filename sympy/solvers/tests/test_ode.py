@@ -1277,21 +1277,25 @@ def test_separable1():
     eq3 = f(x).diff(x) + sin(x)
     eq4 = f(x)**2 + 1 - (x**2 + 1)*f(x).diff(x)
     eq5 = f(x).diff(x)/tan(x) - f(x) - 2
+    eq6 = f(x).diff(x) * (1 - sin(f(x))) - 1
     sol1 = Eq(f(x), C1*exp(x))
     sol2 = Eq(f(x), C1*x)
     sol3 = Eq(f(x), C1 + cos(x))
     sol4 = Eq(atan(f(x)), C1 + atan(x))
     sol5 = Eq(f(x), C1/cos(x) - 2)
+    sol6 = Eq(-x + f(x) + cos(f(x)), C1)
     assert dsolve(eq1, hint='separable') == sol1
     assert dsolve(eq2, hint='separable') == sol2
     assert dsolve(eq3, hint='separable') == sol3
     assert dsolve(eq4, hint='separable', simplify=False) == sol4
     assert dsolve(eq5, hint='separable') == sol5
+    assert dsolve(eq6, hint='separable') == sol6
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
     assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
     assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq6, sol6, order=1, solve_for_func=False)[0]
 
 
 def test_separable2():
@@ -2952,9 +2956,15 @@ def test_nth_algebraic():
     eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
     sol = Eq(f(x), C1 + g(x))
     assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
 
     eqn = (diff(f(x)) - x)*(diff(f(x)) + x)
     sol = [Eq(f(x), C1 - x**2/2), Eq(f(x), C1 + x**2/2)]
+    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
+
+    eqn = (1 - sin(f(x))) * f(x).diff(x)
+    sol = Eq(f(x), C1)
     assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
     assert sol == dsolve(eqn, f(x))
 
