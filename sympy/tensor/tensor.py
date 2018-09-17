@@ -2671,6 +2671,12 @@ class TensExpr(Expr):
             raise NotImplementedError(
                 "missing multidimensional reduction to matrix.")
 
+    def expand(self, **hints):
+        return _expand(self, **hints).doit()
+
+    def _expand(self, **kwargs):
+        return self
+
     def _get_free_indices_set(self):
         indset = set([])
         for arg in self.args:
@@ -2789,6 +2795,9 @@ class TensAdd(TensExpr, AssocOp):
 
     def __new__(cls, *args, **kw_args):
         args = [_sympify(x) for x in args if x]
+
+        args = TensAdd._tensAdd_flatten(args)
+
         obj = Basic.__new__(cls, *args, **kw_args)
         return obj
 
@@ -2798,8 +2807,6 @@ class TensAdd(TensExpr, AssocOp):
             args = [arg.doit(**kwargs) for arg in self.args]
         else:
             args = self.args
-
-        args = TensAdd._tensAdd_flatten(args)
 
         if not args:
             return S.Zero
@@ -2848,27 +2855,12 @@ class TensAdd(TensExpr, AssocOp):
     @staticmethod
     def _tensAdd_flatten(args):
         # flatten TensAdd, coerce terms which are not tensors to tensors
-
-        if not all(isinstance(x, TensExpr) for x in args):
-            args1 = []
-            for x in args:
-                if isinstance(x, TensExpr):
-                    if isinstance(x, TensAdd):
-                        args1.extend(list(x.args))
-                    else:
-                        args1.append(x)
-            args1 = [x for x in args1 if x.coeff != 0]
-            args2 = [x for x in args if not isinstance(x, TensExpr)]
-            t1 = TensMul.from_data(Add(*args2), [], [], [])
-            args = [t1] + args1
-
         a = []
         for x in args:
-            if isinstance(x, TensAdd):
+            if isinstance(x, (Add, TensAdd)):
                 a.extend(list(x.args))
             else:
                 a.append(x)
-
         args = [x for x in a if x.coeff]
         return args
 
@@ -2923,8 +2915,8 @@ class TensAdd(TensExpr, AssocOp):
     def free_args(self):
         return self.args[0].free_args
 
-    def expand(self, **hints):
-        return TensAdd(*[i.expand() for i in self.args]).doit()
+    def _expand(self, **hints):
+        return TensAdd(*[_expand(i, **hints) for i in self.args])
 
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
@@ -3266,7 +3258,7 @@ class Tensor(TensExpr):
     def split(self):
         return [self]
 
-    def expand(self):
+    def _expand(self, **kwargs):
         return self
 
     def sorted_components(self):
@@ -3447,14 +3439,27 @@ class TensMul(TensExpr, AssocOp):
     def __new__(cls, *args, **kw_args):
         is_canon_bp = kw_args.get('is_canon_bp', False)
         args = list(map(_sympify, args))
+
+        # Flatten:
+        args = [i for arg in args for i in (arg.args if isinstance(arg, (TensMul, Mul)) else [arg])]
+
+        args, indices, free, dum = TensMul._tensMul_contract_indices(args, replace_indices=False)
+
+        # Data for indices:
+        index_types = [i.tensor_index_type for i in indices]
+        index_structure = _IndexStructure(free, dum, index_types, indices, canon_bp=is_canon_bp)
+
         obj = TensExpr.__new__(cls, *args)
-        obj._is_canon_bp = is_canon_bp
+        obj._indices = indices
+        obj._index_types = index_types
+        obj._index_structure = index_structure
+        obj._ext_rank = len(obj._index_structure.free) + 2*len(obj._index_structure.dum)
         obj._coeff = S.One
-        obj._indices = [i for arg in args for i in get_indices(arg)]
+        obj._is_canon_bp = is_canon_bp
         return obj
 
     @staticmethod
-    def _tensMul_contract_indices(args):
+    def _tensMul_contract_indices(args, replace_indices=True):
         args_indices = [get_indices(arg) for arg in args]
         replacements = [{} for arg in args]
         free2pos1 = {}
@@ -3499,7 +3504,7 @@ class TensMul(TensExpr, AssocOp):
                         dummy_data.append((index, pos1, other_pos1, pos2, other_pos2))
                     else:
                         dummy_data.append((-index, other_pos1, pos1, other_pos2, pos2))
-                    indices.append(None)
+                    indices.append(index)
                 elif index in free2pos1:
                     raise ValueError("Repeated index: %s" % index)
                 else:
@@ -3513,19 +3518,20 @@ class TensMul(TensExpr, AssocOp):
 
         dummy_data.sort(key=lambda x: x[3])
 
-        for old_index, pos1cov, pos1contra, pos2cov, pos2contra in dummy_data:
-            index_type = old_index.tensor_index_type
-            while True:
-                dummy_name = dummy_fmt_gen(index_type)
-                if dummy_name not in free_names:
-                    break
-            dummy = TensorIndex(dummy_name, index_type, True)
-            replacements[pos1cov][old_index] = dummy
-            replacements[pos1contra][-old_index] = -dummy
-            indices[pos2cov] = dummy
-            indices[pos2contra] = -dummy
+        if replace_indices:
+            for old_index, pos1cov, pos1contra, pos2cov, pos2contra in dummy_data:
+                index_type = old_index.tensor_index_type
+                while True:
+                    dummy_name = dummy_fmt_gen(index_type)
+                    if dummy_name not in free_names:
+                        break
+                dummy = TensorIndex(dummy_name, index_type, True)
+                replacements[pos1cov][old_index] = dummy
+                replacements[pos1contra][-old_index] = -dummy
+                indices[pos2cov] = dummy
+                indices[pos2contra] = -dummy
+            args = [arg.xreplace(repl) for arg, repl in zip(args, replacements)]
 
-        args = [arg.xreplace(repl) for arg, repl in zip(args, replacements)]
         dummy_pairs2 = [(p2a, p2b) for (i, p1a, p1b, p2a, p2b) in dummy_data]
         return args, indices, free, dummy_pairs2
 
@@ -3563,9 +3569,6 @@ class TensMul(TensExpr, AssocOp):
             args = [arg.doit(**kwargs) for arg in self.args]
         else:
             args = self.args
-
-        # Flatten:
-        args = [i for arg in args for i in (arg.args if isinstance(arg, (TensMul, Mul)) else [arg])]
 
         args = [arg for arg in args if arg != self.identity]
 
@@ -3780,12 +3783,14 @@ class TensMul(TensExpr, AssocOp):
                 res *= arg
         return splitp
 
-    def expand(self, *args, **hints):
+    def _expand(self, **hints):
         # TODO: temporary solution, in the future this should be linked to
         # `Expr.expand`.
-        args = [arg.expand() for arg in self.args]
+        args = [_expand(arg, **hints) for arg in self.args]
         args1 = [arg.args if isinstance(arg, (Add, TensAdd)) else (arg,) for arg in args]
-        return TensAdd(*[TensMul(*i).doit() for i in itertools.product(*args1)]).doit()
+        return TensAdd(*[
+            TensMul(*i) for i in itertools.product(*args1)]
+        )
 
     def __neg__(self):
         return TensMul(S.NegativeOne, self, is_canon_bp=self._is_canon_bp).doit()
@@ -4418,3 +4423,10 @@ def substitute_indices(t, *index_tuples):
 
     t = TensMul.from_data(t.coeff, t.components, free1, t.dum)
     return t
+
+
+def _expand(expr, **kwargs):
+    if isinstance(expr, TensExpr):
+        return expr._expand(**kwargs)
+    else:
+        return expr.expand(**kwargs)
