@@ -4046,10 +4046,10 @@ def ode_nth_algebraic(eq, func, order, match):
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> eq = Eq(f(x) * (1 + f(x).diff(x)), 0)
+    >>> eq = Eq(f(x) * (f(x).diff(x)**2 - 1), 0)
     >>> dsolve(eq, f(x), hint='nth_algebraic')
     ... # doctest: +NORMALIZE_WHITESPACE
-    [Eq(f(x), 0), Eq(f(x), -x + C1)]
+    [Eq(f(x), 0), Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
 
     Note that this solver can return algebraic solutions that do not have any
     integration constants (f(x) = 0 in the above example).
