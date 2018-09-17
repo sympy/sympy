@@ -62,6 +62,8 @@ information on each (run ``help(ode)``):
   - 2nd order Liouville differential equations.
   - Power series solutions for second order differential equations
     at ordinary and regular singular points.
+  - `n`\th order differential equation that can be solved with algebraic
+    rearrangement and integration.
   - `n`\th order linear homogeneous differential equation with constant
     coefficients.
   - `n`\th order linear inhomogeneous differential equation with constant
@@ -283,6 +285,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: ``best``, and ``all_Integral`` meta-hints should not be included in this
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
+    "nth_algebraic",
     "separable",
     "1st_exact",
     "1st_linear",
@@ -305,6 +308,7 @@ allhints = (
     "Liouville",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
+    "nth_algebraic_Integral",
     "separable_Integral",
     "1st_exact_Integral",
     "1st_linear_Integral",
@@ -918,11 +922,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
-    ('separable', '1st_linear', '1st_homogeneous_coeff_best',
+    ('nth_algebraic', 'separable', '1st_linear', '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
     '1st_power_series', 'lie_group',
-    'nth_linear_constant_coeff_homogeneous',
+    'nth_linear_constant_coeff_homogeneous', 'nth_algebraic_Integral',
     'separable_Integral', '1st_linear_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
@@ -1339,6 +1343,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
 
     if order > 0:
+        # Any ODE that can be solved with a combination of algebra and
+        # integrals e.g.:
+        # d^3/dx^3(x y) = F(x)
+        r = _nth_algebraic_match(reduced_eq, func)
+        if r['solutions']:
+            matching_hints['nth_algebraic'] = r
+            matching_hints['nth_algebraic_Integral'] = r
+
         # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
 
@@ -3967,6 +3979,168 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
             frobdict[numsyms[i]] = -num/(indicial.subs(d, m+i))
 
     return frobdict
+
+def _nth_algebraic_match(eq, func):
+    r"""
+    Matches any differential equation that nth_algebraic can solve. Uses
+    `sympy.solve` but teaches it how to integrate derivatives.
+
+    This involves calling `sympy.solve` and does most of the work of finding a
+    solution (apart from evaluating the integrals).
+    """
+
+    # Each integration should generate a different constant
+    constants = iter(numbered_symbols(prefix='C', cls=Symbol, start=1))
+    constant = lambda: next(constants, None)
+
+    # Like Derivative but "invertible"
+    class diffx(Function):
+        def inverse(self):
+            # We mustn't use integrate here because fx has been replaced by _t
+            # in the equation so integrals will not be correct while solve is
+            # still working.
+            return lambda expr: Integral(expr, var) + constant()
+
+    # Replace derivatives wrt the independent variable with diffx
+    def replace(eq, var):
+        def expand_diffx(*args):
+            differand, diffs = args[0], args[1:]
+            toreplace = differand
+            for v, n in diffs:
+                for _ in range(n):
+                    if v == var:
+                        toreplace = diffx(toreplace)
+                    else:
+                        toreplace = Derivative(toreplace, v)
+            return toreplace
+        return eq.replace(Derivative, expand_diffx)
+
+    # Restore derivatives in solution afterwards
+    def unreplace(eq, var):
+        return eq.replace(diffx, lambda e: Derivative(e, var))
+
+    # The independent variable
+    var = func.args[0]
+    subs_eqn = replace(eq, var)
+    try:
+        solns = solve(subs_eqn, func)
+    except NotImplementedError:
+        solns = []
+
+    solns = [unreplace(soln, var) for soln in solns]
+    solns = [Equality(func, soln) for soln in solns]
+    return {'var':var, 'solutions':solns}
+
+def ode_nth_algebraic(eq, func, order, match):
+    r"""
+    Solves an `n`\th order ordinary differential equation using algebra and
+    integrals.
+
+    There is no general form for the kind of equation that this can solve. The
+    the equation is solved algebraically treating differentiation as an
+    invertible algebraic function.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = Eq(f(x) * (f(x).diff(x)**2 - 1), 0)
+    >>> dsolve(eq, f(x), hint='nth_algebraic')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    [Eq(f(x), 0), Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
+
+    Note that this solver can return algebraic solutions that do not have any
+    integration constants (f(x) = 0 in the above example).
+
+    # indirect doctest
+
+    """
+    solns = match['solutions']
+    var = match['var']
+    solns = _nth_algebraic_remove_redundant_solutions(eq, solns, order, var)
+    if len(solns) == 1:
+        return solns[0]
+    else:
+        return solns
+
+# FIXME: Maybe something like this function should be applied to the solutions
+# returned by dsolve in general rather than just for nth_algebraic...
+
+def _nth_algebraic_remove_redundant_solutions(eq, solns, order, var):
+    r"""
+    Remove redundant solutions from the set of solutions returned by
+    nth_algebraic.
+
+    This function is needed because otherwise nth_algebraic can return
+    redundant solutions where both algebraic solutions and integral
+    solutions are found to the ODE. As an example consider:
+
+        eq = Eq(f(x) * f(x).diff(x), 0)
+
+    There are two ways to find solutions to eq. The first is the algebraic
+    solution f(x)=0. The second is to solve the equation f(x).diff(x) = 0
+    leading to the solution f(x) = C1. In this particular case we then see
+    that the first solution is a special case of the second and we don't
+    want to return it.
+
+    This does not always happen for algebraic solutions though since if we
+    have
+
+        eq = Eq(f(x)*(1 + f(x).diff(x)), 0)
+
+    then we get the algebraic solution f(x) = 0 and the integral solution
+    f(x) = -x + C1 and in this case the two solutions are not equivalent wrt
+    initial conditions so both should be returned.
+    """
+    # I believe that any algebraic solutions can only emerge before *any*
+    # integrations occur (although I haven't proved this and it depends on the
+    # particular way that diffx is defined at the time of writing). This means
+    # that an algebraic solution for f(x) will not have any integration
+    # constants and any integral solution will have a number of constants that
+    # matches the order of the ODE.
+    solns_algebraic = []
+    solns_integral = {} # {soln1: constants1, ...}
+    for soln in solns:
+        constants = soln.free_symbols - eq.free_symbols
+        if len(constants) == 0:
+            solns_algebraic.append(soln)
+        elif len(constants) == order:
+            solns_integral[soln] = constants
+        else:
+            assert False, "Solution should have 0 or order constants..."
+
+    # Compare each algebraic solution with each integral solution to remove
+    # redundant algebraic solutions.
+    solns = solns[:]
+    for soln in solns_algebraic:
+        for soln_integral, constants in solns_integral.items():
+            if _nth_algebraic_is_special_case_of(soln, soln_integral, constants, var):
+                solns.remove(soln)
+                break
+
+    return solns
+
+def _nth_algebraic_is_special_case_of(soln1, soln2, constants2, var):
+    r"""
+    True if soln1 is found to be a special case of soln2 wrt some value of the
+    constants that appear in soln2. False otherwise.
+    """
+    # solns are in the form Eq(f(x), expr)
+    # We're going to assert the equality of the two solutions for f(x)
+    expr1 = soln1.rhs
+    expr2 = soln2.rhs
+
+    # FIXME: We don't want to call .doit() if it can be avoided...
+    expr1 = expr1.doit()
+    expr2 = expr2.doit()
+
+    # FIXME: We don't know if we can reasonably substitute these values for x
+    # into the expression...
+    values = range(2*len(constants2))
+    equations = [Eq(expr1, expr2.subs(var, v)) for v in values]
+    return len(solve(equations, constants2)) > 0
 
 def _nth_linear_match(eq, func, order):
     r"""
