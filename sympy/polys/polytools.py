@@ -552,7 +552,8 @@ class Poly(Expr):
 
         return f.per(new, gens=gens)
 
-    def replace(f, x, y=None):
+    def replace(f, x, y=None, *_ignore):
+        # XXX this does not match Basic's signature
         """
         Replace ``x`` with ``y`` in generators list.
 
@@ -573,7 +574,7 @@ class Poly(Expr):
                 raise PolynomialError(
                     "syntax supported only in univariate case")
 
-        if x == y:
+        if x == y or x not in f.gens:
             return f
 
         if x in f.gens and y not in f.gens:
@@ -2300,7 +2301,6 @@ class Poly(Expr):
             raise OperationNotSupported(f, 'diff')
 
     _eval_derivative = diff
-    _eval_diff = diff
 
     def eval(self, x, a=None, auto=True):
         """
