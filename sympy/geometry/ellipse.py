@@ -1380,7 +1380,7 @@ class Circle(Ellipse):
             r_square = (center_x ** 2) + (center_y ** 2) - constant_term
             new_equation = (x - center_x) ** 2 + (y - center_y) ** 2 - r_square
 
-            if r_square.is_nonnegative:
+            if r_square.is_nonnegative is not False:
                 radius = sqrt(r_square)
                 if Poly(equation) == Poly(new_equation):
                     return Circle(center, radius)
