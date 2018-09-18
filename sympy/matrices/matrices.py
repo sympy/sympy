@@ -384,10 +384,7 @@ class MatrixDeterminant(MatrixCommon):
                          lambda i, j: self.cofactor(i, j, method))
 
     def det(self, method="bareiss", iszerofunc=None):
-        """Computes the determinant of a matrix.  If the matrix
-        is at most 3x3, a hard-coded formula is used.
-        Otherwise, the determinant using the method `method`.
-
+        """Computes the determinant of a matrix.
 
         Parameters
         ==========
@@ -409,9 +406,8 @@ class MatrixDeterminant(MatrixCommon):
 
             * 'det_lu' : Legacy support for 'lu'
 
-            * Also the uppercase letters would just work fine, but
-
-
+            * Also any strings with uppercase letters would just work fine if
+            their lowercase equivalents are supported, but is not recommended.
         """
 
         # sanitize `method`
