@@ -996,7 +996,16 @@ class MatplotlibBackend(BaseBackend):
                 ends = [s.end for s in parent._series]
                 self.ax.set_xlim(min(starts), max(ends))
         if parent.ylim:
-            self.ax.set_ylim(parent.ylim)
+            from sympy.core.basic import Basic
+            ylim = parent.ylim
+            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be real".format(ylim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be finite".format(ylim))
+            ylim = (float(i) for i in ylim)
+            self.ax.set_ylim(ylim)
         if not isinstance(self.ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
             self.ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
