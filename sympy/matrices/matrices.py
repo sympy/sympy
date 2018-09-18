@@ -389,10 +389,29 @@ class MatrixDeterminant(MatrixCommon):
         Otherwise, the determinant using the method `method`.
 
 
-        Possible values for "method":
-          bareiss
-          berkowitz
-          lu
+        Parameters
+        ==========
+
+        method : string
+
+            Specifies an algorithm to use for computing matrix determinant.
+
+            If the matrix is at most 3x3, the key is ignored and a hard-coded
+            formula is used. Otherwise, it will be defaulted with 'bareiss'
+
+            * 'bareiss' : Bareiss' fraction-free algorithm
+
+            * 'berkowitz' : Berkowitz algorithm
+
+            * 'lu' : LU decomposition
+
+            * 'bareis' : Legacy support for 'bareiss'
+
+            * 'det_lu' : Legacy support for 'lu'
+
+            * Also the uppercase letters would just work fine, but
+
+
         """
 
         # sanitize `method`
