@@ -1835,3 +1835,15 @@ def test_tensor_expand():
 
     expr = C(-i)*(B(j)*B(-j) + B(j)*C(-j))
     assert expr.expand() == C(-i)*B(j)*B(-j) + C(-i)*B(j)*C(-j)
+
+
+def test_tensor_alternative_construction():
+    L = TensorIndexType("L")
+    i0, i1, i2, i3 = tensor_indices('i0:4', L)
+    A = tensorhead("A", [L], [[1]])
+    x, y = symbols("x y")
+
+    assert A(i0) == A(Symbol("i0"))
+    assert A(-i0) == A(-Symbol("i0"))
+    raises(TypeError, lambda: A(x+y))
+    raises(ValueError, lambda: A(2*x))

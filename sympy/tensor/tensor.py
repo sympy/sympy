@@ -3125,6 +3125,7 @@ class Tensor(TensExpr):
 
     def __new__(cls, tensor_head, indices, **kw_args):
         is_canon_bp = kw_args.pop('is_canon_bp', False)
+        indices = cls._parse_indices(tensor_head, indices)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
         obj._index_structure = _IndexStructure.from_indices(*indices)
         obj._free_indices_set = set(obj._index_structure.get_free_indices())
@@ -3145,6 +3146,24 @@ class Tensor(TensExpr):
     def doit(self, **kwargs):
         args, indices, free, dum = TensMul._tensMul_contract_indices([self])
         return args[0]
+
+    @staticmethod
+    def _parse_indices(tensor_head, indices):
+        if not isinstance(indices, (tuple, list, Tuple)):
+            raise TypeError("indices should be an array, got %s" % type(indices))
+        indices = list(indices)
+        for i, index in enumerate(indices):
+            if isinstance(index, Symbol):
+                indices[i] = TensorIndex(index, tensor_head.index_types[i], True)
+            elif isinstance(index, Mul):
+                c, e = index.as_coeff_Mul()
+                if c == -1 and isinstance(e, Symbol):
+                    indices[i] = TensorIndex(e, tensor_head.index_types[i], False)
+                else:
+                    raise ValueError("index not understood: %s" % index)
+            elif not isinstance(index, TensorIndex):
+                raise TypeError("wrong type for index: %s is %s" % (index, type(index)))
+        return indices
 
     def _set_new_index_structure(self, im, is_canon_bp=False):
         indices = im.get_indices()
