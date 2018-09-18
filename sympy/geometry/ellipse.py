@@ -429,8 +429,29 @@ class Ellipse(GeometrySet):
 
         return fuzzy_bool(test.is_positive)
 
-    def equation(self, x='x', y='y'):
-        """The equation of the ellipse.
+    def equation(self, x='x', y='y', slope=None):
+        """
+        Returns the equation of an ellipse either using the slope of major axis, or, using hradius
+        and vradius.
+
+        Approach to the solution (using slope) :
+
+        Let the center of the ellipse be at C=(xc,yc)
+        Let the major axis be the line that passes through C with a slope of s;
+        points on that line are given by the zeros of L(x,y) = (y−yc − s*(x−xc))**2.
+        Let the minor axis be the line perpendicular to L (and also passing through C);
+        points on that line are given by the zeros of l(x,y) = (s*(y−yc) + (x−xc))**2.
+
+        Requiring that the distance between the intersections of E and L be 2M identifies
+        b = M**2*(1 + s**2)
+
+        and similarly, requiring that the intersections between E and l be separated by 2m identifies
+        a = m**2*(1 + s**2)
+
+        So the points that are on an ellipse centered at (xc,yc) whose major axis (with radius of M)
+        is on a line with slope s, and whose minor axis has radius of m, are given by the zeros of:
+
+        E(x,y) = L(x,y)/a + l(x,y)/b − 1
 
         Parameters
         ==========
@@ -439,6 +460,10 @@ class Ellipse(GeometrySet):
             Label for the x-axis. Default value is 'x'.
         y : str, optional
             Label for the y-axis. Default value is 'y'.
+        slope : int, optional
+                Label for finding equation if major axis
+                of ellipse has a non-zero slope. Default
+                value is 'None'.
 
         Returns
         =======
@@ -450,6 +475,12 @@ class Ellipse(GeometrySet):
 
         arbitrary_point : Returns parameterized point on ellipse
 
+        References
+        ==========
+
+        .. [1] https://math.stackexchange.com/questions/108270/what-is-the-equation-of-an-ellipse-that-is-not-aligned-with-the-axis
+        .. [2] https://en.wikipedia.org/wiki/Ellipse#Equation_of_a_shifted_ellipse
+
         Examples
         ========
 
@@ -457,56 +488,34 @@ class Ellipse(GeometrySet):
         >>> e1 = Ellipse(Point(1, 0), 3, 2)
         >>> e1.equation()
         y**2/4 + (x/3 - 1/3)**2 - 1
+        >>> e1.equation(slope = 1)
+        (-x + y + 1)**2/18 + (x + y - 1)**2/8 - 1
+        >>> e2 = Ellipse(Point(0, 0), 4, 1)
+        >>> e2.equation(slope = 1)
+        (-x + y)**2/32 + (x + y)**2/2 - 1
 
         """
-        x = _symbol(x, real=True)
-        y = _symbol(y, real=True)
-        t1 = ((x - self.center.x) / self.hradius)**2
-        t2 = ((y - self.center.y) / self.vradius)**2
-        return t1 + t2 - 1
 
-    def equation_using_slope(self, slope):
-        """
-        Returns the equation of an ellipse using the slope of major axis, along with hradius
-        and vradius.
+        if slope is not None:
+            a, b, x, y, x_c, y_c = symbols('a,b,x,y,x_c,y_c')
+            x_c = self.center.x
+            y_c = self.center.y
 
-        Approach to the solution :
+            L = ((y - y_c) - slope * (x - x_c)) ** 2
+            l = (slope * (y - y_c) + (x - x_c)) ** 2
 
-        Let the center of the ellipse be at C=(xc,yc)
-        Let the major axis be the line that passes through C with a slope of s;
-        points on that line are given by the zeros of L(x,y) = y−yc − s*(x−xc).
-        Let the minor axis be the line perpendicular to L (and also passing through C);
-        points on that line are given by the zeros of l(x,y) = s*(y−yc) + (x−xc).
-
-        Requiring that the distance between the intersections of E and L be 2M identifies
-        b = M**2*(1 + s**2)
-
-        and similarly, requiring that the intersections between E and l be separated by 2m identifies
-        a = m**2*(1 + s**2)
-
-        So the points that are on an ellipse centered at (xc,yc) whose major axis (with radius of M)
-        is on a line with slope s, and whose minor axis has radius of m, are given by the zeros of:
-
-        E(x,y) = L(x,y)**2/a + l(x,y)**2/b − 1
-
-        References
-        ==========
-        .. [1] https://math.stackexchange.com/questions/108270/what-is-the-equation-of-an-ellipse-that-is-not-aligned-with-the-axis
-        .. [2] https://en.wikipedia.org/wiki/Ellipse#Equation_of_a_shifted_ellipse
-        """
-
-        a, b, x, y, m, M, x_c, y_c, s = symbols('a,b,x,y,m,M,x_c,y_c,s')
-        x_c = self.center.x
-        y_c = self.center.y
-        L = ((y - y_c) - s * (x - x_c)).subs(s, slope)
-        l = (s * (y - y_c) + (x - x_c)).subs(s, slope)
-
-        if idiff(L, y, x) == -1 / idiff(l, y, x):
-            a = self.vradius**2*(1 + slope**2)
-            b = self.hradius**2*(1 + slope**2)
-            return ((L ** 2) / a) + ((l ** 2) / b) - 1
+            if idiff(L, y, x) == -1 / idiff(l, y, x):
+                a = self.major ** 2 * (1 + slope ** 2)
+                b = self.minor ** 2 * (1 + slope ** 2)
+                return L / a + l / b - 1
+            else:
+                raise ValueError("The equation for ellipse cannot be calculated.")
         else:
-            raise ValueError("The equation for ellipse cannot be calculated.")
+            x = _symbol(x, real=True)
+            y = _symbol(y, real=True)
+            t1 = ((x - self.center.x) / self.hradius)**2
+            t2 = ((y - self.center.y) / self.vradius)**2
+            return t1 + t2 - 1
 
     def evolute(self, x='x', y='y'):
         """The equation of evolute of the ellipse.
