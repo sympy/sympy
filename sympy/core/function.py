@@ -2083,14 +2083,15 @@ class Subs(Expr):
             # x is the variable being substituted into
             apos = self.point.index(x)
             other = self.variables[apos]
-            arg = self.expr.nseries(other, n=n, logx=logx)
-            o = arg.getO()
-            subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
-            return Add(*subs_args) + o.subs(other, x)
-        arg = self.expr.nseries(x, n=n, logx=logx)
+        else:
+            other = x
+        arg = self.expr.nseries(other, n=n, logx=logx)
         o = arg.getO()
-        subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
-        return Add(*subs_args) + o
+        terms = Add.make_args(arg.removeO())
+        rv = Add(*[self.func(a, *self.args[1:]) for a in terms])
+        if o:
+            rv += o.subs(other, x)
+        return rv
 
     def _eval_as_leading_term(self, x):
         if x in self.point:

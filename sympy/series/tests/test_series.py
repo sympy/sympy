@@ -114,6 +114,9 @@ def test_series_of_Subs():
     assert subs3.series(x).doit() == subs3.doit().series(x)
     assert subs3.series(z).doit() == sin(x*y)
 
+    raises(ValueError, lambda: Subs(x + 2*y, y, z).series())
+    assert Subs(x + y, y, z).series(x).doit() == x + z
+
 
 def test_issue_3978():
     f = Function('f')
