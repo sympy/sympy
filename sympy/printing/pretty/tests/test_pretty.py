@@ -40,6 +40,8 @@ from sympy.tensor.functions import TensorProduct
 from sympy.sets.setexpr import SetExpr
 from sympy.sets import ImageSet
 
+from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+
 import sympy as sym
 class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
@@ -5854,6 +5856,7 @@ u("""\
 
 
 def test_issue_4335():
+    y = Function('y')
     expr = -y(x).diff(x)
     ucode_str = \
 u("""\
@@ -5924,7 +5927,8 @@ u("""\
 
 
 def test_issue_6134():
-    from sympy.abc import lamda, phi, t
+    from sympy.abc import lamda, t
+    phi = Function('phi')
 
     e = lamda*x*Integral(phi(t)*pi*sin(pi*t), (t, 0, 1)) + lamda*x**2*Integral(phi(t)*2*pi*sin(2*pi*t), (t, 0, 1))
     ucode_str = \
@@ -6150,3 +6154,155 @@ def test_vector_expr_pretty_printing():
 
     assert upretty(Gradient(A.x+3*A.y)) == u("∇⋅(A_x + 3⋅A_y)")
     # TODO: add support for ASCII pretty.
+
+
+def test_pretty_print_tensor_expr():
+    L = TensorIndexType("L")
+    i, j, k = tensor_indices("i j k", L)
+    i0 = tensor_indices("i_0", L)
+    A, B, C, D = tensorhead("A B C D", [L], [[1]])
+    H = tensorhead("H", [L, L], [[1], [1]])
+
+    expr = -i
+    ascii_str = \
+"""\
+-i\
+"""
+    ucode_str = \
+u("""\
+-i\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(i)
+    ascii_str = \
+"""\
+ i\n\
+A \
+"""
+    ucode_str = \
+u("""\
+ i\n\
+A \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(i0)
+    ascii_str = \
+"""\
+ i_0\n\
+A   \
+"""
+    ucode_str = \
+u("""\
+ i₀\n\
+A  \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(-i)
+    ascii_str = \
+"""\
+A \n\
+ i\
+"""
+    ucode_str = \
+u("""\
+A \n\
+ i\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = -3*A(-i)
+    ascii_str = \
+"""\
+-3*A \n\
+    i\
+"""
+    ucode_str = \
+u("""\
+-3⋅A \n\
+    i\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = H(i, -j)
+    ascii_str = \
+"""\
+ i \n\
+H  \n\
+  j\
+"""
+    ucode_str = \
+u("""\
+ i \n\
+H  \n\
+  j\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = H(i, -i)
+    ascii_str = \
+"""\
+ L_0   \n\
+H      \n\
+    L_0\
+"""
+    ucode_str = \
+u("""\
+ L₀  \n\
+H    \n\
+   L₀\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = H(i, -j)*A(j)*B(k)
+    ascii_str = \
+"""\
+ i     L_0  k\n\
+H    *A   *B \n\
+  L_0        \
+"""
+    ucode_str = \
+u("""\
+ i    L₀  k\n\
+H   ⋅A  ⋅B \n\
+  L₀       \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = (1+x)*A(i)
+    ascii_str = \
+"""\
+         i\n\
+(x + 1)*A \
+"""
+    ucode_str = \
+u("""\
+         i\n\
+(x + 1)⋅A \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(i) + 3*B(i)
+    ascii_str = \
+"""\
+ i      i\n\
+A  + 3*B \
+"""
+    ucode_str = \
+u("""\
+ i      i\n\
+A  + 3⋅B \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str

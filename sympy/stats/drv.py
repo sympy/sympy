@@ -24,7 +24,7 @@ class DiscreteDistribution(Basic):
         return self.pdf(*args)
 
 
-class SingleDiscreteDistribution(Basic, NamedArgsMixin):
+class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     """ Discrete distribution of a single variable
 
     Serves as superclass for PoissonDistribution etc....
@@ -298,7 +298,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
         """
         return {self.value: self.distribution.sample()}
 
-    def integrate(self, expr, rvs=None, evaluate=True, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=True, **kwargs):
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr

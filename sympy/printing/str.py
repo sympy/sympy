@@ -414,7 +414,11 @@ class StrPrinter(Printer):
         return expr._print()
 
     def _print_TensMul(self, expr):
-        return expr._print()
+        # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
+        sign, args = expr._get_args_for_traditional_printer()
+        return sign + "*".join(
+            [self.parenthesize(arg, precedence(expr)) for arg in args]
+        )
 
     def _print_TensAdd(self, expr):
         return expr._print()

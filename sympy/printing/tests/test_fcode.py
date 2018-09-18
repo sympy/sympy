@@ -1,6 +1,8 @@
 from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
-    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq,
-    Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda, sign)
+                   factorial, Integral, Piecewise, Add, diff, symbols, S,
+                   Float, Dummy, Eq, Range, Catalan, EulerGamma, E,
+                   GoldenRatio, I, pi, Function, Rational, Integer, Lambda,
+                   sign, Mod)
 
 from sympy.codegen import For, Assignment, aug_assign
 from sympy.codegen.ast import Declaration, Type, Variable, float32, float64, value_const, real, bool_, While
@@ -74,6 +76,13 @@ def test_fcode_Float():
 def test_fcode_functions():
     x, y = symbols('x,y')
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
+    raises(NotImplementedError, lambda: fcode(Mod(x, y), standard=66))
+    raises(NotImplementedError, lambda: fcode(x % y, standard=66))
+    raises(NotImplementedError, lambda: fcode(Mod(x, y), standard=77))
+    raises(NotImplementedError, lambda: fcode(x % y, standard=77))
+    for standard in [90, 95, 2003, 2008]:
+        assert fcode(Mod(x, y), standard=standard) == "      modulo(x, y)"
+        assert fcode(x % y, standard=standard) == "      modulo(x, y)"
 
 
 def test_case():
@@ -168,8 +177,8 @@ def test_implicit():
 def test_not_fortran():
     x = symbols('x')
     g = Function('g')
-    assert fcode(
-        gamma(x)) == "C     Not supported in Fortran:\nC     gamma\n      gamma(x)"
+    gamma_f = fcode(gamma(x))
+    assert gamma_f == "C     Not supported in Fortran:\nC     gamma\n      gamma(x)"
     assert fcode(Integral(sin(x))) == "C     Not supported in Fortran:\nC     Integral\n      Integral(sin(x), x)"
     assert fcode(g(x)) == "C     Not supported in Fortran:\nC     g\n      g(x)"
 

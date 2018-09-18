@@ -1761,7 +1761,7 @@ class Atom(Basic):
     def sort_key(self, order=None):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         return self
 
     @property
@@ -1807,11 +1807,11 @@ def _aresame(a, b):
         return True
 
 
-def _atomic(e):
+def _atomic(e, recursive=False):
     """Return atom-like quantities as far as substitution is
     concerned: Derivatives, Functions and Symbols. Don't
     return any 'atoms' that are inside such quantities unless
-    they also appear outside, too.
+    they also appear outside, too, unless `recursive` is True.
 
     Examples
     ========
@@ -1831,10 +1831,13 @@ def _atomic(e):
     from sympy import Derivative, Function, Symbol
     pot = preorder_traversal(e)
     seen = set()
-    try:
-        free = e.free_symbols
-    except AttributeError:
-        return {e}
+    if isinstance(e, Basic):
+        try:
+            free = e.free_symbols
+        except AttributeError:
+            return {e}
+    else:
+        return set()
     atoms = set()
     for p in pot:
         if p in seen:
@@ -1844,7 +1847,8 @@ def _atomic(e):
         if isinstance(p, Symbol) and p in free:
             atoms.add(p)
         elif isinstance(p, (Derivative, Function)):
-            pot.skip()
+            if not recursive:
+                pot.skip()
             atoms.add(p)
     return atoms
 

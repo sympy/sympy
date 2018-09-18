@@ -72,6 +72,11 @@ def test_cse_single():
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
 
+    subst42, (red42,) = cse([42])  # issue_15082
+    assert len(subst42) == 0 and red42 == 42
+    subst_half, (red_half,) = cse([0.5])
+    assert len(subst_half) == 0 and red_half == 0.5
+
 
 def test_cse_single2():
     # Simple substitution, test for being able to pass the expression directly
@@ -82,6 +87,10 @@ def test_cse_single2():
     substs, reduced = cse(Matrix([[1]]))
     assert isinstance(reduced[0], Matrix)
 
+    subst42, (red42,) = cse(42)  # issue 15082
+    assert len(subst42) == 0 and red42 == 42
+    subst_half, (red_half,) = cse(0.5)  # issue 15082
+    assert len(subst_half) == 0 and red_half == 0.5
 
 def test_cse_not_possible():
     # No substitution possible.
@@ -494,6 +503,14 @@ def test_cse_ignore():
     assert not any(y in sub.free_symbols for _, sub in subst2), "Sub-expressions containing y must be ignored"
     assert any(sub - sqrt(x + 1) == 0 for _, sub in subst2), "cse failed to identify sqrt(x + 1) as sub-expression"
 
+def test_cse_ignore_issue_15002():
+    l = [
+        w*exp(x)*exp(-z),
+        exp(y)*exp(x)*exp(-z)
+    ]
+    substs, reduced = cse(l, ignore=(x,))
+    rl = [e.subs(reversed(substs)) for e in reduced]
+    assert rl == l
 
 def test_cse__performance():
     import time

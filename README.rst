@@ -91,7 +91,7 @@ if SymPy is installed.
 Installation
 ------------
 
-SymPy has a hard dependency on the `mpmath <http://mpmath.org/>`
+SymPy has a hard dependency on the `mpmath <http://mpmath.org/>`_
 library (version >= 0.19).  You should install it first, please refer to
 the mpmath installation guide:
 
@@ -138,7 +138,8 @@ To test pull requests, use `sympy-bot <https://github.com/sympy/sympy-bot>`_.
 
 Regenerate Experimental `\LaTeX` Parser/Lexer
 ---------------------------------------------
-The parser and lexer generated with the `ANTLR4 <http://antlr4.org`_ toolchain
+
+The parser and lexer generated with the `ANTLR4 <http://antlr4.org>`_ toolchain
 in `sympy/parsing/latex/_antlr` and checked into the repo. Presently, most
 users should not need to regenerate these files, but if you plan to work on
 this feature, you will need the `antlr4` command line tool available. One way

@@ -203,9 +203,9 @@ class Relational(Boolean, Expr, EvalfMixin):
                     return r
                 return l
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         r = self
-        r = r.func(*[i.simplify(ratio=ratio, measure=measure)
+        r = r.func(*[i.simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
             for i in r.args])
         if r.is_Relational:
             dif = r.lhs - r.rhs

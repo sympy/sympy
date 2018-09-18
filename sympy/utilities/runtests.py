@@ -142,13 +142,17 @@ def get_sympy_dir():
 
 def setup_pprint():
     from sympy import pprint_use_unicode, init_printing
+    import sympy.interactive.printing as interactive_printing
 
     # force pprint to be in ascii mode in doctests
-    pprint_use_unicode(False)
+    use_unicode_prev = pprint_use_unicode(False)
 
     # hook our nice, hash-stable strprinter
     init_printing(pretty_print=False)
 
+    # Prevent init_printing() in doctests from affecting other doctests
+    interactive_printing.NO_GLOBAL = True
+    return use_unicode_prev
 
 def run_in_subprocess_with_hash_randomization(
         function, function_args=(),
@@ -516,7 +520,7 @@ def _test(*paths, **kwargs):
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
     time_balance = kwargs.get('time_balance', True)
-    blacklist = kwargs.get('blacklist', [])
+    blacklist = kwargs.get('blacklist', ['sympy/integrals/rubi/rubi_tests/tests'])
     blacklist = convert_to_native_paths(blacklist)
     fast_threshold = kwargs.get('fast_threshold', None)
     slow_threshold = kwargs.get('slow_threshold', None)
@@ -654,6 +658,8 @@ def _doctest(*paths, **kwargs):
     Returns 0 if tests passed and 1 if they failed.  See the docstrings of
     ``doctest()`` and ``test()`` for more information.
     """
+    from sympy import pprint_use_unicode
+
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
     colors = kwargs.get("colors", True)
@@ -662,6 +668,7 @@ def _doctest(*paths, **kwargs):
     split  = kwargs.get('split', None)
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
+        "doc/src/modules/physics/mechanics/autolev_parser.rst",
         "sympy/physics/gaussopt.py", # raises deprecation warning
         "sympy/galgebra.py", # raises ImportError
         "sympy/this.py", # Prints text to the terminal
@@ -669,9 +676,21 @@ def _doctest(*paths, **kwargs):
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
         "sympy/physics/unitsystems.py", # raises deprecation warning
+        "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
         "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
         "sympy/parsing/latex/_antlr/latexparser.py", # generated code
+        "sympy/integrals/rubi/rubi.py"
     ])
+    # autolev parser tests
+    num = 12
+    for i in range (1, num+1):
+        blacklist.append("sympy/parsing/autolev/test-examples/ruletest" + str(i) + ".py")
+    blacklist.extend(["sympy/parsing/autolev/test-examples/pydy-example-repo/mass_spring_damper.py",
+                      "sympy/parsing/autolev/test-examples/pydy-example-repo/chaos_pendulum.py",
+                      "sympy/parsing/autolev/test-examples/pydy-example-repo/double_pendulum.py",
+                      "sympy/parsing/autolev/test-examples/pydy-example-repo/non_min_pendulum.py"])
 
     if import_module('numpy') is None:
         blacklist.extend([
@@ -695,16 +714,15 @@ def _doctest(*paths, **kwargs):
             import matplotlib
             matplotlib.use('Agg')
 
-            # don't display matplotlib windows
-            from sympy.plotting.plot import unset_show
-            unset_show()
-
 
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
     if import_module('theano') is None:
-        blacklist.extend(["doc/src/modules/numeric-computation.rst"])
+        blacklist.extend([
+            "sympy/printing/theanocode.py",
+            "doc/src/modules/numeric-computation.rst",
+        ])
 
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
@@ -725,6 +743,10 @@ def _doctest(*paths, **kwargs):
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
+
+    # Disable showing up of plots
+    from sympy.plotting.plot import unset_show
+    unset_show()
 
     # Show deprecation warnings
     import warnings
@@ -797,13 +819,13 @@ def _doctest(*paths, **kwargs):
     if split:
         matched = split_list(matched, split)
 
-    setup_pprint()
     first_report = True
     for rst_file in matched:
         if not os.path.isfile(rst_file):
             continue
         old_displayhook = sys.displayhook
         try:
+            use_unicode_prev = setup_pprint()
             out = sympytestfile(
                 rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
@@ -812,6 +834,11 @@ def _doctest(*paths, **kwargs):
             # make sure we return to the original displayhook in case some
             # doctest has changed that
             sys.displayhook = old_displayhook
+            # The NO_GLOBAL flag overrides the no_global flag to init_printing
+            # if True
+            import sympy.interactive.printing as interactive_printing
+            interactive_printing.NO_GLOBAL = False
+            pprint_use_unicode(use_unicode_prev)
 
         rstfailed, tested = out
         if tested:
@@ -1320,6 +1347,8 @@ class SymPyDocTests(object):
         clear_cache()
 
         from sympy.core.compatibility import StringIO
+        import sympy.interactive.printing as interactive_printing
+        from sympy import pprint_use_unicode
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
@@ -1330,7 +1359,6 @@ class SymPyDocTests(object):
             # So we have to temporarily extend sys.path to import them
             sys.path.insert(0, dirname)
             module = file[:-3]  # remove ".py"
-        setup_pprint()
         try:
             module = pdoctest._normalize_module(module)
             tests = SymPyDocTestFinder().find(module)
@@ -1387,6 +1415,10 @@ class SymPyDocTests(object):
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
             test.globs['print_function'] = print_function
+
+            old_displayhook = sys.displayhook
+            use_unicode_prev = setup_pprint()
+
             try:
                 f, t = runner.run(test, compileflags=future_flags,
                                   out=new.write, clear_globs=False)
@@ -1398,6 +1430,10 @@ class SymPyDocTests(object):
                 self._reporter.doctest_fail(test.name, new.getvalue())
             else:
                 self._reporter.test_pass()
+                sys.displayhook = old_displayhook
+                interactive_printing.NO_GLOBAL = False
+                pprint_use_unicode(use_unicode_prev)
+
         self._reporter.leaving_filename()
 
     def get_test_files(self, dir, pat='*.py', init_only=True):

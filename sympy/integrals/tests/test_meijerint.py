@@ -306,6 +306,20 @@ def test_inversion_conditional_output():
     assert f2.args[-1][0] == ILT or f2.args[-1][0] == ILT.as_integral
 
 
+def test_inversion_exp_real_nonreal_shift():
+    from sympy import Symbol, DiracDelta
+    r = Symbol('r', real=True)
+    c = Symbol('c', real=False)
+    a = 1 + 2*I
+    z = Symbol('z')
+    assert not meijerint_inversion(exp(r*s), s, t).is_Piecewise
+    assert meijerint_inversion(exp(a*s), s, t) is None
+    assert meijerint_inversion(exp(c*s), s, t) is None
+    f = meijerint_inversion(exp(z*s), s, t)
+    assert f.is_Piecewise
+    assert isinstance(f.args[0][0], DiracDelta)
+
+
 @slow
 def test_lookup_table():
     from random import uniform, randrange

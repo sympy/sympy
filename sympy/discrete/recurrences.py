@@ -1,5 +1,5 @@
 """
-Recurrence
+Recurrences
 """
 from __future__ import print_function, division
 
@@ -15,27 +15,28 @@ def linrec(coeffs, init, n):
     ==========
 
     coeffs : iterable
-        coefficients of recurrence
+        Coefficients of the recurrence
     init : iterable
-        initial values of recurrence
+        Initial values of the recurrence
     n : Integer
-        point of evaluation of recurrence
+        Point of evaluation for the recurrence
 
     Notes
     =====
 
-    Let `y(n)` be the recurrence of given type, c be the sequence
-    of coefficients, b be the sequence of intial/base values of the
-    recurrence and k (equal to len(c)) be the order of recurrence.
-    Then, if n < k,
-        `y(n) = b_n`
-    otherwise,
-        `y(n) = c_0 y(n-1) + c_1 y(n-2) + \cdots + c_{k-1} y(n-k)`
+    Let `y(n)` be the recurrence of given type, ``c`` be the sequence
+    of coefficients, ``b`` be the sequence of initial/base values of the
+    recurrence and ``k`` (equal to ``len(c)``) be the order of recurrence.
+    Then,
 
-    Let `x_0, x_1, \cdots, x_n` be a sequence and consider the transformation
+    .. math :: y(n) = \begin{cases} b_n & 0 \le n < k \\
+        c_0 y(n-1) + c_1 y(n-2) + \cdots + c_{k-1} y(n-k) & n > k
+        \end{cases}
+
+    Let `x_0, x_1, \ldots, x_n` be a sequence and consider the transformation
     that maps each polynomial `f(x)` to `T(f(x))` where each power `x^i` is
     replaced by the corresponding value `x_i`. The sequence is then a solution
-    of the recurrence if and only if `T(x^i p(x)) = 0` for each `i ge 0` where
+    of the recurrence if and only if `T(x^i p(x)) = 0` for each `i \ge 0` where
     `p(x) = x^k - c_0 x^(k-1) - \cdots - c_{k-1}` is the characteristic
     polynomial.
 
@@ -45,15 +46,16 @@ def linrec(coeffs, init, n):
     `T(x^n) = x_n` is equal to
     `T(g(x)) = a_0 x_0 + a_1 x_1 + \cdots + a_{k-1} x_{k-1}`.
 
-    Computation of `x^n`, given `x^k = c_0 x^{k-1} + c_1 x^{k-2} + \cdots + c_{k-1}`
-    is performed using exponentiation by squaring (refer to [1]) with an additional
-    reduction step performed to retain only first k powers of `x` in the
-    representation of `x^n`.
+    Computation of `x^n`,
+    given `x^k = c_0 x^{k-1} + c_1 x^{k-2} + \cdots + c_{k-1}`
+    is performed using exponentiation by squaring (refer to [1]_) with
+    an additional reduction step performed to retain only first `k` powers
+    of `x` in the representation of `x^n`.
 
     Examples
     ========
 
-    >>> from sympy.discrete.recurrence import linrec
+    >>> from sympy.discrete.recurrences import linrec
     >>> from sympy.abc import x, y, z
 
     >>> linrec(coeffs=[1, 1], init=[0, 1], n=10)
@@ -110,7 +112,7 @@ def linrec(coeffs, init, n):
     def _square_and_reduce(u, offset):
         # squares `(u_0 + u_1 x + u_2 x^2 + \cdots + u_{k-1} x^k)` (and
         # multiplies by `x` if offset is 1) and reduces the above result of
-        # length upto 2*k to k using the characteristic equation of the
+        # length upto `2k` to `k` using the characteristic equation of the
         # recurrence given by, `x^k = c_0 x^{k-1} + c_1 x^{k-2} + \cdots + c_{k-1}`
 
         w = [S.Zero]*(2*len(u) - 1 + offset)

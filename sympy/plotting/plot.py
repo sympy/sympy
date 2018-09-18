@@ -31,7 +31,6 @@ import sys
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
 from sympy.core.compatibility import range, Callable
-from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
@@ -218,7 +217,6 @@ class Plot(object):
     def __delitem__(self, index):
         del self._series[index]
 
-    @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def append(self, arg):
         """Adds an element from a plot's series to an existing plot.
 
@@ -250,7 +248,6 @@ class Plot(object):
         else:
             raise TypeError('Must specify element of plot to append.')
 
-    @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def extend(self, arg):
         """Adds all series from another plot.
 
@@ -1048,6 +1045,8 @@ class TextBackend(BaseBackend):
         super(TextBackend, self).__init__(parent)
 
     def show(self):
+        if not _show:
+            return
         if len(self.parent._series) != 1:
             raise ValueError(
                 'The TextBackend supports only one graph per Plot.')
@@ -1140,7 +1139,6 @@ def _matplotlib_list(interval_list):
 # TODO: Add more plotting options for 3d plots.
 # TODO: Adaptive sampling for 3D plots.
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot(*args, **kwargs):
     """
     Plots a function of a single variable and returns an instance of
@@ -1298,7 +1296,6 @@ def plot(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot_parametric(*args, **kwargs):
     """
     Plots a 2D parametric plot.
@@ -1429,7 +1426,6 @@ def plot_parametric(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot3d_parametric_line(*args, **kwargs):
     """
     Plots a 3D parametric line plot.
@@ -1525,7 +1521,6 @@ def plot3d_parametric_line(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot3d(*args, **kwargs):
     """
     Plots a 3D surface plot.
@@ -1637,7 +1632,6 @@ def plot3d(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot3d_parametric_surface(*args, **kwargs):
     """
     Plots a 3D parametric surface plot.

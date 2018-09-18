@@ -55,7 +55,7 @@ class RandomDomain(Basic):
     def __contains__(self, other):
         raise NotImplementedError()
 
-    def integrate(self, expr):
+    def compute_expectation(self, expr):
         raise NotImplementedError()
 
 
@@ -150,7 +150,7 @@ class PSpace(Basic):
 
     @property
     def values(self):
-        return frozenset(RandomSymbol(sym, self) for sym in self.domain.symbols)
+        return frozenset(RandomSymbol(sym, self) for sym in self.symbols)
 
     @property
     def symbols(self):
@@ -168,7 +168,7 @@ class PSpace(Basic):
     def probability(self, condition):
         raise NotImplementedError()
 
-    def integrate(self, expr):
+    def compute_expectation(self, expr):
         raise NotImplementedError()
 
 
@@ -228,6 +228,7 @@ class RandomSymbol(Expr):
     """
 
     def __new__(cls, symbol, pspace=None):
+        from sympy.stats.joint_rv import JointRandomSymbol
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
@@ -235,6 +236,8 @@ class RandomSymbol(Expr):
             raise TypeError("symbol should be of type Symbol")
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
+        if cls == JointRandomSymbol and isinstance(pspace, SinglePSpace):
+            cls = RandomSymbol
         return Basic.__new__(cls, symbol, pspace)
 
     is_finite = True
@@ -297,7 +300,10 @@ class IndependentProductPSpace(ProductPSpace):
         symbols = FiniteSet(*[val.symbol for val in rs_space_dict.keys()])
 
         # Overlapping symbols
-        if len(symbols) < sum(len(space.symbols) for space in spaces):
+        from sympy.stats.joint_rv import MarginalDistribution, CompoundDistribution
+        if len(symbols) < sum(len(space.symbols) for space in spaces if not
+         isinstance(space.distribution, (
+            CompoundDistribution, MarginalDistribution))):
             raise ValueError("Overlapping Random Variables")
 
         if all(space.is_Finite for space in spaces):
@@ -333,11 +339,11 @@ class IndependentProductPSpace(ProductPSpace):
     def values(self):
         return sumsets(space.values for space in self.spaces)
 
-    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or self.values
         rvs = frozenset(rvs)
         for space in self.spaces:
-            expr = space.integrate(expr, rvs & space.values, evaluate=False, **kwargs)
+            expr = space.compute_expectation(expr, rvs & space.values, evaluate=False, **kwargs)
         if evaluate and hasattr(expr, 'doit'):
             return expr.doit(**kwargs)
         return expr
@@ -387,10 +393,10 @@ class IndependentProductPSpace(ProductPSpace):
         z = Dummy('z', real=True, finite=True)
         rvs = random_symbols(expr)
         if any(pspace(rv).is_Continuous for rv in rvs):
-            expr = self.integrate(DiracDelta(expr - z),
+            expr = self.compute_expectation(DiracDelta(expr - z),
              **kwargs)
         else:
-            expr = self.integrate(KroneckerDelta(expr, z),
+            expr = self.compute_expectation(KroneckerDelta(expr, z),
              **kwargs)
         return Lambda(z, expr)
 
@@ -415,7 +421,7 @@ class IndependentProductPSpace(ProductPSpace):
             return FinitePSpace.conditional_space(self, condition)
         if normalize:
             replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
-            norm = domain.integrate(self.pdf, **kwargs)
+            norm = domain.compute_expectation(self.pdf, **kwargs)
             pdf = self.pdf / norm.xreplace(replacement)
             density = Lambda(domain.symbols, pdf)
 
@@ -517,6 +523,8 @@ def pspace(expr):
     True
     """
     expr = sympify(expr)
+    if isinstance(expr, RandomSymbol) and expr.pspace != None:
+        return expr.pspace
     rvs = random_symbols(expr)
     if not rvs:
         raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
@@ -674,7 +682,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
                      for arg in expr.args])
 
     # Otherwise case is simple, pass work off to the ProbabilitySpace
-    result = pspace(expr).integrate(expr, evaluate=evaluate, **kwargs)
+    result = pspace(expr).compute_expectation(expr, evaluate=evaluate, **kwargs)
     if evaluate and hasattr(result, 'doit'):
         return result.doit(**kwargs)
     else:
@@ -1213,6 +1221,9 @@ def pspace_independent(a, b):
     """
     a_symbols = set(pspace(b).symbols)
     b_symbols = set(pspace(a).symbols)
+
+    if len(set(random_symbols(a)).intersection(random_symbols(b))) != 0:
+        return False
 
     if len(a_symbols.intersection(b_symbols)) == 0:
         return True

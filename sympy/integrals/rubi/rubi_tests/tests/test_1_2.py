@@ -26,7 +26,7 @@ from sympy.functions.elementary.trigonometric import acos as arccos
 from sympy.integrals.rubi.utility_function import EllipticE, EllipticF, hypergeom, rubi_test
 from sympy import pi as Pi
 from sympy import S, hyper, I, simplify, exp_polar, symbols
-from sympy.utilities.pytest import XFAIL, slow, skip, ON_TRAVIS
+
 
 a, b, c, d, e, f, m, n, x, u = symbols('a b c d e f m n x u')
 
@@ -78,7 +78,7 @@ def test_2():
         else:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True)
 
-@XFAIL
+
 def test_3():
     test = [
         [x**m*(a + b*x), x, S(2), a*x**(S(1) + m)/(S(1) + m) + b*x**(S(2) + m)/(S(2) + m)],
@@ -191,7 +191,7 @@ def test_6():
         else:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True)
 
-@XFAIL
+
 def test_7():
     test = [
         #[(a + b*x)**(S(3)/S(2))*(c + d*x)**(S(1)/S(3)), x, S(5), S(12)/S(187)*(b*c - a*d)*(a + b*x)**(S(3)/S(2))*(c + d*x)**(S(1)/S(3))/(b*d) + S(6)/S(17)*(a + b*x)**(S(5)/S(2))*(c + d*x)**(S(1)/S(3))/b - S(108)/S(935)*(b*c - a*d)**S(2)*(c + d*x)**(S(1)/S(3))*sqrt(a + b*x)/(b*d**S(2)) - S(108)/S(935)*S(3)**(S(3)/S(4))*(b*c - a*d)**S(3)*((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)))*EllipticF(( - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)) + (b*c - a*d)**(S(1)/S(3))*(S(1) + sqrt(S(3))))/( - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)) + (b*c - a*d)**(S(1)/S(3))*(S(1) - sqrt(S(3)))), sqrt( - S(7) + S(4)*sqrt(S(3))))*sqrt(((b*c - a*d)**(S(2)/S(3)) + b**(S(1)/S(3))*(b*c - a*d)**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)) + b**(S(2)/S(3))*(c + d*x)**(S(2)/S(3)))/( - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)) + (b*c - a*d)**(S(1)/S(3))*(S(1) - sqrt(S(3))))**S(2))*sqrt(S(2) - sqrt(S(3)))/(b**(S(4)/S(3))*d**S(3)*sqrt(a - b*c/d + b*(c + d*x)/d)*sqrt( - (b*c - a*d)**(S(1)/S(3))*((b*c - a*d)**(S(1)/S(3)) - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)))/( - b**(S(1)/S(3))*(c + d*x)**(S(1)/S(3)) + (b*c - a*d)**(S(1)/S(3))*(S(1) - sqrt(S(3))))**S(2)))],
@@ -214,7 +214,7 @@ def test_7():
         else:
             assert rubi_test(r, i[1], i[3], expand=True, _diff=True)
 
-@XFAIL
+
 def test_numerical():
     test = [
         [(a + b*x)**(S(1)/S(2))*(c + d*x)**(S(1)/S(4)), x, S(5), S(4)/S(7)*(a + b*x)**(S(3)/S(2))*(c + d*x)**(S(1)/S(4))/b + S(4)/S(21)*(b*c - a*d)*(c + d*x)**(S(1)/S(4))*sqrt(a + b*x)/(b*d) - S(8)/S(21)*(b*c - a*d)**(S(9)/S(4))*EllipticF(b**(S(1)/S(4))*(c + d*x)**(S(1)/S(4))/(b*c - a*d)**(S(1)/S(4)), I)*sqrt(S(1) - b*(c + d*x)/(b*c - a*d))/(b**(S(5)/S(4))*d**S(2)*sqrt(a - b*c/d + b*(c + d*x)/d))],

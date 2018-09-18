@@ -174,12 +174,12 @@ manipulate the algorithm, like
   have finite index, and even if it has it may take many more intermediate
   cosets than the actual index of the subgroup is. To avoid a coset enumeration
   "running away" therefore SymPy has a "safety stop" built-in. This is
-  controlled by this variable. For example:
+  controlled by this variable. To change it, use `max_cosets` keyword.
+  For example:
 
-  >>> CosetTable.coset_table_max_limit = 50
   >>> F, a, b = free_group("a, b")
   >>> Cox = FpGroup(F, [a**6, b**6, (a*b)**2, (a**2*b**2)**2, (a**3*b**3)**5])
-  >>> C_r = coset_enumeration_r(Cox, [a])
+  >>> C_r = coset_enumeration_r(Cox, [a], max_cosets=50)
   Traceback (most recent call last):
     ...
   ValueError: the coset enumeration has defined more than 50 cosets

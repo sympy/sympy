@@ -514,6 +514,9 @@ class LatexPrinter(Printer):
                 return self._print(expr.base, exp="%s/%s" % (p, q))
             return r"%s^{%s/%s}" % (base, p, q)
         elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_commutative:
+            # special case for 1^(-x), issue 9216
+            if expr.base == 1:
+                return r"%s^{%s}" % (expr.base, expr.exp)
             # things like 1/x
             return self._print_Mul(expr)
         else:
@@ -607,7 +610,8 @@ class LatexPrinter(Printer):
         return outstr
 
     def _print_Indexed(self, expr):
-        tex = self._print(expr.base)+'_{%s}' % ','.join(
+        tex_base = self._print(expr.base)
+        tex = '{'+tex_base+'}'+'_{%s}' % ','.join(
             map(self._print, expr.indices))
         return tex
 
@@ -1588,6 +1592,50 @@ class LatexPrinter(Printer):
     _print_MutableDenseNDimArray = _print_NDimArray
     _print_MutableSparseNDimArray = _print_NDimArray
 
+    def _print_Tensor(self, expr):
+        name = expr.args[0].args[0]
+        indices = expr.get_indices()
+        out_str = self._print(name)
+        last_valence = None
+        for index in indices:
+            new_valence = index.is_up
+            if last_valence != new_valence:
+                if last_valence is not None:
+                    out_str += "}"
+                if index.is_up:
+                    out_str += "{}^{"
+                else:
+                    out_str += "{}_{"
+            out_str += self._print(index.args[0])
+            last_valence = new_valence
+        if last_valence is not None:
+            out_str += "}"
+        return out_str
+
+    def _print_TensMul(self, expr):
+        # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
+        sign, args = expr._get_args_for_traditional_printer()
+        return sign + "".join(
+            [self.parenthesize(arg, precedence(expr)) for arg in args]
+        )
+
+    def _print_TensAdd(self, expr):
+        a = []
+        args = expr.args
+        for x in args:
+            a.append(self.parenthesize(x, precedence(expr)))
+        a.sort()
+        s = ' + '.join(a)
+        s = s.replace('+ -', '- ')
+        return s
+
+    def _print_TensorIndex(self, expr):
+        return "{}%s{%s}" % (
+            "^" if expr.is_up else "_",
+            self._print(expr.args[0])
+        )
+        return self._print(expr.args[0])
+
     def _print_tuple(self, expr):
         return r"\left ( %s\right )" % \
             r", \quad ".join([ self._print(i) for i in expr ])
@@ -2198,93 +2246,135 @@ def translate(s):
                 return modifier_dict[key](translate(s[:-len(key)]))
         return s
 
-def latex(expr, **settings):
-    r"""
-    Convert the given expression to LaTeX representation.
 
-    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational, log
-    >>> from sympy.abc import x, y, mu, r, tau
+def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
+    fold_short_frac=None, inv_trig_style="abbreviated",
+    itex=False, ln_notation=False, long_frac_ratio=None,
+    mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
+    order=None, symbol_names=None):
+    r"""Convert the given expression to LaTeX string representation.
 
-    >>> print(latex((2*tau)**Rational(7,2)))
-    8 \sqrt{2} \tau^{\frac{7}{2}}
+    Parameters
+    ==========
+    fold_frac_powers : boolean, optional
+        Emit ``^{p/q}`` instead of ``^{\frac{p}{q}}`` for fractional powers.
+    fold_func_brackets : boolean, optional
+        Fold function brackets where applicable.
+    fold_short_frac : boolean, optional
+        Emit ``p / q`` instead of ``\frac{p}{q}`` when the denominator is
+        simple enough (at most two terms and no powers). The default value is
+        ``True`` for inline mode, ``False`` otherwise.
+    inv_trig_style : string, optional
+        How inverse trig functions should be displayed. Can be one of
+        ``abbreviated``, ``full``, or ``power``. Defaults to ``abbreviated``.
+    itex : boolean, optional
+        Specifies if itex-specific syntax is used, including emitting
+        ``$$...$$``.
+    ln_notation : boolean, optional
+        If set to ``True``, ``\ln`` is used instead of default ``\log``.
+    long_frac_ratio : float or None, optional
+        The allowed ratio of the width of the numerator to the width of the
+        denominator before the printer breaks off long fractions. If ``None``
+        (the default value), long fractions are not broken up.
+    mat_delim : string, optional
+        The delimiter to wrap around matrices. Can be one of ``[``, ``(``, or
+        the empty string. Defaults to ``[``.
+    mat_str : string, optional
+        Which matrix environment string to emit. ``smallmatrix``, ``matrix``,
+        ``array``, etc. Defaults to ``smallmatrix`` for inline mode, ``matrix``
+        for matrices of no more than 10 columns, and ``array`` otherwise.
+    mode: string, optional
+        Specifies how the generated code will be delimited. ``mode`` can be one
+        of ``plain``, ``inline``, ``equation`` or ``equation*``.  If ``mode``
+        is set to ``plain``, then the resulting code will not be delimited at
+        all (this is the default). If ``mode`` is set to ``inline`` then inline
+        LaTeX ``$...$`` will be used. If ``mode`` is set to ``equation`` or
+        ``equation*``, the resulting code will be enclosed in the ``equation``
+        or ``equation*`` environment (remember to import ``amsmath`` for
+        ``equation*``), unless the ``itex`` option is set. In the latter case,
+        the ``$$...$$`` syntax is used.
+    mul_symbol : string or None, optional
+        The symbol to use for multiplication. Can be one of ``None``, ``ldot``,
+        ``dot``, or ``times``.
+    order: string, optional
+        Any of the supported monomial orderings (currently ``lex``, ``grlex``,
+        or ``grevlex``), ``old``, and ``none``. This parameter does nothing for
+        Mul objects. Setting order to ``old`` uses the compatibility ordering
+        for Add defined in Printer. For very large expressions, set the
+        ``order`` keyword to ``none`` if speed is a concern.
+    symbol_names : dictionary of strings mapped to symbols, optional
+        Dictionary of symbols and the custom strings they should be emitted as.
+
+    Notes
+    =====
 
     Not using a print statement for printing, results in double backslashes for
     latex commands since that's the way Python escapes backslashes in strings.
 
+    >>> from sympy import latex, Rational
+    >>> from sympy.abc import tau
     >>> latex((2*tau)**Rational(7,2))
     '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
+    >>> print(latex((2*tau)**Rational(7,2)))
+    8 \sqrt{2} \tau^{\frac{7}{2}}
 
-    order: Any of the supported monomial orderings (currently "lex", "grlex", or
-    "grevlex"), "old", and "none". This parameter does nothing for Mul objects.
-    Setting order to "old" uses the compatibility ordering for Add defined in
-    Printer. For very large expressions, set the 'order' keyword to 'none' if
-    speed is a concern.
+    Examples
+    ========
 
-    mode: Specifies how the generated code will be delimited. 'mode' can be one
-    of 'plain', 'inline', 'equation' or 'equation*'.  If 'mode' is set to
-    'plain', then the resulting code will not be delimited at all (this is the
-    default). If 'mode' is set to 'inline' then inline LaTeX $ $ will be used.
-    If 'mode' is set to 'equation' or 'equation*', the resulting code will be
-    enclosed in the 'equation' or 'equation*' environment (remember to import
-    'amsmath' for 'equation*'), unless the 'itex' option is set. In the latter
-    case, the ``$$ $$`` syntax is used.
+    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational, log
+    >>> from sympy.abc import x, y, mu, r, tau
+
+    Basic usage:
+
+    >>> print(latex((2*tau)**Rational(7,2)))
+    8 \sqrt{2} \tau^{\frac{7}{2}}
+
+    ``mode`` and ``itex`` options:
 
     >>> print(latex((2*mu)**Rational(7,2), mode='plain'))
     8 \sqrt{2} \mu^{\frac{7}{2}}
-
     >>> print(latex((2*tau)**Rational(7,2), mode='inline'))
     $8 \sqrt{2} \tau^{7 / 2}$
-
     >>> print(latex((2*mu)**Rational(7,2), mode='equation*'))
     \begin{equation*}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation*}
-
     >>> print(latex((2*mu)**Rational(7,2), mode='equation'))
     \begin{equation}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation}
-
-    itex: Specifies if itex-specific syntax is used, including emitting ``$$ $$``.
-
+    >>> print(latex((2*mu)**Rational(7,2), mode='equation', itex=True))
+    $$8 \sqrt{2} \mu^{\frac{7}{2}}$$
+    >>> print(latex((2*mu)**Rational(7,2), mode='plain'))
+    8 \sqrt{2} \mu^{\frac{7}{2}}
+    >>> print(latex((2*tau)**Rational(7,2), mode='inline'))
+    $8 \sqrt{2} \tau^{7 / 2}$
+    >>> print(latex((2*mu)**Rational(7,2), mode='equation*'))
+    \begin{equation*}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation*}
+    >>> print(latex((2*mu)**Rational(7,2), mode='equation'))
+    \begin{equation}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation}
     >>> print(latex((2*mu)**Rational(7,2), mode='equation', itex=True))
     $$8 \sqrt{2} \mu^{\frac{7}{2}}$$
 
-    fold_frac_powers: Emit "^{p/q}" instead of "^{\frac{p}{q}}" for fractional
-    powers.
+    Fraction options:
 
     >>> print(latex((2*tau)**Rational(7,2), fold_frac_powers=True))
     8 \sqrt{2} \tau^{7/2}
-
-    fold_func_brackets: Fold function brackets where applicable.
-
     >>> print(latex((2*tau)**sin(Rational(7,2))))
     \left(2 \tau\right)^{\sin{\left (\frac{7}{2} \right )}}
-    >>> print(latex((2*tau)**sin(Rational(7,2)), fold_func_brackets = True))
+    >>> print(latex((2*tau)**sin(Rational(7,2)), fold_func_brackets=True))
     \left(2 \tau\right)^{\sin {\frac{7}{2}}}
-
-    fold_short_frac: Emit "p / q" instead of "\frac{p}{q}" when the
-    denominator is simple enough (at most two terms and no powers).
-    The default value is `True` for inline mode, False otherwise.
-
     >>> print(latex(3*x**2/y))
     \frac{3 x^{2}}{y}
     >>> print(latex(3*x**2/y, fold_short_frac=True))
     3 x^{2} / y
-
-    long_frac_ratio: The allowed ratio of the width of the numerator to the
-    width of the denominator before we start breaking off long fractions.
-    If None (the default value), long fractions are not broken up.
-
     >>> print(latex(Integral(r, r)/2/pi, long_frac_ratio=2))
     \frac{\int r\, dr}{2 \pi}
     >>> print(latex(Integral(r, r)/2/pi, long_frac_ratio=0))
     \frac{1}{2 \pi} \int r\, dr
 
-    mul_symbol: The symbol to use for multiplication. Can be one of None,
-    "ldot", "dot", or "times".
+    Multiplication options:
 
     >>> print(latex((2*tau)**sin(Rational(7,2)), mul_symbol="times"))
     \left(2 \times \tau\right)^{\sin{\left (\frac{7}{2} \right )}}
 
-    inv_trig_style: How inverse trig functions should be displayed. Can be one
-    of "abbreviated", "full", or "power". Defaults to "abbreviated".
+    Trig options:
 
     >>> print(latex(asin(Rational(7,2))))
     \operatorname{asin}{\left (\frac{7}{2} \right )}
@@ -2293,47 +2383,57 @@ def latex(expr, **settings):
     >>> print(latex(asin(Rational(7,2)), inv_trig_style="power"))
     \sin^{-1}{\left (\frac{7}{2} \right )}
 
-    mat_str: Which matrix environment string to emit. "smallmatrix", "matrix",
-    "array", etc. Defaults to "smallmatrix" for inline mode, "matrix" for
-    matrices of no more than 10 columns, and "array" otherwise.
+    Matrix options:
 
     >>> print(latex(Matrix(2, 1, [x, y])))
     \left[\begin{matrix}x\\y\end{matrix}\right]
-
     >>> print(latex(Matrix(2, 1, [x, y]), mat_str = "array"))
     \left[\begin{array}{c}x\\y\end{array}\right]
-
-    mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(",
-    or the empty string. Defaults to "[".
-
     >>> print(latex(Matrix(2, 1, [x, y]), mat_delim="("))
     \left(\begin{matrix}x\\y\end{matrix}\right)
 
-    symbol_names: Dictionary of symbols and the custom strings they should be
-    emitted as.
+    Custom printing of symbols:
 
-    >>> print(latex(x**2, symbol_names={x:'x_i'}))
+    >>> print(latex(x**2, symbol_names={x: 'x_i'}))
     x_i^{2}
 
-    ``latex`` also supports the builtin container types list, tuple, and
+    Logarithms:
+
+    >>> print(latex(log(10)))
+    \log{\left (10 \right )}
+    >>> print(latex(log(10), ln_notation=True))
+    \ln{\left (10 \right )}
+
+    ``latex()`` also supports the builtin container types list, tuple, and
     dictionary.
 
     >>> print(latex([2/x, y], mode='inline'))
     $\left [ 2 / x, \quad y\right ]$
 
-    ln_notation: If set to ``True`` "\ln" is used instead of default "\log"
-
-    >>> print(latex(log(10)))
-    \log{\left (10 \right )}
-
-    >>> print(latex(log(10), ln_notation=True))
-    \ln{\left (10 \right )}
-
     """
+    if symbol_names is None:
+        symbol_names = {}
+
+    settings = {
+        'fold_frac_powers' : fold_frac_powers,
+        'fold_func_brackets' : fold_func_brackets,
+        'fold_short_frac' : fold_short_frac,
+        'inv_trig_style' : inv_trig_style,
+        'itex' : itex,
+        'ln_notation' : ln_notation,
+        'long_frac_ratio' : long_frac_ratio,
+        'mat_delim' : mat_delim,
+        'mat_str' : mat_str,
+        'mode' : mode,
+        'mul_symbol' : mul_symbol,
+        'order' : order,
+        'symbol_names' : symbol_names,
+    }
 
     return LatexPrinter(settings).doprint(expr)
 
 
 def print_latex(expr, **settings):
-    """Prints LaTeX representation of the given expression."""
+    """Prints LaTeX representation of the given expression. Takes the same
+    settings as ``latex()``."""
     print(latex(expr, **settings))

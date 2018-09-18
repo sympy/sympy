@@ -49,7 +49,7 @@ from sympy.core.logic import fuzzy_and
 from sympy.core.compatibility import string_types, with_metaclass, range
 from sympy.utilities import default_sort_key
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import has_dups
 from sympy.core.evaluate import global_evaluate
 
 import sys
@@ -130,8 +130,6 @@ def _getnargs_new(eval_):
         return tuple(range(num_no_default, num_no_default+num_with_default+1))
 
 
-
-
 class FunctionClass(ManagedProperties):
     """
     Base class for function classes. FunctionClass is a subclass of type.
@@ -145,7 +143,6 @@ class FunctionClass(ManagedProperties):
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
         nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', _getnargs(cls)))
-        super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
@@ -161,6 +158,8 @@ class FunctionClass(ManagedProperties):
         elif nargs is not None:
             nargs = (as_int(nargs),)
         cls._nargs = nargs
+
+        super(FunctionClass, cls).__init__(*args, **kwargs)
 
     @property
     def __signature__(self):
@@ -313,7 +312,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
         if (old.is_Function and new.is_Function and
             callable(old) and callable(new) and
             old == self.func and len(self.args) in new.nargs):
-            return new(*self.args)
+            return new(*[i._subs(old, new) for i in self.args])
 
 
 class Function(Application, Expr):
@@ -510,8 +509,11 @@ class Function(Application, Expr):
 
     def _eval_evalf(self, prec):
         # Lookup mpmath function based on name
-        fname = self.func.__name__
         try:
+            if isinstance(self, AppliedUndef):
+                # Shouldn't lookup in mpmath but might have ._imp_
+                raise AttributeError
+            fname = self.func.__name__
             if not hasattr(mpmath, fname):
                 from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
                 fname = MPMATH_TRANSLATIONS[fname]
@@ -601,6 +603,7 @@ class Function(Application, Expr):
         """
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
+
         Examples
         ========
 
@@ -830,6 +833,7 @@ class UndefinedFunction(FunctionClass):
 
     def __ne__(self, other):
         return not self == other
+
 
 class WildFunction(Function, AtomicExpr):
     """
@@ -1298,29 +1302,11 @@ class Derivative(Expr):
 
     @classmethod
     def _sort_variable_count(cls, varcounts):
-        """Like ``_sort_variables``, but acting on variable-count pairs.
-
-        Examples
-        ========
-
-        >>> from sympy import Derivative, Function, symbols
-        >>> vsort = Derivative._sort_variable_count
-        >>> x, y, z = symbols('x y z')
-        >>> f, g, h = symbols('f g h', cls=Function)
-
-        >>> vsort([(x, 1), (y, 2), (z, 1)])
-        [(x, 1), (y, 2), (z, 1)]
-
-        >>> vsort([(z, 1), (y, 1), (x, 1), (h(x), 1), (g(x), 1), (f(x), 1)])
-        [(x, 1), (y, 1), (z, 1), (f(x), 1), (g(x), 1), (h(x), 1)]
         """
-        d = dict(varcounts)
-        varsorted = cls._sort_variables([i for i, j in varcounts])
-        return [Tuple(var, d[var]) for var in varsorted]
+        Sort (variable, count) pairs by variable, but disallow sorting of non-symbols.
 
-    @classmethod
-    def _sort_variables(cls, vars):
-        """Sort variables, but disallow sorting of non-symbols.
+        The count is not sorted. It is kept in the same order as the input
+        after sorting by variable.
 
         When taking derivatives, the following rules usually hold:
 
@@ -1332,55 +1318,55 @@ class Derivative(Expr):
         ========
 
         >>> from sympy import Derivative, Function, symbols
-        >>> vsort = Derivative._sort_variables
+        >>> vsort = Derivative._sort_variable_count
         >>> x, y, z = symbols('x y z')
         >>> f, g, h = symbols('f g h', cls=Function)
 
-        >>> vsort((x,y,z))
-        [x, y, z]
+        >>> vsort([(x, 3), (y, 2), (z, 1)])
+        [(x, 3), (y, 2), (z, 1)]
 
-        >>> vsort((h(x),g(x),f(x)))
-        [f(x), g(x), h(x)]
+        >>> vsort([(h(x), 1), (g(x), 1), (f(x), 1)])
+        [(f(x), 1), (g(x), 1), (h(x), 1)]
 
-        >>> vsort((z,y,x,h(x),g(x),f(x)))
-        [x, y, z, f(x), g(x), h(x)]
+        >>> vsort([(z, 1), (y, 2), (x, 3), (h(x), 1), (g(x), 1), (f(x), 1)])
+        [(x, 3), (y, 2), (z, 1), (f(x), 1), (g(x), 1), (h(x), 1)]
 
-        >>> vsort((x,f(x),y,f(y)))
-        [x, f(x), y, f(y)]
+        >>> vsort([(x, 1), (f(x), 1), (y, 1), (f(y), 1)])
+        [(x, 1), (f(x), 1), (y, 1), (f(y), 1)]
 
-        >>> vsort((y,x,g(x),f(x),z,h(x),y,x))
-        [x, y, f(x), g(x), z, h(x), x, y]
+        >>> vsort([(y, 1), (x, 2), (g(x), 1), (f(x), 1), (z, 1), (h(x), 1), (y, 2), (x, 1)])
+        [(x, 2), (y, 1), (f(x), 1), (g(x), 1), (z, 1), (h(x), 1), (x, 1), (y, 2)]
 
-        >>> vsort((z,y,f(x),x,f(x),g(x)))
-        [y, z, f(x), x, f(x), g(x)]
+        >>> vsort([(z, 1), (y, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)])
+        [(y, 1), (z, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)]
 
-        >>> vsort((z,y,f(x),x,f(x),g(x),z,z,y,x))
-        [y, z, f(x), x, f(x), g(x), x, y, z, z]
+        >>> vsort([(z, 1), (y, 2), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1), (z, 2), (z, 1), (y, 1), (x, 1)])
+        [(y, 2), (z, 1), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1), (x, 1), (y, 1), (z, 2), (z, 1)]
+
         """
-
         sorted_vars = []
         symbol_part = []
         non_symbol_part = []
-        for v in vars:
+        for (v, c) in varcounts:
             if not v.is_symbol:
                 if len(symbol_part) > 0:
                     sorted_vars.extend(sorted(symbol_part,
-                                              key=default_sort_key))
+                                              key=lambda i: default_sort_key(i[0])))
                     symbol_part = []
-                non_symbol_part.append(v)
+                non_symbol_part.append((v, c))
             else:
                 if len(non_symbol_part) > 0:
                     sorted_vars.extend(sorted(non_symbol_part,
-                                              key=default_sort_key))
+                                              key=lambda i: default_sort_key(i[0])))
                     non_symbol_part = []
-                symbol_part.append(v)
+                symbol_part.append((v, c))
         if len(non_symbol_part) > 0:
             sorted_vars.extend(sorted(non_symbol_part,
-                                      key=default_sort_key))
+                                      key=lambda i: default_sort_key(i[0])))
         if len(symbol_part) > 0:
             sorted_vars.extend(sorted(symbol_part,
-                                      key=default_sort_key))
-        return sorted_vars
+                                      key=lambda i: default_sort_key(i[0])))
+        return [Tuple(*i) for i in sorted_vars]
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative
@@ -1655,7 +1641,7 @@ class Lambda(Expr):
         from sympy.sets.sets import FiniteSet
         v = list(variables) if iterable(variables) else [variables]
         for i in v:
-            if not getattr(i, 'is_Symbol', False):
+            if not getattr(i, 'is_symbol', False):
                 raise TypeError('variable is not a symbol: %s' % i)
         if len(v) == 1 and v[0] == expr:
             return S.IdentityFunction
@@ -1770,14 +1756,17 @@ class Subs(Expr):
     """
     def __new__(cls, expr, variables, point, **assumptions):
         from sympy import Symbol
+
         if not is_sequence(variables, Tuple):
             variables = [variables]
-        variables = list(sympify(variables))
+        variables = Tuple(*variables)
 
-        if list(uniq(variables)) != variables:
-            repeated = [ v for v in set(variables) if variables.count(v) > 1 ]
-            raise ValueError('cannot substitute expressions %s more than '
-                             'once.' % repeated)
+        if has_dups(variables):
+            repeated = [str(v) for v, i in Counter(variables).items() if i > 1]
+            __ = ', '.join(repeated)
+            raise ValueError(filldedent('''
+                The following expressions appear more than once: %s
+                ''' % __))
 
         point = Tuple(*(point if is_sequence(point, Tuple) else [point]))
 
@@ -1785,7 +1774,16 @@ class Subs(Expr):
             raise ValueError('Number of point values must be the same as '
                              'the number of variables.')
 
-        expr = sympify(expr)
+        if not point:
+            return sympify(expr)
+
+        # denest
+        if isinstance(expr, Subs):
+            variables = expr.variables + variables
+            point = expr.point + point
+            expr = expr.expr
+        else:
+            expr = sympify(expr)
 
         # use symbols with names equal to the point value (with preppended _)
         # to give a variable-independent expression
@@ -1856,15 +1854,10 @@ class Subs(Expr):
         return (self.expr.expr_free_symbols - set(self.variables) |
             set(self.point.expr_free_symbols))
 
-    def _has(self, pattern):
-        if pattern in self.variables and pattern not in self.point:
-            return False
-        return super(Subs, self)._has(pattern)
-
     def __eq__(self, other):
         if not isinstance(other, Subs):
             return False
-        return self._expr == other._expr
+        return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
         return not(self == other)
@@ -1873,14 +1866,29 @@ class Subs(Expr):
         return super(Subs, self).__hash__()
 
     def _hashable_content(self):
-        return (self._expr.xreplace(self.canonical_variables),)
+        return (self._expr.xreplace(self.canonical_variables),
+            ) + tuple(ordered([(v, p) for v, p in
+            zip(self.variables, self.point) if not self.expr.has(v)]))
 
     def _eval_subs(self, old, new):
+        # Subs doit will do the variables in order; the semantics
+        # of subs for Subs is have the following invariant for
+        # Subs object foo:
+        #    foo.doit().subs(reps) == foo.subs(reps).doit()
+        pt = list(self.point)
         if old in self.variables:
-            if old in self.point:
-                newpoint = tuple(new if i == old else i for i in self.point)
-                return self.func(self.expr, self.variables, newpoint)
-            return self
+            i = self.variables.index(old)
+            # any occurance of old before this point will get
+            # handled by replacements from here on
+            for j in range(i, len(self.variables)):
+                pt[j] = pt[j]._subs(old, new)
+            return self.func(self.expr, self.variables, pt)
+        v = [i._subs(old, new) for i in self.variables]
+        if v != list(self.variables):
+            return self.func(self.expr, self.variables + (old,), pt + [new])
+        expr = self.expr._subs(old, new)
+        pt = [i._subs(old, new) for i in self.point]
+        return self.func(expr, v, pt)
 
     def _eval_derivative(self, s):
         # Apply the chain rule of the derivative on the substitution variables:

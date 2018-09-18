@@ -1898,7 +1898,7 @@ def test_inf():
 
 
 def test_issue_12448():
-    f = Symbol('f')
+    f = Function('f')
     fun = [f(i) for i in range(15)]
     sym = symbols('x:15')
     reps = dict(zip(fun, sym))

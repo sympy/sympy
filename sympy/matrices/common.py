@@ -203,6 +203,8 @@ class MatrixShaping(MatrixRequired):
         if not self:
             return type(self)(other)
 
+        pos = as_int(pos)
+
         if pos < 0:
             pos = self.cols + pos
         if pos < 0:
@@ -212,7 +214,7 @@ class MatrixShaping(MatrixRequired):
 
         if self.rows != other.rows:
             raise ShapeError(
-                "self and other must have the same number of rows.")
+                "`self` and `other` must have the same number of rows.")
 
         return self._eval_col_insert(pos, other)
 
@@ -435,10 +437,11 @@ class MatrixShaping(MatrixRequired):
         row
         col_insert
         """
-        from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
             return self._new(other)
+
+        pos = as_int(pos)
 
         if pos < 0:
             pos = self.rows + pos
@@ -1769,7 +1772,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: x.replace(F, G, map))
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         """Apply simplify to each element of the matrix.
 
         Examples
@@ -1783,7 +1786,8 @@ class MatrixOperations(MatrixRequired):
         >>> _.simplify()
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.simplify(ratio, measure))
+        return self.applyfunc(lambda x: x.simplify(ratio=ratio, measure=measure,
+                                                   rational=rational, inverse=inverse))
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
@@ -2310,7 +2314,7 @@ def classof(A, B):
     ========
 
     >>> from sympy import Matrix, ImmutableMatrix
-    >>> from sympy.matrices.matrices import classof
+    >>> from sympy.matrices.common import classof
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
@@ -2321,7 +2325,7 @@ def classof(A, B):
             return A.__class__
         else:
             return B.__class__
-    except Exception:
+    except AttributeError:
         pass
     try:
         import numpy
@@ -2329,6 +2333,6 @@ def classof(A, B):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except Exception:
+    except (AttributeError, ImportError):
         pass
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))

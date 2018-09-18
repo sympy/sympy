@@ -1,10 +1,11 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
-        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise)
+        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError, _mexpand
+from sympy.core.sympify import sympify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import subsets, variations
@@ -176,6 +177,9 @@ def test_Lambda():
     assert Lambda(x, x**2)(e(x)) == x**4
     assert e(e(x)) == x**4
 
+    x1, x2 = (Indexed('x', i) for i in (1, 2))
+    assert Lambda((x1, x2), x1 + x2)(x, y) == x + y
+
     assert Lambda((x, y), x + y).nargs == FiniteSet(2)
 
     p = x, y, z, t
@@ -185,7 +189,6 @@ def test_Lambda():
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
     raises(TypeError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
-
 
 
 def test_IdentityFunction():
@@ -217,6 +220,15 @@ def test_Lambda_equality():
 
 
 def test_Subs():
+    assert Subs(1, (), ()) is S.One
+    # check null subs influence on hashing
+    assert Subs(x, y, z) != Subs(x, y, 1)
+    # self mapping var/point
+    assert Subs(Derivative(f(x), (x, 2)), x, x).doit() == f(x).diff(x, x)
+    assert Subs(x, x, 0).has(x)  # it's a structural answer
+    assert not Subs(x, x, 0).free_symbols
+    assert Subs(Subs(x + y, x, 2), y, 1) == Subs(x + y, (x, y), (2, 1))
+    assert Subs(x, (x,), (0,)) == Subs(x, x, 0)
     assert Subs(x, x, 0) == Subs(y, y, 0)
     assert Subs(x, x, 0).subs(x, 1) == Subs(x, x, 0)
     assert Subs(y, x, 0).subs(y, 1) == Subs(1, x, 0)
@@ -224,8 +236,7 @@ def test_Subs():
     assert Subs(f(x**2), x**2, 0).doit() == f(0)
     assert Subs(f(x, y, z), (x, y, z), (0, 1, 1)) != \
         Subs(f(x, y, z), (x, y, z), (0, 0, 1))
-    assert Subs(f(x, y), (x, y, z), (0, 1, 1)) == \
-        Subs(f(x, y), (x, y, z), (0, 1, 2))
+    assert Subs(x, y, 2).subs(x, y).doit() == 2
     assert Subs(f(x, y), (x, y, z), (0, 1, 1)) != \
         Subs(f(x, y) + z, (x, y, z), (0, 1, 0))
     assert Subs(f(x, y), (x, y), (0, 1)).doit() == f(0, 1)
@@ -628,18 +639,31 @@ def test_straight_line():
 
 
 def test_sort_variable():
-    vsort = Derivative._sort_variables
+    vsort = Derivative._sort_variable_count
 
-    assert vsort((x, y, z)) == [x, y, z]
-    assert vsort((h(x), g(x), f(x))) == [f(x), g(x), h(x)]
-    assert vsort((z, y, x, h(x), g(x), f(x))) == [x, y, z, f(x), g(x), h(x)]
-    assert vsort((x, f(x), y, f(y))) == [x, f(x), y, f(y)]
-    assert vsort((y, x, g(x), f(x), z, h(x), y, x)) == \
-        [x, y, f(x), g(x), z, h(x), x, y]
-    assert vsort((z, y, f(x), x, f(x), g(x))) == [y, z, f(x), x, f(x), g(x)]
-    assert vsort((z, y, f(x), x, f(x), g(x), z, z, y, x)) == \
-        [y, z, f(x), x, f(x), g(x), x, y, z, z]
+    assert vsort([(x, 3), (y, 2), (z, 1)]) == [(x, 3), (y, 2), (z, 1)]
 
+    assert vsort([(h(x), 1), (g(x), 1), (f(x), 1)]) == [(f(x), 1), (g(x), 1), (h(x), 1)]
+
+    assert vsort([(z, 1), (y, 2), (x, 3), (h(x), 1), (g(x), 1), (f(x), 1)]) == [(x, 3), (y, 2), (z, 1), (f(x), 1), (g(x), 1), (h(x), 1)]
+
+    assert vsort([(x, 1), (f(x), 1), (y, 1), (f(y), 1)]) == [(x, 1), (f(x), 1), (y, 1), (f(y), 1)]
+
+    assert vsort([(y, 1), (x, 2), (g(x), 1), (f(x), 1), (z, 1), (h(x), 1), (y, 2), (x, 1)]) == [(x, 2), (y, 1), (f(x), 1), (g(x), 1), (z, 1), (h(x), 1), (x, 1), (y, 2)]
+
+    assert vsort([(z, 1), (y, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)]) == [(y, 1), (z, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)]
+
+    assert vsort([(z, 1), (y, 2), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1),
+    (z, 2), (z, 1), (y, 1), (x, 1)]) == [(y, 2), (z, 1), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1), (x, 1), (y, 1), (z, 2), (z, 1)]
+
+
+    assert vsort(((y, 2), (x, 1), (y, 1), (x, 1))) == [(x, 1), (x, 1), (y, 2), (y, 1)]
+
+    assert isinstance(vsort([(x, 3), (y, 2), (z, 1)])[0], Tuple)
+
+def test_multiple_derivative():
+    # Issue #15007
+    assert f(x,y).diff(y,y,x,y,x) == Derivative(f(x, y), (x, 2), (y, 3))
 
 def test_unhandled():
     class MyExpr(Expr):
@@ -652,11 +676,6 @@ def test_unhandled():
     expr = MyExpr(x, y, z)
     assert diff(expr, x, y, f(x), z) == Derivative(expr, f(x), z)
     assert diff(expr, f(x), x) == Derivative(expr, f(x), x)
-
-
-def test_issue_4711():
-    x = Symbol("x")
-    assert Symbol('f')(x) == f(x)
 
 
 def test_nfloat():
@@ -693,7 +712,8 @@ def test_nfloat():
 
 
 def test_issue_7068():
-    from sympy.abc import a, b, f
+    from sympy.abc import a, b
+    f = Function('f')
     y1 = Dummy('y')
     y2 = Dummy('y')
     func1 = f(a + y1 * b)
@@ -913,6 +933,7 @@ def test_order_could_be_zero():
     assert diff(y, (x, n + 1)) == S.Zero
     assert diff(y, (x, m)) == S.Zero
 
+
 def test_undefined_function_eq():
     f = Function('f')
     f2 = Function('f')
@@ -927,6 +948,7 @@ def test_undefined_function_eq():
     assert f != g
 
     assert f != f_real
+
 
 def test_function_assumptions():
     x = Symbol('x')
@@ -943,3 +965,33 @@ def test_function_assumptions():
     # way UndefinedFunction.__new__ works.
     f_real2 = Function('f', is_real=True)
     assert f_real2(x).is_real is True
+
+
+def test_undef_fcn_float_issue_6938():
+    f = Function('ceil')
+    assert not f(0.3).is_number
+    f = Function('sin')
+    assert not f(0.3).is_number
+    assert not f(pi).evalf().is_number
+    x = Symbol('x')
+    assert not f(x).evalf(subs={x:1.2}).is_number
+
+def test_undefined_function_eval():
+    # Issue 15170. Make sure UndefinedFunction with eval defined works
+    # properly. The issue there was that the hash was determined before _nargs
+    # was set, which is included in the hash, hence changing the hash. The
+    # class is added to sympy.core.core.all_classes before the hash is
+    # changed, meaning "temp in all_classes" would fail, causing sympify(temp(t))
+    # to give a new class. We will eventually remove all_classes, but make
+    # sure this continues to work.
+
+    fdiff = lambda self, argindex=1: cos(self.args[argindex - 1])
+    eval = classmethod(lambda cls, t: None)
+    _imp_ = classmethod(lambda cls, t: sin(t))
+
+    temp = Function('temp', fdiff=fdiff, eval=eval, _imp_=_imp_)
+
+    expr = temp(t)
+    assert sympify(expr) == expr
+    assert type(sympify(expr)).fdiff.__name__ == "<lambda>"
+    assert expr.diff(t) == cos(t)

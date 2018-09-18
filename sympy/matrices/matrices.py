@@ -2,26 +2,24 @@ from __future__ import print_function, division
 
 from mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.assumptions.refine import refine
 from sympy.core.add import Add
-from sympy.core.basic import Basic, Atom
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
 from sympy.core.power import Pow
 from sympy.core.symbol import (Symbol, Dummy, symbols,
     _uniquely_named_symbol)
-from sympy.core.numbers import Integer, ilcm, mod_inverse, Float
+from sympy.core.numbers import Integer, mod_inverse, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions import Abs, exp, factorial
-from sympy.polys import PurePoly, roots, cancel, gcd
+from sympy.functions import exp, factorial
+from sympy.polys import PurePoly, roots, cancel
 from sympy.printing import sstr
-from sympy.simplify import simplify as _simplify, signsimp, nsimplify
+from sympy.simplify import simplify as _simplify, nsimplify
 from sympy.core.compatibility import reduce, as_int, string_types, Callable
 
 from sympy.utilities.iterables import flatten, numbered_symbols
-from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import (is_sequence, default_sort_key, range,
     NotIterable)
 
@@ -29,8 +27,10 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
-from .common import (a2idx, classof, MatrixError, ShapeError,
+from .common import (a2idx, MatrixError, ShapeError,
         NonSquareMatrixError, MatrixCommon)
+
+from sympy.core.decorators import deprecated
 
 
 def _iszero(x):
@@ -170,7 +170,7 @@ class MatrixDeterminant(MatrixCommon):
         submat, toeplitz = self._eval_berkowitz_toeplitz_matrix()
         return toeplitz * submat._eval_berkowitz_vector()
 
-    def _eval_det_bareiss(self):
+    def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul):
         """Compute matrix determinant using Bareiss' fraction-free
         algorithm which is an extension of the well known Gaussian
         elimination method. This approach is best suited for dense
@@ -195,7 +195,7 @@ class MatrixDeterminant(MatrixCommon):
             # the computation by the factor of 2.5 in one test.
             # Relevant issues: #10279 and #13877.
             pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
-                                         iszerofunc=_is_zero_after_expand_mul)
+                                         iszerofunc=iszerofunc)
             if pivot_pos == None:
                 return S.Zero
 
@@ -383,7 +383,7 @@ class MatrixDeterminant(MatrixCommon):
         return self._new(self.rows, self.cols,
                          lambda i, j: self.cofactor(i, j, method))
 
-    def det(self, method="bareiss"):
+    def det(self, method="bareiss", iszerofunc=None):
         """Computes the determinant of a matrix.  If the matrix
         is at most 3x3, a hard-coded formula is used.
         Otherwise, the determinant using the method `method`.
@@ -403,6 +403,14 @@ class MatrixDeterminant(MatrixCommon):
             method = "lu"
         if method not in ("bareiss", "berkowitz", "lu"):
             raise ValueError("Determinant method '%s' unrecognized" % method)
+
+        if iszerofunc is None:
+            if method == "bareiss":
+                iszerofunc = _is_zero_after_expand_mul
+            elif method == "lu":
+                iszerofunc = _iszero
+        elif not isinstance(iszerofunc, FunctionType):
+            raise ValueError("Zero testing method '%s' unrecognized" % iszerofunc)
 
         # if methods were made internal and all determinant calculations
         # passed through here, then these lines could be factored out of
@@ -426,11 +434,11 @@ class MatrixDeterminant(MatrixCommon):
                    - self[0, 1] * self[1, 0] * self[2, 2])
 
         if method == "bareiss":
-            return self._eval_det_bareiss()
+            return self._eval_det_bareiss(iszerofunc=iszerofunc)
         elif method == "berkowitz":
             return self._eval_det_berkowitz()
         elif method == "lu":
-            return self._eval_det_lu()
+            return self._eval_det_lu(iszerofunc=iszerofunc)
 
     def minor(self, i, j, method="berkowitz"):
         """Return the (i,j) minor of `self`.  That is,
@@ -932,7 +940,7 @@ class MatrixSubspaces(MatrixReductions):
 
         return [self.col(i) for i in pivots]
 
-    def nullspace(self, simplify=False):
+    def nullspace(self, simplify=False, iszerofunc=_iszero):
         """Returns list of vectors (Matrix objects) that span nullspace of self
 
         Examples
@@ -958,7 +966,7 @@ class MatrixSubspaces(MatrixReductions):
         rowspace
         """
 
-        reduced, pivots = self.rref(simplify=simplify)
+        reduced, pivots = self.rref(iszerofunc=iszerofunc, simplify=simplify)
 
         free_vars = [i for i in range(self.cols) if i not in pivots]
 
@@ -1114,10 +1122,22 @@ class MatrixEigen(MatrixSubspaces):
             Raise an error when not all eigenvalues are computed. This is
             caused by ``roots`` not returning a full list of eigenvalues.
 
+        simplify : bool or function
+            If simplify is set to True, it attempts to return the most
+            simplified form of expressions returned by applying default
+            simplification method in every routine.
+            If simplify is set to False, it will skip simplification in this
+            particular routine to save computation resources.
+            If you pass a function to simplify, it will attempt to apply
+            the particular function as simplification method.
+
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
         """
+        simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
+        multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
+
         mat = self
         if not mat:
             return {}
@@ -1125,8 +1145,26 @@ class MatrixEigen(MatrixSubspaces):
             if any(v.has(Float) for v in mat):
                 mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
-        flags.pop('simplify', None)  # pop unsupported flag
-        eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
+        if mat.is_upper or mat.is_lower:
+            if not self.is_square:
+                raise NonSquareMatrixError()
+
+            diagonal_entries = [mat[i, i] for i in range(mat.rows)]
+
+            if multiple:
+                eigs = diagonal_entries
+            else:
+                eigs = {}
+                for diagonal_entry in diagonal_entries:
+                    if diagonal_entry not in eigs:
+                        eigs[diagonal_entry] = 0
+                    eigs[diagonal_entry] += 1
+        else:
+            flags.pop('simplify', None)  # pop unsupported flag
+            if isinstance(simplify, FunctionType):
+                eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify), **flags)
+            else:
+                eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
 
         # make sure the algebraic multiplicty sums to the
         # size of the matrix
@@ -1134,9 +1172,20 @@ class MatrixEigen(MatrixSubspaces):
             isinstance(eigs, dict) else len(eigs)) != self.cols:
             raise MatrixError("Could not compute eigenvalues for {}".format(self))
 
-        return eigs
+        # Since 'simplify' flag is unsupported in roots()
+        # simplify() function will be applied once at the end of the routine.
+        if not simplify:
+            return eigs
+        if not isinstance(simplify, FunctionType):
+            simplify = _simplify
+        # With 'multiple' flag set true, simplify() will be mapped for the list
+        # Otherwise, simplify() will be mapped for the keys of the dictionary
+        if not multiple:
+            return {simplify(key): value for key, value in eigs.items()}
+        else:
+            return [simplify(value) for value in eigs]
 
-    def eigenvects(self, error_when_incomplete=True, **flags):
+    def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
 
         The flag ``simplify`` has two effects:
@@ -1177,12 +1226,12 @@ class MatrixEigen(MatrixSubspaces):
         def eigenspace(eigenval):
             """Get a basis for the eigenspace for a particular eigenvalue"""
             m = mat - self.eye(mat.rows) * eigenval
-            ret = m.nullspace()
+            ret = m.nullspace(iszerofunc=iszerofunc)
             # the nullspace for a real eigenvalue should be
             # non-trivial.  If we didn't find an eigenvector, try once
             # more a little harder
             if len(ret) == 0 and simplify:
-                ret = m.nullspace(simplify=True)
+                ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
             if len(ret) == 0:
                 raise NotImplementedError(
                         "Can't evaluate eigenvector for eigenvalue %s" % eigenval)
@@ -1899,9 +1948,9 @@ class MatrixBase(MatrixDeprecated,
 
     __hash__ = None  # Mutable
 
-    def __array__(self):
+    def __array__(self, dtype=object):
         from .dense import matrix2numpy
-        return matrix2numpy(self)
+        return matrix2numpy(self, dtype=dtype)
 
     def __getattr__(self, attr):
         if attr in ('diff', 'integrate', 'limit'):
@@ -2915,6 +2964,7 @@ class MatrixBase(MatrixDeprecated,
 
         key2ij
         """
+        from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
 
         islice, jslice = [isinstance(k, slice) for k in keys]
         if islice:
@@ -2923,7 +2973,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 rlo, rhi = keys[0].indices(self.rows)[:2]
         else:
-            rlo = a2idx(keys[0], self.rows)
+            rlo = a2idx_(keys[0], self.rows)
             rhi = rlo + 1
         if jslice:
             if not self.cols:
@@ -2931,7 +2981,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 clo, chi = keys[1].indices(self.cols)[:2]
         else:
-            clo = a2idx(keys[1], self.cols)
+            clo = a2idx_(keys[1], self.cols)
             chi = clo + 1
         return rlo, rhi, clo, chi
 
@@ -2945,15 +2995,17 @@ class MatrixBase(MatrixDeprecated,
 
         key2bounds
         """
+        from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
+
         if is_sequence(key):
             if not len(key) == 2:
                 raise TypeError('key must be a sequence of length 2')
-            return [a2idx(i, n) if not isinstance(i, slice) else i
+            return [a2idx_(i, n) if not isinstance(i, slice) else i
                     for i, n in zip(key, self.shape)]
         elif isinstance(key, slice):
             return key.indices(len(self))[:2]
         else:
-            return divmod(a2idx(key, len(self)), self.cols)
+            return divmod(a2idx_(key, len(self)), self.cols)
 
     def LDLdecomposition(self):
         """Returns the LDL Decomposition (L, D) of matrix A,
@@ -4093,54 +4145,21 @@ class MatrixBase(MatrixDeprecated,
                     count += 1
         return v
 
-
+@deprecated(
+    issue=15109,
+    useinstead="from sympy.matrices.common import classof",
+    deprecated_since_version="1.3")
 def classof(A, B):
-    """
-    Get the type of the result when combining matrices of different types.
+    from sympy.matrices.common import classof as classof_
+    return classof_(A, B)
 
-    Currently the strategy is that immutability is contagious.
-
-    Examples
-    ========
-
-    >>> from sympy import Matrix, ImmutableMatrix
-    >>> from sympy.matrices.matrices import classof
-    >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
-    >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
-    >>> classof(M, IM)
-    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
-    """
-    try:
-        if A._class_priority > B._class_priority:
-            return A.__class__
-        else:
-            return B.__class__
-    except AttributeError:
-        pass
-    try:
-        import numpy
-        if isinstance(A, numpy.ndarray):
-            return B.__class__
-        if isinstance(B, numpy.ndarray):
-            return A.__class__
-    except (AttributeError, ImportError):
-        pass
-    raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
-
-
+@deprecated(
+    issue=15109,
+    deprecated_since_version="1.3",
+    useinstead="from sympy.matrices.common import a2idx")
 def a2idx(j, n=None):
-    """Return integer after making positive and validating against n."""
-    if type(j) is not int:
-        try:
-            j = j.__index__()
-        except AttributeError:
-            raise IndexError("Invalid index a[%r]" % (j,))
-    if n is not None:
-        if j < 0:
-            j += n
-        if not (j >= 0 and j < n):
-            raise IndexError("Index out of range: a[%s]" % j)
-    return int(j)
+    from sympy.matrices.common import a2idx as a2idx_
+    return a2idx_(j, n)
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):

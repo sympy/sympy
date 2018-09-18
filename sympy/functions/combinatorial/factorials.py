@@ -18,7 +18,7 @@ from sympy.polys.polytools import Poly
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         from sympy.simplify.combsimp import combsimp
         # combinatorial function with non-integer arguments is
         # automatically passed to gammasimp
@@ -27,13 +27,14 @@ class CombinatorialFunction(Function):
             return expr
         return self
 
+
 ###############################################################################
 ######################## FACTORIAL and MULTI-FACTORIAL ########################
 ###############################################################################
 
 
 class factorial(CombinatorialFunction):
-    """Implementation of factorial function over nonnegative integers.
+    r"""Implementation of factorial function over nonnegative integers.
        By convention (consistent with the gamma function and the binomial
        coefficients), factorial of a negative integer is complex infinity.
 
@@ -42,13 +43,13 @@ class factorial(CombinatorialFunction):
        arises in calculus, probability, number theory, etc.
 
        There is strict relation of factorial with gamma function. In
-       fact n! = gamma(n+1) for nonnegative integers. Rewrite of this
+       fact `n! = gamma(n+1)` for nonnegative integers. Rewrite of this
        kind is very useful in case of combinatorial simplification.
 
        Computation of the factorial is done using two algorithms. For
        small arguments a precomputed look up table is used. However for bigger
        input algorithm Prime-Swing is used. It is the fastest algorithm
-       known and computes n! via prime factorization of special class
+       known and computes `n!` via prime factorization of special class
        of numbers, called here the 'Swing Numbers'.
 
        Examples
@@ -213,15 +214,13 @@ class factorial(CombinatorialFunction):
             else:
                 isprime = aq.is_prime
                 if d == 1:
-                    '''
-                    Apply Wilson's theorem-if a natural number n > 1
-                    is a prime number, (n-1)! = -1 mod n-and its
-                    inverse-if n > 4 is a composite number,
-                    (n-1)! = 0 mod n
-                    '''
+                    # Apply Wilson's theorem (if a natural number n > 1
+                    # is a prime number, then (n-1)! = -1 mod n) and
+                    # its inverse (if n > 4 is a composite number, then
+                    # (n-1)! = 0 mod n)
                     if isprime:
                         return -1 % q
-                    elif isprime == False and (aq - 6).is_nonnegative:
+                    elif isprime is False and (aq - 6).is_nonnegative:
                         return 0
                 elif n.is_Integer and q.is_Integer:
                     n, d, aq = map(int, (n, d, aq))
@@ -274,25 +273,22 @@ class MultiFactorial(CombinatorialFunction):
 
 class subfactorial(CombinatorialFunction):
     r"""The subfactorial counts the derangements of n items and is
-    defined for non-negative integers as::
+    defined for non-negative integers as:
 
-              ,
-             |  1                             for n = 0
-        !n = {  0                             for n = 1
-             |  (n - 1)*(!(n - 1) + !(n - 2)) for n > 1
-              `
+    .. math:: !n = \begin{cases} 1 & n = 0 \\ 0 & n = 1 \\
+                    (n-1)(!(n-1) + !(n-2)) & n > 1 \end{cases}
 
-    It can also be written as int(round(n!/exp(1))) but the recursive
-    definition with caching is implemented for this function.
+    It can also be written as ``int(round(n!/exp(1)))`` but the
+    recursive definition with caching is implemented for this function.
 
     An interesting analytic expression is the following [2]_
 
     .. math:: !x = \Gamma(x + 1, -1)/e
 
-    which is valid for non-negative integers x. The above formula
+    which is valid for non-negative integers `x`. The above formula
     is not very useful incase of non-integers. :math:`\Gamma(x + 1, -1)` is
-    single-valued only for integral arguments x, elsewhere on the positive real
-    axis it has an infinite number of branches none of which are real.
+    single-valued only for integral arguments `x`, elsewhere on the positive
+    real axis it has an infinite number of branches none of which are real.
 
     References
     ==========
@@ -359,20 +355,19 @@ class subfactorial(CombinatorialFunction):
 
 
 class factorial2(CombinatorialFunction):
-    """The double factorial n!!, not to be confused with (n!)!
+    r"""The double factorial `n!!`, not to be confused with `(n!)!`
 
     The double factorial is defined for nonnegative integers and for odd
-    negative integers as::
+    negative integers as:
 
-               ,
-              |  n*(n - 2)*(n - 4)* ... * 1    for n positive odd
-        n!! = {  n*(n - 2)*(n - 4)* ... * 2    for n positive even
-              |  1                             for n = 0
-              |  (n+2)!! / (n+2)               for n negative odd
-               `
+    .. math:: n!! = \begin{cases} 1 & n = 0 \\
+                    n(n-2)(n-4) \cdots 1 & n\ \text{positive odd} \\
+                    n(n-2)(n-4) \cdots 2 & n\ \text{positive even} \\
+                    (n+2)!!/(n+2) & n\ \text{negative odd} \end{cases}
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/Double_factorial
 
     Examples
@@ -402,20 +397,22 @@ class factorial2(CombinatorialFunction):
 
         if arg.is_Number:
             if not arg.is_Integer:
-                raise ValueError("argument must be nonnegative integer or negative odd integer")
+                raise ValueError("argument must be nonnegative integer "
+                                    "or negative odd integer")
 
             # This implementation is faster than the recursive one
             # It also avoids "maximum recursion depth exceeded" runtime error
             if arg.is_nonnegative:
                 if arg.is_even:
                     k = arg / 2
-                    return 2 ** k * factorial(k)
+                    return 2**k * factorial(k)
                 return factorial(arg) / factorial2(arg - 1)
 
 
             if arg.is_odd:
-                return arg * (S.NegativeOne) ** ((1 - arg) / 2) / factorial2(-arg)
-            raise ValueError("argument must be nonnegative integer or negative odd integer")
+                return arg*(S.NegativeOne)**((1 - arg)/2) / factorial2(-arg)
+            raise ValueError("argument must be nonnegative integer "
+                                "or negative odd integer")
 
 
     def _eval_is_even(self):
@@ -465,7 +462,8 @@ class factorial2(CombinatorialFunction):
 
     def _eval_rewrite_as_gamma(self, n):
         from sympy import gamma, Piecewise, sqrt
-        return 2**(n/2)*gamma(n/2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2/pi), Eq(Mod(n, 2), 1)))
+        return 2**(n/2)*gamma(n/2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)),
+                (sqrt(2/pi), Eq(Mod(n, 2), 1)))
 
 
 ###############################################################################
@@ -474,22 +472,22 @@ class factorial2(CombinatorialFunction):
 
 
 class RisingFactorial(CombinatorialFunction):
-    """
+    r"""
     Rising factorial (also called Pochhammer symbol) is a double valued
     function arising in concrete mathematics, hypergeometric functions
     and series expansions. It is defined by:
 
-                rf(x, k) = x * (x + 1) * ... * (x + k - 1)
+    .. math:: rf(x,k) = x \cdot (x+1) \cdots (x+k-1)
 
-    where 'x' can be arbitrary expression and 'k' is an integer. For
+    where `x` can be arbitrary expression and `k` is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit http://mathworld.wolfram.com/RisingFactorial.html page.
 
-    When x is a Poly instance of degree >= 1 with a single variable,
-    rf(x,k) = x(y) * x(y+1) * ... * x(y+k-1), where y is the variable of x.
-    This is as described in Peter Paule, "Greatest Factorial Factorization and
-    Symbolic Summation", Journal of Symbolic Computation, vol. 20, pp.
-    235-268, 1995.
+    When `x` is a Poly instance of degree >= 1 with a single variable,
+    `rf(x,k) = x(y) \cdot x(y+1) \cdots x(y+k-1)`, where `y` is the
+    variable of `x`. This is as described in Peter Paule, "Greatest
+    Factorial Factorization and Symbolic Summation", Journal of
+    Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
     Examples
     ========
@@ -552,13 +550,15 @@ class RisingFactorial(CombinatorialFunction):
                         if isinstance(x, Poly):
                             gens = x.gens
                             if len(gens)!= 1:
-                                raise ValueError("rf only defined for polynomials on one generator")
+                                raise ValueError("rf only defined for "
+                                            "polynomials on one generator")
                             else:
                                 return reduce(lambda r, i:
                                               r*(x.shift(i).expand()),
                                               range(0, int(k)), 1)
                         else:
-                            return reduce(lambda r, i: r*(x + i), range(0, int(k)), 1)
+                            return reduce(lambda r, i: r*(x + i),
+                                        range(0, int(k)), 1)
 
                 else:
                     if x is S.Infinity:
@@ -569,7 +569,8 @@ class RisingFactorial(CombinatorialFunction):
                         if isinstance(x, Poly):
                             gens = x.gens
                             if len(gens)!= 1:
-                                raise ValueError("rf only defined for polynomials on one generator")
+                                raise ValueError("rf only defined for "
+                                            "polynomials on one generator")
                             else:
                                 return 1/reduce(lambda r, i:
                                                 r*(x.shift(-i).expand()),
@@ -600,26 +601,27 @@ class RisingFactorial(CombinatorialFunction):
 
     def _sage_(self):
         import sage.all as sage
-        return sage.rising_factorial(self.args[0]._sage_(), self.args[1]._sage_())
+        return sage.rising_factorial(self.args[0]._sage_(),
+                                     self.args[1]._sage_())
 
 
 class FallingFactorial(CombinatorialFunction):
-    """
+    r"""
     Falling factorial (related to rising factorial) is a double valued
     function arising in concrete mathematics, hypergeometric functions
     and series expansions. It is defined by
 
-                ff(x, k) = x * (x-1) * ... * (x - k+1)
+    .. math:: ff(x,k) = x \cdot (x-1) \cdots (x-k+1)
 
-    where 'x' can be arbitrary expression and 'k' is an integer. For
+    where `x` can be arbitrary expression and `k` is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit http://mathworld.wolfram.com/FallingFactorial.html page.
 
-    When x is a Poly instance of degree >= 1 with single variable,
-    ff(x,k) = x(y) * x(y-1) * ... * x(y-k+1), where y is the variable of x.
-    This is as described in Peter Paule, "Greatest Factorial Factorization and
-    Symbolic Summation", Journal of Symbolic Computation, vol. 20, pp.
-    235-268, 1995.
+    When `x` is a Poly instance of degree >= 1 with single variable,
+    `ff(x,k) = x(y) \cdot x(y-1) \cdots x(y-k+1)`, where `y` is the
+    variable of `x`. This is as described in Peter Paule, "Greatest
+    Factorial Factorization and Symbolic Summation", Journal of
+    Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
     >>> from sympy import ff, factorial, rf, gamma, polygamma, binomial, symbols, Poly
     >>> from sympy.abc import x, k
@@ -683,7 +685,8 @@ class FallingFactorial(CombinatorialFunction):
                         if isinstance(x, Poly):
                             gens = x.gens
                             if len(gens)!= 1:
-                                raise ValueError("ff only defined for polynomials on one generator")
+                                raise ValueError("ff only defined for "
+                                            "polynomials on one generator")
                             else:
                                 return reduce(lambda r, i:
                                               r*(x.shift(-i).expand()),
@@ -700,7 +703,8 @@ class FallingFactorial(CombinatorialFunction):
                         if isinstance(x, Poly):
                             gens = x.gens
                             if len(gens)!= 1:
-                                raise ValueError("rf only defined for polynomials on one generator")
+                                raise ValueError("rf only defined for "
+                                            "polynomials on one generator")
                             else:
                                 return 1/reduce(lambda r, i:
                                                 r*(x.shift(i).expand()),
@@ -743,27 +747,28 @@ ff = FallingFactorial
 
 
 class binomial(CombinatorialFunction):
-    """Implementation of the binomial coefficient. It can be defined
+    r"""Implementation of the binomial coefficient. It can be defined
     in two ways depending on its desired interpretation:
 
-        C(n,k) = n!/(k!(n-k)!)   or   C(n, k) = ff(n, k)/k!
+    .. math:: \binom{n}{k} = \frac{n!}{k!(n-k)!}\ \text{or}\
+                \binom{n}{k} = \frac{ff(n, k)}{k!}
 
     First, in a strict combinatorial sense it defines the
-    number of ways we can choose 'k' elements from a set of
-    'n' elements. In this case both arguments are nonnegative
+    number of ways we can choose `k` elements from a set of
+    `n` elements. In this case both arguments are nonnegative
     integers and binomial is computed using an efficient
     algorithm based on prime factorization.
 
-    The other definition is generalization for arbitrary 'n',
-    however 'k' must also be nonnegative. This case is very
+    The other definition is generalization for arbitrary `n`,
+    however `k` must also be nonnegative. This case is very
     useful when evaluating summations.
 
-    For the sake of convenience for negative integer 'k' this function
+    For the sake of convenience for negative integer `k` this function
     will return zero no matter what valued is the other argument.
 
-    To expand the binomial when n is a symbol, use either
-    expand_func() or expand(func=True). The former will keep the
-    polynomial in factored form while the latter will expand the
+    To expand the binomial when `n` is a symbol, use either
+    ``expand_func()`` or ``expand(func=True)``. The former will keep
+    the polynomial in factored form while the latter will expand the
     polynomial itself. See examples for details.
 
     Examples
@@ -781,7 +786,7 @@ class binomial(CombinatorialFunction):
     Rows of Pascal's triangle can be generated with the binomial function:
 
     >>> for N in range(8):
-    ...     print([ binomial(N, i) for i in range(N + 1)])
+    ...     print([binomial(N, i) for i in range(N + 1)])
     ...
     [1]
     [1, 1]
@@ -795,7 +800,7 @@ class binomial(CombinatorialFunction):
     As can a given diagonal, e.g. the 4th diagonal:
 
     >>> N = -4
-    >>> [ binomial(N, i) for i in range(1 - N)]
+    >>> [binomial(N, i) for i in range(1 - N)]
     [1, -4, 10, -20, 35]
 
     >>> binomial(Rational(5, 4), 3)
@@ -816,7 +821,6 @@ class binomial(CombinatorialFunction):
     ==========
 
     .. [1] https://www.johndcook.com/blog/binomial_coefficients/
-
 
     """
 
@@ -872,10 +876,10 @@ class binomial(CombinatorialFunction):
         n, k = map(sympify, (n, k))
         d = n - k
         n_nonneg, n_isint = n.is_nonnegative, n.is_integer
-        if k.is_zero or ((n_nonneg or n_isint == False)
+        if k.is_zero or ((n_nonneg or n_isint is False)
                 and d.is_zero):
             return S.One
-        if (k - 1).is_zero or ((n_nonneg or n_isint == False)
+        if (k - 1).is_zero or ((n_nonneg or n_isint is False)
                 and (d - 1).is_zero):
             return n
         if k.is_integer:
@@ -884,7 +888,7 @@ class binomial(CombinatorialFunction):
             elif n.is_number:
                 res = cls._eval(n, k)
                 return res.expand(basic=True) if res else res
-        elif n_nonneg == False and n_isint:
+        elif n_nonneg is False and n_isint:
             # a special case when binomial evaluates to complex infinity
             return S.ComplexInfinity
         elif k.is_number:

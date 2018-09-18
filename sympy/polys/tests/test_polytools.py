@@ -833,9 +833,9 @@ def test_Poly_replace():
 
     assert Poly(x + y).replace(y, y) == Poly(x + y)
     assert Poly(x + y).replace(y, z) == Poly(x + z, x, z)
+    assert Poly(x + y).replace(z, t) == Poly(x + y)
 
     raises(PolynomialError, lambda: Poly(x + y).replace(x, y))
-    raises(PolynomialError, lambda: Poly(x + y).replace(z, t))
 
     assert Poly(x + y, x).replace(x, z) == Poly(z + y, z)
     assert Poly(x + y, y).replace(y, z) == Poly(x + z, z)

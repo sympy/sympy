@@ -571,12 +571,12 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq, hint='almost_linear')
     [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> t = symbols('t')
-    >>> x, y = symbols('x, y', function=True)
+    >>> x, y = symbols('x, y', cls=Function)
     >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
     >>> dsolve(eq)
-    [Eq(x(t), C1*x0 + C2*x0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t)),
-    Eq(y(t), C1*y0 + C2(y0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t) +
-    exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0))]
+    [Eq(x(t), C1*x0(t) + C2*x0(t)*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0(t)**2, t)),
+    Eq(y(t), C1*y0(t) + C2*(y0(t)*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0(t)**2, t) +
+    exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0(t)))]
     >>> eq = (Eq(Derivative(x(t),t),x(t)*y(t)*sin(t)), Eq(Derivative(y(t),t),y(t)**2*sin(t)))
     >>> dsolve(eq)
     {Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))}
@@ -1458,7 +1458,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     >>> from sympy import Function, Eq, symbols, diff
     >>> from sympy.solvers.ode import classify_sysode
     >>> from sympy.abc import t
-    >>> f, x, y = symbols('f, x, y', function=True)
+    >>> f, x, y = symbols('f, x, y', cls=Function)
     >>> k, l, m, n = symbols('k, l, m, n', Integer=True)
     >>> x1 = diff(x(t), t) ; y1 = diff(y(t), t)
     >>> x2 = diff(x(t), t, t) ; y2 = diff(y(t), t, t)
@@ -2050,11 +2050,11 @@ def checksysodesol(eqs, sols, func=None):
     Examples
     ========
 
-    >>> from sympy import Eq, diff, symbols, sin, cos, exp, sqrt, S
+    >>> from sympy import Eq, diff, symbols, sin, cos, exp, sqrt, S, Function
     >>> from sympy.solvers.ode import checksysodesol
     >>> C1, C2 = symbols('C1:3')
     >>> t = symbols('t')
-    >>> x, y = symbols('x, y', function=True)
+    >>> x, y = symbols('x, y', cls=Function)
     >>> eq = (Eq(diff(x(t),t), x(t) + y(t) + 17), Eq(diff(y(t),t), -2*x(t) + y(t) + 12))
     >>> sol = [Eq(x(t), (C1*sin(sqrt(2)*t) + C2*cos(sqrt(2)*t))*exp(t) - S(5)/3),
     ... Eq(y(t), (sqrt(2)*C1*cos(sqrt(2)*t) - sqrt(2)*C2*sin(sqrt(2)*t))*exp(t) - S(46)/3)]
@@ -6812,7 +6812,7 @@ def _linear_2eq_order1_type5(x, y, t, r, eq):
 
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    u, v = symbols('u, v', function=True)
+    u, v = symbols('u, v', cls=Function)
     T = Symbol('T')
     if not cancel(r['c']/r['b']).has(t):
         p = cancel(r['c']/r['b'])
@@ -6934,11 +6934,12 @@ def _linear_2eq_order1_type7(x, y, t, r, eq):
         sol2 = dsolve(diff(y(t),t,t) - (m2/r['c'])*diff(y(t),t) - (e2/r['c'])*y(t)).rhs
         sol1 = dsolve(diff(x(t),t) - r['a']*x(t) - r['b']*sol2).rhs
     else:
-        x0, y0 = symbols('x0, y0')              #x0 and y0 being particular solutions
+        x0 = Function('x0')(t)    # x0 and y0 being particular solutions
+        y0 = Function('y0')(t)
         F = exp(Integral(r['a'],t))
         P = exp(Integral(r['d'],t))
         sol1 = C1*x0 + C2*x0*Integral(r['b']*F*P/x0**2, t)
-        sol2 = C1*y0 + C2(F*P/x0 + y0*Integral(r['b']*F*P/x0**2, t))
+        sol2 = C1*y0 + C2*(F*P/x0 + y0*Integral(r['b']*F*P/x0**2, t))
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 
@@ -7536,7 +7537,8 @@ def _linear_2eq_order2_type10(x, y, t, r, eq):
 
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    u, v = symbols('u, v', function=True)
+    u, v = symbols('u, v', cls=Function)
+    assert False
     T = Symbol('T')
     p = Wild('p', exclude=[t, t**2])
     q = Wild('q', exclude=[t, t**2])
@@ -7579,7 +7581,7 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
 
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    u, v = symbols('u, v', function=True)
+    u, v = symbols('u, v', cls=Function)
     f = -r['c1'] ; g = -r['d1']
     h = -r['c2'] ; p = -r['d2']
     [msol1, msol2] = dsolve([Eq(diff(u(t),t), t*f*u(t) + t*g*v(t)), Eq(diff(v(t),t), t*h*u(t) + t*p*v(t))])
@@ -7769,7 +7771,7 @@ def _linear_3eq_order1_type4(x, y, z, t, r, eq):
     `u, v` and `w` in transformed equation gives value of `x, y` and `z`.
 
     """
-    u, v, w = symbols('u, v, w', function=True)
+    u, v, w = symbols('u, v, w', cls=Function)
     a2, a3 = cancel(r['b1']/r['c1']).as_numer_denom()
     f = cancel(r['b1']/a2)
     b1 = cancel(r['a2']/f); b3 = cancel(r['c2']/f)
@@ -7957,7 +7959,7 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
     C1, C2 = get_numbered_constants(eq, num=2)
     n = Wild('n', exclude=[x(t),y(t)])
     f = Wild('f')
-    u, v, phi = symbols('u, v, phi', function=True)
+    u, v = symbols('u, v')
     r = eq[0].match(diff(x(t),t) - x(t)**n*f)
     g = ((diff(y(t),t) - eq[1])/r[f]).subs(y(t),v)
     F = r[f].subs(x(t),u).subs(y(t),v)
@@ -8002,7 +8004,7 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
     C1, C2 = get_numbered_constants(eq, num=2)
     n = Wild('n', exclude=[x(t),y(t)])
     f = Wild('f')
-    u, v, phi = symbols('u, v, phi', function=True)
+    u, v = symbols('u, v')
     r = eq[0].match(diff(x(t),t) - exp(n*x(t))*f)
     g = ((diff(y(t),t) - eq[1])/r[f]).subs(y(t),v)
     F = r[f].subs(x(t),u).subs(y(t),v)
@@ -8038,16 +8040,17 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
 
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    u, v = symbols('u, v', function=True)
+    v = Function('v')
+    u = Symbol('u')
     f = Wild('f')
     g = Wild('g')
     r1 = eq[0].match(diff(x(t),t) - f)
     r2 = eq[1].match(diff(y(t),t) - g)
-    F = r1[f].subs(x(t),u).subs(y(t),v)
-    G = r2[g].subs(x(t),u).subs(y(t),v)
-    sol2r = dsolve(Eq(diff(v(u),u), G.subs(v,v(u))/F.subs(v,v(u))))
+    F = r1[f].subs(x(t), u).subs(y(t), v(u))
+    G = r2[g].subs(x(t), u).subs(y(t), v(u))
+    sol2r = dsolve(Eq(diff(v(u), u), G/F))
     for sol2s in sol2r:
-        sol1 = solve(Integral(1/F.subs(v, sol2s.rhs), u).doit() - t - C2, u)
+        sol1 = solve(Integral(1/F.subs(v(u), sol2s.rhs), u).doit() - t - C2, u)
     sol = []
     for sols in sol1:
         sol.append(Eq(x(t), sols))
@@ -8075,6 +8078,7 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
     """
     C1, C2 = get_numbered_constants(eq, num=2)
     u, v = symbols('u, v')
+    U, V = symbols('U, V', cls=Function)
     f = Wild('f')
     g = Wild('g')
     f1 = Wild('f1', exclude=[v,t])
@@ -8095,9 +8099,9 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
     sol2r = solve(Integral(F2/F1, u).doit() - Integral(G1/G2,v).doit() - C1, v)
     sol = []
     for sols in sol1r:
-        sol.append(Eq(y(t), dsolve(diff(v(t),t) - F2.subs(u,sols).subs(v,v(t))*G2.subs(v,v(t))*phi.subs(u,sols).subs(v,v(t))).rhs))
+        sol.append(Eq(y(t), dsolve(diff(V(t),t) - F2.subs(u,sols).subs(v,V(t))*G2.subs(v,V(t))*phi.subs(u,sols).subs(v,V(t))).rhs))
     for sols in sol2r:
-        sol.append(Eq(x(t), dsolve(diff(u(t),t) - F1.subs(u,u(t))*G1.subs(v,sols).subs(u,u(t))*phi.subs(v,sols).subs(u,u(t))).rhs))
+        sol.append(Eq(x(t), dsolve(diff(U(t),t) - F1.subs(u,U(t))*G1.subs(v,sols).subs(u,U(t))*phi.subs(v,sols).subs(u,U(t))).rhs))
     return set(sol)
 
 def _nonlinear_2eq_order1_type5(func, t, eq):

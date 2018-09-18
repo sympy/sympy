@@ -23,8 +23,7 @@ matrix:
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8"
-        - TEST_SAGE="true"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle"
       addons:
         apt:
           packages:
@@ -36,7 +35,8 @@ matrix:
     - python: 3.6
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle"
+        - TEST_SAGE="true"
       addons:
         apt:
           packages:
@@ -241,15 +241,14 @@ before_install:
         conda clean --all;
         if [[ "$TEST_SAGE" == "true" ]]; then
             # Use a separate environment because sage downgrades matplotlib
-            conda create -n sage sage=8.1;
-            conda remove -n sage --force sympy;
+            conda create -n sage sagelib mpmath "ipython>=5.5.0,<6";
             conda clean --all;
         fi
         if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
             conda install matchpy;
         fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
-        pip list --format=legacy | grep "numpy" && pip uninstall -y numpy;
+        pip list | grep "numpy" && pip uninstall -y numpy;
     fi
 
 install:
@@ -259,19 +258,22 @@ install:
       then virtualenv -p /usr/bin/pypy ~/.venv;
            . ~/.venv/bin/activate;
     fi
+  # Once https://github.com/fredrik-johansson/mpmath/pull/403 is in a released
+  # version of mpmath remove this line.
+  - pip install mpmath
   # -We:invalid makes invalid escape sequences error in Python 3.6. See
   # -#12028.
   - |
-    pip install mpmath;
     if [[ "${TEST_SETUP}" == "true" ]]; then
-    # The install cycle below is to test installation on systems without setuptools.
-      pip uninstall -y setuptools;
-      python -We:invalid setup.py install;
-      pip uninstall -y sympy;
-      pip install --upgrade setuptools;
+      # The install cycle below is to test installation on systems without
+      # setuptools.
+      virtualenv ~/.venv-no-setuptools;
+      ~/.venv-no-setuptools/bin/pip install mpmath;
+      ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
+      ~/.venv-no-setuptools/bin/python -We:invalid setup.py -q install;
     fi
     python -We:invalid -m compileall -f sympy/;
-    python -We:invalid setup.py install;
+    python -We:invalid setup.py -q install;
     pip list --format=columns;
 
 script:

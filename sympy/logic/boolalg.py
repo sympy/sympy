@@ -411,7 +411,7 @@ class BooleanFunction(Application, Boolean):
     """
     is_Boolean = True
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         return simplify_logic(self)
 
     # /// drop when Py2 is no longer supported
@@ -672,10 +672,10 @@ class Not(BooleanFunction):
         if isinstance(arg, GreaterThan):
             return StrictLessThan(*arg.args)
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         x = self.args[0]
         try:
-            x._eval_simplify(ratio, measure)
+            x._eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
         except:
             pass
         return self.func(x)
@@ -1993,8 +1993,9 @@ def _finger(eq):
     # of times it appeared as a Not(symbol),
     # of times it appeared as a Symbol in an And or Or,
     # of times it appeared as a Not(Symbol) in an And or Or,
-    sum of the number of arguments with which it appeared,
-    counting Symbol as 1 and Not(Symbol) as 2
+    sum of the number of arguments with which it appeared
+    as a Symbol, counting Symbol as 1 and Not(Symbol) as 2
+    and counting self as 1
     ]
 
     >>> from sympy.logic.boolalg import _finger as finger
@@ -2002,7 +2003,18 @@ def _finger(eq):
     >>> from sympy.abc import a, b, x, y
     >>> eq = Or(And(Not(y), a), And(Not(y), b), And(x, y))
     >>> dict(finger(eq))
-    {(0, 0, 1, 0, 2): [x], (0, 0, 1, 0, 3): [a, b], (0, 0, 1, 2, 8): [y]}
+    {(0, 0, 1, 0, 2): [x], (0, 0, 1, 0, 3): [a, b], (0, 0, 1, 2, 2): [y]}
+    >>> dict(finger(x & ~y))
+    {(0, 1, 0, 0, 0): [y], (1, 0, 0, 0, 0): [x]}
+
+    The equation must not have more than one level of nesting:
+
+    >>> dict(finger(And(Or(x, y), y)))
+    {(0, 0, 1, 0, 2): [x], (1, 0, 1, 0, 2): [y]}
+    >>> dict(finger(And(Or(x, And(a, x)), y)))
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: unexpected level of nesting
 
     So y and x have unique fingerprints, but a and b do not.
     """
@@ -2019,9 +2031,10 @@ def _finger(eq):
                 if ai.is_Symbol:
                     d[ai][2] += 1
                     d[ai][-1] += o
-                else:
+                elif ai.is_Not:
                     d[ai.args[0]][3] += 1
-                    d[ai.args[0]][-1] += o
+                else:
+                    raise NotImplementedError('unexpected level of nesting')
     inv = defaultdict(list)
     for k, v in ordered(iter(d.items())):
         inv[tuple(v)].append(k)
@@ -2079,9 +2092,9 @@ def bool_map(bool1, bool2):
 
         # do some quick checks
         if function1.__class__ != function2.__class__:
-            return None
+            return None  # maybe simplification would make them the same
         if len(function1.args) != len(function2.args):
-            return None
+            return None  # maybe simplification would make them the same
         if function1.is_Symbol:
             return {function1: function2}
 
@@ -2109,4 +2122,4 @@ def bool_map(bool1, bool2):
     m = match(a, b)
     if m:
         return a, m
-    return m is not None
+    return m
