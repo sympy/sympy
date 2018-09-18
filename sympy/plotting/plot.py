@@ -980,7 +980,16 @@ class MatplotlibBackend(BaseBackend):
         if parent.yscale and not isinstance(self.ax, Axes3D):
             self.ax.set_yscale(parent.yscale)
         if parent.xlim:
-            self.ax.set_xlim(parent.xlim)
+            from sympy.core.basic import Basic
+            xlim = parent.xlim
+            if any(isinstance(i,Basic) and not i.is_real for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be real".format(xlim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be finite".format(xlim))
+            xlim = (float(i) for i in xlim)
+            self.ax.set_xlim(xlim)
         else:
             if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
                 starts = [s.start for s in parent._series]
