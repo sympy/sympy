@@ -61,7 +61,7 @@ def test_ellipse_geom():
     assert Ellipse((1, 1), 0, 0) == Point(1, 1)
     assert Ellipse((1, 1), 1, 0) == Segment(Point(0, 1), Point(2, 1))
     assert Ellipse((1, 1), 0, 1) == Segment(Point(1, 0), Point(1, 2))
-    
+
     # Private Functions
     assert hash(c1) == hash(Circle(Point(1, 0), Point(0, 1), Point(0, -1)))
     assert c1 in e1
