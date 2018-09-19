@@ -498,6 +498,11 @@ So there is quite a bit that can be done with the module including eigenvalues,
 eigenvectors, nullspace calculation, cofactor expansion tools, and so on. From
 here one might want to look over the ``matrices.py`` file for all functionality.
 
+MatrixDeterminant Class Reference
+---------------------------------
+.. autoclass:: MatrixDeterminant
+   :members:
+
 MatrixBase Class Reference
 --------------------------
 .. autoclass:: MatrixBase
