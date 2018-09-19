@@ -1094,7 +1094,8 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         return None
 
-    def data_contract_dum(self, ndarray_list, dum, ext_rank):
+    @staticmethod
+    def data_contract_dum(ndarray_list, dum, ext_rank):
         from .array import tensorproduct, tensorcontraction, MutableDenseNDimArray
         arrays = list(map(MutableDenseNDimArray, ndarray_list))
         prodarr = tensorproduct(*arrays)
@@ -3478,23 +3479,11 @@ class TensMul(TensExpr, AssocOp):
         return obj
 
     @staticmethod
-    def _tensMul_contract_indices(args, replace_indices=True):
-        args_indices = [get_indices(arg) for arg in args]
-        replacements = [{} for arg in args]
+    def _indices_to_free_dum(args_indices):
         free2pos1 = {}
         free2pos2 = {}
         dummy_data = []
         indices = []
-
-        #_index_order = all([_has_index_order(arg) for arg in args])
-
-        cdt = defaultdict(int)
-
-        def dummy_fmt_gen(tensor_index_type):
-            fmt = tensor_index_type.dummy_fmt
-            nd = cdt[tensor_index_type]
-            cdt[tensor_index_type] += 1
-            return fmt % nd
 
         # Notation for positions (to better understand the code):
         # `pos1`: position in the `args`.
@@ -3508,11 +3497,9 @@ class TensMul(TensExpr, AssocOp):
         # Counter for the index position wrt the whole expression:
         pos2 = 0
 
-        for pos1, arg in enumerate(args):
-            if not isinstance(arg, TensExpr):
-                continue
+        for pos1, arg_indices in enumerate(args_indices):
 
-            for index_pos, index in enumerate(args_indices[pos1]):
+            for index_pos, index in enumerate(arg_indices):
                 if not isinstance(index, TensorIndex):
                     raise TypeError("expected TensorIndex")
                 if -index in free2pos1:
@@ -3536,6 +3523,28 @@ class TensMul(TensExpr, AssocOp):
         free_names = [i.name for i in free2pos2.keys()]
 
         dummy_data.sort(key=lambda x: x[3])
+        return indices, free, free_names, dummy_data
+
+    @staticmethod
+    def _dummy_data_to_dum(dummy_data):
+        return [(p2a, p2b) for (i, p1a, p1b, p2a, p2b) in dummy_data]
+
+    @staticmethod
+    def _tensMul_contract_indices(args, replace_indices=True):
+        replacements = [{} for arg in args]
+
+        #_index_order = all([_has_index_order(arg) for arg in args])
+
+        args_indices = [get_indices(arg) for arg in args]
+        indices, free, free_names, dummy_data = TensMul._indices_to_free_dum(args_indices)
+
+        cdt = defaultdict(int)
+
+        def dummy_fmt_gen(tensor_index_type):
+            fmt = tensor_index_type.dummy_fmt
+            nd = cdt[tensor_index_type]
+            cdt[tensor_index_type] += 1
+            return fmt % nd
 
         if replace_indices:
             for old_index, pos1cov, pos1contra, pos2cov, pos2contra in dummy_data:
@@ -3551,8 +3560,8 @@ class TensMul(TensExpr, AssocOp):
                 indices[pos2contra] = -dummy
             args = [arg.xreplace(repl) for arg, repl in zip(args, replacements)]
 
-        dummy_pairs2 = [(p2a, p2b) for (i, p1a, p1b, p2a, p2b) in dummy_data]
-        return args, indices, free, dummy_pairs2
+        dum = TensMul._dummy_data_to_dum(dummy_data)
+        return args, indices, free, dum
 
     @staticmethod
     def _get_components_from_args(args):
