@@ -110,6 +110,10 @@ the various ODE solving methods. For this reason, they are documented here.
 
 :obj:`separable`
 ^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_nth_algebraic
+
+:obj:`separable`
+^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_separable
 
 :obj:`almost_linear`
