@@ -489,7 +489,7 @@ class Ellipse(GeometrySet):
         >>> e1.equation()
         y**2/4 + (x/3 - 1/3)**2 - 1
         >>> e1.equation(slope = 1)
-        (-x + y + 1)**2/18 + (x + y - 1)**2/8 - 1
+        (-x + y + 1)**2/8 + (x + y - 1)**2/18 - 1
         >>> e2 = Ellipse(Point(0, 0), 4, 1)
         >>> e2.equation(slope = 1)
         (-x + y)**2/2 + (x + y)**2/32 - 1
