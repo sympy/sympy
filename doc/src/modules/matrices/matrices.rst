@@ -503,6 +503,11 @@ MatrixDeterminant Class Reference
 .. autoclass:: MatrixDeterminant
    :members:
 
+MatrixReductions Class Reference
+--------------------------------
+.. autoclass:: MatrixReductions
+   :members:
+
 MatrixBase Class Reference
 --------------------------
 .. autoclass:: MatrixBase
