@@ -492,27 +492,24 @@ class Ellipse(GeometrySet):
         (-x + y + 1)**2/18 + (x + y - 1)**2/8 - 1
         >>> e2 = Ellipse(Point(0, 0), 4, 1)
         >>> e2.equation(slope = 1)
-        (-x + y)**2/32 + (x + y)**2/2 - 1
+        (-x + y)**2/2 + (x + y)**2/32 - 1
 
         """
-
+        x = _symbol(x, real=True)
+        y = _symbol(y, real=True)
+        
         if slope is not None:
-            a, b, x, y, x_c, y_c = symbols('a,b,x,y,x_c,y_c')
             x_c = self.center.x
             y_c = self.center.y
 
             L = ((y - y_c) - slope * (x - x_c)) ** 2
             l = (slope * (y - y_c) + (x - x_c)) ** 2
 
-            if idiff(L, y, x) == -1 / idiff(l, y, x):
-                a = self.major ** 2 * (1 + slope ** 2)
-                b = self.minor ** 2 * (1 + slope ** 2)
-                return L / a + l / b - 1
-            else:
-                raise ValueError("The equation for ellipse cannot be calculated.")
+            b = self.major ** 2 * (1 + slope ** 2)
+            a = self.minor ** 2 * (1 + slope ** 2)
+            return (l / b) + (L / a) - 1
+
         else:
-            x = _symbol(x, real=True)
-            y = _symbol(y, real=True)
             t1 = ((x - self.center.x) / self.hradius)**2
             t2 = ((y - self.center.y) / self.vradius)**2
             return t1 + t2 - 1
