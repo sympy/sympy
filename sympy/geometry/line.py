@@ -18,14 +18,13 @@ Segment3D
 """
 from __future__ import division, print_function
 
-import warnings
 
-from sympy import solve, diff, Expr
+from sympy import Expr
 from sympy.core import S, sympify
 from sympy.core.compatibility import ordered
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, oo, nan, zoo
 from sympy.core.relational import Eq
-from sympy.core.symbol import _symbol, Dummy, var
+from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
@@ -35,7 +34,6 @@ from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.sets import Intersection
 from sympy.matrices import Matrix
-from sympy.polys.polytools import poly, degree, LC
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
 from sympy.utilities.misc import Undecidable, filldedent
@@ -1097,9 +1095,9 @@ class Line(LinearEntity):
     >>> # a circle object is returned
     >>> from sympy.abc import x, y, a, b
     >>> Line(3 * x + y + 18)
-    Line2D(Point2D(0, 0), Point2D(1, -3))
+    Line2D(Point2D(0, -18), Point2D(1, -21))
     >>> Line(3 * a + b + 18, x='a', y='b')
-    Line2D(Point2D(0, 0), Point2D(1, -3))
+    Line2D(Point2D(0, -18), Point2D(1, -21))
     """
 
     def __new__(cls, *args, **kwargs):
@@ -1118,19 +1116,27 @@ class Line(LinearEntity):
                     raise ValueError('ambiguous %s' % x_)
                 return xs[0]
 
+            xin, yin = x, y
+
             x = find(x, equation)
             y = find(y, equation)
 
-            if (len(solve(equation, y)) == 0) and (len(solve(equation, x)) != 0) and (degree(poly(equation, x)) == 1):
-                x_intercept = solve(equation, x)[0]
-                p1 = Point(x_intercept, 0)
-                p2 = Point(x_intercept, 1)
-                return Line(p1, p2)
-            else:
-                slope = diff(LC(poly(solve(equation, y)[0], y)), x)
-                p1 = (0, slope * 0)
-                p2 = (1, slope * 1)
-                return Line(p1, p2)
+            constant_term = equation.subs([(x, 0), (y, 0)])
+
+            if constant_term is nan or constant_term is zoo:
+                constant_term = equation.subs([(x, 0), (y, 1)])
+                if constant_term is zoo or constant_term is nan:
+                    constant_term = equation.subs([(x, 1), (y, 0)])
+
+            x_coeff = equation.subs([(x, 1), (y, 0)]) - constant_term
+            y_coeff = equation.subs([(x, 0), (y, 1)]) - constant_term
+
+            if y_coeff != 0:
+                return Line((0, -constant_term / y_coeff), slope=-x_coeff / y_coeff)
+            if y_coeff == 0 and x_coeff != 0:
+                return Line((-constant_term / x_coeff, 0), slope=oo)
+
+            raise ValueError('neither %s nor %s were found in the equation' % (xin, yin))
 
         else:
             if len(args) > 0:

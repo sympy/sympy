@@ -8,26 +8,26 @@ Contains
 
 from __future__ import division, print_function
 
-from sympy import diff, expand, Expr
+from sympy import diff, Expr
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
-from sympy.core.compatibility import range, ordered
-from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol, var
+from sympy.core.compatibility import ordered
+from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
-from sympy.polys import DomainError, Poly, PolynomialError, poly, degree, LC
+from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
 from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point2D, Point3D
-from .line import Line, LinearEntity
+from .line import Line
 from .util import idiff
 
 import random
@@ -1341,7 +1341,7 @@ class Circle(Ellipse):
     >>> c2.hradius, c2.vradius, c2.radius, c2.center
     (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point2D(1/2, 1/2))
 
-    >>> # a circle object is returned
+    >>> # a circle object returned from given equation and optional 'x' and 'y' parameters
     >>> from sympy.abc import x, y, a, b
     >>> Circle(x ** 2 + y ** 2 - 25)
     Circle(Point2D(0, 0), 5)
@@ -1357,13 +1357,13 @@ class Circle(Ellipse):
             y = kwargs.get('y', 'y')
             equation = args[0]
 
-            def find(x_, equation_):
-                free = equation_.free_symbols
-                xs = [i for i in free if (i.name if type(x_) is str else i) == x_]
+            def find(x_parameter, eq):
+                free = eq.free_symbols
+                xs = [i for i in free if (i.name if type(x_parameter) is str else i) == x_parameter]
                 if not xs:
-                    raise ValueError('could not find %s' % x_)
+                    raise ValueError('could not find %s' % x_parameter)
                 if len(xs) != 1:
-                    raise ValueError('ambiguous %s' % x_)
+                    raise ValueError('ambiguous %s' % x_parameter)
                 return xs[0]
 
             x = find(x, equation)
