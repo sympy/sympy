@@ -20,11 +20,12 @@ from __future__ import division, print_function
 
 import warnings
 
+from sympy import solve, diff, Expr
 from sympy.core import S, sympify
 from sympy.core.compatibility import ordered
 from sympy.core.numbers import Rational
 from sympy.core.relational import Eq
-from sympy.core.symbol import _symbol, Dummy
+from sympy.core.symbol import _symbol, Dummy, var
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
@@ -34,7 +35,7 @@ from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.sets import Intersection
 from sympy.matrices import Matrix
-
+from sympy.polys.polytools import poly, degree, LC
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
 from sympy.utilities.misc import Undecidable, filldedent
@@ -1051,6 +1052,15 @@ class Line(LinearEntity):
     for `Line2D` and the `direction_ratio` argument is only relevant
     for `Line3D`.
 
+    If the equation of a Line, whose line object is needed, is
+    ax + by + c = 0, then the input has to be of
+    the following format:
+
+    Line(ax + by + c, x='x', y='y')
+
+    The input can also be given in terms of some other variable other than x
+    and/or y, but then they need to be specified in the additional argument.
+
     See Also
     ========
 
@@ -1083,24 +1093,68 @@ class Line(LinearEntity):
     >>> s = Segment((0, 0), (0, 1))
     >>> Line(s).equation()
     x
+
+    >>> # a circle object is returned
+    >>> from sympy.abc import x, y, a, b
+    >>> Line(3 * x + y + 18)
+    Line2D(Point2D(0, 0), Point2D(1, -3))
+    >>> Line(3 * a + b + 18, x='a', y='b')
+    Line2D(Point2D(0, 0), Point2D(1, -3))
     """
 
-    def __new__(cls, p1, p2=None, **kwargs):
-        if isinstance(p1, LinearEntity):
-            if p2:
-                raise ValueError('If p1 is a LinearEntity, p2 must be None.')
-            dim = len(p1.p1)
-        else:
-            p1 = Point(p1)
-            dim = len(p1)
-            if p2 is not None or isinstance(p2, Point) and p2.ambient_dimension != dim:
-                p2 = Point(p2)
+    def __new__(cls, *args, **kwargs):
 
-        if dim == 2:
-            return Line2D(p1, p2, **kwargs)
-        elif dim == 3:
-            return Line3D(p1, p2, **kwargs)
-        return LinearEntity.__new__(cls, p1, p2, **kwargs)
+        if len(args) == 1 and isinstance(args[0], Expr):
+            x = kwargs.get('x', 'x')
+            y = kwargs.get('y', 'y')
+            equation = args[0]
+
+            def find(x_, equation_):
+                free = equation_.free_symbols
+                xs = [i for i in free if (i.name if type(x_) is str else i) == x_]
+                if not xs:
+                    raise ValueError('could not find %s' % x_)
+                if len(xs) != 1:
+                    raise ValueError('ambiguous %s' % x_)
+                return xs[0]
+
+            x = find(x, equation)
+            y = find(y, equation)
+
+            if (len(solve(equation, y)) == 0) and (len(solve(equation, x)) != 0) and (degree(poly(equation, x)) == 1):
+                x_intercept = solve(equation, x)[0]
+                p1 = Point(x_intercept, 0)
+                p2 = Point(x_intercept, 1)
+                return Line(p1, p2)
+            else:
+                slope = diff(LC(poly(solve(equation, y)[0], y)), x)
+                p1 = (0, slope * 0)
+                p2 = (1, slope * 1)
+                return Line(p1, p2)
+
+        else:
+            if len(args) > 0:
+                p1 = args[0]
+                if len(args) > 1:
+                    p2 = args[1]
+                else:
+                    p2=None
+
+                if isinstance(p1, LinearEntity):
+                    if p2:
+                        raise ValueError('If p1 is a LinearEntity, p2 must be None.')
+                    dim = len(p1.p1)
+                else:
+                    p1 = Point(p1)
+                    dim = len(p1)
+                    if p2 is not None or isinstance(p2, Point) and p2.ambient_dimension != dim:
+                        p2 = Point(p2)
+
+                if dim == 2:
+                    return Line2D(p1, p2, **kwargs)
+                elif dim == 3:
+                    return Line3D(p1, p2, **kwargs)
+                return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def contains(self, other):
         """
