@@ -145,16 +145,10 @@ class Ellipse(GeometrySet):
                 vradius = hradius * sqrt(1 - eccentricity**2)
 
         if hradius == vradius:
-            return Circle(center, hradius, **kwargs)
+            return center if hradius == 0 else Circle(center, hradius, **kwargs)
 
-        if hradius == 0 and vradius == 0:
-            return center
-
-        if hradius == 0:
-            return Segment(Point(center[0], center[1]-vradius), Point(center[0], center[1]+vradius))
-
-        if vradius == 0:
-            return Segment(Point(center[0]-hradius, center[1]), Point(center[0]+hradius, center[1]))
+        if hradius == 0 or vradius == 0:
+            return Segment(Point(center[0] - hradius, center[1] - vradius), Point(center[0] + hradius, center[1] + vradius))
 
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
 

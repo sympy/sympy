@@ -425,7 +425,7 @@ def test_circumference():
     assert Ellipse(Point(0, 0), 5, 4).circumference == 20 * elliptic_e(S(9) / 25)
 
     # degenerate ellipse
-    assert Ellipse(None, 1, None, 1).circumference == 4
+    assert Ellipse(None, 1, None, 1).length == 2
 
     # circle
     assert Ellipse(None, 1, None, 0).circumference == 2*pi
