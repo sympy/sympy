@@ -408,6 +408,7 @@ class MatrixDeterminant(MatrixCommon):
 
             * Also any strings with uppercase letters would just work fine if
             their lowercase equivalents are supported, but is not recommended.
+
         """
 
         # sanitize `method`
