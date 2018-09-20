@@ -2955,11 +2955,13 @@ def test_sysode_linear_neq_order1():
 def test_nth_algebraic():
     eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
     sol = Eq(f(x), C1 + g(x))
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
     assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
     assert sol == dsolve(eqn, f(x))
 
     eqn = (diff(f(x)) - x)*(diff(f(x)) + x)
     sol = [Eq(f(x), C1 - x**2/2), Eq(f(x), C1 + x**2/2)]
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
     assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
     assert sol == dsolve(eqn, f(x))
 
@@ -2973,12 +2975,14 @@ def test_nth_algebraic_redundant_solutions():
     # This one has a redundant solution that should be removed
     eqn = f(x)*f(x).diff(x)
     soln = Eq(f(x), C1)
+    assert checkodesol(eqn, soln, order=1, solve_for_func=False)[0]
     assert soln == dsolve(eqn, f(x), hint='nth_algebraic')
     assert soln == dsolve(eqn, f(x))
 
     # This has two integral solutions and no algebraic solutions
     eqn = (diff(f(x)) - x)*(diff(f(x)) + x)
     sol = [Eq(f(x), C1 - x**2/2), Eq(f(x), C1 + x**2/2)]
+    assert all(c[0] for c in checkodesol(eqn, sol, order=1, solve_for_func=False))
     assert set(sol) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
     assert set(sol) == set(dsolve(eqn, f(x)))
 
@@ -2989,6 +2993,7 @@ def test_nth_algebraic_redundant_solutions():
     solns = [Eq(f(x), 0),
              Eq(f(x), C1 - x)]
     solns_final =  _nth_algebraic_remove_redundant_solutions(eqn, solns, 1, x)
+    assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
     assert set(solns) == set(solns_final)
 
 
@@ -3004,6 +3009,7 @@ def test_nth_algebraic_find_multiple1():
     eqn = f(x) + f(x)*f(x).diff(x)
     solns = [Eq(f(x), 0),
              Eq(f(x), C1 - x)]
+    assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
     assert set(solns) == set(dsolve(eqn, f(x)))
 
 
@@ -3011,6 +3017,7 @@ def test_nth_algebraic_find_multiple1():
 def test_nth_algebraic_noprep1():
     eqn = Derivative(x*f(x), x, x, x)
     sol = Eq(f(x), (C1 + C2*x + C3*x**2) / x)
+    assert checkodesol(eqn, sol, order=3, solve_for_func=False)[0]
     assert sol == dsolve(eqn, f(x), prep=False, hint='nth_algebraic')
 
 
@@ -3018,6 +3025,7 @@ def test_nth_algebraic_noprep1():
 def test_nth_algebraic_prep1():
     eqn = Derivative(x*f(x), x, x, x)
     sol = Eq(f(x), (C1 + C2*x + C3*x**2) / x)
+    assert checkodesol(eqn, sol, order=3, solve_for_func=False)[0]
     assert sol == dsolve(eqn, f(x), prep=True, hint='nth_algebraic')
     assert sol == dsolve(eqn, f(x))
 
@@ -3026,13 +3034,15 @@ def test_nth_algebraic_prep1():
 def test_nth_algebraic_noprep2():
     eqn = Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x))
     sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
+    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
     assert sol == dsolve(eqn, f(x), prep=False, hint='nth_algebraic')
 
 
 @XFAIL
 def test_nth_algebraic_prep2():
     eqn = Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x))
-    sol = Eq(f(x), C1 + C2*log(x) + exp(x) + Ei(x))
+    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
+    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
     assert sol == dsolve(eqn, f(x), prep=True, hint='nth_algebraic')
     assert sol == dsolve(eqn, f(x))
 
@@ -3041,7 +3051,8 @@ def test_nth_algebraic_prep2():
 @XFAIL
 def test_2nd_order_substitution():
     eqn = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
-    sol = Eq(f(x), C1 + C2*log(x) + exp(x) + Ei(x))
+    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
+    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
     assert sol == dsolve(eqn, f(x))
 
 # This needs a combination of solutions from nth_algebraic and some other
@@ -3051,6 +3062,7 @@ def test_nth_algebraic_find_multiple2():
     eqn = f(x)**2 + f(x)*f(x).diff(x)
     solns = [Eq(f(x), 0),
              Eq(f(x), C1*exp(-x))]
+    assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
     assert set(solns) == dsolve(eqn, f(x))
 
 
@@ -3058,5 +3070,6 @@ def test_nth_algebraic_find_multiple2():
 @XFAIL
 def test_factoring_ode():
     eqn = Derivative(x*f(x), x, x, x) + Derivative(f(x), x, x, x)
-    soln = Eq(f(x), (C1*x**2/2 + C2*x + C3 - x)/x)
+    soln = Eq(f(x), (C1*x**2/2 + C2*x + C3 - x)/(1 + x))
+    assert checkodesol(eqn, soln, order=2, solve_for_func=False)[0]
     assert soln == dsolve(eqn, f(x))
