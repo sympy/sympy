@@ -513,6 +513,11 @@ MatrixEigen Class Reference
 .. autoclass:: MatrixEigen
    :members:
 
+MatrixCalculus Class Reference
+---------------------------------
+.. autoclass:: MatrixCalculus
+   :members:
+
 MatrixBase Class Reference
 --------------------------
 .. autoclass:: MatrixBase
