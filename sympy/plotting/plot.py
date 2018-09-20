@@ -980,14 +980,32 @@ class MatplotlibBackend(BaseBackend):
         if parent.yscale and not isinstance(self.ax, Axes3D):
             self.ax.set_yscale(parent.yscale)
         if parent.xlim:
-            self.ax.set_xlim(parent.xlim)
+            from sympy.core.basic import Basic
+            xlim = parent.xlim
+            if any(isinstance(i,Basic) and not i.is_real for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be real".format(xlim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be finite".format(xlim))
+            xlim = (float(i) for i in xlim)
+            self.ax.set_xlim(xlim)
         else:
             if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
                 starts = [s.start for s in parent._series]
                 ends = [s.end for s in parent._series]
                 self.ax.set_xlim(min(starts), max(ends))
         if parent.ylim:
-            self.ax.set_ylim(parent.ylim)
+            from sympy.core.basic import Basic
+            ylim = parent.ylim
+            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be real".format(ylim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be finite".format(ylim))
+            ylim = (float(i) for i in ylim)
+            self.ax.set_ylim(ylim)
         if not isinstance(self.ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
             self.ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:

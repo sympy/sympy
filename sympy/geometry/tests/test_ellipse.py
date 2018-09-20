@@ -428,3 +428,5 @@ def test_circumference():
 
     # test numerically
     assert abs(Ellipse(None, hradius=5, vradius=3).circumference.evalf(16) - 25.52699886339813) < 1e-10
+def test_issue_15259():
+    assert Circle((1, 2), 0) == Point(1, 2)

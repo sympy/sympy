@@ -40,7 +40,7 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
 
     Represented using a single symbol and interval.
     """
-    def integrate(self, expr, variables=None, **kwargs):
+    def compute_expectation(self, expr, variables=None, **kwargs):
         if variables is None:
             variables = self.symbols
         if not variables:
@@ -59,13 +59,13 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
     A collection of independent domains with continuous support
     """
 
-    def integrate(self, expr, variables=None, **kwargs):
+    def compute_expectation(self, expr, variables=None, **kwargs):
         if variables is None:
             variables = self.symbols
         for domain in self.domains:
             domain_vars = frozenset(variables) & frozenset(domain.symbols)
             if domain_vars:
-                expr = domain.integrate(expr, domain_vars, **kwargs)
+                expr = domain.compute_expectation(expr, domain_vars, **kwargs)
         return expr
 
     def as_boolean(self):
@@ -78,13 +78,13 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     condition such as x > 3
     """
 
-    def integrate(self, expr, variables=None, **kwargs):
+    def compute_expectation(self, expr, variables=None, **kwargs):
         if variables is None:
             variables = self.symbols
         if not variables:
             return expr
         # Extract the full integral
-        fullintgrl = self.fulldomain.integrate(expr, variables)
+        fullintgrl = self.fulldomain.compute_expectation(expr, variables)
         # separate into integrand and limits
         integrand, limits = fullintgrl.function, list(fullintgrl.limits)
 
@@ -312,7 +312,7 @@ class ContinuousPSpace(PSpace):
     def pdf(self):
         return self.density(*self.domain.symbols)
 
-    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         if rvs is None:
             rvs = self.values
         else:
@@ -322,7 +322,7 @@ class ContinuousPSpace(PSpace):
 
         domain_symbols = frozenset(rv.symbol for rv in rvs)
 
-        return self.domain.integrate(self.pdf * expr,
+        return self.domain.compute_expectation(self.pdf * expr,
                 domain_symbols, **kwargs)
 
     def compute_density(self, expr, **kwargs):
@@ -331,11 +331,11 @@ class ContinuousPSpace(PSpace):
             # Marginalize all other random symbols out of the density
             randomsymbols = tuple(set(self.values) - frozenset([expr]))
             symbols = tuple(rs.symbol for rs in randomsymbols)
-            pdf = self.domain.integrate(self.pdf, symbols, **kwargs)
+            pdf = self.domain.compute_expectation(self.pdf, symbols, **kwargs)
             return Lambda(expr.symbol, pdf)
 
         z = Dummy('z', real=True, finite=True)
-        return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
+        return Lambda(z, self.compute_expectation(DiracDelta(expr - z), **kwargs))
 
     @cacheit
     def compute_cdf(self, expr, **kwargs):
@@ -428,7 +428,7 @@ class ContinuousPSpace(PSpace):
             # this makes sure that they are evaluated separately
             # and in the correct order
             replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
-            norm = domain.integrate(self.pdf, **kwargs)
+            norm = domain.compute_expectation(self.pdf, **kwargs)
             pdf = self.pdf / norm.xreplace(replacement)
             density = Lambda(domain.symbols, pdf)
 
@@ -461,7 +461,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         """
         return {self.value: self.distribution.sample()}
 
-    def integrate(self, expr, rvs=None, evaluate=False, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr

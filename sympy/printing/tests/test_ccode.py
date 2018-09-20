@@ -133,7 +133,12 @@ def test_ccode_inline_function():
 
 def test_ccode_exceptions():
     assert ccode(gamma(x), standard='C99') == "tgamma(x)"
-    assert 'not supported in c' in ccode(gamma(x), standard='C89').lower()
+    gamma_c89 = ccode(gamma(x), standard='C89')
+    assert 'not supported in c' in gamma_c89.lower()
+    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=False)
+    assert 'not supported in c' in gamma_c89.lower()
+    gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=True)
+    assert not 'not supported in c' in gamma_c89.lower()
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"

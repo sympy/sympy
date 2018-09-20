@@ -5,6 +5,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError, _mexpand
+from sympy.core.sympify import sympify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import subsets, variations
@@ -190,7 +191,6 @@ def test_Lambda():
     assert Lambda(x, 1)(1) is S.One
 
 
-
 def test_IdentityFunction():
     assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
     assert Lambda(x, 2*x) is not S.IdentityFunction
@@ -220,6 +220,15 @@ def test_Lambda_equality():
 
 
 def test_Subs():
+    assert Subs(1, (), ()) is S.One
+    # check null subs influence on hashing
+    assert Subs(x, y, z) != Subs(x, y, 1)
+    # self mapping var/point
+    assert Subs(Derivative(f(x), (x, 2)), x, x).doit() == f(x).diff(x, x)
+    assert Subs(x, x, 0).has(x)  # it's a structural answer
+    assert not Subs(x, x, 0).free_symbols
+    assert Subs(Subs(x + y, x, 2), y, 1) == Subs(x + y, (x, y), (2, 1))
+    assert Subs(x, (x,), (0,)) == Subs(x, x, 0)
     assert Subs(x, x, 0) == Subs(y, y, 0)
     assert Subs(x, x, 0).subs(x, 1) == Subs(x, x, 0)
     assert Subs(y, x, 0).subs(y, 1) == Subs(1, x, 0)
@@ -227,8 +236,7 @@ def test_Subs():
     assert Subs(f(x**2), x**2, 0).doit() == f(0)
     assert Subs(f(x, y, z), (x, y, z), (0, 1, 1)) != \
         Subs(f(x, y, z), (x, y, z), (0, 0, 1))
-    assert Subs(f(x, y), (x, y, z), (0, 1, 1)) == \
-        Subs(f(x, y), (x, y, z), (0, 1, 2))
+    assert Subs(x, y, 2).subs(x, y).doit() == 2
     assert Subs(f(x, y), (x, y, z), (0, 1, 1)) != \
         Subs(f(x, y) + z, (x, y, z), (0, 1, 0))
     assert Subs(f(x, y), (x, y), (0, 1)).doit() == f(0, 1)
@@ -925,6 +933,7 @@ def test_order_could_be_zero():
     assert diff(y, (x, n + 1)) == S.Zero
     assert diff(y, (x, m)) == S.Zero
 
+
 def test_undefined_function_eq():
     f = Function('f')
     f2 = Function('f')
@@ -939,6 +948,7 @@ def test_undefined_function_eq():
     assert f != g
 
     assert f != f_real
+
 
 def test_function_assumptions():
     x = Symbol('x')
@@ -965,3 +975,23 @@ def test_undef_fcn_float_issue_6938():
     assert not f(pi).evalf().is_number
     x = Symbol('x')
     assert not f(x).evalf(subs={x:1.2}).is_number
+
+def test_undefined_function_eval():
+    # Issue 15170. Make sure UndefinedFunction with eval defined works
+    # properly. The issue there was that the hash was determined before _nargs
+    # was set, which is included in the hash, hence changing the hash. The
+    # class is added to sympy.core.core.all_classes before the hash is
+    # changed, meaning "temp in all_classes" would fail, causing sympify(temp(t))
+    # to give a new class. We will eventually remove all_classes, but make
+    # sure this continues to work.
+
+    fdiff = lambda self, argindex=1: cos(self.args[argindex - 1])
+    eval = classmethod(lambda cls, t: None)
+    _imp_ = classmethod(lambda cls, t: sin(t))
+
+    temp = Function('temp', fdiff=fdiff, eval=eval, _imp_=_imp_)
+
+    expr = temp(t)
+    assert sympify(expr) == expr
+    assert type(sympify(expr)).fdiff.__name__ == "<lambda>"
+    assert expr.diff(t) == cos(t)

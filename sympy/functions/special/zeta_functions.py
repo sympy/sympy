@@ -509,7 +509,7 @@ class dirichlet_eta(Function):
 
     For `\operatorname{Re}(s) > 0`, this function is defined as
 
-    .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^n}{n^s}.
+    .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^{n-1}}{n^s}.
 
     It admits a unique analytic continuation to all of :math:`\mathbb{C}`.
     It is an entire, unbranched function.

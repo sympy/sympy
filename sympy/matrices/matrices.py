@@ -170,7 +170,7 @@ class MatrixDeterminant(MatrixCommon):
         submat, toeplitz = self._eval_berkowitz_toeplitz_matrix()
         return toeplitz * submat._eval_berkowitz_vector()
 
-    def _eval_det_bareiss(self):
+    def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul):
         """Compute matrix determinant using Bareiss' fraction-free
         algorithm which is an extension of the well known Gaussian
         elimination method. This approach is best suited for dense
@@ -195,7 +195,7 @@ class MatrixDeterminant(MatrixCommon):
             # the computation by the factor of 2.5 in one test.
             # Relevant issues: #10279 and #13877.
             pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
-                                         iszerofunc=_is_zero_after_expand_mul)
+                                         iszerofunc=iszerofunc)
             if pivot_pos == None:
                 return S.Zero
 
@@ -383,7 +383,7 @@ class MatrixDeterminant(MatrixCommon):
         return self._new(self.rows, self.cols,
                          lambda i, j: self.cofactor(i, j, method))
 
-    def det(self, method="bareiss"):
+    def det(self, method="bareiss", iszerofunc=None):
         """Computes the determinant of a matrix.  If the matrix
         is at most 3x3, a hard-coded formula is used.
         Otherwise, the determinant using the method `method`.
@@ -403,6 +403,14 @@ class MatrixDeterminant(MatrixCommon):
             method = "lu"
         if method not in ("bareiss", "berkowitz", "lu"):
             raise ValueError("Determinant method '%s' unrecognized" % method)
+
+        if iszerofunc is None:
+            if method == "bareiss":
+                iszerofunc = _is_zero_after_expand_mul
+            elif method == "lu":
+                iszerofunc = _iszero
+        elif not isinstance(iszerofunc, FunctionType):
+            raise ValueError("Zero testing method '%s' unrecognized" % iszerofunc)
 
         # if methods were made internal and all determinant calculations
         # passed through here, then these lines could be factored out of
@@ -426,11 +434,11 @@ class MatrixDeterminant(MatrixCommon):
                    - self[0, 1] * self[1, 0] * self[2, 2])
 
         if method == "bareiss":
-            return self._eval_det_bareiss()
+            return self._eval_det_bareiss(iszerofunc=iszerofunc)
         elif method == "berkowitz":
             return self._eval_det_berkowitz()
         elif method == "lu":
-            return self._eval_det_lu()
+            return self._eval_det_lu(iszerofunc=iszerofunc)
 
     def minor(self, i, j, method="berkowitz"):
         """Return the (i,j) minor of `self`.  That is,
@@ -932,7 +940,7 @@ class MatrixSubspaces(MatrixReductions):
 
         return [self.col(i) for i in pivots]
 
-    def nullspace(self, simplify=False):
+    def nullspace(self, simplify=False, iszerofunc=_iszero):
         """Returns list of vectors (Matrix objects) that span nullspace of self
 
         Examples
@@ -958,7 +966,7 @@ class MatrixSubspaces(MatrixReductions):
         rowspace
         """
 
-        reduced, pivots = self.rref(simplify=simplify)
+        reduced, pivots = self.rref(iszerofunc=iszerofunc, simplify=simplify)
 
         free_vars = [i for i in range(self.cols) if i not in pivots]
 
@@ -1114,10 +1122,22 @@ class MatrixEigen(MatrixSubspaces):
             Raise an error when not all eigenvalues are computed. This is
             caused by ``roots`` not returning a full list of eigenvalues.
 
+        simplify : bool or function
+            If simplify is set to True, it attempts to return the most
+            simplified form of expressions returned by applying default
+            simplification method in every routine.
+            If simplify is set to False, it will skip simplification in this
+            particular routine to save computation resources.
+            If you pass a function to simplify, it will attempt to apply
+            the particular function as simplification method.
+
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
         """
+        simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
+        multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
+
         mat = self
         if not mat:
             return {}
@@ -1126,8 +1146,11 @@ class MatrixEigen(MatrixSubspaces):
                 mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
         if mat.is_upper or mat.is_lower:
+            if not self.is_square:
+                raise NonSquareMatrixError()
+
             diagonal_entries = [mat[i, i] for i in range(mat.rows)]
-            multiple = flags.pop('multiple', False)
+
             if multiple:
                 eigs = diagonal_entries
             else:
@@ -1138,7 +1161,10 @@ class MatrixEigen(MatrixSubspaces):
                     eigs[diagonal_entry] += 1
         else:
             flags.pop('simplify', None)  # pop unsupported flag
-            eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
+            if isinstance(simplify, FunctionType):
+                eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify), **flags)
+            else:
+                eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
 
         # make sure the algebraic multiplicty sums to the
         # size of the matrix
@@ -1146,9 +1172,20 @@ class MatrixEigen(MatrixSubspaces):
             isinstance(eigs, dict) else len(eigs)) != self.cols:
             raise MatrixError("Could not compute eigenvalues for {}".format(self))
 
-        return eigs
+        # Since 'simplify' flag is unsupported in roots()
+        # simplify() function will be applied once at the end of the routine.
+        if not simplify:
+            return eigs
+        if not isinstance(simplify, FunctionType):
+            simplify = _simplify
+        # With 'multiple' flag set true, simplify() will be mapped for the list
+        # Otherwise, simplify() will be mapped for the keys of the dictionary
+        if not multiple:
+            return {simplify(key): value for key, value in eigs.items()}
+        else:
+            return [simplify(value) for value in eigs]
 
-    def eigenvects(self, error_when_incomplete=True, **flags):
+    def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
 
         The flag ``simplify`` has two effects:
@@ -1189,12 +1226,12 @@ class MatrixEigen(MatrixSubspaces):
         def eigenspace(eigenval):
             """Get a basis for the eigenspace for a particular eigenvalue"""
             m = mat - self.eye(mat.rows) * eigenval
-            ret = m.nullspace()
+            ret = m.nullspace(iszerofunc=iszerofunc)
             # the nullspace for a real eigenvalue should be
             # non-trivial.  If we didn't find an eigenvector, try once
             # more a little harder
             if len(ret) == 0 and simplify:
-                ret = m.nullspace(simplify=True)
+                ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
             if len(ret) == 0:
                 raise NotImplementedError(
                         "Can't evaluate eigenvector for eigenvalue %s" % eigenval)

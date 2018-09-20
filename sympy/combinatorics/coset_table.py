@@ -49,6 +49,8 @@ class CosetTable(DefaultPrinting):
     # default limit for the number of cosets allowed in a
     # coset enumeration.
     coset_table_max_limit = 4096000
+    # limit for the current instance
+    coset_table_limit = None
     # maximum size of deduction stack above or equal to
     # which it is emptied
     max_stack_size = 100
@@ -58,7 +60,7 @@ class CosetTable(DefaultPrinting):
             max_cosets = CosetTable.coset_table_max_limit
         self.fp_group = fp_grp
         self.subgroup = subgroup
-        self.coset_table_max_limit = max_cosets
+        self.coset_table_limit = max_cosets
         # "p" is setup independent of Ω and n
         self.p = [0]
         # a list of the form `[gen_1, gen_1^{-1}, ... , gen_k, gen_k^{-1}]`
@@ -148,11 +150,11 @@ class CosetTable(DefaultPrinting):
         A = self.A
         table = self.table
         len_table = len(table)
-        if len_table >= self.coset_table_max_limit:
+        if len_table >= self.coset_table_limit:
             # abort the further generation of cosets
             raise ValueError("the coset enumeration has defined more than "
                     "%s cosets. Try with a greater value max number of cosets "
-                    % self.coset_table_max_limit)
+                    % self.coset_table_limit)
         table.append([None]*len(A))
         self.P.append([None]*len(self.A))
         # beta is the new coset generated
@@ -181,11 +183,11 @@ class CosetTable(DefaultPrinting):
         A = self.A
         table = self.table
         len_table = len(table)
-        if len_table >= self.coset_table_max_limit:
+        if len_table >= self.coset_table_limit:
             # abort the further generation of cosets
             raise ValueError("the coset enumeration has defined more than "
                     "%s cosets. Try with a greater value max number of cosets "
-                    % self.coset_table_max_limit)
+                    % self.coset_table_limit)
         table.append([None]*len(A))
         # beta is the new coset generated
         beta = len_table

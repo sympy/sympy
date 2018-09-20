@@ -1490,13 +1490,13 @@ class Beam3D(Beam):
     >>> b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.solve_slope_deflection()
     >>> b.slope()
-    [0, 0, l*x*(-l*q + 3*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
-    + q*x**3/(6*E*I) + x**2*(-l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I))
+    [0, 0, l*x*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
+    + q*x**3/(6*E*I) + x**2*(-l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I))
     - m)/(2*E*I)]
     >>> b.deflection()
-    [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
-    + l*m*x**2/(4*E*I) - l*x**3*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
-    + q*x**4/(24*E*I) + l*x*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G), 0]
+    [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
+    + l*m*x**2/(4*E*I) - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
+    + q*x**4/(24*E*I) + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G), 0]
 
     References
     ==========

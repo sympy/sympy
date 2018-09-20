@@ -59,7 +59,7 @@ known_functions = {
     "Abs": "abs",
     "conjugate": "conjg",
     "Max": "max",
-    "Min": "min"
+    "Min": "min",
 }
 
 
@@ -98,6 +98,7 @@ class FCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,
@@ -302,6 +303,19 @@ class FCodePrinter(CodePrinter):
             return self._print(eval_expr)
         else:
             return CodePrinter._print_Function(self, expr.func(*args))
+
+    def _print_Mod(self, expr):
+        # NOTE : Fortran has the functions mod() and modulo(). modulo() behaves
+        # the same wrt to the sign of the arguments as Python and SymPy's
+        # modulus computations (% and Mod()) but is not available in Fortran 66
+        # or Fortran 77, thus we raise an error.
+        if self._settings['standard'] in [66, 77]:
+            msg = ("Python % operator and SymPy's Mod() function are not "
+                   "supported by Fortran 66 or 77 standards.")
+            raise NotImplementedError(msg)
+        else:
+            x, y = expr.args
+            return "      modulo({}, {})".format(self._print(x), self._print(y))
 
     def _print_ImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.

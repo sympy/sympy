@@ -3,21 +3,21 @@ import sympy as sm
 import math as m
 import numpy as np
 
-frame_a=me.ReferenceFrame('a')
-c1, c2, c3=sm.symbols('c1 c2 c3', real=True)
+frame_a = me.ReferenceFrame('a')
+c1, c2, c3 = sm.symbols('c1 c2 c3', real=True)
 a=me.inertia(frame_a, 1, 1, 1)
-particle_p1=me.Particle('p1', me.Point('p1_pt'), sm.Symbol('m'))
-particle_p2=me.Particle('p2', me.Point('p2_pt'), sm.Symbol('m'))
-body_r_cm=me.Point('r_cm')
-body_r_f=me.ReferenceFrame('r_f')
-body_r=me.RigidBody('r', body_r_cm, body_r_f, sm.symbols('m'), (me.outer(body_r_f.x,body_r_f.x),body_r_cm))
-r_a = sm.Matrix([1,1,1,1,1,0,0,0,1]).reshape(3, 3)
-point_o=me.Point('o')
-m1=sm.symbols('m1')
+particle_p1 = me.Particle('p1', me.Point('p1_pt'), sm.Symbol('m'))
+particle_p2 = me.Particle('p2', me.Point('p2_pt'), sm.Symbol('m'))
+body_r_cm = me.Point('r_cm')
+body_r_f = me.ReferenceFrame('r_f')
+body_r = me.RigidBody('r', body_r_cm, body_r_f, sm.symbols('m'), (me.outer(body_r_f.x,body_r_f.x),body_r_cm))
+frame_a.orient(body_r_f, 'DCM', sm.Matrix([1,1,1,1,1,0,0,0,1]).reshape(3, 3))
+point_o = me.Point('o')
+m1 = sm.symbols('m1')
 particle_p1.mass = m1
-m2=sm.symbols('m2')
+m2 = sm.symbols('m2')
 particle_p2.mass = m2
-mr=sm.symbols('mr')
+mr = sm.symbols('mr')
 body_r.mass = mr
 i1 = sm.symbols('i1')
 i2 = sm.symbols('i2')

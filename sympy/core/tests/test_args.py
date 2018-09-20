@@ -10,7 +10,7 @@ import warnings
 import io
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
-                   Eq, log)
+                   Eq, log, Function)
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
@@ -3712,6 +3712,14 @@ def test_sympy__series__sequences__SeqPer():
 def test_sympy__series__sequences__SeqFormula():
     from sympy.series.sequences import SeqFormula
     assert _test_args(SeqFormula(x**2, (0, 10)))
+
+
+def test_sympy__series__sequences__RecursiveSeq():
+    from sympy.series.sequences import RecursiveSeq
+    y = Function("y")
+    n = symbols("n")
+    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y, n, (0, 1)))
+    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y, n))
 
 
 def test_sympy__series__sequences__SeqExprOp():

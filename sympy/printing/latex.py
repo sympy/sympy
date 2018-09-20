@@ -514,6 +514,9 @@ class LatexPrinter(Printer):
                 return self._print(expr.base, exp="%s/%s" % (p, q))
             return r"%s^{%s/%s}" % (base, p, q)
         elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_commutative:
+            # special case for 1^(-x), issue 9216
+            if expr.base == 1:
+                return r"%s^{%s}" % (expr.base, expr.exp)
             # things like 1/x
             return self._print_Mul(expr)
         else:
@@ -607,7 +610,8 @@ class LatexPrinter(Printer):
         return outstr
 
     def _print_Indexed(self, expr):
-        tex = self._print(expr.base)+'_{%s}' % ','.join(
+        tex_base = self._print(expr.base)
+        tex = '{'+tex_base+'}'+'_{%s}' % ','.join(
             map(self._print, expr.indices))
         return tex
 
@@ -1587,6 +1591,50 @@ class LatexPrinter(Printer):
     _print_ImmutableSparseNDimArray = _print_NDimArray
     _print_MutableDenseNDimArray = _print_NDimArray
     _print_MutableSparseNDimArray = _print_NDimArray
+
+    def _print_Tensor(self, expr):
+        name = expr.args[0].args[0]
+        indices = expr.get_indices()
+        out_str = self._print(name)
+        last_valence = None
+        for index in indices:
+            new_valence = index.is_up
+            if last_valence != new_valence:
+                if last_valence is not None:
+                    out_str += "}"
+                if index.is_up:
+                    out_str += "{}^{"
+                else:
+                    out_str += "{}_{"
+            out_str += self._print(index.args[0])
+            last_valence = new_valence
+        if last_valence is not None:
+            out_str += "}"
+        return out_str
+
+    def _print_TensMul(self, expr):
+        # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
+        sign, args = expr._get_args_for_traditional_printer()
+        return sign + "".join(
+            [self.parenthesize(arg, precedence(expr)) for arg in args]
+        )
+
+    def _print_TensAdd(self, expr):
+        a = []
+        args = expr.args
+        for x in args:
+            a.append(self.parenthesize(x, precedence(expr)))
+        a.sort()
+        s = ' + '.join(a)
+        s = s.replace('+ -', '- ')
+        return s
+
+    def _print_TensorIndex(self, expr):
+        return "{}%s{%s}" % (
+            "^" if expr.is_up else "_",
+            self._print(expr.args[0])
+        )
+        return self._print(expr.args[0])
 
     def _print_tuple(self, expr):
         return r"\left ( %s\right )" % \

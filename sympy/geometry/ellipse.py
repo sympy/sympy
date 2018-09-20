@@ -1358,6 +1358,8 @@ class Circle(Ellipse):
             r = sympify(args[1])
 
         if not (c is None or r is None):
+            if r == 0:
+                return c
             return GeometryEntity.__new__(cls, c, r, **kwargs)
 
         raise GeometryError("Circle.__new__ received unknown arguments")
