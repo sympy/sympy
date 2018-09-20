@@ -508,6 +508,11 @@ MatrixSubspaces Class Reference
 .. autoclass:: MatrixSubspaces
    :members:
 
+MatrixEigen Class Reference
+---------------------------------
+.. autoclass:: MatrixEigen
+   :members:
+
 MatrixBase Class Reference
 --------------------------
 .. autoclass:: MatrixBase
