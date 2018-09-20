@@ -503,6 +503,11 @@ MatrixDeterminant Class Reference
 .. autoclass:: MatrixDeterminant
    :members:
 
+MatrixSubspaces Class Reference
+---------------------------------
+.. autoclass:: MatrixSubspaces
+   :members:
+
 MatrixBase Class Reference
 --------------------------
 .. autoclass:: MatrixBase
