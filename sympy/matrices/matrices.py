@@ -745,7 +745,7 @@ class MatrixReductions(MatrixDeterminant):
             * "n->n+km" (column n goes to column n + k*column m)
 
         Parameters
-        =========
+        ==========
 
         op : string; the elementary row operation
         col : the column to apply the column operation
