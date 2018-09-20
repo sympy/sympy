@@ -504,17 +504,17 @@ MatrixDeterminant Class Reference
    :members:
 
 MatrixSubspaces Class Reference
----------------------------------
+-------------------------------
 .. autoclass:: MatrixSubspaces
    :members:
 
 MatrixEigen Class Reference
----------------------------------
+---------------------------
 .. autoclass:: MatrixEigen
    :members:
 
 MatrixCalculus Class Reference
----------------------------------
+------------------------------
 .. autoclass:: MatrixCalculus
    :members:
 
