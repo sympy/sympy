@@ -173,7 +173,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         if _can_print_latex(o):
             s = latex(o, mode=latex_mode, **settings)
             s = s.strip('$')
-            return '$$%s$$' % s
+            return '$\\displaystyle %s$' % s
 
     def _result_display(self, arg):
         """IPython's pretty-printer display hook, for use in IPython 0.10
