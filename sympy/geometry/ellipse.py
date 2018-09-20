@@ -563,13 +563,10 @@ class Ellipse(GeometrySet):
         """
         x = _symbol(x)
         y = _symbol(y)
+        m =_symbol(m)
         hr, vr = self.hradius, self.vradius
-        if hr == vr:
-            return (x - self.center.x)**2 + (y - self.center.y)**2 - self.hradius**2
-        if hr > vr:
-            return (x - self.center.x)**2 + (y - self.center.y)**2 - self.hradius**2
-        if hr < vr:
-            return (x - self.center.x)**2 + (y - self.center.y)**2 - self.vradius**2
+        m = max(hr, vr)
+        return (x - self.center.x)**2 + (y - self.center.y)**2 - m**2
 
     @property
     def hradius(self):
