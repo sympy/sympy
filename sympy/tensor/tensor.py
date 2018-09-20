@@ -32,6 +32,7 @@ lowered when the tensor is put in canonical form.
 from __future__ import print_function, division
 
 from collections import defaultdict
+import operator
 import itertools
 from sympy import Rational, prod, Integer
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
@@ -2672,6 +2673,10 @@ class TensExpr(Expr):
             raise NotImplementedError(
                 "missing multidimensional reduction to matrix.")
 
+    @staticmethod
+    def _get_indices_permutation(indices1, indices2):
+        return [indices1.index(i) for i in indices2]
+
     def expand(self, **hints):
         return _expand(self, **hints).doit()
 
@@ -3080,6 +3085,21 @@ class TensAdd(TensExpr, AssocOp):
         s = s.replace('+ -', '- ')
         return s
 
+    def _extract_data(self, replacement_dict):
+        from sympy.tensor.array import Array, permutedims
+        args_indices, arrays = zip(*[
+            arg._extract_data(replacement_dict) if
+            isinstance(arg, TensExpr) else ([], []) for arg in self.args
+        ])
+        arrays = list(arrays)
+        ref_indices = args_indices[0]
+        for i in range(1, len(args_indices)):
+            indices = args_indices[i]
+            array = arrays[i]
+            permutation = TensMul._get_indices_permutation(indices, ref_indices)
+            arrays[i] = permutedims(array, permutation)
+        return ref_indices, sum(arrays, Array.zeros(*array.shape))
+
     @property
     def data(self):
         return _tensor_data_substitution_dict[self.expand()]
@@ -3340,6 +3360,97 @@ class Tensor(TensExpr):
     # TODO: put this into TensExpr?
     def __getitem__(self, item):
         return self.data[item]
+
+    def _extract_data(self, replacement_dict):
+        from .array import Array, tensorcontraction, tensorproduct, permutedims
+        for k, v in replacement_dict.items():
+            if isinstance(k, Tensor) and k.args[0] == self.args[0]:
+                other = k
+                array = v
+                break
+        else:
+            raise ValueError("%s not found in %s" % (self, replacement_dict))
+        array = Array(array)
+        replacement_dict = {k: Array(v) for k, v in replacement_dict.items()}
+
+        dum1 = self.dum
+        dum2 = other.dum
+        if len(dum2) > 0:
+            for pair in dum2:
+                # allow `dum2` if the contained values are also in `dum1`.
+                if pair not in dum1:
+                    raise NotImplementedError("%s with contractions is not implemented" % other)
+            # Remove elements in `dum2` from `dum1`:
+            dum1 = [pair for pair in dum1 if pair not in dum2]
+        if len(dum1) > 0:
+            indices2 = other.get_indices()
+            repl = {}
+            for p1, p2 in dum1:
+                repl[indices2[p2]] = -indices2[p1]
+            other = other.xreplace(repl).doit()
+            array = _TensorDataLazyEvaluator.data_contract_dum([array], dum1, len(indices2))
+
+        # TODO Check if array is compatible with dimensions
+        # Check if variance of indices needs to be fixed:
+        free_ind1 = self.get_free_indices()
+        free_ind2 = other.get_free_indices()
+        index_types1 = self.index_types
+        pos2up = []
+        pos2down = []
+        free2remaining = free_ind2[:]
+        for i, index in enumerate(free_ind1):
+            if index in free2remaining:
+                other_pos = free2remaining.index(index)
+                free2remaining[other_pos] = None
+                continue
+            if -index in free2remaining:
+                free_ind1[i] = -index
+                other_pos = free2remaining.index(-index)
+                free2remaining[other_pos] = None
+                if index.is_up:
+                    pos2down.append(i)
+                else:
+                    pos2up.append(i)
+            else:
+                index2 = free2remaining[i]
+                if index2 is None:
+                    raise ValueError("incompatible indices: %s and %s" % (self, other))
+                free2remaining[i] = None
+                free_ind2[i] = index
+                if index.is_up ^ index2.is_up:
+                    if index.is_up:
+                        pos2down.append(i)
+                    else:
+                        pos2up.append(i)
+
+        if len(set(free_ind1) & set(free_ind2)) < len(free_ind1):
+            indices1 = self.get_indices()
+            indices2 = other.get_indices()
+            raise ValueError("incompatible indices: %s and %s" % (indices1, indices2))
+
+        # TODO: add possibility of metric after (spinors)
+        def contract_and_permute(metric, array, pos):
+            array = tensorcontraction(tensorproduct(metric, array), (1, 2+pos))
+            permu = list(range(len(free_ind1)))
+            permu[0], permu[pos] = permu[pos], permu[0]
+            return permutedims(array, permu)
+
+        # Raise indices:
+        for pos in pos2up:
+            metric = replacement_dict[index_types1[pos]]
+            metric_inverse = _TensorDataLazyEvaluator.inverse_matrix(metric)
+            array = contract_and_permute(metric_inverse, array, pos)
+        # Lower indices:
+        for pos in pos2down:
+            metric = replacement_dict[index_types1[pos]]
+            array = contract_and_permute(metric, array, pos)
+
+        if free_ind1:
+            permutation = self._get_indices_permutation(free_ind2, free_ind1)
+            array = permutedims(array, permutation)
+        if len(free_ind2) == 0 and array.rank() == 0:
+            array = array[()]
+        return free_ind2, array
 
     @property
     def data(self):
@@ -4155,6 +4266,16 @@ class TensMul(TensExpr, AssocOp):
         if len(set(i if i.is_up else -i for i in indices)) != len(indices):
             return t.func(*t.args)
         return t
+
+    def _extract_data(self, replacement_dict):
+        args_indices, arrays = zip(*[arg._extract_data(replacement_dict) for arg in self.args if isinstance(arg, TensExpr)])
+        coeff = reduce(operator.mul, [a for a in self.args if not isinstance(a, TensExpr)], S.One)
+        indices, free, free_names, dummy_data = TensMul._indices_to_free_dum(args_indices)
+        dum = TensMul._dummy_data_to_dum(dummy_data)
+        ext_rank = self.ext_rank
+        free.sort(key=lambda x: x[1])
+        free_indices = [i[0] for i in free]
+        return free_indices, coeff*_TensorDataLazyEvaluator.data_contract_dum(arrays, dum, ext_rank)
 
     @property
     def data(self):
