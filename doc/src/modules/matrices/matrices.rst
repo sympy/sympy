@@ -503,7 +503,11 @@ MatrixDeterminant Class Reference
 .. autoclass:: MatrixDeterminant
    :members:
 
-<<<<<<< HEAD
+MatrixReductions Class Reference
+--------------------------------
+.. autoclass:: MatrixReductions
+    :members:
+
 MatrixSubspaces Class Reference
 -------------------------------
 .. autoclass:: MatrixSubspaces
@@ -517,11 +521,6 @@ MatrixEigen Class Reference
 MatrixCalculus Class Reference
 ------------------------------
 .. autoclass:: MatrixCalculus
-=======
-MatrixReductions Class Reference
---------------------------------
-.. autoclass:: MatrixReductions
->>>>>>> 6d21d3405... Added docs from MatrixReductions class
    :members:
 
 MatrixBase Class Reference
