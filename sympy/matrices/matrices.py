@@ -411,6 +411,15 @@ class MatrixDeterminant(MatrixCommon):
         =======
         det : Basic
             Result of determinant.
+
+        Raises
+        ======
+        ValueError :
+            Raised if wrong keys are given for 'method' or 'iszerofunc'.
+
+        NonSquareMatrixError :
+            Raises when attempted to calculate determinant from a non-square
+            matrix.
         """
 
         # sanitize `method`
