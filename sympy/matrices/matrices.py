@@ -388,9 +388,7 @@ class MatrixDeterminant(MatrixCommon):
 
         Parameters
         ==========
-
         method : string
-
             Specifies an algorithm to use for computing matrix determinant.
 
             If the matrix is at most 3x3, the key is ignored and a hard-coded
@@ -402,13 +400,12 @@ class MatrixDeterminant(MatrixCommon):
 
             * 'lu' : LU decomposition
 
-            * 'bareis' : Legacy support for 'bareiss'
-
-            * 'det_lu' : Legacy support for 'lu'
-
-            * Also any strings with uppercase letters would just work fine if
-            their lowercase equivalents are supported, but is not recommended.
-
+            .. note::
+                For backward compatibility, legacy keys like **bareis** ,
+                **det_lu** can still be used to indicate corresponding
+                methods.
+                And the keys are also **case-insensitive** for now.
+                However, we would discourage you to use the keys in the manner.
         """
 
         # sanitize `method`
