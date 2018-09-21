@@ -388,7 +388,7 @@ class MatrixDeterminant(MatrixCommon):
 
         Parameters
         ==========
-        method : string
+        method : string, optional
             Specifies an algorithm to use for computing matrix determinant.
 
             If the matrix is at most 3x3, the key is ignored and a hard-coded
