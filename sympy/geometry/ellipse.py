@@ -10,10 +10,11 @@ from __future__ import division, print_function
 
 from sympy import diff, Expr
 from sympy.core import S, pi, sympify
+from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import ordered
-from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
+from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol, var
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -23,6 +24,7 @@ from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
+from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity, GeometrySet
@@ -1370,24 +1372,23 @@ class Circle(Ellipse):
             y = find(y, equation)
 
             try:
-                center_x = solve(diff(equation, x))[0]
-                center_y = solve(diff(equation, y))[0]
-            except IndexError:
+                co = linear_coeffs(equation, x**2, y**2, x, y)
+            except ValueError:
                 raise GeometryError("The given equation is not that of a circle.")
 
-            center = Point(center_x, center_y)
-            constant_term = equation.subs([(x, 0), (y, 0)])
-            r_square = (center_x ** 2) + (center_y ** 2) - constant_term
-            new_equation = (x - center_x) ** 2 + (y - center_y) ** 2 - r_square
+            a, b, c, d, e = [co[i] for i in (x**2, y**2, x, y, 0)]
 
-            if r_square.is_nonnegative is not False:
-                radius = sqrt(r_square)
-                if Poly(equation) == Poly(new_equation):
-                    return Circle(center, radius)
-                else:
-                    raise GeometryError("The given equation is not that of a circle.")
-            else:
+            if a == 0 or b == 0 or a != b:
+                raise GeometryError("The given equation is not that of a circle.")
+
+            center_x = -c / a / 2
+            center_y = -d / b / 2
+            r2 = (center_x ** 2) + (center_y ** 2) - e
+
+            if r2.is_negative:
                 raise GeometryError("The given equation of circle has an imaginary radius")
+
+            return Circle((center_x, center_y), sqrt(r2))
 
         else:
             c, r = None, None
