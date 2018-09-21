@@ -392,13 +392,16 @@ class MatrixDeterminant(MatrixCommon):
             Specifies an algorithm to use for computing matrix determinant.
 
             If the matrix is at most 3x3, the key is ignored and a hard-coded
-            formula is used. Otherwise, it will be defaulted with 'bareiss'
+            formula is used. Otherwise, it will be defaulted with 'bareiss'.
 
-            * 'bareiss' : Bareiss' fraction-free algorithm
+            * 'bareiss' :
+                Bareiss' fraction-free algorithm
 
-            * 'berkowitz' : Berkowitz algorithm
+            * 'berkowitz' :
+                Berkowitz algorithm
 
-            * 'lu' : LU decomposition
+            * 'lu' :
+                LU decomposition
 
             .. note::
                 For backward compatibility, legacy keys like **bareis** ,
