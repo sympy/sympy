@@ -145,7 +145,7 @@ class Ellipse(GeometrySet):
                 vradius = hradius * sqrt(1 - eccentricity**2)
 
         if hradius == vradius:
-            return center if hradius == 0 else Circle(center, hradius, **kwargs)
+            return Circle(center, hradius, **kwargs)
 
         if hradius == 0 or vradius == 0:
             return Segment(Point(center[0] - hradius, center[1] - vradius), Point(center[0] + hradius, center[1] + vradius))
