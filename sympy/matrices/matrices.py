@@ -406,6 +406,11 @@ class MatrixDeterminant(MatrixCommon):
                 methods.
                 And the keys are also **case-insensitive** for now.
                 However, we would discourage you to use the keys in the manner.
+
+        Returns
+        =======
+        det : Basic
+            Result of determinant.
         """
 
         # sanitize `method`
