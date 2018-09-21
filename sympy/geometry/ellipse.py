@@ -497,7 +497,7 @@ class Ellipse(GeometrySet):
         """
         x = _symbol(x, real=True)
         y = _symbol(y, real=True)
-        
+
         if slope is not None:
             x_c = self.center.x
             y_c = self.center.y
@@ -507,7 +507,7 @@ class Ellipse(GeometrySet):
 
             b = self.major ** 2 * (1 + slope ** 2)
             a = self.minor ** 2 * (1 + slope ** 2)
-            return (l / b) + (L / a) - 1
+            return l / b + L / a - 1
 
         else:
             t1 = ((x - self.center.x) / self.hradius)**2
