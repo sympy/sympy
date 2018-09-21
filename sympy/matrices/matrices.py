@@ -410,6 +410,19 @@ class MatrixDeterminant(MatrixCommon):
                 And the keys are also **case-insensitive** for now.
                 However, we would discourage you to use the keys in the manner.
 
+        iszerofunc : FunctionType or None, optional
+            Specifies zero testing method used for 'bareiss' or 'lu'.
+            If unspecified, it will be defaulted into None
+
+            * None
+                _iszero when method='bareiss'.
+
+                _is_zero_after_expand_mul when method='lu'
+
+            * FunctionType
+                Zero testing function should be specified as a function which
+                accepts a single symbolic argument and returns Boolean or None.
+
         Returns
         =======
         det : Basic
