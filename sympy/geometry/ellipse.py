@@ -1359,14 +1359,7 @@ class Circle(Ellipse):
             y = kwargs.get('y', 'y')
             equation = args[0]
 
-            def find(x, equation):
-                free = equation.free_symbols
-                xs = [i for i in free if (i.name if type(x) is str else i) == x]
-                if not xs:
-                    raise ValueError('could not find %s' % x)
-                if len(xs) != 1:
-                    raise ValueError('ambiguous %s' % x)
-                return xs[0]
+            from sympy.geometry.util import find
 
             x = find(x, equation)
             y = find(y, equation)
@@ -1381,9 +1374,9 @@ class Circle(Ellipse):
             if a == 0 or b == 0 or a != b:
                 raise GeometryError("The given equation is not that of a circle.")
 
-            center_x = -c / a / 2
-            center_y = -d / b / 2
-            r2 = (center_x ** 2) + (center_y ** 2) - e
+            center_x = -c/a/2
+            center_y = -d/b/2
+            r2 = (center_x**2) + (center_y**2) - e
 
             if r2.is_negative:
                 raise GeometryError("The given equation of circle has an imaginary radius")
@@ -1395,8 +1388,7 @@ class Circle(Ellipse):
             if len(args) == 3:
                 args = [Point(a, dim=2) for a in args]
                 if Point.is_collinear(*args):
-                    raise GeometryError(
-                        "Cannot construct a circle from three collinear points")
+                    return Polygon(*args)
                 from .polygon import Triangle
                 t = Triangle(*args)
                 c = t.circumcenter

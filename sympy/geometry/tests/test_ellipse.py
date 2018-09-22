@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D
+from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D
 from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
@@ -49,8 +49,7 @@ def test_ellipse_geom():
     # Test creation with three points
     cen, rad = Point(3*half, 2), 5*half
     assert Circle(Point(0, 0), Point(3, 0), Point(0, 4)) == Circle(cen, rad)
-    raises(
-        GeometryError, lambda: Circle(Point(0, 0), Point(1, 1), Point(2, 2)))
+    assert Circle(Point(0, 0), Point(1, 1), Point(2, 2)) == Segment2D(Point2D(0, 0), Point2D(2, 2))
 
     raises(ValueError, lambda: Ellipse(None, None, None, 1))
     raises(GeometryError, lambda: Circle(Point(0, 0)))

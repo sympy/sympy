@@ -1109,14 +1109,7 @@ class Line(LinearEntity):
             y = kwargs.get('y', 'y')
             equation = args[0]
 
-            def find(x_, equation_):
-                free = equation_.free_symbols
-                xs = [i for i in free if (i.name if type(x_) is str else i) == x_]
-                if not xs:
-                    raise ValueError('could not find %s' % x_)
-                if len(xs) != 1:
-                    raise ValueError('ambiguous %s' % x_)
-                return xs[0]
+            from sympy.geometry.util import find
 
             xin, yin = x, y
 
@@ -1127,9 +1120,9 @@ class Line(LinearEntity):
             a, b, c = [co[i] for i in (x, y, 0)]
 
             if b:
-                return Line((0, -c / b), slope=-a / b)
+                return Line((0, -c/b), slope=-a/b)
             if a:
-                return Line((-c / a, 0), slope=oo)
+                return Line((-c/a, 0), slope=oo)
             raise ValueError('neither %s nor %s were found in the equation' % (xin, yin))
 
         else:
