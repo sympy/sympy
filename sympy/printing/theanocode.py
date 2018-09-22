@@ -137,6 +137,9 @@ class TheanoPrinter(Printer):
         if isinstance(children[1], int) and children[1] > 0:
             for i in range(children[1]):
                 result = tt.dot(result, children[0])
+        else:
+            raise NotImplementedError('''Only non-negative integer
+           powers of matrices can be handled by Theano at the moment''')
         return result
 
     def _print_MatrixSlice(self, expr, **kwargs):
