@@ -1590,15 +1590,6 @@ class TensorIndexType(Basic):
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> Lorentz.metric
     metric(Lorentz,Lorentz)
-
-    Examples with metric components data added, this means it is working on a
-    fixed basis:
-
-    >>> Lorentz.data = [1, -1, -1, -1]
-    >>> Lorentz
-    TensorIndexType(Lorentz, 0)
-    >>> Lorentz.data
-    [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, -1]]
     """
 
     def __new__(cls, name, metric=False, dim=None, eps_dim=None,
@@ -2232,55 +2223,17 @@ class TensorHead(Basic):
     examples.
 
     >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-    >>> Lorentz.data = [1, -1, -1, -1]
+    >>> from sympy import diag
     >>> i0, i1 = tensor_indices('i0:2', Lorentz)
-    >>> A.data = [[j+2*i for j in range(4)] for i in range(4)]
 
-    in order to retrieve data, it is also necessary to specify abstract indices
-    enclosed by round brackets, then numerical indices inside square brackets.
+    Specify a replacement dictionary to keep track of the arrays to use for
+    replacements in the tensorial expression. The ``TensorIndexType`` is
+    associated to the metric used for contractions (in fully covariant form):
 
-    >>> A(i0, i1)[0, 0]
-    0
-    >>> A(i0, i1)[2, 3] == 3+2*2
-    True
+    >>> repl = {Lorentz: diag(1, -1, -1, -1)}
 
-    Notice that square brackets create a valued tensor expression instance:
-
-    >>> A(i0, i1)
-    A(i0, i1)
-
-    To view the data, just type:
-
-    >>> A.data
-    [[0, 1, 2, 3], [2, 3, 4, 5], [4, 5, 6, 7], [6, 7, 8, 9]]
-
-    Turning to a tensor expression, covariant indices get the corresponding
-    components data corrected by the metric:
-
-    >>> A(i0, -i1).data
-    [[0, -1, -2, -3], [2, -3, -4, -5], [4, -5, -6, -7], [6, -7, -8, -9]]
-
-    >>> A(-i0, -i1).data
-    [[0, -1, -2, -3], [-2, 3, 4, 5], [-4, 5, 6, 7], [-6, 7, 8, 9]]
-
-    while if all indices are contravariant, the ``ndarray`` remains the same
-
-    >>> A(i0, i1).data
-    [[0, 1, 2, 3], [2, 3, 4, 5], [4, 5, 6, 7], [6, 7, 8, 9]]
-
-    When all indices are contracted and components data are added to the tensor,
-    accessing the data will return a scalar, no array object. In fact, arrays
-    are dropped to scalars if they contain only one element.
-
-    >>> A(i0, -i0)
-    A(L_0, -L_0)
-    >>> A(i0, -i0).data
-    -18
-
-    It is also possible to assign components data to an indexed tensor, i.e. a
-    tensor with specified covariant and contravariant components. In this
-    example, the covariant components data of the Electromagnetic tensor are
-    injected into `A`:
+    Let's see some examples of working with components with the electromagnetic
+    tensor:
 
     >>> from sympy import symbols
     >>> Ex, Ey, Ez, Bx, By, Bz = symbols('E_x E_y E_z B_x B_y B_z')
@@ -2290,62 +2243,46 @@ class TensorHead(Basic):
     antisymmetric matrix to it, because `[[2]]` stands for the Young tableau
     representation of an antisymmetric set of two elements:
 
-    >>> F = tensorhead('A', [Lorentz, Lorentz], [[2]])
-    >>> F(-i0, -i1).data = [
+    >>> F = tensorhead('F', [Lorentz, Lorentz], [[2]])
+
+    Let's update the dictionary to contain the matrix to use in the
+    replacements:
+
+    >>> repl.update({F(-i0, -i1): [
     ... [0, Ex/c, Ey/c, Ez/c],
     ... [-Ex/c, 0, -Bz, By],
     ... [-Ey/c, Bz, 0, -Bx],
-    ... [-Ez/c, -By, Bx, 0]]
+    ... [-Ez/c, -By, Bx, 0]]})
 
     Now it is possible to retrieve the contravariant form of the Electromagnetic
     tensor:
 
-    >>> F(i0, i1).data
+    >>> F(i0, i1).replace_with_arrays(repl, [i0, i1])
     [[0, -E_x/c, -E_y/c, -E_z/c], [E_x/c, 0, -B_z, B_y], [E_y/c, B_z, 0, -B_x], [E_z/c, -B_y, B_x, 0]]
 
     and the mixed contravariant-covariant form:
 
-    >>> F(i0, -i1).data
+    >>> F(i0, -i1).replace_with_arrays(repl, [i0, -i1])
     [[0, E_x/c, E_y/c, E_z/c], [E_x/c, 0, B_z, -B_y], [E_y/c, -B_z, 0, B_x], [E_z/c, B_y, -B_x, 0]]
 
-    To convert the darray to a SymPy matrix, just cast:
-
-    >>> F.data.tomatrix()
-    Matrix([
-    [    0, -E_x/c, -E_y/c, -E_z/c],
-    [E_x/c,      0,   -B_z,    B_y],
-    [E_y/c,    B_z,      0,   -B_x],
-    [E_z/c,   -B_y,    B_x,      0]])
-
-    Still notice, in this last example, that accessing components data from a
-    tensor without specifying the indices is equivalent to assume that all
-    indices are contravariant.
-
-    It is also possible to store symbolic components data inside a tensor, for
-    example, define a four-momentum-like tensor:
+    Energy-momentum of a particle may be represented as:
 
     >>> from sympy import symbols
     >>> P = tensorhead('P', [Lorentz], [[1]])
     >>> E, px, py, pz = symbols('E p_x p_y p_z', positive=True)
-    >>> P.data = [E, px, py, pz]
+    >>> repl.update({P(i0): [E, px, py, pz]})
 
     The contravariant and covariant components are, respectively:
 
-    >>> P(i0).data
+    >>> P(i0).replace_with_arrays(repl, [i0])
     [E, p_x, p_y, p_z]
-    >>> P(-i0).data
+    >>> P(-i0).replace_with_arrays(repl, [-i0])
     [E, -p_x, -p_y, -p_z]
 
-    The contraction of a 1-index tensor by itself is usually indicated by a
-    power by two:
+    The contraction of a 1-index tensor by itself:
 
-    >>> P(i0)**2
-    E**2 - p_x**2 - p_y**2 - p_z**2
-
-    As the power by two is clearly identical to `P_\mu P^\mu`, it is possible to
-    simply contract the ``TensorHead`` object, without specifying the indices
-
-    >>> P**2
+    >>> expr = P(i0)*P(-i0)
+    >>> expr.replace_with_arrays(repl, [])
     E**2 - p_x**2 - p_y**2 - p_z**2
     """
     is_commutative = False
@@ -2761,7 +2698,71 @@ class TensExpr(Expr):
 
         return recursor(self, ())
 
-    def replace_with_arrays(self, indices, replacement_dict):
+    @staticmethod
+    def _match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict):
+        from .array import Array, tensorcontraction, tensorproduct, permutedims
+
+        index_types1 = [i.tensor_index_type for i in free_ind1]
+
+        # Check if variance of indices needs to be fixed:
+        pos2up = []
+        pos2down = []
+        free2remaining = free_ind2[:]
+        for pos1, index1 in enumerate(free_ind1):
+            if index1 in free2remaining:
+                pos2 = free2remaining.index(index1)
+                free2remaining[pos2] = None
+                continue
+            if -index1 in free2remaining:
+                pos2 = free2remaining.index(-index1)
+                free2remaining[pos2] = None
+                free_ind2[pos2] = index1
+                if index1.is_up:
+                    pos2up.append(pos2)
+                else:
+                    pos2down.append(pos2)
+            else:
+                index2 = free2remaining[pos1]
+                if index2 is None:
+                    raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
+                free2remaining[pos1] = None
+                free_ind2[pos1] = index1
+                if index1.is_up ^ index2.is_up:
+                    if index1.is_up:
+                        pos2up.append(pos1)
+                    else:
+                        pos2down.append(pos1)
+
+        if len(set(free_ind1) & set(free_ind2)) < len(free_ind1):
+            raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
+
+        # TODO: add possibility of metric after (spinors)
+        def contract_and_permute(metric, array, pos):
+            array = tensorcontraction(tensorproduct(metric, array), (1, 2+pos))
+            permu = list(range(len(free_ind1)))
+            permu[0], permu[pos] = permu[pos], permu[0]
+            return permutedims(array, permu)
+
+        # Raise indices:
+        for pos in pos2up:
+            metric = replacement_dict[index_types1[pos]]
+            metric_inverse = _TensorDataLazyEvaluator.inverse_matrix(metric)
+            array = contract_and_permute(metric_inverse, array, pos)
+        # Lower indices:
+        for pos in pos2down:
+            metric = replacement_dict[index_types1[pos]]
+            array = contract_and_permute(metric, array, pos)
+
+        if free_ind1:
+            permutation = TensExpr._get_indices_permutation(free_ind2, free_ind1)
+            array = permutedims(array, permutation)
+
+        if hasattr(array, "rank") and array.rank() == 0:
+            array = array[()]
+
+        return free_ind2, array
+
+    def replace_with_arrays(self, replacement_dict, indices):
         """
         Replace the tensorial expressions with arrays. The final array will
         correspond to the N-dimensional array with indices arranged according
@@ -2770,10 +2771,10 @@ class TensExpr(Expr):
         Parameters
         ==========
 
-        indices
-            the index order with respect to which the array is read.
         replacement_dict
             dictionary containing the replacement rules for tensors.
+        indices
+            the index order with respect to which the array is read.
 
         Examples
         ========
@@ -2785,17 +2786,17 @@ class TensExpr(Expr):
         >>> L = TensorIndexType("L")
         >>> i, j = tensor_indices("i j", L)
         >>> A = tensorhead("A", [L], [[1]])
-        >>> A(i).replace_with_arrays([i], {A(i): [1, 2]})
+        >>> A(i).replace_with_arrays({A(i): [1, 2]}, [i])
         [1, 2]
         >>> expr = A(i)*A(j)
-        >>> expr.replace_with_arrays([i, j], {A(i): [1, 2]})
+        >>> expr.replace_with_arrays({A(i): [1, 2]}, [i, j])
         [[1, 2], [2, 4]]
 
         For contractions, specify the metric of the ``TensorIndexType``, which
         in this case is ``L``, in its covariant form:
 
         >>> expr = A(i)*A(-i)
-        >>> expr.replace_with_arrays([], {A(i): [1, 2], L: diag(1, -1)})
+        >>> expr.replace_with_arrays({A(i): [1, 2], L: diag(1, -1)}, [])
         -3
 
         Symmetrization of an array:
@@ -2803,20 +2804,20 @@ class TensExpr(Expr):
         >>> H = tensorhead("H", [L, L], [[1], [1]])
         >>> a, b, c, d = symbols("a b c d")
         >>> expr = H(i, j)/2 + H(j, i)/2
-        >>> expr.replace_with_arrays([i, j], {H(i, j): [[a, b], [c, d]]})
+        >>> expr.replace_with_arrays({H(i, j): [[a, b], [c, d]]}, [i, j])
         [[a, b/2 + c/2], [b/2 + c/2, d]]
 
         Anti-symmetrization of an array:
 
         >>> expr = H(i, j)/2 - H(j, i)/2
         >>> repl = {H(i, j): [[a, b], [c, d]]}
-        >>> expr.replace_with_arrays([i, j], repl)
+        >>> expr.replace_with_arrays(repl, [i, j])
         [[0, b/2 - c/2], [-b/2 + c/2, 0]]
 
         The same expression can be read as the transpose by inverting ``i`` and
         ``j``:
 
-        >>> expr.replace_with_arrays([j, i], repl)
+        >>> expr.replace_with_arrays(repl, [j, i])
         [[0, -b/2 + c/2], [b/2 - c/2, 0]]
         """
         from .array import Array, permutedims
@@ -2837,10 +2838,15 @@ class TensExpr(Expr):
                     array.shape))
 
         ret_indices, array = self._extract_data(replacement_dict)
-        permutation = self._get_indices_permutation(indices, ret_indices)
-        if len(permutation) == 0:
-            return array
-        array = permutedims(array, permutation)
+
+        last_indices, array = self._match_indices_with_other_tensor(array, indices, ret_indices, replacement_dict)
+        #permutation = self._get_indices_permutation(indices, ret_indices)
+        #if not hasattr(array, "rank"):
+            #return array
+        #if array.rank() == 0:
+            #array = array[()]
+            #return array
+        #array = permutedims(array, permutation)
         return array
 
 
@@ -2879,21 +2885,18 @@ class TensAdd(TensExpr, AssocOp):
 
     Examples with components data added to the tensor expression:
 
-    >>> Lorentz.data = [1, -1, -1, -1]
-    >>> a, b = tensor_indices('a, b', Lorentz)
-    >>> p.data = [2, 3, -2, 7]
-    >>> q.data = [2, 3, -2, 7]
-    >>> t = p(a) + q(a); t
-    p(a) + q(a)
-    >>> t(b)
-    p(b) + q(b)
+    >>> from sympy import symbols, diag
+    >>> x, y, z, t = symbols("x y z t")
+    >>> repl = {}
+    >>> repl[Lorentz] = diag(1, -1, -1, -1)
+    >>> repl[p(a)] = [1, 2, 3, 4]
+    >>> repl[q(a)] = [x, y, z, t]
 
     The following are: 2**2 - 3**2 - 2**2 - 7**2 ==> -58
 
-    >>> (p(a)*p(-a)).data
-    -58
-    >>> p(a)**2
-    -58
+    >>> expr = p(a) + q(a)
+    >>> expr.replace_with_arrays(repl, [a])
+    [x + 1, y + 2, z + 3, t + 4]
     """
 
     def __new__(cls, *args, **kw_args):
@@ -3186,9 +3189,9 @@ class TensAdd(TensExpr, AssocOp):
         from sympy.tensor.array import Array, permutedims
         args_indices, arrays = zip(*[
             arg._extract_data(replacement_dict) if
-            isinstance(arg, TensExpr) else ([], []) for arg in self.args
+            isinstance(arg, TensExpr) else ([], arg) for arg in self.args
         ])
-        arrays = list(arrays)
+        arrays = [Array(i) for i in arrays]
         ref_indices = args_indices[0]
         for i in range(1, len(args_indices)):
             indices = args_indices[i]
@@ -3470,11 +3473,14 @@ class Tensor(TensExpr):
                 break
         else:
             raise ValueError("%s not found in %s" % (self, replacement_dict))
-        array = Array(array)
+
+        # TODO: inefficient, this should be done at root level only:
         replacement_dict = {k: Array(v) for k, v in replacement_dict.items()}
+        array = Array(array)
 
         dum1 = self.dum
         dum2 = other.dum
+
         if len(dum2) > 0:
             for pair in dum2:
                 # allow `dum2` if the contained values are also in `dum1`.
@@ -3490,67 +3496,11 @@ class Tensor(TensExpr):
             other = other.xreplace(repl).doit()
             array = _TensorDataLazyEvaluator.data_contract_dum([array], dum1, len(indices2))
 
-        # TODO Check if array is compatible with dimensions
-        # Check if variance of indices needs to be fixed:
         free_ind1 = self.get_free_indices()
         free_ind2 = other.get_free_indices()
         index_types1 = self.index_types
-        pos2up = []
-        pos2down = []
-        free2remaining = free_ind2[:]
-        for i, index in enumerate(free_ind1):
-            if index in free2remaining:
-                other_pos = free2remaining.index(index)
-                free2remaining[other_pos] = None
-                continue
-            if -index in free2remaining:
-                free_ind1[i] = -index
-                other_pos = free2remaining.index(-index)
-                free2remaining[other_pos] = None
-                if index.is_up:
-                    pos2down.append(i)
-                else:
-                    pos2up.append(i)
-            else:
-                index2 = free2remaining[i]
-                if index2 is None:
-                    raise ValueError("incompatible indices: %s and %s" % (self, other))
-                free2remaining[i] = None
-                free_ind2[i] = index
-                if index.is_up ^ index2.is_up:
-                    if index.is_up:
-                        pos2down.append(i)
-                    else:
-                        pos2up.append(i)
 
-        if len(set(free_ind1) & set(free_ind2)) < len(free_ind1):
-            indices1 = self.get_indices()
-            indices2 = other.get_indices()
-            raise ValueError("incompatible indices: %s and %s" % (indices1, indices2))
-
-        # TODO: add possibility of metric after (spinors)
-        def contract_and_permute(metric, array, pos):
-            array = tensorcontraction(tensorproduct(metric, array), (1, 2+pos))
-            permu = list(range(len(free_ind1)))
-            permu[0], permu[pos] = permu[pos], permu[0]
-            return permutedims(array, permu)
-
-        # Raise indices:
-        for pos in pos2up:
-            metric = replacement_dict[index_types1[pos]]
-            metric_inverse = _TensorDataLazyEvaluator.inverse_matrix(metric)
-            array = contract_and_permute(metric_inverse, array, pos)
-        # Lower indices:
-        for pos in pos2down:
-            metric = replacement_dict[index_types1[pos]]
-            array = contract_and_permute(metric, array, pos)
-
-        if free_ind1:
-            permutation = self._get_indices_permutation(free_ind2, free_ind1)
-            array = permutedims(array, permutation)
-        if len(free_ind2) == 0 and array.rank() == 0:
-            array = array[()]
-        return free_ind2, array
+        return self._match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict)
 
     @property
     def data(self):
