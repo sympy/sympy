@@ -391,5 +391,5 @@ def test_issue_12665():
 
 
 def test_zeros_without_shape():
-    arr = Array.zeros(shape=())
-    assert arr == Array(0)
+    arr = ImmutableDenseNDimArray.zeros()
+    assert arr == ImmutableDenseNDimArray(0)
