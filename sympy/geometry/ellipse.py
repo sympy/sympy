@@ -29,7 +29,7 @@ from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point2D, Point3D
-from .line import Line
+from .line import Line, LinearEntity, Segment
 from .util import idiff
 
 import random
