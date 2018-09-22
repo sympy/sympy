@@ -26,7 +26,7 @@ from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point2D, Point3D
-from .line import Line, LinearEntity
+from .line import Line, LinearEntity, Segment
 from .util import idiff
 
 import random
@@ -146,6 +146,9 @@ class Ellipse(GeometrySet):
 
         if hradius == vradius:
             return Circle(center, hradius, **kwargs)
+
+        if hradius == 0 or vradius == 0:
+            return Segment(Point(center[0] - hradius, center[1] - vradius), Point(center[0] + hradius, center[1] + vradius))
 
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
 
