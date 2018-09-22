@@ -1378,9 +1378,6 @@ class Circle(Ellipse):
             center_y = -d/b/2
             r2 = (center_x**2) + (center_y**2) - e
 
-            if r2.is_negative:
-                raise GeometryError("The given equation of circle has an imaginary radius")
-
             return Circle((center_x, center_y), sqrt(r2))
 
         else:
