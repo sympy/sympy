@@ -5,7 +5,7 @@ import itertools
 
 from sympy.core.sympify import _sympify
 
-from sympy import Basic, Tuple
+from sympy import Basic, Tuple, S
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
 
@@ -69,7 +69,7 @@ class DenseNDimArray(NDimArray):
 
     @classmethod
     def zeros(cls, *shape):
-        list_length = functools.reduce(lambda x, y: x*y, shape)
+        list_length = functools.reduce(lambda x, y: x*y, shape, S.One)
         return cls._new(([0]*list_length,), shape)
 
     def tomatrix(self):
