@@ -1859,15 +1859,29 @@ def test_tensor_replacement():
 
     expr = H(i, j)
     repl = {H(i,-j): [[1,2],[3,4]], L: diag(1, -1)}
-    assert expr._extract_data(repl) == ([i, -j], Array([[1, -2], [3, -4]]))
-    assert expr.replace_with_arrays([i, -j], repl) == Array([[1, -2], [3, -4]])
-    assert expr.replace_with_arrays([-j, i], repl) == Array([[1, 3], [-2, -4]])
+    assert expr._extract_data(repl) == ([i, j], Array([[1, -2], [3, -4]]))
+
+    assert expr.replace_with_arrays([i, j], repl) == Array([[1, -2], [3, -4]])
+    assert expr.replace_with_arrays([i, -j], repl) == Array([[1, 2], [3, 4]])
+    assert expr.replace_with_arrays([-i, j], repl) == Array([[1, -2], [-3, 4]])
+    assert expr.replace_with_arrays([-i, -j], repl) == Array([[1, 2], [-3, -4]])
+    assert expr.replace_with_arrays([j, i], repl) == Array([[1, 3], [-2, -4]])
+    assert expr.replace_with_arrays([j, -i], repl) == Array([[1, -3], [-2, 4]])
+    assert expr.replace_with_arrays([-j, i], repl) == Array([[1, 3], [2, 4]])
+    assert expr.replace_with_arrays([-j, -i], repl) == Array([[1, -3], [2, -4]])
 
     expr = H(i,j)
     repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
     assert expr._extract_data(repl) == ([i, j], Array([[1, 2], [3, 4]]))
+
     assert expr.replace_with_arrays([i, j], repl) == Array([[1, 2], [3, 4]])
+    assert expr.replace_with_arrays([i, -j], repl) == Array([[1, -2], [3, -4]])
+    assert expr.replace_with_arrays([-i, j], repl) == Array([[1, 2], [-3, -4]])
+    assert expr.replace_with_arrays([-i, -j], repl) == Array([[1, -2], [-3, 4]])
     assert expr.replace_with_arrays([j, i], repl) == Array([[1, 3], [2, 4]])
+    assert expr.replace_with_arrays([j, -i], repl) == Array([[1, -3], [2, -4]])
+    assert expr.replace_with_arrays([-j, i], repl) == Array([[1, 3], [-2, -4]])
+    assert expr.replace_with_arrays([-j, -i], repl) == Array([[1, -3], [-2, 4]])
 
     # Not the same indices:
     expr = H(i,k)
@@ -1877,6 +1891,7 @@ def test_tensor_replacement():
     expr = A(i)*A(-i)
     repl = {A(i): [1,2], L: diag(1, -1)}
     assert expr._extract_data(repl) == ([], -3)
+    assert expr.replace_with_arrays([], repl) == -3
 
     expr = K(i, j, -j, k)*A(-i)*A(-k)
     repl = {A(i): [1, 2], K(i,j,k,l): Array([1]*2**4).reshape(2,2,2,2), L: diag(1, -1)}
@@ -1900,6 +1915,10 @@ def test_tensor_replacement():
     assert expr._extract_data(repl) == ([k, i, j], Array([[[2, 4], [6, 8]]]))
     assert expr.replace_with_arrays([k, i, j], repl) == Array([[[2, 4], [6, 8]]])
     assert expr.replace_with_arrays([k, j, i], repl) == Array([[[2, 6], [4, 8]]])
+
+    expr = A(k)*A(-k) + 100
+    repl = {A(k): [2, 3], L: diag(1, 1)}
+    assert expr.replace_with_arrays([], repl) == 113
 
     ## Symmetrization:
     expr = H(i, j) + H(j, i)
