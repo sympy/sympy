@@ -1850,6 +1850,7 @@ def test_tensor_alternative_construction():
 
 def test_tensor_replacement():
     L = TensorIndexType("L")
+    L2 = TensorIndexType("L2", dim=2)
     i, j, k, l = tensor_indices("i j k l", L)
     i0 = tensor_indices("i0", L)
     A, B, C, D = tensorhead("A B C D", [L], [[1]])
@@ -1859,10 +1860,14 @@ def test_tensor_replacement():
     expr = H(i, j)
     repl = {H(i,-j): [[1,2],[3,4]], L: diag(1, -1)}
     assert expr._extract_data(repl) == ([i, -j], Array([[1, -2], [3, -4]]))
+    assert expr.replace_with_arrays([i, -j], repl) == Array([[1, -2], [3, -4]])
+    assert expr.replace_with_arrays([-j, i], repl) == Array([[1, 3], [-2, -4]])
 
     expr = H(i,j)
     repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
     assert expr._extract_data(repl) == ([i, j], Array([[1, 2], [3, 4]]))
+    assert expr.replace_with_arrays([i, j], repl) == Array([[1, 2], [3, 4]])
+    assert expr.replace_with_arrays([j, i], repl) == Array([[1, 3], [2, 4]])
 
     # Not the same indices:
     expr = H(i,k)
@@ -1893,10 +1898,21 @@ def test_tensor_replacement():
     expr = A(k)*H(i, j) + B(k)*H(i, j)
     repl = {A(k): [1], B(k): [1], H(i, j): [[1, 2],[3,4]], L:diag(1,1)}
     assert expr._extract_data(repl) == ([k, i, j], Array([[[2, 4], [6, 8]]]))
+    assert expr.replace_with_arrays([k, i, j], repl) == Array([[[2, 4], [6, 8]]])
+    assert expr.replace_with_arrays([k, j, i], repl) == Array([[[2, 6], [4, 8]]])
 
+    ## Symmetrization:
     expr = H(i, j) + H(j, i)
     repl = {H(i, j): [[1, 2], [3, 4]]}
     assert expr._extract_data(repl) == ([i, j], Array([[2, 5], [5, 8]]))
+    assert expr.replace_with_arrays([i, j], repl) == Array([[2, 5], [5, 8]])
+    assert expr.replace_with_arrays([j, i], repl) == Array([[2, 5], [5, 8]])
+
+    ## Anti-symmetrization:
+    expr = H(i, j) - H(j, i)
+    repl = {H(i, j): [[1, 2], [3, 4]]}
+    assert expr.replace_with_arrays([i, j], repl) == Array([[0, -1], [1, 0]])
+    assert expr.replace_with_arrays([j, i], repl) == Array([[0, 1], [-1, 0]])
 
     # Tensors with contractions in replacements:
     expr = K(i, j, k, -k)
@@ -1906,3 +1922,20 @@ def test_tensor_replacement():
     expr = H(i, -i)
     repl = {H(i, -i): 42}
     assert expr._extract_data(repl) == ([], 42)
+
+    # Replace with array, raise exception if indices are not compatible:
+    expr = A(i)*A(j)
+    repl = {A(i): [1, 2]}
+    raises(ValueError, lambda: expr.replace_with_arrays([j], repl))
+
+    # Raise exception if array dimension is not compatible:
+    expr = A(i)
+    repl = {A(i): [[1, 2]]}
+    raises(ValueError, lambda: expr.replace_with_arrays([i], repl))
+
+    # TensorIndexType with dimension, wrong dimension in replacement array:
+    u1, u2, u3 = tensor_indices("u1:4", L2)
+    U = tensorhead("U", [L2], [[1]])
+    expr = U(u1)*U(-u2)
+    repl = {U(u1): [[1]]}
+    raises(ValueError, lambda: expr.replace_with_arrays([u1, -u2], repl))
