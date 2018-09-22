@@ -11,9 +11,16 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
     TensorManager, TensExpr, TIDS, TensorHead, canon_bp
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import range
 from sympy.matrices import diag
+import warnings
 
+
+def filter_warnings_decorator(f):
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        f()
 
 def _is_equal(arg1, arg2):
     if isinstance(arg1, TensExpr):
@@ -525,7 +532,10 @@ def test_TensExpr():
     #raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__rdiv__(t, 'a'))
-    raises(ValueError, lambda: A(a, b)**2)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        # DO NOT REMOVE THIS AFTER DEFRECATION REMOVED:
+        raises(ValueError, lambda: A(a, b)**2)
     raises(NotImplementedError, lambda: 2**A(a, b))
     raises(NotImplementedError, lambda: abs(A(a, b)))
 
@@ -1293,6 +1303,7 @@ def _get_valued_base_test_variables():
             n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4)
 
 
+@filter_warnings_decorator
 def test_valued_tensor_iter():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1314,6 +1325,7 @@ def test_valued_tensor_iter():
     assert list(BA(i1, i2) - 2 * BA(i1, i2)) == [-i for i in list(ba_matrix)]
 
 
+@filter_warnings_decorator
 def test_valued_tensor_covariant_contravariant_elements():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1327,6 +1339,7 @@ def test_valued_tensor_covariant_contravariant_elements():
     assert AB(-i0, i1)[1, 1] == 1
 
 
+@filter_warnings_decorator
 def test_valued_tensor_get_matrix():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1347,6 +1360,7 @@ def test_valued_tensor_get_matrix():
     assert A(-i0).get_matrix() == Matrix([E, -px, -py, -pz])
 
 
+@filter_warnings_decorator
 def test_valued_tensor_contraction():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1371,6 +1385,7 @@ def test_valued_tensor_contraction():
         assert contrexp[i] == [E, px, py, pz][i]
 
 
+@filter_warnings_decorator
 def test_valued_tensor_self_contraction():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1379,6 +1394,7 @@ def test_valued_tensor_self_contraction():
     assert BA(i0, -i0).data == 2
 
 
+@filter_warnings_decorator
 def test_valued_tensor_pow():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1389,6 +1405,7 @@ def test_valued_tensor_pow():
     assert C(mu0)**1 == C**1
 
 
+@filter_warnings_decorator
 def test_valued_tensor_expressions():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1429,6 +1446,7 @@ def test_valued_tensor_expressions():
     assert expr5.data.expand() == 28*E*x1 + 12*px*x1 + 20*py*x1 + 28*pz*x1 + 136*x2 + 3*x3
 
 
+@filter_warnings_decorator
 def test_valued_tensor_add_scalar():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1450,6 +1468,7 @@ def test_valued_tensor_add_scalar():
     assert expr4.data == 0
 
 
+@filter_warnings_decorator
 def test_noncommuting_components():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1478,6 +1497,7 @@ def test_noncommuting_components():
     assert Vc.expand() == b * a + b * d
 
 
+@filter_warnings_decorator
 def test_valued_non_diagonal_metric():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1486,6 +1506,7 @@ def test_valued_non_diagonal_metric():
     assert (NA(n0)*NA(-n0)).data == (NA(n0).get_matrix().T * mmatrix * NA(n0).get_matrix())[0, 0]
 
 
+@filter_warnings_decorator
 def test_valued_assign_numpy_ndarray():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1523,6 +1544,7 @@ def test_valued_assign_numpy_ndarray():
             assert AB(-i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if j else 1)
 
 
+@filter_warnings_decorator
 def test_valued_metric_inverse():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1555,6 +1577,7 @@ def test_valued_metric_inverse():
             assert KD(i0, -i1)[i, j] == meye[i, j]
 
 
+@filter_warnings_decorator
 def test_valued_canon_bp_swapaxes():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1579,6 +1602,8 @@ def test_pprint():
     assert pretty(A) == "A(Lorentz)"
 
 
+
+@filter_warnings_decorator
 def test_valued_components_with_wrong_symmetry():
     IT = TensorIndexType('IT', dim=3)
     i0, i1, i2, i3 = tensor_indices('i0:4', IT)
@@ -1610,6 +1635,7 @@ def test_valued_components_with_wrong_symmetry():
     A_antisym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 
 
+@filter_warnings_decorator
 def test_issue_10972_TensMul_data():
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
     Lorentz.data = [-1, 1]
@@ -1636,6 +1662,7 @@ def test_issue_10972_TensMul_data():
     assert ((mul_1 + mul_1).data == 2 * mul_1.data)
 
 
+@filter_warnings_decorator
 def test_TensMul_data():
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='L', dim=4)
     Lorentz.data = [-1, 1, 1, 1]
@@ -1696,6 +1723,7 @@ def test_TensMul_data():
     assert (mul_3.data == Array([0, 0, 0, 0]))
 
 
+@filter_warnings_decorator
 def test_issue_11020_TensAdd_data():
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
     Lorentz.data = [-1, 1]
