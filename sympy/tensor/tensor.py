@@ -45,6 +45,13 @@ from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp
 from sympy.matrices import eye
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+import warnings
+
+
+@deprecated(useinstead=".replace_with_arrays", issue=15276, deprecated_since_version="1.4")
+def deprecate_data():
+    pass
 
 
 class TIDS(CantSympify):
@@ -1649,10 +1656,12 @@ class TensorIndexType(Basic):
 
     @property
     def data(self):
+        deprecate_data()
         return _tensor_data_substitution_dict[self]
 
     @data.setter
     def data(self, data):
+        deprecate_data()
         # This assignment is a bit controversial, should metric components be assigned
         # to the metric only or also to the TensorIndexType object? The advantage here
         # is the ability to assign a 1D array and transform it to a 2D diagonal array.
@@ -1687,6 +1696,7 @@ class TensorIndexType(Basic):
 
     @data.deleter
     def data(self):
+        deprecate_data()
         if self in _tensor_data_substitution_dict:
             del _tensor_data_substitution_dict[self]
         if self.metric in _tensor_data_substitution_dict:
@@ -2429,8 +2439,10 @@ class TensorHead(Basic):
         return tensor.doit()
 
     def __pow__(self, other):
-        if self.data is None:
-            raise ValueError("No power on abstract tensors.")
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+            if self.data is None:
+                raise ValueError("No power on abstract tensors.")
         from .array import tensorproduct, tensorcontraction
         metrics = [_.data for _ in self.args[1].args[0]]
 
@@ -2444,14 +2456,17 @@ class TensorHead(Basic):
 
     @property
     def data(self):
+        deprecate_data()
         return _tensor_data_substitution_dict[self]
 
     @data.setter
     def data(self, data):
+        deprecate_data()
         _tensor_data_substitution_dict[self] = data
 
     @data.deleter
     def data(self):
+        deprecate_data()
         if self in _tensor_data_substitution_dict:
             del _tensor_data_substitution_dict[self]
 
@@ -3184,14 +3199,17 @@ class TensAdd(TensExpr, AssocOp):
 
     @property
     def data(self):
+        deprecate_data()
         return _tensor_data_substitution_dict[self.expand()]
 
     @data.setter
     def data(self, data):
+        deprecate_data()
         _tensor_data_substitution_dict[self] = data
 
     @data.deleter
     def data(self):
+        deprecate_data()
         if self in _tensor_data_substitution_dict:
             del _tensor_data_substitution_dict[self]
 
@@ -3536,15 +3554,18 @@ class Tensor(TensExpr):
 
     @property
     def data(self):
+        deprecate_data()
         return _tensor_data_substitution_dict[self]
 
     @data.setter
     def data(self, data):
+        deprecate_data()
         # TODO: check data compatibility with properties of tensor.
         _tensor_data_substitution_dict[self] = data
 
     @data.deleter
     def data(self):
+        deprecate_data()
         if self in _tensor_data_substitution_dict:
             del _tensor_data_substitution_dict[self]
         if self.metric in _tensor_data_substitution_dict:
@@ -4361,15 +4382,18 @@ class TensMul(TensExpr, AssocOp):
 
     @property
     def data(self):
+        deprecate_data()
         dat = _tensor_data_substitution_dict[self.expand()]
         return dat
 
     @data.setter
     def data(self, data):
+        deprecate_data()
         raise ValueError("Not possible to set component data to a tensor expression")
 
     @data.deleter
     def data(self):
+        deprecate_data()
         raise ValueError("Not possible to delete component data to a tensor expression")
 
     def __iter__(self):
