@@ -1312,10 +1312,7 @@ def _mask_nc(eq, name=None):
             if a.is_Symbol:
                 nc_syms.add(a)
             elif not (a.is_Add or a.is_Mul or a.is_Pow):
-                if all(s.is_commutative for s in a.free_symbols):
-                    rep.append((a, Dummy()))
-                else:
-                    nc_obj.add(a)
+                nc_obj.add(a)
                 pot.skip()
 
     # If there is only one nc symbol or object, it can be factored regularly

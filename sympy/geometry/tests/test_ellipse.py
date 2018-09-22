@@ -58,6 +58,10 @@ def test_ellipse_geom():
     assert c1.hradius == 1
     assert c1.vradius == 1
 
+    assert Ellipse((1, 1), 0, 0) == Point(1, 1)
+    assert Ellipse((1, 1), 1, 0) == Segment(Point(0, 1), Point(2, 1))
+    assert Ellipse((1, 1), 0, 1) == Segment(Point(1, 0), Point(1, 2))
+
     # Private Functions
     assert hash(c1) == hash(Circle(Point(1, 0), Point(0, 1), Point(0, -1)))
     assert c1 in e1
@@ -421,10 +425,12 @@ def test_circumference():
     assert Ellipse(Point(0, 0), 5, 4).circumference == 20 * elliptic_e(S(9) / 25)
 
     # degenerate ellipse
-    assert Ellipse(None, 1, None, 1).circumference == 4
+    assert Ellipse(None, 1, None, 1).length == 2
 
     # circle
     assert Ellipse(None, 1, None, 0).circumference == 2*pi
 
     # test numerically
     assert abs(Ellipse(None, hradius=5, vradius=3).circumference.evalf(16) - 25.52699886339813) < 1e-10
+def test_issue_15259():
+    assert Circle((1, 2), 0) == Point(1, 2)

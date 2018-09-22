@@ -388,3 +388,8 @@ def test_issue_12665():
     arr = ImmutableDenseNDimArray([1, 2, 3])
     # This should NOT raise an exception:
     hash(arr)
+
+
+def test_zeros_without_shape():
+    arr = ImmutableDenseNDimArray.zeros()
+    assert arr == ImmutableDenseNDimArray(0)
