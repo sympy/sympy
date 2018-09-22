@@ -2247,12 +2247,12 @@ class TensorHead(Basic):
     Now it is possible to retrieve the contravariant form of the Electromagnetic
     tensor:
 
-    >>> F(i0, i1).replace_with_arrays([i0, i1], repl)
+    >>> F(i0, i1).replace_with_arrays(repl, [i0, i1])
     [[0, -E_x/c, -E_y/c, -E_z/c], [E_x/c, 0, -B_z, B_y], [E_y/c, B_z, 0, -B_x], [E_z/c, -B_y, B_x, 0]]
 
     and the mixed contravariant-covariant form:
 
-    >>> F(i0, -i1).replace_with_arrays([i0, -i1], repl)
+    >>> F(i0, -i1).replace_with_arrays(repl, [i0, -i1])
     [[0, E_x/c, E_y/c, E_z/c], [E_x/c, 0, B_z, -B_y], [E_y/c, -B_z, 0, B_x], [E_z/c, B_y, -B_x, 0]]
 
     Energy-momentum of a particle may be represented as:
@@ -2264,15 +2264,15 @@ class TensorHead(Basic):
 
     The contravariant and covariant components are, respectively:
 
-    >>> P(i0).replace_with_arrays([i0], repl)
+    >>> P(i0).replace_with_arrays(repl, [i0])
     [E, p_x, p_y, p_z]
-    >>> P(-i0).replace_with_arrays([-i0], repl)
+    >>> P(-i0).replace_with_arrays(repl, [-i0])
     [E, -p_x, -p_y, -p_z]
 
     The contraction of a 1-index tensor by itself:
 
     >>> expr = P(i0)*P(-i0)
-    >>> expr.replace_with_arrays([], repl)
+    >>> expr.replace_with_arrays(repl, [])
     E**2 - p_x**2 - p_y**2 - p_z**2
     """
     is_commutative = False
@@ -2747,7 +2747,7 @@ class TensExpr(Expr):
 
         return free_ind2, array
 
-    def replace_with_arrays(self, indices, replacement_dict):
+    def replace_with_arrays(self, replacement_dict, indices):
         """
         Replace the tensorial expressions with arrays. The final array will
         correspond to the N-dimensional array with indices arranged according
@@ -2756,10 +2756,10 @@ class TensExpr(Expr):
         Parameters
         ==========
 
-        indices
-            the index order with respect to which the array is read.
         replacement_dict
             dictionary containing the replacement rules for tensors.
+        indices
+            the index order with respect to which the array is read.
 
         Examples
         ========
@@ -2771,17 +2771,17 @@ class TensExpr(Expr):
         >>> L = TensorIndexType("L")
         >>> i, j = tensor_indices("i j", L)
         >>> A = tensorhead("A", [L], [[1]])
-        >>> A(i).replace_with_arrays([i], {A(i): [1, 2]})
+        >>> A(i).replace_with_arrays({A(i): [1, 2]}, [i])
         [1, 2]
         >>> expr = A(i)*A(j)
-        >>> expr.replace_with_arrays([i, j], {A(i): [1, 2]})
+        >>> expr.replace_with_arrays({A(i): [1, 2]}, [i, j])
         [[1, 2], [2, 4]]
 
         For contractions, specify the metric of the ``TensorIndexType``, which
         in this case is ``L``, in its covariant form:
 
         >>> expr = A(i)*A(-i)
-        >>> expr.replace_with_arrays([], {A(i): [1, 2], L: diag(1, -1)})
+        >>> expr.replace_with_arrays({A(i): [1, 2], L: diag(1, -1)}, [])
         -3
 
         Symmetrization of an array:
@@ -2789,20 +2789,20 @@ class TensExpr(Expr):
         >>> H = tensorhead("H", [L, L], [[1], [1]])
         >>> a, b, c, d = symbols("a b c d")
         >>> expr = H(i, j)/2 + H(j, i)/2
-        >>> expr.replace_with_arrays([i, j], {H(i, j): [[a, b], [c, d]]})
+        >>> expr.replace_with_arrays({H(i, j): [[a, b], [c, d]]}, [i, j])
         [[a, b/2 + c/2], [b/2 + c/2, d]]
 
         Anti-symmetrization of an array:
 
         >>> expr = H(i, j)/2 - H(j, i)/2
         >>> repl = {H(i, j): [[a, b], [c, d]]}
-        >>> expr.replace_with_arrays([i, j], repl)
+        >>> expr.replace_with_arrays(repl, [i, j])
         [[0, b/2 - c/2], [-b/2 + c/2, 0]]
 
         The same expression can be read as the transpose by inverting ``i`` and
         ``j``:
 
-        >>> expr.replace_with_arrays([j, i], repl)
+        >>> expr.replace_with_arrays(repl, [j, i])
         [[0, -b/2 + c/2], [b/2 - c/2, 0]]
         """
         from .array import Array, permutedims
@@ -2880,7 +2880,7 @@ class TensAdd(TensExpr, AssocOp):
     The following are: 2**2 - 3**2 - 2**2 - 7**2 ==> -58
 
     >>> expr = p(a) + q(a)
-    >>> expr.replace_with_arrays([a], repl)
+    >>> expr.replace_with_arrays(repl, [a])
     [x + 1, y + 2, z + 3, t + 4]
     """
 
