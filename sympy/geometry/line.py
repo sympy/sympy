@@ -22,8 +22,7 @@ from __future__ import division, print_function
 from sympy import Expr
 from sympy.core import S, sympify
 from sympy.core.compatibility import ordered
-from sympy.core.function import _mexpand
-from sympy.core.numbers import Rational, oo, nan, zoo
+from sympy.core.numbers import Rational, oo
 from sympy.core.relational import Eq, Equality
 from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
@@ -1043,6 +1042,7 @@ class Line(LinearEntity):
     p2 : Point
     slope : sympy expression
     direction_ratio : list
+    equation : equation of a line
 
     Notes
     =====
@@ -1094,11 +1094,11 @@ class Line(LinearEntity):
     >>> Line(s).equation()
     x
 
-    >>> # a line object returned from given equation and optional 'x' and 'y' parameters
+    # a line object returned from given equation and optional 'x' and 'y' parameters
     >>> from sympy.abc import x, y, a, b
-    >>> Line(3 * x + y + 18)
+    >>> Line(3*x + y + 18)
     Line2D(Point2D(0, -18), Point2D(1, -21))
-    >>> Line(3 * a + b + 18, x='a', y='b')
+    >>> Line(3*a + b + 18, x='a', y='b')
     Line2D(Point2D(0, -18), Point2D(1, -21))
     """
 

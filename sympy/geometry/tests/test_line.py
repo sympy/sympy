@@ -40,17 +40,17 @@ warnings.simplefilter('always', UserWarning)  # make sure to show warnings every
 
 def test_object_from_equation():
     from sympy.abc import x, y, a, b
-    assert Line(3 * x + y + 18) == Line2D(Point2D(0, -18), Point2D(1, -21))
-    assert Line(3 * x + 5 * y + 1) == Line2D(Point2D(0, -1/5), Point2D(1, -4/5))
-    assert Line(3 * a + b + 18, x='a', y='b') == Line2D(Point2D(0, -18), Point2D(1, -21))
-    assert Line(3 * x + y) == Line2D(Point2D(0, 0), Point2D(1, -3))
+    assert Line(3*x + y + 18) == Line2D(Point2D(0, -18), Point2D(1, -21))
+    assert Line(3*x + 5 * y + 1) == Line2D(Point2D(0, -1/5), Point2D(1, -4/5))
+    assert Line(3*a + b + 18, x='a', y='b') == Line2D(Point2D(0, -18), Point2D(1, -21))
+    assert Line(3*x + y) == Line2D(Point2D(0, 0), Point2D(1, -3))
     assert Line(x + y) == Line2D(Point2D(0, 0), Point2D(1, -1))
     raises(ValueError, lambda: Line(x))
     raises(ValueError, lambda: Line(y))
-    raises(ValueError, lambda: Line(x / y))
-    raises(ValueError, lambda: Line(a / b, x='a', y='b'))
-    raises(ValueError, lambda: Line(y / x))
-    raises(ValueError, lambda: Line(b / a, x='a', y='b'))
+    raises(ValueError, lambda: Line(x/y))
+    raises(ValueError, lambda: Line(a/b, x='a', y='b'))
+    raises(ValueError, lambda: Line(y/x))
+    raises(ValueError, lambda: Line(b/a, x='a', y='b'))
     raises(ValueError, lambda: Line((x + 1)**2 + y))
 
 

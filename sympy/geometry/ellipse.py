@@ -10,11 +10,10 @@ from __future__ import division, print_function
 
 from sympy import diff, Expr
 from sympy.core import S, pi, sympify
-from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import ordered
-from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol, var
+from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -871,7 +870,7 @@ class Ellipse(GeometrySet):
         x, y = Dummy('x', real=True), Dummy('y', real=True)
         eq = self.equation(x, y)
         dydx = idiff(eq, y, x)
-        norm = -1 / dydx
+        norm = -1/dydx
         slope = Line(p, (x, y)).slope
         seq = slope - norm
 
@@ -1106,9 +1105,9 @@ class Ellipse(GeometrySet):
         """
         if self.hradius == self.vradius:
             return self.func(self.center.rotate(angle, pt), self.hradius)
-        if (angle / S.Pi).is_integer:
+        if (angle/S.Pi).is_integer:
             return super(Ellipse, self).rotate(angle, pt)
-        if (2*angle / S.Pi).is_integer:
+        if (2*angle/S.Pi).is_integer:
             return self.func(self.center.rotate(angle, pt), self.vradius, self.hradius)
         # XXX see https://github.com/sympy/sympy/issues/2815 for general ellipes
         raise NotImplementedError('Only rotations of pi/2 are currently supported for Ellipse.')
@@ -1273,8 +1272,8 @@ class Ellipse(GeometrySet):
 
         """
 
-        I_xx = (S.Pi*(self.hradius)*(self.vradius**3)) / 4
-        I_yy = (S.Pi*(self.hradius**3)*(self.vradius)) / 4
+        I_xx = (S.Pi*(self.hradius)*(self.vradius**3))/4
+        I_yy = (S.Pi*(self.hradius**3)*(self.vradius))/4
         I_xy = 0
 
         if point is None:
@@ -1300,6 +1299,7 @@ class Circle(Ellipse):
     center : Point
     radius : number or sympy expression
     points : sequence of three Points
+    equation : equation of a circle
 
     Attributes
     ==========
@@ -1312,7 +1312,7 @@ class Circle(Ellipse):
     ======
 
     GeometryError
-        When trying to construct circle from three collinear points.
+        When the given equation is not that of a circle.
         When trying to construct circle from incorrect parameters.
 
     If the equation of a circle, whose circle object is needed, is
@@ -1343,7 +1343,7 @@ class Circle(Ellipse):
     >>> c2.hradius, c2.vradius, c2.radius, c2.center
     (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point2D(1/2, 1/2))
 
-    >>> # a circle object returned from given equation and optional 'x' and 'y' parameters
+    # a circle object returned from given equation and optional 'x' and 'y' parameters
     >>> from sympy.abc import x, y, a, b
     >>> Circle(x ** 2 + y ** 2 - 25)
     Circle(Point2D(0, 0), 5)
