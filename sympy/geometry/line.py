@@ -23,7 +23,7 @@ from sympy import Expr
 from sympy.core import S, sympify
 from sympy.core.compatibility import ordered
 from sympy.core.numbers import Rational, oo
-from sympy.core.relational import Eq, Equality
+from sympy.core.relational import Eq
 from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.functions.elementary.piecewise import Piecewise
