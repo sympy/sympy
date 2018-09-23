@@ -1031,9 +1031,8 @@ class LinearEntity(GeometrySet):
 class Line(LinearEntity):
     """An infinite line in space.
 
-    A line is declared with two distinct points.
-    A 2D line may be declared with a point and slope
-    and a 3D line may be defined with a point and a direction ratio.
+    A 2D line is declared with two distinct points, point and slope, or
+    an equation. A 3D line may be defined with a point and a direction ratio.
 
     Parameters
     ==========
@@ -1051,15 +1050,6 @@ class Line(LinearEntity):
     on the dimension of `p1`.  The `slope` argument is only relevant
     for `Line2D` and the `direction_ratio` argument is only relevant
     for `Line3D`.
-
-    If the equation of a Line, whose line object is needed, is
-    ax + by + c = 0, then the input has to be of
-    the following format:
-
-    Line(ax + by + c, x='x', y='y')
-
-    The input can also be given in terms of some other variable other than x
-    and/or y, but then they need to be specified in the additional argument.
 
     See Also
     ========
@@ -1094,11 +1084,17 @@ class Line(LinearEntity):
     >>> Line(s).equation()
     x
 
-    # a line object returned from given equation and optional 'x' and 'y' parameters
+    The line corresponding to an equation in the for `ax + by + c = 0`,
+    can be entered:
+
     >>> from sympy.abc import x, y, a, b
     >>> Line(3*x + y + 18)
     Line2D(Point2D(0, -18), Point2D(1, -21))
-    >>> Line(3*a + b + 18, x='a', y='b')
+
+    If `x` or `y` has a different name, then they can be specified, too,
+    as a string (to match the name) or symbol:
+
+    >>> Line(3*a + b + 18, x='a', y=b)
     Line2D(Point2D(0, -18), Point2D(1, -21))
     """
 
