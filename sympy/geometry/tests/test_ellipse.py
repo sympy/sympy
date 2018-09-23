@@ -1,13 +1,31 @@
 from __future__ import division
 
-from sympy import Dummy, Rational, S, Symbol, symbols, pi, sqrt, oo
+from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, I
 from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
-from sympy.integrals.integrals import Integral
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises
 from sympy import integrate
 from sympy.functions.special.elliptic_integrals import elliptic_e
+
+def test_object_from_equation():
+    from sympy.abc import x, y, a, b
+    assert Circle(x**2 + y**2 + 3*x + 4*y - 8) == Circle(Point2D(S(-3) / 2, -2),
+                                                                                      sqrt(57) / 2)
+    assert Circle(x**2 + y**2 + 6*x + 8*y + 25) == Circle(Point2D(-3, -4), 0)
+    assert Circle(a**2 + b**2 + 6*a + 8*b + 25, x='a', y='b') == Circle(Point2D(-3, -4), 0)
+    assert Circle(x**2 + y**2 - 25) == Circle(Point2D(0, 0), 5)
+    assert Circle(x**2 + y**2) == Circle(Point2D(0, 0), 0)
+    assert Circle(a**2 + b**2, x='a', y='b') == Circle(Point2D(0, 0), 0)
+    assert Circle(x**2 + y**2 + 6*x + 8) == Circle(Point2D(-3, 0), 1)
+    assert Circle(x**2 + y**2 + 6*y + 8) == Circle(Point2D(0, -3), 1)
+    assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(-1/2, -2/3), 5*sqrt(37)/6)
+    assert Circle(x**2 + y**2 + 3*x + 4*y + 26) == Circle(Point2D(-3/2, -2), sqrt(79)*I/2)
+    assert Circle(x**2 + y**2 + 25) == Circle(Point2D(0, 0), 5*I)
+    assert Circle(a**2 + b**2 + 25, x='a', y='b') == Circle(Point2D(0, 0), 5*I)
+    raises(GeometryError, lambda: Circle(x**2 + 6*y + 8))
+    raises(GeometryError, lambda: Circle(6*(x ** 2) + 4*(y**2) + 6*x + 8*y + 25))
+    raises(ValueError, lambda: Circle(a**2 + b**2 + 3*a + 4*b - 8))
 
 
 def test_ellipse_geom():
@@ -31,8 +49,7 @@ def test_ellipse_geom():
     # Test creation with three points
     cen, rad = Point(3*half, 2), 5*half
     assert Circle(Point(0, 0), Point(3, 0), Point(0, 4)) == Circle(cen, rad)
-    raises(
-        GeometryError, lambda: Circle(Point(0, 0), Point(1, 1), Point(2, 2)))
+    assert Circle(Point(0, 0), Point(1, 1), Point(2, 2)) == Segment2D(Point2D(0, 0), Point2D(2, 2))
 
     raises(ValueError, lambda: Ellipse(None, None, None, 1))
     raises(GeometryError, lambda: Circle(Point(0, 0)))
