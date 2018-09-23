@@ -505,6 +505,8 @@ class Point(GeometryEntity):
         """Returns `True` if there exists a line
         that contains `self` and `points`.  Returns `False` otherwise.
         A trivially True value is returned if no points are given.
+        Instead, for checking if some points are collinear or not, use
+        method `are_collinear`.
 
         Parameters
         ==========
@@ -538,6 +540,42 @@ class Point(GeometryEntity):
         points = Point._normalize_dimension(*[Point(i) for i in points])
         points = list(uniq(points))
         return Point.affine_rank(*points) <= 1
+
+    def are_collinear(*args):
+        """Returns `True` if there exists a line
+        that contains `points`.  Returns `False` otherwise.
+        This method is a simple advancement to method `is_collinear`
+        in checking only co-linearity of the points given as arguments.
+
+        Parameters
+        ==========
+
+        args : sequence of Points
+
+        Returns
+        =======
+
+        are_collinear : boolean
+
+        See Also
+        ========
+
+        sympy.geometry.line.Line
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> from sympy.abc import x
+        >>> p1, p2 = Point(0, 0), Point(1, 1)
+        >>> p3, p4, p5 = Point(2, 2), Point(x, x), Point(1, 2)
+        >>> Point.are_collinear(p1, p2, p3, p4)
+        True
+        >>> Point.are_collinear(p1, p2, p3, p5)
+        False
+
+        """
+        return args[0].is_collinear(*args[1:])
 
     def is_concyclic(self, *args):
         """Do `self` and the given sequence of points lie in a circle?
@@ -1140,9 +1178,9 @@ class Point3D(Point):
         >>> Point3D.are_collinear(p1, p2, p3, p5)
         False
         """
-        return Point.is_collinear(*points)
+        return Point.are_collinear(*points)
 
-    def direction_cosine(self, point):
+    def direction_cosines(self, point):
         """
         Gives the direction cosine between 2 points
 
@@ -1161,15 +1199,15 @@ class Point3D(Point):
 
         >>> from sympy import Point3D
         >>> p1 = Point3D(1, 2, 3)
-        >>> p1.direction_cosine(Point3D(2, 3, 5))
+        >>> p1.direction_cosines(Point3D(2, 3, 5))
         [sqrt(6)/6, sqrt(6)/6, sqrt(6)/3]
         """
-        a = self.direction_ratio(point)
+        a = self.direction_ratios(point)
         b = sqrt(Add(*(i**2 for i in a)))
         return [(point.x - self.x) / b,(point.y - self.y) / b,
                 (point.z - self.z) / b]
 
-    def direction_ratio(self, point):
+    def direction_ratios(self, point):
         """
         Gives the direction ratio between 2 points
 
@@ -1188,7 +1226,7 @@ class Point3D(Point):
 
         >>> from sympy import Point3D
         >>> p1 = Point3D(1, 2, 3)
-        >>> p1.direction_ratio(Point3D(2, 3, 5))
+        >>> p1.direction_ratios(Point3D(2, 3, 5))
         [1, 1, 2]
         """
         return [(point.x - self.x),(point.y - self.y),(point.z - self.z)]

@@ -8,11 +8,12 @@ Contains
 
 from __future__ import division, print_function
 
+from sympy import N
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import range, ordered
-from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
+from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol, symbols
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -28,7 +29,6 @@ from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point2D, Point3D
 from .line import Line, LinearEntity, Segment
 from .util import idiff
-
 import random
 
 
@@ -326,6 +326,38 @@ class Ellipse(GeometrySet):
         else:
             return 4 * self.major * elliptic_e(self.eccentricity**2)
 
+    def ellipse_circumference(self):
+        """
+        Computes the circumference of an ellipse using length of semi-axes as a and b.
+        Require a >= 0 and b >= 0. This is much faster than the circumference method
+        given in the method circumference.
+        Relative accuracy is about 0.5 ** 53 and computes result numerically using
+        double precision.
+
+        Examples
+        ========
+        >>> from sympy import Ellipse, Point
+        >>> e = Ellipse(Point(0,0), 4, 3)
+        >>> e.ellipse_circumference()
+        22.1034921607095
+        >>> e.circumference.n()
+        22.1034921607095
+        """
+
+        x, y = max(self.hradius, self.vradius), min(self.hradius, self.vradius)
+        digits = 53
+        tol = sqrt(pow(0.5, digits))
+        if digits * y < tol * x:
+            return 4 * x
+        s = 0
+        m = 1
+        while x - y > tol * y:
+            x, y = 0.5 * (x + y), sqrt(x * y)
+            m *= 2
+            s += m * pow(x - y, 2)
+        return N(pi * (pow(self.hradius + self.vradius, 2) - s) / (x + y))
+
+
     @property
     def eccentricity(self):
         """The eccentricity of the ellipse.
@@ -400,8 +432,29 @@ class Ellipse(GeometrySet):
 
         return fuzzy_bool(test.is_positive)
 
-    def equation(self, x='x', y='y'):
-        """The equation of the ellipse.
+    def equation(self, x='x', y='y', slope=None):
+        """
+        Returns the equation of an ellipse either using the slope of major axis, or, using hradius
+        and vradius.
+
+        Approach to the solution (using slope) :
+
+        Let the center of the ellipse be at C=(xc,yc)
+        Let the major axis be the line that passes through C with a slope of s;
+        points on that line are given by the zeros of L(x,y) = (y−yc − s*(x−xc))**2.
+        Let the minor axis be the line perpendicular to L (and also passing through C);
+        points on that line are given by the zeros of l(x,y) = (s*(y−yc) + (x−xc))**2.
+
+        Requiring that the distance between the intersections of E and L be 2M identifies
+        b = M**2*(1 + s**2)
+
+        and similarly, requiring that the intersections between E and l be separated by 2m identifies
+        a = m**2*(1 + s**2)
+
+        So the points that are on an ellipse centered at (xc,yc) whose major axis (with radius of M)
+        is on a line with slope s, and whose minor axis has radius of m, are given by the zeros of:
+
+        E(x,y) = L(x,y)/a + l(x,y)/b − 1
 
         Parameters
         ==========
@@ -410,6 +463,10 @@ class Ellipse(GeometrySet):
             Label for the x-axis. Default value is 'x'.
         y : str, optional
             Label for the y-axis. Default value is 'y'.
+        slope : int, optional
+                Label for finding equation if major axis
+                of ellipse has a non-zero slope. Default
+                value is 'None'.
 
         Returns
         =======
@@ -421,6 +478,12 @@ class Ellipse(GeometrySet):
 
         arbitrary_point : Returns parameterized point on ellipse
 
+        References
+        ==========
+
+        .. [1] https://math.stackexchange.com/questions/108270/what-is-the-equation-of-an-ellipse-that-is-not-aligned-with-the-axis
+        .. [2] https://en.wikipedia.org/wiki/Ellipse#Equation_of_a_shifted_ellipse
+
         Examples
         ========
 
@@ -428,13 +491,31 @@ class Ellipse(GeometrySet):
         >>> e1 = Ellipse(Point(1, 0), 3, 2)
         >>> e1.equation()
         y**2/4 + (x/3 - 1/3)**2 - 1
+        >>> e1.equation(slope = 1)
+        (-x + y + 1)**2/8 + (x + y - 1)**2/18 - 1
+        >>> e2 = Ellipse(Point(0, 0), 4, 1)
+        >>> e2.equation(slope = 1)
+        (-x + y)**2/2 + (x + y)**2/32 - 1
 
         """
         x = _symbol(x, real=True)
         y = _symbol(y, real=True)
-        t1 = ((x - self.center.x) / self.hradius)**2
-        t2 = ((y - self.center.y) / self.vradius)**2
-        return t1 + t2 - 1
+
+        if slope is not None:
+            x_c = self.center.x
+            y_c = self.center.y
+
+            L = ((y - y_c) - slope * (x - x_c)) ** 2
+            l = (slope * (y - y_c) + (x - x_c)) ** 2
+
+            b = self.major ** 2 * (1 + slope ** 2)
+            a = self.minor ** 2 * (1 + slope ** 2)
+            return l / b + L / a - 1
+
+        else:
+            t1 = ((x - self.center.x) / self.hradius)**2
+            t2 = ((y - self.center.y) / self.vradius)**2
+            return t1 + t2 - 1
 
     def evolute(self, x='x', y='y'):
         """The equation of evolute of the ellipse.

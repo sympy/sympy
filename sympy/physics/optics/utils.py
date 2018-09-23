@@ -99,7 +99,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         if is_sequence(incident):
             _incident = Matrix(incident)
         elif isinstance(incident, Ray3D):
-            _incident = Matrix(incident.direction_ratio)
+            _incident = Matrix(incident.direction_ratios)
         else:
             raise TypeError(
                 "incident should be a Matrix, Ray3D, or sequence")
@@ -123,7 +123,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
             if is_sequence(normal):
                 _normal = Matrix(normal)
             elif isinstance(normal, Ray3D):
-                _normal = Matrix(normal.direction_ratio)
+                _normal = Matrix(normal.direction_ratios)
                 if isinstance(incident, Ray3D):
                     intersection_pt = intersection(incident, normal)
                     if len(intersection_pt) == 0:
@@ -168,7 +168,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     if not return_ray:
         return drs
     else:
-        return Ray3D(intersection_pt, direction_ratio=drs)
+        return Ray3D(intersection_pt, direction_ratios=drs)
 
 
 def deviation(incident, medium1, medium2, normal=None, plane=None):
@@ -214,13 +214,13 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
                                  plane=plane)
     if refracted != 0:
         if isinstance(refracted, Ray3D):
-            refracted = Matrix(refracted.direction_ratio)
+            refracted = Matrix(refracted.direction_ratios)
 
         if not isinstance(incident, Matrix):
             if is_sequence(incident):
                 _incident = Matrix(incident)
             elif isinstance(incident, Ray3D):
-                _incident = Matrix(incident.direction_ratio)
+                _incident = Matrix(incident.direction_ratios)
             else:
                 raise TypeError(
                     "incident should be a Matrix, Ray3D, or sequence")
@@ -232,7 +232,7 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
                 if is_sequence(normal):
                     _normal = Matrix(normal)
                 elif isinstance(normal, Ray3D):
-                    _normal = Matrix(normal.direction_ratio)
+                    _normal = Matrix(normal.direction_ratios)
                 else:
                     raise TypeError(
                         "normal should be a Matrix, Ray3D, or sequence")
