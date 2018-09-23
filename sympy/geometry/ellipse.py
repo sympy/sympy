@@ -1386,10 +1386,9 @@ class Circle(Ellipse):
             c, r = None, None
             if len(args) == 3:
                 args = [Point(a, dim=2) for a in args]
-                if Point.is_collinear(*args):
-                    return Polygon(*args)
-                from .polygon import Triangle
                 t = Triangle(*args)
+                if not isinstance(t, Triangle):
+                    return t
                 c = t.circumcenter
                 r = t.circumradius
             elif len(args) == 2:
