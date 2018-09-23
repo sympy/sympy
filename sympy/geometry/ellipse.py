@@ -8,7 +8,7 @@ Contains
 
 from __future__ import division, print_function
 
-from sympy import diff, Expr
+from sympy import Expr
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
@@ -28,7 +28,7 @@ from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point2D, Point3D
-from .line import Line, LinearEntity, Segment
+from .line import Line, LinearEntity
 from .util import idiff
 
 import random
