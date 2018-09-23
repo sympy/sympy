@@ -136,7 +136,9 @@ class Ellipse(GeometrySet):
             raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
 
         if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
-            raise ValueError('Exactly two arguments of "hradius", "vradius", and "eccentricity" must not be None."')
+            raise ValueError(filldedent('''
+                Exactly two arguments of "hradius", "vradius", and
+                "eccentricity" must not be None.'''))
 
         if eccentricity is not None:
             if hradius is None:
@@ -1290,8 +1292,8 @@ class Ellipse(GeometrySet):
 class Circle(Ellipse):
     """A circle in space.
 
-    Constructed simply from a center and a radius, or from three
-    non-collinear points.
+    Constructed simply from a center and a radius, from three
+    non-collinear points, or the equation of a circle.
 
     Parameters
     ==========
@@ -1315,15 +1317,6 @@ class Circle(Ellipse):
         When the given equation is not that of a circle.
         When trying to construct circle from incorrect parameters.
 
-    If the equation of a circle, whose circle object is needed, is
-    ax**2 + by**2 + gx + hy + c = 0, then the input has to be of
-    the following format:
-
-    Circle(ax**2 + by**2 + gx + hy + c)
-
-    The input can also be given in terms of some other variable other than x
-    and/or y, but then they need to be specified in the additional argument.
-
     See Also
     ========
 
@@ -1332,24 +1325,33 @@ class Circle(Ellipse):
     Examples
     ========
 
+    >>> from sympy import Eq
     >>> from sympy.geometry import Point, Circle
-    >>> # a circle constructed from a center and radius
+    >>> from sympy.abc import x, y, a, b
+
+    A circle constructed from a center and radius:
+
     >>> c1 = Circle(Point(0, 0), 5)
     >>> c1.hradius, c1.vradius, c1.radius
     (5, 5, 5)
 
-    >>> # a circle constructed from three points
+    A circle constructed from three points:
+
     >>> c2 = Circle(Point(0, 0), Point(1, 1), Point(1, 0))
     >>> c2.hradius, c2.vradius, c2.radius, c2.center
     (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point2D(1/2, 1/2))
 
-    # a circle object returned from given equation and optional 'x' and 'y' parameters
-    >>> from sympy.abc import x, y, a, b
-    >>> Circle(x ** 2 + y ** 2 - 25)
-    Circle(Point2D(0, 0), 5)
-    >>> Circle(a ** 2 + b ** 2 - 25, x='a', y='b')
+    A circle can be constructed from an equation in the form
+    `a*x**2 + by**2 + gx + hy + c = 0`, too:
+
+    >>> Circle(x**2 + y**2 - 25)
     Circle(Point2D(0, 0), 5)
 
+    If the variables corresponding to x and y are named something
+    else, their name or symbol can be supplied:
+
+    >>> Circle(Eq(a**2 + b**2, 25), x='a', y=b)
+    Circle(Point2D(0, 0), 5)
     """
 
     def __new__(cls, *args, **kwargs):
