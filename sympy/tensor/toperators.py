@@ -46,7 +46,6 @@ class PartialDerivative(TensExpr):
     def _extract_data(self, replacement_dict):
         from .array import derive_by_array, tensorcontraction, tensorproduct
         indices, array = self.expr._extract_data(replacement_dict)
-        #import pdb; pdb.set_trace()
         for variable in self.variables:
             var_indices, var_array = variable._extract_data(replacement_dict)
             coeff_array, var_array = zip(*[i.as_coeff_Mul() for i in var_array])

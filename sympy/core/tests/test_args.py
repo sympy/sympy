@@ -3879,9 +3879,9 @@ def test_sympy__tensor__tensor__TensMul():
     assert _test_args(3*p(a)*q(b))
 
 
-def test_sympy__tensor__operators__PartialDerivative():
+def test_sympy__tensor__toperators__PartialDerivative():
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
-    from sympy.tensor.operators import PartialDerivative
+    from sympy.tensor.toperators import PartialDerivative
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
     A = tensorhead("A", [Lorentz], [[1]])

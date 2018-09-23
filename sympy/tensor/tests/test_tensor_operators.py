@@ -1,4 +1,4 @@
-from sympy.tensor.operators import PartialDerivative
+from sympy.tensor.toperators import PartialDerivative
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
 from sympy import symbols, diag
 from sympy import Array
