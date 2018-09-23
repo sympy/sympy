@@ -1356,6 +1356,7 @@ class Circle(Ellipse):
 
     def __new__(cls, *args, **kwargs):
         from sympy.geometry.util import find
+        from .polygon import Triangle
 
         if len(args) == 1 and isinstance(args[0], Expr):
             x = kwargs.get('x', 'x')
