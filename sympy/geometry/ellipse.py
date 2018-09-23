@@ -8,7 +8,7 @@ Contains
 
 from __future__ import division, print_function
 
-from sympy import Expr
+from sympy import Expr, Eq
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
@@ -1355,14 +1355,14 @@ class Circle(Ellipse):
     """
 
     def __new__(cls, *args, **kwargs):
+        from sympy.geometry.util import find
 
         if len(args) == 1 and isinstance(args[0], Expr):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
             equation = args[0]
-
-            from sympy.geometry.util import find
-
+            if isinstance(equation, Eq):
+                equation = equation.lhs - equation.rhs
             x = find(x, equation)
             y = find(y, equation)
 
@@ -1403,11 +1403,6 @@ class Circle(Ellipse):
                 return GeometryEntity.__new__(cls, c, r, **kwargs)
 
             raise GeometryError("Circle.__new__ received unknown arguments")
-
-
-
-
-
 
     @property
     def circumference(self):
