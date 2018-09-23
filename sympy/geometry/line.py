@@ -1061,8 +1061,10 @@ class Line(LinearEntity):
     Examples
     ========
 
-    >>> from sympy import Point
+    >>> from sympy import Point, Eq
     >>> from sympy.geometry import Line, Segment
+    >>> from sympy.abc import x, y, a, b
+
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
     Line2D(Point2D(2, 3), Point2D(3, 5))
@@ -1087,28 +1089,26 @@ class Line(LinearEntity):
     The line corresponding to an equation in the for `ax + by + c = 0`,
     can be entered:
 
-    >>> from sympy.abc import x, y, a, b
     >>> Line(3*x + y + 18)
     Line2D(Point2D(0, -18), Point2D(1, -21))
 
     If `x` or `y` has a different name, then they can be specified, too,
     as a string (to match the name) or symbol:
 
-    >>> Line(3*a + b + 18, x='a', y=b)
+    >>> Line(Eq(3*a + b, -18), x='a', y=b)
     Line2D(Point2D(0, -18), Point2D(1, -21))
     """
 
     def __new__(cls, *args, **kwargs):
+        from sympy.geometry.util import find
 
         if len(args) == 1 and isinstance(args[0], Expr):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
             equation = args[0]
-
-            from sympy.geometry.util import find
-
+            if isinstance(equation, Eq):
+                equation = equation.lhs - equation.rhs
             xin, yin = x, y
-
             x = find(x, equation) or Dummy()
             y = find(y, equation) or Dummy()
 
