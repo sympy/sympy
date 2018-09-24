@@ -6321,7 +6321,7 @@ A  + 3⋅B \n\
 
 
 def test_pretty_print_tensor_partial_deriv():
-    from sympy.tensor.operators import PartialDerivative
+    from sympy.tensor.toperators import PartialDerivative
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
 
     L = TensorIndexType("L")
