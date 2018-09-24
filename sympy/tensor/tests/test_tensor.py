@@ -9,7 +9,7 @@ from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
-    TensorManager, TensExpr, TIDS, TensorHead, canon_bp
+    TensorManager, TensExpr, TensorHead, canon_bp
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import range
@@ -737,8 +737,6 @@ def test_mul():
     assert str(C()) == 'C'
     assert str(t) == '1'
     assert t == 1
-    raises(ValueError, lambda: TIDS.free_dum_from_indices(a, a))
-    raises(ValueError, lambda: TIDS.free_dum_from_indices(-a, -a))
     raises(ValueError, lambda: A(a, b)*A(a, c))
     t = A(a, b)*A(-a, c)
     raises(ValueError, lambda: t(a, b, c))
