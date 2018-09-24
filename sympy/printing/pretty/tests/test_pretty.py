@@ -6337,7 +6337,7 @@ def test_pretty_print_tensor_partial_deriv():
 """\
  d / i\\\n\
 ---|A |\n\
-  j\  /\n\
+  j\\  /\n\
 dA     \n\
        \
 """
@@ -6357,7 +6357,7 @@ u("""\
 """\
  L_0  d / k   \\\n\
 A   *---|H    |\n\
-       j\  L_0/\n\
+       j\\  L_0/\n\
      dA        \n\
                \
 """
@@ -6377,7 +6377,7 @@ A  ⋅───⎜H   ⎟\n\
 """\
  L_0  d / k           k   \\\n\
 A   *---|B *C    + 3*H    |\n\
-       j\    L_0       L_0/\n\
+       j\\    L_0       L_0/\n\
      dA                    \n\
                            \
 """
@@ -6395,9 +6395,9 @@ A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
     expr = (A(i) + B(i))*PartialDerivative(C(-j), D(j))
     ascii_str = \
 """\
-/ i    i\   d  /    \\\n\
+/ i    i\\   d  /    \\\n\
 |A  + B |*-----|C   |\n\
-\       /   L_0\ L_0/\n\
+\\       /   L_0\\ L_0/\n\
           dD         \n\
                      \
 """
@@ -6415,9 +6415,9 @@ u("""\
     expr = (A(i) + B(i))*PartialDerivative(C(-i), D(j))
     ascii_str = \
 """\
-/ L_0    L_0\  d /    \\\n\
+/ L_0    L_0\\  d /    \\\n\
 |A    + B   |*---|C   |\n\
-\           /   j\ L_0/\n\
+\\           /   j\\ L_0/\n\
               dD       \n\
                        \
 """
