@@ -232,6 +232,7 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 from itertools import islice
+from functools import cmp_to_key
 
 from sympy.core import Add, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, range
