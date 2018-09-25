@@ -566,9 +566,6 @@ class Ellipse(GeometrySet):
         (x - 2)**2 + (y - 4)**2 - 81
 
         """
-        x = _symbol(x)
-        y = _symbol(y)
-        m =_symbol(m)
         hr, vr = self.hradius, self.vradius
         m = max(hr, vr)
         return (x - self.center.x)**2 + (y - self.center.y)**2 - m**2
