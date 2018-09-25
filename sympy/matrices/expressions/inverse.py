@@ -34,13 +34,15 @@ class Inverse(MatPow):
     is_Inverse = True
     exp = S(-1)
 
-    def __new__(cls, mat):
+    def __new__(cls, mat, exp=S(-1)):
+        # exp is there to make it consistent with
+        # inverse.func(*inverse.args) == inverse
         mat = _sympify(mat)
         if not mat.is_Matrix:
             raise TypeError("mat should be a matrix")
         if not mat.is_square:
             raise ShapeError("Inverse of non-square matrix %s" % mat)
-        return Basic.__new__(cls, mat)
+        return Basic.__new__(cls, mat, exp)
 
     @property
     def arg(self):
@@ -58,6 +60,8 @@ class Inverse(MatPow):
         return 1/det(self.arg)
 
     def doit(self, **hints):
+        if 'inv_expand' in hints and hints['inv_expand'] == False:
+            return self
         if hints.get('deep', True):
             return self.arg.doit(**hints).inverse()
         else:
