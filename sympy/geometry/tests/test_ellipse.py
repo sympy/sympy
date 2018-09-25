@@ -454,9 +454,12 @@ def test_issue_15259():
 
 def test_auxiliary_circle():
     p, q = symbols('p, q')
+
     # circle p = q
     assert Ellipse(Point(0,0), p, q).auxiliary_circle == x**2 + y**2 - p**2
+
     # horizontal ellipse p > q
     assert Ellipse(Point(0,0), p, q).auxiliary_circle == x**2 + y**2 - p**2
+
     # vertical ellipse p < q
     assert Ellipse(Point(0,0), p, q).auxiliary_circle == x**2 + y**2 - q**2
