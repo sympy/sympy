@@ -446,13 +446,13 @@ class Ellipse(GeometrySet):
 
         Approach to the solution (using slope) :
 
-        Let the center of the ellipse be at C=(xc,yc)
+        Let the center of the ellipse be at C=(xc, yc)
 
         Let the major axis be the line that passes through C with a slope of s;
-        points on that line are given by the zeros of L(x,y) = (y−yc − s*(x−xc))**2.
+        points on that line are given by the zeros of L(x,y) = (y - yc - s*(x - xc))**2.
 
         Let the minor axis be the line perpendicular to L (and also passing through C);
-        points on that line are given by the zeros of l(x,y) = (s*(y−yc) + (x−xc))**2.
+        points on that line are given by the zeros of l(x,y) = (s*(y - yc) + (x - xc))**2.
 
         Requiring that the distance between the intersections of E and L be 2M identifies
         b = M**2*(1 + s**2)
@@ -462,7 +462,7 @@ class Ellipse(GeometrySet):
 
         So the points that are on an ellipse centered at (xc,yc) whose major axis (with radius of M)
         is on a line with slope s, and whose minor axis has radius of m, are given by the zeros of:
-        E(x,y) = L(x,y)/a + l(x,y)/b − 1
+        E(x,y) = L(x,y)/a + l(x,y)/b - 1
 
         Parameters
         ==========
