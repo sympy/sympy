@@ -27,6 +27,12 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
+      python -We:invalid -m compileall -f sympy/;
+      python -We:invalid setup.py -q install;
+      pip list --format=columns;
+    displayName: 'Install SymPy'
+
+  - script: |
       ./bin/test_travis.sh
     displayName: 'doctests'
     env:
