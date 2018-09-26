@@ -599,6 +599,7 @@ def test_nonlinear_3eq_order1():
 
 
 def test_checkodesol():
+    from sympy import Ei
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
     raises(ValueError, lambda: checkodesol(f(x, y).diff(x), Eq(f(x, y), x)))
