@@ -22,8 +22,8 @@ jobs:
     inputs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
-      env:
-        TEST_DOCTESTS: "true"
+    env:
+      TEST_DOCTESTS: "true"
 
   - script: python -m pip install --upgrade pip && pip install mpmath
     displayName: 'Install dependencies'
