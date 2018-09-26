@@ -394,14 +394,12 @@ class MatrixDeterminant(MatrixCommon):
             If the matrix is at most 3x3, the key is ignored and a hard-coded
             formula is used. Otherwise, it will be defaulted with 'bareiss'.
 
-                * 'bareiss' :
-                    Bareiss' fraction-free algorithm
+            If it is set with 'bareiss', Bareiss' fraction-free algorithm would
+            be used
 
-                * 'berkowitz' :
-                    Berkowitz algorithm
+            If it is set with 'berkowitz', Berkowitz algorithm would be used.
 
-                * 'lu' :
-                    LU decomposition
+            Otherwise, if it is set with 'lu', LU decomposition would be used.
 
             .. note::
                 For backward compatibility, legacy keys like **bareis** ,
@@ -414,15 +412,14 @@ class MatrixDeterminant(MatrixCommon):
             Specifies zero testing method used for 'bareiss' or 'lu'.
             If unspecified, it will be defaulted into None
 
-                * None :
-                    _iszero when method='bareiss'.
+            If it is set to None, it will be defaulted to _iszero when when
+            method is set to 'bareiss', and _is_zero_after_expand_mul when
+            method is set to 'lu'.
 
-                    _is_zero_after_expand_mul when method='lu'
-
-                * FunctionType :
-                    Zero testing function should be specified as a function
-                    which accepts a single symbolic argument and returns Boolean
-                    or None.
+            It can also accept any user-specified zero testing function, if it
+            is formatted as a function which accepts a single symbolic argument
+            and returns True if it is tested as zero and False if it tested as
+            non-zero, and also None if it is undecidable.
 
         Returns
         =======
