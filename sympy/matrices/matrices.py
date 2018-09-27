@@ -994,12 +994,15 @@ class MatrixSubspaces(MatrixReductions):
         """Apply the Gram-Schmidt orthogonalization procedure
         to vectors supplied in `vecs`.
 
-        Arguments
-        =========
+        Parameters
+        ==========
 
-        vecs : vectors to be made orthogonal
-        normalize : bool. Whether the returned vectors should be renormalized
-        to be unit vectors.
+        vecs :
+            vectors to be made orthogonal
+
+        normalize : bool
+            Whether the returned vectors should be renormalized to be unit
+            vectors.
         """
 
         normalize = kwargs.get('normalize', False)
