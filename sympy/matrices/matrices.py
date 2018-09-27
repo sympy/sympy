@@ -645,7 +645,7 @@ class MatrixReductions(MatrixDeterminant):
         normalize : whether pivot rows should be normalized so that
             the pivot value is 1
         zero_above : whether entries above the pivot should be zeroed.
-            If `zero_above=False` , an echelon matrix will be returned.
+            If `zero_above=False`, an echelon matrix will be returned.
         """
         rows, cols = self.rows, self.cols
         mat = list(self)
@@ -736,7 +736,7 @@ class MatrixReductions(MatrixDeterminant):
         return mat
 
     def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
-        """Performs the elementary column operation `op` .
+        """Performs the elementary column operation `op`.
 
         `op` may be one of
 
@@ -766,7 +766,7 @@ class MatrixReductions(MatrixDeterminant):
             return self._eval_col_op_add_multiple_to_other_col(col, k, col2)
 
     def elementary_row_op(self, op="n->kn", row=None, k=None, row1=None, row2=None):
-        """Performs the elementary row operation `op` .
+        """Performs the elementary row operation `op`.
 
         `op` may be one of
 
@@ -855,14 +855,14 @@ class MatrixReductions(MatrixDeterminant):
             A function used to simplify elements when looking for a pivot.
             By default SymPy's `simplify` is used.
         pivots : True or False
-            If `True` , a tuple containing the row-reduced matrix and a tuple
+            If `True`, a tuple containing the row-reduced matrix and a tuple
             of pivot columns is returned.  If `False` just the row-reduced
             matrix is returned.
         normalize_last : True or False
-            If `True` , no pivots are normalized to `1` until after all entries
+            If `True`, no pivots are normalized to `1` until after all entries
             above and below each pivot are zeroed.  This means the row
             reduction algorithm is fraction free until the very last step.
-            If `False` , the naive row reduction procedure is used where
+            If `False`, the naive row reduction procedure is used where
             each pivot is normalized to be `1` before row operations are
             used to zero above and below the pivot.
 
@@ -992,7 +992,7 @@ class MatrixSubspaces(MatrixReductions):
     @classmethod
     def orthogonalize(cls, *vecs, **kwargs):
         """Apply the Gram-Schmidt orthogonalization procedure
-        to vectors supplied in `vecs` .
+        to vectors supplied in `vecs`.
 
         Arguments
         =========
