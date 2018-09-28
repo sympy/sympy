@@ -585,7 +585,7 @@ def test_issue_8449():
     assert Le(oo, -p) is S.false
 
 
-def test_simplify():
+def test_simplify_relational():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
     r = S(1) < x
     # canonical operations are not the same as simplification,
@@ -599,6 +599,15 @@ def test_simplify():
     # _eval_simplify routine
     assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
         2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
+    # canonical at least
+    for f in (Eq, Ne):
+        f(y, x).simplify() == f(x, y)
+        f(x - 1, 0).simplify() == f(x, 1)
+        f(x - 1, x).simplify() == S.false
+        f(2*x - 1, x).simplify() == f(x, 1)
+        f(2*x, 4).simplify() == f(x, 2)
+        z = cos(1)**2 + sin(1)**2 - 1  # z.is_zero is None
+        f(z*x, 0).simplify() == f(z*x, 0)
 
 
 def test_equals():
