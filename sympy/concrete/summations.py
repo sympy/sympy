@@ -165,19 +165,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return obj
 
-    def dummy_eq(self, other, symbol=None):
-        if type(self) != type(other):
-            return False
-        if len(self.variables) != len(other.variables):
-            return False
-        if len(self.free_symbols) != len(other.free_symbols):
-            return False
-        reps = dict(zip(self.variables, other.variables))
-        aligned = self.xreplace(reps)
-        if symbol:
-            return super(Sum, aligned).dummy_eq(other, symbol=symbol)
-        return aligned == other
-
     def _eval_is_zero(self):
         # a Sum is only zero if its function is zero or if all terms
         # cancel out. This only answers whether the summand is zero; if

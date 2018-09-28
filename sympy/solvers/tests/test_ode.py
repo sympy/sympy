@@ -12,7 +12,7 @@ from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
-x, y, z = symbols('x:z', real=True)
+u, x, y, z = symbols('u,x:z', real=True)
 f = Function('f')
 g = Function('g')
 h = Function('h')
@@ -156,9 +156,8 @@ def test_sysode_linear_2eq_order1_many_zeros():
         assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
-
 def test_dsolve_linsystem_symbol_piecewise():
-    u = Symbol('u')
+    u = Symbol('u')  # XXX it's more complicated with real u
     eq = (Eq(diff(f(x), x), 2*f(x) + g(x)),
            Eq(diff(g(x), x), u*f(x)))
     s1 = [Eq(f(x), Piecewise((C1*exp(x*(sqrt(4*u + 4)/2 + 1)) +
@@ -582,20 +581,20 @@ def test_checksysodesol():
 @slow
 def test_nonlinear_3eq_order1():
     x, y, z = symbols('x, y, z', cls=Function)
-    t = Symbol('t')
+    t, u = symbols('t u')
     eq1 = (4*diff(x(t),t) + 2*y(t)*z(t), 3*diff(y(t),t) - z(t)*x(t), 5*diff(z(t),t) - x(t)*y(t))
-    sol1 = "[Eq(4*Integral(1/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), (_y, x(t))), "\
-    "C3 - sqrt(15)*t/15), Eq(3*Integral(1/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), "\
-    "(_y, y(t))), C3 + sqrt(5)*t/10), Eq(5*Integral(1/(sqrt(-10*_y**2 - 3*C1 + C2)*"\
-    "sqrt(5*_y**2 + 4*C1 - C2)), (_y, z(t))), C3 + sqrt(3)*t/6)]"
-    assert str(dsolve(eq1)) == sol1
+    sol1 = [Eq(4*Integral(1/(sqrt(-4*u**2 - 3*C1 + C2)*sqrt(-4*u**2 + 5*C1 - C2)), (u, x(t))),
+        C3 - sqrt(15)*t/15), Eq(3*Integral(1/(sqrt(-6*u**2 - C1 + 5*C2)*sqrt(3*u**2 + C1 - 4*C2)),
+        (u, y(t))), C3 + sqrt(5)*t/10), Eq(5*Integral(1/(sqrt(-10*u**2 - 3*C1 + C2)*
+        sqrt(5*u**2 + 4*C1 - C2)), (u, z(t))), C3 + sqrt(3)*t/6)]
+    assert [i.dummy_eq(j) for i, j in zip(dsolve(eq1), sol1)]
 
     eq2 = (4*diff(x(t),t) + 2*y(t)*z(t)*sin(t), 3*diff(y(t),t) - z(t)*x(t)*sin(t), 5*diff(z(t),t) - x(t)*y(t)*sin(t))
-    sol2 = "[Eq(3*Integral(1/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), (_y, x(t))), C3 + "\
-    "sqrt(5)*cos(t)/10), Eq(4*Integral(1/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), "\
-    "(_y, y(t))), C3 - sqrt(15)*cos(t)/15), Eq(5*Integral(1/(sqrt(-10*_y**2 - 3*C1 + C2)*"\
-    "sqrt(5*_y**2 + 4*C1 - C2)), (_y, z(t))), C3 + sqrt(3)*cos(t)/6)]"
-    assert str(dsolve(eq2)) == sol2
+    sol2 = [Eq(3*Integral(1/(sqrt(-6*u**2 - C1 + 5*C2)*sqrt(3*u**2 + C1 - 4*C2)), (u, x(t))), C3 +
+        sqrt(5)*cos(t)/10), Eq(4*Integral(1/(sqrt(-4*u**2 - 3*C1 + C2)*sqrt(-4*u**2 + 5*C1 - C2)),
+        (u, y(t))), C3 - sqrt(15)*cos(t)/15), Eq(5*Integral(1/(sqrt(-10*u**2 - 3*C1 + C2)*
+        sqrt(5*u**2 + 4*C1 - C2)), (u, z(t))), C3 + sqrt(3)*cos(t)/6)]
+    assert [i.dummy_eq(j) for i, j in zip(dsolve(eq2), sol2)]
 
 
 def test_checkodesol():
@@ -1036,14 +1035,16 @@ def test_solve_ics():
             Eq(g(x), exp(x)*sin(x))]
 
     # Test cases where dsolve returns two solutions.
-    assert dsolve(diff(x**2*f(x)**2 - x, x), f(x), ics={f(1): 0}) == [Eq(f(x),
+    eq = (x**2*f(x)**2 - x).diff(x)
+    assert dsolve(eq, f(x), ics={f(1): 0}) == [Eq(f(x),
         -sqrt(x - 1)/x), Eq(f(x), sqrt(x - 1)/x)]
-    assert dsolve(diff(x**2*f(x)**2 - x, x), f(x), ics={f(x).diff(x).subs(x, 1): 0}) == [Eq(f(x),
+    assert dsolve(eq, f(x), ics={f(x).diff(x).subs(x, 1): 0}) == [Eq(f(x),
         -sqrt(x - S(1)/2)/x), Eq(f(x), sqrt(x - S(1)/2)/x)]
 
-    assert dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x),
+    eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
+    assert dsolve(eq, f(x),
         ics={f(0):1}, hint='1st_exact', simplify=False) == Eq(x*cos(f(x)) + f(x)**3/3, S(1)/3)
-    assert dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x),
+    assert dsolve(eq, f(x),
         ics={f(0):1}, hint='1st_exact', simplify=True) == Eq(x*cos(f(x)) + f(x)**3/3, S(1)/3)
 
     assert solve_ics([Eq(f(x), C1*exp(x))], [f(x)], [C1], {f(0): 1}) == {C1: 1}
@@ -1284,20 +1285,22 @@ def test_separable2():
     eq9 = exp(x + 1)*tan(f(x)) + cos(f(x))*f(x).diff(x)
     eq10 = (x*cos(f(x)) + x**2*sin(f(x))*f(x).diff(x) -
             a**2*sin(f(x))*f(x).diff(x))
-    # solve() messes this one up a little bit, so lets test _Integral here
-    # We have to test strings with _Integral because y is a dummy variable.
-    sol6str = ("Eq(Integral((_y - 2)/_y**3, (_y, f(x))), "
-               "C1 + Integral(x**(-2), x))")
+    sol6 = Eq(Integral((u - 2)/u**3, (u, f(x))),
+        C1 + Integral(x**(-2), x)
+        ).as_dummy(canonical=True, plain=True)
     sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(2 + x))
     sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
-    sol9str = ("Eq(Integral(cos(_y)/tan(_y), (_y, f(x))), "
-                "C1 + Integral(-E*exp(x), x))")
+    sol9 = Eq(Integral(cos(u)/tan(u), (u, f(x))),
+        C1 + Integral(-exp(1)*exp(x), x)
+        ).as_dummy(canonical=True, plain=True)
     sol10 = Eq(-log(cos(f(x))), C1 - log(- a**2 + x**2)/2)
-    assert str(dsolve(eq6, hint='separable_Integral')) == sol6str
+    assert dsolve(eq6, hint='separable_Integral').as_dummy(
+        canonical=True, plain=True) == sol6
     assert dsolve(eq7, hint='separable', simplify=False) == sol7
     assert dsolve(eq8, hint='separable', simplify=False) == sol8
-    assert str(dsolve(eq9, hint='separable_Integral')) == sol9str
+    assert dsolve(eq9, hint='separable_Integral').as_dummy(
+        canonical=True, plain=True) == sol9
     assert dsolve(eq10, hint='separable', simplify=False) == sol10
     assert checkodesol(eq7, sol7, order=1, solve_for_func=False)[0]
     assert checkodesol(eq8, sol8, order=1, solve_for_func=False)[0]
@@ -2891,9 +2894,10 @@ def test_issue_10867():
 
 
 def test_issue_11290():
-    sol_1 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact_Integral')
-    sol_0 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact')
-    assert str(sol_1)== "Eq(Subs(Integral(_y**2 - x*sin(_y) - Integral(-sin(_y), x), _y) + Integral(cos(_y), x), _y, f(x)), C1)"
+    eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
+    sol_1 = dsolve(eq, f(x), simplify=False, hint='1st_exact_Integral').as_dummy(canonical=True)
+    sol_0 = dsolve(eq, f(x), simplify=False, hint='1st_exact')
+    assert sol_1 == Eq(Subs(Integral(u**2 - x*sin(u) - Integral(-sin(u), x), u) + Integral(cos(u), x), u, f(x)), C1).as_dummy(canonical=True)
     assert sol_1.doit() == sol_0
 
 

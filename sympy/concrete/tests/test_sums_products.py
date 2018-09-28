@@ -542,11 +542,12 @@ def test_equality():
             assert F(1, x) != F(1, y)
         except ValueError:
             pass
-        assert F(a, (x, 1, 2)) != F(a, (x, 1, 3))
-        assert F(a, (x, 1, 2)) != F(b, (x, 1, 2))
-        assert F(x, (x, 1, 2)) != F(r, (r, 1, 2))
-        assert F(1, (x, 1, x)) != F(1, (y, 1, x))
-        assert F(1, (x, 1, x)) != F(1, (y, 1, y))
+        assert F(a, (x, 1, 2)) != F(a, (x, 1, 3))  # diff limit
+        assert F(a, (x, 1, x)) != F(a, (y, 1, y))
+        assert F(a, (x, 1, 2)) != F(b, (x, 1, 2))  # diff expression
+        assert F(x, (x, 1, 2)) != F(r, (r, 1, 2))  # diff assumptions
+        assert F(1, (x, 1, x)) != F(1, (y, 1, x))  # only dummy is diff
+        assert F(1, (x, 1, x)).dummy_eq(F(1, (y, 1, x)))
 
     # issue 5265
     assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))

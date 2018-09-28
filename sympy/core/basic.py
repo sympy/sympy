@@ -374,29 +374,28 @@ class Basic(with_metaclass(ManagedProperties)):
         False
 
         """
-        dummy_symbols = [s for s in self.free_symbols if s.is_Dummy]
+        s = self.as_dummy(canonical=True)
+        o = _sympify(other)
+        o = o.as_dummy(canonical=True)
 
-        if not dummy_symbols:
-            return self == other
-        elif len(dummy_symbols) == 1:
+        dummy_symbols = [i for i in s.free_symbols if i.is_Dummy]
+
+        if len(dummy_symbols) == 1:
             dummy = dummy_symbols.pop()
         else:
-            raise ValueError(
-                "only one dummy symbol allowed on the left-hand side")
+            return s == o
 
         if symbol is None:
-            symbols = other.free_symbols
+            symbols = o.free_symbols
 
-            if not symbols:
-                return self == other
-            elif len(symbols) == 1:
+            if len(symbols) == 1:
                 symbol = symbols.pop()
             else:
-                raise ValueError("specify a symbol in which expressions should be compared")
+                return s == o
 
         tmp = dummy.__class__()
 
-        return self.subs(dummy, tmp) == other.subs(symbol, tmp)
+        return s.subs(dummy, tmp) == o.subs(symbol, tmp)
 
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
     # regardless of the global setting.  See issue 5487.
@@ -510,13 +509,86 @@ class Basic(with_metaclass(ManagedProperties)):
     def expr_free_symbols(self):
         return set([])
 
+    def as_dummy(self, canonical=False, plain=False):
+        """Return the expression with any objects having structural
+        dummy symbols replaced with unique, canonical symbols within
+        the object in which they appear.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral, Symbol
+        >>> from sympy.abc import x, u, v
+        >>> (x + Integral(x, (x, x))).as_dummy()
+        x + Integral(_x, (_x, x))
+
+        >>> Integral(u, (u, x)).as_dummy(canonical=True)
+        Integral(u, (u, x))
+        >>> Integral(v, (v, x)).as_dummy(canonical=True)
+        Integral(u, (u, x))
+        >>> Integral(u, (u, u)).as_dummy(canonical=True)
+        Integral(v, (v, u))
+
+        The default is to use Dummy symbols with the assumptions as
+        the symbols they are replacing. To ignore assumptions set
+        `plain=True`.
+
+        >>> r = Symbol('r', real=True)
+        >>> i = Integral(r, (r, 1))
+        >>> v = i.as_dummy().variables[0]
+        >>> v.is_real
+        True
+        >>> v = i.as_dummy(plain=True).variables[0]
+        >>> v.is_real is None
+        True
+
+        Any object that has structural dummy variables should have
+        a property, `dummy_variables` that returns a list of structural
+        dummy symbols of the object itself.
+
+        >>> from sympy import Derivative, Sum, Subs, Lambda
+        >>> from sympy.abc import y
+
+        >>> Derivative(Integral(y, (x, x)), y).as_dummy(canonical=True)
+        Derivative(Integral(y, (u, x)), y)
+
+        >>> eq = Subs(Integral(x, (x, x)), x, Sum(x, (x, 1, 2)))
+        >>> eq.as_dummy(canonical=True)
+        Subs(Integral(u, (u, x)), u, Sum(u, (u, 1, 2)))
+
+        >>> Lambda(x, Integral(y, (x, x))).as_dummy()
+        Lambda(_x, Integral(y, (_x, _x)))
+        >>> Lambda(x, Integral(y, (x, x))).as_dummy(canonical=True)
+        Lambda(v, Integral(y, (u, v)))
+        """
+        from sympy.core.symbol import Symbol
+        def can(x):
+            d = dict([(i, i.as_dummy()) for i in x.dummy_variables])
+            x = x.subs(d)  # targets non-dummy that shadow dummy
+            if canonical:
+                c = x.canonical_variables
+            else:
+                c = dict([(i, i.as_dummy()) for i in x.dummy_variables])
+            if plain:
+                c = dict((k, Symbol(v.name)) for k, v in c.items())
+            x = x.xreplace(c)
+            # undo shadow masking
+            x = x.xreplace(dict((v, k) for k, v in d.items()))
+            return x
+        rv = self.replace(
+            lambda x: hasattr(x, 'dummy_variables'),
+            lambda x: can(x))
+        if rv != self and hasattr(rv, 'dummy_variables'):
+            rv = can(rv)
+        return rv
+
     @property
     def canonical_variables(self):
         """Return a dictionary mapping any variable defined in
-        ``self.variables`` as underscore-suffixed numbers
-        corresponding to their position in ``self.variables``. Enough
-        underscores are added to ensure that there will be no clash with
-        existing free symbols.
+        ``self.dummy_variables`` to variables that do not clash with
+        any existing symbol in the expression. The
+        variables are attempted in the order u, v, w, x, y, z,
+        and then number-subscripted ``iota``.
 
         Examples
         ========
@@ -524,18 +596,24 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy import Lambda
         >>> from sympy.abc import x
         >>> Lambda(x, 2*x).canonical_variables
-        {x: 0_}
+        {x: u}
         """
-        from sympy import Symbol
-        if not hasattr(self, 'variables'):
+        from itertools import chain
+        from sympy import symbols, Symbol, Derivative
+        from sympy.utilities.iterables import numbered_symbols
+        if not hasattr(self, 'dummy_variables'):
             return {}
-        u = "_"
-        while any(str(s).endswith(u) for s in self.free_symbols):
-            u += "_"
-        name = '%%i%s' % u
-        V = self.variables
-        return dict(list(zip(V, [Symbol(name % i, **v.assumptions0)
-            for i, v in enumerate(V)])))
+        dums = chain(symbols('u:z'), symbols('a:t'), numbered_symbols('iota_'))
+        reps = {}
+        v = self.dummy_variables
+        syms = [i.name for i in self.atoms(Symbol) - set(v)]
+        for v in v:
+            d = next(dums).name
+            while v == d or d in syms:
+                d = next(dums).name
+            if v != d:
+                reps[v] = Symbol(d, **v.assumptions0)
+        return reps
 
     def rcall(self, *args):
         """Apply on the argument recursively through the expression tree.
