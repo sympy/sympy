@@ -1868,5 +1868,5 @@ def test_print_basic():
         # dummy function for testing
         return UnimplementedExpr(expr).doit()
 
-    assert latex(unimplemented_expr(x)) == 'UnimplementedExpr(x)'
-    assert latex(unimplemented_expr(x**2)) == 'UnimplementedExpr(x^{2})'
+    assert latex(unimplemented_expr(x)) == r'UnimplementedExpr\left(x\right)'
+    assert latex(unimplemented_expr(x**2)) == r'UnimplementedExpr\left(x^{2}\right)'
