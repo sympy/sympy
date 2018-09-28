@@ -1845,3 +1845,11 @@ def test_latex_printer_tensor():
 
     expr = A(i) + 3*B(i)
     assert latex(expr) == "3B{}^{i} + A{}^{i}"
+
+
+def test_trace():
+    # Issue 15303
+    from sympy import trace
+    A = MatrixSymbol("A", 2, 2)
+    assert latex(trace(A)) == r"\operatorname{Tr} A"
+    assert latex(trace(A**2)) == r"\operatorname{Tr} A^{2}"
