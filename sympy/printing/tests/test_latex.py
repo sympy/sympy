@@ -1853,3 +1853,20 @@ def test_trace():
     A = MatrixSymbol("A", 2, 2)
     assert latex(trace(A)) == r"\operatorname{Tr} A"
     assert latex(trace(A**2)) == r"\operatorname{Tr} A^{2}"
+
+
+def test_print_basic():
+    # Issue 15303
+    from sympy import Basic, Expr
+
+    # dummy class and function for testing printing where the function is not implemented in latex.py
+    class UnimplementedExpr(Expr):
+        def __new__(cls, e):
+            return Basic.__new__(cls, e)
+
+    def unimplemented_expr(expr):
+        # dummy function for testing
+        return UnimplementedExpr(expr).doit()
+
+    assert latex(unimplemented_expr(x)) == 'UnimplementedExpr(x)'
+    assert latex(unimplemented_expr(x**2)) == 'UnimplementedExpr(x^{2})'
