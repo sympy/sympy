@@ -1851,8 +1851,8 @@ def test_trace():
     # Issue 15303
     from sympy import trace
     A = MatrixSymbol("A", 2, 2)
-    assert latex(trace(A)) == r"\operatorname{Tr} A"
-    assert latex(trace(A**2)) == r"\operatorname{Tr} A^{2}"
+    assert latex(trace(A)) == r"\mathrm{tr}\left (A \right )"
+    assert latex(trace(A**2)) == r"\mathrm{tr}\left (A^{2} \right )"
 
 
 def test_print_basic():
