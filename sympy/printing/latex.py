@@ -289,6 +289,10 @@ class LatexPrinter(Printer):
         else:
             return expr
 
+    def _print_Basic(self, expr):
+        l = [self._print(o) for o in expr.args]
+        return expr.__class__.__name__ + "(%s)" % ", ".join(l)
+
     def _print_bool(self, e):
         return r"\mathrm{%s}" % e
 
