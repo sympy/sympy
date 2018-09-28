@@ -381,8 +381,7 @@ class Beam(object):
         >>> b.apply_load(4, 2, -1)
         >>> b.apply_load(-2, 2, 2, end=3)
         >>> b.load
-        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2)
-            + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
+        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 18*SingularityFunction(x, 3, 0) + 12*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
         """
         x = self.variable
         value = sympify(value)
@@ -446,10 +445,9 @@ class Beam(object):
         >>> b = Beam(4, E, I)
         >>> b.apply_load(-3, 0, -2)
         >>> b.apply_load(4, 2, -1)
-        >>> b.apply_load(-2, 2, 2, end = 3)
+        >>> b.apply_load(-2, 2, 2, end=3)
         >>> b.load
-        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2)
-            + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
+        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 18*SingularityFunction(x, 3, 0) + 12*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
         >>> b.remove_load(-2, 2, 2, end = 3)
         >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1)
