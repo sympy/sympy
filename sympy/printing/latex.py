@@ -291,7 +291,7 @@ class LatexPrinter(Printer):
 
     def _print_Basic(self, expr):
         l = [self._print(o) for o in expr.args]
-        return expr.__class__.__name__ + "(%s)" % ", ".join(l)
+        return self._deal_with_super_sub(expr.__class__.__name__) + "(%s)" % ", ".join(l)
 
     def _print_bool(self, e):
         return r"\mathrm{%s}" % e
