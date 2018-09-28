@@ -10,8 +10,7 @@ from sympy.functions.special.elliptic_integrals import elliptic_e
 
 def test_object_from_equation():
     from sympy.abc import x, y, a, b
-    assert Circle(x**2 + y**2 + 3*x + 4*y - 8) == Circle(Point2D(S(-3) / 2, -2),
-                                                                                      sqrt(57) / 2)
+    assert Circle(x**2 + y**2 + 3*x + 4*y - 8) == Circle(Point2D(S(-3) / 2, -2),                                                                                sqrt(57) / 2)
     assert Circle(x**2 + y**2 + 6*x + 8*y + 25) == Circle(Point2D(-3, -4), 0)
     assert Circle(a**2 + b**2 + 6*a + 8*b + 25, x='a', y='b') == Circle(Point2D(-3, -4), 0)
     assert Circle(x**2 + y**2 - 25) == Circle(Point2D(0, 0), 5)
@@ -451,3 +450,15 @@ def test_circumference():
     assert abs(Ellipse(None, hradius=5, vradius=3).circumference.evalf(16) - 25.52699886339813) < 1e-10
 def test_issue_15259():
     assert Circle((1, 2), 0) == Point(1, 2)
+
+def test_auxiliary_circle():
+    p, q = symbols('p, q')
+
+    # circle p = q
+    assert Ellipse(Point(0,0), p, q).auxiliary_circle == x**2 + y**2 - p**2
+
+    # horizontal ellipse p > q
+    assert Ellipse(Point(0,0), p, q).auxiliary_circle == x**2 + y**2 - p**2
+
+    # vertical ellipse p < q
+    assert Ellipse(Point(0,0), p, q).auxiliary_circle == x**2 + y**2 - q**2
