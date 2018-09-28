@@ -1468,7 +1468,7 @@ class LatexPrinter(Printer):
 
     def _print_Trace(self, expr):
         mat = expr.arg
-        return r"\operatorname{Tr} %s" % self._print(mat)
+        return r"\mathrm{tr}\left (%s \right )" % self._print(mat)
 
     def _print_Adjoint(self, expr):
         mat = expr.arg
