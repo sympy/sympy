@@ -381,7 +381,8 @@ class Beam(object):
         >>> b.apply_load(4, 2, -1)
         >>> b.apply_load(-2, 2, 2, end=3)
         >>> b.load
-        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 18*SingularityFunction(x, 3, 0) + 12*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
+        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 4*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
+
         """
         x = self.variable
         value = sympify(value)
@@ -402,7 +403,7 @@ class Beam(object):
             # point such that it evaluates to zero past 'end'.
             f = value * x**order
             for i in range(0, order + 1):
-                self._load -= (f.diff(x, i).subs(x, end) *
+                self._load -= (f.diff(x, i).subs(x, end - start) *
                                SingularityFunction(x, end, i) / factorial(i))
 
     def remove_load(self, value, start, order, end=None):
@@ -447,7 +448,7 @@ class Beam(object):
         >>> b.apply_load(4, 2, -1)
         >>> b.apply_load(-2, 2, 2, end=3)
         >>> b.load
-        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 18*SingularityFunction(x, 3, 0) + 12*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
+        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 4*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
         >>> b.remove_load(-2, 2, 2, end = 3)
         >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1)
@@ -478,7 +479,7 @@ class Beam(object):
             # point such that it evaluates to zero past 'end'.
             f = value * x**order
             for i in range(0, order + 1):
-                self._load += (f.diff(x, i).subs(x, end) *
+                self._load += (f.diff(x, i).subs(x, end - start) *
                                SingularityFunction(x, end, i) / factorial(i))
 
     @property

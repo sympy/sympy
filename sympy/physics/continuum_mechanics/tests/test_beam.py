@@ -146,15 +146,15 @@ def test_Beam():
     C3 = symbols('C3')
     C4 = symbols('C4')
     p = b3.load
-    q = -2*SingularityFunction(x, 2, 2) + 18*SingularityFunction(x, 3, 0) + 12*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
+    q = -2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 4*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
     assert p == q
 
     p = b3.slope()
-    q = 2 + (-SingularityFunction(x, 2, 5)/30 + 3*SingularityFunction(x, 3, 3) + SingularityFunction(x, 3, 4)/2 + SingularityFunction(x, 3, 5)/30)/(E*I)
+    q = 2 + (-SingularityFunction(x, 2, 5)/30 + SingularityFunction(x, 3, 3)/3 + SingularityFunction(x, 3, 4)/6 + SingularityFunction(x, 3, 5)/30)/(E*I)
     assert p == q
 
     p = b3.deflection()
-    q = 2*x + (-SingularityFunction(x, 2, 6)/180 + 3*SingularityFunction(x, 3, 4)/4 + SingularityFunction(x, 3, 5)/10 + SingularityFunction(x, 3, 6)/180)/(E*I)
+    q = 2*x + (-SingularityFunction(x, 2, 6)/180 + SingularityFunction(x, 3, 4)/12 + SingularityFunction(x, 3, 5)/30 + SingularityFunction(x, 3, 6)/180)/(E*I)
     assert p == q + C4
 
     b4 = Beam(4, E, I)
@@ -550,6 +550,13 @@ def test_parabolic_loads():
     loading = beam.load.xreplace({L: 10, E: 20, I: 30, P: 40})
     assert loading.xreplace({x: 5}) == 40
     assert loading.xreplace({x: 15}) == 0
+
+    # check ramp load
+    beam = Beam(2 * L, E, I)
+    beam.apply_load(P, 0, 1, end=L)
+    assert beam.load == (P*SingularityFunction(x, 0, 1) -
+                         P*SingularityFunction(x, L, 1) -
+                         P*L*SingularityFunction(x, L, 0))
 
     # check higher order load: x**8 load from x=0 to x=L
     beam = Beam(2 * L, E, I)
