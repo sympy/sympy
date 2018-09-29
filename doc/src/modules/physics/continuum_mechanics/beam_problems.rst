@@ -263,7 +263,7 @@ deflection is restricted at both the supports.
 
 .. note::
 
-    Using the sign convention of upward forces and clockwise moment
+    Using the sign convention of upward forces and counterclockwise moment
     being positive.
 
 >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -306,10 +306,10 @@ deflection is restricted at both the supports.
 Example 3
 ---------
 
-A beam of length 6 meters is having a roller support at the start and a
-hinged support at the end. A clockwise moment of 1.5 kN-m is applied at the mid
-of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m
-is applied from the mid till the end of the beam.
+A beam of length 6 meters is having a roller support at the start and a hinged
+support at the end. A counterclockwise moment of 1.5 kN-m is applied at the mid
+of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m is
+applied from the mid till the end of the beam.
 
 ::
 
@@ -325,7 +325,7 @@ is applied from the mid till the end of the beam.
 
 .. note::
 
-    Using the sign convention of upward forces and clockwise moment
+    Using the sign convention of upward forces and counterclockwise moment
     being positive.
 
 >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -516,7 +516,8 @@ Example 6
 An overhanging beam of length 11 meters is subjected to a distributed constant
 load of 2 KN/m from 2 meters away from the starting point till 6 meters away
 from it. It is pinned at the starting point and is resting over a roller 8 meters
-away from that end. Also a clockwise moment of 5 KN-m is applied at the overhanging end.
+away from that end. Also a counterclockwise moment of 5 KN-m is applied at the
+overhanging end.
 
 ::
 
@@ -863,3 +864,19 @@ from the top at a distance of ``2*l`` from starting point.
     ⎝    36         108           108     ⎠        ⎝    36         108           108     ⎠             ⎝  54           18                9                108              6               108       ⎠
     ──────────────────────────────────────────── - ───────────────────────────────────────────────── + ─────────────────────────────────────────────────────────────────────────────────────────────────────────
                         E⋅I                                               E⋅I                                                                             E⋅I
+
+Example 11
+==========
+
+        The following example shows
+
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+
+   >>> n = 6
+   >>> b = Beam(10 * n , E, I)
+   >>> for i in range(n):
+   ...     b.apply_load(1 / (5**i), 10 * i + 5, i, end=10 * i + 10)
+   >>> plot(b.load)
