@@ -2,112 +2,239 @@
 Solving Beam Bending Problems using Singularity Functions
 ===========================================================
 
-To make this document easier to read, we are going to enable pretty printing.
+To make this document easier to read, enable pretty printing:
 
-    >>> from sympy import *
-    >>> x, y, z = symbols('x y z')
-    >>> init_printing(use_unicode=True, wrap_line=False)
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> from sympy import *
+   >>> x, y, z = symbols('x y z')
+   >>> init_printing(use_unicode=True, wrap_line=False)
 
 Beam
 ====
 
-A Beam is a structural element that is capable of withstanding load
-primarily by resisting against bending. Beams are characterized by
-their second moment of area, their length and their elastic modulus.
-
-In Sympy, we can construct a 2D beam objects with the following properties :
+A planar beam is a structural element that is capable of withstanding load
+through resistance to internal shear and bending. Beams are characterized by
+their length, constraints, cross-sectional second moment of area, and elastic
+modulus. In SymPy, 2D beam objects are constructed by specifying the following
+properties:
 
 - Length
 - Elastic Modulus
 - Second Moment of Area
-- Variable : A symbol that can be used as a variable along the length. By default,
-  this is set to ``Symbol(x)``.
+- Variable : A symbol representing the location along the beam's length. By
+  default, this is set to ``Symbol(x)``.
 - Boundary Conditions
-    - bc_slope : Boundary conditions for slope.
-    - bc_deflection : Boundary conditions for deflection.
+   - bc_slope : Boundary conditions for slope.
+   - bc_deflection : Boundary conditions for deflection.
 - Load Distribution
 
-We have following methods under the beam class:
+Once the above are specified, the following methods are used to compute useful
+information about the loaded beam:
 
-- apply_load
-- solve_for_reaction_loads
-- shear_force
-- bending_moment
-- slope
-- deflection
-
+- ``solve_for_reaction_loads()``
+- ``shear_force()``
+- ``bending_moment()``
+- ``slope()``
 
 Examples
 ========
 
-Let us solve some beam bending problems using this module :
+Below are examples of a variety two dimensional beam bending problems.
 
 Example 1
 ---------
 
-A beam of length 9 meters is having a fixed support at the start.
-A distributed constant load of 8 kN/m is applied downward from the starting
-point till 5 meters away from the start. A clockwise moment of 50 kN-m is
-applied at 5 meters away from the start of the beam. A downward point load
-of 12 kN is applied at the end.
+A cantilever beam 9 meters in length has a distributed constant load of 8 kN/m
+applied downward from the fixed end over a 5 meter distance. A counterclockwise
+moment of 50 kN-m is applied 5 meters from the fixed end. Lastly, a downward
+point load of 12 kN is applied at the free end of the beam.
 
 ::
 
-                                     
-  \\\\|    8 KN/m                    
-  \\\\|_____________                 
-  \\\\|| | | | | | |   ⭯ 50 KN-m     12 KN
-  \\\\|V V V V V V V   |               |
-  \\\\|________________|_______________V
-  \\\\|________________|_______________|
+  \\\\|    8 kN/m
+  \\\\|_____________
+  \\\\|| | | | | | |   ⭯ 50 kN-m     12 kN
+  \\\\|V V V V V V V   |               |      y
+  \\\\|________________|_______________V     |
+  \\\\|________________|_______________|     |___ x
   \\\\|                                :
   \\\\|----------------|---------------|
              5.0 m            4.0 m
 
 .. note::
 
-    Since a user is free to choose its own sign convention we are considering
-    the upward forces and clockwise bending moment being positive.
+    The user is free to choose their own sign convention. In this case the
+    upward forces and counterclockwise bending moment being positive.
 
+The beam must be initialized with the length, modulus of elasticity, and the
+second moment of area. These quantities can be symbols or numbers.
 
->>> from sympy.physics.continuum_mechanics.beam import Beam
->>> from sympy import symbols
->>> E, I = symbols('E, I')
->>> R1, M1 = symbols('R1, M1')
->>> b = Beam(9, E, I)
->>> b.apply_load(R1, 0, -1)
->>> b.apply_load(M1, 0, -2)
->>> b.apply_load(-8, 0, 0, end=5)
->>> b.apply_load(50, 5, -2)
->>> b.apply_load(-12, 9, -1)
->>> b.bc_slope.append((0, 0))
->>> b.bc_deflection.append((0, 0))
->>> b.solve_for_reaction_loads(R1, M1)
->>> b.reaction_loads
-    {M₁: -258, R₁: 52}
->>> b.load
-             -2         -1        0             -2            0             -1
-    - 258⋅<x>   + 52⋅<x>   - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
->>> b.shear_force()
-             -1         0        1             -1            1             0
-    - 258⋅<x>   + 52⋅<x>  - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
->>> b.bending_moment()
-             0         1        2             0            2             1
-    - 258⋅<x>  + 52⋅<x>  - 4⋅<x>  + 50⋅<x - 5>  + 4⋅<x - 5>  - 12⋅<x - 9>
->>> b.slope()
-                                3                          3             
-             1         2   4⋅<x>              1   4⋅<x - 5>             2
-    - 258⋅<x>  + 26⋅<x>  - ────── + 50⋅<x - 5>  + ────────── - 6⋅<x - 9> 
-                             3                        3                  
-    ─────────────────────────────────────────────────────────────────────
-                                     E⋅I                                 
->>> b.deflection()
-                       3      4                        4             
-             2   26⋅<x>    <x>              2   <x - 5>             3
-    - 129⋅<x>  + ─────── - ──── + 25⋅<x - 5>  + ──────── - 2⋅<x - 9> 
-                    3       3                      3                 
-    ─────────────────────────────────────────────────────────────────
-                                   E⋅I                               
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> E, I = symbols('E, I')
+   >>> b = Beam(9, E, I)
+
+The three loads are applied to the beam using the ``apply_load()`` method. This
+method supports point forces, point moments, and polynomial distributed loads
+of any order, i.e. :math:`c, cx, cx^2, cx^3, \ldots``.
+
+The 12 kN point load is in the negative direction, at the location of 9 meters,
+and the polynomial order is specified as -1:
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> b.apply_load(-12, 9, -1)
+
+The ``load`` attribute can then be used to access the loading function in
+singularity function form:
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> b.load
+              -1
+   -12⋅<x - 9>
+
+Similarly, the positive moment can be applied with a polynomial order -2:
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> b.apply_load(50, 5, -2)
+
+The distributed load is of order 0 and spans x=0 to x=5:
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> b.apply_load(-8, 0, 0, end=5)
+
+The fixed end imposes two boundary conditions: 1) no vertical deflection and 2)
+no rotation. These are specified by appending tuples of x values and the
+corresponding deflection or slope values:
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> b.bc_deflection.append((0, 0))
+   >>> b.bc_slope.append((0, 0))
+
+These boundary conditions introduce an unknown reaction force and moment which
+need to be applied to the beam to maintain static equilibrium:
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> R, M = symbols('R, M')
+   >>> b.apply_load(R, 0, -1)
+   >>> b.apply_load(M, 0, -2)
+   >>> b.load
+        -2        -1        0             -2            0             -1
+   M⋅<x>   + R⋅<x>   - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
+
+These two variables can be solved for in terms of the applied loads and the
+final loading can be displayed:
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> b.solve_for_reaction_loads(R, M)
+   >>> b.reaction_loads
+       {M: -258, R: 52}
+   >>> b.load
+                -2         -1        0             -2            0             -1
+       - 258⋅<x>   + 52⋅<x>   - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
+
+At this point, the beam is fully defined and the internal shear and bending
+moments are calculated like so:
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> b.shear_force()
+                -1         0        1             -1            1             0
+       - 258⋅<x>   + 52⋅<x>  - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
+   >>> b.bending_moment()
+                0         1        2             0            2             1
+       - 258⋅<x>  + 52⋅<x>  - 4⋅<x>  + 50⋅<x - 5>  + 4⋅<x - 5>  - 12⋅<x - 9>
+
+These can be visualized by calling the respective plot methods:
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> b.plot_shear_force();
+   >>> b.plot_bending_moment();
+
+The beam will deform under load and the slope and deflection can be determined
+with:
+
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+
+   >>> b.slope()
+                                   3                          3
+                1         2   4⋅<x>              1   4⋅<x - 5>             2
+       - 258⋅<x>  + 26⋅<x>  - ────── + 50⋅<x - 5>  + ────────── - 6⋅<x - 9>
+                                3                        3
+       ─────────────────────────────────────────────────────────────────────
+                                        E⋅I
+   >>> b.deflection()
+                          3      4                        4
+                2   26⋅<x>    <x>              2   <x - 5>             3
+       - 129⋅<x>  + ─────── - ──── + 25⋅<x - 5>  + ──────── - 2⋅<x - 9>
+                       3       3                      3
+       ─────────────────────────────────────────────────────────────────
+                                      E⋅I
+
+The slope and deflection of the beam can be plotted so long as numbers are
+provided for the modulus and second moment:
+
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+
+   >>> b.plot_slope(subs={E: 20E9, I: 3.25E-6});
+   >>> b.plot_deflection(subs={E: 20E9, I: 3.25E-6});
+
+All of the plots can be shown in one figure with:
+
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+
+   >>> b.plot_loading_results(subs={E: 20E9, I: 3.25E-6});
 
 Example 2
 ---------
