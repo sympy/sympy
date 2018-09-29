@@ -868,7 +868,9 @@ from the top at a distance of ``2*l`` from starting point.
 Example 11
 ==========
 
-        The following example shows
+Any type of load defined by a polynomial can be applied to the beam. This
+allows approximation of arbitrary load distributions. The following example
+shows six truncated polynomial loads across the surface of a beam.
 
 .. plot::
    :context: close-figs
@@ -876,7 +878,7 @@ Example 11
    :include-source: True
 
    >>> n = 6
-   >>> b = Beam(10 * n , E, I)
+   >>> b = Beam(10*n, E, I)
    >>> for i in range(n):
-   ...     b.apply_load(1 / (5**i), 10 * i + 5, i, end=10 * i + 10)
-   >>> plot(b.load)
+   ...     b.apply_load(1 / (5**i), 10*i + 5, i, end=10*i + 10)
+   >>> plot(b.load, (x, 0, 10*n))
