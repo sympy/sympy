@@ -305,45 +305,8 @@ class Ellipse(GeometrySet):
         """
         return self.args[0]
 
-    def ellipse_circumference(self):
-        """
-        Computes the circumference of an ellipse using length of semi-axes as a and b.
-        Require a >= 0 and b >= 0. This is an alternative method to the circumference method
-        given in the method 'circumference'.
-
-        Relative accuracy is about 0.5 ** 53 and computes result numerically using
-        double precision.
-
-        Examples
-        ========
-
-        >>> from sympy import Ellipse, Point
-        >>> e = Ellipse(Point(0,0), 4, 3)
-        >>> e.ellipse_circumference()
-        22.1034921607095
-        >>> e.circumference.n()
-        22.1034921607095
-        """
-
-        x, y = max(self.hradius, self.vradius), min(self.hradius, self.vradius)
-
-        digits = 53
-        tol = sqrt(pow(0.5, digits))
-
-        if digits * y < tol * x:
-            return 4 * x
-        s = 0
-        m = 1
-
-        while x - y > tol * y:
-            x, y = 0.5 * (x + y), sqrt(x * y)
-            m *= 2
-            s += m * pow(x - y, 2)
-
-        return N(pi * (pow(self.hradius + self.vradius, 2) - s) / (x + y))
-
     @property
-    def circumference(self):
+    def circumference(self, prec=None):
         """The circumference of the ellipse.
 
         Examples
@@ -358,12 +321,12 @@ class Ellipse(GeometrySet):
         """
         if self.eccentricity == 1:
             # degenerate
-            return 4*self.major
+            return 4 * self.major
         elif self.eccentricity == 0:
             # circle
-            return 2*pi*self.hradius
+            return 2 * pi * self.hradius
         else:
-            return 4*self.major*elliptic_e(self.eccentricity**2)
+            return 4 * self.major * elliptic_e(self.eccentricity ** 2)
 
     @property
     def eccentricity(self):
