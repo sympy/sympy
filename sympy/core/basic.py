@@ -1587,6 +1587,13 @@ class Basic(with_metaclass(ManagedProperties)):
         if pattern is None or isinstance(self, pattern):
             if hasattr(self, rule):
                 hints.pop('deep',None)
+                hints.pop('func',None)
+                hints.pop('log',None)
+                hints.pop('basic',None)
+                hints.pop('mul',None)
+                hints.pop('power_exp',None)
+                hints.pop('power_base',None)
+                hints.pop('multinomial',None)
                 if hints:
                     rewritten = getattr(self, rule)(*args, **hints)
                 else:
