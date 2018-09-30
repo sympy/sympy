@@ -850,29 +850,29 @@ class MatrixReductions(MatrixDeterminant):
 
         iszerofunc : Function
             A function used for detecting whether an element can
-            act as a pivot.  `lambda x: x.is_zero` is used by default.
+            act as a pivot.  ``lambda x: x.is_zero`` is used by default.
         simplify : Function
             A function used to simplify elements when looking for a pivot.
-            By default SymPy's `simplify` is used.
+            By default SymPy's ``simplify`` is used.
         pivots : True or False
             If `True`, a tuple containing the row-reduced matrix and a tuple
-            of pivot columns is returned.  If `False` just the row-reduced
+            of pivot columns is returned.  If ``False`` just the row-reduced
             matrix is returned.
         normalize_last : True or False
-            If `True`, no pivots are normalized to `1` until after all entries
+            If ``True``, no pivots are normalized to ``1`` until after all entries
             above and below each pivot are zeroed.  This means the row
             reduction algorithm is fraction free until the very last step.
-            If `False`, the naive row reduction procedure is used where
-            each pivot is normalized to be `1` before row operations are
+            If ``False``, the naive row reduction procedure is used where
+            each pivot is normalized to be ``1`` before row operations are
             used to zero above and below the pivot.
 
         Notes
         =====
 
-        The default value of `normalize_last=True` can provide significant
+        The default value of ``normalize_last=True`` can provide significant
         speedup to row reduction, especially on matrices with symbols.  However,
         if you depend on the form row reduction algorithm leaves entries
-        of the matrix, set `noramlize_last=False`
+        of the matrix, set ``noramlize_last=False``
 
 
         Examples
