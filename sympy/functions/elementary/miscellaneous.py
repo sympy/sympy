@@ -747,7 +747,7 @@ class Max(MinMaxBase, Application):
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
-    def _eval_rewrite_as_Piecewise(self, *args):
+    def _eval_rewrite_as_Piecewise(self, *args, **hints):
         is_real = all(i.is_real for i in args)
         if is_real:
             return _minmax_as_Piecewise('>=', *args)
@@ -812,7 +812,7 @@ class Min(MinMaxBase, Application):
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
 
-    def _eval_rewrite_as_Piecewise(self, *args):
+    def _eval_rewrite_as_Piecewise(self, *args, **hints):
         is_real = all(i.is_real for i in args)
         if is_real:
             return _minmax_as_Piecewise('<=', *args)
