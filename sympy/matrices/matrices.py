@@ -997,7 +997,7 @@ class MatrixSubspaces(MatrixReductions):
         Parameters
         ==========
 
-        vecs :
+        vecs
             vectors to be made orthogonal
 
         normalize : bool
