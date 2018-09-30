@@ -1001,8 +1001,7 @@ class MatrixSubspaces(MatrixReductions):
             vectors to be made orthogonal
 
         normalize : bool
-            Whether the returned vectors should be renormalized to be unit
-            vectors.
+            If true, return an orthonormal basis.
         """
 
         normalize = kwargs.get('normalize', False)
