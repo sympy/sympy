@@ -859,11 +859,11 @@ class MatrixReductions(MatrixDeterminant):
             of pivot columns is returned.  If ``False`` just the row-reduced
             matrix is returned.
         normalize_last : True or False
-            If ``True``, no pivots are normalized to ``1`` until after all
+            If ``True``, no pivots are normalized to `1` until after all
             entries above and below each pivot are zeroed.  This means the row
             reduction algorithm is fraction free until the very last step.
             If ``False``, the naive row reduction procedure is used where
-            each pivot is normalized to be ``1`` before row operations are
+            each pivot is normalized to be `1` before row operations are
             used to zero above and below the pivot.
 
         Notes
