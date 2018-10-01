@@ -395,12 +395,12 @@ class MatrixDeterminant(MatrixCommon):
             If the matrix is at most 3x3, a hard-coded formula is used and the
             specified method is ignored. Otherwise, it defaults to 'bareiss'.
 
-            If it is set with 'bareiss', Bareiss' fraction-free algorithm would
-            be used
+            If it is set to 'bareiss', Bareiss' fraction-free algorithm will be
+            used.
 
-            If it is set with 'berkowitz', Berkowitz algorithm would be used.
+            If it is set to 'berkowitz', Berkowitz' algorithm would be used.
 
-            Otherwise, if it is set with 'lu', LU decomposition would be used.
+            Otherwise, if it is set to 'lu', LU decomposition would be used.
 
             .. note::
                 For backward compatibility, legacy keys like **bareis** ,
