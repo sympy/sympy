@@ -212,7 +212,7 @@ before_install:
       pip install fastcache;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr;
+      pip install "sphinx" "docutils" doctr matplotlib;
     fi
   - |
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
