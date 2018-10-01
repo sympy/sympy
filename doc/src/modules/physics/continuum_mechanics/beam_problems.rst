@@ -196,8 +196,8 @@ These can be visualized by calling the respective plot methods:
    :format: doctest
    :include-source: True
 
-   >>> b.plot_shear_force();
-   >>> b.plot_bending_moment();
+   >>> b.plot_shear_force()  # doctest: +SKIP
+   >>> b.plot_bending_moment()  # doctest: +SKIP
 
 The beam will deform under load and the slope and deflection can be determined
 with:
@@ -230,8 +230,8 @@ provided for the modulus and second moment:
    :format: doctest
    :include-source: True
 
-   >>> b.plot_slope(subs={E: 20E9, I: 3.25E-6});
-   >>> b.plot_deflection(subs={E: 20E9, I: 3.25E-6});
+   >>> b.plot_slope(subs={E: 20E9, I: 3.25E-6})  # doctest: +SKIP
+   >>> b.plot_deflection(subs={E: 20E9, I: 3.25E-6})  # doctest: +SKIP
 
 All of the plots can be shown in one figure with:
 
@@ -240,7 +240,7 @@ All of the plots can be shown in one figure with:
    :format: doctest
    :include-source: True
 
-   >>> b.plot_loading_results(subs={E: 20E9, I: 3.25E-6});
+   >>> b.plot_loading_results(subs={E: 20E9, I: 3.25E-6})  # doctest: +SKIP
 
 Example 2
 ---------
@@ -881,4 +881,4 @@ shows six truncated polynomial loads across the surface of a beam.
    >>> b = Beam(10*n, E, I)
    >>> for i in range(n):
    ...     b.apply_load(1 / (5**i), 10*i + 5, i, end=10*i + 10)
-   >>> plot(b.load, (x, 0, 10*n))
+   >>> plot(b.load, (x, 0, 10*n))  # doctest: +SKIP
