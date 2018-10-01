@@ -1859,14 +1859,28 @@ def test_print_basic():
     # Issue 15303
     from sympy import Basic, Expr
 
-    # dummy class and function for testing printing where the function is not implemented in latex.py
+    # dummy class for testing printing where the function is not implemented in latex.py
     class UnimplementedExpr(Expr):
         def __new__(cls, e):
             return Basic.__new__(cls, e)
 
+    # dummy function for testing
     def unimplemented_expr(expr):
-        # dummy function for testing
         return UnimplementedExpr(expr).doit()
+
+    # override class name to use superscript
+    def unimplemented_expr_sub(expr):
+        result = UnimplementedExpr(expr)
+        result.__class__.__name__ = 'UnimplementedExpr_x^1'
+        return result
+
+    # override class name to use subscript
+    def unimplemented_expr_sup(expr):
+        result = UnimplementedExpr(expr)
+        result.__class__.__name__ = 'UnimplementedExpr_sub1__sup_sub2'
+        return result
 
     assert latex(unimplemented_expr(x)) == r'UnimplementedExpr\left(x\right)'
     assert latex(unimplemented_expr(x**2)) == r'UnimplementedExpr\left(x^{2}\right)'
+    assert latex(unimplemented_expr_sub(x)) == r'UnimplementedExpr^{1}_{x}\left(x\right)'
+    assert latex(unimplemented_expr_sup(x)) == r'UnimplementedExpr^{sup}_{sub1 sub2}\left(x\right)'
