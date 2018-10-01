@@ -2903,7 +2903,7 @@ def test_issue_14395():
     assert dsolve(Derivative(f(x), x, x) + 9*f(x) - sec(x), f(x)) == sol
 
     
-def test_sysode_linear_neq_order1( ):
+def test_sysode_linear_neq_order1():
     Z0 = Function('Z0')
     Z1 = Function('Z1')
     Z2 = Function('Z2')
