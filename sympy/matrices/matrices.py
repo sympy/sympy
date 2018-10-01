@@ -388,6 +388,7 @@ class MatrixDeterminant(MatrixCommon):
 
         Parameters
         ==========
+
         method : string, optional
             Specifies an algorithm to use for computing matrix determinant.
 
@@ -423,11 +424,13 @@ class MatrixDeterminant(MatrixCommon):
 
         Returns
         =======
+
         det : Basic
             Result of determinant.
 
         Raises
         ======
+
         ValueError :
             Raised if wrong keys are given for 'method' or 'iszerofunc'.
 
