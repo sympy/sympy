@@ -5,6 +5,9 @@ singularity functions in mechanics.
 
 from __future__ import print_function, division
 
+matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
+numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
+
 from sympy.core import S, Symbol, diff, symbols
 from sympy.solvers import linsolve
 from sympy.printing import sstr
@@ -15,7 +18,7 @@ from sympy.series import limit
 from sympy.plotting import plot
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
-
+from sympy import lambdify
 
 class Beam(object):
     """
@@ -1385,8 +1388,9 @@ class Beam(object):
             length = subs[self.length]
         else:
             length = self.length
-        return plot(deflection.subs(subs), (self.variable, 0, length), title='Deflection',
-                xlabel='position', ylabel='Value', line_color='r')
+        return plot(deflection.subs(subs), (self.variable, 0, length),
+                    title='Deflection', xlabel='position', ylabel='Value',
+                    line_color='r')
 
     @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def plot_loading_results(self, subs=None):
@@ -1406,12 +1410,12 @@ class Beam(object):
 
         Examples
         ========
-        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
-        is applied from half of the beam till the end. There are two simple supports
-        below the beam, one at the starting point and another at the ending point
-        of the beam. A pointload of magnitude 5 KN is also applied from top of the
-        beam, at a distance of 4 meters from the starting point.
-        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+        There is a beam of length 8 meters. A constant distributed load of 10
+        KN/m is applied from half of the beam till the end. There are two
+        simple supports below the beam, one at the starting point and another
+        at the ending point of the beam. A pointload of magnitude 5 KN is also
+        applied from top of the beam, at a distance of 4 meters from the
+        starting point.  Take E = 200 GPa and I = 400*(10**-6) meter**4.
 
         Using the sign convention of downwards forces being positive.
 
@@ -1427,11 +1431,14 @@ class Beam(object):
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> axes = b.plot_loading_results()
         """
-        from sympy import lambdify
-        matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
-        plt = matplotlib.pyplot
-        numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
-        linspace = numpy.linspace
+        if matplotlib is None:
+            raise ImportError('Install matplotlib to use this method.')
+        else:
+            plt = matplotlib.pyplot
+        if numpy is None:
+            raise ImportError('Install numpy to use this method.')
+        else:
+            linspace = numpy.linspace
 
         length = self.length
         variable = self.variable
@@ -1441,18 +1448,25 @@ class Beam(object):
             if sym == self.variable:
                 continue
             if sym not in subs:
-                raise ValueError('Value of %s was not passed.' %sym)
+                raise ValueError('Value of %s was not passed.' % sym)
         if self.length in subs:
             length = subs[self.length]
         else:
             length = self.length
 
-        # As we are using matplotlib directly in this method, we need to change SymPy methods
-        # to numpy functions.
-        shear = lambdify(variable, self.shear_force().subs(subs).rewrite(Piecewise), 'numpy')
-        moment = lambdify(variable, self.bending_moment().subs(subs).rewrite(Piecewise), 'numpy')
-        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise), 'numpy')
-        deflection = lambdify(variable, self.deflection().subs(subs).rewrite(Piecewise), 'numpy')
+        # As we are using matplotlib directly in this method, we need to change
+        # SymPy methods to numpy functions.
+        shear = lambdify(variable,
+                         self.shear_force().subs(subs).rewrite(Piecewise),
+                         'numpy')
+        moment = lambdify(variable,
+                          self.bending_moment().subs(subs).rewrite(Piecewise),
+                          'numpy')
+        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise),
+                         'numpy')
+        deflection = lambdify(variable,
+                              self.deflection().subs(subs).rewrite(Piecewise),
+                              'numpy')
 
         points = linspace(0, float(length), num=100*length)
 
