@@ -410,9 +410,9 @@ class MatrixDeterminant(MatrixCommon):
                 However, we would discourage you to use the keys in the manner.
 
         iszerofunc : FunctionType or None, optional
-            If it is set to None, it will be defaulted to _iszero when when
-            method is set to 'bareiss', and _is_zero_after_expand_mul when
-            method is set to 'lu'.
+            If it is set to None, it will be defaulted to _iszero if the method
+            is set to 'bareiss', and _is_zero_after_expand_mul if the method is
+            set to 'lu'.
 
             It can also accept any user-specified zero testing function, if it
             is formatted as a function which accepts a single symbolic argument
