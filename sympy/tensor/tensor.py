@@ -39,7 +39,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.compatibility import string_types, reduce, range, SYMPY_INTS
-from sympy.core.containers import Tuple
+from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import CantSympify, _sympify
@@ -3695,6 +3695,84 @@ class TensMul(TensExpr, AssocOp):
         if self.data is None:
             raise ValueError("No iteration on abstract tensors")
         return self.data.__iter__()
+
+
+class TensorElement(TensExpr):
+    """
+    Tensor with evaluated components.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.tensor import TensorIndexType, tensorhead
+    >>> from sympy import symbols
+    >>> L = TensorIndexType("L")
+    >>> i, j, k = symbols("i j k")
+    >>> A = tensorhead("A", [L, L], [[1], [1]])
+    >>> A(i, j).get_free_indices()
+    [i, j]
+
+    If we want to set component ``i`` to a specific value, use the
+    ``TensorElement`` class:
+
+    >>> from sympy.tensor.tensor import TensorElement
+    >>> te = TensorElement(A(i, j), {i: 2})
+
+    As index ``i`` has been accessed (``{i: 2}`` is the evaluation of its 3rd
+    element), the free indices will only contain ``j``:
+
+    >>> te.get_free_indices()
+    [j]
+    """
+
+    def __new__(cls, expr, index_map):
+        pass
+        if not isinstance(expr, Tensor):
+            # remap
+            if not isinstance(expr, TensExpr):
+                raise TypeError("%s is not a tensor expression" % expr)
+            return expr.func(*[TensorElement(arg, index_map) for arg in expr.args])
+        expr_free_indices = expr.get_free_indices()
+        name_translation = {i.args[0]: i for i in expr_free_indices}
+        #import pdb; pdb.set_trace()
+        index_map = {name_translation.get(index, index): value for index, value in index_map.items()}
+        index_map = {index: value for index, value in index_map.items() if index in expr_free_indices}
+        free_indices = [i for i in expr_free_indices if i not in index_map.keys()]
+        index_map = Dict(index_map)
+        obj = TensExpr.__new__(cls, expr, index_map)
+        obj._free_indices = free_indices
+        return obj
+
+    @property
+    def free(self):
+        return [(index, i) for i, index in enumerate(self.get_free_indices())]
+
+    @property
+    def dum(self):
+        # TODO: inherit dummies from expr
+        return []
+
+    @property
+    def expr(self):
+        return self._args[0]
+
+    @property
+    def index_map(self):
+        return self._args[1]
+
+    def get_free_indices(self):
+        return self._free_indices
+
+    def get_indices(self):
+        return self.get_free_indices()
+
+    def _extract_data(self, replacement_dict):
+        ret_indices, array = self.expr._extract_data(replacement_dict)
+        index_map = self.index_map
+        slice_tuple = tuple(index_map.get(i, slice(None)) for i in ret_indices)
+        ret_indices = [i for i in ret_indices if i not in index_map]
+        array = array.__getitem__(slice_tuple)
+        return ret_indices, array
 
 
 def canon_bp(p):
