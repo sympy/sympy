@@ -1112,8 +1112,7 @@ class Line(LinearEntity):
             x = find(x, equation) or Dummy()
             y = find(y, equation) or Dummy()
 
-            co = linear_coeffs(equation, x, y)
-            a, b, c = [co[i] for i in (x, y, 0)]
+            a, b, c = linear_coeffs(equation, x, y)
 
             if b:
                 return Line((0, -c/b), slope=-a/b)

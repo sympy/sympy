@@ -1411,11 +1411,9 @@ class Circle(Ellipse):
             y = find(y, equation)
 
             try:
-                co = linear_coeffs(equation, x**2, y**2, x, y)
+                a, b, c, d, e = linear_coeffs(equation, x**2, y**2, x, y)
             except ValueError:
                 raise GeometryError("The given equation is not that of a circle.")
-
-            a, b, c, d, e = [co[i] for i in (x**2, y**2, x, y, 0)]
 
             if a == 0 or b == 0 or a != b:
                 raise GeometryError("The given equation is not that of a circle.")

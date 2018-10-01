@@ -1970,10 +1970,12 @@ def test_issue_14721():
         (a, 0, -sqrt(2)/2), (a, 0, sqrt(2)/2)]
     assert solve((a + b**2 - 1, a + b**2 - 2)) == []
 
+
 def test_issue_14779():
     x = symbols('x', real=True)
     assert solve(sqrt(x**4 - 130*x**2 + 1089) + sqrt(x**4 - 130*x**2
                  + 3969) - 96*Abs(x)/x,x) == [sqrt(130)]
+
 
 def test_issue_15307():
     assert solve((y - 2, Mul(x + 3,x - 2, evaluate=False))) == \
@@ -1982,3 +1984,6 @@ def test_issue_15307():
         {x: 2, y: 2}
     assert solve((y - 2, Add(x + 4, x - 2, evaluate=False))) == \
         {x: -1, y: 2}
+    eq1 = Eq(12513*x + 2*y - 219093, -5726*x - y)
+    eq2 = Eq(-2*x + 8, 2*x - 40)
+    assert solve([eq1, eq2]) == {x:12, y:75}
