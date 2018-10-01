@@ -319,7 +319,7 @@ class lowergamma(Function):
     def _eval_rewrite_as_uppergamma(self, s, x):
         return gamma(s) - uppergamma(s, x)
 
-    def _eval_rewrite_as_expint(self, s, x):
+    def _eval_rewrite_as_expint(self, s, x, **hints):
         from sympy import expint
         if s.is_integer and s.is_nonpositive:
             return self
@@ -460,7 +460,7 @@ class uppergamma(Function):
     def _eval_rewrite_as_lowergamma(self, s, x):
         return gamma(s) - lowergamma(s, x)
 
-    def _eval_rewrite_as_expint(self, s, x):
+    def _eval_rewrite_as_expint(self, s, x, **hints):
         from sympy import expint
         return expint(1 - s, x)*x**s
 

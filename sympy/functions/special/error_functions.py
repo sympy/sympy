@@ -177,7 +177,7 @@ class erf(Function):
     def _eval_rewrite_as_hyper(self, z):
         return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **hints):
         return sqrt(z**2)/z - z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     def _eval_rewrite_as_tractable(self, z):
@@ -375,7 +375,7 @@ class erfc(Function):
         from sympy import uppergamma
         return S.One - sqrt(z**2)/z*(S.One - uppergamma(S.Half, z**2)/sqrt(S.Pi))
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **hints):
         return S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     def _eval_expand_func(self, **hints):
@@ -556,7 +556,7 @@ class erfi(Function):
         from sympy import uppergamma
         return sqrt(-z**2)/z*(uppergamma(S.Half, -z**2)/sqrt(S.Pi) - S.One)
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **hints):
         return sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
 
     def _eval_expand_func(self, **hints):
@@ -708,7 +708,7 @@ class erf2(Function):
         return (sqrt(y**2)/y*(S.One - uppergamma(S.Half, y**2)/sqrt(S.Pi)) -
             sqrt(x**2)/x*(S.One - uppergamma(S.Half, x**2)/sqrt(S.Pi)))
 
-    def _eval_rewrite_as_expint(self, x, y):
+    def _eval_rewrite_as_expint(self, x, y, **hints):
         return erf(y).rewrite(expint) - erf(x).rewrite(expint)
 
     def _eval_expand_func(self, **hints):
@@ -1072,7 +1072,7 @@ class Ei(Function):
         #     immediately turns into expint
         return -uppergamma(0, polar_lift(-1)*z) - I*pi
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **hints):
         return -expint(1, polar_lift(-1)*z) - I*pi
 
     def _eval_rewrite_as_li(self, z):
@@ -1682,7 +1682,7 @@ class Si(TrigonometricIntegral):
     def _Ifactor(cls, z, sign):
         return I*Shi(z)*sign
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **hints):
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
 
@@ -1790,7 +1790,7 @@ class Ci(TrigonometricIntegral):
     def _Ifactor(cls, z, sign):
         return Chi(z) + I*pi/2*sign
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **hints):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
 
     def _sage_(self):
@@ -1877,7 +1877,7 @@ class Shi(TrigonometricIntegral):
     def _Ifactor(cls, z, sign):
         return I*Si(z)*sign
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **hints):
         from sympy import exp_polar
         # XXX should we polarify z?
         return (E1(z) - E1(exp_polar(I*pi)*z))/2 - I*pi/2
@@ -1977,7 +1977,7 @@ class Chi(TrigonometricIntegral):
     def _Ifactor(cls, z, sign):
         return Ci(z) + I*pi/2*sign
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **hints):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
