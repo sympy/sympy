@@ -392,8 +392,8 @@ class MatrixDeterminant(MatrixCommon):
         method : string, optional
             Specifies the algorithm used for computing the matrix determinant.
 
-            If the matrix is at most 3x3, the key is ignored and a hard-coded
-            formula is used. Otherwise, it will be defaulted with 'bareiss'.
+            If the matrix is at most 3x3, a hard-coded formula is used and the
+            specified method is ignored. Otherwise, it defaults to 'bareiss'.
 
             If it is set with 'bareiss', Bareiss' fraction-free algorithm would
             be used
