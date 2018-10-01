@@ -8,7 +8,7 @@ from __future__ import print_function, division
 from sympy.core import S, Symbol, diff, symbols
 from sympy.solvers import linsolve
 from sympy.printing import sstr
-from sympy.functions import SingularityFunction, Piecewise
+from sympy.functions import SingularityFunction, Piecewise, factorial
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
@@ -352,12 +352,14 @@ class Beam(object):
             point forces this is the location of application.
         order : Integer
             The order of the applied load.
-            - For moments, order= -2
-            - For point loads, order=-1
-            - For constant distributed load, order=0
-            - For ramp loads, order=1
-            - For parabolic ramp loads, order=2
-            - ... so on.
+
+               - For moments, order = -2
+               - For point loads, order =-1
+               - For constant distributed load, order = 0
+               - For ramp loads, order = 1
+               - For parabolic ramp loads, order = 2
+               - ... so on.
+
         end : Sympifyable, optional
             An optional argument that can be used if the load has an end point
             within the length of the beam.
@@ -366,7 +368,7 @@ class Beam(object):
         ========
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
-        A pointload of magnitude 4 N is applied from the top of the beam at
+        A point load of magnitude 4 N is applied from the top of the beam at
         2 meters from the starting point and a parabolic ramp load of magnitude
         2 N/m is applied below the beam starting from 2 meters to 3 meters
         away from the starting point of the beam.
@@ -377,10 +379,10 @@ class Beam(object):
         >>> b = Beam(4, E, I)
         >>> b.apply_load(-3, 0, -2)
         >>> b.apply_load(4, 2, -1)
-        >>> b.apply_load(-2, 2, 2, end = 3)
+        >>> b.apply_load(-2, 2, 2, end=3)
         >>> b.load
-        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2)
-            + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
+        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 4*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
+
         """
         x = self.variable
         value = sympify(value)
@@ -391,12 +393,18 @@ class Beam(object):
         self._load += value*SingularityFunction(x, start, order)
 
         if end:
-            if order == 0:
-                self._load -= value*SingularityFunction(x, end, order)
-            elif order.is_positive:
-                self._load -= value*SingularityFunction(x, end, order) + value*SingularityFunction(x, end, 0)
-            else:
-                raise ValueError("""Order of the load should be positive.""")
+            if order.is_negative:
+                msg = ("If 'end' is provided the 'order' of the load cannot "
+                       "be negative, i.e. 'end' is only valid for distributed "
+                       "loads.")
+                raise ValueError(msg)
+            # NOTE : A Taylor series can be used to define the summation of
+            # singularity functions that subtract from the load past the end
+            # point such that it evaluates to zero past 'end'.
+            f = value * x**order
+            for i in range(0, order + 1):
+                self._load -= (f.diff(x, i).subs(x, end - start) *
+                               SingularityFunction(x, end, i) / factorial(i))
 
     def remove_load(self, value, start, order, end=None):
         """
@@ -438,10 +446,9 @@ class Beam(object):
         >>> b = Beam(4, E, I)
         >>> b.apply_load(-3, 0, -2)
         >>> b.apply_load(4, 2, -1)
-        >>> b.apply_load(-2, 2, 2, end = 3)
+        >>> b.apply_load(-2, 2, 2, end=3)
         >>> b.load
-        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2)
-            + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
+        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 4*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
         >>> b.remove_load(-2, 2, 2, end = 3)
         >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1)
@@ -455,15 +462,25 @@ class Beam(object):
             self._load -= value*SingularityFunction(x, start, order)
             self._applied_loads.remove((value, start, order, end))
         else:
-            raise ValueError("""No such load distribution exists on the beam object.""")
+            msg = "No such load distribution exists on the beam object."
+            raise ValueError(msg)
 
         if end:
-            if order == 0:
-                self._load += value*SingularityFunction(x, end, order)
-            elif order.is_positive:
-                self._load += value*SingularityFunction(x, end, order) + value*SingularityFunction(x, end, 0)
-            else:
-                raise ValueError("""Order of the load should be positive.""")
+            # TODO : This is essentially duplicate code wrt to apply_load,
+            # would be better to move it to one location and both methods use
+            # it.
+            if order.is_negative:
+                msg = ("If 'end' is provided the 'order' of the load cannot "
+                       "be negative, i.e. 'end' is only valid for distributed "
+                       "loads.")
+                raise ValueError(msg)
+            # NOTE : A Taylor series can be used to define the summation of
+            # singularity functions that subtract from the load past the end
+            # point such that it evaluates to zero past 'end'.
+            f = value * x**order
+            for i in range(0, order + 1):
+                self._load += (f.diff(x, i).subs(x, end - start) *
+                               SingularityFunction(x, end, i) / factorial(i))
 
     @property
     def load(self):
@@ -475,7 +492,7 @@ class Beam(object):
         ========
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
-        A pointload of magnitude 4 N is applied from the top of the beam at
+        A point load of magnitude 4 N is applied from the top of the beam at
         2 meters from the starting point and a parabolic ramp load of magnitude
         2 N/m is applied below the beam starting from 3 meters away from the
         starting point of the beam.
