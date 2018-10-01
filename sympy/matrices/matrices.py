@@ -428,12 +428,11 @@ class MatrixDeterminant(MatrixCommon):
         Raises
         ======
 
-        ValueError :
-            Raised if wrong keys are given for 'method' or 'iszerofunc'.
+        ValueError
+            If unrecognized keys are given for ``method`` or ``iszerofunc``
 
-        NonSquareMatrixError :
-            Raises when attempted to calculate determinant from a non-square
-            matrix.
+        NonSquareMatrixError
+            If attempted to calculate determinant from a non-square matrix.
         """
 
         # sanitize `method`
