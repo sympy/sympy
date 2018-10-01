@@ -5,9 +5,6 @@ singularity functions in mechanics.
 
 from __future__ import print_function, division
 
-matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
-numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
-
 from sympy.core import S, Symbol, diff, symbols
 from sympy.solvers import linsolve
 from sympy.printing import sstr
@@ -19,6 +16,10 @@ from sympy.plotting import plot
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy import lambdify
+
+matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
+numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
+
 
 class Beam(object):
     """
