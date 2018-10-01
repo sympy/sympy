@@ -1368,7 +1368,7 @@ class Derivative(Expr):
                 # and will cause an AppliedUndef to block if v is in
                 # the arguments
                 if any(_block(k, v, wrt=True)
-                        for k in [vi[0] for vi in d.variable_count]):
+                        for k, _ in d.variable_count):
                     return True
                 return False
             if not wrt and isinstance(d, AppliedUndef):
