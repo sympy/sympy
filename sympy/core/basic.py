@@ -1586,7 +1586,11 @@ class Basic(with_metaclass(ManagedProperties)):
 
         if pattern is None or isinstance(self, pattern):
             if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args)
+                hints.pop('deep', None)
+                if hints:
+                    rewritten = getattr(self, rule)(*args, **hints)
+                else:
+                    rewritten = getattr(self, rule)(*args)
                 if rewritten is not None:
                     return rewritten
         return self.func(*args)
