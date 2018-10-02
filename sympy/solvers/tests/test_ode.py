@@ -2905,7 +2905,7 @@ def test_issue_14395():
 
 def test_sysode_linear_neq_order1():
     
-    from sympy import Funtcion
+    from sympy import Function
     from sympy import symbols
     from sympy import dsolve
     from sympy.abc import t
