@@ -98,7 +98,7 @@ jobs:
     displayName: 'tests'
     env:
       TEST_SYMPY: "true"
-      SPLIT="1/1"
+      SPLIT: "1/1"
 
 - job: 'Optional_dependencies'
   pool:
