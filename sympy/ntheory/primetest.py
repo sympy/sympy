@@ -127,7 +127,7 @@ def mr(n, bases):
     Examples
     ========
 
-    >>> from sympy.ntheory.primetest import mrfrom sympy.ntheory.primetest import mr
+    >>> from sympy.ntheory.primetest import mr
     >>> mr(1373651, [2, 3])
     False
     >>> mr(479001599, [31, 73])
