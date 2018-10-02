@@ -1,5 +1,25 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
+variables:
+  conda.optional.dependencies: >-
+    python=$(python.version)
+    numpy
+    scipy
+    gmpy2
+    matplotlib>=2.2
+    theano
+    llvmlite
+    autowrap
+    cython
+    wurlitzer
+    python-symengine=0.3.*
+    tensorflow
+    numexpr
+    ipython
+    antlr-python-runtime>=4.7,<4.8
+    antlr>=4.7,<4.8
+    cloudpickle
+
 jobs:
 
 - job: 'Doctests'
@@ -37,3 +57,17 @@ jobs:
     displayName: 'doctests'
     env:
       TEST_DOCTESTS: "true"
+
+- task: CondaEnvironment@1
+  inputs:
+  - task: CondaEnvironment@0
+    inputs:
+      environmentName: 'myEnvironment'
+      packageSpecs: $(conda.optional.dependencies)
+
+  - script: |
+      ./bin/test_travis.sh
+    displayName: 'optional dependencies tests'
+    env:
+      TEST_ASCII: "true"
+      TEST_OPT_DEPENDENCY: $(conda.optional.dependencies)
