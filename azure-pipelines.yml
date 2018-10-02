@@ -84,7 +84,7 @@ jobs:
       TEST_OPT_DEPENDENCY: $(conda.optional.dependencies)
 
 - job: 'Sage_tests'
-    pool:
+  pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
     matrix:
