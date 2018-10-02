@@ -2904,17 +2904,13 @@ def test_issue_14395():
 
 
 def test_sysode_linear_neq_order1():
-    
-    from sympy import Function
-    from sympy import symbols
-    from sympy import dsolve
     from sympy.abc import t
-    
+
     Z0 = Function('Z0')
     Z1 = Function('Z1')
     Z2 = Function('Z2')
     Z3 = Function('Z3')
-    
+
     k01, k10, k20, k21, k23, k30 = symbols('k01 k10 k20 k21 k23 k30')
 
     eq = (Eq(Derivative(Z0(t), t), -k01*Z0(t) + k10*Z1(t) + k20*Z2(t) + k30*Z3(t)), Eq(Derivative(Z1(t), t),
@@ -2929,5 +2925,5 @@ def test_sysode_linear_neq_order1():
                 k21 - k23))),
                Eq(Z2(t), C4*(-k20 - k21 - k23 + k30)*exp(t*(-k20 - k21 - k23))/k23),
                Eq(Z3(t), C2*exp(-k30*t) + C4*exp(t*(-k20 - k21 - k23)))]
-    
+
     assert dsolve(eq, simplify=False) == sols_eq
