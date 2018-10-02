@@ -69,6 +69,12 @@ jobs:
         python.version: '3.6'
     maxParallel: 2
 
+  # Remove this when https://github.com/Microsoft/vsts-tasks/issues/8299 is
+  # fixed.
+  steps:
+  - script: sudo install -d -m 0777 /usr/envs
+    displayName: Fix Conda permissions
+
   steps:
   - task: CondaEnvironment@0
     inputs:
@@ -96,6 +102,12 @@ jobs:
       Python36:
         python.version: '3.6'
     maxParallel: 1
+
+  # Remove this when https://github.com/Microsoft/vsts-tasks/issues/8299 is
+  # fixed.
+  steps:
+  - script: sudo install -d -m 0777 /usr/envs
+    displayName: Fix Conda permissions
 
   steps:
   - task: CondaEnvironment@0
