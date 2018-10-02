@@ -1470,7 +1470,7 @@ class Variable(Node):
         Examples
         ========
 
-        >>> from sympy.codegen.ast import Variable
+        >>> from sympy.codegen.ast import Variable, NoneToken
         >>> x = Variable('x')
         >>> decl1 = x.as_Declaration()
         # value is special NoneToken() which must be tested with == operator
@@ -1567,7 +1567,7 @@ class Declaration(Token):
     ========
 
     >>> from sympy import Symbol
-    >>> from sympy.codegen.ast import Declaration, Type, Variable, integer, untyped
+    >>> from sympy.codegen.ast import Declaration, Type, Variable, NoneToken, integer, untyped
     >>> z = Declaration('z')
     >>> z.variable.type == untyped
     True
