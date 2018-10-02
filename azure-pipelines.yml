@@ -71,7 +71,7 @@ jobs:
 
   - task: CondaEnvironment@0
     inputs:
-      environmentName: 'myEnvironment'
+      environmentName: 'optional-dependencies'
       packageSpecs: $(conda.optional.dependencies)
 
   - script: |
