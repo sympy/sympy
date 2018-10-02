@@ -3,6 +3,7 @@
 variables:
   conda.optional.dependencies: >-
     python=$(python.version)
+    mpmath
     numpy
     scipy
     gmpy2
