@@ -407,8 +407,8 @@ class MatrixDeterminant(MatrixCommon):
                 For backward compatibility, legacy keys like "bareis" ,
                 "det_lu" can still be used to indicate corresponding
                 methods.
-                And the keys are also case-insensitive for now.
-                However, we would discourage you to use the keys in the manner.
+                And the keys are also case-insensitive for now. However, it is
+                suggested to use the proper keys for specifying the method.
 
         iszerofunc : FunctionType or None, optional
             If it is set to ``None``, it will be defaulted to ``_iszero`` if the
