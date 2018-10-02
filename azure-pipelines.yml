@@ -58,7 +58,7 @@ jobs:
     env:
       TEST_DOCTESTS: "true"
 
-- job: 'Optional dependencies'
+- job: 'Optional_dependencies'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
