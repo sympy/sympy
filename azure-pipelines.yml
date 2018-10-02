@@ -81,3 +81,25 @@ jobs:
     env:
       TEST_ASCII: "true"
       TEST_OPT_DEPENDENCY: $(conda.optional.dependencies)
+
+- job: 'Sage_tests'
+    pool:
+    vmImage: 'Ubuntu 16.04'
+  strategy:
+    matrix:
+      Python36:
+        python.version: '3.6'
+    maxParallel: 1
+
+  steps:
+  - task: CondaEnvironment@0
+    inputs:
+      environmentName: 'sage'
+      packageSpecs: sagelib mpmath ipython>=5.5.0,<6
+
+
+  - script: |
+      ./bin/test_travis.sh
+    displayName: Sage tests'
+    env:
+      TEST_SAGE: "true"
