@@ -403,10 +403,10 @@ class MatrixDeterminant(MatrixCommon):
             Otherwise, if it is set to ``lu``, LU decomposition would be used.
 
             .. note::
-                For backward compatibility, legacy keys like **bareis** ,
-                **det_lu** can still be used to indicate corresponding
+                For backward compatibility, legacy keys like "bareis" ,
+                "det_lu" can still be used to indicate corresponding
                 methods.
-                And the keys are also **case-insensitive** for now.
+                And the keys are also case-insensitive for now.
                 However, we would discourage you to use the keys in the manner.
 
         iszerofunc : FunctionType or None, optional
@@ -429,7 +429,7 @@ class MatrixDeterminant(MatrixCommon):
         ======
 
         ValueError
-            If unrecognized keys are given for ``method`` or ``iszerofunc``
+            If unrecognized keys are given for ``method`` or ``iszerofunc``.
 
         NonSquareMatrixError
             If attempted to calculate determinant from a non-square matrix.
