@@ -413,12 +413,12 @@ class Equality(Relational):
         (b, x, b, -x)
         """
         L, R = args
-        eval = kwargs.get('evaluate', True)
-        if eval:
+        evaluate = kwargs.get('evaluate', True)
+        if evaluate:
             # allow cancellation of args
             return L - R
         args = Add.make_args(L) + Add.make_args(-R)
-        if eval is None:
+        if evaluate is None:
             # no cancellation, but canonical
             return _unevaluated_Add(*args)
         # no cancellation, not canonical
