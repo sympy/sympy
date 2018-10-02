@@ -83,6 +83,10 @@ jobs:
     env:
       TEST_ASCII: "true"
       TEST_OPT_DEPENDENCY: $(conda.optional.dependencies)
+      CPATH: $CONDA_PREFIX/include
+      LIBRARY_PATH: $CONDA_PREFIX/lib
+      LD_LIBRARY_PATH: $CONDA_PREFIX/lib
+      SYMPY_STRICT_COMPILER_CHECKS: 1
 
 - job: 'Sage_tests'
   pool:
