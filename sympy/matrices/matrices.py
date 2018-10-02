@@ -418,7 +418,7 @@ class MatrixDeterminant(MatrixCommon):
             It can also accept any user-specified zero testing function, if it
             is formatted as a function which accepts a single symbolic argument
             and returns ``True`` if it is tested as zero and ``False`` if it
-            tested as non-zero, and also None if it is undecidable.
+            tested as non-zero, and also ``None`` if it is undecidable.
 
         Returns
         =======
