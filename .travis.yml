@@ -65,6 +65,7 @@ matrix:
             - librsvg2-bin
             - imagemagick
             - docbook2x
+            - python-matplotlib
 
     - python: 2.7
       env:
@@ -212,7 +213,7 @@ before_install:
       pip install fastcache;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr numpy matplotlib;
+      pip install "sphinx" "docutils" doctr;
     fi
   - |
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
