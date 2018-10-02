@@ -72,6 +72,7 @@ jobs:
   steps:
   - task: CondaEnvironment@0
     inputs:
+      createOptions: "-c conda-forge"
       environmentName: 'optional-dependencies'
       packageSpecs: $(conda.optional.dependencies)
 
@@ -94,6 +95,7 @@ jobs:
   steps:
   - task: CondaEnvironment@0
     inputs:
+      createOptions: "-c conda-forge"
       environmentName: 'sage'
       packageSpecs: sagelib mpmath ipython>=5.5.0,<6
 
