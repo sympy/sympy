@@ -58,8 +58,17 @@ jobs:
     env:
       TEST_DOCTESTS: "true"
 
-- task: CondaEnvironment@1
-  inputs:
+- job: 'Optional dependencies'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  strategy:
+    matrix:
+      Python27:
+        python.version: '2.7'
+      Python36:
+        python.version: '3.6'
+    maxParallel: 2
+
   - task: CondaEnvironment@0
     inputs:
       environmentName: 'myEnvironment'
