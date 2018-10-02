@@ -2667,6 +2667,8 @@ def _tsolve(eq, sym, **flags):
                 return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
             elif lhs.base == 0 and rhs == 1:
                 return _solve(lhs.exp, sym, **flags)
+            else:
+                raise NotImplementedError
 
         elif lhs.is_Mul and rhs.is_positive:
             llhs = expand_log(log(lhs))
