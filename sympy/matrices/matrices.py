@@ -405,7 +405,7 @@ class MatrixDeterminant(MatrixCommon):
 
             .. note::
                 For backward compatibility, legacy keys like "bareis" and
-                "det_lu" can still be used to indicate corresponding
+                "det_lu" can still be used to indicate the corresponding
                 methods.
                 And the keys are also case-insensitive for now. However, it is
                 suggested to use the precise keys for specifying the method.
