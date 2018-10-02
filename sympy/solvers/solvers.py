@@ -3006,6 +3006,9 @@ def _invert(eq, *symbols, **kwargs):
     dointpow = bool(kwargs.get('integer_power', False))
 
     lhs = eq
+    if eq.args:
+        # make sure we are working with flat eq
+        lhs = eq.func(*eq.args)
     rhs = S.Zero
     while True:
         was = lhs

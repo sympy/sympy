@@ -5,7 +5,7 @@ from sympy import (
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom)
+    E, cbrt, denom, Add)
 
 from sympy.core.compatibility import range
 from sympy.core.function import nfloat
@@ -1974,3 +1974,11 @@ def test_issue_14779():
     x = symbols('x', real=True)
     assert solve(sqrt(x**4 - 130*x**2 + 1089) + sqrt(x**4 - 130*x**2
                  + 3969) - 96*Abs(x)/x,x) == [sqrt(130)]
+
+def test_issue_15307():
+    assert solve((y - 2, Mul(x + 3,x - 2, evaluate=False))) == \
+        [{x: -3, y: 2}, {x: 2, y: 2}]
+    assert solve((y - 2, Mul(3, x - 2, evaluate=False))) == \
+        {x: 2, y: 2}
+    assert solve((y - 2, Add(x + 4, x - 2, evaluate=False))) == \
+        {x: -1, y: 2}
