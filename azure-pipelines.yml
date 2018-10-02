@@ -104,6 +104,6 @@ jobs:
 
   - script: |
       ./bin/test_travis.sh
-    displayName: Sage tests'
+    displayName: 'Sage tests'
     env:
       TEST_SAGE: "true"
