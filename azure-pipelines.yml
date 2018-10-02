@@ -69,6 +69,7 @@ jobs:
         python.version: '3.6'
     maxParallel: 2
 
+  steps:
   - task: CondaEnvironment@0
     inputs:
       environmentName: 'optional-dependencies'
