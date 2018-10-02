@@ -404,7 +404,7 @@ class MatrixDeterminant(MatrixCommon):
             Otherwise, if it is set to ``'lu'``, LU decomposition will be used.
 
             .. note::
-                For backward compatibility, legacy keys like "bareis" ,
+                For backward compatibility, legacy keys like "bareis" and
                 "det_lu" can still be used to indicate corresponding
                 methods.
                 And the keys are also case-insensitive for now. However, it is
