@@ -408,7 +408,7 @@ class MatrixDeterminant(MatrixCommon):
                 "det_lu" can still be used to indicate corresponding
                 methods.
                 And the keys are also case-insensitive for now. However, it is
-                suggested to use the proper keys for specifying the method.
+                suggested to use the precise keys for specifying the method.
 
         iszerofunc : FunctionType or None, optional
             If it is set to ``None``, it will be defaulted to ``_iszero`` if the
