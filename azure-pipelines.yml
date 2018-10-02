@@ -134,3 +134,4 @@ jobs:
     displayName: 'Sage tests'
     env:
       TEST_SAGE: "true"
+      AZURE: "true"
