@@ -65,7 +65,6 @@ matrix:
             - librsvg2-bin
             - imagemagick
             - docbook2x
-            - python-matplotlib
 
     - python: 2.7
       env:
