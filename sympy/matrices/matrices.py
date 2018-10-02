@@ -399,9 +399,9 @@ class MatrixDeterminant(MatrixCommon):
             If it is set to ``'bareiss'``, Bareiss' fraction-free algorithm will
             be used.
 
-            If it is set to ``'berkowitz'``, Berkowitz' algorithm would be used.
+            If it is set to ``'berkowitz'``, Berkowitz' algorithm will be used.
 
-            Otherwise, if it is set to ``'lu'``, LU decomposition would be used.
+            Otherwise, if it is set to ``'lu'``, LU decomposition will be used.
 
             .. note::
                 For backward compatibility, legacy keys like "bareis" ,
