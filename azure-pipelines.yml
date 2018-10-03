@@ -61,7 +61,7 @@ jobs:
     env:
       TEST_DOCTESTS: "true"
 
-- job: 'Tests split 1/2'
+- job: 'Tests_split_1_2'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -101,7 +101,7 @@ jobs:
       SPLIT: "1/2"
 
 
-- job: 'Tests split 2/2'
+- job: 'Tests_split_2_2'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
