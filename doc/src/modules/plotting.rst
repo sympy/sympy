@@ -78,8 +78,36 @@ Series Classes
 .. autoclass:: sympy.plotting.plot_implicit.ImplicitSeries
    :members:
 
+Examples
+========
 
+Below are examples of 2D plots.
 
+Example 1
+---------
+
+**append(** *arg* **)**
+
+Adds an element from a plot’s series to an existing plot.
+Consider two Plot objects, p1 and p2. To add the second plot’s first series object to the first, use the append method, like so:
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+   
+   >>> from sympy import symbols
+   >>> from sympy.plotting import plot
+   >>> x = symbols('x')
+   >>> p1 = plot(x*x)
+   >>> p2 = plot(x)
+   >>> p1.append(p2[0])
+   >>> p1
+   Plot object containing:
+   [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+   [1]: cartesian line: x for x over (-10.0, 10.0)
+
+.. image:: ../pics/append.png
 
 Pyglet Plotting Module
 ======================
