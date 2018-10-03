@@ -1120,11 +1120,11 @@ class MatrixEigen(MatrixSubspaces):
         Parameters
         ==========
 
-        error_when_incomplete : bool
+        error_when_incomplete : bool, optional
             Raise an error when not all eigenvalues are computed. This is
             caused by ``roots`` not returning a full list of eigenvalues.
 
-        simplify : bool or function
+        simplify : bool or function, optional
             If simplify is set to True, it attempts to return the most
             simplified form of expressions returned by applying default
             simplification method in every routine.
@@ -1133,7 +1133,7 @@ class MatrixEigen(MatrixSubspaces):
             If you pass a function to simplify, it will attempt to apply
             the particular function as simplification method.
 
-        rational : bool
+        rational : bool, optional
             Since the roots routine doesn't always work well with Floats,
             they will be replaced with Rationals before calling that
             routine. If this is not desired, set flag ``rational`` to False.
