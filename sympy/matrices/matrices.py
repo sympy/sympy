@@ -1155,6 +1155,15 @@ class MatrixEigen(MatrixSubspaces):
             Eigenvalues of a matrix. The return format would be specified by
             the key ``multiple``.
 
+        Raises
+        ======
+
+        MatrixError
+            If not enough roots get computed from the equation.
+
+        NonSquareMatrixError
+            If attempted to compute eigenvalues from a non-sqaure matrix.
+
         See Also
         ========
 
