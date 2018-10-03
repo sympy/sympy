@@ -48,15 +48,7 @@ class DenseNDimArray(NDimArray):
             return syindex
 
         if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
-
-            def slice_expand(s, dim):
-                if not isinstance(s, slice):
-                        return (s,)
-                start, stop, step = s.indices(dim)
-                return [start + i*step for i in range((stop-start)//step)]
-
-            sl_factors = [slice_expand(i, dim) for (i, dim) in zip(index, self.shape)]
-            eindices = itertools.product(*sl_factors)
+            sl_factors, eindices = self._get_slice_data_for_array_access(index)
             array = [self._array[self._parse_index(i)] for i in eindices]
             nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
             return type(self)(array, nshape)
@@ -191,11 +183,16 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         [[1, 0], [0, 1]]
 
         """
-        index = self._parse_index(index)
-        self._setter_iterable_check(value)
-        value = _sympify(value)
-
-        self._array[index] = value
+        if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
+            value, eindices, slice_offsets = self._get_slice_data_for_array_assignment(index, value)
+            for i in eindices:
+                other_i = [ind - j for ind, j in zip(i, slice_offsets) if j is not None]
+                self._array[self._parse_index(i)] = value[other_i]
+        else:
+            index = self._parse_index(index)
+            self._setter_iterable_check(value)
+            value = _sympify(value)
+            self._array[index] = value
 
     def as_immutable(self):
         return ImmutableDenseNDimArray(self)
