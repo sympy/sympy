@@ -176,7 +176,8 @@ class ComplexRootOf(RootOf):
     Roots of a univariate polynomial separated into disjoint
     real or complex intervals and indexed in a fixed order.
     Currently only rational coefficients are allowed.
-    Can be imported as ``CRootOf``.
+    Can be imported as ``CRootOf``. To avoid confusion, the
+    generator must be a Symbol.
 
 
     Examples
@@ -270,6 +271,23 @@ class ComplexRootOf(RootOf):
     >>> t.eval_rational(n=2)
     104755/2097152 - 6634255*I/2097152
 
+    Notes
+    =====
+
+    Although a PurePoly can be constructed from a non-symbol generator
+    RootOf instances of non-symbols are disallowed to avoid confusion
+    over what root is being represented.
+
+    >>> from sympy import exp, PurePoly
+    >>> PurePoly(x) == PurePoly(exp(x))
+    True
+    >>> CRootOf(x - 1, 0)
+    1
+    >>> CRootOf(exp(x) - 1, 0)  # would correspond to x == 0
+    Traceback (most recent call last):
+    ...
+    sympy.polys.polyerrors.PolynomialError: generator must be a Symbol
+
     See Also
     ========
     eval_approx
@@ -305,6 +323,11 @@ class ComplexRootOf(RootOf):
 
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
+
+        if not poly.gen.is_Symbol:
+            # PurePoly(sin(x) + 1) == PurePoly(x + 1) but the roots of
+            # x for each are not the same: issue 8617
+            raise PolynomialError("generator must be a Symbol")
 
         degree = poly.degree()
 
