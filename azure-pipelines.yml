@@ -218,3 +218,4 @@ jobs:
     env:
       TEST_SAGE: "true"
       AZURE: "true"
+      SAGE_ROOT: "/usr/envs/sage/"
