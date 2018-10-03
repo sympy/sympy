@@ -164,6 +164,7 @@ jobs:
       createOptions: "-c conda-forge"
       environmentName: 'optional-dependencies'
       packageSpecs: $(conda.optional.dependencies)
+    displayName: 'Create conda environment'
 
   - script: |
       python -We:invalid -m compileall -f sympy/;
@@ -204,6 +205,7 @@ jobs:
       createOptions: "-c conda-forge"
       environmentName: 'sage'
       packageSpecs: sage mpmath ipython>=5.5.0,<6 python=3
+    displayName: 'Create conda environment'
 
   - script: |
       python -We:invalid -m compileall -f sympy/;
