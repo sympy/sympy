@@ -40,7 +40,8 @@ from sympy.tensor.functions import TensorProduct
 from sympy.sets.setexpr import SetExpr
 from sympy.sets import ImageSet
 
-from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+from sympy.tensor.tensor import (TensorIndexType, tensor_indices, tensorhead,
+        TensorElement)
 
 import sympy as sym
 class lowergamma(sym.lowergamma):
@@ -6309,5 +6310,44 @@ u("""\
  i      i\n\
 A  + 3⋅B \
 """)
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = TensorElement(H(i, j), {i:1})
+    ascii_str = \
+"""\
+ i=1,j\n\
+H     \
+"""
+    ucode_str = ascii_str
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = TensorElement(H(i, j), {i:1, j:1})
+    ascii_str = \
+"""\
+ i=1,j=1\n\
+H       \
+"""
+    ucode_str = ascii_str
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = TensorElement(H(i, j), {j:1})
+    ascii_str = \
+"""\
+ i,j=1\n\
+H     \
+"""
+    ucode_str = ascii_str
+
+    expr = TensorElement(H(-i, j), {-i:1})
+    ascii_str = \
+"""\
+    j\n\
+H    \n\
+ i=1 \
+"""
+    ucode_str = ascii_str
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str

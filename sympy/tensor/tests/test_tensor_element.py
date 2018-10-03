@@ -1,4 +1,5 @@
-from sympy.tensor.tensor import (TensorIndex, TensorIndexType, tensor_indices, tensorhead, TensorElement)
+from sympy.tensor.tensor import (Tensor, TensorIndex, TensorIndexType,
+        tensor_indices, tensorhead, TensorElement)
 from sympy.tensor import Array
 from sympy import Symbol
 
@@ -10,6 +11,9 @@ def test_tensor_element():
     A = tensorhead("A", [L, L], [[1], [1]])
 
     a = A(i, j)
+
+    assert isinstance(TensorElement(a, {}), Tensor)
+    assert isinstance(TensorElement(a, {k: 1}), Tensor)
 
     te1 = TensorElement(a, {Symbol("i"): 1})
     assert te1.free == [(j, 0)]

@@ -3726,7 +3726,6 @@ class TensorElement(TensExpr):
     """
 
     def __new__(cls, expr, index_map):
-        pass
         if not isinstance(expr, Tensor):
             # remap
             if not isinstance(expr, TensExpr):
@@ -3734,9 +3733,10 @@ class TensorElement(TensExpr):
             return expr.func(*[TensorElement(arg, index_map) for arg in expr.args])
         expr_free_indices = expr.get_free_indices()
         name_translation = {i.args[0]: i for i in expr_free_indices}
-        #import pdb; pdb.set_trace()
         index_map = {name_translation.get(index, index): value for index, value in index_map.items()}
         index_map = {index: value for index, value in index_map.items() if index in expr_free_indices}
+        if len(index_map) == 0:
+            return expr
         free_indices = [i for i in expr_free_indices if i not in index_map.keys()]
         index_map = Dict(index_map)
         obj = TensExpr.__new__(cls, expr, index_map)
