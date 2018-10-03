@@ -1125,7 +1125,7 @@ class MatrixEigen(MatrixSubspaces):
 
         error_when_incomplete : bool, optional
             If it is set to ``True``, it will attempt to raise an error when
-            not every eigenvalues got computed. This is caused by ``roots`` not
+            not every eigenvalues had got computed. This is caused by ``roots`` not
             returning a full list of eigenvalues.
 
         simplify : bool or function, optional
@@ -1141,7 +1141,7 @@ class MatrixEigen(MatrixSubspaces):
 
         rational : bool, optional
             If it is set to ``True``, every floating point numbers would be
-            replaced to rationals before the roots routine. It can solve some
+            replaced with rationals before computation. It can solve some
             issues of ``roots`` routine not working well with floats.
 
         multiple : bool, optional
@@ -1162,7 +1162,7 @@ class MatrixEigen(MatrixSubspaces):
         ======
 
         MatrixError
-            If not enough roots get computed from the equation.
+            If not enough roots had got computed.
 
         NonSquareMatrixError
             If attempted to compute eigenvalues from a non-sqaure matrix.
