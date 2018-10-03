@@ -1126,12 +1126,12 @@ class MatrixEigen(MatrixSubspaces):
             returning a full list of eigenvalues.
 
         simplify : bool or function, optional
-            If simplify is set to True, it attempts to return the most
+            If it is set to ``True``, it attempts to return the most
             simplified form of expressions returned by applying default
             simplification method in every routine.
-            If simplify is set to False, it will skip simplification in this
+            If it is set to ``False``, it will skip simplification in this
             particular routine to save computation resources.
-            If you pass a function to simplify, it will attempt to apply
+            If a function is passed to, it will attempt to apply
             the particular function as simplification method.
 
         rational : bool, optional
