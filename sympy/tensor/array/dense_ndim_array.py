@@ -135,6 +135,7 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
 
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
+        cls._check_special_bounds(flat_list, shape)
         flat_list = flatten(flat_list)
         flat_list = Tuple(*flat_list)
         self = Basic.__new__(cls, flat_list, shape, **kwargs)

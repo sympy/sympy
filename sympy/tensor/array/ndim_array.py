@@ -444,6 +444,13 @@ class NDimArray(object):
         # TODO: add checks for dimensions for `value`?
         return value, eindices, slice_offsets
 
+    @classmethod
+    def _check_special_bounds(cls, flat_list, shape):
+        if shape == () and len(flat_list) != 1:
+            raise ValueError("arrays without shape need one scalar value")
+        if shape == (0,) and len(flat_list) > 0:
+            raise ValueError("if array shape is (0,) there cannot be elements")
+
 
 class ImmutableNDimArray(NDimArray, Basic):
     _op_priority = 11.0
