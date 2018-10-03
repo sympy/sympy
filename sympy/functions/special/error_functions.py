@@ -556,7 +556,6 @@ class erfi(Function):
         from sympy import uppergamma
         return sqrt(-z**2)/z*(uppergamma(S.Half, -z**2)/sqrt(S.Pi) - S.One)
 
-
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
 
