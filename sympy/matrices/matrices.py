@@ -1121,8 +1121,9 @@ class MatrixEigen(MatrixSubspaces):
         ==========
 
         error_when_incomplete : bool, optional
-            Raise an error when not all eigenvalues are computed. This is
-            caused by ``roots`` not returning a full list of eigenvalues.
+            If it is set to ``True``, it will attempt to raise an error when
+            not all eigenvalues are computed. This is caused by ``roots`` not
+            returning a full list of eigenvalues.
 
         simplify : bool or function, optional
             If simplify is set to True, it attempts to return the most
