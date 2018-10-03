@@ -369,7 +369,7 @@ class sign(Function):
         import sage.all as sage
         return sage.sgn(self.args[0]._sage_())
 
-    def _eval_rewrite_as_Piecewise(self, arg, **hints):
+    def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
         if arg.is_real:
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
@@ -588,7 +588,7 @@ class Abs(Function):
         if arg.is_real:
             return arg*(Heaviside(arg) - Heaviside(-arg))
 
-    def _eval_rewrite_as_Piecewise(self, arg, **hints):
+    def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
         if arg.is_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
 

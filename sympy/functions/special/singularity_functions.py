@@ -168,7 +168,7 @@ class SingularityFunction(Function):
             if shift.is_zero:
                 return S.Infinity
 
-    def _eval_rewrite_as_Piecewise(self, *args, **hints):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         '''
         Converts a Singularity Function expression into its Piecewise form.
 

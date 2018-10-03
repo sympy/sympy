@@ -317,7 +317,7 @@ class DiracDelta(Function):
             return p.degree() == 1
         return False
 
-    def _eval_rewrite_as_Piecewise(self, *args, **hints):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         """Represents DiracDelta in a Piecewise form
 
            Examples

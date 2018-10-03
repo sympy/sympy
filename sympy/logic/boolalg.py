@@ -1186,7 +1186,7 @@ class ITE(BooleanFunction):
     def _eval_as_set(self):
         return self.to_nnf().as_set()
 
-    def _eval_rewrite_as_Piecewise(self, *args, **hints):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         from sympy.functions import Piecewise
         return Piecewise((args[1], args[0]), (args[2], True))
 
