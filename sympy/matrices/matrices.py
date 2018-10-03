@@ -1148,6 +1148,13 @@ class MatrixEigen(MatrixSubspaces):
             If it is set to ``False``, the result will be in the form of a
             dictionary.
 
+        Returns
+        =======
+
+        eigs : list or dict
+            Eigenvalues of a matrix. The return format would be specified by
+            the key ``multiple``.
+
         See Also
         ========
 
