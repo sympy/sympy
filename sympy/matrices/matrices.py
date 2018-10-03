@@ -1140,6 +1140,13 @@ class MatrixEigen(MatrixSubspaces):
             If it is set to ``True``, every floating point numbers would be
             replaced to rationals before the roots routine. It can solve some
             issues of ``roots`` routine not working well with floats.
+
+        multiple : bool, optional
+            If it is set to ``True``, the result will be in the form of a
+            list.
+
+            If it is set to ``False``, the result will be in the form of a
+            dictionary.
         """
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
