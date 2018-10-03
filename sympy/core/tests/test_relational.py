@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
-    log, cos, sin)
+    log, cos, sin, Add)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -786,3 +786,10 @@ def test_rel_args():
         for b in (S.true, x < 1, And(x, y)):
             for v in (0.1, 1, 2**32, t, S(1)):
                 raises(TypeError, lambda: Relational(b, v, op))
+
+
+def test_Equality_rewrite_as_Add():
+    eq = Eq(x + y, y - x)
+    assert eq.rewrite(Add) == 2*x
+    assert eq.rewrite(Add, evaluate=None).args == (x, x, y, -y)
+    assert eq.rewrite(Add, evaluate=False).args == (x, y, x, -y)

@@ -279,21 +279,21 @@ class TWave(Expr):
         else:
             raise TypeError(type(other).__name__ + " and TWave objects can't be added.")
 
-    def _eval_rewrite_as_sin(self, *args):
+    def _eval_rewrite_as_sin(self, *args, **kwargs):
         return self._amplitude*sin(self.wavenumber*Symbol('x')
             - self.angular_velocity*Symbol('t') + self._phase + pi/2, evaluate=False)
 
-    def _eval_rewrite_as_cos(self, *args):
+    def _eval_rewrite_as_cos(self, *args, **kwargs):
         return self._amplitude*cos(self.wavenumber*Symbol('x')
             - self.angular_velocity*Symbol('t') + self._phase)
 
-    def _eval_rewrite_as_pde(self, *args):
+    def _eval_rewrite_as_pde(self, *args, **kwargs):
         from sympy import Function
         mu, epsilon, x, t = symbols('mu, epsilon, x, t')
         E = Function('E')
         return Derivative(E(x, t), x, 2) + mu*epsilon*Derivative(E(x, t), t, 2)
 
-    def _eval_rewrite_as_exp(self, *args):
+    def _eval_rewrite_as_exp(self, *args, **kwargs):
         from sympy import exp, I
         return self._amplitude*exp(I*(self.wavenumber*Symbol('x')
             - self.angular_velocity*Symbol('t') + self._phase))

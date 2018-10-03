@@ -4,7 +4,7 @@ from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import range
 from sympy.matrices import MatrixBase
-from sympy.core import S
+from sympy.core import S, Basic
 
 
 class MatPow(MatrixExpr):
@@ -29,6 +29,7 @@ class MatPow(MatrixExpr):
         return self.base.shape
 
     def _entry(self, i, j, **kwargs):
+        from sympy.matrices.expressions import MatMul
         A = self.doit()
         if isinstance(A, MatPow):
             # We still have a MatPow, make an explicit MatMul out of it.
@@ -49,13 +50,20 @@ class MatPow(MatrixExpr):
         return A._entry(i, j)
 
     def doit(self, **kwargs):
+        from sympy.matrices.expressions import Inverse
         deep = kwargs.get('deep', True)
         if deep:
             args = [arg.doit(**kwargs) for arg in self.args]
         else:
             args = self.args
+
         base = args[0]
         exp = args[1]
+        # combine all powers, e.g. (A**2)**3 = A**6
+        while isinstance(base, MatPow):
+            exp = exp*base.args[1]
+            base = base.args[0]
+
         if exp.is_zero and base.is_square:
             if isinstance(base, MatrixBase):
                 return base.func(Identity(base.shape[0]))
@@ -70,9 +78,8 @@ class MatPow(MatrixExpr):
             return base**exp
         # Note: just evaluate cases we know, return unevaluated on others.
         # E.g., MatrixSymbol('x', n, m) to power 0 is not an error.
+        elif exp is S(-1) and base.is_square:
+            return Inverse(base).doit(**kwargs)
         elif exp is S.One:
             return base
         return MatPow(base, exp)
-
-
-from .matmul import MatMul

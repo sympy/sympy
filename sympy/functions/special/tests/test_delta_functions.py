@@ -31,7 +31,7 @@ def test_DiracDelta():
     # FIXME: this is generally undefined @ x=0
     #         But then limit(Delta(c)*Heaviside(x),x,-oo)
     #         need's to be implemented.
-    #assert 0*DiracDelta(x) == 0
+    # assert 0*DiracDelta(x) == 0
 
     assert adjoint(DiracDelta(x)) == DiracDelta(x)
     assert adjoint(DiracDelta(x - y)) == DiracDelta(x - y)
@@ -139,3 +139,12 @@ def test_rewrite():
     assert 5*x*y*Heaviside(y + 1).rewrite(SingularityFunction) == 5*x*y*SingularityFunction(y, -1, 0)
     assert ((x - 3)**3*Heaviside(x - 3)).rewrite(SingularityFunction) == (x - 3)**3*SingularityFunction(x, 3, 0)
     assert Heaviside(0).rewrite(SingularityFunction) == SingularityFunction(0, 0, 0)
+
+def test_issue_15923():
+    x = Symbol('x', real=True)
+    assert Heaviside(x).rewrite(Piecewise, H0=0) == (
+        Piecewise((0, x <= 0), (1, True)))
+    assert Heaviside(x).rewrite(Piecewise, H0=1) == (
+        Piecewise((0, x < 0), (1, True)))
+    assert Heaviside(x).rewrite(Piecewise, H0=S(1)/2) == (
+        Piecewise((0, x < 0), (1/2, Eq(x, 0)), (1, x > 0)))

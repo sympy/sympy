@@ -182,6 +182,17 @@ class TheanoPrinter(Printer):
             result = tt.dot(result, child)
         return result
 
+    def _print_MatPow(self, expr, **kwargs):
+        children = [self._print(arg, **kwargs) for arg in expr.args]
+        result = 1
+        if isinstance(children[1], int) and children[1] > 0:
+            for i in range(children[1]):
+                result = tt.dot(result, children[0])
+        else:
+            raise NotImplementedError('''Only non-negative integer
+           powers of matrices can be handled by Theano at the moment''')
+        return result
+
     def _print_MatrixSlice(self, expr, **kwargs):
         parent = self._print(expr.parent, **kwargs)
         rowslice = self._print(slice(*expr.rowslice), **kwargs)

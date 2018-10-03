@@ -6128,7 +6128,12 @@ def test_MatrixSymbol_printing():
     x = MatrixSymbol('x', n, n)
     y = MatrixSymbol('y*', n, n)
     assert pretty(x + y) == "x + y*"
-    assert pretty(-a*x + -2*y*y) == "-a*x -2*y**y*"
+    ascii_str = \
+"""\
+     2     \n\
+-2*y*  -a*x\
+"""
+    assert pretty(-a*x + -2*y*y) == ascii_str
 
 
 def test_degree_printing():

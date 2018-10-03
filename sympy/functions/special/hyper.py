@@ -206,7 +206,7 @@ class hyper(TupleParametersBase):
             return gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
         return hyperexpand(self)
 
-    def _eval_rewrite_as_Sum(self, ap, bq, z):
+    def _eval_rewrite_as_Sum(self, ap, bq, z, **kwargs):
         from sympy.functions import factorial, RisingFactorial, Piecewise
         from sympy import Sum
         n = Dummy("n", integer=True)
@@ -754,7 +754,7 @@ class HyperRep(Function):
         """ An expression for F(exp_polar(2*I*pi*n + pi*I)*x), |x| > 1. """
         raise NotImplementedError
 
-    def _eval_rewrite_as_nonrep(self, *args):
+    def _eval_rewrite_as_nonrep(self, *args, **kwargs):
         from sympy import Piecewise
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
         minus = False
@@ -774,7 +774,7 @@ class HyperRep(Function):
             return small
         return Piecewise((big, abs(x) > 1), (small, True))
 
-    def _eval_rewrite_as_nonrepsmall(self, *args):
+    def _eval_rewrite_as_nonrepsmall(self, *args, **kwargs):
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
         args = self.args[:-1] + (x,)
         if not n.is_Integer:
