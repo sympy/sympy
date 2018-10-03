@@ -3,6 +3,33 @@ from sympy import S, diag
 
 
 class PartialDerivative(TensExpr):
+    """
+    Partial derivative for tensor expressions.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.tensor import TensorIndexType, tensorhead
+    >>> from sympy.tensor.toperators import PartialDerivative
+    >>> from sympy import symbols
+    >>> L = TensorIndexType("L")
+    >>> A = tensorhead("A", [L], [[1]])
+    >>> i, j = symbols("i j")
+
+    >>> expr = PartialDerivative(A(i), A(j))
+    >>> expr
+    PartialDerivative(A(i), A(j))
+
+    The ``PartialDerivative`` object behaves like a tensorial expression:
+
+    >>> expr.get_indices()
+    [i, j]
+
+    Indices can be contracted:
+
+    >>> PartialDerivative(A(i), A(-i))
+    PartialDerivative(A(L_0), A(-L_0))
+    """
 
     def __new__(cls, expr, *variables):
 
@@ -50,9 +77,13 @@ class PartialDerivative(TensExpr):
             var_indices, var_array = variable._extract_data(replacement_dict)
             coeff_array, var_array = zip(*[i.as_coeff_Mul() for i in var_array])
             array = derive_by_array(array, var_array)
+            array = array.as_mutable()
             varindex = var_indices[0]
-            # TODO: find a more efficient way:
-            array = tensorcontraction(tensorproduct(diag(*[S.One/i for i in coeff_array]), array), (1, 2))
+            # Remove coefficients of base vector:
+            coeff_index = [0] + [slice(None) for i in range(len(indices))]
+            for i, coeff in enumerate(coeff_array):
+                coeff_index[0] = i
+                array[tuple(coeff_index)] /= coeff
             if -varindex in indices:
                 pos = indices.index(-varindex)
                 array = tensorcontraction(array, (0, pos+1))
