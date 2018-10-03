@@ -1135,9 +1135,9 @@ class MatrixEigen(MatrixSubspaces):
             the particular function as simplification method.
 
         rational : bool, optional
-            Since the roots routine doesn't always work well with Floats,
-            they will be replaced with Rationals before calling that
-            routine. If this is not desired, set flag ``rational`` to False.
+            If it is set to ``True``, every floating point numbers would be
+            replaced to rationals before the roots routine. It can solve some
+            issues of ``roots`` routine not working well with floats.
         """
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
