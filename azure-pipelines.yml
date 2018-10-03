@@ -203,7 +203,7 @@ jobs:
       createCustomEnvironment: true
       createOptions: "-c conda-forge"
       environmentName: 'sage'
-      packageSpecs: sage mpmath ipython>=5.5.0,<6
+      packageSpecs: sage mpmath ipython>=5.5.0,<6 python=3
 
   - script: |
       python -We:invalid -m compileall -f sympy/;
