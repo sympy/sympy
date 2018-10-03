@@ -1147,6 +1147,12 @@ class MatrixEigen(MatrixSubspaces):
 
             If it is set to ``False``, the result will be in the form of a
             dictionary.
+
+        See Also
+        ========
+
+        charpoly
+        eigenvects
         """
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
