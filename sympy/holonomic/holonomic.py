@@ -30,7 +30,8 @@ from sympy.polys.polyclasses import DMF
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly
 
-from sympy.core import Basic,Add
+from sympy.core import Add
+from sympy.interactive.printing import Printable
 
 def DifferentialOperators(base, generator):
     r"""
@@ -136,7 +137,7 @@ class DifferentialOperatorAlgebra(object):
             return False
 
 
-class DifferentialOperator(Basic):
+class DifferentialOperator(Printable):
     """
     Differential Operators are elements of Weyl Algebra. The Operators
     are defined by a list of polynomials in the base ring and the

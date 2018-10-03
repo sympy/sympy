@@ -11,6 +11,10 @@ from sympy import preview
 from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
 
+""" empty class for marked as printable types """
+class Printable(object):
+    pass
+
 
 def _init_python_printing(stringify_func, **settings):
     """Setup printing in Python interactive session. """
@@ -123,8 +127,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
             elif isinstance(o, bool):
                 return False
-            # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
-            # to use here, than these explicit imports.
+            elif hasattr(o, '_latex') :
+                return True
             elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic, NDimArray)):
                 return True
             elif isinstance(o, (float, integer_types)) and print_builtin:
@@ -194,7 +198,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         from sympy.physics.vector import Vector, Dyadic
         from sympy.tensor.array import NDimArray
 
-        printable_types = [Basic, MatrixBase, float, tuple, list, set,
+        printable_types = [Printable , Basic, MatrixBase, float, tuple, list, set,
                 frozenset, dict, Vector, Dyadic, NDimArray] + list(integer_types)
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
