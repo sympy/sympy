@@ -1118,7 +1118,7 @@ class MatrixEigen(MatrixSubspaces):
         the characteristic polynomial.
 
         Eigenvalues of a matrix `A` can be computed by solving a matrix
-        equation `det(A - \lambda I) = 0`
+        equation `\det(A - \lambda I) = 0`
 
         Parameters
         ==========
