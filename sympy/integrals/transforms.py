@@ -158,7 +158,7 @@ class IntegralTransform(Function):
         return self._as_integral(self.function, self.function_variable,
                                  self.transform_variable)
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         return self.as_integral
 
 from sympy.solvers.inequalities import _solve_inequality

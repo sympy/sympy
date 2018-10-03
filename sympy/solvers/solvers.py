@@ -253,7 +253,7 @@ def checksol(f, symbol, sol=None, **flags):
             if f not in (S.true, S.false):
                 return
         else:
-            f = Add(f.lhs, -f.rhs, evaluate=False)
+            f = f.rewrite(Add, evaluate=False)
 
     if isinstance(f, BooleanAtom):
         return bool(f)
@@ -973,7 +973,7 @@ def solve(f, *symbols, **flags):
                             is True or False.
                         '''))
                 else:
-                    fi = Add(fi.lhs, -fi.rhs, evaluate=False)
+                    fi = fi.rewrite(Add, evaluate=False)
             f[i] = fi
 
         if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
@@ -1432,7 +1432,7 @@ def _solve(f, *symbols, **flags):
 
     # /!\ capture this flag then set it to False so that no checking in
     # recursive calls will be done; only the final answer is checked
-    flags['check']=checkdens = check = flags.pop('check', True)
+    flags['check'] = checkdens = check = flags.pop('check', True)
 
     # build up solutions if f is a Mul
     if f.is_Mul:
@@ -2667,6 +2667,8 @@ def _tsolve(eq, sym, **flags):
                 return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
             elif lhs.base == 0 and rhs == 1:
                 return _solve(lhs.exp, sym, **flags)
+            else:
+                raise NotImplementedError
 
         elif lhs.is_Mul and rhs.is_positive:
             llhs = expand_log(log(lhs))

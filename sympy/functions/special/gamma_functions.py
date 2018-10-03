@@ -169,10 +169,10 @@ class gamma(Function):
         elif x.is_noninteger:
             return floor(x).is_even
 
-    def _eval_rewrite_as_tractable(self, z):
+    def _eval_rewrite_as_tractable(self, z, **kwargs):
         return exp(loggamma(z))
 
-    def _eval_rewrite_as_factorial(self, z):
+    def _eval_rewrite_as_factorial(self, z, **kwargs):
         return factorial(z - 1)
 
     def _eval_nseries(self, x, n, logx):
@@ -316,10 +316,10 @@ class lowergamma(Function):
         if not z in (S.Zero, S.NegativeInfinity):
             return self.func(self.args[0].conjugate(), z.conjugate())
 
-    def _eval_rewrite_as_uppergamma(self, s, x):
+    def _eval_rewrite_as_uppergamma(self, s, x, **kwargs):
         return gamma(s) - uppergamma(s, x)
 
-    def _eval_rewrite_as_expint(self, s, x):
+    def _eval_rewrite_as_expint(self, s, x, **kwargs):
         from sympy import expint
         if s.is_integer and s.is_nonpositive:
             return self
@@ -457,10 +457,10 @@ class uppergamma(Function):
         if not z in (S.Zero, S.NegativeInfinity):
             return self.func(self.args[0].conjugate(), z.conjugate())
 
-    def _eval_rewrite_as_lowergamma(self, s, x):
+    def _eval_rewrite_as_lowergamma(self, s, x, **kwargs):
         return gamma(s) - lowergamma(s, x)
 
-    def _eval_rewrite_as_expint(self, s, x):
+    def _eval_rewrite_as_expint(self, s, x, **kwargs):
         from sympy import expint
         return expint(1 - s, x)*x**s
 
@@ -722,13 +722,13 @@ class polygamma(Function):
 
         return polygamma(n, z)
 
-    def _eval_rewrite_as_zeta(self, n, z):
+    def _eval_rewrite_as_zeta(self, n, z, **kwargs):
         if n >= S.One:
             return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
         else:
             return self
 
-    def _eval_rewrite_as_harmonic(self, n, z):
+    def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
         if n.is_integer:
             if n == S.Zero:
                 return harmonic(z - 1) - S.EulerGamma
@@ -920,7 +920,7 @@ class loggamma(Function):
         # It is very inefficient to first add the order and then do the nseries
         return (r + Add(*l))._eval_nseries(x, n, logx) + o
 
-    def _eval_rewrite_as_intractable(self, z):
+    def _eval_rewrite_as_intractable(self, z, **kwargs):
         return log(gamma(z))
 
     def _eval_is_real(self):
