@@ -1129,8 +1129,10 @@ class MatrixEigen(MatrixSubspaces):
             If it is set to ``True``, it attempts to return the most
             simplified form of expressions returned by applying default
             simplification method in every routine.
+
             If it is set to ``False``, it will skip simplification in this
             particular routine to save computation resources.
+
             If a function is passed to, it will attempt to apply
             the particular function as simplification method.
 
