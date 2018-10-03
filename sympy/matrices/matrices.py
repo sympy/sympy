@@ -1117,6 +1117,9 @@ class MatrixEigen(MatrixSubspaces):
         """Return eigenvalues using the Berkowitz agorithm to compute
         the characteristic polynomial.
 
+        Eigenvalues of a matrix `A` can be computed by solving a matrix
+        equation `det(A - \lambda I) = 0`
+
         Parameters
         ==========
 
