@@ -384,15 +384,56 @@ class MatrixDeterminant(MatrixCommon):
                          lambda i, j: self.cofactor(i, j, method))
 
     def det(self, method="bareiss", iszerofunc=None):
-        """Computes the determinant of a matrix.  If the matrix
-        is at most 3x3, a hard-coded formula is used.
-        Otherwise, the determinant using the method `method`.
+        """Computes the determinant of a matrix.
 
+        Parameters
+        ==========
 
-        Possible values for "method":
-          bareis
-          berkowitz
-          lu
+        method : string, optional
+            Specifies the algorithm used for computing the matrix determinant.
+
+            If the matrix is at most 3x3, a hard-coded formula is used and the
+            specified method is ignored. Otherwise, it defaults to
+            ``'bareiss'``.
+
+            If it is set to ``'bareiss'``, Bareiss' fraction-free algorithm will
+            be used.
+
+            If it is set to ``'berkowitz'``, Berkowitz' algorithm will be used.
+
+            Otherwise, if it is set to ``'lu'``, LU decomposition will be used.
+
+            .. note::
+                For backward compatibility, legacy keys like "bareis" and
+                "det_lu" can still be used to indicate the corresponding
+                methods.
+                And the keys are also case-insensitive for now. However, it is
+                suggested to use the precise keys for specifying the method.
+
+        iszerofunc : FunctionType or None, optional
+            If it is set to ``None``, it will be defaulted to ``_iszero`` if the
+            method is set to ``'bareiss'``, and ``_is_zero_after_expand_mul`` if
+            the method is set to ``'lu'``.
+
+            It can also accept any user-specified zero testing function, if it
+            is formatted as a function which accepts a single symbolic argument
+            and returns ``True`` if it is tested as zero and ``False`` if it
+            tested as non-zero, and also ``None`` if it is undecidable.
+
+        Returns
+        =======
+
+        det : Basic
+            Result of determinant.
+
+        Raises
+        ======
+
+        ValueError
+            If unrecognized keys are given for ``method`` or ``iszerofunc``.
+
+        NonSquareMatrixError
+            If attempted to calculate determinant from a non-square matrix.
         """
 
         # sanitize `method`
