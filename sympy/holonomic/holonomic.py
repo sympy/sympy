@@ -372,7 +372,7 @@ class DifferentialOperator(Basic):
         base = self.parent.base
         return x0 in roots(base.to_sympy(self.listofpoly[-1]), self.x)
 
-    def _latex(self,expr):
+    def _latex(self,printer):
         listofpoly = self.listofpoly
         print_str = ''
         for i,v in enumerate(listofpoly):

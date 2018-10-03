@@ -7038,7 +7038,7 @@ class GroebnerBasis(Basic):
         """
         return self.reduce(poly)[1] == 0
 
-    def _latex(self,expr):
+    def _latex(self,printer):
         pls = ",".join([ latex(p.as_expr()) for p in self.polys])
         gens = ",".join( map(latex,self.gens) )
         dm = latex(self.domain)
