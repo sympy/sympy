@@ -56,6 +56,8 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
+from sympy.printing import latex
+
 from sympy.core.compatibility import iterable, range, ordered
 
 @public
@@ -7035,6 +7037,13 @@ class GroebnerBasis(Basic):
 
         """
         return self.reduce(poly)[1] == 0
+
+    def _latex(self,expr):
+        pls = ",".join([ latex(p.as_expr()) for p in self.polys])
+        gens = ",".join( map(latex,self.gens) )
+        dm = latex(self.domain)
+        order = latex(self.order)
+        return "GroebnerBasis([%s],%s,domain=%s,order=%s)" % (pls,gens,dm,order)
 
 
 @public

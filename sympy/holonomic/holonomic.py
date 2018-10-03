@@ -7,7 +7,7 @@ from __future__ import print_function, division
 
 from sympy import (Symbol, diff, S, Dummy, Order, rf, meijerint, I,
     solve, limit, Float, nsimplify, gamma)
-from sympy.printing import sstr
+from sympy.printing import sstr,latex
 from sympy.core.compatibility import range, ordered
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.core.sympify import sympify
@@ -30,6 +30,7 @@ from sympy.polys.polyclasses import DMF
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly
 
+from sympy.core import Basic,Add
 
 def DifferentialOperators(base, generator):
     r"""
@@ -135,7 +136,7 @@ class DifferentialOperatorAlgebra(object):
             return False
 
 
-class DifferentialOperator(object):
+class DifferentialOperator(Basic):
     """
     Differential Operators are elements of Weyl Algebra. The Operators
     are defined by a list of polynomials in the base ring and the
@@ -371,6 +372,32 @@ class DifferentialOperator(object):
         base = self.parent.base
         return x0 in roots(base.to_sympy(self.listofpoly[-1]), self.x)
 
+    def _latex(self,expr):
+        listofpoly = self.listofpoly
+        print_str = ''
+        for i,v in enumerate(listofpoly):
+            if v == self.parent.base.zero:
+                continue
+
+            lv = latex(v)
+            if v == self.parent.base.one:
+                lv = ""
+            elif (not v.is_monomial) or lv.strip()[0] == "-" :
+                lv = '(' + lv + ')'
+
+            if i == 0:
+                print_str += lv
+                continue
+
+            if print_str:
+                print_str += ' + '
+
+            if i == 1:
+                print_str += lv + '%s' %(self.parent.gen_symbol)
+                continue
+
+            print_str += lv +  '%s^' %(self.parent.gen_symbol) + latex(i)
+        return print_str
 
 class HolonomicFunction(object):
     r"""
