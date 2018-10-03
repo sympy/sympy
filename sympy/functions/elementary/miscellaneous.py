@@ -606,7 +606,7 @@ class MinMaxBase(Expr, LatticeOp):
             l.append(df * da)
         return Add(*l)
 
-    def _eval_rewrite_as_Abs(self, *args):
+    def _eval_rewrite_as_Abs(self, *args, **kwargs):
         from sympy.functions.elementary.complexes import Abs
         s = (args[0] + self.func(*args[1:]))/2
         d = abs(args[0] - self.func(*args[1:]))/2
@@ -742,7 +742,7 @@ class Max(MinMaxBase, Application):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Heaviside(self, *args):
+    def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
@@ -807,7 +807,7 @@ class Min(MinMaxBase, Application):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Heaviside(self, *args):
+    def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])

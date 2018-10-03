@@ -1232,7 +1232,7 @@ class Pow(Expr):
         else:
             return True
 
-    def _eval_rewrite_as_exp(self, base, expo):
+    def _eval_rewrite_as_exp(self, base, expo, **kwargs):
         from sympy import exp, log, I, arg
 
         if base.is_zero or base.has(exp) or expo.has(exp):

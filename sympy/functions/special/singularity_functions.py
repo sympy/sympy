@@ -182,7 +182,7 @@ class SingularityFunction(Function):
         elif n.is_nonnegative:
             return Piecewise(((x - a)**n, (x - a) > 0), (0, True))
 
-    def _eval_rewrite_as_Heaviside(self, *args):
+    def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
         '''
         Rewrites a Singularity Function expression using Heavisides and DiracDeltas.
 
