@@ -505,6 +505,9 @@ class Pow(Expr):
             return check.is_Integer
 
     def _eval_is_real(self):
+        if self.is_number is True:
+            return self.evalf().is_real
+
         from sympy import arg, exp, log, Mul
         real_b = self.base.is_real
         if real_b is None:

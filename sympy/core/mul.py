@@ -1175,6 +1175,8 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_real(self):
+        if self.is_number is True:
+            return self.evalf().is_real
         return self._eval_real_imag(True)
 
     def _eval_real_imag(self, real):
