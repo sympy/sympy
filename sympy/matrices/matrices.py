@@ -1167,8 +1167,7 @@ class MatrixEigen(MatrixSubspaces):
         See Also
         ========
 
-        charpoly
-        eigenvects
+        charpoly, eigenvects
 
         Notes
         =====
