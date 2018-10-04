@@ -39,13 +39,23 @@ jobs:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
+      PyPy:
+        python.version: '2.7' # dummy
+        pypy: "true"
     maxParallel: 4
 
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-      architecture: 'x64'
+  - ${{ if neq(pypy, 'true') }}:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(python.version)'
+        architecture: 'x64'
+
+  - ${{ if eq(pypy, 'true') }}:
+    - script: |
+        virtualenv -p /usr/bin/pypy ~/.venv;
+        . ~/.venv/bin/activate
+    displayName: 'Create PyPy virtualenv'
 
   - script: python -m pip install --upgrade pip && pip install mpmath
     displayName: 'Install dependencies'
