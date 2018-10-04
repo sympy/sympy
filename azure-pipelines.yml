@@ -31,16 +31,21 @@ jobs:
     matrix:
       Python27:
         python.version: '2.7'
+        pypy: "false"
       Python34:
         python.version: '3.4'
+        pypy: "false"
       Python35:
         python.version: '3.5'
+        pypy: "false"
       Python36:
         python.version: '3.6'
+        pypy: "false"
       Python37:
         python.version: '3.7'
+        pypy: "false"
       PyPy:
-        python.version: '2.7' # dummy
+        python.version: 'none'
         pypy: "true"
     maxParallel: 4
 
