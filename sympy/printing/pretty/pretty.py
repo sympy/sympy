@@ -1056,12 +1056,8 @@ class PrettyPrinter(Printer):
                 top = stringPict(*top.right(" "*indpic.width()))
             last_val = index.is_up
 
-        if not no_top:
-            pict = prettyForm(*center.above(top))
-        else:
-            pict = center
-        if not no_bot:
-            pict = prettyForm(*pict.below(bot))
+        pict = prettyForm(*center.above(top))
+        pict = prettyForm(*pict.below(bot))
         return pict
 
     def _print_Tensor(self, expr):
@@ -1101,6 +1097,35 @@ class PrettyPrinter(Printer):
         if not expr.is_up:
             sym = -sym
         return self._print(sym)
+
+    def _print_PartialDerivative(self, deriv):
+        if self._use_unicode:
+            deriv_symbol = U('PARTIAL DIFFERENTIAL')
+        else:
+            deriv_symbol = r'd'
+        x = None
+
+        for variable in reversed(deriv.variables):
+            s = self._print(variable)
+            ds = prettyForm(*s.left(deriv_symbol))
+
+            if x is None:
+                x = ds
+            else:
+                x = prettyForm(*x.right(' '))
+                x = prettyForm(*x.right(ds))
+
+        f = prettyForm(
+            binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
+
+        pform = prettyForm(deriv_symbol)
+
+        pform = prettyForm(*pform.below(stringPict.LINE, x))
+        pform.baseline = pform.baseline + 1
+        pform = prettyForm(*stringPict.next(pform, f))
+        pform.binding = prettyForm.MUL
+
+        return pform
 
     def _print_Piecewise(self, pexpr):
 
