@@ -224,7 +224,6 @@ jobs:
     displayName: 'Install SymPy'
 
   - script: |
-      source /usr/envs/sage/bin/sage-env
       ./bin/test_travis.sh
     displayName: 'Sage tests'
     env:
