@@ -220,4 +220,6 @@ jobs:
     env:
       TEST_SAGE: "true"
       AZURE: "true"
+      # remove once https://github.com/Microsoft/vsts-tasks/issues/8504 is fixed
       SAGE_ROOT: "/usr/envs/sage/"
+      SAGE_LOCAL: "/usr/envs/sage/"
