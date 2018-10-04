@@ -45,16 +45,16 @@ jobs:
     maxParallel: 4
 
   steps:
-  - ${{ if neq(pypy, 'true') }}:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '$(python.version)'
-        architecture: 'x64'
+  - task: UsePythonVersion@0
+    condition: ne(pypy, "true")
+    inputs:
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
 
-  - ${{ if eq(pypy, 'true') }}:
-    - script: |
-        virtualenv -p /usr/bin/pypy ~/.venv;
-        . ~/.venv/bin/activate
+  - script: |
+      virtualenv -p /usr/bin/pypy ~/.venv;
+      . ~/.venv/bin/activate
+    condition: eq(pypy, "true")
     displayName: 'Create PyPy virtualenv'
 
   - script: python -m pip install --upgrade pip && pip install mpmath
