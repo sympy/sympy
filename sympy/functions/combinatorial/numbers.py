@@ -70,8 +70,9 @@ class carmichael(Function):
 
     A Carmichael number will pass a Fermat primality test to every base b relatively prime to the number,
     even though it is not actually prime. This makes tests based on Fermat's Little Theorem less effective than
-    strong probable prime tests such as the Baillie-PSW primality test and the Miller–Rabin primality test.
-    mr functions given in sympy/sympy/ntheory/primetest.py will go wrong for each and every carmichael number.
+    strong probable prime tests such as the Baillie-PSW primality test and the Miller-Rabin primality test.
+    mr functions given in sympy/sympy/ntheory/primetest.py will produce wrong results for each and every
+    carmichael number.
 
     Examples
     ========
@@ -99,21 +100,18 @@ class carmichael(Function):
     """
 
     @staticmethod
-    # returns true if n is a perfect square
     def is_perfect_square(n):
-        root = int(sqrt(n))
-
-        if root ** 2 == n:
+        from sympy.ntheory.primetest import is_square
+        if is_square(n):
             return True
-        return False
+        else:
+            return False
 
     @staticmethod
-    # returns true if p divides n
     def divides(p, n):
         return n % p == 0
 
     @staticmethod
-    # returns true if n is prime
     def is_prime(n):
         from sympy import sieve
 
@@ -133,7 +131,6 @@ class carmichael(Function):
         return True
 
     @staticmethod
-    # returns true if n is a Carmichael number
     def is_carmichael(n):
         if n >= 0:
             if (n == 1) or (carmichael.is_prime(n)) or (n % 2 == 0):
@@ -159,7 +156,6 @@ class carmichael(Function):
             raise ValueError('The provided number must be greater than or equal to 0')
 
     @staticmethod
-    # returns a set object of Carmichael numbers in [x, y), where x and y are non-negative integers and x <= y
     def find_carmichael_numbers_in_range(x, y):
         if 0 <= x <= y:
             if x % 2 == 0:
@@ -171,7 +167,6 @@ class carmichael(Function):
             raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
 
     @staticmethod
-    # returns a list of first n Carmichael numbers.
     def find_first_n_carmichaels(n):
         i = 1
         carmichaels = list()
