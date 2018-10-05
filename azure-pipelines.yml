@@ -47,7 +47,6 @@ jobs:
       PyPy:
         python.version: 'none'
         pypy: "true"
-    maxParallel: 6
 
   steps:
   - task: UsePythonVersion@0
@@ -92,7 +91,6 @@ jobs:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
-    maxParallel: 5
 
   steps:
   - task: UsePythonVersion@0
@@ -132,7 +130,6 @@ jobs:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
-    maxParallel: 5
 
   steps:
   - task: UsePythonVersion@0
@@ -165,7 +162,6 @@ jobs:
         python.version: '2.7'
       Python36:
         python.version: '3.6'
-    maxParallel: 2
 
   steps:
   # Remove this when https://github.com/Microsoft/vsts-tasks/issues/8299 is
@@ -205,7 +201,6 @@ jobs:
     matrix:
       Python36:
         python.version: '3.6'
-    maxParallel: 1
 
   steps:
   # Remove this when https://github.com/Microsoft/vsts-tasks/issues/8299 is
