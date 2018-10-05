@@ -58,7 +58,7 @@ jobs:
   - script: |
       set -x
       set -e
-      sudo install -d -m 0777 /opt/pypy3
+      sudo install -d -m 0777 /opt/pypy3/site-packages
       pypy3 --version
       pypy3 -m ensurepip
       pypy3 -m pip install --upgrade pip
