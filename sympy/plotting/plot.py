@@ -237,7 +237,17 @@ class Plot(object):
         Plot object containing:
         [0]: cartesian line: x**2 for x over (-10.0, 10.0)
         [1]: cartesian line: x for x over (-10.0, 10.0)
+	
+	    .. plot::
 
+	       >>> from sympy import symbols
+           >>> from sympy.plotting import plot
+           >>> x = symbols('x')
+           >>> p1 = plot(x*x, show = False)
+           >>> p2 = plot(x, show = False)
+           >>> p1.append(p2[0])
+           >>> p1.show()	
+	
         See Also
         ========
         extend
@@ -1864,58 +1874,4 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
 
             for i in range(len(free_symbols) - nb_of_free_symbols):
                 ranges.append(Tuple(Dummy()) + default_range)
-            plots = [exprs + Tuple(*ranges)]
-        return plots
-
-    if isinstance(args[0], Expr) or (isinstance(args[0], Tuple) and
-                                     len(args[0]) == expr_len and
-                                     expr_len != 3):
-        # Cannot handle expressions with number of expression = 3. It is
-        # not possible to differentiate between expressions and ranges.
-        #Series of plots with same range
-        for i in range(len(args)):
-            if isinstance(args[i], Tuple) and len(args[i]) != expr_len:
-                break
-            if not isinstance(args[i], Tuple):
-                args[i] = Tuple(args[i])
-        else:
-            i = len(args) + 1
-
-        exprs = args[:i]
-        assert all(isinstance(e, Expr) for expr in exprs for e in expr)
-        free_symbols = list(set().union(*[e.free_symbols for expr in exprs
-                                        for e in expr]))
-
-        if len(free_symbols) > nb_of_free_symbols:
-            raise ValueError("The number of free_symbols in the expression "
-                             "is greater than %d" % nb_of_free_symbols)
-        if len(args) == i + nb_of_free_symbols and isinstance(args[i], Tuple):
-            ranges = Tuple(*[range_expr for range_expr in args[
-                           i:i + nb_of_free_symbols]])
-            plots = [expr + ranges for expr in exprs]
-            return plots
-        else:
-            #Use default ranges.
-            default_range = Tuple(-10, 10)
-            ranges = []
-            for symbol in free_symbols:
-                ranges.append(Tuple(symbol) + default_range)
-
-            for i in range(nb_of_free_symbols - len(free_symbols)):
-                ranges.append(Tuple(Dummy()) + default_range)
-            ranges = Tuple(*ranges)
-            plots = [expr + ranges for expr in exprs]
-            return plots
-
-    elif isinstance(args[0], Tuple) and len(args[0]) == expr_len + nb_of_free_symbols:
-        #Multiple plots with different ranges.
-        for arg in args:
-            for i in range(expr_len):
-                if not isinstance(arg[i], Expr):
-                    raise ValueError("Expected an expression, given %s" %
-                                     str(arg[i]))
-            for i in range(nb_of_free_symbols):
-                if not len(arg[i + expr_len]) == 3:
-                    raise ValueError("The ranges should be a tuple of "
-                                     "length 3, got %s" % str(arg[i + expr_len]))
-        return args
+           
