@@ -50,7 +50,7 @@ jobs:
 
   steps:
   - task: UsePythonVersion@0
-    condition: ne('$(pypy)', 'true')
+    condition: eq('$(pypy)', 'false')
     inputs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
