@@ -400,7 +400,7 @@ class Function(Application, Expr):
 
     @property
     def _diff_wrt(self):
-        """Allow derivatives wrt functions.
+        """Don't allow derivatives wrt defined functions.
 
         Examples
         ========
@@ -412,7 +412,8 @@ class Function(Application, Expr):
         True
 
         """
-        return True
+        return False
+        
 
     @cacheit
     def __new__(cls, *args, **options):
@@ -799,6 +800,11 @@ class AppliedUndef(Function):
         args = [arg._sage_() for arg in self.args]
         func = sage.function(fname)(*args)
         return func
+
+    @property
+    def _diff_wrt(self):
+        """Allow derivatives wrt to undefined functions."""
+        return True
 
 class UndefinedFunction(FunctionClass):
     """
