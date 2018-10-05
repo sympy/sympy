@@ -56,7 +56,7 @@ jobs:
       architecture: 'x64'
 
   - script: |
-      virtualenv -p /usr/bin/pypy ~/.venv;
+      pypy -m venv ~/.venv;
       . ~/.venv/bin/activate
     condition: eq(variables.pypy, true)
     displayName: 'Create PyPy virtualenv'
