@@ -238,7 +238,13 @@ class Plot(object):
         [0]: cartesian line: x**2 for x over (-10.0, 10.0)
         [1]: cartesian line: x for x over (-10.0, 10.0)
         
-        .. image:: plotOutputs/append.png
+        .. plot::
+
+           import matplotlib.pyplot as plt
+           import matplotlib.image as mpimg
+           import numpy as np
+           img = mpimg.imread('/sympy/doc/src/modules/plotOutputs/append.png')
+           imgplot = plt.imshow(img)
         
         See Also
         ========
