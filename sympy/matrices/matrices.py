@@ -1173,7 +1173,7 @@ class MatrixEigen(MatrixSubspaces):
         =====
 
         Eigenvalues of a matrix `A` can be computed by solving a matrix
-        equation `\det(A - \lambda I) = 0`
+        equation `\\det(A - \\lambda I) = 0`
         """
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
