@@ -59,7 +59,7 @@ jobs:
   - script: |
       virtualenv -p /usr/bin/pypy ~/.venv;
       . ~/.venv/bin/activate
-    condition: eq(pypy, "true")
+    condition: eq('$(pypy)', 'true')
     displayName: 'Create PyPy virtualenv'
 
   - script: python -m pip install --upgrade pip && pip install mpmath
