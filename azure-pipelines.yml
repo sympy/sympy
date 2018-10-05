@@ -29,19 +29,19 @@ jobs:
     vmImage: 'Ubuntu 16.04'
   strategy:
     matrix:
-      Python27:
+      Python 2.7:
         python.version: '2.7'
         pypy: "false"
-      Python34:
+      Python 3.4:
         python.version: '3.4'
         pypy: "false"
-      Python35:
+      Python 3.5:
         python.version: '3.5'
         pypy: "false"
-      Python36:
+      Python 3.6:
         python.version: '3.6'
         pypy: "false"
-      Python37:
+      Python 3.7:
         python.version: '3.7'
         pypy: "false"
       PyPy:
@@ -81,34 +81,34 @@ jobs:
     vmImage: 'Ubuntu 16.04'
   strategy:
     matrix:
-      Python27 Split 1/2:
+      Python 2.7 Split 1/2:
         python.version: '2.7'
         SPLIT: '1/2'
-      Python34 Split 1/2:
+      Python 3.4 Split 1/2:
         python.version: '3.4'
         SPLIT: '1/2'
-      Python35 Split 1/2:
+      Python 3.5 Split 1/2:
         python.version: '3.5'
         SPLIT: '1/2'
-      Python36 Split 1/2:
+      Python 3.6 Split 1/2:
         python.version: '3.6'
         SPLIT: '1/2'
-      Python37 Split 1/2:
+      Python 3.7 Split 1/2:
         python.version: '3.7'
         SPLIT: '1/2'
-      Python27 Split 2/2:
+      Python 2.7 Split 2/2:
         python.version: '2.7'
         SPLIT: '2/2'
-      Python34 Split 2/2:
+      Python 3.4 Split 2/2:
         python.version: '3.4'
         SPLIT: '2/2'
-      Python35 Split 2/2:
+      Python 3.5 Split 2/2:
         python.version: '3.5'
         SPLIT: '2/2'
-      Python36 Split 2/2:
+      Python 3.6 Split 2/2:
         python.version: '3.6'
         SPLIT: '2/2'
-      Python37 Split 2/2:
+      Python 3.7 Split 2/2:
         python.version: '3.7'
         SPLIT: '2/2'
 
@@ -139,9 +139,9 @@ jobs:
     vmImage: 'Ubuntu 16.04'
   strategy:
     matrix:
-      Python27:
+      Python 2.7:
         python.version: '2.7'
-      Python36:
+      Python 3.6:
         python.version: '3.6'
 
   steps:
@@ -180,7 +180,7 @@ jobs:
     vmImage: 'Ubuntu 16.04'
   strategy:
     matrix:
-      Python36:
+      Python 3.6:
         python.version: '3.6'
 
   steps:
