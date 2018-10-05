@@ -2,7 +2,7 @@ import string
 
 from sympy import (
     Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
-    expand_func, diff, EulerGamma, cancel, re, im, Product)
+    expand_func, diff, EulerGamma, cancel, re, im, Product, carmichael)
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
@@ -14,6 +14,19 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.numbers import GoldenRatio
 
 x = Symbol('x')
+
+
+def test_carmichael():
+    assert carmichael.find_carmichael_numbers_in_range(0, 561) == []
+    assert carmichael.find_carmichael_numbers_in_range(561, 562) == [561]
+    assert carmichael.find_carmichael_numbers_in_range(561, 1105) == carmichael.find_carmichael_numbers_in_range(561,
+                                                                                                                 562)
+    assert carmichael.find_first_n_carmichaels(5) == [561, 1105, 1729, 2465, 2821]
+    assert carmichael.is_prime(2821) == False
+    assert carmichael.is_prime(2465) == False
+    assert carmichael.is_prime(1729) == False
+    assert carmichael.is_prime(1105) == False
+    assert carmichael.is_prime(561) == False
 
 
 def test_bernoulli():
