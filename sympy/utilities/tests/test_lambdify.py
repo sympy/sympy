@@ -839,6 +839,19 @@ def test_issue_12092():
     f = implemented_function('f', lambda x: x**2)
     assert f(f(2)).evalf() == Float(16)
 
+def test_issue_14911():
+    class Variable(sympy.Symbol):
+        def _sympystr(self, printer):
+            return printer.doprint(self.name)
+
+        _lambdacode = _sympystr
+        _numpycode = _sympystr
+
+    x = Variable('x')
+    y = 2 * x
+    code = LambdaPrinter().doprint(y)
+    assert code.replace(' ', '') == '2*x'
+
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
     assert lambdify((x, y, z), ITE(x, y, z))(False, 5, 3) == 3
