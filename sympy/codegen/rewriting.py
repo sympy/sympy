@@ -221,7 +221,7 @@ def create_expand_pow_optimization(limit):
 
     """
     return ReplaceOptim(
-        lambda e: e.is_Pow and e.base.is_symbol and e.exp.is_integer and e.exp <= limit,
+        lambda e: e.is_Pow and e.base.is_symbol and e.exp.is_integer and e.exp.is_nonnegative and e.exp <= limit,
         lambda p: Mul(*([p.base]*p.exp), evaluate=False)
     )
 
