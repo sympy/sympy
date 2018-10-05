@@ -76,21 +76,41 @@ jobs:
     env:
       TEST_DOCTESTS: "true"
 
-- job: 'Tests_split_1_2'
+- job: 'Tests'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
     matrix:
-      Python27:
+      Python27 Split 1/2:
         python.version: '2.7'
-      Python34:
+        SPLIT:'1/2'
+      Python34 Split 1/2:
         python.version: '3.4'
-      Python35:
+        SPLIT:'1/2'
+      Python35 Split 1/2:
         python.version: '3.5'
-      Python36:
+        SPLIT:'1/2'
+      Python36 Split 1/2:
         python.version: '3.6'
-      Python37:
+        SPLIT:'1/2'
+      Python37 Split 1/2:
         python.version: '3.7'
+        SPLIT:'1/2'
+      Python27 Split 2/2:
+        python.version: '2.7'
+        SPLIT:'2/2'
+      Python34 Split 2/2:
+        python.version: '3.4'
+        SPLIT:'2/2'
+      Python35 Split 2/2:
+        python.version: '3.5'
+        SPLIT:'2/2'
+      Python36 Split 2/2:
+        python.version: '3.6'
+        SPLIT:'2/2'
+      Python37 Split 2/2:
+        python.version: '3.7'
+        SPLIT:'2/2'
 
   steps:
   - task: UsePythonVersion@0
@@ -112,46 +132,7 @@ jobs:
     displayName: 'tests'
     env:
       TEST_SYMPY: "true"
-      SPLIT: "1/2"
-
-
-- job: 'Tests_split_2_2'
-  pool:
-    vmImage: 'Ubuntu 16.04'
-  strategy:
-    matrix:
-      Python27:
-        python.version: '2.7'
-      Python34:
-        python.version: '3.4'
-      Python35:
-        python.version: '3.5'
-      Python36:
-        python.version: '3.6'
-      Python37:
-        python.version: '3.7'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-      architecture: 'x64'
-
-  - script: python -m pip install --upgrade pip && pip install mpmath
-    displayName: 'Install dependencies'
-
-  - script: |
-      python -We:invalid -m compileall -f sympy/;
-      python -We:invalid setup.py -q install;
-      pip list --format=columns;
-    displayName: 'Install SymPy'
-
-  - script: |
-      ./bin/test_travis.sh
-    displayName: 'tests'
-    env:
-      TEST_SYMPY: "true"
-      SPLIT: "2/2"
+      SPLIT: '$(SPLIT)'
 
 - job: 'Optional_dependencies'
   pool:
