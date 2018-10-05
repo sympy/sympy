@@ -1586,10 +1586,11 @@ class Basic(with_metaclass(ManagedProperties)):
 
         if pattern is None or isinstance(self, pattern):
             if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args)
+                rewritten = getattr(self, rule)(*args, **hints)
                 if rewritten is not None:
                     return rewritten
-        return self.func(*args)
+
+        return self.func(*args) if hints.get('evaluate', True) else self
 
     def _accept_eval_derivative(self, s):
         # This method needs to be overridden by array-like objects

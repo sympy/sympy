@@ -7789,6 +7789,7 @@ def _linear_3eq_order1_type4(x, y, z, t, r, eq):
 
 def sysode_linear_neq_order1(match_):
     sol = _linear_neq_order1_type1(match_)
+    return sol
 
 def _linear_neq_order1_type1(match_):
     r"""

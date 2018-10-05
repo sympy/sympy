@@ -67,7 +67,7 @@ class Trace(Expr):
                 return Trace(self.arg)
 
 
-    def _eval_rewrite_as_Sum(self):
+    def _eval_rewrite_as_Sum(self, **kwargs):
         from sympy import Sum, Dummy
         i = Dummy('i')
         return Sum(self.arg[i, i], (i, 0, self.arg.rows-1)).doit()
