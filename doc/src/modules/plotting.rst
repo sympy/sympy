@@ -78,9 +78,6 @@ Series Classes
 .. autoclass:: sympy.plotting.plot_implicit.ImplicitSeries
    :members:
 
-
-
-
 Pyglet Plotting Module
 ======================
 

@@ -22,9 +22,11 @@ sys.path = ['ext'] + sys.path
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
+
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode',
               'sphinx.ext.mathjax', 'numpydoc', 'sympylive',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
+
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]

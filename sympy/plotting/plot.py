@@ -226,7 +226,8 @@ class Plot(object):
         Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
         second plot's first series object to the first, use the
         ``append`` method, like so:
-
+	
+        .. plot::
         >>> from sympy import symbols
         >>> from sympy.plotting import plot
         >>> x = symbols('x')
@@ -237,7 +238,7 @@ class Plot(object):
         Plot object containing:
         [0]: cartesian line: x**2 for x over (-10.0, 10.0)
         [1]: cartesian line: x for x over (-10.0, 10.0)
-
+	
         See Also
         ========
         extend
