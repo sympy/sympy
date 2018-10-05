@@ -83,34 +83,34 @@ jobs:
     matrix:
       Python27 Split 1/2:
         python.version: '2.7'
-        SPLIT:'1/2'
+        SPLIT: '1/2'
       Python34 Split 1/2:
         python.version: '3.4'
-        SPLIT:'1/2'
+        SPLIT: '1/2'
       Python35 Split 1/2:
         python.version: '3.5'
-        SPLIT:'1/2'
+        SPLIT: '1/2'
       Python36 Split 1/2:
         python.version: '3.6'
-        SPLIT:'1/2'
+        SPLIT: '1/2'
       Python37 Split 1/2:
         python.version: '3.7'
-        SPLIT:'1/2'
+        SPLIT: '1/2'
       Python27 Split 2/2:
         python.version: '2.7'
-        SPLIT:'2/2'
+        SPLIT: '2/2'
       Python34 Split 2/2:
         python.version: '3.4'
-        SPLIT:'2/2'
+        SPLIT: '2/2'
       Python35 Split 2/2:
         python.version: '3.5'
-        SPLIT:'2/2'
+        SPLIT: '2/2'
       Python36 Split 2/2:
         python.version: '3.6'
-        SPLIT:'2/2'
+        SPLIT: '2/2'
       Python37 Split 2/2:
         python.version: '3.7'
-        SPLIT:'2/2'
+        SPLIT: '2/2'
 
   steps:
   - task: UsePythonVersion@0
