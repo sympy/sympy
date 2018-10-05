@@ -31,26 +31,26 @@ jobs:
     matrix:
       Python 2.7:
         python.version: '2.7'
-        pypy: 'false'
+        pypy: false
       Python 3.4:
         python.version: '3.4'
-        pypy: 'false'
+        pypy: false
       Python 3.5:
         python.version: '3.5'
-        pypy: 'false'
+        pypy: false
       Python 3.6:
         python.version: '3.6'
-        pypy: 'false'
+        pypy: false
       Python 3.7:
         python.version: '3.7'
-        pypy: 'false'
+        pypy: false
       PyPy:
         python.version: 'none'
-        pypy: 'true'
+        pypy: true
 
   steps:
   - task: UsePythonVersion@0
-    condition: eq('$(pypy)', 'false')
+    condition: '$(pypy)'
     inputs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
@@ -58,7 +58,7 @@ jobs:
   - script: |
       virtualenv -p /usr/bin/pypy ~/.venv;
       . ~/.venv/bin/activate
-    condition: eq('$(pypy)', 'true')
+    condition: '$(pypy)'
     displayName: 'Create PyPy virtualenv'
 
   - script: python -m pip install --upgrade pip && pip install mpmath
