@@ -6442,7 +6442,8 @@ u("""\
     ascii_str = \
 """\
  i=1,j\n\
-H     \
+H     \n\
+      \
 """
     ucode_str = ascii_str
     assert pretty(expr) == ascii_str
@@ -6452,7 +6453,8 @@ H     \
     ascii_str = \
 """\
  i=1,j=1\n\
-H       \
+H       \n\
+        \
 """
     ucode_str = ascii_str
     assert pretty(expr) == ascii_str
@@ -6462,7 +6464,8 @@ H       \
     ascii_str = \
 """\
  i,j=1\n\
-H     \
+H     \n\
+      \
 """
     ucode_str = ascii_str
 
