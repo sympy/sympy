@@ -4034,7 +4034,7 @@ class MatrixBase(MatrixDeprecated,
                                  'more rows than columns, try M.solve_least_squares(rhs).')
         if method == 'GE':
             return self.gauss_jordan_solve(rhs)[0]
-	else :
+        else:
             return self.inv(method=method) * rhs
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
