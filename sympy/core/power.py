@@ -516,6 +516,7 @@ class Pow(Expr):
                     return return_val
                 if self.is_Number is True:
                     return self.evalf().is_real
+                return return_val
             if self.is_Number is True:
                 return self.evalf().is_real
             else:
@@ -544,6 +545,7 @@ class Pow(Expr):
                 return return_val
             if self.is_Number is True:
                 return self.evalf().is_real
+            return return_val
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary
         if im_b:
@@ -563,6 +565,7 @@ class Pow(Expr):
                         return return_val
                     if self.is_Number is True:
                         return self.evalf().is_real
+                    return return_val
             elif self.base in (-S.ImaginaryUnit, S.ImaginaryUnit):
                 if (self.exp/2).is_integer is False:
                     return False
@@ -582,9 +585,11 @@ class Pow(Expr):
                 return return_val
             if self.is_Number is True:
                 return self.evalf().is_real
+            return return_val
 
         if return_val is None and self.is_Number is True:
             return self.evalf().is_real
+        return return_val
 
     def _eval_is_complex(self):
         if all(a.is_complex for a in self.args):
