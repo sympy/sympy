@@ -57,6 +57,7 @@ jobs:
 
   - script: |
       pypy3 --version
+      pypy3 -m pip install --upgrade pip
       pypy3 -m venv ~/.venv;
       . ~/.venv/bin/activate
     condition: eq(variables.pypy, true)
