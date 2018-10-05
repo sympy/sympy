@@ -47,7 +47,7 @@ jobs:
       PyPy:
         python.version: 'none'
         pypy: "true"
-    maxParallel: 4
+    maxParallel: 6
 
   steps:
   - task: UsePythonVersion@0
