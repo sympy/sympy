@@ -1167,7 +1167,7 @@ class MatrixEigen(MatrixSubspaces):
         See Also
         ========
 
-        sympy.matrices.matrices.MatrixDeterminant.charpoly
+        MatrixDeterminant.charpoly
         eigenvects
 
         Notes
