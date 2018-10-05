@@ -237,7 +237,9 @@ class Plot(object):
         Plot object containing:
         [0]: cartesian line: x**2 for x over (-10.0, 10.0)
         [1]: cartesian line: x for x over (-10.0, 10.0)
-
+        
+        .. image:: plotOutputs/append.png
+        
         See Also
         ========
         extend
