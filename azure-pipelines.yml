@@ -56,6 +56,8 @@ jobs:
       architecture: 'x64'
 
   - script: |
+      set -x
+      set -e
       pypy3 --version
       pypy3 -m pip install --upgrade pip
       pypy3 -m venv ~/.venv;
