@@ -78,11 +78,6 @@ Series Classes
 .. autoclass:: sympy.plotting.plot_implicit.ImplicitSeries
    :members:
 
-Examples
-========
-
-Below are examples of 2D plots.
-
 Pyglet Plotting Module
 ======================
 
