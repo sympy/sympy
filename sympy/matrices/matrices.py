@@ -4016,10 +4016,13 @@ class MatrixBase(MatrixDeprecated,
         t = self.H
         return (t * self).inv(method=method) * t * rhs
 
-    def solve(self, rhs ):
-        """Return solution to self*soln = rhs using Gauss Jordan method.
+    def solve(self, rhs, method='GE'):
+        """Return solution to self*soln = rhs using given inversion method.
 
-
+        For a list of possible inversion methods, see the .inv() docstring.
+	When no method is passed or Gauss Elimination method is choosen in-
+	stead of calculating inverse Gauss jordan elimination method is us-
+	ed to solve.
         """
 
         if not self.is_square:
@@ -4029,8 +4032,10 @@ class MatrixBase(MatrixDeprecated,
             elif self.rows > self.cols:
                 raise ValueError('For over-determined system, M, having '
                                  'more rows than columns, try M.solve_least_squares(rhs).')
-        else:
-            return self.gauss_jordan_solve( rhs )[0]
+	if method == 'GE' :
+	    return self.gauss_jordan_solve( rhs )[0]
+	else :
+            return self.inv(method=method) * rhs
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
               colsep=', ', align='right'):
