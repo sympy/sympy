@@ -4033,7 +4033,7 @@ class MatrixBase(MatrixDeprecated,
                 raise ValueError('For over-determined system, M, having '
                                  'more rows than columns, try M.solve_least_squares(rhs).')
         if method == 'GE':
-	    return self.gauss_jordan_solve( rhs )[0]
+	    return self.gauss_jordan_solve(rhs)[0]
 	else :
             return self.inv(method=method) * rhs
 
