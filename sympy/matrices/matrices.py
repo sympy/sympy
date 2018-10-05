@@ -4020,9 +4020,9 @@ class MatrixBase(MatrixDeprecated,
         """Return solution to self*soln = rhs using given inversion method.
 
         For a list of possible inversion methods, see the .inv() docstring.
-	When no method is passed or Gauss Elimination method is choosen in-
-	stead of calculating inverse Gauss jordan elimination method is us-
-	ed to solve.
+        When no method is passed or Gauss Elimination method is choosen in-
+        stead of calculating inverse Gauss jordan elimination method is us-
+        ed to solve.
         """
 
         if not self.is_square:
