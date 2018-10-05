@@ -4019,7 +4019,7 @@ class MatrixBase(MatrixDeprecated,
     def solve(self, rhs ):
         """Return solution to self*soln = rhs using Gauss Jordan method.
 
-        
+
         """
 
         if not self.is_square:
@@ -4030,7 +4030,7 @@ class MatrixBase(MatrixDeprecated,
                 raise ValueError('For over-determined system, M, having '
                                  'more rows than columns, try M.solve_least_squares(rhs).')
         else:
-            return self.gauss_jordan_solve( rhs )[0] 
+            return self.gauss_jordan_solve( rhs )[0]
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
               colsep=', ', align='right'):
