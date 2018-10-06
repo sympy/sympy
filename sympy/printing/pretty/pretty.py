@@ -1021,19 +1021,29 @@ class PrettyPrinter(Printer):
     _print_MutableDenseNDimArray = _print_NDimArray
     _print_MutableSparseNDimArray = _print_NDimArray
 
-    def _print_Tensor(self, expr):
-        name = expr.args[0].name
-        indices = expr.get_indices()
-
+    def _printer_tensor_indices(self, name, indices, index_map={}):
         center = stringPict(name)
         top = stringPict(" "*center.width())
         bot = stringPict(" "*center.width())
 
         no_top = True
         no_bot = True
+        last_valence = None
+        prev_map = None
 
         for i, index in enumerate(indices):
             indpic = self._print(index.args[0])
+            if ((index in index_map) or prev_map) and last_valence == index.is_up:
+                if index.is_up:
+                    top = prettyForm(*stringPict.next(top, ","))
+                else:
+                    bot = prettyForm(*stringPict.next(bot, ","))
+            if index in index_map:
+                indpic = prettyForm(*stringPict.next(indpic, "="))
+                indpic = prettyForm(*stringPict.next(indpic, self._print(index_map[index])))
+                prev_map = True
+            else:
+                prev_map = False
             if index.is_up:
                 no_top = False
                 top = stringPict(*top.right(indpic))
@@ -1044,10 +1054,22 @@ class PrettyPrinter(Printer):
                 bot = stringPict(*bot.right(indpic))
                 center = stringPict(*center.right(" "*indpic.width()))
                 top = stringPict(*top.right(" "*indpic.width()))
+            last_valence = index.is_up
 
         pict = prettyForm(*center.above(top))
         pict = prettyForm(*pict.below(bot))
         return pict
+
+    def _print_Tensor(self, expr):
+        name = expr.args[0].name
+        indices = expr.get_indices()
+        return self._printer_tensor_indices(name, indices)
+
+    def _print_TensorElement(self, expr):
+        name = expr.expr.args[0].name
+        indices = expr.expr.get_indices()
+        index_map = expr.index_map
+        return self._printer_tensor_indices(name, indices, index_map)
 
     def _print_TensMul(self, expr):
         sign, args = expr._get_args_for_traditional_printer()
