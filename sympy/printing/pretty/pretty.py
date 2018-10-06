@@ -1028,12 +1028,12 @@ class PrettyPrinter(Printer):
 
         no_top = True
         no_bot = True
-        last_val = None
+        last_valence = None
         prev_map = None
 
         for i, index in enumerate(indices):
             indpic = self._print(index.args[0])
-            if ((index in index_map) or prev_map) and last_val == index.is_up:
+            if ((index in index_map) or prev_map) and last_valence == index.is_up:
                 if index.is_up:
                     top = prettyForm(*stringPict.next(top, ","))
                 else:
@@ -1054,7 +1054,7 @@ class PrettyPrinter(Printer):
                 bot = stringPict(*bot.right(indpic))
                 center = stringPict(*center.right(" "*indpic.width()))
                 top = stringPict(*top.right(" "*indpic.width()))
-            last_val = index.is_up
+            last_valence = index.is_up
 
         pict = prettyForm(*center.above(top))
         pict = prettyForm(*pict.below(bot))

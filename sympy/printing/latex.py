@@ -1592,13 +1592,14 @@ class LatexPrinter(Printer):
     _print_MutableDenseNDimArray = _print_NDimArray
     _print_MutableSparseNDimArray = _print_NDimArray
 
-    def _print_Tensor(self, expr):
-        name = expr.args[0].args[0]
-        indices = expr.get_indices()
+    def _printer_tensor_indices(self, name, indices, index_map={}):
         out_str = self._print(name)
         last_valence = None
+        prev_map = None
         for index in indices:
             new_valence = index.is_up
+            if ((index in index_map) or prev_map) and last_valence == new_valence:
+                out_str += ","
             if last_valence != new_valence:
                 if last_valence is not None:
                     out_str += "}"
@@ -1607,10 +1608,27 @@ class LatexPrinter(Printer):
                 else:
                     out_str += "{}_{"
             out_str += self._print(index.args[0])
+            if index in index_map:
+                out_str += "="
+                out_str += self._print(index_map[index])
+                prev_map = True
+            else:
+                prev_map = False
             last_valence = new_valence
         if last_valence is not None:
             out_str += "}"
         return out_str
+
+    def _print_Tensor(self, expr):
+        name = expr.args[0].args[0]
+        indices = expr.get_indices()
+        return self._printer_tensor_indices(name, indices)
+
+    def _print_TensorElement(self, expr):
+        name = expr.expr.args[0].args[0]
+        indices = expr.expr.get_indices()
+        index_map = expr.index_map
+        return self._printer_tensor_indices(name, indices, index_map)
 
     def _print_TensMul(self, expr):
         # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
