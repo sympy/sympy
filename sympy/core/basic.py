@@ -578,7 +578,7 @@ class Basic(with_metaclass(ManagedProperties)):
         rv = self.replace(
             lambda x: hasattr(x, 'dummy_variables'),
             lambda x: can(x))
-        if rv != self and hasattr(rv, 'dummy_variables'):
+        if hasattr(rv, 'dummy_variables'):
             rv = can(rv)
         return rv
 

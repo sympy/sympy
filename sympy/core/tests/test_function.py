@@ -4,7 +4,6 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
         Matrix, Basic)
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.abc import t, w, x, y, z
 from sympy.core.basic import _aresame
 from sympy.core.function import PoleError, _mexpand
 from sympy.core.sympify import sympify
@@ -14,6 +13,7 @@ from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import range
 
+from sympy.abc import t, u, v, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
 
 
@@ -1068,3 +1068,14 @@ def test_issue_15241():
     assert (G + y*Gy).diff(Gy, y) == 1
     assert (y*G + y*Gy*G).diff(G, y) == y*Gy.diff(y) + Gy + 1
     assert (y*G + y*Gy*G).diff(y, G) == y*Gy.diff(y) + Gy + 1
+
+
+def test_as_dummy():
+    assert Lambda(x, x + v).as_dummy(canonical=True
+        ) == Lambda(u, u + v).as_dummy(canonical=True
+        ) == Lambda(u, u + v)
+    assert Subs(x, x, x + v).as_dummy(canonical=True
+        ) == Subs(u, u, x + v).as_dummy(canonical=True
+        ) == Subs(u, u, x + v)
+    assert Subs(x, x, u + v).as_dummy(canonical=True
+        ) == Subs(w, w, u + v)
