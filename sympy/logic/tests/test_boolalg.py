@@ -264,6 +264,9 @@ def test_simplification():
     assert simplify((A & B) | (A & C)) == And(A, Or(B, C))
     assert simplify(And(x, Not(x))) == False
     assert simplify(Or(x, Not(x))) == True
+    assert simplify(And(Eq(x, 0), Eq(x, y))) == And(Eq(x, 0), Eq(y, 0))
+    assert And(Eq(x, 0), Eq(x, y)).simplify() == And(Eq(x, 0), Eq(y, 0))
+    assert And(Eq(x, 0), Ne(x, y)).simplify() == And(Eq(x, 0), Ne(y, 0))
 
 
 def test_bool_map():
@@ -818,4 +821,4 @@ def test_binary_symbols():
 
 
 def test_BooleanFunction_diff():
-    assert And(x, y).diff(x) == Piecewise((0, Eq(False, y)), (1, True))
+    assert And(x, y).diff(x) == Piecewise((0, Eq(y, False)), (1, True))
