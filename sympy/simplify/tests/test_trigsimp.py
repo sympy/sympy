@@ -361,11 +361,11 @@ def test_issue_2827_trigsimp_methods():
 def test_issue_15129_trigsimp_methods():
     t1 = Matrix([sin(Rational(1, 50)), cos(Rational(1, 50)), 0])
     t2 = Matrix([sin(Rational(1, 25)), cos(Rational(1, 25)), 0])
-    t3 = Matrix([cos(Rational(1, 25)), sin(Rational(1, 50)), 0])
+    t3 = Matrix([cos(Rational(1, 25)), sin(Rational(1, 25)), 0])
     r1 = t1.dot(t2)
     r2 = t1.dot(t3)
-    assert r1.simplify() == cos(1/50)
-    assert r2.simplify() == sin(3/50)
+    assert r1.simplify() == cos(Rational(1,50))
+    assert r2.simplify() == sin(Rational(3,50))
 
 def test_exptrigsimp():
     def valid(a, b):
