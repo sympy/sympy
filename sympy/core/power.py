@@ -505,29 +505,29 @@ class Pow(Expr):
             return check.is_Integer
 
     def _eval_is_real(self):
-        def _n2(e):
+        def _n2(rv):
             """Numeric testing for significant 2 digits for numbers"""
-            if e.is_Number:
-                try:
-                    return e.evalf(2, strict=True)
-                except PrecisionExhausted:
-                    return None
+            if rv is not None:
+                return rv
             else:
-                return None
+                if self.is_Number:
+                    try:
+                        return self.evalf(2, strict=True).is_real
+                    except PrecisionExhausted:
+                        return None
+                else:
+                    return None
 
         from sympy import arg, exp, log, Mul
         real_b = self.base.is_real
         if real_b is None:
             if self.base.func == exp and self.base.args[0].is_imaginary:
                 return_val = self.exp.is_imaginary
-                if return_val is not None:
-                    return return_val
-                else:
-                    return _n2(self)
-            return _n2(self)
+                return _n2(return_val)
+            return _n2(None)
         real_e = self.exp.is_real
         if real_e is None:
-            return _n2(self)
+            return _n2(None)
         if real_b and real_e:
             if self.base.is_positive:
                 return True
@@ -542,10 +542,7 @@ class Pow(Expr):
                         return False
         if real_e and self.exp.is_negative:
             return_val = Pow(self.base, -self.exp).is_real
-            if return_val is not None:
-                return return_val
-            else:
-                return _n2(self)
+            return _n2(return_val)
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary
         if im_b:
@@ -561,10 +558,7 @@ class Pow(Expr):
                 if c and c.is_Integer:
                     return_val = Mul(
                         self.base**c, self.base**a, evaluate=False).is_real
-                    if return_val is not None:
-                        return return_val
-                    else:
-                        return _n2(self)
+                    return _n2(return_val)
             elif self.base in (-S.ImaginaryUnit, S.ImaginaryUnit):
                 if (self.exp/2).is_integer is False:
                     return False
@@ -580,12 +574,9 @@ class Pow(Expr):
         if real_b is False:  # we already know it's not imag
             i = arg(self.base)*self.exp/S.Pi
             return_val = i.is_integer
-            if return_val is not None:
-                return return_val
-            else:
-                return _n2(self)
+            return _n2(return_val)
 
-        return _n2(self)
+        return _n2(None)
 
     def _eval_is_complex(self):
         if all(a.is_complex for a in self.args):
