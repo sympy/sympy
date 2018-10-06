@@ -643,17 +643,7 @@ class Ellipse(GeometrySet):
                 return self
             else:
                 ellipse_equation = self.equation(x, y)
-                result = solve([ellipse_equation, o.equation(x, y)], [x, y])
-
-                # Issue 15283
-                # Cast into floats and double check for any imaginary number
-                from sympy.solvers.solvers import check_assumptions
-                from sympy.core.function import nfloat
-                result = [(xres, yres) for (xres, yres) in result
-                if (check_assumptions(nfloat(xres), against=x)
-                and check_assumptions(nfloat(yres), against=y))]
-
-                return list(ordered([Point(i) for i in result]))
+                return list(ordered([Point(i) for i in solve([ellipse_equation, o.equation(x, y)], [x, y])]))
         elif isinstance(o, LinearEntity3D):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
