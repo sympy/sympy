@@ -522,8 +522,7 @@ class Pow(Expr):
         real_b = self.base.is_real
         if real_b is None:
             if self.base.func == exp and self.base.args[0].is_imaginary:
-                return_val = self.exp.is_imaginary
-                return _n2(return_val)
+                return _n2(self.exp.is_imaginary)
             return _n2(None)
         real_e = self.exp.is_real
         if real_e is None:
@@ -556,9 +555,8 @@ class Pow(Expr):
             elif self.exp.is_Add:
                 c, a = self.exp.as_coeff_Add()
                 if c and c.is_Integer:
-                    return_val = Mul(
-                        self.base**c, self.base**a, evaluate=False).is_real
-                    return _n2(return_val)
+                    return _n2(Mul(
+                        self.base**c, self.base**a, evaluate=False).is_real)
             elif self.base in (-S.ImaginaryUnit, S.ImaginaryUnit):
                 if (self.exp/2).is_integer is False:
                     return False
@@ -573,8 +571,7 @@ class Pow(Expr):
 
         if real_b is False:  # we already know it's not imag
             i = arg(self.base)*self.exp/S.Pi
-            return_val = i.is_integer
-            return _n2(return_val)
+            return _n2(i.is_integer)
 
         return _n2(None)
 
