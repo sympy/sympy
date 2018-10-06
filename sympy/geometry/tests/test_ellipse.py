@@ -451,3 +451,8 @@ def test_circumference():
     assert abs(Ellipse(None, hradius=5, vradius=3).circumference.evalf(16) - 25.52699886339813) < 1e-10
 def test_issue_15259():
     assert Circle((1, 2), 0) == Point(1, 2)
+
+def test_issue_15283():
+    el1 = Ellipse(Point(0, 0), 2, 1)
+    el2 = Ellipse(Point(3, 5), 4, 3)
+    assert el1.intersection(el2) == []
