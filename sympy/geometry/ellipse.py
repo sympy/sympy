@@ -650,8 +650,8 @@ class Ellipse(GeometrySet):
                 from sympy.solvers.solvers import check_assumptions
                 from sympy.core.function import nfloat
                 result = [(xres, yres) for (xres, yres) in result
-                if (check_assumptions(nfloat(xres), against=x) is not False
-                and check_assumptions(nfloat(yres), against=y) is not False)]
+                if (check_assumptions(nfloat(xres), against=x)
+                and check_assumptions(nfloat(yres), against=y))]
 
                 return list(ordered([Point(i) for i in result]))
         elif isinstance(o, LinearEntity3D):
