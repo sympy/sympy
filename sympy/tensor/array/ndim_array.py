@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy import Basic
 from sympy.core.compatibility import SYMPY_INTS, Iterable
+import itertools
 
 
 class NDimArray(object):
@@ -423,6 +424,32 @@ class NDimArray(object):
 
     def adjoint(self):
         return self._eval_adjoint()
+
+    def _slice_expand(self, s, dim):
+        if not isinstance(s, slice):
+                return (s,)
+        start, stop, step = s.indices(dim)
+        return [start + i*step for i in range((stop-start)//step)]
+
+    def _get_slice_data_for_array_access(self, index):
+        sl_factors = [self._slice_expand(i, dim) for (i, dim) in zip(index, self.shape)]
+        eindices = itertools.product(*sl_factors)
+        return sl_factors, eindices
+
+    def _get_slice_data_for_array_assignment(self, index, value):
+        if not isinstance(value, NDimArray):
+            value = type(self)(value)
+        sl_factors, eindices = self._get_slice_data_for_array_access(index)
+        slice_offsets = [min(i) if isinstance(i, list) else None for i in sl_factors]
+        # TODO: add checks for dimensions for `value`?
+        return value, eindices, slice_offsets
+
+    @classmethod
+    def _check_special_bounds(cls, flat_list, shape):
+        if shape == () and len(flat_list) != 1:
+            raise ValueError("arrays without shape need one scalar value")
+        if shape == (0,) and len(flat_list) > 0:
+            raise ValueError("if array shape is (0,) there cannot be elements")
 
 
 class ImmutableNDimArray(NDimArray, Basic):

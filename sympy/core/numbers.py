@@ -3475,12 +3475,12 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
         from sympy import exp
         return exp(expt)
 
-    def _eval_rewrite_as_sin(self):
+    def _eval_rewrite_as_sin(self, **kwargs):
         from sympy import sin
         I = S.ImaginaryUnit
         return sin(I + S.Pi/2) - I*sin(I)
 
-    def _eval_rewrite_as_cos(self):
+    def _eval_rewrite_as_cos(self, **kwargs):
         from sympy import cos
         I = S.ImaginaryUnit
         return cos(I) + I*cos(I + S.Pi/2)

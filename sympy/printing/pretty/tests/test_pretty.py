@@ -40,7 +40,8 @@ from sympy.tensor.functions import TensorProduct
 from sympy.sets.setexpr import SetExpr
 from sympy.sets import ImageSet
 
-from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+from sympy.tensor.tensor import (TensorIndexType, tensor_indices, tensorhead,
+        TensorElement)
 
 import sympy as sym
 class lowergamma(sym.lowergamma):
@@ -6184,12 +6185,14 @@ u("""\
     ascii_str = \
 """\
  i\n\
-A \
+A \n\
+  \
 """
     ucode_str = \
 u("""\
  i\n\
-A \
+A \n\
+  \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -6198,12 +6201,14 @@ A \
     ascii_str = \
 """\
  i_0\n\
-A   \
+A   \n\
+    \
 """
     ucode_str = \
 u("""\
  i₀\n\
-A  \
+A  \n\
+   \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -6211,11 +6216,13 @@ A  \
     expr = A(-i)
     ascii_str = \
 """\
+  \n\
 A \n\
  i\
 """
     ucode_str = \
 u("""\
+  \n\
 A \n\
  i\
 """)
@@ -6225,11 +6232,13 @@ A \n\
     expr = -3*A(-i)
     ascii_str = \
 """\
+     \n\
 -3*A \n\
     i\
 """
     ucode_str = \
 u("""\
+     \n\
 -3⋅A \n\
     i\
 """)
@@ -6288,12 +6297,14 @@ H   ⋅A  ⋅B \n\
     ascii_str = \
 """\
          i\n\
-(x + 1)*A \
+(x + 1)*A \n\
+          \
 """
     ucode_str = \
 u("""\
          i\n\
-(x + 1)⋅A \
+(x + 1)⋅A \n\
+          \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -6302,12 +6313,169 @@ u("""\
     ascii_str = \
 """\
  i      i\n\
-A  + 3*B \
+A  + 3*B \n\
+         \
 """
     ucode_str = \
 u("""\
  i      i\n\
-A  + 3⋅B \
+A  + 3⋅B \n\
+         \
 """)
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+
+def test_pretty_print_tensor_partial_deriv():
+    from sympy.tensor.toperators import PartialDerivative
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+
+    L = TensorIndexType("L")
+    i, j, k = tensor_indices("i j k", L)
+    i0 = tensor_indices("i0", L)
+
+    A, B, C, D = tensorhead("A B C D", [L], [[1]])
+
+    H = tensorhead("H", [L, L], [[1], [1]])
+
+    expr = PartialDerivative(A(i), A(j))
+    ascii_str = \
+"""\
+ d / i\\\n\
+---|A |\n\
+  j\\  /\n\
+dA     \n\
+       \
+"""
+    ucode_str = \
+u("""\
+ ∂ ⎛ i⎞\n\
+───⎜A ⎟\n\
+  j⎝  ⎠\n\
+∂A     \n\
+       \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(i)*PartialDerivative(H(k, -i), A(j))
+    ascii_str = \
+"""\
+ L_0  d / k   \\\n\
+A   *---|H    |\n\
+       j\\  L_0/\n\
+     dA        \n\
+               \
+"""
+    ucode_str = \
+u("""\
+ L₀  ∂ ⎛ k  ⎞\n\
+A  ⋅───⎜H   ⎟\n\
+      j⎝  L₀⎠\n\
+    ∂A       \n\
+             \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(i)*PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j))
+    ascii_str = \
+"""\
+ L_0  d / k           k   \\\n\
+A   *---|B *C    + 3*H    |\n\
+       j\\    L_0       L_0/\n\
+     dA                    \n\
+                           \
+"""
+    ucode_str = \
+u("""\
+ L₀  ∂ ⎛ k          k  ⎞\n\
+A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
+      j⎝    L₀       L₀⎠\n\
+    ∂A                  \n\
+                        \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = (A(i) + B(i))*PartialDerivative(C(-j), D(j))
+    ascii_str = \
+"""\
+/ i    i\\   d  /    \\\n\
+|A  + B |*-----|C   |\n\
+\\       /   L_0\\ L_0/\n\
+          dD         \n\
+                     \
+"""
+    ucode_str = \
+u("""\
+⎛ i    i⎞  ∂  ⎛   ⎞\n\
+⎜A  + B ⎟⋅────⎜C  ⎟\n\
+⎝       ⎠   L₀⎝ L₀⎠\n\
+          ∂D       \n\
+                   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = (A(i) + B(i))*PartialDerivative(C(-i), D(j))
+    ascii_str = \
+"""\
+/ L_0    L_0\\  d /    \\\n\
+|A    + B   |*---|C   |\n\
+\\           /   j\\ L_0/\n\
+              dD       \n\
+                       \
+"""
+    ucode_str = \
+u("""\
+⎛ L₀    L₀⎞  ∂ ⎛   ⎞\n\
+⎜A   + B  ⎟⋅───⎜C  ⎟\n\
+⎝         ⎠   j⎝ L₀⎠\n\
+            ∂D      \n\
+                    \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = TensorElement(H(i, j), {i:1})
+    ascii_str = \
+"""\
+ i=1,j\n\
+H     \n\
+      \
+"""
+    ucode_str = ascii_str
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = TensorElement(H(i, j), {i:1, j:1})
+    ascii_str = \
+"""\
+ i=1,j=1\n\
+H       \n\
+        \
+"""
+    ucode_str = ascii_str
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = TensorElement(H(i, j), {j:1})
+    ascii_str = \
+"""\
+ i,j=1\n\
+H     \n\
+      \
+"""
+    ucode_str = ascii_str
+
+    expr = TensorElement(H(-i, j), {-i:1})
+    ascii_str = \
+"""\
+    j\n\
+H    \n\
+ i=1 \
+"""
+    ucode_str = ascii_str
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str

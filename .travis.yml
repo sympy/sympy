@@ -211,9 +211,6 @@ before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
     fi
-  - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr;
-    fi
   - |
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     # We do this conditionally because it saves us some downloading if the
@@ -249,6 +246,9 @@ before_install:
         fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list | grep "numpy" && pip uninstall -y numpy;
+    fi
+  - if [[ "${TEST_SPHINX}" == "true" ]]; then
+      pip install "sphinx" "docutils" doctr matplotlib;
     fi
 
 install:

@@ -444,21 +444,21 @@ class exp(ExpBase):
             return S.One
         return exp(arg)
 
-    def _eval_rewrite_as_sin(self, arg):
+    def _eval_rewrite_as_sin(self, arg, **kwargs):
         from sympy import sin
         I = S.ImaginaryUnit
         return sin(I*arg + S.Pi/2) - I*sin(I*arg)
 
-    def _eval_rewrite_as_cos(self, arg):
+    def _eval_rewrite_as_cos(self, arg, **kwargs):
         from sympy import cos
         I = S.ImaginaryUnit
         return cos(I*arg) + I*cos(I*arg + S.Pi/2)
 
-    def _eval_rewrite_as_tanh(self, arg):
+    def _eval_rewrite_as_tanh(self, arg, **kwargs):
         from sympy import tanh
         return (1 + tanh(arg/2))/(1 - tanh(arg/2))
 
-    def _eval_rewrite_as_sqrt(self, arg):
+    def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         from sympy.functions.elementary.trigonometric import sin, cos
         if arg.is_Mul:
             coeff = arg.coeff(S.Pi*S.ImaginaryUnit)

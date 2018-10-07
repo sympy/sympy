@@ -192,10 +192,10 @@ class lerchphi(Function):
         else:
             return self
 
-    def _eval_rewrite_as_zeta(self, z, s, a):
+    def _eval_rewrite_as_zeta(self, z, s, a, **kwargs):
         return self._eval_rewrite_helper(z, s, a, zeta)
 
-    def _eval_rewrite_as_polylog(self, z, s, a):
+    def _eval_rewrite_as_polylog(self, z, s, a, **kwargs):
         return self._eval_rewrite_helper(z, s, a, polylog)
 
 ###############################################################################
@@ -310,7 +310,7 @@ class polylog(Function):
             return polylog(s - 1, z)/z
         raise ArgumentIndexError
 
-    def _eval_rewrite_as_lerchphi(self, s, z):
+    def _eval_rewrite_as_lerchphi(self, s, z, **kwargs):
         return z*lerchphi(z, s, 1)
 
     def _eval_expand_func(self, **hints):
@@ -478,13 +478,13 @@ class zeta(Function):
                     return zeta - harmonic(a - 1, z)
 
 
-    def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
+    def _eval_rewrite_as_dirichlet_eta(self, s, a=1, **kwargs):
         if a != 1:
             return self
         s = self.args[0]
         return dirichlet_eta(s)/(1 - 2**(1 - s))
 
-    def _eval_rewrite_as_lerchphi(self, s, a=1):
+    def _eval_rewrite_as_lerchphi(self, s, a=1, **kwargs):
         return lerchphi(1, s, a)
 
     def _eval_is_finite(self):
@@ -544,7 +544,7 @@ class dirichlet_eta(Function):
         if not z.has(zeta):
             return (1 - 2**(1 - s))*z
 
-    def _eval_rewrite_as_zeta(self, s):
+    def _eval_rewrite_as_zeta(self, s, **kwargs):
         return (1 - 2**(1 - s)) * zeta(s)
 
 

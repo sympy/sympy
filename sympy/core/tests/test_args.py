@@ -3879,6 +3879,23 @@ def test_sympy__tensor__tensor__TensMul():
     assert _test_args(3*p(a)*q(b))
 
 
+def test_sympy__tensor__tensor__TensorElement():
+    from sympy.tensor.tensor import TensorIndexType, tensorhead, TensorElement
+    L = TensorIndexType("L")
+    A = tensorhead("A", [L, L], [[1], [1]])
+    telem = TensorElement(A(x, y), {x: 1})
+    assert _test_args(telem)
+
+
+def test_sympy__tensor__toperators__PartialDerivative():
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    from sympy.tensor.toperators import PartialDerivative
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b = tensor_indices('a,b', Lorentz)
+    A = tensorhead("A", [Lorentz], [[1]])
+    assert _test_args(PartialDerivative(A(a), A(b)))
+
+
 def test_as_coeff_add():
     assert (7, (3*x, 4*x**2)) == (7 + 3*x + 4*x**2).as_coeff_add()
 

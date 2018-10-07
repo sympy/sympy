@@ -871,21 +871,25 @@ class Expr(Basic, EvalfMixin):
             else:
                 domain = Interval(b, a)
             # check the singularities of self within the interval
+            # if singularities is a ConditionSet (not iterable), catch the exception and pass
             singularities = solveset(self.cancel().as_numer_denom()[1], x,
                 domain=domain)
             for logterm in self.atoms(log):
                 singularities = singularities | solveset(logterm.args[0], x,
                     domain=domain)
-            for s in singularities:
-                if value is S.NaN:
-                    # no need to keep adding, it will stay NaN
-                    break
-                if not s.is_comparable:
-                    continue
-                if (a < s) == (s < b) == True:
-                    value += -limit(self, x, s, "+") + limit(self, x, s, "-")
-                elif (b < s) == (s < a) == True:
-                    value += limit(self, x, s, "+") - limit(self, x, s, "-")
+            try:
+                for s in singularities:
+                    if value is S.NaN:
+                        # no need to keep adding, it will stay NaN
+                        break
+                    if not s.is_comparable:
+                        continue
+                    if (a < s) == (s < b) == True:
+                        value += -limit(self, x, s, "+") + limit(self, x, s, "-")
+                    elif (b < s) == (s < a) == True:
+                        value += limit(self, x, s, "+") - limit(self, x, s, "-")
+            except TypeError:
+                pass
 
         return value
 
