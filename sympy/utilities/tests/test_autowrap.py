@@ -37,7 +37,11 @@ class TmpFileManager:
     @classmethod
     def cleanup(cls):
         for file in cls.tmp_files:
-            shutil.rmtree(file)
+            try:
+                os.remove(file)
+            except OSError:
+                # If the file doesn't exist, for instance, if the test failed.
+                pass
         for folder in cls.tmp_folders:
             shutil.rmtree(folder)
 
