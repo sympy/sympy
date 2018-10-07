@@ -1513,7 +1513,7 @@ def _transolve(f, symbol, domain):
         """
         Helper for ``_transolve`` to handle equations of
         ``Add`` type, i.e. equations taking the form as
-        `a*f(x) + b*g(x) + .... = c`.
+        ``a*f(x) + b*g(x) + .... = c``.
         For example: 4**x + 8**x = 0
         """
         result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
