@@ -2,8 +2,9 @@ from sympy.core import symbols, Symbol, Tuple, oo, Dummy
 from sympy.core.compatibility import iterable, range
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises, XFAIL
-
+from sympy import Lambda
 # import test:
+
 from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
     GreaterThan, StrictLessThan, Range, Array, Subs, Function, KroneckerDelta, Derivative
 
@@ -216,6 +217,11 @@ def test_Indexed_func_args():
     A = Indexed(a, i, j)
     assert A == A.func(*A.args)
 
+def test_indexed_lambda_args():
+    indexed_var = Indexed('x1', 'i')
+    indexed_lambda = Lambda(indexed_var,indexed_var**2)
+    assert getattr(indexed_var,"is_Symbol") == True
+    assert indexed_lambda == Lambda(Indexed('x1','i'),Indexed('x1','i')**2)
 
 def test_Indexed_subs():
     i, j, k = symbols('i j k', integer=True)

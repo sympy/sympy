@@ -137,6 +137,7 @@ class Indexed(Expr):
     is_Indexed = True
     is_symbol = True
     is_Atom = True
+    is_Symbol = True
 
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
