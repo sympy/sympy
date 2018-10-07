@@ -36,13 +36,15 @@ class TmpFileManager:
 
     @classmethod
     def cleanup(cls):
-        for file in cls.tmp_files:
+        while cls.tmp_files:
+            file = cls.tmp_files.pop()
             try:
                 os.remove(file)
             except OSError:
                 # If the file doesn't exist, for instance, if the test failed.
                 pass
-        for folder in cls.tmp_folders:
+        while cls.tmp_folders:
+            folder = cls.tmp_folders.pop()
             shutil.rmtree(folder)
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
