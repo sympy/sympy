@@ -27,12 +27,12 @@ class TmpFileManager:
     @classmethod
     def tmp_file(cls, name=''):
         cls.tmp_files.add(name)
-        return cls.tmp_files[-1]
+        return name
 
     @classmethod
     def tmp_folder(cls, name=''):
         cls.tmp_folders.add(name)
-        return cls.tmp_folders[-1]
+        return name
 
     @classmethod
     def cleanup(cls):
