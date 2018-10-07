@@ -16,7 +16,7 @@ c1_d, c2_d, c3_d = _me.dynamicsymbols('c1 c2 c3', 1)
 body_r_cm = _me.Point('r_cm')
 body_r_cm.set_vel(frame_n, 0)
 body_r_f = _me.ReferenceFrame('r_f')
-body_r = _me.RigidBody('r', body_r_cm, body_r_f, _sm.symbols('m'), (_me.outer(body_r_f.x,body_r_f.x),body_r_cm))
+body_r = _me.RigidBody('r', body_r_cm, body_r_f, _sm.symbols('m'), (_me.outer(body_r_f.x, body_r_f.x), body_r_cm))
 point_po2.set_pos(particle_p1.point, c1*frame_a.x)
 v=2*point_po2.pos_from(particle_p1.point)+c2*frame_a.y
 frame_a.set_ang_vel(frame_n, c3*frame_a.z)

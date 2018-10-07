@@ -53,7 +53,7 @@ def declare_frames(self, ctx, i, j=None):
 
     self.type2.update({name1: "frame"})
     self.write(name2 + " = " + "_me.ReferenceFrame('" + name1 + "')\n")
-
+    
 def declare_points(self, ctx, i, j=None):
     if "{" in ctx.getText():
         if j:
@@ -117,7 +117,7 @@ def declare_bodies(self, ctx, i, j=None):
     # They will be reset using the setters later in the code anyway.
     self.write(name2 + " = " + "_me.RigidBody('" + name1 + "', " + masscenter + ", " +
                 refFrame + ", " + "_sm.symbols('m'), (_me.outer(" + refFrame +
-                ".x," + refFrame + ".x)," + masscenter + "))\n")
+                ".x, " + refFrame + ".x), " + masscenter + "))\n")
 
 def inertia_func(self, v1, v2, l, frame):
 
