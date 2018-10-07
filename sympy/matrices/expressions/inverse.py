@@ -67,6 +67,9 @@ class Inverse(MatPow):
         else:
             return self.arg.inverse()
 
+def invert_matrix(matexpr):
+    """ Matrix Inverse"""
+    return Inverse(matexpr).doit()
 
 from sympy.assumptions.ask import ask, Q
 from sympy.assumptions.refine import handlers_dict
