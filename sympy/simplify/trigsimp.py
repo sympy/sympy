@@ -1143,8 +1143,8 @@ def _futrig(e, **kwargs):
         lambda x: _eapply(factor, x, trigs),
         TR14,  # factored powers of identities
         [identity, lambda x: _eapply(_mexpand, x, trigs)],
-        TRmorrie,
         TR10i,  # sin-cos products > sin-cos of sums
+        TRmorrie,
         [identity, TR8],  # sin-cos products -> sin-cos of sums
         [identity, lambda x: TR2i(TR2(x))],  # tan -> sin-cos -> tan
         [
