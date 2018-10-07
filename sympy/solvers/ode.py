@@ -232,6 +232,7 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 from itertools import islice
+from functools import cmp_to_key
 
 from sympy.core import Add, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, range
@@ -366,7 +367,14 @@ def sub_func_doit(eq, func, new):
 
     # Make sure that expressions such as ``Derivative(f(x), (x, 2))`` get
     # replaced before ``Derivative(f(x), x)``:
-    reps = sorted(reps.items(), key=lambda x: -x[0].derivative_count)
+    #
+    # Also replace e.g. Derivative(x*Derivative(f(x), x), x) before
+    # Derivative(f(x), x)
+    def cmp(subs1, subs2):
+        return subs2[0].has(subs1[0]) - subs1[0].has(subs2[0])
+    key = lambda x: (-x[0].derivative_count, cmp_to_key(cmp)(x))
+    reps = sorted(reps.items(), key=key)
+
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
