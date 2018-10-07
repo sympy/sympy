@@ -38,11 +38,8 @@ class TmpFileManager:
     def cleanup(cls):
         while cls.tmp_files:
             file = cls.tmp_files.pop()
-            try:
+            if os.path.isfile(file):
                 os.remove(file)
-            except OSError:
-                # If the file doesn't exist, for instance, if the test failed.
-                pass
         while cls.tmp_folders:
             folder = cls.tmp_folders.pop()
             shutil.rmtree(folder)
