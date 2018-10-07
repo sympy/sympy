@@ -1155,28 +1155,67 @@ class MatrixEigen(MatrixSubspaces):
         return self.hstack(*p_cols), self.diag(*diag)
 
     def eigenvals(self, error_when_incomplete=True, **flags):
-        """Return eigenvalues using the Berkowitz agorithm to compute
+        r"""Return eigenvalues using the Berkowitz agorithm to compute
         the characteristic polynomial.
 
         Parameters
         ==========
 
-        error_when_incomplete : bool
-            Raise an error when not all eigenvalues are computed. This is
-            caused by ``roots`` not returning a full list of eigenvalues.
+        error_when_incomplete : bool, optional
+            If it is set to ``True``, it will raise an error if not all
+            eigenvalues are computed. This is caused by ``roots`` not returning
+            a full list of eigenvalues.
 
-        simplify : bool or function
-            If simplify is set to True, it attempts to return the most
+        simplify : bool or function, optional
+            If it is set to ``True``, it attempts to return the most
             simplified form of expressions returned by applying default
             simplification method in every routine.
-            If simplify is set to False, it will skip simplification in this
+
+            If it is set to ``False``, it will skip simplification in this
             particular routine to save computation resources.
-            If you pass a function to simplify, it will attempt to apply
+
+            If a function is passed to, it will attempt to apply
             the particular function as simplification method.
 
-        Since the roots routine doesn't always work well with Floats,
-        they will be replaced with Rationals before calling that
-        routine. If this is not desired, set flag ``rational`` to False.
+        rational : bool, optional
+            If it is set to ``True``, every floating point numbers would be
+            replaced with rationals before computation. It can solve some
+            issues of ``roots`` routine not working well with floats.
+
+        multiple : bool, optional
+            If it is set to ``True``, the result will be in the form of a
+            list.
+
+            If it is set to ``False``, the result will be in the form of a
+            dictionary.
+
+        Returns
+        =======
+
+        eigs : list or dict
+            Eigenvalues of a matrix. The return format would be specified by
+            the key ``multiple``.
+
+        Raises
+        ======
+
+        MatrixError
+            If not enough roots had got computed.
+
+        NonSquareMatrixError
+            If attempted to compute eigenvalues from a non-square matrix.
+
+        See Also
+        ========
+
+        MatrixDeterminant.charpoly
+        eigenvects
+
+        Notes
+        =====
+
+        Eigenvalues of a matrix `A` can be computed by solving a matrix
+        equation `\det(A - \lambda I) = 0`
         """
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
