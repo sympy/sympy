@@ -582,6 +582,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     {Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))}
     """
     if iterable(eq):
+        eq = simplify_sysode(eq)
         match = classify_sysode(eq, func)
         eq = match['eq']
         order = match['order']
@@ -1413,6 +1414,94 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
+
+def simplify_sysode(eq):
+    # Simplifies equations such that each equation will contain derivative of
+    # only one function
+    # a1*x'(t) + b1*y'(t) + c1*x(t) + d1*y(t) + e1 = 0
+    # a2*x'(t) + b2*y'(t) + c2*x(t) + d2*y(t) + e2 = 0
+    #             ||
+    #             ||
+    #             \/
+    # a3*x'(t) = c3*x(t) + d3*y(t) + e3
+    # a4*x'(t) = c4*x(t) + d4*y(t) + e4
+
+    should_simplify = False
+    for eqs in eq:
+        derivs = eqs.atoms(Derivative)
+        func = [d.atoms(AppliedUndef) for d in derivs]
+        if len(func) > 1:
+            should_simplify = True
+    if not should_simplify:
+        return eq
+    eq = list(map(sympify, eq if iterable(eq) else [eq]))
+    for i, fi in enumerate(eq):
+        if isinstance(fi, Equality):
+            eq[i] = fi.lhs - fi.rhs
+
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    n = i + 1
+    funcs = []
+    for eqs in eq:
+        derivs = eqs.atoms(Derivative)
+        func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
+        for func_ in  func:
+            funcs.append(func_)
+    funcs = list(set(funcs))
+    if len(funcs) != len(eq):
+        raise ValueError("Number of functions not equal to number of equations")
+
+    order = dict()
+    for func in funcs:
+        if not order.get(func, False):
+            max_order = 0
+            for eqs_ in eq:
+                order_ = ode_order(eqs_,func)
+                if max_order < order_:
+                    max_order = order_
+            order[func] = max_order
+    def find_coefficient(eqs, j, func):
+        for k in range(order[func]+1):
+            func_coef[j,func,k] = collect(eqs.expand(),[diff(func,t,k)]).coeff(diff(func,t,k))
+    func_coef = {}
+    for j, eqs in enumerate(eq):
+        for func in funcs:
+            find_coefficient(eqs, j, func)
+    fc = func_coef
+    if len(eq) == 2:
+        # a1*x' + b1*y' + c1*x + d1*y + e1 = 0
+        # a2*x' + b2*y' + c2*x + d2*y + e2 = 0
+        r = dict()
+        x = funcs[0].func
+        y = funcs[1].func
+        r['a1'] = fc[0,x(t),1]
+        r['b1'] = fc[0,y(t),1]
+        r['c1'] = fc[0,x(t),0]
+        r['d1'] = fc[0,y(t),0]
+        r['a2'] = fc[1,x(t),1]
+        r['b2'] = fc[1,y(t),1]
+        r['c2'] = fc[1,x(t),0]
+        r['d2'] = fc[1,y(t),0]
+        forcing = [S(0),S(0)]
+        for i in range(2):
+            for j in Add.make_args(eq[i]):
+                if not j.has(x(t), y(t)):
+                    forcing[i] += j
+        if not (forcing[0].has(t) or forcing[1].has(t)):
+            r['e1'] = forcing[0]
+            r['e2'] = forcing[1]
+        else:
+            raise NotImplementedError
+        if r['a1']*r['b2'] - r['a2']*r['b1'] == 0:
+            raise ValueError("Solution Not Possible")
+        else:
+            coeff = r['a1']*r['b2'] - r['a2']*r['b1']
+            forcingX = -r['c1']*x(t) - r['d1']*y(t) - r['e1']
+            forcingY = -r['c2']*x(t) - r['d2']*y(t) - r['e2']
+            eq1 = Eq(coeff*x(t).diff(t),r['b2']*forcingX - r['b1']*forcingY)
+            eq2 = Eq(-coeff*y(t).diff(t),r['a2']*forcingX - r['a1']*forcingY)
+            eq = (eq1,eq2)
+            return eq
 
 def classify_sysode(eq, funcs=None, **kwargs):
     r"""
