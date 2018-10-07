@@ -90,6 +90,15 @@ def test_diff_no_eval_derivative():
     # it doesn't have y so it shouldn't need a method for this case
     assert My(x).diff(y) == 0
 
+def test_diff_wrt_itself():
+    class Value(Expr):
+        _diff_wrt = True
+
+        def __new__(cls):
+            return Expr.__new__(cls)
+
+    v = Value()
+    assert diff(v, v) is S.One
 
 def test_speed():
     # this should return in 0.0s. If it takes forever, it's wrong.

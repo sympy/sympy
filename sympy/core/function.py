@@ -1209,20 +1209,6 @@ class Derivative(Expr):
                 else:
                     return S.Zero
 
-        # If we can't compute the derivative of expr (but we wanted to) and
-        # expr is itself not a Derivative, finish building an unevaluated
-        # derivative class by calling Expr.__new__.
-        if (not (hasattr(expr, '_eval_derivative') and evaluate) and
-           (not isinstance(expr, Derivative))):
-            # If we wanted to evaluate, we sort the variables into standard
-            # order for later comparisons. This is too aggressive if evaluate
-            # is False, so we don't do it in that case.
-            if evaluate:
-                #TODO: check if assumption of discontinuous derivatives exist
-                variable_count = cls._sort_variable_count(variable_count)
-            obj = Expr.__new__(cls, expr, *variable_count)
-            return obj
-
         # Compute the derivative now by repeatedly calling the
         # _eval_derivative method of expr for each variable. When this method
         # returns None, the derivative couldn't be computed wrt that variable
@@ -1246,11 +1232,27 @@ class Derivative(Expr):
                 if isinstance(v, (Iterable, Tuple, MatrixCommon, NDimArray)):
                     # Treat derivatives by arrays/matrices as much as symbols.
                     is_symbol = True
+                old_expr = expr
                 if not is_symbol:
                     new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
+
+                # If we can't compute the derivative of expr (but we wanted to) and
+                # expr is itself not a Derivative, finish building an unevaluated
+                # derivative class by calling Expr.__new__.
+                if (not (hasattr(expr, '_eval_derivative') and evaluate) and
+                (not isinstance(expr, Derivative))):
+                    # If we wanted to evaluate, we sort the variables into standard
+                    # order for later comparisons. This is too aggressive if evaluate
+                    # is False, so we don't do it in that case.
+                    if evaluate:
+                        #TODO: check if assumption of discontinuous derivatives exist
+                        variable_count = cls._sort_variable_count(variable_count)
+                    obj = Expr.__new__(cls, old_expr, *variable_count)
+                    return obj
+
                 # Evaluate the derivative `n` times.  If
                 # `_eval_derivative_n_times` is not overridden by the current
                 # object, the default in `Basic` will call a loop over
