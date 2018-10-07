@@ -37,17 +37,9 @@ class TmpFileManager:
     @classmethod
     def cleanup(cls):
         for file in cls.tmp_files:
-            try:
-                os.remove(file)
-            except OSError:
-                # If the file doesn't exist, for instance, if the test failed.
-                pass
+            shutil.rmtree(file)
         for file in cls.tmp_folders:
-            try:
-                os.rmdir(file)
-            except OSError:
-                # If the file doesn't exist, for instance, if the test failed.
-                pass
+            shutil.rmtree(file)
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
