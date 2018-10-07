@@ -38,8 +38,8 @@ class TmpFileManager:
     def cleanup(cls):
         for file in cls.tmp_files:
             shutil.rmtree(file)
-        for file in cls.tmp_folders:
-            shutil.rmtree(file)
+        for folder in cls.tmp_folders:
+            shutil.rmtree(folder)
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
