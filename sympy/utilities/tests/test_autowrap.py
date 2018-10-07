@@ -119,7 +119,7 @@ def test_cython_wrapper_inoutarg():
     assert source == expected
 
 
-def test_cython_wrapper_compile_flags():
+def _test_cython_wrapper_compile_flags(dummy_var):
     from sympy import Equality
     x, y, z = symbols('x,y,z')
     routine = make_routine("test", Equality(z, x + y))
@@ -225,6 +225,12 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     with open(setup_file_path) as f:
         setup_text = f.read()
     assert setup_text == expected
+
+def test_cython_wrapper_compile_flags():
+    try:
+        _test_cython_wrapper_compile_flags(True)
+    finally:
+        TmpFileManager.cleanup()
 
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')
