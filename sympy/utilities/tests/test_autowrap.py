@@ -149,7 +149,6 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     setup_file_path = os.path.join(temp_dir, 'setup.py')
 
     code_gen._prepare_files(routine, build_dir=temp_dir)
-    TmpFileManager.tmp_file(setup_file_path)
     TmpFileManager.tmp_file(code_gen.module_name + '.pyx')
 
     with open(setup_file_path) as f:
