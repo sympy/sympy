@@ -1175,7 +1175,20 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_real(self):
-        return self._eval_real_imag(True)
+        def _n2(rv):
+            """Numeric testing for significant 2 digits for numbers"""
+            if rv is not None:
+                return rv
+            else:
+                if self.is_Number:
+                    try:
+                        return self.evalf(2, strict=True).is_real
+                    except PrecisionExhausted:
+                        return None
+                else:
+                    return None
+
+        return _n2(self._eval_real_imag(True))
 
     def _eval_real_imag(self, real):
         zero = False
