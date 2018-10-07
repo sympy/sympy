@@ -21,17 +21,17 @@ class TmpFileManager:
     """
     A class to track record of every temporary files created by the tests.
     """
-    tmp_files = []
-    tmp_folders = []
+    tmp_files = set('')
+    tmp_folders = set('')
 
     @classmethod
     def tmp_file(cls, name=''):
-        cls.tmp_files.append(name)
+        cls.tmp_files.add(name)
         return cls.tmp_files[-1]
 
     @classmethod
     def tmp_folder(cls, name=''):
-        cls.tmp_folders.append(name)
+        cls.tmp_folders.add(name)
         return cls.tmp_folders[-1]
 
     @classmethod
