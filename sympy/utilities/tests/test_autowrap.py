@@ -124,6 +124,9 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         setup_text = f.read()
     assert setup_text == expected
 
+    os.remove(setup_file_path)
+    os.remove(code_gen.module_name + '.pyx')
+
     code_gen = CythonCodeWrapper(CCodeGen(),
                                  include_dirs=['/usr/local/include', '/opt/booger/include'],
                                  library_dirs=['/user/local/lib'],
@@ -158,6 +161,9 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         setup_text = f.read()
     assert setup_text == expected
 
+    os.remove(setup_file_path)
+    os.remove(code_gen.module_name + '.pyx')
+
     expected = """\
 try:
     from setuptools import setup
@@ -185,6 +191,10 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     with open(setup_file_path) as f:
         setup_text = f.read()
     assert setup_text == expected
+
+    os.remove(setup_file_path)
+    os.remove(code_gen.module_name + '.pyx')
+    os.rmdir(temp_dir)
 
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')
