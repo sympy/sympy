@@ -17,6 +17,25 @@ from sympy.utilities.codegen import (
     CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
 )
 
+class TmpFileManager:
+    """
+    A class to track record of every temporary files created by the tests.
+    """
+    tmp_files = []
+
+    @classmethod
+    def tmp_file(cls, name=''):
+        cls.tmp_files.append(name)
+        return cls.tmp_files[-1]
+
+    @classmethod
+    def cleanup(cls):
+        for file in cls.tmp_files:
+            try:
+                os.remove(file)
+            except OSError:
+                # If the file doesn't exist, for instance, if the test failed.
+                pass
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
