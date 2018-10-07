@@ -22,6 +22,7 @@ class TmpFileManager:
     A class to track record of every temporary files created by the tests.
     """
     tmp_files = []
+    tmp_folders = []
 
     @classmethod
     def tmp_file(cls, name=''):
@@ -29,10 +30,21 @@ class TmpFileManager:
         return cls.tmp_files[-1]
 
     @classmethod
+    def tmp_folder(cls, name=''):
+        cls.tmp_folders.append(name)
+        return cls.tmp_folders[-1]
+
+    @classmethod
     def cleanup(cls):
         for file in cls.tmp_files:
             try:
                 os.remove(file)
+            except OSError:
+                # If the file doesn't exist, for instance, if the test failed.
+                pass
+        for file in cls.tmp_folders:
+            try:
+                os.rmdir(file)
             except OSError:
                 # If the file doesn't exist, for instance, if the test failed.
                 pass
