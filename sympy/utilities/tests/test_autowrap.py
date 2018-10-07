@@ -147,8 +147,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
     setup_file_path = os.path.join(temp_dir, 'setup.py')
 
-    code_gen._prepare_files(routine, build_dir=temp_dir)
-    TmpFileManager.tmp_file(code_gen.module_name + '.pyx')
+    code_gen._prepare_files(routine, build_dir=temp_dir, pyx_dir=temp_dir)
 
     with open(setup_file_path) as f:
         setup_text = f.read()
@@ -183,8 +182,7 @@ ext_mods = [Extension(
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """ % {'num': CodeWrapper._module_counter}
 
-    code_gen._prepare_files(routine, build_dir=temp_dir)
-    TmpFileManager.tmp_file(code_gen.module_name + '.pyx')
+    code_gen._prepare_files(routine, build_dir=temp_dir, pyx_dir=temp_dir)
 
     with open(setup_file_path) as f:
         setup_text = f.read()
@@ -213,8 +211,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """ % {'num': CodeWrapper._module_counter}
 
     code_gen._need_numpy = True
-    code_gen._prepare_files(routine, build_dir=temp_dir)
-    TmpFileManager.tmp_file(code_gen.module_name + '.pyx')
+    code_gen._prepare_files(routine, build_dir=temp_dir, pyx_dir=temp_dir)
 
     with open(setup_file_path) as f:
         setup_text = f.read()
