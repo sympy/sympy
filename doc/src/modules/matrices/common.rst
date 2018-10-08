@@ -1,6 +1,8 @@
 Common Matrices
 ===============
 
+.. module:: sympy.matrices.common
+
 MatrixShaping Class Reference
 -----------------------------
 .. autoclass:: MatrixShaping
