@@ -11,7 +11,6 @@ from sympy.core.numbers import Float
 from mpmath.libmp import bitcount as _bitlength
 
 
-
 def _int_tuple(*i):
     return tuple(int(_) for _ in i)
 
@@ -152,27 +151,6 @@ def mr(n, bases):
             if not _test(n, base, s, t):
                 return False
     return True
-
-
-def is_euler_pseudoprime(n, b):
-    """Return True if n is prime or an Euler pseudoprime to base b, else False."""
-    from sympy.ntheory.factor_ import trailing
-
-    if not mr(n, [b]):
-        return False
-
-    n = as_int(n)
-    r = n - 1
-    c = pow(b, r >> trailing(r), n)
-    if c == 1:
-        return True
-
-    while True:
-        if c == n - 1:
-            return True
-        c = pow(c, 2, n)
-        if c == 1:
-            return False
 
 
 def _lucas_sequence(n, P, Q, k):

@@ -21,6 +21,7 @@ from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.utilities.memoization import recurrence_memo
+from sympy.ntheory import isprime
 
 from mpmath import bernfrac, workprec
 from mpmath.libmp import ifib as _ifib
@@ -113,22 +114,7 @@ class carmichael(Function):
 
     @staticmethod
     def is_prime(n):
-        from sympy import sieve
-
-        if n == 2:
-            return True
-        if (n % 2 == 0) or (n < 2):
-            return False
-
-        global sieve
-
-        if n in sieve:
-            return True
-        else:
-            for i in range(3, n // 2, 2):
-                if not (n % i):
-                    return False
-        return True
+        return isprime(n)
 
     @staticmethod
     def is_carmichael(n):
