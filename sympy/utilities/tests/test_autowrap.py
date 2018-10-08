@@ -44,6 +44,19 @@ class TmpFileManager:
             folder = cls.tmp_folders.pop()
             shutil.rmtree(folder)
 
+def cleanup_tmp_files(test_func):
+    """
+    A decorator to help test codes remove temporary files after the tests.
+    """
+    def wrapper_function():
+        try:
+            test_func()
+        finally:
+            TmpFileManager.cleanup()
+
+    return wrapper_function
+
+
 def get_string(dump_fn, routines, prefix="file", **kwargs):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
        this wrapper returns the contents of that stream as a string. This
