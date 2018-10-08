@@ -68,7 +68,9 @@ jobs:
     condition: eq(variables.pypy, true)
     displayName: 'Create PyPy virtualenv'
 
-  - script: echo $PATH
+  - script: |
+      echo $PATH
+      which python
     displayName: 'Test'
 
   - script: python -m pip install --upgrade pip && pip install mpmath
