@@ -306,13 +306,13 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         command = [sys.executable, "setup.py", "build_ext", "--inplace"]
         return command
 
-    def _prepare_files(self, routine, build_dir=os.curdir, pyx_dir=os.curdir):
+    def _prepare_files(self, routine, build_dir=os.curdir):
         # NOTE : build_dir is used for testing purposes.
         pyxfilename = self.module_name + '.pyx'
         codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
 
         # pyx
-        with open(os.path.join(pyx_dir, pyxfilename), 'w') as f:
+        with open(os.path.join(build_dir, pyxfilename), 'w') as f:
             self.dump_pyx([routine], f, self.filename)
 
         # setup.py
