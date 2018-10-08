@@ -612,6 +612,7 @@ class Ellipse(GeometrySet):
 
         Notes
         -----
+
         Currently supports intersections with Point, Line, Segment, Ray,
         Circle and Ellipse types.
 
