@@ -565,10 +565,10 @@ class Ellipse(GeometrySet):
          >>> ellipse.auxiliary_circle()
          (x - 2)**2 + (y - 4)**2 - 81
 
-        """
-        hr, vr = self.hradius, self.vradius
-        m = max(hr, vr)
-        return (x - self.center.x)**2 + (y - self.center.y)**2 - m**2
+         """
+         hr, vr = self.hradius, self.vradius
+         m = max(hr, vr)
+         return (x - self.center.x)**2 + (y - self.center.y)**2 - m**2
 
     @property
     def hradius(self):
