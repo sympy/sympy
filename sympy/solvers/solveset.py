@@ -1136,7 +1136,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
 def _is_exponential(f, symbol):
     r"""
-    Returns ``True`` if one or more terms contain ``symbol`` only in
+    Return ``True`` if one or more terms contain ``symbol`` only in
     exponents, else ``False``.
 
     Parameters
@@ -1274,7 +1274,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
 
 def _is_logarithmic(f, symbol):
     r"""
-    Returns ``True`` if the equation is in the form
+    Return ``True`` if the equation is in the form
     `a\log(f(x)) + b\log(g(x)) + ... + c` else ``False``.
 
     Parameters
