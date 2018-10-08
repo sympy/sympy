@@ -544,8 +544,8 @@ class Ellipse(GeometrySet):
         return Point.distance(self.center, self.foci[0])
 
     def auxiliary_circle(self, x='x', y='y'):
-        """The equation of auxiliary circle of the ellipse.
-
+         """The equation of auxiliary circle of the ellipse.
+ 
         Returns
         =======
 
@@ -564,12 +564,11 @@ class Ellipse(GeometrySet):
         >>> ellipse = Ellipse(Point(2, 4), 9, 1)
         >>> ellipse.auxiliary_circle()
         (x - 2)**2 + (y - 4)**2 - 81
-
         """
         hr, vr = self.hradius, self.vradius
         m = max(hr, vr)
         return (x - self.center.x)**2 + (y - self.center.y)**2 - m**2
-
+    
     @property
     def hradius(self):
         """The horizontal radius of the ellipse.
