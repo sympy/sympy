@@ -158,7 +158,6 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
     temp_dir = tempfile.mkdtemp()
     TmpFileManager.tmp_folder(temp_dir)
-
     setup_file_path = os.path.join(temp_dir, 'setup.py')
 
     code_gen._prepare_files(routine, build_dir=temp_dir)
@@ -227,7 +226,6 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     with open(setup_file_path) as f:
         setup_text = f.read()
     assert setup_text == expected
-
 
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')
