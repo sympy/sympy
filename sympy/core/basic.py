@@ -374,9 +374,9 @@ class Basic(with_metaclass(ManagedProperties)):
         False
 
         """
-        s = self.as_dummy(syms='')
+        s = self.as_dummy()
         o = _sympify(other)
-        o = o.as_dummy(syms='')
+        o = o.as_dummy()
 
         dummy_symbols = [i for i in s.free_symbols if i.is_Dummy]
 
@@ -509,9 +509,9 @@ class Basic(with_metaclass(ManagedProperties)):
     def expr_free_symbols(self):
         return set([])
 
-    def as_dummy(self, syms=None, default=None):
-        """Return the expression with any objects having structural
-        dummy symbols replaced with unique, canonical symbols within
+    def as_dummy(self):
+        """Return the expression with any objects having structurally
+        bound symbols replaced with unique, canonical symbols within
         the object in which they appear and having only the default
         assumption for commutativity being True.
 
@@ -519,122 +519,46 @@ class Basic(with_metaclass(ManagedProperties)):
         ========
 
         >>> from sympy import Integral, Symbol
-        >>> from sympy.abc import x, u, v
+        >>> from sympy.abc import x, y
         >>> r = Symbol('r', real=True)
         >>> Integral(r, (r, x)).as_dummy()
-        Integral(_r, (_r, x))
+        Integral(_0, (_0, x))
         >>> _.variables[0].is_real is None
         True
 
-        >>> Integral(u, (u, x)).as_dummy(syms='')
-        Integral(u, (u, x))
-        >>> Integral(v, (v, x)).as_dummy(syms='')
-        Integral(u, (u, x))
-        >>> Integral(u, (u, u)).as_dummy(syms='')
-        Integral(v, (v, u))
-        >>> Integral(u, (u, u)).as_dummy(syms='x')
-        Integral(x, (x, u))
+        Notes
+        =====
 
         Any object that has structural dummy variables should have
         a property, `bound_symbols` that returns a list of structural
         dummy symbols of the object itself.
 
-        >>> from sympy import Derivative, Sum, Subs, Lambda
-        >>> from sympy.abc import y
-
-        >>> Derivative(Integral(y, (x, x)), y).as_dummy(syms='')
-        Derivative(Integral(y, (u, x)), y)
-
-        >>> eq = Subs(Integral(x, (x, x)), x, Sum(x, (x, 1, 2)))
-        >>> eq.as_dummy(syms='')
-        Subs(Integral(u, (u, x)), u, Sum(u, (u, 1, 2)))
-
-        >>> Lambda(x, Integral(y, (x, x))).as_dummy()
-        Lambda(_x, Integral(y, (_x, _x)))
-        >>> Lambda(x, Integral(y, (x, x))).as_dummy(syms='')
-        Lambda(v, Integral(y, (u, v)))
-        """
-        from sympy.core.symbol import Symbol
-        def can(x):
-            d = dict([(i, i.as_dummy()) for i in x.bound_symbols])
-            x = x.subs(d)  # targets non-dummy that shadow dummy
-            if syms is None and default is None:
-                c = dict([(i, i.as_dummy()) for i in x.bound_symbols])
-            else:
-                c = x._canonical_bound(
-                    '' if syms is None else (syms or 'u:z'),
-                    'iota_' if default is None else default)
-            x = x.xreplace(c)
-            # undo shadow masking
-            x = x.xreplace(dict((v, k) for k, v in d.items()))
-            return x
-        rv = self.replace(
-            lambda x: hasattr(x, 'bound_symbols'),
-            lambda x: can(x))
-        if hasattr(rv, 'bound_symbols'):
-            rv = can(rv)
-        return rv
-
-    def _canonical_bound(self, syms=None, default=None):
-        """Return a dictionary mapping any variable defined in
-        ``self.bound_symbols`` to symbols that do not clash
-        with any existing symbol in the expression using, first,
-        the symbols given in syms and then falling back to numbered
-        instances of the default symbol.
-
-        Examples
-        ========
+        Lambda and Subs have bound symbols, but because of how they
+        are cached, they already compare the same regardless of their
+        bound symbols:
 
         >>> from sympy import Lambda
-        >>> from sympy.abc import a, b, x, y
-        >>> Lambda(x, 2*x)._canonical_bound()
-        {x: 0}
-        >>> Lambda(x, 2*x)._canonical_bound('i')
-        {x: i}
-        >>> Lambda(x, 2*x)._canonical_bound('x')
-        {x: x}
-        >>> Lambda(x, 2*x)._canonical_bound(default='i')
-        {x: i0}
-
-        The first non-clashing symbol will be used:
-
-        >>> Lambda(y, a + b + y)._canonical_bound('a:c')
-        {y: c}
-
-        If all the syms given clash with existing free symbols
-        then the default value will be used:
-
-        >>> Lambda(y, 2*x + y)._canonical_bound('x')
-        {y: _0}
-        >>> Lambda(y, 2*x + y)._canonical_bound('x', 'i')
-        {y: i0}
-        >>> Lambda(y, 2*x + y)._canonical_bound(default='i_')
-        {y: i_0}
+        >>> Lambda(x, x + 1) == Lambda(y, y + 1)
+        True
         """
-        from itertools import chain
-        from sympy import symbols, Symbol, Derivative
-        from sympy.utilities.iterables import numbered_symbols
-        if not hasattr(self, 'bound_symbols'):
-            return {}
-        if syms:
-            dums = chain(symbols(syms, seq=True), numbered_symbols(default or '_'))
-        else:
-            dums = numbered_symbols(default or '')
-        reps = {}
-        v = self.bound_symbols
-        syms = [i.name for i in self.atoms(Symbol) - set(v)]
-        for v in v:
-            d = next(dums).name
-            while v == d or d in syms:
-                d = next(dums).name
-            if v != d:
-                reps[v] = Symbol(d)
-        return reps
+        def can(x):
+            d = dict([(i, i.as_dummy()) for i in x.bound_symbols])
+            # mask free that shadow bound
+            x = x.subs(d)
+            c = x.canonical_variables
+            # replace bound
+            x = x.xreplace(c)
+            # undo masking
+            x = x.xreplace(dict((v, k) for k, v in d.items()))
+            return x
+        return self.replace(
+            lambda x: hasattr(x, 'bound_symbols'),
+            lambda x: can(x))
 
     @property
     def canonical_variables(self):
         """Return a dictionary mapping any variable defined in
-        ``self.bound_symbols`` to symbols that do not clash
+        ``self.bound_symbols`` to Symbols that do not clash
         with any existing symbol in the expression.
 
         Examples
@@ -643,23 +567,24 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy import Lambda
         >>> from sympy.abc import x
         >>> Lambda(x, 2*x).canonical_variables
-        {x: iota_0}
+        {x: _0}
         """
-        from itertools import chain
-        from sympy import symbols, Symbol, Derivative
+        from sympy.core.symbol import Symbol
         from sympy.utilities.iterables import numbered_symbols
         if not hasattr(self, 'bound_symbols'):
             return {}
-        dums = numbered_symbols('iota_')
+        dums = numbered_symbols('_')
         reps = {}
         v = self.bound_symbols
-        syms = [i.name for i in self.atoms(Symbol) - set(v)]
+        # this free will include bound symbols that are not part of
+        # self's bound symbols
+        free = set([i.name for i in self.atoms(Symbol) - set(v)])
         for v in v:
-            d = next(dums).name
-            while v == d or d in syms:
-                d = next(dums).name
-            if v != d:
-                reps[v] = Symbol(d)
+            d = next(dums)
+            if v.is_Symbol:
+                while v.name == d.name or d.name in free:
+                    d = next(dums)
+            reps[v] = d
         return reps
 
     def rcall(self, *args):

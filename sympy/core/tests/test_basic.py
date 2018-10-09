@@ -11,7 +11,7 @@ from sympy.core.symbol import symbols
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
-from sympy import sin, Q, cos, gamma, Tuple, Integral
+from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum
 from sympy.functions.elementary.exponential import exp
 from sympy.utilities.pytest import raises
 from sympy.core import I, pi
@@ -247,44 +247,13 @@ def test_atomic():
 
 
 def test_as_dummy():
-    u, v, x, y, z, i0 = symbols('u v x y z i0')
-    L = Lambda(x, x + 1)
-    assert L.as_dummy().variables[0].name == 'x'
-    assert L.as_dummy('').variables[0].name == 'u'
-    assert L.as_dummy('a').variables[0].name == 'a'
-    assert L.as_dummy('', default='i').variables[0].name == 'u'
-    assert L.as_dummy(default='i').variables[0].name == 'i0'
-    assert Lambda(x, x + i0).as_dummy(default='i').variables[0].name == 'i1'
-
-    d = x.as_dummy()
-    assert d != x
-    assert d.as_dummy() != d
-    assert d.name == x.name
-    assert d.assumptions0 == x.assumptions0
-    i = symbols('i', integer=True)
-    d = i.as_dummy()
-    assert d.name == i.name
-    assert d.assumptions0 == x.assumptions0
-    d = i.as_dummy(syms='u')
-    assert d.name == i.name
-    assert d.assumptions0 == x.assumptions0
-    for i in range(2):
-        assert (i + Integral(x, (x, x))).as_dummy(
-            syms='u') == Integral(u, (u, x)) + i
-        assert (i + Integral(u, (u, x))).as_dummy(
-            syms='u') == Integral(u, (u, x)) + i
-        assert (i + Integral(v, (v, x))).as_dummy(
-            syms='u') == Integral(u, (u, x)) + i
-        assert (i + Integral(u, (u, u))).as_dummy(
-            syms='u v') == Integral(v, (v, u)) + i
-    assert str((x + Integral(x, (x, x))).as_dummy(
-            )) == 'x + Integral(_x, (_x, x))'
-    r = symbols('r', real=True)
-    i = Integral(r, (r, 1))
-    assert i.as_dummy().variables[0].is_real is None
+    u, v, x, y, z, _0, _1 = symbols('u v x y z _0 _1')
+    assert Lambda(x, x + 1).as_dummy() == Lambda(_0, _0 + 1)
+    assert Lambda(x, x + _0).as_dummy() == Lambda(_1, _0 + _1)
+    assert (1 + Sum(x, (x, 1, x))).as_dummy() == 1 + Sum(_0, (_0, 1, x))
 
 
 def test_canonical_variables():
-    x, i0, i1 = symbols('x iota_:2')
-    assert Lambda(x, x + 1).canonical_variables == {x: i0}
-    assert Lambda(x, x + i0).canonical_variables == {x: i1}
+    x, i0, i1 = symbols('x _:2')
+    assert Integral(x, (x, x + 1)).canonical_variables == {x: i0}
+    assert Integral(x, (x, x + i0)).canonical_variables == {x: i1}

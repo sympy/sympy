@@ -68,7 +68,7 @@ class Integral(AddWithLimits):
         >>> i.as_dummy()
         Integral(x, x)
         >>> at.as_dummy()
-        Integral(_x, (_x, x))
+        Integral(_0, (_0, x))
 
         """
 
