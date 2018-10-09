@@ -429,6 +429,8 @@ class Basic(with_metaclass(ManagedProperties)):
         s = s.strip('$')
         return "$$%s$$" % s
 
+    _repr_latex_orig = _repr_latex_
+
     def atoms(self, *types):
         """Returns the atoms that form the current object.
 

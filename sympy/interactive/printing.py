@@ -224,6 +224,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             debug("init_printing: using mathjax formatter")
             for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
+            Basic._repr_latex_ = Basic._repr_latex_orig
+            MatrixBase._repr_latex_ = MatrixBase._repr_latex_orig
         else:
             debug("init_printing: not using text/latex formatter")
             for cls in printable_types:
@@ -231,6 +233,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 #latex_formatter.for_type(cls, None)
                 if cls in latex_formatter.type_printers:
                     latex_formatter.type_printers.pop(cls)
+
+            Basic._repr_latex_ = None
+            MatrixBase._repr_latex_ = None
 
     else:
         ip.set_hook('result_display', _result_display)

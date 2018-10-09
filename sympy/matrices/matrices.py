@@ -1968,6 +1968,8 @@ class MatrixBase(MatrixDeprecated,
         s = s.strip('$')
         return "$$%s$$" % s
 
+    _repr_latex_orig = _repr_latex_
+
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
         return matrix2numpy(self, dtype=dtype)
