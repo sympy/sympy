@@ -117,8 +117,8 @@ class CodePrinter(StrPrinter):
             lines = self._format_code(lines)
             num_syms = set([(k, self._print(v)) for k, v in self._number_symbols])
             result = (num_syms, self._not_supported, "\n".join(lines))
-        del self._not_supported
-        del self._number_symbols
+        self._not_supported = set()
+        self._number_symbols = set()
         return result
 
     def _doprint_loops(self, expr, assign_to=None):
