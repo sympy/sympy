@@ -1286,21 +1286,17 @@ def test_separable2():
     eq10 = (x*cos(f(x)) + x**2*sin(f(x))*f(x).diff(x) -
             a**2*sin(f(x))*f(x).diff(x))
     sol6 = Eq(Integral((u - 2)/u**3, (u, f(x))),
-        C1 + Integral(x**(-2), x)
-        ).as_dummy(canonical=True, plain=True)
+        C1 + Integral(x**(-2), x))
     sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(2 + x))
     sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
     sol9 = Eq(Integral(cos(u)/tan(u), (u, f(x))),
-        C1 + Integral(-exp(1)*exp(x), x)
-        ).as_dummy(canonical=True, plain=True)
+        C1 + Integral(-exp(1)*exp(x), x))
     sol10 = Eq(-log(cos(f(x))), C1 - log(- a**2 + x**2)/2)
-    assert dsolve(eq6, hint='separable_Integral').as_dummy(
-        canonical=True, plain=True) == sol6
+    assert dsolve(eq6, hint='separable_Integral').dummy_eq(sol6)
     assert dsolve(eq7, hint='separable', simplify=False) == sol7
     assert dsolve(eq8, hint='separable', simplify=False) == sol8
-    assert dsolve(eq9, hint='separable_Integral').as_dummy(
-        canonical=True, plain=True) == sol9
+    assert dsolve(eq9, hint='separable_Integral').dummy_eq(sol9)
     assert dsolve(eq10, hint='separable', simplify=False) == sol10
     assert checkodesol(eq7, sol7, order=1, solve_for_func=False)[0]
     assert checkodesol(eq8, sol8, order=1, solve_for_func=False)[0]
@@ -2895,9 +2891,11 @@ def test_issue_10867():
 
 def test_issue_11290():
     eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
-    sol_1 = dsolve(eq, f(x), simplify=False, hint='1st_exact_Integral').as_dummy(canonical=True)
+    sol_1 = dsolve(eq, f(x), simplify=False, hint='1st_exact_Integral')
     sol_0 = dsolve(eq, f(x), simplify=False, hint='1st_exact')
-    assert sol_1 == Eq(Subs(Integral(u**2 - x*sin(u) - Integral(-sin(u), x), u) + Integral(cos(u), x), u, f(x)), C1).as_dummy(canonical=True)
+    assert sol_1.dummy_eq(Eq(Subs(
+        Integral(u**2 - x*sin(u) - Integral(-sin(u), x), u) +
+        Integral(cos(u), x), u, f(x)), C1))
     assert sol_1.doit() == sol_0
 
 

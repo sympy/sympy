@@ -8,10 +8,10 @@ from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
     _atomic)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
-from sympy.core.function import Function
+from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
-from sympy import sin, Lambda, Q, cos, gamma, Tuple, Integral
+from sympy import sin, Q, cos, gamma, Tuple, Integral
 from sympy.functions.elementary.exponential import exp
 from sympy.utilities.pytest import raises
 from sympy.core import I, pi
@@ -247,7 +247,15 @@ def test_atomic():
 
 
 def test_as_dummy():
-    u, v, x = symbols('u, v, x')
+    u, v, x, y, z, i0 = symbols('u v x y z i0')
+    L = Lambda(x, x + 1)
+    assert L.as_dummy().variables[0].name == 'x'
+    assert L.as_dummy('').variables[0].name == 'u'
+    assert L.as_dummy('a').variables[0].name == 'a'
+    assert L.as_dummy('', default='i').variables[0].name == 'u'
+    assert L.as_dummy(default='i').variables[0].name == 'i0'
+    assert Lambda(x, x + i0).as_dummy(default='i').variables[0].name == 'i1'
+
     d = x.as_dummy()
     assert d != x
     assert d.as_dummy() != d
@@ -256,29 +264,27 @@ def test_as_dummy():
     i = symbols('i', integer=True)
     d = i.as_dummy()
     assert d.name == i.name
-    assert d.assumptions0 == i.assumptions0
-    assert i.as_dummy(plain=True).assumptions0 == x.assumptions0
-    d = i.as_dummy(canonical=True)
-    assert d.name == i.name
-    assert d.assumptions0 == i.assumptions0
-    d = i.as_dummy(canonical=True, plain=True)
+    assert d.assumptions0 == x.assumptions0
+    d = i.as_dummy(syms='u')
     assert d.name == i.name
     assert d.assumptions0 == x.assumptions0
     for i in range(2):
         assert (i + Integral(x, (x, x))).as_dummy(
-            canonical=True) == Integral(u, (u, x)) + i
+            syms='u') == Integral(u, (u, x)) + i
         assert (i + Integral(u, (u, x))).as_dummy(
-            canonical=True) == Integral(u, (u, x)) + i
+            syms='u') == Integral(u, (u, x)) + i
         assert (i + Integral(v, (v, x))).as_dummy(
-            canonical=True) == Integral(u, (u, x)) + i
+            syms='u') == Integral(u, (u, x)) + i
         assert (i + Integral(u, (u, u))).as_dummy(
-            canonical=True) == Integral(v, (v, u)) + i
+            syms='u v') == Integral(v, (v, u)) + i
     assert str((x + Integral(x, (x, x))).as_dummy(
             )) == 'x + Integral(_x, (_x, x))'
     r = symbols('r', real=True)
     i = Integral(r, (r, 1))
-    assert i.as_dummy().variables[0].is_real is True
-    assert i.as_dummy(plain=True).variables[0].is_real is None
-    d = i.as_dummy(canonical=True, plain=True)
-    assert d.variables[0].name == u.name
-    assert d.function == u
+    assert i.as_dummy().variables[0].is_real is None
+
+
+def test_canonical_variables():
+    x, i0, i1 = symbols('x iota_:2')
+    assert Lambda(x, x + 1).canonical_variables == {x: i0}
+    assert Lambda(x, x + i0).canonical_variables == {x: i1}

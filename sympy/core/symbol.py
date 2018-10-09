@@ -260,9 +260,8 @@ class Symbol(AtomicExpr, Boolean):
     def sort_key(self, order=None):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
-    def as_dummy(self, canonical=False, plain=False):
-        return (Symbol if canonical else Dummy)(self.name,
-            **({} if plain else self._assumptions.generator))
+    def as_dummy(self, syms=None):
+        return (Dummy if syms is None else Symbol)(self.name)
 
     def as_real_imag(self, deep=True, **hints):
         from sympy import im, re

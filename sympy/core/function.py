@@ -1685,7 +1685,7 @@ class Lambda(Expr):
         """The variables used in the internal representation of the function"""
         return self._args[0]
 
-    dummy_variables = variables
+    bound_symbols = variables
 
     @property
     def expr(self):
@@ -1866,7 +1866,7 @@ class Subs(Expr):
         """The variables to be evaluated"""
         return self._args[1]
 
-    dummy_variables = variables
+    bound_symbols = variables
 
     @property
     def expr(self):

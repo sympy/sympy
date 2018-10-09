@@ -206,7 +206,7 @@ class ExprWithLimits(Expr):
         return [l[0] for l in self.limits]
 
     @property
-    def dummy_variables(self):
+    def bound_symbols(self):
         """Return only variables that are dummy variables.
 
         Examples
@@ -214,7 +214,7 @@ class ExprWithLimits(Expr):
 
         >>> from sympy import Integral
         >>> from sympy.abc import x, i, j, k
-        >>> Integral(x**i, (i, 1, 3), (j, 2), k).dummy_variables
+        >>> Integral(x**i, (i, 1, 3), (j, 2), k).bound_symbols
         [i, j]
 
         See Also

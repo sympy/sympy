@@ -1071,11 +1071,11 @@ def test_issue_15241():
 
 
 def test_as_dummy():
-    assert Lambda(x, x + v).as_dummy(canonical=True
-        ) == Lambda(u, u + v).as_dummy(canonical=True
+    assert Lambda(x, x + v).as_dummy(syms='u:w'
+        ) == Lambda(u, u + v).as_dummy(syms='u:w'
         ) == Lambda(u, u + v)
-    assert Subs(x, x, x + v).as_dummy(canonical=True
-        ) == Subs(u, u, x + v).as_dummy(canonical=True
+    assert Subs(x, x, x + v).as_dummy(syms='u:w'
+        ) == Subs(u, u, x + v).as_dummy(syms='u:w'
         ) == Subs(u, u, x + v)
-    assert Subs(x, x, u + v).as_dummy(canonical=True
+    assert Subs(x, x, u + v).as_dummy(syms='u:w'
         ) == Subs(w, w, u + v)
