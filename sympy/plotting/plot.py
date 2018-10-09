@@ -262,16 +262,22 @@ class Plot(object):
         Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
         second plot to the first, use the ``extend`` method, like so:
 
-        >>> from sympy import symbols
-        >>> from sympy.plotting import plot
-        >>> x = symbols('x')
-        >>> p1 = plot(x*x)
-        >>> p2 = plot(x)
-        >>> p1.extend(p2)
-        >>> p1
-        Plot object containing:
-        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
-        [1]: cartesian line: x for x over (-10.0, 10.0)
+        .. plot::
+           :format: doctest
+           :include-source: True
+
+           >>> from sympy import symbols
+           >>> from sympy.plotting import plot
+           >>> x = symbols('x')
+           >>> p1 = plot(x**2, show=False)
+           >>> p2 = plot(x, -x, show=False)
+           >>> p1.extend(p2)
+           >>> p1
+           Plot object containing:
+           [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+           [1]: cartesian line: x for x over (-10.0, 10.0)
+           [2]: cartesian line: -x for x over (-10.0, 10.0)
+           >>> p1.show()
 
         """
         if isinstance(arg, Plot):
@@ -1258,37 +1264,61 @@ def plot(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.plotting import plot
-    >>> x = symbols('x')
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import symbols
+       >>> from sympy.plotting import plot
+       >>> x = symbols('x')
 
     Single Plot
 
-    >>> plot(x**2, (x, -5, 5))
-    Plot object containing:
-    [0]: cartesian line: x**2 for x over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot(x**2, (x, -5, 5))
+       Plot object containing:
+       [0]: cartesian line: x**2 for x over (-5.0, 5.0)
 
     Multiple plots with single range.
 
-    >>> plot(x, x**2, x**3, (x, -5, 5))
-    Plot object containing:
-    [0]: cartesian line: x for x over (-5.0, 5.0)
-    [1]: cartesian line: x**2 for x over (-5.0, 5.0)
-    [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
 
+       >>> plot(x, x**2, x**3, (x, -5, 5))
+       Plot object containing:
+       [0]: cartesian line: x for x over (-5.0, 5.0)
+       [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+       [2]: cartesian line: x**3 for x over (-5.0, 5.0)
 
     Multiple plots with different ranges.
 
-    >>> plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
-    Plot object containing:
-    [0]: cartesian line: x**2 for x over (-6.0, 6.0)
-    [1]: cartesian line: x for x over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
+       Plot object containing:
+       [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+       [1]: cartesian line: x for x over (-5.0, 5.0)
 
     No adaptive sampling.
 
-    >>> plot(x**2, adaptive=False, nb_of_points=400)
-    Plot object containing:
-    [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot(x**2, adaptive=False, nb_of_points=400)
+       Plot object containing:
+       [0]: cartesian line: x**2 for x over (-10.0, 10.0)
 
     See Also
     ========
