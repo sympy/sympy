@@ -804,3 +804,9 @@ def test_Subs_subs():
     g = Function('g')
     assert Subs(2*f(x, y) + g(x), f(x, y), 1).subs(y, 2) == Subs(
         2*f(x, y) + g(x), (f(x, y), y), (1, 2))
+
+
+def test_issue_13333():
+    eq = 1/x
+    assert eq.subs(dict(x='1/2')) == 2
+    assert eq.subs(dict(x='(1/2)')) == 2
