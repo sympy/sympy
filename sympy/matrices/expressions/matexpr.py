@@ -247,6 +247,12 @@ class MatrixExpr(Expr):
         else:
             return parsed
 
+    def _eval_derivative_n_times(self, x, n):
+        expr = self
+        for i in range(n):
+            expr = expr._eval_derivative(x)
+        return expr
+
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
             "Indexing not implemented for %s" % self.__class__.__name__)

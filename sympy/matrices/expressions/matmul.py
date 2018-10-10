@@ -12,7 +12,7 @@ from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
 from sympy.matrices.matrices import MatrixBase
 
 
-class MatMul(MatrixExpr):
+class MatMul(MatrixExpr, Mul):
     """
     A product of matrix expressions
 

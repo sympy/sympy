@@ -13,7 +13,8 @@ from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatri
 from sympy.utilities import default_sort_key, sift
 from sympy.core.operations import AssocOp
 
-class MatAdd(MatrixExpr, AssocOp):
+
+class MatAdd(MatrixExpr, Add):
     """A Sum of Matrix Expressions
 
     MatAdd inherits from and operates like SymPy Add
