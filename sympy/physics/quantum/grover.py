@@ -369,13 +369,12 @@ def random_oracle(nqubits, min_img=1, max_img=1, q_type='bin'):
         raise QuantumError("min_pic must be < 2**nqubits and max_pic must be <= 2**nqubits")
 
     import random
-
-    integers = list(range(nqubits ** 2))
     pics = random.randint(min_img, max_img)
+    integers = random.sample(range(2 ** nqubits), pics)
     if q_type == "int":
-        items = [IntQubit(integers.pop(integers.index(random.choice(integers))), nqubits) for _ in range(pics)]
+        items = [IntQubit(integers.pop()) for _ in range(pics)]
     else:
-        items = [Qubit(IntQubit(integers.pop(integers.index(random.choice(integers))), nqubits)) for _ in range(pics)]
+        items = [Qubit(IntQubit(integers.pop())) for _ in range(pics)]
 
     return OracleGate(nqubits, lambda qubits: qubits in items)
 
