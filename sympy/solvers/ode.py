@@ -4135,20 +4135,27 @@ def _nth_algebraic_is_special_case_of(soln1, soln2, constants2, var):
     True if soln1 is found to be a special case of soln2 wrt some value of the
     constants that appear in soln2. False otherwise.
     """
-    # solns are in the form Eq(f(x), expr)
-    # We're going to assert the equality of the two solutions for f(x)
-    expr1 = soln1.rhs
-    expr2 = soln2.rhs
+    # The solutions returned by nth_algebraic should be given explicitly as in
+    # Eq(f(x), expr). We will equate the RHSs and try to solve for the
+    # integration constants. If we get any solutions for the constants that
+    # don't depend on x then that shows that those values of the constants
+    # make soln1 a special case of soln2 impying that soln1 is redundant.
 
-    # FIXME: We don't want to call .doit() if it can be avoided...
-    expr1 = expr1.doit()
-    expr2 = expr2.doit()
+    constant_solns = solve(Eq(soln1.rhs, soln2.rhs), constants2)
 
-    # FIXME: We don't know if we can reasonably substitute these values for x
-    # into the expression...
-    values = range(2*len(constants2))
-    equations = [Eq(expr1, expr2.subs(var, v)) for v in values]
-    return len(solve(equations, constants2)) > 0
+    # Handling all the types potentially returned by solve is awkward...
+    if isinstance(constant_solns, dict):
+        constant_solns = list(constant_solns.values())
+    elif not isinstance(constant_solns, list):
+        constant_solns = [constant_solns]
+    if len(constants2) == 1:
+        constant_solns = [[soln] for soln in constant_solns]
+
+    for constant_soln in constant_solns:
+        if not any(c.has(var) for c in constant_soln):
+            return True
+    else:
+        return False
 
 def _nth_linear_match(eq, func, order):
     r"""
