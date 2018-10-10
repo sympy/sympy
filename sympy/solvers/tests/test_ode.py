@@ -2996,6 +2996,10 @@ def test_nth_algebraic_redundant_solutions():
     assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
     assert set(solns) == set(solns_final)
 
+    solns = [Eq(f(x), exp(x)),
+             Eq(f(x), C1*exp(C2*x))]
+    solns_final =  _nth_algebraic_remove_redundant_solutions(eqn, solns, 2, x)
+    assert solns_final == [Eq(f(x), C1*exp(C2*x))]
 
 #
 # These tests can be combined with the above test if they get fixed
