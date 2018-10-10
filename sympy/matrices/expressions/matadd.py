@@ -30,10 +30,12 @@ class MatAdd(MatrixExpr, Add):
 
     def __new__(cls, *args, **kwargs):
         args = list(map(sympify, args))
-        check = kwargs.get('check', True)
+        check = kwargs.get('check', False)
 
         obj = Basic.__new__(cls, *args)
         if check:
+            if all(not isinstance(i, MatrixExpr) for i in args):
+                return Add.fromiter(args)
             validate(*args)
         return obj
 

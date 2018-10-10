@@ -1309,8 +1309,9 @@ def _mask_nc(eq, name=None):
         if any(a == r[0] for r in rep):
             pot.skip()
         elif not a.is_commutative:
-            if a.is_Symbol:
+            if a.is_symbol:
                 nc_syms.add(a)
+                pot.skip()
             elif not (a.is_Add or a.is_Mul or a.is_Pow):
                 if all(s.is_commutative for s in a.free_symbols):
                     rep.append((a, Dummy()))
@@ -1336,7 +1337,7 @@ def _mask_nc(eq, name=None):
 
     nc_syms = list(nc_syms)
     nc_syms.sort(key=default_sort_key)
-    return expr, {v: k for k, v in rep} or None, nc_syms
+    return expr, {v: k for k, v in rep}, nc_syms
 
 
 def factor_nc(expr):
