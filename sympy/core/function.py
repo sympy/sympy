@@ -1472,7 +1472,11 @@ class Derivative(Expr):
     def variables(self):
         # TODO: deprecate?
         # TODO: support for `d^n`?
-        return tuple(v for v, count in self.variable_count if count.is_Integer for i in (range(count) if count.is_Integer else [1]))
+        rv = []
+        for v, count in self.variable_count:
+            if count.is_Integer:
+                rv.extend([v]*count)
+        return tuple(rv)
 
     @property
     def variable_count(self):
@@ -1681,6 +1685,8 @@ class Lambda(Expr):
         """The variables used in the internal representation of the function"""
         return self._args[0]
 
+    bound_symbols = variables
+
     @property
     def expr(self):
         """The return value of the function"""
@@ -1859,6 +1865,8 @@ class Subs(Expr):
     def variables(self):
         """The variables to be evaluated"""
         return self._args[1]
+
+    bound_symbols = variables
 
     @property
     def expr(self):

@@ -245,16 +245,11 @@ class CoordSystem(Basic):
 
     @staticmethod
     def _inv_transf(from_coords, to_exprs):
-        # TODO, check for results, get solve to return results in definite
-        # format instead of wondering dict/tuple/whatever.
-        # As it is at the moment this is an ugly hack for changing the format
         inv_from = [i.as_dummy() for i in from_coords]
         inv_to = solve(
-            [t[0] - t[1] for t in zip(inv_from, to_exprs)], list(from_coords))
-        if isinstance(inv_to, dict):
-            inv_to = [inv_to[fc] for fc in from_coords]
-        else:
-            inv_to = inv_to[0]
+            [t[0] - t[1] for t in zip(inv_from, to_exprs)],
+            list(from_coords), dict=True)[0]
+        inv_to = [inv_to[fc] for fc in from_coords]
         return Matrix(inv_from), Matrix(inv_to)
 
     @staticmethod
@@ -1297,7 +1292,8 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 def dummyfy(args, exprs):
     # TODO Is this a good idea?
     d_args = Matrix([s.as_dummy() for s in args])
-    d_exprs = Matrix([sympify(expr).subs(list(zip(args, d_args))) for expr in exprs])
+    reps = dict(zip(args, d_args))
+    d_exprs = Matrix([sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
 
 

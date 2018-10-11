@@ -1298,8 +1298,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         if r and r[d] != 0:
             y = Dummy('y')
             g = simplify(r[e]/r[d]).subs(f(x), y)
-            h = simplify(r[k]/r[d])
-            if h.has(f(x)) or g.has(x):
+            h = simplify(r[k]/r[d]).subs(f(x), y)
+            if y in h.free_symbols or x in g.free_symbols:
                 pass
             else:
                 r = {'g': g, 'h': h, 'y': y}

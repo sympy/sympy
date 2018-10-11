@@ -4,7 +4,6 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
         Matrix, Basic)
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.abc import t, w, x, y, z
 from sympy.core.basic import _aresame
 from sympy.core.function import PoleError, _mexpand
 from sympy.core.sympify import sympify
@@ -14,6 +13,7 @@ from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import range
 
+from sympy.abc import t, u, v, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
 
 
