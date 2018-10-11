@@ -108,8 +108,8 @@ the various ODE solving methods. For this reason, they are documented here.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_nth_linear_constant_coeff_variation_of_parameters
 
-:obj:`ode_nth_algebraic`
-^^^^^^^^^^^^^^^^
+:obj:`nth_algebraic`
+^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_nth_algebraic
 
 :obj:`separable`
