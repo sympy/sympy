@@ -905,7 +905,7 @@ class Piecewise(Function):
             exp_sets.append((expr, cond_int))
         return exp_sets
 
-    def _eval_rewrite_as_ITE(self, *args):
+    def _eval_rewrite_as_ITE(self, *args, **kwargs):
         byfree = {}
         args = list(args)
         default = any(c == True for b, c in args)

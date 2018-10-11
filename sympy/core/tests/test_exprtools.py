@@ -1,10 +1,10 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
-from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
+from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I, Function,
                    Interval, O, symbols, simplify, collect, Sum, Basic, Dict,
                    root, exp, cos, sin, oo, Dummy, log)
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
-                                  gcd_terms, factor_terms, factor_nc,
+                                  gcd_terms, factor_terms, factor_nc, _mask_nc,
                                   _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
@@ -376,6 +376,13 @@ def test_issue_7903():
     t = exp(I*cos(a)) + exp(-I*sin(a))
     assert t.simplify()
 
+def test_issue_8263():
+    F, G = symbols('F, G', commutative=False, cls=Function)
+    x, y = symbols('x, y')
+    expr, dummies, _ = _mask_nc(F(x)*G(y) - G(y)*F(x))
+    for v in dummies.values():
+        assert not v.is_commutative
+    assert not expr.is_zero
 
 def test_monotonic_sign():
     F = _monotonic_sign

@@ -184,15 +184,15 @@ class Ynm(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, m, theta, phi):
+    def _eval_rewrite_as_polynomial(self, n, m, theta, phi, **kwargs):
         # TODO: Make sure n \in N
         # TODO: Assert |m| <= n ortherwise we should return 0
         return self.expand(func=True)
 
-    def _eval_rewrite_as_sin(self, n, m, theta, phi):
+    def _eval_rewrite_as_sin(self, n, m, theta, phi, **kwargs):
         return self.rewrite(cos)
 
-    def _eval_rewrite_as_cos(self, n, m, theta, phi):
+    def _eval_rewrite_as_cos(self, n, m, theta, phi, **kwargs):
         # This method can be expensive due to extensive use of simplification!
         from sympy.simplify import simplify, trigsimp
         # TODO: Make sure n \in N

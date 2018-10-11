@@ -1026,11 +1026,9 @@ class Derivative(Expr):
         >>> from sympy import symbols, Function
         >>> f, g = symbols('f g', cls=Function)
         >>> f(2*g(x)).diff(x)
-        2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
-                                              (_xi_1,), (2*g(x),))
+        2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), _xi_1, 2*g(x))
         >>> f(g(x)).diff(x)
-        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
-                                            (_xi_1,), (g(x),))
+        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), _xi_1, g(x))
 
     Finally, note that, to be consistent with variational calculus, and to
     ensure that the definition of substituting a Function for a Symbol in an
@@ -1076,8 +1074,7 @@ class Derivative(Expr):
         >>> Derivative(f(x)**2, f(x), evaluate=True)
         2*f(x)
         >>> Derivative(f(g(x)), x, evaluate=True)
-        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
-                                            (_xi_1,), (g(x),))
+        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), _xi_1, g(x))
 
     """
 
@@ -1301,72 +1298,101 @@ class Derivative(Expr):
         return [i[0] if i[1] == 1 else i for i in v]
 
     @classmethod
-    def _sort_variable_count(cls, varcounts):
+    def _sort_variable_count(cls, vc):
         """
-        Sort (variable, count) pairs by variable, but disallow sorting of non-symbols.
+        Sort (variable, count) pairs into canonical order while
+        retaining order of variables that do not commute during
+        differentiation:
 
-        The count is not sorted. It is kept in the same order as the input
-        after sorting by variable.
-
-        When taking derivatives, the following rules usually hold:
-
-        * Derivative wrt different symbols commute.
-        * Derivative wrt different non-symbols commute.
-        * Derivatives wrt symbols and non-symbols don't commute.
+        * symbols and functions commute with each other
+        * derivatives commute with each other
+        * a derivative doesn't commute with anything it contains
+        * any other object is not allowed to commute if it has
+          free symbols in common with another object
 
         Examples
         ========
 
-        >>> from sympy import Derivative, Function, symbols
+        >>> from sympy import Derivative, Function, symbols, cos
         >>> vsort = Derivative._sort_variable_count
         >>> x, y, z = symbols('x y z')
         >>> f, g, h = symbols('f g h', cls=Function)
 
-        >>> vsort([(x, 3), (y, 2), (z, 1)])
-        [(x, 3), (y, 2), (z, 1)]
+        Contiguous items are collapsed into one pair:
 
-        >>> vsort([(h(x), 1), (g(x), 1), (f(x), 1)])
-        [(f(x), 1), (g(x), 1), (h(x), 1)]
+        >>> vsort([(x, 1), (x, 1)])
+        [(x, 2)]
+        >>> vsort([(y, 1), (f(x), 1), (y, 1), (f(x), 1)])
+        [(y, 2), (f(x), 2)]
 
-        >>> vsort([(z, 1), (y, 2), (x, 3), (h(x), 1), (g(x), 1), (f(x), 1)])
-        [(x, 3), (y, 2), (z, 1), (f(x), 1), (g(x), 1), (h(x), 1)]
+        Ordering is canonical.
 
-        >>> vsort([(x, 1), (f(x), 1), (y, 1), (f(y), 1)])
-        [(x, 1), (f(x), 1), (y, 1), (f(y), 1)]
+        >>> def vsort0(*v):
+        ...     # docstring helper to
+        ...     # change vi -> (vi, 0), sort, and return vi vals
+        ...     return [i[0] for i in vsort([(i, 0) for i in v])]
 
-        >>> vsort([(y, 1), (x, 2), (g(x), 1), (f(x), 1), (z, 1), (h(x), 1), (y, 2), (x, 1)])
-        [(x, 2), (y, 1), (f(x), 1), (g(x), 1), (z, 1), (h(x), 1), (x, 1), (y, 2)]
+        >>> vsort0(y, x)
+        [x, y]
+        >>> vsort0(g(y), g(x), f(y))
+        [f(y), g(x), g(y)]
 
-        >>> vsort([(z, 1), (y, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)])
-        [(y, 1), (z, 1), (f(x), 1), (x, 1), (f(x), 1), (g(x), 1)]
+        Symbols are sorted as far to the left as possible but never
+        move to the left of a derivative having the same symbol in
+        its variables; the same applies to AppliedUndef which are
+        always sorted after Symbols:
 
-        >>> vsort([(z, 1), (y, 2), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1), (z, 2), (z, 1), (y, 1), (x, 1)])
-        [(y, 2), (z, 1), (f(x), 1), (x, 2), (f(x), 2), (g(x), 1), (x, 1), (y, 1), (z, 2), (z, 1)]
-
+        >>> dfx = f(x).diff(x)
+        >>> assert vsort0(dfx, y) == [y, dfx]
+        >>> assert vsort0(dfx, x) == [dfx, x]
         """
-        sorted_vars = []
-        symbol_part = []
-        non_symbol_part = []
-        for (v, c) in varcounts:
-            if not v.is_symbol:
-                if len(symbol_part) > 0:
-                    sorted_vars.extend(sorted(symbol_part,
-                                              key=lambda i: default_sort_key(i[0])))
-                    symbol_part = []
-                non_symbol_part.append((v, c))
+        from sympy.utilities.iterables import uniq, topological_sort
+        if not vc:
+            return []
+        vc = list(vc)
+        if len(vc) == 1:
+            return [Tuple(*vc[0])]
+        V = list(range(len(vc)))
+        E = []
+        v = lambda i: vc[i][0]
+        D = Dummy()
+        def _block(d, v, wrt=False):
+            # return True if v should not come before d else False
+            if d == v:
+                return wrt
+            if d.is_Symbol:
+                return False
+            if isinstance(d, Derivative):
+                # a derivative blocks if any of it's variables contain
+                # v; the wrt flag will return True for an exact match
+                # and will cause an AppliedUndef to block if v is in
+                # the arguments
+                if any(_block(k, v, wrt=True)
+                        for k, _ in d.variable_count):
+                    return True
+                return False
+            if not wrt and isinstance(d, AppliedUndef):
+                return False
+            if v.is_Symbol:
+                return v in d.free_symbols
+            if isinstance(v, AppliedUndef):
+                return _block(d.xreplace({v: D}), D)
+            return d.free_symbols & v.free_symbols
+        for i in range(len(vc)):
+            for j in range(i):
+                if _block(v(j), v(i)):
+                    E.append((j,i))
+        # this is the default ordering to use in case of ties
+        O = dict(zip(ordered(uniq([i for i, c in vc])), range(len(vc))))
+        ix = topological_sort((V, E), key=lambda i: O[v(i)])
+        # merge counts of contiguously identical items
+        merged = []
+        for v, c in [vc[i] for i in ix]:
+            if merged and merged[-1][0] == v:
+                merged[-1][1] += c
             else:
-                if len(non_symbol_part) > 0:
-                    sorted_vars.extend(sorted(non_symbol_part,
-                                              key=lambda i: default_sort_key(i[0])))
-                    non_symbol_part = []
-                symbol_part.append((v, c))
-        if len(non_symbol_part) > 0:
-            sorted_vars.extend(sorted(non_symbol_part,
-                                      key=lambda i: default_sort_key(i[0])))
-        if len(symbol_part) > 0:
-            sorted_vars.extend(sorted(symbol_part,
-                                      key=lambda i: default_sort_key(i[0])))
-        return [Tuple(*i) for i in sorted_vars]
+                merged.append([v, c])
+        return [Tuple(*i) for i in merged]
 
     def _eval_is_commutative(self):
         return self.expr.is_commutative
@@ -1742,7 +1768,7 @@ class Subs(Expr):
     >>> f = Function('f')
     >>> e = Subs(f(x).diff(x), x, y)
     >>> e.subs(y, 0)
-    Subs(Derivative(f(x), x), (x,), (0,))
+    Subs(Derivative(f(x), x), x, 0)
     >>> e.subs(f, sin).doit()
     cos(y)
 

@@ -871,21 +871,18 @@ class Basic(with_metaclass(ManagedProperties)):
             raise ValueError("subs accepts either 1 or 2 arguments")
 
         sequence = list(sequence)
-        for i in range(len(sequence)):
-            s = list(sequence[i])
-            for j, si in enumerate(s):
-                try:
-                    si = sympify(si, strict=True)
-                except SympifyError:
-                    if type(si) is str:
-                        si = Symbol(si)
-                    else:
-                        # if it can't be sympified, skip it
-                        sequence[i] = None
-                        break
-                s[j] = si
-            else:
-                sequence[i] = None if _aresame(*s) else tuple(s)
+        for i, s in enumerate(sequence):
+            if type(s[0]) is str:
+                # when old is a string we prefer Symbol
+                s = Symbol(s[0]), s[1]
+            try:
+                s = [sympify(_, strict=type(_) is not str) for _ in s]
+            except SympifyError:
+                # if it can't be sympified, skip it
+                sequence[i] = None
+                continue
+            # skip if there is no change
+            sequence[i] = None if _aresame(*s) else tuple(s)
         sequence = list(filter(None, sequence))
 
         if unordered:
@@ -1586,10 +1583,11 @@ class Basic(with_metaclass(ManagedProperties)):
 
         if pattern is None or isinstance(self, pattern):
             if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args)
+                rewritten = getattr(self, rule)(*args, **hints)
                 if rewritten is not None:
                     return rewritten
-        return self.func(*args)
+
+        return self.func(*args) if hints.get('evaluate', True) else self
 
     def _accept_eval_derivative(self, s):
         # This method needs to be overridden by array-like objects

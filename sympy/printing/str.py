@@ -404,6 +404,14 @@ class StrPrinter(Printer):
                 use = trim
             return 'Permutation(%s)' % use
 
+    def _print_Subs(self, obj):
+        expr, old, new = obj.args
+        if len(obj.point) == 1:
+            old = old[0]
+            new = new[0]
+        return "Subs(%s, %s, %s)" % (
+            self._print(expr), self._print(old), self._print(new))
+
     def _print_TensorIndex(self, expr):
         return expr._print()
 

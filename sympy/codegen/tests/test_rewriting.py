@@ -169,3 +169,5 @@ def test_create_expand_pow_optimization():
 
     sin4x = sin(x)**4
     assert ccode(optimize(sin4x, [my_opt])) == 'pow(sin(x), 4)'
+
+    assert ccode(optimize((x**(-4)), [my_opt])) == 'pow(x, -4)'

@@ -103,14 +103,14 @@ def test_issue_11313():
 def test_series_of_Subs():
     from sympy.abc import x, y, z
 
-    subs1 = Subs(sin(x), (x,), (y,))
-    subs2 = Subs(sin(x) * cos(z), (x,), (y,))
+    subs1 = Subs(sin(x), x, y)
+    subs2 = Subs(sin(x) * cos(z), x, y)
     subs3 = Subs(sin(x * z), (x, z), (y, x))
 
     assert subs1.series(x) == subs1
-    assert subs1.series(y) == Subs(x, (x,), (y,)) + Subs(-x**3/6, (x,), (y,)) + Subs(x**5/120, (x,), (y,)) + O(y**6)
+    assert subs1.series(y) == Subs(x, x, y) + Subs(-x**3/6, x, y) + Subs(x**5/120, x, y) + O(y**6)
     assert subs1.series(z) == subs1
-    assert subs2.series(z) == Subs(z**4*sin(x)/24, (x,), (y,)) + Subs(-z**2*sin(x)/2, (x,), (y,)) + Subs(sin(x), (x,), (y,)) + O(z**6)
+    assert subs2.series(z) == Subs(z**4*sin(x)/24, x, y) + Subs(-z**2*sin(x)/2, x, y) + Subs(sin(x), x, y) + O(z**6)
     assert subs3.series(x).doit() == subs3.doit().series(x)
     assert subs3.series(z).doit() == sin(x*y)
 
@@ -118,22 +118,22 @@ def test_series_of_Subs():
 def test_issue_3978():
     f = Function('f')
     assert f(x).series(x, 0, 3, dir='-') == \
-            f(0) + x*Subs(Derivative(f(x), x), (x,), (0,)) + \
-            x**2*Subs(Derivative(f(x), x, x), (x,), (0,))/2 + O(x**3)
+            f(0) + x*Subs(Derivative(f(x), x), x, 0) + \
+            x**2*Subs(Derivative(f(x), x, x), x, 0)/2 + O(x**3)
     assert f(x).series(x, 0, 3) == \
-            f(0) + x*Subs(Derivative(f(x), x), (x,), (0,)) + \
-            x**2*Subs(Derivative(f(x), x, x), (x,), (0,))/2 + O(x**3)
+            f(0) + x*Subs(Derivative(f(x), x), x, 0) + \
+            x**2*Subs(Derivative(f(x), x, x), x, 0)/2 + O(x**3)
     assert f(x**2).series(x, 0, 3) == \
-            f(0) + x**2*Subs(Derivative(f(x), x), (x,), (0,)) + O(x**3)
+            f(0) + x**2*Subs(Derivative(f(x), x), x, 0) + O(x**3)
     assert f(x**2+1).series(x, 0, 3) == \
-            f(1) + x**2*Subs(Derivative(f(x), x), (x,), (1,)) + O(x**3)
+            f(1) + x**2*Subs(Derivative(f(x), x), x, 1) + O(x**3)
 
     class TestF(Function):
         pass
 
     assert TestF(x).series(x, 0, 3) ==  TestF(0) + \
-            x*Subs(Derivative(TestF(x), x), (x,), (0,)) + \
-            x**2*Subs(Derivative(TestF(x), x, x), (x,), (0,))/2 + O(x**3)
+            x*Subs(Derivative(TestF(x), x), x, 0) + \
+            x**2*Subs(Derivative(TestF(x), x, x), x, 0)/2 + O(x**3)
 
 from sympy.series.acceleration import richardson, shanks
 from sympy import Sum, Integer

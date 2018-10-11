@@ -113,10 +113,10 @@ class fibonacci(Function):
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
 
-    def _eval_rewrite_as_sqrt(self, n):
+    def _eval_rewrite_as_sqrt(self, n, **kwargs):
         return 2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
 
-    def _eval_rewrite_as_GoldenRatio(self,n):
+    def _eval_rewrite_as_GoldenRatio(self,n, **kwargs):
         return (S.GoldenRatio**n - 1/(-S.GoldenRatio)**n)/(2*S.GoldenRatio-1)
 
 
@@ -166,7 +166,7 @@ class lucas(Function):
         if n.is_Integer:
             return fibonacci(n + 1) + fibonacci(n - 1)
 
-    def _eval_rewrite_as_sqrt(self, n):
+    def _eval_rewrite_as_sqrt(self, n, **kwargs):
         return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
 
 
@@ -242,7 +242,7 @@ class tribonacci(Function):
                        "only for non-negative integer indices.")
                 return cls._tribpoly(n).subs(_sym, sym)
 
-    def _eval_rewrite_as_sqrt(self, n):
+    def _eval_rewrite_as_sqrt(self, n, **kwargs):
         w = (-1 + S.ImaginaryUnit * sqrt(3)) / 2
         a = (1 + cbrt(19 + 3*sqrt(33)) + cbrt(19 - 3*sqrt(33))) / 3
         b = (1 + w*cbrt(19 + 3*sqrt(33)) + w**2*cbrt(19 - 3*sqrt(33))) / 3
@@ -252,7 +252,7 @@ class tribonacci(Function):
             + c**(n + 1)/((c - a)*(c - b)))
         return Tn
 
-    def _eval_rewrite_as_TribonacciConstant(self, n):
+    def _eval_rewrite_as_TribonacciConstant(self, n, **kwargs):
         b = cbrt(586 + 102*sqrt(33))
         Tn = 3 * b * S.TribonacciConstant**n / (b**2 - 2*b + 4)
         return floor(Tn + S.Half)
@@ -538,7 +538,7 @@ class bell(Function):
                 r = cls._bell_incomplete_poly(int(n), int(k_sym), symbols)
                 return r
 
-    def _eval_rewrite_as_Sum(self, n, k_sym=None, symbols=None):
+    def _eval_rewrite_as_Sum(self, n, k_sym=None, symbols=None, **kwargs):
         from sympy import Sum
         if (k_sym is not None) or (symbols is not None):
             return self
@@ -720,19 +720,19 @@ class harmonic(Function):
                 cls._functions[m] = f
             return cls._functions[m](int(n))
 
-    def _eval_rewrite_as_polygamma(self, n, m=1):
+    def _eval_rewrite_as_polygamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
         return S.NegativeOne**m/factorial(m - 1) * (polygamma(m - 1, 1) - polygamma(m - 1, n + 1))
 
-    def _eval_rewrite_as_digamma(self, n, m=1):
+    def _eval_rewrite_as_digamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
         return self.rewrite(polygamma)
 
-    def _eval_rewrite_as_trigamma(self, n, m=1):
+    def _eval_rewrite_as_trigamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
         return self.rewrite(polygamma)
 
-    def _eval_rewrite_as_Sum(self, n, m=None):
+    def _eval_rewrite_as_Sum(self, n, m=None, **kwargs):
         from sympy import Sum
         k = Dummy("k", integer=True)
         if m is None:
@@ -772,7 +772,7 @@ class harmonic(Function):
 
         return self
 
-    def _eval_rewrite_as_tractable(self, n, m=1):
+    def _eval_rewrite_as_tractable(self, n, m=1, **kwargs):
         from sympy import polygamma
         return self.rewrite(polygamma).rewrite("tractable", deep=True)
 
@@ -900,7 +900,7 @@ class euler(Function):
             if m.is_odd and m.is_positive:
                 return S.Zero
 
-    def _eval_rewrite_as_Sum(self, n, x=None):
+    def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
         from sympy import Sum
         if x is None and n.is_even:
             k = Dummy("k", integer=True)
@@ -1036,22 +1036,22 @@ class catalan(Function):
         n = self.args[0]
         return catalan(n)*(polygamma(0, n + Rational(1, 2)) - polygamma(0, n + 2) + log(4))
 
-    def _eval_rewrite_as_binomial(self, n):
+    def _eval_rewrite_as_binomial(self, n, **kwargs):
         return binomial(2*n, n)/(n + 1)
 
-    def _eval_rewrite_as_factorial(self, n):
+    def _eval_rewrite_as_factorial(self, n, **kwargs):
         return factorial(2*n) / (factorial(n+1) * factorial(n))
 
-    def _eval_rewrite_as_gamma(self, n):
+    def _eval_rewrite_as_gamma(self, n, **kwargs):
         from sympy import gamma
         # The gamma function allows to generalize Catalan numbers to complex n
         return 4**n*gamma(n + S.Half)/(gamma(S.Half)*gamma(n + 2))
 
-    def _eval_rewrite_as_hyper(self, n):
+    def _eval_rewrite_as_hyper(self, n, **kwargs):
         from sympy import hyper
         return hyper([1 - n, -n], [2], 1)
 
-    def _eval_rewrite_as_Product(self, n):
+    def _eval_rewrite_as_Product(self, n, **kwargs):
         from sympy import Product
         if not (n.is_integer and n.is_nonnegative):
             return self
@@ -1129,7 +1129,7 @@ class genocchi(Function):
         if (n - 1).is_zero:
             return S.One
 
-    def _eval_rewrite_as_bernoulli(self, n):
+    def _eval_rewrite_as_bernoulli(self, n, **kwargs):
         if n.is_integer and n.is_nonnegative:
             return (1 - S(2) ** n) * bernoulli(n) * 2
 

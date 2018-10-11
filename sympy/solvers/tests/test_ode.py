@@ -161,18 +161,15 @@ def test_dsolve_linsystem_symbol_piecewise():
     u = Symbol('u')
     eq = (Eq(diff(f(x), x), 2*f(x) + g(x)),
            Eq(diff(g(x), x), u*f(x)))
-    s1 = [
-        Eq(f(x), Piecewise((C1*exp(x*(sqrt(4*u + 4)/2 + 1))
-            + C2*exp(x*(-sqrt(4*u + 4)/2 + 1)), Ne(4*u + 4, 0)),
-            ((C1 + C2*(x + Piecewise((0, Eq(sqrt(4*u + 4)/2 + 1, 2)),
-            (1/(-sqrt(4*u + 4)/2 + 1), True))))*exp(x*(sqrt(4*u + 4)/2 + 1)),
-            True))),
-        Eq(g(x), Piecewise((C1*(sqrt(4*u + 4)/2 - 1)*exp(x*(sqrt(4*u + 4)/2 + 1))
-            + C2*(-sqrt(4*u + 4)/2 - 1)*exp(x*(-sqrt(4*u + 4)/2 + 1)),
-            Ne(4*u + 4, 0)), ((C1*(sqrt(4*u + 4)/2 - 1) + C2*(x*(sqrt(4*u + 4)/2 - 1)
-            + Piecewise((1, Eq(sqrt(4*u + 4)/2 + 1, 2)),
-            (0, True))))*exp(x*(sqrt(4*u + 4)/2 + 1)), True)))
-    ]
+    s1 = [Eq(f(x), Piecewise((C1*exp(x*(sqrt(4*u + 4)/2 + 1)) +
+        C2*exp(x*(-sqrt(4*u + 4)/2 + 1)), Ne(4*u + 4, 0)), ((C1 + C2*(x +
+        Piecewise((0, Eq(sqrt(4*u + 4)/2 + 1, 2)), (1/(-sqrt(4*u + 4)/2 + 1),
+        True))))*exp(x*(sqrt(4*u + 4)/2 + 1)), True))), Eq(g(x),
+        Piecewise((C1*(sqrt(4*u + 4)/2 - 1)*exp(x*(sqrt(4*u + 4)/2 + 1)) +
+        C2*(-sqrt(4*u + 4)/2 - 1)*exp(x*(-sqrt(4*u + 4)/2 + 1)), Ne(4*u + 4,
+        0)), ((C1*(sqrt(4*u + 4)/2 - 1) + C2*(x*(sqrt(4*u + 4)/2 - 1) +
+        Piecewise((1, Eq(sqrt(4*u + 4)/2 + 1, 2)), (0,
+        True))))*exp(x*(sqrt(4*u + 4)/2 + 1)), True)))]
     s = dsolve(eq)
     assert s == s1
     s = [(l.lhs, l.rhs) for l in s]
@@ -602,6 +599,7 @@ def test_nonlinear_3eq_order1():
 
 
 def test_checkodesol():
+    from sympy import Ei
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
     raises(ValueError, lambda: checkodesol(f(x, y).diff(x), Eq(f(x, y), x)))
@@ -639,7 +637,10 @@ def test_checkodesol():
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
     assert not checkodesol(eq3, sol3)[1].has(f(x))
-
+    # This case was failing intermittently depending on hash-seed:
+    eqn = Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x))
+    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
+    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
 
 @slow
 def test_dsolve_options():
@@ -2896,7 +2897,7 @@ def test_issue_10867():
 def test_issue_11290():
     sol_1 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact_Integral')
     sol_0 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact')
-    assert str(sol_1)== "Eq(Subs(Integral(_y**2 - x*sin(_y) - Integral(-sin(_y), x), _y) + Integral(cos(_y), x), (_y,), (f(x),)), C1)"
+    assert str(sol_1)== "Eq(Subs(Integral(_y**2 - x*sin(_y) - Integral(-sin(_y), x), _y) + Integral(cos(_y), x), _y, f(x)), C1)"
     assert sol_1.doit() == sol_0
 
 
@@ -2904,3 +2905,29 @@ def test_issue_14395():
     sol = Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))
         - 2*log(cos(x)**2)/3 + 2*cos(x)**2/3)*cos(3*x))
     assert dsolve(Derivative(f(x), x, x) + 9*f(x) - sec(x), f(x)) == sol
+
+
+def test_sysode_linear_neq_order1():
+    from sympy.abc import t
+
+    Z0 = Function('Z0')
+    Z1 = Function('Z1')
+    Z2 = Function('Z2')
+    Z3 = Function('Z3')
+
+    k01, k10, k20, k21, k23, k30 = symbols('k01 k10 k20 k21 k23 k30')
+
+    eq = (Eq(Derivative(Z0(t), t), -k01*Z0(t) + k10*Z1(t) + k20*Z2(t) + k30*Z3(t)), Eq(Derivative(Z1(t), t),
+          k01*Z0(t) - k10*Z1(t) + k21*Z2(t)), Eq(Derivative(Z2(t), t), -(k20 + k21 + k23)*Z2(t)), Eq(Derivative(Z3(t),
+          t), k23*Z2(t) - k30*Z3(t)))
+
+    sols_eq = [Eq(Z0(t), C1*k10/k01 + C2*(-k10 + k30)*exp(-k30*t)/(k01 + k10 - k30) - C3*exp(t*(-
+                k01 - k10)) + C4*(k10*k20 + k10*k21 - k10*k30 - k20**2 - k20*k21 - k20*k23 + k20*k30 +
+                k23*k30)*exp(t*(-k20 - k21 - k23))/(k23*(k01 + k10 - k20 - k21 - k23))),
+               Eq(Z1(t), C1 - C2*k01*exp(-k30*t)/(k01 + k10 - k30) + C3*exp(t*(-k01 - k10)) + C4*(k01*k20 + k01*k21
+                - k01*k30 - k20*k21 - k21**2 - k21*k23 + k21*k30)*exp(t*(-k20 - k21 - k23))/(k23*(k01 + k10 - k20 -
+                k21 - k23))),
+               Eq(Z2(t), C4*(-k20 - k21 - k23 + k30)*exp(t*(-k20 - k21 - k23))/k23),
+               Eq(Z3(t), C2*exp(-k30*t) + C4*exp(t*(-k20 - k21 - k23)))]
+
+    assert dsolve(eq, simplify=False) == sols_eq

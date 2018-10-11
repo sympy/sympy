@@ -1416,7 +1416,7 @@ def test_Hadamard():
     from sympy.matrices import MatrixSymbol, HadamardProduct
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    assert latex(HadamardProduct(X, Y*Y)) == r'X \circ \left(Y Y\right)'
+    assert latex(HadamardProduct(X, Y*Y)) == r'X \circ Y^{2}'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
 
 
@@ -1795,7 +1795,7 @@ def test_issue_9216():
 def test_latex_printer_tensor():
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
     L = TensorIndexType("L")
-    i, j, k = tensor_indices("i j k", L)
+    i, j, k, l = tensor_indices("i j k l", L)
     i0 = tensor_indices("i_0", L)
     A, B, C, D = tensorhead("A B C D", [L], [[1]])
     H = tensorhead("H", [L, L], [[1], [1]])
@@ -1845,3 +1845,24 @@ def test_latex_printer_tensor():
 
     expr = A(i) + 3*B(i)
     assert latex(expr) == "3B{}^{i} + A{}^{i}"
+
+    ## Test ``TensorElement``:
+    from sympy.tensor.tensor import TensorElement
+
+    expr = TensorElement(K(i,j,k,l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3,j,k=2,l}'
+
+    expr = TensorElement(K(i,j,k,l), {i:3})
+    assert latex(expr) == 'K{}^{i=3,jkl}'
+
+    expr = TensorElement(K(i,-j,k,l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3}{}_{j}{}^{k=2,l}'
+
+    expr = TensorElement(K(i,-j,k,-l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3}{}_{j}{}^{k=2}{}_{l}'
+
+    expr = TensorElement(K(i,j,-k,-l), {i:3, -k:2})
+    assert latex(expr) == 'K{}^{i=3,j}{}_{k=2,l}'
+
+    expr = TensorElement(K(i,j,-k,-l), {i:3})
+    assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'

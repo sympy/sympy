@@ -142,6 +142,10 @@ def test_multiplication():
     B = MatrixSymbol('B', n, n)
     assert Identity(n) * (A + B) == A + B
 
+    assert A**2*A == A**3
+    assert A**2*(A.I)**3 == A.I
+    assert A**3*(A.I)**2 == A
+
 
 def test_MatPow():
     A = MatrixSymbol('A', n, n)
@@ -155,6 +159,8 @@ def test_MatPow():
     assert A**1 == A
     assert A**2 == AA
     assert A**-1 == Inverse(A)
+    assert (A**-1)**-1 == A
+    assert (A**2)**3 == A**6
     assert A**S.Half == sqrt(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
 

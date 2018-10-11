@@ -22,6 +22,7 @@ from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand)
 from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import Symbol
+from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
@@ -1052,9 +1053,9 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     =======
 
     A set of solutions satisfying the given equation.
-    A `ConditionSet` if the equation is unsolvable or
+    A ``ConditionSet`` if the equation is unsolvable or
     if the assumptions are not properly defined, in that case
-    a different style of `ConditionSet` is returned having the
+    a different style of ``ConditionSet`` is returned having the
     solution(s) of the equation with the desired assumptions.
 
     Examples
@@ -1078,12 +1079,12 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     The logarithm function is the inverse of the exponential function.
     The defining relation between exponentiation and logarithm is:
 
-    .. math:: {log_b x} = y \enspace if \enspace b^y = x
+    .. math:: {\log_b x} = y \enspace if \enspace b^y = x
 
     Therefore if we are given an equation with exponent terms, we can
-    convert every term to its corresponding log form. This is achieved by
-    taking logarithms and expanding the equation using log identities
-    so that it can easily be handled by `solveset`.
+    convert every term to its corresponding logarithmic form. This is
+    achieved by taking logarithms and expanding the equation using
+    logarithmic identities so that it can easily be handled by ``solveset``.
 
     For example:
 
@@ -1091,9 +1092,9 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     Taking log both sides will reduce the equation to
 
-    .. math:: (2x)*log(3) = (x + 3)*log(2)
+    .. math:: (2x)\log(3) = (x + 3)\log(2)
 
-    This form can be easily handed by `solveset`.
+    This form can be easily handed by ``solveset``.
     """
     unsolved_result = ConditionSet(symbol, Eq(lhs - rhs), domain)
     newlhs = powdenest(lhs)
@@ -1137,8 +1138,8 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
 def _is_exponential(f, symbol):
     r"""
-    Return True if one or more terms contain symbol only in exponents,
-    else False.
+    Return ``True`` if one or more terms contain ``symbol`` only in
+    exponents, else ``False``.
 
     Parameters
     ==========
@@ -1169,7 +1170,7 @@ def _is_exponential(f, symbol):
     * Philosophy behind the helper
 
     The function extracts each term of the equation and checks if it is
-    of exponential form w.r.t `symbol`.
+    of exponential form w.r.t ``symbol``.
     """
     rv = False
     for expr_arg in _term_factors(f):
@@ -1187,19 +1188,19 @@ def _is_exponential(f, symbol):
 def _solve_logarithm(lhs, rhs, symbol, domain):
     r"""
     Helper to solve logarithmic equations which are reducible
-    to a single instance of `log`.
+    to a single instance of `\log`.
 
     Logarithmic equations are (currently) the equations that contains
-    `log` terms which can be reduced to a single log term or
+    `\log` terms which can be reduced to a single `\log` term or
     a constant using various logarithmic identities.
 
     For example:
 
-    .. math:: log(x) + log(x - 4)
+    .. math:: \log(x) + \log(x - 4)
 
     can be reduced to:
 
-    .. math:: log(x(x - 4))
+    .. math:: \log(x(x - 4))
 
     Parameters
     ==========
@@ -1217,7 +1218,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
     =======
 
     A set of solutions satisfying the given equation.
-    A `ConditionSet` if the equation is unsolvable.
+    A ``ConditionSet`` if the equation is unsolvable.
 
     Examples
     ========
@@ -1233,7 +1234,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
 
     A logarithm is another way to write exponent and is defined by
 
-    .. math:: {log_b x} = y \enspace if \enspace b^y = x
+    .. math:: {\log_b x} = y \enspace if \enspace b^y = x
 
     When one side of the equation contains a single logarithm, the
     equation can be solved by rewriting the equation as an equivalent
@@ -1243,26 +1244,26 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
 
     Take for example
 
-    .. math:: log(2*x) - 15 = 0
+    .. math:: \log(2x) - 15 = 0
 
     contains single logarithm, therefore we can directly rewrite it to
     exponential form as
 
-    .. math:: x = exp(15)/2
+    .. math:: x = \frac{e^{15}}{2}
 
     But if the equation has more than one logarithm as
 
-    .. math:: log(x - 3) + log(x + 3) = 0
+    .. math:: \log(x - 3) + \log(x + 3) = 0
 
-    we use log identities to convert into a reduced form
+    we use logarithmic identities to convert it into a reduced form
 
     Using,
 
-    .. math:: log(a) + log(b) = log(a*b)
+    .. math:: \log(a) + \log(b) = \log(ab)
 
-    therefore the equation becomes,
+    the equation becomes,
 
-    .. math:: log((x - 3)*(x  + 3))
+    .. math:: \log((x - 3)(x + 3))
 
     This equation contains one logarithm and can be solved by rewriting
     to exponents.
@@ -1275,8 +1276,8 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
 
 def _is_logarithmic(f, symbol):
     r"""
-    Return True if the equation is in the form
-    `a*log(f(x)) + b*log(g(x)) + ... + c` else False.
+    Return ``True`` if the equation is in the form
+    `a\log(f(x)) + b\log(g(x)) + ... + c` else ``False``.
 
     Parameters
     ==========
@@ -1290,7 +1291,7 @@ def _is_logarithmic(f, symbol):
     Returns
     =======
 
-    `True` if the equation is logarithmic otherwise `False`.
+    ``True`` if the equation is logarithmic otherwise ``False``.
 
     Examples
     ========
@@ -1312,7 +1313,7 @@ def _is_logarithmic(f, symbol):
     * Philosophy behind the helper
 
     The function extracts each term and checks whether it is
-    logarithmic w.r.t `symbol`.
+    logarithmic w.r.t ``symbol``.
     """
     rv = False
     for term in Add.make_args(f):
@@ -1334,7 +1335,7 @@ def _is_logarithmic(f, symbol):
 def _transolve(f, symbol, domain):
     r"""
     Function to solve transcendental equations. It is a helper to
-    `solveset` and should be used internally. `\_transolve`
+    ``solveset`` and should be used internally. ``_transolve``
     currently supports the following class of equations:
 
         - Exponential equations
@@ -1345,33 +1346,33 @@ def _transolve(f, symbol, domain):
 
     f : Any transcendental equation that needs to be solved.
         This needs to be an expression, which is assumed
-        to be equal to 0.
+        to be equal to ``0``.
 
     symbol : The variable for which the equation is solved.
-        This needs to be of class `Symbol`.
+        This needs to be of class ``Symbol``.
 
     domain : A set over which the equation is solved.
-        This needs to be of class `Set`.
+        This needs to be of class ``Set``.
 
     Returns
     =======
 
     Set
-        A set of values for `symbol` for which `f` is equal to
-        zero. An `EmptySet` is returned if `f` does not have solutions
-        in respective domain. A `ConditionSet` is returned as unsolved
+        A set of values for ``symbol`` for which ``f`` is equal to
+        zero. An ``EmptySet`` is returned if ``f`` does not have solutions
+        in respective domain. A ``ConditionSet`` is returned as unsolved
         object if algorithms to evaluate complete solution are not
         yet implemented.
 
-    How to use `\_transolve`
-    ========================
+    How to use ``_transolve``
+    =========================
 
-    `\_transolve` should not be used as an independent function, because
-    it assumes that the equation (`f`) and the `symbol` comes from
-    `solveset` and might have undergone a few modification(s).
-    To use `\_transolve` as an independent function the equation (`f`)
-    and the `symbol` should be passed as they would have been by
-    `solveset`.
+    ``_transolve`` should not be used as an independent function, because
+    it assumes that the equation (``f``) and the ``symbol`` comes from
+    ``solveset`` and might have undergone a few modification(s).
+    To use ``_transolve`` as an independent function the equation (``f``)
+    and the ``symbol`` should be passed as they would have been by
+    ``solveset``.
 
     Examples
     ========
@@ -1383,42 +1384,42 @@ def _transolve(f, symbol, domain):
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
     {-(log(3) + 3*log(5))/(-log(5) + 2*log(3))}
 
-    How `\_transolve` works
-    =======================
+    How ``_transolve`` works
+    ========================
 
-    `\_transolve` uses two types of helper functions to solve equations
+    ``_transolve`` uses two types of helper functions to solve equations
     of a particular class:
 
     Identifying helpers: To determine whether a given equation
     belongs to a certain class of equation or not. Returns either
-    True or False.
+    ``True`` or ``False``.
 
     Solving helpers: Once an equation is identified, a corresponding
     helper either solves the equation or returns a form of the equation
-    that `solveset` might better be able to handle.
+    that ``solveset`` might better be able to handle.
 
     * Philosophy behind the module
 
-    The purpose of `\_transolve` is to take equations which are not
+    The purpose of ``_transolve`` is to take equations which are not
     already polynomial in their generator(s) and to either recast them
     as such through a valid transformation or to solve them outright.
     A pair of helper functions for each class of supported
     transcendental functions are employed for this purpose. One
     identifies the transcendental form of an equation and the other
     either solves it or recasts it into a tractable form that can be
-    solved by  `solveset`.
-    For example, an equation in the form `a*b**f(x) - c*d**g(x) = 0`
+    solved by  ``solveset``.
+    For example, an equation in the form `ab^{f(x)} - cd^{g(x)} = 0`
     can be transformed to
-    `log(a) + f(x)*log(b) - log(c) - g(x)*log(d) = 0`
-    (under certain assumptions) and this can be solved with `solveset`
+    `\log(a) + f(x)\log(b) - \log(c) - g(x)\log(d) = 0`
+    (under certain assumptions) and this can be solved with ``solveset``
     if `f(x)` and `g(x)` are in polynomial form.
 
-    How `\_transolve` is better than `\_tsolve`
-    ===========================================
+    How ``_transolve`` is better than ``_tsolve``
+    =============================================
 
     1) Better output
 
-    `\_transolve` provides expressions in a more simplified form.
+    ``_transolve`` provides expressions in a more simplified form.
 
     Consider a simple exponential equation
 
@@ -1435,14 +1436,14 @@ def _transolve(f, symbol, domain):
 
     2) Extensible
 
-    The API of `\_transolve` is designed such that it is easily
+    The API of ``_transolve`` is designed such that it is easily
     extensible, i.e. the code that solves a given class of
     equations is encapsulated in a helper and not mixed in with
-    the code of \_transolve itself.
+    the code of ``_transolve`` itself.
 
     3) Modular
 
-    `\_transolve` is designed to be modular i.e, for every class of
+    ``_transolve`` is designed to be modular i.e, for every class of
     equation a separate helper for identification and solving is
     implemented. This makes it easy to change or modify any of the
     method implemented directly in the helpers without interfering
@@ -1450,10 +1451,10 @@ def _transolve(f, symbol, domain):
 
     4) Faster Computation
 
-    Solving equation via `\_transolve` is much faster as compared to
-    `\_tsolve`. In `solve`, attempts are made computing every possibility
+    Solving equation via ``_transolve`` is much faster as compared to
+    ``_tsolve``. In ``solve``, attempts are made computing every possibility
     to get the solutions. This series of attempts makes solving a bit
-    slow. In `\_transolve`, computation begins only after a particular
+    slow. In ``_transolve``, computation begins only after a particular
     type of equation is identified.
 
     How to add new class of equations
@@ -1464,7 +1465,7 @@ def _transolve(f, symbol, domain):
     - Identify the type of the equations
 
       Determine the type of the class of equations to which they belong:
-      it could be of `Add`, `Pow`, etc. types. Separate internal functions
+      it could be of ``Add``, ``Pow``, etc. types. Separate internal functions
       are used for each type. Write identification and solving helpers
       and use them from within the routine for the given type of equation
       (after adding it, if necessary). Something like:
@@ -1488,15 +1489,15 @@ def _transolve(f, symbol, domain):
     adding an equation solver:
 
     - Naming conventions:
-      Name of the *identification* *helper* should be as
-      `\_is\_class` where `class` will be the name or abbreviation
-      of the class of equation. The *solving* *helper* will be named as
-      `\_solve\_class`.
+      Name of the identification helper should be as
+      ``_is_class`` where class will be the name or abbreviation
+      of the class of equation. The solving helper will be named as
+      ``_solve_class``.
       For example: for exponential equations it becomes
-      `\_is\_exponential` and `\_solve\_expo`.
-    - The `identifying helpers`should take two input parameters,
+      ``_is_exponential`` and ``_solve_expo``.
+    - The identifying helpers should take two input parameters,
       the equation to be checked and the variable for which a solution
-      is being sought, while `solving helpers` would require an additional
+      is being sought, while solving helpers would require an additional
       domain parameter.
     - Be sure to consider corner cases.
     - Add tests for each helper.
@@ -1512,9 +1513,9 @@ def _transolve(f, symbol, domain):
 
     def add_type(lhs, rhs, symbol, domain):
         """
-        Helper for `_transolve` to handle equations of
-        `Add` type, i.e. equations taking the form as
-        `a*f(x) + b*g(x) + .... = c`.
+        Helper for ``_transolve`` to handle equations of
+        ``Add`` type, i.e. equations taking the form as
+        ``a*f(x) + b*g(x) + .... = c``.
         For example: 4**x + 8**x = 0
         """
         result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
@@ -1617,7 +1618,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     {2*n*I*pi | n in Integers}
 
     * If you want to use `solveset` to solve the equation in the
-      real domain, provide a real domain. (Using `solveset\_real`
+      real domain, provide a real domain. (Using ``solveset_real``
       does this automatically.)
 
     >>> R = S.Reals
@@ -1807,10 +1808,11 @@ def solvify(f, symbol, domain):
 ###############################################################################
 
 
-def linear_coeffs(eq, *syms):
-    """Return a dictionary with symbols in `syms` keyed to the
-    coefficient of the corresponding symbol in `eq`. The additive
-    constant is returned with key 0.
+def linear_coeffs(eq, *syms, **_kw):
+    """Return a list whose elements are the coefficients of the
+    corresponding symbols in the sum of terms in  ``eq``.
+    The additive constant is returned as the last element of the
+    list.
 
     Examples
     ========
@@ -1818,14 +1820,13 @@ def linear_coeffs(eq, *syms):
     >>> from sympy.solvers.solveset import linear_coeffs
     >>> from sympy.abc import x, y, z
 
-
-    >>> linear_coeffs(2*x - 1, x, y)
-    {0: -1, x: 2}
+    >>> linear_coeffs(3*x + 2*y - 1, x, y)
+    [3, 2, -1]
 
     It is not necessary to expand the expression:
 
-    >>> linear_coeffs(x + y*(z*(3*x + 2) + 3), x)
-    {0: y*(2*z + 3), x: 3*y*z + 1}
+    >>> linear_coeffs(x + y*(z*(x*3 + 2) + 3), x)
+    [3*y*z + 1, y*(2*z + 3)]
 
     But if there are nonlinear or cross terms -- even if they would
     cancel after simplification -- an error is raised so the situation
@@ -1833,7 +1834,7 @@ def linear_coeffs(eq, *syms):
 
     >>> eq = 1/x*(x - 1) + 1/x
     >>> linear_coeffs(eq.expand(), x)
-    {0: 1}
+    [0, 1]
     >>> linear_coeffs(eq, x)
     Traceback (most recent call last):
     ...
@@ -1845,8 +1846,8 @@ def linear_coeffs(eq, *syms):
     ValueError: nonlinear term encountered: x*(y + 1)
     """
     d = defaultdict(list)
-    c, terms = eq.as_coeff_add(*syms)
-    d[0].append(c)
+    c, terms = _sympify(eq).as_coeff_add(*syms)
+    d[0].extend(Add.make_args(c))
     for t in terms:
         m, f = t.as_coeff_mul(*syms)
         if len(f) != 1:
@@ -1855,7 +1856,7 @@ def linear_coeffs(eq, *syms):
         if f in syms:
             d[f].append(m)
         elif f.is_Add:
-            d1 = linear_coeffs(f, *syms)
+            d1 = linear_coeffs(f, *syms, **{'dict': True})
             d[0].append(m*d1.pop(0))
             xf, vf = list(d1.items())[0]
             d[xf].append(m*vf)
@@ -1864,7 +1865,9 @@ def linear_coeffs(eq, *syms):
     else:
         for k, v in d.items():
             d[k] = Add(*v)
-        return defaultdict(lambda: S.Zero, d)  # default now zero
+        if not _kw:
+            return [d.get(s, S.Zero) for s in syms] + [d[0]]
+        return d  # default is still list but this won't matter
     raise ValueError('nonlinear term encountered: %s' % t)
 
 
@@ -1975,15 +1978,9 @@ def linear_eq_to_matrix(equations, *symbols):
     A, b = [], []
     for i, f in enumerate(equations):
         if isinstance(f, Equality):
-            # non-cancelling method of creating expr; we
-            # don't care about the order of the args or
-            # else we would use _unevaluated_Add
-            f = Add._from_args(
-                Add.make_args(f.lhs) +
-                Add.make_args(-f.rhs))
-        co = linear_coeffs(f, *symbols)
-        coeff_list = [co[i] for i in symbols]
-        b.append(-co[0])
+            f = f.rewrite(Add, evaluate=False)
+        coeff_list = linear_coeffs(f, *symbols)
+        b.append(-coeff_list.pop())
         A.append(coeff_list)
     A, b = map(Matrix, (A, b))
     return A, b
@@ -1991,12 +1988,12 @@ def linear_eq_to_matrix(equations, *symbols):
 
 def linsolve(system, *symbols):
     r"""
-    Solve system of N linear equations with M variables, which
-    means both under - and overdetermined systems are supported.
+    Solve system of N linear equations with M variables; both
+    underdetermined and overdetermined systems are supported.
     The possible number of solutions is zero, one or infinite.
-    Zero solutions throws a ValueError, where as infinite
-    solutions are represented parametrically in terms of given
-    symbols. For unique solution a FiniteSet of ordered tuple
+    Zero solutions throws a ValueError, whereas infinite
+    solutions are represented parametrically in terms of the given
+    symbols. For unique solution a FiniteSet of ordered tuples
     is returned.
 
     All Standard input formats are supported:

@@ -1014,6 +1014,21 @@ def test_issue_10156():
         8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))
 
 
+def test_issue_14129():
+    assert Sum( k*x**k, (k, 0, n-1)).doit() == \
+        Piecewise((n**2/2 - n/2, Eq(x, 1)), ((n*x*x**n -
+            n*x**n - x*x**n + x)/(x - 1)**2, True))
+    assert Sum( x**k, (k, 0, n-1)).doit() == \
+        Piecewise((n, Eq(x, 1)), ((-x**n + 1)/(-x + 1), True))
+    assert Sum( k*(x/y+x)**k, (k, 0, n-1)).doit() == \
+        Piecewise((n*(n - 1)/2, Eq(x, y/(y + 1))),
+        (x*(y + 1)*(n*x*y*(x + x/y)**n/(x + x/y)
+        + n*x*(x + x/y)**n/(x + x/y) - n*y*(x
+        + x/y)**n/(x + x/y) - x*y*(x + x/y)**n/(x
+        + x/y) - x*(x + x/y)**n/(x + x/y) + y)/(x*y
+        + x - y)**2, True))
+
+
 def test_issue_14112():
     assert Sum((-1)**n/sqrt(n), (n, 1, oo)).is_absolutely_convergent() is S.false
     assert Sum((-1)**(2*n)/n, (n, 1, oo)).is_convergent() is S.false

@@ -1,7 +1,8 @@
 from sympy import (
     symbols, sin, simplify, cos, trigsimp, rad, tan, exptrigsimp,sinh,
     cosh, diff, cot, Subs, exp, tanh, exp, S, integrate, I,Matrix,
-    Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise)
+    Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise , Rational
+    )
 
 from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL
@@ -357,6 +358,14 @@ def test_issue_2827_trigsimp_methods():
     eq = 1/sqrt(E) + E
     assert exptrigsimp(eq) == eq
 
+def test_issue_15129_trigsimp_methods():
+    t1 = Matrix([sin(Rational(1, 50)), cos(Rational(1, 50)), 0])
+    t2 = Matrix([sin(Rational(1, 25)), cos(Rational(1, 25)), 0])
+    t3 = Matrix([cos(Rational(1, 25)), sin(Rational(1, 25)), 0])
+    r1 = t1.dot(t2)
+    r2 = t1.dot(t3)
+    assert trigsimp(r1) == cos(S(1)/50)
+    assert trigsimp(r2) == sin(S(3)/50)
 
 def test_exptrigsimp():
     def valid(a, b):

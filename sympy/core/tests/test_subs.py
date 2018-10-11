@@ -647,7 +647,7 @@ def test_simultaneous_subs():
     assert (x/y).subs(reps, simultaneous=True) == \
         (y/x).subs(reps, simultaneous=True)
     assert Derivative(x, y, z).subs(reps, simultaneous=True) == \
-        Subs(Derivative(0, y, z), (y,), (0,))
+        Subs(Derivative(0, y, z), y, 0)
 
 
 def test_issue_6419_6421():
@@ -804,3 +804,9 @@ def test_Subs_subs():
     g = Function('g')
     assert Subs(2*f(x, y) + g(x), f(x, y), 1).subs(y, 2) == Subs(
         2*f(x, y) + g(x), (f(x, y), y), (1, 2))
+
+
+def test_issue_13333():
+    eq = 1/x
+    assert eq.subs(dict(x='1/2')) == 2
+    assert eq.subs(dict(x='(1/2)')) == 2
