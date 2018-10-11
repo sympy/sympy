@@ -1243,7 +1243,7 @@ def _mask_nc(eq, name=None):
     Multiple nc-symbols:
 
     >>> _mask_nc(A**2 - B**2, 'd')
-    (A**2 - B**2, None, [A, B])
+    (A**2 - B**2, {}, [A, B])
 
     An nc-object with nc-symbols but no others outside of it:
 
