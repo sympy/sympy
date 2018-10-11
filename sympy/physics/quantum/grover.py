@@ -372,9 +372,9 @@ def random_oracle(nqubits, min_img=1, max_img=1, q_type='bin'):
     pics = random.randint(min_img, max_img)
     integers = random.sample(range(2 ** nqubits), pics)
     if q_type == "int":
-        items = [IntQubit(integers.pop()) for _ in range(pics)]
+        items = [IntQubit(i) for i in integers]
     else:
-        items = [Qubit(IntQubit(integers.pop())) for _ in range(pics)]
+        items = [Qubit(IntQubit(i)) for i in integers]
 
     return OracleGate(nqubits, lambda qubits: qubits in items)
 
