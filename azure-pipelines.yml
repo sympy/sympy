@@ -44,9 +44,9 @@ jobs:
       Python 3.7:
         python.version: '3.7'
         pypy: false
-      PyPy:
-        python.version: 'none'
-        pypy: true
+      # PyPy:
+      #   python.version: 'none'
+      #   pypy: true
 
   steps:
 
