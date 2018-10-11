@@ -766,7 +766,7 @@ class Differential(Expr):
         else:
             # For higher form it is more complicated:
             # Invariant formula:
-            # http://en.wikipedia.org/wiki/Exterior_derivative#Invariant_formula
+            # https://en.wikipedia.org/wiki/Exterior_derivative#Invariant_formula
             # df(v1, ... vn) = +/- vi(f(v1..no i..vn))
             #                  +/- f([vi,vj],v1..no i, no j..vn)
             f = self._form_field

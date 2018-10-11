@@ -294,7 +294,7 @@ class DiagramGrid(object):
     References
     ==========
 
-    [FiveLemma] http://en.wikipedia.org/wiki/Five_lemma
+    [FiveLemma] https://en.wikipedia.org/wiki/Five_lemma
     """
     @staticmethod
     def _simplify_morphisms(morphisms):

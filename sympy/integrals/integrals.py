@@ -653,8 +653,8 @@ class Integral(AddWithLimits):
         instances which can be resolved with doit() (provided they are integrable).
 
         References:
-           [1] http://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
-           [2] http://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
+           [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
+           [2] https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
 
         Examples
         ========
@@ -1272,7 +1272,7 @@ class Integral(AddWithLimits):
 
         References
         ==========
-        .. [1] http://en.wikipedia.org/wiki/Cauchy_principal_value
+        .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
         .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
         from sympy.calculus import singularities

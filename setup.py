@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """Distutils based setup script for SymPy.
 
-This uses Distutils (http://python.org/sigs/distutils-sig/) the standard
+This uses Distutils (https://python.org/sigs/distutils-sig/) the standard
 python mechanism for installing packages. Optionally, you can use
-Setuptools (http://pythonhosted.org/setuptools/setuptools.html)
+Setuptools (https://pythonhosted.org/setuptools/setuptools.html)
 to automatically handle dependencies. For the easiest installation
 just type the command (you'll probably need root privileges for that):
 
@@ -390,7 +390,7 @@ if __name__ == '__main__':
           author_email='sympy@googlegroups.com',
           license='BSD',
           keywords="Math CAS",
-          url='http://sympy.org',
+          url='https://sympy.org',
           py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],

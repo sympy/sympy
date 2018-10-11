@@ -1193,7 +1193,7 @@ def GramSchmidt(vlist, orthonormal=False):
     """
     Apply the Gram-Schmidt process to a set of vectors.
 
-    see: http://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+    see: https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
     out = []
     m = len(vlist)
@@ -1246,7 +1246,7 @@ def hessian(f, varlist, constraints=[]):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Hessian_matrix
+    https://en.wikipedia.org/wiki/Hessian_matrix
 
     See Also
     ========
@@ -1443,7 +1443,7 @@ def wronskian(functions, var, method='bareiss'):
                          |  (n)      (n)            (n)     |
                          | D   (f1) D   (f2)  ...  D   (fn) |
 
-    see: http://en.wikipedia.org/wiki/Wronskian
+    see: https://en.wikipedia.org/wiki/Wronskian
 
     See Also
     ========

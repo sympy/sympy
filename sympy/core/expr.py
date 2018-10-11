@@ -2557,7 +2557,7 @@ class Expr(Basic, EvalfMixin):
         References
         ==========
 
-        - http://en.wikipedia.org/wiki/Algebraic_expression
+        - https://en.wikipedia.org/wiki/Algebraic_expression
 
         """
         if syms:

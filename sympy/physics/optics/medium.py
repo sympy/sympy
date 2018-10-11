@@ -61,7 +61,7 @@ class Medium(Symbol):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Optical_medium
+    .. [1] https://en.wikipedia.org/wiki/Optical_medium
 
     """
 

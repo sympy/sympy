@@ -78,7 +78,7 @@ def mr(n, bases):
       A Computational Perspective", Springer, 2nd edition, 135-138
 
     A list of thresholds and the bases they require are here:
-    http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
+    https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
 
     Examples
     ========
@@ -457,7 +457,7 @@ def isprime(n):
 
     References
     ==========
-    - http://en.wikipedia.org/wiki/Strong_pseudoprime
+    - https://en.wikipedia.org/wiki/Strong_pseudoprime
     - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
       http://mpqs.free.fr/LucasPseudoprimes.pdf
     - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test

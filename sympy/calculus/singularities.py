@@ -53,7 +53,7 @@ def singularities(expression, symbol):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathematical_singularity
+    .. [1] https://en.wikipedia.org/wiki/Mathematical_singularity
 
     """
     if not expression.is_rational_function(symbol):

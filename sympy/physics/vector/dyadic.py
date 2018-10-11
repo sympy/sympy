@@ -10,7 +10,7 @@ class Dyadic(object):
     """A Dyadic object.
 
     See:
-    http://en.wikipedia.org/wiki/Dyadic_tensor
+    https://en.wikipedia.org/wiki/Dyadic_tensor
     Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
 
     A more powerful way to represent a rigid body's inertia. While it is more

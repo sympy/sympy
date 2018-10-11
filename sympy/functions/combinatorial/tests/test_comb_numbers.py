@@ -543,7 +543,7 @@ def test_nC_nP_nT():
             1, 720, -1764, 1624, -735, 175, -21,
             1, -5040, 13068, -13132, 6769, -1960, 322, -28,
             1, 40320, -109584, 118124, -67284, 22449, -4536, 546, -36, 1]
-    # http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
+    # https://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
     assert  [stirling(n, k, kind=1)
         for n in range(10) for k in range(n+1)] == [
             1,
@@ -556,7 +556,7 @@ def test_nC_nP_nT():
             0, 720, 1764, 1624, 735, 175, 21, 1,
             0, 5040, 13068, 13132, 6769, 1960, 322, 28, 1,
             0, 40320, 109584, 118124, 67284, 22449, 4536, 546, 36, 1]
-    # http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
+    # https://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
     assert [stirling(n, k, kind=2)
         for n in range(10) for k in range(n+1)] == [
             1,

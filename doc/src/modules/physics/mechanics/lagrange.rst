@@ -3,7 +3,7 @@ Lagrange's Method in Physics/Mechanics
 ======================================
 
 :mod:`mechanics` provides functionality for deriving equations of motion
-using `Lagrange's method <http://en.wikipedia.org/wiki/Lagrangian_mechanics>`_.
+using `Lagrange's method <https://en.wikipedia.org/wiki/Lagrangian_mechanics>`_.
 This document will describe Lagrange's method as used in this module, but not
 how the equations are actually derived.
 

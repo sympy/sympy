@@ -93,7 +93,7 @@ class Order(Expr):
     References
     ==========
 
-    .. [1] `Big O notation <http://en.wikipedia.org/wiki/Big_O_notation>`_
+    .. [1] `Big O notation <https://en.wikipedia.org/wiki/Big_O_notation>`_
 
     Notes
     =====

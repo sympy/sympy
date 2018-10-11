@@ -280,7 +280,7 @@ class MatrixDeterminant(MatrixCommon):
         a matrix.  That is, the transpose of the matrix of cofactors.
 
 
-        http://en.wikipedia.org/wiki/Adjugate
+        https://en.wikipedia.org/wiki/Adjugate
 
         See Also
         ========
@@ -2781,7 +2781,7 @@ class MatrixBase(MatrixDeprecated,
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Gaussian_elimination
+        .. [1] https://en.wikipedia.org/wiki/Gaussian_elimination
 
         """
         from sympy.matrices import Matrix, zeros
