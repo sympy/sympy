@@ -112,6 +112,10 @@ def test_subs():
 
     raises(ValueError, lambda: b21.subs('bad arg'))
     raises(ValueError, lambda: b21.subs(b1, b2, b3))
+    # dict(b1=foo) creates a string 'b1' but leaves foo unchanged; subs
+    # will convert the first to a symbol but will raise an error if foo
+    # cannot be sympified; sympification is strict if foo is not string
+    raises(ValueError, lambda: b21.subs(b1='bad arg'))
 
 
 def test_atoms():
