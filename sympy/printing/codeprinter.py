@@ -373,12 +373,9 @@ class CodePrinter(StrPrinter):
                         break
             if func is not None:
                 try:
-                    return func(self, *[self.parenthesize(item, 0) for item in expr.args])
+                    return func(*[self.parenthesize(item, 0) for item in expr.args])
                 except TypeError:
-                    try:
-                        return func(*[self.parenthesize(item, 0) for item in expr.args])
-                    except TypeError:
-                        return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                    return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
