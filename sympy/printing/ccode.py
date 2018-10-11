@@ -291,9 +291,8 @@ class C89CodePrinter(CodePrinter):
     def _print_Mod(self, expr):
         num, den = expr.args
         if num.is_integer and den.is_integer:
-            template = "(({}) % ({}))"
-            return template.format(self._print(num), self._print(den))
-        elif not num.is_integer or not den.is_integer:
+            return "(({}) % ({}))".format(self._print(num), self._print(den))
+        else:
             return self._print_math_func(expr, known='fmod')
 
     def _print_Rational(self, expr):
