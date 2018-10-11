@@ -103,7 +103,7 @@ def egyptian_fraction(r, algorithm="Greedy"):
 
     .. [1] https://en.wikipedia.org/wiki/Egyptian_fraction
     .. [2] https://en.wikipedia.org/wiki/Greedy_algorithm_for_Egyptian_fractions
-    .. [3] http://www.ics.uci.edu/~eppstein/numth/egypt/conflict.html
+    .. [3] https://www.ics.uci.edu/~eppstein/numth/egypt/conflict.html
     .. [4] http://ami.ektf.hu/uploads/papers/finalpdf/AMI_42_from129to134.pdf
 
     """
