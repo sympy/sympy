@@ -3,7 +3,7 @@
 
 This uses Distutils (https://python.org/sigs/distutils-sig/) the standard
 python mechanism for installing packages. Optionally, you can use
-Setuptools (https://pythonhosted.org/setuptools/setuptools.html)
+Setuptools (https://setuptools.readthedocs.io/en/latest/)
 to automatically handle dependencies. For the easiest installation
 just type the command (you'll probably need root privileges for that):
 
