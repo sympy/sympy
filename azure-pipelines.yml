@@ -48,11 +48,12 @@ jobs:
         python.version: 'none'
         pypy: true
 
+  steps:
+
   # TODO: Get pypy working. The below is a start (but doesn't work). It would
   # be easier if https://github.com/Microsoft/vsts-tasks/issues/8514 were
   # fixed.
 
-  # steps:
   # - task: UsePythonVersion@0
   #   condition: eq(variables.pypy, false)
   #   inputs:
