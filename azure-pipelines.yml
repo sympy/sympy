@@ -50,16 +50,16 @@ jobs:
 
   steps:
 
+  - task: UsePythonVersion@0
+    condition: eq(variables.pypy, false)
+    inputs:
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
+
   # TODO: Get pypy working. The below is a start (but doesn't work). It would
   # be easier if https://github.com/Microsoft/vsts-tasks/issues/8514 were
   # fixed.
 
-  # - task: UsePythonVersion@0
-  #   condition: eq(variables.pypy, false)
-  #   inputs:
-  #     versionSpec: '$(python.version)'
-  #     architecture: 'x64'
-  #
   # - script: |
   #     set -x
   #     set -e
