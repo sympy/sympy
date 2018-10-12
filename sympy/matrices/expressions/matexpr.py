@@ -246,10 +246,7 @@ class MatrixExpr(Expr):
             return parsed
 
     def _eval_derivative_n_times(self, x, n):
-        expr = self
-        for i in range(n):
-            expr = expr._eval_derivative(x)
-        return expr
+        return Basic._eval_derivative_n_times(self, x, n)
 
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
