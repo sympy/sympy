@@ -1512,7 +1512,7 @@ class TensorType(Basic):
             return [TensorHead(name, self, comm) for name in names]
 
 
-def tensorhead(name, typ, sym, comm=0):
+def tensorhead(name, typ, sym=None, comm=0):
     """
     Function generating tensorhead(s).
 
@@ -1539,7 +1539,16 @@ def tensorhead(name, typ, sym, comm=0):
     >>> A(a, -b)
     A(a, -b)
 
+    If no symmetry parameter is provided, assume there are not index
+    symmetries:
+
+    >>> B = tensorhead('B', [Lorentz, Lorentz])
+    >>> B(a, -b)
+    B(a, -b)
+
     """
+    if sym is None:
+        sym = [[1] for i in range(len(typ))]
     sym = tensorsymmetry(*sym)
     S = TensorType(typ, sym)
     th = S(name, comm)
