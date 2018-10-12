@@ -90,39 +90,20 @@ jobs:
 
 - job: 'Tests'
   pool:
+    timeoutInMinutes: 0
     vmImage: 'Ubuntu 16.04'
   strategy:
     matrix:
-      Python 2.7 Split 1/2:
+      Python 2.7:
         python.version: '2.7'
-        SPLIT: '1/2'
-      Python 3.4 Split 1/2:
+      Python 3.4:
         python.version: '3.4'
-        SPLIT: '1/2'
-      Python 3.5 Split 1/2:
+      Python 3.5:
         python.version: '3.5'
-        SPLIT: '1/2'
-      Python 3.6 Split 1/2:
+      Python 3.6:
         python.version: '3.6'
-        SPLIT: '1/2'
-      Python 3.7 Split 1/2:
+      Python 3.7:
         python.version: '3.7'
-        SPLIT: '1/2'
-      Python 2.7 Split 2/2:
-        python.version: '2.7'
-        SPLIT: '2/2'
-      Python 3.4 Split 2/2:
-        python.version: '3.4'
-        SPLIT: '2/2'
-      Python 3.5 Split 2/2:
-        python.version: '3.5'
-        SPLIT: '2/2'
-      Python 3.6 Split 2/2:
-        python.version: '3.6'
-        SPLIT: '2/2'
-      Python 3.7 Split 2/2:
-        python.version: '3.7'
-        SPLIT: '2/2'
 
   steps:
   - task: UsePythonVersion@0
@@ -144,7 +125,6 @@ jobs:
     displayName: 'tests'
     env:
       TEST_SYMPY: 'true'
-      SPLIT: '$(SPLIT)'
 
 - job: 'Optional_dependencies'
   # Allow this build to fail. There are gfortran issues that should be fixed
