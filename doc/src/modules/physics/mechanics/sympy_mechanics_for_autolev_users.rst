@@ -282,16 +282,13 @@ Mathematical Equivalents
 |                       |                       | ference.html>`_       |
 +-----------------------+-----------------------+-----------------------+
 | ``Roots(Polynomial(   | ``sm.solve(           | For more information  |
-| a*x^2 + b*x + c, x,   | sm.Poly(a*x**2 +      | refer to `solvers. <ht| 
-| 2)``                  | b*x + c))``           | tp://docs.sympy.org/la|
-|                       |                       | test/modules/solvers/ |
-| ``Roots([1;2;3])``    | ``sm.solve(sm.Poly(   | solvers.html>`_       |
-|                       | sm.Matrix([1,2,3]).   |                       |
-|                       | reshape(3, 1), x),    |                       |
-|                       | x)``                  | For numerical         |
-|                       |                       | computation related   |
-|                       |                       | to polynomials and    |
-|                       |                       | roots refer to        |
+| a*x^2 + b*x + c, x,   | sm.Poly(a*x**2 +      | refer to              |
+| 2)``                  | b*x + c))``           | :ref:`solvers`.       |
+|                       |                       |                       |
+| ``Roots([1;2;3])``    | ``sm.solve(sm.Poly(   | For numerical         |
+|                       | sm.Matrix([1,2,3]).   | computation related   |
+|                       | reshape(3, 1), x),    | to polynomials and    |
+|                       | x)``                  | roots refer to        |
 |                       |                       | `mpmath/calculus. <htt|
 |                       |                       | p://docs.s            | 
 |                       |                       | ympy.org/0.7.6/module |
