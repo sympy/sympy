@@ -3,9 +3,7 @@
 # without any worry (e.g., by "git clean -Xdf"), because it can be
 # regenerated.  Lines beginning with # are comments.  You can also ignore
 # files on a per-repository basis by modifying the core.excludesfile
-# configuration option (see "git help config").  If you need to make git
-# track a file that is ignored for some reason, you have to use
-# "git add -f". See "git help gitignore" for more information.
+# configuration option (see "git help conf
 
 
 # Regular Python bytecode file
