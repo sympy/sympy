@@ -521,7 +521,7 @@ def _get_namespace(m):
     else:
         raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
 
-def lambdastr(args, expr, printer=None, dummify=False):
+def lambdastr(args, expr, printer=None, dummify=None):
     """
     Returns a string that can be evaluated to a lambda function.
 
@@ -544,7 +544,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     """
     # Transforming everything to strings.
     from sympy.matrices import DeferredVector
-    from sympy import Dummy, sympify, Symbol, Function, flatten
+    from sympy import Dummy, sympify, Symbol, Function, flatten, Derivative, Basic
 
     if printer is not None:
         if inspect.isfunction(printer):
@@ -567,8 +567,8 @@ def lambdastr(args, expr, printer=None, dummify=False):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
             return ",".join(str(a) for a in dummies)
         else:
-            #Sub in dummy variables for functions or symbols
-            if isinstance(args, (Function, Symbol)):
+            # replace these with Dummy symbols
+            if isinstance(args, (Function, Symbol, Derivative)):
                 dummies = Dummy()
                 dummies_dict.update({args : dummies})
                 return str(dummies)
@@ -606,6 +606,11 @@ def lambdastr(args, expr, printer=None, dummify=False):
                 yield (n,)
 
             n += 1
+
+    if dummify is None:
+        dummify = any(isinstance(a, Basic) and
+            a.atoms(Function, Derivative) for a in (
+            args if isiter(args) else [args]))
 
     if isiter(args) and any(isiter(i) for i in args):
         dum_args = [str(Dummy(str(i))) for i in range(len(args))]
@@ -718,44 +723,34 @@ class _EvaluatorPrinter(object):
 
         Returns string form of args, and updated expr.
         """
-        from sympy import Dummy, Symbol, MatrixSymbol, Function, flatten
+        from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
         from sympy.matrices import DeferredVector
-
-        dummify = self._dummify
 
         # Args of type Dummy can cause name collisions with args
         # of type Symbol.  Force dummify of everything in this
         # situation.
-        if not dummify:
-            dummify = any(isinstance(arg, Dummy) for arg in flatten(args))
+        dummify = self._dummify or any(
+            isinstance(arg, Dummy) for arg in flatten(args))
 
-        argstrs = []
-        for arg in args:
+        argstrs = [None]*len(args)
+        for arg, i in reversed(list(ordered(zip(args, range(len(args)))))):
             if iterable(arg):
-                nested_argstrs, expr = self._preprocess(arg, expr)
-                argstrs.append(nested_argstrs)
+                s, expr = self._preprocess(arg, expr)
             elif isinstance(arg, DeferredVector):
-                argstrs.append(str(arg))
-            elif isinstance(arg, Symbol) or isinstance(arg, MatrixSymbol):
-                argrep = self._argrepr(arg)
-
-                if dummify or not self._is_safe_ident(argrep):
+                s = str(arg)
+            elif isinstance(arg, Basic) and arg.is_symbol:
+                s = self._argrepr(arg)
+                if dummify or not self._is_safe_ident(s):
                     dummy = Dummy()
-                    argstrs.append(self._argrepr(dummy))
+                    s = self._argrepr(dummy)
                     expr = self._subexpr(expr, {arg: dummy})
-                else:
-                    argstrs.append(argrep)
-            elif isinstance(arg, Function):
+            elif dummify or isinstance(arg, (Function, Derivative)):
                 dummy = Dummy()
-                argstrs.append(self._argrepr(dummy))
-                expr = self._subexpr(expr, {arg: dummy})
-            elif dummify:
-                dummy = Dummy()
-                argstrs.append(self._argrepr(dummy))
+                s = self._argrepr(dummy)
                 expr = self._subexpr(expr, {arg: dummy})
             else:
-                argstrs.append(str(arg))
-
+                s = str(arg)
+            argstrs[i] = s
         return argstrs, expr
 
     def _subexpr(self, expr, dummies_dict):
@@ -764,7 +759,7 @@ class _EvaluatorPrinter(object):
 
         try:
             expr = sympify(expr).xreplace(dummies_dict)
-        except Exception:
+        except AttributeError:
             if isinstance(expr, DeferredVector):
                 pass
             elif isinstance(expr, dict):
