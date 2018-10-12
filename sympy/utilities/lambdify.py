@@ -724,6 +724,7 @@ class _EvaluatorPrinter(object):
         Returns string form of args, and updated expr.
         """
         from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
+        from sympy.matrices import DeferredVector
 
         # Args of type Dummy can cause name collisions with args
         # of type Symbol.  Force dummify of everything in this
@@ -735,6 +736,8 @@ class _EvaluatorPrinter(object):
         for arg, i in reversed(list(ordered(zip(args, range(len(args)))))):
             if iterable(arg):
                 s, expr = self._preprocess(arg, expr)
+            elif isinstance(arg, DeferredVector):
+                s = str(arg)
             elif isinstance(arg, Basic) and arg.is_symbol:
                 s = self._argrepr(arg)
                 if dummify or not self._is_safe_ident(s):
