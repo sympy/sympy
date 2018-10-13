@@ -2188,6 +2188,16 @@ class TensExpr(Expr):
         #array = permutedims(array, permutation)
         return array
 
+    def _check_add_Sum(self, expr, index_symbols):
+        from sympy import Sum
+        indices = self.get_indices()
+        dum = self.dum
+        sum_indices = [ (index_symbols[i], 0,
+            indices[i].tensor_index_type.dim-1) for i, j in dum]
+        if sum_indices:
+            expr = Sum(expr, *sum_indices)
+        return expr
+
 
 class TensAdd(TensExpr, AssocOp):
     """
@@ -2925,18 +2935,11 @@ class Tensor(TensExpr):
         return self.contract_metric(metric)
 
     def _eval_rewrite_as_Indexed(self, tens, indices):
-        from sympy import Indexed, Sum
+        from sympy import Indexed
         # TODO: replace .args[0] with .name:
-        indices = self.get_indices()
-        sindices = [i.args[0] for i in indices]
-        expr = Indexed(tens.args[0], *sindices)
-        dum = self.dum
-        sum_indices = [
-            (sindices[i], 0, indices[i].tensor_index_type.dim-1)
-            for i, j in dum]
-        if sum_indices:
-            expr = Sum(expr, *sum_indices)
-        return expr
+        index_symbols = [i.args[0] for i in self.get_indices()]
+        expr = Indexed(tens.args[0], *index_symbols)
+        return self._check_add_Sum(expr, index_symbols)
 
 
 class TensMul(TensExpr, AssocOp):
@@ -3715,17 +3718,10 @@ class TensMul(TensExpr, AssocOp):
 
     def _eval_rewrite_as_Indexed(self, *args):
         from sympy import Sum
-        indices = self.get_indices()
-        dum = self.dum
-        sindices = [i.args[0] for i in indices]
+        index_symbols = [i.args[0] for i in self.get_indices()]
         args = [arg.args[0] if isinstance(arg, Sum) else arg for arg in args]
         expr = Mul.fromiter(args)
-        sum_indices = [
-            (sindices[i], 0, indices[i].tensor_index_type.dim-1)
-            for i, j in dum]
-        if sum_indices:
-            expr = Sum(expr, *sum_indices)
-        return expr
+        return self._check_add_Sum(expr, index_symbols)
 
 
 class TensorElement(TensExpr):
