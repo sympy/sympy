@@ -486,24 +486,18 @@ class Add(Expr, AssocOp):
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
-    def _eval_is_real(self):
-        def _n2(rv):
-            """Numeric testing for significant 2 digits for numbers"""
-            if rv is not None:
-                return rv
-            else:
-                if self.is_Number:
-                    try:
-                        return self.evalf(2, strict=True).is_real
-                    except PrecisionExhausted:
-                        return None
-                else:
-                    return None
-
-        return _n2(_fuzzy_group(
-        (a.is_real for a in self.args), quick_exit=True))
-
     # assumption methods
+    def _eval_is_real(self):
+        if self.is_number:
+            r, i = self.n(2).as_real_imag()
+            if not i:
+                return True
+            if i._prec != 1:
+                if i != 0:
+                    return False
+                return True
+        return _fuzzy_group(
+        (a.is_real for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: _fuzzy_group(
         (a.is_complex for a in self.args), quick_exit=True)
     _eval_is_antihermitian = lambda self: _fuzzy_group(
