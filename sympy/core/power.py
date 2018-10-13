@@ -519,6 +519,14 @@ class Pow(Expr):
                     return None
 
         from sympy import arg, exp, log, Mul
+        if self.is_number:
+            r, i = self.n(2).as_real_imag()
+            if not i:
+                return True
+            if i._prec != 1:
+                if i != 0:
+                    return False
+                return True
         real_b = self.base.is_real
         if real_b is None:
             if self.base.func == exp and self.base.args[0].is_imaginary:
