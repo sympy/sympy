@@ -1191,6 +1191,16 @@ class Mul(Expr, AssocOp):
         return _n2(self._eval_real_imag(True))
 
     def _eval_real_imag(self, real):
+        if self.is_number:
+            r, i = self.n(2).as_real_imag()
+            if not real:
+                r, i = i, r
+            if not i:
+                return True
+            if i._prec != 1:
+                if i != 0:
+                    return False
+                return True
         zero = False
         t_not_re_im = None
 
