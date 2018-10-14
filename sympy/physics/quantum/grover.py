@@ -420,11 +420,11 @@ def g_bbht_search(qstate, oracle):
     from sympy.physics.quantum.qubit import measure_all_oneshot
 
     max_iterations = 1
-    factor_iterations = 6 / 5
+    factor_iterations = 6.0 / 5.0
     count_grover_iterations = 0
 
     while True:
-        for _ in range(random.choice(list(range(0, int(math.ceil(max_iterations)))))):
+        for _ in range(random.choice(list(range(int(math.ceil(max_iterations)))))):
             count_grover_iterations += 1
             qstate = qapply(grover_iteration(qstate, oracle))
 
