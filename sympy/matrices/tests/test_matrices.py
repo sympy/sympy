@@ -1947,7 +1947,6 @@ def test_diff():
     assert diff(A_imm, y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
 
-@XFAIL
 def test_diff_by_matrix():
 
     # Derive matrix by matrix:
