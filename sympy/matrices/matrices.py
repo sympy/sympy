@@ -1706,11 +1706,7 @@ class MatrixCalculus(MatrixCommon):
         integrate
         limit
         """
-        from sympy import Derivative
-        return Derivative(self, *args, evaluate=True)
-
-    def _eval_derivative(self, arg):
-        return self.applyfunc(lambda x: x.diff(arg))
+        return self.applyfunc(lambda x: x.diff(*args))
 
     def _accept_eval_derivative(self, s):
         return s._visit_eval_derivative_array(self)
