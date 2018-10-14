@@ -149,7 +149,7 @@ def runtest_issue_15337(language, backend):
     # the kwarg "helpers", but in issue 10274 the user mistakenly thought that
     # if there was only a single helper it did not need to be passed via an
     # iterable that wrapped the helper tuple. There were no tests for this
-    # behavior so when the code was changed to accept a single tuple it broken
+    # behavior so when the code was changed to accept a single tuple it broke
     # the original behavior. These tests below ensure that both now work.
     a, b, c, d, e = symbols('a, b, c, d, e')
     expr = (a - b + c - d + e)**13

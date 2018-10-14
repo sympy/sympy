@@ -556,11 +556,12 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         helpful for debugging.
     helpers : 3-tuple or iterable of 3-tuples, optional
         Used to define auxiliary expressions needed for the main expr. If the
-        main expression needs to call a specialized function it should be pass
-        in via ``helpers``. Autowrap will then make sure that the compiled main
-        expression can link to the helper routine. Items should be 3-tuples
-        with (<function_name>, <sympy_expression>, <argument tuple>). It is
-        mandatory to supply an argument sequence to helper routines.
+        main expression needs to call a specialized function it should be
+        passed in via ``helpers``. Autowrap will then make sure that the
+        compiled main expression can link to the helper routine. Items should
+        be 3-tuples with (<function_name>, <sympy_expression>,
+        <argument_tuple>). It is mandatory to supply an argument sequence to
+        helper routines.
     code_gen : CodeGen instance
         An instance of a CodeGen subclass. Overrides ``language``.
     include_dirs : [string]
