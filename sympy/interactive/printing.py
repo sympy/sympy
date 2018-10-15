@@ -96,6 +96,16 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             debug('matplotlib exception caught:', repr(e))
             return None
 
+
+    from sympy import Basic
+    from sympy.matrices import MatrixBase
+    from sympy.physics.vector import Vector, Dyadic
+    from sympy.tensor.array import NDimArray
+
+    # These should all have _repr_latex_ and _repr_latex_orig. If you update
+    # this also update printable_types below.
+    sympy_latex_types = (Basic, MatrixBase, Vector, Dyadic, NDimArray)
+
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
 
@@ -104,10 +114,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
 
         try:
-            from sympy import Basic
-            from sympy.matrices import MatrixBase
-            from sympy.physics.vector import Vector, Dyadic
-            from sympy.tensor.array import NDimArray
             # If you're adding another type, make sure you add it to printable_types
             # later in this file as well
 
@@ -125,7 +131,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 return False
             # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
             # to use here, than these explicit imports.
-            elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic, NDimArray)):
+            elif isinstance(o, sympy_latex_types):
                 return True
             elif isinstance(o, (float, integer_types)) and print_builtin:
                 return True
@@ -224,8 +230,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             debug("init_printing: using mathjax formatter")
             for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
-            Basic._repr_latex_ = Basic._repr_latex_orig
-            MatrixBase._repr_latex_ = MatrixBase._repr_latex_orig
+            for typ in sympy_latex_types:
+                typ._repr_latex_ = typ._repr_latex_orig
         else:
             debug("init_printing: not using text/latex formatter")
             for cls in printable_types:
@@ -234,8 +240,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 if cls in latex_formatter.type_printers:
                     latex_formatter.type_printers.pop(cls)
 
-            Basic._repr_latex_ = None
-            MatrixBase._repr_latex_ = None
+            for typ in sympy_latex_types:
+                typ._repr_latex_ = None
 
     else:
         ip.set_hook('result_display', _result_display)
