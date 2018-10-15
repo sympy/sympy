@@ -7,7 +7,7 @@ may be optionally for things like plotting support.
 
 See the webpage for more information and documentation:
 
-    http://sympy.org
+    https://sympy.org
 
 """
 
@@ -19,7 +19,7 @@ try:
     import mpmath
 except ImportError:
     raise ImportError("SymPy now depends on mpmath as an external library. "
-    "See http://docs.sympy.org/latest/install.html#mpmath for more information.")
+    "See https://docs.sympy.org/latest/install.html#mpmath for more information.")
 
 del mpmath
 

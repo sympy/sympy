@@ -2814,7 +2814,7 @@ def test_X20():
     #                                    1 + 1/2 x
     # mpmath support numeric Pade approximant but there is
     # no symbolic implementation in SymPy
-    # http://en.wikipedia.org/wiki/Pad%C3%A9_approximant
+    # https://en.wikipedia.org/wiki/Pad%C3%A9_approximant
     raise NotImplementedError("Symbolic Pade approximant not supported")
 
 

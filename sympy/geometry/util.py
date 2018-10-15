@@ -350,7 +350,7 @@ def convex_hull(*args, **kwargs):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Graham_scan
+    [1] https://en.wikipedia.org/wiki/Graham_scan
 
     [2] Andrew's Monotone Chain Algorithm
     (A.M. Andrew,

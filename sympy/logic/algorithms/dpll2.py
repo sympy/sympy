@@ -6,7 +6,7 @@ Features:
   - VSIDS heuristic
 
 References:
-  - http://en.wikipedia.org/wiki/DPLL_algorithm
+  - https://en.wikipedia.org/wiki/DPLL_algorithm
 """
 from __future__ import print_function, division
 

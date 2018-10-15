@@ -675,7 +675,7 @@ class conjugate(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Complex_conjugation
+    .. [1] https://en.wikipedia.org/wiki/Complex_conjugation
     """
 
     @classmethod

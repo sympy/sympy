@@ -86,7 +86,7 @@ class gamma(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Gamma_function
     .. [2] http://dlmf.nist.gov/5
     .. [3] http://mathworld.wolfram.com/GammaFunction.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma/
@@ -229,7 +229,7 @@ class lowergamma(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Incomplete_gamma_function#Lower_incomplete_Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Lower_incomplete_Gamma_function
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
            Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical Tables
     .. [3] http://dlmf.nist.gov/8
@@ -377,13 +377,13 @@ class uppergamma(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Incomplete_gamma_function#Upper_incomplete_Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Upper_incomplete_Gamma_function
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
            Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical Tables
     .. [3] http://dlmf.nist.gov/8
     .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma2/
     .. [5] http://functions.wolfram.com/GammaBetaErf/Gamma3/
-    .. [6] http://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
+    .. [6] https://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
     """
 
 
@@ -558,7 +558,7 @@ class polygamma(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Polygamma_function
+    .. [1] https://en.wikipedia.org/wiki/Polygamma_function
     .. [2] http://mathworld.wolfram.com/PolygammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma/
     .. [4] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
@@ -849,7 +849,7 @@ class loggamma(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Gamma_function
     .. [2] http://dlmf.nist.gov/5
     .. [3] http://mathworld.wolfram.com/LogGammaFunction.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/LogGamma/
@@ -966,7 +966,7 @@ def digamma(x):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Digamma_function
+    .. [1] https://en.wikipedia.org/wiki/Digamma_function
     .. [2] http://mathworld.wolfram.com/DigammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
@@ -996,7 +996,7 @@ def trigamma(x):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigamma_function
+    .. [1] https://en.wikipedia.org/wiki/Trigamma_function
     .. [2] http://mathworld.wolfram.com/TrigammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """

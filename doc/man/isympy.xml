@@ -23,7 +23,7 @@ this will generate isympy.1 in the current directory. -->
 
   <!-- TITLE should be something like "User commands",           -->
   <!-- "&dhpackage; command-line reference" or similar (see e.g. -->
-  <!-- http://www.tldp.org/HOWTO/Man-Page/q2.html). But limit    -->
+  <!-- https://www.tldp.org/HOWTO/Man-Page/q2.html). But limit    -->
   <!-- the length to 30 chars.                                   -->
   <!ENTITY dhtitle     "&dhpackage; command-line reference">
 
@@ -36,7 +36,7 @@ this will generate isympy.1 in the current directory. -->
 
   <!-- SECTION should be 1-8, maybe w/ subsection other          -->
   <!-- parameters are allowed: see man(7), man(1) and            -->
-  <!-- http://www.tldp.org/HOWTO/Man-Page/q2.html.               -->
+  <!-- https://www.tldp.org/HOWTO/Man-Page/q2.html.               -->
   <!ENTITY dhsection   "1">
 
 ]>

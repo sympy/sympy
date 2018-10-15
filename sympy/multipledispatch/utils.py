@@ -35,7 +35,7 @@ def _toposort(edges):
 
     [1] Kahn, Arthur B. (1962), "Topological sorting of large networks",
     Communications of the ACM
-    [2] http://en.wikipedia.org/wiki/Toposort#Algorithms
+    [2] https://en.wikipedia.org/wiki/Toposort#Algorithms
     """
     incoming_edges = reverse_dict(edges)
     incoming_edges = dict((k, set(val)) for k, val in incoming_edges.items())

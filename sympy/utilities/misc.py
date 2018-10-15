@@ -309,7 +309,7 @@ def replace(string, *reps):
     References
     ==========
 
-    .. [1] http://stackoverflow.com/questions/6116978/python-replace-multiple-strings
+    .. [1] https://stackoverflow.com/questions/6116978/python-replace-multiple-strings
     """
     if len(reps) == 1:
         kv = reps[0]
