@@ -2565,12 +2565,12 @@ class MatrixBase(MatrixDeprecated,
         """Return the dot product of two vectors of equal length. ``self`` must
         be a ``Matrix`` of size 1 x n or n x 1, and ``b`` must be either a
         matrix of size 1 x n, n x 1, or a list/tuple of length n. A scalar is returned.
-		
-		In case one or both of the vector is complex then we need to calculate the inner product 
-		of the two vectors. To calculate the inner product we call the inner_product function. 
 
-        The expected kwargs are hermitian and conjugate_convention. Hermitian takes two True or False 
-        depending on wether dot product is to be calculated or inner product is to be used. 
+        In case one or both of the vector is complex then we need to calculate the inner product
+        of the two vectors. To calculate the inner product we call the inner_product function.
+
+        The expected kwargs are hermitian and conjugate_convention. Hermitian takes two True or False
+        depending on wether dot product is to be calculated or inner product is to be used.
         conjugate_convention has basically two inputs ("maths", "left", "math") or ("physics", "right").
         conjugate_convention is used to  determine which convention is to be followed when calculating the inner product.
 
@@ -2587,16 +2587,16 @@ class MatrixBase(MatrixDeprecated,
         >>> v = [3, 2, 1]
         >>> M.row(0).dot(v)
         10
-		
-		>>> v.dot(v, hermitian = False)
+        >>> q = Matrix([1j, 1j, 1j])
+        >>> q.dot(q, hermitian = False)
         -3.00000000000000
 
-        >>> v.dot(v, hermitian = True)
+        >>> q.dot(q, hermitian = True)
         3.00000000000000
 
         See Also
         ========
-		inner_product
+        inner_product
         cross
         multiply
         multiply_elementwise
@@ -2631,37 +2631,36 @@ class MatrixBase(MatrixDeprecated,
         if b.shape != (n, 1):
             b = b.reshape(n, 1)
 
-
         """ Retrive the calue of hermitian and conjugate_convention from kwargs.
-        If it so happens that only conjugate_convention is passed then automatically set 
+        If it so happens that only conjugate_convention is passed then automatically set
         hermitian to True. If only hermitian is true but no conjugate_convention is not passed
         then automatically set it to "maths"
-      	"""
+        """
 
         hermitian = kwargs.get("hermitian")
         conjugate_convention = kwargs.get("conjugate_convention")
-        
+
         if(conjugate_convention != None and hermitian == None):
-        	hermitian = True
+            hermitian = True
         if(hermitian == True and conjugate_convention == None):
-        	conjugate_convention = "maths"
+            conjugate_convention = "maths"
 
         if(hermitian == True):
             return mat.inner_product(b, conjugate_convention)
-       	elif(hermitian == False):
-       		return (mat*b)[0]
-       	else:
-       		warning_to_print =  "Warning: taking the non-Hermitian dot product of complex vectors. To suppress this warning, explicitly set hermitian=False."
-	        if mat.is_symbolic() == True:
-	            if b.is_symbolic() == False and b.conjugate() != b:
-	                print(warning_to_print)
-	        else:
-	            if b.is_symbolic() == True:
-	                if mat.conjugate() != mat:
-	                    print(warning_to_print)
-	            else:
-	                if b.conjugate() != b or mat.conjugate() != mat:
-	                    print(warning_to_print)
+        elif(hermitian == False):
+            return (mat*b)[0]
+        else:
+            warning_to_print =  "Warning: taking the non-Hermitian dot product of complex vectors. To suppress this warning, explicitly set hermitian=False."
+            if mat.is_symbolic() == True:
+                if b.is_symbolic() == False and b.conjugate() != b:
+                    print(warning_to_print)
+            else:
+                if b.is_symbolic() == True:
+                    if mat.conjugate() != mat:
+                        print(warning_to_print)
+                else:
+                    if b.conjugate() != b or mat.conjugate() != mat:
+                        print(warning_to_print)
 
         return (mat * b)[0]
 
@@ -2882,25 +2881,24 @@ class MatrixBase(MatrixDeprecated,
             return sol, tau
 
     def inner_product(self, b, conjugate_convention):
-    	""" Used to calculate the inner_product if hermitian flag is set to True in the dot function.
-    	If conjugate_convention is ("maths", "left", "math") then conjugate the first matrix, conversely
-    	if conjugate_convention is ("physics", "right") then conjugate the second matrix. 
-    	
-		See Also
-		===
+        """ Used to calculate the inner_product if hermitian flag is set to True in the dot function.
+        If conjugate_convention is ("maths", "left", "math") then conjugate the first matrix, conversely
+        if conjugate_convention is ("physics", "right") then conjugate the second matrix.
 
-		dot
-    	"""
-    	
-    	mat = self
+        See Also
+        ===
 
-    	if conjugate_convention in ("maths", "left", "math"):
-    		return (mat.conjugate()*b)[0]
-    	elif conjugate_convention in ("physics", "right"):
-    		return (mat*b.conjugate())[0]
-    	else:
-    		print("Invalid conjugate_convention is entered.")
-        
+        dot
+        """
+
+        mat = self
+
+        if conjugate_convention in ("maths", "left", "math"):
+            return (mat.conjugate()*b)[0]
+        elif conjugate_convention in ("physics", "right"):
+            return (mat*b.conjugate())[0]
+        else:
+            print("Invalid conjugate_convention is entered.")
 
     def inv_mod(self, m):
         r"""
