@@ -1018,7 +1018,7 @@ class Derivative(Expr):
         ValueError: Can't calculate derivative wrt x*y.
 
     To make it easier to work with variational calculus, however,
-    derivatives wrt AppliedUnder and Derivatives are allowed.
+    derivatives wrt AppliedUndef and Derivatives are allowed.
     For example, in the Euler-Lagrange method one may write
     F(t, u, v) where u = f(t) and v = f'(t). These variables can be
     written explicity as functions of time::
@@ -1071,6 +1071,25 @@ class Derivative(Expr):
 
         >>> _.doit()
         0
+
+    Replacing undefined functions with concrete expressions
+
+    One must be careful to replace undefined functions with expressions
+    that contain variables consistent with the function definition and
+    the variables of differentiation or else insconsistent result will
+    be obtained. Consider the following example:
+
+    >>> eq = f(x)*g(y)
+    >>> eq.subs(f(x), x*y).diff(x, y).doit()
+    y*Derivative(g(y), y) + g(y)
+    >>> eq.diff(x, y).subs(f(x), x*y).doit()
+    y*Derivative(g(y), y)
+
+    The results differ because `f(x)` was replaced with an expression
+    that involved both variables of differentiation. In the abstract
+    case, differentiation of `f(x)` by `y` is 0; in the concrete case,
+    the presence of `y` made that derivative nonvanishing and produced
+    the extra `g(y)` term.
 
     Defining differentiation for an object
 
