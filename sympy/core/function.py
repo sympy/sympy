@@ -182,6 +182,13 @@ class FunctionClass(ManagedProperties):
         return set()
 
     @property
+    def xreplace(self):
+        # Function needs args so we define a property that returns
+        # a function that takes args...and then use that function
+        # to return the right value
+        return lambda rule, **_: rule.get(self, self)
+
+    @property
     def nargs(self):
         """Return a set of the allowed number of arguments for the function.
 
