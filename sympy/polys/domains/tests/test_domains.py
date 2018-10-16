@@ -5,6 +5,7 @@ from sympy.abc import x, y, z
 
 from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX
 from sympy.polys.domains.realfield import RealField
+from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
 
 from sympy.polys.rings import ring
 from sympy.polys.fields import field
@@ -782,3 +783,9 @@ def test_CC_double():
     assert CC(1e-15j).imag > 1e-50
     assert CC(1e-20j).imag > 1e-50
     assert CC(1e-40j).imag > 1e-50
+
+def test_gaussian_domains():
+    I = S.ImaginaryUnit
+    a, b, c = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I)]
+    ZZ_I.gcd(a, b) == b
+    ZZ_I.gcd(a, c) == b
