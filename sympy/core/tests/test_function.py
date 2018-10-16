@@ -655,6 +655,8 @@ def test_subs_in_derivative():
     assert dxy.diff(dyx) is S.One
     assert Derivative(f(x, y), x, 2, y, 3).subs(
         dyx, g(x, y)) == Derivative(g(x, y), x, 1, y, 2)
+    assert Derivative(f(x, x - y), y).subs(x, x + y) == Subs(
+        Derivative(f(x, x - y), y), x, x + y)
 
 
 def test_diff_wrt_not_allowed():

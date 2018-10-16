@@ -1591,9 +1591,14 @@ class Derivative(Expr):
         return self.expr.free_symbols
 
     def _eval_subs(self, old, new):
+        # The substitution (old, new) cannot be done inside
+        # Derivative(expr, vars) for a variety of reasons
+        # as handled below.
         if old in self._wrt_variables:
             # quick exit case
             if not getattr(new, '_diff_wrt', False):
+                # case (0): new is not a valid variable of
+                # differentiation
                 if isinstance(old, Symbol):
                     # don't introduce a new symbol if the old will do
                     return Subs(self, old, new)
@@ -1616,32 +1621,33 @@ class Derivative(Expr):
             if _subset(old_vars, self_vars):
                 return Derivative(new, *(self_vars - old_vars).items()).canonical
 
-        # The substitution (old, new) cannot be done inside
-        # Derivative(expr, vars) for a variety of reasons
-        # as handled below.
-
         args = list(self.args)
         newargs = list(x._subs(old, new) for x in args)
-
-        if args[0] == old:  # complete replacement of self.expr
+        if args[0] == old:
+            # complete replacement of self.expr
             # we already checked that the new is valid so we know
             # it won't be a problem should it appear in variables
             return Derivative(*newargs)
 
-        if newargs[0] != args[0]:  # expression changed
-            # (1) can't change expr by introducing something
-            # that already appears in self._wrt_variables
+        if newargs[0] != args[0]:
+            # case (1) can't change expr by introducing something that is in
+            # the _wrt_variables if it was already in the expr
             # e.g.
             # for Derivative(f(x, g(y)), y), x cannot be replaced with
             # anything that has y in it; for f(g(x), g(y)).diff(g(y))
             # g(x) cannot be replaced with anything that has g(y)
-            for vi in self._wrt_variables:
-                if newargs[0].count(vi) > args[0].count(vi):
-                    return Subs(self, old, new)
+            syms = {vi: Dummy() for vi in self._wrt_variables
+                if not vi.is_Symbol}
+            wrt = set(syms.get(vi, vi) for vi in self._wrt_variables)
+            forbidden = args[0].xreplace(syms).free_symbols & wrt
+            nfree = new.xreplace(syms).free_symbols
+            ofree = old.xreplace(syms).free_symbols
+            if (nfree - ofree) & forbidden:
+                return Subs(self, old, new)
 
         viter = ((i, j) for ((i,_), (j,_)) in zip(newargs[1:], args[1:]))
         if any(i != j for i, j in viter):  # a wrt-variable change
-            # (2) can't change vars by introducing a variable
+            # case (2) can't change vars by introducing a variable
             # that is contained in expr, e.g.
             # for Derivative(f(z, g(h(x), y)), y), y cannot be changed to
             # x, h(x), or g(h(x), y)
@@ -1657,7 +1663,7 @@ class Derivative(Expr):
             subs = []
             for i, (vi, ci) in enumerate(vc):
                 if not vi._diff_wrt:
-                    # (3) invalid differentiation expression so
+                    # case (3) invalid differentiation expression so
                     # create a replacement dummy
                     xi = Dummy('xi_%i' % i)
                     # replace the old valid variable with the dummy
