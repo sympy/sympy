@@ -709,7 +709,8 @@ class Integral(AddWithLimits):
                           for l in f.limits]
                 f = self.func(f.function, *limits)
             return f.subs(x, ab)*dab_dsym
-        rv = 0
+
+        rv = S.Zero
         if b is not None:
             rv += _do(f, b)
         if a is not None:
@@ -725,7 +726,8 @@ class Integral(AddWithLimits):
             # while differentiating
             u = Dummy('u')
             arg = f.subs(x, u).diff(sym).subs(u, x)
-            rv += self.func(arg, Tuple(x, a, b))
+            if arg:
+                rv += self.func(arg, Tuple(x, a, b))
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,

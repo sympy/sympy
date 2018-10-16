@@ -1685,7 +1685,7 @@ class MatrixEigen(MatrixSubspaces):
 class MatrixCalculus(MatrixCommon):
     """Provides calculus-related matrix operations."""
 
-    def diff(self, *args):
+    def diff(self, *args, **kwargs):
         """Calculate the derivative of each element in the matrix.
         ``args`` will be passed to the ``integrate`` function.
 
@@ -1706,8 +1706,10 @@ class MatrixCalculus(MatrixCommon):
         integrate
         limit
         """
+        # XXX this should be handled here rather than in Derivative
         from sympy import Derivative
-        return Derivative(self, *args, evaluate=True)
+        kwargs.setdefault('evaluate', True)
+        return Derivative(self, *args, **kwargs)
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))

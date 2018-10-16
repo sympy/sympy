@@ -1958,15 +1958,7 @@ def test_diff():
     assert A.diff(a) == MutableDenseMatrix([[0, 0], [0, 0]])
 
     B = ImmutableDenseMatrix([a, b])
-    assert A.diff(B) == Array(
-        [[[
-            [0,0],
-            [0,0]
-        ]],
-        [[
-            [0,0],
-            [0,0]
-        ]]])
+    assert A.diff(B) == A.zeros(2)
 
     # Test diff with tuples:
 

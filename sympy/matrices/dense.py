@@ -205,12 +205,6 @@ class DenseMatrix(MatrixBase):
         mat = [a*b for a,b in zip(self._mat, other._mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
-    def _eval_diff(self, *args, **kwargs):
-        if kwargs.pop("evaluate", True):
-            return self.diff(*args)
-        else:
-            return Derivative(self, *args, **kwargs)
-
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using the method indicated (default
         is Gauss elimination).

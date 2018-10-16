@@ -366,6 +366,8 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
 
     sol = []
     for i in range(k_max + 1, k_max + m + 1):
+        if (i < 0) == True:
+            continue
         r = f.diff(x, i).limit(x, 0) / factorial(i)
         if r is S.Zero:
             continue
