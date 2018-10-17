@@ -71,7 +71,7 @@ class Transpose(MatrixExpr):
         return det(self.arg)
 
 def transpose(expr):
-    """ Matrix transpose """
+    """Matrix transpose"""
     return Transpose(expr).doit()
 
 
