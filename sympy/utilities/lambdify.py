@@ -243,6 +243,12 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     functions can be found at:
     https://github.com/pydata/numexpr#supported-functions
 
+    Using autograd.numpy is only necessary if you intend to use the
+    resulting function with the autograd module for automatic
+    differentiation.  This is useful for instance if Sympy is used only
+    in a subsection of a project and obtaining complete symbolic gradients
+    is not feasible.
+
     In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
     by default. As of release 1.0 ``numpy.array`` is the default.
     To get the old default behavior you must pass in ``[{'ImmutableDenseMatrix':
