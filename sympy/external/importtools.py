@@ -165,10 +165,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
                                         StrictVersion(min_module_version))
                 break
             except ValueError as e:  # e.g. StrictVersion('1.1.post1')
-                warnings.warn("Versions %s and %s are not comparable with "
-                              "StrictVersion()"
-                              % (modversion, min_module_version),
-                              UserWarning)
+                pass
 
             try:
                 from pkg_resources import parse_version
@@ -176,8 +173,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
                                         parse_version(min_module_version))
                 break
             except ImportError:  # could pkg_resources be missing?
-                warnings.warn("pkg_resources is not available.",
-                              UserWarning)
+                pass
 
         if version_check_failed:
             if warn_old_version:
