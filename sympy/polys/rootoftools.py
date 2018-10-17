@@ -176,7 +176,8 @@ class ComplexRootOf(RootOf):
     Roots of a univariate polynomial separated into disjoint
     real or complex intervals and indexed in a fixed order.
     Currently only rational coefficients are allowed.
-    Can be imported as ``CRootOf``.
+    Can be imported as ``CRootOf``. To avoid confusion, the
+    generator must be a Symbol.
 
 
     Examples
@@ -188,6 +189,7 @@ class ComplexRootOf(RootOf):
     CRootOf is a way to reference a particular root of a
     polynomial. If there is a rational root, it will be returned:
 
+    >>> CRootOf.clear_cache()  # for doctest reproducibility
     >>> CRootOf(x**2 - 4, 0)
     -2
 
@@ -269,6 +271,23 @@ class ComplexRootOf(RootOf):
     >>> t.eval_rational(n=2)
     104755/2097152 - 6634255*I/2097152
 
+    Notes
+    =====
+
+    Although a PurePoly can be constructed from a non-symbol generator
+    RootOf instances of non-symbols are disallowed to avoid confusion
+    over what root is being represented.
+
+    >>> from sympy import exp, PurePoly
+    >>> PurePoly(x) == PurePoly(exp(x))
+    True
+    >>> CRootOf(x - 1, 0)
+    1
+    >>> CRootOf(exp(x) - 1, 0)  # would correspond to x == 0
+    Traceback (most recent call last):
+    ...
+    sympy.polys.polyerrors.PolynomialError: generator must be a Symbol
+
     See Also
     ========
     eval_approx
@@ -304,6 +323,11 @@ class ComplexRootOf(RootOf):
 
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
+
+        if not poly.gen.is_Symbol:
+            # PurePoly(sin(x) + 1) == PurePoly(x + 1) but the roots of
+            # x for each are not the same: issue 8617
+            raise PolynomialError("generator must be a Symbol")
 
         degree = poly.degree()
 
@@ -722,6 +746,23 @@ class ComplexRootOf(RootOf):
             roots.append(coeff*cls._postprocess_root(root, radicals))
 
         return roots
+
+    @classmethod
+    def clear_cache(cls):
+        """Reset cache for reals and complexes.
+
+        The intervals used to approximate a root instance are updated
+        as needed. When a request is made to see the intervals, the
+        most current values are shown. `clear_cache` will reset all
+        CRootOf instances back to their original state.
+
+        See Also
+        ========
+        _reset
+        """
+        global _reals_cache, _complexes_cache
+        _reals_cache = _pure_key_dict()
+        _complexes_cache = _pure_key_dict()
 
     def _get_interval(self):
         """Internal function for retrieving isolation interval from cache. """

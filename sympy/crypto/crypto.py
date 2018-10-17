@@ -559,7 +559,7 @@ def encipher_vigenere(msg, key, symbols=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Vigenere_cipher
+    .. [1] https://en.wikipedia.org/wiki/Vigenere_cipher
     .. [2] http://web.archive.org/web/20071116100808/
        http://filebox.vt.edu/users/batman/kryptos.html
        (short URL: https://goo.gl/ijr22d)
@@ -1433,7 +1433,7 @@ def encode_morse(msg, sep='|', mapping=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Morse_code
+    .. [1] https://en.wikipedia.org/wiki/Morse_code
 
     Examples
     ========
@@ -1481,7 +1481,7 @@ def decode_morse(msg, sep='|', mapping=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Morse_code
+    .. [1] https://en.wikipedia.org/wiki/Morse_code
 
     Examples
     ========
@@ -2072,7 +2072,7 @@ def _legendre(a, p):
     legendre symbol (a / p) (int)
 
     """
-    sig = pow(a%p, (p - 1)//2) % p
+    sig = pow(a, (p - 1)//2, p)
     if sig == 1:
         return 1
     elif sig == 0:

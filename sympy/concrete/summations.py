@@ -2,10 +2,11 @@ from __future__ import print_function, division
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, Function
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
+from sympy.core.mul import Mul
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.calculus.singularities import is_decreasing
@@ -13,7 +14,7 @@ from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
-from sympy.polys import apart, PolynomialError
+from sympy.polys import apart, PolynomialError, together
 from sympy.series.limits import limit
 from sympy.series.order import O
 from sympy.sets.sets import FiniteSet
@@ -22,6 +23,7 @@ from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
+from sympy.simplify import denom
 from sympy.calculus.util import AccumulationBounds
 import itertools
 
@@ -150,8 +152,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
            http://dl.acm.org/citation.cfm?doid=322248.322255
-    .. [2] http://en.wikipedia.org/wiki/Summation#Capital-sigma_notation
-    .. [3] http://en.wikipedia.org/wiki/Empty_sum
+    .. [2] https://en.wikipedia.org/wiki/Summation#Capital-sigma_notation
+    .. [3] https://en.wikipedia.org/wiki/Empty_sum
     """
 
     __slots__ = ['is_commutative']
@@ -270,7 +272,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
-    def _eval_simplify(self, ratio=1.7, measure=None):
+    def _eval_simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
         from sympy.simplify.simplify import factor_sum, sum_combine
         from sympy.core.function import expand
         from sympy.core.mul import Mul
@@ -1053,10 +1055,35 @@ def eval_sum_symbolic(f, limits):
 
         r = gosper_sum(f, (i, a, b))
 
+        if isinstance(r, (Mul,Add)):
+            from sympy import ordered, Tuple
+            non_limit = r.free_symbols - Tuple(*limits[1:]).free_symbols
+            den = denom(together(r))
+            den_sym = non_limit & den.free_symbols
+            args = []
+            for v in ordered(den_sym):
+                try:
+                    s = solve(den, v)
+                    m = Eq(v, s[0]) if s else S.false
+                    if m != False:
+                        args.append((Sum(f_orig.subs(*m.args), limits).doit(), m))
+                    break
+                except NotImplementedError:
+                    continue
+
+            args.append((r, True))
+            return Piecewise(*args)
+
         if not r in (None, S.NaN):
             return r
 
-    return eval_sum_hyper(f_orig, (i, a, b))
+    h = eval_sum_hyper(f_orig, (i, a, b))
+    if h is not None:
+        return h
+
+    factored = f_orig.factor()
+    if factored != f_orig:
+        return eval_sum_symbolic(factored, (i, a, b))
 
 
 def _eval_sum_hyper(f, i, a):

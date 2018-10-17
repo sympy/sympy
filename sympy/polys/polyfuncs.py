@@ -184,7 +184,7 @@ def horner(f, *gens, **args):
 
     References
     ==========
-    [1] - http://en.wikipedia.org/wiki/Horner_scheme
+    [1] - https://en.wikipedia.org/wiki/Horner_scheme
 
     """
     allowed_flags(args, [])
@@ -275,7 +275,7 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     function. Setting it too high will decrease the maximal degree in the
     denominator for the same amount of data.
 
-    Example:
+    Examples
     ========
     >>> from sympy.polys.polyfuncs import rational_interpolate
 

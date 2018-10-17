@@ -44,7 +44,8 @@ class Trace(Expr):
         n = Dummy("n")
         return MatrixExpr.from_index_summation(
                 Sum(self.args[0][t1, t1].diff(v[m, n]), (t1, 0, self.args[0].shape[0]-1)),
-                m
+                m,
+                dimensions=(v.args[1:])
             )
 
     @property
@@ -66,7 +67,7 @@ class Trace(Expr):
                 return Trace(self.arg)
 
 
-    def _eval_rewrite_as_Sum(self):
+    def _eval_rewrite_as_Sum(self, **kwargs):
         from sympy import Sum, Dummy
         i = Dummy('i')
         return Sum(self.arg[i, i], (i, 0, self.arg.rows-1)).doit()

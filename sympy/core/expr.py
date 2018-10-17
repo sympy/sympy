@@ -6,10 +6,10 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex
 from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit
-from .compatibility import reduce, as_int, default_sort_key, range
+from .compatibility import reduce, as_int, default_sort_key, range, Iterable
 from mpmath.libmp import mpf_log, prec_to_dps
 
-from collections import defaultdict, Iterable
+from collections import defaultdict
 
 class Expr(Basic, EvalfMixin):
     """
@@ -28,16 +28,21 @@ class Expr(Basic, EvalfMixin):
 
     __slots__ = []
 
+    is_scalar = True  # self derivative is 1
+
     @property
     def _diff_wrt(self):
-        """Is it allowed to take derivative wrt to this instance.
+        """Return True if one can differentiate with respect to this
+        object, else False.
 
-        This determines if it is allowed to take derivatives wrt this object.
-        Subclasses such as Symbol, Function and Derivative should return True
+        Subclasses such as Symbol, Function and Derivative return True
         to enable derivatives wrt them. The implementation in Derivative
-        separates the Symbol and non-Symbol _diff_wrt=True variables and
-        temporarily converts the non-Symbol vars in Symbols when performing
-        the differentiation.
+        separates the Symbol and non-Symbol (_diff_wrt=True) variables and
+        temporarily converts the non-Symbols into Symbols when performing
+        the differentiation. By default, any object deriving from Expr
+        will behave like a scalar with self.diff(self) == 1. If this is
+        not desired then the object must also set `is_scalar = False` or
+        else define an _eval_derivative routine.
 
         Note, see the docstring of Derivative for how this should work
         mathematically. In particular, note that expr.subs(yourclass, Symbol)
@@ -51,11 +56,17 @@ class Expr(Basic, EvalfMixin):
         >>> e = Expr()
         >>> e._diff_wrt
         False
-        >>> class MyClass(Expr):
+        >>> class MyScalar(Expr):
         ...     _diff_wrt = True
         ...
-        >>> (2*MyClass()).diff(MyClass())
-        2
+        >>> MyScalar().diff(MyScalar())
+        1
+        >>> class MySymbol(Expr):
+        ...     _diff_wrt = True
+        ...     is_scalar = False
+        ...
+        >>> MySymbol().diff(MySymbol())
+        Derivative(MySymbol(), MySymbol())
         """
         return False
 
@@ -871,21 +882,25 @@ class Expr(Basic, EvalfMixin):
             else:
                 domain = Interval(b, a)
             # check the singularities of self within the interval
+            # if singularities is a ConditionSet (not iterable), catch the exception and pass
             singularities = solveset(self.cancel().as_numer_denom()[1], x,
                 domain=domain)
             for logterm in self.atoms(log):
                 singularities = singularities | solveset(logterm.args[0], x,
                     domain=domain)
-            for s in singularities:
-                if value is S.NaN:
-                    # no need to keep adding, it will stay NaN
-                    break
-                if not s.is_comparable:
-                    continue
-                if (a < s) == (s < b) == True:
-                    value += -limit(self, x, s, "+") + limit(self, x, s, "-")
-                elif (b < s) == (s < a) == True:
-                    value += limit(self, x, s, "+") - limit(self, x, s, "-")
+            try:
+                for s in singularities:
+                    if value is S.NaN:
+                        # no need to keep adding, it will stay NaN
+                        break
+                    if not s.is_comparable:
+                        continue
+                    if (a < s) == (s < b) == True:
+                        value += -limit(self, x, s, "+") + limit(self, x, s, "-")
+                    elif (b < s) == (s < a) == True:
+                        value += limit(self, x, s, "+") - limit(self, x, s, "-")
+            except TypeError:
+                pass
 
         return value
 
@@ -2553,7 +2568,7 @@ class Expr(Basic, EvalfMixin):
         References
         ==========
 
-        - http://en.wikipedia.org/wiki/Algebraic_expression
+        - https://en.wikipedia.org/wiki/Algebraic_expression
 
         """
         if syms:
@@ -2615,14 +2630,19 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy import collect, Dummy, Order, Rational, Symbol
         if x is None:
-            syms = self.atoms(Symbol)
+            syms = self.free_symbols
             if not syms:
                 return self
             elif len(syms) > 1:
                 raise ValueError('x must be given for multivariate functions.')
             x = syms.pop()
 
-        if not self.has(x):
+        if isinstance(x, Symbol):
+            dep = x in self.free_symbols
+        else:
+            d = Dummy()
+            dep = d in self.xreplace({x: d}).free_symbols
+        if not dep:
             if n is None:
                 return (s for s in [self])
             else:
@@ -3023,9 +3043,8 @@ class Expr(Basic, EvalfMixin):
     ###################################################################################
 
     def diff(self, *symbols, **assumptions):
-        new_symbols = list(map(sympify, symbols))  # e.g. x, 2, y, z
         assumptions.setdefault("evaluate", True)
-        return Derivative(self, *new_symbols, **assumptions)
+        return Derivative(self, *symbols, **assumptions)
 
     ###########################################################################
     ###################### EXPRESSION EXPANSION METHODS #######################
@@ -3167,7 +3186,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.integrals import integrate
         return integrate(self, *args, **kwargs)
 
-    def simplify(self, ratio=1.7, measure=None):
+    def simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
         """See the simplify function in sympy.simplify"""
         from sympy.simplify import simplify
         from sympy.core.function import count_ops
@@ -3373,9 +3392,9 @@ class AtomicExpr(Atom, Expr):
 
     def _eval_derivative_n_times(self, s, n):
         from sympy import Piecewise, Eq
-        from sympy import NDimArray, Tuple
+        from sympy import Tuple
         from sympy.matrices.common import MatrixCommon
-        if isinstance(s, (NDimArray, MatrixCommon, Tuple, Iterable)):
+        if isinstance(s, (MatrixCommon, Tuple, Iterable)):
             return super(AtomicExpr, self)._eval_derivative_n_times(s, n)
         if self == s:
             return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
@@ -3451,9 +3470,9 @@ class UnevaluatedExpr(Expr):
         obj = Expr.__new__(cls, arg, **kwargs)
         return obj
 
-    def doit(self, *args, **kwargs):
+    def doit(self, **kwargs):
         if kwargs.get("deep", True):
-            return self.args[0].doit(*args, **kwargs)
+            return self.args[0].doit(**kwargs)
         else:
             return self.args[0]
 

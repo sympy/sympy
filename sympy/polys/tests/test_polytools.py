@@ -833,9 +833,9 @@ def test_Poly_replace():
 
     assert Poly(x + y).replace(y, y) == Poly(x + y)
     assert Poly(x + y).replace(y, z) == Poly(x + z, x, z)
+    assert Poly(x + y).replace(z, t) == Poly(x + y)
 
     raises(PolynomialError, lambda: Poly(x + y).replace(x, y))
-    raises(PolynomialError, lambda: Poly(x + y).replace(z, t))
 
     assert Poly(x + y, x).replace(x, z) == Poly(z + y, z)
     assert Poly(x + y, y).replace(y, z) == Poly(x + z, z)
@@ -2500,10 +2500,9 @@ def test_factor_large():
             x**6 - x**5 + x**4 - x**3 + x**2 - x + 1, 1)])
 
 
-@XFAIL
 def test_factor_noeval():
-    assert factor(6*x - 10) == 2*(3*x - 5)
-    assert factor((6*x - 10)/(3*x - 6)) == S(2)/3*((3*x - 5)/(x - 2))
+    assert factor(6*x - 10) == Mul(2, 3*x - 5, evaluate=False)
+    assert factor((6*x - 10)/(3*x - 6)) == Mul(S(2)/3, 3*x - 5, 1/(x - 2))
 
 
 def test_intervals():

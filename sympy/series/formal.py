@@ -366,6 +366,8 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
 
     sol = []
     for i in range(k_max + 1, k_max + m + 1):
+        if (i < 0) == True:
+            continue
         r = f.diff(x, i).limit(x, 0) / factorial(i)
         if r is S.Zero:
             continue
@@ -666,10 +668,11 @@ def solve_de(f, x, DE, order, g, k):
     Examples
     ========
 
-    >>> from sympy import Derivative as D
+    >>> from sympy import Derivative as D, Function
     >>> from sympy import exp, ln
     >>> from sympy.series.formal import solve_de
-    >>> from sympy.abc import x, k, f
+    >>> from sympy.abc import x, k
+    >>> f = Function('f')
 
     >>> solve_de(exp(x), x, D(f(x), x) - f(x), 1, f, k)
     (Piecewise((1/factorial(k), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)

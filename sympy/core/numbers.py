@@ -2455,7 +2455,7 @@ class AlgebraicNumber(Expr):
 
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         from sympy.polys import CRootOf, minpoly
 
         for r in [r for r in self.minpoly.all_roots() if r.func != CRootOf]:
@@ -2503,7 +2503,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Zero
+    .. [1] https://en.wikipedia.org/wiki/Zero
     """
 
     p = 0
@@ -2568,7 +2568,7 @@ class One(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/1_%28number%29
+    .. [1] https://en.wikipedia.org/wiki/1_%28number%29
     """
     is_number = True
 
@@ -2620,7 +2620,7 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/%E2%88%921_%28number%29
+    .. [1] https://en.wikipedia.org/wiki/%E2%88%921_%28number%29
 
     """
     is_number = True
@@ -2676,7 +2676,7 @@ class Half(with_metaclass(Singleton, RationalConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/One_half
+    .. [1] https://en.wikipedia.org/wiki/One_half
     """
     is_number = True
 
@@ -2725,7 +2725,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Infinity
+    .. [1] https://en.wikipedia.org/wiki/Infinity
     """
 
     is_commutative = True
@@ -3201,7 +3201,7 @@ class NaN(with_metaclass(Singleton, Number)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/NaN
+    .. [1] https://en.wikipedia.org/wiki/NaN
 
     """
     is_commutative = True
@@ -3439,7 +3439,7 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/E_%28mathematical_constant%29
+    .. [1] https://en.wikipedia.org/wiki/E_%28mathematical_constant%29
     """
 
     is_real = True
@@ -3475,12 +3475,12 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
         from sympy import exp
         return exp(expt)
 
-    def _eval_rewrite_as_sin(self):
+    def _eval_rewrite_as_sin(self, **kwargs):
         from sympy import sin
         I = S.ImaginaryUnit
         return sin(I + S.Pi/2) - I*sin(I)
 
-    def _eval_rewrite_as_cos(self):
+    def _eval_rewrite_as_cos(self, **kwargs):
         from sympy import cos
         I = S.ImaginaryUnit
         return cos(I) + I*cos(I + S.Pi/2)
@@ -3521,7 +3521,7 @@ class Pi(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Pi
+    .. [1] https://en.wikipedia.org/wiki/Pi
     """
 
     is_real = True
@@ -3582,7 +3582,7 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Golden_ratio
+    .. [1] https://en.wikipedia.org/wiki/Golden_ratio
     """
 
     is_real = True
@@ -3623,6 +3623,73 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     _eval_rewrite_as_sqrt = _eval_expand_func
 
 
+class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
+    r"""The tribonacci constant.
+
+    The tribonacci numbers are like the Fibonacci numbers, but instead
+    of starting with two predetermined terms, the sequence starts with
+    three predetermined terms and each term afterwards is the sum of the
+    preceding three terms.
+
+    The tribonacci constant is the ratio toward which adjacent tribonacci
+    numbers tend. It is a root of the polynomial `x^3 - x^2 - x - 1 = 0`,
+    and also satisfies the equation `x + x^{-3} = 2`.
+
+    TribonacciConstant is a singleton, and can be accessed
+    by ``S.TribonacciConstant``.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.TribonacciConstant > 1
+    True
+    >>> S.TribonacciConstant.expand(func=True)
+    1/3 + (-3*sqrt(33) + 19)**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
+    >>> S.TribonacciConstant.is_irrational
+    True
+    >>> S.TribonacciConstant.n(20)
+    1.8392867552141611326
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Generalizations_of_Fibonacci_numbers#Tribonacci_numbers
+    """
+
+    is_real = True
+    is_positive = True
+    is_negative = False
+    is_irrational = True
+    is_number = True
+    is_algebraic = True
+    is_transcendental = False
+
+    __slots__ = []
+
+    def _latex(self, printer):
+        return r"\mathrm{TribonacciConstant}"
+
+    def __int__(self):
+        return 2
+
+    def _eval_evalf(self, prec):
+        rv = self._eval_expand_func(function=True)._eval_evalf(prec + 4)
+        return Float(rv, precision=prec)
+
+    def _eval_expand_func(self, **hints):
+        from sympy import sqrt, cbrt
+        return (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
+
+    def approximation_interval(self, number_cls):
+        if issubclass(number_cls, Integer):
+            return (S.One, Rational(2))
+        elif issubclass(number_cls, Rational):
+            pass
+
+    _eval_rewrite_as_sqrt = _eval_expand_func
+
+
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     r"""The Euler-Mascheroni constant.
 
@@ -3649,7 +3716,7 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
+    .. [1] https://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
     """
 
     is_real = True
@@ -3705,7 +3772,7 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Catalan%27s_constant
+    .. [1] https://en.wikipedia.org/wiki/Catalan%27s_constant
     """
 
     is_real = True
@@ -3756,7 +3823,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Imaginary_unit
+    .. [1] https://en.wikipedia.org/wiki/Imaginary_unit
     """
 
     is_commutative = True

@@ -19,7 +19,8 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
-    residue, Derivative, logcombine, Symbol, Intersection, Union, EmptySet, Interval)
+    residue, Derivative, logcombine, Symbol, Intersection, Union,
+    EmptySet, Interval, Integral, idiff)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -1197,7 +1198,6 @@ def test_N8():
                Q.is_true((x >= y) & (y >= z) & (z >= x)))
 
 
-@XFAIL
 def test_N9():
     x = Symbol('x')
     assert solveset(abs(x - 1) > 2, domain=S.Reals) == Union(Interval(-oo, -1, False, True),
@@ -1379,11 +1379,10 @@ def test_P7():
                          x*(5*z + 11) + y*(6*z - 12)]])
 
 
-@XFAIL
 def test_P8():
     M = Matrix([[1, -2*I],
                 [-3*I, 4]])
-    assert M.norm(ord=S.Infinity) == 7  # Matrix.norm(ord=inf) not implemented
+    assert M.norm(ord=S.Infinity) == 7
 
 
 def test_P9():
@@ -1459,7 +1458,7 @@ def test_P16():
                 [6*sqrt(6), 24*sqrt(3)]])
     assert M.rank() == 1
 
-@XFAIL
+
 def test_P17():
     t = symbols('t', real=True)
     M=Matrix([
@@ -1946,12 +1945,9 @@ def test_R17():
                - 2.8469909700078206) < 1e-15
 
 
-@XFAIL
 def test_R18():
     k = symbols('k', integer=True, positive=True)
     Sm = Sum(1/(2**k*k**2), (k, 1, oo))
-    # returns polylog(2, 1/2),  particular value for 1/2 is not known.
-    # https://github.com/sympy/sympy/issues/7132
     T = Sm.doit()
     assert T.simplify() == -log(2)**2/2 + pi**2/12
 
@@ -2086,9 +2082,8 @@ def test_T2():
     assert limit((3**x + 5**x)**(1/x), x, oo) == 5
 
 
-@XFAIL
 def test_T3():
-    assert limit(log(x)/(log(x) + sin(x)), x, oo) == 1  # raises PoleError
+    assert limit(log(x)/(log(x) + sin(x)), x, oo) == 1
 
 
 def test_T4():
@@ -2181,21 +2176,21 @@ def test_U4():
     assert diff(x**n, x, n).rewrite(factorial) == factorial(n)
 
 
-@XFAIL
 def test_U5():
-    # https://github.com/sympy/sympy/issues/6681
-    # f(g(x)).diff(x,2) returns Derivative(g(x), x)**2*Subs(Derivative(
-    #  f(_xi_1), _xi_1, _xi_1), (_xi_1,), (g(x),)) + Derivative(g(x), x, x)*
-    #  Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
-    raise NotImplementedError("f(g(t)).diff(t,2) Subs not performed")
+    # issue 6681
+    t = symbols('t')
+    ans = (
+        Derivative(f(g(t)), g(t))*Derivative(g(t), (t, 2)) +
+        Derivative(f(g(t)), (g(t), 2))*Derivative(g(t), t)**2)
+    assert f(g(t)).diff(t, 2) == ans
+    assert ans.doit() == ans
 
 
-@XFAIL
 def test_U6():
     h = Function('h')
-    # raises ValueError: Invalid limits given: (y, h(x), g(x))
-    T = integrate(f(y), y, h(x), g(x))
-    T.diff(x)
+    T = integrate(f(y), (y, h(x), g(x)))
+    assert T.diff(x) == (
+        f(g(x))*Derivative(g(x), x) - f(h(x))*Derivative(h(x), x))
 
 
 @XFAIL
@@ -2211,14 +2206,11 @@ def test_U7():
 def test_U8():
     x, y = symbols('x y', real=True)
     eq = cos(x*y) + x
-    eq = eq.subs(y, f(x))
     #  If SymPy had implicit_diff() function this hack could be avoided
     # TODO: Replace solve with solveset, current test fails for solveset
-    assert (solve((f(x) - eq).diff(x), f(x).diff(x))[0].subs(f(x), y) ==
-            (-y*sin(x*y) + 1)/(x*sin(x*y) + 1))
+    assert idiff(y - eq, y, x) == (-y*sin(x*y) + 1)/(x*sin(x*y) + 1)
 
 
-@XFAIL
 def test_U9():
     # Wester sample case for Maple:
     # O29 := diff(f(x, y), x) + diff(f(x, y), y);
@@ -2231,19 +2223,17 @@ def test_U9():
     #                        2 D(g)(x  + y ) (x + y)
     x, y = symbols('x y', real=True)
     su = diff(f(x, y), x) + diff(f(x, y), y)
-    s2 = Subs(su, f(x, y), g(x**2 + y**2)).doit()
+    s2 = su.subs(f(x, y), g(x**2 + y**2))
     s3 = s2.doit().factor()
     # Subs not performed, s3 = 2*(x + y)*Subs(Derivative(
-    #   g(_xi_1), _xi_1), (_xi_1,), (x**2 + y**2,))
+    #   g(_xi_1), _xi_1), _xi_1, x**2 + y**2)
     # Derivative(g(x*2 + y**2), x**2 + y**2) is not valid in SymPy,
     # and probably will remain that way. You can take derivatives with respect
     # to other expressions only if they are atomic, like a symbol or a
     # function.
     # D operator should be added to SymPy
     # See https://github.com/sympy/sympy/issues/4719.
-
-    # raises ValueError: Can't differentiate wrt the variable: x**2 + y**2
-    assert s3 == 2*(x + y)*Derivative(g(x**2 + y**2), x**2 + y**2)
+    assert s3 == (x + y)*Subs(Derivative(g(x), x), x, x**2 + y**2)*2
 
 
 def test_U10():
@@ -2298,12 +2288,9 @@ def test_U17():
 supported in SymPy")
 
 
-@XFAIL
 def test_V1():
     x = symbols('x', real=True)
-    # integral not calculated
-    # https://github.com/sympy/sympy/issues/4212
-    assert integrate(abs(x), x) == x*abs(x)/2
+    assert integrate(abs(x), x) == Piecewise((-x**2/2, x <= 0), (x**2/2, True))
 
 
 def test_V2():
@@ -2315,7 +2302,6 @@ def test_V3():
     assert integrate(1/(x**3 + 2),x).diff().simplify() == 1/(x**3 + 2)
 
 
-@XFAIL
 def test_V4():
     assert integrate(2**x/sqrt(1 + 4**x), x) == asinh(2**x)/log(2)
 
@@ -2615,11 +2601,9 @@ def test_W25():
     assert (i2 - pi*a/2).simplify() == 0
 
 
-@XFAIL
+
 def test_W26():
     x, y = symbols('x y', real=True)
-    # integrate(abs(y - x**2), (y,0,2)) raises ValueError: gamma function pole
-    # https://github.com/sympy/sympy/issues/7165
     assert integrate(integrate(abs(y - x**2), (y, 0, 2)),
                      (x, -1, 1)) == S(46)/15
 
@@ -2814,7 +2798,7 @@ def test_X20():
     #                                    1 + 1/2 x
     # mpmath support numeric Pade approximant but there is
     # no symbolic implementation in SymPy
-    # http://en.wikipedia.org/wiki/Pad%C3%A9_approximant
+    # https://en.wikipedia.org/wiki/Pad%C3%A9_approximant
     raise NotImplementedError("Symbolic Pade approximant not supported")
 
 

@@ -125,8 +125,8 @@ def sqrt(arg, evaluate=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Square_root
-    .. [2] http://en.wikipedia.org/wiki/Principal_value
+    .. [1] https://en.wikipedia.org/wiki/Square_root
+    .. [2] https://en.wikipedia.org/wiki/Principal_value
     """
     # arg = sympify(arg) is handled by Pow
     return Pow(arg, S.Half, evaluate=evaluate)
@@ -178,8 +178,8 @@ def cbrt(arg, evaluate=None):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Cube_root
-    * http://en.wikipedia.org/wiki/Principal_value
+    * https://en.wikipedia.org/wiki/Cube_root
+    * https://en.wikipedia.org/wiki/Principal_value
 
     """
     return Pow(arg, Rational(1, 3), evaluate=evaluate)
@@ -264,10 +264,10 @@ def root(arg, n, k=0, evaluate=None):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Square_root
-    * http://en.wikipedia.org/wiki/Real_root
-    * http://en.wikipedia.org/wiki/Root_of_unity
-    * http://en.wikipedia.org/wiki/Principal_value
+    * https://en.wikipedia.org/wiki/Square_root
+    * https://en.wikipedia.org/wiki/Real_root
+    * https://en.wikipedia.org/wiki/Root_of_unity
+    * https://en.wikipedia.org/wiki/Principal_value
     * http://mathworld.wolfram.com/CubeRoot.html
 
     """
@@ -606,7 +606,7 @@ class MinMaxBase(Expr, LatticeOp):
             l.append(df * da)
         return Add(*l)
 
-    def _eval_rewrite_as_Abs(self, *args):
+    def _eval_rewrite_as_Abs(self, *args, **kwargs):
         from sympy.functions.elementary.complexes import Abs
         s = (args[0] + self.func(*args[1:]))/2
         d = abs(args[0] - self.func(*args[1:]))/2
@@ -719,8 +719,8 @@ class Max(MinMaxBase, Application):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
-    .. [2] http://en.wikipedia.org/wiki/Lattice_%28order%29
+    .. [1] https://en.wikipedia.org/wiki/Directed_complete_partial_order
+    .. [2] https://en.wikipedia.org/wiki/Lattice_%28order%29
 
     See Also
     ========
@@ -742,12 +742,12 @@ class Max(MinMaxBase, Application):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Heaviside(self, *args):
+    def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
-    def _eval_rewrite_as_Piecewise(self, *args):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         is_real = all(i.is_real for i in args)
         if is_real:
             return _minmax_as_Piecewise('>=', *args)
@@ -807,12 +807,12 @@ class Min(MinMaxBase, Application):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Heaviside(self, *args):
+    def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
 
-    def _eval_rewrite_as_Piecewise(self, *args):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         is_real = all(i.is_real for i in args)
         if is_real:
             return _minmax_as_Piecewise('<=', *args)

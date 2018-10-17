@@ -1,12 +1,12 @@
 from sympy import (
     Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
-    FiniteSet, Float, FourierTransform, Function, IndexedBase, Integral,
+    FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
     Interval, InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin, Mod,
+    Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin, acsc, Mod,
     assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
@@ -305,6 +305,8 @@ def test_latex_functions():
     assert latex(asin(x**2), inv_trig_style="power",
                  fold_func_brackets=True) == \
         r"\sin^{-1} {x^{2}}"
+    assert latex(acsc(x), inv_trig_style="full") == \
+        r"\operatorname{arccsc}{\left (x \right )}"
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
@@ -520,11 +522,12 @@ def test_latex_indexed():
     Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
     symbol_latex = latex(Psi_symbol * conjugate(Psi_symbol))
     indexed_latex = latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
-    # \\overline{\\Psi_{0}} \\Psi_{0}   vs.   \\Psi_{0} \\overline{\\Psi_{0}}
-    assert symbol_latex.split() == indexed_latex.split() \
-        or symbol_latex.split() == indexed_latex.split()[::-1]
+    # \\overline{{\\Psi}_{0}} {\\Psi}_{0}   vs.   \\Psi_{0} \\overline{\\Psi_{0}}
+    assert symbol_latex == '\\Psi_{0} \\overline{\\Psi_{0}}'
+    assert indexed_latex == '\\overline{{\\Psi}_{0}} {\\Psi}_{0}'
 
     # Symbol('gamma') gives r'\gamma'
+    assert latex(Indexed('x1',Symbol('i'))) == '{x_{1}}_{i}'
     assert latex(IndexedBase('gamma')) == r'\gamma'
     assert latex(IndexedBase('a b')) == 'a b'
     assert latex(IndexedBase('a_b')) == 'a_{b}'
@@ -1413,7 +1416,7 @@ def test_Hadamard():
     from sympy.matrices import MatrixSymbol, HadamardProduct
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    assert latex(HadamardProduct(X, Y*Y)) == r'X \circ \left(Y Y\right)'
+    assert latex(HadamardProduct(X, Y*Y)) == r'X \circ Y^{2}'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
 
 
@@ -1759,3 +1762,107 @@ def test_WedgeProduct_printing():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert latex(wp) == r"\mathrm{d}x \wedge \mathrm{d}y"
+
+
+def test_issue_14041():
+    import sympy.physics.mechanics as me
+
+    A_frame = me.ReferenceFrame('A')
+    thetad, phid  = me.dynamicsymbols('theta, phi', 1)
+    L = Symbol('L')
+
+    assert latex(L*(phid + thetad)**2*A_frame.x) == \
+        r"L \left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
+    assert latex((phid + thetad)**2*A_frame.x) == \
+        r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
+    assert latex((phid*thetad)**a*A_frame.x) == \
+        r"\left(\dot{\phi} \dot{\theta}\right)^{a}\mathbf{\hat{a}_x}"
+
+
+def test_issue_9216():
+    expr_1 = Pow(1, -1, evaluate=False)
+    assert latex(expr_1) == r"1^{-1}"
+
+    expr_2 = Pow(1, Pow(1, -1, evaluate=False), evaluate=False)
+    assert latex(expr_2) == r"1^{1^{-1}}"
+
+    expr_3 = Pow(3, -2, evaluate=False)
+    assert latex(expr_3) == r"\frac{1}{9}"
+
+    expr_4 = Pow(1, -2, evaluate=False)
+    assert latex(expr_4) == r"1^{-2}"
+
+def test_latex_printer_tensor():
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    L = TensorIndexType("L")
+    i, j, k, l = tensor_indices("i j k l", L)
+    i0 = tensor_indices("i_0", L)
+    A, B, C, D = tensorhead("A B C D", [L], [[1]])
+    H = tensorhead("H", [L, L], [[1], [1]])
+    K = tensorhead("K", [L, L, L, L], [[1], [1], [1], [1]])
+
+    assert latex(i) == "{}^{i}"
+    assert latex(-i) == "{}_{i}"
+
+    expr = A(i)
+    assert latex(expr) == "A{}^{i}"
+
+    expr = A(i0)
+    assert latex(expr) == "A{}^{i_{0}}"
+
+    expr = A(-i)
+    assert latex(expr) == "A{}_{i}"
+
+    expr = -3*A(i)
+    assert latex(expr) == r"-3A{}^{i}"
+
+    expr = K(i, j, -k, -i0)
+    assert latex(expr) == "K{}^{ij}{}_{ki_{0}}"
+
+    expr = K(i, -j, -k, i0)
+    assert latex(expr) == "K{}^{i}{}_{jk}{}^{i_{0}}"
+
+    expr = K(i, -j, k, -i0)
+    assert latex(expr) == "K{}^{i}{}_{j}{}^{k}{}_{i_{0}}"
+
+    expr = H(i, -j)
+    assert latex(expr) == "H{}^{i}{}_{j}"
+
+    expr = H(i, j)
+    assert latex(expr) == "H{}^{ij}"
+
+    expr = H(-i, -j)
+    assert latex(expr) == "H{}_{ij}"
+
+    expr = (1+x)*A(i)
+    assert latex(expr) == r"\left(x + 1\right)A{}^{i}"
+
+    expr = H(i, -i)
+    assert latex(expr) == "H{}^{L_{0}}{}_{L_{0}}"
+
+    expr = H(i, -j)*A(j)*B(k)
+    assert latex(expr) == "H{}^{i}{}_{L_{0}}A{}^{L_{0}}B{}^{k}"
+
+    expr = A(i) + 3*B(i)
+    assert latex(expr) == "3B{}^{i} + A{}^{i}"
+
+    ## Test ``TensorElement``:
+    from sympy.tensor.tensor import TensorElement
+
+    expr = TensorElement(K(i,j,k,l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3,j,k=2,l}'
+
+    expr = TensorElement(K(i,j,k,l), {i:3})
+    assert latex(expr) == 'K{}^{i=3,jkl}'
+
+    expr = TensorElement(K(i,-j,k,l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3}{}_{j}{}^{k=2,l}'
+
+    expr = TensorElement(K(i,-j,k,-l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3}{}_{j}{}^{k=2}{}_{l}'
+
+    expr = TensorElement(K(i,j,-k,-l), {i:3, -k:2})
+    assert latex(expr) == 'K{}^{i=3,j}{}_{k=2,l}'
+
+    expr = TensorElement(K(i,j,-k,-l), {i:3})
+    assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'

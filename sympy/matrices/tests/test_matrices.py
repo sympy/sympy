@@ -1,4 +1,3 @@
-import collections
 import random
 import warnings
 
@@ -14,7 +13,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
-from sympy.core.compatibility import long, iterable, range
+from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
@@ -329,12 +328,14 @@ def test_determinant():
 
     assert M.det(method="bareiss") == -1
     assert M.det(method="berkowitz") == -1
+    assert M.det(method="lu") == -1
 
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
     assert M.det(method="bareiss") == 2*x*y - y
     assert M.det(method="berkowitz") == 2*x*y - y
+    assert M.det(method="lu") == 2*x*y - y
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),
@@ -342,6 +343,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == 1
     assert M.det(method="berkowitz") == 1
+    assert M.det(method="lu") == 1
 
     M = Matrix(( ( 3, -2,  0, 5),
                  (-2,  1, -2, 2),
@@ -350,6 +352,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == -289
     assert M.det(method="berkowitz") == -289
+    assert M.det(method="lu") == -289
 
     M = Matrix(( ( 1,  2,  3,  4),
                  ( 5,  6,  7,  8),
@@ -358,6 +361,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == 0
     assert M.det(method="berkowitz") == 0
+    assert M.det(method="lu") == 0
 
     M = Matrix(( (3, 2, 0, 0, 0),
                  (0, 3, 2, 0, 0),
@@ -367,6 +371,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == 275
     assert M.det(method="berkowitz") == 275
+    assert M.det(method="lu") == 275
 
     M = Matrix(( (1, 0,  1,  2, 12),
                  (2, 0,  1,  1,  4),
@@ -376,6 +381,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == -55
     assert M.det(method="berkowitz") == -55
+    assert M.det(method="lu") == -55
 
     M = Matrix(( (-5,  2,  3,  4,  5),
                  ( 1, -4,  3,  4,  5),
@@ -385,6 +391,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == 11664
     assert M.det(method="berkowitz") == 11664
+    assert M.det(method="lu") == 11664
 
     M = Matrix(( ( 2,  7, -1, 3, 2),
                  ( 0,  0,  1, 0, 1),
@@ -394,6 +401,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == 123
     assert M.det(method="berkowitz") == 123
+    assert M.det(method="lu") == 123
 
     M = Matrix(( (x, y, z),
                  (1, 0, 0),
@@ -401,6 +409,7 @@ def test_determinant():
 
     assert M.det(method="bareiss") == z**2 - x*y
     assert M.det(method="berkowitz") == z**2 - x*y
+    assert M.det(method="lu") == z**2 - x*y
 
     # issue 13835
     a = symbols('a')
@@ -409,73 +418,6 @@ def test_determinant():
     assert M(5).det() == 0
     assert M(6).det() == 0
     assert M(7).det() == 0
-
-
-def test_det_LU_decomposition():
-
-    for M in [Matrix(), Matrix([[1]])]:
-        assert M.det(method="lu") == 1
-
-    M = Matrix(( (-3,  2),
-                 ( 8, -5) ))
-
-    assert M.det(method="lu") == -1
-
-    M = Matrix(( (x,   1),
-                 (y, 2*y) ))
-
-    assert M.det(method="lu") == 2*x*y - y
-
-    M = Matrix(( (1, 1, 1),
-                 (1, 2, 3),
-                 (1, 3, 6) ))
-
-    assert M.det(method="lu") == 1
-
-    M = Matrix(( ( 3, -2,  0, 5),
-                 (-2,  1, -2, 2),
-                 ( 0, -2,  5, 0),
-                 ( 5,  0,  3, 4) ))
-
-    assert M.det(method="lu") == -289
-
-    M = Matrix(( (3, 2, 0, 0, 0),
-                 (0, 3, 2, 0, 0),
-                 (0, 0, 3, 2, 0),
-                 (0, 0, 0, 3, 2),
-                 (2, 0, 0, 0, 3) ))
-
-    assert M.det(method="lu") == 275
-
-    M = Matrix(( (1, 0,  1,  2, 12),
-                 (2, 0,  1,  1,  4),
-                 (2, 1,  1, -1,  3),
-                 (3, 2, -1,  1,  8),
-                 (1, 1,  1,  0,  6) ))
-
-    assert M.det(method="lu") == -55
-
-    M = Matrix(( (-5,  2,  3,  4,  5),
-                 ( 1, -4,  3,  4,  5),
-                 ( 1,  2, -3,  4,  5),
-                 ( 1,  2,  3, -2,  5),
-                 ( 1,  2,  3,  4, -1) ))
-
-    assert M.det(method="lu") == 11664
-
-    M = Matrix(( ( 2,  7, -1, 3, 2),
-                 ( 0,  0,  1, 0, 1),
-                 (-2,  0,  7, 0, 2),
-                 (-3, -2,  4, 5, 3),
-                 ( 1,  0,  0, 0, 1) ))
-
-    assert M.det(method="lu") == 123
-
-    M = Matrix(( (x, y, z),
-                 (1, 0, 0),
-                 (y, z, x) ))
-
-    assert M.det(method="lu") == z**2 - x*y
 
 
 def test_slicing():
@@ -1055,6 +997,25 @@ def test_eigen():
     assert Matrix([]).eigenvals() == {}
     assert Matrix([]).eigenvects() == []
 
+    # issue 15119
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2], [0, 4], [0, 0]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0], [3, 4], [5, 6]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals())
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals(error_when_incomplete = False))
+    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals(error_when_incomplete = False))
+
+    # issue 15125
+    from sympy.core.function import count_ops
+    q = Symbol("q", positive = True)
+    m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
+    assert count_ops(m.eigenvals(simplify=False)) > count_ops(m.eigenvals(simplify=True))
+    assert count_ops(m.eigenvals(simplify=lambda x: x)) > count_ops(m.eigenvals(simplify=True))
+
+    assert isinstance(m.eigenvals(simplify=True, multiple=False), dict)
+    assert isinstance(m.eigenvals(simplify=True, multiple=True), list)
+    assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
+    assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
 
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
@@ -1079,7 +1040,8 @@ def test_xreplace():
         assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).xreplace({1: 2})
 
 def test_simplify():
-    f, n = symbols('f, n')
+    n = Symbol('n')
+    f = Function('f')
 
     M = Matrix([[            1/x + 1/y,                 (x + x*y) / x  ],
                 [ (f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n) / pi ]])
@@ -1924,6 +1886,12 @@ def test_errors():
     raises(ValueError,
         lambda: Matrix([[1, 2], [3, 4]]).det(method='Not a real method'))
     raises(ValueError,
+        lambda: Matrix([[1, 2, 3, 4], [5, 6, 7, 8],
+        [9, 10, 11, 12], [13, 14, 15, 16]]).det(iszerofunc="Not function"))
+    raises(ValueError,
+        lambda: Matrix([[1, 2, 3, 4], [5, 6, 7, 8],
+        [9, 10, 11, 12], [13, 14, 15, 16]]).det(iszerofunc=False))
+    raises(ValueError,
         lambda: hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]])))
     raises(ValueError, lambda: hessian(Matrix([[1, 2], [3, 4]]), []))
     raises(ValueError, lambda: hessian(Symbol('x')**2, 'a'))
@@ -1931,7 +1899,11 @@ def test_errors():
     raises(IndexError, lambda: eye(3)[2, 5])
     M = Matrix(((1, 2, 3, 4), (5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16)))
     raises(ValueError, lambda: M.det('method=LU_decomposition()'))
-
+    V = Matrix([[10, 10, 10]])
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(ValueError, lambda: M.row_insert(4.7, V))
+    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    raises(ValueError, lambda: M.col_insert(-4.2, V))
 
 def test_len():
     assert len(Matrix()) == 0
@@ -1986,15 +1958,7 @@ def test_diff():
     assert A.diff(a) == MutableDenseMatrix([[0, 0], [0, 0]])
 
     B = ImmutableDenseMatrix([a, b])
-    assert A.diff(B) == Array(
-        [[[
-            [0,0],
-            [0,0]
-        ]],
-        [[
-            [0,0],
-            [0,0]
-        ]]])
+    assert A.diff(B) == A.zeros(2)
 
     # Test diff with tuples:
 
@@ -2217,7 +2181,7 @@ def test_matrix_norm():
     assert A.norm('frobenius') == sqrt(389)/2
 
     # Test properties of matrix norms
-    # http://en.wikipedia.org/wiki/Matrix_norm#Definition
+    # https://en.wikipedia.org/wiki/Matrix_norm#Definition
     # Two matrices
     A = Matrix([[1, 2], [3, 4]])
     B = Matrix([[5, 5], [-2, 2]])
@@ -2242,7 +2206,7 @@ def test_matrix_norm():
             assert dif == 0
 
     # Test Properties of Vector Norms
-    # http://en.wikipedia.org/wiki/Vector_norm
+    # https://en.wikipedia.org/wiki/Vector_norm
     # Two column vectors
     a = Matrix([1, 1 - 1*I, -3])
     b = Matrix([S(1)/2, 1*I, 1])
@@ -2634,7 +2598,7 @@ def test_hash():
         assert len(s) == 1 and s.pop() == cls.eye(1)
     # issue 3979
     for cls in classes[:2]:
-        assert not isinstance(cls.eye(1), collections.Hashable)
+        assert not isinstance(cls.eye(1), Hashable)
 
 
 @XFAIL
@@ -2677,7 +2641,7 @@ def test_issue_11434():
 
 def test_rank_regression_from_so():
     # see:
-    # http://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
+    # https://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
 
     nu, lamb = symbols('nu, lambda')
     A = Matrix([[-3*nu,         1,                  0,  0],
@@ -3118,3 +3082,94 @@ def test_issue_14517():
     # test one random eigenvalue, the computation is a little slow
     test_ev = random.choice(list(ev.keys()))
     assert (M - test_ev*eye(4)).det() == 0
+
+def test_issue_14943():
+    # Test that __array__ accepts the optional dtype argument
+    try:
+        from numpy import array
+    except ImportError:
+        skip('NumPy must be available to test creating matrices from ndarrays')
+
+    M = Matrix([[1,2], [3,4]])
+    assert array(M, dtype=float).dtype.name == 'float64'
+
+def test_issue_8240():
+    # Eigenvalues of large triangular matrices
+    n = 200
+
+    diagonal_variables = [Symbol('x%s' % i) for i in range(n)]
+    M = [[0 for i in range(n)] for j in range(n)]
+    for i in range(n):
+        M[i][i] = diagonal_variables[i]
+    M = Matrix(M)
+
+    eigenvals = M.eigenvals()
+    assert len(eigenvals) == n
+    for i in range(n):
+        assert eigenvals[diagonal_variables[i]] == 1
+
+    eigenvals = M.eigenvals(multiple=True)
+    assert set(eigenvals) == set(diagonal_variables)
+
+    # with multiplicity
+    M = Matrix([[x, 0, 0], [1, y, 0], [2, 3, x]])
+    eigenvals = M.eigenvals()
+    assert eigenvals == {x: 2, y: 1}
+
+    eigenvals = M.eigenvals(multiple=True)
+    assert len(eigenvals) == 3
+    assert eigenvals.count(x) == 2
+    assert eigenvals.count(y) == 1
+
+def test_legacy_det():
+    # Minimal support for legacy keys for 'method' in det()
+    # Partially copied from test_determinant()
+
+    M = Matrix(( ( 3, -2,  0, 5),
+                 (-2,  1, -2, 2),
+                 ( 0, -2,  5, 0),
+                 ( 5,  0,  3, 4) ))
+
+    assert M.det(method="bareis") == -289
+    assert M.det(method="det_lu") == -289
+    assert M.det(method="det_LU") == -289
+
+    M = Matrix(( (3, 2, 0, 0, 0),
+                 (0, 3, 2, 0, 0),
+                 (0, 0, 3, 2, 0),
+                 (0, 0, 0, 3, 2),
+                 (2, 0, 0, 0, 3) ))
+
+    assert M.det(method="bareis") == 275
+    assert M.det(method="det_lu") == 275
+    assert M.det(method="Bareis") == 275
+
+    M = Matrix(( (1, 0,  1,  2, 12),
+                 (2, 0,  1,  1,  4),
+                 (2, 1,  1, -1,  3),
+                 (3, 2, -1,  1,  8),
+                 (1, 1,  1,  0,  6) ))
+
+    assert M.det(method="bareis") == -55
+    assert M.det(method="det_lu") == -55
+    assert M.det(method="BAREISS") == -55
+
+    M = Matrix(( (-5,  2,  3,  4,  5),
+                 ( 1, -4,  3,  4,  5),
+                 ( 1,  2, -3,  4,  5),
+                 ( 1,  2,  3, -2,  5),
+                 ( 1,  2,  3,  4, -1) ))
+
+    assert M.det(method="bareis") == 11664
+    assert M.det(method="det_lu") == 11664
+    assert M.det(method="BERKOWITZ") == 11664
+
+    M = Matrix(( ( 2,  7, -1, 3, 2),
+                 ( 0,  0,  1, 0, 1),
+                 (-2,  0,  7, 0, 2),
+                 (-3, -2,  4, 5, 3),
+                 ( 1,  0,  0, 0, 1) ))
+
+    assert M.det(method="bareis") == 123
+    assert M.det(method="det_lu") == 123
+    assert M.det(method="LU") == 123

@@ -444,21 +444,21 @@ class exp(ExpBase):
             return S.One
         return exp(arg)
 
-    def _eval_rewrite_as_sin(self, arg):
+    def _eval_rewrite_as_sin(self, arg, **kwargs):
         from sympy import sin
         I = S.ImaginaryUnit
         return sin(I*arg + S.Pi/2) - I*sin(I*arg)
 
-    def _eval_rewrite_as_cos(self, arg):
+    def _eval_rewrite_as_cos(self, arg, **kwargs):
         from sympy import cos
         I = S.ImaginaryUnit
         return cos(I*arg) + I*cos(I*arg + S.Pi/2)
 
-    def _eval_rewrite_as_tanh(self, arg):
+    def _eval_rewrite_as_tanh(self, arg, **kwargs):
         from sympy import tanh
         return (1 + tanh(arg/2))/(1 - tanh(arg/2))
 
-    def _eval_rewrite_as_sqrt(self, arg):
+    def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         from sympy.functions.elementary.trigonometric import sin, cos
         if arg.is_Mul:
             coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
@@ -652,11 +652,15 @@ class log(Function):
 
         return self.func(arg)
 
-    def _eval_simplify(self, ratio, measure):
-        from sympy.simplify.simplify import expand_log, simplify
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        from sympy.simplify.simplify import expand_log, simplify, inversecombine
         if (len(self.args) == 2):
-            return simplify(self.func(*self.args), ratio=ratio, measure=measure)
-        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
+            return simplify(self.func(*self.args), ratio=ratio, measure=measure,
+                            rational=rational, inverse=inverse)
+        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure,
+                         rational=rational, inverse=inverse))
+        if inverse:
+            expr = inversecombine(expr)
         expr = expand_log(expr, deep=True)
         return min([expr, self], key=measure)
 
@@ -801,7 +805,7 @@ class LambertW(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Lambert_W_function
+    .. [1] https://en.wikipedia.org/wiki/Lambert_W_function
     """
 
     @classmethod

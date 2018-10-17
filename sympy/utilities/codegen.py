@@ -876,7 +876,7 @@ class CCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         if len(routine.results) > 1:
@@ -1183,7 +1183,7 @@ class FCodeGen(CodeGen):
         If the routine has multiple result objects, a CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         prototype = [ "interface\n" ]
@@ -1204,7 +1204,7 @@ class FCodeGen(CodeGen):
                 assign_to = result.result_var
 
             constants, not_fortran, f_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False, source_format='free'),
+                'doprint', dict(human=False, source_format='free', standard=95),
                 result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
@@ -1843,7 +1843,7 @@ class RustCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         results = [i.get_datatype('Rust') for i in routine.results]

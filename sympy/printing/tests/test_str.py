@@ -1,12 +1,12 @@
 from __future__ import division
 
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
-    factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow, Rational, Float, Rel,
-    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
-    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
+    factorial, factorial2, Function, GoldenRatio, TribonacciConstant, I,
+    Integer, Integral, Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow,
+    Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
+    symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -131,6 +131,10 @@ def test_Geometry():
 
 def test_GoldenRatio():
     assert str(GoldenRatio) == "GoldenRatio"
+
+
+def test_TribonacciConstant():
+    assert str(TribonacciConstant) == "TribonacciConstant"
 
 
 def test_ImaginaryUnit():
@@ -521,7 +525,6 @@ def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
     assert str(Rel(x + y, y, "==")) == "Eq(x + y, y)"
     assert str(Rel(x, y, "!=")) == "Ne(x, y)"
-    assert str(Rel(x, y, ':=')) == "Assignment(x, y)"
     assert str(Eq(x, 1) | Eq(x, 2)) == "Eq(x, 1) | Eq(x, 2)"
     assert str(Ne(x, 1) & Ne(x, 2)) == "Ne(x, 1) & Ne(x, 2)"
 
@@ -769,7 +772,7 @@ def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
 
 def test_Complement():
-    assert str(Complement(S.Reals, S.Naturals)) == 'S.Reals \\ S.Naturals'
+    assert str(Complement(S.Reals, S.Naturals)) == 'Reals \\ Naturals'
 
 def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2, 3), Interval(3, 4),evaluate=False)) == \
@@ -801,3 +804,8 @@ def test_MatrixSymbol_printing():
 
     assert str(A - A*B - B) == "-B - A*B + A"
     assert str(A*B - (A+B)) == "-(A + B) + A*B"
+
+
+def test_Subs_printing():
+    assert str(Subs(x, (x,), (1,))) == 'Subs(x, x, 1)'
+    assert str(Subs(x + y, (x, y), (1, 2))) == 'Subs(x + y, (x, y), (1, 2))'

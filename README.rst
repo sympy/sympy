@@ -6,7 +6,7 @@ SymPy
 .. |pypi version| image:: https://img.shields.io/pypi/v/sympy.svg
    :target: https://pypi.python.org/pypi/sympy
 .. |Build status| image:: https://secure.travis-ci.org/sympy/sympy.svg?branch=master
-   :target: http://travis-ci.org/sympy/sympy
+   :target: https://travis-ci.org/sympy/sympy
 .. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Join the chat at https://gitter.im/sympy/sympy
    :target: https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
@@ -15,7 +15,7 @@ SymPy
 
 A Python library for symbolic mathematics.
 
-http://sympy.org/
+https://sympy.org/
 
 See the AUTHORS file for the list of authors.
 
@@ -49,14 +49,14 @@ To get the git version do
     $ git clone git://github.com/sympy/sympy.git
 
 For other options (tarballs, debs, etc.), see
-http://docs.sympy.org/dev/install.html.
+https://docs.sympy.org/dev/install.html.
 
 Documentation and usage
 -----------------------
 
 Everything is at:
 
-http://docs.sympy.org/
+https://docs.sympy.org/
 
 You can generate everything at the above site in your local copy of SymPy by::
 
@@ -91,7 +91,7 @@ if SymPy is installed.
 Installation
 ------------
 
-SymPy has a hard dependency on the `mpmath <http://mpmath.org/>`
+SymPy has a hard dependency on the `mpmath <http://mpmath.org/>`_
 library (version >= 0.19).  You should install it first, please refer to
 the mpmath installation guide:
 
@@ -105,7 +105,7 @@ If you install it system-wide, you may need to prefix the previous command with 
 
     $ sudo python setup.py install
 
-See http://docs.sympy.org/dev/install.html for more information.
+See https://docs.sympy.org/dev/install.html for more information.
 
 Contributing
 ------------
@@ -138,7 +138,8 @@ To test pull requests, use `sympy-bot <https://github.com/sympy/sympy-bot>`_.
 
 Regenerate Experimental `\LaTeX` Parser/Lexer
 ---------------------------------------------
-The parser and lexer generated with the `ANTLR4 <http://antlr4.org`_ toolchain
+
+The parser and lexer generated with the `ANTLR4 <http://antlr4.org>`_ toolchain
 in `sympy/parsing/latex/_antlr` and checked into the repo. Presently, most
 users should not need to regenerate these files, but if you plan to work on
 this feature, you will need the `antlr4` command line tool available. One way
@@ -210,10 +211,10 @@ to play a lead development role.
 Since then, a lot more people have joined the development and some people have
 also left. You can see the full list in doc/src/aboutus.rst, or online at:
 
-http://docs.sympy.org/dev/aboutus.html#sympy-development-team
+https://docs.sympy.org/dev/aboutus.html#sympy-development-team
 
 The git history goes back to 2007, when development moved from svn to hg.  To
-see the history before that point, look at http://github.com/sympy/sympy-old.
+see the history before that point, look at https://github.com/sympy/sympy-old.
 
 You can use git to see the biggest developers.  The command::
 

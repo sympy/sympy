@@ -111,18 +111,24 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             # If you're adding another type, make sure you add it to printable_types
             # later in this file as well
 
-            if isinstance(o, (list, tuple, set, frozenset)):
-               return all(_can_print_latex(i) for i in o)
+            builtin_types = (list, tuple, set, frozenset)
+            if isinstance(o, builtin_types):
+                # If the object is a custom subclass with a custom str or
+                # repr, use that instead.
+                if (type(o).__str__ not in (i.__str__ for i in builtin_types) or
+                    type(o).__repr__ not in (i.__repr__ for i in builtin_types)):
+                    return False
+                return all(_can_print_latex(i) for i in o)
             elif isinstance(o, dict):
-               return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
+                return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
             elif isinstance(o, bool):
-               return False
+                return False
             # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
             # to use here, than these explicit imports.
             elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic, NDimArray)):
-               return True
+                return True
             elif isinstance(o, (float, integer_types)) and print_builtin:
-               return True
+                return True
             return False
         except RuntimeError:
             return False
@@ -159,7 +165,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function to generate the latex representation of sympy expressions.
         """
         if _can_print_latex(o):
-            s = latex(o, mode='plain', **settings)
+            s = latex(o, mode=latex_mode, **settings)
             s = s.strip('$')
             return '$$%s$$' % s
 
@@ -246,6 +252,8 @@ def _is_ipython(shell):
             return False
     return isinstance(shell, InteractiveShell)
 
+# Used by the doctester to override the default for no_global
+NO_GLOBAL = False
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
@@ -408,7 +416,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                     debug("init_printing: Setting use_latex to True")
                     use_latex = True
 
-    if not no_global:
+    if not NO_GLOBAL and not no_global:
         Printer.set_global_settings(order=order, use_unicode=use_unicode,
                                     wrap_line=wrap_line, num_columns=num_columns)
     else:

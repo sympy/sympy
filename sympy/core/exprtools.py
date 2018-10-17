@@ -1176,7 +1176,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
         if p.is_Add:
             list_args = [do(a) for a in Add.make_args(p)]
             # get a common negative (if there) which gcd_terms does not remove
-            if all(a.as_coeff_Mul()[0] < 0 for a in list_args):
+            if all(a.as_coeff_Mul()[0].extract_multiplicatively(-1) is not None
+                   for a in list_args):
                 cont = -cont
                 list_args = [-a for a in list_args]
             # watch out for exp(-(x+2)) which gcd_terms will change to exp(-x-2)
@@ -1311,10 +1312,7 @@ def _mask_nc(eq, name=None):
             if a.is_Symbol:
                 nc_syms.add(a)
             elif not (a.is_Add or a.is_Mul or a.is_Pow):
-                if all(s.is_commutative for s in a.free_symbols):
-                    rep.append((a, Dummy()))
-                else:
-                    nc_obj.add(a)
+                nc_obj.add(a)
                 pot.skip()
 
     # If there is only one nc symbol or object, it can be factored regularly

@@ -414,7 +414,7 @@ def test_factorial():
     assert limit(f, x, oo) == oo
     assert limit(x/f, x, oo) == 0
     # see Stirling's approximation:
-    # http://en.wikipedia.org/wiki/Stirling's_approximation
+    # https://en.wikipedia.org/wiki/Stirling's_approximation
     assert limit(f/(sqrt(2*pi*x)*(x/E)**x), x, oo) == 1
     assert limit(f, x, -oo) == factorial(-oo)
     assert limit(f, x, x**2) == factorial(x**2)
@@ -532,3 +532,6 @@ def test_issue_14456():
 
 def test_issue_14411():
     assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2)) == -oo
+
+def test_issue_14574():
+    assert limit(sqrt(x)*cos(x - x**2) / (x + 1), x, oo) == 0

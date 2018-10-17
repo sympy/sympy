@@ -43,7 +43,7 @@ class elliptic_k(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals
+    .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
     .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticK
 
     See Also
@@ -79,10 +79,10 @@ class elliptic_k(Function):
         from sympy.simplify import hyperexpand
         return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
 
-    def _eval_rewrite_as_hyper(self, m):
+    def _eval_rewrite_as_hyper(self, m, **kwargs):
         return (pi/2)*hyper((S.Half, S.Half), (S.One,), m)
 
-    def _eval_rewrite_as_meijerg(self, m):
+    def _eval_rewrite_as_meijerg(self, m, **kwargs):
         return meijerg(((S.Half, S.Half), []), ((S.Zero,), (S.Zero,)), -m)/2
 
     def _sage_(self):
@@ -119,7 +119,7 @@ class elliptic_f(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals
+    .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
     .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticF
 
     See Also
@@ -197,7 +197,7 @@ class elliptic_e(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals
+    .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
     .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticE2
     .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticE
     """
@@ -258,12 +258,12 @@ class elliptic_e(Function):
             return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
         return super(elliptic_e, self)._eval_nseries(x, n=n, logx=logx)
 
-    def _eval_rewrite_as_hyper(self, *args):
+    def _eval_rewrite_as_hyper(self, *args, **kwargs):
         if len(args) == 1:
             m = args[0]
             return (pi/2)*hyper((-S.Half, S.Half), (S.One,), m)
 
-    def _eval_rewrite_as_meijerg(self, *args):
+    def _eval_rewrite_as_meijerg(self, *args, **kwargs):
         if len(args) == 1:
             m = args[0]
             return -meijerg(((S.Half, S(3)/2), []), \
@@ -306,7 +306,7 @@ class elliptic_pi(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals
+    .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
     .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticPi3
     .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticPi
     """

@@ -6,16 +6,18 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import combinations, product
 
+from sympy.core.add import Add
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Number, oo
 from sympy.core.operations import LatticeOp
-from sympy.core.function import Application, Derivative
+from sympy.core.function import Application, Derivative, count_ops
 from sympy.core.compatibility import (ordered, range, with_metaclass,
     as_int, reduce)
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
 from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import sift
 
 
 def as_Boolean(e):
@@ -411,8 +413,13 @@ class BooleanFunction(Application, Boolean):
     """
     is_Boolean = True
 
-    def _eval_simplify(self, ratio, measure):
-        return simplify_logic(self)
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        rv = self.func(*[a._eval_simplify(ratio=ratio, measure=measure,
+            rational=rational, inverse=inverse) for a in self.args])
+        return simplify_logic(rv)
+
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+        return self._eval_simplify(ratio, measure, rational, inverse)
 
     # /// drop when Py2 is no longer supported
     def __lt__(self, other):
@@ -541,6 +548,63 @@ class And(LatticeOp, BooleanFunction):
                 rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
+
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        from sympy.core.relational import Equality, Relational
+        from sympy.solvers.solveset import linear_coeffs
+        # standard simplify
+        rv = super(And, self)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if not isinstance(rv, And):
+            return rv
+        # simplify args that are equalities involving
+        # symbols so x == 0 & x == y -> x==0 & y == 0
+        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
+        if not Rel:
+            return rv
+        eqs, other = sift(Rel, lambda i: isinstance(i, Equality), binary=True)
+        if not eqs:
+            return rv
+        reps = {}
+        sifted = {}
+        if eqs:
+            # group by length of free symbols
+            sifted = sift(ordered([
+                (i.free_symbols, i) for i in eqs]),
+                lambda x: len(x[0]))
+            eqs = []
+            while 1 in sifted:
+                for free, e in sifted.pop(1):
+                    x = free.pop()
+                    if e.lhs != x or x in e.rhs.free_symbols:
+                        try:
+                            m, b = linear_coeffs(
+                                e.rewrite(Add, evaluate=False), x)
+                            enew = e.func(x, -b/m)
+                            if measure(enew) <= ratio*measure(e):
+                                e = enew
+                            else:
+                                eqs.append(e)
+                                continue
+                        except ValueError:
+                            pass
+                    if x in reps:
+                        eqs.append(e.func(e.rhs, reps[x]))
+                    else:
+                        reps[x] = e.rhs
+                        eqs.append(e)
+                resifted = defaultdict(list)
+                for k in sifted:
+                    for f, e in sifted[k]:
+                        e = e.subs(reps)
+                        f = e.free_symbols
+                        resifted[len(f)].append((f, e))
+                sifted = resifted
+        for k in sifted:
+            eqs.extend([e for f, e in sifted[k]])
+        other = [ei.subs(reps) for ei in other]
+        rv = rv.func(*([i.canonical for i in (eqs + other)] + nonRel))
+        return rv
 
     def _eval_as_set(self):
         from sympy.sets.sets import Intersection
@@ -671,14 +735,6 @@ class Not(BooleanFunction):
             return StrictGreaterThan(*arg.args)
         if isinstance(arg, GreaterThan):
             return StrictLessThan(*arg.args)
-
-    def _eval_simplify(self, ratio, measure):
-        x = self.args[0]
-        try:
-            x._eval_simplify(ratio, measure)
-        except:
-            pass
-        return self.func(x)
 
     def _eval_as_set(self):
         """
@@ -1186,7 +1242,7 @@ class ITE(BooleanFunction):
     def _eval_as_set(self):
         return self.to_nnf().as_set()
 
-    def _eval_rewrite_as_Piecewise(self, *args):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         from sympy.functions import Piecewise
         return Piecewise((args[1], args[0]), (args[2], True))
 
@@ -1993,8 +2049,9 @@ def _finger(eq):
     # of times it appeared as a Not(symbol),
     # of times it appeared as a Symbol in an And or Or,
     # of times it appeared as a Not(Symbol) in an And or Or,
-    sum of the number of arguments with which it appeared,
-    counting Symbol as 1 and Not(Symbol) as 2
+    sum of the number of arguments with which it appeared
+    as a Symbol, counting Symbol as 1 and Not(Symbol) as 2
+    and counting self as 1
     ]
 
     >>> from sympy.logic.boolalg import _finger as finger
@@ -2002,7 +2059,18 @@ def _finger(eq):
     >>> from sympy.abc import a, b, x, y
     >>> eq = Or(And(Not(y), a), And(Not(y), b), And(x, y))
     >>> dict(finger(eq))
-    {(0, 0, 1, 0, 2): [x], (0, 0, 1, 0, 3): [a, b], (0, 0, 1, 2, 8): [y]}
+    {(0, 0, 1, 0, 2): [x], (0, 0, 1, 0, 3): [a, b], (0, 0, 1, 2, 2): [y]}
+    >>> dict(finger(x & ~y))
+    {(0, 1, 0, 0, 0): [y], (1, 0, 0, 0, 0): [x]}
+
+    The equation must not have more than one level of nesting:
+
+    >>> dict(finger(And(Or(x, y), y)))
+    {(0, 0, 1, 0, 2): [x], (1, 0, 1, 0, 2): [y]}
+    >>> dict(finger(And(Or(x, And(a, x)), y)))
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: unexpected level of nesting
 
     So y and x have unique fingerprints, but a and b do not.
     """
@@ -2019,9 +2087,10 @@ def _finger(eq):
                 if ai.is_Symbol:
                     d[ai][2] += 1
                     d[ai][-1] += o
-                else:
+                elif ai.is_Not:
                     d[ai.args[0]][3] += 1
-                    d[ai.args[0]][-1] += o
+                else:
+                    raise NotImplementedError('unexpected level of nesting')
     inv = defaultdict(list)
     for k, v in ordered(iter(d.items())):
         inv[tuple(v)].append(k)
@@ -2079,9 +2148,9 @@ def bool_map(bool1, bool2):
 
         # do some quick checks
         if function1.__class__ != function2.__class__:
-            return None
+            return None  # maybe simplification would make them the same
         if len(function1.args) != len(function2.args):
-            return None
+            return None  # maybe simplification would make them the same
         if function1.is_Symbol:
             return {function1: function2}
 
@@ -2109,4 +2178,4 @@ def bool_map(bool1, bool2):
     m = match(a, b)
     if m:
         return a, m
-    return m is not None
+    return m

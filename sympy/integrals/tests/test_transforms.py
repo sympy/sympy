@@ -46,9 +46,9 @@ def test_as_integral():
         Integral(f(x)*exp(-2*I*pi*s*x), (x, -oo, oo))
     assert laplace_transform(f(x), x, s).rewrite('Integral') == \
         Integral(f(x)*exp(-s*x), (x, 0, oo))
-    assert str(inverse_mellin_transform(f(s), s, x, (a, b)).rewrite('Integral')) \
+    assert str(2*pi*I*inverse_mellin_transform(f(s), s, x, (a, b)).rewrite('Integral')) \
         == "Integral(x**(-s)*f(s), (s, _c - oo*I, _c + oo*I))"
-    assert str(inverse_laplace_transform(f(s), s, x).rewrite('Integral')) == \
+    assert str(2*pi*I*inverse_laplace_transform(f(s), s, x).rewrite('Integral')) == \
         "Integral(f(s)*exp(s*x), (s, _c - oo*I, _c + oo*I))"
     assert inverse_fourier_transform(f(s), s, x).rewrite('Integral') == \
         Integral(f(s)*exp(2*I*pi*s*x), (s, -oo, oo))
@@ -583,6 +583,37 @@ def test_inverse_laplace_transform():
         Matrix([[exp(t)*Heaviside(t), 0], [0, exp(2*t)*Heaviside(t)]])
 
 
+def test_inverse_laplace_transform_delta():
+    from sympy import DiracDelta
+    ILT = inverse_laplace_transform
+    t = symbols('t')
+    assert ILT(2, s, t) == 2*DiracDelta(t)
+    assert ILT(2*exp(3*s) - 5*exp(-7*s), s, t) == \
+        2*DiracDelta(t + 3) - 5*DiracDelta(t - 7)
+    a = cos(sin(7)/2)
+    assert ILT(a*exp(-3*s), s, t) == a*DiracDelta(t - 3)
+    assert ILT(exp(2*s), s, t) == DiracDelta(t + 2)
+    r = Symbol('r', real=True)
+    assert ILT(exp(r*s), s, t) == DiracDelta(t + r)
+
+
+def test_inverse_laplace_transform_delta_cond():
+    from sympy import DiracDelta, Eq, im
+    ILT = inverse_laplace_transform
+    t = symbols('t')
+    r = Symbol('r', real=True)
+    assert ILT(exp(r*s), s, t, noconds=False) == (DiracDelta(t + r), True)
+    z = Symbol('z')
+    assert ILT(exp(z*s), s, t, noconds=False) == \
+        (DiracDelta(t + z), Eq(im(z), 0))
+    # inversion does not exist: verify it doesn't evaluate to DiracDelta
+    for z in (Symbol('z', real=False),
+              Symbol('z', imaginary=True, zero=False)):
+        f = ILT(exp(z*s), s, t, noconds=False)
+        f = f[0] if isinstance(f, tuple) else f
+        assert f.func != DiracDelta
+
+
 def test_fourier_transform():
     from sympy import simplify, expand, expand_complex, factor, expand_trig
     FT = fourier_transform
@@ -802,3 +833,9 @@ def test_issue_8514():
 def test_issue_12591():
     x, y = symbols("x y", real=True)
     assert fourier_transform(exp(x), x, y) == FourierTransform(exp(x), x, y)
+
+
+def test_issue_14692():
+    b = Symbol('b', negative=True)
+    assert laplace_transform(1/(I*x - b), x, s) == \
+        (-I*exp(I*b*s)*expint(1, b*s*exp_polar(I*pi/2)), 0, True)

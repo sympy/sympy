@@ -14,12 +14,38 @@ from sympy.physics import units
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
-
+from sympy.integrals.integrals import Integral
 
 x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
 n = Symbol('n', integer=True)
 f = Function('f')
 
+def test_principal_value():
+    g = 1 / x
+    assert Integral(g, (x, -oo, oo)).principal_value() == 0
+    assert Integral(g, (y, -oo, oo)).principal_value() == oo * sign(1 / x)
+    raises(ValueError, lambda: Integral(g, (x)).principal_value())
+    raises(ValueError, lambda: Integral(g).principal_value())
+
+    l = 1 / ((x ** 3) - 1)
+    assert Integral(l, (x, -oo, oo)).principal_value() == -sqrt(3)*pi/3
+    raises(ValueError, lambda: Integral(l, (x, -oo, 1)).principal_value())
+
+    d = 1 / (x ** 2 - 1)
+    assert Integral(d, (x, -oo, oo)).principal_value() == 0
+    assert Integral(d, (x, -2, 2)).principal_value() == -log(3)
+
+    v = x / (x ** 2 - 1)
+    assert Integral(v, (x, -oo, oo)).principal_value() == 0
+    assert Integral(v, (x, -2, 2)).principal_value() == 0
+
+    s = x ** 2 / (x ** 2 - 1)
+    assert Integral(s, (x, -oo, oo)).principal_value() == oo
+    assert Integral(s, (x, -2, 2)).principal_value() == -log(3) + 4
+
+    f = 1 / ((x ** 2 - 1) * (1 + x ** 2))
+    assert Integral(f, (x, -oo, oo)).principal_value() == -pi / 2
+    assert Integral(f, (x, -2, 2)).principal_value() == -atan(2) - log(3) / 2
 
 def diff_test(i):
     """Return the set of symbols, s, which were used in testing that
@@ -69,7 +95,7 @@ def test_basics():
     assert diff(Integral(y, y), x) == 0
     assert diff(Integral(x, (x, 0, 1)), x) == 0
     assert diff(Integral(x, x), x) == x
-    assert diff(Integral(t, (t, 0, x)), x) == x + Integral(0, (t, 0, x))
+    assert diff(Integral(t, (t, 0, x)), x) == x
 
     e = (t + 1)**2
     assert diff(integrate(e, (t, 0, x)), x) == \
@@ -116,6 +142,7 @@ def test_diff_wrt():
 
     raises(ValueError, lambda: integrate(x + 1, x + 1))
     raises(ValueError, lambda: integrate(x + 1, (x + 1, 0, 1)))
+
 
 def test_basics_multiple():
 
@@ -469,12 +496,14 @@ def test_evalf_issue_939():
         integrate(1/(x**5 + 1), (x, 2, 4)), chop=True) == '0.0144361088886740'
 
 
-def test_double_integrals():
-    #double integral
-    assert NS(integrate(
+@XFAIL
+def test_failing_integrals():
+    #---
+    # Double integrals not implemented
+    assert NS(Integral(
         sqrt(x) + x*y, (x, 1, 2), (y, -1, 1)), 15) == '2.43790283299492'
     # double integral + zero detection
-    assert NS(integrate(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0'
+    assert NS(Integral(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0.0'
 
 
 def test_integrate_SingularityFunction():
@@ -537,7 +566,7 @@ def test_integrate_returns_piecewise():
     assert integrate(exp(n*x), x) == Piecewise(
         (exp(n*x)/n, Ne(n, 0)), (x, True))
     assert integrate(x*exp(n*x), x) == Piecewise(
-        ((n**2*x - n)*exp(n*x)/n**3, Ne(n**3, 0)), (x**2/2, True))
+        ((n*x - 1)*exp(n*x)/n**2, Ne(n**2, 0)), (x**2/2, True))
     assert integrate(x**(n*y), x) == Piecewise(
         (x**(n*y + 1)/(n*y + 1), Ne(n*y, -1)), (log(x), True))
     assert integrate(x**(n*y), y) == Piecewise(
@@ -1346,3 +1375,23 @@ def test_issue_14437():
 def test_issue_14470():
     assert integrate(1/sqrt(exp(x) + 1), x) == \
         log(-1 + 1/sqrt(exp(x) + 1)) - log(1 + 1/sqrt(exp(x) + 1))
+
+def test_issue_14877():
+    f = exp(1 - exp(x**2)*x + 2*x**2)*(2*x**3 + x)/(1 - exp(x**2)*x)**2
+    assert integrate(f, x) == \
+        -exp(2*x**2 - x*exp(x**2) + 1)/(x*exp(3*x**2) - exp(2*x**2))
+
+def test_issue_14782():
+    f = sqrt(-x**2 + 1)*(-x**2 + x)
+    assert integrate(f, [x, -1, 1]) == - pi / 8
+    assert integrate(f, [x, 0, 1]) == S(1) / 3 - pi / 16
+
+def test_issue_12081():
+    f = x**(-S(3)/2)*exp(-x)
+    assert integrate(f, [x, 0, oo]) == oo
+
+
+def test_issue_15285():
+    y = 1/x - 1
+    f = 4*y*exp(-2*y)/x**2
+    assert integrate(f, [x, 0, 1]) == 1

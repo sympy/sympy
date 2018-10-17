@@ -79,8 +79,9 @@ def test_CRootOf___new__():
 
     raises(PolynomialError, lambda: rootof(Poly(0, x), 0))
     raises(PolynomialError, lambda: rootof(Poly(1, x), 0))
-
     raises(PolynomialError, lambda: rootof(x - y, 0))
+    # issue 8617
+    raises(PolynomialError, lambda: rootof(exp(x), 0))
 
     raises(NotImplementedError, lambda: rootof(x**3 - x + sqrt(2), 0))
     raises(NotImplementedError, lambda: rootof(x**3 - x + I, 0))
@@ -237,9 +238,6 @@ def test_CRootOf_evalf():
     # issue 6451
     r = rootof(legendre_poly(64, x), 7)
     assert r.n(2) == r.n(100).n(2)
-    # issue 8617
-    ans = [w.n(2) for w in solve(x**3 - x - 4)]
-    assert rootof(exp(x)**3 - exp(x) - 4, 0).n(2) in ans
     # issue 9019
     r0 = rootof(x**2 + 1, 0, radicals=False)
     r1 = rootof(x**2 + 1, 1, radicals=False)
@@ -520,6 +518,7 @@ def test_pure_key_dict():
 
 
 def test_eval_approx_relative():
+    CRootOf.clear_cache()
     t = [CRootOf(x**3 + 10*x + 1, i) for i in range(3)]
     assert [i.eval_rational(1e-1) for i in t] == [
         -21/220, 15/256 - 805*I/256, 15/256 + 805*I/256]

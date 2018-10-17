@@ -2,14 +2,14 @@
 Examples
 ========
 
-In the following sections we give few examples of what can be do with this
+In the following sections we give few examples of what can be done with this
 module.
 
 
 Dimensional analysis
 ====================
 
-We will start from the second Newton's law
+We will start from Newton's second law
 
 .. math::
     m a = F
@@ -104,7 +104,7 @@ variables (taken from Wikipedia). The result should be 224.701 days.
     2*pi*venus_a**(3/2)/(sqrt(gravitational_constant)*sqrt(solar_mass))
 
 To convert to days, use the ``convert_to`` function (and possibly approximate
-the outcoming result:
+the outcoming result):
 
     >>> from sympy.physics.units import convert_to
     >>> convert_to(q, day)
@@ -113,7 +113,7 @@ the outcoming result:
     224.662800523082*day
 
 We could also have the solar mass and the day as units coming from the
-astrophysical system, but I wanted to show how to create a unit that one needs.
+astrophysical system, but we wanted to show how to create a unit that one needs.
 
 We can see in this example that intermediate dimensions can be ill-defined,
 such as sqrt(G), but one should check that the final result - when all

@@ -40,6 +40,8 @@ PRECEDENCE_VALUES = {
     "MatAdd": PRECEDENCE["Add"],
     "MatMul": PRECEDENCE["Mul"],
     "MatPow": PRECEDENCE["Pow"],
+    "TensAdd": PRECEDENCE["Add"],
+    "TensMul": PRECEDENCE["Mul"],
     "HadamardProduct": PRECEDENCE["Mul"],
     "KroneckerProduct": PRECEDENCE["Mul"],
     "Equality": PRECEDENCE["Mul"],

@@ -3,7 +3,7 @@ from sympy import (
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
-    factor_terms, DiracDelta, Heaviside)
+    factor_terms, DiracDelta, Heaviside, Add, Mul, factorial)
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -30,9 +30,13 @@ def test_piecewise():
         Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
+    # Explicitly constructed empty Piecewise not accepted
+    raises(TypeError, lambda: Piecewise())
     # False condition is never retained
-    assert Piecewise((x, False)) == Piecewise(
-        (x, False), evaluate=False) == Piecewise()
+    assert Piecewise((2*x, x < 0), (x, False)) == \
+        Piecewise((2*x, x < 0), (x, False), evaluate=False) == \
+        Piecewise((2*x, x < 0))
+    assert Piecewise((x, False)) == Undefined
     raises(TypeError, lambda: Piecewise(x))
     assert Piecewise((x, 1)) == x  # 1 and 0 are accepted as True/False
     raises(TypeError, lambda: Piecewise((x, 2)))
@@ -84,11 +88,16 @@ def test_piecewise():
         ).subs(x, 1) == Piecewise((-1, y < 1), (2, True))
     assert Piecewise((1, Eq(x**2, -1)), (2, x < 0)).subs(x, I) == 1
 
+    p6 = Piecewise((x, x > 0))
+    n = symbols('n', negative=True)
+    assert p6.subs(x, n) == Undefined
+
     # Test evalf
     assert p.evalf() == p
     assert p.evalf(subs={x: -2}) == -1
     assert p.evalf(subs={x: -1}) == 1
     assert p.evalf(subs={x: 1}) == log(1)
+    assert p6.evalf(subs={x: -5}) == Undefined
 
     # Test doit
     f_int = Piecewise((Integral(x, (x, 0, 1)), x < 1))
@@ -352,7 +361,19 @@ def test_piecewise_simplify():
     p = Piecewise(((x**2 + 1)/x**2, Eq(x*(1 + x) - x**2, 0)),
                   ((-1)**x*(-1), True))
     assert p.simplify() == \
-        Piecewise((1 + 1/x**2, Eq(x, 0)), ((-1)**(x + 1), True))
+        Piecewise((zoo, Eq(x, 0)), ((-1)**(x + 1), True))
+    # simplify when there are Eq in conditions
+    assert Piecewise(
+        (a, And(Eq(a, 0), Eq(a + b, 0))), (1, True)).simplify(
+        ) == Piecewise(
+        (0, And(Eq(a, 0), Eq(b, 0))), (1, True))
+    assert Piecewise((2*x*factorial(a)/(factorial(y)*factorial(-y + a)),
+        Eq(y, 0) & Eq(-y + a, 0)), (2*factorial(a)/(factorial(y)*factorial(-y
+        + a)), Eq(y, 0) & Eq(-y + a, 1)), (0, True)).simplify(
+        ) == Piecewise(
+            (2*x, And(Eq(a, 0), Eq(y, 0))),
+            (2, And(Eq(a, 1), Eq(y, 0))),
+            (0, True))
 
 
 def test_piecewise_solve():
@@ -444,6 +465,11 @@ def test_piecewise_fold():
 
     assert piecewise_fold(Piecewise((x, ITE(x > 0, y < 1, y > 1)))
         ) == Piecewise((x, ((x <= 0) | (y < 1)) & ((x > 0) | (y > 1))))
+
+    a, b = (Piecewise((2, Eq(x, 0)), (0, True)),
+        Piecewise((x, Eq(-x + y, 0)), (1, Eq(-x + y, 1)), (0, True)))
+    assert piecewise_fold(Mul(a, b, evaluate=False)
+        ) == piecewise_fold(Mul(b, a, evaluate=False))
 
 
 def test_piecewise_fold_piecewise_in_cond():
@@ -1080,3 +1106,26 @@ def test_Piecewise_rewrite_as_ITE():
 
 def test_issue_14052():
     assert integrate(abs(sin(x)), (x, 0, 2*pi)) == 4
+
+
+def test_issue_14240():
+    assert piecewise_fold(
+        Piecewise((1, a), (2, b), (4, True)) +
+        Piecewise((8, a), (16, True))
+        ) == Piecewise((9, a), (18, b), (20, True))
+    assert piecewise_fold(
+        Piecewise((2, a), (3, b), (5, True)) *
+        Piecewise((7, a), (11, True))
+        ) == Piecewise((14, a), (33, b), (55, True))
+    # these will hang if naive folding is used
+    assert piecewise_fold(Add(*[
+        Piecewise((i, a), (0, True)) for i in range(40)])
+        ) == Piecewise((780, a), (0, True))
+    assert piecewise_fold(Mul(*[
+        Piecewise((i, a), (0, True)) for i in range(1, 41)])
+        ) == Piecewise((factorial(40), a), (0, True))
+
+def test_issue_14787():
+    x = Symbol('x')
+    f = Piecewise((x, x < 1), ((S(58) / 7), True))
+    assert str(f.evalf()) == "Piecewise((x, x < 1), (8.28571428571429, True))"

@@ -53,7 +53,7 @@ def singularities(expression, symbol):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathematical_singularity
+    .. [1] https://en.wikipedia.org/wiki/Mathematical_singularity
 
     """
     if not expression.is_rational_function(symbol):
@@ -62,7 +62,8 @@ def singularities(expression, symbol):
             " functions are not yet implemented."
         )
     else:
-        return solveset(simplify(1 / expression), symbol)
+        domain = S.Reals if symbol.is_real else S.Complexes
+        return solveset(simplify(1 / expression), symbol, domain)
 
 
 ###########################################################################

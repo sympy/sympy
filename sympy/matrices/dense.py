@@ -18,8 +18,8 @@ from sympy.simplify import simplify as _simplify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
-from sympy.matrices.matrices import (MatrixBase,
-                                     ShapeError, a2idx, classof)
+from sympy.matrices.matrices import MatrixBase, ShapeError
+from sympy.matrices.common import a2idx, classof
 
 def _iszero(x):
     """Returns True if x is zero."""
@@ -204,12 +204,6 @@ class DenseMatrix(MatrixBase):
     def _eval_matrix_mul_elementwise(self, other):
         mat = [a*b for a,b in zip(self._mat, other._mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
-
-    def _eval_diff(self, *args, **kwargs):
-        if kwargs.pop("evaluate", True):
-            return self.diff(*args)
-        else:
-            return Derivative(self, *args, **kwargs)
 
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using the method indicated (default
@@ -739,7 +733,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         for k in range(0, self.cols):
             self[i, k], self[j, k] = self[j, k], self[i, k]
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         """Applies simplify to the elements of a matrix in place.
 
         This is a shortcut for M.applyfunc(lambda x: simplify(x, ratio, measure))
@@ -750,8 +744,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         sympy.simplify.simplify.simplify
         """
         for i in range(len(self._mat)):
-            self._mat[i] = _simplify(self._mat[i], ratio=ratio,
-                                     measure=measure)
+            self._mat[i] = _simplify(self._mat[i], ratio=ratio, measure=measure,
+                                     rational=rational, inverse=inverse)
 
     def zip_row_op(self, i, k, f):
         """In-place operation on row ``i`` using two-arg functor whose args are
@@ -1193,7 +1187,7 @@ def GramSchmidt(vlist, orthonormal=False):
     """
     Apply the Gram-Schmidt process to a set of vectors.
 
-    see: http://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+    see: https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
     out = []
     m = len(vlist)
@@ -1246,7 +1240,7 @@ def hessian(f, varlist, constraints=[]):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Hessian_matrix
+    https://en.wikipedia.org/wiki/Hessian_matrix
 
     See Also
     ========
@@ -1443,7 +1437,7 @@ def wronskian(functions, var, method='bareiss'):
                          |  (n)      (n)            (n)     |
                          | D   (f1) D   (f2)  ...  D   (fn) |
 
-    see: http://en.wikipedia.org/wiki/Wronskian
+    see: https://en.wikipedia.org/wiki/Wronskian
 
     See Also
     ========

@@ -825,7 +825,8 @@ class PrettyPrinter(Printer):
             if s is None:
                 s = pform     # First element
             else:
-                if S(item.args[0]).is_negative:
+                coeff = item.as_coeff_mmul()[0]
+                if _coeff_isneg(S(coeff)):
                     s = prettyForm(*stringPict.next(s, ' '))
                     pform = self._print(item)
                 else:
@@ -931,26 +932,49 @@ class PrettyPrinter(Printer):
         #Fixing the newlines
         lengths = []
         strs = ['']
+        flag = []
         for i, partstr in enumerate(o1):
+            flag.append(0)
             # XXX: What is this hack?
             if '\n' in partstr:
                 tempstr = partstr
                 tempstr = tempstr.replace(vectstrs[i], '')
-                tempstr = tempstr.replace(u'\N{RIGHT PARENTHESIS UPPER HOOK}',
-                                          u'\N{RIGHT PARENTHESIS UPPER HOOK}'
-                                          + ' ' + vectstrs[i])
+                if u'\N{right parenthesis extension}' in tempstr:   # If scalar is a fraction
+                    for paren in range(len(tempstr)):
+                        flag[i] = 1
+                        if tempstr[paren] == u'\N{right parenthesis extension}':
+                            tempstr = tempstr[:paren] + u'\N{right parenthesis extension}'\
+                                         + ' '  + vectstrs[i] + tempstr[paren + 1:]
+                            break
+                elif u'\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
+                    flag[i] = 1
+                    tempstr = tempstr.replace(u'\N{RIGHT PARENTHESIS LOWER HOOK}',
+                                        u'\N{RIGHT PARENTHESIS LOWER HOOK}'
+                                        + ' ' + vectstrs[i])
+                else:
+                    tempstr = tempstr.replace(u'\N{RIGHT PARENTHESIS UPPER HOOK}',
+                                        u'\N{RIGHT PARENTHESIS UPPER HOOK}'
+                                        + ' ' + vectstrs[i])
                 o1[i] = tempstr
+
         o1 = [x.split('\n') for x in o1]
-        n_newlines = max([len(x) for x in o1])
-        for parts in o1:
-            lengths.append(len(parts[0]))
+        n_newlines = max([len(x) for x in o1])  # Width of part in its pretty form
+
+        if 1 in flag:                           # If there was a fractional scalar
+            for i, parts in enumerate(o1):
+                if len(parts) == 1:             # If part has no newline
+                    parts.insert(0, ' ' * (len(parts[0])))
+                    flag[i] = 1
+
+        for i, parts in enumerate(o1):
+            lengths.append(len(parts[flag[i]]))
             for j in range(n_newlines):
                 if j+1 <= len(parts):
                     if j >= len(strs):
                         strs.append(' ' * (sum(lengths[:-1]) +
                                            3*(len(lengths)-1)))
-                    if j == 0:
-                        strs[0] += parts[0] + ' + '
+                    if j == flag[i]:
+                        strs[flag[i]] += parts[flag[i]] + ' + '
                     else:
                         strs[j] += parts[j] + ' '*(lengths[-1] -
                                                    len(parts[j])+
@@ -996,6 +1020,112 @@ class PrettyPrinter(Printer):
     _print_ImmutableSparseNDimArray = _print_NDimArray
     _print_MutableDenseNDimArray = _print_NDimArray
     _print_MutableSparseNDimArray = _print_NDimArray
+
+    def _printer_tensor_indices(self, name, indices, index_map={}):
+        center = stringPict(name)
+        top = stringPict(" "*center.width())
+        bot = stringPict(" "*center.width())
+
+        no_top = True
+        no_bot = True
+        last_valence = None
+        prev_map = None
+
+        for i, index in enumerate(indices):
+            indpic = self._print(index.args[0])
+            if ((index in index_map) or prev_map) and last_valence == index.is_up:
+                if index.is_up:
+                    top = prettyForm(*stringPict.next(top, ","))
+                else:
+                    bot = prettyForm(*stringPict.next(bot, ","))
+            if index in index_map:
+                indpic = prettyForm(*stringPict.next(indpic, "="))
+                indpic = prettyForm(*stringPict.next(indpic, self._print(index_map[index])))
+                prev_map = True
+            else:
+                prev_map = False
+            if index.is_up:
+                no_top = False
+                top = stringPict(*top.right(indpic))
+                center = stringPict(*center.right(" "*indpic.width()))
+                bot = stringPict(*bot.right(" "*indpic.width()))
+            else:
+                no_bot = False
+                bot = stringPict(*bot.right(indpic))
+                center = stringPict(*center.right(" "*indpic.width()))
+                top = stringPict(*top.right(" "*indpic.width()))
+            last_valence = index.is_up
+
+        pict = prettyForm(*center.above(top))
+        pict = prettyForm(*pict.below(bot))
+        return pict
+
+    def _print_Tensor(self, expr):
+        name = expr.args[0].name
+        indices = expr.get_indices()
+        return self._printer_tensor_indices(name, indices)
+
+    def _print_TensorElement(self, expr):
+        name = expr.expr.args[0].name
+        indices = expr.expr.get_indices()
+        index_map = expr.index_map
+        return self._printer_tensor_indices(name, indices, index_map)
+
+    def _print_TensMul(self, expr):
+        sign, args = expr._get_args_for_traditional_printer()
+        args = [
+            prettyForm(*self._print(i).parens()) if
+            precedence_traditional(i) < PRECEDENCE["Mul"] else self._print(i)
+            for i in args
+        ]
+        pform = prettyForm.__mul__(*args)
+        if sign:
+            return prettyForm(*pform.left(sign))
+        else:
+            return pform
+
+    def _print_TensAdd(self, expr):
+        args = [
+            prettyForm(*self._print(i).parens()) if
+            precedence_traditional(i) < PRECEDENCE["Mul"] else self._print(i)
+            for i in expr.args
+        ]
+        return prettyForm.__add__(*args)
+
+    def _print_TensorIndex(self, expr):
+        sym = expr.args[0]
+        if not expr.is_up:
+            sym = -sym
+        return self._print(sym)
+
+    def _print_PartialDerivative(self, deriv):
+        if self._use_unicode:
+            deriv_symbol = U('PARTIAL DIFFERENTIAL')
+        else:
+            deriv_symbol = r'd'
+        x = None
+
+        for variable in reversed(deriv.variables):
+            s = self._print(variable)
+            ds = prettyForm(*s.left(deriv_symbol))
+
+            if x is None:
+                x = ds
+            else:
+                x = prettyForm(*x.right(' '))
+                x = prettyForm(*x.right(ds))
+
+        f = prettyForm(
+            binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
+
+        pform = prettyForm(deriv_symbol)
+
+        pform = prettyForm(*pform.below(stringPict.LINE, x))
+        pform.baseline = pform.baseline + 1
+        pform = prettyForm(*stringPict.next(pform, f))
+        pform.binding = prettyForm.MUL
+
+        return pform
 
     def _print_Piecewise(self, pexpr):
 
@@ -2290,6 +2420,15 @@ class PrettyPrinter(Printer):
             return pform
         else:
             return self.emptyPrinter(e)
+
+    def _print_AssignmentBase(self, e):
+
+        op = prettyForm(' ' + xsym(e.op) + ' ')
+
+        l = self._print(e.lhs)
+        r = self._print(e.rhs)
+        pform = prettyForm(*stringPict.next(l, op, r))
+        return pform
 
 
 def pretty(expr, **settings):
