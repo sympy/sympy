@@ -91,8 +91,8 @@ def test_doit_nonsquare():
 def test_doit_nested_MatrixExpr():
     X = ImmutableMatrix([[1, 2], [3, 4]])
     Y = ImmutableMatrix([[2, 3], [4, 5]])
-    assert MatPow(MatMul(X, Y), 2).doit() == (X*Y)**2
-    assert MatPow(MatAdd(X, Y), 2).doit() == (X + Y)**2
+    assert MatPow(MatMul(X, Y), 2).doit(deep=True) == (X*Y)**2
+    assert MatPow(MatAdd(X, Y), 2).doit(deep=True) == (X + Y)**2
 
 
 def test_identity_power():
@@ -120,3 +120,16 @@ def test_zero_power():
     assert MatPow(z2, 2).doit() == z2
     assert MatPow(z2, 0).doit() == Identity(4)
     raises(ValueError, lambda:MatPow(z2, -1).doit())
+
+
+def test_transpose_power():
+    from sympy.matrices.expressions.transpose import Transpose as TP
+
+    assert str(TP(C*D)**5) == '(C*D).T**5'
+
+    assert (C.T.I.T)**7 == C**-7
+    assert (((TP(A*E))**5).T)**7 == (A*E)**35
+    assert (((C.T)**l).T)**k == C**(l*k)
+
+    assert (D**-5).T**-5 == (D**25).T
+    assert (((D*C)**l).T**k).T == (D*C)**(l*k)
