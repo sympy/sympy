@@ -3,7 +3,7 @@ from sympy import Sum, Dummy
 
 from sympy.core import S, symbols, Add, Mul
 from sympy.core.compatibility import long
-from sympy.functions import transpose, sin, cos, sqrt
+from sympy.functions import transpose, sin, cos, sqrt, cbrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
@@ -162,6 +162,7 @@ def test_MatPow():
     assert (A**-1)**-1 == A
     assert (A**2)**3 == A**6
     assert A**S.Half == sqrt(A)
+    assert A**(S(1)/3) == cbrt(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
 
 
