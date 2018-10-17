@@ -486,7 +486,7 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s)" % (self._module_format('numpy.angle'), self._print(expr.args[0]))
 
     def _print_im(self, expr):
-        return "%s(%s)" % (self._module_format('numpy.imag'), self._print(expr.args[0])))
+        return "%s(%s)" % (self._module_format('numpy.imag'), self._print(expr.args[0]))
 
     def _print_Mod(self, expr):
         return "%s(%s)" % (self._module_format('numpy.mod'), ', '.join(

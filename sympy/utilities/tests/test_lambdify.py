@@ -1044,4 +1044,4 @@ def test_imag_real():
     assert f_re(val) == val.real
 
     f_im = lambdify([z], sympy.im(z))  # see #15400
-    assert f_re(val) == val.imag
+    assert f_im(val) == val.imag
