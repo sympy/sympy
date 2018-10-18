@@ -2561,18 +2561,29 @@ class MatrixBase(MatrixDeprecated,
             raise TypeError("Size mis-match")
         return self._diagonal_solve(rhs)
 
-    def dot(self, b, **kwargs):
-        """Return the dot product of two vectors of equal length. ``self`` must
-        be a ``Matrix`` of size 1 x n or n x 1, and ``b`` must be either a
-        matrix of size 1 x n, n x 1, or a list/tuple of length n. A scalar is returned.
+    def dot(self, b, hermitian=None, conjugate_convention=None):
+        """Return the dot product of two vectors of equal length. ``self``
+        must be a ``Matrix`` of size 1 x n or n x 1, and ``b`` must be
+        either a matrix of size 1 x n, n x 1, or a list/tuple of length n.
+        A scalar is returned.
 
-        In case one or both of the vector is complex then we need to calculate the inner product
-        of the two vectors. To calculate the inner product we call the inner_product function.
+        In case one or both of the vectors are complex and the hermitian
+        flag is set to true we need to calculate the hermitian inner
+        product of the two vectors.
 
-        The expected kwargs are hermitian and conjugate_convention. Hermitian takes two True or False
-        depending on wether dot product is to be calculated or inner product is to be used.
-        conjugate_convention has basically two inputs ("maths", "left", "math") or ("physics", "right").
-        conjugate_convention is used to  determine which convention is to be followed when calculating the inner product.
+        The expected kwargs are hermitian and conjugate_convention.
+        Hermitian takes argument as either True or False depending on
+        whether dot product is to be calculated or hermitian inner
+        product is to be calculated.
+
+        Conjugate_convention takes one argument as input. The accepted
+        arguments are: "maths", "left", "math", "physics" or "right".
+        "maths", "math" or "left" all correspond to the same convention
+        in which hermitian of the first vector is used.
+        i.e. (a.conjugate() * b)[0]
+        "physics" or "right" both correspond to the same convention in
+        which hermitian of the second vector is used.
+        i.e. (a * b.conjugate())[0]
 
         Examples
         ========
@@ -2588,15 +2599,20 @@ class MatrixBase(MatrixDeprecated,
         >>> M.row(0).dot(v)
         10
         >>> q = Matrix([1j, 1j, 1j])
-        >>> q.dot(q, hermitian = False)
+        >>> q.dot(q, hermitian=False)
         -3.00000000000000
 
-        >>> q.dot(q, hermitian = True)
+        >>> q.dot(q, hermitian=True)
         3.00000000000000
+
+        >>> q1 = Matrix([1, 1, 1j])
+        >>> q.dot(q1, hermitian=True, conjugate_convention="maths")
+        1.0 - 2.0*I
+        >>> q.dot(q1, hermitian=True, conjugate_convention="physics")
+        1.0 + 2.0*I
 
         See Also
         ========
-        inner_product
         cross
         multiply
         multiply_elementwise
@@ -2631,38 +2647,27 @@ class MatrixBase(MatrixDeprecated,
         if b.shape != (n, 1):
             b = b.reshape(n, 1)
 
-        """ Retrive the calue of hermitian and conjugate_convention from kwargs.
-        If it so happens that only conjugate_convention is passed then automatically set
-        hermitian to True. If only hermitian is true but no conjugate_convention is not passed
-        then automatically set it to "maths"
-        """
+        # Now ``mat`` is a row vector and ``b`` is a column vector.
 
-        hermitian = kwargs.get("hermitian")
-        conjugate_convention = kwargs.get("conjugate_convention")
+        # If it so happens that only conjugate_convention is passed
+        # then automatically set hermitian to True. If only hermitian
+        # is true but no conjugate_convention is not passed then
+        # automatically set it to "maths"
 
-        if(conjugate_convention != None and hermitian == None):
+        if (conjugate_convention != None) and (hermitian == None):
             hermitian = True
-        if(hermitian == True and conjugate_convention == None):
+        if (hermitian == True) and (conjugate_convention == None):
             conjugate_convention = "maths"
 
-        if(hermitian == True):
-            return mat.inner_product(b, conjugate_convention)
-        elif(hermitian == False):
-            return (mat*b)[0]
-        else:
-            warning_to_print =  "Warning: taking the non-Hermitian dot product of complex vectors. To suppress this warning, explicitly set hermitian=False."
-            if mat.is_symbolic() == True:
-                if b.is_symbolic() == False and b.conjugate() != b:
-                    print(warning_to_print)
+        if hermitian == True:
+            if conjugate_convention in ("maths", "left", "math"):
+                return (mat.conjugate()*b)[0]
+            elif conjugate_convention in ("physics", "right"):
+                return (mat*b.conjugate())[0]
             else:
-                if b.is_symbolic() == True:
-                    if mat.conjugate() != mat:
-                        print(warning_to_print)
-                else:
-                    if b.conjugate() != b or mat.conjugate() != mat:
-                        print(warning_to_print)
-
-        return (mat * b)[0]
+                raise ValueError("Invalid conjugate_convention is entered.")
+        else:
+            return (mat * b)[0]
 
     def dual(self):
         """Returns the dual of a matrix, which is:
@@ -2879,26 +2884,6 @@ class MatrixBase(MatrixDeprecated,
             return sol, tau, free_var_index
         else:
             return sol, tau
-
-    def inner_product(self, b, conjugate_convention):
-        """ Used to calculate the inner_product if hermitian flag is set to True in the dot function.
-        If conjugate_convention is ("maths", "left", "math") then conjugate the first matrix, conversely
-        if conjugate_convention is ("physics", "right") then conjugate the second matrix.
-
-        See Also
-        ===
-
-        dot
-        """
-
-        mat = self
-
-        if conjugate_convention in ("maths", "left", "math"):
-            return (mat.conjugate()*b)[0]
-        elif conjugate_convention in ("physics", "right"):
-            return (mat*b.conjugate())[0]
-        else:
-            print("Invalid conjugate_convention is entered.")
 
     def inv_mod(self, m):
         r"""
