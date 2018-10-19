@@ -132,7 +132,7 @@ class MatrixExpr(Expr):
             return Identity(self.rows)
         elif other is S.One:
             return self
-        return MatPow(self, other).doit()
+        return MatPow(self, other).doit(deep=False)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')

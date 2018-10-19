@@ -52,7 +52,7 @@ class MatPow(MatrixExpr):
 
     def doit(self, **kwargs):
         from sympy.matrices.expressions import Inverse
-        deep = kwargs.get('deep', False)
+        deep = kwargs.get('deep', True)
         if deep:
             args = [arg.doit(**kwargs) for arg in self.args]
         else:
@@ -82,9 +82,8 @@ class MatPow(MatrixExpr):
             return Inverse(base).doit(**kwargs)
         elif exp is S.One:
             return base
-        elif isinstance(base, Transpose) and isinstance(base.arg, MatPow):
-            return Transpose(MatPow(base.arg, exp).doit())
-
+        elif isinstance(base, Transpose):
+            return Transpose(MatPow(base.arg, exp).doit(deep=False))
         return MatPow(base, exp)
 
     def _eval_transpose(self):
