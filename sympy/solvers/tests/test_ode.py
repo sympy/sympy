@@ -1734,6 +1734,12 @@ def test_nth_linear_constant_coeff_homogeneous():
     assert checkodesol(eq29, sol29, order=4, solve_for_func=False)[0]
     assert checkodesol(eq30, sol30, order=5, solve_for_func=False)[0]
 
+    # Issue #15237
+    eqn = Derivative(x*f(x), x, x, x)
+    hint = 'nth_linear_constant_coeff_homogeneous'
+    raises(ValueError, lambda: dsolve(eqn, f(x), hint, prep=True))
+    raises(ValueError, lambda: dsolve(eqn, f(x), hint, prep=False))
+
 
 def test_nth_linear_constant_coeff_homogeneous_rootof():
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
