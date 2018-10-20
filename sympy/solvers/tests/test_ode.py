@@ -1751,6 +1751,38 @@ def test_nth_linear_constant_coeff_homogeneous_rootof():
         C5*exp(x*rootof(x**5 + 11*x - 2, 4)))
     assert dsolve(eq) == sol
 
+def test_nth_linear_constant_coeff_homogeneous_irrational():
+    our_hint='nth_linear_constant_coeff_homogeneous'
+
+    eq = Eq(sqrt(2) * f(x).diff(x,x,x) + f(x).diff(x), 0)
+    sol = Eq(f(x), C1 + C2*sin(2**(S(3)/4)*x/2) + C3*cos(2**(S(3)/4)*x/2))
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint) == sol
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=3, solve_for_func=False)[0]
+
+    E = exp(1)
+    eq = Eq(E * f(x).diff(x,x,x) + f(x).diff(x), 0)
+    sol = Eq(f(x), C1 + C2*sin(x/sqrt(E)) + C3*cos(x/sqrt(E)))
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint) == sol
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=3, solve_for_func=False)[0]
+
+    eq = Eq(pi * f(x).diff(x,x,x) + f(x).diff(x), 0)
+    sol = Eq(f(x), C1 + C2*sin(x/sqrt(pi)) + C3*cos(x/sqrt(pi)))
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint) == sol
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=3, solve_for_func=False)[0]
+
+    eq = Eq(I * f(x).diff(x,x,x) + f(x).diff(x), 0)
+    sol = Eq(f(x), C1 + C2*exp(-sqrt(I)*x) + C3*exp(sqrt(I)*x))
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint) == sol
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=3, solve_for_func=False)[0]
+
 
 @XFAIL
 @slow
