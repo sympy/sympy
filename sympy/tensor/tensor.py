@@ -2197,6 +2197,16 @@ class TensExpr(Expr):
         #array = permutedims(array, permutation)
         return array
 
+    def _check_add_Sum(self, expr, index_symbols):
+        from sympy import Sum
+        indices = self.get_indices()
+        dum = self.dum
+        sum_indices = [ (index_symbols[i], 0,
+            indices[i].tensor_index_type.dim-1) for i, j in dum]
+        if sum_indices:
+            expr = Sum(expr, *sum_indices)
+        return expr
+
 
 class TensAdd(TensExpr, AssocOp):
     """
@@ -2571,6 +2581,9 @@ class TensAdd(TensExpr, AssocOp):
             raise ValueError("No iteration on abstract tensors")
         return self.data.flatten().__iter__()
 
+    def _eval_rewrite_as_Indexed(self, *args):
+        return Add.fromiter(args)
+
 
 class Tensor(TensExpr):
     """
@@ -2929,6 +2942,13 @@ class Tensor(TensExpr):
 
     def contract_delta(self, metric):
         return self.contract_metric(metric)
+
+    def _eval_rewrite_as_Indexed(self, tens, indices):
+        from sympy import Indexed
+        # TODO: replace .args[0] with .name:
+        index_symbols = [i.args[0] for i in self.get_indices()]
+        expr = Indexed(tens.args[0], *index_symbols)
+        return self._check_add_Sum(expr, index_symbols)
 
 
 class TensMul(TensExpr, AssocOp):
@@ -3704,6 +3724,13 @@ class TensMul(TensExpr, AssocOp):
         if self.data is None:
             raise ValueError("No iteration on abstract tensors")
         return self.data.__iter__()
+
+    def _eval_rewrite_as_Indexed(self, *args):
+        from sympy import Sum
+        index_symbols = [i.args[0] for i in self.get_indices()]
+        args = [arg.args[0] if isinstance(arg, Sum) else arg for arg in args]
+        expr = Mul.fromiter(args)
+        return self._check_add_Sum(expr, index_symbols)
 
 
 class TensorElement(TensExpr):
