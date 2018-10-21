@@ -162,6 +162,14 @@ def test_canonicalize_no_dummies():
     tc = t.canon_bp()
     assert str(tc) == 'A(a, c)*A(b, d)'
 
+def test_tensorhead_construction_without_symmetry():
+    L = Lorentz = TensorIndexType('Lorentz')
+    A1 = tensorhead('A', [L, L])
+    A2 = tensorhead('A', [L, L], [[1], [1]])
+    assert A1 == A2
+    A3 = tensorhead('A', [L, L], [[1, 1]])  # Symmetric
+    assert A1 != A3
+
 def test_no_metric_symmetry():
     # no metric symmetry; A no symmetry
     # A^d1_d0 * A^d0_d1
