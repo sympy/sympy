@@ -13,7 +13,7 @@ from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.matrices import MatrixBase
 
 
-class MatMul(MatrixExpr):
+class MatMul(MatrixExpr, Mul):
     """
     A product of matrix expressions
 
