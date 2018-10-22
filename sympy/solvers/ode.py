@@ -4194,7 +4194,9 @@ def _nth_linear_match(eq, func, order):
             terms[-1] += i
         else:
             c, f = i.as_independent(func)
-            if isinstance(f, Derivative) and set(f.variables) == one_x:
+            if (isinstance(f, Derivative)
+                    and set(f.variables) == one_x
+                    and f.args[0] == func):
                 terms[f.derivative_count] += c
             elif f == func:
                 terms[len(f.args[1:])] += c
