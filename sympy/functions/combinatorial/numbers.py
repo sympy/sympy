@@ -21,6 +21,7 @@ from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.utilities.memoization import recurrence_memo
+from sympy.ntheory import isprime
 
 from mpmath import bernfrac, workprec
 from mpmath.libmp import ifib as _ifib
@@ -37,6 +38,131 @@ def _product(a, b):
 # Dummy symbol used for computing polynomial sequences
 _sym = Symbol('x')
 _symbols = Function('x')
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Carmichael numbers                               #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class carmichael(Function):
+    """
+    Carmichael Numbers:
+
+    Certain cryptographic algorithms make use of big prime numbers.
+    However, checking whether a big number is prime is not so easy.
+    Randomized prime number checking tests exist that offer a high degree of confidence of
+    accurate determination at low cost, such as the Fermat test.
+
+    Let 'a' be a random number between 2 and n - 1, where n is the number whose primality we are testing.
+    Then, n is probably prime if it satisfies the modular arithmetic congruence relation :
+
+    a^(n-1) = 1(mod n).
+    (where mod refers to the modulo operation)
+
+    If a number passes the Fermat test several times, then it is prime with a
+    high probability.
+
+    Unfortunately, certain composite numbers (non-primes) still pass the Fermat test
+    with every number smaller than themselves.
+    These numbers are called Carmichael numbers.
+
+    A Carmichael number will pass a Fermat primality test to every base b relatively prime to the number,
+    even though it is not actually prime. This makes tests based on Fermat's Little Theorem less effective than
+    strong probable prime tests such as the Baillie-PSW primality test and the Miller-Rabin primality test.
+    mr functions given in sympy/sympy/ntheory/primetest.py will produce wrong results for each and every
+    carmichael number.
+
+    Examples
+    ========
+
+    >>> from sympy import carmichael
+    >>> carmichael.find_first_n_carmichaels(5)
+    [561, 1105, 1729, 2465, 2821]
+    >>> carmichael.is_prime(2465)
+    False
+    >>> carmichael.is_prime(1729)
+    False
+    >>> carmichael.find_carmichael_numbers_in_range(0, 562)
+    [561]
+    >>> carmichael.find_carmichael_numbers_in_range(0,1000)
+    [561]
+    >>> carmichael.find_carmichael_numbers_in_range(0,2000)
+    [561, 1105, 1729]
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Carmichael_number
+    .. [2] https://en.wikipedia.org/wiki/Fermat_primality_test
+    .. [3] https://www.jstor.org/stable/23248683?seq=1#metadata_info_tab_contents
+    """
+
+    @staticmethod
+    def is_perfect_square(n):
+        from sympy.ntheory.primetest import is_square
+        if is_square(n):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def divides(p, n):
+        return n % p == 0
+
+    @staticmethod
+    def is_prime(n):
+        return isprime(n)
+
+    @staticmethod
+    def is_carmichael(n):
+        if n >= 0:
+            if (n == 1) or (carmichael.is_prime(n)) or (n % 2 == 0):
+                return False
+
+            divisors = list([1, n])
+
+            # get divisors
+            for i in range(3, n // 2 + 1, 2):
+                if n % i == 0:
+                    divisors.append(i)
+
+            for i in divisors:
+                if carmichael.is_perfect_square(i) and i != 1:
+                    return False
+                if carmichael.is_prime(i):
+                    if not carmichael.divides(i - 1, n - 1):
+                        return False
+
+            return True
+
+        else:
+            raise ValueError('The provided number must be greater than or equal to 0')
+
+    @staticmethod
+    def find_carmichael_numbers_in_range(x, y):
+        if 0 <= x <= y:
+            if x % 2 == 0:
+                return list([i for i in range(x + 1, y, 2) if carmichael.is_carmichael(i)])
+            else:
+                return list([i for i in range(x, y, 2) if carmichael.is_carmichael(i)])
+
+        else:
+            raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
+
+    @staticmethod
+    def find_first_n_carmichaels(n):
+        i = 1
+        carmichaels = list()
+
+        while len(carmichaels) < n:
+            if carmichael.is_carmichael(i):
+                carmichaels.append(i)
+            i += 2
+
+        return carmichaels
 
 
 #----------------------------------------------------------------------------#
@@ -1074,6 +1200,7 @@ class catalan(Function):
         from sympy import gamma
         if self.args[0].is_number:
             return self.rewrite(gamma)._eval_evalf(prec)
+
 
 
 #----------------------------------------------------------------------------#
