@@ -7,7 +7,7 @@ from __future__ import print_function, division
 
 from sympy import (Symbol, diff, S, Dummy, Order, rf, meijerint, I,
     solve, limit, Float, nsimplify, gamma)
-from sympy.printing import sstr,latex
+from sympy.printing import sstr
 from sympy.core.compatibility import range, ordered
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.core.sympify import sympify
@@ -380,10 +380,10 @@ class DifferentialOperator(Printable):
             if v == self.parent.base.zero:
                 continue
 
-            lv = latex(v)
+            lv = printer._print(v)
             if v == self.parent.base.one:
                 lv = ""
-            elif (not v.is_monomial) or lv.strip()[0] == "-" :
+            elif printer._needs_add_brackets( v.ring.to_sympy(v) ) :
                 lv = '(' + lv + ')'
 
             if i == 0:
@@ -394,10 +394,10 @@ class DifferentialOperator(Printable):
                 print_str += ' + '
 
             if i == 1:
-                print_str += lv + '%s' %(self.parent.gen_symbol)
+                print_str += lv + '%s' % self.parent.gen_symbol
                 continue
 
-            print_str += lv +  '%s^' %(self.parent.gen_symbol) + latex(i)
+            print_str += lv +  '%s^' % self.parent.gen_symbol + printer._print(i)
         return print_str
 
 class HolonomicFunction(object):
