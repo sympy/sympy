@@ -618,6 +618,10 @@ class MatrixElement(Expr):
             args = self.args
         return args[0][args[1], args[2]]
 
+    @property
+    def indices(self):
+        return self.args[1:]
+
     def _eval_derivative(self, v):
         from sympy import Sum, symbols, Dummy
 
