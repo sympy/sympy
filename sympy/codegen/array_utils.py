@@ -4,6 +4,7 @@ from sympy.core.sympify import _sympify
 from sympy.core.mul import Mul
 from sympy.matrices.expressions import MatMul
 from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.tensor.array import NDimArray
 
 
 class CodegenArrayContraction(Basic):
