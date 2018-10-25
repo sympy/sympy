@@ -1,5 +1,6 @@
 from collections import defaultdict
 from sympy.core.basic import Basic
+from sympy.core.sympify import _sympify
 from sympy.core.mul import Mul
 from sympy.matrices.expressions import MatMul
 from sympy.matrices.expressions.matexpr import MatrixExpr
@@ -69,6 +70,7 @@ class CodegenArrayContraction(Basic):
 
 class CodegenArrayTensorProduct(Basic):
     def __new__(cls, *args):
+        args = [_sympify(arg) for arg in args]
         if len(args) == 1:
             return args[0]
         return Basic.__new__(cls, *args)
