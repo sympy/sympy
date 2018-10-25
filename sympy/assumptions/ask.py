@@ -228,7 +228,7 @@ class AssumptionKeys(object):
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Algebraic_number
+        .. [1] https://en.wikipedia.org/wiki/Algebraic_number
         """
         return Predicate('algebraic')
 

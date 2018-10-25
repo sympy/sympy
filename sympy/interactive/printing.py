@@ -165,7 +165,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function to generate the latex representation of sympy expressions.
         """
         if _can_print_latex(o):
-            s = latex(o, mode='plain', **settings)
+            s = latex(o, mode=latex_mode, **settings)
             s = s.strip('$')
             return '$$%s$$' % s
 

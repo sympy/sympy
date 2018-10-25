@@ -2229,7 +2229,7 @@ def linear_congruence(a, b, m):
     There are 3 solutions distinct mod(15) since gcd(a, m) = gcd(3, 15) = 3.
 
     **Reference**
-    1) Wikipedia http://en.wikipedia.org/wiki/Linear_congruence_theorem
+    1) Wikipedia https://en.wikipedia.org/wiki/Linear_congruence_theorem
 
     """
     from sympy.polys.polytools import gcdex

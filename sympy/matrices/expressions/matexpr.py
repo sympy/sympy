@@ -71,7 +71,7 @@ class MatrixExpr(Expr):
 
     is_commutative = False
     is_number = False
-    is_symbol = True
+    is_symbol = False
 
     def __new__(cls, *args, **kwargs):
         args = map(sympify, args)
@@ -87,22 +87,22 @@ class MatrixExpr(Expr):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return MatAdd(self, other).doit()
+        return MatAdd(self, other, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return MatAdd(other, self).doit()
+        return MatAdd(other, self, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return MatAdd(self, -other).doit()
+        return MatAdd(self, -other, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return MatAdd(other, -self).doit()
+        return MatAdd(other, -self, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
@@ -244,6 +244,9 @@ class MatrixExpr(Expr):
             return None
         else:
             return parsed
+
+    def _eval_derivative_n_times(self, x, n):
+        return Basic._eval_derivative_n_times(self, x, n)
 
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
@@ -654,9 +657,10 @@ class MatrixSymbol(MatrixExpr):
     >>> A.shape
     (3, 4)
     >>> 2*A*B + Identity(3)
-    I + 2*A*B
+    2*A*B + I
     """
     is_commutative = False
+    is_symbol = True
     _diff_wrt = True
 
     def __new__(cls, name, n, m):

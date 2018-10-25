@@ -351,7 +351,8 @@ def test_cse_MatrixExpr():
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
     ans = cse(f)
-    actual_ans = ([(x0, -z), (x1, x*y)], [Piecewise((x0+x1, Eq(y, 0)), (x0 - x1, True))])
+    actual_ans = ([(x0, -z), (x1, x*y)],
+        [Piecewise((x0 + x1, Eq(y, 0)), (x0 - x1, True))])
     assert ans == actual_ans
 
 

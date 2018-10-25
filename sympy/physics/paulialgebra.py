@@ -6,7 +6,7 @@ See the documentation to the class Pauli for examples.
 
 References
 ~~~~~~~~~~
-.. [1] http://en.wikipedia.org/wiki/Pauli_matrices
+.. [1] https://en.wikipedia.org/wiki/Pauli_matrices
 """
 
 from __future__ import print_function, division

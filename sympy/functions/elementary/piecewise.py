@@ -1,16 +1,18 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number
+from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number, Symbol
 from sympy.core.basic import as_Basic
 from sympy.core.sympify import SympifyError
 from sympy.core.relational import (Equality, Unequality, Relational,
     _canonical)
+from sympy.core.function import UndefinedFunction
+from sympy.core.numbers import Rational, NumberSymbol
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
     true, false, Not, Or, ITE, simplify_logic)
 from sympy.utilities.iterables import cartes
 from sympy.core.compatibility import default_sort_key, range
-from sympy.utilities.iterables import uniq, is_sequence, ordered, product
+from sympy.utilities.iterables import uniq, is_sequence, ordered, product, sift
 from sympy.utilities.misc import filldedent, Undecidable, func_name
 
 
@@ -58,6 +60,12 @@ class ExprCondPair(Tuple):
         yield self.expr
         yield self.cond
 
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        return self.func(*[a.simplify(
+            ratio=ratio,
+            measure=measure,
+            rational=rational,
+            inverse=inverse) for a in self.args])
 
 class Piecewise(Function):
     """
@@ -315,6 +323,37 @@ class Piecewise(Function):
                     c = c.doit(**hints)
             newargs.append((e, c))
         return self.func(*newargs)
+
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        args = [a._eval_simplify(ratio, measure, rational, inverse)
+            for a in self.args]
+        for i, (expr, cond) in enumerate(args):
+            # try to simplify conditions and the expression for
+            # equalities that are part of the condition, e.g.
+            # Piecewise((n, And(Eq(n,0), Eq(n + m, 0))), (1, True))
+            # -> Piecewise((0, And(Eq(n, 0), Eq(m, 0))), (1, True))
+            if isinstance(cond, And):
+                eqs, other = sift(cond.args,
+                    lambda i: isinstance(i, Equality), binary=True)
+            elif isinstance(cond, Equality):
+                eqs, other = [cond], []
+            else:
+                eqs = other = []
+            if eqs:
+                eqs = list(ordered(eqs))
+                for j, e in enumerate(eqs):
+                    # these blessed lhs objects behave like Symbols
+                    # and the rhs are simple replacements for the "symbols"
+                    if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
+                        isinstance(e.rhs,
+                            (Rational, NumberSymbol,
+                            Symbol, UndefinedFunction)):
+                        expr = expr.subs(*e.args)
+                        eqs[j + 1:] = [ei.subs(*e.args) for ei in eqs[j + 1:]]
+                        other = [ei.subs(*e.args) for ei in other]
+                cond = And(*(eqs + other))
+                args[i] = args[i].func(expr, cond)
+        return self.func(*args)
 
     def _eval_as_leading_term(self, x):
         for e, c in self.args:
@@ -1008,8 +1047,8 @@ def piecewise_fold(expr):
         # (and the expression is commutative).
         if expr.is_Add or expr.is_Mul and expr.is_commutative:
             p, args = sift(expr.args, lambda x: x.is_Piecewise, binary=True)
-            pc = sift(p, lambda x: x.args[0].cond)
-            for c in pc:
+            pc = sift(p, lambda x: tuple([c for e,c in x.args]))
+            for c in list(ordered(pc)):
                 if len(pc[c]) > 1:
                     pargs = [list(i.args) for i in pc[c]]
                     # the first one is the same; there may be more

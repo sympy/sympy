@@ -1,5 +1,5 @@
 from sympy import KroneckerDelta, diff, Piecewise, And
-from sympy import Sum, Dummy
+from sympy import Sum, Dummy, factor, expand
 
 from sympy.core import S, symbols, Add, Mul
 from sympy.core.compatibility import long
@@ -337,3 +337,12 @@ def test_MatrixElement_with_values():
 def test_inv():
     B = MatrixSymbol('B', 3, 3)
     assert B.inv() == B**-1
+
+def test_factor_expand():
+    A = MatrixSymbol("A", n, n)
+    B = MatrixSymbol("B", n, n)
+    expr1 = (A + B)*(C + D)
+    expr2 = A*C + B*C + A*D + B*D
+    assert expr1 != expr2
+    assert expand(expr1) == expr2
+    assert factor(expr2) == expr1

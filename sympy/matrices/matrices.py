@@ -280,7 +280,7 @@ class MatrixDeterminant(MatrixCommon):
         a matrix.  That is, the transpose of the matrix of cofactors.
 
 
-        http://en.wikipedia.org/wiki/Adjugate
+        https://en.wikipedia.org/wiki/Adjugate
 
         See Also
         ========
@@ -1685,7 +1685,7 @@ class MatrixEigen(MatrixSubspaces):
 class MatrixCalculus(MatrixCommon):
     """Provides calculus-related matrix operations."""
 
-    def diff(self, *args):
+    def diff(self, *args, **kwargs):
         """Calculate the derivative of each element in the matrix.
         ``args`` will be passed to the ``integrate`` function.
 
@@ -1706,7 +1706,9 @@ class MatrixCalculus(MatrixCommon):
         integrate
         limit
         """
+        # XXX this should be handled here rather than in Derivative
         from sympy import Derivative
+        kwargs.setdefault('evaluate', True)
         deriv = Derivative(self, *args, evaluate=True)
         if not isinstance(self, Basic):
             return deriv.as_mutable()
@@ -2785,7 +2787,7 @@ class MatrixBase(MatrixDeprecated,
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Gaussian_elimination
+        .. [1] https://en.wikipedia.org/wiki/Gaussian_elimination
 
         """
         from sympy.matrices import Matrix, zeros

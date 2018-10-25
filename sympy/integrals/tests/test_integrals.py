@@ -95,7 +95,7 @@ def test_basics():
     assert diff(Integral(y, y), x) == 0
     assert diff(Integral(x, (x, 0, 1)), x) == 0
     assert diff(Integral(x, x), x) == x
-    assert diff(Integral(t, (t, 0, x)), x) == x + Integral(0, (t, 0, x))
+    assert diff(Integral(t, (t, 0, x)), x) == x
 
     e = (t + 1)**2
     assert diff(integrate(e, (t, 0, x)), x) == \
@@ -142,6 +142,7 @@ def test_diff_wrt():
 
     raises(ValueError, lambda: integrate(x + 1, x + 1))
     raises(ValueError, lambda: integrate(x + 1, (x + 1, 0, 1)))
+
 
 def test_basics_multiple():
 

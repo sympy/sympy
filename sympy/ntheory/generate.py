@@ -626,7 +626,7 @@ def primerange(a, b):
         References
         ==========
 
-        1. http://en.wikipedia.org/wiki/Prime_number
+        1. https://en.wikipedia.org/wiki/Prime_number
         2. http://primes.utm.edu/notes/gaps.html
 
         Examples
@@ -686,7 +686,7 @@ def randprime(a, b):
         References
         ==========
 
-        - http://en.wikipedia.org/wiki/Bertrand's_postulate
+        - https://en.wikipedia.org/wiki/Bertrand's_postulate
 
         Examples
         ========
@@ -827,7 +827,7 @@ def cycle_length(f, x0, nmax=None, values=False):
         [17, 35, 2, 5]
 
     Code modified from:
-        http://en.wikipedia.org/wiki/Cycle_detection.
+        https://en.wikipedia.org/wiki/Cycle_detection.
     """
 
     nmax = int(nmax or 0)

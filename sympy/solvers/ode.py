@@ -3029,7 +3029,7 @@ def ode_1st_exact(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Exact_differential_equation
+    - https://en.wikipedia.org/wiki/Exact_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 73
 
@@ -3085,7 +3085,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 59
 
@@ -3184,7 +3184,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 59
 
@@ -3280,7 +3280,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 59
 
@@ -3441,7 +3441,7 @@ def ode_1st_linear(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
+    - https://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 92
 
@@ -3527,7 +3527,7 @@ def ode_Bernoulli(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Bernoulli_differential_equation
+    - https://en.wikipedia.org/wiki/Bernoulli_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 95
 
@@ -4194,7 +4194,9 @@ def _nth_linear_match(eq, func, order):
             terms[-1] += i
         else:
             c, f = i.as_independent(func)
-            if isinstance(f, Derivative) and set(f.variables) == one_x:
+            if (isinstance(f, Derivative)
+                    and set(f.variables) == one_x
+                    and f.args[0] == func):
                 terms[f.derivative_count] += c
             elif f == func:
                 terms[len(f.args[1:])] += c
@@ -4263,7 +4265,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Cauchy%E2%80%93Euler_equation
+    - https://en.wikipedia.org/wiki/Cauchy%E2%80%93Euler_equation
     - C. Bender & S. Orszag, "Advanced Mathematical Methods for Scientists and
       Engineers", Springer 1999, pp. 12
 
@@ -4903,7 +4905,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Linear_differential_equation section:
+    - https://en.wikipedia.org/wiki/Linear_differential_equation section:
       Nonhomogeneous_equation_with_constant_coefficients
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 211
@@ -5038,7 +5040,7 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Method_of_undetermined_coefficients
+    - https://en.wikipedia.org/wiki/Method_of_undetermined_coefficients
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 221
 
@@ -5361,7 +5363,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Variation_of_parameters
+    - https://en.wikipedia.org/wiki/Variation_of_parameters
     - http://planetmath.org/VariationOfParameters
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 233

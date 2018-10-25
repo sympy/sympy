@@ -1243,7 +1243,7 @@ def _mask_nc(eq, name=None):
     Multiple nc-symbols:
 
     >>> _mask_nc(A**2 - B**2, 'd')
-    (A**2 - B**2, None, [A, B])
+    (A**2 - B**2, {}, [A, B])
 
     An nc-object with nc-symbols but no others outside of it:
 
@@ -1309,8 +1309,9 @@ def _mask_nc(eq, name=None):
         if any(a == r[0] for r in rep):
             pot.skip()
         elif not a.is_commutative:
-            if a.is_Symbol:
+            if a.is_symbol:
                 nc_syms.add(a)
+                pot.skip()
             elif not (a.is_Add or a.is_Mul or a.is_Pow):
                 nc_obj.add(a)
                 pot.skip()
@@ -1333,7 +1334,7 @@ def _mask_nc(eq, name=None):
 
     nc_syms = list(nc_syms)
     nc_syms.sort(key=default_sort_key)
-    return expr, {v: k for k, v in rep} or None, nc_syms
+    return expr, {v: k for k, v in rep}, nc_syms
 
 
 def factor_nc(expr):
