@@ -14,6 +14,14 @@ class CodegenArrayContraction(Basic):
     def __new__(cls, expr, *indices):
         return Basic.__new__(cls, expr, *indices)
 
+    @property
+    def expr(self):
+        return self.args[0]
+
+    @property
+    def contraction_indices(self):
+        return self.args[1:]
+
     @staticmethod
     def from_summation(summation):
         from sympy import Indexed
@@ -71,6 +79,21 @@ class CodegenArrayContraction(Basic):
 class CodegenArrayTensorProduct(Basic):
     def __new__(cls, *args):
         args = [_sympify(arg) for arg in args]
+        ranks = [cls.get_rank(arg) for arg in args]
         if len(args) == 1:
             return args[0]
-        return Basic.__new__(cls, *args)
+        obj = Basic.__new__(cls, *args)
+        obj._ranks = ranks
+        return obj
+
+    @property
+    def ranks(self):
+        return self._ranks[:]
+
+    @classmethod
+    def get_rank(cls, expr):
+        if isinstance(expr, MatrixExpr):
+            return 2
+        if isinstance(expr, NDimArray):
+            return expr.rank()
+        return 0
