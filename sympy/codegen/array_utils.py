@@ -13,6 +13,8 @@ class CodegenArrayContraction(Basic):
     processable by the code printers.
     """
     def __new__(cls, expr, *indices):
+        indices = [_sympify(ind) for ind in indices]
+        expr = _sympify(expr)
         return Basic.__new__(cls, expr, *indices)
 
     @property

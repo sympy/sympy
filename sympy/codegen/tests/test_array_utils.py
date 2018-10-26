@@ -25,5 +25,6 @@ def test_codegen_array_contraction_construction():
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, M), (1, 2), (3, 4))
     assert CodegenArrayContraction.from_MatMul(expr) == result
     elem = expr[i, j]
-    result = CodegenArrayContraction(CodegenArrayTensorProduct(M, M, N), (1, 4), (2, 5))
-    assert CodegenArrayContraction.from_summation(elem) == result
+    result1 = CodegenArrayContraction(CodegenArrayTensorProduct(M, M, N), (1, 4), (2, 5))
+    result2 = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, M), (1, 2), (3, 4))
+    assert CodegenArrayContraction.from_summation(elem) in (result1, result2)
