@@ -289,6 +289,10 @@ class LatexPrinter(Printer):
         else:
             return expr
 
+    def _print_Basic(self, expr):
+        l = [self._print(o) for o in expr.args]
+        return self._deal_with_super_sub(expr.__class__.__name__) + r"\left(%s\right)" % ", ".join(l)
+
     def _print_bool(self, e):
         return r"\mathrm{%s}" % e
 
@@ -1461,6 +1465,10 @@ class LatexPrinter(Printer):
             return r"\left(%s\right)^T" % self._print(mat)
         else:
             return "%s^T" % self._print(mat)
+
+    def _print_Trace(self, expr):
+        mat = expr.arg
+        return r"\mathrm{tr}\left (%s \right )" % self._print(mat)
 
     def _print_Adjoint(self, expr):
         mat = expr.arg
