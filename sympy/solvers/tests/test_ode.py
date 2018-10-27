@@ -1604,6 +1604,8 @@ def test_nth_linear_constant_coeff_homogeneous():
     eq28 = f(x).diff(x, 3) + 8*f(x)
     eq29 = f(x).diff(x, 4) + 4*f(x).diff(x, 2)
     eq30 = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x)
+    eq31 = f(x).diff(x, 4) + f(x).diff(x, 2) + f(x)
+    eq32 = f(x).diff(x, 4) + 4*f(x).diff(x, 2) + f(x)
     sol1 = Eq(f(x), C1 + C2*exp(-2*x))
     sol2 = Eq(f(x), (C1 + C2*exp(x))*exp(x))
     sol3 = Eq(f(x), C1*exp(x) + C2*exp(-x))
@@ -1643,6 +1645,10 @@ def test_nth_linear_constant_coeff_homogeneous():
         (C1*sin(x*sqrt(3)) + C2*cos(x*sqrt(3)))*exp(x) + C3*exp(-2*x))
     sol29 = Eq(f(x), C1 + C2*sin(2*x) + C3*cos(2*x) + C4*x)
     sol30 = Eq(f(x), C1 + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
+    sol31 = Eq(f(x), (C1*sin(sqrt(3)*x/2) + C2*cos(sqrt(3)*x/2))/sqrt(exp(x))
+                   + (C3*sin(sqrt(3)*x/2) + C4*cos(sqrt(3)*x/2))*sqrt(exp(x)))
+    sol32 = Eq(f(x), C1*sin(x*sqrt(-sqrt(3) + 2)) + C2*sin(x*sqrt(sqrt(3) + 2))
+                   + C3*cos(x*sqrt(-sqrt(3) + 2)) + C4*cos(x*sqrt(sqrt(3) + 2)))
     sol1s = constant_renumber(sol1, 'C', 1, 2)
     sol2s = constant_renumber(sol2, 'C', 1, 2)
     sol3s = constant_renumber(sol3, 'C', 1, 2)
@@ -1703,6 +1709,8 @@ def test_nth_linear_constant_coeff_homogeneous():
     assert dsolve(eq28) in (sol28, sol28s)
     assert dsolve(eq29) in (sol29, sol29s)
     assert dsolve(eq30) in (sol30, sol30s)
+    assert dsolve(eq31) in (sol31,)
+    assert dsolve(eq32) in (sol32,)
     assert checkodesol(eq1, sol1, order=2, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=2, solve_for_func=False)[0]
@@ -1733,6 +1741,8 @@ def test_nth_linear_constant_coeff_homogeneous():
     assert checkodesol(eq28, sol28, order=3, solve_for_func=False)[0]
     assert checkodesol(eq29, sol29, order=4, solve_for_func=False)[0]
     assert checkodesol(eq30, sol30, order=5, solve_for_func=False)[0]
+    assert checkodesol(eq31, sol31, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq32, sol32, order=4, solve_for_func=False)[0]
 
     # Issue #15237
     eqn = Derivative(x*f(x), x, x, x)
