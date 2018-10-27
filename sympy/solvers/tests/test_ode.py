@@ -2798,6 +2798,10 @@ def test_lie_group():
     assert sol == Eq(f(x), 2/(C1 + x**2))
     assert checkodesol(eq, sol)[0]
 
+@XFAIL
+def test_lie_group_issue15219():
+    eqn = exp(f(x).diff(x)-f(x))
+    assert 'lie_group' not in classify_ode(eqn, f(x))
 
 def test_user_infinitesimals():
     C2 = Symbol("C2")

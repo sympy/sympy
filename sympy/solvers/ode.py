@@ -5645,6 +5645,8 @@ def ode_lie_group(eq, func, order, match):
     else:
         try:
             sol = solve(eq, df)
+            if sol == []:
+                raise NotImplementedError
         except NotImplementedError:
             raise NotImplementedError("Unable to solve the differential equation " +
                 str(eq) + " by the lie group method")
