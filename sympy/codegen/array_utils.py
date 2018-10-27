@@ -155,7 +155,7 @@ class CodegenArrayContraction(Basic):
         return CodegenArrayContraction(c_tp, *new_contr_indices)
 
     def _get_contraction_links(self):
-        """
+        r"""
         Returns a dictionary of links between arguments in the tensor product
         being contracted.
 
