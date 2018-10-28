@@ -17,6 +17,10 @@ class CodegenArrayContraction(Basic):
     def __new__(cls, expr, *contraction_indices, **kwargs):
         contraction_indices = cls._sort_contraction_indices(contraction_indices)
         expr = _sympify(expr)
+
+        if isinstance(expr, CodegenArrayContraction):
+            return cls._flatten(expr, *contraction_indices)
+
         obj = Basic.__new__(cls, expr, *contraction_indices)
         obj._mapping, obj._ranks = cls._get_mapping_from_contraction_indices(expr, *contraction_indices)
         free_indices = kwargs.get("free_indices", None)
@@ -40,7 +44,7 @@ class CodegenArrayContraction(Basic):
             ranks = expr.ranks
         else:
             args = [expr]
-            ranks = [CodegenArrayTensorProduct.get_rank(expr)]
+            ranks = [get_rank(expr)]
         mapping = {}
         counter = 0
         for i, rank in enumerate(ranks):
@@ -48,6 +52,28 @@ class CodegenArrayContraction(Basic):
                 mapping[counter] = (i, j)
                 counter += 1
         return mapping, ranks
+
+    @staticmethod
+    def _flatten(expr, *outer_contraction_indices):
+        inner_contraction_indices = expr.contraction_indices
+        all_inner = [j for i in inner_contraction_indices for j in i]
+        all_inner.sort()
+        # TODO: add API for total rank and cumulative rank:
+        total_rank = get_rank(expr)
+        inner_rank = len(all_inner)
+        outer_rank = total_rank - inner_rank
+        shifts = [0 for i in range(outer_rank)]
+        counter = 0
+        pointer = 0
+        for i in range(outer_rank):
+            while pointer < inner_rank and counter >= all_inner[pointer]:
+                counter += 1
+                pointer += 1
+            shifts[i] += pointer
+            counter += 1
+        outer_contraction_indices = tuple(tuple(shifts[j] + j for j in i) for i in outer_contraction_indices)
+        contraction_indices = inner_contraction_indices + outer_contraction_indices
+        return CodegenArrayContraction(expr.expr, *contraction_indices)
 
     def _get_contraction_tuples(self):
         r"""
@@ -420,9 +446,21 @@ class CodegenArrayTensorProduct(Basic):
     """
     def __new__(cls, *args):
         args = [_sympify(arg) for arg in args]
-        ranks = [cls.get_rank(arg) for arg in args]
+        args = cls._flatten(args)
+        ranks = [get_rank(arg) for arg in args]
+
         if len(args) == 1:
             return args[0]
+
+        # If there is a contraction object inside, transform the whole
+        # expression into `CodegenArrayContraction`:
+        contractions = {i: arg for i, arg in enumerate(args) if isinstance(arg, CodegenArrayContraction)}
+        if contractions:
+            cumulative_ranks = list(accumulate([0] + ranks))[:-1]
+            tp = cls(*[arg.expr if isinstance(arg, CodegenArrayContraction) else arg for arg in args])
+            contraction_indices = [tuple(cumulative_ranks[i] + k for k in j) for i, arg in contractions.items() for j in arg.contraction_indices]
+            return CodegenArrayContraction(tp, *contraction_indices)
+
         obj = Basic.__new__(cls, *args)
         obj._ranks = ranks
         return obj
@@ -432,17 +470,24 @@ class CodegenArrayTensorProduct(Basic):
         return self._ranks[:]
 
     @classmethod
-    def get_rank(cls, expr):
-        if isinstance(expr, (MatrixExpr, MatrixElement)):
-            return 2
-        if isinstance(expr, NDimArray):
-            return expr.rank()
-        if isinstance(expr, Indexed):
-            return expr.rank
-        if isinstance(expr, IndexedBase):
-            shape = expr.shape
-            if shape is None:
-                return -1
-            else:
-                return len(shape)
-        return 0
+    def _flatten(cls, args):
+        args = [i for arg in args for i in (arg.args if isinstance(arg, cls) else [arg])]
+        return args
+
+
+def get_rank(expr):
+    if isinstance(expr, (MatrixExpr, MatrixElement)):
+        return 2
+    if isinstance(expr, CodegenArrayContraction):
+        return sum(expr.ranks)
+    if isinstance(expr, NDimArray):
+        return expr.rank()
+    if isinstance(expr, Indexed):
+        return expr.rank
+    if isinstance(expr, IndexedBase):
+        shape = expr.shape
+        if shape is None:
+            return -1
+        else:
+            return len(shape)
+    return 0

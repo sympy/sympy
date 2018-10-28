@@ -77,3 +77,44 @@ def test_codegen_array_recognize_matrix_mul_lines():
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M,N,P,Q), (1, 2), (5, 6))
     assert cg._recognize_matrix_mul_lines() == [(0, 3, [M, N]), (4, 7, [P, Q])]
+
+
+def test_codegen_array_flatten():
+
+    # Flatten nested CodegenArrayTensorProduct objects:
+    expr1 = CodegenArrayTensorProduct(M, N)
+    expr2 = CodegenArrayTensorProduct(P, Q)
+    expr = CodegenArrayTensorProduct(expr1, expr2)
+    assert expr == CodegenArrayTensorProduct(M, N, P, Q)
+    assert expr.args == (M, N, P, Q)
+
+    # Flatten mixed CodegenArrayTensorProduct and CodegenArrayContraction objects:
+    cg1 = CodegenArrayContraction(expr1, (1, 2))
+    cg2 = CodegenArrayContraction(expr2, (0, 3))
+
+    expr = CodegenArrayTensorProduct(cg1, cg2)
+    assert expr == CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (1, 2), (4, 7))
+
+    expr = CodegenArrayTensorProduct(M, cg1)
+    assert expr == CodegenArrayContraction(CodegenArrayTensorProduct(M, M, N), (3, 4))
+
+    # Flatten nested CodegenArrayContraction objects:
+    cgnested = CodegenArrayContraction(cg1, (0, 1))
+    assert cgnested == CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (0, 3), (1, 2))
+
+    cgnested = CodegenArrayContraction(CodegenArrayTensorProduct(cg1, cg2), (0, 3))
+    assert cgnested == CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (0, 6), (1, 2), (4, 7))
+
+    cg3 = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (1, 3), (2, 4))
+    cgnested = CodegenArrayContraction(cg3, (0, 1))
+    assert cgnested == CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (0, 5), (1, 3), (2, 4))
+
+    cgnested = CodegenArrayContraction(cg3, (0, 3), (1, 2))
+    assert cgnested == CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (0, 7), (1, 3), (2, 4), (5, 6))
+
+    cg4 = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (1, 5), (3, 7))
+    cgnested = CodegenArrayContraction(cg4, (0, 1))
+    assert cgnested == CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (0, 2), (1, 5), (3, 7))
+
+    cgnested = CodegenArrayContraction(cg4, (0, 1), (2, 3))
+    assert cgnested == CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (0, 2), (1, 5), (3, 7), (4, 6))
