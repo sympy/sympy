@@ -75,8 +75,6 @@ class CodegenArrayContraction(Basic):
         argument (i.e. 1 or `B`).
         """
         mapping = self._mapping
-        #if mapping is None:
-            #raise NotImplementedError
         return [[mapping[j] for j in i] for i in self.contraction_indices]
 
     @staticmethod
@@ -155,7 +153,7 @@ class CodegenArrayContraction(Basic):
         return CodegenArrayContraction(c_tp, *new_contr_indices)
 
     def _get_contraction_links(self):
-        """
+        r"""
         Returns a dictionary of links between arguments in the tensor product
         being contracted.
 
@@ -181,26 +179,27 @@ class CodegenArrayContraction(Basic):
         >>> cg
         CodegenArrayContraction(CodegenArrayTensorProduct(A, B, C, D), (1, 2), (3, 4), (5, 6))
         >>> cg._get_contraction_links()
-        {0: [(1, 0)], 1: [(0, 1), (2, 0)], 2: [(1, 1), (3, 0)], 3: [(2, 1)]}
+        {0: {1: (1, 0)}, 1: {0: (0, 1), 1: (2, 0)}, 2: {0: (1, 1), 1: (3, 0)}, 3: {0: (2, 1)}}
 
         This dictionary is interpreted as follows: argument in position 0 (i.e.
-        matrix `A`) is contracted to `(1, 0)`, that is argument in position 1
-        (matrix `B`) on the first index slot of `B`, this is the contraction
-        provided by the index `j` from `A`.
+        matrix `A`) has its second index (i.e. 1) contracted to `(1, 0)`, that
+        is argument in position 1 (matrix `B`) on the first index slot of `B`,
+        this is the contraction provided by the index `j` from `A`.
 
         The argument in position 1 (that is, matrix `B`) has two contractions,
-        the ones provided by the indices `j` and `k`.  The link `(0, 1)` and
+        the ones provided by the indices `j` and `k`, respectively the first
+        and second indices (0 and 1 in the sub-dict).  The link `(0, 1)` and
         `(2, 0)` respectively. `(0, 1)` is the index slot 1 (the 2nd) of
         argument in position 0 (that is, `A_{\ldot j}`), and so on.
         """
         contraction_tuples = self._get_contraction_tuples()
-        dlinks = defaultdict(list)
+        dlinks = defaultdict(dict)
         for links in contraction_tuples:
             if len(links) > 2:
                 raise NotImplementedError("three or more axes contracted at the same time")
             (arg1, pos1), (arg2, pos2) = links
-            dlinks[arg1].append((arg2, pos2))
-            dlinks[arg2].append((arg1, pos1))
+            dlinks[arg1][pos1] = (arg2, pos2)
+            dlinks[arg2][pos2] = (arg1, pos1)
         return dict(dlinks)
 
     def _recognize_matrix_mul_lines(self, first_indices=None):
@@ -223,9 +222,11 @@ class CodegenArrayContraction(Basic):
 
         >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
         >>> from sympy.abc import i, j, k, l, N
-        >>> from sympy.codegen.array_utils import CodegenArrayContraction
+        >>> from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
+        >>> C = MatrixSymbol("C", N, N)
+        >>> D = MatrixSymbol("D", N, N)
 
         >>> expr = Sum(A[i, j]*B[j, k], (j, 0, N-1))
         >>> cg = CodegenArrayContraction.from_summation(expr)
@@ -254,6 +255,12 @@ class CodegenArrayContraction(Basic):
         >>> cg._recognize_matrix_mul_lines()
         [(None, None, [Trace(A)])]
 
+        Recognize some more complex traces:
+        >>> expr = Sum(A[i, j]*B[j, i], (i, 0, N-1), (j, 0, N-1))
+        >>> cg = CodegenArrayContraction.from_summation(expr)
+        >>> cg._recognize_matrix_mul_lines()
+        [(None, None, [Trace(A*B)])]
+
         More complicated expressions:
 
         >>> expr = Sum(A[i, j]*B[k, j]*A[l, k], (j, 0, N-1), (k, 0, N-1))
@@ -261,8 +268,8 @@ class CodegenArrayContraction(Basic):
         >>> cg._recognize_matrix_mul_lines()
         [(i, l, [A, B.T, A.T])]
 
-        Expressions constructed from matrix expressions do not contain literal indices,
-        the positions of free indices are returned instead:
+        Expressions constructed from matrix expressions do not contain literal
+        indices, the positions of free indices are returned instead:
 
         >>> expr = A*B
         >>> cg = CodegenArrayContraction.from_MatMul(expr)
@@ -270,6 +277,15 @@ class CodegenArrayContraction(Basic):
         {0: 0, 3: 3}
         >>> cg._recognize_matrix_mul_lines()
         [(0, 3, [A, B])]
+
+        If more than one line of matrix multiplications is detected, return
+        separate matrix multiplication factors:
+
+        >>> cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, B, C, D), (1, 2), (5, 6))
+        >>> cg._recognize_matrix_mul_lines()
+        [(0, 3, [A, B]), (4, 7, [C, D])]
+
+        The two lines have free indices at axes 0, 3 and 4, 7, respectively.
         """
         expr = self.expr
         if not isinstance(expr, CodegenArrayTensorProduct):
@@ -278,49 +294,58 @@ class CodegenArrayContraction(Basic):
             args = expr.args
         free_indices = self.free_indices
         dlinks = self._get_contraction_links()
-        # TODO: check that all elements have rank-2
-        if free_indices:
-            if first_indices:
-                first_index = first_indices[0]
-                starting_argind = free_indices.pop(first_index)
-            else:
-                first_index, starting_argind = min(free_indices.items(), key=lambda x: x[1])
-                free_indices.pop(first_index)
-            current_argind = starting_argind
-        else:
-            first_index = None
-            starting_argind = 0
-            current_argind = 0
-        current_argind, current_pos = self._mapping[current_argind]
-        starting_argind, starting_pos = self._mapping[starting_argind]
-        matmul_args = []
-        prev_argind = None
-        prev_pos = 0
-        last_index = None
-        while True:
-            elem = args[current_argind]
-            if current_pos != prev_pos:
-                elem = Transpose(elem)
-            matmul_args.append(elem)
-            if current_argind not in dlinks:
-                break
-            link_list = [(i, p) for i, p in dlinks.pop(current_argind) if i != prev_argind]
-            if len(link_list) == 0:
-                if free_indices:
-                    last_index = [i for i, j in free_indices.items() if self._mapping[j] == (current_argind, 1-current_pos)][0]
+        return_list = []
+        while dlinks:
+            if free_indices:
+                if first_indices:
+                    first_index = first_indices[0]
+                    starting_argind = free_indices.pop(first_index)
                 else:
-                    last_index = None
-                break
-            if len(link_list) != 1:
-                if len(link_list) != 2 and link_list[0][0] != link_list[1][0]:
+                    first_index, starting_argind = min(free_indices.items(), key=lambda x: x[1])
+                    free_indices.pop(first_index)
+                starting_argind, starting_pos = self._mapping[starting_argind]
+            else:
+                first_index = None
+                starting_argind = min(dlinks)
+                starting_pos = 0  #max(dlinks[starting_argind])
+            current_argind, current_pos = starting_argind, starting_pos
+            matmul_args = []
+            prev_argind = None
+            prev_pos = None
+            last_index = None
+            while True:
+                elem = args[current_argind]
+                if current_pos == 1:
+                    elem = Transpose(elem)
+                matmul_args.append(elem)
+                if current_argind not in dlinks:
+                    break
+                other_pos = 1 - current_pos
+                link_dict = dlinks.pop(current_argind)
+                if other_pos not in link_dict:
+                    if free_indices:
+                        last_index = [i for i, j in free_indices.items() if self._mapping[j] == (current_argind, other_pos)][0]
+                    else:
+                        last_index = None
+                    break
+                if len(link_dict) > 2:
                     raise NotImplementedError("not a matrix multiplication line")
-            prev_argind = current_argind
-            current_argind, current_pos = link_list[0]
-            if current_argind == starting_argind:
-                # This is a trace:
-                matmul_args = [Trace(*matmul_args)]
-                break
-        return [(first_index, last_index, matmul_args)]
+                prev_argind = current_argind
+                prev_pos = current_pos
+                # Get the last element of `link_list` as the next link. The last
+                # element is the correct start for trace expressions:
+                current_argind, current_pos = link_dict[other_pos]
+                if current_argind == starting_argind:
+                    # This is a trace:
+                    if len(matmul_args) > 1:
+                        matmul_args = [Trace(MatMul(*matmul_args, check=True))]
+                    else:
+                        matmul_args = [Trace(*matmul_args)]
+                    break
+            dlinks.pop(starting_argind, None)
+            free_indices.pop(last_index, None)
+            return_list.append((first_index, last_index, matmul_args))
+        return return_list
 
     @staticmethod
     def from_summation(summation):
@@ -390,6 +415,9 @@ class CodegenArrayContraction(Basic):
 
 
 class CodegenArrayTensorProduct(Basic):
+    r"""
+    Class to represent the tensor product of array-like objects.
+    """
     def __new__(cls, *args):
         args = [_sympify(arg) for arg in args]
         ranks = [cls.get_rank(arg) for arg in args]

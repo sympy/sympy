@@ -2,12 +2,15 @@ from sympy import symbols, IndexedBase
 from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
 from sympy import (MatrixSymbol, Sum)
 from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.matrices import Trace
 
 A, B = symbols("A B", cls=IndexedBase)
 i, j, k, l, m, n = symbols("i j k l m n")
 
 M = MatrixSymbol("M", k, k)
 N = MatrixSymbol("N", k, k)
+P = MatrixSymbol("P", k, k)
+Q = MatrixSymbol("Q", k, k)
 
 
 def test_codegen_array_contraction_construction():
@@ -46,3 +49,31 @@ def test_codegen_array_contraction_indices_types():
     indtup = cg._get_contraction_tuples()
     assert indtup == [[(0, 1), (2, 0)], [(1, 0), (2, 1)]]
     assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [(1, 4), (2, 5)]
+
+
+def test_codegen_array_recognize_matrix_mul_lines():
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(M), (0, 1))
+    assert cg._recognize_matrix_mul_lines() == [(None, None, [Trace(M)])]
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (0, 1), (2, 3))
+    assert cg._recognize_matrix_mul_lines() == [(None, None, [Trace(M)]), (None, None, [Trace(N)])]
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (0, 3), (1, 2))
+    assert cg._recognize_matrix_mul_lines() == [(None, None, [Trace(M*N)])]
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (0, 2), (1, 3))
+    assert cg._recognize_matrix_mul_lines() == [(None, None, [Trace(M*N.T)])]
+
+    cg = CodegenArrayContraction.from_summation((M*N*P)[i,j])
+    assert cg._recognize_matrix_mul_lines() == [(i, j, [M, N, P])]
+    cg = CodegenArrayContraction.from_MatMul(M*N*P)
+    assert cg._recognize_matrix_mul_lines() == [(0, 5, [M, N, P])]
+
+    cg = CodegenArrayContraction.from_summation((M*N.T*P)[i,j])
+    assert cg._recognize_matrix_mul_lines() == [(i, j, [M, N.T, P])]
+    cg = CodegenArrayContraction.from_MatMul(M*N.T*P)
+    assert cg._recognize_matrix_mul_lines() == [(0, 5, [M, N.T, P])]
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(M,N,P,Q), (1, 2), (5, 6))
+    assert cg._recognize_matrix_mul_lines() == [(0, 3, [M, N]), (4, 7, [P, Q])]
