@@ -934,7 +934,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
     '1st_power_series', 'lie_group',
-    'nth_linear_constant_coeff_homogeneous', 'nth_algebraic_Integral',
+    'nth_linear_constant_coeff_homogeneous',
+    'nth_linear_euler_eq_homogeneous', 'nth_algebraic_Integral',
     'separable_Integral', '1st_linear_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
