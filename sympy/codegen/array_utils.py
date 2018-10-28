@@ -50,7 +50,7 @@ class CodegenArrayContraction(Basic):
         return mapping, ranks
 
     def _get_contraction_tuples(self):
-        """
+        r"""
         Return tuples containing the argument index and position within the
         argument of the index position.
 
