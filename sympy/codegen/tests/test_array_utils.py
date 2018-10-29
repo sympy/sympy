@@ -158,6 +158,12 @@ def test_codegen_array_parse():
     assert _codegen_array_parse(expr) == (CodegenArrayElementwiseAdd(M, CodegenArrayPermuteDims(N, Permutation([1,0]))), (i, j))
     expr = M[i, j] + M[j, i]
     assert _codegen_array_parse(expr) == (CodegenArrayElementwiseAdd(M, CodegenArrayPermuteDims(M, Permutation([1,0]))), (i, j))
+    expr = (M*N*P)[i, j]
+    assert _codegen_array_parse(expr) == (CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P), (1, 2), (3, 4)), (i, j))
+    expr = expr.function  # Disregard summation in previous expression
+    ret1, ret2 =  _codegen_array_parse(expr)
+    assert ret1 == CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N, P), (1, 2), (3, 4))
+    assert str(ret2) == "(i, j, _i_1, _i_2)"
     expr = KroneckerDelta(i, j)*M[i, k]
     assert _codegen_array_parse(expr) == (M, ({i, j}, k))
     expr = KroneckerDelta(j, k)*(M[i, j]*N[k, l] + N[i, j]*M[k, l])
@@ -165,6 +171,9 @@ def test_codegen_array_parse():
             CodegenArrayTensorProduct(M, N),
             CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), Permutation(0, 2)(1, 3))
         ), (1, 2)), (i, l, frozenset({j, k})))
+    expr = M[i, i]
+    assert _codegen_array_parse(expr) == (CodegenArrayDiagonal(M, (0, 1)), (i,))
+
 
 def test_codegen_array_diagonal():
     cg = CodegenArrayDiagonal(M, (1, 0))
