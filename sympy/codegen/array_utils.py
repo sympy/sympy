@@ -551,7 +551,7 @@ class CodegenArrayDiagonal(Basic):
         if isinstance(expr, CodegenArrayDiagonal):
             return cls._flatten(expr, *diagonal_indices)
         obj = Basic.__new__(cls, expr, *diagonal_indices)
-        obj._mapping, obj._ranks = CodegenArrayContraction._get_mapping_from_contraction_indices(expr, *diagonal_indices)
+        _, obj._ranks = CodegenArrayContraction._get_mapping_from_contraction_indices(expr, *diagonal_indices)
         return obj
 
     @property
@@ -625,6 +625,7 @@ def _codegen_array_parse(expr):
         axes_contraction = defaultdict(list)
         flattened_indices = []
         held_back = []
+        # Check if there are KroneckerDelta objects:
         kronecker_delta_repl = {}
         for arg in args:
             if not isinstance(arg, KroneckerDelta):
@@ -634,7 +635,9 @@ def _codegen_array_parse(expr):
             kindices = frozenset(arg.indices)
             kronecker_delta_repl[i] = kindices
             kronecker_delta_repl[j] = kindices
-        args = [arg for arg in args if not isinstance(arg, KroneckerDelta)]
+        # Remove KroneckerDelta objects, their relations should be handled by
+        # CodegenArrayDiagonal:
+        args, indices = zip(*[(arg, loc_indices) for arg, loc_indices in zip(args, indices) if not isinstance(arg, KroneckerDelta)])
         for arg, loc_indices in zip(args, indices):
             for i, ind in enumerate(loc_indices):
                 ind = kronecker_delta_repl.get(ind, ind)

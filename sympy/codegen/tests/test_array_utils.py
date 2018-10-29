@@ -2,9 +2,10 @@ from sympy import symbols, IndexedBase
 from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayTensorProduct, CodegenArrayDiagonal,
         CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
-        _codegen_array_parse)
+        _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatAdd)
 from sympy import (MatrixSymbol, Sum)
 from sympy.combinatorics import Permutation
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices import Trace
 
@@ -157,7 +158,13 @@ def test_codegen_array_parse():
     assert _codegen_array_parse(expr) == (CodegenArrayElementwiseAdd(M, CodegenArrayPermuteDims(N, Permutation([1,0]))), (i, j))
     expr = M[i, j] + M[j, i]
     assert _codegen_array_parse(expr) == (CodegenArrayElementwiseAdd(M, CodegenArrayPermuteDims(M, Permutation([1,0]))), (i, j))
-
+    expr = KroneckerDelta(i, j)*M[i, k]
+    assert _codegen_array_parse(expr) == (M, ({i, j}, k))
+    expr = KroneckerDelta(j, k)*(M[i, j]*N[k, l] + N[i, j]*M[k, l])
+    assert _codegen_array_parse(expr) == (CodegenArrayDiagonal(CodegenArrayElementwiseAdd(
+            CodegenArrayTensorProduct(M, N),
+            CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), Permutation(0, 2)(1, 3))
+        ), (1, 2)), (i, l, frozenset({j, k})))
 
 def test_codegen_array_diagonal():
     cg = CodegenArrayDiagonal(M, (1, 0))
