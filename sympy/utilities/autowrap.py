@@ -77,12 +77,13 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import iterable
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
+from sympy.core import Basic
 from sympy.core.symbol import Dummy, Symbol
 from sympy.tensor.indexed import Idx, IndexedBase
 from sympy.utilities.codegen import (make_routine, get_code_generator,
                                      OutputArgument, InOutArgument,
                                      InputArgument, CodeGenArgumentListError,
-                                     Result, ResultBase, C99CodeGen)
+                                     Result, ResultBase, C99CodeGen, Routine)
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -130,8 +131,8 @@ class CodeWrapper:
     def include_empty(self):
         return bool(self.filepath)
 
-    def _generate_code(self, main_routine, routines):
-        routines.append(main_routine)
+    def _generate_code(self, main_routines, routines):
+        routines.extend(main_routines)
         self.generator.write(
             routines, self.filename, True, self.include_header,
             self.include_empty)
@@ -148,9 +149,9 @@ class CodeWrapper:
         os.chdir(workdir)
         try:
             sys.path.append(workdir)
-            self._generate_code(routine, helpers)
-            self._prepare_files(routine)
-            self._process_files(routine)
+            self._generate_code(routines, helpers)
+            self._prepare_files(routines)
+            self._process_files(routines)
             mod = __import__(self.module_name)
         finally:
             sys.path.remove(workdir)
@@ -163,9 +164,12 @@ class CodeWrapper:
                     # Could be some issues on Windows
                     pass
 
-        return self._get_wrapped_function(mod, routine.name)
+        if len(routines) == 1:
+            return self._get_wrapped_function(mod, routines[0].name)
+        else:
+            return mod
 
-    def _process_files(self, routine):
+    def _process_files(self, routines):
         command = self.command
         command.extend(self.flags)
         try:
@@ -188,31 +192,32 @@ def %(name)s():
 %(name)s.returns = "%(retvals)s"
 """
 
-    def _prepare_files(self, routine):
+    def _prepare_files(self, routines):
         return
 
-    def _generate_code(self, routine, helpers):
+    def _generate_code(self, routines, helpers):
         with open('%s.py' % self.module_name, 'w') as f:
-            printed = ", ".join(
-                [str(res.expr) for res in routine.result_variables])
-            # convert OutputArguments to return value like f2py
-            args = filter(lambda x: not isinstance(
-                x, OutputArgument), routine.arguments)
-            retvals = []
-            for val in routine.result_variables:
-                if isinstance(val, Result):
-                    retvals.append('nameless')
-                else:
-                    retvals.append(val.result_var)
+            for routine in routines:
+                printed = ", ".join(
+                    [str(res.expr) for res in routine.result_variables])
+                # convert OutputArguments to return value like f2py
+                args = filter(lambda x: not isinstance(
+                    x, OutputArgument), routine.arguments)
+                retvals = []
+                for val in routine.result_variables:
+                    if isinstance(val, Result):
+                        retvals.append('nameless')
+                    else:
+                        retvals.append(val.result_var)
 
-            print(DummyWrapper.template % {
-                'name': routine.name,
-                'expr': printed,
-                'args': ", ".join([str(a.name) for a in args]),
-                'retvals': ", ".join([str(val) for val in retvals])
-            }, end="", file=f)
+                print(DummyWrapper.template % {
+                    'name': routine.name,
+                    'expr': printed,
+                    'args': ", ".join([str(a.name) for a in args]),
+                    'retvals': ", ".join([str(val) for val in retvals])
+                }, end="", file=f)
 
-    def _process_files(self, routine):
+    def _process_files(self, routines):
         return
 
     @classmethod
@@ -312,14 +317,14 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         command = [sys.executable, "setup.py", "build_ext", "--inplace"]
         return command
 
-    def _prepare_files(self, routine, build_dir=os.curdir):
+    def _prepare_files(self, routines, build_dir=os.curdir):
         # NOTE : build_dir is used for testing purposes.
         pyxfilename = self.module_name + '.pyx'
         codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
 
         # pyx
         with open(os.path.join(build_dir, pyxfilename), 'w') as f:
-            self.dump_pyx([routine], f, self.filename)
+            self.dump_pyx(routines, f, self.filename)
 
         # setup.py
         ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
@@ -500,7 +505,7 @@ class F2PyCodeWrapper(CodeWrapper):
         command = [sys.executable, "-c", "import numpy.f2py as f2py2e;f2py2e.main()"]+args
         return command
 
-    def _prepare_files(self, routine):
+    def _prepare_files(self, routines):
         pass
 
     @classmethod
@@ -637,20 +642,27 @@ def autowrap(expr_or_routines, language=None, backend='f2py', tempdir=None, args
         if expr.has(expr_h):
             name_h = binary_function(name_h, expr_h, backend='dummy')
             expr = expr.subs(expr_h, name_h(*args_h))
-    try:
-        routine = code_gen.routine('autofunc', expr, args)
-    except CodeGenArgumentListError as e:
-        # if all missing arguments are for pure output, we simply attach them
-        # at the end and try again, because the wrappers will silently convert
-        # them to return values anyway.
-        new_args = []
-        for missing in e.missing_args:
-            if not isinstance(missing, OutputArgument):
-                raise
-            new_args.append(missing.name)
-        routine = code_gen.routine('autofunc', expr, args + new_args)
 
-    return code_wrapper.wrap_code(routine, helpers=helps)
+    if isinstance(expr_or_routines, Basic):
+        expr = expr_or_routines
+        try:
+            routines = [code_gen.routine('autofunc', expr, args, user_local_vars)]
+        except CodeGenArgumentListError as e:
+            # if all missing arguments are for pure output, we simply attach them
+            # at the end and try again, because the wrappers will silently convert
+            # them to return values anyway.
+            new_args = []
+            for missing in e.missing_args:
+                if not isinstance(missing, OutputArgument):
+                    raise
+                new_args.append(missing.name)
+            routines = [code_gen.routine('autofunc', expr, args + new_args)]
+    elif all(isinstance(routine, Routine) for routine in expr_or_routines):
+        routines = expr_or_routines
+        print(len(routines))
+    else:
+        raise ValueError("the first argument in autowrap must be an expression or a list of Routine")
+    return code_wrapper.wrap_code(routines, helpers=helps)
 
 
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
