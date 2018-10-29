@@ -18,7 +18,9 @@ from typing import Any, Dict, Tuple
 from functools import wraps
 from itertools import chain
 
-from sympy.core import S
+from sympy.core import S, Number
+from sympy.core.compatibility import string_types, range
+from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
     Assignment, Pointer, Variable, Declaration, Type,
     real, complex_, integer, bool_, float32, float64, float80,
@@ -405,7 +407,7 @@ class C89CodePrinter(CodePrinter):
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
         body = self._print(expr.body)
-        return ('for ({target} = {start}; {target} < {stop}; {target} += '
+        return ('for (int {target} = {start}; {target} < {stop}; {target} += '
                 '{step}) {{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
 
@@ -618,6 +620,40 @@ class C89CodePrinter(CodePrinter):
         return 'continue'
 
     _print_union = _print_struct
+
+
+# TODO Loic: Fix
+# class _C9XCodePrinter(object):
+#     # Move these methods to C99CodePrinter when removing CCodePrinter
+#     def _get_loop_opening_ending(self, indices):
+#         open_lines = []
+#         close_lines = []
+#         loopstart = "for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++){"  # C99
+#         for i in indices:
+#             # C arrays start at 0 and end at dimension-1
+#             if not isinstance(i, Number):
+#                 open_lines.append(loopstart % {
+#                     'var': self._print(i.label),
+#                     'start': self._print(i.lower),
+#                     'end': self._print(i.upper + 1)})
+#                 close_lines.append("}")
+#         return open_lines, close_lines
+
+
+# @deprecated(
+#     last_supported_version='1.0',
+#     useinstead="C89CodePrinter or C99CodePrinter, e.g. ccode(..., standard='C99')",
+#     issue=12220,
+#     deprecated_since_version='1.1')
+
+# class CCodePrinter(_C9XCodeC89CodePrinter):
+#     """
+#     Deprecated.
+
+#     Alias for C89CodePrinter, for backwards compatibility.
+#     """
+#     _kf = _known_functions_C9X  # known_functions-dict to copy
+
 
 class C99CodePrinter(C89CodePrinter):
     standard = 'C99'
