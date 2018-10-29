@@ -546,7 +546,7 @@ class CodegenArrayDiagonal(Basic):
     """
     def __new__(cls, expr, *diagonal_indices):
         expr = _sympify(expr)
-        diagonal_indices = [tuple(sorted(i)) for i in diagonal_indices]
+        diagonal_indices = [Tuple(*sorted(i)) for i in diagonal_indices]
         if isinstance(expr, CodegenArrayDiagonal):
             return cls._flatten(expr, *diagonal_indices)
         obj = Basic.__new__(cls, expr, *diagonal_indices)
@@ -640,9 +640,8 @@ def _codegen_array_parse(expr):
         flattened_indices = tuple(i for i in flattened_indices if i is not None)
         flattened_indices += tuple(held_back)
         if axes_contraction:
-            return CodegenArrayDiagonal(tp,
-                *[tuple(v) for v in axes_contraction.values()],
-            ), flattened_indices
+            return (CodegenArrayDiagonal(tp,
+                *[Tuple(*v) for v in axes_contraction.values()]), flattened_indices)
         else:
             return tp, flattened_indices
     if isinstance(expr, MatrixElement):
@@ -662,7 +661,7 @@ def _codegen_array_parse(expr):
         for i in range(1, len(args)):
             if set(indices[i]) != index0set:
                 raise NotImplementedError("indices must be the same")
-            permutation = Permutation([index0.index(i) for i in indices[i]])
+            permutation = Permutation([index0.index(j) for j in indices[i]])
             # Perform index permutations:
             args[i] = CodegenArrayPermuteDims(args[i], permutation)
         return CodegenArrayElementwiseAdd(*args), index0
