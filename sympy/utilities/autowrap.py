@@ -709,13 +709,13 @@ def autowrap(expr_or_routines, language=None, backend='f2py', tempdir=None, args
     for name_h, expr_h, args_h in helpers:
         helps.append(code_gen.routine(name_h, expr_h, args_h))
 
-    for name_h, expr_h, args_h in helpers:
-        if expr.has(expr_h):
-            name_h = binary_function(name_h, expr_h, backend='dummy')
-            expr = expr.subs(expr_h, name_h(*args_h))
 
     if isinstance(expr_or_routines, Basic):
         expr = expr_or_routines
+        for name_h, expr_h, args_h in helpers:
+            if expr.has(expr_h):
+                name_h = binary_function(name_h, expr_h, backend='dummy')
+                expr = expr.subs(expr_h, name_h(*args_h))
         try:
             routines = [code_gen.routine('autofunc', expr, args, user_local_vars)]
         except CodeGenArgumentListError as e:
