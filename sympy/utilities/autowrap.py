@@ -512,13 +512,83 @@ class F2PyCodeWrapper(CodeWrapper):
     def _get_wrapped_function(cls, mod, name):
         return getattr(mod, name)
 
+class PureCythonCodeWrapper(CodeWrapper):
+    @property
+    def command(self):
+        bld = open(self.filename + '.pyxbld', "w")
+        code = """
+def make_ext(modname, pyxfilename):
+    from distutils.extension import Extension
+
+    return Extension(name = modname,
+                     sources=[pyxfilename],
+                     extra_compile_args = ['-O3', '-w']
+                    )
+                    """
+        bld.write(code)
+        bld.close()
+        bld = open('build.py', 'w')
+        code = """
+import pyximport
+pyximport.install(build_dir=\'.\', inplace=True)
+import {module_name}
+        """.format(module_name=self.filename)
+        bld.write(code)
+        bld.close()
+
+        if not self.quiet:
+            print(open(self.filename + '.pyx').read())
+
+        command = [sys.executable, 'build.py']
+
+        return command
+
+    @property
+    def module_name(self):
+        return "%s_%s" % (self._filename, CodeWrapper._module_counter)
+
+    @property
+    def include_header(self):
+        return True
+
+    def _prepare_files(self, routines):
+        pass
+
+    @classmethod
+    def _get_wrapped_function(cls, mod, name):
+        return getattr(mod, name)
+
+class NumPyCodeWrapper(CodeWrapper):
+    @property
+    def command(self):
+        return []
+
+    def _prepare_files(self, routines):
+        pass
+
+    def _process_files(self, routines):
+        if not self.quiet:
+            print(open(self.filename + '.py').read())
+
+    @property
+    def module_name(self):
+        return "%s_%s" % (self._filename, CodeWrapper._module_counter)
+
+    @property
+    def include_header(self):
+        return True
+
+    @classmethod
+    def _get_wrapped_function(cls, mod, name):
+        return getattr(mod, name)
+
 
 # Here we define a lookup of backends -> tuples of languages. For now, each
 # tuple is of length 1, but if a backend supports more than one language,
 # the most preferable language is listed first.
-_lang_lookup = {'CYTHON': ('C99', 'C89', 'C'),
+_lang_lookup = {'CYTHON': ('C99', 'C89', 'C', 'CYTHON'),
                 'F2PY': ('F95',),
-                'NUMPY': ('C99', 'C89', 'C'),
+                'NUMPY': ('C99', 'C89', 'C', 'NUMPY'),
                 'DUMMY': ('F95',)}     # Dummy here just for testing
 
 
@@ -628,7 +698,8 @@ def autowrap(expr_or_routines, language=None, backend='f2py', tempdir=None, args
 
     CodeWrapperClass = {
         'F2PY': F2PyCodeWrapper,
-        'CYTHON': CythonCodeWrapper,
+        'CYTHON': PureCythonCodeWrapper if language.upper() == 'CYTHON' else CythonCodeWrapper,
+        'NUMPY': NumPyCodeWrapper,
         'DUMMY': DummyWrapper
     }[backend.upper()]
     code_wrapper = CodeWrapperClass(code_gen, tempdir, flags if flags else (),

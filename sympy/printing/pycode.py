@@ -5,7 +5,9 @@ This module contains python code printers for plain python as well as NumPy & Sc
 """
 from collections import defaultdict
 from itertools import chain
-from sympy.core import S
+from sympy.core import sympify, S
+from sympy.core import Add
+from sympy.core.compatibility import string_types
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
@@ -867,11 +869,114 @@ class NumPyPrinter(PythonCodePrinter):
     def _print_CodegenArrayElementwiseAdd(self, expr):
         return self._expand_fold_binary_op('numpy.add', expr.args)
 
+    def _print_Indexed(self, expr):
+        elem = []
+        for i in range(expr.rank):
+            e = expr.indices[i]
+            if isinstance(e, Add) and e.has(Idx):
+                lower = 0
+                upper = 0
+                for a in e.args:
+                    if isinstance(a, Idx):
+                        lower += a.lower
+                        upper += a.upper
+                    else:
+                        lower += a
+                        upper += a
+                elem.append("%s:%s"%(lower, upper))
+            else:
+                elem.append(self._print(expr.indices[i]))
+        return "%s[%s]" % (self._print(expr.base.label), ', '.join(elem))
+
+    def _print_Idx(self, expr):
+        return "%s:%s"%(expr.lower, expr.upper)
+
+    def _print_For(self, expr):
+        lines = []
+        for e in expr.body:
+            temp1, temp2, addlines = self.doprint(e)
+            if isinstance(addlines, str):
+                lines.append(addlines)
+            else:
+                lines += addlines
+        return "\n".join(lines)
+
+    def _print_Assignment(self, expr):
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.matrices.expressions.matexpr import MatrixSymbol
+        from sympy.matrices import MatrixBase, MatrixSlice
+        from sympy.tensor.indexed import IndexedBase
+        lhs = expr.lhs
+        rhs = expr.rhs
+        # We special case assignments that take multiple lines
+        if isinstance(expr.rhs, Piecewise):
+            # Here we modify Piecewise so each expression is now
+            # an Assignment, and then continue on the print.
+            expressions = []
+            conditions = []
+            for (e, c) in rhs.args:
+                expressions.append(Assignment(lhs, e))
+                conditions.append(c)
+            temp = Piecewise(*zip(expressions, conditions))
+            return self._print(temp)
+        #elif isinstance(lhs, MatrixSymbol):
+        elif isinstance(lhs, (MatrixBase, MatrixSymbol, MatrixSlice)):
+            # Here we form an Assignment for each element in the array,
+            # printing each one.
+            lines = []
+            for (i, j) in self._traverse_matrix_indices(lhs):
+                temp = Assignment(lhs[i, j], rhs[i, j])
+                code0 = self._print(temp)
+                lines.append(code0)
+            return "\n".join(lines)
+        else:
+            lhs_code = self._print(lhs)
+            rhs_code = self._print(rhs)
+            # hack to avoid the printing of m[i] = m[i]
+            if lhs_code == rhs_code:
+                return ""
+            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+
+    def indent_code(self, code):
+        """Accepts a string of code or a list of code lines"""
+
+        if isinstance(code, string_types):
+            code_lines = self.indent_code(code.splitlines(True))
+            return ''.join(code_lines)
+
+        tab = "    "
+        inc_token = (':', ":\n")
+        dec_token = ('end\n',)
+
+        code = [ line.lstrip(' \t') for line in code ]
+
+
+        increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
+        decrease = [ int(any(map(line.endswith, dec_token)))
+                     for line in code ]
+
+        pretty = []
+        level = 0
+        for n, line in enumerate(code):
+            if line == '' or line == '\n':
+                pretty.append(line)
+                continue
+            level -= decrease[n]
+            pretty.append("%s%s" % (tab*level, line))
+            level += increase[n]
+        return pretty
+
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported
     _print_fresnelc = CodePrinter._print_not_supported
     _print_fresnels = CodePrinter._print_not_supported
 
+    _print_Matrix = \
+        _print_DenseMatrix = \
+        _print_MutableDenseMatrix = \
+        _print_ImmutableMatrix = \
+        _print_ImmutableDenseMatrix = \
+        _print_MatrixBase
 
 for k in NumPyPrinter._kf:
     setattr(NumPyPrinter, '_print_%s' % k, _print_known_func)

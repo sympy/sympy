@@ -89,6 +89,8 @@ from sympy.core.compatibility import is_sequence, StringIO, string_types
 from sympy.printing.ccode import c_code_printers
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fcode import FCodePrinter
+from sympy.printing.pycode import NumPyPrinter
+from sympy.printing.cython import CythonCodePrinter
 from sympy.printing.julia import JuliaCodePrinter
 from sympy.printing.octave import OctaveCodePrinter
 from sympy.printing.rust import RustCodePrinter
@@ -1331,6 +1333,279 @@ class FCodeGen(CCodeGen):
     # functions it has to call.
     dump_fns = [dump_f95, dump_h]
 
+class CythonCodeGen(CodeGen):
+    """Generator for Cython code.
+
+    The .write() method inherited from CodeGen will output a code file <prefix>.pyx.
+
+    """
+
+    code_extension = "pyx"
+    has_inout_and_output = False
+
+    default_datatypes = {'int': 'int',
+                         'float': 'double'}
+
+    def __init__(self, project='project', printer=None, settings={}):
+        super(CythonCodeGen, self).__init__(project)
+        self.printer = printer or CythonCodePrinter(settings)
+
+    def _get_header(self):
+        print('header!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        code_lines = []
+        tmp = header_comment % {"version": sympy_version,
+            "project": self.project}
+        for line in tmp.splitlines():
+            if line == '':
+                code_lines.append("#\n")
+            else:
+                code_lines.append("#   %s\n" % line)
+        code_lines += ["#!python\n",
+                      "#cython: language_level=3\n",
+                      "#cython: boundscheck=False\n",
+                      "#cython: wraparound=False\n",
+                      "#cython: cdivision=True\n",
+                      "#cython: binding=True\n",
+                      "#import cython\n",
+                      "from libc.math cimport *\n",
+                     ]
+        return code_lines + ["\n\n"]
+
+    def _preprocessor_statements(self, prefix):
+
+        return []
+
+    def _get_routine_opening(self, routine):
+        """Returns the opening statements of the routine."""
+        code_list = []
+
+        export = True
+        # export = self.settings.pop('export', True)
+        if export:
+            code_list.append("def ")
+        else:
+            code_list.append("cdef void ")
+
+        # Inputs
+        args = []
+
+        for arg in routine.arguments:
+            if isinstance(arg, OutputArgument):
+                raise CodeGenError("Cython: invalid argument of type %s" %
+                                   str(type(arg)))
+
+            if isinstance(arg, (InputArgument, InOutArgument)):
+
+                name = self._get_symbol(arg.name)
+
+                if not arg.dimensions:
+                    # If it is a scalar
+                    if isinstance(arg, ResultBase):
+                        # if it is an output
+                        args.append("*%s %s" % (self._get_type(arg.datatype), name))
+                    else:
+                        # if it is an output
+                        args.append("%s %s" % (self._get_type(arg.datatype), name))
+                else:
+                    if not export and len(arg.dimensions) == 1:
+                        # if the dimension is 1
+                        args.append("*%s %s" % (self._get_type(arg.datatype), name))
+                    else:
+                        array_type = self._get_type(arg.datatype) + '[' + ', '.join([':']*len(arg.dimensions)) + ':1]'
+                        args.append("%s %s" % (array_type, name))
+            else:
+                raise CodeGenError("Unknown Argument type: %s" % type(arg))
+
+        args = ", ".join(args)
+        code_list.append("%s(%s)%s\n" % (routine.name, args, ":" if export else " nogil:"))
+        code_list = [ "".join(code_list) ]
+
+        return code_list
+
+    def _declare_arguments(self, routine):
+        return []
+
+    def _declare_globals(self, routine):
+        return []
+
+    def _declare_locals(self, routine):
+        args = []
+        for l in routine.idx_vars:
+            print(l)
+            args.append("cdef int %s\n" % self._get_symbol(l))
+
+        for g in routine.local_vars:
+            if isinstance(g, Symbol):
+                args.append("cdef double %s\n"%(self._get_symbol(g)))
+            else:
+                shape = [d for d in g.shape if d!=1]
+                args.append("cdef double %s[%s]\n"%(self._get_symbol(g), ','.join("%s"%s for s in shape)))
+        return ["".join(args)]
+
+    def _call_printer(self, routine):
+        code_lines = []
+
+        # Compose a list of symbols to be dereferenced in the function
+        # body. These are the arguments that were passed by a reference
+        # pointer, excluding arrays.
+        dereference = []
+        for arg in routine.arguments:
+            if isinstance(arg, ResultBase) and not arg.dimensions:
+                dereference.append(arg.name)
+
+        return_val = None
+        for result in routine.result_variables:
+            if isinstance(result, Result):
+                assign_to = result.name
+                t = self._get_type(result.datatype)
+                code_lines.append("{0} {1};\n".format(t, str(assign_to)))
+                return_val = assign_to
+
+        for statement in routine.statements:
+            expr = statement
+            if isinstance(statement, Equality):
+                expr = Assignment(statement.lhs, statement.rhs)
+
+            settings = routine.settings
+            settings.update(dict(human=False, dereference=dereference))
+            constants, not_c, c_expr = self._printer_method_with_settings(
+                'doprint', settings,
+                expr)
+
+            for name, value in sorted(constants, key=str):
+                code_lines.append("double const %s = %s;\n" % (name, value))
+            code_lines.append("%s\n" % c_expr)
+
+        return code_lines
+
+    def _get_routine_ending(self, routine):
+        return ["#end\n"]
+
+    def _indent_code(self, codelines):
+        p = CythonCodePrinter()
+        return p.indent_code(codelines)
+
+    def dump_pyx(self, routines, f, prefix, header=True, empty=True):
+        self.dump_code(routines, f, prefix, header, empty)
+
+    dump_pyx.extension = code_extension
+    dump_pyx.__doc__ = CodeGen.dump_code.__doc__
+
+    # This list of dump functions is used by CodeGen.write to know which dump
+    # functions it has to call.
+    dump_fns = [dump_pyx]
+
+class NumPyCodeGen(CodeGen):
+    """Generator for numpy code.
+
+    The .write() method inherited from CodeGen will output a code file
+    <prefix>.py.
+
+    """
+
+    code_extension = "py"
+    has_inout_and_output = False
+
+    def __init__(self, project='project', printer=None, settings={}):
+        super(NumPyCodeGen, self).__init__(project)
+        self.printer = printer or NumPyPrinter(settings)
+
+    def _get_header(self):
+        """Writes a common header for the generated files."""
+        code_lines = []
+        tmp = header_comment % {"version": sympy_version,
+            "project": self.project}
+        for line in tmp.splitlines():
+            if line == '':
+                code_lines.append("#\n")
+            else:
+                code_lines.append("#   %s\n" % line)
+        code_lines.append("import numpy")
+        return code_lines
+
+    def _preprocessor_statements(self, prefix):
+        return []
+
+    def _get_routine_opening(self, routine):
+        """Returns the opening statements of the routine."""
+        code_list = []
+        code_list.append("def ")
+
+        # Inputs
+        args = []
+        for i, arg in enumerate(routine.arguments):
+            if isinstance(arg, OutputArgument):
+                raise CodeGenError("NumPy: invalid argument of type %s" %
+                                   str(type(arg)))
+            if isinstance(arg, (InputArgument, InOutArgument)):
+                args.append("%s" % self._get_symbol(arg.name))
+        args = ", ".join(args)
+        code_list.append("%s(%s):\n" % (routine.name, args))
+        code_list = [ "".join(code_list) ]
+
+        return code_list
+
+    def _declare_arguments(self, routine):
+        return []
+
+    def _declare_globals(self, routine):
+        return []
+
+    def _declare_locals(self, routine):
+        return []
+
+    def _get_routine_ending(self, routine):
+        outs = []
+        for result in routine.results:
+            if isinstance(result, Result):
+                # Note: name not result_var; want `y` not `y[i]` for Indexed
+                s = self._get_symbol(result.name)
+            else:
+                raise CodeGenError("unexpected object in Routine results")
+            outs.append(s)
+        if outs:
+            return ["return " + ", ".join(outs) + "\n#end\n"]
+        else:
+            return ["#end\n"]
+
+    def _call_printer(self, routine):
+        declarations = []
+        code_lines = []
+        # for i, result in enumerate(routine.results):
+        for statement in routine.statements:
+            expr = statement
+            if isinstance(statement, Equality):
+                expr = Assignment(statement.lhs, statement.rhs)
+
+            constants, not_supported, py_expr = self._printer_method_with_settings(
+                'doprint', dict(human=False), expr)
+
+            for obj, v in sorted(constants, key=str):
+                declarations.append(
+                    "%s = %s\n" % (obj, v))
+            for obj in sorted(not_supported, key=str):
+                if isinstance(obj, Function):
+                    name = obj.func
+                else:
+                    name = obj
+                declarations.append(
+                    "# unsupported: %s\n" % (name))
+            code_lines.append("%s\n" % (py_expr))
+        return declarations + code_lines
+
+    def _indent_code(self, codelines):
+        p = NumPyPrinter()
+        return p.indent_code(codelines)
+
+    def dump_py(self, routines, f, prefix, header=True, empty=True):
+        self.dump_code(routines, f, prefix, header, empty)
+
+    dump_py.extension = code_extension
+    dump_py.__doc__ = CodeGen.dump_code.__doc__
+
+    # This list of dump functions is used by CodeGen.write to know which dump
+    # functions it has to call.
+    dump_fns = [dump_py]
 
 class JuliaCodeGen(CodeGen):
     """Generator for Julia code.
@@ -1786,6 +2061,8 @@ def get_code_generator(language, project=None, standard=None, printer = None, se
             language = 'C99'
     CodeGenClass = {"C": CCodeGen, "C89": C89CodeGen, "C99": C99CodeGen,
                     "F95": FCodeGen, "JULIA": JuliaCodeGen,
+                    "NUMPY": NumPyCodeGen,
+                    "CYTHON": CythonCodeGen,
                     "OCTAVE": OctaveCodeGen,
                     "RUST": RustCodeGen}.get(language.upper())
     if CodeGenClass is None:
