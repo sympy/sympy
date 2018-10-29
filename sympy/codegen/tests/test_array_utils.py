@@ -155,6 +155,8 @@ def test_codegen_array_parse():
     assert _codegen_array_parse(expr) == (CodegenArrayElementwiseAdd(M, N), (i, j))
     expr = M[i, j] + N[j, i]
     assert _codegen_array_parse(expr) == (CodegenArrayElementwiseAdd(M, CodegenArrayPermuteDims(N, Permutation([1,0]))), (i, j))
+    expr = M[i, j] + M[j, i]
+    assert _codegen_array_parse(expr) == (CodegenArrayElementwiseAdd(M, CodegenArrayPermuteDims(M, Permutation([1,0]))), (i, j))
 
 
 def test_codegen_array_diagonal():
@@ -163,3 +165,9 @@ def test_codegen_array_diagonal():
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N, P), (4, 1), (2, 0))
     assert cg == CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N, P), (1, 4), (0, 2))
+
+
+def test_codegen_recognize_matrix_expression():
+
+    expr = CodegenArrayElementwiseAdd(M, CodegenArrayPermuteDims(M, [1, 0]))
+    assert _recognize_matrix_expression(expr) == _RecognizeMatAdd([M, Trace(M)])

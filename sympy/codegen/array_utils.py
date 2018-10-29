@@ -5,7 +5,7 @@ from sympy.core.sympify import _sympify
 from sympy.core.mul import Mul
 from sympy.core.compatibility import accumulate, default_sort_key
 from sympy.combinatorics import Permutation
-from sympy.matrices.expressions import MatMul, Trace, Transpose
+from sympy.matrices.expressions import MatMul, Trace, Transpose, MatrixSymbol
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.tensor.array import NDimArray
@@ -508,7 +508,8 @@ class CodegenArrayPermuteDims(Basic):
         from sympy.combinatorics import Permutation
         expr = _sympify(expr)
         permutation = Permutation(permutation)
-        if permutation.index() == 0:
+        plist = permutation.args[0]
+        if plist == sorted(plist):
             return expr
         obj = Basic.__new__(cls, expr, permutation)
         return obj
@@ -624,8 +625,19 @@ def _codegen_array_parse(expr):
         axes_contraction = defaultdict(list)
         flattened_indices = []
         held_back = []
+        kronecker_delta_repl = {}
+        for arg in args:
+            if not isinstance(arg, KroneckerDelta):
+                continue
+            # Diagonalize two indices:
+            i, j = arg.indices
+            kindices = frozenset(arg.indices)
+            kronecker_delta_repl[i] = kindices
+            kronecker_delta_repl[j] = kindices
+        args = [arg for arg in args if not isinstance(arg, KroneckerDelta)]
         for arg, loc_indices in zip(args, indices):
             for i, ind in enumerate(loc_indices):
+                ind = kronecker_delta_repl.get(ind, ind)
                 if ind in flattened_indices:
                     other_pos = flattened_indices.index(ind)
                     if other_pos not in axes_contraction[ind]:
@@ -651,6 +663,7 @@ def _codegen_array_parse(expr):
     if isinstance(expr, IndexedBase):
         raise NotImplementedError
     if isinstance(expr, KroneckerDelta):
+        return expr, expr.indices
         raise NotImplementedError
     if isinstance(expr, Add):
         args, indices = zip(*[_codegen_array_parse(arg) for arg in expr.args])
@@ -666,3 +679,33 @@ def _codegen_array_parse(expr):
             args[i] = CodegenArrayPermuteDims(args[i], permutation)
         return CodegenArrayElementwiseAdd(*args), index0
     raise NotImplementedError("could not recognize expression %s" % expr)
+
+
+class _RecognizeMatAdd(list):
+    def __repr__(self):
+        return "_RecognizeMatAdd(%s)" % super(_RecognizeMatAdd, self).__repr__()
+
+class _RecognizeMatMul(list):
+    pass
+
+def _recognize_matrix_expression(expr):
+    # TODO: expr has to be a CodegenArray... type
+    if isinstance(expr, CodegenArrayContraction):
+        return expr._recognize_addition_of_mul_lines()
+    elif isinstance(expr, CodegenArrayElementwiseAdd):
+        add_args = _RecognizeMatAdd()
+        for arg in expr.args:
+            add_args.append(_recognize_matrix_expression(arg))
+            #if isinstance(arg, MatrixSymbol):
+                #add_args.append(arg)
+        return add_args
+    elif isinstance(expr, (MatrixSymbol, IndexedBase)):
+        return expr
+    elif isinstance(expr, CodegenArrayPermuteDims):
+        if expr.permutation.args[0] == [1, 0]:
+            return Trace(expr.expr)
+        else:
+            raise NotImplementedError
+    elif isinstance(expr, CodegenArrayTensorProduct):
+        pass
+    raise NotImplementedError

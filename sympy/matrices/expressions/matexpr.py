@@ -215,6 +215,7 @@ class MatrixExpr(Expr):
             return Sum(x.args[0], (di, 0, x.args[0].shape[0]-1))
         M = M.replace(lambda x: isinstance(x, Trace), getsum)
 
+        print("Input: ", M, "\n\n")
         repl = {}
         if self.shape[0] == 1:
             repl[i] = 0
@@ -231,6 +232,7 @@ class MatrixExpr(Expr):
         if len(repl) < 2:
             parsed = res
         else:
+            print(res, "\n\n")
             if m not in repl:
                 parsed = MatrixExpr.from_index_summation(res, m)
             elif i not in repl:
