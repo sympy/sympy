@@ -217,9 +217,9 @@ class CodePrinter(StrPrinter):
         # support broadcast of scalar
         if linds and not rinds:
             rinds = linds
-        if rinds != linds:
-            raise ValueError("lhs indices must match non-dummy"
-                    " rhs indices in %s" % expr)
+        # if rinds != linds:
+        #     raise ValueError("lhs indices must match non-dummy"
+        #             " rhs indices in %s" % expr)
 
         return self._sort_optimized(rinds, assign_to)
 
@@ -304,9 +304,11 @@ class CodePrinter(StrPrinter):
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
+        from sympy.matrices import MatrixBase, MatrixSlice
         from sympy.tensor.indexed import IndexedBase
         lhs = expr.lhs
         rhs = expr.rhs
+
         # We special case assignments that take multiple lines
         if isinstance(expr.rhs, Piecewise):
             # Here we modify Piecewise so each expression is now
@@ -318,7 +320,7 @@ class CodePrinter(StrPrinter):
                 conditions.append(c)
             temp = Piecewise(*zip(expressions, conditions))
             return self._print(temp)
-        elif isinstance(lhs, MatrixSymbol):
+        elif isinstance(lhs, (MatrixBase, MatrixSymbol, MatrixSlice)):
             # Here we form an Assignment for each element in the array,
             # printing each one.
             lines = []
