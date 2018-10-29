@@ -6,8 +6,8 @@ from .companion import CompanionMatrix
 from .funcmatrix import FunctionMatrix
 from .inverse import Inverse
 from .matadd import MatAdd
-from .matexpr import (Identity, MatrixExpr, MatrixSymbol, ZeroMatrix, OneMatrix,
-                      matrix_symbols)
+from .matexpr import (Identity, MatrixExpr, MatrixElement, MatrixSymbol, ZeroMatrix,
+                      OneMatrix, matrix_symbols)
 from .matmul import MatMul
 from .matpow import MatPow
 from .trace import Trace, trace
