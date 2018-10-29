@@ -2224,7 +2224,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     routines = []
     for name, expr in name_expr:
         routines.append(code_gen.routine(name, expr, argument_sequence,
-                                         global_vars))
+                                         global_vars=global_vars))
 
     # Write the code.
     return code_gen.write(routines, prefix, to_files, header, empty)
