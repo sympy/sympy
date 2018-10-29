@@ -1,7 +1,7 @@
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.core.compatibility import StringIO
 from sympy import erf, Integral, Symbol
-from sympy import Equality
+from sympy import Equality, Range, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import (
     codegen, make_routine, CCodeGen, C89CodeGen, C99CodeGen, InputArgument,
@@ -9,6 +9,7 @@ from sympy.utilities.codegen import (
     InOutArgument)
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
+from sympy.codegen.ast import For, Assignment
 
 #FIXME: Fails due to circular import in with core
 # from sympy import codegen
@@ -597,6 +598,26 @@ def test_ccode_unused_array_arg():
         '   double test_result;\n'
         '   test_result = 1.0;\n'
         '   return test_result;\n'
+        '}\n'
+    )
+    assert source == expected
+
+def test_c_for():
+    n = symbols('n', integer=True)
+    i = Idx('i', n)
+    x = MatrixSymbol('x', 5, 1)
+    y = MatrixSymbol('y', 5, 1)
+    name_expr = ("test", [For(i, Range(0, 5), [Assignment(y[i, 0], x[i, 0])])]),
+    result = codegen(name_expr, "c99", "test", header=False, empty=False)
+    source = result[0][1]
+    print(source)
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(int n, double *y, double *x) {\n'
+        '   for (int i = 0; i < 5; i += 1) {\n'
+        '      y[i] = x[i];\n'
+        '   }\n'
         '}\n'
     )
     assert source == expected

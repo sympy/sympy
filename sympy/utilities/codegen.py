@@ -94,7 +94,7 @@ from sympy.printing.octave import OctaveCodePrinter
 from sympy.printing.rust import RustCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
-                            MatrixExpr, MatrixSlice)
+                            MatrixExpr, MatrixSlice, MatrixElement)
 
 
 __all__ = [
@@ -582,27 +582,52 @@ class CodeGen:
                     new_expr.append(expr)
                     out_arg = expr.lhs
                     expr = expr.rhs
-                    symbol = out_arg
                     if isinstance(out_arg, Indexed):
-                        dims = tuple([ (S.One, dim) for dim in out_arg.shape])
+                        dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
                         symbol = out_arg.base.label
-                        output_args.append(
-                                InOutArgument(symbol, out_arg, expr, dimensions=dims))
-                    if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
+                    elif isinstance(out_arg, Symbol):
+                        dims = []
+                        symbol = out_arg
+                    elif isinstance(out_arg, MatrixSymbol):
+                        dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
+                        symbol = out_arg
+                    elif isinstance(expr, MatrixBase):
+                        for i in range(expr.shape[0]):
+                            symbol = expr[i].base.label
+                            dims = tuple([ (S.Zero, dim - 1) for dim in expr[i].base.shape if dim != 1])
+                    elif isinstance(expr, MatrixSlice):
+                        symbol = expr.parent
+                        dims = tuple([ (S.Zero, dim - 1) for dim in symbol.shape if dim != 1])
+                    elif isinstance(expr, MatrixElement):
+                        symbol = expr.parent
+                        dims = tuple([ (S.Zero, dim - 1) for dim in symbol.shape if dim != 1])
+                    else:
                         raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
                                         "can define output arguments.")
 
-                    r = Result(expr, symbol)
-                    return_index += 1
-                    return_val.append(r)
+                    if symbol in symbols:
+                        if self.has_inout_and_output:
+                            if expr.has(symbol):
+                                output_args.append(
+                                    InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                            else: #loic: comment for julia
+                                output_args.append(
+                                    OutputArgument(symbol, out_arg, expr, dimensions=dims))
+                        else:
+                                output_args.append(
+                                    InOutArgument(symbol, out_arg, expr, dimensions=dims))
 
-                    if not expr.has(symbol):
-                        # this is a pure output: remove from the symbols list, so
-                        # it doesn't become an input.
                         symbols.remove(symbol)
                 elif isinstance(expr, For): # we should add all the classes which have a CodeBlock
                     body = extract(expr.body.args, return_index)
                     new_expr.append(For(expr.target, expr.iterable, body))
+                elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
+                    new_expr.append(expr)
+                    # Create a "dummy" MatrixSymbol to use as the Output arg
+                    out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
+                    dims = tuple([(S.Zero, dim - 1) for dim in out_arg.shape])
+                    output_args.append(
+                        OutputArgument(out_arg, out_arg, expr, dimensions=dims))
                 else:
                     r = Result(expr, 'out' + str(return_index))
                     return_index += 1
