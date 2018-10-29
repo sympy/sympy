@@ -392,7 +392,7 @@ class CythonCodePrinter(CodePrinter):
         increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
         decrease = [ int(any(map(line.endswith, dec_token)))
                      for line in code ]
-        
+
         pretty = []
         level = 0
         for n, line in enumerate(code):
