@@ -188,21 +188,6 @@ class CythonCodePrinter(CodePrinter):
         rows, cols = mat.shape
         return ((i, j) for i in range(rows) for j in range(cols))
 
-    # def _get_loop_opening_ending(self, indices):
-    #     from sympy.tensor.indexed import Idx
-
-    #     open_lines = []
-    #     close_lines = []
-    #     for i in indices:
-    #         # Cython arrays start at 0 and end at dimension-1
-    #         if isinstance(i, Idx):
-    #             var, start, stop = map(self._print,
-    #                 [i.label, i.lower, i.upper + 1])
-    #             open_lines.append('for %s in range(%s, %s):' % (var, start, stop))
-    #             close_lines.append("#end\n")
-    #     return open_lines, close_lines
-        
-
     def _print_Pow(self, expr):
         if "Pow" in self.known_functions:
             return self._print_Function(expr)
