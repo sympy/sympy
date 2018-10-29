@@ -537,8 +537,8 @@ def _validate_backend_language(backend, language):
 
 @cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
-def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
-             flags=None, verbose=False, helpers=None, code_gen=None, **kwargs):
+def autowrap(expr_or_routines, language=None, backend='f2py', tempdir=None, args=None,
+             flags=None, verbose=False, helpers=None, code_gen=None, user_local_vars=None, settings={}, **kwargs):
     """Generates python callable binaries based on the math expression.
 
     Parameters
@@ -619,7 +619,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     args = list(args) if iterable(args, exclude=set) else args
 
     if code_gen is None:
-        code_gen = get_code_generator(language, "autowrap")
+        code_gen = get_code_generator(language, "autowrap", settings=settings)
 
     CodeWrapperClass = {
         'F2PY': F2PyCodeWrapper,
