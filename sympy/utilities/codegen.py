@@ -82,6 +82,8 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 import os
 import textwrap
 
+from collections import OrderedDict
+
 from sympy import __version__ as sympy_version
 from sympy.codegen import For, Assignment
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
@@ -503,7 +505,7 @@ class CodeGen:
 
     printer = None  # will be set to an instance of a CodePrinter subclass
     default_datatypes = None
-    has_inout_and_output = True
+    has_output = True
 
     def _indent_code(self, codelines):
         return self.printer.indent_code(codelines)
@@ -558,7 +560,8 @@ class CodeGen:
                 common, simplified = cse(expr)
                 expr = simplified
 
-        local_vars = [Result(b,a) for a,b in common]
+        # TODO Loic: remove ordereddict ?
+        local_vars = OrderedDict([(Result(b,a), None) for a,b in common])
         local_symbols = {a for a,_ in common}
         local_expressions = Tuple(*[b for _,b in common])
         return local_vars, local_symbols, local_expressions, expr
@@ -611,7 +614,7 @@ class CodeGen:
                                         "can define output arguments.")
 
                     if symbol in symbols:
-                        if self.has_inout_and_output:
+                        if self.has_output:
                             if expr.has(symbol):
                                 output_args.append(
                                     InOutArgument(symbol, out_arg, expr, dimensions=dims))
@@ -619,8 +622,13 @@ class CodeGen:
                                 output_args.append(
                                     OutputArgument(symbol, out_arg, expr, dimensions=dims))
                         else:
+                            if expr.has(symbol):
                                 output_args.append(
                                     InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                            if isinstance(out_arg, Indexed):
+                                output_args.append(
+                                    InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                            return_val.append(Result(expr, name=symbol, result_var=out_arg))
 
                     # remove duplicate arguments when they are not local variables
                     if symbol not in local_vars:
@@ -630,12 +638,17 @@ class CodeGen:
                     body = extract(expr.body.args, return_index)
                     new_expr.append(For(expr.target, expr.iterable, body))
                 elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
-                    new_expr.append(expr)
                     # Create a "dummy" MatrixSymbol to use as the Output arg
-                    out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
+                    out_arg = MatrixSymbol('out' + str(return_index), *expr.shape)
+                    return_index += 1
+                    new_expr.append(Assignment(out_arg, expr))
                     dims = tuple([(S.Zero, dim - 1) for dim in out_arg.shape])
-                    output_args.append(
-                        OutputArgument(out_arg, out_arg, expr, dimensions=dims))
+                    if self.has_output:
+                        output_args.append(
+                            OutputArgument(out_arg, out_arg, expr, dimensions=dims))
+                    else:
+                        return_val.append(Result(expr, name=out_arg.name, result_var=out_arg))
+
                 else:
                     r = Result(expr, 'out' + str(return_index))
                     return_index += 1
@@ -683,12 +696,13 @@ class CodeGen:
         else:
             expressions = Tuple(expr)
 
+        idx_vars = {i.label for i in expressions.atoms(Idx)}
+
         if self.cse:
             if {i.label for i in expressions.atoms(Idx)} != set():
                 raise CodeGenError("CSE and Indexed expressions do not play well together yet")
         else:
             # local variables for indexed expressions
-            idx_vars = {i.label for i in expressions.atoms(Idx)}
             local_vars = set()
             local_symbols = idx_vars.copy()
 
@@ -970,7 +984,7 @@ class CCodeGen(CodeGen):
         for g in routine.local_vars:
             if isinstance(g, Symbol):
                 code_lines.append("double %s;\n"%(self._get_symbol(g)))
-            else:
+            elif not isinstance(g, Result):
                 shape = [d for d in g.shape if d!=1]
                 code_lines.append("double %s[%s];\n"%(self._get_symbol(g), ','.join("%s"%s for s in shape)))
 
@@ -1216,6 +1230,10 @@ class FCodeGen(CCodeGen):
 
     def _declare_locals(self, routine):
         code_list = []
+        for var in sorted(routine.idx_vars, key=str):
+            typeinfo = self._get_type(get_default_datatype(var))
+            code_list.append("%s :: %s\n" % (
+                typeinfo, self._get_symbol(var)))
         for var in sorted(routine.local_vars, key=str):
             typeinfo = self._get_type(get_default_datatype(var))
             code_list.append("%s :: %s\n" % (
@@ -1341,7 +1359,7 @@ class CythonCodeGen(CodeGen):
     """
 
     code_extension = "pyx"
-    has_inout_and_output = False
+    has_output = False
 
     default_datatypes = {'int': 'int',
                          'float': 'double'}
@@ -1504,7 +1522,7 @@ class NumPyCodeGen(CodeGen):
     """
 
     code_extension = "py"
-    has_inout_and_output = False
+    has_output = False
 
     def __init__(self, project='project', printer=None, settings={}):
         super(NumPyCodeGen, self).__init__(project)
@@ -1616,7 +1634,7 @@ class JuliaCodeGen(CodeGen):
     """
 
     code_extension = "jl"
-    has_inout_and_output = False
+    has_output = False
 
     def __init__(self, project='project', printer=None, settings={}):
         super().__init__(project)
@@ -1924,6 +1942,8 @@ class RustCodeGen(CodeGen):
     default_datatypes = {'int': 'i32',
                          'float': 'f64'}
 
+    has_output = False
+
     def __init__(self, project="project", printer=None, settings={}):
         super().__init__(project=project)
         self.printer = printer or RustCodePrinter(settings)
@@ -1960,7 +1980,7 @@ class RustCodeGen(CodeGen):
         type_args = []
         for arg in routine.arguments:
             name = self.printer.doprint(arg.name)
-            if arg.dimensions or isinstance(arg, ResultBase):
+            if arg.dimensions:# or isinstance(arg, ResultBase):
                 type_args.append(("*%s" % name, self._get_type(arg.datatype)))
             else:
                 type_args.append((name, self._get_type(arg.datatype)))

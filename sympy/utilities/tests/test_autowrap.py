@@ -87,7 +87,7 @@ def test_cython_wrapper_inoutarg():
 def test_cython_wrapper_compile_flags():
     from sympy import Equality
     x, y, z = symbols('x,y,z')
-    routine = make_routine("test", Equality(z, x + y))
+    routine = [make_routine("test", Equality(z, x + y))]
 
     code_gen = CythonCodeWrapper(CCodeGen())
 

@@ -212,9 +212,9 @@ def test_output_arg_mixed_unordered():
         "fn foo(x: f64) -> (f64, f64, f64, f64) {\n"
         "    let out1 = (2*x).cos();\n"
         "    let y = x.sin();\n"
-        "    let out3 = x.cos();\n"
+        "    let out2 = x.cos();\n"
         "    let a = (2*x).sin();\n"
-        "    (out1, y, out3, a)\n"
+        "    (out1, y, out2, a)\n"
         "}\n"
     )
     assert source == expected
@@ -350,7 +350,7 @@ def test_InOutArgument_order():
     result, = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
     expected = (
-        "fn test(x: f64, y: f64) -> f64 {\n"
+        "fn test(y: f64, x: f64) -> f64 {\n"
         "    let x = x.powi(2) + y;\n"
         "    x\n"
         "}\n"

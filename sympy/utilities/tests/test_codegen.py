@@ -1360,24 +1360,20 @@ def test_fcode_matrix_output():
     result = codegen(name_expr, "f95", "test", header=False, empty=False)
     source = result[0][1]
     expected = (
-        "REAL*8 function test(x, y, z, out_%(hash)s)\n"
+        "REAL*8 function test(x, y, z, out%(number)s)\n"
         "implicit none\n"
         "REAL*8, intent(in) :: x\n"
         "REAL*8, intent(in) :: y\n"
         "REAL*8, intent(in) :: z\n"
-        "REAL*8, intent(out), dimension(1:2, 1:2) :: out_%(hash)s\n"
-        "out_%(hash)s(1, 1) = x\n"
-        "out_%(hash)s(2, 1) = z\n"
-        "out_%(hash)s(1, 2) = y\n"
-        "out_%(hash)s(2, 2) = 16\n"
+        "REAL*8, intent(out), dimension(1:2, 1:2) :: out%(number)s\n"
+        "out%(number)s(1, 1) = x\n"
+        "out%(number)s(2, 1) = z\n"
+        "out%(number)s(1, 2) = y\n"
+        "out%(number)s(2, 2) = 16\n"
         "test = x + y\n"
         "end function\n"
     )
-    # look for the magic number
-    a = source.splitlines()[5]
-    b = a.split('_')
-    out = b[1]
-    expected = expected % {'hash': out}
+    expected = expected % {'number': 2}
     assert source == expected
 
 
@@ -1448,19 +1444,15 @@ def test_fcode_matrixsymbol_slice_autoname():
     result = codegen(name_expr, "f95", "test", header=False, empty=False)
     source = result[0][1]
     expected = (
-        "subroutine test(A, out_%(hash)s)\n"
+        "subroutine test(A, out%(number)s)\n"
         "implicit none\n"
         "REAL*8, intent(in), dimension(1:2, 1:3) :: A\n"
-        "REAL*8, intent(out), dimension(1:2, 1:1) :: out_%(hash)s\n"
-        "out_%(hash)s(1, 1) = A(1, 2)\n"
-        "out_%(hash)s(2, 1) = A(2, 2)\n"
+        "REAL*8, intent(out), dimension(1:2, 1:1) :: out%(number)s\n"
+        "out%(number)s(1, 1) = A(1, 2)\n"
+        "out%(number)s(2, 1) = A(2, 2)\n"
         "end subroutine\n"
     )
-    # look for the magic number
-    a = source.splitlines()[3]
-    b = a.split('_')
-    out = b[1]
-    expected = expected % {'hash': out}
+    expected = expected % {'number': 1}
     assert source == expected
 
 

@@ -205,9 +205,9 @@ def test_jl_output_arg_mixed_unordered():
         'function foo(x)\n'
         '    out1 = cos(2*x)\n'
         '    y = sin(x)\n'
-        '    out3 = cos(x)\n'
+        '    out2 = cos(x)\n'
         '    a = sin(2*x)\n'
-        '    return out1, y, out3, a\n'
+        '    return out1, y, out2, a\n'
         'end\n'
     )
     assert source == expected
@@ -458,10 +458,10 @@ def test_jl_matrixsymbol_slice_autoname():
     expected = (
         "function test(A)\n"
         "    B = A[1,:]\n"
-        "    out2 = A[2,:]\n"
-        "    out3 = A[:,1]\n"
-        "    out4 = A[:,2]\n"
-        "    return B, out2, out3, out4\n"
+        "    out1 = A[2,:]\n"
+        "    out2 = A[:,1]\n"
+        "    out3 = A[:,2]\n"
+        "    return B, out1, out2, out3\n"
         "end\n"
     )
     assert source == expected
@@ -569,7 +569,7 @@ def test_jl_InOutArgument_order():
     result, = codegen(name_expr, "Julia", header=False, empty=False)
     source = result[1]
     expected = (
-        "function test(x, y)\n"
+        "function test(y, x)\n"
         "    x = x.^2 + y\n"
         "    return x\n"
         "end\n"
