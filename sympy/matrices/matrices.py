@@ -2598,18 +2598,21 @@ class MatrixBase(MatrixDeprecated,
         >>> v = [3, 2, 1]
         >>> M.row(0).dot(v)
         10
-        >>> q = Matrix([1j, 1j, 1j])
+
+        >>> from sympy import I
+        >>> q = Matrix([1*I, 1*I, 1*I])
         >>> q.dot(q, hermitian=False)
-        -3.00000000000000
+        -3
 
         >>> q.dot(q, hermitian=True)
-        3.00000000000000
+        3
 
-        >>> q1 = Matrix([1, 1, 1j])
+        >>> q1 = Matrix([1, 1, 1*I])
         >>> q.dot(q1, hermitian=True, conjugate_convention="maths")
-        1.0 - 2.0*I
+        1 - 2*I
         >>> q.dot(q1, hermitian=True, conjugate_convention="physics")
-        1.0 + 2.0*I
+        1 + 2*I
+
 
         See Also
         ========
@@ -2654,9 +2657,9 @@ class MatrixBase(MatrixDeprecated,
         # is true but no conjugate_convention is not passed then
         # automatically set it to "maths"
 
-        if (conjugate_convention != None) and (hermitian == None):
+        if (conjugate_convention is not None) and (hermitian is None):
             hermitian = True
-        if (hermitian == True) and (conjugate_convention == None):
+        if (hermitian == True) and (conjugate_convention is None):
             conjugate_convention = "maths"
 
         if hermitian == True:
