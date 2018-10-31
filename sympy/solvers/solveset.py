@@ -19,7 +19,7 @@ from sympy.core.containers import Tuple
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log, _mexpand)
+                                expand_log, _mexpand, expand)
 from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
@@ -37,7 +37,7 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
 from sympy.sets.sets import Set
 from sympy.matrices import Matrix, MatrixBase
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
-                         RootOf, factor)
+                         RootOf, factor, PolificationFailed)
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -506,6 +506,11 @@ def _solve_as_rational(f, symbol, domain):
             # coefficients in a ring over which finding roots
             # isn't implemented yet, e.g. ZZ[a] for some symbol a
             return ConditionSet(symbol, Eq(f, 0), domain)
+        except PolificationFailed as e:
+            g = expand(g)
+            if g.is_number:
+                return _solveset(g, symbol, domain)
+            raise e
     else:
         valid_solns = _solveset(g, symbol, domain)
         invalid_solns = _solveset(h, symbol, domain)
@@ -1657,7 +1662,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     if not isinstance(f, (Expr, Number)):
         raise ValueError("%s is not a valid SymPy expression" % f)
 
-    if not isinstance(symbol, Expr) and  symbol is not None:
+    if not isinstance(symbol, Expr) and symbol is not None:
         raise ValueError("%s is not a valid SymPy symbol" % symbol)
 
     if not isinstance(domain, Set):
