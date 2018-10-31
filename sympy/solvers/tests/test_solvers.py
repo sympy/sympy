@@ -1990,3 +1990,10 @@ def test_issue_15307():
     eq1 = Eq(12513*x + 2*y - 219093, -5726*x - y)
     eq2 = Eq(-2*x + 8, 2*x - 40)
     assert solve([eq1, eq2]) == {x:12, y:75}
+
+def test_issue_15415():
+    assert solve(x - 3, x) == [3]
+    assert solve([x - 3], x) == {x:3}
+    assert solve(Eq(y + 3*x**2/2, y + 3*x), y) == []
+    assert solve([Eq(y + 3*x**2/2, y + 3*x)], y) == []
+    assert solve([Eq(y + 3*x**2/2, y + 3*x), Eq(x, 1)], y) == []

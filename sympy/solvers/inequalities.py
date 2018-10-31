@@ -713,7 +713,7 @@ def _solve_inequality(ie, s, linear=False):
     is never True or always True, respectively.
 
     If `linear` is True (default is False) an `s`-dependent expression
-    will be isoloated on the left, if possible
+    will be isolated on the left, if possible
     but it will not be solved for `s` unless the expression is linear
     in `s`. Furthermore, only "safe" operations which don't change the
     sense of the relationship are applied: no division by an unsigned
@@ -758,7 +758,7 @@ def _solve_inequality(ie, s, linear=False):
     >>> f(x*y < 1, x)
     x*y < 1
 
-    And while an equality (or unequality) still holds after dividing by a
+    And while an equality (or inequality) still holds after dividing by a
     non-zero quantity
 
     >>> nz = Symbol('nz', nonzero=True)

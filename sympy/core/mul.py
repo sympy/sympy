@@ -274,7 +274,10 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif isinstance(o, MatrixExpr):
-                coeff = o.__mul__(coeff)
+                if isinstance(coeff, MatrixExpr):
+                    coeff *= o
+                else:
+                    coeff = o.__mul__(coeff)
                 continue
 
             elif o is S.ComplexInfinity:

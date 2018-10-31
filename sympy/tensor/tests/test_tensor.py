@@ -1,4 +1,4 @@
-from sympy import Matrix, eye, Integer, expand
+from sympy import Matrix, eye, Integer, expand, Indexed, Sum
 from sympy.combinatorics import Permutation
 from sympy.core import S, Rational, Symbol, Basic, Add
 from sympy.core.containers import Tuple
@@ -161,6 +161,14 @@ def test_canonicalize_no_dummies():
     t = A(c, a)*A(b, d)
     tc = t.canon_bp()
     assert str(tc) == 'A(a, c)*A(b, d)'
+
+def test_tensorhead_construction_without_symmetry():
+    L = Lorentz = TensorIndexType('Lorentz')
+    A1 = tensorhead('A', [L, L])
+    A2 = tensorhead('A', [L, L], [[1], [1]])
+    assert A1 == A2
+    A3 = tensorhead('A', [L, L], [[1, 1]])  # Symmetric
+    assert A1 != A3
 
 def test_no_metric_symmetry():
     # no metric symmetry; A no symmetry
@@ -1984,3 +1992,29 @@ def test_tensor_replacement():
     expr = U(u1)*U(-u2)
     repl = {U(u1): [[1]]}
     raises(ValueError, lambda: expr.replace_with_arrays(repl, [u1, -u2]))
+
+
+def test_rewrite_tensor_to_Indexed():
+    L = TensorIndexType("L", dim=4)
+    A = tensorhead("A", [L, L, L, L], [[1], [1], [1], [1]])
+    B = tensorhead("B", [L], [[1]])
+
+    i0, i1, i2, i3 = symbols("i0:4")
+    L_0, L_1 = symbols("L_0:2")
+
+    a1 = A(i0, i1, i2, i3)
+    assert a1.rewrite(Indexed) == Indexed(Symbol("A"), i0, i1, i2, i3)
+
+    a2 = A(i0, -i0, i2, i3)
+    assert a2.rewrite(Indexed) == Sum(Indexed(Symbol("A"), L_0, L_0, i2, i3), (L_0, 0, 3))
+
+    a3 = a2 + A(i2, i3, i0, -i0)
+    assert a3.rewrite(Indexed) == \
+        Sum(Indexed(Symbol("A"), L_0, L_0, i2, i3), (L_0, 0, 3)) +\
+        Sum(Indexed(Symbol("A"), i2, i3, L_0, L_0), (L_0, 0, 3))
+
+    b1 = B(-i0)*a1
+    assert b1.rewrite(Indexed) == Sum(Indexed(Symbol("B"), L_0)*Indexed(Symbol("A"), L_0, i1, i2, i3), (L_0, 0, 3))
+
+    b2 = B(-i3)*a2
+    assert b2.rewrite(Indexed) == Sum(Indexed(Symbol("B"), L_1)*Indexed(Symbol("A"), L_0, L_0, i2, L_1), (L_0, 0, 3), (L_1, 0, 3))

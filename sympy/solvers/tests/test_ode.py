@@ -1734,6 +1734,12 @@ def test_nth_linear_constant_coeff_homogeneous():
     assert checkodesol(eq29, sol29, order=4, solve_for_func=False)[0]
     assert checkodesol(eq30, sol30, order=5, solve_for_func=False)[0]
 
+    # Issue #15237
+    eqn = Derivative(x*f(x), x, x, x)
+    hint = 'nth_linear_constant_coeff_homogeneous'
+    raises(ValueError, lambda: dsolve(eqn, f(x), hint, prep=True))
+    raises(ValueError, lambda: dsolve(eqn, f(x), hint, prep=False))
+
 
 def test_nth_linear_constant_coeff_homogeneous_rootof():
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
@@ -2969,8 +2975,38 @@ def test_nth_algebraic():
 
     eqn = (1 - sin(f(x))) * f(x).diff(x)
     sol = Eq(f(x), C1)
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
     assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
     assert sol == dsolve(eqn, f(x))
+
+    M, m, r, t = symbols('M m r t')
+    phi = Function('phi')
+    eqn = Eq(-M * phi(t).diff(t),
+             Rational(3, 2) * m * r**2 * phi(t).diff(t) * phi(t).diff(t,t))
+    solns = [Eq(phi(t), C1), Eq(phi(t), C1 + C2*t - M*t**2/(3*m*r**2))]
+    assert checkodesol(eqn, solns[0], order=2, solve_for_func=False)[0]
+    assert checkodesol(eqn, solns[1], order=2, solve_for_func=False)[0]
+    assert set(solns) == set(dsolve(eqn, phi(t), hint='nth_algebraic'))
+    assert set(solns) == set(dsolve(eqn, phi(t)))
+
+    eqn = f(x) * f(x).diff(x) * f(x).diff(x, x)
+    sol = Eq(f(x), C1 + C2*x)
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
+
+    eqn = f(x) * f(x).diff(x) * f(x).diff(x, x) * (f(x) - 1)
+    sol = Eq(f(x), C1 + C2*x)
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
+
+    eqn = f(x) * f(x).diff(x) * f(x).diff(x, x) * (f(x) - 1) * (f(x).diff(x) - x)
+    solns = [Eq(f(x), C1 + x**2/2), Eq(f(x), C1 + C2*x)]
+    assert checkodesol(eqn, solns[0], order=2, solve_for_func=False)[0]
+    assert checkodesol(eqn, solns[1], order=2, solve_for_func=False)[0]
+    assert set(solns) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
+    assert set(solns) == set(dsolve(eqn, f(x)))
 
 
 def test_nth_algebraic_redundant_solutions():
