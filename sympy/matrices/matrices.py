@@ -2664,13 +2664,14 @@ class MatrixBase(MatrixDeprecated,
 
         if hermitian == True:
             if conjugate_convention in ("maths", "left", "math"):
-                return (mat.conjugate()*b)[0]
+                mat = mat.conjugate()
             elif conjugate_convention in ("physics", "right"):
-                return (mat*b.conjugate())[0]
+                b = b.conjugate()
             else:
-                raise ValueError("Invalid conjugate_convention is entered.")
-        else:
-            return (mat * b)[0]
+                raise ValueError("Unknown conjugate_convention was entered."
+                                 " conjugate_convention must be one of the"
+                                 " following: math, maths, left, physics or right.")
+        return (mat * b)[0]
 
     def dual(self):
         """Returns the dual of a matrix, which is:
