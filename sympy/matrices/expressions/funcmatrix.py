@@ -45,7 +45,8 @@ class FunctionMatrix(MatrixExpr):
 
     def _eval_trace(self):
         from sympy.matrices.expressions.trace import Trace
-        return Trace._eval_rewrite_as_Sum(Trace(self)).doit()
+        from sympy import Sum
+        return Trace(self).rewrite(Sum).doit()
 
     def as_real_imag(self):
         return (re(Matrix(self)), im(Matrix(self)))

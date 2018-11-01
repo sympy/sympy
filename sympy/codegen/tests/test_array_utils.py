@@ -2,12 +2,14 @@ from sympy import symbols, IndexedBase
 from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayTensorProduct, CodegenArrayDiagonal,
         CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
-        _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatAdd)
+        _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatOp,
+        _RecognizeMatMulLines, _unfold_recognized_expr,
+        parse_indexed_expression, recognize_matrix_expression)
 from sympy import (MatrixSymbol, Sum)
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy.matrices import Trace
+from sympy.matrices import (Trace, MatAdd, MatMul, Transpose)
 
 A, B = symbols("A B", cls=IndexedBase)
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -20,7 +22,7 @@ Q = MatrixSymbol("Q", k, k)
 
 def test_codegen_array_contraction_construction():
     s = Sum(A[i]*B[i], (i, 0, 3))
-    cg = CodegenArrayContraction.from_summation(s)
+    cg = parse_indexed_expression(s)
     assert cg == CodegenArrayContraction(CodegenArrayTensorProduct(A, B), (0, 1))
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, B), (1, 0))
@@ -30,14 +32,14 @@ def test_codegen_array_contraction_construction():
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
     assert CodegenArrayContraction.from_MatMul(expr) == result
     elem = expr[i, j]
-    assert CodegenArrayContraction.from_summation(elem) == result
+    assert parse_indexed_expression(elem) == result
 
     expr = M*N*M
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, M), (1, 2), (3, 4))
     assert CodegenArrayContraction.from_MatMul(expr) == result
     elem = expr[i, j]
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, M, N), (1, 4), (2, 5))
-    cg = CodegenArrayContraction.from_summation(elem)
+    cg = parse_indexed_expression(elem)
     cg = cg.sort_args_by_name()
     assert cg == result
 
@@ -62,29 +64,29 @@ def test_codegen_array_contraction_indices_types():
 def test_codegen_array_recognize_matrix_mul_lines():
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M), (0, 1))
-    assert cg._recognize_matrix_mul_lines() == [(None, None, [Trace(M)])]
+    assert recognize_matrix_expression(cg) == Trace(M)
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (0, 1), (2, 3))
-    assert cg._recognize_matrix_mul_lines() == [(None, None, [Trace(M)]), (None, None, [Trace(N)])]
+    assert recognize_matrix_expression(cg) == [Trace(M), Trace(N)]
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (0, 3), (1, 2))
-    assert cg._recognize_matrix_mul_lines() == [(None, None, [Trace(M*N)])]
+    assert recognize_matrix_expression(cg) == Trace(M*N)
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (0, 2), (1, 3))
-    assert cg._recognize_matrix_mul_lines() == [(None, None, [Trace(M*N.T)])]
+    assert recognize_matrix_expression(cg) == Trace(M*N.T)
 
-    cg = CodegenArrayContraction.from_summation((M*N*P)[i,j])
-    assert cg._recognize_matrix_mul_lines() == [(i, j, [M, N, P])]
+    cg = parse_indexed_expression((M*N*P)[i,j])
+    assert recognize_matrix_expression(cg) == M*N*P
     cg = CodegenArrayContraction.from_MatMul(M*N*P)
-    assert cg._recognize_matrix_mul_lines() == [(0, 5, [M, N, P])]
+    assert recognize_matrix_expression(cg) == M*N*P
 
-    cg = CodegenArrayContraction.from_summation((M*N.T*P)[i,j])
-    assert cg._recognize_matrix_mul_lines() == [(i, j, [M, N.T, P])]
+    cg = parse_indexed_expression((M*N.T*P)[i,j])
+    assert recognize_matrix_expression(cg) == M*N.T*P
     cg = CodegenArrayContraction.from_MatMul(M*N.T*P)
-    assert cg._recognize_matrix_mul_lines() == [(0, 5, [M, N.T, P])]
+    assert recognize_matrix_expression(cg) == M*N.T*P
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M,N,P,Q), (1, 2), (5, 6))
-    assert cg._recognize_matrix_mul_lines() == [(0, 3, [M, N]), (4, 7, [P, Q])]
+    assert recognize_matrix_expression(cg) == [M*N, P*Q]
 
 
 def test_codegen_array_flatten():
@@ -186,4 +188,45 @@ def test_codegen_array_diagonal():
 def test_codegen_recognize_matrix_expression():
 
     expr = CodegenArrayElementwiseAdd(M, CodegenArrayPermuteDims(M, [1, 0]))
-    assert _recognize_matrix_expression(expr) == _RecognizeMatAdd([M, Trace(M)])
+    rec = _recognize_matrix_expression(expr)
+    assert rec == _RecognizeMatOp(MatAdd, [M, _RecognizeMatOp(Transpose, [M])])
+    assert _unfold_recognized_expr(rec) == M + Transpose(M)
+
+    expr = M[i,j] + N[i,j]
+    p1, p2 = _codegen_array_parse(expr)
+    rec = _recognize_matrix_expression(p1)
+    assert rec == _RecognizeMatOp(MatAdd, [M, N])
+    assert _unfold_recognized_expr(rec) == M + N
+
+    expr = M[i,j] + N[j,i]
+    p1, p2 = _codegen_array_parse(expr)
+    rec = _recognize_matrix_expression(p1)
+    assert rec == _RecognizeMatOp(MatAdd, [M, _RecognizeMatOp(Transpose, [N])])
+    assert _unfold_recognized_expr(rec) == M + N.T
+
+    expr = M[i,j]*N[k,l] + N[i,j]*M[k,l]
+    p1, p2 = _codegen_array_parse(expr)
+    rec = _recognize_matrix_expression(p1)
+    assert rec == _RecognizeMatOp(MatAdd, [_RecognizeMatMulLines([M, N]), _RecognizeMatMulLines([N, M])])
+    #assert _unfold_recognized_expr(rec) == TensorProduct(M, N) + TensorProduct(N, M) maybe?
+
+    expr = (M*N*P)[i, j]
+    p1, p2 = _codegen_array_parse(expr)
+    rec = _recognize_matrix_expression(p1)
+    assert rec == _RecognizeMatMulLines([_RecognizeMatOp(MatMul, [M, N, P])])
+    assert _unfold_recognized_expr(rec) == M*N*P
+
+    expr = Sum(M[i,j]*(N*P)[j,m], (j, 0, k-1))
+    p1, p2 = _codegen_array_parse(expr)
+    rec = _recognize_matrix_expression(p1)
+    assert rec == _RecognizeMatOp(MatMul, [M, N, P])
+    assert _unfold_recognized_expr(rec) == M*N*P
+
+    expr = Sum((P[j, m] + P[m, j])*(M[i,j]*N[m,n] + N[i,j]*M[m,n]), (j, 0, k-1), (m, 0, k-1))
+    p1, p2 = _codegen_array_parse(expr)
+    rec = _recognize_matrix_expression(p1)
+    assert rec == _RecognizeMatOp(MatAdd, [
+        _RecognizeMatOp(MatMul, [M, _RecognizeMatOp(MatAdd, [P, _RecognizeMatOp(Transpose, [P])]), N]),
+        _RecognizeMatOp(MatMul, [N, _RecognizeMatOp(MatAdd, [P, _RecognizeMatOp(Transpose, [P])]), M])
+        ])
+    assert _unfold_recognized_expr(rec) == M*(P + P.T)*N + N*(P + P.T)*M

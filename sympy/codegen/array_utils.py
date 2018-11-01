@@ -1,18 +1,30 @@
+import itertools
 from collections import defaultdict
-from sympy import Indexed, IndexedBase, Tuple, Sum, Add
+from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
 from sympy.core.mul import Mul
 from sympy.core.compatibility import accumulate, default_sort_key
 from sympy.combinatorics import Permutation
-from sympy.matrices.expressions import MatMul, Trace, Transpose, MatrixSymbol
+from sympy.matrices.expressions import (MatAdd, MatMul, Trace, Transpose,
+        MatrixSymbol)
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.tensor.array import NDimArray
 
 
-class CodegenArrayContraction(Basic):
-    """
+class _CodegenArrayAbstract(Basic):
+
+    @property
+    def ranks(self):
+        return self._ranks[:]
+
+    def rank(self):
+        return sum(self.ranks)
+
+
+class CodegenArrayContraction(_CodegenArrayAbstract):
+    r"""
     This class is meant to represent contractions of arrays in a form easily
     processable by the code printers.
     """
@@ -26,15 +38,7 @@ class CodegenArrayContraction(Basic):
         obj = Basic.__new__(cls, expr, *contraction_indices)
         obj._mapping, obj._ranks = cls._get_mapping_from_contraction_indices(expr, *contraction_indices)
 
-        # TODO: simplify this code:
-        free_indices = kwargs.get("free_indices", None)
-        if "free_indices_to_position" in kwargs:
-            free_indices_to_position = kwargs.get("free_indices_to_position")
-        elif free_indices is not None:
-            free_indices_to_position = cls._get_free_indices_to_position_map(free_indices, contraction_indices)
-        else:
-            free_indices_to_position = {i: i for i in range(sum(obj._ranks)) if all([i not in cind for cind in contraction_indices])}
-        obj._free_indices = free_indices
+        free_indices_to_position = {i: i for i in range(sum(obj._ranks)) if all([i not in cind for cind in contraction_indices])}
         obj._free_indices_to_position = free_indices_to_position
         return obj
 
@@ -245,170 +249,6 @@ class CodegenArrayContraction(Basic):
             dlinks[arg2][pos2] = (arg1, pos1)
         return dict(dlinks)
 
-    def _recognize_matrix_mul_lines(self, first_indices=None):
-        r"""
-        Recognize lines of matrix multiplications in the contractions of tensor
-        products of two-dimensional array.  If the ``CodegenArrayContraction``
-        object was created from a summation of indexed expressions, it will
-        remember the starting and ending free indices.
-
-        This can help perform the transformation expressed in mathematical
-        notation as:
-
-        `\sum_{j=0}^{N-1} A_{i,j} B_{j,k} \Longrightarrow \mathbf{A}\cdot \mathbf{B}`
-
-        Optional parameter ``first_indices``: specify a list of free indices to
-        use as the indices of the starting mat-mul lines in the expression.
-
-        Examples
-        ========
-
-        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
-        >>> from sympy.abc import i, j, k, l, N
-        >>> from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
-        >>> A = MatrixSymbol("A", N, N)
-        >>> B = MatrixSymbol("B", N, N)
-        >>> C = MatrixSymbol("C", N, N)
-        >>> D = MatrixSymbol("D", N, N)
-
-        >>> expr = Sum(A[i, j]*B[j, k], (j, 0, N-1))
-        >>> cg = CodegenArrayContraction.from_summation(expr)
-        >>> cg.free_indices_to_position
-        {i: 0, k: 3}
-        >>> cg._recognize_matrix_mul_lines()
-        [(i, k, [A, B])]
-        >>> cg._recognize_matrix_mul_lines(first_indices=[k])
-        [(k, i, [B.T, A.T])]
-
-        Transposition is detected:
-
-        >>> expr = Sum(A[j, i]*B[j, k], (j, 0, N-1))
-        >>> cg = CodegenArrayContraction.from_summation(expr)
-        >>> cg.free_indices_to_position
-        {i: 1, k: 3}
-        >>> cg._recognize_matrix_mul_lines()
-        [(i, k, [A.T, B])]
-        >>> cg._recognize_matrix_mul_lines(first_indices=[k])
-        [(k, i, [B.T, A])]
-
-        Detect the trace:
-
-        >>> expr = Sum(A[i, i], (i, 0, N-1))
-        >>> cg = CodegenArrayContraction.from_summation(expr)
-        >>> cg._recognize_matrix_mul_lines()
-        [(None, None, [Trace(A)])]
-
-        Recognize some more complex traces:
-        >>> expr = Sum(A[i, j]*B[j, i], (i, 0, N-1), (j, 0, N-1))
-        >>> cg = CodegenArrayContraction.from_summation(expr)
-        >>> cg._recognize_matrix_mul_lines()
-        [(None, None, [Trace(A*B)])]
-
-        More complicated expressions:
-
-        >>> expr = Sum(A[i, j]*B[k, j]*A[l, k], (j, 0, N-1), (k, 0, N-1))
-        >>> cg = CodegenArrayContraction.from_summation(expr)
-        >>> cg._recognize_matrix_mul_lines()
-        [(i, l, [A, B.T, A.T])]
-
-        Expressions constructed from matrix expressions do not contain literal
-        indices, the positions of free indices are returned instead:
-
-        >>> expr = A*B
-        >>> cg = CodegenArrayContraction.from_MatMul(expr)
-        >>> cg.free_indices_to_position
-        {0: 0, 3: 3}
-        >>> cg._recognize_matrix_mul_lines()
-        [(0, 3, [A, B])]
-
-        If more than one line of matrix multiplications is detected, return
-        separate matrix multiplication factors:
-
-        >>> cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, B, C, D), (1, 2), (5, 6))
-        >>> cg._recognize_matrix_mul_lines()
-        [(0, 3, [A, B]), (4, 7, [C, D])]
-
-        The two lines have free indices at axes 0, 3 and 4, 7, respectively.
-        """
-        expr = self.expr
-        if not isinstance(expr, CodegenArrayTensorProduct):
-            args = [expr]
-        else:
-            args = expr.args
-        free_indices = self.free_indices_to_position
-        dlinks = self._get_contraction_links()
-        return_list = []
-        while dlinks:
-            if free_indices:
-                if first_indices:
-                    first_index = first_indices[0]
-                    starting_argind = free_indices.pop(first_index)
-                else:
-                    first_index, starting_argind = min(free_indices.items(), key=lambda x: x[1])
-                    free_indices.pop(first_index)
-                starting_argind, starting_pos = self._mapping[starting_argind]
-            else:
-                first_index = None
-                starting_argind = min(dlinks)
-                starting_pos = 0  #max(dlinks[starting_argind])
-            current_argind, current_pos = starting_argind, starting_pos
-            matmul_args = []
-            prev_argind = None
-            prev_pos = None
-            last_index = None
-            while True:
-                elem = args[current_argind]
-                if current_pos == 1:
-                    elem = Transpose(elem)
-                matmul_args.append(elem)
-                if current_argind not in dlinks:
-                    break
-                other_pos = 1 - current_pos
-                link_dict = dlinks.pop(current_argind)
-                if other_pos not in link_dict:
-                    if free_indices:
-                        last_index = [i for i, j in free_indices.items() if self._mapping[j] == (current_argind, other_pos)][0]
-                    else:
-                        last_index = None
-                    break
-                if len(link_dict) > 2:
-                    raise NotImplementedError("not a matrix multiplication line")
-                prev_argind = current_argind
-                prev_pos = current_pos
-                # Get the last element of `link_list` as the next link. The last
-                # element is the correct start for trace expressions:
-                current_argind, current_pos = link_dict[other_pos]
-                if current_argind == starting_argind:
-                    # This is a trace:
-                    if len(matmul_args) > 1:
-                        matmul_args = [Trace(MatMul(*matmul_args, check=True))]
-                    else:
-                        matmul_args = [Trace(*matmul_args)]
-                    break
-            dlinks.pop(starting_argind, None)
-            free_indices.pop(last_index, None)
-            return_list.append((first_index, last_index, matmul_args))
-        return return_list
-
-    def _recognize_addition_of_mul_lines(self):
-        res = [recurse_expr(i) for i in expr.args]
-        d = collections.defaultdict(list)
-        for res_addend in res:
-            scalar = 1
-            for elem, indices in res_addend:
-                if indices is None:
-                    scalar = elem
-                    continue
-                indices = tuple(sorted(indices, key=default_sort_key))
-                d[indices].append(scalar*remove_matelement(elem, *indices))
-                scalar = 1
-        return [(MatrixElement(Add.fromiter(v), *k), k) for k, v in d.items()]
-
-    @staticmethod
-    def from_summation(summation):
-        expr, indices = _codegen_array_parse(summation)
-        return expr
-
     @staticmethod
     def from_MatMul(expr):
         args_nonmat = []
@@ -426,7 +266,7 @@ class CodegenArrayContraction(Basic):
             )
 
 
-class CodegenArrayTensorProduct(Basic):
+class CodegenArrayTensorProduct(_CodegenArrayAbstract):
     r"""
     Class to represent the tensor product of array-like objects.
     """
@@ -461,19 +301,43 @@ class CodegenArrayTensorProduct(Basic):
         return args
 
 
-class CodegenArrayElementwiseAdd(Basic):
+class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
     r"""
     Class for elementwise array additions.
     """
     def __new__(cls, *args):
         args = [_sympify(arg) for arg in args]
         obj = Basic.__new__(cls, *args)
+        ranks = [get_rank(arg) for arg in args]
+        ranks = list(set(ranks))
+        if len(ranks) != 1:
+            raise ValueError("summing arrays of different ranks")
+        obj._ranks = ranks
         return obj
 
 
-class CodegenArrayPermuteDims(Basic):
+class CodegenArrayPermuteDims(_CodegenArrayAbstract):
     r"""
     Class to represent permutation of axes of arrays.
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.array_utils import CodegenArrayPermuteDims
+    >>> from sympy import MatrixSymbol
+    >>> M = MatrixSymbol("M", 3, 3)
+    >>> cg = CodegenArrayPermuteDims(M, [1, 0])
+
+    The object ``cg`` represents the transposition of ``M``, as the permutation
+    ``[1, 0]`` will act on its indices by switching them:
+
+    `M_{ij} \Rightarrow M_{ji}`
+
+    This is evident when transforming back to matrix form:
+
+    >>> from sympy.codegen.array_utils import recognize_matrix_expression
+    >>> recognize_matrix_expression(cg)
+    M.T
     """
     def __new__(cls, expr, permutation):
         from sympy.combinatorics import Permutation
@@ -483,6 +347,7 @@ class CodegenArrayPermuteDims(Basic):
         if plist == sorted(plist):
             return expr
         obj = Basic.__new__(cls, expr, permutation)
+        obj._ranks = [get_rank(expr)]
         return obj
 
     @property
@@ -494,14 +359,14 @@ class CodegenArrayPermuteDims(Basic):
         return self.args[1]
 
 
-class CodegenArrayDiagonal(Basic):
+class CodegenArrayDiagonal(_CodegenArrayAbstract):
     r"""
     Class to represent the diagonal operator.
 
     In a 2-dimensional array it returns the diagonal, this looks like the
     operation:
 
-    `i \rightarrow A_{ii}`
+    `A_{ij} \rightarrow A_{ii}`
 
     The diagonal over axes 1 and 2 (the second and third) of the tensor product
     of two 2-dimensional arrays `A \otimes B` is
@@ -563,10 +428,8 @@ class CodegenArrayDiagonal(Basic):
 def get_rank(expr):
     if isinstance(expr, (MatrixExpr, MatrixElement)):
         return 2
-    if isinstance(expr, CodegenArrayContraction):
-        return sum(expr.ranks)
-    if isinstance(expr, CodegenArrayDiagonal):
-        return sum(expr.ranks)
+    if isinstance(expr, _CodegenArrayAbstract):
+        return expr.rank()
     if isinstance(expr, NDimArray):
         return expr.rank()
     if isinstance(expr, Indexed):
@@ -701,31 +564,325 @@ def _codegen_array_parse(expr):
     raise NotImplementedError("could not recognize expression %s" % expr)
 
 
-class _RecognizeMatAdd(list):
-    def __repr__(self):
-        return "_RecognizeMatAdd(%s)" % super(_RecognizeMatAdd, self).__repr__()
+def parse_indexed_expression(expr, first_indices=[]):
+    r"""
+    Parse indexed expression into a form useful for code generation.
 
-class _RecognizeMatMul(list):
-    pass
+    Examples
+    ========
+
+    >>> from sympy.codegen.array_utils import parse_indexed_expression
+    >>> from sympy import MatrixSymbol, Sum, symbols
+    >>> i, j, k, d = symbols("i j k d")
+    >>> M = MatrixSymbol("M", d, d)
+    >>> N = MatrixSymbol("N", d, d)
+
+    Recognize the trace in summation form:
+
+    >>> expr = Sum(M[i, i], (i, 0, d-1))
+    >>> parse_indexed_expression(expr)
+    CodegenArrayContraction(M, (0, 1))
+
+    Recognize the extraction of the diagonal by using the same index `i` on
+    both axes of the matrix:
+
+    >>> expr = M[i, i]
+    >>> parse_indexed_expression(expr)
+    CodegenArrayDiagonal(M, (0, 1))
+
+    This function can help perform the transformation expressed in two
+    different mathematical notations as:
+
+    `\sum_{j=0}^{N-1} A_{i,j} B_{j,k} \Longrightarrow \mathbf{A}\cdot \mathbf{B}`
+
+    Recognize the matrix multiplication in summation form:
+
+    >>> expr = Sum(M[i, j]*N[j, k], (j, 0, d-1))
+    >>> parse_indexed_expression(expr)
+    CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
+
+    Specify that ``k`` has to be the starting index:
+
+    >>> parse_indexed_expression(expr, first_indices=[k])
+    CodegenArrayPermuteDims(CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)), (0 1))
+    """
+
+    result, indices = _codegen_array_parse(expr)
+    if not first_indices:
+        return result
+    for i in first_indices:
+        if i not in indices:
+            raise ValueError("index %s not found or not a free index" % i)
+    first_indices.extend([i for i in indices if i not in first_indices])
+    permutation = [first_indices.index(i) for i in indices]
+    return CodegenArrayPermuteDims(result, permutation)
+
+
+def _has_multiple_lines(expr):
+    if isinstance(expr, _RecognizeMatMulLines):
+        return True
+    if isinstance(expr, _RecognizeMatOp):
+        return expr.multiple_lines
+    return False
+
+
+class _RecognizeMatOp(object):
+    """
+    Class to help parsing matrix multiplication lines.
+    """
+    def __init__(self, operator, args):
+        self.operator = operator
+        self.args = args
+        if any(_has_multiple_lines(arg) for arg in args):
+            multiple_lines = True
+        else:
+            multiple_lines = False
+        self.multiple_lines = multiple_lines
+
+    def __repr__(self):
+        op = self.operator
+        if op == MatMul:
+            s = "*"
+        elif op == MatAdd:
+            s = "+"
+        else:
+            s = op.__name__
+            return "_RecognizeMatOp(%s, %s)" % (s, repr(self.args))
+        return "_RecognizeMatOp(%s)" % (s.join(repr(i) for i in self.args))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        if self.operator != other.operator:
+            return False
+        if self.args != other.args:
+            return False
+        return True
+
+    def __iter__(self):
+        return iter(self.args)
+
+
+class _RecognizeMatMulLines(list):
+    """
+    This class handles multiple parsed multiplication lines.
+    """
+    def __new__(cls, args):
+        if len(args) == 1:
+            return args[0]
+        return list.__new__(cls, args)
+
+    def __repr__(self):
+        return "_RecognizeMatMulLines(%s)" % super(_RecognizeMatMulLines, self).__repr__()
+
+
+def _support_function_tp1_recognize(contraction, args):
+    dlinks = contraction._get_contraction_links()
+    flatten_contractions = [j for i in contraction.contraction_indices for j in i]
+    total_rank = sum(contraction.ranks)
+    # TODO: turn `free_indices` into a list?
+    free_indices = {i: i for i in range(total_rank) if i not in flatten_contractions}
+    return_list = []
+    while dlinks:
+        if free_indices:
+            first_index, starting_argind = min(free_indices.items(), key=lambda x: x[1])
+            free_indices.pop(first_index)
+            starting_argind, starting_pos = contraction._mapping[starting_argind]
+        else:
+            # Maybe a Trace
+            first_index = None
+            starting_argind = min(dlinks)
+            starting_pos = 0
+        current_argind, current_pos = starting_argind, starting_pos
+        matmul_args = []
+        prev_argind = None
+        prev_pos = None
+        last_index = None
+        while True:
+            elem = args[current_argind]
+            if current_pos == 1:
+                elem = _RecognizeMatOp(Transpose, [elem])
+            matmul_args.append(elem)
+            if current_argind not in dlinks:
+                break
+            other_pos = 1 - current_pos
+            link_dict = dlinks.pop(current_argind)
+            if other_pos not in link_dict:
+                if free_indices:
+                    last_index = [i for i, j in free_indices.items() if contraction._mapping[j] == (current_argind, other_pos)][0]
+                else:
+                    last_index = None
+                break
+            if len(link_dict) > 2:
+                raise NotImplementedError("not a matrix multiplication line")
+            prev_argind = current_argind
+            prev_pos = current_pos
+            # Get the last element of `link_dict` as the next link. The last
+            # element is the correct start for trace expressions:
+            current_argind, current_pos = link_dict[other_pos]
+            if current_argind == starting_argind:
+                # This is a trace:
+                if len(matmul_args) > 1:
+                    matmul_args = [_RecognizeMatOp(Trace, [_RecognizeMatOp(MatMul, matmul_args)])]
+                else:
+                    matmul_args = [_RecognizeMatOp(Trace, matmul_args)]
+                break
+        dlinks.pop(starting_argind, None)
+        free_indices.pop(last_index, None)
+        return_list.append(_RecognizeMatOp(MatMul, matmul_args))
+    return _RecognizeMatMulLines(return_list)
+
+
+def recognize_matrix_expression(expr):
+    r"""
+    Recognize matrix expressions in codegen objects.
+
+    If more than one matrix multiplication line have been detected, return a
+    list with the matrix expressions.
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
+    >>> from sympy.abc import i, j, k, l, N
+    >>> from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+    >>> from sympy.codegen.array_utils import recognize_matrix_expression, parse_indexed_expression
+    >>> A = MatrixSymbol("A", N, N)
+    >>> B = MatrixSymbol("B", N, N)
+    >>> C = MatrixSymbol("C", N, N)
+    >>> D = MatrixSymbol("D", N, N)
+
+    >>> expr = Sum(A[i, j]*B[j, k], (j, 0, N-1))
+    >>> cg = parse_indexed_expression(expr)
+    >>> recognize_matrix_expression(cg)
+    A*B
+    >>> cg = parse_indexed_expression(expr, first_indices=[k])
+    >>> recognize_matrix_expression(cg)
+    (A*B).T
+
+    Transposition is detected:
+
+    >>> expr = Sum(A[j, i]*B[j, k], (j, 0, N-1))
+    >>> cg = parse_indexed_expression(expr)
+    >>> recognize_matrix_expression(cg)
+    A.T*B
+    >>> cg = parse_indexed_expression(expr, first_indices=[k])
+    >>> recognize_matrix_expression(cg)
+    (A.T*B).T
+
+    Detect the trace:
+
+    >>> expr = Sum(A[i, i], (i, 0, N-1))
+    >>> cg = parse_indexed_expression(expr)
+    >>> recognize_matrix_expression(cg)
+    Trace(A)
+
+    Recognize some more complex traces:
+    >>> expr = Sum(A[i, j]*B[j, i], (i, 0, N-1), (j, 0, N-1))
+    >>> cg = parse_indexed_expression(expr)
+    >>> recognize_matrix_expression(cg)
+    Trace(A*B)
+
+    More complicated expressions:
+
+    >>> expr = Sum(A[i, j]*B[k, j]*A[l, k], (j, 0, N-1), (k, 0, N-1))
+    >>> cg = parse_indexed_expression(expr)
+    >>> recognize_matrix_expression(cg)
+    A*B.T*A.T
+
+    Expressions constructed from matrix expressions do not contain literal
+    indices, the positions of free indices are returned instead:
+
+    >>> expr = A*B
+    >>> cg = CodegenArrayContraction.from_MatMul(expr)
+    >>> recognize_matrix_expression(cg)
+    A*B
+
+    If more than one line of matrix multiplications is detected, return
+    separate matrix multiplication factors:
+
+    >>> cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, B, C, D), (1, 2), (5, 6))
+    >>> recognize_matrix_expression(cg)
+    [A*B, C*D]
+
+    The two lines have free indices at axes 0, 3 and 4, 7, respectively.
+    """
+    # TODO: expr has to be a CodegenArray... type
+    rec = _recognize_matrix_expression(expr)
+    return _unfold_recognized_expr(rec)
+
 
 def _recognize_matrix_expression(expr):
-    # TODO: expr has to be a CodegenArray... type
     if isinstance(expr, CodegenArrayContraction):
-        return expr._recognize_addition_of_mul_lines()
+        args = _recognize_matrix_expression(expr.expr)
+        if isinstance(args, _RecognizeMatOp) and args.operator == MatAdd:
+            contraction_indices = expr.contraction_indices
+            addends = []
+            for arg in args.args:
+                mapping, ranks = expr._get_mapping_from_contraction_indices(arg, contraction_indices)
+                # TODO: horrible monkey patching...
+                if isinstance(arg, _RecognizeMatMulLines):
+                    mapping = {i: (i//2, i%2) for i in range(2*len(arg))}
+                    ranks = [2 for i in range(len(arg))]
+                expr._mapping = mapping
+                expr._ranks = ranks
+                addends.append(_support_function_tp1_recognize(expr, arg))
+            return _RecognizeMatOp(MatAdd, addends)
+        elif isinstance(args, _RecognizeMatMulLines):
+            return _support_function_tp1_recognize(expr, args)
+        return _support_function_tp1_recognize(expr, [args])
     elif isinstance(expr, CodegenArrayElementwiseAdd):
-        add_args = _RecognizeMatAdd()
+        add_args = []
         for arg in expr.args:
             add_args.append(_recognize_matrix_expression(arg))
-            #if isinstance(arg, MatrixSymbol):
-                #add_args.append(arg)
-        return add_args
+        return _RecognizeMatOp(MatAdd, add_args)
     elif isinstance(expr, (MatrixSymbol, IndexedBase)):
         return expr
     elif isinstance(expr, CodegenArrayPermuteDims):
         if expr.permutation.args[0] == [1, 0]:
-            return Trace(expr.expr)
+            return _RecognizeMatOp(Transpose, [_recognize_matrix_expression(expr.expr)])
+        elif isinstance(expr.expr, CodegenArrayTensorProduct):
+            ranks = expr.expr.ranks
+            intrange = list(range(sum(ranks)))
+            newrange = [expr.permutation(i) for i in range(sum(ranks))]
+            newpos = []
+            counter = 0
+            for rank in ranks:
+                newpos.append(newrange[counter:counter+rank])
+                counter += rank
+            newargs = []
+            for pos, arg in zip(newpos, expr.expr.args):
+                if pos == sorted(pos):
+                    newargs.append((_recognize_matrix_expression(arg), pos[0]))
+                elif len(pos) == 2:
+                    newargs.append((_RecognizeMatOp(Transpose, [_recognize_matrix_expression(arg)]), pos[0]))
+                else:
+                    raise NotImplementedError
+            newargs.sort(key=lambda x: x[1])
+            newargs = [i[0] for i in newargs]
+            return _RecognizeMatMulLines(newargs)
         else:
             raise NotImplementedError
     elif isinstance(expr, CodegenArrayTensorProduct):
-        pass
+        args = [_recognize_matrix_expression(arg) for arg in expr.args]
+        multiple_lines = [_has_multiple_lines(arg) for arg in args]
+        if any(multiple_lines):
+            if any(a.operator != MatAdd for i, a in enumerate(args) if multiple_lines[i]):
+                raise NotImplementedError
+            expand_args = [arg.args if multiple_lines[i] else [arg] for i, arg in enumerate(args)]
+            it = itertools.product(*expand_args)
+            ret = _RecognizeMatOp(MatAdd, [_RecognizeMatMulLines([k for j in i for k in (j if isinstance(j, _RecognizeMatMulLines) else [j])]) for i in it])
+            return ret
+        return _RecognizeMatMulLines(args)
+    elif isinstance(expr, Transpose):
+        return expr
     raise NotImplementedError
+
+
+def _unfold_recognized_expr(expr):
+    if isinstance(expr, _RecognizeMatOp):
+        return expr.operator(*[_unfold_recognized_expr(i) for i in expr.args])
+    elif isinstance(expr, _RecognizeMatMulLines):
+        return [_unfold_recognized_expr(i) for i in expr]
+    else:
+        return expr
