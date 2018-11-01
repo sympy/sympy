@@ -371,6 +371,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                 print("DEBUG: returned %s" % str(result))
 
             if result is not None:
+                if not symbol.is_commutative:
+                    raise AttributeError("Can not collect noncommutative symbol")
+
                 terms, elems, common_expo, has_deriv = result
 
                 # when there was derivative in current pattern we
