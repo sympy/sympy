@@ -1497,7 +1497,7 @@ class LatexPrinter(Printer):
         from sympy import Add, MatAdd, HadamardProduct, MatMul, Mul
 
         def parens(x):
-            if isinstance(x, (Add, MatAdd, HadamardProduct)):
+            if isinstance(x, (Add, MatAdd, HadamardProduct)) or isinstance(x, MatMul) and x.args[0] < 0:
                 return r"\left(%s\right)" % self._print(x)
             return self._print(x)
 

@@ -1681,6 +1681,14 @@ def test_issue_7117():
     assert latex(q) == r"\left(x + 1 = 2 x\right)^{2}"
 
 
+def test_issue_15439():
+    x = MatrixSymbol('x', 2, 2)
+    y = MatrixSymbol('y', 2, 2)
+    assert latex((x * y).subs(y, -y)) == r"x \left(-y\right)"
+    assert latex((x * y).subs(y, -2*y)) == r"x \left(-2 y\right)"
+    assert latex((x * y).subs(x, -x)) == r"\left(-x\right) y"
+
+
 def test_issue_2934():
     assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'
 
