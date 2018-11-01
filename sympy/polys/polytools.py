@@ -4451,7 +4451,12 @@ def degree(f, gen=0):
     else:
         isNum = f.is_Number
         if not isNum:
-            p, _ = poly_from_expr(f)
+            try:
+                p, _ = poly_from_expr(f)
+            except PolificationFailed as e:
+                isNum = f.expand().is_Number
+                if not isNum:
+                    raise e
 
     if isNum:
         return S.Zero if f else S.NegativeInfinity
