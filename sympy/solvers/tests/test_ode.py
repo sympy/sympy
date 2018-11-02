@@ -2429,13 +2429,10 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
-    sol = Eq(f(x), C1 + C2*log(x) + (x - 1)*exp(x)*log(x) - Integral(x*exp(x)*log(x), x))
-    assert our_hint in classify_ode(eq)
-    dsolve_sol = dsolve(eq, f(x), hint=our_hint)
     from sympy.integrals.risch import NonElementaryIntegral
-    from sympy.integrals.integrals import Integral as _Integral
-    dsolve_sol = dsolve_sol.replace(NonElementaryIntegral, lambda *args: _Integral(*args))
-    assert dsolve_sol == sol
+    sol = Eq(f(x), C1 + C2*log(x) + (x - 1)*exp(x)*log(x) - NonElementaryIntegral(x*exp(x)*log(x), x))
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint) == sol
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
 
