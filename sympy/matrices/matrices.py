@@ -2562,28 +2562,27 @@ class MatrixBase(MatrixDeprecated,
         return self._diagonal_solve(rhs)
 
     def dot(self, b, hermitian=None, conjugate_convention=None):
-        """Return the dot product of two vectors of equal length. ``self``
-        must be a ``Matrix`` of size 1 x n or n x 1, and ``b`` must be
-        either a matrix of size 1 x n, n x 1, or a list/tuple of length n.
+        """Return the dot or inner product of two vectors of equal length.
+        Here ``self`` must be a ``Matrix`` of size 1 x n or n x 1, and ``b``
+        must be either a matrix of size 1 x n, n x 1, or a list/tuple of length n.
         A scalar is returned.
 
         In case one or both of the vectors are complex and the hermitian
-        flag is set to true we need to calculate the hermitian inner
+        flag is set to ``True`` this will calculate the hermitian inner
         product of the two vectors.
 
-        The expected kwargs are hermitian and conjugate_convention.
+        Possible kwargs are hermitian and conjugate_convention.
         Hermitian takes argument as either True or False depending on
         whether dot product is to be calculated or hermitian inner
         product is to be calculated.
 
         Conjugate_convention takes one argument as input. The accepted
-        arguments are: "maths", "left", "math", "physics" or "right".
-        "maths", "math" or "left" all correspond to the same convention
+        arguments are: ``"maths"`` ,``"math"`` ,``"left"`` ,``"physics"``
+        or ``"right"``.
+        ``"maths"``, ``"math"`` or ``"left"`` all correspond to the same convention
         in which hermitian of the first vector is used.
-        i.e. (a.conjugate() * b)[0]
-        "physics" or "right" both correspond to the same convention in
+        ``"physics"`` or ``"right"`` both correspond to the same convention in
         which hermitian of the second vector is used.
-        i.e. (a * b.conjugate())[0]
 
         Examples
         ========
@@ -2616,6 +2615,7 @@ class MatrixBase(MatrixDeprecated,
 
         See Also
         ========
+
         cross
         multiply
         multiply_elementwise
@@ -2655,11 +2655,11 @@ class MatrixBase(MatrixDeprecated,
         # If it so happens that only conjugate_convention is passed
         # then automatically set hermitian to True. If only hermitian
         # is true but no conjugate_convention is not passed then
-        # automatically set it to "maths"
+        # automatically set it to ``"maths"``
 
-        if (conjugate_convention is not None) and (hermitian is None):
+        if conjugate_convention is not None and hermitian is None:
             hermitian = True
-        if (hermitian == True) and (conjugate_convention is None):
+        if hermitian == True and conjugate_convention is None:
             conjugate_convention = "maths"
 
         if hermitian == True:
