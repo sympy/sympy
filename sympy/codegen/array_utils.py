@@ -1,4 +1,5 @@
 import itertools
+from functools import reduce
 from collections import defaultdict
 from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S
 from sympy.core.basic import Basic
@@ -16,11 +17,38 @@ from sympy.tensor.array import NDimArray
 class _CodegenArrayAbstract(Basic):
 
     @property
-    def ranks(self):
-        return self._ranks[:]
+    def subranks(self):
+        """
+        Returns the ranks of the objects in the uppermost tensor product inside
+        the current object.  In case no tensor products are contained, return
+        the atomic ranks.
 
-    def rank(self):
-        return sum(self.ranks)
+        Examples
+        ========
+
+        >>> from sympy.codegen.array_utils import CodegenArrayTensorProduct, CodegenArrayContraction
+        >>> from sympy import MatrixSymbol
+        >>> M = MatrixSymbol("M", 3, 3)
+        >>> N = MatrixSymbol("N", 3, 3)
+        >>> P = MatrixSymbol("P", 3, 3)
+
+        Important: do not confuse the rank of the matrix with the rank of an array.
+
+        >>> tp = CodegenArrayTensorProduct(M, N, P)
+        >>> tp.subranks
+        [2, 2, 2]
+
+        >>> co = CodegenArrayContraction(tp, (1, 2), (3, 4))
+        >>> co.subranks
+        [2, 2, 2]
+        """
+        return self._subranks[:]
+
+    def subrank(self):
+        """
+        The sum of ``subranks``.
+        """
+        return sum(self.subranks)
 
 
 class CodegenArrayContraction(_CodegenArrayAbstract):
@@ -36,9 +64,10 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
             return cls._flatten(expr, *contraction_indices)
 
         obj = Basic.__new__(cls, expr, *contraction_indices)
-        obj._mapping, obj._ranks = cls._get_mapping_from_contraction_indices(expr, *contraction_indices)
+        obj._subranks = _get_subranks(expr)
+        obj._mapping = _get_mapping_from_subranks(obj._subranks)
 
-        free_indices_to_position = {i: i for i in range(sum(obj._ranks)) if all([i not in cind for cind in contraction_indices])}
+        free_indices_to_position = {i: i for i in range(sum(obj._subranks)) if all([i not in cind for cind in contraction_indices])}
         obj._free_indices_to_position = free_indices_to_position
         return obj
 
@@ -53,22 +82,6 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
             free_indices_to_position[ind] = counter
             counter += 1
         return free_indices_to_position
-
-    @staticmethod
-    def _get_mapping_from_contraction_indices(expr, *contraction_indices):
-        if isinstance(expr, CodegenArrayTensorProduct):
-            args = expr.args
-            ranks = expr.ranks
-        else:
-            args = [expr]
-            ranks = [get_rank(expr)]
-        mapping = {}
-        counter = 0
-        for i, rank in enumerate(ranks):
-            for j in range(rank):
-                mapping[counter] = (i, j)
-                counter += 1
-        return mapping, ranks
 
     @staticmethod
     def _flatten(expr, *outer_contraction_indices):
@@ -122,8 +135,8 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
     @staticmethod
     def _contraction_tuples_to_contraction_indices(expr, contraction_tuples):
-        # TODO: check that `expr` has `.ranks`:
-        ranks = expr.ranks
+        # TODO: check that `expr` has `.subranks`:
+        ranks = expr.subranks
         cumulative_ranks = [0] + list(accumulate(ranks))
         return [tuple(cumulative_ranks[j]+k for j, k in i) for i in contraction_tuples]
 
@@ -140,10 +153,6 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         return self.args[0]
 
     @property
-    def ranks(self):
-        return self._ranks[:]
-
-    @property
     def contraction_indices(self):
         return self.args[1:]
 
@@ -153,7 +162,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
             raise NotImplementedError("only for contractions of tensor products")
         contraction_indices = self.contraction_indices
         args = expr.args
-        ranks = expr.ranks
+        ranks = expr.subranks
         mapping = {}
         counter = 0
         for i, rank in enumerate(ranks):
@@ -239,15 +248,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         `(2, 0)` respectively. `(0, 1)` is the index slot 1 (the 2nd) of
         argument in position 0 (that is, `A_{\ldot j}`), and so on.
         """
-        contraction_tuples = self._get_contraction_tuples()
-        dlinks = defaultdict(dict)
-        for links in contraction_tuples:
-            if len(links) > 2:
-                raise NotImplementedError("three or more axes contracted at the same time")
-            (arg1, pos1), (arg2, pos2) = links
-            dlinks[arg1][pos1] = (arg2, pos2)
-            dlinks[arg2][pos2] = (arg1, pos1)
-        return dict(dlinks)
+        return _get_contraction_links(self.subranks, *self.contraction_indices)
 
     @staticmethod
     def from_MatMul(expr):
@@ -288,12 +289,8 @@ class CodegenArrayTensorProduct(_CodegenArrayAbstract):
             return CodegenArrayContraction(tp, *contraction_indices)
 
         obj = Basic.__new__(cls, *args)
-        obj._ranks = ranks
+        obj._subranks = ranks
         return obj
-
-    @property
-    def ranks(self):
-        return self._ranks[:]
 
     @classmethod
     def _flatten(cls, args):
@@ -312,7 +309,7 @@ class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
         ranks = list(set(ranks))
         if len(ranks) != 1:
             raise ValueError("summing arrays of different ranks")
-        obj._ranks = ranks
+        obj._subranks = ranks
         return obj
 
 
@@ -347,7 +344,7 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         if plist == sorted(plist):
             return expr
         obj = Basic.__new__(cls, expr, permutation)
-        obj._ranks = [get_rank(expr)]
+        obj._subranks = [get_rank(expr)]
         return obj
 
     @property
@@ -387,7 +384,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         if isinstance(expr, CodegenArrayDiagonal):
             return cls._flatten(expr, *diagonal_indices)
         obj = Basic.__new__(cls, expr, *diagonal_indices)
-        _, obj._ranks = CodegenArrayContraction._get_mapping_from_contraction_indices(expr, *diagonal_indices)
+        obj._subranks = _get_subranks(expr)
         return obj
 
     @property
@@ -397,10 +394,6 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
     @property
     def diagonal_indices(self):
         return self.args[1:]
-
-    @property
-    def ranks(self):
-        return self._ranks
 
     @staticmethod
     def _flatten(expr, *outer_diagonal_indices):
@@ -429,7 +422,7 @@ def get_rank(expr):
     if isinstance(expr, (MatrixExpr, MatrixElement)):
         return 2
     if isinstance(expr, _CodegenArrayAbstract):
-        return expr.rank()
+        return expr.subrank()
     if isinstance(expr, NDimArray):
         return expr.rank()
     if isinstance(expr, Indexed):
@@ -440,7 +433,40 @@ def get_rank(expr):
             return -1
         else:
             return len(shape)
+    if isinstance(expr, _RecognizeMatOp):
+        return expr.rank()
+    if isinstance(expr, _RecognizeMatMulLines):
+        return expr.rank()
     return 0
+
+
+def _get_subranks(expr):
+    if isinstance(expr, _CodegenArrayAbstract):
+        return expr.subranks
+    else:
+        return [get_rank(expr)]
+
+
+def _get_mapping_from_subranks(subranks):
+    mapping = {}
+    counter = 0
+    for i, rank in enumerate(subranks):
+        for j in range(rank):
+            mapping[counter] = (i, j)
+            counter += 1
+    return mapping
+
+def _get_contraction_links(subranks, *contraction_indices):
+    mapping = _get_mapping_from_subranks(subranks)
+    contraction_tuples = [[mapping[j] for j in i] for i in contraction_indices]
+    dlinks = defaultdict(dict)
+    for links in contraction_tuples:
+        if len(links) > 2:
+            raise NotImplementedError("three or more axes contracted at the same time")
+        (arg1, pos1), (arg2, pos2) = links
+        dlinks[arg1][pos1] = (arg2, pos2)
+        dlinks[arg2][pos2] = (arg1, pos1)
+    return dict(dlinks)
 
 
 def _sort_contraction_indices(pairing_indices):
@@ -639,6 +665,12 @@ class _RecognizeMatOp(object):
             multiple_lines = False
         self.multiple_lines = multiple_lines
 
+    def rank(self):
+        if self.operator == Trace:
+            return 0
+        # TODO: check
+        return 2
+
     def __repr__(self):
         op = self.operator
         if op == MatMul:
@@ -672,14 +704,19 @@ class _RecognizeMatMulLines(list):
             return args[0]
         return list.__new__(cls, args)
 
+    def rank(self):
+        return reduce(lambda x, y: x*y, [get_rank(i) for i in self], S.One)
+
     def __repr__(self):
         return "_RecognizeMatMulLines(%s)" % super(_RecognizeMatMulLines, self).__repr__()
 
 
-def _support_function_tp1_recognize(contraction, args):
-    dlinks = contraction._get_contraction_links()
-    flatten_contractions = [j for i in contraction.contraction_indices for j in i]
-    total_rank = sum(contraction.ranks)
+def _support_function_tp1_recognize(contraction_indices, args):
+    subranks = [get_rank(i) for i in args]
+    mapping = _get_mapping_from_subranks(subranks)
+    dlinks = _get_contraction_links(subranks, *contraction_indices)
+    flatten_contractions = [j for i in contraction_indices for j in i]
+    total_rank = sum(subranks)
     # TODO: turn `free_indices` into a list?
     free_indices = {i: i for i in range(total_rank) if i not in flatten_contractions}
     return_list = []
@@ -687,7 +724,7 @@ def _support_function_tp1_recognize(contraction, args):
         if free_indices:
             first_index, starting_argind = min(free_indices.items(), key=lambda x: x[1])
             free_indices.pop(first_index)
-            starting_argind, starting_pos = contraction._mapping[starting_argind]
+            starting_argind, starting_pos = mapping[starting_argind]
         else:
             # Maybe a Trace
             first_index = None
@@ -709,7 +746,7 @@ def _support_function_tp1_recognize(contraction, args):
             link_dict = dlinks.pop(current_argind)
             if other_pos not in link_dict:
                 if free_indices:
-                    last_index = [i for i, j in free_indices.items() if contraction._mapping[j] == (current_argind, other_pos)][0]
+                    last_index = [i for i, j in free_indices.items() if mapping[j] == (current_argind, other_pos)][0]
                 else:
                     last_index = None
                 break
@@ -815,22 +852,15 @@ def recognize_matrix_expression(expr):
 def _recognize_matrix_expression(expr):
     if isinstance(expr, CodegenArrayContraction):
         args = _recognize_matrix_expression(expr.expr)
+        contraction_indices = expr.contraction_indices
         if isinstance(args, _RecognizeMatOp) and args.operator == MatAdd:
-            contraction_indices = expr.contraction_indices
             addends = []
             for arg in args.args:
-                mapping, ranks = expr._get_mapping_from_contraction_indices(arg, contraction_indices)
-                # TODO: horrible monkey patching...
-                if isinstance(arg, _RecognizeMatMulLines):
-                    mapping = {i: (i//2, i%2) for i in range(2*len(arg))}
-                    ranks = [2 for i in range(len(arg))]
-                expr._mapping = mapping
-                expr._ranks = ranks
-                addends.append(_support_function_tp1_recognize(expr, arg))
+                addends.append(_support_function_tp1_recognize(contraction_indices, arg))
             return _RecognizeMatOp(MatAdd, addends)
         elif isinstance(args, _RecognizeMatMulLines):
-            return _support_function_tp1_recognize(expr, args)
-        return _support_function_tp1_recognize(expr, [args])
+            return _support_function_tp1_recognize(contraction_indices, args)
+        return _support_function_tp1_recognize(contraction_indices, [args])
     elif isinstance(expr, CodegenArrayElementwiseAdd):
         add_args = []
         for arg in expr.args:
@@ -842,7 +872,7 @@ def _recognize_matrix_expression(expr):
         if expr.permutation.args[0] == [1, 0]:
             return _RecognizeMatOp(Transpose, [_recognize_matrix_expression(expr.expr)])
         elif isinstance(expr.expr, CodegenArrayTensorProduct):
-            ranks = expr.expr.ranks
+            ranks = expr.expr.subranks
             intrange = list(range(sum(ranks)))
             newrange = [expr.permutation(i) for i in range(sum(ranks))]
             newpos = []

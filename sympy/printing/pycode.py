@@ -519,7 +519,7 @@ class NumPyPrinter(PythonCodePrinter):
             counter = 0
             d = {j: min(i) for i in contraction_indices for j in i}
             indices = []
-            for rank_arg in base.ranks:
+            for rank_arg in base.subranks:
                 lindices = []
                 for i in range(rank_arg):
                     if counter in d:
