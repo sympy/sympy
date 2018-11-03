@@ -329,7 +329,7 @@ class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
             raise ValueError("summing arrays of different ranks")
         obj._subranks = ranks
         shapes = [arg.shape for arg in args]
-        if len(set([i for i in shapes if i is not None])) != 1:
+        if len(set([i for i in shapes if i is not None])) > 1:
             raise ValueError("mismatching shapes in addition")
         if any(i is None for i in shapes):
             obj._shape = None
