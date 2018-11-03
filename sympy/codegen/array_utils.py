@@ -50,6 +50,10 @@ class _CodegenArrayAbstract(Basic):
         """
         return sum(self.subranks)
 
+    @property
+    def shape(self):
+        return self._shape
+
 
 class CodegenArrayContraction(_CodegenArrayAbstract):
     r"""
@@ -69,6 +73,15 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
         free_indices_to_position = {i: i for i in range(sum(obj._subranks)) if all([i not in cind for cind in contraction_indices])}
         obj._free_indices_to_position = free_indices_to_position
+
+        shape = expr.shape
+        if shape:
+            # Check that no contraction happens when the shape is mismatched:
+            for i in contraction_indices:
+                if len(set(shape[j] for j in i)) != 1:
+                    raise ValueError("contracting indices of different dimensions")
+            shape = tuple(shp for i, shp in enumerate(shape) if not any(i in j for j in contraction_indices))
+        obj._shape = shape
         return obj
 
     @staticmethod
@@ -290,6 +303,11 @@ class CodegenArrayTensorProduct(_CodegenArrayAbstract):
 
         obj = Basic.__new__(cls, *args)
         obj._subranks = ranks
+        shapes = [i.shape for i in args]
+        if any(i is None for i in shapes):
+            obj._shape = None
+        else:
+            obj._shape = tuple(j for i in shapes for j in i)
         return obj
 
     @classmethod
@@ -310,6 +328,13 @@ class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
         if len(ranks) != 1:
             raise ValueError("summing arrays of different ranks")
         obj._subranks = ranks
+        shapes = [arg.shape for arg in args]
+        if len(set([i for i in shapes if i is not None])) != 1:
+            raise ValueError("mismatching shapes in addition")
+        if any(i is None for i in shapes):
+            obj._shape = None
+        else:
+            obj._shape = shapes[0]
         return obj
 
 
@@ -345,6 +370,12 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
             return expr
         obj = Basic.__new__(cls, expr, permutation)
         obj._subranks = [get_rank(expr)]
+        shape = expr.shape
+        if shape is None:
+            obj._shape = None
+        else:
+            pinverse = permutation**-1
+            obj._shape = tuple(shape[pinverse(i)] for i in range(len(shape)))
         return obj
 
     @property
@@ -385,6 +416,19 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
             return cls._flatten(expr, *diagonal_indices)
         obj = Basic.__new__(cls, expr, *diagonal_indices)
         obj._subranks = _get_subranks(expr)
+        shape = expr.shape
+        if shape is None:
+            obj._shape = None
+        else:
+            # Check that no diagonalization happens on indices with mismatched
+            # dimensions:
+            for i in diagonal_indices:
+                if len(set(shape[j] for j in i)) != 1:
+                    raise ValueError("contracting indices of different dimensions")
+            # Get new shape:
+            shp1 = tuple(shp for i,shp in enumerate(shape) if not any(i in j for j in diagonal_indices))
+            shp2 = tuple(shape[i[0]] for i in diagonal_indices)
+            obj._shape = shp1 + shp2
         return obj
 
     @property
@@ -495,6 +539,13 @@ def _codegen_array_parse(expr):
         function = expr.function
         summation_indices = expr.variables
         subexpr, subindices = _codegen_array_parse(function)
+        # Check dimensional consistency:
+        shape = subexpr.shape
+        if shape:
+            for ind, istart, iend in expr.limits:
+                i = subindices.index(ind)
+                if istart != 0 or iend+1 != shape[i]:
+                    raise ValueError("summation index and array dimension mismatch: %s" % ind)
         contraction_indices = []
         subindices = list(subindices)
         if isinstance(subexpr, CodegenArrayDiagonal):

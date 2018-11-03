@@ -10,6 +10,7 @@ from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices import (Trace, MatAdd, MatMul, Transpose)
+from sympy.utilities.pytest import raises, XFAIL
 
 A, B = symbols("A B", cls=IndexedBase)
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -230,3 +231,42 @@ def test_codegen_recognize_matrix_expression():
         _RecognizeMatOp(MatMul, [N, _RecognizeMatOp(MatAdd, [P, _RecognizeMatOp(Transpose, [P])]), M])
         ])
     assert _unfold_recognized_expr(rec) == M*(P + P.T)*N + N*(P + P.T)*M
+
+
+def test_codegen_array_shape():
+    expr = CodegenArrayTensorProduct(M, N, P, Q)
+    assert expr.shape == (k, k, k, k, k, k, k, k)
+    Z = MatrixSymbol("Z", m, n)
+    expr = CodegenArrayTensorProduct(M, Z)
+    assert expr.shape == (k, k, m, n)
+    expr2 = CodegenArrayContraction(expr, (0, 1))
+    assert expr2.shape == (m, n)
+    expr2 = CodegenArrayDiagonal(expr, (0, 1))
+    assert expr2.shape == (m, n, k)
+    exprp = CodegenArrayPermuteDims(expr, [2, 1, 3, 0])
+    assert exprp.shape == (n, k, k, m)
+    expr3 = CodegenArrayTensorProduct(N, Z)
+    expr2 = CodegenArrayElementwiseAdd(expr, expr3)
+    assert expr2.shape == (k, k, m, n)
+
+    # Contraction along axes with discordant dimensions:
+    raises(ValueError, lambda: CodegenArrayContraction(expr, (1, 2)))
+    # Also diagonal needs the same dimensions:
+    raises(ValueError, lambda: CodegenArrayDiagonal(expr, (1, 2)))
+
+
+def test_codegen_array_parse_out_of_bounds():
+
+    expr = Sum(M[i, i], (i, 0, 4))
+    raises(ValueError, lambda: parse_indexed_expression(expr))
+    expr = Sum(M[i, i], (i, 0, k))
+    raises(ValueError, lambda: parse_indexed_expression(expr))
+    expr = Sum(M[i, i], (i, 1, k-1))
+    raises(ValueError, lambda: parse_indexed_expression(expr))
+
+    expr = Sum(M[i, j]*N[j,m], (j, 0, 4))
+    raises(ValueError, lambda: parse_indexed_expression(expr))
+    expr = Sum(M[i, j]*N[j,m], (j, 0, k))
+    raises(ValueError, lambda: parse_indexed_expression(expr))
+    expr = Sum(M[i, j]*N[j,m], (j, 1, k-1))
+    raises(ValueError, lambda: parse_indexed_expression(expr))
