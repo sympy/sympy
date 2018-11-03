@@ -2576,7 +2576,7 @@ class MatrixBase(MatrixDeprecated,
         whether dot product is to be calculated or hermitian inner
         product is to be calculated.
 
-        Conjugate_convention takes one argument as input. The accepted
+        If ``conjugate_convention`` is ``"left"``, ``"math"`` or ``"maths"``,
         arguments are: ``"maths"`` ,``"math"`` ,``"left"`` ,``"physics"``
         or ``"right"``.
         ``"maths"``, ``"math"`` or ``"left"`` all correspond to the same convention
