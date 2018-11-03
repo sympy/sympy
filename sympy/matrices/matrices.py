@@ -2579,7 +2579,6 @@ class MatrixBase(MatrixDeprecated,
         If ``conjugate_convention`` is ``"left"``, ``"math"`` or ``"maths"``,
         the conjugate of the first vector (``self``) is used.  If ``"right"``
         or ``"physics"`` is specified, the conjugate of the second vector ``b`` is used.
-        which hermitian of the second vector is used.
 
         Examples
         ========
