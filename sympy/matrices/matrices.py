@@ -2655,7 +2655,7 @@ class MatrixBase(MatrixDeprecated,
 
         if conjugate_convention is not None and hermitian is None:
             hermitian = True
-        if hermitian == True and conjugate_convention is None:
+        if hermitian and conjugate_convention is None:
             conjugate_convention = "maths"
 
         if hermitian == True:
