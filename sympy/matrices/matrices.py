@@ -2576,13 +2576,9 @@ class MatrixBase(MatrixDeprecated,
         whether dot product is to be calculated or hermitian inner
         product is to be calculated.
 
-        Conjugate_convention takes one argument as input. The accepted
-        arguments are: ``"maths"`` ,``"math"`` ,``"left"`` ,``"physics"``
-        or ``"right"``.
-        ``"maths"``, ``"math"`` or ``"left"`` all correspond to the same convention
-        in which hermitian of the first vector is used.
-        ``"physics"`` or ``"right"`` both correspond to the same convention in
-        which hermitian of the second vector is used.
+        If ``conjugate_convention`` is ``"left"``, ``"math"`` or ``"maths"``,
+        the conjugate of the first vector (``self``) is used.  If ``"right"``
+        or ``"physics"`` is specified, the conjugate of the second vector ``b`` is used.
 
         Examples
         ========
@@ -2659,7 +2655,7 @@ class MatrixBase(MatrixDeprecated,
 
         if conjugate_convention is not None and hermitian is None:
             hermitian = True
-        if hermitian == True and conjugate_convention is None:
+        if hermitian and conjugate_convention is None:
             conjugate_convention = "maths"
 
         if hermitian == True:
