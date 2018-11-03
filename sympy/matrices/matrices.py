@@ -2577,7 +2577,7 @@ class MatrixBase(MatrixDeprecated,
         product is to be calculated.
 
         If ``conjugate_convention`` is ``"left"``, ``"math"`` or ``"maths"``,
-        arguments are: ``"maths"`` ,``"math"`` ,``"left"`` ,``"physics"``
+        the conjugate of the first vector (``self``) is used.  If ``"right"``
         or ``"right"``.
         ``"maths"``, ``"math"`` or ``"left"`` all correspond to the same convention
         in which hermitian of the first vector is used.
