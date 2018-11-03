@@ -8,6 +8,7 @@ from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.symbol import Symbol
 from sympy.printing.str import StrPrinter
+from sympy.codegen.ast import Assignment
 
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
