@@ -85,7 +85,7 @@ import textwrap
 from collections import OrderedDict
 
 from sympy import __version__ as sympy_version
-from sympy.codegen import For, Assignment
+from sympy.codegen import Assignment, WithBody
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
 from sympy.core.compatibility import is_sequence, StringIO, string_types
 from sympy.printing.ccode import c_code_printers
@@ -634,9 +634,9 @@ class CodeGen:
                     if symbol not in local_vars:
                         # avoid duplicate arguments
                         symbols.remove(symbol)
-                elif isinstance(expr, For): # we should add all the classes which have a CodeBlock
+                elif isinstance(expr, WithBody): # we should add all the classes which have a CodeBlock
                     body = extract(expr.body.args, return_index)
-                    new_expr.append(For(expr.target, expr.iterable, body))
+                    new_expr.append(expr)
                 elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
                     # Create a "dummy" MatrixSymbol to use as the Output arg
                     out_arg = MatrixSymbol('out' + str(return_index), *expr.shape)
@@ -1781,9 +1781,9 @@ class OctaveCodeGen(CodeGen):
                         # this is a pure output: remove from the symbols list, so
                         # it doesn't become an input.
                         symbols.remove(symbol)
-                elif isinstance(expr, For): # we should add all the classes which have a CodeBlock
+                elif isinstance(expr, WithBody): # we should add all the classes which have a CodeBlock
                     body = extract(expr.body.args, return_index)
-                    new_expr.append(For(expr.target, expr.iterable, body))
+                    new_expr.append(expr)
                 else:
                     r = Result(expr, 'out' + str(return_index))
                     return_index += 1

@@ -13,7 +13,7 @@ There are several submodules available:
 
 """
 from .ast import (
-    Assignment, aug_assign, CodeBlock, For, Attribute, Variable, Declaration,
+    Assignment, aug_assign, CodeBlock, WithBody, For, Attribute, Variable, Declaration,
     While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall
 )
 
