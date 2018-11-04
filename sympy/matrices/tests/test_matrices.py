@@ -2509,8 +2509,8 @@ def test_dot():
     assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I]), hermitian=True, conjugate_convention="physics") == 13 - I
     assert Matrix([1, 2, 3*I]).dot(Matrix([4, 5*I, 6]), hermitian=True, conjugate_convention="right") == 4 + 8*I
     assert Matrix([1, 2, 3*I]).dot(Matrix([4, 5*I, 6]), hermitian=True, conjugate_convention="left") == 4 - 8*I
-    assert Matrix([I, 2*I, 3]).dot(Matrix([I, 2*I, 3]), hermitian=False, conjugate_convention="left") == 4
-    assert Matrix([I, 2*I, 3]).dot(Matrix([I, 2*I, 3]), conjugate_convention="left") == 14
+    assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), hermitian=False, conjugate_convention="left") == -5
+    assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), conjugate_convention="left") == 5
 
 
 def test_dual():
