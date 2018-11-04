@@ -2567,14 +2567,11 @@ class MatrixBase(MatrixDeprecated,
         must be either a matrix of size 1 x n, n x 1, or a list/tuple of length n.
         A scalar is returned.
 
-        In case one or both of the vectors are complex and the hermitian
-        flag is set to ``True`` this will calculate the hermitian inner
-        product of the two vectors.
+        By default, ``dot`` does not conjugate ``self`` or ``b``, even if there are
+        complex entries. Set ``hermitian=True`` (and optionally a ``conjugate_convention``)
+        to compute the hermitian inner product.
 
-        Possible kwargs are hermitian and conjugate_convention.
-        Hermitian takes argument as either True or False depending on
-        whether dot product is to be calculated or hermitian inner
-        product is to be calculated.
+        Possible kwargs are ``hermitian`` and ``conjugate_convention``.
 
         If ``conjugate_convention`` is ``"left"``, ``"math"`` or ``"maths"``,
         the conjugate of the first vector (``self``) is used.  If ``"right"``
