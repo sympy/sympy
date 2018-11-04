@@ -362,7 +362,9 @@ def test_linear_3eq_order1():
     C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*\
     exp(Integral(-t**2 - sin(t), t))), Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*\
     Integral(t**3 + log(t), t)) + C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
-    assert dsolve(eq4) == sol4
+    dsolve_sol = dsolve(eq4)
+    dsolve_sol = [eq.subs(C3, -C3) for eq in dsolve_sol]
+    assert all(simplify(s4.rhs - ds4.rhs) == 0 for s4, ds4 in zip(sol4, dsolve_sol))
 
     eq5 = (Eq(diff(x(t),t),4*x(t) - z(t)),Eq(diff(y(t),t),2*x(t)+2*y(t)-z(t)),Eq(diff(z(t),t),3*x(t)+y(t)))
     sol5 = [Eq(x(t), C1*exp(2*t) + C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t)/2 + C3*t*exp(2*t) + C3*exp(2*t)), \
@@ -2934,6 +2936,98 @@ def test_issue_14395():
     assert dsolve(Derivative(f(x), x, x) + 9*f(x) - sec(x), f(x)) == sol
 
 
+def test_matrix_exp():
+    from sympy.matrices.dense import Matrix, eye, zeros
+    from sympy.solvers.ode import matrix_exp
+    t = Symbol('t')
+
+    for n in range(1, 6+1):
+        assert matrix_exp(zeros(n), t) == eye(n)
+
+    for n in range(1, 6+1):
+        A = eye(n)
+        expAt = exp(t) * eye(n)
+        assert matrix_exp(A, t) == expAt
+
+    for n in range(1, 6+1):
+        A = Matrix(n, n, lambda i,j: i+1 if i==j else 0)
+        expAt = Matrix(n, n, lambda i,j: exp((i+1)*t) if i==j else 0)
+        assert matrix_exp(A, t) == expAt
+
+    A = Matrix([[0, 1], [-1, 0]])
+    expAt = Matrix([[cos(t), sin(t)], [-sin(t), cos(t)]])
+    assert matrix_exp(A, t) == expAt
+
+    A = Matrix([[2, -5], [2, -4]])
+    expAt = Matrix([
+            [3*exp(-t)*sin(t) + exp(-t)*cos(t), -5*exp(-t)*sin(t)],
+            [2*exp(-t)*sin(t), -3*exp(-t)*sin(t) + exp(-t)*cos(t)]
+            ])
+    assert matrix_exp(A, t) == expAt
+
+    A = Matrix([[21, 17, 6], [-5, -1, -6], [4, 4, 16]])
+    expAt = Matrix([
+        [(8*t*exp(12*t) + 5*exp(12*t) - 1)*exp(4*t)/4,
+         (8*t*exp(12*t) + 5*exp(12*t) - 5)*exp(4*t)/4,
+         (exp(12*t) - 1)*exp(4*t)/2],
+        [(-8*t*exp(12*t) - exp(12*t) + 1)*exp(4*t)/4,
+         (-8*t*exp(12*t) - exp(12*t) + 5)*exp(4*t)/4,
+         (-exp(12*t) + 1)*exp(4*t)/2],
+        [4*t*exp(16*t), 4*t*exp(16*t), exp(16*t)]])
+    expAt = Matrix([
+        [2*t*exp(16*t) + 5*exp(16*t)/4 - exp(4*t)/4, 2*t*exp(16*t) + 5*exp(16*t)/4 - 5*exp(4*t)/4,  exp(16*t)/2 - exp(4*t)/2],
+        [ -2*t*exp(16*t) - exp(16*t)/4 + exp(4*t)/4,  -2*t*exp(16*t) - exp(16*t)/4 + 5*exp(4*t)/4, -exp(16*t)/2 + exp(4*t)/2],
+        [                             4*t*exp(16*t),                                4*t*exp(16*t),                 exp(16*t)]
+        ])
+    assert matrix_exp(A, t) == expAt
+
+    A = Matrix([[1, 1, 0, 0],
+                [0, 1, 1, 0],
+                [0, 0, 1, -S(1)/8],
+                [0, 0, S(1)/2, S(1)/2]])
+    expAt = Matrix([
+        [exp(t), t*exp(t), 4*t*exp(3*t/4) + 8*t*exp(t) + 48*exp(3*t/4) - 48*exp(t),
+                            -2*t*exp(3*t/4) - 2*t*exp(t) - 16*exp(3*t/4) + 16*exp(t)],
+        [0, exp(t), -t*exp(3*t/4) - 8*exp(3*t/4) + 8*exp(t), t*exp(3*t/4)/2 + 2*exp(3*t/4) - 2*exp(t)],
+        [0, 0, t*exp(3*t/4)/4 + exp(3*t/4), -t*exp(3*t/4)/8],
+        [0, 0, t*exp(3*t/4)/2, -t*exp(3*t/4)/4 + exp(3*t/4)]
+        ])
+    assert matrix_exp(A, t) == expAt
+
+    A = Matrix([
+    [ 0, 1,  0, 0],
+    [-1, 0,  0, 0],
+    [ 0, 0,  0, 1],
+    [ 0, 0, -1, 0]])
+
+    expAt = Matrix([
+    [ cos(t), sin(t),         0,        0],
+    [-sin(t), cos(t),         0,        0],
+    [      0,      0,    cos(t),   sin(t)],
+    [      0,      0,   -sin(t),   cos(t)]])
+    assert matrix_exp(A, t) == expAt
+
+    A = Matrix([
+    [ 0, 1,  1, 0],
+    [-1, 0,  0, 1],
+    [ 0, 0,  0, 1],
+    [ 0, 0, -1, 0]])
+
+    expAt = Matrix([
+    [ cos(t), sin(t),  t*cos(t), t*sin(t)],
+    [-sin(t), cos(t), -t*sin(t), t*cos(t)],
+    [      0,      0,    cos(t),   sin(t)],
+    [      0,      0,   -sin(t),   cos(t)]])
+    assert matrix_exp(A, t) == expAt
+
+    # This case is unacceptably slow right now but should be solvable...
+    #a, b, c, d, e, f = symbols('a b c d e f')
+    #A = Matrix([
+    #[-a,  b,          c,  d],
+    #[ a, -b,          e,  0],
+    #[ 0,  0, -c - e - f,  0],
+    #[ 0,  0,          f, -d]])
+
 def test_sysode_linear_neq_order1():
     from sympy.abc import t
 
@@ -2944,11 +3038,11 @@ def test_sysode_linear_neq_order1():
 
     k01, k10, k20, k21, k23, k30 = symbols('k01 k10 k20 k21 k23 k30')
 
-    eq = (Eq(Derivative(Z0(t), t), -k01*Z0(t) + k10*Z1(t) + k20*Z2(t) + k30*Z3(t)), Eq(Derivative(Z1(t), t),
+    eq1 = (Eq(Derivative(Z0(t), t), -k01*Z0(t) + k10*Z1(t) + k20*Z2(t) + k30*Z3(t)), Eq(Derivative(Z1(t), t),
           k01*Z0(t) - k10*Z1(t) + k21*Z2(t)), Eq(Derivative(Z2(t), t), -(k20 + k21 + k23)*Z2(t)), Eq(Derivative(Z3(t),
           t), k23*Z2(t) - k30*Z3(t)))
 
-    sols_eq = [Eq(Z0(t), C1*k10/k01 + C2*(-k10 + k30)*exp(-k30*t)/(k01 + k10 - k30) - C3*exp(t*(-
+    sol1 = [Eq(Z0(t), C1*k10/k01 + C2*(-k10 + k30)*exp(-k30*t)/(k01 + k10 - k30) - C3*exp(t*(-
                 k01 - k10)) + C4*(k10*k20 + k10*k21 - k10*k30 - k20**2 - k20*k21 - k20*k23 + k20*k30 +
                 k23*k30)*exp(t*(-k20 - k21 - k23))/(k23*(k01 + k10 - k20 - k21 - k23))),
                Eq(Z1(t), C1 - C2*k01*exp(-k30*t)/(k01 + k10 - k30) + C3*exp(t*(-k01 - k10)) + C4*(k01*k20 + k01*k21
@@ -2957,8 +3051,33 @@ def test_sysode_linear_neq_order1():
                Eq(Z2(t), C4*(-k20 - k21 - k23 + k30)*exp(t*(-k20 - k21 - k23))/k23),
                Eq(Z3(t), C2*exp(-k30*t) + C4*exp(t*(-k20 - k21 - k23)))]
 
-    assert dsolve(eq, simplify=False) == sols_eq
+    assert dsolve(eq1, simplify=False) == sol1
+    # assert checksysodesol(eq1, sol1) == (True, [0, 0, 0])
 
+    x, y, z = symbols('x y z', cls=Function)
+    k2, k3 = symbols('k2 k3')
+    eq2 = (
+        Eq(Derivative(z(t), t), k2*y(t)),
+        Eq(Derivative(x(t), t), k3*y(t)),
+        Eq(Derivative(y(t), t), (-k2 - k3)*y(t))
+        )
+    sol2 = { Eq(z(t), C1 - C3*k2*exp(t*(-k2 - k3))/(k2 + k3)),
+             Eq(x(t), C2 - C3*k3*exp(t*(-k2 - k3))/(k2 + k3)),
+             Eq(y(t), C3*exp(t*(-k2 - k3))) }
+    assert set(dsolve(eq2)) == sol2
+    assert checksysodesol(eq2, sol2) == (True, [0, 0, 0])
+
+    u, v, w = symbols('u v w', cls=Function)
+    eq3 = [4*u(t) - v(t) - 2*w(t) + Derivative(u(t), t),
+           2*u(t) + v(t) - 2*w(t) + Derivative(v(t), t),
+           5*u(t) + v(t) - 3*w(t) + Derivative(w(t), t)]
+    sol3 = {Eq(u(t), C1*exp(-2*t) + C2*(sqrt(3)*sin(sqrt(3)*t)/6 + cos(sqrt(3)*t)/2)
+                                  + C3*(-sin(sqrt(3)*t)/2 + sqrt(3)*cos(sqrt(3)*t)/6)),
+            Eq(v(t), C2*(sqrt(3)*sin(sqrt(3)*t)/6 + cos(sqrt(3)*t)/2)
+                   + C3*(-sin(sqrt(3)*t)/2 + sqrt(3)*cos(sqrt(3)*t)/6)),
+            Eq(w(t), C1*exp(-2*t) + C2*cos(sqrt(3)*t) - C3*sin(sqrt(3)*t))}
+    assert set(dsolve(eq3)) == sol3
+    assert checksysodesol(eq3, sol3) == (True, [0, 0, 0])
 
 def test_nth_algebraic():
     eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
