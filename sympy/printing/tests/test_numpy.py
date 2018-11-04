@@ -1,6 +1,8 @@
-from sympy import Piecewise, lambdify, Equality, Unequality, Sum, Mod, cbrt, sqrt
+from sympy import (Piecewise, lambdify, Equality, Unequality, Sum, Mod, cbrt,
+        sqrt, MatrixSymbol)
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Cbrt, Sqrt
+from sympy.codegen.array_utils import CodegenArrayContraction
 from sympy.printing.lambdarepr import NumPyPrinter
 
 from sympy.utilities.pytest import skip
@@ -49,6 +51,21 @@ def test_multiple_sums():
     x_ = np.linspace(-1, +1, 10)
     assert np.allclose(f(a_, b_, c_, d_, x_),
                        sum((x_ + j_) * i_ for i_ in range(a_, b_ + 1) for j_ in range(c_, d_ + 1)))
+
+
+def test_codegen_einsum():
+    if not np:
+        skip("NumPy not installed")
+
+    M = MatrixSymbol("M", 2, 2)
+    N = MatrixSymbol("N", 2, 2)
+
+    cg = CodegenArrayContraction.from_MatMul(M*N)
+    f = lambdify((M, N), cg, 'numpy')
+
+    ma = np.matrix([[1, 2], [3, 4]])
+    mb = np.matrix([[1,-2], [-1, 3]])
+    assert (f(ma, mb) == ma*mb).all()
 
 
 def test_relational():

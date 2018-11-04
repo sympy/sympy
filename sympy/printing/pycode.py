@@ -504,6 +504,37 @@ class NumPyPrinter(PythonCodePrinter):
             func = self._module_format('numpy.array')
         return "%s(%s)" % (func, self._print(expr.tolist()))
 
+    def _print_CodegenArrayTensorProduct(self, expr):
+        array_list = [j for i, arg in enumerate(expr.args) for j in
+                (self._print(arg), "[%i]" % i)]
+        return "%s(%s)" % (self._module_format('numpy.einsum'), ", ".join(array_list))
+
+    def _print_CodegenArrayContraction(self, expr):
+        from sympy.codegen.array_utils import CodegenArrayTensorProduct
+        base = expr.expr
+        contraction_indices = expr.contraction_indices
+        if len(contraction_indices) == 0:
+            return self._print(base)
+        if isinstance(base, CodegenArrayTensorProduct):
+            counter = 0
+            d = {j: min(i) for i in contraction_indices for j in i}
+            indices = []
+            for rank_arg in base.subranks:
+                lindices = []
+                for i in range(rank_arg):
+                    if counter in d:
+                        lindices.append(d[counter])
+                    else:
+                        lindices.append(counter)
+                    counter += 1
+                indices.append(lindices)
+            elems = ["%s, %s" % (self._print(arg), ind) for arg, ind in zip(base.args, indices)]
+            return "%s(%s)" % (
+                self._module_format('numpy.einsum'),
+                ", ".join(elems)
+            )
+        raise NotImplementedError()
+
 
 for k in NumPyPrinter._kf:
     setattr(NumPyPrinter, '_print_%s' % k, _print_known_func)
