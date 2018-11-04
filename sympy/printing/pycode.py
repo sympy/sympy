@@ -131,6 +131,54 @@ class PythonCodePrinter(CodePrinter):
     def _get_comment(self, text):
         return "  # {0}".format(text)
 
+    def _expand_fold_binary_op(self, op, args):
+        """
+        This method expands a fold on binary operations.
+
+        ``functools.reduce`` is an example of a folded operation.
+
+        For example, the expression
+
+        `A + B + C + D`
+
+        is folded into
+
+        `((A + B) + C) + D`
+        """
+        if len(args) == 1:
+            return self._print(args[0])
+        else:
+            return "%s(%s, %s)" % (
+                self._module_format(op),
+                self._print(args[0]),
+                self._expand_fold_binary_op(op, args[1:]),
+            )
+
+    def _expand_reduce_binary_op(self, op, args):
+        """
+        This method expands a reductin on binary operations.
+
+        Notice: this is NOT the same as ``functools.reduce``.
+
+        For example, the expression
+
+        `A + B + C + D`
+
+        is reduced into:
+
+        `(A + B) + (C + D)`
+        """
+        if len(args) == 1:
+            return self._print(args[0])
+        else:
+            N = len(args)
+            Nhalf = N // 2
+            return "%s(%s, %s)" % (
+                self._module_format(op),
+                self._expand_reduce_binary_op(args[:Nhalf]),
+                self._expand_reduce_binary_op(args[Nhalf:]),
+            )
+
     def _print_NaN(self, expr):
         return "float('nan')"
 
@@ -506,7 +554,7 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_CodegenArrayTensorProduct(self, expr):
         array_list = [j for i, arg in enumerate(expr.args) for j in
-                (self._print(arg), "[%i]" % i)]
+                (self._print(arg), "[%i, %i]" % (2*i, 2*i+1))]
         return "%s(%s)" % (self._module_format('numpy.einsum'), ", ".join(array_list))
 
     def _print_CodegenArrayContraction(self, expr):
@@ -534,6 +582,33 @@ class NumPyPrinter(PythonCodePrinter):
                 ", ".join(elems)
             )
         raise NotImplementedError()
+
+    def _print_CodegenArrayDiagonal(self, expr):
+        diagonal_indices = list(expr.diagonal_indices)
+        if len(diagonal_indices) > 1:
+            # TODO: this should be handled in sympy.codegen.array_utils,
+            # possibly by creating the possibility of unfolding the
+            # CodegenArrayDiagonal object into nested ones. Same reasoning for
+            # the array contraction.
+            raise NotImplementedError
+        if len(diagonal_indices[0]) != 2:
+            raise NotImplementedError
+        return "%s(%s, 0, axis1=%s, axis2=%s)" % (
+            self._module_format("numpy.diagonal"),
+            self._print(expr.expr),
+            diagonal_indices[0][0],
+            diagonal_indices[0][1],
+        )
+
+    def _print_CodegenArrayPermuteDims(self, expr):
+        return "%s(%s, %s)" % (
+            self._module_format("numpy.transpose"),
+            self._print(expr.expr),
+            self._print(expr.permutation.args[0]),
+        )
+
+    def _print_CodegenArrayElementwiseAdd(self, expr):
+        return self._expand_fold_binary_op('numpy.add', expr.args)
 
 
 for k in NumPyPrinter._kf:
