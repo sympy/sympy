@@ -1709,7 +1709,11 @@ class MatrixCalculus(MatrixCommon):
         # XXX this should be handled here rather than in Derivative
         from sympy import Derivative
         kwargs.setdefault('evaluate', True)
-        return Derivative(self, *args, **kwargs)
+        deriv = Derivative(self, *args, evaluate=True)
+        if not isinstance(self, Basic):
+            return deriv.as_mutable()
+        else:
+            return deriv
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))
