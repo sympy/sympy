@@ -29,6 +29,7 @@ from mpmath.libmp.libmpf import (
     prec_to_dps)
 from sympy.utilities.misc import debug, filldedent
 from .evaluate import global_evaluate
+from sympy.core.compatibility import lru_cache
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -154,10 +155,11 @@ def _literal_float(f):
     return bool(regex.match(pat, f))
 
 # (a,b) -> gcd(a,b)
-_gcdcache = {}
+#_gcdcache = {}
 
 # TODO caching with decorator, but not to degrade performance
 
+@lru_cache()
 
 def igcd(*args):
     """Computes nonnegative integer greatest common divisor.
@@ -189,7 +191,7 @@ def igcd(*args):
             b = args[k]
             k += 1
             try:
-                a = _gcdcache[(a, b)]
+              #  a = _gcdcache[(a, b)]
             except KeyError:
                 b = as_int(b)
                 if not b:
@@ -201,7 +203,7 @@ def igcd(*args):
                     b = -b
                 t = a, b
                 a = igcd2(a, b)
-                _gcdcache[t] = _gcdcache[t[1], t[0]] = a
+             #   _gcdcache[t] = _gcdcache[t[1], t[0]] = a
     while k < len(args):
         ok = as_int(args[k])
         k += 1
