@@ -8057,10 +8057,13 @@ def matrix_exp_jordan_form(A, t):
 
     eigenchains = jordan_chains(A)
 
+    # Needed for consistency across Python versions:
+    eigenchains = sorted(eigenchains.items(), key=default_sort_key)
+
     blocks = []
     vectors = []
     seen_conjugate = set()
-    for e, chains in eigenchains.items():
+    for e, chains in eigenchains:
         for chain in chains:
             n = len(chain)
             if im(e).is_nonzero:
