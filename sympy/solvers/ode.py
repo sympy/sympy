@@ -8095,7 +8095,10 @@ def matrix_exp_jordan_form(A, t):
                 blocks.append(exp(e * t) * expJblock)
 
     expJ = Matrix.diag(*blocks)
-    P = Matrix.hstack(*vectors)
+    if len(vectors):
+        P = vectors[0].hstack(*vectors)
+    else:
+        P = Matrix(0, 0)
 
     return P, expJ
 
