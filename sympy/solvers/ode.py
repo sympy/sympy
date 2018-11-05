@@ -8074,16 +8074,11 @@ def matrix_exp_jordan_form(A, t):
                 imrt = im(e) * t
                 imblock = Matrix([[cos(imrt), sin(imrt)],
                                   [-sin(imrt), cos(imrt)]])
-                expJblock = Matrix(0, 2*n, [])
-                for i in range(n):
-                    subblockrow = Matrix(2, 0, [])
-                    for j in range(n):
-                        if j >= i:
-                            subblock = imblock * t**(j-i) / factorial(j-i)
-                        else:
-                            subblock = zeros(2, 2)
-                        subblockrow = subblockrow.row_join(subblock)
-                    expJblock = expJblock.col_join(subblockrow)
+                expJblock2 = Matrix(n, n, lambda i,j:
+                        imblock * t**(j-i) / factorial(j-i) if j >= i
+                        else zeros(2, 2))
+                expJblock = Matrix(2*n, 2*n, lambda i,j: expJblock2[i//2,j//2][i%2,j%2])
+
                 blocks.append(exprt * expJblock)
                 for i in range(n):
                     vectors.append(re(chain[i]))
@@ -8095,10 +8090,7 @@ def matrix_exp_jordan_form(A, t):
                 blocks.append(exp(e * t) * expJblock)
 
     expJ = Matrix.diag(*blocks)
-    if len(vectors):
-        P = vectors[0].hstack(*vectors)
-    else:
-        P = Matrix(0, 0)
+    P = Matrix(N, N, lambda i,j: vectors[j][i])
 
     return P, expJ
 
