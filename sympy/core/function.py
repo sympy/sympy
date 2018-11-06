@@ -138,7 +138,7 @@ class FunctionClass(ManagedProperties):
     undefined function classes.
     """
     _new = type.__new__
-        
+
     def __init__(cls, *args, **kwargs):
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
@@ -408,7 +408,7 @@ class Function(Application, Expr):
     >>>
 
     """
-    
+
     @property
     def _diff_wrt(self):
         return False
