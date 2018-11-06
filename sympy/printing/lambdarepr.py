@@ -7,6 +7,7 @@ from .pycode import (
     MpmathPrinter,  # MpmathPrinter is imported for backward compatibility
     NumPyPrinter  # NumPyPrinter is imported for backward compatibility
 )
+from sympy.core.basic import Basic
 from sympy.external import import_module
 from sympy.utilities import default_sort_key
 
@@ -58,7 +59,7 @@ class LambdaPrinter(PythonCodePrinter):
         return str(expr)
 
 
-class TensorflowPrinter(LambdaPrinter):
+class TensorflowPrinter(PythonCodePrinter):
     """
     Tensorflow printer which handles vectorized piecewise functions,
     logical operators, max/min, and relational operators.
@@ -67,22 +68,22 @@ class TensorflowPrinter(LambdaPrinter):
 
     def _print_And(self, expr):
         "Logical And printer"
-        # We have to override LambdaPrinter because it uses Python 'and' keyword.
-        # If LambdaPrinter didn't define it, we could use StrPrinter's
+        # We have to override the printer because it uses Python 'and' keyword.
+        # If the printer didn't define it, we could use StrPrinter's
         # version of the function and add 'logical_and' to TENSORFLOW_TRANSLATIONS.
         return '{0}({1})'.format('logical_and', ','.join(self._print(i) for i in expr.args))
 
     def _print_Or(self, expr):
         "Logical Or printer"
-        # We have to override LambdaPrinter because it uses Python 'or' keyword.
-        # If LambdaPrinter didn't define it, we could use StrPrinter's
+        # We have to override the printer because it uses Python 'or' keyword.
+        # If the printer didn't define it, we could use StrPrinter's
         # version of the function and add 'logical_or' to TENSORFLOW_TRANSLATIONS.
         return '{0}({1})'.format('logical_or', ','.join(self._print(i) for i in expr.args))
 
     def _print_Not(self, expr):
         "Logical Not printer"
-        # We have to override LambdaPrinter because it uses Python 'not' keyword.
-        # If LambdaPrinter didn't define it, we would still have to define our
+        # We have to override the printer because it uses Python 'not' keyword.
+        # If the printer didn't define it, we would still have to define our
         #     own because StrPrinter doesn't define it.
         return '{0}({1})'.format('logical_not', ','.join(self._print(i) for i in expr.args))
 
@@ -143,6 +144,63 @@ class TensorflowPrinter(LambdaPrinter):
                                                lhs=lhs,
                                                rhs=rhs)
         return super(TensorflowPrinter, self)._print_Relational(expr)
+
+    def _print_MatrixBase(self, expr):
+        return "%s(%s)" % (
+            self._module_format("tensorflow.Variable"),
+            str(expr.tolist()),
+        )
+
+    def _print_Assignment(self, expr):
+        # TODO: is this necessary?
+        return "%s = %s" % (
+            self._print(expr.lhs),
+            self._print(expr.rhs),
+        )
+
+    def _print_CodeBlock(self, expr):
+        # TODO: is this necessary?
+        ret = []
+        for subexpr in expr.args:
+            ret.append(self._print(subexpr))
+        return "\n".join(ret)
+
+    def _print__Placeholder(self, expr):
+        shape = expr.shape
+        return "%s(%s, %s)" % (
+            self._module_format("tensorflow.placeholder"),
+            self._module_format("tensorflow.float32"),
+            str(shape),
+        )
+
+
+class _Placeholder(Basic):
+    def __new__(cls, dtype=None, shape=()):
+        return Basic.__new__(cls, dtype, shape)
+    shape = property(lambda self: self.args[1])
+
+
+def _lambdify_tensorflow(variables, expr):
+    from sympy.codegen import CodeBlock, Assignment
+    from sympy import Symbol, MatrixSymbol
+    printer = TensorflowPrinter()
+    statements = []
+    for v in variables:
+        if isinstance(v, Symbol):
+            placeholder = _Placeholder()
+            statements.append(Assignment(v, placeholder))
+        elif isinstance(v, MatrixSymbol):
+            placeholder = _Placeholder(shape=v.shape)
+            statements.append(Assignment(v, placeholder))
+    rename = {i: Symbol(str(i)+"_") for i in variables}
+    ret_code = """\
+def _lambdified({0}):
+""".format(", ".join(map(str, rename.values())))  #, rename)
+    for i in statements:
+        ret_code += "    %s\n" % printer.doprint(i)
+    ret_code += "    feed_dict = {0}\n".format(rename)
+    ret_code += "    return tensorflow.InteractiveSession().run(%s, feed_dict=feed_dict)\n" % printer.doprint(expr)
+    return ret_code
 
 
 # numexpr works by altering the string passed to numexpr.evaluate
