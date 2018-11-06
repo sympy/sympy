@@ -1,9 +1,9 @@
 from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
     tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfi,
-    EulerGamma, Expr, factor, Function, I, im, Integral, integrate,
+    EulerGamma, Expr, factor, Function, gamma, I, im, Integral, integrate,
     Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
-    Ne, O, oo, pi, Piecewise, polar_lift, Poly, Rational, re, S, Si, sign,
+    Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
     symbols, sympify, tan, trigsimp, Tuple
 )
@@ -1395,3 +1395,9 @@ def test_issue_15285():
     y = 1/x - 1
     f = 4*y*exp(-2*y)/x**2
     assert integrate(f, [x, 0, 1]) == 1
+
+
+def test_issue_15432():
+    assert integrate(x**n * exp(-x) * log(x), (x, 0, oo)).gammasimp() == Piecewise(
+        (gamma(n + 1)*polygamma(0, n) + gamma(n + 1)/n, re(n) + 1 > 0),
+        (Integral(x**n*exp(-x)*log(x), (x, 0, oo)), True))

@@ -103,12 +103,12 @@ compiled using the Theano compiler chain.
     >>> expr = sin(x)/x
 
     >>> from sympy.printing.theanocode import theano_function
-    >>> f = theano_function([x], expr)
+    >>> f = theano_function([x], [expr])
 
 If array broadcasting or types are desired then Theano requires this extra
 information
 
-    >>> f = theano_function([x], expr, dims={x: 1}, dtypes={x: 'float64'})
+    >>> f = theano_function([x], [expr], dims={x: 1}, dtypes={x: 'float64'})
 
 Theano has a more sophisticated code generation system than SymPy's C/Fortran
 code printers.  Among other things it handles common sub-expressions and
