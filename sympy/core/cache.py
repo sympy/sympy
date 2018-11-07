@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
-from sympy.core.compatibility import lru_cache
+
 class _cache(list):
     """ List of cached functions """
 
