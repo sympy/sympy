@@ -15,7 +15,7 @@ from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
 from sympy.core.compatibility import (
-    as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
+    as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY, lru_cache ,
     SYMPY_INTS, int_info)
 
 import mpmath
@@ -29,7 +29,6 @@ from mpmath.libmp.libmpf import (
     prec_to_dps)
 from sympy.utilities.misc import debug, filldedent
 from .evaluate import global_evaluate
-from sympy.core.compatibility import lru_cache
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -197,7 +196,6 @@ def igcd(*args):
                 break
             if b < 0:
                 b = -b
-            t = a, b
             a = igcd2(a, b)
     while k < len(args):
         ok = as_int(args[k])
