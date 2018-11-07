@@ -150,8 +150,8 @@ class PythonCodePrinter(CodePrinter):
         else:
             return "%s(%s, %s)" % (
                 self._module_format(op),
-                self._print(args[0]),
-                self._expand_fold_binary_op(op, args[1:]),
+                self._expand_fold_binary_op(op, args[:-1]),
+                self._print(args[-1]),
             )
 
     def _expand_reduce_binary_op(self, op, args):
