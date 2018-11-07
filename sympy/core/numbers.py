@@ -15,8 +15,9 @@ from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
 from sympy.core.compatibility import (
-    as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY, lru_cache ,
+    as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
+from sympy.core.cache import lru_cache
 
 import mpmath
 import mpmath.libmp as mlib
