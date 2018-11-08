@@ -293,7 +293,7 @@ class subfactorial(CombinatorialFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Subfactorial
+    .. [1] https://en.wikipedia.org/wiki/Subfactorial
     .. [2] http://mathworld.wolfram.com/Subfactorial.html
 
     Examples

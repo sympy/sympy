@@ -1257,7 +1257,7 @@ class asech(InverseHyperbolicFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hyperbolic_function
+    .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
     .. [2] http://dlmf.nist.gov/4.37
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSech/
 
@@ -1380,7 +1380,7 @@ class acsch(InverseHyperbolicFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hyperbolic_function
+    .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
     .. [2] http://dlmf.nist.gov/4.37
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCsch/
 

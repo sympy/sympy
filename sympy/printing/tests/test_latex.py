@@ -755,7 +755,8 @@ def test_latex_productset():
     line = Interval(0, 1)
     bigline = Interval(0, 10)
     fset = FiniteSet(1, 2, 3)
-    assert latex(line**2) == r"%s^2" % latex(line)
+    assert latex(line**2) == r"%s^{2}" % latex(line)
+    assert latex(line**10) == r"%s^{10}" % latex(line)
     assert latex(line * bigline * fset) == r"%s \times %s \times %s" % (
         latex(line), latex(bigline), latex(fset))
 
@@ -1795,7 +1796,7 @@ def test_issue_9216():
 def test_latex_printer_tensor():
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
     L = TensorIndexType("L")
-    i, j, k = tensor_indices("i j k", L)
+    i, j, k, l = tensor_indices("i j k l", L)
     i0 = tensor_indices("i_0", L)
     A, B, C, D = tensorhead("A B C D", [L], [[1]])
     H = tensorhead("H", [L, L], [[1], [1]])
@@ -1845,3 +1846,56 @@ def test_latex_printer_tensor():
 
     expr = A(i) + 3*B(i)
     assert latex(expr) == "3B{}^{i} + A{}^{i}"
+
+    ## Test ``TensorElement``:
+    from sympy.tensor.tensor import TensorElement
+
+    expr = TensorElement(K(i,j,k,l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3,j,k=2,l}'
+
+    expr = TensorElement(K(i,j,k,l), {i:3})
+    assert latex(expr) == 'K{}^{i=3,jkl}'
+
+    expr = TensorElement(K(i,-j,k,l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3}{}_{j}{}^{k=2,l}'
+
+    expr = TensorElement(K(i,-j,k,-l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3}{}_{j}{}^{k=2}{}_{l}'
+
+    expr = TensorElement(K(i,j,-k,-l), {i:3, -k:2})
+    assert latex(expr) == 'K{}^{i=3,j}{}_{k=2,l}'
+
+    expr = TensorElement(K(i,j,-k,-l), {i:3})
+    assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'
+
+
+def test_trace():
+    # Issue 15303
+    from sympy import trace
+    A = MatrixSymbol("A", 2, 2)
+    assert latex(trace(A)) == r"\mathrm{tr}\left (A \right )"
+    assert latex(trace(A**2)) == r"\mathrm{tr}\left (A^{2} \right )"
+
+
+def test_print_basic():
+    # Issue 15303
+    from sympy import Basic, Expr
+
+    # dummy class for testing printing where the function is not implemented in latex.py
+    class UnimplementedExpr(Expr):
+        def __new__(cls, e):
+            return Basic.__new__(cls, e)
+
+    # dummy function for testing
+    def unimplemented_expr(expr):
+        return UnimplementedExpr(expr).doit()
+
+    # override class name to use superscript / subscript
+    def unimplemented_expr_sup_sub(expr):
+        result = UnimplementedExpr(expr)
+        result.__class__.__name__ = 'UnimplementedExpr_x^1'
+        return result
+
+    assert latex(unimplemented_expr(x)) == r'UnimplementedExpr\left(x\right)'
+    assert latex(unimplemented_expr(x**2)) == r'UnimplementedExpr\left(x^{2}\right)'
+    assert latex(unimplemented_expr_sup_sub(x)) == r'UnimplementedExpr^{1}_{x}\left(x\right)'

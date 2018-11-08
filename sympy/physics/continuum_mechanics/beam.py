@@ -1508,10 +1508,10 @@ class Beam3D(Beam):
     is restricted.
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam3D
-    >>> from sympy import symbols
+    >>> from sympy import symbols, simplify
     >>> l, E, G, I, A = symbols('l, E, G, I, A')
     >>> b = Beam3D(l, E, G, I, A)
-    >>> q, m = symbols('q, m')
+    >>> x, q, m = symbols('x, q, m')
     >>> b.apply_load(q, 0, 0, dir="y")
     >>> b.apply_moment_load(m, 0, -1, dir="z")
     >>> b.shear_force()
@@ -1525,10 +1525,18 @@ class Beam3D(Beam):
     [0, 0, l*x*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
     + q*x**3/(6*E*I) + x**2*(-l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I))
     - m)/(2*E*I)]
-    >>> b.deflection()
-    [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
-    + l*m*x**2/(4*E*I) - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
-    + q*x**4/(24*E*I) + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G), 0]
+    >>> dx, dy, dz = b.deflection()
+    >>> dx
+    0
+    >>> dz
+    0
+    >>> expectedy = (
+    ... -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
+    ... + l*m*x**2/(4*E*I) - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
+    ... + q*x**4/(24*E*I) + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G)
+    ... )
+    >>> simplify(dy - expectedy)
+    0
 
     References
     ==========

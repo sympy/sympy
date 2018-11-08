@@ -805,7 +805,7 @@ class LambertW(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Lambert_W_function
+    .. [1] https://en.wikipedia.org/wiki/Lambert_W_function
     """
 
     @classmethod

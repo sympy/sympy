@@ -78,7 +78,7 @@ class beta(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Beta_function
+    .. [1] https://en.wikipedia.org/wiki/Beta_function
     .. [2] http://mathworld.wolfram.com/BetaFunction.html
     .. [3] http://dlmf.nist.gov/5.12
     """

@@ -62,6 +62,8 @@ information on each (run ``help(ode)``):
   - 2nd order Liouville differential equations.
   - Power series solutions for second order differential equations
     at ordinary and regular singular points.
+  - `n`\th order differential equation that can be solved with algebraic
+    rearrangement and integration.
   - `n`\th order linear homogeneous differential equation with constant
     coefficients.
   - `n`\th order linear inhomogeneous differential equation with constant
@@ -232,6 +234,7 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 from itertools import islice
+from functools import cmp_to_key
 
 from sympy.core import Add, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, range
@@ -246,7 +249,8 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
-from sympy.logic.boolalg import BooleanAtom, And, Or, Not
+from sympy.logic.boolalg import (BooleanAtom, And, Or, Not, BooleanTrue,
+                                BooleanFalse)
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
     atan2, conjugate, Piecewise
 from sympy.functions.combinatorial.factorials import factorial
@@ -283,6 +287,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: ``best``, and ``all_Integral`` meta-hints should not be included in this
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
+    "nth_algebraic",
     "separable",
     "1st_exact",
     "1st_linear",
@@ -305,6 +310,7 @@ allhints = (
     "Liouville",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
+    "nth_algebraic_Integral",
     "separable_Integral",
     "1st_exact_Integral",
     "1st_linear_Integral",
@@ -366,7 +372,14 @@ def sub_func_doit(eq, func, new):
 
     # Make sure that expressions such as ``Derivative(f(x), (x, 2))`` get
     # replaced before ``Derivative(f(x), x)``:
-    reps = sorted(reps.items(), key=lambda x: -x[0].derivative_count)
+    #
+    # Also replace e.g. Derivative(x*Derivative(f(x), x), x) before
+    # Derivative(f(x), x)
+    def cmp(subs1, subs2):
+        return subs2[0].has(subs1[0]) - subs1[0].has(subs2[0])
+    key = lambda x: (-x[0].derivative_count, cmp_to_key(cmp)(x))
+    reps = sorted(reps.items(), key=key)
+
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
@@ -918,11 +931,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
-    ('separable', '1st_linear', '1st_homogeneous_coeff_best',
+    ('nth_algebraic', 'separable', '1st_linear', '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
     '1st_power_series', 'lie_group',
-    'nth_linear_constant_coeff_homogeneous',
+    'nth_linear_constant_coeff_homogeneous', 'nth_algebraic_Integral',
     'separable_Integral', '1st_linear_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
@@ -1290,8 +1303,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         if r and r[d] != 0:
             y = Dummy('y')
             g = simplify(r[e]/r[d]).subs(f(x), y)
-            h = simplify(r[k]/r[d])
-            if h.has(f(x)) or g.has(x):
+            h = simplify(r[k]/r[d]).subs(f(x), y)
+            if y in h.free_symbols or x in g.free_symbols:
                 pass
             else:
                 r = {'g': g, 'h': h, 'y': y}
@@ -1339,6 +1352,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
 
     if order > 0:
+        # Any ODE that can be solved with a combination of algebra and
+        # integrals e.g.:
+        # d^3/dx^3(x y) = F(x)
+        r = _nth_algebraic_match(reduced_eq, func)
+        if r['solutions']:
+            matching_hints['nth_algebraic'] = r
+            matching_hints['nth_algebraic_Integral'] = r
+
         # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
 
@@ -3009,7 +3030,7 @@ def ode_1st_exact(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Exact_differential_equation
+    - https://en.wikipedia.org/wiki/Exact_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 73
 
@@ -3065,7 +3086,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 59
 
@@ -3164,7 +3185,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 59
 
@@ -3260,7 +3281,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - https://en.wikipedia.org/wiki/Homogeneous_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 59
 
@@ -3421,7 +3442,7 @@ def ode_1st_linear(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
+    - https://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 92
 
@@ -3507,7 +3528,7 @@ def ode_Bernoulli(eq, func, order, match):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Bernoulli_differential_equation
+    - https://en.wikipedia.org/wiki/Bernoulli_differential_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 95
 
@@ -3968,6 +3989,192 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
     return frobdict
 
+def _nth_algebraic_match(eq, func):
+    r"""
+    Matches any differential equation that nth_algebraic can solve. Uses
+    `sympy.solve` but teaches it how to integrate derivatives.
+
+    This involves calling `sympy.solve` and does most of the work of finding a
+    solution (apart from evaluating the integrals).
+    """
+
+    # Each integration should generate a different constant
+    constants = iter(numbered_symbols(prefix='C', cls=Symbol, start=1))
+    constant = lambda: next(constants, None)
+
+    # Like Derivative but "invertible"
+    class diffx(Function):
+        def inverse(self):
+            # We mustn't use integrate here because fx has been replaced by _t
+            # in the equation so integrals will not be correct while solve is
+            # still working.
+            return lambda expr: Integral(expr, var) + constant()
+
+    # Replace derivatives wrt the independent variable with diffx
+    def replace(eq, var):
+        def expand_diffx(*args):
+            differand, diffs = args[0], args[1:]
+            toreplace = differand
+            for v, n in diffs:
+                for _ in range(n):
+                    if v == var:
+                        toreplace = diffx(toreplace)
+                    else:
+                        toreplace = Derivative(toreplace, v)
+            return toreplace
+        return eq.replace(Derivative, expand_diffx)
+
+    # Restore derivatives in solution afterwards
+    def unreplace(eq, var):
+        return eq.replace(diffx, lambda e: Derivative(e, var))
+
+    # The independent variable
+    var = func.args[0]
+    subs_eqn = replace(eq, var)
+    try:
+        solns = solve(subs_eqn, func)
+    except NotImplementedError:
+        solns = []
+
+    solns = [unreplace(soln, var) for soln in solns]
+    solns = [Equality(func, soln) for soln in solns]
+    return {'var':var, 'solutions':solns}
+
+def ode_nth_algebraic(eq, func, order, match):
+    r"""
+    Solves an `n`\th order ordinary differential equation using algebra and
+    integrals.
+
+    There is no general form for the kind of equation that this can solve. The
+    the equation is solved algebraically treating differentiation as an
+    invertible algebraic function.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = Eq(f(x) * (f(x).diff(x)**2 - 1), 0)
+    >>> dsolve(eq, f(x), hint='nth_algebraic')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    [Eq(f(x), 0), Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
+
+    Note that this solver can return algebraic solutions that do not have any
+    integration constants (f(x) = 0 in the above example).
+
+    # indirect doctest
+
+    """
+    solns = match['solutions']
+    var = match['var']
+    solns = _nth_algebraic_remove_redundant_solutions(eq, solns, order, var)
+    if len(solns) == 1:
+        return solns[0]
+    else:
+        return solns
+
+# FIXME: Maybe something like this function should be applied to the solutions
+# returned by dsolve in general rather than just for nth_algebraic...
+
+def _nth_algebraic_remove_redundant_solutions(eq, solns, order, var):
+    r"""
+    Remove redundant solutions from the set of solutions returned by
+    nth_algebraic.
+
+    This function is needed because otherwise nth_algebraic can return
+    redundant solutions where both algebraic solutions and integral
+    solutions are found to the ODE. As an example consider:
+
+        eq = Eq(f(x) * f(x).diff(x), 0)
+
+    There are two ways to find solutions to eq. The first is the algebraic
+    solution f(x)=0. The second is to solve the equation f(x).diff(x) = 0
+    leading to the solution f(x) = C1. In this particular case we then see
+    that the first solution is a special case of the second and we don't
+    want to return it.
+
+    This does not always happen for algebraic solutions though since if we
+    have
+
+        eq = Eq(f(x)*(1 + f(x).diff(x)), 0)
+
+    then we get the algebraic solution f(x) = 0 and the integral solution
+    f(x) = -x + C1 and in this case the two solutions are not equivalent wrt
+    initial conditions so both should be returned.
+    """
+    def is_special_case_of(soln1, soln2):
+        return _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var)
+
+    unique_solns = []
+    for soln1 in solns:
+        for soln2 in unique_solns[:]:
+            if is_special_case_of(soln1, soln2):
+                break
+            elif is_special_case_of(soln2, soln1):
+                unique_solns.remove(soln2)
+        else:
+            unique_solns.append(soln1)
+
+    return unique_solns
+
+def _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var):
+    r"""
+    True if soln1 is found to be a special case of soln2 wrt some value of the
+    constants that appear in soln2. False otherwise.
+    """
+    # The solutions returned by nth_algebraic should be given explicitly as in
+    # Eq(f(x), expr). We will equate the RHSs of the two solutions giving an
+    # equation f1(x) = f2(x).
+    #
+    # Since this is supposed to hold for all x it also holds for derivatives
+    # f1'(x) and f2'(x). For an order n ode we should be able to differentiate
+    # each solution n times to get n+1 equations.
+    #
+    # We then try to solve those n+1 equations for the integrations constants
+    # in f2(x). If we can find a solution that doesn't depend on x then it
+    # means that some value of the constants in f1(x) is a special case of
+    # f2(x) corresponding to a paritcular choice of the integration constants.
+
+    constants1 = soln1.free_symbols.difference(eq.free_symbols)
+    constants2 = soln2.free_symbols.difference(eq.free_symbols)
+
+    constants1_new = get_numbered_constants(soln1.rhs - soln2.rhs, len(constants1))
+    if len(constants1) == 1:
+        constants1_new = {constants1_new}
+    for c_old, c_new in zip(constants1, constants1_new):
+        soln1 = soln1.subs(c_old, c_new)
+
+    # n equations for f1(x)=f2(x), f1'(x)=f2'(x), ...
+    lhs = soln1.rhs.doit()
+    rhs = soln2.rhs.doit()
+    eqns = [Eq(lhs, rhs)]
+    for n in range(1, order):
+        lhs = lhs.diff(var)
+        rhs = rhs.diff(var)
+        eq = Eq(lhs, rhs)
+        eqns.append(eq)
+
+    # BooleanTrue/False awkwardly show up for trivial equations
+    if any(isinstance(eq, BooleanFalse) for eq in eqns):
+        return False
+    eqns = [eq for eq in eqns if not isinstance(eq, BooleanTrue)]
+
+    constant_solns = solve(eqns, constants2)
+
+    # Sometimes returns a dict and sometimes a list of dicts
+    if isinstance(constant_solns, dict):
+        constant_solns = [constant_solns]
+
+    # If any solution gives all constants as expressions that don't depend on
+    # x then there exists constants for soln2 that give soln1
+    for constant_soln in constant_solns:
+        if not any(c.has(var) for c in constant_soln.values()):
+            return True
+    else:
+        return False
+
+
 def _nth_linear_match(eq, func, order):
     r"""
     Matches a differential equation to the linear form:
@@ -4005,7 +4212,9 @@ def _nth_linear_match(eq, func, order):
             terms[-1] += i
         else:
             c, f = i.as_independent(func)
-            if isinstance(f, Derivative) and set(f.variables) == one_x:
+            if (isinstance(f, Derivative)
+                    and set(f.variables) == one_x
+                    and f.args[0] == func):
                 terms[f.derivative_count] += c
             elif f == func:
                 terms[len(f.args[1:])] += c
@@ -4074,7 +4283,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Cauchy%E2%80%93Euler_equation
+    - https://en.wikipedia.org/wiki/Cauchy%E2%80%93Euler_equation
     - C. Bender & S. Orszag, "Advanced Mathematical Methods for Scientists and
       Engineers", Springer 1999, pp. 12
 
@@ -4714,7 +4923,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Linear_differential_equation section:
+    - https://en.wikipedia.org/wiki/Linear_differential_equation section:
       Nonhomogeneous_equation_with_constant_coefficients
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 211
@@ -4849,7 +5058,7 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Method_of_undetermined_coefficients
+    - https://en.wikipedia.org/wiki/Method_of_undetermined_coefficients
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 221
 
@@ -5172,7 +5381,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Variation_of_parameters
+    - https://en.wikipedia.org/wiki/Variation_of_parameters
     - http://planetmath.org/VariationOfParameters
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 233

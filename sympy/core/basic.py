@@ -374,29 +374,28 @@ class Basic(with_metaclass(ManagedProperties)):
         False
 
         """
-        dummy_symbols = [s for s in self.free_symbols if s.is_Dummy]
+        s = self.as_dummy()
+        o = _sympify(other)
+        o = o.as_dummy()
 
-        if not dummy_symbols:
-            return self == other
-        elif len(dummy_symbols) == 1:
+        dummy_symbols = [i for i in s.free_symbols if i.is_Dummy]
+
+        if len(dummy_symbols) == 1:
             dummy = dummy_symbols.pop()
         else:
-            raise ValueError(
-                "only one dummy symbol allowed on the left-hand side")
+            return s == o
 
         if symbol is None:
-            symbols = other.free_symbols
+            symbols = o.free_symbols
 
-            if not symbols:
-                return self == other
-            elif len(symbols) == 1:
+            if len(symbols) == 1:
                 symbol = symbols.pop()
             else:
-                raise ValueError("specify a symbol in which expressions should be compared")
+                return s == o
 
         tmp = dummy.__class__()
 
-        return self.subs(dummy, tmp) == other.subs(symbol, tmp)
+        return s.subs(dummy, tmp) == o.subs(symbol, tmp)
 
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
     # regardless of the global setting.  See issue 5487.
@@ -510,13 +509,57 @@ class Basic(with_metaclass(ManagedProperties)):
     def expr_free_symbols(self):
         return set([])
 
+    def as_dummy(self):
+        """Return the expression with any objects having structurally
+        bound symbols replaced with unique, canonical symbols within
+        the object in which they appear and having only the default
+        assumption for commutativity being True.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral, Symbol
+        >>> from sympy.abc import x, y
+        >>> r = Symbol('r', real=True)
+        >>> Integral(r, (r, x)).as_dummy()
+        Integral(_0, (_0, x))
+        >>> _.variables[0].is_real is None
+        True
+
+        Notes
+        =====
+
+        Any object that has structural dummy variables should have
+        a property, `bound_symbols` that returns a list of structural
+        dummy symbols of the object itself.
+
+        Lambda and Subs have bound symbols, but because of how they
+        are cached, they already compare the same regardless of their
+        bound symbols:
+
+        >>> from sympy import Lambda
+        >>> Lambda(x, x + 1) == Lambda(y, y + 1)
+        True
+        """
+        def can(x):
+            d = dict([(i, i.as_dummy()) for i in x.bound_symbols])
+            # mask free that shadow bound
+            x = x.subs(d)
+            c = x.canonical_variables
+            # replace bound
+            x = x.xreplace(c)
+            # undo masking
+            x = x.xreplace(dict((v, k) for k, v in d.items()))
+            return x
+        return self.replace(
+            lambda x: hasattr(x, 'bound_symbols'),
+            lambda x: can(x))
+
     @property
     def canonical_variables(self):
         """Return a dictionary mapping any variable defined in
-        ``self.variables`` as underscore-suffixed numbers
-        corresponding to their position in ``self.variables``. Enough
-        underscores are added to ensure that there will be no clash with
-        existing free symbols.
+        ``self.bound_symbols`` to Symbols that do not clash
+        with any existing symbol in the expression.
 
         Examples
         ========
@@ -524,18 +567,25 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy import Lambda
         >>> from sympy.abc import x
         >>> Lambda(x, 2*x).canonical_variables
-        {x: 0_}
+        {x: _0}
         """
-        from sympy import Symbol
-        if not hasattr(self, 'variables'):
+        from sympy.core.symbol import Symbol
+        from sympy.utilities.iterables import numbered_symbols
+        if not hasattr(self, 'bound_symbols'):
             return {}
-        u = "_"
-        while any(str(s).endswith(u) for s in self.free_symbols):
-            u += "_"
-        name = '%%i%s' % u
-        V = self.variables
-        return dict(list(zip(V, [Symbol(name % i, **v.assumptions0)
-            for i, v in enumerate(V)])))
+        dums = numbered_symbols('_')
+        reps = {}
+        v = self.bound_symbols
+        # this free will include bound symbols that are not part of
+        # self's bound symbols
+        free = set([i.name for i in self.atoms(Symbol) - set(v)])
+        for v in v:
+            d = next(dums)
+            if v.is_Symbol:
+                while v.name == d.name or d.name in free:
+                    d = next(dums)
+            reps[v] = d
+        return reps
 
     def rcall(self, *args):
         """Apply on the argument recursively through the expression tree.
@@ -871,21 +921,18 @@ class Basic(with_metaclass(ManagedProperties)):
             raise ValueError("subs accepts either 1 or 2 arguments")
 
         sequence = list(sequence)
-        for i in range(len(sequence)):
-            s = list(sequence[i])
-            for j, si in enumerate(s):
-                try:
-                    si = sympify(si, strict=True)
-                except SympifyError:
-                    if type(si) is str:
-                        si = Symbol(si)
-                    else:
-                        # if it can't be sympified, skip it
-                        sequence[i] = None
-                        break
-                s[j] = si
-            else:
-                sequence[i] = None if _aresame(*s) else tuple(s)
+        for i, s in enumerate(sequence):
+            if type(s[0]) is str:
+                # when old is a string we prefer Symbol
+                s = Symbol(s[0]), s[1]
+            try:
+                s = [sympify(_, strict=type(_) is not str) for _ in s]
+            except SympifyError:
+                # if it can't be sympified, skip it
+                sequence[i] = None
+                continue
+            # skip if there is no change
+            sequence[i] = None if _aresame(*s) else tuple(s)
         sequence = list(filter(None, sequence))
 
         if unordered:

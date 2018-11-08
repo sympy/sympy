@@ -227,16 +227,21 @@ class Plot(object):
         second plot's first series object to the first, use the
         ``append`` method, like so:
 
-        >>> from sympy import symbols
-        >>> from sympy.plotting import plot
-        >>> x = symbols('x')
-        >>> p1 = plot(x*x)
-        >>> p2 = plot(x)
-        >>> p1.append(p2[0])
-        >>> p1
-        Plot object containing:
-        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
-        [1]: cartesian line: x for x over (-10.0, 10.0)
+        .. plot::
+           :format: doctest
+           :include-source: True
+
+           >>> from sympy import symbols
+           >>> from sympy.plotting import plot
+           >>> x = symbols('x')
+           >>> p1 = plot(x*x, show=False)
+           >>> p2 = plot(x, show=False)
+           >>> p1.append(p2[0])
+           >>> p1
+           Plot object containing:
+           [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+           [1]: cartesian line: x for x over (-10.0, 10.0)
+           >>> p1.show()
 
         See Also
         ========
@@ -257,16 +262,22 @@ class Plot(object):
         Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
         second plot to the first, use the ``extend`` method, like so:
 
-        >>> from sympy import symbols
-        >>> from sympy.plotting import plot
-        >>> x = symbols('x')
-        >>> p1 = plot(x*x)
-        >>> p2 = plot(x)
-        >>> p1.extend(p2)
-        >>> p1
-        Plot object containing:
-        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
-        [1]: cartesian line: x for x over (-10.0, 10.0)
+        .. plot::
+           :format: doctest
+           :include-source: True
+
+           >>> from sympy import symbols
+           >>> from sympy.plotting import plot
+           >>> x = symbols('x')
+           >>> p1 = plot(x**2, show=False)
+           >>> p2 = plot(x, -x, show=False)
+           >>> p1.extend(p2)
+           >>> p1
+           Plot object containing:
+           [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+           [1]: cartesian line: x for x over (-10.0, 10.0)
+           [2]: cartesian line: -x for x over (-10.0, 10.0)
+           >>> p1.show()
 
         """
         if isinstance(arg, Plot):
@@ -1253,37 +1264,61 @@ def plot(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.plotting import plot
-    >>> x = symbols('x')
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import symbols
+       >>> from sympy.plotting import plot
+       >>> x = symbols('x')
 
     Single Plot
 
-    >>> plot(x**2, (x, -5, 5))
-    Plot object containing:
-    [0]: cartesian line: x**2 for x over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot(x**2, (x, -5, 5))
+       Plot object containing:
+       [0]: cartesian line: x**2 for x over (-5.0, 5.0)
 
     Multiple plots with single range.
 
-    >>> plot(x, x**2, x**3, (x, -5, 5))
-    Plot object containing:
-    [0]: cartesian line: x for x over (-5.0, 5.0)
-    [1]: cartesian line: x**2 for x over (-5.0, 5.0)
-    [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
 
+       >>> plot(x, x**2, x**3, (x, -5, 5))
+       Plot object containing:
+       [0]: cartesian line: x for x over (-5.0, 5.0)
+       [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+       [2]: cartesian line: x**3 for x over (-5.0, 5.0)
 
     Multiple plots with different ranges.
 
-    >>> plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
-    Plot object containing:
-    [0]: cartesian line: x**2 for x over (-6.0, 6.0)
-    [1]: cartesian line: x for x over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
+       Plot object containing:
+       [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+       [1]: cartesian line: x for x over (-5.0, 5.0)
 
     No adaptive sampling.
 
-    >>> plot(x**2, adaptive=False, nb_of_points=400)
-    Plot object containing:
-    [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot(x**2, adaptive=False, nb_of_points=400)
+       Plot object containing:
+       [0]: cartesian line: x**2 for x over (-10.0, 10.0)
 
     See Also
     ========
@@ -1401,31 +1436,51 @@ def plot_parametric(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols, cos, sin
-    >>> from sympy.plotting import plot_parametric
-    >>> u = symbols('u')
+    .. plot::
+       :context: reset
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import symbols, cos, sin
+       >>> from sympy.plotting import plot_parametric
+       >>> u = symbols('u')
 
     Single Parametric plot
 
-    >>> plot_parametric(cos(u), sin(u), (u, -5, 5))
-    Plot object containing:
-    [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot_parametric(cos(u), sin(u), (u, -5, 5))
+       Plot object containing:
+       [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
 
 
     Multiple parametric plot with single range.
 
-    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))
-    Plot object containing:
-    [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-10.0, 10.0)
-    [1]: parametric cartesian line: (u, cos(u)) for u over (-10.0, 10.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))
+       Plot object containing:
+       [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-10.0, 10.0)
+       [1]: parametric cartesian line: (u, cos(u)) for u over (-10.0, 10.0)
 
     Multiple parametric plots.
 
-    >>> plot_parametric((cos(u), sin(u), (u, -5, 5)),
-    ...     (cos(u), u, (u, -5, 5)))
-    Plot object containing:
-    [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
-    [1]: parametric cartesian line: (cos(u), u) for u over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot_parametric((cos(u), sin(u), (u, -5, 5)),
+       ...     (cos(u), u, (u, -5, 5)))
+       Plot object containing:
+       [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
+       [1]: parametric cartesian line: (cos(u), u) for u over (-5.0, 5.0)
 
 
     See Also
@@ -1502,24 +1557,39 @@ def plot3d_parametric_line(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols, cos, sin
-    >>> from sympy.plotting import plot3d_parametric_line
-    >>> u = symbols('u')
+    .. plot::
+       :context: reset
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import symbols, cos, sin
+       >>> from sympy.plotting import plot3d_parametric_line
+       >>> u = symbols('u')
 
     Single plot.
 
-    >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))
-    Plot object containing:
-    [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))
+       Plot object containing:
+       [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
 
 
     Multiple plots.
 
-    >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)),
-    ...     (sin(u), u**2, u, (u, -5, 5)))
-    Plot object containing:
-    [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
-    [1]: 3D parametric cartesian line: (sin(u), u**2, u) for u over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)),
+       ...     (sin(u), u**2, u, (u, -5, 5)))
+       Plot object containing:
+       [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
+       [1]: 3D parametric cartesian line: (sin(u), u**2, u) for u over (-5.0, 5.0)
 
 
     See Also
@@ -1605,32 +1675,52 @@ def plot3d(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.plotting import plot3d
-    >>> x, y = symbols('x y')
+    .. plot::
+       :context: reset
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import symbols
+       >>> from sympy.plotting import plot3d
+       >>> x, y = symbols('x y')
 
     Single plot
 
-    >>> plot3d(x*y, (x, -5, 5), (y, -5, 5))
-    Plot object containing:
-    [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d(x*y, (x, -5, 5), (y, -5, 5))
+       Plot object containing:
+       [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
 
 
     Multiple plots with same range
 
-    >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))
-    Plot object containing:
-    [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
-    [1]: cartesian surface: -x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))
+       Plot object containing:
+       [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+       [1]: cartesian surface: -x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
 
 
     Multiple plots with different ranges.
 
-    >>> plot3d((x**2 + y**2, (x, -5, 5), (y, -5, 5)),
-    ...     (x*y, (x, -3, 3), (y, -3, 3)))
-    Plot object containing:
-    [0]: cartesian surface: x**2 + y**2 for x over (-5.0, 5.0) and y over (-5.0, 5.0)
-    [1]: cartesian surface: x*y for x over (-3.0, 3.0) and y over (-3.0, 3.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d((x**2 + y**2, (x, -5, 5), (y, -5, 5)),
+       ...     (x*y, (x, -3, 3), (y, -3, 3)))
+       Plot object containing:
+       [0]: cartesian surface: x**2 + y**2 for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+       [1]: cartesian surface: x*y for x over (-3.0, 3.0) and y over (-3.0, 3.0)
 
 
     See Also
@@ -1715,16 +1805,26 @@ def plot3d_parametric_surface(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols, cos, sin
-    >>> from sympy.plotting import plot3d_parametric_surface
-    >>> u, v = symbols('u v')
+    .. plot::
+       :context: reset
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import symbols, cos, sin
+       >>> from sympy.plotting import plot3d_parametric_surface
+       >>> u, v = symbols('u v')
 
     Single plot.
 
-    >>> plot3d_parametric_surface(cos(u + v), sin(u - v), u - v,
-    ...     (u, -5, 5), (v, -5, 5))
-    Plot object containing:
-    [0]: parametric cartesian surface: (cos(u + v), sin(u - v), u - v) for u over (-5.0, 5.0) and v over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d_parametric_surface(cos(u + v), sin(u - v), u - v,
+       ...     (u, -5, 5), (v, -5, 5))
+       Plot object containing:
+       [0]: parametric cartesian surface: (cos(u + v), sin(u - v), u - v) for u over (-5.0, 5.0) and v over (-5.0, 5.0)
 
 
     See Also
@@ -1830,14 +1930,19 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
     Examples
     ========
 
-    >>> from sympy import plot, cos, sin, symbols
-    >>> from sympy.plotting.plot import check_arguments
-    >>> x = symbols('x')
-    >>> check_arguments([cos(x), sin(x)], 2, 1)
-        [(cos(x), sin(x), (x, -10, 10))]
+    .. plot::
+       :context: reset
+       :format: doctest
+       :include-source: True
 
-    >>> check_arguments([x, x**2], 1, 1)
-        [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
+       >>> from sympy import plot, cos, sin, symbols
+       >>> from sympy.plotting.plot import check_arguments
+       >>> x = symbols('x')
+       >>> check_arguments([cos(x), sin(x)], 2, 1)
+           [(cos(x), sin(x), (x, -10, 10))]
+
+       >>> check_arguments([x, x**2], 1, 1)
+           [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
     """
     if expr_len > 1 and isinstance(args[0], Expr):
         # Multiple expressions same range.

@@ -609,7 +609,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
       A Computational Perspective", Springer, 2nd edition, 236-238
     - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html
-    - http://www.cs.toronto.edu/~yuvalf/Factorization.pdf
+    - https://www.cs.toronto.edu/~yuvalf/Factorization.pdf
     """
 
     n = int(n)
@@ -1361,7 +1361,7 @@ def divisors(n, generator=False):
     [1, 2, 4, 8, 3, 6, 12, 24, 5, 10, 20, 40, 15, 30, 60, 120]
 
     This is a slightly modified version of Tim Peters referenced at:
-    http://stackoverflow.com/questions/1010381/python-factorization
+    https://stackoverflow.com/questions/1010381/python-factorization
 
     See Also
     ========
@@ -1439,7 +1439,7 @@ def udivisors(n, generator=False):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Unitary_divisor
+    - https://en.wikipedia.org/wiki/Unitary_divisor
     - http://mathworld.wolfram.com/UnitaryDivisor.html
 
     Examples
@@ -1522,7 +1522,7 @@ def antidivisors(n, generator=False):
     References
     ==========
 
-    .. [1] definition is described in http://oeis.org/A066272/a066272a.html
+    .. [1] definition is described in https://oeis.org/A066272/a066272a.html
 
     Examples
     ========
@@ -1704,7 +1704,7 @@ class divisor_sigma(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Divisor_function
+    .. [1] https://en.wikipedia.org/wiki/Divisor_function
 
     Examples
     ========
@@ -1768,7 +1768,7 @@ def core(n, t=2):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Square-free_integer#Squarefree_core
+    .. [1] https://en.wikipedia.org/wiki/Square-free_integer#Squarefree_core
 
     Examples
     ========

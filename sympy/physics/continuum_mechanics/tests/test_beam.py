@@ -1,4 +1,4 @@
-from sympy import Symbol, symbols, S
+from sympy import Symbol, symbols, S, simplify
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log
 from sympy.utilities.pytest import raises
@@ -473,12 +473,16 @@ def test_Beam3D():
 
     assert b.shear_force() == [0, -q*x, 0]
     assert b.bending_moment() == [0, 0, -m*x + q*x**2/2]
-    assert b.deflection() == [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m)
+    expected_deflection = (-l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m)
             + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I)) + l*m*x**2/(4*E*I)
             - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I))
             - m*x**3/(6*E*I) + q*x**4/(24*E*I)
             + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I))
-            - q*x**2/(2*A*G), 0]
+            - q*x**2/(2*A*G)
+            )
+    dx, dy, dz = b.deflection()
+    assert dx == dz == 0
+    assert simplify(dy - expected_deflection) == 0  # == doesn't work
 
 
     b2 = Beam3D(30, E, G, I, A, x)
@@ -491,8 +495,11 @@ def test_Beam3D():
 
     b2.solve_slope_deflection()
     assert b2.slope() == [0, 0, 25*x**3/(3*E*I) - 375*x**2/(E*I) + 3750*x/(E*I)]
-    assert b2.deflection() == [0, 25*x**4/(12*E*I) - 125*x**3/(E*I) + 1875*x**2/(E*I)
-                        - 25*x**2/(A*G) + 750*x/(A*G), 0]
+    expected_deflection = (25*x**4/(12*E*I) - 125*x**3/(E*I) + 1875*x**2/(E*I)
+                        - 25*x**2/(A*G) + 750*x/(A*G))
+    dx, dy, dz = b2.deflection()
+    assert dx == dz == 0
+    assert simplify(dy - expected_deflection) == 0  # == doesn't work
 
     # Test for solve_for_reaction_loads
     b3 = Beam3D(30, E, G, I, A, x)

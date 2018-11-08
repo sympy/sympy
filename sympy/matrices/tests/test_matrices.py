@@ -1931,6 +1931,7 @@ def test_limit():
 
 def test_diff():
     A = MutableDenseMatrix(((1, 4, x), (y, 2, 4), (10, 5, x**2 + 1)))
+    assert isinstance(A.diff(x), type(A))
     assert A.diff(x) == MutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert A.diff(y) == MutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
@@ -1938,11 +1939,15 @@ def test_diff():
     assert diff(A, y) == MutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
     A_imm = A.as_immutable()
+    assert isinstance(A_imm.diff(x), type(A_imm))
     assert A_imm.diff(x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert A_imm.diff(y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
     assert diff(A_imm, x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert diff(A_imm, y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+
+
+def test_diff_by_matrix():
 
     # Derive matrix by matrix:
 
@@ -1958,15 +1963,7 @@ def test_diff():
     assert A.diff(a) == MutableDenseMatrix([[0, 0], [0, 0]])
 
     B = ImmutableDenseMatrix([a, b])
-    assert A.diff(B) == Array(
-        [[[
-            [0,0],
-            [0,0]
-        ]],
-        [[
-            [0,0],
-            [0,0]
-        ]]])
+    assert A.diff(B) == A.zeros(2)
 
     # Test diff with tuples:
 
@@ -2189,7 +2186,7 @@ def test_matrix_norm():
     assert A.norm('frobenius') == sqrt(389)/2
 
     # Test properties of matrix norms
-    # http://en.wikipedia.org/wiki/Matrix_norm#Definition
+    # https://en.wikipedia.org/wiki/Matrix_norm#Definition
     # Two matrices
     A = Matrix([[1, 2], [3, 4]])
     B = Matrix([[5, 5], [-2, 2]])
@@ -2214,7 +2211,7 @@ def test_matrix_norm():
             assert dif == 0
 
     # Test Properties of Vector Norms
-    # http://en.wikipedia.org/wiki/Vector_norm
+    # https://en.wikipedia.org/wiki/Vector_norm
     # Two column vectors
     a = Matrix([1, 1 - 1*I, -3])
     b = Matrix([S(1)/2, 1*I, 1])
@@ -2649,7 +2646,7 @@ def test_issue_11434():
 
 def test_rank_regression_from_so():
     # see:
-    # http://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
+    # https://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
 
     nu, lamb = symbols('nu, lambda')
     A = Matrix([[-3*nu,         1,                  0,  0],

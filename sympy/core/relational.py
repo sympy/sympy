@@ -433,6 +433,29 @@ class Equality(Relational):
                 return set([self.rhs])
         return set()
 
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        from sympy.solvers.solveset import linear_coeffs
+        # standard simplify
+        e = super(Equality, self)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if not isinstance(e, Equality):
+            return e
+        free = self.free_symbols
+        if len(free) == 1:
+            try:
+                x = free.pop()
+                m, b = linear_coeffs(
+                    e.rewrite(Add, evaluate=False), x)
+                if m.is_zero is False:
+                    enew = e.func(x, -b/m)
+                else:
+                    enew = e.func(m*x, -b)
+                if measure(enew) <= ratio*measure(e):
+                    e = enew
+            except ValueError:
+                pass
+        return e.canonical
+
 Eq = Equality
 
 
@@ -495,6 +518,13 @@ class Unequality(Relational):
             elif self.rhs.is_Symbol:
                 return set([self.rhs])
         return set()
+
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        eq = Equality(*self.args)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if isinstance(eq, Equality):
+            eq = self.func(*eq.args)
+        return eq
 
 Ne = Unequality
 

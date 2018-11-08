@@ -201,7 +201,7 @@ def DihedralGroup(n):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Dihedral_group
+    [1] https://en.wikipedia.org/wiki/Dihedral_group
 
     """
     # small cases are special
@@ -264,7 +264,7 @@ def SymmetricGroup(n):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations
+    [1] https://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations
 
     """
     if n == 1:

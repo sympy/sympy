@@ -20,7 +20,7 @@ It would be nice to have a basic understanding of SymPy and SymPy Mechanics befo
 going over this page.
 If you are completely new to Python, you can check out the official
 `Python Tutorial <https://docs.python.org/3/tutorial/>`_.
-Check out the `SymPy Documentation <http://docs.sympy.org/>`_, especially
+Check out the `SymPy Documentation <https://docs.sympy.org/>`_, especially
 the tutorial to get a feel for SymPy.
 For an introduction to Multibody dynamics in Python, `this <https://www.youtube.com/watch?v=mdo2NYtA-xY&t=6950s>`_
 lecture is very helpful.
@@ -85,9 +85,9 @@ Rough Autolev-SymPy Equivalents
 The tables below give rough equivalents for some common Autolev
 expressions. **These are not exact equivalents**, but rather should be
 taken as hints to get you going in the right direction. For more detail
-read the built-in documentation on `SymPy vectors <http://docs.sympy.org/latest/modules/physics/vector/index.html>`_,
-`SymPy mechanics <http://docs.sympy.org/latest/modules/physics/mechanics/index.html>`_ and
-`PyDy <http://www.pydy.org/documentation.html>`_ .
+read the built-in documentation on `SymPy vectors <https://docs.sympy.org/latest/modules/physics/vector/index.html>`_,
+`SymPy mechanics <https://docs.sympy.org/latest/modules/physics/mechanics/index.html>`_ and
+`PyDy <https://www.pydy.org/documentation.html>`_ .
 
 In the tables below, it is assumed that you have executed the following
 commands in Python:
@@ -117,7 +117,7 @@ Mathematical Equivalents
 +-----------------------+-----------------------+-----------------------+
 ||                      ||                      ||                      |
 | ``Constants C+``      | ``c = sm.symbols(‘c’, | Refer to SymPy        |
-|                       | real=True,            | `assumptions <http:// |
+|                       | real=True,            | `assumptions <https://|
 |                       | nonnegative=True)``   | docs.sympy.org/latest/|
 |                       |                       | modules/core.html#    |
 |                       |                       | module-sympy.core.    |
@@ -258,9 +258,9 @@ Mathematical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``E = COS(X*Y)``      | ``e = sm.cos(x*y)``   | For more information  |
 |                       |                       | refer to `series.     |
-| ``TY = Taylor(E,      | ``b = e.series(x, 0,  | <http://docs.sympy.org|
-| 0:2, x=0, y=0)``      | 2).removeO().series(y,| /latest/modules/series|
-|                       | 0, 2).removeO()``     | /series.html>`_       |
+| ``TY = Taylor(E,      | ``b = e.series(x, 0,  | <https://docs.sympy   |
+| 0:2, x=0, y=0)``      | 2).removeO().series(y,| .org/latest/modules   |
+|                       | 0, 2).removeO()``     | /series/series.html>`_|
 |                       |                       |                       |
 +-----------------------+-----------------------+-----------------------+
 | ``F = Evaluate(E,     | ``E.subs([(x, a), (y, |                       |
@@ -282,16 +282,13 @@ Mathematical Equivalents
 |                       |                       | ference.html>`_       |
 +-----------------------+-----------------------+-----------------------+
 | ``Roots(Polynomial(   | ``sm.solve(           | For more information  |
-| a*x^2 + b*x + c, x,   | sm.Poly(a*x**2 +      | refer to `solvers. <ht| 
-| 2)``                  | b*x + c))``           | tp://docs.sympy.org/la|
-|                       |                       | test/modules/solvers/ |
-| ``Roots([1;2;3])``    | ``sm.solve(sm.Poly(   | solvers.html>`_       |
-|                       | sm.Matrix([1,2,3]).   |                       |
-|                       | reshape(3, 1), x),    |                       |
-|                       | x)``                  | For numerical         |
-|                       |                       | computation related   |
-|                       |                       | to polynomials and    |
-|                       |                       | roots refer to        |
+| a*x^2 + b*x + c, x,   | sm.Poly(a*x**2 +      | refer to              |
+| 2)``                  | b*x + c))``           | :ref:`solvers`.       |
+|                       |                       |                       |
+| ``Roots([1;2;3])``    | ``sm.solve(sm.Poly(   | For numerical         |
+|                       | sm.Matrix([1,2,3]).   | computation related   |
+|                       | reshape(3, 1), x),    | to polynomials and    |
+|                       | x)``                  | roots refer to        |
 |                       |                       | `mpmath/calculus. <htt|
 |                       |                       | p://docs.s            | 
 |                       |                       | ympy.org/0.7.6/module |
@@ -309,8 +306,8 @@ Mathematical Equivalents
 | solve for.            |                       | refer to              |
 |                       |                       | ``nonlinsolve`` and   |
 |                       |                       | ``nsolve`` in         |
-|                       |                       | `solvers. <http://docs|
-|                       |                       | .sympy.org/latest/    |
+|                       |                       | `solvers. <https://   |
+|                       |                       | docs.sympy.org/latest/|
 |                       |                       | modules/solvers/      |
 |                       |                       | solvers.html>`_       |
 +-----------------------+-----------------------+-----------------------+
@@ -646,7 +643,7 @@ Numerical evaluation for dynamics can be achieved using PyDy. One can
 pass in the KanesMethod object to the System class along with the values
 for the constants, specifieds, initial conditions and time steps. The
 equations of motion can then be integrated. The plotting is achieved
-using matlplotlib. Here is an example from the `PyDy Documentation <http://www.pydy.org/documentation.html>`_
+using matlplotlib. Here is an example from the `PyDy Documentation <https://www.pydy.org/documentation.html>`_
 on how it is done::
 
     from numpy import array, linspace, sin
@@ -667,16 +664,16 @@ on how it is done::
     plt.show()
 
 For information on all the things PyDy can accomplish refer to the 
-`PyDy Documentation <http://www.pydy.org/documentation.html>`_.
+`PyDy Documentation <https://www.pydy.org/documentation.html>`_.
 
 The tools in the PyDy workflow are :
 
--  `SymPy <http://sympy.org>`_: SymPy is a Python library for
+-  `SymPy <https://sympy.org>`_: SymPy is a Python library for
     symbolic computation. It provides computer algebra capabilities
     either as a standalone application, as a library to other
     applications, or live on the web as SymPy Live or SymPy Gamma.
 
--  `NumPy <http://www.numpy.org/>`_: NumPy is a library for the
+-  `NumPy <https://www.numpy.org/>`_: NumPy is a library for the
     Python programming language, adding support for large,
     multi-dimensional arrays and matrices, along with a large
     collection of high-level mathematical functions to operate on
@@ -717,16 +714,16 @@ scientific computing with Python.
 Links
 ----------
 
-`SymPy Tutorial <http://docs.sympy.org/latest/tutorial/index.html>`_
+`SymPy Tutorial <https://docs.sympy.org/latest/tutorial/index.html>`_
 
-`SymPy Documentation <http://docs.sympy.org/>`_
+`SymPy Documentation <https://docs.sympy.org/>`_
 
 `SymPy Physics Vector
-Documentation <http://docs.sympy.org/latest/modules/physics/vector/index.html>`_
+Documentation <https://docs.sympy.org/latest/modules/physics/vector/index.html>`_
 
 `SymPy Mechanics
-Documentation <http://docs.sympy.org/latest/modules/physics/mechanics/index.html>`_
+Documentation <https://docs.sympy.org/latest/modules/physics/mechanics/index.html>`_
 
-`PyDy Documentation <http://www.pydy.org/documentation.html>`_
+`PyDy Documentation <https://www.pydy.org/documentation.html>`_
 
 `MultiBody Dynamics with Python <https://www.youtube.com/watch?v=mdo2NYtA-xY>`_

@@ -293,7 +293,7 @@ class frac(Function):
     References
     ===========
 
-    .. [1] http://en.wikipedia.org/wiki/Fractional_part
+    .. [1] https://en.wikipedia.org/wiki/Fractional_part
     .. [2] http://mathworld.wolfram.com/FractionalPart.html
 
     """
