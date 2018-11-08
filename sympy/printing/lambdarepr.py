@@ -147,9 +147,12 @@ class TensorflowPrinter(PythonCodePrinter):
 
     def _print_MatrixBase(self, expr):
         return "%s(%s)" % (
-            self._module_format("tensorflow.Variable"),
+            self._module_format("tensorflow.constant"),
             str(expr.tolist()),
         )
+
+    def _print_MatMul(self, expr):
+        return self._expand_fold_binary_op("tensorflow.matmul", expr.args)
 
     def _print_Assignment(self, expr):
         # TODO: is this necessary?
@@ -164,14 +167,6 @@ class TensorflowPrinter(PythonCodePrinter):
         for subexpr in expr.args:
             ret.append(self._print(subexpr))
         return "\n".join(ret)
-
-    def _print__Placeholder(self, expr):
-        shape = expr.shape
-        return "%s(%s, %s)" % (
-            self._module_format("tensorflow.placeholder"),
-            self._module_format("tensorflow.float32"),
-            str(shape),
-        )
 
     def _get_letter_generator_for_einsum(self):
         for i in range(97, 123):
@@ -280,33 +275,9 @@ class TensorflowPrinter(PythonCodePrinter):
         return self._expand_fold_binary_op('tensorflow.add', expr.args)
 
 
-class _Placeholder(Basic):
-    def __new__(cls, dtype=None, shape=()):
-        return Basic.__new__(cls, dtype, shape)
-    shape = property(lambda self: self.args[1])
-
-
-def _lambdify_tensorflow(variables, expr):
-    from sympy.codegen import CodeBlock, Assignment
-    from sympy import Symbol, MatrixSymbol
+def tensorflow_code(expr):
     printer = TensorflowPrinter()
-    statements = []
-    for v in variables:
-        if isinstance(v, Symbol):
-            placeholder = _Placeholder()
-            statements.append(Assignment(v, placeholder))
-        elif isinstance(v, MatrixSymbol):
-            placeholder = _Placeholder(shape=v.shape)
-            statements.append(Assignment(v, placeholder))
-    rename = {i: Symbol(str(i)+"_") for i in variables}
-    ret_code = """\
-def _lambdified({0}):
-""".format(", ".join(map(str, rename.values())))  #, rename)
-    for i in statements:
-        ret_code += "    %s\n" % printer.doprint(i)
-    ret_code += "    feed_dict = {0}\n".format(rename)
-    ret_code += "    return tensorflow.InteractiveSession().run(%s, feed_dict=feed_dict)\n" % printer.doprint(expr)
-    return ret_code
+    return printer.doprint(expr)
 
 
 # numexpr works by altering the string passed to numexpr.evaluate
