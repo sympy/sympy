@@ -155,11 +155,10 @@ def _literal_float(f):
     return bool(regex.match(pat, f))
 
 # (a,b) -> gcd(a,b)
-_gcdcache = {}
 
 # TODO caching with decorator, but not to degrade performance
 
-@lru_cache()
+@lru_cache(1024)
 def igcd(*args):
     """Computes nonnegative integer greatest common divisor.
 
