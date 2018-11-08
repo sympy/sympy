@@ -4064,26 +4064,26 @@ class MatrixBase(MatrixDeprecated,
     def solve(self, rhs, method='GJ'):
         """Return the unique soln making self*soln = rhs.
 
-           If there is not a unique solution then a ValueError will be raised. If `self` is not
-           square, a ValueError and a different routine for solving the system will be suggested.
+        If there is not a unique solution then a ValueError will be raised. If `self` is not
+        square, a ValueError and a different routine for solving the system will be suggested.
 
-           When the method is GJ, the Gauss-Jordan elimination will be used. To use a different
-           method and to compute the solution via the inverse, use a method defined in the
-           .inv() docstring.
+        When the method is GJ, the Gauss-Jordan elimination will be used. To use a different
+        method and to compute the solution via the inverse, use a method defined in the
+        .inv() docstring.
         """
 
         if method == 'GJ':
-            try:
+    	    try:
                 soln, param = self.gauss_jordan_solve(rhs)
                 if param:
                     raise ValueError("Matrix det == 0; not invertible. "
                     "Try `self.gauss_jordan_solve(rhs)` to obtain a parametric solution.")
             except ValueError:
-                # raise same error as in inv:
-                Matrix.zeros(1).inv()
+            # raise same error as in inv:
+            Matrix.zeros(1).inv()
             return soln
-        else:
-            return self.inv(method=method)*rhs
+         else:
+             return self.inv(method=method)*rhs
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
               colsep=', ', align='right'):
