@@ -2878,6 +2878,12 @@ def test_gauss_jordan_solve():
     b = Matrix([1, 1, 1])
     raises(ValueError, lambda: A.gauss_jordan_solve(b))
 
+def test_solve():
+    A = Matrix([[1,2], [2,4]])
+    b = Matrix([[3], [4]])
+    raises(ValueError, lambda: A.solve(b)) #no solution
+    b = Matrix([[ 4], [8]])
+    raises(ValueError, lambda: A.solve(b)) #infinite solution
 
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])

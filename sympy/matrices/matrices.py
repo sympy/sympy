@@ -4073,16 +4073,16 @@ class MatrixBase(MatrixDeprecated,
         """
 
         if method == 'GJ':
-    	    try:
+            try:
                 soln, param = self.gauss_jordan_solve(rhs)
                 if param:
                     raise ValueError("Matrix det == 0; not invertible. "
                     "Try `self.gauss_jordan_solve(rhs)` to obtain a parametric solution.")
             except ValueError:
-            # raise same error as in inv:
-            Matrix.zeros(1).inv()
+                # raise same error as in inv:
+                self.zeros(1).inv()
             return soln
-         else:
+        else:
              return self.inv(method=method)*rhs
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
