@@ -4016,26 +4016,29 @@ class MatrixBase(MatrixDeprecated,
         t = self.H
         return (t * self).inv(method=method) * t * rhs
 
-    def solve(self, rhs, method='GE'):
-        """Return solution to self*soln = rhs using given inversion method.
+    def solve(self, rhs, method='GJ'):
+        """Return the unique soln making self*soln = rhs.
 
-        For a list of possible inversion methods, see the .inv() docstring.
-        When no method is passed or Gauss Elimination method is choosen in-
-        stead of calculating inverse Gauss jordan elimination method is us-
-        ed to solve.
+           If there is not a unique solution then a ValueError will be raised. If `self` is not
+           square, a ValueError and a different routine for solving the system will be suggested.
+
+           When the method is GJ, the Gauss-Jordan elimination will be used. To use a different
+           method and to compute the solution via the inverse, use a method defined in the
+           .inv() docstring.
         """
 
-        if not self.is_square:
-            if self.rows < self.cols:
-                raise ValueError('Under-determined system. '
-                                 'Try M.gauss_jordan_solve(rhs)')
-            elif self.rows > self.cols:
-                raise ValueError('For over-determined system, M, having '
-                                 'more rows than columns, try M.solve_least_squares(rhs).')
-        if method == 'GE':
-            return self.gauss_jordan_solve(rhs)[0]
+        if method == 'GJ':
+            try:
+                soln, param = self.gauss_jordan_solve(rhs)
+                if param:
+                    raise ValueError("Matrix det == 0; not invertible. "
+                    "Try `self.gauss_jordan_solve(rhs)` to obtain a parametric solution.")
+            except ValueError:
+                # raise same error as in inv:
+                Matrix.zeros(1).inv()
+            return soln
         else:
-            return self.inv(method=method) * rhs
+            return self.inv(method=method)*rhs
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
               colsep=', ', align='right'):
