@@ -335,9 +335,9 @@ def random_oracle(nqubits, min_img=1, max_img=1, q_type='bin'):
     nqubits : int
         The number of qubits for OracleGate
     min_pic : int
-        Minimum number of invers images that are mapped to 1
+        Minimum number of inverse images that are mapped to 1
     max_pic : int
-        Maximum number of invers images that are mapped to 1
+        Maximum number of inverse images that are mapped to 1
     q_type : OracleGate
         Type of the Qubits that the oracle should be applied on.
         Can be 'bin' for binary (Qubit()) or 'int' for integer (IntQubit()).
@@ -384,7 +384,7 @@ def g_bbht_search(qstate, oracle):
 
     G-BBHT-Search is an algorithm based on Grover's algorithm,
     but designed for an unknown oracle function that returns 1
-    for an unknown number of qubit states. Its based on this
+    for an unknown number of qubit states. It is based on the
     paper: Boyer, M., Brassard, G., Hoyer, P.,  Tapp, A. (1998).
     Tight bounds on quantum searching: Progress of Physics,
     46(4-5), 493-505.
@@ -400,12 +400,12 @@ def g_bbht_search(qstate, oracle):
     Returns
     =======
 
-    (Qubit, int) : (single Qubit that fullfilles oracle, numberof grover iterations applied)
+    (Qubit, int) : (single Qubit that fulfills oracle, number of grover iterations applied)
 
     Examples
     ========
 
-    G-BBHT-Search for a orcale that returns 1 for a unkown number of statesbetween 5 - 15::
+    G-BBHT-Search for an orcale that returns 1 for an unkown number of statesbetween 5 - 15::
 
         >>> from sympy.physics.quantum.grover import random_oracle, superposition_basis, g_bbht_search
         >>> basis_states = superposition_basis(4)
@@ -416,7 +416,6 @@ def g_bbht_search(qstate, oracle):
 
     """
     import random
-    import math
     from sympy.physics.quantum.qubit import measure_all_oneshot
 
     max_iterations = 1
@@ -424,7 +423,7 @@ def g_bbht_search(qstate, oracle):
     count_grover_iterations = 0
 
     while True:
-        for _ in range(random.choice(list(range(int(math.ceil(max_iterations)))))):
+        for _ in range(1 if max_iterations == 1 else random.randint(0, int(max_iterations))):
             count_grover_iterations += 1
             qstate = qapply(grover_iteration(qstate, oracle))
 
