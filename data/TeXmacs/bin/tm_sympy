@@ -29,18 +29,19 @@ import traceback
 from sympy import __version__
 from sympy.printing import latex
 
+from types import FunctionType
+from sympy.plotting.plot import Plot
+
 BEGIN, END = chr(2), chr(5)
 
 DATA_COMMAND = chr(16)
 DATA_ESCAPE = chr(27)
 
 def send(kind, output=None):
-    if output is None:
-        output = ""
-    elif kind == "latex":
-        output = latex(output)
+    message = "%s:%s" % (kind, output)
 
-    message = "%s:%s" %  (kind, output)
+    if kind == "latex":
+        message = "%s:$%s$" % (kind, output)
 
     os.sys.stdout.write(BEGIN)
     os.sys.stdout.write(message)
@@ -94,4 +95,10 @@ while True:
                 continue
 
         _globals['_'] = output
-        send("latex", output)
+        
+        if output is None:
+            send("verbatim", "")
+        elif isinstance(output, Plot) or isinstance(output, FunctionType):
+            send("verbatim", str(output))
+        else:
+            send("latex", latex(output))
