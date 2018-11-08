@@ -11,8 +11,6 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.mpelements import MPContext
 from sympy.polys.polyerrors import DomainError, CoercionFailed
 
-import math
-
 @public
 class ComplexField(Field, CharacteristicZero, SimpleDomain):
     """Complex numbers up to the given precision. """
@@ -45,7 +43,7 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
     def tolerance(self):
         return self._context.tolerance
 
-    def __init__(self, prec=_default_precision, dps=None, tol=False):
+    def __init__(self, prec=_default_precision, dps=None, tol=None):
         context = MPContext(prec, dps, tol)
         context._parent = self
         self._context = context

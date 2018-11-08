@@ -2,25 +2,30 @@
 Printing (Docstrings)
 =====================
 
+
 mechanics_printing
 ==================
 
-.. autofunction:: sympy.physics.mechanics.functions.mechanics_printing
+This function is the same as :mod:`physics.vector`'s
+:mod:`time_derivative_printing`.
 
 
 mprint
 ======
 
-.. autofunction:: sympy.physics.mechanics.functions.mprint
+This function is the same as :mod:`physics.vector`'s
+:mod:`vprint`.
 
 
 mpprint
 =======
 
-.. autofunction:: sympy.physics.mechanics.functions.mpprint
+This function is the same as :mod:`physics.vector`'s
+:mod:`vpprint`.
 
 
 mlatex
 ======
 
-.. autofunction:: sympy.physics.mechanics.functions.mlatex
+This function is the same as :mod:`physics.vector`'s
+:mod:`vlatex`.

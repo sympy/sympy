@@ -1,19 +1,24 @@
+from __future__ import print_function
 from textwrap import dedent
 
 from sympy import (
     symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
-    factorial)
+    factorial, true)
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
+from sympy.core.compatibility import range
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
-    cartes, common_prefix, common_suffix, dict_merge, flatten,
-    generate_bell, generate_derangements, generate_involutions,
+    cartes, common_prefix, common_suffix, dict_merge, filter_symbols,
+    flatten, generate_bell, generate_derangements, generate_involutions,
     generate_oriented_forest, group, has_dups, kbins, minlex, multiset,
-    multiset_combinations, multiset_partitions, multiset_permutations,
-    necklaces, numbered_symbols, ordered, partitions, permutations,
-    postfixes, postorder_traversal, prefixes, reshape, rotate_left,
-    rotate_right, runs, sift, subsets, take, topological_sort, unflatten,
-    uniq, variations)
+    multiset_combinations, multiset_partitions,
+    multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
+    permutations, postfixes, postorder_traversal, prefixes, reshape,
+    rotate_left, rotate_right, runs, sift, subsets, take, topological_sort,
+    unflatten, uniq, variations, ordered_partitions)
+from sympy.utilities.enumerative import (
+    factoring_visitor, multiset_partitions_taocp )
+
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -30,7 +35,7 @@ def test_postorder_traversal():
     expr = Piecewise((x, x < 1), (x**2, True))
     expected = [
         x, 1, x, x < 1, ExprCondPair(x, x < 1),
-        ExprCondPair.true_sentinel, 2, x, x**2,
+        2, x, x**2, true,
         ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
     ]
     assert list(postorder_traversal(expr, keys=default_sort_key)) == expected
@@ -65,7 +70,7 @@ def test_flatten():
     assert flatten([MyOp(x, y), z]) == [MyOp(x, y), z]
     assert flatten([MyOp(x, y), z], cls=MyOp) == [x, y, z]
 
-    assert flatten(set([1, 11, 2])) == list(set([1, 11, 2]))
+    assert flatten({1, 11, 2}) == list({1, 11, 2})
 
 
 def test_group():
@@ -161,16 +166,28 @@ def test_cartes():
     assert list(cartes('a', repeat=2)) == [('a', 'a')]
     assert list(cartes(list(range(2)))) == [(0,), (1,)]
 
+def test_filter_symbols():
+    s = numbered_symbols()
+    filtered = filter_symbols(s, symbols("x0 x2 x3"))
+    assert take(filtered, 3) == list(symbols("x1 x4 x5"))
 
 def test_numbered_symbols():
     s = numbered_symbols(cls=Dummy)
     assert isinstance(next(s), Dummy)
+    assert next(numbered_symbols('C', start=1, exclude=[symbols('C1')])) == \
+        symbols('C2')
 
 
 def test_sift():
     assert sift(list(range(5)), lambda _: _ % 2) == {1: [1, 3], 0: [0, 2, 4]}
     assert sift([x, y], lambda _: _.has(x)) == {False: [y], True: [x]}
     assert sift([S.One], lambda _: _.has(x)) == {False: [1]}
+    assert sift([0, 1, 2, 3], lambda x: x % 2, binary=True) == (
+        [1, 3], [0, 2])
+    assert sift([0, 1, 2, 3], lambda x: x % 3 == 1, binary=True) == (
+        [1], [0, 2, 3])
+    raises(ValueError, lambda:
+        sift([0, 1, 2, 3], lambda x: x % 3, binary=True))
 
 
 def test_take():
@@ -286,7 +303,24 @@ def test_multiset_partitions():
     assert list(multiset_partitions('ab', 1)) == [[['a', 'b']]]
     assert list(multiset_partitions('aaa', 1)) == [['aaa']]
     assert list(multiset_partitions([1, 1], 1)) == [[[1, 1]]]
-
+    ans = [('mpsyy',), ('mpsy', 'y'), ('mps', 'yy'), ('mps', 'y', 'y'),
+           ('mpyy', 's'), ('mpy', 'sy'), ('mpy', 's', 'y'), ('mp', 'syy'),
+           ('mp', 'sy', 'y'), ('mp', 's', 'yy'), ('mp', 's', 'y', 'y'),
+           ('msyy', 'p'), ('msy', 'py'), ('msy', 'p', 'y'), ('ms', 'pyy'),
+           ('ms', 'py', 'y'), ('ms', 'p', 'yy'), ('ms', 'p', 'y', 'y'),
+           ('myy', 'ps'), ('myy', 'p', 's'), ('my', 'psy'), ('my', 'ps', 'y'),
+           ('my', 'py', 's'), ('my', 'p', 'sy'), ('my', 'p', 's', 'y'),
+           ('m', 'psyy'), ('m', 'psy', 'y'), ('m', 'ps', 'yy'),
+           ('m', 'ps', 'y', 'y'), ('m', 'pyy', 's'), ('m', 'py', 'sy'),
+           ('m', 'py', 's', 'y'), ('m', 'p', 'syy'),
+           ('m', 'p', 'sy', 'y'), ('m', 'p', 's', 'yy'),
+           ('m', 'p', 's', 'y', 'y')]
+    assert list(tuple("".join(part) for part in p)
+                for p in multiset_partitions('sympy')) == ans
+    factorings = [[24], [8, 3], [12, 2], [4, 6], [4, 2, 3],
+                  [6, 2, 2], [2, 2, 2, 3]]
+    assert list(factoring_visitor(p, [2,3]) for
+                p in multiset_partitions_taocp([3, 1])) == factorings
 
 def test_multiset_combinations():
     ans = ['iii', 'iim', 'iip', 'iis', 'imp', 'ims', 'ipp', 'ips',
@@ -362,14 +396,21 @@ def test_multiset_permutations():
 
 
 def test_partitions():
+    ans = [[{}], [(0, {})]]
+    for i in range(2):
+        assert list(partitions(0, size=i)) == ans[i]
+        assert list(partitions(1, 0, size=i)) == ans[i]
+        assert list(partitions(6, 2, 2, size=i)) == ans[i]
+        assert list(partitions(6, 2, None, size=i)) != ans[i]
+        assert list(partitions(6, None, 2, size=i)) != ans[i]
+        assert list(partitions(6, 2, 0, size=i)) == ans[i]
+
     assert [p.copy() for p in partitions(6, k=2)] == [
         {2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
 
     assert [p.copy() for p in partitions(6, k=3)] == [
         {3: 2}, {1: 1, 2: 1, 3: 1}, {1: 3, 3: 1}, {2: 3}, {1: 2, 2: 2},
         {1: 4, 2: 1}, {1: 6}]
-
-    assert [p.copy() for p in partitions(6, k=2, m=2)] == []
 
     assert [p.copy() for p in partitions(8, k=4, m=3)] == [
         {4: 2}, {1: 1, 3: 1, 4: 1}, {2: 2, 4: 1}, {2: 1, 3: 2}] == [
@@ -383,7 +424,6 @@ def test_partitions():
         {1: 1, 3: 1}, {2: 2}, {1: 2, 2: 1}, {1: 4}] == [
         i.copy() for i in partitions(4) if all(k <= 3 for k in i)]
 
-    raises(ValueError, lambda: list(partitions(3, 0)))
 
     # Consistency check on output of _partitions and RGS_unrank.
     # This provides a sanity test on both routines.  Also verifies that
@@ -394,7 +434,7 @@ def test_partitions():
         i  = 0
         for m, q  in _set_partitions(n):
             assert  q == RGS_unrank(i, n)
-            i = i+1
+            i += 1
         assert i == RGS_enum(n)
 
 def test_binary_partitions():
@@ -408,10 +448,20 @@ def test_binary_partitions():
 
 
 def test_bell_perm():
-    assert [len(list(generate_bell(i))) for i in range(1, 7)] == [
+    assert [len(set(generate_bell(i))) for i in range(1, 7)] == [
         factorial(i) for i in range(1, 7)]
     assert list(generate_bell(3)) == [
-        (0, 1, 2), (1, 0, 2), (1, 2, 0), (2, 1, 0), (2, 0, 1), (0, 2, 1)]
+        (0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]
+    # generate_bell and trotterjohnson are advertised to return the same
+    # permutations; this is not technically necessary so this test could
+    # be removed
+    for n in range(1, 5):
+        p = Permutation(range(n))
+        b = generate_bell(n)
+        for bi in b:
+            assert bi == tuple(p.array_form)
+            p = p.next_trotterjohnson()
+    raises(ValueError, lambda: list(generate_bell(0)))  # XXX is this consistent with other permutation algorithms?
 
 
 def test_involutions():
@@ -419,7 +469,7 @@ def test_involutions():
     for n, N in enumerate(lengths):
         i = list(generate_involutions(n + 1))
         assert len(i) == N
-        assert len(set([Permutation(j)**2 for j in i])) == 1
+        assert len({Permutation(j)**2 for j in i}) == 1
 
 
 def test_derangements():
@@ -451,6 +501,30 @@ def test_necklaces():
         [5,   8,   8,  39],
         [6,  14,  13,  92],
         [7,  20,  18, 198]])
+
+def test_bracelets():
+    bc = [i for i in bracelets(2, 4)]
+    assert Matrix(bc) == Matrix([
+        [0, 0],
+        [0, 1],
+        [0, 2],
+        [0, 3],
+        [1, 1],
+        [1, 2],
+        [1, 3],
+        [2, 2],
+        [2, 3],
+        [3, 3]
+        ])
+    bc = [i for i in bracelets(4, 2)]
+    assert Matrix(bc) == Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 1],
+        [0, 0, 1, 1],
+        [0, 1, 0, 1],
+        [0, 1, 1, 1],
+        [1, 1, 1, 1]
+    ])
 
 
 def test_generate_oriented_forest():
@@ -537,8 +611,8 @@ def test_reshape():
         (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
     assert reshape(tuple(seq), ([1], 1, (2,))) == \
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
-    assert reshape(list(range(12)), [2, [3], set([2]), (1, (3,), 1)]) == \
-        [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
+    assert reshape(list(range(12)), [2, [3], {2}, (1, (3,), 1)]) == \
+        [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
 
 
 def test_uniq():
@@ -645,3 +719,16 @@ def test__partition():
         ['b', 'e'], ['a', 'c'], ['d']]
     output = (3, [1, 0, 1, 2, 0])
     assert _partition('abcde', *output) == [['b', 'e'], ['a', 'c'], ['d']]
+
+
+def test_ordered_partitions():
+    from sympy.functions.combinatorial.numbers import nT
+    f = ordered_partitions
+    assert list(f(0, 1)) == [[]]
+    assert list(f(1, 0)) == [[]]
+    for i in range(1, 7):
+        for j in [None] + list(range(1, i)):
+            assert (
+                sum(1 for p in f(i, j, 1)) ==
+                sum(1 for p in f(i, j, 0)) ==
+                nT(i, j))

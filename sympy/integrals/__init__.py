@@ -1,7 +1,8 @@
-"""Integration functions that integrates a sympy expression.
+"""Integration functions that integrate a sympy expression.
 
     Examples
-    --------
+    ========
+
     >>> from sympy import integrate, sin
     >>> from sympy.abc import x
     >>> integrate(1/x,x)
@@ -22,3 +23,4 @@ from .transforms import (mellin_transform, inverse_mellin_transform,
                         CosineTransform, InverseCosineTransform,
                         hankel_transform, inverse_hankel_transform,
                         HankelTransform, InverseHankelTransform)
+from .singularityfunctions import singularityintegrate

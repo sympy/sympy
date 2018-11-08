@@ -7,12 +7,12 @@ language.  If you do not, the `official Python
 tutorial <http://docs.python.org/3/tutorial/index.html>`_ is excellent.
 
 This tutorial assumes a decent mathematical background.  Most examples require
-knowledge up to calculus level, and some require knowledge at a calculus
-level.  Some of the advanced features require more than this. If you come
-across a section that uses some mathematical function you are not familiar
-with, you can probably skip over it, or replace it with a similar one that you
-are more familiar with.  Or look up the function on Wikipedia and learn
-something new.  Some important mathematical concepts that are not common
+knowledge lower than a calculus level, and some require knowledge at a
+calculus level.  Some of the advanced features require more than this. If you
+come across a section that uses some mathematical function you are not
+familiar with, you can probably skip over it, or replace it with a similar one
+that you are more familiar with.  Or look up the function on Wikipedia and
+learn something new.  Some important mathematical concepts that are not common
 knowledge will be introduced as necessary.
 
 Installation
@@ -35,7 +35,7 @@ SymPy Live" button below
     >>> x = symbols('x')
     >>> a = Integral(cos(x)*exp(x), x)
     >>> Eq(a, a.doit())
-    Integral(exp(x)*cos(x), x) == exp(x)*sin(x)/2 + exp(x)*cos(x)/2
+    Eq(Integral(exp(x)*cos(x), x), exp(x)*sin(x)/2 + exp(x)*cos(x)/2)
 
 The SymPy Live shell in the bottom corner will pop up and evaluate the code
 block. You can also click any individual line to evaluate it one at a time.
@@ -49,7 +49,7 @@ on the bottom right of the screen.
 
 By default, the SymPy Live shell uses `\LaTeX` for output.  If you want the
 output to look more like the output in the documentation, change the
-output format to ``Str`` or ``Unicode``.
+output format to ``Str`` or ``Unicode`` in the settings.
 
 If you wish to modify an example before evaluating it, change the evaluation
 mode to "copy" in the SymPy Live settings.  This will cause clicking on an

@@ -209,15 +209,15 @@ from sympy.polys.sqfreetools import (
     dup_sqf_list_include, dmp_sqf_list, dmp_sqf_list_include, dup_gff_list, dmp_gff_list)
 
 from sympy.polys.galoistools import (
-    gf_degree, gf_LC, gf_TC, gf_strip, gf_trunc, gf_normal, gf_from_dict,
+    gf_degree, gf_LC, gf_TC, gf_strip, gf_from_dict,
     gf_to_dict, gf_from_int_poly, gf_to_int_poly, gf_neg, gf_add_ground, gf_sub_ground,
     gf_mul_ground, gf_quo_ground, gf_add, gf_sub, gf_mul, gf_sqr, gf_add_mul, gf_sub_mul,
     gf_expand, gf_div, gf_rem, gf_quo, gf_exquo, gf_lshift, gf_rshift, gf_pow, gf_pow_mod,
     gf_gcd, gf_lcm, gf_cofactors, gf_gcdex, gf_monic, gf_diff, gf_eval, gf_multi_eval,
     gf_compose, gf_compose_mod, gf_trace_map, gf_random, gf_irreducible, gf_irred_p_ben_or,
-    gf_irred_p_rabin, gf_irreducible_p, gf_sqf_p, gf_sqf_part, gf_sqf_list, gf_Qmatrix,
-    gf_Qbasis, gf_berlekamp, gf_ddf_zassenhaus, gf_edf_zassenhaus, gf_ddf_shoup, gf_edf_shoup,
-    gf_zassenhaus, gf_shoup, gf_factor_sqf, gf_factor, gf_value, gf_csolve)
+    gf_irred_p_rabin, gf_irreducible_p, gf_sqf_p, gf_sqf_part, gf_Qmatrix,
+    gf_berlekamp, gf_ddf_zassenhaus, gf_edf_zassenhaus, gf_ddf_shoup, gf_edf_shoup,
+    gf_zassenhaus, gf_shoup, gf_factor_sqf, gf_factor)
 
 from sympy.utilities import public
 
@@ -574,11 +574,11 @@ class IPolys(object):
         return list(map(self.from_dense, prs))
 
     def dup_inner_subresultants(self, f, g):
-        prs, beta, delta = dup_inner_subresultants(self.to_dense(f), self.to_dense(g), self.domain)
-        return (list(map(self.from_dense, prs)), beta, delta)
+        prs, sres = dup_inner_subresultants(self.to_dense(f), self.to_dense(g), self.domain)
+        return (list(map(self.from_dense, prs)), sres)
     def dmp_inner_subresultants(self, f, g):
-        prs, beta, delta = dmp_inner_subresultants(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
-        return (list(map(self.from_dense, prs)), beta, delta)
+        prs, sres  = dmp_inner_subresultants(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
+        return (list(map(self.from_dense, prs)), sres)
 
     def dup_subresultants(self, f, g):
         prs = dup_subresultants(self.to_dense(f), self.to_dense(g), self.domain)

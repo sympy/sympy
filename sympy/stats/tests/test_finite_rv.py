@@ -1,12 +1,16 @@
-from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
+from sympy.core.compatibility import range
+from sympy import (FiniteSet, S, Symbol, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        factor, cancel)
+        cancel, KroneckerDelta, exp, I)
+from sympy.concrete.expr_with_limits import AddWithLimits
+from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
-        Hypergeometric, P, E, variance, covariance, skewness, sample, density,
-        given, independent, dependent, where, FiniteRV, pspace, cdf,
-        correlation, moment, cmoment, smoment)
+    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
+    density, where, FiniteRV, pspace, cdf,
+    correlation, moment, cmoment, smoment, characteristic_function, moment_generating_function)
+from sympy.stats.frv_types import DieDistribution
 from sympy.utilities.pytest import raises, slow
-from sympy.abc import p
+from sympy.abc import p, x, i
 
 oo = S.Infinity
 
@@ -18,7 +22,7 @@ def BayesTest(A, B):
 
 def test_discreteuniform():
     # Symbolic
-    a, b, c = symbols('a b c')
+    a, b, c, t = symbols('a b c t')
     X = DiscreteUniform('X', [a, b, c])
 
     assert E(X) == (a + b + c)/3
@@ -40,11 +44,13 @@ def test_discreteuniform():
     assert dict(density(Die('D', 6)).items()) == \
            dict(density(DiscreteUniform('U', range(1, 7))).items())
 
+    assert characteristic_function(X)(t) == exp(I*a*t)/3 + exp(I*b*t)/3 + exp(I*c*t)/3
+    assert moment_generating_function(X)(t) == exp(a*t)/3 + exp(b*t)/3 + exp(c*t)/3
 
 def test_dice():
     # TODO: Make iid method!
     X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
-    a, b = symbols('a b')
+    a, b, t = symbols('a b t')
 
     assert E(X) == 3 + S.Half
     assert variance(X) == S(35)/12
@@ -87,6 +93,9 @@ def test_dice():
 
     assert where(X > 3).set == FiniteSet(4, 5, 6)
 
+    assert characteristic_function(X)(t) == exp(6*I*t)/6 + exp(5*I*t)/6 + exp(4*I*t)/6 + exp(3*I*t)/6 + exp(2*I*t)/6 + exp(I*t)/6
+    assert moment_generating_function(X)(t) == exp(6*t)/6 + exp(5*t)/6 + exp(4*t)/6 + exp(3*t)/6 + exp(2*t)/6 + exp(t)/6
+
 
 def test_given():
     X = Die('X', 6)
@@ -112,14 +121,14 @@ def test_domains():
 
     raises(ValueError, lambda: P(X > Z))  # Two domains with same internal symbol
 
-    pspace(X + Y).domain.set == FiniteSet(1, 2, 3, 4, 5, 6)**2
+    assert pspace(X + Y).domain.set == FiniteSet(1, 2, 3, 4, 5, 6)**2
 
     assert where(X > 3).set == FiniteSet(4, 5, 6)
     assert X.pspace.domain.dict == FiniteSet(
-        Dict({X.symbol: i}) for i in range(1, 7))
+        *[Dict({X.symbol: i}) for i in range(1, 7)])
 
-    assert where(X > Y).dict == FiniteSet(Dict({X.symbol: i, Y.symbol: j})
-            for i in range(1, 7) for j in range(1, 7) if i > j)
+    assert where(X > Y).dict == FiniteSet(*[Dict({X.symbol: i, Y.symbol: j})
+            for i in range(1, 7) for j in range(1, 7) if i > j])
 
 
 def test_dice_bayes():
@@ -130,21 +139,32 @@ def test_dice_bayes():
     BayesTest(X > 3, X > 2)
 
 
+def test_die_args():
+    raises(ValueError, lambda: Die('X', -1))  # issue 8105: negative sides.
+    raises(ValueError, lambda: Die('X', 0))
+    raises(ValueError, lambda: Die('X', 1.5))  # issue 8103: non integer sides.
+
+    k = Symbol('k')
+    sym_die = Die('X', k)
+    raises(ValueError, lambda: density(sym_die).dict)
+
+
 def test_bernoulli():
-    p, a, b = symbols('p a b')
+    p, a, b, t = symbols('p a b t')
     X = Bernoulli('B', p, a, b)
 
     assert E(X) == a*p + b*(-p + 1)
     assert density(X)[a] == p
     assert density(X)[b] == 1 - p
+    assert characteristic_function(X)(t) == p * exp(I * a * t) + (-p + 1) * exp(I * b * t)
+    assert moment_generating_function(X)(t) == p * exp(a * t) + (-p + 1) * exp(b * t)
 
     X = Bernoulli('B', p, 1, 0)
 
     assert E(X) == p
     assert simplify(variance(X)) == p*(1 - p)
-    E(a*X + b) == a*E(X) + b
-    variance(a*X + b) == a**2 * variance(X)
-
+    assert E(a*X + b) == a*E(X) + b
+    assert simplify(variance(a*X + b)) == simplify(a**2 * variance(X))
 
 def test_cdf():
     D = Die('D', 6)
@@ -171,6 +191,9 @@ def test_coins():
 
     raises(ValueError, lambda: P(C > D))  # Can't intelligently compare H to T
 
+def test_binomial_verify_parameters():
+    raises(ValueError, lambda: Binomial('b', .2, .5))
+    raises(ValueError, lambda: Binomial('b', 3, 1.5))
 
 def test_binomial_numeric():
     nvals = range(5)
@@ -179,27 +202,31 @@ def test_binomial_numeric():
     for n in nvals:
         for p in pvals:
             X = Binomial('X', n, p)
-            assert Eq(E(X), n*p)
-            assert Eq(variance(X), n*p*(1 - p))
+            assert E(X) == n*p
+            assert variance(X) == n*p*(1 - p)
             if n > 0 and 0 < p < 1:
-                assert Eq(skewness(X), (1 - 2*p)/sqrt(n*p*(1 - p)))
+                assert skewness(X) == (1 - 2*p)/sqrt(n*p*(1 - p))
             for k in range(n + 1):
-                assert Eq(P(Eq(X, k)), binomial(n, k)*p**k*(1 - p)**(n - k))
+                assert P(Eq(X, k)) == binomial(n, k)*p**k*(1 - p)**(n - k)
 
 
-@slow
 def test_binomial_symbolic():
-    n = 10  # Because we're using for loops, can't do symbolic n
+    n = 2  # Because we're using for loops, can't do symbolic n
     p = symbols('p', positive=True)
     X = Binomial('X', n, p)
+    t = Symbol('t')
+
     assert simplify(E(X)) == n*p == simplify(moment(X, 1))
     assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
-    assert cancel((skewness(X) - (1-2*p)/sqrt(n*p*(1-p)))) == 0
+    assert cancel((skewness(X) - (1 - 2*p)/sqrt(n*p*(1 - p)))) == 0
+    assert characteristic_function(X)(t) == p ** 2 * exp(2 * I * t) + 2 * p * (-p + 1) * exp(I * t) + (-p + 1) ** 2
+    assert moment_generating_function(X)(t) == p ** 2 * exp(2 * t) + 2 * p * (-p + 1) * exp(t) + (-p + 1) ** 2
 
     # Test ability to change success/failure winnings
     H, T = symbols('H T')
     Y = Binomial('Y', n, p, succ=H, fail=T)
     assert simplify(E(Y) - (n*(H*p + T*(1 - p)))) == 0
+
 
 def test_hypergeometric_numeric():
     for N in range(1, 5):
@@ -213,8 +240,20 @@ def test_hypergeometric_numeric():
                     assert variance(X) == n*(m/N)*(N - m)/N*(N - n)/(N - 1)
                 # Only test for skewness when defined
                 if N > 2 and 0 < m < N and n < N:
-                    assert Eq(skewness(X), simplify((N - 2*m)*sqrt(N - 1)*(N - 2*n)
-                        / (sqrt(n*m*(N - m)*(N - n))*(N - 2))))
+                    assert skewness(X) == simplify((N - 2*m)*sqrt(N - 1)*(N - 2*n)
+                        / (sqrt(n*m*(N - m)*(N - n))*(N - 2)))
+
+
+def test_rademacher():
+    X = Rademacher('X')
+    t = Symbol('t')
+
+    assert E(X) == 0
+    assert variance(X) == 1
+    assert density(X)[-1] == S.Half
+    assert density(X)[1] == S.Half
+    assert characteristic_function(X)(t) == exp(I*t)/2 + exp(-I*t)/2
+    assert moment_generating_function(X)(t) == exp(t) / 2 + exp(-t) / 2
 
 
 def test_FiniteRV():
@@ -236,3 +275,19 @@ def test_density_call():
     assert 0 in d
     assert 5 not in d
     assert d(S(0)) == d[S(0)]
+
+
+def test_DieDistribution():
+    X = DieDistribution(6)
+    assert X.pdf(S(1)/2) == S.Zero
+    assert X.pdf(x).subs({x: 1}).doit() == S(1)/6
+    assert X.pdf(x).subs({x: 7}).doit() == 0
+    assert X.pdf(x).subs({x: -1}).doit() == 0
+    assert X.pdf(x).subs({x: S(1)/3}).doit() == 0
+    raises(TypeError, lambda: X.pdf(x).subs({x: Matrix([0, 0])}))
+    raises(ValueError, lambda: X.pdf(x**2 - 1))
+
+def test_FinitePSpace():
+    X = Die('X', 6)
+    space = pspace(X)
+    assert space.density == DieDistribution(6)

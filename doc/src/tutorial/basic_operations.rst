@@ -143,7 +143,17 @@ takes a dictionary of ``Symbol: point`` pairs.
 
     >>> expr = cos(2*x)
     >>> expr.evalf(subs={x: 2.4})
-        0.0874989834394464
+    0.0874989834394464
+
+Sometimes there are roundoff errors smaller than the desired precision that
+remain after an expression is evaluated. Such numbers can be removed at the
+user's discretion by setting the ``chop`` flag to True.
+
+    >>> one = cos(1)**2 + sin(1)**2
+    >>> (one - 1).evalf()
+    -0.e-124
+    >>> (one - 1).evalf(chop=True)
+    0
 
 ``lambdify``
 ============
@@ -168,6 +178,8 @@ the given numerical library, usually NumPy.  For example
     [ 0.          0.84147098  0.90929743  0.14112001 -0.7568025  -0.95892427
      -0.2794155   0.6569866   0.98935825  0.41211849]
 
+.. warning:: ``lambdify`` uses ``eval``.  Don't use it on unsanitized input.
+
 You can use other libraries than NumPy. For example, to use the standard
 library math module, use ``"math"``.
 
@@ -180,7 +192,7 @@ dictionary of ``sympy_name:numerical_function`` pairs.  For example
 
     >>> def mysin(x):
     ...     """
-    ...     My sine. Not only accurate for small x.
+    ...     My sine. Note that this is only accurate for small x.
     ...     """
     ...     return x
     >>> f = lambdify(x, expr, {"sin":mysin})
@@ -188,3 +200,4 @@ dictionary of ``sympy_name:numerical_function`` pairs.  For example
     0.1
 
 .. TODO: Write an advanced numerics section
+

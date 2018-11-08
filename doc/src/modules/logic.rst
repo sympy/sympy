@@ -1,5 +1,5 @@
 Logic Module
-===============
+============
 
 .. module:: sympy.logic
 
@@ -18,11 +18,11 @@ You can build Boolean expressions with the standard python operators ``&``
     >>> from sympy import *
     >>> x, y = symbols('x,y')
     >>> y | (x & y)
-    Or(And(x, y), y)
+    y | (x & y)
     >>> x | y
-    Or(x, y)
+    x | y
     >>> ~x
-    Not(x)
+    ~x
 
 You can also form implications with ``>>`` and ``<<``::
 
@@ -36,9 +36,9 @@ Like most types in SymPy, Boolean expressions inherit from :class:`Basic`::
     >>> (y & x).subs({x: True, y: True})
     True
     >>> (x | y).atoms()
-    set([x, y])
+    {x, y}
 
-The logic module also includes the following functions to derive boolean expressions 
+The logic module also includes the following functions to derive boolean expressions
 from their truth tables-
 
 .. autofunction:: sympy.logic.boolalg.SOPform
@@ -46,7 +46,11 @@ from their truth tables-
 .. autofunction:: sympy.logic.boolalg.POSform
 
 Boolean functions
------------------------
+-----------------
+
+.. autoclass:: sympy.logic.boolalg.BooleanTrue
+
+.. autoclass:: sympy.logic.boolalg.BooleanFalse
 
 .. autoclass:: sympy.logic.boolalg.And
 
@@ -85,12 +89,12 @@ Simplification and equivalence-testing
 SymPy's simplify() function can also be used to simplify logic expressions to their
 simplest forms.
 
-.. autofunction:: sympy.logic.boolalg.bool_equal
+.. autofunction:: sympy.logic.boolalg.bool_map
 
 Inference
 ---------
 
-.. module: sympy.logic.inference
+.. module:: sympy.logic.inference
 
 This module implements some inference routines in propositional logic.
 

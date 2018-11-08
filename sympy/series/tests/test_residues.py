@@ -1,6 +1,6 @@
-from sympy import residue, Symbol, Function, sin, S, I, pi, exp, log, pi, factorial
+from sympy import residue, Symbol, Function, sin, S, I, exp, log, pi, factorial
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.abc import x, y, z, a, s
+from sympy.abc import x, z, a, s
 
 
 def test_basic1():
@@ -25,10 +25,9 @@ def test_basic2():
     assert residue(x**2, x, 5) == 0
 
 
-def _test_f():
-    # FIXME: we get infinite recursion here:
+def test_f():
     f = Function("f")
-    assert residue(f(x)/x**5, x, 0) == f.diff(x, 4)/24
+    assert residue(f(x)/x**5, x, 0) == f(x).diff(x, 4).subs(x, 0)/24
 
 
 def test_functions():
@@ -64,3 +63,11 @@ def test_NotImplemented():
 def test_bug():
     assert residue(2**(z)*(s + z)*(1 - s - z)/z**2, z, 0) == \
         1 + s*log(2) - s**2*log(2) - 2*s
+
+
+def test_issue_5654():
+    assert residue(1/(x**2 + a**2)**2, x, a*I) == -I/(4*a**3)
+
+
+def test_issue_6499():
+    assert residue(1/(exp(z) - 1), z, 0) == 1

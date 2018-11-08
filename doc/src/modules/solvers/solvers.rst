@@ -1,9 +1,20 @@
+.. _solvers:
+
 Solvers
-==========
+=======
 
 .. module:: sympy.solvers
 
 The *solvers* module in SymPy implements methods for solving equations.
+
+.. note::
+
+   It is recommended to use :func:`solveset` to solve univariate equations,
+   :func:`sympy.solvers.solveset.linsolve` to solve system of linear equations
+   instead of :func:`solve` and :func:`sympy.solvers.solveset.nonlinsolve` to
+   solve system of non linear equations since sooner or later the ``solveset``
+   will take over ``solve`` either internally or externally.
+
 
 Algebraic equations
 --------------------
@@ -29,8 +40,6 @@ is the symbol that we want to solve the equation for.
 .. autofunction:: sympy.solvers.solvers.solve_linear_system_LU
 
 .. autofunction:: sympy.solvers.solvers.solve_undetermined_coeffs
-
-.. autofunction:: sympy.solvers.solvers.tsolve
 
 .. autofunction:: sympy.solvers.solvers.nsolve
 
@@ -73,7 +82,12 @@ Systems of Polynomial Equations
 
 .. autofunction:: sympy.solvers.polysys.solve_triangulated
 
-Diophantine Equations (DEs) 
+Diophantine Equations (DEs)
 ---------------------------
 
 See :ref:`diophantine-docs`
+
+Inequalities
+------------
+
+See :ref:`inequality-docs`

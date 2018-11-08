@@ -30,7 +30,8 @@ from sympy.polys.polyerrors import (
     RefinementFailed,
     DomainError)
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
+
 
 def dup_sturm(f, K):
     """
@@ -57,7 +58,7 @@ def dup_sturm(f, K):
     1. [Davenport88]_
 
     """
-    if not K.has_Field:
+    if not K.is_Field:
         raise DomainError("can't compute Sturm sequence over %s" % K)
 
     f = dup_sqf_part(f, K)
@@ -71,52 +72,54 @@ def dup_sturm(f, K):
     return sturm[:-1]
 
 def dup_root_upper_bound(f, K):
-    """Compute the LMQ upper bound for `f`'s positive roots,
-       which was developed by Akritas-Strzebonski-Vigklas.
+    """Compute the LMQ upper bound for the positive roots of `f`;
+       LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
-       Reference:
-       ==========
-       Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
-           Values of the Positive Roots of Polynomials"
-           Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
+    References
+    ==========
+    .. [#] Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
+        Values of the Positive Roots of Polynomials"
+        Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
-    n, t, P = len(f), K.one, []
-
+    n, P = len(f), []
+    t = n * [K.one]
     if dup_LC(f, K) < 0:
         f = dup_neg(f, K)
-
     f = list(reversed(f))
 
-    for i in xrange(0, n):
+    for i in range(0, n):
         if f[i] >= 0:
             continue
 
-        a, Q = K.log(-f[i], 2), []
+        a, QL = K.log(-f[i], 2), []
 
-        for j in xrange(i + 1, n):
+        for j in range(i + 1, n):
 
             if f[j] <= 0:
                 continue
 
-            q = t + a - K.log(f[j], 2)
-            Q.append(q // (j - i))
+            q = t[j] + a - K.log(f[j], 2)
+            QL.append([q // (j - i) , j])
 
-            t += 1
-
-        if not Q:
+        if not QL:
             continue
 
-        P.append(min(Q))
+        q = min(QL)
+
+        t[q[1]] = t[q[1]] + 1
+
+        P.append(q[0])
 
     if not P:
         return None
     else:
-        return 2.0**(max(P) + 1)
+        return K.get_field()(2)**(max(P) + 1)
 
 def dup_root_lower_bound(f, K):
-    """Compute LMQ lower bound for `f`'s positive roots.
+    """Compute the LMQ lower bound for the positive roots of `f`;
+       LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
-       Reference:
+       References
        ==========
        Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
            Values of the Positive Roots of Polynomials"
@@ -125,7 +128,7 @@ def dup_root_lower_bound(f, K):
     bound = dup_root_upper_bound(dup_reverse(f), K)
 
     if bound is not None:
-        return 1.0 / bound
+        return 1/bound
     else:
         return None
 
@@ -209,7 +212,7 @@ def dup_inner_refine_real_root(f, M, K, eps=None, steps=None, disjoint=None, fas
             d), K, fast=fast)
 
     if eps is not None and steps is not None:
-        for i in xrange(0, steps):
+        for i in range(0, steps):
             if abs(F(a, c) - F(b, d)) >= eps:
                 f, (a, b, c, d) = dup_step_refine_real_root(f, (a, b, c, d), K, fast=fast)
             else:
@@ -220,7 +223,7 @@ def dup_inner_refine_real_root(f, M, K, eps=None, steps=None, disjoint=None, fas
                 f, (a, b, c, d) = dup_step_refine_real_root(f, (a, b, c, d), K, fast=fast)
 
         if steps is not None:
-            for i in xrange(0, steps):
+            for i in range(0, steps):
                 f, (a, b, c, d) = dup_step_refine_real_root(f, (a, b, c, d), K, fast=fast)
 
     if disjoint is not None:
@@ -287,8 +290,8 @@ def dup_refine_real_root(f, s, t, K, eps=None, steps=None, disjoint=None, fast=F
 def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
     """Internal function for isolation positive roots up to given precision.
 
-       References:
-       ===========
+       References
+       ==========
            1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root
            Isolation Methods . Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
            2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the
@@ -487,8 +490,8 @@ def _isolate_zero(f, K, inf, sup, basis=False, sqf=False):
 def dup_isolate_real_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False, blackbox=False):
     """Isolate real roots of a square-free polynomial using the Vincent-Akritas-Strzebonski (VAS) CF approach.
 
-       References:
-       ===========
+       References
+       ==========
        1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root Isolation Methods.
        Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
        2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the Performance
@@ -518,8 +521,8 @@ def dup_isolate_real_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False, b
 def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, basis=False, fast=False):
     """Isolate real roots using Vincent-Akritas-Strzebonski (VAS) continued fractions approach.
 
-       References:
-       ===========
+       References
+       ==========
        1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root Isolation Methods.
        Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
        2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the Performance
@@ -555,14 +558,14 @@ def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, basis=False, fast
 def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, strict=False, basis=False, fast=False):
     """Isolate real roots of a list of square-free polynomial using Vincent-Akritas-Strzebonski (VAS) CF approach.
 
-       References:
-       ===========
+       References
+       ==========
        1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root Isolation Methods.
        Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
        2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the Performance
        of the Continued Fractions Method Using New Bounds of Positive Roots.
        Nonlinear Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
-"""
+    """
     if K.is_QQ:
         K, F, polys = K.get_ring(), K, polys[:]
 
@@ -699,7 +702,7 @@ def dup_count_real_roots(f, K, inf=None, sup=None):
     if dup_degree(f) <= 0:
         return 0
 
-    if not K.has_Field:
+    if not K.is_Field:
         R, K = K, K.get_field()
         f = dup_convert(f, R, K)
 
@@ -735,6 +738,12 @@ A3 = 'A3'  # Axis #3 (-0): re < 0 and im = 0
 A4 = 'A4'  # Axis #4 (0-): re = 0 and im < 0
 
 _rules_simple = {
+    # Q --> Q (same) => no change
+    (Q1, Q1): 0,
+    (Q2, Q2): 0,
+    (Q3, Q3): 0,
+    (Q4, Q4): 0,
+
     # A -- CCW --> Q => +1/4 (CCW)
     (A1, Q1): 1,
     (A2, Q2): 1,
@@ -911,6 +920,7 @@ _rules_ambiguous = {
 }
 
 _values = {
+    0: [( 0, 1)],
     1: [(+1, 4)],
     2: [(-1, 4)],
     3: [(+1, 4)],
@@ -1302,7 +1312,7 @@ def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= x:
                     I_L1_L.append(((a, b), indices, h))
-                else:
+                if a >= x:
                     I_L1_R.append(((a, b), indices, h))
 
     for I in I_L3:
@@ -1326,7 +1336,7 @@ def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= x:
                     I_L3_L.append(((b, a), indices, h))
-                else:
+                if a >= x:
                     I_L3_R.append(((b, a), indices, h))
 
     Q_L1_L = _intervals_to_quadrants(I_L1_L, f1L1F, f2L1F, u, x, F)
@@ -1408,7 +1418,7 @@ def _horizontal_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= y:
                     I_L2_B.append(((a, b), indices, h))
-                else:
+                if a >= y:
                     I_L2_U.append(((a, b), indices, h))
 
     for I in I_L4:
@@ -1432,7 +1442,7 @@ def _horizontal_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
 
                 if b <= y:
                     I_L4_B.append(((b, a), indices, h))
-                else:
+                if a >= y:
                     I_L4_U.append(((b, a), indices, h))
 
     Q_L1_B = Q_L1
@@ -1672,26 +1682,42 @@ class RealInterval(object):
         self.f, self.dom = f, dom
 
     @property
+    def func(self):
+        return RealInterval
+
+    @property
+    def args(self):
+        i = self
+        return (i.mobius + (i.neg,), i.f, i.dom)
+
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        return self.args == other.args
+
+    @property
     def a(self):
         """Return the position of the left end. """
         field = self.dom.get_field()
         a, b, c, d = self.mobius
 
         if not self.neg:
-            return field(a, c)
+            if a*d < b*c:
+                return field(a, c)
+            return field(b, d)
         else:
+            if a*d > b*c:
+                return -field(a, c)
             return -field(b, d)
 
     @property
     def b(self):
         """Return the position of the right end. """
-        field = self.dom.get_field()
-        a, b, c, d = self.mobius
-
-        if not self.neg:
-            return field(b, d)
-        else:
-            return -field(a, c)
+        was = self.neg
+        self.neg = not was
+        rv = -self.a
+        self.neg = was
+        return rv
 
     @property
     def dx(self):
@@ -1712,7 +1738,11 @@ class RealInterval(object):
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
-        return (self.b <= other.a or other.b <= self.a)
+        if isinstance(other, RealInterval):
+            return (self.b <= other.a or other.b <= self.a)
+        assert isinstance(other, ComplexInterval)
+        return (self.b <= other.ax or other.bx <= self.a
+            or other.ay*other.by > 0)
 
     def _inner_refine(self):
         """Internal one step real root refinement procedure. """
@@ -1726,34 +1756,172 @@ class RealInterval(object):
 
     def refine_disjoint(self, other):
         """Refine an isolating interval until it is disjoint with another one. """
-        while not self.is_disjoint(other):
-            self, other = self._inner_refine(), other._inner_refine()
+        expr = self
+        while not expr.is_disjoint(other):
+            expr, other = expr._inner_refine(), other._inner_refine()
 
-        return self, other
+        return expr, other
 
     def refine_size(self, dx):
         """Refine an isolating interval until it is of sufficiently small size. """
-        while not (self.dx < dx):
-            self = self._inner_refine()
+        expr = self
+        while not (expr.dx < dx):
+            expr = expr._inner_refine()
 
-        return self
+        return expr
 
     def refine_step(self, steps=1):
         """Perform several steps of real root refinement algorithm. """
-        for _ in xrange(steps):
-            self = self._inner_refine()
+        expr = self
+        for _ in range(steps):
+            expr = expr._inner_refine()
 
-        return self
+        return expr
 
     def refine(self):
         """Perform one step of real root refinement algorithm. """
         return self._inner_refine()
 
+
 class ComplexInterval(object):
-    """A fully qualified representation of a complex isolation interval. """
+    """A fully qualified representation of a complex isolation interval.
+    The printed form is shown as (ax, bx) x (ay, by) where (ax, ay)
+    and (bx, by) are the coordinates of the southwest and northeast
+    corners of the interval's rectangle, respectively.
+
+    Examples
+    ========
+
+    >>> from sympy import CRootOf, Rational, S
+    >>> from sympy.abc import x
+    >>> CRootOf.clear_cache()  # for doctest reproducibility
+    >>> root = CRootOf(x**10 - 2*x + 3, 9)
+    >>> i = root._get_interval(); i
+    (3/64, 3/32) x (9/8, 75/64)
+
+    The real part of the root lies within the range [0, 3/4] while
+    the imaginary part lies within the range [9/8, 3/2]:
+
+    >>> root.n(3)
+    0.0766 + 1.14*I
+
+    The width of the ranges in the x and y directions on the complex
+    plane are:
+
+    >>> i.dx, i.dy
+    (3/64, 3/64)
+
+    The center of the range is
+
+    >>> i.center
+    (9/128, 147/128)
+
+    The northeast coordinate of the rectangle bounding the root in the
+    complex plane is given by attribute b and the x and y components
+    are accessed by bx and by:
+
+    >>> i.b, i.bx, i.by
+    ((3/32, 75/64), 3/32, 75/64)
+
+    The southwest coordinate is similarly given by i.a
+
+    >>> i.a, i.ax, i.ay
+    ((3/64, 9/8), 3/64, 9/8)
+
+    Although the interval prints to show only the real and imaginary
+    range of the root, all the information of the underlying root
+    is contained as properties of the interval.
+
+    For example, an interval with a nonpositive imaginary range is
+    considered to be the conjugate. Since the y values of y are in the
+    range [0, 1/4] it is not the conjugate:
+
+    >>> i.conj
+    False
+
+    The conjugate's interval is
+
+    >>> ic = i.conjugate(); ic
+    (3/64, 3/32) x (-75/64, -9/8)
+
+        NOTE: the values printed still represent the x and y range
+        in which the root -- conjugate, in this case -- is located,
+        but the underlying a and b values of a root and its conjugate
+        are the same:
+
+        >>> assert i.a == ic.a and i.b == ic.b
+
+        What changes are the reported coordinates of the bounding rectangle:
+
+        >>> (i.ax, i.ay), (i.bx, i.by)
+        ((3/64, 9/8), (3/32, 75/64))
+        >>> (ic.ax, ic.ay), (ic.bx, ic.by)
+        ((3/64, -75/64), (3/32, -9/8))
+
+    The interval can be refined once:
+
+    >>> i  # for reference, this is the current interval
+    (3/64, 3/32) x (9/8, 75/64)
+
+    >>> i.refine()
+    (3/64, 3/32) x (9/8, 147/128)
+
+    Several refinement steps can be taken:
+
+    >>> i.refine_step(2)  # 2 steps
+    (9/128, 3/32) x (9/8, 147/128)
+
+    It is also possible to refine to a given tolerance:
+
+    >>> tol = min(i.dx, i.dy)/2
+    >>> i.refine_size(tol)
+    (9/128, 21/256) x (9/8, 291/256)
+
+    A disjoint interval is one whose bounding rectangle does not
+    overlap with another. An interval, necessarily, is not disjoint with
+    itself, but any interval is disjoint with a conjugate since the
+    conjugate rectangle will always be in the lower half of the complex
+    plane and the non-conjugate in the upper half:
+
+    >>> i.is_disjoint(i), i.is_disjoint(i.conjugate())
+    (False, True)
+
+    The following interval j is not disjoint from i:
+
+    >>> close = CRootOf(x**10 - 2*x + 300/S(101), 9)
+    >>> j = close._get_interval(); j
+    (75/1616, 75/808) x (225/202, 1875/1616)
+    >>> i.is_disjoint(j)
+    False
+
+    The two can be made disjoint, however:
+
+    >>> newi, newj = i.refine_disjoint(j)
+    >>> newi
+    (39/512, 159/2048) x (2325/2048, 4653/4096)
+    >>> newj
+    (3975/51712, 2025/25856) x (29325/25856, 117375/103424)
+
+    Even though the real ranges overlap, the imaginary do not, so
+    the roots have been resolved as distinct. Intervals are disjoint
+    when either the real or imaginary component of the intervals is
+    distinct. In the case above, the real components have not been
+    resolved (so we don't know, yet, which root has the smaller real
+    part) but the imaginary part of ``close`` is larger than ``root``:
+
+    >>> close.n(3)
+    0.0771 + 1.13*I
+    >>> root.n(3)
+    0.0766 + 1.14*I
+    """
 
     def __init__(self, a, b, I, Q, F1, F2, f1, f2, dom, conj=False):
         """Initialize new complex interval with complete information. """
+        # a and b are the SW and NE corner of the bounding interval,
+        # (ax, ay) and (bx, by), respectively, for the NON-CONJUGATE
+        # root (the one with the positive imaginary part); when working
+        # with the conjugate, the a and b value are still non-negative
+        # but the ay, by are reversed and have oppositite sign
         self.a, self.b = a, b
         self.I, self.Q = I, Q
 
@@ -1762,6 +1930,20 @@ class ComplexInterval(object):
 
         self.dom = dom
         self.conj = conj
+
+    @property
+    def func(self):
+        return ComplexInterval
+
+    @property
+    def args(self):
+        i = self
+        return (i.a, i.b, i.I, i.Q, i.F1, i.F2, i.f1, i.f2, i.dom, i.conj)
+
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        return self.args == other.args
 
     @property
     def ax(self):
@@ -1805,7 +1987,8 @@ class ComplexInterval(object):
         return ((self.ax + self.bx)/2, (self.ay + self.by)/2)
 
     def as_tuple(self):
-        """Return tuple representation of complex isolating interval. """
+        """Return tuple representation of the complex isolating
+        interval's SW and NE corners, respectively. """
         return ((self.ax, self.ay), (self.bx, self.by))
 
     def __repr__(self):
@@ -1818,8 +2001,15 @@ class ComplexInterval(object):
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
-        return ((self.conj != other.conj) or ((self.bx <= other.ax or other.bx <= self.ax) or
-                                              (self.by <= other.ay or other.by <= self.ay)))
+        if isinstance(other, RealInterval):
+            return other.is_disjoint(self)
+        if self.conj != other.conj:  # above and below real axis
+            return True
+        re_distinct = (self.bx <= other.ax or other.bx <= self.ax)
+        if re_distinct:
+            return True
+        im_distinct = (self.by <= other.ay or other.by <= self.ay)
+        return im_distinct
 
     def _inner_refine(self):
         """Internal one step complex root refinement procedure. """
@@ -1851,27 +2041,29 @@ class ComplexInterval(object):
 
     def refine_disjoint(self, other):
         """Refine an isolating interval until it is disjoint with another one. """
-        while not self.is_disjoint(other):
-            self, other = self._inner_refine(), other._inner_refine()
+        expr = self
+        while not expr.is_disjoint(other):
+            expr, other = expr._inner_refine(), other._inner_refine()
 
-        return self, other
+        return expr, other
 
     def refine_size(self, dx, dy=None):
         """Refine an isolating interval until it is of sufficiently small size. """
         if dy is None:
             dy = dx
+        expr = self
+        while not (expr.dx < dx and expr.dy < dy):
+            expr = expr._inner_refine()
 
-        while not (self.dx < dx and self.dy < dy):
-            self = self._inner_refine()
-
-        return self
+        return expr
 
     def refine_step(self, steps=1):
         """Perform several steps of complex root refinement algorithm. """
-        for _ in xrange(steps):
-            self = self._inner_refine()
+        expr = self
+        for _ in range(steps):
+            expr = expr._inner_refine()
 
-        return self
+        return expr
 
     def refine(self):
         """Perform one step of complex root refinement algorithm. """

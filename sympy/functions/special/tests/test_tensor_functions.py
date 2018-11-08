@@ -2,8 +2,8 @@ from sympy import (
     adjoint, conjugate, Dummy, Eijk, KroneckerDelta, LeviCivita, Symbol,
     symbols, transpose,
 )
+from sympy.core.compatibility import range, long
 from sympy.physics.secondquant import evaluate_deltas, F
-from sympy.utilities.pytest import XFAIL
 
 x, y = symbols('x y')
 
@@ -11,6 +11,7 @@ x, y = symbols('x y')
 def test_levicivita():
     assert Eijk(1, 2, 3) == LeviCivita(1, 2, 3)
     assert LeviCivita(1, 2, 3) == 1
+    assert LeviCivita(long(1), long(2), long(3)) == 1
     assert LeviCivita(1, 3, 2) == -1
     assert LeviCivita(1, 2, 2) == 0
     i, j, k = symbols('i j k')
@@ -34,13 +35,14 @@ def test_kronecker_delta():
     k = Symbol('k', nonzero=True)
     assert KroneckerDelta(1, 1) == 1
     assert KroneckerDelta(1, 2) == 0
+    assert KroneckerDelta(k, 0) == 0
     assert KroneckerDelta(x, x) == 1
     assert KroneckerDelta(x**2 - y**2, x**2 - y**2) == 1
     assert KroneckerDelta(i, i) == 1
     assert KroneckerDelta(i, i + 1) == 0
     assert KroneckerDelta(0, 0) == 1
     assert KroneckerDelta(0, 1) == 0
-    assert KroneckerDelta(i + k, i) == KroneckerDelta(0, k)
+    assert KroneckerDelta(i + k, i) == 0
     assert KroneckerDelta(i + k, i + k) == 1
     assert KroneckerDelta(i + k, i + 1 + k) == 0
     assert KroneckerDelta(i, j).subs(dict(i=1, j=0)) == 0

@@ -6,14 +6,13 @@ from sympy.polys.densebasic import (
     dup_slice,
     dup_LC, dmp_LC,
     dup_degree, dmp_degree,
-    dup_normal,
     dup_strip, dmp_strip,
     dmp_zero_p, dmp_zero,
     dmp_one_p, dmp_one,
     dmp_ground, dmp_zeros)
 
 from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 def dup_add_term(f, c, i, K):
     """
@@ -321,7 +320,7 @@ def dup_quo_ground(f, c, K):
     if not f:
         return f
 
-    if K.has_Field:
+    if K.is_Field:
         return [ K.quo(cf, c) for cf in f ]
     else:
         return [ cf // c for cf in f ]
@@ -764,10 +763,10 @@ def dup_mul(f, g, K):
     if n < 100:
         h = []
 
-        for i in xrange(0, df + dg + 1):
+        for i in range(0, df + dg + 1):
             coeff = K.zero
 
-            for j in xrange(max(0, i - dg), min(df, i) + 1):
+            for j in range(max(0, i - dg), min(df, i) + 1):
                 coeff += f[j]*g[i - j]
 
             h.append(coeff)
@@ -825,10 +824,10 @@ def dmp_mul(f, g, u, K):
 
     h, v = [], u - 1
 
-    for i in xrange(0, df + dg + 1):
+    for i in range(0, df + dg + 1):
         coeff = dmp_zero(v)
 
-        for j in xrange(max(0, i - dg), min(df, i) + 1):
+        for j in range(max(0, i - dg), min(df, i) + 1):
             coeff = dmp_add(coeff, dmp_mul(f[j], g[i - j], v, K), v, K)
 
         h.append(coeff)
@@ -850,9 +849,9 @@ def dup_sqr(f, K):
     x**4 + 2*x**2 + 1
 
     """
-    df, h = dup_degree(f), []
+    df, h = len(f) - 1, []
 
-    for i in xrange(0, 2*df + 1):
+    for i in range(0, 2*df + 1):
         c = K.zero
 
         jmin = max(0, i - df)
@@ -862,7 +861,7 @@ def dup_sqr(f, K):
 
         jmax = jmin + n // 2 - 1
 
-        for j in xrange(jmin, jmax + 1):
+        for j in range(jmin, jmax + 1):
             c += f[j]*f[i - j]
 
         c += c
@@ -900,7 +899,7 @@ def dmp_sqr(f, u, K):
 
     h, v = [], u - 1
 
-    for i in xrange(0, 2*df + 1):
+    for i in range(0, 2*df + 1):
         c = dmp_zero(v)
 
         jmin = max(0, i - df)
@@ -910,7 +909,7 @@ def dmp_sqr(f, u, K):
 
         jmax = jmin + n // 2 - 1
 
-        for j in xrange(jmin, jmax + 1):
+        for j in range(jmin, jmax + 1):
             c = dmp_add(c, dmp_mul(f[j], f[i - j], v, K), v, K)
 
         c = dmp_mul_ground(c, K(2), v, K)
@@ -1528,7 +1527,7 @@ def dup_div(f, g, K):
     (1/2*x + 1, 5)
 
     """
-    if K.has_Field:
+    if K.is_Field:
         return dup_ff_div(f, g, K)
     else:
         return dup_rr_div(f, g, K)
@@ -1621,7 +1620,7 @@ def dmp_div(f, g, u, K):
     (1/2*x + 1/2*y - 1/2, -y + 1)
 
     """
-    if K.has_Field:
+    if K.is_Field:
         return dmp_ff_div(f, g, u, K)
     else:
         return dmp_rr_div(f, g, u, K)

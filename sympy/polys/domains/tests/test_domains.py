@@ -1,25 +1,22 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, nan, Poly, Integer, Rational
+from sympy import S, sqrt, sin, oo, Poly, Float
 from sympy.abc import x, y, z
 
-from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF,
-    PolynomialRing, FractionField, EX)
+from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX
+from sympy.polys.domains.realfield import RealField
 
 from sympy.polys.rings import ring
 from sympy.polys.fields import field
 
-from sympy.polys.domains.modularinteger import ModularIntegerFactory
-
 from sympy.polys.polyerrors import (
     UnificationFailed,
-    GeneratorsNeeded,
     GeneratorsError,
     CoercionFailed,
     NotInvertible,
     DomainError)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 ALG = QQ.algebraic_field(sqrt(2), sqrt(3))
 
@@ -68,6 +65,7 @@ def test_Domain_unify():
     assert unify(RR, ZZ[x]) == RR[x]
     assert unify(RR, ZZ.frac_field(x)) == RR.frac_field(x)
     assert unify(RR, EX) == EX
+    assert RR[x].unify(ZZ.frac_field(y)) == RR.frac_field(x, y)
 
     assert unify(CC, F3) == CC
     assert unify(CC, ZZ) == CC
@@ -432,7 +430,8 @@ def test_Domain_get_ring():
 
     assert EX.get_ring() == EX
 
-    raises(DomainError, lambda: RR.get_ring())
+    assert RR.get_ring() == RR
+    # XXX: This should also be like RR
     raises(DomainError, lambda: ALG.get_ring())
 
 
@@ -483,11 +482,13 @@ def test_Domain_convert():
 
 
 def test_PolynomialRing__init():
-    raises(GeneratorsNeeded, lambda: ZZ.poly_ring())
+    R, = ring("", ZZ)
+    assert ZZ.poly_ring() == R.to_domain()
 
 
 def test_FractionField__init():
-    raises(GeneratorsNeeded, lambda: ZZ.frac_field())
+    F, = field("", ZZ)
+    assert ZZ.frac_field() == F.to_domain()
 
 
 def test_inject():
@@ -519,6 +520,8 @@ def test_Domain___eq__():
 
     assert (ZZ.frac_field(x, y) == QQ.frac_field(x, y)) is False
     assert (QQ.frac_field(x, y) == ZZ.frac_field(x, y)) is False
+
+    assert RealField()[x] == RR[x]
 
 
 def test_Domain__algebraic_field():
@@ -672,6 +675,15 @@ def test_ModularInteger():
     a = F3(2)**2
     assert isinstance(a, F3.dtype) and a == 1
 
+    F7 = FF(7)
+
+    a = F7(3)**100000000000
+    assert isinstance(a, F7.dtype) and a == 4
+    a = F7(3)**-100000000000
+    assert isinstance(a, F7.dtype) and a == 2
+    a = F7(3)**S(2)
+    assert isinstance(a, F7.dtype) and a == 2
+
     assert bool(F3(3)) is False
     assert bool(F3(4)) is True
 
@@ -731,3 +743,42 @@ def test_ModularInteger():
 
     raises(ValueError, lambda: FF(0))
     raises(ValueError, lambda: FF(2.1))
+
+def test_QQ_int():
+    assert int(QQ(2**2000, 3**1250)) == 455431
+    assert int(QQ(2**100, 3)) == 422550200076076467165567735125
+
+def test_RR_double():
+    assert RR(3.14) > 1e-50
+    assert RR(1e-13) > 1e-50
+    assert RR(1e-14) > 1e-50
+    assert RR(1e-15) > 1e-50
+    assert RR(1e-20) > 1e-50
+    assert RR(1e-40) > 1e-50
+
+def test_RR_Float():
+    f1 = Float("1.01")
+    f2 = Float("1.0000000000000000000001")
+    assert f1._prec == 53
+    assert f2._prec == 80
+    assert RR(f1)-1 > 1e-50
+    assert RR(f2)-1 < 1e-50 # RR's precision is lower than f2's
+
+    RR2 = RealField(prec=f2._prec)
+    assert RR2(f1)-1 > 1e-50
+    assert RR2(f2)-1 > 1e-50 # RR's precision is equal to f2's
+
+def test_CC_double():
+    assert CC(3.14).real > 1e-50
+    assert CC(1e-13).real > 1e-50
+    assert CC(1e-14).real > 1e-50
+    assert CC(1e-15).real > 1e-50
+    assert CC(1e-20).real > 1e-50
+    assert CC(1e-40).real > 1e-50
+
+    assert CC(3.14j).imag > 1e-50
+    assert CC(1e-13j).imag > 1e-50
+    assert CC(1e-14j).imag > 1e-50
+    assert CC(1e-15j).imag > 1e-50
+    assert CC(1e-20j).imag > 1e-50
+    assert CC(1e-40j).imag > 1e-50

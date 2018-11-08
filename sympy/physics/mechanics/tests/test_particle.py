@@ -31,7 +31,7 @@ def test_particle():
     P2.set_vel(N, v1 * N.x + v2 * N.y + v3 * N.z)
     assert p.linear_momentum(N) == m2 * (v1 * N.x + v2 * N.y + v3 * N.z)
     assert p.angular_momentum(O, N) == m2 * r * (v3 * N.x - v1 * N.z)
-    p.set_potential_energy(m * g * h)
+    p.potential_energy = m * g * h
     assert p.potential_energy == m * g * h
     # TODO make the result not be system-dependent
     assert p.kinetic_energy(

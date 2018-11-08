@@ -1,7 +1,8 @@
+from collections import defaultdict
 from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, Integer
 from sympy.core.containers import tuple_wrapper
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.core.compatibility import is_sequence, iterable, u
+from sympy.utilities.pytest import raises
+from sympy.core.compatibility import is_sequence, iterable, range
 
 
 def test_Tuple():
@@ -18,7 +19,7 @@ def test_Tuple():
     st2 = Tuple(*t2)
     assert st2.atoms() == set(t2)
     assert st == st2.subs({p: 1, q: 2, r: 3, s: 4})
-    # issue 2406
+    # issue 5505
     assert all(isinstance(arg, Basic) for arg in st.args)
     assert Tuple(p, 1).subs(p, 0) == Tuple(0, 1)
     assert Tuple(p, Tuple(p, 1)).subs(p, 0) == Tuple(0, Tuple(0, 1))
@@ -63,10 +64,10 @@ def test_Tuple_equality():
 
 
 def test_Tuple_comparision():
-    assert (Tuple(1, 3) >= Tuple(-10, 30)) is True
-    assert (Tuple(1, 3) <= Tuple(-10, 30)) is False
-    assert (Tuple(1, 3) >= Tuple(1, 3)) is True
-    assert (Tuple(1, 3) <= Tuple(1, 3)) is True
+    assert (Tuple(1, 3) >= Tuple(-10, 30)) is S.true
+    assert (Tuple(1, 3) <= Tuple(-10, 30)) is S.false
+    assert (Tuple(1, 3) >= Tuple(1, 3)) is S.true
+    assert (Tuple(1, 3) <= Tuple(1, 3)) is S.true
 
 
 def test_Tuple_tuple_count():
@@ -113,7 +114,7 @@ def test_tuple_wrapper():
 def test_iterable_is_sequence():
     ordered = [list(), tuple(), Tuple(), Matrix([[]])]
     unordered = [set()]
-    not_sympy_iterable = [{}, '', u('')]
+    not_sympy_iterable = [{}, '', u'']
     assert all(is_sequence(i) for i in ordered)
     assert all(not is_sequence(i) for i in unordered)
     assert all(iterable(i) for i in ordered + unordered)
@@ -146,7 +147,7 @@ def test_Dict():
 
     assert set(
         d.items()) == set((Tuple(x, S(1)), Tuple(y, S(2)), Tuple(z, S(3))))
-    assert set(d) == set([x, y, z])
+    assert set(d) == {x, y, z}
     assert str(d) == '{x: 1, y: 2, z: 3}'
     assert d.__repr__() == '{x: 1, y: 2, z: 3}'
 
@@ -154,22 +155,21 @@ def test_Dict():
     d = Dict({x: 1, y: 2, z: 3})
     assert d == Dict(d)
 
+    # Test for supporting defaultdict
+    d = defaultdict(int)
+    assert d[x] == 0
+    assert d[y] == 0
+    assert d[z] == 0
+    assert Dict(d)
+    d = Dict(d)
+    assert len(d) == 3
+    assert set(d.keys()) == set((x, y, z))
+    assert set(d.values()) == set((S(0), S(0), S(0)))
 
-def test_issue_2689():
+
+def test_issue_5788():
     args = [(1, 2), (2, 1)]
-    for o in [Dict, Tuple]:
-        # __eq__ and arg handling
-        if o != Tuple:
-            assert o(*args) == o(*reversed(args))
-        pair = [o(*args), o(*reversed(args))]
-        assert sorted(pair) == sorted(reversed(pair))
-        assert set(o(*args))  # doesn't fail
-
-
-@XFAIL
-def test_issue_2689b():
-    args = [(1, 2), (2, 1)]
-    for o in [FiniteSet]:
+    for o in [Dict, Tuple, FiniteSet]:
         # __eq__ and arg handling
         if o != Tuple:
             assert o(*args) == o(*reversed(args))

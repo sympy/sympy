@@ -9,10 +9,21 @@ Should be run from sympy root directory
 $ python bin/ask_update.py
 """
 
-from sympy.assumptions.ask import (compute_known_facts, known_facts,
-        known_facts_keys)
+# hook in-tree SymPy into Python path, if possible
+import os
+import sys
 
-f = open('sympy/assumptions/ask_generated.py', 'w')
-code = compute_known_facts(known_facts, known_facts_keys)
-f.write(code)
-f.close()
+isympy_path = os.path.abspath(__file__)
+isympy_dir = os.path.dirname(isympy_path)
+sympy_top = os.path.split(isympy_dir)[0]
+sympy_dir = os.path.join(sympy_top, 'sympy')
+
+if os.path.isdir(sympy_dir):
+    sys.path.insert(0, sympy_top)
+
+from sympy.assumptions.ask import (compute_known_facts,
+        get_known_facts, get_known_facts_keys)
+
+with open('sympy/assumptions/ask_generated.py', 'w') as f:
+    code = compute_known_facts(get_known_facts(), get_known_facts_keys())
+    f.write(code)

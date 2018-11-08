@@ -7,6 +7,7 @@ from sympy.assumptions.ask import _extract_facts, Q
 from sympy.core import symbols
 from sympy.logic.boolalg import Or
 from sympy.printing import pretty
+from sympy.utilities.pytest import XFAIL
 
 
 def test_equal():
@@ -19,7 +20,7 @@ def test_equal():
 def test_pretty():
     assert pretty(Q.positive(x)) == "Q.positive(x)"
     assert pretty(
-        set([Q.positive, Q.integer])) == "set([Q.integer, Q.positive])"
+        set([Q.positive, Q.integer])) == "{Q.integer, Q.positive}"
 
 
 def test_extract_facts():
@@ -30,6 +31,10 @@ def test_extract_facts():
     assert _extract_facts(~a(x), y) is None
     assert _extract_facts(a(x) | b(x), x) == a | b
     assert _extract_facts(a(x) | ~b(x), x) == a | ~b
+    assert _extract_facts(a(x) & b(y), x) == a
+    assert _extract_facts(a(x) & b(y), y) == b
+    assert _extract_facts(a(x) | b(y), x) == None
+    assert _extract_facts(~(a(x) | b(y)), x) == ~a
 
 
 def test_global():
@@ -45,9 +50,3 @@ def test_global():
     global_assumptions.clear()
     assert not Q.is_true(x > 0) in global_assumptions
     assert not Q.is_true(y > 0) in global_assumptions
-
-
-def test_composite_predicates():
-    pred = Q.integer | ~Q.positive
-    assert type(pred(x)) is Or
-    assert pred(x) == Q.integer(x) | ~Q.positive(x)

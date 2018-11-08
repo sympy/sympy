@@ -1,18 +1,22 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
-from itertools import combinations, permutations, product, product as cartes
+from itertools import (
+    combinations, combinations_with_replacement, permutations,
+    product, product as cartes
+)
 import random
 from operator import gt
 
-from sympy.core.decorators import deprecated
-from sympy.core import Basic, C
+from sympy.core import Basic
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, combinations_with_replacement, default_sort_key, is_sequence,
-    iterable, ordered, xrange
+    as_int, default_sort_key, is_sequence, iterable, ordered, range
 )
+
+from sympy.utilities.enumerative import (
+    multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
 
 
 def flatten(iterable, levels=None, cls=None):
@@ -49,7 +53,7 @@ def flatten(iterable, levels=None, cls=None):
     >>> flatten([MyOp(1, MyOp(2, 3))], cls=MyOp)
     [1, 2, 3]
 
-    adapted from http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
+    adapted from https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
     """
     if levels is not None:
         if not levels:
@@ -84,7 +88,7 @@ def unflatten(iter, n=2):
     """
     if n < 1 or len(iter) % n:
         raise ValueError('iter length is not a multiple of %i' % n)
-    return list(zip(*(iter[i::n] for i in xrange(n))))
+    return list(zip(*(iter[i::n] for i in range(n))))
 
 
 def reshape(seq, how):
@@ -120,8 +124,8 @@ def reshape(seq, how):
     >>> reshape(tuple(seq), ([1], 1, (2,)))
     (([1], 2, (3, 4)), ([5], 6, (7, 8)))
 
-    >>> reshape(list(range(12)), [2, [3], set([2]), (1, (3,), 1)])
-    [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
+    >>> reshape(list(range(12)), [2, [3], {2}, (1, (3,), 1)])
+    [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
 
     """
     m = sum(flatten(how))
@@ -524,10 +528,34 @@ def subsets(seq, k=None, repetition=False):
                 yield i
 
 
-def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
+def filter_symbols(iterator, exclude):
+    """
+    Only yield elements from `iterator` that do not occur in `exclude`.
+
+    Parameters
+    ==========
+
+    iterator : iterable
+    iterator to take elements from
+
+    exclude : iterable
+    elements to exclude
+
+    Returns
+    =======
+
+    iterator : iterator
+    filtered iterator
+    """
+    exclude = set(exclude)
+    for s in iterator:
+        if s not in exclude:
+            yield s
+
+def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
-    increasing subscripts.
+    increasing subscripts provided that they do not occur in `exclude`.
 
     Parameters
     ==========
@@ -548,15 +576,18 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     sym : Symbol
         The subscripted symbols.
     """
-
+    exclude = set(exclude or [])
     if cls is None:
-        # We can't just make the default cls=C.Symbol because it isn't
+        # We can't just make the default cls=Symbol because it isn't
         # imported yet.
-        cls = C.Symbol
+        from sympy import Symbol
+        cls = Symbol
 
     while True:
         name = '%s%s' % (prefix, start)
-        yield cls(name, *args, **assumptions)
+        s = cls(name, *args, **assumptions)
+        if s not in exclude:
+            yield s
         start += 1
 
 
@@ -590,19 +621,24 @@ def capture(func):
     return file.getvalue()
 
 
-def sift(seq, keyfunc):
+def sift(seq, keyfunc, binary=False):
     """
-    Sift the sequence, ``seq`` into a dictionary according to keyfunc.
+    Sift the sequence, ``seq`` according to ``keyfunc``.
 
-    OUTPUT: each element in expr is stored in a list keyed to the value
-    of keyfunc for the element.
+    OUTPUT: When binary is False (default), the output is a dictionary
+    where elements of ``seq`` are stored in a list keyed to the value
+    of keyfunc for that element. If ``binary`` is True then a tuple
+    with lists ``T`` and ``F`` are returned where ``T`` is a list
+    containing elements of seq for which ``keyfunc`` was True and
+    ``F`` containing those elements for which ``keyfunc`` was False;
+    a ValueError is raised if the ``keyfunc`` is not binary.
 
     Examples
     ========
 
     >>> from sympy.utilities import sift
     >>> from sympy.abc import x, y
-    >>> from sympy import sqrt, exp
+    >>> from sympy import sqrt, exp, pi, Tuple
 
     >>> sift(range(5), lambda x: x % 2)
     {0: [0, 2, 4], 1: [1, 3]}
@@ -621,6 +657,30 @@ def sift(seq, keyfunc):
     ...      lambda x: x.as_base_exp()[0])
     {E: [exp(x)], x: [sqrt(x)], y: [y**(2*x)]}
 
+    Sometimes you expect the results to be binary; the
+    results can be unpacked by setting ``binary`` to True:
+
+    >>> sift(range(4), lambda x: x % 2, binary=True)
+    ([1, 3], [0, 2])
+    >>> sift(Tuple(1, pi), lambda x: x.is_rational, binary=True)
+    ([1], [pi])
+
+    A ValueError is raised if the predicate was not actually binary
+    (which is a good test for the logic where sifting is used and
+    binary results were expected):
+
+    >>> unknown = exp(1) - pi  # the rationality of this is unknown
+    >>> args = Tuple(1, pi, unknown)
+    >>> sift(args, lambda x: x.is_rational, binary=True)
+    Traceback (most recent call last):
+    ...
+    ValueError: keyfunc gave non-binary output
+
+    The non-binary sifting shows that there were 3 keys generated:
+
+    >>> set(sift(args, lambda x: x.is_rational).keys())
+    {None, False, True}
+
     If you need to sort the sifted items it might be better to use
     ``ordered`` which can economically apply multiple sort keys
     to a squence while sorting.
@@ -629,15 +689,23 @@ def sift(seq, keyfunc):
     ========
     ordered
     """
-    m = defaultdict(list)
+    if not binary:
+        m = defaultdict(list)
+        for i in seq:
+            m[keyfunc(i)].append(i)
+        return m
+    sift = F, T = [], []
     for i in seq:
-        m[keyfunc(i)].append(i)
-    return m
+        try:
+            sift[keyfunc(i)].append(i)
+        except (IndexError, TypeError):
+            raise ValueError('keyfunc gave non-binary output')
+    return T, F
 
 
 def take(iter, n):
     """Return ``n`` items from ``iter`` iterator. """
-    return [ value for _, value in zip(xrange(n), iter) ]
+    return [ value for _, value in zip(range(n), iter) ]
 
 
 def dict_merge(*dicts):
@@ -669,7 +737,7 @@ def common_prefix(*seqs):
         return seqs[0]
     i = 0
     for i in range(min(len(s) for s in seqs)):
-        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
+        if not all(seqs[j][i] == seqs[0][i] for j in range(len(seqs))):
             break
     else:
         i += 1
@@ -696,7 +764,7 @@ def common_suffix(*seqs):
         return seqs[0]
     i = 0
     for i in range(-1, -min(len(s) for s in seqs) - 1, -1):
-        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
+        if not all(seqs[j][i] == seqs[0][i] for j in range(len(seqs))):
             break
     else:
         i -= 1
@@ -721,7 +789,7 @@ def prefixes(seq):
     """
     n = len(seq)
 
-    for i in xrange(n):
+    for i in range(n):
         yield seq[:i + 1]
 
 
@@ -740,7 +808,7 @@ def postfixes(seq):
     """
     n = len(seq)
 
-    for i in xrange(n):
+    for i in range(n):
         yield seq[n - i - 1:]
 
 
@@ -809,7 +877,7 @@ def topological_sort(graph, key=None):
         ...
         ValueError: cycle detected
 
-    .. seealso:: http://en.wikipedia.org/wiki/Topological_sorting
+    .. seealso:: https://en.wikipedia.org/wiki/Topological_sorting
 
     """
     V, E = graph
@@ -876,7 +944,7 @@ def rotate_left(x, y):
 
 def rotate_right(x, y):
     """
-    Left rotates a list x by the number of steps specified
+    Right rotates a list x by the number of steps specified
     in y.
 
     Examples
@@ -1000,7 +1068,7 @@ def multiset_permutations(m, size=None, g=None):
 
 def _partition(seq, vector, m=None):
     """
-    Return the partion of seq as specified by the partition vector.
+    Return the partition of seq as specified by the partition vector.
 
     Examples
     ========
@@ -1085,7 +1153,7 @@ def _set_partitions(n):
 
     Nijenhuis, Albert and Wilf, Herbert. (1978) Combinatorial Algorithms,
     2nd Ed, p 91, algorithm "nexequ". Available online from
-    http://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
+    https://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
     November 17, 2012).
 
     """
@@ -1195,14 +1263,24 @@ def multiset_partitions(multiset, m=None):
     sympy.functions.combinatorial.numbers.nT
     """
 
+    # This function looks at the supplied input and dispatches to
+    # several special-case routines as they apply.
     if type(multiset) is int:
         n = multiset
         if m and m > n:
             return
-        multiset = list(range(multiset))
+        multiset = list(range(n))
         if m == 1:
             yield [multiset[:]]
             return
+
+        # If m is not None, it can sometimes be faster to use
+        # MultisetPartitionTraverser.enum_range() even for inputs
+        # which are sets.  Since the _set_partitions code is quite
+        # fast, this is only advantageous when the overall set
+        # partitions outnumber those with the desired number of parts
+        # by a large factor.  (At least 60.)  Such a switch is not
+        # currently implemented.
         for nc, q in _set_partitions(n):
             if m is None or nc == m:
                 rv = [[] for i in range(nc)]
@@ -1215,6 +1293,8 @@ def multiset_partitions(multiset, m=None):
         multiset = [multiset]
 
     if not has_variety(multiset):
+        # Only one component, repeated n times.  The resulting
+        # partitions correspond to partitions of integer n.
         n = len(multiset)
         if m and m > n:
             return
@@ -1237,43 +1317,42 @@ def multiset_partitions(multiset, m=None):
             yield [multiset[:]]
             return
 
-        # if there are repeated elements, sort them and define the
-        # canon dictionary that will be used to create the cache key
-        # in case elements of the multiset are not hashable
-        cache = set()
-        canon = {}  # {physical position: position where it appeared first}
-        for i, mi in enumerate(multiset):
-            canon.setdefault(i, canon.get(i, multiset.index(mi)))
-        if len(set(canon.values())) != n:
-            canon = {}
-            for i, mi in enumerate(multiset):
-                canon.setdefault(i, canon.get(i, multiset.index(mi)))
+        # Split the information of the multiset into two lists -
+        # one of the elements themselves, and one (of the same length)
+        # giving the number of repeats for the corresponding element.
+        elements, multiplicities = zip(*group(multiset, False))
+
+        if len(elements) < len(multiset):
+            # General case - multiset with more than one distinct element
+            # and at least one element repeated more than once.
+            if m:
+                mpt = MultisetPartitionTraverser()
+                for state in mpt.enum_range(multiplicities, m-1, m):
+                    yield list_visitor(state, elements)
+            else:
+                for state in multiset_partitions_taocp(multiplicities):
+                    yield list_visitor(state, elements)
         else:
-            canon = None
-
-        for nc, q in _set_partitions(n):
-            if m is None or nc == m:
-                rv = [[] for i in range(nc)]
-                for i in range(n):
-                    rv[q[i]].append(i)
-                if canon:
-                    canonical = tuple(
-                        sorted([tuple([canon[i] for i in j]) for j in rv]))
-                    if canonical in cache:
-                        continue
-                    cache.add(canonical)
-
-                yield [[multiset[j] for j in i] for i in rv]
+            # Set partitions case - no repeated elements. Pretty much
+            # same as int argument case above, with same possible, but
+            # currently unimplemented optimization for some cases when
+            # m is not None
+            for nc, q in _set_partitions(n):
+                if m is None or nc == m:
+                    rv = [[] for i in range(nc)]
+                    for i in range(n):
+                        rv[q[i]].append(i)
+                    yield [[multiset[j] for j in i] for i in rv]
 
 
 def partitions(n, m=None, k=None, size=False):
-    """Generate all partitions of integer n (>= 0).
+    """Generate all partitions of positive integer, n.
 
     Parameters
     ==========
 
     ``m`` : integer (default gives partitions of all sizes)
-        limits number of parts in parition (mnemonic: m, maximum parts)
+        limits number of parts in partition (mnemonic: m, maximum parts)
     ``k`` : integer (default gives partitions number from 1 through n)
         limits the numbers that are kept in the partition (mnemonic: k, keys)
     ``size`` : bool (default False, only partition is returned)
@@ -1292,17 +1371,18 @@ def partitions(n, m=None, k=None, size=False):
     The numbers appearing in the partition (the key of the returned dict)
     are limited with k:
 
-    >>> for p in partitions(6, k=2):
+    >>> for p in partitions(6, k=2):  # doctest: +SKIP
     ...     print(p)
     {2: 3}
     {1: 2, 2: 2}
     {1: 4, 2: 1}
     {1: 6}
 
-    The maximum number of parts in the partion (the sum of the values in
-    the returned dict) are limited with m:
+    The maximum number of parts in the partition (the sum of the values in
+    the returned dict) are limited with m (default value, None, gives
+    partitions from 1 through n):
 
-    >>> for p in partitions(6, m=2):
+    >>> for p in partitions(6, m=2):  # doctest: +SKIP
     ...     print(p)
     ...
     {6: 1}
@@ -1320,9 +1400,9 @@ def partitions(n, m=None, k=None, size=False):
     If you want to build a list of the returned dictionaries then
     make a copy of them:
 
-    >>> [p.copy() for p in partitions(6, k=2)]
+    >>> [p.copy() for p in partitions(6, k=2)]  # doctest: +SKIP
     [{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
-    >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]
+    >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]  # doctest: +SKIP
     [(3, {2: 3}), (4, {1: 2, 2: 2}), (5, {1: 4, 2: 1}), (6, {1: 6})]
 
     Reference:
@@ -1335,19 +1415,33 @@ def partitions(n, m=None, k=None, size=False):
     sympy.combinatorics.partitions.IntegerPartition
 
     """
-    if n < 0:
-        raise ValueError("n must be >= 0")
-    if m == 0:
-        raise ValueError("m must be > 0")
-    m = min(m or n, n)
-    if m < 1:
-        raise ValueError("maximum numbers in partition, m, must be > 0")
-    k = min(k or n, n)
-    if k < 1:
-        raise ValueError("maximum value in partition, k, must be > 0")
-
-    if m*k < n:
+    if (
+            n <= 0 or
+            m is not None and m < 1 or
+            k is not None and k < 1 or
+            m and k and m*k < n):
+        # the empty set is the only way to handle these inputs
+        # and returning {} to represent it is consistent with
+        # the counting convention, e.g. nT(0) == 1.
+        if size:
+            yield 0, {}
+        else:
+            yield {}
         return
+
+    if m is None:
+        m = n
+    else:
+        m = min(m, n)
+
+    if n == 0:
+        if size:
+            yield 1, {0: 1}
+        else:
+            yield {0: 1}
+        return
+
+    k = min(k or n, n)
 
     n, m, k = as_int(n), as_int(m), as_int(k)
     q, r = divmod(n, k)
@@ -1401,6 +1495,140 @@ def partitions(n, m=None, k=None, size=False):
             yield sum(ms.values()), ms
         else:
             yield ms
+
+
+def ordered_partitions(n, m=None, sort=True):
+    """Generates ordered partitions of integer ``n``.
+
+    Parameters
+    ==========
+
+    ``m`` : integer (default gives partitions of all sizes) else only
+        those with size m. In addition, if ``m`` is not None then
+        partitions are generated *in place* (see examples).
+    ``sort`` : bool (default True) controls whether partitions are
+        returned in sorted order when ``m`` is not None; when False,
+        the partitions are returned as fast as possible with elements
+        sorted, but when m|n the partitions will not be in
+        ascending lexicographical order.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import ordered_partitions
+
+    All partitions of 5 in ascending lexicographical:
+
+    >>> for p in ordered_partitions(5):
+    ...     print(p)
+    [1, 1, 1, 1, 1]
+    [1, 1, 1, 2]
+    [1, 1, 3]
+    [1, 2, 2]
+    [1, 4]
+    [2, 3]
+    [5]
+
+    Only partitions of 5 with two parts:
+
+    >>> for p in ordered_partitions(5, 2):
+    ...     print(p)
+    [1, 4]
+    [2, 3]
+
+    When ``m`` is given, a given list objects will be used more than
+    once for speed reasons so you will not see the correct partitions
+    unless you make a copy of each as it is generated:
+
+    >>> [p for p in ordered_partitions(7, 3)]
+    [[1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2]]
+    >>> [list(p) for p in ordered_partitions(7, 3)]
+    [[1, 1, 5], [1, 2, 4], [1, 3, 3], [2, 2, 3]]
+
+    When ``n`` is a multiple of ``m``, the elements are still sorted
+    but the partitions themselves will be *unordered* if sort is False;
+    the default is to return them in ascending lexicographical order.
+
+    >>> for p in ordered_partitions(6, 2):
+    ...     print(p)
+    [1, 5]
+    [2, 4]
+    [3, 3]
+
+    But if speed is more important than ordering, sort can be set to
+    False:
+
+    >>> for p in ordered_partitions(6, 2, sort=False):
+    ...     print(p)
+    [1, 5]
+    [3, 3]
+    [2, 4]
+
+    References
+    ==========
+
+    .. [1] Generating Integer Partitions, [online],
+        Available: https://jeromekelleher.net/generating-integer-partitions.html
+    .. [2] Jerome Kelleher and Barry O'Sullivan, "Generating All
+        Partitions: A Comparison Of Two Encodings", [online],
+        Available: https://arxiv.org/pdf/0909.2331v2.pdf
+    """
+    if n < 1 or m is not None and m < 1:
+        # the empty set is the only way to handle these inputs
+        # and returning {} to represent it is consistent with
+        # the counting convention, e.g. nT(0) == 1.
+        yield []
+        return
+
+    if m is None:
+        # The list `a`'s leading elements contain the partition in which
+        # y is the biggest element and x is either the same as y or the
+        # 2nd largest element; v and w are adjacent element indices
+        # to which x and y are being assigned, respectively.
+        a = [1]*n
+        y = -1
+        v = n
+        while v > 0:
+            v -= 1
+            x = a[v] + 1
+            while y >= 2 * x:
+                a[v] = x
+                y -= x
+                v += 1
+            w = v + 1
+            while x <= y:
+                a[v] = x
+                a[w] = y
+                yield a[:w + 1]
+                x += 1
+                y -= 1
+            a[v] = x + y
+            y = a[v] - 1
+            yield a[:w]
+    elif m == 1:
+        yield [n]
+    elif n == m:
+        yield [1]*n
+    else:
+        # recursively generate partitions of size m
+        for b in range(1, n//m + 1):
+            a = [b]*m
+            x = n - b*m
+            if not x:
+                if sort:
+                    yield a
+            elif not sort and x <= m:
+                for ax in ordered_partitions(x, sort=False):
+                    mi = len(ax)
+                    a[-mi:] = [i + b for i in ax]
+                    yield a
+                    a[-mi:] = [b]*mi
+            else:
+                for mi in range(1, m):
+                    for ax in ordered_partitions(x, mi, sort=True):
+                        a[-mi:] = [i + b for i in ax]
+                        yield a
+                        a[-mi:] = [b]*mi
 
 
 def binary_partitions(n):
@@ -1473,7 +1701,9 @@ def has_dups(seq):
     >>> all(has_dups(c) is False for c in (set(), Set(), dict(), Dict()))
     True
     """
-    if isinstance(seq, (dict, set, C.Dict, C.Set)):
+    from sympy.core.containers import Dict
+    from sympy.sets.sets import Set
+    if isinstance(seq, (dict, set, Dict, Set)):
         return False
     uniq = set()
     return any(True for s in seq if s in uniq or uniq.add(s))
@@ -1541,8 +1771,12 @@ def uniq(seq, result=None):
 
 
 def generate_bell(n):
-    """
-    Generates the bell permutations of length ``n``.
+    """Return permutations of [0, 1, ..., n - 1] such that each permutation
+    differs from the last by the exchange of a single pair of neighbors.
+    The ``n!`` permutations are returned as an iterator. In order to obtain
+    the next permutation from a random starting permutation, use the
+    ``next_trotterjohnson`` method of the Permutation class (which generates
+    the same sequence in a different manner).
 
     Examples
     ========
@@ -1561,54 +1795,82 @@ def generate_bell(n):
     >>> list(permutations(range(4)))[:5]
     [(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3), (0, 2, 3, 1), (0, 3, 1, 2)]
     >>> list(generate_bell(4))[:5]
-    [(0, 1, 2, 3), (1, 0, 2, 3), (1, 2, 0, 3), (1, 2, 3, 0), (2, 1, 3, 0)]
+    [(0, 1, 2, 3), (0, 1, 3, 2), (0, 3, 1, 2), (3, 0, 1, 2), (3, 0, 2, 1)]
 
     Notice how the 2nd and 3rd lexicographical permutations have 3 elements
-    out of place whereas each bell permutations always has only two
-    elements out of place relative to the previous permutation.
+    out of place whereas each "bell" permutation always has only two
+    elements out of place relative to the previous permutation (and so the
+    signature (+/-1) of a permutation is opposite of the signature of the
+    previous permutation).
 
     How the position of inversion varies across the elements can be seen
-    by tracing out where the 0 appears in the permutations:
+    by tracing out where the largest number appears in the permutations:
 
     >>> m = zeros(4, 24)
     >>> for i, p in enumerate(generate_bell(4)):
-    ...     m[:, i] = Matrix(list(p))
+    ...     m[:, i] = Matrix([j - 3 for j in list(p)])  # make largest zero
     >>> m.print_nonzero('X')
-    [ XXXXXX  XXXXXX  XXXXXX ]
-    [X XXXX XX XXXX XX XXXX X]
-    [XX XX XXXX XX XXXX XX XX]
     [XXX  XXXXXX  XXXXXX  XXX]
+    [XX XX XXXX XX XXXX XX XX]
+    [X XXXX XX XXXX XX XXXX X]
+    [ XXXXXX  XXXXXX  XXXXXX ]
+
+    See Also
+    ========
+    sympy.combinatorics.Permutation.next_trotterjohnson
 
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Method_ringing
-    * http://stackoverflow.com/questions/4856615/recursive-permutation/4857018
+    * https://en.wikipedia.org/wiki/Method_ringing
+    * https://stackoverflow.com/questions/4856615/recursive-permutation/4857018
     * http://programminggeeks.com/bell-algorithm-for-permutation/
-    * http://en.wikipedia.org/wiki/
-      Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
+    * https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
     * Generating involutions, derangements, and relatives by ECO
       Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
 
     """
-    from sympy.functions.combinatorial.factorials import factorial
-    pos = dir = 1
-    do = factorial(n)
-    p = list(range(n))
-    yield tuple(p)
-    do -= 1
-    while do:
-        if pos >= n:
-            dir = -dir
-            p[0], p[1] = p[1], p[0]
-        elif pos < 1:
-            dir = -dir
-            p[-2], p[-1] = p[-1], p[-2]
-        else:
-            p[pos - 1], p[pos] = p[pos], p[pos - 1]
-        pos += dir
-        yield tuple(p)
-        do -= 1
+    n = as_int(n)
+    if n < 1:
+        raise ValueError('n must be a positive integer')
+    if n == 1:
+        yield (0,)
+    elif n == 2:
+        yield (0, 1)
+        yield (1, 0)
+    elif n == 3:
+        for li in [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]:
+            yield li
+    else:
+        m = n - 1
+        op = [0] + [-1]*m
+        l = list(range(n))
+        while True:
+            yield tuple(l)
+            # find biggest element with op
+            big = None, -1  # idx, value
+            for i in range(n):
+                if op[i] and l[i] > big[1]:
+                    big = i, l[i]
+            i, _ = big
+            if i is None:
+                break  # there are no ops left
+            # swap it with neighbor in the indicated direction
+            j = i + op[i]
+            l[i], l[j] = l[j], l[i]
+            op[i], op[j] = op[j], op[i]
+            # if it landed at the end or if the neighbor in the same
+            # direction is bigger then turn off op
+            if j == 0 or j == m or l[j + op[j]] > l[j]:
+                op[j] = 0
+            # any element bigger to the left gets +1 op
+            for i in range(j):
+                if l[i] > l[j]:
+                    op[i] = 1
+            # any element bigger to the right gets -1 op
+            for i in range(j + 1, n):
+                if l[i] > l[j]:
+                    op[i] = -1
 
 
 def generate_involutions(n):
@@ -1678,13 +1940,6 @@ def generate_derangements(perm):
             yield pi
 
 
-@deprecated(
-    useinstead="bracelets", deprecated_since_version="0.7.3")
-def unrestricted_necklace(n, k):
-    """Wrapper to necklaces to return a free (unrestricted) necklace."""
-    return necklaces(n, k, free=True)
-
-
 def necklaces(n, k, free=False):
     """
     A routine to generate necklaces that may (free=True) or may not
@@ -1711,7 +1966,7 @@ def necklaces(n, k, free=False):
     >>> B = [show('ABC', i) for i in bracelets(3, 3)]
     >>> N = [show('ABC', i) for i in necklaces(3, 3)]
     >>> set(N) - set(B)
-    set(['ACB'])
+    {'ACB'}
 
     >>> list(necklaces(4, 2))
     [(0, 0, 0, 0), (0, 0, 0, 1), (0, 0, 1, 1),
@@ -1747,7 +2002,7 @@ def generate_oriented_forest(n):
     Reference:
     [1] T. Beyer and S.M. Hedetniemi: constant time generation of \
         rooted trees, SIAM J. Computing Vol. 9, No. 4, November 1980
-    [2] http://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python
+    [2] https://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python
 
     Examples
     ========
@@ -1763,14 +2018,14 @@ def generate_oriented_forest(n):
         if P[n] > 0:
             P[n] = P[P[n]]
         else:
-            for p in xrange(n - 1, 0, -1):
+            for p in range(n - 1, 0, -1):
                 if P[p] != 0:
                     target = P[p] - 1
-                    for q in xrange(p - 1, 0, -1):
+                    for q in range(p - 1, 0, -1):
                         if P[q] == target:
                             break
                     offset = p - q
-                    for i in xrange(p, n + 1):
+                    for i in range(p, n + 1):
                         P[i] = P[i - offset]
                     break
             else:
@@ -1910,8 +2165,8 @@ def kbins(l, k, ordered=None):
     [[0, 1, 2], [3, 4]]
     [[0, 1, 2, 3], [4]]
 
-    The ``ordered`` flag which is either None (to give the simple partition
-    of the the elements) or is a 2 digit integer indicating whether the order of
+    The ``ordered`` flag is either None (to give the simple partition
+    of the elements) or is a 2 digit integer indicating whether the order of
     the bins and the order of the items in the bins matters. Given::
 
         A = [[0], [1, 2]]
@@ -1973,7 +2228,7 @@ def kbins(l, k, ordered=None):
     """
     def partition(lista, bins):
         #  EnricoGiampieri's partition generator from
-        #  http://stackoverflow.com/questions/13131491/
+        #  https://stackoverflow.com/questions/13131491/
         #  partition-n-items-into-k-bins-in-python-lazily
         if len(lista) == 1 or bins == 1:
             yield [lista]
@@ -2015,3 +2270,38 @@ def kbins(l, k, ordered=None):
     else:
         raise ValueError(
             'ordered must be one of 00, 01, 10 or 11, not %s' % ordered)
+
+
+def permute_signs(t):
+    """Return iterator in which the signs of non-zero elements
+    of t are permuted.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import permute_signs
+    >>> list(permute_signs((0, 1, 2)))
+    [(0, 1, 2), (0, -1, 2), (0, 1, -2), (0, -1, -2)]
+    """
+    for signs in cartes(*[(1, -1)]*(len(t) - t.count(0))):
+        signs = list(signs)
+        yield type(t)([i*signs.pop() if i else i for i in t])
+
+
+def signed_permutations(t):
+    """Return iterator in which the signs of non-zero elements
+    of t and the order of the elements are permuted.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import signed_permutations
+    >>> list(signed_permutations((0, 1, 2)))
+    [(0, 1, 2), (0, -1, 2), (0, 1, -2), (0, -1, -2), (0, 2, 1),
+    (0, -2, 1), (0, 2, -1), (0, -2, -1), (1, 0, 2), (-1, 0, 2),
+    (1, 0, -2), (-1, 0, -2), (1, 2, 0), (-1, 2, 0), (1, -2, 0),
+    (-1, -2, 0), (2, 0, 1), (-2, 0, 1), (2, 0, -1), (-2, 0, -1),
+    (2, 1, 0), (-2, 1, 0), (2, -1, 0), (-2, -1, 0)]
+    """
+    return (type(t)(i) for j in permutations(t)
+        for i in permute_signs(j))

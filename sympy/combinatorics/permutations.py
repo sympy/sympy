@@ -4,12 +4,12 @@ import random
 from collections import defaultdict
 
 from sympy.core import Basic
-from sympy.core.compatibility import is_sequence, reduce, xrange
+from sympy.core.compatibility import is_sequence, reduce, range, as_int
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from sympy.polys.polytools import lcm
 from sympy.matrices import zeros
-from sympy.mpmath.libmp.libintmath import ifac
+from mpmath.libmp.libintmath import ifac
 
 
 def _af_rmul(a, b):
@@ -31,7 +31,8 @@ def _af_rmul(a, b):
 
     This handles the operands in reverse order compared to the ``*`` operator:
 
-    >>> a = Permutation(a); b = Permutation(b)
+    >>> a = Permutation(a)
+    >>> b = Permutation(b)
     >>> list(a*b)
     [2, 0, 1]
     >>> [b(a(i)) for i in range(3)]
@@ -98,7 +99,8 @@ def _af_rmuln(*abc):
     if m == 2:
         a, b = a
         return [a[i] for i in b]
-    assert m != 0
+    if m == 0:
+        raise ValueError("String must not be empty")
     p0 = _af_rmuln(*a[:m//2])
     p1 = _af_rmuln(*a[m//2:])
     return [p0[i] for i in p1]
@@ -116,9 +118,9 @@ def _af_parity(pi):
     ========
 
     >>> from sympy.combinatorics.permutations import _af_parity
-    >>> _af_parity([0,1,2,3])
+    >>> _af_parity([0, 1, 2, 3])
     0
-    >>> _af_parity([3,2,0,1])
+    >>> _af_parity([3, 2, 0, 1])
     1
 
     See Also
@@ -164,6 +166,7 @@ def _af_invert(a):
         inv_form[ai] = i
     return inv_form
 
+
 def _af_pow(a, n):
     """
     Routine for finding powers of a permutation.
@@ -173,7 +176,7 @@ def _af_pow(a, n):
 
     >>> from sympy.combinatorics.permutations import Permutation, _af_pow
     >>> Permutation.print_cyclic = False
-    >>> p = Permutation([2,0,3,1])
+    >>> p = Permutation([2, 0, 3, 1])
     >>> p.order()
     4
     >>> _af_pow(p._array_form, 4)
@@ -208,6 +211,7 @@ def _af_pow(a, n):
                 n = n // 2
     return b
 
+
 def _af_commutes_with(a, b):
     """
     Checks if the two permutations with array forms
@@ -217,7 +221,7 @@ def _af_commutes_with(a, b):
     ========
 
     >>> from sympy.combinatorics.permutations import _af_commutes_with
-    >>> _af_commutes_with([1,2,0], [0,2,1])
+    >>> _af_commutes_with([1, 2, 0], [0, 2, 1])
     False
 
     See Also
@@ -233,7 +237,7 @@ class Cycle(dict):
     Wrapper around dict which provides the functionality of a disjoint cycle.
 
     A cycle shows the rule to use to move subsets of elements to obtain
-    a permutation. The Cycle class is more flexible that Permutation in
+    a permutation. The Cycle class is more flexible than Permutation in
     that 1) all elements need not be present in order to investigate how
     multiple cycles act in sequence and 2) it can contain singletons:
 
@@ -242,12 +246,12 @@ class Cycle(dict):
     A Cycle will automatically parse a cycle given as a tuple on the rhs:
 
     >>> Cycle(1, 2)(2, 3)
-    Cycle(1, 3, 2)
+    (1 3 2)
 
     The identity cycle, Cycle(), can be used to start a product:
 
-    >>> Cycle()(1, 2)(2,3)
-    Cycle(1, 3, 2)
+    >>> Cycle()(1, 2)(2, 3)
+    (1 3 2)
 
     The array form of a Cycle can be obtained by calling the list
     method (or passing it to the list function) and all elements from
@@ -263,7 +267,7 @@ class Cycle(dict):
     provide the desired size -- but the Cycle cannot be truncated to
     a size smaller than the largest element that is out of place:
 
-    >>> b = Cycle(2,4)(1,2)(3,1,4)(1,3)
+    >>> b = Cycle(2, 4)(1, 2)(3, 1, 4)(1, 3)
     >>> b.list()
     [0, 2, 1, 3, 4]
     >>> b.list(b.size + 1)
@@ -275,21 +279,21 @@ class Cycle(dict):
     element is always shown -- as a singleton if necessary:
 
     >>> Cycle(1, 4, 10)(4, 5)
-    Cycle(1, 5, 4, 10)
+    (1 5 4 10)
     >>> Cycle(1, 2)(4)(5)(10)
-    Cycle(1, 2)(10)
+    (1 2)(10)
 
     The array form can be used to instantiate a Permutation so other
     properties of the permutation can be investigated:
 
-    >>> Perm(Cycle(1,2)(3,4).list()).transpositions()
+    >>> Perm(Cycle(1, 2)(3, 4).list()).transpositions()
     [(1, 2), (3, 4)]
 
     Notes
     =====
 
     The underlying structure of the Cycle is a dictionary and although
-    the __iter__ method has been redefiend to give the array form of the
+    the __iter__ method has been redefined to give the array form of the
     cycle, the underlying dictionary items are still available with the
     such methods as items():
 
@@ -303,6 +307,7 @@ class Cycle(dict):
     """
     def __missing__(self, arg):
         """Enter arg into dictionary and return arg."""
+        arg = as_int(arg)
         self[arg] = arg
         return arg
 
@@ -315,10 +320,11 @@ class Cycle(dict):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle as C
         >>> from sympy.combinatorics.permutations import Permutation as Perm
         >>> C(1, 2)(2, 3)
-        Cycle(1, 3, 2)
+        (1 3 2)
 
         An instance of a Cycle will automatically parse list-like
         objects and Permutations that are on the right. It is more
@@ -327,9 +333,9 @@ class Cycle(dict):
 
         >>> a = C(1, 2)
         >>> a(2, 3)
-        Cycle(1, 3, 2)
+        (1 3 2)
         >>> a(2, 3)(4, 5)
-        Cycle(1, 3, 2)(4, 5)
+        (1 3 2)(4 5)
 
         """
         rv = Cycle(*other)
@@ -347,6 +353,7 @@ class Cycle(dict):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
@@ -365,7 +372,7 @@ class Cycle(dict):
         if not self and size is None:
             raise ValueError('must give size for empty Cycle')
         if size is not None:
-            big = max([i for i in self.keys() if self[i] != i])
+            big = max([i for i in self.keys() if self[i] != i] + [0])
             size = max(size, big + 1)
         else:
             size = self.size
@@ -379,9 +386,9 @@ class Cycle(dict):
 
         >>> from sympy.combinatorics import Cycle
         >>> Cycle(1, 2)
-        Cycle(1, 2)
+        (1 2)
         >>> print(_)
-        Cycle(1, 2)
+        (1 2)
         >>> list(Cycle(1, 2).items())
         [(1, 2), (2, 1)]
         """
@@ -394,14 +401,38 @@ class Cycle(dict):
             s += '(%s)' % big
         return 'Cycle%s' % s
 
+    def __str__(self):
+        """We want it to be printed in a Cycle notation with no
+        comma in-between.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Cycle
+        >>> Cycle(1, 2)
+        (1 2)
+        >>> Cycle(1, 2, 4)(5, 6)
+        (1 2 4)(5 6)
+        """
+        if not self:
+            return '()'
+        cycles = Permutation(self).cyclic_form
+        s = ''.join(str(tuple(c)) for c in cycles)
+        big = self.size - 1
+        if not any(i == big for c in cycles for i in c):
+            s += '(%s)' % big
+        s = s.replace(',', '')
+        return s
+
     def __init__(self, *args):
         """Load up a Cycle instance with the values for the cycle.
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle
         >>> Cycle(1, 2, 6)
-        Cycle(1, 2, 6)
+        (1 2 6)
         """
 
         if not args:
@@ -415,7 +446,9 @@ class Cycle(dict):
                 for k, v in args[0].items():
                     self[k] = v
                 return
-        args = [int(a) for a in args]
+        args = [as_int(a) for a in args]
+        if any(i < 0 for i in args):
+            raise ValueError('negative integers are not allowed in a cycle.')
         if has_dups(args):
             raise ValueError('All elements must be unique in a cycle.')
         for i in range(-len(args), 0):
@@ -423,17 +456,20 @@ class Cycle(dict):
 
     @property
     def size(self):
+        if not self:
+            return 0
         return max(self.keys()) + 1
 
     def copy(self):
         return Cycle(self)
+
 
 class Permutation(Basic):
     """
     A permutation, alternatively known as an 'arrangement number' or 'ordering'
     is an arrangement of the elements of an ordered list into a one-to-one
     mapping with itself. The permutation of a given arrangement is given by
-    indicating the positions of the elements after re-arrangment [2]_. For
+    indicating the positions of the elements after re-arrangement [2]_. For
     example, if one started with elements [x, y, a, b] (in that order) and
     they were reordered as [x, y, b, a] then the permutation would be
     [0, 1, 3, 2]. Notice that (in SymPy) the first element is always referred
@@ -504,8 +540,8 @@ class Permutation(Basic):
     >>> Permutation(1,2,3) == Permutation(2,3,1) == Permutation(3,1,2)
     True
 
-    The disjoint cycle notation is convenient when representing permutations
-    that have several cycles in them:
+    The disjoint cycle notation is convenient when representing
+    permutations that have several cycles in them:
 
     >>> Permutation(1, 2)(3, 5) == Permutation([[1, 2], [3, 5]])
     True
@@ -517,6 +553,29 @@ class Permutation(Basic):
     Permutation([0, 3, 2, 1])
     >>> _ == Permutation([[1, 2]])*Permutation([[1, 3]])*Permutation([[2, 3]])
     True
+
+        Caution: when the cycles have common elements
+        between them then the order in which the
+        permutations are applied matters. The
+        convention is that the permutations are
+        applied from *right to left*. In the following, the
+        transposition of elements 2 and 3 is followed
+        by the transposition of elements 1 and 2:
+
+        >>> Permutation(1, 2)(2, 3) == Permutation([(1, 2), (2, 3)])
+        True
+        >>> Permutation(1, 2)(2, 3).list()
+        [0, 3, 1, 2]
+
+        If the first and second elements had been
+        swapped first, followed by the swapping of the second
+        and third, the result would have been [0, 2, 3, 1].
+        If, for some reason, you want to apply the cycles
+        in the order they are entered, you can simply reverse
+        the order of cycles:
+
+        >>> Permutation([(1, 2), (2, 3)][::-1]).list()
+        [0, 2, 3, 1]
 
     Entering a singleton in a permutation is a way to indicate the size of the
     permutation. The ``size`` keyword can also be used.
@@ -610,7 +669,7 @@ class Permutation(Basic):
 
     >>> Permutation.print_cyclic = True
     >>> p
-    Permutation(1, 2)(3, 4, 5)
+    (1 2)(3 4 5)
     >>> Permutation.print_cyclic = False
 
     2) Regardless of the setting, a list of elements in the array for cyclic
@@ -637,7 +696,7 @@ class Permutation(Basic):
     >>> p = Permutation([1, 0, 2, 3])
     >>> Permutation.print_cyclic = True
     >>> p
-    Permutation(3)(0, 1)
+    (3)(0 1)
     >>> Permutation.print_cyclic = False
 
     The 2 was not printed but it is still there as can be seen with the
@@ -659,7 +718,7 @@ class Permutation(Basic):
     2
     >>> q(1) # the easy way
     2
-    >>> dict([(i, q(i)) for i in range(q.size)]) # showing the bijection
+    >>> {i: q(i) for i in range(q.size)} # showing the bijection
     {0: 5, 1: 2, 2: 3, 3: 4, 4: 1, 5: 0}
 
     The full cyclic form (including singletons) can be obtained:
@@ -686,7 +745,7 @@ class Permutation(Basic):
     same elements, but what that rank is depends on how the permutations are
     enumerated. (There are a number of different methods of doing so.) The
     lexicographic rank is given by the rank method and this rank is used to
-    increment a partion with addition/subtraction:
+    increment a permutation with addition/subtraction:
 
     >>> p.rank()
     6
@@ -751,9 +810,9 @@ class Permutation(Basic):
            Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
            Reading, MA: Addison-Wesley, 1994.
 
-    .. [6] http://en.wikipedia.org/wiki/Permutation#Product_and_inverse
+    .. [6] https://en.wikipedia.org/wiki/Permutation#Product_and_inverse
 
-    .. [7] http://en.wikipedia.org/wiki/Lehmer_code
+    .. [7] https://en.wikipedia.org/wiki/Lehmer_code
 
     """
 
@@ -824,19 +883,19 @@ class Permutation(Basic):
         #g) (Permutation) = adjust size or return copy
         ok = True
         if not args:  # a
-            return _af_new(list(range(size or 0)))
+            return cls._af_new(list(range(size or 0)))
         elif len(args) > 1:  # c
-            return _af_new(Cycle(*args).list(size))
+            return cls._af_new(Cycle(*args).list(size))
         if len(args) == 1:
             a = args[0]
-            if isinstance(a, Perm):  # g
+            if isinstance(a, cls):  # g
                 if size is None or size == a.size:
                     return a
-                return Perm(a.array_form, size=size)
+                return cls(a.array_form, size=size)
             if isinstance(a, Cycle):  # f
-                return _af_new(a.list(size))
+                return cls._af_new(a.list(size))
             if not is_sequence(a):  # b
-                return _af_new(list(range(a + 1)))
+                return cls._af_new(list(range(a + 1)))
             if has_variety(is_sequence(ai) for ai in a):
                 ok = False
         else:
@@ -844,7 +903,6 @@ class Permutation(Basic):
         if not ok:
             raise ValueError("Permutation argument must be a list of ints, "
                              "a list of lists, Permutation or Cycle.")
-
 
         # safe to assume args are valid; this also makes a copy
         # of the args
@@ -862,12 +920,8 @@ class Permutation(Basic):
         # counting starts from 1.
 
         temp = flatten(args)
-        if has_dups(temp):
-            if is_cycle:
-                raise ValueError('there were repeated elements; to resolve '
-                'cycles use Cycle%s.' % ''.join([str(tuple(c)) for c in args]))
-            else:
-                raise ValueError('there were repeated elements.')
+        if has_dups(temp) and not is_cycle:
+            raise ValueError('there were repeated elements.')
         temp = set(temp)
 
         if not is_cycle and \
@@ -889,14 +943,11 @@ class Permutation(Basic):
             # might split a cycle and lead to an invalid aform
             # but do allow the permutation size to be increased
             aform.extend(list(range(len(aform), size)))
-        size = len(aform)
-        obj = Basic.__new__(cls, aform)
-        obj._array_form = aform
-        obj._size = size
-        return obj
 
-    @staticmethod
-    def _af_new(perm):
+        return cls._af_new(aform)
+
+    @classmethod
+    def _af_new(cls, perm):
         """A method to produce a Permutation object from a list;
         the list is bound to the _array_form attribute, so it must
         not be modified; this method is meant for internal use only;
@@ -915,7 +966,7 @@ class Permutation(Basic):
         Permutation([2, 1, 3, 0])
 
         """
-        p = Basic.__new__(Perm, perm)
+        p = Basic.__new__(cls, perm)
         p._array_form = perm
         p._size = len(perm)
         return p
@@ -934,17 +985,41 @@ class Permutation(Basic):
 
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
-        >>> p = Permutation([[2,0], [3,1]])
+        >>> p = Permutation([[2, 0], [3, 1]])
         >>> p.array_form
         [2, 3, 0, 1]
-        >>> Permutation([[2,0,3,1]]).array_form
+        >>> Permutation([[2, 0, 3, 1]]).array_form
         [3, 2, 0, 1]
-        >>> Permutation([2,0,3,1]).array_form
+        >>> Permutation([2, 0, 3, 1]).array_form
         [2, 0, 3, 1]
         >>> Permutation([[1, 2], [4, 5]]).array_form
         [0, 2, 1, 3, 5, 4]
         """
         return self._array_form[:]
+
+    def __repr__(self):
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        if Permutation.print_cyclic:
+            if not self.size:
+                return 'Permutation()'
+            # before taking Cycle notation, see if the last element is
+            # a singleton and move it to the head of the string
+            s = Cycle(self)(self.size - 1).__repr__()[len('Cycle'):]
+            last = s.rfind('(')
+            if not last == 0 and ',' not in s[last:]:
+                s = s[last:] + s[:last]
+            return 'Permutation%s' %s
+        else:
+            s = self.support()
+            if not s:
+                if self.size < 5:
+                    return 'Permutation(%s)' % str(self.array_form)
+                return 'Permutation([], size=%s)' % self.size
+            trim = str(self.array_form[:s[-1] + 1]) + ', size=%s' % self.size
+            use = full = str(self.array_form)
+            if len(trim) < len(full):
+                use = trim
+            return 'Permutation(%s)' % use
 
     def list(self, size=None):
         """Return the permutation as an explicit list, possibly
@@ -954,6 +1029,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
         >>> p = Permutation(2, 3)(4, 5)
@@ -1105,7 +1181,7 @@ class Permutation(Basic):
 
         """
         rank = (self.rank() + other) % self.cardinality
-        rv = Perm.unrank_lex(self.size, rank)
+        rv = self.unrank_lex(self.size, rank)
         rv._rank = rank
         return rv
 
@@ -1165,14 +1241,14 @@ class Permutation(Basic):
             rv = args[i]*rv
         return rv
 
-    @staticmethod
-    def rmul_with_af(*args):
+    @classmethod
+    def rmul_with_af(cls, *args):
         """
         same as rmul, but the elements of args are Permutation objects
         which have _array_form
         """
         a = [x._array_form for x in args]
-        rv = _af_new(_af_rmuln(*a))
+        rv = cls._af_new(_af_rmuln(*a))
         return rv
 
     def mul_inv(self, other):
@@ -1181,11 +1257,12 @@ class Permutation(Basic):
         """
         a = _af_invert(self._array_form)
         b = other._array_form
-        return _af_new(_af_rmul(a, b))
+        return self._af_new(_af_rmul(a, b))
 
     def __rmul__(self, other):
-        """This is needed to coerse other to Permutation in rmul."""
-        return Perm(other)*self
+        """This is needed to coerce other to Permutation in rmul."""
+        cls = type(self)
+        return cls(other)*self
 
     def __mul__(self, other):
         """
@@ -1235,7 +1312,7 @@ class Permutation(Basic):
         >>> [[1, 2]]*[[2, 3]]*Permutation([]) # doctest: +SKIP
         >>> from sympy.combinatorics.permutations import Cycle
         >>> Cycle(1, 2)(2, 3)
-        Cycle(1, 3, 2)
+        (1 3 2)
 
         """
         a = self.array_form
@@ -1246,7 +1323,7 @@ class Permutation(Basic):
         else:
             b.extend(list(range(len(b), len(a))))
             perm = [b[i] for i in a] + b[len(a):]
-        return _af_new(perm)
+        return self._af_new(perm)
 
     def commutes_with(self, other):
         """
@@ -1256,11 +1333,11 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> a = Permutation([1,4,3,0,2,5])
-        >>> b = Permutation([0,1,2,3,4,5])
+        >>> a = Permutation([1, 4, 3, 0, 2, 5])
+        >>> b = Permutation([0, 1, 2, 3, 4, 5])
         >>> a.commutes_with(b)
         True
-        >>> b = Permutation([2,3,5,4,1,0])
+        >>> b = Permutation([2, 3, 5, 4, 1, 0])
         >>> a.commutes_with(b)
         False
         """
@@ -1283,17 +1360,18 @@ class Permutation(Basic):
         >>> p**4
         Permutation([0, 1, 2, 3])
         """
-        if type(n) == Perm:
+        if isinstance(n, Permutation):
             raise NotImplementedError(
                 'p**p is not defined; do you mean p^p (conjugate)?')
         n = int(n)
-        return _af_new(_af_pow(self.array_form, n))
+        return self._af_new(_af_pow(self.array_form, n))
 
     def __rxor__(self, i):
         """Return self(i) when ``i`` is an int.
 
         Examples
         ========
+
         >>> from sympy.combinatorics import Permutation
         >>> p = Permutation(1, 2, 9)
         >>> 2^p == p(2) == 9
@@ -1329,7 +1407,7 @@ class Permutation(Basic):
 
         The expression q^p^r is equivalent to q^(p*r):
 
-        >>> r = Permutation(9)(4,6,8)
+        >>> r = Permutation(9)(4, 6, 8)
         >>> q^p^r == q^(p*r)
         True
 
@@ -1352,9 +1430,9 @@ class Permutation(Basic):
         in general from p^(q^r)
 
         >>> q^p^r
-        Permutation(9)(1, 4, 8)
+        (9)(1 4 8)
         >>> q^(p^r)
-        Permutation(9)(1, 8, 6)
+        (9)(1 8 6)
 
         For a given r and p, both of the following are conjugates of p:
         ~r*p*r and r*p*~r. But these are not necessarily the same:
@@ -1381,7 +1459,7 @@ class Permutation(Basic):
         p = self._array_form
         for i in range(self.size):
             a[h[i]] = h[p[i]]
-        return _af_new(a)
+        return self._af_new(a)
 
     def transpositions(self):
         """
@@ -1406,7 +1484,7 @@ class Permutation(Basic):
         References
         ==========
 
-        1. http://en.wikipedia.org/wiki/Transposition_%28mathematics%29#Properties
+        1. https://en.wikipedia.org/wiki/Transposition_%28mathematics%29#Properties
 
         """
         a = self.cyclic_form
@@ -1433,11 +1511,11 @@ class Permutation(Basic):
         >>> Permutation.print_cyclic = True
 
         >>> Permutation.from_sequence('SymPy')
-        Permutation(4)(0, 1, 3)
+        (4)(0 1 3)
         >>> _(sorted("SymPy"))
         ['S', 'y', 'm', 'P', 'y']
         >>> Permutation.from_sequence('SymPy', key=lambda x: x.lower())
-        Permutation(4)(0, 2)(1, 3)
+        (4)(0 2)(1 3)
         """
         ic = list(zip(i, list(range(len(i)))))
         if key:
@@ -1464,7 +1542,7 @@ class Permutation(Basic):
         >>> p*~p == ~p*p == Permutation([0, 1, 2, 3])
         True
         """
-        return _af_new(_af_invert(self._array_form))
+        return self._af_new(_af_invert(self._array_form))
 
     def __iter__(self):
         """Yield elements from array form.
@@ -1487,7 +1565,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([[2,0], [3,1]])
+        >>> p = Permutation([[2, 0], [3, 1]])
         >>> p.array_form
         [2, 3, 0, 1]
         >>> [p(i) for i in range(4)]
@@ -1512,7 +1590,7 @@ class Permutation(Basic):
                 try:
                     # P([a, b, c])
                     return [i[j] for j in self._array_form]
-                except:
+                except Exception:
                     raise TypeError('unrecognized argument')
         else:
             # P(1, 2, 3)
@@ -1527,9 +1605,9 @@ class Permutation(Basic):
 
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2, 3, 4, 5]).atoms()
-        set([0, 1, 2, 3, 4, 5])
+        {0, 1, 2, 3, 4, 5}
         >>> Permutation([[0, 1], [2, 3], [4, 5]]).atoms()
-        set([0, 1, 2, 3, 4, 5])
+        {0, 1, 2, 3, 4, 5}
         """
         return set(self.array_form)
 
@@ -1574,7 +1652,7 @@ class Permutation(Basic):
                 perm[j], perm[i] = perm[i], perm[j]
                 i += 1
                 j -= 1
-        return _af_new(perm)
+        return self._af_new(perm)
 
     @classmethod
     def unrank_nonlex(self, n, r):
@@ -1606,7 +1684,7 @@ class Permutation(Basic):
         n = int(n)
         r = r % ifac(n)
         _unrank1(n, r, id_perm)
-        return _af_new(id_perm)
+        return self._af_new(id_perm)
 
     def rank_nonlex(self, inv_perm=None):
         """
@@ -1618,7 +1696,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3])
+        >>> p = Permutation([0, 1, 2, 3])
         >>> p.rank_nonlex()
         23
 
@@ -1669,7 +1747,7 @@ class Permutation(Basic):
         r = self.rank_nonlex()
         if r == ifac(self.size) - 1:
             return None
-        return Perm.unrank_nonlex(self.size, r + 1)
+        return self.unrank_nonlex(self.size, r + 1)
 
     def rank(self):
         """
@@ -1717,7 +1795,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3])
+        >>> p = Permutation([0, 1, 2, 3])
         >>> p.cardinality
         24
 
@@ -1740,10 +1818,10 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3])
+        >>> p = Permutation([0, 1, 2, 3])
         >>> p.parity()
         0
-        >>> p = Permutation([3,2,0,1])
+        >>> p = Permutation([3, 2, 0, 1])
         >>> p.parity()
         1
 
@@ -1766,10 +1844,10 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3])
+        >>> p = Permutation([0, 1, 2, 3])
         >>> p.is_even
         True
-        >>> p = Permutation([3,2,1,0])
+        >>> p = Permutation([3, 2, 1, 0])
         >>> p.is_even
         True
 
@@ -1789,10 +1867,10 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3])
+        >>> p = Permutation([0, 1, 2, 3])
         >>> p.is_odd
         False
-        >>> p = Permutation([3,2,0,1])
+        >>> p = Permutation([3, 2, 0, 1])
         >>> p.is_odd
         True
 
@@ -1847,12 +1925,17 @@ class Permutation(Basic):
         return self.size == 0
 
     @property
+    def is_identity(self):
+        return self.is_Identity
+
+    @property
     def is_Identity(self):
         """
         Returns True if the Permutation is an identity permutation.
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([])
         >>> p.is_Identity
@@ -1873,7 +1956,7 @@ class Permutation(Basic):
         order
         """
         af = self.array_form
-        return not af or all(i == af[i] for i in xrange(self.size))
+        return not af or all(i == af[i] for i in range(self.size))
 
     def ascents(self):
         """
@@ -1884,7 +1967,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([4,0,1,3,2])
+        >>> p = Permutation([4, 0, 1, 3, 2])
         >>> p.ascents()
         [1, 2]
 
@@ -1906,7 +1989,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([4,0,1,3,2])
+        >>> p = Permutation([4, 0, 1, 3, 2])
         >>> p.descents()
         [0, 3]
 
@@ -1927,7 +2010,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([1,0,2,3,4])
+        >>> p = Permutation([1, 0, 2, 3, 4])
         >>> p.max()
         1
 
@@ -1951,7 +2034,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,4,3,2])
+        >>> p = Permutation([0, 1, 4, 3, 2])
         >>> p.min()
         2
 
@@ -1987,10 +2070,10 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3,4,5])
+        >>> p = Permutation([0, 1, 2, 3, 4, 5])
         >>> p.inversions()
         0
-        >>> Permutation([3,2,1,0]).inversions()
+        >>> Permutation([3, 2, 1, 0]).inversions()
         6
 
         See Also
@@ -2055,7 +2138,7 @@ class Permutation(Basic):
         References
         ==========
 
-        http://en.wikipedia.org/wiki/Commutator
+        https://en.wikipedia.org/wiki/Commutator
         """
 
         a = self.array_form
@@ -2069,7 +2152,7 @@ class Permutation(Basic):
         invb = [None]*n
         for i in range(n):
             invb[b[i]] = i
-        return _af_new([a[b[inva[i]]] for i in invb])
+        return self._af_new([a[b[inva[i]]] for i in invb])
 
     def signature(self):
         """
@@ -2082,7 +2165,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2])
+        >>> p = Permutation([0, 1, 2])
         >>> p.inversions()
         0
         >>> p.signature()
@@ -2144,7 +2227,7 @@ class Permutation(Basic):
         See Also
         ========
 
-        min, max, suppport, cardinality, order, rank, size
+        min, max, support, cardinality, order, rank, size
         """
 
         return len(self.support())
@@ -2230,7 +2313,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([2,5,7,3,6,0,1,4,8])
+        >>> p = Permutation([2, 5, 7, 3, 6, 0, 1, 4, 8])
         >>> p.runs()
         [[2, 5, 7], [3, 6], [0, 1, 4, 8]]
         >>> q = Permutation([1,3,2,0])
@@ -2300,10 +2383,10 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3])
+        >>> p = Permutation([0, 1, 2, 3])
         >>> p.rank_trotterjohnson()
         0
-        >>> p = Permutation([0,2,1,3])
+        >>> p = Permutation([0, 2, 1, 3])
         >>> p.rank_trotterjohnson()
         7
 
@@ -2334,7 +2417,7 @@ class Permutation(Basic):
         return rank
 
     @classmethod
-    def unrank_trotterjohnson(self, size, rank):
+    def unrank_trotterjohnson(cls, size, rank):
         """
         Trotter Johnson permutation unranking. See [4] section 2.4.
 
@@ -2367,13 +2450,15 @@ class Permutation(Basic):
                     perm[i] = perm[i - 1]
                 perm[k] = j - 1
             r2 = r1
-        return _af_new(perm)
+        return cls._af_new(perm)
 
     def next_trotterjohnson(self):
         """
         Returns the next permutation in Trotter-Johnson order.
         If self is the last permutation it returns None.
-        See [4] section 2.4.
+        See [4] section 2.4. If it is desired to generate all such
+        permutations, they can be generated in order more quickly
+        with the ``generate_bell`` function.
 
         Examples
         ========
@@ -2391,7 +2476,7 @@ class Permutation(Basic):
         See Also
         ========
 
-        rank_trotterjohnson, unrank_trotterjohnson
+        rank_trotterjohnson, unrank_trotterjohnson, sympy.utilities.iterables.generate_bell
         """
         pi = self.array_form[:]
         n = len(pi)
@@ -2419,7 +2504,7 @@ class Permutation(Basic):
                     done = True
         if m == 0:
             return None
-        return _af_new(pi)
+        return self._af_new(pi)
 
     def get_precedence_matrix(self):
         """
@@ -2430,7 +2515,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation.josephus(3,6,1)
+        >>> p = Permutation.josephus(3, 6, 1)
         >>> p
         Permutation([2, 5, 3, 1, 4, 0])
         >>> p.get_precedence_matrix()
@@ -2459,7 +2544,7 @@ class Permutation(Basic):
         Computes the precedence distance between two permutations.
 
         Suppose p and p' represent n jobs. The precedence metric
-        counts the number of times a job j is prededed by job i
+        counts the number of times a job j is preceded by job i
         in both p and p'. This metric is commutative.
 
         Examples
@@ -2504,7 +2589,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation.josephus(3,6,1)
+        >>> p = Permutation.josephus(3, 6, 1)
         >>> p.get_adjacency_matrix()
         Matrix([
         [0, 0, 0, 0, 0, 0],
@@ -2603,14 +2688,14 @@ class Permutation(Basic):
         return sum([abs(a[i] - b[i]) for i in range(len(a))])
 
     @classmethod
-    def josephus(self, m, n, s=1):
+    def josephus(cls, m, n, s=1):
         """Return as a permutation the shuffling of range(n) using the Josephus
         scheme in which every m-th item is selected until all have been chosen.
         The returned permutation has elements listed by the order in which they
         were selected.
 
         The parameter ``s`` stops the selection process when there are ``s``
-        items remaining and these are selected by countinuing the selection,
+        items remaining and these are selected by continuing the selection,
         counting by 1 rather than by ``m``.
 
         Consider selecting every 3rd item from 6 until only 2 remain::
@@ -2635,8 +2720,8 @@ class Permutation(Basic):
         References
         ==========
 
-        1. http://en.wikipedia.org/wiki/Flavius_Josephus
-        2. http://en.wikipedia.org/wiki/Josephus_problem
+        1. https://en.wikipedia.org/wiki/Flavius_Josephus
+        2. https://en.wikipedia.org/wiki/Josephus_problem
         3. http://www.wou.edu/~burtonl/josephus.html
 
         """
@@ -2649,10 +2734,10 @@ class Permutation(Basic):
                 Q.append(Q.popleft())
             perm.append(Q.popleft())
         perm.extend(list(Q))
-        return Perm(perm)
+        return cls(perm)
 
     @classmethod
-    def from_inversion_vector(self, inversion):
+    def from_inversion_vector(cls, inversion):
         """
         Calculates the permutation from the inversion vector.
 
@@ -2676,14 +2761,14 @@ class Permutation(Basic):
         except IndexError:
             raise ValueError("The inversion vector is not valid.")
         perm.extend(N)
-        return _af_new(perm)
+        return cls._af_new(perm)
 
     @classmethod
-    def random(self, n):
+    def random(cls, n):
         """
         Generates a random permutation of length ``n``.
 
-        Uses the underlying Python psuedo-random number generator.
+        Uses the underlying Python pseudo-random number generator.
 
         Examples
         ========
@@ -2695,10 +2780,10 @@ class Permutation(Basic):
         """
         perm_array = list(range(n))
         random.shuffle(perm_array)
-        return _af_new(perm_array)
+        return cls._af_new(perm_array)
 
     @classmethod
-    def unrank_lex(self, size, rank):
+    def unrank_lex(cls, size, rank):
         """
         Lexicographic permutation unranking.
 
@@ -2729,7 +2814,7 @@ class Permutation(Basic):
                 if perm_array[j] > d - 1:
                     perm_array[j] += 1
             psize = new_psize
-        return _af_new(perm_array)
+        return cls._af_new(perm_array)
 
     # global flag to control how permutations are printed
     # when True, Permutation([0, 2, 1, 3]) -> Cycle(1, 2)

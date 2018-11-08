@@ -2,12 +2,12 @@ from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
 
 from sympy.polys.galoistools import (
-    gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm, gf_rem)
+    gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm)
 from sympy.polys.polyerrors import ModularGCDFailed
 from sympy.polys.domains import PolynomialRing
 
-from sympy.core.compatibility import xrange
-from sympy.mpmath import sqrt
+from sympy.core.compatibility import range
+from mpmath import sqrt
 from sympy import Dummy
 import random
 
@@ -148,7 +148,7 @@ def _chinese_remainder_reconstruction_univariate(hp, hq, p, q):
     x = hp.ring.gens[0]
     hpq = hp.ring.zero
 
-    for i in xrange(n+1):
+    for i in range(n+1):
         hpq[(i,)] = crt([p, q], [hp.coeff(x**i), hq.coeff(x**i)], symmetric=True)[0]
 
     hpq.strip_zero()
@@ -522,7 +522,7 @@ def _degree_bound_bivariate(f, g):
     # polynomial in Z_p[y]
     delta = _gf_gcd(_LC(fp), _LC(gp), p)
 
-    for a in xrange(p):
+    for a in range(p):
         if not delta.evaluate(0, a) % p:
             continue
         fpa = fp.evaluate(1, a).trunc_ground(p)
@@ -840,7 +840,7 @@ def modgcd_bivariate(f, g):
         hpeval = []
         unlucky = False
 
-        for a in xrange(p):
+        for a in range(p):
             deltaa = delta.evaluate(0, a)
             if not deltaa % p:
                 continue
@@ -997,7 +997,7 @@ def _modgcd_multivariate_p(f, g, p, degbound, contbound):
 
     evaltest = delta
 
-    for i in xrange(k-1):
+    for i in range(k-1):
         evaltest *= _gf_gcd(_LC(_swap(f, i)), _LC(_swap(g, i)), p)
 
     degdelta = delta.degree()
@@ -1157,7 +1157,7 @@ def modgcd_multivariate(f, g):
     gamma = ring.domain.gcd(f.LC, g.LC)
 
     badprimes = ring.domain.one
-    for i in xrange(k):
+    for i in range(k):
         badprimes *= ring.domain.gcd(_swap(f, i).LC, _swap(g, i).LC)
 
     degbound = [min(fdeg, gdeg) for fdeg, gdeg in zip(f.degrees(), g.degrees())]
@@ -2033,7 +2033,7 @@ def _to_ZZ_poly(f, ring):
             m = m.mul_monom(monom[1:])
         n = len(coeff)
 
-        for i in xrange(n):
+        for i in range(n):
             if coeff[i]:
                 c = domain(coeff[i] * den) * m
 
@@ -2116,7 +2116,7 @@ def _primitive_in_x0(f):
     `\mathbb Q(\alpha)[x_0, x_1, \ldots, x_{n-1}] \cong \mathbb Q(\alpha)[x_1, \ldots, x_{n-1}][x_0]`.
     """
     fring = f.ring
-    ring = fring.drop_to_ground(*xrange(1, fring.ngens))
+    ring = fring.drop_to_ground(*range(1, fring.ngens))
     dom = ring.domain.ring
     f_ = ring(f.as_expr())
     cont = dom.zero
@@ -2262,7 +2262,7 @@ def func_field_modgcd(f, g):
         contx0g, g = _primitive_in_x0(g)
         contx0h = func_field_modgcd(contx0f, contx0g)[0]
 
-        ZZring_ = ZZring.drop_to_ground(*xrange(1, n))
+        ZZring_ = ZZring.drop_to_ground(*range(1, n))
 
         f_ = _to_ZZ_poly(f, ZZring_)
         g_ = _to_ZZ_poly(g, ZZring_)

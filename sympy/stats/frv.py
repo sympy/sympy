@@ -11,17 +11,27 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
-        And, Or, Tuple, Piecewise, Eq, Lambda)
-from sympy.core.sets import FiniteSet
+from sympy import (Basic, Symbol, cacheit, sympify, Mul,
+        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy)
+from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
-        PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs,
-        NamedArgsMixin)
+        PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
+        sumsets, rv_subs, NamedArgsMixin)
 from sympy.core.containers import Dict
 import random
 
 class FiniteDensity(dict):
+    """
+    A domain with Finite Density.
+    """
     def __call__(self, item):
+        """
+        Make instance of a class callable.
+
+        If item belongs to current instance of a class, return it.
+
+        Otherwise, return 0.
+        """
         item = sympify(item)
         if item in self:
             return self[item]
@@ -30,6 +40,9 @@ class FiniteDensity(dict):
 
     @property
     def dict(self):
+        """
+        Return item as dictionary.
+        """
         return dict(self)
 
 class FiniteDomain(RandomDomain):
@@ -50,7 +63,7 @@ class FiniteDomain(RandomDomain):
 
     @property
     def dict(self):
-        return FiniteSet(Dict(dict(el)) for el in self.elements)
+        return FiniteSet(*[Dict(dict(el)) for el in self.elements])
 
     def __contains__(self, other):
         return other in self.elements
@@ -89,7 +102,7 @@ class SingleFiniteDomain(FiniteDomain):
 
     @property
     def elements(self):
-        return FiniteSet(frozenset(((self.symbol, elem), )) for elem in self.set)
+        return FiniteSet(*[frozenset(((self.symbol, elem), )) for elem in self.set])
 
     def __iter__(self):
         return (frozenset(((self.symbol, elem),)) for elem in self.set)
@@ -112,7 +125,7 @@ class ProductFiniteDomain(ProductDomain, FiniteDomain):
 
     @property
     def elements(self):
-        return FiniteSet(iter(self))
+        return FiniteSet(*self)
 
 
 class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
@@ -124,6 +137,9 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     """
 
     def __new__(cls, domain, condition):
+        """
+        Create a new instance of ConditionalFiniteDomain class
+        """
         if condition is True:
             return domain
         cond = rv_subs(condition)
@@ -140,6 +156,11 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
 
     def _test(self, elem):
+        """
+        Test the value. If value is boolean, return it. If value is equality
+        relational (two objects are equal), return it with left-hand side
+        being equal to right-hand side. Otherwise, raise ValueError exception.
+        """
         val = self.condition.xreplace(dict(elem))
         if val in [True, False]:
             return val
@@ -155,13 +176,12 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
     @property
     def set(self):
-        if self.fulldomain.__class__ is SingleFiniteDomain:
-            return FiniteSet(elem for elem in self.fulldomain.set
-                    if frozenset(((self.fulldomain.symbol, elem),)) in self)
+        if isinstance(self.fulldomain, SingleFiniteDomain):
+            return FiniteSet(*[elem for elem in self.fulldomain.set
+                               if frozenset(((self.fulldomain.symbol, elem),)) in self])
         else:
             raise NotImplementedError(
                 "Not implemented on multi-dimensional conditional domain")
-        #return FiniteSet(elem for elem in self.fulldomain if elem in self)
 
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)
@@ -181,6 +201,16 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
         x = Symbol('x')
         return Lambda(x, Piecewise(*(
             [(v, Eq(k, x)) for k, v in self.dict.items()] + [(0, True)])))
+
+    @property
+    def characteristic_function(self):
+        t = Dummy('t', real=True)
+        return Lambda(t, sum(exp(I*k*t)*v for k, v in self.dict.items()))
+
+    @property
+    def moment_generating_function(self):
+        t = Dummy('t', real=True)
+        return Lambda(t, sum(exp(k * t) * v for k, v in self.dict.items()))
 
     @property
     def set(self):
@@ -210,14 +240,6 @@ class FinitePSpace(PSpace):
     """
     is_Finite = True
 
-    @property
-    def domain(self):
-        return self.args[0]
-
-    @property
-    def density(self):
-        return self.args[0]
-
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))
                 for key, val in density.items())
@@ -228,6 +250,7 @@ class FinitePSpace(PSpace):
         return obj
 
     def prob_of(self, elem):
+        elem = sympify(elem)
         return self._density.get(elem, 0)
 
     def where(self, condition):
@@ -265,7 +288,21 @@ class FinitePSpace(PSpace):
                     for v, cum_prob in sorted_items]
         return sorted_items
 
-    def integrate(self, expr, rvs=None):
+    @cacheit
+    def compute_characteristic_function(self, expr):
+        d = self.compute_density(expr)
+        t = Dummy('t', real=True)
+
+        return Lambda(t, sum(exp(I*k*t)*v for k,v in d.items()))
+
+    @cacheit
+    def compute_moment_generating_function(self, expr):
+        d = self.compute_density(expr)
+        t = Dummy('t', real=True)
+
+        return Lambda(t, sum(exp(k * t) * v for k, v in d.items()))
+
+    def compute_expectation(self, expr, rvs=None, **kwargs):
         rvs = rvs or self.values
         expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
         return sum([expr.xreplace(dict(elem)) * self.prob_of(elem)
@@ -280,7 +317,7 @@ class FinitePSpace(PSpace):
         domain = self.where(condition)
         prob = self.probability(condition)
         density = dict((key, val / prob)
-                for key, val in self._density.items() if key in domain)
+                for key, val in self._density.items() if domain._test(key))
         return FinitePSpace(domain, density)
 
     def sample(self):
@@ -293,7 +330,7 @@ class FinitePSpace(PSpace):
         cdf = self.sorted_cdf(expr, python_float=True)
 
         x = random.uniform(0, 1)
-        # Find first occurence with cumulative probability less than x
+        # Find first occurrence with cumulative probability less than x
         # This should be replaced with binary search
         for value, cum_prob in cdf:
             if x < cum_prob:
@@ -320,11 +357,11 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     @property
     @cacheit
     def _density(self):
-        return dict((frozenset(((self.symbol, val),)), prob)
+        return dict((FiniteSet((self.symbol, val)), prob)
                     for val, prob in self.distribution.dict.items())
 
 
-class ProductFinitePSpace(ProductPSpace, FinitePSpace):
+class ProductFinitePSpace(IndependentProductPSpace, FinitePSpace):
     """
     A collection of several independent finite probability spaces
     """
@@ -349,3 +386,9 @@ class ProductFinitePSpace(ProductPSpace, FinitePSpace):
     @cacheit
     def density(self):
         return Dict(self._density)
+
+    def probability(self, condition):
+        return FinitePSpace.probability(self, condition)
+
+    def compute_density(self, expr):
+        return FinitePSpace.compute_density(self, expr)

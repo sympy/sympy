@@ -3,10 +3,11 @@
 from __future__ import print_function, division
 
 from sympy.core import igcd
+from sympy import oo
 
 from sympy.polys.monomials import monomial_min, monomial_div
 from sympy.polys.orderings import monomial_key
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 import random
 
@@ -137,6 +138,8 @@ def dup_degree(f):
     """
     Return the leading degree of ``f`` in ``K[x]``.
 
+    Note that the degree of 0 is negative infinity (the SymPy object -oo).
+
     Examples
     ========
 
@@ -149,12 +152,16 @@ def dup_degree(f):
     3
 
     """
+    if not f:
+        return -oo
     return len(f) - 1
 
 
 def dmp_degree(f, u):
     """
     Return the leading degree of ``f`` in ``x_0`` in ``K[X]``.
+
+    Note that the degree of 0 is negative infinity (the SymPy object -oo).
 
     Examples
     ========
@@ -163,7 +170,7 @@ def dmp_degree(f, u):
     >>> from sympy.polys.densebasic import dmp_degree
 
     >>> dmp_degree([[[]]], 2)
-    -1
+    -oo
 
     >>> f = ZZ.map([[2], [1, 2, 3]])
 
@@ -172,7 +179,7 @@ def dmp_degree(f, u):
 
     """
     if dmp_zero_p(f, u):
-        return -1
+        return -oo
     else:
         return len(f) - 1
 
@@ -240,7 +247,7 @@ def dmp_degree_list(f, u):
     (1, 2)
 
     """
-    degs = [-1]*(u + 1)
+    degs = [-oo]*(u + 1)
     _rec_degree_list(f, u, 0, degs)
     return tuple(degs)
 
@@ -680,7 +687,10 @@ def dmp_ground_nth(f, N, u, K):
         elif n >= len(f):
             return K.zero
         else:
-            f, v = f[dmp_degree(f, v) - n], v - 1
+            d = dmp_degree(f, v)
+            if d == -oo:
+                d = -1
+            f, v = f[d - n], v - 1
 
     return f
 
@@ -725,7 +735,7 @@ def dmp_zero(u):
     """
     r = []
 
-    for i in xrange(u):
+    for i in range(u):
         r = [r]
 
     return r
@@ -813,7 +823,7 @@ def dmp_ground(c, u):
     if not c:
         return dmp_zero(u)
 
-    for i in xrange(u + 1):
+    for i in range(u + 1):
         c = [c]
 
     return c
@@ -841,7 +851,7 @@ def dmp_zeros(n, u, K):
     if u < 0:
         return [K.zero]*n
     else:
-        return [ dmp_zero(u) for i in xrange(n) ]
+        return [ dmp_zero(u) for i in range(n) ]
 
 
 def dmp_grounds(c, n, u):
@@ -866,7 +876,7 @@ def dmp_grounds(c, n, u):
     if u < 0:
         return [c]*n
     else:
-        return [ dmp_ground(c, u) for i in xrange(n) ]
+        return [ dmp_ground(c, u) for i in range(n) ]
 
 
 def dmp_negative_p(f, u, K):
@@ -929,12 +939,12 @@ def dup_from_dict(f, K):
     n, h = max(f.keys()), []
 
     if type(n) is int:
-        for k in xrange(n, -1, -1):
+        for k in range(n, -1, -1):
             h.append(f.get(k, K.zero))
     else:
         (n,) = n
 
-        for k in xrange(n, -1, -1):
+        for k in range(n, -1, -1):
             h.append(f.get((k,), K.zero))
 
     return dup_strip(h)
@@ -959,7 +969,7 @@ def dup_from_raw_dict(f, K):
 
     n, h = max(f.keys()), []
 
-    for k in xrange(n, -1, -1):
+    for k in range(n, -1, -1):
         h.append(f.get(k, K.zero))
 
     return dup_strip(h)
@@ -998,7 +1008,7 @@ def dmp_from_dict(f, u, K):
 
     n, v, h = max(coeffs.keys()), u - 1, []
 
-    for k in xrange(n, -1, -1):
+    for k in range(n, -1, -1):
         coeff = coeffs.get(k)
 
         if coeff is not None:
@@ -1027,9 +1037,9 @@ def dup_to_dict(f, K=None, zero=False):
     if not f and zero:
         return {(0,): K.zero}
 
-    n, result = dup_degree(f), {}
+    n, result = len(f) - 1, {}
 
-    for k in xrange(0, n + 1):
+    for k in range(0, n + 1):
         if f[n - k]:
             result[(k,)] = f[n - k]
 
@@ -1052,9 +1062,9 @@ def dup_to_raw_dict(f, K=None, zero=False):
     if not f and zero:
         return {0: K.zero}
 
-    n, result = dup_degree(f), {}
+    n, result = len(f) - 1, {}
 
-    for k in xrange(0, n + 1):
+    for k in range(0, n + 1):
         if f[n - k]:
             result[k] = f[n - k]
 
@@ -1084,7 +1094,10 @@ def dmp_to_dict(f, u, K=None, zero=False):
 
     n, v, result = dmp_degree(f, u), u - 1, {}
 
-    for k in xrange(0, n + 1):
+    if n == -oo:
+        n = -1
+
+    for k in range(0, n + 1):
         h = dmp_to_dict(f[n - k], v)
 
         for exp, coeff in h.items():
@@ -1176,7 +1189,7 @@ def dmp_nest(f, l, K):
     if not isinstance(f, list):
         return dmp_ground(f, l)
 
-    for i in xrange(l):
+    for i in range(l):
         f = [f]
 
     return f
@@ -1235,7 +1248,7 @@ def dup_deflate(f, K):
 
     g = 0
 
-    for i in xrange(len(f)):
+    for i in range(len(f)):
         if not f[-i - 1]:
             continue
 
@@ -1316,7 +1329,7 @@ def dup_multi_deflate(polys, K):
 
         g = 0
 
-        for i in xrange(len(p)):
+        for i in range(len(p)):
             if not p[-i - 1]:
                 continue
 
@@ -1430,7 +1443,7 @@ def _rec_inflate(g, M, v, i, K):
     result = [g[0]]
 
     for coeff in g[1:]:
-        for _ in xrange(1, M[i]):
+        for _ in range(1, M[i]):
             result.append(dmp_zero(w))
 
         result.append(coeff)
@@ -1486,7 +1499,7 @@ def dmp_exclude(f, u, K):
 
     J, F = [], dmp_to_dict(f, u)
 
-    for j in xrange(0, u + 1):
+    for j in range(0, u + 1):
         for monom in F.keys():
             if monom[j]:
                 break
@@ -1863,7 +1876,7 @@ def dup_random(n, a, b, K):
     [-2, -8, 9, -4]
 
     """
-    f = [ K.convert(random.randint(a, b)) for _ in xrange(0, n + 1) ]
+    f = [ K.convert(random.randint(a, b)) for _ in range(0, n + 1) ]
 
     while not f[0]:
         f[0] = K.convert(random.randint(a, b))

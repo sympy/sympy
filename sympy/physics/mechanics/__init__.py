@@ -27,14 +27,22 @@ from . import particle
 from .particle import *
 __all__.extend(particle.__all__)
 
-from . import point
-from .point import *
-__all__.extend(point.__all__)
-
-from . import essential
-from .essential import *
-__all__.extend(essential.__all__)
-
 from . import lagrange
 from .lagrange import *
 __all__.extend(lagrange.__all__)
+
+from sympy.physics import vector
+from sympy.physics.vector import *
+__all__.extend(vector.__all__)
+
+from . import linearize
+from .linearize import *
+__all__.extend(linearize.__all__)
+
+from . import body
+from .body import *
+__all__.extend(body.__all__)
+
+from . import system
+from .system import *
+__all__.extend(system.__all__)

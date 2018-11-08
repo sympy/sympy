@@ -1,19 +1,20 @@
-from sympy import Symbol, floor, nan, oo, E, symbols, ceiling, pi, Rational, \
-    Float, I, sin, exp, log, factorial
+from sympy import AccumBounds, Symbol, floor, nan, oo, zoo, E, symbols, \
+        ceiling, pi, Rational, Float, I, sin, exp, log, factorial, frac, Eq
 
 from sympy.utilities.pytest import XFAIL
 
+x = Symbol('x')
+i = Symbol('i', imaginary=True)
+y = Symbol('y', real=True)
+k, n = symbols('k,n', integer=True)
 
 def test_floor():
-
-    x = Symbol('x')
-    y = Symbol('y', real=True)
-    k, n = symbols('k,n', integer=True)
 
     assert floor(nan) == nan
 
     assert floor(oo) == oo
     assert floor(-oo) == -oo
+    assert floor(zoo) == zoo
 
     assert floor(0) == 0
 
@@ -43,9 +44,12 @@ def test_floor():
 
     assert floor(I) == I
     assert floor(-I) == -I
+    e = floor(i)
+    assert e.func is floor and e.args[0] == i
 
     assert floor(oo*I) == oo*I
     assert floor(-oo*I) == -oo*I
+    assert floor(exp(I*pi/4)*oo) == exp(I*pi/4)*oo
 
     assert floor(2*I) == 2*I
     assert floor(-2*I) == -2*I
@@ -101,17 +105,31 @@ def test_floor():
     assert floor(factorial(50)/exp(1)) == \
         11188719610782480504630258070757734324011354208865721592720336800
 
+    assert (floor(y) <= y) == True
+    assert (floor(y) > y) == False
+    assert (floor(x) <= x).is_Relational  # x could be non-real
+    assert (floor(x) > x).is_Relational
+    assert (floor(x) <= y).is_Relational  # arg is not same as rhs
+    assert (floor(x) > y).is_Relational
+
+    assert floor(y).rewrite(frac) == y - frac(y)
+    assert floor(y).rewrite(ceiling) == -ceiling(-y)
+    assert floor(y).rewrite(frac).subs(y, -pi) == floor(-pi)
+    assert floor(y).rewrite(frac).subs(y, E) == floor(E)
+    assert floor(y).rewrite(ceiling).subs(y, E) == -ceiling(-E)
+    assert floor(y).rewrite(ceiling).subs(y, -pi) == -ceiling(pi)
+
+    assert Eq(floor(y), y - frac(y))
+    assert Eq(floor(y), -ceiling(-y))
+
 
 def test_ceiling():
-
-    x = Symbol('x')
-    y = Symbol('y', real=True)
-    k, n = symbols('k,n', integer=True)
 
     assert ceiling(nan) == nan
 
     assert ceiling(oo) == oo
     assert ceiling(-oo) == -oo
+    assert ceiling(zoo) == zoo
 
     assert ceiling(0) == 0
 
@@ -141,9 +159,12 @@ def test_ceiling():
 
     assert ceiling(I) == I
     assert ceiling(-I) == -I
+    e = ceiling(i)
+    assert e.func is ceiling and e.args[0] == i
 
     assert ceiling(oo*I) == oo*I
     assert ceiling(-oo*I) == -oo*I
+    assert ceiling(exp(I*pi/4)*oo) == exp(I*pi/4)*oo
 
     assert ceiling(2*I) == 2*I
     assert ceiling(-2*I) == -2*I
@@ -199,6 +220,53 @@ def test_ceiling():
     assert ceiling(factorial(50)/exp(1)) == \
         11188719610782480504630258070757734324011354208865721592720336801
 
+    assert (ceiling(y) >= y) == True
+    assert (ceiling(y) < y) == False
+    assert (ceiling(x) >= x).is_Relational  # x could be non-real
+    assert (ceiling(x) < x).is_Relational
+    assert (ceiling(x) >= y).is_Relational  # arg is not same as rhs
+    assert (ceiling(x) < y).is_Relational
+
+    assert ceiling(y).rewrite(floor) == -floor(-y)
+    assert ceiling(y).rewrite(frac) == y + frac(-y)
+    assert ceiling(y).rewrite(floor).subs(y, -pi) == -floor(pi)
+    assert ceiling(y).rewrite(floor).subs(y, E) == -floor(-E)
+    assert ceiling(y).rewrite(frac).subs(y, pi) == ceiling(pi)
+    assert ceiling(y).rewrite(frac).subs(y, -E) == ceiling(-E)
+
+    assert Eq(ceiling(y), y + frac(-y))
+    assert Eq(ceiling(y), -floor(-y))
+
+
+def test_frac():
+    assert isinstance(frac(x), frac)
+    assert frac(oo) == AccumBounds(0, 1)
+    assert frac(-oo) == AccumBounds(0, 1)
+
+    assert frac(n) == 0
+    assert frac(nan) == nan
+    assert frac(Rational(4, 3)) == Rational(1, 3)
+    assert frac(-Rational(4, 3)) == Rational(2, 3)
+
+    r = Symbol('r', real=True)
+    assert frac(I*r) == I*frac(r)
+    assert frac(1 + I*r) == I*frac(r)
+    assert frac(0.5 + I*r) == 0.5 + I*frac(r)
+    assert frac(n + I*r) == I*frac(r)
+    assert frac(n + I*k) == 0
+    assert frac(x + I*x) == frac(x + I*x)
+    assert frac(x + I*n) == frac(x)
+
+    assert frac(x).rewrite(floor) == x - floor(x)
+    assert frac(x).rewrite(ceiling) == x + ceiling(-x)
+    assert frac(y).rewrite(floor).subs(y, pi) == frac(pi)
+    assert frac(y).rewrite(floor).subs(y, -E) == frac(-E)
+    assert frac(y).rewrite(ceiling).subs(y, -pi) == frac(-pi)
+    assert frac(y).rewrite(ceiling).subs(y, E) == frac(E)
+
+    assert Eq(frac(y), y - floor(y))
+    assert Eq(frac(y), y + ceiling(-y))
+
 
 def test_series():
     x, y = symbols('x,y')
@@ -213,7 +281,21 @@ def test_series():
 
 
 @XFAIL
-def test_issue_1050():
+def test_issue_4149():
     assert floor(3 + pi*I + y*I) == 3 + floor(pi + y)*I
     assert floor(3*I + pi*I + y*I) == floor(3 + pi + y)*I
     assert floor(3 + E + pi*I + y*I) == 5 + floor(pi + y)*I
+
+
+def test_issue_11207():
+    assert floor(floor(x)) == floor(x)
+    assert floor(ceiling(x)) == ceiling(x)
+    assert ceiling(floor(x)) == floor(x)
+    assert ceiling(ceiling(x)) == ceiling(x)
+
+
+def test_nested_floor_ceiling():
+    assert floor(-floor(ceiling(x**3)/y)) == -floor(ceiling(x**3)/y)
+    assert ceiling(-floor(ceiling(x**3)/y)) == -floor(ceiling(x**3)/y)
+    assert floor(ceiling(-floor(x**Rational(7, 2)/y))) == -floor(x**Rational(7, 2)/y)
+    assert -ceiling(-ceiling(floor(x)/y)) == ceiling(floor(x)/y)

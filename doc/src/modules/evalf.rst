@@ -69,7 +69,7 @@ This shows digits 999,951 through 1,000,000 of pi:
 
 
 High-precision calculations can be slow. It is recommended (but entirely
-optional) to install gmpy (http://code.google.com/p/gmpy/), which will
+optional) to install gmpy (https://code.google.com/p/gmpy/), which will
 significantly speed up computations such as the one above.
 
 Floating-point numbers
@@ -89,7 +89,7 @@ can be created with a custom precision as second argument:
 
 As the last example shows, some Python floats are only accurate to about 15
 digits as inputs, while others (those that have a denominator that is a
-power of 2, like .125 = 1/4) are exact. To create a ``Float`` from a
+power of 2, like 0.125 = 1/8) are exact. To create a ``Float`` from a
 high-precision decimal number, it is better to pass a string, ``Rational``,
 or ``evalf`` a ``Rational``:
 
@@ -161,7 +161,9 @@ Fibonacci number, the following happens:
 
 
 The lack of digits in the returned number indicates that ``N`` failed to achieve
-full accuracy. The result indicates that the magnitude of the expression is something less than 10^84, but that is not a particularly good answer. To force a higher working precision, the ``maxn`` keyword argument can be used:
+full accuracy. The result indicates that the magnitude of the expression is something
+less than 10^84, but that is not a particularly good answer. To force a higher working
+precision, the ``maxn`` keyword argument can be used:
 
     >>> N(fibonacci(1000) - (GoldenRatio)**1000/sqrt(5), maxn=500)
     -4.60123853010113e-210
@@ -284,7 +286,7 @@ Oscillatory quadrature requires an integrand containing a factor cos(ax+b) or
 sin(ax+b). Note that many other oscillatory integrals can be transformed to
 this form with a change of variables:
 
-    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
+    >>> init_printing(use_unicode=False, wrap_line=False)
     >>> intgrl = Integral(sin(1/x), (x, 0, 1)).transform(x, 1/x)
     >>> intgrl
      oo
@@ -422,6 +424,3 @@ Here are several more advanced examples:
     >>> nsimplify(gamma('1/4')*gamma('3/4'), [pi])
       ___
     \/ 2 *pi
-
-
-

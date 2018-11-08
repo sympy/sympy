@@ -1,4 +1,5 @@
 from sympy.liealgebras.cartan_type import CartanType
+from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 
 def test_type_E():

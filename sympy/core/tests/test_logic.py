@@ -1,9 +1,34 @@
-from sympy.core.logic import fuzzy_not, Logic, And, Or, Not, fuzzy_and, fuzzy_or
+from sympy.core.logic import (fuzzy_not, Logic, And, Or, Not, fuzzy_and,
+    fuzzy_or, _fuzzy_group, _torf)
 from sympy.utilities.pytest import raises
 
 T = True
 F = False
 U = None
+
+
+def test_torf():
+    from sympy.utilities.iterables import cartes
+    v = [T, F, U]
+    for i in cartes(*[v]*3):
+        assert _torf(i) is (
+            True if all(j for j in i) else (False if all(j is False for j in i) else None))
+
+
+def test_fuzzy_group():
+    from sympy.utilities.iterables import cartes
+    v = [T, F, U]
+    for i in cartes(*[v]*3):
+        assert _fuzzy_group(i) is (
+            None if None in i else (
+            True if all(j for j in i) else False))
+        assert _fuzzy_group(i, quick_exit=True) is (
+            None if (i.count(False) > 1) else (None if None in i else (
+            True if all(j for j in i) else False)))
+    it = (True if (i == 0) else None for i in range(2))
+    assert _torf(it) is None
+    it = (True if (i == 1) else None for i in range(2))
+    assert _torf(it) is None
 
 
 def test_fuzzy_not():
@@ -127,6 +152,9 @@ def test_logic_fromstring():
     raises(ValueError, lambda: S('a | & b'))
     raises(ValueError, lambda: S('a & & b'))
     raises(ValueError, lambda: S('a |'))
+    raises(ValueError, lambda: S('a|b'))
+    raises(ValueError, lambda: S('!'))
+    raises(ValueError, lambda: S('! a'))
 
 
 def test_logic_not():
@@ -137,3 +165,10 @@ def test_logic_not():
     # functionality into some method.
     assert Not(And('a', 'b')) == Or(Not('a'), Not('b'))
     assert Not(Or('a', 'b')) == And(Not('a'), Not('b'))
+
+
+def test_formatting():
+    S = Logic.fromstring
+    raises(ValueError, lambda: S('a&b'))
+    raises(ValueError, lambda: S('a|b'))
+    raises(ValueError, lambda: S('! a'))

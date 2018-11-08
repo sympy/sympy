@@ -17,7 +17,7 @@ The algorithm to compute `\int f(x) \mathrm{d}x` or
 3. Expand the result in named special functions.
 
 Step (3) is implemented in the function hyperexpand (q.v.). Steps (1) and (2)
-are described below. Morever, G-functions are usually branched. Thus our treatment
+are described below. Moreover, G-functions are usually branched. Thus our treatment
 of branched functions is described first.
 
 Some other integrals (e.g. `\int_{-\infty}^\infty`) can also be computed by first
@@ -113,10 +113,10 @@ have to try something else.
 
 Suppose now we want to rewrite as a product of two G-functions. To do this,
 we (try to) find all inequivalent ways of splitting `f(x)` into a product
-`f_1(x) f_2(x)`. 
+`f_1(x) f_2(x)`.
 We could try these splittings in any order, but it is often a good idea to
-minimise (a) the number of powers occuring in `f_i(x)` and (b) the number of
-different functions occuring in `f_i(x)`. Thus given e.g.
+minimize (a) the number of powers occurring in `f_i(x)` and (b) the number of
+different functions occurring in `f_i(x)`. Thus given e.g.
 `f(x) = \sin{x}\, e^{x} \sin{2x}` we should try `f_1(x) = \sin{x}\, \sin{2x}`,
 `f_2(x) = e^{x}` first.
 All of this is done by the function ``_mul_as_two_parts(f)``.
@@ -161,7 +161,7 @@ is satisfies `G(\operatorname{Exp}(2 \pi i)z) = G(z)` for all `z \in \mathcal{S}
 be used to exploit the information. This is done transparently by the
 integration code.
 
-.. [BlogPost] http://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/
+.. [BlogPost] https://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/
 
 The G-Function Integration Theorems
 ***********************************
@@ -174,23 +174,23 @@ formulae from the ones we give here. It seemed best to keep the theorems as
 simple as possible, since they are very complicated anyway.):
 
 1. .. math:: \int_0^\infty
-    G_{p, q}^{m, n} \left.\left(\begin{matrix} a_1, \dots, a_p \\
-                                               b_1, \dots, b_q \end{matrix}
+    G_{p, q}^{m, n} \left.\left(\begin{matrix} a_1, \cdots, a_p \\
+                                               b_1, \cdots, b_q \end{matrix}
             \right| \eta x \right) \mathrm{d}x =
      \frac{\prod_{j=1}^m \Gamma(b_j + 1) \prod_{j=1}^n \Gamma(-a_j)}{\eta
            \prod_{j=m+1}^q \Gamma(-b_j) \prod_{j=n+1}^p \Gamma(a_j + 1)}
 
 2. .. math:: \int_0^\infty
-    G_{u, v}^{s, t} \left.\left(\begin{matrix} c_1, \dots, c_u \\
-                                               d_1, \dots, d_v \end{matrix}
+    G_{u, v}^{s, t} \left.\left(\begin{matrix} c_1, \cdots, c_u \\
+                                               d_1, \cdots, d_v \end{matrix}
             \right| \sigma x \right)
-    G_{p, q}^{m, n} \left.\left(\begin{matrix} a_1, \dots, a_p \\
-                                               b_1, \dots, b_q \end{matrix}
+    G_{p, q}^{m, n} \left.\left(\begin{matrix} a_1, \cdots, a_p \\
+                                               b_1, \cdots, b_q \end{matrix}
             \right| \omega x \right)
     \mathrm{d}x =
     G_{v+p, u+q}^{m+t, n+s} \left.\left(
-          \begin{matrix} a_1, \dots, a_n, -d_1, \dots, -d_v, a_{n+1}, \dots, a_p \\
-                         b_1, \dots, b_m, -c_1, \dots, -c_u, b_{m+1}, \dots, b_q
+          \begin{matrix} a_1, \cdots, a_n, -d_1, \cdots, -d_v, a_{n+1}, \cdots, a_p \\
+                         b_1, \cdots, b_m, -c_1, \cdots, -c_u, b_{m+1}, \cdots, b_q
           \end{matrix}
             \right| \frac{\omega}{\sigma} \right)
 
@@ -210,11 +210,11 @@ of indices `m, n, p, q` and of indices `n, m, q, p` can be related easily
 .. math:: \xi = m + n - p \\
           \delta = m + n - \frac{p + q}{2}
 
-.. math:: C_3: -\Re(b_j) < 1 \text{ for } j=1, \dots, m \\
-               0 < -\Re(a_j) \text{ for } j=1, \dots, n
+.. math:: C_3: -\Re(b_j) < 1 \text{ for } j=1, \ldots, m \\
+               0 < -\Re(a_j) \text{ for } j=1, \ldots, n
 
-.. math:: C_3^*: -\Re(b_j) < 1 \text{ for } j=1, \dots, q \\
-               0 < -\Re(a_j) \text{ for } j=1, \dots, p
+.. math:: C_3^*: -\Re(b_j) < 1 \text{ for } j=1, \ldots, q \\
+               0 < -\Re(a_j) \text{ for } j=1, \ldots, p
 
 .. math:: C_4: -\Re(\delta) + \frac{q + 1 - p}{2} > q - p
 
@@ -240,14 +240,14 @@ These are the conditions "at infinity":
 
    .. math::
       A = 1 \le n \wedge p < q \wedge 1 \le m
-   
+
    .. math::
       B = 1 \le p \wedge 1 \le m \wedge q = p+1 \wedge
                   \neg (n = 0 \wedge m = p + 1 )
 
    .. math::
       C = 1 \le n \wedge q = p \wedge |\arg(\eta)| \ne (\delta - 2k)\pi
-             \text{ for } k = 0, 1, \dots
+             \text{ for } k = 0, 1, \ldots
                \left\lceil \frac{\delta}{2} \right\rceil.
 2. .. math:: n = 0 \wedge p + 1 \le m \wedge |\arg(\eta)| < \delta \pi
 3. .. math:: (p < q \wedge 1 \le m \wedge \delta > 0 \wedge |\arg(\eta)| = \delta \pi)
@@ -290,22 +290,22 @@ We introduce the following notation:
 
 The following conditions will be helpful:
 
-.. math:: C_1: (a_i - b_j \notin \mathbb{Z}_{>0} \text{ for } i = 1, \dots, n, j = 1, \dots, m) \\
+.. math:: C_1: (a_i - b_j \notin \mathbb{Z}_{>0} \text{ for } i = 1, \ldots, n, j = 1, \ldots, m) \\
                \wedge
-               (c_i - d_j \notin \mathbb{Z}_{>0} \text{ for } i = 1, \dots, t, j = 1, \dots, s)
+               (c_i - d_j \notin \mathbb{Z}_{>0} \text{ for } i = 1, \ldots, t, j = 1, \ldots, s)
 .. math:: C_2:
-    \Re(1 + b_i + d_j) > 0 \text{ for } i = 1, \dots, m, j = 1, \dots, s
+    \Re(1 + b_i + d_j) > 0 \text{ for } i = 1, \ldots, m, j = 1, \ldots, s
 .. math:: C_3:
-    \Re(a_i + c_j) < 1 \text{ for } i = 1, \dots, n, j = 1, \dots, t
+    \Re(a_i + c_j) < 1 \text{ for } i = 1, \ldots, n, j = 1, \ldots, t
 .. math:: C_4:
-    (p - q)\Re(c_i) - \Re(\mu) > -\frac{3}{2} \text{ for } i=1, \dots, t
+    (p - q)\Re(c_i) - \Re(\mu) > -\frac{3}{2} \text{ for } i=1, \ldots, t
 .. math:: C_5:
-    (p - q)\Re(1 + d_i) - \Re(\mu) > -\frac{3}{2} \text{ for } i=1, \dots, s
+    (p - q)\Re(1 + d_i) - \Re(\mu) > -\frac{3}{2} \text{ for } i=1, \ldots, s
 .. math:: C_6:
-    (u - v)\Re(a_i) - \Re(\rho) > -\frac{3}{2} \text{ for } i=1, \dots, n
+    (u - v)\Re(a_i) - \Re(\rho) > -\frac{3}{2} \text{ for } i=1, \ldots, n
 .. math:: C_7:
-    (u - v)\Re(1 + b_i) - \Re(\rho) > -\frac{3}{2} \text{ for } i=1, \dots, m
-.. math:: C_8: 
+    (u - v)\Re(1 + b_i) - \Re(\rho) > -\frac{3}{2} \text{ for } i=1, \ldots, m
+.. math:: C_8:
     0 < \lvert{\phi}\rvert + 2 \Re\left(\left(\mu -1\right) \left(- u + v\right) + \left(- p + q\right) \left(\rho -1\right) + \left(- p + q\right) \left(- u + v\right)\right)
 .. math:: C_9:
     0 < \lvert{\phi}\rvert - 2 \Re\left(\left(\mu -1\right) \left(- u + v\right) + \left(- p + q\right) \left(\rho -1\right) + \left(- p + q\right) \left(- u + v\right)\right)
@@ -317,7 +317,7 @@ The following conditions will be helpful:
     |\arg(\omega)| < c^*\pi
 .. math:: C_{13}:
     |\arg(\omega)| = c^*\pi
-.. math:: C_{14}^1: 
+.. math:: C_{14}^1:
     \left(z_0 \ne 1 \wedge |\arg(1 - z_0)| < \pi \right) \vee
     \left(z_0 = 1 \wedge \Re(\mu + \rho - u + v) < 1 \right)
 .. math:: C_{14}^2:
@@ -362,9 +362,9 @@ as follows:
 21. .. math:: m = 0 \wedge 0 < n \wedge 0 < c^{*} \wedge 0 < \phi \wedge C_{1} \wedge C_{3} \wedge C_{12}
 22. .. math:: s t = 0 \wedge 0 < b^{*} \wedge 0 < c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{10} \wedge C_{12}
 23. .. math:: m n = 0 \wedge 0 < b^{*} \wedge 0 < c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{10} \wedge C_{12}
-24. .. math:: p < m + n \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge c^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15} 
+24. .. math:: p < m + n \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge c^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}
 25. .. math:: q < m + n \wedge s = 0 \wedge \phi = 0 \wedge 0 < t \wedge 0 < b^{*} \wedge c^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - q + 1\right) \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}
-26. .. math:: p = q -1 \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15} 
+26. .. math:: p = q -1 \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}
 27. .. math:: p = q + 1 \wedge s = 0 \wedge \phi = 0 \wedge 0 < t \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}
 28. .. math:: p < q -1 \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}
 29. .. math:: q + 1 < p \wedge s = 0 \wedge \phi = 0 \wedge 0 < t \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - q + 1 \right) \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}
@@ -451,7 +451,7 @@ particular the inner integral has to converge. Also, for our identification of
 the final integral as a Fox H / Meijer G-function to be correct, the poles of
 the newly obtained gamma function must be separated properly.
 
-It is easy to check that the inner integal converges absolutely for
+It is easy to check that the inner integral converges absolutely for
 `\Re(as) < -1`. Thus the contour `L` has to run left of the line `\Re(as) = -1`.
 Under this condition, the poles of the newly-introduced gamma function are
 separated properly.

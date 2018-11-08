@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from pyglet.gl import *
 from plot_mode_base import PlotModeBase
 from sympy.core import S
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 class PlotSurface(PlotModeBase):
@@ -75,9 +75,9 @@ class PlotSurface(PlotModeBase):
 
     def draw_verts(self, use_cverts, use_solid_color):
         def f():
-            for u in xrange(1, len(self.u_set)):
+            for u in range(1, len(self.u_set)):
                 glBegin(GL_QUAD_STRIP)
-                for v in xrange(len(self.v_set)):
+                for v in range(len(self.v_set)):
                     pa = self.verts[u - 1][v]
                     pb = self.verts[u][v]
                     if pa is None or pb is None:

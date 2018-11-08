@@ -1,11 +1,11 @@
 from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
-                   cos, sqrt, symbols, oo, Derivative, gamma, O)
+                   cos, sqrt, symbols, oo, Derivative, gamma, O, appellf1)
 from sympy.series.limits import limit
 from sympy.abc import x, z, k
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import (
     random_complex_number as randcplx,
-    test_numerically as tn,
+    verify_numerically as tn,
     test_derivative_numerically as td)
 
 
@@ -99,10 +99,10 @@ def test_radius_of_convergence():
     assert hyper([-1, 1, 3], [-2], z).radius_of_convergence == 0
     assert hyper((-1, 2, 3, 4), [], z).radius_of_convergence == oo
 
-    assert hyper([1, 1], [3], 1).convergence_statement is True
-    assert hyper([1, 1], [2], 1).convergence_statement is False
-    assert hyper([1, 1], [2], -1).convergence_statement is True
-    assert hyper([1, 1], [1], -1).convergence_statement is False
+    assert hyper([1, 1], [3], 1).convergence_statement == True
+    assert hyper([1, 1], [2], 1).convergence_statement == False
+    assert hyper([1, 1], [2], -1).convergence_statement == True
+    assert hyper([1, 1], [1], -1).convergence_statement == False
 
 
 def test_meijer():
@@ -123,6 +123,9 @@ def test_meijer():
     assert g.nu == 75
     assert g.delta == -1
     assert g.is_commutative is True
+    assert g.is_number is False
+    #issue 13071
+    assert meijerg([[],[]], [[S(1)/2],[0]], 1).is_number is True
 
     assert meijerg([1, 2], [3], [4], [5], z).delta == S(1)/2
 
@@ -132,6 +135,10 @@ def test_meijer():
                                Tuple(0), Tuple(S(1)/2), z**2/4), cos(z), z)
     assert tn(meijerg(Tuple(1, 1), Tuple(), Tuple(1), Tuple(0), z),
               log(1 + z), z)
+
+    # test exceptions
+    raises(ValueError, lambda: meijerg(((3, 1), (2,)), ((oo,), (2, 0)), x))
+    raises(ValueError, lambda: meijerg(((3, 1), (2,)), ((1,), (2, 0)), x))
 
     # differentiation
     g = meijerg((randcplx(),), (randcplx() + 2*I,), Tuple(),
@@ -204,8 +211,10 @@ def test_hyper_unpolarify():
     assert hyper([0], [], a).argument == a
     assert hyper([0], [0], a).argument == b
     assert hyper([0, 1], [0], a).argument == a
+    assert hyper([0, 1], [0], exp_polar(2*pi*I)).argument == 1
 
 
+@slow
 def test_hyperrep():
     from sympy.functions.special.hyper import (HyperRep, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
@@ -294,6 +303,7 @@ def test_hyperrep():
     assert t(HyperRep_sinasin(a, z), 2*a*z*hyper([1 - a, 1 + a], [S(3)/2], z), z)
 
 
+@slow
 def test_meijerg_eval():
     from sympy import besseli, exp_polar
     from sympy.abc import l
@@ -330,6 +340,20 @@ def test_limits():
            hyper((1,), (S(4)/3, S(5)/3), 0) + \
            9*k**2*hyper((2,), (S(7)/3, S(8)/3), 0)/20 + \
            81*k**4*hyper((3,), (S(10)/3, S(11)/3), 0)/1120 + \
-           O(k**6) # issue 3251
+           O(k**6) # issue 6350
     assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
-            meijerg(((), ()), ((1,), (0,)), 0) # issue 2953
+            meijerg(((), ()), ((1,), (0,)), 0) # issue 6052
+
+def test_appellf1():
+    a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
+    assert appellf1(a, b2, b1, c, y, x) == appellf1(a, b1, b2, c, x, y)
+    assert appellf1(a, b1, b1, c, y, x) == appellf1(a, b1, b1, c, x, y)
+    assert appellf1(a, b1, b2, c, S(0), S(0)) == S(1)
+
+def test_derivative_appellf1():
+    from sympy import diff
+    a, b1, b2, c, x, y, z = symbols('a b1 b2 c x y z')
+    assert diff(appellf1(a, b1, b2, c, x, y), x) == a*b1*appellf1(a + 1, b2, b1 + 1, c + 1, y, x)/c
+    assert diff(appellf1(a, b1, b2, c, x, y), y) == a*b2*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)/c
+    assert diff(appellf1(a, b1, b2, c, x, y), z) == 0
+    assert diff(appellf1(a, b1, b2, c, x, y), a) ==  Derivative(appellf1(a, b1, b2, c, x, y), a)

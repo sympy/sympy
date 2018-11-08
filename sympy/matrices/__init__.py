@@ -4,7 +4,7 @@ Includes functions for fast creating matrices like zero, one/eye, random
 matrix, etc.
 """
 from .matrices import (DeferredVector, ShapeError, NonSquareMatrixError,
-    MatrixBase)
+                       MatrixBase)
 
 from .dense import (
     GramSchmidt, Matrix, casoratian, diag, eye, hessian, jordan_cell,
@@ -18,13 +18,10 @@ from .sparse import MutableSparseMatrix
 
 SparseMatrix = MutableSparseMatrix
 
-from .immutable import ImmutableMatrix, ImmutableSparseMatrix
-
-MutableSparseMatrix = SparseMatrix
-ImmutableDenseMatrix = ImmutableMatrix
+from .immutable import ImmutableMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix
 
 from .expressions import (MatrixSlice, BlockDiagMatrix, BlockMatrix,
-        FunctionMatrix, Identity, Inverse, MatAdd, MatMul, MatPow, MatrixExpr,
-        MatrixSymbol, Trace, Transpose, ZeroMatrix, blockcut, block_collapse,
-        matrix_symbols, Adjoint, hadamard_product, HadamardProduct,
-        Determinant, det, DiagonalMatrix, DiagonalOf, trace)
+                          FunctionMatrix, Identity, Inverse, MatAdd, MatMul, MatPow, MatrixExpr,
+                          MatrixSymbol, Trace, Transpose, ZeroMatrix, blockcut, block_collapse,
+                          matrix_symbols, Adjoint, hadamard_product, HadamardProduct,
+                          Determinant, det, DiagonalMatrix, DiagonalOf, trace, DotProduct, kronecker_product, KroneckerProduct)

@@ -76,7 +76,7 @@ from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def dup_trial_division(f, factors, K):
@@ -276,7 +276,7 @@ def dup_zz_zassenhaus(f, K):
     # choose a prime number `p` such that `f` be square free in Z_p
     # if there are many factors in Z_p, choose among a few different `p`
     # the one with fewer factors
-    for px in xrange(3, bound + 1):
+    for px in range(3, bound + 1):
         if not isprime(px) or b % px == 0:
             continue
 
@@ -321,8 +321,8 @@ def dup_zz_zassenhaus(f, K):
                 for i in S:
                     G = dup_mul(G, g[i], K)
                 G = dup_trunc(G, pl, K)
-                G1 = dup_primitive(G, K)[1]
-                q = G1[-1]
+                G = dup_primitive(G, K)[1]
+                q = G[-1]
                 if q and fc % q != 0:
                     continue
 
@@ -419,10 +419,10 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     n = dup_degree(f)
     g, h = [], []
 
-    for i in xrange(n, -1, -2):
+    for i in range(n, -1, -2):
         g.insert(0, f[i])
 
-    for i in xrange(n - 1, -1, -2):
+    for i in range(n - 1, -1, -2):
         h.insert(0, f[i])
 
     g = dup_sqr(dup_strip(g), K)
@@ -470,7 +470,7 @@ def _dup_cyclotomic_decompose(n, K):
         Q = [ dup_quo(dup_inflate(h, p, K), h, K) for h in H ]
         H.extend(Q)
 
-        for i in xrange(1, k):
+        for i in range(1, k):
             Q = [ dup_inflate(q, p, K) for q in Q ]
             H.extend(Q)
 
@@ -676,7 +676,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
         c = dmp_one(v, K)
         d = dup_LC(h, K)*cs
 
-        for i in reversed(xrange(len(E))):
+        for i in reversed(range(len(E))):
             k, e, (t, _) = 0, E[i], T[i]
 
             while not (d % e):
@@ -811,7 +811,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
         m = dmp_nest([K.one, -a], n, K)
         M = dmp_one(n, K)
 
-        for k in K.map(xrange(0, d)):
+        for k in K.map(range(0, d)):
             if dmp_zero_p(c, u):
                 break
 
@@ -850,7 +850,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
     d = max(dmp_degree_list(f, u)[1:])
 
-    for j, s, a in zip(xrange(2, n + 2), S, A):
+    for j, s, a in zip(range(2, n + 2), S, A):
         G, w = list(H), j - 1
 
         I, J = A[:j - 2], A[j - 1:]
@@ -866,7 +866,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
         dj = dmp_degree_in(s, w, w)
 
-        for k in K.map(xrange(0, dj)):
+        for k in K.map(range(0, dj)):
             if dmp_zero_p(c, w):
                 break
 
@@ -956,8 +956,8 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     eez_mod_step = query('EEZ_MODULUS_STEP')
 
     while len(configs) < eez_num_configs:
-        for _ in xrange(eez_num_tries):
-            A = [ K(randint(-mod, mod)) for _ in xrange(u) ]
+        for _ in range(eez_num_tries):
+            A = [ K(randint(-mod, mod)) for _ in range(u) ]
 
             if tuple(A) not in history:
                 history.add(tuple(A))
@@ -1178,6 +1178,7 @@ def dmp_gf_factor(f, u, K):
 def dup_factor_list(f, K0):
     """Factor polynomials into irreducibles in `K[x]`. """
     j, f = dup_terms_gcd(f, K0)
+    cont, f = dup_primitive(f, K0)
 
     if K0.is_FiniteField:
         coeff, factors = dup_gf_factor(f, K0)
@@ -1190,7 +1191,7 @@ def dup_factor_list(f, K0):
         else:
             K0_inexact = None
 
-        if K0.has_Field:
+        if K0.is_Field:
             K = K0.get_ring()
 
             denom, f = dup_clear_denoms(f, K0, K)
@@ -1212,19 +1213,20 @@ def dup_factor_list(f, K0):
         else:  # pragma: no cover
             raise DomainError('factorization not supported over %s' % K0)
 
-        if K0.has_Field:
+        if K0.is_Field:
             for i, (f, k) in enumerate(factors):
                 factors[i] = (dup_convert(f, K, K0), k)
 
             coeff = K0.convert(coeff, K)
+            coeff = K0.quo(coeff, denom)
 
-            if K0_inexact is None:
-                coeff = coeff/denom
-            else:
+            if K0_inexact:
                 for i, (f, k) in enumerate(factors):
-                    f = dup_quo_ground(f, denom, K0)
+                    max_norm = dup_max_norm(f, K0)
+                    f = dup_quo_ground(f, max_norm, K0)
                     f = dup_convert(f, K0, K0_inexact)
                     factors[i] = (f, k)
+                    coeff = K0.mul(coeff, K0.pow(max_norm, k))
 
                 coeff = K0_inexact.convert(coeff, K0)
                 K0 = K0_inexact
@@ -1232,7 +1234,7 @@ def dup_factor_list(f, K0):
     if j:
         factors.insert(0, ([K0.one, K0.zero], j))
 
-    return coeff, _sort_factors(factors)
+    return coeff*cont, _sort_factors(factors)
 
 
 def dup_factor_list_include(f, K):
@@ -1252,6 +1254,7 @@ def dmp_factor_list(f, u, K0):
         return dup_factor_list(f, K0)
 
     J, f = dmp_terms_gcd(f, u, K0)
+    cont, f = dmp_ground_primitive(f, u, K0)
 
     if K0.is_FiniteField:  # pragma: no cover
         coeff, factors = dmp_gf_factor(f, u, K0)
@@ -1264,7 +1267,7 @@ def dmp_factor_list(f, u, K0):
         else:
             K0_inexact = None
 
-        if K0.has_Field:
+        if K0.is_Field:
             K = K0.get_ring()
 
             denom, f = dmp_clear_denoms(f, u, K0, K)
@@ -1290,19 +1293,20 @@ def dmp_factor_list(f, u, K0):
         else:  # pragma: no cover
             raise DomainError('factorization not supported over %s' % K0)
 
-        if K0.has_Field:
+        if K0.is_Field:
             for i, (f, k) in enumerate(factors):
                 factors[i] = (dmp_convert(f, u, K, K0), k)
 
             coeff = K0.convert(coeff, K)
+            coeff = K0.quo(coeff, denom)
 
-            if K0_inexact is None:
-                coeff = coeff/denom
-            else:
+            if K0_inexact:
                 for i, (f, k) in enumerate(factors):
-                    f = dmp_quo_ground(f, denom, u, K0)
+                    max_norm = dmp_max_norm(f, u, K0)
+                    f = dmp_quo_ground(f, max_norm, u, K0)
                     f = dmp_convert(f, u, K0, K0_inexact)
                     factors[i] = (f, k)
+                    coeff = K0.mul(coeff, K0.pow(max_norm, k))
 
                 coeff = K0_inexact.convert(coeff, K0)
                 K0 = K0_inexact
@@ -1314,7 +1318,7 @@ def dmp_factor_list(f, u, K0):
         term = {(0,)*(u - i) + (1,) + (0,)*i: K0.one}
         factors.insert(0, (dmp_from_dict(term, u, K0), j))
 
-    return coeff, _sort_factors(factors)
+    return coeff*cont, _sort_factors(factors)
 
 
 def dmp_factor_list_include(f, u, K):

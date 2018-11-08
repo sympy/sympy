@@ -1,0 +1,23 @@
+#!/usr/bin/env python
+"""
+Diagnostics for import statements.
+Run bin/diagnose_imports.py --help for details.
+"""
+
+from os.path import abspath, dirname, join, normpath
+import subprocess
+import sys
+
+this_file = abspath(__file__)
+diagnose_imports_filename = join(
+    dirname(this_file),
+    '..', 'sympy', 'utilities', 'tests', 'diagnose_imports.py')
+diagnose_imports_filename = normpath(diagnose_imports_filename)
+
+process = subprocess.Popen(
+    [
+        sys.executable,
+        diagnose_imports_filename,
+    ] + sys.argv[1:],
+    bufsize = -1)
+process.wait()

@@ -1,3 +1,4 @@
+from sympy.core.compatibility import range
 from sympy import symbols, FiniteSet
 from sympy.combinatorics.polyhedron import (Polyhedron,
     tetrahedron, cube as square, octahedron, dodecahedron, icosahedron,
@@ -74,7 +75,7 @@ def test_polyhedron():
                 f = [[c[i] for i in f] for f in P.faces]
                 assert h.faces == Polyhedron(c, f).faces
         assert len(got) == target
-        assert PermutationGroup([Permutation(g) for g in got]).is_group()
+        assert PermutationGroup([Permutation(g) for g in got]).is_group
 
     for h, size, rpt, target in zip(
         (tetrahedron, square, octahedron, dodecahedron, icosahedron),

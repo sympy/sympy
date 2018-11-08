@@ -118,10 +118,10 @@ debug this function to figure out the exact problem.
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild
+from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
 from sympy.functions import log, exp
 from sympy.series.order import Order
-from sympy.simplify import powsimp
+from sympy.simplify.powsimp import powsimp, powdenest
 from sympy import cacheit
 
 from sympy.core.compatibility import reduce
@@ -136,15 +136,15 @@ def compare(a, b, x):
     """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
     # log(exp(...)) must always be simplified here for termination
     la, lb = log(a), log(b)
-    if isinstance(a, Basic) and a.func is exp:
+    if isinstance(a, Basic) and isinstance(a, exp):
         la = a.args[0]
-    if isinstance(b, Basic) and b.func is exp:
+    if isinstance(b, Basic) and isinstance(b, exp):
         lb = b.args[0]
 
     c = limitinf(la/lb, x)
     if c == 0:
         return "<"
-    elif c.is_unbounded:
+    elif c.is_infinite:
         return ">"
     else:
         return "="
@@ -189,7 +189,7 @@ class SubsSet(dict):
         {d3: exp(x-d2)}.
 
     The function rewrite uses all this information to correctly rewrite our
-    expression in terms of w. In this case w can be choosen to be exp(-x),
+    expression in terms of w. In this case w can be chosen to be exp(-x),
     i.e. d2. The correct rewriting then is::
 
         exp(-w)/w + 1/w + x.
@@ -206,8 +206,9 @@ class SubsSet(dict):
         return dict.__getitem__(self, key)
 
     def do_subs(self, e):
+        """Substitute the variables with expressions"""
         for expr, var in self.items():
-            e = e.subs(var, expr)
+            e = e.xreplace({var: expr})
         return e
 
     def meets(self, s2):
@@ -221,15 +222,16 @@ class SubsSet(dict):
         for expr, var in s2.items():
             if expr in self:
                 if exps:
-                    exps = exps.subs(var, res[expr])
+                    exps = exps.xreplace({var: res[expr]})
                 tr[var] = res[expr]
             else:
                 res[expr] = var
         for var, rewr in s2.rewrites.items():
-            res.rewrites[var] = rewr.subs(tr)
+            res.rewrites[var] = rewr.xreplace(tr)
         return res, exps
 
     def copy(self):
+        """Create a shallow copy of SubsSet"""
         r = SubsSet()
         r.rewrites = self.rewrites.copy()
         for expr, var in self.items():
@@ -242,7 +244,8 @@ def mrv(e, x):
     """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
        and e rewritten in terms of these"""
     e = powsimp(e, deep=True, combine='exp')
-    assert isinstance(e, Basic)
+    if not isinstance(e, Basic):
+        raise TypeError("e should be an instance of Basic")
     if not e.has(x):
         return SubsSet(), e
     elif e == x:
@@ -259,20 +262,26 @@ def mrv(e, x):
         return mrv_max1(s1, s2, e.func(i, e1, e2), x)
     elif e.is_Pow:
         b, e = e.as_base_exp()
+        if b == 1:
+            return SubsSet(), b
         if e.has(x):
             return mrv(exp(e * log(b)), x)
         else:
             s, expr = mrv(b, x)
             return s, expr**e
-    elif e.func is log:
+    elif isinstance(e, log):
         s, expr = mrv(e.args[0], x)
         return s, log(expr)
-    elif e.func is exp:
+    elif isinstance(e, exp):
         # We know from the theory of this algorithm that exp(log(...)) may always
         # be simplified here, and doing so is vital for termination.
-        if e.args[0].func is log:
+        if isinstance(e.args[0], log):
             return mrv(e.args[0].args[0], x)
-        if limitinf(e.args[0], x).is_unbounded:
+        # if a product has an infinite factor the result will be
+        # infinite if there is no zero, otherwise NaN; here, we
+        # consider the result infinite if any factor is infinite
+        li = limitinf(e.args[0], x)
+        if any(_.is_infinite for _ in Mul.make_args(li)):
             s1 = SubsSet()
             e1 = s1[e]
             s2, e2 = mrv(e.args[0], x)
@@ -306,9 +315,10 @@ def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
     f and g and returns either (f, expsf) [if f is larger], (g, expsg)
     [if g is larger] or (union, expsboth) [if f, g are of the same class].
     """
-    assert isinstance(f, SubsSet)
-    assert isinstance(g, SubsSet)
-
+    if not isinstance(f, SubsSet):
+        raise TypeError("f should be an instance of SubsSet")
+    if not isinstance(g, SubsSet):
+        raise TypeError("g should be an instance of SubsSet")
     if f == SubsSet():
         return g, expsg
     elif g == SubsSet():
@@ -322,7 +332,8 @@ def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
     elif c == "<":
         return g, expsg
     else:
-        assert c == "="
+        if c != "=":
+            raise ValueError("c should be =")
         return union, expsboth
 
 
@@ -352,14 +363,15 @@ def sign(e, x):
         e <  0 for x sufficiently large ... -1
 
     The result of this function is currently undefined if e changes sign
-    arbitarily often for arbitrarily large x (e.g. sin(x)).
+    arbitrarily often for arbitrarily large x (e.g. sin(x)).
 
     Note that this returns zero only if e is *constantly* zero
     for x sufficiently large. [If e is constant, of course, this is just
     the same thing as the sign of e.]
     """
     from sympy import sign as _sign
-    assert isinstance(e, Basic)
+    if not isinstance(e, Basic):
+        raise TypeError("e should be an instance of Basic")
 
     if e.is_positive:
         return 1
@@ -378,7 +390,7 @@ def sign(e, x):
         if not sa:
             return 0
         return sa * sign(b, x)
-    elif e.func is exp:
+    elif isinstance(e, exp):
         return 1
     elif e.is_Pow:
         s = sign(e.base, x)
@@ -386,7 +398,7 @@ def sign(e, x):
             return 1
         if e.exp.is_Integer:
             return s**e.exp
-    elif e.func is log:
+    elif isinstance(e, log):
         return sign(e.args[0] - 1, x)
 
     # if all else fails, do it the hard way
@@ -399,7 +411,7 @@ def sign(e, x):
 @cacheit
 def limitinf(e, x):
     """Limit e(x) for x-> oo"""
-    #rewrite e in terms of tractable functions only
+    # rewrite e in terms of tractable functions only
     e = e.rewrite('tractable', deep=True)
 
     if not e.has(x):
@@ -408,9 +420,9 @@ def limitinf(e, x):
         e = e.expand().removeO()
     if not x.is_positive:
         # We make sure that x.is_positive is True so we
-        # get all the correct mathematical bechavior from the expression.
+        # get all the correct mathematical behavior from the expression.
         # We need a fresh variable.
-        p = Dummy('p', positive=True, bounded=True)
+        p = Dummy('p', positive=True, finite=True)
         e = e.subs(x, p)
         x = p
     c0, e0 = mrv_leadterm(e, x)
@@ -421,8 +433,9 @@ def limitinf(e, x):
         if c0.match(I*Wild("a", exclude=[I])):
             return c0*oo
         s = sign(c0, x)
-        #the leading term shouldn't be 0:
-        assert s != 0
+        # the leading term shouldn't be 0:
+        if s == 0:
+            raise ValueError("Leading term should not be 0")
         return s*oo
     elif sig == 0:
         return limitinf(c0, x)  # e0=0: lim f = lim c0
@@ -431,37 +444,35 @@ def limitinf(e, x):
 def moveup2(s, x):
     r = SubsSet()
     for expr, var in s.items():
-        r[expr.subs(x, exp(x))] = var
+        r[expr.xreplace({x: exp(x)})] = var
     for var, expr in s.rewrites.items():
-        r.rewrites[var] = s.rewrites[var].subs(x, exp(x))
+        r.rewrites[var] = s.rewrites[var].xreplace({x: exp(x)})
     return r
 
 
 def moveup(l, x):
-    return [e.subs(x, exp(x)) for e in l]
+    return [e.xreplace({x: exp(x)}) for e in l]
 
 
 @debug
 @timeit
-def calculate_series(e, x, skip_abs=False, logx=None):
+def calculate_series(e, x, logx=None):
     """ Calculates at least one term of the series of "e" in "x".
 
     This is a place that fails most often, so it is in its own function.
     """
-    from sympy.core.exprtools import factor_terms
+    from sympy.polys import cancel
 
-    n = 1
-    while 1:
-        series = e.nseries(x, n=n, logx=logx)
-        if not series.has(Order):
-            # The series expansion is locally exact.
-            return series
+    for t in e.lseries(x, logx=logx):
+        t = cancel(t)
 
-        series = series.removeO()
-        series = factor_terms(series, fraction=True)
-        if series and ((not skip_abs) or series.has(x)):
-            return series
-        n *= 2
+        if t.has(exp) and t.has(log):
+            t = powdenest(t)
+
+        if t.simplify():
+            break
+
+    return t
 
 
 @debug
@@ -478,10 +489,11 @@ def mrv_leadterm(e, x):
         # e really does not depend on x after simplification
         series = calculate_series(e, x)
         c0, e0 = series.leadterm(x)
-        assert e0 == 0
+        if e0 != 0:
+            raise ValueError("e0 should be 0")
         return c0, e0
     if x in Omega:
-        #move the whole omega up (exponentiate each term):
+        # move the whole omega up (exponentiate each term):
         Omega_up = moveup2(Omega, x)
         e_up = moveup([e], x)[0]
         exps_up = moveup([exps], x)[0]
@@ -496,10 +508,9 @@ def mrv_leadterm(e, x):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = Dummy("w", real=True, positive=True, bounded=True)
+    w = Dummy("w", real=True, positive=True, finite=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    series = series.subs(log(w), logw)  # this should not be necessary
     return series.leadterm(w)
 
 
@@ -551,25 +562,29 @@ def rewrite(e, Omega, x, wsym):
     for examples and correct results.
     """
     from sympy import ilcm
-    assert isinstance(Omega, SubsSet)
-    assert len(Omega) != 0
-    #all items in Omega must be exponentials
+    if not isinstance(Omega, SubsSet):
+        raise TypeError("Omega should be an instance of SubsSet")
+    if len(Omega) == 0:
+        raise ValueError("Length can not be 0")
+    # all items in Omega must be exponentials
     for t in Omega.keys():
-        assert t.func is exp
+        if not isinstance(t, exp):
+            raise ValueError("Value should be exp")
     rewrites = Omega.rewrites
     Omega = list(Omega.items())
 
     nodes = build_expression_tree(Omega, rewrites)
     Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)
 
-    g, _ = Omega[-1]
-        # g is going to be the "w" - the simplest one in the mrv set
-    sig = sign(g.args[0], x)
+    # make sure we know the sign of each exp() term; after the loop,
+    # g is going to be the "w" - the simplest one in the mrv set
+    for g, _ in Omega:
+        sig = sign(g.args[0], x)
+        if sig != 1 and sig != -1:
+            raise NotImplementedError('Result depends on the sign of %s' % sig)
     if sig == 1:
         wsym = 1/wsym  # if g goes to oo, substitute 1/w
-    elif sig != -1:
-        raise NotImplementedError('Result depends on the sign of %s' % sig)
-    #O2 is a list, which results by rewriting each item in Omega using "w"
+    # O2 is a list, which results by rewriting each item in Omega using "w"
     O2 = []
     denominators = []
     for f, var in Omega:
@@ -578,24 +593,25 @@ def rewrite(e, Omega, x, wsym):
             denominators.append(c.q)
         arg = f.args[0]
         if var in rewrites:
-            assert rewrites[var].func is exp
+            if not isinstance(rewrites[var], exp):
+                raise ValueError("Value should be exp")
             arg = rewrites[var].args[0]
         O2.append((var, exp((arg - c*g.args[0]).expand())*wsym**c))
 
-    #Remember that Omega contains subexpressions of "e". So now we find
-    #them in "e" and substitute them for our rewriting, stored in O2
+    # Remember that Omega contains subexpressions of "e". So now we find
+    # them in "e" and substitute them for our rewriting, stored in O2
 
     # the following powsimp is necessary to automatically combine exponentials,
-    # so that the .subs() below succeeds:
+    # so that the .xreplace() below succeeds:
     # TODO this should not be necessary
     f = powsimp(e, deep=True, combine='exp')
     for a, b in O2:
-        f = f.subs(a, b)
+        f = f.xreplace({a: b})
 
     for _, var in Omega:
         assert not f.has(var)
 
-    #finally compute the logarithm of w (logw).
+    # finally compute the logarithm of w (logw).
     logw = g.args[0]
     if sig == 1:
         logw = -logw  # log(w)->log(1/w)=-log(w)
@@ -603,7 +619,7 @@ def rewrite(e, Omega, x, wsym):
     # Some parts of sympy have difficulty computing series expansions with
     # non-integral exponents. The following heuristic improves the situation:
     exponent = reduce(ilcm, denominators, 1)
-    f = f.subs(wsym, wsym**exponent)
+    f = f.xreplace({wsym: wsym**exponent})
     logw /= exponent
 
     return f, logw
@@ -623,19 +639,19 @@ def gruntz(e, z, z0, dir="+"):
     file. It relies heavily on the series expansion. Most frequently, gruntz()
     is only used if the faster limit() function (which uses heuristics) fails.
     """
-    if not isinstance(z, Symbol):
+    if not z.is_symbol:
         raise NotImplementedError("Second argument must be a Symbol")
 
-    #convert all limits to the limit z->oo; sign of z is handled in limitinf
+    # convert all limits to the limit z->oo; sign of z is handled in limitinf
     r = None
     if z0 == oo:
         r = limitinf(e, z)
     elif z0 == -oo:
         r = limitinf(e.subs(z, -z), z)
     else:
-        if dir == "-":
+        if str(dir) == "-":
             e0 = e.subs(z, z0 - 1/z)
-        elif dir == "+":
+        elif str(dir) == "+":
             e0 = e.subs(z, z0 + 1/z)
         else:
             raise NotImplementedError("dir must be '+' or '-'")

@@ -89,7 +89,7 @@ def sample3d(f, x_args, y_args):
     for j in range(len(X)):
         for k in range(len(X[0])):
             try:
-                Z[j][k] = float( f.subs(x, X[j][k]).subs(y, Y[j][k]) )
+                Z[j][k] = float(f.subs(x, X[j][k]).subs(y, Y[j][k]))
             except (TypeError, NotImplementedError):
                 Z[j][k] = 0
     return X, Y, Z

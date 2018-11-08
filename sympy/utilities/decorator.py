@@ -6,17 +6,19 @@ import sys
 import types
 import inspect
 
+from functools import update_wrapper
+
 from sympy.core.decorators import wraps
 from sympy.core.compatibility import class_types, get_function_globals, get_function_name, iterable
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
     from sympy.core import sympify
-    from sympy.matrices import Matrix
+    from sympy.matrices import MatrixBase
 
     @wraps(func)
     def threaded_func(expr, *args, **kwargs):
-        if isinstance(expr, Matrix):
+        if isinstance(expr, MatrixBase):
             return expr.applyfunc(lambda f: func(f, *args, **kwargs))
         elif iterable(expr):
             try:
@@ -81,12 +83,12 @@ def conserve_mpmath_dps(func):
     """After the function finishes, resets the value of mpmath.mp.dps to
     the value it had before the function was run."""
     import functools
-    from sympy import mpmath
+    import mpmath
 
-    def func_wrapper():
+    def func_wrapper(*args, **kwargs):
         dps = mpmath.mp.dps
         try:
-            func()
+            return func(*args, **kwargs)
         finally:
             mpmath.mp.dps = dps
 
@@ -126,23 +128,26 @@ class no_attrs_in_subclass(object):
 
 
 def doctest_depends_on(exe=None, modules=None, disable_viewers=None):
-    """Adds metadata about the depenencies which need to be met for doctesting
+    """Adds metadata about the dependencies which need to be met for doctesting
     the docstrings of the decorated objects."""
-    pyglet = False
-    if modules is not None and 'pyglet' in modules:
-        pyglet = True
 
     def depends_on_deco(fn):
-        fn._doctest_depends_on = dict(exe=exe, modules=modules,
-                                      disable_viewers=disable_viewers,
-                                      pyglet=pyglet)
+        dependencies = {}
+        if exe is not None:
+            dependencies['executables'] = exe
+        if modules is not None:
+            dependencies['modules'] = modules
+        if disable_viewers is not None:
+            dependencies['disable_viewers'] = disable_viewers
 
-        # once we drop py2.5 support and use class decorators this evaluates
-        # to True
+        fn._doctest_depends_on = dependencies
+
         if inspect.isclass(fn):
-            fn._doctest_depdends_on = no_attrs_in_subclass(fn, fn._doctest_depends_on)
+            fn._doctest_depdends_on = no_attrs_in_subclass(
+                fn, fn._doctest_depends_on)
         return fn
     return depends_on_deco
+
 
 def public(obj):
     """
@@ -150,15 +155,16 @@ def public(obj):
 
     By using this decorator on functions or classes you achieve the same goal
     as by filling ``__all__`` variables manually, you just don't have to repeat
-    your self (object's name). You also know if object is public at definition
+    yourself (object's name). You also know if object is public at definition
     site, not at some random location (where ``__all__`` was set).
 
-    Note that in multiple decorator setup, in almost all cases, ``@public``
+    Note that in multiple decorator setup (in almost all cases) ``@public``
     decorator must be applied before any other decorators, because it relies
     on the pointer to object's global namespace. If you apply other decorators
-    first, ``@public`` may end up modifying wrong namespace.
+    first, ``@public`` may end up modifying the wrong namespace.
 
-    Example::
+    Examples
+    ========
 
     >>> from sympy.utilities.decorator import public
 
@@ -190,3 +196,15 @@ def public(obj):
         ns["__all__"].append(name)
 
     return obj
+
+
+def memoize_property(storage):
+    """Create a property, where the lookup is stored in ``storage``"""
+    def decorator(method):
+        name = method.__name__
+        def wrapper(self):
+            if name not in storage:
+                storage[name] = method(self)
+            return storage[name]
+        return property(update_wrapper(wrapper, method))
+    return decorator

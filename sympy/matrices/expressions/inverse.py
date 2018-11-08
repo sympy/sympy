@@ -34,12 +34,15 @@ class Inverse(MatPow):
     is_Inverse = True
     exp = S(-1)
 
-    def __new__(cls, mat):
+    def __new__(cls, mat, exp=S(-1)):
+        # exp is there to make it consistent with
+        # inverse.func(*inverse.args) == inverse
         mat = _sympify(mat)
-        assert mat.is_Matrix
+        if not mat.is_Matrix:
+            raise TypeError("mat should be a matrix")
         if not mat.is_square:
             raise ShapeError("Inverse of non-square matrix %s" % mat)
-        return Basic.__new__(cls, mat)
+        return Basic.__new__(cls, mat, exp)
 
     @property
     def arg(self):
@@ -57,7 +60,35 @@ class Inverse(MatPow):
         return 1/det(self.arg)
 
     def doit(self, **hints):
+        if 'inv_expand' in hints and hints['inv_expand'] == False:
+            return self
         if hints.get('deep', True):
             return self.arg.doit(**hints).inverse()
         else:
             return self.arg.inverse()
+
+
+from sympy.assumptions.ask import ask, Q
+from sympy.assumptions.refine import handlers_dict
+
+
+def refine_Inverse(expr, assumptions):
+    """
+    >>> from sympy import MatrixSymbol, Q, assuming, refine
+    >>> X = MatrixSymbol('X', 2, 2)
+    >>> X.I
+    X^-1
+    >>> with assuming(Q.orthogonal(X)):
+    ...     print(refine(X.I))
+    X.T
+    """
+    if ask(Q.orthogonal(expr), assumptions):
+        return expr.arg.T
+    elif ask(Q.unitary(expr), assumptions):
+        return expr.arg.conjugate()
+    elif ask(Q.singular(expr), assumptions):
+        raise ValueError("Inverse of singular matrix %s" % expr.arg)
+
+    return expr
+
+handlers_dict['Inverse'] = refine_Inverse

@@ -19,7 +19,7 @@ def test_threaded():
     assert function([x, y], 1, 2) == [2*x + 3, 2*y + 3]
     assert function((x, y), 1, 2) == (2*x + 3, 2*y + 3)
 
-    assert function(set([x, y]), 1, 2) == set([2*x + 3, 2*y + 3])
+    assert function({x, y}, 1, 2) == {2*x + 3, 2*y + 3}
 
     @threaded
     def function(expr, n):

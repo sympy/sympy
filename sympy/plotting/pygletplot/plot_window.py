@@ -46,7 +46,6 @@ class PlotWindow(ManagedWindow):
         self.push_handlers(self.controller)
 
         glClearColor(1.0, 1.0, 1.0, 0.0)
-        #glClearColor(0.95, 0.95, 0.95, 0.0)
         glClearDepth(1.0)
 
         glDepthFunc(GL_LESS)
@@ -62,8 +61,6 @@ class PlotWindow(ManagedWindow):
         if self.antialiasing:
             glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
             glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
-            #glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
-            #glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE)
 
         self.camera.setup_projection()
 

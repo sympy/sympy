@@ -4,8 +4,8 @@ from __future__ import print_function, division
 
 from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
                    Tuple)
-from sympy.core.compatibility import u
-from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.core.compatibility import range
+from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
 __all__ = [
@@ -34,10 +34,10 @@ _straight_bracket = "|"
 
 # Unicode brackets
 # MATHEMATICAL ANGLE BRACKETS
-_lbracket_ucode = u("\u27E8")
-_rbracket_ucode = u("\u27E9")
+_lbracket_ucode = u"\N{MATHEMATICAL LEFT ANGLE BRACKET}"
+_rbracket_ucode = u"\N{MATHEMATICAL RIGHT ANGLE BRACKET}"
 # LIGHT VERTICAL BAR
-_straight_bracket_ucode = u("\u2758")
+_straight_bracket_ucode = u"\N{LIGHT VERTICAL BAR}"
 
 # Other options for unicode printing of <, > and | for Dirac notation.
 
@@ -113,7 +113,7 @@ class StateBase(QExpr):
 
     @classmethod
     def dual_class(self):
-        """Return the class used to construt the dual."""
+        """Return the class used to construct the dual."""
         raise NotImplementedError(
             'dual_class must be implemented in a subclass'
         )
@@ -133,7 +133,9 @@ class StateBase(QExpr):
         # Setup for unicode vs ascii
         if use_unicode:
             lbracket, rbracket = self.lbracket_ucode, self.rbracket_ucode
-            slash, bslash, vert = u('\u2571'), u('\u2572'), u('\u2502')
+            slash, bslash, vert = u'\N{BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT}', \
+                                  u'\N{BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT}', \
+                                  u'\N{BOX DRAWINGS LIGHT VERTICAL}'
         else:
             lbracket, rbracket = self.lbracket, self.rbracket
             slash, bslash, vert = '/', '\\', '|'
@@ -147,18 +149,18 @@ class StateBase(QExpr):
         brackets = []
         for bracket in lbracket, rbracket:
             # Create left bracket
-            if bracket in set([_lbracket, _lbracket_ucode]):
+            if bracket in {_lbracket, _lbracket_ucode}:
                 bracket_args = [ ' ' * (height//2 - i - 1) +
                                  slash for i in range(height // 2)]
                 bracket_args.extend(
                     [ ' ' * i + bslash for i in range(height // 2)])
             # Create right bracket
-            elif bracket in set([_rbracket, _rbracket_ucode]):
+            elif bracket in {_rbracket, _rbracket_ucode}:
                 bracket_args = [ ' ' * i + bslash for i in range(height // 2)]
                 bracket_args.extend([ ' ' * (
                     height//2 - i - 1) + slash for i in range(height // 2)])
             # Create straight bracket
-            elif bracket in set([_straight_bracket, _straight_bracket_ucode]):
+            elif bracket in {_straight_bracket, _straight_bracket_ucode}:
                 bracket_args = [vert for i in range(height)]
             else:
                 raise ValueError(bracket)
@@ -232,7 +234,7 @@ class KetBase(StateBase):
     #-------------------------------------------------------------------------
 
     def _eval_innerproduct(self, bra, **hints):
-        """Evaluate the inner product betweeen this ket and a bra.
+        """Evaluate the inner product between this ket and a bra.
 
         This is called to compute <bra|ket>, where the ket is ``self``.
 
@@ -386,7 +388,7 @@ class Ket(State, KetBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Bra-ket_notation
+    .. [1] https://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
     @classmethod
@@ -447,7 +449,7 @@ class Bra(State, BraBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Bra-ket_notation
+    .. [1] https://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
     @classmethod
@@ -735,7 +737,7 @@ class Wavefunction(Function):
                      or upper in args[ct].free_symbols):
                 continue
 
-            if (args[ct] < lower) is True or (args[ct] > upper) is True:
+            if (args[ct] < lower) == True or (args[ct] > upper) == True:
                 return 0
 
             ct += 1
@@ -932,7 +934,7 @@ class Wavefunction(Function):
             return Wavefunction((const)**(-1)*self.expr, *self.args[1:])
 
     def prob(self):
-        """
+        r"""
         Return the absolute magnitude of the w.f., `|\psi(x)|^2`
 
         Examples

@@ -4,11 +4,10 @@ from __future__ import print_function, division
 
 from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
-from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.domains import ZZ, QQ, RR, EX
-from sympy.assumptions import ask, Q
+from sympy.polys.domains.realfield import RealField
 from sympy.utilities import public
-from sympy.core import sympify, Symbol
+from sympy.core import sympify
 
 
 def _construct_simple(coeffs, opt):
@@ -16,7 +15,7 @@ def _construct_simple(coeffs, opt):
     result, rationals, reals, algebraics = {}, False, False, False
 
     if opt.extension is True:
-        is_algebraic = lambda coeff: ask(Q.algebraic(coeff))
+        is_algebraic = lambda coeff: coeff.is_number and coeff.is_algebraic
     else:
         is_algebraic = lambda coeff: False
 
@@ -45,7 +44,10 @@ def _construct_simple(coeffs, opt):
         domain, result = _construct_algebraic(coeffs, opt)
     else:
         if reals:
-            domain = RR
+            # Use the maximum precision of all coefficients for the RR's
+            # precision
+            max_prec = max([c._prec for c in coeffs])
+            domain = RealField(prec=max_prec)
         else:
             if opt.field or rationals:
                 domain = QQ
@@ -113,19 +115,18 @@ def _construct_composite(coeffs, opt):
         numers.append(numer)
         denoms.append(denom)
 
-    try:
-        polys, gens = parallel_dict_from_basic(numers + denoms)  # XXX: sorting
-    except GeneratorsNeeded:
+    polys, gens = parallel_dict_from_basic(numers + denoms)  # XXX: sorting
+    if not gens:
         return None
 
     if opt.composite is None:
-        if any(gen.is_number for gen in gens):
+        if any(gen.is_number and gen.is_algebraic for gen in gens):
             return None # generators are number-like so lets better use EX
 
         all_symbols = set([])
 
         for gen in gens:
-            symbols = gen.atoms(Symbol)
+            symbols = gen.free_symbols
 
             if all_symbols & symbols:
                 return None # there could be algebraic relations between generators
@@ -174,7 +175,8 @@ def _construct_composite(coeffs, opt):
             break
 
     if reals:
-        ground = RR
+        max_prec = max([c._prec for c in coeffs])
+        ground = RealField(prec=max_prec)
     elif rationals:
         ground = QQ
     else:

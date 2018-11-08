@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
 from sympy.core.assumptions import StdFactKB
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import (string_types, range, is_sequence,
+    ordered)
 from .basic import Basic
-from .core import C
 from .sympify import sympify
 from .singleton import S
 from .expr import Expr, AtomicExpr
@@ -12,10 +12,120 @@ from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import cartes
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.core.containers import Tuple
 
 import string
 import re as _re
+import random
+
+
+def _symbol(s, matching_symbol=None, **assumptions):
+    """Return s if s is a Symbol, else if s is a string, return either
+    the matching_symbol if the names are the same or else a new symbol
+    with the same assumptions as the matching symbol (or the
+    assumptions as provided).
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Dummy
+    >>> from sympy.core.symbol import _symbol
+    >>> _symbol('y')
+    y
+    >>> _.is_real is None
+    True
+    >>> _symbol('y', real=True).is_real
+    True
+
+    >>> x = Symbol('x')
+    >>> _symbol(x, real=True)
+    x
+    >>> _.is_real is None  # ignore attribute if s is a Symbol
+    True
+
+    Below, the variable sym has the name 'foo':
+
+    >>> sym = Symbol('foo', real=True)
+
+    Since 'x' is not the same as sym's name, a new symbol is created:
+
+    >>> _symbol('x', sym).name
+    'x'
+
+    It will acquire any assumptions give:
+
+    >>> _symbol('x', sym, real=False).is_real
+    False
+
+    Since 'foo' is the same as sym's name, sym is returned
+
+    >>> _symbol('foo', sym)
+    foo
+
+    Any assumptions given are ignored:
+
+    >>> _symbol('foo', sym, real=False).is_real
+    True
+
+    NB: the symbol here may not be the same as a symbol with the same
+    name defined elsewhere as a result of different assumptions.
+
+    See Also
+    ========
+
+    sympy.core.symbol.Symbol
+
+    """
+    if isinstance(s, string_types):
+        if matching_symbol and matching_symbol.name == s:
+            return matching_symbol
+        return Symbol(s, **assumptions)
+    elif isinstance(s, Symbol):
+        return s
+    else:
+        raise ValueError('symbol must be string for symbol name or Symbol')
+
+
+def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
+    """Return a symbol which, when printed, will have a name unique
+    from any other already in the expressions given. The name is made
+    unique by prepending underscores (default) but this can be
+    customized with the keyword 'modify'.
+
+    Parameters
+    ==========
+
+        xname : a string or a Symbol (when symbol xname <- str(xname))
+        compare : a single arg function that takes a symbol and returns
+            a string to be compared with xname (the default is the str
+            function which indicates how the name will look when it
+            is printed, e.g. this includes underscores that appear on
+            Dummy symbols)
+        modify : a single arg function that changes its string argument
+            in some way (the default is to preppend underscores)
+
+    Examples
+    ========
+
+    >>> from sympy.core.symbol import _uniquely_named_symbol as usym, Dummy
+    >>> from sympy.abc import x
+    >>> usym('x', x)
+    _x
+    """
+    default = None
+    if is_sequence(xname):
+        xname, default = xname
+    x = str(xname)
+    if not exprs:
+        return _symbol(x, default, **assumptions)
+    if not is_sequence(exprs):
+        exprs = [exprs]
+    syms = set().union(*[e.free_symbols for e in exprs])
+    if modify is None:
+        modify = lambda s: '_' + s
+    while any(x == compare(s) for s in syms):
+        x = modify(x)
+    return _symbol(x, default, **assumptions)
 
 
 class Symbol(AtomicExpr, Boolean):
@@ -39,6 +149,7 @@ class Symbol(AtomicExpr, Boolean):
     __slots__ = ['name']
 
     is_Symbol = True
+    is_symbol = True
 
     @property
     def _diff_wrt(self):
@@ -54,6 +165,40 @@ class Symbol(AtomicExpr, Boolean):
         """
         return True
 
+    @staticmethod
+    def _sanitize(assumptions, obj=None):
+        """Remove None, covert values to bool, check commutativity *in place*.
+        """
+
+        # be strict about commutativity: cannot be None
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            whose = '%s ' % obj.__name__ if obj else ''
+            raise ValueError(
+                '%scommutativity must be True or False.' % whose)
+
+        # sanitize other assumptions so 1 -> True and 0 -> False
+        for key in list(assumptions.keys()):
+            from collections import defaultdict
+            from sympy.utilities.exceptions import SymPyDeprecationWarning
+            keymap = defaultdict(lambda: None)
+            keymap.update({'bounded': 'finite', 'unbounded': 'infinite', 'infinitesimal': 'zero'})
+            if keymap[key]:
+                SymPyDeprecationWarning(
+                    feature="%s assumption" % key,
+                    useinstead="%s" % keymap[key],
+                    issue=8071,
+                    deprecated_since_version="0.7.6").warn()
+                assumptions[keymap[key]] = assumptions[key]
+                assumptions.pop(key)
+                key = keymap[key]
+
+            v = assumptions[key]
+            if v is None:
+                assumptions.pop(key)
+                continue
+            assumptions[key] = bool(v)
+
     def __new__(cls, name, **assumptions):
         """Symbols are identified by name and assumptions::
 
@@ -64,22 +209,31 @@ class Symbol(AtomicExpr, Boolean):
         False
 
         """
-
-        if assumptions.get('zero', False):
-            return S.Zero
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Symbol commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
         if not isinstance(name, string_types):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
+
         obj = Expr.__new__(cls)
         obj.name = name
+
+        # TODO: Issue #8873: Forcing the commutative assumption here means
+        # later code such as ``srepr()`` cannot tell whether the user
+        # specified ``commutative=True`` or omitted it.  To workaround this,
+        # we keep a copy of the assumptions dict, then create the StdFactKB,
+        # and finally overwrite its ``._generator`` with the dict copy.  This
+        # is a bit of a hack because we assume StdFactKB merely copies the
+        # given dict as ``._generator``, but future modification might, e.g.,
+        # compute a minimal equivalent assumption set.
+        tmp_asm_copy = assumptions.copy()
+
+        # be strict about commutativity
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        assumptions['commutative'] = is_commutative
         obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
         return obj
 
     __xnew__ = staticmethod(
@@ -94,6 +248,7 @@ class Symbol(AtomicExpr, Boolean):
         return {'_assumptions': self._assumptions}
 
     def _hashable_content(self):
+        # Note: user-specified assumptions not hashed, just derived ones
         return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
     @property
@@ -106,17 +261,14 @@ class Symbol(AtomicExpr, Boolean):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def as_dummy(self):
-        return Dummy(self.name, **self.assumptions0)
-
-    def __call__(self, *args):
-        from .function import Function
-        return Function(self.name)(*args)
+        return Dummy(self.name)
 
     def as_real_imag(self, deep=True, **hints):
+        from sympy import im, re
         if hints.get('ignore') == self:
             return None
         else:
-            return (C.re(self), C.im(self))
+            return (re(self), im(self))
 
     def _sage_(self):
         import sage.all as sage
@@ -128,22 +280,23 @@ class Symbol(AtomicExpr, Boolean):
         return not self in wrt
 
     @property
-    def is_number(self):
-        return False
-
-    @property
     def free_symbols(self):
-        return set([self])
+        return {self}
+
+    binary_symbols = free_symbols  # in this case, not always
+
+    def as_set(self):
+        return S.UniversalSet
 
 
 class Dummy(Symbol):
-    """Dummy symbols are each unique, identified by an internal count index:
+    """Dummy symbols are each unique, even if they have the same name:
 
     >>> from sympy import Dummy
-    >>> bool(Dummy("x") == Dummy("x")) == True
+    >>> Dummy("x") == Dummy("x")
     False
 
-    If a name is not supplied then a string value of the count index will be
+    If a name is not supplied then a string value of an internal count will be
     used. This is useful when a temporary variable is needed and the name
     of the variable used in the expression is not important.
 
@@ -152,29 +305,50 @@ class Dummy(Symbol):
 
     """
 
+    # In the rare event that a Dummy object needs to be recreated, both the
+    # `name` and `dummy_index` should be passed.  This is used by `srepr` for
+    # example:
+    # >>> d1 = Dummy()
+    # >>> d2 = eval(srepr(d1))
+    # >>> d2 == d1
+    # True
+    #
+    # If a new session is started between `srepr` and `eval`, there is a very
+    # small chance that `d2` will be equal to a previously-created Dummy.
+
     _count = 0
+    _prng = random.Random()
+    _base_dummy_index = _prng.randint(10**6, 9*10**6)
 
     __slots__ = ['dummy_index']
 
     is_Dummy = True
 
-    def __new__(cls, name=None, **assumptions):
+    def __new__(cls, name=None, dummy_index=None, **assumptions):
+        if dummy_index is not None:
+            assert name is not None, "If you specify a dummy_index, you must also provide a name"
+
         if name is None:
             name = "Dummy_" + str(Dummy._count)
 
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Dummy's commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        if dummy_index is None:
+            dummy_index = Dummy._base_dummy_index + Dummy._count
+            Dummy._count += 1
+
+        cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
-        Dummy._count += 1
-        obj.dummy_index = Dummy._count
+        obj.dummy_index = dummy_index
+
         return obj
 
     def __getstate__(self):
         return {'_assumptions': self._assumptions, 'dummy_index': self.dummy_index}
+
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (
+            2, (str(self), self.dummy_index)), S.One.sort_key(), S.One
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
@@ -182,41 +356,99 @@ class Dummy(Symbol):
 
 class Wild(Symbol):
     """
-    A Wild symbol matches anything.
+    A Wild symbol matches anything, or anything
+    without whatever is explicitly excluded.
+
+    Parameters
+    ==========
+
+    name : str
+        Name of the Wild instance.
+    exclude : iterable, optional
+        Instances in ``exclude`` will not be matched.
+    properties : iterable of functions, optional
+        Functions, each taking an expressions as input
+        and returns a ``bool``. All functions in ``properties``
+        need to return ``True`` in order for the Wild instance
+        to match the expression.
 
     Examples
     ========
 
     >>> from sympy import Wild, WildFunction, cos, pi
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y, z
     >>> a = Wild('a')
-    >>> b = Wild('b')
-    >>> b.match(a)
-    {a_: b_}
     >>> x.match(a)
     {a_: x}
     >>> pi.match(a)
     {a_: pi}
-    >>> (x**2).match(a)
-    {a_: x**2}
+    >>> (3*x**2).match(a*x)
+    {a_: 3*x}
     >>> cos(x).match(a)
     {a_: cos(x)}
+    >>> b = Wild('b', exclude=[x])
+    >>> (3*x**2).match(b*x)
+    >>> b.match(a)
+    {a_: b_}
     >>> A = WildFunction('A')
     >>> A.match(a)
     {a_: A_}
+
+    Tips
+    ====
+
+    When using Wild, be sure to use the exclude
+    keyword to make the pattern more precise.
+    Without the exclude pattern, you may get matches
+    that are technically correct, but not what you
+    wanted. For example, using the above without
+    exclude:
+
+    >>> from sympy import symbols
+    >>> a, b = symbols('a b', cls=Wild)
+    >>> (2 + 3*y).match(a*x + b*y)
+    {a_: 2/x, b_: 3}
+
+    This is technically correct, because
+    (2/x)*x + 3*y == 2 + 3*y, but you probably
+    wanted it to not match at all. The issue is that
+    you really didn't want a and b to include x and y,
+    and the exclude parameter lets you specify exactly
+    this.  With the exclude parameter, the pattern will
+    not match.
+
+    >>> a = Wild('a', exclude=[x, y])
+    >>> b = Wild('b', exclude=[x, y])
+    >>> (2 + 3*y).match(a*x + b*y)
+
+    Exclude also helps remove ambiguity from matches.
+
+    >>> E = 2*x**3*y*z
+    >>> a, b = symbols('a b', cls=Wild)
+    >>> E.match(a*b)
+    {a_: 2*y*z, b_: x**3}
+    >>> a = Wild('a', exclude=[x, y])
+    >>> E.match(a*b)
+    {a_: z, b_: 2*x**3*y}
+    >>> a = Wild('a', exclude=[x, y, z])
+    >>> E.match(a*b)
+    {a_: 2, b_: x**3*y*z}
+
+    Wild also accepts a ``properties`` parameter:
+
+    >>> a = Wild('a', properties=[lambda k: k.is_Integer])
+    >>> E.match(a*b)
+    {a_: 2, b_: x**3*y*z}
+
     """
+    is_Wild = True
 
     __slots__ = ['exclude', 'properties']
-    is_Wild = True
 
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Wild's commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        cls._sanitize(assumptions, cls)
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
     def __getnewargs__(self):
@@ -243,14 +475,11 @@ class Wild(Symbol):
         repl_dict[self] = expr
         return repl_dict
 
-    def __call__(self, *args, **kwargs):
-        raise TypeError("'%s' object is not callable" % type(self).__name__)
-
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
 def symbols(names, **args):
-    """
+    r"""
     Transform strings into instances of :class:`Symbol` class.
 
     :func:`symbols` function returns a sequence of symbols with names taken
@@ -274,8 +503,8 @@ def symbols(names, **args):
         (a, b, c)
         >>> symbols(['a', 'b', 'c'])
         [a, b, c]
-        >>> symbols(set(['a', 'b', 'c']))
-        set([a, b, c])
+        >>> symbols({'a', 'b', 'c'})
+        {a, b, c}
 
     If an iterable container is needed for a single symbol, set the ``seq``
     argument to ``True`` or terminate the symbol name with a comma::
@@ -286,8 +515,8 @@ def symbols(names, **args):
     To reduce typing, range syntax is supported to create indexed symbols.
     Ranges are indicated by a colon and the type of range is determined by
     the character to the right of the colon. If the character is a digit
-    then all continguous digits to the left are taken as the nonnegative
-    starting value (or 0 if there are no digit of the colon) and all
+    then all contiguous digits to the left are taken as the nonnegative
+    starting value (or 0 if there is no digit left of the colon) and all
     contiguous digits to the right are taken as 1 greater than the ending
     value::
 
@@ -341,7 +570,7 @@ def symbols(names, **args):
 
         >>> symbols('x((a:b))')
         (x(a), x(b))
-        >>> symbols('x(:1\,:2)')  # or 'x((:1)\,(:2))'
+        >>> symbols(r'x(:1\,:2)')  # or r'x((:1)\,(:2))'
         (x(0,0), x(0,1))
 
     All newly created symbols have assumptions set according to ``args``::
@@ -369,7 +598,7 @@ def symbols(names, **args):
 
     if isinstance(names, string_types):
         marker = 0
-        literals = ['\,', '\:', '\ ']
+        literals = [r'\,', r'\:', r'\ ']
         for i in range(len(literals)):
             lit = literals.pop(0)
             if lit in names:
@@ -470,22 +699,25 @@ def var(names, **args):
     into the *global* namespace. It's recommended not to use :func:`var` in
     library code, where :func:`symbols` has to be used::
 
-        >>> from sympy import var
+    Examples
+    ========
 
-        >>> var('x')
-        x
-        >>> x
-        x
+    >>> from sympy import var
 
-        >>> var('a,ab,abc')
-        (a, ab, abc)
-        >>> abc
-        abc
+    >>> var('x')
+    x
+    >>> x
+    x
 
-        >>> var('x,y', real=True)
-        (x, y)
-        >>> x.is_real and y.is_real
-        True
+    >>> var('a,ab,abc')
+    (a, ab, abc)
+    >>> abc
+    abc
+
+    >>> var('x,y', real=True)
+    (x, y)
+    >>> x.is_real and y.is_real
+    True
 
     See :func:`symbol` documentation for more details on what kinds of
     arguments can be passed to :func:`var`.
@@ -518,3 +750,68 @@ def var(names, **args):
         del frame  # break cyclic dependencies as stated in inspect docs
 
     return syms
+
+def disambiguate(*iter):
+    """
+    Return a Tuple containing the passed expressions with symbols
+    that appear the same when printed replaced with numerically
+    subscripted symbols, and all Dummy symbols replaced with Symbols.
+
+    Parameters
+    ==========
+
+    iter: list of symbols or expressions.
+
+    Examples
+    ========
+
+    >>> from sympy.core.symbol import disambiguate
+    >>> from sympy import Dummy, Symbol, Tuple
+    >>> from sympy.abc import y
+
+    >>> tup = Symbol('_x'), Dummy('x'), Dummy('x')
+    >>> disambiguate(*tup)
+    (x_2, x, x_1)
+
+    >>> eqs = Tuple(Symbol('x')/y, Dummy('x')/y)
+    >>> disambiguate(*eqs)
+    (x_1/y, x/y)
+
+    >>> ix = Symbol('x', integer=True)
+    >>> vx = Symbol('x')
+    >>> disambiguate(vx + ix)
+    (x + x_1,)
+
+    To make your own mapping of symbols to use, pass only the free symbols
+    of the expressions and create a dictionary:
+
+    >>> free = eqs.free_symbols
+    >>> mapping = dict(zip(free, disambiguate(*free)))
+    >>> eqs.xreplace(mapping)
+    (x_1/y, x/y)
+
+    """
+    new_iter = Tuple(*iter)
+    key = lambda x:tuple(sorted(x.assumptions0.items()))
+    syms = ordered(new_iter.free_symbols, keys=key)
+    mapping = {}
+    for s in syms:
+        mapping.setdefault(str(s).lstrip('_'), []).append(s)
+    reps = {}
+    for k in mapping:
+        # the first or only symbol doesn't get subscripted but make
+        # sure that it's a Symbol, not a Dummy
+        k0 = Symbol("%s" % (k), **mapping[k][0].assumptions0)
+        if k != k0:
+            reps[mapping[k][0]] = k0
+        # the others get subscripts (and are made into Symbols)
+        skip = 0
+        for i in range(1, len(mapping[k])):
+            while True:
+                name = "%s_%i" % (k, i + skip)
+                if name not in mapping:
+                    break
+                skip += 1
+            ki = mapping[k][i]
+            reps[ki] = Symbol(name, **ki.assumptions0)
+    return new_iter.xreplace(reps)

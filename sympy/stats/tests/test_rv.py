@@ -1,11 +1,15 @@
+from __future__ import unicode_literals
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
         DiracDelta)
-from sympy.stats import (Die, Normal, Exponential, P, E, variance, covariance,
+from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample)
-from sympy.stats.rv import ProductPSpace, rs_swap, Density, NamedArgsMixin
+from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
+        RandomSymbol, PSpace)
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.compatibility import range
+from sympy.abc import x
 
 
 def test_where():
@@ -26,7 +30,7 @@ def test_where():
     XX = given(X, And(X**2 <= 1, X >= 0))
     assert XX.pspace.domain.set == Interval(0, 1)
     assert XX.pspace.domain.as_boolean() == \
-        And(0 <= X.symbol, X.symbol**2 <= 1)
+        And(0 <= X.symbol, X.symbol**2 <= 1, -oo < X.symbol, X.symbol < oo)
 
     with raises(TypeError):
         XX = given(X, X + 3)
@@ -44,10 +48,11 @@ def test_random_symbols():
 def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
-    assert not pspace(5 + 3)
+    raises(ValueError, lambda: pspace(5 + 3))
+    raises(ValueError, lambda: pspace(x < 1))
     assert pspace(X) == X.pspace
     assert pspace(2*X + 1) == X.pspace
-    assert pspace(2*X + Y) == ProductPSpace(Y.pspace, X.pspace)
+    assert pspace(2*X + Y) == IndependentProductPSpace(Y.pspace, X.pspace)
 
 
 def test_rs_swap():
@@ -79,6 +84,10 @@ def test_RandomSymbol_diff():
     assert (2*X).diff(X)
 
 
+def test_random_symbol_no_pspace():
+    x = RandomSymbol(Symbol('x'))
+    assert x.pspace == PSpace()
+
 def test_overlap():
     X = Normal('x', 0, 1)
     Y = Normal('x', 0, 2)
@@ -86,13 +95,13 @@ def test_overlap():
     raises(ValueError, lambda: P(X > Y))
 
 
-def test_ProductPSpace():
+def test_IndependentProductPSpace():
     X = Normal('X', 0, 1)
     Y = Normal('Y', 0, 1)
     px = X.pspace
     py = Y.pspace
-    assert pspace(X + Y) == ProductPSpace(px, py)
-    assert pspace(X + Y) == ProductPSpace(py, px)
+    assert pspace(X + Y) == IndependentProductPSpace(px, py)
+    assert pspace(X + Y) == IndependentProductPSpace(py, px)
 
 
 def test_E():
@@ -118,6 +127,10 @@ def test_Sample():
 
     # Make sure this doesn't raise an error
     E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3)
+
+
+    assert all(i in range(1, 7) for i in density(X, numsamples=10))
+    assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
 
 
 def test_given():
@@ -156,10 +169,11 @@ def test_dependent_finite():
 
 def test_normality():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
-    x, z = symbols('x, z', real=True)
+    x, z = symbols('x, z', real=True, finite=True)
     dens = density(X - Y, Eq(X + Y, z))
 
     assert integrate(dens(x), (x, -oo, oo)) == 1
+
 
 def test_Density():
     X = Die('X', 6)
@@ -189,3 +203,27 @@ def test_density_constant():
 def test_real():
     x = Normal('x', 0, 1)
     assert x.is_real
+
+
+def test_issue_10052():
+    X = Exponential('X', 3)
+    assert P(X < oo) == 1
+    assert P(X > oo) == 0
+    assert P(X < 2, X > oo) == 0
+    assert P(X < oo, X > oo) == 0
+    assert P(X < oo, X > 2) == 1
+    assert P(X < 3, X == 2) == 0
+    raises(ValueError, lambda: P(1))
+    raises(ValueError, lambda: P(X < 1, 2))
+
+def test_issue_11934():
+    density = {0: .5, 1: .5}
+    X = FiniteRV('X', density)
+    assert E(X) == 0.5
+    assert P( X>= 2) == 0
+
+def test_issue_8129():
+    X = Exponential('X', 4)
+    assert P(X >= X) == 1
+    assert P(X > X) == 0
+    assert P(X > X+1) == 0

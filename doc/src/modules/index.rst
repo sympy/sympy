@@ -11,7 +11,7 @@ Most of the things are already documented though in this document, that is
 automatically generated using SymPy's docstrings.
 
 Click the  "modules" (:ref:`modindex`) link in the top right corner to easily
-access any SymPy module, or use this contens:
+access any SymPy module, or use the list below:
 
 .. toctree::
    :maxdepth: 2
@@ -21,35 +21,41 @@ access any SymPy module, or use this contens:
    ntheory.rst
    crypto.rst
    concrete.rst
+   discrete.rst
    evalf.rst
+   codegen.rst
+   numeric-computation.rst
    functions/index.rst
-   galgebra/index.rst
-   geometry.rst
+   geometry/index.rst
+   holonomic/index.rst
    integrals/integrals.rst
+   liealgebras/index.rst
    logic.rst
    matrices/index.rst
-   Mpmath <mpmath/index.rst>
    polys/index.rst
    printing.rst
    plotting.rst
    assumptions/index.rst
    rewriting.rst
-   series.rst
+   series/index.rst
    sets.rst
    simplify/simplify.rst
    simplify/hyperexpand.rst
-   statistics.rst
    stats.rst
    solvers/ode.rst
    solvers/pde.rst
    solvers/solvers.rst
    solvers/diophantine.rst
+   solvers/inequalities.rst
+   solvers/solveset.rst
    tensor/index.rst
    utilities/index.rst
    parsing.rst
+   calculus/index.rst
    physics/index.rst
    categories.rst
    diffgeom.rst
+   vector/index.rst
 
 Contributions to docs
 ---------------------

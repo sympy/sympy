@@ -1,11 +1,11 @@
 from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
-                   Function, Product, Rational, Sum, oo)
+                   Function, Product, Rational, Sum, oo, exp, log, S, pi)
 from sympy.utilities.pytest import raises
 from sympy import simplify
-from sympy.concrete.simplification import change_index, reorder, reverse_order
 
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
 f = Function('f')
+
 
 def test_karr_convention():
     # Test the Karr product convention that we want to hold.
@@ -119,11 +119,11 @@ def test_karr_proposition_2a():
         assert simplify(P / (g.subs(i, n) / g.subs(i, m))) == 1
 
     # m < n
-    test_the_product(u,   u+v)
+    test_the_product(u, u+v)
     # m = n
-    test_the_product(u,   u  )
+    test_the_product(u, u)
     # m > n
-    test_the_product(u+v, u  )
+    test_the_product(u+v, u)
 
 
 def test_karr_proposition_2b():
@@ -152,23 +152,23 @@ def test_karr_proposition_2b():
         assert simplify(S1 / (S2 * S3)) == 1
 
     # l < m < n
-    test_the_product(u,     u+v,   u+v+w)
+    test_the_product(u, u+v, u+v+w)
     # l < m = n
-    test_the_product(u,     u+v,   u+v  )
+    test_the_product(u, u+v, u+v)
     # l < m > n
-    test_the_product(u,     u+v+w, v    )
+    test_the_product(u, u+v+w, v)
     # l = m < n
-    test_the_product(u,     u,     u+v  )
+    test_the_product(u, u, u+v)
     # l = m = n
-    test_the_product(u,     u,     u    )
+    test_the_product(u, u, u)
     # l = m > n
-    test_the_product(u+v,   u+v,   u    )
+    test_the_product(u+v, u+v, u)
     # l > m < n
-    test_the_product(u+v,   u,     u+w  )
+    test_the_product(u+v, u, u+w)
     # l > m = n
-    test_the_product(u+v,   u,     u    )
+    test_the_product(u+v, u, u)
     # l > m > n
-    test_the_product(u+v+w, u+v,   u    )
+    test_the_product(u+v+w, u+v, u)
 
 
 def test_simple_products():
@@ -192,6 +192,10 @@ def test_simple_products():
     raises(ValueError, lambda: Product(n, k, 1))
     raises(ValueError, lambda: Product(n, k, 1, 10))
     raises(ValueError, lambda: Product(n, (k, 1)))
+
+    assert product(1, (n, 1, oo)) == 1  # issue 8301
+    assert product(2, (n, 1, oo)) == oo
+    assert product(-1, (n, 1, oo)).func is Product
 
 
 def test_multiple_products():
@@ -225,21 +229,21 @@ def test_special_products():
 
 def test__eval_product():
     from sympy.abc import i, n
-    # 1710
+    # issue 4809
     a = Function('a')
     assert product(2*a(i), (i, 1, n)) == 2**n * Product(a(i), (i, 1, n))
-    # 1711
+    # issue 4810
     assert product(2**i, (i, 1, n)) == 2**(n/2 + n**2/2)
 
 
 def test_product_pow():
-    # Issue 1718
+    # issue 4817
     assert product(2**f(k), (k, 1, n)) == 2**Sum(f(k), (k, 1, n))
     assert product(2**(2*f(k)), (k, 1, n)) == 2**Sum(2*f(k), (k, 1, n))
 
 
 def test_infinite_product():
-    # Issue 2638
+    # issue 5737
     assert isinstance(Product(2**(1/factorial(n)), (n, 0, oo)), Product)
 
 
@@ -279,58 +283,90 @@ def test_simplify():
 def test_change_index():
     b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
 
-    assert change_index(Product(x, (x, a, b)), x, x + 1, y) == \
+    assert Product(x, (x, a, b)).change_index(x, x + 1, y) == \
         Product(y - 1, (y, a + 1, b + 1))
-    assert change_index(Product(x**2, (x, a, b)), x, x - 1) == \
+    assert Product(x**2, (x, a, b)).change_index(x, x - 1) == \
         Product((x + 1)**2, (x, a - 1, b - 1))
-    assert change_index(Product(x**2, (x, a, b)), x, -x, y) == \
+    assert Product(x**2, (x, a, b)).change_index(x, -x, y) == \
         Product((-y)**2, (y, -b, -a))
-    assert change_index(Product(x, (x, a, b)), x, -x - 1) == \
+    assert Product(x, (x, a, b)).change_index(x, -x - 1) == \
         Product(-x - 1, (x, - b - 1, -a - 1))
-    assert change_index(Product(x*y, (x, a, b), (y, c, d)), x, x - 1, z) == \
+    assert Product(x*y, (x, a, b), (y, c, d)).change_index(x, x - 1, z) == \
         Product((z + 1)*y, (z, a - 1, b - 1), (y, c, d))
 
 
 def test_reorder():
     b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
 
-    assert reorder(Product(x*y, (x, a, b), (y, c, d)), (0, 1)) == \
+    assert Product(x*y, (x, a, b), (y, c, d)).reorder((0, 1)) == \
         Product(x*y, (y, c, d), (x, a, b))
-    assert reorder(Product(x, (x, a, b), (x, c, d)), (0, 1)) == \
+    assert Product(x, (x, a, b), (x, c, d)).reorder((0, 1)) == \
         Product(x, (x, c, d), (x, a, b))
-    assert reorder(Product(x*y + z, (x, a, b), (z, m, n), (y, c, d)), \
+    assert Product(x*y + z, (x, a, b), (z, m, n), (y, c, d)).reorder(\
         (2, 0), (0, 1)) == Product(x*y + z, (z, m, n), (y, c, d), (x, a, b))
-    assert reorder(Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+    assert Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)).reorder(\
         (0, 1), (1, 2), (0, 2)) == \
         Product(x*y*z, (x, a, b), (z, m, n), (y, c, d))
-    assert reorder(Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+    assert Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)).reorder(\
         (x, y), (y, z), (x, z)) == \
         Product(x*y*z, (x, a, b), (z, m, n), (y, c, d))
-    assert reorder(Product(x*y, (x, a, b), (y, c, d)), (x, 1)) == \
+    assert Product(x*y, (x, a, b), (y, c, d)).reorder((x, 1)) == \
         Product(x*y, (y, c, d), (x, a, b))
-    assert reorder(Product(x*y, (x, a, b), (y, c, d)), (y, x)) == \
+    assert Product(x*y, (x, a, b), (y, c, d)).reorder((y, x)) == \
         Product(x*y, (y, c, d), (x, a, b))
+
+
+def test_Product_is_convergent():
+    assert Product(1/n**2, (n, 1, oo)).is_convergent() is S.false
+    assert Product(exp(1/n**2), (n, 1, oo)).is_convergent() is S.true
+    assert Product(1/n, (n, 1, oo)).is_convergent() is S.false
+    assert Product(1 + 1/n, (n, 1, oo)).is_convergent() is S.false
+    assert Product(1 + 1/n**2, (n, 1, oo)).is_convergent() is S.true
 
 
 def test_reverse_order():
     x, y, a, b, c, d= symbols('x, y, a, b, c, d', integer = True)
 
-    assert reverse_order(Product(x, (x, 0, 3)), 0) == Product(1/x, (x, 4, -1))
-    assert reverse_order(Product(x*y, (x, 1, 5), (y, 0, 6)), 0, 1) == \
+    assert Product(x, (x, 0, 3)).reverse_order(0) == Product(1/x, (x, 4, -1))
+    assert Product(x*y, (x, 1, 5), (y, 0, 6)).reverse_order(0, 1) == \
            Product(x*y, (x, 6, 0), (y, 7, -1))
-    assert reverse_order(Product(x, (x, 1, 2)), 0) == Product(1/x, (x, 3, 0))
-    assert reverse_order(Product(x, (x, 1, 3)), 0) == Product(1/x, (x, 4, 0))
-    assert reverse_order(Product(x, (x, 1, a)), 0) == Product(1/x, (x, a + 1, 0))
-    assert reverse_order(Product(x, (x, a, 5)), 0) == Product(1/x, (x, 6, a - 1))
-    assert reverse_order(Product(x, (x, a + 1, a + 5)), 0) == \
+    assert Product(x, (x, 1, 2)).reverse_order(0) == Product(1/x, (x, 3, 0))
+    assert Product(x, (x, 1, 3)).reverse_order(0) == Product(1/x, (x, 4, 0))
+    assert Product(x, (x, 1, a)).reverse_order(0) == Product(1/x, (x, a + 1, 0))
+    assert Product(x, (x, a, 5)).reverse_order(0) == Product(1/x, (x, 6, a - 1))
+    assert Product(x, (x, a + 1, a + 5)).reverse_order(0) == \
            Product(1/x, (x, a + 6, a))
-    assert reverse_order(Product(x, (x, a + 1, a + 2)), 0) == \
+    assert Product(x, (x, a + 1, a + 2)).reverse_order(0) == \
            Product(1/x, (x, a + 3, a))
-    assert reverse_order(Product(x, (x, a + 1, a + 1)), 0) == \
+    assert Product(x, (x, a + 1, a + 1)).reverse_order(0) == \
            Product(1/x, (x, a + 2, a))
-    assert reverse_order(Product(x, (x, a, b)), 0) == Product(1/x, (x, b + 1, a - 1))
-    assert reverse_order(Product(x, (x, a, b)), x) == Product(1/x, (x, b + 1, a - 1))
-    assert reverse_order(Product(x*y, (x, a, b), (y, 2, 5)), x, 1) == \
+    assert Product(x, (x, a, b)).reverse_order(0) == Product(1/x, (x, b + 1, a - 1))
+    assert Product(x, (x, a, b)).reverse_order(x) == Product(1/x, (x, b + 1, a - 1))
+    assert Product(x*y, (x, a, b), (y, 2, 5)).reverse_order(x, 1) == \
            Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
-    assert reverse_order(Product(x*y, (x, a, b), (y, 2, 5)), y, x) == \
+    assert Product(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x) == \
            Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
+
+
+def test_issue_9983():
+    n = Symbol('n', integer=True, positive=True)
+    p = Product(1 + 1/n**(S(2)/3), (n, 1, oo))
+    assert p.is_convergent() is S.false
+    assert product(1 + 1/n**(S(2)/3), (n, 1, oo)) == p.doit()
+
+
+def test_issue_13546():
+    n = Symbol('n')
+    k = Symbol('k')
+    p = Product(n + 1 / 2**k, (k, 0, n-1)).doit()
+    assert p.subs(n, 2).doit() == S(15)/2
+
+
+def test_issue_14036():
+    a, n = symbols('a n')
+    assert product(1 - a**2 / (n*pi)**2, [n, 1, oo]) != 0
+
+
+def test_rewrite_Sum():
+    assert Product(1 - S.Half**2/k**2, (k, 1, oo)).rewrite(Sum) == \
+        exp(Sum(log(1 - 1/(4*k**2)), (k, 1, oo)))

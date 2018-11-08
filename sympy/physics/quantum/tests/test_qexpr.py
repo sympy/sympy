@@ -31,6 +31,12 @@ def test_qexpr_commutative():
     q = QExpr._new_rawargs(0, 1, HilbertSpace())
     assert q.is_commutative is False
 
+def test_qexpr_commutative_free_symbols():
+    q1 = QExpr(x)
+    assert q1.free_symbols.pop().is_commutative is False
+
+    q2 = QExpr('q2')
+    assert q2.free_symbols.pop().is_commutative is False
 
 def test_qexpr_subs():
     q1 = QExpr(x, y)

@@ -21,11 +21,14 @@ from __future__ import print_function
 
 import os
 import sys
-import re
-import string
 import inspect
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from HTMLParser import HTMLParser
+
+try:
+    from HTMLParser import HTMLParser
+except ImportError:
+    # It's html.parser in Python 3
+    from html.parser import HTMLParser
 
 # Load color templates, used from sympy/utilities/runtests.py
 color_templates = (
@@ -141,11 +144,11 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
                     print('  * ' + md)
             if c_idt:
                 # Use "# indirect doctest" in the docstring to
-                # supress this warning.
+                # suppress this warning.
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
                 for md in c_idt:
                     print('  * ' + md)
-                print('\n    Use \"# indirect doctest\" in the docstring to supress this warning')
+                print('\n    Use \"# indirect doctest\" in the docstring to suppress this warning')
             if c_sph:
                 print_header('Not imported into Sphinx', '-', not no_color and small_header_color)
                 for md in c_sph:
@@ -167,7 +170,7 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
                 for md in f_idt:
                     print('  * ' + md)
-                print('\n    Use \"# indirect doctest\" in the docstring to supress this warning')
+                print('\n    Use \"# indirect doctest\" in the docstring to suppress this warning')
             if f_sph:
                 print_header('Not imported into Sphinx', '-', not no_color and small_header_color)
                 for md in f_sph:
@@ -213,7 +216,6 @@ def _get_arg_list(name, fobj):
 
     # Now add the defaults
     if argspec.defaults:
-        rev_defaults = list(argspec.defaults).reverse()
         for i in range(len(argspec.defaults)):
             arg_list[i] = str(arg_list[i]) + '=' + str(argspec.defaults[-i])
 
@@ -227,7 +229,7 @@ def _get_arg_list(name, fobj):
         arg_list.append(argspec.keywords)
 
     # Truncate long arguments
-    arg_list = map(lambda x: x[:trunc], arg_list)
+    arg_list = [x[:trunc] for x in arg_list]
 
     # Construct the parameter string (enclosed in brackets)
     str_param = "%s(%s)" % (name, ', '.join(arg_list))
@@ -394,7 +396,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
     contained. It then goes through each of the classes/functions to get
     the docstring and doctest coverage of the module. """
 
-    # Import the package and find membmers
+    # Import the package and find members
     m = None
     try:
         __import__(module_path)
@@ -562,8 +564,6 @@ if __name__ == "__main__":
     sympy_dir = os.path.join(sympy_top, 'sympy')  # ../sympy/
     if os.path.isdir(sympy_dir):
         sys.path.insert(0, sympy_top)
-
-    skip_paths = ['mpmath']
 
     usage = "usage: ./bin/doctest_coverage.py PATHS"
 

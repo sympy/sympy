@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import is_sequence, string_types, u
+from sympy.core.compatibility import is_sequence, string_types
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
@@ -94,9 +94,11 @@ class QExpr(Expr):
     is_commutative = False
 
     # The separator used in printing the label.
-    _label_separator = u('')
+    _label_separator = u''
 
-    is_commutative = False
+    @property
+    def free_symbols(self):
+        return {self}
 
     def __new__(cls, *args, **old_assumptions):
         """Construct a new quantum object.
@@ -178,7 +180,7 @@ class QExpr(Expr):
         of arguments to be run through the constructor.
 
         NOTE: Any classes that override this MUST return a tuple of arguments.
-        Should be overidden by subclasses to specify the default arguments for kets and operators
+        Should be overridden by subclasses to specify the default arguments for kets and operators
         """
         raise NotImplementedError("No default arguments for this class!")
 
@@ -320,25 +322,6 @@ class QExpr(Expr):
     def doit(self, **kw_args):
         return self
 
-    def _eval_rewrite(self, pattern, rule, **hints):
-        # TODO: Make Basic.rewrite get the rule using the class name rather
-        # than str(). See L1072 of basic.py.
-        # This will call self.rule(*self.args) for rewriting.
-        if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints)
-                     for a in self.args ]
-        else:
-            args = self.args
-
-        if pattern is None or isinstance(self, pattern):
-            if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args, **hints)
-
-                if rewritten is not None:
-                    return rewritten
-
-        return self
-
     #-------------------------------------------------------------------------
     # Represent
     #-------------------------------------------------------------------------
@@ -362,7 +345,7 @@ class QExpr(Expr):
             def _represent_Position(self, basis, **options):
 
         Usually, basis object will be instances of Operator subclasses, but
-        there is a chance we will relax this in the future to accomodate other
+        there is a chance we will relax this in the future to accommodate other
         types of basis sets that are not associated with an operator.
 
         If the ``format`` option is given it can be ("sympy", "numpy",

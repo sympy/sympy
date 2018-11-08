@@ -1,78 +1,74 @@
-# Prepare the VM
-
-First execute:
-
-    vagrant up
-    fab vagrant prepare
-
-which will prepare the VM (install packages, cache sympy repository, etc.).
-
-You only need to execute this once. It will take a while if you have never run
-it before, because it has to download a lot of stuff.
+**NOTE: The release script is currently in the process of moving from
+Vagrant/fabric to Docker/rever. The fabfile.py is left here for reference, but
+all release processes should be done with release.sh and rever.xsh.**
 
 # Release
 
 First, make sure that you have done the following things
 
 - Create a release branch. Usually this branch is the same name as the release
-(e.g., "0.7.3"), although no naming convention is enforced on it.
+  (e.g., "0.7.3"), although no naming convention is enforced on it.
 
-- Change the version in the release branch in sympy/__init__.py.  If you want
-  to do a release candidate, change it to something like 0.7.3.rc1.
+- Change the version in the release branch in sympy/release.py. If you want to
+  do a release candidate, change it to a [PEP
+  440](https://www.python.org/dev/peps/pep-0440) compliant version like
+  0.7.3rc1. Note that setuptools normalizes versions like 0.7.3.rc1 to
+  0.7.3rc1, so there will be errors if you do not use the latter form.
 
-- Change the version in master.  This way, any additional changes made in
-  master will be shown as coming from the right place. The master release
-  should be like "0.7.3-git".
+- Change the version in master. This way, any additional changes made in master
+  will be shown as coming from the right place. The master release should be
+  e.g. `0.7.4.dev`, see [PEP 440](https://www.python.org/dev/peps/pep-0440) for
+  rules about development version numbers. Note that this version number should
+  the next projected version plus the `.dev`.
 
 - Push the release branch up to origin, and make a pull request for it against
   master.
 
-It is important to create a new branch because that lets master continue
-as normal. The fab script will automatically checkout the release branch from
+It is important to create a new branch because that lets master continue as
+normal. The release script will automatically checkout the release branch from
 origin, which is why you need to push it (it determines what the release
 branch by just looking at what branch you have checked out locally, so make
 sure you are on the release branch when you release). It is important to
 change the version number because it uses that in naming the tarballs it
 creates.
 
+Next, make sure you have Docker installed.
+
+**TODO: Fix the release script to pull sympy/sympy-release from Dockerhub.**
+
 Once you have done these things, execute:
 
-    fab vagrant release
+    ./release.sh <BRANCH> <VERSION>
 
-this create release tarballs and put them all into a new "release" directory
-of the current directory.
+where `<BRANCH>` is the release branch (e.g., `0.7.3`), and `<VERSION>` is the
+release version (e.g., `0.7.3rc1`).
 
-# Testing things
+On Linux, you may need to use `sudo` to execute this.
 
-The full test suite is not run by fabric, because we leave that to
-Travis. However, there are things that need to be tested specific to the
-release. Most of these things are done automatically by the release command
-(like testing that the tarball can be installed), but one thing must be tested
-manually, because it has to be inspected by hand, namely, making sure that the
-tarballs contain everything, and don't contain any junk files.
+This will run all the release scripts. If they are successful, they will
+create release tarballs and put them all into a new "release-VERSION"
+directory of the current directory. Most likely they will fail the first time,
+in which case you will need to investigate why and fix things (e.g., update
+authors, run tests, update whitelists in `rever.xsh`, fix setup.py). The whole
+script can take about an hour or so to run (depending on how long the tests
+take). Every time you re-run the script, it pulls from the branch and runs
+everything from scratch.
 
-Run
-
-    fab vagrant show_files:arg
-
-to show the files in the tarball, where `arg` is one of `2`, `3`, or `html`.
-You'll probably want to pipe the output of this into less, so that you can
-inspect it.
-
-You should also open the pdf and make sure that it has built correctly, and
-open the html docs and make sure that they have built correctly.
+At the end it will print two things, the list of authors, and the md5 sums.
+Copy the list of authors into the release notes. You should verify that the
+md5 sums of the release files are the same as what are printed.
 
 # Tagging the release
 
 Once you have made the final release files that you plan to upload, be sure
 that everything is committed, and that the most recent git HEAD is indeed the
-same one that was used to build the files (you can always do `fab vagrant
-release` again if you are not sure). Then tag the release with the command
+same one that was used to build the files (you can always run the release
+script again if you are not sure). Then tag the release with the command
 
     git tag sympy-VERSION -a
 
 where you should replace `VERSION` with the version (which should be `x.y.z`,
-or `x.y.z.rcn` for the `n`th release candidate. It is very important to follow
+or `x.y.zrcn` for the `n`th release candidate. It is very important to follow
 the tag naming conventions.  The `-a` will cause it to prompt for a tag commit
 message. Just write something like "SymPy VERSION release".
 
@@ -81,40 +77,64 @@ Then, push up the tag, with
     git push origin sympy-VERSION
 
 Note, once a tag is pushed, that's it. It can't be changed. If you need to
-change the tag, you must bump the release number.
+change the tag, you must bump the release number.  So double check that
+everything is right before pushing.
 
 # Uploading
 
-TODO
+**WARNING: This stuff does not fully work yet. Some development on `rever.xsh`
+may be required.**
 
-# Other
+Before you release, you need to push the tag up, as described above.
 
-You can run all the SymPy tests by running:
+Release candidates should be uploaded to GitHub only.
 
-    fab vagrant test_sympy
+    rever VERSION -a GitHub_release
 
-To get the md5 sums of all the files, use
+This will create the release on GitHub for the tag, and upload the files to
+it.  Do not upload release candidates to PyPI, as `pip` and `easy_install`
+will pick them up if you do.
 
-    fab md5
+This will prompt you for a username and password the first time you call it.
+After that, it will prompt you to generate a token file.  If you don't save
+the token to a file, you will need to pass it in as an argument. Releasing is
+only supported via OAuth, so using a token is required.
 
-To list the files in the tarball use
+You (obviously) need push access to create a GitHub release.
 
-    fab vagrant show_files:arg
+For final releases, you should upload to both GitHub and PyPI. The command
 
-where `arg` is one of `2`, `3`, and `html`, for the Python 2 or 3 sources and
-the html docs, respectively. Note that the source code is already checked
-automatically against the files in git and a whitelist.
+    rever VERSION -a upload
 
-You can obtain all available commands by:
+will do both of these (**TODO: This function has not been translated from the
+fabfile yet**).  You will need admin access to the SymPy PyPI project.
 
-    fab -l
+Note that if either of these commands fails for some reason, you will very
+likely need to go into the web interface and clean some things up before you
+can upload again.
 
-# Restarting from scratch
+# Updating websites
 
-Run
+You should now update the websites. Only do this for final releases. The command
 
-    vagrant destroy
+    rever VERSION -a update_websites
 
-You can also delete the releases that it has built
+will update docs.sympy.org and sympy.org (**TODO: This isn't fully translated
+from the fabfile yet.**).  You will need to have local clones
+of these repos, and push access to them (obviously).  **Note, this command
+will commit and push the changes automatically.**
 
-    rm -rf release
+The other website that needs to be updated is SymPy Live. You should make this
+as a pull request to the Live repo.
+
+# Updating the Dockerfile
+
+If you change the Dockerfile, you will need to run
+
+    docker build -f Dockerfile . -t sympy/sympy-release
+
+Once you have it working, push the changes up to Dockerhub
+
+    docker push sympy/sympy-release
+
+You'll need access to the sympy org, ask Aaron or Ondřej if you need it.

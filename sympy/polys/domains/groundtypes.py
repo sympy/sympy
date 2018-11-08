@@ -14,7 +14,7 @@ from .pythonrational import PythonRational
 
 from sympy.core.numbers import (
     igcdex as python_gcdex,
-    igcd as python_gcd,
+    igcd2 as python_gcd,
     ilcm as python_lcm,
 )
 
@@ -69,7 +69,7 @@ else:
     gmpy_qdiv = None
 
 
-import sympy.mpmath.libmp as mlib
+import mpmath.libmp as mlib
 
 
 def python_sqrt(n):

@@ -1,10 +1,12 @@
 How to Build Documentation
 ==========================
 
-To make the html documentation, install the prerequisites, e.g. on
-Debian/Ubuntu (similarly for other distributions)::
+Debian/Ubuntu
+-------------
 
-    apt-get install python-sphinx texlive-latex-recommended dvipng
+To make the html documentation, install the prerequisites::
+
+    apt-get install python-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
 
 and do::
 
@@ -14,47 +16,49 @@ and to view it, do::
 
     epiphany _build/html/index.html
 
+Fedora
+------
 
-About the Translated Tutorial
-=============================
+Fedora (and maybe other RPM based distributions), install the prerequisites::
 
-Translated versions of the tutorial are generated when building the html
-documentation using ``make html``. If you quickly want to check only the
-translations and not the whole documentation, just run::
+    dnf install python3-sphinx librsvg2 ImageMagick docbook2X texlive-dvipng-bin texlive-scheme-medium librsvg2-tools
 
-    make htmli18n
+After that, run::
 
-This will create ``tutorial.cs.html``, ``tutorial.ru.html`` (and so on for all
-languages) in the ``_build/html/`` directory. The input is the English tutorial
-``tutorial.en.rst`` and the .po files ``tutorial.cs.po``, ``tutorial.ru.po``, etc.
-You can freely change the English tutorial -- sentences that are not translated
-will remain in English in the translated versions.
+    make html
 
+If you get **mpmath** error, install python3-mpmath package::
 
-How to Update Translations
-==========================
+    dnf install python3-mpmath
 
-In order to update translations, you first need to make sure that the
-``tutorial.pot`` template is up-to-date by running::
+And view it at::
 
-    make gettext
+    _build/html/index.html
 
-If you are creating a translation for a new language, copy the generated
-``tutorial.pot`` to a new file ``tutorial.??.po`` where ``??`` is the
-two-character language code for your language. Also add the language
-code to the LANGUAGES macro in the Makefile. When the translation work
-for a new language has reached 90% or more, a link to the new translation
-should be added at the bottom of tutorial.en.rst.
+Windows 10
+----------
 
-If you are just updating a translation, for example the
-``tutorial.cs.po``, just do::
+Making your sphinx build successful on the Windows system is tricky because of
+some dependencies like dvipng or docbook2x not available.
 
-    make update-po
+For Windows 10, however, the Windows Subsystem for Linux can be a possible
+workaround solution, and you can install Ubuntu shell on your Windows system
+after following up the tutorial below
 
-This will create a new ``tutorial.cs.po`` by using the template
-``tutorial.pot`` and reusing the old translations from old ``tutorial.cs.po``
-(if they still work) and leaving the rest untranslated.
+https://github.com/MicrosoftDocs/WSL/blob/live/WSL/install-win10.md
 
-Update your ``tutorial.??.po`` file with your translations, then just build it
-using ``make html`` (see the previous section). When you are done, use
-``git add`` to add your changes to the repository and submit a pull request.
+In your command prompt, simply run 'ubuntu' to transfer to linux terminal,
+and follow up the Debian/Ubuntu tutorial above to install all the dependencies,
+and then you can run 'make html' to build.
+(Note that you would also have to install 'make' via 'apt-get install make')
+
+If you want to change directory in your prompt to your working folder of sympy
+in windows file system, you can prepend 'cd /mnt/' to your file path in windows,
+and run in your shell to navigate to the folder.
+(Also note that linux uses '/' instead of '\\' for path)
+
+This method would provide better compatibility than cygwin or msys2,
+and more convenience than a virtual machine, if you partially need linux
+environment for your workflow.
+
+However this method is only viable for Windows 10 64-bit users.

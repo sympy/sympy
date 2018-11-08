@@ -11,7 +11,7 @@ from sympy.polys.specialpolys import f_polys, w_polys
 from sympy import nextprime, sin, sqrt, I
 from sympy.utilities.pytest import raises
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 w_1, w_2 = w_polys()
@@ -159,7 +159,7 @@ def test_dup_zz_factor():
 
     f = x**4 + x + 1
 
-    for i in xrange(0, 20):
+    for i in range(0, 20):
         assert R.dup_zz_factor(f) == (1, [(f, 1)])
 
     assert R.dup_zz_factor(x**2 + 2*x + 2) == \
@@ -308,8 +308,8 @@ def test_dmp_zz_wang():
     assert R.dmp_expand(factors) == w_1
 
 
-def test_issue_3256():
-    # This tests a bug in the Wang algorithm that occured only with a very
+def test_issue_6355():
+    # This tests a bug in the Wang algorithm that occurred only with a very
     # specific set of random numbers.
     random_sequence = [-1, -1, 0, 0, 0, 0, -1, -1, 0, -1, 3, -1, 3, 3, 3, 3, -1, 3]
 
@@ -513,6 +513,8 @@ def test_dup_factor_list():
 
     assert R.dup_factor_list(x**2 + 2*x + 1) == (1, [(x + 1, 2)])
     assert R.dup_factor_list_include(x**2 + 2*x + 1) == [(x + 1, 2)]
+    # issue 8037
+    assert R.dup_factor_list(6*x**2 - 5*x - 6) == (1, [(2*x - 3, 1), (3*x + 2, 1)])
 
     R, x = ring("x", QQ)
     assert R.dup_factor_list(QQ(1,2)*x**2 + x + QQ(1,2)) == (QQ(1, 2), [(x + 1, 2)])
@@ -526,7 +528,10 @@ def test_dup_factor_list():
 
     f = 6.7225336055071*x**2 - 10.6463972754741*x - 0.33469524022264
     coeff, factors = R.dup_factor_list(f)
-    assert coeff == RR(1.0) and len(factors) == 1 and factors[0][0].almosteq(f, 1e-10) and factors[0][1] == 1
+    assert coeff == RR(10.6463972754741)
+    assert len(factors) == 1
+    assert factors[0][0].max_norm() == RR(1.0)
+    assert factors[0][1] == 1
 
     Rt, t = ring("t", ZZ)
     R, x = ring("x", Rt)
@@ -534,8 +539,7 @@ def test_dup_factor_list():
     f = 4*t*x**2 + 4*t**2*x
 
     assert R.dup_factor_list(f) == \
-        (4, [(t, 1),
-             (x, 1),
+        (4*t, [(x, 1),
              (x + t, 1)])
 
     Rt, t = ring("t", QQ)
@@ -544,8 +548,7 @@ def test_dup_factor_list():
     f = QQ(1, 2)*t*x**2 + QQ(1, 2)*t**2*x
 
     assert R.dup_factor_list(f) == \
-        (QQ(1, 2), [(t, 1),
-                    (x, 1),
+        (QQ(1, 2)*t, [(x, 1),
                     (x + t, 1)])
 
     R, x = ring("x", QQ.algebraic_field(I))
@@ -628,20 +631,22 @@ def test_dmp_factor_list():
     f = 2.0*x**2 - 8.0*y**2
 
     assert R.dmp_factor_list(f) == \
-        (RR(2.0), [(1.0*x - 2.0*y, 1),
-                   (1.0*x + 2.0*y, 1)])
+        (RR(8.0), [(0.5*x - y, 1),
+                   (0.5*x + y, 1)])
 
     f = 6.7225336055071*x**2*y**2 - 10.6463972754741*x*y - 0.33469524022264
     coeff, factors = R.dmp_factor_list(f)
-    assert coeff == RR(1.0) and len(factors) == 1 and factors[0][0].almosteq(f, 1e-10) and factors[0][1] == 1
+    assert coeff == RR(10.6463972754741)
+    assert len(factors) == 1
+    assert factors[0][0].max_norm() == RR(1.0)
+    assert factors[0][1] == 1
 
     Rt, t = ring("t", ZZ)
     R, x, y = ring("x,y", Rt)
     f = 4*t*x**2 + 4*t**2*x
 
     assert R.dmp_factor_list(f) == \
-        (4, [(t, 1),
-             (x, 1),
+        (4*t, [(x, 1),
              (x + t, 1)])
 
     Rt, t = ring("t", QQ)
@@ -649,8 +654,7 @@ def test_dmp_factor_list():
     f = QQ(1, 2)*t*x**2 + QQ(1, 2)*t**2*x
 
     assert R.dmp_factor_list(f) == \
-        (QQ(1, 2), [(t, 1),
-                    (x, 1),
+        (QQ(1, 2)*t, [(x, 1),
                     (x + t, 1)])
 
     R, x, y = ring("x,y", FF(2))
