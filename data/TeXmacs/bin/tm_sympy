@@ -40,7 +40,10 @@ def send(kind, output=None):
     elif kind == "latex":
         output = latex(output)
 
-    message = "%s:%s" %  (kind, output)
+    if len(output) > 0:
+        message = "%s:$%s$" %  (kind, output)
+    else:
+        message = "%s:%s" %  (kind, output)
 
     os.sys.stdout.write(BEGIN)
     os.sys.stdout.write(message)
