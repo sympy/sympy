@@ -86,10 +86,10 @@ while True:
 
         try:
             output = eval(line, _globals)
-        except SyntaxError:
+        except:
             try:
                 output = eval(compile(line, 'tm_sympy', 'exec'), _globals)
-            except (SyntaxError, TypeError) :
+            except:
                 send("verbatim", traceback.format_exc(limit = 0))
                 continue
 
