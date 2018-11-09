@@ -4083,7 +4083,7 @@ class MatrixBase(MatrixDeprecated,
                 self.zeros(1).inv()
             return soln
         else:
-             return self.inv(method=method)*rhs
+            return self.inv(method=method)*rhs
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
               colsep=', ', align='right'):
