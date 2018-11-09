@@ -1416,8 +1416,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         r_rescaled = None
         if r is not None:
             coeff = r[order]
-            power = coeff.match(k*x**n)[n]
-            factor = x**(order - power)
+            factor = x**order / coeff
             r_rescaled = {i: factor*r[i] for i in r}
 
         if r_rescaled and not any(not _test_term(r_rescaled[i], i) for i in
@@ -5215,7 +5214,9 @@ def _undetermined_coefficients_match(expr, x):
         r"""
         Test if ``expr`` fits the proper form for undetermined coefficients.
         """
-        if expr.is_Add:
+        if not expr.has(x):
+            return True
+        elif expr.is_Add:
             return all(_test_term(i, x) for i in expr.args)
         elif expr.is_Mul:
             if expr.has(sin, cos):
