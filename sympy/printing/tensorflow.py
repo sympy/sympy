@@ -1,4 +1,6 @@
 from distutils.version import LooseVersion as V
+import collections
+
 from sympy.printing.printer import Printer
 from sympy.printing.precedence import PRECEDENCE
 from sympy.printing.pycode import AbstractPythonCodePrinter
@@ -76,10 +78,27 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
 
     _print_Expr = _print_Function
     _print_Application = _print_Function
+    _print_MatrixExpr = _print_Function
     # TODO: a better class structure would avoid this mess:
     _print_Not = _print_Function
     _print_And = _print_Function
     _print_Or = _print_Function
+    _print_Transpose = _print_Function
+    _print_Trace = _print_Function
+
+    def _print_Derivative(self, expr):
+        variables = expr.variables
+        if any(isinstance(i, collections.Iterable) for i in variables):
+            raise NotImplementedError("derivation by multiple variables is not supported")
+        def unfold(expr, args):
+            if len(args) == 0:
+                return self._print(expr)
+            return "%s(%s, %s)[0]" % (
+                    self._module_format("tensorflow.gradients"),
+                    unfold(expr, args[:-1]),
+                    self._print(args[-1]),
+                )
+        return unfold(expr.expr, variables)
 
     def _print_Piecewise(self, expr):
         tensorflow = import_module('tensorflow')

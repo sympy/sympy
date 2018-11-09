@@ -1,6 +1,7 @@
 from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.tensorflow import tensorflow_code
-from sympy import (eye, symbols, MatrixSymbol, Symbol, Matrix, symbols, sin, exp)
+from sympy import (eye, symbols, MatrixSymbol, Symbol, Matrix, symbols, sin,
+        exp, Function, Derivative, Trace)
 from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
         CodegenArrayPermuteDims, CodegenArrayDiagonal)
@@ -38,6 +39,10 @@ def test_tensorflow_matrix():
     assert tensorflow_code(expr) == "tensorflow.matmul(tensorflow.matmul(tensorflow.matmul(M, N), P), Q)"
     expr = M**3
     assert tensorflow_code(expr) == "tensorflow.matmul(tensorflow.matmul(M, M), M)"
+    expr = M.T
+    assert tensorflow_code(expr) == "tensorflow.matrix_transpose(M)"
+    expr = Trace(M)
+    assert tensorflow_code(expr) == "tensorflow.trace(M)"
 
 
 def test_codegen_einsum():
@@ -134,3 +139,10 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert tensorflow_code(F) == "((-1)*B + A)[0, 0]"
+
+
+def test_tensorflow_Derivative():
+    f = Function("f")
+
+    expr = Derivative(sin(x), x)
+    assert tensorflow_code(expr) == "tensorflow.gradients(tensorflow.sin(x), x)[0]"
