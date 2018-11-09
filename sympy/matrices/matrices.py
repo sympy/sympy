@@ -2361,22 +2361,31 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if self.is_hermitian:
-            L = self._cholesky()
+        hermitian = True
+        if self.is_symmetric():
+            hermitian = False
+            L = self._cholesky(hermitian=False)
+        elif self.is_hermitian:
+            L = self._cholesky(hermitian=True)
         elif self.rows >= self.cols:
-            L = (self.H * self)._cholesky()
+            L = (self.H * self)._cholesky(hermitian=True)
             rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
-        return (L.H)._upper_triangular_solve(Y)
+        if hermitian:
+            return (L.H)._upper_triangular_solve(Y)
+        else:
+            return (L.T)._upper_triangular_solve(Y)
 
-    def cholesky(self):
-        """Returns the Cholesky decomposition L of a matrix A
-        such that L * L.H = A
+    def cholesky(self, hermitian=True):
+        """Returns the Cholesky-type decomposition L of a matrix A
+        such that L * L.H == A if hermitian flag is True,
+        or L * L.T == A if hermitian is False.
 
-        A must be a Hermitian positive-definite matrix.
+        A must be a Hermitian positive-definite matrix if hermitian is True,
+        or a symmetric matrix if it is False.
 
         Examples
         ========
@@ -2407,6 +2416,18 @@ class MatrixBase(MatrixDeprecated,
         [   9, 3*I],
         [-3*I,   5]])
 
+        Non-hermitian Cholesky-type decomposition may be useful when the
+        matrix is not positive-definite.
+
+        >>> A = Matrix([[1, 2], [2, 1]])
+        >>> L = A.cholesky(hermitian=False)
+        >>> L
+        Matrix([
+        [1,         0],
+        [2, sqrt(3)*I]])
+        >>> L*L.T == A
+        True
+
         See Also
         ========
 
@@ -2417,9 +2438,11 @@ class MatrixBase(MatrixDeprecated,
 
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if not self.is_hermitian:
+        if hermitian and not self.is_hermitian:
             raise ValueError("Matrix must be Hermitian.")
-        return self._cholesky()
+        if not hermitian and not self.is_symmetric():
+            raise ValueError("Matrix must be symmetric.")
+        return self._cholesky(hermitian=hermitian)
 
     def condition_number(self):
         """Returns the condition number of a matrix.
@@ -3095,12 +3118,14 @@ class MatrixBase(MatrixDeprecated,
         else:
             return divmod(a2idx_(key, len(self)), self.cols)
 
-    def LDLdecomposition(self):
+    def LDLdecomposition(self, hermitian=True):
         """Returns the LDL Decomposition (L, D) of matrix A,
-        such that L * D * L.H == A
+        such that L * D * L.H == A if hermitian flag is True, or
+        L * D * L.T == A if hermitian is False.
         This method eliminates the use of square root.
         Further this ensures that all the diagonal entries of L are 1.
-        A must be a Hermitian positive-definite matrix.
+        A must be a Hermitian positive-definite matrix if hermitian is True,
+        or a symmetric matrix otherwise.
 
         Examples
         ========
@@ -3146,9 +3171,11 @@ class MatrixBase(MatrixDeprecated,
         """
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if not self.is_hermitian:
+        if hermitian and not self.is_hermitian:
             raise ValueError("Matrix must be Hermitian.")
-        return self._LDLdecomposition()
+        if not hermitian and not self.is_symmetric():
+            raise ValueError("Matrix must be symmetric.")
+        return self._LDLdecomposition(hermitian=hermitian)
 
     def LDLsolve(self, rhs):
         """Solves Ax = B using LDL decomposition,
@@ -3179,17 +3206,24 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if self.is_hermitian:
-            L, D = self.LDLdecomposition()
+        hermitian = True
+        if self.is_symmetric():
+            hermitian = False
+            L, D = self.LDLdecomposition(hermitian=False)
+        elif self.is_hermitian:
+            L, D = self.LDLdecomposition(hermitian=True)
         elif self.rows >= self.cols:
-            L, D = (self.H * self).LDLdecomposition()
+            L, D = (self.H * self).LDLdecomposition(hermitian=True)
             rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
         Z = D._diagonal_solve(Y)
-        return (L.H)._upper_triangular_solve(Z)
+        if hermitian:
+            return (L.H)._upper_triangular_solve(Z)
+        else:
+            return (L.T)._upper_triangular_solve(Z)
 
     def lower_triangular_solve(self, rhs):
         """Solves Ax = B, where A is a lower triangular matrix.
