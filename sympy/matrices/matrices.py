@@ -2364,11 +2364,11 @@ class MatrixBase(MatrixDeprecated,
         hermitian = True
         if self.is_symmetric():
             hermitian = False
-            L = self._cholesky(hermitian=False)
+            L = self._cholesky(hermitian=hermitian)
         elif self.is_hermitian:
-            L = self._cholesky(hermitian=True)
+            L = self._cholesky(hermitian=hermitian)
         elif self.rows >= self.cols:
-            L = (self.H * self)._cholesky(hermitian=True)
+            L = (self.H * self)._cholesky(hermitian=hermitian)
             rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
@@ -3209,11 +3209,11 @@ class MatrixBase(MatrixDeprecated,
         hermitian = True
         if self.is_symmetric():
             hermitian = False
-            L, D = self.LDLdecomposition(hermitian=False)
+            L, D = self.LDLdecomposition(hermitian=hermitian)
         elif self.is_hermitian:
-            L, D = self.LDLdecomposition(hermitian=True)
+            L, D = self.LDLdecomposition(hermitian=hermitian)
         elif self.rows >= self.cols:
-            L, D = (self.H * self).LDLdecomposition(hermitian=True)
+            L, D = (self.H * self).LDLdecomposition(hermitian=hermitian)
             rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
