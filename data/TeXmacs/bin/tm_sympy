@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # TeXmacs interface for SymPy
 #
@@ -29,8 +29,7 @@ import traceback
 from sympy import __version__
 from sympy.printing import latex
 
-from types import FunctionType
-from sympy.plotting.plot import Plot
+from sympy import Basic, MatrixBase
 
 BEGIN, END = chr(2), chr(5)
 
@@ -38,10 +37,10 @@ DATA_COMMAND = chr(16)
 DATA_ESCAPE = chr(27)
 
 def send(kind, output=None):
-    message = "%s:%s" % (kind, output)
-
+    message = "%s:%s" %  (kind, output)
+    
     if kind == "latex":
-        message = "%s:$%s$" % (kind, output)
+        message = "%s:$%s$" %  (kind, output)
 
     os.sys.stdout.write(BEGIN)
     os.sys.stdout.write(message)
@@ -66,7 +65,7 @@ f = Function('f')
 Gamma, Zeta = gamma, zeta
 
 _greek = 'alpha beta gamma delta epsilon zeta eta '  \
-         'theta iota kappa mu nu xi omicron pi rho ' \
+         'theta iota kappa mu nu xi omicron rho ' \
          'sigma tau upsilon phi chi psi omega'
 
 for _symbol in _greek.split(' '):
@@ -85,20 +84,19 @@ while True:
     elif line[0] != DATA_COMMAND:
         line = re.sub(r' {2}(\s*)', r'\n \1', line)
 
-        try:
+        try: # Is it a Python expression?
             output = eval(line, _globals)
-        except SyntaxError:
-            try:
-                output = eval(compile(line, 'tm_sympy', 'exec'), _globals)
-            except (SyntaxError, TypeError) :
-                send("verbatim", traceback.format_exc(limit = 0))
-                continue
-
-        _globals['_'] = output
-        
-        if output is None:
-            send("verbatim", "")
-        elif isinstance(output, Plot) or isinstance(output, FunctionType):
-            send("verbatim", str(output))
+        except Exception:
+            try: # Is it a statement?
+                eval(compile(line, 'tm_sympy', 'exec'), _globals)
+            except Exception as e:
+                send("verbatim", ''.join(traceback.format_exception_only(type(e), e)))
+            else:
+                send("verbatim", "")
         else:
-            send("latex", latex(output))
+            if isinstance(output, Basic) or isinstance(output, MatrixBase):
+                send("latex", latex(output))
+            else:
+                send("verbatim", str(output))
+            
+            _globals['_'] = output
