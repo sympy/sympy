@@ -2737,7 +2737,6 @@ def test_pinv_solve():
     # Proof the solution is not exact.
     assert A * A.pinv() * B != B
 
-@XFAIL
 def test_pinv_rank_deficient():
     # Test the four properties of the pseudoinverse for various matrices.
     As = [Matrix([[1, 1, 1], [2, 2, 2]]),
