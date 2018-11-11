@@ -414,7 +414,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer
         elif _module_present('tensorflow', namespaces):
-            from sympy.printing.lambdarepr import TensorflowPrinter as Printer
+            from sympy.printing.tensorflow import TensorflowPrinter as Printer
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer
         else:

@@ -76,7 +76,7 @@ def _print_known_const(self, expr):
     return self._module_format(known)
 
 
-class PythonCodePrinter(CodePrinter):
+class AbstractPythonCodePrinter(CodePrinter):
     printmethod = "_pythoncode"
     language = "Python"
     standard = "python3"
@@ -99,7 +99,7 @@ class PythonCodePrinter(CodePrinter):
     )
 
     def __init__(self, settings=None):
-        super(PythonCodePrinter, self).__init__(settings)
+        super(AbstractPythonCodePrinter, self).__init__(settings)
         self.module_imports = defaultdict(set)
         self.known_functions = dict(self._kf, **(settings or {}).get(
             'user_functions', {}))
@@ -150,8 +150,8 @@ class PythonCodePrinter(CodePrinter):
         else:
             return "%s(%s, %s)" % (
                 self._module_format(op),
-                self._print(args[0]),
-                self._expand_fold_binary_op(op, args[1:]),
+                self._expand_fold_binary_op(op, args[:-1]),
+                self._print(args[-1]),
             )
 
     def _expand_reduce_binary_op(self, op, args):
@@ -179,15 +179,46 @@ class PythonCodePrinter(CodePrinter):
                 self._expand_reduce_binary_op(args[Nhalf:]),
             )
 
+    def _get_einsum_string(self, subranks, contraction_indices):
+        letters = self._get_letter_generator_for_einsum()
+        contraction_string = ""
+        counter = 0
+        d = {j: min(i) for i in contraction_indices for j in i}
+        indices = []
+        for rank_arg in subranks:
+            lindices = []
+            for i in range(rank_arg):
+                if counter in d:
+                    lindices.append(d[counter])
+                else:
+                    lindices.append(counter)
+                counter += 1
+            indices.append(lindices)
+        mapping = {}
+        letters_free = []
+        letters_dum = []
+        for i in indices:
+            for j in i:
+                if j not in mapping:
+                    l = next(letters)
+                    mapping[j] = l
+                else:
+                    l = mapping[j]
+                contraction_string += l
+                if j in d:
+                    if l not in letters_dum:
+                        letters_dum.append(l)
+                else:
+                    letters_free.append(l)
+            contraction_string += ","
+        contraction_string = contraction_string[:-1]
+        return contraction_string, letters_free, letters_dum
+
     def _print_NaN(self, expr):
         return "float('nan')"
 
     def _print_Infinity(self, expr):
         return "float('inf')"
-
-    def _print_sign(self, e):
-        return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
-            f=self._module_format('math.copysign'), e=self._print(e.args[0]))
 
     def _print_NegativeInfinity(self, expr):
         return "float('-inf')"
@@ -236,7 +267,7 @@ class PythonCodePrinter(CodePrinter):
             lhs = self._print(expr.lhs)
             rhs = self._print(expr.rhs)
             return '({lhs} {op} {rhs})'.format(op=expr.rel_op, lhs=lhs, rhs=rhs)
-        return super(PythonCodePrinter, self)._print_Relational(expr)
+        return super(AbstractPythonCodePrinter, self)._print_Relational(expr)
 
     def _print_ITE(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
@@ -318,6 +349,17 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NoneToken(self, arg):
         return 'None'
+
+
+class PythonCodePrinter(AbstractPythonCodePrinter):
+
+    def _print_sign(self, e):
+        return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
+            f=self._module_format('math.copysign'), e=self._print(e.args[0]))
+
+    def _print_Not(self, expr):
+        PREC = precedence(expr)
+        return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
 
 for k in PythonCodePrinter._kf:
