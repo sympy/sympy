@@ -1,3 +1,5 @@
+import random
+
 from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.tensorflow import tensorflow_code
 from sympy import (eye, symbols, MatrixSymbol, Symbol, Matrix, symbols, sin,
@@ -10,7 +12,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.utilities.pytest import skip
 from sympy.external import import_module
 
-tf = import_module("tensorflow")
+tf = tensorflow = import_module("tensorflow")
 
 M = MatrixSymbol("M", 3, 3)
 N = MatrixSymbol("N", 3, 3)
@@ -18,6 +20,25 @@ P = MatrixSymbol("P", 3, 3)
 Q = MatrixSymbol("Q", 3, 3)
 
 x, y, z, t = symbols("x y z t")
+
+if tf is not None:
+    llo = [[j for j in range(i, i+3)] for i in range(0, 9, 3)]
+    m3x3 = tf.constant(llo)
+    m3x3sympy = Matrix(llo)
+    session = tf.Session()
+
+
+def _compare_tensorflow_matrix(variables, expr):
+    f = lambdify(variables, expr, 'tensorflow')
+    random_matrices = [Matrix([[random.randint(0, 10) for k in
+        range(i.shape[1])] for j in range(i.shape[0])]) for i in variables]
+    random_variables = [eval(tensorflow_code(i)) for i in
+            random_matrices]
+    r = session.run(f(*random_variables))
+    e = expr.subs({k: v for k, v in zip(variables, random_matrices)}).doit()
+    if e.is_Matrix:
+        e = e.tolist()
+    assert (r == e).all()
 
 
 def test_tensorflow_matrix():
@@ -31,18 +52,31 @@ def test_tensorflow_matrix():
 
     expr = M
     assert tensorflow_code(expr) == "M"
+    _compare_tensorflow_matrix((M,), expr)
+
     expr = M + N
     assert tensorflow_code(expr) == "M + N"
+    _compare_tensorflow_matrix((M, N), expr)
+
     expr = M*N
     assert tensorflow_code(expr) == "tensorflow.matmul(M, N)"
+    _compare_tensorflow_matrix((M, N), expr)
+
     expr = M*N*P*Q
     assert tensorflow_code(expr) == "tensorflow.matmul(tensorflow.matmul(tensorflow.matmul(M, N), P), Q)"
+    _compare_tensorflow_matrix((M, N, P, Q), expr)
+
     expr = M**3
     assert tensorflow_code(expr) == "tensorflow.matmul(tensorflow.matmul(M, M), M)"
+    _compare_tensorflow_matrix((M,), expr)
+
     expr = M.T
     assert tensorflow_code(expr) == "tensorflow.matrix_transpose(M)"
+    _compare_tensorflow_matrix((M,), expr)
+
     expr = Trace(M)
     assert tensorflow_code(expr) == "tensorflow.trace(M)"
+    _compare_tensorflow_matrix((M,), expr)
 
 
 def test_codegen_einsum():
