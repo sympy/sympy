@@ -1017,6 +1017,10 @@ class Union(Set, EvalfMixin):
         args = list(args)
 
         def flatten(arg):
+            if isinstance(arg, set):
+                # If any element of python set is a Set, it should not be sympified
+                if all(not isinstance(x, Set) for x in arg):
+                    return [_sympify(arg)]
             if isinstance(arg, Set):
                 if arg.is_Union:
                     return sum(map(flatten, arg.args), [])

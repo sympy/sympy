@@ -107,6 +107,8 @@ def test_union():
 
     assert Union(Set()) == Set()
 
+    assert Union({1},{2},{3}) == FiniteSet(1,2,3)
+
     assert FiniteSet(1) + FiniteSet(2) + FiniteSet(3) == FiniteSet(1, 2, 3)
     assert FiniteSet('ham') + FiniteSet('eggs') == FiniteSet('ham', 'eggs')
     assert FiniteSet(1, 2, 3) + S.EmptySet == FiniteSet(1, 2, 3)
