@@ -8059,6 +8059,7 @@ def matrix_exp_jordan_form(A, t):
 
     # Needed for consistency across Python versions:
     eigenchains = sorted(eigenchains.items(), key=default_sort_key)
+    isreal = not A.has(I)
 
     blocks = []
     vectors = []
@@ -8066,7 +8067,7 @@ def matrix_exp_jordan_form(A, t):
     for e, chains in eigenchains:
         for chain in chains:
             n = len(chain)
-            if im(e).is_nonzero:
+            if isreal and im(e).is_nonzero:
                 if e in seen_conjugate:
                     continue
                 seen_conjugate.add(e.conjugate())

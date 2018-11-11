@@ -3028,6 +3028,12 @@ def test_matrix_exp():
     #[ 0,  0, -c - e - f,  0],
     #[ 0,  0,          f, -d]])
 
+    A = Matrix([[0, I], [I, 0]])
+    expAt = Matrix([
+    [exp(I*t)/2 + exp(-I*t)/2, exp(I*t)/2 - exp(-I*t)/2],
+    [exp(I*t)/2 - exp(-I*t)/2, exp(I*t)/2 + exp(-I*t)/2]])
+    assert matrix_exp(A, t) == expAt
+
 def test_sysode_linear_neq_order1():
 
     x, y = symbols('x y', cls=Function)
