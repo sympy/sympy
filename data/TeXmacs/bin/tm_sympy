@@ -51,7 +51,12 @@ send("verbatim", "Welcome to SymPy " + __version__)
 
 _globals = {}
 
-_init = open(os.path.join(sys.path[0], "init.py"))
+py2or3 = sys.version_info[0];
+
+if py2or3 == 2:
+    _init = open(os.path.join(sys.path[0], "init-py2.py"))
+else:
+    _init = open(os.path.join(sys.path[0], "init-py3.py"))
 
 try:
     eval(compile(_init.read(), 'init.py', 'exec'), _globals)
