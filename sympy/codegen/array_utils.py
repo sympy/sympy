@@ -360,6 +360,11 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
     >>> from sympy.codegen.array_utils import recognize_matrix_expression
     >>> recognize_matrix_expression(cg)
     M.T
+
+    >>> N = MatrixSymbol("N", 3, 2)
+    >>> cg = CodegenArrayPermuteDims(N, [1, 0])
+    >>> cg.shape
+    (2, 3)
     """
     def __new__(cls, expr, permutation):
         from sympy.combinatorics import Permutation
@@ -374,8 +379,8 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         if shape is None:
             obj._shape = None
         else:
-            pinverse = permutation**-1
-            obj._shape = tuple(shape[pinverse(i)] for i in range(len(shape)))
+            #pinverse = permutation**-1
+            obj._shape = tuple(shape[permutation(i)] for i in range(len(shape)))
         return obj
 
     @property

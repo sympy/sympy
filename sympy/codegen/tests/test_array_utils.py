@@ -244,7 +244,7 @@ def test_codegen_array_shape():
     expr2 = CodegenArrayDiagonal(expr, (0, 1))
     assert expr2.shape == (m, n, k)
     exprp = CodegenArrayPermuteDims(expr, [2, 1, 3, 0])
-    assert exprp.shape == (n, k, k, m)
+    assert exprp.shape == (m, k, n, k)
     expr3 = CodegenArrayTensorProduct(N, Z)
     expr2 = CodegenArrayElementwiseAdd(expr, expr3)
     assert expr2.shape == (k, k, m, n)
