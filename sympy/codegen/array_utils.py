@@ -379,7 +379,6 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         if shape is None:
             obj._shape = None
         else:
-            #pinverse = permutation**-1
             obj._shape = tuple(shape[permutation(i)] for i in range(len(shape)))
         return obj
 
