@@ -1661,14 +1661,17 @@ class JuliaCodeGen(CodeGen):
         code_list.append("function ")
 
         # Inputs
-        args = []
+        args_in = []
+        args_inout = []
         for i, arg in enumerate(routine.arguments):
             if isinstance(arg, OutputArgument):
                 raise CodeGenError("Julia: invalid argument of type %s" %
                                    str(type(arg)))
-            if isinstance(arg, (InputArgument, InOutArgument)):
-                args.append("%s" % self._get_symbol(arg.name))
-        args = ", ".join(args)
+            if isinstance(arg, InputArgument):
+                args_in.append("%s" % self._get_symbol(arg.name))
+            if isinstance(arg, InOutArgument):
+                args_inout.append("%s" % self._get_symbol(arg.name))
+        args = ", ".join(args_inout + args_in)
         code_list.append("%s(%s)\n" % (routine.name, args))
         code_list = [ "".join(code_list) ]
 
