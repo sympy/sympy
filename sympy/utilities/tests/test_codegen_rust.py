@@ -350,7 +350,7 @@ def test_InOutArgument_order():
     result, = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
     expected = (
-        "fn test(y: f64, x: f64) -> f64 {\n"
+        "fn test(x: f64, y: f64) -> f64 {\n"
         "    let x = x.powi(2) + y;\n"
         "    x\n"
         "}\n"

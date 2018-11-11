@@ -1980,14 +1980,19 @@ class RustCodeGen(CodeGen):
         else:
             rstype = ""
 
-        type_args = []
+        type_args_in = []
+        type_args_inout = []
         for arg in routine.arguments:
             name = self.printer.doprint(arg.name)
+            if isinstance(arg, InputArgument):
+                type_args = type_args_in
+            if isinstance(arg, InOutArgument):
+                type_args = type_args_inout
             if arg.dimensions:# or isinstance(arg, ResultBase):
                 type_args.append(("*%s" % name, self._get_type(arg.datatype)))
             else:
                 type_args.append((name, self._get_type(arg.datatype)))
-        arguments = ", ".join([ "%s: %s" % t for t in type_args])
+        arguments = ", ".join([ "%s: %s" % t for t in type_args_inout + type_args_in])
         return "fn %s(%s)%s" % (routine.name, arguments, rstype)
 
     def _preprocessor_statements(self, prefix):
