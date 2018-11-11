@@ -1,6 +1,7 @@
 from distutils.version import LooseVersion as V
 import collections
 
+from sympy.core.compatibility import Iterable
 from sympy.printing.printer import Printer
 from sympy.printing.precedence import PRECEDENCE
 from sympy.printing.pycode import AbstractPythonCodePrinter
@@ -88,7 +89,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
 
     def _print_Derivative(self, expr):
         variables = expr.variables
-        if any(isinstance(i, collections.Iterable) for i in variables):
+        if any(isinstance(i, Iterable) for i in variables):
             raise NotImplementedError("derivation by multiple variables is not supported")
         def unfold(expr, args):
             if len(args) == 0:
