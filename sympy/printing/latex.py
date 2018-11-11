@@ -1728,7 +1728,7 @@ class LatexPrinter(Printer):
 
     def _print_ProductSet(self, p):
         if len(p.sets) > 1 and not has_variety(p.sets):
-            return self._print(p.sets[0]) + "^%d" % len(p.sets)
+            return self._print(p.sets[0]) + "^{%d}" % len(p.sets)
         else:
             return r" \times ".join(self._print(set) for set in p.sets)
 

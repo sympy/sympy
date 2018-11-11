@@ -2027,10 +2027,18 @@ def test_cholesky():
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky())
     raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).cholesky())
     raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).cholesky())
+    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky(hermitian=False))
+    assert Matrix(((5 + I, 0), (0, 1))).cholesky(hermitian=False) == Matrix([
+        [sqrt(5 + I), 0], [0, 1]])
+    A = Matrix(((1, 5), (5, 1)))
+    L = A.cholesky(hermitian=False)
+    assert L == Matrix([[1, 0], [5, 2*sqrt(6)*I]])
+    assert L*L.T == A
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-    assert A.cholesky() * A.cholesky().T == A
-    assert A.cholesky().is_lower
-    assert A.cholesky() == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
+    L = A.cholesky()
+    assert L * L.T == A
+    assert L.is_lower
+    assert L == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
     A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
     assert A.cholesky() == Matrix(((2, 0, 0), (I, 1, 0), (1 - I, 0, 3)))
 
@@ -2040,6 +2048,10 @@ def test_LDLdecomposition():
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition())
     raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).LDLdecomposition())
     raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).LDLdecomposition())
+    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition(hermitian=False))
+    A = Matrix(((1, 5), (5, 1)))
+    L, D = A.LDLdecomposition(hermitian=False)
+    assert L * D * L.T == A
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     L, D = A.LDLdecomposition()
     assert L * D * L.T == A
@@ -2069,6 +2081,11 @@ def test_cholesky_solve():
     b = A*x
     soln = A.cholesky_solve(b)
     assert soln == x
+    A = Matrix(((1, 5), (5, 1)))
+    x = Matrix((4, -3))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert soln == x
     A = Matrix(((9, 3*I), (-3*I, 5)))
     x = Matrix((-2, 1))
     b = A*x
@@ -2079,6 +2096,11 @@ def test_cholesky_solve():
     b = A*x
     soln = A.cholesky_solve(b)
     assert expand_mul(soln) == x
+    a00, a01, a11, b0, b1 = symbols('a00, a01, a11, b0, b1')
+    A = Matrix(((a00, a01), (a01, a11)))
+    b = Matrix((b0, b1))
+    x = A.cholesky_solve(b)
+    assert simplify(A*x) == b
 
 
 def test_LDLsolve():
@@ -2878,6 +2900,12 @@ def test_gauss_jordan_solve():
     b = Matrix([1, 1, 1])
     raises(ValueError, lambda: A.gauss_jordan_solve(b))
 
+def test_solve():
+    A = Matrix([[1,2], [2,4]])
+    b = Matrix([[3], [4]])
+    raises(ValueError, lambda: A.solve(b)) #no solution
+    b = Matrix([[ 4], [8]])
+    raises(ValueError, lambda: A.solve(b)) #infinite solution
 
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
