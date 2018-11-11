@@ -1484,8 +1484,9 @@ class LatexPrinter(Printer):
 
         args = expr.args
         if isinstance(args[0], Mul):
-            args = args[0].args + args[1:]
-        args = list(args)
+            args = args[0].as_ordered_factors() + list(args[1:])
+        else:
+            args = list(args)
 
         if isinstance(expr, MatMul) and _coeff_isneg(expr):
             if args[0] == -1:
