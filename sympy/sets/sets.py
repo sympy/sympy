@@ -1018,9 +1018,7 @@ class Union(Set, EvalfMixin):
 
         def flatten(arg):
             if isinstance(arg, set):
-                # If any element of python set is a Set, it should not be sympified
-                if all(not isinstance(x, Set) for x in arg):
-                    return [_sympify(arg)]
+                return [_sympify(arg)]
             if isinstance(arg, Set):
                 if arg.is_Union:
                     return sum(map(flatten, arg.args), [])
@@ -1891,7 +1889,7 @@ def simplify_union(args):
     if len(args) == 1:
         return args.pop()
     else:
-        return Union(args, evaluate=False)
+        return Union(list(args), evaluate=False)
 
 
 def simplify_intersection(args):
