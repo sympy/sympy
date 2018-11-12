@@ -3589,14 +3589,24 @@ class MatrixBase(MatrixDeprecated,
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
 
+        m = self.rows
+        n = self.cols
+        if m < n:
+            raise NotImplementedError("Underdetermined systems not supported.")
         A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
-        n = self.rows
         b = rhs.permute_rows(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
-        for i in range(n):
-            for j in range(i):
+        for i in range(m):
+            for j in range(min(i, n)):
                 scale = A[i, j]
                 b.zip_row_op(i, j, lambda x, y: x - y * scale)
+        # consistency check for overdetermined systems
+        if m > n:
+            for i in range(n, m):
+                for j in range(b.cols):
+                    if not iszerofunc(b[i, j]):
+                        raise ValueError("The system is inconsistent.")
+            b = b[0:n, :]   # truncate zero rows if consistent
         # backward substitution
         for i in range(n - 1, -1, -1):
             for j in range(i + 1, n):
