@@ -17,6 +17,16 @@ from sympy.utilities.decorator import doctest_depends_on
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
+# These are the namespaces the lambda functions will use.
+MATH = {}
+MPMATH = {}
+NUMPY = {}
+SCIPY = {}
+TENSORFLOW = {}
+TORCH = {}
+SYMPY = {}
+NUMEXPR = {}
+
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
 MATH_DEFAULT = {}
@@ -24,6 +34,7 @@ MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
 SCIPY_DEFAULT = {"I": 1j}
 TENSORFLOW_DEFAULT = {}
+TORCH_DEFAULT = {}
 SYMPY_DEFAULT = {}
 NUMEXPR_DEFAULT = {}
 
@@ -89,6 +100,8 @@ TENSORFLOW_TRANSLATIONS = {
     "re": "real",
 }
 
+TORCH_TRANSLATIONS = {}
+
 NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
@@ -98,6 +111,7 @@ MODULES = {
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
+    "torch": (TORCH, TORCH_DEFAULT, TORCH_TRANSLATIONS, ("import_module('torch')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -424,6 +438,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.tensorflow import TensorflowPrinter as Printer
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer
+        elif _module_present('torch', namespaces):
+            from sympy.printing.torch import TorchPrinter as Printer
         else:
             from sympy.printing.pycode import PythonCodePrinter as Printer
         user_functions = {}

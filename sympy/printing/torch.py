@@ -12,7 +12,7 @@ class TorchPrinter(AbstractPythonCodePrinter):
 
     def _print_MatrixBase(self, expr):
         return "%s(%s)" % (
-            self._module_format("torch.LongTensor"),
+            self._module_format("torch.FloatTensor"),
             str(expr.tolist())
         )
 
