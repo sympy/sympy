@@ -77,8 +77,18 @@ def _coeff_isneg(a):
     >>> _coeff_isneg(Symbol('n', negative=True)) # coeff is 1
     False
 
+    For matrix expressions:
+
+    >>> from sympy import MatrixSymbol, sqrt
+    >>> A = MatrixSymbol("A", 3, 3)
+    >>> _coeff_isneg(-sqrt(2)*A)
+    True
+    >>> _coeff_isneg(sqrt(2)*A)
+    False
     """
 
+    if a.is_MatMul:
+        a = a.args[0]
     if a.is_Mul:
         a = a.args[0]
     return a.is_Number and a.is_negative

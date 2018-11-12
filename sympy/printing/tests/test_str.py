@@ -795,14 +795,14 @@ def test_MatrixElement_printing():
     assert(str(3 * A[0, 0]) == "3*A[0, 0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert str(F) == "(-B + A)[0, 0]"
+    assert str(F) == "(A - B)[0, 0]"
 
 
 def test_MatrixSymbol_printing():
     A = MatrixSymbol("A", 3, 3)
     B = MatrixSymbol("B", 3, 3)
 
-    assert str(A - A*B - B) == "-B - A*B + A"
+    assert str(A - A*B - B) == "A - A*B - B"
     assert str(A*B - (A+B)) == "-(A + B) + A*B"
 
 

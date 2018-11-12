@@ -1212,10 +1212,10 @@ def test_matAdd():
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     l = LatexPrinter()
-    assert l._print_MatAdd(C - 2*B) in ['-2 B + C', 'C -2 B']
-    assert l._print_MatAdd(C + 2*B) in ['2 B + C', 'C + 2 B']
-    assert l._print_MatAdd(B - 2*C) in ['B -2 C', '-2 C + B']
-    assert l._print_MatAdd(B + 2*C) in ['B + 2 C', '2 C + B']
+    assert l._print(C - 2*B) in ['- 2 B + C', 'C -2 B']
+    assert l._print(C + 2*B) in ['2 B + C', 'C + 2 B']
+    assert l._print(B - 2*C) in ['B - 2 C', '- 2 C + B']
+    assert l._print(B + 2*C) in ['B + 2 C', '2 C + B']
 
 
 def test_matMul():
@@ -1227,13 +1227,13 @@ def test_matMul():
     l = LatexPrinter()
     assert l._print_MatMul(2*A) == '2 A'
     assert l._print_MatMul(2*x*A) == '2 x A'
-    assert l._print_MatMul(-2*A) == '-2 A'
+    assert l._print_MatMul(-2*A) == '- 2 A'
     assert l._print_MatMul(1.5*A) == '1.5 A'
     assert l._print_MatMul(sqrt(2)*A) == r'\sqrt{2} A'
     assert l._print_MatMul(-sqrt(2)*A) == r'- \sqrt{2} A'
     assert l._print_MatMul(2*sqrt(2)*x*A) == r'2 \sqrt{2} x A'
-    assert l._print_MatMul(-2*A*(A + 2*B)) in [r'-2 A \left(A + 2 B\right)',
-        r'-2 A \left(2 B + A\right)']
+    assert l._print_MatMul(-2*A*(A + 2*B)) in [r'- 2 A \left(A + 2 B\right)',
+        r'- 2 A \left(2 B + A\right)']
 
 
 def test_latex_MatrixSlice():
@@ -1682,6 +1682,14 @@ def test_issue_7117():
     assert latex(q) == r"\left(x + 1 = 2 x\right)^{2}"
 
 
+def test_issue_15439():
+    x = MatrixSymbol('x', 2, 2)
+    y = MatrixSymbol('y', 2, 2)
+    assert latex((x * y).subs(y, -y)) == r"x \left(- y\right)"
+    assert latex((x * y).subs(y, -2*y)) == r"x \left(- 2 y\right)"
+    assert latex((x * y).subs(x, -x)) == r"- x y"
+
+
 def test_issue_2934():
     assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'
 
@@ -1728,7 +1736,7 @@ def test_MatrixElement_printing():
     assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
 
     F = C[0, 0].subs(C, A - B)
-    assert latex(F) == r"\left(-B + A\right)_{0, 0}"
+    assert latex(F) == r"\left(A - B\right)_{0, 0}"
 
 
 def test_MatrixSymbol_printing():
@@ -1737,9 +1745,9 @@ def test_MatrixSymbol_printing():
     B = MatrixSymbol("B", 3, 3)
     C = MatrixSymbol("C", 3, 3)
 
-    assert latex(-A) == r"-A"
-    assert latex(A - A*B - B) == r"-B - A B + A"
-    assert latex(-A*B - A*B*C - B) == r"-B - A B - A B C"
+    assert latex(-A) == r"- A"
+    assert latex(A - A*B - B) == r"A - A B - B"
+    assert latex(-A*B - A*B*C - B) == r"- A B - A B C - B"
 
 
 def test_Quaternion_latex_printing():
