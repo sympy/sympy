@@ -2590,10 +2590,21 @@ class MatrixBase(MatrixDeprecated,
             raise TypeError("Size mis-match")
         return self._diagonal_solve(rhs)
 
-    def dot(self, b):
-        """Return the dot product of two vectors of equal length. ``self`` must
-        be a ``Matrix`` of size 1 x n or n x 1, and ``b`` must be either a
-        matrix of size 1 x n, n x 1, or a list/tuple of length n. A scalar is returned.
+    def dot(self, b, hermitian=None, conjugate_convention=None):
+        """Return the dot or inner product of two vectors of equal length.
+        Here ``self`` must be a ``Matrix`` of size 1 x n or n x 1, and ``b``
+        must be either a matrix of size 1 x n, n x 1, or a list/tuple of length n.
+        A scalar is returned.
+
+        By default, ``dot`` does not conjugate ``self`` or ``b``, even if there are
+        complex entries. Set ``hermitian=True`` (and optionally a ``conjugate_convention``)
+        to compute the hermitian inner product.
+
+        Possible kwargs are ``hermitian`` and ``conjugate_convention``.
+
+        If ``conjugate_convention`` is ``"left"``, ``"math"`` or ``"maths"``,
+        the conjugate of the first vector (``self``) is used.  If ``"right"``
+        or ``"physics"`` is specified, the conjugate of the second vector ``b`` is used.
 
         Examples
         ========
@@ -2608,6 +2619,21 @@ class MatrixBase(MatrixDeprecated,
         >>> v = [3, 2, 1]
         >>> M.row(0).dot(v)
         10
+
+        >>> from sympy import I
+        >>> q = Matrix([1*I, 1*I, 1*I])
+        >>> q.dot(q, hermitian=False)
+        -3
+
+        >>> q.dot(q, hermitian=True)
+        3
+
+        >>> q1 = Matrix([1, 1, 1*I])
+        >>> q.dot(q1, hermitian=True, conjugate_convention="maths")
+        1 - 2*I
+        >>> q.dot(q1, hermitian=True, conjugate_convention="physics")
+        1 + 2*I
+
 
         See Also
         ========
@@ -2645,7 +2671,28 @@ class MatrixBase(MatrixDeprecated,
             mat = mat.reshape(1, n)
         if b.shape != (n, 1):
             b = b.reshape(n, 1)
+
         # Now ``mat`` is a row vector and ``b`` is a column vector.
+
+        # If it so happens that only conjugate_convention is passed
+        # then automatically set hermitian to True. If only hermitian
+        # is true but no conjugate_convention is not passed then
+        # automatically set it to ``"maths"``
+
+        if conjugate_convention is not None and hermitian is None:
+            hermitian = True
+        if hermitian and conjugate_convention is None:
+            conjugate_convention = "maths"
+
+        if hermitian == True:
+            if conjugate_convention in ("maths", "left", "math"):
+                mat = mat.conjugate()
+            elif conjugate_convention in ("physics", "right"):
+                b = b.conjugate()
+            else:
+                raise ValueError("Unknown conjugate_convention was entered."
+                                 " conjugate_convention must be one of the"
+                                 " following: math, maths, left, physics or right.")
         return (mat * b)[0]
 
     def dual(self):
