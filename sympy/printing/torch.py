@@ -11,9 +11,10 @@ class TorchPrinter(AbstractPythonCodePrinter):
         return self._expand_fold_binary_op("torch.mm", [expr.base]*expr.exp)
 
     def _print_MatrixBase(self, expr):
+        data = "["+", ".join(["["+", ".join([self._print(j) for j in i])+"]" for i in expr.tolist()])+"]"
         return "%s(%s)" % (
             self._module_format("torch.FloatTensor"),
-            str(expr.tolist())
+            str(data)
         )
 
     def _print_CodegenArrayTensorProduct(self, expr):
@@ -70,10 +71,9 @@ class TorchPrinter(AbstractPythonCodePrinter):
         )
 
     def _print_CodegenArrayPermuteDims(self, expr):
-        return "%s(%s, %s)" % (
-            self._module_format("torch.transpose"),
+        return "%s.permute(%s)" % (
             self._print(expr.expr),
-            self._print(expr.permutation.args[0]),
+            ", ".join([self._print(i) for i in expr.permutation.args[0]]),
         )
 
     def _print_CodegenArrayElementwiseAdd(self, expr):

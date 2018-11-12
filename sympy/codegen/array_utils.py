@@ -312,6 +312,14 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
                 *contractions
             )
 
+    def doit(self, **kwargs):
+        from sympy.tensor.array import tensorcontraction
+        deep = kwargs.get("deep", True)
+        expr = self.expr
+        if deep:
+            expr = expr.doit(**kwargs)
+        return tensorcontraction(expr, *self.contraction_indices)
+
 
 def get_shape(expr):
     if hasattr(expr, "shape"):
@@ -359,6 +367,15 @@ class CodegenArrayTensorProduct(_CodegenArrayAbstract):
         args = [i for arg in args for i in (arg.args if isinstance(arg, cls) else [arg])]
         return args
 
+    def doit(self, **kwargs):
+        from sympy.tensor.array import tensorproduct
+        deep = kwargs.get("deep", True)
+        if deep:
+            args = [i.doit(**kwargs) for i in self.args]
+        else:
+            args = self.args
+        return tensorproduct(*args)
+
 
 class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
     r"""
@@ -380,6 +397,14 @@ class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
         else:
             obj._shape = shapes[0]
         return obj
+
+    def doit(self, **kwargs):
+        deep = kwargs.get("deep", True)
+        if deep:
+            args = [i.doit(**kwargs) for i in self.args]
+        else:
+            args = self.args
+        return Add.fromiter(args)
 
 
 class CodegenArrayPermuteDims(_CodegenArrayAbstract):
@@ -493,6 +518,13 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
 
         return self
 
+    def doit(self, **kwargs):
+        from sympy.tensor.array import permutedims
+        deep = kwargs.get("deep", True)
+        expr = self.expr
+        if deep:
+            expr = expr.doit(**kwargs)
+        return permutedims(expr, self.permutation)
 
 def nest_permutation(expr):
     if isinstance(expr, CodegenArrayPermuteDims):
@@ -574,6 +606,9 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         outer_diagonal_indices = tuple(tuple(shifts[j] + j for j in i) for i in outer_diagonal_indices)
         diagonal_indices = inner_diagonal_indices + outer_diagonal_indices
         return CodegenArrayDiagonal(expr.expr, *diagonal_indices)
+
+    def doit(self, **kwargs):
+        raise NotImplementedError("no implementation for diagonal yet")
 
 
 def get_rank(expr):

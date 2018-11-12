@@ -250,6 +250,8 @@ def permutedims(expr, perm):
 
     """
     if not isinstance(expr, NDimArray):
+        expr = ImmutableDenseNDimArray(expr)
+    if not isinstance(expr, NDimArray):
         raise TypeError("expression has to be an N-dim array")
 
     from sympy.combinatorics import Permutation
