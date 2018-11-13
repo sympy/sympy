@@ -181,6 +181,8 @@ def test_codegen_array_parse():
             CodegenArrayTensorProduct(M, N),
             CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), Permutation(0, 2)(1, 3))
         ), (1, 2)), (i, l, frozenset({j, m, k})))
+    expr = KroneckerDelta(i, j)*KroneckerDelta(j, k)*KroneckerDelta(k,m)*M[i, 0]*KroneckerDelta(m, n)
+    assert _codegen_array_parse(expr) == (M, ({i,j,k,m,n}, 0))
     expr = M[i, i]
     assert _codegen_array_parse(expr) == (CodegenArrayDiagonal(M, (0, 1)), (i,))
 
