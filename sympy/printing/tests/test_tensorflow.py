@@ -55,7 +55,7 @@ def test_tensorflow_matrix():
     _compare_tensorflow_matrix((M,), expr)
 
     expr = M + N
-    assert tensorflow_code(expr) == "M + N"
+    assert tensorflow_code(expr) == "tensorflow.add(M, N)"
     _compare_tensorflow_matrix((M, N), expr)
 
     expr = M*N
@@ -172,7 +172,7 @@ def test_MatrixElement_printing():
     assert tensorflow_code(3 * A[0, 0]) == "3*A[0, 0]"
 
     F = C[0, 0].subs(C, A - B)
-    assert tensorflow_code(F) == "((-1)*B + A)[0, 0]"
+    assert tensorflow_code(F) == "(tensorflow.add((-1)*B, A))[0, 0]"
 
 
 def test_tensorflow_Derivative():
