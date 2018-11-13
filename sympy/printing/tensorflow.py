@@ -128,7 +128,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         data = "["+", ".join(["["+", ".join([self._print(j) for j in i])+"]" for i in expr.tolist()])+"]"
         return "%s(%s)" % (
             self._module_format(tensorflow_f),
-            str(data),
+            data,
         )
 
     def _print_MatMul(self, expr):
