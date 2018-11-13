@@ -97,7 +97,23 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         return free_indices_to_position
 
     @staticmethod
-    def _flatten(expr, *outer_contraction_indices):
+    def _get_index_shifts(expr):
+        """
+        Get the mapping of indices at the positions before the contraction
+        occures.
+
+        Examples
+        ========
+
+        >>> from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+        >>> cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), [1, 2])
+        >>> cg._get_index_shifts(cg)
+        [0, 2]
+
+        Indeed, ``cg`` after the contraction has two dimensions, 0 and 1. They
+        need to be shifted by 0 and 2 to get the corresponding positions before
+        the contraction (that is, 0 and 3).
+        """
         inner_contraction_indices = expr.contraction_indices
         all_inner = [j for i in inner_contraction_indices for j in i]
         all_inner.sort()
@@ -114,7 +130,18 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
                 pointer += 1
             shifts[i] += pointer
             counter += 1
+        return shifts
+
+    @staticmethod
+    def _convert_outer_indices_to_inner_indices(expr, *outer_contraction_indices):
+        shifts = CodegenArrayContraction._get_index_shifts(expr)
         outer_contraction_indices = tuple(tuple(shifts[j] + j for j in i) for i in outer_contraction_indices)
+        return outer_contraction_indices
+
+    @staticmethod
+    def _flatten(expr, *outer_contraction_indices):
+        inner_contraction_indices = expr.contraction_indices
+        outer_contraction_indices = CodegenArrayContraction._convert_outer_indices_to_inner_indices(expr, *outer_contraction_indices)
         contraction_indices = inner_contraction_indices + outer_contraction_indices
         return CodegenArrayContraction(expr.expr, *contraction_indices)
 
@@ -389,6 +416,52 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
     @property
     def permutation(self):
         return self.args[1]
+
+    def sink_permutation(self, deep=False):
+        r"""
+        Sink the permutation down the expression tree.
+        """
+        expr = self.expr
+        if isinstance(expr, CodegenArrayTensorProduct):
+            # Check if the permutation keeps the subranks separated:
+            subranks = expr.subranks
+            subrank = expr.subrank()
+            l = list(range(subrank))
+            p = [self.permutation(i) for i in l]
+            dargs = {}
+            counter = 0
+            print(subranks)
+            for i, arg in zip(subranks, expr.args):
+                print(arg)
+                p0 = p[counter:counter+i]
+                counter += i
+                s0 = sorted(p0)
+                if not all([s0[j+1]-s0[j] == 1 for j in range(len(s0)-1)]):
+                    # Cross-argument permutations, impossible to sink the object:
+                    return self
+                subpermutation = [p0.index(j) for j in s0]
+                dargs[s0[0]] = CodegenArrayPermuteDims(arg, subpermutation)
+            # Read the arguments sorting the according to the keys of the dict:
+            args = [dargs[i] for i in sorted(dargs)]
+            return CodegenArrayTensorProduct(*args)
+        elif isinstance(expr, CodegenArrayContraction):
+            # Invert tree hierarchy: put the contraction above.
+            #plist = self.permutation.args[0]
+            shifts = expr._get_index_shifts(expr)
+            cycles = self.permutation.cyclic_form
+            newcycles = CodegenArrayContraction._convert_outer_indices_to_inner_indices(expr, *cycles)
+            newpermutation = Permutation(newcycles)
+            new_contr_indices = [tuple(newpermutation(j) for j in i) for i in expr.contraction_indices]
+            return CodegenArrayContraction(CodegenArrayPermuteDims(expr.expr, newpermutation), *new_contr_indices)
+
+        return self
+
+
+def sink_permutation(expr, deep=False):
+    if isinstance(expr, CodegenArrayPermuteDims):
+        return expr.sink_permutation()
+    else:
+        return expr
 
 
 class CodegenArrayDiagonal(_CodegenArrayAbstract):
@@ -703,7 +776,8 @@ def parse_indexed_expression(expr, first_indices=[]):
         return result
     for i in first_indices:
         if i not in indices:
-            raise ValueError("index %s not found or not a free index" % i)
+            first_indices.remove(i)
+            #raise ValueError("index %s not found or not a free index" % i)
     first_indices.extend([i for i in indices if i not in first_indices])
     permutation = [first_indices.index(i) for i in indices]
     return CodegenArrayPermuteDims(result, permutation)

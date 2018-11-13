@@ -279,3 +279,25 @@ def test_codegen_array_parse_out_of_bounds():
     raises(ValueError, lambda: parse_indexed_expression(expr))
     expr = Sum(M[i, j]*N[j,m], (j, 1, k-1))
     raises(ValueError, lambda: parse_indexed_expression(expr))
+
+
+def test_codegen_permutedims_sink():
+
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [0, 1, 3, 2])
+    sunk = cg.sink_permutation()
+    assert sunk == CodegenArrayTensorProduct(M, CodegenArrayPermuteDims(N, [1, 0]))
+    assert recognize_matrix_expression(sunk) == [M, N.T]
+
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 0, 3, 2])
+    sunk = cg.sink_permutation()
+    assert sunk == CodegenArrayTensorProduct(CodegenArrayPermuteDims(M, [1, 0]), CodegenArrayPermuteDims(N, [1, 0]))
+    assert recognize_matrix_expression(sunk) == [M.T, N.T]
+
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [3, 2, 1, 0])
+    sunk = cg.sink_permutation()
+    assert sunk == CodegenArrayTensorProduct(CodegenArrayPermuteDims(N, [1, 0]), CodegenArrayPermuteDims(M, [1, 0]))
+    assert recognize_matrix_expression(sunk) == [N.T, M.T]
+
+    cg = CodegenArrayPermuteDims(CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)), [1, 0])
+    sunk = cg.sink_permutation()
+    assert sunk == CodegenArrayContraction(CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [[0, 3]]), (1, 2))
