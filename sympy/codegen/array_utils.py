@@ -106,6 +106,9 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         ========
 
         >>> from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+        >>> from sympy import MatrixSymbol
+        >>> M = MatrixSymbol("M", 3, 3)
+        >>> N = MatrixSymbol("N", 3, 3)
         >>> cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), [1, 2])
         >>> cg._get_index_shifts(cg)
         [0, 2]
