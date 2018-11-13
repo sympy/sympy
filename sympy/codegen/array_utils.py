@@ -596,16 +596,26 @@ def _codegen_array_parse(expr):
                 continue
             # Diagonalize two indices:
             i, j = arg.indices
-            # TODO: this will probably fail on KroneckerDelta(i, j)*KroneckerDelta(j, k)
-            kindices = frozenset(arg.indices)
-            kronecker_delta_repl[i] = kindices
-            kronecker_delta_repl[j] = kindices
+            kindices = set(arg.indices)
+            if i in kronecker_delta_repl:
+                kindices.update(kronecker_delta_repl[i])
+            if j in kronecker_delta_repl:
+                kindices.update(kronecker_delta_repl[j])
+            kindices = frozenset(kindices)
+            for index in kindices:
+                kronecker_delta_repl[index] = kindices
         # Remove KroneckerDelta objects, their relations should be handled by
         # CodegenArrayDiagonal:
-        args, indices = zip(*[(arg, loc_indices) for arg, loc_indices in zip(args, indices) if not isinstance(arg, KroneckerDelta)])
-        flattened_indices = [kronecker_delta_repl.get(j, j) for i in indices for j in i]
+        newargs = []
+        newindices = []
+        for arg, loc_indices in zip(args, indices):
+            if isinstance(arg, KroneckerDelta):
+                continue
+            newargs.append(arg)
+            newindices.append(loc_indices)
+        flattened_indices = [kronecker_delta_repl.get(j, j) for i in newindices for j in i]
         diagonal_indices, ret_indices = _get_diagonal_indices(flattened_indices)
-        tp = CodegenArrayTensorProduct(*args)
+        tp = CodegenArrayTensorProduct(*newargs)
         if diagonal_indices:
             return (CodegenArrayDiagonal(tp, *diagonal_indices), ret_indices)
         else:
