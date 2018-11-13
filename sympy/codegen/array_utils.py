@@ -420,9 +420,9 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
     def permutation(self):
         return self.args[1]
 
-    def sink_permutation(self, deep=False):
+    def nest_permutation(self, deep=False):
         r"""
-        Sink the permutation down the expression tree.
+        Nest the permutation down the expression tree.
         """
         expr = self.expr
         if isinstance(expr, CodegenArrayTensorProduct):
@@ -438,7 +438,7 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
                 counter += i
                 s0 = sorted(p0)
                 if not all([s0[j+1]-s0[j] == 1 for j in range(len(s0)-1)]):
-                    # Cross-argument permutations, impossible to sink the object:
+                    # Cross-argument permutations, impossible to nest the object:
                     return self
                 subpermutation = [p0.index(j) for j in s0]
                 dargs[s0[0]] = CodegenArrayPermuteDims(arg, subpermutation)
@@ -457,9 +457,9 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         return self
 
 
-def sink_permutation(expr, deep=False):
+def nest_permutation(expr, deep=False):
     if isinstance(expr, CodegenArrayPermuteDims):
-        return expr.sink_permutation()
+        return expr.nest_permutation()
     else:
         return expr
 
