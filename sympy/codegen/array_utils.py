@@ -430,9 +430,7 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
             p = [self.permutation(i) for i in l]
             dargs = {}
             counter = 0
-            print(subranks)
             for i, arg in zip(subranks, expr.args):
-                print(arg)
                 p0 = p[counter:counter+i]
                 counter += i
                 s0 = sorted(p0)
@@ -446,7 +444,6 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
             return CodegenArrayTensorProduct(*args)
         elif isinstance(expr, CodegenArrayContraction):
             # Invert tree hierarchy: put the contraction above.
-            #plist = self.permutation.args[0]
             shifts = expr._get_index_shifts(expr)
             cycles = self.permutation.cyclic_form
             newcycles = CodegenArrayContraction._convert_outer_indices_to_inner_indices(expr, *cycles)
