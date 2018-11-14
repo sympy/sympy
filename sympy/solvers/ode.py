@@ -257,7 +257,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
-                         PolynomialError, lcm)
+                         PolynomialError, lcm, roots)
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -4956,7 +4956,12 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
             chareq += r[i]*symbol**i
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
+    # Can't just call roots because it doesn't return rootof for unsolveable
+    # polynomials.
+    chareqroots = roots(chareq, multiple=True)
+    if chareqroots == []:
+        chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
+
     chareq_is_complex = not all([i.is_real for i in chareq.all_coeffs()])
 
     # A generator of constants
