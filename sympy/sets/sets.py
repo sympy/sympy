@@ -608,7 +608,7 @@ class ProductSet(Set):
             elif iterable(arg):
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
-        sets = flatten(list(sets))
+        sets = flatten(list(map(lambda x: _sympify(x) if isinstance(x, set) else x, sets)))
 
         if EmptySet() in sets or len(sets) == 0:
             return EmptySet()
@@ -1014,7 +1014,7 @@ class Union(Set, EvalfMixin):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
-        args = list(args)
+        args = list(map(lambda arg: _sympify(arg) if isinstance(arg, set) else arg, args))
 
         def flatten(arg):
             if isinstance(arg, Set):
@@ -1195,7 +1195,7 @@ class Intersection(Set):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
-        args = list(args)
+        args = list(map(lambda arg: _sympify(arg) if isinstance(arg, set) else arg, args))
 
         def flatten(arg):
             if isinstance(arg, Set):
@@ -1350,6 +1350,8 @@ class Complement(Set, EvalfMixin):
     is_Complement = True
 
     def __new__(cls, a, b, evaluate=True):
+        a = _sympify(a) if isinstance(a, set) else a
+        b = _sympify(b) if isinstance(a, set) else b
         if evaluate:
             return Complement.reduce(a, b)
 
@@ -1706,6 +1708,8 @@ class SymmetricDifference(Set):
     is_SymmetricDifference = True
 
     def __new__(cls, a, b, evaluate=True):
+        a = _sympify(a) if isinstance(a, set) else a
+        b = _sympify(b) if isinstance(b, set) else b
         if evaluate:
             return SymmetricDifference.reduce(a, b)
 
