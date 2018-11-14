@@ -935,7 +935,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
     '1st_power_series', 'lie_group',
-    'nth_linear_constant_coeff_homogeneous', 'nth_algebraic_Integral',
+    'nth_linear_constant_coeff_homogeneous',
+    'nth_linear_euler_eq_homogeneous', 'nth_algebraic_Integral',
     'separable_Integral', '1st_linear_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
@@ -1410,17 +1411,27 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             elif order == 1:
                 return x == coeff
             return False
-        if r and not any(not _test_term(r[i], i) for i in r if i >= 0):
-            if not r[-1]:
-                matching_hints["nth_linear_euler_eq_homogeneous"] = r
+
+        # Find coefficient for higest derivative, multiply coefficients to
+        # bring the equation into Euler form if possible
+        r_rescaled = None
+        if r is not None:
+            coeff = r[order]
+            factor = x**order / coeff
+            r_rescaled = {i: factor*r[i] for i in r}
+
+        if r_rescaled and not any(not _test_term(r_rescaled[i], i) for i in
+                r_rescaled if i != 'trialset' and i >= 0):
+            if not r_rescaled[-1]:
+                matching_hints["nth_linear_euler_eq_homogeneous"] = r_rescaled
             else:
-                matching_hints["nth_linear_euler_eq_nonhomogeneous_variation_of_parameters"] = r
-                matching_hints["nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral"] = r
-                e, re = posify(r[-1].subs(x, exp(x)))
+                matching_hints["nth_linear_euler_eq_nonhomogeneous_variation_of_parameters"] = r_rescaled
+                matching_hints["nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral"] = r_rescaled
+                e, re = posify(r_rescaled[-1].subs(x, exp(x)))
                 undetcoeff = _undetermined_coefficients_match(e.subs(re), x)
                 if undetcoeff['test']:
-                    r['trialset'] = undetcoeff['trialset']
-                    matching_hints["nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"] = r
+                    r_rescaled['trialset'] = undetcoeff['trialset']
+                    matching_hints["nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"] = r_rescaled
 
 
     # Order keys based on allhints.
@@ -5221,7 +5232,9 @@ def _undetermined_coefficients_match(expr, x):
         r"""
         Test if ``expr`` fits the proper form for undetermined coefficients.
         """
-        if expr.is_Add:
+        if not expr.has(x):
+            return True
+        elif expr.is_Add:
             return all(_test_term(i, x) for i in expr.args)
         elif expr.is_Mul:
             if expr.has(sin, cos):

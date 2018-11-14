@@ -717,6 +717,7 @@ def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
         ('nth_algebraic',
         'nth_linear_constant_coeff_homogeneous',
+        'nth_linear_euler_eq_homogeneous',
         'Liouville',
         '2nd_power_series_ordinary',
         'nth_algebraic_Integral',
@@ -731,6 +732,7 @@ def test_classify_ode():
         '1st_homogeneous_coeff_subs_dep_div_indep',
         '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_homogeneous',
+        'nth_linear_euler_eq_homogeneous',
         'nth_algebraic_Integral',
         'separable_Integral',
         '1st_linear_Integral',
@@ -776,14 +778,17 @@ def test_classify_ode():
         '1st_homogeneous_coeff_subs_dep_div_indep',
         '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
+        'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
+        'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',
         'nth_algebraic_Integral',
         'separable_Integral', '1st_exact_Integral',
         '1st_linear_Integral',
         'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
-        'nth_linear_constant_coeff_variation_of_parameters_Integral')
+        'nth_linear_constant_coeff_variation_of_parameters_Integral',
+        'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral')
     #     w/o f(x) given
     assert classify_ode(diff(f(x) + x, x) + diff(f(x), x)) == ans
     #     w/ f(x) and prep=True
@@ -791,8 +796,11 @@ def test_classify_ode():
                         prep=True) == ans
 
     assert classify_ode(Eq(2*x**3*f(x).diff(x), 0), f(x)) == \
-        ('nth_algebraic', 'separable', '1st_linear', '1st_power_series', 'lie_group',
-         'nth_algebraic_Integral', 'separable_Integral', '1st_linear_Integral')
+        ('nth_algebraic', 'separable', '1st_linear', '1st_power_series',
+         'lie_group', 'nth_linear_euler_eq_homogeneous',
+         'nth_algebraic_Integral', 'separable_Integral',
+         '1st_linear_Integral')
+
     assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
         ('nth_algebraic', 'separable', '1st_power_series', 'lie_group',
                 'nth_algebraic_Integral', 'separable_Integral')
@@ -2333,6 +2341,13 @@ def test_nth_order_linear_euler_eq_homogeneous():
     assert dsolve(eq, y(t), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
+    eq = sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x)
+    sol = C1*sin(log(x)) + C2*cos(log(x))
+    sols = constant_renumber(sol, 'C', 1, 3)
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
 
 def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     x, t = symbols('x t')
@@ -2418,6 +2433,13 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     sols = constant_renumber(sol, 'C', 1, 2)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
+    from sympy.integrals.risch import NonElementaryIntegral
+    sol = Eq(f(x), C1 + C2*log(x) + (x - 1)*exp(x)*log(x) - NonElementaryIntegral(x*exp(x)*log(x), x))
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint) == sol
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
 
