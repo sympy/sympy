@@ -22,6 +22,9 @@ Q = MatrixSymbol("Q", k, k)
 
 
 def test_codegen_array_contraction_construction():
+    cg = CodegenArrayContraction(A)
+    assert cg == A
+
     s = Sum(A[i]*B[i], (i, 0, 3))
     cg = parse_indexed_expression(s)
     assert cg == CodegenArrayContraction(CodegenArrayTensorProduct(A, B), (0, 1))
@@ -301,3 +304,12 @@ def test_codegen_permutedims_sink():
     cg = CodegenArrayPermuteDims(CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)), [1, 0])
     sunk = cg.nest_permutation()
     assert sunk == CodegenArrayContraction(CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [[0, 3]]), (1, 2))
+
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 0, 3, 2])
+    sunk = cg.nest_permutation()
+    assert sunk == CodegenArrayTensorProduct(CodegenArrayPermuteDims(M, [1, 0]), CodegenArrayPermuteDims(N, [1, 0]))
+
+    cg = CodegenArrayPermuteDims(CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P), (1, 2), (3, 4)), [1, 0])
+    sunk = cg.nest_permutation()
+    assert sunk == CodegenArrayContraction(CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N, P), [[0, 5]]), (1, 2), (3, 4))
+    sunk2 = sunk.expr.nest_permutation()
