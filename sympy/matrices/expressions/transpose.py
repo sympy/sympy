@@ -72,7 +72,7 @@ class Transpose(MatrixExpr):
 
 def transpose(expr):
     """Matrix transpose"""
-    return Transpose(expr).doit()
+    return Transpose(expr).doit(deep=False)
 
 
 from sympy.assumptions.ask import ask, Q
