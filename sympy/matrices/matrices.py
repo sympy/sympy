@@ -3825,11 +3825,10 @@ class MatrixBase(MatrixDeprecated,
                 return AH * (A * AH).inv()
         except ValueError:
             # Matrix is not full rank, so A*AH cannot be inverted.
-            P, D = (A.H * A).diagonalize()
-            for i in range(P.cols):
-                P[:,i] = P.col(i) / P.col(i).norm()
+            # However, it is Hermitian, so we can diagonalize it.
+            P, D = (AH * A).diagonalize(normalize=True)
             D_pinv = D.applyfunc(lambda x: 0 if x==0 else 1/x)
-            return P * D_pinv * P.H * A.H
+            return P * D_pinv * P.H * AH
 
     def print_nonzero(self, symb="X"):
         """Shows location of non-zero entries for fast shape lookup.
