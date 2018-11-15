@@ -231,8 +231,9 @@ def remove_ids(mul):
     as args.
 
     See Also
-    --------
-        sympy.strategies.rm_id
+    ========
+
+    sympy.strategies.rm_id
     """
     # Separate Exprs from MatrixExprs in args
     factor, mmul = mul.as_coeff_mmul()
@@ -286,7 +287,7 @@ rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
 def only_squares(*matrices):
-    """ factor matrices only if they are square """
+    """factor matrices only if they are square"""
     if matrices[0].rows != matrices[-1].cols:
         raise RuntimeError("Invalid matrices being multiplied")
     out = []

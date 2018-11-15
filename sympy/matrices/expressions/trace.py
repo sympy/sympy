@@ -10,13 +10,13 @@ class Trace(Expr):
 
     Represents the trace of a matrix expression.
 
+    Examples
+    ========
+
     >>> from sympy import MatrixSymbol, Trace, eye
     >>> A = MatrixSymbol('A', 3, 3)
     >>> Trace(A)
     Trace(A)
-
-    See Also:
-        trace
     """
     is_Trace = True
 
@@ -74,18 +74,17 @@ class Trace(Expr):
 
 
 def trace(expr):
-    """ Trace of a Matrix.  Sum of the diagonal elements
+    """Trace of a Matrix.  Sum of the diagonal elements.
+
+    Examples
+    ========
 
     >>> from sympy import trace, Symbol, MatrixSymbol, pprint, eye
     >>> n = Symbol('n')
     >>> X = MatrixSymbol('X', n, n)  # A square matrix
     >>> trace(2*X)
     2*Trace(X)
-
     >>> trace(eye(3))
     3
-
-    See Also:
-        Trace
     """
     return Trace(expr).doit()

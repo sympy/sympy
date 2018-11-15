@@ -19,6 +19,9 @@ class MatAdd(MatrixExpr, Add):
 
     MatAdd inherits from and operates like SymPy Add
 
+    Examples
+    ========
+
     >>> from sympy import MatAdd, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
@@ -85,6 +88,9 @@ def combine(cnt, mat):
 
 def merge_explicit(matadd):
     """ Merge explicit MatrixBase arguments
+
+    Examples
+    ========
 
     >>> from sympy import MatrixSymbol, eye, Matrix, MatAdd, pprint
     >>> from sympy.matrices.expressions.matadd import merge_explicit
