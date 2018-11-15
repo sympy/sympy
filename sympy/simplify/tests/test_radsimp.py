@@ -227,7 +227,7 @@ def test_collect_D():
     x, a, b = symbols('x,a,b')
     fx = D(f(x), x)
     fxx = D(f(x), x, x)
-    
+
     assert collect(a*fx + b*fx, fx) == (a + b)*fx
     assert collect(a*D(fx, x) + b*D(fx, x), fx) == (a + b)*D(fx, x)
     assert collect(a*fxx + b*fxx, fx) == (a + b)*D(fx, x)
