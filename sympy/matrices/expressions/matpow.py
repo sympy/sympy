@@ -82,10 +82,8 @@ class MatPow(MatrixExpr):
             return Inverse(base).doit(**kwargs)
         elif exp is S.One:
             return base
-        elif isinstance(base, Transpose):
-            return Transpose(MatPow(base.arg, exp).doit(deep=False))
         return MatPow(base, exp)
 
     def _eval_transpose(self):
         base, exp = self.args
-        return MatPow(base.arg, exp) if base.is_Transpose else Transpose(self)
+        return MatPow(base.T, exp)
