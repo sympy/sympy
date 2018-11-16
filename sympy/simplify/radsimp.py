@@ -326,7 +326,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     if evaluate:
         if expr.is_Add:
-            o = expr.get0() or 0
+            o = expr.getO() or 0
             expr = expr.func(*[
                     collect(a, syms, func, True, exact, distribute_order_term)
                     for a in expr.args if a != o]) + o
