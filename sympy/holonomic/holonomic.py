@@ -30,6 +30,8 @@ from sympy.polys.polyclasses import DMF
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly
 
+from sympy.core import Add
+from sympy.interactive.printing import Printable
 
 def DifferentialOperators(base, generator):
     r"""
@@ -135,7 +137,7 @@ class DifferentialOperatorAlgebra(object):
             return False
 
 
-class DifferentialOperator(object):
+class DifferentialOperator(Printable):
     """
     Differential Operators are elements of Weyl Algebra. The Operators
     are defined by a list of polynomials in the base ring and the
@@ -371,6 +373,32 @@ class DifferentialOperator(object):
         base = self.parent.base
         return x0 in roots(base.to_sympy(self.listofpoly[-1]), self.x)
 
+    def _latex(self,printer):
+        listofpoly = self.listofpoly
+        print_str = ''
+        for i,v in enumerate(listofpoly):
+            if v == self.parent.base.zero:
+                continue
+
+            lv = printer._print(v)
+            if v == self.parent.base.one:
+                lv = ""
+            elif printer._needs_add_brackets( v.ring.to_sympy(v) ) :
+                lv = '(' + lv + ')'
+
+            if i == 0:
+                print_str += lv
+                continue
+
+            if print_str:
+                print_str += ' + '
+
+            if i == 1:
+                print_str += lv + '%s' % self.parent.gen_symbol
+                continue
+
+            print_str += lv +  '%s^' % self.parent.gen_symbol + printer._print(i)
+        return print_str
 
 class HolonomicFunction(object):
     r"""

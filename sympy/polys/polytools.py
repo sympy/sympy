@@ -7036,6 +7036,13 @@ class GroebnerBasis(Basic):
         """
         return self.reduce(poly)[1] == 0
 
+    def _latex(self,printer):
+        pls = ",".join( [ printer._print(p.as_expr()) for p in self.polys] )
+        gens = ",".join( [ printer._print(gen) for gen in self.gens] )
+        dm = printer._print(self.domain)
+        order = printer._print(self.order)
+        return r"\mathrm{GroebnerBasis}([%s],%s,\mathrm{domain=}%s,\mathrm{order=}%s)" % (pls,gens,dm,order)
+
 
 @public
 def poly(expr, *gens, **args):
