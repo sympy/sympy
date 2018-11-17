@@ -3825,14 +3825,15 @@ class MatrixBase(MatrixDeprecated,
                 return AH * (A * AH).inv()
         except ValueError:
             # Matrix is not full rank, so A*AH cannot be inverted.
+            pass
+        try:
             # However, it is Hermitian, so we can diagonalize it.
-            try:
-                P, D = (AH * A).diagonalize(normalize=True)
-                D_pinv = D.applyfunc(lambda x: 0 if x==0 else 1/x)
-                return P * D_pinv * P.H * AH
-            except MatrixError:
-                raise NotImplementedError('pinv for rank-deficient matrices where diagonalization '
-                                          'of A.H*A fails is not yet supported.')
+            P, D = (AH * A).diagonalize(normalize=True)
+            D_pinv = D.applyfunc(lambda x: 0 if x==0 else 1/x)
+            return P * D_pinv * P.H * AH
+        except MatrixError:
+            raise NotImplementedError('pinv for rank-deficient matrices where diagonalization '
+                                      'of A.H*A fails is not yet supported.')
 
     def print_nonzero(self, symb="X"):
         """Shows location of non-zero entries for fast shape lookup.
