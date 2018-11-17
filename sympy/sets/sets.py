@@ -998,6 +998,21 @@ class Union(Set, EvalfMixin):
     >>> Union(Interval(1, 2), Interval(2, 3))
     Interval(1, 3)
 
+    Python sets are converted to FiniteSet
+    While using the constructor, the sets can be inside a list, an iterable or unpacked.
+    However, list inside the outermost list or iterable are taken to mean as another set.
+
+    >>> Union([{1},{2}])
+    {1, 2}
+    >>> Union([{1},[{2}]])
+    {1, {2}}
+
+    Also, if more than one arguments are passed unpacked, those containing a list are taken
+    to be a set.
+
+    >>> Union({1},[{2}])
+    {1, {2}}
+
     See Also
     ========
 
@@ -1014,8 +1029,21 @@ class Union(Set, EvalfMixin):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
-        args = list(args)
 
+        # If the only arg is a list or another iterable,
+        # don't put the args tuple inside another list, instead
+        # put the elemnet of the tuple inside list
+        if len(args)==1:
+            args = args[0]
+            if iterable(args) and not isinstance(args,Basic):
+                args = list(args)
+            else: # if argument is an instance of Basic, don't convert to list, instead put inside a list
+                args = [args]
+        else:
+            args = list(args)
+
+        # flatten takes an arg and returns [arg] after applying changes
+        # to sets, Sets and iterables
         def flatten(arg):
             if isinstance(arg, set):
                 return [_sympify(arg)]
@@ -1025,9 +1053,9 @@ class Union(Set, EvalfMixin):
                 else:
                     return [arg]
             if iterable(arg):  # and not isinstance(arg, Set) (implicit)
-                return sum(map(flatten, arg), [])
+                return [FiniteSet(*sum(map(flatten, arg), []))]
             raise TypeError("Input must be Sets or iterables of Sets")
-        args = flatten(args)
+        args = sum(map(flatten,args),[])
 
         # Union of no sets is EmptySet
         if len(args) == 0:

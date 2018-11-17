@@ -97,7 +97,7 @@ def test_union():
     assert Union(Interval(1, 2), S.EmptySet) == Interval(1, 2)
     assert Union(S.EmptySet) == S.EmptySet
 
-    assert Union(Interval(0, 1), [FiniteSet(1.0/n) for n in range(1, 10)]) == \
+    assert Union(Interval(0, 1), *[FiniteSet(1.0/n) for n in range(1, 10)]) == \
         Interval(0, 1)
 
     assert Interval(1, 2).union(Interval(2, 3)) == \
