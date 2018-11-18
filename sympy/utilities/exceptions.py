@@ -134,6 +134,10 @@ class SymPyDeprecationWarning(DeprecationWarning):
 
     def __init__(self, value=None, feature=None, last_supported_version=None,
                  useinstead=None, issue=None, deprecated_since_version=None):
+
+        self.args = (value, feature, last_supported_version, useinstead,
+                issue, deprecated_since_version)
+
         self.fullMessage = ""
 
         if not feature:
@@ -170,9 +174,6 @@ https://github.com/sympy/sympy/wiki/Deprecating-policy.\
             value = ""
 
         self.fullMessage += value
-
-        self.args = (value, feature, last_supported_version, useinstead,
-                issue, deprecated_since_version)
 
     def __str__(self):
         return '\n%s\n' % filldedent(self.fullMessage)
