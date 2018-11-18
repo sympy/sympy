@@ -256,7 +256,7 @@ def checksol(f, symbol, sol=None, **flags):
             f = f.rewrite(Add, evaluate=False)
 
     if isinstance(f, BooleanAtom):
-        return bool(f)
+        return [bool(f)]
     elif not f.is_Relational and not f:
         return True
 
@@ -977,7 +977,8 @@ def solve(f, *symbols, **flags):
             f[i] = fi
 
         if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
-            return reduce_inequalities(f, symbols=symbols)
+            #print("I am here")
+            return [reduce_inequalities(f, symbols=symbols)]
 
         if isinstance(fi, Poly):
             f[i] = fi.as_expr()
@@ -1327,7 +1328,7 @@ def solve(f, *symbols, **flags):
     if not solution:
         solution = []
     else:
-        if isinstance(solution, dict):
+        if isinstance(solution, dict) or isinstance(solution, BooleanAtom):
             solution = [solution]
         elif iterable(solution[0]):
             solution = [dict(list(zip(symbols, s))) for s in solution]
