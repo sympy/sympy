@@ -1627,6 +1627,9 @@ def test_Mod():
     assert (3*i*x) % (2*i*y) == i*Mod(3*x, 2*y)
     assert Mod(4*i, 4) == 0
 
+    # issue 15493
+    assert mod(3*i, 2) == Mod(i, 2)
+
     # issue 8677
     n = Symbol('n', integer=True, positive=True)
     assert factorial(n) % n == 0
