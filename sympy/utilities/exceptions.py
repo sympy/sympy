@@ -171,6 +171,9 @@ https://github.com/sympy/sympy/wiki/Deprecating-policy.\
 
         self.fullMessage += value
 
+        self.args = (value, feature, last_supported_version, useinstead,
+                issue, deprecated_since_version)
+
     def __str__(self):
         return '\n%s\n' % filldedent(self.fullMessage)
 
