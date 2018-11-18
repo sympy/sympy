@@ -2276,7 +2276,7 @@ def encipher_railfence(message,rails):
     >>> message = "hello world"
     >>> ciphertext = encipher_railfence(message,3)
     >>> print(ciphertext)
-    >>> hlowrdel ol
+    >>> horel ollwd
     
     Parameters
     ==========
@@ -2300,7 +2300,7 @@ def decipher_railfence(ciphertext,rails):
     
     Example:
     >>> from sympy.crypto.crypto import decipher_railfence
-    >>> plaintext = decipher_railfence("hlowrdel ol",3)
+    >>> plaintext = decipher_railfence("horel ollwd",3)
     >>> print(plaintext)
     >>> hello world
     
