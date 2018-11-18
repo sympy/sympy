@@ -18,6 +18,8 @@ from __future__ import print_function
 
 from string import whitespace, ascii_uppercase as uppercase, printable
 
+from itertools import cycle
+
 from sympy import nextprime
 from sympy.core import Rational, Symbol
 from sympy.core.numbers import igcdex, mod_inverse
@@ -2246,3 +2248,80 @@ def decipher_gm(message, key):
         m <<= 1
         m += not b
     return m
+
+
+
+########### RaiFence Cipher #############
+
+def encipher_railfence(message,rails):
+    """
+     link : https://en.wikipedia.org/wiki/Rail_fence_cipher
+     
+     performs the Rail Fence Encryption on the plain text. 
+    the plain text is written downwards and diagonally on successive "rails" of an imaginary fence
+    then moving up when the bottom rail is reached.
+    When the top rail is reached, the message is written downwards again until the whole plaintext is written out
+    The message is then read off in rows.
+    
+    For example, if 3 "rails" and the message 'WE ARE DISCOVERED. FLEE AT ONCE' is used, the cipherer writes out:
+    
+    W . . . E . . . C . . . R . . . L . . . T . . . E
+    . E . R . D . S . O . E . E . F . E . A . O . C .
+    . . A . . . I . . . V . . . D . . . E . . . N . .
+    
+    output : WECRLTEERDSOEEFEAOCAIVDEN
+    
+    EXAMPLE:
+    >>> from sympy.crypto.crypto import encipher_railfence
+    >>> message = "hello world"
+    >>> ciphertext = encipher_railfence(message,3)
+    >>> print(ciphertext)
+    >>> hlowrdel ol
+    
+    Parameters
+    ==========
+    
+    message(string) : the message to encrypt.
+    rails(int) : the number of rails.
+    
+    Returns
+    =======
+    The Encrypted string message.
+    
+    """
+    r = list(range(rails))
+    p = cycle(r + r[-2:0:-1])
+    return ''.join(sorted(message, key=lambda i: next(p)))
+
+
+def decipher_railfence(ciphertext,rails):
+    """
+    Decrypt the message using the given rails
+    
+    Example:
+    >>> from sympy.crypto.crypto import decipher_railfence
+    >>> plaintext = decipher_railfence("hlowrdel ol",3)
+    >>> print(plaintext)
+    >>> hello world
+    
+    Parameters
+    ==========
+    
+    message(string) : the message to encrypt.
+    rails(int) : the number of rails.
+    
+    Returns
+    =======
+    The Decrypted string message.
+    
+    """
+    r = list(range(rails))
+    p = cycle(r + r[-2:0:-1])
+    
+    idx = sorted(range(len(ciphertext)), key=lambda i: next(p))
+    res = [''] * len(ciphertext)
+    for i, c in zip(idx, ciphertext):
+        res[i] = c
+    return ''.join(res)
+    
+
