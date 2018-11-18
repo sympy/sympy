@@ -410,6 +410,26 @@ class Basic(with_metaclass(ManagedProperties)):
         from sympy.printing import sstr
         return sstr(self, order=None)
 
+    # We don't define _repr_png_ here because it would add a large amount of
+    # data to any notebook containing SymPy expressions, without adding
+    # anything useful to the notebook. It can still enabled manually, e.g.,
+    # for the qtconsole, with init_printing().
+    def _repr_latex_(self):
+        """
+        IPython/Jupyter LaTeX printing
+
+        To change the behavior of this (e.g., pass in some settings to LaTeX),
+        use init_printing(). init_printing() will also enable LaTeX printing
+        for built in numeric types like ints and container types that contain
+        SymPy objects, like lists and dictionaries of expressions.
+        """
+        from sympy.printing.latex import latex
+        s = latex(self, mode='equation*')
+        s = s.strip('$')
+        return "$$%s$$" % s
+
+    _repr_latex_orig = _repr_latex_
+
     def atoms(self, *types):
         """Returns the atoms that form the current object.
 
