@@ -193,6 +193,8 @@ class Limit(Expr):
         if not e.has(z):
             return e
 
+        use_heuristics = hints.get('heuristics', True)
+
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
@@ -229,7 +231,9 @@ class Limit(Expr):
             if r is S.NaN:
                 raise PoleError()
         except (PoleError, ValueError):
-            r = heuristics(e, z, z0, dir)
+            r = None
+            if use_heuristics:
+                r = heuristics(e, z, z0, dir)
             if r is None:
                 return self
         except NotImplementedError:

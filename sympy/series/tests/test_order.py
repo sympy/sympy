@@ -334,6 +334,18 @@ def test_issue_6753():
     assert (1 + x**2)**10000*O(x) == O(x)
 
 
+def test_issue_9917():
+    from sympy.abc import n
+    from sympy import O, oo, sin
+
+    assert O(n*sin(n) + 1, (n, oo)) == O(n*sin(n) + 1, (n, oo))
+    assert O((n*sin(n))**2 + 1, (n, oo)) == O(n**2*sin(n)**2 + 1, (n, oo))
+    assert O(((n**2)*sin(n))**2 + 1, (n, oo)) == O(n**4*sin(n)**2 + 1, (n, oo))
+    assert O((n**2)*sin(n) + 1, (n, oo)) == O(n**2*sin(n) + 1, (n, oo))
+    assert O(n*((sin(n))**2) + 1, (n, oo)) == O(n*sin(n)**2 + 1, (n, oo))
+    assert O((n**2)*((sin(n))**2) + 1, (n, oo)) == O(n**2*sin(n)**2 + 1, (n, oo))
+
+
 def test_order_at_infinity():
     assert Order(1 + x, (x, oo)) == Order(x, (x, oo))
     assert Order(3*x, (x, oo)) == Order(x, (x, oo))
