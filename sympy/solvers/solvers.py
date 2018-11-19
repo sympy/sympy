@@ -254,11 +254,12 @@ def checksol(f, symbol, sol=None, **flags):
                 return
         else:
             f = f.rewrite(Add, evaluate=False)
-
+    
+#   15492
     if isinstance(f, BooleanAtom):
-        return bool(f)
+        return []
     elif not f.is_Relational and not f:
-        return True
+        return []
 
     if sol and not f.free_symbols & set(sol.keys()):
         # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
