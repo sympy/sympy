@@ -2255,13 +2255,8 @@ def decipher_gm(message, key):
 
 def encipher_railfence(message,rails):
     """
+     Reference : 
      link : https://en.wikipedia.org/wiki/Rail_fence_cipher
-     
-     performs the Rail Fence Encryption on the plain text. 
-    the plain text is written downwards and diagonally on successive "rails" of an imaginary fence
-    then moving up when the bottom rail is reached.
-    When the top rail is reached, the message is written downwards again until the whole plaintext is written out
-    The message is then read off in rows.
     
     For example, if 3 "rails" and the message 'WE ARE DISCOVERED. FLEE AT ONCE' is used, the cipherer writes out:
     
@@ -2269,14 +2264,13 @@ def encipher_railfence(message,rails):
     . E . R . D . S . O . E . E . F . E . A . O . C .
     . . A . . . I . . . V . . . D . . . E . . . N . .
     
-    output : WECRLTEERDSOEEFEAOCAIVDEN
+    OUTPUT : WECRLTEERDSOEEFEAOCAIVDEN
     
     EXAMPLE:
     >>> from sympy.crypto.crypto import encipher_railfence
     >>> message = "hello world"
-    >>> ciphertext = encipher_railfence(message,3)
-    >>> print(ciphertext)
-    >>> horel ollwd
+    >>> encipher_railfence(message,3)
+    'horel ollwd'
     
     Parameters
     ==========
@@ -2300,9 +2294,8 @@ def decipher_railfence(ciphertext,rails):
     
     Example:
     >>> from sympy.crypto.crypto import decipher_railfence
-    >>> plaintext = decipher_railfence("horel ollwd",3)
-    >>> print(plaintext)
-    >>> hello world
+    >>> decipher_railfence("horel ollwd",3)
+    'hello world'
     
     Parameters
     ==========
