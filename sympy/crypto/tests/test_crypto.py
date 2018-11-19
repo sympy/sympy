@@ -25,10 +25,12 @@ from random import randrange
 def test_encipher_railfence():
     assert encipher_railfence("hello world",2) == "hlowrdel ol"
     assert encipher_railfence("hello world",3) == "horel ollwd"
+    assert encipher_railfence("hello world",4) == "hwe olordll"
     
 def test_decipher_railfence():
     assert decipher_railfence("hlowrdel ol",2) == "hello world"
     assert decipher_railfence("horel ollwd",3) == "hello world"
+    assert decipher_railfence("hwe olordll",4) == "hello world"
 
 
 def test_cycle_list():
