@@ -27,7 +27,7 @@ from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational, Ge, _canonical
 from sympy.core.logic import fuzzy_not, fuzzy_and
-from sympy.logic.boolalg import And, Or, BooleanAtom
+from sympy.logic.boolalg import And, Or, BooleanAtom, BooleanFalse, BooleanTrue
 from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
@@ -978,7 +978,14 @@ def solve(f, *symbols, **flags):
             f[i] = fi
 
         if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
-            return reduce_inequalities(f, symbols=symbols)
+            tmp = reduce_inequalities(f, symbols=symbols)
+            if isinstance(tmp, BooleanFalse):
+                if flags.get('dict', False):
+                    return []
+            elif isinstance(tmp, BooleanTrue):
+                if flags.get('dict', False):
+                    return [tmp]
+            return tmp
 
         if isinstance(fi, Poly):
             f[i] = fi.as_expr()
