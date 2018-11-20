@@ -1629,7 +1629,6 @@ def test_Mod():
 
     # issue 15493
     assert mod(3*i, 2) == Mod(i, 2)
-    assert Mod(3 * i, 2) == Mod(i, 2)
     e = symbols('e', even=True)
     assert Mod(e / 2, 2) != 0
 
