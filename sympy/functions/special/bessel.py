@@ -1294,7 +1294,6 @@ class airybi(AiryBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0:
