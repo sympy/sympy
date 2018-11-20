@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.numbers import nan
 from .function import Function
+from sympy.simplify.radsimp import denom
 
 
 class Mod(Function):
@@ -117,15 +118,14 @@ class Mod(Function):
                 net = Add(*non_mod_l) + Add(*[i.args[0] for i in mod_l])
                 return cls(net, q)
 
-        if isinstance(p, Mul):
+        if isinstance(p, Mul) and denom(p) == 1:
             # separating into modulus and non modulus
             both_l = non_mod_l, mod_l = [], []
             for arg in p.args:
                 both_l[isinstance(arg, cls)].append(arg)
 
-            was = non_mod_l[:]
-            non_mod_l = [cls(x, q) for x in n]
-            changed = was != non_mod_l
+            non_mod_l = [cls(x, q) for x in non_mod_l]
+            changed = not all(isinstance(i, cls) for i in non_mod_l)
             if changed or mod_l and all(inner.args[1] == q for inner in mod_l):
                 # finding distributive term
                 mod = []
