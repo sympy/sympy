@@ -983,8 +983,6 @@ def solve(f, *symbols, **flags):
                 if isinstance(temp, BooleanFalse):
                     if flags.get('dict', False):
                         return []
-                    else:
-                        return
             return temp
 
         if isinstance(fi, Poly):
@@ -1335,7 +1333,7 @@ def solve(f, *symbols, **flags):
     if not solution:
         solution = []
     else:
-        if isinstance(solution, dict) :
+        if isinstance(solution, dict):
             solution = [solution]
         elif iterable(solution[0]):
             solution = [dict(list(zip(symbols, s))) for s in solution]
