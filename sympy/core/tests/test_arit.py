@@ -1463,7 +1463,8 @@ def test_Add_as_content_primitive():
 
     assert (3/x + 2*x*y*z**2).as_content_primitive() == (1, 3/x + 2*x*y*z**2)
     assert (3/x + 3*x*y*z**2).as_content_primitive() == (3, 1/x + x*y*z**2)
-    assert (3/x + 6*x*y*z**2).as_content_pr
+    assert (3/x + 6*x*y*z**2).as_content_primitive() == (3, 1/x + 2*x*y*z**2)
+
     assert (2*x/3 + 4*y/9).as_content_primitive() == \
         (Rational(2, 9), 3*x + 2*y)
     assert (2*x/3 + 2.5*y).as_content_primitive() == \
@@ -1627,9 +1628,10 @@ def test_Mod():
     assert Mod(4*i, 4) == 0
 
     # issue 15493
-    assert Mod(3*i, 2) == Mod(i, 2)
+    assert mod(3*i, 2) == Mod(i, 2)
+    assert Mod(3 * i, 2) == Mod(i, 2)
     e = symbols('e', even=True)
-    assert Mod(e/2, 2) != 0
+    assert Mod(e / 2, 2) != 0
 
     # issue 8677
     n = Symbol('n', integer=True, positive=True)
