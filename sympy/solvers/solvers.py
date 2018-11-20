@@ -27,7 +27,7 @@ from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational, Ge, _canonical
 from sympy.core.logic import fuzzy_not, fuzzy_and
-from sympy.logic.boolalg import And, Or, BooleanAtom, BooleanFalse, BooleanTrue
+from sympy.logic.boolalg import And, Or, BooleanAtom, BooleanFalse
 from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
@@ -982,9 +982,9 @@ def solve(f, *symbols, **flags):
             if isinstance(temp, BooleanAtom):
                 if isinstance(temp, BooleanFalse):
                     if flags.get('dict', False):
-                        return
-                    else:
                         return []
+                    else:
+                        return
             return temp
 
         if isinstance(fi, Poly):
@@ -1097,9 +1097,6 @@ def solve(f, *symbols, **flags):
                     if fi.is_zero:
                         continue
                     return []
-                # if fi.is_bool:
-                #     print("Here i am")
-                #     return []
                 ok = True
             else:
                 if fi.is_constant():
@@ -1338,7 +1335,7 @@ def solve(f, *symbols, **flags):
     if not solution:
         solution = []
     else:
-        if isinstance(solution, dict) or isinstance(solution, BooleanAtom):
+        if isinstance(solution, dict) :
             solution = [solution]
         elif iterable(solution[0]):
             solution = [dict(list(zip(symbols, s))) for s in solution]
