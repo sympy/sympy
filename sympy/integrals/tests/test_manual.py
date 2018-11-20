@@ -338,10 +338,10 @@ def test_issue_10847():
                                                                              And(x - y > -y, y < 0)), \
                                                                             (-atanh(sqrt(x - y)/sqrt(-y))/sqrt(-y), \
                                                                              And(x - y < -y, y < 0)))/3 \
-                                                                             - 4*y*sqrt(x - y)/3 + 2*(x - y)**(3/2)*log(z/x)/3 \
-                                                                             + 4*(x - y)**(3/2)/9
+                                                                             - 4*y*sqrt(x - y)/3 + 2*(x - y)**(S(3)/2)*log(z/x)/3 \
+                                                                             + 4*(x - y)**(S(3)/2)/9
 
-    assert manualintegrate(sqrt(x) * log(x), x) == 2*x**(3/2)*log(x)/3 - 4*x**(3/2)/9
+    assert manualintegrate(sqrt(x) * log(x), x) == 2*x**(S(3)/2)*log(x)/3 - 4*x**(S(3)/2)/9
     assert manualintegrate(sqrt(a*x + b) / x, x) == -2*b*Piecewise((-atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b), -b > 0), \
                                                                (acoth(sqrt(a*x + b)/sqrt(b))/sqrt(b), And(-b < 0, a*x + b > b)), \
                                                                (atanh(sqrt(a*x + b)/sqrt(b))/sqrt(b), And(-b < 0, a*x + b < b))) \
@@ -358,8 +358,8 @@ def test_issue_10847():
                            / (x**6 + 2*x**5 + 3*x**4 + 4*x**3 + 3*x**2 + 2*x + 1), x) == \
                            2*x/(x**2 + 1) + 3*atan(x) - 1/(x**2 + 1) - 3/(x + 1)
     assert manualintegrate(sqrt(2*x + 3) / (x + 1), x) == 2*sqrt(2*x + 3) - log(sqrt(2*x + 3) + 1) + log(sqrt(2*x + 3) - 1)
-    assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**(5/2)/20 - (2*x + 3)**(3/2)/4
-    assert manualintegrate(x**Rational(3,2) * log(x), x) == 2*x**Rational(5,2)*log(x)/5 - 4*x**Rational(5/2)/25
+    assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**(S(5)/2)/20 - (2*x + 3)**(S(3)/2)/4
+    assert manualintegrate(x**Rational(3,2) * log(x), x) == 2*x**Rational(5,2)*log(x)/5 - 4*x**Rational(5,2)/25
     assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
     assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - Integral(log(y - 1)/y, y)
 

@@ -40,7 +40,7 @@ def test_prefix_operations():
 
     expr3 = kilo / 3
     assert isinstance(expr3, Mul)
-    assert (expr3).args == (1/3, kilo)
+    assert (expr3).args == (S(1)/3, kilo)
 
     expr4 = kilo / x
     assert isinstance(expr4, Mul)
