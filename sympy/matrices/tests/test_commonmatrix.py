@@ -957,11 +957,11 @@ def test_echelon_form():
 
     a = ReductionsOnlyMatrix(3, 3, [2, 1, 3, 0, 0, 0, 2, 1, 3])
     nulls = [Matrix([
-             [-1/2],
+             [-S(1)/2],
              [   1],
              [   0]]),
              Matrix([
-             [-3/2],
+             [-S(3)/2],
              [   0],
              [   1]])]
     rows = [a[i,:] for i in range(a.rows)]
