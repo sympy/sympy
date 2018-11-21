@@ -2957,8 +2957,6 @@ def test_dsolve_linsystem_symbol():
             Eq(g(x), -C1*eps*sin(eps*x) + C2*eps*cos(eps*x))]
     assert checksysodesol(eq1, sol1) == (True, [0, 0])
 
-
-
 def test_C1_function_9239():
     t = Symbol('t')
     C1 = Function('C1')
@@ -2970,14 +2968,10 @@ def test_C1_function_9239():
            Eq(C2(t), 6*sqrt(3)*C3*exp(6*sqrt(3)*t) - 6*sqrt(3)*C4*exp(-6*sqrt(3)*t))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
-
-
 def test_issue_15056():
     t = Symbol('t')
     C3 = Symbol('C3')
     assert get_numbered_constants(Symbol('C1') * Function('C2')(t)) == C3
-
-
 
 def test_issue_10379():
     t,y = symbols('t,y')
