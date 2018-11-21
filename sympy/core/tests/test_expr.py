@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, I,
                    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
                    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,

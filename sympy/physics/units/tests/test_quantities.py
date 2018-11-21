@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division
-
 from sympy import (Abs, Add, Basic, Function, Number, Rational, S, Symbol,
     diff, exp, integrate, log, sin, sqrt, symbols)
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
@@ -266,7 +264,7 @@ def test_units():
     t = (1*au / speed_of_light) / minute
     # TODO: need a better way to simplify expressions containing units:
     t = convert_to(convert_to(t, meter / minute), meter)
-    assert t == 49865956897/5995849160
+    assert t == S(49865956897)/5995849160
 
     # TODO: fix this, it should give `m` without `Abs`
     assert sqrt(m**2) == Abs(m)

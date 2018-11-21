@@ -1,4 +1,3 @@
-from __future__ import division
 import warnings
 from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt
 from sympy import solve, simplify
