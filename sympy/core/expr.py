@@ -2628,7 +2628,7 @@ class Expr(Basic, EvalfMixin):
         -x
 
         """
-        from sympy import collect, Dummy, Order, Rational, Symbol
+        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling
         if x is None:
             syms = self.free_symbols
             if not syms:
@@ -2707,7 +2707,7 @@ class Expr(Basic, EvalfMixin):
                         s1 = self._eval_nseries(x, n=n + more, logx=logx)
                         newn = s1.getn()
                         if newn != ngot:
-                            ndo = n + (n - ngot)*more/(newn - ngot)
+                            ndo = n + ceiling((n - ngot)*more/(newn - ngot))
                             s1 = self._eval_nseries(x, n=ndo, logx=logx)
                             while s1.getn() < n:
                                 s1 = self._eval_nseries(x, n=ndo, logx=logx)
