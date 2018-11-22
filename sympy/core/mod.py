@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core.numbers import nan
 from .function import Function
-from sympy.simplify.radsimp import denom
 
 
 class Mod(Function):
@@ -36,6 +35,7 @@ class Mod(Function):
             """Try to return p % q if both are numbers or +/-p is known
             to be less than or equal q.
             """
+            from sympy.simplify.radsimp import denom
 
             if q == S.Zero:
                 raise ZeroDivisionError("Modulo by zero")
