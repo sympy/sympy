@@ -197,5 +197,12 @@ def test_exp_product_positive_factors():
 def test_issue_8805():
     assert series(1, n=8) == 1
 
+
 def test_issue_10761():
     assert series(1/(x**-2 + x**-3), x, 0) == x**3 - x**4 + x**5 + O(x**6)
+
+
+def test_issue_14885():
+    assert series(x**(-S(3)/2)*exp(x), x, 0) == (x**(-S(3)/2) + 1/sqrt(x) +
+        sqrt(x)/2 + x**(S(3)/2)/6 + x**(S(5)/2)/24 + x**(S(7)/2)/120 +
+        x**(S(9)/2)/720 + x**(S(11)/2)/5040 + O(x**6))
