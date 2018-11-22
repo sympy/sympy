@@ -30,12 +30,12 @@ class Mod(Function):
         from sympy.core.singleton import S
         from sympy.core.exprtools import gcd_terms
         from sympy.polys.polytools import gcd
+        from sympy.simplify.radsimp import denom
 
         def doit(p, q):
             """Try to return p % q if both are numbers or +/-p is known
             to be less than or equal q.
             """
-            from sympy.simplify.radsimp import denom
 
             if q == S.Zero:
                 raise ZeroDivisionError("Modulo by zero")
