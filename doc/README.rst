@@ -14,7 +14,7 @@ and do::
 
 and to view it, do::
 
-    firefox _build/html/index.html
+    epiphany _build/html/index.html
 
 Fedora
 ------
