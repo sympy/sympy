@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core.numbers import nan
 from .function import Function
-from sympy.simplify.radsimp import denom
 
 
 class Mod(Function):
@@ -31,6 +30,7 @@ class Mod(Function):
         from sympy.core.singleton import S
         from sympy.core.exprtools import gcd_terms
         from sympy.polys.polytools import gcd
+        from sympy.simplify.radsimp import denom
 
         def doit(p, q):
             """Try to return p % q if both are numbers or +/-p is known

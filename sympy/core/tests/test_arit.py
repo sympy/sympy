@@ -1629,7 +1629,9 @@ def test_Mod():
 
     # issue 15493
     assert Mod(3*i, 2) == Mod(i, 2)
-    
+    e = symbols('e', even=True)
+    assert Mod(e / 2, 2).subs(e, 6) == Mod(3, 2)
+
     # issue 8677
     n = Symbol('n', integer=True, positive=True)
     assert factorial(n) % n == 0
