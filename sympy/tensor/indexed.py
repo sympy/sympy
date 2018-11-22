@@ -679,6 +679,10 @@ class Idx(Expr):
         return p.doprint(self.label)
 
     @property
+    def name(self):
+        return self.label.name if self.label.is_Symbol else str(self.label)
+
+    @property
     def free_symbols(self):
         return {self}
 
