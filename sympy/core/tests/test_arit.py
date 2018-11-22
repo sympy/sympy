@@ -1628,10 +1628,8 @@ def test_Mod():
     assert Mod(4*i, 4) == 0
 
     # issue 15493
-    assert mod(3*i, 2) == Mod(i, 2)
-    e = symbols('e', even=True)
-    assert Mod(e / 2, 2) != 0
-
+    assert Mod(3*i, 2) == Mod(i, 2)
+    
     # issue 8677
     n = Symbol('n', integer=True, positive=True)
     assert factorial(n) % n == 0
