@@ -2255,18 +2255,10 @@ def decipher_gm(message, key):
 
 def encipher_railfence(message,rails):
     """
-     Reference : 
-     link : https://en.wikipedia.org/wiki/Rail_fence_cipher
+    Performs Railfence Encryption on plaintext and returns ciphertext
     
-    For example, if 3 "rails" and the message 'WE ARE DISCOVERED. FLEE AT ONCE' is used, the cipherer writes out:
-    
-    W . . . E . . . C . . . R . . . L . . . T . . . E
-    . E . R . D . S . O . E . E . F . E . A . O . C .
-    . . A . . . I . . . V . . . D . . . E . . . N . .
-    
-    OUTPUT : WECRLTEERDSOEEFEAOCAIVDEN
-    
-    EXAMPLE:
+    EXAMPLE
+    =======
     >>> from sympy.crypto.crypto import encipher_railfence
     >>> message = "hello world"
     >>> encipher_railfence(message,3)
@@ -2282,6 +2274,10 @@ def encipher_railfence(message,rails):
     =======
     The Encrypted string message.
     
+     References
+     ==========
+     .. [1] https://en.wikipedia.org/wiki/Rail_fence_cipher
+    
     """
     r = list(range(rails))
     p = cycle(r + r[-2:0:-1])
@@ -2292,7 +2288,8 @@ def decipher_railfence(ciphertext,rails):
     """
     Decrypt the message using the given rails
     
-    Example:
+    Example
+    =======
     >>> from sympy.crypto.crypto import decipher_railfence
     >>> decipher_railfence("horel ollwd",3)
     'hello world'
