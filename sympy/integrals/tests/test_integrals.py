@@ -1,7 +1,7 @@
 from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
     tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfi,
-    EulerGamma, Expr, factor, Function, gamma, I, im, Integral, integrate,
+    EulerGamma, Expr, factor, Function, gamma, I, Idx, im, IndexedBase, Integral, integrate,
     Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
@@ -1401,3 +1401,10 @@ def test_issue_15432():
     assert integrate(x**n * exp(-x) * log(x), (x, 0, oo)).gammasimp() == Piecewise(
         (gamma(n + 1)*polygamma(0, n) + gamma(n + 1)/n, re(n) + 1 > 0),
         (Integral(x**n*exp(-x)*log(x), (x, 0, oo)), True))
+
+
+def test_issue_15124():
+    omega = IndexedBase('omega')
+    m, p = symbols('m p', cls=Idx)
+    assert integrate(exp(x*I*(omega[m] + omega[p])), x, conds='none') == \
+        -I*exp(I*x*omega[m])*exp(I*x*omega[p])/(omega[m] + omega[p])
