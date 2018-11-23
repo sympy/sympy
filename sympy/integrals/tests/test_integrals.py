@@ -1,8 +1,8 @@
 from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
     tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfi,
-    EulerGamma, Expr, factor, Function, gamma, I, Idx, im, IndexedBase, Integral, integrate,
-    Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
+    EulerGamma, Expr, factor, Function, gamma, gammasimp, I, Idx, im, IndexedBase,
+    Integral, integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
     symbols, sympify, tan, trigsimp, Tuple
@@ -1408,3 +1408,9 @@ def test_issue_15124():
     m, p = symbols('m p', cls=Idx)
     assert integrate(exp(x*I*(omega[m] + omega[p])), x, conds='none') == \
         -I*exp(I*x*omega[m])*exp(I*x*omega[p])/(omega[m] + omega[p])
+
+
+def test_issue_15292():
+    res = integrate(exp(-x**2*cos(2*t)) * cos(x**2*sin(2*t)), (x, 0, oo))
+    assert isinstance(res, Piecewise)
+    assert gammasimp((res - sqrt(pi)/2 * cos(t)).subs(t, pi/6)) == 0
