@@ -2251,12 +2251,12 @@ def decipher_gm(message, key):
 
 
 
-########### RaiFence Cipher #############
+########### RailFence Cipher #############
 
 def encipher_railfence(message,rails):
     """
     Performs Railfence Encryption on plaintext and returns ciphertext
-    
+
     EXAMPLE
     =======
     >>> from sympy.crypto.crypto import encipher_railfence
