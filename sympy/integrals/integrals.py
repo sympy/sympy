@@ -1456,17 +1456,21 @@ def integrate(*args, **kwargs):
     Integral, Integral.doit
 
     """
-    meijerg = kwargs.pop('meijerg', None)
-    conds = kwargs.pop('conds', 'piecewise')
-    risch = kwargs.pop('risch', None)
-    manual = kwargs.pop('manual', None)
+    doit_flags = {
+        'deep': False,
+        'meijerg': kwargs.pop('meijerg', None),
+        'conds': kwargs.pop('conds', 'piecewise'),
+        'risch': kwargs.pop('risch', None),
+        'manual': kwargs.pop('manual', None)
+        }
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        return integral.doit(deep=False, meijerg=meijerg, conds=conds,
-                             risch=risch, manual=manual)
+        return integral.doit(**doit_flags)
     else:
-        return integral
+        new_args = [a.doit(**doit_flags) if isinstance(a, Integral) else a
+            for a in integral.args]
+        return integral.func(*new_args)
 
 
 def line_integrate(field, curve, vars):
