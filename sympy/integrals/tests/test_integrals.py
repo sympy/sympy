@@ -1386,6 +1386,7 @@ def test_issue_14782():
     assert integrate(f, [x, -1, 1]) == - pi / 8
     assert integrate(f, [x, 0, 1]) == S(1) / 3 - pi / 16
 
+
 def test_issue_12081():
     f = x**(-S(3)/2)*exp(-x)
     assert integrate(f, [x, 0, oo]) == oo
@@ -1408,6 +1409,12 @@ def test_issue_15124():
     m, p = symbols('m p', cls=Idx)
     assert integrate(exp(x*I*(omega[m] + omega[p])), x, conds='none') == \
         -I*exp(I*x*omega[m])*exp(I*x*omega[p])/(omega[m] + omega[p])
+
+
+def test_issue_15218():
+    assert Eq(x, y).integrate(x) == Eq(x**2/2, x*y)
+    assert Integral(Eq(x, y), x) == Eq(Integral(x, x), Integral(y, x))
+    assert Integral(Eq(x, y), x).doit() == Eq(x**2/2, x*y)
 
 
 def test_issue_15292():
