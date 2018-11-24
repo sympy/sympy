@@ -598,7 +598,7 @@ def test_inverse_laplace_transform_delta():
 
 
 def test_inverse_laplace_transform_delta_cond():
-    from sympy import DiracDelta, Eq, im
+    from sympy import DiracDelta, Eq, im, Heaviside
     ILT = inverse_laplace_transform
     t = symbols('t')
     r = Symbol('r', real=True)
@@ -612,7 +612,9 @@ def test_inverse_laplace_transform_delta_cond():
         f = ILT(exp(z*s), s, t, noconds=False)
         f = f[0] if isinstance(f, tuple) else f
         assert f.func != DiracDelta
-
+    # issue 15043
+    assert ILT(1/s + exp(r*s)/s, s, t, noconds=False) == (
+        Heaviside(t) + Heaviside(r + t), True)
 
 def test_fourier_transform():
     from sympy import simplify, expand, expand_complex, factor, expand_trig
