@@ -1,8 +1,8 @@
 from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
     tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfi,
-    EulerGamma, Expr, factor, Function, gamma, I, Idx, im, IndexedBase, Integral, integrate,
-    Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
+    EulerGamma, Expr, factor, Function, gamma, gammasimp, I, Idx, im, IndexedBase,
+    Integral, integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
     symbols, sympify, tan, trigsimp, Tuple
@@ -1386,6 +1386,7 @@ def test_issue_14782():
     assert integrate(f, [x, -1, 1]) == - pi / 8
     assert integrate(f, [x, 0, 1]) == S(1) / 3 - pi / 16
 
+
 def test_issue_12081():
     f = x**(-S(3)/2)*exp(-x)
     assert integrate(f, [x, 0, oo]) == oo
@@ -1414,3 +1415,9 @@ def test_issue_15218():
     assert Eq(x, y).integrate(x) == Eq(x**2/2, x*y)
     assert Integral(Eq(x, y), x) == Eq(Integral(x, x), Integral(y, x))
     assert Integral(Eq(x, y), x).doit() == Eq(x**2/2, x*y)
+
+
+def test_issue_15292():
+    res = integrate(exp(-x**2*cos(2*t)) * cos(x**2*sin(2*t)), (x, 0, oo))
+    assert isinstance(res, Piecewise)
+    assert gammasimp((res - sqrt(pi)/2 * cos(t)).subs(t, pi/6)) == 0

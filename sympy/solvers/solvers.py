@@ -2909,6 +2909,8 @@ def nsolve(*args, **kwargs):
             if isinstance(fi, Equality):
                 f[i] = fi.lhs - fi.rhs
         f = Matrix(f).T
+    if iterable(x0):
+        x0 = list(x0)
     if not isinstance(f, Matrix):
         # assume it's a sympy expression
         if isinstance(f, Equality):

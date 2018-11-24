@@ -12,6 +12,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.utilities import filldedent
 from sympy.simplify.radsimp import denom
 from sympy.polys.rationaltools import together
+from sympy.core.compatibility import iterable
 
 def continuous_domain(f, symbol, domain):
     """
@@ -167,7 +168,7 @@ def function_range(f, symbol, domain):
 
             solution = solveset(f.diff(symbol), symbol, interval)
 
-            if isinstance(solution, ConditionSet):
+            if not iterable(solution):
                 raise NotImplementedError('Unable to find critical points for {}'.format(f))
 
             critical_points += solution

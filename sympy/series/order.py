@@ -184,6 +184,9 @@ class Order(Expr):
             if point[0] is S.Infinity:
                 s = {k: 1/Dummy() for k in variables}
                 rs = {1/v: 1/k for k, v in s.items()}
+            elif point[0] is S.NegativeInfinity:
+                s = {k: -1/Dummy() for k in variables}
+                rs = {-1/v: -1/k for k, v in s.items()}
             elif point[0] is not S.Zero:
                 s = dict((k, Dummy() + point[0]) for k in variables)
                 rs = dict((v - point[0], k - point[0]) for k, v in s.items())

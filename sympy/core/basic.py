@@ -1686,10 +1686,10 @@ class Basic(with_metaclass(ManagedProperties)):
             obj = self
             for i in range(n):
                 obj2 = obj._accept_eval_derivative(s)
-                if obj == obj2:
+                if obj == obj2 or obj2 is None:
                     break
                 obj = obj2
-            return obj
+            return obj2
         else:
             return None
 

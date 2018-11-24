@@ -428,3 +428,10 @@ def test_issue_14622():
     assert O(x, (x, oo)).contains(O(x, (x, 0))) is None
     assert O(x, (x, 0)).contains(O(x, (x, oo))) is None
     raises(NotImplementedError, lambda: O(x**3).contains(x**w))
+
+
+def test_issue_15539():
+    assert O(1/x**2 + 1/x**4, (x, -oo)) == O(1/x**2, (x, -oo))
+    assert O(1/x**4 + exp(x), (x, -oo)) == O(1/x**4, (x, -oo))
+    assert O(1/x**4 + exp(-x), (x, -oo)) == O(exp(-x), (x, -oo))
+    assert O(1/x, (x, oo)).subs(x, -x) == O(-1/x, (x, -oo))
