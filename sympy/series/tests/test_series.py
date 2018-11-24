@@ -206,3 +206,7 @@ def test_issue_14885():
     assert series(x**(-S(3)/2)*exp(x), x, 0) == (x**(-S(3)/2) + 1/sqrt(x) +
         sqrt(x)/2 + x**(S(3)/2)/6 + x**(S(5)/2)/24 + x**(S(7)/2)/120 +
         x**(S(9)/2)/720 + x**(S(11)/2)/5040 + O(x**6))
+
+
+def test_issue_15539():
+    assert series(exp(x), x, -oo) == O(x**(-6), (x, -oo))
