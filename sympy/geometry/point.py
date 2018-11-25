@@ -380,18 +380,22 @@ class Point(GeometryEntity):
         points = list(uniq(points))
         return Point.affine_rank(*points) <= 2
 
-    def distance(self, p):
-        """The Euclidean distance from self to point p.
+    def distance(self, other):
+        """The Euclidean distance between self and other .
 
         Parameters
         ==========
 
-        p : Point
+        p : LinearEntity or Point
 
         Returns
         =======
 
         distance : number or symbolic expression.
+
+        Raises
+        ======
+        AttributeError : if other.distance() is not defined
 
         See Also
         ========
@@ -402,19 +406,28 @@ class Point(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy.geometry import Point
+        >>> from sympy.geometry import Point, Line
         >>> p1, p2 = Point(1, 1), Point(4, 5)
+        >>> l = Line((3, 1), (2, 2))
         >>> p1.distance(p2)
         5
-
+        >>> p1.distance(l)
+        sqrt(2)
         >>> from sympy.abc import x, y
         >>> p3 = Point(x, y)
         >>> p3.distance(Point(0, 0))
         sqrt(x**2 + y**2)
 
         """
-        s, p = Point._normalize_dimension(self, Point(p))
-        return sqrt(Add(*((a - b)**2 for a, b in zip(s, p))))
+        if not isinstance(other , GeometryEntity) :
+            other = Point(other, dim=self.ambient_dimension)
+        if isinstance(other , Point) :
+            s, p = Point._normalize_dimension(self, Point(other))
+            return sqrt(Add(*((a - b)**2 for a, b in zip(s, p))))
+        try :
+            return other.distance(self)
+        except AttributeError :
+            raise AttributeError("distance between Point and %s is not defined"%type(other))
 
     def dot(self, p):
         """Return dot product of self with another Point."""

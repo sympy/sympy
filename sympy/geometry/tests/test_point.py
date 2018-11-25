@@ -33,6 +33,7 @@ def test_point():
     p3 = Point(0, 0)
     p4 = Point(1, 1)
     p5 = Point(0, 1)
+    line = Line(Point(1,0), slope = 1)
 
     assert p1 in p1
     assert p1 not in p2
@@ -55,6 +56,10 @@ def test_point():
     assert Point.distance(p1, p1) == 0
     assert Point.distance(p3, p2) == sqrt(p2.x**2 + p2.y**2)
 
+    # distance should be symmetric
+    assert p1.distance(line) == line.distance(p1)
+    assert p4.distance(line) == line.distance(p4)
+
     assert Point.taxicab_distance(p4, p3) == 2
 
     assert Point.canberra_distance(p4, p5) == 1
@@ -72,7 +77,7 @@ def test_point():
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
     assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
     assert Point.is_collinear(p3, p3, p4, p5) is False
-    line = Line(Point(1,0), slope = 1)
+
     raises(TypeError, lambda: Point.is_collinear(line))
     raises(TypeError, lambda: p1_1.is_collinear(line))
 
