@@ -2767,6 +2767,25 @@ def test_pinv_rank_deficient():
     assert solution == Matrix([3, w1])
     assert A * A.pinv() * B != B
 
+@XFAIL
+def test_pinv_rank_deficient_when_diagonalization_fails():
+    print('Test the four properties of the pseudoinverse for matrices when diagonalization of A.H*A fails.')
+    As = [Matrix([
+        [0.61, 0.89, 0.55, 0.20, 0.71, 0],
+        [0.62, 0.96, 0.85, 0.85, 0.16, 0],
+        [0.69, 0.56, 0.17, 0.04, 0.54, 0],
+        [0.10, 0.54, 0.91, 0.41, 0.71, 0],
+        [0.07, 0.30, 0.10, 0.48, 0.90, 0],
+        [0,0,0,0,0,0]])]
+    for A in As:
+        A_pinv = A.pinv()
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
 
 def test_gauss_jordan_solve():
 
