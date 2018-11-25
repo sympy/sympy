@@ -2740,7 +2740,8 @@ def test_pinv_solve():
 def test_pinv_rank_deficient():
     # Test the four properties of the pseudoinverse for various matrices.
     As = [Matrix([[1, 1, 1], [2, 2, 2]]),
-          Matrix([[1, 0], [0, 0]])]
+          Matrix([[1, 0], [0, 0]]),
+          Matrix([[1, 2], [2, 4], [3, 6]])]
     for A in As:
         A_pinv = A.pinv()
         AAp = A * A_pinv
