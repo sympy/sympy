@@ -1790,7 +1790,13 @@ class Expr(Basic, EvalfMixin):
         values, the corresponding exponents. The resulting dictionary should
         be used with caution if the expression is a Mul and contains non-
         commutative factors since the order that they appeared will be lost in
-        the dictionary."""
+        the dictionary.
+
+        See Also
+        ========
+        as_ordered_factors: An alternative for noncommutative applications,
+                            returning an ordered list of factors.
+        """
         d = defaultdict(int)
         d.update(dict([self.as_base_exp()]))
         return d

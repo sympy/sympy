@@ -410,6 +410,13 @@ def test_exptrigsimp():
         assert s == exptrigsimp(e)
         assert valid(s, 2*sinh(a))
 
+@XFAIL
+def test_exptrigsimp_noncommutative():
+    a,b = symbols('a b', commutative=False)
+    x = Symbol('x', commutative=True)
+    assert exp(a + x) == exptrigsimp(exp(a)*exp(x))
+    p = exp(a)*exp(b) - exp(b)*exp(a)
+    assert p == exptrigsimp(p) != 0
 
 def test_powsimp_on_numbers():
     assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
