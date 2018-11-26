@@ -5,10 +5,10 @@ from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, simplify, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly, sec, Ei)
-from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
-    classify_ode, classify_sysode, constant_renumber, constantsimp,
-    homogeneous_order, infinitesimals, checkinfsol, checksysodesol, solve_ics,
-    dsolve)
+from sympy.solvers.ode import (_undetermined_coefficients_match,
+    checkodesol, classify_ode, classify_sysode, constant_renumber,
+    constantsimp, homogeneous_order, infinitesimals, checkinfsol,
+    checksysodesol, solve_ics, dsolve, get_numbered_constants)
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
 
@@ -2957,20 +2957,21 @@ def test_dsolve_linsystem_symbol():
             Eq(g(x), -C1*eps*sin(eps*x) + C2*eps*cos(eps*x))]
     assert checksysodesol(eq1, sol1) == (True, [0, 0])
 
-
-
 def test_C1_function_9239():
     t = Symbol('t')
     C1 = Function('C1')
     C2 = Function('C2')
-    C3 = Symbol('C1')  # XXX: update these after
-    C4 = Symbol('C2')  # XXX: https://github.com/sympy/sympy/issues/15056
+    C3 = Symbol('C3')
+    C4 = Symbol('C4')
     eq = (Eq(diff(C1(t), t), 9*C2(t)), Eq(diff(C2(t), t), 12*C1(t)))
     sol = [Eq(C1(t), 9*C3*exp(6*sqrt(3)*t) + 9*C4*exp(-6*sqrt(3)*t)),
            Eq(C2(t), 6*sqrt(3)*C3*exp(6*sqrt(3)*t) - 6*sqrt(3)*C4*exp(-6*sqrt(3)*t))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
-
+def test_issue_15056():
+    t = Symbol('t')
+    C3 = Symbol('C3')
+    assert get_numbered_constants(Symbol('C1') * Function('C2')(t)) == C3
 
 def test_issue_10379():
     t,y = symbols('t,y')
