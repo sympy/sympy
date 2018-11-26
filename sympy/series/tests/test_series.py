@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols, IndexedBase
+    Function, log, sqrt, Symbol, Subs, pi, symbols, IndexedBase, atan
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
@@ -209,4 +209,7 @@ def test_issue_14885():
 
 
 def test_issue_15539():
-    assert series(exp(x), x, -oo) == O(x**(-6), (x, -oo))
+    assert series(atan(x), x, -oo) == (-1/(5*x**5) + 1/(3*x**3) - 1/x - pi/2
+        + O(x**(-6), (x, -oo)))
+    assert series(atan(x), x, oo) == (-1/(5*x**5) + 1/(3*x**3) - 1/x + pi/2
+        + O(x**(-6), (x, oo)))
