@@ -4,7 +4,7 @@ from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, Float, sec, zoo)
+    binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -533,5 +533,15 @@ def test_issue_14456():
 def test_issue_14411():
     assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2)) == -oo
 
+
 def test_issue_14574():
     assert limit(sqrt(x)*cos(x - x**2) / (x + 1), x, oo) == 0
+
+
+def test_issue_10102():
+    assert limit(fresnels(x), x, oo) == S.Half
+    assert limit(3 + fresnels(x), x, oo) == 3 + S.Half
+    assert limit(5*fresnels(x), x, oo) == 5*S.Half
+    assert limit(fresnelc(x), x, oo) == S.Half
+    assert limit(fresnels(x), x, -oo) == -S.Half
+    assert limit(4*fresnelc(x), x, -oo) == -2
