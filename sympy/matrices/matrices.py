@@ -3830,11 +3830,11 @@ class MatrixBase(MatrixDeprecated,
             # However, A*AH is Hermitian, so we can diagonalize it.
             if self.rows >= self.cols:
                 P, D = (AH * A).diagonalize(normalize=True)
-                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1/x)
+                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
                 return P * D_pinv * P.H * AH
             else:
                 P, D = (A * AH).diagonalize(normalize=True)
-                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1/x)
+                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
                 return AH * P * D_pinv * P.H
         except MatrixError:
             raise NotImplementedError('pinv for rank-deficient matrices where diagonalization '
