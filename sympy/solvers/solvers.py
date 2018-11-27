@@ -979,10 +979,8 @@ def solve(f, *symbols, **flags):
 
         if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
             temp = reduce_inequalities(f, symbols=symbols)
-            if isinstance(temp, BooleanAtom):
-                if isinstance(temp, BooleanFalse):
-                    if flags.get('dict', False):
-                        return []
+            if isinstance(temp, BooleanFalse) and flags.get('dict', False):
+                return []
             return temp
 
         if isinstance(fi, Poly):
