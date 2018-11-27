@@ -381,12 +381,7 @@ class Point(GeometryEntity):
         return Point.affine_rank(*points) <= 2
 
     def distance(self, other):
-        """The Euclidean distance between self and other .
-
-        Parameters
-        ==========
-
-        p : LinearEntity or Point
+        """The Euclidean distance between self and another GeometricEntity.
 
         Returns
         =======
@@ -395,7 +390,10 @@ class Point(GeometryEntity):
 
         Raises
         ======
-        AttributeError : if other.distance() is not defined
+        AttributeError : if other is a GeometricEntity for which
+                         distance is not defined.
+        TypeError : if other is not a GeometricEntity except Tuple
+                    and List.
 
         See Also
         ========
