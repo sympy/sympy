@@ -1796,6 +1796,8 @@ class Expr(Basic, EvalfMixin):
         ========
         as_ordered_factors: An alternative for noncommutative applications,
                             returning an ordered list of factors.
+        args_cnc: Similar to as_ordered_factors, but guarantees separation
+                  of commutative and noncommutative factors.
         """
         d = defaultdict(int)
         d.update(dict([self.as_base_exp()]))

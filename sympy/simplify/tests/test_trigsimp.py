@@ -410,7 +410,6 @@ def test_exptrigsimp():
         assert s == exptrigsimp(e)
         assert valid(s, 2*sinh(a))
 
-@XFAIL
 def test_exptrigsimp_noncommutative():
     a,b = symbols('a b', commutative=False)
     x = Symbol('x', commutative=True)
