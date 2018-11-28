@@ -1,4 +1,4 @@
-from sympy import Symbol, symbols, S
+from sympy import Symbol, symbols, S, simplify
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log
 from sympy.utilities.pytest import raises
@@ -146,15 +146,15 @@ def test_Beam():
     C3 = symbols('C3')
     C4 = symbols('C4')
     p = b3.load
-    q = - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
+    q = -2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 4*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
     assert p == q
 
     p = b3.slope()
-    q = 2 + (-SingularityFunction(x, 2, 5)/30 + SingularityFunction(x, 3, 3)/3 + SingularityFunction(x, 3, 5)/30)/(E*I)
+    q = 2 + (-SingularityFunction(x, 2, 5)/30 + SingularityFunction(x, 3, 3)/3 + SingularityFunction(x, 3, 4)/6 + SingularityFunction(x, 3, 5)/30)/(E*I)
     assert p == q
 
     p = b3.deflection()
-    q = 2*x + (-SingularityFunction(x, 2, 6)/180 + SingularityFunction(x, 3, 4)/12 + SingularityFunction(x, 3, 6)/180)/(E*I)
+    q = 2*x + (-SingularityFunction(x, 2, 6)/180 + SingularityFunction(x, 3, 4)/12 + SingularityFunction(x, 3, 5)/30 + SingularityFunction(x, 3, 6)/180)/(E*I)
     assert p == q + C4
 
     b4 = Beam(4, E, I)
@@ -172,6 +172,7 @@ def test_Beam():
     q = -3*SingularityFunction(x, 0, 4)/24 + 3*SingularityFunction(x, 3, 4)/24
     assert p == q/(E*I) + C3*x + C4
 
+    # can't use end with point loads
     raises(ValueError, lambda: b4.apply_load(-3, 0, -1, end=3))
     with raises(TypeError):
         b4.variable = 1
@@ -472,12 +473,16 @@ def test_Beam3D():
 
     assert b.shear_force() == [0, -q*x, 0]
     assert b.bending_moment() == [0, 0, -m*x + q*x**2/2]
-    assert b.deflection() == [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m)
+    expected_deflection = (-l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m)
             + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I)) + l*m*x**2/(4*E*I)
             - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I))
             - m*x**3/(6*E*I) + q*x**4/(24*E*I)
             + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I))
-            - q*x**2/(2*A*G), 0]
+            - q*x**2/(2*A*G)
+            )
+    dx, dy, dz = b.deflection()
+    assert dx == dz == 0
+    assert simplify(dy - expected_deflection) == 0  # == doesn't work
 
 
     b2 = Beam3D(30, E, G, I, A, x)
@@ -490,8 +495,11 @@ def test_Beam3D():
 
     b2.solve_slope_deflection()
     assert b2.slope() == [0, 0, 25*x**3/(3*E*I) - 375*x**2/(E*I) + 3750*x/(E*I)]
-    assert b2.deflection() == [0, 25*x**4/(12*E*I) - 125*x**3/(E*I) + 1875*x**2/(E*I)
-                        - 25*x**2/(A*G) + 750*x/(A*G), 0]
+    expected_deflection = (25*x**4/(12*E*I) - 125*x**3/(E*I) + 1875*x**2/(E*I)
+                        - 25*x**2/(A*G) + 750*x/(A*G))
+    dx, dy, dz = b2.deflection()
+    assert dx == dz == 0
+    assert simplify(dy - expected_deflection) == 0  # == doesn't work
 
     # Test for solve_for_reaction_loads
     b3 = Beam3D(30, E, G, I, A, x)
@@ -503,3 +511,63 @@ def test_Beam3D():
     b3.apply_load(R4, start=30, order=-1, dir="z")
     b3.solve_for_reaction_loads(R1, R2, R3, R4)
     assert b3.reaction_loads == {R1: -120, R2: -120, R3: -1350, R4: -2700}
+
+
+def test_parabolic_loads():
+
+    E, I, L = symbols('E, I, L', positive=True, real=True)
+    R, M, P = symbols('R, M, P', real=True)
+
+    # cantilever beam fixed at x=0 and parabolic distributed loading across
+    # length of beam
+    beam = Beam(L, E, I)
+
+    beam.bc_deflection.append((0, 0))
+    beam.bc_slope.append((0, 0))
+    beam.apply_load(R, 0, -1)
+    beam.apply_load(M, 0, -2)
+
+    # parabolic load
+    beam.apply_load(1, 0, 2)
+
+    beam.solve_for_reaction_loads(R, M)
+
+    assert beam.reaction_loads[R] == -L**3 / 3
+
+    # cantilever beam fixed at x=0 and parabolic distributed loading across
+    # first half of beam
+    beam = Beam(2 * L, E, I)
+
+    beam.bc_deflection.append((0, 0))
+    beam.bc_slope.append((0, 0))
+    beam.apply_load(R, 0, -1)
+    beam.apply_load(M, 0, -2)
+
+    # parabolic load from x=0 to x=L
+    beam.apply_load(1, 0, 2, end=L)
+
+    beam.solve_for_reaction_loads(R, M)
+
+    # result should be the same as the prior example
+    assert beam.reaction_loads[R] == -L**3 / 3
+
+    # check constant load
+    beam = Beam(2 * L, E, I)
+    beam.apply_load(P, 0, 0, end=L)
+    loading = beam.load.xreplace({L: 10, E: 20, I: 30, P: 40})
+    assert loading.xreplace({x: 5}) == 40
+    assert loading.xreplace({x: 15}) == 0
+
+    # check ramp load
+    beam = Beam(2 * L, E, I)
+    beam.apply_load(P, 0, 1, end=L)
+    assert beam.load == (P*SingularityFunction(x, 0, 1) -
+                         P*SingularityFunction(x, L, 1) -
+                         P*L*SingularityFunction(x, L, 0))
+
+    # check higher order load: x**8 load from x=0 to x=L
+    beam = Beam(2 * L, E, I)
+    beam.apply_load(P, 0, 8, end=L)
+    loading = beam.load.xreplace({L: 10, E: 20, I: 30, P: 40})
+    assert loading.xreplace({x: 5}) == 40 * 5**8
+    assert loading.xreplace({x: 15}) == 0

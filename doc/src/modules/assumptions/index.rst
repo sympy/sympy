@@ -121,7 +121,7 @@ in notable speed improvements.
 
 Logic inference used in one ask could be used to speed up further queries, and
 current system does not take advantage of this. For example, a truth maintenance
-system (http://en.wikipedia.org/wiki/Truth_maintenance_system) could be implemented.
+system (https://en.wikipedia.org/wiki/Truth_maintenance_system) could be implemented.
 
 Misc
 ====

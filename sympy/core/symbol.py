@@ -261,8 +261,7 @@ class Symbol(AtomicExpr, Boolean):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def as_dummy(self):
-        """Return a Dummy having the same name and same assumptions as self."""
-        return Dummy(self.name, **self._assumptions.generator)
+        return Dummy(self.name)
 
     def as_real_imag(self, deep=True, **hints):
         from sympy import im, re

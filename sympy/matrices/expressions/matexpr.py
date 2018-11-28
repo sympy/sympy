@@ -31,7 +31,7 @@ def _sympifyit(arg, retval=None):
 
 
 class MatrixExpr(Expr):
-    """ Superclass for Matrix Expressions
+    """Superclass for Matrix Expressions
 
     MatrixExprs represent abstract matrices, linear transformations represented
     within a particular basis.
@@ -46,11 +46,8 @@ class MatrixExpr(Expr):
 
     See Also
     ========
-        MatrixSymbol
-        MatAdd
-        MatMul
-        Transpose
-        Inverse
+
+    MatrixSymbol, MatAdd, MatMul, Transpose, Inverse
     """
 
     # Should not be considered iterable by the
@@ -71,7 +68,7 @@ class MatrixExpr(Expr):
 
     is_commutative = False
     is_number = False
-    is_symbol = True
+    is_symbol = False
 
     def __new__(cls, *args, **kwargs):
         args = map(_sympify, args)
@@ -87,22 +84,22 @@ class MatrixExpr(Expr):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return MatAdd(self, other).doit()
+        return MatAdd(self, other, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return MatAdd(other, self).doit()
+        return MatAdd(other, self, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return MatAdd(self, -other).doit()
+        return MatAdd(self, -other, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return MatAdd(other, -self).doit()
+        return MatAdd(other, -self, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
@@ -131,13 +128,11 @@ class MatrixExpr(Expr):
             raise ShapeError("Power of non-square matrix %s" % self)
         elif self.is_Identity:
             return self
-        elif other is S.NegativeOne:
-            return Inverse(self)
         elif other is S.Zero:
             return Identity(self.rows)
         elif other is S.One:
             return self
-        return MatPow(self, other)
+        return MatPow(self, other).doit(deep=False)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
@@ -246,6 +241,9 @@ class MatrixExpr(Expr):
             return None
         else:
             return parsed
+
+    def _eval_derivative_n_times(self, x, n):
+        return Basic._eval_derivative_n_times(self, x, n)
 
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
@@ -619,6 +617,10 @@ class MatrixElement(Expr):
             args = self.args
         return args[0][args[1], args[2]]
 
+    @property
+    def indices(self):
+        return self.args[1:]
+
     def _eval_derivative(self, v):
         from sympy import Sum, symbols, Dummy
 
@@ -652,6 +654,9 @@ class MatrixSymbol(MatrixExpr):
     Creates a SymPy Symbol to represent a Matrix. This matrix has a shape and
     can be included in Matrix Expressions
 
+    Examples
+    ========
+
     >>> from sympy import MatrixSymbol, Identity
     >>> A = MatrixSymbol('A', 3, 4) # A 3 by 4 Matrix
     >>> B = MatrixSymbol('B', 4, 3) # A 4 by 3 Matrix
@@ -661,6 +666,7 @@ class MatrixSymbol(MatrixExpr):
     I + 2*A*B
     """
     is_commutative = False
+    is_symbol = True
     _diff_wrt = True
 
     def __new__(cls, name, n, m):
@@ -671,7 +677,7 @@ class MatrixSymbol(MatrixExpr):
         return obj
 
     def _hashable_content(self):
-        return(self.name, self.shape)
+        return (self.name, self.shape)
 
     @property
     def shape(self):
@@ -687,7 +693,7 @@ class MatrixSymbol(MatrixExpr):
         return MatrixSymbol(self.name, *shape)
 
     def __call__(self, *args):
-        raise TypeError( "%s object is not callable" % self.__class__ )
+        raise TypeError("%s object is not callable" % self.__class__)
 
     def _entry(self, i, j, **kwargs):
         return MatrixElement(self, i, j)
@@ -709,6 +715,9 @@ class MatrixSymbol(MatrixExpr):
 
 class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity
+
+    Examples
+    ========
 
     >>> from sympy.matrices import Identity, MatrixSymbol
     >>> A = MatrixSymbol('A', 3, 5)
@@ -761,10 +770,13 @@ class Identity(MatrixExpr):
 class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
 
+    Examples
+    ========
+
     >>> from sympy import MatrixSymbol, ZeroMatrix
     >>> A = MatrixSymbol('A', 3, 5)
     >>> Z = ZeroMatrix(3, 5)
-    >>> A+Z
+    >>> A + Z
     A
     >>> Z*A.T
     0
@@ -777,7 +789,6 @@ class ZeroMatrix(MatrixExpr):
     @property
     def shape(self):
         return (self.args[0], self.args[1])
-
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')

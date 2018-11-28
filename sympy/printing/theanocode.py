@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from sympy.external import import_module
 from sympy.printing.printer import Printer
 from sympy.core.compatibility import range, is_sequence
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 import sympy
 from functools import partial
 
@@ -180,6 +179,17 @@ class TheanoPrinter(Printer):
         result = children[0]
         for child in children[1:]:
             result = tt.dot(result, child)
+        return result
+
+    def _print_MatPow(self, expr, **kwargs):
+        children = [self._print(arg, **kwargs) for arg in expr.args]
+        result = 1
+        if isinstance(children[1], int) and children[1] > 0:
+            for i in range(children[1]):
+                result = tt.dot(result, children[0])
+        else:
+            raise NotImplementedError('''Only non-negative integer
+           powers of matrices can be handled by Theano at the moment''')
         return result
 
     def _print_MatrixSlice(self, expr, **kwargs):
@@ -377,7 +387,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     return {}
 
 
-def theano_function(inputs, outputs, squeeze=True, scalar=False, **kwargs):
+def theano_function(inputs, outputs, scalar=False, **kwargs):
     """ Create a Theano function from SymPy expressions.
 
     The inputs and outputs are converted to Theano variables using
@@ -390,17 +400,9 @@ def theano_function(inputs, outputs, squeeze=True, scalar=False, **kwargs):
         Sequence of symbols which constitute the inputs of the function.
 
     outputs
-        Expression or sequence of expressions which constitute the outputs(s) of
-        the function. The free symbols of each expression must be a subset of
+        Sequence of expressions which constitute the outputs(s) of the
+        function. The free symbols of each expression must be a subset of
         ``inputs``.
-
-    squeeze : bool
-        If ``outputs`` is a sequence of length one, pass the printed value of
-        the lone element of the sequence to :func:`theano.function` instead of
-        the sequence itself. This has the effect of making a function which
-        returns a single array instead of a list containing one array. This
-        behavior is deprecated and the default value will be changed to False in
-        a future release. To get a function that returns a single
 
     scalar : bool
         Convert 0-dimensional arrays in output to scalars. This will return a
@@ -450,13 +452,13 @@ def theano_function(inputs, outputs, squeeze=True, scalar=False, **kwargs):
 
     A simple function with one input and one output:
 
-    >>> f1 = theano_function([x], x**2 - 1, scalar=True)
+    >>> f1 = theano_function([x], [x**2 - 1], scalar=True)
     >>> f1(3)
     8.0
 
     A function with multiple inputs and one output:
 
-    >>> f2 = theano_function([x, y, z], (x**z + y**z)**(1/z), scalar=True)
+    >>> f2 = theano_function([x, y, z], [(x**z + y**z)**(1/z)], scalar=True)
     >>> f2(3, 4, 2)
     5.0
 
@@ -474,16 +476,6 @@ def theano_function(inputs, outputs, squeeze=True, scalar=False, **kwargs):
     if not theano:
         raise ImportError("theano is required for theano_function")
 
-    # Squeeze output sequence of length one
-    if squeeze and is_sequence(outputs) and len(outputs) == 1:
-        SymPyDeprecationWarning(
-            feature='theano_function() with squeeze=True',
-            issue=14986,
-            deprecated_since_version='1.2.1',
-            useinstead='a single expression as "outputs" (not a list)',
-        ).warn()
-        outputs = outputs[0]
-
     # Pop off non-theano keyword args
     cache = kwargs.pop('cache', {})
     dtypes = kwargs.pop('dtypes', {})
@@ -498,13 +490,11 @@ def theano_function(inputs, outputs, squeeze=True, scalar=False, **kwargs):
     # Print inputs/outputs
     code = partial(theano_code, cache=cache, dtypes=dtypes,
                    broadcastables=broadcastables)
-    tinputs  = list(map(code, inputs))
+    tinputs = list(map(code, inputs))
+    toutputs = list(map(code, outputs))
 
-    is_seq = is_sequence(outputs)
-    if is_seq:
-        toutputs = list(map(code, outputs))
-    else:
-        toutputs = code(outputs)
+    if len(toutputs) == 1:
+        toutputs = toutputs[0]
 
     # Compile theano func
     func = theano.function(tinputs, toutputs, **kwargs)
@@ -519,12 +509,12 @@ def theano_function(inputs, outputs, squeeze=True, scalar=False, **kwargs):
     # Create wrapper to convert 0-dimensional outputs to scalars
     def wrapper(*args):
         out = func(*args)
+        # out can be array(1.0) or [array(1.0), array(2.0)]
 
-        if not is_seq:
-            return out[()]
-
-        else:
+        if is_sequence(out):
             return [o[()] if is_0d[i] else o for i, o in enumerate(out)]
+        else:
+            return out[()]
 
     wrapper.__wrapped__ = func
     wrapper.__doc__ = func.__doc__

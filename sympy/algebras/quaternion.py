@@ -174,8 +174,9 @@ class Quaternion(Expr):
     def _eval_Integral(self, *args):
         return self.integrate(*args)
 
-    def _eval_diff(self, *symbols, **kwargs):
-        return self.diff(*symbols)
+    def diff(self, *symbols, **kwargs):
+        kwargs.setdefault('evaluate', True)
+        return self.func(*[a.diff(*symbols, **kwargs) for a  in self.args])
 
     def add(self, other):
         """Adds quaternions.
@@ -412,10 +413,6 @@ class Quaternion(Expr):
         q2 = Quaternion.from_axis_angle(v, p * angle)
         return q2 * (q.norm()**p)
 
-    def diff(self, *args):
-        return Quaternion(diff(self.a, *args), diff(self.b, *args),
-                          diff(self.c, *args), diff(self.d, *args))
-
     def integrate(self, *args):
         # TODO: is this expression correct?
         return Quaternion(integrate(self.a, *args), integrate(self.b, *args),
@@ -529,7 +526,7 @@ class Quaternion(Expr):
 
         m10 = 2*s*(q.b*q.c + q.d*q.a)
         m11 = 1 - 2*s*(q.b**2 + q.d**2)
-        m12 = 2*s*(q.c*q.d + q.b*q.a)
+        m12 = 2*s*(q.c*q.d - q.b*q.a)
 
         m20 = 2*s*(q.b*q.d - q.c*q.a)
         m21 = 2*s*(q.c*q.d + q.b*q.a)

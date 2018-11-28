@@ -5,7 +5,7 @@ The FCodePrinter converts single sympy expressions into single Fortran
 expressions, using the functions defined in the Fortran 77 standard where
 possible. Some useful pointers to Fortran can be found on wikipedia:
 
-http://en.wikipedia.org/wiki/Fortran
+https://en.wikipedia.org/wiki/Fortran
 
 Most of the code below is based on the "Professional Programmer\'s Guide to
 Fortran77" by Clive G. Page:

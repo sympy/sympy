@@ -53,7 +53,7 @@ def flatten(iterable, levels=None, cls=None):
     >>> flatten([MyOp(1, MyOp(2, 3))], cls=MyOp)
     [1, 2, 3]
 
-    adapted from http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
+    adapted from https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
     """
     if levels is not None:
         if not levels:
@@ -877,7 +877,7 @@ def topological_sort(graph, key=None):
         ...
         ValueError: cycle detected
 
-    .. seealso:: http://en.wikipedia.org/wiki/Topological_sorting
+    .. seealso:: https://en.wikipedia.org/wiki/Topological_sorting
 
     """
     V, E = graph
@@ -1153,7 +1153,7 @@ def _set_partitions(n):
 
     Nijenhuis, Albert and Wilf, Herbert. (1978) Combinatorial Algorithms,
     2nd Ed, p 91, algorithm "nexequ". Available online from
-    http://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
+    https://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
     November 17, 2012).
 
     """
@@ -1568,10 +1568,10 @@ def ordered_partitions(n, m=None, sort=True):
     ==========
 
     .. [1] Generating Integer Partitions, [online],
-        Available: http://jeromekelleher.net/generating-integer-partitions.html
+        Available: https://jeromekelleher.net/generating-integer-partitions.html
     .. [2] Jerome Kelleher and Barry O'Sullivan, "Generating All
         Partitions: A Comparison Of Two Encodings", [online],
-        Available: http://arxiv.org/pdf/0909.2331v2.pdf
+        Available: https://arxiv.org/pdf/0909.2331v2.pdf
     """
     if n < 1 or m is not None and m < 1:
         # the empty set is the only way to handle these inputs
@@ -1822,10 +1822,10 @@ def generate_bell(n):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Method_ringing
-    * http://stackoverflow.com/questions/4856615/recursive-permutation/4857018
+    * https://en.wikipedia.org/wiki/Method_ringing
+    * https://stackoverflow.com/questions/4856615/recursive-permutation/4857018
     * http://programminggeeks.com/bell-algorithm-for-permutation/
-    * http://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
+    * https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
     * Generating involutions, derangements, and relatives by ECO
       Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
 
@@ -2002,7 +2002,7 @@ def generate_oriented_forest(n):
     Reference:
     [1] T. Beyer and S.M. Hedetniemi: constant time generation of \
         rooted trees, SIAM J. Computing Vol. 9, No. 4, November 1980
-    [2] http://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python
+    [2] https://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python
 
     Examples
     ========
@@ -2228,7 +2228,7 @@ def kbins(l, k, ordered=None):
     """
     def partition(lista, bins):
         #  EnricoGiampieri's partition generator from
-        #  http://stackoverflow.com/questions/13131491/
+        #  https://stackoverflow.com/questions/13131491/
         #  partition-n-items-into-k-bins-in-python-lazily
         if len(lista) == 1 or bins == 1:
             yield [lista]

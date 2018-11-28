@@ -76,7 +76,7 @@ def _print_known_const(self, expr):
     return self._module_format(known)
 
 
-class PythonCodePrinter(CodePrinter):
+class AbstractPythonCodePrinter(CodePrinter):
     printmethod = "_pythoncode"
     language = "Python"
     standard = "python3"
@@ -99,7 +99,7 @@ class PythonCodePrinter(CodePrinter):
     )
 
     def __init__(self, settings=None):
-        super(PythonCodePrinter, self).__init__(settings)
+        super(AbstractPythonCodePrinter, self).__init__(settings)
         self.module_imports = defaultdict(set)
         self.known_functions = dict(self._kf, **(settings or {}).get(
             'user_functions', {}))
@@ -131,15 +131,94 @@ class PythonCodePrinter(CodePrinter):
     def _get_comment(self, text):
         return "  # {0}".format(text)
 
+    def _expand_fold_binary_op(self, op, args):
+        """
+        This method expands a fold on binary operations.
+
+        ``functools.reduce`` is an example of a folded operation.
+
+        For example, the expression
+
+        `A + B + C + D`
+
+        is folded into
+
+        `((A + B) + C) + D`
+        """
+        if len(args) == 1:
+            return self._print(args[0])
+        else:
+            return "%s(%s, %s)" % (
+                self._module_format(op),
+                self._expand_fold_binary_op(op, args[:-1]),
+                self._print(args[-1]),
+            )
+
+    def _expand_reduce_binary_op(self, op, args):
+        """
+        This method expands a reductin on binary operations.
+
+        Notice: this is NOT the same as ``functools.reduce``.
+
+        For example, the expression
+
+        `A + B + C + D`
+
+        is reduced into:
+
+        `(A + B) + (C + D)`
+        """
+        if len(args) == 1:
+            return self._print(args[0])
+        else:
+            N = len(args)
+            Nhalf = N // 2
+            return "%s(%s, %s)" % (
+                self._module_format(op),
+                self._expand_reduce_binary_op(args[:Nhalf]),
+                self._expand_reduce_binary_op(args[Nhalf:]),
+            )
+
+    def _get_einsum_string(self, subranks, contraction_indices):
+        letters = self._get_letter_generator_for_einsum()
+        contraction_string = ""
+        counter = 0
+        d = {j: min(i) for i in contraction_indices for j in i}
+        indices = []
+        for rank_arg in subranks:
+            lindices = []
+            for i in range(rank_arg):
+                if counter in d:
+                    lindices.append(d[counter])
+                else:
+                    lindices.append(counter)
+                counter += 1
+            indices.append(lindices)
+        mapping = {}
+        letters_free = []
+        letters_dum = []
+        for i in indices:
+            for j in i:
+                if j not in mapping:
+                    l = next(letters)
+                    mapping[j] = l
+                else:
+                    l = mapping[j]
+                contraction_string += l
+                if j in d:
+                    if l not in letters_dum:
+                        letters_dum.append(l)
+                else:
+                    letters_free.append(l)
+            contraction_string += ","
+        contraction_string = contraction_string[:-1]
+        return contraction_string, letters_free, letters_dum
+
     def _print_NaN(self, expr):
         return "float('nan')"
 
     def _print_Infinity(self, expr):
         return "float('inf')"
-
-    def _print_sign(self, e):
-        return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
-            f=self._module_format('math.copysign'), e=self._print(e.args[0]))
 
     def _print_NegativeInfinity(self, expr):
         return "float('-inf')"
@@ -188,7 +267,7 @@ class PythonCodePrinter(CodePrinter):
             lhs = self._print(expr.lhs)
             rhs = self._print(expr.rhs)
             return '({lhs} {op} {rhs})'.format(op=expr.rel_op, lhs=lhs, rhs=rhs)
-        return super(PythonCodePrinter, self)._print_Relational(expr)
+        return super(AbstractPythonCodePrinter, self)._print_Relational(expr)
 
     def _print_ITE(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
@@ -270,6 +349,17 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NoneToken(self, arg):
         return 'None'
+
+
+class PythonCodePrinter(AbstractPythonCodePrinter):
+
+    def _print_sign(self, e):
+        return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
+            f=self._module_format('math.copysign'), e=self._print(e.args[0]))
+
+    def _print_Not(self, expr):
+        PREC = precedence(expr)
+        return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
 
 for k in PythonCodePrinter._kf:
@@ -486,7 +576,7 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s)" % (self._module_format('numpy.angle'), self._print(expr.args[0]))
 
     def _print_im(self, expr):
-        return "%s(%s)" % (self._module_format('numpy.imag', self._print(expr.args[0])))
+        return "%s(%s)" % (self._module_format('numpy.imag'), self._print(expr.args[0]))
 
     def _print_Mod(self, expr):
         return "%s(%s)" % (self._module_format('numpy.mod'), ', '.join(
@@ -503,6 +593,64 @@ class NumPyPrinter(PythonCodePrinter):
         if func is None:
             func = self._module_format('numpy.array')
         return "%s(%s)" % (func, self._print(expr.tolist()))
+
+    def _print_CodegenArrayTensorProduct(self, expr):
+        array_list = [j for i, arg in enumerate(expr.args) for j in
+                (self._print(arg), "[%i, %i]" % (2*i, 2*i+1))]
+        return "%s(%s)" % (self._module_format('numpy.einsum'), ", ".join(array_list))
+
+    def _print_CodegenArrayContraction(self, expr):
+        from sympy.codegen.array_utils import CodegenArrayTensorProduct
+        base = expr.expr
+        contraction_indices = expr.contraction_indices
+        if len(contraction_indices) == 0:
+            return self._print(base)
+        if isinstance(base, CodegenArrayTensorProduct):
+            counter = 0
+            d = {j: min(i) for i in contraction_indices for j in i}
+            indices = []
+            for rank_arg in base.subranks:
+                lindices = []
+                for i in range(rank_arg):
+                    if counter in d:
+                        lindices.append(d[counter])
+                    else:
+                        lindices.append(counter)
+                    counter += 1
+                indices.append(lindices)
+            elems = ["%s, %s" % (self._print(arg), ind) for arg, ind in zip(base.args, indices)]
+            return "%s(%s)" % (
+                self._module_format('numpy.einsum'),
+                ", ".join(elems)
+            )
+        raise NotImplementedError()
+
+    def _print_CodegenArrayDiagonal(self, expr):
+        diagonal_indices = list(expr.diagonal_indices)
+        if len(diagonal_indices) > 1:
+            # TODO: this should be handled in sympy.codegen.array_utils,
+            # possibly by creating the possibility of unfolding the
+            # CodegenArrayDiagonal object into nested ones. Same reasoning for
+            # the array contraction.
+            raise NotImplementedError
+        if len(diagonal_indices[0]) != 2:
+            raise NotImplementedError
+        return "%s(%s, 0, axis1=%s, axis2=%s)" % (
+            self._module_format("numpy.diagonal"),
+            self._print(expr.expr),
+            diagonal_indices[0][0],
+            diagonal_indices[0][1],
+        )
+
+    def _print_CodegenArrayPermuteDims(self, expr):
+        return "%s(%s, %s)" % (
+            self._module_format("numpy.transpose"),
+            self._print(expr.expr),
+            self._print(expr.permutation.args[0]),
+        )
+
+    def _print_CodegenArrayElementwiseAdd(self, expr):
+        return self._expand_fold_binary_op('numpy.add', expr.args)
 
 
 for k in NumPyPrinter._kf:

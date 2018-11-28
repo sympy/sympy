@@ -22,8 +22,9 @@ sys.path = ['ext'] + sys.path
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'numpydoc', 'sympylive', 'sphinx.ext.graphviz', ]
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode',
+              'sphinx.ext.mathjax', 'numpydoc', 'sympylive',
+              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
@@ -31,7 +32,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
 
-# MathJax file, which is free to use.  See http://www.mathjax.org/docs/2.0/start.html
+# MathJax file, which is free to use.  See https://www.mathjax.org/docs/2.0/start.html
 mathjax_path = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
 
 # Add any paths that contain templates here, relative to this directory.
@@ -80,6 +81,8 @@ today_fmt = '%B %d, %Y'
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
+# Don't show the source code hyperlinks when using matplotlib plot directive.
+plot_html_show_source_link = False
 
 # Options for HTML output
 # -----------------------
@@ -102,7 +105,7 @@ html_theme = 'classic'
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
-# See http://sphinx-doc.org/theming.html#builtin-themes.
+# See http://www.sphinx-doc.org/en/master/theming.html#builtin-themes
 
 
 # If true, SmartyPants will be used to convert quotes and dashes to

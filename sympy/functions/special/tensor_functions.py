@@ -127,7 +127,7 @@ class KroneckerDelta(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Kronecker_delta
+    .. [1] https://en.wikipedia.org/wiki/Kronecker_delta
     """
 
     is_integer = True

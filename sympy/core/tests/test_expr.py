@@ -763,6 +763,11 @@ def test_count():
     assert expr.count(sin(a)) == 1
     assert expr.count(lambda u: type(u) is sin) == 1
 
+    f = Function('f')
+    assert f(x).count(f(x)) == 1
+    assert f(x).diff(x).count(f(x)) == 1
+    assert f(x).diff(x).count(x) == 2
+
 
 def test_has_basics():
     f = Function('f')
@@ -1734,6 +1739,9 @@ def test_held_expression_UnevaluatedExpr():
     assert isinstance(e1, Mul)
     assert e1.args == (x, he)
     assert e1.doit() == 1
+    assert UnevaluatedExpr(Derivative(x, x)).doit(deep=False
+        ) == Derivative(x, x)
+    assert UnevaluatedExpr(Derivative(x, x)).doit() == 1
 
     xx = Mul(x, x, evaluate=False)
     assert xx != x**2

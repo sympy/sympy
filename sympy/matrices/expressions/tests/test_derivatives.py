@@ -4,7 +4,7 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative
-from sympy import MatAdd, Identity
+from sympy import MatAdd, Identity, MatMul
 
 k = symbols("k")
 
@@ -85,7 +85,7 @@ def test_matrix_derivative_with_inverse():
 
     # Cookbook example 64:
     expr = Trace(Inverse(X + A))
-    assert expr.diff(X) == -(Inverse(X + A)*Inverse(X + A)).T
+    assert expr.diff(X) == -(Inverse(X + A)).T**2
 
 
 def test_matrix_derivatives_of_traces():
@@ -135,7 +135,7 @@ def test_matrix_derivatives_of_traces():
     expr = Trace(X**2*B)
     # TODO: wrong result
     #assert expr.diff(X) == (X*B + B*X).T
-    expr = Trace(X*X*B)
+    expr = Trace(MatMul(X, X, B))
     assert expr.diff(X) == (X*B + B*X).T
 
     # Cookbook example 108:

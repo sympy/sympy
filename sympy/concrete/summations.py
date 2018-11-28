@@ -6,6 +6,7 @@ from sympy.core.function import Derivative, Function
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
+from sympy.core.mul import Mul
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.calculus.singularities import is_decreasing
@@ -13,7 +14,7 @@ from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
-from sympy.polys import apart, PolynomialError
+from sympy.polys import apart, PolynomialError, together
 from sympy.series.limits import limit
 from sympy.series.order import O
 from sympy.sets.sets import FiniteSet
@@ -22,6 +23,7 @@ from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
+from sympy.simplify import denom
 from sympy.calculus.util import AccumulationBounds
 import itertools
 
@@ -150,8 +152,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
            http://dl.acm.org/citation.cfm?doid=322248.322255
-    .. [2] http://en.wikipedia.org/wiki/Summation#Capital-sigma_notation
-    .. [3] http://en.wikipedia.org/wiki/Empty_sum
+    .. [2] https://en.wikipedia.org/wiki/Summation#Capital-sigma_notation
+    .. [3] https://en.wikipedia.org/wiki/Empty_sum
     """
 
     __slots__ = ['is_commutative']
@@ -164,19 +166,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             raise ValueError('Sum requires values for lower and upper bounds.')
 
         return obj
-
-    def dummy_eq(self, other, symbol=None):
-        if type(self) != type(other):
-            return False
-        if len(self.variables) != len(other.variables):
-            return False
-        if len(self.free_symbols) != len(other.free_symbols):
-            return False
-        reps = dict(zip(self.variables, other.variables))
-        aligned = self.xreplace(reps)
-        if symbol:
-            return super(Sum, aligned).dummy_eq(other, symbol=symbol)
-        return aligned == other
 
     def _eval_is_zero(self):
         # a Sum is only zero if its function is zero or if all terms
@@ -1065,6 +1054,25 @@ def eval_sum_symbolic(f, limits):
             return Piecewise((l, Eq(q, S.One)), (r, True))
 
         r = gosper_sum(f, (i, a, b))
+
+        if isinstance(r, (Mul,Add)):
+            from sympy import ordered, Tuple
+            non_limit = r.free_symbols - Tuple(*limits[1:]).free_symbols
+            den = denom(together(r))
+            den_sym = non_limit & den.free_symbols
+            args = []
+            for v in ordered(den_sym):
+                try:
+                    s = solve(den, v)
+                    m = Eq(v, s[0]) if s else S.false
+                    if m != False:
+                        args.append((Sum(f_orig.subs(*m.args), limits).doit(), m))
+                    break
+                except NotImplementedError:
+                    continue
+
+            args.append((r, True))
+            return Piecewise(*args)
 
         if not r in (None, S.NaN):
             return r

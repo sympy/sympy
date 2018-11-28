@@ -845,9 +845,9 @@ class Polygon(GeometrySet):
         Method:
         [1] http://cgm.cs.mcgill.ca/~orm/mind2p.html
         Uses rotating calipers:
-        [2] http://en.wikipedia.org/wiki/Rotating_calipers
+        [2] https://en.wikipedia.org/wiki/Rotating_calipers
         and antipodal points:
-        [3] http://en.wikipedia.org/wiki/Antipodal_point
+        [3] https://en.wikipedia.org/wiki/Antipodal_point
         """
         e1 = self
 

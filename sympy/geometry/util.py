@@ -19,6 +19,22 @@ from sympy.core.containers import OrderedSet
 from .point import Point, Point2D
 
 
+def find(x, equation):
+    """
+    Checks whether the parameter 'x' is present in 'equation' or not.
+    If it is present then it returns the passed parameter 'x' as a free
+    symbol, else, it returns a ValueError.
+    """
+
+    free = equation.free_symbols
+    xs = [i for i in free if (i.name if type(x) is str else i) == x]
+    if not xs:
+        raise ValueError('could not find %s' % x)
+    if len(xs) != 1:
+        raise ValueError('ambiguous %s' % x)
+    return xs[0]
+
+
 def _ordered_points(p):
     """Return the tuple of points sorted numerically according to args"""
     return tuple(sorted(p, key=lambda x: x.args))
@@ -334,7 +350,7 @@ def convex_hull(*args, **kwargs):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Graham_scan
+    [1] https://en.wikipedia.org/wiki/Graham_scan
 
     [2] Andrew's Monotone Chain Algorithm
     (A.M. Andrew,

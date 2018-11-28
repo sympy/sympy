@@ -325,7 +325,12 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             return [_f for _f in terms if _f], elems, common_expo, has_deriv
 
     if evaluate:
-        if expr.is_Mul:
+        if expr.is_Add:
+            o = expr.getO() or 0
+            expr = expr.func(*[
+                    collect(a, syms, func, True, exact, distribute_order_term)
+                    for a in expr.args if a != o]) + o
+        elif expr.is_Mul:
             return expr.func(*[
                 collect(term, syms, func, True, exact, distribute_order_term)
                 for term in expr.args])
@@ -371,6 +376,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                 print("DEBUG: returned %s" % str(result))
 
             if result is not None:
+                if not symbol.is_commutative:
+                    raise AttributeError("Can not collect noncommutative symbol")
+
                 terms, elems, common_expo, has_deriv = result
 
                 # when there was derivative in current pattern we

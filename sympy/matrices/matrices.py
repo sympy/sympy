@@ -280,7 +280,7 @@ class MatrixDeterminant(MatrixCommon):
         a matrix.  That is, the transpose of the matrix of cofactors.
 
 
-        http://en.wikipedia.org/wiki/Adjugate
+        https://en.wikipedia.org/wiki/Adjugate
 
         See Also
         ========
@@ -384,15 +384,56 @@ class MatrixDeterminant(MatrixCommon):
                          lambda i, j: self.cofactor(i, j, method))
 
     def det(self, method="bareiss", iszerofunc=None):
-        """Computes the determinant of a matrix.  If the matrix
-        is at most 3x3, a hard-coded formula is used.
-        Otherwise, the determinant using the method `method`.
+        """Computes the determinant of a matrix.
 
+        Parameters
+        ==========
 
-        Possible values for "method":
-          bareis
-          berkowitz
-          lu
+        method : string, optional
+            Specifies the algorithm used for computing the matrix determinant.
+
+            If the matrix is at most 3x3, a hard-coded formula is used and the
+            specified method is ignored. Otherwise, it defaults to
+            ``'bareiss'``.
+
+            If it is set to ``'bareiss'``, Bareiss' fraction-free algorithm will
+            be used.
+
+            If it is set to ``'berkowitz'``, Berkowitz' algorithm will be used.
+
+            Otherwise, if it is set to ``'lu'``, LU decomposition will be used.
+
+            .. note::
+                For backward compatibility, legacy keys like "bareis" and
+                "det_lu" can still be used to indicate the corresponding
+                methods.
+                And the keys are also case-insensitive for now. However, it is
+                suggested to use the precise keys for specifying the method.
+
+        iszerofunc : FunctionType or None, optional
+            If it is set to ``None``, it will be defaulted to ``_iszero`` if the
+            method is set to ``'bareiss'``, and ``_is_zero_after_expand_mul`` if
+            the method is set to ``'lu'``.
+
+            It can also accept any user-specified zero testing function, if it
+            is formatted as a function which accepts a single symbolic argument
+            and returns ``True`` if it is tested as zero and ``False`` if it
+            tested as non-zero, and also ``None`` if it is undecidable.
+
+        Returns
+        =======
+
+        det : Basic
+            Result of determinant.
+
+        Raises
+        ======
+
+        ValueError
+            If unrecognized keys are given for ``method`` or ``iszerofunc``.
+
+        NonSquareMatrixError
+            If attempted to calculate determinant from a non-square matrix.
         """
 
         # sanitize `method`
@@ -745,7 +786,7 @@ class MatrixReductions(MatrixDeterminant):
             * "n->n+km" (column n goes to column n + k*column m)
 
         Parameters
-        =========
+        ==========
 
         op : string; the elementary row operation
         col : the column to apply the column operation
@@ -850,29 +891,29 @@ class MatrixReductions(MatrixDeterminant):
 
         iszerofunc : Function
             A function used for detecting whether an element can
-            act as a pivot.  `lambda x: x.is_zero` is used by default.
+            act as a pivot.  ``lambda x: x.is_zero`` is used by default.
         simplify : Function
             A function used to simplify elements when looking for a pivot.
-            By default SymPy's `simplify`is used.
+            By default SymPy's ``simplify`` is used.
         pivots : True or False
-            If `True`, a tuple containing the row-reduced matrix and a tuple
-            of pivot columns is returned.  If `False` just the row-reduced
+            If ``True``, a tuple containing the row-reduced matrix and a tuple
+            of pivot columns is returned.  If ``False`` just the row-reduced
             matrix is returned.
         normalize_last : True or False
-            If `True`, no pivots are normalized to `1` until after all entries
-            above and below each pivot are zeroed.  This means the row
+            If ``True``, no pivots are normalized to `1` until after all
+            entries above and below each pivot are zeroed.  This means the row
             reduction algorithm is fraction free until the very last step.
-            If `False`, the naive row reduction procedure is used where
+            If ``False``, the naive row reduction procedure is used where
             each pivot is normalized to be `1` before row operations are
             used to zero above and below the pivot.
 
         Notes
         =====
 
-        The default value of `normalize_last=True` can provide significant
+        The default value of ``normalize_last=True`` can provide significant
         speedup to row reduction, especially on matrices with symbols.  However,
         if you depend on the form row reduction algorithm leaves entries
-        of the matrix, set `noramlize_last=False`
+        of the matrix, set ``noramlize_last=False``
 
 
         Examples
@@ -994,12 +1035,14 @@ class MatrixSubspaces(MatrixReductions):
         """Apply the Gram-Schmidt orthogonalization procedure
         to vectors supplied in `vecs`.
 
-        Arguments
-        =========
+        Parameters
+        ==========
 
-        vecs : vectors to be made orthogonal
-        normalize : bool. Whether the returned vectors
-                    should be renormalized to be unit vectors.
+        vecs
+            vectors to be made orthogonal
+
+        normalize : bool
+            If true, return an orthonormal basis.
         """
 
         normalize = kwargs.get('normalize', False)
@@ -1112,28 +1155,67 @@ class MatrixEigen(MatrixSubspaces):
         return self.hstack(*p_cols), self.diag(*diag)
 
     def eigenvals(self, error_when_incomplete=True, **flags):
-        """Return eigenvalues using the Berkowitz agorithm to compute
+        r"""Return eigenvalues using the Berkowitz agorithm to compute
         the characteristic polynomial.
 
         Parameters
         ==========
 
-        error_when_incomplete : bool
-            Raise an error when not all eigenvalues are computed. This is
-            caused by ``roots`` not returning a full list of eigenvalues.
+        error_when_incomplete : bool, optional
+            If it is set to ``True``, it will raise an error if not all
+            eigenvalues are computed. This is caused by ``roots`` not returning
+            a full list of eigenvalues.
 
-        simplify : bool or function
-            If simplify is set to True, it attempts to return the most
+        simplify : bool or function, optional
+            If it is set to ``True``, it attempts to return the most
             simplified form of expressions returned by applying default
             simplification method in every routine.
-            If simplify is set to False, it will skip simplification in this
+
+            If it is set to ``False``, it will skip simplification in this
             particular routine to save computation resources.
-            If you pass a function to simplify, it will attempt to apply
+
+            If a function is passed to, it will attempt to apply
             the particular function as simplification method.
 
-        Since the roots routine doesn't always work well with Floats,
-        they will be replaced with Rationals before calling that
-        routine. If this is not desired, set flag ``rational`` to False.
+        rational : bool, optional
+            If it is set to ``True``, every floating point numbers would be
+            replaced with rationals before computation. It can solve some
+            issues of ``roots`` routine not working well with floats.
+
+        multiple : bool, optional
+            If it is set to ``True``, the result will be in the form of a
+            list.
+
+            If it is set to ``False``, the result will be in the form of a
+            dictionary.
+
+        Returns
+        =======
+
+        eigs : list or dict
+            Eigenvalues of a matrix. The return format would be specified by
+            the key ``multiple``.
+
+        Raises
+        ======
+
+        MatrixError
+            If not enough roots had got computed.
+
+        NonSquareMatrixError
+            If attempted to compute eigenvalues from a non-square matrix.
+
+        See Also
+        ========
+
+        MatrixDeterminant.charpoly
+        eigenvects
+
+        Notes
+        =====
+
+        Eigenvalues of a matrix `A` can be computed by solving a matrix
+        equation `\det(A - \lambda I) = 0`
         """
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
@@ -1603,7 +1685,7 @@ class MatrixEigen(MatrixSubspaces):
 class MatrixCalculus(MatrixCommon):
     """Provides calculus-related matrix operations."""
 
-    def diff(self, *args):
+    def diff(self, *args, **kwargs):
         """Calculate the derivative of each element in the matrix.
         ``args`` will be passed to the ``integrate`` function.
 
@@ -1624,8 +1706,14 @@ class MatrixCalculus(MatrixCommon):
         integrate
         limit
         """
+        # XXX this should be handled here rather than in Derivative
         from sympy import Derivative
-        return Derivative(self, *args, evaluate=True)
+        kwargs.setdefault('evaluate', True)
+        deriv = Derivative(self, *args, evaluate=True)
+        if not isinstance(self, Basic):
+            return deriv.as_mutable()
+        else:
+            return deriv
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))
@@ -1947,6 +2035,28 @@ class MatrixBase(MatrixDeprecated,
     _sympify = staticmethod(sympify)
 
     __hash__ = None  # Mutable
+
+    # Defined here the same as on Basic.
+
+    # We don't define _repr_png_ here because it would add a large amount of
+    # data to any notebook containing SymPy expressions, without adding
+    # anything useful to the notebook. It can still enabled manually, e.g.,
+    # for the qtconsole, with init_printing().
+    def _repr_latex_(self):
+        """
+        IPython/Jupyter LaTeX printing
+
+        To change the behavior of this (e.g., pass in some settings to LaTeX),
+        use init_printing(). init_printing() will also enable LaTeX printing
+        for built in numeric types like ints and container types that contain
+        SymPy objects, like lists and dictionaries of expressions.
+        """
+        from sympy.printing.latex import latex
+        s = latex(self, mode='equation*')
+        s = s.strip('$')
+        return "$$%s$$" % s
+
+    _repr_latex_orig = _repr_latex_
 
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
@@ -2273,22 +2383,31 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if self.is_hermitian:
-            L = self._cholesky()
+        hermitian = True
+        if self.is_symmetric():
+            hermitian = False
+            L = self._cholesky(hermitian=hermitian)
+        elif self.is_hermitian:
+            L = self._cholesky(hermitian=hermitian)
         elif self.rows >= self.cols:
-            L = (self.H * self)._cholesky()
+            L = (self.H * self)._cholesky(hermitian=hermitian)
             rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
-        return (L.H)._upper_triangular_solve(Y)
+        if hermitian:
+            return (L.H)._upper_triangular_solve(Y)
+        else:
+            return (L.T)._upper_triangular_solve(Y)
 
-    def cholesky(self):
-        """Returns the Cholesky decomposition L of a matrix A
-        such that L * L.H = A
+    def cholesky(self, hermitian=True):
+        """Returns the Cholesky-type decomposition L of a matrix A
+        such that L * L.H == A if hermitian flag is True,
+        or L * L.T == A if hermitian is False.
 
-        A must be a Hermitian positive-definite matrix.
+        A must be a Hermitian positive-definite matrix if hermitian is True,
+        or a symmetric matrix if it is False.
 
         Examples
         ========
@@ -2319,6 +2438,18 @@ class MatrixBase(MatrixDeprecated,
         [   9, 3*I],
         [-3*I,   5]])
 
+        Non-hermitian Cholesky-type decomposition may be useful when the
+        matrix is not positive-definite.
+
+        >>> A = Matrix([[1, 2], [2, 1]])
+        >>> L = A.cholesky(hermitian=False)
+        >>> L
+        Matrix([
+        [1,         0],
+        [2, sqrt(3)*I]])
+        >>> L*L.T == A
+        True
+
         See Also
         ========
 
@@ -2329,9 +2460,11 @@ class MatrixBase(MatrixDeprecated,
 
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if not self.is_hermitian:
+        if hermitian and not self.is_hermitian:
             raise ValueError("Matrix must be Hermitian.")
-        return self._cholesky()
+        if not hermitian and not self.is_symmetric():
+            raise ValueError("Matrix must be symmetric.")
+        return self._cholesky(hermitian=hermitian)
 
     def condition_number(self):
         """Returns the condition number of a matrix.
@@ -2479,10 +2612,21 @@ class MatrixBase(MatrixDeprecated,
             raise TypeError("Size mis-match")
         return self._diagonal_solve(rhs)
 
-    def dot(self, b):
-        """Return the dot product of two vectors of equal length. ``self`` must
-        be a ``Matrix`` of size 1 x n or n x 1, and ``b`` must be either a
-        matrix of size 1 x n, n x 1, or a list/tuple of length n. A scalar is returned.
+    def dot(self, b, hermitian=None, conjugate_convention=None):
+        """Return the dot or inner product of two vectors of equal length.
+        Here ``self`` must be a ``Matrix`` of size 1 x n or n x 1, and ``b``
+        must be either a matrix of size 1 x n, n x 1, or a list/tuple of length n.
+        A scalar is returned.
+
+        By default, ``dot`` does not conjugate ``self`` or ``b``, even if there are
+        complex entries. Set ``hermitian=True`` (and optionally a ``conjugate_convention``)
+        to compute the hermitian inner product.
+
+        Possible kwargs are ``hermitian`` and ``conjugate_convention``.
+
+        If ``conjugate_convention`` is ``"left"``, ``"math"`` or ``"maths"``,
+        the conjugate of the first vector (``self``) is used.  If ``"right"``
+        or ``"physics"`` is specified, the conjugate of the second vector ``b`` is used.
 
         Examples
         ========
@@ -2497,6 +2641,21 @@ class MatrixBase(MatrixDeprecated,
         >>> v = [3, 2, 1]
         >>> M.row(0).dot(v)
         10
+
+        >>> from sympy import I
+        >>> q = Matrix([1*I, 1*I, 1*I])
+        >>> q.dot(q, hermitian=False)
+        -3
+
+        >>> q.dot(q, hermitian=True)
+        3
+
+        >>> q1 = Matrix([1, 1, 1*I])
+        >>> q.dot(q1, hermitian=True, conjugate_convention="maths")
+        1 - 2*I
+        >>> q.dot(q1, hermitian=True, conjugate_convention="physics")
+        1 + 2*I
+
 
         See Also
         ========
@@ -2534,7 +2693,28 @@ class MatrixBase(MatrixDeprecated,
             mat = mat.reshape(1, n)
         if b.shape != (n, 1):
             b = b.reshape(n, 1)
+
         # Now ``mat`` is a row vector and ``b`` is a column vector.
+
+        # If it so happens that only conjugate_convention is passed
+        # then automatically set hermitian to True. If only hermitian
+        # is true but no conjugate_convention is not passed then
+        # automatically set it to ``"maths"``
+
+        if conjugate_convention is not None and hermitian is None:
+            hermitian = True
+        if hermitian and conjugate_convention is None:
+            conjugate_convention = "maths"
+
+        if hermitian == True:
+            if conjugate_convention in ("maths", "left", "math"):
+                mat = mat.conjugate()
+            elif conjugate_convention in ("physics", "right"):
+                b = b.conjugate()
+            else:
+                raise ValueError("Unknown conjugate_convention was entered."
+                                 " conjugate_convention must be one of the"
+                                 " following: math, maths, left, physics or right.")
         return (mat * b)[0]
 
     def dual(self):
@@ -2699,7 +2879,7 @@ class MatrixBase(MatrixDeprecated,
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Gaussian_elimination
+        .. [1] https://en.wikipedia.org/wiki/Gaussian_elimination
 
         """
         from sympy.matrices import Matrix, zeros
@@ -3007,12 +3187,14 @@ class MatrixBase(MatrixDeprecated,
         else:
             return divmod(a2idx_(key, len(self)), self.cols)
 
-    def LDLdecomposition(self):
+    def LDLdecomposition(self, hermitian=True):
         """Returns the LDL Decomposition (L, D) of matrix A,
-        such that L * D * L.H == A
+        such that L * D * L.H == A if hermitian flag is True, or
+        L * D * L.T == A if hermitian is False.
         This method eliminates the use of square root.
         Further this ensures that all the diagonal entries of L are 1.
-        A must be a Hermitian positive-definite matrix.
+        A must be a Hermitian positive-definite matrix if hermitian is True,
+        or a symmetric matrix otherwise.
 
         Examples
         ========
@@ -3058,9 +3240,11 @@ class MatrixBase(MatrixDeprecated,
         """
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if not self.is_hermitian:
+        if hermitian and not self.is_hermitian:
             raise ValueError("Matrix must be Hermitian.")
-        return self._LDLdecomposition()
+        if not hermitian and not self.is_symmetric():
+            raise ValueError("Matrix must be symmetric.")
+        return self._LDLdecomposition(hermitian=hermitian)
 
     def LDLsolve(self, rhs):
         """Solves Ax = B using LDL decomposition,
@@ -3091,17 +3275,24 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if self.is_hermitian:
-            L, D = self.LDLdecomposition()
+        hermitian = True
+        if self.is_symmetric():
+            hermitian = False
+            L, D = self.LDLdecomposition(hermitian=hermitian)
+        elif self.is_hermitian:
+            L, D = self.LDLdecomposition(hermitian=hermitian)
         elif self.rows >= self.cols:
-            L, D = (self.H * self).LDLdecomposition()
+            L, D = (self.H * self).LDLdecomposition(hermitian=hermitian)
             rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
         Z = D._diagonal_solve(Y)
-        return (L.H)._upper_triangular_solve(Z)
+        if hermitian:
+            return (L.H)._upper_triangular_solve(Z)
+        else:
+            return (L.T)._upper_triangular_solve(Z)
 
     def lower_triangular_solve(self, rhs):
         """Solves Ax = B, where A is a lower triangular matrix.
@@ -3467,14 +3658,24 @@ class MatrixBase(MatrixDeprecated,
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
 
+        m = self.rows
+        n = self.cols
+        if m < n:
+            raise NotImplementedError("Underdetermined systems not supported.")
         A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
-        n = self.rows
         b = rhs.permute_rows(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
-        for i in range(n):
-            for j in range(i):
+        for i in range(m):
+            for j in range(min(i, n)):
                 scale = A[i, j]
                 b.zip_row_op(i, j, lambda x, y: x - y * scale)
+        # consistency check for overdetermined systems
+        if m > n:
+            for i in range(n, m):
+                for j in range(b.cols):
+                    if not iszerofunc(b[i, j]):
+                        raise ValueError("The system is inconsistent.")
+            b = b[0:n, :]   # truncate zero rows if consistent
         # backward substitution
         for i in range(n - 1, -1, -1):
             for j in range(i + 1, n):
@@ -3973,21 +4174,29 @@ class MatrixBase(MatrixDeprecated,
         t = self.H
         return (t * self).inv(method=method) * t * rhs
 
-    def solve(self, rhs, method='GE'):
-        """Return solution to self*soln = rhs using given inversion method.
+    def solve(self, rhs, method='GJ'):
+        """Return the unique soln making self*soln = rhs.
 
-        For a list of possible inversion methods, see the .inv() docstring.
+        If there is not a unique solution then a ValueError will be raised. If `self` is not
+        square, a ValueError and a different routine for solving the system will be suggested.
+
+        When the method is GJ, the Gauss-Jordan elimination will be used. To use a different
+        method and to compute the solution via the inverse, use a method defined in the
+        .inv() docstring.
         """
 
-        if not self.is_square:
-            if self.rows < self.cols:
-                raise ValueError('Under-determined system. '
-                                 'Try M.gauss_jordan_solve(rhs)')
-            elif self.rows > self.cols:
-                raise ValueError('For over-determined system, M, having '
-                                 'more rows than columns, try M.solve_least_squares(rhs).')
+        if method == 'GJ':
+            try:
+                soln, param = self.gauss_jordan_solve(rhs)
+                if param:
+                    raise ValueError("Matrix det == 0; not invertible. "
+                    "Try `self.gauss_jordan_solve(rhs)` to obtain a parametric solution.")
+            except ValueError:
+                # raise same error as in inv:
+                self.zeros(1).inv()
+            return soln
         else:
-            return self.inv(method=method) * rhs
+            return self.inv(method=method)*rhs
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
               colsep=', ', align='right'):

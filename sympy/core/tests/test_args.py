@@ -1582,6 +1582,11 @@ def test_sympy__functions__combinatorial__numbers__euler():
     assert _test_args(euler(x))
 
 
+def test_sympy__functions__combinatorial__numbers__carmichael():
+    from sympy.functions.combinatorial.numbers import carmichael
+    assert _test_args(carmichael(x))
+
+
 def test_sympy__functions__combinatorial__numbers__fibonacci():
     from sympy.functions.combinatorial.numbers import fibonacci
     assert _test_args(fibonacci(x))
@@ -3857,7 +3862,7 @@ def test_sympy__tensor__tensor__TensAdd():
 
 def test_sympy__tensor__tensor__Tensor():
     from sympy.core import S
-    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul, TIDS
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
@@ -3868,7 +3873,7 @@ def test_sympy__tensor__tensor__Tensor():
 
 def test_sympy__tensor__tensor__TensMul():
     from sympy.core import S
-    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul, TIDS
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
@@ -3876,6 +3881,23 @@ def test_sympy__tensor__tensor__TensMul():
     p = S1('p')
     q = S1('q')
     assert _test_args(3*p(a)*q(b))
+
+
+def test_sympy__tensor__tensor__TensorElement():
+    from sympy.tensor.tensor import TensorIndexType, tensorhead, TensorElement
+    L = TensorIndexType("L")
+    A = tensorhead("A", [L, L], [[1], [1]])
+    telem = TensorElement(A(x, y), {x: 1})
+    assert _test_args(telem)
+
+
+def test_sympy__tensor__toperators__PartialDerivative():
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    from sympy.tensor.toperators import PartialDerivative
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b = tensor_indices('a,b', Lorentz)
+    A = tensorhead("A", [Lorentz], [[1]])
+    assert _test_args(PartialDerivative(A(a), A(b)))
 
 
 def test_as_coeff_add():
@@ -4214,6 +4236,41 @@ def test_sympy__physics__optics__gaussopt__BeamParameter():
 def test_sympy__physics__optics__medium__Medium():
     from sympy.physics.optics import Medium
     assert _test_args(Medium('m'))
+
+
+def test_sympy__codegen__array_utils__CodegenArrayContraction():
+    from sympy.codegen.array_utils import CodegenArrayContraction
+    from sympy import IndexedBase
+    A = symbols("A", cls=IndexedBase)
+    assert _test_args(CodegenArrayContraction(A, (0, 1)))
+
+
+def test_sympy__codegen__array_utils__CodegenArrayDiagonal():
+    from sympy.codegen.array_utils import CodegenArrayDiagonal
+    from sympy import IndexedBase
+    A = symbols("A", cls=IndexedBase)
+    assert _test_args(CodegenArrayDiagonal(A, (0, 1)))
+
+
+def test_sympy__codegen__array_utils__CodegenArrayTensorProduct():
+    from sympy.codegen.array_utils import CodegenArrayTensorProduct
+    from sympy import IndexedBase
+    A, B = symbols("A B", cls=IndexedBase)
+    assert _test_args(CodegenArrayTensorProduct(A, B))
+
+
+def test_sympy__codegen__array_utils__CodegenArrayElementwiseAdd():
+    from sympy.codegen.array_utils import CodegenArrayElementwiseAdd
+    from sympy import IndexedBase
+    A, B = symbols("A B", cls=IndexedBase)
+    assert _test_args(CodegenArrayElementwiseAdd(A, B))
+
+
+def test_sympy__codegen__array_utils__CodegenArrayPermuteDims():
+    from sympy.codegen.array_utils import CodegenArrayPermuteDims
+    from sympy import IndexedBase
+    A = symbols("A", cls=IndexedBase)
+    assert _test_args(CodegenArrayPermuteDims(A, (1, 0)))
 
 
 def test_sympy__codegen__ast__Assignment():

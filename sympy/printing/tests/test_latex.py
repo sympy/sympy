@@ -755,7 +755,8 @@ def test_latex_productset():
     line = Interval(0, 1)
     bigline = Interval(0, 10)
     fset = FiniteSet(1, 2, 3)
-    assert latex(line**2) == r"%s^2" % latex(line)
+    assert latex(line**2) == r"%s^{2}" % latex(line)
+    assert latex(line**10) == r"%s^{10}" % latex(line)
     assert latex(line * bigline * fset) == r"%s \times %s \times %s" % (
         latex(line), latex(bigline), latex(fset))
 
@@ -1211,10 +1212,10 @@ def test_matAdd():
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     l = LatexPrinter()
-    assert l._print_MatAdd(C - 2*B) in ['-2 B + C', 'C -2 B']
-    assert l._print_MatAdd(C + 2*B) in ['2 B + C', 'C + 2 B']
-    assert l._print_MatAdd(B - 2*C) in ['B -2 C', '-2 C + B']
-    assert l._print_MatAdd(B + 2*C) in ['B + 2 C', '2 C + B']
+    assert l._print(C - 2*B) in ['- 2 B + C', 'C -2 B']
+    assert l._print(C + 2*B) in ['2 B + C', 'C + 2 B']
+    assert l._print(B - 2*C) in ['B - 2 C', '- 2 C + B']
+    assert l._print(B + 2*C) in ['B + 2 C', '2 C + B']
 
 
 def test_matMul():
@@ -1226,13 +1227,13 @@ def test_matMul():
     l = LatexPrinter()
     assert l._print_MatMul(2*A) == '2 A'
     assert l._print_MatMul(2*x*A) == '2 x A'
-    assert l._print_MatMul(-2*A) == '-2 A'
+    assert l._print_MatMul(-2*A) == '- 2 A'
     assert l._print_MatMul(1.5*A) == '1.5 A'
     assert l._print_MatMul(sqrt(2)*A) == r'\sqrt{2} A'
     assert l._print_MatMul(-sqrt(2)*A) == r'- \sqrt{2} A'
     assert l._print_MatMul(2*sqrt(2)*x*A) == r'2 \sqrt{2} x A'
-    assert l._print_MatMul(-2*A*(A + 2*B)) in [r'-2 A \left(A + 2 B\right)',
-        r'-2 A \left(2 B + A\right)']
+    assert l._print_MatMul(-2*A*(A + 2*B)) in [r'- 2 A \left(A + 2 B\right)',
+        r'- 2 A \left(2 B + A\right)']
 
 
 def test_latex_MatrixSlice():
@@ -1416,7 +1417,7 @@ def test_Hadamard():
     from sympy.matrices import MatrixSymbol, HadamardProduct
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    assert latex(HadamardProduct(X, Y*Y)) == r'X \circ \left(Y Y\right)'
+    assert latex(HadamardProduct(X, Y*Y)) == r'X \circ Y^{2}'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
 
 
@@ -1681,6 +1682,14 @@ def test_issue_7117():
     assert latex(q) == r"\left(x + 1 = 2 x\right)^{2}"
 
 
+def test_issue_15439():
+    x = MatrixSymbol('x', 2, 2)
+    y = MatrixSymbol('y', 2, 2)
+    assert latex((x * y).subs(y, -y)) == r"x \left(- y\right)"
+    assert latex((x * y).subs(y, -2*y)) == r"x \left(- 2 y\right)"
+    assert latex((x * y).subs(x, -x)) == r"- x y"
+
+
 def test_issue_2934():
     assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'
 
@@ -1727,7 +1736,7 @@ def test_MatrixElement_printing():
     assert latex(3 * A[0, 0]) == r"3 A_{0, 0}"
 
     F = C[0, 0].subs(C, A - B)
-    assert latex(F) == r"\left(-B + A\right)_{0, 0}"
+    assert latex(F) == r"\left(A - B\right)_{0, 0}"
 
 
 def test_MatrixSymbol_printing():
@@ -1736,9 +1745,9 @@ def test_MatrixSymbol_printing():
     B = MatrixSymbol("B", 3, 3)
     C = MatrixSymbol("C", 3, 3)
 
-    assert latex(-A) == r"-A"
-    assert latex(A - A*B - B) == r"-B - A B + A"
-    assert latex(-A*B - A*B*C - B) == r"-B - A B - A B C"
+    assert latex(-A) == r"- A"
+    assert latex(A - A*B - B) == r"A - A B - B"
+    assert latex(-A*B - A*B*C - B) == r"- A B - A B C - B"
 
 
 def test_Quaternion_latex_printing():
@@ -1795,7 +1804,7 @@ def test_issue_9216():
 def test_latex_printer_tensor():
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
     L = TensorIndexType("L")
-    i, j, k = tensor_indices("i j k", L)
+    i, j, k, l = tensor_indices("i j k l", L)
     i0 = tensor_indices("i_0", L)
     A, B, C, D = tensorhead("A B C D", [L], [[1]])
     H = tensorhead("H", [L, L], [[1], [1]])
@@ -1845,3 +1854,56 @@ def test_latex_printer_tensor():
 
     expr = A(i) + 3*B(i)
     assert latex(expr) == "3B{}^{i} + A{}^{i}"
+
+    ## Test ``TensorElement``:
+    from sympy.tensor.tensor import TensorElement
+
+    expr = TensorElement(K(i,j,k,l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3,j,k=2,l}'
+
+    expr = TensorElement(K(i,j,k,l), {i:3})
+    assert latex(expr) == 'K{}^{i=3,jkl}'
+
+    expr = TensorElement(K(i,-j,k,l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3}{}_{j}{}^{k=2,l}'
+
+    expr = TensorElement(K(i,-j,k,-l), {i:3, k:2})
+    assert latex(expr) == 'K{}^{i=3}{}_{j}{}^{k=2}{}_{l}'
+
+    expr = TensorElement(K(i,j,-k,-l), {i:3, -k:2})
+    assert latex(expr) == 'K{}^{i=3,j}{}_{k=2,l}'
+
+    expr = TensorElement(K(i,j,-k,-l), {i:3})
+    assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'
+
+
+def test_trace():
+    # Issue 15303
+    from sympy import trace
+    A = MatrixSymbol("A", 2, 2)
+    assert latex(trace(A)) == r"\mathrm{tr}\left (A \right )"
+    assert latex(trace(A**2)) == r"\mathrm{tr}\left (A^{2} \right )"
+
+
+def test_print_basic():
+    # Issue 15303
+    from sympy import Basic, Expr
+
+    # dummy class for testing printing where the function is not implemented in latex.py
+    class UnimplementedExpr(Expr):
+        def __new__(cls, e):
+            return Basic.__new__(cls, e)
+
+    # dummy function for testing
+    def unimplemented_expr(expr):
+        return UnimplementedExpr(expr).doit()
+
+    # override class name to use superscript / subscript
+    def unimplemented_expr_sup_sub(expr):
+        result = UnimplementedExpr(expr)
+        result.__class__.__name__ = 'UnimplementedExpr_x^1'
+        return result
+
+    assert latex(unimplemented_expr(x)) == r'UnimplementedExpr\left(x\right)'
+    assert latex(unimplemented_expr(x**2)) == r'UnimplementedExpr\left(x^{2}\right)'
+    assert latex(unimplemented_expr_sup_sub(x)) == r'UnimplementedExpr^{1}_{x}\left(x\right)'

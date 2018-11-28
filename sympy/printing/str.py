@@ -339,22 +339,6 @@ class StrPrinter(Printer):
         return '.*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
 
-    def _print_MatAdd(self, expr):
-        terms = [self.parenthesize(arg, precedence(expr))
-             for arg in expr.args]
-        l = []
-        for t in terms:
-            if t.startswith('-'):
-                sign = "-"
-                t = t[1:]
-            else:
-                sign = "+"
-            l.extend([sign, t])
-        sign = l.pop(0)
-        if sign == '+':
-            sign = ""
-        return sign + ' '.join(l)
-
     def _print_NaN(self, expr):
         return 'nan'
 
@@ -403,6 +387,14 @@ class StrPrinter(Printer):
             if len(trim) < len(full):
                 use = trim
             return 'Permutation(%s)' % use
+
+    def _print_Subs(self, obj):
+        expr, old, new = obj.args
+        if len(obj.point) == 1:
+            old = old[0]
+            new = new[0]
+        return "Subs(%s, %s, %s)" % (
+            self._print(expr), self._print(old), self._print(new))
 
     def _print_TensorIndex(self, expr):
         return expr._print()

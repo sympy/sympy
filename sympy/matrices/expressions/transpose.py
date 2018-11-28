@@ -71,8 +71,8 @@ class Transpose(MatrixExpr):
         return det(self.arg)
 
 def transpose(expr):
-    """ Matrix transpose """
-    return Transpose(expr).doit()
+    """Matrix transpose"""
+    return Transpose(expr).doit(deep=False)
 
 
 from sympy.assumptions.ask import ask, Q

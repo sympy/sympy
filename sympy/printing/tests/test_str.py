@@ -6,7 +6,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -795,12 +795,17 @@ def test_MatrixElement_printing():
     assert(str(3 * A[0, 0]) == "3*A[0, 0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert str(F) == "(-B + A)[0, 0]"
+    assert str(F) == "(A - B)[0, 0]"
 
 
 def test_MatrixSymbol_printing():
     A = MatrixSymbol("A", 3, 3)
     B = MatrixSymbol("B", 3, 3)
 
-    assert str(A - A*B - B) == "-B - A*B + A"
+    assert str(A - A*B - B) == "A - A*B - B"
     assert str(A*B - (A+B)) == "-(A + B) + A*B"
+
+
+def test_Subs_printing():
+    assert str(Subs(x, (x,), (1,))) == 'Subs(x, x, 1)'
+    assert str(Subs(x + y, (x, y), (1, 2))) == 'Subs(x + y, (x, y), (1, 2))'

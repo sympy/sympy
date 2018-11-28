@@ -245,7 +245,7 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Resultant
+    [1] https://en.wikipedia.org/wiki/Resultant
     [2] I.M. Isaacs, Proc. Amer. Math. Soc. 25 (1970), 638
     "Degrees of sums in a separable field extension".
     """

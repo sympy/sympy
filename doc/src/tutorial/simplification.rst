@@ -28,7 +28,7 @@ way to arrive at the simplest form of an expression.  Here are some examples
     (x - 2)⋅(x - 1)
 
 Here, ``gamma(x)`` is `\Gamma(x)`, the `gamma function
-<http://en.wikipedia.org/wiki/Gamma_function>`_.  We see that ``simplify()``
+<https://en.wikipedia.org/wiki/Gamma_function>`_.  We see that ``simplify()``
 is capable of handling a large class of expressions.
 
 But ``simplify()`` has a pitfall.  It just applies all the major
@@ -207,7 +207,7 @@ apart
 -----
 
 ``apart()`` performs a `partial fraction decomposition
-<http://en.wikipedia.org/wiki/Partial_fraction_decomposition>`_ on a rational
+<https://en.wikipedia.org/wiki/Partial_fraction_decomposition>`_ on a rational
 function.
 
     >>> expr = (4*x**3 + 21*x**2 + 10*x + 12)/(x**4 + 5*x**3 + 5*x**2 + 4*x)
@@ -576,7 +576,7 @@ assumptions we put on them in the previous section.  We will also define ``k``,
     >>> x, y, z = symbols('x y z')
     >>> k, m, n = symbols('k m n')
 
-The `factorial <http://en.wikipedia.org/wiki/Factorial>`_ function is
+The `factorial <https://en.wikipedia.org/wiki/Factorial>`_ function is
 ``factorial``.  ``factorial(n)`` represents `n!= 1\cdot2\cdots(n - 1)\cdot
 n`. `n!` represents the number of permutations of `n` distinct items.
 
@@ -584,7 +584,7 @@ n`. `n!` represents the number of permutations of `n` distinct items.
     n!
 
 The `binomial coefficient
-<http://en.wikipedia.org/wiki/Binomial_coefficient>`_ function is
+<https://en.wikipedia.org/wiki/Binomial_coefficient>`_ function is
 ``binomial``.  ``binomial(n, k)`` represents `\binom{n}{k}`, the number of
 ways to choose `k` items from a set of `n` distinct items.  It is also often
 written as `nCk`, and is pronounced "`n` choose `k`".
@@ -595,7 +595,7 @@ written as `nCk`, and is pronounced "`n` choose `k`".
     ⎝k⎠
 
 The factorial function is closely related to the `gamma function
-<http://en.wikipedia.org/wiki/Gamma_function>`_, ``gamma``.  ``gamma(z)``
+<https://en.wikipedia.org/wiki/Gamma_function>`_, ``gamma``.  ``gamma(z)``
 represents `\Gamma(z) = \int_0^\infty t^{z - 1}e^{-t}\,dt`, which for positive integer
 `z` is the same as `(z - 1)!`.
 
@@ -603,12 +603,12 @@ represents `\Gamma(z) = \int_0^\infty t^{z - 1}e^{-t}\,dt`, which for positive i
     Γ(z)
 
 The `generalized hypergeometric function
-<http://en.wikipedia.org/wiki/Generalized_hypergeometric_function>`_ is
+<https://en.wikipedia.org/wiki/Generalized_hypergeometric_function>`_ is
 ``hyper``.  ``hyper([a_1, ..., a_p], [b_1, ..., b_q], z)`` represents
 `{}_pF_q\left(\begin{matrix} a_1, \cdots, a_p \\ b_1, \cdots, b_q \end{matrix}
 \middle| z \right)`.  The most common case is `{}_2F_1`, which is often
 referred to as the `ordinary hypergeometric function
-<http://en.wikipedia.org/wiki/Hypergeometric_function>`_.
+<https://en.wikipedia.org/wiki/Hypergeometric_function>`_.
 
     >>> hyper([1, 2], [3], z)
      ┌─  ⎛1, 2 │  ⎞
@@ -697,7 +697,7 @@ Example: Continued Fractions
 ============================
 
 Let's use SymPy to explore continued fractions.  A `continued fraction
-<http://en.wikipedia.org/wiki/Continued_fraction>`_ is an expression of the
+<https://en.wikipedia.org/wiki/Continued_fraction>`_ is an expression of the
 form
 
 .. math::

@@ -4,15 +4,16 @@ from __future__ import division
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, simplify, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec)
-from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
-    classify_ode, classify_sysode, constant_renumber, constantsimp,
-    homogeneous_order, infinitesimals, checkinfsol, checksysodesol, solve_ics)
+    Piecewise, symbols, Poly, sec, Ei)
+from sympy.solvers.ode import (_undetermined_coefficients_match,
+    checkodesol, classify_ode, classify_sysode, constant_renumber,
+    constantsimp, homogeneous_order, infinitesimals, checkinfsol,
+    checksysodesol, solve_ics, dsolve, get_numbered_constants)
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
-x, y, z = symbols('x:z', real=True)
+u, x, y, z = symbols('u,x:z', real=True)
 f = Function('f')
 g = Function('g')
 h = Function('h')
@@ -156,23 +157,19 @@ def test_sysode_linear_2eq_order1_many_zeros():
         assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
-
 def test_dsolve_linsystem_symbol_piecewise():
-    u = Symbol('u')
+    u = Symbol('u')  # XXX it's more complicated with real u
     eq = (Eq(diff(f(x), x), 2*f(x) + g(x)),
            Eq(diff(g(x), x), u*f(x)))
-    s1 = [
-        Eq(f(x), Piecewise((C1*exp(x*(sqrt(4*u + 4)/2 + 1))
-            + C2*exp(x*(-sqrt(4*u + 4)/2 + 1)), Ne(4*u + 4, 0)),
-            ((C1 + C2*(x + Piecewise((0, Eq(sqrt(4*u + 4)/2 + 1, 2)),
-            (1/(-sqrt(4*u + 4)/2 + 1), True))))*exp(x*(sqrt(4*u + 4)/2 + 1)),
-            True))),
-        Eq(g(x), Piecewise((C1*(sqrt(4*u + 4)/2 - 1)*exp(x*(sqrt(4*u + 4)/2 + 1))
-            + C2*(-sqrt(4*u + 4)/2 - 1)*exp(x*(-sqrt(4*u + 4)/2 + 1)),
-            Ne(4*u + 4, 0)), ((C1*(sqrt(4*u + 4)/2 - 1) + C2*(x*(sqrt(4*u + 4)/2 - 1)
-            + Piecewise((1, Eq(sqrt(4*u + 4)/2 + 1, 2)),
-            (0, True))))*exp(x*(sqrt(4*u + 4)/2 + 1)), True)))
-    ]
+    s1 = [Eq(f(x), Piecewise((C1*exp(x*(sqrt(4*u + 4)/2 + 1)) +
+        C2*exp(x*(-sqrt(4*u + 4)/2 + 1)), Ne(4*u + 4, 0)), ((C1 + C2*(x +
+        Piecewise((0, Eq(sqrt(4*u + 4)/2 + 1, 2)), (1/(-sqrt(4*u + 4)/2 + 1),
+        True))))*exp(x*(sqrt(4*u + 4)/2 + 1)), True))), Eq(g(x),
+        Piecewise((C1*(sqrt(4*u + 4)/2 - 1)*exp(x*(sqrt(4*u + 4)/2 + 1)) +
+        C2*(-sqrt(4*u + 4)/2 - 1)*exp(x*(-sqrt(4*u + 4)/2 + 1)), Ne(4*u + 4,
+        0)), ((C1*(sqrt(4*u + 4)/2 - 1) + C2*(x*(sqrt(4*u + 4)/2 - 1) +
+        Piecewise((1, Eq(sqrt(4*u + 4)/2 + 1, 2)), (0,
+        True))))*exp(x*(sqrt(4*u + 4)/2 + 1)), True)))]
     s = dsolve(eq)
     assert s == s1
     s = [(l.lhs, l.rhs) for l in s]
@@ -585,23 +582,24 @@ def test_checksysodesol():
 @slow
 def test_nonlinear_3eq_order1():
     x, y, z = symbols('x, y, z', cls=Function)
-    t = Symbol('t')
+    t, u = symbols('t u')
     eq1 = (4*diff(x(t),t) + 2*y(t)*z(t), 3*diff(y(t),t) - z(t)*x(t), 5*diff(z(t),t) - x(t)*y(t))
-    sol1 = "[Eq(4*Integral(1/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), (_y, x(t))), "\
-    "C3 - sqrt(15)*t/15), Eq(3*Integral(1/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), "\
-    "(_y, y(t))), C3 + sqrt(5)*t/10), Eq(5*Integral(1/(sqrt(-10*_y**2 - 3*C1 + C2)*"\
-    "sqrt(5*_y**2 + 4*C1 - C2)), (_y, z(t))), C3 + sqrt(3)*t/6)]"
-    assert str(dsolve(eq1)) == sol1
+    sol1 = [Eq(4*Integral(1/(sqrt(-4*u**2 - 3*C1 + C2)*sqrt(-4*u**2 + 5*C1 - C2)), (u, x(t))),
+        C3 - sqrt(15)*t/15), Eq(3*Integral(1/(sqrt(-6*u**2 - C1 + 5*C2)*sqrt(3*u**2 + C1 - 4*C2)),
+        (u, y(t))), C3 + sqrt(5)*t/10), Eq(5*Integral(1/(sqrt(-10*u**2 - 3*C1 + C2)*
+        sqrt(5*u**2 + 4*C1 - C2)), (u, z(t))), C3 + sqrt(3)*t/6)]
+    assert [i.dummy_eq(j) for i, j in zip(dsolve(eq1), sol1)]
 
     eq2 = (4*diff(x(t),t) + 2*y(t)*z(t)*sin(t), 3*diff(y(t),t) - z(t)*x(t)*sin(t), 5*diff(z(t),t) - x(t)*y(t)*sin(t))
-    sol2 = "[Eq(3*Integral(1/(sqrt(-6*_y**2 - C1 + 5*C2)*sqrt(3*_y**2 + C1 - 4*C2)), (_y, x(t))), C3 + "\
-    "sqrt(5)*cos(t)/10), Eq(4*Integral(1/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), "\
-    "(_y, y(t))), C3 - sqrt(15)*cos(t)/15), Eq(5*Integral(1/(sqrt(-10*_y**2 - 3*C1 + C2)*"\
-    "sqrt(5*_y**2 + 4*C1 - C2)), (_y, z(t))), C3 + sqrt(3)*cos(t)/6)]"
-    assert str(dsolve(eq2)) == sol2
+    sol2 = [Eq(3*Integral(1/(sqrt(-6*u**2 - C1 + 5*C2)*sqrt(3*u**2 + C1 - 4*C2)), (u, x(t))), C3 +
+        sqrt(5)*cos(t)/10), Eq(4*Integral(1/(sqrt(-4*u**2 - 3*C1 + C2)*sqrt(-4*u**2 + 5*C1 - C2)),
+        (u, y(t))), C3 - sqrt(15)*cos(t)/15), Eq(5*Integral(1/(sqrt(-10*u**2 - 3*C1 + C2)*
+        sqrt(5*u**2 + 4*C1 - C2)), (u, z(t))), C3 + sqrt(3)*cos(t)/6)]
+    assert [i.dummy_eq(j) for i, j in zip(dsolve(eq2), sol2)]
 
 
 def test_checkodesol():
+    from sympy import Ei
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
     raises(ValueError, lambda: checkodesol(f(x, y).diff(x), Eq(f(x, y), x)))
@@ -627,10 +625,10 @@ def test_checkodesol():
         solve_for_func=False) == (True, 0)
     assert checkodesol(f(x).diff(x, 2), [Eq(f(x), C1 + C2*x),
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)]) == \
-        [(True, 0), (True, 0), (False, 2*C2)]
+        [(True, 0), (True, 0), (False, C2)]
     assert checkodesol(f(x).diff(x, 2), set([Eq(f(x), C1 + C2*x),
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)])) == \
-        set([(True, 0), (True, 0), (False, 2*C2)])
+        set([(True, 0), (True, 0), (False, C2)])
     assert checkodesol(f(x).diff(x) - 1/f(x)/2, Eq(f(x)**2, x)) == \
         [(True, 0), (True, 0)]
     assert checkodesol(f(x).diff(x) - f(x), Eq(C1*exp(x), f(x))) == (True, 0)
@@ -639,7 +637,10 @@ def test_checkodesol():
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
     assert not checkodesol(eq3, sol3)[1].has(f(x))
-
+    # This case was failing intermittently depending on hash-seed:
+    eqn = Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x))
+    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
+    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
 
 @slow
 def test_dsolve_options():
@@ -714,20 +715,33 @@ def test_dsolve_options():
 
 def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
-        ('nth_linear_constant_coeff_homogeneous', 'Liouville',
-            '2nd_power_series_ordinary' ,'Liouville_Integral')
+        ('nth_algebraic',
+        'nth_linear_constant_coeff_homogeneous',
+        'nth_linear_euler_eq_homogeneous',
+        'Liouville',
+        '2nd_power_series_ordinary',
+        'nth_algebraic_Integral',
+        'Liouville_Integral',
+        )
     assert classify_ode(f(x), f(x)) == ()
-    assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == ('separable',
+    assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == (
+        'nth_algebraic',
+        'separable',
         '1st_linear', '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
         '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_homogeneous',
+        'nth_linear_euler_eq_homogeneous',
+        'nth_algebraic_Integral',
         'separable_Integral',
         '1st_linear_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
-    assert classify_ode(f(x).diff(x)**2, f(x)) == ('lie_group',)
+    assert classify_ode(f(x).diff(x)**2, f(x)) == (
+        'nth_algebraic',
+        'lie_group',
+        'nth_algebraic_Integral')
     # issue 4749: f(x) should be cleared from highest derivative before classifying
     a = classify_ode(Eq(f(x).diff(x) + f(x), x), f(x))
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
@@ -758,19 +772,23 @@ def test_classify_ode():
         ('separable', '1st_exact', '1st_power_series', 'lie_group',
          'separable_Integral', '1st_exact_Integral')
     # preprocessing
-    ans = ('separable', '1st_exact', '1st_linear', 'Bernoulli',
+    ans = ('nth_algebraic', 'separable', '1st_exact', '1st_linear', 'Bernoulli',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
         '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
+        'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
+        'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',
+        'nth_algebraic_Integral',
         'separable_Integral', '1st_exact_Integral',
         '1st_linear_Integral',
         'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
-        'nth_linear_constant_coeff_variation_of_parameters_Integral')
+        'nth_linear_constant_coeff_variation_of_parameters_Integral',
+        'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral')
     #     w/o f(x) given
     assert classify_ode(diff(f(x) + x, x) + diff(f(x), x)) == ans
     #     w/ f(x) and prep=True
@@ -778,10 +796,14 @@ def test_classify_ode():
                         prep=True) == ans
 
     assert classify_ode(Eq(2*x**3*f(x).diff(x), 0), f(x)) == \
-        ('separable', '1st_linear', '1st_power_series', 'lie_group',
-         'separable_Integral', '1st_linear_Integral')
+        ('nth_algebraic', 'separable', '1st_linear', '1st_power_series',
+         'lie_group', 'nth_linear_euler_eq_homogeneous',
+         'nth_algebraic_Integral', 'separable_Integral',
+         '1st_linear_Integral')
+
     assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
-        ('separable', '1st_power_series', 'lie_group', 'separable_Integral')
+        ('nth_algebraic', 'separable', '1st_power_series', 'lie_group',
+                'nth_algebraic_Integral', 'separable_Integral')
     # test issue 13864
     assert classify_ode(Eq(diff(f(x), x) - f(x)**x, 0), f(x)) == \
         ('1st_power_series', 'lie_group')
@@ -1039,14 +1061,16 @@ def test_solve_ics():
             Eq(g(x), exp(x)*sin(x))]
 
     # Test cases where dsolve returns two solutions.
-    assert dsolve(diff(x**2*f(x)**2 - x, x), f(x), ics={f(1): 0}) == [Eq(f(x),
+    eq = (x**2*f(x)**2 - x).diff(x)
+    assert dsolve(eq, f(x), ics={f(1): 0}) == [Eq(f(x),
         -sqrt(x - 1)/x), Eq(f(x), sqrt(x - 1)/x)]
-    assert dsolve(diff(x**2*f(x)**2 - x, x), f(x), ics={f(x).diff(x).subs(x, 1): 0}) == [Eq(f(x),
+    assert dsolve(eq, f(x), ics={f(x).diff(x).subs(x, 1): 0}) == [Eq(f(x),
         -sqrt(x - S(1)/2)/x), Eq(f(x), sqrt(x - S(1)/2)/x)]
 
-    assert dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x),
+    eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
+    assert dsolve(eq, f(x),
         ics={f(0):1}, hint='1st_exact', simplify=False) == Eq(x*cos(f(x)) + f(x)**3/3, S(1)/3)
-    assert dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x),
+    assert dsolve(eq, f(x),
         ics={f(0):1}, hint='1st_exact', simplify=True) == Eq(x*cos(f(x)) + f(x)**3/3, S(1)/3)
 
     assert solve_ics([Eq(f(x), C1*exp(x))], [f(x)], [C1], {f(0): 1}) == {C1: 1}
@@ -1262,21 +1286,25 @@ def test_separable1():
     eq3 = f(x).diff(x) + sin(x)
     eq4 = f(x)**2 + 1 - (x**2 + 1)*f(x).diff(x)
     eq5 = f(x).diff(x)/tan(x) - f(x) - 2
+    eq6 = f(x).diff(x) * (1 - sin(f(x))) - 1
     sol1 = Eq(f(x), C1*exp(x))
     sol2 = Eq(f(x), C1*x)
     sol3 = Eq(f(x), C1 + cos(x))
     sol4 = Eq(atan(f(x)), C1 + atan(x))
     sol5 = Eq(f(x), C1/cos(x) - 2)
+    sol6 = Eq(-x + f(x) + cos(f(x)), C1)
     assert dsolve(eq1, hint='separable') == sol1
     assert dsolve(eq2, hint='separable') == sol2
     assert dsolve(eq3, hint='separable') == sol3
     assert dsolve(eq4, hint='separable', simplify=False) == sol4
     assert dsolve(eq5, hint='separable') == sol5
+    assert dsolve(eq6, hint='separable') == sol6
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
     assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
     assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq6, sol6, order=1, solve_for_func=False)[0]
 
 
 def test_separable2():
@@ -1287,20 +1315,18 @@ def test_separable2():
     eq9 = exp(x + 1)*tan(f(x)) + cos(f(x))*f(x).diff(x)
     eq10 = (x*cos(f(x)) + x**2*sin(f(x))*f(x).diff(x) -
             a**2*sin(f(x))*f(x).diff(x))
-    # solve() messes this one up a little bit, so lets test _Integral here
-    # We have to test strings with _Integral because y is a dummy variable.
-    sol6str = ("Eq(Integral((_y - 2)/_y**3, (_y, f(x))), "
-               "C1 + Integral(x**(-2), x))")
+    sol6 = Eq(Integral((u - 2)/u**3, (u, f(x))),
+        C1 + Integral(x**(-2), x))
     sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(2 + x))
     sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
-    sol9str = ("Eq(Integral(cos(_y)/tan(_y), (_y, f(x))), "
-                "C1 + Integral(-E*exp(x), x))")
+    sol9 = Eq(Integral(cos(u)/tan(u), (u, f(x))),
+        C1 + Integral(-exp(1)*exp(x), x))
     sol10 = Eq(-log(cos(f(x))), C1 - log(- a**2 + x**2)/2)
-    assert str(dsolve(eq6, hint='separable_Integral')) == sol6str
+    assert dsolve(eq6, hint='separable_Integral').dummy_eq(sol6)
     assert dsolve(eq7, hint='separable', simplify=False) == sol7
     assert dsolve(eq8, hint='separable', simplify=False) == sol8
-    assert str(dsolve(eq9, hint='separable_Integral')) == sol9str
+    assert dsolve(eq9, hint='separable_Integral').dummy_eq(sol9)
     assert dsolve(eq10, hint='separable', simplify=False) == sol10
     assert checkodesol(eq7, sol7, order=1, solve_for_func=False)[0]
     assert checkodesol(eq8, sol8, order=1, solve_for_func=False)[0]
@@ -1586,6 +1612,8 @@ def test_nth_linear_constant_coeff_homogeneous():
     eq28 = f(x).diff(x, 3) + 8*f(x)
     eq29 = f(x).diff(x, 4) + 4*f(x).diff(x, 2)
     eq30 = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x)
+    eq31 = f(x).diff(x, 4) + f(x).diff(x, 2) + f(x)
+    eq32 = f(x).diff(x, 4) + 4*f(x).diff(x, 2) + f(x)
     sol1 = Eq(f(x), C1 + C2*exp(-2*x))
     sol2 = Eq(f(x), (C1 + C2*exp(x))*exp(x))
     sol3 = Eq(f(x), C1*exp(x) + C2*exp(-x))
@@ -1625,6 +1653,10 @@ def test_nth_linear_constant_coeff_homogeneous():
         (C1*sin(x*sqrt(3)) + C2*cos(x*sqrt(3)))*exp(x) + C3*exp(-2*x))
     sol29 = Eq(f(x), C1 + C2*sin(2*x) + C3*cos(2*x) + C4*x)
     sol30 = Eq(f(x), C1 + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
+    sol31 = Eq(f(x), (C1*sin(sqrt(3)*x/2) + C2*cos(sqrt(3)*x/2))/sqrt(exp(x))
+                   + (C3*sin(sqrt(3)*x/2) + C4*cos(sqrt(3)*x/2))*sqrt(exp(x)))
+    sol32 = Eq(f(x), C1*sin(x*sqrt(-sqrt(3) + 2)) + C2*sin(x*sqrt(sqrt(3) + 2))
+                   + C3*cos(x*sqrt(-sqrt(3) + 2)) + C4*cos(x*sqrt(sqrt(3) + 2)))
     sol1s = constant_renumber(sol1, 'C', 1, 2)
     sol2s = constant_renumber(sol2, 'C', 1, 2)
     sol3s = constant_renumber(sol3, 'C', 1, 2)
@@ -1685,6 +1717,8 @@ def test_nth_linear_constant_coeff_homogeneous():
     assert dsolve(eq28) in (sol28, sol28s)
     assert dsolve(eq29) in (sol29, sol29s)
     assert dsolve(eq30) in (sol30, sol30s)
+    assert dsolve(eq31) in (sol31,)
+    assert dsolve(eq32) in (sol32,)
     assert checkodesol(eq1, sol1, order=2, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=2, solve_for_func=False)[0]
@@ -1715,6 +1749,14 @@ def test_nth_linear_constant_coeff_homogeneous():
     assert checkodesol(eq28, sol28, order=3, solve_for_func=False)[0]
     assert checkodesol(eq29, sol29, order=4, solve_for_func=False)[0]
     assert checkodesol(eq30, sol30, order=5, solve_for_func=False)[0]
+    assert checkodesol(eq31, sol31, order=4, solve_for_func=False)[0]
+    assert checkodesol(eq32, sol32, order=4, solve_for_func=False)[0]
+
+    # Issue #15237
+    eqn = Derivative(x*f(x), x, x, x)
+    hint = 'nth_linear_constant_coeff_homogeneous'
+    raises(ValueError, lambda: dsolve(eqn, f(x), hint, prep=True))
+    raises(ValueError, lambda: dsolve(eqn, f(x), hint, prep=False))
 
 
 def test_nth_linear_constant_coeff_homogeneous_rootof():
@@ -1726,6 +1768,38 @@ def test_nth_linear_constant_coeff_homogeneous_rootof():
         C4*exp(x*rootof(x**5 + 11*x - 2, 3)) +
         C5*exp(x*rootof(x**5 + 11*x - 2, 4)))
     assert dsolve(eq) == sol
+
+def test_nth_linear_constant_coeff_homogeneous_irrational():
+    our_hint='nth_linear_constant_coeff_homogeneous'
+
+    eq = Eq(sqrt(2) * f(x).diff(x,x,x) + f(x).diff(x), 0)
+    sol = Eq(f(x), C1 + C2*sin(2**(S(3)/4)*x/2) + C3*cos(2**(S(3)/4)*x/2))
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint) == sol
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=3, solve_for_func=False)[0]
+
+    E = exp(1)
+    eq = Eq(E * f(x).diff(x,x,x) + f(x).diff(x), 0)
+    sol = Eq(f(x), C1 + C2*sin(x/sqrt(E)) + C3*cos(x/sqrt(E)))
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint) == sol
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=3, solve_for_func=False)[0]
+
+    eq = Eq(pi * f(x).diff(x,x,x) + f(x).diff(x), 0)
+    sol = Eq(f(x), C1 + C2*sin(x/sqrt(pi)) + C3*cos(x/sqrt(pi)))
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint) == sol
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=3, solve_for_func=False)[0]
+
+    eq = Eq(I * f(x).diff(x,x,x) + f(x).diff(x), 0)
+    sol = Eq(f(x), C1 + C2*exp(-sqrt(I)*x) + C3*exp(sqrt(I)*x))
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint) == sol
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=3, solve_for_func=False)[0]
 
 
 @XFAIL
@@ -2309,6 +2383,13 @@ def test_nth_order_linear_euler_eq_homogeneous():
     assert dsolve(eq, y(t), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
+    eq = sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x)
+    sol = C1*sin(log(x)) + C2*cos(log(x))
+    sols = constant_renumber(sol, 'C', 1, 3)
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
 
 def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     x, t = symbols('x t')
@@ -2394,6 +2475,13 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     sols = constant_renumber(sol, 'C', 1, 2)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
+    from sympy.integrals.risch import NonElementaryIntegral
+    sol = Eq(f(x), C1 + C2*log(x) + (x - 1)*exp(x)*log(x) - NonElementaryIntegral(x*exp(x)*log(x), x))
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint) == sol
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
 
@@ -2558,9 +2646,9 @@ def test_issue_6989():
         ))
     eq = -f(x).diff(x) + x*exp(-k*x)
     sol = dsolve(eq, f(x))
-    actual_sol = Eq(f(x), Piecewise(
-        (C1 - x*exp(-k*x)/k - exp(-k*x)/k**2, Ne(k**2, 0)),
-        (C1 + x**2/2, True)
+    actual_sol = Eq(f(x), C1 + Piecewise(
+        ((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
+        (+x**2/2, True)
     ))
     errstr = str(eq) + ' : ' + str(sol) + ' == ' + str(actual_sol)
     assert sol == actual_sol, errstr
@@ -2774,6 +2862,10 @@ def test_lie_group():
     assert sol == Eq(f(x), 2/(C1 + x**2))
     assert checkodesol(eq, sol)[0]
 
+@XFAIL
+def test_lie_group_issue15219():
+    eqn = exp(f(x).diff(x)-f(x))
+    assert 'lie_group' not in classify_ode(eqn, f(x))
 
 def test_user_infinitesimals():
     C2 = Symbol("C2")
@@ -2852,10 +2944,11 @@ def test_2nd_power_series_regular():
 
 def test_issue_7093():
     x = Symbol("x") # assuming x is real leads to an error
-    sol = Eq(f(x), C1 - 2*x*sqrt(x**3)/5)
+    sol = [Eq(f(x), C1 - 2*x*sqrt(x**3)/5),
+           Eq(f(x), C1 + 2*x*sqrt(x**3)/5)]
     eq = Derivative(f(x), x)**2 - x**3
-    assert dsolve(eq) == sol and checkodesol(eq, sol) == (True, 0)
-
+    assert (set(dsolve(eq)) == set(sol) and
+            checkodesol(eq, sol) == [(True, 0)] * 2)
 
 def test_dsolve_linsystem_symbol():
     eps = Symbol('epsilon', positive=True)
@@ -2864,20 +2957,21 @@ def test_dsolve_linsystem_symbol():
             Eq(g(x), -C1*eps*sin(eps*x) + C2*eps*cos(eps*x))]
     assert checksysodesol(eq1, sol1) == (True, [0, 0])
 
-
-
 def test_C1_function_9239():
     t = Symbol('t')
     C1 = Function('C1')
     C2 = Function('C2')
-    C3 = Symbol('C1')  # XXX: update these after
-    C4 = Symbol('C2')  # XXX: https://github.com/sympy/sympy/issues/15056
+    C3 = Symbol('C3')
+    C4 = Symbol('C4')
     eq = (Eq(diff(C1(t), t), 9*C2(t)), Eq(diff(C2(t), t), 12*C1(t)))
     sol = [Eq(C1(t), 9*C3*exp(6*sqrt(3)*t) + 9*C4*exp(-6*sqrt(3)*t)),
            Eq(C2(t), 6*sqrt(3)*C3*exp(6*sqrt(3)*t) - 6*sqrt(3)*C4*exp(-6*sqrt(3)*t))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
-
+def test_issue_15056():
+    t = Symbol('t')
+    C3 = Symbol('C3')
+    assert get_numbered_constants(Symbol('C1') * Function('C2')(t)) == C3
 
 def test_issue_10379():
     t,y = symbols('t,y')
@@ -2894,9 +2988,12 @@ def test_issue_10867():
 
 
 def test_issue_11290():
-    sol_1 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact_Integral')
-    sol_0 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact')
-    assert str(sol_1)== "Eq(Subs(Integral(_y**2 - x*sin(_y) - Integral(-sin(_y), x), _y) + Integral(cos(_y), x), (_y,), (f(x),)), C1)"
+    eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
+    sol_1 = dsolve(eq, f(x), simplify=False, hint='1st_exact_Integral')
+    sol_0 = dsolve(eq, f(x), simplify=False, hint='1st_exact')
+    assert sol_1.dummy_eq(Eq(Subs(
+        Integral(u**2 - x*sin(u) - Integral(-sin(u), x), u) +
+        Integral(cos(u), x), u, f(x)), C1))
     assert sol_1.doit() == sol_0
 
 
@@ -2904,3 +3001,186 @@ def test_issue_14395():
     sol = Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))
         - 2*log(cos(x)**2)/3 + 2*cos(x)**2/3)*cos(3*x))
     assert dsolve(Derivative(f(x), x, x) + 9*f(x) - sec(x), f(x)) == sol
+
+
+def test_sysode_linear_neq_order1():
+    from sympy.abc import t
+
+    Z0 = Function('Z0')
+    Z1 = Function('Z1')
+    Z2 = Function('Z2')
+    Z3 = Function('Z3')
+
+    k01, k10, k20, k21, k23, k30 = symbols('k01 k10 k20 k21 k23 k30')
+
+    eq = (Eq(Derivative(Z0(t), t), -k01*Z0(t) + k10*Z1(t) + k20*Z2(t) + k30*Z3(t)), Eq(Derivative(Z1(t), t),
+          k01*Z0(t) - k10*Z1(t) + k21*Z2(t)), Eq(Derivative(Z2(t), t), -(k20 + k21 + k23)*Z2(t)), Eq(Derivative(Z3(t),
+          t), k23*Z2(t) - k30*Z3(t)))
+
+    sols_eq = [Eq(Z0(t), C1*k10/k01 + C2*(-k10 + k30)*exp(-k30*t)/(k01 + k10 - k30) - C3*exp(t*(-
+                k01 - k10)) + C4*(k10*k20 + k10*k21 - k10*k30 - k20**2 - k20*k21 - k20*k23 + k20*k30 +
+                k23*k30)*exp(t*(-k20 - k21 - k23))/(k23*(k01 + k10 - k20 - k21 - k23))),
+               Eq(Z1(t), C1 - C2*k01*exp(-k30*t)/(k01 + k10 - k30) + C3*exp(t*(-k01 - k10)) + C4*(k01*k20 + k01*k21
+                - k01*k30 - k20*k21 - k21**2 - k21*k23 + k21*k30)*exp(t*(-k20 - k21 - k23))/(k23*(k01 + k10 - k20 -
+                k21 - k23))),
+               Eq(Z2(t), C4*(-k20 - k21 - k23 + k30)*exp(t*(-k20 - k21 - k23))/k23),
+               Eq(Z3(t), C2*exp(-k30*t) + C4*exp(t*(-k20 - k21 - k23)))]
+
+    assert dsolve(eq, simplify=False) == sols_eq
+
+
+def test_nth_algebraic():
+    eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
+    sol = Eq(f(x), C1 + g(x))
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
+
+    eqn = (diff(f(x)) - x)*(diff(f(x)) + x)
+    sol = [Eq(f(x), C1 - x**2/2), Eq(f(x), C1 + x**2/2)]
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
+
+    eqn = (1 - sin(f(x))) * f(x).diff(x)
+    sol = Eq(f(x), C1)
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
+
+    M, m, r, t = symbols('M m r t')
+    phi = Function('phi')
+    eqn = Eq(-M * phi(t).diff(t),
+             Rational(3, 2) * m * r**2 * phi(t).diff(t) * phi(t).diff(t,t))
+    solns = [Eq(phi(t), C1), Eq(phi(t), C1 + C2*t - M*t**2/(3*m*r**2))]
+    assert checkodesol(eqn, solns[0], order=2, solve_for_func=False)[0]
+    assert checkodesol(eqn, solns[1], order=2, solve_for_func=False)[0]
+    assert set(solns) == set(dsolve(eqn, phi(t), hint='nth_algebraic'))
+    assert set(solns) == set(dsolve(eqn, phi(t)))
+
+    eqn = f(x) * f(x).diff(x) * f(x).diff(x, x)
+    sol = Eq(f(x), C1 + C2*x)
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
+
+    eqn = f(x) * f(x).diff(x) * f(x).diff(x, x) * (f(x) - 1)
+    sol = Eq(f(x), C1 + C2*x)
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
+
+    eqn = f(x) * f(x).diff(x) * f(x).diff(x, x) * (f(x) - 1) * (f(x).diff(x) - x)
+    solns = [Eq(f(x), C1 + x**2/2), Eq(f(x), C1 + C2*x)]
+    assert checkodesol(eqn, solns[0], order=2, solve_for_func=False)[0]
+    assert checkodesol(eqn, solns[1], order=2, solve_for_func=False)[0]
+    assert set(solns) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
+    assert set(solns) == set(dsolve(eqn, f(x)))
+
+
+def test_nth_algebraic_redundant_solutions():
+    # This one has a redundant solution that should be removed
+    eqn = f(x)*f(x).diff(x)
+    soln = Eq(f(x), C1)
+    assert checkodesol(eqn, soln, order=1, solve_for_func=False)[0]
+    assert soln == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert soln == dsolve(eqn, f(x))
+
+    # This has two integral solutions and no algebraic solutions
+    eqn = (diff(f(x)) - x)*(diff(f(x)) + x)
+    sol = [Eq(f(x), C1 - x**2/2), Eq(f(x), C1 + x**2/2)]
+    assert all(c[0] for c in checkodesol(eqn, sol, order=1, solve_for_func=False))
+    assert set(sol) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
+    assert set(sol) == set(dsolve(eqn, f(x)))
+
+    # This one doesn't work with dsolve at the time of writing but the
+    # redundancy checking code should not remove the algebraic solution.
+    from sympy.solvers.ode import _nth_algebraic_remove_redundant_solutions
+    eqn = f(x) + f(x)*f(x).diff(x)
+    solns = [Eq(f(x), 0),
+             Eq(f(x), C1 - x)]
+    solns_final =  _nth_algebraic_remove_redundant_solutions(eqn, solns, 1, x)
+    assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
+    assert set(solns) == set(solns_final)
+
+    solns = [Eq(f(x), exp(x)),
+             Eq(f(x), C1*exp(C2*x))]
+    solns_final =  _nth_algebraic_remove_redundant_solutions(eqn, solns, 2, x)
+    assert solns_final == [Eq(f(x), C1*exp(C2*x))]
+
+#
+# These tests can be combined with the above test if they get fixed
+# so that dsolve actually works in all these cases.
+#
+
+# Fails due to division by f(x) eliminating the solution before nth_algebraic
+# is called.
+@XFAIL
+def test_nth_algebraic_find_multiple1():
+    eqn = f(x) + f(x)*f(x).diff(x)
+    solns = [Eq(f(x), 0),
+             Eq(f(x), C1 - x)]
+    assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
+    assert set(solns) == set(dsolve(eqn, f(x)))
+
+
+# prep = True breaks this
+def test_nth_algebraic_noprep1():
+    eqn = Derivative(x*f(x), x, x, x)
+    sol = Eq(f(x), (C1 + C2*x + C3*x**2) / x)
+    assert checkodesol(eqn, sol, order=3, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), prep=False, hint='nth_algebraic')
+
+
+@XFAIL
+def test_nth_algebraic_prep1():
+    eqn = Derivative(x*f(x), x, x, x)
+    sol = Eq(f(x), (C1 + C2*x + C3*x**2) / x)
+    assert checkodesol(eqn, sol, order=3, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), prep=True, hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
+
+
+# prep = True breaks this
+def test_nth_algebraic_noprep2():
+    eqn = Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x))
+    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
+    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), prep=False, hint='nth_algebraic')
+
+
+@XFAIL
+def test_nth_algebraic_prep2():
+    eqn = Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x))
+    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
+    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), prep=True, hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x))
+
+
+# This one needs a substitution f' = g. Should be doable...
+@XFAIL
+def test_2nd_order_substitution():
+    eqn = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
+    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
+    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x))
+
+# This needs a combination of solutions from nth_algebraic and some other
+# method from dsolve
+@XFAIL
+def test_nth_algebraic_find_multiple2():
+    eqn = f(x)**2 + f(x)*f(x).diff(x)
+    solns = [Eq(f(x), 0),
+             Eq(f(x), C1*exp(-x))]
+    assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
+    assert set(solns) == dsolve(eqn, f(x))
+
+
+# Needs to be a way to know how to combine derivatives in the expression
+@XFAIL
+def test_factoring_ode():
+    eqn = Derivative(x*f(x), x, x, x) + Derivative(f(x), x, x, x)
+    soln = Eq(f(x), (C1*x**2/2 + C2*x + C3 - x)/(1 + x))
+    assert checkodesol(eqn, soln, order=2, solve_for_func=False)[0]
+    assert soln == dsolve(eqn, f(x))

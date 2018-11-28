@@ -1,5 +1,6 @@
-from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log, Function, \
-    Derivative, Expr, symbols, pi, I, S, diff, Piecewise, Eq, ff, Sum
+from sympy import (Symbol, Rational, cos, sin, tan, cot, exp, log,
+    Function, Derivative, Expr, symbols, pi, I, S, diff, Piecewise,
+    Eq, ff, Sum, And, factorial, Max, NDimArray, re, im)
 from sympy.utilities.pytest import raises
 
 
@@ -87,6 +88,10 @@ def test_diff_no_eval_derivative():
     x, y = symbols('x y')
     # My doesn't have its own _eval_derivative method
     assert My(x).diff(x).func is Derivative
+    assert My(x).diff(x, 3).func is Derivative
+    assert re(x).diff(x, 2) == Derivative(re(x), (x, 2))  # issue 15518
+    assert diff(NDimArray([re(x), im(x)]), (x, 2)) == NDimArray(
+        [Derivative(re(x), (x, 2)), Derivative(im(x), (x, 2))])
     # it doesn't have y so it shouldn't need a method for this case
     assert My(x).diff(y) == 0
 
@@ -109,6 +114,7 @@ def test_diff_nth_derivative():
     f =  Function("f")
     x = Symbol("x")
     y = Symbol("y")
+    z = Symbol("z")
     n = Symbol("n", integer=True)
 
     expr = diff(sin(x), (x, n))
@@ -125,7 +131,11 @@ def test_diff_nth_derivative():
     assert expr3 == Derivative(f(x), (x, n))
 
     assert diff(x, (x, n)) == Piecewise((x, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
-    assert diff(2*x, (x, n)) == 2*Piecewise((x, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
+    assert diff(2*x, (x, n)).dummy_eq(
+        Sum(Piecewise((2*x*factorial(n)/(factorial(y)*factorial(-y + n)),
+        Eq(y, 0) & Eq(Max(0, -y + n), 0)),
+        (2*factorial(n)/(factorial(y)*factorial(-y + n)), Eq(y, 0) & Eq(Max(0,
+        -y + n), 1)), (0, True)), (y, 0, n)))
     # TODO: assert diff(x**2, (x, n)) == x**(2-n)*ff(2, n)
     exprm = x*sin(x)
     mul_diff = diff(exprm, (x, n))
@@ -135,6 +145,10 @@ def test_diff_nth_derivative():
 
     exprm2 = 2*y*x*sin(x)*cos(x)*log(x)*exp(x)
     dex = exprm2.diff((x, n))
-    assert isinstance(dex/2/y, Sum)
+    assert isinstance(dex, Sum)
     for i in range(7):
-        assert dex.subs(n, i).doit().expand() == exprm2.diff((x, i)).expand()
+        assert dex.subs(n, i).doit().expand() == \
+        exprm2.diff((x, i)).expand()
+
+    assert (cos(x)*sin(y)).diff([[x, y, z]]) == NDimArray([
+        -sin(x)*sin(y), cos(x)*cos(y), 0])

@@ -68,7 +68,7 @@ class Integral(AddWithLimits):
         >>> i.as_dummy()
         Integral(x, x)
         >>> at.as_dummy()
-        Integral(_x, (_x, x))
+        Integral(_0, (_0, x))
 
         """
 
@@ -653,8 +653,8 @@ class Integral(AddWithLimits):
         instances which can be resolved with doit() (provided they are integrable).
 
         References:
-           [1] http://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
-           [2] http://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
+           [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
+           [2] https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
 
         Examples
         ========
@@ -709,7 +709,8 @@ class Integral(AddWithLimits):
                           for l in f.limits]
                 f = self.func(f.function, *limits)
             return f.subs(x, ab)*dab_dsym
-        rv = 0
+
+        rv = S.Zero
         if b is not None:
             rv += _do(f, b)
         if a is not None:
@@ -725,7 +726,8 @@ class Integral(AddWithLimits):
             # while differentiating
             u = Dummy('u')
             arg = f.subs(x, u).diff(sym).subs(u, x)
-            rv += self.func(arg, Tuple(x, a, b))
+            if arg:
+                rv += self.func(arg, Tuple(x, a, b))
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
@@ -1272,7 +1274,7 @@ class Integral(AddWithLimits):
 
         References
         ==========
-        .. [1] http://en.wikipedia.org/wiki/Cauchy_principal_value
+        .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
         .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
         from sympy.calculus import singularities
@@ -1454,17 +1456,21 @@ def integrate(*args, **kwargs):
     Integral, Integral.doit
 
     """
-    meijerg = kwargs.pop('meijerg', None)
-    conds = kwargs.pop('conds', 'piecewise')
-    risch = kwargs.pop('risch', None)
-    manual = kwargs.pop('manual', None)
+    doit_flags = {
+        'deep': False,
+        'meijerg': kwargs.pop('meijerg', None),
+        'conds': kwargs.pop('conds', 'piecewise'),
+        'risch': kwargs.pop('risch', None),
+        'manual': kwargs.pop('manual', None)
+        }
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        return integral.doit(deep=False, meijerg=meijerg, conds=conds,
-                             risch=risch, manual=manual)
+        return integral.doit(**doit_flags)
     else:
-        return integral
+        new_args = [a.doit(**doit_flags) if isinstance(a, Integral) else a
+            for a in integral.args]
+        return integral.func(*new_args)
 
 
 def line_integrate(field, curve, vars):

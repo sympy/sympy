@@ -238,7 +238,7 @@ class sin(TrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Sin
     .. [4] http://mathworld.wolfram.com/TrigonometryAngles.html
@@ -378,45 +378,45 @@ class sin(TrigonometricFunction):
             else:
                 return (-1)**(n//2) * x**(n)/factorial(n)
 
-    def _eval_rewrite_as_exp(self, arg):
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
             arg = arg.func(arg.args[0]).rewrite(exp)
         return (exp(arg*I) - exp(-arg*I)) / (2*I)
 
-    def _eval_rewrite_as_Pow(self, arg):
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
         if isinstance(arg, log):
             I = S.ImaginaryUnit
             x = arg.args[0]
             return I*x**-I / 2 - I*x**I /2
 
-    def _eval_rewrite_as_cos(self, arg):
+    def _eval_rewrite_as_cos(self, arg, **kwargs):
         return cos(arg - S.Pi / 2, evaluate=False)
 
-    def _eval_rewrite_as_tan(self, arg):
+    def _eval_rewrite_as_tan(self, arg, **kwargs):
         tan_half = tan(S.Half*arg)
         return 2*tan_half/(1 + tan_half**2)
 
-    def _eval_rewrite_as_sincos(self, arg):
+    def _eval_rewrite_as_sincos(self, arg, **kwargs):
         return sin(arg)*cos(arg)/cos(arg)
 
-    def _eval_rewrite_as_cot(self, arg):
+    def _eval_rewrite_as_cot(self, arg, **kwargs):
         cot_half = cot(S.Half*arg)
         return 2*cot_half/(1 + cot_half**2)
 
-    def _eval_rewrite_as_pow(self, arg):
+    def _eval_rewrite_as_pow(self, arg, **kwargs):
         return self.rewrite(cos).rewrite(pow)
 
-    def _eval_rewrite_as_sqrt(self, arg):
+    def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         return self.rewrite(cos).rewrite(sqrt)
 
-    def _eval_rewrite_as_csc(self, arg):
+    def _eval_rewrite_as_csc(self, arg, **kwargs):
         return 1/csc(arg)
 
-    def _eval_rewrite_as_sec(self, arg):
+    def _eval_rewrite_as_sec(self, arg, **kwargs):
         return 1 / sec(arg - S.Pi / 2, evaluate=False)
 
-    def _eval_rewrite_as_sinc(self, arg):
+    def _eval_rewrite_as_sinc(self, arg, **kwargs):
         return arg*sinc(arg)
 
     def _eval_conjugate(self):
@@ -513,7 +513,7 @@ class cos(TrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Cos
     """
@@ -681,36 +681,36 @@ class cos(TrigonometricFunction):
             else:
                 return (-1)**(n//2)*x**(n)/factorial(n)
 
-    def _eval_rewrite_as_exp(self, arg):
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
             arg = arg.func(arg.args[0]).rewrite(exp)
         return (exp(arg*I) + exp(-arg*I)) / 2
 
-    def _eval_rewrite_as_Pow(self, arg):
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
         if isinstance(arg, log):
             I = S.ImaginaryUnit
             x = arg.args[0]
             return x**I/2 + x**-I/2
 
-    def _eval_rewrite_as_sin(self, arg):
+    def _eval_rewrite_as_sin(self, arg, **kwargs):
         return sin(arg + S.Pi / 2, evaluate=False)
 
-    def _eval_rewrite_as_tan(self, arg):
+    def _eval_rewrite_as_tan(self, arg, **kwargs):
         tan_half = tan(S.Half*arg)**2
         return (1 - tan_half)/(1 + tan_half)
 
-    def _eval_rewrite_as_sincos(self, arg):
+    def _eval_rewrite_as_sincos(self, arg, **kwargs):
         return sin(arg)*cos(arg)/sin(arg)
 
-    def _eval_rewrite_as_cot(self, arg):
+    def _eval_rewrite_as_cot(self, arg, **kwargs):
         cot_half = cot(S.Half*arg)**2
         return (cot_half - 1)/(cot_half + 1)
 
-    def _eval_rewrite_as_pow(self, arg):
+    def _eval_rewrite_as_pow(self, arg, **kwargs):
         return self._eval_rewrite_as_sqrt(arg)
 
-    def _eval_rewrite_as_sqrt(self, arg):
+    def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         from sympy.functions.special.polynomials import chebyshevt
 
         def migcdex(x):
@@ -848,10 +848,10 @@ class cos(TrigonometricFunction):
             pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls
 
-    def _eval_rewrite_as_sec(self, arg):
+    def _eval_rewrite_as_sec(self, arg, **kwargs):
         return 1/sec(arg)
 
-    def _eval_rewrite_as_csc(self, arg):
+    def _eval_rewrite_as_csc(self, arg, **kwargs):
         return 1 / sec(arg)._eval_rewrite_as_csc(arg)
 
     def _eval_conjugate(self):
@@ -934,7 +934,7 @@ class tan(TrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Tan
     """
@@ -1094,7 +1094,7 @@ class tan(TrigonometricFunction):
             return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
         return Function._eval_nseries(self, x, n=n, logx=logx)
 
-    def _eval_rewrite_as_Pow(self, arg):
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
         if isinstance(arg, log):
             I = S.ImaginaryUnit
             x = arg.args[0]
@@ -1140,42 +1140,42 @@ class tan(TrigonometricFunction):
                 return (im(P)/re(P)).subs([(z, tan(terms))])
         return tan(arg)
 
-    def _eval_rewrite_as_exp(self, arg):
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
             arg = arg.func(arg.args[0]).rewrite(exp)
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(neg_exp - pos_exp)/(neg_exp + pos_exp)
 
-    def _eval_rewrite_as_sin(self, x):
+    def _eval_rewrite_as_sin(self, x, **kwargs):
         return 2*sin(x)**2/sin(2*x)
 
-    def _eval_rewrite_as_cos(self, x):
+    def _eval_rewrite_as_cos(self, x, **kwargs):
         return cos(x - S.Pi / 2, evaluate=False) / cos(x)
 
-    def _eval_rewrite_as_sincos(self, arg):
+    def _eval_rewrite_as_sincos(self, arg, **kwargs):
         return sin(arg)/cos(arg)
 
-    def _eval_rewrite_as_cot(self, arg):
+    def _eval_rewrite_as_cot(self, arg, **kwargs):
         return 1/cot(arg)
 
-    def _eval_rewrite_as_sec(self, arg):
+    def _eval_rewrite_as_sec(self, arg, **kwargs):
         sin_in_sec_form = sin(arg)._eval_rewrite_as_sec(arg)
         cos_in_sec_form = cos(arg)._eval_rewrite_as_sec(arg)
         return sin_in_sec_form / cos_in_sec_form
 
-    def _eval_rewrite_as_csc(self, arg):
+    def _eval_rewrite_as_csc(self, arg, **kwargs):
         sin_in_csc_form = sin(arg)._eval_rewrite_as_csc(arg)
         cos_in_csc_form = cos(arg)._eval_rewrite_as_csc(arg)
         return sin_in_csc_form / cos_in_csc_form
 
-    def _eval_rewrite_as_pow(self, arg):
+    def _eval_rewrite_as_pow(self, arg, **kwargs):
         y = self.rewrite(cos).rewrite(pow)
         if y.has(cos):
             return None
         return y
 
-    def _eval_rewrite_as_sqrt(self, arg):
+    def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         y = self.rewrite(cos).rewrite(sqrt)
         if y.has(cos):
             return None
@@ -1232,7 +1232,7 @@ class cot(TrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Cot
     """
@@ -1390,48 +1390,48 @@ class cot(TrigonometricFunction):
         else:
             return (self.func(re), S.Zero)
 
-    def _eval_rewrite_as_exp(self, arg):
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
             arg = arg.func(arg.args[0]).rewrite(exp)
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(pos_exp + neg_exp)/(pos_exp - neg_exp)
 
-    def _eval_rewrite_as_Pow(self, arg):
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
         if isinstance(arg, log):
             I = S.ImaginaryUnit
             x = arg.args[0]
             return -I*(x**-I + x**I)/(x**-I - x**I)
 
-    def _eval_rewrite_as_sin(self, x):
+    def _eval_rewrite_as_sin(self, x, **kwargs):
         return sin(2*x)/(2*(sin(x)**2))
 
-    def _eval_rewrite_as_cos(self, x):
+    def _eval_rewrite_as_cos(self, x, **kwargs):
         return cos(x) / cos(x - S.Pi / 2, evaluate=False)
 
-    def _eval_rewrite_as_sincos(self, arg):
+    def _eval_rewrite_as_sincos(self, arg, **kwargs):
         return cos(arg)/sin(arg)
 
-    def _eval_rewrite_as_tan(self, arg):
+    def _eval_rewrite_as_tan(self, arg, **kwargs):
         return 1/tan(arg)
 
-    def _eval_rewrite_as_sec(self, arg):
+    def _eval_rewrite_as_sec(self, arg, **kwargs):
         cos_in_sec_form = cos(arg)._eval_rewrite_as_sec(arg)
         sin_in_sec_form = sin(arg)._eval_rewrite_as_sec(arg)
         return cos_in_sec_form / sin_in_sec_form
 
-    def _eval_rewrite_as_csc(self, arg):
+    def _eval_rewrite_as_csc(self, arg, **kwargs):
         cos_in_csc_form = cos(arg)._eval_rewrite_as_csc(arg)
         sin_in_csc_form = sin(arg)._eval_rewrite_as_csc(arg)
         return cos_in_csc_form / sin_in_csc_form
 
-    def _eval_rewrite_as_pow(self, arg):
+    def _eval_rewrite_as_pow(self, arg, **kwargs):
         y = self.rewrite(cos).rewrite(pow)
         if y.has(cos):
             return None
         return y
 
-    def _eval_rewrite_as_sqrt(self, arg):
+    def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         y = self.rewrite(cos).rewrite(sqrt)
         if y.has(cos):
             return None
@@ -1565,25 +1565,25 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     def fdiff(self, argindex=1):
         return -self._calculate_reciprocal("fdiff", argindex)/self**2
 
-    def _eval_rewrite_as_exp(self, arg):
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_exp", arg)
 
-    def _eval_rewrite_as_Pow(self, arg):
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_Pow", arg)
 
-    def _eval_rewrite_as_sin(self, arg):
+    def _eval_rewrite_as_sin(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_sin", arg)
 
-    def _eval_rewrite_as_cos(self, arg):
+    def _eval_rewrite_as_cos(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_cos", arg)
 
-    def _eval_rewrite_as_tan(self, arg):
+    def _eval_rewrite_as_tan(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_tan", arg)
 
-    def _eval_rewrite_as_pow(self, arg):
+    def _eval_rewrite_as_pow(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_pow", arg)
 
-    def _eval_rewrite_as_sqrt(self, arg):
+    def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_sqrt", arg)
 
     def _eval_conjugate(self):
@@ -1639,7 +1639,7 @@ class sec(ReciprocalTrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Sec
     """
@@ -1650,23 +1650,23 @@ class sec(ReciprocalTrigonometricFunction):
     def period(self, symbol=None):
         return self._period(symbol)
 
-    def _eval_rewrite_as_cot(self, arg):
+    def _eval_rewrite_as_cot(self, arg, **kwargs):
         cot_half_sq = cot(arg/2)**2
         return (cot_half_sq + 1)/(cot_half_sq - 1)
 
-    def _eval_rewrite_as_cos(self, arg):
+    def _eval_rewrite_as_cos(self, arg, **kwargs):
         return (1/cos(arg))
 
-    def _eval_rewrite_as_sincos(self, arg):
+    def _eval_rewrite_as_sincos(self, arg, **kwargs):
         return sin(arg)/(cos(arg)*sin(arg))
 
-    def _eval_rewrite_as_sin(self, arg):
+    def _eval_rewrite_as_sin(self, arg, **kwargs):
         return (1 / cos(arg)._eval_rewrite_as_sin(arg))
 
-    def _eval_rewrite_as_tan(self, arg):
+    def _eval_rewrite_as_tan(self, arg, **kwargs):
         return (1 / cos(arg)._eval_rewrite_as_tan(arg))
 
-    def _eval_rewrite_as_csc(self, arg):
+    def _eval_rewrite_as_csc(self, arg, **kwargs):
         return csc(pi / 2 - arg, evaluate=False)
 
     def fdiff(self, argindex=1):
@@ -1719,7 +1719,7 @@ class csc(ReciprocalTrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Csc
     """
@@ -1730,23 +1730,23 @@ class csc(ReciprocalTrigonometricFunction):
     def period(self, symbol=None):
         return self._period(symbol)
 
-    def _eval_rewrite_as_sin(self, arg):
+    def _eval_rewrite_as_sin(self, arg, **kwargs):
         return (1/sin(arg))
 
-    def _eval_rewrite_as_sincos(self, arg):
+    def _eval_rewrite_as_sincos(self, arg, **kwargs):
         return cos(arg)/(sin(arg)*cos(arg))
 
-    def _eval_rewrite_as_cot(self, arg):
+    def _eval_rewrite_as_cot(self, arg, **kwargs):
         cot_half = cot(arg/2)
         return (1 + cot_half**2)/(2*cot_half)
 
-    def _eval_rewrite_as_cos(self, arg):
+    def _eval_rewrite_as_cos(self, arg, **kwargs):
         return (1 / sin(arg)._eval_rewrite_as_cos(arg))
 
-    def _eval_rewrite_as_sec(self, arg):
+    def _eval_rewrite_as_sec(self, arg, **kwargs):
         return sec(pi / 2 - arg, evaluate=False)
 
-    def _eval_rewrite_as_tan(self, arg):
+    def _eval_rewrite_as_tan(self, arg, **kwargs):
         return (1 / sin(arg)._eval_rewrite_as_tan(arg))
 
     def fdiff(self, argindex=1):
@@ -1806,7 +1806,7 @@ class sinc(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Sinc_function
+    .. [1] https://en.wikipedia.org/wiki/Sinc_function
 
     """
 
@@ -1845,11 +1845,11 @@ class sinc(Function):
         x = self.args[0]
         return (sin(x)/x)._eval_nseries(x, n, logx)
 
-    def _eval_rewrite_as_jn(self, arg):
+    def _eval_rewrite_as_jn(self, arg, **kwargs):
         from sympy.functions.special.bessel import jn
         return jn(0, arg)
 
-    def _eval_rewrite_as_sin(self, arg):
+    def _eval_rewrite_as_sin(self, arg, **kwargs):
         return Piecewise((sin(arg)/arg, Ne(arg, 0)), (1, True))
 
 
@@ -1895,7 +1895,7 @@ class asin(InverseTrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSin
     """
@@ -2016,22 +2016,22 @@ class asin(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
-    def _eval_rewrite_as_acos(self, x):
+    def _eval_rewrite_as_acos(self, x, **kwargs):
         return S.Pi/2 - acos(x)
 
-    def _eval_rewrite_as_atan(self, x):
+    def _eval_rewrite_as_atan(self, x, **kwargs):
         return 2*atan(x/(1 + sqrt(1 - x**2)))
 
-    def _eval_rewrite_as_log(self, x):
+    def _eval_rewrite_as_log(self, x, **kwargs):
         return -S.ImaginaryUnit*log(S.ImaginaryUnit*x + sqrt(1 - x**2))
 
-    def _eval_rewrite_as_acot(self, arg):
+    def _eval_rewrite_as_acot(self, arg, **kwargs):
         return 2*acot((1 + sqrt(1 - arg**2))/arg)
 
-    def _eval_rewrite_as_asec(self, arg):
+    def _eval_rewrite_as_asec(self, arg, **kwargs):
         return S.Pi/2 - asec(1/arg)
 
-    def _eval_rewrite_as_acsc(self, arg):
+    def _eval_rewrite_as_acsc(self, arg, **kwargs):
         return acsc(1/arg)
 
     def _eval_is_real(self):
@@ -2080,7 +2080,7 @@ class acos(InverseTrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCos
     """
@@ -2184,14 +2184,14 @@ class acos(InverseTrigonometricFunction):
     def _eval_nseries(self, x, n, logx):
         return self._eval_rewrite_as_log(self.args[0])._eval_nseries(x, n, logx)
 
-    def _eval_rewrite_as_log(self, x):
+    def _eval_rewrite_as_log(self, x, **kwargs):
         return S.Pi/2 + S.ImaginaryUnit * \
             log(S.ImaginaryUnit * x + sqrt(1 - x**2))
 
-    def _eval_rewrite_as_asin(self, x):
+    def _eval_rewrite_as_asin(self, x, **kwargs):
         return S.Pi/2 - asin(x)
 
-    def _eval_rewrite_as_atan(self, x):
+    def _eval_rewrite_as_atan(self, x, **kwargs):
         return atan(sqrt(1 - x**2)/x) + (S.Pi/2)*(1 - x*sqrt(1/x**2))
 
     def inverse(self, argindex=1):
@@ -2200,13 +2200,13 @@ class acos(InverseTrigonometricFunction):
         """
         return cos
 
-    def _eval_rewrite_as_acot(self, arg):
+    def _eval_rewrite_as_acot(self, arg, **kwargs):
         return S.Pi/2 - 2*acot((1 + sqrt(1 - arg**2))/arg)
 
-    def _eval_rewrite_as_asec(self, arg):
+    def _eval_rewrite_as_asec(self, arg, **kwargs):
         return asec(1/arg)
 
-    def _eval_rewrite_as_acsc(self, arg):
+    def _eval_rewrite_as_acsc(self, arg, **kwargs):
         return S.Pi/2 - acsc(1/arg)
 
     def _eval_conjugate(self):
@@ -2250,7 +2250,7 @@ class atan(InverseTrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan
     """
@@ -2361,7 +2361,7 @@ class atan(InverseTrigonometricFunction):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_rewrite_as_log(self, x):
+    def _eval_rewrite_as_log(self, x, **kwargs):
         return S.ImaginaryUnit/2 * (log(S(1) - S.ImaginaryUnit * x)
             - log(S(1) + S.ImaginaryUnit * x))
 
@@ -2379,19 +2379,19 @@ class atan(InverseTrigonometricFunction):
         """
         return tan
 
-    def _eval_rewrite_as_asin(self, arg):
+    def _eval_rewrite_as_asin(self, arg, **kwargs):
         return sqrt(arg**2)/arg*(S.Pi/2 - asin(1/sqrt(1 + arg**2)))
 
-    def _eval_rewrite_as_acos(self, arg):
+    def _eval_rewrite_as_acos(self, arg, **kwargs):
         return sqrt(arg**2)/arg*acos(1/sqrt(1 + arg**2))
 
-    def _eval_rewrite_as_acot(self, arg):
+    def _eval_rewrite_as_acot(self, arg, **kwargs):
         return acot(1/arg)
 
-    def _eval_rewrite_as_asec(self, arg):
+    def _eval_rewrite_as_asec(self, arg, **kwargs):
         return sqrt(arg**2)/arg*asec(sqrt(1 + arg**2))
 
-    def _eval_rewrite_as_acsc(self, arg):
+    def _eval_rewrite_as_acsc(self, arg, **kwargs):
         return sqrt(arg**2)/arg*(S.Pi/2 - acsc(sqrt(1 + arg**2)))
 
 
@@ -2410,7 +2410,7 @@ class acot(InverseTrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCot
     """
@@ -2534,7 +2534,7 @@ class acot(InverseTrigonometricFunction):
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
-    def _eval_rewrite_as_log(self, x):
+    def _eval_rewrite_as_log(self, x, **kwargs):
         return S.ImaginaryUnit/2 * (log(1 - S.ImaginaryUnit/x)
             - log(1 + S.ImaginaryUnit/x))
 
@@ -2544,20 +2544,20 @@ class acot(InverseTrigonometricFunction):
         """
         return cot
 
-    def _eval_rewrite_as_asin(self, arg):
+    def _eval_rewrite_as_asin(self, arg, **kwargs):
         return (arg*sqrt(1/arg**2)*
                 (S.Pi/2 - asin(sqrt(-arg**2)/sqrt(-arg**2 - 1))))
 
-    def _eval_rewrite_as_acos(self, arg):
+    def _eval_rewrite_as_acos(self, arg, **kwargs):
         return arg*sqrt(1/arg**2)*acos(sqrt(-arg**2)/sqrt(-arg**2 - 1))
 
-    def _eval_rewrite_as_atan(self, arg):
+    def _eval_rewrite_as_atan(self, arg, **kwargs):
         return atan(1/arg)
 
-    def _eval_rewrite_as_asec(self, arg):
+    def _eval_rewrite_as_asec(self, arg, **kwargs):
         return arg*sqrt(1/arg**2)*asec(sqrt((1 + arg**2)/arg**2))
 
-    def _eval_rewrite_as_acsc(self, arg):
+    def _eval_rewrite_as_acsc(self, arg, **kwargs):
         return arg*sqrt(1/arg**2)*(S.Pi/2 - acsc(sqrt((1 + arg**2)/arg**2)))
 
 
@@ -2609,7 +2609,7 @@ class asec(InverseTrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSec
     .. [4] http://reference.wolfram.com/language/ref/ArcSec.html
@@ -2669,22 +2669,22 @@ class asec(InverseTrigonometricFunction):
             return False
         return fuzzy_or(((x - 1).is_nonnegative, (-x - 1).is_nonnegative))
 
-    def _eval_rewrite_as_log(self, arg):
+    def _eval_rewrite_as_log(self, arg, **kwargs):
         return S.Pi/2 + S.ImaginaryUnit*log(S.ImaginaryUnit/arg + sqrt(1 - 1/arg**2))
 
-    def _eval_rewrite_as_asin(self, arg):
+    def _eval_rewrite_as_asin(self, arg, **kwargs):
         return S.Pi/2 - asin(1/arg)
 
-    def _eval_rewrite_as_acos(self, arg):
+    def _eval_rewrite_as_acos(self, arg, **kwargs):
         return acos(1/arg)
 
-    def _eval_rewrite_as_atan(self, arg):
+    def _eval_rewrite_as_atan(self, arg, **kwargs):
         return sqrt(arg**2)/arg*(-S.Pi/2 + 2*atan(arg + sqrt(arg**2 - 1)))
 
-    def _eval_rewrite_as_acot(self, arg):
+    def _eval_rewrite_as_acot(self, arg, **kwargs):
         return sqrt(arg**2)/arg*(-S.Pi/2 + 2*acot(arg - sqrt(arg**2 - 1)))
 
-    def _eval_rewrite_as_acsc(self, arg):
+    def _eval_rewrite_as_acsc(self, arg, **kwargs):
         return S.Pi/2 - acsc(arg)
 
 
@@ -2718,7 +2718,7 @@ class acsc(InverseTrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCsc
     """
@@ -2775,22 +2775,22 @@ class acsc(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
-    def _eval_rewrite_as_log(self, arg):
+    def _eval_rewrite_as_log(self, arg, **kwargs):
         return -S.ImaginaryUnit*log(S.ImaginaryUnit/arg + sqrt(1 - 1/arg**2))
 
-    def _eval_rewrite_as_asin(self, arg):
+    def _eval_rewrite_as_asin(self, arg, **kwargs):
         return asin(1/arg)
 
-    def _eval_rewrite_as_acos(self, arg):
+    def _eval_rewrite_as_acos(self, arg, **kwargs):
         return S.Pi/2 - acos(1/arg)
 
-    def _eval_rewrite_as_atan(self, arg):
+    def _eval_rewrite_as_atan(self, arg, **kwargs):
         return sqrt(arg**2)/arg*(S.Pi/2 - atan(sqrt(arg**2 - 1)))
 
-    def _eval_rewrite_as_acot(self, arg):
+    def _eval_rewrite_as_acot(self, arg, **kwargs):
         return sqrt(arg**2)/arg*(S.Pi/2 - acot(1/sqrt(arg**2 - 1)))
 
-    def _eval_rewrite_as_asec(self, arg):
+    def _eval_rewrite_as_asec(self, arg, **kwargs):
         return S.Pi/2 - asec(arg)
 
 
@@ -2884,8 +2884,8 @@ class atan2(InverseTrigonometricFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://en.wikipedia.org/wiki/Atan2
+    .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+    .. [2] https://en.wikipedia.org/wiki/Atan2
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan2
     """
 
@@ -2924,13 +2924,13 @@ class atan2(InverseTrigonometricFunction):
             return -S.ImaginaryUnit*log(
                 (x + S.ImaginaryUnit*y)/sqrt(x**2 + y**2))
 
-    def _eval_rewrite_as_log(self, y, x):
+    def _eval_rewrite_as_log(self, y, x, **kwargs):
         return -S.ImaginaryUnit*log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
 
-    def _eval_rewrite_as_atan(self, y, x):
+    def _eval_rewrite_as_atan(self, y, x, **kwargs):
         return 2*atan(y / (sqrt(x**2 + y**2) + x))
 
-    def _eval_rewrite_as_arg(self, y, x):
+    def _eval_rewrite_as_arg(self, y, x, **kwargs):
         from sympy import arg
         if x.is_real and y.is_real:
             return arg(x + y*S.ImaginaryUnit)

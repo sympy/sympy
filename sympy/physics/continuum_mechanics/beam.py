@@ -8,13 +8,17 @@ from __future__ import print_function, division
 from sympy.core import S, Symbol, diff, symbols
 from sympy.solvers import linsolve
 from sympy.printing import sstr
-from sympy.functions import SingularityFunction, Piecewise
+from sympy.functions import SingularityFunction, Piecewise, factorial
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
+from sympy import lambdify
+
+matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
+numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
 
 
 class Beam(object):
@@ -352,12 +356,14 @@ class Beam(object):
             point forces this is the location of application.
         order : Integer
             The order of the applied load.
-            - For moments, order= -2
-            - For point loads, order=-1
-            - For constant distributed load, order=0
-            - For ramp loads, order=1
-            - For parabolic ramp loads, order=2
-            - ... so on.
+
+               - For moments, order = -2
+               - For point loads, order =-1
+               - For constant distributed load, order = 0
+               - For ramp loads, order = 1
+               - For parabolic ramp loads, order = 2
+               - ... so on.
+
         end : Sympifyable, optional
             An optional argument that can be used if the load has an end point
             within the length of the beam.
@@ -366,7 +372,7 @@ class Beam(object):
         ========
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
-        A pointload of magnitude 4 N is applied from the top of the beam at
+        A point load of magnitude 4 N is applied from the top of the beam at
         2 meters from the starting point and a parabolic ramp load of magnitude
         2 N/m is applied below the beam starting from 2 meters to 3 meters
         away from the starting point of the beam.
@@ -377,10 +383,10 @@ class Beam(object):
         >>> b = Beam(4, E, I)
         >>> b.apply_load(-3, 0, -2)
         >>> b.apply_load(4, 2, -1)
-        >>> b.apply_load(-2, 2, 2, end = 3)
+        >>> b.apply_load(-2, 2, 2, end=3)
         >>> b.load
-        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2)
-            + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
+        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 4*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
+
         """
         x = self.variable
         value = sympify(value)
@@ -391,12 +397,18 @@ class Beam(object):
         self._load += value*SingularityFunction(x, start, order)
 
         if end:
-            if order == 0:
-                self._load -= value*SingularityFunction(x, end, order)
-            elif order.is_positive:
-                self._load -= value*SingularityFunction(x, end, order) + value*SingularityFunction(x, end, 0)
-            else:
-                raise ValueError("""Order of the load should be positive.""")
+            if order.is_negative:
+                msg = ("If 'end' is provided the 'order' of the load cannot "
+                       "be negative, i.e. 'end' is only valid for distributed "
+                       "loads.")
+                raise ValueError(msg)
+            # NOTE : A Taylor series can be used to define the summation of
+            # singularity functions that subtract from the load past the end
+            # point such that it evaluates to zero past 'end'.
+            f = value * x**order
+            for i in range(0, order + 1):
+                self._load -= (f.diff(x, i).subs(x, end - start) *
+                               SingularityFunction(x, end, i) / factorial(i))
 
     def remove_load(self, value, start, order, end=None):
         """
@@ -438,10 +450,9 @@ class Beam(object):
         >>> b = Beam(4, E, I)
         >>> b.apply_load(-3, 0, -2)
         >>> b.apply_load(4, 2, -1)
-        >>> b.apply_load(-2, 2, 2, end = 3)
+        >>> b.apply_load(-2, 2, 2, end=3)
         >>> b.load
-        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2)
-            + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
+        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 4*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
         >>> b.remove_load(-2, 2, 2, end = 3)
         >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1)
@@ -455,15 +466,25 @@ class Beam(object):
             self._load -= value*SingularityFunction(x, start, order)
             self._applied_loads.remove((value, start, order, end))
         else:
-            raise ValueError("""No such load distribution exists on the beam object.""")
+            msg = "No such load distribution exists on the beam object."
+            raise ValueError(msg)
 
         if end:
-            if order == 0:
-                self._load += value*SingularityFunction(x, end, order)
-            elif order.is_positive:
-                self._load += value*SingularityFunction(x, end, order) + value*SingularityFunction(x, end, 0)
-            else:
-                raise ValueError("""Order of the load should be positive.""")
+            # TODO : This is essentially duplicate code wrt to apply_load,
+            # would be better to move it to one location and both methods use
+            # it.
+            if order.is_negative:
+                msg = ("If 'end' is provided the 'order' of the load cannot "
+                       "be negative, i.e. 'end' is only valid for distributed "
+                       "loads.")
+                raise ValueError(msg)
+            # NOTE : A Taylor series can be used to define the summation of
+            # singularity functions that subtract from the load past the end
+            # point such that it evaluates to zero past 'end'.
+            f = value * x**order
+            for i in range(0, order + 1):
+                self._load += (f.diff(x, i).subs(x, end - start) *
+                               SingularityFunction(x, end, i) / factorial(i))
 
     @property
     def load(self):
@@ -475,7 +496,7 @@ class Beam(object):
         ========
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
-        A pointload of magnitude 4 N is applied from the top of the beam at
+        A point load of magnitude 4 N is applied from the top of the beam at
         2 meters from the starting point and a parabolic ramp load of magnitude
         2 N/m is applied below the beam starting from 3 meters away from the
         starting point of the beam.
@@ -1368,8 +1389,9 @@ class Beam(object):
             length = subs[self.length]
         else:
             length = self.length
-        return plot(deflection.subs(subs), (self.variable, 0, length), title='Deflection',
-                xlabel='position', ylabel='Value', line_color='r')
+        return plot(deflection.subs(subs), (self.variable, 0, length),
+                    title='Deflection', xlabel='position', ylabel='Value',
+                    line_color='r')
 
     @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def plot_loading_results(self, subs=None):
@@ -1389,12 +1411,12 @@ class Beam(object):
 
         Examples
         ========
-        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
-        is applied from half of the beam till the end. There are two simple supports
-        below the beam, one at the starting point and another at the ending point
-        of the beam. A pointload of magnitude 5 KN is also applied from top of the
-        beam, at a distance of 4 meters from the starting point.
-        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+        There is a beam of length 8 meters. A constant distributed load of 10
+        KN/m is applied from half of the beam till the end. There are two
+        simple supports below the beam, one at the starting point and another
+        at the ending point of the beam. A pointload of magnitude 5 KN is also
+        applied from top of the beam, at a distance of 4 meters from the
+        starting point.  Take E = 200 GPa and I = 400*(10**-6) meter**4.
 
         Using the sign convention of downwards forces being positive.
 
@@ -1410,11 +1432,14 @@ class Beam(object):
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> axes = b.plot_loading_results()
         """
-        from sympy import lambdify
-        matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
-        plt = matplotlib.pyplot
-        numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
-        linspace = numpy.linspace
+        if matplotlib is None:
+            raise ImportError('Install matplotlib to use this method.')
+        else:
+            plt = matplotlib.pyplot
+        if numpy is None:
+            raise ImportError('Install numpy to use this method.')
+        else:
+            linspace = numpy.linspace
 
         length = self.length
         variable = self.variable
@@ -1424,20 +1449,27 @@ class Beam(object):
             if sym == self.variable:
                 continue
             if sym not in subs:
-                raise ValueError('Value of %s was not passed.' %sym)
+                raise ValueError('Value of %s was not passed.' % sym)
         if self.length in subs:
             length = subs[self.length]
         else:
             length = self.length
 
-        # As we are using matplotlib directly in this method, we need to change SymPy methods
-        # to numpy functions.
-        shear = lambdify(variable, self.shear_force().subs(subs).rewrite(Piecewise), 'numpy')
-        moment = lambdify(variable, self.bending_moment().subs(subs).rewrite(Piecewise), 'numpy')
-        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise), 'numpy')
-        deflection = lambdify(variable, self.deflection().subs(subs).rewrite(Piecewise), 'numpy')
+        # As we are using matplotlib directly in this method, we need to change
+        # SymPy methods to numpy functions.
+        shear = lambdify(variable,
+                         self.shear_force().subs(subs).rewrite(Piecewise),
+                         'numpy')
+        moment = lambdify(variable,
+                          self.bending_moment().subs(subs).rewrite(Piecewise),
+                          'numpy')
+        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise),
+                         'numpy')
+        deflection = lambdify(variable,
+                              self.deflection().subs(subs).rewrite(Piecewise),
+                              'numpy')
 
-        points = linspace(0, float(length), num=5*length)
+        points = linspace(0, float(length), num=100*length)
 
         # Creating a grid for subplots with 2 rows and 2 columns
         fig, axs = plt.subplots(4, 1)
@@ -1476,10 +1508,10 @@ class Beam3D(Beam):
     is restricted.
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam3D
-    >>> from sympy import symbols
+    >>> from sympy import symbols, simplify
     >>> l, E, G, I, A = symbols('l, E, G, I, A')
     >>> b = Beam3D(l, E, G, I, A)
-    >>> q, m = symbols('q, m')
+    >>> x, q, m = symbols('x, q, m')
     >>> b.apply_load(q, 0, 0, dir="y")
     >>> b.apply_moment_load(m, 0, -1, dir="z")
     >>> b.shear_force()
@@ -1493,10 +1525,18 @@ class Beam3D(Beam):
     [0, 0, l*x*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
     + q*x**3/(6*E*I) + x**2*(-l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I))
     - m)/(2*E*I)]
-    >>> b.deflection()
-    [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
-    + l*m*x**2/(4*E*I) - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
-    + q*x**4/(24*E*I) + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G), 0]
+    >>> dx, dy, dz = b.deflection()
+    >>> dx
+    0
+    >>> dz
+    0
+    >>> expectedy = (
+    ... -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
+    ... + l*m*x**2/(4*E*I) - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
+    ... + q*x**4/(24*E*I) + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G)
+    ... )
+    >>> simplify(dy - expectedy)
+    0
 
     References
     ==========

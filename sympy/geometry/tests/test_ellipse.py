@@ -1,13 +1,45 @@
 from __future__ import division
 
-from sympy import Dummy, Rational, S, Symbol, symbols, pi, sqrt, oo
+from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, I
 from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
-from sympy.integrals.integrals import Integral
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises
 from sympy import integrate
 from sympy.functions.special.elliptic_integrals import elliptic_e
+
+
+def test_ellipse_equation_using_slope():
+    from sympy.abc import x, y
+
+    e1 = Ellipse(Point(1, 0), 3, 2)
+    assert str(e1.equation(_slope=1)) == str((-x + y + 1)**2/8 + (x + y - 1)**2/18 - 1)
+
+    e2 = Ellipse(Point(0, 0), 4, 1)
+    assert str(e2.equation(_slope=1)) == str((-x + y)**2/2 + (x + y)**2/32 - 1)
+
+    e3 = Ellipse(Point(1, 5), 6, 2)
+    assert str(e3.equation(_slope=2)) == str((-2*x + y - 3)**2/20 + (x + 2*y - 11)**2/180 - 1)
+
+
+def test_object_from_equation():
+    from sympy.abc import x, y, a, b
+    assert Circle(x**2 + y**2 + 3*x + 4*y - 8) == Circle(Point2D(S(-3) / 2, -2),
+                                                                                      sqrt(57) / 2)
+    assert Circle(x**2 + y**2 + 6*x + 8*y + 25) == Circle(Point2D(-3, -4), 0)
+    assert Circle(a**2 + b**2 + 6*a + 8*b + 25, x='a', y='b') == Circle(Point2D(-3, -4), 0)
+    assert Circle(x**2 + y**2 - 25) == Circle(Point2D(0, 0), 5)
+    assert Circle(x**2 + y**2) == Circle(Point2D(0, 0), 0)
+    assert Circle(a**2 + b**2, x='a', y='b') == Circle(Point2D(0, 0), 0)
+    assert Circle(x**2 + y**2 + 6*x + 8) == Circle(Point2D(-3, 0), 1)
+    assert Circle(x**2 + y**2 + 6*y + 8) == Circle(Point2D(0, -3), 1)
+    assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(-1/2, -2/3), 5*sqrt(37)/6)
+    assert Circle(x**2 + y**2 + 3*x + 4*y + 26) == Circle(Point2D(-3/2, -2), sqrt(79)*I/2)
+    assert Circle(x**2 + y**2 + 25) == Circle(Point2D(0, 0), 5*I)
+    assert Circle(a**2 + b**2 + 25, x='a', y='b') == Circle(Point2D(0, 0), 5*I)
+    raises(GeometryError, lambda: Circle(x**2 + 6*y + 8))
+    raises(GeometryError, lambda: Circle(6*(x ** 2) + 4*(y**2) + 6*x + 8*y + 25))
+    raises(ValueError, lambda: Circle(a**2 + b**2 + 3*a + 4*b - 8))
 
 
 def test_ellipse_geom():
@@ -31,8 +63,7 @@ def test_ellipse_geom():
     # Test creation with three points
     cen, rad = Point(3*half, 2), 5*half
     assert Circle(Point(0, 0), Point(3, 0), Point(0, 4)) == Circle(cen, rad)
-    raises(
-        GeometryError, lambda: Circle(Point(0, 0), Point(1, 1), Point(2, 2)))
+    assert Circle(Point(0, 0), Point(1, 1), Point(2, 2)) == Segment2D(Point2D(0, 0), Point2D(2, 2))
 
     raises(ValueError, lambda: Ellipse(None, None, None, 1))
     raises(GeometryError, lambda: Circle(Point(0, 0)))
@@ -57,6 +88,10 @@ def test_ellipse_geom():
     assert c1.major == 1
     assert c1.hradius == 1
     assert c1.vradius == 1
+
+    assert Ellipse((1, 1), 0, 0) == Point(1, 1)
+    assert Ellipse((1, 1), 1, 0) == Segment(Point(0, 1), Point(2, 1))
+    assert Ellipse((1, 1), 0, 1) == Segment(Point(1, 0), Point(1, 2))
 
     # Private Functions
     assert hash(c1) == hash(Circle(Point(1, 0), Point(0, 1), Point(0, -1)))
@@ -421,7 +456,7 @@ def test_circumference():
     assert Ellipse(Point(0, 0), 5, 4).circumference == 20 * elliptic_e(S(9) / 25)
 
     # degenerate ellipse
-    assert Ellipse(None, 1, None, 1).circumference == 4
+    assert Ellipse(None, 1, None, 1).length == 2
 
     # circle
     assert Ellipse(None, 1, None, 0).circumference == 2*pi

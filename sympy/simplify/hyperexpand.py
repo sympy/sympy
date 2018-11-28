@@ -2298,7 +2298,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
                 s = Dummy('s')
                 integrand = z**s
                 for b in bm:
-                    if not Mod(b, 1):
+                    if not Mod(b, 1) and b.is_Number:
                         b = int(round(b))
                     integrand *= gamma(b - s)
                 for a in an:

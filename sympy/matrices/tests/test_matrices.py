@@ -640,6 +640,25 @@ def test_LUsolve():
     b = A*x
     soln = A.LUsolve(b)
     assert soln == x
+    A = Matrix([[2, 1], [1, 0], [1, 0]])   # issue 14548
+    b = Matrix([3, 1, 1])
+    assert A.LUsolve(b) == Matrix([1, 1])
+    b = Matrix([3, 1, 2])                  # inconsistent
+    raises(ValueError, lambda: A.LUsolve(b))
+    A = Matrix([[0, -1, 2],
+                [5, 10, 7],
+                [8,  3, 4],
+                [2, 3, 5],
+                [3, 6, 2],
+                [8, 3, 6]])
+    x = Matrix([2, 1, -4])
+    b = A*x
+    soln = A.LUsolve(b)
+    assert soln == x
+    A = Matrix([[0, -1, 2], [5, 10, 7]])  # underdetermined
+    x = Matrix([-1, 2, 0])
+    b = A*x
+    raises(NotImplementedError, lambda: A.LUsolve(b))
 
 
 def test_QRsolve():
@@ -1931,6 +1950,7 @@ def test_limit():
 
 def test_diff():
     A = MutableDenseMatrix(((1, 4, x), (y, 2, 4), (10, 5, x**2 + 1)))
+    assert isinstance(A.diff(x), type(A))
     assert A.diff(x) == MutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert A.diff(y) == MutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
@@ -1938,11 +1958,15 @@ def test_diff():
     assert diff(A, y) == MutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
     A_imm = A.as_immutable()
+    assert isinstance(A_imm.diff(x), type(A_imm))
     assert A_imm.diff(x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert A_imm.diff(y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
     assert diff(A_imm, x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert diff(A_imm, y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+
+
+def test_diff_by_matrix():
 
     # Derive matrix by matrix:
 
@@ -1958,15 +1982,7 @@ def test_diff():
     assert A.diff(a) == MutableDenseMatrix([[0, 0], [0, 0]])
 
     B = ImmutableDenseMatrix([a, b])
-    assert A.diff(B) == Array(
-        [[[
-            [0,0],
-            [0,0]
-        ]],
-        [[
-            [0,0],
-            [0,0]
-        ]]])
+    assert A.diff(B) == A.zeros(2)
 
     # Test diff with tuples:
 
@@ -2030,10 +2046,18 @@ def test_cholesky():
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky())
     raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).cholesky())
     raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).cholesky())
+    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky(hermitian=False))
+    assert Matrix(((5 + I, 0), (0, 1))).cholesky(hermitian=False) == Matrix([
+        [sqrt(5 + I), 0], [0, 1]])
+    A = Matrix(((1, 5), (5, 1)))
+    L = A.cholesky(hermitian=False)
+    assert L == Matrix([[1, 0], [5, 2*sqrt(6)*I]])
+    assert L*L.T == A
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-    assert A.cholesky() * A.cholesky().T == A
-    assert A.cholesky().is_lower
-    assert A.cholesky() == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
+    L = A.cholesky()
+    assert L * L.T == A
+    assert L.is_lower
+    assert L == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
     A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
     assert A.cholesky() == Matrix(((2, 0, 0), (I, 1, 0), (1 - I, 0, 3)))
 
@@ -2043,6 +2067,10 @@ def test_LDLdecomposition():
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition())
     raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).LDLdecomposition())
     raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).LDLdecomposition())
+    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition(hermitian=False))
+    A = Matrix(((1, 5), (5, 1)))
+    L, D = A.LDLdecomposition(hermitian=False)
+    assert L * D * L.T == A
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     L, D = A.LDLdecomposition()
     assert L * D * L.T == A
@@ -2072,6 +2100,11 @@ def test_cholesky_solve():
     b = A*x
     soln = A.cholesky_solve(b)
     assert soln == x
+    A = Matrix(((1, 5), (5, 1)))
+    x = Matrix((4, -3))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert soln == x
     A = Matrix(((9, 3*I), (-3*I, 5)))
     x = Matrix((-2, 1))
     b = A*x
@@ -2082,6 +2115,11 @@ def test_cholesky_solve():
     b = A*x
     soln = A.cholesky_solve(b)
     assert expand_mul(soln) == x
+    a00, a01, a11, b0, b1 = symbols('a00, a01, a11, b0, b1')
+    A = Matrix(((a00, a01), (a01, a11)))
+    b = Matrix((b0, b1))
+    x = A.cholesky_solve(b)
+    assert simplify(A*x) == b
 
 
 def test_LDLsolve():
@@ -2189,7 +2227,7 @@ def test_matrix_norm():
     assert A.norm('frobenius') == sqrt(389)/2
 
     # Test properties of matrix norms
-    # http://en.wikipedia.org/wiki/Matrix_norm#Definition
+    # https://en.wikipedia.org/wiki/Matrix_norm#Definition
     # Two matrices
     A = Matrix([[1, 2], [3, 4]])
     B = Matrix([[5, 5], [-2, 2]])
@@ -2214,7 +2252,7 @@ def test_matrix_norm():
             assert dif == 0
 
     # Test Properties of Vector Norms
-    # http://en.wikipedia.org/wiki/Vector_norm
+    # https://en.wikipedia.org/wiki/Vector_norm
     # Two column vectors
     a = Matrix([1, 1 - 1*I, -3])
     b = Matrix([S(1)/2, 1*I, 1])
@@ -2503,6 +2541,14 @@ def test_dot():
     assert ones(1, 3).dot(ones(3, 1)) == 3
     assert ones(1, 3).dot([1, 1, 1]) == 3
     assert Matrix([1, 2, 3]).dot(Matrix([1, 2, 3])) == 14
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I])) == -5 + I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I]), hermitian=False) == -5 + I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I]), hermitian=True) == 13 + I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I]), hermitian=True, conjugate_convention="physics") == 13 - I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([4, 5*I, 6]), hermitian=True, conjugate_convention="right") == 4 + 8*I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([4, 5*I, 6]), hermitian=True, conjugate_convention="left") == 4 - 8*I
+    assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), hermitian=False, conjugate_convention="left") == -5
+    assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), conjugate_convention="left") == 5
 
 
 def test_dual():
@@ -2649,7 +2695,7 @@ def test_issue_11434():
 
 def test_rank_regression_from_so():
     # see:
-    # http://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
+    # https://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
 
     nu, lamb = symbols('nu, lambda')
     A = Matrix([[-3*nu,         1,                  0,  0],
@@ -2881,6 +2927,12 @@ def test_gauss_jordan_solve():
     b = Matrix([1, 1, 1])
     raises(ValueError, lambda: A.gauss_jordan_solve(b))
 
+def test_solve():
+    A = Matrix([[1,2], [2,4]])
+    b = Matrix([[3], [4]])
+    raises(ValueError, lambda: A.solve(b)) #no solution
+    b = Matrix([[ 4], [8]])
+    raises(ValueError, lambda: A.solve(b)) #infinite solution
 
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
@@ -3128,3 +3180,56 @@ def test_issue_8240():
     assert len(eigenvals) == 3
     assert eigenvals.count(x) == 2
     assert eigenvals.count(y) == 1
+
+def test_legacy_det():
+    # Minimal support for legacy keys for 'method' in det()
+    # Partially copied from test_determinant()
+
+    M = Matrix(( ( 3, -2,  0, 5),
+                 (-2,  1, -2, 2),
+                 ( 0, -2,  5, 0),
+                 ( 5,  0,  3, 4) ))
+
+    assert M.det(method="bareis") == -289
+    assert M.det(method="det_lu") == -289
+    assert M.det(method="det_LU") == -289
+
+    M = Matrix(( (3, 2, 0, 0, 0),
+                 (0, 3, 2, 0, 0),
+                 (0, 0, 3, 2, 0),
+                 (0, 0, 0, 3, 2),
+                 (2, 0, 0, 0, 3) ))
+
+    assert M.det(method="bareis") == 275
+    assert M.det(method="det_lu") == 275
+    assert M.det(method="Bareis") == 275
+
+    M = Matrix(( (1, 0,  1,  2, 12),
+                 (2, 0,  1,  1,  4),
+                 (2, 1,  1, -1,  3),
+                 (3, 2, -1,  1,  8),
+                 (1, 1,  1,  0,  6) ))
+
+    assert M.det(method="bareis") == -55
+    assert M.det(method="det_lu") == -55
+    assert M.det(method="BAREISS") == -55
+
+    M = Matrix(( (-5,  2,  3,  4,  5),
+                 ( 1, -4,  3,  4,  5),
+                 ( 1,  2, -3,  4,  5),
+                 ( 1,  2,  3, -2,  5),
+                 ( 1,  2,  3,  4, -1) ))
+
+    assert M.det(method="bareis") == 11664
+    assert M.det(method="det_lu") == 11664
+    assert M.det(method="BERKOWITZ") == 11664
+
+    M = Matrix(( ( 2,  7, -1, 3, 2),
+                 ( 0,  0,  1, 0, 1),
+                 (-2,  0,  7, 0, 2),
+                 (-3, -2,  4, 5, 3),
+                 ( 1,  0,  0, 0, 1) ))
+
+    assert M.det(method="bareis") == 123
+    assert M.det(method="det_lu") == 123
+    assert M.det(method="LU") == 123

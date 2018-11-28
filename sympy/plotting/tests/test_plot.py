@@ -434,3 +434,38 @@ def test_append_issue_7140():
 
     with raises(TypeError):
         p1.append(p2._series)
+
+def test_issue_15265():
+    from sympy.core.sympify import sympify
+    from sympy.core.singleton import S
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+    eqn = sin(x)
+
+    p = plot(eqn, xlim=(-S.Pi, S.Pi), ylim=(-1, 1))
+    p._backend.close()
+
+    p = plot(eqn, xlim=(-1, 1), ylim=(-S.Pi, S.Pi))
+    p._backend.close()
+
+    p = plot(eqn, xlim=(-1, 1), ylim=(sympify('-3.14'), sympify('3.14')))
+    p._backend.close()
+
+    p = plot(eqn, xlim=(sympify('-3.14'), sympify('3.14')), ylim=(-1, 1))
+    p._backend.close()
+
+    raises(ValueError,
+        lambda: plot(eqn, xlim=(-S.ImaginaryUnit, 1), ylim=(-1, 1)))
+
+    raises(ValueError,
+        lambda: plot(eqn, xlim=(-1, 1), ylim=(-1, S.ImaginaryUnit)))
+
+    raises(ValueError,
+        lambda: plot(eqn, xlim=(-S.Infinity, 1), ylim=(-1, 1)))
+
+    raises(ValueError,
+        lambda: plot(eqn, xlim=(-1, 1), ylim=(-1, S.Infinity)))

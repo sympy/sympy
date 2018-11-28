@@ -289,6 +289,10 @@ class LatexPrinter(Printer):
         else:
             return expr
 
+    def _print_Basic(self, expr):
+        l = [self._print(o) for o in expr.args]
+        return self._deal_with_super_sub(expr.__class__.__name__) + r"\left(%s\right)" % ", ".join(l)
+
     def _print_bool(self, e):
         return r"\mathrm{%s}" % e
 
@@ -297,7 +301,6 @@ class LatexPrinter(Printer):
 
     def _print_NoneType(self, e):
         return r"\mathrm{%s}" % e
-
 
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
@@ -726,7 +729,7 @@ class LatexPrinter(Printer):
         '''
         func = expr.func.__name__
         if hasattr(self, '_print_' + func) and \
-            not isinstance(expr.func, UndefinedFunction):
+            not isinstance(expr, AppliedUndef):
             return getattr(self, '_print_' + func)(expr, exp)
         else:
             args = [ str(self._print(arg)) for arg in expr.args ]
@@ -1462,6 +1465,10 @@ class LatexPrinter(Printer):
         else:
             return "%s^T" % self._print(mat)
 
+    def _print_Trace(self, expr):
+        mat = expr.arg
+        return r"\mathrm{tr}\left (%s \right )" % self._print(mat)
+
     def _print_Adjoint(self, expr):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
@@ -1470,34 +1477,25 @@ class LatexPrinter(Printer):
         else:
             return r"%s^\dagger" % self._print(mat)
 
-    def _print_MatAdd(self, expr):
-        terms = [self._print(t) for t in expr.args]
-        l = []
-        for t in terms:
-            if t.startswith('-'):
-                sign = "-"
-                t = t[1:]
-            else:
-                sign = "+"
-            l.extend([sign, t])
-        sign = l.pop(0)
-        if sign == '+':
-            sign = ""
-        return sign + ' '.join(l)
-
     def _print_MatMul(self, expr):
         from sympy import Add, MatAdd, HadamardProduct, MatMul, Mul
 
-        def parens(x):
-            if isinstance(x, (Add, MatAdd, HadamardProduct)):
-                return r"\left(%s\right)" % self._print(x)
-            return self._print(x)
+        parens = lambda x: self.parenthesize(x, precedence_traditional(expr), False)
 
-        if isinstance(expr, MatMul) and expr.args[0].is_Number and expr.args[0]<0:
-            expr = Mul(-1*expr.args[0], MatMul(*expr.args[1:]))
-            return '-' + ' '.join(map(parens, expr.args))
+        args = expr.args
+        if isinstance(args[0], Mul):
+            args = args[0].as_ordered_factors() + list(args[1:])
         else:
-            return ' '.join(map(parens, expr.args))
+            args = list(args)
+
+        if isinstance(expr, MatMul) and _coeff_isneg(expr):
+            if args[0] == -1:
+                args = args[1:]
+            else:
+                args[0] = -args[0]
+            return '- ' + ' '.join(map(parens, args))
+        else:
+            return ' '.join(map(parens, args))
 
     def _print_Mod(self, expr, exp=None):
         if exp is not None:
@@ -1592,13 +1590,14 @@ class LatexPrinter(Printer):
     _print_MutableDenseNDimArray = _print_NDimArray
     _print_MutableSparseNDimArray = _print_NDimArray
 
-    def _print_Tensor(self, expr):
-        name = expr.args[0].args[0]
-        indices = expr.get_indices()
+    def _printer_tensor_indices(self, name, indices, index_map={}):
         out_str = self._print(name)
         last_valence = None
+        prev_map = None
         for index in indices:
             new_valence = index.is_up
+            if ((index in index_map) or prev_map) and last_valence == new_valence:
+                out_str += ","
             if last_valence != new_valence:
                 if last_valence is not None:
                     out_str += "}"
@@ -1607,10 +1606,27 @@ class LatexPrinter(Printer):
                 else:
                     out_str += "{}_{"
             out_str += self._print(index.args[0])
+            if index in index_map:
+                out_str += "="
+                out_str += self._print(index_map[index])
+                prev_map = True
+            else:
+                prev_map = False
             last_valence = new_valence
         if last_valence is not None:
             out_str += "}"
         return out_str
+
+    def _print_Tensor(self, expr):
+        name = expr.args[0].args[0]
+        indices = expr.get_indices()
+        return self._printer_tensor_indices(name, indices)
+
+    def _print_TensorElement(self, expr):
+        name = expr.expr.args[0].args[0]
+        indices = expr.expr.get_indices()
+        index_map = expr.index_map
+        return self._printer_tensor_indices(name, indices, index_map)
 
     def _print_TensMul(self, expr):
         # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
@@ -1713,7 +1729,7 @@ class LatexPrinter(Printer):
 
     def _print_ProductSet(self, p):
         if len(p.sets) > 1 and not has_variety(p.sets):
-            return self._print(p.sets[0]) + "^%d" % len(p.sets)
+            return self._print(p.sets[0]) + "^{%d}" % len(p.sets)
         else:
             return r" \times ".join(self._print(set) for set in p.sets)
 

@@ -1,4 +1,4 @@
-from sympy import Matrix, eye, Integer, expand
+from sympy import Matrix, eye, Integer, expand, Indexed, Sum
 from sympy.combinatorics import Permutation
 from sympy.core import S, Rational, Symbol, Basic, Add
 from sympy.core.containers import Tuple
@@ -9,10 +9,18 @@ from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
-    TensorManager, TensExpr, TIDS, TensorHead, canon_bp
+    TensorManager, TensExpr, TensorHead, canon_bp
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import range
+from sympy.matrices import diag
+import warnings
 
+
+def filter_warnings_decorator(f):
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        f()
 
 def _is_equal(arg1, arg2):
     if isinstance(arg1, TensExpr):
@@ -153,6 +161,14 @@ def test_canonicalize_no_dummies():
     t = A(c, a)*A(b, d)
     tc = t.canon_bp()
     assert str(tc) == 'A(a, c)*A(b, d)'
+
+def test_tensorhead_construction_without_symmetry():
+    L = Lorentz = TensorIndexType('Lorentz')
+    A1 = tensorhead('A', [L, L])
+    A2 = tensorhead('A', [L, L], [[1], [1]])
+    assert A1 == A2
+    A3 = tensorhead('A', [L, L], [[1, 1]])  # Symmetric
+    assert A1 != A3
 
 def test_no_metric_symmetry():
     # no metric symmetry; A no symmetry
@@ -524,7 +540,10 @@ def test_TensExpr():
     #raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__rdiv__(t, 'a'))
-    raises(ValueError, lambda: A(a, b)**2)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        # DO NOT REMOVE THIS AFTER DEFRECATION REMOVED:
+        raises(ValueError, lambda: A(a, b)**2)
     raises(NotImplementedError, lambda: 2**A(a, b))
     raises(NotImplementedError, lambda: abs(A(a, b)))
 
@@ -726,8 +745,6 @@ def test_mul():
     assert str(C()) == 'C'
     assert str(t) == '1'
     assert t == 1
-    raises(ValueError, lambda: TIDS.free_dum_from_indices(a, a))
-    raises(ValueError, lambda: TIDS.free_dum_from_indices(-a, -a))
     raises(ValueError, lambda: A(a, b)*A(a, c))
     t = A(a, b)*A(-a, c)
     raises(ValueError, lambda: t(a, b, c))
@@ -1265,8 +1282,6 @@ def _get_valued_base_test_variables():
     BA = tensorhead("BA", [Lorentz] * 2, [[1]]*2)
     BA.data = ba_matrix
 
-    BA(i0, i1)*A(-i0)*B(-i1)
-
     # Let's test the diagonal metric, with inverted Minkowski metric:
     LorentzD = TensorIndexType('LorentzD')
     LorentzD.data = [-1, 1, 1, 1]
@@ -1294,6 +1309,7 @@ def _get_valued_base_test_variables():
             n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4)
 
 
+@filter_warnings_decorator
 def test_valued_tensor_iter():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1315,6 +1331,7 @@ def test_valued_tensor_iter():
     assert list(BA(i1, i2) - 2 * BA(i1, i2)) == [-i for i in list(ba_matrix)]
 
 
+@filter_warnings_decorator
 def test_valued_tensor_covariant_contravariant_elements():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1328,6 +1345,7 @@ def test_valued_tensor_covariant_contravariant_elements():
     assert AB(-i0, i1)[1, 1] == 1
 
 
+@filter_warnings_decorator
 def test_valued_tensor_get_matrix():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1348,6 +1366,7 @@ def test_valued_tensor_get_matrix():
     assert A(-i0).get_matrix() == Matrix([E, -px, -py, -pz])
 
 
+@filter_warnings_decorator
 def test_valued_tensor_contraction():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1372,6 +1391,7 @@ def test_valued_tensor_contraction():
         assert contrexp[i] == [E, px, py, pz][i]
 
 
+@filter_warnings_decorator
 def test_valued_tensor_self_contraction():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1380,6 +1400,7 @@ def test_valued_tensor_self_contraction():
     assert BA(i0, -i0).data == 2
 
 
+@filter_warnings_decorator
 def test_valued_tensor_pow():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1390,6 +1411,7 @@ def test_valued_tensor_pow():
     assert C(mu0)**1 == C**1
 
 
+@filter_warnings_decorator
 def test_valued_tensor_expressions():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1430,6 +1452,7 @@ def test_valued_tensor_expressions():
     assert expr5.data.expand() == 28*E*x1 + 12*px*x1 + 20*py*x1 + 28*pz*x1 + 136*x2 + 3*x3
 
 
+@filter_warnings_decorator
 def test_valued_tensor_add_scalar():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1451,6 +1474,7 @@ def test_valued_tensor_add_scalar():
     assert expr4.data == 0
 
 
+@filter_warnings_decorator
 def test_noncommuting_components():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1479,6 +1503,7 @@ def test_noncommuting_components():
     assert Vc.expand() == b * a + b * d
 
 
+@filter_warnings_decorator
 def test_valued_non_diagonal_metric():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1487,6 +1512,7 @@ def test_valued_non_diagonal_metric():
     assert (NA(n0)*NA(-n0)).data == (NA(n0).get_matrix().T * mmatrix * NA(n0).get_matrix())[0, 0]
 
 
+@filter_warnings_decorator
 def test_valued_assign_numpy_ndarray():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1524,6 +1550,7 @@ def test_valued_assign_numpy_ndarray():
             assert AB(-i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if j else 1)
 
 
+@filter_warnings_decorator
 def test_valued_metric_inverse():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1556,6 +1583,7 @@ def test_valued_metric_inverse():
             assert KD(i0, -i1)[i, j] == meye[i, j]
 
 
+@filter_warnings_decorator
 def test_valued_canon_bp_swapaxes():
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1580,6 +1608,8 @@ def test_pprint():
     assert pretty(A) == "A(Lorentz)"
 
 
+
+@filter_warnings_decorator
 def test_valued_components_with_wrong_symmetry():
     IT = TensorIndexType('IT', dim=3)
     i0, i1, i2, i3 = tensor_indices('i0:4', IT)
@@ -1611,6 +1641,7 @@ def test_valued_components_with_wrong_symmetry():
     A_antisym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 
 
+@filter_warnings_decorator
 def test_issue_10972_TensMul_data():
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
     Lorentz.data = [-1, 1]
@@ -1637,6 +1668,7 @@ def test_issue_10972_TensMul_data():
     assert ((mul_1 + mul_1).data == 2 * mul_1.data)
 
 
+@filter_warnings_decorator
 def test_TensMul_data():
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='L', dim=4)
     Lorentz.data = [-1, 1, 1, 1]
@@ -1697,6 +1729,7 @@ def test_TensMul_data():
     assert (mul_3.data == Array([0, 0, 0, 0]))
 
 
+@filter_warnings_decorator
 def test_issue_11020_TensAdd_data():
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
     Lorentz.data = [-1, 1]
@@ -1847,3 +1880,141 @@ def test_tensor_alternative_construction():
     assert A(-i0) == A(-Symbol("i0"))
     raises(TypeError, lambda: A(x+y))
     raises(ValueError, lambda: A(2*x))
+
+
+def test_tensor_replacement():
+    L = TensorIndexType("L")
+    L2 = TensorIndexType("L2", dim=2)
+    i, j, k, l = tensor_indices("i j k l", L)
+    i0 = tensor_indices("i0", L)
+    A, B, C, D = tensorhead("A B C D", [L], [[1]])
+    H = tensorhead("H", [L, L], [[1], [1]])
+    K = tensorhead("K", [L, L, L, L], [[1], [1], [1], [1]])
+
+    expr = H(i, j)
+    repl = {H(i,-j): [[1,2],[3,4]], L: diag(1, -1)}
+    assert expr._extract_data(repl) == ([i, j], Array([[1, -2], [3, -4]]))
+
+    assert expr.replace_with_arrays(repl, [i, j]) == Array([[1, -2], [3, -4]])
+    assert expr.replace_with_arrays(repl, [i, -j]) == Array([[1, 2], [3, 4]])
+    assert expr.replace_with_arrays(repl, [-i, j]) == Array([[1, -2], [-3, 4]])
+    assert expr.replace_with_arrays(repl, [-i, -j]) == Array([[1, 2], [-3, -4]])
+    assert expr.replace_with_arrays(repl, [j, i]) == Array([[1, 3], [-2, -4]])
+    assert expr.replace_with_arrays(repl, [j, -i]) == Array([[1, -3], [-2, 4]])
+    assert expr.replace_with_arrays(repl, [-j, i]) == Array([[1, 3], [2, 4]])
+    assert expr.replace_with_arrays(repl, [-j, -i]) == Array([[1, -3], [2, -4]])
+
+    expr = H(i,j)
+    repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
+    assert expr._extract_data(repl) == ([i, j], Array([[1, 2], [3, 4]]))
+
+    assert expr.replace_with_arrays(repl, [i, j]) == Array([[1, 2], [3, 4]])
+    assert expr.replace_with_arrays(repl, [i, -j]) == Array([[1, -2], [3, -4]])
+    assert expr.replace_with_arrays(repl, [-i, j]) == Array([[1, 2], [-3, -4]])
+    assert expr.replace_with_arrays(repl, [-i, -j]) == Array([[1, -2], [-3, 4]])
+    assert expr.replace_with_arrays(repl, [j, i]) == Array([[1, 3], [2, 4]])
+    assert expr.replace_with_arrays(repl, [j, -i]) == Array([[1, -3], [2, -4]])
+    assert expr.replace_with_arrays(repl, [-j, i]) == Array([[1, 3], [-2, -4]])
+    assert expr.replace_with_arrays(repl, [-j, -i]) == Array([[1, -3], [-2, 4]])
+
+    # Not the same indices:
+    expr = H(i,k)
+    repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
+    assert expr._extract_data(repl) == ([i, k], Array([[1, 2], [3, 4]]))
+
+    expr = A(i)*A(-i)
+    repl = {A(i): [1,2], L: diag(1, -1)}
+    assert expr._extract_data(repl) == ([], -3)
+    assert expr.replace_with_arrays(repl, []) == -3
+
+    expr = K(i, j, -j, k)*A(-i)*A(-k)
+    repl = {A(i): [1, 2], K(i,j,k,l): Array([1]*2**4).reshape(2,2,2,2), L: diag(1, -1)}
+    assert expr._extract_data(repl)
+
+    expr = H(j, k)
+    repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
+    raises(ValueError, lambda: expr._extract_data(repl))
+
+    expr = A(i)
+    repl = {B(i): [1, 2]}
+    raises(ValueError, lambda: expr._extract_data(repl))
+
+    expr = A(i)
+    repl = {A(i): [[1, 2], [3, 4]]}
+    raises(ValueError, lambda: expr._extract_data(repl))
+
+    # TensAdd:
+    expr = A(k)*H(i, j) + B(k)*H(i, j)
+    repl = {A(k): [1], B(k): [1], H(i, j): [[1, 2],[3,4]], L:diag(1,1)}
+    assert expr._extract_data(repl) == ([k, i, j], Array([[[2, 4], [6, 8]]]))
+    assert expr.replace_with_arrays(repl, [k, i, j]) == Array([[[2, 4], [6, 8]]])
+    assert expr.replace_with_arrays(repl, [k, j, i]) == Array([[[2, 6], [4, 8]]])
+
+    expr = A(k)*A(-k) + 100
+    repl = {A(k): [2, 3], L: diag(1, 1)}
+    assert expr.replace_with_arrays(repl, []) == 113
+
+    ## Symmetrization:
+    expr = H(i, j) + H(j, i)
+    repl = {H(i, j): [[1, 2], [3, 4]]}
+    assert expr._extract_data(repl) == ([i, j], Array([[2, 5], [5, 8]]))
+    assert expr.replace_with_arrays(repl, [i, j]) == Array([[2, 5], [5, 8]])
+    assert expr.replace_with_arrays(repl, [j, i]) == Array([[2, 5], [5, 8]])
+
+    ## Anti-symmetrization:
+    expr = H(i, j) - H(j, i)
+    repl = {H(i, j): [[1, 2], [3, 4]]}
+    assert expr.replace_with_arrays(repl, [i, j]) == Array([[0, -1], [1, 0]])
+    assert expr.replace_with_arrays(repl, [j, i]) == Array([[0, 1], [-1, 0]])
+
+    # Tensors with contractions in replacements:
+    expr = K(i, j, k, -k)
+    repl = {K(i, j, k, -k): [[1, 2], [3, 4]]}
+    assert expr._extract_data(repl) == ([i, j], Array([[1, 2], [3, 4]]))
+
+    expr = H(i, -i)
+    repl = {H(i, -i): 42}
+    assert expr._extract_data(repl) == ([], 42)
+
+    # Replace with array, raise exception if indices are not compatible:
+    expr = A(i)*A(j)
+    repl = {A(i): [1, 2]}
+    raises(ValueError, lambda: expr.replace_with_arrays(repl, [j]))
+
+    # Raise exception if array dimension is not compatible:
+    expr = A(i)
+    repl = {A(i): [[1, 2]]}
+    raises(ValueError, lambda: expr.replace_with_arrays(repl, [i]))
+
+    # TensorIndexType with dimension, wrong dimension in replacement array:
+    u1, u2, u3 = tensor_indices("u1:4", L2)
+    U = tensorhead("U", [L2], [[1]])
+    expr = U(u1)*U(-u2)
+    repl = {U(u1): [[1]]}
+    raises(ValueError, lambda: expr.replace_with_arrays(repl, [u1, -u2]))
+
+
+def test_rewrite_tensor_to_Indexed():
+    L = TensorIndexType("L", dim=4)
+    A = tensorhead("A", [L, L, L, L], [[1], [1], [1], [1]])
+    B = tensorhead("B", [L], [[1]])
+
+    i0, i1, i2, i3 = symbols("i0:4")
+    L_0, L_1 = symbols("L_0:2")
+
+    a1 = A(i0, i1, i2, i3)
+    assert a1.rewrite(Indexed) == Indexed(Symbol("A"), i0, i1, i2, i3)
+
+    a2 = A(i0, -i0, i2, i3)
+    assert a2.rewrite(Indexed) == Sum(Indexed(Symbol("A"), L_0, L_0, i2, i3), (L_0, 0, 3))
+
+    a3 = a2 + A(i2, i3, i0, -i0)
+    assert a3.rewrite(Indexed) == \
+        Sum(Indexed(Symbol("A"), L_0, L_0, i2, i3), (L_0, 0, 3)) +\
+        Sum(Indexed(Symbol("A"), i2, i3, L_0, L_0), (L_0, 0, 3))
+
+    b1 = B(-i0)*a1
+    assert b1.rewrite(Indexed) == Sum(Indexed(Symbol("B"), L_0)*Indexed(Symbol("A"), L_0, i1, i2, i3), (L_0, 0, 3))
+
+    b2 = B(-i3)*a2
+    assert b2.rewrite(Indexed) == Sum(Indexed(Symbol("B"), L_1)*Indexed(Symbol("A"), L_0, L_0, i2, L_1), (L_0, 0, 3), (L_1, 0, 3))

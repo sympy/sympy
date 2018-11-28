@@ -1,9 +1,9 @@
 from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
     tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfi,
-    EulerGamma, Expr, factor, Function, I, im, Integral, integrate,
-    Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
-    Ne, O, oo, pi, Piecewise, polar_lift, Poly, Rational, re, S, Si, sign,
+    EulerGamma, Expr, factor, Function, gamma, gammasimp, I, Idx, im, IndexedBase,
+    Integral, integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
+    Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
     symbols, sympify, tan, trigsimp, Tuple
 )
@@ -95,7 +95,7 @@ def test_basics():
     assert diff(Integral(y, y), x) == 0
     assert diff(Integral(x, (x, 0, 1)), x) == 0
     assert diff(Integral(x, x), x) == x
-    assert diff(Integral(t, (t, 0, x)), x) == x + Integral(0, (t, 0, x))
+    assert diff(Integral(t, (t, 0, x)), x) == x
 
     e = (t + 1)**2
     assert diff(integrate(e, (t, 0, x)), x) == \
@@ -142,6 +142,7 @@ def test_diff_wrt():
 
     raises(ValueError, lambda: integrate(x + 1, x + 1))
     raises(ValueError, lambda: integrate(x + 1, (x + 1, 0, 1)))
+
 
 def test_basics_multiple():
 
@@ -1385,6 +1386,38 @@ def test_issue_14782():
     assert integrate(f, [x, -1, 1]) == - pi / 8
     assert integrate(f, [x, 0, 1]) == S(1) / 3 - pi / 16
 
+
 def test_issue_12081():
     f = x**(-S(3)/2)*exp(-x)
     assert integrate(f, [x, 0, oo]) == oo
+
+
+def test_issue_15285():
+    y = 1/x - 1
+    f = 4*y*exp(-2*y)/x**2
+    assert integrate(f, [x, 0, 1]) == 1
+
+
+def test_issue_15432():
+    assert integrate(x**n * exp(-x) * log(x), (x, 0, oo)).gammasimp() == Piecewise(
+        (gamma(n + 1)*polygamma(0, n) + gamma(n + 1)/n, re(n) + 1 > 0),
+        (Integral(x**n*exp(-x)*log(x), (x, 0, oo)), True))
+
+
+def test_issue_15124():
+    omega = IndexedBase('omega')
+    m, p = symbols('m p', cls=Idx)
+    assert integrate(exp(x*I*(omega[m] + omega[p])), x, conds='none') == \
+        -I*exp(I*x*omega[m])*exp(I*x*omega[p])/(omega[m] + omega[p])
+
+
+def test_issue_15218():
+    assert Eq(x, y).integrate(x) == Eq(x**2/2, x*y)
+    assert Integral(Eq(x, y), x) == Eq(Integral(x, x), Integral(y, x))
+    assert Integral(Eq(x, y), x).doit() == Eq(x**2/2, x*y)
+
+
+def test_issue_15292():
+    res = integrate(exp(-x**2*cos(2*t)) * cos(x**2*sin(2*t)), (x, 0, oo))
+    assert isinstance(res, Piecewise)
+    assert gammasimp((res - sqrt(pi)/2 * cos(t)).subs(t, pi/6)) == 0

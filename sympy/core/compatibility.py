@@ -98,6 +98,7 @@ if PY3:
         MutableSet, Iterable, Hashable)
 
     from inspect import unwrap
+    from itertools import accumulate
 else:
     import codecs
     import types
@@ -176,6 +177,14 @@ else:
                 raise ValueError('wrapper loop when unwrapping {!r}'.format(f))
             memo.add(id_func)
         return func
+
+    def accumulate(iterable, func=operator.add):
+        state = iterable[0]
+        yield state
+        for i in iterable[1:]:
+            state = func(state, i)
+            yield state
+
 
 def with_metaclass(meta, *bases):
     """
@@ -779,7 +788,7 @@ def lru_cache(maxsize=100, typed=False):
     f.cache_info().  Clear the cache and statistics with f.cache_clear().
     Access the underlying function with f.__wrapped__.
 
-    See:  http://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
+    See:  https://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
 
     """
 

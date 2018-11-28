@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from .add import _unevaluated_Add, Add
 from .basic import S
 from .compatibility import ordered
 from .expr import Expr
@@ -295,6 +296,9 @@ class Equality(Relational):
     the Equality.  If None is returned by `_eval_Eq`, an Equality object will
     be created as usual.
 
+    Since this object is already an expression, it does not respond to
+    the method `as_expr` if one tries to create `x - y` from Eq(x, y).
+    This can be done with the `rewrite(Add)` method.
     """
     rel_op = '=='
 
@@ -388,6 +392,38 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
+    def _eval_rewrite_as_Add(self, *args, **kwargs):
+        """return Eq(L, R) as L - R. To control the evaluation of
+        the result set pass `evaluate=True` to give L - R;
+        if `evaluate=None` then terms in L and R will not cancel
+        but they will be listed in canonical order; otherwise
+        non-canonical args will be returned.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq, Add
+        >>> from sympy.abc import b, x
+        >>> eq = Eq(x + b, x - b)
+        >>> eq.rewrite(Add)
+        2*b
+        >>> eq.rewrite(Add, evaluate=None).args
+        (b, b, x, -x)
+        >>> eq.rewrite(Add, evaluate=False).args
+        (b, x, b, -x)
+        """
+        L, R = args
+        evaluate = kwargs.get('evaluate', True)
+        if evaluate:
+            # allow cancellation of args
+            return L - R
+        args = Add.make_args(L) + Add.make_args(-R)
+        if evaluate is None:
+            # no cancellation, but canonical
+            return _unevaluated_Add(*args)
+        # no cancellation, not canonical
+        return Add._from_args(args)
+
     @property
     def binary_symbols(self):
         if S.true in self.args or S.false in self.args:
@@ -396,6 +432,29 @@ class Equality(Relational):
             elif self.rhs.is_Symbol:
                 return set([self.rhs])
         return set()
+
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        from sympy.solvers.solveset import linear_coeffs
+        # standard simplify
+        e = super(Equality, self)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if not isinstance(e, Equality):
+            return e
+        free = self.free_symbols
+        if len(free) == 1:
+            try:
+                x = free.pop()
+                m, b = linear_coeffs(
+                    e.rewrite(Add, evaluate=False), x)
+                if m.is_zero is False:
+                    enew = e.func(x, -b/m)
+                else:
+                    enew = e.func(m*x, -b)
+                if measure(enew) <= ratio*measure(e):
+                    e = enew
+            except ValueError:
+                pass
+        return e.canonical
 
 Eq = Equality
 
@@ -459,6 +518,13 @@ class Unequality(Relational):
             elif self.rhs.is_Symbol:
                 return set([self.rhs])
         return set()
+
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        eq = Equality(*self.args)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if isinstance(eq, Equality):
+            eq = self.func(*eq.args)
+        return eq
 
 Ne = Unequality
 

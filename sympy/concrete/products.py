@@ -183,8 +183,8 @@ class Product(ExprWithIntLimits):
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
            http://dl.acm.org/citation.cfm?doid=322248.322255
-    .. [2] http://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation
-    .. [3] http://en.wikipedia.org/wiki/Empty_product
+    .. [2] https://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation
+    .. [3] https://en.wikipedia.org/wiki/Empty_product
     """
 
     __slots__ = ['is_commutative']
@@ -193,7 +193,7 @@ class Product(ExprWithIntLimits):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
 
-    def _eval_rewrite_as_Sum(self, *args):
+    def _eval_rewrite_as_Sum(self, *args, **kwargs):
         from sympy.concrete.summations import Sum
         return exp(Sum(log(self.function), *self.limits))
 

@@ -47,18 +47,6 @@ def test_Dummy_force_dummy_index():
     assert Dummy()._count == Dummy('d', dummy_index=3)._count
 
 
-def test_as_dummy():
-    x = Symbol('x')
-    x1 = x.as_dummy()
-    assert x1 != x
-    assert x1 != x.as_dummy()
-
-    x = Symbol('x', commutative=False)
-    x1 = x.as_dummy()
-    assert x1 != x
-    assert x1.is_commutative is False
-
-
 def test_lt_gt():
     from sympy import sympify as S
     x, y = Symbol('x'), Symbol('y')

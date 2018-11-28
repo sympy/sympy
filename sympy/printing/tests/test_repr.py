@@ -174,9 +174,8 @@ def test_Dummy_from_Symbol():
     # should not get the full dictionary of assumptions
     n = Symbol('n', integer=True)
     d = n.as_dummy()
-    s1 = "Dummy('n', dummy_index=%s, integer=True)" % str(d.dummy_index)
-    s2 = "Dummy('n', integer=True, dummy_index=%s)" % str(d.dummy_index)
-    assert srepr(d) in (s1, s2)
+    assert srepr(d
+        ) == "Dummy('n', dummy_index=%s)" % str(d.dummy_index)
 
 
 def test_tuple():

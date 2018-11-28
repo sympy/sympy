@@ -129,22 +129,32 @@ class DenseMatrix(MatrixBase):
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
-    def _cholesky(self):
+    def _cholesky(self, hermitian=True):
         """Helper function of cholesky.
         Without the error checks.
         To be used privately.
         Implements the Cholesky-Banachiewicz algorithm.
+        Returns L such that L*L.H == self if hermitian flag is True,
+        or L*L.T == self if hermitian is False.
         """
         L = zeros(self.rows, self.rows)
-        for i in range(self.rows):
-            for j in range(i):
-                L[i, j] = (1 / L[j, j])*expand_mul(self[i, j] -
-                    sum(L[i, k]*L[j, k].conjugate() for k in range(j)))
-            Lii2 = expand_mul(self[i, i] -
-                sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
-            if Lii2.is_positive is False:
-                raise ValueError("Matrix must be positive-definite")
-            L[i, i] = sqrt(Lii2)
+        if hermitian:
+            for i in range(self.rows):
+                for j in range(i):
+                    L[i, j] = (1 / L[j, j])*expand_mul(self[i, j] -
+                        sum(L[i, k]*L[j, k].conjugate() for k in range(j)))
+                Lii2 = expand_mul(self[i, i] -
+                    sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
+                if Lii2.is_positive is False:
+                    raise ValueError("Matrix must be positive-definite")
+                L[i, i] = sqrt(Lii2)
+        else:
+            for i in range(self.rows):
+                for j in range(i):
+                    L[i, j] = (1 / L[j, j])*(self[i, j] -
+                        sum(L[i, k]*L[j, k] for k in range(j)))
+                L[i, i] = sqrt(self[i, i] -
+                    sum(L[i, k]**2 for k in range(i)))
         return self._new(L)
 
     def _diagonal_solve(self, rhs):
@@ -204,12 +214,6 @@ class DenseMatrix(MatrixBase):
     def _eval_matrix_mul_elementwise(self, other):
         mat = [a*b for a,b in zip(self._mat, other._mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
-
-    def _eval_diff(self, *args, **kwargs):
-        if kwargs.pop("evaluate", True):
-            return self.diff(*args)
-        else:
-            return Derivative(self, *args, **kwargs)
 
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using the method indicated (default
@@ -287,22 +291,31 @@ class DenseMatrix(MatrixBase):
         cols = self.cols
         return [mat[i*cols:(i + 1)*cols] for i in range(self.rows)]
 
-    def _LDLdecomposition(self):
+    def _LDLdecomposition(self, hermitian=True):
         """Helper function of LDLdecomposition.
         Without the error checks.
         To be used privately.
+        Returns L and D such that L*D*L.H == self if hermitian flag is True,
+        or L*D*L.T == self if hermitian is False.
         """
         # https://en.wikipedia.org/wiki/Cholesky_decomposition#LDL_decomposition_2
         D = zeros(self.rows, self.rows)
         L = eye(self.rows)
-        for i in range(self.rows):
-            for j in range(i):
-                L[i, j] = (1 / D[j, j])*expand_mul(self[i, j] - sum(
-                    L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j)))
-            D[i, i] = expand_mul(self[i, i] -
-                sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
-            if D[i, i].is_positive is False:
-                raise ValueError("Matrix must be positive-definite")
+        if hermitian:
+            for i in range(self.rows):
+                for j in range(i):
+                    L[i, j] = (1 / D[j, j])*expand_mul(self[i, j] - sum(
+                        L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j)))
+                D[i, i] = expand_mul(self[i, i] -
+                    sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
+                if D[i, i].is_positive is False:
+                    raise ValueError("Matrix must be positive-definite")
+        else:
+            for i in range(self.rows):
+                for j in range(i):
+                    L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
+                        L[i, k]*L[j, k]*D[k, k] for k in range(j)))
+                D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i))
         return self._new(L), self._new(D)
 
     def _lower_triangular_solve(self, rhs):
@@ -1193,7 +1206,7 @@ def GramSchmidt(vlist, orthonormal=False):
     """
     Apply the Gram-Schmidt process to a set of vectors.
 
-    see: http://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+    see: https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
     out = []
     m = len(vlist)
@@ -1246,7 +1259,7 @@ def hessian(f, varlist, constraints=[]):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Hessian_matrix
+    https://en.wikipedia.org/wiki/Hessian_matrix
 
     See Also
     ========
@@ -1443,7 +1456,7 @@ def wronskian(functions, var, method='bareiss'):
                          |  (n)      (n)            (n)     |
                          | D   (f1) D   (f2)  ...  D   (fn) |
 
-    see: http://en.wikipedia.org/wiki/Wronskian
+    see: https://en.wikipedia.org/wiki/Wronskian
 
     See Also
     ========
