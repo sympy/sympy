@@ -259,7 +259,7 @@ counterpart, ``Limit``.  To evaluate it, use ``doit``.
     >>> expr.doit()
     0
 
-To evaluate a limit at one side only, pass ``'+'`` or ``'-'`` as a third
+To evaluate a limit at one side only, pass ``'+'`` or ``'-'`` as a fourth
 argument to ``limit``.  For example, to compute
 
 .. math::
