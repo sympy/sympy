@@ -453,9 +453,9 @@ class primepi(Function):
 
             n = int(n)
             if n < 2:
-                return 0
+                return S.Zero
             if n <= sieve._list[-1]:
-                return sieve.search(n)[0]
+                return S(sieve.search(n)[0])
             lim = int(n ** 0.5)
             lim -= 1
             lim = max(lim, 0)
