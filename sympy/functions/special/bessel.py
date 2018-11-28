@@ -1128,7 +1128,7 @@ class airyai(AiryBase):
     @cacheit
     def taylor_term(self, n, x, *previous_terms):
         if self.args[0] != x:
-            return super(sin, self).taylor_term(n, x, *previous_terms)
+            return super(airyai, self).taylor_term(n, x, *previous_terms)
         if n < 0:
             return S.Zero
         else:
@@ -1295,7 +1295,9 @@ class airybi(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(airybi, self).taylor_term(n, x, *previous_terms)
         if n < 0:
             return S.Zero
         else:
