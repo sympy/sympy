@@ -418,7 +418,10 @@ class Point(GeometryEntity):
 
         """
         if not isinstance(other , GeometryEntity) :
-            other = Point(other, dim=self.ambient_dimension)
+            try :
+                other = Point(other, dim=self.ambient_dimension)
+            except TypeError :
+                raise TypeError("only distnace with some GeometricEntity, Point, List or tuple is supported")
         if isinstance(other , Point) :
             s, p = Point._normalize_dimension(self, Point(other))
             return sqrt(Add(*((a - b)**2 for a, b in zip(s, p))))
