@@ -449,9 +449,10 @@ class primepi(Function):
         if n is S.Infinity:
             return S.Infinity
 
-        if n.is_Integer:
+        if n.is_real and n.is_number:
 
             n = int(n)
+
             if n < 2:
                 return S.Zero
             if n <= sieve._list[-1]:
