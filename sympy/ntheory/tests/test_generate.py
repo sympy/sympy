@@ -1,4 +1,4 @@
-from sympy import Sieve, sieve, Symbol, S
+from sympy import Sieve, sieve, Symbol, S, limit
 from sympy.core.compatibility import range
 
 from sympy.ntheory import isprime, totient, mobius, randprime, nextprime, prevprime, \
@@ -48,6 +48,7 @@ def test_primepi():
     n = Symbol('n')
     assert primepi(n).subs(n, 2) == 1
     assert primepi(S.Infinity) == S.Infinity
+    assert limit(primepi(n), n, 100) == 25
 
 
 def test_composite():
