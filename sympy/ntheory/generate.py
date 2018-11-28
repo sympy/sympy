@@ -482,7 +482,7 @@ class primepi(Function):
                 lim2 = min(lim, i * i - 1)
                 for j in range(lim, lim2, -1):
                     arr1[j] -= arr1[j // i] - p
-            return arr2[1]
+            return S(arr2[1])
 
 
 def nextprime(n, ith=1):
