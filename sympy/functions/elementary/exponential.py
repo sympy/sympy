@@ -314,9 +314,10 @@ class exp(ExpBase):
         """
         return S.Exp1
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(exp, self).taylor_term(n, x, *previous_terms)
         """
         Calculates the next term in the Taylor series expansion.
         """
@@ -587,9 +588,10 @@ class log(Function):
         """
         return self, S.One
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):  # of log(1+x)
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(log, self).taylor_term(n, x, *previous_terms)
         r"""
         Returns the next term in the Taylor series expansion of `\log(1+x)`.
         """
