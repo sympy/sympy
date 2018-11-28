@@ -450,7 +450,7 @@ class primepi(Function):
             return S.Infinity
 
         if n == -S.Infinity:
-            return 0
+            return S.Zero
 
         if n == nan:
             raise ValueError("n must be real")
