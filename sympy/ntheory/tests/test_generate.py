@@ -44,9 +44,15 @@ def test_primepi():
     sieve.extend(3000)
     assert primepi(2000) == 303
     assert primepi(-1) == 0
+    assert primepi(S(7)/2) == 2
+    assert primepi(3.5) == 2
 
     n = Symbol('n')
     assert primepi(n).subs(n, 2) == 1
+
+    n = Symbol('n', real=True)
+    assert primepi(n).subs(n, 2) == 1
+
     assert primepi(S.Infinity) == S.Infinity
     assert limit(primepi(n), n, 100) == 25
 
