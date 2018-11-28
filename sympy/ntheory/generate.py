@@ -12,6 +12,7 @@ from array import array as _array
 
 from .primetest import isprime
 from sympy.core.compatibility import as_int, range
+from sympy import Function, S
 
 
 def _azeros(n):
@@ -375,8 +376,8 @@ def prime(nth):
     return a - 1
 
 
-def primepi(n):
-    """ Return the value of the prime counting function pi(n) = the number
+class primepi(Function):
+    """ Represents the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
 
         Algorithm Description:
@@ -442,38 +443,46 @@ def primepi(n):
         primerange : Generate all primes in a given range
         prime : Return the nth prime
     """
-    n = int(n)
-    if n < 2:
-        return 0
-    if n <= sieve._list[-1]:
-        return sieve.search(n)[0]
-    lim = int(n ** 0.5)
-    lim -= 1
-    lim = max(lim,0)
-    while lim * lim <= n:
-        lim += 1
-    lim-=1
-    arr1 = [0] * (lim + 1)
-    arr2 = [0] * (lim + 1)
-    for i in range(1, lim + 1):
-        arr1[i] = i - 1
-        arr2[i] = n // i - 1
-    for i in range(2, lim + 1):
-        # Presently, arr1[k]=phi(k,i - 1),
-        # arr2[k] = phi(n // k,i - 1)
-        if arr1[i] == arr1[i - 1]:
-            continue
-        p = arr1[i - 1]
-        for j in range(1,min(n // (i * i), lim) + 1):
-            st = i * j
-            if st <= lim:
-                arr2[j] -= arr2[st] - p
-            else:
-                arr2[j] -= arr1[n // st] - p
-        lim2 = min(lim, i*i - 1)
-        for j in range(lim, lim2, -1):
-            arr1[j] -= arr1[j // i] - p
-    return arr2[1]
+    @classmethod
+    def eval(cls, n):
+
+        if n is S.Infinity:
+            return S.Infinity
+
+        if n.is_Integer:
+
+            n = int(n)
+            if n < 2:
+                return 0
+            if n <= sieve._list[-1]:
+                return sieve.search(n)[0]
+            lim = int(n ** 0.5)
+            lim -= 1
+            lim = max(lim, 0)
+            while lim * lim <= n:
+                lim += 1
+            lim -= 1
+            arr1 = [0] * (lim + 1)
+            arr2 = [0] * (lim + 1)
+            for i in range(1, lim + 1):
+                arr1[i] = i - 1
+                arr2[i] = n // i - 1
+            for i in range(2, lim + 1):
+                # Presently, arr1[k]=phi(k,i - 1),
+                # arr2[k] = phi(n // k,i - 1)
+                if arr1[i] == arr1[i - 1]:
+                    continue
+                p = arr1[i - 1]
+                for j in range(1, min(n // (i * i), lim) + 1):
+                    st = i * j
+                    if st <= lim:
+                        arr2[j] -= arr2[st] - p
+                    else:
+                        arr2[j] -= arr1[n // st] - p
+                lim2 = min(lim, i * i - 1)
+                for j in range(lim, lim2, -1):
+                    arr1[j] -= arr1[j // i] - p
+            return arr2[1]
 
 
 def nextprime(n, ith=1):
