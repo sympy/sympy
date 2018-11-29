@@ -191,6 +191,7 @@ def test_divmod():
     assert divmod(S(-3), S(2)) == (-2, 1)
     assert divmod(S(-3), 2) == (-2, 1)
 
+    assert divmod(S(4), S(-3.1)) == Tuple(-2, -2.2)
 
 def test_igcd():
     assert igcd(0, 0) == 0
