@@ -449,13 +449,11 @@ class primepi(Function):
             return S.Infinity
         if n is S.NegativeInfinity:
             return S.Zero
-        if n is S.NaN:
-            raise ValueError("n must be real")
 
         try:
             n = int(n)
         except TypeError:
-            if n.is_real == False:
+            if n.is_real == False or n is S.NaN:
                 raise ValueError("n must be real")
             return
 
