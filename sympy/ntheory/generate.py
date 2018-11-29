@@ -12,7 +12,7 @@ from array import array as _array
 
 from .primetest import isprime
 from sympy.core.compatibility import as_int, range
-from sympy import Function, S, nan
+from sympy import Function, S
 
 
 def _azeros(n):
@@ -445,14 +445,11 @@ class primepi(Function):
     """
     @classmethod
     def eval(cls, n):
-
         if n is S.Infinity:
             return S.Infinity
-
-        if n == -S.Infinity:
+        if n is S.NegativeInfinity:
             return S.Zero
-
-        if n == nan:
+        if n is S.NaN:
             raise ValueError("n must be real")
 
         try:
