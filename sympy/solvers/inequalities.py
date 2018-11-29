@@ -126,7 +126,7 @@ def solve_poly_inequalities(polys):
     Union(Interval.open(-oo, -sqrt(3)), Interval.open(-1, 1), Interval.open(sqrt(3), oo))
     """
     from sympy import Union
-    return Union(*sum([solve_poly_inequality(*p) for p in polys],[]))
+    return Union(*[i for p in polys for i in solve_poly_inequality(*p)])
 
 
 def solve_rational_inequalities(eqs):
