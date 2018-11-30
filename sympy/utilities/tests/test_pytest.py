@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises, USE_PYTEST
+from sympy.utilities.pytest import raises, USE_PYTEST, assert_raise_message
 
 if USE_PYTEST:
     import py.test
@@ -61,3 +61,16 @@ def test_unexpected_exception_is_passed_through_with():
 
 def test_second_argument_should_be_callable_or_string():
     raises(TypeError, lambda: raises("irrelevant", 42))
+
+
+def test_assert_raise_message():
+
+    message1 = "division by zero"
+    message2 = "zero"
+    message3 = "one"
+    message4 = "some error message"
+
+    assert_raise_message(ZeroDivisionError, message1, lambda: 1/0) # error message: 'division by zero'
+    assert_raise_message(ZeroDivisionError, message2, lambda: 1/0)
+
+    raises(AssertionError, lambda: assert_raise_message(ZeroDivisionError, message3, lambda: 1/0))
