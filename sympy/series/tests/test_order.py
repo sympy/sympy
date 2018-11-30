@@ -1,6 +1,6 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
-    Function, Add)
+    Function, Add, Derivative)
 from sympy.utilities.pytest import raises
 from sympy.abc import w, x, y, z
 
@@ -262,7 +262,7 @@ def test_getn():
 
 
 def test_diff():
-    assert O(x**2).diff(x) == O(x)
+    assert O(x**2).diff(x) == Derivative(O(x**2), x)
 
 
 def test_getO():

@@ -497,7 +497,7 @@ def test_issue_5183():
     assert ((1 + x)**2).series(x, n=6) == 1 + 2*x + x**2
     assert (1 + 1/x).series() == 1 + 1/x
     assert Derivative(exp(x).series(), x).doit() == \
-        1 + x + x**2/2 + x**3/6 + x**4/24 + O(x**5)
+        1 + x + x**2/2 + x**3/6 + x**4/24 + Derivative(O(x**6), x)
 
 
 def test_issue_5654():
