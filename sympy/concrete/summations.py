@@ -15,7 +15,7 @@ from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.polys import apart, PolynomialError, together
-from sympy.series.limits import limit
+from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
 from sympy.sets.sets import FiniteSet
 from sympy.simplify.combsimp import combsimp
@@ -424,15 +424,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ###  -------- Divergence test ----------- ###
         try:
-            lim_val = limit(sequence_term, sym, upper_limit)
-            if lim_val.is_number and lim_val is not S.Zero:
+            lim_val = limit_seq(sequence_term, sym)
+            if lim_val is not None and lim_val.is_nonzero:
                 return S.false
         except NotImplementedError:
             pass
 
         try:
-            lim_val_abs = limit(abs(sequence_term), sym, upper_limit)
-            if lim_val_abs.is_number and lim_val_abs is not S.Zero:
+            lim_val_abs = limit_seq(abs(sequence_term), sym)
+            if lim_val_abs is not None and lim_val_abs.is_nonzero:
                 return S.false
         except NotImplementedError:
             pass
@@ -467,9 +467,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ### ------------- Limit comparison test -----------###
         # (1/n) comparison
         try:
-            lim_comp = limit(sym*sequence_term, sym, S.Infinity)
-            if lim_comp.is_number and lim_comp > 0:
-                    return S.false
+            lim_comp = limit_seq(sym*sequence_term, sym)
+            if lim_comp is not None and lim_comp.is_number and lim_comp > 0:
+                return S.false
         except NotImplementedError:
             pass
 
@@ -477,8 +477,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         next_sequence_term = sequence_term.xreplace({sym: sym + 1})
         ratio = combsimp(powsimp(next_sequence_term/sequence_term))
         try:
-            lim_ratio = limit(ratio, sym, upper_limit)
-            if lim_ratio.is_number:
+            lim_ratio = limit_seq(ratio, sym)
+            if lim_ratio is not None and lim_ratio.is_number:
                 if abs(lim_ratio) > 1:
                     return S.false
                 if abs(lim_ratio) < 1:
@@ -487,10 +487,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             pass
 
         ### ----------- root test ---------------- ###
-        lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
+        # lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
         try:
-            lim_evaluated = lim.doit()
-            if lim_evaluated.is_number:
+            lim_evaluated = limit_seq(abs(sequence_term)**(1/sym), sym)
+            if lim_evaluated is not None and lim_evaluated.is_number:
                 if lim_evaluated < 1:
                     return S.true
                 if lim_evaluated > 1:
@@ -551,8 +551,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             m = Dummy('m', integer=True)
             def _dirichlet_test(g_n):
                 try:
-                    ing_val = limit(Sum(g_n, (sym, interval.inf, m)).doit(), m, S.Infinity)
-                    if ing_val.is_finite:
+                    ing_val = limit_seq(Sum(g_n, (sym, interval.inf, m)).doit(), m)
+                    if ing_val is not None and ing_val.is_finite:
                         return S.true
                 except NotImplementedError:
                     pass
@@ -560,11 +560,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             ### -------- bounded times convergent test ---------###
             def _bounded_convergent_test(g1_n, g2_n):
                 try:
-                    lim_val = limit(g1_n, sym, upper_limit)
-                    if lim_val.is_finite or (isinstance(lim_val, AccumulationBounds)
-                                             and (lim_val.max - lim_val.min).is_finite):
-                        if Sum(g2_n, (sym, lower_limit, upper_limit)).is_absolutely_convergent():
-                            return S.true
+                    lim_val = limit_seq(g1_n, sym)
+                    if lim_val is not None and (lim_val.is_finite or (
+                        isinstance(lim_val, AccumulationBounds)
+                        and (lim_val.max - lim_val.min).is_finite)):
+                            if Sum(g2_n, (sym, lower_limit, upper_limit)).is_absolutely_convergent():
+                                return S.true
                 except NotImplementedError:
                     pass
 

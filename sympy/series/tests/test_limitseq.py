@@ -1,4 +1,5 @@
-from sympy import symbols, oo, Sum, harmonic, Add, S, binomial, factorial
+from sympy import (symbols, Symbol, oo, Sum, harmonic, Add, S, binomial,
+    factorial, log, fibonacci)
 from sympy.series.limitseq import limit_seq
 from sympy.series.limitseq import difference_delta as dd
 from sympy.utilities.pytest import raises, XFAIL
@@ -87,6 +88,21 @@ def test_alternating_sign():
     assert limit_seq((-2)**(n+1)/(n + 3**n), n) == 0
     assert limit_seq((2*n + (-1)**n)/(n + 1), n) == 2
     assert limit_seq((-3)**n/(n + 3**n), n) is None
+
+
+def test_limitseq_sum():
+    from sympy.abc import x, y, z
+    assert limit_seq(Sum(1/x, (x, 1, y)) - log(y), y) == S.EulerGamma
+    assert limit_seq(Sum(1/x, (x, 1, y)) - 1/y, y) == S.Infinity
+    assert (limit_seq(binomial(2*x, x) / Sum(binomial(2*y, y), (y, 1, x)), x) ==
+            S(3) / 4)
+    assert (limit_seq(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
+                  (2**x*x), x) == 4)
+
+
+def test_issue_10382():
+    n = Symbol('n', integer=True)
+    assert limit_seq(fibonacci(n+1)/fibonacci(n), n) == S.GoldenRatio
 
 
 @XFAIL
