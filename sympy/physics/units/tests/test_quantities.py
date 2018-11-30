@@ -15,8 +15,7 @@ from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
 from sympy.physics.units.dimensions import Dimension, charge, length, time, dimsys_default
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
-from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
 
 k = PREFIXES["k"]
 
@@ -76,8 +75,10 @@ def test_Quantity_definition():
     assert v.dimension == length
     assert v.scale_factor == 5000
 
-    raises(SymPyDeprecationWarning, lambda: Quantity('invalid', 'dimension', 1))
-    raises(SymPyDeprecationWarning, lambda: Quantity('mismatch', dimension=length, scale_factor=kg))
+    with warns_deprecated_sympy():
+        Quantity('invalid', 'dimension', 1)
+    with warns_deprecated_sympy():
+        Quantity('mismatch', dimension=length, scale_factor=kg)
 
 
 def test_abbrev():
@@ -375,7 +376,8 @@ def test_factor_and_dimension():
 
 @XFAIL
 def test_factor_and_dimension_with_Abs():
-    v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
+    with warns_deprecated_sympy():
+        v_w1 = Quantity('v_w1', length/time, S(3)/2*meter/second)
     v_w1.set_dimension(length/time)
     v_w1.set_scale_factor(S(3)/2*meter/second)
     expr = v_w1 - Abs(v_w1)

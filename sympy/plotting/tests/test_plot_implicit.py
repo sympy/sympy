@@ -3,7 +3,7 @@ from sympy import (plot_implicit, cos, Symbol, symbols, Eq, sin, re, And, Or, ex
                    tan, pi)
 from sympy.plotting.plot import unset_show
 from tempfile import NamedTemporaryFile
-from sympy.utilities.pytest import skip
+from sympy.utilities.pytest import skip, warns
 from sympy.external import import_module
 
 #Set plots not to show
@@ -53,17 +53,10 @@ def plot_implicit_tests(name):
     plot_and_save(y - cos(pi / x))
 
     #Test plots which cannot be rendered using the adaptive algorithm
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning, match="Adaptive meshing could not be applied"):
         plot_and_save(Eq(y, re(cos(x) + I*sin(x))), name=name)
-        for i in w: # Same warning may be issued multiple times
-            assert issubclass(i.category, UserWarning)
-            assert "Adaptive meshing could not be applied" in str(i.message)
 
-    with warnings.catch_warnings(record=True) as w:
-        plot_and_save(x**2 - 1, title='An implicit plot')
-        for i in w:
-            assert issubclass(i.category, UserWarning)
-            assert 'No labelled objects found' in str(i.message)
+    plot_and_save(x**2 - 1, title='An implicit plot')
 
 def test_line_color():
     x, y = symbols('x, y')

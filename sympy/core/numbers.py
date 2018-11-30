@@ -3,7 +3,6 @@ from __future__ import print_function, division
 import decimal
 import fractions
 import math
-import warnings
 import re as regex
 from collections import defaultdict
 

@@ -6,7 +6,6 @@
 
 import os
 import re
-import warnings
 import io
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
@@ -14,7 +13,6 @@ from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 x, y, z = symbols('x,y,z')
 
@@ -74,9 +72,6 @@ def test_all_classes_are_tested():
 
             if test not in ns:
                 failed.append(module + '.' + name)
-
-    # reset all SymPyDeprecationWarning into errors
-    warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
     assert not failed, "Missing classes: %s.  Please add tests for these to sympy/core/tests/test_args.py." % ", ".join(failed)
 
