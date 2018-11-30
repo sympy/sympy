@@ -5,12 +5,15 @@ from __future__ import print_function, division
 import sys
 import functools
 import os
+import contextlib
+import warnings
 
 from sympy.core.compatibility import get_function_name
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 try:
     import py
-    from py.test import skip, raises
+    from py.test import skip, raises, warns
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False
@@ -150,6 +153,45 @@ if not USE_PYTEST:
         func_wrapper.__wrapped__ = func
         return func_wrapper
 
+    @contextlib.contextmanager
+    def warns(warningcls, **kwargs):
+        '''Like raises but tests that warnings are emitted.
+
+        >>> from sympy.utilities.pytest import warns
+        >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
+        >>> import warnings
+
+        >>> with warns(UserWarning):
+        ...     warnings.warn('deprecated', UserWarning)
+
+        >>> with warns(UserWarning):
+        ...     pass
+        Traceback (most recent call last):
+        ...
+        AssertionError: Failed: DID NOT WARN. No warnings of type UserWarning\
+        was emitted. The list of emitted warnings is: [].
+        '''
+        match = kwargs.pop('match', '')
+        if kwargs:
+            raise TypeError('Invalid keyword arguments: %s' % kwargs)
+
+        # Absorbs all warnings in warnrec
+        with warnings.catch_warnings(record=True) as warnrec:
+            # Hide all warnings but make sure that our warning is emitted
+            warnings.simplefilter("ignore")
+            warnings.filterwarnings("always", match, warningcls)
+            # Now run the test
+            yield
+
+        # Raise if expected warning not found
+        if not any(issubclass(w.category, warningcls) for w in warnrec):
+            msg = ('Failed: DID NOT WARN.'
+                   ' No warnings of type %s was emitted.'
+                   ' The list of emitted warnings is: %s.'
+                   ) % (warningcls, [w.message for w in warnrec])
+            raise AssertionError(msg)
+
+
 else:
     XFAIL = py.test.mark.xfail
     slow = py.test.mark.slow
@@ -162,3 +204,56 @@ else:
             return inner
 
         return skipping
+
+
+@contextlib.contextmanager
+def warns_deprecated_sympy():
+    '''Shorthand for warns(SympyDeprecationWarning).'''
+    with warns(SymPyDeprecationWarning):
+        yield
+
+@contextlib.contextmanager
+def ignore_warnings(warningcls):
+    '''Context manager to suppress warnings during tests.
+
+    This function is useful for suppressing warnings during tests. The warns
+    function should be used to assert that a warning is raised. The
+    ignore_warnings function is useful in situation when the warning is not
+    guaranteed to be raised (e.g. on importing a module) or if the warning
+    comes from third-party code.
+
+    When the warning is coming (reliably) from SymPy the warns function should
+    be preferred to ignore_warnings.
+
+    >>> from sympy.utilities.pytest import ignore_warnings
+    >>> import warnings
+
+    Here's a warning:
+
+    >>> with warnings.catch_warnings():  # reset warnings in doctest
+    ...     warnings.simplefilter('error')
+    ...     warnings.warn('deprecated', UserWarning)
+    Traceback (most recent call last):
+      ...
+    UserWarning: deprecated
+
+    Let's suppress it with ignore_warnings:
+
+    >>> with warnings.catch_warnings():  # reset warnings in doctest
+    ...     warnings.simplefilter('error')
+    ...     with ignore_warnings(UserWarning):
+    ...         warnings.warn('deprecated', UserWarning)
+
+    (No warning emitted)
+    '''
+    # Absorbs all warnings in warnrec
+    with warnings.catch_warnings(record=True) as warnrec:
+        # Make sure our warning doesn't get filtered
+        warnings.simplefilter("always", warningcls)
+        # Now run the test
+        yield
+
+    # Reissue any warnings that we aren't testing for
+    for w in warnrec:
+        if not issubclass(w.category, warningcls):
+            warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
