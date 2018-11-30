@@ -323,8 +323,8 @@ def test_issue_2850():
             log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 + Integral(log(x**2 + 1)/x, x)/2
 
 def test_issue_9462():
-    assert manualintegrate(sin(2*x)*exp(x), x) == -3*exp(x)*sin(2*x) \
-                           - 2*exp(x)*cos(2*x) + 4*Integral(2*exp(x)*cos(2*x), x)
+    assert manualintegrate(sin(2*x)*exp(x), x) == exp(x)*sin(2*x) \
+                           - 2*exp(x)*cos(2*x) - 4*Integral(exp(x)*sin(2*x), x)
     assert manualintegrate((x - 3) / (x**2 - 2*x + 2)**2, x) == \
                            Integral(x/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x) \
                            - 3*Integral(1/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x)
@@ -361,7 +361,8 @@ def test_issue_10847():
     assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**(5/2)/20 - (2*x + 3)**(3/2)/4
     assert manualintegrate(x**Rational(3,2) * log(x), x) == 2*x**Rational(5,2)*log(x)/5 - 4*x**Rational(5/2)/25
     assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
-    assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - Integral(log(y - 1)/y, y)
+    assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == \
+        log(y)*log(-1 + 1/y) - Integral(log(-1 + 1/y)/y, y)
 
 def test_issue_12899():
     assert manualintegrate(f(x,y).diff(x),y) == Integral(Derivative(f(x,y),x),y)

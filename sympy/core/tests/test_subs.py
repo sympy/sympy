@@ -194,7 +194,7 @@ def test_mul():
     x, y, z, a, b, c = symbols('x y z a b c')
     A, B, C = symbols('A B C', commutative=0)
     assert (x*y*z).subs(z*x, y) == y**2
-    assert (z*x).subs(1/x, z) == z*x
+    assert (z*x).subs(1/x, z) == 1
     assert (x*y/z).subs(1/z, a) == a*x*y
     assert (x*y/z).subs(x/z, a) == a*y
     assert (x*y/z).subs(y/z, a) == a*x
@@ -810,3 +810,19 @@ def test_issue_15234():
     p = 6*x**5 + x**4 - 4*x**3 + 4*x**2 - 2*x + 3
     p_subbed = 6*x**5 - 4*x**3 - 2*x + y**4 + 4*y**2 + 3
     assert p.subs([(x**i, y**i) for i in [2, 4]]) == p_subbed
+
+
+def test_issue_6976():
+    x, y = symbols('x y')
+    assert (sqrt(x)**3 + sqrt(x) + x + x**2).subs(sqrt(x), y) == \
+        y**4 + y**3 + y**2 + y
+    assert (x**4 + x**3 + x**2 + x + sqrt(x)).subs(x**2, y) == \
+        sqrt(x) + x**3 + x + y**2 + y
+    assert x.subs(x**3, y) == x
+    assert x.subs(x**(S(1)/3), y) == y**3
+
+    # More substitutions are possible with nonnegative symbols
+    x, y = symbols('x y', nonnegative=True)
+    assert (x**4 + x**3 + x**2 + x + sqrt(x)).subs(x**2, y) == \
+        y**(1/4) + y**(3/2) + sqrt(y) + y**2 + y
+    assert x.subs(x**3, y) == y**(1/3)
