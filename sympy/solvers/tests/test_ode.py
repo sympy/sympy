@@ -1769,6 +1769,17 @@ def test_nth_linear_constant_coeff_homogeneous_rootof():
         C5*exp(x*rootof(x**5 + 11*x - 2, 4)))
     assert dsolve(eq) == sol
 
+    eq = f(x).diff(x, 6) - 6*f(x).diff(x, 5) + 5*f(x).diff(x, 4) + 10*f(x).diff(x) - 50 * f(x)
+    sol = Eq(f(x),
+          C1*exp(5*x)
+        + C2*exp(x*rootof(x**5 - x**4 + 10, 0))
+        + C3*exp(x*rootof(x**5 - x**4 + 10, 1))
+        + C4*exp(x*rootof(x**5 - x**4 + 10, 2))
+        + C5*exp(x*rootof(x**5 - x**4 + 10, 3))
+        + C6*exp(x*rootof(x**5 - x**4 + 10, 4))
+            )
+    assert dsolve(eq) == sol
+
 def test_nth_linear_constant_coeff_homogeneous_irrational():
     our_hint='nth_linear_constant_coeff_homogeneous'
 
