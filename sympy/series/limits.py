@@ -84,8 +84,8 @@ def limit(e, z, z0, dir="+"):
 
 def heuristics(e, z, z0, dir):
     """Computes the limit of an expression term-wise.
-     Parameters are the same as for the ``limit`` function.
-     Works with the arguments of expression ``e`` one by one, computing
+    Parameters are the same as for the ``limit`` function.
+    Works with the arguments of expression ``e`` one by one, computing
     the limit of each and then combining the results. This approach
     works only for simple limits, but it is fast.
     """
