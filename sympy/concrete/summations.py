@@ -425,14 +425,14 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ###  -------- Divergence test ----------- ###
         try:
             lim_val = limit_seq(sequence_term, sym)
-            if lim_val is not None and lim_val.is_nonzero:
+            if lim_val is not None and lim_val.is_zero is False:
                 return S.false
         except NotImplementedError:
             pass
 
         try:
             lim_val_abs = limit_seq(abs(sequence_term), sym)
-            if lim_val_abs is not None and lim_val_abs.is_nonzero:
+            if lim_val_abs is not None and lim_val_abs.is_zero is False:
                 return S.false
         except NotImplementedError:
             pass
