@@ -421,14 +421,14 @@ class Point(GeometryEntity):
             try :
                 other = Point(other, dim=self.ambient_dimension)
             except TypeError :
-                raise TypeError("only distnace with some GeometricEntity, Point, List or tuple is supported")
+                raise TypeError("not recognized as a GeometricEntity: %s" % type(other))
         if isinstance(other , Point) :
             s, p = Point._normalize_dimension(self, Point(other))
             return sqrt(Add(*((a - b)**2 for a, b in zip(s, p))))
         try :
             return other.distance(self)
         except AttributeError :
-            raise AttributeError("distance between Point and %s is not defined"%type(other))
+            raise AttributeError("distance between Point and %s is not defined" % type(other))
 
     def dot(self, p):
         """Return dot product of self with another Point."""
