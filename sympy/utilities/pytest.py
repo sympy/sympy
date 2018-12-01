@@ -158,7 +158,6 @@ if not USE_PYTEST:
         '''Like raises but tests that warnings are emitted.
 
         >>> from sympy.utilities.pytest import warns
-        >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
         >>> import warnings
 
         >>> with warns(UserWarning):
@@ -208,7 +207,28 @@ else:
 
 @contextlib.contextmanager
 def warns_deprecated_sympy():
-    '''Shorthand for warns(SympyDeprecationWarning).'''
+    '''Shorthand for ``warns(SymPyDeprecationWarning)``
+
+    This is the recommended way to test that ``SymPyDeprecationWarning`` is
+    emitted for deprecated features in SymPy. To test for other warnings use
+    ``warns``. To suppress warnings without asserting that they are emitted
+    use ``ignore_warnings``.
+
+    >>> from sympy.utilities.pytest import warns_deprecated_sympy
+    >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
+    >>> import warnings
+
+    >>> with warns_deprecated_sympy():
+    ...     SymPyDeprecationWarning("Don't use", feature="old thing",
+    ...         deprecated_since_version="1.0", issue=123).warn()
+
+    >>> with warns_deprecated_sympy():
+    ...     pass
+    Traceback (most recent call last):
+    ...
+    AssertionError: Failed: DID NOT WARN. No warnings of type \
+    SymPyDeprecationWarning was emitted. The list of emitted warnings is: [].
+    '''
     with warns(SymPyDeprecationWarning):
         yield
 
