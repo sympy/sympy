@@ -4,12 +4,10 @@
 import os
 import tempfile
 import shutil
-import warnings
 import tempfile
 
 from sympy.core import symbols, Eq
 from sympy.core.compatibility import StringIO
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import raises
 from sympy.utilities.autowrap import (autowrap, binary_function,
             CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
@@ -37,10 +35,8 @@ def test_cython_wrapper_scalar_function():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
     routine = make_routine("test", expr)
-    with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', category=SymPyDeprecationWarning)
-        code_gen = CythonCodeWrapper(CCodeGen())
-        source = get_string(code_gen.dump_pyx, [routine])
+    code_gen = CythonCodeWrapper(CCodeGen())
+    source = get_string(code_gen.dump_pyx, [routine])
 
     expected = (
         "cdef extern from 'file.h':\n"
