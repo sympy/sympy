@@ -1457,6 +1457,10 @@ def test_issue_9585():
     assert Derivative(Poly(x**2 + x), x).doit() == Poly(2*x + 1)
 
 
+def test_issue_15351():
+    assert degree(-2*x*(x + 1) + 2*(x - 1)*(x + 2)) == 0
+
+
 def test_Poly_eval():
     assert Poly(0, x).eval(7) == 0
     assert Poly(1, x).eval(7) == 1

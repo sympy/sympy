@@ -1559,7 +1559,7 @@ def test_raises_substitution():
 
 def test_issue_15351():
     x = Symbol('x')
-    assert solveset((2*x-2)/(1+x)-(2*x)/(2+x)) == EmptySet()
+    assert solveset((2*x - 2)/(1 + x) - (2*x)/(2 + x)) == EmptySet()
 
 
 def test_issue_9556():

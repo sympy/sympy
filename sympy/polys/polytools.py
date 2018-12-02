@@ -4454,7 +4454,7 @@ def degree(f, gen=0):
             try:
                 p, _ = poly_from_expr(f)
             except PolificationFailed as e:
-                isNum = f.expand().is_Number
+                isNum = e.expr.is_Number
                 if not isNum:
                     raise e
 
