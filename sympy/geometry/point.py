@@ -392,8 +392,7 @@ class Point(GeometryEntity):
         ======
         AttributeError : if other is a GeometricEntity for which
                          distance is not defined.
-        TypeError : if other is not a GeometricEntity except Tuple
-                    and List.
+        TypeError : if other is not recognized as a GeometricEntity.
 
         See Also
         ========
@@ -411,9 +410,12 @@ class Point(GeometryEntity):
         5
         >>> p1.distance(l)
         sqrt(2)
+
+        The computed distance may be symbolic, too:
+
         >>> from sympy.abc import x, y
         >>> p3 = Point(x, y)
-        >>> p3.distance(Point(0, 0))
+        >>> p3.distance((0, 0))
         sqrt(x**2 + y**2)
 
         """
