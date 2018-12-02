@@ -21,7 +21,7 @@ def test_function_range():
     assert function_range(tan(x), x, Interval(pi/2, pi)
         ) == Interval(-oo, 0)
     assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)
-        ) == Union(Interval(-oo, 2/7), Interval(8/3, oo))
+        ) == Union(Interval(-oo, S(2)/7), Interval(S(8)/3, oo))
     assert function_range(1/(x**2), x, Interval(-1, 1)
         ) == Interval(1, oo)
     assert function_range(exp(x), x, Interval(-1, 1)
@@ -55,7 +55,7 @@ def test_continuous_domain():
     assert continuous_domain((x - 1)/((x - 1)**2), x, S.Reals) == \
         Union(Interval(-oo, 1, True, True), Interval(1, oo, True, True))
     assert continuous_domain(log(x) + log(4*x - 1), x, S.Reals) == \
-        Interval(1/4, oo, True, True)
+        Interval(S(1)/4, oo, True, True)
     assert continuous_domain(1/sqrt(x - 3), x, S.Reals) == Interval(3, oo, True, True)
     assert continuous_domain(1/x - 2, x, S.Reals) == \
         Union(Interval.open(-oo, 0), Interval.open(0, oo))
@@ -114,7 +114,7 @@ def test_periodicity():
     assert periodicity(2*tan(x)**2, x) == pi
     assert periodicity(sin(x%4), x) == 4
     assert periodicity(sin(x)%4, x) == 2*pi
-    assert periodicity(tan((3*x-2)%4), x) == 4/3
+    assert periodicity(tan((3*x-2)%4), x) == S(4)/3
     assert periodicity((sqrt(2)*(x+1)+x) % 3, x) == 3 / (sqrt(2)+1)
     assert periodicity((x**2+1) % x, x) == None
 

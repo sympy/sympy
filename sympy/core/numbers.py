@@ -574,7 +574,7 @@ class Number(AtomicExpr):
             return Tuple(*divmod(self.p, other.p))
         else:
             rat = self/other
-        w = sign(rat)*int(abs(rat))  # = rat.floor()
+        w = int(rat) if rat > 0 else int(rat) - 1
         r = self - other*w
         return Tuple(w, r)
 

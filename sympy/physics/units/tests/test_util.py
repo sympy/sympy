@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division
-
 from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import (Add, Mul, Pow, Tuple, pi, sin, sqrt, sstr, sympify,

@@ -114,10 +114,6 @@ def test_basic5():
 def test_issue_3885():
     assert limit(x*y + x*z, z, 2) == x*y + 2*x
 
-def test_issue_10382():
-    n = Symbol('n', integer=True)
-    assert limit(fibonacci(n+1)/fibonacci(n), n, oo) == S.GoldenRatio
-
 
 def test_Limit():
     assert Limit(sin(x)/x, x, 0) != 1
@@ -484,15 +480,6 @@ def test_issue_9205():
     assert Limit(-x**2 + y, x**2, a).free_symbols == {y, a}
 
 
-def test_limit_seq():
-    assert limit(Sum(1/x, (x, 1, y)) - log(y), y, oo) == EulerGamma
-    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == S.Infinity
-    assert (limit(binomial(2*x, x) / Sum(binomial(2*y, y), (y, 1, x)), x, oo) ==
-            S(3) / 4)
-    assert (limit(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
-                  (2**x*x), x, oo) == 4)
-
-
 def test_issue_11879():
     assert simplify(limit(((x+y)**n-x**n)/y, y, 0)) == n*x**(n-1)
 
@@ -545,3 +532,7 @@ def test_issue_10102():
     assert limit(fresnelc(x), x, oo) == S.Half
     assert limit(fresnels(x), x, -oo) == -S.Half
     assert limit(4*fresnelc(x), x, -oo) == -2
+
+
+def test_issue_14377():
+    raises(NotImplementedError, lambda: limit(exp(I*x)*sin(pi*x), x, oo))

@@ -89,10 +89,10 @@ def test_discrete_probability():
     assert P(Eq(Y, 3)) == 32*exp(-4)/3
     assert P(Y < 3) == 13*exp(-4)
     assert P(Y > 3).equals(32*(-S(71)/32 + 3*exp(4)/32)*exp(-4)/3)
-    assert P(Y >= 3).equals(32*(-39/32 + 3*exp(4)/32)*exp(-4)/3)
+    assert P(Y >= 3).equals(32*(-S(39)/32 + 3*exp(4)/32)*exp(-4)/3)
     assert P(Y <= 3) == 71*exp(-4)/3
     assert P(Ne(Y, 3)).equals(
-        13*exp(-4) + 32*(-71/32 + 3*exp(4)/32)*exp(-4)/3)
+        13*exp(-4) + 32*(-S(71)/32 + 3*exp(4)/32)*exp(-4)/3)
     assert P(X < S.Infinity) is S.One
     assert P(X > S.Infinity) is S.Zero
     assert P(G < 3) == x*(-x + 1) + x

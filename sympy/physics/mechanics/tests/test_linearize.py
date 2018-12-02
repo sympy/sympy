@@ -1,4 +1,3 @@
-from __future__ import division
 from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt
 from sympy import solve, simplify
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\

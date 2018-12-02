@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, zoo, Integer,
         sign, im, nan, Dummy, factorial, comp, refine
@@ -1985,3 +1983,8 @@ def test_Add_is_zero():
 
 def test_issue_14392():
     assert (sin(zoo)**2).as_real_imag() == (nan, nan)
+
+def test_divmod():
+    assert divmod(x, y) == (x//y, x % y)
+    assert divmod(x, 3) == (x//3, x % 3)
+    assert divmod(3, x) == (3//x, 3 % x)

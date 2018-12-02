@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import
 
 from sympy.codegen import Assignment
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational

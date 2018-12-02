@@ -88,7 +88,7 @@ def test_Beam():
 
     # Test for slope distribution function
     p = b1.slope()
-    q = -4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2) + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3
+    q = -4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2) + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + S(4000)/3
     assert p == q/(E*I)
 
     # Test for deflection distribution function
@@ -394,7 +394,7 @@ def test_apply_support():
     R_10, R_30 = symbols('R_10, R_30')
     b.solve_for_reaction_loads(R_10, R_30)
     assert b.slope() == (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
-            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
+            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + S(4000)/3)/(E*I)
     assert b.deflection() == (4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
             + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
 

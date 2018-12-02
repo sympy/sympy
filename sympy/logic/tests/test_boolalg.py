@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy.assumptions.ask import Q
 from sympy.core.containers import Tuple
 from sympy.core.numbers import oo

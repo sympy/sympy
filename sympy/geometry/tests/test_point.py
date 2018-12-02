@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import I, Rational, Symbol, pi, sqrt
 from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
 from sympy.geometry.entity import rotate, scale, translate

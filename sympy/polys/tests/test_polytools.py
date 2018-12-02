@@ -2169,7 +2169,7 @@ def test_transform():
 
     # Unify ZZ, QQ, and RR
     assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1.0), Poly(x - S(1)/2)) == \
-        Poly(9/4, x) == \
+        Poly(S(9)/4, x) == \
         cancel((x - S(1)/2)**2*(x**2 - 2*x + 1).subs(x, (x + 1.0)/(x - S(1)/2)))
 
     raises(ValueError, lambda: Poly(x*y).transform(Poly(x + 1), Poly(x - 1)))

@@ -1004,8 +1004,8 @@ def test_solvify():
     x = Symbol('x')
 
     assert solvify(x**2 + 10, x, S.Reals) == []
-    assert solvify(x**3 + 1, x, S.Complexes) == [-1, 1/2 - sqrt(3)*I/2,
-                                                 1/2 + sqrt(3)*I/2]
+    assert solvify(x**3 + 1, x, S.Complexes) == [-1, S(1)/2 - sqrt(3)*I/2,
+                                                 S(1)/2 + sqrt(3)*I/2]
     assert solvify(log(x), x, S.Reals) == [1]
     assert solvify(cos(x), x, S.Reals) == [pi/2, 3*pi/2]
     assert solvify(sin(x) + 1, x, S.Reals) == [3*pi/2]
@@ -1720,7 +1720,7 @@ def test_issue_12429():
 
 def test_solveset_arg():
     assert solveset(arg(x), x, S.Reals)  == Interval.open(0, oo)
-    assert solveset(arg(4*x -3), x) == Interval.open(3/4, oo)
+    assert solveset(arg(4*x -3), x) == Interval.open(S(3)/4, oo)
 
 
 def test__is_finite_with_finite_vars():
