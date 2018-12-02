@@ -2,7 +2,6 @@ import sys
 import inspect
 import copy
 import pickle
-import warnings
 
 from sympy.physics.units import meter
 
@@ -26,6 +25,7 @@ from sympy.core.multidimensional import vectorize
 
 from sympy.core.compatibility import HAS_GMPY
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import ignore_warnings
 
 from sympy import symbols, S
 
@@ -74,8 +74,18 @@ def check(a, exclude=[], check_attr=True):
                 if not hasattr(attr, "__call__"):
                     assert hasattr(b, i), i
                     assert getattr(b, i) == attr, "%s != %s, protocol: %s" % (getattr(b, i), attr, protocol)
-        c(a, b, d1)
-        c(b, a, d2)
+
+        # XXX Can be removed if Py2 support is dropped.
+        # DeprecationWarnings on Python 2.6 from calling e.g. getattr(a, 'message')
+        # This check eliminates 800 warnings.
+        if sys.version_info < (3,):
+            with ignore_warnings(DeprecationWarning):
+                c(a, b, d1)
+                c(b, a, d2)
+        else:
+            c(a, b, d1)
+            c(b, a, d2)
+
 
 #================== core =========================
 

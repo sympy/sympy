@@ -1,5 +1,4 @@
 import itertools as it
-import warnings
 
 from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
@@ -14,7 +13,7 @@ from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.pytest import raises, skip
+from sympy.utilities.pytest import raises, skip, warns
 from sympy.external import import_module
 
 def test_Min():
@@ -348,8 +347,7 @@ def test_issue_11463():
     # numpy.select evaluates all options before considering conditions,
     # so it raises a warning about root of negative number which does
     # not affect the outcome. This warning is suppressed here
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warns(RuntimeWarning):
         assert f(numpy.array(-1)) < -1
 
 

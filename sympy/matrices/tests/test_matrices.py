@@ -1,5 +1,4 @@
 import random
-import warnings
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
@@ -16,8 +15,7 @@ from sympy.matrices import (
 from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
@@ -1890,7 +1888,8 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
     raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
-    raises(SymPyDeprecationWarning, lambda: Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]])))
+    with warns_deprecated_sympy():
+        Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]]))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([1, 2, 3]))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
@@ -3134,12 +3133,13 @@ def test_deprecated():
     # Maintain tests for deprecated functions.  We must capture
     # the deprecation warnings.  When the deprecated functionality is
     # removed, the corresponding tests should be removed.
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
-        P, Jcells = m.jordan_cells()
-        assert Jcells[1] == Matrix(1, 1, [2])
-        assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+    m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
+    P, Jcells = m.jordan_cells()
+    assert Jcells[1] == Matrix(1, 1, [2])
+    assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+    with warns_deprecated_sympy():
         assert Matrix([[1,2],[3,4]]).dot(Matrix([[1,3],[4,5]])) == [10, 19, 14, 28]
 
 

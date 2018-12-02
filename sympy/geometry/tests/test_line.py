@@ -8,10 +8,9 @@ from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises, slow, warns
 
 import traceback
-import warnings
 import sys
 
 x = Symbol('x', real=True)
@@ -23,17 +22,6 @@ y1 = Symbol('y1', real=True)
 t = Symbol('t', real=True)
 a, b = symbols('a,b', real=True)
 m = symbols('m', real=True)
-
-
-# make warnings show tracebacks
-def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
-    traceback.print_stack()
-    log = file if hasattr(file, 'write') else sys.stderr
-    log.write(warnings.formatwarning(message, category, filename, lineno, line))
-
-
-warnings.showwarning = warn_with_traceback
-warnings.simplefilter('always', UserWarning)  # make sure to show warnings every time they occur
 
 
 def test_object_from_equation():
@@ -294,13 +282,11 @@ def test_contains():
     assert r3.contains(Point3D(0, 0, 0)) is True
     assert Ray3D(Point3D(1, 1, 1), Point3D(1, 0, 0)).contains([]) is False
     assert Line3D((0, 0, 0), (x, y, z)).contains((2 * x, 2 * y, 2 * z))
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert Line3D(p1, Point3D(0, 1, 0)).contains(Point(1.0, 1.0)) is False
-        assert len(w) == 1
 
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert r3.contains(Point(1.0, 1.0)) is False
-        assert len(w) == 1
 
 
 def test_contains_nonreal_symbols():
@@ -340,9 +326,8 @@ def test_distance_2d():
 
 
 def test_dimension_normalization():
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert Ray((1, 1), (2, 1, 2)) == Ray((1, 1, 0), (2, 1, 2))
-        assert len(w) == 1
 
 
 def test_distance_3d():
