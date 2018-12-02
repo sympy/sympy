@@ -744,7 +744,7 @@ def test_as_sum_midpoint2():
     assert e.as_sum(3, method="midpoint").expand() == S(35)/108 + y + y**2
     assert e.as_sum(4, method="midpoint").expand() == S(21)/64 + y + y**2
     assert e.as_sum(n, method="midpoint").expand() == \
-        y**2 + y + 1/3 - 1/(12*n**2)
+        y**2 + y + S(1)/3 - 1/(12*n**2)
 
 
 def test_as_sum_left():

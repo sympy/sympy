@@ -1,4 +1,3 @@
-from __future__ import division
 from sympy import (
     Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
     Integer, Eq, symbols, Add, I, Float, log, Rational,
@@ -317,10 +316,10 @@ def test_subs_noncommutative():
     for p in range(1, 5):
         for k in range(10):
             assert (y * x**k).subs(x**p, L) == y * L**(k//p) * x**(k % p)
-    assert (x**(3/2)).subs(x**(1/2), L) == x**(3/2)
-    assert (x**(1/2)).subs(x**(1/2), L) == L
-    assert (x**(-1/2)).subs(x**(1/2), L) == x**(-1/2)
-    assert (x**(-1/2)).subs(x**(-1/2), L) == L
+    assert (x**(S(3)/2)).subs(x**(S(1)/2), L) == x**(S(3)/2)
+    assert (x**(S(1)/2)).subs(x**(S(1)/2), L) == L
+    assert (x**(-S(1)/2)).subs(x**(S(1)/2), L) == x**(-S(1)/2)
+    assert (x**(-S(1)/2)).subs(x**(-S(1)/2), L) == L
 
     assert (x**(2*someint)).subs(x**someint, L) == L**2
     assert (x**(2*someint + 3)).subs(x**someint, L) == L**2*x**3
@@ -697,7 +696,7 @@ def test_issue_2877():
 
     def r(a, b, c):
         return factor(a*x**2 + b*x + c)
-    e = r(5/6, 10, 5)
+    e = r(5.0/6, 10, 5)
     assert nsimplify(e) == 5*x**2/6 + 10*x + 5
 
 

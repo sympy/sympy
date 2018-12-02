@@ -1,6 +1,4 @@
-from __future__ import division
-
-from sympy import Symbol, sqrt, Derivative
+from sympy import Symbol, sqrt, Derivative, S
 from sympy.geometry import Point, Point2D, Line, Circle ,Polygon, Segment, convex_hull, intersection, centroid
 from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points
 from sympy.solvers.solvers import solve
@@ -110,7 +108,7 @@ def test_farthest_points_closest_points():
 
     # equidistant points
     a, b, c = (
-        Point2D(0, 0), Point2D(1, 0), Point2D(1/2, sqrt(3)/2))
+        Point2D(0, 0), Point2D(1, 0), Point2D(S(1)/2, sqrt(3)/2))
     ans = set([_ordered_points((i, j))
         for i, j in subsets((a, b, c), 2)])
     assert closest_points(b, c, a) == ans

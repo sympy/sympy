@@ -147,4 +147,4 @@ def test_issue_15923():
     assert Heaviside(x).rewrite(Piecewise, H0=1) == (
         Piecewise((0, x < 0), (1, True)))
     assert Heaviside(x).rewrite(Piecewise, H0=S(1)/2) == (
-        Piecewise((0, x < 0), (1/2, Eq(x, 0)), (1, x > 0)))
+        Piecewise((0, x < 0), (S(1)/2, Eq(x, 0)), (1, x > 0)))
