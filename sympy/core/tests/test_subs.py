@@ -823,5 +823,5 @@ def test_issue_6976():
     # More substitutions are possible with nonnegative symbols
     x, y = symbols('x y', nonnegative=True)
     assert (x**4 + x**3 + x**2 + x + sqrt(x)).subs(x**2, y) == \
-        y**(1/4) + y**(3/2) + sqrt(y) + y**2 + y
-    assert x.subs(x**3, y) == y**(1/3)
+        y**(S(1)/4) + y**(S(3)/2) + sqrt(y) + y**2 + y
+    assert x.subs(x**3, y) == y**(S(1)/3)
