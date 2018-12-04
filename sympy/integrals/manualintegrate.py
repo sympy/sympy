@@ -497,10 +497,11 @@ def parts_rule(integral):
             return
 
         # Set a limit on the number of times u can be used
-        cachekey = u.xreplace({symbol: _cache_dummy})
-        if _parts_u_cache[cachekey] > 5:
-            return
-        _parts_u_cache[cachekey] += 1
+        if isinstance(u, (sympy.sin, sympy.cos, sympy.exp, sympy.sinh, sympy.cosh)):
+            cachekey = u.xreplace({symbol: _cache_dummy})
+            if _parts_u_cache[cachekey] > 2:
+                return
+            _parts_u_cache[cachekey] += 1
 
         while True:
             if (integrand / (v * du)).cancel() == 1:
