@@ -548,7 +548,6 @@ def parts_rule(integral):
         if (constant != 1) and rule:
             rule = ConstantTimesRule(constant, integrand, rule,
                                      constant * integrand, symbol)
-        cachekey = u.xreplace({symbol: _cache_dummy})
         return rule
 
 
