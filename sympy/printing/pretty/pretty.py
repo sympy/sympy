@@ -837,9 +837,9 @@ class PrettyPrinter(Printer):
 
     def _print_MatMul(self, expr):
         args = list(expr.args)
-        from sympy import Add, MatAdd, HadamardProduct
+        from sympy import Add, MatAdd, HadamardProduct, KroneckerProduct
         for i, a in enumerate(args):
-            if (isinstance(a, (Add, MatAdd, HadamardProduct))
+            if (isinstance(a, (Add, MatAdd, HadamardProduct, KroneckerProduct))
                     and len(expr.args) > 1):
                 args[i] = prettyForm(*self._print(a).parens())
             else:
