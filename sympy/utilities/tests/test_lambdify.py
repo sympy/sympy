@@ -10,7 +10,8 @@ from sympy import (
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
-    digamma, RisingFactorial, besselj, bessely, besseli, besselk, S)
+    digamma, RisingFactorial, besselj, bessely, besseli, besselk, S,
+    MatrixSymbol)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.pycode import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
@@ -1045,3 +1046,14 @@ def test_imag_real():
 
     f_im = lambdify([z], sympy.im(z))  # see #15400
     assert f_im(val) == val.imag
+
+
+def test_MatrixSymbol_issue_15578():
+    if not numpy:
+        skip("numpy not installed")
+    A = MatrixSymbol('A', 2, 2)
+    A0 = numpy.array([[1, 2], [3, 4]])
+    f = lambdify(A, A**(-1))
+    assert numpy.allclose(f(A0), numpy.array([[-2., 1.], [1.5, -0.5]]))
+    g = lambdify(A, A**3)
+    assert numpy.allclose(g(A0), numpy.array([[37, 54], [81, 118]]))
