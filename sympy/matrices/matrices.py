@@ -2100,7 +2100,7 @@ class MatrixBase(MatrixDeprecated,
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
             l = jc[0, 0]
-            if n.is_Integer == False:
+            if str(n).isdigit() == False:
                 for i in range(N):
                     for j in range(N-i):
                         bn = binomial(n, i)
