@@ -466,8 +466,9 @@ def periodicity(f, symbol, check=False):
         elif isinstance(a, TrigonometricFunction):
             period = periodicity(a, symbol)
         #check if 'f' is linear in 'symbol'
-        elif degree(a, symbol) == 1 and symbol not in n.free_symbols:
-            period = Abs(n / a.diff(symbol))
+        elif (a.is_polynomial(symbol) and degree(a, symbol) == 1 and
+            symbol not in n.free_symbols):
+                period = Abs(n / a.diff(symbol))
 
     elif period is None:
         from sympy.solvers.decompogen import compogen
