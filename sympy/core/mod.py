@@ -142,7 +142,7 @@ class Mod(Function):
                 net = prod_mod1*prod_mod
                 return prod_non_mod*cls(net, q)
 
-            return cls(Mul(*non_mod_l), q)
+            p = Mul(*non_mod_l)
 
         # XXX other possibilities?
 
