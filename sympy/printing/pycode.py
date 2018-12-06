@@ -499,6 +499,16 @@ class NumPyPrinter(PythonCodePrinter):
         "Matrix multiplication printer"
         return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
 
+    def _print_MatPow(self, expr):
+        "Matrix power printer"
+        return '{0}({1}, {2})'.format(self._module_format('numpy.linalg.matrix_power'),
+            self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_Inverse(self, expr):
+        "Matrix inverse printer"
+        return '{0}({1})'.format(self._module_format('numpy.linalg.inv'),
+            self._print(expr.args[0]))
+
     def _print_DotProduct(self, expr):
         # DotProduct allows any shape order, but numpy.dot does matrix
         # multiplication, so we have to make sure it gets 1 x n by n x 1.
