@@ -59,8 +59,8 @@ def apart(f, x=None, full=False, **options):
     Calling ``doit()`` yields a human-readable result:
 
     >>> apart(y/(x**2 + x + 1), x, full=True).doit()
-    (-y/3 - 2*y*(-1/2 - sqrt(3)*I/2)/3)/(x + 1/2 + sqrt(3)*I/2) + (-y/3 -
-        2*y*(-1/2 + sqrt(3)*I/2)/3)/(x + 1/2 - sqrt(3)*I/2)
+    (-2*y*(-1/2 - sqrt(3)*I/2)/3 - y/3)/(x + 1/2 + sqrt(3)*I/2) +
+        (-2*y*(-1/2 + sqrt(3)*I/2)/3 - y/3)/(x + 1/2 - sqrt(3)*I/2)
 
 
     See Also
