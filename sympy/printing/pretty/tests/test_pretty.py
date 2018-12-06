@@ -6479,15 +6479,9 @@ H    \n\
 
 
 def test_issue_15560():
-    import sys
-    from sympy.core.compatibility import StringIO
-    fd = StringIO()
-    a = MatrixSymbol("a", 1, 1)
-    sso = sys.stdout
-    sys.stdout = fd
-    try:
-        pprint(a*(KroneckerProduct(a, a)), use_unicode=False, wrap_line=False)
-    finally:
-        sys.stdout = sso
-    assert fd.getvalue() == 'a*(a x a)\n'
+    a = MatrixSymbol('a', 1, 1)
+    e = pretty(a*(KroneckerProduct(a, a)))
+    result = 'a*(a x a)'
+    assert e == result
+
 
