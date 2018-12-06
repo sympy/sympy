@@ -18,7 +18,7 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 from __future__ import print_function, division
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 import sympy
 
@@ -495,6 +495,13 @@ def parts_rule(integral):
 
         if isinstance(v, sympy.Integral):
             return
+
+        # Set a limit on the number of times u can be used
+        if isinstance(u, (sympy.sin, sympy.cos, sympy.exp, sympy.sinh, sympy.cosh)):
+            cachekey = u.xreplace({symbol: _cache_dummy})
+            if _parts_u_cache[cachekey] > 2:
+                return
+            _parts_u_cache[cachekey] += 1
 
         while True:
             if (integrand / (v * du)).cancel() == 1:
@@ -1008,7 +1015,9 @@ def fallback_rule(integral):
 
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
+# Also record "u" of integration by parts, to avoid infinite repetition.
 _integral_cache = {}
+_parts_u_cache = defaultdict(int)
 _cache_dummy = sympy.Dummy("z")
 
 def integral_steps(integrand, symbol, **options):
@@ -1390,6 +1399,8 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral
     """
     result = _manualintegrate(integral_steps(f, var))
+    # Clear the cache of u-parts
+    _parts_u_cache.clear()
     # If we got Piecewise with two parts, put generic first
     if isinstance(result, Piecewise) and len(result.args) == 2:
         cond = result.args[0][1]
