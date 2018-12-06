@@ -2100,15 +2100,13 @@ class MatrixBase(MatrixDeprecated,
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
             l = jc[0, 0]
-            if(n.is_Integer == False):
+            if n.is_Integer == False:
                 for i in range(N):
                     for j in range(N-i):
                         bn = binomial(n, i)
                         if isinstance(bn, binomial):
                             bn = bn._eval_expand_func()
-                        jc[j, i+j] = l**(n-i)*bn
-
-                 
+                        jc[j, i+j] = l**(n-i)*bn    
             elif l == 0 and (n < N - 1) != False:
                 raise ValueError("Matrix det == 0; not invertible")
             elif l == 0 and N > 1 and n % 1 != 0:
