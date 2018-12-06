@@ -19,7 +19,7 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
 
-from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
+from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerProduct
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -6476,3 +6476,18 @@ H    \n\
     ucode_str = ascii_str
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+def test_issue_15560():
+    import sys
+    from sympy.core.compatibility import StringIO
+    fd = StringIO()
+    a = MatrixSymbol("a", 1, 1)
+    sso = sys.stdout
+    sys.stdout = fd
+    try:
+        pprint(a*(KroneckerProduct(a, a)), use_unicode=False, wrap_line=False)
+    finally:
+        sys.stdout = sso
+    assert fd.getvalue() == 'a*(a x a)\n'
+
