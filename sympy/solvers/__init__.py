@@ -14,7 +14,8 @@ from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
 
 from .diophantine import diophantine
 
-from .recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
+from .recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper, \
+    rfind, guess_seq
 
 from .ode import checkodesol, classify_ode, dsolve, \
     homogeneous_order
