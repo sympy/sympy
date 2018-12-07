@@ -497,7 +497,7 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_MatMul(self, expr):
         "Matrix multiplication printer"
-        return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
+        return '({0})'.format(expr)
 
     def _print_MatPow(self, expr):
         "Matrix power printer"
