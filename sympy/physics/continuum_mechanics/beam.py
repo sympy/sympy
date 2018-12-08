@@ -997,7 +997,7 @@ class Beam(object):
             return self._hinge_beam_slope
         if not self._boundary_conditions['slope']:
             return diff(self.deflection(), x)
-        if self._composite_type == "fixed":
+        if isinstance(I, Piecewise) and self._composite_type == "fixed":
             args = I.args
             slope = 0
             conditions = []
@@ -1064,7 +1064,7 @@ class Beam(object):
         if self._composite_type == "hinge":
             return self._hinge_beam_deflection
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
-            if self._composite_type == "fixed":
+            if isinstance(I, Piecewise) and self._composite_type == "fixed":
                 args = I.args
                 conditions = []
                 prev_slope = 0
@@ -1093,7 +1093,7 @@ class Beam(object):
             constant = symbols(base_char + '4')
             return integrate(self.slope(), x) + constant
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
-            if self._composite_type == "fixed":
+            if isinstance(I, Piecewise) and self._composite_type == "fixed":
                 args = I.args
                 conditions = []
                 prev_slope = 0
@@ -1126,7 +1126,7 @@ class Beam(object):
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
             return S(1)/(E*I)*deflection_curve
 
-        if self._composite_type == "fixed":
+        if isinstance(I, Piecewise) and self._composite_type == "fixed":
             args = I.args
             conditions = []
             prev_slope = 0
