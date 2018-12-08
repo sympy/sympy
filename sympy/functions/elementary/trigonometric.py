@@ -1081,7 +1081,7 @@ class tan(TrigonometricFunction):
         from sympy import bernoulli
         if n < 0 or n % 2 == 0:
             return S.Zero
-        else:9
+        else:
             x = sympify(x)
 
             a, b = ((n - 1)//2), 2**(n + 1)
