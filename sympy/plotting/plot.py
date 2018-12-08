@@ -184,6 +184,7 @@ class Plot(object):
         # (thanks to the parent attribute of the backend).
         self.backend = DefaultBackend
 
+
         # The keyword arguments should only contain options for the plot.
         for key, val in kwargs.items():
             if hasattr(self, key):
@@ -452,6 +453,11 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.adaptive = kwargs.get('adaptive', True)
         self.depth = kwargs.get('depth', 12)
         self.line_color = kwargs.get('line_color', None)
+        self.xscale=kwargs.get('xscale','linear')
+
+
+
+
 
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
@@ -471,12 +477,13 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             Luiz Henrique de Figueiredo.
 
         """
+
         if self.only_integers or not self.adaptive:
             return super(LineOver1DRangeSeries, self).get_segments()
         else:
             f = lambdify([self.var], self.expr)
             list_segments = []
-
+            np=import_module('numpy')
             def sample(p, q, depth):
                 """ Samples recursively if three points are almost collinear.
                 For depth < 6, points are added irrespective of whether they
@@ -504,7 +511,10 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 #at both ends. If there is a real value in between, then
                 #sample those points further.
                 elif p[1] is None and q[1] is None:
-                    xarray = np.linspace(p[0], q[0], 10)
+                    if self.xscale is 'log':
+                        xarray = np.logspace(p[0], q[0], 10)
+                    else:
+                        xarray = np.linspace(p[0], q[0], 10)
                     yarray = list(map(f, xarray))
                     if any(y is not None for y in yarray):
                         for i in range(len(yarray) - 1):
@@ -521,9 +531,14 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 else:
                     list_segments.append([p, q])
 
+            if self.xscale is 'log':
+                self.start=np.log(self.start)
+
+
             f_start = f(self.start)
             f_end = f(self.end)
             sample([self.start, f_start], [self.end, f_end], 0)
+
             return list_segments
 
     def get_points(self):
@@ -535,6 +550,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
         f = vectorized_lambdify([self.var], self.expr)
         list_y = f(list_x)
+        print(list_x)
         return (list_x, list_y)
 
 
@@ -1047,8 +1063,12 @@ class MatplotlibBackend(BaseBackend):
         if parent.title:
             self.ax.set_title(parent.title)
         if parent.xlabel:
+            if parent.xscale is 'log':
+                parent.xlabel='log(%s)' % parent.xlabel
             self.ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
+            if parent.xscale is 'log':
+                parent.ylabel='f(%s)' % parent.xlabel
             self.ax.set_ylabel(parent.ylabel, position=(0, 1))
 
     def show(self):
