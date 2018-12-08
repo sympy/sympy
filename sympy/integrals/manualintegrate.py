@@ -30,6 +30,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.core.relational import Eq, Ne
 from sympy.polys.polytools import degree
+from sympy.ntheory.factor_ import divisors
 
 ZERO = sympy.S.Zero
 
@@ -180,10 +181,18 @@ def find_substitutions(integrand, symbol, u_var):
                 r.extend(possible_subterms(u))
             return r
         elif isinstance(term, sympy.Pow):
+            r = []
             if term.args[1].is_constant(symbol):
-                return [term.args[0]]
+                r.append(term.args[0])
             elif term.args[0].is_constant(symbol):
-                return [term.args[1]]
+                r.append(term.args[1])
+            if term.args[1].is_Integer:
+                r.extend([term.args[0]**d for d in divisors(term.args[1])
+                    if 1 < d < abs(term.args[1])])
+                if term.args[0].is_Add:
+                    r.extend([t for t in possible_subterms(term.args[0])
+                        if t.is_Pow])
+            return r
         elif isinstance(term, sympy.Add):
             r = []
             for arg in term.args:
