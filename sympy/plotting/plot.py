@@ -1075,12 +1075,8 @@ class MatplotlibBackend(BaseBackend):
         if parent.title:
             self.ax.set_title(parent.title)
         if parent.xlabel:
-            if parent.xscale is 'log':
-                parent.xlabel='log(%s)' % parent.xlabel
             self.ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
-            if parent.xscale is 'log':
-                parent.ylabel='f(%s)' % parent.xlabel
             self.ax.set_ylabel(parent.ylabel, position=(0, 1))
 
     def show(self):
