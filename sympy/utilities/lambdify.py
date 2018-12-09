@@ -16,19 +16,8 @@ from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, integer_types, PY3)
 from sympy.utilities.decorator import doctest_depends_on
 
-# These are the namespaces the lambda functions will use.
-MATH = {}
-MPMATH = {}
-NUMPY = {}
-SCIPY = {}
-TENSORFLOW = {}
-SYMPY = {}
-NUMEXPR = {}
-
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
-# These are separate from the names above because the above names are modified
-# throughout this file, whereas these should remain unmodified.
 MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
@@ -36,6 +25,19 @@ SCIPY_DEFAULT = {"I": 1j}
 TENSORFLOW_DEFAULT = {}
 SYMPY_DEFAULT = {}
 NUMEXPR_DEFAULT = {}
+
+# These are the namespaces the lambda functions will use.
+# These are separate from the names above because they are modified
+# throughout this file, whereas the defaults should remain unmodified.
+
+MATH = MATH_DEFAULT.copy()
+MPMATH = MPMATH_DEFAULT.copy()
+NUMPY = NUMPY_DEFAULT.copy()
+SCIPY = SCIPY_DEFAULT.copy()
+TENSORFLOW = TENSORFLOW_DEFAULT.copy()
+SYMPY = SYMPY_DEFAULT.copy()
+NUMEXPR = NUMEXPR_DEFAULT.copy()
+
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
@@ -104,7 +106,7 @@ MODULES = {
 }
 
 
-def _import(module, reload="False"):
+def _import(module, reload=False):
     """
     Creates a global translation dictionary for module.
 
