@@ -762,6 +762,33 @@ def _codegen_array_parse(expr):
     raise NotImplementedError("could not recognize expression %s" % expr)
 
 
+def _parse_matrix_expression(expr):
+    if isinstance(expr, MatMul):
+        args_nonmat = []
+        args = []
+        contractions = []
+        for arg in expr.args:
+            if isinstance(arg, MatrixExpr):
+                args.append(arg)
+            else:
+                args_nonmat.append(arg)
+        contractions = [(2*i+1, 2*i+2) for i in range(len(args)-1)]
+        return Mul.fromiter(args_nonmat)*CodegenArrayContraction(
+                CodegenArrayTensorProduct(*[_parse_matrix_expression(arg) for arg in args]),
+                *contractions
+        )
+    elif isinstance(expr, MatAdd):
+        return CodegenArrayElementwiseAdd(
+                *[_parse_matrix_expression(arg) for arg in expr.args]
+        )
+    elif isinstance(expr, Transpose):
+        return CodegenArrayPermuteDims(
+                _parse_matrix_expression(expr.args[0]), [1, 0]
+        )
+    else:
+        return expr
+
+
 def parse_indexed_expression(expr, first_indices=[]):
     r"""
     Parse indexed expression into a form useful for code generation.
