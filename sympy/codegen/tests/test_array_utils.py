@@ -1,15 +1,18 @@
-from sympy import symbols, IndexedBase from sympy.codegen.array_utils import
-(CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal,
+from sympy import symbols, IndexedBase
+from sympy.codegen.array_utils import (CodegenArrayContraction,
+        CodegenArrayTensorProduct, CodegenArrayDiagonal,
         CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
         _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatOp,
         _RecognizeMatMulLines, _unfold_recognized_expr,
         parse_indexed_expression, recognize_matrix_expression,
-        _parse_matrix_expression) from sympy import (MatrixSymbol, Sum) from
-sympy.combinatorics import Permutation from
-sympy.functions.special.tensor_functions import KroneckerDelta from
-sympy.matrices.expressions.matexpr import MatrixElement from sympy.matrices
-import (Trace, MatAdd, MatMul, Transpose) from sympy.utilities.pytest import
-raises, XFAIL
+        _parse_matrix_expression)
+from sympy import (MatrixSymbol, Sum)
+from sympy.combinatorics import Permutation
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.matrices import (Trace, MatAdd, MatMul, Transpose)
+from sympy.utilities.pytest import raises, XFAIL
+
 
 A, B = symbols("A B", cls=IndexedBase)
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -45,7 +48,6 @@ def test_codegen_array_contraction_construction():
     cg = parse_indexed_expression(elem)
     cg = cg.sort_args_by_name()
     assert cg == result
-
 
 def test_codegen_array_contraction_indices_types():
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (0, 1))
@@ -90,6 +92,11 @@ def test_codegen_array_recognize_matrix_mul_lines():
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M,N,P,Q), (1, 2), (5, 6))
     assert recognize_matrix_expression(cg) == [M*N, P*Q]
+
+    expr = -2*M*N
+    elem = expr[i, j]
+    cg = parse_indexed_expression(elem)
+    assert recognize_matrix_expression(cg) == -2*M*N
 
 
 def test_codegen_array_flatten():
@@ -324,3 +331,14 @@ def test_parsing_of_matrix_expressions():
 
     expr = M*Transpose(N)
     assert _parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, CodegenArrayPermuteDims(N, [1, 0])), (1, 2))
+
+
+def test_special_matrices():
+    a = MatrixSymbol("a", k, 1)
+    b = MatrixSymbol("b", k, 1)
+
+    expr = a.T*b
+    elem = expr[0, 0]
+    cg = parse_indexed_expression(elem)
+    assert cg == CodegenArrayContraction(CodegenArrayTensorProduct(a, b), (0, 2))
+    assert recognize_matrix_expression(cg) == a.T*b
