@@ -533,7 +533,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
             if self.xscale is 'log':
                 self.start=np.log(self.start)
-
+                self.end=np.log(self.end)
 
             f_start = f(self.start)
             f_end = f(self.end)
@@ -544,13 +544,19 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
     def get_points(self):
         np = import_module('numpy')
         if self.only_integers is True:
-            list_x = np.linspace(int(self.start), int(self.end),
+            if self.xscale is 'log':
+                list_x = np.logspace(int(self.start), int(self.end),
+                        num=int(self.end) - int(self.start) + 1)
+            else:
+                list_x = np.linspace(int(self.start), int(self.end),
                     num=int(self.end) - int(self.start) + 1)
         else:
-            list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
+            if self.xscale is 'log':
+                list_x = np.logspace(self.start, self.end, num=self.nb_of_points)
+            else:
+                list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
         f = vectorized_lambdify([self.var], self.expr)
         list_y = f(list_x)
-        print(list_x)
         return (list_x, list_y)
 
 
