@@ -673,10 +673,10 @@ for k in NumPyPrinter._kc:
 _known_functions_scipy_special = {
     'erf': 'erf',
     'erfc': 'erfc',
-    'besselj': 'jn',
-    'bessely': 'yn',
+    'besselj': 'jv',
+    'bessely': 'yv',
     'besseli': 'iv',
-    'besselk': 'kn',
+    'besselk': 'kv',
     'factorial': 'factorial',
     'gamma': 'gamma',
     'loggamma': 'gammaln',
