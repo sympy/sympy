@@ -983,24 +983,41 @@ def test_scipy_fns():
         scipy.special.psi]
     numpy.random.seed(0)
     for (sympy_fn, scipy_fn) in zip(single_arg_sympy_fns, single_arg_scipy_fns):
-        test_values = 20 * numpy.random.rand(20)
-        f = lambdify(x, sympy_fn(x), modules = "scipy")
-        assert numpy.all(abs(f(test_values) - scipy_fn(test_values)) < 1e-15)
+        f = lambdify(x, sympy_fn(x), modules="scipy")
+        for i in range(20):
+            tv = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
+            # SciPy thinks that factorial(z) is 0 when re(z) < 0.
+            # SymPy does not think so.
+            if sympy_fn == factorial and numpy.real(tv) < 0:
+                tv = tv + 2*numpy.abs(numpy.real(tv))
+            # SciPy supports gammaln for real arguments only,
+            # and there is also a branch cut along the negative real axis
+            if sympy_fn == loggamma:
+                tv = numpy.abs(tv)
+            # SymPy's digamma evaluates as polygamma(0, z)
+            # which SciPy supports for real arguments only
+            if sympy_fn == digamma:
+                tv = numpy.real(tv)
+            sympy_result = sympy_fn(tv).evalf()
+            assert abs(f(tv) - sympy_result) < 1e-13*(1 + abs(sympy_result))
+            assert abs(f(tv) - scipy_fn(tv)) < 1e-13*(1 + abs(sympy_result))
 
     double_arg_sympy_fns = [RisingFactorial, besselj, bessely, besseli,
         besselk]
-    double_arg_scipy_fns = [scipy.special.poch, scipy.special.jn,
-        scipy.special.yn, scipy.special.iv, scipy.special.kn]
-
-    #suppress scipy warnings
-    import warnings
-    warnings.filterwarnings('ignore', '.*floating point number truncated*')
-
+    double_arg_scipy_fns = [scipy.special.poch, scipy.special.jv,
+        scipy.special.yv, scipy.special.iv, scipy.special.kv]
     for (sympy_fn, scipy_fn) in zip(double_arg_sympy_fns, double_arg_scipy_fns):
+        f = lambdify((x, y), sympy_fn(x, y), modules="scipy")
         for i in range(20):
-            test_values = 20 * numpy.random.rand(2)
-            f = lambdify((x,y), sympy_fn(x,y), modules = "scipy")
-            assert abs(f(*test_values) - scipy_fn(*test_values)) < 1e-15
+            # SciPy supports only real orders of Bessel functions
+            tv1 = numpy.random.uniform(-10, 10)
+            tv2 = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
+            # SciPy supports poch for real arguments only
+            if sympy_fn == RisingFactorial:
+                tv2 = numpy.real(tv2)
+            sympy_result = sympy_fn(tv1, tv2).evalf()
+            assert abs(f(tv1, tv2) - sympy_result) < 1e-13*(1 + abs(sympy_result))
+            assert abs(f(tv1, tv2) - scipy_fn(tv1, tv2)) < 1e-13*(1 + abs(sympy_result))
 
 
 def test_lambdify_inspect():
