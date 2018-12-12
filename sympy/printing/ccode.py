@@ -696,7 +696,18 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
         if nest:
             args = self._print(expr.args[0])
             if len(expr.args) > 1:
-                args += ', %s' % self._print(expr.func(*expr.args[1:]))
+                parenPile = ''
+                for currArg in expr.args[1:-1]:
+                    parenPile += ')'
+                    args += ', {ns}{name}{suffix}({next}'.format(
+                        ns=self._ns,
+                        name=known,
+                        suffix=suffix,
+                        next = self._print(currArg)
+                    )
+                args += ', %s%s' % (
+                    self._print(expr.func(*expr.args[-1:])),
+                    parenPile)
         else:
             args = ', '.join(map(lambda arg: self._print(arg), expr.args))
         return '{ns}{name}{suffix}({args})'.format(
