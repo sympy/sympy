@@ -512,6 +512,8 @@ def auto_symbol(tokens, local_dict, global_dict):
     """Inserts calls to ``Symbol``/``Function`` for undefined variables."""
     result = []
     prevTok = (None, None)
+     global_dict['beta'] = None #If beta is present in global dict then it takes it as a function.
+
 
     tokens.append((None, None))  # so zip traverses all tokens
     for tok, nextTok in zip(tokens, tokens[1:]):
