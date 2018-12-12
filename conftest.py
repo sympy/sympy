@@ -8,6 +8,7 @@ import json
 import sys
 import warnings
 import pytest
+from sympy.utilities.runtests import setup_pprint
 
 durations_path = os.path.join(os.path.dirname(__file__), '.ci', 'durations.json')
 blacklist_path = os.path.join(os.path.dirname(__file__), '.ci', 'blacklisted.json')
@@ -15,6 +16,9 @@ blacklist_path = os.path.join(os.path.dirname(__file__), '.ci', 'blacklisted.jso
 # Collecting tests from rubi_tests under pytest leads to errors even if the
 # tests will be skipped.
 collect_ignore = ["sympy/integrals/rubi/rubi_tests"]
+
+# Set up printing for doctests
+setup_pprint()
 
 def _mk_group(group_dict):
     return list(chain(*[[k+'::'+v for v in files] for k, files in group_dict.items()]))
