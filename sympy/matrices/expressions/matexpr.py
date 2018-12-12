@@ -901,8 +901,7 @@ def matrix_derivative(expr, x):
 
     shape = first.shape + second.shape
     rank = sum([i != 1 for i in shape])
-    if rank > 2:
-        return Derivative(expr, x)
+    return Derivative(expr, x)
 
 
 from .matmul import MatMul
