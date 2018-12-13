@@ -1,7 +1,7 @@
 import itertools
 from functools import reduce
 from collections import defaultdict
-from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S
+from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
 from sympy.core.mul import Mul
@@ -313,6 +313,12 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
             )
 
 
+def get_shape(expr):
+    if hasattr(expr, "shape"):
+        return expr.shape
+    return ()
+
+
 class CodegenArrayTensorProduct(_CodegenArrayAbstract):
     r"""
     Class to represent the tensor product of array-like objects.
@@ -334,9 +340,14 @@ class CodegenArrayTensorProduct(_CodegenArrayAbstract):
             contraction_indices = [tuple(cumulative_ranks[i] + k for k in j) for i, arg in contractions.items() for j in arg.contraction_indices]
             return CodegenArrayContraction(tp, *contraction_indices)
 
+        #newargs = [i for i in args if hasattr(i, "shape")]
+        #coeff = reduce(lambda x, y: x*y, [i for i in args if not hasattr(i, "shape")], S.One)
+        #newargs[0] *= coeff
+
         obj = Basic.__new__(cls, *args)
         obj._subranks = ranks
-        shapes = [i.shape for i in args]
+        shapes = [get_shape(i) for i in args]
+
         if any(i is None for i in shapes):
             obj._shape = None
         else:
@@ -625,6 +636,9 @@ def _sort_contraction_indices(pairing_indices):
 def _get_diagonal_indices(flattened_indices):
     axes_contraction = defaultdict(list)
     for i, ind in enumerate(flattened_indices):
+        if isinstance(ind, (int, Integer)):
+            # If the indices is a number, there can be no diagonal operation:
+            continue
         axes_contraction[ind].append(i)
     axes_contraction = {k: v for k, v in axes_contraction.items() if len(v) > 1}
     # Put the diagonalized indices at the end:
@@ -759,7 +773,35 @@ def _codegen_array_parse(expr):
             # Perform index permutations:
             args[i] = CodegenArrayPermuteDims(args[i], permutation)
         return CodegenArrayElementwiseAdd(*args), index0
+    return expr, ()
     raise NotImplementedError("could not recognize expression %s" % expr)
+
+
+def _parse_matrix_expression(expr):
+    if isinstance(expr, MatMul):
+        args_nonmat = []
+        args = []
+        contractions = []
+        for arg in expr.args:
+            if isinstance(arg, MatrixExpr):
+                args.append(arg)
+            else:
+                args_nonmat.append(arg)
+        contractions = [(2*i+1, 2*i+2) for i in range(len(args)-1)]
+        return Mul.fromiter(args_nonmat)*CodegenArrayContraction(
+                CodegenArrayTensorProduct(*[_parse_matrix_expression(arg) for arg in args]),
+                *contractions
+        )
+    elif isinstance(expr, MatAdd):
+        return CodegenArrayElementwiseAdd(
+                *[_parse_matrix_expression(arg) for arg in expr.args]
+        )
+    elif isinstance(expr, Transpose):
+        return CodegenArrayPermuteDims(
+                _parse_matrix_expression(expr.args[0]), [1, 0]
+        )
+    else:
+        return expr
 
 
 def parse_indexed_expression(expr, first_indices=[]):
@@ -891,6 +933,7 @@ def _support_function_tp1_recognize(contraction_indices, args):
     if not isinstance(args, list):
         args = [args]
     subranks = [get_rank(i) for i in args]
+    coeff = reduce(lambda x, y: x*y, [arg for arg, srank in zip(args, subranks) if srank == 0], S.One)
     mapping = _get_mapping_from_subranks(subranks)
     dlinks = _get_contraction_links(subranks, *contraction_indices)
     flatten_contractions = [j for i in contraction_indices for j in i]
@@ -945,6 +988,9 @@ def _support_function_tp1_recognize(contraction_indices, args):
         dlinks.pop(starting_argind, None)
         free_indices.pop(last_index, None)
         return_list.append(_RecognizeMatOp(MatMul, matmul_args))
+    if coeff != 1:
+        # Let's inject the coefficient:
+        return_list[0].args.insert(0, coeff)
     return _RecognizeMatMulLines(return_list)
 
 
@@ -1084,7 +1130,9 @@ def _recognize_matrix_expression(expr):
         return _RecognizeMatMulLines(args)
     elif isinstance(expr, Transpose):
         return expr
-    raise NotImplementedError
+    elif isinstance(expr, MatrixExpr):
+        return expr
+    return expr
 
 
 def _unfold_recognized_expr(expr):
