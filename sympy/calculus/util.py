@@ -20,7 +20,7 @@ def continuous_domain(f, symbol, domain):
     is continuous.
     This method is limited by the ability to determine the various
     singularities and discontinuities of the given function.
-    
+
     Parameters
     ==========
     
