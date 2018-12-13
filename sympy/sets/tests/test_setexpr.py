@@ -252,7 +252,7 @@ def test_SetExpr_Interval_pow():
     assert SetExpr(Interval(1, 5))**(-2) == SetExpr(Interval(S.One/25, 1))
     assert SetExpr(Interval(-1, 3))**(-2) == SetExpr(Interval(0, oo))
     assert SetExpr(Interval(0, 2))**(-2) == SetExpr(Interval(S.One/4, oo))
-    assert SetExpr(Interval(-1, 2))**(-3) == SetExpr(Union(Interval(-oo, -1), Interval(1/8, oo)))
+    assert SetExpr(Interval(-1, 2))**(-3) == SetExpr(Union(Interval(-oo, -1), Interval(S(1)/8, oo)))
     assert SetExpr(Interval(-3, -2))**(-3) == SetExpr(Interval(S(-1)/8, -S.One/27))
     assert SetExpr(Interval(-3, -2))**(-2) == SetExpr(Interval(S.One/9, S.One/4))
     #assert SetExpr(Interval(0, oo))**(S.One/2) == SetExpr(Interval(0, oo))

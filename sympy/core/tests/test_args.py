@@ -6,7 +6,6 @@
 
 import os
 import re
-import warnings
 import io
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
@@ -14,7 +13,6 @@ from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 x, y, z = symbols('x,y,z')
 
@@ -74,9 +72,6 @@ def test_all_classes_are_tested():
 
             if test not in ns:
                 failed.append(module + '.' + name)
-
-    # reset all SymPyDeprecationWarning into errors
-    warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
     assert not failed, "Missing classes: %s.  Please add tests for these to sympy/core/tests/test_args.py." % ", ".join(failed)
 
@@ -4221,6 +4216,13 @@ def test_sympy__ntheory__factor___primeomega():
 def test_sympy__ntheory__residue_ntheory__mobius():
     from sympy.ntheory import mobius
     assert _test_args(mobius(2))
+
+
+def test_sympy__ntheory__generate__primepi():
+    from sympy.ntheory import primepi
+    n = symbols('n')
+    t = primepi(n)
+    assert _test_args(t)
 
 
 def test_sympy__physics__optics__waves__TWave():

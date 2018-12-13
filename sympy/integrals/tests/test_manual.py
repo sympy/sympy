@@ -323,8 +323,8 @@ def test_issue_2850():
             log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 + Integral(log(x**2 + 1)/x, x)/2
 
 def test_issue_9462():
-    assert manualintegrate(sin(2*x)*exp(x), x) == -3*exp(x)*sin(2*x) \
-                           - 2*exp(x)*cos(2*x) + 4*Integral(2*exp(x)*cos(2*x), x)
+    assert manualintegrate(sin(2*x)*exp(x), x) == exp(x)*sin(2*x) \
+                           - 2*exp(x)*cos(2*x) - 4*Integral(exp(x)*sin(2*x), x)
     assert manualintegrate((x - 3) / (x**2 - 2*x + 2)**2, x) == \
                            Integral(x/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x) \
                            - 3*Integral(1/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x)
@@ -338,10 +338,10 @@ def test_issue_10847():
                                                                              And(x - y > -y, y < 0)), \
                                                                             (-atanh(sqrt(x - y)/sqrt(-y))/sqrt(-y), \
                                                                              And(x - y < -y, y < 0)))/3 \
-                                                                             - 4*y*sqrt(x - y)/3 + 2*(x - y)**(3/2)*log(z/x)/3 \
-                                                                             + 4*(x - y)**(3/2)/9
+                                                                             - 4*y*sqrt(x - y)/3 + 2*(x - y)**(S(3)/2)*log(z/x)/3 \
+                                                                             + 4*(x - y)**(S(3)/2)/9
 
-    assert manualintegrate(sqrt(x) * log(x), x) == 2*x**(3/2)*log(x)/3 - 4*x**(3/2)/9
+    assert manualintegrate(sqrt(x) * log(x), x) == 2*x**(S(3)/2)*log(x)/3 - 4*x**(S(3)/2)/9
     assert manualintegrate(sqrt(a*x + b) / x, x) == -2*b*Piecewise((-atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b), -b > 0), \
                                                                (acoth(sqrt(a*x + b)/sqrt(b))/sqrt(b), And(-b < 0, a*x + b > b)), \
                                                                (atanh(sqrt(a*x + b)/sqrt(b))/sqrt(b), And(-b < 0, a*x + b < b))) \
@@ -358,10 +358,11 @@ def test_issue_10847():
                            / (x**6 + 2*x**5 + 3*x**4 + 4*x**3 + 3*x**2 + 2*x + 1), x) == \
                            2*x/(x**2 + 1) + 3*atan(x) - 1/(x**2 + 1) - 3/(x + 1)
     assert manualintegrate(sqrt(2*x + 3) / (x + 1), x) == 2*sqrt(2*x + 3) - log(sqrt(2*x + 3) + 1) + log(sqrt(2*x + 3) - 1)
-    assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**(5/2)/20 - (2*x + 3)**(3/2)/4
-    assert manualintegrate(x**Rational(3,2) * log(x), x) == 2*x**Rational(5,2)*log(x)/5 - 4*x**Rational(5/2)/25
+    assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**(S(5)/2)/20 - (2*x + 3)**(S(3)/2)/4
+    assert manualintegrate(x**Rational(3,2) * log(x), x) == 2*x**Rational(5,2)*log(x)/5 - 4*x**Rational(5,2)/25
     assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
-    assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - Integral(log(y - 1)/y, y)
+    assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == \
+        log(y)*log(-1 + 1/y) - Integral(log(-1 + 1/y)/y, y)
 
 def test_issue_12899():
     assert manualintegrate(f(x,y).diff(x),y) == Integral(Derivative(f(x,y),x),y)
@@ -386,3 +387,24 @@ def test_issue_13297():
 def test_issue_14470():
     assert manualintegrate(1/(x*sqrt(x + 1)), x) == \
         log(-1 + 1/sqrt(x + 1)) - log(1 + 1/sqrt(x + 1))
+
+
+def test_issue_9858():
+    assert manualintegrate(exp(x)*cos(exp(x)), x) == sin(exp(x))
+    assert manualintegrate(exp(2*x)*cos(exp(x)), x) == \
+        exp(x)*sin(exp(x)) + cos(exp(x))
+    res = manualintegrate(exp(10*x)*sin(exp(x)), x)
+    assert not res.has(Integral)
+    assert res.diff(x) == exp(10*x)*sin(exp(x))
+    # an example with many similar integrations by parts
+    assert manualintegrate(sum([x*exp(k*x) for k in range(1, 8)]), x) == (
+        x*exp(7*x)/7 + x*exp(6*x)/6 + x*exp(5*x)/5 + x*exp(4*x)/4 +
+        x*exp(3*x)/3 + x*exp(2*x)/2 + x*exp(x) - exp(7*x)/49 -exp(6*x)/36 -
+        exp(5*x)/25 - exp(4*x)/16 - exp(3*x)/9 - exp(2*x)/4 - exp(x))
+
+
+def test_issue_8520():
+    assert manualintegrate(x/(x**4 + 1), x) == atan(x**2)/2
+    assert manualintegrate(x**2/(x**6 + 25), x) == atan(x**3/5)/15
+    f = x/(9*x**4 + 4)**2
+    assert manualintegrate(f, x).diff(x).factor() == f

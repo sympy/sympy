@@ -217,6 +217,19 @@ class Expr(Basic, EvalfMixin):
         from sympy.functions.elementary.integers import floor
         return floor(other / self)
 
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rdivmod__')
+    def __divmod__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(self / other), Mod(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__divmod__')
+    def __rdivmod__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(other / self), Mod(other, self)
+
     def __int__(self):
         # Although we only need to round to the units position, we'll
         # get one more digit so the extra testing below can be avoided

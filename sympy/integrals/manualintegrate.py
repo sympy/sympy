@@ -18,7 +18,7 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 from __future__ import print_function, division
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 import sympy
 
@@ -30,6 +30,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.core.relational import Eq, Ne
 from sympy.polys.polytools import degree
+from sympy.ntheory.factor_ import divisors
 
 ZERO = sympy.S.Zero
 
@@ -136,7 +137,14 @@ def find_substitutions(integrand, symbol, u_var):
             return False
 
         substituted = substituted.subs(u, u_var).cancel()
+
         if symbol not in substituted.free_symbols:
+            # avoid increasing the degree of a rational function
+            if integrand.is_rational_function(symbol) and substituted.is_rational_function(u_var):
+                deg_before = max([degree(t, symbol) for t in integrand.as_numer_denom()])
+                deg_after = max([degree(t, u_var) for t in substituted.as_numer_denom()])
+                if deg_after > deg_before:
+                    return False
             return substituted.as_independent(u_var, as_Add=False)
 
         # special treatment for substitutions u = (a*x+b)**(1/n)
@@ -173,10 +181,18 @@ def find_substitutions(integrand, symbol, u_var):
                 r.extend(possible_subterms(u))
             return r
         elif isinstance(term, sympy.Pow):
+            r = []
             if term.args[1].is_constant(symbol):
-                return [term.args[0]]
+                r.append(term.args[0])
             elif term.args[0].is_constant(symbol):
-                return [term.args[1]]
+                r.append(term.args[1])
+            if term.args[1].is_Integer:
+                r.extend([term.args[0]**d for d in divisors(term.args[1])
+                    if 1 < d < abs(term.args[1])])
+                if term.args[0].is_Add:
+                    r.extend([t for t in possible_subterms(term.args[0])
+                        if t.is_Pow])
+            return r
         elif isinstance(term, sympy.Add):
             r = []
             for arg in term.args:
@@ -488,6 +504,13 @@ def parts_rule(integral):
 
         if isinstance(v, sympy.Integral):
             return
+
+        # Set a limit on the number of times u can be used
+        if isinstance(u, (sympy.sin, sympy.cos, sympy.exp, sympy.sinh, sympy.cosh)):
+            cachekey = u.xreplace({symbol: _cache_dummy})
+            if _parts_u_cache[cachekey] > 2:
+                return
+            _parts_u_cache[cachekey] += 1
 
         while True:
             if (integrand / (v * du)).cancel() == 1:
@@ -999,8 +1022,13 @@ def rewrites_rule(integral):
 def fallback_rule(integral):
     return DontKnowRule(*integral)
 
-# Cache is used to break cyclic integrals
+# Cache is used to break cyclic integrals.
+# Need to use the same dummy variable in cached expressions for them to match.
+# Also record "u" of integration by parts, to avoid infinite repetition.
 _integral_cache = {}
+_parts_u_cache = defaultdict(int)
+_cache_dummy = sympy.Dummy("z")
+
 def integral_steps(integrand, symbol, **options):
     """Returns the steps needed to compute an integral.
 
@@ -1047,13 +1075,16 @@ def integral_steps(integrand, symbol, **options):
         to obtain a result.
 
     """
-    cachekey = (integrand, symbol)
+    cachekey = integrand.xreplace({symbol: _cache_dummy})
     if cachekey in _integral_cache:
         if _integral_cache[cachekey] is None:
-            # cyclic integral! null_safe will eliminate that path
-            return None
+            # Stop this attempt, because it leads around in a loop
+            return DontKnowRule(integrand, symbol)
         else:
-            return _integral_cache[cachekey]
+            # TODO: This is for future development, as currently
+            # _integral_cache gets no values other than None
+            return (_integral_cache[cachekey].xreplace(_cache_dummy, symbol),
+                symbol)
     else:
         _integral_cache[cachekey] = None
 
@@ -1377,6 +1408,8 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral
     """
     result = _manualintegrate(integral_steps(f, var))
+    # Clear the cache of u-parts
+    _parts_u_cache.clear()
     # If we got Piecewise with two parts, put generic first
     if isinstance(result, Piecewise) and len(result.args) == 2:
         cond = result.args[0][1]

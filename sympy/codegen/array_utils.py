@@ -432,6 +432,9 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
 
         >>> from sympy.codegen.array_utils import (CodegenArrayPermuteDims, CodegenArrayTensorProduct, nest_permutation)
         >>> from sympy import MatrixSymbol
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+
         >>> M = MatrixSymbol("M", 3, 3)
         >>> N = MatrixSymbol("N", 3, 3)
         >>> cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 0, 3, 2])
@@ -768,6 +771,9 @@ def parse_indexed_expression(expr, first_indices=[]):
 
     >>> from sympy.codegen.array_utils import parse_indexed_expression
     >>> from sympy import MatrixSymbol, Sum, symbols
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
+
     >>> i, j, k, d = symbols("i j k d")
     >>> M = MatrixSymbol("M", d, d)
     >>> N = MatrixSymbol("N", d, d)

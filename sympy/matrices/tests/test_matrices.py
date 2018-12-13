@@ -1,5 +1,4 @@
 import random
-import warnings
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
@@ -16,8 +15,7 @@ from sympy.matrices import (
 from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
@@ -1890,7 +1888,8 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
     raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
-    raises(SymPyDeprecationWarning, lambda: Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]])))
+    with warns_deprecated_sympy():
+        Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]]))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([1, 2, 3]))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
@@ -2786,11 +2785,11 @@ def test_pinv_solve():
     # Proof the solution is not exact.
     assert A * A.pinv() * B != B
 
-@XFAIL
 def test_pinv_rank_deficient():
     # Test the four properties of the pseudoinverse for various matrices.
     As = [Matrix([[1, 1, 1], [2, 2, 2]]),
-          Matrix([[1, 0], [0, 0]])]
+          Matrix([[1, 0], [0, 0]]),
+          Matrix([[1, 2], [2, 4], [3, 6]])]
     for A in As:
         A_pinv = A.pinv()
         AAp = A * A_pinv
@@ -2815,6 +2814,25 @@ def test_pinv_rank_deficient():
     assert w1.name == 'w1_0'
     assert solution == Matrix([3, w1])
     assert A * A.pinv() * B != B
+
+@XFAIL
+def test_pinv_rank_deficient_when_diagonalization_fails():
+    print('Test the four properties of the pseudoinverse for matrices when diagonalization of A.H*A fails.')
+    As = [Matrix([
+        [61, 89, 55, 20, 71, 0],
+        [62, 96, 85, 85, 16, 0],
+        [69, 56, 17,  4, 54, 0],
+        [10, 54, 91, 41, 71, 0],
+        [ 7, 30, 10, 48, 90, 0],
+        [0,0,0,0,0,0]])]
+    for A in As:
+        A_pinv = A.pinv()
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
 
 
 def test_gauss_jordan_solve():
@@ -3115,12 +3133,13 @@ def test_deprecated():
     # Maintain tests for deprecated functions.  We must capture
     # the deprecation warnings.  When the deprecated functionality is
     # removed, the corresponding tests should be removed.
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
-        P, Jcells = m.jordan_cells()
-        assert Jcells[1] == Matrix(1, 1, [2])
-        assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+    m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
+    P, Jcells = m.jordan_cells()
+    assert Jcells[1] == Matrix(1, 1, [2])
+    assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+    with warns_deprecated_sympy():
         assert Matrix([[1,2],[3,4]]).dot(Matrix([[1,3],[4,5]])) == [10, 19, 14, 28]
 
 

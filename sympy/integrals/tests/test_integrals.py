@@ -744,7 +744,7 @@ def test_as_sum_midpoint2():
     assert e.as_sum(3, method="midpoint").expand() == S(35)/108 + y + y**2
     assert e.as_sum(4, method="midpoint").expand() == S(21)/64 + y + y**2
     assert e.as_sum(n, method="midpoint").expand() == \
-        y**2 + y + 1/3 - 1/(12*n**2)
+        y**2 + y + S(1)/3 - 1/(12*n**2)
 
 
 def test_as_sum_left():
@@ -1421,3 +1421,17 @@ def test_issue_15292():
     res = integrate(exp(-x**2*cos(2*t)) * cos(x**2*sin(2*t)), (x, 0, oo))
     assert isinstance(res, Piecewise)
     assert gammasimp((res - sqrt(pi)/2 * cos(t)).subs(t, pi/6)) == 0
+
+
+def test_issue_4514():
+    assert integrate(sin(2*x)/sin(x), x) == 2*sin(x)
+
+
+def test_issue_15457():
+    x, a, b = symbols('x a b', real=True)
+    definite = integrate(exp(Abs(x-2)), (x, a, b))
+    indefinite = integrate(exp(Abs(x-2)), x)
+    assert definite.subs({a: 1, b: 3}) == -2 + 2*E
+    assert indefinite.subs(x, 3) - indefinite.subs(x, 1) == -2 + 2*E
+    assert definite.subs({a: -3, b: -1}) == -exp(3) + exp(5)
+    assert indefinite.subs(x, -1) - indefinite.subs(x, -3) == -exp(3) + exp(5)

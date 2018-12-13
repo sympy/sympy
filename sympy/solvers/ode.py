@@ -4962,7 +4962,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     # Can't just call roots because it doesn't return rootof for unsolveable
     # polynomials.
     chareqroots = roots(chareq, multiple=True)
-    if chareqroots == []:
+    if len(chareqroots) != order:
         chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
 
     chareq_is_complex = not all([i.is_real for i in chareq.all_coeffs()])

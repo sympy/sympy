@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, TribonacciConstant, I,
     Integer, Integral, Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow,
@@ -444,8 +442,8 @@ def test_sqrt():
     assert str(1/sqrt(x)) == "1/sqrt(x)"
     assert str(1/sqrt(x**2)) == "1/sqrt(x**2)"
     assert str(y/sqrt(x)) == "y/sqrt(x)"
-    assert str(x**(1/2)) == "x**0.5"
-    assert str(1/x**(1/2)) == "x**(-0.5)"
+    assert str(x**0.5) == "x**0.5"
+    assert str(1/x**0.5) == "x**(-0.5)"
 
 
 def test_Rational():
@@ -804,6 +802,8 @@ def test_MatrixSymbol_printing():
 
     assert str(A - A*B - B) == "A - A*B - B"
     assert str(A*B - (A+B)) == "-(A + B) + A*B"
+    assert str(A**(-1)) == "A**(-1)"
+    assert str(A**3) == "A**3"
 
 
 def test_Subs_printing():
