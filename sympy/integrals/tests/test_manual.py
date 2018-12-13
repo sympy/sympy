@@ -3,9 +3,11 @@ from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    diff, I, sqrt, erf, Piecewise, Eq, Ne, symbols, Rational,
                    And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
                    Function, jacobi, gegenbauer, chebyshevt, chebyshevu,
-                   legendre, hermite, laguerre, assoc_laguerre)
+                   legendre, hermite, laguerre, assoc_laguerre, uppergamma, li,
+                   Ei, Ci, Si, Chi, Shi, fresnels, fresnelc, polylog, erf, erfi,
+                   sinh, cosh, elliptic_f, elliptic_e)
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule)
+    _parts_rule, integral_steps, contains_dont_know)
 
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
 f = Function('f')
@@ -177,12 +179,50 @@ def test_manualintegrate_trig_substitution():
          3*sqrt(49*x**2 + 1)/5764801 + 1/(5764801*sqrt(49*x**2 + 1)))
 
 def test_manualintegrate_trivial_substitution():
-    assert manualintegrate((exp(x) - exp(-x))/x, x) == \
-        -Integral(exp(-x)/x, x) + Integral(exp(x)/x, x)
+    assert manualintegrate((exp(x) - exp(-x))/x, x) == -Ei(-x) + Ei(x)
+    f = Function('f')
+    assert manualintegrate((f(x) - f(-x))/x, x) == \
+        -Integral(f(-x)/x, x) + Integral(f(x)/x, x)
 
 def test_manualintegrate_rational():
     assert manualintegrate(1/(4 - x**2), x) == Piecewise((acoth(x/2)/2, x**2 > 4), (atanh(x/2)/2, x**2 < 4))
     assert manualintegrate(1/(-1 + x**2), x) == Piecewise((-acoth(x), x**2 > 1), (-atanh(x), x**2 < 1))
+
+def test_manualintegrate_special():
+    f, F = 4*exp(-x**2/3), 2*sqrt(3)*sqrt(pi)*erf(sqrt(3)*x/3)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = 3*exp(4*x**2), 3*sqrt(pi)*erfi(2*x)/4
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = x**(S(1)/3)*exp(-x/8), -16*uppergamma(S(4)/3, x/8)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = exp(2*x)/x, Ei(2*x)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = exp(1 + 2*x - x**2), sqrt(pi)*exp(2)*erf(x - 1)/2
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f = sin(x**2 + 4*x + 1)
+    F = (sqrt(2)*sqrt(pi)*(-sin(3)*fresnelc(sqrt(2)*(2*x + 4)/(2*sqrt(pi))) +
+        cos(3)*fresnels(sqrt(2)*(2*x + 4)/(2*sqrt(pi))))/2)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = cos(4*x**2), sqrt(2)*sqrt(pi)*fresnelc(2*sqrt(2)*x/sqrt(pi))/4
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = sin(3*x + 2)/x, sin(2)*Ci(3*x) + cos(2)*Si(3*x)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = sinh(3*x - 2)/x, -sinh(2)*Chi(3*x) + cosh(2)*Shi(3*x)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = 5*cos(2*x - 3)/x, 5*cos(3)*Ci(2*x) + 5*sin(3)*Si(2*x)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = cosh(x/2)/x, Chi(x/2)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = cos(x**2)/x, Ci(x**2)/2
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = 1/log(2*x + 1), li(2*x + 1)/2
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = polylog(2, 5*x)/x, polylog(3, 5*x)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = 5/sqrt(3 - 2*sin(x)**2), 5*sqrt(3)*elliptic_f(x, S(2)/3)/3
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    f, F = sqrt(4 + 9*sin(x)**2), 2*elliptic_e(x, -S(9)/4)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
 
 
 def test_manualintegrate_derivative():
@@ -323,11 +363,23 @@ def test_issue_2850():
             log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 + Integral(log(x**2 + 1)/x, x)/2
 
 def test_issue_9462():
-    assert manualintegrate(sin(2*x)*exp(x), x) == exp(x)*sin(2*x) \
-                           - 2*exp(x)*cos(2*x) - 4*Integral(exp(x)*sin(2*x), x)
+    assert manualintegrate(sin(2*x)*exp(x), x) == exp(x)*sin(2*x)/5 - 2*exp(x)*cos(2*x)/5
+    assert not contains_dont_know(integral_steps(sin(2*x)*exp(x), x)
+)
     assert manualintegrate((x - 3) / (x**2 - 2*x + 2)**2, x) == \
                            Integral(x/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x) \
                            - 3*Integral(1/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x)
+
+
+def test_cyclic_parts():
+    f = cos(x)*exp(x/4)
+    F = 16*exp(x/4)*sin(x)/17 + 4*exp(x/4)*cos(x)/17
+    assert manualintegrate(f, x) == F and F.diff(x) == f
+    f = x*cos(x)*exp(x/4)
+    F = (x*(16*exp(x/4)*sin(x)/17 + 4*exp(x/4)*cos(x)/17) -
+        128*exp(x/4)*sin(x)/289 + 240*exp(x/4)*cos(x)/289)
+    assert manualintegrate(f, x) == F and F.diff(x) == f
+
 
 def test_issue_10847():
     assert manualintegrate(x**2 / (x**2 - c), x) == c*Piecewise((atan(x/sqrt(-c))/sqrt(-c), -c > 0), \
