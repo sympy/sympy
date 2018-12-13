@@ -118,21 +118,6 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     the function's derivative satisfies given predicate is a superset
     of the given interval.
 
-    Examples
-    ========
-
-    >>> from sympy import monotonicity_helper
-    >>> from sympy.abc import x
-    >>> from sympy import S, Interval, oo
-    >>> monotonicity_helper(x**3 - 3*x**2 + 4*x, lambda x: x >= 0, S.Reals)
-    True
-    >>> monotonicity_helper(4*x**3, lambda x: x > 0, Interval.Lopen(3, oo))
-    True
-    >>> monotonicity_helper(-x**2, lambda x: x <= 0, Interval(-oo, 0))
-    False
-    >>> monotonicity_helper(-x**2, lambda x: x < 0, Interval(-oo, 0))
-    False
-
     Returns
     =======
 
