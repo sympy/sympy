@@ -588,6 +588,10 @@ class MatrixExpr(Expr):
         else:
             return remove_matelement(retexpr, first_index, last_index)
 
+    def applyfunc(self, func):
+        from .applyfunc import ElementwiseApplyFunction
+        return ElementwiseApplyFunction(func, self)
+
 
 class MatrixElement(Expr):
     parent = property(lambda self: self.args[0])
