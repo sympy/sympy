@@ -16,6 +16,10 @@ and to view it, do::
 
     firefox _build/html/index.html
 
+If you get **mpmath** error, install python3-mpmath package::
+
+    apt-get install python3-mpmath
+
 Fedora
 ------
 

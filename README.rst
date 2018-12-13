@@ -63,6 +63,9 @@ You can generate everything at the above site in your local copy of SymPy by::
     $ cd doc
     $ make html
 
+To fulfill the package requirement, ensure that all the dependencies for building
+documentation enlisted in `doc/README.rst` are satisfied.
+
 Then the docs will be in `_build/html`. If you don't want to read that, here
 is a short usage:
 
