@@ -23,7 +23,7 @@ def continuous_domain(f, symbol, domain):
 
     Parameters
     ==========
-    
+
     f : Expr.
         The concerned function.
     symbol : Symbol
@@ -46,11 +46,11 @@ def continuous_domain(f, symbol, domain):
     Interval(2, 5)
     >>> continuous_domain(log(2*x - 1), x, S.Reals)
     Interval.open(1/2, oo)
-    
+
     Returns
     =======
     Intervals where the function is continuous.
-    
+
     Raises
     ======
     NotImplementedError
