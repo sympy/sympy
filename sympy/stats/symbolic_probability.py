@@ -164,7 +164,7 @@ class Expectation(Expr):
         return expectation(arg, condition=condition, evaluate=False)
 
     def _eval_rewrite_as_Sum(self, arg, condition=None, **kwargs):
-        return self.rewrite(Integral)
+        return expectation(arg, condition=condition, evaluate=False)
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -274,7 +274,7 @@ class Variance(Expr):
         return variance(self.args[0], self._condition, evaluate=False)
 
     def _eval_rewrite_as_Sum(self, arg, condition=None, **kwargs):
-        return self.rewrite(Integral)
+        return variance(self.args[0], self._condition, evaluate=False)
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -407,7 +407,7 @@ class Covariance(Expr):
         return covariance(self.args[0], self.args[1], self._condition, evaluate=False)
 
     def _eval_rewrite_as_Sum(self, arg1, arg2, condition=None, **kwargs):
-        return self.rewrite(Integral)
+        return covariance(self.args[0], self.args[1], self._condition, evaluate=False)
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
