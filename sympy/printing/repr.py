@@ -82,6 +82,18 @@ class ReprPrinter(Printer):
     def _print_Integer(self, expr):
         return 'Integer(%i)' % expr.p
 
+    def _print_Integers(self, expr):
+        return 'S.Integers'
+
+    def _print_Naturals(self, expr):
+        return 'S.Naturals'
+
+    def _print_Naturals0(self, expr):
+        return 'S.Naturals0'
+
+    def _print_Reals(self, expr):
+        return 'S.Reals'
+
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
 
