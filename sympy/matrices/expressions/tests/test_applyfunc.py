@@ -6,6 +6,10 @@ from sympy.matrices.common import ShapeError
 
 X = MatrixSymbol("X", 3, 3)
 Y = MatrixSymbol("Y", 3, 3)
+
+k = symbols("k")
+Xk = MatrixSymbol("X", k, k)
+
 Xd = X.as_explicit()
 
 x, y, z, t = symbols("x y z t")
@@ -48,3 +52,17 @@ def test_applyfunc_matrix():
     assert expr.expr == M
     assert expr.doit() == M.applyfunc(sin)
     assert expr.doit() == Matrix([[sin(x), sin(y)], [sin(z), sin(t)]])
+
+    expr = ElementwiseApplyFunction(double, Xk)
+    assert expr.doit() == expr
+    assert expr.subs(k, 2).shape == (2, 2)
+    assert (expr*expr).shape == (k, k)
+    M = MatrixSymbol("M", k, t)
+    expr2 = M.T*expr*M
+    assert isinstance(expr2, MatMul)
+    assert expr2.args[1] == expr
+    assert expr2.shape == (t, t)
+    expr3 = expr*M
+    assert expr3.shape == (k, t)
+
+    raises(ShapeError, lambda: M*expr)
