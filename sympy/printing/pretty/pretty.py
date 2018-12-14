@@ -1977,23 +1977,41 @@ class PrettyPrinter(Printer):
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):
         s = None
+        try:
+            for item in seq:
+                pform = self._print(item)
 
-        for item in seq:
-            pform = self._print(item)
+                if parenthesize(item):
+                    pform = prettyForm(*pform.parens())
+                if s is None:
+                    # first element
+                    s = pform
+                else:
+                    s = prettyForm(*stringPict.next(s, delimiter))
+                    s = prettyForm(*stringPict.next(s, pform))
 
-            if parenthesize(item):
-                pform = prettyForm(*pform.parens())
             if s is None:
-                # first element
-                s = pform
-            else:
-                s = prettyForm(*stringPict.next(s, delimiter))
-                s = prettyForm(*stringPict.next(s, pform))
+                s = stringPict('')
 
-        if s is None:
-            s = stringPict('')
+            s = prettyForm(*s.parens(left, right, ifascii_nougly=True))
+        except AttributeError:
+            s = None
+            for item in seq:
+                pform = self.doprint(item)
 
-        s = prettyForm(*s.parens(left, right, ifascii_nougly=True))
+                if parenthesize(item):
+                    pform = prettyForm(*pform.parens())
+                if s is None:
+                    # first element
+                    s = pform
+                else:
+                    s = prettyForm(*stringPict.next(s, delimiter))
+                    s = prettyForm(*stringPict.next(s, pform))
+
+            if s is None:
+                s = stringPict('')
+
+            s = prettyForm(*s.parens(left, right, ifascii_nougly=True))
         return s
 
     def join(self, delimiter, args):
