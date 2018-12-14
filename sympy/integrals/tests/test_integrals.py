@@ -1188,7 +1188,7 @@ def test_powers():
 def test_manual_option():
     raises(ValueError, lambda: integrate(1/x, x, manual=True, meijerg=True))
     # an example of a function that manual integration cannot handle
-    assert integrate(exp(x**2), x, manual=True) == Integral(exp(x**2), x)
+    assert integrate(log(1+x)/x, (x, 0, 1), manual=True).has(Integral)
 
 
 def test_meijerg_option():
@@ -1329,10 +1329,10 @@ def test_singularities():
 
 def test_issue_12645():
     x, y = symbols('x y', real=True)
-    assert (integrate(sin(x*x + y*y),
+    assert (integrate(sin(x*x*x + y*y),
                       (x, -sqrt(pi - y*y), sqrt(pi - y*y)),
                       (y, -sqrt(pi), sqrt(pi)))
-                == Integral(sin(x**2 + y**2),
+                == Integral(sin(x**3 + y**2),
                             (x, -sqrt(-y**2 + pi), sqrt(-y**2 + pi)),
                             (y, -sqrt(pi), sqrt(pi))))
 
@@ -1435,3 +1435,8 @@ def test_issue_15457():
     assert indefinite.subs(x, 3) - indefinite.subs(x, 1) == -2 + 2*E
     assert definite.subs({a: -3, b: -1}) == -exp(3) + exp(5)
     assert indefinite.subs(x, -1) - indefinite.subs(x, -3) == -exp(3) + exp(5)
+
+
+def test_issue_15431():
+    assert integrate(x*exp(x)*log(x), x) == \
+        (x*exp(x) - exp(x))*log(x) - exp(x) + Ei(x)
