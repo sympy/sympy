@@ -352,34 +352,35 @@ def special_function_rule(integral):
     e = sympy.Wild('e', exclude=[symbol], properties=[
         lambda x: not (x.is_nonnegative and x.is_integer)])
     wilds = (a, b, c, d, e)
-    # patterns consist of a SymPy class, wildcard match, and an optional
-    # condition coded as a lambda (when Wild properties are not enough)
-    patterns = {
-        (sympy.Mul, sympy.exp(a*symbol + b)/symbol): EiRule,
-        (sympy.Mul, sympy.cos(a*symbol + b)/symbol): CiRule,
-        (sympy.Mul, sympy.cosh(a*symbol + b)/symbol): ChiRule,
-        (sympy.Mul, sympy.sin(a*symbol + b)/symbol): SiRule,
-        (sympy.Mul, sympy.sinh(a*symbol + b)/symbol): ShiRule,
-        (sympy.Pow, 1/sympy.log(a*symbol + b)): LiRule,
-        (sympy.exp, sympy.exp(a*symbol**2 + b*symbol + c)): ErfRule,
-        (sympy.sin, sympy.sin(a*symbol**2 + b*symbol + c)): FresnelSRule,
-        (sympy.cos, sympy.cos(a*symbol**2 + b*symbol + c)): FresnelCRule,
-        (sympy.Mul, symbol**e*sympy.exp(a*symbol)): UpperGammaRule,
-        (sympy.Mul, sympy.polylog(b, a*symbol)/symbol): PolylogRule,
+    # patterns consist of a SymPy class, a wildcard expr, an optional
+    # condition coded as a lambda (when Wild properties are not enough),
+    # followed by an applicable rule
+    patterns = (
+        (sympy.Mul, sympy.exp(a*symbol + b)/symbol, None, EiRule),
+        (sympy.Mul, sympy.cos(a*symbol + b)/symbol, None, CiRule),
+        (sympy.Mul, sympy.cosh(a*symbol + b)/symbol, None, ChiRule),
+        (sympy.Mul, sympy.sin(a*symbol + b)/symbol, None, SiRule),
+        (sympy.Mul, sympy.sinh(a*symbol + b)/symbol, None, ShiRule),
+        (sympy.Pow, 1/sympy.log(a*symbol + b), None, LiRule),
+        (sympy.exp, sympy.exp(a*symbol**2 + b*symbol + c), None, ErfRule),
+        (sympy.sin, sympy.sin(a*symbol**2 + b*symbol + c), None, FresnelSRule),
+        (sympy.cos, sympy.cos(a*symbol**2 + b*symbol + c), None, FresnelCRule),
+        (sympy.Mul, symbol**e*sympy.exp(a*symbol), None, UpperGammaRule),
+        (sympy.Mul, sympy.polylog(b, a*symbol)/symbol, None, PolylogRule),
         (sympy.Pow, 1/sympy.sqrt(a - d*sympy.sin(symbol)**2),
-            lambda a, d: a != d): EllipticFRule,
+            lambda a, d: a != d, EllipticFRule),
         (sympy.Pow, sympy.sqrt(a - d*sympy.sin(symbol)**2),
-            lambda a, d: a != d): EllipticERule,
-    }
+            lambda a, d: a != d, EllipticERule),
+    )
     for p in patterns:
         if isinstance(integrand, p[0]):
             match = integrand.match(p[1])
             if match:
                 wild_vals = tuple(match.get(w) for w in wilds
                                   if match.get(w) is not None)
-                if len(p) < 3 or p[2](*wild_vals):
+                if p[2] is None or p[2](*wild_vals):
                     args = wild_vals + (integrand, symbol)
-                    return patterns[p](*args)
+                    return p[3](*args)
 
 
 def inverse_trig_rule(integral):
