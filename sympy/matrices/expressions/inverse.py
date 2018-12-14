@@ -67,6 +67,16 @@ class Inverse(MatPow):
         else:
             return self.arg.inverse()
 
+    def _eval_derivative_matrix_lines(self, x):
+        arg = self.args[0]
+        lines = arg._eval_derivative_matrix_lines(x)
+        for line in lines:
+            line.first *= -self.T
+            line.second *= self
+            line.first_T *= self
+            line.second_T *= -self.T
+        return lines
+
 
 from sympy.assumptions.ask import ask, Q
 from sympy.assumptions.refine import handlers_dict

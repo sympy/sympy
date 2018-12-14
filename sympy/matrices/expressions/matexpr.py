@@ -196,8 +196,21 @@ class MatrixExpr(Expr):
         from sympy.matrices.expressions.adjoint import Adjoint
         return Adjoint(self)
 
-    def _eval_derivative(self, v):
-        return matrix_derivative(self, v)
+    def _eval_derivative(self, x):
+        from sympy import Derivative
+        lines = self._eval_derivative_matrix_lines(x)
+
+        first = lines[0].first
+        second = lines[0].second
+
+        one_final = (first.shape[1] == 1) and (second.shape[1] == 1)
+
+        if lines[0].trace or one_final:
+            return reduce(lambda x,y: x+y, [lr.first * lr.second.T + lr.first_T * lr.second_T.T for lr in lines])
+
+        shape = first.shape + second.shape
+        rank = sum([i != 1 for i in shape])
+        return Derivative(self, x)
 
     def _eval_derivative_n_times(self, x, n):
         return Basic._eval_derivative_n_times(self, x, n)
@@ -665,6 +678,26 @@ class MatrixSymbol(MatrixExpr):
     def _eval_simplify(self, **kwargs):
         return self
 
+    def _eval_derivative_matrix_lines(self, x):
+        if self != x:
+            return [_LeftRightArgs(
+                ZeroMatrix(x.shape[0], self.shape[0]),
+                ZeroMatrix(x.shape[1], self.shape[1]),
+                ZeroMatrix(x.shape[0], self.shape[1]),
+                ZeroMatrix(x.shape[1], self.shape[0]),
+            )]
+        else:
+            first=Identity(self.shape[0])
+            second=Identity(self.shape[1])
+            first_T=ZeroMatrix(x.shape[0], self.shape[1])
+            second_T=ZeroMatrix(x.shape[1], self.shape[0])
+            return [_LeftRightArgs(
+                first=first,
+                second=second,
+                first_T=first_T,
+                second_T=second_T,
+            )]
+
 
 class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity
@@ -802,106 +835,6 @@ class _LeftRightArgs(object):
         if not isinstance(other, _LeftRightArgs):
             return False
         return (self.first == other.first) and (self.second == other.second) and (self.first_T == other.first_T) and (self.second_T == other.second_T)
-
-
-def _matrix_derivative(expr, x):
-    from .trace import Trace
-    from .transpose import Transpose
-    from sympy import (Identity, ZeroMatrix)
-
-    if isinstance(expr, MatrixSymbol):
-        if expr != x:
-            return [_LeftRightArgs(
-                ZeroMatrix(x.shape[0], expr.shape[0]),
-                ZeroMatrix(x.shape[1], expr.shape[1]),
-                ZeroMatrix(x.shape[0], expr.shape[1]),
-                ZeroMatrix(x.shape[1], expr.shape[0]),
-            )]
-        else:
-            first=Identity(expr.shape[0])
-            second=Identity(expr.shape[1])
-            first_T=ZeroMatrix(x.shape[0], expr.shape[1])
-            second_T=ZeroMatrix(x.shape[1], expr.shape[0])
-            return [_LeftRightArgs(
-                first=first,
-                second=second,
-                first_T=first_T,
-                second_T=second_T,
-            )]
-    if isinstance(expr, MatMul):
-        with_x_ind = [i for i, arg in enumerate(expr.args) if arg.has(x)]
-        lines = []
-        for ind in with_x_ind:
-            left_args = expr.args[:ind]
-            right_args = expr.args[ind+1:]
-
-            right_mat = MatMul.fromiter(right_args)
-            right_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(right_args)])
-            left_mat = MatMul.fromiter(left_args)
-            left_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(left_args)])
-
-            d = _matrix_derivative(expr.args[ind], x)
-            for i in d:
-                i.first *= left_rev
-                i.second *= right_mat
-                i.first_T *= right_mat
-                i.second_T *= left_rev
-                lines.append(i)
-
-        return lines
-    if isinstance(expr, MatAdd):
-        add_lines = [_matrix_derivative(arg, x) for arg in expr.args]
-        return [j for i in add_lines for j in i]
-    if isinstance(expr, Inverse):
-        # Note: this instance check has to precede `MatPow`:
-        arg = expr.args[0]
-        lines = _matrix_derivative(arg, x)
-        for line in lines:
-            line.first *= -expr.T
-            line.second *= expr
-            line.first_T *= expr
-            line.second_T *= -expr.T
-        return lines
-    elif isinstance(expr, MatPow):
-        # Note: this instance check has to come after `Inverse`:
-        exp = expr.exp
-        if (exp > 0) == True:
-            newexpr = MatMul.fromiter([expr.base for i in range(exp)])
-        elif (exp == -1) == True:
-            return _matrix_derivative(Inverse(expr.base), x)
-        elif (exp < 0) == True:
-            newexpr = MatMul.fromiter([Inverse(expr.base) for i in range(-exp)])
-        elif (exp == 0) == True:
-            return _matrix_derivative(expr.doit(), x)
-        else:
-            raise NotImplementedError("cannot evaluate %s derived by %s" % (expr, x))
-        return _matrix_derivative(newexpr, x)
-    if isinstance(expr, Transpose):
-        lines = _matrix_derivative(expr.args[0], x)
-        return [i.transpose() for i in lines]
-    if isinstance(expr, Trace):
-        r = _matrix_derivative(expr.args[0], x)
-        for lr in r:
-            lr.trace = True
-        return r
-    raise NotImplementedError
-
-
-def matrix_derivative(expr, x):
-    from sympy import Derivative
-    lines = _matrix_derivative(expr, x)
-
-    first = lines[0].first
-    second = lines[0].second
-
-    one_final = (first.shape[1] == 1) and (second.shape[1] == 1)
-
-    if lines[0].trace or one_final:
-        return reduce(lambda x,y: x+y, [lr.first * lr.second.T + lr.first_T * lr.second_T.T for lr in lines])
-
-    shape = first.shape + second.shape
-    rank = sum([i != 1 for i in shape])
-    return Derivative(expr, x)
 
 
 from .matmul import MatMul
