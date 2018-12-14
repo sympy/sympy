@@ -223,9 +223,8 @@ def test_matrix_derivatives_of_traces():
 
     # Cookbook example 125:
     expr = Trace(Inverse(X.T*C*X)*A)
-    part1 = -(C*X*(X.T*C*X).inv())
-    part2 = (X.T*C*X).inv()
-    assert expr.diff(X) == part1*A*part2 + part1*A.T*part2
+    # Warning: result in the cookbook appears to be wrong:
+    assert expr.diff(X) == - X.inv().T*A.T*X.inv()*C.inv().T*X.inv().T - X.inv().T*A*X.inv()*C.inv()*X.inv().T
 
     # Cookbook example 126:
     expr = Trace((X.T*C*X).inv()*(X.T*B*X))
@@ -233,7 +232,8 @@ def test_matrix_derivatives_of_traces():
 
     # Cookbook example 127:
     expr = Trace((A + X.T*C*X).inv()*(X.T*B*X))
-    #assert expr.diff(X) == -2*C*X*(A + X.T*C*X).inv()*X.T*B*X*(A + X.T*C*X).inv() + 2*B*X*(A + X.T*C*X).inv()
+    # Warning: result in the cookbook appears to be wrong:
+    assert expr.diff(X) == B*X*Inverse(A + X.T*C*X) - C*X*Inverse(A + X.T*C*X)*X.T*B*X*Inverse(A + X.T*C*X) - C.T*X*Inverse(A.T + (C*X).T*X)*X.T*B.T*X*Inverse(A.T + (C*X).T*X) + B.T*X*Inverse(A.T + (C*X).T*X)
 
 
 def test_derivatives_of_complicated_matrix_expr():
