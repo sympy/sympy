@@ -364,8 +364,7 @@ def test_issue_2850():
 
 def test_issue_9462():
     assert manualintegrate(sin(2*x)*exp(x), x) == exp(x)*sin(2*x)/5 - 2*exp(x)*cos(2*x)/5
-    assert not contains_dont_know(integral_steps(sin(2*x)*exp(x), x)
-)
+    assert not contains_dont_know(integral_steps(sin(2*x)*exp(x), x))
     assert manualintegrate((x - 3) / (x**2 - 2*x + 2)**2, x) == \
                            Integral(x/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x) \
                            - 3*Integral(1/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x)
