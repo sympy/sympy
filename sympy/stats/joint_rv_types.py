@@ -1,5 +1,5 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
-    IndexedBase)
+    IndexedBase, log, E, I)
 from sympy.stats.rv import _value_check, random_symbols
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
     JointDistributionHandmade, MarginalDistribution)
@@ -103,6 +103,20 @@ class MultivariateNormalDistribution(JointDistribution):
         return Lambda(sym, S(1)/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
             -S(1)/2*(_mu - sym).transpose()*(_sigma.inv()*\
                 (_mu - sym)))[0])
+
+    def entropy(self):
+        sigma = self.sigma
+        return log(2*pi*E*det(sigma))/2
+
+    def mgf(self, *args):
+        mu, sigma = self.mu, self.sigma
+        t = ImmutableMatrix(args)
+        return exp(mu.transpose()*t + t.transpose()*(sigma*t)/2)
+
+    def cf(self, *args):
+        mu, sigma = self.mu, self.sigma
+        t = ImmutableMatrix(args)
+        return exp(I*(mu.transpose()*t) - t.transpose()*(sigma*t)/2)
 
 #-------------------------------------------------------------------------------
 # Multivariate Laplace distribution ---------------------------------------------------------
