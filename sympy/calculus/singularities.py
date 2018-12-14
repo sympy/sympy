@@ -57,9 +57,9 @@ def singularities(expression, symbol):
     =======
 
     Set
-        A set of values for `symbol` for which `expression` has a
-        singularity. An `EmptySet` is returned if `expression` has no
-        singularities for any given value of `Symbol`.
+        A set of values for ``symbol`` for which ``expression`` has a
+        singularity. An ``EmptySet`` is returned if ``expression`` has no
+        singularities for any given value of ``Symbol``.
 
     Raises
     ======
@@ -122,8 +122,8 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     =======
 
     Boolean
-        True if `predicate` is true for all the derivatives when `symbol` is
-        varied in `range`, False otherwise.
+        True if ``predicate`` is true for all the derivatives when ``symbol``
+        is varied in ``range``, False otherwise.
 
     """
     expression = sympify(expression)
@@ -177,8 +177,8 @@ def is_increasing(expression, interval=S.Reals, symbol=None):
     =======
 
     Boolean
-        True if functions is increasing (either strictly increasing or
-        constant) in the given interval, False otherwise.
+        True if ``expression`` is increasing (either strictly increasing or
+        constant) in the given ``interval``, False otherwise.
 
     """
     return monotonicity_helper(expression, lambda x: x >= 0, interval, symbol)
@@ -219,7 +219,7 @@ def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
     =======
 
     Boolean
-        True if functions is strictly increasing in the given interval,
+        True if ``expression`` is strictly increasing in the given ``interval``,
         False otherwise.
 
     """
@@ -261,8 +261,8 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     =======
 
     Boolean
-        True if functions is decreasing (either strictly decreasing or
-        constant) in the given interval, False otherwise.
+        True if ``expression`` is decreasing (either strictly decreasing or
+        constant) in the given ``interval``, False otherwise.
 
     """
     return monotonicity_helper(expression, lambda x: x <= 0, interval, symbol)
@@ -301,7 +301,7 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     =======
 
     Boolean
-        True if functions is strictly decreasing in the given interval,
+        True if ``expression`` is strictly decreasing in the given ``interval``,
         False otherwise.
 
     """
@@ -340,7 +340,8 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     =======
 
     Boolean
-        True if functions is monotonic in the given interval, False otherwise.
+        True if ``expression`` is monotonic in the given ``interval``,
+        False otherwise.
 
     Raises
     ======
