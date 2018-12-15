@@ -1,6 +1,6 @@
 from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
-    tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfi,
+    tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfc, erfi,
     EulerGamma, Expr, factor, Function, gamma, gammasimp, I, Idx, im, IndexedBase,
     Integral, integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
@@ -1440,3 +1440,15 @@ def test_issue_15457():
 def test_issue_15431():
     assert integrate(x*exp(x)*log(x), x) == \
         (x*exp(x) - exp(x))*log(x) - exp(x) + Ei(x)
+
+
+def test_issue_15640_log_substitutions():
+    f = x/log(x)
+    F = Ei(2*log(x))
+    assert integrate(f, x) == F and F.diff(x) == f
+    f = x**3/log(x)**2
+    F = -x**4/log(x) + 4*Ei(4*log(x))
+    assert integrate(f, x) == F and F.diff(x) == f
+    f = sqrt(log(x))/x**2
+    F = -sqrt(pi)*erfc(sqrt(log(x)))/2 - sqrt(log(x))/x
+    assert integrate(f, x) == F and F.diff(x) == f
