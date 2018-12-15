@@ -6,9 +6,12 @@ Debian/Ubuntu
 
 To make the html documentation, install the prerequisites::
 
-    apt-get install python-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
+    sudo apt-get install texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
+    pip install mpmath sphinx docutils matplotlib
 
-and do::
+The Python dependencies can be installed either with **pip** (as shown here) or with **apt-get** (install python-<package>).
+
+Now type in the command::
 
     make html
 
@@ -16,9 +19,6 @@ and to view it, do::
 
     firefox _build/html/index.html
 
-If you get **mpmath** error, install python3-mpmath package::
-
-    apt-get install python3-mpmath
 
 Fedora
 ------
