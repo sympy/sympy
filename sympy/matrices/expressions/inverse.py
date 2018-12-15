@@ -71,10 +71,12 @@ class Inverse(MatPow):
         arg = self.args[0]
         lines = arg._eval_derivative_matrix_lines(x)
         for line in lines:
-            line.first *= -self.T
-            line.second *= self
-            line.first_T *= self
-            line.second_T *= -self.T
+            if line.transposed:
+                line.first *= self
+                line.second *= -self.T
+            else:
+                line.first *= -self.T
+                line.second *= self
         return lines
 
 

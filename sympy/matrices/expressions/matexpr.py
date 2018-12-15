@@ -556,7 +556,7 @@ def _matrix_derivative(expr, x):
     one_final = (first.shape[1] == 1) and (second.shape[1] == 1)
 
     if lines[0].trace or one_final:
-        return reduce(lambda x,y: x+y, [lr.first * lr.second.T + lr.first_T * lr.second_T.T for lr in lines])
+        return reduce(lambda x,y: x+y, [lr.first * lr.second.T for lr in lines])
 
     shape = first.shape + second.shape
     rank = sum([i != 1 for i in shape])
@@ -687,19 +687,15 @@ class MatrixSymbol(MatrixExpr):
             return [_LeftRightArgs(
                 ZeroMatrix(x.shape[0], self.shape[0]),
                 ZeroMatrix(x.shape[1], self.shape[1]),
-                ZeroMatrix(x.shape[0], self.shape[1]),
-                ZeroMatrix(x.shape[1], self.shape[0]),
+                False,
             )]
         else:
             first=Identity(self.shape[0])
             second=Identity(self.shape[1])
-            first_T=ZeroMatrix(x.shape[0], self.shape[1])
-            second_T=ZeroMatrix(x.shape[1], self.shape[0])
             return [_LeftRightArgs(
                 first=first,
                 second=second,
-                first_T=first_T,
-                second_T=second_T,
+                transposed=False,
             )]
 
 
@@ -817,28 +813,44 @@ def matrix_symbols(expr):
 
 
 class _LeftRightArgs(object):
-    def __init__(self, first=S.One, second=S.One, first_T=S.One, second_T=S.One):
+    r"""
+    Helper class to compute matrix derivatives.
+
+    The logic: when an expression is derived by a matrix `X_{mn}`, two lines of
+    matrix multiplications are created: the one contracted to `m` (first line),
+    and the one contracted to `n` (second line).
+
+    Transposition flips the side by which new matrices are connected to the
+    lines.
+
+    The trace connects the end of the two lines.
+    """
+
+    def __init__(self, first, second, transposed=False):
         self.first = first
         self.second = second
-        self.first_T = first_T
-        self.second_T = second_T
         self.trace = False
+        self.transposed = transposed
+
     def __repr__(self):
-        return "_LeftRightArgs(first=%s[%s], second=%s[%s], first_T=%s[%s], second_T=%s[%s], trace=%s)" % (
-                self.first, self.first.shape,
-                self.second, self.second.shape,
-                self.first_T, self.first_T.shape,
-                self.second_T, self.second_T.shape,
-                self.trace,
+        return "_LeftRightArgs(first=%s[%s], second=%s[%s], transposed=%s, trace=%s)" % (
+            self.first, self.first.shape,
+            self.second, self.second.shape,
+            self.transposed,
+            self.trace,
         )
+
     def transpose(self):
-        return type(self)(self.first_T, self.second_T, self.first, self.second)
+        self.transposed = not self.transposed
+        return self
+
     def __hash__(self):
-        return hash((self.first, self.second, self.first_T, self.second_T))
+        return hash((self.first, self.second, self.transposed))
+
     def __eq__(self, other):
         if not isinstance(other, _LeftRightArgs):
             return False
-        return (self.first == other.first) and (self.second == other.second) and (self.first_T == other.first_T) and (self.second_T == other.second_T)
+        return (self.first == other.first) and (self.second == other.second) and (self.transposed == other.transposed)
 
 
 from .matmul import MatMul
