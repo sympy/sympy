@@ -197,20 +197,7 @@ class MatrixExpr(Expr):
         return Adjoint(self)
 
     def _eval_derivative(self, x):
-        from sympy import Derivative
-        lines = self._eval_derivative_matrix_lines(x)
-
-        first = lines[0].first
-        second = lines[0].second
-
-        one_final = (first.shape[1] == 1) and (second.shape[1] == 1)
-
-        if lines[0].trace or one_final:
-            return reduce(lambda x,y: x+y, [lr.first * lr.second.T + lr.first_T * lr.second_T.T for lr in lines])
-
-        shape = first.shape + second.shape
-        rank = sum([i != 1 for i in shape])
-        return Derivative(self, x)
+        return _matrix_derivative(self, x)
 
     def _eval_derivative_n_times(self, x, n):
         return Basic._eval_derivative_n_times(self, x, n)
@@ -557,6 +544,23 @@ class MatrixExpr(Expr):
             return remove_matelement(retexpr, *ind0)
         else:
             return remove_matelement(retexpr, first_index, last_index)
+
+
+def _matrix_derivative(expr, x):
+    from sympy import Derivative
+    lines = expr._eval_derivative_matrix_lines(x)
+
+    first = lines[0].first
+    second = lines[0].second
+
+    one_final = (first.shape[1] == 1) and (second.shape[1] == 1)
+
+    if lines[0].trace or one_final:
+        return reduce(lambda x,y: x+y, [lr.first * lr.second.T + lr.first_T * lr.second_T.T for lr in lines])
+
+    shape = first.shape + second.shape
+    rank = sum([i != 1 for i in shape])
+    return Derivative(expr, x)
 
 
 class MatrixElement(Expr):

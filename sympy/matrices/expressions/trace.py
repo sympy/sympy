@@ -35,8 +35,14 @@ class Trace(Expr):
         return self
 
     def _eval_derivative(self, v):
-        from sympy.matrices.expressions.matexpr import MatrixExpr
-        return MatrixExpr._eval_derivative(self, v)
+        from sympy.matrices.expressions.matexpr import _matrix_derivative
+        return _matrix_derivative(self, v)
+
+    def _eval_derivative_matrix_lines(self, x):
+        r = self.args[0]._eval_derivative_matrix_lines(x)
+        for lr in r:
+            lr.trace = True
+        return r
 
     @property
     def arg(self):
@@ -60,12 +66,6 @@ class Trace(Expr):
         from sympy import Sum, Dummy
         i = Dummy('i')
         return Sum(self.arg[i, i], (i, 0, self.arg.rows-1)).doit()
-
-    def _eval_derivative_matrix_lines(self, x):
-        r = self.args[0]._eval_derivative_matrix_lines(x)
-        for lr in r:
-            lr.trace = True
-        return r
 
 
 def trace(expr):
