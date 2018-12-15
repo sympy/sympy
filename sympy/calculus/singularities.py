@@ -25,33 +25,14 @@ def singularities(expression, symbol):
     """
     Find singularities of a given function.
 
-    Currently supported functions are:
-    - univariate rational (real or complex) functions
-
     Parameters
     ==========
 
-    expression: Expr
+    expression : Expr
         The target function in which singularities need to be found.
-    symbol: Symbol
+    symbol : Symbol
         The symbol over the values of which the singularity in
         expression in being searched for.
-
-    Examples
-    ========
-
-    >>> from sympy.calculus.singularities import singularities
-    >>> from sympy import Symbol
-    >>> x = Symbol('x', real=True)
-    >>> y = Symbol('y', real=False)
-    >>> singularities(x**2 + x + 1, x)
-    EmptySet()
-    >>> singularities(1/(x + 1), x)
-    {-1}
-    >>> singularities(1/(y**2 + 1), y)
-    {-I, I}
-    >>> singularities(1/(y**3 + 1), y)
-    {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
 
     Returns
     =======
@@ -71,13 +52,32 @@ def singularities(expression, symbol):
     Notes
     =====
 
-    This function does not find nonisolated singularities
+    This function does not find non-isolated singularities
     nor does it find branch points of the expression.
+
+    Currently supported functions are:
+        - univariate rational (real or complex) functions
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Mathematical_singularity
+
+    Examples
+    ========
+
+    >>> from sympy.calculus.singularities import singularities
+    >>> from sympy import Symbol
+    >>> x = Symbol('x', real=True)
+    >>> y = Symbol('y', real=False)
+    >>> singularities(x**2 + x + 1, x)
+    EmptySet()
+    >>> singularities(1/(x + 1), x)
+    {-1}
+    >>> singularities(1/(y**2 + 1), y)
+    {-I, I}
+    >>> singularities(1/(y**3 + 1), y)
+    {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
 
     """
     if not expression.is_rational_function(symbol):
@@ -91,7 +91,7 @@ def singularities(expression, symbol):
 
 
 ###########################################################################
-###################### DIFFERENTIAL CALCULUS METHODS ######################
+#                      DIFFERENTIAL CALCULUS METHODS                      #
 ###########################################################################
 
 
@@ -102,16 +102,16 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     Parameters
     ==========
 
-    expression: Expr
+    expression : Expr
         The target function which is being checked
-    predicate: function
+    predicate : function
         The property being tested for. The function takes in an integer
         and returns a boolean. The integer input is the derivative and
         the boolean result should be true if the property is being held,
         and false otherwise.
-    interval: Symbol
+    interval : Set, optional
         The range of values in which we are testing, defaults to all reals.
-    symbol: Symbol
+    symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
 
     It returns a boolean indicating whether the interval in which
@@ -149,12 +149,20 @@ def is_increasing(expression, interval=S.Reals, symbol=None):
     Parameters
     ==========
 
-    expression: Expr
+    expression : Expr
         The target function which is being checked.
-    interval: Symbol
-        The range of values in which we are testing, defaults to all reals.
-    symbol: Symbol
+    interval : Set, optional
+        The range of values in which we are testing (defaults to set of
+        all real numbers).
+    symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
+
+    Returns
+    =======
+
+    Boolean
+        True if ``expression`` is increasing (either strictly increasing or
+        constant) in the given ``interval``, False otherwise.
 
     Examples
     ========
@@ -173,13 +181,6 @@ def is_increasing(expression, interval=S.Reals, symbol=None):
     >>> is_increasing(x**2 + y, Interval(1, 2), x)
     True
 
-    Returns
-    =======
-
-    Boolean
-        True if ``expression`` is increasing (either strictly increasing or
-        constant) in the given ``interval``, False otherwise.
-
     """
     return monotonicity_helper(expression, lambda x: x >= 0, interval, symbol)
 
@@ -191,12 +192,20 @@ def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
     Parameters
     ==========
 
-    expression: Expr
+    expression : Expr
         The target function which is being checked.
-    interval: Symbol
-        The range of values in which we are testing, defaults to all reals.
-    symbol: Symbol
+    interval : Set, optional
+        The range of values in which we are testing (defaults to set of
+        all real numbers).
+    symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
+
+    Returns
+    =======
+
+    Boolean
+        True if ``expression`` is strictly increasing in the given ``interval``,
+        False otherwise.
 
     Examples
     ========
@@ -215,13 +224,6 @@ def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
     >>> is_strictly_increasing(-x**2 + y, Interval(-oo, 0), x)
     False
 
-    Returns
-    =======
-
-    Boolean
-        True if ``expression`` is strictly increasing in the given ``interval``,
-        False otherwise.
-
     """
     return monotonicity_helper(expression, lambda x: x > 0, interval, symbol)
 
@@ -233,12 +235,20 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     Parameters
     ==========
 
-    expression: Expr
+    expression : Expr
         The target function which is being checked.
-    interval: Symbol
-        The range of values in which we are testing.
-    symbol: Symbol
+    interval : Set, optional
+        The range of values in which we are testing (defaults to set of
+        all real numbers).
+    symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
+
+    Returns
+    =======
+
+    Boolean
+        True if ``expression`` is decreasing (either strictly decreasing or
+        constant) in the given ``interval``, False otherwise.
 
     Examples
     ========
@@ -257,13 +267,6 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     >>> is_decreasing(-x**2 + y, Interval(-oo, 0), x)
     False
 
-    Returns
-    =======
-
-    Boolean
-        True if ``expression`` is decreasing (either strictly decreasing or
-        constant) in the given ``interval``, False otherwise.
-
     """
     return monotonicity_helper(expression, lambda x: x <= 0, interval, symbol)
 
@@ -275,12 +278,20 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     Parameters
     ==========
 
-    expression: Expr
+    expression : Expr
         The target function which is being checked.
-    interval: Symbol
-        The range of values in which we are testing, defaults to all reals.
-    symbol: Symbol
+    interval : Set, optional
+        The range of values in which we are testing (defaults to set of
+        all real numbers).
+    symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
+
+    Returns
+    =======
+
+    Boolean
+        True if ``expression`` is strictly decreasing in the given ``interval``,
+        False otherwise.
 
     Examples
     ========
@@ -297,13 +308,6 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     >>> is_strictly_decreasing(-x**2 + y, Interval(-oo, 0), x)
     False
 
-    Returns
-    =======
-
-    Boolean
-        True if ``expression`` is strictly decreasing in the given ``interval``,
-        False otherwise.
-
     """
     return monotonicity_helper(expression, lambda x: x < 0, interval, symbol)
 
@@ -312,12 +316,29 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     """
     Return whether the function is monotonic in the given interval.
 
-    expression: Expr
+    Parameters
+    ==========
+
+    expression : Expr
         The target function which is being checked.
-    interval: Symbol
-        The range of values in which we are testing, defaults to all reals.
-    symbol: Symbol
+    interval : Set, optional
+        The range of values in which we are testing (defaults to set of
+        all real numbers).
+    symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
+
+    Returns
+    =======
+
+    Boolean
+        True if ``expression`` is monotonic in the given ``interval``,
+        False otherwise.
+
+    Raises
+    ======
+
+    NotImplementedError
+        Monotonicity check has not been implemented for the queried function.
 
     Examples
     ========
@@ -335,19 +356,6 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     False
     >>> is_monotonic(x**2 + y + 1, Interval(1, 2), x)
     True
-
-    Returns
-    =======
-
-    Boolean
-        True if ``expression`` is monotonic in the given ``interval``,
-        False otherwise.
-
-    Raises
-    ======
-
-    NotImplementedError
-        Monotonicity check has not been implemented for the queried function.
 
     """
     expression = sympify(expression)
