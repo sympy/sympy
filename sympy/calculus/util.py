@@ -24,12 +24,12 @@ def continuous_domain(f, symbol, domain):
     Parameters
     ==========
 
-    f : Expr.
+    f : Expr
         The concerned function.
     symbol : Symbol
         The variable for which the intervals are to be determined.
     domain : Domain
-        The domain over which the continuity of the symbol has to be checked
+        The domain over which the continuity of the symbol has to be checked.
 
     Examples
     ========
@@ -49,13 +49,15 @@ def continuous_domain(f, symbol, domain):
 
     Returns
     =======
-    Intervals where the function is continuous.
+
+    interval
+        Union of all intervals where the function is continuous.
 
     Raises
     ======
     NotImplementedError
-        if the method to determine continuity of such a function
-        has not yet been developed
+        If the method to determine continuity of such a function
+        has not yet been developed.
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
