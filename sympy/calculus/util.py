@@ -28,7 +28,7 @@ def continuous_domain(f, symbol, domain):
         The concerned function.
     symbol : Symbol
         The variable for which the intervals are to be determined.
-    domain : Domain
+    domain : Interval
         The domain over which the continuity of the symbol has to be checked.
 
     Examples
@@ -50,7 +50,7 @@ def continuous_domain(f, symbol, domain):
     Returns
     =======
 
-    interval
+    Interval
         Union of all intervals where the function is continuous.
 
     Raises
