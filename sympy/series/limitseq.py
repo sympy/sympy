@@ -10,6 +10,9 @@ from sympy.core.symbol import Dummy
 from sympy.core.function import PoleError
 from sympy.series.limits import Limit
 from sympy.functions.combinatorial.numbers import fibonacci
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import Max, Min
+from sympy.functions.elementary.trigonometric import cos, sin
 
 
 def difference_delta(expr, n=None, step=1):
@@ -193,6 +196,8 @@ def limit_seq(expr, n=None, trials=5):
     .. [1] Computing Limits of Sequences - Manuel Kauers
     """
 
+    from sympy.concrete.summations import Sum
+    from sympy.calculus.util import AccumulationBounds
     if n is None:
         free = expr.free_symbols
         if len(free) == 1:
@@ -200,22 +205,36 @@ def limit_seq(expr, n=None, trials=5):
         elif not free:
             return expr
         else:
-            raise ValueError("expr %s has more than one variables. Please"
-                             "specify a variable." % (expr))
+            raise ValueError("Expression has more than one variable. "
+                             "Please specify a variable.")
     elif n not in expr.free_symbols:
         return expr
 
     expr = expr.rewrite(fibonacci, S.GoldenRatio)
     n_ = Dummy("n", integer=True, positive=True)
+    n1 = Dummy("n", odd=True, positive=True)
+    n2 = Dummy("n", even=True, positive=True)
 
-    # If there is a negative term raised to a power involving n, consider
-    # even and odd n separately.
+    # If there is a negative term raised to a power involving n, or a
+    # trigonometric function, then consider even and odd n separately.
     powers = (p.as_base_exp() for p in expr.atoms(Pow))
-    if any(b.is_negative and e.has(n) for b, e in powers):
-        L1 = _limit_seq(expr.xreplace({n: 2*n_}), n_, trials)
-        if L1 is not None:
-            L2 = _limit_seq(expr.xreplace({n: 2*n_ + 1}), n_, trials)
-            if L1 == L2:
-                return L1
+    if (any(b.is_negative and e.has(n) for b, e in powers) or
+        expr.has(cos, sin)):
+            L1 = _limit_seq(expr.xreplace({n: n1}), n1, trials)
+            if L1 is not None:
+                L2 = _limit_seq(expr.xreplace({n: n2}), n2, trials)
+                if L1 != L2:
+                    if L1.is_comparable and L2.is_comparable:
+                        return AccumulationBounds(Min(L1, L2), Max(L1, L2))
+                    else:
+                        return None
     else:
-        return _limit_seq(expr.xreplace({n: n_}), n_, trials)
+        L1 = _limit_seq(expr.xreplace({n: n_}), n_, trials)
+    if L1 is not None:
+        return L1
+    else:
+        # Maybe the absolute value is easier to deal with (though not if
+        # it's a sum). If it tends to 0, the limit is 0.
+        if not(expr.has(Sum) or expr.is_Add):
+            if _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials) is S.Zero:
+                return S.Zero
