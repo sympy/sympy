@@ -219,22 +219,28 @@ def limit_seq(expr, n=None, trials=5):
     # trigonometric function, then consider even and odd n separately.
     powers = (p.as_base_exp() for p in expr.atoms(Pow))
     if (any(b.is_negative and e.has(n) for b, e in powers) or
-        expr.has(cos, sin)):
-            L1 = _limit_seq(expr.xreplace({n: n1}), n1, trials)
-            if L1 is not None:
-                L2 = _limit_seq(expr.xreplace({n: n2}), n2, trials)
-                if L1 != L2:
-                    if L1.is_comparable and L2.is_comparable:
-                        return AccumulationBounds(Min(L1, L2), Max(L1, L2))
-                    else:
-                        return None
+            expr.has(cos, sin)):
+        L1 = _limit_seq(expr.xreplace({n: n1}), n1, trials)
+        if L1 is not None:
+            L2 = _limit_seq(expr.xreplace({n: n2}), n2, trials)
+            if L1 != L2:
+                if L1.is_comparable and L2.is_comparable:
+                    return AccumulationBounds(Min(L1, L2), Max(L1, L2))
+                else:
+                    return None
     else:
         L1 = _limit_seq(expr.xreplace({n: n_}), n_, trials)
     if L1 is not None:
         return L1
     else:
+        if expr.is_Add:
+            limits = [limit_seq(term, n, trials) for term in expr.args]
+            if any(result is None for result in limits):
+                return None
+            else:
+                return Add(*limits)
         # Maybe the absolute value is easier to deal with (though not if
-        # it's a sum). If it tends to 0, the limit is 0.
-        if not(expr.has(Sum) or expr.is_Add):
+        # it has a Sum). If it tends to 0, the limit is 0.
+        elif not expr.has(Sum):
             if _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials) is S.Zero:
                 return S.Zero
