@@ -223,7 +223,7 @@ def test_matrix_derivatives_of_traces():
 
     # Cookbook example 125:
     expr = Trace(Inverse(X.T*C*X)*A)
-    # Warning: result in the cookbook appears to be wrong:
+    # Warning: result in the cookbook is equivalent if B and C are symmetric:
     assert expr.diff(X) == - X.inv().T*A.T*X.inv()*C.inv().T*X.inv().T - X.inv().T*A*X.inv()*C.inv()*X.inv().T
 
     # Cookbook example 126:
@@ -232,7 +232,7 @@ def test_matrix_derivatives_of_traces():
 
     # Cookbook example 127:
     expr = Trace((A + X.T*C*X).inv()*(X.T*B*X))
-    # Warning: result in the cookbook appears to be wrong:
+    # Warning: result in the cookbook is equivalent if B and C are symmetric:
     assert expr.diff(X) == B*X*Inverse(A + X.T*C*X) - C*X*Inverse(A + X.T*C*X)*X.T*B*X*Inverse(A + X.T*C*X) - C.T*X*Inverse(A.T + (C*X).T*X)*X.T*B.T*X*Inverse(A.T + (C*X).T*X) + B.T*X*Inverse(A.T + (C*X).T*X)
 
 
