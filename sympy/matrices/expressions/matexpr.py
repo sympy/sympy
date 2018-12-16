@@ -196,51 +196,8 @@ class MatrixExpr(Expr):
         from sympy.matrices.expressions.adjoint import Adjoint
         return Adjoint(self)
 
-    def _eval_derivative(self, v):
-        if not isinstance(v, MatrixExpr):
-            return None
-
-        # Convert to the index-summation notation, perform the derivative, then
-        # reconvert it back to matrix expression.
-        from sympy import symbols, Dummy, Lambda, Trace
-        i, j, m, n = symbols("i j m n", cls=Dummy)
-        M = self._entry(i, j, expand=False)
-
-        # Replace traces with summations:
-        def getsum(x):
-            di = Dummy("d_i")
-            return Sum(x.args[0], (di, 0, x.args[0].shape[0]-1))
-        M = M.replace(lambda x: isinstance(x, Trace), getsum)
-
-        repl = {}
-        if self.shape[0] == 1:
-            repl[i] = 0
-        if self.shape[1] == 1:
-            repl[j] = 0
-        if v.shape[0] == 1:
-            repl[m] = 0
-        if v.shape[1] == 1:
-            repl[n] = 0
-        res = M.diff(v[m, n])
-        res = res.xreplace(repl)
-        if res == 0:
-            return res
-        if len(repl) < 2:
-            parsed = res
-        else:
-            if m not in repl:
-                parsed = MatrixExpr.from_index_summation(res, m)
-            elif i not in repl:
-                parsed = MatrixExpr.from_index_summation(res, i)
-            else:
-                parsed = MatrixExpr.from_index_summation(res)
-
-        if (parsed.has(m)) or (parsed.has(n)) or (parsed.has(i)) or (parsed.has(j)):
-            # In this case, there are still some KroneckerDelta.
-            # It's because the result is not a matrix, but a higher dimensional array.
-            return None
-        else:
-            return parsed
+    def _eval_derivative(self, x):
+        return _matrix_derivative(self, x)
 
     def _eval_derivative_n_times(self, x, n):
         return Basic._eval_derivative_n_times(self, x, n)
@@ -589,6 +546,23 @@ class MatrixExpr(Expr):
             return remove_matelement(retexpr, first_index, last_index)
 
 
+def _matrix_derivative(expr, x):
+    from sympy import Derivative
+    lines = expr._eval_derivative_matrix_lines(x)
+
+    first = lines[0].first
+    second = lines[0].second
+
+    one_final = (first.shape[1] == 1) and (second.shape[1] == 1)
+
+    if lines[0].trace or one_final:
+        return reduce(lambda x,y: x+y, [lr.first * lr.second.T for lr in lines])
+
+    shape = first.shape + second.shape
+    rank = sum([i != 1 for i in shape])
+    return Derivative(expr, x)
+
+
 class MatrixElement(Expr):
     parent = property(lambda self: self.args[0])
     i = property(lambda self: self.args[1])
@@ -708,6 +682,22 @@ class MatrixSymbol(MatrixExpr):
     def _eval_simplify(self, **kwargs):
         return self
 
+    def _eval_derivative_matrix_lines(self, x):
+        if self != x:
+            return [_LeftRightArgs(
+                ZeroMatrix(x.shape[0], self.shape[0]),
+                ZeroMatrix(x.shape[1], self.shape[1]),
+                False,
+            )]
+        else:
+            first=Identity(self.shape[0])
+            second=Identity(self.shape[1])
+            return [_LeftRightArgs(
+                first=first,
+                second=second,
+                transposed=False,
+            )]
+
 
 class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity
@@ -820,6 +810,48 @@ class ZeroMatrix(MatrixExpr):
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
+
+
+class _LeftRightArgs(object):
+    r"""
+    Helper class to compute matrix derivatives.
+
+    The logic: when an expression is derived by a matrix `X_{mn}`, two lines of
+    matrix multiplications are created: the one contracted to `m` (first line),
+    and the one contracted to `n` (second line).
+
+    Transposition flips the side by which new matrices are connected to the
+    lines.
+
+    The trace connects the end of the two lines.
+    """
+
+    def __init__(self, first, second, transposed=False):
+        self.first = first
+        self.second = second
+        self.trace = False
+        self.transposed = transposed
+
+    def __repr__(self):
+        return "_LeftRightArgs(first=%s[%s], second=%s[%s], transposed=%s, trace=%s)" % (
+            self.first, self.first.shape,
+            self.second, self.second.shape,
+            self.transposed,
+            self.trace,
+        )
+
+    def transpose(self):
+        self.transposed = not self.transposed
+        return self
+
+    def __hash__(self):
+        return hash((self.first, self.second, self.transposed))
+
+    def __eq__(self, other):
+        if not isinstance(other, _LeftRightArgs):
+            return False
+        return (self.first == other.first) and (self.second == other.second) and (self.transposed == other.transposed)
+
 
 from .matmul import MatMul
 from .matadd import MatAdd
