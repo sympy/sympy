@@ -123,7 +123,7 @@ class Mod(Function):
             for arg in p.args:
                 both_l[isinstance(arg, cls)].append(arg)
 
-            if q.is_Number:
+            if q is 2:
                 non_mod_l = [(x%q if x.is_Integer else x) for x in non_mod_l]
 
             if mod_l and all(inner.args[1] == q for inner in mod_l):
