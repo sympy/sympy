@@ -407,8 +407,6 @@ def periodicity(f, symbol, check=False):
     >>> periodicity(sin(4*x)**cos(2*x), x)
     pi
     >>> periodicity(exp(x), x)
-    None
-
     """
     from sympy.core.function import diff
     from sympy.core.mod import Mod
