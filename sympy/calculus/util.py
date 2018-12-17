@@ -553,7 +553,7 @@ def _periodicity(args, symbol):
 
     Returns
     =======
-    
+
     period
         The least common period of the function for all the symbols
         of the function.
