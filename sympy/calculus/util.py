@@ -21,6 +21,16 @@ def continuous_domain(f, symbol, domain):
     This method is limited by the ability to determine the various
     singularities and discontinuities of the given function.
 
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for which the intervals are to be determined.
+    domain : Interval
+        The domain over which the continuity of the symbol has to be checked.
+
     Examples
     ========
 
@@ -36,6 +46,18 @@ def continuous_domain(f, symbol, domain):
     Interval(2, 5)
     >>> continuous_domain(log(2*x - 1), x, S.Reals)
     Interval.open(1/2, oo)
+
+    Returns
+    =======
+
+    Interval
+        Union of all intervals where the function is continuous.
+
+    Raises
+    ======
+    NotImplementedError
+        If the method to determine continuity of such a function
+        has not yet been developed.
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
