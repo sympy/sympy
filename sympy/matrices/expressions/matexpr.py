@@ -545,6 +545,10 @@ class MatrixExpr(Expr):
         else:
             return remove_matelement(retexpr, first_index, last_index)
 
+    def applyfunc(self, func):
+        from .applyfunc import ElementwiseApplyFunction
+        return ElementwiseApplyFunction(func, self)
+
 
 def _matrix_derivative(expr, x):
     from sympy import Derivative
