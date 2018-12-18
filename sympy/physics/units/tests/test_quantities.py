@@ -3,7 +3,7 @@
 from sympy import (Abs, Add, Basic, Function, Number, Rational, S, Symbol,
     diff, exp, integrate, log, sin, sqrt, symbols)
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
-    volume)
+    volume, voltage, current, ohm)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     day, energy, foot, grams, hour, inch, kg, km, m, meter, mile, millimeter,
     minute, pressure, quart, s, second, speed_of_light, temperature, bit,
@@ -42,6 +42,12 @@ def test_convert_to():
     # Wrong dimension to convert:
     assert q.convert_to(s) == q
     assert speed_of_light.convert_to(m) == speed_of_light
+
+    vs = Quantity('vs')
+    vs.set_dimension(voltage)
+    vs_i = Quantity('vs_i')
+    vs_i.set_dimension(current)
+    assert convert_to(vs/vs_i, ohm) == ohm
 
 
 def test_Quantity_definition():
