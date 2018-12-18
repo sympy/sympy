@@ -581,6 +581,16 @@ def lcim(numbers):
     The numbers can be rational or irrational or a mixture of both.
     `None` is returned for incommensurable numbers.
 
+    Parameters
+    ==========
+    numbers : int[]
+        Numbers whose lcim has to be founed. They can be rational or irrational or a mixture of both.
+
+    Returns
+    =======
+    number
+          lcim if it exists, otherwise `None` for incommensurable numbers.
+
     Examples
     ========
     >>> from sympy import S, pi
