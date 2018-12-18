@@ -2918,10 +2918,6 @@ def count_ops(expr, visual=False):
         while args:
             a = args.pop()
 
-            # XXX: This is a hack to support non-Basic args
-            # if isinstance(a, string_types):
-            #     continue
-
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:
@@ -3008,10 +3004,6 @@ def count_ops(expr, visual=False):
             args = [expr]
             while args:
                 a = args.pop()
-
-                # XXX: This is a hack to support non-Basic args
-                # if isinstance(a, string_types):
-                #     continue
 
                 if a.args:
                     o = Symbol(a.func.__name__.upper())
