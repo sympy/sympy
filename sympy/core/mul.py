@@ -295,12 +295,8 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif o.is_commutative:
-                #      e
-                # o = b
                 b, e = o.as_base_exp()
 
-                #  y
-                # 3
                 if o.is_Pow:
                     if b.is_Number:
 
@@ -323,10 +319,6 @@ class Mul(Expr, AssocOp):
                         elif b.is_positive or e.is_integer:
                             num_exp.append((b, e))
                             continue
-
-                    elif b is S.ImaginaryUnit and e.is_Rational:
-                        neg1e += e/2
-                        continue
 
                 c_powers.append((b, e))
 
