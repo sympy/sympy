@@ -1,4 +1,4 @@
-from sympy import KroneckerDelta, diff, Piecewise, And
+from sympy import KroneckerDelta, diff, Piecewise, exp
 from sympy import Sum, Dummy, factor, expand
 
 from sympy.core import S, symbols, Add, Mul
@@ -347,3 +347,12 @@ def test_factor_expand():
     assert expr1 != expr2
     assert expand(expr1) == expr2
     assert factor(expr2) == expr1
+
+def test_exp():
+    A = MatrixSymbol('A', 2, 2)
+    B = MatrixSymbol('B', 2, 2)
+    expr1 = exp(A)*exp(B)
+    expr2 = exp(B)*exp(A)
+    assert expr1 != expr2
+    assert not isinstance(expr1, exp)
+    assert not isinstance(expr2, exp)
