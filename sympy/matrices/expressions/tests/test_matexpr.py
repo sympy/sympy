@@ -1,4 +1,4 @@
-from sympy import KroneckerDelta, diff, Piecewise, exp
+from sympy import KroneckerDelta, diff, Piecewise, exp, SympifyError
 from sympy import Sum, Dummy, factor, expand
 
 from sympy.core import S, symbols, Add, Mul
@@ -357,3 +357,6 @@ def test_exp():
     assert expr1 - expr2 != 0
     assert not isinstance(expr1, exp)
     assert not isinstance(expr2, exp)
+
+def test_invalid_args():
+    raises(SympifyError, lambda: MatrixSymbol(1, 2, 'A'))
