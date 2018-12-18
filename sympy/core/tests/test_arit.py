@@ -266,7 +266,7 @@ def test_pow_im():
     assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     assert Mul(Pow(-1, Rational(3, 2), evaluate=False), I, I) == I
-    assert Mul(I*Pow(I, S.Half, evaluate=False)) == (-1)**Rational(3, 4)
+    assert Mul(I*Pow(I, S.Half, evaluate=False)) == sqrt(I)*I
 
 
 def test_real_mul():
