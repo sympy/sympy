@@ -175,13 +175,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     Returns an anonymous function for fast calculation of numerical values.
 
     If not specified differently by the user, ``modules`` defaults to
-    ``["numpy"]`` if NumPy is installed, and ``["math", "mpmath", "sympy"]``
-    if it isn't, that is, SymPy functions are replaced as far as possible by
-    either ``numpy`` functions if available, and Python's standard library
-    ``math``, or ``mpmath`` functions otherwise. To change this behavior, the
-    "modules" argument can be used. It accepts:
+    ``["scipy", "numpy"]`` if SciPy is installed, ``["numpy"]`` if only
+    NumPy is installed, and ``["math", "mpmath", "sympy"]`` if neither is
+    installed. That is, SymPy functions are replaced as far as possible by
+    either ``scipy`` or ``numpy`` functions if available, and Python's
+    standard library ``math``, or ``mpmath`` functions otherwise. To change
+    this behavior, the "modules" argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "numexpr", "sympy", "tensorflow"
+     - the strings "math", "mpmath", "numpy", "numexpr", "scipy", "sympy",
+       "tensorflow"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
