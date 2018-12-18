@@ -312,7 +312,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
 
         # pyx
-        with open(pyxfilename, 'w') as f:
+        with open(os.path.join(build_dir, pyxfilename), 'w') as f:
             self.dump_pyx([routine], f, self.filename)
 
         # setup.py

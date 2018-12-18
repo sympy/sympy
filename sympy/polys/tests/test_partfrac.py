@@ -39,7 +39,7 @@ def test_apart():
 
     assert apart(x/2, y) == x/2
 
-    f, g = (x+y)/(2*x - y), Rational(3/2)*y/((2*x - y)) + Rational(1/2)
+    f, g = (x+y)/(2*x - y), Rational(3, 2)*y/((2*x - y)) + Rational(1, 2)
 
     assert apart(f, x, full=False) == g
     assert apart(f, x, full=True) == g

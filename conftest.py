@@ -12,6 +12,10 @@ import pytest
 durations_path = os.path.join(os.path.dirname(__file__), '.ci', 'durations.json')
 blacklist_path = os.path.join(os.path.dirname(__file__), '.ci', 'blacklisted.json')
 
+# Collecting tests from rubi_tests under pytest leads to errors even if the
+# tests will be skipped.
+collect_ignore = ["sympy/integrals/rubi/rubi_tests"]
+
 def _mk_group(group_dict):
     return list(chain(*[[k+'::'+v for v in files] for k, files in group_dict.items()]))
 

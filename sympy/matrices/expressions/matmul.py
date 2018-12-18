@@ -135,6 +135,31 @@ class MatMul(MatrixExpr, Mul):
 
         return coeff_c, coeff_nc + matrices
 
+    def _eval_derivative_matrix_lines(self, x):
+        from .transpose import Transpose
+        with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
+        lines = []
+        for ind in with_x_ind:
+            left_args = self.args[:ind]
+            right_args = self.args[ind+1:]
+
+            right_mat = MatMul.fromiter(right_args)
+            right_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(right_args)])
+            left_mat = MatMul.fromiter(left_args)
+            left_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(left_args)])
+
+            d = self.args[ind]._eval_derivative_matrix_lines(x)
+            for i in d:
+                if i.transposed:
+                    i.first *= right_mat
+                    i.second *= left_rev
+                else:
+                    i.first *= left_rev
+                    i.second *= right_mat
+                lines.append(i)
+
+        return lines
+
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """

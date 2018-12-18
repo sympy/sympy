@@ -530,11 +530,6 @@ def _test(*paths, **kwargs):
                    fast_threshold=fast_threshold,
                    slow_threshold=slow_threshold)
 
-    # Disable warnings for external modules
-    import sympy.external
-    sympy.external.importtools.WARN_OLD_VERSION = False
-    sympy.external.importtools.WARN_NOT_INSTALLED = False
-
     # Show deprecation warnings
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)

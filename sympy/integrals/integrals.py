@@ -458,7 +458,7 @@ class Integral(AddWithLimits):
 
             if function.has(Abs, sign) and (
                 (len(xab) < 3 and all(x.is_real for x in xab)) or
-                (len(xab) == 3 and all(x.is_real and x.is_finite for
+                (len(xab) == 3 and all(x.is_real and not x.is_infinite for
                  x in xab[1:]))):
                     # some improper integrals are better off with Abs
                     xr = Dummy("xr", real=True)

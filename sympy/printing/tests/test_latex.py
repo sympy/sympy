@@ -1738,6 +1738,11 @@ def test_MatrixElement_printing():
     F = C[0, 0].subs(C, A - B)
     assert latex(F) == r"\left(A - B\right)_{0, 0}"
 
+    i, j, k = symbols("i j k")
+    M = MatrixSymbol("M", k, k)
+    N = MatrixSymbol("N", k, k)
+    assert latex((M*N)[i, j]) == r'\sum_{i_{1}=0}^{k - 1} M_{i, i_{1}} N_{i_{1}, j}'
+
 
 def test_MatrixSymbol_printing():
     # test cases for issue #14237

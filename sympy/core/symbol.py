@@ -251,6 +251,11 @@ class Symbol(AtomicExpr, Boolean):
         # Note: user-specified assumptions not hashed, just derived ones
         return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
+    def _eval_subs(self, old, new):
+        from sympy.core.power import Pow
+        if old.is_Pow:
+            return Pow(self, S.One, evaluate=False)._eval_subs(old, new)
+
     @property
     def assumptions0(self):
         return dict((key, value) for key, value

@@ -544,6 +544,12 @@ def exptrigsimp(expr):
     def f(rv):
         if not rv.is_Mul:
             return rv
+        commutative_part, noncommutative_part = rv.args_cnc()
+        # Since as_powers_dict loses order information,
+        # if there is more than one noncommutative factor,
+        # it should only be used to simplify the commutative part.
+        if (len(noncommutative_part) > 1):
+            return f(Mul(*commutative_part))*Mul(*noncommutative_part)
         rvd = rv.as_powers_dict()
         newd = rvd.copy()
 

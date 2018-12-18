@@ -423,7 +423,7 @@ def test__solve_inequality():
         for c in (0, 1):
             e = 2*fx - c > 0
             assert _solve_inequality(e, x, linear=True) == (
-                fx > c/2)
+                fx > c/S(2))
     assert _solve_inequality(2*x**2 + 2*x - 1 < 0, x, linear=True) == (
         x*(x + 1) < S.Half)
     assert _solve_inequality(Eq(x*y, 1), x) == Eq(x*y, 1)

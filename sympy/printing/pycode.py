@@ -499,6 +499,16 @@ class NumPyPrinter(PythonCodePrinter):
         "Matrix multiplication printer"
         return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
 
+    def _print_MatPow(self, expr):
+        "Matrix power printer"
+        return '{0}({1}, {2})'.format(self._module_format('numpy.linalg.matrix_power'),
+            self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_Inverse(self, expr):
+        "Matrix inverse printer"
+        return '{0}({1})'.format(self._module_format('numpy.linalg.inv'),
+            self._print(expr.args[0]))
+
     def _print_DotProduct(self, expr):
         # DotProduct allows any shape order, but numpy.dot does matrix
         # multiplication, so we have to make sure it gets 1 x n by n x 1.
@@ -663,16 +673,25 @@ for k in NumPyPrinter._kc:
 _known_functions_scipy_special = {
     'erf': 'erf',
     'erfc': 'erfc',
-    'besselj': 'jn',
-    'bessely': 'yn',
+    'besselj': 'jv',
+    'bessely': 'yv',
     'besseli': 'iv',
-    'besselk': 'kn',
+    'besselk': 'kv',
     'factorial': 'factorial',
     'gamma': 'gamma',
     'loggamma': 'gammaln',
     'digamma': 'psi',
-    'RisingFactorial': 'poch'
+    'RisingFactorial': 'poch',
+    'jacobi': 'eval_jacobi',
+    'gegenbauer': 'eval_gegenbauer',
+    'chebyshevt': 'eval_chebyt',
+    'chebyshevu': 'eval_chebyu',
+    'legendre': 'eval_legendre',
+    'hermite': 'eval_hermite',
+    'laguerre': 'eval_laguerre',
+    'assoc_laguerre': 'eval_genlaguerre',
 }
+
 _known_constants_scipy_constants = {
     'GoldenRatio': 'golden_ratio',
     'Pi': 'pi',
@@ -701,6 +720,13 @@ class SciPyPrinter(NumPyPrinter):
 
     _print_ImmutableSparseMatrix = _print_SparseMatrix
 
+    # SciPy's lpmv has a different order of arguments from assoc_legendre
+    def _print_assoc_legendre(self, expr):
+        return "{0}({2}, {1}, {3})".format(
+            self._module_format('scipy.special.lpmv'),
+            self._print(expr.args[0]),
+            self._print(expr.args[1]),
+            self._print(expr.args[2]))
 
 for k in SciPyPrinter._kf:
     setattr(SciPyPrinter, '_print_%s' % k, _print_known_func)

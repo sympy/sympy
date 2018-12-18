@@ -81,7 +81,7 @@ def test_gammasimp():
 
     # was part of test_combsimp() in test_combsimp.py
     assert gammasimp(binomial(n + 2, k + S(1)/2)) == gamma(n + 3)/ \
-        (gamma(k + 3/2)*gamma(-k + n + 5/2))
+        (gamma(k + S(3)/2)*gamma(-k + n + S(5)/2))
     assert gammasimp(binomial(n + 2, k + 2.0)) == \
         gamma(n + 3)/(gamma(k + 3.0)*gamma(-k + n + 1))
 

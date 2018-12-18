@@ -58,7 +58,7 @@ def test_JointPSpace_margial_distribution():
     from sympy import polar_lift
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
-        8*polar_lift(x**2/2 + 1)**(5/2))
+        8*polar_lift(x**2/2 + 1)**(S(5)/2))
     assert integrate(marginal_distribution(T, 1)(x), (x, -oo, oo)) == 1
 
 def test_JointRV():

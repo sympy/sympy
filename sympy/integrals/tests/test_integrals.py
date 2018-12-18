@@ -744,7 +744,7 @@ def test_as_sum_midpoint2():
     assert e.as_sum(3, method="midpoint").expand() == S(35)/108 + y + y**2
     assert e.as_sum(4, method="midpoint").expand() == S(21)/64 + y + y**2
     assert e.as_sum(n, method="midpoint").expand() == \
-        y**2 + y + 1/3 - 1/(12*n**2)
+        y**2 + y + S(1)/3 - 1/(12*n**2)
 
 
 def test_as_sum_left():
@@ -1188,7 +1188,7 @@ def test_powers():
 def test_manual_option():
     raises(ValueError, lambda: integrate(1/x, x, manual=True, meijerg=True))
     # an example of a function that manual integration cannot handle
-    assert integrate(exp(x**2), x, manual=True) == Integral(exp(x**2), x)
+    assert integrate(log(1+x)/x, (x, 0, 1), manual=True).has(Integral)
 
 
 def test_meijerg_option():
@@ -1329,10 +1329,10 @@ def test_singularities():
 
 def test_issue_12645():
     x, y = symbols('x y', real=True)
-    assert (integrate(sin(x*x + y*y),
+    assert (integrate(sin(x*x*x + y*y),
                       (x, -sqrt(pi - y*y), sqrt(pi - y*y)),
                       (y, -sqrt(pi), sqrt(pi)))
-                == Integral(sin(x**2 + y**2),
+                == Integral(sin(x**3 + y**2),
                             (x, -sqrt(-y**2 + pi), sqrt(-y**2 + pi)),
                             (y, -sqrt(pi), sqrt(pi))))
 
@@ -1421,3 +1421,22 @@ def test_issue_15292():
     res = integrate(exp(-x**2*cos(2*t)) * cos(x**2*sin(2*t)), (x, 0, oo))
     assert isinstance(res, Piecewise)
     assert gammasimp((res - sqrt(pi)/2 * cos(t)).subs(t, pi/6)) == 0
+
+
+def test_issue_4514():
+    assert integrate(sin(2*x)/sin(x), x) == 2*sin(x)
+
+
+def test_issue_15457():
+    x, a, b = symbols('x a b', real=True)
+    definite = integrate(exp(Abs(x-2)), (x, a, b))
+    indefinite = integrate(exp(Abs(x-2)), x)
+    assert definite.subs({a: 1, b: 3}) == -2 + 2*E
+    assert indefinite.subs(x, 3) - indefinite.subs(x, 1) == -2 + 2*E
+    assert definite.subs({a: -3, b: -1}) == -exp(3) + exp(5)
+    assert indefinite.subs(x, -1) - indefinite.subs(x, -3) == -exp(3) + exp(5)
+
+
+def test_issue_15431():
+    assert integrate(x*exp(x)*log(x), x) == \
+        (x*exp(x) - exp(x))*log(x) - exp(x) + Ei(x)

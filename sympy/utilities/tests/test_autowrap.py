@@ -4,18 +4,17 @@
 import os
 import tempfile
 import shutil
-import warnings
 import tempfile
 
 from sympy.core import symbols, Eq
 from sympy.core.compatibility import StringIO
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import raises
 from sympy.utilities.autowrap import (autowrap, binary_function,
             CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
 from sympy.utilities.codegen import (
     CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
 )
+from sympy.utilities.tmpfiles import TmpFileManager, cleanup_tmp_files
 
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
@@ -37,10 +36,8 @@ def test_cython_wrapper_scalar_function():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
     routine = make_routine("test", expr)
-    with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', category=SymPyDeprecationWarning)
-        code_gen = CythonCodeWrapper(CCodeGen())
-        source = get_string(code_gen.dump_pyx, [routine])
+    code_gen = CythonCodeWrapper(CCodeGen())
+    source = get_string(code_gen.dump_pyx, [routine])
 
     expected = (
         "cdef extern from 'file.h':\n"
@@ -88,6 +85,7 @@ def test_cython_wrapper_inoutarg():
     assert source == expected
 
 
+@cleanup_tmp_files
 def test_cython_wrapper_compile_flags():
     from sympy import Equality
     x, y, z = symbols('x,y,z')
@@ -117,6 +115,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """ % {'num': CodeWrapper._module_counter}
 
     temp_dir = tempfile.mkdtemp()
+    TmpFileManager.tmp_folder(temp_dir)
     setup_file_path = os.path.join(temp_dir, 'setup.py')
 
     code_gen._prepare_files(routine, build_dir=temp_dir)
@@ -228,15 +227,15 @@ def test_autowrap_args():
     assert f.returns == "z"
 
 
+@cleanup_tmp_files
 def test_autowrap_store_files():
     x, y = symbols('x y')
     tmp = tempfile.mkdtemp()
-    try:
-        f = autowrap(x + y, backend='dummy', tempdir=tmp)
-        assert f() == str(x + y)
-        assert os.access(tmp, os.F_OK)
-    finally:
-        shutil.rmtree(tmp)
+    TmpFileManager.tmp_folder(tmp)
+
+    f = autowrap(x + y, backend='dummy', tempdir=tmp)
+    assert f() == str(x + y)
+    assert os.access(tmp, os.F_OK)
 
 
 def test_autowrap_store_files_issue_gh12939():

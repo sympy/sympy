@@ -87,3 +87,18 @@ class MatPow(MatrixExpr):
     def _eval_transpose(self):
         base, exp = self.args
         return MatPow(base.T, exp)
+
+    def _eval_derivative_matrix_lines(self, x):
+        from .matmul import MatMul
+        exp = self.exp
+        if (exp > 0) == True:
+            newexpr = MatMul.fromiter([self.base for i in range(exp)])
+        elif (exp == -1) == True:
+            return Inverse(self.base)._eval_derivative_matrix_lines(x)
+        elif (exp < 0) == True:
+            newexpr = MatMul.fromiter([Inverse(self.base) for i in range(-exp)])
+        elif (exp == 0) == True:
+            return self.doit()._eval_derivative_matrix_lines(x)
+        else:
+            raise NotImplementedError("cannot evaluate %s derived by %s" % (self, x))
+        return newexpr._eval_derivative_matrix_lines(x)

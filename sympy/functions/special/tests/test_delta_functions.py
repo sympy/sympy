@@ -4,11 +4,9 @@ from sympy import (
     SingularityFunction, signsimp
 )
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, warns_deprecated_sympy
 
 from sympy.core.function import ArgumentIndexError
-
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy.utilities.misc import filldedent
 
@@ -64,11 +62,15 @@ def test_DiracDelta():
     assert DiracDelta(x - y) != DiracDelta(y - x)
     assert signsimp(DiracDelta(x - y) - DiracDelta(y - x)) == 0
 
-    with raises(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         assert DiracDelta(x*y).simplify(x) == DiracDelta(x)/abs(y)
+    with warns_deprecated_sympy():
         assert DiracDelta(x*y).simplify(y) == DiracDelta(y)/abs(x)
+    with warns_deprecated_sympy():
         assert DiracDelta(x**2*y).simplify(x) == DiracDelta(x**2*y)
+    with warns_deprecated_sympy():
         assert DiracDelta(y).simplify(x) == DiracDelta(y)
+    with warns_deprecated_sympy():
         assert DiracDelta((x - 1)*(x - 2)*(x - 3)).simplify(x) == (
             DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2)
 
@@ -147,4 +149,4 @@ def test_issue_15923():
     assert Heaviside(x).rewrite(Piecewise, H0=1) == (
         Piecewise((0, x < 0), (1, True)))
     assert Heaviside(x).rewrite(Piecewise, H0=S(1)/2) == (
-        Piecewise((0, x < 0), (1/2, Eq(x, 0)), (1, x > 0)))
+        Piecewise((0, x < 0), (S(1)/2, Eq(x, 0)), (1, x > 0)))

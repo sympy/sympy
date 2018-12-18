@@ -35,19 +35,14 @@ class Trace(Expr):
         return self
 
     def _eval_derivative(self, v):
-        from sympy import Dummy, MatrixExpr, Sum
-        if not isinstance(v, MatrixExpr):
-            return None
+        from sympy.matrices.expressions.matexpr import _matrix_derivative
+        return _matrix_derivative(self, v)
 
-        t1 = Dummy("t_1")
-        m = Dummy("m")
-        n = Dummy("n")
-        # TODO: use self.rewrite(Sum) instead:
-        return MatrixExpr.from_index_summation(
-                Sum(self.args[0][t1, t1].diff(v[m, n]), (t1, 0, self.args[0].shape[0]-1)),
-                m,
-                dimensions=(v.args[1:])
-            )
+    def _eval_derivative_matrix_lines(self, x):
+        r = self.args[0]._eval_derivative_matrix_lines(x)
+        for lr in r:
+            lr.trace = True
+        return r
 
     @property
     def arg(self):
