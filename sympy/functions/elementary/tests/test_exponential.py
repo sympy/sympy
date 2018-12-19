@@ -118,7 +118,7 @@ def test_exp_rewrite():
     assert exp(pi*I/4).rewrite(sqrt) == sqrt(2)/2 + sqrt(2)*I/2
     assert exp(pi*I/3).rewrite(sqrt) == S(1)/2 + sqrt(3)*I/2
     assert exp(x*log(y)).rewrite(Pow) == y**x
-    assert exp(log(x)*log(y)).rewrite(Pow) == x**log(y)
+    assert exp(log(x)*log(y)).rewrite(Pow) in [x**log(y), y**log(x)]
     assert exp(log(log(x))*y).rewrite(Pow) == log(x)**y
 
     n = Symbol('n', integer=True)
