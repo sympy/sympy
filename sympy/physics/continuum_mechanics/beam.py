@@ -340,7 +340,7 @@ class Beam(object):
             reaction_moment = Symbol('M_'+str(loc))
             self.apply_load(reaction_load, loc, -1)
             self.apply_load(reaction_moment, loc, -2)
-            self.bc_deflection = [(loc, 0)]
+            self.bc_deflection.append((loc, 0))
             self.bc_slope.append((loc, 0))
 
     def apply_load(self, value, start, order, end=None):
@@ -1744,7 +1744,7 @@ class Beam3D(Beam):
             reaction_load = Symbol('R_'+str(loc))
             reaction_moment = Symbol('M_'+str(loc))
             self._reaction_loads[reaction_load] = [reaction_load, reaction_moment]
-            self.bc_deflection = [(loc, [0, 0, 0])]
+            self.bc_deflection.append((loc, [0, 0, 0]))
             self.bc_slope.append((loc, [0, 0, 0]))
 
     def solve_for_reaction_loads(self, *reaction):
