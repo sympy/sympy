@@ -488,3 +488,4 @@ def test_issue15494():
     solution  = integrate(integrand, s)
 
     assert solution == 0.666666666666667*exp(1.5*s) + 0.5*exp(2.0*s) - 0.769230769230769*exp(2.6*s)
+    
