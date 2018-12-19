@@ -22,7 +22,8 @@ from collections import namedtuple, defaultdict
 
 import sympy
 
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, Mapping
+from sympy.core.containers import Dict
 from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.polynomials import OrthogonalPolynomial
@@ -137,6 +138,36 @@ def manual_diff(f, symbol):
                 return f.args[0] * manual_diff(f.args[1], symbol)
     return f.diff(symbol)
 
+def manual_subs(expr, *args):
+    """
+    A wrapper for `expr.subs(*args)` with additional logic for substitution
+    of invertible functions.
+    """
+    if len(args) == 1:
+        sequence = args[0]
+        if isinstance(sequence, (Dict, Mapping)):
+            sequence = sequence.items()
+        elif not iterable(sequence):
+            raise ValueError("Expected an iterable of (old, new) pairs")
+    elif len(args) == 2:
+        sequence = [args]
+    else:
+        raise ValueError("subs accepts either 1 or 2 arguments")
+
+    new_subs = []
+    for old, new in sequence:
+        if isinstance(old, sympy.log):
+            # If log(x) = y, then exp(a*log(x)) = exp(a*y)
+            # that is, x**a = exp(a*y). Replace nontrivial powers of x
+            # before subs turns them into `exp(y)**a`, but
+            # do not replace x itself yet, to avoid `log(exp(y))`.
+            a = sympy.Wild('a')
+            expr = expr.replace(old.args[0]**(1 + a),
+                sympy.exp((1 + a)*new), exact=True)
+            new_subs.append((old.args[0], sympy.exp(new)))
+
+    return expr.subs(list(sequence) + new_subs)
+
 # Method based on that on SIN, described in "Symbolic Integration: The
 # Stormy Decade"
 
@@ -149,7 +180,7 @@ def find_substitutions(integrand, symbol, u_var):
             # replaced everything already
             return False
 
-        substituted = substituted.subs(u, u_var).cancel()
+        substituted = manual_subs(substituted, u, u_var).cancel()
 
         if symbol not in substituted.free_symbols:
             # avoid increasing the degree of a rational function
@@ -963,7 +994,7 @@ def trig_substitution_rule(integral):
                 substitutions[sympy.sqrt(f(theta)**(-2))] = 1/f(theta)
 
             replaced = integrand.subs(symbol, x_func).trigsimp()
-            replaced = replaced.subs(substitutions)
+            replaced = manual_subs(replaced, substitutions)
             if not replaced.has(symbol):
                 replaced *= manual_diff(x_func, theta)
                 replaced = replaced.trigsimp()
@@ -1018,7 +1049,7 @@ def substitution_rule(integral):
 
                     for expr in could_be_zero:
                         if not fuzzy_not(expr.is_zero):
-                            substep = integral_steps(integrand.subs(expr, 0), symbol)
+                            substep = integral_steps(manual_subs(integrand, expr, 0), symbol)
 
                             if substep:
                                 piecewise.append((

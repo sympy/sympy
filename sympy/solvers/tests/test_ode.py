@@ -3142,6 +3142,13 @@ def test_nth_algebraic_redundant_solutions():
     solns_final =  _nth_algebraic_remove_redundant_solutions(eqn, solns, 2, x)
     assert solns_final == [Eq(f(x), C1*exp(C2*x))]
 
+    # This one needs a substitution f' = g.
+    eqn = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
+    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
+    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x))
+
+
 #
 # These tests can be combined with the above test if they get fixed
 # so that dsolve actually works in all these cases.
@@ -3191,14 +3198,6 @@ def test_nth_algebraic_prep2():
     assert sol == dsolve(eqn, f(x), prep=True, hint='nth_algebraic')
     assert sol == dsolve(eqn, f(x))
 
-
-# This one needs a substitution f' = g. Should be doable...
-@XFAIL
-def test_2nd_order_substitution():
-    eqn = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
-    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x))
 
 # This needs a combination of solutions from nth_algebraic and some other
 # method from dsolve

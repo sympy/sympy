@@ -7,7 +7,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Ei, Ci, Si, Chi, Shi, fresnels, fresnelc, polylog, erf, erfi,
                    sinh, cosh, elliptic_f, elliptic_e)
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule, integral_steps, contains_dont_know)
+    _parts_rule, integral_steps, contains_dont_know, manual_subs)
 
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
 f = Function('f')
@@ -459,3 +459,18 @@ def test_issue_8520():
     assert manualintegrate(x**2/(x**6 + 25), x) == atan(x**3/5)/15
     f = x/(9*x**4 + 4)**2
     assert manualintegrate(f, x).diff(x).factor() == f
+
+
+def test_manual_subs():
+    x, y = symbols('x y')
+    expr = log(x) + exp(x)
+    # if log(x) is y, then exp(y) is x
+    assert manual_subs(expr, log(x), y) == y + exp(exp(y))
+    # if exp(x) is y, then log(y) need not be x
+    assert manual_subs(expr, exp(x), y) == log(x) + y
+
+
+def test_issue_15471():
+    f = log(x)*cos(log(x))/x**(S(3)/4)
+    F = -128*x**(1/4)*sin(log(x))/289 + 240*x**(1/4)*cos(log(x))/289 + (16*x**(1/4)*sin(log(x))/17 + 4*x**(1/4)*cos(log(x))/17)*log(x)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
