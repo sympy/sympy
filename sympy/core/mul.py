@@ -295,8 +295,12 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif o.is_commutative:
+                #      e
+                # o = b
                 b, e = o.as_base_exp()
 
+                #  y
+                # 3
                 if o.is_Pow:
                     if b.is_Number:
 
