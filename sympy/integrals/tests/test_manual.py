@@ -459,3 +459,17 @@ def test_issue_8520():
     assert manualintegrate(x**2/(x**6 + 25), x) == atan(x**3/5)/15
     f = x/(9*x**4 + 4)**2
     assert manualintegrate(f, x).diff(x).factor() == f
+
+    
+def test_issue15494():
+    from sympy.abc import t, s
+
+    Z0 = Function('Z0')
+    Z1 = Function('Z1')
+
+    k01, k10= symbols('k01 k10', real=True, positive=True)
+
+    integrand = (exp(s/2)-2*exp(1.6*s)+exp(s))*exp(s)
+    solution  = integrate(integrand, s)
+
+    assert solution == 0.666666666666667*exp(1.5*s) + 0.5*exp(2.0*s) - 0.769230769230769*exp(2.6*s)
