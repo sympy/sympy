@@ -6318,6 +6318,19 @@ def factor(f, *gens, **args):
     """
     f = sympify(f)
     if args.pop('deep', False):
+        from sympy.simplify.simplify import bottom_up
+        def _try_factor(expr):
+            """
+            Factor, but avoid changing the expression when unable to.
+            """
+            fac = factor(expr)
+            if fac.is_Mul or fac.is_Pow:
+                return fac
+            return expr
+
+        f = bottom_up(f, _try_factor)
+        # clean up any subexpressions that may have been expanded
+        # while factoring out a larger expression
         partials = {}
         muladd = f.atoms(Mul, Add)
         for p in muladd:
