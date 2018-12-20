@@ -477,14 +477,7 @@ def test_issue_15471():
 
 
 def test_issue15494():
-    from sympy.abc import t, s
-
-    Z0 = Function('Z0')
-    Z1 = Function('Z1')
-
-    k01, k10= symbols('k01 k10', real=True, positive=True)
-
-    integrand = (exp(s/2)-2*exp(1.6*s)+exp(s))*exp(s)
+    t, s = symbols('t s', real=True, positive=True)
+    integrand = (exp(s/2) - 2*exp(1.6*s) + exp(s))*exp(s)
     solution  = integrate(integrand, s)
-
     assert solution == 0.666666666666667*exp(1.5*s) + 0.5*exp(2.0*s) - 0.769230769230769*exp(2.6*s)
