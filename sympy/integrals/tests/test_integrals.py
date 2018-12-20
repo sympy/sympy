@@ -1205,6 +1205,19 @@ def test_risch_option():
     assert integrate(erf(x), x, risch=True) == Integral(erf(x), x)
     # TODO: How to test risch=False?
 
+
+def test_heurisch_option():
+    raises(ValueError, lambda: integrate(1/x, x, risch=True, heurisch=True))
+    # an integral that heurisch can handle
+    assert integrate(exp(x**2), x, heurisch=True) == sqrt(pi)*erfi(x)/2
+    # an integral that heurisch currently cannot handle
+    assert integrate(exp(x)/x, x, heurisch=True) == Integral(exp(x)/x, x)
+    # an integral where heurisch currently hangs, issue 15471
+    assert integrate(log(x)*cos(log(x))/x**(S(3)/4), x, heurisch=False) == (
+        -128*x**(S(1)/4)*sin(log(x))/289 + 240*x**(S(1)/4)*cos(log(x))/289 +
+        (16*x**(S(1)/4)*sin(log(x))/17 + 4*x**(S(1)/4)*cos(log(x))/17)*log(x))
+
+
 def test_issue_6828():
     f = 1/(1.08*x**2 - 4.3)
     g = integrate(f, x).diff(x)
