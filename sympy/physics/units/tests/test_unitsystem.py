@@ -74,4 +74,4 @@ def test_dim():
 
 
 def test_is_consistent():
-assert UnitSystem((m, s)).is_consistent is True
+    assert UnitSystem((m, s)).is_consistent is True
