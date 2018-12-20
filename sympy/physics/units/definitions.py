@@ -53,7 +53,7 @@ meter.set_scale_factor(One)
 # gram; used to define its prefixed units
 g = gram = grams = Quantity("gram", abbrev="g")
 gram.set_dimension(mass)
-gram.set_scale_factor(Rational(1, 1000))
+gram.set_scale_factor(One)
 
 # NOTE: the `kilogram` has scale factor 1000. In SI, kg is a base unit, but
 # nonetheless we are trying to be compatible with the `kilo` prefix. In a
@@ -65,7 +65,7 @@ gram.set_scale_factor(Rational(1, 1000))
 # (that is, support all kinds of unit systems).
 kg = kilogram = kilograms = Quantity("kilogram", abbrev="kg")
 kilogram.set_dimension(mass)
-kilogram.set_scale_factor(One)
+kilogram.set_scale_factor(kilo*gram)
 
 s = second = seconds = Quantity("second", abbrev="s")
 second.set_dimension(time)
