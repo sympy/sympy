@@ -147,7 +147,7 @@ class Mod(Function):
                         _.append(i)
                 non_mod_l = _
 
-            p = Mul(* [*non_mod_l, *mod_l])
+            p = Mul(*(non_mod_l + mod_l))
 
         # XXX other possibilities?
 
