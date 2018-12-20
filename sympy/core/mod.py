@@ -121,16 +121,6 @@ class Mod(Function):
             for arg in p.args:
                 both_l[isinstance(arg, cls)].append(arg)
 
-            if q.is_Integer and q is not S.One:
-                _ = []
-                for i in non_mod_l:
-                    if i.is_Integer:
-                        # and (i % q is not S.Zero)
-                        _.append(i%q)
-                    else:
-                        _.append(i)
-                non_mod_l = _
-
             if mod_l and all(inner.args[1] == q for inner in mod_l):
                 # finding distributive term
                 non_mod_l = [cls(x, q) for x in non_mod_l]
@@ -147,7 +137,17 @@ class Mod(Function):
                 net = prod_mod1*prod_mod
                 return prod_non_mod*cls(net, q)
 
-            p = Mul(*non_mod_l)
+            if q.is_Integer and q is not S.One:
+                _ = []
+                for i in non_mod_l:
+                    if i.is_Integer:
+                        # and (i % q is not S.Zero)
+                        _.append(i%q)
+                    else:
+                        _.append(i)
+                non_mod_l = _
+
+            p = Mul(* [*non_mod_l, *mod_l])
 
         # XXX other possibilities?
 
