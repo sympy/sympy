@@ -17,6 +17,7 @@ from sympy.core.compatibility import (
     is_sequence, range, string_types, ordered)
 from sympy.core.containers import OrderedSet
 from .point import Point, Point2D
+from  sympy.core import Equality, Add
 
 
 def find(x, equation):
@@ -570,6 +571,13 @@ def idiff(eq, y, x, n=1):
         y = y[0]
     elif isinstance(y, Symbol):
         dep = {y}
+    elif isinstance(y, Function):
+        pass
+    else:
+        raise ValueError("expecting x-dependent symbol(s) or function(s) but got: %s" % y)
+
+    if isinstance(eq, Equality):
+        eq = eq.rewrite(Add)
 
     f = dict([(s, Function(
         s.name)(x)) for s in eq.free_symbols if s != x and s in dep])

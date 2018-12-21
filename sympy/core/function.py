@@ -1164,10 +1164,9 @@ class Derivative(Expr):
     def __new__(cls, expr, *variables, **kwargs):
 
         from sympy.matrices.common import MatrixCommon
-        from sympy import Integer, Eq
+        from sympy import Integer
         from sympy.tensor.array import Array, NDimArray, derive_by_array
         from sympy.utilities.misc import filldedent
-        from sympy.core import Equality
 
         expr = sympify(expr)
         try:
@@ -1326,10 +1325,6 @@ class Derivative(Expr):
         # we return here if evaluate is False or if there is no
         # _eval_derivative method
         if not evaluate or not hasattr(expr, '_eval_derivative'):
-            # return the derivative of Equality
-            if isinstance(expr, Equality):
-                return Eq(expr.lhs.diff(), expr.rhs.diff())
-
             # return an unevaluated Derivative
             if evaluate and variable_count == [(expr, 1)] and expr.is_scalar:
                 # special hack providing evaluation for classes
