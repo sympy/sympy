@@ -166,7 +166,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
                                              for p in actual_packages])
 
-        preamble = r"""\documentclass[12pt]{standalone}
+        preamble = r"""\documentclass[varwidth,12pt]{standalone}
 %s
 
 \begin{document}

@@ -42,7 +42,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     except ImportError:
         pass
 
-    preamble = "\\documentclass[%s]{standalone}\n" \
+    preamble = "\\documentclass[varwidth,%s]{standalone}\n" \
                "\\usepackage{amsmath,amsfonts}%s\\begin{document}"
     if euler:
         addpackages = '\\usepackage{euler}'
