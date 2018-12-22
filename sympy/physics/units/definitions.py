@@ -50,8 +50,22 @@ m = meter = meters = Quantity("meter", abbrev="m")
 meter.set_dimension(length)
 meter.set_scale_factor(One)
 
+<<<<<<< HEAD
 # NOTE: the `kilogram` has scale factor of 1 in SI.
 # The current state of the code assumes SI unit dimensions, in
+=======
+# gram; used to define its prefixed units
+g = gram = grams = Quantity("gram", abbrev="g")
+gram.set_dimension(mass)
+gram.set_scale_factor(Rational(1, 1000))
+
+# NOTE: the `kilogram` has scale factor 1000. In SI, kg is a base unit, but
+# nonetheless we are trying to be compatible with the `kilo` prefix. In a
+# similar manner, people using CGS or gaussian units could argue that the
+# `centimeter` rather than `meter` is the fundamental unit for length, but the
+# scale factor of `centimeter` will be kept as 1/100 to be compatible with the
+# `centi` prefix.  The current state of the code assumes SI unit dimensions, in
+>>>>>>> f4b2af5... changing scale_factor of kg to "One"
 # the future this module will be modified in order to be unit system-neutral
 # (that is, support all kinds of unit systems).
 kg = kilogram = kilograms = Quantity("kilogram", abbrev="kg")
