@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core.numbers import nan
+from sympy.core.numbers import nan, Integer
 from .function import Function
 
 
@@ -62,7 +62,7 @@ class Mod(Function):
             except TypeError:
                 pass
             else:
-                if type(d) is int:
+                if type(d) is int or type(d) is long:
                     rv = p - d*q
                     if (rv*q < 0) == True:
                         rv += q
