@@ -1,4 +1,4 @@
-from sympy import Symbol, sqrt, Derivative, S, Function, exp, Eq
+from sympy import Symbol, sqrt, Derivative, S, Function, exp
 from sympy.geometry import Point, Point2D, Line, Circle, Polygon, Segment, convex_hull, intersection, centroid
 from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points
 from sympy.solvers.solvers import solve
@@ -24,8 +24,7 @@ def test_idiff():
     assert idiff(f(x) * exp(f(x)) - x * exp(x), f(x), x) == (x + 1) * exp(x - f(x))/(f(x) + 1)
     assert idiff(f(x) - y * exp(x), [f(x), y], x) == (y + Derivative(y, x)) * exp(x)
     assert idiff(f(x) - y * exp(x), [y, f(x)], x) == -y + exp(-x) * Derivative(f(x), x)
-    assert idiff(Eq(y * exp(y), x * exp(x)), y, x) == (x + 1) * exp(x - y)/(y + 1)
-    assert idiff(Eq(f(x), g(x)), [f(x), g(x)], x) == Derivative(g(x), x)
+    assert idiff(f(x) - g(x), [f(x), g(x)], x) == Derivative(g(x), x)
 
 
 def test_intersection():

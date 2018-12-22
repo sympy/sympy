@@ -576,9 +576,6 @@ def idiff(eq, y, x, n=1):
     else:
         raise ValueError("expecting x-dependent symbol(s) or function(s) but got: %s" % y)
 
-    if isinstance(eq, Equality):
-        eq = eq.rewrite(Add)
-
     f = dict([(s, Function(
         s.name)(x)) for s in eq.free_symbols if s != x and s in dep])
 
