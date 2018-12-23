@@ -62,8 +62,6 @@ def plot_implicit_tests(name):
         plot_and_save(Eq(y, re(cos(x) + I*sin(x))), name=name, dir=temp_dir)
 
     plot_and_save(x**2 - 1, title='An implicit plot', dir=temp_dir)
-    
-    TmpFileManager.cleanup()
 
 def test_line_color():
     x, y = symbols('x, y')
@@ -75,7 +73,10 @@ def test_line_color():
 def test_matplotlib():
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
-        plot_implicit_tests('test')
-        test_line_color()
+        try:
+            plot_implicit_tests('test')
+            test_line_color()
+        finally:
+            TmpFileManager.cleanup()
     else:
         skip("Matplotlib not the default backend")
