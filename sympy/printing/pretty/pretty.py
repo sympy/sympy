@@ -45,6 +45,7 @@ class PrettyPrinter(Printer):
         "wrap_line": True,
         "num_columns": None,
         "use_unicode_sqrt_char": True,
+        "perm_cyclic": True
     }
 
     def __init__(self, settings=None):
@@ -372,6 +373,12 @@ class PrettyPrinter(Printer):
             l = self._print(str(tuple(i)).replace(',', ''))
             cyc = prettyForm(*cyc.right(l))
         return cyc
+
+    def _print_Permutation(self,expr):
+        if self._settings.get("perm_cyclic",True):
+            return self._print_Cycle(expr)
+        else:
+            pass
 
     def _print_PDF(self, pdf):
         lim = self._print(pdf.pdf.args[0])
@@ -2450,7 +2457,8 @@ def pretty(expr, **settings):
 
 
 def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
-                 full_prec="auto", order=None, use_unicode_sqrt_char=True):
+                 full_prec="auto", order=None, use_unicode_sqrt_char=True,
+                 perm_cyclic=True):
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
@@ -2484,7 +2492,8 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
     """
     print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
                  use_unicode=use_unicode, full_prec=full_prec, order=order,
-                 use_unicode_sqrt_char=use_unicode_sqrt_char))
+                 use_unicode_sqrt_char=use_unicode_sqrt_char,
+                 perm_cyclic=perm_cyclic))
 
 pprint = pretty_print
 
