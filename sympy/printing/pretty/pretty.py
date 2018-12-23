@@ -42,6 +42,7 @@ class PrettyPrinter(Printer):
         "root_notation": True,
         "mat_symbol_style": "plain",
         "imaginary_unit": "i",
+        "perm_cyclic": True,
     }
 
     def __init__(self, settings=None):
@@ -386,6 +387,29 @@ class PrettyPrinter(Printer):
             l = self._print(str(tuple(i)).replace(',', ''))
             cyc = prettyForm(*cyc.right(l))
         return cyc
+
+    def _print_Permutation(self,expr):
+        if self._settings.get("perm_cyclic",True):
+            return self._print_Cycle(expr)
+        else:
+            pass
+
+    def _print_PDF(self, pdf):
+        lim = self._print(pdf.pdf.args[0])
+        lim = prettyForm(*lim.right(', '))
+        lim = prettyForm(*lim.right(self._print(pdf.domain[0])))
+        lim = prettyForm(*lim.right(', '))
+        lim = prettyForm(*lim.right(self._print(pdf.domain[1])))
+        lim = prettyForm(*lim.parens())
+
+        f = self._print(pdf.pdf.args[1])
+        f = prettyForm(*f.right(', '))
+        f = prettyForm(*f.right(lim))
+        f = prettyForm(*f.parens())
+
+        pform = prettyForm('PDF')
+        pform = prettyForm(*pform.right(f))
+        return pform
 
     def _print_Integral(self, integral):
         f = integral.function
@@ -2615,7 +2639,8 @@ def pretty(expr, **settings):
 
 def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
                  full_prec="auto", order=None, use_unicode_sqrt_char=True,
-                 root_notation = True, mat_symbol_style="plain", imaginary_unit="i"):
+                 root_notation = True, mat_symbol_style="plain",
+                 imaginary_unit="i", perm_cyclic=True):
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
@@ -2662,7 +2687,7 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
                  use_unicode=use_unicode, full_prec=full_prec, order=order,
                  use_unicode_sqrt_char=use_unicode_sqrt_char,
                  root_notation=root_notation, mat_symbol_style=mat_symbol_style,
-                 imaginary_unit=imaginary_unit))
+                 imaginary_unit=imaginary_unit, perm_cyclic=perm_cyclic))
 
 pprint = pretty_print
 
