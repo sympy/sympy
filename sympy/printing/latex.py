@@ -379,7 +379,16 @@ class LatexPrinter(Printer):
         if self._settings.get("perm_cyclic",True):
             return self._print_Cycle(expr)
         else:
-            pass
+            s = expr.support()
+            if not s:
+                if expr.size < 5:
+                    return 'Permutation(%s)' % self._print(expr.array_form)
+                return 'Permutation([], size=%s)' % self._print(expr.size)
+            trim = self._print(expr.array_form[:s[-1] + 1]) + ', size=%s' % self._print(expr.size)
+            use = full = self._print(expr.array_form)
+            if len(trim) < len(full):
+                use = trim
+            return 'Permutation(%s)' % use
 
 
     def _print_Float(self, expr):

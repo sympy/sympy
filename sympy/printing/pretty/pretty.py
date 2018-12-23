@@ -392,7 +392,13 @@ class PrettyPrinter(Printer):
         if self._settings.get("perm_cyclic",True):
             return self._print_Cycle(expr)
         else:
-            pass
+            s = expr.support()
+            if not s:
+                if expr.size < 5:
+                    return 'Permutation(%s)' % self._print(expr.array_form)
+                return 'Permutation([], size=%s)' % self._print(expr.size)
+            use = self._print(expr.array_form)
+            return prettyForm('Permutation(%s)' % use)
 
     def _print_PDF(self, pdf):
         lim = self._print(pdf.pdf.args[0])
