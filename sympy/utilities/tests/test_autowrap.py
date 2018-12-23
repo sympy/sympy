@@ -85,7 +85,6 @@ def test_cython_wrapper_inoutarg():
     assert source == expected
 
 
-@cleanup_tmp_files
 def test_cython_wrapper_compile_flags():
     from sympy import Equality
     x, y, z = symbols('x,y,z')
@@ -185,6 +184,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         setup_text = f.read()
     assert setup_text == expected
 
+    TmpFileManager.cleanup()
+
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')
 
@@ -226,8 +227,6 @@ def test_autowrap_args():
     assert f.args == "y, x, z"
     assert f.returns == "z"
 
-
-@cleanup_tmp_files
 def test_autowrap_store_files():
     x, y = symbols('x y')
     tmp = tempfile.mkdtemp()
@@ -237,6 +236,7 @@ def test_autowrap_store_files():
     assert f() == str(x + y)
     assert os.access(tmp, os.F_OK)
 
+    TmpFileManager.cleanup()
 
 def test_autowrap_store_files_issue_gh12939():
     x, y = symbols('x y')
