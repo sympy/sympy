@@ -17,7 +17,6 @@ from sympy.core.compatibility import (
     is_sequence, range, string_types, ordered)
 from sympy.core.containers import OrderedSet
 from .point import Point, Point2D
-from  sympy.core import Equality, Add
 
 
 def find(x, equation):
