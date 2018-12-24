@@ -12,7 +12,7 @@ unset_show()
 
 def tmp_file(dir=None, name=''):
     return NamedTemporaryFile(
-    prefix=name, suffix='.png', dir=dir, delete=False).name
+    suffix='.png', dir=dir, delete=False).name
 
 def plot_and_save(expr, *args, **kwargs):
     name = kwargs.pop('name', '')
