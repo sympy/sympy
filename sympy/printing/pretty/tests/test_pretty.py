@@ -10,6 +10,7 @@ from sympy import (
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
 from sympy.core.expr import UnevaluatedExpr
 
+from  sympy.physics import mechanics
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
@@ -6485,7 +6486,6 @@ def test_issue_15560():
     assert e == result
 
 def test_issue_15583():
-    from  sympy.physics import mechanics
 
     N = mechanics.ReferenceFrame('N')
     result = '(n_x, n_y, n_z)'
