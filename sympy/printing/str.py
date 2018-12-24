@@ -354,28 +354,16 @@ class StrPrinter(Printer):
 
     def _print_Permutation(self, expr):
         from sympy.combinatorics.permutations import Permutation, Cycle
-        if Permutation.print_cyclic:
-            if not expr.size:
-                return '()'
-            # before taking Cycle notation, see if the last element is
-            # a singleton and move it to the head of the string
-            s = Cycle(expr)(expr.size - 1).__repr__()[len('Cycle'):]
-            last = s.rfind('(')
-            if not last == 0 and ',' not in s[last:]:
-                s = s[last:] + s[:last]
-            s = s.replace(',', '')
-            return s
-        else:
-            s = expr.support()
-            if not s:
-                if expr.size < 5:
-                    return 'Permutation(%s)' % self._print(expr.array_form)
-                return 'Permutation([], size=%s)' % self._print(expr.size)
-            trim = self._print(expr.array_form[:s[-1] + 1]) + ', size=%s' % self._print(expr.size)
-            use = full = self._print(expr.array_form)
-            if len(trim) < len(full):
-                use = trim
-            return 'Permutation(%s)' % use
+        s = expr.support()
+        if not s:
+            if expr.size < 5:
+                return 'Permutation(%s)' % self._print(expr.array_form)
+            return 'Permutation([], size=%s)' % self._print(expr.size)
+        trim = self._print(expr.array_form[:s[-1] + 1]) + ', size=%s' % self._print(expr.size)
+        use = full = self._print(expr.array_form)
+        if len(trim) < len(full):
+            use = trim
+        return 'Permutation(%s)' % use
 
     def _print_Subs(self, obj):
         expr, old, new = obj.args

@@ -1010,27 +1010,20 @@ class Permutation(Atom):
         return self._array_form[:]
 
     def __repr__(self):
-        if Permutation.print_cyclic:
-            if not self.size:
-                return 'Permutation()'
-            # before taking Cycle notation, see if the last element is
-            # a singleton and move it to the head of the string
-            s = Cycle(self)(self.size - 1).__repr__()[len('Cycle'):]
-            last = s.rfind('(')
-            if not last == 0 and ',' not in s[last:]:
-                s = s[last:] + s[:last]
-            return 'Permutation%s' %s
-        else:
-            s = self.support()
-            if not s:
-                if self.size < 5:
-                    return 'Permutation(%s)' % str(self.array_form)
-                return 'Permutation([], size=%s)' % self.size
-            trim = str(self.array_form[:s[-1] + 1]) + ', size=%s' % self.size
-            use = full = str(self.array_form)
-            if len(trim) < len(full):
-                use = trim
-            return 'Permutation(%s)' % use
+        """
+        Default Representation Array Form
+        """
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        s = self.support()
+        if not s:
+            if self.size < 5:
+                return 'Permutation(%s)' % str(self.array_form)
+            return 'Permutation([], size=%s)' % self.size
+        trim = str(self.array_form[:s[-1] + 1]) + ', size=%s' % self.size
+        use = full = str(self.array_form)
+        if len(trim) < len(full):
+            use = trim
+        return 'Permutation(%s)' % use
 
     def list(self, size=None):
         """Return the permutation as an explicit list, possibly
@@ -2835,7 +2828,6 @@ class Permutation(Atom):
     # global flag to control how permutations are printed
     # when True, Permutation([0, 2, 1, 3]) -> Cycle(1, 2)
     # when False, Permutation([0, 2, 1, 3]) -> Permutation([0, 2, 1])
-    print_cyclic = True
 
 
 def _merge(arr, temp, left, mid, right):
