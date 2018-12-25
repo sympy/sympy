@@ -245,6 +245,12 @@ class Mul(Expr, AssocOp):
 
                 else:
                     # NCMul can have commutative parts as well
+                    if isinstance(o, MatrixExpr):
+                        if isinstance(coeff, MatrixExpr):
+                            coeff *= o
+                        else:
+                            coeff = o.__mul__(coeff)
+                        continue
                     for q in o.args:
                         if q.is_commutative:
                             seq.append(q)
