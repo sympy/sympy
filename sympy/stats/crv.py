@@ -15,7 +15,7 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
+        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial, log)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.polys.polyerrors import PolynomialError
@@ -373,6 +373,16 @@ class ContinuousPSpace(PSpace):
         mgf = integrate(exp(t * x) * d(x), (x, -oo, oo), **kwargs)
         return Lambda(t, mgf)
 
+    @cacheit
+    def compute_entropy(self, expr, **kwargs):
+        if not self.domain.set.is_Interval:
+            raise NotImplementedError("Entropy of multivariate expressions not implemented")
+
+        d = self.compute_density(expr, **kwargs)
+        x, t = symbols('x, t', real=True, cls=Dummy)
+        h = integrate(d(x)*log(d(x)), (x, -oo, oo), **kwargs)
+        return Lambda(t, h)
+
     def probability(self, condition, **kwargs):
         z = Dummy('z', real=True, finite=True)
         cond_inv = False
@@ -482,8 +492,10 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
 
     def compute_characteristic_function(self, expr, **kwargs):
+        print(self.value)
         if expr == self.value:
             t = symbols("t", real=True, cls=Dummy)
+            print(self.distribution)
             return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
         else:
             return ContinuousPSpace.compute_characteristic_function(self, expr, **kwargs)
@@ -511,6 +523,10 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         fx = self.compute_density(self.value)
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
         return Lambda(y, fy)
+
+    def compute_entropy(self, expr, **kwargs):
+        # Definition - http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
+        return ContinuousPSpace.compute_entropy(self, expr, **kwargs)
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:
