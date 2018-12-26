@@ -110,7 +110,7 @@ def test_E():
 def test_H():
     X = Normal('X', 0, 1)
     x = symbols('x')
-    assert H(X)(x) == -log(pi)/2 - 1/2 - log(2)/2
+    assert H(X)(x) == log(pi)/2 + 1/2 + log(2)/2
 
 def test_Sample():
     X = Die('X', 6)
