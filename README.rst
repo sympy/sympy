@@ -82,7 +82,7 @@ To start it, issue::
 
     $ bin/isympy
 
-from this directory if SymPy is not installed or simply::
+from this directory, if SymPy is not installed or simply::
 
     $ isympy
 
@@ -264,5 +264,4 @@ academic, commercial, creating forks or derivatives, as long as you copy the
 BSD statement if you redistribute it (see the LICENSE file for details).  That
 said, although not required by the SymPy license, if it is convenient for you,
 please cite SymPy when using it in your work and also consider contributing
-all your changes back, so that we can incorporate it and all of us will
-benefit in the end.
+all your changes back, so that we can incorporate it and all of us will benefit in the end.
