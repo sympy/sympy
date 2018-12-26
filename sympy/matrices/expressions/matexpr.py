@@ -202,6 +202,10 @@ class MatrixExpr(Expr):
     def _eval_derivative_n_times(self, x, n):
         return Basic._eval_derivative_n_times(self, x, n)
 
+    def _visit_eval_derivative_scalar(self, x):
+        # `x` is a scalar:
+        return ZeroMatrix(*self.shape)
+
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
             "Indexing not implemented for %s" % self.__class__.__name__)
@@ -556,14 +560,19 @@ def _matrix_derivative(expr, x):
 
     first = lines[0].first
     second = lines[0].second
+    higher = lines[0].higher
 
-    one_final = (first.shape[1] == 1) and (second.shape[1] == 1)
+    ranks = [i.rank() for i in lines]
+    assert len(set(ranks)) == 1
+    rank = ranks[0]
 
-    if lines[0].trace or one_final:
-        return reduce(lambda x,y: x+y, [lr.first * lr.second.T for lr in lines])
+    if rank <= 2:
+        return reduce(lambda x, y: x+y, [i.matrix_form() for i in lines])
+        if first != 1:
+            return reduce(lambda x,y: x+y, [lr.first * lr.second.T for lr in lines])
+        elif higher != 1:
+            return reduce(lambda x,y: x+y, [lr.higher for lr in lines])
 
-    shape = first.shape + second.shape
-    rank = sum([i != 1 for i in shape])
     return Derivative(expr, x)
 
 
@@ -691,7 +700,7 @@ class MatrixSymbol(MatrixExpr):
             return [_LeftRightArgs(
                 ZeroMatrix(x.shape[0], self.shape[0]),
                 ZeroMatrix(x.shape[1], self.shape[1]),
-                False,
+                transposed=False,
             )]
         else:
             first=Identity(self.shape[0])
@@ -830,23 +839,51 @@ class _LeftRightArgs(object):
     The trace connects the end of the two lines.
     """
 
-    def __init__(self, first, second, transposed=False):
+    def __init__(self, first, second, higher=S.One, transposed=False):
         self.first = first
         self.second = second
-        self.trace = False
+        self.higher = higher
         self.transposed = transposed
 
     def __repr__(self):
-        return "_LeftRightArgs(first=%s[%s], second=%s[%s], transposed=%s, trace=%s)" % (
-            self.first, self.first.shape,
-            self.second, self.second.shape,
+        return "_LeftRightArgs(first=%s[%s], second=%s[%s], higher=%s, transposed=%s)" % (
+            self.first, self.first.shape if isinstance(self.first, MatrixExpr) else None,
+            self.second, self.second.shape if isinstance(self.second, MatrixExpr) else None,
+            self.higher,
             self.transposed,
-            self.trace,
         )
 
     def transpose(self):
         self.transposed = not self.transposed
         return self
+
+    def matrix_form(self):
+        if self.first != 1 and self.higher != 1:
+            raise ValueError("higher dimensional array cannot be represented")
+        if self.first != 1:
+            return self.first*self.second.T
+        else:
+            return self.higher
+
+    def rank(self):
+        """
+        Number of dimensions different from trivial (warning: not related to
+        matrix rank).
+        """
+        rank = 0
+        if self.first != 1:
+            rank += sum([i != 1 for i in self.first.shape])
+        if self.second != 1:
+            rank += sum([i != 1 for i in self.second.shape])
+        if self.higher != 1:
+            rank += 2
+        return rank
+
+    def append_first(self, other):
+        self.first *= other
+
+    def append_second(self, other):
+        self.second *= other
 
     def __hash__(self):
         return hash((self.first, self.second, self.transposed))
