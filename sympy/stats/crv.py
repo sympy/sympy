@@ -380,7 +380,7 @@ class ContinuousPSpace(PSpace):
 
         d = self.compute_density(expr, **kwargs)
         x, t = symbols('x, t', real=True, cls=Dummy)
-        h = integrate(d(x)*log(d(x)), (x, -oo, oo), **kwargs)
+        h = integrate(-d(x)*log(d(x)), (x, -oo, oo), **kwargs)
         return Lambda(t, h)
 
     def probability(self, condition, **kwargs):
@@ -492,10 +492,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
 
     def compute_characteristic_function(self, expr, **kwargs):
-        print(self.value)
         if expr == self.value:
             t = symbols("t", real=True, cls=Dummy)
-            print(self.distribution)
             return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
         else:
             return ContinuousPSpace.compute_characteristic_function(self, expr, **kwargs)
