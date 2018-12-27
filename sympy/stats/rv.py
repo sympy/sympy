@@ -917,6 +917,17 @@ def moment_generating_function(expr, condition=None, evaluate=True, **kwargs):
     else:
         return result
 
+def entropy(expr, condition=None, evaluate=True, **kwargs):
+    if condition is not None:
+        return entropy(given(expr, condition, **kwargs), **kwargs)
+
+    result = pspace(expr).compute_entropy(expr, **kwargs)
+
+    if evaluate and hasattr(result, 'doit'):
+        return result.doit()
+    else:
+        return result
+
 def where(condition, given_condition=None, **kwargs):
     """
     Returns the domain where a condition is True.
