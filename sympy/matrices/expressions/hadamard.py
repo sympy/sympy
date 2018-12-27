@@ -1,9 +1,11 @@
 from __future__ import print_function, division
 
 from sympy.core import Mul, sympify
+from sympy.core import Expr
 from sympy.strategies import unpack, flatten, condition, exhaust, do_one
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
+from sympy.matrices.common import MatrixArithmetic
 
 def hadamard_product(*matrices):
     """
@@ -66,7 +68,21 @@ class HadamardProduct(MatrixExpr):
         return HadamardProduct(*list(map(transpose, self.args)))
 
     def doit(self, **ignored):
-        return canonicalize(self)
+        expr_args, non_expr_args = [], []
+        for i in self.args:
+            if isinstance(i, MatrixExpr):
+                expr_args.append(i)
+            else:
+                non_expr_args.append(i)
+        if len(non_expr_args) < 2:
+            return canonicalize(self)
+        else:
+            multiplication = MatrixArithmetic.multiply_elementwise(non_expr_args[0], non_expr_args[1])
+            for i in range(2, len(non_expr_args)):
+                multiplication = MatrixArithmetic.multiply_elementwise(multiplication, non_expr_args[i])
+            expr_args.append(multiplication)
+            return HadamardProduct(*expr_args)
+
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
