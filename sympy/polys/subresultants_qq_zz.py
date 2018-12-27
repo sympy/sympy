@@ -1797,8 +1797,12 @@ def rem_z(p, q, x):
     the Theory of Subresultants.'' Submitted for publication.
 
     '''
-    delta = (degree(p, x) - degree(q, x) + 1)
-    return rem(Abs(LC(q, x))**delta  *  p, q, x)
+    if (p.as_poly().is_univariate and q.as_poly().is_univariate and
+            p.as_poly().gens == q.as_poly().gens):
+        delta = (degree(p, x) - degree(q, x) + 1)
+        return rem(Abs(LC(q, x))**delta  *  p, q, x)
+    else:
+        return prem(p, q, x)
 
 def quo_z(p, q, x):
     """
