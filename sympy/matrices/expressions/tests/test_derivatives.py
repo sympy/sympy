@@ -244,5 +244,9 @@ def test_derivatives_of_complicated_matrix_expr():
 
 def test_mixed_deriv_mixed_expressions():
 
+    expr = Trace(A)*A
+    # TODO: this is not yet supported:
+    assert expr.diff(A) == Derivative(expr, A)
+
     expr = Trace(Trace(A)*A)
     assert expr.diff(A) == (2*Trace(A))*Identity(k)
