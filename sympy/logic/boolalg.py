@@ -2033,6 +2033,11 @@ def simplify_logic(expr, form=None, deep=True):
     truthtable = []
     for t in product([0, 1], repeat=len(variables)):
         t = list(t)
+        for i in range(len(variables)):
+            if(list(variables)[i] == True):
+                t[i]=1
+            elif(list(variables)[i] == False):
+                t[i]=0
         if expr.xreplace(dict(zip(variables, t))) == True:
             truthtable.append(t)
     big = len(truthtable) >= (2 ** (len(variables) - 1))
