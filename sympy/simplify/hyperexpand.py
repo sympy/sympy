@@ -79,7 +79,7 @@ from sympy.simplify import simplify
 from sympy.functions.elementary.complexes import polarify, unpolarify
 from sympy.simplify.powsimp import powdenest
 from sympy.polys import poly, Poly
-from sympy.series import residue
+from sympy.series import residue, limit
 
 # function to define "buckets"
 def _mod1(x):
@@ -1971,6 +1971,12 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
         res = r[0].subs(z0, z)
         if rewrite:
             res = res.rewrite(rewrite)
+        if res is S.NaN:
+            # Can happen when the formula results in an indeterminate form like (log(0) - log(0)),
+            # which often happens when |z| == 1
+            # Try taking it as a limit
+            res = r[0].rewrite('nonrepsmall')
+            res = limit(res.subs(z0, unpolarify(z)*z0), z0, 1, dir='-')
         return res
 
     # TODO
