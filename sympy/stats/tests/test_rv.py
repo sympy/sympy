@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
         DiracDelta, Lambda, log, pi)
-from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance, covariance,
+from sympy.stats import (Die, Normal, Geometric, Exponential, FiniteRV, P, E, H, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
@@ -108,9 +108,11 @@ def test_E():
     assert E(5) == 5
 
 def test_H():
+    k, x, p = symbols('k x p')
+    L = Geometric('L', p)
     X = Normal('X', 0, 1)
-    x = symbols('x')
     assert H(X)(x) == log(pi)/2 + 1/2 + log(2)/2
+    assert H(L)(k) == (-p*log(p) - (-p + 1)*log(-p + 1))/p
 
 def test_Sample():
     X = Die('X', 6)

@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
                    Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq, poly,
-                   Symbol, series, factorial, And, Mul)
+                   Symbol, series, factorial, And, Mul, log)
 
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
@@ -137,6 +137,22 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
             if mgf is not None:
                 return mgf
         return self.compute_moment_generating_function(**kwargs)(t)
+
+    def compute_entropy(self, **kwargs):
+        x, t = symbols('x, t', real = True, cls = Dummy)
+        pdf = self.pdf(x)
+        h = summation(-pdf * log(pdf), (x, self.set.inf, self.set.sup))
+        return Lambda(t, h)
+
+    def _entropy(self, t):
+        return None
+
+    def entropy(self, t, **kwargs):
+        if not kwargs:
+            h = self._entropy(t)
+            if h is not None:
+                return h
+        return self.compute_entropy(**kwargs)(t)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
@@ -336,5 +352,12 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
         if expr == self.value:
             t = symbols("t", real=True, cls=Dummy)
             return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))
+        else:
+            raise NotImplementedError()
+
+    def compute_entropy(self, expr, **kwargs):
+        if expr == self.value:
+            t = symbols("t", real=True, cls=Dummy)
+            return Lambda(t, self.distribution.entropy(t, **kwargs))
         else:
             raise NotImplementedError()

@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta, hyper, binomial,
-                   Piecewise, floor)
+                   Piecewise, floor, pi, O)
 from sympy.stats.rv import _value_check, RandomSymbol
 from sympy.stats.joint_rv_types import JointRV
 from sympy.stats.joint_rv import MarginalDistribution, JointPSpace, CompoundDistribution
@@ -43,6 +43,9 @@ class GeometricDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         p = self.p
         return p * exp(t) / (1 - (1 - p) * exp(t))
+
+    def _entropy(self, t):
+        return -(self.p * log(self.p) + (1 - self.p) * log(1 - self.p))/self.p
 
 def Geometric(name, p):
     r"""
@@ -282,6 +285,10 @@ class PoissonDistribution(SingleDiscreteDistribution):
 
     def _moment_generating_function(self, t):
         return exp(self.lamda * (exp(t) - 1))
+
+    def _entropy(self, t):
+        # https://pure.tue.nl/ws/portalfiles/portal/1959440/Metis199989.pdf
+        return log(2*pi*exp(1)*t)/2 - 1/(12*t) + O(t**-2)
 
 
 def Poisson(name, lamda):
