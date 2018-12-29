@@ -12,7 +12,7 @@ from __future__ import print_function, division
 from itertools import product
 
 from sympy import (Basic, Symbol, cacheit, sympify, Mul,
-        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy)
+        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, log)
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
@@ -307,6 +307,9 @@ class FinitePSpace(PSpace):
         expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
         return sum([expr.xreplace(dict(elem)) * self.prob_of(elem)
                 for elem in self.domain])
+
+    def compute_entropy(self, expr):
+        return sum([-self.prob_of(elem)*log(self.prob_of(elem)) for elem in self.domain])
 
     def probability(self, condition):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))

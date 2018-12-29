@@ -111,8 +111,10 @@ def test_H():
     k, x, p = symbols('k x p')
     L = Geometric('L', p)
     X = Normal('X', 0, 1)
+    D = Die('D')
     assert H(X)(x) == log(pi)/2 + 1/2 + log(2)/2
     assert H(L)(k) == (-p*log(p) - (-p + 1)*log(-p + 1))/p
+    assert H(D) == log(6)
 
 def test_Sample():
     X = Die('X', 6)
