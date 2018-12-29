@@ -2029,15 +2029,14 @@ def simplify_logic(expr, form=None, deep=True):
         return expr
     # get variables in case not deep or after doing
     # deep simplification since they may have changed
-    variables = _find_predicates(expr)
+    variables = list(ordered(_find_predicates(expr)))  # atoms to the left
     truthtable = []
-    for t in product([0, 1], repeat=len(variables)):
-        t = list(t)
-        for j, var in enumerate(list(variables)):
-            if(var == True):
-                t[j] = True
-            elif(var == False):
-                t[j] = False
+    i=len(variables) -1
+    while variables[i] in (True, False):  # detect 1, 0, True, False, S.true, S.false
+        variables[i] = 1 if variables[i] == True else 0
+        i -= 1
+    for t in product([0, 1], repeat = i + 1):
+        t = list(t[:]) + variables[i + 1:]
         if expr.xreplace(dict(zip(variables, t))) == True:
             truthtable.append(t)
     big = len(truthtable) >= (2 ** (len(variables) - 1))
