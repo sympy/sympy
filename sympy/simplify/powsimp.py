@@ -13,7 +13,6 @@ from sympy.polys import lcm, gcd
 from sympy.ntheory.factor_ import multiplicity
 
 
-
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
     reduces expression by combining powers with similar bases and exponents.
@@ -101,6 +100,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
     from sympy.matrices.expressions.matexpr import MatrixSymbol
 
+
     def recurse(arg, **kwargs):
         _deep = kwargs.get('deep', deep)
         _combine = kwargs.get('combine', combine)
@@ -166,6 +166,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if (b and b.is_Rational and not all(ei.is_Number for ei in e) and \
                     coeff is not S.One and
                     b not in (S.One, S.NegativeOne)):
+
                 m = multiplicity(abs(b), abs(coeff))
                 if m:
                     e.append(m)
