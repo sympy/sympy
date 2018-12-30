@@ -216,14 +216,6 @@ def multiplicity(p, n):
                 if p.q == 1:
                     if n.p == 1:
                         return -multiplicity(p.p, n.q)
-                    elif isinstance(n.p,int):
-                        numerator=n.p
-                        denominator=n.q
-                        s=S.One
-                        while numerator%p.p==0:
-                            s*=p.p
-                            numerator/=p.p
-                        return multiplicity(p.p,(s/denominator))
                     return S.Zero
                 elif p.p == 1:
                     return multiplicity(p.q, n.q)
