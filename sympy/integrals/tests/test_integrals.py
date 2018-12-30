@@ -1465,3 +1465,13 @@ def test_issue_15640_log_substitutions():
     f = sqrt(log(x))/x**2
     F = -sqrt(pi)*erfc(sqrt(log(x)))/2 - sqrt(log(x))/x
     assert integrate(f, x) == F and F.diff(x) == f
+
+
+def test_issue_4311():
+    x = symbols('x')
+    assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)
+    x = symbols('x', real=True)
+    assert integrate(x*abs(9-x**2), x) == Piecewise(
+        (x**4/4 - 9*x**2/2, x <= -3),
+        (-x**4/4 + 9*x**2/2 - S(81)/2, x <= 3),
+        (x**4/4 - 9*x**2/2, True))
