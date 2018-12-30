@@ -2031,10 +2031,13 @@ def simplify_logic(expr, form=None, deep=True):
     # deep simplification since they may have changed
     variables = _find_predicates(expr)
     truthtable = []
-    for t in product([0, 1], repeat=len(variables)):
-        t = list(t)
-        if expr.xreplace(dict(zip(variables, t))) == True:
-            truthtable.append(t)
+    from sympy.utilities.iterables import sift
+    c, v = sift(variables, lambda x: x in (True, False), binary=True)
+    variables = c + v
+    c = [1 if i==True else 0 for i in c]
+    for t in product([0, 1], repeat=len(v)):
+        if expr.xreplace(dict(zip(v, t))) == True:
+            truthtable.append(c+list(t[:]))
     big = len(truthtable) >= (2 ** (len(variables) - 1))
     if form == 'dnf' or form is None and big:
         return SOPform(variables, truthtable)
