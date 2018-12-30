@@ -187,9 +187,12 @@ class FourierSeries(SeriesBase):
             return iter(self)
 
         terms = []
+
         for t in self:
             if len(terms) == n:
                 break
+            if len(terms) <n and self.args[0]==Add(*terms):
+                raise ValueError(("Given Fourier Series only contain {} number of terms").format(len(terms)))
             if t is not S.Zero:
                 terms.append(t)
 
