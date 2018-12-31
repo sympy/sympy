@@ -133,6 +133,7 @@ test_list = [
     # codegen
     'sympy/codegen/',
     'sympy/utilities/tests/test_codegen',
+    'sympy/utilities/_compilation/tests/test_compilation'
 
     # cloudpickle
     'pickling',
