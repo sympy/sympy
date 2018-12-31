@@ -2029,14 +2029,16 @@ def simplify_logic(expr, form=None, deep=True):
         return expr
     # get variables in case not deep or after doing
     # deep simplification since they may have changed
-    variables = list(ordered(_find_predicates(expr)))  # atoms to the left
-    truthtable = []
+    variables = _find_predicates(expr)
+    # group into constants and variable values
     c, v = sift(variables, lambda x: x in (True, False), binary=True)
     variables = c + v
+    truthtable = []
+    # standardize constants to be 1 or 0 in keeping with truthtable
     c = [1 if i==True else 0 for i in c]
     for t in product([0, 1], repeat=len(v)):
         if expr.xreplace(dict(zip(v, t))) == True:
-            truthtable.append(c+list(t[:]))
+            truthtable.append(c + list(t))
     big = len(truthtable) >= (2 ** (len(variables) - 1))
     if form == 'dnf' or form is None and big:
         return SOPform(variables, truthtable)
