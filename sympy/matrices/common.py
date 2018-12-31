@@ -2065,6 +2065,8 @@ class MatrixArithmetic(MatrixRequired):
                     except (AttributeError, MatrixError):
                         pass
                 return a._eval_pow_by_recursion(num)
+            elif num.is_Number!=True and num.is_negative==None:
+                return ("{}**{}").format(a,num)
             elif isinstance(num, (Expr, float)):
                 return a._matrix_pow_by_jordan_blocks(num)
             else:
