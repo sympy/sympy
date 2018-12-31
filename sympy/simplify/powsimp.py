@@ -166,8 +166,13 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if (b and b.is_Rational and not all(ei.is_Number for ei in e) and \
                     coeff is not S.One and
                     b not in (S.One, S.NegativeOne)):
-
-                m = multiplicity(abs(b), abs(coeff))
+                numerator=coeff.p
+                denominator=coeff.q
+                s=S.One
+                while numerator%b==0:
+                    s*=b
+                    numerator/=b
+                m = multiplicity(abs(b), abs(s/denominator))
                 if m:
                     e.append(m)
                     coeff /= b**m
