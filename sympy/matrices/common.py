@@ -13,6 +13,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.function import count_ops
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
+from sympy.core.power import Pow
 from sympy.core.compatibility import is_sequence, default_sort_key, range, \
     NotIterable, Iterable
 
@@ -2065,8 +2066,8 @@ class MatrixArithmetic(MatrixRequired):
                     except (AttributeError, MatrixError):
                         pass
                 return a._eval_pow_by_recursion(num)
-            elif num.is_Number!=True and num.is_negative==None:
-                return ("{}**{}").format(a,num)
+            elif num.is_Number!=True and num.is_negative==None and a.det()==0:
+                return Pow.__new__(type(a),a,num)
             elif isinstance(num, (Expr, float)):
                 return a._matrix_pow_by_jordan_blocks(num)
             else:
