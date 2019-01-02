@@ -4055,12 +4055,12 @@ class MatrixBase(MatrixDeprecated,
 
         n = mat.rows
         m = mat.cols
-        rank = 0
+        ranked = list()
 
         Q, R = mat.zeros(n, Min(n, m)), mat.zeros(Min(n, m),m)
         for j in range(m):  # for each column vector
             tmp = mat[:, j]  # take original v
-            for i in range(Min(j, n, rank)):
+            for i in range(Min(j, n)):
                 # subtract the project of mat on new vector
                 R[i, j] = Q[:, i].dot(mat[:, j])
                 tmp -= Q[:, i] * R[i, j]
@@ -4069,11 +4069,14 @@ class MatrixBase(MatrixDeprecated,
             if j < n:
                 R[j, j] = tmp.norm()
                 if not R[j, j].is_zero:
-                    rank += 1
+                    ranked.append(j)
                     Q[:, j] = tmp / R[j, j]
 
-        if rank != 0:
-            return cls(Q[:, :rank]), cls(R[:rank, :])
+        if len(ranked) != 0:
+            return (
+            cls(Q.extract(range(Q.rows), ranked)),
+            cls(R.extract(ranked, range(R.cols)))
+            )
         else:
             # Trivial case handling for zero-rank matrix
             # Force Q as matrix containing standard basis vectors
