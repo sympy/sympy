@@ -252,10 +252,11 @@ def test_mixed_deriv_mixed_expressions():
     assert expr.diff(A) == (2*Trace(A))*Identity(k)
 
     expr = Trace(A)*A
+    # TODO: this is not yet supported:
     assert expr.diff(A) == Derivative(expr, A)
 
     expr = Trace(Trace(A)*A)
     assert expr.diff(A) == (2*Trace(A))*Identity(k)
 
     expr = Trace(Trace(Trace(A)*A)*A)
-    assert expr.diff(A) == Derivative(expr, A)
+    assert expr.diff(A) == (3*Trace(A)**2)*Identity(k)

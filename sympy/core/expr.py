@@ -3396,7 +3396,7 @@ class Expr(Basic, EvalfMixin):
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.matrices.expressions.matexpr import _LeftRightArgs
-        return [_LeftRightArgs(S.One, S.One, higher=self.diff(x))]
+        return [_LeftRightArgs(S.One, S.One, higher=self._eval_derivative(x))]
 
 
 class AtomicExpr(Atom, Expr):

@@ -204,7 +204,10 @@ class MatrixExpr(Expr):
 
     def _visit_eval_derivative_scalar(self, x):
         # `x` is a scalar:
-        return ZeroMatrix(*self.shape)
+        if x.has(self):
+            return _matrix_derivative(x, self)
+        else:
+            return ZeroMatrix(*self.shape)
 
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
