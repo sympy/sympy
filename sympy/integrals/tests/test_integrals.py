@@ -1468,8 +1468,11 @@ def test_issue_15640_log_substitutions():
     assert integrate(f, x) == F and F.diff(x) == f
 
 
-def test_issue_15716():
-    x = Symbol('x')
-    e = -3**x*exp(-3)*log(3**x*exp(-3)/factorial(x))/factorial(x)
-    definite = integrate(e, [x, -oo, oo])
-    assert Integral(e, (x, -oo, oo)).doit() == definite
+def test_issue_4311():
+    x = symbols('x')
+    assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)
+    x = symbols('x', real=True)
+    assert integrate(x*abs(9-x**2), x) == Piecewise(
+        (x**4/4 - 9*x**2/2, x <= -3),
+        (-x**4/4 + 9*x**2/2 - S(81)/2, x <= 3),
+        (x**4/4 - 9*x**2/2, True))
