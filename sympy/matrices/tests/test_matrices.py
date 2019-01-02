@@ -821,7 +821,7 @@ def test_QR_non_square():
     print R.is_upper
     print A == Q*R
 
-    A = Matrix([[1,2,3,4],[1,4,9,16],[1,8,27,64]])
+    A = Matrix([[1, 2, 3, 4], [1, 4, 9, 16], [1, 8, 27, 64]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.rows)
     print R.is_upper
