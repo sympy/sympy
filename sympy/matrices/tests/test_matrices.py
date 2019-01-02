@@ -801,6 +801,7 @@ def test_QR():
 
 
 def test_QR_non_square():
+    # Tall and thin matrices
     A = Matrix([[9, 0, 26], [12, 0, -7], [0, 4, 4], [0, -3, -3]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)
@@ -812,6 +813,19 @@ def test_QR_non_square():
     assert Q.T * Q == eye(Q.cols)
     assert R.is_upper
     assert A == Q*R
+
+    # Short and fat matrices
+    A = Matrix([[1, 2, 3], [4, 5, 6]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.rows)
+    print R.is_upper
+    print A == Q*R
+
+    A = Matrix([[1,2,3,4],[1,4,9,16],[1,8,27,64]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.rows)
+    print R.is_upper
+    print A == Q*R
 
 
 def test_nullspace():
