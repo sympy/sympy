@@ -4070,7 +4070,8 @@ class MatrixBase(MatrixDeprecated,
             tmp = mat[:, j]  # take original v
             for i in range(j):
                 # subtract the project of mat on new vector
-                tmp -= Q[:, i] * mat[:, j].dot(Q[:, i])
+                R[i, j] = Q[:, i].dot(mat[:, j])
+                tmp -= Q[:, i] * R[i, j]
                 tmp.expand()
             # normalize it
             R[j, j] = tmp.norm()
@@ -4078,8 +4079,7 @@ class MatrixBase(MatrixDeprecated,
             if Q[:, j].norm() != 1:
                 raise NotImplementedError(
                     "Could not normalize the vector %d." % j)
-            for i in range(j):
-                R[i, j] = Q[:, i].dot(mat[:, j])
+
         return cls(Q), cls(R)
 
     def QRsolve(self, b):
