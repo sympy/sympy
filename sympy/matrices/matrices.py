@@ -4055,13 +4055,6 @@ class MatrixBase(MatrixDeprecated,
 
         n = mat.rows
         m = mat.cols
-        rank = n
-        row_reduced = mat.rref()[0]
-        for i in range(row_reduced.rows):
-            if row_reduced.row(i).norm() == 0:
-                rank -= 1
-        if not rank == mat.cols:
-            raise MatrixError("The rank of the matrix must match the columns")
         Q, R = mat.zeros(n, Min(n, m)), mat.zeros(Min(n, m),m)
         for j in range(m):  # for each column vector
             tmp = mat[:, j]  # take original v
