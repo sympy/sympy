@@ -818,14 +818,14 @@ def test_QR_non_square():
     A = Matrix([[1, 2, 3], [4, 5, 6]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.rows)
-    print R.is_upper
-    print A == Q*R
+    assert R.is_upper
+    assert A == Q*R
 
     A = Matrix([[1, 2, 3, 4], [1, 4, 9, 16], [1, 8, 27, 64]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.rows)
-    print R.is_upper
-    print A == Q*R
+    assert R.is_upper
+    assert A == Q*R
 
 
 def test_nullspace():
