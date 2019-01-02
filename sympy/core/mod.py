@@ -44,6 +44,8 @@ class Mod(Function):
                 return S.Zero
 
             if q.is_Number:
+                if p.is_Number:
+                    return p%q
                 if q == 2:
                     if p.is_even:
                         return S.Zero
