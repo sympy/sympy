@@ -15,6 +15,7 @@ from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
 from sympy.integrals.integrals import Integral
+from sympy import factorial
 
 x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
 n = Symbol('n', integer=True)
@@ -1465,3 +1466,10 @@ def test_issue_15640_log_substitutions():
     f = sqrt(log(x))/x**2
     F = -sqrt(pi)*erfc(sqrt(log(x)))/2 - sqrt(log(x))/x
     assert integrate(f, x) == F and F.diff(x) == f
+
+
+def test_issue_15716():
+    x = Symbol('x')
+    e = -3**x*exp(-3)*log(3**x*exp(-3)/factorial(x))/factorial(x)
+    definite = integrate(e, [x, -oo, oo])
+    assert Integral(e, (x, -oo, oo)).doit() == definite
