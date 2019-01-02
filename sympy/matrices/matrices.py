@@ -4065,20 +4065,21 @@ class MatrixBase(MatrixDeprecated,
                 rank -= 1
         if not rank == mat.cols:
             raise MatrixError("The rank of the matrix must match the columns")
-        Q, R = mat.zeros(n, m), mat.zeros(m)
+        Q, R = mat.zeros(n, Min(n, m)), mat.zeros(Min(n, m),m)
         for j in range(m):  # for each column vector
             tmp = mat[:, j]  # take original v
-            for i in range(j):
+            for i in range(Min(j, n)):
                 # subtract the project of mat on new vector
                 R[i, j] = Q[:, i].dot(mat[:, j])
                 tmp -= Q[:, i] * R[i, j]
                 tmp.expand()
             # normalize it
-            R[j, j] = tmp.norm()
-            Q[:, j] = tmp / R[j, j]
-            if Q[:, j].norm() != 1:
-                raise NotImplementedError(
-                    "Could not normalize the vector %d." % j)
+            if j < n:
+                R[j, j] = tmp.norm()
+                Q[:, j] = tmp / R[j, j]
+                if Q[:, j].norm() != 1:
+                    raise NotImplementedError(
+                        "Could not normalize the vector %d." % j)
 
         return cls(Q), cls(R)
 
