@@ -4055,10 +4055,12 @@ class MatrixBase(MatrixDeprecated,
 
         n = mat.rows
         m = mat.cols
+        rank = 0
+
         Q, R = mat.zeros(n, Min(n, m)), mat.zeros(Min(n, m),m)
         for j in range(m):  # for each column vector
             tmp = mat[:, j]  # take original v
-            for i in range(Min(j, n)):
+            for i in range(Min(j, n, rank)):
                 # subtract the project of mat on new vector
                 R[i, j] = Q[:, i].dot(mat[:, j])
                 tmp -= Q[:, i] * R[i, j]
@@ -4066,12 +4068,18 @@ class MatrixBase(MatrixDeprecated,
             # normalize it
             if j < n:
                 R[j, j] = tmp.norm()
-                Q[:, j] = tmp / R[j, j]
-                if Q[:, j].norm() != 1:
-                    raise NotImplementedError(
-                        "Could not normalize the vector %d." % j)
+                if not R[j, j].is_zero:
+                    rank += 1
+                    Q[:, j] = tmp / R[j, j]
 
-        return cls(Q), cls(R)
+        if rank != 0:
+            return cls(Q[:, :rank]), cls(R[:rank, :])
+        else:
+            # Trivial case handling for zero-rank matrix
+            # Force Q as matrix containing standard basis vectors
+            for i in range(Min(n, m)):
+                Q[i, i] = 1
+            return cls(Q), cls(R)
 
     def QRsolve(self, b):
         """Solve the linear system 'Ax = b'.
