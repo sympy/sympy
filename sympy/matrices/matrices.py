@@ -4053,9 +4053,6 @@ class MatrixBase(MatrixDeprecated,
         cls = self.__class__
         mat = self.as_mutable()
 
-        if not mat.rows >= mat.cols:
-            raise MatrixError(
-                "The number of rows must be greater than columns")
         n = mat.rows
         m = mat.cols
         rank = n
