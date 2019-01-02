@@ -884,6 +884,25 @@ def test_QR_trivial():
     assert R.is_upper
     assert A == Q*R
 
+    # Rank deficient matrices with zero norm from beginning columns
+    A = Matrix([[0, 0, 0], [1, 2, 3]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0, 0], [1, 2, 3, 4], [0, 0, 0, 0]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0, 0], [1, 2, 3, 4], [0, 0, 0, 0], [2, 4, 6, 8]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
 
 def test_nullspace():
     # first test reduced row-ech form
