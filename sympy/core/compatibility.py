@@ -735,7 +735,7 @@ if GROUND_TYPES == 'gmpy':
 
 
 # lru_cache compatible with py2.7 copied directly from
-#   http://code.activestate.com/
+#   https://code.activestate.com/
 #   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
 from collections import namedtuple
 from functools import update_wrapper
