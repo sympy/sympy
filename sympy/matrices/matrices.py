@@ -4057,32 +4057,45 @@ class MatrixBase(MatrixDeprecated,
         m = mat.cols
         ranked = list()
 
-        Q, R = mat.zeros(n, Min(n, m)), mat.zeros(Min(n, m),m)
+        # If matrix is fat, pad additional zeros to make it square.
+        # Variable nOrig is used to collect the original dimensions, so that
+        # it can be used to truncate unncecssary zeros from the Q
+        if n < m:
+            nOrig = n
+            n = m
+            mat.col_join(mat.zeros(n - nOrig, m))
+        else:
+            nOrig = n
+
+        Q, R = mat.zeros(n, m), mat.zeros(m)
         for j in range(m):  # for each column vector
             tmp = mat[:, j]  # take original v
-            for i in range(Min(j, n)):
+            for i in range(j):
                 # subtract the project of mat on new vector
                 R[i, j] = Q[:, i].dot(mat[:, j])
                 tmp -= Q[:, i] * R[i, j]
                 tmp.expand()
             # normalize it
-            if j < n:
-                R[j, j] = tmp.norm()
-                if not R[j, j].is_zero:
-                    ranked.append(j)
-                    Q[:, j] = tmp / R[j, j]
+            R[j, j] = tmp.norm()
+            if not R[j, j].is_zero:
+                ranked.append(j)
+                Q[:, j] = tmp / R[j, j]
+
 
         if len(ranked) != 0:
             return (
-            cls(Q.extract(range(Q.rows), ranked)),
+            cls(Q.extract(range(nOrig), ranked)),
             cls(R.extract(ranked, range(R.cols)))
             )
         else:
             # Trivial case handling for zero-rank matrix
             # Force Q as matrix containing standard basis vectors
-            for i in range(Min(n, m)):
+            for i in range(Min(nOrig, m)):
                 Q[i, i] = 1
-            return cls(Q), cls(R)
+            return (
+            cls(Q.extract(range(nOrig), range(Min(nOrig, m)))),
+            cls(R.extract(range(Min(nOrig, m)), range(R.cols)))
+            )
 
     def QRsolve(self, b):
         """Solve the linear system 'Ax = b'.
