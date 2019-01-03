@@ -286,10 +286,6 @@ class PoissonDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         return exp(self.lamda * (exp(t) - 1))
 
-    def _entropy(self, t):
-        # https://pure.tue.nl/ws/portalfiles/portal/1959440/Metis199989.pdf
-        return log(2*pi*exp(1)*t)/2 - 1/(12*t) + O(t**-2)
-
 
 def Poisson(name, lamda):
     r"""
