@@ -216,9 +216,9 @@ def with_metaclass(meta, *bases):
     may omit it.
 
     >>> MyClass.__mro__
-    (<class 'MyClass'>, <... 'object'>)
+    (<class '...MyClass'>, <... 'object'>)
     >>> type(MyClass)
-    <class 'Meta'>
+    <class '...Meta'>
 
     """
     # This requires a bit of explanation: the basic idea is to make a dummy
