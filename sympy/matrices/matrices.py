@@ -4063,7 +4063,7 @@ class MatrixBase(MatrixDeprecated,
         if n < m:
             nOrig = n
             n = m
-            mat.col_join(mat.zeros(n - nOrig, m))
+            mat = mat.col_join(mat.zeros(n - nOrig, m))
         else:
             nOrig = n
 
