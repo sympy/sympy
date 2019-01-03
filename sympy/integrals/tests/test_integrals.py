@@ -1476,9 +1476,3 @@ def test_issue_4311():
         (x**4/4 - 9*x**2/2, x <= -3),
         (-x**4/4 + 9*x**2/2 - S(81)/2, x <= 3),
         (x**4/4 - 9*x**2/2, True))
-
-def test_issue_15716():
-    x = Symbol('x')
-    e = -3**x*exp(-3)*log(3**x*exp(-3)/factorial(x))/factorial(x)
-    definite = integrate(e, [x, -oo, oo])
-    assert Integral(e, (x, -oo, oo)).doit() == definite
