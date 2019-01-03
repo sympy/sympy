@@ -1534,6 +1534,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation([[2,0], [3,1]])
         >>> ~p
         Permutation([2, 3, 0, 1])
@@ -2336,6 +2337,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation([4, 8, 0, 7, 1, 5, 3, 6, 2])
         >>> p.inversion_vector()
         [4, 7, 0, 5, 0, 2, 1, 1]
@@ -2515,6 +2517,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation.josephus(3, 6, 1)
         >>> p
         Permutation([2, 5, 3, 1, 4, 0])

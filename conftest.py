@@ -15,7 +15,7 @@ blacklist_path = os.path.join(os.path.dirname(__file__), '.ci', 'blacklisted.jso
 
 # Collecting tests from rubi_tests under pytest leads to errors even if the
 # tests will be skipped.
-collect_ignore = ["sympy/integrals/rubi/rubi_tests"] + _get_doctest_blacklist()
+collect_ignore = ["sympy/integrals/rubi"] + _get_doctest_blacklist()
 
 # Set up printing for doctests
 setup_pprint()

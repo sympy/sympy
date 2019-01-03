@@ -219,8 +219,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
     >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
     >>> f(1, 2)
-    matrix([[1],
-            [2]])
+    [[1]
+     [2]]
 
     Usage
     =====
