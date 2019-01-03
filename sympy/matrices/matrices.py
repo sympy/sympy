@@ -4183,8 +4183,9 @@ class MatrixBase(MatrixDeprecated,
         """
         if method == 'CH':
             return self.cholesky_solve(rhs)
-        t = self.H
-        return (t * self).inv(method=method) * t * rhs
+        else:
+            t = self.H
+            return (t * self).solve(t * rhs)
 
     def solve(self, rhs, method='GJ'):
         """Return the unique soln making self*soln = rhs.
