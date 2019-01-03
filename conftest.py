@@ -19,6 +19,10 @@ collect_ignore = ["sympy/integrals/rubi/rubi_tests"] + _get_doctest_blacklist()
 
 # Set up printing for doctests
 setup_pprint()
+sys.__displayhook__ = sys.displayhook
+#from sympy import pprint_use_unicode
+#pprint_use_unicode(False)
+
 
 def _mk_group(group_dict):
     return list(chain(*[[k+'::'+v for v in files] for k, files in group_dict.items()]))

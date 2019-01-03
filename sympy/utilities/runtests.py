@@ -705,6 +705,12 @@ def _get_doctest_blacklist():
             "doc/src/modules/numeric-computation.rst",
         ])
 
+    if import_module('antlr4') is None:
+        blacklist.extend([
+            "sympy/parsing/autolev/__init__.py",
+            "sympy/parsing/latex/_parse_latex_antlr.py",
+        ])
+
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
         "sympy/utilities/autowrap.py",
