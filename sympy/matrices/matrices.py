@@ -4130,6 +4130,14 @@ class MatrixBase(MatrixDeprecated,
     def solve_least_squares(self, rhs, method='CH'):
         """Return the least-square fit to the data.
 
+        Parameters
+        ==========
+
+        rhs : Matrix
+            Vectors representing the right hand side of the linear equation.
+
+        method : string or boolean
+
         By default the cholesky_solve routine is used (method='CH'); other
         methods of matrix inversion can be used. To find out which are
         available, see the docstring of the .inv() method.
