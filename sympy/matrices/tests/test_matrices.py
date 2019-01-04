@@ -2817,7 +2817,8 @@ def test_pinv_rank_deficient():
 
 @XFAIL
 def test_pinv_rank_deficient_when_diagonalization_fails():
-    print('Test the four properties of the pseudoinverse for matrices when diagonalization of A.H*A fails.')
+    # Test the four properties of the pseudoinverse for matrices when
+    # diagonalization of A.H*A fails.'
     As = [Matrix([
         [61, 89, 55, 20, 71, 0],
         [62, 96, 85, 85, 16, 0],
