@@ -1541,7 +1541,7 @@ class XypicDiagramDrawer(object):
     should be done:
 
     >>> def formatter(astr):
-    ...   astr.label = "\exists !" + astr.label
+    ...   astr.label = r"\exists !" + astr.label
     ...   astr.arrow_style = "{-->}"
     >>> drawer.arrow_formatters["unique"] = formatter
     >>> print(drawer.draw(diagram, grid))
