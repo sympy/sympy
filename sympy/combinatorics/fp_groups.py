@@ -514,6 +514,137 @@ class FpGroup(DefaultPrinting):
         P, T = self._to_perm_group()
         return T.invert(P._elements)
 
+def subgroup_quotient(G, H, parent_group=None, homomorphism=False):
+    '''
+    Compute the quotient group G/H.
+    The quotient group is computed on a new FreeGroup when
+    `G` is a list of the elements of parent_group.
+
+    Arguments
+    =========
+    G -- A list of `FreeGroupElement`s or an `FpGroup`.
+    H -- A list of `FreeGroupElement`s or an `FpGroup`.
+    parent_group -- A group specified when `G` and `H` are given by a list of generators.
+    homomorphism -- Return a homomorphism whenever `homomorphism` = True
+
+    Returns
+    =======
+    * When `homomorphism = True`, quotient group along with the homomorphism
+    from the quotient to the parent_group whose image is isomorphic to G.
+    * Only the quotient group in all other cases.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.fp_groups import FpGroup
+    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics.fp_groups import subgroup_quotient
+
+    >>> F, x, y = free_group("x, y")
+    >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
+    >>> T = subgroup_quotient(f, [x, y])
+    >>> T.order() == 1
+    True
+
+    >>> T = subgroup_quotient(f, [x*y**2*x*y, y**2*x*y*x, y**-1])
+    >>> H = f.subgroup([x*y**2*x*y, y**2*x*y*x, y**-1])
+    >>> T.order() == f.order()/H.order()
+    True
+
+    >>> G = [x, y]
+    >>> H = [x*y**2*x*y, y**2*x*y*x, x*y*x]
+    >>> K, T = subgroup_quotient(G, H, parent_group=f, homomorphism=True)
+    >>> G = f.subgroup(G)
+    >>> H = f.subgroup(H)
+    >>> K.order() == G.order()/H.order()
+    True
+    >>> T(K.generators) == list(f.generators)
+    True
+    >>> T.domain == K
+    True
+
+    '''
+    def _get_pres(F, parent_group=None):
+        if isinstance(F, list) and parent_group:
+            K, T = parent_group.subgroup(F, homomorphism=True)
+            f_gens = T(K.generators)
+            f_rels = T(K.relators)
+        else:
+            f_gens = F.generators
+            f_rels = F.relators
+        return f_gens, f_rels
+
+    def _check(F):
+        if ((isinstance(F, list) and not all(elem in free_group for elem in F))
+        or (isinstance(F, FpGroup) and not (F.free_group == free_group))):
+            raise ValueError("The group elements must belong to the parent group")
+
+    # If no parent group is specified,
+    # G is set to the parent `FpGroup`
+    if not parent_group:
+        if isinstance(G, list):
+            raise ValueError("The parent_group must be"
+                            "defined when the group is a list")
+        parent_group = G
+
+    free_group = parent_group.free_group
+
+    if not isinstance(parent_group, FpGroup):
+        raise ValueError("The parent group must be an instance"
+                                    "of FpGroup")
+
+    _check(G)
+    _check(H)
+
+    h_gens, h_rels = _get_pres(H, parent_group=parent_group)
+    T = None
+    # return the `FpGroup` on a new `free_group`
+    if isinstance(G, list):
+        G, T = parent_group.subgroup(G, homomorphism=True)
+        h_gens = T.invert(h_gens)
+        h_rels = T.invert(h_rels)
+        free_group = G.free_group
+
+    g_gens, g_rels = _get_pres(G)
+
+    q_relators = list(g_rels) + list(h_gens)
+    q_group = FpGroup(free_group, q_relators)
+
+    # Return the quotient group with presentation
+    # <G.generators|q_realtors>
+    if homomorphism and T:
+        T.domain = q_group
+        return q_group, T
+    return q_group
+
+def maximal_abelian_quotient(G):
+    '''
+    Compute the maximal abelian quotient of an FpGroup.
+    The quotient group G/[G,G] will be the largest
+    abelain quotient of `G`.
+    Here, [G, G] is the commutator subgroup.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.fp_groups import FpGroup
+    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics.fp_groups import maximal_abelian_quotient
+    >>> F, x, y = free_group("x, y")
+    >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
+    >>> T = maximal_abelian_quotient(f)
+    >>> T.order()
+    2
+    >>> T.is_abelian
+    True
+
+    See Also
+    ========
+    subgroup_quotient
+
+    '''
+    if not isinstance(G, FpGroup):
+        raise ValueError("The group must be finitely presented")
+
+    return subgroup_quotient(G, G.derived_subgroup())
 
 class FpSubgroup(DefaultPrinting):
     '''
@@ -1294,7 +1425,8 @@ def reidemeister_presentation(fp_grp, H, C=None, homomorphism=False):
     define_schreier_generators(C, homomorphism=homomorphism)
     reidemeister_relators(C)
     gens, rels = C._schreier_generators, C._reidemeister_relators
-    gens, rels = simplify_presentation(gens, rels, change_gens=True)
+    if gens:
+        gens, rels = simplify_presentation(gens, rels, change_gens=True)
 
     C.schreier_generators = tuple(gens)
     C.reidemeister_relators = tuple(rels)
