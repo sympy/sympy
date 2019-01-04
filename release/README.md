@@ -6,27 +6,26 @@ all release processes should be done with release.sh and rever.xsh.**
 
 First, make sure that you have done the following things
 
-- Create a release branch. Usually this branch is the same name as the release
+- Create a release branch. Usually, this branch is the same name as the release
   (e.g., "0.7.3"), although no naming convention is enforced on it.
 
 - Change the version in the release branch in sympy/release.py. If you want to
   do a release candidate, change it to a [PEP
   440](https://www.python.org/dev/peps/pep-0440) compliant version like
-  0.7.3rc1. Note that setuptools normalizes versions like 0.7.3.rc1 to
+  0.7.3rc1. Note that setuptools normalize versions like 0.7.3.rc1 to
   0.7.3rc1, so there will be errors if you do not use the latter form.
 
-- Change the version in master. This way, any additional changes made in master
+- Change the version in master. This way, any additional changes made in the master
   will be shown as coming from the right place. The master release should be
   e.g. `0.7.4.dev`, see [PEP 440](https://www.python.org/dev/peps/pep-0440) for
   rules about development version numbers. Note that this version number should
   the next projected version plus the `.dev`.
 
-- Push the release branch up to origin, and make a pull request for it against
+- Push the release branch up to the origin, and make a pull request for it against
   master.
 
-It is important to create a new branch because that lets master continue as
-normal. The release script will automatically checkout the release branch from
-origin, which is why you need to push it (it determines what the release
+It is important to create a new branch because that lets the master continues as
+normal. The release script will automatically check out the release branch from the origin, which is why you need to push it (it determines what the release
 branch by just looking at what branch you have checked out locally, so make
 sure you are on the release branch when you release). It is important to
 change the version number because it uses that in naming the tarballs it
@@ -54,9 +53,9 @@ script can take about an hour or so to run (depending on how long the tests
 take). Every time you re-run the script, it pulls from the branch and runs
 everything from scratch.
 
-At the end it will print two things, the list of authors, and the md5 sums.
+In the end, it will print two things, the list of authors, and the md5 sums.
 Copy the list of authors into the release notes. You should verify that the
-md5 sums of the release files are the same as what are printed.
+md5 sums of the release files are the same as what is printed.
 
 # Tagging the release
 
@@ -121,7 +120,7 @@ You should now update the websites. Only do this for final releases. The command
 
 will update docs.sympy.org and sympy.org (**TODO: This isn't fully translated
 from the fabfile yet.**).  You will need to have local clones
-of these repos, and push access to them (obviously).  **Note, this command
+of these repos and push access to them (obviously).  **Note, this command
 will commit and push the changes automatically.**
 
 The other website that needs to be updated is SymPy Live. You should make this
