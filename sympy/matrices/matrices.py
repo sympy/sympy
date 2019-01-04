@@ -4149,6 +4149,12 @@ class MatrixBase(MatrixDeprecated,
             from ``.solve()``, after applying a naive approach of using dot
             product of conjugate transposed ``self`` in both sides.
 
+        Returns
+        =======
+
+        solutions : Matrix
+            Vector representing the solution.
+
         Examples
         ========
 
