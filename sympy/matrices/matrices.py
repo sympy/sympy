@@ -4136,7 +4136,7 @@ class MatrixBase(MatrixDeprecated,
         rhs : Matrix
             Vectors representing the right hand side of the linear equation.
 
-        method : string or boolean
+        method : string or boolean, optional
             If set to ``'CH'``, ``cholesky_solve`` routine will be used.
 
             If set to ``'QR'``, ``QRsolve`` routine will be used.
