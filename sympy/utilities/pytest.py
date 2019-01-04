@@ -114,6 +114,9 @@ if not USE_PYTEST:
     class Skipped(Exception):
         pass
 
+    class Failed(Exception):
+        pass
+
     def XFAIL(func):
         def wrapper():
             try:
@@ -167,7 +170,7 @@ if not USE_PYTEST:
         ...     pass
         Traceback (most recent call last):
         ...
-        AssertionError: Failed: DID NOT WARN. No warnings of type UserWarning\
+        Failed: DID NOT WARN. No warnings of type UserWarning\
         was emitted. The list of emitted warnings is: [].
         '''
         match = kwargs.pop('match', '')
@@ -188,7 +191,7 @@ if not USE_PYTEST:
                    ' No warnings of type %s was emitted.'
                    ' The list of emitted warnings is: %s.'
                    ) % (warningcls, [w.message for w in warnrec])
-            raise AssertionError(msg)
+            raise Failed(msg)
 
 
 else:
@@ -226,7 +229,7 @@ def warns_deprecated_sympy():
     ...     pass
     Traceback (most recent call last):
     ...
-    AssertionError: Failed: DID NOT WARN. No warnings of type \
+    Failed: DID NOT WARN. No warnings of type \
     SymPyDeprecationWarning was emitted. The list of emitted warnings is: [].
     '''
     with warns(SymPyDeprecationWarning):
