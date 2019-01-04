@@ -58,6 +58,7 @@ from collections import defaultdict
 import warnings
 
 
+
 def recast_to_symbols(eqs, symbols):
     """Return (e, s, d) where e and s are versions of eqs and
     symbols in which any non-Symbol objects in symbols have
@@ -1357,7 +1358,6 @@ def _solve(f, *symbols, **flags):
     gives None a ValueError will be raised."""
 
     not_impl_msg = "No algorithms are implemented to solve equation %s"
-
     if len(symbols) != 1:
         soln = None
         free = f.free_symbols
@@ -1644,6 +1644,7 @@ def _solve(f, *symbols, **flags):
                 flags['tsolve'] = True
                 solvers = dict([(k, flags.get(k, True)) for k in
                     ('cubics', 'quartics', 'quintics')])
+
                 soln = roots(poly, **solvers)
                 if sum(soln.values()) < deg:
                     # e.g. roots(32*x**5 + 400*x**4 + 2032*x**3 +
@@ -1694,6 +1695,7 @@ def _solve(f, *symbols, **flags):
 
     # fallback if above fails
     # -----------------------
+
     if result is False:
         # try unrad
         if flags.pop('_unrad', True):
@@ -1727,6 +1729,7 @@ def _solve(f, *symbols, **flags):
             soln = _tsolve(f_num, symbol, **flags)
             if soln is not None:
                 result = soln
+
         except PolynomialError:
             pass
     # ----------- end of fallback ----------------------------
@@ -2630,6 +2633,7 @@ def _tsolve(eq, sym, **flags):
         flags['tsolve_saw'].append(eq)
 
     rhs, lhs = _invert(eq, sym)
+    soln=[]
 
     if lhs == sym:
         return [rhs]
@@ -2667,8 +2671,16 @@ def _tsolve(eq, sym, **flags):
                 return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
             elif lhs.base == 0 and rhs == 1:
                 return _solve(lhs.exp, sym, **flags)
-            else:
-                raise NotImplementedError
+            elif rhs==1 and lhs.base!=0 :
+                x=_solve(lhs.base+S.One,sym,**flags)
+                for t in x:
+                    if eq.subs(sym,t)==0 and t not in soln:
+                        soln.append(t)
+
+
+
+
+
 
         elif lhs.is_Mul and rhs.is_positive:
             llhs = expand_log(log(lhs))
@@ -2687,7 +2699,9 @@ def _tsolve(eq, sym, **flags):
 
         rewrite = lhs.rewrite(exp)
         if rewrite != lhs:
-            return _solve(rewrite - rhs, sym, **flags)
+            y= _solve(rewrite - rhs, sym, **flags)
+            y.extend(soln)
+            return list(set(y))
     except NotImplementedError:
         pass
 

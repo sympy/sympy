@@ -448,8 +448,7 @@ def test_solve_transcendental():
     assert str(solve(Eq(a, 0.5 - cos(pi*b)/2), b)) == \
         '[-0.318309886183791*acos(-2.0*a + 1.0) + 2.0, 0.318309886183791*acos(-2.0*a + 1.0)]'
 
-    # issue 15325
-    assert solve(y**(1/x) - z, x) == [log(y)/log(z)]
+    
 
 
 def test_solve_for_functions_derivatives():
