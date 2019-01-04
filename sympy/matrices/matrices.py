@@ -4137,10 +4137,17 @@ class MatrixBase(MatrixDeprecated,
             Vectors representing the right hand side of the linear equation.
 
         method : string or boolean
+            If set to ``'CH'``, ``cholesky_solve`` routine will be used.
 
-        By default the cholesky_solve routine is used (method='CH'); other
-        methods of matrix inversion can be used. To find out which are
-        available, see the docstring of the .inv() method.
+            If set to ``'QR'``, ``QRsolve`` routine will be used.
+
+            If set to ``'LDL'``, ``LDLsolve`` routine will be used.
+
+            If set to ``'PINV'``, ``pinv_solve`` routine will be used.
+
+            Other linear solving methods may be used, which can be inherited
+            from ``.solve()``, after applying a naive approach of using dot
+            product of conjugate transposed ``self`` in both sides.
 
         Examples
         ========
