@@ -259,16 +259,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         the generated function relies on the input being a numpy array:
 
         >>> from sympy import Piecewise
+        >>> from sympy.utilities.pytest import ignore_warnings
         >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
-        >>> f(array([-1, 0, 1, 2]))
+
+        >>> with ignore_warnings(RuntimeWarning):
+        ...     f(array([-1, 0, 1, 2]))
         [-1.   0.   1.   0.5]
+
         >>> f(0)
         Traceback (most recent call last):
             ...
         ZeroDivisionError: division by zero
 
         In such cases, the input should be wrapped in a numpy array:
-        >>> float(f(array([0])))
+        >>> with ignore_warnings(RuntimeWarning):
+        ...     float(f(array([0])))
         0.0
 
         Or if numpy functionality is not required another module can be used:
