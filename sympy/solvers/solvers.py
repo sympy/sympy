@@ -2673,11 +2673,8 @@ def _tsolve(eq, sym, **flags):
                 for t in x:
                     if eq.subs(sym,t)==0 and t not in soln:
                         soln.append(t)
-
-
-
-
-
+            else:
+                raise NotImplementedError
 
         elif lhs.is_Mul and rhs.is_positive:
             llhs = expand_log(log(lhs))
