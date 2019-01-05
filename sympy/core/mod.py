@@ -143,8 +143,7 @@ class Mod(Function):
             if q.is_Integer and q is not S.One:
                 _ = []
                 for i in non_mod_l:
-                    if i.is_Integer:
-                        # and (i % q is not S.Zero)
+                    if i.is_Integer and (i % q is not S.Zero):
                         _.append(i%q)
                     else:
                         _.append(i)
