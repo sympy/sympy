@@ -58,7 +58,6 @@ from collections import defaultdict
 import warnings
 
 
-
 def recast_to_symbols(eqs, symbols):
     """Return (e, s, d) where e and s are versions of eqs and
     symbols in which any non-Symbol objects in symbols have
@@ -1358,6 +1357,7 @@ def _solve(f, *symbols, **flags):
     gives None a ValueError will be raised."""
 
     not_impl_msg = "No algorithms are implemented to solve equation %s"
+
     if len(symbols) != 1:
         soln = None
         free = f.free_symbols
@@ -1644,7 +1644,6 @@ def _solve(f, *symbols, **flags):
                 flags['tsolve'] = True
                 solvers = dict([(k, flags.get(k, True)) for k in
                     ('cubics', 'quartics', 'quintics')])
-
                 soln = roots(poly, **solvers)
                 if sum(soln.values()) < deg:
                     # e.g. roots(32*x**5 + 400*x**4 + 2032*x**3 +
@@ -1695,7 +1694,6 @@ def _solve(f, *symbols, **flags):
 
     # fallback if above fails
     # -----------------------
-
     if result is False:
         # try unrad
         if flags.pop('_unrad', True):
@@ -1729,7 +1727,6 @@ def _solve(f, *symbols, **flags):
             soln = _tsolve(f_num, symbol, **flags)
             if soln is not None:
                 result = soln
-
         except PolynomialError:
             pass
     # ----------- end of fallback ----------------------------
@@ -2619,7 +2616,7 @@ def _tsolve(eq, sym, **flags):
     >>> from sympy.abc import x
 
     >>> tsolve(3**(2*x + 5) - 4, x)
-    [(-5*log(3)/2 + log(2) + I*pi)/log(3), -5/2 + log(2)/log(3)]
+    [-5/2 + log(2)/log(3), (-5*log(3)/2 + log(2) + I*pi)/log(3)]
 
     >>> tsolve(log(x) + 2*x, x)
     [LambertW(2)/2]
