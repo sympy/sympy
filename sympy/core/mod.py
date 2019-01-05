@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
 from sympy.core.numbers import nan
-from .function import Function
+from sympy.core.function import Function
+from sympy.core.mul import Mul
 
 
 class Mod(Function):
@@ -51,6 +52,16 @@ class Mod(Function):
                         return S.Zero
                     elif p.is_odd:
                         return S.One
+                    if p.is_Mul:
+                        terms = p.as_two_terms()
+                        if terms[0].is_even:
+                            return S.Zero
+                        else:
+                            return Mod(terms[1],2)
+                if p.is_Mul:
+                    terms = p.as_two_terms()
+                    if(terms[0]%q==0):
+                        return S.Zero
 
             if hasattr(p, '_eval_Mod'):
                 rv = getattr(p, '_eval_Mod')(q)
