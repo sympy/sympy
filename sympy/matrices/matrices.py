@@ -4141,8 +4141,6 @@ class MatrixBase(MatrixDeprecated,
 
             If set to ``'QR'``, ``QRsolve`` routine will be used.
 
-            If set to ``'LDL'``, ``LDLsolve`` routine will be used.
-
             If set to ``'PINV'``, ``pinv_solve`` routine will be used.
 
             Other linear solving methods may be used, which can be inherited
