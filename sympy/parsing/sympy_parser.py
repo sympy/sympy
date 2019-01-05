@@ -509,22 +509,22 @@ def implicit_multiplication_application(result, local_dict, global_dict):
 
     return result
 
-def find_closing(string:str,pos:int,opening:str,closing:str)->int:
+def find_closing(string,pos,opening,closing):
     # find the next closing
-    ic=string.index(closing,pos) 
+    ic=string.index(closing,pos)
     # print("ic",ic)
-    # find the next opening in the space between if there is one 
+    # find the next opening in the space between if there is one
     try:
         io=string.index(opening,pos+1,ic-1)
         # print("io",io)
         # find the closing to the next (leftmost) opening
         ioc=find_closing(string,io,opening,closing)
-        # and start from there 
+        # and start from there
         return string.index(closing,ioc+1)
     except ValueError:
-        #if there is no opening the next closing was the matching one 
+        #if there is no opening the next closing was the matching one
         return ic
-    
+
 
 def auto_indexed_base(tokens, local_dict, global_dict):
     """Inserts calls to ``IndexedBase`` for undefined indexed variables."""
@@ -532,8 +532,8 @@ def auto_indexed_base(tokens, local_dict, global_dict):
     prevTok = (None, None)
     n=len(tokens)
     local_dict=copy.copy(local_dict)
-    tokens.append((None, None))  # to provide a last nextTok 
-    tokvals=[t[1] for t in tokens] 
+    tokens.append((None, None))  # to provide a last nextTok
+    tokvals=[t[1] for t in tokens]
 
     for i in range(n):
         tok=tokens[i]
@@ -544,12 +544,12 @@ def auto_indexed_base(tokens, local_dict, global_dict):
         if tokNum == NAME and nextTokVal=='[':
             # find closing ']'
             # todo:
-            # we could catch the possible exception if no closing ']' is found 
+            # we could catch the possible exception if no closing ']' is found
             # to make the resulting errormessage more intelligible
-            ic=find_closing(tokvals,i+1,'[',']') 
+            ic=find_closing(tokvals,i+1,'[',']')
             inner_tokens=tokens[i+2:ic]
             # print('inner_tokens',inner_tokens)
-            # The element between '[' and ']' should be either a number or a tuple  
+            # The element between '[' and ']' should be either a number or a tuple
             # The rank of the IndexedBase will be 1 or the length of the tuple
             # To determine the kind of the inner expression we call sympify recursively
             innerExp=sympify(untokenize(inner_tokens))
@@ -568,19 +568,19 @@ def auto_indexed_base(tokens, local_dict, global_dict):
                 if isinstance(stored,IndexedBase):
                     # There are two possibilities for stored
                     # either WE defined it before and remember the rank
-                    # sympify was called with a 'locals' dict containing our IndexedBase var 
+                    # sympify was called with a 'locals' dict containing our IndexedBase var
                     # in the latter case we can not be sure that 'stored' has a shape
                     if stored.shape is None:
                         # overwrite it with our more specific definition which includes the rank
                         local_dict[name]=new
                     else:
-                        # compare the rank to be able to detect expressions like A[1]+A[1,2] 
+                        # compare the rank to be able to detect expressions like A[1]+A[1,2]
                         assert(len(new.shape)==len(stored.shape))
 
                     result.append((NAME, name))
 
             else:
-                # remember an IndexedBase to be able to detect 
+                # remember an IndexedBase to be able to detect
                 # if the next occourence is compatible in shape
                 local_dict[name]=new
 
@@ -594,7 +594,7 @@ def auto_indexed_base(tokens, local_dict, global_dict):
             result.append((tokNum, tokVal))
 
         prevTok = (tokNum, tokVal)
-    
+
 
     return result
 
