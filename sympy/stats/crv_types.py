@@ -48,7 +48,7 @@ from __future__ import print_function, division
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfi, I, hyper, uppergamma,
-                   sinh, Ne, expint, digamma, EulerGamma, harmonic)
+                   sinh, Ne, expint, digamma, EulerGamma, harmonic, E)
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, exp, besseli, besselj, besselk
@@ -1651,6 +1651,9 @@ class LaplaceDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return exp(self.mu*t) / (1 - self.b**2*t**2)
 
+    def _entropy(self, t):
+        return log(2*self.b*E)
+
 def Laplace(name, mu, b):
     r"""
     Create a continuous random variable with a Laplace distribution.
@@ -1735,6 +1738,9 @@ class LogisticDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return exp(self.mu*t) * Beta(1 - self.s*t, 1 + self.s*t)
 
+    def _entropy(self, t):
+        return log(self.s) + 2
+
 def Logistic(name, mu, s):
     r"""
     Create a continuous random variable with a logistic distribution.
@@ -1807,6 +1813,10 @@ class LogNormalDistribution(SingleContinuousDistribution):
 
     def _moment_generating_function(self, t):
         raise NotImplementedError('Moment generating function of the log-normal distribution is not defined.')
+
+    def _entropy(self, t):
+        mean, std = self.mean, self.std
+        return log(std*exp(mean + 1/2)*sqrt(2*pi))/log(2)
 
 def LogNormal(name, mean, std):
     r"""
@@ -1882,6 +1892,9 @@ class MaxwellDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
+
+    def _entropy(self, t):
+        return log(self.a * sqrt(2*pi)) + EulerGamma - 1/2
 
 def Maxwell(name, a):
     r"""
@@ -2051,6 +2064,9 @@ class NormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return exp(mean*t + std**2*t**2/2)
 
+    def _entropy(self, t):
+        return log(2*pi*E*self.std**2)/2
+
 def Normal(name, mean, std):
     r"""
     Create a continuous random variable with a Normal distribution.
@@ -2175,6 +2191,10 @@ class ParetoDistribution(SingleContinuousDistribution):
         xm, alpha = self.xm, self.alpha
         return alpha * (-I * xm * t) ** alpha * uppergamma(-alpha, -I * xm * t)
 
+    def _entropy(self, t):
+        xm, alpha = self.xm, self.aplha
+        return log(xm*exp(1 + 1/alpha)/alpha)
+
 
 def Pareto(name, xm, alpha):
     r"""
@@ -2251,6 +2271,9 @@ class QuadraticUDistribution(SingleContinuousDistribution):
             a, b = self.a, self.b
 
             return -3*I*(exp(I*a*t*exp(I*b*t)) * (4*I - (-4*b + (a+b)**2)*t)) / ((a-b)**3 * t**2)
+
+    def _entropy(self, t):
+        return S.NaN
 
 
 def QuadraticU(name, a, b):
@@ -2411,6 +2434,9 @@ class RayleighDistribution(SingleContinuousDistribution):
         sigma = self.sigma
         return 1 + sigma*t*exp(sigma**2*t**2/2) * sqrt(pi/2) * (erf(sigma*t/sqrt(2)) + 1)
 
+    def _entropy(self, t):
+        return 1 + log(self.sigma/sqrt(2)) + EulerGamma/2
+
 
 def Rayleigh(name, sigma):
     r"""
@@ -2543,6 +2569,10 @@ class StudentTDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the Student-T distribution is undefined.')
 
+    def _entropy(self, t):
+        nu = self.nu
+        return (nu + 1)*(digamma((1 + nu)/2) - digamma(nu/2)) + log(sqrt(nu)*beta_fn(S(1)/2, nu/2))
+
 def StudentT(name, nu):
     r"""
     Create a continuous random variable with a student's t distribution.
@@ -2617,6 +2647,10 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
             (2 / (d+c-a-b), And(b <= x, x < c)),
             (2*(d-x) / ((d-c)*(d+c-a-b)), And(c <= x, x <= d)),
             (S.Zero, True))
+
+    def _entropy(self, x):
+        a, b, c, d = self.a, self.b, self.c, self.d
+        return (d - c + b - a)/(2*(d + c - b - a)) +log((d + c - b - a)/2)
 
 def Trapezoidal(name, a, b, c, d):
     r"""
@@ -2705,6 +2739,9 @@ class TriangularDistribution(SingleContinuousDistribution):
         a, b, c = self.a, self.b, self.c
         return 2 * ((b - c) * exp(a * t) - (b - a) * exp(c * t) + (c + a) * exp(b * t)) / (
         (b - a) * (c - a) * (b - c) * t ** 2)
+
+    def _entropy(self, t):
+        return 1/2 + log((self.b - self.a)/2)
 
 
 def Triangular(name, a, b, c):
@@ -2802,6 +2839,9 @@ class UniformDistribution(SingleContinuousDistribution):
         left, right = self.left, self.right
         return Piecewise(((exp(t*right) - exp(t*left)) / (t * (right - left)), Ne(t, 0)),
                          (S.One, True))
+
+    def _entropy(self, t):
+        return log(self.right - self.left)
 
     def expectation(self, expr, var, **kwargs):
         from sympy import Max, Min
@@ -3061,6 +3101,9 @@ class WeibullDistribution(SingleContinuousDistribution):
     def sample(self):
         return random.weibullvariate(self.alpha, self.beta)
 
+    def _entropy(self, x):
+        return EulerGamma * (1 - 1/self.beta) + log(self.alpha/self.beta) + 1
+
 def Weibull(name, alpha, beta):
     r"""
     Create a continuous random variable with a Weibull distribution.
@@ -3138,6 +3181,9 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return Piecewise((2 * besseli(1, self.R*t) / (self.R*t), Ne(t, 0)),
                          (S.One, True))
+
+    def _entropy(self, t):
+        return log(pi*self.R) - 1/2
 
 def WignerSemicircle(name, R):
     r"""
