@@ -1666,6 +1666,7 @@ def test_Mod():
     i, j = symbols('i j', integer=True, positive=True)
     assert Mod(3*i, 2) == Mod(i, 2)
     assert Mod(8*i/j, 4) == 4*Mod(2*i/j, 1)
+    assert Mod(8*i, 4) == 0
 
 
 def test_Mod_is_integer():
