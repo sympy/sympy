@@ -64,7 +64,7 @@ DAMAGE.
 
 --------------------------------------------------------------------------------
 
-Submodule that were taken from the multiple dispatch project (https://github.com/mrocklin/multipledispatch)
+Submodules taken from the multipledispatch project (https://github.com/mrocklin/multipledispatch)
 are licensed as:
 
 Copyright (c) 2014 Matthew Rocklin
