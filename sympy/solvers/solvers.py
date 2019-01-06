@@ -2663,6 +2663,8 @@ def _tsolve(eq, sym, **flags):
                         return sol_base  # no solutions to remove so return now
                     return list(ordered(set(sol_base) - set(
                     _solve(lhs.exp, sym, **flags))))
+                elif lhs.base.is_positive and lhs.exp.is_real:
+                    return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
                 elif rhs == 1:
                     if  lhs.base == 0:
                         return _solve(lhs.exp, sym, **flags)
@@ -2671,13 +2673,15 @@ def _tsolve(eq, sym, **flags):
                         b1 = _solve(lhs.base - 1, sym, **flags)
                         b_1 = _solve(lhs.base + 1, sym, **flags)
                         e0 = _solve(lhs.exp, sym, **flags)
-                        sol = list(b1) + list(e0)
+                        e1=[]
+                        rewrite = lhs.rewrite(exp)
+                        if rewrite != lhs:
+                            e1= _solve(rewrite - rhs, sym, **flags)
+                        sol = list(b1) + list(e0) + list(e1)
                         for b in b_1:
                                 if eq.subs(sym, b)==0:
                                     sol.append(b)
-                        return list(ordered(sol))
-                elif lhs.base.is_positive and lhs.exp.is_real:
-                    return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
+                        return list(set(ordered(sol)))
                 else:
                     raise NotImplementedError
 
