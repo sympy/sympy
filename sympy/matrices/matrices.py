@@ -4143,9 +4143,9 @@ class MatrixBase(MatrixDeprecated,
 
             If set to ``'PINV'``, ``pinv_solve`` routine will be used.
 
-            Other linear solving methods may be used, which can be inherited
-            from ``.solve()``, after applying a naive approach of using dot
-            product of conjugate transposed ``self`` in both sides.
+            Otherwise, a naive approach solution involving the conjugate of
+            self will be returned. The passed method will be passed on to the
+            ``solve`` routine.
 
         Returns
         =======
