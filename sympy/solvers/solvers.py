@@ -2630,7 +2630,6 @@ def _tsolve(eq, sym, **flags):
         flags['tsolve_saw'].append(eq)
 
     rhs, lhs = _invert(eq, sym)
-    soln=[]
 
     if lhs == sym:
         return [rhs]
@@ -2654,27 +2653,33 @@ def _tsolve(eq, sym, **flags):
                     return _solve(lhs - rhs, sym, **flags)
             elif sym not in lhs.exp.free_symbols:
                 return _solve(lhs.base - rhs**(1/lhs.exp), sym, **flags)
-            elif not rhs and sym in lhs.exp.free_symbols:
-                # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
-                # the same place
-                sol_base = _solve(lhs.base, sym, **flags)
-                if not sol_base:
-                    return sol_base  # no solutions to remove so return now
-                return list(ordered(set(sol_base) - set(
-                    _solve(lhs.exp, sym, **flags))))
-            elif (rhs is not S.Zero and
-                        lhs.base.is_positive and
-                        lhs.exp.is_real):
-                return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
-            elif lhs.base == 0 and rhs == 1:
-                return _solve(lhs.exp, sym, **flags)
-            elif rhs==1 and lhs.base!=0 :
-                x=_solve(lhs.base+S.One,sym,**flags)
-                for t in x:
-                    if eq.subs(sym,t)==0 and t not in soln:
-                        soln.append(t)
             else:
-                raise NotImplementedError
+                # sym in lhs.exp.free_symbols
+                if not rhs:
+                    # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
+                    # the same place
+                    sol_base = _solve(lhs.base, sym, **flags)
+                    if not sol_base:
+                        return sol_base  # no solutions to remove so return now
+                    return list(ordered(set(sol_base) - set(
+                    _solve(lhs.exp, sym, **flags))))
+                elif rhs == 1:
+                    if  lhs.base == 0:
+                        return _solve(lhs.exp, sym, **flags)
+                    else:
+                        # 1 = foo**0, 1**foo, (-1)**even
+                        b1 = _solve(lhs.base - 1, sym, **flags)
+                        b_1 = _solve(lhs.base + 1, sym, **flags)
+                        e0 = _solve(lhs.exp, sym, **flags)
+                        sol = list(b1) + list(e0)
+                        for b in b_1:
+                                if eq.subs(sym, b)==0:
+                                    sol.append(b)
+                        return list(ordered(sol))
+                elif lhs.base.is_positive and lhs.exp.is_real:
+                    return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
+                else:
+                    raise NotImplementedError
 
         elif lhs.is_Mul and rhs.is_positive:
             llhs = expand_log(log(lhs))
@@ -2693,9 +2698,7 @@ def _tsolve(eq, sym, **flags):
 
         rewrite = lhs.rewrite(exp)
         if rewrite != lhs:
-            y= _solve(rewrite - rhs, sym, **flags)
-            y.extend(soln)
-            return list(set(y))
+            return _solve(rewrite - rhs, sym, **flags)
     except NotImplementedError:
         pass
 
