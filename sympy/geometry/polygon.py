@@ -1060,9 +1060,9 @@ class Polygon(GeometrySet):
         oargs = o.args
         n = len(args)
         o0 = oargs[0]
-        for i0 in xrange(n):
+        for i0 in range(n):
             if args[i0] == o0:
-                if all(args[(i0 + i) % n] == oargs[i] for i in xrange(1, n)):
+                if all(args[(i0 + i) % n] == oargs[i] for i in range(1, n)):
                     return True
         return False
 
