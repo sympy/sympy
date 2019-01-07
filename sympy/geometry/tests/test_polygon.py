@@ -59,6 +59,9 @@ def test_polygon():
         Point(0, 0), Point(3, -1),
         Point(6, 0), Point(4, 5),
         Point(2, 3), Point(0, 3))
+    p8 = Polygon(
+        Point(-9, 6.6), Point(-4, -3),
+        Point(-8.4, -8.7), Point(-11, 1))
 
     r = Ray(Point(-9,6.6), Point(-9,5.5))
     #
@@ -66,6 +69,7 @@ def test_polygon():
     #
     assert p1 == p7
     assert p1 != p2
+    assert p6 == p8
     assert len(p1.args) == 6
     assert len(p1.sides) == 6
     assert p1.perimeter == 5 + 2*sqrt(10) + sqrt(29) + sqrt(8)

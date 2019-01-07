@@ -1037,7 +1037,7 @@ class Polygon(GeometrySet):
         """
         Two polygons are equal only if
             they have same set of vertices.
-        and order of vertices passed to constructor is same.
+        and cyclic order of vertices passed to constructor is same.
 
         Examples
         ========
@@ -1058,10 +1058,13 @@ class Polygon(GeometrySet):
 
         args = self.args
         oargs = o.args
-        if args == oargs:
-            return True
-        else:
-            return False
+        n = len(args)
+        o0 = oargs[0]
+        for i0 in xrange(n):
+            if args[i0] == o0:
+                if all(args[(i0 + i) % n] == oargs[i] for i in xrange(1, n)):
+                    return True
+        return False
 
     def __hash__(self):
         return super(Polygon, self).__hash__()
