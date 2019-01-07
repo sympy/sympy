@@ -1034,22 +1034,34 @@ class Polygon(GeometrySet):
             ).format(2. * scale_factor, path, fill_color)
 
     def __eq__(self, o):
+        """
+        Two polygons are equal only if
+            they have same set of vertices.
+        and order of vertices passed to constructor is same.
+
+        Examples
+        ========
+
+        >> from sympy import Point, Triangle
+        >> a = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
+        >> b = Triangle(Point(0, 0), Point(4, 3), Point(4, 0))
+        >> a==b
+        False
+        >>
+        >> c = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
+        >> a==c
+        True
+        """
+
         if not isinstance(o, Polygon) or len(self.args) != len(o.args):
             return False
 
-        # See if self can ever be traversed (cw or ccw) from any of its
-        # vertices to match all points of o
         args = self.args
         oargs = o.args
-        n = len(args)
-        o0 = oargs[0]
-        for i0 in range(n):
-            if args[i0] == o0:
-                if all(args[(i0 + i) % n] == oargs[i] for i in range(1, n)):
-                    return True
-                if all(args[(i0 - i) % n] == oargs[i] for i in range(1, n)):
-                    return True
-        return False
+        if args == oargs:
+            return True
+        else:
+            return False
 
     def __hash__(self):
         return super(Polygon, self).__hash__()
