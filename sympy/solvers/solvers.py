@@ -2697,7 +2697,7 @@ def _tsolve(eq, sym, **flags):
                         if rewrite != lhs:
                             e1= _solve(rewrite - rhs, sym, **flags)
                         sol=sol+list(e1)
-                        return sol
+                        return list(ordered(sol))
 
                 else:
                     raise NotImplementedError
