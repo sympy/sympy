@@ -877,6 +877,40 @@ class MatrixReductions(MatrixDeterminant):
         echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
         return len(pivots)
 
+    def Rankdecomposition(self, iszerofunc=_iszero, simplify=False):
+        """Returns rank-factorized form of A as A = C*F where F is in reduced
+        row echelon form.
+
+        Parameters
+        ==========
+
+        iszerofunc : Function, optional
+
+        simplify : Bool or Function, optional
+
+        Returns
+        =======
+
+        (C, F) : Matrices
+
+        Examples
+        ========
+
+        See Also
+        ========
+        rref
+        rank
+        """
+        cls = self.__class__
+        mat = self.as_mutable()
+
+        (F, pivot_cols) = mat.rref(simplify=simplify, pivots=True)
+
+        C = mat.extract(range(self.rows), pivot_cols)
+        C = C.row_join(C.zeros(C.rows, F.rows - C.cols))
+
+        return (cls(C), cls(F))
+
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True, normalize_last=True):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
