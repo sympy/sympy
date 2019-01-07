@@ -290,7 +290,7 @@ p.admonition-title:after {
 }
 
 pre {
-    font-family: DejaVu Sans Mono, DejaVu Sans, monospace;
+    font-family: DejaVu Sans Mono, monospace;
     font-size: 80%;
     padding: 5px;
     background-color: {{ theme_codebgcolor }};
