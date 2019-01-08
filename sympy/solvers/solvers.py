@@ -2688,16 +2688,19 @@ def _tsolve(eq, sym, **flags):
                         from sympy import divisors
                         x=divisors(rhs)
                         for i in x:
-                            if eq.subs(sym,i)==0:
-                                sol.append(i)
-                            elif eq.subs(sym,-i)==0:
-                                sol.append(-i)
+                            base_sols = solve(lhs.base - i, sym) + solve(lhs.base + i, sym)
+                            for s in set(base_sols):
+                                if eq.subs(sym, s)==0:
+                                    sol.append(s)
                         e1=[]
                         rewrite = lhs.rewrite(exp)
                         if rewrite != lhs:
-                            e1= _solve(rewrite - rhs, sym, **flags)
+                            try:
+                                e1= _solve(rewrite - rhs, sym, **flags)
+                            except:
+                                pass
                         sol=sol+list(e1)
-                        return list(ordered(sol))
+                        return list(set(ordered(sol)))
 
                 else:
                     raise NotImplementedError
