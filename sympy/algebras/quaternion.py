@@ -93,7 +93,7 @@ class Quaternion(Expr):
             The vector representation of the given axis.
         angle : number
             The angle by which axis is rotated (in radians).
-        
+
         Returns
         =======
 
