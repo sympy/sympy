@@ -2700,6 +2700,8 @@ def _tsolve(eq, sym, **flags):
                             except:
                                 pass
                         sol = sol + list(e1)
+                        if len(sol)==0:
+                            raise NotImplementedError
                         return list(set(ordered(sol)))
 
                 else:
