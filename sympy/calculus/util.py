@@ -583,13 +583,13 @@ def lcim(numbers):
 
     Parameters
     ==========
-    numbers : int[]
-        Numbers whose lcim has to be founed. They can be rational or irrational or a mixture of both.
+    numbers: list
+        Numbers (rational and/or irrational) for which lcim is to be found.
 
     Returns
     =======
     number
-          lcim if it exists, otherwise `None` for incommensurable numbers.
+        lcim if it exists, otherwise `None` for incommensurable numbers.
 
     Examples
     ========
