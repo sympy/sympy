@@ -4143,9 +4143,9 @@ class MatrixBase(MatrixDeprecated,
 
             If set to ``'PINV'``, ``pinv_solve`` routine will be used.
 
-            Otherwise, a naive approach solution involving the conjugate of
-            self will be returned. The passed method will be passed on to the
-            ``solve`` routine.
+            Otherwise, the conjugate of self will be used to create a system
+            of equations that is passed to ``solve`` along with the hint
+            defined by ``method``.
 
         Returns
         =======
