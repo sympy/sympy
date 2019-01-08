@@ -1084,7 +1084,7 @@ def casoratian(seqs, n, zero=True):
 
     k = len(seqs)
 
-    return Matrix(k, k, f).det()
+    return Matrix(k, k, f).det(method="berkowitz")
 
 
 def eye(*args, **kwargs):
