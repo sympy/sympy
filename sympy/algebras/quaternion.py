@@ -122,7 +122,7 @@ class Quaternion(Expr):
 
     @classmethod
     def from_rotation_matrix(cls, M):
-        """Returns the equivalent quaternion of a matrix. 
+        """Returns the equivalent quaternion of a matrix.
 
         Parameters
         ==========
