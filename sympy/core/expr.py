@@ -1058,7 +1058,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_number:
                         try:
                             coeff *= complex(factor)
-                        except TypeError:
+                        except (TypeError, ValueError):
                             pass
                         else:
                             continue
