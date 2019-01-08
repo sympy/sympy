@@ -86,6 +86,20 @@ class Quaternion(Expr):
     def from_axis_angle(cls, vector, angle):
         """Returns a rotation quaternion given the axis and the angle of rotation.
 
+        Parameters
+        ==========
+
+        vector : tuple of three numbers
+            The vector representation of the given axis.
+        angle : number
+            The angle by which axis is rotated (in radians).
+        
+        Returns
+        =======
+
+        Quaternion
+            The normalized rotation quaternion based on the axis and the angle of rotation.
+
         Example
         ========
 
@@ -108,8 +122,18 @@ class Quaternion(Expr):
 
     @classmethod
     def from_rotation_matrix(cls, M):
-        """Returns the equivalent quaternion of a matrix. The quaternion will be normalized
-        only if the matrix is special orthogonal (orthogonal and det(M) = 1).
+        """Returns the equivalent quaternion of a matrix. 
+
+        Parameters
+        ==========
+        M : Matrix
+            The matrix from which an equivalent quaternion has to be obtained.
+
+        Returns
+        ==========
+        Quaternion
+            The quaternion equivalent to given matrix. The quaternion will be normalized
+            only if the matrix is special orthogonal (orthogonal and det(M) = 1).
 
         Example
         ========
@@ -181,6 +205,16 @@ class Quaternion(Expr):
     def add(self, other):
         """Adds quaternions.
 
+        Parameters
+        ==========
+        other : Quaternion
+            The quaternion to add to current (self) quaternion.
+
+        Returns
+        =========
+        Quaternion
+            The resultant quaternion after adding self to other
+
         Example
         ========
 
@@ -224,6 +258,16 @@ class Quaternion(Expr):
 
     def mul(self, other):
         """Multiplies quaternions.
+
+        Parameters
+        ==========
+        other : Quaternion
+            The quaternion to multiply to current (self) quaternion.
+
+        Returns
+        =========
+        Quaternion
+            The resultant quaternion after multiply self with other
 
         Example
         ========
@@ -312,7 +356,17 @@ class Quaternion(Expr):
 
     def pow(self, p):
         """Finds the pth power of the quaternion.
-        Returns the inverse if p = -1.
+
+        Parameters
+        =========
+        p : number
+            The power to which current (self) quaternion is raised.
+
+        Returns
+        =========
+        Quaternion
+            The resultant quaternion after raising current quaternion to p.
+            Inverse is returned if p = -1.
 
         Example
         ========
