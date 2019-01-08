@@ -21,6 +21,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
+from sympy.matrices.expressions import MatPow
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
