@@ -2666,7 +2666,7 @@ def _tsolve(eq, sym, **flags):
                 elif lhs.base.is_positive and lhs.exp.is_real:
                     return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
                 elif rhs.is_Integer:
-                    if rhs==1:
+                    if rhs == 1:
                         if  lhs.base == 0:
                             return _solve(lhs.exp, sym, **flags)
                         else:
@@ -2680,7 +2680,7 @@ def _tsolve(eq, sym, **flags):
                                 e1= _solve(rewrite - rhs, sym, **flags)
                             sol = list(b1) + list(e0) + list(e1)
                             for b in b_1:
-                                    if eq.subs(sym, b)==0:
+                                    if eq.subs(sym, b) == 0:
                                         sol.append(b)
                             return list(set(ordered(sol)))
                     else:
@@ -2690,7 +2690,7 @@ def _tsolve(eq, sym, **flags):
                         for i in x:
                             base_sols = solve(lhs.base - i, sym) + solve(lhs.base + i, sym)
                             for s in set(base_sols):
-                                if eq.subs(sym, s)==0:
+                                if eq.subs(sym, s) == 0:
                                     sol.append(s)
                         e1=[]
                         rewrite = lhs.rewrite(exp)
@@ -2699,7 +2699,7 @@ def _tsolve(eq, sym, **flags):
                                 e1= _solve(rewrite - rhs, sym, **flags)
                             except:
                                 pass
-                        sol=sol+list(e1)
+                        sol = sol + list(e1)
                         return list(set(ordered(sol)))
 
                 else:
