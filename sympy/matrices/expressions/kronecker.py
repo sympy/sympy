@@ -255,7 +255,7 @@ def extract_commutative(kron):
 
 
 def matrix_kronecker_product(*matrices):
-    """Compute the kronecker product of a sequence of sympy Matrices.
+    """Compute the Kronecker product of a sequence of SymPy Matrices.
 
     This is the standard Kronecker product of matrices [1].
 
@@ -263,13 +263,13 @@ def matrix_kronecker_product(*matrices):
     ==========
 
     matrices : tuple of MatrixBase instances
-        The matrices to take the kronecker product of.
+        The matrices to take the Kronecker product of.
 
     Returns
     =======
 
     matrix : MatrixBase
-        The kronecker product matrix.
+        The Kronecker product matrix.
 
     Examples
     ========
