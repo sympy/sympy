@@ -275,17 +275,17 @@ def matrix_kronecker_product(*matrices):
     ========
 
     >>> from sympy import I, Matrix, symbols
-    >>> from sympy.physics.quantum.matrixutils import _sympy_tensor_product
+    >>> from sympy.matrices.expressions import matrix_kronecker_product
 
     >>> m1 = Matrix([[1,2],[3,4]])
     >>> m2 = Matrix([[1,0],[0,1]])
-    >>> _sympy_tensor_product(m1, m2)
+    >>> matrix_kronecker_product(m1, m2)
     Matrix([
     [1, 0, 2, 0],
     [0, 1, 0, 2],
     [3, 0, 4, 0],
     [0, 3, 0, 4]])
-    >>> _sympy_tensor_product(m2, m1)
+    >>> matrix_kronecker_product(m2, m1)
     Matrix([
     [1, 2, 0, 0],
     [3, 4, 0, 0],
