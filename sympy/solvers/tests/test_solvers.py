@@ -1997,3 +1997,10 @@ def test_issue_15415():
     assert solve(Eq(y + 3*x**2/2, y + 3*x), y) == []
     assert solve([Eq(y + 3*x**2/2, y + 3*x)], y) == []
     assert solve([Eq(y + 3*x**2/2, y + 3*x), Eq(x, 1)], y) == []
+
+def test_issue_15731():
+    assert solve(Eq((x**2 - 7*x + 11)**(x**2 - 13*x + 42), 1)) == [2, 3, 4, 5, 6, 7]
+    assert solve((x)**(x+4)-4) == [-2]
+    assert solve((-x)**(-x+4)-4) == [2]
+    assert solve((x**2-6)**(x**2-2)-4) == [-2, 2]
+    assert solve((x**2 + 1)**x - 25) == [2]

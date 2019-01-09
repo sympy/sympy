@@ -14,6 +14,7 @@ This module contain solvers for all kinds of equations:
 
 from __future__ import print_function, division
 
+from sympy import divisors
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, range)
 from sympy.core.sympify import sympify
@@ -2666,44 +2667,30 @@ def _tsolve(eq, sym, **flags):
                 elif lhs.base.is_positive and lhs.exp.is_real:
                     return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
                 elif rhs.is_Integer:
-                    if rhs == 1:
-                        if  lhs.base == 0:
-                            return _solve(lhs.exp, sym, **flags)
-                        else:
-                            # 1 = foo**0, 1**foo, (-1)**even
-                            b1 = _solve(lhs.base - 1, sym, **flags)
-                            b_1 = _solve(lhs.base + 1, sym, **flags)
-                            e0 = _solve(lhs.exp, sym, **flags)
-                            e1=[]
-                            rewrite = lhs.rewrite(exp)
-                            if rewrite != lhs:
-                                e1= _solve(rewrite - rhs, sym, **flags)
-                            sol = list(b1) + list(e0) + list(e1)
-                            for b in b_1:
-                                    if eq.subs(sym, b) == 0:
-                                        sol.append(b)
-                            return list(set(ordered(sol)))
+                    if  lhs.base == 0:
+                        return _solve(lhs.exp, sym, **flags)
                     else:
+                        e0=[]
+                        e1=[]
                         sol=[]
-                        from sympy import divisors
+                        if rhs==1:
+                            e0 = _solve(lhs.exp, sym, **flags)
                         x=divisors(rhs)
                         for i in x:
                             base_sols = solve(lhs.base - i, sym) + solve(lhs.base + i, sym)
                             for s in set(base_sols):
                                 if eq.subs(sym, s) == 0:
                                     sol.append(s)
-                        e1=[]
                         rewrite = lhs.rewrite(exp)
                         if rewrite != lhs:
                             try:
                                 e1= _solve(rewrite - rhs, sym, **flags)
                             except:
                                 pass
-                        sol = sol + list(e1)
+                        sol = sol + list(e1)+ list(e0)
                         if len(sol)==0:
                             raise NotImplementedError
                         return list(set(ordered(sol)))
-
                 else:
                     raise NotImplementedError
 
