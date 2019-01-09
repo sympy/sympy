@@ -2,13 +2,13 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, zoo, Integer,
-        sign, im, nan, Dummy, factorial, comp, refine
+        sign, im, nan, Dummy, factorial, comp, refine, MatrixSymbol
 )
 from sympy.core.compatibility import long, range
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import verify_numerically
-
+from sympy.matrices.expressions import MatMul
 
 a, c, x, y, z = symbols('a,c,x,y,z')
 b = Symbol("b", positive=True)
@@ -1751,6 +1751,15 @@ def test_issue_6077():
     assert 2**x/2**(2.0*x) == 2**(-1.0*x)
     assert 2**x*2**(2.0*x) == 2**(3.0*x)
     assert 2**(1.5*x)*2**(2.5*x) == 2**(4.0*x)
+
+
+def test_issue_15665():
+    n = Symbol('n')
+    A = MatrixSymbol("A", n, n)
+    B = MatrixSymbol("B", n, n)
+
+    assert isinstance(Mul(A, B), MatMul)
+    assert isinstance(Mul(-1, Mul(A, B)), MatMul)
 
 
 def test_mul_flatten_oo():
