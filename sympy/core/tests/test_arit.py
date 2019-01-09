@@ -10,7 +10,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import verify_numerically
 from sympy.matrices.expressions import MatMul
 
-a, c, x, y, z = symbols('a,c,x,y,z')
+a, c, x, y, z, n = symbols('a,c,x,y,z,n')
 b = Symbol("b", positive=True)
 
 
@@ -1753,15 +1753,6 @@ def test_issue_6077():
     assert 2**(1.5*x)*2**(2.5*x) == 2**(4.0*x)
 
 
-def test_issue_15665():
-    n = Symbol('n')
-    A = MatrixSymbol("A", n, n)
-    B = MatrixSymbol("B", n, n)
-
-    assert isinstance(Mul(A, B), MatMul)
-    assert isinstance(Mul(-1, Mul(A, B)), MatMul)
-
-
 def test_mul_flatten_oo():
     p = symbols('p', positive=True)
     n, m = symbols('n,m', negative=True)
@@ -1994,3 +1985,11 @@ def test_Add_is_zero():
 
 def test_issue_14392():
     assert (sin(zoo)**2).as_real_imag() == (nan, nan)
+
+
+def test_issue_15665():
+    A = MatrixSymbol("A", n, n)
+    B = MatrixSymbol("B", n, n)
+
+    assert isinstance(Mul(A, B), MatMul)
+    assert isinstance(Mul(-1, Mul(A, B)), MatMul)
