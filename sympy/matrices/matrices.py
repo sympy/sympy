@@ -4130,9 +4130,28 @@ class MatrixBase(MatrixDeprecated,
     def solve_least_squares(self, rhs, method='CH'):
         """Return the least-square fit to the data.
 
-        By default the cholesky_solve routine is used (method='CH'); other
-        methods of matrix inversion can be used. To find out which are
-        available, see the docstring of the .inv() method.
+        Parameters
+        ==========
+
+        rhs : Matrix
+            Vector representing the right hand side of the linear equation.
+
+        method : string or boolean, optional
+            If set to ``'CH'``, ``cholesky_solve`` routine will be used.
+
+            If set to ``'QR'``, ``QRsolve`` routine will be used.
+
+            If set to ``'PINV'``, ``pinv_solve`` routine will be used.
+
+            Otherwise, the conjugate of self will be used to create a system
+            of equations that is passed to ``solve`` along with the hint
+            defined by ``method``.
+
+        Returns
+        =======
+
+        solutions : Matrix
+            Vector representing the solution.
 
         Examples
         ========
@@ -4183,8 +4202,15 @@ class MatrixBase(MatrixDeprecated,
         """
         if method == 'CH':
             return self.cholesky_solve(rhs)
-        t = self.H
-        return (t * self).inv(method=method) * t * rhs
+        elif method == 'QR':
+            return self.QRsolve(rhs)
+        elif method == 'LDL':
+            return self.LDLsolve(rhs)
+        elif method == 'PINV':
+            return self.pinv_solve(rhs)
+        else:
+            t = self.H
+            return (t * self).solve(t * rhs, method=method)
 
     def solve(self, rhs, method='GJ'):
         """Return the unique soln making self*soln = rhs.
