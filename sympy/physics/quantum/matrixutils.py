@@ -146,7 +146,7 @@ def matrix_dagger(e):
 
 # TODO: Move this into sympy.matricies.
 def _sympy_tensor_product(*matrices):
-    """Compute the tensor product of a sequence of sympy Matrices.
+    """Compute the kronecker product of a sequence of sympy Matrices.
 
     This is the standard Kronecker product of matrices [1].
 
@@ -154,13 +154,13 @@ def _sympy_tensor_product(*matrices):
     ==========
 
     matrices : tuple of MatrixBase instances
-        The matrices to take the tensor product of.
+        The matrices to take the kronecker product of.
 
     Returns
     =======
 
     matrix : MatrixBase
-        The tensor product matrix.
+        The kronecker product matrix.
 
     Examples
     ========
