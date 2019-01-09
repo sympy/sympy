@@ -2,15 +2,14 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, zoo, Integer,
-        sign, im, nan, Dummy, factorial, comp, refine, MatrixSymbol
+        sign, im, nan, Dummy, factorial, comp, refine
 )
 from sympy.core.compatibility import long, range
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import verify_numerically
-from sympy.matrices.expressions import MatMul
 
-a, c, x, y, z, n = symbols('a,c,x,y,z,n')
+a, c, x, y, z = symbols('a,c,x,y,z')
 b = Symbol("b", positive=True)
 
 
@@ -1985,11 +1984,3 @@ def test_Add_is_zero():
 
 def test_issue_14392():
     assert (sin(zoo)**2).as_real_imag() == (nan, nan)
-
-
-def test_issue_15665():
-    A = MatrixSymbol("A", n, n)
-    B = MatrixSymbol("B", n, n)
-
-    assert isinstance(Mul(A, B), MatMul)
-    assert isinstance(Mul(-1, Mul(A, B)), MatMul)

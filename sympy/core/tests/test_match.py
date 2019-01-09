@@ -1,8 +1,9 @@
 from sympy import (abc, Add, cos, Derivative, diff, exp, Float, Function,
     I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
-    Wild, pi, meijerg
+    Wild, pi, meijerg, MatrixSymbol
 )
 from sympy.utilities.pytest import XFAIL
+from sympy.matrices.expressions import MatMul
 
 
 def test_symbol():
@@ -617,3 +618,11 @@ def test_gh_issue_2711():
     assert f.find(a + b) == \
         {meijerg(((), ()), ((S.Zero,), ()), x), x, S.Zero}
     assert f.find(a**2) == {meijerg(((), ()), ((S.Zero,), ()), x), x}
+
+def test_issue_15665():
+    n=Symbol('n')
+    A = MatrixSymbol("A", n, n)
+    B = MatrixSymbol("B", n, n)
+
+    assert isinstance(Mul(A, B), MatMul)
+    assert isinstance(Mul(-1, Mul(A, B)), MatMul)
