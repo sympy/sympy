@@ -255,7 +255,48 @@ def extract_commutative(kron):
 
 
 def matrix_kronecker_product(*matrices):
+    """Compute the kronecker product of a sequence of sympy Matrices.
 
+    This is the standard Kronecker product of matrices [1].
+
+    Parameters
+    ==========
+
+    matrices : tuple of MatrixBase instances
+        The matrices to take the kronecker product of.
+
+    Returns
+    =======
+
+    matrix : MatrixBase
+        The kronecker product matrix.
+
+    Examples
+    ========
+
+    >>> from sympy import I, Matrix, symbols
+    >>> from sympy.physics.quantum.matrixutils import _sympy_tensor_product
+
+    >>> m1 = Matrix([[1,2],[3,4]])
+    >>> m2 = Matrix([[1,0],[0,1]])
+    >>> _sympy_tensor_product(m1, m2)
+    Matrix([
+    [1, 0, 2, 0],
+    [0, 1, 0, 2],
+    [3, 0, 4, 0],
+    [0, 3, 0, 4]])
+    >>> _sympy_tensor_product(m2, m1)
+    Matrix([
+    [1, 2, 0, 0],
+    [3, 4, 0, 0],
+    [0, 0, 1, 2],
+    [0, 0, 3, 4]])
+
+    References
+    ==========
+
+    [1] https://en.wikipedia.org/wiki/Kronecker_product
+    """
     # Make sure we have a sequence of Matrices
     if not all(isinstance(m, MatrixBase) for m in matrices):
         raise TypeError(
