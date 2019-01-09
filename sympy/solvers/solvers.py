@@ -2670,26 +2670,23 @@ def _tsolve(eq, sym, **flags):
                     if  lhs.base == 0:
                         return _solve(lhs.exp, sym, **flags)
                     else:
-                        e0=[]
-                        e1=[]
-                        sol=[]
-                        if rhs==1:
-                            e0 = _solve(lhs.exp, sym, **flags)
-                        x=divisors(rhs)
-                        for i in x:
-                            base_sols = solve(lhs.base - i, sym) + solve(lhs.base + i, sym)
-                            for s in set(base_sols):
+                        if rhs == 1:
+                            sol = list(_solve(lhs.exp, sym, **flags))
+                        else:
+                            sol = []
+                        for i in divisors(rhs):
+                            b_i = _solve(lhs.base - i, sym, **flags)
+                            b_negi = _solve(lhs.base + i, sym, **flags)
+                            for s in set(b_i + b_negi):
                                 if eq.subs(sym, s) == 0:
                                     sol.append(s)
                         rewrite = lhs.rewrite(exp)
                         if rewrite != lhs:
                             try:
-                                e1= _solve(rewrite - rhs, sym, **flags)
+                                sol.extend(_solve(rewrite - rhs, sym, **flags))
                             except:
                                 pass
-                        sol = sol + list(e1) + list(e0)
-                        if len(sol)==0:
-                            raise NotImplementedError
+                        # at worst, this is a subset of all solutions
                         return list(ordered(set(sol)))
                 else:
                     raise NotImplementedError
