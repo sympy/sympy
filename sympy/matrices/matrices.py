@@ -4233,6 +4233,16 @@ class MatrixBase(MatrixDeprecated,
                 # raise same error as in inv:
                 self.zeros(1).inv()
             return soln
+        elif method == 'LU':
+            return self.LUsolve()
+        elif method == 'CH':
+            return self.cholesky_solve(rhs)
+        elif method == 'QR':
+            return self.QRsolve(rhs)
+        elif method == 'LDL':
+            return self.LDLsolve(rhs)
+        elif method == 'PINV':
+            return self.pinv_solve(rhs)
         else:
             return self.inv(method=method)*rhs
 
