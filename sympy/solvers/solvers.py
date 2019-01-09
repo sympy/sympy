@@ -2687,10 +2687,10 @@ def _tsolve(eq, sym, **flags):
                                 e1= _solve(rewrite - rhs, sym, **flags)
                             except:
                                 pass
-                        sol = sol + list(e1)+ list(e0)
+                        sol = sol + list(e1) + list(e0)
                         if len(sol)==0:
                             raise NotImplementedError
-                        return list(set(ordered(sol)))
+                        return list(ordered(set(sol)))
                 else:
                     raise NotImplementedError
 
