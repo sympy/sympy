@@ -11,7 +11,9 @@ from time import clock
 
 class PlotWindow(ManagedWindow):
 
-    def __init__(self, plot, **kwargs):
+    def __init__(self, plot, antialiasing=True, ortho=False,
+                 invert_mouse_zoom=False, linewidth=1.5, caption="SymPy Plot",
+                 **kwargs):
         """
         Named Arguments
         ===============
@@ -28,11 +30,11 @@ class PlotWindow(ManagedWindow):
         self.camera = None
         self._calculating = False
 
-        self.antialiasing = kwargs.pop('antialiasing', True)
-        self.ortho = kwargs.pop('ortho', False)
-        self.invert_mouse_zoom = kwargs.pop('invert_mouse_zoom', False)
-        self.linewidth = kwargs.pop('linewidth', 1.5)
-        self.title = kwargs.setdefault('caption', "SymPy Plot")
+        self.antialiasing = antialiasing
+        self.ortho = ortho
+        self.invert_mouse_zoom = invert_mouse_zoom
+        self.linewidth = linewidth
+        self.title = caption
         self.last_caption_update = 0
         self.caption_update_interval = 0.2
         self.drawing_first_object = True
