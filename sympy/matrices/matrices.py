@@ -4232,7 +4232,7 @@ class MatrixBase(MatrixDeprecated,
                 self.zeros(1).inv()
             return soln
         elif method == 'LU':
-            return self.LUsolve()
+            return self.LUsolve(rhs)
         elif method == 'CH':
             return self.cholesky_solve(rhs)
         elif method == 'QR':
