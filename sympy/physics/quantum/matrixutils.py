@@ -188,35 +188,9 @@ def _sympy_tensor_product(*matrices):
 
     [1] https://en.wikipedia.org/wiki/Kronecker_product
     """
-    # Make sure we have a sequence of Matrices
-    if not all(isinstance(m, MatrixBase) for m in matrices):
-        raise TypeError(
-            'Sequence of Matrices expected, got: %s' % repr(matrices)
-        )
+    from sympy.matrices.expressions.kronecker import matrix_kronecker_product
 
-    # Pull out the first element in the product.
-    matrix_expansion = matrices[-1]
-    # Do the tensor product working from right to left.
-    for mat in reversed(matrices[:-1]):
-        rows = mat.rows
-        cols = mat.cols
-        # Go through each row appending tensor product to.
-        # running matrix_expansion.
-        for i in range(rows):
-            start = matrix_expansion*mat[i*cols]
-            # Go through each column joining each item
-            for j in range(cols - 1):
-                start = start.row_join(
-                    matrix_expansion*mat[i*cols + j + 1]
-                )
-            # If this is the first element, make it the start of the
-            # new row.
-            if i == 0:
-                next = start
-            else:
-                next = next.col_join(start)
-        matrix_expansion = next
-    return matrix_expansion
+    return matrix_kronecker_product(*matrices)
 
 
 def _numpy_tensor_product(*product):
