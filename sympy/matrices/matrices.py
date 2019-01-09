@@ -3697,8 +3697,30 @@ class MatrixBase(MatrixDeprecated,
         """
         return self * b
 
-    def normalized(self):
+    def normalized(self, iszerofunc=_iszero):
         """Return the normalized version of ``self``.
+
+        Parameters
+        ==========
+
+        iszerofunc : Function, optional
+            A function to determine whether self is a zero vector.
+            The default ``_iszero`` tests to see if each element is
+            exactly zero.
+
+        Returns
+        =======
+
+        Matrix
+            Normalized vector form of self.
+            It has the same length as a unit vector. However, a zero vector
+            will be returned for a vector with norm 0.
+
+        Raises
+        ======
+
+        ShapeError
+            If the matrix is not in a vector form.
 
         See Also
         ========
@@ -3708,7 +3730,10 @@ class MatrixBase(MatrixDeprecated,
         if self.rows != 1 and self.cols != 1:
             raise ShapeError("A Matrix must be a vector to normalize.")
         norm = self.norm()
-        out = self.applyfunc(lambda i: i / norm)
+        if iszerofunc(norm):
+            out = self.zeros(self.rows, self.cols)
+        else:
+            out = self.applyfunc(lambda i: i / norm)
         return out
 
     def norm(self, ord=None):
