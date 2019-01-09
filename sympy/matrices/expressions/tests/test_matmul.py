@@ -139,3 +139,7 @@ def test_issue_12950():
 def test_construction_with_Mul():
     assert Mul(C, D) == MatMul(C, D)
     assert Mul(D, C) == MatMul(D, C)
+
+def test_issue_15665():
+    assert isinstance(Mul(C, D), MatMul)
+    assert isinstance(Mul(-1, Mul(C, D)), MatMul)
