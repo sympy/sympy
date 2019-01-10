@@ -64,7 +64,8 @@ def epsilon(i, j, k):
 
 
 class Pauli(Symbol):
-    """The class representing algebraic properties of Pauli matrices. 
+    """
+    The class representing algebraic properties of Pauli matrices.
 
     The symbol used to display the Pauli matrices can be changed with an
     optional parameter ``label="sigma"``. Pauli matrices with different 
@@ -80,6 +81,7 @@ class Pauli(Symbol):
 
     See Also
     ========
+
     evaluate_pauli_product
 
     Examples
@@ -100,9 +102,9 @@ class Pauli(Symbol):
     >>> from sympy.physics.paulialgebra import Pauli
     >>> Pauli(1, label="tau")
     tau1
-    >>> Pauli(1)*Pauli(2, "tau")
+    >>> Pauli(1)*Pauli(2, label="tau")
     sigma1*tau2
-    >>> Pauli(1, "tau")*Pauli(2,"tau")
+    >>> Pauli(1, label="tau")*Pauli(2, label="tau")
     I*tau3
 
     >>> from sympy import I
@@ -115,7 +117,6 @@ class Pauli(Symbol):
     I*sigma2*sigma3
     >>> evaluate_pauli_product(f)
     -sigma1
-
     """
 
     __slots__ = ["i", "label"]
@@ -137,7 +138,7 @@ class Pauli(Symbol):
             j = self.i
             k = other.i
             jlab = self.label
-            klab = self.label
+            klab = other.label
 
             if jlab == klab:
                 return delta(j, k) \
