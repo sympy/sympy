@@ -274,8 +274,9 @@ def matrix_kronecker_product(*matrices):
     Examples
     ========
 
-    >>> from sympy import I, Matrix, symbols
-    >>> from sympy.matrices.expressions import matrix_kronecker_product
+    >>> from sympy import Matrix
+    >>> from sympy.matrices.expressions.kronecker import (
+    matrix_kronecker_product)
 
     >>> m1 = Matrix([[1,2],[3,4]])
     >>> m2 = Matrix([[1,0],[0,1]])
