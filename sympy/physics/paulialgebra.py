@@ -68,7 +68,7 @@ class Pauli(Symbol):
     The class representing algebraic properties of Pauli matrices.
 
     The symbol used to display the Pauli matrices can be changed with an
-    optional parameter ``label="sigma"``. Pauli matrices with different 
+    optional parameter ``label="sigma"``. Pauli matrices with different
     ``label`` attributes cannot multiply together.
 
     If the left multiplication of symbol or number with Pauli matrix is needed,
