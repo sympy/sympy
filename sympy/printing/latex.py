@@ -669,7 +669,7 @@ class LatexPrinter(Printer):
                 tex += r"\int"
 
                 if len(lim) > 1:
-                    if self._settings['mode'] in ['equation', 'equation*'] \
+                    if self._settings['mode'] != 'inline' \
                             and not self._settings['itex']:
                         tex += r"\limits"
 

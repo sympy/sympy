@@ -180,7 +180,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     if isinstance(expr, str):
         latex_string = expr
     else:
-        latex_string = latex(expr, mode='inline', **latex_settings)
+        latex_string = ('$\\displaystyle ' +
+                        latex(expr, mode='plain', **latex_settings) +
+                        '$')
 
     try:
         workdir = tempfile.mkdtemp()
