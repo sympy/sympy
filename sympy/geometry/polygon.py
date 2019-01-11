@@ -11,7 +11,7 @@ from sympy.logic import And
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import has_dups, has_variety, uniq
+from sympy.utilities.iterables import has_dups, has_variety, uniq, rotate_left, least_rotation
 from sympy.utilities.misc import func_name
 
 from .entity import GeometryEntity, GeometrySet
@@ -145,6 +145,9 @@ class Polygon(GeometrySet):
                 i += 1
 
         vertices = list(nodup)
+
+
+
 
         if len(vertices) > 3:
             return GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -1053,6 +1056,26 @@ class Polygon(GeometrySet):
 
     def __hash__(self):
         return super(Polygon, self).__hash__()
+
+    def _hashable_content(self):
+        def ref_list(point_list):
+            '''
+            Converts list of Point objects to their corresponding
+            order in sorting.
+            '''
+            kee = {}
+            for i, p in enumerate(ordered(set(point_list))):
+                kee[p] = i
+            return [kee[p] for p in point_list]
+
+        # find minimal rotation of both normal and reverse list
+        # of points and use smaller of the two to compute hash.
+        S1 = ref_list( self.args)
+        r_nor = rotate_left( S1, least_rotation( S1))
+        S2 = ref_list( list( reversed(self.args) ))
+        r_rev = rotate_left( S2, least_rotation( S2))
+        r = r_nor if r_nor < r_rev else r_rev
+        return tuple(r)
 
     def __contains__(self, o):
         """

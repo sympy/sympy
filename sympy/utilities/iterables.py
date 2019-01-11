@@ -961,6 +961,42 @@ def rotate_right(x, y):
     return x[y:] + x[:y]
 
 
+def least_rotation(x):
+    '''
+    Returns the number of steps of left rotation required to
+    obtain lexicographically minimal string/list/tuple, etc.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import least_rotation, rotate_left
+    >>> a = [3, 1, 5, 1, 2]
+    >>> least_rotation(a)
+    3
+    >>> rotate_left(a, _)
+    [1, 2, 3, 1, 5]
+    
+    .. seealso:: https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
+    '''
+    S = x + x      # Concatenate string to it self to avoid modular arithmetic
+    f = [-1] * len(S)     # Failure function
+    k = 0       # Least rotation of string found so far
+    for j in range(1,len(S)):
+        sj = S[j]
+        i = f[j-k-1]
+        while i != -1 and sj != S[k+i+1]:
+            if sj < S[k+i+1]:
+                k = j-i-1
+            i = f[i]
+        if sj != S[k+i+1]:
+            if sj < S[k]:
+                k = j
+            f[j-k] = -1
+        else:
+            f[j-k] = i+1
+    return k
+
+
 def multiset_combinations(m, n, g=None):
     """
     Return the unique combinations of size ``n`` from multiset ``m``.
