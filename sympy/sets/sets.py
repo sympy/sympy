@@ -1023,15 +1023,18 @@ class Union(Set, EvalfMixin):
                 else:
                     return [arg]
             if iterable(arg) or arg == {}:  # and not isinstance(arg, Set) (implicit)
-                if type(arg) == set or type(arg) == dict:
-                    if type(arg) == dict and arg != {}:
+                try:
+                    return sum(map(flatten, arg), [])
+                except:        
+                    if type(arg) == set or type(arg) == dict:
+                        if type(arg) == dict and arg != {}:
+                            raise TypeError("Input must be Sets or iterables of Sets")
+                        elif arg == {}:
+                            arg = set(arg)                            
+                        arg = sympify(arg)
+                        return flatten(arg)
+                    else:            
                         raise TypeError("Input must be Sets or iterables of Sets")
-                    elif arg == {}:
-                        arg = set(arg)                            
-                    arg = sympify(arg)
-                    return flatten(arg)
-                return sum(map(flatten, arg), [])
-            raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
 
         # Union of no sets is EmptySet
