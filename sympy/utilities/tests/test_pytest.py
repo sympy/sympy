@@ -1,14 +1,9 @@
 import warnings
 
-from sympy.utilities.pytest import (raises, warns, ignore_warnings, USE_PYTEST,
-                                    warns_deprecated_sympy)
+from sympy.utilities.pytest import (raises, warns, ignore_warnings,
+                                    warns_deprecated_sympy, Failed)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-
-if USE_PYTEST:
-    from _pytest.outcomes import Failed
-else:
-    Failed = AssertionError
 
 
 # Test callables
@@ -25,7 +20,7 @@ def test_lack_of_exception_triggers_AssertionError_callable():
     try:
         raises(Exception, lambda: 1 + 1)
         assert False
-    except Failed as e:
+    except AssertionError as e:
         assert "DID NOT RAISE" in str(e)
 
 
@@ -50,7 +45,7 @@ def test_lack_of_exception_triggers_AssertionError_with():
         with raises(Exception):
             1 + 1
         assert False
-    except Failed as e:
+    except AssertionError as e:
         assert "DID NOT RAISE" in str(e)
 
 
