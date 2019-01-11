@@ -1035,6 +1035,7 @@ class Union(Set, EvalfMixin):
                         return flatten(arg)
                     else:            
                         raise TypeError("Input must be Sets or iterables of Sets")
+            raise TypeError("Input must be Sets or iterables of Sets")            
         args = flatten(args)
 
         # Union of no sets is EmptySet
