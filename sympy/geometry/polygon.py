@@ -11,7 +11,7 @@ from sympy.logic import And
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import has_dups, has_variety, uniq
+from sympy.utilities.iterables import has_dups, has_variety, uniq, rotate_left, least_rotation
 from sympy.utilities.misc import func_name
 
 from .entity import GeometryEntity, GeometrySet
@@ -1033,26 +1033,23 @@ class Polygon(GeometrySet):
             'stroke-width="{0}" opacity="0.6" d="{1}" />'
             ).format(2. * scale_factor, path, fill_color)
 
-    def __eq__(self, o):
-        if not isinstance(o, Polygon) or len(self.args) != len(o.args):
-            return False
+    def _hashable_content(self):
 
-        # See if self can ever be traversed (cw or ccw) from any of its
-        # vertices to match all points of o
-        args = self.args
-        oargs = o.args
-        n = len(args)
-        o0 = oargs[0]
-        for i0 in range(n):
-            if args[i0] == o0:
-                if all(args[(i0 + i) % n] == oargs[i] for i in range(1, n)):
-                    return True
-                if all(args[(i0 - i) % n] == oargs[i] for i in range(1, n)):
-                    return True
-        return False
+        def ref_list(point_list):
+            kee = {}
+            for i, p in enumerate(ordered(set(point_list))):
+                kee[p] = i
+            return [kee[p] for p in point_list]
 
-    def __hash__(self):
-        return super(Polygon, self).__hash__()
+        S1 = ref_list( self.args)
+        r_nor = rotate_left( S1, least_rotation( S1))
+        S2 = ref_list( list( reversed(self.args) ))
+        r_rev = rotate_left( S2, least_rotation( S2))
+        if r_nor < r_rev:
+            res = r_nor
+        else :
+            res = r_rev
+        return tuple(res)
 
     def __contains__(self, o):
         """
