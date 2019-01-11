@@ -975,7 +975,7 @@ def least_rotation(x):
     3
     >>> rotate_left(a, _)
     [1, 2, 3, 1, 5]
-    
+
     .. seealso:: https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
     '''
     S = x + x      # Concatenate string to it self to avoid modular arithmetic
