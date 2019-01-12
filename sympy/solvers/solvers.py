@@ -2665,41 +2665,38 @@ def _tsolve(eq, sym, **flags):
                         return sol_base  # no solutions to remove so return now
                     return list(ordered(set(sol_base) - set(
                     _solve(lhs.exp, sym, **flags))))
-                elif lhs.base.is_positive and lhs.exp.is_real:
-                    return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
-                elif rhs.is_Rational:
-                    if  lhs.base == 0:
-                        return _solve(lhs.exp, sym, **flags)
-                    elif lhs.base.is_Number and lhs.base>0:
-                        rewrite = lhs.rewrite(exp)
-                        if rewrite != lhs:
-                            return _solve(rewrite - rhs, sym, **flags)
-                    else:
-                        sol = []
-                        temp_num=[]
-                        temp_pow=[]
+                elif rhs.is_Rational or lhs.exp.is_real:
+                    sol=[]
+                    if  lhs.base == 0 and rhs==0:
+                        sol.extend(_solve(lhs.exp, sym, **flags))
+                    if lhs.base.is_Number and lhs.base<0:
+                        sol.extend(_solve(-abs(lhs.base)**lhs.exp - rhs, sym, **flags) + _solve(abs(lhs.base)**lhs.exp - rhs, sym, **flags))
+                    if lhs.base.is_positive:
+                        if lhs.exp.is_real:
+                            sol.extend(_solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags))
+                        else:
+                            rewrite = lhs.rewrite(exp)
+                            if rewrite != lhs:
+                                sol.extend(_solve(rewrite - rhs, sym, **flags))
+                    if rhs.is_Rational:
                         b_pos=[]
                         b_negi=[]
                         e0=[]
-                        for i in divisors(rhs.p):
+                        for i in divisors(abs(rhs.p)):
                             b=0
                             t=True
                             if i!=1:
                                 b, t = integer_log(rhs.p,i)
                             if t:
-                                for s in divisors(rhs.q):
+                                for s in divisors(abs(rhs.q)):
                                     if s**b== rhs.q:
-                                        temp_num.append(Rational(i,s))
-                                        temp_pow.append(b)
-                        for i in temp_num:
-                            b_pos.extend(_solve(lhs.base-i, sym, **flags))
-                            b_negi.extend(_solve(lhs.base+i, sym, **flags))
-                        for i in temp_pow:
-                            e0.extend(_solve(lhs.exp-b, sym, **flags))
+                                        b_pos.extend(_solve(lhs.base-Rational(i,s), sym, **flags))
+                                        b_negi.extend(_solve(lhs.base+Rational(i,s), sym, **flags))
+                                        e0.extend(_solve(lhs.exp-b, sym, **flags))
                         for s in list(set(b_pos).union(e0,b_negi)):
                             if eq.subs(sym, s) == 0:
                                 sol.append(s)
-                        return list(ordered(set(sol)))
+                    return list(ordered(set(sol)))
                 else:
                     raise NotImplementedError
 
