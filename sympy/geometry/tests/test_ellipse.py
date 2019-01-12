@@ -314,6 +314,19 @@ def test_ellipse_geom():
     assert cir.rotate(pi/3, Point(0, 1)) == Circle(Point(S(1)/2 + sqrt(3)/2, S(1)/2 + sqrt(3)/2), 1)
 
     # director_circle
+    y1 = Symbol('y1', real=True)
+    half = Rational(1, 2)
+    p1 = Point(0, 0)
+    p2 = Point(1, 1)
+    p4 = Point(0, 1)
+
+    e1 = Ellipse(p1, 1, 1)
+    e2 = Ellipse(p2, half, 1)
+    e3 = Ellipse(p1, y1, y1)
+    c1 = Circle(p1, 1)
+    c2 = Circle(p2, 1)
+    c3 = Circle(Point(sqrt(2), sqrt(2)), 1)
+
     assert e1.director_circle() == Circle(Point2D(0, 0), sqrt(2))
     assert e2.director_circle() == Circle(Point2D(1, 1), sqrt(5)/2)
     assert e3.director_circle() == Circle(Point2D(0, 0), sqrt(2)*Abs(y1))
