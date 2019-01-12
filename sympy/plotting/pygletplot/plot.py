@@ -12,14 +12,14 @@ except ImportError:
     raise ImportError("pyglet is required for plotting.\n "
                       "visit http://www.pyglet.org/")
 
-from .plot_object import PlotObject
-from .plot_axes import PlotAxes
-from .plot_window import PlotWindow
-from .plot_mode import PlotMode
+from sympy.plotting.pygletplot.plot_object import PlotObject
+from sympy.plotting.pygletplot.plot_axes import PlotAxes
+from sympy.plotting.pygletplot.plot_window import PlotWindow
+from sympy.plotting.pygletplot.plot_mode import PlotMode
 
 from time import sleep
 from os import getcwd, listdir
-from .util import parse_option_string
+from sympy.plotting.pygletplot.util import parse_option_string
 
 from sympy.geometry.entity import GeometryEntity
 
@@ -259,8 +259,8 @@ class PygletPlot(object):
             self._win_args['visible'] = True
             self.axes.reset_resources()
 
-            if hasattr(self, '_doctest_depends_on'):
-                self._win_args['runfromdoctester'] = True
+            #if hasattr(self, '_doctest_depends_on'):
+            #    self._win_args['runfromdoctester'] = True
 
             self._window = PlotWindow(self, **self._win_args)
 

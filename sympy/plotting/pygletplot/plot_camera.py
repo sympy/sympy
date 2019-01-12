@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
 from pyglet.gl import *
-from .plot_rotation import get_spherical_rotatation
-from .util import get_model_matrix
-from .util import screen_to_model, model_to_screen
-from .util import vec_subs
+from sympy.plotting.pygletplot.plot_rotation import get_spherical_rotatation
+from sympy.plotting.pygletplot.util import get_model_matrix
+from sympy.plotting.pygletplot.util import screen_to_model, model_to_screen
+from sympy.plotting.pygletplot.util import vec_subs
 
 
 class PlotCamera(object):

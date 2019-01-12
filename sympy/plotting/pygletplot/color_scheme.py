@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import Basic, Symbol, symbols, lambdify
 from sympy.utilities.iterables import sift
-from .util import interpolate, rinterpolate, create_bounds, update_bounds
+from sympy.plotting.pygletplot.util import interpolate, rinterpolate, create_bounds, update_bounds
 from sympy.core.compatibility import range
 
 
@@ -61,13 +61,13 @@ class ColorScheme(object):
             else:
                 self.f = lambdify('x,y,z,u,v', args[0])
         else:
-            self.f, self.gradient = self._interpret_args(args, kwargs)
+            self.f, self.gradient = self._interpret_args(args)
         self._test_color_function()
         if not isinstance(self.gradient, ColorGradient):
             raise ValueError("Color gradient not properly initialized. "
                              "(Not a ColorGradient instance.)")
 
-    def _interpret_args(self, args, kwargs):
+    def _interpret_args(self, args):
         f, gradient = None, self.gradient
         atoms, lists = self._sort_args(args)
         s = self._pop_symbol_list(lists)

@@ -3,10 +3,10 @@ from __future__ import print_function, division
 from pyglet.gl import *
 from pyglet import font
 
-from .plot_object import PlotObject
-from .util import strided_range, billboard_matrix
-from .util import get_direction_vectors
-from .util import dot_product, vec_sub, vec_mag
+from sympy.plotting.pygletplot.plot_object import PlotObject
+from sympy.plotting.pygletplot.util import strided_range, billboard_matrix
+from sympy.plotting.pygletplot.util import get_direction_vectors
+from sympy.plotting.pygletplot.util import dot_product, vec_sub, vec_mag
 from sympy.core import S
 from sympy.core.compatibility import is_sequence, range
 
@@ -103,6 +103,7 @@ class PlotAxes(PlotObject):
                 continue
             b[i][0] = c[i][0] if b[i][0] is None else min([b[i][0], c[i][0]])
             b[i][1] = c[i][1] if b[i][1] is None else max([b[i][1], c[i][1]])
+            self._bounding_box = b
             self._recalculate_axis_ticks(i)
 
     def _recalculate_axis_ticks(self, axis):

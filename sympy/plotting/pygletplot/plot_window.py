@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
 from pyglet.gl import *
-from .managed_window import ManagedWindow
+from sympy.plotting.pygletplot.managed_window import ManagedWindow
 
-from .plot_camera import PlotCamera
-from .plot_controller import PlotController
+from sympy.plotting.pygletplot.plot_camera import PlotCamera
+from sympy.plotting.pygletplot.plot_controller import PlotController
 
 from time import clock
 
@@ -85,7 +85,16 @@ class PlotWindow(ManagedWindow):
         if len(self.plot._functions.values()) == 0:
             self.drawing_first_object = True
 
-        for r in self.plot._functions.itervalues():
+        try:
+            dict.iteritems
+        except AttributeError:
+            # Python 3
+            iterfunctions = iter(self.plot._functions.values())
+        else:
+            # Python 2
+            iterfunctions = self.plot._functions.itervalues()
+
+        for r in iterfunctions:
             if self.drawing_first_object:
                 self.camera.set_rot_preset(r.default_rot_preset)
                 self.drawing_first_object = False
