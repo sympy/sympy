@@ -1335,7 +1335,7 @@ class Ellipse(GeometrySet):
         """Returns the equation of director circle of the ellipse/circle.
 
         The director circle of an ellipse/circle is the circle having the property
-        that the two tangents to the ellipse/circle drawn from any point on the 
+        that the two tangents to the ellipse/circle drawn from any point on the
         circle are perpendicular to each other.
 
         Parameters
@@ -1353,17 +1353,14 @@ class Ellipse(GeometrySet):
 
         Examples
         ========
-        
-        For an ellipse :
-        >>> from sympy import Point, Ellipse
-        >>> e1 = Ellipse(Point(1, 0), 3, 2)
+
+        >>> from sympy import Point2D, Ellipse, sqrt, Circle
+        >>> e1 = Ellipse(Point2D(1, 0), 3, 2)
         >>> c = e1.director_circle()
         Circle(Point2D(1, 0), sqrt(13))
         >>> c.equation()
         y**2 + (x - 1)**2 - 13
-
-        For a circle :
-        >>> c1 = Circle(Point(1, 0), 2)
+        >>> c1 = Circle(Point2D(1, 0), 2)
         >>> c = c1.director_circle()
         Circle(Point2D(1, 0), 2*sqrt(2))
         >>> c.equation()
