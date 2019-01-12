@@ -83,7 +83,7 @@ if not USE_PYTEST:
                 code()
             except expectedException:
                 return
-            raise AssertionError("DID NOT RAISE")
+            raise Failed("DID NOT RAISE")
         elif isinstance(code, str):
             raise TypeError(
                 '\'raises(xxx, "code")\' has been phased out; '
@@ -104,7 +104,7 @@ if not USE_PYTEST:
 
         def __exit__(self, exc_type, exc_value, traceback):
             if exc_type is None:
-                raise AssertionError("DID NOT RAISE")
+                raise Failed("DID NOT RAISE")
             return issubclass(exc_type, self.expectedException)
 
     class XFail(Exception):
