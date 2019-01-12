@@ -1400,11 +1400,11 @@ class Basic(with_metaclass(ManagedProperties)):
         from sympy.simplify.simplify import bottom_up
 
         try:
-            query = sympify(query)
+            query = _sympify(query)
         except SympifyError:
             pass
         try:
-            value = sympify(value)
+            value = _sympify(value)
         except SympifyError:
             pass
         if isinstance(query, type):
