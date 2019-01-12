@@ -1331,6 +1331,46 @@ class Ellipse(GeometrySet):
 
         return I_xx, I_yy, I_xy
 
+    def director_circle(self):
+        """Returns the equation of director circle of the ellipse/circle.
+
+        The director circle of an ellipse/circle is the circle having the property
+        that the two tangents to the ellipse/circle drawn from any point on the 
+        circle are perpendicular to each other.
+
+        Parameters
+        ==========
+
+        x : str, optional
+            Label for the x-axis. Default value is 'x'.
+        y : str, optional
+            Label for the y-axis. Default value is 'y'.
+
+        Returns
+        =======
+
+        equation : Circle object
+
+        Examples
+        ========
+        
+        For an ellipse :
+        >>> from sympy import Point, Ellipse
+        >>> e1 = Ellipse(Point(1, 0), 3, 2)
+        >>> c = e1.director_circle()
+        Circle(Point2D(1, 0), sqrt(13))
+        >>> c.equation()
+        y**2 + (x - 1)**2 - 13
+
+        For a circle :
+        >>> c1 = Circle(Point(1, 0), 2)
+        >>> c = c1.director_circle()
+        Circle(Point2D(1, 0), 2*sqrt(2))
+        >>> c.equation()
+        y**2 + (x - 1)**2 - 8
+        """
+        return Circle(Point2D(self.center.x,self.center.y),sqrt(self.hradius**2 + self.vradius**2))
+
 
 class Circle(Ellipse):
     """A circle in space.

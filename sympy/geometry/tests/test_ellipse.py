@@ -313,6 +313,14 @@ def test_ellipse_geom():
     assert cir.rotate(pi/3, Point(1, 0)) == Circle(Point(1, 0), 1)
     assert cir.rotate(pi/3, Point(0, 1)) == Circle(Point(S(1)/2 + sqrt(3)/2, S(1)/2 + sqrt(3)/2), 1)
 
+    # director_circle
+    assert e1.director_circle() == Circle(Point2D(0, 0), sqrt(2))
+    assert e2.director_circle() == Circle(Point2D(1, 1), sqrt(5)/2)
+    assert e3.director_circle() == Circle(Point2D(0, 0), sqrt(2)*Abs(y1))
+    assert c1.director_circle() == Circle(Point2D(0, 0), sqrt(2))
+    assert c2.director_circle() == Circle(Point2D(1, 1), sqrt(2))
+    assert c3.director_circle() == Circle(Point2D(sqrt(2), sqrt(2)), sqrt(2))
+
 
 def test_construction():
     e1 = Ellipse(hradius=2, vradius=1, eccentricity=None)
