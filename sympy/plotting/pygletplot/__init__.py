@@ -136,7 +136,7 @@ try:
         =============================
         """
 
-        from .plot import PygletPlot
+        from sympy.plotting.pygletplot.plot import PygletPlot
         return PygletPlot(*args, **kwargs)
 
 except Exception as e:

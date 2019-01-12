@@ -415,8 +415,8 @@ class ScreenShot:
 
     def __nonzero__(self):
         if self.screenshot_requested:
-            return 1
-        return 0
+            return True
+        return False
 
     __bool__ = __nonzero__
 

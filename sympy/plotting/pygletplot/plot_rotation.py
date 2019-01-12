@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 try:
-    from pyglet.gl.gl import c_float
+    from ctypes import c_float
 except ImportError:
     pass
 
