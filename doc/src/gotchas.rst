@@ -301,8 +301,6 @@ evaluate the two numbers before SymPy has a chance to get
 to them.  The solution is to :func:`sympify` one of the numbers, or use
 :mod:`Rational`.
 
-.. doctest-skip::
-
     >>> x**(1/2)  # evaluates to x**0 or x**0.5
     x**0.5
     >>> x**(S(1)/2)  # sympyify one of the ints
@@ -329,8 +327,6 @@ you don't have to worry about this problem:
     obtaining the Python result for the division rather than a SymPy
     Rational.
 
-.. doctest-skip::
-
     >>> x = Symbol('x')
     >>> print(solve(7*x -22, x))
     [22/7]
@@ -352,8 +348,6 @@ Also, if you do not use :command:`isympy`, you could use ``from
 __future__ import division`` to prevent the ``/`` sign from performing
 `integer division <https://en.wikipedia.org/wiki/Integer_division>`_.
 
-.. doctest-skip::
-
     >>> from __future__ import division
     >>> 1/2   # With division imported it evaluates to a python float
     0.5
@@ -362,8 +356,6 @@ __future__ import division`` to prevent the ``/`` sign from performing
 
     But be careful: you will now receive floats where you might have desired
     a Rational:
-
-.. doctest-skip::
 
     >>> x**(1/2)
     x**0.5

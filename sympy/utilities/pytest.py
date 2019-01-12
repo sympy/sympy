@@ -46,7 +46,7 @@ if not USE_PYTEST:
         >>> raises(ZeroDivisionError, lambda: 1/2)
         Traceback (most recent call last):
         ...
-        AssertionError: DID NOT RAISE
+        Failed: DID NOT RAISE
 
         >>> with raises(ZeroDivisionError):
         ...     n = 1/0
@@ -54,7 +54,7 @@ if not USE_PYTEST:
         ...     n = 1/2
         Traceback (most recent call last):
         ...
-        AssertionError: DID NOT RAISE
+        Failed: DID NOT RAISE
 
         Note that you cannot test multiple statements via
         ``with raises``:
