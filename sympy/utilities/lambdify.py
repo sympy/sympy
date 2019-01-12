@@ -16,6 +16,8 @@ from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, integer_types, PY3)
 from sympy.utilities.decorator import doctest_depends_on
 
+__doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
+
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
 MATH_DEFAULT = {}

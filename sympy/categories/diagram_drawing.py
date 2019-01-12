@@ -95,6 +95,9 @@ from sympy.printing import latex
 from sympy.utilities.decorator import doctest_depends_on
 
 
+__doctest_requires__ = {('preview_diagram',): 'pyglet'}
+
+
 class _GrowableGrid(object):
     """
     Holds a growable grid of objects.

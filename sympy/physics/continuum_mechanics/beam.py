@@ -21,6 +21,9 @@ matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']
 numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
 
 
+__doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
+
+
 class Beam(object):
     """
     A Beam is a structural element that is capable of withstanding load
