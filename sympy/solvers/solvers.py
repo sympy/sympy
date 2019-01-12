@@ -2670,7 +2670,7 @@ def _tsolve(eq, sym, **flags):
                 elif rhs.is_Rational:
                     if  lhs.base == 0:
                         return _solve(lhs.exp, sym, **flags)
-                    elif lhs.base.is_Number:
+                    elif lhs.base.is_Number and lhs.base>0:
                         rewrite = lhs.rewrite(exp)
                         if rewrite != lhs:
                             return _solve(rewrite - rhs, sym, **flags)
