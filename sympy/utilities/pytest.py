@@ -13,7 +13,9 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 try:
     import py
-    from py.test import skip, raises, warns, Failed
+    from _pytest.python_api import raises
+    from _pytest.recwarn import warns
+    from _pytest.outcomes import skip, Failed
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False
