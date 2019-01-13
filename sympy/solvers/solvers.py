@@ -2667,8 +2667,6 @@ def _tsolve(eq, sym, **flags):
                     _solve(lhs.exp, sym, **flags))))
                 elif rhs.is_Rational or lhs.exp.is_real:
                     sol=[]
-                    if  lhs.base == 0 and rhs==0:
-                        sol.extend(_solve(lhs.exp, sym, **flags))
                     if lhs.base.is_Number and lhs.base<0:
                         sol.extend(_solve(-abs(lhs.base)**lhs.exp - rhs, sym, **flags) + _solve(abs(lhs.base)**lhs.exp - rhs, sym, **flags))
                     if lhs.base.is_positive:
