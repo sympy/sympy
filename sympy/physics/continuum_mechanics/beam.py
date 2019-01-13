@@ -549,7 +549,7 @@ class Beam(object):
 
         Examples
         ========
-        A combined beam, with constant fkexural rigidity E*I, is formed by joining
+        A combined beam, with constant flexural rigidity E*I, is formed by joining
         a Beam of length 2*l to the right of another Beam of length l. The whole beam
         is fixed at both of its both end. A point load of magnitude P is also applied
         from the top at a distance of 2*l from starting point.
@@ -860,7 +860,7 @@ class Beam(object):
         return integrate(self.shear_force(), x)
 
     def max_bmoment(self):
-        """Returns maximum Shear force and its coordinate
+        """Returns maximum Bending Moment and its coordinate
         in the Beam object."""
         from sympy import solve, Mul, Interval
         bending_curve = self.bending_moment()
@@ -1180,8 +1180,8 @@ class Beam(object):
             return None
 
 
-    def bending_stress(self, y, M):
-        b_stress = (M*y)/self.second_moment
+    def bending_stress(self, y, m):
+        b_stress = (m*y)/self.second_moment
         return b_stress
 
 
@@ -1193,7 +1193,7 @@ class Beam(object):
         ==========
         y_max : Sympifiable
                 A Symbol or a value for the maximum distance from the neutral axis
-        M : Sympifiable or Optional
+        m : Sympifiable or Optional
             A symbol or a value for maximum bending moment. If not given will be determined
             by the function max_bmoment()
         """
@@ -1216,11 +1216,11 @@ class Beam(object):
 
         Parameters
         ==========
-        Q_max : Sympifiable
+        q_max : Sympifiable
                 A symbol or a value for the maximum first moment of area i.e. w.r.t the neutral axis(y = 0).
         b : Sympifiable
             A symbol or a value for the width of the cross section of the Beam.
-        V : Sympifiable
+        v : Sympifiable
             A symbol or a value for the maximum shear force on the Beam. If not given will be determined
             by the function max_shear_force().
         """
