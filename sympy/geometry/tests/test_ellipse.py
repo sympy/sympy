@@ -133,7 +133,7 @@ def test_ellipse_geom():
     assert c1.is_tangent(e1) is True
     assert c1.is_tangent(Ellipse(Point(2, 0), 1, 1)) is True
     assert c1.is_tangent(
-        Polygon(Point(1, 1), Point(1, -1), Point(2, 0))) is True
+        Polygon(Point(1, 1), Point(1, -1), Point(2, 0))) is False
     assert c1.is_tangent(
         Polygon(Point(1, 1), Point(1, 0), Point(2, 0))) is False
     assert Circle(Point(5, 5), 3).is_tangent(Circle(Point(0, 5), 1)) is False
