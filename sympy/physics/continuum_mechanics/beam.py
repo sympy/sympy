@@ -1179,6 +1179,59 @@ class Beam(object):
         else:
             return None
 
+
+    def bending_stress(self, y, M):
+        b_stress = (M*y)/self.second_moment
+        return b_stress
+
+
+    def max_bending_stress(self, y_max, m=None):
+        """Returns the maximum bending stress and its coordinates
+        in the Beam object.
+
+        Parameters
+        ==========
+        y_max : Sympifiable
+                A Symbol or a value for the maximum distance from the neutral axis
+        M : Sympifiable or Optional
+            A symbol or a value for maximum bending moment. If not given will be determined
+            by the function max_bmoment()
+        """
+        if m is None:
+            x, m = self.max_bmoment()
+        else:
+            x = self.max_bmoment()[0]
+        max_b_stress = self.bending_stress(y_max, m)
+        return ((x, y_max), max_b_stress)
+
+
+    def shear_stress(self, q, b, v):
+        shear = (q*v)/(self.second_moment*b)
+        return shear
+
+
+    def max_shear_stress(self, q_max, b, v=None):
+        """Returns the maximum shear stress and its coordinates
+        in the Beam object
+
+        Parameters
+        ==========
+        Q_max : Sympifiable
+                A symbol or a value for the maximum first moment of area i.e. w.r.t the neutral axis(y = 0).
+        b : Sympifiable
+            A symbol or a value for the width of the cross section of the Beam.
+        V : Sympifiable
+            A symbol or a value for the maximum shear force on the Beam. If not given will be determined
+            by the function max_shear_force().
+        """
+        if v is None:
+            x, v = self.max_shear_force()
+        else:
+            x = self.max_shear_force()[0]
+        max_shear = self.shear_stress(q_max, b, v)
+        return ((x, 0), max_shear)
+
+
     def plot_shear_force(self, subs=None):
         """
         Returns a plot for Shear force present in the Beam object.
