@@ -1357,11 +1357,13 @@ class Ellipse(GeometrySet):
         >>> from sympy import Point2D, Ellipse, sqrt, Circle
         >>> e1 = Ellipse(Point2D(1, 0), 3, 2)
         >>> c = e1.director_circle()
+        >>> c
         Circle(Point2D(1, 0), sqrt(13))
         >>> c.equation()
         y**2 + (x - 1)**2 - 13
         >>> c1 = Circle(Point2D(1, 0), 2)
         >>> c = c1.director_circle()
+        >>> c
         Circle(Point2D(1, 0), 2*sqrt(2))
         >>> c.equation()
         y**2 + (x - 1)**2 - 8
