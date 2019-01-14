@@ -1,6 +1,6 @@
 from sympy import Abs, Rational, Float, S, Symbol, symbols, cos, pi, sqrt, oo
 from sympy.functions.elementary.trigonometric import tan
-from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, Polygon, Ray, RegularPolygon, Segment, Triangle,
+from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
                             convex_hull, intersection, Line)
 from sympy.utilities.pytest import raises, slow, warns
 from sympy.utilities.randtest import verify_numerically
@@ -212,9 +212,9 @@ def test_polygon():
     assert t1.is_equilateral() is False
     assert t2.is_equilateral()
     assert t3.is_equilateral() is False
-    assert t1.is_similar(t2) is False
-    assert t1.is_similar(t3)
-    assert t2.is_similar(t3) is False
+    assert are_similar(t1, t2) is False
+    assert are_similar(t1, t3)
+    assert are_similar(t2, t3) is False
     assert t1.is_similar(Point(0, 0)) is False
 
     # Bisectors
