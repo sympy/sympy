@@ -2003,3 +2003,6 @@ def test_issue_15731():
     assert solve((x**2-6)**(x**2-2)-4) == [-2, 2]
     assert solve((x**2 + 1)**x - 25) == [2]
     assert solve(x**(x+S(1)/2)-S(9)/4) == [1.50000000000000]
+    assert solve((x**2-2*x-1)**(x**2-3) - 1/(1-2*sqrt(2))) == [sqrt(2)]
+    assert solve((-sqrt(sqrt(2)))**x - 2) == [4]
+    assert solve((sqrt(2))**x - sqrt(sqrt(2))) == [1/2]

@@ -37,7 +37,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify, denom, logcombine)
+                            nsimplify, denom, logcombine, sqrtdenest)
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1
 from sympy.matrices import Matrix, zeros
@@ -2667,7 +2667,7 @@ def _tsolve(eq, sym, **flags):
                     _solve(lhs.exp, sym, **flags))))
                 elif rhs.is_Rational or lhs.exp.is_real:
                     sol=[]
-                    if lhs.base.is_Number and lhs.base<0:
+                    if lhs.base.is_real and lhs.base<0:
                         sol.extend(_solve(-abs(lhs.base)**lhs.exp - rhs, sym, **flags) + _solve(abs(lhs.base)**lhs.exp - rhs, sym, **flags))
                     if lhs.base.is_positive:
                         if lhs.exp.is_real:
@@ -2691,10 +2691,20 @@ def _tsolve(eq, sym, **flags):
                                         b_pos.extend(_solve(lhs.base-Rational(i,s), sym, **flags))
                                         b_negi.extend(_solve(lhs.base+Rational(i,s), sym, **flags))
                                         e0.extend(_solve(lhs.exp-b, sym, **flags))
-                        for s in list(set(b_pos).union(e0,b_negi)):
+                        for s in list(set(b_pos).union(e0, b_negi)):
                             if eq.subs(sym, s) == 0:
                                 sol.append(s)
                     return list(ordered(set(sol)))
+                elif rhs.is_irrational :
+                    sol=[]
+                    b, e = sqrtdenest(rhs).as_base_exp()
+                    sol_base = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, **flags))]
+                    sol_exp = [sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))]
+                    for s in list(set(sol_base).intersection(sol_exp)):
+                        if eq.subs(sym, s) == 0:
+                            sol.append(s)
+                    return list(ordered(set(sol)))
+
                 else:
                     raise NotImplementedError
 
