@@ -155,12 +155,12 @@ def test_latex_builtins():
 
 
 def test_latex_SingularityFunction():
-    assert latex(SingularityFunction(x, 4, 5)) == r"{\langle x - 4 \rangle}^{5}"
-    assert latex(SingularityFunction(x, -3, 4)) == r"{\langle x + 3 \rangle}^{4}"
-    assert latex(SingularityFunction(x, 0, 4)) == r"{\langle x \rangle}^{4}"
-    assert latex(SingularityFunction(x, a, n)) == r"{\langle - a + x \rangle}^{n}"
-    assert latex(SingularityFunction(x, 4, -2)) == r"{\langle x - 4 \rangle}^{-2}"
-    assert latex(SingularityFunction(x, 4, -1)) == r"{\langle x - 4 \rangle}^{-1}"
+    assert latex(SingularityFunction(x, 4, 5)) == r"{\left\langle x - 4 \right\rangle}^{5}"
+    assert latex(SingularityFunction(x, -3, 4)) == r"{\left\langle x + 3 \right\rangle}^{4}"
+    assert latex(SingularityFunction(x, 0, 4)) == r"{\left\langle x \right\rangle}^{4}"
+    assert latex(SingularityFunction(x, a, n)) == r"{\left\langle - a + x \right\rangle}^{n}"
+    assert latex(SingularityFunction(x, 4, -2)) == r"{\left\langle x - 4 \right\rangle}^{-2}"
+    assert latex(SingularityFunction(x, 4, -1)) == r"{\left\langle x - 4 \right\rangle}^{-1}"
 
 def test_latex_cycle():
     assert latex(Cycle(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
@@ -716,9 +716,9 @@ def test_latex_intervals():
 
 def test_latex_AccumuBounds():
     a = Symbol('a', real=True)
-    assert latex(AccumBounds(0, 1)) == r"\langle 0, 1\rangle"
-    assert latex(AccumBounds(0, a)) == r"\langle 0, a\rangle"
-    assert latex(AccumBounds(a + 1, a + 2)) == r"\langle a + 1, a + 2\rangle"
+    assert latex(AccumBounds(0, 1)) == r"\left\langle 0, 1\right\rangle"
+    assert latex(AccumBounds(0, a)) == r"\left\langle 0, a\right\rangle"
+    assert latex(AccumBounds(a + 1, a + 2)) == r"\left\langle a + 1, a + 2\right\rangle"
 
 
 def test_latex_emptyset():
@@ -1365,15 +1365,15 @@ def test_Modules():
 
     assert latex(F) == r"{\mathbb{Q}\left[x, y\right]}^{2}"
     assert latex(M) == \
-        r"\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>"
+        r"\left\langle {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right\rangle"
 
     I = R.ideal(x**2, y)
-    assert latex(I) == r"\left< {x^{2}},{y} \right>"
+    assert latex(I) == r"\left\langle {x^{2}},{y} \right\rangle"
 
     Q = F / M
-    assert latex(Q) == r"\frac{{\mathbb{Q}\left[x, y\right]}^{2}}{\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}"
+    assert latex(Q) == r"\frac{{\mathbb{Q}\left[x, y\right]}^{2}}{\left\langle {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right\rangle}"
     assert latex(Q.submodule([1, x**3/2], [2, y])) == \
-        r"\left< {{\left[ {1},{\frac{x^{3}}{2}} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}},{{\left[ {2},{y} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}} \right>"
+        r"\left\langle {{\left[ {1},{\frac{x^{3}}{2}} \right]} + {\left\langle {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right\rangle}},{{\left[ {2},{y} \right]} + {\left\langle {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right\rangle}} \right\rangle"
 
     h = homomorphism(QQ.old_poly_ring(x).free_module(2), QQ.old_poly_ring(x).free_module(2), [0, 0])
 
@@ -1385,8 +1385,8 @@ def test_QuotientRing():
     R = QQ.old_poly_ring(x)/[x**2 + 1]
 
     assert latex(
-        R) == r"\frac{\mathbb{Q}\left[x\right]}{\left< {x^{2} + 1} \right>}"
-    assert latex(R.one) == r"{1} + {\left< {x^{2} + 1} \right>}"
+        R) == r"\frac{\mathbb{Q}\left[x\right]}{\left\langle {x^{2} + 1} \right\rangle}"
+    assert latex(R.one) == r"{1} + {\left\langle {x^{2} + 1} \right\rangle}"
 
 
 def test_Tr():

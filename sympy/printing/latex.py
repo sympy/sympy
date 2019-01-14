@@ -1700,7 +1700,7 @@ class LatexPrinter(Printer):
     def _print_SingularityFunction(self, expr):
         shift = self._print(expr.args[0] - expr.args[1])
         power = self._print(expr.args[2])
-        tex = r"{\langle %s \rangle}^{%s}" % (shift, power)
+        tex = r"{\left\langle %s \right\rangle}^{%s}" % (shift, power)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
@@ -1811,7 +1811,7 @@ class LatexPrinter(Printer):
                    (left, self._print(i.start), self._print(i.end), right)
 
     def _print_AccumulationBounds(self, i):
-        return r"\langle %s, %s\rangle" % \
+        return r"\left\langle %s, %s\right\rangle" % \
                 (self._print(i.min), self._print(i.max))
 
     def _print_Union(self, u):
@@ -2134,11 +2134,11 @@ class LatexPrinter(Printer):
             '{' + self._print(x) + '}' for x in m)
 
     def _print_SubModule(self, m):
-        return r"\left< %s \right>" % ",".join(
+        return r"\left\langle %s \right\rangle" % ",".join(
             '{' + self._print(x) + '}' for x in m.gens)
 
     def _print_ModuleImplementedIdeal(self, m):
-        return r"\left< %s \right>" % ",".join(
+        return r"\left\langle %s \right\rangle" % ",".join(
             '{' + self._print(x) + '}' for [x] in m._module.gens)
 
     def _print_Quaternion(self, expr):

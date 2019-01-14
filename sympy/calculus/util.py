@@ -582,13 +582,13 @@ class AccumulationBounds(AtomicExpr):
 
     Let `a` and `b` be reals such that a <= b.
 
-    `\langle a, b\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
+    `\left\langle a, b\right\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
 
-    `\langle -\infty, b\rangle = \{x \in \mathbb{R} \mid x \le b\} \cup \{-\infty, \infty\}`
+    `\left\langle -\infty, b\right\rangle = \{x \in \mathbb{R} \mid x \le b\} \cup \{-\infty, \infty\}`
 
-    `\langle a, \infty \rangle = \{x \in \mathbb{R} \mid a \le x\} \cup \{-\infty, \infty\}`
+    `\left\langle a, \infty \right\rangle = \{x \in \mathbb{R} \mid a \le x\} \cup \{-\infty, \infty\}`
 
-    `\langle -\infty, \infty \rangle = \mathbb{R} \cup \{-\infty, \infty\}`
+    `\left\langle -\infty, \infty \right\rangle = \mathbb{R} \cup \{-\infty, \infty\}`
 
     `oo` and `-oo` are added to the second and third definition respectively,
     since if either `-oo` or `oo` is an argument, then the other one should
@@ -686,7 +686,7 @@ class AccumulationBounds(AtomicExpr):
 
     Some elementary functions can also take AccumulationBounds as input.
     A function `f` evaluated for some real AccumulationBounds `<a, b>`
-    is defined as `f(\langle a, b\rangle) = \{ f(x) \mid a \le x \le b \}`
+    is defined as `f(\left\langle a, b\right\rangle) = \{ f(x) \mid a \le x \le b \}`
 
     >>> sin(AccumBounds(pi/6, pi/3))
     AccumBounds(1/2, sqrt(3)/2)
