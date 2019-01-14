@@ -801,7 +801,7 @@ def test_QR():
 
 
 def test_QR_non_square():
-    # Tall and thin matrices
+    # Narrow (cols < rows) matrices
     A = Matrix([[9, 0, 26], [12, 0, -7], [0, 4, 4], [0, -3, -3]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)
@@ -820,7 +820,7 @@ def test_QR_non_square():
     assert R.is_upper
     assert A == Q*R
 
-    # Short and fat matrices
+    # Wide (cols > rows) matrices
     A = Matrix([[1, 2, 3], [4, 5, 6]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)

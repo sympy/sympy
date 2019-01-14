@@ -4057,9 +4057,8 @@ class MatrixBase(MatrixDeprecated,
         m = mat.cols
         ranked = list()
 
-        # If matrix is fat, pad additional zeros to make it square.
-        # Variable nOrig is used to collect the original dimensions, so that
-        # it can be used to truncate unncecssary zeros from the Q
+        # Pad with additional rows to make wide matrices square
+        # nOrig keeps track of original size so zeros can be trimmed from Q
         if n < m:
             nOrig = n
             n = m
