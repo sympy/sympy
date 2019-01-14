@@ -28,7 +28,6 @@ from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
-import sympy
 
 
 class Integral(AddWithLimits):
@@ -827,7 +826,7 @@ class Integral(AddWithLimits):
         from sympy.integrals.heurisch import heurisch as heurisch_, heurisch_wrapper
         from sympy.integrals.rationaltools import ratint
         from sympy.integrals.risch import risch_integrate
-        f = sympy.simplify(f, rational = True)
+
         if risch:
             try:
                 return risch_integrate(f, x, conds=conds)
