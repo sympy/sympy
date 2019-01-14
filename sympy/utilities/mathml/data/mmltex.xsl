@@ -456,16 +456,16 @@ Modified Fabian Seoane 2007 for sympy
 
 <!-- 4.4.3.25 floor -->
 <xsl:template match="m:apply[*[1][self::m:floor]]">
-	<xsl:text>\lfloor </xsl:text>
+	<xsl:text>\left\lfloor </xsl:text>
 	<xsl:apply-templates select="*[2]"/>
-	<xsl:text>\rfloor </xsl:text>
+	<xsl:text>\right\rfloor </xsl:text>
 </xsl:template>
 
 <!-- 4.4.3.25 ceiling -->
 <xsl:template match="m:apply[*[1][self::m:ceiling]]">
-	<xsl:text>\lceil </xsl:text>
+	<xsl:text>\left\lceil </xsl:text>
 	<xsl:apply-templates select="*[2]"/>
-	<xsl:text>\rceil </xsl:text>
+	<xsl:text>\right\rceil </xsl:text>
 </xsl:template>
 
 <!-- 4.4.4.1 eq -->

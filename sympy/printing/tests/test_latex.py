@@ -322,8 +322,8 @@ def test_latex_functions():
     assert latex(FallingFactorial(3, k)) == r"{\left(3\right)}_{k}"
     assert latex(RisingFactorial(3, k)) == r"{3}^{\left(k\right)}"
 
-    assert latex(floor(x)) == r"\lfloor{x}\rfloor"
-    assert latex(ceiling(x)) == r"\lceil{x}\rceil"
+    assert latex(floor(x)) == r"\left\lfloor{x}\right\rfloor"
+    assert latex(ceiling(x)) == r"\left\lceil{x}\right\rceil"
     assert latex(Min(x, 2, x**3)) == r"\min\left(2, x, x^{3}\right)"
     assert latex(Min(x, y)**2) == r"\min\left(x, y\right)^{2}"
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
