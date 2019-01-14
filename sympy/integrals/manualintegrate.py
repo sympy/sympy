@@ -32,7 +32,6 @@ from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.core.relational import Eq, Ne
 from sympy.polys.polytools import degree
 from sympy.ntheory.factor_ import divisors
-from sympy import exp
 
 ZERO = sympy.S.Zero
 
@@ -1576,9 +1575,6 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
-    if len(f.args) > 1 :
-        if all(i.has(exp) for i in f.args):
-            f = f.expand()
     result = _manualintegrate(integral_steps(f, var))
     # Clear the cache of u-parts
     _parts_u_cache.clear()
