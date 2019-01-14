@@ -1181,20 +1181,34 @@ class Beam(object):
 
 
     def bending_stress(self, y, m):
+        """
+        Returns bending stress of any point(or layer) in the beam cross-section at a distance `y`
+        from the neutral axis.
+
+        Parameters
+        ==========
+        y : Sympifiable
+            A symbol or a value representing the vertical distance of the required point(or layer)
+            on the cross-section from the neutral axis.
+        m : Sympifiable
+            A symbol or a value representing the bending moment at the required cross-section of
+            the beam.
+        """
         b_stress = (m*y)/self.second_moment
         return b_stress
 
 
     def max_bending_stress(self, y_max, m=None):
-        """Returns the maximum bending stress and its coordinates
+        """
+        Returns the maximum bending stress and its coordinates
         in the Beam object.
 
         Parameters
         ==========
         y_max : Sympifiable
-                A Symbol or a value for the maximum distance from the neutral axis
+                A Symbol or a value representing the maximum vertical distance from the neutral axis
         m : Sympifiable or Optional
-            A symbol or a value for maximum bending moment. If not given will be determined
+            A symbol or a value representing maximum bending moment. If not given will be determined
             by the function max_bmoment()
         """
         if m is None:
@@ -1206,22 +1220,39 @@ class Beam(object):
 
 
     def shear_stress(self, q, b, v):
+        """
+        Returns the transverse shear stress of a beam cross-section at a point(or a layer) above or
+        below the neutral axis where its first moment of area is `q` and the width of the
+        cross section is `b`.
+
+        Parameters
+        ==========
+        q : Sympifiable
+            A symbol or a value representing the first moment of area between the location
+            where the shear stress is being calculated and the location where the shear stress is
+            zero about the neutral (centroidal) axis.
+        b : Sympifiable
+            A symbol or a value representing the width of the beam cross section at that point.
+        v : Sympifiable
+            A symbol or a value representing the shear force at the required cross section of the beam.
+        """
         shear = (q*v)/(self.second_moment*b)
         return shear
 
 
     def max_shear_stress(self, q_max, b, v=None):
-        """Returns the maximum shear stress and its coordinates
+        """
+        Returns the maximum trannsverse shear stress and its coordinates
         in the Beam object
 
         Parameters
         ==========
         q_max : Sympifiable
-                A symbol or a value for the maximum first moment of area i.e. w.r.t the neutral axis(y = 0).
+                A symbol or a value representing the maximum first moment of area i.e. w.r.t the neutral axis(y = 0).
         b : Sympifiable
-            A symbol or a value for the width of the cross section of the Beam.
-        v : Sympifiable
-            A symbol or a value for the maximum shear force on the Beam. If not given will be determined
+            A symbol or a value representing the width of the cross section of the Beam.
+        v : Sympifiable or Optional
+            A symbol or a value representing the maximum shear force on the Beam. If not given will be determined
             by the function max_shear_force().
         """
         if v is None:
