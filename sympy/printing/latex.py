@@ -30,7 +30,7 @@ from sympy.utilities.iterables import has_variety
 import re
 
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
-# Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
+# Complete list at https://docs.mathjax.org/en/latest/tex.html#supported-latex-commands
 # This variable only contains those functions which sympy uses.
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                     'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec', 'csc',
