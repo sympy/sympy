@@ -827,7 +827,7 @@ class Integral(AddWithLimits):
         from sympy.integrals.heurisch import heurisch as heurisch_, heurisch_wrapper
         from sympy.integrals.rationaltools import ratint
         from sympy.integrals.risch import risch_integrate
-        f= sympy.simplify(f)
+        f = sympy.simplify(f, rational = True)
         if risch:
             try:
                 return risch_integrate(f, x, conds=conds)
