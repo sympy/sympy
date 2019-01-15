@@ -3096,7 +3096,7 @@ def nfloat(expr, n=15, exponent=False):
         lambda x: x.func(*nfloat(x.args, n, exponent)),
         lambda x: isinstance(x, Function)))
 
-def log_concave(func, *args):
+def log_concave(func, *syms):
     """Checks if the function passed in the argument is logarithamically concave.
 
     Examples
@@ -3106,13 +3106,11 @@ def log_concave(func, *args):
     >>> from sympy.abc import x, y
     >>> from sympy import exp, cos
     >>> log_concave(cos(x), x)
-    False
+    True
     >>> log_concave(exp(x), x)
     True
     """
     from sympy import solve_univariate_inequality as s
-
-    syms = args[:]
 
     if len(syms) > 1:
         raise NotImplementedError("Log concavity check for multivariate functions is not implemented yet.")
@@ -3123,7 +3121,7 @@ def log_concave(func, *args):
         return False
     return True
 
-def log_convex(func, *args):
+def log_convex(func, *syms):
     """Checks if the function passed in the argument is logarithamically convex.
 
     Examples
@@ -3138,8 +3136,6 @@ def log_convex(func, *args):
     True
     """
     from sympy import solve_univariate_inequality as s
-
-    syms = args[:]
 
     if len(syms) > 1:
         raise NotImplementedError("Log convexity check for multivariate functions is not implemented yet.")
