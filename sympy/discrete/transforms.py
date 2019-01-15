@@ -465,29 +465,21 @@ def dft_matrix(points, unitary=False):
     >>> from sympy import dft_matrix, idft_matrix
 
     >>> dft_matrix(4)
-    [1  1   1   1 ]
-    [             ]
-    [1  -I  -1  I ]
-    [             ]
-    [1  -1  1   -1]
-    [             ]
-    [1  I   -1  -I]
+    Matrix([
+    [1,  1,  1,  1],
+    [1, -I, -1,  I],
+    [1, -1,  1, -1],
+    [1,  I, -1, -I]])
 
     >>> idft_matrix(2)
-    [1/2  1/2 ]
-    [         ]
-    [1/2  -1/2]
+    Matrix([
+    [1/2,  1/2],
+    [1/2, -1/2]])
 
     >>> dft_matrix(2, True)
-    [  ___     ___ ]
-    [\/ 2    \/ 2  ]
-    [-----   ----- ]
-    [  2       2   ]
-    [              ]
-    [  ___     ___ ]
-    [\/ 2   -\/ 2  ]
-    [-----  -------]
-    [  2       2   ]
+    Matrix([
+    [sqrt(2)/2,  sqrt(2)/2],
+    [sqrt(2)/2, -sqrt(2)/2]])
 
     References
     ==========
