@@ -187,8 +187,9 @@ class lambdify(object):
                                                  use_python_cmath=True)
         self.failure = False
 
-    def __call__(self, args):
-        args = complex(args)
+    def __call__(self, args, kwargs = {}):
+        if kwargs.get('complex_wrap_evalf', None) is not None:
+            args = complex(args)
         try:
             #The result can be sympy.Float. Hence wrap it with complex type.
             result = complex(self.lambda_func(args))
@@ -239,6 +240,9 @@ class lambdify(object):
 
 
 def experimental_lambdify(*args, **kwargs):
+    if kwargs.get('use_python_math', None) is True:
+        if kwargs.get('complex_wrap_evalf', None):
+            kwargs['complex_wrap_evalf']=False
     l = Lambdifier(*args, **kwargs)
     return l
 
