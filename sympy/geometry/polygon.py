@@ -146,9 +146,6 @@ class Polygon(GeometrySet):
 
         vertices = list(nodup)
 
-
-
-
         if len(vertices) > 3:
             return GeometryEntity.__new__(cls, *vertices, **kwargs)
         elif len(vertices) == 3:
