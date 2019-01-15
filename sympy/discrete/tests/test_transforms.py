@@ -2,7 +2,9 @@ from sympy import sqrt
 from sympy.core import S, Symbol, symbols, I
 from sympy.core.compatibility import range
 from sympy.discrete import (fft, ifft, ntt, intt, fwht, ifwht,
-    mobius_transform, inverse_mobius_transform)
+    mobius_transform, inverse_mobius_transform, dft_matrix, idft_matrix)
+from sympy.matrices import Matrix, eye
+from sympy.simplify import simplify
 from sympy.utilities.pytest import raises
 
 
@@ -154,3 +156,18 @@ def test_mobius_transform():
 
     raises(TypeError, lambda: mobius_transform(x, subset=True))
     raises(TypeError, lambda: inverse_mobius_transform(y, subset=False))
+
+def test_dft_matrix_idft_matrix():
+    for p in range(1, 7):
+        assert dft_matrix(p, True) == idft_matrix(p, True).H
+    assert dft_matrix(4)*idft_matrix(4) == eye(4)
+    assert dft_matrix(4, True)*idft_matrix(4, True) == eye(4)
+
+    assert dft_matrix(2) == Matrix([[1, 1], [1, -1]])
+
+    assert idft_matrix(2) == Matrix([[1/2, 1/2], [1/2, -1/2]])
+
+    assert simplify(dft_matrix(8)*idft_matrix(8)) == eye(8)
+    assert simplify(dft_matrix(8, True)*idft_matrix(8, True)) == eye(8)
+
+    raises(ValueError, lambda: dft_matrix(0.3))

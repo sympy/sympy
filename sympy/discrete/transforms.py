@@ -9,10 +9,14 @@ from __future__ import print_function, division, unicode_literals
 from sympy.core import S, Symbol, sympify
 from sympy.core.compatibility import as_int, range, iterable
 from sympy.core.function import expand_mul
+from sympy.core.mod import Mod
 from sympy.core.numbers import pi, I
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.ntheory import isprime, primitive_root
 from sympy.utilities.iterables import ibin
+from sympy.matrices import zeros
 
 
 #----------------------------------------------------------------------------#
@@ -426,3 +430,74 @@ def inverse_mobius_transform(seq, subset=True):
     return _mobius_transform(seq, sgn=-1, subset=subset)
 
 inverse_mobius_transform.__doc__ = mobius_transform.__doc__
+
+def _dft_matrix(points, sgn, divisor, unitary):
+    if unitary:
+        divisor = points/sqrt(points)
+
+    m = zeros(points)
+    for i in range(points):
+        for j in range(points):
+            m[i,j] = exp(-sgn*I*Mod(i*j, points)*2*pi/points)/divisor
+
+    return m
+
+def dft_matrix(points, unitary=False):
+    r"""
+    Returns the Dicrete Fourier Transform matrix. The DFT matrix is the matrix
+    that a vector is multiplied with to compute the DFT. Note that using
+    `fft` is faster when computing the result of the transform.
+
+    Parameters
+    ==========
+
+    points : natural
+    Number of transform points
+
+    Optional parameters
+    ===================
+
+    unitary : boolean
+    If `True` the (I)DFT matrix is scaled such that it is unitary. Default is `False`.
+
+    Examples
+    ========
+    >>> from sympy import dft_matrix, idft_matrix
+
+    >>> dft_matrix(4)
+    [1  1   1   1 ]
+    [             ]
+    [1  -I  -1  I ]
+    [             ]
+    [1  -1  1   -1]
+    [             ]
+    [1  I   -1  -I]
+
+    >>> idft_matrix(2)
+    [1/2  1/2 ]
+    [         ]
+    [1/2  -1/2]
+
+    >>> dft_matrix(2, True)
+    [  ___     ___ ]
+    [\/ 2    \/ 2  ]
+    [-----   ----- ]
+    [  2       2   ]
+    [              ]
+    [  ___     ___ ]
+    [\/ 2   -\/ 2  ]
+    [-----  -------]
+    [  2       2   ]
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/DFT_matrix
+
+    """
+    return _dft_matrix(points, +1, 1, unitary)
+
+def idft_matrix(points, unitary=False):
+    return _dft_matrix(points, -1, points, unitary)
+
+idft_matrix.__doc__ = dft_matrix.__doc__
