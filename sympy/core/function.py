@@ -3096,4 +3096,5 @@ def nfloat(expr, n=15, exponent=False):
         lambda x: x.func(*nfloat(x.args, n, exponent)),
         lambda x: isinstance(x, Function)))
 
+
 from sympy.core.symbol import Dummy, Symbol

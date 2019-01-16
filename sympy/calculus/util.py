@@ -585,6 +585,11 @@ def log_convex(func, *syms, **kwargs):
     False
     >>> log_convex(x**(-1), x)
     True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Logarithmically_convex_function
     """
 
     if len(syms) > 1:
@@ -622,6 +627,11 @@ def log_concave(func, *syms, **kwargs):
     False
     >>> log_concave(exp(-x**2/2), x)
     True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Logarithmically_concave_function
     """
 
     if len(syms) > 1:
