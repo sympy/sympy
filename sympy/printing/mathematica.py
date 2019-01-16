@@ -94,6 +94,14 @@ class MCodePrinter(CodePrinter):
     _print_tuple = _print_list
     _print_Tuple = _print_list
 
+    def _print_Matrix(self, expr):
+        return self._print_list(
+        [self._print_list(expr.row(i)) for i in range(expr.rows)]
+        )
+    _print_ImmutableMatrix = _print_Matrix
+    _print_ImmutableDenseMatrix = _print_Matrix
+    _print_MutableDenseMatrix = _print_Matrix
+
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_mfunc = self.known_functions[expr.func.__name__]
