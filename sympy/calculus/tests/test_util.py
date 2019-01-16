@@ -163,7 +163,6 @@ def test_lcim():
 
 def test_log_convex():
 
-    assert log_convex(exp(x**2.5), x) == True
     assert log_convex(exp(x), x, strict = True) == False
     assert log_convex(x**3, x) == False
     assert log_convex(x**(-2), x) == True
@@ -172,7 +171,6 @@ def test_log_convex():
 
 def test_log_concave():
 
-    assert log_concave(exp(x**2.5), x) == False
     assert log_concave(exp(x), x, strict = True) == False
     assert log_concave(x**3, x) == True
     assert log_concave(x**(-2), x) == False
