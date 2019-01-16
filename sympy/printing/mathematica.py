@@ -103,12 +103,15 @@ class MCodePrinter(CodePrinter):
     _print_MutableDenseMatrix = _print_Matrix
 
     def _print_SparseMatrix(self, expr):
+        from sympy.core.compatibility import default_sort_key
+
         def print_rule(pos, val):
             return '{} -> {}'.format(
             self.doprint((pos[0]+1, pos[1]+1)), self.doprint(val))
         def print_data():
             return self._print_list(
-            [print_rule(key, value) for key, value in expr._smat.items()]
+            [print_rule(key, value)
+            for key, value in sorted(expr._smat.items(), key=default_sort_key)]
             )
         def print_dims():
             return self._print_list(
