@@ -579,7 +579,7 @@ def log_convex(func, *syms, **kwargs):
     Examples
     ========
 
-    >>> from sympy import *
+    >>> from sympy import symbols, exp, log_convex
     >>> x = symbols('x', real = True, positive = True)
     >>> log_convex(exp(x), x, strict = True)
     False
@@ -621,7 +621,7 @@ def log_concave(func, *syms, **kwargs):
     Examples
     ========
 
-    >>> from sympy import *
+    >>> from sympy import symbols, exp, log_concave
     >>> x = symbols('x', real = True, positive = True)
     >>> log_concave(exp(x), x, strict = True)
     False
