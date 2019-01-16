@@ -35,3 +35,9 @@ def test_print_Symbol():
     p = setup_test_printer(reserved_word_suffix='_He_Man')
     p.reserved_words.update(['if'])
     assert p._print(y) == 'if_He_Man'
+
+def test_issue_15791():
+    assert (CodePrinter._print_MutableSparseMatrix.__name__ ==
+    CodePrinter._print_not_supported.__name__)
+    assert (CodePrinter._print_ImmutableSparseMatrix.__name__ ==
+    CodePrinter._print_not_supported.__name__)
