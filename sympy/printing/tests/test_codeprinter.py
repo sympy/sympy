@@ -1,4 +1,5 @@
 from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.str import StrPrinter
 from sympy.core import symbols
 from sympy.core.symbol import Dummy
 from sympy.utilities.pytest import raises
@@ -41,3 +42,7 @@ def test_issue_15791():
     CodePrinter._print_not_supported.__name__)
     assert (CodePrinter._print_ImmutableSparseMatrix.__name__ ==
     CodePrinter._print_not_supported.__name__)
+    assert (CodePrinter._print_MutableSparseMatrix.__name__ !=
+    StrPrinter._print_MatrixBase.__name__)
+    assert (CodePrinter._print_ImmutableSparseMatrix.__name__ !=
+    StrPrinter._print_MatrixBase.__name__)
