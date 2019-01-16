@@ -1220,11 +1220,3 @@ def test_Subs_Derivative():
     ans = 3*x**2*exp(1/x)*exp(x**3) - exp(1/x)*exp(x**3)/x**2
     assert all(subs(i).doit().expand() == ans for i in eqs)
     assert all(subs(i.doit()).doit().expand() == ans for i in eqs)
-
-def test_log_concave():
-    assert log_concave(cos(2*x), x) == True
-    assert log_concave(1/x, x) == False
-
-def test_log_convex():
-    assert log_convex(exp(x), x) == True
-    assert log_convex(cos(x), x) == False

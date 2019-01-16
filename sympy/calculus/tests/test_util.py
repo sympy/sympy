@@ -1,7 +1,7 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 periodicity, lcim, AccumBounds)
+                                 periodicity, lcim, AccumBounds, log_convex, log_concave)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
@@ -160,6 +160,24 @@ def test_lcim():
     assert lcim([2*pi, pi/2]) == 2*pi
     assert lcim([S(1), 2*pi]) is None
     assert lcim([S(2) + 2*E, E/3 + S(1)/3, S(1) + E]) == S(2) + 2*E
+
+def test_log_convex():
+
+    assert log_convex(exp(x**2.5), x) == True
+    assert log_convex(exp(x), x, strict = True) == False
+    assert log_convex(x**3, x) == False
+    assert log_convex(x**(-2), x) == True
+    assert log_convex(1, x) == True
+    assert log_convex(1, x, strict) == False
+
+def test_log_concave():
+
+    assert log_concave(exp(x**2.5), x) == False
+    assert log_concave(exp(x), x, strict = True) == False
+    assert log_concave(x**3, x) == True
+    assert log_concave(x**(-2), x) == False
+    assert log_concave(1, x) == True
+    assert log_concave(1, x, strict) == False
 
 
 def test_AccumBounds():

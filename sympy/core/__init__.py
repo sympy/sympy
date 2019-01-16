@@ -22,7 +22,7 @@ from .function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     Function, Subs, expand, PoleError, count_ops, \
     expand_mul, expand_log, expand_func, \
     expand_trig, expand_complex, expand_multinomial, nfloat, \
-    expand_power_base, expand_power_exp, log_concave, log_convex
+    expand_power_base, expand_power_exp
 from .evalf import PrecisionExhausted, N
 from .containers import Tuple, Dict
 from .exprtools import gcd_terms, factor_terms, factor_nc

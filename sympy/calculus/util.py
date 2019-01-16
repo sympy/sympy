@@ -13,6 +13,7 @@ from sympy.utilities import filldedent
 from sympy.simplify.radsimp import denom
 from sympy.polys.rationaltools import together
 from sympy.core.compatibility import iterable
+from sympy.solvers.inequalities import solve_univariate_inequality
 
 def continuous_domain(f, symbol, domain):
     """
@@ -569,6 +570,79 @@ def lcim(numbers):
 
     return result
 
+def log_convex(func, *syms, **kwargs):
+    """Checks if the function passed in the argument is logarithamically convex.
+    If the function is logarithamically convex then it return `True`, otherwise,
+    `False`.
+    To check for strict logarithmic convexity, `strict = True` can be used.
+
+    Examples
+    ========
+
+    >>> from sympy import *
+    >>> x = symbols('x', real = True, positive = True)
+    >>> log_convex(exp(x), x, strict = True)
+    False
+    >>> log_convex(x**(-1), x)
+    True
+    """
+
+    if len(syms) > 1:
+        raise NotImplementedError("Log convexity check for multivariate functions is not implemented yet.")
+
+    func = _sympify(func)
+    strictness = kwargs.get('strict', False)
+    var = syms[0]
+    upper_bound = 1
+    if func.diff(var) == 0:
+        ratio = func * func.diff(var).diff(var)
+        upper_bound = 0
+    else:
+        ratio = func * func.diff(var).diff(var) / (func.diff(var)**2)
+    if strictness:
+        comp = ratio <= upper_bound
+    else:
+        comp = ratio < upper_bound
+    if solve_univariate_inequality(comp, var):
+        return False
+    return True
+
+def log_concave(func, *syms, **kwargs):
+    """Checks if the function passed in the argument is logarithamically concave.
+    If the function is logarithamically concave then it return `True`, otherwise,
+    `False`.
+    To check for strict logarithmic concavity, `strict = True` can be used.
+
+    Examples
+    ========
+
+    >>> from sympy import *
+    >>> x = symbols('x', real = True, positive = True)
+    >>> log_concave(exp(x), x, strict = True)
+    False
+    >>> log_concave(exp(-x**2/2), x)
+    True
+    """
+
+    if len(syms) > 1:
+        raise NotImplementedError("Log concavity check for multivariate functions is not implemented yet.")
+
+    func = _sympify(func)
+    strictness = kwargs.get('strict', False)
+    var = syms[0]
+    upper_bound = 1
+    if func.diff(var) == 0:
+        ratio = func * func.diff(var).diff(var)
+        upper_bound = 0
+    else:
+        ratio = func * func.diff(var).diff(var) / (func.diff(var)**2)
+    if strictness:
+        comp = ratio >= upper_bound
+    else:
+        comp = ratio > upper_bound
+    if solve_univariate_inequality(comp, var):
+        return False
+    return True
 
 class AccumulationBounds(AtomicExpr):
     r"""
