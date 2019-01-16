@@ -704,6 +704,18 @@ def _get_doctest_blacklist():
             "sympy/printing/theanocode.py",
             "doc/src/modules/numeric-computation.rst",
         ])
+    elif import_module('numpy') and import_module('distutils'):
+        # Check version of NumPy and Theano, see https://github.com/sympy/sympy/issues/15784
+        # and https://github.com/Theano/Theano/pull/6671
+        import theano
+        import numpy
+        from distutils.version import LooseVersion as V
+
+        if V(numpy.version.version) >= V("1.16.0") and V(theano.version.version) <= V("1.0.3"):
+            blacklist.extend([
+            "sympy/printing/theanocode.py",
+            "doc/src/modules/numeric-computation.rst",
+            ])
 
     if import_module('antlr4') is None:
         blacklist.extend([

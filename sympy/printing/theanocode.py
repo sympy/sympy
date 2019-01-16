@@ -452,20 +452,20 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
 
     A simple function with one input and one output:
 
-    >>> f1 = theano_function([x], [x**2 - 1], scalar=True) #doctest: +SKIP
-    >>> f1(3) #doctest: +SKIP
+    >>> f1 = theano_function([x], [x**2 - 1], scalar=True)
+    >>> f1(3)
     8.0
 
     A function with multiple inputs and one output:
 
-    >>> f2 = theano_function([x, y, z], [(x**z + y**z)**(1/z)], scalar=True) #doctest: +SKIP
-    >>> f2(3, 4, 2) #doctest: +SKIP
+    >>> f2 = theano_function([x, y, z], [(x**z + y**z)**(1/z)], scalar=True)
+    >>> f2(3, 4, 2)
     5.0
 
     A function with multiple inputs and multiple outputs:
 
-    >>> f3 = theano_function([x, y], [x**2 + y**2, x**2 - y**2], scalar=True) #doctest: +SKIP
-    >>> f3(2, 3) #doctest: +SKIP
+    >>> f3 = theano_function([x, y], [x**2 + y**2, x**2 - y**2], scalar=True)
+    >>> f3(2, 3)
     [13.0, -5.0]
 
     See also

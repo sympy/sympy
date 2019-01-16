@@ -11,15 +11,7 @@ from __future__ import print_function
 
 # files listed here can be in unix forward slash format with paths
 # listed relative to sympy (which contains bin, etc...)
-
-# Check version of NumPy and Theano, see https://github.com/sympy/sympy/issues/15784
-# and https://github.com/Theano/Theano/pull/6671
-import numpy as np
-from distutils.version import LooseVersion as V
-if V(np.version.version) >= V("1.16.0") and V(theano.version.version) <= V("1.0.3"):
-    blacklist = ["doc/src/modules/numeric-computation.rst"]
-else:
-    blacklist = []
+blacklist = []
 
 import sys
 import os
