@@ -10,7 +10,7 @@ cache instead.
 import logging
 
 from sympy.external import import_module
-from sympy.utilities.pytest import raises, SKIP
+from sympy.utilities.pytest import raises, SKIP, skip
 
 theanologger = logging.getLogger('theano.configdefaults')
 theanologger.setLevel(logging.CRITICAL)
@@ -20,10 +20,18 @@ theanologger.setLevel(logging.WARNING)
 
 if theano:
     import numpy as np
+    import distutils
     ts = theano.scalar
     tt = theano.tensor
     xt, yt, zt = [tt.scalar(name, 'floatX') for name in 'xyz']
     Xt, Yt, Zt = [tt.tensor('floatX', (False, False), name=n) for n in 'XYZ']
+
+    # Check version of NumPy and Theano, see https://github.com/sympy/sympy/issues/15784
+    # and https://github.com/Theano/Theano/pull/6671
+    if distutils.version.LooseVersion(np.version.version) >= distutils.version.LooseVersion("1.16.0") and distutils.version.LooseVersion(theano.version.version) <= distutils.version.LooseVersion("1.0.3"):
+        skiptest = True
+    else:
+        skiptest = False
 else:
     #bin/test will not execute any tests now
     disabled = True
@@ -274,11 +282,19 @@ def test_Derivative():
 
 def test_theano_function_simple():
     """ Test theano_function() with single output. """
+
+    if skiptest:
+        skip("Bad combination of NumPy and Theano versions")
+
     f = theano_function_([x, y], [x+y])
     assert f(2, 3) == 5
 
 def test_theano_function_multi():
     """ Test theano_function() with multiple outputs. """
+
+    if skiptest:
+        skip("Bad combination of NumPy and Theano versions")
+
     f = theano_function_([x, y], [x+y, x-y])
     o1, o2 = f(2, 3)
     assert o1 == 5
@@ -286,6 +302,10 @@ def test_theano_function_multi():
 
 def test_theano_function_numpy():
     """ Test theano_function() vs Numpy implementation. """
+
+    if skiptest:
+        skip("Bad combination of NumPy and Theano versions")
+
     f = theano_function_([x, y], [x+y], dim=1,
                          dtypes={x: 'float64', y: 'float64'})
     assert np.linalg.norm(f([1, 2], [3, 4]) - np.asarray([4, 6])) < 1e-9
@@ -298,6 +318,9 @@ def test_theano_function_numpy():
 
 
 def test_theano_function_matrix():
+    if skiptest:
+        skip("Bad combination of NumPy and Theano versions")
+
     m = sy.Matrix([[x, y], [z, x + y + z]])
     expected = np.array([[1.0, 2.0], [3.0, 1.0 + 2.0 + 3.0]])
     f = theano_function_([x, y, z], [m])
@@ -319,6 +342,9 @@ def test_theano_function_kwargs():
     """
     Test passing additional kwargs from theano_function() to theano.function().
     """
+    if skiptest:
+        skip("Bad combination of NumPy and Theano versions")
+
     import numpy as np
     f = theano_function_([x, y, z], [x+y], dim=1, on_unused_input='ignore',
             dtypes={x: 'float64', y: 'float64', z: 'float64'})
@@ -334,6 +360,9 @@ def test_theano_function_kwargs():
 
 def test_theano_function_scalar():
     """ Test the "scalar" argument to theano_function(). """
+
+    if skiptest:
+        skip("Bad combination of NumPy and Theano versions")
 
     args = [
         ([x, y], [x + y], None, [0]),  # Single 0d output
