@@ -452,8 +452,8 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
 
     A simple function with one input and one output:
 
-    >>> f1 = theano_function([x], [x**2 - 1], scalar=True)
-    >>> f1(3)
+    >>> f1 = theano_function([x], [x**2 - 1], scalar=True) #doctest: +SKIP
+    >>> f1(3) #doctest: +SKIP
     8.0
 
     A function with multiple inputs and one output:
