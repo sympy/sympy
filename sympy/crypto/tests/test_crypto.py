@@ -13,7 +13,7 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_elgamal, decipher_elgamal, dh_private_key, dh_public_key,
       dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
       decipher_bifid, bifid_square, padded_key, uniq, decipher_gm,
-      encipher_gm, gm_public_key, gm_private_key)
+      encipher_gm, gm_public_key, gm_private_key, encipher_railfence, decipher_railfence)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -22,6 +22,15 @@ from sympy.utilities.pytest import raises, slow
 
 from random import randrange
 
+def test_encipher_railfence():
+    assert encipher_railfence("hello world",2) == "hlowrdel ol"
+    assert encipher_railfence("hello world",3) == "horel ollwd"
+    assert encipher_railfence("hello world",4) == "hwe olordll"
+
+def test_decipher_railfence():
+    assert decipher_railfence("hlowrdel ol",2) == "hello world"
+    assert decipher_railfence("horel ollwd",3) == "hello world"
+    assert decipher_railfence("hwe olordll",4) == "hello world"
 
 def test_cycle_list():
     assert cycle_list(3, 4) == [3, 0, 1, 2]
