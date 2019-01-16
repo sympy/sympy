@@ -20,7 +20,8 @@ theanologger.setLevel(logging.WARNING)
 
 if theano:
     import numpy as np
-    import distutils
+    from distutils.version import LooseVersion as V
+
     ts = theano.scalar
     tt = theano.tensor
     xt, yt, zt = [tt.scalar(name, 'floatX') for name in 'xyz']
@@ -28,7 +29,7 @@ if theano:
 
     # Check version of NumPy and Theano, see https://github.com/sympy/sympy/issues/15784
     # and https://github.com/Theano/Theano/pull/6671
-    if distutils.version.LooseVersion(np.version.version) >= distutils.version.LooseVersion("1.16.0") and distutils.version.LooseVersion(theano.version.version) <= distutils.version.LooseVersion("1.0.3"):
+    if V(np.version.version) >= V("1.16.0") and V(theano.version.version) <= V("1.0.3"):
         skiptest = True
     else:
         skiptest = False
