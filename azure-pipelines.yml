@@ -4,7 +4,7 @@ variables:
   conda.optional.dependencies: >-
     python=$(python.version)
     mpmath
-    numpy<=1.15.4
+    numpy
     scipy
     gmpy2
     matplotlib>=2.2
