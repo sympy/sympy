@@ -1193,6 +1193,28 @@ class Beam(object):
         m : Sympifiable
             A symbol or a value representing the bending moment at the required cross-section of
             the beam.
+
+        Example
+        =======
+        There is a beam of length 6 m with a u.d.l of 40 KN/m over its length. The beam has a rectangular
+        cross-section(0.3 x 0.6 m) with moment of inertia. The bending stress at a point
+        0.2 m above the neutral axis and at a cross-section which is 4 meters from the start of the beam
+        has to be determined.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols, Symbol
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(6, E, I)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(40, 0, 0, end=6)
+        >>> b.apply_load(R2, 6, -1)
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> moment = b.bending_moment()
+        >>> x = Symbol('x')
+        >>> moment = abs(moment.subs(x, 4))
+        >>> b.bending_stress(0.2, moment)
+        32.0/I
         """
         b_stress = (m*y)/self.second_moment
         return b_stress
@@ -1235,6 +1257,37 @@ class Beam(object):
             A symbol or a value representing the width of the beam cross section at that point.
         v : Sympifiable
             A symbol or a value representing the shear force at the required cross section of the beam.
+
+        Example
+        =======
+        There is symmetrical I-section beam with flange width as `W` and web width as `w`. The total height
+        is  `D` while the height of the web is `d`.
+        The first moment of area at a point on the web at `y` units above the neutral axis is determined as:
+        Q = Q_flange + Q_web
+        Therefore shear stress = V(Q_flange + Q_web)/I*b
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I, l = symbols('E, I, l')
+        >>> b = Beam(l, E, I)
+        >>> y, W, D, w, d, F = symbols('y, W, D, w, d, F')
+        >>> q_flange = W*(D**2 - d**2)/8
+        >>> q_web = w*((d**2)/4 - y**2)/2
+        >>> q = q_flange + q_web
+        >>> tau = b.shear_stress(q, w, F)
+        >>> tau               # shear stress at a point on the web at `y` units above the neutral axis
+        F*(W*(D**2 - d**2)/8 + w*(d**2/4 - y**2)/2)/(I*w)
+        >>> q_neutral_axis = q.subs(y, 0)
+        >>> tau_neutral_axis = b.shear_stress(q_neutral_axis, w, F)
+        >>> tau_neutral_axis           # shear stress on the neutral axis
+        F*(W*(D**2 - d**2)/8 + d**2*w/8)/(I*w)
+        >>> q_top_of_web = q.subs(y, d/2)
+        >>> tau_top_of_web = b.shear_stress(q_top_of_web, w, F)
+        >>> tau_top_of_web              # shear stress at the top of web
+        F*W*(D**2 - d**2)/(8*I*w)
+
+        The above example is simply a cross sectional analysis. Load(s) can be applied on the beam to calculate
+        the shear force on the beam if needed.
         """
         shear = (q*v)/(self.second_moment*b)
         return shear
