@@ -622,6 +622,13 @@ def test_LUdecomp():
     P, L, Dee, U = M.LUdecompositionFF()
     assert P*M == L*Dee.inv()*U
 
+    # issue 15794
+    M = Matrix(
+        [[1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]]
+    )
+    raises(ValueError, lambda : M.LUdecomposition_Simple(rankcheck=True))
 
 def test_LUsolve():
     A = Matrix([[2, 3, 5],
