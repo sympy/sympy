@@ -2685,14 +2685,15 @@ def _tsolve(eq, sym, **flags):
                         check = _solve(lhs.exp, sym, **flags)
                         # other divisors
                         for d in (i for i in divisors(abs(rhs.p)) if i != 1):
-                            b, t = integer_log(rhs.p, d)
+                            e, t = integer_log(rhs.p, d)
                             if not t:
                                 continue  # rhs.p != d**b
                             for s in divisors(abs(rhs.q)):
-                                if s**b== rhs.q:
+                                if s**e== rhs.q:
                                     r = Rational(d, s)
                                     check.extend(_solve(lhs.base - r, sym, **flags))
                                     check.extend(_solve(lhs.base + r, sym, **flags))
+                                    check.extend(_solve(lhs.exp - e, sym, **flags))
                         for s in check:
                             # rational solutions should easily pass 0 test
                             if eq.subs(sym, s) == 0:
