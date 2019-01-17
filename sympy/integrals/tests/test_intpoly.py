@@ -1,6 +1,6 @@
 from sympy import sqrt, Abs
 
-from sympy.core import S
+from sympy.core import S, Symbol
 
 from sympy.integrals.intpoly import (decompose, best_origin,
                                      polytope_integrate)
@@ -116,34 +116,63 @@ def test_polytope_integrate():
     assert polytope_integrate(fig1, x**2 + x*y + y**2) ==\
         S(2031627344735367)/(8*10**12)
 
+    # Using desired decimal precision. Internally, Gauss-Legendre
+    # quadrature is used to compute till desired precision
+    assert Abs(polytope_integrate(fig1, x ** 2 + x * y + y ** 2, dps=5) -
+               253.95) < 0.005
+    assert Abs(polytope_integrate(fig1, x ** 2 + x * y + y ** 2, dps=10) -
+               253.9534181) < 1e-8
+
     fig2 = Polygon(Point(4.561, 2.317), Point(1.491, -1.315),
                    Point(-3.310, -3.164), Point(-4.845, -3.110),
                    Point(-4.569, 1.867))
-    assert polytope_integrate(fig2, x**2 + x*y + y**2) ==\
+    assert polytope_integrate(fig2, x ** 2 + x * y + y ** 2) == \
         S(517091313866043)/(16*10**11)
+    assert Abs(polytope_integrate(fig2, x ** 2 + x * y + y ** 2, dps=5) -
+               323.18) < 0.005
+    assert Abs(polytope_integrate(fig2, x ** 2 + x * y + y ** 2, dps=10) -
+               323.1820712) < 5e-8
 
     fig3 = Polygon(Point(-2.740, -1.888), Point(-3.292, 4.233),
                    Point(-2.723, -0.697), Point(-0.643, -3.151))
-    assert polytope_integrate(fig3, x**2 + x*y + y**2) ==\
+    assert polytope_integrate(fig3, x**2 + x*y + y**2) == \
         S(147449361647041)/(8*10**12)
+    assert Abs(polytope_integrate(fig3, x ** 2 + x * y + y ** 2, dps=5) -
+               18.431) < 0.0005
+    assert Abs(polytope_integrate(fig3, x ** 2 + x * y + y ** 2, dps=10) -
+               18.43117021) < 5e-9
 
     fig4 = Polygon(Point(0.211, -4.622), Point(-2.684, 3.851),
                    Point(0.468, 4.879), Point(4.630, -1.325),
                    Point(-0.411, -1.044))
-    assert polytope_integrate(fig4, x**2 + x*y + y**2) ==\
+    assert polytope_integrate(fig4, x ** 2 + x * y + y ** 2) == \
         S(180742845225803)/(10**12)
+    assert Abs(polytope_integrate(fig4, x ** 2 + x * y + y ** 2, dps=5) -
+               180.74) < 0.005
+    assert Abs(polytope_integrate(fig4, x ** 2 + x * y + y ** 2, dps=10) -
+               180.7428452) < 5e-8
 
-    #  Tests for many polynomials with maximum degree given(2D case).
+    # Tests for many polynomials with maximum degree given(2D case).
     tri = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
-    polys = []
     expr1 = x**9*y + x**7*y**3 + 2*x**2*y**8
     expr2 = x**6*y**4 + x**5*y**5 + 2*y**10
     expr3 = x**10 + x**9*y + x**8*y**2 + x**5*y**5
-    polys.extend((expr1, expr2, expr3))
-    result_dict = polytope_integrate(tri, polys, max_degree=10)
-    assert result_dict[expr1] == S(615780107)/594
-    assert result_dict[expr2] == S(13062161)/27
-    assert result_dict[expr3] == S(1946257153)/924
+    polys = [expr1, expr2, expr3]
+    assert polytope_integrate(tri, polys, max_degree=10) == {
+        x ** 9 * y + x ** 7 * y ** 3 + 2 * x ** 2 * y ** 8: S(615780107) / 594,
+        x ** 6 * y ** 4 + x ** 5 * y ** 5 + 2 * y ** 10: S(13062161) / 27,
+        x ** 10 + x ** 9 * y + x ** 8 * y ** 2 + x ** 5 * y ** 5: S(1946257153) / 924}
+
+    # For a desired decimal precision
+    result_dict = polytope_integrate(tri, polys, dps=5, max_degree=10)
+    assert Abs(result_dict[expr1] - 1.0367e+6) < 50
+    assert Abs(result_dict[expr2] - 4.8378e+5) < 50
+    assert Abs(result_dict[expr3] - 2.1063e+6) < 50
+
+    result_dict = polytope_integrate(tri, polys, dps=10, max_degree=10)
+    assert Abs(result_dict[expr1] - 1036666.847) < 0.0005
+    assert Abs(result_dict[expr2] - 483783.7407) < 0.0005
+    assert Abs(result_dict[expr3] - 2106338.910) < 0.0005
 
     #  Tests when all integral of all monomials up to a max_degree is to be
     #  calculated.
@@ -163,6 +192,48 @@ def test_polytope_integrate():
                                                 y ** 3: S(1) / 4,
                                                 x ** 2: S(1) / 3,
                                                 x * y ** 3: S(1) / 8}
+
+    # For a desired decimal precision
+    result_dict = polytope_integrate(Polygon(Point(0, 0), Point(0, 1),
+                                             Point(1, 1), Point(1, 0)),
+                                     max_degree=4, dps=5)
+
+    assert result_dict[0] == 0
+    assert result_dict[1] == 1.0000
+    assert Abs(result_dict[x*y**3] - 0.12500) < 5e-6
+    assert Abs(result_dict[x**2*y**2] - 0.11111) < 5e-6
+    assert Abs(result_dict[x**4] - 0.20000) < 5e-6
+    assert Abs(result_dict[y] - 0.50000) < 5e-6
+    assert Abs(result_dict[y**2] - 0.33333) < 5e-6
+    assert Abs(result_dict[x**3*y] - 0.12500) < 5e-6
+    assert Abs(result_dict[x**2] - 0.33333) < 5e-6
+    assert Abs(result_dict[y**3] - 0.25000) < 5e-6
+    assert Abs(result_dict[x*y**2] - 0.16667) < 5e-6
+    assert Abs(result_dict[x**3] - 0.25000) < 5e-6
+    assert Abs(result_dict[y**4] - 0.20000) < 5e-6
+    assert Abs(result_dict[x**2*y] - 0.16667) < 5e-6
+    assert Abs(result_dict[x] - 0.50000) < 5e-6
+    assert Abs(result_dict[x*y] - 0.25000) < 5e-6
+
+    result_dict = polytope_integrate(Polygon(Point(0, 0), Point(0, 1),
+                                             Point(1, 1), Point(1, 0)),
+                                     max_degree=4, dps=10)
+    assert result_dict[0] == 0
+    assert result_dict[1] == 1.000000000
+    assert Abs(result_dict[x * y ** 3] - 0.1250000000) < 5e-11
+    assert Abs(result_dict[x ** 2 * y ** 2] - 0.1111111111) < 5e-11
+    assert Abs(result_dict[x ** 4] - 0.2000000000) < 5e-11
+    assert Abs(result_dict[y] - 0.5000000000) < 5e-11
+    assert Abs(result_dict[y ** 2] - 0.3333333333) < 5e-11
+    assert Abs(result_dict[x ** 3 * y] - 0.1250000000) < 5e-11
+    assert Abs(result_dict[x ** 2] - 0.3333333333) < 5e-11
+    assert Abs(result_dict[y ** 3] - 0.2500000000) < 5e-11
+    assert Abs(result_dict[x * y ** 2] - 0.1666666667) < 5e-11
+    assert Abs(result_dict[x ** 3] - 0.2500000000) < 5e-11
+    assert Abs(result_dict[y ** 4] - 0.2000000000) < 5e-11
+    assert Abs(result_dict[x ** 2 * y] - 0.1666666667) < 5e-11
+    assert Abs(result_dict[x] - 0.5000000000) < 5e-11
+    assert Abs(result_dict[x * y] - 0.2500000000) < 5e-11
 
     #  Tests for 3D polytopes
     cube1 = [[(0, 0, 0), (0, 6, 6), (6, 6, 6), (3, 6, 0),
@@ -189,11 +260,26 @@ def test_polytope_integrate():
              [0, 1, 2], [2, 4, 1], [0, 3, 2]]
 
     assert polytope_integrate(cube2, x ** 2 + y ** 2 + x * y + z ** 2) ==\
-           S(15625)/4
+        S(15625)/4
     assert polytope_integrate(cube3, x ** 2 + y ** 2 + x * y + z ** 2) ==\
-           S(33835) / 12
+        S(33835) / 12
     assert polytope_integrate(cube4, x ** 2 + y ** 2 + x * y + z ** 2) ==\
-           S(37) / 960
+        S(37) / 960
+
+    # For a desired decimal precision
+    assert Abs(polytope_integrate(cube2, x ** 2 + y ** 2 + x * y + z ** 2,
+                                  dps=5) - 3906.3) < 0.051
+    assert Abs(polytope_integrate(cube3, x ** 2 + y ** 2 + x * y + z ** 2,
+                                  dps=5) - 2819.6) < 0.051
+    assert Abs(polytope_integrate(cube4, x ** 2 + y ** 2 + x * y + z ** 2,
+                                  dps=5) - 0.038542) < 5e-7
+
+    assert Abs(polytope_integrate(cube2, x ** 2 + y ** 2 + x * y + z ** 2,
+                              dps=10) - 3906.250000) < 5e-11
+    assert Abs(polytope_integrate(cube3, x ** 2 + y ** 2 + x * y + z ** 2,
+                              dps=10) - 2819.583333) < 5e-7
+    assert polytope_integrate(cube4, x ** 2 + y ** 2 + x * y + z ** 2,
+                              dps=10) - 0.03854166667 < 5e-12
 
     #  Test cases from Mathematica's PolyhedronData library
     octahedron = [[(S(-1) / sqrt(2), 0, 0), (0, S(1) / sqrt(2), 0),
@@ -203,6 +289,10 @@ def test_polytope_integrate():
                   [4, 2, 5], [2, 0, 1], [5, 2, 1]]
 
     assert polytope_integrate(octahedron, 1) == sqrt(2) / 3
+
+    # For a desired decimal precision
+    assert Abs(polytope_integrate(octahedron, 1, dps=5) - 0.47140) < 5e-6
+    assert Abs(polytope_integrate(octahedron, 1, dps=10) - 0.4714045208) < 5e-11
 
     great_stellated_dodecahedron =\
         [[(-0.32491969623290634095, 0, 0.42532540417601993887),
@@ -233,9 +323,9 @@ def test_polytope_integrate():
          [14, 16, 6, 9, 18], [19, 8, 7, 17, 15]]
     #  Actual volume is : 0.163118960624632
     assert Abs(polytope_integrate(great_stellated_dodecahedron, 1) -\
-        0.163118960624632) < 1e-12
+               0.163118960624632) < 1e-12
 
-    expr = x **2 + y ** 2 + z ** 2
+    expr = x ** 2 + y ** 2 + z ** 2
     octahedron_five_compound = [[(0, -0.7071067811865475244, 0),
                                  (0, 0.70710678118654752440, 0),
                                  (0.1148764602736805918,
@@ -478,8 +568,7 @@ def test_polytope_integrate():
                       [16, 72, 69], [44, 89, 62], [30, 69, 68], [45, 64, 91]]
     #  Actual volume is : 51.405764746872634
     assert Abs(polytope_integrate(echidnahedron, 1) - 51.4057647468726) < 1e-12
-    assert Abs(polytope_integrate(echidnahedron, expr) - 253.569603474519) <\
-    1e-12
+    assert Abs(polytope_integrate(echidnahedron, expr) - 253.569603474519) < 1e-12
 
     #  Tests for many polynomials with maximum degree given(2D case).
     assert polytope_integrate(cube2, [x**2, y*z], max_degree=2) == \
@@ -489,6 +578,43 @@ def test_polytope_integrate():
         {1: 125, x: 625 / S(2), x * z: 3125 / S(4), y: 625 / S(2),
          y * z: 3125 / S(4), z ** 2: 3125 / S(3), y ** 2: 3125 / S(3),
          z: 625 / S(2), x * y: 3125 / S(4), x ** 2: 3125 / S(3)}
+
+    # For a desired decimal precision
+    result_dict = polytope_integrate(cube2, [x**2, y*z], max_degree=2, dps=5)
+
+    assert Abs(result_dict[x ** 2] - 1041.7) < 0.05
+    assert Abs(result_dict[y * z] - 781.25) < 0.005
+
+    result_dict = polytope_integrate(cube2, [x ** 2, y * z], max_degree=2,
+                                     dps=10)
+    assert Abs(result_dict[x ** 2] - 1041.666667) < 5e-7
+    assert Abs(result_dict[y * z] - 781.2500000) < 5e-8
+
+    result_dict = polytope_integrate(cube2, max_degree=2, dps=5)
+
+    assert Abs(result_dict[1] - 125.00) < 0.005
+    assert Abs(result_dict[x ** 2] - 1041.7) < 0.05
+    assert Abs(result_dict[y * z] - 781.25) < 0.005
+    assert Abs(result_dict[x * z] - 781.25) < 0.005
+    assert Abs(result_dict[x] - 312.50) < 0.005
+    assert Abs(result_dict[y ** 2] - 1041.7) < 0.05
+    assert Abs(result_dict[x * y] - 781.25) < 0.005
+    assert Abs(result_dict[z] - 312.50) < 0.005
+    assert Abs(result_dict[y] - 312.50) < 0.005
+    assert Abs(result_dict[z ** 2] - 1041.7) < 0.05
+
+    result_dict = polytope_integrate(cube2, max_degree=2, dps=10)
+
+    assert Abs(result_dict[1] - 125.0000000) < 5e-8
+    assert Abs(result_dict[x ** 2] - 1041.666667) < 5e-7
+    assert Abs(result_dict[y * z] - 781.2500000) < 5e-8
+    assert Abs(result_dict[x * z] - 781.2500000) < 5e-8
+    assert Abs(result_dict[x] - 312.5000000) < 5e-8
+    assert Abs(result_dict[y ** 2] - 1041.666667) < 5e-7
+    assert Abs(result_dict[x * y] - 781.2500000) < 5e-8
+    assert Abs(result_dict[z] - 312.5000000) < 5e-8
+    assert Abs(result_dict[y] - 312.5000000) < 5e-8
+    assert Abs(result_dict[z ** 2] - 1041.666667) < 5e-7
 
 
 def test_polytopes_intersecting_sides():
