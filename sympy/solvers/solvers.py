@@ -2665,46 +2665,47 @@ def _tsolve(eq, sym, **flags):
                         return sol_base  # no solutions to remove so return now
                     return list(ordered(set(sol_base) - set(
                     _solve(lhs.exp, sym, **flags))))
-                elif rhs.is_Rational or lhs.exp.is_real:
-                    sol=[]
-                    if lhs.base.is_real and lhs.base<0:
-                        sol.extend(_solve(-abs(lhs.base)**lhs.exp - rhs, sym, **flags) + _solve(abs(lhs.base)**lhs.exp - rhs, sym, **flags))
+
+                if rhs.is_Rational or lhs.exp.is_real:
+                    sol = []
+                    if lhs.base.is_real and lhs.base < 0:
+                        a = abs(lhs.base)**lhs.exp
+                        sol.extend(_solve(a + rhs, sym, **flags))
+                        sol.extend(_solve(a - rhs, sym, **flags))
                     if lhs.base.is_positive:
                         if lhs.exp.is_real:
-                            sol.extend(_solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags))
+                            logform = lhs.exp*log(lhs.base) - log(rhs)
+                            sol.extend(_solve(logform, sym, **flags))
                         else:
                             rewrite = lhs.rewrite(exp)
                             if rewrite != lhs:
                                 sol.extend(_solve(rewrite - rhs, sym, **flags))
                     if rhs.is_Rational:
-                        b_pos=[]
-                        b_negi=[]
-                        e0=[]
-                        for i in divisors(abs(rhs.p)):
-                            b=0
-                            t=True
-                            if i!=1:
-                                b, t = integer_log(rhs.p,i)
-                            if t:
-                                for s in divisors(abs(rhs.q)):
-                                    if s**b== rhs.q:
-                                        b_pos.extend(_solve(lhs.base-Rational(i,s), sym, **flags))
-                                        b_negi.extend(_solve(lhs.base+Rational(i,s), sym, **flags))
-                                        e0.extend(_solve(lhs.exp-b, sym, **flags))
-                        for s in list(set(b_pos).union(e0, b_negi)):
+                        # solutions when divisor is 1
+                        check = _solve(lhs.exp, sym, **flags)
+                        # other divisors
+                        for d in (i for i in divisors(abs(rhs.p)) if i != 1):
+                            b, t = integer_log(rhs.p, d)
+                            for s in divisors(abs(rhs.q)):
+                                if s**b== rhs.q:
+                                    r = Rational(d, s)
+                                    check.extend(_solve(lhs.base - r, sym, **flags))
+                                    check.extend(_solve(lhs.base + r, sym, **flags))
+                        for s in check:
+                            # rational solutions should easily pass 0 test
                             if eq.subs(sym, s) == 0:
                                 sol.append(s)
                     return list(ordered(set(sol)))
-                elif rhs.is_irrational :
-                    sol=[]
+                elif rhs.is_irrational:
+                    sol = []
                     b, e = sqrtdenest(rhs).as_base_exp()
                     sol_base = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, **flags))]
                     sol_exp = [sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))]
                     for s in list(set(sol_base).intersection(sol_exp)):
-                        if eq.subs(sym, s) == 0:
+                        # irrational solutions may be harder to test
+                        if eq.subs(sym, s).equals(0):
                             sol.append(s)
                     return list(ordered(set(sol)))
-
                 else:
                     raise NotImplementedError
 
@@ -2723,6 +2724,7 @@ def _tsolve(eq, sym, **flags):
             elif lhs.func == LambertW:
                 return _solve(lhs.args[0] - rhs*exp(rhs), sym, **flags)
 
+        # XXX this is done above...will it be necessary here in any case?
         rewrite = lhs.rewrite(exp)
         if rewrite != lhs:
             return _solve(rewrite - rhs, sym, **flags)
