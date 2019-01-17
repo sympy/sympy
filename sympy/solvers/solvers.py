@@ -2686,6 +2686,8 @@ def _tsolve(eq, sym, **flags):
                         # other divisors
                         for d in (i for i in divisors(abs(rhs.p)) if i != 1):
                             b, t = integer_log(rhs.p, d)
+                            if not t:
+                                continue  # rhs.p != d**b
                             for s in divisors(abs(rhs.q)):
                                 if s**b== rhs.q:
                                     r = Rational(d, s)
