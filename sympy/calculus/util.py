@@ -570,87 +570,73 @@ def lcim(numbers):
 
     return result
 
-def log_convex(func, *syms, **kwargs):
-    """Checks if the function passed in the argument is logarithamically convex.
-    If the function is logarithamically convex then it return `True`, otherwise,
-    `False`.
-    To check for strict logarithmic convexity, `strict = True` can be used.
+def is_convex(f, *syms, domain = S.Reals):
+    """Determines the  convexity of the function passed in the argument.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    syms : Tuple of symbols
+        The variables with respect to which the convexity is to be determined.
+    domain : Interval
+        The domain over which the convexity of the function has to be checked.
+
+    Returns
+    =======
+
+    Boolean
+        The method returns `True` if the function is convex otherwise it
+        returns `False`.
+
+    Raises
+    ======
+
+    NotImplementedError
+        The check for the convexity of multivariate functions is not implemented yet.
+
+    Notes
+    =====
+
+    To determine concavity of a function pass `-f` as the concerned function.
+    To determine logarithmic convexity of a function pass log(f) as
+    concerned function.
+    To determine logartihmic concavity of a function pass -log(f) as
+    concerned of a function.
+
+    Currently, convexity check of multivariate functions is not handled.
 
     Examples
     ========
 
-    >>> from sympy import symbols, exp, log_convex
-    >>> x = symbols('x', real = True, positive = True)
-    >>> log_convex(exp(x), x, strict = True)
-    False
-    >>> log_convex(x**(-1), x)
+    >>> from sympy import symbols, exp, oo
+    >>> from sympy.calculus.util import is_convex
+    >>> x = symbols('x')
+    >>> is_convex(exp(x), x)
     True
+    >>> is_convex(x**3, x, domain = Interval(-1, oo))
+    False
 
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Logarithmically_convex_function
+    ..[1] https://en.wikipedia.org/wiki/Convex_function
+    ..[2] http://www.ifp.illinois.edu/~angelia/L3_convfunc.pdf
+    ..[3] https://en.wikipedia.org/wiki/Logarithmically_convex_function
+    ..[4] https://en.wikipedia.org/wiki/Logarithmically_concave_function
+    ..[5] https://en.wikipedia.org/wiki/Concave_function
+
     """
 
     if len(syms) > 1:
-        raise NotImplementedError("Log convexity check for multivariate functions is not implemented yet.")
+        raise NotImplementedError(
+            "The check for the convexity of multivariate functions is not implemented yet.")
 
-    func = _sympify(func)
-    strictness = kwargs.get('strict', False)
+    f = _sympify(f)
     var = syms[0]
-    upper_bound = 1
-    if func.diff(var) == 0:
-        ratio = func * func.diff(var).diff(var)
-        upper_bound = 0
-    else:
-        ratio = func * func.diff(var).diff(var) / (func.diff(var)**2)
-    if strictness:
-        comp = ratio <= upper_bound
-    else:
-        comp = ratio < upper_bound
-    if solve_univariate_inequality(comp, var):
-        return False
-    return True
-
-def log_concave(func, *syms, **kwargs):
-    """Checks if the function passed in the argument is logarithamically concave.
-    If the function is logarithamically concave then it return `True`, otherwise,
-    `False`.
-    To check for strict logarithmic concavity, `strict = True` can be used.
-
-    Examples
-    ========
-
-    >>> from sympy import symbols, exp, log_concave
-    >>> x = symbols('x', real = True, positive = True)
-    >>> log_concave(exp(x), x, strict = True)
-    False
-    >>> log_concave(exp(-x**2/2), x)
-    True
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Logarithmically_concave_function
-    """
-
-    if len(syms) > 1:
-        raise NotImplementedError("Log concavity check for multivariate functions is not implemented yet.")
-
-    func = _sympify(func)
-    strictness = kwargs.get('strict', False)
-    var = syms[0]
-    upper_bound = 1
-    if func.diff(var) == 0:
-        ratio = func * func.diff(var).diff(var)
-        upper_bound = 0
-    else:
-        ratio = func * func.diff(var).diff(var) / (func.diff(var)**2)
-    if strictness:
-        comp = ratio >= upper_bound
-    else:
-        comp = ratio > upper_bound
-    if solve_univariate_inequality(comp, var):
+    condition = f.diff(var, 2) < 0
+    if solve_univariate_inequality(condition, var, False, domain):
         return False
     return True
 
