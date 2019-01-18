@@ -2683,6 +2683,8 @@ def _tsolve(eq, sym, **flags):
                     if rhs.is_Rational:
                         # solutions when divisor is 1
                         check = _solve(lhs.exp, sym, **flags)
+                        check.extend(_solve(lhs.base - 1, sym, **flags))
+                        check.extend(_solve(lhs.base + 1, sym, **flags))
                         # other divisors
                         for d in (i for i in divisors(abs(rhs.p)) if i != 1):
                             e, t = integer_log(rhs.p, d)
