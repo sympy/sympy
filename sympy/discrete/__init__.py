@@ -1,8 +1,7 @@
 """This module contains functions which operate on discrete sequences.
 
 Transforms - ``fft``, ``ifft``, ``ntt``, ``intt``, ``fwht``, ``ifwht``,
-            ``mobius_transform``, ``inverse_mobius_transform``, ``dft_matrix``,
-            ``ìdft_matrix``
+            ``mobius_transform``, ``inverse_mobius_transform``
 
 Convolutions - ``convolution``, ``convolution_fft``, ``convolution_ntt``,
             ``convolution_fwht``, ``convolution_subset``,
@@ -10,5 +9,5 @@ Convolutions - ``convolution``, ``convolution_fft``, ``convolution_ntt``,
 """
 
 from .transforms import (fft, ifft, ntt, intt, fwht, ifwht,
-    mobius_transform, inverse_mobius_transform, dft_matrix, idft_matrix)
+    mobius_transform, inverse_mobius_transform)
 from .convolutions import convolution, covering_product, intersecting_product
