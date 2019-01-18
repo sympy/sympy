@@ -981,7 +981,7 @@ def solve(f, *symbols, **flags):
             if isinstance(res, (bool, BooleanFalse)) and flags.get('dict', False):
                 return []
             elif isinstance(res, (bool, BooleanTrue)) and flags.get('dict', False):
-                return [True]
+                return [res]
             return res
 
         if isinstance(fi, Poly):
