@@ -570,7 +570,7 @@ def lcim(numbers):
 
     return result
 
-def is_convex(f, *syms, domain = S.Reals):
+def is_convex(f, *syms, **kwargs):
     """Determines the  convexity of the function passed in the argument.
 
     Parameters
@@ -634,6 +634,7 @@ def is_convex(f, *syms, domain = S.Reals):
             "The check for the convexity of multivariate functions is not implemented yet.")
 
     f = _sympify(f)
+    domain = kwargs.get('domain', S.Reals)
     var = syms[0]
     condition = f.diff(var, 2) < 0
     if solve_univariate_inequality(condition, var, False, domain):
