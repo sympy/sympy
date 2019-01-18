@@ -603,14 +603,14 @@ def is_convex(f, *syms, **kwargs):
     To determine logarithmic convexity of a function pass log(f) as
     concerned function.
     To determine logartihmic concavity of a function pass -log(f) as
-    concerned of a function.
+    concerned function.
 
     Currently, convexity check of multivariate functions is not handled.
 
     Examples
     ========
 
-    >>> from sympy import symbols, exp, oo
+    >>> from sympy import symbols, exp, oo, Interval
     >>> from sympy.calculus.util import is_convex
     >>> x = symbols('x')
     >>> is_convex(exp(x), x)
