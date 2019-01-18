@@ -1138,7 +1138,7 @@ def dft_matrix(points, inverse=False, unitary=False, **kwargs):
     [1/2,  1/2],
     [1/2, -1/2]])
 
-    >>> dft_matrix(2, True)
+    >>> dft_matrix(2, unitary = True)
     Matrix([
     [sqrt(2)/2,  sqrt(2)/2],
     [sqrt(2)/2, -sqrt(2)/2]])
