@@ -2,9 +2,7 @@ from sympy import sqrt
 from sympy.core import S, Symbol, symbols, I
 from sympy.core.compatibility import range
 from sympy.discrete import (fft, ifft, ntt, intt, fwht, ifwht,
-    mobius_transform, inverse_mobius_transform, dft_matrix, idft_matrix)
-from sympy.matrices import Matrix, eye
-from sympy.simplify import simplify
+    mobius_transform, inverse_mobius_transform)
 from sympy.utilities.pytest import raises
 
 
