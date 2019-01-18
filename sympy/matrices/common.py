@@ -6,22 +6,28 @@ etc.).
 
 from __future__ import print_function, division
 
+from sympy.assumptions.refine import refine
+
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
-from sympy.core.expr import Expr
-from sympy.core.symbol import Symbol
-from sympy.core.function import count_ops
-from sympy.core.singleton import S
-from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, range, \
-    NotIterable, Iterable
+    NotIterable, Iterable, reduce, as_int, string_types
+from sympy.core.decorators import call_highest_priority
+from sympy.core.expr import Expr
+from sympy.core.function import count_ops
+from sympy.core.mod import Mod
+from sympy.core.numbers import pi, I
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+
+from sympy.functions import Abs
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
+
 from sympy.utilities.iterables import flatten
-from sympy.functions import Abs
-from sympy.core.compatibility import reduce, as_int, string_types
-from sympy.assumptions.refine import refine
-from sympy.core.decorators import call_highest_priority
 
 from types import FunctionType
 from collections import defaultdict
@@ -610,6 +616,13 @@ class MatrixSpecial(MatrixRequired):
     """Construction of special matrices"""
 
     @classmethod
+    def _eval_dft_matrix(cls, points, sgn, divisor):
+        def entry(i,j):
+            return exp(-sgn*I*Mod(i*j, points)*2*pi/points)/divisor
+
+        return cls._new(points, points, entry)
+
+    @classmethod
     def _eval_diag(cls, rows, cols, diag_dict):
         """diag_dict is a defaultdict containing
         all the entries of the diagonal matrix."""
@@ -652,6 +665,73 @@ class MatrixSpecial(MatrixRequired):
         def entry(i, j):
             return S.Zero
         return cls._new(rows, cols, entry)
+
+    @classmethod
+    def dft_matrix(kls, points, inverse=False, unitary=False, **kwargs):
+        r"""
+        Returns the Dicrete Fourier Transform matrix. The DFT matrix is the matrix
+        that a vector is multiplied with to compute the DFT. Note that using
+        `fft` is faster when computing the result of the transform.
+
+        Parameters
+        ==========
+
+        points : natural
+        Number of transform points
+
+        Optional parameters
+        ===================
+
+        inverse : boolean
+        If `True` the inverse Discrete Fourier Transform is returned. Default is `False`.
+
+        unitary : boolean
+        If `True` the (I)DFT matrix is scaled such that it is unitary. Default is `False`.
+
+        Examples
+        ========
+        >>> from sympy.matrices import dft_matrix
+
+        >>> dft_matrix(4)
+        Matrix([
+        [1,  1,  1,  1],
+        [1, -I, -1,  I],
+        [1, -1,  1, -1],
+        [1,  I, -1, -I]])
+
+        >>> dft_matrix(2, inverse = True)
+        Matrix([
+        [1/2,  1/2],
+        [1/2, -1/2]])
+
+        >>> dft_matrix(2, unitary = True)
+        Matrix([
+        [sqrt(2)/2,  sqrt(2)/2],
+        [sqrt(2)/2, -sqrt(2)/2]])
+
+        See also
+        ========
+        `discrete.fft`
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/DFT_matrix
+
+        """
+        klass = kwargs.get('cls', kls)
+        points = as_int(points)
+        divisor = 1
+        if unitary:
+            divisor = sqrt(points)
+        elif inverse:
+            divisor = points
+        if inverse:
+            sgn = -1
+        else:
+            sgn = 1
+
+        return klass._eval_dft_matrix(points, sgn, divisor)
 
     @classmethod
     def diag(kls, *args, **kwargs):
@@ -897,7 +977,6 @@ class MatrixSpecial(MatrixRequired):
         rows, cols = as_int(rows), as_int(cols)
 
         return klass._eval_zeros(rows, cols)
-
 
 class MatrixProperties(MatrixRequired):
     """Provides basic properties of a matrix."""

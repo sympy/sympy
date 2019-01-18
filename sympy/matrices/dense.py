@@ -1101,6 +1101,62 @@ def eye(*args, **kwargs):
 
     return Matrix.eye(*args, **kwargs)
 
+def dft_matrix(points, inverse=False, unitary=False, **kwargs):
+    r"""
+    Returns the Dicrete Fourier Transform matrix. The DFT matrix is the matrix
+    that a vector is multiplied with to compute the DFT. Note that using
+    `fft` is faster when computing the result of the transform.
+
+    Parameters
+    ==========
+
+    points : natural
+    Number of transform points
+
+    Optional parameters
+    ===================
+
+    inverse : boolean
+    If `True` the inverse Discrete Fourier Transform is returned. Default is `False`.
+
+    unitary : boolean
+    If `True` the (I)DFT matrix is scaled such that it is unitary. Default is `False`.
+
+    Examples
+    ========
+    >>> from sympy.matrices import dft_matrix
+
+    >>> dft_matrix(4)
+    Matrix([
+    [1,  1,  1,  1],
+    [1, -I, -1,  I],
+    [1, -1,  1, -1],
+    [1,  I, -1, -I]])
+
+    >>> dft_matrix(2, inverse = True)
+    Matrix([
+    [1/2,  1/2],
+    [1/2, -1/2]])
+
+    >>> dft_matrix(2, True)
+    Matrix([
+    [sqrt(2)/2,  sqrt(2)/2],
+    [sqrt(2)/2, -sqrt(2)/2]])
+
+    See also
+    ========
+    `discrete.fft`
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/DFT_matrix
+
+    """
+
+    from .dense import Matrix
+
+    return Matrix.dft_matrix(*args, **kwargs)
 
 def diag(*values, **kwargs):
     """Create a sparse, diagonal matrix from a list of diagonal values.
@@ -1360,6 +1416,23 @@ def ones(*args, **kwargs):
 
     return Matrix.ones(*args, **kwargs)
 
+def dft_matrix(*args, **kwargs):
+    """Returns a matrix of ones with ``rows`` rows and ``cols`` columns;
+    if ``cols`` is omitted a square matrix will be returned.
+
+    See Also
+    ========
+
+    zeros
+    eye
+    diag
+    """
+
+    if 'c' in kwargs:
+        kwargs['cols'] = kwargs.pop('c')
+    from .dense import Matrix
+
+    return Matrix.dft_matrix(*args, **kwargs)
 
 def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
                percent=100, prng=None):

@@ -11,7 +11,7 @@ from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
-    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
+    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, dft_matrix)
 from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
@@ -3262,3 +3262,19 @@ def test_legacy_det():
     assert M.det(method="bareis") == 123
     assert M.det(method="det_lu") == 123
     assert M.det(method="LU") == 123
+
+
+def test_dft_matrix():
+    for p in range(1, 7):
+        assert dft_matrix(p, unitary=True) == dft_matrix(p, unitary=True, inverse=True).H
+    assert dft_matrix(4)*dft_matrix(4, inverse=True) == eye(4)
+    assert dft_matrix(4, unitary=True)*dft_matrix(4, inverse=True, unitary=True) == eye(4)
+
+    assert dft_matrix(2) == Matrix([[1, 1], [1, -1]])
+
+    assert dft_matrix(2, inverse=True) == Matrix([[1/2, 1/2], [1/2, -1/2]])
+
+    assert simplify(dft_matrix(8)*dft_matrix(8, inverse=True)) == eye(8)
+    assert simplify(dft_matrix(8, unitary=True)*dft_matrix(8, inverse=True, unitary=True)) == eye(8)
+
+    raises(ValueError, lambda: dft_matrix(0.3))

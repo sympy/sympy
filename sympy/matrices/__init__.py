@@ -10,7 +10,7 @@ from .dense import (
     GramSchmidt, Matrix, casoratian, diag, eye, hessian, jordan_cell,
     list2numpy, matrix2numpy, matrix_multiply_elementwise, ones,
     randMatrix, rot_axis1, rot_axis2, rot_axis3, symarray, wronskian,
-    zeros)
+    zeros, dft_matrix)
 
 MutableDenseMatrix = MutableMatrix = Matrix
 
