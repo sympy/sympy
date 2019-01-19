@@ -21,7 +21,7 @@ from sympy.utilities.iterables import ibin
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _fourier_transform(seq, dps, inverse=False):
+def _fourier_transform(seq, dps, inverse=False, fourier_params=(1, 1)):
     """Utility function for the Discrete Fourier Transform"""
 
     if not iterable(seq):
@@ -36,6 +36,11 @@ def _fourier_transform(seq, dps, inverse=False):
     if n < 2:
         return a
 
+    (alpha, beta) = sympify(fourier_params)
+    beta = as_int(beta)
+    if beta != S.One and beta != S.NegativeOne:
+        raise NotImplementedError("The second fourier_params must be 1 or -1")
+
     b = n.bit_length() - 1
     if n&(n - 1): # not a power of 2
         b += 1
@@ -47,7 +52,7 @@ def _fourier_transform(seq, dps, inverse=False):
         if i < j:
             a[i], a[j] = a[j], a[i]
 
-    ang = -2*pi/n if inverse else 2*pi/n
+    ang = -2*pi*beta/n if inverse else 2*pi*beta/n
 
     if dps is not None:
         ang = ang.evalf(dps + 2)
@@ -63,14 +68,14 @@ def _fourier_transform(seq, dps, inverse=False):
                 a[i + j], a[i + j + hf] = u + v, u - v
         h *= 2
 
-    if inverse:
-        a = [(x/n).evalf(dps) for x in a] if dps is not None \
-                            else [x/n for x in a]
+    n = sympify(n)
+    denom = n**((S(1)+alpha)/S(2)) if inverse else n**((S(1)-alpha)/S(2))
+    a = [(x/denom).evalf(dps) for x in a] if dps else [x/denom for x in a]
 
     return a
 
 
-def fft(seq, dps=None):
+def fft(seq, dps=None, fourier_params=(1, 1)):
     r"""
     Performs the Discrete Fourier Transform (**DFT**) in the complex domain.
 
@@ -85,8 +90,62 @@ def fft(seq, dps=None):
 
     seq : iterable
         The sequence on which **DFT** is to be applied.
+
     dps : Integer
         Specifies the number of decimal digits for precision.
+
+    fourier_params : (Number, Number)
+        Specifies the formula used for Fourier transformation.
+
+        (1, 1) is the SymPy's defaults.
+
+        (1, -1) is equivalent to the NumPy and MATLAB's default settings for
+        the ``fft`` and ``ifft``.
+
+        (0, 1) is equivalent to the Mathematica's default settings for
+        ``Fourier`` and ``InverseFourier``.
+
+        (0, -1) is equivalent to the Maple's default settings for
+        ``FourierTransform`` and ``InverseFourierTransform``
+
+        For further information about the options and formulas, see ``Notes``
+        section.
+
+    Raises
+    ======
+
+    NotImplementedError :
+        If given ``fourier_params`` are not supported.
+
+    Notes
+    =====
+
+    The formula for computing Fourier transformation may vary across libraries,
+    and caution should be taken.
+
+    SymPy's default implementation uses the formula
+
+    `A[k] = \sum_{n=0}^{N-1} a[n] \omega_{N}^{k n}` for ``fft``
+
+    and `a[k] =\frac{1}{N} \sum_{n=0}^{N-1} A[n] \omega_{N}^{k n}`
+    for ``ifft``
+
+    where `\omega_{N} = e^{2 \pi i/N}`.
+
+    While it can be generalized as
+
+    `A[k] = \frac{1}{\sqrt{N^{1-\alpha}}}
+    \sum_{n=0}^{N-1} a[n] \omega_{N}^{k n}`
+    for ``fft``
+
+    and
+    `a[k] =\frac{1}{\sqrt{N^{1+\alpha}}}
+    \sum_{n=0}^{N-1} A[n] \omega_{N}^{k n}`
+    for ``ifft``
+
+    where `\omega_{N} = e^{2 \pi i \beta/N}`
+
+    while `(\alpha,\beta)` are ``fourier_params``.
 
     Examples
     ========
@@ -116,11 +175,13 @@ def fft(seq, dps=None):
 
     """
 
-    return _fourier_transform(seq, dps=dps)
+    return _fourier_transform(seq, dps=dps,
+        fourier_params=fourier_params)
 
 
-def ifft(seq, dps=None):
-    return _fourier_transform(seq, dps=dps, inverse=True)
+def ifft(seq, dps=None, fourier_params=(1, 1)):
+    return _fourier_transform(seq, dps=dps, inverse=True,
+        fourier_params=fourier_params)
 
 ifft.__doc__ = fft.__doc__
 
