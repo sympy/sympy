@@ -461,7 +461,7 @@ def test_max_deflection():
 
 
 def test_max_bending_stress():
-    # beam with circular cross section of diameter 120 mm
+    # beam with circular cross section of diameter 120 mm(0.12 m)
     E = Symbol('E')
     b = Beam(10, E, 0.00001018)
     R1, R2 = symbols('R1, R2')
@@ -469,7 +469,10 @@ def test_max_bending_stress():
     b.apply_load(R2, 10, -1)
     b.apply_load(1000, 0, 0, end=10)
     b.solve_for_reaction_loads(R1, R2)
+    I = Symbol('I')
     assert b.max_bending_stress(0.06) == ((5, 0.06), 73673870.3339882)
+    b.second_moment = I
+    assert b.max_bending_stress(0.06, 12500) == ((5, 0.06), 750.0/I)
 
 
 def test_max_shear_stress():
@@ -483,6 +486,7 @@ def test_max_shear_stress():
     b.solve_for_reaction_loads(R1, R2)
     b.solve_for_reaction_loads(R1, R2)
     assert b.max_shear_stress(z*((d**2)/4)/2, z, F) == ((0, 0), 3*F/(2*d*z))
+    assert b.max_shear_stress(z*((d**2)/4)/2, z) == ((0, 0), 7500/(d*z))
 
 
 def test_Beam3D():
