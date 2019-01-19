@@ -2703,10 +2703,18 @@ def _tsolve(eq, sym, **flags):
                     return list(ordered(set(sol)))
                 elif rhs.is_irrational:
                     sol = []
+                    if lhs.base.is_real and lhs.base < 0:
+                        a = abs(lhs.base)**lhs.exp
+                        sol.extend(_solve(a + rhs, sym, **flags))
+                        sol.extend(_solve(a - rhs, sym, **flags))
+                    b_l, e_l = lhs.base.as_base_exp()
+                    n, d = e_l*lhs.exp.as_numer_denom()
                     b, e = sqrtdenest(rhs).as_base_exp()
-                    sol_base = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, **flags))]
-                    sol_exp = [sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))]
-                    for s in list(set(sol_base).intersection(sol_exp)):
+                    check = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, **flags))]
+                    check.extend([sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))])
+                    if (e_l*d) !=1 :
+                        check.extend(_solve(b_l**(n) - rhs**(e_l*d), sym, **flags))
+                    for s in list(set(check)):
                         # irrational solutions may be harder to test
                         if eq.subs(sym, s).equals(0):
                             sol.append(s)
