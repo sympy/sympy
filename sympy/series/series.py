@@ -15,7 +15,7 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
     return expr.series(x, x0, n, dir)
 
 
-def lagrange_inversion_theorem(eq, no_of_terms = 3):
+def lagrange_inversion_theorem(eq, x, n=3, a=0):
     """
     The Lagrange inversion theorem (or Lagrange inversion formula, which we abbreviate
     as LIT), also known as the Lagrange--Bürmann formula, gives the Taylor series
@@ -37,7 +37,8 @@ def lagrange_inversion_theorem(eq, no_of_terms = 3):
     where f is analytic at a point a and f'(a) is not equal to 0.
     Then it is possible to invert or solve the equation for w in the form of a series:
 
-    w = a + \sum_{n = 1}^{oo} (g_n*(z - f(a))**n)/n!
+    . . math::
+    g(z) = a + \sum_{n = 1}^{oo} \frac{g_n (z - f(a))^n}{/n!}
 
     where
                       n-1
@@ -55,7 +56,12 @@ def lagrange_inversion_theorem(eq, no_of_terms = 3):
 
     eq : expression, the expansion of whose inverse is to be found.
 
-    no_of_terms : no of terms required in the expansion; default value is 3 terms.
+    x : variable, in terms of which equation is given, and in terms of which, the
+    expansion will be provided.
+
+    n : no of terms required in the expansion; default value is 3 terms.
+
+    a : point on x-axis in the neighbourhood of which, the inverse expansion is to be found.
 
     Examples
     ========
@@ -100,46 +106,52 @@ def lagrange_inversion_theorem(eq, no_of_terms = 3):
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/Lagrange_inversion_theorem
     .. [2] http://mathworld.wolfram.com/LagrangeInversionTheorem.html
     .. [3] http://www.cfm.brown.edu/people/dobrush/am33/Mathematica/lit.html
     """
-    from sympy.abc import w, x
 
     try:
-        eq.free_symbols
-    except:
-        raise AssertionError("The function provided is not analytic i.e. f' = 0. Lagrange's inversion theorem "
-                             "requires that the function be analytic")
-    if len(eq.free_symbols) == 2:
-        if not (x in eq.free_symbols and w in eq.free_symbols):
-            raise AssertionError("The function provided must be in terms of 'x' or 'w'")
-    if len(eq.free_symbols) == 1:
-        if not (x in eq.free_symbols or w in eq.free_symbols):
-            raise AssertionError("The function provided must be in terms of 'x' or 'w'")
+        not eq.free_symbols
+    except AttributeError:
+        raise ValueError("The function provided is not analytic i.e. f' = 0. Lagrange's inversion theorem requires "
+                         "that the function be analytic")
 
-    n = no_of_terms
+    if len(eq.free_symbols) == 1:
+        if x not in eq.free_symbols:
+            raise ValueError("The function variable provided does not match the equation variable")
+
+    w = x
     eq = eq.subs(x, w)
     z = eq
 
     z_diff = diff(eq, w)
-    t = 0
 
-    while (True):
-        if z_diff.subs(w, t) == 0 or not (z_diff.subs(w, t)).is_real:
-            t = t + 1
-            continue
-        else:
-            break
+    if z_diff.subs(w, a) == 0 or not (z_diff.subs(w, a)).is_real:
+        raise ValueError("The first derivative of the function is zero at the point 'a' provided i.e. f'(a) = 0. "
+                         "Lagrange's inversion theorem requires that the derivative of the function be non zero at "
+                         "the point 'a'.")
 
-    a = t
     f_a = z.subs(w, a)
-    sum = 0
+    result = a
 
-    while (n > 0):
-        l = limit(diff(((w - a) / (z - f_a)) ** n, w, n - 1), w, a)
-        sum = sum + (((z - f_a) ** n) / factorial(n)) * l
-        n = n - 1
+    if n == 1:
+        return result
 
-    sum = sum.subs(w, x)
-    return sum
+    a_1 = ((w - a)/(z - f_a))
+    l = limit(a_1, w, a)
+    result = result + l*(z - f_a)
+
+    if n == 2:
+        return result
+
+    a_2 = diff(((w - a)/(z - f_a))**2, w, 1)
+
+    for i in range(2, n):
+        l = limit(a_2, w, a)
+        result = result + (((z - f_a) ** i) / factorial(i)) * l
+        a_2 = (i+1) * ((w - a / z - f_a) ** i) * a_2
+
+    result = result.subs(w, x)
+    return result

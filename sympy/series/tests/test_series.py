@@ -221,25 +221,27 @@ def test_lagrange_inversion_theorem():
     from sympy import exp
 
     eq = 2 * y
-    raises(AssertionError, lambda: lagrange_inversion_theorem(eq))
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
 
-    eq1 = 2
-    raises(AssertionError, lambda: lagrange_inversion_theorem(eq1))
+    eq = 2
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
 
     eq = x ** 2
-    assert lagrange_inversion_theorem(eq) == x**2/2 + (x**2 - 1)**3/16 - (x**2 - 1)**2/8 - 1/2
-    assert lagrange_inversion_theorem(eq, 1) == x**2/2 - 1/2
-    assert lagrange_inversion_theorem(eq, 2) == x**2/2 - (x**2 - 1)**2/8 - 1/2
-    assert lagrange_inversion_theorem(eq, 4) == x**2/2 - 5*(x**2 - 1)**4/128 + (x**2 - 1)**3/16 - (x**2 - 1)**2/8 - 1/2
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, y, 1, 1))
+    assert lagrange_inversion_theorem(eq, x, 3, 1) == x**2/2 - (x**2 - 1)**2/8 + 1/2
+    assert lagrange_inversion_theorem(eq, x, 1, 1) == 1
+    assert lagrange_inversion_theorem(eq, x, 2, 1) == x**2/2 + 1/2
+    assert lagrange_inversion_theorem(eq, x, 4, 1) == x**2/2 - (x**2 - 1)**3/8 - (x**2 - 1)**2/8 + 1/2
 
     eq = (x ** 3) * exp(x)
-    assert lagrange_inversion_theorem(eq, 1) == (x**3*exp(x) - E)*exp(-1)/4
+    assert lagrange_inversion_theorem(eq, x, 2, 1) == (x**3*exp(x) - E)*exp(-1)/4 + 1
+    assert lagrange_inversion_theorem(eq, x, 3, 1) == -13*(x**3*exp(x)-E)**2*exp(-2)/128 + (x**3*exp(x)-E)*exp(-1)/4 + 1
 
     eq = (x ** 3) * exp(x) * y
-    raises(AssertionError, lambda: lagrange_inversion_theorem(eq, 1))
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
 
     eq = sin(x)
-    assert lagrange_inversion_theorem(eq) == sin(x)**3/6 + sin(x)
+    assert lagrange_inversion_theorem(eq, x, 2, 1) == (sin(x) - sin(1))/cos(1) + 1
 
     eq = cos(y)
-    raises(AssertionError, lambda: lagrange_inversion_theorem(eq, 1))
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
