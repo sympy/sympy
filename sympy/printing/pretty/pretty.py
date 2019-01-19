@@ -22,8 +22,8 @@ from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
 from sympy.printing.conventions import requires_partial
 
-from .stringpict import prettyForm, stringPict
-from .pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
+from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.printing.pretty.pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
     pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek_unicode, U, \
     annotated
 
@@ -45,6 +45,7 @@ class PrettyPrinter(Printer):
         "wrap_line": True,
         "num_columns": None,
         "use_unicode_sqrt_char": True,
+        "root_notation": True,
     }
 
     def __init__(self, settings=None):
@@ -1741,7 +1742,7 @@ class PrettyPrinter(Printer):
             if e is S.NegativeOne:
                 return prettyForm("1")/self._print(b)
             n, d = fraction(e)
-            if n is S.One and d.is_Atom and not e.is_Integer:
+            if n is S.One and d.is_Atom and not e.is_Integer and self._settings['root_notation']:
                 return self._print_nth_root(b, e)
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))
@@ -2450,7 +2451,7 @@ def pretty(expr, **settings):
 
 
 def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
-                 full_prec="auto", order=None, use_unicode_sqrt_char=True):
+                 full_prec="auto", order=None, use_unicode_sqrt_char=True,root_notation = True):
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
@@ -2484,7 +2485,7 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
     """
     print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
                  use_unicode=use_unicode, full_prec=full_prec, order=order,
-                 use_unicode_sqrt_char=use_unicode_sqrt_char))
+                 use_unicode_sqrt_char=use_unicode_sqrt_char,root_notation = root_notation))
 
 pprint = pretty_print
 
