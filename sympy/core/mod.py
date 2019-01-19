@@ -1,21 +1,3 @@
-Skip to content
- 
-Search or jump to…
-
-Pull requests
-Issues
-Marketplace
-Explore
- @shiksha11 Sign out
-315
-5,485 2,464 sympy/sympy
- Code  Issues 2,959  Pull requests 592  Projects 0  Wiki  Insights
-sympy/sympy/core/mod.py
-595b35a  14 days ago
-@rationa-kunal rationa-kunal multiplication with denom
-@smichr @rationa-kunal @nilabja10201992 @ashishkg0022 @KaTeX-bot @skirpichev @asmeurer @flacjacket @rheaparekh @miham @renatocoutinho @randyheydon @certik @debugger22 @jrioux @gxyd
-     
-224 lines (192 sloc)  7.02 KB
 from __future__ import print_function, division
 
 from sympy.core.numbers import nan, Integer
@@ -234,16 +216,3 @@ class Mod(Function):
     def _eval_is_nonpositive(self):
         if self.args[1].is_negative:
             return True
-© 2019 GitHub, Inc.
-Terms
-Privacy
-Security
-Status
-Help
-Contact GitHub
-Pricing
-API
-Training
-Blog
-About
-Press h to open a hovercard with more details.
