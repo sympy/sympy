@@ -1,27 +1,40 @@
+Skip to content
+ 
+Search or jump to…
+
+Pull requests
+Issues
+Marketplace
+Explore
+ @shiksha11 Sign out
+315
+5,485 2,464 sympy/sympy
+ Code  Issues 2,959  Pull requests 592  Projects 0  Wiki  Insights
+sympy/sympy/core/mod.py
+595b35a  14 days ago
+@rationa-kunal rationa-kunal multiplication with denom
+@smichr @rationa-kunal @nilabja10201992 @ashishkg0022 @KaTeX-bot @skirpichev @asmeurer @flacjacket @rheaparekh @miham @renatocoutinho @randyheydon @certik @debugger22 @jrioux @gxyd
+     
+224 lines (192 sloc)  7.02 KB
 from __future__ import print_function, division
 
-from sympy.core.numbers import nan
-from sympy.core.function import Function
-from sympy.core.mul import Mul
+from sympy.core.numbers import nan, Integer
+from sympy.core.compatibility import integer_types
+from .function import Function
 
 
 class Mod(Function):
     """Represents a modulo operation on symbolic expressions.
-
     Receives two arguments, dividend p and divisor q.
-
     The convention used is the same as Python's: the remainder always has the
     same sign as the divisor.
-
     Examples
     ========
-
     >>> from sympy.abc import x, y
     >>> x**2 % y
     Mod(x**2, y)
     >>> _.subs({x: 5, y: 6})
     1
-
     """
 
     @classmethod
@@ -46,22 +59,12 @@ class Mod(Function):
 
             if q.is_Number:
                 if p.is_Number:
-                    return (p % q)
+                    return p%q
                 if q == 2:
                     if p.is_even:
                         return S.Zero
                     elif p.is_odd:
                         return S.One
-                    if p.is_Mul:
-                        terms = p.as_two_terms()
-                        if terms[0].is_even:
-                            return S.Zero
-                        else:
-                            return Mod(terms[1],2)
-                if p.is_Mul:
-                    terms = p.as_two_terms()
-                    if(terms[0]%q==0):
-                        return S.Zero
 
             if hasattr(p, '_eval_Mod'):
                 rv = getattr(p, '_eval_Mod')(q)
@@ -75,7 +78,7 @@ class Mod(Function):
             except TypeError:
                 pass
             else:
-                if type(d) is int:
+                if isinstance(d, integer_types):
                     rv = p - d*q
                     if (rv*q < 0) == True:
                         rv += q
@@ -150,6 +153,17 @@ class Mod(Function):
                 net = prod_mod1*prod_mod
                 return prod_non_mod*cls(net, q)
 
+            if q.is_Integer and q is not S.One:
+                _ = []
+                for i in non_mod_l:
+                    if i.is_Integer and (i % q is not S.Zero):
+                        _.append(i%q)
+                    else:
+                        _.append(i)
+                non_mod_l = _
+
+            p = Mul(*(non_mod_l + mod_l))
+
         # XXX other possibilities?
 
         # extract gcd; any further simplification should be done by the user
@@ -220,3 +234,16 @@ class Mod(Function):
     def _eval_is_nonpositive(self):
         if self.args[1].is_negative:
             return True
+© 2019 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+Press h to open a hovercard with more details.
