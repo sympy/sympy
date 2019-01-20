@@ -340,7 +340,10 @@ def real_root(arg, n=None, evaluate=None):
 class MinMaxBase(Expr, LatticeOp):
     def __new__(cls, *args, **assumptions):
         if not args:
-            raise ValueError("The Max/Min functions must have arguments.")
+            if cls == Min:
+                return S.Infinity
+            if cls == Max:
+                return S.NegativeInfinity
 
         args = (sympify(arg) for arg in args)
 
