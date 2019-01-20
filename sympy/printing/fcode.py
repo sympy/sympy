@@ -23,11 +23,6 @@ from collections import defaultdict
 from itertools import chain
 import string
 
-from sympy.core import S, Add, N, Float, Symbol
-from sympy.core.compatibility import string_types, range
-from sympy.core.function import Function
-from sympy.core.relational import Eq
-from sympy.sets import Range
 from sympy.codegen.ast import (
     Assignment, Attribute, Declaration, Pointer, Type, value_const,
     float32, float64, float80, complex64, complex128, int8, int16, int32,
@@ -37,9 +32,14 @@ from sympy.codegen.fnodes import (
     allocatable, isign, dsign, cmplx, merge, literal_dp, elemental, pure,
     intent_in, intent_out, intent_inout
 )
-from sympy.printing.printer import printer_context
-from sympy.printing.codeprinter import CodePrinter, requires
+from sympy.core import S, Add, N, Float, Symbol
+from sympy.core.compatibility import string_types, range
+from sympy.core.function import Function
+from sympy.core.relational import Eq
+from sympy.sets import Range
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
+from sympy.printing.printer import printer_context
 
 
 known_functions = {
@@ -712,7 +712,7 @@ class FCodePrinter(CodePrinter):
             "{function_head}\n"
             "end function\n"
             "end interface"
-        ).format(function_head=self._head(entity, fp, *args))
+        ).format(function_head=self._head(entity, fp))
 
     def _print_FunctionDefinition(self, fd):
         if elemental in fd.attrs:

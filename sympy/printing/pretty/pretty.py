@@ -3,31 +3,26 @@ from __future__ import print_function, division
 import itertools
 
 from sympy.core import S
+from sympy.core.compatibility import range
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
-from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Equality
 from sympy.core.symbol import Symbol
-from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
-from sympy.utilities import group
-from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
-from sympy.core.compatibility import range
-from sympy.core.add import Add
-
+from sympy.printing.conventions import requires_partial
+from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
-from sympy.printing.conventions import requires_partial
+from sympy.utilities import default_sort_key
+from sympy.utilities.iterables import has_variety
 
 from .stringpict import prettyForm, stringPict
 from .pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
     pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek_unicode, U, \
     annotated
-
-from sympy.utilities import default_sort_key
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
@@ -1026,8 +1021,6 @@ class PrettyPrinter(Printer):
         top = stringPict(" "*center.width())
         bot = stringPict(" "*center.width())
 
-        no_top = True
-        no_bot = True
         last_valence = None
         prev_map = None
 
@@ -1045,12 +1038,10 @@ class PrettyPrinter(Printer):
             else:
                 prev_map = False
             if index.is_up:
-                no_top = False
                 top = stringPict(*top.right(indpic))
                 center = stringPict(*center.right(" "*indpic.width()))
                 bot = stringPict(*bot.right(" "*indpic.width()))
             else:
-                no_bot = False
                 bot = stringPict(*bot.right(indpic))
                 center = stringPict(*center.right(" "*indpic.width()))
                 top = stringPict(*top.right(" "*indpic.width()))

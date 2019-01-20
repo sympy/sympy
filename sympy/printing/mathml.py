@@ -6,11 +6,10 @@ from __future__ import print_function, division
 
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
-from sympy.core.alphabets import greeks
 from sympy.core.compatibility import range
-from .printer import Printer
-from .pretty.pretty_symbology import greek_unicode
 from .conventions import split_super_sub, requires_partial
+from .pretty.pretty_symbology import greek_unicode
+from .printer import Printer
 
 
 class MathMLPrinterBase(Printer):
@@ -340,7 +339,6 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 return mi
 
         # translate name, supers and subs to unicode characters
-        greek_letters = set(greeks) # make a copy
         def translate(s):
             if s in greek_unicode:
                 return greek_unicode.get(s)
@@ -748,7 +746,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 return mi
 
         # translate name, supers and subs to unicode characters
-        greek_letters = set(greeks) # make a copy
         def translate(s):
             if s in greek_unicode:
                 return greek_unicode.get(s)
@@ -868,7 +865,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         mrow.appendChild(mi)
         for arg in e:
-            x.appendChild(self._print(arg))
+            mrow.appendChild(self._print(arg))
         return mrow
 
     def _print_AssocOp(self, e):

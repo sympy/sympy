@@ -6,11 +6,10 @@ This module contains python code printers for plain python as well as NumPy & Sc
 
 
 from collections import defaultdict
-from functools import wraps
 from itertools import chain
-from sympy.core import sympify, S
-from .precedence import precedence
+from sympy.core import S
 from .codeprinter import CodePrinter
+from .precedence import precedence
 
 _kw_py2and3 = {
     'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
@@ -106,9 +105,6 @@ class AbstractPythonCodePrinter(CodePrinter):
         self.known_constants = dict(self._kc, **(settings or {}).get(
             'user_constants', {}))
 
-    def _get_statement(self, codestring):
-        return codestring
-
     def _declare_number_const(self, name, value):
         return "%s = %s" % (name, value)
 
@@ -126,7 +122,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         return lines
 
     def _get_statement(self, codestring):
-        return "%s" % codestring
+        return "{}".format(codestring)
 
     def _get_comment(self, text):
         return "  # {0}".format(text)
@@ -488,11 +484,10 @@ class NumPyPrinter(PythonCodePrinter):
     _kc = {k: 'numpy.'+v for k, v in _known_constants_math.items()}
 
 
-    def _print_seq(self, seq):
+    def _print_seq(self, seq, delimiter= ', '):
         "General sequence printer: converts to tuple"
         # Print tuples here instead of lists because numba supports
         #     tuples in nopython mode.
-        delimite.get('delimiter', ', ')
         return '({},)'.format(delimiter.join(self._print(item) for item in seq))
 
     def _print_MatMul(self, expr):
