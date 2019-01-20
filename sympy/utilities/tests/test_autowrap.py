@@ -4,17 +4,16 @@
 import os
 import tempfile
 import shutil
-import tempfile
 
 from sympy.core import symbols, Eq
 from sympy.core.compatibility import StringIO
-from sympy.utilities.pytest import raises
 from sympy.utilities.autowrap import (autowrap, binary_function,
-            CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
+            CythonCodeWrapper, UfuncifyCodeWrapper, CodeWrapper)
 from sympy.utilities.codegen import (
     CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
 )
-from sympy.utilities.tmpfiles import TmpFileManager, cleanup_tmp_files
+from sympy.utilities.pytest import raises
+from sympy.utilities.tmpfiles import TmpFileManager
 
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
