@@ -307,7 +307,6 @@ def rubi_integrate(expr, var, showsteps=False):
     '''
     expr = S(expr)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)) or expr.as_independent(var)[1] == (0 or 1):
-        print("true")
         return S(expr)*var
     expr = expr.replace(sym_exp, exp)
     rules_applied[:] = []
