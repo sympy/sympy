@@ -3,7 +3,7 @@ matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.core import Integer, Float
 import inspect, re
-from sympy import powsimp
+from sympy import powsimp, S
 
 if matchpy:
     from matchpy import (Operation, CommutativeOperation, AssociativeOperation,
@@ -305,12 +305,13 @@ def rubi_integrate(expr, var, showsteps=False):
 
     Returns Integral object if unable to integrate.
     '''
+    expr = S(expr)
+    if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)) or expr.as_independent(var)[1] == 0 or 1:
+        return S(expr)*var
     expr = expr.replace(sym_exp, exp)
     rules_applied[:] = []
     expr = process_trig(expr)
     expr = rubi_powsimp(expr)
-    if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
-        return S(expr)*var
     if isinstance(expr, Add):
         results = 0
         for ex in expr.args:
