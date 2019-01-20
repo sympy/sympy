@@ -1436,7 +1436,10 @@ class Circle(Ellipse):
             elif len(args) == 2:
                 # Assume (center, radius) pair
                 c = Point(args[0], dim=2)
-                r = sympify(args[1])
+                try:
+                    r = Rational(str(sympify(args[1])))
+                except (ValueError, TypeError):
+                    r = sympify(args[1])
 
             if not (c is None or r is None):
                 if r == 0:
