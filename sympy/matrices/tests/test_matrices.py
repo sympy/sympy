@@ -3272,7 +3272,7 @@ def test_dft_matrix():
 
     assert dft_matrix(2) == Matrix([[1, 1], [1, -1]])
 
-    assert dft_matrix(2, inverse=True) == Matrix([[1/2, 1/2], [1/2, -1/2]])
+    assert dft_matrix(2, inverse=True) == Matrix([[S(1)/2, S(1)/2], [S(1)/2, -S(1)/2]])
 
     assert simplify(dft_matrix(8)*dft_matrix(8, inverse=True)) == eye(8)
     assert simplify(dft_matrix(8, unitary=True)*dft_matrix(8, inverse=True, unitary=True)) == eye(8)

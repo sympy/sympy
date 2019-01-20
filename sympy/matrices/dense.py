@@ -1086,26 +1086,11 @@ def casoratian(seqs, n, zero=True):
 
     return Matrix(k, k, f).det()
 
-
-def eye(*args, **kwargs):
-    """Create square identity matrix n x n
-
-    See Also
-    ========
-
-    diag
-    zeros
-    ones
-    """
-    from .dense import Matrix
-
-    return Matrix.eye(*args, **kwargs)
-
 def dft_matrix(points, inverse=False, unitary=False, **kwargs):
-    r"""
-    Returns the Dicrete Fourier Transform matrix. The DFT matrix is the matrix
-    that a vector is multiplied with to compute the DFT. Note that using
-    `fft` is faster when computing the result of the transform.
+    """
+    Returns the Dicrete Fourier Transform (DFT) matrix. The DFT matrix is the
+    matrix that a vector is multiplied with to compute the DFT. Note that using
+    ``sympy.discrete.fft`` is faster when computing the result of the transform.
 
     Parameters
     ==========
@@ -1113,17 +1098,15 @@ def dft_matrix(points, inverse=False, unitary=False, **kwargs):
     points : natural
     Number of transform points
 
-    Optional parameters
-    ===================
+    inverse : bool, optional
+    If ``True`` the inverse Discrete Fourier Transform (IDFT) is returned. Default is ``False``.
 
-    inverse : boolean
-    If `True` the inverse Discrete Fourier Transform is returned. Default is `False`.
-
-    unitary : boolean
-    If `True` the (I)DFT matrix is scaled such that it is unitary. Default is `False`.
+    unitary : bool, optional
+    If ``True`` the (I)DFT matrix is scaled such that it is unitary. Default is ``False``.
 
     Examples
     ========
+
     >>> from sympy.matrices import dft_matrix
 
     >>> dft_matrix(4)
@@ -1133,19 +1116,20 @@ def dft_matrix(points, inverse=False, unitary=False, **kwargs):
     [1, -1,  1, -1],
     [1,  I, -1, -I]])
 
-    >>> dft_matrix(2, inverse = True)
+    >>> dft_matrix(2, inverse=True)
     Matrix([
     [1/2,  1/2],
     [1/2, -1/2]])
 
-    >>> dft_matrix(2, unitary = True)
+    >>> dft_matrix(2, unitary=True)
     Matrix([
     [sqrt(2)/2,  sqrt(2)/2],
     [sqrt(2)/2, -sqrt(2)/2]])
 
-    See also
+    See Also
     ========
-    `discrete.fft`
+
+    sympy.discrete.fft
 
     References
     ==========
@@ -1156,7 +1140,7 @@ def dft_matrix(points, inverse=False, unitary=False, **kwargs):
 
     from .dense import Matrix
 
-    return Matrix.dft_matrix(*args, **kwargs)
+    return Matrix.dft_matrix(points, inverse, unitary, **kwargs)
 
 def diag(*values, **kwargs):
     """Create a sparse, diagonal matrix from a list of diagonal values.
@@ -1257,6 +1241,19 @@ def diag(*values, **kwargs):
 
     return Matrix.diag(*values, **kwargs)
 
+def eye(*args, **kwargs):
+    """Create square identity matrix n x n
+
+    See Also
+    ========
+
+    diag
+    zeros
+    ones
+    """
+    from .dense import Matrix
+
+    return Matrix.eye(*args, **kwargs)
 
 def GramSchmidt(vlist, orthonormal=False):
     """
@@ -1415,24 +1412,6 @@ def ones(*args, **kwargs):
     from .dense import Matrix
 
     return Matrix.ones(*args, **kwargs)
-
-def dft_matrix(*args, **kwargs):
-    """Returns a matrix of ones with ``rows`` rows and ``cols`` columns;
-    if ``cols`` is omitted a square matrix will be returned.
-
-    See Also
-    ========
-
-    zeros
-    eye
-    diag
-    """
-
-    if 'c' in kwargs:
-        kwargs['cols'] = kwargs.pop('c')
-    from .dense import Matrix
-
-    return Matrix.dft_matrix(*args, **kwargs)
 
 def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
                percent=100, prng=None):

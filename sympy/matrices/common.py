@@ -617,7 +617,7 @@ class MatrixSpecial(MatrixRequired):
 
     @classmethod
     def _eval_dft_matrix(cls, points, sgn, divisor):
-        def entry(i,j):
+        def entry(i, j):
             return exp(-sgn*I*Mod(i*j, points)*2*pi/points)/divisor
 
         return cls._new(points, points, entry)
@@ -668,68 +668,17 @@ class MatrixSpecial(MatrixRequired):
 
     @classmethod
     def dft_matrix(kls, points, inverse=False, unitary=False, **kwargs):
-        r"""
-        Returns the Dicrete Fourier Transform matrix. The DFT matrix is the matrix
-        that a vector is multiplied with to compute the DFT. Note that using
-        `fft` is faster when computing the result of the transform.
-
-        Parameters
-        ==========
-
-        points : natural
-        Number of transform points
-
-        Optional parameters
-        ===================
-
-        inverse : boolean
-        If `True` the inverse Discrete Fourier Transform is returned. Default is `False`.
-
-        unitary : boolean
-        If `True` the (I)DFT matrix is scaled such that it is unitary. Default is `False`.
-
-        Examples
-        ========
-        >>> from sympy.matrices import dft_matrix
-
-        >>> dft_matrix(4)
-        Matrix([
-        [1,  1,  1,  1],
-        [1, -I, -1,  I],
-        [1, -1,  1, -1],
-        [1,  I, -1, -I]])
-
-        >>> dft_matrix(2, inverse = True)
-        Matrix([
-        [1/2,  1/2],
-        [1/2, -1/2]])
-
-        >>> dft_matrix(2, unitary = True)
-        Matrix([
-        [sqrt(2)/2,  sqrt(2)/2],
-        [sqrt(2)/2, -sqrt(2)/2]])
-
-        See also
-        ========
-        `discrete.fft`
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/DFT_matrix
-
-        """
         klass = kwargs.get('cls', kls)
         points = as_int(points)
-        divisor = 1
+        divisor = S.One
         if unitary:
             divisor = sqrt(points)
         elif inverse:
             divisor = points
         if inverse:
-            sgn = -1
+            sgn = -S.One
         else:
-            sgn = 1
+            sgn = S.One
 
         return klass._eval_dft_matrix(points, sgn, divisor)
 
