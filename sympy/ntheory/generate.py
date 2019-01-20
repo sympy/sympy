@@ -10,9 +10,9 @@ from bisect import bisect
 # memory consumption
 from array import array as _array
 
-from .primetest import isprime
-from sympy.core.compatibility import as_int, range
 from sympy import Function, S
+from sympy.core.compatibility import as_int, range
+from .primetest import isprime
 
 
 def _azeros(n):
@@ -616,6 +616,20 @@ def primerange(a, b):
         be returned from there; otherwise values will be returned
         but will not modify the sieve.
 
+        Examples
+        ========
+
+        >>> from sympy import primerange, sieve
+        >>> print([i for i in primerange(1, 30)])
+        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
+        The Sieve method, primerange, is generally faster but it will
+        occupy more memory as the sieve stores values. The default
+        instance of Sieve, named sieve, can be used:
+
+        >>> list(sieve.primerange(1, 30))
+        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
         Notes
         =====
 
@@ -637,26 +651,6 @@ def primerange(a, b):
         numbers are arbitrarily large, e.g. the numbers in the sequence
         n! + 2, n! + 3 ... n! + n are all composite.
 
-        References
-        ==========
-
-        1. https://en.wikipedia.org/wiki/Prime_number
-        2. http://primes.utm.edu/notes/gaps.html
-
-        Examples
-        ========
-
-        >>> from sympy import primerange, sieve
-        >>> print([i for i in primerange(1, 30)])
-        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
-
-        The Sieve method, primerange, is generally faster but it will
-        occupy more memory as the sieve stores values. The default
-        instance of Sieve, named sieve, can be used:
-
-        >>> list(sieve.primerange(1, 30))
-        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
-
         See Also
         ========
 
@@ -667,6 +661,12 @@ def primerange(a, b):
         Sieve.primerange : return range from already computed primes
                            or extend the sieve to contain the requested
                            range.
+
+        References
+        ==========
+
+        1. https://en.wikipedia.org/wiki/Prime_number
+        2. http://primes.utm.edu/notes/gaps.html
     """
     from sympy.functions.elementary.integers import ceiling
 
@@ -733,6 +733,9 @@ def primorial(n, nth=True):
     """
     Returns the product of the first n primes (default) or
     the primes less than or equal to n (when ``nth=False``).
+
+    Examples
+    ========
 
     >>> from sympy.ntheory.generate import primorial, randprime, primerange
     >>> from sympy import factorint, Mul, primefactors, sqrt

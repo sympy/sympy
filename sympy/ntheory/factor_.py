@@ -6,18 +6,18 @@ from __future__ import print_function, division
 import random
 import math
 
-from .primetest import isprime
-from .generate import sieve, primerange, nextprime
 from sympy.core import sympify
+from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.evalf import bitcount
+from sympy.core.expr import Expr
+from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
+from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm, Rational
 from sympy.core.power import integer_nthroot, Pow
-from sympy.core.mul import Mul
-from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.singleton import S
-from sympy.core.function import Function
-from sympy.core.expr import Expr
+from .primetest import isprime
+from .generate import sieve, primerange, nextprime
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -1701,11 +1701,6 @@ class divisor_sigma(Function):
 
         Default for k is 1.
 
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Divisor_function
-
     Examples
     ========
 
@@ -1723,6 +1718,12 @@ class divisor_sigma(Function):
     ========
 
     divisor_count, totient, divisors, factorint
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Divisor_function
+
     """
 
     @classmethod
@@ -1765,11 +1766,6 @@ def core(n, t=2):
 
         Default for t is 2.
 
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Square-free_integer#Squarefree_core
-
     Examples
     ========
 
@@ -1787,6 +1783,11 @@ def core(n, t=2):
     ========
 
     factorint, sympy.solvers.diophantine.square_factor
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Square-free_integer#Squarefree_core
     """
 
     n = as_int(n)
@@ -1863,11 +1864,6 @@ class udivisor_sigma(Function):
 
         Default for k is 1.
 
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
-
     Examples
     ========
 
@@ -1886,6 +1882,11 @@ class udivisor_sigma(Function):
 
     divisor_count, totient, divisors, udivisors, udivisor_count, divisor_sigma,
     factorint
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
     """
 
     @classmethod
@@ -1915,11 +1916,6 @@ class primenu(Function):
     .. math ::
         \nu(n) = k.
 
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
-
     Examples
     ========
 
@@ -1933,6 +1929,11 @@ class primenu(Function):
     ========
 
     factorint
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
     """
 
     @classmethod
@@ -1960,11 +1961,6 @@ class primeomega(Function):
     .. math ::
         \Omega(n) = \sum_{i=1}^k m_i.
 
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
-
     Examples
     ========
 
@@ -1978,6 +1974,11 @@ class primeomega(Function):
     ========
 
     factorint
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
     """
 
     @classmethod
