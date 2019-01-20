@@ -27,7 +27,7 @@ from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational, Ge, _canonical
 from sympy.core.logic import fuzzy_not, fuzzy_and
-from sympy.logic.boolalg import And, Or, BooleanAtom, BooleanFalse, BooleanTrue
+from sympy.logic.boolalg import And, Or, BooleanAtom, BooleanFalse
 from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
@@ -980,8 +980,6 @@ def solve(f, *symbols, **flags):
             res = reduce_inequalities(f, symbols=symbols)
             if isinstance(res, (bool, BooleanFalse)) and flags.get('dict', False):
                 return []
-            elif isinstance(res, (bool, BooleanTrue)) and flags.get('dict', False):
-                return [res]
             return res
 
         if isinstance(fi, Poly):
