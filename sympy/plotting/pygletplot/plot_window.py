@@ -1,12 +1,12 @@
 from __future__ import print_function, division
 
-import pyglet.gl as pgl
-from sympy.plotting.pygletplot.managed_window import ManagedWindow
+from time import clock
 
+import pyglet.gl as pgl
+
+from sympy.plotting.pygletplot.managed_window import ManagedWindow
 from sympy.plotting.pygletplot.plot_camera import PlotCamera
 from sympy.plotting.pygletplot.plot_controller import PlotController
-
-from time import clock
 
 
 class PlotWindow(ManagedWindow):

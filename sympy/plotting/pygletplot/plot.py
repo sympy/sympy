@@ -9,13 +9,13 @@ except ImportError:
     raise ImportError("pyglet is required for plotting.\n "
                       "visit http://www.pyglet.org/")
 
-from sympy import Integer
 from sympy.core.compatibility import is_sequence, SYMPY_INTS
+from sympy.core.numbers import Integer
 from sympy.geometry.entity import GeometryEntity
-from sympy.plotting.pygletplot.plot_object import PlotObject
 from sympy.plotting.pygletplot.plot_axes import PlotAxes
-from sympy.plotting.pygletplot.plot_window import PlotWindow
 from sympy.plotting.pygletplot.plot_mode import PlotMode
+from sympy.plotting.pygletplot.plot_object import PlotObject
+from sympy.plotting.pygletplot.plot_window import PlotWindow
 from sympy.plotting.pygletplot.util import parse_option_string
 from sympy.utilities.decorator import doctest_depends_on
 

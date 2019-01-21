@@ -1,11 +1,11 @@
 from __future__ import print_function, division
 
 from sympy import Symbol, sympify
+from sympy.core.compatibility import is_sequence, range
+from sympy.geometry.entity import GeometryEntity
 from sympy.plotting.pygletplot.plot_interval import PlotInterval
 from sympy.plotting.pygletplot.plot_object import PlotObject
 from sympy.plotting.pygletplot.util import parse_option_string
-from sympy.geometry.entity import GeometryEntity
-from sympy.core.compatibility import is_sequence, range
 
 
 class PlotMode(PlotObject):
