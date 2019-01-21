@@ -1,29 +1,28 @@
 from __future__ import print_function, division
 
-from sympy import Integer
-from sympy.core.compatibility import is_sequence, SYMPY_INTS
-
 from threading import RLock
 
 # it is sufficient to import "pyglet" here once
 try:
-    from pyglet.gl import *
+    import pyglet.gl as pgl
 except ImportError:
     raise ImportError("pyglet is required for plotting.\n "
                       "visit http://www.pyglet.org/")
 
+from sympy import Integer
+from sympy.core.compatibility import is_sequence, SYMPY_INTS
+from sympy.geometry.entity import GeometryEntity
 from sympy.plotting.pygletplot.plot_object import PlotObject
 from sympy.plotting.pygletplot.plot_axes import PlotAxes
 from sympy.plotting.pygletplot.plot_window import PlotWindow
 from sympy.plotting.pygletplot.plot_mode import PlotMode
+from sympy.plotting.pygletplot.util import parse_option_string
+from sympy.utilities.decorator import doctest_depends_on
 
 from time import sleep
 from os import getcwd, listdir
-from sympy.plotting.pygletplot.util import parse_option_string
 
-from sympy.geometry.entity import GeometryEntity
-
-from sympy.utilities.decorator import doctest_depends_on
+import ctypes
 
 @doctest_depends_on(modules=('pyglet',))
 class PygletPlot(object):
@@ -37,7 +36,7 @@ class PygletPlot(object):
     >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> from sympy.abc import x, y, z
 
-    >>> Plot(x*y**3-y*x**3)
+    >>> Plot(x*y**3-y*x**3) #doctest: +SKIP
     [0]: -x**3*y + x*y**3, 'mode=cartesian'
 
     >>> p = Plot()
@@ -56,19 +55,19 @@ class PygletPlot(object):
     syntax is flexible and arguments left out are taken
     from the defaults for the current coordinate mode:
 
-    >>> Plot(x**2) # implies [x,-5,5,100]
+    >>> Plot(x**2) # implies [x,-5,5,100] #doctest: +SKIP
     [0]: x**2, 'mode=cartesian'
-    >>> Plot(x**2, [], []) # [x,-1,1,40], [y,-1,1,40]
+    >>> Plot(x**2, [], []) # [x,-1,1,40], [y,-1,1,40] #doctest: +SKIP
     [0]: x**2, 'mode=cartesian'
-    >>> Plot(x**2-y**2, [100], [100]) # [x,-1,1,100], [y,-1,1,100]
+    >>> Plot(x**2-y**2, [100], [100]) # [x,-1,1,100], [y,-1,1,100] #doctest: +SKIP
     [0]: x**2 - y**2, 'mode=cartesian'
-    >>> Plot(x**2, [x,-13,13,100])
+    >>> Plot(x**2, [x,-13,13,100]) #doctest: +SKIP
     [0]: x**2, 'mode=cartesian'
-    >>> Plot(x**2, [-13,13]) # [x,-13,13,100]
+    >>> Plot(x**2, [-13,13]) # [x,-13,13,100] #doctest: +SKIP
     [0]: x**2, 'mode=cartesian'
-    >>> Plot(x**2, [x,-13,13]) # [x,-13,13,10]
+    >>> Plot(x**2, [x,-13,13]) # [x,-13,13,10] #doctest: +SKIP
     [0]: x**2, 'mode=cartesian'
-    >>> Plot(1*x, [], [x], mode='cylindrical')
+    >>> Plot(1*x, [], [x], mode='cylindrical') #doctest: +SKIP
     ... # [unbound_theta,0,2*Pi,40], [x,-1,1,20]
     [0]: x, 'mode=cartesian'
 
@@ -110,9 +109,9 @@ class PygletPlot(object):
     [1]: x**2, 'mode=cartesian'
     [2]: 2*x, 'mode=cartesian'
     [3]: 2, 'mode=cartesian'
-    >>> p.show()
-    >>> p.clear()
-    >>> p
+    >>> p.show() #doctest: +SKIP
+    >>> p.clear() #doctest: +SKIP
+    >>> p #doctest: +SKIP
     <blank plot>
     >>> p[1] =  x**2+y**2
     >>> p[1].style = 'solid'
@@ -121,7 +120,7 @@ class PygletPlot(object):
     >>> p[1].color = z, (0.4,0.4,0.9), (0.9,0.4,0.4)
     >>> p[1].style = 'both'
     >>> p[2].style = 'both'
-    >>> p.close()
+    >>> p.close() #doctest: +SKIP
 
 
     Plot Window Keyboard Controls
@@ -169,12 +168,12 @@ class PygletPlot(object):
         >>> from sympy.plotting.pygletplot import PygletPlot as Plot
         >>> from sympy.core import Symbol
         >>> from sympy.abc import x
-        >>> p = Plot(x**2, visible=False)
+        >>> p = Plot(x**2, visible=False) #doctest: +SKIP
 
         ...is equivalent to...
 
-        >>> p = Plot(visible=False)
-        >>> p[1] = x**2
+        >>> p = Plot(visible=False) #doctest: +SKIP
+        >>> p[1] = x**2 #doctest: +SKIP
 
         Note that in earlier versions of the plotting
         module, you were able to specify multiple
@@ -414,9 +413,7 @@ class ScreenShot:
         self.flag = 0
 
     def __nonzero__(self):
-        if self.screenshot_requested:
-            return True
-        return False
+        return self.screenshot_requested
 
     __bool__ = __nonzero__
 
@@ -426,9 +423,9 @@ class ScreenShot:
             return
 
         size_x, size_y = self._plot._window.get_size()
-        size = size_x*size_y*4*sizeof(c_ubyte)
-        image = create_string_buffer(size)
-        glReadPixels(0, 0, size_x, size_y, GL_RGBA, GL_UNSIGNED_BYTE, image)
+        size = size_x*size_y*4*ctypes.sizeof(ctypes.c_ubyte)
+        image = ctypes.create_string_buffer(size)
+        pgl.glReadPixels(0, 0, size_x, size_y, pgl.GL_RGBA, pgl.GL_UNSIGNED_BYTE, image)
         from PIL import Image
         im = Image.frombuffer('RGBA', (size_x, size_y),
                               image.raw, 'raw', 'RGBA', 0, 1)

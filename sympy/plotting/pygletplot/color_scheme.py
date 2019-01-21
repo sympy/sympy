@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
 from sympy import Basic, Symbol, symbols, lambdify
-from sympy.utilities.iterables import sift
-from sympy.plotting.pygletplot.util import interpolate, rinterpolate, create_bounds, update_bounds
 from sympy.core.compatibility import range
+from sympy.plotting.pygletplot.util import interpolate, rinterpolate, create_bounds, update_bounds
+from sympy.utilities.iterables import sift
 
 
 class ColorGradient(object):
@@ -162,6 +162,7 @@ class ColorScheme(object):
 
     def _fill_in_vars(self, args):
         defaults = symbols('x,y,z,u,v')
+        v_error = ValueError("Could not find what to plot.")
         if len(args) == 0:
             return defaults
         if not isinstance(args, (tuple, list)):
@@ -214,18 +215,18 @@ class ColorScheme(object):
             result = self.f(0, 0, 0, 0, 0)
             if len(result) != 3:
                 raise ValueError("length should be equal to 3")
-        except TypeError as te:
+        except TypeError:
             raise ValueError("Color function needs to accept x,y,z,u,v, "
                              "as arguments even if it doesn't use all of them.")
-        except AssertionError as ae:
+        except AssertionError:
             raise ValueError("Color function needs to return 3-tuple r,g,b.")
-        except Exception as ie:
+        except Exception:
             pass  # color function probably not valid at 0,0,0,0,0
 
     def __call__(self, x, y, z, u, v):
         try:
             return self.f(x, y, z, u, v)
-        except Exception as e:
+        except Exception:
             return None
 
     def apply_to_curve(self, verts, u_set, set_len=None, inc_pos=None):

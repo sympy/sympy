@@ -5,7 +5,7 @@ try:
 except ImportError:
     pass
 
-from pyglet.gl import *
+import pyglet.gl as pgl
 from math import sqrt as _sqrt, acos as _acos
 
 
@@ -60,11 +60,11 @@ def get_spherical_rotatation(p1, p2, width, height, theta_multiplier):
     raxis = norm( cross(v1, v2) )
     rtheta = theta_multiplier * rad2deg * _acos(d)
 
-    glPushMatrix()
-    glLoadIdentity()
-    glRotatef(rtheta, *raxis)
+    pgl.glPushMatrix()
+    pgl.glLoadIdentity()
+    pgl.glRotatef(rtheta, *raxis)
     mat = (c_float*16)()
-    glGetFloatv(GL_MODELVIEW_MATRIX, mat)
-    glPopMatrix()
+    pgl.glGetFloatv(pgl.GL_MODELVIEW_MATRIX, mat)
+    pgl.glPopMatrix()
 
     return mat

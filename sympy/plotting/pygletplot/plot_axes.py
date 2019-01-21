@@ -1,14 +1,14 @@
 from __future__ import print_function, division
 
-from pyglet.gl import *
+import pyglet.gl as pgl
 from pyglet import font
 
+from sympy.core import S
+from sympy.core.compatibility import is_sequence
 from sympy.plotting.pygletplot.plot_object import PlotObject
 from sympy.plotting.pygletplot.util import strided_range, billboard_matrix
 from sympy.plotting.pygletplot.util import get_direction_vectors
 from sympy.plotting.pygletplot.util import dot_product, vec_sub, vec_mag
-from sympy.core import S
-from sympy.core.compatibility import is_sequence, range
 
 
 class PlotAxes(PlotObject):
@@ -89,11 +89,11 @@ class PlotAxes(PlotObject):
 
     def draw(self):
         if self._render_object:
-            glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_DEPTH_BUFFER_BIT)
+            pgl.glPushAttrib(pgl.GL_ENABLE_BIT | pgl.GL_POLYGON_BIT | pgl.GL_DEPTH_BUFFER_BIT)
             if self._overlay:
-                glDisable(GL_DEPTH_TEST)
+                pgl.glDisable(pgl.GL_DEPTH_TEST)
             self._render_object.draw()
-            glPopAttrib()
+            pgl.ggglPopAttrib()
 
     def adjust_bounds(self, child_bounds):
         b = self._bounding_box
@@ -154,22 +154,22 @@ class PlotAxesBase(PlotObject):
                           valign=font.Text.BASELINE,
                           halign=font.Text.CENTER)
 
-        glPushMatrix()
-        glTranslatef(*position)
+        pgl.glPushMatrix()
+        pgl.glTranslatef(*position)
         billboard_matrix()
         scale_factor = 0.005 * scale
-        glScalef(scale_factor, scale_factor, scale_factor)
-        glColor4f(0, 0, 0, 0)
+        pgl.glScalef(scale_factor, scale_factor, scale_factor)
+        pgl.glColor4f(0, 0, 0, 0)
         label.draw()
-        glPopMatrix()
+        pgl.glPopMatrix()
 
     def draw_line(self, v, color):
         o = self._p._origin
-        glBegin(GL_LINES)
-        glColor3f(*color)
-        glVertex3f(v[0][0] + o[0], v[0][1] + o[1], v[0][2] + o[2])
-        glVertex3f(v[1][0] + o[0], v[1][1] + o[1], v[1][2] + o[2])
-        glEnd()
+        pgl.glBegin(pgl.GL_LINES)
+        pgl.glColor3f(*color)
+        pgl.glVertex3f(v[0][0] + o[0], v[0][1] + o[1], v[0][2] + o[2])
+        pgl.glVertex3f(v[1][0] + o[0], v[1][1] + o[1], v[1][2] + o[2])
+        pgl.glEnd()
 
 
 class PlotAxesOrdinate(PlotAxesBase):
