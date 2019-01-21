@@ -1475,3 +1475,9 @@ def test_issue_4311():
         (x**4/4 - 9*x**2/2, x <= -3),
         (-x**4/4 + 9*x**2/2 - S(81)/2, x <= 3),
         (x**4/4 - 9*x**2/2, True))
+
+def test_issue_15494():
+    x = symbols('x')
+    integrand = (-2*exp(1.5*x)+exp(x))*exp(x)
+    sol = integrate(integrand, x)
+    assert sol == exp(2*x)/2 - 0.8*exp(2.5*x)
