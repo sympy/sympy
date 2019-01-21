@@ -21,7 +21,7 @@ try:
         [0]: -x**3*y + x*y**3, 'mode=cartesian'
 
         >>> p = Plot()
-        >>> p[1] = x*y
+        >>> p[1] = x*y #doctest +SKIP
         >>> p[1].color = z, (0.4,0.4,0.9), (0.9,0.4,0.4)
 
         >>> p = Plot()
@@ -76,7 +76,7 @@ try:
         1: parametric, cartesian, polar
         2: parametric, cartesian, cylindrical = polar, spherical
 
-        >>> Plot(1, mode='spherical') # doctest: +SKIP
+        >>> Plot(1, mode='spherical')
 
 
         Calculator-like Interface
@@ -86,8 +86,8 @@ try:
         >>> f = x**2
         >>> p[1] = f
         >>> p[2] = f.diff(x)
-        >>> p[3] = f.diff(x).diff(x) # doctest: +SKIP
-        >>> p # doctest: +SKIP
+        >>> p[3] = f.diff(x).diff(x)
+        >>> p
         [1]: x**2, 'mode=cartesian'
         [2]: 2*x, 'mode=cartesian'
         [3]: 2, 'mode=cartesian'

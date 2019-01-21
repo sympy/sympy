@@ -30,13 +30,10 @@ class PygletPlot(object):
     Plot Examples
     =============
 
-    See examples/advanced/pyglet_plotting.py for many more examples.
-
-
     >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> from sympy.abc import x, y, z
 
-    >>> Plot(x*y**3-y*x**3) #doctest: +SKIP
+    >>> Plot(x*y**3-y*x**3)
     [0]: -x**3*y + x*y**3, 'mode=cartesian'
 
     >>> p = Plot()
@@ -55,19 +52,19 @@ class PygletPlot(object):
     syntax is flexible and arguments left out are taken
     from the defaults for the current coordinate mode:
 
-    >>> Plot(x**2) # implies [x,-5,5,100] #doctest: +SKIP
+    >>> Plot(x**2) # implies [x,-5,5,100]
     [0]: x**2, 'mode=cartesian'
-    >>> Plot(x**2, [], []) # [x,-1,1,40], [y,-1,1,40] #doctest: +SKIP
+    >>> Plot(x**2, [], []) # [x,-1,1,40], [y,-1,1,40]
     [0]: x**2, 'mode=cartesian'
-    >>> Plot(x**2-y**2, [100], [100]) # [x,-1,1,100], [y,-1,1,100] #doctest: +SKIP
+    >>> Plot(x**2-y**2, [100], [100]) # [x,-1,1,100], [y,-1,1,100]
     [0]: x**2 - y**2, 'mode=cartesian'
-    >>> Plot(x**2, [x,-13,13,100]) #doctest: +SKIP
+    >>> Plot(x**2, [x,-13,13,100])
     [0]: x**2, 'mode=cartesian'
-    >>> Plot(x**2, [-13,13]) # [x,-13,13,100] #doctest: +SKIP
+    >>> Plot(x**2, [-13,13]) # [x,-13,13,100]
     [0]: x**2, 'mode=cartesian'
-    >>> Plot(x**2, [x,-13,13]) # [x,-13,13,10] #doctest: +SKIP
+    >>> Plot(x**2, [x,-13,13]) # [x,-13,13,10]
     [0]: x**2, 'mode=cartesian'
-    >>> Plot(1*x, [], [x], mode='cylindrical') #doctest: +SKIP
+    >>> Plot(1*x, [], [x], mode='cylindrical')
     ... # [unbound_theta,0,2*Pi,40], [x,-1,1,20]
     [0]: x, 'mode=cartesian'
 
@@ -94,7 +91,7 @@ class PygletPlot(object):
     1: parametric, cartesian, polar
     2: parametric, cartesian, cylindrical = polar, spherical
 
-    >>> Plot(1, mode='spherical') # doctest: +SKIP
+    >>> Plot(1, mode='spherical')
 
 
     Calculator-like Interface
@@ -104,14 +101,14 @@ class PygletPlot(object):
     >>> f = x**2
     >>> p[1] = f
     >>> p[2] = f.diff(x)
-    >>> p[3] = f.diff(x).diff(x) # doctest: +SKIP
-    >>> p # doctest: +SKIP
+    >>> p[3] = f.diff(x).diff(x)
+    >>> p
     [1]: x**2, 'mode=cartesian'
     [2]: 2*x, 'mode=cartesian'
     [3]: 2, 'mode=cartesian'
-    >>> p.show() #doctest: +SKIP
-    >>> p.clear() #doctest: +SKIP
-    >>> p #doctest: +SKIP
+    >>> p.show()
+    >>> p.clear()
+    >>> p
     <blank plot>
     >>> p[1] =  x**2+y**2
     >>> p[1].style = 'solid'
@@ -120,7 +117,7 @@ class PygletPlot(object):
     >>> p[1].color = z, (0.4,0.4,0.9), (0.9,0.4,0.4)
     >>> p[1].style = 'both'
     >>> p[2].style = 'both'
-    >>> p.close() #doctest: +SKIP
+    >>> p.close()
 
 
     Plot Window Keyboard Controls
@@ -168,12 +165,12 @@ class PygletPlot(object):
         >>> from sympy.plotting.pygletplot import PygletPlot as Plot
         >>> from sympy.core import Symbol
         >>> from sympy.abc import x
-        >>> p = Plot(x**2, visible=False) #doctest: +SKIP
+        >>> p = Plot(x**2, visible=False)
 
         ...is equivalent to...
 
-        >>> p = Plot(visible=False) #doctest: +SKIP
-        >>> p[1] = x**2 #doctest: +SKIP
+        >>> p = Plot(visible=False)
+        >>> p[1] = x**2
 
         Note that in earlier versions of the plotting
         module, you were able to specify multiple
