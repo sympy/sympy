@@ -287,12 +287,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     If we were to import the first file and use the ``sin_cos`` function, we
     would get something like
 
+    >>> from sin_cos_sympy import sin_cos # doctest: +SKIP
     >>> sin_cos(1) # doctest: +SKIP
     cos(1) + sin(1)
 
     On the other hand, if we imported ``sin_cos`` from the second file, we
     would get
 
+    >>> from sin_cos_numpy import sin_cos # doctest: +SKIP
     >>> sin_cos(1) # doctest: +SKIP
     1.38177329068
 
@@ -305,20 +307,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     level.
 
     The key point here is that when function in Python references a name that
-    is not defined, that name is looked up in the "global" namespace of the
-    module where that function is defined.
+    is not defined in the function, that name is looked up in the "global"
+    namespace of the module where that function is defined.
 
     Now, in Python, we can emulate this behavior without actually writing a
-    file to disk using the ``eval`` function. ``eval`` takes a string
-    containing a Python expression, and a dictionary that should contain the
-    global variables of the module. Also note that ``eval`` is limited to
-    expressions, so we cannot use the ``def`` keyword, but we can still define
-    simple functions using the ``lambda`` keyword. The following is equivalent
-    to the ``sin_cos`` defined in ``sin_cos_sympy.py``:
+    file to disk using the ``exec`` function. ``exec`` takes a
+    string containing a block of Python code, and a dictionary that should
+    contain the global variables of the module. The following is
+    equivalent to the ``sin_cos`` defined in ``sin_cos_sympy.py``:
 
     >>> import sympy
     >>> module_dictionary = {'sin': sympy.sin, 'cos': sympy.cos}
-    >>> sin_cos = eval('lambda x: sin(x) + cos(x)', module_dictionary)
+    >>> exec('''
+    ... def sin_cos(x):
+    ...     sin(x) + cos(x)
+    ... ''', module_dictionary)
     >>> sin_cos(1)
     cos(1) + sin(1)
 
@@ -326,21 +329,56 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     >>> import numpy
     >>> module_dictionary = {'sin': numpy.sin, 'cos': numpy.cos}
-    >>> sin_cos = eval('lambda x: sin(x) + cos(x)', module_dictionary)
+    >>> exec('''
+    ... def sin_cos(x):
+    ...     sin(x) + cos(x)
+    ... ''', module_dictionary)
     >>> sin_cos(1)
     1.38177329068
 
-    So now we can get an idea of how ``lambdify`` works, and where it gets its
-    name from. ``lambdify`` takes the input expression (like ``sin(x) +
-    cos(x)``) and
+    So now we can get an idea of how ``lambdify`` works. The name "lambdify"
+    comes from the fact that we can think of something like ``lambdify(x,
+    sin(x) + cos(x), 'numpy')`` as ``lambda x: sin(x) + cos(x)``, where
+    ``sin`` and ``cos`` come from the ``numpy`` namespace. This is also why
+    the symbols argument is first in ``lambdify``, as opposed to most SymPy
+    functions where it comes after the expression: to better mimic the
+    ``lambda`` builtin.
+
+    ``lambdify`` takes the input expression (like ``sin(x) + cos(x)``) and
 
     1. Converts it to a string
     2. Creates a module globals dictionary based on the modules that are
        passed in (by default, it uses the NumPy module)
-    3. Creates the string ``"lambda {vars}: {expr}"``, where ``{vars}`` is the
+    3. Creates the string ``"def func({vars}): {expr}"``, where ``{vars}`` is the
        list of variables separated by commas, and ``{expr}`` is the string
-       created in step 1., then ``eval``s that string with the module globals
-       namespace.
+       created in step 1., then ``exec``s that string with the module globals
+       namespace and returns ``func``.
+
+
+    In fact, functions returned by ``lambdify`` support inspection. So you can
+    see exactly how they are by using ``inspect.getsource``, or ``??`` if you
+    are using IPython or the Jupyter notebook.
+
+
+    >>> f = lambdify(x, sin(x) + cos(x))
+    >>> import inspect
+    >>> print(inspect.getsource(f))
+    def _lambdifygenerated(x):
+        return (sin(x) + cos(x))
+
+    This shows us the source code of the function, but not the namespace it
+    was defined in. We can inspect that by looking at the ``__globals__``
+    attribute of ``f``:
+
+    >>> f.__globals__['sin']
+    <ufunc 'sin'>
+    >>> f.__globals__['cos']
+    <ufunc 'cos'>
+    >>> f.__globals__['sin'] is numpy.sin
+    True
+
+    This shows us that ``sin`` and ``cos`` in the namespace of ``f`` will be
+    NumPy sin and cos.
 
     Note that there are some convenience layers in each of these steps, but at
     the core, this is how ``lambdify`` works. Step 1 is done using the
@@ -425,10 +463,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     ``lambdify`` exists: to provide a bridge between SymPy and NumPy.**
 
     However, why is it that ``f`` did work? That's because ``f`` doesn't call
-    any functions, it only adds 1. So the resulting lambda function that is
-    created, ``lambda x: x + 1`` does not depend on the globals namespace it
-    is defined in. Thus it works, but only by accident. A future version of
-    ``lambdify`` may remove this behavior.
+    any functions, it only adds 1. So the resulting function that is created,
+    ``def _lambdifygenerated(x): x + 1`` does not depend on the globals
+    namespace it is defined in. Thus it works, but only by accident. A future
+    version of ``lambdify`` may remove this behavior.
 
     Be aware that certain implementation details described here may change in
     future versions of SymPy. The API of passing in custom modules and
@@ -441,7 +479,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     NumPy), and only pass it input types that are compatible with that module
     (say, NumPy arrays).** Remember that by default, if the ``module``
     argument is not provided, ``lambdify`` creates functions using the NumPy
-    namespace.
+    and SciPy namespaces.
 
     Notes
     =====
