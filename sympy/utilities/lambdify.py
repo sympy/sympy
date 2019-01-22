@@ -170,7 +170,7 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
-@doctest_depends_on(modules=('numpy'))
+@doctest_depends_on(modules=('numpy',))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
     """
@@ -188,7 +188,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> f = lambdify(x, expr, 'numpy')
     >>> a = np.array([1, 2])
     >>> f(a)
-    array([ 1.38177329,  0.49315059])
+    [1.38177329 0.49315059]
 
     The primary purpose of this function is to provide a bridge from SymPy
     expressions to numerical libraries such as NumPy, NumExpr, mpmath, and
@@ -250,7 +250,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         unsanitized input.
 
     Arguments in the provided expression that are not valid Python identifiers
-    are substitued with dummy symbols. This allows for applied functions
+    are substituted with dummy symbols. This allows for applied functions
     (e.g. f(t)) to be supplied as arguments. Call the function with
     dummify=True to replace all arguments with dummy symbols (if `args` is
     not a string) - for example, to ensure that the arguments do not
@@ -320,8 +320,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> module_dictionary = {'sin': sympy.sin, 'cos': sympy.cos}
     >>> exec('''
     ... def sin_cos(x):
-    ...     sin(x) + cos(x)
+    ...     return sin(x) + cos(x)
     ... ''', module_dictionary)
+    >>> sin_cos = module_dictionary['sin_cos']
     >>> sin_cos(1)
     cos(1) + sin(1)
 
@@ -331,8 +332,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> module_dictionary = {'sin': numpy.sin, 'cos': numpy.cos}
     >>> exec('''
     ... def sin_cos(x):
-    ...     sin(x) + cos(x)
+    ...     return sin(x) + cos(x)
     ... ''', module_dictionary)
+    >>> sin_cos = module_dictionary['sin_cos']
     >>> sin_cos(1)
     1.38177329068
 
@@ -349,7 +351,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     1. Converts it to a string
     2. Creates a module globals dictionary based on the modules that are
        passed in (by default, it uses the NumPy module)
-    3. Creates the string ``"def func({vars}): {expr}"``, where ``{vars}`` is the
+    3. Creates the string ``"def func({vars}): return {expr}"``, where ``{vars}`` is the
        list of variables separated by commas, and ``{expr}`` is the string
        created in step 1., then ``exec``s that string with the module globals
        namespace and returns ``func``.
@@ -429,7 +431,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> import numpy
     >>> a = numpy.array([1, 2])
     >>> f(a)
-    array([2, 3])
+    [2 3]
 
     But what happens if you make the mistake of passing in a SymPy expression
     instead of a NumPy array:
@@ -446,7 +448,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     This works as expected on NumPy arrays:
 
     >>> g(a)
-    array([ 1.84147098,  2.90929743])
+    [1.84147098 2.90929743]
 
     But if we try to pass in a SymPy expression, it fails
 
@@ -464,7 +466,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     However, why is it that ``f`` did work? That's because ``f`` doesn't call
     any functions, it only adds 1. So the resulting function that is created,
-    ``def _lambdifygenerated(x): x + 1`` does not depend on the globals
+    ``def _lambdifygenerated(x): return x + 1`` does not depend on the globals
     namespace it is defined in. Thus it works, but only by accident. A future
     version of ``lambdify`` may remove this behavior.
 
@@ -652,8 +654,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     1.0
     >>> tensor = tf.constant([[1.0, 2.0], [3.0, 4.0]]) # works with any shape tensor
     >>> sess.run(func(tensor))
-    array([[ 1.,  2.],
-           [ 3.,  4.]], dtype=float32)
+    [[1. 2.]
+     [3. 4.]]
 
     """
     from sympy.core.symbol import Symbol
