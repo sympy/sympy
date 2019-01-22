@@ -7,10 +7,9 @@ Suggested Usage:    python -i plotting.py
 """
 
 
-from sympy import symbols
-from sympy.plotting.pygletplot import PygletPlot
-from sympy import sin, cos, pi, sqrt, exp
+from sympy import symbols, sin, cos, pi, sqrt
 from sympy.core.compatibility import range
+from sympy.plotting.pygletplot import PygletPlot
 
 from time import sleep, clock
 
