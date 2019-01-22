@@ -794,7 +794,7 @@ def best_origin(a, b, lineseg, expr):
     3 > First check if a point exists on the line segment where the value of
         the highest power generator becomes 0. If not check if the value of
         the next highest becomes 0. If none becomes 0 within line segment
-        constraints then pick the first boundary point of the line segement.
+        constraints then pick the first boundary point of the line segment.
         Actually, any point lying on the segment can be picked as best origin
         in the last case.
 
@@ -815,8 +815,8 @@ def best_origin(a, b, lineseg, expr):
     def x_axis_cut(ls):
         """Returns the point where the input line segment
         intersects the x-axis.
-        Parameters:
-        ===========
+        Parameters
+        ==========
         ls : Line segment
         """
         p, q = ls.points
@@ -832,8 +832,8 @@ def best_origin(a, b, lineseg, expr):
     def y_axis_cut(ls):
         """Returns the point where the input line segment
         intersects the y-axis.
-        Parameters:
-        ===========
+        Parameters
+        ==========
         ls : Line segment
         """
         p, q = ls.points
@@ -926,8 +926,8 @@ def decompose(expr, separate=False):
     ==========
     expr : Polynomial(SymPy expression)
 
-    Optional Parameters :
-    ---------------------
+    Optional Parameters:
+    --------------------
     separate : If True then simply return a list of the constituent monomials
                If not then break up the polynomial into constituent homogeneous
                polynomials.

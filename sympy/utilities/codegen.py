@@ -876,7 +876,7 @@ class CCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         if len(routine.results) > 1:
@@ -1136,7 +1136,7 @@ class FCodeGen(CodeGen):
             elif isinstance(arg, OutputArgument):
                 typeinfo = "%s, intent(out)" % arg.get_datatype('fortran')
             else:
-                raise CodeGenError("Unkown Argument type: %s" % type(arg))
+                raise CodeGenError("Unknown Argument type: %s" % type(arg))
 
             fprint = self._get_symbol
 
@@ -1183,7 +1183,7 @@ class FCodeGen(CodeGen):
         If the routine has multiple result objects, a CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         prototype = [ "interface\n" ]
@@ -1204,7 +1204,7 @@ class FCodeGen(CodeGen):
                 assign_to = result.result_var
 
             constants, not_fortran, f_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False, source_format='free'),
+                'doprint', dict(human=False, source_format='free', standard=95),
                 result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
@@ -1843,7 +1843,7 @@ class RustCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         results = [i.get_datatype('Rust') for i in routine.results]
@@ -1945,7 +1945,7 @@ class RustCodeGen(CodeGen):
 
 
 
-def get_code_generator(language, project=None, standard=None):
+def get_code_generator(language, project=None, standard=None, printer = None):
     if language == 'C':
         if standard is None:
             pass
@@ -1959,7 +1959,7 @@ def get_code_generator(language, project=None, standard=None):
                     "RUST": RustCodeGen}.get(language.upper())
     if CodeGenClass is None:
         raise ValueError("Language '%s' is not supported." % language)
-    return CodeGenClass(project)
+    return CodeGenClass(project, printer)
 
 
 #
@@ -1969,7 +1969,7 @@ def get_code_generator(language, project=None, standard=None):
 
 def codegen(name_expr, language=None, prefix=None, project="project",
             to_files=False, header=True, empty=True, argument_sequence=None,
-            global_vars=None, standard=None, code_gen=None):
+            global_vars=None, standard=None, code_gen=None, printer = None):
     """Generate source code for expressions in a given language.
 
     Parameters
@@ -2014,7 +2014,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
         CodeGenError is raised if required arguments are missing.
         Redundant arguments are used without warning.  If omitted,
         arguments will be ordered alphabetically, but with all input
-        aguments first, and then output or in-out arguments.
+        arguments first, and then output or in-out arguments.
 
     global_vars : iterable, optional
         Sequence of global variables used by the routine.  Variables
@@ -2103,7 +2103,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     else:
         if code_gen is not None:
             raise ValueError("You cannot specify both language and code_gen.")
-        code_gen = get_code_generator(language, project, standard)
+        code_gen = get_code_generator(language, project, standard, printer)
 
     if isinstance(name_expr[0], string_types):
         # single tuple is given, turn it into a singleton list with a tuple.

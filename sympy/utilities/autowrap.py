@@ -312,7 +312,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
 
         # pyx
-        with open(pyxfilename, 'w') as f:
+        with open(os.path.join(build_dir, pyxfilename), 'w') as f:
             self.dump_pyx([routine], f, self.filename)
 
         # setup.py
@@ -554,13 +554,14 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     verbose : bool, optional
         If True, autowrap will not mute the command line backends. This can be
         helpful for debugging.
-    helpers : iterable, optional
-        Used to define auxillary expressions needed for the main expr. If the
-        main expression needs to call a specialized function it should be put
-        in the ``helpers`` iterable. Autowrap will then make sure that the
+    helpers : 3-tuple or iterable of 3-tuples, optional
+        Used to define auxiliary expressions needed for the main expr. If the
+        main expression needs to call a specialized function it should be
+        passed in via ``helpers``. Autowrap will then make sure that the
         compiled main expression can link to the helper routine. Items should
-        be tuples with (<funtion_name>, <sympy_expression>, <arguments>). It
-        is mandatory to supply an argument sequence to helper routines.
+        be 3-tuples with (<function_name>, <sympy_expression>,
+        <argument_tuple>). It is mandatory to supply an argument sequence to
+        helper routines.
     code_gen : CodeGen instance
         An instance of a CodeGen subclass. Overrides ``language``.
     include_dirs : [string]
@@ -596,7 +597,12 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     else:
         language = _infer_language(backend)
 
-    helpers = [helpers] if helpers else ()
+    # two cases 1) helpers is an iterable of 3-tuples and 2) helpers is a
+    # 3-tuple
+    if iterable(helpers) and len(helpers) != 0 and iterable(helpers[0]):
+        helpers = helpers if helpers else ()
+    else:
+        helpers = [helpers] if helpers else ()
     args = list(args) if iterable(args, exclude=set) else args
 
     if code_gen is None:
@@ -817,7 +823,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
             os.chdir(oldwork)
             if not self.filepath:
                 try:
-                    pass # shutil.rmtree(workdir)
+                    shutil.rmtree(workdir)
                 except OSError:
                     # Could be some issues on Windows
                     pass
@@ -993,7 +999,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         If True, autowrap will not mute the command line backends. This can
         be helpful for debugging.
     helpers : iterable, optional
-        Used to define auxillary expressions needed for the main expr. If
+        Used to define auxiliary expressions needed for the main expr. If
         the main expression needs to call a specialized function it should
         be put in the ``helpers`` iterable. Autowrap will then make sure
         that the compiled main expression can link to the helper routine.

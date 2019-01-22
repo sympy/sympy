@@ -95,6 +95,9 @@ from sympy.printing import latex
 from sympy.utilities.decorator import doctest_depends_on
 
 
+__doctest_requires__ = {('preview_diagram',): 'pyglet'}
+
+
 class _GrowableGrid(object):
     """
     Holds a growable grid of objects.
@@ -294,7 +297,7 @@ class DiagramGrid(object):
     References
     ==========
 
-    [FiveLemma] http://en.wikipedia.org/wiki/Five_lemma
+    [FiveLemma] https://en.wikipedia.org/wiki/Five_lemma
     """
     @staticmethod
     def _simplify_morphisms(morphisms):
@@ -439,7 +442,7 @@ class DiagramGrid(object):
         aspects of layout.  For triangles with only simple morphisms
         in the edge, this assures that triangles with all three edges
         visible will get typeset after triangles with less visible
-        edges, which sometimes minimises the necessity in diagonal
+        edges, which sometimes minimizes the necessity in diagonal
         arrows.  For triangles with composite morphisms in the edges,
         this assures that objects connected with shorter morphisms
         will be laid out first, resulting the visual proximity of
@@ -1541,7 +1544,7 @@ class XypicDiagramDrawer(object):
     should be done:
 
     >>> def formatter(astr):
-    ...   astr.label = "\exists !" + astr.label
+    ...   astr.label = r"\exists !" + astr.label
     ...   astr.arrow_style = "{-->}"
     >>> drawer.arrow_formatters["unique"] = formatter
     >>> print(drawer.draw(diagram, grid))

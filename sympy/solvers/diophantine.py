@@ -2290,7 +2290,7 @@ def _diop_ternary_quadratic_normal(var, coeff):
     A = -a_2*c_2
     B = -b_2*c_2
 
-    # If following two conditions are satisified then there are no solutions
+    # If following two conditions are satisfied then there are no solutions
     if A < 0 and B < 0:
         return (None, None, None)
 

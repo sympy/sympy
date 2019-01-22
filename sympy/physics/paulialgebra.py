@@ -6,7 +6,7 @@ See the documentation to the class Pauli for examples.
 
 References
 ~~~~~~~~~~
-.. [1] http://en.wikipedia.org/wiki/Pauli_matrices
+.. [1] https://en.wikipedia.org/wiki/Pauli_matrices
 """
 
 from __future__ import print_function, division
@@ -111,7 +111,7 @@ class Pauli(Symbol):
     def __new__(cls, i):
         if not i in [1, 2, 3]:
             raise IndexError("Invalid Pauli index")
-        obj = Symbol.__new__(cls, "sigma%d" % i, commutative=False)
+        obj = Symbol.__new__(cls, "sigma%d" % i, commutative=False, hermitian=True)
         obj.i = i
         return obj
 

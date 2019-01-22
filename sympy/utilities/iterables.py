@@ -53,7 +53,7 @@ def flatten(iterable, levels=None, cls=None):
     >>> flatten([MyOp(1, MyOp(2, 3))], cls=MyOp)
     [1, 2, 3]
 
-    adapted from http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
+    adapted from https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
     """
     if levels is not None:
         if not levels:
@@ -621,19 +621,24 @@ def capture(func):
     return file.getvalue()
 
 
-def sift(seq, keyfunc):
+def sift(seq, keyfunc, binary=False):
     """
-    Sift the sequence, ``seq`` into a dictionary according to keyfunc.
+    Sift the sequence, ``seq`` according to ``keyfunc``.
 
-    OUTPUT: each element in expr is stored in a list keyed to the value
-    of keyfunc for the element.
+    OUTPUT: When binary is False (default), the output is a dictionary
+    where elements of ``seq`` are stored in a list keyed to the value
+    of keyfunc for that element. If ``binary`` is True then a tuple
+    with lists ``T`` and ``F`` are returned where ``T`` is a list
+    containing elements of seq for which ``keyfunc`` was True and
+    ``F`` containing those elements for which ``keyfunc`` was False;
+    a ValueError is raised if the ``keyfunc`` is not binary.
 
     Examples
     ========
 
     >>> from sympy.utilities import sift
     >>> from sympy.abc import x, y
-    >>> from sympy import sqrt, exp
+    >>> from sympy import sqrt, exp, pi, Tuple
 
     >>> sift(range(5), lambda x: x % 2)
     {0: [0, 2, 4], 1: [1, 3]}
@@ -652,6 +657,30 @@ def sift(seq, keyfunc):
     ...      lambda x: x.as_base_exp()[0])
     {E: [exp(x)], x: [sqrt(x)], y: [y**(2*x)]}
 
+    Sometimes you expect the results to be binary; the
+    results can be unpacked by setting ``binary`` to True:
+
+    >>> sift(range(4), lambda x: x % 2, binary=True)
+    ([1, 3], [0, 2])
+    >>> sift(Tuple(1, pi), lambda x: x.is_rational, binary=True)
+    ([1], [pi])
+
+    A ValueError is raised if the predicate was not actually binary
+    (which is a good test for the logic where sifting is used and
+    binary results were expected):
+
+    >>> unknown = exp(1) - pi  # the rationality of this is unknown
+    >>> args = Tuple(1, pi, unknown)
+    >>> sift(args, lambda x: x.is_rational, binary=True)
+    Traceback (most recent call last):
+    ...
+    ValueError: keyfunc gave non-binary output
+
+    The non-binary sifting shows that there were 3 keys generated:
+
+    >>> set(sift(args, lambda x: x.is_rational).keys())
+    {None, False, True}
+
     If you need to sort the sifted items it might be better to use
     ``ordered`` which can economically apply multiple sort keys
     to a squence while sorting.
@@ -660,10 +689,18 @@ def sift(seq, keyfunc):
     ========
     ordered
     """
-    m = defaultdict(list)
+    if not binary:
+        m = defaultdict(list)
+        for i in seq:
+            m[keyfunc(i)].append(i)
+        return m
+    sift = F, T = [], []
     for i in seq:
-        m[keyfunc(i)].append(i)
-    return m
+        try:
+            sift[keyfunc(i)].append(i)
+        except (IndexError, TypeError):
+            raise ValueError('keyfunc gave non-binary output')
+    return T, F
 
 
 def take(iter, n):
@@ -840,7 +877,7 @@ def topological_sort(graph, key=None):
         ...
         ValueError: cycle detected
 
-    .. seealso:: http://en.wikipedia.org/wiki/Topological_sorting
+    .. seealso:: https://en.wikipedia.org/wiki/Topological_sorting
 
     """
     V, E = graph
@@ -922,6 +959,42 @@ def rotate_right(x, y):
         return []
     y = len(x) - y % len(x)
     return x[y:] + x[:y]
+
+
+def least_rotation(x):
+    '''
+    Returns the number of steps of left rotation required to
+    obtain lexicographically minimal string/list/tuple, etc.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import least_rotation, rotate_left
+    >>> a = [3, 1, 5, 1, 2]
+    >>> least_rotation(a)
+    3
+    >>> rotate_left(a, _)
+    [1, 2, 3, 1, 5]
+
+    .. seealso:: https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
+    '''
+    S = x + x      # Concatenate string to it self to avoid modular arithmetic
+    f = [-1] * len(S)     # Failure function
+    k = 0       # Least rotation of string found so far
+    for j in range(1,len(S)):
+        sj = S[j]
+        i = f[j-k-1]
+        while i != -1 and sj != S[k+i+1]:
+            if sj < S[k+i+1]:
+                k = j-i-1
+            i = f[i]
+        if sj != S[k+i+1]:
+            if sj < S[k]:
+                k = j
+            f[j-k] = -1
+        else:
+            f[j-k] = i+1
+    return k
 
 
 def multiset_combinations(m, n, g=None):
@@ -1031,7 +1104,7 @@ def multiset_permutations(m, size=None, g=None):
 
 def _partition(seq, vector, m=None):
     """
-    Return the partion of seq as specified by the partition vector.
+    Return the partition of seq as specified by the partition vector.
 
     Examples
     ========
@@ -1116,7 +1189,7 @@ def _set_partitions(n):
 
     Nijenhuis, Albert and Wilf, Herbert. (1978) Combinatorial Algorithms,
     2nd Ed, p 91, algorithm "nexequ". Available online from
-    http://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
+    https://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
     November 17, 2012).
 
     """
@@ -1531,10 +1604,10 @@ def ordered_partitions(n, m=None, sort=True):
     ==========
 
     .. [1] Generating Integer Partitions, [online],
-        Available: http://jeromekelleher.net/generating-integer-partitions.html
+        Available: https://jeromekelleher.net/generating-integer-partitions.html
     .. [2] Jerome Kelleher and Barry O'Sullivan, "Generating All
         Partitions: A Comparison Of Two Encodings", [online],
-        Available: http://arxiv.org/pdf/0909.2331v2.pdf
+        Available: https://arxiv.org/pdf/0909.2331v2.pdf
     """
     if n < 1 or m is not None and m < 1:
         # the empty set is the only way to handle these inputs
@@ -1785,10 +1858,10 @@ def generate_bell(n):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Method_ringing
-    * http://stackoverflow.com/questions/4856615/recursive-permutation/4857018
+    * https://en.wikipedia.org/wiki/Method_ringing
+    * https://stackoverflow.com/questions/4856615/recursive-permutation/4857018
     * http://programminggeeks.com/bell-algorithm-for-permutation/
-    * http://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
+    * https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
     * Generating involutions, derangements, and relatives by ECO
       Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
 
@@ -1965,7 +2038,7 @@ def generate_oriented_forest(n):
     Reference:
     [1] T. Beyer and S.M. Hedetniemi: constant time generation of \
         rooted trees, SIAM J. Computing Vol. 9, No. 4, November 1980
-    [2] http://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python
+    [2] https://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python
 
     Examples
     ========
@@ -2128,8 +2201,8 @@ def kbins(l, k, ordered=None):
     [[0, 1, 2], [3, 4]]
     [[0, 1, 2, 3], [4]]
 
-    The ``ordered`` flag which is either None (to give the simple partition
-    of the the elements) or is a 2 digit integer indicating whether the order of
+    The ``ordered`` flag is either None (to give the simple partition
+    of the elements) or is a 2 digit integer indicating whether the order of
     the bins and the order of the items in the bins matters. Given::
 
         A = [[0], [1, 2]]
@@ -2191,7 +2264,7 @@ def kbins(l, k, ordered=None):
     """
     def partition(lista, bins):
         #  EnricoGiampieri's partition generator from
-        #  http://stackoverflow.com/questions/13131491/
+        #  https://stackoverflow.com/questions/13131491/
         #  partition-n-items-into-k-bins-in-python-lazily
         if len(lista) == 1 or bins == 1:
             yield [lista]

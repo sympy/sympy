@@ -47,7 +47,10 @@ class ReprPrinter(Printer):
 
     def _print_Add(self, expr, order=None):
         args = self._as_ordered_terms(expr, order=order)
+        nargs = len(args)
         args = map(self._print, args)
+        if nargs > 255:  # Issue #10259, Python < 3.7
+            return "Add(*[%s])" % ", ".join(args)
         return "Add(%s)" % ", ".join(args)
 
     def _print_Cycle(self, expr):
@@ -79,6 +82,18 @@ class ReprPrinter(Printer):
     def _print_Integer(self, expr):
         return 'Integer(%i)' % expr.p
 
+    def _print_Integers(self, expr):
+        return 'Integers'
+
+    def _print_Naturals(self, expr):
+        return 'Naturals'
+
+    def _print_Naturals0(self, expr):
+        return 'Naturals0'
+
+    def _print_Reals(self, expr):
+        return 'Reals'
+
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
 
@@ -107,10 +122,10 @@ class ReprPrinter(Printer):
         _print_MatrixBase
 
     def _print_BooleanTrue(self, expr):
-        return "S.true"
+        return "true"
 
     def _print_BooleanFalse(self, expr):
-        return "S.false"
+        return "false"
 
     def _print_NaN(self, expr):
         return "nan"
@@ -122,7 +137,10 @@ class ReprPrinter(Printer):
         else:
             args = terms
 
+        nargs = len(args)
         args = map(self._print, args)
+        if nargs > 255:  # Issue #10259, Python < 3.7
+            return "Mul(*[%s])" % ", ".join(args)
         return "Mul(%s)" % ", ".join(args)
 
     def _print_Rational(self, expr):
@@ -224,6 +242,16 @@ class ReprPrinter(Printer):
         else:
             ringstr = ""
         return "%s(%s, %s%s)" % (cls, rep, dom, ringstr)
+
+    def _print_MonogenicFiniteExtension(self, ext):
+        # The expanded tree shown by srepr(ext.modulus)
+        # is not practical.
+        return "FiniteExtension(%s)" % str(ext.modulus)
+
+    def _print_ExtensionElement(self, f):
+        rep = self._print(f.rep)
+        ext = self._print(f.ext)
+        return "ExtElem(%s, %s)" % (rep, ext)
 
 
 def srepr(expr, **settings):

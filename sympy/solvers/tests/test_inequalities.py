@@ -98,6 +98,8 @@ def test_reduce_poly_inequalities_real_interval():
         ) == Union(Interval(-s, -1, True, True), Interval(-1, 1, True, True),
         Interval(1, s, True, True))
 
+    assert reduce_rational_inequalities([[Lt(x**2, -1.)]], x) is S.false
+
 
 def test_reduce_poly_inequalities_complex_relational():
     assert reduce_rational_inequalities(
@@ -217,9 +219,9 @@ def test_reduce_inequalities_errors():
     raises(NotImplementedError, lambda: reduce_inequalities(Ge(x**2*y + y, 1)))
 
 
-def test_hacky_inequalities():
+def test__solve_inequalities():
     assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)
-    assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= 1 - y)
+    assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x < oo) & (x >= -y + 1)
     assert reduce_inequalities(Eq(0, x - y), symbols=[x]) == Eq(x, y)
     assert reduce_inequalities(Ne(0, x - y), symbols=[x]) == Ne(x, y)
 
@@ -268,6 +270,8 @@ def test_solve_univariate_inequality():
         Union(Interval(1, 2), Interval(3, oo))
     assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x) == \
         Or(And(Le(1, x), Le(x, 2)), And(Le(3, x), Lt(x, oo)))
+    assert isolve((x - 1)*(x - 2)*(x - 4) < 0, x, domain = FiniteSet(0, 3)) == \
+        Or(Eq(x, 0), Eq(x, 3))
     # issue 2785:
     assert isolve(x**3 - 2*x - 1 > 0, x, relational=False) == \
         Union(Interval(-1, -sqrt(5)/2 + S(1)/2, True, True),
@@ -309,6 +313,10 @@ def test_solve_univariate_inequality():
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
     raises(TypeError, lambda: isolve(x - I < 0, x))
+
+    zero = x**2 + x - x*(x + 1)
+    assert isolve(zero < 0, x, relational=False) is S.EmptySet
+    assert isolve(zero <= 0, x, relational=False) is S.Reals
 
     # make sure iter_solutions gets a default value
     raises(NotImplementedError, lambda: isolve(
@@ -379,7 +387,9 @@ def test_issue_10198():
 
 
 def test_issue_10047():
-    assert solve(sin(x) < 2) == And(-oo < x, x < oo)
+    # this must remain an inequality, not True, since if x
+    # is not real the inequality is invalid
+    assert solve(sin(x) < 2) == (x <= oo)
 
 
 def test_issue_10268():
@@ -413,7 +423,7 @@ def test__solve_inequality():
         for c in (0, 1):
             e = 2*fx - c > 0
             assert _solve_inequality(e, x, linear=True) == (
-                fx > c/2)
+                fx > c/S(2))
     assert _solve_inequality(2*x**2 + 2*x - 1 < 0, x, linear=True) == (
         x*(x + 1) < S.Half)
     assert _solve_inequality(Eq(x*y, 1), x) == Eq(x*y, 1)
@@ -421,6 +431,7 @@ def test__solve_inequality():
     assert _solve_inequality(Eq(x*nz, 1), x) == Eq(x, 1/nz)
     assert _solve_inequality(x*nz < 1, x) == (x*nz < 1)
     a = Symbol('a', positive=True)
+    assert _solve_inequality(a/x > 1, x) == (S.Zero < x) & (x < a)
     assert _solve_inequality(a/x > 1, x, linear=True) == (1/x > 1/a)
     # make sure to include conditions under which solution is valid
     e = Eq(1 - x, x*(1/x - 1))

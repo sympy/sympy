@@ -317,7 +317,7 @@ class DiracDelta(Function):
             return p.degree() == 1
         return False
 
-    def _eval_rewrite_as_Piecewise(self, *args):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         """Represents DiracDelta in a Piecewise form
 
            Examples
@@ -342,7 +342,7 @@ class DiracDelta(Function):
         if len(args) == 1:
             return Piecewise((DiracDelta(0), Eq(args[0], 0)), (0, True))
 
-    def _eval_rewrite_as_SingularityFunction(self, *args):
+    def _eval_rewrite_as_SingularityFunction(self, *args, **kwargs):
         """
         Returns the DiracDelta expression written in the form of Singularity Functions.
 
@@ -360,16 +360,11 @@ class DiracDelta(Function):
                 return SingularityFunction(x, solve(args[0], x)[0], -1)
             return SingularityFunction(x, solve(args[0], x)[0], -args[1] - 1)
         else:
-            # I dont know how to handle the case for DiracDelta expressions
+            # I don't know how to handle the case for DiracDelta expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
                 rewrite(SingularityFunction) doesn't support
                 arguments with more that 1 variable.'''))
-
-
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\delta'
 
     def _sage_(self):
         import sage.all as sage
@@ -520,7 +515,7 @@ class Heaviside(Function):
         elif fuzzy_not(im(arg).is_zero):
             raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
 
-    def _eval_rewrite_as_Piecewise(self, arg, H0=None):
+    def _eval_rewrite_as_Piecewise(self, arg, H0=None, **kwargs):
         """Represents Heaviside in a Piecewise form
 
            Examples
@@ -547,7 +542,7 @@ class Heaviside(Function):
             return Piecewise((0, arg < 0), (1, arg >= 0))
         return Piecewise((0, arg < 0), (H0, Eq(arg, 0)), (1, arg > 0))
 
-    def _eval_rewrite_as_sign(self, arg, H0=None):
+    def _eval_rewrite_as_sign(self, arg, H0=None, **kwargs):
         """Represents the Heaviside function in the form of sign function.
         The value of the second argument of Heaviside must specify Heaviside(0)
         = 1/2 for rewritting as sign to be strictly equivalent.  For easier
@@ -589,7 +584,7 @@ class Heaviside(Function):
             if H0 is None or H0 == S.Half:
                 return (sign(arg)+1)/2
 
-    def _eval_rewrite_as_SingularityFunction(self, args):
+    def _eval_rewrite_as_SingularityFunction(self, args, **kwargs):
         """
         Returns the Heaviside expression written in the form of Singularity Functions.
 
@@ -606,7 +601,7 @@ class Heaviside(Function):
             # ((x - 5)**3*Heaviside(x - 5)).rewrite(SingularityFunction) should output
             # SingularityFunction(x, 5, 0) instead of (x - 5)**3*SingularityFunction(x, 5, 0)
         else:
-            # I dont know how to handle the case for Heaviside expressions
+            # I don't know how to handle the case for Heaviside expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
                 rewrite(SingularityFunction) doesn't

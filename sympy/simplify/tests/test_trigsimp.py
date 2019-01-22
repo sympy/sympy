@@ -1,8 +1,10 @@
 from sympy import (
     symbols, sin, simplify, cos, trigsimp, rad, tan, exptrigsimp,sinh,
     cosh, diff, cot, Subs, exp, tanh, exp, S, integrate, I,Matrix,
-    Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise)
+    Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise , Rational
+    )
 
+from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
@@ -328,6 +330,7 @@ def test_trigsimp_groebner():
 
     # Test quick=False works
     assert trigsimp_groebner(ex, hints=[2]) in results
+    assert trigsimp_groebner(ex, hints=[long(2)]) in results
 
     # test "I"
     assert trigsimp_groebner(sin(I*x)/cos(I*x), hints=[tanh]) == I*tanh(x)
@@ -355,6 +358,14 @@ def test_issue_2827_trigsimp_methods():
     eq = 1/sqrt(E) + E
     assert exptrigsimp(eq) == eq
 
+def test_issue_15129_trigsimp_methods():
+    t1 = Matrix([sin(Rational(1, 50)), cos(Rational(1, 50)), 0])
+    t2 = Matrix([sin(Rational(1, 25)), cos(Rational(1, 25)), 0])
+    t3 = Matrix([cos(Rational(1, 25)), sin(Rational(1, 25)), 0])
+    r1 = t1.dot(t2)
+    r2 = t1.dot(t3)
+    assert trigsimp(r1) == cos(S(1)/50)
+    assert trigsimp(r2) == sin(S(3)/50)
 
 def test_exptrigsimp():
     def valid(a, b):
@@ -399,6 +410,12 @@ def test_exptrigsimp():
         assert s == exptrigsimp(e)
         assert valid(s, 2*sinh(a))
 
+def test_exptrigsimp_noncommutative():
+    a,b = symbols('a b', commutative=False)
+    x = Symbol('x', commutative=True)
+    assert exp(a + x) == exptrigsimp(exp(a)*exp(x))
+    p = exp(a)*exp(b) - exp(b)*exp(a)
+    assert p == exptrigsimp(p) != 0
 
 def test_powsimp_on_numbers():
     assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4

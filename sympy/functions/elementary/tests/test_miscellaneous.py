@@ -2,16 +2,19 @@ import itertools as it
 
 from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
+from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
                                                       Max, real_root)
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
-from sympy.utilities.pytest import raises
-
+from sympy.utilities.lambdify import lambdify
+from sympy.utilities.pytest import raises, skip, warns
+from sympy.external import import_module
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -309,7 +312,7 @@ def test_root():
     assert root(x, n) == x**(1/n)
     assert root(x, -n) == x**(-1/n)
 
-    assert root(x, n, k) == x**(1/n)*(-1)**(2*k/n)
+    assert root(x, n, k) == (-1)**(2*k/n)*x**(1/n)
 
 
 def test_real_root():
@@ -335,6 +338,19 @@ def test_real_root():
     assert g.subs(dict(x=I, n=2)) == sqrt(I)
 
 
+def test_issue_11463():
+    numpy = import_module('numpy')
+    if not numpy:
+        skip("numpy not installed.")
+    x = Symbol('x')
+    f = lambdify(x, real_root((log(x/(x-2))), 3), 'numpy')
+    # numpy.select evaluates all options before considering conditions,
+    # so it raises a warning about root of negative number which does
+    # not affect the outcome. This warning is suppressed here
+    with warns(RuntimeWarning):
+        assert f(numpy.array(-1)) < -1
+
+
 def test_rewrite_MaxMin_as_Heaviside():
     from sympy.abc import x
     assert Max(0, x).rewrite(Heaviside) == x*Heaviside(x)
@@ -351,6 +367,24 @@ def test_rewrite_MaxMin_as_Heaviside():
         x*Heaviside(-2*x)*Heaviside(-x - 2) - \
         x*Heaviside(2*x)*Heaviside(x - 2) \
         - 2*Heaviside(-x + 2)*Heaviside(x + 2)
+
+
+def test_rewrite_MaxMin_as_Piecewise():
+    from sympy import symbols, Piecewise
+    x, y, z, a, b = symbols('x y z a b', real=True)
+    vx, vy, va = symbols('vx vy va')
+    assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a >= b), (b, True))
+    assert Max(x, y, z).rewrite(Piecewise) == Piecewise((x, (x >= y) & (x >= z)), (y, y >= z), (z, True))
+    assert Max(x, y, a, b).rewrite(Piecewise) == Piecewise((a, (a >= b) & (a >= x) & (a >= y)),
+        (b, (b >= x) & (b >= y)), (x, x >= y), (y, True))
+    assert Min(a, b).rewrite(Piecewise) == Piecewise((a, a <= b), (b, True))
+    assert Min(x, y, z).rewrite(Piecewise) == Piecewise((x, (x <= y) & (x <= z)), (y, y <= z), (z, True))
+    assert Min(x,  y, a, b).rewrite(Piecewise) ==  Piecewise((a, (a <= b) & (a <= x) & (a <= y)),
+        (b, (b <= x) & (b <= y)), (x, x <= y), (y, True))
+
+    # Piecewise rewriting of Min/Max does not takes place for non-real arguments
+    assert Max(vx, vy).rewrite(Piecewise) == Max(vx, vy)
+    assert Min(va, vx, vy).rewrite(Piecewise) == Min(va, vx, vy)
 
 
 def test_issue_11099():
@@ -373,6 +407,52 @@ def test_issue_11099():
 
 def test_issue_12638():
     from sympy.abc import a, b, c, d
-    assert Min(a, b, c, Max(a, b)).simplify() == Min(a, b, c)
-    assert Min(a, b, Max(a, b, c)).simplify() == Min(a, b)
-    assert Min(a, b, Max(a, c)).simplify() == Min(a, b)
+    assert Min(a, b, c, Max(a, b)) == Min(a, b, c)
+    assert Min(a, b, Max(a, b, c)) == Min(a, b)
+    assert Min(a, b, Max(a, c)) == Min(a, b)
+
+
+def test_instantiation_evaluation():
+    from sympy.abc import v, w, x, y, z
+    assert Min(1, Max(2, x)) == 1
+    assert Max(3, Min(2, x)) == 3
+    assert Min(Max(x, y), Max(x, z)) == Max(x, Min(y, z))
+    assert set(Min(Max(w, x), Max(y, z)).args) == set(
+        [Max(w, x), Max(y, z)])
+    assert Min(Max(x, y), Max(x, z), w) == Min(
+        w, Max(x, Min(y, z)))
+    A, B = Min, Max
+    for i in range(2):
+        assert A(x, B(x, y)) == x
+        assert A(x, B(y, A(x, w, z))) == A(x, B(y, A(w, z)))
+        A, B = B, A
+    assert Min(w, Max(x, y), Max(v, x, z)) == Min(
+        w, Max(x, Min(y, Max(v, z))))
+
+def test_rewrite_as_Abs():
+    from itertools import permutations
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.abc import x, y, z, w
+    def test(e):
+        free = e.free_symbols
+        a = e.rewrite(Abs)
+        assert not a.has(Min, Max)
+        for i in permutations(range(len(free))):
+            reps = dict(zip(free, i))
+            assert a.xreplace(reps) == e.xreplace(reps)
+    test(Min(x, y))
+    test(Max(x, y))
+    test(Min(x, y, z))
+    test(Min(Max(w, x), Max(y, z)))
+
+def test_issue_14000():
+    assert isinstance(sqrt(4, evaluate=False), Pow) == True
+    assert isinstance(cbrt(3.5, evaluate=False), Pow) == True
+    assert isinstance(root(16, 4, evaluate=False), Pow) == True
+
+    assert sqrt(4, evaluate=False) == Pow(4, S.Half, evaluate=False)
+    assert cbrt(3.5, evaluate=False) == Pow(3.5, Rational(1, 3), evaluate=False)
+    assert root(4, 2, evaluate=False) == Pow(4, Rational(1, 2), evaluate=False)
+
+    assert root(16, 4, 2, evaluate=False).has(Pow) == True
+    assert real_root(-8, 3, evaluate=False).has(Pow) == True

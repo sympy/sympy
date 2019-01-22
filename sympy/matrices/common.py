@@ -6,7 +6,6 @@ etc.).
 
 from __future__ import print_function, division
 
-import collections
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
@@ -15,7 +14,7 @@ from sympy.core.function import count_ops
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, range, \
-    NotIterable
+    NotIterable, Iterable
 
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
@@ -25,7 +24,7 @@ from sympy.assumptions.refine import refine
 from sympy.core.decorators import call_highest_priority
 
 from types import FunctionType
-
+from collections import defaultdict
 
 class MatrixError(Exception):
     pass
@@ -56,7 +55,7 @@ class MatrixRequired(object):
         raise NotImplementedError("Subclasses must implement this.")
 
     def __eq__(self, other):
-        raise NotImplementedError("Subclasses must impliment this.")
+        raise NotImplementedError("Subclasses must implement this.")
 
     def __getitem__(self, key):
         """Implementations of __getitem__ should accept ints, in which
@@ -86,7 +85,7 @@ class MatrixShaping(MatrixRequired):
                 return self[i, j]
             elif pos <= j < pos + other.cols:
                 return other[i, j - pos]
-            return self[i, j - pos - other.cols]
+            return self[i, j - other.cols]
 
         return self._new(self.rows, self.cols + other.cols,
                          lambda i, j: entry(i, j))
@@ -204,6 +203,8 @@ class MatrixShaping(MatrixRequired):
         if not self:
             return type(self)(other)
 
+        pos = as_int(pos)
+
         if pos < 0:
             pos = self.cols + pos
         if pos < 0:
@@ -213,7 +214,7 @@ class MatrixShaping(MatrixRequired):
 
         if self.rows != other.rows:
             raise ShapeError(
-                "self and other must have the same number of rows.")
+                "`self` and `other` must have the same number of rows.")
 
         return self._eval_col_insert(pos, other)
 
@@ -436,10 +437,11 @@ class MatrixShaping(MatrixRequired):
         row
         col_insert
         """
-        from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
             return self._new(other)
+
+        pos = as_int(pos)
 
         if pos < 0:
             pos = self.rows + pos
@@ -736,12 +738,12 @@ class MatrixSpecial(MatrixRequired):
         rows = kwargs.get('rows', diag_rows)
         cols = kwargs.get('cols', diag_cols)
         if rows < diag_rows or cols < diag_cols:
-            raise ValueError("A {} x {} diagnal matrix cannot accomodate a"
+            raise ValueError("A {} x {} diagnal matrix cannot accommodate a"
                              "diagonal of size at least {} x {}.".format(rows, cols,
                                                                          diag_rows, diag_cols))
 
         # fill a default dict with the diagonal entries
-        diag_entries = collections.defaultdict(lambda: S.Zero)
+        diag_entries = defaultdict(lambda: S.Zero)
         row_pos, col_pos = 0, 0
         for m in args:
             if hasattr(m, 'rows'):
@@ -1694,7 +1696,7 @@ class MatrixOperations(MatrixRequired):
                 perm = reversed(perm)
 
             # since Permutation doesn't let us have non-disjoint cycles,
-            # we'll construct the explict mapping ourselves XXX Bug #12479
+            # we'll construct the explicit mapping ourselves XXX Bug #12479
             mapping = list(range(max_index))
             for (i, j) in perm:
                 mapping[i], mapping[j] = mapping[j], mapping[i]
@@ -1770,7 +1772,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: x.replace(F, G, map))
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         """Apply simplify to each element of the matrix.
 
         Examples
@@ -1784,7 +1786,8 @@ class MatrixOperations(MatrixRequired):
         >>> _.simplify()
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.simplify(ratio, measure))
+        return self.applyfunc(lambda x: x.simplify(ratio=ratio, measure=measure,
+                                                   rational=rational, inverse=inverse))
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
@@ -1881,6 +1884,10 @@ class MatrixOperations(MatrixRequired):
 
     _eval_simplify = simplify
 
+    def _eval_trigsimp(self, **opts):
+        from sympy.simplify import trigsimp
+        return self.applyfunc(lambda x: trigsimp(x, **opts))
+
 
 class MatrixArithmetic(MatrixRequired):
     """Provides basic matrix arithmetic operations.
@@ -1934,6 +1941,10 @@ class MatrixArithmetic(MatrixRequired):
     def _eval_scalar_rmul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
+    def _eval_Mod(self, other):
+        from sympy import Mod
+        return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
+
     # python arithmetic functions
     def __abs__(self):
         """Returns a new matrix with entry-wise absolute values."""
@@ -1969,6 +1980,10 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
+        other = _matrixify(other)
+        if not getattr(other, 'is_Matrix', False) and not getattr(other, 'is_MatrixLike', False):
+            return NotImplemented
+
         return self.__mul__(other)
 
     @call_highest_priority('__rmul__')
@@ -2014,12 +2029,14 @@ class MatrixArithmetic(MatrixRequired):
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_mul(self, other)
 
-        try:
-            return self._eval_scalar_mul(other)
-        except TypeError:
-            pass
+        # if 'other' is not iterable then scalar multiplication.
+        if not isinstance(other, Iterable):
+            try:
+                return self._eval_scalar_mul(other)
+            except TypeError:
+                pass
 
-        raise TypeError('Cannot multiply %s and %s' % (type(self), type(other)))
+        return NotImplemented
 
     def __neg__(self):
         return self._eval_scalar_mul(-1)
@@ -2062,6 +2079,10 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__matmul__')
     def __rmatmul__(self, other):
+        other = _matrixify(other)
+        if not getattr(other, 'is_Matrix', False) and not getattr(other, 'is_MatrixLike', False):
+            return NotImplemented
+
         return self.__rmul__(other)
 
     @call_highest_priority('__mul__')
@@ -2080,12 +2101,14 @@ class MatrixArithmetic(MatrixRequired):
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_rmul(self, other)
 
-        try:
-            return self._eval_scalar_rmul(other)
-        except TypeError:
-            pass
+        # if 'other' is not iterable then scalar multiplication.
+        if not isinstance(other, Iterable):
+            try:
+                return self._eval_scalar_rmul(other)
+            except TypeError:
+                pass
 
-        raise TypeError('Cannot multiply %s and %s' % (type(self), type(other)))
+        return NotImplemented
 
     @call_highest_priority('__sub__')
     def __rsub__(self, a):
@@ -2130,7 +2153,7 @@ class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
-    pass
+    _diff_wrt = True
 
 
 class _MinimalMatrix(object):
@@ -2291,7 +2314,7 @@ def classof(A, B):
     ========
 
     >>> from sympy import Matrix, ImmutableMatrix
-    >>> from sympy.matrices.matrices import classof
+    >>> from sympy.matrices.common import classof
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
@@ -2302,7 +2325,7 @@ def classof(A, B):
             return A.__class__
         else:
             return B.__class__
-    except Exception:
+    except AttributeError:
         pass
     try:
         import numpy
@@ -2310,6 +2333,6 @@ def classof(A, B):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except Exception:
+    except (AttributeError, ImportError):
         pass
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))

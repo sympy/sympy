@@ -21,7 +21,7 @@ def test_function_range():
     assert function_range(tan(x), x, Interval(pi/2, pi)
         ) == Interval(-oo, 0)
     assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)
-        ) == Interval(-oo, oo)
+        ) == Union(Interval(-oo, S(2)/7), Interval(S(8)/3, oo))
     assert function_range(1/(x**2), x, Interval(-1, 1)
         ) == Interval(1, oo)
     assert function_range(exp(x), x, Interval(-1, 1)
@@ -34,8 +34,16 @@ def test_function_range():
         ) == FiniteSet(0)
     assert function_range(x*(x - 1) - (x**2 - x) + y, x, S.Reals
         ) == FiniteSet(y)
+    assert function_range(sin(x), x, Union(Interval(-5, -3), FiniteSet(4))
+        ) == Union(Interval(-sin(3), 1), FiniteSet(sin(4)))
+    assert function_range(cos(x), x, Interval(-oo, -4)
+        ) == Interval(-1, 1)
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
+    raises(NotImplementedError, lambda : function_range(
+        log(x), x, S.Integers))
+    raises(NotImplementedError, lambda : function_range(
+        sin(x)/2, x, S.Naturals))
 
 
 def test_continuous_domain():
@@ -47,7 +55,7 @@ def test_continuous_domain():
     assert continuous_domain((x - 1)/((x - 1)**2), x, S.Reals) == \
         Union(Interval(-oo, 1, True, True), Interval(1, oo, True, True))
     assert continuous_domain(log(x) + log(4*x - 1), x, S.Reals) == \
-        Interval(1/4, oo, True, True)
+        Interval(S(1)/4, oo, True, True)
     assert continuous_domain(1/sqrt(x - 3), x, S.Reals) == Interval(3, oo, True, True)
     assert continuous_domain(1/x - 2, x, S.Reals) == \
         Union(Interval.open(-oo, 0), Interval.open(0, oo))
@@ -106,7 +114,7 @@ def test_periodicity():
     assert periodicity(2*tan(x)**2, x) == pi
     assert periodicity(sin(x%4), x) == 4
     assert periodicity(sin(x)%4, x) == 2*pi
-    assert periodicity(tan((3*x-2)%4), x) == 4/3
+    assert periodicity(tan((3*x-2)%4), x) == S(4)/3
     assert periodicity((sqrt(2)*(x+1)+x) % 3, x) == 3 / (sqrt(2)+1)
     assert periodicity((x**2+1) % x, x) == None
 
@@ -328,19 +336,32 @@ def test_AccumBounds_pow():
 def test_comparison_AccumBounds():
     assert (AccumBounds(1, 3) < 4) == S.true
     assert (AccumBounds(1, 3) < -1) == S.false
-    assert (AccumBounds(1, 3) < 2) is None
+    assert (AccumBounds(1, 3) < 2).rel_op == '<'
+    assert (AccumBounds(1, 3) <= 2).rel_op == '<='
 
     assert (AccumBounds(1, 3) > 4) == S.false
     assert (AccumBounds(1, 3) > -1) == S.true
-    assert (AccumBounds(1, 3) > 2) is None
+    assert (AccumBounds(1, 3) > 2).rel_op == '>'
+    assert (AccumBounds(1, 3) >= 2).rel_op == '>='
 
     assert (AccumBounds(1, 3) < AccumBounds(4, 6)) == S.true
-    assert (AccumBounds(1, 3) < AccumBounds(2, 4)) is None
+    assert (AccumBounds(1, 3) < AccumBounds(2, 4)).rel_op == '<'
     assert (AccumBounds(1, 3) < AccumBounds(-2, 0)) == S.false
 
+    # issue 13499
+    assert (cos(x) > 0).subs(x, oo) == (AccumBounds(-1, 1) > 0)
 
 def test_contains_AccumBounds():
     assert (1 in AccumBounds(1, 2)) == S.true
     raises(TypeError, lambda: a in AccumBounds(1, 2))
+    assert 0 in AccumBounds(-1, 0)
+    raises(TypeError, lambda:
+        (cos(1)**2 + sin(1)**2 - 1) in AccumBounds(-1, 0))
     assert (-oo in AccumBounds(1, oo)) == S.true
     assert (oo in AccumBounds(-oo, 0)) == S.true
+
+    # issue 13159
+    assert Mul(0, AccumBounds(-1, 1)) == Mul(AccumBounds(-1, 1), 0) == 0
+    import itertools
+    for perm in itertools.permutations([0, AccumBounds(-1, 1), x]):
+        assert Mul(*perm) == 0

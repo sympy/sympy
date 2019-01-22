@@ -276,6 +276,10 @@ class Unevaluated(object):
     def as_unevaluated_basic(self):
         return self.func(*self.args, evaluate=False)
 
+    @property
+    def free_symbols(self):
+        return set().union(*[a.free_symbols for a in self.args])
+
     __repr__ = __str__
 
 
@@ -447,7 +451,7 @@ def opt_cse(exprs, order='canonical'):
     # split muls into commutative
     commutative_muls = OrderedSet()
     for m in muls:
-        c, nc = m.args_cnc(cset=True)
+        c, nc = m.args_cnc(cset=False)
         if c:
             c_mul = m.func(*c)
             if nc:
@@ -676,12 +680,16 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     True
 
     The user may disallow substitutions containing certain symbols:
+
     >>> cse([y**2*(x + 1), 3*y**2*(x + 1)], ignore=(y,))
     ([(x0, x + 1)], [x0*y**2, 3*x0*y**2])
 
     """
     from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                                 SparseMatrix, ImmutableSparseMatrix)
+
+    if isinstance(exprs, (int, float)):
+        exprs = sympify(exprs)
 
     # Handle the case if just one expression was passed.
     if isinstance(exprs, (Basic, MatrixBase)):

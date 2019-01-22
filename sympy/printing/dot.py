@@ -1,12 +1,17 @@
 from __future__ import print_function, division
 
-from sympy import (Basic, Expr, Symbol, Integer, Rational, Float,
-    default_sort_key, Add, Mul)
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.core.symbol import Symbol
+from sympy.core.numbers import Integer, Rational, Float
+from sympy.core.compatibility import default_sort_key
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 
 __all__ = ['dotprint']
 
-default_styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
-          (Expr,  {'color': 'black'})]
+default_styles = ((Basic, {'color': 'blue', 'shape': 'ellipse'}),
+          (Expr,  {'color': 'black'}))
 
 
 sort_classes = (Add, Mul)
@@ -119,7 +124,7 @@ template = \
 %(edges)s
 }"""
 
-graphstyle = {'rankdir': 'TD', 'ordering': 'out'}
+_graphstyle = {'rankdir': 'TD', 'ordering': 'out'}
 
 def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
     Basic), maxdepth=None, repeat=True, labelfunc=str, **kwargs):
@@ -186,6 +191,7 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
     # repeat works by adding a signature tuple to the end of each node for its
     # position in the graph. For example, for expr = Add(x, Pow(x, 2)), the x in the
     # Pow will have the tuple (1, 0), meaning it is expr.args[1].args[0].
+    graphstyle = _graphstyle.copy()
     graphstyle.update(kwargs)
 
     nodes = []

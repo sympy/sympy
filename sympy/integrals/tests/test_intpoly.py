@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import sqrt, Abs
 
 from sympy.core import S
@@ -12,7 +10,6 @@ from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point
 from sympy.abc import x, y, z
 
-from sympy.utilities.pytest import XFAIL
 
 
 def test_decompose():
@@ -494,11 +491,7 @@ def test_polytope_integrate():
          z: 625 / S(2), x * y: 3125 / S(4), x ** 2: 3125 / S(3)}
 
 
-@XFAIL
 def test_polytopes_intersecting_sides():
-    #  Intersecting polygons not implemented yet in SymPy. Will be implemented
-    #  soon. As of now, the intersection point will have to be manually
-    #  supplied by user.
     fig5 = Polygon(Point(-4.165, -0.832), Point(-3.668, 1.568),
                    Point(-3.266, 1.279), Point(-1.090, -2.080),
                    Point(3.313, -0.683), Point(3.033, -4.845),

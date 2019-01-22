@@ -428,6 +428,7 @@ class Polyhedron(Basic):
 
         >>> from sympy.combinatorics import Permutation, Cycle
         >>> from sympy.combinatorics.polyhedron import tetrahedron
+        >>> tetrahedron = tetrahedron.copy()
         >>> tetrahedron.array_form
         [0, 1, 2, 3]
 
@@ -533,6 +534,7 @@ class Polyhedron(Basic):
 
         >>> from sympy.combinatorics import Polyhedron, Permutation
         >>> from sympy.combinatorics.polyhedron import cube
+        >>> cube = cube.copy()
         >>> cube.corners
         (0, 1, 2, 3, 4, 5, 6, 7)
         >>> cube.rotate(0)
@@ -578,6 +580,7 @@ class Polyhedron(Basic):
         ========
 
         >>> from sympy.combinatorics.polyhedron import tetrahedron as T
+        >>> T = T.copy()
         >>> T.corners
         (0, 1, 2, 3)
         >>> T.rotate(0)

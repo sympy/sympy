@@ -1,7 +1,5 @@
-from __future__ import division
-
 from sympy.physics.optics.utils import (refraction_angle, deviation,
-    lens_makers_formula, mirror_formula, lens_formula,
+    brewster_angle, lens_makers_formula, mirror_formula, lens_formula,
     hyperfocal_distance, transverse_magnification)
 from sympy.physics.optics.medium import Medium
 from sympy.physics.units import e0
@@ -10,6 +8,8 @@ from sympy import symbols, sqrt, Matrix, oo
 from sympy.geometry.point import Point3D
 from sympy.geometry.line import Ray3D
 from sympy.geometry.plane import Plane
+
+from sympy.core import S
 
 
 def test_refraction_angle():
@@ -52,7 +52,7 @@ def test_refraction_angle():
     assert refraction_angle(r1, 1, 1, plane=P) == \
         Ray3D(Point3D(0, 0, 0), Point3D(1, 1, -1))
     assert refraction_angle(r1, m1, 1.33, plane=P) == \
-        Ray3D(Point3D(0, 0, 0), Point3D(100/133, 100/133, -789378201649271*sqrt(3)/1000000000000000))
+        Ray3D(Point3D(0, 0, 0), Point3D(S(100)/133, S(100)/133, -789378201649271*sqrt(3)/1000000000000000))
     assert refraction_angle(r1, 1, m2, plane=P) == \
         Ray3D(Point3D(0, 0, 0), Point3D(1, 1, -1))
     assert refraction_angle(r1, n1, n2, plane=P) == \
@@ -78,6 +78,12 @@ def test_deviation():
     assert deviation(r1, 1.33, 1, plane=P) is None  # TIR
     assert deviation(r1, 1, 1, normal=[0, 0, 1]) == 0
     assert deviation([-1, -1, -1], 1, 1, normal=[0, 0, 1]) == 0
+
+
+def test_brewster_angle():
+    m1 = Medium('m1', permittivity=e0, n=1)
+    m2 = Medium('m2', permittivity=e0, n=1.33)
+    assert round(brewster_angle(m1, m2), 2) == 0.93
 
 
 def test_lens_makers_formula():

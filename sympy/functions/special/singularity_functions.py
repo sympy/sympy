@@ -168,7 +168,7 @@ class SingularityFunction(Function):
             if shift.is_zero:
                 return S.Infinity
 
-    def _eval_rewrite_as_Piecewise(self, *args):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         '''
         Converts a Singularity Function expression into its Piecewise form.
 
@@ -182,7 +182,7 @@ class SingularityFunction(Function):
         elif n.is_nonnegative:
             return Piecewise(((x - a)**n, (x - a) > 0), (0, True))
 
-    def _eval_rewrite_as_Heaviside(self, *args):
+    def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
         '''
         Rewrites a Singularity Function expression using Heavisides and DiracDeltas.
 

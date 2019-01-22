@@ -30,7 +30,9 @@ known_functions = {
     "acoth": [(lambda x: True, "ArcCoth")],
     "asech": [(lambda x: True, "ArcSech")],
     "acsch": [(lambda x: True, "ArcCsch")],
-
+    "conjugate": [(lambda x: True, "Conjugate")],
+    "Max": [(lambda *x: True, "Max")],
+    "Min": [(lambda *x: True, "Min")],
 }
 
 
@@ -46,6 +48,7 @@ class MCodePrinter(CodePrinter):
         'precision': 15,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
     }
 
     _number_symbols = set()
@@ -99,6 +102,8 @@ class MCodePrinter(CodePrinter):
                     return "%s[%s]" % (mfunc, self.stringify(expr.args, ", "))
         return expr.func.__name__ + "[%s]" % self.stringify(expr.args, ", ")
 
+    _print_MinMaxBase = _print_Function
+
     def _print_Integral(self, expr):
         if len(expr.variables) == 1 and not expr.limits[0][1:]:
             args = [expr.args[0], expr.variables[0]]
@@ -110,7 +115,9 @@ class MCodePrinter(CodePrinter):
         return "Hold[Sum[" + ', '.join(self.doprint(a) for a in expr.args) + "]]"
 
     def _print_Derivative(self, expr):
-        return "Hold[D[" + ', '.join(self.doprint(a) for a in expr.args) + "]]"
+        dexpr = expr.expr
+        dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
+        return "Hold[D[" + ', '.join(self.doprint(a) for a in [dexpr] + dvars) + "]]"
 
 
 def mathematica_code(expr, **settings):

@@ -6,6 +6,7 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, range
 from sympy.core.logic import fuzzy_and
 from sympy.core.evaluate import global_evaluate
+from sympy.utilities.iterables import sift
 
 
 class AssocOp(Basic):
@@ -30,7 +31,10 @@ class AssocOp(Basic):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
-        if not options.pop('evaluate', global_evaluate[0]):
+        evaluate = options.get('evaluate')
+        if evaluate is None:
+            evaluate = global_evaluate[0]
+        if not evaluate:
             return cls._from_args(args)
 
         if len(args) == 0:
@@ -180,11 +184,9 @@ class AssocOp(Basic):
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
         from .function import WildFunction
         from .symbol import Wild
-        from sympy.utilities.iterables import sift
-        sifted = sift(self.args, lambda p:
-            p.has(Wild, WildFunction) and not expr.has(p))
-        wild_part = sifted[True]
-        exact_part = sifted[False]
+        wild_part, exact_part = sift(self.args, lambda p:
+            p.has(Wild, WildFunction) and not expr.has(p),
+            binary=True)
         if not exact_part:
             wild_part = list(ordered(wild_part))
         else:
@@ -262,12 +264,8 @@ class AssocOp(Basic):
             # this is not the same as args_cnc because here
             # we don't assume expr is a Mul -- hence deal with args --
             # and always return a set.
-            cpart, ncpart = [], []
-            for arg in expr.args:
-                if arg.is_commutative:
-                    cpart.append(arg)
-                else:
-                    ncpart.append(arg)
+            cpart, ncpart = sift(expr.args,
+                lambda arg: arg.is_commutative is True, binary=True)
             return set(cpart), ncpart
 
         c, nc = _ncsplit(self)
@@ -284,7 +282,7 @@ class AssocOp(Basic):
                     if not nc:
                         return True
                     elif len(nc) <= len(_nc):
-                        for i in range(len(_nc) - len(nc)):
+                        for i in range(len(_nc) - len(nc) + 1):
                             if _nc[i:i + len(nc)] == nc:
                                 return True
             return False
@@ -397,7 +395,7 @@ class LatticeOp(AssocOp):
 
     References:
 
-    [1] - http://en.wikipedia.org/wiki/Lattice_%28order%29
+    [1] - https://en.wikipedia.org/wiki/Lattice_%28order%29
     """
 
     is_commutative = True

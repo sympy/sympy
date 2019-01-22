@@ -45,8 +45,8 @@ Moved modules:
     * Python 2 `__builtins__`, access with Python 3 name, `builtins`
 
 Iterator/list changes:
-    * `xrange` removed in Python 3, import `xrange` for Python 2/3 compatible
-      iterator version of range
+    * `xrange` renamed as `range` in Python 3, import `range` for Python 2/3
+      compatible iterator version of range.
 
 exec:
     * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
@@ -93,6 +93,12 @@ if PY3:
     exec_=getattr(builtins, "exec")
 
     range=range
+
+    from collections.abc import (Mapping, Callable, MutableMapping,
+        MutableSet, Iterable, Hashable)
+
+    from inspect import unwrap
+    from itertools import accumulate
 else:
     import codecs
     import types
@@ -137,6 +143,49 @@ else:
         exec("exec _code_ in _globs_, _locs_")
     range=xrange
 
+    from collections import (Mapping, Callable, MutableMapping,
+        MutableSet, Iterable, Hashable)
+
+    def unwrap(func, stop=None):
+        """Get the object wrapped by *func*.
+
+       Follows the chain of :attr:`__wrapped__` attributes returning the last
+       object in the chain.
+
+       *stop* is an optional callback accepting an object in the wrapper chain
+       as its sole argument that allows the unwrapping to be terminated early if
+       the callback returns a true value. If the callback never returns a true
+       value, the last object in the chain is returned as usual. For example,
+       :func:`signature` uses this to stop unwrapping if any object in the
+       chain has a ``__signature__`` attribute defined.
+
+       :exc:`ValueError` is raised if a cycle is encountered.
+
+        """
+        if stop is None:
+            def _is_wrapper(f):
+                return hasattr(f, '__wrapped__')
+        else:
+            def _is_wrapper(f):
+                return hasattr(f, '__wrapped__') and not stop(f)
+        f = func  # remember the original func for error reporting
+        memo = {id(f)} # Memoise by id to tolerate non-hashable objects
+        while _is_wrapper(func):
+            func = func.__wrapped__
+            id_func = id(func)
+            if id_func in memo:
+                raise ValueError('wrapper loop when unwrapping {!r}'.format(f))
+            memo.add(id_func)
+        return func
+
+    def accumulate(iterable, func=operator.add):
+        state = iterable[0]
+        yield state
+        for i in iterable[1:]:
+            state = func(state, i)
+            yield state
+
+
 def with_metaclass(meta, *bases):
     """
     Create a base class with a metaclass.
@@ -167,9 +216,9 @@ def with_metaclass(meta, *bases):
     may omit it.
 
     >>> MyClass.__mro__
-    (<class 'MyClass'>, <... 'object'>)
+    (<class '...MyClass'>, <... 'object'>)
     >>> type(MyClass)
-    <class 'Meta'>
+    <class '...Meta'>
 
     """
     # This requires a bit of explanation: the basic idea is to make a dummy
@@ -294,11 +343,12 @@ def is_sequence(i, include=None):
 
 try:
     from itertools import zip_longest
-except ImportError: # <= Python 2.7
+except ImportError:  # Python 2.7
     from itertools import izip_longest as zip_longest
 
 
 try:
+    # Python 2.7
     from string import maketrans
 except ImportError:
     maketrans = str.maketrans
@@ -684,8 +734,8 @@ if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
 
 
-# lru_cache compatible with py2.6->py3.2 copied directly from
-#   http://code.activestate.com/
+# lru_cache compatible with py2.7 copied directly from
+#   https://code.activestate.com/
 #   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
 from collections import namedtuple
 from functools import update_wrapper
@@ -738,7 +788,7 @@ def lru_cache(maxsize=100, typed=False):
     f.cache_info().  Clear the cache and statistics with f.cache_clear().
     Access the underlying function with f.__wrapped__.
 
-    See:  http://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
+    See:  https://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
 
     """
 
@@ -863,6 +913,6 @@ if sys.version_info[:2] >= (3, 3):
 
 try:
     from itertools import filterfalse
-except ImportError:
+except ImportError:  # Python 2.7
     def filterfalse(pred, itr):
         return filter(lambda x: not pred(x), itr)

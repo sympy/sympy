@@ -942,7 +942,7 @@ class Operator(object):
     *not* blindly differentiate but instead use a different representation
     of the z*d/dz operator (see make_derivative_operator).
 
-    To subclass from this, define a __init__ method that initalises a
+    To subclass from this, define a __init__ method that initializes a
     self._poly variable. This variable stores a polynomial. By convention
     the generator is z*d/dz, and acts to the right of all coefficients.
 
@@ -1341,7 +1341,7 @@ class ReduceOrder(Operator):
         n = ai - bj
         if not n.is_Integer or n < 0:
             return None
-        if bj.is_integer and bj <= 0:
+        if bj.is_integer and bj.is_nonpositive:
             return None
 
         expr = Operator.__new__(cls)
@@ -2298,7 +2298,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
                 s = Dummy('s')
                 integrand = z**s
                 for b in bm:
-                    if not Mod(b, 1):
+                    if not Mod(b, 1) and b.is_Number:
                         b = int(round(b))
                     integrand *= gamma(b - s)
                 for a in an:

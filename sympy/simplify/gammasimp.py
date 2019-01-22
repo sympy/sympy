@@ -78,7 +78,7 @@ def _gammasimp(expr, as_comb):
 
     if as_comb:
         expr = expr.replace(_rf,
-            lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
+            lambda a, b: gamma(b + 1))
     else:
         expr = expr.replace(_rf,
             lambda a, b: gamma(a + b)/gamma(a))
@@ -154,12 +154,11 @@ def _gammasimp(expr, as_comb):
                 return rule_gamma(Mul._from_args(args), level + 1)*Mul._from_args(nc)
             level += 1
 
-        # pure gamma handling, not factor absorbtion
+        # pure gamma handling, not factor absorption
         if level == 2:
-            sifted = sift(expr.args, gamma_factor)
-            gamma_ind = Mul(*sifted.pop(False, []))
-            d = Mul(*sifted.pop(True, []))
-            assert not sifted
+            T, F = sift(expr.args, gamma_factor, binary=True)
+            gamma_ind = Mul(*F)
+            d = Mul(*T)
 
             nd, dd = d.as_numer_denom()
             for ipass in range(2):
@@ -383,7 +382,7 @@ def _gammasimp(expr, as_comb):
                                     (denom_gammas, denom_others, numer_others)]:
                 _mult_thm(l, numer, denom)
 
-        # =========== level >= 2 work: factor absorbtion =========
+        # =========== level >= 2 work: factor absorption =========
 
         if level >= 2:
             # Try to absorb factors into the gammas: x*gamma(x) -> gamma(x + 1)

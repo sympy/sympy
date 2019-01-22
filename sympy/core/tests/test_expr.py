@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, I,
                    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
                    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
@@ -580,6 +578,23 @@ def test_as_numer_denom():
     assert ((A*B*C)**-1/x).as_numer_denom() == ((A*B*C)**-1, x)
 
 
+def test_trunc():
+    import math
+    x, y = symbols('x y')
+    assert math.trunc(2) == 2
+    assert math.trunc(4.57) == 4
+    assert math.trunc(-5.79) == -5
+    assert math.trunc(pi) == 3
+    assert math.trunc(log(7)) == 1
+    assert math.trunc(exp(5)) == 148
+    assert math.trunc(cos(pi)) == -1
+    assert math.trunc(sin(5)) == 0
+
+    raises(TypeError, lambda: math.trunc(x))
+    raises(TypeError, lambda: math.trunc(x + y**2))
+    raises(TypeError, lambda: math.trunc(oo))
+
+
 def test_as_independent():
     assert S.Zero.as_independent(x, as_Add=True) == (0, 0)
     assert S.Zero.as_independent(x, as_Add=False) == (0, 0)
@@ -745,6 +760,11 @@ def test_count():
     assert expr.count(sin) == 1
     assert expr.count(sin(a)) == 1
     assert expr.count(lambda u: type(u) is sin) == 1
+
+    f = Function('f')
+    assert f(x).count(f(x)) == 1
+    assert f(x).diff(x).count(f(x)) == 1
+    assert f(x).diff(x).count(x) == 2
 
 
 def test_has_basics():
@@ -1522,6 +1542,7 @@ def test_is_constant():
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
     f = Function('f')
+    assert f(1).is_constant
     assert checksol(x, x, f(x)) is False
 
     p = symbols('p', positive=True)
@@ -1716,6 +1737,9 @@ def test_held_expression_UnevaluatedExpr():
     assert isinstance(e1, Mul)
     assert e1.args == (x, he)
     assert e1.doit() == 1
+    assert UnevaluatedExpr(Derivative(x, x)).doit(deep=False
+        ) == Derivative(x, x)
+    assert UnevaluatedExpr(Derivative(x, x)).doit() == 1
 
     xx = Mul(x, x, evaluate=False)
     assert xx != x**2

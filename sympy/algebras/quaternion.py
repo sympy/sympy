@@ -13,6 +13,8 @@ from sympy import Matrix, Add, Mul
 from sympy import symbols, sympify
 from sympy.printing.latex import latex
 from sympy.printing import StrPrinter
+from sympy.core.numbers import Integer
+from sympy.core.compatibility import SYMPY_INTS
 
 
 class Quaternion(Expr):
@@ -44,7 +46,7 @@ class Quaternion(Expr):
 
     is_commutative = False
 
-    def __new__(cls, a=0, b=0, c=0, d=0, real_field = True):
+    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True):
         a = sympify(a)
         b = sympify(b)
         c = sympify(c)
@@ -172,8 +174,9 @@ class Quaternion(Expr):
     def _eval_Integral(self, *args):
         return self.integrate(*args)
 
-    def _eval_diff(self, *symbols, **kwargs):
-        return self.diff(*symbols)
+    def diff(self, *symbols, **kwargs):
+        kwargs.setdefault('evaluate', True)
+        return self.func(*[a.diff(*symbols, **kwargs) for a  in self.args])
 
     def add(self, other):
         """Adds quaternions.
@@ -303,6 +306,8 @@ class Quaternion(Expr):
     def inverse(self):
         """Returns the inverse of the quaternion."""
         q = self
+        if not q.norm():
+            raise ValueError("Cannot compute inverse for a quaternion with zero norm")
         return conjugate(q) * (1/q.norm()**2)
 
     def pow(self, p):
@@ -321,6 +326,13 @@ class Quaternion(Expr):
         if p == -1:
             return q.inverse()
         res = 1
+
+        if p < 0:
+            q, p = q.inverse(), -p
+
+        if not (isinstance(p, (Integer, SYMPY_INTS))):
+            return NotImplemented
+
         while p > 0:
             if p & 1:
                 res = q * res
@@ -401,10 +413,6 @@ class Quaternion(Expr):
         q2 = Quaternion.from_axis_angle(v, p * angle)
         return q2 * (q.norm()**p)
 
-    def diff(self, *args):
-        return Quaternion(diff(self.a, *args), diff(self.b, *args),
-                          diff(self.c, *args), diff(self.d, *args))
-
     def integrate(self, *args):
         # TODO: is this expression correct?
         return Quaternion(integrate(self.a, *args), integrate(self.b, *args),
@@ -475,7 +483,7 @@ class Quaternion(Expr):
 
         return t
 
-    def to_rotation_matrix(self, v = None):
+    def to_rotation_matrix(self, v=None):
         """Returns the equivalent rotation transformation matrix of the quaternion
         which represents rotation about the origin if v is not passed.
 
@@ -504,10 +512,10 @@ class Quaternion(Expr):
         >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
         >>> trigsimp(q.to_rotation_matrix((1, 1, 1)))
          Matrix([
-        [cos(x), -sin(x), 0, -sqrt(2)*cos(x + pi/4) + 1],
-        [sin(x),  cos(x), 0, -sqrt(2)*sin(x + pi/4) + 1],
-        [     0,       0, 1,                          0],
-        [     0,       0, 0,                          1]])
+        [cos(x), -sin(x), 0,  sin(x) - cos(x) + 1],
+        [sin(x),  cos(x), 0, -sin(x) - cos(x) + 1],
+        [     0,       0, 1,                    0],
+        [     0,       0, 0,                    1]])
         """
 
         q = self
@@ -518,7 +526,7 @@ class Quaternion(Expr):
 
         m10 = 2*s*(q.b*q.c + q.d*q.a)
         m11 = 1 - 2*s*(q.b**2 + q.d**2)
-        m12 = 2*s*(q.c*q.d + q.b*q.a)
+        m12 = 2*s*(q.c*q.d - q.b*q.a)
 
         m20 = 2*s*(q.b*q.d - q.c*q.a)
         m21 = 2*s*(q.c*q.d + q.b*q.a)

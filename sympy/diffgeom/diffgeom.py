@@ -245,16 +245,11 @@ class CoordSystem(Basic):
 
     @staticmethod
     def _inv_transf(from_coords, to_exprs):
-        # TODO, check for results, get solve to return results in definite
-        # format instead of wondering dict/tuple/whatever.
-        # As it is at the moment this is an ugly hack for changing the format
         inv_from = [i.as_dummy() for i in from_coords]
         inv_to = solve(
-            [t[0] - t[1] for t in zip(inv_from, to_exprs)], list(from_coords))
-        if isinstance(inv_to, dict):
-            inv_to = [inv_to[fc] for fc in from_coords]
-        else:
-            inv_to = inv_to[0]
+            [t[0] - t[1] for t in zip(inv_from, to_exprs)],
+            list(from_coords), dict=True)[0]
+        inv_to = [inv_to[fc] for fc in from_coords]
         return Matrix(inv_from), Matrix(inv_to)
 
     @staticmethod
@@ -548,7 +543,7 @@ class BaseVectorField(AtomicExpr):
      d
     ---(g(x0, y0))
     dy0
-    >>> pprint(v(s_field).rcall(point_p).doit())
+    >>> pprint(v(s_field).rcall(point_p))
     /  d                           \|
     |-----(g(r0*cos(theta0), xi_2))||
     \dxi_2                         /|xi_2=r0*sin(theta0)
@@ -600,7 +595,7 @@ class BaseVectorField(AtomicExpr):
         # Remove the dummies
         result = d_result.subs(list(zip(d_funcs, base_scalars)))
         result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
-        return result.doit()  # XXX doit for the Subs instances
+        return result.doit()
 
 
 class Commutator(Expr):
@@ -633,7 +628,7 @@ class Commutator(Expr):
     >>> c_xr
     Commutator(e_x, e_r)
 
-    >>> simplify(c_xr(R2.y**2).doit())
+    >>> simplify(c_xr(R2.y**2))
     -2*y**2*cos(theta)/(x**2 + y**2)
 
     """
@@ -771,7 +766,7 @@ class Differential(Expr):
         else:
             # For higher form it is more complicated:
             # Invariant formula:
-            # http://en.wikipedia.org/wiki/Exterior_derivative#Invariant_formula
+            # https://en.wikipedia.org/wiki/Exterior_derivative#Invariant_formula
             # df(v1, ... vn) = +/- vi(f(v1..no i..vn))
             #                  +/- f([vi,vj],v1..no i, no j..vn)
             f = self._form_field
@@ -874,10 +869,6 @@ class TensorProduct(Expr):
         multipliers = [t[0].rcall(*t[1]) for t in zip(self._args, fields)]
         return TensorProduct(*multipliers)
 
-    def _latex(self, printer, *args):
-        elements = [printer._print(a) for a in self.args]
-        return r'\otimes'.join(elements)
-
 
 class WedgeProduct(TensorProduct):
     """Wedge product of forms.
@@ -953,7 +944,7 @@ class LieDerivative(Expr):
     >>> tp = TensorProduct(R2.dx, R2.dy)
     >>> LieDerivative(R2.e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
-    >>> LieDerivative(R2.e_x, tp).doit()
+    >>> LieDerivative(R2.e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
     """
     def __new__(cls, v_field, expr):
@@ -1048,7 +1039,9 @@ class BaseCovarDerivativeOp(Expr):
         to_subs = [wrt_vector(d) for d in d_funcs]
         result = d_result.subs(list(zip(to_subs, derivs)))
 
-        return result  # TODO .doit() # XXX doit for the Subs instances
+        # Remove the dummies
+        result = result.subs(list(zip(d_funcs, vectors)))
+        return result.doit()
 
 
 class CovarDerivativeOp(Expr):
@@ -1130,7 +1123,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     param
         the argument of the function `\gamma` from R to the curve
     start_point
-        the point which coresponds to `\gamma(0)`
+        the point which corresponds to `\gamma(0)`
     n
         the order to which to expand
     coord_sys
@@ -1242,7 +1235,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     param
         the argument of the function `\gamma` from R to the curve
     start_point
-        the point which coresponds to `\gamma(0)`
+        the point which corresponds to `\gamma(0)`
     coord_sys
         the coordinate system in which to give the equations
 
@@ -1301,7 +1294,8 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 def dummyfy(args, exprs):
     # TODO Is this a good idea?
     d_args = Matrix([s.as_dummy() for s in args])
-    d_exprs = Matrix([sympify(expr).subs(list(zip(args, d_args))) for expr in exprs])
+    reps = dict(zip(args, d_args))
+    d_exprs = Matrix([sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
 
 

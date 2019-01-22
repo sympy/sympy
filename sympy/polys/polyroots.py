@@ -6,7 +6,7 @@ import math
 
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
-from sympy.core.compatibility import ordered
+from sympy.core.compatibility import ordered, range, reduce
 from sympy.core.mul import expand_2arg, Mul
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
@@ -14,6 +14,7 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd, comp
 from sympy.core.exprtools import factor_terms
 from sympy.core.logic import fuzzy_not
+from sympy.core.function import _mexpand
 
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
@@ -28,8 +29,6 @@ from sympy.polys.rationaltools import together
 
 from sympy.simplify import simplify, powsimp
 from sympy.utilities import public
-
-from sympy.core.compatibility import reduce, range
 
 
 def roots_linear(f):
@@ -227,10 +226,10 @@ def _roots_quartic_euler(p, q, r, a):
     -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
     """
     # solve the resolvent equation
-    x = Symbol('x')
+    x = Dummy('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
     xsols = list(roots(Poly(eq, x), cubics=False).keys())
-    xsols = [sol for sol in xsols if sol.is_rational]
+    xsols = [sol for sol in xsols if sol.is_rational and sol.is_nonzero]
     if not xsols:
         return None
     R = max(xsols)
@@ -282,7 +281,7 @@ def roots_quartic(f):
     ==========
 
     1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
-    2. http://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
+    2. https://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
     3. http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
     4. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
     5. http://www.albmath.org/files/Math_5713.pdf
@@ -310,8 +309,8 @@ def roots_quartic(f):
     else:
         a2 = a**2
         e = b - 3*a2/8
-        f = c + a*(a2/8 - b/2)
-        g = d - a*(a*(3*a2/256 - b/16) + c/4)
+        f = _mexpand(c + a*(a2/8 - b/2))
+        g = _mexpand(d - a*(a*(3*a2/256 - b/16) + c/4))
         aon4 = a/4
 
         if f is S.Zero:
@@ -501,7 +500,7 @@ def roots_cyclotomic(f, factor=False):
 
 def roots_quintic(f):
     """
-    Calulate exact roots of a solvable quintic
+    Calculate exact roots of a solvable quintic
     """
     result = []
     coeff_5, coeff_4, p, q, r, s = f.all_coeffs()
@@ -569,7 +568,7 @@ def roots_quintic(f):
     Res_n = [None, [None]*5, [None]*5, [None]*5, [None]*5]
     sol = Symbol('sol')
 
-    # Simplifying improves performace a lot for exact expressions
+    # Simplifying improves performance a lot for exact expressions
     R1 = _quintic_simplify(R1)
     R2 = _quintic_simplify(R2)
     R3 = _quintic_simplify(R3)
@@ -721,6 +720,7 @@ def preprocess_roots(poly):
     """Try to get rid of symbolic coefficients from ``poly``. """
     coeff = S.One
 
+    poly_func = poly.func
     try:
         _, poly = poly.clear_denoms(convert=True)
     except DomainError:
@@ -784,6 +784,8 @@ def preprocess_roots(poly):
             poly = poly.termwise(func)
             coeff *= basis
 
+    if not isinstance(poly, poly_func):
+        poly = poly_func(poly)
     return coeff, poly
 
 
@@ -845,7 +847,7 @@ def roots(f, *gens, **flags):
     References
     ==========
 
-    1. http://en.wikipedia.org/wiki/Cubic_function#Trigonometric_.28and_hyperbolic.29_method
+    1. https://en.wikipedia.org/wiki/Cubic_function#Trigonometric_.28and_hyperbolic.29_method
 
     """
     from sympy.polys.polytools import to_rational_coeffs

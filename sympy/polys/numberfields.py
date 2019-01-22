@@ -134,8 +134,8 @@ def _separate_sq(p):
             else:
                 raise NotImplementedError
             continue
-        sifted = sift(y.args, is_sqrt)
-        a.append((Mul(*sifted[False]), Mul(*sifted[True])**2))
+        T, F = sift(y.args, is_sqrt, binary=True)
+        a.append((Mul(*F), Mul(*T)**2))
     a.sort(key=lambda z: z[1])
     if a[-1][1] is S.One:
         # there are no surds
@@ -245,7 +245,7 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Resultant
+    [1] https://en.wikipedia.org/wiki/Resultant
     [2] I.M. Isaacs, Proc. Amer. Math. Soc. 25 (1970), 638
     "Degrees of sums in a separable field extension".
     """
@@ -528,7 +528,8 @@ def _minpoly_compose(ex, x, dom):
     if ex.is_Rational:
         return ex.q*x - ex.p
     if ex is I:
-        return x**2 + 1
+        _, factors = factor_list(x**2 + 1, x, domain=dom)
+        return x**2 + 1 if len(factors) == 1 else x - I
     if hasattr(dom, 'symbols') and ex in dom.symbols:
         return x - ex
 
@@ -549,18 +550,21 @@ def _minpoly_compose(ex, x, dom):
         r = sift(f.items(), lambda itx: itx[0].is_Rational and itx[1].is_Rational)
         if r[True] and dom == QQ:
             ex1 = Mul(*[bx**ex for bx, ex in r[False] + r[None]])
-            r1 = r[True]
-            dens = [y.q for _, y in r1]
+            r1 = dict(r[True])
+            dens = [y.q for y in r1.values()]
             lcmdens = reduce(lcm, dens, 1)
-            nums = [base**(y.p*lcmdens // y.q) for base, y in r1]
+            neg1 = S.NegativeOne
+            expn1 = r1.pop(neg1, S.Zero)
+            nums = [base**(y.p*lcmdens // y.q) for base, y in r1.items()]
             ex2 = Mul(*nums)
             mp1 = minimal_polynomial(ex1, x)
             # use the fact that in SymPy canonicalization products of integers
             # raised to rational powers are organized in relatively prime
             # bases, and that in ``base**(n/d)`` a perfect power is
             # simplified with the root
-            mp2 = ex2.q*x**lcmdens - ex2.p
-            ex2 = ex2**Rational(1, lcmdens)
+            # Powers of -1 have to be treated separately to preserve sign.
+            mp2 = ex2.q*x**lcmdens - ex2.p*neg1**(expn1*lcmdens)
+            ex2 = neg1**expn1 * ex2**Rational(1, lcmdens)
             res = _minpoly_op_algebraic_element(Mul, ex1, ex2, x, dom, mp1=mp1, mp2=mp2)
         else:
             res = _minpoly_mul(x, dom, *ex.args)
@@ -580,22 +584,29 @@ def _minpoly_compose(ex, x, dom):
 
 
 @public
-def minimal_polynomial(ex, x=None, **args):
+def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
     """
     Computes the minimal polynomial of an algebraic element.
 
     Parameters
     ==========
 
-    ex : algebraic element expression
-    x : independent variable of the minimal polynomial
+    ex : Expr
+        Element or expression whose minimal polynomial is to be calculated.
 
-    Options
-    =======
+    x : Symbol, optional
+        Independent variable of the minimal polynomial
 
-    compose : if ``True`` ``_minpoly_compose`` is used, if ``False`` the ``groebner`` algorithm
-    polys : if ``True`` returns a ``Poly`` object
-    domain : ground domain
+    compose : boolean, optional (default=True)
+        Method to use for computing minimal polynomial. If ``compose=True``
+        (default) then ``_minpoly_compose`` is used, if ``compose=False`` then
+        groebner bases are used.
+
+    polys : boolean, optional (default=False)
+        If ``True`` returns a ``Poly`` object else an ``Expr`` object.
+
+    domain : Domain, optional
+        Ground domain
 
     Notes
     =====
@@ -630,10 +641,6 @@ def minimal_polynomial(ex, x=None, **args):
     from sympy.polys.domains import FractionField
     from sympy.core.basic import preorder_traversal
 
-    compose = args.get('compose', True)
-    polys = args.get('polys', False)
-    dom = args.get('domain', None)
-
     ex = sympify(ex)
     if ex.is_number:
         # not sure if it's always needed but try it for numbers (issue 8354)
@@ -648,20 +655,24 @@ def minimal_polynomial(ex, x=None, **args):
     else:
         x, cls = Dummy('x'), PurePoly
 
-    if not dom:
-        dom = FractionField(QQ, list(ex.free_symbols)) if ex.free_symbols else QQ
-    if hasattr(dom, 'symbols') and x in dom.symbols:
-        raise GeneratorsError("the variable %s is an element of the ground domain %s" % (x, dom))
+    if not domain:
+        if ex.free_symbols:
+            domain = FractionField(QQ, list(ex.free_symbols))
+        else:
+            domain = QQ
+    if hasattr(domain, 'symbols') and x in domain.symbols:
+        raise GeneratorsError("the variable %s is an element of the ground "
+                              "domain %s" % (x, domain))
 
     if compose:
-        result = _minpoly_compose(ex, x, dom)
+        result = _minpoly_compose(ex, x, domain)
         result = result.primitive()[1]
         c = result.coeff(x**degree(result, x))
         if c.is_negative:
             result = expand_mul(-result)
         return cls(result, x, field=True) if polys else result.collect(x)
 
-    if not dom.is_QQ:
+    if not domain.is_QQ:
         raise NotImplementedError("groebner method only works for QQ")
 
     result = _minpoly_groebner(ex, x, cls)
@@ -813,8 +824,11 @@ __all__.append('minpoly')
 
 def _coeffs_generator(n):
     """Generate coefficients for `primitive_element()`. """
-    for coeffs in variations([1, -1], n, repetition=True):
-        yield list(coeffs)
+    for coeffs in variations([1, -1, 2, -2, 3, -3], n, repetition=True):
+        # Two linear combinations with coeffs of opposite signs are
+        # opposites of each other. Hence it suffices to test only one.
+        if coeffs[0] > 0:
+            yield list(coeffs)
 
 
 @public
@@ -827,14 +841,21 @@ def primitive_element(extension, x=None, **args):
         x, cls = sympify(x), Poly
     else:
         x, cls = Dummy('x'), PurePoly
+
     if not args.get('ex', False):
-        extension = [ AlgebraicNumber(ext, gen=x) for ext in extension ]
-
-        g, coeffs = extension[0].minpoly.replace(x), [1]
-
+        gen, coeffs = extension[0], [1]
+        # XXX when minimal_polynomial is extended to work
+        # with AlgebraicNumbers this test can be removed
+        if isinstance(gen, AlgebraicNumber):
+            g = gen.minpoly.replace(x)
+        else:
+            g = minimal_polynomial(gen, x, polys=True)
         for ext in extension[1:]:
-            s, _, g = sqf_norm(g, x, extension=ext)
-            coeffs = [ s*c for c in coeffs ] + [1]
+            _, factors = factor_list(g, extension=ext)
+            g = _choose_factor(factors, x, gen)
+            s, _, g = g.sqf_norm()
+            gen += s*ext
+            coeffs.append(s)
 
         if not args.get('polys', False):
             return g.as_expr(), coeffs

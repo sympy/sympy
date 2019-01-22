@@ -22,6 +22,9 @@ if llvmlite:
     llvm.initialize_native_asmprinter()
 
 
+__doctest_requires__ = {('llvm_callable'): ['llvmlite']}
+
+
 class LLVMJitPrinter(Printer):
     '''Convert expressions to LLVM IR'''
     def __init__(self, module, builder, fn, *args, **kwargs):
@@ -39,7 +42,7 @@ class LLVMJitPrinter(Printer):
     def _add_tmp_var(self, name, value):
         self.tmp_var[name] = value
 
-    def _print_Number(self, n, **kwargs):
+    def _print_Number(self, n):
         return ll.Constant(self.fp_type, float(n))
 
     def _print_Integer(self, expr):
@@ -281,8 +284,7 @@ class LLVMJitCode(object):
             print("Assembly")
             print(target_machine.emit_assembly(llmod))
 
-        fptr = exe_eng.get_pointer_to_function(
-            llmod.get_function(self.link_name))
+        fptr = exe_eng.get_function_address(self.link_name)
 
         return fptr
 

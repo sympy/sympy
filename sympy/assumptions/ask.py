@@ -228,7 +228,7 @@ class AssumptionKeys(object):
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Algebraic_number
+        .. [1] https://en.wikipedia.org/wiki/Algebraic_number
         """
         return Predicate('algebraic')
 
@@ -1328,7 +1328,7 @@ def register_handler(key, handler):
         >>> from sympy.assumptions import register_handler, ask, Q
         >>> from sympy.assumptions.handlers import AskHandler
         >>> class MersenneHandler(AskHandler):
-        ...     # Mersenne numbers are in the form 2**n + 1, n integer
+        ...     # Mersenne numbers are in the form 2**n - 1, n integer
         ...     @staticmethod
         ...     def Integer(expr, assumptions):
         ...         from sympy import log

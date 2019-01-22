@@ -22,7 +22,7 @@ class Medium(Symbol):
 
     """
     This class represents an optical medium. The prime reason to implement this is
-    to facilitate refraction, Fermat's priciple, etc.
+    to facilitate refraction, Fermat's principle, etc.
 
     An optical medium is a material through which electromagnetic waves propagate.
     The permittivity and permeability of the medium define how electromagnetic
@@ -61,7 +61,7 @@ class Medium(Symbol):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Optical_medium
+    .. [1] https://en.wikipedia.org/wiki/Optical_medium
 
     """
 

@@ -6,7 +6,7 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex
 from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit
-from .compatibility import reduce, as_int, default_sort_key, range
+from .compatibility import reduce, as_int, default_sort_key, range, Iterable
 from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
@@ -28,16 +28,21 @@ class Expr(Basic, EvalfMixin):
 
     __slots__ = []
 
+    is_scalar = True  # self derivative is 1
+
     @property
     def _diff_wrt(self):
-        """Is it allowed to take derivative wrt to this instance.
+        """Return True if one can differentiate with respect to this
+        object, else False.
 
-        This determines if it is allowed to take derivatives wrt this object.
-        Subclasses such as Symbol, Function and Derivative should return True
+        Subclasses such as Symbol, Function and Derivative return True
         to enable derivatives wrt them. The implementation in Derivative
-        separates the Symbol and non-Symbol _diff_wrt=True variables and
-        temporarily converts the non-Symbol vars in Symbols when performing
-        the differentiation.
+        separates the Symbol and non-Symbol (_diff_wrt=True) variables and
+        temporarily converts the non-Symbols into Symbols when performing
+        the differentiation. By default, any object deriving from Expr
+        will behave like a scalar with self.diff(self) == 1. If this is
+        not desired then the object must also set `is_scalar = False` or
+        else define an _eval_derivative routine.
 
         Note, see the docstring of Derivative for how this should work
         mathematically. In particular, note that expr.subs(yourclass, Symbol)
@@ -51,11 +56,17 @@ class Expr(Basic, EvalfMixin):
         >>> e = Expr()
         >>> e._diff_wrt
         False
-        >>> class MyClass(Expr):
+        >>> class MyScalar(Expr):
         ...     _diff_wrt = True
         ...
-        >>> (2*MyClass()).diff(MyClass())
-        2
+        >>> MyScalar().diff(MyScalar())
+        1
+        >>> class MySymbol(Expr):
+        ...     _diff_wrt = True
+        ...     is_scalar = False
+        ...
+        >>> MySymbol().diff(MySymbol())
+        Derivative(MySymbol(), MySymbol())
         """
         return False
 
@@ -206,6 +217,19 @@ class Expr(Basic, EvalfMixin):
         from sympy.functions.elementary.integers import floor
         return floor(other / self)
 
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rdivmod__')
+    def __divmod__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(self / other), Mod(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__divmod__')
+    def __rdivmod__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(other / self), Mod(other, self)
+
     def __int__(self):
         # Although we only need to round to the units position, we'll
         # get one more digit so the extra testing below can be avoided
@@ -344,6 +368,12 @@ class Expr(Basic, EvalfMixin):
                 return sympify(dif.is_negative)
         return StrictLessThan(self, other, evaluate=False)
 
+    def __trunc__(self):
+        if not self.is_number:
+            raise TypeError("can't truncate symbols and expressions")
+        else:
+            return Integer(self)
+
     @staticmethod
     def _from_mpmath(x, prec):
         from sympy import Float
@@ -359,27 +389,53 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_number(self):
-        """Returns True if ``self`` has no free symbols.
-        It will be faster than ``if not self.free_symbols``, however, since
-        ``is_number`` will fail as soon as it hits a free symbol.
+        """Returns True if ``self`` has no free symbols and no
+        undefined functions (AppliedUndef, to be precise). It will be
+        faster than ``if not self.free_symbols``, however, since
+        ``is_number`` will fail as soon as it hits a free symbol
+        or undefined function.
 
         Examples
         ========
 
-        >>> from sympy import log, Integral
+        >>> from sympy import log, Integral, cos, sin, pi
+        >>> from sympy.core.function import Function
         >>> from sympy.abc import x
+        >>> f = Function('f')
 
         >>> x.is_number
         False
+        >>> f(1).is_number
+        False
         >>> (2*x).is_number
         False
-        >>> (2 + log(2)).is_number
-        True
         >>> (2 + Integral(2, x)).is_number
         False
         >>> (2 + Integral(2, (x, 1, 2))).is_number
         True
 
+        Not all numbers are Numbers in the SymPy sense:
+
+        >>> pi.is_number, pi.is_Number
+        (True, False)
+
+        If something is a number it should evaluate to a number with
+        real and imaginary parts that are Numbers; the result may not
+        be comparable, however, since the real and/or imaginary part
+        of the result may not have precision.
+
+        >>> cos(1).is_number and cos(1).is_comparable
+        True
+
+        >>> z = cos(1)**2 + sin(1)**2 - 1
+        >>> z.is_number
+        True
+        >>> z.is_comparable
+        False
+
+        See Also
+        ========
+        sympy.core.basic.is_comparable
         """
         return all(obj.is_number for obj in self.args)
 
@@ -531,20 +587,11 @@ class Expr(Basic, EvalfMixin):
 
         simplify = flags.get('simplify', True)
 
-        # Except for expressions that contain units, only one of these should
-        # be necessary since if something is
-        # known to be a number it should also know that there are no
-        # free symbols. But is_number quits as soon as it hits a non-number
-        # whereas free_symbols goes until all free symbols have been collected,
-        # thus is_number should be faster. But a double check on free symbols
-        # is made just in case there is a discrepancy between the two.
-        free = self.free_symbols
-        if self.is_number or not free:
-            # if the following assertion fails then that object's free_symbols
-            # method needs attention: if an expression is a number it cannot
-            # have free symbols
-            assert not free
+        if self.is_number:
             return True
+        free = self.free_symbols
+        if not free:
+            return True  # assume f(1) is some constant
 
         # if we are only interested in some symbols and they are not in the
         # free symbols then this expression is constant wrt those symbols
@@ -790,7 +837,8 @@ class Expr(Basic, EvalfMixin):
 
         self.subs(x, b) - self.subs(x, a),
 
-        possibly using limit() if NaN is returned from subs.
+        possibly using limit() if NaN is returned from subs, or if
+        singularities are found between a and b.
 
         If b or a is None, it only evaluates -self.subs(x, a) or self.subs(b, x),
         respectively.
@@ -799,6 +847,8 @@ class Expr(Basic, EvalfMixin):
         from sympy.series import limit, Limit
         from sympy.solvers.solveset import solveset
         from sympy.sets.sets import Interval
+        from sympy.functions.elementary.exponential import log
+        from sympy.calculus.util import AccumBounds
 
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
@@ -810,7 +860,7 @@ class Expr(Basic, EvalfMixin):
             A = 0
         else:
             A = self.subs(x, a)
-            if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity, AccumBounds):
                 if (a < b) != False:
                     A = limit(self, x, a,"+")
                 else:
@@ -825,7 +875,7 @@ class Expr(Basic, EvalfMixin):
             B = 0
         else:
             B = self.subs(x, b)
-            if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity, AccumBounds):
                 if (a < b) != False:
                     B = limit(self, x, b,"-")
                 else:
@@ -844,12 +894,26 @@ class Expr(Basic, EvalfMixin):
                 domain = Interval(a, b)
             else:
                 domain = Interval(b, a)
-            singularities = list(solveset(self.cancel().as_numer_denom()[1], x, domain = domain))
-            for s in singularities:
-                if a < s < b:
-                    value += -limit(self, x, s, "+") + limit(self, x, s, "-")
-                elif b < s < a:
-                    value += limit(self, x, s, "+") - limit(self, x, s, "-")
+            # check the singularities of self within the interval
+            # if singularities is a ConditionSet (not iterable), catch the exception and pass
+            singularities = solveset(self.cancel().as_numer_denom()[1], x,
+                domain=domain)
+            for logterm in self.atoms(log):
+                singularities = singularities | solveset(logterm.args[0], x,
+                    domain=domain)
+            try:
+                for s in singularities:
+                    if value is S.NaN:
+                        # no need to keep adding, it will stay NaN
+                        break
+                    if not s.is_comparable:
+                        continue
+                    if (a < s) == (s < b) == True:
+                        value += -limit(self, x, s, "+") + limit(self, x, s, "-")
+                    elif (b < s) == (s < a) == True:
+                        value += limit(self, x, s, "+") - limit(self, x, s, "-")
+            except TypeError:
+                pass
 
         return value
 
@@ -994,7 +1058,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_number:
                         try:
                             coeff *= complex(factor)
-                        except TypeError:
+                        except (TypeError, ValueError):
                             pass
                         else:
                             continue
@@ -1093,7 +1157,7 @@ class Expr(Basic, EvalfMixin):
         self is treated as a Mul and the ordering of the factors is maintained.
         If ``cset`` is True the commutative factors will be returned in a set.
         If there were repeated factors (as may happen with an unevaluated Mul)
-        then an error will be raised unless it is explicitly supressed by
+        then an error will be raised unless it is explicitly suppressed by
         setting ``warn`` to False.
 
         Note: -1 is always separated from a Number unless split_1 is False.
@@ -1302,8 +1366,8 @@ class Expr(Basic, EvalfMixin):
 
         def find(l, sub, first=True):
             """ Find where list sub appears in list l. When ``first`` is True
-            the first occurance from the left is returned, else the last
-            occurance is returned. Return None if sub is not in l.
+            the first occurrence from the left is returned, else the last
+            occurrence is returned. Return None if sub is not in l.
 
             >> l = range(5)*2
             >> find(l, [2, 3])
@@ -1533,7 +1597,8 @@ class Expr(Basic, EvalfMixin):
         following interpretation:
 
         * i will has no variable that appears in deps
-        * d will be 1 or else have terms that contain variables that are in deps
+        * d will either have terms that contain variables that are in deps, or
+          be equal to 0 (when self is an Add) or 1 (when self is a Mul)
         * if self is an Add then self = i + d
         * if self is a Mul then self = i*d
         * otherwise (self, S.One) or (S.One, self) is returned.
@@ -1738,7 +1803,15 @@ class Expr(Basic, EvalfMixin):
         values, the corresponding exponents. The resulting dictionary should
         be used with caution if the expression is a Mul and contains non-
         commutative factors since the order that they appeared will be lost in
-        the dictionary."""
+        the dictionary.
+
+        See Also
+        ========
+        as_ordered_factors: An alternative for noncommutative applications,
+                            returning an ordered list of factors.
+        args_cnc: Similar to as_ordered_factors, but guarantees separation
+                  of commutative and noncommutative factors.
+        """
         d = defaultdict(int)
         d.update(dict([self.as_base_exp()]))
         return d
@@ -2186,6 +2259,30 @@ class Expr(Basic, EvalfMixin):
         coeffs.append(self)
         return Add(*coeffs)
 
+    @property
+    def expr_free_symbols(self):
+        """
+        Like ``free_symbols``, but returns the free symbols only if they are contained in an expression node.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> (x + y).expr_free_symbols
+        {x, y}
+
+        If the expression is contained in a non-expression object, don't return
+        the free symbols. Compare:
+
+        >>> from sympy import Tuple
+        >>> t = Tuple(x + y)
+        >>> t.expr_free_symbols
+        set()
+        >>> t.free_symbols
+        {x, y}
+        """
+        return {j for i in self.args for j in i.expr_free_symbols}
+
     def could_extract_minus_sign(self):
         """Return True if self is not in a canonical form with respect
         to its sign.
@@ -2492,7 +2589,7 @@ class Expr(Basic, EvalfMixin):
         References
         ==========
 
-        - http://en.wikipedia.org/wiki/Algebraic_expression
+        - https://en.wikipedia.org/wiki/Algebraic_expression
 
         """
         if syms:
@@ -2552,16 +2649,21 @@ class Expr(Basic, EvalfMixin):
         -x
 
         """
-        from sympy import collect, Dummy, Order, Rational, Symbol
+        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling
         if x is None:
-            syms = self.atoms(Symbol)
+            syms = self.free_symbols
             if not syms:
                 return self
             elif len(syms) > 1:
                 raise ValueError('x must be given for multivariate functions.')
             x = syms.pop()
 
-        if not self.has(x):
+        if isinstance(x, Symbol):
+            dep = x in self.free_symbols
+        else:
+            d = Dummy()
+            dep = d in self.xreplace({x: d}).free_symbols
+        if not dep:
             if n is None:
                 return (s for s in [self])
             else:
@@ -2571,11 +2673,12 @@ class Expr(Basic, EvalfMixin):
             raise ValueError("Dir must be '+' or '-'")
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
-            dir = {S.Infinity: '+', S.NegativeInfinity: '-'}[x0]
-            s = self.subs(x, 1/x).series(x, n=n, dir=dir)
+            sgn = 1 if x0 is S.Infinity else -1
+            s = self.subs(x, sgn/x).series(x, n=n, dir='+')
             if n is None:
-                return (si.subs(x, 1/x) for si in s)
-            return s.subs(x, 1/x)
+                return (si.subs(x, sgn/x) for si in s)
+            return s.subs(x, sgn/x)
+
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
@@ -2626,7 +2729,7 @@ class Expr(Basic, EvalfMixin):
                         s1 = self._eval_nseries(x, n=n + more, logx=logx)
                         newn = s1.getn()
                         if newn != ngot:
-                            ndo = n + (n - ngot)*more/(newn - ngot)
+                            ndo = n + ceiling((n - ngot)*more/(newn - ngot))
                             s1 = self._eval_nseries(x, n=ndo, logx=logx)
                             while s1.getn() < n:
                                 s1 = self._eval_nseries(x, n=ndo, logx=logx)
@@ -2962,9 +3065,8 @@ class Expr(Basic, EvalfMixin):
     ###################################################################################
 
     def diff(self, *symbols, **assumptions):
-        new_symbols = list(map(sympify, symbols))  # e.g. x, 2, y, z
         assumptions.setdefault("evaluate", True)
-        return Derivative(self, *new_symbols, **assumptions)
+        return Derivative(self, *symbols, **assumptions)
 
     ###########################################################################
     ###################### EXPRESSION EXPANSION METHODS #######################
@@ -3106,7 +3208,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.integrals import integrate
         return integrate(self, *args, **kwargs)
 
-    def simplify(self, ratio=1.7, measure=None):
+    def simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
         """See the simplify function in sympy.simplify"""
         from sympy.simplify import simplify
         from sympy.core.function import count_ops
@@ -3310,6 +3412,17 @@ class AtomicExpr(Atom, Expr):
             return S.One
         return S.Zero
 
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Piecewise, Eq
+        from sympy import Tuple
+        from sympy.matrices.common import MatrixCommon
+        if isinstance(s, (MatrixCommon, Tuple, Iterable)):
+            return super(AtomicExpr, self)._eval_derivative_n_times(s, n)
+        if self == s:
+            return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
+        else:
+            return Piecewise((self, Eq(n, 0)), (0, True))
+
     def _eval_is_polynomial(self, syms):
         return True
 
@@ -3321,6 +3434,10 @@ class AtomicExpr(Atom, Expr):
 
     def _eval_nseries(self, x, n, logx):
         return self
+
+    @property
+    def expr_free_symbols(self):
+        return {self}
 
 
 def _mag(x):
@@ -3375,20 +3492,18 @@ class UnevaluatedExpr(Expr):
         obj = Expr.__new__(cls, arg, **kwargs)
         return obj
 
-    def doit(self, *args, **kwargs):
+    def doit(self, **kwargs):
         if kwargs.get("deep", True):
-            return self.args[0].doit(*args, **kwargs)
+            return self.args[0].doit(**kwargs)
         else:
             return self.args[0]
 
 
 def _n2(a, b):
-    """Return (a - b).evalf(2) if it, a and b are comparable, else None.
+    """Return (a - b).evalf(2) if a and b are comparable, else None.
     This should only be used when a and b are already sympified.
     """
-    if not all(i.is_number for i in (a, b)):
-        return
-    # /!\ if is very important (see issue 8245) not to
+    # /!\ it is very important (see issue 8245) not to
     # use a re-evaluated number in the calculation of dif
     if a.is_comparable and b.is_comparable:
         dif = (a - b).evalf(2)

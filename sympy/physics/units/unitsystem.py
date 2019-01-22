@@ -68,7 +68,7 @@ class UnitSystem(object):
 
         Take the base and normal units of the current system to merge
         them to the base and normal units given in argument.
-        If not provided, name and description are overriden by empty strings.
+        If not provided, name and description are overridden by empty strings.
         """
 
         base = self._base_units + tuple(base)

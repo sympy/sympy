@@ -675,6 +675,15 @@ def test_ModularInteger():
     a = F3(2)**2
     assert isinstance(a, F3.dtype) and a == 1
 
+    F7 = FF(7)
+
+    a = F7(3)**100000000000
+    assert isinstance(a, F7.dtype) and a == 4
+    a = F7(3)**-100000000000
+    assert isinstance(a, F7.dtype) and a == 2
+    a = F7(3)**S(2)
+    assert isinstance(a, F7.dtype) and a == 2
+
     assert bool(F3(3)) is False
     assert bool(F3(4)) is True
 

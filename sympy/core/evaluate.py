@@ -19,7 +19,7 @@ global_distribute = _global_function([True])
 def evaluate(x):
     """ Control automatic evaluation
 
-    This context managers controls whether or not all SymPy functions evaluate
+    This context manager controls whether or not all SymPy functions evaluate
     by default.
 
     Note that much of SymPy expects evaluated expressions.  This functionality
@@ -49,7 +49,7 @@ def evaluate(x):
 def distribute(x):
     """ Control automatic distribution of Number over Add
 
-    This context managers controls whether or not Mul distribute Number over
+    This context manager controls whether or not Mul distribute Number over
     Add. Plan is to avoid distributing Number over Add in all of sympy. Once
     that is done, this contextmanager will be removed.
 

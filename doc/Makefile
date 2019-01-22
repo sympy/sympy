@@ -114,7 +114,7 @@ _build/cheatsheet/cheatsheet.pdf: cheatsheet/cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
 
-_build/cheatsheet/cheatsheet.pdf: cheatsheet/combinatoric_cheatsheet.tex
+_build/cheatsheet/combinatoric_cheatsheet.pdf: cheatsheet/combinatoric_cheatsheet.tex
 	mkdir -p _build/cheatsheet
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex

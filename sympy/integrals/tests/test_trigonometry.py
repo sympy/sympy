@@ -1,4 +1,4 @@
-from sympy.core import Eq, Rational, Symbol
+from sympy.core import Ne, Rational, Symbol
 from sympy.functions import sin, cos, tan, csc, sec, cot, log, Piecewise
 from sympy.integrals.trigonometry import trigintegrate
 
@@ -17,16 +17,16 @@ def test_trigintegrate_odd():
     assert trigintegrate(cos(3*x), x) == sin(3*x)/3
 
     y = Symbol('y')
-    assert trigintegrate(sin(y*x), x) == \
-        Piecewise((0, Eq(y, 0)), (-cos(y*x)/y, True))
-    assert trigintegrate(cos(y*x), x) == \
-        Piecewise((x, Eq(y, 0)), (sin(y*x)/y, True))
-    assert trigintegrate(sin(y*x)**2, x) == \
-        Piecewise((0, Eq(y, 0)), ((x*y/2 - sin(x*y)*cos(x*y)/2)/y, True))
-    assert trigintegrate(sin(y*x)*cos(y*x), x) == \
-        Piecewise((0, Eq(y, 0)), (sin(x*y)**2/(2*y), True))
-    assert trigintegrate(cos(y*x)**2, x) == \
-        Piecewise((x, Eq(y, 0)), ((x*y/2 + sin(x*y)*cos(x*y)/2)/y, True))
+    assert trigintegrate(sin(y*x), x) == Piecewise(
+        (-cos(y*x)/y, Ne(y, 0)), (0, True))
+    assert trigintegrate(cos(y*x), x) == Piecewise(
+        (sin(y*x)/y, Ne(y, 0)), (x, True))
+    assert trigintegrate(sin(y*x)**2, x) == Piecewise(
+        ((x*y/2 - sin(x*y)*cos(x*y)/2)/y, Ne(y, 0)), (0, True))
+    assert trigintegrate(sin(y*x)*cos(y*x), x) == Piecewise(
+        (sin(x*y)**2/(2*y), Ne(y, 0)), (0, True))
+    assert trigintegrate(cos(y*x)**2, x) == Piecewise(
+        ((x*y/2 + sin(x*y)*cos(x*y)/2)/y, Ne(y, 0)), (x, True))
 
     y = Symbol('y', positive=True)
     # TODO: remove conds='none' below. For this to work we would have to rule
