@@ -4077,34 +4077,48 @@ class MatrixBase(MatrixDeprecated,
         cls = self.__class__
         mat = self.as_mutable()
 
-        if not mat.rows >= mat.cols:
-            raise MatrixError(
-                "The number of rows must be greater than columns")
         n = mat.rows
         m = mat.cols
-        rank = n
-        row_reduced = mat.rref()[0]
-        for i in range(row_reduced.rows):
-            if row_reduced.row(i).norm() == 0:
-                rank -= 1
-        if not rank == mat.cols:
-            raise MatrixError("The rank of the matrix must match the columns")
+        ranked = list()
+
+        # Pad with additional rows to make wide matrices square
+        # nOrig keeps track of original size so zeros can be trimmed from Q
+        if n < m:
+            nOrig = n
+            n = m
+            mat = mat.col_join(mat.zeros(n - nOrig, m))
+        else:
+            nOrig = n
+
         Q, R = mat.zeros(n, m), mat.zeros(m)
         for j in range(m):  # for each column vector
             tmp = mat[:, j]  # take original v
             for i in range(j):
                 # subtract the project of mat on new vector
-                tmp -= Q[:, i] * mat[:, j].dot(Q[:, i])
+                R[i, j] = Q[:, i].dot(mat[:, j])
+                tmp -= Q[:, i] * R[i, j]
                 tmp.expand()
             # normalize it
             R[j, j] = tmp.norm()
-            Q[:, j] = tmp / R[j, j]
-            if Q[:, j].norm() != 1:
-                raise NotImplementedError(
-                    "Could not normalize the vector %d." % j)
-            for i in range(j):
-                R[i, j] = Q[:, i].dot(mat[:, j])
-        return cls(Q), cls(R)
+            if not R[j, j].is_zero:
+                ranked.append(j)
+                Q[:, j] = tmp / R[j, j]
+
+
+        if len(ranked) != 0:
+            return (
+            cls(Q.extract(range(nOrig), ranked)),
+            cls(R.extract(ranked, range(R.cols)))
+            )
+        else:
+            # Trivial case handling for zero-rank matrix
+            # Force Q as matrix containing standard basis vectors
+            for i in range(Min(nOrig, m)):
+                Q[i, i] = 1
+            return (
+            cls(Q.extract(range(nOrig), range(Min(nOrig, m)))),
+            cls(R.extract(range(Min(nOrig, m)), range(R.cols)))
+            )
 
     def QRsolve(self, b):
         """Solve the linear system 'Ax = b'.

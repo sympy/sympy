@@ -801,6 +801,7 @@ def test_QR():
 
 
 def test_QR_non_square():
+    # Narrow (cols < rows) matrices
     A = Matrix([[9, 0, 26], [12, 0, -7], [0, 4, 4], [0, -3, -3]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)
@@ -808,6 +809,101 @@ def test_QR_non_square():
     assert A == Q*R
 
     A = Matrix([[1, -1, 4], [1, 4, -2], [1, 4, 2], [1, -1, 0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix(2, 1, [1, 2])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    # Wide (cols > rows) matrices
+    A = Matrix([[1, 2, 3], [4, 5, 6]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[1, 2, 3, 4], [1, 4, 9, 16], [1, 8, 27, 64]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix(1, 2, [1, 2])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+def test_QR_trivial():
+    # Rank deficient matrices
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    # Zero rank matrices
+    A = Matrix([[0, 0, 0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0], [0, 0, 0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0], [0, 0, 0]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    # Rank deficient matrices with zero norm from beginning columns
+    A = Matrix([[0, 0, 0], [1, 2, 3]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0, 0], [1, 2, 3, 4], [0, 0, 0, 0]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0, 0], [1, 2, 3, 4], [0, 0, 0, 0], [2, 4, 6, 8]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0], [1, 2, 3]]).T
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)
     assert R.is_upper
@@ -1878,9 +1974,6 @@ def test_errors():
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).trace())
     raises(TypeError, lambda: Matrix([1]).applyfunc(1))
     raises(ShapeError, lambda: Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]])))
-    raises(MatrixError, lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]
-           ]).QRdecomposition())
-    raises(MatrixError, lambda: Matrix(1, 2, [1, 2]).QRdecomposition())
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor(4, 5))
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor_submatrix(4, 5))
     raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))
