@@ -340,7 +340,7 @@ def real_root(arg, n=None, evaluate=None):
 class MinMaxBase(Expr, LatticeOp):
     def __new__(cls, *args, **assumptions):
         if not args:
-            cls._eval_no_args(cls)
+            cls._eval_no_args()
 
         args = (sympify(arg) for arg in args)
 
@@ -730,7 +730,8 @@ class Max(MinMaxBase, Application):
     zero = S.Infinity
     identity = S.NegativeInfinity
 
-    def _eval_no_args(self):
+    @classmethod
+    def _eval_no_args(cls):
         return S.NegativeInfinity
 
     def fdiff( self, argindex ):
@@ -798,7 +799,8 @@ class Min(MinMaxBase, Application):
     zero = S.NegativeInfinity
     identity = S.Infinity
 
-    def _eval_no_args(self):
+    @classmethod
+    def _eval_no_args(cls):
         return S.Infinity
 
     def fdiff( self, argindex ):
