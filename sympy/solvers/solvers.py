@@ -1751,7 +1751,7 @@ def _solve(f, *symbols, **flags):
                     for d in dens)]
     if check:
         # keep only results if the check is not False
-        result = [r for r in result if
+        result = [nsimplify(r) for r in result if
                   checksol(f_num, {symbol: r}, **flags) is not False]
     return result
 
@@ -2718,6 +2718,11 @@ def _tsolve(eq, sym, **flags):
                         # irrational solutions may be harder to test
                         if eq.subs(sym, s).equals(0):
                             sol.append(s)
+                    return list(ordered(set(sol)))
+                elif rhs.is_complex or lhs.base.is_complex and lhs.base != 0:
+                    sol=[]
+                    logform = lhs.exp*log(lhs.base) - log(rhs)
+                    sol.extend(_solve(logform, sym, **flags))
                     return list(ordered(set(sol)))
                 else:
                     raise NotImplementedError

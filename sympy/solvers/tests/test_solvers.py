@@ -634,15 +634,11 @@ def test_PR1964():
     # issue 4497
     assert solve(1/root(5 + x, 5) - 9, x) == [-295244/S(59049)]
 
-    assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [(-S.Half + sqrt(17)/2)**4]
-    assert set(solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4))) in \
-        [
-            set([log((-sqrt(3) + 2)**2), log((sqrt(3) + 2)**2)]),
-            set([2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)]),
-            set([log(-4*sqrt(3) + 7), log(4*sqrt(3) + 7)]),
-        ]
+    assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [-9*sqrt(17)/2 + 49/2]
+    assert set(solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4))) == \
+        set([-log(4*sqrt(3) + 7), log(4*sqrt(3) + 7)])
     assert set(solve(Poly(exp(x) + exp(-x) - 4))) == \
-        set([log(-sqrt(3) + 2), log(sqrt(3) + 2)])
+        set([-log(sqrt(3) + 2), log(sqrt(3) + 2)])
     assert set(solve(x**y + x**(2*y) - 1, x)) == \
         set([(-S.Half + sqrt(5)/2)**(1/y), (-S.Half - sqrt(5)/2)**(1/y)])
 
@@ -694,9 +690,7 @@ def test_checking():
 def test_issue_4671_4463_4467():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
-    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [
-        -sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi)),
-        sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))]
+    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [-sqrt(x*log(1 + I*pi/log(2))), sqrt(x*log(1 + I*pi/log(2)))]
 
     C1, C2 = symbols('C1 C2')
     f = Function('f')
@@ -1591,16 +1585,12 @@ def test_lambert_multivariate():
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
 
-    assert solve(x**3 - 3**x, x) == [-3/log(3)*LambertW(-log(3)/3),
-                                     -3*LambertW(-log(3)/3, -1)/log(3)]
-    assert solve(x**2 - 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
-    assert solve(-x**2 + 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
-    assert solve(3**cos(x) - cos(x)**3) == [
-        acos(-3*LambertW(-log(3)/3)/log(3)),
-        acos(-3*LambertW(-log(3)/3, -1)/log(3))]
+    assert solve(x**3 - 3**x, x) == [3, -3*LambertW(-log(3)/3)/log(3)]
+    assert solve(x**2 - 2**x, x) == [2, 4]
+    assert solve(-x**2 + 2**x, x) == [2, 4]
+    assert solve(3**cos(x) - cos(x)**3) == [I*log(2*sqrt(2) + 3), acos(-3*LambertW(-log(3)/3)/log(3))]
     assert set(solve(3*log(x) - x*log(3))) == set(  # 2.478... and 3
-        [-3*LambertW(-log(3)/3)/log(3),
-        -3*LambertW(-log(3)/3, -1)/log(3)])
+         [-3*LambertW(-log(3)/3)/log(3), 3])
     assert solve(LambertW(2*x) - y, x) == [y*exp(y)/2]
 
 
@@ -2010,4 +2000,15 @@ def test_issue_15731():
     assert solve((-sqrt(2))**x + 2*(sqrt(2))) == [3]
     assert solve((sqrt(2))**x - 2*(sqrt(2))) == [3]
     assert solve(x**(2/x) - 2) == [2, -LambertW(-log(sqrt(2)) - I*pi)/(log(sqrt(2)) + I*pi)]
-    assert solve((x/2)**(2/x) - sqrt(2)) == [4, -4*LambertW(-log(2)/2, -1)/log(2)]
+    assert solve((x/2)**(2/x) - sqrt(2)) == [4, 8]
+    assert solve(I**x + 1) == [2]
+    assert solve((1+I)**x - 2*I) == [2]
+    assert solve((sqrt(2)+sqrt(3))**x - (2*sqrt(6)+5)**(S(1)/3)) == [S(2)/3]
+    b = Symbol('b')
+    assert solve(b**x - b**2, x) == [log(b**2)/log(b)]
+    assert solve(b**x - 1/b, x) == [log(1/b)/log(b)]
+    b = Symbol('b', positive = True)
+    assert solve(b**x - b**2, x) == [2]
+    assert solve(b**x - 1/b, x) == [-1]
+    b = 1 + sqrt(2)
+    assert solve(b**x - b**2) == [2]
