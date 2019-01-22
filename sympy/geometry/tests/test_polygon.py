@@ -17,6 +17,10 @@ def feq(a, b):
 def test_polygon():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
+    q = Symbol('q', real=True)
+    u = Symbol('u', real=True)
+    v = Symbol('v', real=True)
+    w = Symbol('w', real=True)
     x1 = Symbol('x1', real=True)
     half = Rational(1, 2)
     a, b, c = Point(0, 0), Point(2, 0), Point(3, 3)
@@ -55,6 +59,16 @@ def test_polygon():
     p6 = Polygon(
         Point(-11, 1), Point(-9, 6.6),
         Point(-4, -3), Point(-8.4, -8.7))
+    p7 = Polygon(
+        Point(x, y), Point(q, u),
+        Point(v, w))
+    p8 = Polygon(
+        Point(x, y), Point(v, w),
+        Point(q, u))
+    p9 = Polygon(
+        Point(0, 0), Point(4, 4),
+        Point(3, 0), Point(5, 2))
+
     r = Ray(Point(-9,6.6), Point(-9,5.5))
     #
     # General polygon
@@ -88,6 +102,9 @@ def test_polygon():
         Polygon(Point(0, 0), Point(1, 0), Point(1, 1)).distance(
                 Polygon(Point(0, 0), Point(0, 1), Point(1, 1)))
     assert hash(p5) == hash(Polygon(Point(0, 0), Point(4, 4), Point(0, 4)))
+    assert hash(p1) == hash(p2)
+    assert hash(p7) == hash(p8)
+    assert hash(p3) != hash(p9)
     assert p5 == Polygon(Point(4, 4), Point(0, 4), Point(0, 0))
     assert Polygon(Point(4, 4), Point(0, 4), Point(0, 0)) in p5
     assert p5 != Point(0, 4)

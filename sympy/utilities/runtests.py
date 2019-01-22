@@ -646,24 +646,10 @@ def doctest(*paths, **kwargs):
             return val
 
 
-def _doctest(*paths, **kwargs):
-    """
-    Internal function that actually runs the doctests.
+def _get_doctest_blacklist():
+    '''Get the default blacklist for the doctests'''
+    blacklist = []
 
-    All keyword arguments from ``doctest()`` are passed to this function
-    except for ``subprocess``.
-
-    Returns 0 if tests passed and 1 if they failed.  See the docstrings of
-    ``doctest()`` and ``test()`` for more information.
-    """
-    from sympy import pprint_use_unicode
-
-    normal = kwargs.get("normal", False)
-    verbose = kwargs.get("verbose", False)
-    colors = kwargs.get("colors", True)
-    force_colors = kwargs.get("force_colors", False)
-    blacklist = kwargs.get("blacklist", [])
-    split  = kwargs.get('split', None)
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
@@ -721,6 +707,12 @@ def _doctest(*paths, **kwargs):
             "doc/src/modules/numeric-computation.rst",
         ])
 
+    if import_module('antlr4') is None:
+        blacklist.extend([
+            "sympy/parsing/autolev/__init__.py",
+            "sympy/parsing/latex/_parse_latex_antlr.py",
+        ])
+
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
         "sympy/utilities/autowrap.py",
@@ -735,6 +727,34 @@ def _doctest(*paths, **kwargs):
     ])
 
     blacklist = convert_to_native_paths(blacklist)
+    return blacklist
+
+
+def _doctest(*paths, **kwargs):
+    """
+    Internal function that actually runs the doctests.
+
+    All keyword arguments from ``doctest()`` are passed to this function
+    except for ``subprocess``.
+
+    Returns 0 if tests passed and 1 if they failed.  See the docstrings of
+    ``doctest()`` and ``test()`` for more information.
+    """
+    from sympy import pprint_use_unicode
+
+    normal = kwargs.get("normal", False)
+    verbose = kwargs.get("verbose", False)
+    colors = kwargs.get("colors", True)
+    force_colors = kwargs.get("force_colors", False)
+    blacklist = kwargs.get("blacklist", [])
+    split  = kwargs.get('split', None)
+
+    blacklist.extend(_get_doctest_blacklist())
+
+    # Use a non-windowed backend, so that the tests work on Travis
+    if import_module('matplotlib') is not None:
+        import matplotlib
+        matplotlib.use('Agg')
 
     # Disable warnings for external modules
     import sympy.external
