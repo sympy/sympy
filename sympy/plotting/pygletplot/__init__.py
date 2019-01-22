@@ -21,7 +21,7 @@ try:
         [0]: -x**3*y + x*y**3, 'mode=cartesian'
 
         >>> p = Plot()
-        >>> p[1] = x*y #doctest +SKIP
+        >>> p[1] = x*y
         >>> p[1].color = z, (0.4,0.4,0.9), (0.9,0.4,0.4)
 
         >>> p = Plot()
