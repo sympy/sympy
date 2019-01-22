@@ -1360,6 +1360,9 @@ def divisors(n, generator=False):
     >>> list(divisors(120, generator=True))
     [1, 2, 4, 8, 3, 6, 12, 24, 5, 10, 20, 40, 15, 30, 60, 120]
 
+    Notes
+    =====
+
     This is a slightly modified version of Tim Peters referenced at:
     https://stackoverflow.com/questions/1010381/python-factorization
 
@@ -1387,10 +1390,8 @@ def divisor_count(n, modulus=1):
     Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
     those that are divisible by ``modulus`` are counted.
 
-    References
-    ==========
-
-    - http://www.mayer.dial.pipex.com/maths/formulae.htm
+    Examples
+    ========
 
     >>> from sympy import divisor_count
     >>> divisor_count(6)
@@ -1400,6 +1401,12 @@ def divisor_count(n, modulus=1):
     ========
 
     factorint, divisors, totient
+
+    References
+    ==========
+
+    .. [1] http://www.mayer.dial.pipex.com/maths/formulae.htm
+
     """
 
     if not modulus:
@@ -1436,12 +1443,6 @@ def udivisors(n, generator=False):
     prime factors. If only the number of unitary divisors is desired use
     udivisor_count(n).
 
-    References
-    ==========
-
-    - https://en.wikipedia.org/wiki/Unitary_divisor
-    - http://mathworld.wolfram.com/UnitaryDivisor.html
-
     Examples
     ========
 
@@ -1458,6 +1459,13 @@ def udivisors(n, generator=False):
     ========
 
     primefactors, factorint, divisors, divisor_count, udivisor_count
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Unitary_divisor
+    .. [2] http://mathworld.wolfram.com/UnitaryDivisor.html
+
     """
 
     n = as_int(abs(n))
@@ -1519,11 +1527,6 @@ def antidivisors(n, generator=False):
     Antidivisors [1]_ of n are numbers that do not divide n by the largest
     possible margin.  If generator is True an unordered generator is returned.
 
-    References
-    ==========
-
-    .. [1] definition is described in https://oeis.org/A066272/a066272a.html
-
     Examples
     ========
 
@@ -1538,6 +1541,12 @@ def antidivisors(n, generator=False):
     ========
 
     primefactors, factorint, divisors, divisor_count, antidivisor_count
+
+    References
+    ==========
+
+    .. [1] definition is described in https://oeis.org/A066272/a066272a.html
+
     """
 
     n = as_int(abs(n))
@@ -1553,11 +1562,6 @@ def antidivisor_count(n):
     """
     Return the number of antidivisors [1]_ of ``n``.
 
-    References
-    ==========
-
-    .. [1] formula from https://oeis.org/A066272
-
     Examples
     ========
 
@@ -1571,6 +1575,12 @@ def antidivisor_count(n):
     ========
 
     factorint, divisors, antidivisors, divisor_count, totient
+
+    References
+    ==========
+
+    .. [1] formula from https://oeis.org/A066272
+
     """
 
     n = as_int(abs(n))
