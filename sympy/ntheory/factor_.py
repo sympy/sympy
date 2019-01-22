@@ -1402,11 +1402,6 @@ def divisor_count(n, modulus=1):
 
     factorint, divisors, totient
 
-    References
-    ==========
-
-    .. [1] http://www.mayer.dial.pipex.com/maths/formulae.htm
-
     """
 
     if not modulus:
