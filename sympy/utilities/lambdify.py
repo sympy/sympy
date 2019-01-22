@@ -210,7 +210,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     =========
 
     The first argument of lambdify is a variable of list of variables in the
-    expression. Variable lists may be nested. The variable order of the first
+    expression. Variable lists may be nested. Variables can be Symbols,
+    undefined functions, or matrix symbols. The variable order of the first
     argument corresponds to the order the variables should be passed to the
     lambdified function. For instance,
 
@@ -219,7 +220,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> f(1, (2, 3))
     6
 
-    The second argument is the expression or list of expressions to be
+    The second argument is the expression, list of expressions, or matrix to be
     evaluated. Lists may be nested. If the expression is a list, the output
     will also be a list.
 
@@ -227,33 +228,51 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> f(1)
     [1, [2, 3]]
 
+    If it is a matrix, an array will be returned (for the NumPy module).
+
+    >>> from sympy import Matrix
+    >>> f = lambdify(x, Matrix([x, x + 1]))
+    >>> f(1)
+    [[1],
+     [2]]
+
     Note that the argument order here, variables then expression, is used to
     emulate the Python ``lambda`` keyword. ``lambdify(x, expr)`` works
     (roughly) like ``lambda x: expr`` (see "How it works" below).
 
-    If not specified differently by the user, ``modules`` defaults to
-    ``["scipy", "numpy"]`` if SciPy is installed, ``["numpy"]`` if only
-    NumPy is installed, and ``["math", "mpmath", "sympy"]`` if neither is
+    The third argument, ``modules`` is optional. If not specified, ``modules``
+    defaults to ``["scipy", "numpy"]`` if SciPy is installed, ``["numpy"]`` if
+    only NumPy is installed, and ``["math", "mpmath", "sympy"]`` if neither is
     installed. That is, SymPy functions are replaced as far as possible by
     either ``scipy`` or ``numpy`` functions if available, and Python's
     standard library ``math``, or ``mpmath`` functions otherwise. To change
-    this behavior, the "modules" argument can be used. It accepts:
+    this behavior, the "modules" argument can be used. See "Usage" below for a
+    list of the types allowed by the ``modules`` argument.
+
+    ``modules`` can be one of the following types
 
      - the strings "math", "mpmath", "numpy", "numexpr", "scipy", "sympy", "tensorflow"
-     - any modules (e.g. math)
+     - a module (e.g. math). **NOTE: It is always preferable to use the string
+       form of a module if lambdify supports it, as this will allow lambdify
+       to use a module-specific printer, which goes beyond a simple namespace translation.**
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
        given to entries appearing first.
 
+    For example, to use the NumPy module, but to override the ``sin`` function
+    with a custom version, you can use ``modules=[{'sin': custom_sin}, 'numpy'].
+
+
+
     .. warning::
-        Note that this function uses ``eval``, and thus shouldn't be used on
+        Note that this function uses ``exec``, and thus shouldn't be used on
         unsanitized input.
 
     Arguments in the provided expression that are not valid Python identifiers
     are substituted with dummy symbols. This allows for applied functions
     (e.g. f(t)) to be supplied as arguments. Call the function with
-    dummify=True to replace all arguments with dummy symbols (if `args` is
-    not a string) - for example, to ensure that the arguments do not
+    ``dummify=True`` to replace all arguments with dummy symbols (if ``args``
+    is not a string) - for example, to ensure that the arguments do not
     redefine any built-in names.
 
     How it works
@@ -483,103 +502,47 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     argument is not provided, ``lambdify`` creates functions using the NumPy
     and SciPy namespaces.
 
-    Notes
-    =====
-
-    The default behavior is to substitute all arguments in the provided
-    expression with dummy symbols. This allows for applied functions (e.g.
-    f(t)) to be supplied as arguments. Call the function with dummify=False if
-    dummy substitution is unwanted (and ``args`` is not a string). If you want
-    to view the lambdified function or provide "sympy" as the module, you
-    should probably set ``dummify=False``.
-
-    For functions involving large array calculations, numexpr can provide a
-    significant speedup over numpy.  Please note that the available functions
-    for numexpr are more limited than numpy but can be expanded with
-    implemented_function and user defined subclasses of Function.  If specified,
-    numexpr may be the only option in modules. The official list of numexpr
-    functions can be found at:
-    https://github.com/pydata/numexpr#supported-functions
-
-    In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
-    by default. As of release 1.0 ``numpy.array`` is the default.
-    To get the old default behavior you must pass in ``[{'ImmutableDenseMatrix':
-    numpy.matrix}, 'numpy']`` to the ``modules`` kwarg.
-
-    >>> from sympy import lambdify, Matrix
-    >>> from sympy.abc import x, y
-    >>> import numpy
-    >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
-    >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
-    >>> f(1, 2)
-    [[1]
-     [2]]
-
     Usage
     =====
 
-    (1) Use one of the provided modules:
+    The first argument should be a Symbol, or a list of Symbols. The list can
+    itself be nested. This will be the parameter list of the resulting
+    function
 
-        >>> from sympy import sin, tan, gamma
-        >>> from sympy.abc import x, y
-        >>> f = lambdify(x, sin(x), "math")
+    >>> f = lambdify(x, x + 1)
+    >>> f(1)
+    2
+    >>> f = lambdify((x, y), x + y)
+    >>> f(1, 2)
+    3
+    >>> f = lambdify((x, (y, z)), x + y + z)
+    >>> f(1, (2, 3))
+    6
 
-        Attention: Functions that are not in the math module will throw a name
-                   error when the function definition is evaluated! So this
-                   would be better:
+    The first argument may also be a MatrixSymbol, or an undefined function.
 
-        >>> f = lambdify(x, sin(x)*gamma(x), ("math", "mpmath", "sympy"))
+    >>> from sympy import Function
+    >>> g = Function('g')
+    >>> f = lambdify(g(x), g(x) + 1)
+    >>> f(1)
+    2
 
-    (2) Use some other module:
+    The second argument should be an expression, matrix, or list of
+    expressions. If it is a matrix, an array will be returned (for
+    the NumPy module).
 
-        >>> import numpy
-        >>> f = lambdify((x,y), tan(x*y), numpy)
-
-        Attention: There are naming differences between numpy and sympy. So if
-                   you simply take the numpy module, e.g. sympy.atan will not be
-                   translated to numpy.arctan. Use the modified module instead
-                   by passing the string "numpy":
-
-        >>> f = lambdify((x,y), tan(x*y), "numpy")
-        >>> f(1, 2)
-        -2.18503986326
-        >>> from numpy import array
-        >>> f(array([1, 2, 3]), array([2, 3, 5]))
-        [-2.18503986 -0.29100619 -0.8559934 ]
-
-        In the above examples, the generated functions can accept scalar
-        values or numpy arrays as arguments.  However, in some cases
-        the generated function relies on the input being a numpy array:
-
-        >>> from sympy import Piecewise
-        >>> from sympy.utilities.pytest import ignore_warnings
-        >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
-
-        >>> with ignore_warnings(RuntimeWarning):
-        ...     f(array([-1, 0, 1, 2]))
-        [-1.   0.   1.   0.5]
-
-        >>> f(0)
-        Traceback (most recent call last):
-            ...
-        ZeroDivisionError: division by zero
-
-        In such cases, the input should be wrapped in a numpy array:
-        >>> with ignore_warnings(RuntimeWarning):
-        ...     float(f(array([0])))
-        0.0
-
-        Or if numpy functionality is not required another module can be used:
-        >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "math")
-        >>> f(0)
-        0
-
-    (3) Use a dictionary defining custom functions:
-
-        >>> def my_cool_function(x): return 'sin(%s) is cool' % x
-        >>> myfuncs = {"sin" : my_cool_function}
-        >>> f = lambdify(x, sin(x), myfuncs); f(1)
-        'sin(1) is cool'
+    >>> f = lambdify(x, [x, x + 1])
+    >>> f(1) # Return type is list
+    [1, 2]
+    >>> type(f(1))
+    <class 'list'>
+    >>> from sympy import Matrix
+    >>> f = lambdify(x, Matrix([x, x + 1]))
+    >>> f(1)
+    [[1],
+     [2]]
+    >>> type(f(1))
+    <class 'numpy.ndarray'>
 
     Examples
     ========
@@ -605,6 +568,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> row(1, 2)
     Matrix([[1, 3]])
 
+    ``lambdify`` can be used to translate SymPy expressions into mpmath
+    functions. This may be preferable to using ``evalf`` in some cases.
+
+    >>> import mpmath
+    >>> f = lambdify(x, sin(x), 'mpmath')
+    >>> f(1)
+    mpf('0.8414709848078965')
+
     Tuple arguments are handled and the lambdified function should
     be called with the same type of arguments as were used to create
     the function.:
@@ -624,9 +595,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     10
 
     Functions present in ``expr`` can also carry their own numerical
-    implementations, in a callable attached to the ``_imp_``
-    attribute.  Usually you attach this using the
-    ``implemented_function`` factory:
+    implementations, in a callable attached to the ``_imp_`` attribute. This
+    can be used with undefined functions using the ``implemented_function``
+    factory:
 
     >>> f = implemented_function(Function('f'), lambda x: x+1)
     >>> func = lambdify(x, f(x))
@@ -656,6 +627,67 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> sess.run(func(tensor))
     [[1. 2.]
      [3. 4.]]
+
+
+    Notes
+    =====
+
+    - The default behavior is to substitute all arguments in the provided
+      expression with dummy symbols. This allows for undefined functions (e.g.
+      ``f(t)``) to be supplied as arguments. Call the function with
+      ``dummify=False`` if dummy substitution is unwanted (and ``args`` is not
+      a string). If you want to view the lambdified function or provide
+      ``"sympy"`` as the module, you should probably set ``dummify=False``.
+
+    - For functions involving large array calculations, numexpr can provide a
+      significant speedup over numpy. Please note that the available functions
+      for numexpr are more limited than numpy but can be expanded with
+      implemented_function and user defined subclasses of Function. If
+      specified, numexpr may be the only option in modules. The official list
+      of numexpr functions can be found at:
+      https://github.com/pydata/numexpr#supported-functions
+
+    - In previous releases ``lambdify`` replaced ``Matrix`` with
+      ``numpy.matrix`` by default. As of release 1.0 ``numpy.array`` is the
+      default. To get the old default behavior you must pass in
+      ``[{'ImmutableDenseMatrix':  numpy.matrix}, 'numpy']`` to the
+      ``modules`` kwarg.
+
+      >>> from sympy import lambdify, Matrix
+      >>> from sympy.abc import x, y
+      >>> import numpy
+      >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
+      >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
+      >>> f(1, 2)
+      [[1]
+       [2]]
+
+    - In the above examples, the generated functions can accept scalar
+      values or numpy arrays as arguments.  However, in some cases
+      the generated function relies on the input being a numpy array:
+
+      >>> from sympy import Piecewise
+      >>> from sympy.utilities.pytest import ignore_warnings
+      >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
+
+      >>> with ignore_warnings(RuntimeWarning):
+      ...     f(array([-1, 0, 1, 2]))
+      [-1.   0.   1.   0.5]
+
+      >>> f(0)
+      Traceback (most recent call last):
+          ...
+      ZeroDivisionError: division by zero
+
+      In such cases, the input should be wrapped in a numpy array:
+      >>> with ignore_warnings(RuntimeWarning):
+      ...     float(f(array([0])))
+      0.0
+
+      Or if numpy functionality is not required another module can be used:
+      >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "math")
+      >>> f(0)
+      0
 
     """
     from sympy.core.symbol import Symbol
