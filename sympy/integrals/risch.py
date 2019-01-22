@@ -43,7 +43,7 @@ from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
 from sympy.functions import sinh, cosh, tanh, coth
 from sympy.integrals import Integral, integrate
 
-from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
+from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError, degree
 
 from sympy.utilities.iterables import numbered_symbols
 
@@ -1045,7 +1045,10 @@ def hermite_reduce(a, d, DE):
 
     dd = derivation(d, DE)
     dm = gcd(d, dd).as_poly(DE.t)
-    ds, r = d.div(dm)
+    if not degree(dm, gen = DE.t):
+        ds, r = d.div(S.One)
+    else:
+        ds, r = d.div(dm)
 
     while dm.degree(DE.t)>0:
 
