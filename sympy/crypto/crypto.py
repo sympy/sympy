@@ -28,7 +28,7 @@ from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq
-from sympy.utilities.randtest import _randrange
+from sympy.utilities.randtest import _randrange, _randint
 
 
 def AZ(s=None):
@@ -2246,3 +2246,50 @@ def decipher_gm(message, key):
         m <<= 1
         m += not b
     return m
+
+################ Blum–Goldwasser cryptosystem  #########################
+
+def bg_private_key(p, q):
+
+    if not isprime(p) or not isprime(q):
+        raise ValueError("the two arguments must be prime, "
+                         "got %i and %i" %(p, q))
+    elif p == q:
+        raise ValueError("the two arguments must be distinct, "
+                         "got two copies of %i. " %p)
+    elif (p - 3) % 4 != 0 or (q - 3) % 4 != 0:
+        raise ValueError("the two arguments must be congruent to 3 mod 4, "
+                         "got %i and %i" %(p, q))
+    return p, q
+
+def bg_public_key(p, q):
+
+    p, q = bg_private_key(p, q)
+    return p * q
+
+def encipher_bg(i, key, seed=None):
+
+    if i < 0:
+        raise ValueError(
+            "message must be a non-negative "
+            "integer: got %d instead" % i)
+
+    enc_msg = []
+    while i > 0:
+        enc_msg.append(i % 2)
+        i //= 2
+    L = len(enc_msg)
+
+    r = _randint(seed)(2, key - 1)
+    x = x_copy = r**2 % key
+
+    rand_bits = []
+    for k in range(L):
+        rand_bits.append(x % 2)
+        x = x**2 % key
+
+    encrypt_msg = []
+    for (m, b) in zip(enc_msg, rand_bits):
+        encrypt_msg.append(m ^ b)
+
+    return (encrypt_msg, x_copy)
