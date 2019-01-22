@@ -3583,6 +3583,15 @@ class MatrixBase(MatrixDeprecated,
                 # elimination is complete.
                 return lu, row_swaps
 
+        if rankcheck:
+            if iszerofunc(
+            lu[Min(lu.rows, lu.cols) - 1, Min(lu.rows, lu.cols) - 1]):
+                raise ValueError("Rank of matrix is strictly less than"
+                                 " number of rows or columns."
+                                 " Pass keyword argument"
+                                 " rankcheck=False to compute"
+                                 " the LU decomposition of this matrix.")
+
         return lu, row_swaps
 
     def LUdecompositionFF(self):
