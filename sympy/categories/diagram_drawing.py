@@ -2089,7 +2089,7 @@ class XypicDiagramDrawer(object):
         # Let's now get the name of the morphism.
         morphism_name = ""
         if isinstance(morphism, IdentityMorphism):
-            morphism_name = "id_{%s}" + latex(grid[i,j])
+            morphism_name = "id_{%s}" + latex(grid[i, j])
         elif isinstance(morphism, CompositeMorphism):
             component_names = [latex(Symbol(component.name)) for
                                component in morphism.components]
