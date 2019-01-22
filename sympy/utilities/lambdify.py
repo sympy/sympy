@@ -363,7 +363,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     ``sin`` and ``cos`` come from the ``numpy`` namespace. This is also why
     the symbols argument is first in ``lambdify``, as opposed to most SymPy
     functions where it comes after the expression: to better mimic the
-    ``lambda`` builtin.
+    ``lambda`` keyword.
 
     ``lambdify`` takes the input expression (like ``sin(x) + cos(x)``) and
 
