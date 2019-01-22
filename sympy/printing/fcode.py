@@ -24,7 +24,7 @@ from itertools import chain
 import string
 
 from sympy.codegen.ast import (
-    Assignment, Attribute, Declaration, Pointer, Type, value_const,
+    Assignment, Declaration, Pointer, value_const,
     float32, float64, float80, complex64, complex128, int8, int16, int32,
     int64, intc, real, integer,  bool_, complex_
 )

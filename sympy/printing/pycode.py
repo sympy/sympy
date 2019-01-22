@@ -484,10 +484,11 @@ class NumPyPrinter(PythonCodePrinter):
     _kc = {k: 'numpy.'+v for k, v in _known_constants_math.items()}
 
 
-    def _print_seq(self, seq, delimiter= ', '):
+    def _print_seq(self, seq):
         "General sequence printer: converts to tuple"
         # Print tuples here instead of lists because numba supports
         #     tuples in nopython mode.
+        delimiter=', '
         return '({},)'.format(delimiter.join(self._print(item) for item in seq))
 
     def _print_MatMul(self, expr):
