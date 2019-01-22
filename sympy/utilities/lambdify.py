@@ -260,13 +260,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
        given to entries appearing first.
 
     For example, to use the NumPy module, but to override the ``sin`` function
-    with a custom version, you can use ``modules=[{'sin': custom_sin}, 'numpy'].
-
-
+    with a custom version, you can use ``modules=[{'sin': custom_sin}, 'numpy']``.
 
     .. warning::
-        Note that this function uses ``exec``, and thus shouldn't be used on
-        unsanitized input.
+       Note that this function uses ``exec``, and thus shouldn't be used on
+       unsanitized input.
 
     Arguments in the provided expression that are not valid Python identifiers
     are substituted with dummy symbols. This allows for applied functions
@@ -287,12 +285,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     namespaces work. Say we had two files. One called ``sin_cos_sympy.py``,
     with
 
+    .. code:: python
+
+        # sin_cos_sympy.py
+
         from sympy import sin, cos
 
         def sin_cos(x):
             return sin(x) + cos(x)
 
+
     and one called ``sin_cos_numpy.py`` with
+
+    .. code:: python
+
+        # sin_cos_numpy.py
 
         from numpy import sin, cos
 
@@ -375,11 +382,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
        created in step 1., then ``exec``s that string with the module globals
        namespace and returns ``func``.
 
-
     In fact, functions returned by ``lambdify`` support inspection. So you can
     see exactly how they are by using ``inspect.getsource``, or ``??`` if you
     are using IPython or the Jupyter notebook.
-
 
     >>> f = lambdify(x, sin(x) + cos(x))
     >>> import inspect
