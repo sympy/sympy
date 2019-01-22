@@ -485,8 +485,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     calls ``numpy.sin`` on the input expression, and ``numpy.sin`` does not
     know how to operate on a SymPy object. **As a general rule, NumPy
     functions do not know how to operate on SymPy expressions, and SymPy
-    functions do not know how to operate on NumPy arrays. This is why
-    ``lambdify`` exists: to provide a bridge between SymPy and NumPy.**
+    functions do not know how to operate on NumPy arrays. This is why lambdify
+    exists: to provide a bridge between SymPy and NumPy.**
 
     However, why is it that ``f`` did work? That's because ``f`` doesn't call
     any functions, it only adds 1. So the resulting function that is created,
