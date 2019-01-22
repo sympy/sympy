@@ -108,10 +108,10 @@ class NumpyDocString(Mapping):
             'Attributes': [],
             'Methods': [],
             'See Also': [],
-            'Notes': [],
+            # 'Notes': [],
             'Warnings': [],
             'References': '',
-            'Examples': '',
+            # 'Examples': '',
             'index': {}
         }
         self._other_keys = []
