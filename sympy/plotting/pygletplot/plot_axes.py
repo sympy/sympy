@@ -92,7 +92,7 @@ class PlotAxes(PlotObject):
             if self._overlay:
                 pgl.glDisable(pgl.GL_DEPTH_TEST)
             self._render_object.draw()
-            pgl.ggglPopAttrib()
+            pgl.glPopAttrib()
 
     def adjust_bounds(self, child_bounds):
         b = self._bounding_box
