@@ -8,13 +8,14 @@ Contains
 
 from __future__ import division, print_function
 
-from sympy import Expr, Eq
+from sympy import Expr, Eq, Float
 from sympy.core import S, pi, sympify
+from sympy.core.containers import Tuple
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import ordered
 from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
-from sympy.simplify import simplify, trigsimp
+from sympy.simplify import simplify, trigsimp, nsimplify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.elliptic_integrals import elliptic_e
@@ -1436,10 +1437,11 @@ class Circle(Ellipse):
             elif len(args) == 2:
                 # Assume (center, radius) pair
                 c = Point(args[0], dim=2)
-                try:
-                    r = Rational(str(sympify(args[1])))
-                except (ValueError, TypeError):
-                    r = sympify(args[1])
+                r = Tuple(args[1], )
+                r = r.xreplace(dict(
+                [(f, simplify(nsimplify(f, rational=True)))
+                 for f in r.atoms(Float)]))
+                r = r[0]
 
             if not (c is None or r is None):
                 if r == 0:
