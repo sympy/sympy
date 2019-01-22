@@ -7,8 +7,11 @@ try:
     @doctest_depends_on(modules=('pyglet',))
     def PygletPlot(*args, **kwargs):
         """
+
         Plot Examples
         =============
+
+        See examples/advanced/pyglet_plotting.py for many more examples.
 
         >>> from sympy.plotting.pygletplot import PygletPlot as Plot
         >>> from sympy import symbols

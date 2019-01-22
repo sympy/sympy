@@ -30,6 +30,8 @@ class PygletPlot(object):
     Plot Examples
     =============
 
+    See examples/advanced/pyglet_plotting.py for many more examples.
+
     >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> from sympy.abc import x, y, z
 
