@@ -633,7 +633,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     [[1. 2.]
      [3. 4.]]
 
-
     Notes
     =====
 
@@ -685,11 +684,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       ZeroDivisionError: division by zero
 
       In such cases, the input should be wrapped in a numpy array:
+
       >>> with ignore_warnings(RuntimeWarning):
       ...     float(f(array([0])))
       0.0
 
       Or if numpy functionality is not required another module can be used:
+
       >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "math")
       >>> f(0)
       0
