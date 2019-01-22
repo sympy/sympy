@@ -118,10 +118,10 @@ class Sieve:
     def extend_to_no(self, i):
         """Extend to include the ith prime number.
 
-        i must be an integer.
+        Parameters
+        ==========
 
-        The list is extended by 50% if it is too short, so it is
-        likely that it will be longer than requested.
+        i : integer
 
         Examples
         ========
@@ -131,6 +131,12 @@ class Sieve:
         >>> sieve.extend_to_no(9)
         >>> sieve._list
         array('l', [2, 3, 5, 7, 11, 13, 17, 19, 23])
+
+        Notes
+        =====
+
+        The list is extended by 50% if it is too short, so it is
+        likely that it will be longer than requested.
         """
         i = as_int(i)
         while len(self._list) < i:
@@ -325,13 +331,6 @@ def prime(nth):
         For the inputs this implementation can handle, we will have to test
         primality for at max about 10**5 numbers, to get our answer.
 
-        References
-        ==========
-
-        - https://en.wikipedia.org/wiki/Prime_number_theorem#Table_of_.CF.80.28x.29.2C_x_.2F_log_x.2C_and_li.28x.29
-        - https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
-        - https://en.wikipedia.org/wiki/Skewes%27_number
-
         Examples
         ========
 
@@ -349,6 +348,13 @@ def prime(nth):
         sympy.ntheory.primetest.isprime : Test if n is prime
         primerange : Generate all primes in a given range
         primepi : Return the number of primes less than or equal to n
+
+        References
+        ==========
+
+        - https://en.wikipedia.org/wiki/Prime_number_theorem#Table_of_.CF.80.28x.29.2C_x_.2F_log_x.2C_and_li.28x.29
+        - https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
+        - https://en.wikipedia.org/wiki/Skewes%27_number
     """
     n = as_int(nth)
     if n < 1:
@@ -665,8 +671,8 @@ def primerange(a, b):
         References
         ==========
 
-        1. https://en.wikipedia.org/wiki/Prime_number
-        2. http://primes.utm.edu/notes/gaps.html
+        .. [1} https://en.wikipedia.org/wiki/Prime_number
+        .. [2] http://primes.utm.edu/notes/gaps.html
     """
     from sympy.functions.elementary.integers import ceiling
 
@@ -697,11 +703,6 @@ def randprime(a, b):
         Bertrand's postulate assures that
         randprime(a, 2*a) will always succeed for a > 1.
 
-        References
-        ==========
-
-        - https://en.wikipedia.org/wiki/Bertrand's_postulate
-
         Examples
         ========
 
@@ -715,6 +716,11 @@ def randprime(a, b):
         ========
 
         primerange : Generate all primes in a given range
+
+        References
+        ==========
+
+        - https://en.wikipedia.org/wiki/Bertrand's_postulate
 
     """
     if a >= b:

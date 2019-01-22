@@ -315,12 +315,12 @@ class CosetTable(DefaultPrinting):
 
         scan_c, scan_check, scan_and_fill, scan_and_fill_c
 
-        Scan and fill
+        Scan and Fill
         =============
 
         Performed when the default argument fill=True.
 
-        Modified scan
+        Modified Scan
         =============
 
         Performed when the default argument modified=True
@@ -918,6 +918,7 @@ class CosetTable(DefaultPrinting):
         r"""
         Parameters
         ==========
+
         'k', 'lamda' -- the two class representatives to be merged.
         q -- queue of length l of elements to be deleted from Ω *.
         w -- Word in (YUY^-1)
@@ -931,7 +932,10 @@ class CosetTable(DefaultPrinting):
 
     def modified_rep(self, k):
         r"""
-        Input: `k \in [0 \ldots n-1]`
+        Parameters
+        ==========
+
+        `k \in [0 \ldots n-1]`
 
         See Also
         ========
@@ -942,7 +946,10 @@ class CosetTable(DefaultPrinting):
 
     def modified_coincidence(self, alpha, beta, w):
         r"""
-        Input: A coincident pair \alpha,\beta \in \Omega, w \in (Y∪Y^–1)
+        Parameters
+        ==========
+
+        A coincident pair \alpha,\beta \in \Omega, w \in (Y∪Y^–1)
 
         See Also
         ========
@@ -1165,6 +1172,7 @@ def modified_coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
 
     Examples
     ========
+
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
     >>> from sympy.combinatorics.coset_table import modified_coset_enumeration_r
