@@ -47,6 +47,8 @@ MATH_TRANSLATIONS = {
     "ln": "log",
 }
 
+# NOTE: This dictionary is reused in Function._eval_evalf to allow subclasses
+# of Function to automatically evalf.
 MPMATH_TRANSLATIONS = {
     "Abs": "fabs",
     "elliptic_k": "ellipk",
