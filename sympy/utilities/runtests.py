@@ -1400,16 +1400,16 @@ class SymPyDocTests(object):
         for test in tests:
             assert len(test.examples) != 0
 
+            if self._reporter._verbose:
+                self._reporter.write("\n{} ".format(test.name))
+
             # check if there are external dependencies which need to be met
             if '_doctest_depends_on' in test.globs:
                 try:
                     self._check_dependencies(**test.globs['_doctest_depends_on'])
                 except DependencyError as e:
-                    self._reporter.test_skip(v="\n" + str(e))
+                    self._reporter.test_skip(v=str(e))
                     continue
-
-            if self._reporter._verbose:
-                self._reporter.write("\n{} ".format(test.name))
 
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
