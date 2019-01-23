@@ -1,7 +1,7 @@
 import itertools
 from functools import reduce
 from collections import defaultdict
-from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S
+from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
 from sympy.core.mul import Mul
@@ -64,6 +64,9 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         contraction_indices = _sort_contraction_indices(contraction_indices)
         expr = _sympify(expr)
 
+        if len(contraction_indices) == 0:
+            return expr
+
         if isinstance(expr, CodegenArrayContraction):
             return cls._flatten(expr, *contraction_indices)
 
@@ -97,7 +100,26 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         return free_indices_to_position
 
     @staticmethod
-    def _flatten(expr, *outer_contraction_indices):
+    def _get_index_shifts(expr):
+        """
+        Get the mapping of indices at the positions before the contraction
+        occures.
+
+        Examples
+        ========
+
+        >>> from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+        >>> from sympy import MatrixSymbol
+        >>> M = MatrixSymbol("M", 3, 3)
+        >>> N = MatrixSymbol("N", 3, 3)
+        >>> cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), [1, 2])
+        >>> cg._get_index_shifts(cg)
+        [0, 2]
+
+        Indeed, ``cg`` after the contraction has two dimensions, 0 and 1. They
+        need to be shifted by 0 and 2 to get the corresponding positions before
+        the contraction (that is, 0 and 3).
+        """
         inner_contraction_indices = expr.contraction_indices
         all_inner = [j for i in inner_contraction_indices for j in i]
         all_inner.sort()
@@ -114,7 +136,18 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
                 pointer += 1
             shifts[i] += pointer
             counter += 1
+        return shifts
+
+    @staticmethod
+    def _convert_outer_indices_to_inner_indices(expr, *outer_contraction_indices):
+        shifts = CodegenArrayContraction._get_index_shifts(expr)
         outer_contraction_indices = tuple(tuple(shifts[j] + j for j in i) for i in outer_contraction_indices)
+        return outer_contraction_indices
+
+    @staticmethod
+    def _flatten(expr, *outer_contraction_indices):
+        inner_contraction_indices = expr.contraction_indices
+        outer_contraction_indices = CodegenArrayContraction._convert_outer_indices_to_inner_indices(expr, *outer_contraction_indices)
         contraction_indices = inner_contraction_indices + outer_contraction_indices
         return CodegenArrayContraction(expr.expr, *contraction_indices)
 
@@ -280,6 +313,12 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
             )
 
 
+def get_shape(expr):
+    if hasattr(expr, "shape"):
+        return expr.shape
+    return ()
+
+
 class CodegenArrayTensorProduct(_CodegenArrayAbstract):
     r"""
     Class to represent the tensor product of array-like objects.
@@ -301,9 +340,14 @@ class CodegenArrayTensorProduct(_CodegenArrayAbstract):
             contraction_indices = [tuple(cumulative_ranks[i] + k for k in j) for i, arg in contractions.items() for j in arg.contraction_indices]
             return CodegenArrayContraction(tp, *contraction_indices)
 
+        #newargs = [i for i in args if hasattr(i, "shape")]
+        #coeff = reduce(lambda x, y: x*y, [i for i in args if not hasattr(i, "shape")], S.One)
+        #newargs[0] *= coeff
+
         obj = Basic.__new__(cls, *args)
         obj._subranks = ranks
-        shapes = [i.shape for i in args]
+        shapes = [get_shape(i) for i in args]
+
         if any(i is None for i in shapes):
             obj._shape = None
         else:
@@ -360,6 +404,11 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
     >>> from sympy.codegen.array_utils import recognize_matrix_expression
     >>> recognize_matrix_expression(cg)
     M.T
+
+    >>> N = MatrixSymbol("N", 3, 2)
+    >>> cg = CodegenArrayPermuteDims(N, [1, 0])
+    >>> cg.shape
+    (2, 3)
     """
     def __new__(cls, expr, permutation):
         from sympy.combinatorics import Permutation
@@ -374,8 +423,7 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         if shape is None:
             obj._shape = None
         else:
-            pinverse = permutation**-1
-            obj._shape = tuple(shape[pinverse(i)] for i in range(len(shape)))
+            obj._shape = tuple(shape[permutation(i)] for i in range(len(shape)))
         return obj
 
     @property
@@ -385,6 +433,72 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
     @property
     def permutation(self):
         return self.args[1]
+
+    def nest_permutation(self):
+        r"""
+        Nest the permutation down the expression tree.
+
+        Examples
+        ========
+
+        >>> from sympy.codegen.array_utils import (CodegenArrayPermuteDims, CodegenArrayTensorProduct, nest_permutation)
+        >>> from sympy import MatrixSymbol
+        >>> from sympy.combinatorics import Permutation
+        >>> Permutation.print_cyclic = True
+
+        >>> M = MatrixSymbol("M", 3, 3)
+        >>> N = MatrixSymbol("N", 3, 3)
+        >>> cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 0, 3, 2])
+        >>> cg
+        CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), (0 1)(2 3))
+        >>> nest_permutation(cg)
+        CodegenArrayTensorProduct(CodegenArrayPermuteDims(M, (0 1)), CodegenArrayPermuteDims(N, (0 1)))
+
+        In ``cg`` both ``M`` and ``N`` are transposed. The cyclic
+        representation of the permutation after the tensor product is
+        `(0 1)(2 3)`. After nesting it down the expression tree, the usual
+        transposition permutation `(0 1)` appears.
+        """
+        expr = self.expr
+        if isinstance(expr, CodegenArrayTensorProduct):
+            # Check if the permutation keeps the subranks separated:
+            subranks = expr.subranks
+            subrank = expr.subrank()
+            l = list(range(subrank))
+            p = [self.permutation(i) for i in l]
+            dargs = {}
+            counter = 0
+            for i, arg in zip(subranks, expr.args):
+                p0 = p[counter:counter+i]
+                counter += i
+                s0 = sorted(p0)
+                if not all([s0[j+1]-s0[j] == 1 for j in range(len(s0)-1)]):
+                    # Cross-argument permutations, impossible to nest the object:
+                    return self
+                subpermutation = [p0.index(j) for j in s0]
+                dargs[s0[0]] = CodegenArrayPermuteDims(arg, subpermutation)
+            # Read the arguments sorting the according to the keys of the dict:
+            args = [dargs[i] for i in sorted(dargs)]
+            return CodegenArrayTensorProduct(*args)
+        elif isinstance(expr, CodegenArrayContraction):
+            # Invert tree hierarchy: put the contraction above.
+            shifts = expr._get_index_shifts(expr)
+            cycles = self.permutation.cyclic_form
+            newcycles = CodegenArrayContraction._convert_outer_indices_to_inner_indices(expr, *cycles)
+            newpermutation = Permutation(newcycles)
+            new_contr_indices = [tuple(newpermutation(j) for j in i) for i in expr.contraction_indices]
+            return CodegenArrayContraction(CodegenArrayPermuteDims(expr.expr, newpermutation), *new_contr_indices)
+        elif isinstance(expr, CodegenArrayElementwiseAdd):
+            return CodegenArrayElementwiseAdd(*[CodegenArrayPermuteDims(arg, self.permutation) for arg in expr.args])
+
+        return self
+
+
+def nest_permutation(expr):
+    if isinstance(expr, CodegenArrayPermuteDims):
+        return expr.nest_permutation()
+    else:
+        return expr
 
 
 class CodegenArrayDiagonal(_CodegenArrayAbstract):
@@ -522,6 +636,9 @@ def _sort_contraction_indices(pairing_indices):
 def _get_diagonal_indices(flattened_indices):
     axes_contraction = defaultdict(list)
     for i, ind in enumerate(flattened_indices):
+        if isinstance(ind, (int, Integer)):
+            # If the indices is a number, there can be no diagonal operation:
+            continue
         axes_contraction[ind].append(i)
     axes_contraction = {k: v for k, v in axes_contraction.items() if len(v) > 1}
     # Put the diagonalized indices at the end:
@@ -534,6 +651,15 @@ def _get_diagonal_indices(flattened_indices):
     return diagonal_indices, ret_indices
 
 
+def _get_argindex(subindices, ind):
+    for i, sind in enumerate(subindices):
+        if ind == sind:
+            return i
+        if isinstance(sind, (set, frozenset)) and ind in sind:
+            return i
+    raise IndexError("%s not found in %s" % (ind, subindices))
+
+
 def _codegen_array_parse(expr):
     if isinstance(expr, Sum):
         function = expr.function
@@ -543,7 +669,7 @@ def _codegen_array_parse(expr):
         shape = subexpr.shape
         if shape:
             for ind, istart, iend in expr.limits:
-                i = subindices.index(ind)
+                i = _get_argindex(subindices, ind)
                 if istart != 0 or iend+1 != shape[i]:
                     raise ValueError("summation index and array dimension mismatch: %s" % ind)
         contraction_indices = []
@@ -592,16 +718,26 @@ def _codegen_array_parse(expr):
                 continue
             # Diagonalize two indices:
             i, j = arg.indices
-            # TODO: this will probably fail on KroneckerDelta(i, j)*KroneckerDelta(j, k)
-            kindices = frozenset(arg.indices)
-            kronecker_delta_repl[i] = kindices
-            kronecker_delta_repl[j] = kindices
+            kindices = set(arg.indices)
+            if i in kronecker_delta_repl:
+                kindices.update(kronecker_delta_repl[i])
+            if j in kronecker_delta_repl:
+                kindices.update(kronecker_delta_repl[j])
+            kindices = frozenset(kindices)
+            for index in kindices:
+                kronecker_delta_repl[index] = kindices
         # Remove KroneckerDelta objects, their relations should be handled by
         # CodegenArrayDiagonal:
-        args, indices = zip(*[(arg, loc_indices) for arg, loc_indices in zip(args, indices) if not isinstance(arg, KroneckerDelta)])
-        flattened_indices = [kronecker_delta_repl.get(j, j) for i in indices for j in i]
+        newargs = []
+        newindices = []
+        for arg, loc_indices in zip(args, indices):
+            if isinstance(arg, KroneckerDelta):
+                continue
+            newargs.append(arg)
+            newindices.append(loc_indices)
+        flattened_indices = [kronecker_delta_repl.get(j, j) for i in newindices for j in i]
         diagonal_indices, ret_indices = _get_diagonal_indices(flattened_indices)
-        tp = CodegenArrayTensorProduct(*args)
+        tp = CodegenArrayTensorProduct(*newargs)
         if diagonal_indices:
             return (CodegenArrayDiagonal(tp, *diagonal_indices), ret_indices)
         else:
@@ -624,7 +760,6 @@ def _codegen_array_parse(expr):
         raise NotImplementedError
     if isinstance(expr, KroneckerDelta):
         return expr, expr.indices
-        raise NotImplementedError
     if isinstance(expr, Add):
         args, indices = zip(*[_codegen_array_parse(arg) for arg in expr.args])
         args = list(args)
@@ -638,7 +773,35 @@ def _codegen_array_parse(expr):
             # Perform index permutations:
             args[i] = CodegenArrayPermuteDims(args[i], permutation)
         return CodegenArrayElementwiseAdd(*args), index0
+    return expr, ()
     raise NotImplementedError("could not recognize expression %s" % expr)
+
+
+def _parse_matrix_expression(expr):
+    if isinstance(expr, MatMul):
+        args_nonmat = []
+        args = []
+        contractions = []
+        for arg in expr.args:
+            if isinstance(arg, MatrixExpr):
+                args.append(arg)
+            else:
+                args_nonmat.append(arg)
+        contractions = [(2*i+1, 2*i+2) for i in range(len(args)-1)]
+        return Mul.fromiter(args_nonmat)*CodegenArrayContraction(
+                CodegenArrayTensorProduct(*[_parse_matrix_expression(arg) for arg in args]),
+                *contractions
+        )
+    elif isinstance(expr, MatAdd):
+        return CodegenArrayElementwiseAdd(
+                *[_parse_matrix_expression(arg) for arg in expr.args]
+        )
+    elif isinstance(expr, Transpose):
+        return CodegenArrayPermuteDims(
+                _parse_matrix_expression(expr.args[0]), [1, 0]
+        )
+    else:
+        return expr
 
 
 def parse_indexed_expression(expr, first_indices=[]):
@@ -650,6 +813,9 @@ def parse_indexed_expression(expr, first_indices=[]):
 
     >>> from sympy.codegen.array_utils import parse_indexed_expression
     >>> from sympy import MatrixSymbol, Sum, symbols
+    >>> from sympy.combinatorics import Permutation
+    >>> Permutation.print_cyclic = True
+
     >>> i, j, k, d = symbols("i j k d")
     >>> M = MatrixSymbol("M", d, d)
     >>> N = MatrixSymbol("N", d, d)
@@ -689,7 +855,8 @@ def parse_indexed_expression(expr, first_indices=[]):
         return result
     for i in first_indices:
         if i not in indices:
-            raise ValueError("index %s not found or not a free index" % i)
+            first_indices.remove(i)
+            #raise ValueError("index %s not found or not a free index" % i)
     first_indices.extend([i for i in indices if i not in first_indices])
     permutation = [first_indices.index(i) for i in indices]
     return CodegenArrayPermuteDims(result, permutation)
@@ -763,7 +930,10 @@ class _RecognizeMatMulLines(list):
 
 
 def _support_function_tp1_recognize(contraction_indices, args):
+    if not isinstance(args, list):
+        args = [args]
     subranks = [get_rank(i) for i in args]
+    coeff = reduce(lambda x, y: x*y, [arg for arg, srank in zip(args, subranks) if srank == 0], S.One)
     mapping = _get_mapping_from_subranks(subranks)
     dlinks = _get_contraction_links(subranks, *contraction_indices)
     flatten_contractions = [j for i in contraction_indices for j in i]
@@ -818,6 +988,9 @@ def _support_function_tp1_recognize(contraction_indices, args):
         dlinks.pop(starting_argind, None)
         free_indices.pop(last_index, None)
         return_list.append(_RecognizeMatOp(MatMul, matmul_args))
+    if coeff != 1:
+        # Let's inject the coefficient:
+        return_list[0].args.insert(0, coeff)
     return _RecognizeMatMulLines(return_list)
 
 
@@ -957,7 +1130,9 @@ def _recognize_matrix_expression(expr):
         return _RecognizeMatMulLines(args)
     elif isinstance(expr, Transpose):
         return expr
-    raise NotImplementedError
+    elif isinstance(expr, MatrixExpr):
+        return expr
+    return expr
 
 
 def _unfold_recognized_expr(expr):

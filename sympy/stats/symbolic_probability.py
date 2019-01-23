@@ -50,7 +50,7 @@ class Probability(Expr):
         return probability(arg, condition, evaluate=False)
 
     def _eval_rewrite_as_Sum(self, arg, condition=None, **kwargs):
-        return self.rewrite(Integral)
+        return probability(arg, condition, evaluate=False)
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()

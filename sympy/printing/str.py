@@ -209,7 +209,7 @@ class StrPrinter(Printer):
                                         self._print(i.max))
 
     def _print_Inverse(self, I):
-        return "%s^-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
+        return "%s**(-1)" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
 
     def _print_Lambda(self, obj):
         args, expr = obj.args
@@ -338,22 +338,6 @@ class StrPrinter(Printer):
     def _print_HadamardProduct(self, expr):
         return '.*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
-
-    def _print_MatAdd(self, expr):
-        terms = [self.parenthesize(arg, precedence(expr))
-             for arg in expr.args]
-        l = []
-        for t in terms:
-            if t.startswith('-'):
-                sign = "-"
-                t = t[1:]
-            else:
-                sign = "+"
-            l.extend([sign, t])
-        sign = l.pop(0)
-        if sign == '+':
-            sign = ""
-        return sign + ' '.join(l)
 
     def _print_NaN(self, expr):
         return 'nan'

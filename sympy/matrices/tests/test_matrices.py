@@ -1,5 +1,4 @@
 import random
-import warnings
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
@@ -16,8 +15,7 @@ from sympy.matrices import (
 from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
@@ -624,6 +622,13 @@ def test_LUdecomp():
     P, L, Dee, U = M.LUdecompositionFF()
     assert P*M == L*Dee.inv()*U
 
+    # issue 15794
+    M = Matrix(
+        [[1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]]
+    )
+    raises(ValueError, lambda : M.LUdecomposition_Simple(rankcheck=True))
 
 def test_LUsolve():
     A = Matrix([[2, 3, 5],
@@ -640,6 +645,25 @@ def test_LUsolve():
     b = A*x
     soln = A.LUsolve(b)
     assert soln == x
+    A = Matrix([[2, 1], [1, 0], [1, 0]])   # issue 14548
+    b = Matrix([3, 1, 1])
+    assert A.LUsolve(b) == Matrix([1, 1])
+    b = Matrix([3, 1, 2])                  # inconsistent
+    raises(ValueError, lambda: A.LUsolve(b))
+    A = Matrix([[0, -1, 2],
+                [5, 10, 7],
+                [8,  3, 4],
+                [2, 3, 5],
+                [3, 6, 2],
+                [8, 3, 6]])
+    x = Matrix([2, 1, -4])
+    b = A*x
+    soln = A.LUsolve(b)
+    assert soln == x
+    A = Matrix([[0, -1, 2], [5, 10, 7]])  # underdetermined
+    x = Matrix([-1, 2, 0])
+    b = A*x
+    raises(NotImplementedError, lambda: A.LUsolve(b))
 
 
 def test_QRsolve():
@@ -784,6 +808,7 @@ def test_QR():
 
 
 def test_QR_non_square():
+    # Narrow (cols < rows) matrices
     A = Matrix([[9, 0, 26], [12, 0, -7], [0, 4, 4], [0, -3, -3]])
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)
@@ -791,6 +816,101 @@ def test_QR_non_square():
     assert A == Q*R
 
     A = Matrix([[1, -1, 4], [1, 4, -2], [1, 4, 2], [1, -1, 0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix(2, 1, [1, 2])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    # Wide (cols > rows) matrices
+    A = Matrix([[1, 2, 3], [4, 5, 6]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[1, 2, 3, 4], [1, 4, 9, 16], [1, 8, 27, 64]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix(1, 2, [1, 2])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+def test_QR_trivial():
+    # Rank deficient matrices
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    # Zero rank matrices
+    A = Matrix([[0, 0, 0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0], [0, 0, 0]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0], [0, 0, 0]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    # Rank deficient matrices with zero norm from beginning columns
+    A = Matrix([[0, 0, 0], [1, 2, 3]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0, 0], [1, 2, 3, 4], [0, 0, 0, 0]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0, 0], [1, 2, 3, 4], [0, 0, 0, 0], [2, 4, 6, 8]]).T
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
+    A = Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0], [1, 2, 3]]).T
     Q, R = A.QRdecomposition()
     assert Q.T * Q == eye(Q.cols)
     assert R.is_upper
@@ -1861,9 +1981,6 @@ def test_errors():
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).trace())
     raises(TypeError, lambda: Matrix([1]).applyfunc(1))
     raises(ShapeError, lambda: Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]])))
-    raises(MatrixError, lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]
-           ]).QRdecomposition())
-    raises(MatrixError, lambda: Matrix(1, 2, [1, 2]).QRdecomposition())
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor(4, 5))
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor_submatrix(4, 5))
     raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))
@@ -1871,7 +1988,8 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
     raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
-    raises(SymPyDeprecationWarning, lambda: Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]])))
+    with warns_deprecated_sympy():
+        Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]]))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([1, 2, 3]))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
@@ -2027,10 +2145,18 @@ def test_cholesky():
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky())
     raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).cholesky())
     raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).cholesky())
+    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky(hermitian=False))
+    assert Matrix(((5 + I, 0), (0, 1))).cholesky(hermitian=False) == Matrix([
+        [sqrt(5 + I), 0], [0, 1]])
+    A = Matrix(((1, 5), (5, 1)))
+    L = A.cholesky(hermitian=False)
+    assert L == Matrix([[1, 0], [5, 2*sqrt(6)*I]])
+    assert L*L.T == A
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-    assert A.cholesky() * A.cholesky().T == A
-    assert A.cholesky().is_lower
-    assert A.cholesky() == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
+    L = A.cholesky()
+    assert L * L.T == A
+    assert L.is_lower
+    assert L == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
     A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
     assert A.cholesky() == Matrix(((2, 0, 0), (I, 1, 0), (1 - I, 0, 3)))
 
@@ -2040,6 +2166,10 @@ def test_LDLdecomposition():
     raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition())
     raises(ValueError, lambda: Matrix(((5 + I, 0), (0, 1))).LDLdecomposition())
     raises(ValueError, lambda: Matrix(((1, 5), (5, 1))).LDLdecomposition())
+    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition(hermitian=False))
+    A = Matrix(((1, 5), (5, 1)))
+    L, D = A.LDLdecomposition(hermitian=False)
+    assert L * D * L.T == A
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     L, D = A.LDLdecomposition()
     assert L * D * L.T == A
@@ -2069,6 +2199,11 @@ def test_cholesky_solve():
     b = A*x
     soln = A.cholesky_solve(b)
     assert soln == x
+    A = Matrix(((1, 5), (5, 1)))
+    x = Matrix((4, -3))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert soln == x
     A = Matrix(((9, 3*I), (-3*I, 5)))
     x = Matrix((-2, 1))
     b = A*x
@@ -2079,6 +2214,11 @@ def test_cholesky_solve():
     b = A*x
     soln = A.cholesky_solve(b)
     assert expand_mul(soln) == x
+    a00, a01, a11, b0, b1 = symbols('a00, a01, a11, b0, b1')
+    A = Matrix(((a00, a01), (a01, a11)))
+    b = Matrix((b0, b1))
+    x = A.cholesky_solve(b)
+    assert simplify(A*x) == b
 
 
 def test_LDLsolve():
@@ -2308,6 +2448,15 @@ def test_normalized():
     assert Matrix([3, 4]).normalized() == \
         Matrix([Rational(3, 5), Rational(4, 5)])
 
+    # Zero vector trivial cases
+    assert Matrix([0, 0, 0]).normalized() == Matrix([0, 0, 0])
+
+    # Machine precision error truncation trivial cases
+    m = Matrix([0,0,1.e-100])
+    assert m.normalized(
+    iszerofunc=lambda x: x.evalf(n=10, chop=True).is_zero
+    ) == Matrix([0, 0, 0])
+
 
 def test_print_nonzero():
     assert capture(lambda: eye(3).print_nonzero()) == \
@@ -2500,6 +2649,14 @@ def test_dot():
     assert ones(1, 3).dot(ones(3, 1)) == 3
     assert ones(1, 3).dot([1, 1, 1]) == 3
     assert Matrix([1, 2, 3]).dot(Matrix([1, 2, 3])) == 14
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I])) == -5 + I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I]), hermitian=False) == -5 + I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I]), hermitian=True) == 13 + I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([I, 2, 3*I]), hermitian=True, conjugate_convention="physics") == 13 - I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([4, 5*I, 6]), hermitian=True, conjugate_convention="right") == 4 + 8*I
+    assert Matrix([1, 2, 3*I]).dot(Matrix([4, 5*I, 6]), hermitian=True, conjugate_convention="left") == 4 - 8*I
+    assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), hermitian=False, conjugate_convention="left") == -5
+    assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), conjugate_convention="left") == 5
 
 
 def test_dual():
@@ -2737,11 +2894,11 @@ def test_pinv_solve():
     # Proof the solution is not exact.
     assert A * A.pinv() * B != B
 
-@XFAIL
 def test_pinv_rank_deficient():
     # Test the four properties of the pseudoinverse for various matrices.
     As = [Matrix([[1, 1, 1], [2, 2, 2]]),
-          Matrix([[1, 0], [0, 0]])]
+          Matrix([[1, 0], [0, 0]]),
+          Matrix([[1, 2], [2, 4], [3, 6]])]
     for A in As:
         A_pinv = A.pinv()
         AAp = A * A_pinv
@@ -2766,6 +2923,26 @@ def test_pinv_rank_deficient():
     assert w1.name == 'w1_0'
     assert solution == Matrix([3, w1])
     assert A * A.pinv() * B != B
+
+@XFAIL
+def test_pinv_rank_deficient_when_diagonalization_fails():
+    # Test the four properties of the pseudoinverse for matrices when
+    # diagonalization of A.H*A fails.'
+    As = [Matrix([
+        [61, 89, 55, 20, 71, 0],
+        [62, 96, 85, 85, 16, 0],
+        [69, 56, 17,  4, 54, 0],
+        [10, 54, 91, 41, 71, 0],
+        [ 7, 30, 10, 48, 90, 0],
+        [0,0,0,0,0,0]])]
+    for A in As:
+        A_pinv = A.pinv()
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
 
 
 def test_gauss_jordan_solve():
@@ -2878,6 +3055,12 @@ def test_gauss_jordan_solve():
     b = Matrix([1, 1, 1])
     raises(ValueError, lambda: A.gauss_jordan_solve(b))
 
+def test_solve():
+    A = Matrix([[1,2], [2,4]])
+    b = Matrix([[3], [4]])
+    raises(ValueError, lambda: A.solve(b)) #no solution
+    b = Matrix([[ 4], [8]])
+    raises(ValueError, lambda: A.solve(b)) #infinite solution
 
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
@@ -3060,12 +3243,13 @@ def test_deprecated():
     # Maintain tests for deprecated functions.  We must capture
     # the deprecation warnings.  When the deprecated functionality is
     # removed, the corresponding tests should be removed.
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
-        P, Jcells = m.jordan_cells()
-        assert Jcells[1] == Matrix(1, 1, [2])
-        assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+    m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
+    P, Jcells = m.jordan_cells()
+    assert Jcells[1] == Matrix(1, 1, [2])
+    assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+    with warns_deprecated_sympy():
         assert Matrix([[1,2],[3,4]]).dot(Matrix([[1,3],[4,5]])) == [10, 19, 14, 28]
 
 

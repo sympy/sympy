@@ -19,6 +19,9 @@ class MatAdd(MatrixExpr, Add):
 
     MatAdd inherits from and operates like SymPy Add
 
+    Examples
+    ========
+
     >>> from sympy import MatAdd, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
@@ -64,6 +67,10 @@ class MatAdd(MatrixExpr, Add):
             args = self.args
         return canonicalize(MatAdd(*args))
 
+    def _eval_derivative_matrix_lines(self, x):
+        add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
+        return [j for i in add_lines for j in i]
+
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
@@ -85,6 +92,9 @@ def combine(cnt, mat):
 
 def merge_explicit(matadd):
     """ Merge explicit MatrixBase arguments
+
+    Examples
+    ========
 
     >>> from sympy import MatrixSymbol, eye, Matrix, MatAdd, pprint
     >>> from sympy.matrices.expressions.matadd import merge_explicit

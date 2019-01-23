@@ -10,6 +10,7 @@ from sympy import (
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
 from sympy.core.expr import UnevaluatedExpr
 
+from  sympy.physics import mechanics
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
@@ -19,7 +20,7 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
 
-from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
+from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerProduct
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -305,17 +306,14 @@ def test_upretty_subs_missing_in_24():
 
 @XFAIL
 def test_missing_in_2X_issue_9047():
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        assert upretty( Symbol('F_h') ) == u'Fₕ'
-        assert upretty( Symbol('F_k') ) == u'Fₖ'
-        assert upretty( Symbol('F_l') ) == u'Fₗ'
-        assert upretty( Symbol('F_m') ) == u'Fₘ'
-        assert upretty( Symbol('F_n') ) == u'Fₙ'
-        assert upretty( Symbol('F_p') ) == u'Fₚ'
-        assert upretty( Symbol('F_s') ) == u'Fₛ'
-        assert upretty( Symbol('F_t') ) == u'Fₜ'
+    assert upretty( Symbol('F_h') ) == u'Fₕ'
+    assert upretty( Symbol('F_k') ) == u'Fₖ'
+    assert upretty( Symbol('F_l') ) == u'Fₗ'
+    assert upretty( Symbol('F_m') ) == u'Fₘ'
+    assert upretty( Symbol('F_n') ) == u'Fₙ'
+    assert upretty( Symbol('F_p') ) == u'Fₚ'
+    assert upretty( Symbol('F_s') ) == u'Fₛ'
+    assert upretty( Symbol('F_t') ) == u'Fₜ'
 
 
 def test_upretty_modifiers():
@@ -6479,3 +6477,17 @@ H    \n\
     ucode_str = ascii_str
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+def test_issue_15560():
+    a = MatrixSymbol('a', 1, 1)
+    e = pretty(a*(KroneckerProduct(a, a)))
+    result = 'a*(a x a)'
+    assert e == result
+
+def test_issue_15583():
+
+    N = mechanics.ReferenceFrame('N')
+    result = '(n_x, n_y, n_z)'
+    e = pretty((N.x, N.y, N.z))
+    assert e == result

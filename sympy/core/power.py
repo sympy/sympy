@@ -674,9 +674,9 @@ class Pow(Expr):
                         pow = as_int(pow)
                         combines = True
                     except ValueError:
-                        combines = Pow._eval_power(
+                        combines = isinstance(Pow._eval_power(
                             Pow(*old.as_base_exp(), evaluate=False),
-                            pow) is not None
+                            pow), (Pow, exp, Symbol))
                     return combines, pow, None
                 else:
                     # With noncommutative symbols, substitute only integer powers

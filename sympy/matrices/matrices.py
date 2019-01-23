@@ -211,7 +211,7 @@ class MatrixDeterminant(MatrixCommon):
             def entry(i, j):
                 ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
                 if not ret.is_Atom:
-                    cancel(ret)
+                    return cancel(ret)
                 return ret
 
             return sign*bareiss(self._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
@@ -2036,6 +2036,27 @@ class MatrixBase(MatrixDeprecated,
 
     __hash__ = None  # Mutable
 
+    # Defined here the same as on Basic.
+
+    # We don't define _repr_png_ here because it would add a large amount of
+    # data to any notebook containing SymPy expressions, without adding
+    # anything useful to the notebook. It can still enabled manually, e.g.,
+    # for the qtconsole, with init_printing().
+    def _repr_latex_(self):
+        """
+        IPython/Jupyter LaTeX printing
+
+        To change the behavior of this (e.g., pass in some settings to LaTeX),
+        use init_printing(). init_printing() will also enable LaTeX printing
+        for built in numeric types like ints and container types that contain
+        SymPy objects, like lists and dictionaries of expressions.
+        """
+        from sympy.printing.latex import latex
+        s = latex(self, mode='plain')
+        return "$\\displaystyle %s$" % s
+
+    _repr_latex_orig = _repr_latex_
+
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
         return matrix2numpy(self, dtype=dtype)
@@ -2361,22 +2382,31 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if self.is_hermitian:
-            L = self._cholesky()
+        hermitian = True
+        if self.is_symmetric():
+            hermitian = False
+            L = self._cholesky(hermitian=hermitian)
+        elif self.is_hermitian:
+            L = self._cholesky(hermitian=hermitian)
         elif self.rows >= self.cols:
-            L = (self.H * self)._cholesky()
+            L = (self.H * self)._cholesky(hermitian=hermitian)
             rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
-        return (L.H)._upper_triangular_solve(Y)
+        if hermitian:
+            return (L.H)._upper_triangular_solve(Y)
+        else:
+            return (L.T)._upper_triangular_solve(Y)
 
-    def cholesky(self):
-        """Returns the Cholesky decomposition L of a matrix A
-        such that L * L.H = A
+    def cholesky(self, hermitian=True):
+        """Returns the Cholesky-type decomposition L of a matrix A
+        such that L * L.H == A if hermitian flag is True,
+        or L * L.T == A if hermitian is False.
 
-        A must be a Hermitian positive-definite matrix.
+        A must be a Hermitian positive-definite matrix if hermitian is True,
+        or a symmetric matrix if it is False.
 
         Examples
         ========
@@ -2407,6 +2437,18 @@ class MatrixBase(MatrixDeprecated,
         [   9, 3*I],
         [-3*I,   5]])
 
+        Non-hermitian Cholesky-type decomposition may be useful when the
+        matrix is not positive-definite.
+
+        >>> A = Matrix([[1, 2], [2, 1]])
+        >>> L = A.cholesky(hermitian=False)
+        >>> L
+        Matrix([
+        [1,         0],
+        [2, sqrt(3)*I]])
+        >>> L*L.T == A
+        True
+
         See Also
         ========
 
@@ -2417,9 +2459,11 @@ class MatrixBase(MatrixDeprecated,
 
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if not self.is_hermitian:
+        if hermitian and not self.is_hermitian:
             raise ValueError("Matrix must be Hermitian.")
-        return self._cholesky()
+        if not hermitian and not self.is_symmetric():
+            raise ValueError("Matrix must be symmetric.")
+        return self._cholesky(hermitian=hermitian)
 
     def condition_number(self):
         """Returns the condition number of a matrix.
@@ -2567,10 +2611,21 @@ class MatrixBase(MatrixDeprecated,
             raise TypeError("Size mis-match")
         return self._diagonal_solve(rhs)
 
-    def dot(self, b):
-        """Return the dot product of two vectors of equal length. ``self`` must
-        be a ``Matrix`` of size 1 x n or n x 1, and ``b`` must be either a
-        matrix of size 1 x n, n x 1, or a list/tuple of length n. A scalar is returned.
+    def dot(self, b, hermitian=None, conjugate_convention=None):
+        """Return the dot or inner product of two vectors of equal length.
+        Here ``self`` must be a ``Matrix`` of size 1 x n or n x 1, and ``b``
+        must be either a matrix of size 1 x n, n x 1, or a list/tuple of length n.
+        A scalar is returned.
+
+        By default, ``dot`` does not conjugate ``self`` or ``b``, even if there are
+        complex entries. Set ``hermitian=True`` (and optionally a ``conjugate_convention``)
+        to compute the hermitian inner product.
+
+        Possible kwargs are ``hermitian`` and ``conjugate_convention``.
+
+        If ``conjugate_convention`` is ``"left"``, ``"math"`` or ``"maths"``,
+        the conjugate of the first vector (``self``) is used.  If ``"right"``
+        or ``"physics"`` is specified, the conjugate of the second vector ``b`` is used.
 
         Examples
         ========
@@ -2585,6 +2640,21 @@ class MatrixBase(MatrixDeprecated,
         >>> v = [3, 2, 1]
         >>> M.row(0).dot(v)
         10
+
+        >>> from sympy import I
+        >>> q = Matrix([1*I, 1*I, 1*I])
+        >>> q.dot(q, hermitian=False)
+        -3
+
+        >>> q.dot(q, hermitian=True)
+        3
+
+        >>> q1 = Matrix([1, 1, 1*I])
+        >>> q.dot(q1, hermitian=True, conjugate_convention="maths")
+        1 - 2*I
+        >>> q.dot(q1, hermitian=True, conjugate_convention="physics")
+        1 + 2*I
+
 
         See Also
         ========
@@ -2622,7 +2692,28 @@ class MatrixBase(MatrixDeprecated,
             mat = mat.reshape(1, n)
         if b.shape != (n, 1):
             b = b.reshape(n, 1)
+
         # Now ``mat`` is a row vector and ``b`` is a column vector.
+
+        # If it so happens that only conjugate_convention is passed
+        # then automatically set hermitian to True. If only hermitian
+        # is true but no conjugate_convention is not passed then
+        # automatically set it to ``"maths"``
+
+        if conjugate_convention is not None and hermitian is None:
+            hermitian = True
+        if hermitian and conjugate_convention is None:
+            conjugate_convention = "maths"
+
+        if hermitian == True:
+            if conjugate_convention in ("maths", "left", "math"):
+                mat = mat.conjugate()
+            elif conjugate_convention in ("physics", "right"):
+                b = b.conjugate()
+            else:
+                raise ValueError("Unknown conjugate_convention was entered."
+                                 " conjugate_convention must be one of the"
+                                 " following: math, maths, left, physics or right.")
         return (mat * b)[0]
 
     def dual(self):
@@ -3095,12 +3186,14 @@ class MatrixBase(MatrixDeprecated,
         else:
             return divmod(a2idx_(key, len(self)), self.cols)
 
-    def LDLdecomposition(self):
+    def LDLdecomposition(self, hermitian=True):
         """Returns the LDL Decomposition (L, D) of matrix A,
-        such that L * D * L.H == A
+        such that L * D * L.H == A if hermitian flag is True, or
+        L * D * L.T == A if hermitian is False.
         This method eliminates the use of square root.
         Further this ensures that all the diagonal entries of L are 1.
-        A must be a Hermitian positive-definite matrix.
+        A must be a Hermitian positive-definite matrix if hermitian is True,
+        or a symmetric matrix otherwise.
 
         Examples
         ========
@@ -3146,9 +3239,11 @@ class MatrixBase(MatrixDeprecated,
         """
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if not self.is_hermitian:
+        if hermitian and not self.is_hermitian:
             raise ValueError("Matrix must be Hermitian.")
-        return self._LDLdecomposition()
+        if not hermitian and not self.is_symmetric():
+            raise ValueError("Matrix must be symmetric.")
+        return self._LDLdecomposition(hermitian=hermitian)
 
     def LDLsolve(self, rhs):
         """Solves Ax = B using LDL decomposition,
@@ -3179,17 +3274,24 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if self.is_hermitian:
-            L, D = self.LDLdecomposition()
+        hermitian = True
+        if self.is_symmetric():
+            hermitian = False
+            L, D = self.LDLdecomposition(hermitian=hermitian)
+        elif self.is_hermitian:
+            L, D = self.LDLdecomposition(hermitian=hermitian)
         elif self.rows >= self.cols:
-            L, D = (self.H * self).LDLdecomposition()
+            L, D = (self.H * self).LDLdecomposition(hermitian=hermitian)
             rhs = self.H * rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
         Y = L._lower_triangular_solve(rhs)
         Z = D._diagonal_solve(Y)
-        return (L.H)._upper_triangular_solve(Z)
+        if hermitian:
+            return (L.H)._upper_triangular_solve(Z)
+        else:
+            return (L.T)._upper_triangular_solve(Z)
 
     def lower_triangular_solve(self, rhs):
         """Solves Ax = B, where A is a lower triangular matrix.
@@ -3481,6 +3583,15 @@ class MatrixBase(MatrixDeprecated,
                 # elimination is complete.
                 return lu, row_swaps
 
+        if rankcheck:
+            if iszerofunc(
+            lu[Min(lu.rows, lu.cols) - 1, Min(lu.rows, lu.cols) - 1]):
+                raise ValueError("Rank of matrix is strictly less than"
+                                 " number of rows or columns."
+                                 " Pass keyword argument"
+                                 " rankcheck=False to compute"
+                                 " the LU decomposition of this matrix.")
+
         return lu, row_swaps
 
     def LUdecompositionFF(self):
@@ -3555,14 +3666,24 @@ class MatrixBase(MatrixDeprecated,
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
 
+        m = self.rows
+        n = self.cols
+        if m < n:
+            raise NotImplementedError("Underdetermined systems not supported.")
         A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
-        n = self.rows
         b = rhs.permute_rows(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
-        for i in range(n):
-            for j in range(i):
+        for i in range(m):
+            for j in range(min(i, n)):
                 scale = A[i, j]
                 b.zip_row_op(i, j, lambda x, y: x - y * scale)
+        # consistency check for overdetermined systems
+        if m > n:
+            for i in range(n, m):
+                for j in range(b.cols):
+                    if not iszerofunc(b[i, j]):
+                        raise ValueError("The system is inconsistent.")
+            b = b[0:n, :]   # truncate zero rows if consistent
         # backward substitution
         for i in range(n - 1, -1, -1):
             for j in range(i + 1, n):
@@ -3584,8 +3705,30 @@ class MatrixBase(MatrixDeprecated,
         """
         return self * b
 
-    def normalized(self):
+    def normalized(self, iszerofunc=_iszero):
         """Return the normalized version of ``self``.
+
+        Parameters
+        ==========
+
+        iszerofunc : Function, optional
+            A function to determine whether self is a zero vector.
+            The default ``_iszero`` tests to see if each element is
+            exactly zero.
+
+        Returns
+        =======
+
+        Matrix
+            Normalized vector form of self.
+            It has the same length as a unit vector. However, a zero vector
+            will be returned for a vector with norm 0.
+
+        Raises
+        ======
+
+        ShapeError
+            If the matrix is not in a vector form.
 
         See Also
         ========
@@ -3595,7 +3738,10 @@ class MatrixBase(MatrixDeprecated,
         if self.rows != 1 and self.cols != 1:
             raise ShapeError("A Matrix must be a vector to normalize.")
         norm = self.norm()
-        out = self.applyfunc(lambda i: i / norm)
+        if iszerofunc(norm):
+            out = self.zeros(self.rows, self.cols)
+        else:
+            out = self.applyfunc(lambda i: i / norm)
         return out
 
     def norm(self, ord=None):
@@ -3825,8 +3971,20 @@ class MatrixBase(MatrixDeprecated,
                 return AH * (A * AH).inv()
         except ValueError:
             # Matrix is not full rank, so A*AH cannot be inverted.
-            raise NotImplementedError('Rank-deficient matrices are not yet '
-                                      'supported.')
+            pass
+        try:
+            # However, A*AH is Hermitian, so we can diagonalize it.
+            if self.rows >= self.cols:
+                P, D = (AH * A).diagonalize(normalize=True)
+                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
+                return P * D_pinv * P.H * AH
+            else:
+                P, D = (A * AH).diagonalize(normalize=True)
+                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
+                return AH * P * D_pinv * P.H
+        except MatrixError:
+            raise NotImplementedError('pinv for rank-deficient matrices where diagonalization '
+                                      'of A.H*A fails is not supported yet.')
 
     def print_nonzero(self, symb="X"):
         """Shows location of non-zero entries for fast shape lookup.
@@ -3928,34 +4086,48 @@ class MatrixBase(MatrixDeprecated,
         cls = self.__class__
         mat = self.as_mutable()
 
-        if not mat.rows >= mat.cols:
-            raise MatrixError(
-                "The number of rows must be greater than columns")
         n = mat.rows
         m = mat.cols
-        rank = n
-        row_reduced = mat.rref()[0]
-        for i in range(row_reduced.rows):
-            if row_reduced.row(i).norm() == 0:
-                rank -= 1
-        if not rank == mat.cols:
-            raise MatrixError("The rank of the matrix must match the columns")
+        ranked = list()
+
+        # Pad with additional rows to make wide matrices square
+        # nOrig keeps track of original size so zeros can be trimmed from Q
+        if n < m:
+            nOrig = n
+            n = m
+            mat = mat.col_join(mat.zeros(n - nOrig, m))
+        else:
+            nOrig = n
+
         Q, R = mat.zeros(n, m), mat.zeros(m)
         for j in range(m):  # for each column vector
             tmp = mat[:, j]  # take original v
             for i in range(j):
                 # subtract the project of mat on new vector
-                tmp -= Q[:, i] * mat[:, j].dot(Q[:, i])
+                R[i, j] = Q[:, i].dot(mat[:, j])
+                tmp -= Q[:, i] * R[i, j]
                 tmp.expand()
             # normalize it
             R[j, j] = tmp.norm()
-            Q[:, j] = tmp / R[j, j]
-            if Q[:, j].norm() != 1:
-                raise NotImplementedError(
-                    "Could not normalize the vector %d." % j)
-            for i in range(j):
-                R[i, j] = Q[:, i].dot(mat[:, j])
-        return cls(Q), cls(R)
+            if not R[j, j].is_zero:
+                ranked.append(j)
+                Q[:, j] = tmp / R[j, j]
+
+
+        if len(ranked) != 0:
+            return (
+            cls(Q.extract(range(nOrig), ranked)),
+            cls(R.extract(ranked, range(R.cols)))
+            )
+        else:
+            # Trivial case handling for zero-rank matrix
+            # Force Q as matrix containing standard basis vectors
+            for i in range(Min(nOrig, m)):
+                Q[i, i] = 1
+            return (
+            cls(Q.extract(range(nOrig), range(Min(nOrig, m)))),
+            cls(R.extract(range(Min(nOrig, m)), range(R.cols)))
+            )
 
     def QRsolve(self, b):
         """Solve the linear system 'Ax = b'.
@@ -4005,9 +4177,28 @@ class MatrixBase(MatrixDeprecated,
     def solve_least_squares(self, rhs, method='CH'):
         """Return the least-square fit to the data.
 
-        By default the cholesky_solve routine is used (method='CH'); other
-        methods of matrix inversion can be used. To find out which are
-        available, see the docstring of the .inv() method.
+        Parameters
+        ==========
+
+        rhs : Matrix
+            Vector representing the right hand side of the linear equation.
+
+        method : string or boolean, optional
+            If set to ``'CH'``, ``cholesky_solve`` routine will be used.
+
+            If set to ``'QR'``, ``QRsolve`` routine will be used.
+
+            If set to ``'PINV'``, ``pinv_solve`` routine will be used.
+
+            Otherwise, the conjugate of self will be used to create a system
+            of equations that is passed to ``solve`` along with the hint
+            defined by ``method``.
+
+        Returns
+        =======
+
+        solutions : Matrix
+            Vector representing the solution.
 
         Examples
         ========
@@ -4058,24 +4249,39 @@ class MatrixBase(MatrixDeprecated,
         """
         if method == 'CH':
             return self.cholesky_solve(rhs)
-        t = self.H
-        return (t * self).inv(method=method) * t * rhs
+        elif method == 'QR':
+            return self.QRsolve(rhs)
+        elif method == 'LDL':
+            return self.LDLsolve(rhs)
+        elif method == 'PINV':
+            return self.pinv_solve(rhs)
+        else:
+            t = self.H
+            return (t * self).solve(t * rhs, method=method)
 
-    def solve(self, rhs, method='GE'):
-        """Return solution to self*soln = rhs using given inversion method.
+    def solve(self, rhs, method='GJ'):
+        """Return the unique soln making self*soln = rhs.
 
-        For a list of possible inversion methods, see the .inv() docstring.
+        If there is not a unique solution then a ValueError will be raised. If `self` is not
+        square, a ValueError and a different routine for solving the system will be suggested.
+
+        When the method is GJ, the Gauss-Jordan elimination will be used. To use a different
+        method and to compute the solution via the inverse, use a method defined in the
+        .inv() docstring.
         """
 
-        if not self.is_square:
-            if self.rows < self.cols:
-                raise ValueError('Under-determined system. '
-                                 'Try M.gauss_jordan_solve(rhs)')
-            elif self.rows > self.cols:
-                raise ValueError('For over-determined system, M, having '
-                                 'more rows than columns, try M.solve_least_squares(rhs).')
+        if method == 'GJ':
+            try:
+                soln, param = self.gauss_jordan_solve(rhs)
+                if param:
+                    raise ValueError("Matrix det == 0; not invertible. "
+                    "Try `self.gauss_jordan_solve(rhs)` to obtain a parametric solution.")
+            except ValueError:
+                # raise same error as in inv:
+                self.zeros(1).inv()
+            return soln
         else:
-            return self.inv(method=method) * rhs
+            return self.inv(method=method)*rhs
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
               colsep=', ', align='right'):

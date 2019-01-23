@@ -217,6 +217,19 @@ class Expr(Basic, EvalfMixin):
         from sympy.functions.elementary.integers import floor
         return floor(other / self)
 
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rdivmod__')
+    def __divmod__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(self / other), Mod(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__divmod__')
+    def __rdivmod__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(other / self), Mod(other, self)
+
     def __int__(self):
         # Although we only need to round to the units position, we'll
         # get one more digit so the extra testing below can be avoided
@@ -1045,7 +1058,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_number:
                         try:
                             coeff *= complex(factor)
-                        except TypeError:
+                        except (TypeError, ValueError):
                             pass
                         else:
                             continue
@@ -1790,7 +1803,15 @@ class Expr(Basic, EvalfMixin):
         values, the corresponding exponents. The resulting dictionary should
         be used with caution if the expression is a Mul and contains non-
         commutative factors since the order that they appeared will be lost in
-        the dictionary."""
+        the dictionary.
+
+        See Also
+        ========
+        as_ordered_factors: An alternative for noncommutative applications,
+                            returning an ordered list of factors.
+        args_cnc: Similar to as_ordered_factors, but guarantees separation
+                  of commutative and noncommutative factors.
+        """
         d = defaultdict(int)
         d.update(dict([self.as_base_exp()]))
         return d
@@ -2628,7 +2649,7 @@ class Expr(Basic, EvalfMixin):
         -x
 
         """
-        from sympy import collect, Dummy, Order, Rational, Symbol
+        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling
         if x is None:
             syms = self.free_symbols
             if not syms:
@@ -2652,11 +2673,12 @@ class Expr(Basic, EvalfMixin):
             raise ValueError("Dir must be '+' or '-'")
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
-            dir = {S.Infinity: '+', S.NegativeInfinity: '-'}[x0]
-            s = self.subs(x, 1/x).series(x, n=n, dir=dir)
+            sgn = 1 if x0 is S.Infinity else -1
+            s = self.subs(x, sgn/x).series(x, n=n, dir='+')
             if n is None:
-                return (si.subs(x, 1/x) for si in s)
-            return s.subs(x, 1/x)
+                return (si.subs(x, sgn/x) for si in s)
+            return s.subs(x, sgn/x)
+
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
@@ -2707,7 +2729,7 @@ class Expr(Basic, EvalfMixin):
                         s1 = self._eval_nseries(x, n=n + more, logx=logx)
                         newn = s1.getn()
                         if newn != ngot:
-                            ndo = n + (n - ngot)*more/(newn - ngot)
+                            ndo = n + ceiling((n - ngot)*more/(newn - ngot))
                             s1 = self._eval_nseries(x, n=ndo, logx=logx)
                             while s1.getn() < n:
                                 s1 = self._eval_nseries(x, n=ndo, logx=logx)

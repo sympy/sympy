@@ -302,7 +302,6 @@ class LatexPrinter(Printer):
     def _print_NoneType(self, e):
         return r"\mathrm{%s}" % e
 
-
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)
@@ -670,7 +669,7 @@ class LatexPrinter(Printer):
                 tex += r"\int"
 
                 if len(lim) > 1:
-                    if self._settings['mode'] in ['equation', 'equation*'] \
+                    if self._settings['mode'] != 'inline' \
                             and not self._settings['itex']:
                         tex += r"\limits"
 
@@ -1439,7 +1438,10 @@ class LatexPrinter(Printer):
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
-            + '_{%s, %s}' % (expr.i, expr.j)
+            + '_{%s, %s}' % (
+            self._print(expr.i),
+            self._print(expr.j)
+        )
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x):
@@ -1478,34 +1480,25 @@ class LatexPrinter(Printer):
         else:
             return r"%s^\dagger" % self._print(mat)
 
-    def _print_MatAdd(self, expr):
-        terms = [self._print(t) for t in expr.args]
-        l = []
-        for t in terms:
-            if t.startswith('-'):
-                sign = "-"
-                t = t[1:]
-            else:
-                sign = "+"
-            l.extend([sign, t])
-        sign = l.pop(0)
-        if sign == '+':
-            sign = ""
-        return sign + ' '.join(l)
-
     def _print_MatMul(self, expr):
         from sympy import Add, MatAdd, HadamardProduct, MatMul, Mul
 
-        def parens(x):
-            if isinstance(x, (Add, MatAdd, HadamardProduct)):
-                return r"\left(%s\right)" % self._print(x)
-            return self._print(x)
+        parens = lambda x: self.parenthesize(x, precedence_traditional(expr), False)
 
-        if isinstance(expr, MatMul) and expr.args[0].is_Number and expr.args[0]<0:
-            expr = Mul(-1*expr.args[0], MatMul(*expr.args[1:]))
-            return '-' + ' '.join(map(parens, expr.args))
+        args = expr.args
+        if isinstance(args[0], Mul):
+            args = args[0].as_ordered_factors() + list(args[1:])
         else:
-            return ' '.join(map(parens, expr.args))
+            args = list(args)
+
+        if isinstance(expr, MatMul) and _coeff_isneg(expr):
+            if args[0] == -1:
+                args = args[1:]
+            else:
+                args[0] = -args[0]
+            return '- ' + ' '.join(map(parens, args))
+        else:
+            return ' '.join(map(parens, args))
 
     def _print_Mod(self, expr, exp=None):
         if exp is not None:

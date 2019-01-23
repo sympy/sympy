@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S
-from sympy.core.compatibility import reduce, range
+from sympy.core.compatibility import reduce, range, iterable
 from sympy.core.function import Function
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
@@ -87,6 +87,7 @@ class IntegralTransform(Function):
         cond = And(*extra)
         if cond == False:
             raise IntegralTransformError(self.__class__.name, None, '')
+        return cond
 
     def doit(self, **hints):
         """
@@ -132,14 +133,21 @@ class IntegralTransform(Function):
                 if not isinstance(x, tuple):
                     x = [x]
                 ress.append(x[0])
-                if len(x) > 1:
+                if len(x) == 2:
+                    # only a condition
+                    extra.append(x[1])
+                elif len(x) > 2:
+                    # some region parameters and a condition (Mellin, Laplace)
                     extra += [x[1:]]
             res = Add(*ress)
             if not extra:
                 return res
             try:
                 extra = self._collapse_extra(extra)
-                return tuple([res]) + tuple(extra)
+                if iterable(extra):
+                    return tuple([res]) + tuple(extra)
+                else:
+                    return (res, extra)
             except IntegralTransformError:
                 pass
 

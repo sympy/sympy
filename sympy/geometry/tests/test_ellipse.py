@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, I
 from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
@@ -33,8 +31,8 @@ def test_object_from_equation():
     assert Circle(a**2 + b**2, x='a', y='b') == Circle(Point2D(0, 0), 0)
     assert Circle(x**2 + y**2 + 6*x + 8) == Circle(Point2D(-3, 0), 1)
     assert Circle(x**2 + y**2 + 6*y + 8) == Circle(Point2D(0, -3), 1)
-    assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(-1/2, -2/3), 5*sqrt(37)/6)
-    assert Circle(x**2 + y**2 + 3*x + 4*y + 26) == Circle(Point2D(-3/2, -2), sqrt(79)*I/2)
+    assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(-S(1)/2, -S(2)/3), 5*sqrt(37)/6)
+    assert Circle(x**2 + y**2 + 3*x + 4*y + 26) == Circle(Point2D(-S(3)/2, -2), sqrt(79)*I/2)
     assert Circle(x**2 + y**2 + 25) == Circle(Point2D(0, 0), 5*I)
     assert Circle(a**2 + b**2 + 25, x='a', y='b') == Circle(Point2D(0, 0), 5*I)
     raises(GeometryError, lambda: Circle(x**2 + 6*y + 8))
@@ -124,8 +122,8 @@ def test_ellipse_geom():
     p1_2 = p2 + Point(half, 0)
     p1_3 = p2 + Point(0, 1)
     assert e1.tangent_lines(p4) == c1.tangent_lines(p4)
-    assert e2.tangent_lines(p1_2) == [Line(Point(3/2, 1), Point(3/2, 1/2))]
-    assert e2.tangent_lines(p1_3) == [Line(Point(1, 2), Point(5/4, 2))]
+    assert e2.tangent_lines(p1_2) == [Line(Point(S(3)/2, 1), Point(S(3)/2, S(1)/2))]
+    assert e2.tangent_lines(p1_3) == [Line(Point(1, 2), Point(S(5)/4, 2))]
     assert c1.tangent_lines(p1_1) != [Line(p1_1, Point(0, sqrt(2)))]
     assert c1.tangent_lines(p1) == []
     assert e2.is_tangent(Line(p1_2, p2 + Point(half, 1)))
@@ -141,8 +139,8 @@ def test_ellipse_geom():
     assert Circle(Point(5, 5), 3).is_tangent(Circle(Point(0, 5), 1)) is False
 
     assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
-        [Line(Point(0, 0), Point(77/25, 132/25)),
-     Line(Point(0, 0), Point(33/5, 22/5))]
+        [Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
+     Line(Point(0, 0), Point(S(33)/5, S(22)/5))]
     assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(3, 4)) == \
         [Line(Point(3, 4), Point(4, 4)), Line(Point(3, 4), Point(3, 5))]
     assert Circle(Point(5, 5), 2).tangent_lines(Point(3, 3)) == \
@@ -168,18 +166,18 @@ def test_ellipse_geom():
     assert e.normal_lines((0, 1)) == \
         [Line(Point(0, 0), Point(0, 1))]
     assert line_list_close(e.normal_lines(Point(1, 1), 2), [
-        Line(Point(-51/26, -1/5), Point(-25/26, 17/83)),
-        Line(Point(28/29, -7/8), Point(57/29, -9/2))], 2)
+        Line(Point(-S(51)/26, -S(1)/5), Point(-S(25)/26, S(17)/83)),
+        Line(Point(S(28)/29, -S(7)/8), Point(S(57)/29, -S(9)/2))], 2)
     # test the failure of Poly.intervals and checks a point on the boundary
     p = Point(sqrt(3), S.Half)
     assert p in e
     assert line_list_close(e.normal_lines(p, 2), [
-        Line(Point(-341/171, -1/13), Point(-170/171, 5/64)),
-        Line(Point(26/15, -1/2), Point(41/15, -43/26))], 2)
+        Line(Point(-S(341)/171, -S(1)/13), Point(-S(170)/171, S(5)/64)),
+        Line(Point(S(26)/15, -S(1)/2), Point(S(41)/15, -S(43)/26))], 2)
     # be sure to use the slope that isn't undefined on boundary
     e = Ellipse((0, 0), 2, 2*sqrt(3)/3)
     assert line_list_close(e.normal_lines((1, 1), 2), [
-        Line(Point(-64/33, -20/71), Point(-31/33, 2/13)),
+        Line(Point(-S(64)/33, -S(20)/71), Point(-S(31)/33, S(2)/13)),
         Line(Point(1, -1), Point(2, -4))], 2)
     # general ellipse fails except under certain conditions
     e = Ellipse((0, 0), x, 1)
@@ -230,9 +228,9 @@ def test_ellipse_geom():
     assert intersection(Circle(Point(0, 0), 2), Circle(Point(7, 0), 1)) == []
     assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 1, 0.2)) == [Point(5, 0)]
     assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 0.999, 0.2)) == []
-    assert Circle((0, 0), 1/2).intersection(
+    assert Circle((0, 0), S(1)/2).intersection(
         Triangle((-1, 0), (1, 0), (0, 1))) == [
-        Point(-1/2, 0), Point(1/2, 0)]
+        Point(-S(1)/2, 0), Point(S(1)/2, 0)]
     raises(TypeError, lambda: intersection(e2, Line((0, 0, 0), (0, 0, 1))))
     raises(TypeError, lambda: intersection(e2, Rational(12)))
     # some special case intersections
@@ -266,7 +264,7 @@ def test_ellipse_geom():
 
     e1 = Ellipse(Point(0, 0), 5, 10)
     e2 = Ellipse(Point(2, 1), 4, 8)
-    a = 53/17
+    a = S(53)/17
     c = 2*sqrt(3991)/17
     ans = [Point(a - c/8, a/2 + c), Point(a + c/8, a/2 - c)]
     assert e1.intersection(e2) == ans
@@ -281,7 +279,7 @@ def test_ellipse_geom():
     e = Ellipse((1, 2), 3, 2)
     assert e.tangent_lines(Point(10, 0)) == \
         [Line(Point(10, 0), Point(1, 0)),
-        Line(Point(10, 0), Point(14/5, 18/5))]
+        Line(Point(10, 0), Point(S(14)/5, S(18)/5))]
 
     # encloses_point
     e = Ellipse((0, 0), 1, 2)
@@ -311,9 +309,9 @@ def test_ellipse_geom():
     # Link - https://github.com/sympy/sympy/issues/11743
     cir = Circle(Point(1, 0), 1)
     assert cir.rotate(pi/2) == Circle(Point(0, 1), 1)
-    assert cir.rotate(pi/3) == Circle(Point(1/2, sqrt(3)/2), 1)
+    assert cir.rotate(pi/3) == Circle(Point(S(1)/2, sqrt(3)/2), 1)
     assert cir.rotate(pi/3, Point(1, 0)) == Circle(Point(1, 0), 1)
-    assert cir.rotate(pi/3, Point(0, 1)) == Circle(Point(1/2 + sqrt(3)/2, 1/2 + sqrt(3)/2), 1)
+    assert cir.rotate(pi/3, Point(0, 1)) == Circle(Point(S(1)/2 + sqrt(3)/2, S(1)/2 + sqrt(3)/2), 1)
 
 
 def test_construction():
@@ -360,7 +358,7 @@ def test_transform():
         Ellipse(Point(-8, -10), 6, 9)
     assert Circle((0, 0), 2).scale(3, 3, (4, 5)) == \
         Circle(Point(-8, -10), 6)
-    assert Circle(Point(-8, -10), 6).scale(1/3, 1/3, (4, 5)) == \
+    assert Circle(Point(-8, -10), 6).scale(S(1)/3, S(1)/3, (4, 5)) == \
         Circle((0, 0), 2)
     assert Circle((0, 0), 2).translate(4, 5) == \
         Circle((4, 5), 2)

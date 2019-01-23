@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, TribonacciConstant, I,
     Integer, Integral, Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow,
@@ -18,6 +16,7 @@ from sympy.core.compatibility import range
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
 from sympy import MatrixSymbol
+from sympy import factorial, log, integrate
 
 x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')
@@ -444,8 +443,8 @@ def test_sqrt():
     assert str(1/sqrt(x)) == "1/sqrt(x)"
     assert str(1/sqrt(x**2)) == "1/sqrt(x**2)"
     assert str(y/sqrt(x)) == "y/sqrt(x)"
-    assert str(x**(1/2)) == "x**0.5"
-    assert str(1/x**(1/2)) == "x**(-0.5)"
+    assert str(x**0.5) == "x**0.5"
+    assert str(1/x**0.5) == "x**(-0.5)"
 
 
 def test_Rational():
@@ -795,17 +794,25 @@ def test_MatrixElement_printing():
     assert(str(3 * A[0, 0]) == "3*A[0, 0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert str(F) == "(-B + A)[0, 0]"
+    assert str(F) == "(A - B)[0, 0]"
 
 
 def test_MatrixSymbol_printing():
     A = MatrixSymbol("A", 3, 3)
     B = MatrixSymbol("B", 3, 3)
 
-    assert str(A - A*B - B) == "-B - A*B + A"
+    assert str(A - A*B - B) == "A - A*B - B"
     assert str(A*B - (A+B)) == "-(A + B) + A*B"
+    assert str(A**(-1)) == "A**(-1)"
+    assert str(A**3) == "A**3"
 
 
 def test_Subs_printing():
     assert str(Subs(x, (x,), (1,))) == 'Subs(x, x, 1)'
     assert str(Subs(x + y, (x, y), (1, 2))) == 'Subs(x + y, (x, y), (1, 2))'
+
+def test_issue_15716():
+    x = Symbol('x')
+    e = -3**x*exp(-3)*log(3**x*exp(-3)/factorial(x))/factorial(x)
+    assert str(Integral(e, (x, -oo, oo)).doit()) ==  '-(Integral(-3*3**x/factorial(x), (x, -oo, oo))' \
+    ' + Integral(3**x*log(3**x/factorial(x))/factorial(x), (x, -oo, oo)))*exp(-3)'
