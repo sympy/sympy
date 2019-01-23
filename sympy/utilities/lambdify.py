@@ -356,8 +356,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> f = Max(x, sin(x))
     >>> func = lambdify(x, f, 'tensorflow')
     >>> result = func(tf.constant(1.0))
-    >>> result # a tf.Tensor representing the result of the calculation
-    <tf.Tensor 'Maximum:0' shape=() dtype=float32>
+    >>> print(result) # a tf.Tensor representing the result of the calculation
+    Tensor("Maximum:0", shape=(), dtype=float32)
     >>> sess = tf.Session()
     >>> sess.run(result) # compute result
     1.0
