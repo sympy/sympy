@@ -176,10 +176,10 @@ _lambdify_generated_counter = 1
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
     """
-    Returns an anonymous function for fast calculation of numerical values.
+    Translates a SymPy expression into an equivalent numeric function
 
     For example, to convert the SymPy expression ``sin(x) + cos(x)`` to an
-    equivalent NumPy function that numerically evaluates it.
+    equivalent NumPy function that numerically evaluates it:
 
     >>> from sympy import sin, cos, symbols, lambdify
     >>> import numpy as np
@@ -193,9 +193,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     [1.38177329 0.49315059]
 
     The primary purpose of this function is to provide a bridge from SymPy
-    expressions to numerical libraries such as NumPy, NumExpr, mpmath, and
-    tensorflow. In general, SymPy functions do not work with objects
-    from other libraries, such as NumPy arrays, and functions from numeric
+    expressions to numerical libraries such as NumPy, SciPy, NumExpr, mpmath,
+    and tensorflow. In general, SymPy functions do not work with objects from
+    other libraries, such as NumPy arrays, and functions from numeric
     libraries like NumPy or mpmath do not work on SymPy expressions.
     ``lambdify`` bridges the two by converting a SymPy expression to an
     equivalent numeric function.
@@ -205,26 +205,30 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     should be done using only SymPy functions and expressions. Then, use
     ``lambdify`` to convert this to an equivalent function for numerical
     evaluation. For instance, above we created ``expr`` using the SymPy symbol
-    ``x`` and functions ``sin`` and ``cos``, then converted it to an
+    ``x`` and SymPy functions ``sin`` and ``cos``, then converted it to an
     equivalent NumPy function ``f``, and called it on a NumPy array ``a``.
+
+    .. warning::
+       This function uses ``exec``, and thus shouldn't be used on unsanitized
+       input.
 
     Arguments
     =========
 
-    The first argument of lambdify is a variable of list of variables in the
-    expression. Variable lists may be nested. Variables can be Symbols,
-    undefined functions, or matrix symbols. The variable order of the first
-    argument corresponds to the order the variables should be passed to the
-    lambdified function. For instance,
+    The first argument of ``lambdify`` is a variable or list of variables in
+    the expression. Variable lists may be nested. Variables can be Symbols,
+    undefined functions, or matrix symbols. The order and nesting of the
+    variables corresponds to the order and nesting of the parameters passed to
+    the lambdified function. For instance,
 
     >>> from sympy.abc import x, y, z
     >>> f = lambdify([x, (y, z)], x + y + z)
     >>> f(1, (2, 3))
     6
 
-    The second argument is the expression, list of expressions, or matrix to be
-    evaluated. Lists may be nested. If the expression is a list, the output
-    will also be a list.
+    The second argument of ``lambdify`` is the expression, list of
+    expressions, or matrix to be evaluated. Lists may be nested. If the
+    expression is a list, the output will also be a list.
 
     >>> f = lambdify(x, [x, [x + 1, x + 2]])
     >>> f(1)
@@ -235,45 +239,46 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> from sympy import Matrix
     >>> f = lambdify(x, Matrix([x, x + 1]))
     >>> f(1)
-    [[1],
+    [[1]
      [2]]
 
     Note that the argument order here, variables then expression, is used to
     emulate the Python ``lambda`` keyword. ``lambdify(x, expr)`` works
-    (roughly) like ``lambda x: expr`` (see "How it works" below).
+    (roughly) like ``lambda x: expr`` (see :ref:`lambdify-how-it-works` below).
 
     The third argument, ``modules`` is optional. If not specified, ``modules``
     defaults to ``["scipy", "numpy"]`` if SciPy is installed, ``["numpy"]`` if
     only NumPy is installed, and ``["math", "mpmath", "sympy"]`` if neither is
     installed. That is, SymPy functions are replaced as far as possible by
     either ``scipy`` or ``numpy`` functions if available, and Python's
-    standard library ``math``, or ``mpmath`` functions otherwise. To change
-    this behavior, the "modules" argument can be used. See "Usage" below for a
-    list of the types allowed by the ``modules`` argument.
+    standard library ``math``, or ``mpmath`` functions otherwise.
 
     ``modules`` can be one of the following types
 
-     - the strings "math", "mpmath", "numpy", "numexpr", "scipy", "sympy", "tensorflow"
-     - a module (e.g. math). **NOTE: It is always preferable to use the string
-       form of a module if lambdify supports it, as this will allow lambdify
-       to use a module-specific printer, which goes beyond a simple namespace translation.**
-     - dictionaries that map names of sympy functions to arbitrary functions
-     - lists that contain a mix of the arguments above, with higher priority
-       given to entries appearing first.
+     - the strings ``"math"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
+       ``"scipy"``, ``"sympy"``, or ``"tensorflow"``. This uses the
+       corresponding printer and namespace mapping for that module.
+     - a module (e.g., ``math``). This uses the global namespace of the
+       module. If the module is one of the above known modules, it will also
+       use the corresponding printer and namespace mapping (i.e.,
+       ``modules=numpy`` is equivalent to ``modules="numpy"``).
+     - a dictionary that maps names of SymPy functions to arbitrary functions
+       (e.g., ``{'sin': custom_sin}``).
+     - a list that contains a mix of the arguments above, with higher priority
+       given to entries appearing first (e.g., to use the NumPy module but
+       override the ``sin`` function with a custom version, you can use
+       ``[{'sin': custom_sin}, 'numpy']``).
 
-    For example, to use the NumPy module, but to override the ``sin`` function
-    with a custom version, you can use ``modules=[{'sin': custom_sin}, 'numpy']``.
-
-    .. warning::
-       Note that this function uses ``exec``, and thus shouldn't be used on
-       unsanitized input.
-
-    Arguments in the provided expression that are not valid Python identifiers
-    are substituted with dummy symbols. This allows for applied functions
-    (e.g. f(t)) to be supplied as arguments. Call the function with
+    The ``dummify`` keyword argument controls whether or not the variables in
+    the provided expression that are not valid Python identifiers are
+    substituted with dummy symbols. This allows for undefined functions like
+    ``Function('f')(t)`` to be supplied as arguments. By default, the
+    variables are only dummified if they are not valid Python identifiers. Set
     ``dummify=True`` to replace all arguments with dummy symbols (if ``args``
     is not a string) - for example, to ensure that the arguments do not
     redefine any built-in names.
+
+    .. _lambdify-how-it-works:
 
     How it works
     ============
@@ -327,22 +332,23 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     1.38177329068
 
     In the first case we got a symbolic output, because it used the symbolic
-    ``sin`` and ``cos`` functions from SymPy. In the second, got a numeric
+    ``sin`` and ``cos`` functions from SymPy. In the second, we got a numeric
     result, because ``sin_cos`` used the numeric ``sin`` and ``cos`` functions
-    from NumPy. But notice that the versions of the functions used was not
-    inherent to the function definition. Both ``sin_cos`` definitions are
-    exactly the same. Rather, it is based on the names defined at the module
-    level.
+    from NumPy. But notice that the versions of ``sin`` and ``cos`` that were
+    used was not inherent to the ``sin_cos`` function definition. Both
+    ``sin_cos`` definitions are exactly the same. Rather, it was based on the
+    names defined at the module where the ``sin_cos`` function was defined.
 
     The key point here is that when function in Python references a name that
     is not defined in the function, that name is looked up in the "global"
     namespace of the module where that function is defined.
 
     Now, in Python, we can emulate this behavior without actually writing a
-    file to disk using the ``exec`` function. ``exec`` takes a
-    string containing a block of Python code, and a dictionary that should
-    contain the global variables of the module. The following is
-    equivalent to the ``sin_cos`` defined in ``sin_cos_sympy.py``:
+    file to disk using the ``exec`` function. ``exec`` takes a string
+    containing a block of Python code, and a dictionary that should contain
+    the global variables of the module. It then executes the code "in" that
+    dictionary, as if it were the module globals. The following is equivalent
+    to the ``sin_cos`` defined in ``sin_cos_sympy.py``:
 
     >>> import sympy
     >>> module_dictionary = {'sin': sympy.sin, 'cos': sympy.cos}
@@ -385,7 +391,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
        namespace and returns ``func``.
 
     In fact, functions returned by ``lambdify`` support inspection. So you can
-    see exactly how they are by using ``inspect.getsource``, or ``??`` if you
+    see exactly how they are defined by using ``inspect.getsource``, or ``??`` if you
     are using IPython or the Jupyter notebook.
 
     >>> f = lambdify(x, sin(x) + cos(x))
@@ -406,15 +412,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     True
 
     This shows us that ``sin`` and ``cos`` in the namespace of ``f`` will be
-    NumPy sin and cos.
+    ``numpy.sin`` and ``numpy.cos``.
 
     Note that there are some convenience layers in each of these steps, but at
     the core, this is how ``lambdify`` works. Step 1 is done using the
     ``LambdaPrinter`` printers defined in the printing module (see
     :mod:`sympy.printing.lambdarepr`). This allows different SymPy expressions
-    to define how they should be converted to a lambda string for different
-    modules. You can change which printer ``lambdify`` uses by passing a
-    custom printer in to the ``printer`` argument.
+    to define how they should be converted to a string for different modules.
+    You can change which printer ``lambdify`` uses by passing a custom printer
+    in to the ``printer`` argument.
 
     Step 2 is augmented by certain translations. There are default
     translations for each module, but you can provide your own by passing a
@@ -444,8 +450,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     Understanding how ``lambdify`` works can make it easier to avoid certain
     gotchas when using it. For instance, a common mistake is to create a
-    ``lambdified`` function for one module (say, NumPy), and pass it objects
-    for another (say, a SymPy expression).
+    lambdified function for one module (say, NumPy), and pass it objects from
+    another (say, a SymPy expression).
 
     For instance, say we create
 
@@ -509,48 +515,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     argument is not provided, ``lambdify`` creates functions using the NumPy
     and SciPy namespaces.
 
-    Usage
-    =====
-
-    The first argument should be a Symbol, or a list of Symbols. The list can
-    itself be nested. This will be the parameter list of the resulting
-    function
-
-    >>> f = lambdify(x, x + 1)
-    >>> f(1)
-    2
-    >>> f = lambdify((x, y), x + y)
-    >>> f(1, 2)
-    3
-    >>> f = lambdify((x, (y, z)), x + y + z)
-    >>> f(1, (2, 3))
-    6
-
-    The first argument may also be a MatrixSymbol, or an undefined function.
-
-    >>> from sympy import Function
-    >>> g = Function('g')
-    >>> f = lambdify(g(x), g(x) + 1)
-    >>> f(1)
-    2
-
-    The second argument should be an expression, matrix, or list of
-    expressions. If it is a matrix, an array will be returned (for
-    the NumPy module).
-
-    >>> f = lambdify(x, [x, x + 1])
-    >>> f(1) # Return type is list
-    [1, 2]
-    >>> type(f(1))
-    <class 'list'>
-    >>> from sympy import Matrix
-    >>> f = lambdify(x, Matrix([x, x + 1]))
-    >>> f(1)
-    [[1]
-     [2]]
-    >>> type(f(1))
-    <class 'numpy.ndarray'>
-
     Examples
     ========
 
@@ -576,7 +540,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     Matrix([[1, 3]])
 
     ``lambdify`` can be used to translate SymPy expressions into mpmath
-    functions. This may be preferable to using ``evalf`` in some cases.
+    functions. This may be preferable to using ``evalf`` (which uses mpmath on
+    the backend) in some cases.
 
     >>> import mpmath
     >>> f = lambdify(x, sin(x), 'mpmath')
@@ -585,7 +550,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     Tuple arguments are handled and the lambdified function should
     be called with the same type of arguments as were used to create
-    the function.:
+    the function:
 
     >>> f = lambdify((x, (y, z)), x + y)
     >>> f(1, (2, 4))
@@ -638,23 +603,16 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     Notes
     =====
 
-    - The default behavior is to substitute all arguments in the provided
-      expression with dummy symbols. This allows for undefined functions (e.g.
-      ``f(t)``) to be supplied as arguments. Call the function with
-      ``dummify=False`` if dummy substitution is unwanted (and ``args`` is not
-      a string). If you want to view the lambdified function or provide
-      ``"sympy"`` as the module, you should probably set ``dummify=False``.
-
     - For functions involving large array calculations, numexpr can provide a
       significant speedup over numpy. Please note that the available functions
       for numexpr are more limited than numpy but can be expanded with
-      implemented_function and user defined subclasses of Function. If
+      ``implemented_function`` and user defined subclasses of Function. If
       specified, numexpr may be the only option in modules. The official list
       of numexpr functions can be found at:
-      https://github.com/pydata/numexpr#supported-functions
+      https://numexpr.readthedocs.io/en/latest/user_guide.html#supported-functions
 
-    - In previous releases ``lambdify`` replaced ``Matrix`` with
-      ``numpy.matrix`` by default. As of release 1.0 ``numpy.array`` is the
+    - In previous versions of SymPy, ``lambdify`` replaced ``Matrix`` with
+      ``numpy.matrix`` by default. As of SymPy 1.0 ``numpy.array`` is the
       default. To get the old default behavior you must pass in
       ``[{'ImmutableDenseMatrix':  numpy.matrix}, 'numpy']`` to the
       ``modules`` kwarg.
