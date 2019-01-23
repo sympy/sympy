@@ -544,7 +544,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> from sympy import Matrix
     >>> f = lambdify(x, Matrix([x, x + 1]))
     >>> f(1)
-    [[1],
+    [[1]
      [2]]
     >>> type(f(1))
     <class 'numpy.ndarray'>
@@ -579,7 +579,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> import mpmath
     >>> f = lambdify(x, sin(x), 'mpmath')
     >>> f(1)
-    mpf('0.8414709848078965')
+    0.8414709848078965
 
     Tuple arguments are handled and the lambdified function should
     be called with the same type of arguments as were used to create
@@ -675,7 +675,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
 
       >>> with ignore_warnings(RuntimeWarning):
-      ...     f(array([-1, 0, 1, 2]))
+      ...     f(numpy.array([-1, 0, 1, 2]))
       [-1.   0.   1.   0.5]
 
       >>> f(0)
@@ -686,7 +686,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       In such cases, the input should be wrapped in a numpy array:
 
       >>> with ignore_warnings(RuntimeWarning):
-      ...     float(f(array([0])))
+      ...     float(f(numpy.array([0])))
       0.0
 
       Or if numpy functionality is not required another module can be used:
