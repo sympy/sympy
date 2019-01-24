@@ -4,7 +4,6 @@ import decimal
 import fractions
 import math
 import re as regex
-from collections import defaultdict
 
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError, _convert_numpy_types
@@ -197,7 +196,7 @@ def igcd(*args):
                 b = -b
             a = igcd2(a, b)
     while k < len(args):
-        ok = as_int(args[k])
+        as_int(args[k])
         k += 1
     return a
 
@@ -561,7 +560,6 @@ class Number(AtomicExpr):
 
     def __divmod__(self, other):
         from .containers import Tuple
-        from sympy.functions.elementary.complexes import sign
 
         try:
             other = Number(other)

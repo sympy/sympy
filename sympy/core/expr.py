@@ -2031,6 +2031,9 @@ class Expr(Basic, EvalfMixin):
            c * something in a nice way, i.e. preserving the properties
            of arguments of self.
 
+           Examples
+           ========
+
            >>> from sympy import symbols, Rational
 
            >>> x, y = symbols('x,y', real=True)
@@ -2049,8 +2052,6 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
-        from .function import _coeff_isneg
-
         c = sympify(c)
         if self is S.NaN:
             return None
