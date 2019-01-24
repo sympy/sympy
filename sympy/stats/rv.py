@@ -613,6 +613,7 @@ def given(expr, condition=None, **kwargs):
 
         sums = 0
         for res in results:
+            res = RandomSymbol(res, rv.pspace)
             temp = expr.subs(rv, res)
             if temp == True:
                 return True
@@ -725,7 +726,7 @@ def probability(condition, given_condition=None, numsamples=None,
     given_condition = sympify(given_condition)
 
     if given_condition is not None and \
-            not isinstance(given_condition, (Relational, Boolean)):
+            not isinstance(given_condition, (Relational, Boolean, RandomSymbol)):
         raise ValueError("%s is not a relational or combination of relationals"
                 % (given_condition))
     if given_condition == False:

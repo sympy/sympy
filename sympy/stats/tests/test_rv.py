@@ -227,3 +227,7 @@ def test_issue_8129():
     assert P(X >= X) == 1
     assert P(X > X) == 0
     assert P(X > X+1) == 0
+
+def test_issue_12237():
+    X = Normal('X', 0, 1)
+    assert P(X > 0, X) == 1/2
