@@ -875,7 +875,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
     if basic:
         r = 0
     else:
-        r = Poly(0, DE.t)
+        r = Poly(0, DE.t, field=True)
 
     t = DE.t
     if coefficientD:
@@ -895,7 +895,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
         if basic:
             r += d.as_expr()*pv.diff(v)
         else:
-            r += (d*pv.diff(v)).as_poly(t)
+            r += (d*pv.diff(v)).as_poly(t, field=True)
 
     if basic:
         r = cancel(r)
@@ -1045,10 +1045,7 @@ def hermite_reduce(a, d, DE):
 
     dd = derivation(d, DE)
     dm = gcd(d, dd).as_poly(DE.t)
-    if not degree(dm, gen = DE.t):
-        ds, r = d.div(S.One)
-    else:
-        ds, r = d.div(dm)
+    ds, r = d.div(dm)
 
     while dm.degree(DE.t)>0:
 

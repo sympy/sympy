@@ -1,6 +1,6 @@
 from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
-    tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfc, erfi,
+    tanh, Derivative, diff, DiracDelta, Dummy, E, Ei, Eq, exp, erf, erfc, erfi,
     EulerGamma, Expr, factor, Function, gamma, gammasimp, I, Idx, im, IndexedBase,
     Integral, integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
@@ -15,6 +15,7 @@ from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
 from sympy.integrals.integrals import Integral
+from sympy.integrals.risch import DifferentialExtension, hermite_reduce
 
 x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
 n = Symbol('n', integer=True)
@@ -1478,4 +1479,4 @@ def test_issue_4311():
 
 
 def test_issue_15810():
-    assert integrate(1/(2**(2*x/3)+1), (x,0,oo)) == S(3)/2
+    assert integrate(1/(2**(2*x/3)+1), (x,0,oo)) == Rational(3, 2)
