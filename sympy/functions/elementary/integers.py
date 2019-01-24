@@ -254,7 +254,7 @@ class frac(Function):
     For real numbers it is defined [1]_ as
 
     .. math::
-        x - \lfloor{x}\rfloor
+        x - \left\lfloor{x}\right\rfloor
 
     Examples
     ========

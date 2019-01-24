@@ -30,7 +30,7 @@ from sympy.utilities.iterables import has_variety
 import re
 
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
-# Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
+# Complete list at https://docs.mathjax.org/en/latest/tex.html#supported-latex-commands
 # This variable only contains those functions which sympy uses.
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                     'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec', 'csc',
@@ -832,7 +832,7 @@ class LatexPrinter(Printer):
     _print_Min = _print_Max = _hprint_variadic_function
 
     def _print_floor(self, expr, exp=None):
-        tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
+        tex = r"\left\lfloor{%s}\right\rfloor" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -840,7 +840,7 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_ceiling(self, expr, exp=None):
-        tex = r"\lceil{%s}\rceil" % self._print(expr.args[0])
+        tex = r"\left\lceil{%s}\right\rceil" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -1700,7 +1700,7 @@ class LatexPrinter(Printer):
     def _print_SingularityFunction(self, expr):
         shift = self._print(expr.args[0] - expr.args[1])
         power = self._print(expr.args[2])
-        tex = r"{\langle %s \rangle}^{%s}" % (shift, power)
+        tex = r"{\left\langle %s \right\rangle}^{%s}" % (shift, power)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
@@ -1811,7 +1811,7 @@ class LatexPrinter(Printer):
                    (left, self._print(i.start), self._print(i.end), right)
 
     def _print_AccumulationBounds(self, i):
-        return r"\langle %s, %s\rangle" % \
+        return r"\left\langle %s, %s\right\rangle" % \
                 (self._print(i.min), self._print(i.max))
 
     def _print_Union(self, u):
@@ -2134,11 +2134,11 @@ class LatexPrinter(Printer):
             '{' + self._print(x) + '}' for x in m)
 
     def _print_SubModule(self, m):
-        return r"\left< %s \right>" % ",".join(
+        return r"\left\langle %s \right\rangle" % ",".join(
             '{' + self._print(x) + '}' for x in m.gens)
 
     def _print_ModuleImplementedIdeal(self, m):
-        return r"\left< %s \right>" % ",".join(
+        return r"\left\langle %s \right\rangle" % ",".join(
             '{' + self._print(x) + '}' for [x] in m._module.gens)
 
     def _print_Quaternion(self, expr):
