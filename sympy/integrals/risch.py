@@ -790,6 +790,8 @@ def frac_in(f, t, **kwargs):
     **kwargs are applied to Poly.
     """
     cancel = kwargs.pop('cancel', False)
+    if 'field' not in kwargs:
+        kwargs['field'] = True
     if type(f) is tuple:
         fa, fd = f
         f = fa.as_expr()/fd.as_expr()
@@ -875,8 +877,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
     if basic:
         r = 0
     else:
-        r = Poly(0, DE.t, field=True)
-
+        r = Poly(0, DE.t)
     t = DE.t
     if coefficientD:
         if DE.level <= -len(DE.T):
@@ -895,7 +896,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
         if basic:
             r += d.as_expr()*pv.diff(v)
         else:
-            r += (d*pv.diff(v)).as_poly(t, field=True)
+            r += (d*pv.diff(v)).as_poly(t, field=p.domain.is_Field)
 
     if basic:
         r = cancel(r)
