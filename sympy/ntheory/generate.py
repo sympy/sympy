@@ -213,6 +213,15 @@ class Sieve:
     def mobiusrange(self, a, b):
         """Generate all mobius numbers for the range [a, b).
 
+        Parameters
+        ==========
+
+        a : integer
+            First number in range
+
+        b : integer
+            First number outside of range
+
         Examples
         ========
 
@@ -352,9 +361,9 @@ def prime(nth):
         References
         ==========
 
-        - https://en.wikipedia.org/wiki/Prime_number_theorem#Table_of_.CF.80.28x.29.2C_x_.2F_log_x.2C_and_li.28x.29
-        - https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
-        - https://en.wikipedia.org/wiki/Skewes%27_number
+        .. [1] https://en.wikipedia.org/wiki/Prime_number_theorem#Table_of_.CF.80.28x.29.2C_x_.2F_log_x.2C_and_li.28x.29
+        .. [2] https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
+        .. [3] https://en.wikipedia.org/wiki/Skewes%27_number
     """
     n = as_int(nth)
     if n < 1:
@@ -671,7 +680,7 @@ def primerange(a, b):
         References
         ==========
 
-        .. [1} https://en.wikipedia.org/wiki/Prime_number
+        .. [1] https://en.wikipedia.org/wiki/Prime_number
         .. [2] http://primes.utm.edu/notes/gaps.html
     """
     from sympy.functions.elementary.integers import ceiling
@@ -720,7 +729,7 @@ def randprime(a, b):
         References
         ==========
 
-        - https://en.wikipedia.org/wiki/Bertrand's_postulate
+        .. [1] https://en.wikipedia.org/wiki/Bertrand's_postulate
 
     """
     if a >= b:

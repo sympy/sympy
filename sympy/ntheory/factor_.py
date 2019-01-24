@@ -30,6 +30,9 @@ def smoothness(n):
     The smoothness of n is the largest prime factor of n; the power-
     smoothness is the largest divisor raised to its multiplicity.
 
+    Examples
+    ========
+
     >>> from sympy.ntheory.factor_ import smoothness
     >>> smoothness(2**7*3**2)
     (3, 128)
@@ -449,8 +452,8 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     References
     ==========
 
-    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-      A Computational Perspective", Springer, 2nd edition, 229-231
+    .. [1] Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+           A Computational Perspective", Springer, 2nd edition, 229-231
 
     """
     n = int(n)
@@ -606,10 +609,10 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     References
     ==========
 
-    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-      A Computational Perspective", Springer, 2nd edition, 236-238
-    - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html
-    - https://www.cs.toronto.edu/~yuvalf/Factorization.pdf
+    .. [1] Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+           A Computational Perspective", Springer, 2nd edition, 236-238
+    .. [2] http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html
+    .. [3] https://www.cs.toronto.edu/~yuvalf/Factorization.pdf
     """
 
     n = int(n)
@@ -1592,12 +1595,6 @@ class totient(Function):
     ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
     that are relatively prime to n.
 
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Euler%27s_totient_function
-    .. [2] http://mathworld.wolfram.com/TotientFunction.html
-
     Examples
     ========
 
@@ -1611,6 +1608,13 @@ class totient(Function):
     ========
 
     divisor_count
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler%27s_totient_function
+    .. [2] http://mathworld.wolfram.com/TotientFunction.html
+
     """
     @classmethod
     def eval(cls, n):
@@ -1637,12 +1641,6 @@ class reduced_totient(Function):
     ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
     `k^m \equiv 1 \mod n` for all k relatively prime to n.
 
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Carmichael_function
-    .. [2] http://mathworld.wolfram.com/CarmichaelFunction.html
-
     Examples
     ========
 
@@ -1658,6 +1656,13 @@ class reduced_totient(Function):
     ========
 
     totient
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Carmichael_function
+    .. [2] http://mathworld.wolfram.com/CarmichaelFunction.html
+
     """
     @classmethod
     def eval(cls, n):
@@ -1793,6 +1798,7 @@ def core(n, t=2):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Square-free_integer#Squarefree_core
+
     """
 
     n = as_int(n)
@@ -1892,6 +1898,7 @@ class udivisor_sigma(Function):
     ==========
 
     .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+
     """
 
     @classmethod
@@ -1939,6 +1946,7 @@ class primenu(Function):
     ==========
 
     .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+
     """
 
     @classmethod
@@ -1984,6 +1992,7 @@ class primeomega(Function):
     ==========
 
     .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+
     """
 
     @classmethod
