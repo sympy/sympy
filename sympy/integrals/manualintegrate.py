@@ -666,6 +666,7 @@ def parts_rule(integral):
 
 def trig_rule(integral):
     integrand, symbol = integral
+    a = sympy.Wild('a', exclude=[symbol])
     if isinstance(integrand, sympy.sin) or isinstance(integrand, sympy.cos):
         arg = integrand.args[0]
 
@@ -699,7 +700,10 @@ def trig_rule(integral):
     elif integrand == sympy.sqrt(1+sympy.sin(symbol)):
         rewritten = (sympy.sin(symbol/2) + sympy.cos(symbol/2))
     else:
-        return
+        match = integrand.match(sympy.sqrt(1 + sympy.sin(a*symbol)))
+        if not match:
+            return
+        rewritten = (sympy.sin((match[a]*symbol)/2) + sympy.cos((match[a]*symbol)/2))
 
     return RewriteRule(
         rewritten,
