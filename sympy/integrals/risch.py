@@ -43,7 +43,7 @@ from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
 from sympy.functions import sinh, cosh, tanh, coth
 from sympy.integrals import Integral, integrate
 
-from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError, degree
+from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
 
 from sympy.utilities.iterables import numbered_symbols
 

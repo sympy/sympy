@@ -456,8 +456,7 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     for i in range(n, -1, -1):
         if DE.case == 'exp': # this re-checking can be avoided
             with DecrementLevel(DE):
-                ba, bd = frac_in(b + i*derivation(DE.t, DE)/DE.t,
-                                DE.t, field=True)
+                ba, bd = frac_in(b + i*DE.d.quo(Poly(DE.t, DE.t)), field=True)
         with DecrementLevel(DE):
             Qy = [frac_in(q.nth(i), DE.t, field=True) for q in Q]
             fi, Ai = param_rischDE(ba, bd, Qy, DE)
@@ -534,7 +533,7 @@ def param_poly_rischDE(a, b, q, n, DE):
         else:
             # Liouvillian cases
             if DE.case == 'primitive' or DE.case == 'exp':
-                return prde_cancel_liouvillian(b, q, n, DE)
+                raise NotImplementedError
             else:
                 raise NotImplementedError("non-linear and hypertangent "
                         "cases have not yet been implemented")
