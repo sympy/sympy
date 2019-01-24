@@ -1,16 +1,17 @@
 from __future__ import print_function, division
 
+from sympy.calculus.singularities import is_decreasing
+from sympy.calculus.util import AccumulationBounds
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.core.function import Derivative, Function
+from sympy.concrete.gosper import gosper_sum
+from sympy.core.add import Add
+from sympy.core.compatibility import range
+from sympy.core.function import Derivative
+from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
-from sympy.core.mul import Mul
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.calculus.singularities import is_decreasing
-from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
@@ -18,13 +19,11 @@ from sympy.polys import apart, PolynomialError, together
 from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
 from sympy.sets.sets import FiniteSet
+from sympy.simplify import denom
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
-from sympy.core.compatibility import range
-from sympy.simplify import denom
-from sympy.calculus.util import AccumulationBounds
 import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -379,10 +378,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ========
 
         Sum.is_absolutely_convergent()
-
         Product.is_convergent()
         """
-        from sympy import Interval, Integral, Limit, log, symbols, Ge, Gt, simplify
+        from sympy import Interval, Integral, log, symbols, simplify
         p, q, r = symbols('p q r', cls=Wild)
 
         sym = self.limits[0][0]
