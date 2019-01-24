@@ -1437,11 +1437,7 @@ class Circle(Ellipse):
             elif len(args) == 2:
                 # Assume (center, radius) pair
                 c = Point(args[0], dim=2)
-                r = Tuple(args[1], )
-                r = r.xreplace(dict(
-                [(f, simplify(nsimplify(f, rational=True)))
-                 for f in r.atoms(Float)]))
-                r = r[0]
+                r = simplify(nsimplify(args[1], rational=True))
 
             if not (c is None or r is None):
                 if r == 0:
