@@ -424,7 +424,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Basic(self, e):
         x = self.dom.createElement(self.mathml_tag(e))
-        for arg in e:
+        for arg in e.args:
             x.appendChild(self._print(arg))
         return x
 
@@ -864,7 +864,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mi = self.dom.createElement('mi')
         mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         mrow.appendChild(mi)
-        for arg in e:
+        for arg in e.args:
             mrow.appendChild(self._print(arg))
         return mrow
 
