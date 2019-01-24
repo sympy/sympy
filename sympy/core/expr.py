@@ -1020,12 +1020,83 @@ class Expr(Basic, EvalfMixin):
         key, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
 
-        if not any(term.is_Order for term, _ in terms):
-            ordered = sorted(terms, key=key, reverse=reverse)
+
+        def lexicographically(unordered, order, data):
+            terms, others = [], []
+            term_index = {}
+            while unordered:
+                try:
+                    term = unordered[0]
+                    if term.is_Mul:
+                        term.args[0].indices
+                        term.args[1].indices
+                    else:
+                        term.indices
+                    if not term.is_Mul and term in unordered:
+                        term_index[term.args[0]] = [[a, a.indices[0]] for a in unordered if term.args[0] == a.args[0]]
+                        term_index[term.args[0]].sort(key=lambda x: x[1])
+                        for item in term_index[term.args[0]]:
+                            unordered.remove(item[0])
+                    elif term.is_Mul and term in unordered:
+                        factor1 = term.args[0]
+                        factor2 = term.args[1]
+                        term_index[(factor1.args[0], factor2.args[0])] = [[a, a.args[0].indices[0]] \
+                            for a in unordered if (factor1.args[0] == a.args[0].args[0]) and \
+                            (factor2.args[0] == a.args[1].args[0])]
+                        term_index[(factor1.args[0], factor2.args[0])].sort(key=lambda x: x[1])
+                        for item in term_index[(factor1.args[0], factor2.args[0])]:
+                            unordered.remove(item[0])
+
+                except AttributeError:
+                    others.append(term)
+                    #terms.append(term)
+                    unordered.remove(term)
+
+            expr = 0
+            for item in others:
+                expr = Add(expr, item)
+            if expr:
+                terms.extend(expr.as_ordered_terms(order, data))
+
+            bases = term_index.keys()
+
+            while bases:
+                if type(bases[0])==tuple:
+                    low, base = bases[0][0], bases[0]
+                else:
+                    low, base = bases[0], bases[0]
+                for item in bases:
+                    if type(item)==tuple and type(base)!=tuple and str(low)>str(item[0]):
+                        low, base = item[0], item
+                    elif str(low)>=str(item) and type(item)!=tuple:
+                        low, base = item, item
+                    elif type(item)==tuple and type(base)==tuple and str(low)==str(item[0]):
+                        if str(base[1])>str(item[1]):
+                            low, base = item[0], item
+
+                terms.extend([term[0] for term in term_index[base]])
+                bases.remove(base)
+
+            return terms
+
+        if any(hasattr(term, 'indices') for term in gens):
+            unordered = [item[0] for item in terms]
+            ordered = lexicographically(unordered, order, data)
+            nterms = []
+
+            for term, (coeff, cpart, ncpart) in terms:
+                monom = [0]*len(ordered)
+                monom[ordered.index(term)] = 1
+                nterms.append((term, (coeff, monom, ncpart)))
+        else:
+            nterms = terms
+
+        if not any(term.is_Order for term, _ in nterms):
+            ordered = sorted(nterms, key=key, reverse=reverse)
         else:
             _terms, _order = [], []
 
-            for term, repr in terms:
+            for term, repr in nterms:
                 if not term.is_Order:
                     _terms.append((term, repr))
                 else:
@@ -1078,10 +1149,25 @@ class Expr(Basic, EvalfMixin):
 
         gens = sorted(gens, key=default_sort_key)
 
-        k, indices = len(gens), {}
+        k, Indices = len(gens), {}
 
-        for i, g in enumerate(gens):
-            indices[g] = i
+        indexed, index = [], []
+        for _term in gens:
+            if hasattr(_term, 'indices') and _term.indices[0].is_Integer:
+                indexed.append(_term)
+                index.append(_term.indices[0])
+
+        index = sorted(index)
+
+        i = 0
+        for g in gens:
+            if g not in indexed:
+                Indices[g] = i
+                i += 1
+
+        n = len(Indices)
+        for item in indexed:
+            Indices[item] = n + index.index(item.indices[0])
 
         result = []
 
@@ -1089,7 +1175,7 @@ class Expr(Basic, EvalfMixin):
             monom = [0]*k
 
             for base, exp in cpart.items():
-                monom[indices[base]] = exp
+                monom[Indices[base]] = exp
 
             result.append((term, (coeff, tuple(monom), ncpart)))
 

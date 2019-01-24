@@ -5,7 +5,7 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate, gammasimp)
+                   integrate, gammasimp, IndexedBase)
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -1468,6 +1468,24 @@ def test_as_ordered_terms():
     assert f.as_ordered_terms(order="grlex") == [x*y**4, x**2*y**2, y, 2]
     assert f.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
     assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
+
+    a = IndexedBase("a")
+    b = IndexedBase("b")
+    k, l = symbols('k l')
+
+    assert (a[2]+a[1]+a[0]).as_ordered_terms() == [a[0], a[1], a[2]]
+    assert(l + Sum(a[k], (k, 0, 3)).doit()) == l + a[0] + a[1] + a[2] + a[3]
+    assert(l + Sum(a[2*k], (k, 1, 4)).doit()) == l + a[2] + a[4] + a[6] + a[8]
+
+    g = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + a[8] + a[9] + \
+        a[10] + a[11] + a[12] + a[13] + a[14] + a[0]*b[0] + a[1]*b[1] + \
+        a[2]*b[2] + a[3]*b[3] + a[4]*b[4] + a[5]*b[5] + a[6]*b[6] + a[7]*b[7] \
+        + a[8]*b[8] + a[9]*b[9] + a[10]*b[10] + a[11]*b[11] + a[12]*b[12] + \
+        a[13]*b[13] + a[14]*b[14] + b[0] + b[1] + b[2] + b[3] + b[4] + b[5] + \
+        b[6] + b[7] + b[8] + b[9] + b[10] + b[11] + b[12] + b[13] + b[14]
+
+    assert Sum(a[n]+b[n]+a[n]*b[n],(n,0,14)).doit() == g
+    assert Sum(a[n]+b[n]+a[n]*b[n],(n,0,14)).doit() + k**2*b + 5 == k**2*b + 5 + g
 
 
 def test_sort_key_atomic_expr():
