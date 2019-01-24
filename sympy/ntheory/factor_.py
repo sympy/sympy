@@ -1483,10 +1483,13 @@ def udivisor_count(n):
     """
     Return the number of unitary divisors of ``n``.
 
-    References
+    Parameters
     ==========
 
-    - http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+    n : integer
+
+    Examples
+    ========
 
     >>> from sympy.ntheory.factor_ import udivisor_count
     >>> udivisor_count(120)
@@ -1496,6 +1499,12 @@ def udivisor_count(n):
     ========
 
     factorint, divisors, udivisors, divisor_count, totient
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+
     """
 
     if n == 0:
@@ -1560,6 +1569,11 @@ def antidivisor_count(n):
     """
     Return the number of antidivisors [1]_ of ``n``.
 
+    Parameters
+    ==========
+
+    n : integer
+
     Examples
     ========
 
@@ -1594,6 +1608,11 @@ class totient(Function):
 
     ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
     that are relatively prime to n.
+
+    Parameters
+    ==========
+
+    n : integer
 
     Examples
     ========
@@ -1703,7 +1722,10 @@ class divisor_sigma(Function):
     Parameters
     ==========
 
-    k : power of divisors in the sum
+    n : integer
+
+    k : integer, optional
+        power of divisors in the sum
 
         for k = 0, 1:
         ``divisor_sigma(n, 0)`` is equal to ``divisor_count(n)``
@@ -1769,7 +1791,10 @@ def core(n, t=2):
     Parameters
     ==========
 
-    t : core(n, t) calculates the t-th power free part of n
+    n : integer
+
+    t : integer
+        core(n, t) calculates the t-th power free part of n
 
         ``core(n, 2)`` is the squarefree part of ``n``
         ``core(n, 3)`` is the cubefree part of ``n``
