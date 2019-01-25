@@ -2290,6 +2290,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     itex : boolean, optional
         Specifies if itex-specific syntax is used, including emitting
         ``$$...$$``.
+    root_notation : boolean, optional
+        If set to ``False``,exponents of the form 1/n are printed in fractonal form.
+        Default is ``True``,to print exponent in root form.
     ln_notation : boolean, optional
         If set to ``True``, ``\ln`` is used instead of default ``\log``.
     long_frac_ratio : float or None, optional
@@ -2348,6 +2351,11 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
 
     >>> print(latex((2*tau)**Rational(7,2)))
     8 \sqrt{2} \tau^{\frac{7}{2}}
+
+    ``root_notation`` options:
+    >>> print(latex(x**Rational(1, 7)))
+    \sqrt[7]{x}
+
 
     ``mode`` and ``itex`` options:
 
@@ -2458,4 +2466,3 @@ def print_latex(expr, **settings):
     """Prints LaTeX representation of the given expression. Takes the same
     settings as ``latex()``."""
     print(latex(expr, **settings))
-

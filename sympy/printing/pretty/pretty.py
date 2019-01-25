@@ -2482,6 +2482,10 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
     use_unicode_sqrt_char : bool, optional (default=True)
         Use compact single-character square root symbol (when unambiguous).
 
+    root_notation : bool,optional( default= True)
+        Set to 'False' for printing exponents of the form 1/n in fractional form;
+        By default exponent is printed in root form.
+
     """
     print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
                  use_unicode=use_unicode, full_prec=full_prec, order=order,
