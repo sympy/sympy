@@ -2462,6 +2462,7 @@ def test_factor():
 
     # deep option
     assert factor(sin(x**2 + x) + x, deep=True) == sin(x*(x + 1)) + x
+    assert factor(sin(x**2 + x)*x, deep=True) == sin(x*(x + 1))*x
 
     assert factor(sqrt(x**2)) == sqrt(x**2)
 
@@ -3283,3 +3284,10 @@ def test_issue_14364():
     assert gcd([S(6)*(1 + sqrt(7))/5, S(2)*(1 + sqrt(7))/7, S(4)*(1 + sqrt(7))/13]) == S(2)/455 * (1 + sqrt(7))
     assert lcm((S(7)/sqrt(15)/2, S(5)/sqrt(15)/6, S(5)/sqrt(15)/8)) == S(35)/(2*sqrt(15))
     assert lcm([S(5)*(2 + 2**(S(5)/7))/6, S(7)*(2 + 2**(S(5)/7))/2, S(13)*(2 + 2**(S(5)/7))/4]) == S(455)/2 * (2 + 2**(S(5)/7))
+
+
+def test_issue_15669():
+    x = Symbol("x", positive=True)
+    expr = (16*x**3/(-x**2 + sqrt(8*x**2 + (x**2 - 2)**2) + 2)**2 -
+        2*2**(S(4)/5)*x*(-x**2 + sqrt(8*x**2 + (x**2 - 2)**2) + 2)**(S(3)/5) + 10*x)
+    assert factor(expr, deep=True) == x*(x**2 + 2)

@@ -2622,6 +2622,14 @@ def test_sympy__matrices__expressions__slice__MatrixSlice():
     assert _test_args(MatrixSlice(X, (0, 2), (0, 2)))
 
 
+def test_sympy__matrices__expressions__applyfunc__ElementwiseApplyFunction():
+    from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
+    from sympy.matrices.expressions import MatrixSymbol
+    X = MatrixSymbol("X", x, x)
+    func = Lambda(x, x**2)
+    assert _test_args(ElementwiseApplyFunction(func, X))
+
+
 def test_sympy__matrices__expressions__blockmatrix__BlockDiagMatrix():
     from sympy.matrices.expressions.blockmatrix import BlockDiagMatrix
     from sympy.matrices.expressions import MatrixSymbol

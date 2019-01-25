@@ -20,6 +20,8 @@ from .latex import latex
 
 from sympy.utilities.decorator import doctest_depends_on
 
+__doctest_requires__ = {('preview',): ['pyglet']}
+
 @doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
@@ -166,8 +168,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
                                              for p in actual_packages])
 
-        preamble = r"""\documentclass[12pt]{article}
-\pagestyle{empty}
+        preamble = r"""\documentclass[varwidth,12pt]{standalone}
 %s
 
 \begin{document}
@@ -181,7 +182,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     if isinstance(expr, str):
         latex_string = expr
     else:
-        latex_string = latex(expr, mode='inline', **latex_settings)
+        latex_string = ('$\\displaystyle ' +
+                        latex(expr, mode='plain', **latex_settings) +
+                        '$')
 
     try:
         workdir = tempfile.mkdtemp()

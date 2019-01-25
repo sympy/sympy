@@ -5,7 +5,6 @@ from .basic import S
 from .compatibility import ordered
 from .expr import Expr
 from .evalf import EvalfMixin
-from .function import _coeff_isneg
 from .sympify import _sympify
 from .evaluate import global_evaluate
 
@@ -77,7 +76,6 @@ class Relational(Boolean, Expr, EvalfMixin):
             elif isinstance(rv, Relational):  # could it be otherwise?
                 from sympy.core.symbol import Symbol
                 from sympy.logic.boolalg import Boolean
-                from sympy.utilities.misc import filldedent
                 for a in rv.args:
                     if isinstance(a, Symbol):
                         continue

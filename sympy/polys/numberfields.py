@@ -550,18 +550,21 @@ def _minpoly_compose(ex, x, dom):
         r = sift(f.items(), lambda itx: itx[0].is_Rational and itx[1].is_Rational)
         if r[True] and dom == QQ:
             ex1 = Mul(*[bx**ex for bx, ex in r[False] + r[None]])
-            r1 = r[True]
-            dens = [y.q for _, y in r1]
+            r1 = dict(r[True])
+            dens = [y.q for y in r1.values()]
             lcmdens = reduce(lcm, dens, 1)
-            nums = [base**(y.p*lcmdens // y.q) for base, y in r1]
+            neg1 = S.NegativeOne
+            expn1 = r1.pop(neg1, S.Zero)
+            nums = [base**(y.p*lcmdens // y.q) for base, y in r1.items()]
             ex2 = Mul(*nums)
             mp1 = minimal_polynomial(ex1, x)
             # use the fact that in SymPy canonicalization products of integers
             # raised to rational powers are organized in relatively prime
             # bases, and that in ``base**(n/d)`` a perfect power is
             # simplified with the root
-            mp2 = ex2.q*x**lcmdens - ex2.p
-            ex2 = ex2**Rational(1, lcmdens)
+            # Powers of -1 have to be treated separately to preserve sign.
+            mp2 = ex2.q*x**lcmdens - ex2.p*neg1**(expn1*lcmdens)
+            ex2 = neg1**expn1 * ex2**Rational(1, lcmdens)
             res = _minpoly_op_algebraic_element(Mul, ex1, ex2, x, dom, mp1=mp1, mp2=mp2)
         else:
             res = _minpoly_mul(x, dom, *ex.args)

@@ -187,8 +187,9 @@ class lambdify(object):
                                                  use_python_cmath=True)
         self.failure = False
 
-    def __call__(self, args):
-        args = complex(args)
+    def __call__(self, args, kwargs = {}):
+        if not self.lambda_func.use_python_math:
+            args = complex(args)
         try:
             #The result can be sympy.Float. Hence wrap it with complex type.
             result = complex(self.lambda_func(args))

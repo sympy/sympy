@@ -211,7 +211,7 @@ class MatrixDeterminant(MatrixCommon):
             def entry(i, j):
                 ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
                 if not ret.is_Atom:
-                    cancel(ret)
+                    return cancel(ret)
                 return ret
 
             return sign*bareiss(self._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
@@ -2052,9 +2052,8 @@ class MatrixBase(MatrixDeprecated,
         SymPy objects, like lists and dictionaries of expressions.
         """
         from sympy.printing.latex import latex
-        s = latex(self, mode='equation*')
-        s = s.strip('$')
-        return "$$%s$$" % s
+        s = latex(self, mode='plain')
+        return "$\\displaystyle %s$" % s
 
     _repr_latex_orig = _repr_latex_
 
@@ -3584,6 +3583,15 @@ class MatrixBase(MatrixDeprecated,
                 # elimination is complete.
                 return lu, row_swaps
 
+        if rankcheck:
+            if iszerofunc(
+            lu[Min(lu.rows, lu.cols) - 1, Min(lu.rows, lu.cols) - 1]):
+                raise ValueError("Rank of matrix is strictly less than"
+                                 " number of rows or columns."
+                                 " Pass keyword argument"
+                                 " rankcheck=False to compute"
+                                 " the LU decomposition of this matrix.")
+
         return lu, row_swaps
 
     def LUdecompositionFF(self):
@@ -3697,8 +3705,30 @@ class MatrixBase(MatrixDeprecated,
         """
         return self * b
 
-    def normalized(self):
+    def normalized(self, iszerofunc=_iszero):
         """Return the normalized version of ``self``.
+
+        Parameters
+        ==========
+
+        iszerofunc : Function, optional
+            A function to determine whether self is a zero vector.
+            The default ``_iszero`` tests to see if each element is
+            exactly zero.
+
+        Returns
+        =======
+
+        Matrix
+            Normalized vector form of self.
+            It has the same length as a unit vector. However, a zero vector
+            will be returned for a vector with norm 0.
+
+        Raises
+        ======
+
+        ShapeError
+            If the matrix is not in a vector form.
 
         See Also
         ========
@@ -3708,7 +3738,10 @@ class MatrixBase(MatrixDeprecated,
         if self.rows != 1 and self.cols != 1:
             raise ShapeError("A Matrix must be a vector to normalize.")
         norm = self.norm()
-        out = self.applyfunc(lambda i: i / norm)
+        if iszerofunc(norm):
+            out = self.zeros(self.rows, self.cols)
+        else:
+            out = self.applyfunc(lambda i: i / norm)
         return out
 
     def norm(self, ord=None):
@@ -4053,34 +4086,48 @@ class MatrixBase(MatrixDeprecated,
         cls = self.__class__
         mat = self.as_mutable()
 
-        if not mat.rows >= mat.cols:
-            raise MatrixError(
-                "The number of rows must be greater than columns")
         n = mat.rows
         m = mat.cols
-        rank = n
-        row_reduced = mat.rref()[0]
-        for i in range(row_reduced.rows):
-            if row_reduced.row(i).norm() == 0:
-                rank -= 1
-        if not rank == mat.cols:
-            raise MatrixError("The rank of the matrix must match the columns")
+        ranked = list()
+
+        # Pad with additional rows to make wide matrices square
+        # nOrig keeps track of original size so zeros can be trimmed from Q
+        if n < m:
+            nOrig = n
+            n = m
+            mat = mat.col_join(mat.zeros(n - nOrig, m))
+        else:
+            nOrig = n
+
         Q, R = mat.zeros(n, m), mat.zeros(m)
         for j in range(m):  # for each column vector
             tmp = mat[:, j]  # take original v
             for i in range(j):
                 # subtract the project of mat on new vector
-                tmp -= Q[:, i] * mat[:, j].dot(Q[:, i])
+                R[i, j] = Q[:, i].dot(mat[:, j])
+                tmp -= Q[:, i] * R[i, j]
                 tmp.expand()
             # normalize it
             R[j, j] = tmp.norm()
-            Q[:, j] = tmp / R[j, j]
-            if Q[:, j].norm() != 1:
-                raise NotImplementedError(
-                    "Could not normalize the vector %d." % j)
-            for i in range(j):
-                R[i, j] = Q[:, i].dot(mat[:, j])
-        return cls(Q), cls(R)
+            if not R[j, j].is_zero:
+                ranked.append(j)
+                Q[:, j] = tmp / R[j, j]
+
+
+        if len(ranked) != 0:
+            return (
+            cls(Q.extract(range(nOrig), ranked)),
+            cls(R.extract(ranked, range(R.cols)))
+            )
+        else:
+            # Trivial case handling for zero-rank matrix
+            # Force Q as matrix containing standard basis vectors
+            for i in range(Min(nOrig, m)):
+                Q[i, i] = 1
+            return (
+            cls(Q.extract(range(nOrig), range(Min(nOrig, m)))),
+            cls(R.extract(range(Min(nOrig, m)), range(R.cols)))
+            )
 
     def QRsolve(self, b):
         """Solve the linear system 'Ax = b'.
@@ -4130,9 +4177,28 @@ class MatrixBase(MatrixDeprecated,
     def solve_least_squares(self, rhs, method='CH'):
         """Return the least-square fit to the data.
 
-        By default the cholesky_solve routine is used (method='CH'); other
-        methods of matrix inversion can be used. To find out which are
-        available, see the docstring of the .inv() method.
+        Parameters
+        ==========
+
+        rhs : Matrix
+            Vector representing the right hand side of the linear equation.
+
+        method : string or boolean, optional
+            If set to ``'CH'``, ``cholesky_solve`` routine will be used.
+
+            If set to ``'QR'``, ``QRsolve`` routine will be used.
+
+            If set to ``'PINV'``, ``pinv_solve`` routine will be used.
+
+            Otherwise, the conjugate of self will be used to create a system
+            of equations that is passed to ``solve`` along with the hint
+            defined by ``method``.
+
+        Returns
+        =======
+
+        solutions : Matrix
+            Vector representing the solution.
 
         Examples
         ========
@@ -4183,8 +4249,15 @@ class MatrixBase(MatrixDeprecated,
         """
         if method == 'CH':
             return self.cholesky_solve(rhs)
-        t = self.H
-        return (t * self).inv(method=method) * t * rhs
+        elif method == 'QR':
+            return self.QRsolve(rhs)
+        elif method == 'LDL':
+            return self.LDLsolve(rhs)
+        elif method == 'PINV':
+            return self.pinv_solve(rhs)
+        else:
+            t = self.H
+            return (t * self).solve(t * rhs, method=method)
 
     def solve(self, rhs, method='GJ'):
         """Return the unique soln making self*soln = rhs.

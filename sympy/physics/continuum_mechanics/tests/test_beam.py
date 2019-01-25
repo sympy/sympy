@@ -417,6 +417,16 @@ def test_apply_support():
     assert b.deflection() == (4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
             + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
 
+    P = Symbol('P', positive=True)
+    L = Symbol('L', positive=True)
+    b = Beam(L, E, I)
+    b.apply_support(0, type='fixed')
+    b.apply_support(L, type='fixed')
+    b.apply_load(-P, L/2, -1)
+    R_0, R_L, M_0, M_L = symbols('R_0, R_L, M_0, M_L')
+    b.solve_for_reaction_loads(R_0, R_L, M_0, M_L)
+    assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
+
 
 def max_shear_force(self):
     E = Symbol('E')

@@ -733,7 +733,7 @@ def is_groebner(G, ring):
     """
     for i in range(len(G)):
         for j in range(i + 1, len(G)):
-            s = spoly(G[i], G[j])
+            s = spoly(G[i], G[j], ring)
             s = s.rem(G)
             if s:
                 return False
