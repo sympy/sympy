@@ -2018,3 +2018,6 @@ def test_issue_15731():
     b = Symbol('b')
     assert solve(b**x - b**2, x) == [log(b**2)/log(b)]
     assert solve(b**x - 1/b, x) == [log(1/b)/log(b)]
+    b = Symbol('b', positive=True)
+    assert solve(b**x - b**2, x) == [2]
+    assert solve(b**x - 1/b, x) == [-1]

@@ -1729,6 +1729,7 @@ def _solve(f, *symbols, **flags):
             soln = _tsolve(f_num, symbol, **flags)
             if soln is not None:
                 result = soln
+            print(result)
         except PolynomialError:
             pass
     # ----------- end of fallback ----------------------------
@@ -2665,7 +2666,7 @@ def _tsolve(eq, sym, **flags):
                 return [s for s in sol_base if lhs.exp.subs(sym, s) != 0]
 
             if lhs.base == 0:
-                return _solve(lhs.exp, sym, **flags) if rhs == 0 else []
+                return _solve(lhs.exp, sym, **flags) if rhs != 0 else []
 
             sol = []
             if rhs.is_real:
@@ -2718,9 +2719,10 @@ def _tsolve(eq, sym, **flags):
                 logform = lhs.exp*log(lhs.base) - log(rhs)
                 if logform != lhs - rhs:
                     sol.extend(_solve(logform, sym, **flags))
-                rewrite = lhs.rewrite(exp) - rhs
-                if rewrite != lhs:
-                    sol.extend(_solve(rewrite, sym, **flags))
+                else:
+                    rewrite = lhs.rewrite(exp) - rhs
+                    if rewrite != lhs:
+                        sol.extend(_solve(rewrite, sym, **flags))
 
             return list(ordered(set(sol)))
 
@@ -2738,6 +2740,10 @@ def _tsolve(eq, sym, **flags):
                 return list(ordered(soln))
             elif lhs.func == LambertW:
                 return _solve(lhs.args[0] - rhs*exp(rhs), sym, **flags)
+
+        rewrite = lhs.rewrite(exp) - rhs
+        if rewrite != lhs:
+            return _solve(rewrite, sym, **flags)
 
     except NotImplementedError:
         pass
