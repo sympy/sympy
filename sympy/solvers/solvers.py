@@ -1729,7 +1729,6 @@ def _solve(f, *symbols, **flags):
             soln = _tsolve(f_num, symbol, **flags)
             if soln is not None:
                 result = soln
-            print(result)
         except PolynomialError:
             pass
     # ----------- end of fallback ----------------------------
