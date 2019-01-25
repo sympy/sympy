@@ -2008,12 +2008,13 @@ def test_issue_15731():
     assert solve((x**2 + 1)**x - 25) == [2]
     assert solve((-sqrt(2))**x + 2*(sqrt(2))) == [3]
     assert solve((sqrt(2))**x - 2*(sqrt(2))) == [3]
-    assert solve(x**(2/x) - 2) == [2, -LambertW(-log(sqrt(2)) - I*pi)/(log(sqrt(2)) + I*pi)]
+    assert solve(x**(2/x) - 2) == [
+        2, -LambertW(-log(sqrt(2)) - I*pi)/(log(sqrt(2)) + I*pi)]
     assert solve((x/2)**(2/x) - sqrt(2)) == [4, -4*LambertW(-log(2)/2, -1)/log(2)]
     assert solve(I**x + 1) == [2]
     assert solve((1+I)**x - 2*I) == [(log(4) + I*pi)/(2*log(1 + I))]
-    assert solve((sqrt(2)+sqrt(3))**x - (2*sqrt(6)+5)**(S(1)/3)) == [log(2*sqrt(6) + 5)/(3*log(sqrt(2) + sqrt(3)))]
+    assert solve((sqrt(2)+sqrt(3))**x - (2*sqrt(6)+5)**(S(1)/3)) == [
+        log(2*sqrt(6) + 5)/(3*log(sqrt(2) + sqrt(3)))]
     b = Symbol('b')
     assert solve(b**x - b**2, x) == [log(b**2)/log(b)]
     assert solve(b**x - 1/b, x) == [log(1/b)/log(b)]
-    
