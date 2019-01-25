@@ -1009,19 +1009,19 @@ def point_sort(poly, normal=None, clockwise=True):
     >>> point_sort([Point(0, 0), Point(1, 0), Point(1, 1)])
     [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
     """
-    n = len(poly)
+    n = len(poly.vertices)
     if n < 2:
         return poly
 
     order = S(1) if clockwise else S(-1)
-    dim = len(poly[0])
+    dim = len(poly.vertices[0])
     if dim == 2:
-        center = Point(sum(map(lambda vertex: vertex.x, poly)) / n,
-                       sum(map(lambda vertex: vertex.y, poly)) / n)
+        center = Point(sum(map(lambda vertex: vertex.x, poly.vertices)) / n,
+                       sum(map(lambda vertex: vertex.y, poly.vertices)) / n)
     else:
-        center = Point(sum(map(lambda vertex: vertex.x, poly)) / n,
-                       sum(map(lambda vertex: vertex.y, poly)) / n,
-                       sum(map(lambda vertex: vertex.z, poly)) / n)
+        center = Point(sum(map(lambda vertex: vertex.x, poly.vertices)) / n,
+                       sum(map(lambda vertex: vertex.y, poly.vertices)) / n,
+                       sum(map(lambda vertex: vertex.z, poly.vertices)) / n)
 
     def compare(a, b):
         if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
@@ -1055,8 +1055,9 @@ def point_sort(poly, normal=None, clockwise=True):
             return order
 
     if dim == 2:
-        return sorted(poly, key=cmp_to_key(compare))
-    return sorted(poly, key=cmp_to_key(compare3d))
+        return Polygon(*sorted(poly.vertices, key=cmp_to_key(compare)))
+
+    return Polygon(*sorted(poly.vertices, key=cmp_to_key(compare3d)))
 
 
 def norm(point):
