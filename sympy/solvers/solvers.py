@@ -2657,7 +2657,7 @@ def _tsolve(eq, sym, **flags):
                 return _solve(lhs.base - rhs**(1/lhs.exp), sym, **flags)
             else:
                 # sym in lhs.exp.free_symbols
-                if not rhs:
+                if not rhs and sym in lhs.exp.free_symbols:
                     # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
                     # the same place
                     sol_base = _solve(lhs.base, sym, **flags)
@@ -2667,7 +2667,9 @@ def _tsolve(eq, sym, **flags):
                     _solve(lhs.exp, sym, **flags))))
 
                 else:
-                    if lhs.base.is_real:
+                    if lhs.base == 0 and rhs == 1:
+                        return _solve(lhs.exp, sym, **flags)
+                    if rhs.is_real and lhs.base.is_real and lhs.base != 0:
                         sol=[]
                         if lhs.base < 0:
                             a = abs(lhs.base)**lhs.exp
@@ -2677,10 +2679,7 @@ def _tsolve(eq, sym, **flags):
                             rewrite = lhs.rewrite(exp)
                             if rewrite != lhs:
                                 sol.extend(_solve(rewrite - rhs, sym, **flags))
-                        elif lhs.base is S.Zero and rhs is not S.Zero:
-                            sol.append(S.Zero)
                         return list(ordered(set(sol)))
-
                     if rhs.is_real and not lhs.base.is_real:
                         sol=[]
                         if rhs.is_Rational:
@@ -2718,13 +2717,16 @@ def _tsolve(eq, sym, **flags):
                         else:
                             raise NotImplementedError
                         return list(ordered(set(sol)))
-                    if rhs.is_Symbol or lhs.base.is_complex or lhs.exp.is_real and lhs.base != 0:
+                    if (rhs.is_Symbol or lhs.base.is_complex or lhs.exp.is_real) and lhs.base != 0:
                         sol=[]
                         logform = lhs.exp*log(lhs.base) - log(rhs)
                         if logform != lhs - rhs:
                             sol.extend(_solve(logform, sym, **flags))
+                        else:
+                            rewrite = lhs.rewrite(exp)
+                            if rewrite != lhs:
+                                sol.extend(_solve(rewrite - rhs, sym, **flags))
                         return list(ordered(set(sol)))
-
 
         elif lhs.is_Mul and rhs.is_positive:
             llhs = expand_log(log(lhs))

@@ -694,9 +694,8 @@ def test_checking():
 def test_issue_4671_4463_4467():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
-    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [
-        -sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi)),
-        sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))]
+    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [-sqrt(x*log(1 + I*pi/log(2)))
+                                                        , sqrt(x*log(1 + I*pi/log(2)))]
 
     C1, C2 = symbols('C1 C2')
     f = Function('f')
@@ -2006,6 +2005,7 @@ def test_issue_15731():
     assert solve((-sqrt(sqrt(2)))**x - 2) == [4]
     assert solve((sqrt(2))**x - sqrt(sqrt(2))) == [S(1)/2]
     assert solve(x**(x+1/2) - 4*sqrt(2)) == [S(2)]
+    assert solve((x**2 + 1)**x - 25) == [2]
     assert solve((-sqrt(2))**x + 2*(sqrt(2))) == [3]
     assert solve((sqrt(2))**x - 2*(sqrt(2))) == [3]
     assert solve(x**(2/x) - 2) == [2, -LambertW(-log(sqrt(2)) - I*pi)/(log(sqrt(2)) + I*pi)]
@@ -2016,8 +2016,4 @@ def test_issue_15731():
     b = Symbol('b')
     assert solve(b**x - b**2, x) == [log(b**2)/log(b)]
     assert solve(b**x - 1/b, x) == [log(1/b)/log(b)]
-    b = Symbol('b', positive = True)
-    assert solve(b**x - b**2, x) == [2]
-    assert solve(b**x - 1/b, x) == [-1]
-    b = 1 + sqrt(2)
-    assert solve(b**x - b**2) == [log(2*sqrt(2) + 3)/log(1 + sqrt(2))]
+    
