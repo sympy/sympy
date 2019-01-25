@@ -1996,28 +1996,31 @@ def test_issue_15415():
     assert solve([Eq(y + 3*x**2/2, y + 3*x), Eq(x, 1)], y) == []
 
 def test_issue_15731():
+    # f(x)**g(x)=c
     assert solve(Eq((x**2 - 7*x + 11)**(x**2 - 13*x + 42), 1)) == [2, 3, 4, 5, 6, 7]
     assert solve((x)**(x+4)-4) == [-2]
     assert solve((-x)**(-x+4)-4) == [2]
     assert solve((x**2-6)**(x**2-2)-4) == [-2, 2]
-    assert solve(x**(x+S(1)/2)-S(9)/4) == [S(3)/2]
     assert solve((x**2-2*x-1)**(x**2-3) - 1/(1-2*sqrt(2))) == [sqrt(2)]
-    assert solve((-sqrt(sqrt(2)))**x - 2) == [4]
-    assert solve((sqrt(2))**x - sqrt(sqrt(2))) == [S(1)/2]
     assert solve(x**(x+1/2) - 4*sqrt(2)) == [S(2)]
     assert solve((x**2 + 1)**x - 25) == [2]
-    assert solve((-sqrt(2))**x + 2*(sqrt(2))) == [3]
-    assert solve((sqrt(2))**x - 2*(sqrt(2))) == [3]
     assert solve(x**(2/x) - 2) == [
         2, -LambertW(-log(sqrt(2)) - I*pi)/(log(sqrt(2)) + I*pi)]
     assert solve((x/2)**(2/x) - sqrt(2)) == [4, -4*LambertW(-log(2)/2, -1)/log(2)]
+    assert solve(x**(x+S(1)/2)-S(9)/4) == [S(3)/2]
+    # a**g(x)=c
+    assert solve((-sqrt(sqrt(2)))**x - 2) == [4]
+    assert solve((sqrt(2))**x - sqrt(sqrt(2))) == [S(1)/2]
+    assert solve((-sqrt(2))**x + 2*(sqrt(2))) == [3]
+    assert solve((sqrt(2))**x - 2*(sqrt(2))) == [3]
     assert solve(I**x + 1) == [2]
-    assert solve((1+I)**x - 2*I) == [(log(4) + I*pi)/(2*log(1 + I))]
-    assert solve((sqrt(2)+sqrt(3))**x - (2*sqrt(6)+5)**(S(1)/3)) == [
-        log(2*sqrt(6) + 5)/(3*log(sqrt(2) + sqrt(3)))]
+
+
+@XFAIL
+def test_issue_15731_fail():
+    #a**g(x)=c type
     b = Symbol('b')
-    assert solve(b**x - b**2, x) == [log(b**2)/log(b)]
-    assert solve(b**x - 1/b, x) == [log(1/b)/log(b)]
-    b = Symbol('b', positive=True)
     assert solve(b**x - b**2, x) == [2]
     assert solve(b**x - 1/b, x) == [-1]
+    assert solve((1+I)**x - 2*I) == [2]
+    assert solve((sqrt(2)+sqrt(3))**x - (2*sqrt(6)+5)**(S(1)/3)) == [S(2)/3]
