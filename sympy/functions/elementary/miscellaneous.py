@@ -340,7 +340,7 @@ def real_root(arg, n=None, evaluate=None):
 class MinMaxBase(Expr, LatticeOp):
     def __new__(cls, *args, **assumptions):
         if not args:
-            cls._eval_no_args()
+            return cls._eval_no_args()
 
         args = (sympify(arg) for arg in args)
 
