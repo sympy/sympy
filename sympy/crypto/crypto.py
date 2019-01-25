@@ -2249,7 +2249,59 @@ def decipher_gm(message, key):
 
 ################ Blum–Goldwasser cryptosystem  #########################
 
+def _pow_mod(a, b, m):
+    """
+    Calculates (a**b) % m in an efficient manner.
+
+    Parameters
+    ==========
+
+    a: the base, a positive integer
+    b: the exponent, a non-negative integer
+    m: the modulus, a positive integer
+
+    Returns
+    =======
+
+    r, the remainder, a non-negative integer
+    """
+    r = 0 if m == 1 else 1
+
+    while b > 0:
+        if b % 2:
+            r = (r * a) % m
+        b = b // 2
+        a = (a * a) % m
+    return r
+
 def bg_private_key(p, q):
+    """
+    Check if p and q can be used as private keys for
+    the Blum–Goldwasser cryptosystem.
+
+    The three necessary checks for p and q to pass
+    so that they can be used as private keys:
+
+        1. p and q must both be prime
+        2. p and q must be distinct
+        3. p and q must be congruent to 3 mod 4
+
+    Parameters
+    ==========
+
+    p, q : the keys to be checked
+
+    Returns
+    =======
+
+    p, q : input values
+
+    Raises
+    ======
+
+    ValueError : if p and q do not pass the above conditions
+
+    """
 
     if not isprime(p) or not isprime(q):
         raise ValueError("the two arguments must be prime, "
@@ -2263,11 +2315,57 @@ def bg_private_key(p, q):
     return p, q
 
 def bg_public_key(p, q):
+    """
+    Calculates public keys from private keys.
 
+    The function first checks the validity of
+    private keys passed as arguments and
+    then returns their product.
+
+    Parametes
+    =========
+
+    p, q : the private keys
+
+    Returns
+    =======
+
+    N : the public key
+    """
     p, q = bg_private_key(p, q)
-    return p * q
+    N = p * q
+    return N
 
 def encipher_bg(i, key, seed=None):
+    """
+    Encrypts the message using public key and seed.
+
+    ALGORITHM:
+        1. Encodes i as a string of L bits, m.
+        2. Select a random element r, where 1 < r < key, and computes
+           x = r^2 mod key.
+        3. Use BBS pseudo-random number generator to generate L random bits, b,
+        using the initial seed as x.
+        4. Encrypted message, c_i = m_i XOR b_i, 1 <= i <= L.
+        5. x_L = x^(2^L) mod key.
+        6. Return (c, x_L)
+
+    Parameters
+    ==========
+
+    i : message, a non-negative integer
+    key : the public key
+
+    Returns
+    =======
+
+    (encrypted_message, x_L) : Tuple
+
+    Raises
+    ======
+
+    ValueError : if i is negative
+    """
 
     if i < 0:
         raise ValueError(
@@ -2278,10 +2376,12 @@ def encipher_bg(i, key, seed=None):
     while i > 0:
         enc_msg.append(i % 2)
         i //= 2
+    enc_msg.reverse()
     L = len(enc_msg)
 
     r = _randint(seed)(2, key - 1)
-    x = x_copy = r**2 % key
+    x = r**2 % key
+    x_L = _pow_mod(x, 2**L, key)
 
     rand_bits = []
     for k in range(L):
@@ -2292,4 +2392,53 @@ def encipher_bg(i, key, seed=None):
     for (m, b) in zip(enc_msg, rand_bits):
         encrypt_msg.append(m ^ b)
 
-    return (encrypt_msg, x_copy)
+    return (encrypt_msg, x_L)
+
+def decipher_bg(message, key):
+    """
+    Decrypts the message using private keys.
+
+    ALGORITHM:
+        1. Let, c be the encrypted message, y the second number received,
+        and p and q be the private keys.
+        2. Compute, r_p = y^((p+1)/4 ^ L) mod p and
+        r_q = y^((q+1)/4 ^ L) mod q.
+        3. Compute x_0 = (q(q^-1 mod p)r_p + p(p^-1 mod q)r_q) mod N.
+        4. From, recompute the bits using the BBS generator, as in the
+        encryption algorithm.
+        5. Compute original message by XORing c and b.
+
+    Parameters
+    ==========
+
+    message : Tuple of encrypted message and a non-negative integer.
+    key : Tuple of private keys
+
+    Returns
+    =======
+
+    orig_msg : The original message
+    """
+
+    p, q = key
+    encrypt_msg, y = message
+    public_key = p * q
+    L = len(encrypt_msg)
+    p_t = ((p + 1)/4)**L
+    q_t = ((q + 1)/4)**L
+    r_p = _pow_mod(y, p_t, p)
+    r_q = _pow_mod(y, q_t, q)
+
+    x = (q * mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
+
+    orig_bits = []
+    for k in range(L):
+        orig_bits.append(x % 2)
+        x = x**2 % public_key
+
+    orig_msg = 0
+    for (m, b) in zip(encrypt_msg, orig_bits):
+        orig_msg = orig_msg * 2
+        orig_msg += (m ^ b)
+
+    return orig_msg
