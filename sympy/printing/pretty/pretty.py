@@ -2451,7 +2451,7 @@ def pretty(expr, **settings):
 
 
 def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
-                 full_prec="auto", order=None, use_unicode_sqrt_char=True,root_notation = True):
+                 full_prec="auto", order=None, use_unicode_sqrt_char=True, root_notation = True):
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
@@ -2489,7 +2489,7 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
     """
     print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
                  use_unicode=use_unicode, full_prec=full_prec, order=order,
-                 use_unicode_sqrt_char=use_unicode_sqrt_char,root_notation = root_notation))
+                 use_unicode_sqrt_char=use_unicode_sqrt_char, root_notation = root_notation))
 
 pprint = pretty_print
 
