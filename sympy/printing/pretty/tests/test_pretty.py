@@ -57,7 +57,10 @@ ph = Symbol('phi')
 Expressions whose pretty-printing is tested here:
 (A '#' to the right of an expression indicates that its various acceptable
 orderings are accounted for by the tests.)
+
+
 BASIC EXPRESSIONS:
+
 oo
 (x**2)
 1/x
@@ -75,23 +78,35 @@ x/y
 -5*x/(x+10)  # correct placement of negative sign
 1 - Rational(3,2)*(x+1)
 -(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5) # issue 5524
+
+
 ORDERING:
+
 x**2 + x + 1
 1 - x
 1 - 2*x
 2*x**4 + y**2 - x**2 + y**3
+
+
 RELATIONAL:
+
 Eq(x, y)
 Lt(x, y)
 Gt(x, y)
 Le(x, y)
 Ge(x, y)
 Ne(x/(y+1), y**2)  #
+
+
 RATIONAL NUMBERS:
+
 y*x**-2
 y**Rational(3,2) * x**Rational(-5,2)
 sin(x)**3/tan(x)**2
+
+
 FUNCTIONS (ABS, CONJ, EXP, FUNCTION BRACES, FACTORIAL, FLOOR, CEILING):
+
 (2*x + exp(x))  #
 Abs(x)
 Abs(x/(x**2+1)) #
@@ -115,7 +130,10 @@ conjugate( f(1 + conjugate(f(x))) ) #
 f(x/(y+1), y)  # denom of first arg
 floor(1 / (y - floor(x)))
 ceiling(1 / (y - ceiling(x)))
+
+
 SQRT:
+
 sqrt(2)
 2**Rational(1,3)
 2**Rational(1,1000)
@@ -124,13 +142,19 @@ sqrt(x**2 + 1)
 2**(1/x)
 sqrt(2+pi)
 (2+(1+x**2)/(2+x))**Rational(1,4)+(1+x**Rational(1,1000))/sqrt(3+x**2)
+
+
 DERIVATIVES:
+
 Derivative(log(x), x, evaluate=False)
 Derivative(log(x), x, evaluate=False) + x  #
 Derivative(log(x) + x**2, x, y, evaluate=False)
 Derivative(2*x*y, y, x, evaluate=False) + x**2  #
 beta(alpha).diff(alpha)
+
+
 INTEGRALS:
+
 Integral(log(x), x)
 Integral(x**2, x)
 Integral((sin(x))**2 / (tan(x))**2)
@@ -141,14 +165,24 @@ Integral(x**2*y**2, x,y)
 Integral(x**2, (x, None, 1))
 Integral(x**2, (x, 1, None))
 Integral(sin(th)/cos(ph), (th,0,pi), (ph, 0, 2*pi))
+
+
 MATRICES:
+
 Matrix([[x**2+1, 1], [y, x+y]])  #
 Matrix([[x/y, y, th], [0, exp(I*k*ph), 1]])
+
+
 PIECEWISE:
+
 Piecewise((x,x<1),(x**2,True))
+
 ITE:
+
 ITE(x, y, z)
+
 SEQUENCES (TUPLES, LISTS, DICTIONARIES):
+
 ()
 []
 {}
@@ -160,21 +194,34 @@ SEQUENCES (TUPLES, LISTS, DICTIONARIES):
 [x**2]
 (x**2,)
 {x**2: 1}
+
+
 LIMITS:
+
 Limit(x, x, oo)
 Limit(x**2, x, 0)
 Limit(1/x, x, 0)
 Limit(sin(x)/x, x, 0)
+
+
 UNITS:
+
 joule => kg*m**2/s
+
+
 SUBS:
+
 Subs(f(x), x, ph**2)
 Subs(f(x).diff(x), x, 0)
 Subs(f(x).diff(x)/y, (x, y), (0, Rational(1, 2)))
+
+
 ORDER:
+
 O(1)
 O(1/x)
 O(x**2 + y**2)
+
 """
 
 
