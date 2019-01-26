@@ -104,7 +104,7 @@ def _subsets(n):
 def sqrtdenest(expr, max_iter=3):
     """Denests sqrts in an expression that contain other square roots
     if possible, otherwise returns the expr unchanged. This is based on the
-    algorithms of [1]_.
+    algorithms of [1].
 
     Examples
     ========
