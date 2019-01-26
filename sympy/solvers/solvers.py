@@ -2664,65 +2664,75 @@ def _tsolve(eq, sym, **flags):
                 sol_base = _solve(lhs.base, sym, **flags)
                 return [s for s in sol_base if lhs.exp.subs(sym, s) != 0]
 
-            if lhs.base == 0:
-                return _solve(lhs.exp, sym, **flags) if rhs != 0 else []
-
             sol = []
-            if rhs.is_real:
-                if lhs.base.is_real:
-                    if lhs.base < 0:
-                        a = abs(lhs.base)**lhs.exp
-                        sol.extend(_solve(a + rhs, sym, **flags))
-                        sol.extend(_solve(a - rhs, sym, **flags))
-                    elif lhs.base.is_positive:
+            import pdb; pdb.set_trace()
+            if lhs.base.is_real:
+                #lhs.base case should be taken separately from rhs
+                if lhs.base < 0:
+                    a = abs(lhs.base)**lhs.exp
+                    sol.extend(_solve(a + rhs, sym, **flags) +
+                            _solve(a - rhs, sym, **flags))
+                elif lhs.base.is_positive:
+                    #it's because some equation ca't be solved directly
+                    #in exponentialform. So its solved in logform or rewrite
+                    logform = lhs.exp*log(lhs.base) - log(rhs)
+                    if logform != lhs - rhs:
+                        sol.extend(_solve(logform, sym, **flags))
+                    rewrite = lhs.rewrite(exp)
+                    if rewrite != lhs:
+                        sol.extend(_solve(rewrite - rhs, sym, **flags))
+                elif lhs.base == 0 and rhs == 1 or rhs.is_Symbol:
+                    #rhs is non-zero from above if condition
+                    #solution only obtain when rhs==1
+                    return _solve(lhs.exp, sym, **flags)
+
+            if rhs:
+                if rhs.is_Rational:
+                    # solutions when divisor is 1
+                    check = _solve(lhs.exp, sym, **flags)
+                    check.extend(_solve(lhs.base - 1, sym, **flags))
+                    check.extend(_solve(lhs.base + 1, sym, **flags))
+                    # other divisors
+                    for d in (i for i in divisors(abs(rhs.p)) if i != 1):
+                        e, t = integer_log(rhs.p, d)
+                        if not t:
+                            continue  # rhs.p != d**b
+                        for s in divisors(abs(rhs.q)):
+                            if s**e== rhs.q:
+                                r = Rational(d, s)
+                                check.extend(_solve(lhs.base - r, sym, **flags))
+                                check.extend(_solve(lhs.base + r, sym, **flags))
+                                check.extend(_solve(lhs.exp - e, sym, **flags))
+                    for s in check:
+                        # rational solutions should easily pass 0 test
+                        if eq.subs(sym, s) == 0:
+                            sol.append(s)
+                elif rhs.is_irrational:
+                    b_l, e_l = lhs.base.as_base_exp()
+                    n, d = e_l*lhs.exp.as_numer_denom()
+                    b, e = sqrtdenest(rhs).as_base_exp()
+                    check = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, **flags))]
+                    check.extend([sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))])
+                    if (e_l*d) !=1 :
+                        check.extend(_solve(b_l**(n) - rhs**(e_l*d), sym, **flags))
+                    for s in list(set(check)):
+                        # irrational solutions may be harder to test
+                        if eq.subs(sym, s).equals(0):
+                            sol.append(s)
+                else:
+                    #this is when no option is left like if lhs.base and rhs are
+                    #imaginary so we can just solve them by logform or rewritten
+                    #see the difference at above we are including the solution in soln
+                    #and here it is just returing.
+                    logform = lhs.exp*log(lhs.base) - log(rhs)
+                    if logform != lhs - rhs:
+                        return _solve(logform, sym, **flags)
+                    else:
                         rewrite = lhs.rewrite(exp)
                         if rewrite != lhs:
-                            sol.extend(_solve(rewrite - rhs, sym, **flags))
-                else:
-                    if rhs.is_Rational:
-                        # solutions when divisor is 1
-                        check = _solve(lhs.exp, sym, **flags)
-                        check.extend(_solve(lhs.base - 1, sym, **flags))
-                        check.extend(_solve(lhs.base + 1, sym, **flags))
-                        # other divisors
-                        for d in (i for i in divisors(abs(rhs.p)) if i != 1):
-                            e, t = integer_log(rhs.p, d)
-                            if not t:
-                                continue  # rhs.p != d**b
-                            for s in divisors(abs(rhs.q)):
-                                if s**e== rhs.q:
-                                    r = Rational(d, s)
-                                    check.extend(_solve(lhs.base - r, sym, **flags))
-                                    check.extend(_solve(lhs.base + r, sym, **flags))
-                                    check.extend(_solve(lhs.exp - e, sym, **flags))
-                        for s in check:
-                            # rational solutions should easily pass 0 test
-                            if eq.subs(sym, s) == 0:
-                                sol.append(s)
-                    elif rhs.is_irrational:
-                        b_l, e_l = lhs.base.as_base_exp()
-                        n, d = e_l*lhs.exp.as_numer_denom()
-                        b, e = sqrtdenest(rhs).as_base_exp()
-                        check = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, **flags))]
-                        check.extend([sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))])
-                        if (e_l*d) !=1 :
-                            check.extend(_solve(b_l**(n) - rhs**(e_l*d), sym, **flags))
-                        for s in list(set(check)):
-                            # irrational solutions may be harder to test
-                            if eq.subs(sym, s).equals(0):
-                                sol.append(s)
-                    else:
-                        raise NotImplementedError
+                            return _solve(rewrite - rhs, sym, **flags)
             else:
-                # more general forms
-                logform = lhs.exp*log(lhs.base) - log(rhs)
-                if logform != lhs - rhs:
-                    sol.extend(_solve(logform, sym, **flags))
-                else:
-                    rewrite = lhs.rewrite(exp) - rhs
-                    if rewrite != lhs:
-                        sol.extend(_solve(rewrite, sym, **flags))
-
+                raise NotImplementedError
             return list(ordered(set(sol)))
 
         elif lhs.is_Mul and rhs.is_positive:
@@ -2740,9 +2750,12 @@ def _tsolve(eq, sym, **flags):
             elif lhs.func == LambertW:
                 return _solve(lhs.args[0] - rhs*exp(rhs), sym, **flags)
 
-        rewrite = lhs.rewrite(exp) - rhs
+        #this rewrite is used when no option from above is handled
+        #and not only the exponential form cases involving trigonometric
+        #are solved by this.
+        rewrite = lhs.rewrite(exp)
         if rewrite != lhs:
-            return _solve(rewrite, sym, **flags)
+            return _solve(rewrite - rhs, sym, **flags)
 
     except NotImplementedError:
         pass
