@@ -1,12 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.functions import sqrt, sign, root
 from sympy.core import S, sympify, Mul, Add, Expr
-from sympy.core.function import expand_mul
 from sympy.core.compatibility import range
+from sympy.core.function import expand_mul, count_ops, _mexpand
 from sympy.core.symbol import Dummy
+from sympy.functions import sqrt, sign, root
 from sympy.polys import Poly, PolynomialError
-from sympy.core.function import count_ops, _mexpand
 from sympy.utilities import default_sort_key
 
 
@@ -105,7 +104,7 @@ def _subsets(n):
 def sqrtdenest(expr, max_iter=3):
     """Denests sqrts in an expression that contain other square roots
     if possible, otherwise returns the expr unchanged. This is based on the
-    algorithms of [1].
+    algorithms of [1]_.
 
     Examples
     ========
@@ -117,13 +116,15 @@ def sqrtdenest(expr, max_iter=3):
 
     See Also
     ========
+
     sympy.solvers.solvers.unrad
 
     References
     ==========
-    [1] http://researcher.watson.ibm.com/researcher/files/us-fagin/symb85.pdf
 
-    [2] D. J. Jeffrey and A. D. Rich, 'Symplifying Square Roots of Square Roots
+    .. [1] http://researcher.watson.ibm.com/researcher/files/us-fagin/symb85.pdf
+
+    .. [2] D. J. Jeffrey and A. D. Rich, 'Symplifying Square Roots of Square Roots
     by Denesting' (available at http://www.cybertester.com/data/denest.pdf)
 
     """
