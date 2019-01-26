@@ -2271,7 +2271,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     fold_short_frac=None, inv_trig_style="abbreviated",
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-    order=None, symbol_names=None, root_notation = True):
+    order=None, symbol_names=None, root_notation=True):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2291,8 +2291,8 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         Specifies if itex-specific syntax is used, including emitting
         ``$$...$$``.
     root_notation : boolean, optional
-        If set to ``False``,exponents of the form 1/n are printed in fractonal form.
-        Default is ``True``,to print exponent in root form.
+        If set to ``False``, exponents of the form 1/n are printed in fractonal form.
+        Default is ``True``, to print exponent in root form.
     ln_notation : boolean, optional
         If set to ``True``, ``\ln`` is used instead of default ``\log``.
     long_frac_ratio : float or None, optional
@@ -2353,9 +2353,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     8 \sqrt{2} \tau^{\frac{7}{2}}
 
     ``root_notation`` options:
-    >>> print(latex(x**Rational(1, 7)))
+    >>> print(latex(x**Rational(1,7)))
     \sqrt[7]{x}
-    >>> print(latex(x**(S(1)/7), root_notation = False))
+    >>> print(latex(x**(S(1)/7), root_notation=False))
     x^{\frac{1}{7}}
 
 
