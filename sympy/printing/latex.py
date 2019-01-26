@@ -2355,6 +2355,8 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     ``root_notation`` options:
     >>> print(latex(x**Rational(1, 7)))
     \sqrt[7]{x}
+    >>> print(latex(x**(S(1)/7), root_notation = False))
+    x^{\frac{1}{7}}
 
 
     ``mode`` and ``itex`` options:
