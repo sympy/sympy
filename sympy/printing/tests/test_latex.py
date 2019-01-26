@@ -96,7 +96,7 @@ def test_latex_basic():
 
     assert latex(sqrt(x)) == r"\sqrt{x}"
     assert latex(x**Rational(1, 3)) == r"\sqrt[3]{x}"
-    assert latex(x**Rational(1, 3), root_notation = False) == r"x^{\frac{1}{3}}"
+    assert latex(x**Rational(1, 3), root_notation=False) == r"x^{\frac{1}{3}}"
     assert latex(sqrt(x)**3) == r"x^{\frac{3}{2}}"
     assert latex(sqrt(x), itex=True) == r"\sqrt{x}"
     assert latex(x**Rational(1, 3), itex=True) == r"\root{3}{x}"
@@ -1913,3 +1913,4 @@ def test_print_basic():
     assert latex(unimplemented_expr(x)) == r'UnimplementedExpr\left(x\right)'
     assert latex(unimplemented_expr(x**2)) == r'UnimplementedExpr\left(x^{2}\right)'
     assert latex(unimplemented_expr_sup_sub(x)) == r'UnimplementedExpr^{1}_{x}\left(x\right)'
+    
