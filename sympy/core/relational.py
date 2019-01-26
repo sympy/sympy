@@ -524,7 +524,8 @@ class Unequality(Relational):
             ratio, measure, rational, inverse)
         if isinstance(eq, Equality):
             eq = self.func(*eq.args)
-        return eq
+            return eq
+        return ~eq
 
 Ne = Unequality
 
