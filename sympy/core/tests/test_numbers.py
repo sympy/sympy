@@ -234,7 +234,8 @@ def test_igcd_lehmer():
     assert igcd_lehmer(a*c, b*c) == c
     # big divisor
     assert igcd_lehmer(a, 10**1000) == 1
-
+    # swapping argmument
+    assert igcd_lehmer(1, 2) == igcd_lehmer(2, 1)
 
 def test_igcd2():
     # short loop
@@ -255,12 +256,15 @@ def test_ilcm():
     assert ilcm(*[10, 20, 30]) == 60
     raises(ValueError, lambda: ilcm(8.1, 7))
     raises(ValueError, lambda: ilcm(8, 7.1))
+    raises(TypeError, lambda: ilcm(8))
 
 
 def test_igcdex():
     assert igcdex(2, 3) == (-1, 1, 1)
     assert igcdex(10, 12) == (-1, 1, 2)
     assert igcdex(100, 2004) == (-20, 1, 4)
+    assert igcdex(0, 0) == (0, 1, 0)
+    assert igcdex(1, 0) == (1, 0, 1)
 
 
 def _strictly_equal(a, b):
@@ -363,6 +367,23 @@ def test_Number_new():
     raises(TypeError, lambda: Number(cos))
     a = Rational(3, 5)
     assert Number(a) is a  # Check idempotence on Numbers
+
+
+def test_Number_cmp():
+    n1 = Number(1)
+    n2 = Number(2)
+    n3 = Number(-3)
+
+    assert n1 < n2
+    assert n1 <= n2
+    assert n3 < n1
+    assert n2 > n3
+    assert n2 >= n3
+
+    raises(TypeError, lambda: n1 < S.NaN)
+    raises(TypeError, lambda: n1 <= S.NaN)
+    raises(TypeError, lambda: n1 > S.NaN)
+    raises(TypeError, lambda: n1 >= S.NaN)
 
 
 def test_Rational_cmp():

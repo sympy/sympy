@@ -2019,10 +2019,7 @@ class Expr(Basic, EvalfMixin):
         if d is S.One:
             return n
         if d.is_Number:
-            if d is S.One:
-                return n
-            else:
-                return _unevaluated_Mul(n, 1/d)
+            return _unevaluated_Mul(n, 1/d)
         else:
             return n/d
 
