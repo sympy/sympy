@@ -192,6 +192,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 f = -f
 
             newf = eval_sum(f, (i, a, b))
+            if newf is S.NaN:
+                newf = None
             if newf is None:
                 if f == self.function:
                     zeta_function = self.eval_zeta_function(f, (i, a, b))
