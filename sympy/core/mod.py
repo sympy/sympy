@@ -7,16 +7,21 @@ from .function import Function
 
 class Mod(Function):
     """Represents a modulo operation on symbolic expressions.
+
     Receives two arguments, dividend p and divisor q.
+
     The convention used is the same as Python's: the remainder always has the
     same sign as the divisor.
+
     Examples
     ========
+
     >>> from sympy.abc import x, y
     >>> x**2 % y
     Mod(x**2, y)
     >>> _.subs({x: 5, y: 6})
     1
+
     """
 
     @classmethod
