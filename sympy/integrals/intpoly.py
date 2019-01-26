@@ -1009,7 +1009,12 @@ def point_sort(poly, normal=None, clockwise=True):
     >>> point_sort([Point(0, 0), Point(1, 0), Point(1, 1)])
     [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
     """
-    n = len(poly.vertices)
+    if(isinstance(poly, Polygon)):
+        n = len(poly.vertices)
+    else:
+        n = len(poly)
+        poly = Polygon(*poly)
+
     if n < 2:
         return poly
 
@@ -1017,11 +1022,11 @@ def point_sort(poly, normal=None, clockwise=True):
     dim = len(poly.vertices[0])
     if dim == 2:
         center = Point(sum(map(lambda vertex: vertex.x, poly.vertices)) / n,
-                       sum(map(lambda vertex: vertex.y, poly.vertices)) / n)
+                        sum(map(lambda vertex: vertex.y, poly.vertices)) / n)
     else:
         center = Point(sum(map(lambda vertex: vertex.x, poly.vertices)) / n,
-                       sum(map(lambda vertex: vertex.y, poly.vertices)) / n,
-                       sum(map(lambda vertex: vertex.z, poly.vertices)) / n)
+                        sum(map(lambda vertex: vertex.y, poly.vertices)) / n,
+                        sum(map(lambda vertex: vertex.z, poly.vertices)) / n)
 
     def compare(a, b):
         if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
