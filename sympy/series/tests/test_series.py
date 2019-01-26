@@ -228,20 +228,20 @@ def test_lagrange_inversion_theorem():
 
     eq = x ** 2
     raises(ValueError, lambda: lagrange_inversion_theorem(eq, y, 1, 1))
-    assert lagrange_inversion_theorem(eq, x, 3, 1) == x**2/2 - (x**2 - 1)**2/8 + 1/2
+    assert lagrange_inversion_theorem(eq, x, 1, 3) == x**2/2 - (x**2 - 1)**2/8 + 1/2
     assert lagrange_inversion_theorem(eq, x, 1, 1) == 1
-    assert lagrange_inversion_theorem(eq, x, 2, 1) == x**2/2 + 1/2
-    assert lagrange_inversion_theorem(eq, x, 4, 1) == x**2/2 - (x**2 - 1)**3/8 - (x**2 - 1)**2/8 + 1/2
+    assert lagrange_inversion_theorem(eq, x, 1, 2) == x**2/2 + 1/2
+    assert lagrange_inversion_theorem(eq, x, 1, 4) == x**2/2 - (x**2 - 1)**3/8 - (x**2 - 1)**2/8 + 1/2
 
     eq = (x ** 3) * exp(x)
-    assert lagrange_inversion_theorem(eq, x, 2, 1) == (x**3*exp(x) - E)*exp(-1)/4 + 1
-    assert lagrange_inversion_theorem(eq, x, 3, 1) == -13*(x**3*exp(x)-E)**2*exp(-2)/128 + (x**3*exp(x)-E)*exp(-1)/4 + 1
+    assert lagrange_inversion_theorem(eq, x, 1, 2) == (x**3*exp(x) - E)*exp(-1)/4 + 1
+    assert lagrange_inversion_theorem(eq, x, 1, 3) == -13*(x**3*exp(x)-E)**2*exp(-2)/128 + (x**3*exp(x)-E)*exp(-1)/4 + 1
 
     eq = (x ** 3) * exp(x) * y
     raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
 
     eq = sin(x)
-    assert lagrange_inversion_theorem(eq, x, 2, 1) == (sin(x) - sin(1))/cos(1) + 1
+    assert lagrange_inversion_theorem(eq, x, 1, 2) == (sin(x) - sin(1))/cos(1) + 1
 
     eq = cos(y)
     raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))

@@ -15,7 +15,7 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
     return expr.series(x, x0, n, dir)
 
 
-def lagrange_inversion_theorem(eq, x, n=3, a=0):
+def lagrange_inversion_theorem(eq, x, a=0, n=3):
     """
     The Lagrange inversion theorem (or Lagrange inversion formula, which we abbreviate
     as LIT), also known as the Lagrange--Bürmann formula, gives the Taylor series
@@ -59,9 +59,9 @@ def lagrange_inversion_theorem(eq, x, n=3, a=0):
     x : variable, in terms of which equation is given, and in terms of which, the
     expansion will be provided.
 
-    n : no of terms required in the expansion; default value is 3 terms.
-
     a : point on x-axis in the neighbourhood of which, the inverse expansion is to be found.
+
+    n : no of terms required in the expansion; default value is 3 terms.
 
     Examples
     ========
@@ -76,24 +76,31 @@ def lagrange_inversion_theorem(eq, x, n=3, a=0):
 
     >>> eq = (x**2)*exp(x)
 
-    If no second argument is provided, the default number of terms i.e. 3, is present
-    in the expansion of the inverse of the provided equation or expression (as the first argument).
-
-    >>> lagrange_inversion_theorem(eq)
-    2*(x**2*exp(x) - E)**3*exp(-3)/27 - 7*(x**2*exp(x) - E)**2*exp(-2)/54 + (x**2*exp(x) - E)*exp(-1)/3
-
     Here the number of terms required in the expansion is provided.
 
-    >>> lagrange_inversion_theorem(eq, 1)
-    (x**2*exp(x) - E)*exp(-1)/3
-    >>> lagrange_inversion_theorem(eq, 2)
-    -7*(x**2*exp(x) - E)**2*exp(-2)/54 + (x**2*exp(x) - E)*exp(-1)/3
+    >>> lagrange_inversion_theorem(eq, x, 1, 4)
+    -(x**2*exp(x) - E)**3*(-14*exp(3) - 14*E + 7 + 21*exp(2) + 7*exp(4))*exp(-4)/54 - 7*(x**2*exp(x) - E)**2*exp(-2)/54
+    + (x**2*exp(x) - E)*exp(-1)/3 + 1
+
+    Here the number of terms required is, by default, 3.
+
+    >>> lagrange_inversion_theorem(eq, x, 1)
+    -7*(x**2*exp(x) - E)**2*exp(-2)/54 + (x**2*exp(x) - E)*exp(-1)/3 + 1
+
+    Here the point with respect to which the expansion is found is changed from x=1 to x=2.
+
+    >>> lagrange_inversion_theorem(eq, x, 2)
+    -7*(x**2*exp(x) - 4*exp(2))**2*exp(-4)/512 + (x**2*exp(x) - 4*exp(2))*exp(-2)/8 + 2
 
     >>> eq = exp(x)
-    >>> lagrange_inversion_theorem(eq, 2)
+    >>> lagrange_inversion_theorem(eq, x, 2)
+    -(exp(x) - exp(2))**2*exp(-4)/2 + (exp(x) - exp(2))*exp(-2) + 2
+
+    Here the number of terms and the point with respect to which the inverse expansion will be calculated are both
+    not provided explicitly.
+
+    >>> lagrange_inversion_theorem(eq, x)
     -(exp(x) - 1)**2/2 + exp(x) - 1
-    >>> lagrange_inversion_theorem(eq)
-    (exp(x) - 1)**3/3 - (exp(x) - 1)**2/2 + exp(x) - 1
 
     Note
     ====
