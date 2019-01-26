@@ -8,9 +8,8 @@ Contains
 
 from __future__ import division, print_function
 
-from sympy import Expr, Eq, Float
+from sympy import Expr, Eq
 from sympy.core import S, pi, sympify
-from sympy.core.containers import Tuple
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import ordered
