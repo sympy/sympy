@@ -778,7 +778,7 @@ class LatexPrinter(Printer):
                 else:
                     name += r"%s"
             else:
-                name += r"{\left (%s \right )}"
+                name += r"{\left(%s \right)}"
 
             if inv_trig_power_case and exp is not None:
                 name += r"^{%s}" % exp
@@ -850,9 +850,9 @@ class LatexPrinter(Printer):
 
     def _print_log(self, expr, exp=None):
         if not self._settings["ln_notation"]:
-            tex = r"\log{\left (%s \right )}" % self._print(expr.args[0])
+            tex = r"\log{\left(%s \right)}" % self._print(expr.args[0])
         else:
-            tex = r"\ln{\left (%s \right )}" % self._print(expr.args[0])
+            tex = r"\ln{\left(%s \right)}" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -933,7 +933,7 @@ class LatexPrinter(Printer):
 
     def _print_polar_lift(self, expr, exp=None):
         func = r"\operatorname{polar\_lift}"
-        arg = r"{\left (%s \right )}" % self._print(expr.args[0])
+        arg = r"{\left(%s \right)}" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}%s" % (func, exp, arg)
@@ -1471,7 +1471,7 @@ class LatexPrinter(Printer):
 
     def _print_Trace(self, expr):
         mat = expr.arg
-        return r"\mathrm{tr}\left (%s \right )" % self._print(mat)
+        return r"\mathrm{tr}\left(%s \right)" % self._print(mat)
 
     def _print_Adjoint(self, expr):
         mat = expr.arg
@@ -1657,7 +1657,7 @@ class LatexPrinter(Printer):
         return self._print(expr.args[0])
 
     def _print_tuple(self, expr):
-        return r"\left ( %s\right )" % \
+        return r"\left( %s\right)" % \
             r", \quad ".join([ self._print(i) for i in expr ])
 
     def _print_TensorProduct(self, expr):
@@ -1672,7 +1672,7 @@ class LatexPrinter(Printer):
         return self._print_tuple(expr)
 
     def _print_list(self, expr):
-        return r"\left [ %s\right ]" % \
+        return r"\left[ %s\right]" % \
             r", \quad ".join([ self._print(i) for i in expr ])
 
     def _print_dict(self, d):
@@ -1683,7 +1683,7 @@ class LatexPrinter(Printer):
             val = d[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
-        return r"\left \{ %s\right \}" % r", \quad ".join(items)
+        return r"\left\{ %s\right\}" % r", \quad ".join(items)
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
@@ -1966,7 +1966,7 @@ class LatexPrinter(Printer):
 
         args = ", ".join([expr] + gens + [domain])
         if cls in accepted_latex_functions:
-            tex = r"\%s {\left (%s \right )}" % (cls, args)
+            tex = r"\%s {\left(%s \right)}" % (cls, args)
         else:
             tex = r"\operatorname{%s}{\left( %s \right)}" % (cls, args)
 
@@ -2387,7 +2387,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     >>> print(latex((2*tau)**Rational(7,2), fold_frac_powers=True))
     8 \sqrt{2} \tau^{7/2}
     >>> print(latex((2*tau)**sin(Rational(7,2))))
-    \left(2 \tau\right)^{\sin{\left (\frac{7}{2} \right )}}
+    \left(2 \tau\right)^{\sin{\left(\frac{7}{2} \right)}}
     >>> print(latex((2*tau)**sin(Rational(7,2)), fold_func_brackets=True))
     \left(2 \tau\right)^{\sin {\frac{7}{2}}}
     >>> print(latex(3*x**2/y))
@@ -2402,16 +2402,16 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     Multiplication options:
 
     >>> print(latex((2*tau)**sin(Rational(7,2)), mul_symbol="times"))
-    \left(2 \times \tau\right)^{\sin{\left (\frac{7}{2} \right )}}
+    \left(2 \times \tau\right)^{\sin{\left(\frac{7}{2} \right)}}
 
     Trig options:
 
     >>> print(latex(asin(Rational(7,2))))
-    \operatorname{asin}{\left (\frac{7}{2} \right )}
+    \operatorname{asin}{\left(\frac{7}{2} \right)}
     >>> print(latex(asin(Rational(7,2)), inv_trig_style="full"))
-    \arcsin{\left (\frac{7}{2} \right )}
+    \arcsin{\left(\frac{7}{2} \right)}
     >>> print(latex(asin(Rational(7,2)), inv_trig_style="power"))
-    \sin^{-1}{\left (\frac{7}{2} \right )}
+    \sin^{-1}{\left(\frac{7}{2} \right)}
 
     Matrix options:
 
@@ -2430,15 +2430,15 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     Logarithms:
 
     >>> print(latex(log(10)))
-    \log{\left (10 \right )}
+    \log{\left(10 \right)}
     >>> print(latex(log(10), ln_notation=True))
-    \ln{\left (10 \right )}
+    \ln{\left(10 \right)}
 
     ``latex()`` also supports the builtin container types list, tuple, and
     dictionary.
 
     >>> print(latex([2/x, y], mode='inline'))
-    $\left [ 2 / x, \quad y\right ]$
+    $\left[ 2 / x, \quad y\right]$
 
     """
     if symbol_names is None:
