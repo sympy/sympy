@@ -92,14 +92,6 @@ def test_issue_14283():
     assert prntr.doprint(zoo) == "float('nan')"
     assert prntr.doprint(-oo) == "float('-inf')"
 
-
-def test_sequences():
-    prntr = PythonCodePrinter()
-
-    assert prntr.doprint(zoo) == "float('nan')"
-    assert prntr.doprint(-oo) == "float('-inf')"
-
-
 def test_NumPyPrinter_print_seq():
     n = NumPyPrinter()
 
