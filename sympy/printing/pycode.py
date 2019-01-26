@@ -8,7 +8,7 @@ This module contains python code printers for plain python as well as NumPy & Sc
 from collections import defaultdict
 from functools import wraps
 from itertools import chain
-from sympy.core import sympify, S
+from sympy.core import sympify, S, Number, Symbol
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
@@ -497,7 +497,9 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_MatMul(self, expr):
         "Matrix multiplication printer"
-        return '({0})'.format(').dot('.join([self._print(expr.args[1]), self._print(expr.args[0])]))
+        if isinstance(S(expr.args[0]), (Number, Symbol)):
+            return '({0})'.format(').dot('.join([self._print(expr.args[1]), self._print(expr.args[0])]))
+        return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
 
     def _print_MatPow(self, expr):
         "Matrix power printer"
