@@ -697,8 +697,6 @@ def trig_rule(integral):
         arg = integrand.args[0]
         rewritten = ((sympy.csc(arg)**2 + sympy.cot(arg) * sympy.csc(arg)) /
                      (sympy.csc(arg) + sympy.cot(arg)))
-    elif integrand == sympy.sqrt(1+sympy.sin(symbol)):
-        rewritten = (sympy.sin(symbol/2) + sympy.cos(symbol/2))
     else:
         match = integrand.match(sympy.sqrt(1 + sympy.sin(a*symbol)))
         if not match:
