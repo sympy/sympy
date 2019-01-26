@@ -1009,9 +1009,11 @@ def point_sort(poly, normal=None, clockwise=True):
     >>> point_sort([Point(0, 0), Point(1, 0), Point(1, 1)])
     [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
     """
+    flag = 0
     if(isinstance(poly, Polygon)):
         n = len(poly.vertices)
     else:
+        flag = 1
         n = len(poly)
         poly = Polygon(*poly)
 
@@ -1060,9 +1062,14 @@ def point_sort(poly, normal=None, clockwise=True):
             return order
 
     if dim == 2:
-        return Polygon(*sorted(poly.vertices, key=cmp_to_key(compare)))
-
-    return Polygon(*sorted(poly.vertices, key=cmp_to_key(compare3d)))
+        if flag == 0:
+            return Polygon(*sorted(poly.vertices, key=cmp_to_key(compare)))
+        else:
+            return sorted(poly.vertices, key=cmp_to_key(compare))
+    if flag == 0:
+        return Polygon(*sorted(poly.vertices, key=cmp_to_key(compare3d)))
+    else:
+        return sorted(poly.vertices, key=cmp_to_key(compare3d))
 
 
 def norm(point):
