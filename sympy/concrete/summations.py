@@ -1163,7 +1163,7 @@ def eval_sum_hyper(f, i_a_b):
                 return None
             (res1, cond1), (res2, cond2) = res1, res2
             cond = And(cond1, cond2)
-            if cond == False:
+            if cond != True:
                 return None
             return Piecewise((res1 - res2, cond), (old_sum, True))
 
@@ -1175,7 +1175,7 @@ def eval_sum_hyper(f, i_a_b):
         res1, cond1 = res1
         res2, cond2 = res2
         cond = And(cond1, cond2)
-        if cond == False:
+        if cond != True:
             return None
         return Piecewise((res1 + res2, cond), (old_sum, True))
 
