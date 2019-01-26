@@ -400,7 +400,7 @@ def test_euler_maclaurin():
         s, e = A.euler_maclaurin(m, n)
         assert abs((s - zeta(3)).evalf()) < e.evalf()
 
-    raises(ValueError, Sum(1, (x, 0, 1), (k, 0, 1)))
+    raises(ValueError, lambda: Sum(1, (x, 0, 1), (k, 0, 1)).euler_maclaurin())
 
 
 def test_evalf_euler_maclaurin():

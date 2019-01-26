@@ -1890,3 +1890,30 @@ def test_numpy_to_float():
 
     raises(TypeError, lambda: Float(np.complex64(1+2j)))
     raises(TypeError, lambda: Float(np.complex128(1+2j)))
+
+def test_Integer_ceiling_floor():
+    a = Integer(4)
+
+    assert(a.floor() == a)
+    assert(a.ceiling() == a)
+
+def test_ComplexInfinity():
+    assert((zoo).floor() == zoo)
+    assert((zoo).ceiling() == zoo)
+    assert(zoo**zoo == S.NaN)
+
+def test_Infinity_floor_ceiling_power():
+    assert((oo).floor() == oo)
+    assert((oo).ceiling() == oo)
+    assert((oo)**S.NaN == S.NaN)
+    assert((oo)**zoo == S.NaN)
+
+def test_One_power():
+    assert((S.One)**12 == S.One)
+    assert((S.NegativeOne)**S.NaN == S.NaN)
+
+def test_NegativeInfinity():
+    assert((-oo).floor() == -oo)
+    assert((-oo).ceiling() == -oo)
+    assert((-oo)**11 == -oo)
+    assert((-oo)**12 == oo)
