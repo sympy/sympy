@@ -64,7 +64,7 @@ def polytope_integrate(poly, expr=None, **kwargs):
 
     if clockwise:
         if isinstance(poly, Polygon):
-            poly = Polygon(point_sort(poly.vertices), evaluate=False)
+            poly = Polygon(*point_sort(poly.vertices), evaluate=False)
         else:
             raise TypeError("clockwise=True works for only 2-Polytope"
                             "V-representation input")
