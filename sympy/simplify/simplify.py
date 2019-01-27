@@ -934,12 +934,12 @@ def logcombine(expr, force=False):
             # bool to tell whether the leading ``a`` in ``a*log(x)``
             # could appear as log(x**a)
             return (a is not S.NegativeOne and  # -1 *could* go, but we disallow
-                (a.is_real or force and a.is_real is not False))
+                (a.is_real is not False or force))
 
         def goodlog(l):
             # bool to tell whether log ``l``'s argument can combine with others
             a = l.args[0]
-            return a.is_positive or force and a.is_nonpositive is not False
+            return a.is_positive is not False or force and a.is_nonpositive is not False
 
         other = []
         logs = []
