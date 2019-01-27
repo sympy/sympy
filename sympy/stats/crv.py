@@ -256,10 +256,10 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """ Compute the entropy from the PDF
         Returns a Lambda
         """
-        x, t = symbols('x, t', real = True, cls = Dummy)
+        x = symbols('x', real = True, cls = Dummy)
         pdf = self.pdf(x)
         h = integrate(-pdf * log(pdf), (x, -oo, oo))
-        return Lambda(t, h)
+        return h
 
     def _moment_generating_function(self, t):
         return None
@@ -276,19 +276,19 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
                 return None
         return self.compute_moment_generating_function(**kwargs)(t)
 
-    def _entropy(self, t):
+    def _entropy(self):
         return None
 
-    def entropy(self, t, **kwargs):
+    def entropy(self, **kwargs):
         """ Entropy """
         if len(kwargs) == 0:
             try:
-                h = self._entropy(t)
+                h = self._entropy()
                 if h is not None:
                     return h
             except NotImplementedError:
                 return None
-        return self.compute_entropy(**kwargs)(t)
+        return self.compute_entropy(**kwargs)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
@@ -403,9 +403,9 @@ class ContinuousPSpace(PSpace):
             raise NotImplementedError("Entropy of multivariate expressions not implemented")
 
         d = self.compute_density(expr, **kwargs)
-        x, t = symbols('x, t', real=True, cls=Dummy)
+        x = symbols('x', real=True, cls=Dummy)
         h = integrate(-d(x)*log(d(x)), (x, -oo, oo), **kwargs)
-        return Lambda(t, h)
+        return h
 
     def probability(self, condition, **kwargs):
         z = Dummy('z', real=True, finite=True)
@@ -549,8 +549,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     def compute_entropy(self, expr, **kwargs):
         # Definition - http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
         if expr == self.value:
-            t = symbols("t", real = True, cls = Dummy)
-            return Lambda(t, self.distribution.entropy(t, **kwargs))
+            return self.distribution.entropy(**kwargs)
         return ContinuousPSpace.compute_entropy(self, expr, **kwargs)
 
 def _reduce_inequalities(conditions, var, **kwargs):

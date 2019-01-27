@@ -172,7 +172,7 @@ class ArcsinDistribution(SingleContinuousDistribution):
             (2*asin(sqrt((x - a)/(b - a)))/pi, x <= b),
             (S.One, True))
 
-    def _entropy(self, x):
+    def _entropy(self):
         return log(pi/4)
 
 
@@ -334,7 +334,7 @@ class BetaDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), t)
 
-    def _entropy(self, x):
+    def _entropy(self):
         alpha, beta = self.alpha, self.beta
         B = self.pdf(x)
         return (log(B) - (alpha - 1) * digamma(alpha) - (beta - 1) * digamma(beta)
@@ -476,7 +476,7 @@ class CauchyDistribution(SingleContinuousDistribution):
         raise NotImplementedError("The moment generating function for the "
                                   "Cauchy distribution does not exist.")
 
-    def _entropy(self, t):
+    def _entropy(self):
         return log(4*pi*self.gamma)
 
 def Cauchy(name, x0, gamma):
@@ -552,7 +552,7 @@ class ChiDistribution(SingleContinuousDistribution):
         part_3 = hyper(((k + 1) / 2,), (S(3) / 2,), t ** 2 / 2)
         return part_1 + part_2 * part_3
 
-    def _entropy(self, t):
+    def _entropy(self):
         k = self.k
         return log(gamma(k/2)) + (k - log(2) - (k - 1) * digamma(k/2))/2
 
@@ -686,7 +686,7 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
     def  _moment_generating_function(self, t):
         return (1 - 2*t)**(-self.k/2)
 
-    def _entropy(self, t):
+    def _entropy(self):
         k = self.k
         return k/2 + log(2*gamma(k/2)) + (1 - k/2)*digamma(k/2)
 
@@ -912,7 +912,7 @@ class ExponentialDistribution(SingleContinuousDistribution):
         rate = self.rate
         return rate / (rate - t)
 
-    def _entropy(self, t):
+    def _entropy(self):
         rate = self.rate
         return 1 - log(rate)
 
@@ -1002,7 +1002,7 @@ class FDistributionDistribution(SingleContinuousDistribution):
         raise NotImplementedError('The moment generating function for the '
                                   'F-distribution does not exist.')
 
-    def _entropy(self, t):
+    def _entropy(self):
         d1, d2 = self.d1, self.d2
         part_1 = log(gamma(d1/2)) + log(gamma(d2/2)) - log(gamma((d1 + d2)/2))
         part_2 = ((1 - d1/2)*digamma(1 + d1/2) - (1 + d2/2)*digamma(1 + d2/2)
@@ -1154,7 +1154,7 @@ class FrechetDistribution(SingleContinuousDistribution):
         return Piecewise((exp(-((x-m)/s)**(-a)), x >= m),
                         (S.Zero, True))
 
-    def _entropy(self, x):
+    def _entropy(self):
         a, s = self.a, self.m
         return 1 + EulerGamma/a + EulerGamma + log(s/a)
 
@@ -1242,7 +1242,7 @@ class GammaDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return (1- self.theta*t)**(-self.k)
 
-    def _entropy(self, t):
+    def _entropy(self):
         k, theta = self.k, self.theta
         return k + log(theta) + log(gamma(k)) + (1 - k)*digamma(k)
 
@@ -1355,7 +1355,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the '
                                   'gamma inverse distribution does not exist.')
-    def _entropy(self, t):
+    def _entropy(self):
         a, b = self.a, self.b
         return a + log(b*gamma(a)) - (1+a)*gamma(a)
 
@@ -1434,7 +1434,7 @@ class GumbelDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return gamma(1 - self.beta*t) * exp(I*self.mu*t)
 
-    def _entropy(self, t):
+    def _entropy(self):
         return log(self.beta) + EulerGamma + 1
 
 def Gumbel(name, beta, mu):
@@ -1570,7 +1570,7 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
             (1 - (1 - x**a)**b, x <= S.One),
             (S.One, True))
 
-    def _entropy(self, x):
+    def _entropy(self):
         a, b = self.a, self.b
         return (1 - 1/a) + (1 - 1/b)*harmonic(b) + log(a*b)
 
@@ -1651,7 +1651,7 @@ class LaplaceDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return exp(self.mu*t) / (1 - self.b**2*t**2)
 
-    def _entropy(self, t):
+    def _entropy(self):
         return log(2*self.b*E)
 
 def Laplace(name, mu, b):
@@ -1738,7 +1738,7 @@ class LogisticDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return exp(self.mu*t) * Beta(1 - self.s*t, 1 + self.s*t)
 
-    def _entropy(self, t):
+    def _entropy(self):
         return log(self.s) + 2
 
 def Logistic(name, mu, s):
@@ -1814,7 +1814,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError('Moment generating function of the log-normal distribution is not defined.')
 
-    def _entropy(self, t):
+    def _entropy(self):
         mean, std = self.mean, self.std
         return log(std*exp(mean + 1/2)*sqrt(2*pi))/log(2)
 
@@ -1893,7 +1893,7 @@ class MaxwellDistribution(SingleContinuousDistribution):
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
 
-    def _entropy(self, t):
+    def _entropy(self):
         return log(self.a * sqrt(2*pi)) + EulerGamma - 1/2
 
 def Maxwell(name, a):
@@ -2064,7 +2064,7 @@ class NormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return exp(mean*t + std**2*t**2/2)
 
-    def _entropy(self, t):
+    def _entropy(self):
         return log(2*pi*E*self.std**2)/2
 
 def Normal(name, mean, std):
@@ -2191,7 +2191,7 @@ class ParetoDistribution(SingleContinuousDistribution):
         xm, alpha = self.xm, self.alpha
         return alpha * (-I * xm * t) ** alpha * uppergamma(-alpha, -I * xm * t)
 
-    def _entropy(self, t):
+    def _entropy(self):
         xm, alpha = self.xm, self.aplha
         return log(xm*exp(1 + 1/alpha)/alpha)
 
@@ -2272,7 +2272,7 @@ class QuadraticUDistribution(SingleContinuousDistribution):
 
             return -3*I*(exp(I*a*t*exp(I*b*t)) * (4*I - (-4*b + (a+b)**2)*t)) / ((a-b)**3 * t**2)
 
-    def _entropy(self, t):
+    def _entropy(self):
         return S.NaN
 
 
@@ -2434,7 +2434,7 @@ class RayleighDistribution(SingleContinuousDistribution):
         sigma = self.sigma
         return 1 + sigma*t*exp(sigma**2*t**2/2) * sqrt(pi/2) * (erf(sigma*t/sqrt(2)) + 1)
 
-    def _entropy(self, t):
+    def _entropy(self):
         return 1 + log(self.sigma/sqrt(2)) + EulerGamma/2
 
 
@@ -2569,7 +2569,7 @@ class StudentTDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the Student-T distribution is undefined.')
 
-    def _entropy(self, t):
+    def _entropy(self):
         nu = self.nu
         return (nu + 1)*(digamma((1 + nu)/2) - digamma(nu/2)) + log(sqrt(nu)*beta_fn(S(1)/2, nu/2))
 
@@ -2648,7 +2648,7 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
             (2*(d-x) / ((d-c)*(d+c-a-b)), And(c <= x, x <= d)),
             (S.Zero, True))
 
-    def _entropy(self, x):
+    def _entropy(self):
         a, b, c, d = self.a, self.b, self.c, self.d
         return (d - c + b - a)/(2*(d + c - b - a)) +log((d + c - b - a)/2)
 
@@ -2740,7 +2740,7 @@ class TriangularDistribution(SingleContinuousDistribution):
         return 2 * ((b - c) * exp(a * t) - (b - a) * exp(c * t) + (c + a) * exp(b * t)) / (
         (b - a) * (c - a) * (b - c) * t ** 2)
 
-    def _entropy(self, t):
+    def _entropy(self):
         return 1/2 + log((self.b - self.a)/2)
 
 
@@ -2840,7 +2840,7 @@ class UniformDistribution(SingleContinuousDistribution):
         return Piecewise(((exp(t*right) - exp(t*left)) / (t * (right - left)), Ne(t, 0)),
                          (S.One, True))
 
-    def _entropy(self, t):
+    def _entropy(self):
         return log(self.right - self.left)
 
     def expectation(self, expr, var, **kwargs):
@@ -3101,7 +3101,7 @@ class WeibullDistribution(SingleContinuousDistribution):
     def sample(self):
         return random.weibullvariate(self.alpha, self.beta)
 
-    def _entropy(self, x):
+    def _entropy(self):
         return EulerGamma * (1 - 1/self.beta) + log(self.alpha/self.beta) + 1
 
 def Weibull(name, alpha, beta):
@@ -3182,7 +3182,7 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
         return Piecewise((2 * besseli(1, self.R*t) / (self.R*t), Ne(t, 0)),
                          (S.One, True))
 
-    def _entropy(self, t):
+    def _entropy(self):
         return log(pi*self.R) - 1/2
 
 def WignerSemicircle(name, R):
