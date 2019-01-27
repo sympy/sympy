@@ -9,6 +9,11 @@ if [[ "${TEST_SETUP}" == "true" ]]; then
     python bin/test_setup.py
 fi
 
+if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
+    sudo apt-get install gcc
+    sudo apt-get install gfortran
+fi
+
 if [[ "${TEST_SPHINX}" == "true" ]]; then
     echo "Testing SPHINX"
     cd doc
