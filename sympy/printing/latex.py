@@ -2353,6 +2353,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     8 \sqrt{2} \tau^{\frac{7}{2}}
 
     ``root_notation`` options:
+    
     >>> print(latex(x**Rational(1,7)))
     \sqrt[7]{x}
     >>> print(latex(x**(S(1)/7), root_notation=False))
