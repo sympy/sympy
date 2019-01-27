@@ -1280,8 +1280,8 @@ class MatrixEigen(MatrixSubspaces):
         iszerofunc : function, optional
             Specifies a zero testing function to be used in ``rref``.
 
-            Default value is ``_iszero``, which uses naive and fastest approach
-            by using sympy's default assumption handler.
+            Default value is ``_iszero``, which uses SymPy's naive and fast
+            default assumption handler.
 
             It can also accept any user-specified zero testing function, if it
             is formatted as a function which accepts a single symbolic argument
@@ -1292,19 +1292,14 @@ class MatrixEigen(MatrixSubspaces):
             If ``True``, ``as_content_primitive()`` will be used to tidy up
             normalization artifacts.
 
-            It will also be passed to and interpreted by the ``nullspace``
-            routine.
+            It will also be used by the ``nullspace`` routine.
 
         chop : bool or positive number, optional
             If the matrix contains any Floats, they will be changed to Rationals
             for computation purposes, but the answers will be returned after
-            being evaluated with evalf.
-
-            If it is desired to removed small real or imaginary portions during
-            the evalf step, setting ``chop=True`` will automatically set
-            a precision in regards to the precision set to ``evalf`` and chop,
-            while passing a value to the flag will make it chop in regards to
-            the given precision.
+            being evaluated with evalf. The ``chop`` flag is passed to ``evalf``.
+            When ``chop=True`` a default precision will be used; a number will
+            be interpreted as the desired level of precision.
 
         Returns
         =======
@@ -1312,12 +1307,11 @@ class MatrixEigen(MatrixSubspaces):
             A ragged list containing tuples of data obtained by ``eigenvals``
             and ``nullspace``.
 
-            ``eigenspace`` is a list containing ``eigenvector`` s with regard
-            to each eigenvalue.
+            ``eigenspace`` is a list containing the ``eigenvector`` for each
+            eigenvalue.
 
-            ``eigenvector`` is a vector in the form of the ``Matrix``.
-            For example, ``Matrix([a_1, a_2, a_3])`` if it is a vector of
-            length 3.
+            ``eigenvector`` is a vector in the form of a ``Matrix``. e.g.
+            a vector of length 3 is returned as ``Matrix([a_1, a_2, a_3])``.
 
         Raises
         ======
