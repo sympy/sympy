@@ -18,6 +18,8 @@ from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
         sumsets, rv_subs, NamedArgsMixin)
 from sympy.core.containers import Dict
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import Boolean
 import random
 
 class FiniteDensity(dict):
@@ -309,7 +311,11 @@ class FinitePSpace(PSpace):
                 for elem in self.domain])
 
     def compute_entropy(self, expr):
-        return sum([-self.prob_of(elem)*log(self.prob_of(elem)) for elem in self.domain])
+        if isinstance(expr, (Relational, Boolean)):
+            domain = self.where(expr)
+        else:
+            domain = self.domain
+        return sum([-self.prob_of(elem)*log(self.prob_of(elem)) for elem in domain])
 
     def probability(self, condition):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))

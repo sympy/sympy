@@ -115,6 +115,7 @@ def test_H():
     assert simplify(H(X) - (log(pi)/2 + 1/2 + log(2)/2)) == 0
     assert simplify(H(L) - (-p*log(p) - (-p + 1)*log(-p + 1))/p) == 0
     assert H(D) == log(6)
+    assert H(D > 3) == log(6)/2
 
 def test_Sample():
     X = Die('X', 6)

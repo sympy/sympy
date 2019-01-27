@@ -938,9 +938,10 @@ def entropy(expr, condition=None, evaluate=True, **kwargs):
     >>> from sympy.stats import Normal, Die, entropy
     >>> X = Normal('X', 0, 1)
     >>> entropy(X)
-    log(pi)/2 + 1/2 + log(2)/2
+    log(2*E*pi)/2
 
     >>> D = Die('D', 4)
+    >>> entropy(D)
     log(4)
 
     References
