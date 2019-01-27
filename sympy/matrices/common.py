@@ -664,8 +664,10 @@ class MatrixSpecial(MatrixRequired):
 
         rows : rows of the resulting matrix; computed if
                not given.
+
         cols : columns of the resulting matrix; computed if
                not given.
+
         cls : class for the resulting matrix
 
         Examples
@@ -791,9 +793,13 @@ class MatrixSpecial(MatrixRequired):
         ======
 
         size : rows and columns of the matrix
+
         rows : rows of the matrix (if None, rows=size)
+
         cols : cols of the matrix (if None, cols=size)
+
         eigenvalue : value on the diagonal of the matrix
+
         band : position of off-diagonal 1s.  May be 'upper' or
                'lower'. (Default: 'upper')
 
