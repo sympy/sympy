@@ -2674,26 +2674,19 @@ def _tsolve(eq, sym, **flags):
                     return _solve(lhs.exp, sym, **flags) if rhs != 0 else []
 
                 # Gets most solutions...
-                sol = _solve(exp(log(lhs.base)*lhs.exp)-exp(log(rhs)), sym)
+                sol = _solve(exp(log(lhs.base)*lhs.exp)-exp(log(rhs)), sym, **flags)
+
+                # Check for duplicate solutions
+                def equal(expr1, expr2):
+                    return expr1.equals(expr2) or nsimplify(expr1) == nsimplify(expr2)
 
                 # Guess a rational exponent
                 e_rat = nsimplify(log(abs(rhs))/log(abs(lhs.base)))
-
-                # This is needed because simplify(log(abs(b)**2)/log(abs(b)))
-                # only works if b is declared as non-zero. Should be fixed in
-                # simplify
-                if not e_rat.is_Number:
-                    dsubs = {s: Symbol(str(s) + '_', positive=True)for s in
-                            e_rat.free_symbols}
-                    new_e = simplify(e_rat.subs(dsubs))
-                    if new_e.is_Number:
-                        e_rat = new_e
-
+                e_rat = simplify(posify(e_rat)[0])
                 n, d = fraction(e_rat)
                 if expand(lhs.base**n - rhs**d) == 0:
-                    # Remove duplicate more complicated solutions
-                    sol = [s for s in sol if nsimplify(lhs.exp.subs(sym, s)) != e_rat]
-                    sol.extend(solve(lhs.exp - e_rat, sym))
+                    sol = [s for s in sol if not equal(lhs.exp.subs(sym, s), e_rat)]
+                    sol.extend(_solve(lhs.exp - e_rat, sym, **flags))
 
                 return list(ordered(set(sol)))
 
@@ -2721,9 +2714,7 @@ def _tsolve(eq, sym, **flags):
                         for m in range(1, 10):
                             check.extend(_solve(lhs.exp - S(n)/m, sym, **flags))
 
-                for s in set(check):
-                    if eq.subs(sym, s) == 0:
-                        sol.append(s)
+                sol.extend(s for s in check if eq.subs(sym, s).equals(0))
                 return list(ordered(set(sol)))
 
         elif lhs.is_Mul and rhs.is_positive:
