@@ -1268,26 +1268,62 @@ class MatrixEigen(MatrixSubspaces):
             return [simplify(value) for value in eigs]
 
     def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero, **flags):
-        """Return list of triples (eigenval, multiplicity, basis).
-
-        The flag ``simplify`` has two effects:
-            1) if bool(simplify) is True, as_content_primitive()
-            will be used to tidy up normalization artifacts;
-            2) if nullspace needs simplification to compute the
-            basis, the simplify flag will be passed on to the
-            nullspace routine which will interpret it there.
+        """Return list of triples (eigenval, multiplicity, eigenspace).
 
         Parameters
         ==========
 
-        error_when_incomplete : bool
+        error_when_incomplete : bool, optional
             Raise an error when not all eigenvalues are computed. This is
             caused by ``roots`` not returning a full list of eigenvalues.
 
-        If the matrix contains any Floats, they will be changed to Rationals
-        for computation purposes, but the answers will be returned after being
-        evaluated with evalf. If it is desired to removed small imaginary
-        portions during the evalf step, pass a value for the ``chop`` flag.
+        iszerofunc : function, optional
+            Specifies a zero testing function to be used in ``rref``.
+
+            Default value is ``_iszero``, which uses SymPy's naive and fast
+            default assumption handler.
+
+            It can also accept any user-specified zero testing function, if it
+            is formatted as a function which accepts a single symbolic argument
+            and returns ``True`` if it is tested as zero and ``False`` if it
+            is tested as non-zero, and ``None`` if it is undecidable.
+
+        simplify : bool or function, optional
+            If ``True``, ``as_content_primitive()`` will be used to tidy up
+            normalization artifacts.
+
+            It will also be used by the ``nullspace`` routine.
+
+        chop : bool or positive number, optional
+            If the matrix contains any Floats, they will be changed to Rationals
+            for computation purposes, but the answers will be returned after
+            being evaluated with evalf. The ``chop`` flag is passed to ``evalf``.
+            When ``chop=True`` a default precision will be used; a number will
+            be interpreted as the desired level of precision.
+
+        Returns
+        =======
+        ret : [(eigenval, multiplicity, eigenspace), ...]
+            A ragged list containing tuples of data obtained by ``eigenvals``
+            and ``nullspace``.
+
+            ``eigenspace`` is a list containing the ``eigenvector`` for each
+            eigenvalue.
+
+            ``eigenvector`` is a vector in the form of a ``Matrix``. e.g.
+            a vector of length 3 is returned as ``Matrix([a_1, a_2, a_3])``.
+
+        Raises
+        ======
+
+        NotImplementedError
+            If failed to compute nullspace.
+
+        See Also
+        ========
+
+        eigenvals
+        MatrixSubspaces.nullspace
         """
         from sympy.matrices import eye
 
