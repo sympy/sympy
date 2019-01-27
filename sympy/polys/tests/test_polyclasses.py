@@ -1,10 +1,9 @@
 """Tests for OO layer of several polynomial representations. """
 
-from sympy import Rational
 from sympy.core.compatibility import long
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polyclasses import DMP, DMF, ANP
-from sympy.polys.polyerrors import ExactQuotientFailed
+from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible
 from sympy.polys.specialpolys import f_polys
 from sympy.utilities.pytest import raises
 
@@ -505,7 +504,11 @@ def test_ANP_arithmetics():
 
     assert r1 == r2 == c == a % b
 
+    raises(NotInvertible, lambda: a.div(c))
+    raises(NotInvertible, lambda: a.rem(c))
+
     # Comparison with "hard-coded" value fails despite looking identical
+    # from sympy import Rational
     # c = ANP([Rational(11, 10), Rational(-1, 5), Rational(-3, 5)], [1, 0, 0, -2], QQ)
 
     assert q == a/b # == c
