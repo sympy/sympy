@@ -4,29 +4,26 @@ from __future__ import print_function, division
 
 import math
 
-from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
 from sympy.core.compatibility import ordered, range, reduce
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import _mexpand
+from sympy.core.logic import fuzzy_not
 from sympy.core.mul import expand_2arg, Mul
+from sympy.core.numbers import Rational, igcd, comp
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
+from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, igcd, comp
-from sympy.core.exprtools import factor_terms
-from sympy.core.logic import fuzzy_not
-from sympy.core.function import _mexpand
-
-from sympy.ntheory import divisors, isprime, nextprime
 from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
 from sympy.functions.elementary.miscellaneous import root
-
-from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
-from sympy.polys.specialpolys import cyclotomic_poly
+from sympy.ntheory import divisors, isprime, nextprime
 from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
     DomainError)
 from sympy.polys.polyquinticconst import PolyQuintic
+from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.rationaltools import together
-
+from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.simplify import simplify, powsimp
 from sympy.utilities import public
 
@@ -586,11 +583,11 @@ def roots_quintic(f):
     R3 = R3.as_real_imag()
     R4 = R4.as_real_imag()
 
-    for i, root in enumerate(_sol):
-        Res[1][i] = _quintic_simplify(root.subs({ a: R1[0], b: R1[1] }))
-        Res[2][i] = _quintic_simplify(root.subs({ a: R2[0], b: R2[1] }))
-        Res[3][i] = _quintic_simplify(root.subs({ a: R3[0], b: R3[1] }))
-        Res[4][i] = _quintic_simplify(root.subs({ a: R4[0], b: R4[1] }))
+    for i, currentroot in enumerate(_sol):
+        Res[1][i] = _quintic_simplify(currentroot.subs({ a: R1[0], b: R1[1] }))
+        Res[2][i] = _quintic_simplify(currentroot.subs({ a: R2[0], b: R2[1] }))
+        Res[3][i] = _quintic_simplify(currentroot.subs({ a: R3[0], b: R3[1] }))
+        Res[4][i] = _quintic_simplify(currentroot.subs({ a: R4[0], b: R4[1] }))
 
     for i in range(1, 5):
         for j in range(5):
@@ -605,7 +602,6 @@ def roots_quintic(f):
             break
 
     u, v = quintic.uv(theta, d)
-    sqrt5 = math.sqrt(5)
 
     # Now we have various Res values. Each will be a list of five
     # values. We have to pick one r value from those five for each Res
@@ -847,7 +843,7 @@ def roots(f, *gens, **flags):
     References
     ==========
 
-    1. https://en.wikipedia.org/wiki/Cubic_function#Trigonometric_.28and_hyperbolic.29_method
+    .. [1] https://en.wikipedia.org/wiki/Cubic_function#Trigonometric_.28and_hyperbolic.29_method
 
     """
     from sympy.polys.polytools import to_rational_coeffs
@@ -881,13 +877,14 @@ def roots(f, *gens, **flags):
                 # check for foo**n factors in the constant
                 n = f.degree()
                 npow_bases = []
+                others = []
                 expr = f.as_expr()
                 con = expr.as_independent(*gens)[0]
                 for p in Mul.make_args(con):
                     if p.is_Pow and not p.exp % n:
                         npow_bases.append(p.base**(p.exp/n))
                     else:
-                        other.append(p)
+                        others.append(p)
                     if npow_bases:
                         b = Mul(*npow_bases)
                         B = Dummy()
@@ -907,27 +904,27 @@ def roots(f, *gens, **flags):
         if f.is_multivariate:
             raise PolynomialError('multivariate polynomials are not supported')
 
-    def _update_dict(result, root, k):
-        if root in result:
-            result[root] += k
+    def _update_dict(result, currentroot, k):
+        if currentroot in result:
+            result[currentroot] += k
         else:
-            result[root] = k
+            result[currentroot] = k
 
     def _try_decompose(f):
         """Find roots using functional decomposition. """
         factors, roots = f.decompose(), []
 
-        for root in _try_heuristics(factors[0]):
-            roots.append(root)
+        for currentroot in _try_heuristics(factors[0]):
+            roots.append(currentroot)
 
-        for factor in factors[1:]:
+        for currentfactor in factors[1:]:
             previous, roots = list(roots), []
 
-            for root in previous:
-                g = factor - Poly(root, f.gen)
+            for currentroot in previous:
+                g = currentfactor - Poly(currentroot, f.gen)
 
-                for root in _try_heuristics(g):
-                    roots.append(root)
+                for currentroot in _try_heuristics(g):
+                    roots.append(currentroot)
 
         return roots
 
@@ -1012,24 +1009,24 @@ def roots(f, *gens, **flags):
                                 rescale_x, f = res[1], res[-1]
                             result = roots(f)
                             if not result:
-                                for root in _try_decompose(f):
-                                    _update_dict(result, root, 1)
+                                for currentroot in _try_decompose(f):
+                                    _update_dict(result, currentroot, 1)
                         else:
                             for r in _try_heuristics(f):
                                 _update_dict(result, r, 1)
                     else:
-                        for root in _try_decompose(f):
-                            _update_dict(result, root, 1)
+                        for currentroot in _try_decompose(f):
+                            _update_dict(result, currentroot, 1)
                 else:
-                    for factor, k in factors:
-                        for r in _try_heuristics(Poly(factor, f.gen, field=True)):
+                    for currentfactor, k in factors:
+                        for r in _try_heuristics(Poly(currentfactor, f.gen, field=True)):
                             _update_dict(result, r, k)
 
     if coeff is not S.One:
         _result, result, = result, {}
 
-        for root, k in _result.items():
-            result[coeff*root] = k
+        for currentroot, k in _result.items():
+            result[coeff*currentroot] = k
 
     result.update(zeros)
 

@@ -2,15 +2,13 @@
 
 from __future__ import print_function, division
 
+from sympy.core import (S, Add, Mul, Pow, Expr,
+    expand_mul, expand_multinomial)
+from sympy.core.compatibility import range
+from sympy.core.exprtools import decompose_power, decompose_power_rat
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
-from sympy.core.exprtools import decompose_power, decompose_power_rat
-
-from sympy.core import (S, Add, Mul, Pow, Expr,
-    expand_mul, expand_multinomial)
-
-from sympy.core.compatibility import range
 
 import re
 

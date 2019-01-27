@@ -2,12 +2,11 @@
 
 from __future__ import print_function, division
 
-from sympy.core.sympify import CantSympify
-
-from sympy.polys.polyutils import PicklableWithSlots
-from sympy.polys.polyerrors import CoercionFailed, NotReversible
-
 from sympy import oo
+from sympy.core.sympify import CantSympify
+from sympy.polys.polyerrors import CoercionFailed, NotReversible
+from sympy.polys.polyutils import PicklableWithSlots
+
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
@@ -1641,11 +1640,11 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def div(f, g):
         dom, per, F, G, mod = f.unify(g)
-        return (per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom)), self.zero(mod, dom))
+        return (per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom)), f.zero(mod, dom))
 
     def rem(f, g):
         dom, _, _, _, mod = f.unify(g)
-        return self.zero(mod, dom)
+        return f.zero(mod, dom)
 
     def quo(f, g):
         dom, per, F, G, mod = f.unify(g)

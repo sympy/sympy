@@ -1,9 +1,9 @@
 from sympy import var, sturm, subresultants, prem, pquo
-from sympy.matrices import Matrix, eye
+from sympy.matrices import Matrix
 from sympy.polys.subresultants_qq_zz import (sylvester, res, res_q, res_z, bezout,
     subresultants_sylv,   modified_subresultants_sylv,
     subresultants_bezout, modified_subresultants_bezout,
-    process_matrix_output, backward_eye,
+    backward_eye,
     sturm_pg, sturm_q, sturm_amv, euclid_pg, euclid_q,
     euclid_amv, modified_subresultants_pg, subresultants_pg,
     subresultants_amv_q, quo_z, rem_z, subresultants_amv,
@@ -261,6 +261,10 @@ def test_quo_z():
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
     assert quo_z(p, -q, x) != pquo(p, -q, x)
+
+    y = var('y')
+    q = 3*x**6 + 5*y**4 - 4*x**2 - 9*x + 21
+    assert quo_z(p, -q, x) == pquo(p, -q, x)
 
 def test_subresultants_amv():
     x = var('x')
