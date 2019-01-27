@@ -62,16 +62,14 @@ def polytope_integrate(poly, expr=None, **kwargs):
     clockwise = kwargs.get('clockwise', False)
     max_degree = kwargs.get('max_degree', None)
 
-    isPoly = isinstance(poly, Polygon)
-    if isPoly:
-        poly = poly.vertices
-        if clockwise:
-            poly = point_sort(poly)
-    elif clockwise:
+    if clockwise:
+        if isinstance(poly, Polygon):
+            poly = Polygon(point_sort(poly.vertices), evaluate=False)
+        else:
             raise TypeError("clockwise=True works for only 2-Polytope"
                             "V-representation input")
 
-    if isPoly:
+    if isinstance(poly, Polygon):
         # For Vertex Representation(2D case)
         hp_params = hyperplane_parameters(poly)
         facets = poly.sides
