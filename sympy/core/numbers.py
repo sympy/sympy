@@ -176,28 +176,12 @@ def igcd(*args):
     if len(args) < 2:
         raise TypeError(
             'igcd() takes at least 2 arguments (%s given)' % len(args))
-    if 1 in args:
-        a = 1
-        k = 0
-    else:
-        a = abs(as_int(args[0]))
-        k = 1
-    if a != 1:
-        while k < len(args):
-            b = args[k]
-            k += 1
-            b = as_int(b)
-            if not b:
-                continue
-            if b == 1:
-                a = 1
-                break
-            if b < 0:
-                b = -b
-            a = igcd2(a, b)
-    while k < len(args):
-        as_int(args[k])
-        k += 1
+    args_temp = [abs(as_int(i)) for i in args]
+    if 1 in args_temp:
+        return 1
+    a = args_temp.pop()
+    for b in args_temp:
+        a = igcd2(a, b) if b else a
     return a
 
 
