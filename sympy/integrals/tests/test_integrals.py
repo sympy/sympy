@@ -1478,6 +1478,6 @@ def test_issue_4311():
 
 def test_issue_15494():
     x = symbols('x')
-    integrand = (-2*exp(1.5*x)+exp(x))*exp(x)
+    integrand = (sy.exp(x/2)-2*sy.exp(1.6*x)+sy.exp(x))*sy.exp(x)
     sol = integrate(integrand, x)
-    assert sol == exp(2*x)/2 - 0.8*exp(2.5*x)
+    assert str(sol) == str(0.666666666666667*exp(Rational(3,2)*x) + 0.5*exp(2*x) -  0.769230769230769*exp(2.6*x))
