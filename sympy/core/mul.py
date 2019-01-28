@@ -274,7 +274,10 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif isinstance(o, MatrixExpr):
-                coeff = o.__mul__(coeff)
+                if isinstance(coeff, MatrixExpr):
+                    coeff *= o
+                else:
+                    coeff = o.__mul__(coeff)
                 continue
 
             elif o is S.ComplexInfinity:
@@ -320,10 +323,6 @@ class Mul(Expr, AssocOp):
                         elif b.is_positive or e.is_integer:
                             num_exp.append((b, e))
                             continue
-
-                    elif b is S.ImaginaryUnit and e.is_Rational:
-                        neg1e += e/2
-                        continue
 
                 c_powers.append((b, e))
 

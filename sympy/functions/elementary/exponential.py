@@ -467,6 +467,12 @@ class exp(ExpBase):
                 if not isinstance(cosine, cos) and not isinstance (sine, sin):
                     return cosine + S.ImaginaryUnit*sine
 
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
+        if arg.is_Mul:
+            logs = [a for a in arg.args if isinstance(a, log) and len(a.args) == 1]
+            if logs:
+                return Pow(logs[0].args[0], arg.coeff(logs[0]))
+
 
 class log(Function):
     r"""

@@ -22,6 +22,9 @@ if llvmlite:
     llvm.initialize_native_asmprinter()
 
 
+__doctest_requires__ = {('llvm_callable'): ['llvmlite']}
+
+
 class LLVMJitPrinter(Printer):
     '''Convert expressions to LLVM IR'''
     def __init__(self, module, builder, fn, *args, **kwargs):

@@ -613,7 +613,7 @@ class _TensorDataLazyEvaluator(CantSympify):
 
     @staticmethod
     def _flip_index_by_metric(data, metric, pos):
-        from .array import tensorproduct, tensorcontraction, permutedims, MutableDenseNDimArray, NDimArray
+        from .array import tensorproduct, tensorcontraction
 
         mdim = metric.rank()
         ddim = data.rank()
@@ -1512,7 +1512,7 @@ class TensorType(Basic):
             return [TensorHead(name, self, comm) for name in names]
 
 
-def tensorhead(name, typ, sym, comm=0):
+def tensorhead(name, typ, sym=None, comm=0):
     """
     Function generating tensorhead(s).
 
@@ -1539,7 +1539,16 @@ def tensorhead(name, typ, sym, comm=0):
     >>> A(a, -b)
     A(a, -b)
 
+    If no symmetry parameter is provided, assume there are not index
+    symmetries:
+
+    >>> B = tensorhead('B', [Lorentz, Lorentz])
+    >>> B(a, -b)
+    B(a, -b)
+
     """
+    if sym is None:
+        sym = [[1] for i in range(len(typ))]
     sym = tensorsymmetry(*sym)
     S = TensorType(typ, sym)
     th = S(name, comm)
@@ -2039,7 +2048,7 @@ class TensExpr(Expr):
 
     @staticmethod
     def _match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict):
-        from .array import Array, tensorcontraction, tensorproduct, permutedims
+        from .array import tensorcontraction, tensorproduct, permutedims
 
         index_types1 = [i.tensor_index_type for i in free_ind1]
 
@@ -2159,7 +2168,7 @@ class TensExpr(Expr):
         >>> expr.replace_with_arrays(repl, [j, i])
         [[0, -b/2 + c/2], [b/2 - c/2, 0]]
         """
-        from .array import Array, permutedims
+        from .array import Array
 
         replacement_dict = {tensor: Array(array) for tensor, array in replacement_dict.items()}
 
@@ -2187,6 +2196,16 @@ class TensExpr(Expr):
             #return array
         #array = permutedims(array, permutation)
         return array
+
+    def _check_add_Sum(self, expr, index_symbols):
+        from sympy import Sum
+        indices = self.get_indices()
+        dum = self.dum
+        sum_indices = [ (index_symbols[i], 0,
+            indices[i].tensor_index_type.dim-1) for i, j in dum]
+        if sum_indices:
+            expr = Sum(expr, *sum_indices)
+        return expr
 
 
 class TensAdd(TensExpr, AssocOp):
@@ -2562,6 +2581,9 @@ class TensAdd(TensExpr, AssocOp):
             raise ValueError("No iteration on abstract tensors")
         return self.data.flatten().__iter__()
 
+    def _eval_rewrite_as_Indexed(self, *args):
+        return Add.fromiter(args)
+
 
 class Tensor(TensExpr):
     """
@@ -2808,7 +2830,7 @@ class Tensor(TensExpr):
         return self.data[item]
 
     def _extract_data(self, replacement_dict):
-        from .array import Array, tensorcontraction, tensorproduct, permutedims
+        from .array import Array
         for k, v in replacement_dict.items():
             if isinstance(k, Tensor) and k.args[0] == self.args[0]:
                 other = k
@@ -2841,7 +2863,6 @@ class Tensor(TensExpr):
 
         free_ind1 = self.get_free_indices()
         free_ind2 = other.get_free_indices()
-        index_types1 = self.index_types
 
         return self._match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict)
 
@@ -2920,6 +2941,13 @@ class Tensor(TensExpr):
 
     def contract_delta(self, metric):
         return self.contract_metric(metric)
+
+    def _eval_rewrite_as_Indexed(self, tens, indices):
+        from sympy import Indexed
+        # TODO: replace .args[0] with .name:
+        index_symbols = [i.args[0] for i in self.get_indices()]
+        expr = Indexed(tens.args[0], *index_symbols)
+        return self._check_add_Sum(expr, index_symbols)
 
 
 class TensMul(TensExpr, AssocOp):
@@ -3695,6 +3723,13 @@ class TensMul(TensExpr, AssocOp):
         if self.data is None:
             raise ValueError("No iteration on abstract tensors")
         return self.data.__iter__()
+
+    def _eval_rewrite_as_Indexed(self, *args):
+        from sympy import Sum
+        index_symbols = [i.args[0] for i in self.get_indices()]
+        args = [arg.args[0] if isinstance(arg, Sum) else arg for arg in args]
+        expr = Mul.fromiter(args)
+        return self._check_add_Sum(expr, index_symbols)
 
 
 class TensorElement(TensExpr):

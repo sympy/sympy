@@ -2909,6 +2909,8 @@ def nsolve(*args, **kwargs):
             if isinstance(fi, Equality):
                 f[i] = fi.lhs - fi.rhs
         f = Matrix(f).T
+    if iterable(x0):
+        x0 = list(x0)
     if not isinstance(f, Matrix):
         # assume it's a sympy expression
         if isinstance(f, Equality):
@@ -2999,6 +3001,9 @@ def _invert(eq, *symbols, **kwargs):
 
     """
     eq = sympify(eq)
+    if eq.args:
+        # make sure we are working with flat eq
+        eq = eq.func(*eq.args)
     free = eq.free_symbols
     if not symbols:
         symbols = free
@@ -3008,9 +3013,6 @@ def _invert(eq, *symbols, **kwargs):
     dointpow = bool(kwargs.get('integer_power', False))
 
     lhs = eq
-    if eq.args:
-        # make sure we are working with flat eq
-        lhs = eq.func(*eq.args)
     rhs = S.Zero
     while True:
         was = lhs

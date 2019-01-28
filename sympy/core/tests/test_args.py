@@ -6,7 +6,6 @@
 
 import os
 import re
-import warnings
 import io
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
@@ -14,7 +13,6 @@ from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, SKIP
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 x, y, z = symbols('x,y,z')
 
@@ -74,9 +72,6 @@ def test_all_classes_are_tested():
 
             if test not in ns:
                 failed.append(module + '.' + name)
-
-    # reset all SymPyDeprecationWarning into errors
-    warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
     assert not failed, "Missing classes: %s.  Please add tests for these to sympy/core/tests/test_args.py." % ", ".join(failed)
 
@@ -1582,6 +1577,11 @@ def test_sympy__functions__combinatorial__numbers__euler():
     assert _test_args(euler(x))
 
 
+def test_sympy__functions__combinatorial__numbers__carmichael():
+    from sympy.functions.combinatorial.numbers import carmichael
+    assert _test_args(carmichael(x))
+
+
 def test_sympy__functions__combinatorial__numbers__fibonacci():
     from sympy.functions.combinatorial.numbers import fibonacci
     assert _test_args(fibonacci(x))
@@ -2620,6 +2620,14 @@ def test_sympy__matrices__expressions__slice__MatrixSlice():
     from sympy.matrices.expressions import MatrixSymbol
     X = MatrixSymbol('X', 4, 4)
     assert _test_args(MatrixSlice(X, (0, 2), (0, 2)))
+
+
+def test_sympy__matrices__expressions__applyfunc__ElementwiseApplyFunction():
+    from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
+    from sympy.matrices.expressions import MatrixSymbol
+    X = MatrixSymbol("X", x, x)
+    func = Lambda(x, x**2)
+    assert _test_args(ElementwiseApplyFunction(func, X))
 
 
 def test_sympy__matrices__expressions__blockmatrix__BlockDiagMatrix():
@@ -4218,6 +4226,13 @@ def test_sympy__ntheory__residue_ntheory__mobius():
     assert _test_args(mobius(2))
 
 
+def test_sympy__ntheory__generate__primepi():
+    from sympy.ntheory import primepi
+    n = symbols('n')
+    t = primepi(n)
+    assert _test_args(t)
+
+
 def test_sympy__physics__optics__waves__TWave():
     from sympy.physics.optics import TWave
     A, f, phi = symbols('A, f, phi')
@@ -4232,6 +4247,41 @@ def test_sympy__physics__optics__gaussopt__BeamParameter():
 def test_sympy__physics__optics__medium__Medium():
     from sympy.physics.optics import Medium
     assert _test_args(Medium('m'))
+
+
+def test_sympy__codegen__array_utils__CodegenArrayContraction():
+    from sympy.codegen.array_utils import CodegenArrayContraction
+    from sympy import IndexedBase
+    A = symbols("A", cls=IndexedBase)
+    assert _test_args(CodegenArrayContraction(A, (0, 1)))
+
+
+def test_sympy__codegen__array_utils__CodegenArrayDiagonal():
+    from sympy.codegen.array_utils import CodegenArrayDiagonal
+    from sympy import IndexedBase
+    A = symbols("A", cls=IndexedBase)
+    assert _test_args(CodegenArrayDiagonal(A, (0, 1)))
+
+
+def test_sympy__codegen__array_utils__CodegenArrayTensorProduct():
+    from sympy.codegen.array_utils import CodegenArrayTensorProduct
+    from sympy import IndexedBase
+    A, B = symbols("A B", cls=IndexedBase)
+    assert _test_args(CodegenArrayTensorProduct(A, B))
+
+
+def test_sympy__codegen__array_utils__CodegenArrayElementwiseAdd():
+    from sympy.codegen.array_utils import CodegenArrayElementwiseAdd
+    from sympy import IndexedBase
+    A, B = symbols("A B", cls=IndexedBase)
+    assert _test_args(CodegenArrayElementwiseAdd(A, B))
+
+
+def test_sympy__codegen__array_utils__CodegenArrayPermuteDims():
+    from sympy.codegen.array_utils import CodegenArrayPermuteDims
+    from sympy import IndexedBase
+    A = symbols("A", cls=IndexedBase)
+    assert _test_args(CodegenArrayPermuteDims(A, (1, 0)))
 
 
 def test_sympy__codegen__ast__Assignment():

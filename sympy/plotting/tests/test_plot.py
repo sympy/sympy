@@ -4,13 +4,12 @@ from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
 from sympy.plotting.plot import unset_show, plot_contour
 from sympy.utilities import lambdify as lambdify_
-from sympy.utilities.pytest import skip, raises
+from sympy.utilities.pytest import skip, raises, warns
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
 
 from tempfile import NamedTemporaryFile
 import os
-import warnings
 
 unset_show()
 
@@ -279,15 +278,11 @@ def plot_and_save_4(name):
     # is the only way to evaluate the integral. We should perhaps just remove
     # that warning.
 
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning, match="The evaluation of the expression is problematic"):
         i = Integral(log((sin(x)**2 + 1)*sqrt(x**2 + 1)), (x, 0, y))
         p = plot(i, (y, 1, 5))
         p.save(tmp_file('%s_advanced_integral' % name))
         p._backend.close()
-        # Make sure no other warnings were raised
-        for i in w:
-            assert issubclass(i.category, UserWarning)
-            assert "The evaluation of the expression is problematic" in str(i.message)
 
 def plot_and_save_5(name):
     tmp_file = TmpFileManager.tmp_file

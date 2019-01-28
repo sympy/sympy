@@ -13,7 +13,7 @@ from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.matrices import MatrixBase
 
 
-class MatMul(MatrixExpr):
+class MatMul(MatrixExpr, Mul):
     """
     A product of matrix expressions
 
@@ -135,6 +135,31 @@ class MatMul(MatrixExpr):
 
         return coeff_c, coeff_nc + matrices
 
+    def _eval_derivative_matrix_lines(self, x):
+        from .transpose import Transpose
+        with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
+        lines = []
+        for ind in with_x_ind:
+            left_args = self.args[:ind]
+            right_args = self.args[ind+1:]
+
+            right_mat = MatMul.fromiter(right_args)
+            right_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(right_args)])
+            left_mat = MatMul.fromiter(left_args)
+            left_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(left_args)])
+
+            d = self.args[ind]._eval_derivative_matrix_lines(x)
+            for i in d:
+                if i.transposed:
+                    i.append_first(right_mat)
+                    i.append_second(left_rev)
+                else:
+                    i.append_first(left_rev)
+                    i.append_second(right_mat)
+                lines.append(i)
+
+        return lines
+
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
@@ -231,8 +256,9 @@ def remove_ids(mul):
     as args.
 
     See Also
-    --------
-        sympy.strategies.rm_id
+    ========
+
+    sympy.strategies.rm_id
     """
     # Separate Exprs from MatrixExprs in args
     factor, mmul = mul.as_coeff_mmul()
@@ -286,7 +312,7 @@ rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
 def only_squares(*matrices):
-    """ factor matrices only if they are square """
+    """factor matrices only if they are square"""
     if matrices[0].rows != matrices[-1].cols:
         raise RuntimeError("Invalid matrices being multiplied")
     out = []

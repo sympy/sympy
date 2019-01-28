@@ -519,6 +519,8 @@ class CodePrinter(StrPrinter):
     _print_RootSum = _print_not_supported
     _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
+    _print_MutableSparseMatrix = _print_not_supported
+    _print_ImmutableSparseMatrix = _print_not_supported
     _print_Uniform = _print_not_supported
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported

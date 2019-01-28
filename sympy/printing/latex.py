@@ -30,7 +30,7 @@ from sympy.utilities.iterables import has_variety
 import re
 
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
-# Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
+# Complete list at https://docs.mathjax.org/en/latest/tex.html#supported-latex-commands
 # This variable only contains those functions which sympy uses.
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                     'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec', 'csc',
@@ -289,6 +289,10 @@ class LatexPrinter(Printer):
         else:
             return expr
 
+    def _print_Basic(self, expr):
+        l = [self._print(o) for o in expr.args]
+        return self._deal_with_super_sub(expr.__class__.__name__) + r"\left(%s\right)" % ", ".join(l)
+
     def _print_bool(self, e):
         return r"\mathrm{%s}" % e
 
@@ -297,7 +301,6 @@ class LatexPrinter(Printer):
 
     def _print_NoneType(self, e):
         return r"\mathrm{%s}" % e
-
 
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
@@ -666,7 +669,7 @@ class LatexPrinter(Printer):
                 tex += r"\int"
 
                 if len(lim) > 1:
-                    if self._settings['mode'] in ['equation', 'equation*'] \
+                    if self._settings['mode'] != 'inline' \
                             and not self._settings['itex']:
                         tex += r"\limits"
 
@@ -774,7 +777,7 @@ class LatexPrinter(Printer):
                 else:
                     name += r"%s"
             else:
-                name += r"{\left (%s \right )}"
+                name += r"{\left(%s \right)}"
 
             if inv_trig_power_case and exp is not None:
                 name += r"^{%s}" % exp
@@ -829,7 +832,7 @@ class LatexPrinter(Printer):
     _print_Min = _print_Max = _hprint_variadic_function
 
     def _print_floor(self, expr, exp=None):
-        tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
+        tex = r"\left\lfloor{%s}\right\rfloor" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -837,7 +840,7 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_ceiling(self, expr, exp=None):
-        tex = r"\lceil{%s}\rceil" % self._print(expr.args[0])
+        tex = r"\left\lceil{%s}\right\rceil" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -846,9 +849,9 @@ class LatexPrinter(Printer):
 
     def _print_log(self, expr, exp=None):
         if not self._settings["ln_notation"]:
-            tex = r"\log{\left (%s \right )}" % self._print(expr.args[0])
+            tex = r"\log{\left(%s \right)}" % self._print(expr.args[0])
         else:
-            tex = r"\ln{\left (%s \right )}" % self._print(expr.args[0])
+            tex = r"\ln{\left(%s \right)}" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -929,7 +932,7 @@ class LatexPrinter(Printer):
 
     def _print_polar_lift(self, expr, exp=None):
         func = r"\operatorname{polar\_lift}"
-        arg = r"{\left (%s \right )}" % self._print(expr.args[0])
+        arg = r"{\left(%s \right)}" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}%s" % (func, exp, arg)
@@ -1435,7 +1438,10 @@ class LatexPrinter(Printer):
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
-            + '_{%s, %s}' % (expr.i, expr.j)
+            + '_{%s, %s}' % (
+            self._print(expr.i),
+            self._print(expr.j)
+        )
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x):
@@ -1462,6 +1468,10 @@ class LatexPrinter(Printer):
         else:
             return "%s^T" % self._print(mat)
 
+    def _print_Trace(self, expr):
+        mat = expr.arg
+        return r"\mathrm{tr}\left(%s \right)" % self._print(mat)
+
     def _print_Adjoint(self, expr):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
@@ -1470,34 +1480,25 @@ class LatexPrinter(Printer):
         else:
             return r"%s^\dagger" % self._print(mat)
 
-    def _print_MatAdd(self, expr):
-        terms = [self._print(t) for t in expr.args]
-        l = []
-        for t in terms:
-            if t.startswith('-'):
-                sign = "-"
-                t = t[1:]
-            else:
-                sign = "+"
-            l.extend([sign, t])
-        sign = l.pop(0)
-        if sign == '+':
-            sign = ""
-        return sign + ' '.join(l)
-
     def _print_MatMul(self, expr):
         from sympy import Add, MatAdd, HadamardProduct, MatMul, Mul
 
-        def parens(x):
-            if isinstance(x, (Add, MatAdd, HadamardProduct)):
-                return r"\left(%s\right)" % self._print(x)
-            return self._print(x)
+        parens = lambda x: self.parenthesize(x, precedence_traditional(expr), False)
 
-        if isinstance(expr, MatMul) and expr.args[0].is_Number and expr.args[0]<0:
-            expr = Mul(-1*expr.args[0], MatMul(*expr.args[1:]))
-            return '-' + ' '.join(map(parens, expr.args))
+        args = expr.args
+        if isinstance(args[0], Mul):
+            args = args[0].as_ordered_factors() + list(args[1:])
         else:
-            return ' '.join(map(parens, expr.args))
+            args = list(args)
+
+        if isinstance(expr, MatMul) and _coeff_isneg(expr):
+            if args[0] == -1:
+                args = args[1:]
+            else:
+                args[0] = -args[0]
+            return '- ' + ' '.join(map(parens, args))
+        else:
+            return ' '.join(map(parens, args))
 
     def _print_Mod(self, expr, exp=None):
         if exp is not None:
@@ -1655,7 +1656,7 @@ class LatexPrinter(Printer):
         return self._print(expr.args[0])
 
     def _print_tuple(self, expr):
-        return r"\left ( %s\right )" % \
+        return r"\left( %s\right)" % \
             r", \quad ".join([ self._print(i) for i in expr ])
 
     def _print_TensorProduct(self, expr):
@@ -1670,7 +1671,7 @@ class LatexPrinter(Printer):
         return self._print_tuple(expr)
 
     def _print_list(self, expr):
-        return r"\left [ %s\right ]" % \
+        return r"\left[ %s\right]" % \
             r", \quad ".join([ self._print(i) for i in expr ])
 
     def _print_dict(self, d):
@@ -1681,7 +1682,7 @@ class LatexPrinter(Printer):
             val = d[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
-        return r"\left \{ %s\right \}" % r", \quad ".join(items)
+        return r"\left\{ %s\right\}" % r", \quad ".join(items)
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
@@ -1699,7 +1700,7 @@ class LatexPrinter(Printer):
     def _print_SingularityFunction(self, expr):
         shift = self._print(expr.args[0] - expr.args[1])
         power = self._print(expr.args[2])
-        tex = r"{\langle %s \rangle}^{%s}" % (shift, power)
+        tex = r"{\left\langle %s \right\rangle}^{%s}" % (shift, power)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
@@ -1731,7 +1732,7 @@ class LatexPrinter(Printer):
 
     def _print_ProductSet(self, p):
         if len(p.sets) > 1 and not has_variety(p.sets):
-            return self._print(p.sets[0]) + "^%d" % len(p.sets)
+            return self._print(p.sets[0]) + "^{%d}" % len(p.sets)
         else:
             return r" \times ".join(self._print(set) for set in p.sets)
 
@@ -1810,7 +1811,7 @@ class LatexPrinter(Printer):
                    (left, self._print(i.start), self._print(i.end), right)
 
     def _print_AccumulationBounds(self, i):
-        return r"\langle %s, %s\rangle" % \
+        return r"\left\langle %s, %s\right\rangle" % \
                 (self._print(i.min), self._print(i.max))
 
     def _print_Union(self, u):
@@ -1964,7 +1965,7 @@ class LatexPrinter(Printer):
 
         args = ", ".join([expr] + gens + [domain])
         if cls in accepted_latex_functions:
-            tex = r"\%s {\left (%s \right )}" % (cls, args)
+            tex = r"\%s {\left(%s \right)}" % (cls, args)
         else:
             tex = r"\operatorname{%s}{\left( %s \right)}" % (cls, args)
 
@@ -2133,11 +2134,11 @@ class LatexPrinter(Printer):
             '{' + self._print(x) + '}' for x in m)
 
     def _print_SubModule(self, m):
-        return r"\left< %s \right>" % ",".join(
+        return r"\left\langle %s \right\rangle" % ",".join(
             '{' + self._print(x) + '}' for x in m.gens)
 
     def _print_ModuleImplementedIdeal(self, m):
-        return r"\left< %s \right>" % ",".join(
+        return r"\left\langle %s \right\rangle" % ",".join(
             '{' + self._print(x) + '}' for [x] in m._module.gens)
 
     def _print_Quaternion(self, expr):
@@ -2375,7 +2376,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     >>> print(latex((2*tau)**Rational(7,2), fold_frac_powers=True))
     8 \sqrt{2} \tau^{7/2}
     >>> print(latex((2*tau)**sin(Rational(7,2))))
-    \left(2 \tau\right)^{\sin{\left (\frac{7}{2} \right )}}
+    \left(2 \tau\right)^{\sin{\left(\frac{7}{2} \right)}}
     >>> print(latex((2*tau)**sin(Rational(7,2)), fold_func_brackets=True))
     \left(2 \tau\right)^{\sin {\frac{7}{2}}}
     >>> print(latex(3*x**2/y))
@@ -2390,16 +2391,16 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     Multiplication options:
 
     >>> print(latex((2*tau)**sin(Rational(7,2)), mul_symbol="times"))
-    \left(2 \times \tau\right)^{\sin{\left (\frac{7}{2} \right )}}
+    \left(2 \times \tau\right)^{\sin{\left(\frac{7}{2} \right)}}
 
     Trig options:
 
     >>> print(latex(asin(Rational(7,2))))
-    \operatorname{asin}{\left (\frac{7}{2} \right )}
+    \operatorname{asin}{\left(\frac{7}{2} \right)}
     >>> print(latex(asin(Rational(7,2)), inv_trig_style="full"))
-    \arcsin{\left (\frac{7}{2} \right )}
+    \arcsin{\left(\frac{7}{2} \right)}
     >>> print(latex(asin(Rational(7,2)), inv_trig_style="power"))
-    \sin^{-1}{\left (\frac{7}{2} \right )}
+    \sin^{-1}{\left(\frac{7}{2} \right)}
 
     Matrix options:
 
@@ -2418,15 +2419,15 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     Logarithms:
 
     >>> print(latex(log(10)))
-    \log{\left (10 \right )}
+    \log{\left(10 \right)}
     >>> print(latex(log(10), ln_notation=True))
-    \ln{\left (10 \right )}
+    \ln{\left(10 \right)}
 
     ``latex()`` also supports the builtin container types list, tuple, and
     dictionary.
 
     >>> print(latex([2/x, y], mode='inline'))
-    $\left [ 2 / x, \quad y\right ]$
+    $\left[ 2 / x, \quad y\right]$
 
     """
     if symbol_names is None:

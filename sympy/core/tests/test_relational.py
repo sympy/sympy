@@ -802,3 +802,7 @@ def test_Equality_rewrite_as_Add():
     assert eq.rewrite(Add) == 2*x
     assert eq.rewrite(Add, evaluate=None).args == (x, x, y, -y)
     assert eq.rewrite(Add, evaluate=False).args == (x, y, x, -y)
+
+def test_issue_15847():
+    a = Ne(x*(x+y), x**2 + x*y)
+    assert simplify(a) == False

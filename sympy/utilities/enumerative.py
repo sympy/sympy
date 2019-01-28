@@ -381,11 +381,6 @@ class MultisetPartitionTraverser():
     data structures which can be interpreted by the same visitor
     functions used for the output of ``multiset_partitions_taocp``.
 
-    See Also
-    ========
-    multiset_partitions_taocp
-    sympy.utilities.iterables.multiset_partititions
-
     Examples
     ========
 
@@ -395,6 +390,12 @@ class MultisetPartitionTraverser():
     127750
     >>> m.count_partitions([3,3,3])
     686
+
+    See Also
+    ========
+
+    multiset_partitions_taocp
+    sympy.utilities.iterables.multiset_partititions
 
     References
     ==========
@@ -753,7 +754,7 @@ class MultisetPartitionTraverser():
         [['a'], ['a'], ['b', 'b']],
         [['a'], ['a'], ['b'], ['b']]]
 
-        See also
+        See Also
         ========
 
         multiset_partitions_taocp():
@@ -784,10 +785,6 @@ class MultisetPartitionTraverser():
 
         Equivalent to enum_range(multiplicities, 0, ub)
 
-        See also
-        ========
-        enum_all, enum_large, enum_range
-
         Parameters
         ==========
 
@@ -813,6 +810,11 @@ class MultisetPartitionTraverser():
 
         The implementation is based, in part, on the answer given to
         exercise 69, in Knuth [AOCP]_.
+
+        See Also
+        ========
+
+        enum_all, enum_large, enum_range
 
         """
 
@@ -853,10 +855,6 @@ class MultisetPartitionTraverser():
 
         Equivalent to enum_range(multiplicities, lb, sum(multiplicities))
 
-        See also
-        ========
-        enum_all, enum_small, enum_range
-
         Parameters
         ==========
 
@@ -880,6 +878,11 @@ class MultisetPartitionTraverser():
         [['a', 'b'], ['a'], ['b']],
         [['a'], ['a'], ['b', 'b']],
         [['a'], ['a'], ['b'], ['b']]]
+
+        See Also
+        ========
+
+        enum_all, enum_small, enum_range
 
         """
         self.discarded = 0

@@ -249,14 +249,15 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
-from sympy.logic.boolalg import BooleanAtom, And, Or, Not
+from sympy.logic.boolalg import (BooleanAtom, And, Or, Not, BooleanTrue,
+                                BooleanFalse)
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
     atan2, conjugate, Piecewise
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
-                         PolynomialError, lcm)
+                         PolynomialError, lcm, roots)
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -394,6 +395,9 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
 
     atom_set = set().union(*[i.free_symbols for i in eq])
+    func_set = set().union(*[i.atoms(Function) for i in eq])
+    if func_set:
+        atom_set |= {Symbol(str(f.func)) for f in func_set}
     ncs = numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
     Cs = [next(ncs) for i in range(num)]
     return (Cs[0] if num == 1 else tuple(Cs))
@@ -934,7 +938,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
     '1st_power_series', 'lie_group',
-    'nth_linear_constant_coeff_homogeneous', 'nth_algebraic_Integral',
+    'nth_linear_constant_coeff_homogeneous',
+    'nth_linear_euler_eq_homogeneous', 'nth_algebraic_Integral',
     'separable_Integral', '1st_linear_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
@@ -1409,17 +1414,27 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             elif order == 1:
                 return x == coeff
             return False
-        if r and not any(not _test_term(r[i], i) for i in r if i >= 0):
-            if not r[-1]:
-                matching_hints["nth_linear_euler_eq_homogeneous"] = r
+
+        # Find coefficient for higest derivative, multiply coefficients to
+        # bring the equation into Euler form if possible
+        r_rescaled = None
+        if r is not None:
+            coeff = r[order]
+            factor = x**order / coeff
+            r_rescaled = {i: factor*r[i] for i in r}
+
+        if r_rescaled and not any(not _test_term(r_rescaled[i], i) for i in
+                r_rescaled if i != 'trialset' and i >= 0):
+            if not r_rescaled[-1]:
+                matching_hints["nth_linear_euler_eq_homogeneous"] = r_rescaled
             else:
-                matching_hints["nth_linear_euler_eq_nonhomogeneous_variation_of_parameters"] = r
-                matching_hints["nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral"] = r
-                e, re = posify(r[-1].subs(x, exp(x)))
+                matching_hints["nth_linear_euler_eq_nonhomogeneous_variation_of_parameters"] = r_rescaled
+                matching_hints["nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral"] = r_rescaled
+                e, re = posify(r_rescaled[-1].subs(x, exp(x)))
                 undetcoeff = _undetermined_coefficients_match(e.subs(re), x)
                 if undetcoeff['test']:
-                    r['trialset'] = undetcoeff['trialset']
-                    matching_hints["nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"] = r
+                    r_rescaled['trialset'] = undetcoeff['trialset']
+                    matching_hints["nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"] = r_rescaled
 
 
     # Order keys based on allhints.
@@ -4102,60 +4117,77 @@ def _nth_algebraic_remove_redundant_solutions(eq, solns, order, var):
     f(x) = -x + C1 and in this case the two solutions are not equivalent wrt
     initial conditions so both should be returned.
     """
-    # I believe that any algebraic solutions can only emerge before *any*
-    # integrations occur (although I haven't proved this and it depends on the
-    # particular way that diffx is defined at the time of writing). This means
-    # that an algebraic solution for f(x) will not have any integration
-    # constants and any integral solution will have a number of constants that
-    # matches the order of the ODE.
-    solns_algebraic = []
-    solns_integral = {} # {soln1: constants1, ...}
-    for soln in solns:
-        constants = soln.free_symbols - eq.free_symbols
-        if len(constants) == 0:
-            solns_algebraic.append(soln)
-        elif len(constants) == order:
-            solns_integral[soln] = constants
-        else:
-            assert False, "Solution should have 0 or order constants..."
+    def is_special_case_of(soln1, soln2):
+        return _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var)
 
-    # Compare each algebraic solution with each integral solution to remove
-    # redundant algebraic solutions.
-    solns = solns[:]
-    for soln in solns_algebraic:
-        for soln_integral, constants in solns_integral.items():
-            if _nth_algebraic_is_special_case_of(soln, soln_integral, constants, var):
-                solns.remove(soln)
+    unique_solns = []
+    for soln1 in solns:
+        for soln2 in unique_solns[:]:
+            if is_special_case_of(soln1, soln2):
                 break
+            elif is_special_case_of(soln2, soln1):
+                unique_solns.remove(soln2)
+        else:
+            unique_solns.append(soln1)
 
-    return solns
+    return unique_solns
 
-def _nth_algebraic_is_special_case_of(soln1, soln2, constants2, var):
+def _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var):
     r"""
     True if soln1 is found to be a special case of soln2 wrt some value of the
     constants that appear in soln2. False otherwise.
     """
     # The solutions returned by nth_algebraic should be given explicitly as in
-    # Eq(f(x), expr). We will equate the RHSs and try to solve for the
-    # integration constants. If we get any solutions for the constants that
-    # don't depend on x then that shows that those values of the constants
-    # make soln1 a special case of soln2 impying that soln1 is redundant.
+    # Eq(f(x), expr). We will equate the RHSs of the two solutions giving an
+    # equation f1(x) = f2(x).
+    #
+    # Since this is supposed to hold for all x it also holds for derivatives
+    # f1'(x) and f2'(x). For an order n ode we should be able to differentiate
+    # each solution n times to get n+1 equations.
+    #
+    # We then try to solve those n+1 equations for the integrations constants
+    # in f2(x). If we can find a solution that doesn't depend on x then it
+    # means that some value of the constants in f1(x) is a special case of
+    # f2(x) corresponding to a paritcular choice of the integration constants.
 
-    constant_solns = solve(Eq(soln1.rhs, soln2.rhs), constants2)
+    constants1 = soln1.free_symbols.difference(eq.free_symbols)
+    constants2 = soln2.free_symbols.difference(eq.free_symbols)
 
-    # Handling all the types potentially returned by solve is awkward...
+    constants1_new = get_numbered_constants(soln1.rhs - soln2.rhs, len(constants1))
+    if len(constants1) == 1:
+        constants1_new = {constants1_new}
+    for c_old, c_new in zip(constants1, constants1_new):
+        soln1 = soln1.subs(c_old, c_new)
+
+    # n equations for f1(x)=f2(x), f1'(x)=f2'(x), ...
+    lhs = soln1.rhs.doit()
+    rhs = soln2.rhs.doit()
+    eqns = [Eq(lhs, rhs)]
+    for n in range(1, order):
+        lhs = lhs.diff(var)
+        rhs = rhs.diff(var)
+        eq = Eq(lhs, rhs)
+        eqns.append(eq)
+
+    # BooleanTrue/False awkwardly show up for trivial equations
+    if any(isinstance(eq, BooleanFalse) for eq in eqns):
+        return False
+    eqns = [eq for eq in eqns if not isinstance(eq, BooleanTrue)]
+
+    constant_solns = solve(eqns, constants2)
+
+    # Sometimes returns a dict and sometimes a list of dicts
     if isinstance(constant_solns, dict):
-        constant_solns = list(constant_solns.values())
-    elif not isinstance(constant_solns, list):
         constant_solns = [constant_solns]
-    if len(constants2) == 1:
-        constant_solns = [[soln] for soln in constant_solns]
 
+    # If any solution gives all constants as expressions that don't depend on
+    # x then there exists constants for soln2 that give soln1
     for constant_soln in constant_solns:
-        if not any(c.has(var) for c in constant_soln):
+        if not any(c.has(var) for c in constant_soln.values()):
             return True
     else:
         return False
+
 
 def _nth_linear_match(eq, func, order):
     r"""
@@ -4194,7 +4226,9 @@ def _nth_linear_match(eq, func, order):
             terms[-1] += i
         else:
             c, f = i.as_independent(func)
-            if isinstance(f, Derivative) and set(f.variables) == one_x:
+            if (isinstance(f, Derivative)
+                    and set(f.variables) == one_x
+                    and f.args[0] == func):
                 terms[f.derivative_count] += c
             elif f == func:
                 terms[len(f.args[1:])] += c
@@ -4435,7 +4469,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     where `W(x)` is the Wronskian of the fundamental system (the system of `n`
     linearly independent solutions to the homogeneous equation), and `W_i(x)`
     is the Wronskian of the fundamental system with the `i`\th column replaced
-    with `[0, 0, \cdots, 0, \frac{x^{- n}}{a_n} g{\left (x \right )}]`.
+    with `[0, 0, \cdots, 0, \frac{x^{- n}}{a_n} g{\left(x \right)}]`.
 
     This method is general enough to solve any `n`\th order inhomogeneous
     linear differential equation, but sometimes SymPy cannot simplify the
@@ -4866,11 +4900,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C1*exp(x*CRootOf(_x**5 + 10*_x - 2, 0)) +
-    C2*exp(x*CRootOf(_x**5 + 10*_x - 2, 1)) +
-    C3*exp(x*CRootOf(_x**5 + 10*_x - 2, 2)) +
-    C4*exp(x*CRootOf(_x**5 + 10*_x - 2, 3)) +
-    C5*exp(x*CRootOf(_x**5 + 10*_x - 2, 4)))
+    Eq(f(x), C5*exp(x*CRootOf(_x**5 + 10*_x - 2, 0))
+    + (C1*sin(x*im(CRootOf(_x**5 + 10*_x - 2, 1)))
+    + C2*cos(x*im(CRootOf(_x**5 + 10*_x - 2, 1))))*exp(x*re(CRootOf(_x**5 + 10*_x - 2, 1)))
+    + (C3*sin(x*im(CRootOf(_x**5 + 10*_x - 2, 3)))
+    + C4*cos(x*im(CRootOf(_x**5 + 10*_x - 2, 3))))*exp(x*re(CRootOf(_x**5 + 10*_x - 2, 3))))
 
     Note that because this method does not involve integration, there is no
     ``nth_linear_constant_coeff_homogeneous_Integral`` hint.
@@ -4925,7 +4959,12 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
             chareq += r[i]*symbol**i
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
+    # Can't just call roots because it doesn't return rootof for unsolveable
+    # polynomials.
+    chareqroots = roots(chareq, multiple=True)
+    if len(chareqroots) != order:
+        chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
+
     chareq_is_complex = not all([i.is_real for i in chareq.all_coeffs()])
 
     # A generator of constants
@@ -4942,40 +4981,38 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     collectterms = []
     gensols = []
     conjugate_roots = [] # used to prevent double-use of conjugate roots
-    for root, multiplicity in charroots.items():
+    # Loop over roots in theorder provided by roots/rootof...
+    for root in chareqroots:
+        # but don't repoeat multiple roots.
+        if root not in charroots:
+            continue
+        multiplicity = charroots.pop(root)
         for i in range(multiplicity):
-            if isinstance(root, RootOf):
-                gensols.append(exp(root*x))
-                if multiplicity != 1:
-                    raise ValueError("Value should be 1")
-                # This ordering is important
-                collectterms = [(0, root, 0)] + collectterms
+            if chareq_is_complex:
+                gensols.append(x**i*exp(root*x))
+                collectterms = [(i, root, 0)] + collectterms
+                continue
+            reroot = re(root)
+            imroot = im(root)
+            if imroot.has(atan2) and reroot.has(atan2):
+                # Remove this condition when re and im stop returning
+                # circular atan2 usages.
+                gensols.append(x**i*exp(root*x))
+                collectterms = [(i, root, 0)] + collectterms
             else:
-                if chareq_is_complex:
-                    gensols.append(x**i*exp(root*x))
-                    collectterms = [(i, root, 0)] + collectterms
-                    continue
-                reroot = re(root)
-                imroot = im(root)
-                if imroot.has(atan2) and reroot.has(atan2):
-                    # Remove this condition when re and im stop returning
-                    # circular atan2 usages.
-                    gensols.append(x**i*exp(root*x))
-                    collectterms = [(i, root, 0)] + collectterms
-                else:
-                    if root in conjugate_roots:
-                        collectterms = [(i, reroot, imroot)] + collectterms
-                        continue
-                    if imroot == 0:
-                        gensols.append(x**i*exp(reroot*x))
-                        collectterms = [(i, reroot, 0)] + collectterms
-                        continue
-                    conjugate_roots.append(conjugate(root))
-                    gensols.append(x**i*exp(reroot*x) * sin(abs(imroot) * x))
-                    gensols.append(x**i*exp(reroot*x) * cos(    imroot  * x))
-
-                    # This ordering is important
+                if root in conjugate_roots:
                     collectterms = [(i, reroot, imroot)] + collectterms
+                    continue
+                if imroot == 0:
+                    gensols.append(x**i*exp(reroot*x))
+                    collectterms = [(i, reroot, 0)] + collectterms
+                    continue
+                conjugate_roots.append(conjugate(root))
+                gensols.append(x**i*exp(reroot*x) * sin(abs(imroot) * x))
+                gensols.append(x**i*exp(reroot*x) * cos(    imroot  * x))
+
+                # This ordering is important
+                collectterms = [(i, reroot, imroot)] + collectterms
     if returns == 'list':
         return gensols
     elif returns in ('sol' 'both'):
@@ -5201,7 +5238,9 @@ def _undetermined_coefficients_match(expr, x):
         r"""
         Test if ``expr`` fits the proper form for undetermined coefficients.
         """
-        if expr.is_Add:
+        if not expr.has(x):
+            return True
+        elif expr.is_Add:
             return all(_test_term(i, x) for i in expr.args)
         elif expr.is_Mul:
             if expr.has(sin, cos):
@@ -5643,6 +5682,8 @@ def ode_lie_group(eq, func, order, match):
     else:
         try:
             sol = solve(eq, df)
+            if sol == []:
+                raise NotImplementedError
         except NotImplementedError:
             raise NotImplementedError("Unable to solve the differential equation " +
                 str(eq) + " by the lie group method")

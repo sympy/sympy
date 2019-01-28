@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from tokenize import (generate_tokens, untokenize, TokenError,
-    NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN)
+    NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN, NEWLINE)
 
 from keyword import iskeyword
 
@@ -262,9 +262,7 @@ def _implicit_application(tokens, local_dict, global_dict):
                           # work with function exponentiation
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
-        if (tok[0] == NAME and
-              nextTok[0] != OP and
-              nextTok[0] != ENDMARKER):
+        if (tok[0] == NAME and nextTok[0] not in [OP, ENDMARKER, NEWLINE]):
             if _token_callable(tok, local_dict, global_dict, nextTok):
                 result.append((OP, '('))
                 appendParen += 1
@@ -570,8 +568,11 @@ def lambda_notation(tokens, local_dict, global_dict):
     flag = False
     toknum, tokval = tokens[0]
     tokLen = len(tokens)
+
     if toknum == NAME and tokval == 'lambda':
-        if tokLen == 2:
+        if tokLen == 2 or tokLen == 3 and tokens[1][0] == NEWLINE:
+            # In Python 3.6.7+, inputs without a newline get NEWLINE added to
+            # the tokens
             result.extend(tokens)
         elif tokLen > 2:
             result.extend([

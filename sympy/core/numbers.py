@@ -3,9 +3,7 @@ from __future__ import print_function, division
 import decimal
 import fractions
 import math
-import warnings
 import re as regex
-from collections import defaultdict
 
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError, _convert_numpy_types
@@ -17,6 +15,7 @@ from .logic import fuzzy_not
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
+from sympy.core.cache import lru_cache
 
 import mpmath
 import mpmath.libmp as mlib
@@ -154,11 +153,10 @@ def _literal_float(f):
     return bool(regex.match(pat, f))
 
 # (a,b) -> gcd(a,b)
-_gcdcache = {}
 
 # TODO caching with decorator, but not to degrade performance
 
-
+@lru_cache(1024)
 def igcd(*args):
     """Computes nonnegative integer greatest common divisor.
 
@@ -178,33 +176,12 @@ def igcd(*args):
     if len(args) < 2:
         raise TypeError(
             'igcd() takes at least 2 arguments (%s given)' % len(args))
-    if 1 in args:
-        a = 1
-        k = 0
-    else:
-        a = abs(as_int(args[0]))
-        k = 1
-    if a != 1:
-        while k < len(args):
-            b = args[k]
-            k += 1
-            try:
-                a = _gcdcache[(a, b)]
-            except KeyError:
-                b = as_int(b)
-                if not b:
-                    continue
-                if b == 1:
-                    a = 1
-                    break
-                if b < 0:
-                    b = -b
-                t = a, b
-                a = igcd2(a, b)
-                _gcdcache[t] = _gcdcache[t[1], t[0]] = a
-    while k < len(args):
-        ok = as_int(args[k])
-        k += 1
+    args_temp = [abs(as_int(i)) for i in args]
+    if 1 in args_temp:
+        return 1
+    a = args_temp.pop()
+    for b in args_temp:
+        a = igcd2(a, b) if b else a
     return a
 
 
@@ -567,7 +544,6 @@ class Number(AtomicExpr):
 
     def __divmod__(self, other):
         from .containers import Tuple
-        from sympy.functions.elementary.complexes import sign
 
         try:
             other = Number(other)
@@ -580,7 +556,7 @@ class Number(AtomicExpr):
             return Tuple(*divmod(self.p, other.p))
         else:
             rat = self/other
-        w = sign(rat)*int(abs(rat))  # = rat.floor()
+        w = int(rat) if rat > 0 else int(rat) - 1
         r = self - other*w
         return Tuple(w, r)
 
@@ -3870,7 +3846,6 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
                 if expt == 2:
                     return -S.One
                 return -S.ImaginaryUnit
-            return (S.NegativeOne)**(expt*S.Half)
         return
 
     def as_base_exp(self):

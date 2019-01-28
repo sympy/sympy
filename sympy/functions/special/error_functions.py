@@ -2180,22 +2180,27 @@ class fresnels(FresnelIntegral):
         from sympy import Order
         point = args0[0]
 
-        # Expansion at oo
-        if point is S.Infinity:
+        # Expansion at oo and -oo
+        if point in [S.Infinity, -S.Infinity]:
             z = self.args[0]
 
             # expansion of S(x) = S1(x*sqrt(pi/2)), see reference[5] page 1-8
+            # as only real infinities are dealt with, sin and cos are O(1)
             p = [(-1)**k * factorial(4*k + 1) /
                  (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*factorial(2*k))
-                 for k in range(0, n)]
+                 for k in range(0, n) if 4*k + 3 < n]
             q = [1/(2*z)] + [(-1)**k * factorial(4*k - 1) /
                  (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*factorial(2*k - 1))
-                 for k in range(1, n)]
+                 for k in range(1, n) if 4*k + 1 < n]
 
-            p = [-sqrt(2/pi)*t for t in p] + [Order(1/z**n, x)]
-            q = [-sqrt(2/pi)*t for t in q] + [Order(1/z**n, x)]
-
-            return S.Half + (sin(z**2)*Add(*p) + cos(z**2)*Add(*q)).subs(x, sqrt(2/pi)*x)
+            p = [-sqrt(2/pi)*t for t in p]
+            q = [-sqrt(2/pi)*t for t in q]
+            s = 1 if point is S.Infinity else -1
+            # The expansion at oo is 1/2 + some odd powers of z
+            # To get the expansion at -oo, replace z by -z and flip the sign
+            # The result -1/2 + the same odd powers of z as before.
+            return s*S.Half + (sin(z**2)*Add(*p) + cos(z**2)*Add(*q)
+                ).subs(x, sqrt(2/pi)*x) + Order(1/z**n, x)
 
         # All other points are not handled
         return super(fresnels, self)._eval_aseries(n, args0, x, logx)
@@ -2313,21 +2318,26 @@ class fresnelc(FresnelIntegral):
         point = args0[0]
 
         # Expansion at oo
-        if point is S.Infinity:
+        if point in [S.Infinity, -S.Infinity]:
             z = self.args[0]
 
             # expansion of C(x) = C1(x*sqrt(pi/2)), see reference[5] page 1-8
+            # as only real infinities are dealt with, sin and cos are O(1)
             p = [(-1)**k * factorial(4*k + 1) /
                  (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*factorial(2*k))
-                 for k in range(0, n)]
+                 for k in range(0, n) if 4*k + 3 < n]
             q = [1/(2*z)] + [(-1)**k * factorial(4*k - 1) /
                  (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*factorial(2*k - 1))
-                 for k in range(1, n)]
+                 for k in range(1, n) if 4*k + 1 < n]
 
-            p = [-sqrt(2/pi)*t for t in p] + [Order(1/z**n, x)]
-            q = [ sqrt(2/pi)*t for t in q] + [Order(1/z**n, x)]
-
-            return S.Half + (cos(z**2)*Add(*p) + sin(z**2)*Add(*q)).subs(x, sqrt(2/pi)*x)
+            p = [-sqrt(2/pi)*t for t in p]
+            q = [ sqrt(2/pi)*t for t in q]
+            s = 1 if point is S.Infinity else -1
+            # The expansion at oo is 1/2 + some odd powers of z
+            # To get the expansion at -oo, replace z by -z and flip the sign
+            # The result -1/2 + the same odd powers of z as before.
+            return s*S.Half + (cos(z**2)*Add(*p) + sin(z**2)*Add(*q)
+                ).subs(x, sqrt(2/pi)*x) + Order(1/z**n, x)
 
         # All other points are not handled
         return super(fresnelc, self)._eval_aseries(n, args0, x, logx)

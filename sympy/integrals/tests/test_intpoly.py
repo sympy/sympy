@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import sqrt, Abs
 
 from sympy.core import S

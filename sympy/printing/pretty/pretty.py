@@ -837,9 +837,9 @@ class PrettyPrinter(Printer):
 
     def _print_MatMul(self, expr):
         args = list(expr.args)
-        from sympy import Add, MatAdd, HadamardProduct
+        from sympy import Add, MatAdd, HadamardProduct, KroneckerProduct
         for i, a in enumerate(args):
-            if (isinstance(a, (Add, MatAdd, HadamardProduct))
+            if (isinstance(a, (Add, MatAdd, HadamardProduct, KroneckerProduct))
                     and len(expr.args) > 1):
                 args[i] = prettyForm(*self._print(a).parens())
             else:
@@ -1977,21 +1977,37 @@ class PrettyPrinter(Printer):
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):
         s = None
+        try:
+            for item in seq:
+                pform = self._print(item)
 
-        for item in seq:
-            pform = self._print(item)
+                if parenthesize(item):
+                    pform = prettyForm(*pform.parens())
+                if s is None:
+                    # first element
+                    s = pform
+                else:
+                    s = prettyForm(*stringPict.next(s, delimiter))
+                    s = prettyForm(*stringPict.next(s, pform))
 
-            if parenthesize(item):
-                pform = prettyForm(*pform.parens())
             if s is None:
-                # first element
-                s = pform
-            else:
-                s = prettyForm(*stringPict.next(s, delimiter))
-                s = prettyForm(*stringPict.next(s, pform))
+                s = stringPict('')
 
-        if s is None:
-            s = stringPict('')
+        except AttributeError:
+            s = None
+            for item in seq:
+                pform = self.doprint(item)
+                if parenthesize(item):
+                    pform = prettyForm(*pform.parens())
+                if s is None:
+                    # first element
+                    s = pform
+                else :
+                    s = prettyForm(*stringPict.next(s, delimiter))
+                    s = prettyForm(*stringPict.next(s, pform))
+
+            if s is None:
+                s = stringPict('')
 
         s = prettyForm(*s.parens(left, right, ifascii_nougly=True))
         return s

@@ -10,7 +10,9 @@ from sympy import (
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
-    digamma, RisingFactorial, besselj, bessely, besseli, besselk, S)
+    digamma, RisingFactorial, besselj, bessely, besseli, besselk, S,
+    MatrixSymbol, chebyshevt, chebyshevu, legendre, hermite, laguerre,
+    gegenbauer, assoc_legendre, assoc_laguerre, jacobi)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.pycode import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
@@ -1175,24 +1177,79 @@ def test_scipy_fns():
         scipy.special.psi]
     numpy.random.seed(0)
     for (sympy_fn, scipy_fn) in zip(single_arg_sympy_fns, single_arg_scipy_fns):
-        test_values = 20 * numpy.random.rand(20)
-        f = lambdify(x, sympy_fn(x), modules = "scipy")
-        assert numpy.all(abs(f(test_values) - scipy_fn(test_values)) < 1e-15)
+        f = lambdify(x, sympy_fn(x), modules="scipy")
+        for i in range(20):
+            tv = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
+            # SciPy thinks that factorial(z) is 0 when re(z) < 0.
+            # SymPy does not think so.
+            if sympy_fn == factorial and numpy.real(tv) < 0:
+                tv = tv + 2*numpy.abs(numpy.real(tv))
+            # SciPy supports gammaln for real arguments only,
+            # and there is also a branch cut along the negative real axis
+            if sympy_fn == loggamma:
+                tv = numpy.abs(tv)
+            # SymPy's digamma evaluates as polygamma(0, z)
+            # which SciPy supports for real arguments only
+            if sympy_fn == digamma:
+                tv = numpy.real(tv)
+            sympy_result = sympy_fn(tv).evalf()
+            assert abs(f(tv) - sympy_result) < 1e-13*(1 + abs(sympy_result))
+            assert abs(f(tv) - scipy_fn(tv)) < 1e-13*(1 + abs(sympy_result))
 
     double_arg_sympy_fns = [RisingFactorial, besselj, bessely, besseli,
         besselk]
-    double_arg_scipy_fns = [scipy.special.poch, scipy.special.jn,
-        scipy.special.yn, scipy.special.iv, scipy.special.kn]
-
-    #suppress scipy warnings
-    import warnings
-    warnings.filterwarnings('ignore', '.*floating point number truncated*')
-
+    double_arg_scipy_fns = [scipy.special.poch, scipy.special.jv,
+        scipy.special.yv, scipy.special.iv, scipy.special.kv]
     for (sympy_fn, scipy_fn) in zip(double_arg_sympy_fns, double_arg_scipy_fns):
+        f = lambdify((x, y), sympy_fn(x, y), modules="scipy")
         for i in range(20):
-            test_values = 20 * numpy.random.rand(2)
-            f = lambdify((x,y), sympy_fn(x,y), modules = "scipy")
-            assert abs(f(*test_values) - scipy_fn(*test_values)) < 1e-15
+            # SciPy supports only real orders of Bessel functions
+            tv1 = numpy.random.uniform(-10, 10)
+            tv2 = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
+            # SciPy supports poch for real arguments only
+            if sympy_fn == RisingFactorial:
+                tv2 = numpy.real(tv2)
+            sympy_result = sympy_fn(tv1, tv2).evalf()
+            assert abs(f(tv1, tv2) - sympy_result) < 1e-13*(1 + abs(sympy_result))
+            assert abs(f(tv1, tv2) - scipy_fn(tv1, tv2)) < 1e-13*(1 + abs(sympy_result))
+
+
+def test_scipy_polys():
+    if not scipy:
+        skip("scipy not installed")
+    numpy.random.seed(0)
+
+    params = symbols('n k a b')
+    # list polynomials with the number of parameters
+    polys = [
+        (chebyshevt, 1),
+        (chebyshevu, 1),
+        (legendre, 1),
+        (hermite, 1),
+        (laguerre, 1),
+        (gegenbauer, 2),
+        (assoc_legendre, 2),
+        (assoc_laguerre, 2),
+        (jacobi, 3)
+    ]
+
+    for sympy_fn, num_params in polys:
+        args = params[:num_params] + (x,)
+        f = lambdify(args, sympy_fn(*args))
+        for i in range(10):
+            tn = numpy.random.randint(3, 10)
+            tparams = tuple(numpy.random.uniform(0, 5, size=num_params-1))
+            tv = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
+            # SciPy supports hermite for real arguments only
+            if sympy_fn == hermite:
+                tv = numpy.real(tv)
+            # assoc_legendre needs x in (-1, 1) and integer param at most n
+            if sympy_fn == assoc_legendre:
+                tv = numpy.random.uniform(-1, 1)
+                tparams = tuple(numpy.random.randint(1, tn, size=1))
+            vals = (tn,) + tparams + (tv,)
+            sympy_result = sympy_fn(*vals).evalf()
+            assert abs(f(*vals) - sympy_result) < 1e-13*(1 + abs(sympy_result))
 
 
 def test_lambdify_inspect():
@@ -1226,6 +1283,38 @@ def test_lambdify_Derivative_arg_issue_16468():
     raises(SyntaxError, lambda:
         eval(lambdastr((f, fx), f/fx, dummify=False)))
     assert eval(lambdastr((f, fx), f/fx, dummify=True))(10, 5) == 2
-    assert eval(lambdastr((fx, f), f/fx, dummify=True))(10, 5) == S.Half
+    assert eval(lambdastr((fx, f), f/fx, dummify=True))(S(10), 5) == S.Half
     assert lambdify(fx, 1 + fx)(41) == 42
     assert eval(lambdastr(fx, 1 + fx, dummify=True))(41) == 42
+
+
+def test_imag_real():
+    f_re = lambdify([z], sympy.re(z))
+    val = 3+2j
+    assert f_re(val) == val.real
+
+    f_im = lambdify([z], sympy.im(z))  # see #15400
+    assert f_im(val) == val.imag
+
+
+def test_MatrixSymbol_issue_15578():
+    if not numpy:
+        skip("numpy not installed")
+    A = MatrixSymbol('A', 2, 2)
+    A0 = numpy.array([[1, 2], [3, 4]])
+    f = lambdify(A, A**(-1))
+    assert numpy.allclose(f(A0), numpy.array([[-2., 1.], [1.5, -0.5]]))
+    g = lambdify(A, A**3)
+    assert numpy.allclose(g(A0), numpy.array([[37, 54], [81, 118]]))
+
+
+def test_issue_15654():
+    if not scipy:
+        skip("scipy not installed")
+    from sympy.abc import n, l, r, Z
+    from sympy.physics import hydrogen
+    nv, lv, rv, Zv = 1, 0, 3, 1
+    sympy_value = hydrogen.R_nl(nv, lv, rv, Zv).evalf()
+    f = lambdify((n, l, r, Z), hydrogen.R_nl(n, l, r, Z))
+    scipy_value = f(nv, lv, rv, Zv)
+    assert abs(sympy_value - scipy_value) < 1e-15
