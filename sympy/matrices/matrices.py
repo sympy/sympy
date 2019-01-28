@@ -4215,7 +4215,7 @@ class MatrixBase(MatrixDeprecated,
             return (t * self).solve(t * rhs, method=method)
 
     def solve(self, rhs, method='GJ'):
-        """Return the unique soln making self*soln = rhs.
+        """Solves linear equation where the unique solution exists.
 
         Parameters
         ==========
