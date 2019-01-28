@@ -4244,6 +4244,12 @@ class MatrixBase(MatrixDeprecated,
            To use a different method and to compute the solution via the
            inverse, use a method defined in the .inv() docstring.
 
+        Returns
+        =======
+
+        solutions : Matrix
+            Vector representing the solution.
+
         Raises
         ======
 
