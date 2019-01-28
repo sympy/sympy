@@ -14,9 +14,9 @@ References for Physics/Vector
 ================================
 
 .. [WikiDyadics] "Dyadics." Wikipedia, the Free Encyclopedia. Web. 05 Aug.
-        2011. <http://en.wikipedia.org/wiki/Dyadics>.
+        2011. <https://en.wikipedia.org/wiki/Dyadics>.
 .. [WikiDyadicProducts] "Dyadic Product." Wikipedia, the Free Encyclopedia.
-        Web. 05 Aug. 2011. <http://en.wikipedia.org/wiki/Dyadic_product>.
+        Web. 05 Aug. 2011. <https://en.wikipedia.org/wiki/Dyadic_product>.
 .. [Likins1973] Likins, Peter W. Elements of Engineering Mechanics.
         McGraw-Hill, Inc. 1973. Print.
 

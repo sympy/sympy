@@ -1,28 +1,29 @@
 from __future__ import print_function, division
 
+from sympy.calculus.singularities import is_decreasing
+from sympy.calculus.util import AccumulationBounds
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.core.function import Derivative, Function
+from sympy.concrete.gosper import gosper_sum
+from sympy.core.add import Add
+from sympy.core.compatibility import range
+from sympy.core.function import Derivative
+from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.calculus.singularities import is_decreasing
-from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
-from sympy.polys import apart, PolynomialError
-from sympy.series.limits import limit
+from sympy.polys import apart, PolynomialError, together
+from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
 from sympy.sets.sets import FiniteSet
+from sympy.simplify import denom
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
-from sympy.core.compatibility import range
-from sympy.calculus.util import AccumulationBounds
 import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -150,8 +151,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
            http://dl.acm.org/citation.cfm?doid=322248.322255
-    .. [2] http://en.wikipedia.org/wiki/Summation#Capital-sigma_notation
-    .. [3] http://en.wikipedia.org/wiki/Empty_sum
+    .. [2] https://en.wikipedia.org/wiki/Summation#Capital-sigma_notation
+    .. [3] https://en.wikipedia.org/wiki/Empty_sum
     """
 
     __slots__ = ['is_commutative']
@@ -164,19 +165,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             raise ValueError('Sum requires values for lower and upper bounds.')
 
         return obj
-
-    def dummy_eq(self, other, symbol=None):
-        if type(self) != type(other):
-            return False
-        if len(self.variables) != len(other.variables):
-            return False
-        if len(self.free_symbols) != len(other.free_symbols):
-            return False
-        reps = dict(zip(self.variables, other.variables))
-        aligned = self.xreplace(reps)
-        if symbol:
-            return super(Sum, aligned).dummy_eq(other, symbol=symbol)
-        return aligned == other
 
     def _eval_is_zero(self):
         # a Sum is only zero if its function is zero or if all terms
@@ -390,10 +378,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ========
 
         Sum.is_absolutely_convergent()
-
         Product.is_convergent()
         """
-        from sympy import Interval, Integral, Limit, log, symbols, Ge, Gt, simplify
+        from sympy import Interval, Integral, log, symbols, simplify
         p, q, r = symbols('p q r', cls=Wild)
 
         sym = self.limits[0][0]
@@ -435,15 +422,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ###  -------- Divergence test ----------- ###
         try:
-            lim_val = limit(sequence_term, sym, upper_limit)
-            if lim_val.is_number and lim_val is not S.Zero:
+            lim_val = limit_seq(sequence_term, sym)
+            if lim_val is not None and lim_val.is_zero is False:
                 return S.false
         except NotImplementedError:
             pass
 
         try:
-            lim_val_abs = limit(abs(sequence_term), sym, upper_limit)
-            if lim_val_abs.is_number and lim_val_abs is not S.Zero:
+            lim_val_abs = limit_seq(abs(sequence_term), sym)
+            if lim_val_abs is not None and lim_val_abs.is_zero is False:
                 return S.false
         except NotImplementedError:
             pass
@@ -478,9 +465,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ### ------------- Limit comparison test -----------###
         # (1/n) comparison
         try:
-            lim_comp = limit(sym*sequence_term, sym, S.Infinity)
-            if lim_comp.is_number and lim_comp > 0:
-                    return S.false
+            lim_comp = limit_seq(sym*sequence_term, sym)
+            if lim_comp is not None and lim_comp.is_number and lim_comp > 0:
+                return S.false
         except NotImplementedError:
             pass
 
@@ -488,8 +475,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         next_sequence_term = sequence_term.xreplace({sym: sym + 1})
         ratio = combsimp(powsimp(next_sequence_term/sequence_term))
         try:
-            lim_ratio = limit(ratio, sym, upper_limit)
-            if lim_ratio.is_number:
+            lim_ratio = limit_seq(ratio, sym)
+            if lim_ratio is not None and lim_ratio.is_number:
                 if abs(lim_ratio) > 1:
                     return S.false
                 if abs(lim_ratio) < 1:
@@ -498,10 +485,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             pass
 
         ### ----------- root test ---------------- ###
-        lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
+        # lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
         try:
-            lim_evaluated = lim.doit()
-            if lim_evaluated.is_number:
+            lim_evaluated = limit_seq(abs(sequence_term)**(1/sym), sym)
+            if lim_evaluated is not None and lim_evaluated.is_number:
                 if lim_evaluated < 1:
                     return S.true
                 if lim_evaluated > 1:
@@ -562,8 +549,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             m = Dummy('m', integer=True)
             def _dirichlet_test(g_n):
                 try:
-                    ing_val = limit(Sum(g_n, (sym, interval.inf, m)).doit(), m, S.Infinity)
-                    if ing_val.is_finite:
+                    ing_val = limit_seq(Sum(g_n, (sym, interval.inf, m)).doit(), m)
+                    if ing_val is not None and ing_val.is_finite:
                         return S.true
                 except NotImplementedError:
                     pass
@@ -571,11 +558,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             ### -------- bounded times convergent test ---------###
             def _bounded_convergent_test(g1_n, g2_n):
                 try:
-                    lim_val = limit(g1_n, sym, upper_limit)
-                    if lim_val.is_finite or (isinstance(lim_val, AccumulationBounds)
-                                             and (lim_val.max - lim_val.min).is_finite):
-                        if Sum(g2_n, (sym, lower_limit, upper_limit)).is_absolutely_convergent():
-                            return S.true
+                    lim_val = limit_seq(g1_n, sym)
+                    if lim_val is not None and (lim_val.is_finite or (
+                        isinstance(lim_val, AccumulationBounds)
+                        and (lim_val.max - lim_val.min).is_finite)):
+                            if Sum(g2_n, (sym, lower_limit, upper_limit)).is_absolutely_convergent():
+                                return S.true
                 except NotImplementedError:
                     pass
 
@@ -1065,6 +1053,25 @@ def eval_sum_symbolic(f, limits):
             return Piecewise((l, Eq(q, S.One)), (r, True))
 
         r = gosper_sum(f, (i, a, b))
+
+        if isinstance(r, (Mul,Add)):
+            from sympy import ordered, Tuple
+            non_limit = r.free_symbols - Tuple(*limits[1:]).free_symbols
+            den = denom(together(r))
+            den_sym = non_limit & den.free_symbols
+            args = []
+            for v in ordered(den_sym):
+                try:
+                    s = solve(den, v)
+                    m = Eq(v, s[0]) if s else S.false
+                    if m != False:
+                        args.append((Sum(f_orig.subs(*m.args), limits).doit(), m))
+                    break
+                except NotImplementedError:
+                    continue
+
+            args.append((r, True))
+            return Piecewise(*args)
 
         if not r in (None, S.NaN):
             return r

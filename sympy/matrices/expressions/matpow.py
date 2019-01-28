@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
+from .transpose import Transpose
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import range
 from sympy.matrices import MatrixBase
@@ -57,8 +58,7 @@ class MatPow(MatrixExpr):
         else:
             args = self.args
 
-        base = args[0]
-        exp = args[1]
+        base, exp = args
         # combine all powers, e.g. (A**2)**3 = A**6
         while isinstance(base, MatPow):
             exp = exp*base.args[1]
@@ -69,7 +69,7 @@ class MatPow(MatrixExpr):
                 return base.func(Identity(base.shape[0]))
             return Identity(base.shape[0])
         elif isinstance(base, ZeroMatrix) and exp.is_negative:
-            raise ValueError("Matrix det == 0; not invertible.")
+            raise ValueError("Matrix determinant is 0, not invertible.")
         elif isinstance(base, (Identity, ZeroMatrix)):
             return base
         elif isinstance(base, MatrixBase) and exp.is_number:
@@ -83,3 +83,22 @@ class MatPow(MatrixExpr):
         elif exp is S.One:
             return base
         return MatPow(base, exp)
+
+    def _eval_transpose(self):
+        base, exp = self.args
+        return MatPow(base.T, exp)
+
+    def _eval_derivative_matrix_lines(self, x):
+        from .matmul import MatMul
+        exp = self.exp
+        if (exp > 0) == True:
+            newexpr = MatMul.fromiter([self.base for i in range(exp)])
+        elif (exp == -1) == True:
+            return Inverse(self.base)._eval_derivative_matrix_lines(x)
+        elif (exp < 0) == True:
+            newexpr = MatMul.fromiter([Inverse(self.base) for i in range(-exp)])
+        elif (exp == 0) == True:
+            return self.doit()._eval_derivative_matrix_lines(x)
+        else:
+            raise NotImplementedError("cannot evaluate %s derived by %s" % (self, x))
+        return newexpr._eval_derivative_matrix_lines(x)

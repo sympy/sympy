@@ -253,7 +253,7 @@ def checksol(f, symbol, sol=None, **flags):
             if f not in (S.true, S.false):
                 return
         else:
-            f = Add(f.lhs, -f.rhs, evaluate=False)
+            f = f.rewrite(Add, evaluate=False)
 
     if isinstance(f, BooleanAtom):
         return bool(f)
@@ -973,7 +973,7 @@ def solve(f, *symbols, **flags):
                             is True or False.
                         '''))
                 else:
-                    fi = Add(fi.lhs, -fi.rhs, evaluate=False)
+                    fi = fi.rewrite(Add, evaluate=False)
             f[i] = fi
 
         if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
@@ -1432,7 +1432,7 @@ def _solve(f, *symbols, **flags):
 
     # /!\ capture this flag then set it to False so that no checking in
     # recursive calls will be done; only the final answer is checked
-    flags['check']=checkdens = check = flags.pop('check', True)
+    flags['check'] = checkdens = check = flags.pop('check', True)
 
     # build up solutions if f is a Mul
     if f.is_Mul:
@@ -2667,6 +2667,8 @@ def _tsolve(eq, sym, **flags):
                 return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
             elif lhs.base == 0 and rhs == 1:
                 return _solve(lhs.exp, sym, **flags)
+            else:
+                raise NotImplementedError
 
         elif lhs.is_Mul and rhs.is_positive:
             llhs = expand_log(log(lhs))
@@ -2907,6 +2909,8 @@ def nsolve(*args, **kwargs):
             if isinstance(fi, Equality):
                 f[i] = fi.lhs - fi.rhs
         f = Matrix(f).T
+    if iterable(x0):
+        x0 = list(x0)
     if not isinstance(f, Matrix):
         # assume it's a sympy expression
         if isinstance(f, Equality):
@@ -2997,6 +3001,9 @@ def _invert(eq, *symbols, **kwargs):
 
     """
     eq = sympify(eq)
+    if eq.args:
+        # make sure we are working with flat eq
+        eq = eq.func(*eq.args)
     free = eq.free_symbols
     if not symbols:
         symbols = free
@@ -3006,9 +3013,6 @@ def _invert(eq, *symbols, **kwargs):
     dointpow = bool(kwargs.get('integer_power', False))
 
     lhs = eq
-    if eq.args:
-        # make sure we are working with flat eq
-        lhs = eq.func(*eq.args)
     rhs = S.Zero
     while True:
         was = lhs

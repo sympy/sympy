@@ -1250,7 +1250,7 @@ class NamedArgsMixin(object):
         try:
             return self.args[self._argnames.index(attr)]
         except ValueError:
-            raise AttributeError("'%s' object has not attribute '%s'" % (
+            raise AttributeError("'%s' object has no attribute '%s'" % (
                 type(self).__name__, attr))
 
 def _value_check(condition, message):

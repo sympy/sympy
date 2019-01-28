@@ -302,7 +302,7 @@ def fidelity(state1, state2):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Fidelity_of_quantum_states
+    .. [1] https://en.wikipedia.org/wiki/Fidelity_of_quantum_states
 
     """
     state1 = represent(state1) if isinstance(state1, Density) else state1

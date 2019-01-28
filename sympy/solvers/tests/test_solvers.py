@@ -448,6 +448,9 @@ def test_solve_transcendental():
     assert str(solve(Eq(a, 0.5 - cos(pi*b)/2), b)) == \
         '[-0.318309886183791*acos(-2.0*a + 1.0) + 2.0, 0.318309886183791*acos(-2.0*a + 1.0)]'
 
+    # issue 15325
+    assert solve(y**(1/x) - z, x) == [log(y)/log(z)]
+
 
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
@@ -1970,10 +1973,12 @@ def test_issue_14721():
         (a, 0, -sqrt(2)/2), (a, 0, sqrt(2)/2)]
     assert solve((a + b**2 - 1, a + b**2 - 2)) == []
 
+
 def test_issue_14779():
     x = symbols('x', real=True)
     assert solve(sqrt(x**4 - 130*x**2 + 1089) + sqrt(x**4 - 130*x**2
                  + 3969) - 96*Abs(x)/x,x) == [sqrt(130)]
+
 
 def test_issue_15307():
     assert solve((y - 2, Mul(x + 3,x - 2, evaluate=False))) == \
@@ -1982,3 +1987,13 @@ def test_issue_15307():
         {x: 2, y: 2}
     assert solve((y - 2, Add(x + 4, x - 2, evaluate=False))) == \
         {x: -1, y: 2}
+    eq1 = Eq(12513*x + 2*y - 219093, -5726*x - y)
+    eq2 = Eq(-2*x + 8, 2*x - 40)
+    assert solve([eq1, eq2]) == {x:12, y:75}
+
+def test_issue_15415():
+    assert solve(x - 3, x) == [3]
+    assert solve([x - 3], x) == {x:3}
+    assert solve(Eq(y + 3*x**2/2, y + 3*x), y) == []
+    assert solve([Eq(y + 3*x**2/2, y + 3*x)], y) == []
+    assert solve([Eq(y + 3*x**2/2, y + 3*x), Eq(x, 1)], y) == []

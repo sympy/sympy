@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols, IndexedBase
+    Function, log, sqrt, Symbol, Subs, pi, symbols, IndexedBase, atan
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
@@ -108,11 +108,18 @@ def test_series_of_Subs():
     subs3 = Subs(sin(x * z), (x, z), (y, x))
 
     assert subs1.series(x) == subs1
-    assert subs1.series(y) == Subs(x, x, y) + Subs(-x**3/6, x, y) + Subs(x**5/120, x, y) + O(y**6)
+    subs1_series = (Subs(x, x, y) + Subs(-x**3/6, x, y) +
+        Subs(x**5/120, x, y) + O(y**6))
+    assert subs1.series() == subs1_series
+    assert subs1.series(y) == subs1_series
     assert subs1.series(z) == subs1
-    assert subs2.series(z) == Subs(z**4*sin(x)/24, x, y) + Subs(-z**2*sin(x)/2, x, y) + Subs(sin(x), x, y) + O(z**6)
+    assert subs2.series(z) == (Subs(z**4*sin(x)/24, x, y) +
+        Subs(-z**2*sin(x)/2, x, y) + Subs(sin(x), x, y) + O(z**6))
     assert subs3.series(x).doit() == subs3.doit().series(x)
     assert subs3.series(z).doit() == sin(x*y)
+
+    raises(ValueError, lambda: Subs(x + 2*y, y, z).series())
+    assert Subs(x + y, y, z).series(x).doit() == x + z
 
 
 def test_issue_3978():
@@ -190,5 +197,19 @@ def test_exp_product_positive_factors():
 def test_issue_8805():
     assert series(1, n=8) == 1
 
+
 def test_issue_10761():
     assert series(1/(x**-2 + x**-3), x, 0) == x**3 - x**4 + x**5 + O(x**6)
+
+
+def test_issue_14885():
+    assert series(x**(-S(3)/2)*exp(x), x, 0) == (x**(-S(3)/2) + 1/sqrt(x) +
+        sqrt(x)/2 + x**(S(3)/2)/6 + x**(S(5)/2)/24 + x**(S(7)/2)/120 +
+        x**(S(9)/2)/720 + x**(S(11)/2)/5040 + O(x**6))
+
+
+def test_issue_15539():
+    assert series(atan(x), x, -oo) == (-1/(5*x**5) + 1/(3*x**3) - 1/x - pi/2
+        + O(x**(-6), (x, -oo)))
+    assert series(atan(x), x, oo) == (-1/(5*x**5) + 1/(3*x**3) - 1/x + pi/2
+        + O(x**(-6), (x, oo)))

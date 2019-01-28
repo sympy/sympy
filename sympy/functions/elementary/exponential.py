@@ -444,21 +444,21 @@ class exp(ExpBase):
             return S.One
         return exp(arg)
 
-    def _eval_rewrite_as_sin(self, arg):
+    def _eval_rewrite_as_sin(self, arg, **kwargs):
         from sympy import sin
         I = S.ImaginaryUnit
         return sin(I*arg + S.Pi/2) - I*sin(I*arg)
 
-    def _eval_rewrite_as_cos(self, arg):
+    def _eval_rewrite_as_cos(self, arg, **kwargs):
         from sympy import cos
         I = S.ImaginaryUnit
         return cos(I*arg) + I*cos(I*arg + S.Pi/2)
 
-    def _eval_rewrite_as_tanh(self, arg):
+    def _eval_rewrite_as_tanh(self, arg, **kwargs):
         from sympy import tanh
         return (1 + tanh(arg/2))/(1 - tanh(arg/2))
 
-    def _eval_rewrite_as_sqrt(self, arg):
+    def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         from sympy.functions.elementary.trigonometric import sin, cos
         if arg.is_Mul:
             coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
@@ -466,6 +466,12 @@ class exp(ExpBase):
                 cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
                 if not isinstance(cosine, cos) and not isinstance (sine, sin):
                     return cosine + S.ImaginaryUnit*sine
+
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
+        if arg.is_Mul:
+            logs = [a for a in arg.args if isinstance(a, log) and len(a.args) == 1]
+            if logs:
+                return Pow(logs[0].args[0], arg.coeff(logs[0]))
 
 
 class log(Function):
@@ -805,7 +811,7 @@ class LambertW(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Lambert_W_function
+    .. [1] https://en.wikipedia.org/wiki/Lambert_W_function
     """
 
     @classmethod

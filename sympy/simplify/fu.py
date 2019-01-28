@@ -190,27 +190,27 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from sympy.simplify.simplify import bottom_up
-from sympy.core.sympify import sympify
-from sympy.functions.elementary.trigonometric import (
-    cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
-from sympy.functions.elementary.hyperbolic import (
-    cosh, sinh, tanh, coth, sech, csch, HyperbolicFunction)
-from sympy.functions.combinatorial.factorials import binomial
+from sympy.core.add import Add
+from sympy.core.basic import S
 from sympy.core.compatibility import ordered, range
 from sympy.core.expr import Expr
-from sympy.core.mul import Mul
-from sympy.core.power import Pow
-from sympy.core.function import expand_mul
-from sympy.core.add import Add
-from sympy.core.symbol import Dummy
 from sympy.core.exprtools import Factors, gcd_terms, factor_terms
-from sympy.core.basic import S
+from sympy.core.function import expand_mul
+from sympy.core.mul import Mul
 from sympy.core.numbers import pi, I
+from sympy.core.power import Pow
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.elementary.hyperbolic import (
+    cosh, sinh, tanh, coth, sech, csch, HyperbolicFunction)
+from sympy.functions.elementary.trigonometric import (
+    cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
+from sympy.ntheory.factor_ import perfect_power
+from sympy.polys.polytools import factor
+from sympy.simplify.simplify import bottom_up
 from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
-from sympy.polys.polytools import factor
-from sympy.ntheory.factor_ import perfect_power
 
 from sympy import SYMPY_DEBUG
 
@@ -1282,7 +1282,7 @@ def TRmorrie(rv):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Morrie%27s_law
+    https://en.wikipedia.org/wiki/Morrie%27s_law
 
     """
 
@@ -2082,7 +2082,7 @@ def _osborne(e, d):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Hyperbolic_function
+    https://en.wikipedia.org/wiki/Hyperbolic_function
     """
 
     def f(rv):
@@ -2121,7 +2121,7 @@ def _osbornei(e, d):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Hyperbolic_function
+    https://en.wikipedia.org/wiki/Hyperbolic_function
     """
 
     def f(rv):
@@ -2171,7 +2171,7 @@ def hyper_as_trig(rv):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Hyperbolic_function
+    https://en.wikipedia.org/wiki/Hyperbolic_function
     """
     from sympy.simplify.simplify import signsimp
     from sympy.simplify.radsimp import collect

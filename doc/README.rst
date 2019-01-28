@@ -12,9 +12,17 @@ and do::
 
     make html
 
+If you get **mpmath** error, install python-mpmath package::
+
+    apt-get install python-mpmath
+
+If you get **matplotlib** error, install python-matplotlib package::
+
+    apt-get install python-matplotlib
+
 and to view it, do::
 
-    epiphany _build/html/index.html
+    firefox _build/html/index.html
 
 Fedora
 ------
@@ -30,6 +38,10 @@ After that, run::
 If you get **mpmath** error, install python3-mpmath package::
 
     dnf install python3-mpmath
+
+If you get **matplotlib** error, install python3-matplotlib package::
+
+    dnf install python3-matplotlib
 
 And view it at::
 

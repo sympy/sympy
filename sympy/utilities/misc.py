@@ -309,7 +309,7 @@ def replace(string, *reps):
     References
     ==========
 
-    .. [1] http://stackoverflow.com/questions/6116978/python-replace-multiple-strings
+    .. [1] https://stackoverflow.com/questions/6116978/python-replace-multiple-strings
     """
     if len(reps) == 1:
         kv = reps[0]
@@ -428,23 +428,15 @@ def ordinal(num):
     """
     # modified from https://codereview.stackexchange.com/questions/41298/producing-ordinal-numbers
     n = as_int(num)
-    if n < 0:
-        return '-%s' % ordinal(-n)
-    if n == 0 or 4 <= n <= 20:
+    k = abs(n) % 100
+    if 11 <= k <= 13:
         suffix = 'th'
-    elif n == 1 or (n % 10) == 1:
+    elif k % 10 == 1:
         suffix = 'st'
-    elif n == 2 or (n % 10) == 2:
+    elif k % 10 == 2:
         suffix = 'nd'
-    elif n == 3 or (n % 10) == 3:
+    elif k % 10 == 3:
         suffix = 'rd'
-    elif n < 101:
-        suffix = 'th'
     else:
-        suffix = ordinal(n % 100)
-        if len(suffix) == 3:
-            # e.g. 103 -> 3rd
-            # so add other 0 back
-            suffix = '0' + suffix
-        n = str(n)[:-2]
+        suffix = 'th'
     return str(n) + suffix

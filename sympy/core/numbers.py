@@ -3,9 +3,7 @@ from __future__ import print_function, division
 import decimal
 import fractions
 import math
-import warnings
 import re as regex
-from collections import defaultdict
 
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError, _convert_numpy_types
@@ -17,6 +15,7 @@ from .logic import fuzzy_not
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
+from sympy.core.cache import lru_cache
 
 import mpmath
 import mpmath.libmp as mlib
@@ -154,11 +153,10 @@ def _literal_float(f):
     return bool(regex.match(pat, f))
 
 # (a,b) -> gcd(a,b)
-_gcdcache = {}
 
 # TODO caching with decorator, but not to degrade performance
 
-
+@lru_cache(1024)
 def igcd(*args):
     """Computes nonnegative integer greatest common divisor.
 
@@ -188,22 +186,17 @@ def igcd(*args):
         while k < len(args):
             b = args[k]
             k += 1
-            try:
-                a = _gcdcache[(a, b)]
-            except KeyError:
-                b = as_int(b)
-                if not b:
-                    continue
-                if b == 1:
-                    a = 1
-                    break
-                if b < 0:
-                    b = -b
-                t = a, b
-                a = igcd2(a, b)
-                _gcdcache[t] = _gcdcache[t[1], t[0]] = a
+            b = as_int(b)
+            if not b:
+                continue
+            if b == 1:
+                a = 1
+                break
+            if b < 0:
+                b = -b
+            a = igcd2(a, b)
     while k < len(args):
-        ok = as_int(args[k])
+        as_int(args[k])
         k += 1
     return a
 
@@ -567,7 +560,6 @@ class Number(AtomicExpr):
 
     def __divmod__(self, other):
         from .containers import Tuple
-        from sympy.functions.elementary.complexes import sign
 
         try:
             other = Number(other)
@@ -580,7 +572,7 @@ class Number(AtomicExpr):
             return Tuple(*divmod(self.p, other.p))
         else:
             rat = self/other
-        w = sign(rat)*int(abs(rat))  # = rat.floor()
+        w = int(rat) if rat > 0 else int(rat) - 1
         r = self - other*w
         return Tuple(w, r)
 
@@ -2503,7 +2495,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Zero
+    .. [1] https://en.wikipedia.org/wiki/Zero
     """
 
     p = 0
@@ -2568,7 +2560,7 @@ class One(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/1_%28number%29
+    .. [1] https://en.wikipedia.org/wiki/1_%28number%29
     """
     is_number = True
 
@@ -2620,7 +2612,7 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/%E2%88%921_%28number%29
+    .. [1] https://en.wikipedia.org/wiki/%E2%88%921_%28number%29
 
     """
     is_number = True
@@ -2676,7 +2668,7 @@ class Half(with_metaclass(Singleton, RationalConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/One_half
+    .. [1] https://en.wikipedia.org/wiki/One_half
     """
     is_number = True
 
@@ -2725,7 +2717,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Infinity
+    .. [1] https://en.wikipedia.org/wiki/Infinity
     """
 
     is_commutative = True
@@ -3201,7 +3193,7 @@ class NaN(with_metaclass(Singleton, Number)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/NaN
+    .. [1] https://en.wikipedia.org/wiki/NaN
 
     """
     is_commutative = True
@@ -3439,7 +3431,7 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/E_%28mathematical_constant%29
+    .. [1] https://en.wikipedia.org/wiki/E_%28mathematical_constant%29
     """
 
     is_real = True
@@ -3475,12 +3467,12 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
         from sympy import exp
         return exp(expt)
 
-    def _eval_rewrite_as_sin(self):
+    def _eval_rewrite_as_sin(self, **kwargs):
         from sympy import sin
         I = S.ImaginaryUnit
         return sin(I + S.Pi/2) - I*sin(I)
 
-    def _eval_rewrite_as_cos(self):
+    def _eval_rewrite_as_cos(self, **kwargs):
         from sympy import cos
         I = S.ImaginaryUnit
         return cos(I) + I*cos(I + S.Pi/2)
@@ -3521,7 +3513,7 @@ class Pi(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Pi
+    .. [1] https://en.wikipedia.org/wiki/Pi
     """
 
     is_real = True
@@ -3582,7 +3574,7 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Golden_ratio
+    .. [1] https://en.wikipedia.org/wiki/Golden_ratio
     """
 
     is_real = True
@@ -3716,7 +3708,7 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
+    .. [1] https://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
     """
 
     is_real = True
@@ -3772,7 +3764,7 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Catalan%27s_constant
+    .. [1] https://en.wikipedia.org/wiki/Catalan%27s_constant
     """
 
     is_real = True
@@ -3823,7 +3815,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Imaginary_unit
+    .. [1] https://en.wikipedia.org/wiki/Imaginary_unit
     """
 
     is_commutative = True
@@ -3870,7 +3862,6 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
                 if expt == 2:
                     return -S.One
                 return -S.ImaginaryUnit
-            return (S.NegativeOne)**(expt*S.Half)
         return
 
     def as_base_exp(self):

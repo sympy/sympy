@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import sys
 
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq

@@ -7,7 +7,7 @@ may be optionally for things like plotting support.
 
 See the webpage for more information and documentation:
 
-    http://sympy.org
+    https://sympy.org
 
 """
 
@@ -19,7 +19,7 @@ try:
     import mpmath
 except ImportError:
     raise ImportError("SymPy now depends on mpmath as an external library. "
-    "See http://docs.sympy.org/latest/install.html#mpmath for more information.")
+    "See https://docs.sympy.org/latest/install.html#mpmath for more information.")
 
 del mpmath
 
@@ -74,6 +74,8 @@ from .tensor import *
 from .parsing import *
 from .calculus import *
 from .algebras import *
+# This module causes conflicts with other modules:
+# from .stats import *
 # Adds about .04-.05 seconds of import time
 # from combinatorics import *
 # This module is slow to import:

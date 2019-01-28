@@ -6,16 +6,18 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import combinations, product
 
+from sympy.core.add import Add
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Number, oo
 from sympy.core.operations import LatticeOp
-from sympy.core.function import Application, Derivative
+from sympy.core.function import Application, Derivative, count_ops
 from sympy.core.compatibility import (ordered, range, with_metaclass,
     as_int, reduce)
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
 from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import sift
 
 
 def as_Boolean(e):
@@ -412,7 +414,12 @@ class BooleanFunction(Application, Boolean):
     is_Boolean = True
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
-        return simplify_logic(self)
+        rv = self.func(*[a._eval_simplify(ratio=ratio, measure=measure,
+            rational=rational, inverse=inverse) for a in self.args])
+        return simplify_logic(rv)
+
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+        return self._eval_simplify(ratio, measure, rational, inverse)
 
     # /// drop when Py2 is no longer supported
     def __lt__(self, other):
@@ -541,6 +548,63 @@ class And(LatticeOp, BooleanFunction):
                 rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
+
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        from sympy.core.relational import Equality, Relational
+        from sympy.solvers.solveset import linear_coeffs
+        # standard simplify
+        rv = super(And, self)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if not isinstance(rv, And):
+            return rv
+        # simplify args that are equalities involving
+        # symbols so x == 0 & x == y -> x==0 & y == 0
+        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
+        if not Rel:
+            return rv
+        eqs, other = sift(Rel, lambda i: isinstance(i, Equality), binary=True)
+        if not eqs:
+            return rv
+        reps = {}
+        sifted = {}
+        if eqs:
+            # group by length of free symbols
+            sifted = sift(ordered([
+                (i.free_symbols, i) for i in eqs]),
+                lambda x: len(x[0]))
+            eqs = []
+            while 1 in sifted:
+                for free, e in sifted.pop(1):
+                    x = free.pop()
+                    if e.lhs != x or x in e.rhs.free_symbols:
+                        try:
+                            m, b = linear_coeffs(
+                                e.rewrite(Add, evaluate=False), x)
+                            enew = e.func(x, -b/m)
+                            if measure(enew) <= ratio*measure(e):
+                                e = enew
+                            else:
+                                eqs.append(e)
+                                continue
+                        except ValueError:
+                            pass
+                    if x in reps:
+                        eqs.append(e.func(e.rhs, reps[x]))
+                    else:
+                        reps[x] = e.rhs
+                        eqs.append(e)
+                resifted = defaultdict(list)
+                for k in sifted:
+                    for f, e in sifted[k]:
+                        e = e.subs(reps)
+                        f = e.free_symbols
+                        resifted[len(f)].append((f, e))
+                sifted = resifted
+        for k in sifted:
+            eqs.extend([e for f, e in sifted[k]])
+        other = [ei.subs(reps) for ei in other]
+        rv = rv.func(*([i.canonical for i in (eqs + other)] + nonRel))
+        return rv
 
     def _eval_as_set(self):
         from sympy.sets.sets import Intersection
@@ -671,14 +735,6 @@ class Not(BooleanFunction):
             return StrictGreaterThan(*arg.args)
         if isinstance(arg, GreaterThan):
             return StrictLessThan(*arg.args)
-
-    def _eval_simplify(self, ratio, measure, rational, inverse):
-        x = self.args[0]
-        try:
-            x._eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
-        except:
-            pass
-        return self.func(x)
 
     def _eval_as_set(self):
         """
@@ -1186,7 +1242,7 @@ class ITE(BooleanFunction):
     def _eval_as_set(self):
         return self.to_nnf().as_set()
 
-    def _eval_rewrite_as_Piecewise(self, *args):
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         from sympy.functions import Piecewise
         return Piecewise((args[1], args[0]), (args[2], True))
 
@@ -1974,11 +2030,15 @@ def simplify_logic(expr, form=None, deep=True):
     # get variables in case not deep or after doing
     # deep simplification since they may have changed
     variables = _find_predicates(expr)
+    # group into constants and variable values
+    c, v = sift(variables, lambda x: x in (True, False), binary=True)
+    variables = c + v
     truthtable = []
-    for t in product([0, 1], repeat=len(variables)):
-        t = list(t)
-        if expr.xreplace(dict(zip(variables, t))) == True:
-            truthtable.append(t)
+    # standardize constants to be 1 or 0 in keeping with truthtable
+    c = [1 if i==True else 0 for i in c]
+    for t in product([0, 1], repeat=len(v)):
+        if expr.xreplace(dict(zip(v, t))) == True:
+            truthtable.append(c + list(t))
     big = len(truthtable) >= (2 ** (len(variables) - 1))
     if form == 'dnf' or form is None and big:
         return SOPform(variables, truthtable)

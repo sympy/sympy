@@ -1,9 +1,9 @@
 from sympy import KroneckerDelta, diff, Piecewise, And
-from sympy import Sum, Dummy
+from sympy import Sum, Dummy, factor, expand
 
 from sympy.core import S, symbols, Add, Mul
 from sympy.core.compatibility import long
-from sympy.functions import transpose, sin, cos, sqrt
+from sympy.functions import transpose, sin, cos, sqrt, cbrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
@@ -162,6 +162,7 @@ def test_MatPow():
     assert (A**-1)**-1 == A
     assert (A**2)**3 == A**6
     assert A**S.Half == sqrt(A)
+    assert A**(S(1)/3) == cbrt(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
 
 
@@ -337,3 +338,12 @@ def test_MatrixElement_with_values():
 def test_inv():
     B = MatrixSymbol('B', 3, 3)
     assert B.inv() == B**-1
+
+def test_factor_expand():
+    A = MatrixSymbol("A", n, n)
+    B = MatrixSymbol("B", n, n)
+    expr1 = (A + B)*(C + D)
+    expr2 = A*C + B*C + A*D + B*D
+    assert expr1 != expr2
+    assert expand(expr1) == expr2
+    assert factor(expr2) == expr1

@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy.assumptions.ask import Q
 from sympy.core.containers import Tuple
 from sympy.core.numbers import oo
@@ -264,6 +262,17 @@ def test_simplification():
     assert simplify((A & B) | (A & C)) == And(A, Or(B, C))
     assert simplify(And(x, Not(x))) == False
     assert simplify(Or(x, Not(x))) == True
+    assert simplify(And(Eq(x, 0), Eq(x, y))) == And(Eq(x, 0), Eq(y, 0))
+    assert And(Eq(x - 1, 0), Eq(x, y)).simplify() == And(Eq(x, 1), Eq(y, 1))
+    assert And(Ne(x - 1, 0), Ne(x, y)).simplify() == And(Ne(x, 1), Ne(x, y))
+    assert And(Eq(x - 1, 0), Ne(x, y)).simplify() == And(Eq(x, 1), Ne(y, 1))
+    assert And(Eq(x - 1, 0), Eq(x, z + y), Eq(y + x, 0)).simplify(
+        ) == And(Eq(x, 1), Eq(y, -1), Eq(z, 2))
+    assert And(Eq(x - 1, 0), Eq(x + 2, 3)).simplify() == Eq(x, 1)
+    assert And(Ne(x - 1, 0), Ne(x + 2, 3)).simplify() == Ne(x, 1)
+    assert And(Eq(x - 1, 0), Eq(x + 2, 2)).simplify() == False
+    assert And(Ne(x - 1, 0), Ne(x + 2, 2)).simplify(
+        ) == And(Ne(x, 1), Ne(x, 0))
 
 
 def test_bool_map():
@@ -320,7 +329,7 @@ def test_subs():
 
 """
 we test for axioms of boolean algebra
-see http://en.wikipedia.org/wiki/Boolean_algebra_(structure)
+see https://en.wikipedia.org/wiki/Boolean_algebra_(structure)
 """
 
 
@@ -818,4 +827,4 @@ def test_binary_symbols():
 
 
 def test_BooleanFunction_diff():
-    assert And(x, y).diff(x) == Piecewise((0, Eq(False, y)), (1, True))
+    assert And(x, y).diff(x) == Piecewise((0, Eq(y, False)), (1, True))

@@ -273,7 +273,7 @@ def test_find_linear_recurrence():
     assert sequence((2,3,4,5,6,79),(n, 0, 5)).find_linear_recurrence(6,gfvar=x) \
     == ([], None)
     assert sequence((2,3,4,5,8,30),(n, 0, 5)).find_linear_recurrence(6,gfvar=x) \
-    == ([19/2, -20, 27/2], (-31*x**2 + 32*x - 4)/(27*x**3 - 40*x**2 + 19*x -2))
+    == ([S(19)/2, -20, S(27)/2], (-31*x**2 + 32*x - 4)/(27*x**3 - 40*x**2 + 19*x -2))
     assert sequence(fibonacci(n)).find_linear_recurrence(30,gfvar=x) \
     == ([1, 1], -x/(x**2 + x - 1))
     assert sequence(tribonacci(n)).find_linear_recurrence(30,gfvar=x) \

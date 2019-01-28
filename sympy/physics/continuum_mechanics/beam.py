@@ -15,6 +15,13 @@ from sympy.series import limit
 from sympy.plotting import plot
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
+from sympy import lambdify
+
+matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
+numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
+
+
+__doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
 
 
 class Beam(object):
@@ -336,7 +343,7 @@ class Beam(object):
             reaction_moment = Symbol('M_'+str(loc))
             self.apply_load(reaction_load, loc, -1)
             self.apply_load(reaction_moment, loc, -2)
-            self.bc_deflection = [(loc, 0)]
+            self.bc_deflection.append((loc, 0))
             self.bc_slope.append((loc, 0))
 
     def apply_load(self, value, start, order, end=None):
@@ -993,7 +1000,7 @@ class Beam(object):
             return self._hinge_beam_slope
         if not self._boundary_conditions['slope']:
             return diff(self.deflection(), x)
-        if self._composite_type == "fixed":
+        if isinstance(I, Piecewise) and self._composite_type == "fixed":
             args = I.args
             slope = 0
             conditions = []
@@ -1060,7 +1067,7 @@ class Beam(object):
         if self._composite_type == "hinge":
             return self._hinge_beam_deflection
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
-            if self._composite_type == "fixed":
+            if isinstance(I, Piecewise) and self._composite_type == "fixed":
                 args = I.args
                 conditions = []
                 prev_slope = 0
@@ -1089,7 +1096,7 @@ class Beam(object):
             constant = symbols(base_char + '4')
             return integrate(self.slope(), x) + constant
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
-            if self._composite_type == "fixed":
+            if isinstance(I, Piecewise) and self._composite_type == "fixed":
                 args = I.args
                 conditions = []
                 prev_slope = 0
@@ -1122,7 +1129,7 @@ class Beam(object):
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
             return S(1)/(E*I)*deflection_curve
 
-        if self._composite_type == "fixed":
+        if isinstance(I, Piecewise) and self._composite_type == "fixed":
             args = I.args
             conditions = []
             prev_slope = 0
@@ -1522,8 +1529,9 @@ class Beam(object):
             length = subs[self.length]
         else:
             length = self.length
-        return plot(deflection.subs(subs), (self.variable, 0, length), title='Deflection',
-                xlabel='position', ylabel='Value', line_color='r')
+        return plot(deflection.subs(subs), (self.variable, 0, length),
+                    title='Deflection', xlabel='position', ylabel='Value',
+                    line_color='r')
 
     @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def plot_loading_results(self, subs=None):
@@ -1543,12 +1551,12 @@ class Beam(object):
 
         Examples
         ========
-        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
-        is applied from half of the beam till the end. There are two simple supports
-        below the beam, one at the starting point and another at the ending point
-        of the beam. A pointload of magnitude 5 KN is also applied from top of the
-        beam, at a distance of 4 meters from the starting point.
-        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+        There is a beam of length 8 meters. A constant distributed load of 10
+        KN/m is applied from half of the beam till the end. There are two
+        simple supports below the beam, one at the starting point and another
+        at the ending point of the beam. A pointload of magnitude 5 KN is also
+        applied from top of the beam, at a distance of 4 meters from the
+        starting point.  Take E = 200 GPa and I = 400*(10**-6) meter**4.
 
         Using the sign convention of downwards forces being positive.
 
@@ -1564,11 +1572,14 @@ class Beam(object):
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> axes = b.plot_loading_results()
         """
-        from sympy import lambdify
-        matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
-        plt = matplotlib.pyplot
-        numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
-        linspace = numpy.linspace
+        if matplotlib is None:
+            raise ImportError('Install matplotlib to use this method.')
+        else:
+            plt = matplotlib.pyplot
+        if numpy is None:
+            raise ImportError('Install numpy to use this method.')
+        else:
+            linspace = numpy.linspace
 
         length = self.length
         variable = self.variable
@@ -1578,20 +1589,27 @@ class Beam(object):
             if sym == self.variable:
                 continue
             if sym not in subs:
-                raise ValueError('Value of %s was not passed.' %sym)
+                raise ValueError('Value of %s was not passed.' % sym)
         if self.length in subs:
             length = subs[self.length]
         else:
             length = self.length
 
-        # As we are using matplotlib directly in this method, we need to change SymPy methods
-        # to numpy functions.
-        shear = lambdify(variable, self.shear_force().subs(subs).rewrite(Piecewise), 'numpy')
-        moment = lambdify(variable, self.bending_moment().subs(subs).rewrite(Piecewise), 'numpy')
-        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise), 'numpy')
-        deflection = lambdify(variable, self.deflection().subs(subs).rewrite(Piecewise), 'numpy')
+        # As we are using matplotlib directly in this method, we need to change
+        # SymPy methods to numpy functions.
+        shear = lambdify(variable,
+                         self.shear_force().subs(subs).rewrite(Piecewise),
+                         'numpy')
+        moment = lambdify(variable,
+                          self.bending_moment().subs(subs).rewrite(Piecewise),
+                          'numpy')
+        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise),
+                         'numpy')
+        deflection = lambdify(variable,
+                              self.deflection().subs(subs).rewrite(Piecewise),
+                              'numpy')
 
-        points = linspace(0, float(length), num=5*length)
+        points = linspace(0, float(length), num=100*length)
 
         # Creating a grid for subplots with 2 rows and 2 columns
         fig, axs = plt.subplots(4, 1)
@@ -1630,10 +1648,10 @@ class Beam3D(Beam):
     is restricted.
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam3D
-    >>> from sympy import symbols
+    >>> from sympy import symbols, simplify
     >>> l, E, G, I, A = symbols('l, E, G, I, A')
     >>> b = Beam3D(l, E, G, I, A)
-    >>> q, m = symbols('q, m')
+    >>> x, q, m = symbols('x, q, m')
     >>> b.apply_load(q, 0, 0, dir="y")
     >>> b.apply_moment_load(m, 0, -1, dir="z")
     >>> b.shear_force()
@@ -1647,10 +1665,18 @@ class Beam3D(Beam):
     [0, 0, l*x*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
     + q*x**3/(6*E*I) + x**2*(-l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I))
     - m)/(2*E*I)]
-    >>> b.deflection()
-    [0, -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
-    + l*m*x**2/(4*E*I) - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
-    + q*x**4/(24*E*I) + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G), 0]
+    >>> dx, dy, dz = b.deflection()
+    >>> dx
+    0
+    >>> dz
+    0
+    >>> expectedy = (
+    ... -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
+    ... + l*m*x**2/(4*E*I) - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
+    ... + q*x**4/(24*E*I) + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G)
+    ... )
+    >>> simplify(dy - expectedy)
+    0
 
     References
     ==========
@@ -1858,7 +1884,7 @@ class Beam3D(Beam):
             reaction_load = Symbol('R_'+str(loc))
             reaction_moment = Symbol('M_'+str(loc))
             self._reaction_loads[reaction_load] = [reaction_load, reaction_moment]
-            self.bc_deflection = [(loc, [0, 0, 0])]
+            self.bc_deflection.append((loc, [0, 0, 0]))
             self.bc_slope.append((loc, [0, 0, 0]))
 
     def solve_for_reaction_loads(self, *reaction):
