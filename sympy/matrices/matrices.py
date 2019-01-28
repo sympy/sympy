@@ -4222,6 +4222,8 @@ class MatrixBase(MatrixDeprecated,
         method : string or boolean, optional
             If set to ``'CH'``, ``cholesky_solve`` routine will be used.
 
+            If set to ``'LDL'``, ``LDLsolve`` routine will be used.
+
             If set to ``'QR'``, ``QRsolve`` routine will be used.
 
             If set to ``'PINV'``, ``pinv_solve`` routine will be used.
@@ -4296,14 +4298,50 @@ class MatrixBase(MatrixDeprecated,
             return (t * self).solve(t * rhs, method=method)
 
     def solve(self, rhs, method='GJ'):
-        """Return the unique soln making self*soln = rhs.
+        """Solves linear equation where the unique solution exists.
 
-        If there is not a unique solution then a ValueError will be raised. If `self` is not
-        square, a ValueError and a different routine for solving the system will be suggested.
+        Parameters
+        ==========
 
-        When the method is GJ, the Gauss-Jordan elimination will be used. To use a different
-        method and to compute the solution via the inverse, use a method defined in the
-        .inv() docstring.
+        rhs : Matrix
+            Vector representing the right hand side of the linear equation.
+
+        method : string, optional
+           If set to ``'GJ'``, the Gauss-Jordan elimination will be used, which
+           is implemented in the routine ``gauss_jordan_solve``.
+
+           If set to ``'LU'``, ``LUsolve`` routine will be used.
+
+           If set to ``'QR'``, ``QRsolve`` routine will be used.
+
+           If set to ``'PINV'``, ``pinv_solve`` routine will be used.
+
+           It also supports the methods available for special linear systems
+
+           For positive definite systems:
+
+           If set to ``'CH'``, ``cholesky_solve`` routine will be used.
+
+           If set to ``'LDL'``, ``LDLsolve`` routine will be used.
+
+           To use a different method and to compute the solution via the
+           inverse, use a method defined in the .inv() docstring.
+
+        Returns
+        =======
+
+        solutions : Matrix
+            Vector representing the solution.
+
+        Raises
+        ======
+
+        ValueError
+            If there is not a unique solution then a ``ValueError`` will be
+            raised.
+
+            If ``self`` is not square, a ``ValueError`` and a different routine
+            for solving the system will be suggested.
         """
 
         if method == 'GJ':
@@ -4316,6 +4354,16 @@ class MatrixBase(MatrixDeprecated,
                 # raise same error as in inv:
                 self.zeros(1).inv()
             return soln
+        elif method == 'LU':
+            return self.LUsolve(rhs)
+        elif method == 'CH':
+            return self.cholesky_solve(rhs)
+        elif method == 'QR':
+            return self.QRsolve(rhs)
+        elif method == 'LDL':
+            return self.LDLsolve(rhs)
+        elif method == 'PINV':
+            return self.pinv_solve(rhs)
         else:
             return self.inv(method=method)*rhs
 
