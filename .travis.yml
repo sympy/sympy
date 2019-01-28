@@ -58,9 +58,10 @@ matrix:
             - libatlas-base-dev
             - liblapack-dev
             - gfortran
-    - python: 3.7
-      dist: xenial
-      sudo: true
+    - python: 3.6
+      # This is actually 3.7 (once all the dependencies support it). We use
+      # python: 3.6 here because 3.7 requires the slower xenial/sudo: true container,
+      # and we aren't actually using the Travis Python anyway.
       env:
         - TEST_ASCII="true"
         - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle"
