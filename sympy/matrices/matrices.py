@@ -4204,10 +4204,10 @@ class MatrixBase(MatrixDeprecated,
         """
         if method == 'CH':
             return self.cholesky_solve(rhs)
-        elif method == 'LDL':
-            return self.LDLsolve(rhs)
         elif method == 'QR':
             return self.QRsolve(rhs)
+        elif method == 'LDL':
+            return self.LDLsolve(rhs)
         elif method == 'PINV':
             return self.pinv_solve(rhs)
         else:
