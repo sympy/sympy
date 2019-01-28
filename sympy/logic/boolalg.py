@@ -736,6 +736,10 @@ class Not(BooleanFunction):
         if isinstance(arg, GreaterThan):
             return StrictLessThan(*arg.args)
 
+    @property
+    def canonical(self):
+        return self
+
     def _eval_as_set(self):
         """
         Rewrite logic operators and relationals in terms of real sets.
