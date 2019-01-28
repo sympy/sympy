@@ -1913,4 +1913,3 @@ def test_print_basic():
     assert latex(unimplemented_expr(x)) == r'UnimplementedExpr\left(x\right)'
     assert latex(unimplemented_expr(x**2)) == r'UnimplementedExpr\left(x^{2}\right)'
     assert latex(unimplemented_expr_sup_sub(x)) == r'UnimplementedExpr^{1}_{x}\left(x\right)'
-    
