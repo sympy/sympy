@@ -4217,12 +4217,24 @@ class MatrixBase(MatrixDeprecated,
     def solve(self, rhs, method='GJ'):
         """Return the unique soln making self*soln = rhs.
 
-        If there is not a unique solution then a ValueError will be raised. If `self` is not
-        square, a ValueError and a different routine for solving the system will be suggested.
+        Parameters
+        ==========
 
-        When the method is GJ, the Gauss-Jordan elimination will be used. To use a different
-        method and to compute the solution via the inverse, use a method defined in the
-        .inv() docstring.
+        method : string, optional
+           If set to ``'GJ'``, the Gauss-Jordan elimination will be used.
+
+           To use a different method and to compute the solution via the
+           inverse, use a method defined in the .inv() docstring.
+
+        Raises
+        ======
+
+        ValueError
+            If there is not a unique solution then a ``ValueError`` will be
+            raised.
+
+            If ``self`` is not square, a ``ValueError`` and a different routine
+            for solving the system will be suggested.
         """
 
         if method == 'GJ':
