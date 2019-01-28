@@ -2707,13 +2707,25 @@ def _tsolve(eq, sym, **flags):
                     check.extend(_solve(lhs.exp, sym, **flags))
                     check.extend(_solve(lhs.base - 1, sym, **flags))
                     check.extend(_solve(lhs.base + 1, sym, **flags))
-                else:
-                    # Maybe g(x) = n/m ?
-                    for n in range(-10, 10):
-                        if not n: continue
-                        for m in range(1, 10):
-                            check.extend(_solve(lhs.exp - S(n)/m, sym, **flags))
-
+                elif rhs.is_Rational:
+                    for d in (i for i in divisors(abs(rhs.p)) if i != 1):
+                        e, t = integer_log(rhs.p, d)
+                        if not t:
+                            continue  # rhs.p != d**b
+                        for s in divisors(abs(rhs.q)):
+                            if s**e== rhs.q:
+                                r = Rational(d, s)
+                                check.extend(_solve(lhs.base - r, sym, **flags))
+                                check.extend(_solve(lhs.base + r, sym, **flags))
+                                check.extend(_solve(lhs.exp - e, sym, **flags))
+                elif rhs.is_irrational:
+                    b_l, e_l = lhs.base.as_base_exp()
+                    n, d = e_l*lhs.exp.as_numer_denom()
+                    b, e = sqrtdenest(rhs).as_base_exp()
+                    check = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, **flags))]
+                    check.extend([sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))])
+                    if (e_l*d) !=1 :
+                        check.extend(_solve(b_l**(n) - rhs**(e_l*d), sym, **flags))
                 sol.extend(s for s in check if eq.subs(sym, s).equals(0))
                 return list(ordered(set(sol)))
 
