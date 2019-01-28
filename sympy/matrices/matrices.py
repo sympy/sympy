@@ -1538,19 +1538,22 @@ class MatrixEigen(MatrixSubspaces):
             return mat_cache[(val, pow)]
 
         # helper functions
-        def nullity_chain(val):
+        def nullity_chain(val, algebraic_multiplicity):
             """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
             until it is constant where ``E = self - val*I``"""
             # mat.rank() is faster than computing the null space,
             # so use the rank-nullity theorem
             cols = self.cols
             ret = [0]
-            nullity = cols - eig_mat(val, 1).rank()
-            i = 2
-            while nullity != ret[-1]:
-                ret.append(nullity)
+
+            i = 1
+            while True:
                 nullity = cols - eig_mat(val, i).rank()
-                i += 1
+                ret.append(nullity)
+                if nullity == algebraic_multiplicity:
+                    break
+                else:
+                    i += 1
             return ret
 
         def blocks_from_nullity_chain(d):
@@ -1602,7 +1605,8 @@ class MatrixEigen(MatrixSubspaces):
 
         block_structure = []
         for eig in sorted(eigs.keys(), key=default_sort_key):
-            chain = nullity_chain(eig)
+            algebraic_multiplicity = eigs[eig]
+            chain = nullity_chain(eig, algebraic_multiplicity)
             block_sizes = blocks_from_nullity_chain(chain)
             # if block_sizes == [a, b, c, ...], then the number of
             # Jordan blocks of size 1 is a, of size 2 is b, etc.

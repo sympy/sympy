@@ -1844,6 +1844,16 @@ def test_issue_10220():
                         [0, 0, 1, 0],
                         [0, 0, 0, 1]])
 
+def test_jordan_form_issue_15858():
+    # q is too complicated for inverting if not simplified
+    A = ImmutableMatrix(
+        [[1, 1, 1, 0], [-2, -1, 0, -1],
+        [0, 0, -1, -1], [0, 0, 2, 1]]
+        )
+    (P, J) = A.jordan_form()
+    P = P.simplify()
+    PJP = (P * J * P.inv()).simplify()
+    assert PJP == A
 
 def test_Matrix_berkowitz_charpoly():
     UA, K_i, K_w = symbols('UA K_i K_w')
