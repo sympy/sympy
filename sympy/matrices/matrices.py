@@ -4139,6 +4139,8 @@ class MatrixBase(MatrixDeprecated,
         method : string or boolean, optional
             If set to ``'CH'``, ``cholesky_solve`` routine will be used.
 
+            If set to ``'LDL'``, ``LDLsolve`` routine will be used.
+
             If set to ``'QR'``, ``QRsolve`` routine will be used.
 
             If set to ``'PINV'``, ``pinv_solve`` routine will be used.
@@ -4202,6 +4204,8 @@ class MatrixBase(MatrixDeprecated,
         """
         if method == 'CH':
             return self.cholesky_solve(rhs)
+        elif method == 'LDL':
+            return self.LDLsolve(rhs)
         elif method == 'QR':
             return self.QRsolve(rhs)
         elif method == 'PINV':
