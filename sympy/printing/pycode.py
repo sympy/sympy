@@ -673,16 +673,25 @@ for k in NumPyPrinter._kc:
 _known_functions_scipy_special = {
     'erf': 'erf',
     'erfc': 'erfc',
-    'besselj': 'jn',
-    'bessely': 'yn',
+    'besselj': 'jv',
+    'bessely': 'yv',
     'besseli': 'iv',
-    'besselk': 'kn',
+    'besselk': 'kv',
     'factorial': 'factorial',
     'gamma': 'gamma',
     'loggamma': 'gammaln',
     'digamma': 'psi',
-    'RisingFactorial': 'poch'
+    'RisingFactorial': 'poch',
+    'jacobi': 'eval_jacobi',
+    'gegenbauer': 'eval_gegenbauer',
+    'chebyshevt': 'eval_chebyt',
+    'chebyshevu': 'eval_chebyu',
+    'legendre': 'eval_legendre',
+    'hermite': 'eval_hermite',
+    'laguerre': 'eval_laguerre',
+    'assoc_laguerre': 'eval_genlaguerre',
 }
+
 _known_constants_scipy_constants = {
     'GoldenRatio': 'golden_ratio',
     'Pi': 'pi',
@@ -711,6 +720,13 @@ class SciPyPrinter(NumPyPrinter):
 
     _print_ImmutableSparseMatrix = _print_SparseMatrix
 
+    # SciPy's lpmv has a different order of arguments from assoc_legendre
+    def _print_assoc_legendre(self, expr):
+        return "{0}({2}, {1}, {3})".format(
+            self._module_format('scipy.special.lpmv'),
+            self._print(expr.args[0]),
+            self._print(expr.args[1]),
+            self._print(expr.args[2]))
 
 for k in SciPyPrinter._kf:
     setattr(SciPyPrinter, '_print_%s' % k, _print_known_func)

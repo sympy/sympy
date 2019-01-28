@@ -1165,7 +1165,7 @@ class Derivative(Expr):
 
         from sympy.matrices.common import MatrixCommon
         from sympy import Integer
-        from sympy.tensor.array import Array, NDimArray, derive_by_array
+        from sympy.tensor.array import Array, NDimArray
         from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)

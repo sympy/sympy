@@ -1,6 +1,6 @@
 from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
-    tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfi,
+    tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfc, erfi,
     EulerGamma, Expr, factor, Function, gamma, gammasimp, I, Idx, im, IndexedBase,
     Integral, integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
@@ -1188,7 +1188,7 @@ def test_powers():
 def test_manual_option():
     raises(ValueError, lambda: integrate(1/x, x, manual=True, meijerg=True))
     # an example of a function that manual integration cannot handle
-    assert integrate(exp(x**2), x, manual=True) == Integral(exp(x**2), x)
+    assert integrate(log(1+x)/x, (x, 0, 1), manual=True).has(Integral)
 
 
 def test_meijerg_option():
@@ -1204,6 +1204,19 @@ def test_risch_option():
     assert integrate(log(1/x)*y, x, y, risch=True) == y**2*(x*log(1/x)/2 + x/2)
     assert integrate(erf(x), x, risch=True) == Integral(erf(x), x)
     # TODO: How to test risch=False?
+
+
+def test_heurisch_option():
+    raises(ValueError, lambda: integrate(1/x, x, risch=True, heurisch=True))
+    # an integral that heurisch can handle
+    assert integrate(exp(x**2), x, heurisch=True) == sqrt(pi)*erfi(x)/2
+    # an integral that heurisch currently cannot handle
+    assert integrate(exp(x)/x, x, heurisch=True) == Integral(exp(x)/x, x)
+    # an integral where heurisch currently hangs, issue 15471
+    assert integrate(log(x)*cos(log(x))/x**(S(3)/4), x, heurisch=False) == (
+        -128*x**(S(1)/4)*sin(log(x))/289 + 240*x**(S(1)/4)*cos(log(x))/289 +
+        (16*x**(S(1)/4)*sin(log(x))/17 + 4*x**(S(1)/4)*cos(log(x))/17)*log(x))
+
 
 def test_issue_6828():
     f = 1/(1.08*x**2 - 4.3)
@@ -1329,10 +1342,10 @@ def test_singularities():
 
 def test_issue_12645():
     x, y = symbols('x y', real=True)
-    assert (integrate(sin(x*x + y*y),
+    assert (integrate(sin(x*x*x + y*y),
                       (x, -sqrt(pi - y*y), sqrt(pi - y*y)),
                       (y, -sqrt(pi), sqrt(pi)))
-                == Integral(sin(x**2 + y**2),
+                == Integral(sin(x**3 + y**2),
                             (x, -sqrt(-y**2 + pi), sqrt(-y**2 + pi)),
                             (y, -sqrt(pi), sqrt(pi))))
 
@@ -1425,3 +1438,40 @@ def test_issue_15292():
 
 def test_issue_4514():
     assert integrate(sin(2*x)/sin(x), x) == 2*sin(x)
+
+
+def test_issue_15457():
+    x, a, b = symbols('x a b', real=True)
+    definite = integrate(exp(Abs(x-2)), (x, a, b))
+    indefinite = integrate(exp(Abs(x-2)), x)
+    assert definite.subs({a: 1, b: 3}) == -2 + 2*E
+    assert indefinite.subs(x, 3) - indefinite.subs(x, 1) == -2 + 2*E
+    assert definite.subs({a: -3, b: -1}) == -exp(3) + exp(5)
+    assert indefinite.subs(x, -1) - indefinite.subs(x, -3) == -exp(3) + exp(5)
+
+
+def test_issue_15431():
+    assert integrate(x*exp(x)*log(x), x) == \
+        (x*exp(x) - exp(x))*log(x) - exp(x) + Ei(x)
+
+
+def test_issue_15640_log_substitutions():
+    f = x/log(x)
+    F = Ei(2*log(x))
+    assert integrate(f, x) == F and F.diff(x) == f
+    f = x**3/log(x)**2
+    F = -x**4/log(x) + 4*Ei(4*log(x))
+    assert integrate(f, x) == F and F.diff(x) == f
+    f = sqrt(log(x))/x**2
+    F = -sqrt(pi)*erfc(sqrt(log(x)))/2 - sqrt(log(x))/x
+    assert integrate(f, x) == F and F.diff(x) == f
+
+
+def test_issue_4311():
+    x = symbols('x')
+    assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)
+    x = symbols('x', real=True)
+    assert integrate(x*abs(9-x**2), x) == Piecewise(
+        (x**4/4 - 9*x**2/2, x <= -3),
+        (-x**4/4 + 9*x**2/2 - S(81)/2, x <= 3),
+        (x**4/4 - 9*x**2/2, True))

@@ -2861,7 +2861,7 @@ def UniformSum(name, n):
     The density of the Irwin-Hall distribution is given by
 
     .. math ::
-        f(x) := \frac{1}{(n-1)!}\sum_{k=0}^{\lfloor x\rfloor}(-1)^k
+        f(x) := \frac{1}{(n-1)!}\sum_{k=0}^{\left\lfloor x\right\rfloor}(-1)^k
                 \binom{n}{k}(x-k)^{n-1}
 
     Parameters

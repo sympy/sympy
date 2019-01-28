@@ -324,6 +324,25 @@ def test_composite_beam():
     assert b.deflection().subs(x, 2*l) == 7*P*l**3/(24*E*I)
     assert b.deflection().subs(x, 3*l) == 5*P*l**3/(16*E*I)
 
+    # When beams having same second moment are joined.
+    b1 = Beam(2, 500, 10)
+    b2 = Beam(2, 500, 10)
+    b = b1.join(b2, "fixed")
+    b.apply_load(M1, 0, -2)
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, 1, -1)
+    b.apply_load(R3, 4, -1)
+    b.apply_load(10, 3, -1)
+    b.bc_slope = [(0, 0)]
+    b.bc_deflection = [(0, 0), (1, 0), (4, 0)]
+    b.solve_for_reaction_loads(M1, R1, R2, R3)
+    assert b.slope() == -2*SingularityFunction(x, 0, 1)/5625 + SingularityFunction(x, 0, 2)/1875\
+                - 133*SingularityFunction(x, 1, 2)/135000 + SingularityFunction(x, 3, 2)/1000\
+                - 37*SingularityFunction(x, 4, 2)/67500
+    assert b.deflection() == -SingularityFunction(x, 0, 2)/5625 + SingularityFunction(x, 0, 3)/5625\
+                    - 133*SingularityFunction(x, 1, 3)/405000 + SingularityFunction(x, 3, 3)/3000\
+                    - 37*SingularityFunction(x, 4, 3)/202500
+
 
 def test_point_cflexure():
     E = Symbol('E')
@@ -397,6 +416,16 @@ def test_apply_support():
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + S(4000)/3)/(E*I)
     assert b.deflection() == (4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
             + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
+
+    P = Symbol('P', positive=True)
+    L = Symbol('L', positive=True)
+    b = Beam(L, E, I)
+    b.apply_support(0, type='fixed')
+    b.apply_support(L, type='fixed')
+    b.apply_load(-P, L/2, -1)
+    R_0, R_L, M_0, M_L = symbols('R_0, R_L, M_0, M_L')
+    b.solve_for_reaction_loads(R_0, R_L, M_0, M_L)
+    assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
 
 
 def max_shear_force(self):

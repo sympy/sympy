@@ -1,5 +1,5 @@
-from sympy import Symbol, sqrt, Derivative, S
-from sympy.geometry import Point, Point2D, Line, Circle ,Polygon, Segment, convex_hull, intersection, centroid
+from sympy import Symbol, sqrt, Derivative, S, Function, exp
+from sympy.geometry import Point, Point2D, Line, Circle, Polygon, Segment, convex_hull, intersection, centroid
 from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points
 from sympy.solvers.solvers import solve
 from sympy.utilities.pytest import raises
@@ -9,6 +9,8 @@ def test_idiff():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
     t = Symbol('t', real=True)
+    f = Function('f')
+    g = Function('g')
     # the use of idiff in ellipse also provides coverage
     circ = x**2 + y**2 - 4
     ans = -3*x*(x**2 + y**2)/y**5
@@ -19,6 +21,10 @@ def test_idiff():
     assert ans.subs(y, solve(circ, y)[0]).equals(explicit)
     assert True in [sol.diff(x, 3).equals(explicit) for sol in solve(circ, y)]
     assert idiff(x + t + y, [y, t], x) == -Derivative(t, x) - 1
+    assert idiff(f(x) * exp(f(x)) - x * exp(x), f(x), x) == (x + 1) * exp(x - f(x))/(f(x) + 1)
+    assert idiff(f(x) - y * exp(x), [f(x), y], x) == (y + Derivative(y, x)) * exp(x)
+    assert idiff(f(x) - y * exp(x), [y, f(x)], x) == -y + exp(-x) * Derivative(f(x), x)
+    assert idiff(f(x) - g(x), [f(x), g(x)], x) == Derivative(g(x), x)
 
 
 def test_intersection():

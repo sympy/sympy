@@ -151,7 +151,7 @@ def test_latex_printing():
     assert latex(v[6]) == ('(\\mathbf{{x}_{N}} + a^{2})\\mathbf{\\hat{i}_' +
                           '{N}} + \\mathbf{\\hat{k}_{N}}')
     assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + (\\mathbf{{x}_' +
-                           '{C}}^{2} - \\int f{\\left (b \\right )}\\,' +
+                           '{C}}^{2} - \\int f{\\left(b \\right)}\\,' +
                            ' db)\\mathbf{\\hat{k}_{N}}')
     assert latex(s) == '3 \\mathbf{{y}_{C}} \\mathbf{{x}_{N}}^{2}'
     assert latex(d[0]) == '(\\mathbf{\\hat{0}}|\\mathbf{\\hat{0}})'
@@ -161,8 +161,8 @@ def test_latex_printing():
                            'hat{k}_{N}}) + (\\mathbf{\\hat{i}_{N}}{|' +
                            '}\\mathbf{\\hat{k}_{N}})')
     assert latex(d[11]) == ('(a^{2} + b)(\\mathbf{\\hat{i}_{N}}{|}\\' +
-                            'mathbf{\\hat{k}_{N}}) + (\\int f{\\left (' +
-                            'b \\right )}\\, db)(\\mathbf{\\hat{k}_{N}' +
+                            'mathbf{\\hat{k}_{N}}) + (\\int f{\\left(' +
+                            'b \\right)}\\, db)(\\mathbf{\\hat{k}_{N}' +
                             '}{|}\\mathbf{\\hat{k}_{N}})')
 
 

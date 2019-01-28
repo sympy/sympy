@@ -1,15 +1,13 @@
 from __future__ import print_function, division
 
-from sympy.tensor.indexed import Idx
+from sympy.core.compatibility import range
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.core.exprtools import factor_terms
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
-from sympy.core.compatibility import range
 
 
 class Product(ExprWithIntLimits):
@@ -353,11 +351,6 @@ class Product(ExprWithIntLimits):
 
         converges.
 
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Infinite_product
-
         Examples
         ========
 
@@ -371,6 +364,11 @@ class Product(ExprWithIntLimits):
         True
         >>> Product(exp(-n**2), (n, 1, oo)).is_convergent()
         False
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Infinite_product
         """
         from sympy.concrete.summations import Sum
 

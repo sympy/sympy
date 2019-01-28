@@ -107,11 +107,11 @@ matrix element ``M[i, j]`` as in the following diagram::
 
 from __future__ import print_function, division
 
-from sympy.core.sympify import _sympify
-from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
-    range, Iterable)
+                                      Iterable)
+from sympy.core.sympify import _sympify
+from sympy.functions.special.tensor_functions import KroneckerDelta
 
 
 class IndexException(Exception):

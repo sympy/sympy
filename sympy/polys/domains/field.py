@@ -44,6 +44,9 @@ class Field(Ring):
         This definition of GCD over fields allows to clear denominators
         in `primitive()`.
 
+        Examples
+        ========
+
         >>> from sympy.polys.domains import QQ
         >>> from sympy import S, gcd, primitive
         >>> from sympy.abc import x

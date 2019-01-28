@@ -324,10 +324,6 @@ class Mul(Expr, AssocOp):
                             num_exp.append((b, e))
                             continue
 
-                    elif b is S.ImaginaryUnit and e.is_Rational:
-                        neg1e += e/2
-                        continue
-
                 c_powers.append((b, e))
 
             # NON-COMMUTATIVE
