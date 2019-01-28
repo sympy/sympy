@@ -939,7 +939,7 @@ def logcombine(expr, force=False):
         def goodlog(l):
             # bool to tell whether log ``l``'s argument can combine with others
             a = l.args[0]
-            return a.is_positive is not False or force and a.is_nonpositive is not False
+            return a.is_nonnegative or force and a.is_nonpositive is not False
 
         other = []
         logs = []
