@@ -2352,14 +2352,6 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     >>> print(latex((2*tau)**Rational(7,2)))
     8 \sqrt{2} \tau^{\frac{7}{2}}
 
-    ``root_notation`` options:
-    
-    >>> print(latex(x**Rational(1,7)))
-    \sqrt[7]{x}
-    >>> print(latex(x**(S(1)/7), root_notation=False))
-    x^{\frac{1}{7}}
-
-
     ``mode`` and ``itex`` options:
 
     >>> print(latex((2*mu)**Rational(7,2), mode='plain'))
