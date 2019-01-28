@@ -254,6 +254,12 @@ def test_power():
     A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
     assert A**5.0 == Matrix([[168,  72,  89], [291, 144, 161], [572, 267, 329]])
     assert A**5.0 == A**5
+    A = Matrix([[0, 1, 0],[-1, 0, 0],[0, 0, 0]])
+    n = Symbol("n")
+    An = A**n
+    assert An.subs(n, 2).doit() == A**2
+    raises(ValueError, lambda: An.subs(n, -2).doit())
+    assert An * An == A**(2*n)
 
 
 def test_creation():
