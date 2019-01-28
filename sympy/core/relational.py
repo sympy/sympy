@@ -518,11 +518,13 @@ class Unequality(Relational):
         return set()
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
+        # simplify as an equality
         eq = Equality(*self.args)._eval_simplify(
             ratio, measure, rational, inverse)
         if isinstance(eq, Equality):
-            eq = self.func(*eq.args)
-        return eq
+            # send back Ne with the new args
+            return self.func(*eq.args)
+        return ~eq  # result of Ne is ~Eq
 
 Ne = Unequality
 
