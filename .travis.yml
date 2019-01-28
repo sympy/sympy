@@ -122,6 +122,8 @@ matrix:
         - TEST_SLOW="true"
         - SPLIT="2/3"
     - python: 3.7
+      dist: xenial
+      sudo: true
       env:
         - TEST_SLOW="true"
         - SPLIT="3/3"
