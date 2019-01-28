@@ -16,6 +16,7 @@ python:
   - 3.4
   - 3.5
   - 3.6
+  - 3.7
 
 matrix:
   include:
@@ -32,7 +33,7 @@ matrix:
             - libatlas-base-dev
             - liblapack-dev
             - gfortran
-    - python: 3.6
+    - python: 3.7
       env:
         - TEST_ASCII="true"
         - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle"
@@ -47,7 +48,7 @@ matrix:
             - gfortran
             - python-scipy
 
-    - python: 3.6
+    - python: 3.7
       env:
         - TEST_SPHINX="true"
         - FASTCACHE="false"
@@ -78,15 +79,15 @@ matrix:
       env:
         - TEST_SLOW="true"
         - SPLIT="3/3"
-    - python: 3.6
+    - python: 3.7
       env:
         - TEST_SLOW="true"
         - SPLIT="1/3"
-    - python: 3.6
+    - python: 3.7
       env:
         - TEST_SLOW="true"
         - SPLIT="2/3"
-    - python: 3.6
+    - python: 3.7
       env:
         - TEST_SLOW="true"
         - SPLIT="3/3"
