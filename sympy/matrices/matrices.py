@@ -4220,6 +4220,9 @@ class MatrixBase(MatrixDeprecated,
         Parameters
         ==========
 
+        rhs : Matrix
+            Vector representing the right hand side of the linear equation.
+
         method : string, optional
            If set to ``'GJ'``, the Gauss-Jordan elimination will be used, which
            is implemented in the routine ``gauss_jordan_solve``.
