@@ -2271,7 +2271,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     fold_short_frac=None, inv_trig_style="abbreviated",
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-    order=None, symbol_names=None, root_notation=True):
+    order=None, root_notation=True, symbol_names=None):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2290,9 +2290,6 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     itex : boolean, optional
         Specifies if itex-specific syntax is used, including emitting
         ``$$...$$``.
-    root_notation : boolean, optional
-        If set to ``False``, exponents of the form 1/n are printed in fractonal form.
-        Default is ``True``, to print exponent in root form.
     ln_notation : boolean, optional
         If set to ``True``, ``\ln`` is used instead of default ``\log``.
     long_frac_ratio : float or None, optional
@@ -2325,6 +2322,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         Mul objects. Setting order to ``old`` uses the compatibility ordering
         for Add defined in Printer. For very large expressions, set the
         ``order`` keyword to ``none`` if speed is a concern.
+    root_notation : boolean, optional
+        If set to ``False``, exponents of the form 1/n are printed in fractonal form.
+        Default is ``True``, to print exponent in root form.
     symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.
 
