@@ -96,6 +96,7 @@ def test_latex_basic():
 
     assert latex(sqrt(x)) == r"\sqrt{x}"
     assert latex(x**Rational(1, 3)) == r"\sqrt[3]{x}"
+    assert latex(x**Rational(1, 3), root_notation=False) == r"x^{\frac{1}{3}}"
     assert latex(sqrt(x)**3) == r"x^{\frac{3}{2}}"
     assert latex(sqrt(x), itex=True) == r"\sqrt{x}"
     assert latex(x**Rational(1, 3), itex=True) == r"\root{3}{x}"

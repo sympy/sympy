@@ -17,9 +17,9 @@ from sympy.core.function import (_coeff_isneg,
 
 ## sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
-from .printer import Printer
-from .conventions import split_super_sub, requires_partial
-from .precedence import precedence, PRECEDENCE
+from sympy.printing.printer import Printer
+from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.precedence import precedence, PRECEDENCE
 
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
@@ -135,6 +135,7 @@ class LatexPrinter(Printer):
         "mat_delim": "[",
         "symbol_names": {},
         "ln_notation": False,
+        "root_notation": True,
     }
 
     def __init__(self, settings=None):
@@ -491,7 +492,7 @@ class LatexPrinter(Printer):
 
     def _print_Pow(self, expr):
         # Treat x**Rational(1,n) as special case
-        if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1:
+        if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1 and self._settings['root_notation']:
             base = self._print(expr.base)
             expq = expr.exp.q
 
@@ -2270,7 +2271,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     fold_short_frac=None, inv_trig_style="abbreviated",
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-    order=None, symbol_names=None):
+    order=None, symbol_names=None, root_notation=True):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2289,6 +2290,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     itex : boolean, optional
         Specifies if itex-specific syntax is used, including emitting
         ``$$...$$``.
+    root_notation : boolean, optional
+        If set to ``False``, exponents of the form 1/n are printed in fractonal form.
+        Default is ``True``, to print exponent in root form.
     ln_notation : boolean, optional
         If set to ``True``, ``\ln`` is used instead of default ``\log``.
     long_frac_ratio : float or None, optional
@@ -2447,6 +2451,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'mul_symbol' : mul_symbol,
         'order' : order,
         'symbol_names' : symbol_names,
+        'root_notation' : root_notation,
     }
 
     return LatexPrinter(settings).doprint(expr)
