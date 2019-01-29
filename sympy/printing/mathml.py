@@ -864,8 +864,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mi = self.dom.createElement('mi')
         mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         mrow.appendChild(mi)
+        brac = self.dom.createElement('mfenced')
         for arg in e.args:
-            mrow.appendChild(self._print(arg))
+            brac.appendChild(self._print(arg))
+        mrow.appendChild(brac)
         return mrow
 
     def _print_AssocOp(self, e):

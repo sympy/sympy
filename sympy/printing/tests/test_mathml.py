@@ -936,5 +936,5 @@ def test_toprettyxml_hooking():
 
 def test_print_basic():
     expr = Basic(1, 2)
-    assert mpp.doprint(expr) == '<mrow><mi>basic</mi><mn>1</mn><mn>2</mn></mrow>'
+    assert mpp.doprint(expr) == '<mrow><mi>basic</mi><mfenced><mn>1</mn><mn>2</mn></mfenced></mrow>'
     assert mp.doprint(expr) == '<basic><cn>1</cn><cn>2</cn></basic>'
