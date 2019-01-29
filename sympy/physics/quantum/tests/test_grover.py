@@ -88,4 +88,4 @@ def test_grover():
     nqubits = 4
     basis_states = superposition_basis(nqubits)
     expected = (-13*basis_states)/64 + 264*IntQubit(2, nqubits)/256
-    assert apply_grover(return_one_on_two, 4).simplify() == qapply(expected)
+    assert apply_grover(return_one_on_two, 4).simplify() == qapply(expected).simplify()
