@@ -1175,8 +1175,13 @@ def eval_sum_hyper(f, i_a_b):
         res1, cond1 = res1
         res2, cond2 = res2
         cond = And(cond1, cond2)
-        if cond != True:
+        if cond == False:
             return None
+        if cond._eval_as_set() == S.EmptySet:
+            if f.subs(i, 0) == 0:
+                return eval_sum_hyper(f, (i, a, S(-1))) + eval_sum_hyper(f, (i, S(1), b))
+            else:
+                return None
         return Piecewise((res1 + res2, cond), (old_sum, True))
 
     # Now b == oo, a != -oo
