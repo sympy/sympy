@@ -1826,7 +1826,7 @@ class MatrixOperations(MatrixRequired):
         5
 
         """
-        if not self.is_square:
+        if not self.rows == self.cols:
             raise NonSquareMatrixError()
         return self._eval_trace()
 
@@ -2049,7 +2049,7 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rpow__')
     def __pow__(self, num):
-        if not self.is_square:
+        if not self.rows == self.cols:
             raise NonSquareMatrixError()
         try:
             a = self
