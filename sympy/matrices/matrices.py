@@ -1224,7 +1224,7 @@ class MatrixEigen(MatrixSubspaces):
         if not mat:
             return {}
         if flags.pop('rational', True):
-            if any(v.has(Float) for v in mat):
+            if mat.has(Float):
                 mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
         if mat.is_upper or mat.is_lower:
@@ -1337,7 +1337,7 @@ class MatrixEigen(MatrixSubspaces):
 
         mat = self
         # roots doesn't like Floats, so replace them with Rationals
-        has_floats = any(v.has(Float) for v in self)
+        has_floats = self.has(Float)
         if has_floats:
             mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
@@ -1502,7 +1502,7 @@ class MatrixEigen(MatrixSubspaces):
 
         chop = kwargs.pop('chop', False)
         mat = self
-        has_floats = any(v.has(Float) for v in self)
+        has_floats = self.has(Float)
 
         if has_floats:
             try:
