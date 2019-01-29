@@ -7,13 +7,12 @@ from __future__ import print_function, division
 import itertools
 
 from sympy.core import S, Add, Symbol, Mod
-from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
-from sympy.core.operations import AssocOp
 from sympy.core.containers import Tuple
+from sympy.core.function import _coeff_isneg, AppliedUndef, Derivative
+from sympy.core.operations import AssocOp
+from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true
-from sympy.core.function import (_coeff_isneg,
-    UndefinedFunction, AppliedUndef, Derivative)
 
 ## sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
@@ -240,7 +239,7 @@ class LatexPrinter(Printer):
         specifies that this expr is the last to appear in a Mul.
         ``first=True`` specifies that this expr is the first to appear in a Mul.
         """
-        from sympy import Integral, Piecewise, Product, Sum
+        from sympy import Integral, Product, Sum
 
         if expr.is_Mul:
             if not first and _coeff_isneg(expr):
@@ -816,7 +815,6 @@ class LatexPrinter(Printer):
         else:
             symbols = self._print(tuple(symbols))
 
-        args = (symbols, self._print(expr))
         tex = r"\left( %s \mapsto %s \right)" % (symbols, self._print(expr))
 
         return tex
@@ -1482,7 +1480,7 @@ class LatexPrinter(Printer):
             return r"%s^\dagger" % self._print(mat)
 
     def _print_MatMul(self, expr):
-        from sympy import Add, MatAdd, HadamardProduct, MatMul, Mul
+        from sympy import MatMul, Mul
 
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr), False)
 
