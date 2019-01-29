@@ -534,14 +534,36 @@ class Add(Expr, AssocOp):
             # issue 10528: there is no way to know if a nc symbol
             # is zero or not
             return
-
-        from sympy.functions.elementary.complexes import re, im
-        real_list = [re(arg) for arg in self.args]
-        imag_list = [im(arg) for arg in self.args]
-
-        return (
-            self.func(*real_list).is_zero and
-            self.func(*imag_list).is_zero)
+        nz = []
+        z = 0
+        im_or_z = False
+        im = False
+        for a in self.args:
+            if a.is_real:
+                if a.is_zero:
+                    z += 1
+                elif a.is_zero is False:
+                    nz.append(a)
+                else:
+                    return
+            elif a.is_imaginary:
+                im = True
+            elif (S.ImaginaryUnit*a).is_real:
+                im_or_z = True
+            else:
+                return
+        if z == len(self.args):
+            return True
+        if len(nz) == 0 or len(nz) == len(self.args):
+            return None
+        b = self.func(*nz)
+        if b.is_zero:
+            if not im_or_z and not im:
+                return True
+            if im and not im_or_z:
+                return False
+        if b.is_zero is False:
+            return False
 
     def _eval_is_odd(self):
         l = [f for f in self.args if not (f.is_even is True)]
