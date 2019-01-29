@@ -48,7 +48,7 @@ def test_OracleGate():
 def test_WGate():
     nqubits = 2
     basis_states = superposition_basis(nqubits)
-    assert qapply(WGate(nqubits)*basis_states) == basis_states
+    assert qapply(WGate(nqubits)*basis_states).simplify().expand() == basis_states
 
     expected = ((2/sqrt(pow(2, nqubits)))*basis_states) - IntQubit(1, nqubits)
     assert qapply(WGate(nqubits)*IntQubit(1, nqubits)) == expected
@@ -59,7 +59,7 @@ def test_grover_iteration_1():
     basis_states = superposition_basis(numqubits)
     v = OracleGate(numqubits, return_one_on_one)
     expected = IntQubit(1, numqubits)
-    assert qapply(grover_iteration(basis_states, v)) == expected
+    assert qapply(grover_iteration(basis_states, v)).simplify() == expected
 
 
 def test_grover_iteration_2():
@@ -78,14 +78,14 @@ def test_grover_iteration_2():
     # Probability of Qubit('0010') was 251/256 (3) vs 781/1024 (4)
     # Ask about measurement
     expected = (-13*basis_states)/64 + 264*IntQubit(2, numqubits)/256
-    assert qapply(expected) == iterated
+    assert qapply(expected).simplify() == iterated.simplify()
 
 
 def test_grover():
     nqubits = 2
-    assert apply_grover(return_one_on_one, nqubits) == IntQubit(1, nqubits)
+    assert apply_grover(return_one_on_one, nqubits).simplify() == IntQubit(1, nqubits)
 
     nqubits = 4
     basis_states = superposition_basis(nqubits)
     expected = (-13*basis_states)/64 + 264*IntQubit(2, nqubits)/256
-    assert apply_grover(return_one_on_two, 4) == qapply(expected)
+    assert apply_grover(return_one_on_two, 4).simplify() == qapply(expected)
