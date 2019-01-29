@@ -885,7 +885,7 @@ def logcombine(expr, force=False):
     """
     Takes logarithms and combines them using the following rules:
 
-    - log(x) + log(y) == log(x*y) if both are not negative
+    - log(x) + log(y) == log(x*y) if both are positive
     - a*log(x) == log(x**a) if x is positive and a is real
 
     If ``force`` is True then the assumptions above will be assumed to hold if
@@ -934,12 +934,12 @@ def logcombine(expr, force=False):
             # bool to tell whether the leading ``a`` in ``a*log(x)``
             # could appear as log(x**a)
             return (a is not S.NegativeOne and  # -1 *could* go, but we disallow
-                (a.is_real is not False or force))
+                (a.is_real or force and a.is_real is not False))
 
         def goodlog(l):
             # bool to tell whether log ``l``'s argument can combine with others
             a = l.args[0]
-            return a.is_nonnegative or force and a.is_nonpositive is not False
+            return a.is_positive or force and a.is_nonpositive is not False
 
         other = []
         logs = []
