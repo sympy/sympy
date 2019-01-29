@@ -342,7 +342,7 @@ class MatrixDeterminant(MatrixCommon):
         det
         """
 
-        if self.rows != self.cols:
+        if not self.is_square:
             raise NonSquareMatrixError()
 
         berk_vector = self._eval_berkowitz_vector()
@@ -360,7 +360,7 @@ class MatrixDeterminant(MatrixCommon):
         minor_submatrix
         """
 
-        if self.rows != self.cols or self.rows < 1:
+        if not self.is_square or self.rows < 1:
             raise NonSquareMatrixError()
 
         return (-1)**((i + j) % 2) * self.minor(i, j, method)
@@ -377,7 +377,7 @@ class MatrixDeterminant(MatrixCommon):
         adjugate
         """
 
-        if self.rows != self.cols or self.rows < 1:
+        if not self.is_square or self.rows < 1:
             raise NonSquareMatrixError()
 
         return self._new(self.rows, self.cols,
@@ -456,7 +456,7 @@ class MatrixDeterminant(MatrixCommon):
         # if methods were made internal and all determinant calculations
         # passed through here, then these lines could be factored out of
         # the method routines
-        if self.rows != self.cols:
+        if not self.is_square:
             raise NonSquareMatrixError()
 
         n = self.rows
@@ -494,7 +494,7 @@ class MatrixDeterminant(MatrixCommon):
         det
         """
 
-        if self.rows != self.cols or self.rows < 1:
+        if not self.is_square or self.rows < 1:
             raise NonSquareMatrixError()
 
         return self.minor_submatrix(i, j).det(method=method)
