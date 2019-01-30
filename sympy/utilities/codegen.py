@@ -95,7 +95,7 @@ from sympy.printing.octave import OctaveCodePrinter
 from sympy.printing.rust import RustCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
-                            MatrixExpr, MatrixSlice, MutableMatrix)
+                            MatrixExpr, MatrixSlice)
 
 
 __all__ = [
@@ -249,11 +249,11 @@ class DataType(object):
 default_datatypes = {
     "int": DataType("int", "INTEGER*4", "int", "", "", "i32"),
     "float": DataType("double", "REAL*8", "float", "", "", "f64"),
-    "complex": DataType("double", "COMPLEX*16", "complex", "") #FIXME:
-       # complex is only 
-       # supported in fortran and python. So to not break c-code generation, we 
-       # stick with double (but actually should raise an exeption for explicitly
-       # complex variables (x.is_complex==True)) 
+    "complex": DataType("double", "COMPLEX*16", "complex", "", "", "float") #FIXME:
+       # complex is only supported in fortran, python, julia, and octave.
+       # So to not break c or rust code generation, we stick with double or
+       # float, respecitvely (but actually should raise an exeption for
+       # explicitly complex variables (x.is_complex==True))
 }
 
 
@@ -507,7 +507,7 @@ class Result(Variable, ResultBase):
 
         if name is None:
             name = 'result_%d' % abs(hash(expr))
-            
+
         if datatype is None:
             #try to infer data type from the expression
             datatype = get_default_datatype(expr)

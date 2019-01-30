@@ -598,7 +598,7 @@ def test_Relationals():
     assert theq(theano_code_(x >= y), xt >= yt)
     assert theq(theano_code_(x <= y), xt <= yt)
 
-    
+
 def test_complexfunctions():
     xt, yt = theano_code(x, dtypes={x:'complex128'}), theano_code(y, dtypes={y: 'complex128'})
     from sympy import conjugate

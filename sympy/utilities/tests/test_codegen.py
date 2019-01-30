@@ -1526,7 +1526,7 @@ def test_c_with_printer():
     result = codegen(("test", expr), "C","file", header=False, empty=False, printer = CustomPrinter())
     assert result == expected
 
-    
+
 def test_fcode_complex():
     import sympy.utilities.codegen
     sympy.utilities.codegen.COMPLEX_ALLOWED = True
