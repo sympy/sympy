@@ -121,19 +121,19 @@ class LatexPrinter(Printer):
     printmethod = "_latex"
 
     _default_settings = {
-        "order": None,
-        "mode": "plain",
-        "itex": False,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": None,
-        "long_frac_ratio": None,
-        "mul_symbol": None,
         "inv_trig_style": "abbreviated",
-        "mat_str": None,
-        "mat_delim": "[",
-        "symbol_names": {},
+        "itex": False,
         "ln_notation": False,
+        "long_frac_ratio": None,
+        "mat_delim": "[",
+        "mat_str": None,
+        "mode": "plain",
+        "mul_symbol": None,
+        "order": None,
+        "symbol_names": {},
         "root_notation": True,
     }
 
@@ -2288,9 +2288,6 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     itex : boolean, optional
         Specifies if itex-specific syntax is used, including emitting
         ``$$...$$``.
-    root_notation : boolean, optional
-        If set to ``False``, exponents of the form 1/n are printed in fractonal form.
-        Default is ``True``, to print exponent in root form.
     ln_notation : boolean, optional
         If set to ``True``, ``\ln`` is used instead of default ``\log``.
     long_frac_ratio : float or None, optional
@@ -2325,6 +2322,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         ``order`` keyword to ``none`` if speed is a concern.
     symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.
+    root_notation : boolean, optional
+        If set to ``False``, exponents of the form 1/n are printed in fractonal form.
+        Default is ``True``, to print exponent in root form.
 
     Notes
     =====
