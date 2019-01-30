@@ -264,7 +264,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
         options.pop('nargs', None)
 
         if options:
-            raise ValueError("Unknown options: %s" % options)
+            return cls.eval(*args, **options)
 
         if evaluate:
             evaluated = cls.eval(*args)
