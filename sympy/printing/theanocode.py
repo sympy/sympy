@@ -53,6 +53,9 @@ if theano:
             sympy.Or: tt.or_,
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
+            sympy.conjugate: tt.conj,
+            sympy.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
+            
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
@@ -495,6 +498,7 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
     tinputs = list(map(code, inputs))
     toutputs = list(map(code, outputs))
 
+<<<<<<< HEAD
     if len(toutputs) == 1:
         toutputs = toutputs[0]
 
@@ -522,3 +526,10 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
     wrapper.__doc__ = func.__doc__
     wrapper.theano_function = func
     return wrapper
+=======
+    #fix constant expressions as variables
+    toutputs = [output if isinstance(output, theano.Variable) else tt.as_tensor_variable(output) for output in toutputs]
+
+    toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
+    return theano.function(tinputs, toutputs, **theano_kwargs)
+>>>>>>> 3e8854204a2a090a36c03dfb3491e18cb2a11865
