@@ -1477,7 +1477,7 @@ def test_issue_4311():
         (x**4/4 - 9*x**2/2, True))
 
 def test_issue_15494():
-    x = symbols('x')
+    x = symbols('x', real=True, positive=True)
     integrand = (exp(x/2)-2*exp(1.6*x)+exp(x))*exp(x)
     sol = integrate(integrand, x)
     assert str(sol) == str(0.666666666666667*exp(Rational(3,2)*x) + 0.5*exp(2*x) -  0.769230769230769*exp(2.6*x))
