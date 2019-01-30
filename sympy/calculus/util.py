@@ -580,8 +580,9 @@ def is_convex(f, *syms, **kwargs):
         The concerned function.
     syms : Tuple of symbols
         The variables with respect to which the convexity is to be determined.
-    domain : Interval
+    domain : Interval, optional
         The domain over which the convexity of the function has to be checked.
+        If unspecified, S.Reals will be the default domain.
 
     Returns
     =======
@@ -621,11 +622,11 @@ def is_convex(f, *syms, **kwargs):
     References
     ==========
 
-    ..[1] https://en.wikipedia.org/wiki/Convex_function
-    ..[2] http://www.ifp.illinois.edu/~angelia/L3_convfunc.pdf
-    ..[3] https://en.wikipedia.org/wiki/Logarithmically_convex_function
-    ..[4] https://en.wikipedia.org/wiki/Logarithmically_concave_function
-    ..[5] https://en.wikipedia.org/wiki/Concave_function
+    .. [1] https://en.wikipedia.org/wiki/Convex_function
+    .. [2] http://www.ifp.illinois.edu/~angelia/L3_convfunc.pdf
+    .. [3] https://en.wikipedia.org/wiki/Logarithmically_convex_function
+    .. [4] https://en.wikipedia.org/wiki/Logarithmically_concave_function
+    .. [5] https://en.wikipedia.org/wiki/Concave_function
 
     """
 
