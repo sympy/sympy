@@ -60,8 +60,8 @@ def multinomial_coefficients(m, n):
     where ``C_kn`` are multinomial coefficients such that
     ``n=k1+k2+..+km``.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.ntheory import multinomial_coefficients
     >>> multinomial_coefficients(2, 5) # indirect doctest
