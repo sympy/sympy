@@ -738,7 +738,7 @@ class Not(BooleanFunction):
 
     @property
     def canonical(self):
-        return self
+        return self.func(getattr(self.args[0], 'canonical', self.args[0]))
 
     def _eval_as_set(self):
         """
