@@ -208,7 +208,7 @@ jobs:
   - task: CondaEnvironment@0
     inputs:
       createCustomEnvironment: true
-      createOptions: "-c conda-forge"
+      createOptions: "-c conda-forge/label/cf201901"
       environmentName: 'sage'
       packageSpecs: sage mpmath ipython>=5.5.0,<6 python=3
     displayName: 'Create conda environment'

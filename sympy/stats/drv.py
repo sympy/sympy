@@ -1,15 +1,14 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-                   Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq, poly,
-                   Symbol, series, factorial, And, Mul, log)
-
+                   Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
+                   series, factorial, And, log)
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
                             random_symbols, PSpace, ConditionalDomain, RandomDomain,
-                            ProductDomain, ProductPSpace)
+                            ProductDomain)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet

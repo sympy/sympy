@@ -311,14 +311,14 @@ def render_label(label, inits={}):
 
     >>> from sympy.physics.quantum.circuitplot import render_label
     >>> render_label('q0')
-    '$|q0\\\\rangle$'
+    '$\\\\left|q0\\\\right\\\\rangle$'
     >>> render_label('q0', {'q0':'0'})
-    '$|q0\\\\rangle=|0\\\\rangle$'
+    '$\\\\left|q0\\\\right\\\\rangle=\\\\left|0\\\\right\\\\rangle$'
     """
     init = inits.get(label)
     if init:
-        return r'$|%s\rangle=|%s\rangle$' % (label, init)
-    return r'$|%s\rangle$' % label
+        return r'$\left|%s\right\rangle=\left|%s\right\rangle$' % (label, init)
+    return r'$\left|%s\right\rangle$' % label
 
 def labeller(n, symbol='q'):
     """Autogenerate labels for wires of quantum circuits.

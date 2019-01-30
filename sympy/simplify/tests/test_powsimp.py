@@ -310,6 +310,10 @@ def test_issue_10195():
             Rational(1,2))
     assert powsimp((-1)**(3*a/2)) == (-I)**a
 
+def test_issue_15709():
+    assert powsimp(2*3**x/3) == 2*3**(x-1)
+
+
 def test_issue_11981():
     x, y = symbols('x y', commutative=False)
     assert powsimp((x*y)**2 * (y*x)**2) == (x*y)**2 * (y*x)**2

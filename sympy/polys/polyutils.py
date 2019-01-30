@@ -2,15 +2,13 @@
 
 from __future__ import print_function, division
 
+from sympy.core import (S, Add, Mul, Pow, Expr,
+    expand_mul, expand_multinomial)
+from sympy.core.compatibility import range
+from sympy.core.exprtools import decompose_power, decompose_power_rat
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
-from sympy.core.exprtools import decompose_power, decompose_power_rat
-
-from sympy.core import (S, Add, Mul, Pow, Expr,
-    expand_mul, expand_multinomial)
-
-from sympy.core.compatibility import range
 
 import re
 
@@ -436,10 +434,12 @@ class PicklableWithSlots(object):
         ...         self.foo = foo
         ...         self.bar = bar
 
-    To make :mod:`pickle` happy in doctest we have to use this hack::
+    To make :mod:`pickle` happy in doctest we have to use these hacks::
 
         >>> from sympy.core.compatibility import builtins
         >>> builtins.Some = Some
+        >>> from sympy.polys import polyutils
+        >>> polyutils.Some = Some
 
     Next lets see if we can create an instance, pickle it and unpickle::
 

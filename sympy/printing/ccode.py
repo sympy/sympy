@@ -20,7 +20,7 @@ from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
-    Assignment, Pointer, Type, Variable, Declaration,
+    Assignment, Pointer, Variable, Declaration,
     real, complex_, integer, bool_, float32, float64, float80,
     complex64, complex128, intc, value_const, pointer_const,
     int8, int16, int32, int64, uint8, uint16, uint32, uint64, untyped

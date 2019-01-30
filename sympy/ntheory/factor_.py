@@ -216,7 +216,7 @@ def multiplicity(p, n):
                 if p.q == 1:
                     if n.p == 1:
                         return -multiplicity(p.p, n.q)
-                    return S.Zero
+                    return multiplicity(p.p, n.p) - multiplicity(p.p, n.q)
                 elif p.p == 1:
                     return multiplicity(p.q, n.q)
                 else:

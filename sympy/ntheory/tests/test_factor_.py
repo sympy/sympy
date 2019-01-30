@@ -103,7 +103,7 @@ def test_multiplicity():
     raises(ValueError, lambda: multiplicity(1.3, 0))
 
     # handles Rationals
-    assert multiplicity(10, Rational(30, 7)) == 0
+    assert multiplicity(10, Rational(30, 7)) == 1
     assert multiplicity(Rational(2, 7), Rational(4, 7)) == 1
     assert multiplicity(Rational(1, 7), Rational(3, 49)) == 2
     assert multiplicity(Rational(2, 7), Rational(7, 2)) == -1

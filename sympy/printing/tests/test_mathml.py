@@ -1,6 +1,6 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix
+    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
     MathMLPrinter
 
@@ -933,3 +933,8 @@ def test_toprettyxml_hooking():
 
     assert prettyxml_old1 == doc1.toprettyxml()
     assert prettyxml_old2 == doc2.toprettyxml()
+
+def test_print_basic():
+    expr = Basic(1, 2)
+    assert mpp.doprint(expr) == '<mrow><mi>basic</mi><mfenced><mn>1</mn><mn>2</mn></mfenced></mrow>'
+    assert mp.doprint(expr) == '<basic><cn>1</cn><cn>2</cn></basic>'
