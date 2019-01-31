@@ -2803,6 +2803,7 @@ def _handle_positive_dimensional(polys, symbols, denominators):
         new_system, symbols, result, [],
         denominators)
     return result
+
 # end of def _handle_positive_dimensional()
 
 
@@ -3007,6 +3008,7 @@ def nonlinsolve(system, *symbols):
 
     """
     from sympy.polys.polytools import is_zero_dimensional
+    from sympy.polys import RR
 
     if not system:
         return S.EmptySet
@@ -3051,7 +3053,11 @@ def nonlinsolve(system, *symbols):
                 return result
 
         # positive dimensional system
-        return _handle_positive_dimensional(polys, symbols, denominators)
+        res = _handle_positive_dimensional(polys, symbols, denominators)
+        if isinstance(res, EmptySet) and [True for p in polys if p.domain == RR]:
+            raise NotImplementedError("Equation not in exact domain. Try converting to rational")
+        else:
+            return res
 
     else:
         # If all the equations are not polynomial.
