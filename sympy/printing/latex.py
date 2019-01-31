@@ -135,6 +135,7 @@ class LatexPrinter(Printer):
         "order": None,
         "symbol_names": {},
         "root_notation": True,
+        "mat_symbol_style": "plain",
     }
 
     def __init__(self, settings=None):
@@ -1344,15 +1345,22 @@ class LatexPrinter(Printer):
                 s += self._print(expr.point[0])
         return r"O\left(%s\right)" % s
 
-    def _print_Symbol(self, expr):
+    def _print_Symbol(self, expr, style='plain'):
         if expr in self._settings['symbol_names']:
             return self._settings['symbol_names'][expr]
 
-        return self._deal_with_super_sub(expr.name) if \
+        result = self._deal_with_super_sub(expr.name) if \
             '\\' not in expr.name else expr.name
 
+        if style == 'bold':
+            result = r"\mathbf{{{}}}".format(result)
+
+        return result
+
     _print_RandomSymbol = _print_Symbol
-    _print_MatrixSymbol = _print_Symbol
+    
+    def _print_MatrixSymbol(self, expr):
+        return self._print_Symbol(expr, style=self._settings['mat_symbol_style'])
 
     def _deal_with_super_sub(self, string):
         if '{' in string:
@@ -2269,7 +2277,8 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     fold_short_frac=None, inv_trig_style="abbreviated",
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-    order=None, symbol_names=None, root_notation=True):
+    order=None, symbol_names=None, root_notation=True,
+    mat_symbol_style="plain"):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2325,6 +2334,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     root_notation : boolean, optional
         If set to ``False``, exponents of the form 1/n are printed in fractonal form.
         Default is ``True``, to print exponent in root form.
+    mat_symbol_style : string, optional
+        Can be either ``plain`` (default) or ``bold``. If set to ``bold``, 
+        a MatrixSymbol A will be printed as ``\mathbf{A}``, otherwise as ``A``.
 
     Notes
     =====
@@ -2450,6 +2462,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'order' : order,
         'symbol_names' : symbol_names,
         'root_notation' : root_notation,
+        'mat_symbol_style' : mat_symbol_style,
     }
 
     return LatexPrinter(settings).doprint(expr)
