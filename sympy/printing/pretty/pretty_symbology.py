@@ -598,7 +598,7 @@ def put_accent_in_middle_of_string(string, accent):
     ========
 
     >>> from sympy.printing.pretty.pretty_symbology import put_accent_in_middle_of_string
-    >>> put_accent_in_middle_of_string('abcde', u'\N{COMBINING TILDE}')
+    >>> put_accent_in_middle_of_string('abcde', u'\N{COMBINING TILDE}') #doctest +SKIP
     'abc̃de'
 
     References
