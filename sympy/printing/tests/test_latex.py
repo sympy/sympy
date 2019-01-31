@@ -1916,7 +1916,6 @@ def test_print_basic():
 
 def test_MatrixSymbol_bold():
     # Issue #15871
-    
     from sympy import trace
     A = MatrixSymbol("A", 2, 2)
     assert latex(trace(A), mat_symbol_style='bold') == r"\mathrm{tr}\left(\mathbf{A} \right)"
@@ -1928,3 +1927,6 @@ def test_MatrixSymbol_bold():
     assert latex(-A, mat_symbol_style='bold') == r"- \mathbf{A}"
     assert latex(A - A*B - B, mat_symbol_style='bold') == r"\mathbf{A} - \mathbf{A} \mathbf{B} - \mathbf{B}"
     assert latex(-A*B - A*B*C - B, mat_symbol_style='bold') == r"- \mathbf{A} \mathbf{B} - \mathbf{A} \mathbf{B} \mathbf{C} - \mathbf{B}"
+
+    A = MatrixSymbol("A_k", 3, 3)
+    assert latex(A, mat_symbol_style='bold') == r"\mathbf{A_{k}}"

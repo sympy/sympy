@@ -1358,7 +1358,7 @@ class LatexPrinter(Printer):
         return result
 
     _print_RandomSymbol = _print_Symbol
-    
+
     def _print_MatrixSymbol(self, expr):
         return self._print_Symbol(expr, style=self._settings['mat_symbol_style'])
 
@@ -2335,7 +2335,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         If set to ``False``, exponents of the form 1/n are printed in fractonal form.
         Default is ``True``, to print exponent in root form.
     mat_symbol_style : string, optional
-        Can be either ``plain`` (default) or ``bold``. If set to ``bold``, 
+        Can be either ``plain`` (default) or ``bold``. If set to ``bold``,
         a MatrixSymbol A will be printed as ``\mathbf{A}``, otherwise as ``A``.
 
     Notes
