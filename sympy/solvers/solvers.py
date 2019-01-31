@@ -2773,7 +2773,12 @@ def _tsolve(eq, sym, **flags):
             try:
                 poly = lhs.as_poly()
                 g = _filtered_gens(poly, sym)
-                return _solve_lambert(lhs - rhs, sym, g)
+                sols = _solve_lambert(lhs - rhs, sym, g)
+                for n, s in enumerate(sols):
+                    ns = nsimplify(s)
+                    if ns != s and eq.subs(sym, ns).equals(0):
+                        sols[n] = ns
+                return sols
             except NotImplementedError:
                 # maybe it's a convoluted function
                 if len(g) == 2:

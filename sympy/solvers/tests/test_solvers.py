@@ -1594,16 +1594,12 @@ def test_lambert_multivariate():
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
 
-    assert solve(x**3 - 3**x, x) == [-3/log(3)*LambertW(-log(3)/3),
-                                     -3*LambertW(-log(3)/3, -1)/log(3)]
-    assert solve(x**2 - 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
-    assert solve(-x**2 + 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
-    assert solve(3**cos(x) - cos(x)**3) == [
-        acos(-3*LambertW(-log(3)/3)/log(3)),
-        acos(-3*LambertW(-log(3)/3, -1)/log(3))]
+    assert solve(x**3 - 3**x, x) == [3, -3*LambertW(-log(3)/3)/log(3)]
+    assert solve(x**2 - 2**x, x) == [2, 4]
+    assert solve(-x**2 + 2**x, x) == [2, 4]
+    assert solve(3**cos(x) - cos(x)**3) == [acos(3), acos(-3*LambertW(-log(3)/3)/log(3))]
     assert set(solve(3*log(x) - x*log(3))) == set(  # 2.478... and 3
-        [-3*LambertW(-log(3)/3)/log(3),
-        -3*LambertW(-log(3)/3, -1)/log(3)])
+        [3, -3*LambertW(-log(3)/3)/log(3)])
     assert solve(LambertW(2*x) - y, x) == [y*exp(y)/2]
 
 
@@ -2008,8 +2004,8 @@ def test_issue_15731():
     assert solve((x**2-2*x-1)**(x**2-3) - 1/(1-2*sqrt(2))) == [sqrt(2)]
     assert solve(x**(x+1/2) - 4*sqrt(2)) == [S(2)]
     assert solve((x**2 + 1)**x - 25) == [2]
-    assert solve(x**(2/x) - 2) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
-    assert solve((x/2)**(2/x) - sqrt(2)) == [4, -4*LambertW(-log(2)/2, -1)/log(2)]
+    assert solve(x**(2/x) - 2) == [2, 4]
+    assert solve((x/2)**(2/x) - sqrt(2)) == [4, 8]
     assert solve(x**(x+S(1)/2)-S(9)/4) == [S(3)/2]
     # a**g(x)=c
     assert solve((-sqrt(sqrt(2)))**x - 2) == [4, log(2)/(log(2**(S(1)/4)) + I*pi)]
