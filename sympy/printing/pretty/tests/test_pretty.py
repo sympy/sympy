@@ -6545,5 +6545,5 @@ def test_matrixSymbolBold():
 
     assert boldpretty(a*B*c+b*d) == u'b⋅δ + α⋅Β⋅𝐜'
 
-    A = MatrixSymbol("A_k", 3, 3)
-    assert boldpretty(A) == u'𝐀ₖ'
+    A = MatrixSymbol("A_2", 3, 3)
+    assert boldpretty(A) == u'𝐀₂'
