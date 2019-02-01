@@ -2016,11 +2016,10 @@ def test_issue_15731():
     assert solve(I**x + 1) == [2]
     assert solve((1+I)**x - 2*I) == [2]
     assert solve((sqrt(2)+sqrt(3))**x - (2*sqrt(6)+5)**(S(1)/3)) == [S(2)/3]
+    # bases of both sides are equal
     b = Symbol('b')
-    assert solve(b**x - b**2, x) == [2, log(b**2)/log(b)]
-    # assert solve(b**x - b**2, x) == [2]  <-- better
-    assert solve(b**x - 1/b, x) == [-1, log(1/b)/log(b)]
-    # assert solve(b**x - 1/b, x) == [-1] <-- better
+    assert solve(b**x - b**2, x) == [2]
+    assert solve(b**x - 1/b, x) == [-1]
     b = Symbol('b', positive=True)
     assert solve(b**x - b**2, x) == [2]
     assert solve(b**x - 1/b, x) == [-1]

@@ -2674,7 +2674,13 @@ def _tsolve(eq, sym, **flags):
                     return _solve(lhs.exp, sym, **flags) if rhs != 0 else []
 
                 # Gets most solutions...
-                sol = _solve(exp(log(lhs.base)*lhs.exp)-exp(log(rhs)), sym, **flags)
+                if lhs.base == rhs.as_base_exp()[0]:
+                    # handles case when bases are equal
+                    sol = _solve(lhs.exp - rhs.exp, sym, **flags)
+                else:
+                    # handles cases when bases are not equal and exp
+                    # may or may not be equal 
+                    sol = _solve(exp(log(lhs.base)*lhs.exp)-exp(log(rhs)), sym, **flags)
 
                 # Check for duplicate solutions
                 def equal(expr1, expr2):
