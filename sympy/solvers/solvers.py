@@ -2676,10 +2676,10 @@ def _tsolve(eq, sym, **flags):
                 # Gets most solutions...
                 if lhs.base == rhs.as_base_exp()[0]:
                     # handles case when bases are equal
-                    sol = _solve(lhs.exp - rhs.exp, sym, **flags)
+                    sol = _solve(lhs.exp - rhs.as_base_exp()[1], sym, **flags)
                 else:
                     # handles cases when bases are not equal and exp
-                    # may or may not be equal 
+                    # may or may not be equal
                     sol = _solve(exp(log(lhs.base)*lhs.exp)-exp(log(rhs)), sym, **flags)
 
                 # Check for duplicate solutions
