@@ -3054,7 +3054,7 @@ def nonlinsolve(system, *symbols):
 
         # positive dimensional system
         res = _handle_positive_dimensional(polys, symbols, denominators)
-        if isinstance(res, EmptySet) and [True for p in polys if p.domain == RR]:
+        if isinstance(res, EmptySet) and [not p.domain.is_Exact for p in polys]:
             raise NotImplementedError("Equation not in exact domain. Try converting to rational")
         else:
             return res
