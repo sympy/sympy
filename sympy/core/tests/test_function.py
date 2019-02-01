@@ -1220,3 +1220,6 @@ def test_Subs_Derivative():
     ans = 3*x**2*exp(1/x)*exp(x**3) - exp(1/x)*exp(x**3)/x**2
     assert all(subs(i).doit().expand() == ans for i in eqs)
     assert all(subs(i.doit()).doit().expand() == ans for i in eqs)
+
+def test_issue_15796():
+    assert log(4, base = 2, evaluate=True) == 2
