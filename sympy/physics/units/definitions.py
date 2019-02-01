@@ -50,9 +50,13 @@ m = meter = meters = Quantity("meter", abbrev="m")
 meter.set_dimension(length)
 meter.set_scale_factor(One)
 
+# NOTE: the `kilogram` has scale factor of 1 in SI.
+# The current state of the code assumes SI unit dimensions, in
+# the future this module will be modified in order to be unit system-neutral
+# (that is, support all kinds of unit systems).
 kg = kilogram = kilograms = Quantity("kilogram", abbrev="kg")
 kilogram.set_dimension(mass)
-kilogram.set_scale_factor(kilo)
+kilogram.set_scale_factor(One)
 
 s = second = seconds = Quantity("second", abbrev="s")
 second.set_dimension(time)
@@ -74,12 +78,9 @@ cd = candela = candelas = Quantity("candela", abbrev="cd")
 candela.set_dimension(luminous_intensity)
 candela.set_scale_factor(One)
 
-
-# gram; used to define its prefixed units
-
 g = gram = grams = Quantity("gram", abbrev="g")
 gram.set_dimension(mass)
-gram.set_scale_factor(One)
+gram.set_scale_factor(kilogram/kilo)
 
 mg = milligram = milligrams = Quantity("milligram", abbrev="mg")
 milligram.set_dimension(mass)

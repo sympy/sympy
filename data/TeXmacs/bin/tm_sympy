@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # TeXmacs interface for SymPy
 #
@@ -65,7 +65,7 @@ f = Function('f')
 Gamma, Zeta = gamma, zeta
 
 _greek = 'alpha beta gamma delta epsilon zeta eta '  \
-         'theta iota kappa mu nu xi omicron pi rho ' \
+         'theta iota kappa mu nu xi omicron rho ' \
          'sigma tau upsilon phi chi psi omega'
 
 for _symbol in _greek.split(' '):

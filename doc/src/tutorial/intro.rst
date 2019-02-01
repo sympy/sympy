@@ -173,16 +173,16 @@ spherical Bessel function `j_\nu(z)`.
   ────────────────────
            √π
 
-Print `\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx` using `\LaTeX`.
+Print `\int_{0}^{\pi} \cos^{2}{\left(x \right)}\, dx` using `\LaTeX`.
 
   >>> latex(Integral(cos(x)**2, (x, 0, pi)))
-  \int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx
+  \int\limits_{0}^{\pi} \cos^{2}{\left(x \right)}\, dx
 
 Why SymPy?
 ==========
 
 There are many computer algebra systems out there.  `This
-<http://en.wikipedia.org/wiki/List_of_computer_algebra_systems>`_ Wikipedia
+<https://en.wikipedia.org/wiki/List_of_computer_algebra_systems>`_ Wikipedia
 article lists many of them.  What makes SymPy a better choice than the
 alternatives?
 

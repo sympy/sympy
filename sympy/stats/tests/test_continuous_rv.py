@@ -1,5 +1,9 @@
-from __future__ import division
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
+                   Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
+                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
+                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
+from sympy.core.compatibility import range
+from sympy.external import import_module
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, characteristic_function, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy,
@@ -12,20 +16,10 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
                          moment, cmoment, smoment)
-
-from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
-                   Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or)
-
-
 from sympy.stats.crv_types import NormalDistribution
-from sympy.stats.rv import ProductPSpace
-
+from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.external import import_module
-
-from sympy.core.compatibility import range
+from sympy.utilities.randtest import verify_numerically as tn
 
 oo = S.Infinity
 
@@ -165,6 +159,7 @@ def test_sample():
     assert sample(Z) in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val in Interval(0, oo)
+    assert density(Z)(-1) == 0
 
 
 def test_ContinuousRV():
@@ -212,9 +207,8 @@ def test_beta():
     x = Symbol('x')
     assert dens(x) == x**(a - 1)*(1 - x)**(b - 1) / beta(a, b)
 
-    # This is too slow
-    # assert E(B) == a / (a + b)
-    # assert variance(B) == (a*b) / ((a+b)**2 * (a+b+1))
+    assert simplify(E(B)) == a / (a + b)
+    assert simplify(variance(B)) == a*b / (a**3 + 3*a**2*b + a**2 + 3*a*b**2 + 2*a*b + b**3 + b**2)
 
     # Full symbolic solution is too much, test with numeric version
     a, b = 1, 2
@@ -259,6 +253,10 @@ def test_chi_squared():
 
     X = ChiSquared('x', k)
     assert density(X)(x) == 2**(-k/2)*x**(k/2 - 1)*exp(-x/2)/gamma(k/2)
+    assert cdf(X)(x) == Piecewise((lowergamma(k/2, x/2)/gamma(k/2), x >= 0), (0, True))
+
+    X = ChiSquared('x', 15)
+    assert cdf(X)(3) == -14873*sqrt(6)*exp(-S(3)/2)/(5005*sqrt(pi)) + erf(sqrt(6)/2)
 
 
 def test_dagum():
@@ -340,11 +338,9 @@ def test_gamma():
 
     k, theta = symbols('k theta', real=True, finite=True, positive=True)
     X = Gamma('x', k, theta)
-    assert simplify(E(X)) == k*theta
-    # can't get things to simplify on this one so we use subs
-    assert variance(X).subs(k, 5) == (k*theta**2).subs(k, 5)
-    # The following is too slow
-    # assert simplify(skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
+    assert E(X) == k*theta
+    assert variance(X) == k*theta**2
+    assert simplify(skewness(X)) == 2/sqrt(k)
 
 
 def test_gamma_inverse():
@@ -452,9 +448,9 @@ def test_nakagami():
     X = Nakagami('x', mu, omega)
     assert density(X)(x) == (2*x**(2*mu - 1)*mu**mu*omega**(-mu)
                                 *exp(-x**2*mu/omega)/gamma(mu))
-    assert simplify(E(X, meijerg=True)) == (sqrt(mu)*sqrt(omega)
+    assert simplify(E(X)) == (sqrt(mu)*sqrt(omega)
                                             *gamma(mu + S.Half)/gamma(mu + 1))
-    assert simplify(variance(X, meijerg=True)) == (
+    assert simplify(variance(X)) == (
     omega - omega*gamma(mu + S(1)/2)**2/(gamma(mu)*gamma(mu + 1)))
     assert cdf(X)(x) == Piecewise(
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
@@ -470,9 +466,10 @@ def test_pareto():
     x = Symbol('x')
     assert dens(x) == x**(-(alpha + 1))*xm**(alpha)*(alpha)
 
-    # These fail because SymPy can not deduce that 1/xm != 0
-    # assert simplify(E(X)) == alpha*xm/(alpha-1)
-    # assert simplify(variance(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
+    assert simplify(E(X)) == alpha*xm/(alpha-1)
+
+    # computation of taylor series for MGF still too slow
+    #assert simplify(variance(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
 
 
 def test_pareto_numeric():
@@ -514,9 +511,9 @@ def test_studentt():
     nu = Symbol("nu", positive=True)
 
     X = StudentT('x', nu)
-    assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - 1/2)/(sqrt(nu)*beta(1/2, nu/2))
-    assert cdf(X)(x) == 1/2 + x*gamma(nu/2 + 1/2)*hyper((1/2, nu/2 + 1/2),
-                                (3/2,), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
+    assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - S(1)/2)/(sqrt(nu)*beta(S(1)/2, nu/2))
+    assert cdf(X)(x) == S(1)/2 + x*gamma(nu/2 + S(1)/2)*hyper((S(1)/2, nu/2 + S(1)/2),
+                                (S(3)/2,), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
 
 
 def test_trapezoidal():
@@ -623,8 +620,7 @@ def test_weibull():
 
     assert simplify(E(X)) == simplify(a * gamma(1 + 1/b))
     assert simplify(variance(X)) == simplify(a**2 * gamma(1 + 2/b) - E(X)**2)
-    # Skewness tests too slow. Try shortcutting function?
-
+    assert simplify(skewness(X)) == (2*gamma(1 + 1/b)**3 - 3*gamma(1 + 1/b)*gamma(1 + 2/b) + gamma(1 + 3/b))/(-gamma(1 + 1/b)**2 + gamma(1 + 2/b))**(S(3)/2)
 
 def test_weibull_numeric():
     # Test for integers and rationals
@@ -722,7 +718,7 @@ def test_random_parameters():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
-    assert isinstance(pspace(meas), ProductPSpace)
+    assert isinstance(pspace(meas), JointPSpace)
     #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
     #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
 
@@ -737,7 +733,7 @@ def test_conjugate_priors():
     mu = Normal('mu', 2, 3)
     x = Normal('x', mu, 1)
     assert isinstance(simplify(density(mu, Eq(x, y), evaluate=False)(z)),
-            Integral)
+            Mul)
 
 
 def test_difficult_univariate():
@@ -861,13 +857,21 @@ def test_prob_neq():
 def test_union():
     N = Normal('N', 3, 2)
     assert simplify(P(N**2 - N > 2)) == \
-        -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + 3/2
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + S(3)/2
     assert simplify(P(N**2 - 4 > 0)) == \
-        -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + 3/2
+        -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + S(3)/2
 
 def test_Or():
     N = Normal('N', 0, 1)
     assert simplify(P(Or(N > 2, N < 1))) == \
-        -erf(sqrt(2))/2 - erfc(sqrt(2)/2)/2 + 3/2
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/2)/2 + S(3)/2
     assert P(Or(N < 0, N < 1)) == P(N < 1)
     assert P(Or(N > 0, N < 0)) == 1
+
+
+def test_conditional_eq():
+    E = Exponential('E', 1)
+    assert P(Eq(E, 1), Eq(E, 1)) == 1
+    assert P(Eq(E, 1), Eq(E, 2)) == 0
+    assert P(E > 1, Eq(E, 2)) == 1
+    assert P(E < 1, Eq(E, 2)) == 0

@@ -12,6 +12,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.utilities import filldedent
 from sympy.simplify.radsimp import denom
 from sympy.polys.rationaltools import together
+from sympy.core.compatibility import iterable
 
 def continuous_domain(f, symbol, domain):
     """
@@ -19,6 +20,16 @@ def continuous_domain(f, symbol, domain):
     is continuous.
     This method is limited by the ability to determine the various
     singularities and discontinuities of the given function.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for which the intervals are to be determined.
+    domain : Interval
+        The domain over which the continuity of the symbol has to be checked.
 
     Examples
     ========
@@ -35,6 +46,18 @@ def continuous_domain(f, symbol, domain):
     Interval(2, 5)
     >>> continuous_domain(log(2*x - 1), x, S.Reals)
     Interval.open(1/2, oo)
+
+    Returns
+    =======
+
+    Interval
+        Union of all intervals where the function is continuous.
+
+    Raises
+    ======
+    NotImplementedError
+        If the method to determine continuity of such a function
+        has not yet been developed.
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
@@ -167,7 +190,7 @@ def function_range(f, symbol, domain):
 
             solution = solveset(f.diff(symbol), symbol, interval)
 
-            if isinstance(solution, ConditionSet):
+            if not iterable(solution):
                 raise NotImplementedError('Unable to find critical points for {}'.format(f))
 
             critical_points += solution
@@ -465,8 +488,9 @@ def periodicity(f, symbol, check=False):
         elif isinstance(a, TrigonometricFunction):
             period = periodicity(a, symbol)
         #check if 'f' is linear in 'symbol'
-        elif degree(a, symbol) == 1 and symbol not in n.free_symbols:
-            period = Abs(n / a.diff(symbol))
+        elif (a.is_polynomial(symbol) and degree(a, symbol) == 1 and
+            symbol not in n.free_symbols):
+                period = Abs(n / a.diff(symbol))
 
     elif period is None:
         from sympy.solvers.decompogen import compogen
@@ -558,13 +582,13 @@ class AccumulationBounds(AtomicExpr):
 
     Let `a` and `b` be reals such that a <= b.
 
-    `\langle a, b\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
+    `\left\langle a, b\right\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
 
-    `\langle -\infty, b\rangle = \{x \in \mathbb{R} \mid x \le b\} \cup \{-\infty, \infty\}`
+    `\left\langle -\infty, b\right\rangle = \{x \in \mathbb{R} \mid x \le b\} \cup \{-\infty, \infty\}`
 
-    `\langle a, \infty \rangle = \{x \in \mathbb{R} \mid a \le x\} \cup \{-\infty, \infty\}`
+    `\left\langle a, \infty \right\rangle = \{x \in \mathbb{R} \mid a \le x\} \cup \{-\infty, \infty\}`
 
-    `\langle -\infty, \infty \rangle = \mathbb{R} \cup \{-\infty, \infty\}`
+    `\left\langle -\infty, \infty \right\rangle = \mathbb{R} \cup \{-\infty, \infty\}`
 
     `oo` and `-oo` are added to the second and third definition respectively,
     since if either `-oo` or `oo` is an argument, then the other one should
@@ -662,7 +686,7 @@ class AccumulationBounds(AtomicExpr):
 
     Some elementary functions can also take AccumulationBounds as input.
     A function `f` evaluated for some real AccumulationBounds `<a, b>`
-    is defined as `f(\langle a, b\rangle) = \{ f(x) \mid a \le x \le b \}`
+    is defined as `f(\left\langle a, b\right\rangle) = \{ f(x) \mid a \le x \le b \}`
 
     >>> sin(AccumBounds(pi/6, pi/3))
     AccumBounds(1/2, sqrt(3)/2)

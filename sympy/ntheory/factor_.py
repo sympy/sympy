@@ -6,18 +6,18 @@ from __future__ import print_function, division
 import random
 import math
 
-from .primetest import isprime
-from .generate import sieve, primerange, nextprime
 from sympy.core import sympify
+from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.evalf import bitcount
+from sympy.core.expr import Expr
+from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
+from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm, Rational
 from sympy.core.power import integer_nthroot, Pow
-from sympy.core.mul import Mul
-from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.singleton import S
-from sympy.core.function import Function
-from sympy.core.expr import Expr
+from .primetest import isprime
+from .generate import sieve, primerange, nextprime
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -29,6 +29,9 @@ def smoothness(n):
 
     The smoothness of n is the largest prime factor of n; the power-
     smoothness is the largest divisor raised to its multiplicity.
+
+    Examples
+    ========
 
     >>> from sympy.ntheory.factor_ import smoothness
     >>> smoothness(2**7*3**2)
@@ -216,7 +219,7 @@ def multiplicity(p, n):
                 if p.q == 1:
                     if n.p == 1:
                         return -multiplicity(p.p, n.q)
-                    return S.Zero
+                    return multiplicity(p.p, n.p) - multiplicity(p.p, n.q)
                 elif p.p == 1:
                     return multiplicity(p.q, n.q)
                 else:
@@ -449,8 +452,8 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     References
     ==========
 
-    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-      A Computational Perspective", Springer, 2nd edition, 229-231
+    .. [1] Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+           A Computational Perspective", Springer, 2nd edition, 229-231
 
     """
     n = int(n)
@@ -606,10 +609,10 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     References
     ==========
 
-    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-      A Computational Perspective", Springer, 2nd edition, 236-238
-    - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html
-    - http://www.cs.toronto.edu/~yuvalf/Factorization.pdf
+    .. [1] Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+           A Computational Perspective", Springer, 2nd edition, 236-238
+    .. [2] http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html
+    .. [3] https://www.cs.toronto.edu/~yuvalf/Factorization.pdf
     """
 
     n = int(n)
@@ -1360,8 +1363,11 @@ def divisors(n, generator=False):
     >>> list(divisors(120, generator=True))
     [1, 2, 4, 8, 3, 6, 12, 24, 5, 10, 20, 40, 15, 30, 60, 120]
 
+    Notes
+    =====
+
     This is a slightly modified version of Tim Peters referenced at:
-    http://stackoverflow.com/questions/1010381/python-factorization
+    https://stackoverflow.com/questions/1010381/python-factorization
 
     See Also
     ========
@@ -1387,10 +1393,8 @@ def divisor_count(n, modulus=1):
     Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
     those that are divisible by ``modulus`` are counted.
 
-    References
-    ==========
-
-    - http://www.mayer.dial.pipex.com/maths/formulae.htm
+    Examples
+    ========
 
     >>> from sympy import divisor_count
     >>> divisor_count(6)
@@ -1400,6 +1404,7 @@ def divisor_count(n, modulus=1):
     ========
 
     factorint, divisors, totient
+
     """
 
     if not modulus:
@@ -1436,12 +1441,6 @@ def udivisors(n, generator=False):
     prime factors. If only the number of unitary divisors is desired use
     udivisor_count(n).
 
-    References
-    ==========
-
-    - http://en.wikipedia.org/wiki/Unitary_divisor
-    - http://mathworld.wolfram.com/UnitaryDivisor.html
-
     Examples
     ========
 
@@ -1458,6 +1457,13 @@ def udivisors(n, generator=False):
     ========
 
     primefactors, factorint, divisors, divisor_count, udivisor_count
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Unitary_divisor
+    .. [2] http://mathworld.wolfram.com/UnitaryDivisor.html
+
     """
 
     n = as_int(abs(n))
@@ -1477,10 +1483,13 @@ def udivisor_count(n):
     """
     Return the number of unitary divisors of ``n``.
 
-    References
+    Parameters
     ==========
 
-    - http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+    n : integer
+
+    Examples
+    ========
 
     >>> from sympy.ntheory.factor_ import udivisor_count
     >>> udivisor_count(120)
@@ -1490,6 +1499,12 @@ def udivisor_count(n):
     ========
 
     factorint, divisors, udivisors, divisor_count, totient
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+
     """
 
     if n == 0:
@@ -1519,11 +1534,6 @@ def antidivisors(n, generator=False):
     Antidivisors [1]_ of n are numbers that do not divide n by the largest
     possible margin.  If generator is True an unordered generator is returned.
 
-    References
-    ==========
-
-    .. [1] definition is described in http://oeis.org/A066272/a066272a.html
-
     Examples
     ========
 
@@ -1538,6 +1548,12 @@ def antidivisors(n, generator=False):
     ========
 
     primefactors, factorint, divisors, divisor_count, antidivisor_count
+
+    References
+    ==========
+
+    .. [1] definition is described in https://oeis.org/A066272/a066272a.html
+
     """
 
     n = as_int(abs(n))
@@ -1553,10 +1569,10 @@ def antidivisor_count(n):
     """
     Return the number of antidivisors [1]_ of ``n``.
 
-    References
+    Parameters
     ==========
 
-    .. [1] formula from https://oeis.org/A066272
+    n : integer
 
     Examples
     ========
@@ -1571,6 +1587,12 @@ def antidivisor_count(n):
     ========
 
     factorint, divisors, antidivisors, divisor_count, totient
+
+    References
+    ==========
+
+    .. [1] formula from https://oeis.org/A066272
+
     """
 
     n = as_int(abs(n))
@@ -1587,11 +1609,10 @@ class totient(Function):
     ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
     that are relatively prime to n.
 
-    References
+    Parameters
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Euler%27s_totient_function
-    .. [2] http://mathworld.wolfram.com/TotientFunction.html
+    n : integer
 
     Examples
     ========
@@ -1606,6 +1627,13 @@ class totient(Function):
     ========
 
     divisor_count
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler%27s_totient_function
+    .. [2] http://mathworld.wolfram.com/TotientFunction.html
+
     """
     @classmethod
     def eval(cls, n):
@@ -1632,12 +1660,6 @@ class reduced_totient(Function):
     ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
     `k^m \equiv 1 \mod n` for all k relatively prime to n.
 
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Carmichael_function
-    .. [2] http://mathworld.wolfram.com/CarmichaelFunction.html
-
     Examples
     ========
 
@@ -1653,6 +1675,13 @@ class reduced_totient(Function):
     ========
 
     totient
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Carmichael_function
+    .. [2] http://mathworld.wolfram.com/CarmichaelFunction.html
+
     """
     @classmethod
     def eval(cls, n):
@@ -1693,18 +1722,16 @@ class divisor_sigma(Function):
     Parameters
     ==========
 
-    k : power of divisors in the sum
+    n : integer
+
+    k : integer, optional
+        power of divisors in the sum
 
         for k = 0, 1:
         ``divisor_sigma(n, 0)`` is equal to ``divisor_count(n)``
         ``divisor_sigma(n, 1)`` is equal to ``sum(divisors(n))``
 
         Default for k is 1.
-
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Divisor_function
 
     Examples
     ========
@@ -1723,6 +1750,12 @@ class divisor_sigma(Function):
     ========
 
     divisor_count, totient, divisors, factorint
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Divisor_function
+
     """
 
     @classmethod
@@ -1758,17 +1791,15 @@ def core(n, t=2):
     Parameters
     ==========
 
-    t : core(n, t) calculates the t-th power free part of n
+    n : integer
+
+    t : integer
+        core(n, t) calculates the t-th power free part of n
 
         ``core(n, 2)`` is the squarefree part of ``n``
         ``core(n, 3)`` is the cubefree part of ``n``
 
         Default for t is 2.
-
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Square-free_integer#Squarefree_core
 
     Examples
     ========
@@ -1787,6 +1818,12 @@ def core(n, t=2):
     ========
 
     factorint, sympy.solvers.diophantine.square_factor
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Square-free_integer#Squarefree_core
+
     """
 
     n = as_int(n)
@@ -1863,11 +1900,6 @@ class udivisor_sigma(Function):
 
         Default for k is 1.
 
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
-
     Examples
     ========
 
@@ -1886,6 +1918,12 @@ class udivisor_sigma(Function):
 
     divisor_count, totient, divisors, udivisors, udivisor_count, divisor_sigma,
     factorint
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+
     """
 
     @classmethod
@@ -1915,11 +1953,6 @@ class primenu(Function):
     .. math ::
         \nu(n) = k.
 
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
-
     Examples
     ========
 
@@ -1933,6 +1966,12 @@ class primenu(Function):
     ========
 
     factorint
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+
     """
 
     @classmethod
@@ -1960,11 +1999,6 @@ class primeomega(Function):
     .. math ::
         \Omega(n) = \sum_{i=1}^k m_i.
 
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
-
     Examples
     ========
 
@@ -1978,6 +2012,12 @@ class primeomega(Function):
     ========
 
     factorint
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+
     """
 
     @classmethod

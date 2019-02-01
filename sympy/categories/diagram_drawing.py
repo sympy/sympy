@@ -95,6 +95,9 @@ from sympy.printing import latex
 from sympy.utilities.decorator import doctest_depends_on
 
 
+__doctest_requires__ = {('preview_diagram',): 'pyglet'}
+
+
 class _GrowableGrid(object):
     """
     Holds a growable grid of objects.
@@ -294,7 +297,7 @@ class DiagramGrid(object):
     References
     ==========
 
-    [FiveLemma] http://en.wikipedia.org/wiki/Five_lemma
+    [FiveLemma] https://en.wikipedia.org/wiki/Five_lemma
     """
     @staticmethod
     def _simplify_morphisms(morphisms):
@@ -1541,7 +1544,7 @@ class XypicDiagramDrawer(object):
     should be done:
 
     >>> def formatter(astr):
-    ...   astr.label = "\exists !" + astr.label
+    ...   astr.label = r"\exists !" + astr.label
     ...   astr.arrow_style = "{-->}"
     >>> drawer.arrow_formatters["unique"] = formatter
     >>> print(drawer.draw(diagram, grid))

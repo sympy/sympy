@@ -95,6 +95,7 @@ class Add(Expr, AssocOp):
         """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
+        from sympy.tensor.tensor import TensExpr
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -148,6 +149,10 @@ class Add(Expr, AssocOp):
 
             elif isinstance(o, MatrixExpr):
                 # can't add 0 to Matrix so make sure coeff is not 0
+                coeff = o.__add__(coeff) if coeff else o
+                continue
+
+            elif isinstance(o, TensExpr):
                 coeff = o.__add__(coeff) if coeff else o
                 continue
 
@@ -549,7 +554,7 @@ class Add(Expr, AssocOp):
                 return
         if z == len(self.args):
             return True
-        if len(nz) == len(self.args):
+        if len(nz) == 0 or len(nz) == len(self.args):
             return None
         b = self.func(*nz)
         if b.is_zero:
@@ -817,7 +822,7 @@ class Add(Expr, AssocOp):
         >>> ((1 + 2*I)*(1 + 3*I)).as_real_imag()
         (-5, 5)
         """
-        sargs, terms = self.args, []
+        sargs = self.args
         re_part, im_part = [], []
         for term in sargs:
             re, im = term.as_real_imag(deep=deep)

@@ -38,7 +38,7 @@ from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest, collect
 from sympy.simplify.fu import sincos_to_sum
 from sympy.logic.boolalg import And, Or, BooleanAtom
-from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.hyperbolic import \
@@ -2047,16 +2047,23 @@ def meijerint_inversion(f, x, t):
     t_ = t
     t = Dummy('t', polar=True)  # We don't want sqrt(t**2) = abs(t) etc
     f = f.subs(t_, t)
-    c = Dummy('c')
     _debug('Laplace-inverting', f)
     if not _is_analytic(f, x):
         _debug('But expression is not analytic.')
         return None
-    # We filter out exponentials here. If we are given an Add this will not
+    # Exponentials correspond to shifts; we filter them out and then
+    # shift the result later.  If we are given an Add this will not
     # work, but the calling code will take care of that.
-    shift = 0
+    shift = S.Zero
+
     if f.is_Mul:
         args = list(f.args)
+    elif isinstance(f, exp):
+        args = [f]
+    else:
+        args = None
+
+    if args:
         newargs = []
         exponentials = []
         while args:
@@ -2092,6 +2099,18 @@ def meijerint_inversion(f, x, t):
         shift = Add(*exponentials)
         f = Mul(*newargs)
 
+    if x not in f.free_symbols:
+        _debug('Expression consists of constant and exp shift:', f, shift)
+        from sympy import Eq, im
+        cond = Eq(im(shift), 0)
+        if cond == False:
+            _debug('but shift is nonreal, cannot be a Laplace transform')
+            return None
+        res = f*DiracDelta(t + shift)
+        _debug('Result is a delta function, possibly conditional:', res, cond)
+        # cond is True or Eq
+        return Piecewise((res.subs(t, t_), cond))
+
     gs = _rewrite1(f, x)
     if gs is not None:
         fac, po, g, cond = gs
@@ -2114,5 +2133,6 @@ def meijerint_inversion(f, x, t):
             res = res.subs(t, t + shift)
             if not isinstance(cond, bool):
                 cond = cond.subs(t, t + shift)
+            from sympy import InverseLaplaceTransform
             return Piecewise((res.subs(t, t_), cond),
-                             (Integral(f_*exp(x*t), (x, c - oo*I, c + oo*I)).subs(t, t_), True))
+                             (InverseLaplaceTransform(f_.subs(t, t_), x, t_, None), True))

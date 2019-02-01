@@ -58,7 +58,7 @@ class mathieus(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
     .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuS/
@@ -115,7 +115,7 @@ class mathieuc(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
     .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuC/
@@ -172,7 +172,7 @@ class mathieusprime(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
     .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuSPrime/
@@ -229,7 +229,7 @@ class mathieucprime(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
     .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuCPrime/

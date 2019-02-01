@@ -70,9 +70,14 @@ class Transpose(MatrixExpr):
         from sympy.matrices.expressions.determinant import det
         return det(self.arg)
 
+    def _eval_derivative_matrix_lines(self, x):
+        lines = self.args[0]._eval_derivative_matrix_lines(x)
+        return [i.transpose() for i in lines]
+
+
 def transpose(expr):
-    """ Matrix transpose """
-    return Transpose(expr).doit()
+    """Matrix transpose"""
+    return Transpose(expr).doit(deep=False)
 
 
 from sympy.assumptions.ask import ask, Q

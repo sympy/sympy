@@ -133,6 +133,11 @@ def test_issue_14522():
     assert all(eq(r) == 0 for r in roots_eq)
 
 
+def test_issue_15076():
+    sol = roots_quartic(Poly(t**4 -  6*t**2 + t/x - 3, t))
+    assert sol[0].has(x)
+
+
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
     assert roots_cubic(Poly(x**3 - 3*x**2 + 3*x - 1, x)) == [1, 1, 1]

@@ -1,4 +1,4 @@
-from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, zeros
+from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, zeros, S
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
                                      RigidBody, Vector)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
@@ -7,7 +7,7 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      outer, potential_energy, msubs,
                                      find_dynamicsymbols)
 
-from sympy.physics.mechanics.functions import gravity
+from sympy.physics.mechanics.functions import gravity, center_of_mass
 from sympy.physics.vector.vector import Vector
 from sympy.utilities.pytest import raises
 
@@ -181,6 +181,7 @@ def test_find_dynamicsymbols():
     # Test if a ValueError is raised on supplying only a vector as input
     raises(ValueError, lambda: find_dynamicsymbols(v))
 
+
 def test_gravity():
     N = ReferenceFrame('N')
     m, M, g = symbols('m M g')
@@ -198,3 +199,26 @@ def test_gravity():
     for i in range(len(l)):
         for j in range(len(l[i])):
             assert forceList[i][j] == l[i][j]
+
+# This function tests the center_of_mass() function
+# that was added in PR #14758 to compute the center of
+# mass of a system of bodies.
+def test_center_of_mass():
+    a = ReferenceFrame('a')
+    m = symbols('m', real=True)
+    p1 = Particle('p1', Point('p1_pt'), S(1))
+    p2 = Particle('p2', Point('p2_pt'), S(2))
+    p3 = Particle('p3', Point('p3_pt'), S(3))
+    p4 = Particle('p4', Point('p4_pt'), m)
+    b_f = ReferenceFrame('b_f')
+    b_cm = Point('b_cm')
+    mb = symbols('mb')
+    b = RigidBody('b', b_cm, b_f, mb, (outer(b_f.x, b_f.x), b_cm))
+    p2.point.set_pos(p1.point, a.x)
+    p3.point.set_pos(p1.point, a.x + a.y)
+    p4.point.set_pos(p1.point, a.y)
+    b.masscenter.set_pos(p1.point, a.y + a.z)
+    point_o=Point('o')
+    point_o.set_pos(p1.point, center_of_mass(p1.point, p1, p2, p3, p4, b))
+    expr = 5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
+    assert point_o.pos_from(p1.point)-expr == 0

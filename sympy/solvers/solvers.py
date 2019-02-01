@@ -253,7 +253,7 @@ def checksol(f, symbol, sol=None, **flags):
             if f not in (S.true, S.false):
                 return
         else:
-            f = Add(f.lhs, -f.rhs, evaluate=False)
+            f = f.rewrite(Add, evaluate=False)
 
     if isinstance(f, BooleanAtom):
         return bool(f)
@@ -288,7 +288,7 @@ def checksol(f, symbol, sol=None, **flags):
                     return False
                 # there are free symbols -- simple expansion might work
                 _, val = val.as_content_primitive()
-                val = expand_mul(expand_multinomial(val))
+                val = _mexpand(val.as_numer_denom()[0], recursive=True)
         elif attempt == 2:
             if minimal:
                 return
@@ -301,7 +301,7 @@ def checksol(f, symbol, sol=None, **flags):
             if flags.get('force', True):
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
-                exval = expand_mul(expand_multinomial(val))
+                exval = _mexpand(val, recursive=True)
                 if exval.is_number or not exval.free_symbols:
                     # we can decide now
                     val = exval
@@ -973,7 +973,7 @@ def solve(f, *symbols, **flags):
                             is True or False.
                         '''))
                 else:
-                    fi = Add(fi.lhs, -fi.rhs, evaluate=False)
+                    fi = fi.rewrite(Add, evaluate=False)
             f[i] = fi
 
         if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
@@ -1140,6 +1140,9 @@ def solve(f, *symbols, **flags):
                 floats = True
                 f[i] = nsimplify(fi, rational=True)
 
+    # capture any denominators before rewriting since
+    # they may disappear after the rewrite, e.g. issue 14779
+    flags['_denominators'] = _simple_dens(f[0], symbols)
     # Any embedded piecewise functions need to be brought out to the
     # top level so that the appropriate strategy gets selected.
     # However, this is necessary only if one of the piecewise
@@ -1429,8 +1432,7 @@ def _solve(f, *symbols, **flags):
 
     # /!\ capture this flag then set it to False so that no checking in
     # recursive calls will be done; only the final answer is checked
-    checkdens = check = flags.pop('check', True)
-    flags['check'] = False
+    flags['check'] = checkdens = check = flags.pop('check', True)
 
     # build up solutions if f is a Mul
     if f.is_Mul:
@@ -1446,11 +1448,12 @@ def _solve(f, *symbols, **flags):
             # all solutions have been checked but now we must
             # check that the solutions do not set denominators
             # in any factor to zero
-            dens = _simple_dens(f, symbols)
+            dens = flags.get('_denominators', _simple_dens(f, symbols))
             result = [s for s in result if
                 all(not checksol(den, {symbol: s}, **flags) for den in
                 dens)]
-        # set flags for quick exit at end
+        # set flags for quick exit at end; solutions for each
+        # factor were already checked and simplified
         check = False
         flags['simplify'] = False
 
@@ -1485,9 +1488,10 @@ def _solve(f, *symbols, **flags):
                 result.add(Piecewise(
                     (candidate, v),
                     (S.NaN, True)))
-        # the solutions need not be checked again since they
-        # were checked in finding the solutions for each piece
+        # set flags for quick exit at end; solutions for each
+        # piece were already checked and simplified
         check = False
+        flags['simplify'] = False
     else:
         # first see if it really depends on symbol and whether there
         # is only a linear solution
@@ -1561,7 +1565,11 @@ def _solve(f, *symbols, **flags):
                 if not other and len(funcs.intersection(trig)) > 1:
                     newf = TR1(f_num).rewrite(tan)
                     if newf != f_num:
+                        # don't check the rewritten form --check
+                        # solutions in the un-rewritten form below
+                        flags['check'] = False
                         result = _solve(newf, symbol, **flags)
+                        flags['check'] = check
 
                 # just a simple case - see if replacement of single function
                 # clears all symbol-dependent functions, e.g.
@@ -1835,16 +1843,17 @@ def _solve_system(exprs, symbols, **flags):
             else:
                 try:
                     result = solve_poly_system(polys, *symbols)
-                    solved_syms = symbols
+                    if result:
+                        solved_syms = symbols
+                        # we don't know here if the symbols provided
+                        # were given or not, so let solve resolve that.
+                        # A list of dictionaries is going to always be
+                        # returned from here.
+                        result = [dict(list(zip(solved_syms, r))) for r in result]
                 except NotImplementedError:
                     failed.extend([g.as_expr() for g in polys])
                     solved_syms = []
-                if result:
-                    # we don't know here if the symbols provided were given
-                    # or not, so let solve resolve that. A list of dictionaries
-                    # is going to always be returned from here.
-                    #
-                    result = [dict(list(zip(solved_syms, r))) for r in result]
+                    result = None
 
     if result:
         if isinstance(result, dict):
@@ -1867,10 +1876,9 @@ def _solve_system(exprs, symbols, **flags):
 
         solved_syms = set(solved_syms)  # set of symbols we have solved for
         legal = set(symbols)  # what we are interested in
-
         # sort so equation with the fewest potential symbols is first
+        u = Dummy()  # used in solution checking
         for eq in ordered(failed, lambda _: len(_ok_syms(_))):
-            u = Dummy()  # used in solution checking
             newresult = []
             bad_results = []
             got_s = set()
@@ -2637,7 +2645,7 @@ def _tsolve(eq, sym, **flags):
                 if f.count(log) != lhs.count(log):
                     if isinstance(f, log):
                         return _solve(f.args[0] - exp(rhs), sym, **flags)
-                    return _tsolve(f - rhs, sym)
+                    return _tsolve(f - rhs, sym, **flags)
 
         elif lhs.is_Pow:
             if lhs.exp.is_Integer:
@@ -2659,6 +2667,8 @@ def _tsolve(eq, sym, **flags):
                 return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
             elif lhs.base == 0 and rhs == 1:
                 return _solve(lhs.exp, sym, **flags)
+            else:
+                raise NotImplementedError
 
         elif lhs.is_Mul and rhs.is_positive:
             llhs = expand_log(log(lhs))
@@ -2899,6 +2909,8 @@ def nsolve(*args, **kwargs):
             if isinstance(fi, Equality):
                 f[i] = fi.lhs - fi.rhs
         f = Matrix(f).T
+    if iterable(x0):
+        x0 = list(x0)
     if not isinstance(f, Matrix):
         # assume it's a sympy expression
         if isinstance(f, Equality):
@@ -2989,6 +3001,9 @@ def _invert(eq, *symbols, **kwargs):
 
     """
     eq = sympify(eq)
+    if eq.args:
+        # make sure we are working with flat eq
+        eq = eq.func(*eq.args)
     free = eq.free_symbols
     if not symbols:
         symbols = free
@@ -3057,17 +3072,18 @@ def _invert(eq, *symbols, **kwargs):
                     if _lhs != rat:
                         lhs = _lhs
                         rhs = -bi/ai
-            if ai*bi is S.NegativeOne:
-                if all(
-                        isinstance(i, Function) for i in (ad, bd)) and \
-                        ad.func == bd.func and len(ad.args) == len(bd.args):
-                    if len(ad.args) == 1:
+            elif ai == -bi:
+                if isinstance(ad, Function) and ad.func == bd.func:
+                    if len(ad.args) == len(bd.args) == 1:
                         lhs = ad.args[0] - bd.args[0]
-                    else:
+                    elif len(ad.args) == len(bd.args):
                         # should be able to solve
-                        # f(x, y) == f(2, 3) -> x == 2
-                        # f(x, x + y) == f(2, 3) -> x == 2 or x == 3 - y
-                        raise NotImplementedError('equal function with more than 1 argument')
+                        # f(x, y) - f(2 - x, 0) == 0 -> x == 1
+                        raise NotImplementedError(
+                            'equal function with more than 1 argument')
+                    else:
+                        raise ValueError(
+                            'function with different numbers of args')
 
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
@@ -3085,6 +3101,21 @@ def _invert(eq, *symbols, **kwargs):
             elif isinstance(lhs, atan2):
                 y, x = lhs.args
                 lhs = 2*atan(y/(sqrt(x**2 + y**2) + x))
+            elif lhs.func == rhs.func:
+                if len(lhs.args) == len(rhs.args) == 1:
+                    lhs = lhs.args[0]
+                    rhs = rhs.args[0]
+                elif len(lhs.args) == len(rhs.args):
+                    # should be able to solve
+                    # f(x, y) == f(2, 3) -> x == 2
+                    # f(x, x + y) == f(2, 3) -> x == 2
+                    raise NotImplementedError(
+                        'equal function with more than 1 argument')
+                else:
+                    raise ValueError(
+                        'function with different numbers of args')
+
+
         if rhs and lhs.is_Pow and lhs.exp.is_Integer and lhs.exp < 0:
             lhs = 1/lhs
             rhs = 1/rhs

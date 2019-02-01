@@ -13,7 +13,7 @@ def msigma(i):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Pauli_matrices
+    .. [1] https://en.wikipedia.org/wiki/Pauli_matrices
 
     Examples
     ========
@@ -89,7 +89,7 @@ def mgamma(mu, lower=False):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gamma_matrices
+    .. [1] https://en.wikipedia.org/wiki/Gamma_matrices
 
     Examples
     ========

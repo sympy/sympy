@@ -4,7 +4,7 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative
-from sympy import MatAdd
+from sympy import MatAdd, Identity, MatMul, ZeroMatrix
 
 k = symbols("k")
 
@@ -36,6 +36,26 @@ def test_matrix_derivative_trivial_cases():
     assert X.diff(A) == 0
 
 
+def test_matrix_derivative_with_inverse():
+
+    # Cookbook example 61:
+    expr = a.T*Inverse(X)*b
+    assert expr.diff(X) == -Inverse(X).T*a*b.T*Inverse(X).T
+
+    # Cookbook example 62:
+    expr = Determinant(Inverse(X))
+    # Not implemented yet:
+    # assert expr.diff(X) == -Determinant(X.inv())*(X.inv()).T
+
+    # Cookbook example 63:
+    expr = Trace(A*Inverse(X)*B)
+    assert expr.diff(X) == -(X**(-1)*B*A*X**(-1)).T
+
+    # Cookbook example 64:
+    expr = Trace(Inverse(X + A))
+    assert expr.diff(X) == -(Inverse(X + A)).T**2
+
+
 def test_matrix_derivative_vectors_and_scalars():
 
     # Cookbook example 69:
@@ -51,6 +71,12 @@ def test_matrix_derivative_vectors_and_scalars():
     # Cookbook example 71:
     expr = a.T*X.T*b
     assert expr.diff(X) == b*a.T
+
+    # Cookbook example 72:
+    expr = a.T*X*a
+    assert expr.diff(X) == a*a.T
+    expr = a.T*X.T*a
+    assert expr.diff(X) == a*a.T
 
     # Cookbook example 77:
     expr = b.T*X.T*X*c
@@ -73,16 +99,154 @@ def test_matrix_derivative_vectors_and_scalars():
     assert expr.diff(X) == D*(X*b + c)*b.T + D.T*(X*b + c)*b.T
 
 
-def test_matrix_derivative_with_inverse():
+def test_matrix_derivatives_of_traces():
 
-    # Cookbook example 61:
-    expr = a.T*Inverse(X)*b
-    assert expr.diff(X) == -Inverse(X).T*a*b.T*Inverse(X).T
+    ## First order:
 
-    # Cookbook example 63:
-    expr = Trace(A*Inverse(X)*B)
-    assert expr.diff(X) == -(X**(-1)*B*A*X**(-1)).T
+    # Cookbook example 99:
+    expr = Trace(X)
+    assert expr.diff(X) == Identity(k)
 
-    # Cookbook example 64:
-    expr = Trace(Inverse(X + A))
-    assert expr.diff(X) == -(Inverse(X + A)*Inverse(X + A)).T
+    # Cookbook example 100:
+    expr = Trace(X*A)
+    assert expr.diff(X) == A.T
+
+    # Cookbook example 101:
+    expr = Trace(A*X*B)
+    assert expr.diff(X) == A.T*B.T
+
+    # Cookbook example 102:
+    expr = Trace(A*X.T*B)
+    assert expr.diff(X) == B*A
+
+    # Cookbook example 103:
+    expr = Trace(X.T*A)
+    assert expr.diff(X) == A
+
+    # Cookbook example 104:
+    expr = Trace(A*X.T)
+    assert expr.diff(X) == A
+
+    # Cookbook example 105:
+    # TODO: TensorProduct is not supported
+    #expr = Trace(TensorProduct(A, X))
+    #assert expr.diff(X) == Trace(A)*Identity(k)
+
+    ## Second order:
+
+    # Cookbook example 106:
+    expr = Trace(X**2)
+    assert expr.diff(X) == 2*X.T
+
+    # Cookbook example 107:
+    expr = Trace(X**2*B)
+    # TODO: wrong result
+    #assert expr.diff(X) == (X*B + B*X).T
+    expr = Trace(MatMul(X, X, B))
+    assert expr.diff(X) == (X*B + B*X).T
+
+    # Cookbook example 108:
+    expr = Trace(X.T*B*X)
+    assert expr.diff(X) == B*X + B.T*X
+
+    # Cookbook example 109:
+    expr = Trace(B*X*X.T)
+    assert expr.diff(X) == B*X + B.T*X
+
+    # Cookbook example 110:
+    expr = Trace(X*X.T*B)
+    assert expr.diff(X) == B*X + B.T*X
+
+    # Cookbook example 111:
+    expr = Trace(X*B*X.T)
+    assert expr.diff(X) == X*B.T + X*B
+
+    # Cookbook example 112:
+    expr = Trace(B*X.T*X)
+    assert expr.diff(X) == X*B.T + X*B
+
+    # Cookbook example 113:
+    expr = Trace(X.T*X*B)
+    assert expr.diff(X) == X*B.T + X*B
+
+    # Cookbook example 114:
+    expr = Trace(A*X*B*X)
+    assert expr.diff(X) == A.T*X.T*B.T + B.T*X.T*A.T
+
+    # Cookbook example 115:
+    expr = Trace(X.T*X)
+    assert expr.diff(X) == 2*X
+    expr = Trace(X*X.T)
+    assert expr.diff(X) == 2*X
+
+    # Cookbook example 116:
+    expr = Trace(B.T*X.T*C*X*B)
+    assert expr.diff(X) == C.T*X*B*B.T + C*X*B*B.T
+
+    # Cookbook example 117:
+    expr = Trace(X.T*B*X*C)
+    assert expr.diff(X) == B*X*C + B.T*X*C.T
+
+    # Cookbook example 118:
+    expr = Trace(A*X*B*X.T*C)
+    assert expr.diff(X) == A.T*C.T*X*B.T + C*A*X*B
+
+    # Cookbook example 119:
+    expr = Trace((A*X*B + C)*(A*X*B + C).T)
+    assert expr.diff(X) == 2*A.T*(A*X*B + C)*B.T
+
+    # Cookbook example 120:
+    # TODO: no support for TensorProduct.
+    # expr = Trace(TensorProduct(X, X))
+    # expr = Trace(X)*Trace(X)
+    # expr.diff(X) == 2*Trace(X)*Identity(k)
+
+    # Higher Order
+
+    # Cookbook example 121:
+    expr = Trace(X**k)
+    #assert expr.diff(X) == k*(X**(k-1)).T
+
+    # Cookbook example 122:
+    expr = Trace(A*X**k)
+    #assert expr.diff(X) == # Needs indices
+
+    # Cookbook example 123:
+    expr = Trace(B.T*X.T*C*X*X.T*C*X*B)
+    assert expr.diff(X) == C*X*X.T*C*X*B*B.T + C.T*X*B*B.T*X.T*C.T*X + C*X*B*B.T*X.T*C*X + C.T*X*X.T*C.T*X*B*B.T
+
+    # Other
+
+    # Cookbook example 124:
+    expr = Trace(A*X**(-1)*B)
+    assert expr.diff(X) == -Inverse(X).T*A.T*B.T*Inverse(X).T
+
+    # Cookbook example 125:
+    expr = Trace(Inverse(X.T*C*X)*A)
+    # Warning: result in the cookbook is equivalent if B and C are symmetric:
+    assert expr.diff(X) == - X.inv().T*A.T*X.inv()*C.inv().T*X.inv().T - X.inv().T*A*X.inv()*C.inv()*X.inv().T
+
+    # Cookbook example 126:
+    expr = Trace((X.T*C*X).inv()*(X.T*B*X))
+    assert expr.diff(X) == -2*C*X*(X.T*C*X).inv()*X.T*B*X*(X.T*C*X).inv() + 2*B*X*(X.T*C*X).inv()
+
+    # Cookbook example 127:
+    expr = Trace((A + X.T*C*X).inv()*(X.T*B*X))
+    # Warning: result in the cookbook is equivalent if B and C are symmetric:
+    assert expr.diff(X) == B*X*Inverse(A + X.T*C*X) - C*X*Inverse(A + X.T*C*X)*X.T*B*X*Inverse(A + X.T*C*X) - C.T*X*Inverse(A.T + (C*X).T*X)*X.T*B.T*X*Inverse(A.T + (C*X).T*X) + B.T*X*Inverse(A.T + (C*X).T*X)
+
+
+def test_derivatives_of_complicated_matrix_expr():
+    expr = a.T*(A*X*(X.T*B + X*A) + B.T*X.T*(a*b.T*(X*D*X.T + X*(X.T*B + A*X)*D*B - X.T*C.T*A)*B + B*(X*D.T + B*A*X*A.T - 3*X*D))*B + 42*X*B*X.T*A.T*(X + X.T))*b
+    result = (B*(B*A*X*A.T - 3*X*D + X*D.T) + a*b.T*(X*(A*X + X.T*B)*D*B + X*D*X.T - X.T*C.T*A)*B)*B*b*a.T*B.T + B**2*b*a.T*B.T*X.T*a*b.T*X*D + 42*A*X*B.T*X.T*a*b.T + B*D*B**3*b*a.T*B.T*X.T*a*b.T*X + B*b*a.T*A*X + 42*a*b.T*(X + X.T)*A*X*B.T + b*a.T*X*B*a*b.T*B.T**2*X*D.T + b*a.T*X*B*a*b.T*B.T**3*D.T*(B.T*X + X.T*A.T) + 42*b*a.T*X*B*X.T*A.T + 42*A.T*(X + X.T)*b*a.T*X*B + A.T*B.T**2*X*B*a*b.T*B.T*A + A.T*a*b.T*(A.T*X.T + B.T*X) + A.T*X.T*b*a.T*X*B*a*b.T*B.T**3*D.T + B.T*X*B*a*b.T*B.T*D - 3*B.T*X*B*a*b.T*B.T*D.T - C.T*A*B**2*b*a.T*B.T*X.T*a*b.T + X.T*A.T*a*b.T*A.T
+    assert expr.diff(X) == result
+
+
+def test_mixed_deriv_mixed_expressions():
+
+    expr = Trace(A)*A
+    # TODO: this is not yet supported:
+    assert expr.diff(A) == Derivative(expr, A)
+
+    expr = Trace(Trace(A)*A)
+    assert expr.diff(A) == (2*Trace(A))*Identity(k)
