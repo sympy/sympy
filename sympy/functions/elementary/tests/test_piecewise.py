@@ -1125,7 +1125,16 @@ def test_issue_14240():
         Piecewise((i, a), (0, True)) for i in range(1, 41)])
         ) == Piecewise((factorial(40), a), (0, True))
 
+
 def test_issue_14787():
     x = Symbol('x')
     f = Piecewise((x, x < 1), ((S(58) / 7), True))
     assert str(f.evalf()) == "Piecewise((x, x < 1), (8.28571428571429, True))"
+
+
+def test_issue_8458():
+    x, y = symbols('x y')
+    p1 = Piecewise((0, x == 0), (sin(x), True))
+    assert p1.simplify() == sin(x)
+    p2 = Piecewise((x+1, Eq(x, -1)), (4*x + (y-2)**4, Eq(x, 0) & Eq(x+y, 2)), (sin(x), True))
+    assert p2.simplify() == sin(x)
