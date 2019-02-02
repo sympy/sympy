@@ -176,7 +176,7 @@ class Symbol(AtomicExpr, Boolean):
             whose = '%s ' % obj.__name__ if obj else ''
             raise ValueError(
                 '%scommutativity must be True or False.' % whose)
-            
+
     def __new__(cls, name, **assumptions):
         """Symbols are identified by name and assumptions::
 
