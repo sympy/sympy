@@ -357,6 +357,8 @@ class Piecewise(Function):
         prevexpr = None
         for i, (expr, cond) in reversed(list(enumerate(args))):
             if prevexpr is not None:
+                _prevexpr = prevexpr
+                _expr = expr
                 if isinstance(cond, And):
                     eqs, other = sift(cond.args,
                         lambda i: isinstance(i, Equality), binary=True)
@@ -373,11 +375,14 @@ class Piecewise(Function):
                             isinstance(e.rhs,
                                 (Rational, NumberSymbol,
                                 Symbol, UndefinedFunction)):
-                            prevexpr = prevexpr.subs(*e.args)
-                            expr = expr.subs(*e.args)
-                if prevexpr == expr:
+                            _prevexpr = _prevexpr.subs(*e.args)
+                            _expr = _expr.subs(*e.args)
+                if _prevexpr == _expr:
                     args[i] = args[i].func(args[i+1][0], cond)
-            prevexpr = expr
+                else:
+                    prevexpr = expr
+            else:
+                prevexpr = expr
         return self.func(*args)
 
     def _eval_as_leading_term(self, x):
