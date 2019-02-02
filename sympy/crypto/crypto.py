@@ -2325,8 +2325,8 @@ def bg_public_key(p, q):
     private keys passed as arguments and
     then returns their product.
 
-    Parametes
-    =========
+    Parameters
+    ==========
 
     p, q : the private keys
 
