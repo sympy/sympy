@@ -21,7 +21,7 @@ class MathMLPrinterBase(Printer):
     _default_settings = {
         "order": None,
         "encoding": "utf-8",
-        "root_notation": False,
+        "root_notation": True,
         "symbol_names": {},
     }
 
@@ -920,7 +920,7 @@ def mathml(expr, printer='content', **settings):
         return MathMLContentPrinter(settings).doprint(expr)
 
 
-def print_mathml(expr, printer='content', symbol_names=None, root_notation=False, order=None):
+def print_mathml(expr, printer='content', symbol_names=None, root_notation=True, order=None):
     """
     Prints a pretty representation of the MathML code for expr. If printer is
     presentation then prints Presentation MathML else prints content MathML.
