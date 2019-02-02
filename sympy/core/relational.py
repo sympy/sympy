@@ -325,7 +325,8 @@ class Relational(Boolean, Expr, EvalfMixin):
                         scale = gcd(c)
                         c = [ctmp/scale for ctmp in c]
                         if leading.is_negative and isinstance(r, _Inequality):
-                            # Dividing with a negative number, so change order of arguments
+                            # Multiplying with -1 to get positive leading
+                            # polynomial term so change order of arguments,
                             # canonical will put the symbol back on the rhs later
                             r = r.func(constant/scale, -Poly.from_list(c, x).as_expr())
                         else:
