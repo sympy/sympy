@@ -2256,9 +2256,12 @@ def _pow_mod(a, b, m):
     Parameters
     ==========
 
-    a: the base, a positive integer
-    b: the exponent, a non-negative integer
-    m: the modulus, a positive integer
+    a: a positive integer
+       the base
+    b: a non-negative integer
+       the exponent
+    m: a positive integer
+       the modulus
 
     Returns
     =======
