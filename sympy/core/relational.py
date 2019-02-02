@@ -316,7 +316,7 @@ class Relational(Boolean, Expr, EvalfMixin):
                     # maybe not a linear function, try polynomial
                     from sympy.polys import Poly, poly, PolynomialError, gcd
                     try:
-                        p = poly(dif)
+                        p = poly(dif, x)
                         c = p.all_coeffs()
                         leading = c[0]
                         constant = c[-1]
