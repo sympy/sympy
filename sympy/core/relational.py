@@ -294,24 +294,6 @@ class Relational(Boolean, Expr, EvalfMixin):
             if v is not None:
                 r = r.func._eval_relation(v, S.Zero)
 
-            r = r.canonical
-
-            # If there is only one symbol in the expression, try to write it on a simplified form
-            free = r.free_symbols
-            if len(free) == 1:
-                from sympy.solvers.solveset import linear_coeffs
-                try:
-                    x = free.pop()
-                    dif = r.lhs - r.rhs
-                    m, b = linear_coeffs(dif, x)
-                    if m.is_zero is False:
-                        rnew = r.func(x, -b/m)
-                    else:
-                        rnew = r.func(m*x, -b)
-                    if measure(rnew) <= ratio*measure(r):
-                        r = rnew.canonical
-                except ValueError:
-                    pass
         # Did we get a simplified result?
         r = r.canonical
         measure = kwargs['measure']
@@ -535,6 +517,29 @@ class Equality(Relational):
         # no cancellation, not canonical
         return Add._from_args(args)
 
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        from sympy.solvers.solveset import linear_coeffs
+        # standard simplify
+        e = super(Equality, self)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if not isinstance(e, Equality):
+            return e
+        free = self.free_symbols
+        if len(free) == 1:
+            try:
+                x = free.pop()
+                m, b = linear_coeffs(
+                    e.rewrite(Add, evaluate=False), x)
+                if m.is_zero is False:
+                    enew = e.func(x, -b/m)
+                else:
+                    enew = (S.Zero == -b)
+                if measure(enew) <= ratio*measure(e):
+                    e = enew
+            except ValueError:
+                pass
+        return e.canonical
+
     @property
     def binary_symbols(self):
         if S.true in self.args or S.false in self.args:
@@ -677,6 +682,34 @@ class _Inequality(Relational):
         # make a "non-evaluated" Expr for the inequality
         return Relational.__new__(cls, lhs, rhs, **options)
 
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        # standard simplify
+        e = super(_Inequality, self)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if not isinstance(e, _Inequality):
+            return e
+
+        # If there is only one symbol in the expression,
+        # try to write it on a simplified form
+        free = e.free_symbols
+        if len(free) == 1:
+            try:
+                from sympy.solvers.solveset import linear_coeffs
+                x = free.pop()
+                dif = e.lhs - e.rhs
+                m, b = linear_coeffs(dif, x)
+                if m.is_zero is False:
+                    e = e.func(x, -b/m)
+                elif x.is_real: # We do not want to cancel symbols if it
+                                #eventually turns out that they are complex
+                    e = (S.zero == -b)
+            except ValueError:
+                pass
+    
+        if measure(e) < ratio*measure(self):
+            return e.canonical
+        else:
+            return self
 
 class _Greater(_Inequality):
     """Not intended for general use

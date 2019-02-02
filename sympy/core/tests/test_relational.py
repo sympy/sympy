@@ -635,7 +635,8 @@ def test_simplify_relational():
     # reason for the 'if r.is_Relational' in Relational's
     # _eval_simplify routine
     assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
-                    2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
+        2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
+
     # canonical at least
     assert Eq(y, x).simplify() == Eq(x, y)
     assert Eq(x - 1, 0).simplify() == Eq(x, 1)
@@ -652,6 +653,7 @@ def test_simplify_relational():
     assert Ne(2*x, 4).simplify() == Ne(x, 2)
     assert Ne(z*x, 0).simplify() == S.false
 
+    # No real-valued assumptions
     assert Ge(y, x).simplify() == Le(x, y)
     assert Ge(x - 1, 0).simplify() == Ge(x, 1)
     assert Ge(x - 1, x).simplify() == S.false
@@ -680,6 +682,35 @@ def test_simplify_relational():
     assert Lt(2*x, 4).simplify() == Lt(x, 2)
     assert Lt(z*x, 0).simplify() == S.false
 
+    # Real-valued assumptions
+    xr, yr = symbols('x y', real=True)
+    assert Ge(yr, xr).simplify() == Le(xr, yr)
+    assert Ge(xr - 1, 0).simplify() == Ge(xr, 1)
+    assert Ge(xr - 1, xr).simplify() == S.false
+    assert Ge(2*xr - 1, xr).simplify() == Le(xr, 1)
+    assert Ge(2*xr, 4).simplify() == Ge(xr, 2)
+    assert Ge(z*xr, 0).simplify() == S.true
+
+    assert Le(yr, xr).simplify() == Ge(xr, yr)
+    assert Le(xr - 1, 0).simplify() == Le(xr, 1)
+    assert Le(xr - 1, xr).simplify() == S.true
+    assert Le(2*xr - 1, xr).simplify() == Ge(xr, 1)
+    assert Le(2*xr, 4).simplify() == Le(xr, 2)
+    assert Le(z*xr, 0).simplify() == S.true
+
+    assert Gt(yr, xr).simplify() == Lt(xr, yr)
+    assert Gt(xr - 1, 0).simplify() == Gt(xr, 1)
+    assert Gt(xr - 1, xr).simplify() == S.false
+    assert Gt(2*xr - 1, xr).simplify() == Lt(xr, 1)
+    assert Gt(2*xr, 4).simplify() == Gt(xr, 2)
+    assert Gt(z*xr, 0).simplify() == S.false
+
+    assert Lt(yr, xr).simplify() == Gt(xr, yr)
+    assert Lt(xr - 1, 0).simplify() == Lt(xr, 1)
+    assert Lt(xr - 1, xr).simplify() == S.true
+    assert Lt(2*xr - 1, xr).simplify() == Gt(xr, 1)
+    assert Lt(2*xr, 4).simplify() == Lt(xr, 2)
+    assert Lt(z*xr, 0).simplify() == S.false
 
 def test_equals():
     w, x, y, z = symbols('w:z')
