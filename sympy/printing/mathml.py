@@ -485,8 +485,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         self._settings = _default_settings
 
         if settings is not None:
-            for setting in settings:
-                self._settings[setting] = settings[setting]
+            self._settings.update(settings)
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
