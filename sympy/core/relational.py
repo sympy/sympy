@@ -294,6 +294,25 @@ class Relational(Boolean, Expr, EvalfMixin):
             if v is not None:
                 r = r.func._eval_relation(v, S.Zero)
 
+            r = r.canonical
+
+            # If there is only one symbol in the expression, try to write it on a simplified form
+            free = r.free_symbols
+            if len(free) == 1:
+                from sympy.solvers.solveset import linear_coeffs
+                try:
+                    x = free.pop()
+                    dif = r.lhs - r.rhs
+                    m, b = linear_coeffs(dif, x)
+                    if m.is_zero is False:
+                        rnew = r.func(x, -b/m)
+                    else:
+                        rnew = r.func(m*x, -b)
+                    if measure(rnew) <= ratio*measure(r):
+                        r = rnew.canonical
+                except ValueError:
+                    pass
+        # Did we get a simplified result?
         r = r.canonical
         measure = kwargs['measure']
         if measure(r) < kwargs['ratio']*measure(self):
@@ -304,6 +323,7 @@ class Relational(Boolean, Expr, EvalfMixin):
     def _eval_trigsimp(self, **opts):
         from sympy.simplify import trigsimp
         return self.func(trigsimp(self.lhs, **opts), trigsimp(self.rhs, **opts))
+
 
     def __nonzero__(self):
         raise TypeError("cannot determine truth value of Relational")
