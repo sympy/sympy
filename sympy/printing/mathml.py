@@ -8,9 +8,9 @@ from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
 from sympy.core.alphabets import greeks
 from sympy.core.compatibility import range
-from .printer import Printer
-from .pretty.pretty_symbology import greek_unicode
-from .conventions import split_super_sub, requires_partial
+from sympy.printing.printer import Printer
+from sympy.printing.pretty.pretty_symbology import greek_unicode
+from sympy.printing.conventions import split_super_sub, requires_partial
 
 
 class MathMLPrinterBase(Printer):
@@ -20,8 +20,11 @@ class MathMLPrinterBase(Printer):
 
     _default_settings = {
         "order": None,
-        "encoding": "utf-8"
+        "encoding": "utf-8",
+        "root_notation": False,
+        "symbol_names": {},
     }
+
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
         from xml.dom.minidom import Document,Text
@@ -111,6 +114,12 @@ class MathMLContentPrinter(MathMLPrinterBase):
     References: https://www.w3.org/TR/MathML2/chapter4.html
     """
     printmethod = "_mathml_content"
+
+    def __init__(self, settings=None):
+        Printer.__init__(self, settings)
+        from xml.dom.minidom import Document,Text
+
+        self.dom = Document()
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -378,7 +387,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
-        if e.exp.is_Rational and e.exp.p == 1:
+        if e.exp.is_Rational and e.exp.p == 1 and self._settings['root_notation']:
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('root'))
             if e.exp.q != 2:
@@ -465,6 +474,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     References: https://www.w3.org/TR/MathML2/chapter3.html
     """
     printmethod = "_mathml_presentation"
+
+    def __init__(self, settings=None):
+        Printer.__init__(self, settings)
+        from xml.dom.minidom import Document,Text
+
+        self.dom = Document()
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -796,7 +811,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             x.appendChild(self._print(e.exp))
             return x
 
-        if e.exp.is_Rational and e.exp.p == 1:
+        if e.exp.is_Rational and e.exp.p == 1 and self._settings['root_notation']:
             if e.exp.q == 2:
                 x = self.dom.createElement('msqrt')
                 x.appendChild(self._print(e.base))
@@ -905,7 +920,7 @@ def mathml(expr, printer='content', **settings):
         return MathMLContentPrinter(settings).doprint(expr)
 
 
-def print_mathml(expr, printer='content', **settings):
+def print_mathml(expr, printer='content', symbol_names=None, root_notation=False, order=None):
     """
     Prints a pretty representation of the MathML code for expr. If printer is
     presentation then prints Presentation MathML else prints content MathML.
@@ -930,6 +945,16 @@ def print_mathml(expr, printer='content', **settings):
     </mrow>
 
     """
+
+    if symbol_names is None:
+        symbol_names = {}
+
+    settings = {
+        'order' : order,
+        'symbol_names' : symbol_names,
+        'root_notation' : root_notation,
+    }
+
     if printer == 'presentation':
         s = MathMLPresentationPrinter(settings)
     else:
