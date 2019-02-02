@@ -624,6 +624,8 @@ def test_issue_8449():
 
 def test_simplify_relational():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
+    assert simplify(x*(y + 1) - x*y - x - 1 < x) == (x > -1)
+    assert simplify(x < x*(y + 1) - x*y - x + 1) == (x < 1)
     r = S(1) < x
     # canonical operations are not the same as simplification,
     # so if there is no simplification, canonicalization will
@@ -657,60 +659,47 @@ def test_simplify_relational():
     assert Ge(y, x).simplify() == Le(x, y)
     assert Ge(x - 1, 0).simplify() == Ge(x, 1)
     assert Ge(x - 1, x).simplify() == S.false
-    assert Ge(2*x - 1, x).simplify() == Le(x, 1)
+    assert Ge(2*x - 1, x).simplify() == Ge(x, 1)
     assert Ge(2*x, 4).simplify() == Ge(x, 2)
     assert Ge(z*x, 0).simplify() == S.true
+    assert Ge(x, -2).simplify() == Ge(x, -2)
+    assert Ge(-x, -2).simplify() == Le(x, 2)
+    assert Ge(x, 2).simplify() == Ge(x, 2)
+    assert Ge(-x, 2).simplify() == Le(x, -2)
 
     assert Le(y, x).simplify() == Ge(x, y)
     assert Le(x - 1, 0).simplify() == Le(x, 1)
     assert Le(x - 1, x).simplify() == S.true
-    assert Le(2*x - 1, x).simplify() == Ge(x, 1)
+    assert Le(2*x - 1, x).simplify() == Le(x, 1)
     assert Le(2*x, 4).simplify() == Le(x, 2)
     assert Le(z*x, 0).simplify() == S.true
+    assert Le(x, -2).simplify() == Le(x, -2)
+    assert Le(-x, -2).simplify() == Ge(x, 2)
+    assert Le(x, 2).simplify() == Le(x, 2)
+    assert Le(-x, 2).simplify() == Ge(x, -2)
 
     assert Gt(y, x).simplify() == Lt(x, y)
     assert Gt(x - 1, 0).simplify() == Gt(x, 1)
     assert Gt(x - 1, x).simplify() == S.false
-    assert Gt(2*x - 1, x).simplify() == Lt(x, 1)
+    assert Gt(2*x - 1, x).simplify() == Gt(x, 1)
     assert Gt(2*x, 4).simplify() == Gt(x, 2)
     assert Gt(z*x, 0).simplify() == S.false
+    assert Gt(x, -2).simplify() == Gt(x, -2)
+    assert Gt(-x, -2).simplify() == Lt(x, 2)
+    assert Gt(x, 2).simplify() == Gt(x, 2)
+    assert Gt(-x, 2).simplify() == Lt(x, -2)
 
     assert Lt(y, x).simplify() == Gt(x, y)
     assert Lt(x - 1, 0).simplify() == Lt(x, 1)
     assert Lt(x - 1, x).simplify() == S.true
-    assert Lt(2*x - 1, x).simplify() == Gt(x, 1)
+    assert Lt(2*x - 1, x).simplify() == Lt(x, 1)
     assert Lt(2*x, 4).simplify() == Lt(x, 2)
     assert Lt(z*x, 0).simplify() == S.false
+    assert Lt(x, -2).simplify() == Lt(x, -2)
+    assert Lt(-x, -2).simplify() == Gt(x, 2)
+    assert Lt(x, 2).simplify() == Lt(x, 2)
+    assert Lt(-x, 2).simplify() == Gt(x, -2)
 
-    # Real-valued assumptions
-    xr, yr = symbols('x y', real=True)
-    assert Ge(yr, xr).simplify() == Le(xr, yr)
-    assert Ge(xr - 1, 0).simplify() == Ge(xr, 1)
-    assert Ge(xr - 1, xr).simplify() == S.false
-    assert Ge(2*xr - 1, xr).simplify() == Le(xr, 1)
-    assert Ge(2*xr, 4).simplify() == Ge(xr, 2)
-    assert Ge(z*xr, 0).simplify() == S.true
-
-    assert Le(yr, xr).simplify() == Ge(xr, yr)
-    assert Le(xr - 1, 0).simplify() == Le(xr, 1)
-    assert Le(xr - 1, xr).simplify() == S.true
-    assert Le(2*xr - 1, xr).simplify() == Ge(xr, 1)
-    assert Le(2*xr, 4).simplify() == Le(xr, 2)
-    assert Le(z*xr, 0).simplify() == S.true
-
-    assert Gt(yr, xr).simplify() == Lt(xr, yr)
-    assert Gt(xr - 1, 0).simplify() == Gt(xr, 1)
-    assert Gt(xr - 1, xr).simplify() == S.false
-    assert Gt(2*xr - 1, xr).simplify() == Lt(xr, 1)
-    assert Gt(2*xr, 4).simplify() == Gt(xr, 2)
-    assert Gt(z*xr, 0).simplify() == S.false
-
-    assert Lt(yr, xr).simplify() == Gt(xr, yr)
-    assert Lt(xr - 1, 0).simplify() == Lt(xr, 1)
-    assert Lt(xr - 1, xr).simplify() == S.true
-    assert Lt(2*xr - 1, xr).simplify() == Gt(xr, 1)
-    assert Lt(2*xr, 4).simplify() == Lt(xr, 2)
-    assert Lt(z*xr, 0).simplify() == S.false
 
 def test_equals():
     w, x, y, z = symbols('w:z')
@@ -983,3 +972,9 @@ def test_trigsimp():
     assert changed.subs(x, pi/8) is S.true
     # or an evaluated one
     assert trigsimp(Eq(cos(x)**2 + sin(x)**2, 1)) is S.true
+
+
+def test_polynomial_relation_simplification():
+    assert Ge(3*x*(x + 1) + 4, 3*x).simplify() == Ge(x**2, -Rational(4,3))
+    assert Le(-(3*x*(x + 1) + 4), -3*x).simplify() == Ge(x**2, -Rational(4,3))
+    assert ((x**2+3)*(x**2-1)+3*x >= 2*x**2).simplify() == (x**4 + 3*x >= 3)

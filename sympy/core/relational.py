@@ -294,6 +294,7 @@ class Relational(Boolean, Expr, EvalfMixin):
             if v is not None:
                 r = r.func._eval_relation(v, S.Zero)
 
+            r = r.canonical
             # If there is only one symbol in the expression,
             # try to write it on a simplified form
             free = r.free_symbols
@@ -304,13 +305,33 @@ class Relational(Boolean, Expr, EvalfMixin):
                     dif = r.lhs - r.rhs
                     m, b = linear_coeffs(dif, x)
                     if m.is_zero is False:
-                        r = r.func(x + b/m, 0)
-                    elif x.is_real:
+                        if m.is_negative and isinstance(r, _Inequality):
+                            # Dividing with a negative number, so change order of arguments
+                            # canonical will put the symbol back on the rhs later
+                            r = r.func(-b/m, x)
+                        else:
+                            r = r.func(x, -b/m)
+                    else:
                         r = r.func(b, S.zero)
                 except ValueError:
-                    pass
-        
-
+                    # maybe not a linear function, try polynomial
+                    from sympy.polys import Poly, poly, PolynomialError, gcd
+                    try:
+                        p = poly(dif)
+                        c = p.all_coeffs()
+                        leading = c[0]
+                        constant = c[-1]
+                        c[-1] = 0
+                        scale = gcd(c)
+                        c = [ctmp/scale for ctmp in c]
+                        if leading.is_negative and isinstance(r, _Inequality):
+                            # Dividing with a negative number, so change order of arguments
+                            # canonical will put the symbol back on the rhs later
+                            r = r.func(constant/scale, -Poly.from_list(c, x).as_expr())
+                        else:
+                            r = r.func(Poly.from_list(c, x).as_expr(), -constant/scale)
+                    except PolynomialError:
+                        pass
         # Did we get a simplified result?
         r = r.canonical
         measure = kwargs['measure']
