@@ -988,4 +988,4 @@ def test_multivariate_linear_function_simplification():
     assert (2*x + y < 2*x + y + 3).simplify() == True
 
 def test_nonpolymonial_relations():
-    assert Eq(cos(x), 0).simplify == Eq(cos(x), 0)
+    assert Eq(cos(x), 0).simplify() == Eq(cos(x), 0)
