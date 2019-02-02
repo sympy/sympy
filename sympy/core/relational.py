@@ -293,7 +293,6 @@ class Relational(Boolean, Expr, EvalfMixin):
                 v = S.Zero
             if v is not None:
                 r = r.func._eval_relation(v, S.Zero)
-
             r = r.canonical
             # If there is only one symbol in the expression,
             # try to write it on a simplified form
@@ -305,9 +304,9 @@ class Relational(Boolean, Expr, EvalfMixin):
                     dif = r.lhs - r.rhs
                     m, b = linear_coeffs(dif, x)
                     if m.is_zero is False:
-                        if m.is_negative and isinstance(r, _Inequality):
+                        if m.is_negative:
                             # Dividing with a negative number, so change order of arguments
-                            # canonical will put the symbol back on the rhs later
+                            # canonical will put the symbol back on the lhs later
                             r = r.func(-b/m, x)
                         else:
                             r = r.func(x, -b/m)
@@ -324,15 +323,33 @@ class Relational(Boolean, Expr, EvalfMixin):
                         c[-1] = 0
                         scale = gcd(c)
                         c = [ctmp/scale for ctmp in c]
-                        if leading.is_negative and isinstance(r, _Inequality):
+                        if leading.is_negative:
                             # Multiplying with -1 to get positive leading
                             # polynomial term so change order of arguments,
-                            # canonical will put the symbol back on the rhs later
+                            # canonical will put the symbol back on the lhs later
                             r = r.func(constant/scale, -Poly.from_list(c, x).as_expr())
                         else:
                             r = r.func(Poly.from_list(c, x).as_expr(), -constant/scale)
                     except PolynomialError:
                         pass
+            elif len(free) >= 2:
+                try:
+                    from sympy.solvers.solveset import linear_coeffs
+                    from sympy.polys import gcd
+                    free = list(ordered(free))
+                    dif = r.lhs - r.rhs
+                    m = linear_coeffs(dif, *free)
+                    constant = m[-1]
+                    del m[-1]
+                    scale = gcd(m)
+                    m = [mtmp/scale for mtmp in m]
+                    newexpr = Add(*[i*j for i,j in zip(m, free)])
+                    if scale.is_zero is False:
+                        r = r.func(newexpr, -constant/scale)
+                    else:
+                        r = r.func(constant, S.zero)
+                except ValueError:
+                    pass
         # Did we get a simplified result?
         r = r.canonical
         measure = kwargs['measure']

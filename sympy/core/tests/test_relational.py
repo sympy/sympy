@@ -978,3 +978,11 @@ def test_polynomial_relation_simplification():
     assert Ge(3*x*(x + 1) + 4, 3*x).simplify() == Ge(x**2, -Rational(4,3))
     assert Le(-(3*x*(x + 1) + 4), -3*x).simplify() == Ge(x**2, -Rational(4,3))
     assert ((x**2+3)*(x**2-1)+3*x >= 2*x**2).simplify() == (x**4 + 3*x >= 3)
+
+def test_multivariate_linear_function_simplification():
+    assert Ge(x + y, x - y).simplify() == Ge(y, 0)
+    assert Le(-x + y, -x - y).simplify() == Ge(y, 0)
+    assert Eq(2*x + y, 2*x + y - 3).simplify() == False
+    assert (2*x + y > 2*x + y - 3).simplify() == True
+    assert (2*x + y < 2*x + y - 3).simplify() == False
+    assert (2*x + y < 2*x + y + 3).simplify() == True
