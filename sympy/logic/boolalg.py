@@ -604,6 +604,73 @@ class And(LatticeOp, BooleanFunction):
             eqs.extend([e for f, e in sifted[k]])
         other = [ei.subs(reps) for ei in other]
         rv = rv.func(*([i.canonical for i in (eqs + other)] + nonRel))
+        # Use replacement patterns for Relationals
+        changed = True
+        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
+        if len(Rel) <= 1:
+            return rv
+        Rel = [i.canonical for i in Rel]
+        patterns = simplify_patterns_and()
+        while changed and len(Rel) >= 2:
+            changed = False
+            # sort based on ordered
+            Rel = list(ordered(Rel))
+            # store all possible simplifications
+            results = []
+            # try all combinations
+            for ((i, pi), (j, pj)) in combinations(enumerate(Rel), 2):
+                for k, (pattern, simp) in enumerate(patterns):
+                    res = []
+                    # use SymPy matching
+                    oldexpr = And(pi, pj)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+                    # Try reversing first relational
+                    # This and the rest should not be required with a better canonical
+                    oldexpr = And(pi.reversed, pj)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+                    # Try reversing second relational
+                    oldexpr = And(pi, pj.reversed)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+                    # Try reversing both relationals
+                    oldexpr = And(pi.reversed, pj.reversed)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+
+                    if res:
+                        for tmpres, oldexpr in res:
+                            # we have a matching, compute replacement
+                            np = simp.subs(tmpres)
+                            if np == S.false:
+                                # if false, the whole expression will be false
+                                return S.false
+                            # add replacement
+                            if isinstance(np, Relational): # We only want ITE if they simplify to Relationals
+                                costsaving = measure(oldexpr) - measure(np) # ratio?
+                                if costsaving > 0:
+                                    results.append((costsaving, (i, j, np)))
+            if results:
+                # sort replacments based on measure
+                results = list(reversed(sorted(results, key=lambda pair: pair[0])))
+                # get best replacement
+                cost, replacement = results[0]
+                i, j, newrel = replacement
+                # remove old relations, from the end
+                del Rel[j]
+                del Rel[i]
+                if newrel != S.true:
+                    # no need to add true
+                    Rel.append(newrel.canonical)
+                # we changed something to start over
+                changed = True
+
+        rv = rv.func(*([i.canonical for i in ordered(Rel)] + nonRel))
         return rv
 
     def _eval_as_set(self):
@@ -662,6 +729,82 @@ class Or(LatticeOp, BooleanFunction):
     def _eval_as_set(self):
         from sympy.sets.sets import Union
         return Union(*[arg.as_set() for arg in self.args])
+
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        from sympy.core.relational import Relational
+        # standard simplify
+        rv = super(Or, self)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if not isinstance(rv, Or):
+            return rv
+        # Use replacement patterns for Relationals
+        patterns = simplify_patterns_or()
+        changed = True
+        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
+        if len(Rel) <= 1:
+            return rv
+        Rel = [i.canonical for i in Rel]
+        while changed and len(Rel) >= 2:
+            changed = False
+            # Sort based on ordered
+            Rel = list(ordered(Rel))
+            # Create a list of possible replacements
+            results = []
+            # Try all combinations
+            for ((i, pi), (j, pj)) in combinations(enumerate(Rel), 2):
+                for k, (pattern, simp) in enumerate(patterns):
+                    res = []
+                    # use SymPy matching
+                    oldexpr = Or(pi, pj)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+                    # Try reversing first relational
+                    # This and the rest should not be required with a better canonical
+                    oldexpr = Or(pi.reversed, pj)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+                    # Try reversing second relational
+                    oldexpr = Or(pi, pj.reversed)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+                    # Try reversing both relationals
+                    oldexpr = Or(pi.reversed, pj.reversed)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+
+                    if res:
+                        for tmpres, oldexpr in res:
+                            # we have a matching, compute replacement
+                            np = simp.subs(tmpres)
+                            if np == S.true:
+                                # if true, the whole expression will be true
+                                return S.true
+                            # add replacement
+                            if isinstance(np, Relational): # We only want ITE if they simplify to Relationals
+                                costsaving = measure(oldexpr) - measure(np) # ratio?
+                                if costsaving > 0:
+                                    results.append((costsaving, (i, j, np)))
+            if results:
+                # Sort results based on complexity
+                results = list(reversed(sorted(results, key=lambda pair: pair[0])))
+                # Replace the simplest
+                cost, replacement = results[0]
+                i, j, newrel = replacement
+                # Remove the old relationals
+                del Rel[j]
+                del Rel[i]
+                if newrel != S.false:
+                    # Insert the new one (not need to insert false)
+                    Rel.append(newrel.canonical)
+                # We did change comething so try again
+                changed = True
+
+        rv = rv.func(*([i.canonical for i in ordered(Rel)] + nonRel))
+        return rv
 
 
 class Not(BooleanFunction):
@@ -2183,3 +2326,66 @@ def bool_map(bool1, bool2):
     if m:
         return a, m
     return m
+
+def simplify_patterns_and():
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.core import Wild
+    from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    a = Wild('a')
+    b = Wild('b')
+    c = Wild('c')
+    # With a better canonical fewer results are required
+    _matchers_and = ((And(Eq(a, b), Ge(a, b)), Eq(a, b)),
+                     (And(Eq(a, b), Gt(a, b)), S.false),
+                     (And(Eq(a, b), Le(a, b)), Eq(a, b)),
+                     (And(Eq(a, b), Lt(a, b)), S.false),
+                     (And(Ge(a, b), Gt(a, b)), Gt(a, b)),
+                     (And(Ge(a, b), Le(a, b)), Eq(a, b)),
+                     (And(Ge(a, b), Lt(a, b)), S.false),
+                     (And(Ge(a, b), Ne(a, b)), Gt(a, b)),
+                     (And(Gt(a, b), Le(a, b)), S.false),
+                     (And(Gt(a, b), Lt(a, b)), S.false),
+                     (And(Gt(a, b), Ne(a, b)), Gt(a, b)),
+                     (And(Le(a, b), Lt(a, b)), Lt(a, b)),
+                     (And(Le(a, b), Ne(a, b)), Lt(a, b)),
+                     (And(Lt(a, b), Ne(a, b)), Lt(a, b)),
+                     # Min/max
+                     (And(Ge(a, b), Ge(a, c)), Ge(a, Max(b, c))),
+                     (And(Ge(a, b), Gt(a, c)), ITE(b > c, Ge(a, b), Gt(a, c))),
+                     (And(Gt(a, b), Gt(a, c)), Gt(a, Max(b, c))),
+                     (And(Le(a, b), Le(a, c)), Lt(a, Min(b, c))),
+                     (And(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
+                     (And(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
+                     )
+    return _matchers_and
+
+def simplify_patterns_or():
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.core import Wild
+    from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    a = Wild('a')
+    b = Wild('b')
+    c = Wild('c')
+    _matchers_or = ((Or(Eq(a, b), Ge(a, b)), Ge(a, b)),
+                     (Or(Eq(a, b), Gt(a, b)), Ge(a, b)),
+                     (Or(Eq(a, b), Le(a, b)), Le(a, b)),
+                     (Or(Eq(a, b), Lt(a, b)), Le(a, b)),
+                     (Or(Ge(a, b), Gt(a, b)), Ge(a, b)),
+                     (Or(Ge(a, b), Le(a, b)), S.true),
+                     (Or(Ge(a, b), Lt(a, b)), S.true),
+                     (Or(Ge(a, b), Ne(a, b)), S.true),
+                     (Or(Gt(a, b), Le(a, b)), S.true),
+                     (Or(Gt(a, b), Lt(a, b)), Ne(a, b)),
+                     (Or(Gt(a, b), Ne(a, b)), Gt(a, b)),
+                     (Or(Le(a, b), Lt(a, b)), Le(a, b)),
+                     (Or(Le(a, b), Ne(a, b)), S.true),
+                     (Or(Lt(a, b), Ne(a, b)), Ne(a, b)),
+                     # Min/max
+                     (Or(Ge(a, b), Ge(a, c)), Ge(a, Min(b, c))),
+                     (Or(Ge(a, b), Gt(a, c)), ITE(b > c, Gt(a, c), Ge(a, b))),
+                     (Or(Gt(a, b), Gt(a, c)), Gt(a, Min(b, c))),
+                     (Or(Le(a, b), Le(a, c)), Lt(a, Max(b, c))),
+                     (Or(Le(a, b), Lt(a, c)), ITE(b > c, Lt(a, c), Le(a, b))),
+                     (Or(Lt(a, b), Lt(a, c)), Lt(a, Max(b, c))),
+                     )
+    return _matchers_or
