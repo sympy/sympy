@@ -572,7 +572,8 @@ class BooleanFunction(Application, Boolean):
                             # we have a matching, compute replacement
                             np = simp.subs(tmpres)
                             if np == dominatingvalue:
-                                # if true, the whole expression will be true
+                                # if dominatingvalue, the whole expression
+                                # will be replacementvalue
                                 return replacementvalue
                             # add replacement
                             if isinstance(np, Relational): # We only want ITE if they simplify to Relationals
@@ -582,14 +583,15 @@ class BooleanFunction(Application, Boolean):
             if results:
                 # Sort results based on complexity
                 results = list(reversed(sorted(results, key=lambda pair: pair[0])))
-                # Replace the simplest
+                # Replace the one providing most simplification
                 cost, replacement = results[0]
                 i, j, newrel = replacement
                 # Remove the old relationals
                 del Rel[j]
                 del Rel[i]
                 if newrel != ~dominatingvalue:
-                    # Insert the new one (not need to insert false)
+                    # Insert the new one (no need to insert a value that will
+                    # not affect the result)
                     Rel.append(newrel.canonical)
                 # We did change comething so try again
                 changed = True
