@@ -418,6 +418,10 @@ class BooleanFunction(Application, Boolean):
             rational=rational, inverse=inverse) for a in self.args])
         return simplify_logic(rv)
 
+    @property
+    def canonical(self):
+        return self.func(getattr(self.args[0], 'canonical', self.args[0]))
+
     def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         return self._eval_simplify(ratio, measure, rational, inverse)
 
@@ -735,10 +739,6 @@ class Not(BooleanFunction):
             return StrictGreaterThan(*arg.args)
         if isinstance(arg, GreaterThan):
             return StrictLessThan(*arg.args)
-
-    @property
-    def canonical(self):
-        return self.func(getattr(self.args[0], 'canonical', self.args[0]))
 
     def _eval_as_set(self):
         """
