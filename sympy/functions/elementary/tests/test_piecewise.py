@@ -1135,7 +1135,7 @@ def test_issue_14787():
 def test_issue_8458():
     x, y = symbols('x y')
     # Original issue
-    p1 = Piecewise((0, x == 0), (sin(x), True))
+    p1 = Piecewise((0, Eq(x, 0)), (sin(x), True))
     assert p1.simplify() == sin(x)
     # Slightly larger variant
     p2 = Piecewise((x, Eq(x, 0)), (4*x + (y-2)**4, Eq(x, 0) & Eq(x+y, 2)), (sin(x), True))
