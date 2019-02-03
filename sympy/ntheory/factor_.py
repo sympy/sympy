@@ -19,8 +19,9 @@ from sympy.core.singleton import S
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 
-small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
-    for i in range(256)]
+small_trailing = [0] * 256
+for j in range(1,8):
+    small_trailing[1<<j::1<<(j+1)] = [j] * (1<<(7-j))
 
 
 def smoothness(n):
