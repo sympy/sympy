@@ -498,6 +498,104 @@ class BooleanFunction(Application, Boolean):
         else:
             return S.Zero
 
+    def _apply_patternbased_simplification(self, rv, patterns, measure, dominatingvalue, replacementvalue=None):
+        """
+        Replace patterns of Relational
+
+        Parameters
+        ==========
+
+        rv : Expr
+            Boolean expression
+
+        patterns : tuple
+            Tuple of tuples, with (pattern to simplify, simplified pattern)
+
+        measure : function
+            Simplification measure
+
+        dominatingvalue : boolean or None
+            The dominating value for the function of consideration.
+            For example, for And S.false is dominating. As soon as one
+            expression is S.false in And, the whole expression is S.false.
+
+        replacementvalue : boolean or None, optional
+            The resulting value for the whole expression if one argument
+            evaluates to dominatingvalue.
+            For example, for Nand S.false is dominating, but in this case
+            the resulting value is S.true. Default is None. If replacementvalue
+            is None and dominatingvalue is not None, replacementvalue = dominatingvalue
+        """
+        from sympy.core.relational import Relational
+        if replacementvalue is None and dominatingvalue is not None:
+            replacementvalue = dominatingvalue
+        # Use replacement patterns for Relationals
+        changed = True
+        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
+        if len(Rel) <= 1:
+            return rv
+        Rel = [i.canonical for i in Rel]
+        while changed and len(Rel) >= 2:
+            changed = False
+            # Sort based on ordered
+            Rel = list(ordered(Rel))
+            # Create a list of possible replacements
+            results = []
+            # Try all combinations
+            for ((i, pi), (j, pj)) in combinations(enumerate(Rel), 2):
+                for k, (pattern, simp) in enumerate(patterns):
+                    res = []
+                    # use SymPy matching
+                    oldexpr = rv.func(pi, pj)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+                    # Try reversing first relational
+                    # This and the rest should not be required with a better canonical
+                    oldexpr = rv.func(pi.reversed, pj)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+                    # Try reversing second relational
+                    oldexpr = rv.func(pi, pj.reversed)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+                    # Try reversing both relationals
+                    oldexpr = rv.func(pi.reversed, pj.reversed)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+
+                    if res:
+                        for tmpres, oldexpr in res:
+                            # we have a matching, compute replacement
+                            np = simp.subs(tmpres)
+                            if np == dominatingvalue:
+                                # if true, the whole expression will be true
+                                return replacementvalue
+                            # add replacement
+                            if isinstance(np, Relational): # We only want ITE if they simplify to Relationals
+                                costsaving = measure(oldexpr) - measure(np) # ratio?
+                                if costsaving > 0:
+                                    results.append((costsaving, (i, j, np)))
+            if results:
+                # Sort results based on complexity
+                results = list(reversed(sorted(results, key=lambda pair: pair[0])))
+                # Replace the simplest
+                cost, replacement = results[0]
+                i, j, newrel = replacement
+                # Remove the old relationals
+                del Rel[j]
+                del Rel[i]
+                if newrel != ~dominatingvalue:
+                    # Insert the new one (not need to insert false)
+                    Rel.append(newrel.canonical)
+                # We did change comething so try again
+                changed = True
+
+        rv = rv.func(*([i.canonical for i in ordered(Rel)] + nonRel))
+        return rv
 
 class And(LatticeOp, BooleanFunction):
     """
@@ -604,74 +702,8 @@ class And(LatticeOp, BooleanFunction):
             eqs.extend([e for f, e in sifted[k]])
         other = [ei.subs(reps) for ei in other]
         rv = rv.func(*([i.canonical for i in (eqs + other)] + nonRel))
-        # Use replacement patterns for Relationals
-        changed = True
-        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
-        if len(Rel) <= 1:
-            return rv
-        Rel = [i.canonical for i in Rel]
         patterns = simplify_patterns_and()
-        while changed and len(Rel) >= 2:
-            changed = False
-            # sort based on ordered
-            Rel = list(ordered(Rel))
-            # store all possible simplifications
-            results = []
-            # try all combinations
-            for ((i, pi), (j, pj)) in combinations(enumerate(Rel), 2):
-                for k, (pattern, simp) in enumerate(patterns):
-                    res = []
-                    # use SymPy matching
-                    oldexpr = And(pi, pj)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing first relational
-                    # This and the rest should not be required with a better canonical
-                    oldexpr = And(pi.reversed, pj)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing second relational
-                    oldexpr = And(pi, pj.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing both relationals
-                    oldexpr = And(pi.reversed, pj.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-
-                    if res:
-                        for tmpres, oldexpr in res:
-                            # we have a matching, compute replacement
-                            np = simp.subs(tmpres)
-                            if np == S.false:
-                                # if false, the whole expression will be false
-                                return S.false
-                            # add replacement
-                            if isinstance(np, Relational): # We only want ITE if they simplify to Relationals
-                                costsaving = measure(oldexpr) - measure(np) # ratio?
-                                if costsaving > 0:
-                                    results.append((costsaving, (i, j, np)))
-            if results:
-                # sort replacments based on measure
-                results = list(reversed(sorted(results, key=lambda pair: pair[0])))
-                # get best replacement
-                cost, replacement = results[0]
-                i, j, newrel = replacement
-                # remove old relations, from the end
-                del Rel[j]
-                del Rel[i]
-                if newrel != S.true:
-                    # no need to add true
-                    Rel.append(newrel.canonical)
-                # we changed something to start over
-                changed = True
-
-        rv = rv.func(*([i.canonical for i in ordered(Rel)] + nonRel))
-        return rv
+        return self._apply_patternbased_simplification(rv, patterns, measure, False)
 
     def _eval_as_set(self):
         from sympy.sets.sets import Intersection
@@ -731,80 +763,13 @@ class Or(LatticeOp, BooleanFunction):
         return Union(*[arg.as_set() for arg in self.args])
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
-        from sympy.core.relational import Relational
         # standard simplify
         rv = super(Or, self)._eval_simplify(
             ratio, measure, rational, inverse)
         if not isinstance(rv, Or):
             return rv
-        # Use replacement patterns for Relationals
         patterns = simplify_patterns_or()
-        changed = True
-        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
-        if len(Rel) <= 1:
-            return rv
-        Rel = [i.canonical for i in Rel]
-        while changed and len(Rel) >= 2:
-            changed = False
-            # Sort based on ordered
-            Rel = list(ordered(Rel))
-            # Create a list of possible replacements
-            results = []
-            # Try all combinations
-            for ((i, pi), (j, pj)) in combinations(enumerate(Rel), 2):
-                for k, (pattern, simp) in enumerate(patterns):
-                    res = []
-                    # use SymPy matching
-                    oldexpr = Or(pi, pj)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing first relational
-                    # This and the rest should not be required with a better canonical
-                    oldexpr = Or(pi.reversed, pj)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing second relational
-                    oldexpr = Or(pi, pj.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing both relationals
-                    oldexpr = Or(pi.reversed, pj.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-
-                    if res:
-                        for tmpres, oldexpr in res:
-                            # we have a matching, compute replacement
-                            np = simp.subs(tmpres)
-                            if np == S.true:
-                                # if true, the whole expression will be true
-                                return S.true
-                            # add replacement
-                            if isinstance(np, Relational): # We only want ITE if they simplify to Relationals
-                                costsaving = measure(oldexpr) - measure(np) # ratio?
-                                if costsaving > 0:
-                                    results.append((costsaving, (i, j, np)))
-            if results:
-                # Sort results based on complexity
-                results = list(reversed(sorted(results, key=lambda pair: pair[0])))
-                # Replace the simplest
-                cost, replacement = results[0]
-                i, j, newrel = replacement
-                # Remove the old relationals
-                del Rel[j]
-                del Rel[i]
-                if newrel != S.false:
-                    # Insert the new one (not need to insert false)
-                    Rel.append(newrel.canonical)
-                # We did change comething so try again
-                changed = True
-
-        rv = rv.func(*([i.canonical for i in ordered(Rel)] + nonRel))
-        return rv
+        return self._apply_patternbased_simplification(rv, patterns, measure, S.true)
 
 
 class Not(BooleanFunction):
