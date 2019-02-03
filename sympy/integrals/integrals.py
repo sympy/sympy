@@ -1022,7 +1022,7 @@ class Integral(AddWithLimits):
                 try:
                     result = manualintegrate(g, x)
                     if result == S.NaN:
-                        result=None
+                        result = None
                     if result is not None and not isinstance(result, Integral):
                         if result.has(Integral) and not manual:
                             # Try to have other algorithms do the integrals

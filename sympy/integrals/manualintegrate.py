@@ -32,7 +32,7 @@ from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.core.relational import Eq, Ne
 from sympy.polys.polytools import degree
 from sympy.ntheory.factor_ import divisors
-from sympy import cancel,exp
+from sympy import cancel, exp
 
 ZERO = sympy.S.Zero
 
