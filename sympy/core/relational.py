@@ -323,13 +323,7 @@ class Relational(Boolean, Expr, EvalfMixin):
                         c[-1] = 0
                         scale = gcd(c)
                         c = [ctmp/scale for ctmp in c]
-                        if leading.is_negative:
-                            # Multiplying with -1 to get positive leading
-                            # polynomial term so change order of arguments,
-                            # canonical will put the symbol back on the lhs later
-                            r = r.func(constant/scale, -Poly.from_list(c, x).as_expr())
-                        else:
-                            r = r.func(Poly.from_list(c, x).as_expr(), -constant/scale)
+                        r = r.func(Poly.from_list(c, x).as_expr(), -constant/scale)
                     except PolynomialError:
                         pass
             elif len(free) >= 2:
@@ -343,9 +337,19 @@ class Relational(Boolean, Expr, EvalfMixin):
                     del m[-1]
                     scale = gcd(m)
                     m = [mtmp/scale for mtmp in m]
-                    newexpr = Add(*[i*j for i,j in zip(m, free)])
+                    nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
                     if scale.is_zero is False:
-                        r = r.func(newexpr, -constant/scale)
+                        if constant != 0:
+                            # lhs: expression, rhs: constant
+                            newexpr = Add(*[i*j for i, j in nzm])
+                            r = r.func(newexpr, -constant/scale)
+                        else:
+                            # keep first term on lhs
+                            lhsterm = nzm[0][0]*nzm[0][1]
+                            del nzm[0]
+                            newexpr = Add(*[i*j for i, j in nzm])
+                            r = r.func(lhsterm, -newexpr)
+
                     else:
                         r = r.func(constant, S.zero)
                 except ValueError:
