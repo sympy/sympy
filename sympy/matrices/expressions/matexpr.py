@@ -5,7 +5,7 @@ import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq
 from sympy.core.decorators import call_highest_priority
-from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key
+from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key, string_types
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -651,6 +651,8 @@ class MatrixSymbol(MatrixExpr):
     _diff_wrt = True
 
     def __new__(cls, name, n, m):
+        if not isinstance(name, string_types):
+            raise TypeError("name should be a string, not %s" % repr(type(name)))
         n, m = sympify(n), sympify(m)
         obj = Basic.__new__(cls, name, n, m)
         return obj

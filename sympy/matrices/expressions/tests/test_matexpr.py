@@ -347,3 +347,6 @@ def test_factor_expand():
     assert expr1 != expr2
     assert expand(expr1) == expr2
     assert factor(expr2) == expr1
+
+def test_invalid_args():
+    raises(TypeError, lambda: MatrixSymbol(3, 3, "A"))
