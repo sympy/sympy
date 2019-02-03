@@ -250,7 +250,7 @@ class AssumptionKeys(object):
         >>> ask(Q.transcendental(pi))
         True
         >>> ask(Q.transcendental(2))
-        Falses
+        False
 
         """
 
