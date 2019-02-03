@@ -2320,7 +2320,7 @@ def simplify_patterns_and():
                      (And(Ge(a, b), Ge(a, c)), Ge(a, Max(b, c))),
                      (And(Ge(a, b), Gt(a, c)), ITE(b > c, Ge(a, b), Gt(a, c))),
                      (And(Gt(a, b), Gt(a, c)), Gt(a, Max(b, c))),
-                     (And(Le(a, b), Le(a, c)), Lt(a, Min(b, c))),
+                     (And(Le(a, b), Le(a, c)), Le(a, Min(b, c))),
                      (And(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
                      (And(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
                      )
@@ -2351,7 +2351,7 @@ def simplify_patterns_or():
                      (Or(Ge(a, b), Ge(a, c)), Ge(a, Min(b, c))),
                      (Or(Ge(a, b), Gt(a, c)), ITE(b > c, Gt(a, c), Ge(a, b))),
                      (Or(Gt(a, b), Gt(a, c)), Gt(a, Min(b, c))),
-                     (Or(Le(a, b), Le(a, c)), Lt(a, Max(b, c))),
+                     (Or(Le(a, b), Le(a, c)), Le(a, Max(b, c))),
                      (Or(Le(a, b), Lt(a, c)), ITE(b > c, Lt(a, c), Le(a, b))),
                      (Or(Lt(a, b), Lt(a, c)), Lt(a, Max(b, c))),
                      )
