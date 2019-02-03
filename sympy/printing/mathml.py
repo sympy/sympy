@@ -464,6 +464,29 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     """
     printmethod = "_mathml_presentation"
 
+    def __init__(self, settings=None):
+        MathMLPrinterBase.__init__(self, settings)
+
+        _default_settings = {
+            "fold_frac_powers": False,
+            "fold_func_brackets": False,
+            "fold_short_frac": None,
+            "inv_trig_style": "abbreviated",
+            "ln_notation": False,
+            "long_frac_ratio": None,
+            "mat_delim": "[",
+            "mat_symbol_style": "plain",
+            "mul_symbol": None,
+            "root_notation": True,
+            "symbol_names": {},
+            "order": None
+        }
+
+        self._settings = _default_settings
+
+        if settings is not None:
+            self._settings.update(settings)
+
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
         translate = {
