@@ -3,13 +3,13 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
-from sympy.core.containers import Tuple, OrderedSet
-from sympy.core.singleton import S
-from sympy.core.function import _coeff_isneg
-from sympy.core.exprtools import factor_terms
 from sympy.core.compatibility import iterable, range
-from sympy.utilities.iterables import filter_symbols, \
-    numbered_symbols, sift, topological_sort, ordered
+from sympy.core.containers import Tuple, OrderedSet
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import _coeff_isneg
+from sympy.core.singleton import S
+from sympy.utilities.iterables import numbered_symbols, sift, \
+        topological_sort, ordered
 
 from . import cse_opts
 
@@ -96,14 +96,16 @@ def preprocess_for_cse(expr, optimizations):
     elimination.
 
     Parameters
-    ----------
+    ==========
+
     expr : sympy expression
         The target expression to optimize.
     optimizations : list of (callable, callable) pairs
         The (preprocessor, postprocessor) pairs.
 
     Returns
-    -------
+    =======
+
     expr : sympy expression
         The transformed expression.
     """
@@ -118,7 +120,8 @@ def postprocess_for_cse(expr, optimizations):
     return the expression to canonical sympy form.
 
     Parameters
-    ----------
+    ==========
+
     expr : sympy expression
         The target expression to transform.
     optimizations : list of (callable, callable) pairs, optional
@@ -127,7 +130,8 @@ def postprocess_for_cse(expr, optimizations):
         correctly.
 
     Returns
-    -------
+    =======
+
     expr : sympy expression
         The transformed expression.
     """
@@ -231,8 +235,8 @@ class FuncArgTracker(object):
     def get_subset_candidates(self, argset, restrict_to_funcset=None):
         """
         Return a set of functions each of which whose argument list contains
-        `argset`, optionally filtered only to contain functions in
-        `restrict_to_funcset`.
+        ``argset``, optionally filtered only to contain functions in
+        ``restrict_to_funcset``.
         """
         iarg = iter(argset)
 
@@ -299,9 +303,15 @@ def match_common_args(func_class, funcs, opt_subs):
 
     The function we work with is assumed to be associative and commutative.
 
-    :arg func_class: The function class (e.g. Add, Mul)
-    :arg funcs: A list of function calls
-    :arg opt_subs: A dictionary of substitutions which this function may update
+    Parameters
+    ==========
+
+    func_class: class
+        The function class (e.g. Add, Mul)
+    funcs: list of functions
+        A list of function calls
+    opt_subs: dict
+        A dictionary of substitutions which this function may update
     """
 
     # Sort to ensure that whole-function subexpressions come before the items
@@ -378,7 +388,8 @@ def opt_cse(exprs, order='canonical'):
     coefficient Muls
 
     Parameters
-    ----------
+    ==========
+
     exprs : list of sympy expressions
         The expressions to optimize.
     order : string, 'none' or 'canonical'
@@ -386,7 +397,8 @@ def opt_cse(exprs, order='canonical'):
         expressions where speed is a concern, use the setting order='none'.
 
     Returns
-    -------
+    =======
+
     opt_subs : dictionary of expression substitutions
         The expression substitutions which can be useful to optimize CSE.
 

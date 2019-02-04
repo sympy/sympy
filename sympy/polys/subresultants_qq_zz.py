@@ -247,7 +247,7 @@ res_z(f, g, x)
 from __future__ import print_function, division
 
 from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
-from sympy import (QQ, quo, prem, rem, S, sign, simplify, summation, var, zeros)
+from sympy import (QQ, pquo, quo, prem, rem, S, sign, simplify, summation, var, zeros)
 from sympy.polys.polyerrors import PolynomialError
 
 def sylvester(f, g, x, method = 1):
