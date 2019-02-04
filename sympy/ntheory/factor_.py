@@ -1419,8 +1419,14 @@ def divisor_count(n, modulus=1):
     return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
 
 
-def proper_divisors(n):
-    return divisors(n)[1:-1]
+def proper_divisors(n, generator=False):
+    if not generator:
+        return divisors(n)[1:-1]
+    else:
+        x = divisors(n)
+        x.remove(1)
+        x.remove(n)
+        return x
 
 
 def proper_divisors_count(n):
