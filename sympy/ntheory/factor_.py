@@ -1423,8 +1423,8 @@ def proper_divisors(n):
     return divisors(n)[1:-1]
 
 
-def proper_divisors_count(n, modulus=1):
-    return max(divisor_count(n, modulus)-2, 0)
+def proper_divisors_count(n):
+    return max(divisor_count(n)-2, 0)
 
 
 def _udivisors(n):
