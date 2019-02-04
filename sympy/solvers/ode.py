@@ -682,28 +682,30 @@ def dsolve(eq, func=None, hint="default", simplify=True,
 
 
 def reduction_of_order(eq):
+    
     r'''
+    
     Patch here  <------------
     I would like to make it a wrapper.I have learned about decorators but haven't used them
-    so I would do it if you say. 
-    Function created to try to solve equations refered to issue
-       dsolve doesn't know order-reducing substitutions #15881
-       #Steps:
+    so I would do it if you say.Function created to try to solve equations refered to issue
+    dsolve doesn't know order-reducing substitutions #15881
+    #Steps:
        1: Try to use dsolve.
        2: This is a recursive call till we are not left with a linear equation:
        If NotImplemented error is raised try substituting whole expression with g(x)
-       (I think Dummy should be used but I do not understand the working of it very well 
+       (I think Dummy should be used but I do not understand the working of it very well
        so I'm letting it be a substitution function for the time being.)
        3: Still unable to solve ?Then again raise the NotImplementedError.
        #A thing I read which I would like to ask is that the given equation is a Liouville equation
         and it's method is already implemented then why is sympy unable to solve it.
        Example :
-       >>from sympy.abc import x
-       >>from sympy import Function
-       >>f = Function("f")(x)
-       >>eq = f(x).diff(x, 2) + x * f(x).diff(x)**2
+       >>>from sympy.abc import x
+       >>>from sympy import Function
+       >>>f = Function("f")(x)
+       >>>eq = f(x).diff(x, 2) + x * f(x).diff(x)**2
        >>print(eq)
        Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
+       
     '''    
     try: 
         
