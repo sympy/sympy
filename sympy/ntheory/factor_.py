@@ -1464,7 +1464,7 @@ def proper_divisor_count(n):
     See Also
     ========
 
-    divisors, proper_divisors, divisors_count
+    divisors, proper_divisors, divisor_count
 
     """
     return max(divisor_count(n)-2, 0)
