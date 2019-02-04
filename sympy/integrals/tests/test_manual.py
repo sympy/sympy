@@ -474,8 +474,3 @@ def test_issue_15471():
     f = log(x)*cos(log(x))/x**(S(3)/4)
     F = -128*x**(1/4)*sin(log(x))/289 + 240*x**(1/4)*cos(log(x))/289 + (16*x**(1/4)*sin(log(x))/17 + 4*x**(1/4)*cos(log(x))/17)*log(x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
-
-def test_issue_15773():
-    f = sqrt(5+5*sin(5*x))
-    F = sqrt(5)*(2*sin(5*x/2)/5-2*cos(5*x/2)/5)
-    assert manualintegrate(f, x) == F

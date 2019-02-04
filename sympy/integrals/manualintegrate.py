@@ -701,7 +701,7 @@ def trig_rule(integral):
         match = integrand.match(sympy.sqrt(1 + sympy.sin(a*symbol)))
         if not match:
             return
-        rewritten = (sympy.sin((match[a]*symbol)/2) + sympy.cos((match[a]*symbol)/2))
+        rewritten = abs(sympy.cos(match[a]*symbol)) / sympy.sqrt(1-sympy.sin(match[a]*symbol))
 
     return RewriteRule(
         rewritten,
