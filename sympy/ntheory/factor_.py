@@ -1429,7 +1429,23 @@ def proper_divisors(n, generator=False):
         return x
 
 
-def proper_divisors_count(n):
+def proper_divisor_count(n):
+    """
+    Return the number of proper divisors of ``n``.
+    
+    Examples
+    ========
+
+    >>> from sympy import divisor_count
+    >>> proper_divisor_count(6)
+    2
+
+    See Also
+    ========
+
+    divisors, proper_divisors, divisors_count
+
+    """
     return max(divisor_count(n)-2, 0)
 
 
