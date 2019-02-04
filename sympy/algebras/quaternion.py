@@ -22,8 +22,8 @@ class Quaternion(Expr):
     Quaternion objects can be instantiated as Quaternion(a, b, c, d)
     as in (a + b*i + c*j + d*k).
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.algebras.quaternion import Quaternion
     >>> q = Quaternion(1, 2, 3, 4)
@@ -89,19 +89,19 @@ class Quaternion(Expr):
         Parameters
         ==========
 
-        vector : tuple
-            Axis of rotation.
-        angle
-            Angle of rotation.
+        vector : tuple of three numbers
+            The vector representation of the given axis.
+        angle : number
+            The angle by which axis is rotated (in radians).
 
         Returns
         =======
 
         Quaternion
-            A rotation quaternion calculated from the given axis and the angle of rotation.
+            The normalized rotation quaternion calculated from the given axis and the angle of rotation.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import pi, sqrt
@@ -124,7 +124,9 @@ class Quaternion(Expr):
     def from_rotation_matrix(cls, M):
         """Returns the equivalent quaternion of a matrix. The quaternion will be normalized
         only if the matrix is special orthogonal (orthogonal and det(M) = 1).
+
         Parameters:
+        ==========
 
         M : Matrix
             Input matrix to be converted to equivalent quaternion. M must be special 
@@ -134,9 +136,9 @@ class Quaternion(Expr):
         =======
 
         Quaternion
-            Returns the equivalent quaternion of a matrix.
+            The quaternion equivalent to given matrix.
 
-        Example
+        Examples
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
@@ -206,12 +208,20 @@ class Quaternion(Expr):
     def add(self, other):
         """Adds quaternions.
 
+        Parameters
+        ==========
+
+        other : Quaternion
+            The quaternion to add to current (self) quaternion.
+
         Returns
         =======
-        Quaternion
 
-        Example
-        =======
+        Quaternion
+            The resultant quaternion after adding self to other
+
+        Examples
+        ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import symbols
@@ -254,12 +264,20 @@ class Quaternion(Expr):
     def mul(self, other):
         """Multiplies quaternions.
 
+        Parameters
+        ==========
+
+        other : Quaternion
+            The quaternion to multiply to current (self) quaternion.
+
         Returns
         =======
-        Quaternion
 
-        Example
-        =======
+        Quaternion
+            The resultant quaternion after multiply self with other
+
+        Examples
+        ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import symbols
@@ -274,7 +292,7 @@ class Quaternion(Expr):
         x + 2*x*i + 3*x*j + 4*x*k
 
         Quaternions over complex fields :
-        ========
+        ================================
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import I
         >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
@@ -355,7 +373,6 @@ class Quaternion(Expr):
 
     def pow(self, p):
         """Finds the pth power of the quaternion.
-        Returns the inverse if p = -1.
 
         Parameters
         ==========
@@ -367,10 +384,10 @@ class Quaternion(Expr):
         =======
 
         Quaternion
-            Returns the p-th power of the quaternion.
+            Returns the p-th power of the current quaternion.
             Returns the inverse if p = -1.
 
-        Example
+        Examples
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
@@ -407,8 +424,8 @@ class Quaternion(Expr):
         Quaternion
             Exponential of q (e^q).
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
@@ -431,8 +448,8 @@ class Quaternion(Expr):
     def _ln(self):
         """Returns the natural logarithm of the quaternion (_ln(q)).
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
@@ -467,8 +484,8 @@ class Quaternion(Expr):
         Quaternion
             The p-th power in the cos-sin form.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
@@ -507,8 +524,8 @@ class Quaternion(Expr):
         tuple
             The coordinates of the quaternion after rotation.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import symbols, trigsimp, cos, sin
@@ -536,8 +553,8 @@ class Quaternion(Expr):
         =======
         tuple
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 1, 1, 1)
@@ -587,8 +604,8 @@ class Quaternion(Expr):
             Returns the equivalent rotation transformation matrix of the quaternion
             which represents rotation about the origin if v is not passed.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import symbols, trigsimp, cos, sin
@@ -603,8 +620,8 @@ class Quaternion(Expr):
         Generates a 4x4 transformation matrix (used for rotation about a point
         other than the origin) if the point(v) is passed as an argument.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import symbols, trigsimp, cos, sin
