@@ -230,6 +230,7 @@ code is tested extensively in ``test_ode.py``, so if anything is broken, one
 of those tests will surely fail.
 
 """
+
 from __future__ import print_function, division
 
 from collections import defaultdict
@@ -678,6 +679,63 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             # The key 'hint' stores the hint needed to be solved for.
             hint = hints['hint']
             return _helper_simplify(eq, hint, hints, simplify, ics=ics)
+
+'''
+Patch here  <------------
+I would like to make it a wrapper.I have learned about decorators but haven't used them
+so I would do it if you say. 
+
+Function created to try to solve equations refered to issue
+   dsolve doesn't know order-reducing substitutions #15881
+   #Steps:
+   1: Try to use dsolve.
+
+   2: This is a recursive call till we are not left with a linear equation:
+   If NotImplemented error is raised try substituting whole expression with g(x)
+   (I think Dummy should be used but I do not understand the working of it very well 
+   so I'm letting it be a substitution function for the time being.)
+   
+   3: Still unable to solve ?Then again raise the NotImplementedError.
+   
+   #A thing I read which I would like to ask is that the given equation is a Liouville equation
+    and it's method is already implemented then why is sympy unable to solve it?
+   
+   Example :
+   from sympy.abc import x
+   from sympy import Function
+   f = Function("f")(x)
+   eq = f(x).diff(x, 2) + x * f(x).diff(x)**2
+   print(eq)
+   Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
+   
+'''
+
+
+def reduction_of_order(eq):
+    
+    try: 
+        
+        return dsolve(eq)
+
+    except NotImplementedError:
+        
+        atom_x = list(eq.atoms(Symbol))[0]
+        atom_f = list(eq.atoms(Function))[0]
+        
+        if ode_order(eq,atom_f)> 1:
+            g = Function('g')(atom_x)
+            eq = eq.subs(atom_f.diff(atom_x),g)
+            if not(eq.has(atom_f)):
+                return dsolve(reduction_of_order(eq).subs(g,atom_f.diff(atom_x)))
+            else:
+                raise NotImplementedError
+        else:
+            raise NotImplementedError
+            
+    else:
+        raise NotImplementedError
+            
+
 
 def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     r"""
