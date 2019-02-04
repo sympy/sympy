@@ -254,4 +254,4 @@ def test_vector_derivative_printing():
     # assert unicode_vpretty(v) == u('  5\n d\n───(ω) n_x\n  5\ndt')
     # assert ascii_vpretty(v) == '  5\n d\n---(omega) n_x\n  5\ndt'
 
-test_vector_derivative_printing()
+
