@@ -160,12 +160,12 @@ class VectorPrettyPrinter(PrettyPrinter):
     """Pretty Printer for vectorialexpressions. """
 
     def _print_Derivative(self, deriv):
+        
         from sympy.physics.vector.functions import dynamicsymbols
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
         t = dynamicsymbols._t
         dot_i = 0
         syms = list(reversed(deriv.variables))
-
         while len(syms) > 0:
             if syms[-1] == t:
                 syms.pop()
@@ -202,8 +202,17 @@ class VectorPrettyPrinter(PrettyPrinter):
         lu = len(uni) // 2 + 1
         pic_split = [pic[:lp], pic[lp:]]
         uni_split = [uni[:lu], uni[lu:]]
+        #if unicode is false then calculate number of apostrophes needed and add to output
+        if not self._use_unicode:
+            
+            apostrophes = ""
+            for i in range(0, dot_i):
+                apostrophes += "'"
 
-        d['picture'] = [pic_split[0] + dots[dot_i] + pic_split[1]]
+            d['picture'][0] += apostrophes
+        else:
+            d['picture'] = [pic_split[0] + dots[dot_i] + pic_split[1]]
+
         d['unicode'] =  uni_split[0] + dots[dot_i] + uni_split[1]
 
         return pform
