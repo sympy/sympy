@@ -461,6 +461,8 @@ def test_presentation_printmethod():
     assert mpp.doprint(1 + x) == '<mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow>'
     assert mpp.doprint(x**2) == '<msup><mi>x</mi><mn>2</mn></msup>'
     assert mpp.doprint(2*x) == '<mrow><mn>2</mn><mo>&InvisibleTimes;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(x**(S(1)/3)) == '<mroot><mi>x</mi><mn>3</mn></mroot>'
+    assert mpp.doprint(x**(S(1)/3), root_notation=False) == '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
 
 
 def test_presentation_mathml_core():
