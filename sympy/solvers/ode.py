@@ -231,7 +231,6 @@ of those tests will surely fail.
 
 """
 
-
 from __future__ import print_function, division
 
 from collections import defaultdict
@@ -710,8 +709,6 @@ Function created to try to solve equations refered to issue
    Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
    
 '''
-
-
 def reduction_of_order(eq):
     
     try: 
