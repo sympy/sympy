@@ -1707,7 +1707,6 @@ def lfsr_connection_polynomial(s):
     """
     # Initialization:
     p = s[0].mod
-    F = FF(p)
     x = Symbol("x")
     C = 1*x**0
     B = 1*x**0

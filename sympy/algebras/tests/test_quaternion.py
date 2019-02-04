@@ -1,6 +1,6 @@
 from sympy.algebras.quaternion import Quaternion
 from sympy import symbols, re, im, Add, Mul, I, Abs
-from sympy import cos, sin, sqrt, conjugate, exp, log, acos, E, pi
+from sympy import cos, sin, sqrt, conjugate, log, acos, E, pi
 from sympy.utilities.pytest import raises
 from sympy import Matrix
 from sympy import diff, integrate, trigsimp

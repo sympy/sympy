@@ -3,18 +3,16 @@
 # https://en.wikipedia.org/wiki/Quaternion
 from __future__ import print_function
 
-from sympy.core.expr import Expr
 from sympy import Rational
 from sympy import re, im, conjugate
-from sympy import sqrt, sin, cos, acos, asin, exp, ln
+from sympy import sqrt, sin, cos, acos, exp, ln
 from sympy import trigsimp
-from sympy import diff, integrate
+from sympy import integrate
 from sympy import Matrix, Add, Mul
-from sympy import symbols, sympify
-from sympy.printing.latex import latex
-from sympy.printing import StrPrinter
-from sympy.core.numbers import Integer
+from sympy import sympify
 from sympy.core.compatibility import SYMPY_INTS
+from sympy.core.expr import Expr
+from sympy.core.numbers import Integer
 
 
 class Quaternion(Expr):
