@@ -546,7 +546,10 @@ class And(LatticeOp, BooleanFunction):
                 c = x.canonical
                 if c in rel:
                     continue
-                nc = (~c).canonical
+                nc = ~c
+                if not isinstance(nc, Relational):
+                    continue
+                nc = nc.canonical
                 if any(r == nc for r in rel):
                     return [S.false]
                 rel.append(c)
