@@ -246,9 +246,9 @@ def not_empty_in(finset_intersection, *syms):
     Parameters
     ==========
 
-    finset_intersection: The unevaluated intersection of FiniteSet containing
+    finset_intersection : The unevaluated intersection of FiniteSet containing
                         real-valued functions with Union of Sets
-    syms: Tuple of symbols
+    syms : Tuple of symbols
             Symbol for which domain is to be found
 
     Raises
@@ -583,16 +583,19 @@ def lcim(numbers):
 
     Parameters
     ==========
-    numbers: list
+
+    numbers : list
         Numbers (rational and/or irrational) for which lcim is to be found.
 
     Returns
     =======
+
     number
         lcim if it exists, otherwise `None` for incommensurable numbers.
 
     Examples
     ========
+
     >>> from sympy import S, pi
     >>> from sympy.calculus.util import lcim
     >>> lcim([S(1)/2, S(3)/4, S(5)/6])
