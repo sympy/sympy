@@ -1463,6 +1463,11 @@ class EvalfMixin(object):
 
     def _evalf(self, prec):
         """Helper for evalf. Does the same thing but takes binary precision"""
+        from sympy import I
+        base, exp = self.as_base_exp()
+        if exp.has(I) and not self.free_symbols:
+            from sympy.core.evalf import EvalfMixin
+            return EvalfMixin.evalf(self)
         r = self._eval_evalf(prec)
         if r is None:
             r = self
