@@ -1442,7 +1442,7 @@ def proper_divisors(n, generator=False):
     
     """
     for i in divisors(n, generator):
-        if i > 1 and i < n:
+        if 1 < i < n:
             yield i
 
 
