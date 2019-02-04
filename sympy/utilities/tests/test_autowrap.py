@@ -4,17 +4,16 @@
 import os
 import tempfile
 import shutil
-import tempfile
 
 from sympy.core import symbols, Eq
 from sympy.core.compatibility import StringIO
-from sympy.utilities.pytest import raises
 from sympy.utilities.autowrap import (autowrap, binary_function,
-            CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
+            CythonCodeWrapper, UfuncifyCodeWrapper, CodeWrapper)
 from sympy.utilities.codegen import (
     CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
 )
-from sympy.utilities.tmpfiles import TmpFileManager, cleanup_tmp_files
+from sympy.utilities.pytest import raises
+from sympy.utilities.tmpfiles import TmpFileManager
 
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
@@ -85,7 +84,6 @@ def test_cython_wrapper_inoutarg():
     assert source == expected
 
 
-@cleanup_tmp_files
 def test_cython_wrapper_compile_flags():
     from sympy import Equality
     x, y, z = symbols('x,y,z')
@@ -185,6 +183,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         setup_text = f.read()
     assert setup_text == expected
 
+    TmpFileManager.cleanup()
+
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')
 
@@ -226,8 +226,6 @@ def test_autowrap_args():
     assert f.args == "y, x, z"
     assert f.returns == "z"
 
-
-@cleanup_tmp_files
 def test_autowrap_store_files():
     x, y = symbols('x y')
     tmp = tempfile.mkdtemp()
@@ -237,6 +235,7 @@ def test_autowrap_store_files():
     assert f() == str(x + y)
     assert os.access(tmp, os.F_OK)
 
+    TmpFileManager.cleanup()
 
 def test_autowrap_store_files_issue_gh12939():
     x, y = symbols('x y')

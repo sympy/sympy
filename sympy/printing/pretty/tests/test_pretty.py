@@ -10,6 +10,7 @@ from sympy import (
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
 from sympy.core.expr import UnevaluatedExpr
 
+from  sympy.physics import mechanics
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
@@ -458,6 +459,23 @@ x \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+    #see issue #14033
+    expr = x**Rational(1, 3)
+    ascii_str = \
+"""\
+ 1/3\n\
+x   \
+"""
+    ucode_str = \
+u("""\
+ 1/3\n\
+x   \
+""")
+    assert xpretty(expr, use_unicode=False, wrap_line=False,\
+    root_notation = False) == ascii_str
+    assert xpretty(expr, use_unicode=True, wrap_line=False,\
+    root_notation = False) == ucode_str
 
     expr = x**Rational(-5, 2)
     ascii_str = \
@@ -6482,4 +6500,11 @@ def test_issue_15560():
     a = MatrixSymbol('a', 1, 1)
     e = pretty(a*(KroneckerProduct(a, a)))
     result = 'a*(a x a)'
+    assert e == result
+
+def test_issue_15583():
+
+    N = mechanics.ReferenceFrame('N')
+    result = '(n_x, n_y, n_z)'
+    e = pretty((N.x, N.y, N.z))
     assert e == result

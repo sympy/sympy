@@ -21,6 +21,16 @@ def continuous_domain(f, symbol, domain):
     This method is limited by the ability to determine the various
     singularities and discontinuities of the given function.
 
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for which the intervals are to be determined.
+    domain : Interval
+        The domain over which the continuity of the symbol has to be checked.
+
     Examples
     ========
 
@@ -36,6 +46,18 @@ def continuous_domain(f, symbol, domain):
     Interval(2, 5)
     >>> continuous_domain(log(2*x - 1), x, S.Reals)
     Interval.open(1/2, oo)
+
+    Returns
+    =======
+
+    Interval
+        Union of all intervals where the function is continuous.
+
+    Raises
+    ======
+    NotImplementedError
+        If the method to determine continuity of such a function
+        has not yet been developed.
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
@@ -92,6 +114,16 @@ def function_range(f, symbol, domain):
     This method is limited by the ability to determine the singularities and
     determine limits.
 
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for which the range of function is to be determined.
+    domain : Interval
+        The domain under which the range of the function has to be found.
+
     Examples
     ========
 
@@ -112,6 +144,18 @@ def function_range(f, symbol, domain):
     >>> function_range(sqrt(x), x , Interval(-5, 9))
     Interval(0, 3)
 
+    Returns
+    =======
+
+    Interval
+        Union of all ranges for all intervals under domain where function is continuous.
+
+    Raises
+    ======
+    NotImplementedError
+        If any of the intervals, in the given domain, for which function
+        is continuous are not finite or real,
+        OR if the critical points of the function on the domain can't be found.
     """
     from sympy.solvers.solveset import solveset
 
@@ -195,15 +239,16 @@ def function_range(f, symbol, domain):
 
 
 def not_empty_in(finset_intersection, *syms):
-    """ Finds the domain of the functions in `finite_set` in which the
+    """
+    Finds the domain of the functions in `finite_set` in which the
     `finite_set` is not-empty
 
     Parameters
     ==========
 
-    finset_intersection: The unevaluated intersection of FiniteSet containing
+    finset_intersection : The unevaluated intersection of FiniteSet containing
                         real-valued functions with Union of Sets
-    syms: Tuple of symbols
+    syms : Tuple of symbols
             Symbol for which domain is to be found
 
     Raises
@@ -315,7 +360,7 @@ def periodicity(f, symbol, check=False):
         The concerned function.
     symbol : Symbol
         The variable for which the period is to be determined.
-    check : Boolean
+    check : Boolean, optional
         The flag to verify whether the value being returned is a period or not.
 
     Returns
@@ -362,7 +407,6 @@ def periodicity(f, symbol, check=False):
     >>> periodicity(sin(4*x)**cos(2*x), x)
     pi
     >>> periodicity(exp(x), x)
-
     """
     from sympy.core.function import diff
     from sympy.core.mod import Mod
@@ -492,9 +536,29 @@ def periodicity(f, symbol, check=False):
 
 
 def _periodicity(args, symbol):
-    """Helper for periodicity to find the period of a list of simpler
-    functions. It uses the `lcim` method to find the least common period of
+    """
+    Helper for `periodicity` to find the period of a list of simpler
+    functions.
+    It uses the `lcim` method to find the least common period of
     all the functions.
+
+    Parameters
+    ==========
+
+    args : Tuple of Symbol
+        All the symbols present in a function.
+
+    symbol : Symbol
+        The symbol over which the function is to be evaluated.
+
+    Returns
+    =======
+
+    period
+        The least common period of the function for all the symbols
+        of the function.
+        None if for at least one of the symbols the function is aperiodic
+
     """
     periods = []
     for f in args:
@@ -517,8 +581,21 @@ def lcim(numbers):
     The numbers can be rational or irrational or a mixture of both.
     `None` is returned for incommensurable numbers.
 
+    Parameters
+    ==========
+
+    numbers : list
+        Numbers (rational and/or irrational) for which lcim is to be found.
+
+    Returns
+    =======
+
+    number
+        lcim if it exists, otherwise `None` for incommensurable numbers.
+
     Examples
     ========
+
     >>> from sympy import S, pi
     >>> from sympy.calculus.util import lcim
     >>> lcim([S(1)/2, S(3)/4, S(5)/6])
@@ -560,13 +637,13 @@ class AccumulationBounds(AtomicExpr):
 
     Let `a` and `b` be reals such that a <= b.
 
-    `\langle a, b\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
+    `\left\langle a, b\right\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
 
-    `\langle -\infty, b\rangle = \{x \in \mathbb{R} \mid x \le b\} \cup \{-\infty, \infty\}`
+    `\left\langle -\infty, b\right\rangle = \{x \in \mathbb{R} \mid x \le b\} \cup \{-\infty, \infty\}`
 
-    `\langle a, \infty \rangle = \{x \in \mathbb{R} \mid a \le x\} \cup \{-\infty, \infty\}`
+    `\left\langle a, \infty \right\rangle = \{x \in \mathbb{R} \mid a \le x\} \cup \{-\infty, \infty\}`
 
-    `\langle -\infty, \infty \rangle = \mathbb{R} \cup \{-\infty, \infty\}`
+    `\left\langle -\infty, \infty \right\rangle = \mathbb{R} \cup \{-\infty, \infty\}`
 
     `oo` and `-oo` are added to the second and third definition respectively,
     since if either `-oo` or `oo` is an argument, then the other one should
@@ -664,7 +741,7 @@ class AccumulationBounds(AtomicExpr):
 
     Some elementary functions can also take AccumulationBounds as input.
     A function `f` evaluated for some real AccumulationBounds `<a, b>`
-    is defined as `f(\langle a, b\rangle) = \{ f(x) \mid a \le x \le b \}`
+    is defined as `f(\left\langle a, b\right\rangle) = \{ f(x) \mid a \le x \le b \}`
 
     >>> sin(AccumBounds(pi/6, pi/3))
     AccumBounds(1/2, sqrt(3)/2)

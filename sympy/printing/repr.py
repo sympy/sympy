@@ -9,8 +9,7 @@ from __future__ import print_function, division
 
 from sympy.core.function import AppliedUndef
 from .printer import Printer
-import mpmath.libmp as mlib
-from mpmath.libmp import repr_dps
+from mpmath.libmp import repr_dps, to_str as mlib_to_str
 from sympy.core.compatibility import range
 
 
@@ -82,6 +81,18 @@ class ReprPrinter(Printer):
     def _print_Integer(self, expr):
         return 'Integer(%i)' % expr.p
 
+    def _print_Integers(self, expr):
+        return 'Integers'
+
+    def _print_Naturals(self, expr):
+        return 'Naturals'
+
+    def _print_Naturals0(self, expr):
+        return 'Naturals0'
+
+    def _print_Reals(self, expr):
+        return 'Reals'
+
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
 
@@ -141,7 +152,7 @@ class ReprPrinter(Printer):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
 
     def _print_Float(self, expr):
-        r = mlib.to_str(expr._mpf_, repr_dps(expr._prec))
+        r = mlib_to_str(expr._mpf_, repr_dps(expr._prec))
         return "%s('%s', precision=%i)" % (expr.__class__.__name__, r, expr._prec)
 
     def _print_Sum2(self, expr):

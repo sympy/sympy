@@ -1058,7 +1058,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_number:
                         try:
                             coeff *= complex(factor)
-                        except TypeError:
+                        except (TypeError, ValueError):
                             pass
                         else:
                             continue
@@ -1803,7 +1803,15 @@ class Expr(Basic, EvalfMixin):
         values, the corresponding exponents. The resulting dictionary should
         be used with caution if the expression is a Mul and contains non-
         commutative factors since the order that they appeared will be lost in
-        the dictionary."""
+        the dictionary.
+
+        See Also
+        ========
+        as_ordered_factors: An alternative for noncommutative applications,
+                            returning an ordered list of factors.
+        args_cnc: Similar to as_ordered_factors, but guarantees separation
+                  of commutative and noncommutative factors.
+        """
         d = defaultdict(int)
         d.update(dict([self.as_base_exp()]))
         return d
@@ -2011,10 +2019,7 @@ class Expr(Basic, EvalfMixin):
         if d is S.One:
             return n
         if d.is_Number:
-            if d is S.One:
-                return n
-            else:
-                return _unevaluated_Mul(n, 1/d)
+            return _unevaluated_Mul(n, 1/d)
         else:
             return n/d
 
@@ -2022,6 +2027,9 @@ class Expr(Basic, EvalfMixin):
         """Return None if it's not possible to make self in the form
            c * something in a nice way, i.e. preserving the properties
            of arguments of self.
+
+           Examples
+           ========
 
            >>> from sympy import symbols, Rational
 
@@ -2041,8 +2049,6 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
-        from .function import _coeff_isneg
-
         c = sympify(c)
         if self is S.NaN:
             return None

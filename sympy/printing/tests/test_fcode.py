@@ -5,15 +5,17 @@ from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
                    sign, Mod)
 
 from sympy.codegen import For, Assignment, aug_assign
-from sympy.codegen.ast import Declaration, Type, Variable, float32, float64, value_const, real, bool_, While
+from sympy.codegen.ast import Declaration, Variable, float32, float64, \
+        value_const, real, bool_, While, FunctionPrototype, FunctionDefinition, \
+        integer, Return
+from sympy.core.compatibility import range
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
+from sympy.matrices import Matrix, MatrixSymbol
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
-from sympy.matrices import Matrix, MatrixSymbol
 
 
 def test_printmethod():
@@ -780,3 +782,26 @@ def test_While():
         '   x = x - 1\n'
         'end do'
     )
+
+
+def test_FunctionPrototype_print():
+    x = symbols('x')
+    n = symbols('n', integer=True)
+    vx = Variable(x, type=real)
+    vn = Variable(n, type=integer)
+    fp1 = FunctionPrototype(real, 'power', [vx, vn])
+    # Should be changed to proper test once multi-line generation is working
+    # see https://github.com/sympy/sympy/issues/15824
+    raises(NotImplementedError, lambda: fcode(fp1))
+
+
+def test_FunctionDefinition_print():
+    x = symbols('x')
+    n = symbols('n', integer=True)
+    vx = Variable(x, type=real)
+    vn = Variable(n, type=integer)
+    body = [Assignment(x, x**n), Return(x)]
+    fd1 = FunctionDefinition(real, 'power', [vx, vn], body)
+    # Should be changed to proper test once multi-line generation is working
+    # see https://github.com/sympy/sympy/issues/15824
+    raises(NotImplementedError, lambda: fcode(fd1))

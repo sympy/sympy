@@ -2,12 +2,12 @@
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range
+from sympy.core.symbol import Dummy
 from sympy.polys.monomials import monomial_mul, monomial_lcm, monomial_divides, term_div
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
-from sympy.core.symbol import Dummy
-from sympy.core.compatibility import range
 
 def groebner(seq, ring, method=None):
     """
@@ -73,22 +73,24 @@ def _buchberger(f, ring):
     variable at a time, provided that the ideal is zero-dimensional
     (finite number of solutions).
 
-    References
-    ==========
-
-    1. [Bose03]_
-    2. [Giovini91]_
-    3. [Ajwa95]_
-    4. [Cox97]_
+    Notes
+    =====
 
     Algorithm used: an improved version of Buchberger's algorithm
     as presented in T. Becker, V. Weispfenning, Groebner Bases: A
     Computational Approach to Commutative Algebra, Springer, 1993,
     page 232.
 
+    References
+    ==========
+
+    .. [1] [Bose03]_
+    .. [2] [Giovini91]_
+    .. [3] [Ajwa95]_
+    .. [4] [Cox97]_
+
     """
     order = ring.order
-    domain = ring.domain
 
     monomial_mul = ring.monomial_mul
     monomial_div = ring.monomial_div
@@ -592,16 +594,17 @@ def _f5b(F, ring):
 
     Once a Groebner basis has been found, it gets reduced.
 
-    ** References **
-    Yao Sun, Dingkang Wang: "A New Proof for the Correctness of F5
-    (F5-Like) Algorithm", http://arxiv.org/abs/1004.0084 (specifically
-    v4)
+    References
+    ==========
 
-    Thomas Becker, Volker Weispfenning, Groebner bases: A computational
-    approach to commutative algebra, 1993, p. 203, 216
+    .. [1] Yao Sun, Dingkang Wang: "A New Proof for the Correctness of F5
+           (F5-Like) Algorithm", http://arxiv.org/abs/1004.0084 (specifically
+           v4)
+
+    .. [2] Thomas Becker, Volker Weispfenning, Groebner bases: A computational
+           approach to commutative algebra, 1993, p. 203, 216
     """
     order = ring.order
-    domain = ring.domain
 
     # reduce polynomials (like in Mario Pernici's implementation) (Becker, Weispfenning, p. 203)
     B = F
@@ -733,7 +736,7 @@ def is_groebner(G, ring):
     """
     for i in range(len(G)):
         for j in range(i + 1, len(G)):
-            s = spoly(G[i], G[j])
+            s = spoly(G[i], G[j], ring)
             s = s.rem(G)
             if s:
                 return False
@@ -794,7 +797,7 @@ def groebner_lcm(f, g):
     References
     ==========
 
-    1. [Cox97]_
+    .. [1] [Cox97]_
 
     """
     if f.ring != g.ring:

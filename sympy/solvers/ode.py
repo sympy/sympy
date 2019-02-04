@@ -4469,7 +4469,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     where `W(x)` is the Wronskian of the fundamental system (the system of `n`
     linearly independent solutions to the homogeneous equation), and `W_i(x)`
     is the Wronskian of the fundamental system with the `i`\th column replaced
-    with `[0, 0, \cdots, 0, \frac{x^{- n}}{a_n} g{\left (x \right )}]`.
+    with `[0, 0, \cdots, 0, \frac{x^{- n}}{a_n} g{\left(x \right)}]`.
 
     This method is general enough to solve any `n`\th order inhomogeneous
     linear differential equation, but sometimes SymPy cannot simplify the
@@ -4900,11 +4900,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C1*exp(x*CRootOf(_x**5 + 10*_x - 2, 0)) +
-    C2*exp(x*CRootOf(_x**5 + 10*_x - 2, 1)) +
-    C3*exp(x*CRootOf(_x**5 + 10*_x - 2, 2)) +
-    C4*exp(x*CRootOf(_x**5 + 10*_x - 2, 3)) +
-    C5*exp(x*CRootOf(_x**5 + 10*_x - 2, 4)))
+    Eq(f(x), C5*exp(x*CRootOf(_x**5 + 10*_x - 2, 0))
+    + (C1*sin(x*im(CRootOf(_x**5 + 10*_x - 2, 1)))
+    + C2*cos(x*im(CRootOf(_x**5 + 10*_x - 2, 1))))*exp(x*re(CRootOf(_x**5 + 10*_x - 2, 1)))
+    + (C3*sin(x*im(CRootOf(_x**5 + 10*_x - 2, 3)))
+    + C4*cos(x*im(CRootOf(_x**5 + 10*_x - 2, 3))))*exp(x*re(CRootOf(_x**5 + 10*_x - 2, 3))))
 
     Note that because this method does not involve integration, there is no
     ``nth_linear_constant_coeff_homogeneous_Integral`` hint.
@@ -4981,40 +4981,38 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     collectterms = []
     gensols = []
     conjugate_roots = [] # used to prevent double-use of conjugate roots
-    for root, multiplicity in charroots.items():
+    # Loop over roots in theorder provided by roots/rootof...
+    for root in chareqroots:
+        # but don't repoeat multiple roots.
+        if root not in charroots:
+            continue
+        multiplicity = charroots.pop(root)
         for i in range(multiplicity):
-            if isinstance(root, RootOf):
-                gensols.append(exp(root*x))
-                if multiplicity != 1:
-                    raise ValueError("Value should be 1")
-                # This ordering is important
-                collectterms = [(0, root, 0)] + collectterms
+            if chareq_is_complex:
+                gensols.append(x**i*exp(root*x))
+                collectterms = [(i, root, 0)] + collectterms
+                continue
+            reroot = re(root)
+            imroot = im(root)
+            if imroot.has(atan2) and reroot.has(atan2):
+                # Remove this condition when re and im stop returning
+                # circular atan2 usages.
+                gensols.append(x**i*exp(root*x))
+                collectterms = [(i, root, 0)] + collectterms
             else:
-                if chareq_is_complex:
-                    gensols.append(x**i*exp(root*x))
-                    collectterms = [(i, root, 0)] + collectterms
-                    continue
-                reroot = re(root)
-                imroot = im(root)
-                if imroot.has(atan2) and reroot.has(atan2):
-                    # Remove this condition when re and im stop returning
-                    # circular atan2 usages.
-                    gensols.append(x**i*exp(root*x))
-                    collectterms = [(i, root, 0)] + collectterms
-                else:
-                    if root in conjugate_roots:
-                        collectterms = [(i, reroot, imroot)] + collectterms
-                        continue
-                    if imroot == 0:
-                        gensols.append(x**i*exp(reroot*x))
-                        collectterms = [(i, reroot, 0)] + collectterms
-                        continue
-                    conjugate_roots.append(conjugate(root))
-                    gensols.append(x**i*exp(reroot*x) * sin(abs(imroot) * x))
-                    gensols.append(x**i*exp(reroot*x) * cos(    imroot  * x))
-
-                    # This ordering is important
+                if root in conjugate_roots:
                     collectterms = [(i, reroot, imroot)] + collectterms
+                    continue
+                if imroot == 0:
+                    gensols.append(x**i*exp(reroot*x))
+                    collectterms = [(i, reroot, 0)] + collectterms
+                    continue
+                conjugate_roots.append(conjugate(root))
+                gensols.append(x**i*exp(reroot*x) * sin(abs(imroot) * x))
+                gensols.append(x**i*exp(reroot*x) * cos(    imroot  * x))
+
+                # This ordering is important
+                collectterms = [(i, reroot, imroot)] + collectterms
     if returns == 'list':
         return gensols
     elif returns in ('sol' 'both'):

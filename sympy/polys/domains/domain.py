@@ -2,17 +2,15 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.core import Basic, sympify
 from sympy.core.compatibility import HAS_GMPY, integer_types, is_sequence
-
-from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
-from sympy.polys.orderings import lex
-from sympy.polys.polyutils import _unify_gens
-
-from sympy.utilities import default_sort_key, public
 from sympy.core.decorators import deprecated
+from sympy.polys.domains.domainelement import DomainElement
+from sympy.polys.orderings import lex
+from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
+from sympy.polys.polyutils import _unify_gens
+from sympy.utilities import default_sort_key, public
 
 @public
 class Domain(object):

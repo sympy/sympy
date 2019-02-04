@@ -6,11 +6,10 @@ from __future__ import print_function, division
 
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
-from sympy.core.alphabets import greeks
 from sympy.core.compatibility import range
-from sympy.printing.printer import Printer
-from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.pretty.pretty_symbology import greek_unicode
+from sympy.printing.printer import Printer
 
 
 class MathMLPrinterBase(Printer):
@@ -22,9 +21,7 @@ class MathMLPrinterBase(Printer):
         "order": None,
         "encoding": "utf-8",
         "root_notation": True,
-        "symbol_names": {},
     }
-
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
         from xml.dom.minidom import Document,Text
@@ -114,12 +111,6 @@ class MathMLContentPrinter(MathMLPrinterBase):
     References: https://www.w3.org/TR/MathML2/chapter4.html
     """
     printmethod = "_mathml_content"
-
-    def __init__(self, settings=None):
-        Printer.__init__(self, settings)
-        from xml.dom.minidom import Document,Text
-
-        self.dom = Document()
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -349,7 +340,6 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 return mi
 
         # translate name, supers and subs to unicode characters
-        greek_letters = set(greeks) # make a copy
         def translate(s):
             if s in greek_unicode:
                 return greek_unicode.get(s)
@@ -387,7 +377,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
-        if e.exp.is_Rational and e.exp.p == 1 and self._settings['root_notation']:
+        if e.exp.is_Rational and e.exp.p == 1:
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('root'))
             if e.exp.q != 2:
@@ -435,7 +425,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Basic(self, e):
         x = self.dom.createElement(self.mathml_tag(e))
-        for arg in e:
+        for arg in e.args:
             x.appendChild(self._print(arg))
         return x
 
@@ -476,10 +466,27 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     printmethod = "_mathml_presentation"
 
     def __init__(self, settings=None):
-        Printer.__init__(self, settings)
-        from xml.dom.minidom import Document,Text
+        MathMLPrinterBase.__init__(self, settings)
+        
+        _default_settings = {
+            "fold_frac_powers": False,
+            "fold_func_brackets": False,
+            "fold_short_frac": None,
+            "inv_trig_style": "abbreviated",
+            "ln_notation": False,
+            "long_frac_ratio": None,
+            "mat_delim": "[",
+            "mat_symbol_style": "plain",
+            "mul_symbol": None,
+            "root_notation": True,
+            "symbol_names": {},
+            "order": None
+        }
 
-        self.dom = Document()
+        self._settings = _default_settings
+
+        if settings is not None:
+            self._settings.update(settings)
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -763,7 +770,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 return mi
 
         # translate name, supers and subs to unicode characters
-        greek_letters = set(greeks) # make a copy
         def translate(s):
             if s in greek_unicode:
                 return greek_unicode.get(s)
@@ -882,8 +888,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mi = self.dom.createElement('mi')
         mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         mrow.appendChild(mi)
-        for arg in e:
-            x.appendChild(self._print(arg))
+        brac = self.dom.createElement('mfenced')
+        for arg in e.args:
+            brac.appendChild(self._print(arg))
+        mrow.appendChild(brac)
         return mrow
 
     def _print_AssocOp(self, e):
@@ -920,7 +928,7 @@ def mathml(expr, printer='content', **settings):
         return MathMLContentPrinter(settings).doprint(expr)
 
 
-def print_mathml(expr, printer='content', symbol_names=None, root_notation=True, order=None):
+def print_mathml(expr, printer='content', **settings):
     """
     Prints a pretty representation of the MathML code for expr. If printer is
     presentation then prints Presentation MathML else prints content MathML.
@@ -945,16 +953,6 @@ def print_mathml(expr, printer='content', symbol_names=None, root_notation=True,
     </mrow>
 
     """
-
-    if symbol_names is None:
-        symbol_names = {}
-
-    settings = {
-        'order' : order,
-        'symbol_names' : symbol_names,
-        'root_notation' : root_notation,
-    }
-
     if printer == 'presentation':
         s = MathMLPresentationPrinter(settings)
     else:

@@ -22,6 +22,9 @@ if llvmlite:
     llvm.initialize_native_asmprinter()
 
 
+__doctest_requires__ = {('llvm_callable'): ['llvmlite']}
+
+
 class LLVMJitPrinter(Printer):
     '''Convert expressions to LLVM IR'''
     def __init__(self, module, builder, fn, *args, **kwargs):
@@ -365,6 +368,7 @@ def llvm_callable(args, expr, callback_type=None):
 
     Parameters
     ==========
+
     args : List of Symbol
         Arguments to the generated function.  Usually the free symbols in
         the expression.  Currently each one is assumed to convert to
@@ -380,10 +384,12 @@ def llvm_callable(args, expr, callback_type=None):
 
     Returns
     =======
+
     Compiled function that can evaluate the expression.
 
     Examples
     ========
+
     >>> import sympy.printing.llvmjitcode as jit
     >>> from sympy.abc import a
     >>> e = a*a + a + 1

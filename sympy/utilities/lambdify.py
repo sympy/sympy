@@ -5,7 +5,6 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
-from functools import wraps
 import inspect
 import keyword
 import re
@@ -13,8 +12,10 @@ import textwrap
 import linecache
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, string_types, range, builtins, integer_types, PY3)
+    NotIterable, string_types, range, builtins, PY3)
 from sympy.utilities.decorator import doctest_depends_on
+
+__doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -115,6 +116,7 @@ def _import(module, reload=False):
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
+    # Required despite static analysis claiming it is not used
     from sympy.external import import_module
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
@@ -175,13 +177,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     Returns an anonymous function for fast calculation of numerical values.
 
     If not specified differently by the user, ``modules`` defaults to
-    ``["numpy"]`` if NumPy is installed, and ``["math", "mpmath", "sympy"]``
-    if it isn't, that is, SymPy functions are replaced as far as possible by
-    either ``numpy`` functions if available, and Python's standard library
-    ``math``, or ``mpmath`` functions otherwise. To change this behavior, the
-    "modules" argument can be used. It accepts:
+    ``["scipy", "numpy"]`` if SciPy is installed, ``["numpy"]`` if only
+    NumPy is installed, and ``["math", "mpmath", "sympy"]`` if neither is
+    installed. That is, SymPy functions are replaced as far as possible by
+    either ``scipy`` or ``numpy`` functions if available, and Python's
+    standard library ``math``, or ``mpmath`` functions otherwise. To change
+    this behavior, the "modules" argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "numexpr", "sympy", "tensorflow"
+     - the strings "math", "mpmath", "numpy", "numexpr", "scipy", "sympy",
+       "tensorflow"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -217,8 +221,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
     >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
     >>> f(1, 2)
-    matrix([[1],
-            [2]])
+    [[1]
+     [2]]
 
     Usage
     =====
@@ -257,16 +261,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         the generated function relies on the input being a numpy array:
 
         >>> from sympy import Piecewise
+        >>> from sympy.utilities.pytest import ignore_warnings
         >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
-        >>> f(array([-1, 0, 1, 2]))
+
+        >>> with ignore_warnings(RuntimeWarning):
+        ...     f(array([-1, 0, 1, 2]))
         [-1.   0.   1.   0.5]
+
         >>> f(0)
         Traceback (most recent call last):
             ...
         ZeroDivisionError: division by zero
 
         In such cases, the input should be wrapped in a numpy array:
-        >>> float(f(array([0])))
+        >>> with ignore_warnings(RuntimeWarning):
+        ...     float(f(array([0])))
         0.0
 
         Or if numpy functionality is not required another module can be used:
@@ -358,13 +367,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     """
     from sympy.core.symbol import Symbol
-    from sympy.utilities.iterables import flatten
 
     # If the user hasn't specified any modules, use what is available.
-    module_provided = True
     if modules is None:
-        module_provided = False
-
         try:
             _import("scipy")
         except ImportError:
