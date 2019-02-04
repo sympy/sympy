@@ -267,12 +267,12 @@ class Piecewise(Function):
                 nonredundant = []
                 for c in cond.args:
                     if (isinstance(c, Relational) and
-                            (~c).canonical in current_cond):
+                            c.negated.canonical in current_cond):
                         continue
                     nonredundant.append(c)
                 cond = cond.func(*nonredundant)
             elif isinstance(cond, Relational):
-                if (~cond).canonical in current_cond:
+                if cond.negated.canonical in current_cond:
                     cond = S.true
 
             current_cond.add(cond)
