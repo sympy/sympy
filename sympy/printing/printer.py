@@ -123,7 +123,7 @@ in a shorter form.
 
 The output of the code above is::
 
-    \\frac{\\partial^{2}}{\\partial x\\partial y}  f{\\left (x,y \\right )}
+    \\frac{\\partial^{2}}{\\partial x\\partial y}  f{\\left(x,y \\right)}
     f_{xy}
 
 Example of Custom Printing Method

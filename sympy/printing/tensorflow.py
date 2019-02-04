@@ -1,12 +1,10 @@
 from distutils.version import LooseVersion as V
-import collections
 
+from sympy import Mul
 from sympy.core.compatibility import Iterable
-from sympy.printing.printer import Printer
+from sympy.external import import_module
 from sympy.printing.precedence import PRECEDENCE
 from sympy.printing.pycode import AbstractPythonCodePrinter
-from sympy import Mul
-from sympy.external import import_module
 import sympy
 
 

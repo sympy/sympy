@@ -59,7 +59,11 @@ def tree(node):
 
     It uses print_node() together with pprint_nodes() on node.args recursively.
 
-    See also: print_tree()
+    See Also
+    ========
+
+    print_tree
+
     """
     subtrees = []
     for arg in node.args:
@@ -112,6 +116,10 @@ def print_tree(node):
       transcendental: False
       zero: False
 
-    See also: tree()
+    See Also
+    ========
+
+    tree
+
     """
     print(tree(node))

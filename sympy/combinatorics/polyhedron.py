@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, Tuple
-from sympy.sets import FiniteSet
-from sympy.core.compatibility import as_int, range
 from sympy.combinatorics import Permutation as Perm
 from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.core import Basic, Tuple
+from sympy.core.compatibility import as_int, range
+from sympy.sets import FiniteSet
 from sympy.utilities.iterables import (minlex, unflatten, flatten)
 
 rmul = Perm.rmul
@@ -377,7 +377,7 @@ class Polyhedron(Basic):
         References
         ==========
 
-        [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
+        .. [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
 
         """
         faces = [minlex(f, directed=False, is_set=True) for f in faces]

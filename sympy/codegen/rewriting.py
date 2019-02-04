@@ -32,12 +32,11 @@ The ``optims_c99`` imported above is tuple containing the following instances
 
 """
 from __future__ import (absolute_import, division, print_function)
-from itertools import tee, chain
-from sympy import log, Add, exp, Max, Min, Wild, Pow, expand_log, Dummy
-from sympy.utilities.iterables import sift
-from sympy.core.compatibility import filterfalse
-from sympy.core.mul import Mul
+from itertools import chain
+from sympy import log, exp, Max, Min, Wild, expand_log, Dummy
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
+from sympy.core.mul import Mul
+from sympy.utilities.iterables import sift
 
 
 class Optimization(object):
@@ -97,6 +96,7 @@ def optimize(expr, optimizations):
 
     Parameters
     ==========
+
     expr : expression
     optimizations : iterable of ``Optimization`` instances
         The optimizations will be sorted with respect to ``priority`` (highest first).
