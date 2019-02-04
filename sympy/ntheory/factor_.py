@@ -1441,6 +1441,8 @@ def proper_divisors(n, generator=False):
     factorint, divisors, proper_divisor_count
     
     """
+    if not generator:
+        return divisors(n)[1:-1]
     for i in divisors(n, generator):
         if 1 < i < n:
             yield i
