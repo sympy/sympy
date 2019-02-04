@@ -184,12 +184,26 @@ def trailing(n):
         if n == 1 << z:
             return z
 
-    t = 8
-    n >>= 8
-    while not n & 0xff:    # Processing eight bits at a time
+    if z < 300:
+        # fixed 8-byte reduction
+        t = 8
         n >>= 8
-        t += 8
-    return t + small_trailing[n & 0xff]
+        while not n & 0xff:
+            n >>= 8
+            t += 8
+        return t + small_trailing[n & 0xff]
+
+    # binary reduction important when there might be a large
+    # number of trailing 0s
+    t = 0
+    p = 8
+    while not n & 1:
+        while not n & ((1 << p) - 1):
+            n >>= p
+            t += p
+            p *= 2
+        p //= 2
+    return t
 
 
 def multiplicity(p, n):
