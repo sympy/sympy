@@ -1423,7 +1423,7 @@ def proper_divisors(n, generator=False):
     if not generator:
         return divisors(n)[1:-1]
     else:
-        x = divisors(n)
+        x = divisors(n, True)
         x.remove(1)
         x.remove(n)
         return x
