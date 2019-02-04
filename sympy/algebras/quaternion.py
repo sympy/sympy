@@ -84,7 +84,20 @@ class Quaternion(Expr):
 
     @classmethod
     def from_axis_angle(cls, vector, angle):
-        """Returns a rotation quaternion given the axis and the angle of rotation.
+        """
+        Parameters
+        ========
+
+        vector : tuple
+            Axis of rotation.
+        angle
+            Angle of rotation.
+
+        Returns
+        ========
+
+        Quaternion
+            A rotation quaternion calculated from the given axis and the angle of rotation.
 
         Example
         ========
@@ -108,8 +121,18 @@ class Quaternion(Expr):
 
     @classmethod
     def from_rotation_matrix(cls, M):
-        """Returns the equivalent quaternion of a matrix. The quaternion will be normalized
-        only if the matrix is special orthogonal (orthogonal and det(M) = 1).
+        """
+        Parameters:
+
+        M : Matrix
+            Input matrix to be converted to equivalent quatarnion. M must be special 
+            orthogonal (orthogonal and det(M) = 1) for the quatarnion to be normalized.
+
+        Returns
+        =======
+
+        Quatarnion
+            Returns the equivalent quaternion of a matrix.
 
         Example
         ========
@@ -225,6 +248,10 @@ class Quaternion(Expr):
     def mul(self, other):
         """Multiplies quaternions.
 
+        Returns
+        =======
+        Quatarnion
+
         Example
         ========
 
@@ -253,6 +280,16 @@ class Quaternion(Expr):
     @staticmethod
     def _generic_mul(q1, q2):
 
+        """
+        Parameters
+        =======
+        q1 : Quatarnion
+        q2 : Quatarnion
+
+        Returns
+        =======
+        Quatarnion
+        """
         q1 = sympify(q1)
         q2 = sympify(q2)
 
@@ -311,8 +348,19 @@ class Quaternion(Expr):
         return conjugate(q) * (1/q.norm()**2)
 
     def pow(self, p):
-        """Finds the pth power of the quaternion.
-        Returns the inverse if p = -1.
+        """
+        Parameters
+        =======
+        
+        p : int
+            Power to be applied on quaternion.
+
+        Returns
+        =======
+
+        Quaternion
+            res = the p-th power of the quaternion.
+            res = the inverse if p = -1.
 
         Example
         ========
@@ -343,7 +391,10 @@ class Quaternion(Expr):
         return res
 
     def exp(self):
-        """Returns the exponential of q (e^q).
+        """
+        Returns
+        ========
+        Exponential of q (e^q).
 
         Example
         ========
@@ -392,7 +443,17 @@ class Quaternion(Expr):
         return Quaternion(a, b, c, d)
 
     def pow_cos_sin(self, p):
-        """Computes the pth power in the cos-sin form.
+        """
+        Parameters
+        =======
+
+        p: int
+            Power to be applied on quaternion.
+
+        Returns
+        =======
+        Quatarnion
+            The p-th power in the cos-sin form.
 
         Example
         ========
@@ -420,7 +481,18 @@ class Quaternion(Expr):
 
     @staticmethod
     def rotate_point(pin, r):
-        """Returns the coordinates of the point pin(a 3 tuple) after rotation.
+        """
+        Parameters
+        =======
+        pin : tuple
+            A 3-element tuple of coordinates of a point. This point will be
+            the axis of rotation.
+        r
+            Angle to be rotated.
+        Returns
+        =======
+        tuple
+            The coordinates of the quaternion after rotation.
 
         Example
         ========
@@ -484,8 +556,17 @@ class Quaternion(Expr):
         return t
 
     def to_rotation_matrix(self, v=None):
-        """Returns the equivalent rotation transformation matrix of the quaternion
-        which represents rotation about the origin if v is not passed.
+        """
+        Parameters
+        =======
+        v : tuple or None
+            Default value: None
+
+        Returns
+        =======
+        tuple
+            Returns the equivalent rotation transformation matrix of the quaternion
+            which represents rotation about the origin if v is not passed.
 
         Example
         ========
