@@ -374,7 +374,7 @@ class Quaternion(Expr):
 
         Parameters
         ==========
-        
+
         p : int
             Power to be applied on quaternion.
 
@@ -417,7 +417,7 @@ class Quaternion(Expr):
         """Returns the exponential of q (e^q).
 
         Returns
-        ========
+        =======
 
         Quaternion
             Exponential of q (e^q).
