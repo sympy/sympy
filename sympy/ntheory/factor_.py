@@ -1448,11 +1448,11 @@ def proper_divisors(n, generator=False):
         return []
     if n == 0:
         return []
-    
+
     def _proper_divisors(n):
         factordict = factorint(n)
         ps = sorted(factordict.keys())
-        
+
         def rec_gen(n=0):
             if n == len(ps):
                 yield 1
@@ -1463,16 +1463,16 @@ def proper_divisors(n, generator=False):
                 for q in rec_gen(n + 1):
                     for p in pows:
                         yield p * q
-    
+
         for p in rec_gen():
             if p is not n:
                 yield p
-    
-    ps = _proper_divisors(n)
-    
+
+    pd = _proper_divisors(n)
+
     if not generator:
-        return sorted(ps)
-    return ps
+        return sorted(pd)
+    return pd
 
 
 def proper_divisor_count(n):
