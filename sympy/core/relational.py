@@ -122,7 +122,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         """
         ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
         a, b = self.args
-        return ops.get(self.func, self.func)(b, a, evaluate=False)
+        return Relational.__new__(ops.get(self.func, self.func), b, a)
 
     @property
     def negated(self):
@@ -154,7 +154,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         ops = {Eq: Ne, Ge: Lt, Gt: Le, Le: Gt, Lt: Ge, Ne: Eq}
         # If there ever will be new Relational subclasses, the following line will work until it is properly sorted out
         # return ops.get(self.func, lambda a, b, evaluate=False: ~(self.func(a, b, evaluate=evaluate)))(*self.args, evaluate=False)
-        return ops.get(self.func)(*self.args, evaluate=False)
+        return Relational.__new__(ops.get(self.func), *self.args)
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
