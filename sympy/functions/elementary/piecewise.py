@@ -368,7 +368,7 @@ class Piecewise(Function):
                 _expr = expr
                 if eqs and not other:
                     eqs = list(ordered(eqs))
-                    for j, e in enumerate(eqs):
+                    for e in eqs:
                         # these blessed lhs objects behave like Symbols
                         # and the rhs are simple replacements for the "symbols"
                         if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
@@ -383,7 +383,11 @@ class Piecewise(Function):
                     # as the next. These will be merged when creating the new
                     # Piecewise
                     args[i] = args[i].func(args[i+1][0], cond)
-            prevexpr = expr
+                else:
+                    # Update the expression that we compare against
+                    prevexpr = expr
+            else:
+                prevexpr = expr
         # Handle segments of the type Or(Eq(x, y), Eq(x, z), And(Eq(x, 2), Eq(y, 3)))
         # Check if any of the Or-terms can be moved to the next segment
         # This may or may not be a good idea, so we check the consequences here
@@ -407,7 +411,7 @@ class Piecewise(Function):
                         _expr = expr
                         if eqs and not other:
                             eqs = list(ordered(eqs))
-                            for k, e in enumerate(eqs):
+                            for e in eqs:
                                 # these blessed lhs objects behave like Symbols
                                 # and the rhs are simple replacements for the "symbols"
                                 if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
@@ -420,7 +424,7 @@ class Piecewise(Function):
                             movedterms.append(orterm)
                         else:
                             terms.append(orterm)
-                    # Are the any terms that can be in the next segment?
+                    # Are there any terms that can be in the next segment?
                     if movedterms:
                         anythingchanged = True
                         newcond = Or(*(terms))
@@ -437,20 +441,21 @@ class Piecewise(Function):
         # See if not equal expressions happens to evaluate to the
         # same function as in the next piecewise segment for the not equal condition
         prevexpr = None
-        for i, (expr, cond) in reversed(list(enumerate(args))):
-            if prevexpr is not None:
+        prevcond = None
+        for i, (expr, cond) in list(enumerate(args)):
+            if prevexpr is not None and prevcond is not None:
                 _prevexpr = prevexpr
                 _expr = expr
-                if isinstance(cond, And):
-                    eqs, other = sift(cond.args,
+                if isinstance(prevcond, And):
+                    eqs, other = sift(prevcond.args,
                         lambda i: isinstance(i, Unequality), binary=True)
-                elif isinstance(cond, Unequality):
-                    eqs, other = [cond], []
+                elif isinstance(prevcond, Unequality):
+                    eqs, other = [prevcond], []
                 else:
                     eqs = other = []
                 if eqs and not other:
                     eqs = list(ordered(eqs))
-                    for j, e in enumerate(eqs):
+                    for e in eqs:
                         # these blessed lhs objects behave like Symbols
                         # and the rhs are simple replacements for the "symbols"
                         if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
@@ -464,8 +469,14 @@ class Piecewise(Function):
                     # Set the expression for the Not equal section to the same
                     # as the next. These will be merged when creating the new
                     # Piecewise
-                    args[i] = args[i].func(args[i+1][0], cond)
-            prevexpr = expr
+                    args[i] = args[i].func(prevexpr, cond)
+                else:
+                    prevexpr = expr
+                    prevcond = cond
+            else:
+                prevexpr = expr
+                prevcond = cond
+
         return self.func(*args)
 
     def _eval_as_leading_term(self, x):

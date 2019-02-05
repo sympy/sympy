@@ -1154,14 +1154,23 @@ def test_piecewise_simplify2():
     assert Piecewise((1, Eq(x, 0)), (sin(x)/x, True)).simplify() == Piecewise((1, Eq(x, 0)), (sin(x)/x, True))
     assert Piecewise((1, Eq(x, 0)), (sin(x) + 1 + x, True)).simplify() == x + sin(x) + 1
 
-    assert Piecewise((x**2, Ne(x, y)), (x*y, True)).simplify() == x*y
+    assert Piecewise((x**2, Ne(x, y)), (x*y, True)).simplify() == x**2
 
-    assert Piecewise((x**2, Ne(x, 2)), (2*x, Ne(x, 4)), (x*y, True)).simplify() == 2*x
+    assert Piecewise((x**2, Ne(x, 2)), (2*x, Ne(x, 4)), (x*y, True)).simplify() == x**2
 
     assert Piecewise((y*x**2, Eq(x, 2)), (y*2*x, Ge(x, 4)), (x*y, True)).simplify() == Piecewise((2*x*y, Or(Eq(x, 2), Ge(x, 4))), (x*y, True))
 
     p = Piecewise((x**2, And(Ne(x, 2), Ne(x, y))), (2*x, Ne(x, 4)), (x*y, True))
     ps = p.simplify()
-    assert ps == Piecewise((2*x, (Ne(x, 2) | Ne(x, 4)) & (Ne(x, 4) | Ne(x, y))), (x*y, True))
+    assert ps == Piecewise((x**2, (Ne(x, 2) | Ne(x, 4)) & (Ne(x, 4) | Ne(x, y))), (x*y, True))
     # Currently, the segment expressions must be simplified twice
-    assert ps.simplify() == Piecewise((2*x, Ne(x, 4) | (Ne(x, 2) & Ne(x, y))), (x*y, True))
+    assert ps.simplify() == Piecewise((x**2, Ne(x, 4) | (Ne(x, 2) & Ne(x, y))), (x*y, True))
+
+    # From example in #15705
+    a=symbols('a', real=True)
+    expr = Piecewise((-a, -a > a), (a, a >= -a))
+    p = Piecewise((0, 0 < expr), (expr, expr <= 0))
+    pf = piecewise_fold(p)
+    assert pf.simplify() == 0
+    # It actually works when simplifying the joint Piecewise as well
+    assert p.simplify() == 0
