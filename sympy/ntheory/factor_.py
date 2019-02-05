@@ -1431,7 +1431,7 @@ def proper_divisors(n, generator=False):
     >>> proper_divisors(24)
     [1, 2, 3, 4, 6, 8, 12]
     >>> proper_divisor_count(24)
-    6
+    7
     >>> list(proper_divisors(120, generator=True))
     [1, 2, 4, 8, 3, 6, 12, 24, 5, 10, 20, 40, 15, 30, 60]
 
