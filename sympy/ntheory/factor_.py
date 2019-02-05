@@ -1421,7 +1421,7 @@ def divisor_count(n, modulus=1):
 
 def proper_divisors(n, generator=False):
     """
-    Return all divisors of n except 1 and n, sorted by default.
+    Return all divisors of n except n, sorted by default.
     If generator is ``True`` an unordered generator is returned.
 
     Examples
@@ -1429,11 +1429,11 @@ def proper_divisors(n, generator=False):
     
     >>> from sympy import proper_divisors, proper_divisor_count
     >>> proper_divisors(24)
-    [2, 3, 4, 6, 8, 12]
+    [1, 2, 3, 4, 6, 8, 12]
     >>> proper_divisor_count(24)
     6
     >>> list(proper_divisors(120, generator=True))
-    [2, 4, 8, 3, 6, 12, 24, 5, 10, 20, 40, 15, 30, 60]
+    [1, 2, 4, 8, 3, 6, 12, 24, 5, 10, 20, 40, 15, 30, 60]
 
     See Also
     ========
@@ -1442,9 +1442,9 @@ def proper_divisors(n, generator=False):
     
     """
     if not generator:
-        return divisors(n)[1:-1]
+        return divisors(n)[:-1]
     for i in divisors(n, generator):
-        if 1 < i < n:
+        if i < n:
             yield i
 
 
@@ -1457,7 +1457,7 @@ def proper_divisor_count(n):
 
     >>> from sympy import proper_divisor_count
     >>> proper_divisor_count(6)
-    2
+    3
 
     See Also
     ========
@@ -1465,7 +1465,7 @@ def proper_divisor_count(n):
     divisors, proper_divisors, divisor_count
 
     """
-    return max(divisor_count(n)-2, 0)
+    return divisor_count(n)-1
 
 
 def _udivisors(n):
