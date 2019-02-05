@@ -1426,7 +1426,7 @@ def proper_divisors(n, generator=False):
 
     Examples
     ========
-    
+
     >>> from sympy import proper_divisors, proper_divisor_count
     >>> proper_divisors(24)
     [1, 2, 3, 4, 6, 8, 12]
@@ -1437,9 +1437,9 @@ def proper_divisors(n, generator=False):
 
     See Also
     ========
-    
+
     factorint, divisors, proper_divisor_count
-    
+
     """
     n = as_int(abs(n))
     if isprime(n):
@@ -1478,7 +1478,7 @@ def proper_divisors(n, generator=False):
 def proper_divisor_count(n):
     """
     Return the number of proper divisors of ``n``.
-    
+
     Examples
     ========
 
