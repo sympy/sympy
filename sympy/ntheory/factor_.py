@@ -1322,7 +1322,7 @@ def primefactors(n, limit=None, verbose=False):
     return s
 
 
-def _divisors(n):
+def _divisors(n, proper=False):
     """Helper function for divisors which generates the divisors."""
 
     factordict = factorint(n)
@@ -1339,8 +1339,13 @@ def _divisors(n):
                 for p in pows:
                     yield p * q
 
-    for p in rec_gen():
-        yield p
+    if proper:
+        for p in rec_gen():
+            if p != n:
+                yield p
+    else:
+        for p in rec_gen():
+            yield p
 
 
 def divisors(n, generator=False):
@@ -1449,26 +1454,7 @@ def proper_divisors(n, generator=False):
     if n == 0:
         return []
 
-    def _proper_divisors(n):
-        factordict = factorint(n)
-        ps = sorted(factordict.keys())
-
-        def rec_gen(n=0):
-            if n == len(ps):
-                yield 1
-            else:
-                pows = [1]
-                for j in range(factordict[ps[n]]):
-                    pows.append(pows[-1] * ps[n])
-                for q in rec_gen(n + 1):
-                    for p in pows:
-                        yield p * q
-
-        for p in rec_gen():
-            if p is not n:
-                yield p
-
-    pd = _proper_divisors(n)
+    pd = _divisors(n, True)
 
     if not generator:
         return sorted(pd)
