@@ -1452,7 +1452,7 @@ def proper_divisors(n, generator=False):
     factorint, divisors, proper_divisor_count
 
     """
-    return divisors(n, generator, proper=True)
+    return divisors(n, generator=generator, proper=True)
 
 
 def proper_divisor_count(n):
@@ -1472,7 +1472,7 @@ def proper_divisor_count(n):
     divisors, proper_divisors, divisor_count
 
     """
-    return max(divisor_count(n)-1, 0)
+    return max(divisor_count(n) - 1, 0)
 
 
 def _udivisors(n):
