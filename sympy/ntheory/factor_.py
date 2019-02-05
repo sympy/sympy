@@ -1492,7 +1492,7 @@ def proper_divisor_count(n):
     divisors, proper_divisors, divisor_count
 
     """
-    return divisor_count(n)-1
+    return max(divisor_count(n)-1, 0)
 
 
 def _udivisors(n):
