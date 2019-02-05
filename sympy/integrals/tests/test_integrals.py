@@ -1475,3 +1475,10 @@ def test_issue_4311():
         (x**4/4 - 9*x**2/2, x <= -3),
         (-x**4/4 + 9*x**2/2 - S(81)/2, x <= 3),
         (x**4/4 - 9*x**2/2, True))
+def test_issue_15730():
+    x = Symbol('x', real=True)
+    f = integrate(sqrt(1+sin(x)), x)
+    F = Piecewise((2*sqrt(-sin(x) + 1), x <= 0), (-2*sqrt(-sin(x) + 1) + 4, x <= pi/2),\
+    (2*sqrt(-sin(x) + 1) + 4, x <= 3*pi/2), (-2*sqrt(-sin(x) + 1) + 4 + 4*sqrt(2), x <= 2*pi),\
+    (2*sqrt(-sin(x) + 1) + 4*sqrt(2), True))
+    assert f == F
