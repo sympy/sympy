@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
-    log, cos, sin, Add)
+    log, cos, sin, Add, floor, ceiling)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -658,17 +658,20 @@ def test_canonical():
 
 
 @XFAIL
-def test_issue_8444():
+def test_issue_8444_nonworkingtests():
     x = symbols('x', real=True)
     assert (x <= oo) == (x >= -oo) == True
 
     x = symbols('x')
     assert x >= floor(x)
     assert (x < floor(x)) == False
-    assert Gt(x, floor(x)) == Gt(x, floor(x), evaluate=False)
-    assert Ge(x, floor(x)) == Ge(x, floor(x), evaluate=False)
     assert x <= ceiling(x)
     assert (x > ceiling(x)) == False
+
+def test_issue_8444_workingtests():
+    x = symbols('x')
+    assert Gt(x, floor(x)) == Gt(x, floor(x), evaluate=False)
+    assert Ge(x, floor(x)) == Ge(x, floor(x), evaluate=False)
     assert Lt(x, ceiling(x)) == Lt(x, ceiling(x), evaluate=False)
     assert Le(x, ceiling(x)) == Le(x, ceiling(x), evaluate=False)
     i = symbols('i', integer=True)
@@ -803,6 +806,21 @@ def test_Equality_rewrite_as_Add():
     assert eq.rewrite(Add, evaluate=None).args == (x, x, y, -y)
     assert eq.rewrite(Add, evaluate=False).args == (x, y, x, -y)
 
+
 def test_issue_15847():
     a = Ne(x*(x+y), x**2 + x*y)
     assert simplify(a) == False
+
+
+def test_negated_property():
+    eq = Eq(x, y)
+    assert eq.negated == Ne(x, y)
+
+    eq = Ne(x, y)
+    assert eq.negated == Eq(x, y)
+
+    eq = Ge(x + y, y - x)
+    assert eq.negated == Lt(x + y, y - x)
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(x, y).negated.negated == f(x, y)

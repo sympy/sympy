@@ -13,6 +13,7 @@ from sympy.utilities import filldedent
 from sympy.simplify.radsimp import denom
 from sympy.polys.rationaltools import together
 from sympy.core.compatibility import iterable
+from sympy.solvers.inequalities import solve_univariate_inequality
 
 def continuous_domain(f, symbol, domain):
     """
@@ -624,6 +625,77 @@ def lcim(numbers):
 
     return result
 
+def is_convex(f, *syms, **kwargs):
+    """Determines the  convexity of the function passed in the argument.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    syms : Tuple of symbols
+        The variables with respect to which the convexity is to be determined.
+    domain : Interval, optional
+        The domain over which the convexity of the function has to be checked.
+        If unspecified, S.Reals will be the default domain.
+
+    Returns
+    =======
+
+    Boolean
+        The method returns `True` if the function is convex otherwise it
+        returns `False`.
+
+    Raises
+    ======
+
+    NotImplementedError
+        The check for the convexity of multivariate functions is not implemented yet.
+
+    Notes
+    =====
+
+    To determine concavity of a function pass `-f` as the concerned function.
+    To determine logarithmic convexity of a function pass log(f) as
+    concerned function.
+    To determine logartihmic concavity of a function pass -log(f) as
+    concerned function.
+
+    Currently, convexity check of multivariate functions is not handled.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, exp, oo, Interval
+    >>> from sympy.calculus.util import is_convex
+    >>> x = symbols('x')
+    >>> is_convex(exp(x), x)
+    True
+    >>> is_convex(x**3, x, domain = Interval(-1, oo))
+    False
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Convex_function
+    .. [2] http://www.ifp.illinois.edu/~angelia/L3_convfunc.pdf
+    .. [3] https://en.wikipedia.org/wiki/Logarithmically_convex_function
+    .. [4] https://en.wikipedia.org/wiki/Logarithmically_concave_function
+    .. [5] https://en.wikipedia.org/wiki/Concave_function
+
+    """
+
+    if len(syms) > 1:
+        raise NotImplementedError(
+            "The check for the convexity of multivariate functions is not implemented yet.")
+
+    f = _sympify(f)
+    domain = kwargs.get('domain', S.Reals)
+    var = syms[0]
+    condition = f.diff(var, 2) < 0
+    if solve_univariate_inequality(condition, var, False, domain):
+        return False
+    return True
 
 class AccumulationBounds(AtomicExpr):
     r"""

@@ -122,7 +122,39 @@ class Relational(Boolean, Expr, EvalfMixin):
         """
         ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
         a, b = self.args
-        return ops.get(self.func, self.func)(b, a, evaluate=False)
+        return Relational.__new__(ops.get(self.func, self.func), b, a)
+
+    @property
+    def negated(self):
+        """Return the negated relationship.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x
+        >>> Eq(x, 1)
+        Eq(x, 1)
+        >>> _.negated
+        Ne(x, 1)
+        >>> x < 1
+        x < 1
+        >>> _.negated
+        x >= 1
+
+        Notes
+        =====
+
+        This works more or less identical to ``~``/``Not``. The difference is
+        that ``negated`` returns the relationship even if `evaluate=False`.
+        Hence, this is useful in code when checking for e.g. negated relations
+        to exisiting ones as it will not be affected by the `evaluate` flag.
+
+        """
+        ops = {Eq: Ne, Ge: Lt, Gt: Le, Le: Gt, Lt: Ge, Ne: Eq}
+        # If there ever will be new Relational subclasses, the following line will work until it is properly sorted out
+        # return ops.get(self.func, lambda a, b, evaluate=False: ~(self.func(a, b, evaluate=evaluate)))(*self.args, evaluate=False)
+        return Relational.__new__(ops.get(self.func), *self.args)
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
@@ -500,7 +532,7 @@ class Unequality(Relational):
         if evaluate:
             is_equal = Equality(lhs, rhs)
             if isinstance(is_equal, BooleanAtom):
-                return ~is_equal
+                return is_equal.negated
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
@@ -524,7 +556,7 @@ class Unequality(Relational):
         if isinstance(eq, Equality):
             # send back Ne with the new args
             return self.func(*eq.args)
-        return ~eq  # result of Ne is ~Eq
+        return eq.negated  # result of Ne is the negated Eq
 
 Ne = Unequality
 
