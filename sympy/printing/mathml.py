@@ -467,7 +467,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def __init__(self, settings=None):
         MathMLPrinterBase.__init__(self, settings)
-        
+
         _default_settings = {
             "fold_frac_powers": False,
             "fold_func_brackets": False,
