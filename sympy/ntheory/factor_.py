@@ -1348,7 +1348,7 @@ def _divisors(n, proper=False):
             yield p
 
 
-def divisors(n, generator=False):
+def divisors(n, generator=False, proper=False):
     r"""
     Return all divisors of n sorted from 1..n by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1388,7 +1388,7 @@ def divisors(n, generator=False):
         return [1]
     if n == 0:
         return []
-    rv = _divisors(n)
+    rv = _divisors(n, proper)
     if not generator:
         return sorted(rv)
     return rv
@@ -1446,19 +1446,7 @@ def proper_divisors(n, generator=False):
     factorint, divisors, proper_divisor_count
 
     """
-    n = as_int(abs(n))
-    if isprime(n):
-        return [1]
-    if n == 1:
-        return []
-    if n == 0:
-        return []
-
-    pd = _divisors(n, proper=True)
-
-    if not generator:
-        return sorted(pd)
-    return pd
+    return divisors(n, generator, proper=True)
 
 
 def proper_divisor_count(n):
