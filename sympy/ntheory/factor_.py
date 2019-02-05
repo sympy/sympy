@@ -1441,6 +1441,14 @@ def proper_divisors(n, generator=False):
     factorint, divisors, proper_divisor_count
     
     """
+    n = as_int(abs(n))
+    if isprime(n):
+        return [1]
+    if n == 1:
+        return []
+    if n == 0:
+        return []
+    
     def _proper_divisors(n):
         factordict = factorint(n)
         ps = sorted(factordict.keys())
