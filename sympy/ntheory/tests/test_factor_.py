@@ -11,9 +11,9 @@ from sympy.ntheory import (isprime, n_order, is_primitive_root,
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity,
     trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
-from sympy.ntheory.factor_ import (smoothness, smoothness_p,
+from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
-    udivisor_count, primenu, primeomega, small_trailing)
+    udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing)
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.multinomial import (
     multinomial_coefficients, multinomial_coefficients_iterator)
