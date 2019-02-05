@@ -54,7 +54,7 @@ def test_QubitBra():
 
 def test_IntQubit():
     # issue 9136
-    iqb = IntQubit(0, nbits=1)
+    iqb = IntQubit(0, nqubits=1)
     assert qubit_to_matrix(Qubit('0')) == qubit_to_matrix(iqb)
 
     iqb = IntQubit(1, nbits=1)
