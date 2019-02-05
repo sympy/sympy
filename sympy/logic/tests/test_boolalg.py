@@ -114,7 +114,6 @@ def test_Not():
     assert Not(0) is true
     assert Not(1) is false
     assert Not(2) is false
-    assert Not(A).canonical == Not(A)
 
 
 def test_Nand():
