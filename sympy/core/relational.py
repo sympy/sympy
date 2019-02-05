@@ -141,10 +141,20 @@ class Relational(Boolean, Expr, EvalfMixin):
         x < 1
         >>> _.negated
         x >= 1
+
+        Notes
+        =====
+
+        This works more or less identical to ``~``/``Not``. The difference is
+        that ``negated`` returns the relationship even if `evaluate=False`.
+        Hence, this is useful in code when checking for e.g. negated relations
+        to exisiting ones as it will not be affected by the `evaluate` flag.
+
         """
         ops = {Eq: Ne, Ge: Lt, Gt: Le, Le: Gt, Lt: Ge, Ne: Eq}
-        a, b = self.args
-        return ops.get(self.func, self.func)(a, b, evaluate=False)
+        # If there ever will be new Relational subclasses, the following line will work until it is properly sorted out
+        # return ops.get(self.func, lambda a, b, evaluate=False: ~(self.func(a, b, evaluate=evaluate)))(*self.args, evaluate=False)
+        return ops.get(self.func)(*self.args, evaluate=False)
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
