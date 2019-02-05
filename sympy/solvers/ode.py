@@ -323,6 +323,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
+    "order_reducing_substitution",
     )
 
 lie_heuristics = (
@@ -403,6 +404,7 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     return (Cs[0] if num == 1 else tuple(Cs))
 
 
+@order_reducing_substitution
 def dsolve(eq, func=None, hint="default", simplify=True,
     ics= None, xi=None, eta=None, x0=0, n=6, **kwargs):
     r"""
@@ -1354,7 +1356,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                             matching_hints["2nd_power_series_regular"] = coeff_dict
 
-
     if order > 0:
         # Any ODE that can be solved with a combination of algebra and
         # integrals e.g.:
@@ -1436,10 +1437,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     r_rescaled['trialset'] = undetcoeff['trialset']
                     matching_hints["nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"] = r_rescaled
 
-
     # Order keys based on allhints.
     retlist = [i for i in allhints if i in matching_hints]
-
     if dict:
         # Dictionaries are ordered arbitrarily, so make note of which
         # hint would come first for dsolve().  Use an ordered dict in Py 3.
@@ -1661,6 +1660,20 @@ def classify_sysode(eq, funcs=None, **kwargs):
     return matching_hints
 
 
+# Use repeated substitution until we do not have a function independent of derivative
+def check_substitution_type(eq):
+    order_to_subs = 0
+    for nsubs_try in range(1,ode_order(eq)):
+        if reduced_eq.subs(f(x).diff(x, nsubs_try), Dummy()).has(f(x)):
+            break
+        else:
+            order_to_subs += 1
+    g = Function("g")        
+    if order_to_subs > 0:
+       return {'nsubs': order_to_subs, "eq" :reduced_eq.subs(f(x).diff(x,order_to_subs), g(x)), "substitution_type":True }        
+    else:     
+       return {'nsubs': order_to_subs, "eq" :reduced_eq.subs(f(x).diff(x,order_to_subs), g(x)), "substitution_type":False }        
+       
 def check_linear_2eq_order1(eq, func, func_coef):
     x = func[0].func
     y = func[1].func
@@ -3065,6 +3078,22 @@ def ode_1st_exact(eq, func, order, match):
     sol = Integral(d, x) + Integral((e - (Integral(d, x).diff(y))), y)
     return Eq(sol, C1)
 
+def order_reducing_substitution(fun):
+    '''
+    Substitutes lowest order derivate in equation to function with order of derivative as 0
+    '''
+    def inner(eq):
+        my_dict = check_substitution_type(fun(eq))
+        if my_dict["substitution_type"] == True:
+            x = list(fun(eq).atoms(Symbol))[0]
+            f = list(fun(eq).atoms(Function))[0]
+            eq = dsolve(fun(eq))
+            for order_times_integrate in range(my_dict["nsubs"]):
+                eq = Integrate(eq, x)
+            return eq
+        else:
+            return fun(eq)
+    return inner
 
 def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     r"""
