@@ -123,11 +123,11 @@ class Quaternion(Expr):
         """Returns the equivalent quaternion of a matrix. The quaternion will be normalized
         only if the matrix is special orthogonal (orthogonal and det(M) = 1).
 
-        Parameters:
+        Parameters
         ==========
 
         M : Matrix
-            Input matrix to be converted to equivalent quaternion. M must be special 
+            Input matrix to be converted to equivalent quaternion. M must be special
             orthogonal (orthogonal and det(M) = 1) for the quaternion to be normalized.
 
         Returns
