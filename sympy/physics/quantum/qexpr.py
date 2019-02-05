@@ -129,10 +129,10 @@ class QExpr(Expr):
         """
 
         # First compute args and call Expr.__new__ to create the instance
-        args = cls._eval_args(args)
+        args = cls._eval_args(args, **old_assumptions)
         if len(args) == 0:
-            args = cls._eval_args(tuple(cls.default_args()))
-        inst = Expr.__new__(cls, *args, **old_assumptions)
+            args = cls._eval_args(tuple(cls.default_args()), **old_assumptions)
+        inst = Expr.__new__(cls, *args)
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst

@@ -282,7 +282,8 @@ class IntQubitState(QubitState):
     """A base class for qubits that work with binary representations."""
 
     @classmethod
-    def _eval_args(cls, args):
+    def _eval_args(cls, args, **extra_args):
+        nbits = extra_args.get('nbits')
         # The case of a QubitState instance
         if len(args) == 1 and isinstance(args[0], QubitState):
             return QubitState._eval_args(args)
@@ -295,12 +296,14 @@ class IntQubitState(QubitState):
             return QubitState._eval_args(qubit_values)
         # For two numbers, the second number is the number of bits
         # on which it is expressed, so IntQubit(0,5) == |00000>.
-        elif len(args) == 2 and args[1] > 1:
+        elif nbits is not None or (len(args) == 2 and args[1] > 1):
+            if nbits is None:
+                nbits = args[1]
             need = bitcount(abs(args[0]))
-            if args[1] < need:
+            if nbits < need:
                 raise ValueError(
-                    'cannot represent %s with %s bits' % (args[0], args[1]))
-            qubit_values = [(args[0] >> i) & 1 for i in reversed(range(args[1]))]
+                    'cannot represent %s with %s bits' % (args[0], nbits))
+            qubit_values = [(args[0] >> i) & 1 for i in reversed(range(nbits))]
             return QubitState._eval_args(qubit_values)
         else:
             return QubitState._eval_args(args)

@@ -53,6 +53,16 @@ def test_QubitBra():
 
 
 def test_IntQubit():
+    # issue 9136
+    iqb = IntQubit(0, nbits=1)
+    assert qubit_to_matrix(Qubit('0')) == qubit_to_matrix(iqb)
+
+    iqb = IntQubit(1, nbits=1)
+    assert qubit_to_matrix(Qubit('1')) == qubit_to_matrix(iqb)
+
+    iqb = IntQubit(7, nbits=4)
+    assert qubit_to_matrix(Qubit('111')) == qubit_to_matrix(iqb)
+
     iqb = IntQubit(8)
     assert iqb.as_int() == 8
     assert iqb.qubit_values == (1, 0, 0, 0)
