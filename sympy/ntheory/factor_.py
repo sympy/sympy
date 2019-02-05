@@ -1454,7 +1454,7 @@ def proper_divisors(n, generator=False):
     if n == 0:
         return []
 
-    pd = _divisors(n, True)
+    pd = _divisors(n, proper=True)
 
     if not generator:
         return sorted(pd)
