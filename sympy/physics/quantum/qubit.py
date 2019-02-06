@@ -362,7 +362,7 @@ class IntQubit(IntQubitState, Qubit):
         integer gives the integer to represent in binary form and the second
         integer gives the number of qubits to use.
         List of zeros and ones is also accepted to generate qubit by bit pattern.
- 
+
     nqubits : int
         The integer that represents the number of qubits.
         This number should be passed with keyword ``nqubits=N``.
