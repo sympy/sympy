@@ -283,8 +283,11 @@ class IntQubitState(QubitState):
 
     @classmethod
     def _eval_args(cls, args, **extra_args):
-        # args should be integer
-        if not all((isinstance(a, (int, Integer)) for a in args)):
+        # The case of a QubitState instance
+        if len(args) == 1 and isinstance(args[0], QubitState):
+            return QubitState._eval_args(args)
+        # otherwise, args should be integer
+        elif not all((isinstance(a, (int, Integer)) for a in args)):
             raise ValueError('values must be integers, got (%s)' % (tuple(type(a) for a in args),))
         nqubits = extra_args.get('nqubits')
         # use nqubits if specified
@@ -295,9 +298,6 @@ class IntQubitState(QubitState):
                 raise ValueError(
                     'too many positional arguments (%s). should be (number, nqubits=n)' % (args,))
             return cls._eval_args_with_nqubits(args[0], nqubits)
-        # The case of a QubitState instance
-        if len(args) == 1 and isinstance(args[0], QubitState):
-            return QubitState._eval_args(args)
         # For a single argument, we construct the binary representation of
         # that integer with the minimal number of bits.
         if len(args) == 1 and args[0] > 1:
@@ -357,9 +357,17 @@ class IntQubit(IntQubitState, Qubit):
     values : int, tuple
         If a single argument, the integer we want to represent in the qubit
         values. This integer will be represented using the fewest possible
-        number of qubits. If a pair of integers, the first integer gives the
-        integer to represent in binary form and the second integer gives
-        the number of qubits to use.
+        number of qubits.
+        If a pair of integers and the second value is more than one, the first
+        integer gives the integer to represent in binary form and the second 
+        integer gives the number of qubits to use.
+        List of zeros and ones is also accepted to generate qubit by bit pattern.
+ 
+    nqubits : int
+        The integer that represents the number of qubits.
+        This number should be passed with keyword ``nqubits=N``.
+        You can use this in order to avoid ambiguity of Qubit-style tuple of bits.
+        Please see the example below for more details.
 
     Examples
     ========
@@ -388,6 +396,21 @@ class IntQubit(IntQubitState, Qubit):
 
         >>> Qubit(q)
         |101>
+
+    Please note that ``IntQubit`` also accept ``Qubit``-style list of bits.
+    So, the code below yields qubits 3, not a single bit ``1``.
+
+        >>> IntQubit(1, 1)
+        |3>
+
+    To avoid ambiguity, use ``nqubits`` parameter.
+    Use of this keyword is recommended especially when you provide the values by variables.
+
+        >>> IntQubit(1, nqubits=1)
+        |1>
+        >>> a = 1
+        >>> IntQubit(a, nqubits=1)
+        |1>
     """
     @classmethod
     def dual_class(self):

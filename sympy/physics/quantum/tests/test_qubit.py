@@ -57,6 +57,9 @@ def test_IntQubit():
     iqb = IntQubit(0, nqubits=1)
     assert qubit_to_matrix(Qubit('0')) == qubit_to_matrix(iqb)
 
+    qb = Qubit('1010')
+    assert qubit_to_matrix(IntQubit(qb)) == qubit_to_matrix(qb)
+
     iqb = IntQubit(1, nqubits=1)
     assert qubit_to_matrix(Qubit('1')) == qubit_to_matrix(iqb)
     assert qubit_to_matrix(IntQubit(1)) == qubit_to_matrix(iqb)
