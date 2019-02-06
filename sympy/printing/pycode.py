@@ -8,7 +8,7 @@ This module contains python code printers for plain python as well as NumPy & Sc
 from collections import defaultdict
 from functools import wraps
 from itertools import chain
-from sympy.core import sympify, S, Number, Symbol
+from sympy.core import S, Number, Symbol
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
