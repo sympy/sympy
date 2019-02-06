@@ -1385,13 +1385,11 @@ def divisors(n, generator=False, proper=False):
     if isprime(n):
         if proper:
             return [1]
-        else:
-            return [1, n]
+        return [1, n]
     if n == 1:
         if proper:
             return []
-        else:
-            return [1]
+        return [1]
     if n == 0:
         return []
     rv = _divisors(n, proper)
