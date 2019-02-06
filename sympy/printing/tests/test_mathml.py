@@ -942,7 +942,5 @@ def test_print_basic():
 
 
 def test_root_notation_print():
-    m1 = MathMLPrinter(printer='presentation')
-    assert m1.doprint(x**(S(1)/3)) == '<mroot><mi>x</mi><mn>3</mn></mroot>'
-    m2 = MathMLPrinter(printer='presentation', root_notation=False)
-    assert m2.doprint(x**(S(1)/3)) == '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
+    assert mathml(x**(S(1)/3), printer='presentation') == '<mroot><mi>x</mi><mn>3</mn></mroot>'
+    assert mathml(x**(S(1)/3), printer='presentation', root_notation=False) == '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
