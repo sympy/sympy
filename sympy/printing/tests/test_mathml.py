@@ -461,8 +461,6 @@ def test_presentation_printmethod():
     assert mpp.doprint(1 + x) == '<mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow>'
     assert mpp.doprint(x**2) == '<msup><mi>x</mi><mn>2</mn></msup>'
     assert mpp.doprint(2*x) == '<mrow><mn>2</mn><mo>&InvisibleTimes;</mo><mi>x</mi></mrow>'
-    assert mpp.doprint(x**(S(1)/3)) == '<mroot><mi>x</mi><mn>3</mn></mroot>'
-    assert mpp.doprint(x**(S(1)/3), root_notation=False) == '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
 
 
 def test_presentation_mathml_core():
@@ -936,7 +934,15 @@ def test_toprettyxml_hooking():
     assert prettyxml_old1 == doc1.toprettyxml()
     assert prettyxml_old2 == doc2.toprettyxml()
 
+
 def test_print_basic():
     expr = Basic(1, 2)
     assert mpp.doprint(expr) == '<mrow><mi>basic</mi><mfenced><mn>1</mn><mn>2</mn></mfenced></mrow>'
     assert mp.doprint(expr) == '<basic><cn>1</cn><cn>2</cn></basic>'
+
+
+def test_root_notation_print():
+    m1 = MathMLPrinter(printer='presentation')
+    assert m1.doprint(x**(S(1)/3)) == '<mroot><mi>x</mi><mn>3</mn></mroot>'
+    m2 = MathMLPrinter(printer='presentation', root_notation=False)
+    assert m2.doprint(x**(S(1)/3)) == '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
