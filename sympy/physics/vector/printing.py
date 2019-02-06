@@ -7,6 +7,7 @@ from sympy.interactive.printing import init_printing
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter, translate
 from sympy.printing.pretty.pretty import PrettyPrinter
+from sympy.printing.pretty.pretty_symbology import put_accent_in_middle_of_string
 from sympy.printing.str import StrPrinter
 
 __all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex',
@@ -196,15 +197,9 @@ class VectorPrettyPrinter(PrettyPrinter):
                 4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
-        pic = d['picture'][0]
-        uni = d['unicode']
-        lp = len(pic) // 2 + 1
-        lu = len(uni) // 2 + 1
-        pic_split = [pic[:lp], pic[lp:]]
-        uni_split = [uni[:lu], uni[lu:]]
 
-        d['picture'] = [pic_split[0] + dots[dot_i] + pic_split[1]]
-        d['unicode'] =  uni_split[0] + dots[dot_i] + uni_split[1]
+        d['picture'] = [put_accent_in_middle_of_string(d['picture'][0], dots[dot_i])]
+        d['unicode'] =  put_accent_in_middle_of_string(d['unicode'], dots[dot_i])
 
         return pform
 
