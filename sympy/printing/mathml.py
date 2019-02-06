@@ -20,8 +20,19 @@ class MathMLPrinterBase(Printer):
     _default_settings = {
         "order": None,
         "encoding": "utf-8",
+        "fold_frac_powers": False,
+        "fold_func_brackets": False,
+        "fold_short_frac": None,
+        "inv_trig_style": "abbreviated",
+        "ln_notation": False,
+        "long_frac_ratio": None,
+        "mat_delim": "[",
+        "mat_symbol_style": "plain",
+        "mul_symbol": None,
         "root_notation": True,
+        "symbol_names": {},
     }
+
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
         from xml.dom.minidom import Document,Text
@@ -377,7 +388,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
-        if e.exp.is_Rational and e.exp.p == 1:
+        if self._settings['root_notation'] and e.exp.is_Rational and e.exp.p == 1:
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('root'))
             if e.exp.q != 2:
@@ -464,29 +475,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     References: https://www.w3.org/TR/MathML2/chapter3.html
     """
     printmethod = "_mathml_presentation"
-
-    def __init__(self, settings=None):
-        MathMLPrinterBase.__init__(self, settings)
-
-        _default_settings = {
-            "fold_frac_powers": False,
-            "fold_func_brackets": False,
-            "fold_short_frac": None,
-            "inv_trig_style": "abbreviated",
-            "ln_notation": False,
-            "long_frac_ratio": None,
-            "mat_delim": "[",
-            "mat_symbol_style": "plain",
-            "mul_symbol": None,
-            "root_notation": True,
-            "symbol_names": {},
-            "order": None
-        }
-
-        self._settings = _default_settings
-
-        if settings is not None:
-            self._settings.update(settings)
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
