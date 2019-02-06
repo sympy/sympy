@@ -359,7 +359,7 @@ class IntQubit(IntQubitState, Qubit):
         values. This integer will be represented using the fewest possible
         number of qubits.
         If a pair of integers and the second value is more than one, the first
-        integer gives the integer to represent in binary form and the second 
+        integer gives the integer to represent in binary form and the second
         integer gives the number of qubits to use.
         List of zeros and ones is also accepted to generate qubit by bit pattern.
  
@@ -397,7 +397,7 @@ class IntQubit(IntQubitState, Qubit):
         >>> Qubit(q)
         |101>
 
-    Please note that ``IntQubit`` also accept ``Qubit``-style list of bits.
+    Please note that ``IntQubit`` also accepts a ``Qubit``-style list of bits.
     So, the code below yields qubits 3, not a single bit ``1``.
 
         >>> IntQubit(1, 1)
