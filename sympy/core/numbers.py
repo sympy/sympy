@@ -3812,7 +3812,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     __slots__ = []
 
     def _latex(self, printer):
-        return r"i"
+        return printer._settings['imaginary_unit']
 
     @staticmethod
     def __abs__():

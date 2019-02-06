@@ -135,6 +135,7 @@ class LatexPrinter(Printer):
         "order": None,
         "symbol_names": {},
         "root_notation": True,
+        "imaginary_unit": "i",
     }
 
     def __init__(self, settings=None):
@@ -2269,7 +2270,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     fold_short_frac=None, inv_trig_style="abbreviated",
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-    order=None, symbol_names=None, root_notation=True):
+    order=None, symbol_names=None, root_notation=True, imaginary_unit="i"):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2325,6 +2326,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     root_notation : boolean, optional
         If set to ``False``, exponents of the form 1/n are printed in fractonal form.
         Default is ``True``, to print exponent in root form.
+    imaginary_unit : string, optional
+        String to use for the imaginary unit. Default is "i". Common alternatives
+        are "j" and "\\textrm{i}".
 
     Notes
     =====
@@ -2450,6 +2454,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'order' : order,
         'symbol_names' : symbol_names,
         'root_notation' : root_notation,
+        'imaginary_unit' : imaginary_unit,
     }
 
     return LatexPrinter(settings).doprint(expr)
