@@ -57,11 +57,13 @@ def test_IntQubit():
     iqb = IntQubit(0, nqubits=1)
     assert qubit_to_matrix(Qubit('0')) == qubit_to_matrix(iqb)
 
-    iqb = IntQubit(1, nbits=1)
+    iqb = IntQubit(1, nqubits=1)
     assert qubit_to_matrix(Qubit('1')) == qubit_to_matrix(iqb)
+    assert qubit_to_matrix(IntQubit(1)) == qubit_to_matrix(iqb)
 
-    iqb = IntQubit(7, nbits=4)
-    assert qubit_to_matrix(Qubit('111')) == qubit_to_matrix(iqb)
+    iqb = IntQubit(7, nqubits=4)
+    assert qubit_to_matrix(Qubit('0111')) == qubit_to_matrix(iqb)
+    assert qubit_to_matrix(IntQubit(7, 4)) == qubit_to_matrix(iqb)
 
     iqb = IntQubit(8)
     assert iqb.as_int() == 8
@@ -176,6 +178,9 @@ def test_measure_all():
     state2 = Qubit('11')/sqrt(5) + 2*Qubit('00')/sqrt(5)
     assert measure_all(state2) == \
         [(Qubit('00'), Rational(4, 5)), (Qubit('11'), Rational(1, 5))]
+
+    # from issue #12585
+    assert measure_all(qapply(Qubit('0'))) == [(Qubit('0'), 1)]
 
 
 def test_eval_trace():

@@ -284,6 +284,12 @@ class IntQubitState(QubitState):
     @classmethod
     def _eval_args(cls, args, **extra_args):
         nqubits = extra_args.get('nqubits')
+        # use nqubits if specified
+        if nqubits is not None:
+            if len(args) != 1:
+                raise ValueError(
+                    'too many positional arguments (%s). should be (number, nqubits=n)' % (args,))
+            return cls._eval_args_with_nqubits(args[0], nqubits)
         # The case of a QubitState instance
         if len(args) == 1 and isinstance(args[0], QubitState):
             return QubitState._eval_args(args)
@@ -296,17 +302,19 @@ class IntQubitState(QubitState):
             return QubitState._eval_args(qubit_values)
         # For two numbers, the second number is the number of bits
         # on which it is expressed, so IntQubit(0,5) == |00000>.
-        elif nqubits is not None or (len(args) == 2 and args[1] > 1):
-            if nqubits is None:
-                nqubits = args[1]
-            need = bitcount(abs(args[0]))
-            if nqubits < need:
-                raise ValueError(
-                    'cannot represent %s with %s bits' % (args[0], nqubits))
-            qubit_values = [(args[0] >> i) & 1 for i in reversed(range(nqubits))]
-            return QubitState._eval_args(qubit_values)
+        elif len(args) == 2 and args[1] > 1:
+            return cls._eval_args_with_nqubits(args[0], args[1])
         else:
             return QubitState._eval_args(args)
+
+    @classmethod
+    def _eval_args_with_nqubits(cls, number, nqubits):
+        need = bitcount(abs(number))
+        if nqubits < need:
+            raise ValueError(
+                'cannot represent %s with %s bits' % (number, nqubits))
+        qubit_values = [(number >> i) & 1 for i in reversed(range(nqubits))]
+        return QubitState._eval_args(qubit_values)
 
     def as_int(self):
         """Return the numerical value of the qubit."""
@@ -544,7 +552,7 @@ def measure_all(qubit, format='sympy', normalize=True):
         for i in range(size):
             if m[i] != 0.0:
                 results.append(
-                    (Qubit(IntQubit(i, nqubits)), m[i]*conjugate(m[i]))
+                    (Qubit(IntQubit(i, nqubits=nqubits)), m[i]*conjugate(m[i]))
                 )
         return results
     else:
