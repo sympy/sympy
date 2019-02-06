@@ -283,9 +283,14 @@ class IntQubitState(QubitState):
 
     @classmethod
     def _eval_args(cls, args, **extra_args):
+        # args should be integer
+        if not all((isinstance(a, (int, Integer)) for a in args)):
+            raise ValueError('values must be integers, got (%s)' % (tuple(type(a) for a in args),))
         nqubits = extra_args.get('nqubits')
         # use nqubits if specified
         if nqubits is not None:
+            if not isinstance(nqubits, (int, Integer)):
+                raise ValueError('nqubits must be an integer, got (%s)' % type(nqubits))
             if len(args) != 1:
                 raise ValueError(
                     'too many positional arguments (%s). should be (number, nqubits=n)' % (args,))

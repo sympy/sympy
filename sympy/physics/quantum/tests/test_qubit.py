@@ -88,6 +88,9 @@ def test_IntQubit():
     assert iqb._eval_innerproduct_IntQubitBra(iqb_bra) == Integer(0)
     raises(ValueError, lambda: IntQubit(4, 1))
 
+    raises(ValueError, lambda: IntQubit('5'))
+    raises(ValueError, lambda: IntQubit(5, '5'))
+    raises(ValueError, lambda: IntQubit(5, nqubits='5'))
 
 def test_superposition_of_states():
     state = 1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10')
