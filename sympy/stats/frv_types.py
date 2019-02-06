@@ -10,6 +10,7 @@ Bernoulli
 Coin
 Binomial
 Hypergeometric
+Rademacher
 """
 
 from __future__ import print_function, division

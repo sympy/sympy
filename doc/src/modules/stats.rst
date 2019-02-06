@@ -15,11 +15,16 @@ Finite Types
 .. autofunction:: Binomial
 .. autofunction:: Hypergeometric
 .. autofunction:: FiniteRV
+.. autofunction:: Rademacher
 
 Discrete Types
 -----------------
 .. autofunction:: Geometric
 .. autofunction:: Poisson
+.. autofunction:: Logarithmic
+.. autofunction:: NegativeBinomial
+.. autofunction:: YuleSimon
+.. autofunction:: Zeta
 
 Continuous Types
 -------------------
