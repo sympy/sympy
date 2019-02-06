@@ -6,11 +6,10 @@ from __future__ import print_function, division
 
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
-from sympy.core.alphabets import greeks
 from sympy.core.compatibility import range
-from .printer import Printer
-from .pretty.pretty_symbology import greek_unicode
 from .conventions import split_super_sub, requires_partial
+from .pretty.pretty_symbology import greek_unicode
+from .printer import Printer
 
 
 class MathMLPrinterBase(Printer):
@@ -340,7 +339,6 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 return mi
 
         # translate name, supers and subs to unicode characters
-        greek_letters = set(greeks) # make a copy
         def translate(s):
             if s in greek_unicode:
                 return greek_unicode.get(s)
@@ -426,7 +424,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Basic(self, e):
         x = self.dom.createElement(self.mathml_tag(e))
-        for arg in e:
+        for arg in e.args:
             x.appendChild(self._print(arg))
         return x
 
@@ -465,6 +463,29 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     References: https://www.w3.org/TR/MathML2/chapter3.html
     """
     printmethod = "_mathml_presentation"
+
+    def __init__(self, settings=None):
+        MathMLPrinterBase.__init__(self, settings)
+
+        _default_settings = {
+            "fold_frac_powers": False,
+            "fold_func_brackets": False,
+            "fold_short_frac": None,
+            "inv_trig_style": "abbreviated",
+            "ln_notation": False,
+            "long_frac_ratio": None,
+            "mat_delim": "[",
+            "mat_symbol_style": "plain",
+            "mul_symbol": None,
+            "root_notation": True,
+            "symbol_names": {},
+            "order": None
+        }
+
+        self._settings = _default_settings
+
+        if settings is not None:
+            self._settings.update(settings)
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -748,7 +769,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 return mi
 
         # translate name, supers and subs to unicode characters
-        greek_letters = set(greeks) # make a copy
         def translate(s):
             if s in greek_unicode:
                 return greek_unicode.get(s)
@@ -867,8 +887,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mi = self.dom.createElement('mi')
         mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         mrow.appendChild(mi)
-        for arg in e:
-            x.appendChild(self._print(arg))
+        brac = self.dom.createElement('mfenced')
+        for arg in e.args:
+            brac.appendChild(self._print(arg))
+        mrow.appendChild(brac)
         return mrow
 
     def _print_AssocOp(self, e):

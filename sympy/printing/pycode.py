@@ -6,7 +6,6 @@ This module contains python code printers for plain python as well as NumPy & Sc
 
 
 from collections import defaultdict
-from functools import wraps
 from itertools import chain
 from sympy.core import S, Number, Symbol
 from .precedence import precedence
@@ -106,9 +105,6 @@ class AbstractPythonCodePrinter(CodePrinter):
         self.known_constants = dict(self._kc, **(settings or {}).get(
             'user_constants', {}))
 
-    def _get_statement(self, codestring):
-        return codestring
-
     def _declare_number_const(self, name, value):
         return "%s = %s" % (name, value)
 
@@ -126,7 +122,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         return lines
 
     def _get_statement(self, codestring):
-        return "%s" % codestring
+        return "{}".format(codestring)
 
     def _get_comment(self, text):
         return "  # {0}".format(text)
@@ -492,7 +488,7 @@ class NumPyPrinter(PythonCodePrinter):
         "General sequence printer: converts to tuple"
         # Print tuples here instead of lists because numba supports
         #     tuples in nopython mode.
-        delimite.get('delimiter', ', ')
+        delimiter=', '
         return '({},)'.format(delimiter.join(self._print(item) for item in seq))
 
     def _print_MatMul(self, expr):

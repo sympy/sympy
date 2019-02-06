@@ -1,16 +1,14 @@
-from sympy.core.compatibility import range
 from sympy import (FiniteSet, S, Symbol, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        cancel, KroneckerDelta, exp, I)
-from sympy.concrete.expr_with_limits import AddWithLimits
+        cancel, exp, I)
+from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
     Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
     density, where, FiniteRV, pspace, cdf,
     correlation, moment, cmoment, smoment, characteristic_function, moment_generating_function)
 from sympy.stats.frv_types import DieDistribution
-from sympy.utilities.pytest import raises, slow
-from sympy.abc import p, x, i
+from sympy.utilities.pytest import raises
 
 oo = S.Infinity
 
@@ -266,6 +264,7 @@ def test_FiniteRV():
         *[Eq(F.symbol, i) for i in [1, 2, 3]])
 
 def test_density_call():
+    from sympy.abc import p
     x = Bernoulli('x', p)
     d = density(x)
     assert d(0) == 1 - p
@@ -278,6 +277,7 @@ def test_density_call():
 
 
 def test_DieDistribution():
+    from sympy.abc import x
     X = DieDistribution(6)
     assert X.pdf(S(1)/2) == S.Zero
     assert X.pdf(x).subs({x: 1}).doit() == S(1)/6

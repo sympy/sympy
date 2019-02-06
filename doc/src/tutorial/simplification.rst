@@ -315,7 +315,7 @@ under other conditions as well).  A common consequence of the failure of
 identity 2 is that `\sqrt{x}\sqrt{y} \neq \sqrt{xy}`.
 
 Identity 3 is not always true.  For example, if `x = -1`, `a = 2`, and `b =
-\frac{1}{2}`, then `(x^a)^b = {\left ((-1)^2\right )}^{1/2} = \sqrt{1} = 1`
+\frac{1}{2}`, then `(x^a)^b = {\left((-1)^2\right)}^{1/2} = \sqrt{1} = 1`
 and `x^{ab} = (-1)^{2\cdot1/2} = (-1)^1 = -1`.  However, identity 3 is true
 when `b` is an integer (again, it may also hold in other cases as well).  Two
 common consequences of the failure of identity 3 are that `\sqrt{x^2}\neq x`
@@ -330,7 +330,7 @@ To summarize
 +-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
 |2. `x^ay^a = (xy)^a`   |`x, y \geq 0` and `a \in \mathbb{R}`|`(-1)^{1/2}(-1)^{1/2} \neq (-1\cdot-1)^{1/2}`       |`\sqrt{x}\sqrt{y} \neq \sqrt{xy}` in general                                 |
 +-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
-|3. `(x^a)^b = x^{ab}`  |`b \in \mathbb{Z}`                  |`{\left((-1)^2\right )}^{1/2} \neq (-1)^{2\cdot1/2}`|`\sqrt{x^2}\neq x` and `\sqrt{\frac{1}{x}}\neq\frac{1}{\sqrt{x}}` in general |
+|3. `(x^a)^b = x^{ab}`  |`b \in \mathbb{Z}`                  |`{\left((-1)^2\right)}^{1/2} \neq (-1)^{2\cdot1/2}` |`\sqrt{x^2}\neq x` and `\sqrt{\frac{1}{x}}\neq\frac{1}{\sqrt{x}}` in general |
 +-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
 
 
@@ -499,16 +499,16 @@ is real.
 
 As before, ``z`` and ``t`` will be Symbols with no additional assumptions.
 
-Note that the identity `\log{\left (\frac{x}{y}\right )} = \log(x) - \log(y)`
-is a special case of identities 1 and 2 by `\log{\left (\frac{x}{y}\right )}
-=` `\log{\left (x\cdot\frac{1}{y}\right )} =` `\log(x) + \log{\left(
-y^{-1}\right )} =` `\log(x) - \log(y)`, and thus it also holds if `x` and `y`
+Note that the identity `\log{\left(\frac{x}{y}\right)} = \log(x) - \log(y)`
+is a special case of identities 1 and 2 by `\log{\left(\frac{x}{y}\right)}
+=` `\log{\left(x\cdot\frac{1}{y}\right)} =` `\log(x) + \log{\left(
+y^{-1}\right)} =` `\log(x) - \log(y)`, and thus it also holds if `x` and `y`
 are positive, but may not hold in general.
 
-We also see that `\log{\left( e^x \right)} = x` comes from `\log{\left ( e^x
+We also see that `\log{\left( e^x \right)} = x` comes from `\log{\left( e^x
 \right)} = x\log(e) = x`, and thus holds when `x` is real (and it can be
 verified that it does not hold in general for arbitrary complex `x`, for
-example, `\log{\left (e^{x + 2\pi i}\right)} = \log{\left (e^x\right )} = x
+example, `\log{\left(e^{x + 2\pi i}\right)} = \log{\left(e^x\right)} = x
 \neq x + 2\pi i`).
 
 expand_log
