@@ -302,13 +302,16 @@ class Quaternion(Expr):
     def _generic_mul(q1, q2):
 
         """Generic multiplication.
+
         Parameters
         ==========
+
         q1 : Quaternion
         q2 : Quaternion
 
         Returns
         =======
+
         Quaternion
         """
         q1 = sympify(q1)
@@ -473,11 +476,12 @@ class Quaternion(Expr):
         Parameters
         ==========
 
-        p: int
+        p : int
             Power to be applied on quaternion.
 
         Returns
         =======
+
         Quaternion
             The p-th power in the cos-sin form.
 
@@ -511,13 +515,16 @@ class Quaternion(Expr):
 
         Parameters
         ==========
+
         pin : tuple
             A 3-element tuple of coordinates of a point. This point will be
             the axis of rotation.
         r
             Angle to be rotated.
+
         Returns
         =======
+
         tuple
             The coordinates of the quaternion after rotation.
 
@@ -548,6 +555,7 @@ class Quaternion(Expr):
 
         Returns
         =======
+
         tuple
 
         Examples
@@ -592,11 +600,13 @@ class Quaternion(Expr):
 
         Parameters
         ==========
+
         v : tuple or None
             Default value: None
 
         Returns
         =======
+
         tuple
             Returns the equivalent rotation transformation matrix of the quaternion
             which represents rotation about the origin if v is not passed.
