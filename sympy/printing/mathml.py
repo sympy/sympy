@@ -7,9 +7,9 @@ from __future__ import print_function, division
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
 from sympy.core.compatibility import range
-from .conventions import split_super_sub, requires_partial
-from .pretty.pretty_symbology import greek_unicode
-from .printer import Printer
+from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.pretty.pretty_symbology import greek_unicode
+from sympy.printing.printer import Printer
 
 
 class MathMLPrinterBase(Printer):
@@ -19,8 +19,20 @@ class MathMLPrinterBase(Printer):
 
     _default_settings = {
         "order": None,
-        "encoding": "utf-8"
+        "encoding": "utf-8",
+        "fold_frac_powers": False,
+        "fold_func_brackets": False,
+        "fold_short_frac": None,
+        "inv_trig_style": "abbreviated",
+        "ln_notation": False,
+        "long_frac_ratio": None,
+        "mat_delim": "[",
+        "mat_symbol_style": "plain",
+        "mul_symbol": None,
+        "root_notation": True,
+        "symbol_names": {},
     }
+
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
         from xml.dom.minidom import Document,Text
@@ -376,7 +388,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
-        if e.exp.is_Rational and e.exp.p == 1:
+        if self._settings['root_notation'] and e.exp.is_Rational and e.exp.p == 1:
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('root'))
             if e.exp.q != 2:
@@ -463,29 +475,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     References: https://www.w3.org/TR/MathML2/chapter3.html
     """
     printmethod = "_mathml_presentation"
-
-    def __init__(self, settings=None):
-        MathMLPrinterBase.__init__(self, settings)
-
-        _default_settings = {
-            "fold_frac_powers": False,
-            "fold_func_brackets": False,
-            "fold_short_frac": None,
-            "inv_trig_style": "abbreviated",
-            "ln_notation": False,
-            "long_frac_ratio": None,
-            "mat_delim": "[",
-            "mat_symbol_style": "plain",
-            "mul_symbol": None,
-            "root_notation": True,
-            "symbol_names": {},
-            "order": None
-        }
-
-        self._settings = _default_settings
-
-        if settings is not None:
-            self._settings.update(settings)
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -816,7 +805,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             x.appendChild(self._print(e.exp))
             return x
 
-        if e.exp.is_Rational and e.exp.p == 1:
+        if e.exp.is_Rational and e.exp.p == 1 and self._settings['root_notation']:
             if e.exp.q == 2:
                 x = self.dom.createElement('msqrt')
                 x.appendChild(self._print(e.base))

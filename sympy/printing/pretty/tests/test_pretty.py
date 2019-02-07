@@ -24,6 +24,7 @@ from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerP
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
+from sympy.printing.pretty.pretty_symbology import put_accent_in_middle_of_string
 
 from sympy.physics.units import joule, degree, radian
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
@@ -319,8 +320,8 @@ def test_missing_in_2X_issue_9047():
 def test_upretty_modifiers():
     # Accents
     assert upretty( Symbol('Fmathring') ) == u'F̊'
-    assert upretty( Symbol('Fddddot') ) == u'F̈̈'
-    assert upretty( Symbol('Fdddot') ) == u'F̈̇'
+    assert upretty( Symbol('Fddddot') ) == u'F⃜'
+    assert upretty( Symbol('Fdddot') ) == u'F⃛'
     assert upretty( Symbol('Fddot') ) == u'F̈'
     assert upretty( Symbol('Fdot') ) == u'Ḟ'
     assert upretty( Symbol('Fcheck') ) == u'F̌'
@@ -6508,3 +6509,11 @@ def test_issue_15583():
     result = '(n_x, n_y, n_z)'
     e = pretty((N.x, N.y, N.z))
     assert e == result
+
+def test_put_accent_in_middle_of_string():
+    assert put_accent_in_middle_of_string('a', u'\N{COMBINING TILDE}') == u'ã'
+    assert put_accent_in_middle_of_string('aa', u'\N{COMBINING TILDE}') == u'aã'
+    assert put_accent_in_middle_of_string('aaa', u'\N{COMBINING TILDE}') == u'aãa'
+    assert put_accent_in_middle_of_string('aaaa', u'\N{COMBINING TILDE}') == u'aaãa'
+    assert put_accent_in_middle_of_string('aaaaa', u'\N{COMBINING TILDE}') == u'aaãaa'
+    assert put_accent_in_middle_of_string('abcdefg', u'\N{COMBINING FOUR DOTS ABOVE}') == u'abcd⃜efg'
