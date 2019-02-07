@@ -94,6 +94,7 @@ def test_IntQubit():
     raises(ValueError, lambda: IntQubit('5'))
     raises(ValueError, lambda: IntQubit(5, '5'))
     raises(ValueError, lambda: IntQubit(5, nqubits='5'))
+    raises(TypeError, lambda: IntQubit(5, bad_arg=True))
 
 def test_superposition_of_states():
     state = 1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10')
