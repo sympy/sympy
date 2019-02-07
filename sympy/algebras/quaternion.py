@@ -289,7 +289,7 @@ class Quaternion(Expr):
         x + 2*x*i + 3*x*j + 4*x*k
 
         Quaternions over complex fields :
-        ===========
+
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import I
         >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
