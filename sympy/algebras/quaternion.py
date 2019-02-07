@@ -264,14 +264,14 @@ class Quaternion(Expr):
         Parameters
         ==========
 
-        other : Quaternion
+        other : Quaternion or symbol
             The quaternion to multiply to current (self) quaternion.
 
         Returns
         =======
 
         Quaternion
-            The resultant quaternion after multiply self with other
+            The resultant quaternion after multiplying self with other
 
         Examples
         ========
@@ -300,19 +300,45 @@ class Quaternion(Expr):
 
     @staticmethod
     def _generic_mul(q1, q2):
-
         """Generic multiplication.
 
         Parameters
         ==========
 
-        q1 : Quaternion
-        q2 : Quaternion
+        q1 : Quaternion or symbol
+        q2 : Quaternion or symbol
+
+        It's important to note that if both q1 and q2 is not a Quaternion,
+        this function simply returns q1 * q2.
 
         Returns
         =======
 
         Quaternion
+            The resultant quaternion after multiplying q1 and q2
+
+        Examples
+        ========
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import symbols
+        >>> q1 = Quaternion(1, 2, 3, 4)
+        >>> q2 = Quaternion(5, 6, 7, 8)
+        >>> Quaternion._generic_mul(q1, q2)
+        (-60) + 12*i + 30*j + 24*k
+        >>> Quaternion._generic_mul(q1, 2)
+        2 + 4*i + 6*j + 8*k
+        >>> x = symbols('x', real = True)
+        >>> Quaternion._generic_mul(q1, x)
+        x + 2*x*i + 3*x*j + 4*x*k
+
+        Quaternions over complex fields :
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import I
+        >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
+        >>> Quaternion._generic_mul(q3, 2 + 3*I)
+        (2 + 3*I)*(3 + 4*I) + (2 + 3*I)*(2 + 5*I)*i + 0*j + (2 + 3*I)*(7 + 8*I)*k
         """
         q1 = sympify(q1)
         q2 = sympify(q2)
@@ -557,6 +583,7 @@ class Quaternion(Expr):
         =======
 
         tuple
+            Tuple of (axis, angle)
 
         Examples
         ========
