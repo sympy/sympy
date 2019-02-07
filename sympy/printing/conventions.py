@@ -84,3 +84,39 @@ def requires_partial(expr):
         return len(set(expr.variables)) > 1
 
     return sum(not s.is_integer for s in expr.free_symbols) > 1
+
+
+def split_leading_trailing_underscore(text):
+    """
+    Removes leading and trailing underscores and returns a tuple as:
+    ( number of leading, text without leading and trailing, number of trailing)
+
+    Examples
+    ========
+
+    >>> from sympy.printing.conventions import split_leading_trailing_underscore
+    >>> split_leading_trailing_underscore('__a')
+    (2, 'a', 0)
+
+    >>> split_leading_trailing_underscore('_a__3_b__')
+    (1, 'a__3_b', 2)
+
+    """
+    pos = 0
+    leading = 0
+    while pos < len(text):
+        if text[pos] == "_":
+            leading += 1
+            pos += 1
+        else:
+            break
+    pos = len(text)-1
+    trailing = 0
+    while pos >= max(leading, 1):
+        if text[pos] == "_":
+            trailing += 1
+            pos -= 1
+        else:
+            break
+
+    return(leading, text[leading:(len(text)-trailing)], trailing)

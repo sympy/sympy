@@ -2,7 +2,7 @@ from sympy import symbols, Derivative, Integral, exp, cos, oo, Function
 from sympy.functions.special.bessel import besselj
 from sympy.functions.special.polynomials import legendre
 from sympy.functions.combinatorial.numbers import bell
-from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.conventions import split_super_sub, requires_partial, split_leading_trailing_underscore
 from sympy.utilities.pytest import raises, XFAIL
 
 def test_super_sub():
@@ -97,3 +97,8 @@ def test_requires_partial_unspecified_variables():
     f = symbols('f', cls=Function)
     assert requires_partial(Derivative(f, x)) is False
     assert requires_partial(Derivative(f, x, y)) is True
+
+
+def test_split_leading_trailing_underscore():
+    assert split_leading_trailing_underscore('__aaa_') == (2, 'aaa', 1)
+    assert split_leading_trailing_underscore('_b_c^d___') == (1, 'b_c^d', 3)

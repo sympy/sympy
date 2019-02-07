@@ -28,7 +28,7 @@ except ImportError:
     unicode_warnings += 'No unicodedata available\n'
     U = lambda name: None
 
-from sympy.printing.conventions import split_super_sub
+from sympy.printing.conventions import split_super_sub, split_leading_trailing_underscore
 from sympy.core.alphabets import greeks
 
 
@@ -507,7 +507,8 @@ def pretty_symbol(symb_name):
     if not _use_unicode:
         return symb_name
 
-    name, sups, subs = split_super_sub(symb_name)
+    leading, name, trailing = split_leading_trailing_underscore(symb_name)
+    name, sups, subs = split_super_sub(name)
 
     def translate(s) :
         gG = greek_unicode.get(s)
@@ -551,7 +552,7 @@ def pretty_symbol(symb_name):
         sups_result = ' '.join(pretty_sups)
         subs_result = ' '.join(pretty_subs)
 
-    return ''.join([name, sups_result, subs_result])
+    return leading*'_' + ''.join([name, sups_result, subs_result]) + trailing*'_'
 
 
 def annotated(letter):
