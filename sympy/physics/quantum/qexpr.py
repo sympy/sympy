@@ -100,7 +100,7 @@ class QExpr(Expr):
     def free_symbols(self):
         return {self}
 
-    def __new__(cls, *args, **old_assumptions):
+    def __new__(cls, *args, **kwargs):
         """Construct a new quantum object.
 
         Parameters
@@ -129,9 +129,9 @@ class QExpr(Expr):
         """
 
         # First compute args and call Expr.__new__ to create the instance
-        args = cls._eval_args(args, **old_assumptions)
+        args = cls._eval_args(args, **kwargs)
         if len(args) == 0:
-            args = cls._eval_args(tuple(cls.default_args()), **old_assumptions)
+            args = cls._eval_args(tuple(cls.default_args()), **kwargs)
         inst = Expr.__new__(cls, *args)
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
