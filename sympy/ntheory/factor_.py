@@ -1398,10 +1398,11 @@ def divisors(n, generator=False, proper=False):
     return rv
 
 
-def divisor_count(n, modulus=1):
+def divisor_count(n, modulus=1, proper=False):
     """
     Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
-    those that are divisible by ``modulus`` are counted.
+    those that are divisible by ``modulus`` are counted. If ``proper`` is True
+    then the divisor of ``n`` will not be counted.
 
     Examples
     ========
@@ -1409,11 +1410,15 @@ def divisor_count(n, modulus=1):
     >>> from sympy import divisor_count
     >>> divisor_count(6)
     4
+    >>> divisor_count(6, 2)
+    2
+    >>> divisor_count(6, proper=True)
+    3
 
     See Also
     ========
 
-    factorint, divisors, totient
+    factorint, divisors, totient, proper_divisor_count
 
     """
 
@@ -1425,7 +1430,10 @@ def divisor_count(n, modulus=1):
             return 0
     if n == 0:
         return 0
-    return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
+    n = Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
+    if n and proper:
+        n -= 1
+    return n
 
 
 def proper_divisors(n, generator=False):
@@ -1453,7 +1461,7 @@ def proper_divisors(n, generator=False):
     return divisors(n, generator=generator, proper=True)
 
 
-def proper_divisor_count(n):
+def proper_divisor_count(n, modulus=1):
     """
     Return the number of proper divisors of ``n``.
 
@@ -1463,6 +1471,8 @@ def proper_divisor_count(n):
     >>> from sympy import proper_divisor_count
     >>> proper_divisor_count(6)
     3
+    >>> proper_divisor_count(6, modulus=2)
+    1
 
     See Also
     ========
@@ -1470,7 +1480,7 @@ def proper_divisor_count(n):
     divisors, proper_divisors, divisor_count
 
     """
-    return max(divisor_count(n) - 1, 0)
+    return divisor_count(n, modulus=modulus, proper=True)
 
 
 def _udivisors(n):
