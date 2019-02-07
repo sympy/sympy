@@ -1918,7 +1918,6 @@ def test_imaginary_unit():
     assert latex(1 + I) == '1 + i'
     assert latex(1 + I, imaginary_unit='j') == '1 + j'
     assert latex(1 + I, imaginary_unit='foo') == '1 + foo'
-    assert latex(1 + I, imaginary_unit='foo') == '1 + foo'
     assert latex(I, imaginary_unit=r"\text{i}") == '\\text{i}'
 
     raises(TypeError, lambda: latex(I, imaginary_unit=I))

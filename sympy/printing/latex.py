@@ -177,7 +177,7 @@ class LatexPrinter(Printer):
                     self._settings['mul_symbol']
 
         self._delim_dict = {'(': ')', '[': ']'}
-        
+
         if not isinstance(self._settings['imaginary_unit'], string_types):
             raise TypeError("'imaginary_unit' must be a string, not {}".format(self._settings['imaginary_unit']))
 
