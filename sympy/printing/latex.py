@@ -23,7 +23,7 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key, range
+from sympy.core.compatibility import default_sort_key, range, string_types
 from sympy.utilities.iterables import has_variety
 
 import re
@@ -177,6 +177,9 @@ class LatexPrinter(Printer):
                     self._settings['mul_symbol']
 
         self._delim_dict = {'(': ')', '[': ']'}
+        
+        if not isinstance(self._settings['imaginary_unit'], string_types):
+            raise TypeError("'imaginary_unit' must be a string, not {}".format(self._settings['imaginary_unit']))
 
     def parenthesize(self, item, level, strict=False):
         prec_val = precedence_traditional(item)
