@@ -33,7 +33,6 @@ except ImportError:
 from sympy.printing.conventions import split_super_sub
 from sympy.core.alphabets import greeks
 
-
 # prefix conventions when constructing tables
 # L   - LATIN     i
 # G   - GREEK     beta
@@ -219,19 +218,19 @@ for s in '+-=()':
 # TODO: Make brackets adjust to height of contents
 modifier_dict = {
     # Accents
-    'mathring': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING RING ABOVE}'),
-    'ddddot': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING FOUR DOTS ABOVE}'),
-    'dddot': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING THREE DOTS ABOVE}'),
-    'ddot': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING DIAERESIS}'),
-    'dot': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING DOT ABOVE}'),
-    'check': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING CARON}'),
-    'breve': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING BREVE}'),
-    'acute': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING ACUTE ACCENT}'),
-    'grave': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING GRAVE ACCENT}'),
-    'tilde': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING TILDE}'),
-    'hat': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING CIRCUMFLEX ACCENT}'),
-    'bar': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING OVERLINE}'),
-    'vec': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING RIGHT ARROW ABOVE}'),
+    'mathring': lambda s: center_accent(s, u'\N{COMBINING RING ABOVE}'),
+    'ddddot': lambda s: center_accent(s, u'\N{COMBINING FOUR DOTS ABOVE}'),
+    'dddot': lambda s: center_accent(s, u'\N{COMBINING THREE DOTS ABOVE}'),
+    'ddot': lambda s: center_accent(s, u'\N{COMBINING DIAERESIS}'),
+    'dot': lambda s: center_accent(s, u'\N{COMBINING DOT ABOVE}'),
+    'check': lambda s: center_accent(s, u'\N{COMBINING CARON}'),
+    'breve': lambda s: center_accent(s, u'\N{COMBINING BREVE}'),
+    'acute': lambda s: center_accent(s, u'\N{COMBINING ACUTE ACCENT}'),
+    'grave': lambda s: center_accent(s, u'\N{COMBINING GRAVE ACCENT}'),
+    'tilde': lambda s: center_accent(s, u'\N{COMBINING TILDE}'),
+    'hat': lambda s: center_accent(s, u'\N{COMBINING CIRCUMFLEX ACCENT}'),
+    'bar': lambda s: center_accent(s, u'\N{COMBINING OVERLINE}'),
+    'vec': lambda s: center_accent(s, u'\N{COMBINING RIGHT ARROW ABOVE}'),
     'prime': lambda s: s+u'\N{PRIME}',
     'prm': lambda s: s+u'\N{PRIME}',
     # # Faces -- these are here for some compatibility with latex printing
@@ -610,7 +609,8 @@ def annotated(letter):
     else:
         return ascii_pics[letter]
 
-def put_accent_in_middle_of_string(string, accent):
+
+def center_accent(string, accent):
     """
     Returns a string with accent inserted on the middle character. Useful to
     put combining accents on symbol names, including multi-character names.

@@ -24,9 +24,9 @@ from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerP
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
-from sympy.printing.pretty.pretty_symbology import put_accent_in_middle_of_string
+from sympy.printing.pretty.pretty import center_accent
 
-from sympy.physics.units import joule, degree, radian
+from sympy.physics.units import joule, degree
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
 
@@ -6551,11 +6551,10 @@ def test_matrixSymbolBold():
     assert boldpretty(A) == u'𝐀₂'
 
 
-def test_put_accent_in_middle_of_string():
-    assert put_accent_in_middle_of_string('a', u'\N{COMBINING TILDE}') == u'ã'
-    assert put_accent_in_middle_of_string('aa', u'\N{COMBINING TILDE}') == u'aã'
-    assert put_accent_in_middle_of_string('aaa', u'\N{COMBINING TILDE}') == u'aãa'
-    assert put_accent_in_middle_of_string('aaaa', u'\N{COMBINING TILDE}') == u'aaãa'
-    assert put_accent_in_middle_of_string('aaaaa', u'\N{COMBINING TILDE}') == u'aaãaa'
-    assert put_accent_in_middle_of_string('abcdefg', u'\N{COMBINING FOUR DOTS ABOVE}') == u'abcd⃜efg'
-
+def test_center_accent():
+    assert center_accent('a', u'\N{COMBINING TILDE}') == u'ã'
+    assert center_accent('aa', u'\N{COMBINING TILDE}') == u'aã'
+    assert center_accent('aaa', u'\N{COMBINING TILDE}') == u'aãa'
+    assert center_accent('aaaa', u'\N{COMBINING TILDE}') == u'aaãa'
+    assert center_accent('aaaaa', u'\N{COMBINING TILDE}') == u'aaãaa'
+    assert center_accent('abcdefg', u'\N{COMBINING FOUR DOTS ABOVE}') == u'abcd⃜efg'
