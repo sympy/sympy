@@ -29,7 +29,6 @@ class Quaternion(Expr):
     1 + 2*i + 3*j + 4*k
 
     Quaternions over complex fields can be defined as :
-    ===========
 
     >>> from sympy.algebras.quaternion import Quaternion
     >>> from sympy import symbols, I
@@ -235,7 +234,6 @@ class Quaternion(Expr):
         (x + 1) + 2*i + 3*j + 4*k
 
         Quaternions over complex fields :
-        ===========
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import I
