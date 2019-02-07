@@ -20,7 +20,7 @@ It would be nice to have a basic understanding of SymPy and SymPy Mechanics befo
 going over this page.
 If you are completely new to Python, you can check out the official
 `Python Tutorial <https://docs.python.org/3/tutorial/>`_.
-Check out the `SymPy Documentation <https://docs.sympy.org/>`_, especially
+Check out the :ref:`SymPy Documentation <documentation>`, especially
 the tutorial to get a feel for SymPy.
 For an introduction to Multibody dynamics in Python, `this <https://www.youtube.com/watch?v=mdo2NYtA-xY&t=6950s>`_
 lecture is very helpful.
