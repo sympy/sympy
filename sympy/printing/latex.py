@@ -23,7 +23,7 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key, range
+from sympy.core.compatibility import default_sort_key, range, string_types
 from sympy.utilities.iterables import has_variety
 
 import re
@@ -135,6 +135,7 @@ class LatexPrinter(Printer):
         "order": None,
         "symbol_names": {},
         "root_notation": True,
+        "imaginary_unit": "i",
     }
 
     def __init__(self, settings=None):
@@ -176,6 +177,22 @@ class LatexPrinter(Printer):
                     self._settings['mul_symbol']
 
         self._delim_dict = {'(': ')', '[': ']'}
+
+        imaginary_unit_table = {
+            None: r"i",
+            "i": r"i",
+            "ri": r"\mathrm{i}",
+            "ti": r"\text{i}",
+            "j": r"j",
+            "rj": r"\mathrm{j}",
+            "tj": r"\text{j}",
+        }
+        try:
+            self._settings['imaginary_unit_latex'] = \
+                imaginary_unit_table[self._settings['imaginary_unit']]
+        except KeyError:
+            self._settings['imaginary_unit_latex'] = \
+                self._settings['imaginary_unit']
 
     def parenthesize(self, item, level, strict=False):
         prec_val = precedence_traditional(item)
@@ -2269,7 +2286,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     fold_short_frac=None, inv_trig_style="abbreviated",
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-    order=None, symbol_names=None, root_notation=True):
+    order=None, symbol_names=None, root_notation=True, imaginary_unit="i"):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2325,6 +2342,10 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     root_notation : boolean, optional
         If set to ``False``, exponents of the form 1/n are printed in fractonal form.
         Default is ``True``, to print exponent in root form.
+    imaginary_unit : string, optional
+        String to use for the imaginary unit. Defined options are "i" (default)
+        and "j". Adding "b" or "t" in front gives ``\mathrm`` or ``\text``, so
+        "bi" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
 
     Notes
     =====
@@ -2450,6 +2471,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'order' : order,
         'symbol_names' : symbol_names,
         'root_notation' : root_notation,
+        'imaginary_unit' : imaginary_unit,
     }
 
     return LatexPrinter(settings).doprint(expr)
