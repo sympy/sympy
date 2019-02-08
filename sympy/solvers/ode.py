@@ -2187,7 +2187,7 @@ def odesimp(eq, func, order, constants, hint):
     ... simplify=False)
     >>> pprint(eq, wrap_line=False)
                             x
-                           ----                         
+                           ----
                            f(x)
                              /
                             |
