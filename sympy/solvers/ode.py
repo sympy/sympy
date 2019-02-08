@@ -4002,8 +4002,9 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
     return frobdict
 
-# Check :Use repeated substitution until we do not have a function independent of derivative
-def check_substitution_type(eq, func):
+
+def _check_substitution_type(eq, func):
+    # Check if some derivate of positive order can be substituted as g(x) = f^(order_to_subs) (x)
     x = func.args[0]
     f = func.func
     order_to_subs = 0
