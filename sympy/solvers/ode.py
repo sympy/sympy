@@ -4008,8 +4008,9 @@ def _check_substitution_type(eq, func):
     x = func.args[0]
     f = func.func
     order_to_subs = 0
+    D = Dummy()
     for nsubs_try in range(1,ode_order(eq)):
-        if reduced_eq.subs(f(x).diff(x, nsubs_try), Dummy()).has(f(x)):
+        if reduced_eq.subs(f(x).diff(x, nsubs_try), D).has(f(x)):
             break
         else:
             order_to_subs += 1
