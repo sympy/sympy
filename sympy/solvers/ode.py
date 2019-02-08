@@ -404,7 +404,6 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     return (Cs[0] if num == 1 else tuple(Cs))
 
 
-@order_reducing_substitution
 def dsolve(eq, func=None, hint="default", simplify=True,
     ics= None, xi=None, eta=None, x0=0, n=6, **kwargs):
     r"""
@@ -1360,6 +1359,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # Any ODE that can be solved with a combination of algebra and
         # integrals e.g.:
         # d^3/dx^3(x y) = F(x)
+        r = _check_substitution_type(reduced_eq, func)
+        if r["solutions"]:
+            matching_hints['order_reducing_substitution'] = r
+
         r = _nth_algebraic_match(reduced_eq, func)
         if r['solutions']:
             matching_hints['nth_algebraic'] = r
@@ -1387,7 +1390,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             # Homogeneous case: F(x) is identically 0
             else:
                 matching_hints["nth_linear_constant_coeff_homogeneous"] = r
-
         # nth order Euler equation a_n*x**n*y^(n) + ... + a_1*x*y' + a_0*y = F(x)
         #In case of Homogeneous euler equation F(x) = 0
         def _test_term(coeff, order):
@@ -1659,21 +1661,6 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     return matching_hints
 
-
-# Use repeated substitution until we do not have a function independent of derivative
-def check_substitution_type(eq):
-    order_to_subs = 0
-    for nsubs_try in range(1,ode_order(eq)):
-        if reduced_eq.subs(f(x).diff(x, nsubs_try), Dummy()).has(f(x)):
-            break
-        else:
-            order_to_subs += 1
-    g = Function("g")        
-    if order_to_subs > 0:
-       return {'nsubs': order_to_subs, "eq" :reduced_eq.subs(f(x).diff(x,order_to_subs), g(x)), "substitution_type":True }        
-    else:     
-       return {'nsubs': order_to_subs, "eq" :reduced_eq.subs(f(x).diff(x,order_to_subs), g(x)), "substitution_type":False }        
-       
 def check_linear_2eq_order1(eq, func, func_coef):
     x = func[0].func
     y = func[1].func
@@ -3078,23 +3065,6 @@ def ode_1st_exact(eq, func, order, match):
     sol = Integral(d, x) + Integral((e - (Integral(d, x).diff(y))), y)
     return Eq(sol, C1)
 
-def order_reducing_substitution(fun):
-    '''
-    Substitutes lowest order derivate in equation to function with order of derivative as 0
-    '''
-    def inner(eq):
-        my_dict = check_substitution_type(fun(eq))
-        if my_dict["substitution_type"] == True:
-            x = list(fun(eq).atoms(Symbol))[0]
-            f = list(fun(eq).atoms(Function))[0]
-            eq = dsolve(fun(eq))
-            for order_times_integrate in range(my_dict["nsubs"]):
-                eq = Integrate(eq, x)
-            return eq
-        else:
-            return fun(eq)
-    return inner
-
 def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     r"""
     Returns the best solution to an ODE from the two hints
@@ -4031,6 +4001,30 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
             frobdict[numsyms[i]] = -num/(indicial.subs(d, m+i))
 
     return frobdict
+
+# Check :Use repeated substitution until we do not have a function independent of derivative
+def check_substitution_type(eq, func):
+    x = func.args[0]
+    f = func.func
+    order_to_subs = 0
+    for nsubs_try in range(1,ode_order(eq)):
+        if reduced_eq.subs(f(x).diff(x, nsubs_try), Dummy()).has(f(x)):
+            break
+        else:
+            order_to_subs += 1
+    if order_to_subs > 0:
+        return {'var':order_to_subs, 'solutions':True}
+
+# Use repeated substitution until we do not have a function independent of derivative   
+def order_reducing_substitution(eq, func, order, match):
+    '''
+    Substitutes lowest order derivate in equation to function with order of derivative as 0
+    '''
+    x = func.args[0]
+    f = func.func
+    g = Function('g')(x)
+    eq = dsolve(dsolve(eq.subs(f(x).diff(x, match['var'])), g).subs(g, f(x).diff(x, match['var'])))
+    return eq
 
 def _nth_algebraic_match(eq, func):
     r"""
@@ -8705,3 +8699,4 @@ def _nonlinear_3eq_order1_type5(x, y, t, eq):
     sol2 = dsolve(diff(v(t),t) - (v*(a*F3-c*F1)).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (w*(b*F1-a*F2)).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
     return [sol1, sol2, sol3]
+    
