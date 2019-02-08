@@ -178,8 +178,21 @@ class LatexPrinter(Printer):
 
         self._delim_dict = {'(': ')', '[': ']'}
 
-        if not isinstance(self._settings['imaginary_unit'], string_types):
-            raise TypeError("'imaginary_unit' must be a string, not {}".format(self._settings['imaginary_unit']))
+        imaginary_unit_table = {
+            None: r"i",
+            "i": r"i",
+            "ri": r"\mathrm{i}",
+            "ti": r"\text{i}",
+            "j": r"j",
+            "rj": r"\mathrm{j}",
+            "tj": r"\text{j}",
+        }
+        try:
+            self._settings['imaginary_unit_latex'] = \
+                imaginary_unit_table[self._settings['imaginary_unit']]
+        except KeyError:
+            self._settings['imaginary_unit_latex'] = \
+                self._settings['imaginary_unit']
 
     def parenthesize(self, item, level, strict=False):
         prec_val = precedence_traditional(item)
@@ -2330,8 +2343,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         If set to ``False``, exponents of the form 1/n are printed in fractonal form.
         Default is ``True``, to print exponent in root form.
     imaginary_unit : string, optional
-        String to use for the imaginary unit. Default is "i". Common alternatives
-        are "j" and "\\textrm{i}".
+        String to use for the imaginary unit. Defined options are "i" (default)
+        and "j". Adding "b" or "t" in front gives ``\mathrm`` or ``\text``, so
+        "bi" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
 
     Notes
     =====
