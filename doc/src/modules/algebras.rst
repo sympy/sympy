@@ -6,7 +6,7 @@ Introduction
 ------------
 
 The Algebras module for SymPy provides support
-for basic algebrsic operations on Quaternions.
+for basic algebraic operations on Quaternions.
 
 Quaternion Reference
 --------------------
