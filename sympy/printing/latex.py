@@ -2459,3 +2459,114 @@ def print_latex(expr, **settings):
     """Prints LaTeX representation of the given expression. Takes the same
     settings as ``latex()``."""
     print(latex(expr, **settings))
+
+
+def multiline_latex(lhs, rhs, terms_per_line=1, use_eqnarray=True, use_dots=False, **settings):
+    r"""
+    This function generates a LaTeX equation with a multiline right-hand side
+    in either an ``eqnarray`` or ``align*`` environment.
+
+    Parameters
+    ==========
+
+    lhs : Expr
+        Left-hand side of equation
+
+    rhs : Expr
+        Right-hand side of equation
+
+    terms_per_line : integer, optional
+        Number of terms per line to print. Default is 1.
+
+    use_eqnarray : boolean, optional
+        If ``True``, the ``eqnarray`` environment is used, if ``False`` the ``align*`` environment is used.
+        Default is ``True``.
+
+    use_dots : boolean, optional
+        If ``True``, ``\\dots`` is added to the end of each line. Default is ``False``.
+
+    Examples
+    ========
+
+    >>> from sympy import multiline_latex, symbols, sin, cos, exp, log, I
+    >>> x, y, alpha = symbols('x y alpha')
+    >>> expr = sin(alpha*y) + exp(I*alpha) - cos(log(y))
+    >>> print(multiline_latex(x, expr))
+    \begin{eqnarray}
+    x & = & e^{i \alpha} \nonumber \\
+    & & + \sin{\left(\alpha y \right)} \nonumber \\
+    & & - \cos{\left(\log{\left(y \right)} \right)}
+    \end{eqnarray}
+
+    Using at most two terms per line:
+    >>> print(multiline_latex(x, expr, 2))
+    \begin{eqnarray}
+    x & = & e^{i \alpha} + \sin{\left(\alpha y \right)} \nonumber \\
+    & & - \cos{\left(\log{\left(y \right)} \right)}
+    \end{eqnarray}
+
+    Using ``align*`` and dots:
+    >>> print(multiline_latex(x, expr, terms_per_line=2, use_eqnarray=False, use_dots=True))
+    \begin{align*}
+    x = & e^{i \alpha} + \sin{\left(\alpha y \right)} \dots \\
+    & - \cos{\left(\log{\left(y \right)} \right)}
+    \end{align*}
+
+    Notes
+    =====
+
+    All optional parameters from ``latex`` can also be used.
+
+    """
+
+    # Based on code from https://github.com/sympy/sympy/issues/3001
+    l = LatexPrinter(**settings)
+    if use_eqnarray:
+        result = r'\begin{eqnarray}' + '\n'
+        first_term = '& = &'
+        nonumber = r'\nonumber'
+        end_term = '\n\\end{eqnarray}'
+    else:
+        result = r'\begin{align*}' + '\n'
+        first_term = '= &'
+        nonumber = ''
+        end_term =  '\n\\end{align*}'
+    dots = ''
+    if use_dots:
+        dots=r'\dots'
+    terms = rhs.as_ordered_terms()
+    n_terms = len(terms)
+    term_count = 1
+    for i in range(n_terms):
+        term = terms[i]
+        term_start = ''
+        term_end = r''
+        sign = r'+'
+        if term_count > terms_per_line:
+            if use_eqnarray:
+                term_start = '& & '
+            else:
+                term_start = '& '
+            term_count = 1
+        if term_count == terms_per_line:
+            # End of line
+            if i < n_terms-1:
+                # There are terms remaining
+                term_end = dots + nonumber + r' \\' + '\n'
+            else:
+                term_end = ''
+
+        if term.as_ordered_factors()[0] == -1:
+            term = -1*term
+            sign = r'-'
+        if i == 0: # beginning
+            if sign == r'+':
+                sign = r""
+            result += r'{:s} {:s}{:s} {:s} {:s}'.format(l.doprint(lhs),
+                        first_term, sign, l.doprint(term), term_end)
+        else:
+            result += r'{:s}{:s} {:s} {:s}'.format(term_start, sign,
+                        l.doprint(term), term_end)
+        term_count += 1
+    result += end_term
+    return result

@@ -23,7 +23,7 @@ from sympy.ntheory.factor_ import udivisor_sigma
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import (latex, translate, greek_letters_set,
-                                  tex_greek_dictionary)
+                                  tex_greek_dictionary, multiline_latex)
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableSparseNDimArray, MutableDenseNDimArray)
 from sympy.tensor.array import tensorproduct
@@ -1881,6 +1881,48 @@ def test_latex_printer_tensor():
 
     expr = TensorElement(K(i,j,-k,-l), {i:3})
     assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'
+
+
+def test_multiline_latex():
+    a, b, c, d, e, f = symbols('a b c d e f')
+    expr = -a + 2*b -3*c +4*d -5*e
+    expected = r"\begin{eqnarray}" + "\n"\
+    r"f & = &- a \nonumber \\" + "\n"\
+    r"& & + 2 b \nonumber \\" + "\n"\
+    r"& & - 3 c \nonumber \\" + "\n"\
+    r"& & + 4 d \nonumber \\" + "\n"\
+    r"& & - 5 e " + "\n"\
+    r"\end{eqnarray}"
+    assert multiline_latex(f, expr) == expected
+
+    expected2 = r'\begin{eqnarray}' + '\n'\
+    r'f & = &- a + 2 b \nonumber \\' + '\n'\
+    r'& & - 3 c + 4 d \nonumber \\' + '\n'\
+    r'& & - 5 e ' + '\n'\
+    r'\end{eqnarray}'
+
+    assert multiline_latex(f, expr, 2) == expected2
+
+    expected3 = r'\begin{eqnarray}' + '\n'\
+    r'f & = &- a + 2 b - 3 c \nonumber \\'+ '\n'\
+    r'& & + 4 d - 5 e ' + '\n'\
+    r'\end{eqnarray}'
+
+    assert multiline_latex(f, expr, 3) == expected3
+
+    expected3dots = r'\begin{eqnarray}' + '\n'\
+    r'f & = &- a + 2 b - 3 c \dots\nonumber \\'+ '\n'\
+    r'& & + 4 d - 5 e ' + '\n'\
+    r'\end{eqnarray}'
+
+    assert multiline_latex(f, expr, 3, use_dots=True) == expected3dots
+
+    expected3align = r'\begin{align*}' + '\n'\
+    r'f = &- a + 2 b - 3 c  \\'+ '\n'\
+    r'& + 4 d - 5 e ' + '\n'\
+    r'\end{align*}'
+
+    assert multiline_latex(f, expr, 3, use_eqnarray=False) == expected3align
 
 
 def test_trace():
