@@ -274,10 +274,7 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif isinstance(o, MatrixExpr):
-                if isinstance(coeff, MatrixExpr):
-                    coeff *= o
-                else:
-                    coeff = o.__mul__(coeff)
+                nc_part.append(o)
                 continue
 
             elif o is S.ComplexInfinity:
@@ -595,7 +592,9 @@ class Mul(Expr, AssocOp):
         # 0
         elif coeff is S.Zero:
             # we know for sure the result will be 0 except the multiplicand
-            # is infinity
+            # is infinity or a matrix
+            if any(isinstance(c, MatrixExpr) for c in nc_part):
+                return [coeff], nc_part, order_symbols
             if any(c.is_finite == False for c in c_part):
                 return [S.NaN], [], order_symbols
             return [coeff], [], order_symbols

@@ -1,7 +1,7 @@
 from sympy.core import I, symbols, Basic, Mul
 from sympy.functions import adjoint, transpose
 from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
-        eye, ImmutableMatrix)
+        eye, ImmutableMatrix, zeros)
 from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack, only_squares)
@@ -9,6 +9,7 @@ from sympy.strategies import null_safe
 from sympy import refine, Q, Symbol
 
 n, m, l, k = symbols('n m l k', integer=True)
+x = symbols('x')
 A = MatrixSymbol('A', n, m)
 B = MatrixSymbol('B', m, l)
 C = MatrixSymbol('C', n, n)

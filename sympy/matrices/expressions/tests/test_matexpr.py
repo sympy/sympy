@@ -1,5 +1,5 @@
 from sympy import KroneckerDelta, diff, Piecewise, And
-from sympy import Sum, Dummy, factor, expand
+from sympy import Sum, Dummy, factor, expand, zeros
 
 from sympy.core import S, symbols, Add, Mul
 from sympy.core.compatibility import long
@@ -9,7 +9,7 @@ from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         SparseMatrix, Transpose, Adjoint)
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
@@ -347,3 +347,69 @@ def test_factor_expand():
     assert expr1 != expr2
     assert expand(expr1) == expr2
     assert factor(expr2) == expr1
+
+def test_MatMul_postprocessor():
+    z = zeros(2)
+    z1 = ZeroMatrix(2, 2)
+    assert Mul(0, z) == Mul(z, 0) in [z, z1]
+
+    M = Matrix([[1, 2], [3, 4]])
+    Mx = Matrix([[x, 2*x], [3*x, 4*x]])
+    assert Mul(x, M) == Mul(M, x) == Mx
+
+    A = MatrixSymbol("A", 2, 2)
+    assert Mul(A, M) == MatMul(A, M)
+    assert Mul(M, A) == MatMul(M, A)
+    # Scalars should be absorbed into constant matrices
+    a = Mul(x, M, A)
+    b = Mul(M, x, A)
+    c = Mul(M, A, x)
+    assert a == b == c == MatMul(Mx, A)
+    a = Mul(x, A, M)
+    b = Mul(A, x, M)
+    c = Mul(A, M, x)
+    assert a == b == c == MatMul(A, Mx)
+    assert Mul(M, M) == M**2
+    assert Mul(A, M, M) == MatMul(A, M**2)
+    assert Mul(M, M, A) == MatMul(M**2, A)
+    assert Mul(M, A, M) == MatMul(M, A, M)
+
+    assert Mul(A, x, M, M, x) == MatMul(A, Mx**2)
+
+@XFAIL
+def test_MatAdd_postprocessor_xfail():
+    # These are difficult to get working because of the way that Add processes
+    # its args.
+    z = zeros(2)
+    raises(TypeError, lambda: Add(0, z))
+    raises(TypeError, lambda: Add(z, 0))
+    raises(TypeError, lambda: Add(S.NaN, z))
+
+def test_MatAdd_postprocessor():
+    z = zeros(2)
+    raises(TypeError, lambda: Add(S.Infinity, z))
+    raises(TypeError, lambda: Add(z, S.Infinity))
+    raises(TypeError, lambda: Add(S.ComplexInfinity, z))
+    raises(TypeError, lambda: Add(z, S.ComplexInfinity))
+    # raises(TypeError, lambda: Add(S.Infinity, z)) # see the XFAIL above
+    raises(TypeError, lambda: Add(z, S.NaN))
+
+    M = Matrix([[1, 2], [3, 4]])
+    raises(TypeError, lambda: Add(x, M))
+    raises(TypeError, lambda: Add(M, x))
+
+    A = MatrixSymbol("A", 2, 2)
+    assert Add(A, M) == Add(M, A) == A + M
+
+    # Scalars should be absorbed into constant matrices (producing an error)
+    raises(TypeError, lambda: Add(x, M, A))
+    raises(TypeError, lambda: Add(M, x, A))
+    raises(TypeError, lambda: Add(M, A, x))
+    raises(TypeError, lambda: Add(x, A, M))
+    raises(TypeError, lambda: Add(A, x, M))
+    raises(TypeError, lambda: Add(A, M, x))
+
+    assert Add(M, M) == 2*M
+    assert Add(M, A, M) == Add(M, M, A) == Add(A, M, M) == A + 2*M
+
+    raises(TypeError, lambda: Add(A, x, M, M, x))
