@@ -8,42 +8,39 @@ from sympy import (
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
-from sympy.core.expr import UnevaluatedExpr
 
-from  sympy.physics import mechanics
+from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
+    SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
+from sympy.core.compatibility import range, u_decode as u
+from sympy.core.expr import UnevaluatedExpr
+from sympy.core.trace import Tr
+
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
     meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
 
-from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
-    SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
-
 from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerProduct
 
-from sympy.printing.pretty import pretty as xpretty
-from sympy.printing.pretty import pprint
-from sympy.printing.pretty.pretty import center_accent
-
+from sympy.physics import mechanics
 from sympy.physics.units import joule, degree
+from sympy.printing.pretty import pprint, pretty as xpretty
+from sympy.printing.pretty.pretty_symbology import center_accent
+
+from sympy.sets import ImageSet
+from sympy.sets.setexpr import SetExpr
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
-
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.core.trace import Tr
-
-from sympy.core.compatibility import u_decode as u
-from sympy.core.compatibility import range
-
-from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
 from sympy.tensor.functions import TensorProduct
-
-from sympy.sets.setexpr import SetExpr
-from sympy.sets import ImageSet
-
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, tensorhead,
         TensorElement)
+
+from sympy.utilities.pytest import raises, XFAIL
+
+from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
+
+
 
 import sympy as sym
 class lowergamma(sym.lowergamma):
