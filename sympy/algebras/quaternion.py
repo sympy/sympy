@@ -308,7 +308,7 @@ class Quaternion(Expr):
         q1 : Quaternion or symbol
         q2 : Quaternion or symbol
 
-        It's important to note that if both q1 and q2 is not a Quaternion,
+        It's important to note that if neither q1 nor q2 is a Quaternion,
         this function simply returns q1 * q2.
 
         Returns

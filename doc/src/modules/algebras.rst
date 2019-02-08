@@ -5,15 +5,15 @@ Algebras Module
 Introduction
 ------------
 
-The algebras module for SymPy will provide support
-for basic algebric operations on Quaternions.
+The Algebras module for SymPy provides support
+for basic algebrsic operations on Quaternions.
 
 Quaternion Reference
 --------------------
 
 .. automodule:: sympy.algebras
 
-This section lists the classes implemented by Algebras module.
+This section lists the classes implemented by the Algebras module.
 
 .. autoclass:: Quaternion
    :members:
