@@ -323,6 +323,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
+    "order_reducing_substitution",
     )
 
 lie_heuristics = (
@@ -1354,11 +1355,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                             matching_hints["2nd_power_series_regular"] = coeff_dict
 
-
     if order > 0:
         # Any ODE that can be solved with a combination of algebra and
         # integrals e.g.:
         # d^3/dx^3(x y) = F(x)
+        r = _check_substitution_type(reduced_eq, func)
+        if r["solutions"]:
+            matching_hints['order_reducing_substitution'] = r
+
         r = _nth_algebraic_match(reduced_eq, func)
         if r['solutions']:
             matching_hints['nth_algebraic'] = r
@@ -1386,7 +1390,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             # Homogeneous case: F(x) is identically 0
             else:
                 matching_hints["nth_linear_constant_coeff_homogeneous"] = r
-
         # nth order Euler equation a_n*x**n*y^(n) + ... + a_1*x*y' + a_0*y = F(x)
         #In case of Homogeneous euler equation F(x) = 0
         def _test_term(coeff, order):
@@ -1436,10 +1439,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     r_rescaled['trialset'] = undetcoeff['trialset']
                     matching_hints["nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"] = r_rescaled
 
-
     # Order keys based on allhints.
     retlist = [i for i in allhints if i in matching_hints]
-
     if dict:
         # Dictionaries are ordered arbitrarily, so make note of which
         # hint would come first for dsolve().  Use an ordered dict in Py 3.
@@ -1659,7 +1660,6 @@ def classify_sysode(eq, funcs=None, **kwargs):
     matching_hints['type_of_equation'] = type_of_equation
 
     return matching_hints
-
 
 def check_linear_2eq_order1(eq, func, func_coef):
     x = func[0].func
@@ -3065,7 +3065,6 @@ def ode_1st_exact(eq, func, order, match):
     sol = Integral(d, x) + Integral((e - (Integral(d, x).diff(y))), y)
     return Eq(sol, C1)
 
-
 def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     r"""
     Returns the best solution to an ODE from the two hints
@@ -4002,6 +4001,30 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
             frobdict[numsyms[i]] = -num/(indicial.subs(d, m+i))
 
     return frobdict
+
+# Check :Use repeated substitution until we do not have a function independent of derivative
+def check_substitution_type(eq, func):
+    x = func.args[0]
+    f = func.func
+    order_to_subs = 0
+    for nsubs_try in range(1,ode_order(eq)):
+        if reduced_eq.subs(f(x).diff(x, nsubs_try), Dummy()).has(f(x)):
+            break
+        else:
+            order_to_subs += 1
+    if order_to_subs > 0:
+        return {'var':order_to_subs, 'solutions':True}
+
+# Use repeated substitution until we do not have a function independent of derivative   
+def order_reducing_substitution(eq, func, order, match):
+    '''
+    Substitutes lowest order derivate in equation to function with order of derivative as 0
+    '''
+    x = func.args[0]
+    f = func.func
+    g = Function('g')(x)
+    eq = dsolve(dsolve(eq.subs(f(x).diff(x, match['var'])), g).subs(g, f(x).diff(x, match['var'])))
+    return eq
 
 def _nth_algebraic_match(eq, func):
     r"""
@@ -8676,3 +8699,4 @@ def _nonlinear_3eq_order1_type5(x, y, t, eq):
     sol2 = dsolve(diff(v(t),t) - (v*(a*F3-c*F1)).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (w*(b*F1-a*F2)).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
     return [sol1, sol2, sol3]
+    
