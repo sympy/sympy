@@ -560,6 +560,10 @@ def get_postprocessor(cls):
                 matrices.append(term)
             else:
                 nonmatrices.append(term)
+
+        if not matrices: # for instance, MatrixElement
+            return cls._from_args(nonmatrices)
+
         if nonmatrices:
             if cls == Mul:
                 for i in range(len(matrices)):
