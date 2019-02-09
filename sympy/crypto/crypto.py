@@ -2249,31 +2249,6 @@ def decipher_gm(message, key):
 
 ################ Blum–Goldwasser cryptosystem  #########################
 
-def _pow_mod(a, b, m):
-    """
-    Calculates (a**b) % m in an efficient manner.
-
-    Parameters
-    ==========
-
-    a: the base, a positive integer
-    b: the exponent, a non-negative integer
-    m: the modulus, a positive integer
-
-    Returns
-    =======
-
-    r, the remainder, a non-negative integer
-    """
-    r = 0 if m == 1 else 1
-
-    while b > 0:
-        if b % 2:
-            r = (r * a) % m
-        b = b // 2
-        a = (a * a) % m
-    return r
-
 def bg_private_key(p, q):
     """
     Check if p and q can be used as private keys for
@@ -2322,8 +2297,8 @@ def bg_public_key(p, q):
     private keys passed as arguments and
     then returns their product.
 
-    Parametes
-    =========
+    Parameters
+    ==========
 
     p, q : the private keys
 
@@ -2381,7 +2356,7 @@ def encipher_bg(i, key, seed=None):
 
     r = _randint(seed)(2, key - 1)
     x = r**2 % key
-    x_L = _pow_mod(x, 2**L, key)
+    x_L = pow(x, 2**L, key)
 
     rand_bits = []
     for k in range(L):
@@ -2426,8 +2401,8 @@ def decipher_bg(message, key):
     L = len(encrypt_msg)
     p_t = ((p + 1)/4)**L
     q_t = ((q + 1)/4)**L
-    r_p = _pow_mod(y, p_t, p)
-    r_q = _pow_mod(y, q_t, q)
+    r_p = pow(y, p_t, p)
+    r_q = pow(y, q_t, q)
 
     x = (q * mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
 
