@@ -2547,7 +2547,7 @@ class MatrixBase(MatrixDeprecated,
         of compatible dimensions: if each has 3 elements, a matrix of the
         same type and shape as ``self`` will be returned. If ``b`` has the same
         shape as ``self`` then common identities for the cross product (like
-        a \times b = - b \times a) will hold.
+        `a \times b = - b \times a`) will hold.
 
         Parameters
         ==========
