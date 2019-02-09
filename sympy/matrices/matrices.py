@@ -291,7 +291,7 @@ class MatrixDeterminant(MatrixCommon):
         return self.cofactor_matrix(method).transpose()
 
     def charpoly(self, x='lambda', simplify=_simplify):
-        """Computes characteristic polynomial ``det(x*I - self)`` where I is
+        """Computes characteristic polynomial det(x*I - self) where I is
         the identity matrix.
 
         A PurePoly is returned, so using different variables for ``x`` does
@@ -1215,7 +1215,7 @@ class MatrixEigen(MatrixSubspaces):
         =====
 
         Eigenvalues of a matrix `A` can be computed by solving a matrix
-        equation ``\det(A - \lambda I) = 0``
+        equation `\det(A - \lambda I) = 0`
         """
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
@@ -2547,7 +2547,7 @@ class MatrixBase(MatrixDeprecated,
         of compatible dimensions: if each has 3 elements, a matrix of the
         same type and shape as ``self`` will be returned. If ``b`` has the same
         shape as ``self`` then common identities for the cross product (like
-        ``a \times b = - b \times a``) will hold.
+        a \times b = - b \times a) will hold.
 
         Parameters
         ==========
@@ -2974,11 +2974,11 @@ class MatrixBase(MatrixDeprecated,
 
         Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
 
-        * Compute ``\mathrm{adj}(K) = \mathrm{cof}(K)^t``, the adjoint matrix of `K`.
+        * Compute `\mathrm{adj}(K) = \mathrm{cof}(K)^t`, the adjoint matrix of `K`.
 
-        * Compute ``r = 1/\mathrm{det}(K) \pmod m``.
+        * Compute `r = 1/\mathrm{det}(K) \pmod m`.
 
-        * ``K^{-1} = r\cdot \mathrm{adj}(K) \pmod m``.
+        * `K^{-1} = r\cdot \mathrm{adj}(K) \pmod m`.
 
         Examples
         ========
