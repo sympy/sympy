@@ -885,3 +885,89 @@ class LambertW(Function):
                 return False
         else:
             return s.is_algebraic
+       
+class sigmoid(Function):
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return exp(-args[0])/( (1+exp(-args[0]) ** 2))
+
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, arg):
+
+        if arg is S.Zero:
+            return S.Half
+
+        arg = sympify(arg)
+        print("hello")
+        return 1/(1+exp(-arg))
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+
+        from sympy.ntheory.combinatorial.numbers import bernoulli
+
+        x = sympify(x)
+        if n < 0:
+            return S.Zero
+
+        if n == 0:
+            return S.Half
+
+        if n == 1:
+            return 1/4
+
+        if n == 2:
+            return S.Zero
+
+        else:
+            return x**n*(-1**n)*( 2** (n+1) - 1)*bernoulli(n)/(2*factorial(n))
+
+    def as_real_imag(self, deep=True, **hints):
+
+        import sympy
+        re, im = self.args[0].as_real_imag()
+        if deep:
+            re = re.expand(deep, **hints)
+            im = im.expand(deep, **hints)
+
+        a = ( 1 + exp(-re)*cos(rm))/(1 + exp(-2*re) + 2*exp(-re)*cos(rm))
+        b = exp(-a)*sin(b)/(1 + exp(-2*re) + 2*exp(-re)*cos(rm))
+
+        return (a,b)
+
+    def _eval_is_real(self):
+        if self.args[0].is_real:
+            return True
+        elif self.args[0].is_imaginary:
+            arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
+            return arg2.is_even
+
+    def _eval_is_algebraic(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if fuzzy_not(self.exp.is_zero):
+                if self.exp.is_algebraic:
+                    return False
+                elif (self.exp/S.Pi).is_rational:
+                    return False
+        else:
+            return s.is_algebraic
+
+    def _taylor(self, x, n):
+        from sympy import Order
+        l = []
+        g = None
+        for i in range(n):
+            g = self.taylor_term(i, self.args[0], g)
+            g = g.nseries(x, n=n)
+            l.append(g)
+        return Add(*l) + Order(x**n, x)
+
+    def _eval_rewrite_as_tanh(self,arg):
+        from sympy import tanh
+        return (1 + tanh(arg/2))/2
