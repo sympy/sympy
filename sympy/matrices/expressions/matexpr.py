@@ -561,7 +561,7 @@ def get_postprocessor(cls):
             else:
                 nonmatrices.append(term)
 
-        if not matrices: # for instance, MatrixElement
+        if not matrices:
             return cls._from_args(nonmatrices)
 
         if nonmatrices:
