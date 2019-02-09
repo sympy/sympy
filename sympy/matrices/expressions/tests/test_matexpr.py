@@ -378,38 +378,53 @@ def test_MatMul_postprocessor():
 
 @XFAIL
 def test_MatAdd_postprocessor_xfail():
-    # These are difficult to get working because of the way that Add processes
+    # This is difficult to get working because of the way that Add processes
     # its args.
     z = zeros(2)
-    raises(TypeError, lambda: Add(0, z))
-    raises(TypeError, lambda: Add(z, 0))
-    raises(TypeError, lambda: Add(S.NaN, z))
+    assert Add(z, S.NaN) == Add(S.NaN, z)
 
 def test_MatAdd_postprocessor():
+    # Some of these are nonsensical, but we do not raise errors for Add
+    # because that breaks algorithms that want to replace matrices with dummy
+    # symbols.
+
     z = zeros(2)
-    raises(TypeError, lambda: Add(S.Infinity, z))
-    raises(TypeError, lambda: Add(z, S.Infinity))
-    raises(TypeError, lambda: Add(S.ComplexInfinity, z))
-    raises(TypeError, lambda: Add(z, S.ComplexInfinity))
-    # raises(TypeError, lambda: Add(S.Infinity, z)) # see the XFAIL above
-    raises(TypeError, lambda: Add(z, S.NaN))
+
+    assert Add(0, z) == Add(z, 0) == z
+
+    a = Add(S.Infinity, z)
+    assert a == Add(z, S.Infinity)
+    assert isinstance(a, Add)
+    assert a.args == (S.Infinity, z)
+
+    a = Add(S.ComplexInfinity, z)
+    assert a == Add(z, S.ComplexInfinity)
+    assert isinstance(a, Add)
+    assert a.args == (S.ComplexInfinity, z)
+
+    a = Add(z, S.NaN)
+    # assert a == Add(S.NaN, z) # See the XFAIL above
+    assert isinstance(a, Add)
+    assert a.args == (S.NaN, z)
 
     M = Matrix([[1, 2], [3, 4]])
-    raises(TypeError, lambda: Add(x, M))
-    raises(TypeError, lambda: Add(M, x))
+    a = Add(x, M)
+    assert a == Add(M, x)
+    assert isinstance(a, Add)
+    assert a.args == (x, M)
 
     A = MatrixSymbol("A", 2, 2)
     assert Add(A, M) == Add(M, A) == A + M
 
     # Scalars should be absorbed into constant matrices (producing an error)
-    raises(TypeError, lambda: Add(x, M, A))
-    raises(TypeError, lambda: Add(M, x, A))
-    raises(TypeError, lambda: Add(M, A, x))
-    raises(TypeError, lambda: Add(x, A, M))
-    raises(TypeError, lambda: Add(A, x, M))
-    raises(TypeError, lambda: Add(A, M, x))
+    a = Add(x, M, A)
+    assert a == Add(M, x, A) == Add(M, A, x) == Add(x, A, M) == Add(A, x, M) == Add(A, M, x)
+    assert isinstance(a, Add)
+    assert a.args == (x, A + M)
 
     assert Add(M, M) == 2*M
     assert Add(M, A, M) == Add(M, M, A) == Add(A, M, M) == A + 2*M
 
-    raises(TypeError, lambda: Add(A, x, M, M, x))
+    a = Add(A, x, M, M, x)
+    assert isinstance(a, Add)
+    assert a.args == (2*x, A + 2*M)

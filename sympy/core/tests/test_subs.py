@@ -28,18 +28,12 @@ def test_subs_Matrix():
     assert (x*y).subs({y:z, x:0}) == 0
     assert (x*y).subs({y:z, x:0}, simultaneous=True) in [z, z1]
     assert (x + y).subs({x: z, y: z}, simultaneous=True) in [z, z1]
+    assert (x + y).subs({x: z, y: z}) in [z, z1]
 
     # Issue #15528
     assert Mul(Matrix([[3]]), x).subs(x, 2.0) == Matrix([[6.0]])
-    raises(TypeError, lambda: Add(Matrix([[3]]), x).subs(x, 2.0))
-
-@XFAIL
-def test_subs_Matrix_XFAIL():
-    # Fails because it tries to compute the subexpressions one at a time, like
-    # x + z, which raises TypeError.
-    z = zeros(2)
-    z1 = ZeroMatrix(2, 2)
-    assert (x + y).subs({x: z, y: z}) in [z, z1]
+    # Does not raise a TypeError, see comment on the MatAdd postprocessor
+    assert Add(Matrix([[3]]), x).subs(x, 2.0) == Add(Matrix([[3]]), 2.0)
 
 def test_subs_AccumBounds():
     e = x

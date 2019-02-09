@@ -561,17 +561,22 @@ def get_postprocessor(cls):
             else:
                 nonmatrices.append(term)
         if nonmatrices:
-            for i in range(len(matrices)):
-                if not matrices[i].is_MatrixExpr:
-                    # If one of the matrices explicit, absorb the scalar into it
-                    # (doit will combine all explicit matrices into one, so it
-                    # doesn't matter which)
-                    if cls == Mul:
+            if cls == Mul:
+                for i in range(len(matrices)):
+                    if not matrices[i].is_MatrixExpr:
+                        # If one of the matrices explicit, absorb the scalar into it
+                        # (doit will combine all explicit matrices into one, so it
+                        # doesn't matter which)
                         matrices[i] = matrices[i].__mul__(cls._from_args(nonmatrices))
-                    else:
-                        matrices[i] = matrices[i].__add__(cls._from_args(nonmatrices))
-                    nonmatrices = []
-                    break
+                        nonmatrices = []
+                        break
+
+            else:
+                # Maintain the ability to create Add(scalar, matrix) without
+                # raising an exception. That way different algorithms can
+                # replace matrix expressions with non-commutative symbols to
+                # manipulate them like non-commutative scalars.
+                return cls._from_args(nonmatrices + [mat_class(*matrices).doit(deep=False)])
 
         return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
     return _postprocessor
