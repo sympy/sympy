@@ -365,31 +365,34 @@ class Beam(object):
                - pin type
                - roller type
                - fixed type
-        b = Beam(10, E, I)
 
         Exmaples
         =======
-        >>>from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
-        >>> E, I = symbols('E, I')
-        >>> b = Beam(30, E, I)
-        >>> b.apply_support(10, 'roller')
-        >>> b.apply_support(30, 'roller')
-        >>> b.apply_load(-8, 0, -1)
-        >>> b.apply_load(120, 30, -2)
-        >>> R_10, R_30 = symbols('R_10, R_30')
-        >>> b.solve_for_reaction_loads(R_10, R_30)
-        >>> b.load
-        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
-        + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
-
-        >>> b.remove_support(30, 'roller')
-        >>> b.apply_support(25, 'roller')
-        >>> R_25 = Symbol('R_25')
-        >>> b.solve_for_reaction_load(R_10, R_25)
-        -8*SingularityFunction(x, 0, -1) + 16*SingularityFunction(x, 10, -1)/3
-        + 8*SingularityFunction(x, 25, -1)/3 + 120*SingularityFunction(x, 30, -2)
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols, Symbol
+        >>> E,I = symbols('E I')
+        >>> b = Beam(8, E, I)
+        >>> b.apply_support(1, "pin")
+        >>> b.apply_support(8, "roller")
+        >>> b.apply_load(10, 0, 0, end=2)
+        >>> b.apply_load(20, 5, -1)
+        >>> b.apply_load(8, 7.5, -1)
+        >>> R_1, R_8 = symbols('R_1, R_8')
+        >>> b.solve_for_reaction_loads(R_1, R_8)
+        >>> b.reaction_loads
+        {R_1: -29.1428571428571, R_8: -18.8571428571429}
+        >>> b.remove_support(8, "roller")
+        >>> b.apply_support(7, "roller")
+        >>> R_7 = Symbol('R_7')
+        >>> b.solve_for_reaction_loads(R_1, R_7)
+        >>> b.reaction_loads
+        {R_1: -26.0, R_7: -22.0}
         """
+        # resubstituting self._load with Reaction variable in case solved value of
+        # reaction load has been substituted in the load equation
+        res = dict((value, reaction) for reaction, value in self._reaction_loads.items())
+        self._load = self._load.subs(res)
+
         if (loc, type) in self._applied_supports:
             if type == "pin" or type == "roller":
                 reaction_load = Symbol('R_'+ str(loc))
