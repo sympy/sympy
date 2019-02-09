@@ -2356,7 +2356,7 @@ def encipher_bg(i, key, seed=None):
 
     r = _randint(seed)(2, key - 1)
     x = r**2 % key
-    x_L = pow(x, 2**L, key)
+    x_L = pow(int(x), int(2**L), int(key))
 
     rand_bits = []
     for k in range(L):
@@ -2401,8 +2401,8 @@ def decipher_bg(message, key):
     L = len(encrypt_msg)
     p_t = ((p + 1)/4)**L
     q_t = ((q + 1)/4)**L
-    r_p = pow(y, p_t, p)
-    r_q = pow(y, q_t, q)
+    r_p = pow(int(y), int(p_t), int(p))
+    r_q = pow(int(y), int(q_t), int(q))
 
     x = (q * mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
 
