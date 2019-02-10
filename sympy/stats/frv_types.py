@@ -18,7 +18,7 @@ from sympy.core.compatibility import as_int, range
 from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
 from sympy.concrete.summations import Sum
-from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
+from sympy import (S, sympify, And, Rational, binomial, cacheit, Integer,
         Dict, Basic, KroneckerDelta, Dummy)
 
 __all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
@@ -35,6 +35,13 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
 
     def __new__(cls, density):
         density = Dict(density)
+        for k in density.values():
+            k_sym = sympify(k)
+            if fuzzy_not(fuzzy_and((k_sym.is_nonnegative, (k_sym - 1).is_nonpositive))):
+                raise ValueError("density at a point must be between 0 and 1")
+        sum_sym = sum(density.values())
+        if sum_sym != 1:
+            raise ValueError("Total density must be equal to 1")
         return Basic.__new__(cls, density)
 
 def FiniteRV(name, density):
@@ -156,6 +163,15 @@ def Die(name, sides=6):
 
 class BernoulliDistribution(SingleFiniteDistribution):
     _argnames = ('p', 'succ', 'fail')
+
+    def __new__(cls, *args):
+        p = args[BernoulliDistribution._argnames.index('p')]
+        p_sym = sympify(p)
+
+        if fuzzy_not(fuzzy_and((p_sym.is_nonnegative, (p_sym - 1).is_nonpositive))):
+            raise ValueError("'p' must be: 0 <= p <= 1 . p = %s" % str(p))
+        else:
+            return super(BernoulliDistribution, cls).__new__(cls, *args)
 
     @property
     @cacheit
