@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
-from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
+from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
+from sympy.core.compatibility import range
 
 _af_new = Permutation._af_new
 
@@ -37,7 +37,7 @@ def AbelianGroup(*cyclic_orders):
     References
     ==========
 
-    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups
+    .. [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups
 
     """
     groups = []
@@ -264,7 +264,7 @@ def SymmetricGroup(n):
     References
     ==========
 
-    [1] https://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations
+    .. [1] https://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations
 
     """
     if n == 1:
@@ -304,5 +304,5 @@ def RubikGroup(n):
     """
     from sympy.combinatorics.generators import rubik
     if n <= 1:
-        raise ValueError("Invalid cube . n has to be greater than 1")
+        raise ValueError("Invalid cube. n has to be greater than 1")
     return PermutationGroup(rubik(n))

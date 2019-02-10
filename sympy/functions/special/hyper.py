@@ -4,8 +4,8 @@ from __future__ import print_function, division
 
 from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
 from sympy.core.function import Function, Derivative, ArgumentIndexError
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import reduce, range
+from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.symbol import Dummy
 

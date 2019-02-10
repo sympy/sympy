@@ -10,6 +10,7 @@ from sympy import (
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
 from sympy.core.expr import UnevaluatedExpr
 
+from  sympy.physics import mechanics
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
@@ -19,10 +20,11 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
 
-from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
+from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerProduct
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
+from sympy.printing.pretty.pretty_symbology import put_accent_in_middle_of_string
 
 from sympy.physics.units import joule, degree, radian
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
@@ -318,8 +320,8 @@ def test_missing_in_2X_issue_9047():
 def test_upretty_modifiers():
     # Accents
     assert upretty( Symbol('Fmathring') ) == u'F̊'
-    assert upretty( Symbol('Fddddot') ) == u'F̈̈'
-    assert upretty( Symbol('Fdddot') ) == u'F̈̇'
+    assert upretty( Symbol('Fddddot') ) == u'F⃜'
+    assert upretty( Symbol('Fdddot') ) == u'F⃛'
     assert upretty( Symbol('Fddot') ) == u'F̈'
     assert upretty( Symbol('Fdot') ) == u'Ḟ'
     assert upretty( Symbol('Fcheck') ) == u'F̌'
@@ -458,6 +460,23 @@ x \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+    #see issue #14033
+    expr = x**Rational(1, 3)
+    ascii_str = \
+"""\
+ 1/3\n\
+x   \
+"""
+    ucode_str = \
+u("""\
+ 1/3\n\
+x   \
+""")
+    assert xpretty(expr, use_unicode=False, wrap_line=False,\
+    root_notation = False) == ascii_str
+    assert xpretty(expr, use_unicode=True, wrap_line=False,\
+    root_notation = False) == ucode_str
 
     expr = x**Rational(-5, 2)
     ascii_str = \
@@ -6476,3 +6495,37 @@ H    \n\
     ucode_str = ascii_str
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+def test_issue_15560():
+    a = MatrixSymbol('a', 1, 1)
+    e = pretty(a*(KroneckerProduct(a, a)))
+    result = 'a*(a x a)'
+    assert e == result
+
+
+def test_issue_15583():
+
+    N = mechanics.ReferenceFrame('N')
+    result = '(n_x, n_y, n_z)'
+    e = pretty((N.x, N.y, N.z))
+    assert e == result
+
+
+def test_put_accent_in_middle_of_string():
+    assert put_accent_in_middle_of_string('a', u'\N{COMBINING TILDE}') == u'ã'
+    assert put_accent_in_middle_of_string('aa', u'\N{COMBINING TILDE}') == u'aã'
+    assert put_accent_in_middle_of_string('aaa', u'\N{COMBINING TILDE}') == u'aãa'
+    assert put_accent_in_middle_of_string('aaaa', u'\N{COMBINING TILDE}') == u'aaãa'
+    assert put_accent_in_middle_of_string('aaaaa', u'\N{COMBINING TILDE}') == u'aaãaa'
+    assert put_accent_in_middle_of_string('abcdefg', u'\N{COMBINING FOUR DOTS ABOVE}') == u'abcd⃜efg'
+
+def test_imaginary_unit():
+    from sympy import pretty # As it is redefined above
+    assert pretty(1 + I, use_unicode=False) == '1 + I'
+    assert pretty(1 + I, use_unicode=True) == u'1 + ⅈ'
+    assert pretty(1 + I, use_unicode=False, imaginary_unit='j') == '1 + I'
+    assert pretty(1 + I, use_unicode=True, imaginary_unit='j') == u'1 + ⅉ'
+
+    raises(TypeError, lambda: pretty(I, imaginary_unit=I))
+    raises(ValueError, lambda: pretty(I, imaginary_unit="kkk"))

@@ -110,7 +110,7 @@ strings can occur without custom indices, and also overwrites the latex string
 that would be used if there were custom indices. ::
 
   >>> from sympy.physics.vector import ReferenceFrame, vlatex
-  >>> N = ReferenceFrame('N', latexs=['n1','\mathbf{n}_2','cat'])
+  >>> N = ReferenceFrame('N', latexs=['n1','\\mathbf{n}_2','cat'])
   >>> vlatex(N.x)
   'n1'
   >>> vlatex(N.y)

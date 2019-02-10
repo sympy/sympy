@@ -1,4 +1,4 @@
-from sympy.core.compatibility import unichr
+from sympy.core.compatibility import range, unichr
 from sympy.utilities.misc import translate, replace, ordinal
 
 def test_translate():
@@ -35,3 +35,4 @@ def test_ordinal():
     assert ordinal(103) == '103rd'
     assert ordinal(104) == '104th'
     assert ordinal(200) == '200th'
+    assert all(ordinal(i) == str(i) + 'th' for i in range(-220, -203))

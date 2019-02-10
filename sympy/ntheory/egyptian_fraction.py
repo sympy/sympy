@@ -1,8 +1,9 @@
 from __future__ import print_function, division
 
-import sympy.polys
 from sympy import Integer
 from sympy.core.compatibility import range
+import sympy.polys
+
 import sys
 if sys.version_info < (3,5):
     from fractions import gcd

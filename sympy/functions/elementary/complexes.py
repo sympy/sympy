@@ -1,18 +1,18 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
+from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
+from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
+from sympy.core.relational import Eq
+from sympy.functions.elementary.exponential import exp, exp_polar, log
+from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.core.expr import Expr
-from sympy.core.relational import Eq
-from sympy.core.logic import fuzzy_not, fuzzy_or
-from sympy.functions.elementary.exponential import exp, exp_polar, log
 from sympy.functions.elementary.trigonometric import atan, atan2
-from sympy.functions.elementary.integers import ceiling
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################

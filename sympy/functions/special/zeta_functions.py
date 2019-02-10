@@ -2,8 +2,8 @@
 from __future__ import print_function, division
 
 from sympy.core import Function, S, sympify, pi, I
-from sympy.core.function import ArgumentIndexError
 from sympy.core.compatibility import range
+from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
 from sympy.functions.elementary.exponential import log, exp_polar
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -314,7 +314,7 @@ class polylog(Function):
         return z*lerchphi(z, s, 1)
 
     def _eval_expand_func(self, **hints):
-        from sympy import log, expand_mul, Dummy, exp_polar, I
+        from sympy import log, expand_mul, Dummy
         s, z = self.args
         if s == 1:
             return -log(1 - z)

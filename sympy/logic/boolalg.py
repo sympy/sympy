@@ -320,6 +320,10 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     def __hash__(self):
         return hash(True)
 
+    @property
+    def negated(self):
+        return S.false
+
     def as_set(self):
         """
         Rewrite logic operators and relationals in terms of real sets.
@@ -382,6 +386,10 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
 
     def __hash__(self):
         return hash(False)
+
+    @property
+    def negated(self):
+        return S.true
 
     def as_set(self):
         """
@@ -542,7 +550,7 @@ class And(LatticeOp, BooleanFunction):
                 c = x.canonical
                 if c in rel:
                     continue
-                nc = (~c).canonical
+                nc = c.negated.canonical
                 if any(r == nc for r in rel):
                     return [S.false]
                 rel.append(c)
@@ -652,7 +660,7 @@ class Or(LatticeOp, BooleanFunction):
                 c = x.canonical
                 if c in rel:
                     continue
-                nc = (~c).canonical
+                nc = c.negated.canonical
                 if any(r == nc for r in rel):
                     return [S.true]
                 rel.append(c)
@@ -842,7 +850,7 @@ class Xor(BooleanFunction):
                 argset.remove(arg)
             else:
                 argset.add(arg)
-        rel = [(r, r.canonical, (~r).canonical) for r in argset if r.is_Relational]
+        rel = [(r, r.canonical, r.negated.canonical) for r in argset if r.is_Relational]
         odd = False  # is number of complimentary pairs odd? start 0 -> False
         remove = []
         for i, (r, c, nc) in enumerate(rel):
@@ -1050,7 +1058,7 @@ class Implies(BooleanFunction):
         elif A.is_Relational and B.is_Relational:
             if A.canonical == B.canonical:
                 return S.true
-            if (~A).canonical == B.canonical:
+            if A.negated.canonical == B.canonical:
                 return B
         else:
             return Basic.__new__(cls, *args)
@@ -1093,7 +1101,7 @@ class Equivalent(BooleanFunction):
         rel = []
         for r in argset:
             if isinstance(r, Relational):
-                rel.append((r, r.canonical, (~r).canonical))
+                rel.append((r, r.canonical, r.negated.canonical))
         remove = []
         for i, (r, c, nc) in enumerate(rel):
             for j in range(i + 1, len(rel)):
@@ -2030,11 +2038,15 @@ def simplify_logic(expr, form=None, deep=True):
     # get variables in case not deep or after doing
     # deep simplification since they may have changed
     variables = _find_predicates(expr)
+    # group into constants and variable values
+    c, v = sift(variables, lambda x: x in (True, False), binary=True)
+    variables = c + v
     truthtable = []
-    for t in product([0, 1], repeat=len(variables)):
-        t = list(t)
-        if expr.xreplace(dict(zip(variables, t))) == True:
-            truthtable.append(t)
+    # standardize constants to be 1 or 0 in keeping with truthtable
+    c = [1 if i==True else 0 for i in c]
+    for t in product([0, 1], repeat=len(v)):
+        if expr.xreplace(dict(zip(v, t))) == True:
+            truthtable.append(c + list(t))
     big = len(truthtable) >= (2 ** (len(variables) - 1))
     if form == 'dnf' or form is None and big:
         return SOPform(variables, truthtable)

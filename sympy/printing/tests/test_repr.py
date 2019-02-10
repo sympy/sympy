@@ -243,15 +243,34 @@ def test_DMP():
     assert srepr(ZZ.old_poly_ring(x)([1, 2])) == \
         "DMP([1, 2], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x')))"
 
+
 def test_FiniteExtension():
     assert srepr(FiniteExtension(Poly(x**2 + 1, x))) == \
         "FiniteExtension(Poly(x**2 + 1, x, domain='ZZ'))"
+
 
 def test_ExtensionElement():
     A = FiniteExtension(Poly(x**2 + 1, x))
     assert srepr(A.generator) == \
         "ExtElem(DMP([1, 0], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x'))), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
 
+
 def test_BooleanAtom():
     assert srepr(true) == "true"
     assert srepr(false) == "false"
+
+
+def test_Integers():
+    sT(S.Integers, "Integers")
+
+
+def test_Naturals():
+    sT(S.Naturals, "Naturals")
+
+
+def test_Naturals0():
+    sT(S.Naturals0, "Naturals0")
+
+
+def test_Reals():
+    sT(S.Reals, "Reals")

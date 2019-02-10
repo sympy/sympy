@@ -430,8 +430,6 @@ def test_solve_transcendental():
 
     # misc
     # make sure that the right variables is picked up in tsolve
-    raises(NotImplementedError, lambda: solve((exp(x) + 1)**x - 2))
-
     # shouldn't generate a GeneratorsNeeded error in _tsolve when the NaN is generated
     # for eq_down. Actual answers, as determined numerically are approx. +/- 0.83
     raises(NotImplementedError, lambda:
@@ -696,9 +694,12 @@ def test_checking():
 def test_issue_4671_4463_4467():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
+    # This is probably better than the form below but equivalent:
+    #assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [-sqrt(x*log(1 + I*pi/log(2)))
+    #                                                    , sqrt(x*log(1 + I*pi/log(2)))]
     assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [
-        -sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi)),
-        sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))]
+         sqrt(x*(-log(log(2)) + log(log(2) + I*pi))),
+        -sqrt(-x*(log(log(2)) - log(log(2) + I*pi)))]
 
     C1, C2 = symbols('C1 C2')
     f = Function('f')
@@ -1593,16 +1594,12 @@ def test_lambert_multivariate():
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
 
-    assert solve(x**3 - 3**x, x) == [-3/log(3)*LambertW(-log(3)/3),
-                                     -3*LambertW(-log(3)/3, -1)/log(3)]
-    assert solve(x**2 - 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
-    assert solve(-x**2 + 2**x, x) == [2, -2*LambertW(-log(2)/2, -1)/log(2)]
-    assert solve(3**cos(x) - cos(x)**3) == [
-        acos(-3*LambertW(-log(3)/3)/log(3)),
-        acos(-3*LambertW(-log(3)/3, -1)/log(3))]
+    assert solve(x**3 - 3**x, x) == [3, -3*LambertW(-log(3)/3)/log(3)]
+    assert solve(x**2 - 2**x, x) == [2, 4]
+    assert solve(-x**2 + 2**x, x) == [2, 4]
+    assert solve(3**cos(x) - cos(x)**3) == [acos(3), acos(-3*LambertW(-log(3)/3)/log(3))]
     assert set(solve(3*log(x) - x*log(3))) == set(  # 2.478... and 3
-        [-3*LambertW(-log(3)/3)/log(3),
-        -3*LambertW(-log(3)/3, -1)/log(3)])
+        [3, -3*LambertW(-log(3)/3)/log(3)])
     assert solve(LambertW(2*x) - y, x) == [y*exp(y)/2]
 
 
@@ -1997,3 +1994,33 @@ def test_issue_15415():
     assert solve(Eq(y + 3*x**2/2, y + 3*x), y) == []
     assert solve([Eq(y + 3*x**2/2, y + 3*x)], y) == []
     assert solve([Eq(y + 3*x**2/2, y + 3*x), Eq(x, 1)], y) == []
+
+def test_issue_15731():
+    # f(x)**g(x)=c
+    assert solve(Eq((x**2 - 7*x + 11)**(x**2 - 13*x + 42), 1)) == [2, 3, 4, 5, 6, 7]
+    assert solve((x)**(x + 4) - 4) == [-2]
+    assert solve((-x)**(-x + 4) - 4) == [2]
+    assert solve((x**2 - 6)**(x**2 - 2) - 4) == [-2, 2]
+    assert solve((x**2 - 2*x - 1)**(x**2 - 3) - 1/(1 - 2*sqrt(2))) == [sqrt(2)]
+    assert solve(x**(x + S.Half) - 4*sqrt(2)) == [S(2)]
+    assert solve((x**2 + 1)**x - 25) == [2]
+    assert solve(x**(2/x) - 2) == [2, 4]
+    assert solve((x/2)**(2/x) - sqrt(2)) == [4, 8]
+    assert solve(x**(x + S.Half) - S(9)/4) == [S(3)/2]
+    # a**g(x)=c
+    assert solve((-sqrt(sqrt(2)))**x - 2) == [4, log(2)/(log(2**(S(1)/4)) + I*pi)]
+    assert solve((sqrt(2))**x - sqrt(sqrt(2))) == [S(1)/2]
+    assert solve((-sqrt(2))**x + 2*(sqrt(2))) == [3,
+            (3*log(2)**2 + 4*pi**2 - 4*I*pi*log(2))/(log(2)**2 + 4*pi**2)]
+    assert solve((sqrt(2))**x - 2*(sqrt(2))) == [3]
+    assert solve(I**x + 1) == [2]
+    assert solve((1 + I)**x - 2*I) == [2]
+    assert solve((sqrt(2) + sqrt(3))**x - (2*sqrt(6) + 5)**(S(1)/3)) == [S(2)/3]
+    # bases of both sides are equal
+    b = Symbol('b')
+    assert solve(b**x - b**2, x) == [2]
+    assert solve(b**x - 1/b, x) == [-1]
+    assert solve(b**x - b, x) == [1]
+    b = Symbol('b', positive=True)
+    assert solve(b**x - b**2, x) == [2]
+    assert solve(b**x - 1/b, x) == [-1]

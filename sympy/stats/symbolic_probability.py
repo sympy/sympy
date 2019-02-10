@@ -1,11 +1,9 @@
 import itertools
 
-from sympy.core.sympify import _sympify
-
+from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol
 from sympy.core.compatibility import default_sort_key
-
-from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol, Dummy, Basic
 from sympy.core.evaluate import global_evaluate
+from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
 from sympy.stats.rv import RandomSymbol, probability, expectation
 
@@ -50,7 +48,7 @@ class Probability(Expr):
         return probability(arg, condition, evaluate=False)
 
     def _eval_rewrite_as_Sum(self, arg, condition=None, **kwargs):
-        return self.rewrite(Integral)
+        return probability(arg, condition, evaluate=False)
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
