@@ -1006,7 +1006,7 @@ class tan(TrigonometricFunction):
                             and not isinstance(sresult, cos):
                         if sresult == 0:
                             return S.ComplexInfinity
-                        return (1 - cresult)/sresult
+                        return 1/sresult - cresult/sresult
                 table2 = {
                     12: (3, 4),
                     20: (4, 5),
