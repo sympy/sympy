@@ -4003,14 +4003,14 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     return frobdict
 
 
-def _check_substitution_type(eq, func, order):
+def _check_substitution_type(eq, func):
     # Check if some derivate of positive order can be substituted as g(x) = f^(order_to_subs) (x)
     x = func.args[0]
     f = func.func
     order_to_subs = 0
     D = Dummy()
-    for nsubs_try in range(1,order):
-        if reduced_eq.subs(f(x).diff(x, nsubs_try), D).has(f(x)):
+    for nsubs_try in range(1,ode_order(eq,f(x))):
+        if eq.subs(f(x).diff(x, nsubs_try), D).has(f(x)):
             break
         else:
             order_to_subs += 1
@@ -4021,6 +4021,7 @@ def _check_substitution_type(eq, func, order):
 def order_reducing_substitution(eq, func, order, match):
     '''
     Substitutes lowest order derivate in equation to function with order of derivative as 0
+    match[var] here is how many times the function if solved is to be integrated to  get f(x) since g(x) = f^(match[var])
     '''
     x = func.args[0]
     f = func.func
@@ -8701,4 +8702,8 @@ def _nonlinear_3eq_order1_type5(x, y, t, eq):
     sol2 = dsolve(diff(v(t),t) - (v*(a*F3-c*F1)).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (w*(b*F1-a*F2)).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
     return [sol1, sol2, sol3]
-    
+
+
+x = Symbol("x")    
+f = Function("f")(x)
+print(dsolve(f.diff(x,2)+x*f.diff(x)**2))
