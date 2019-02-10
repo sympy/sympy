@@ -159,7 +159,25 @@ def import_module(module, min_module_version=None, min_python_version=None,
         # NOTE: StrictVersion() is use here to make sure a comparison like
         # '1.11.2' < '1.6.1' doesn't fail. There is not a straight forward way
         # to create a unit test for this.
-        if StrictVersion(modversion) < StrictVersion(min_module_version):
+        for _ in range(1):
+            # strict version comparison can easily throw errors
+            version_check_failed = True  # Default value
+            try:
+                version_check_failed = (StrictVersion(modversion) <
+                                        StrictVersion(min_module_version))
+                break
+            except ValueError as e:  # e.g. StrictVersion('1.1.post1')
+                pass
+
+            try:
+                from pkg_resources import parse_version
+                version_check_failed = (parse_version(modversion) <
+                                        parse_version(min_module_version))
+                break
+            except ImportError:  # could pkg_resources be missing?
+                pass
+
+        if version_check_failed:
             if warn_old_version:
                 # Attempt to create a pretty string version of the version
                 from ..core.compatibility import string_types
@@ -169,7 +187,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
                     verstr = '.'.join(map(str, min_module_version))
                 else:
                     # Either don't know what this is.  Hopefully
-                    # it's something that has a nice str version, like an int.
+                    # it's something that has a nice str version, e.g. int
                     verstr = str(min_module_version)
                 warnings.warn("%s version is too old to use "
                     "(%s or newer required)" % (module, verstr),

@@ -22,6 +22,7 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
+AUTOGRAD_NUMPY_DEFAULT = {"I": 1j}
 SCIPY_DEFAULT = {"I": 1j}
 TENSORFLOW_DEFAULT = {}
 SYMPY_DEFAULT = {}
@@ -34,6 +35,7 @@ NUMEXPR_DEFAULT = {}
 MATH = MATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
+AUTOGRAD_NUMPY = AUTOGRAD_NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
@@ -79,6 +81,8 @@ MPMATH_TRANSLATIONS = {
 NUMPY_TRANSLATIONS = {}
 SCIPY_TRANSLATIONS = {}
 
+AUTOGRAD_NUMPY_TRANSLATIONS = {}
+
 TENSORFLOW_TRANSLATIONS = {
     "Abs": "abs",
     "ceiling": "ceil",
@@ -96,6 +100,7 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
+    "autograd.numpy": (AUTOGRAD_NUMPY, AUTOGRAD_NUMPY_DEFAULT, AUTOGRAD_NUMPY_TRANSLATIONS, ("import autograd.numpy; from autograd.numpy import *; from autograd.numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
@@ -112,7 +117,7 @@ def _import(module, reload=False):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy", "tensorflow".
+    "mpmath", "numpy", "autograd.numpy", "sympy", "tensorflow".
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
@@ -184,8 +189,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     standard library ``math``, or ``mpmath`` functions otherwise. To change
     this behavior, the "modules" argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "numexpr", "scipy", "sympy",
-       "tensorflow"
+     - the strings "math", "mpmath", "numpy", "autogra.numpy", "numexpr",
+     "scipy", "sympy", "tensorflow"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -209,6 +214,12 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     numexpr may be the only option in modules. The official list of numexpr
     functions can be found at:
     https://github.com/pydata/numexpr#supported-functions
+
+    Using autograd.numpy is only necessary if you intend to use the
+    resulting function with the autograd module for automatic
+    differentiation.  This is useful for instance if Sympy is used only
+    in a subsection of a project and obtaining complete symbolic gradients
+    is not feasible.
 
     In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
     by default. As of release 1.0 ``numpy.array`` is the default.
@@ -418,6 +429,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.pycode import SciPyPrinter as Printer
         elif _module_present('numpy', namespaces):
             from sympy.printing.pycode import NumPyPrinter as Printer
+        elif _module_present('autograd.numpy', namespaces):
+            from sympy.printing.pycode import NumPyPrinter as Printer
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer
         elif _module_present('tensorflow', namespaces):
@@ -504,6 +517,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         "{imp_mods}"
         ).format(sig=sig, expr=expr_str, src=funcstr, imp_mods='\n'.join(imp_mod_lines))
     return func
+
 
 def _module_present(modname, modlist):
     if modname in modlist:
