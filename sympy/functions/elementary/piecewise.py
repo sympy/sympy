@@ -1,19 +1,17 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number, Symbol
+from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Symbol
 from sympy.core.basic import as_Basic
-from sympy.core.sympify import SympifyError
-from sympy.core.relational import (Equality, Unequality, Relational,
-    _canonical)
+from sympy.core.compatibility import range
 from sympy.core.function import UndefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol
+from sympy.core.relational import (Equality, Unequality, Relational,
+    _canonical)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
-    true, false, Not, Or, ITE, simplify_logic)
-from sympy.utilities.iterables import cartes
-from sympy.core.compatibility import default_sort_key, range
-from sympy.utilities.iterables import uniq, is_sequence, ordered, product, sift
-from sympy.utilities.misc import filldedent, Undecidable, func_name
+    true, false, Or, ITE, simplify_logic)
+from sympy.utilities.iterables import uniq, ordered, product, sift
+from sympy.utilities.misc import filldedent, func_name
 
 
 Undefined = S.NaN  # Piecewise()
@@ -269,12 +267,12 @@ class Piecewise(Function):
                 nonredundant = []
                 for c in cond.args:
                     if (isinstance(c, Relational) and
-                            (~c).canonical in current_cond):
+                            c.negated.canonical in current_cond):
                         continue
                     nonredundant.append(c)
                 cond = cond.func(*nonredundant)
             elif isinstance(cond, Relational):
-                if (~cond).canonical in current_cond:
+                if cond.negated.canonical in current_cond:
                     cond = S.true
 
             current_cond.add(cond)
@@ -353,6 +351,38 @@ class Piecewise(Function):
                         other = [ei.subs(*e.args) for ei in other]
                 cond = And(*(eqs + other))
                 args[i] = args[i].func(expr, cond)
+        # See if expressions valid for a single point happens to evaluate
+        # to the same function as in the next piecewise segment, see:
+        # https://github.com/sympy/sympy/issues/8458
+        prevexpr = None
+        for i, (expr, cond) in reversed(list(enumerate(args))):
+            if prevexpr is not None:
+                _prevexpr = prevexpr
+                _expr = expr
+                if isinstance(cond, And):
+                    eqs, other = sift(cond.args,
+                        lambda i: isinstance(i, Equality), binary=True)
+                elif isinstance(cond, Equality):
+                    eqs, other = [cond], []
+                else:
+                    eqs = other = []
+                if eqs:
+                    eqs = list(ordered(eqs))
+                    for j, e in enumerate(eqs):
+                        # these blessed lhs objects behave like Symbols
+                        # and the rhs are simple replacements for the "symbols"
+                        if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
+                            isinstance(e.rhs,
+                                (Rational, NumberSymbol,
+                                Symbol, UndefinedFunction)):
+                            _prevexpr = _prevexpr.subs(*e.args)
+                            _expr = _expr.subs(*e.args)
+                if _prevexpr == _expr:
+                    args[i] = args[i].func(args[i+1][0], cond)
+                else:
+                    prevexpr = expr
+            else:
+                prevexpr = expr
         return self.func(*args)
 
     def _eval_as_leading_term(self, x):
@@ -892,7 +922,6 @@ class Piecewise(Function):
     @classmethod
     def __eval_cond(cls, cond):
         """Return the truth value of the condition."""
-        from sympy.solvers.solvers import checksol
         if cond == True:
             return True
         if isinstance(cond, Equality):

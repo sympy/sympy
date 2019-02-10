@@ -1,24 +1,24 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.mul import Mul
-from sympy.core.singleton import S, Singleton
-from sympy.core.symbol import Dummy, Symbol, Wild
-from sympy.core.function import UndefinedFunction
+from sympy.core.cache import cacheit
 from sympy.core.compatibility import (range, integer_types, with_metaclass,
                                       is_sequence, iterable, ordered)
-from sympy.core.decorators import call_highest_priority
-from sympy.core.cache import cacheit
-from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
+from sympy.core.decorators import call_highest_priority
 from sympy.core.evaluate import global_evaluate
+from sympy.core.function import UndefinedFunction
+from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.relational import Eq
+from sympy.core.singleton import S, Singleton
+from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.sympify import sympify
 from sympy.polys import lcm, factor
 from sympy.sets.sets import Interval, Intersection
-from sympy.utilities.iterables import flatten
-from sympy.tensor.indexed import Idx
 from sympy.simplify import simplify
+from sympy.tensor.indexed import Idx
+from sympy.utilities.iterables import flatten
 from sympy import expand
 
 

@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
 from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
+from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.compatibility import range
 from .zeta_functions import zeta
 from .error_functions import erf, erfc
 from sympy.functions.elementary.exponential import exp, log

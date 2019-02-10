@@ -2,11 +2,10 @@
 from __future__ import (absolute_import, division, print_function)
 
 import math
-from itertools import product
-from sympy import Add, Symbol, sin, Abs, oo, Interval
-from sympy.core.function import UndefinedFunction
+from sympy import Interval
 from sympy.calculus.singularities import is_increasing, is_decreasing
 from sympy.codegen.rewriting import Optimization
+from sympy.core.function import UndefinedFunction
 
 """
 This module collects classes useful for approimate rewriting of expressions.
@@ -23,6 +22,7 @@ class SumApprox(Optimization):
 
     Parameters
     ==========
+
     bounds : dict
         Mapping expressions to length 2 tuple of bounds (low, high).
     reltol : number
@@ -104,6 +104,7 @@ class SeriesApprox(Optimization):
 
     Parameters
     ==========
+
     bounds : dict
         Mapping expressions to length 2 tuple of bounds (low, high).
     reltol : number

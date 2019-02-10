@@ -19,6 +19,7 @@ from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_s
 from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
+from sympy.matrices.expressions import MatPow
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
@@ -243,7 +244,7 @@ def test_power():
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 2
     assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     n = Symbol('n', integer=True)
-    raises(ValueError, lambda: A**n)
+    assert isinstance(A**n, MatPow)
     n = Symbol('n', integer=True, nonnegative=True)
     raises(ValueError, lambda: A**n)
     assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
@@ -251,6 +252,12 @@ def test_power():
     A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
     assert A**5.0 == Matrix([[168,  72,  89], [291, 144, 161], [572, 267, 329]])
     assert A**5.0 == A**5
+    A = Matrix([[0, 1, 0],[-1, 0, 0],[0, 0, 0]])
+    n = Symbol("n")
+    An = A**n
+    assert An.subs(n, 2).doit() == A**2
+    raises(ValueError, lambda: An.subs(n, -2).doit())
+    assert An * An == A**(2*n)
 
 
 def test_creation():
@@ -622,6 +629,13 @@ def test_LUdecomp():
     P, L, Dee, U = M.LUdecompositionFF()
     assert P*M == L*Dee.inv()*U
 
+    # issue 15794
+    M = Matrix(
+        [[1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]]
+    )
+    raises(ValueError, lambda : M.LUdecomposition_Simple(rankcheck=True))
 
 def test_LUsolve():
     A = Matrix([[2, 3, 5],
@@ -3361,3 +3375,11 @@ def test_case_6913():
     a = Symbol("a")
     a = m[0, 0]>0
     assert str(a) == 'm[0, 0] > 0'
+
+def test_issue_15872():
+    A = Matrix([[1, 1, 1, 0], [-2, -1, 0, -1], [0, 0, -1, -1], [0, 0, 2, 1]])
+    B = A - Matrix.eye(4) * I
+    assert B.rank() == 3
+    assert (B**2).rank() == 2
+    assert (B**3).rank() == 2
+    

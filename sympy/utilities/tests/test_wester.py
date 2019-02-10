@@ -733,9 +733,8 @@ def test_J16():
     raise NotImplementedError("diff(zeta(x), x) @ x=0 == -log(2*pi)/2")
 
 
-@XFAIL
 def test_J17():
-    assert deltaintegrate(f((x + 2)/5)*DiracDelta((x - 2)/3) - g(x)*diff(DiracDelta(x - 1), x), (x, 0, 3))
+    assert integrate(f((x + 2)/5)*DiracDelta((x - 2)/3) - g(x)*diff(DiracDelta(x - 1), x), (x, 0, 3)) == 3*f(S(4)/5) + Subs(Derivative(g(x), x), x, 1)
 
 
 @XFAIL
@@ -1158,8 +1157,8 @@ def test_N1():
 @XFAIL
 def test_N2():
     x = symbols('x', real=True)
-    assert ask(Q.is_true(x**4 - x + 1 > 0))
-    assert ask(Q.is_true(x**4 - x + 1 > 1)) == False
+    assert ask(Q.is_true(x**4 - x + 1 > 0)) is True
+    assert ask(Q.is_true(x**4 - x + 1 > 1)) is False
 
 
 @XFAIL
@@ -1170,25 +1169,25 @@ def test_N3():
 @XFAIL
 def test_N4():
     x, y = symbols('x y', real=True)
-    assert ask(Q.is_true(2*x**2 > 2*y**2), Q.is_true((x > y) & (y > 0)))
+    assert ask(Q.is_true(2*x**2 > 2*y**2), Q.is_true((x > y) & (y > 0))) is True
 
 
 @XFAIL
 def test_N5():
     x, y, k = symbols('x y k', real=True)
-    assert ask(Q.is_true(k*x**2 > k*y**2), Q.is_true((x > y) & (y > 0) & (k > 0)))
+    assert ask(Q.is_true(k*x**2 > k*y**2), Q.is_true((x > y) & (y > 0) & (k > 0))) is True
 
 
 @XFAIL
 def test_N6():
     x, y, k, n = symbols('x y k n', real=True)
-    assert ask(Q.is_true(k*x**n > k*y**n), Q.is_true((x > y) & (y > 0) & (k > 0) & (n > 0)))
+    assert ask(Q.is_true(k*x**n > k*y**n), Q.is_true((x > y) & (y > 0) & (k > 0) & (n > 0))) is True
 
 
 @XFAIL
 def test_N7():
     x, y = symbols('x y', real=True)
-    assert ask(Q.is_true(y > 0), Q.is_true((x > 1) & (y >= x - 1)))
+    assert ask(Q.is_true(y > 0), Q.is_true((x > 1) & (y >= x - 1))) is True
 
 
 @XFAIL

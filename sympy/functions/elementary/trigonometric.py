@@ -2,22 +2,22 @@ from __future__ import print_function, division
 
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
+from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.numbers import igcdex, Rational, pi
-from sympy.core.singleton import S
-from sympy.core.symbol import Symbol, Wild
 from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.core.numbers import igcdex, Rational, pi
+from sympy.core.relational import Ne
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
-from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.exponential import log, exp
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh,
     coth, HyperbolicFunction, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.sets.sets import FiniteSet
 from sympy.utilities.iterables import numbered_symbols
-from sympy.core.compatibility import range
-from sympy.core.relational import Ne
-from sympy.functions.elementary.piecewise import Piecewise
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -77,7 +77,6 @@ class TrigonometricFunction(Function):
             return general_period
 
         if symbol in f.free_symbols:
-            p, q = Wild('p'), Wild('q')
             if f.is_Mul:
                 g, h = f.as_independent(symbol)
                 if h == symbol:
@@ -2522,9 +2521,6 @@ class acot(InverseTrigonometricFunction):
             return arg
         else:
             return self.func(arg)
-
-    def _eval_is_real(self):
-        return self.args[0].is_real
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:

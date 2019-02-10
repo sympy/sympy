@@ -10,10 +10,9 @@ system has common roots. That is when the resultant is equal to zero.
 """
 
 from sympy import IndexedBase, Matrix, Mul, Poly
-from sympy import rem, prod, fraction, total_degree
+from sympy import rem, prod, total_degree
 from sympy.core.compatibility import range
-from sympy.polys.monomials import monomial_deg
-from sympy.polys.monomials import itermonomials
+from sympy.polys.monomials import monomial_deg, itermonomials
 from sympy.polys.orderings import monomial_key
 from sympy.polys.polytools import poly_from_expr
 from sympy.functions.combinatorial.factorials import binomial
@@ -27,6 +26,7 @@ class DixonResultant():
 
     Examples
     ========
+
     >>> from sympy.core import symbols
 
     >>> from sympy.polys.multivariate_resultants import DixonResultant
@@ -49,14 +49,17 @@ class DixonResultant():
     >>> matrix.det()
     0
 
-    Reference
-    ==========
-    1. [Kapur1994]_
-    2. [Palancz08]_
-
     See Also
     ========
+
     Notebook in examples: sympy/example/notebooks.
+
+    References
+    ==========
+
+    .. [1] [Kapur1994]_
+    .. [2] [Palancz08]_
+
     """
 
     def __init__(self, polynomials, variables):
@@ -88,7 +91,7 @@ class DixonResultant():
     def get_dixon_polynomial(self):
         r"""
         Returns
-        -------
+        =======
 
         dixon_polynomial: polynomial
             Dixon's polynomial is calculated as:
@@ -161,6 +164,7 @@ class MacaulayResultant():
 
     Examples
     ========
+
     >>> from sympy.core import symbols
 
     >>> from sympy.polys.multivariate_resultants import MacaulayResultant
@@ -185,19 +189,23 @@ class MacaulayResultant():
     [   0,    0, -a_1,    0],
     [   0,    0,    0, -a_1]])
 
-    Reference
-    ==========
-    1. [Bruce97]_
-    2. [Stiller96]_
-
     See Also
     ========
+
     Notebook in examples: sympy/example/notebooks.
+
+    References
+    ==========
+
+    .. [1] [Bruce97]_
+    .. [2] [Stiller96]_
+
     """
     def __init__(self, polynomials, variables):
         """
         Parameters
-        ----------
+        ==========
+
         variables: list
             A list of all n variables
         polynomials : list of sympy polynomials
@@ -217,7 +225,8 @@ class MacaulayResultant():
     def _get_degree_m(self):
         r"""
         Returns
-        -------
+        =======
+
         degree_m: int
             The degree_m is calculated as  1 + \sum_1 ^ n (d_i - 1),
             where d_i is the degree of the i polynomial
@@ -227,7 +236,8 @@ class MacaulayResultant():
     def get_size(self):
         r"""
         Returns
-        -------
+        =======
+
         size: int
             The size of set T. Set T is the set of all possible
             monomials of the n variables for degree equal to the
@@ -238,7 +248,8 @@ class MacaulayResultant():
     def get_monomials_of_certain_degree(self, degree):
         """
         Returns
-        -------
+        =======
+
         monomials: list
             A list of monomials of a certain degree.
         """
@@ -252,7 +263,8 @@ class MacaulayResultant():
     def get_monomials_set(self):
         r"""
         Returns
-        -------
+        =======
+
         self.monomial_set: set
             The set T. Set of all possible monomials of degree degree_m
         """
@@ -262,7 +274,8 @@ class MacaulayResultant():
     def get_row_coefficients(self):
         """
         Returns
-        -------
+        =======
+
         row_coefficients: list
             The row coefficients of Macaulay's matrix
         """
@@ -289,7 +302,8 @@ class MacaulayResultant():
     def get_matrix(self):
         """
         Returns
-        -------
+        =======
+
         macaulay_matrix: Matrix
             The Macaulay's matrix
         """
@@ -311,14 +325,16 @@ class MacaulayResultant():
     def get_reduced_nonreduced(self):
         r"""
         Returns
-        -------
+        =======
+
         reduced: list
             A list of the reduced monomials
         non_reduced: list
             A list of the monomials that are not reduced
 
-        Definition.
-        ---------
+        Definition
+        ==========
+
         A polynomial is said to be reduced in x_i, if its degree (the
         maximum degree of its monomials) in x_i is less than d_i. A
         polynomial that is reduced in all variables but one is said
@@ -340,7 +356,8 @@ class MacaulayResultant():
     def get_submatrix(self, matrix):
         r"""
         Returns
-        -------
+        =======
+
         macaulay_submatrix: Matrix
             The Macaulay's matrix. Columns that are non reduced are kept.
             The row which contain one if the a_{i}s is dropped. a_{i}s

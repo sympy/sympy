@@ -1,10 +1,9 @@
-from sympy import Basic, Function, Symbol
-from sympy.printing.codeprinter import CodePrinter
-from sympy.core.function import _coeff_isneg
-from sympy.printing.precedence import precedence
-from sympy.core.compatibility import string_types, range
-from sympy.core import S
 from sympy.codegen.ast import Assignment
+from sympy.core import S
+from sympy.core.compatibility import string_types, range
+from sympy.core.function import _coeff_isneg, Lambda
+from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.precedence import precedence
 from functools import reduce
 
 known_functions = {
@@ -199,7 +198,7 @@ class GLSLPrinter(CodePrinter):
                 func = cond_func
             else:
                 for cond, func in cond_func:
-                    if cond(args):
+                    if cond(func_args):
                         break
             if func is not None:
                 try:

@@ -1,7 +1,7 @@
 from itertools import chain
+from sympy.codegen.fnodes import Module
 from sympy.core.symbol import Dummy
 from sympy.printing.fcode import FCodePrinter
-from sympy.codegen.fnodes import Module
 
 """ This module collects utilities for rendering Fortran code. """
 

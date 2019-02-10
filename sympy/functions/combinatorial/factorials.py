@@ -1,19 +1,17 @@
 from __future__ import print_function, division
 
 from sympy.core import S, sympify, Dummy, Mod
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import reduce, range, HAS_GMPY
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
 from sympy.core.relational import Eq
-
 from sympy.ntheory import sieve
+from sympy.polys.polytools import Poly
 
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, range, HAS_GMPY
-from sympy.core.cache import cacheit
-
-from sympy.polys.polytools import Poly
 
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
@@ -842,8 +840,6 @@ class binomial(CombinatorialFunction):
     @classmethod
     def _eval(self, n, k):
         # n.is_Number and k.is_Integer and k != 1 and n != k
-        from sympy.functions.elementary.exponential import log
-        from sympy.core import N
 
         if k.is_Integer:
             if n.is_Integer and n >= 0:
