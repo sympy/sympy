@@ -1578,9 +1578,8 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
-    if len(f.args) > 1 :
-        if all(i.has(exp) for i in f.args):
-            f = cancel(f)
+    if all(i.has(exp) for i in f.args):
+        f = cancel(f)
     result = _manualintegrate(integral_steps(f, var))
     # Clear the cache of u-parts
     _parts_u_cache.clear()

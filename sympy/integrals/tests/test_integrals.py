@@ -1479,6 +1479,6 @@ def test_issue_4311():
 def test_issue_15494():
     x = symbols('x', real=True, positive=True)
     integrand = (exp(x/2)-2*exp(1.6*x)+exp(x))*exp(x)
-    sol = integrate(integrand, x)
+    sol = integrate(integrand, x, manual=True)
     expected = Rational(2, 3)*exp(Rational(3,2)*x) + Rational(1, 2)*exp(2*x) -  0.769230769230769*exp(2.6*x)
     assert abs(sol - expected) < 1e-15 * exp(2.6*x)
