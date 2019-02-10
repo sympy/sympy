@@ -3355,3 +3355,9 @@ def test_legacy_det():
     assert M.det(method="bareis") == 123
     assert M.det(method="det_lu") == 123
     assert M.det(method="LU") == 123
+
+def test_case_6913():
+    m = MatrixSymbol('m', 1, 1)
+    a = Symbol("a")
+    a = m[0, 0]>0
+    assert str(a) == 'm[0, 0] > 0'
