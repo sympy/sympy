@@ -2461,7 +2461,7 @@ def print_latex(expr, **settings):
     print(latex(expr, **settings))
 
 
-def multiline_latex(lhs, rhs, terms_per_line=1, use_eqnarray=True, use_dots=False, **settings):
+def multiline_latex(lhs, rhs, terms_per_line=1, environment="align", use_dots=False, **settings):
     r"""
     This function generates a LaTeX equation with a multiline right-hand side
     in either an ``eqnarray`` or ``align*`` environment.
@@ -2478,9 +2478,10 @@ def multiline_latex(lhs, rhs, terms_per_line=1, use_eqnarray=True, use_dots=Fals
     terms_per_line : integer, optional
         Number of terms per line to print. Default is 1.
 
-    use_eqnarray : boolean, optional
-        If ``True``, the ``eqnarray`` environment is used, if ``False`` the ``align*`` environment is used.
-        Default is ``True``.
+    environment : "string", optional
+        Which LaTeX wnvironment to use for the output. Options are "align*"
+        (default), "eqnarray", and "IEEEeqnarray". Note the only the first
+        character is detected so exact spelling is not important.
 
     use_dots : boolean, optional
         If ``True``, ``\\dots`` is added to the end of each line. Default is ``False``.
@@ -2506,7 +2507,7 @@ def multiline_latex(lhs, rhs, terms_per_line=1, use_eqnarray=True, use_dots=Fals
     \end{eqnarray}
 
     Using ``align*`` and dots:
-    >>> print(multiline_latex(x, expr, terms_per_line=2, use_eqnarray=False, use_dots=True))
+    >>> print(multiline_latex(x, expr, terms_per_line=2, environment="align*", use_dots=True))
     \begin{align*}
     x = & e^{i \alpha} + \sin{\left(\alpha y \right)} \dots \\
     & - \cos{\left(\log{\left(y \right)} \right)}
@@ -2521,16 +2522,24 @@ def multiline_latex(lhs, rhs, terms_per_line=1, use_eqnarray=True, use_dots=Fals
 
     # Based on code from https://github.com/sympy/sympy/issues/3001
     l = LatexPrinter(**settings)
-    if use_eqnarray:
+    if environment.lower().startswith('e'):
         result = r'\begin{eqnarray}' + '\n'
         first_term = '& = &'
         nonumber = r'\nonumber'
         end_term = '\n\\end{eqnarray}'
+        doubleet = True
+    elif environment.lower().startswith('i'):
+        result = r'\begin{IEEEeqnarray}{rCl}' + '\n'
+        first_term = '& = &'
+        nonumber = r'\nonumber'
+        end_term = '\n\\end{IEEEeqnarray}'
+        doubleet = True
     else:
         result = r'\begin{align*}' + '\n'
         first_term = '= &'
         nonumber = ''
         end_term =  '\n\\end{align*}'
+        doubleet = False
     dots = ''
     if use_dots:
         dots=r'\dots'
@@ -2543,7 +2552,7 @@ def multiline_latex(lhs, rhs, terms_per_line=1, use_eqnarray=True, use_dots=Fals
         term_end = r''
         sign = r'+'
         if term_count > terms_per_line:
-            if use_eqnarray:
+            if doubleet:
                 term_start = '& & '
             else:
                 term_start = '& '
@@ -2552,7 +2561,7 @@ def multiline_latex(lhs, rhs, terms_per_line=1, use_eqnarray=True, use_dots=Fals
             # End of line
             if i < n_terms-1:
                 # There are terms remaining
-                term_end = dots + nonumber + r' \\' + '\n'
+                term_end = dots + nonumber + r'\\' + '\n'
             else:
                 term_end = ''
 
