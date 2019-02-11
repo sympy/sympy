@@ -925,6 +925,13 @@ def test_issue_13642():
     assert Abs(f(1) - sinc(1)).n() < 1e-15
 
 
+def test_issue_13881():
+    from sympy import MatrixSymbol, lambdify, Matrix
+    x = MatrixSymbol('x', 3, 1)
+    f = lambdify(x, x.T*x)
+    assert (f(Matrix([1, 2, 3]))).equals(14)
+
+
 def test_sinc_mpmath():
     f = lambdify(x, sinc(x), "mpmath")
     assert Abs(f(1) - sinc(1)).n() < 1e-15
