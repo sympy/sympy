@@ -203,7 +203,6 @@ class VectorPrettyPrinter(PrettyPrinter):
         uni_split = [uni[:lu], uni[lu:]]
         #if unicode is false then calculate number of apostrophes needed and add to output
         if not self._use_unicode:
-            
             apostrophes = ""
             for i in range(0, dot_i):
                 apostrophes += "'"
@@ -213,7 +212,6 @@ class VectorPrettyPrinter(PrettyPrinter):
             d['picture'] = [pic_split[0] + dots[dot_i] + pic_split[1]]
 
         d['unicode'] =  uni_split[0] + dots[dot_i] + uni_split[1]
-
         return pform
 
     def _print_Function(self, e):

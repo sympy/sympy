@@ -229,8 +229,6 @@ def test_vector_derivative_printing():
 
     assert v._latex() == r'\ddot{\omega}\mathbf{\hat{n}_x}'
     assert unicode_vpretty(v) == u('ω̈ n_x')
-    
- 
     assert ascii_vpretty(v) == u("omega'' n_x")
 
     # Third order
@@ -247,11 +245,10 @@ def test_vector_derivative_printing():
     assert unicode_vpretty(v) == u('ω⃜ n_x')
     assert ascii_vpretty(v) == u("omega'''' n_x")
 
-    # # Fifth order
-    # v = omega.diff().diff().diff().diff().diff() * N.x
+    # Fifth order
+    v = omega.diff().diff().diff().diff().diff() * N.x
 
-    # assert v._latex() == r'\frac{d^{5}}{d t^{5}} \omega{\left(t \right)}\mathbf{\hat{n}_x}'
-    # assert unicode_vpretty(v) == u('  5\n d\n───(ω) n_x\n  5\ndt')
-    # assert ascii_vpretty(v) == '  5\n d\n---(omega) n_x\n  5\ndt'
-
+    assert v._latex() == r'\frac{d^{5}}{d t^{5}} \omega{\left(t \right)}\mathbf{\hat{n}_x}'
+    assert unicode_vpretty(v) == u('  5\n d\n───(ω) n_x\n  5\ndt')
+    assert ascii_vpretty(v) == '  5\n d\n---(omega) n_x\n  5\ndt'
 
