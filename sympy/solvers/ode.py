@@ -8701,9 +8701,3 @@ def _nonlinear_3eq_order1_type5(x, y, t, eq):
     sol1 = dsolve(diff(u(t),t) - (u*(c*F2-b*F3)).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (v*(a*F3-c*F1)).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (w*(b*F1-a*F2)).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
-    return [sol1, sol2, sol3]
-
-
-x = Symbol("x")    
-f = Function("f")(x)
-print(dsolve(f.diff(x,2)+x*f.diff(x)**2))
