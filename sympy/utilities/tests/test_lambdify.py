@@ -927,8 +927,8 @@ def test_issue_13642():
 
 def test_issue_13881():
     from sympy import MatrixSymbol, lambdify, Matrix
-    x=MatrixSymbol('x', 3, 1)
-    f=lambdify(x, x.T*x)
+    x = MatrixSymbol('x', 3, 1)
+    f = lambdify(x, x.T*x)
     assert f(Matrix([1, 2, 3])) == 14
 
 
