@@ -39,10 +39,10 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
         for k in density.values():
             k_sym = sympify(k)
             if fuzzy_not(fuzzy_and((k_sym.is_nonnegative, (k_sym - 1).is_nonpositive))):
-                raise ValueError("Probability at a point must be between 0 and 1")
+                raise ValueError("Probability at a point must be between 0 and 1.")
         sum_sym = sum(density.values())
         if sum_sym != 1:
-            raise ValueError("Total Probability must be equal to 1")
+            raise ValueError("Total Probability must be equal to 1.")
         return Basic.__new__(cls, density)
 
 def FiniteRV(name, density):
@@ -179,7 +179,7 @@ class BernoulliDistribution(SingleFiniteDistribution):
         p_sym = sympify(p)
 
         if fuzzy_not(fuzzy_and((p_sym.is_nonnegative, (p_sym - 1).is_nonpositive))):
-            raise ValueError("'p' must be: 0 <= p <= 1 . p = %s" % str(p))
+            raise ValueError("p = %s is not in range [0, 1]." % str(p))
         else:
             return super(BernoulliDistribution, cls).__new__(cls, *args)
 
