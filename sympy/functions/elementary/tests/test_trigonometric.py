@@ -1611,3 +1611,6 @@ def test_issue_14543():
     assert sec(pi/2 + x) == -csc(x)
     assert sec(3*pi/2 + x) == csc(x)
     assert sec(3*pi/2 - x) == -csc(x)
+
+def test_issue_15959():
+    assert tan(3*pi/8) == 1 + sqrt(2)
