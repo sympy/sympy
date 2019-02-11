@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
-    symbols, sympify, Rational, Dummy)
+    symbols, sympify, Rational, Dummy, Symbol)
 from sympy.core.cache import cacheit
 from sympy.core.function import AppliedUndef
 from sympy.functions.elementary.miscellaneous import root as _root
@@ -970,7 +970,7 @@ class ComplexRootOf(RootOf):
         # is_real value of the CRootOf instance.
         if type(self) == type(other):
             return sympify(self == other)
-        if other.is_Symbol:
+        if other.has(Symbol):
             return
         if not (other.is_number and not other.has(AppliedUndef)):
             return S.false
