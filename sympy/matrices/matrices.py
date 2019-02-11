@@ -2401,7 +2401,7 @@ class MatrixBase(MatrixDeprecated,
         return self + b
 
     def cholesky_solve(self, rhs):
-        """Solves Ax = B using Cholesky decomposition,
+        """Solves ``Ax = B`` using Cholesky decomposition,
         for a general square non-singular matrix.
         For a non-square matrix with rows > cols,
         the least squares solution is returned.
@@ -2547,7 +2547,7 @@ class MatrixBase(MatrixDeprecated,
         of compatible dimensions: if each has 3 elements, a matrix of the
         same type and shape as ``self`` will be returned. If ``b`` has the same
         shape as ``self`` then common identities for the cross product (like
-        a \times b = - b \times a) will hold.
+        `a \times b = - b \times a`) will hold.
 
         Parameters
         ==========
@@ -2617,7 +2617,7 @@ class MatrixBase(MatrixDeprecated,
         return self.H * mgamma(0)
 
     def diagonal_solve(self, rhs):
-        """Solves Ax = B efficiently, where A is a diagonal Matrix,
+        """Solves ``Ax = B`` efficiently, where A is a diagonal Matrix,
         with non-zero diagonal entries.
 
         Examples
@@ -2836,7 +2836,7 @@ class MatrixBase(MatrixDeprecated,
 
     def gauss_jordan_solve(self, b, freevar=False):
         """
-        Solves Ax = b using Gauss Jordan elimination.
+        Solves ``Ax = b`` using Gauss Jordan elimination.
 
         There may be zero, one, or infinite solutions.  If one solution
         exists, it will be returned. If infinite solutions exist, it will
@@ -2861,7 +2861,7 @@ class MatrixBase(MatrixDeprecated,
         =======
 
         x : Matrix
-            The matrix that will satisfy Ax = B.  Will have as many rows as
+            The matrix that will satisfy ``Ax = B``.  Will have as many rows as
             matrix A has columns, and as many columns as matrix B.
 
         params : Matrix
@@ -3171,7 +3171,7 @@ class MatrixBase(MatrixDeprecated,
 
     def key2bounds(self, keys):
         """Converts a key with potentially mixed types of keys (integer and slice)
-        into a tuple of ranges and raises an error if any index is out of ``self's``
+        into a tuple of ranges and raises an error if any index is out of ``self``'s
         range.
 
         See Also
@@ -3202,7 +3202,7 @@ class MatrixBase(MatrixDeprecated,
 
     def key2ij(self, key):
         """Converts key into canonical form, converting integers or indexable
-        items into valid integers for ``self's`` range or returning slices
+        items into valid integers for ``self``'s range or returning slices
         unchanged.
 
         See Also
@@ -3282,7 +3282,7 @@ class MatrixBase(MatrixDeprecated,
         return self._LDLdecomposition(hermitian=hermitian)
 
     def LDLsolve(self, rhs):
-        """Solves Ax = B using LDL decomposition,
+        """Solves ``Ax = B`` using LDL decomposition,
         for a general square and non-singular matrix.
 
         For a non-square matrix with rows > cols,
@@ -3330,7 +3330,7 @@ class MatrixBase(MatrixDeprecated,
             return (L.T)._upper_triangular_solve(Z)
 
     def lower_triangular_solve(self, rhs):
-        """Solves Ax = B, where A is a lower triangular matrix.
+        """Solves ``Ax = B``, where A is a lower triangular matrix.
 
         See Also
         ========
@@ -3700,7 +3700,7 @@ class MatrixBase(MatrixDeprecated,
         """
         if rhs.rows != self.rows:
             raise ShapeError(
-                "``self`` and `rhs` must have the same number of rows.")
+                "``self`` and ``rhs`` must have the same number of rows.")
 
         m = self.rows
         n = self.cols
@@ -3881,7 +3881,7 @@ class MatrixBase(MatrixDeprecated,
                 raise NotImplementedError("Matrix Norms under development")
 
     def pinv_solve(self, B, arbitrary_matrix=None):
-        """Solve Ax = B using the Moore-Penrose pseudoinverse.
+        """Solve ``Ax = B`` using the Moore-Penrose pseudoinverse.
 
         There may be zero, one, or infinite solutions.  If one solution
         exists, it will be returned.  If infinite solutions exist, one will
@@ -3908,7 +3908,7 @@ class MatrixBase(MatrixDeprecated,
         =======
 
         x : Matrix
-            The matrix that will satisfy Ax = B.  Will have as many rows as
+            The matrix that will satisfy ``Ax = B``.  Will have as many rows as
             matrix A has columns, and as many columns as matrix B.
 
         Examples
@@ -4166,7 +4166,7 @@ class MatrixBase(MatrixDeprecated,
             )
 
     def QRsolve(self, b):
-        """Solve the linear system 'Ax = b'.
+        """Solve the linear system ``Ax = b``.
 
         ``self`` is the matrix ``A``, the method argument is the vector
         ``b``.  The method returns the solution vector ``x``.  If ``b`` is a
@@ -4446,7 +4446,7 @@ class MatrixBase(MatrixDeprecated,
         return rowsep.join(res)
 
     def upper_triangular_solve(self, rhs):
-        """Solves Ax = B, where A is an upper triangular matrix.
+        """Solves ``Ax = B``, where A is an upper triangular matrix.
 
         See Also
         ========
