@@ -278,9 +278,10 @@ class exp(ExpBase):
 
             coeffs, log_term = [coeff], None
             for term in Mul.make_args(terms):
-                if isinstance(logcombine(term), log):
+                term_ = logcombine(term)
+                if isinstance(term_, log):
                     if log_term is None:
-                        log_term = logcombine(term).args[0]
+                        log_term = term_.args[0]
                     else:
                         return None
                 elif term.is_comparable:
