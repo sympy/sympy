@@ -970,6 +970,8 @@ class ComplexRootOf(RootOf):
         # is_real value of the CRootOf instance.
         if type(self) == type(other):
             return sympify(self == other)
+        if other.is_Symbol:
+            return
         if not (other.is_number and not other.has(AppliedUndef)):
             return S.false
         if not other.is_finite:

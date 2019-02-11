@@ -138,7 +138,7 @@ def test_CRootOf___eval_Eq__():
     r1 = rootof(eq, 1)
     assert Eq(r, r1) is S.false
     assert Eq(r, r) is S.true
-    assert Eq(r, x) is S.false
+    assert Eq(r, x).lhs is r and Eq(r, x).rhs is x
     assert Eq(r, 0) is S.false
     assert Eq(r, S.Infinity) is S.false
     assert Eq(r, I) is S.false
