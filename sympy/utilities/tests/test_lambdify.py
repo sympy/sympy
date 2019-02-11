@@ -927,9 +927,9 @@ def test_issue_13642():
 
 def test_issue_13881():
     from sympy import MatrixSymbol, lambdify, Matrix
-    x = MatrixSymbol('x', 3, 1)
-    f = lambdify(x, x.T*x)
-    assert (f(Matrix([1, 2, 3]))).equals(14)
+    x=MatrixSymbol('x', 3, 1)
+    f=lambdify(x, x.T*x)
+    assert f(Matrix([1, 2, 3])) == 14
 
 
 def test_sinc_mpmath():
