@@ -1360,8 +1360,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # integrals e.g.:
         # d^3/dx^3(x y) = F(x)
         r = _check_substitution_type(reduced_eq, func)
-        if r["solutions"]:
-            matching_hints['order_reducing_substitution'] = r
+        if r:
+            if r["solutions"]:
+                matching_hints['order_reducing_substitution'] = r
 
         r = _nth_algebraic_match(reduced_eq, func)
         if r['solutions']:
@@ -4004,7 +4005,12 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
 
 def _check_substitution_type(eq, func):
-    # Check if some derivate of positive order can be substituted as g(x) = f^(order_to_subs) (x)
+    r"""
+    Matches any differential equation that order_reducing_substitution can solve.
+
+    For this to work equation should min order of derivative to be 1, i.e., f(x) should not be present.
+    """
+
     x = func.args[0]
     f = func.func
     order_to_subs = 0
@@ -4018,15 +4024,17 @@ def _check_substitution_type(eq, func):
         return {'var':order_to_subs, 'solutions':True}
 
 # Use repeated substitution until we do not have a function independent of derivative   
-def order_reducing_substitution(eq, func, order, match):
-    '''
+def ode_order_reducing_substitution(eq, func, order, match):
+    r'''
     Substitutes lowest order derivate in equation to function with order of derivative as 0
     match[var] here is how many times the function if solved is to be integrated to  get f(x) since g(x) = f^(match[var])
     '''
     x = func.args[0]
     f = func.func
-    g = Function('g')(x)
-    eq = dsolve(dsolve(eq.subs(f(x).diff(x, match['var'])), g).subs(g, f(x).diff(x, match['var'])))
+    g = Function('g')
+    eq = eq.subs(f(x).diff(x, match['var']), g(x))
+    eq = dsolve(eq)
+    eq = dsolve(eq.subs(g(x), f(x).diff(x, match['var'])))
     return eq
 
 def _nth_algebraic_match(eq, func):
@@ -8701,3 +8709,4 @@ def _nonlinear_3eq_order1_type5(x, y, t, eq):
     sol1 = dsolve(diff(u(t),t) - (u*(c*F2-b*F3)).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (v*(a*F3-c*F1)).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (w*(b*F1-a*F2)).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
+    return [sol1, sol2, sol3]
