@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import itertools
 
 from sympy.core import S
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, string_types
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
@@ -41,10 +41,16 @@ class PrettyPrinter(Printer):
         "num_columns": None,
         "use_unicode_sqrt_char": True,
         "root_notation": True,
+        "imaginary_unit": "i",
     }
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
+
+        if not isinstance(self._settings['imaginary_unit'], string_types):
+            raise TypeError("'imaginary_unit' must a string, not {}".format(self._settings['imaginary_unit']))
+        elif self._settings['imaginary_unit'] not in ["i", "j"]:
+            raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))
         self.emptyPrinter = lambda x: prettyForm(xstr(x))
 
     @property
@@ -136,7 +142,7 @@ class PrettyPrinter(Printer):
     def _print_Atom(self, e):
         try:
             # print atoms like Exp1 or Pi
-            return prettyForm(pretty_atom(e.__class__.__name__))
+            return prettyForm(pretty_atom(e.__class__.__name__, printer=self))
         except KeyError:
             return self.emptyPrinter(e)
 
@@ -2458,7 +2464,8 @@ def pretty(expr, **settings):
 
 
 def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
-                 full_prec="auto", order=None, use_unicode_sqrt_char=True, root_notation = True):
+                 full_prec="auto", order=None, use_unicode_sqrt_char=True,
+                 root_notation = True, imaginary_unit="i"):
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
@@ -2493,10 +2500,14 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
         Set to 'False' for printing exponents of the form 1/n in fractional form;
         By default exponent is printed in root form.
 
+    imaginary_unit : string, optional (default="i")
+        Letter to use for imaginary unit when use_unicode is True.
+        Can be "i" (default) or "j".
     """
     print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
                  use_unicode=use_unicode, full_prec=full_prec, order=order,
-                 use_unicode_sqrt_char=use_unicode_sqrt_char, root_notation=root_notation))
+                 use_unicode_sqrt_char=use_unicode_sqrt_char,
+                 root_notation=root_notation, imaginary_unit=imaginary_unit))
 
 pprint = pretty_print
 
