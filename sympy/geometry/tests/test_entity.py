@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import Symbol, pi, sqrt, Rational
 from sympy.geometry import Circle, Ellipse, Line, Point, Polygon, Ray, RegularPolygon, Segment, Triangle, Parabola
 from sympy.geometry.entity import scale

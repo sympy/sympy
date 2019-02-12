@@ -2,8 +2,8 @@ from __future__ import print_function, division
 
 from itertools import combinations
 
-from sympy.core import Basic
 from sympy.combinatorics.graycode import GrayCode
+from sympy.core import Basic
 from sympy.core.compatibility import range
 
 
@@ -81,6 +81,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         next_binary, prev_binary
         """
         bin_list = Subset.bitlist_from_subset(self.subset, self.superset)
@@ -105,6 +106,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         prev_binary, iterate_binary
         """
         return self.iterate_binary(1)
@@ -126,6 +128,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         next_binary, iterate_binary
         """
         return self.iterate_binary(-1)
@@ -147,6 +150,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         prev_lexicographic
         """
         i = self.superset_size - 1
@@ -191,6 +195,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         next_lexicographic
         """
         i = self.superset_size - 1
@@ -230,6 +235,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         next_gray, prev_gray
         """
         unranked_code = GrayCode.unrank(self.superset_size,
@@ -251,6 +257,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         iterate_graycode, prev_gray
         """
         return self.iterate_graycode(1)
@@ -269,6 +276,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         iterate_graycode, next_gray
         """
         return self.iterate_graycode(-1)
@@ -291,6 +299,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         iterate_binary, unrank_binary
         """
         if self._rank_binary is None:
@@ -345,6 +354,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         iterate_graycode, unrank_gray
         """
         if self._rank_graycode is None:
@@ -367,6 +377,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         superset, size, superset_size, cardinality
         """
         return self._subset
@@ -386,6 +397,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         subset, superset, superset_size, cardinality
         """
         return len(self.subset)
@@ -405,6 +417,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         subset, size, superset_size, cardinality
         """
         return self._superset
@@ -424,6 +437,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         subset, superset, size, cardinality
         """
         return len(self.superset)
@@ -443,6 +457,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         subset, superset, size, superset_size
         """
         return 2**(self.superset_size)
@@ -461,6 +476,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         bitlist_from_subset
         """
         if len(super_set) != len(bitlist):
@@ -485,6 +501,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         subset_from_bitlist
         """
         bitlist = ['0'] * len(superset)
@@ -508,6 +525,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         iterate_binary, rank_binary
         """
         bits = bin(rank)[2:].rjust(len(superset), '0')
@@ -529,6 +547,7 @@ class Subset(Basic):
 
         See Also
         ========
+
         iterate_graycode, rank_gray
         """
         graycode_bitlist = GrayCode.unrank(len(superset), rank)
@@ -584,6 +603,7 @@ def ksubsets(superset, k):
 
     See Also
     ========
+
     class:Subset
     """
     return combinations(superset, k)

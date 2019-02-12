@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
-    log, cos, sin)
+    log, cos, sin, Add, floor, ceiling)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -585,7 +585,7 @@ def test_issue_8449():
     assert Le(oo, -p) is S.false
 
 
-def test_simplify():
+def test_simplify_relational():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
     r = S(1) < x
     # canonical operations are not the same as simplification,
@@ -599,6 +599,15 @@ def test_simplify():
     # _eval_simplify routine
     assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
         2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
+    # canonical at least
+    for f in (Eq, Ne):
+        f(y, x).simplify() == f(x, y)
+        f(x - 1, 0).simplify() == f(x, 1)
+        f(x - 1, x).simplify() == S.false
+        f(2*x - 1, x).simplify() == f(x, 1)
+        f(2*x, 4).simplify() == f(x, 2)
+        z = cos(1)**2 + sin(1)**2 - 1  # z.is_zero is None
+        f(z*x, 0).simplify() == f(z*x, 0)
 
 
 def test_equals():
@@ -649,17 +658,20 @@ def test_canonical():
 
 
 @XFAIL
-def test_issue_8444():
+def test_issue_8444_nonworkingtests():
     x = symbols('x', real=True)
     assert (x <= oo) == (x >= -oo) == True
 
     x = symbols('x')
     assert x >= floor(x)
     assert (x < floor(x)) == False
-    assert Gt(x, floor(x)) == Gt(x, floor(x), evaluate=False)
-    assert Ge(x, floor(x)) == Ge(x, floor(x), evaluate=False)
     assert x <= ceiling(x)
     assert (x > ceiling(x)) == False
+
+def test_issue_8444_workingtests():
+    x = symbols('x')
+    assert Gt(x, floor(x)) == Gt(x, floor(x), evaluate=False)
+    assert Ge(x, floor(x)) == Ge(x, floor(x), evaluate=False)
     assert Lt(x, ceiling(x)) == Lt(x, ceiling(x), evaluate=False)
     assert Le(x, ceiling(x)) == Le(x, ceiling(x), evaluate=False)
     i = symbols('i', integer=True)
@@ -786,3 +798,29 @@ def test_rel_args():
         for b in (S.true, x < 1, And(x, y)):
             for v in (0.1, 1, 2**32, t, S(1)):
                 raises(TypeError, lambda: Relational(b, v, op))
+
+
+def test_Equality_rewrite_as_Add():
+    eq = Eq(x + y, y - x)
+    assert eq.rewrite(Add) == 2*x
+    assert eq.rewrite(Add, evaluate=None).args == (x, x, y, -y)
+    assert eq.rewrite(Add, evaluate=False).args == (x, y, x, -y)
+
+
+def test_issue_15847():
+    a = Ne(x*(x+y), x**2 + x*y)
+    assert simplify(a) == False
+
+
+def test_negated_property():
+    eq = Eq(x, y)
+    assert eq.negated == Ne(x, y)
+
+    eq = Ne(x, y)
+    assert eq.negated == Eq(x, y)
+
+    eq = Ge(x + y, y - x)
+    assert eq.negated == Lt(x + y, y - x)
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(x, y).negated.negated == f(x, y)

@@ -28,16 +28,21 @@ class Expr(Basic, EvalfMixin):
 
     __slots__ = []
 
+    is_scalar = True  # self derivative is 1
+
     @property
     def _diff_wrt(self):
-        """Is it allowed to take derivative wrt to this instance.
+        """Return True if one can differentiate with respect to this
+        object, else False.
 
-        This determines if it is allowed to take derivatives wrt this object.
-        Subclasses such as Symbol, Function and Derivative should return True
+        Subclasses such as Symbol, Function and Derivative return True
         to enable derivatives wrt them. The implementation in Derivative
-        separates the Symbol and non-Symbol _diff_wrt=True variables and
-        temporarily converts the non-Symbol vars in Symbols when performing
-        the differentiation.
+        separates the Symbol and non-Symbol (_diff_wrt=True) variables and
+        temporarily converts the non-Symbols into Symbols when performing
+        the differentiation. By default, any object deriving from Expr
+        will behave like a scalar with self.diff(self) == 1. If this is
+        not desired then the object must also set `is_scalar = False` or
+        else define an _eval_derivative routine.
 
         Note, see the docstring of Derivative for how this should work
         mathematically. In particular, note that expr.subs(yourclass, Symbol)
@@ -51,11 +56,17 @@ class Expr(Basic, EvalfMixin):
         >>> e = Expr()
         >>> e._diff_wrt
         False
-        >>> class MyClass(Expr):
+        >>> class MyScalar(Expr):
         ...     _diff_wrt = True
         ...
-        >>> (2*MyClass()).diff(MyClass())
-        2
+        >>> MyScalar().diff(MyScalar())
+        1
+        >>> class MySymbol(Expr):
+        ...     _diff_wrt = True
+        ...     is_scalar = False
+        ...
+        >>> MySymbol().diff(MySymbol())
+        Derivative(MySymbol(), MySymbol())
         """
         return False
 
@@ -205,6 +216,19 @@ class Expr(Basic, EvalfMixin):
     def __rfloordiv__(self, other):
         from sympy.functions.elementary.integers import floor
         return floor(other / self)
+
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rdivmod__')
+    def __divmod__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(self / other), Mod(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__divmod__')
+    def __rdivmod__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(other / self), Mod(other, self)
 
     def __int__(self):
         # Although we only need to round to the units position, we'll
@@ -871,21 +895,25 @@ class Expr(Basic, EvalfMixin):
             else:
                 domain = Interval(b, a)
             # check the singularities of self within the interval
+            # if singularities is a ConditionSet (not iterable), catch the exception and pass
             singularities = solveset(self.cancel().as_numer_denom()[1], x,
                 domain=domain)
             for logterm in self.atoms(log):
                 singularities = singularities | solveset(logterm.args[0], x,
                     domain=domain)
-            for s in singularities:
-                if value is S.NaN:
-                    # no need to keep adding, it will stay NaN
-                    break
-                if not s.is_comparable:
-                    continue
-                if (a < s) == (s < b) == True:
-                    value += -limit(self, x, s, "+") + limit(self, x, s, "-")
-                elif (b < s) == (s < a) == True:
-                    value += limit(self, x, s, "+") - limit(self, x, s, "-")
+            try:
+                for s in singularities:
+                    if value is S.NaN:
+                        # no need to keep adding, it will stay NaN
+                        break
+                    if not s.is_comparable:
+                        continue
+                    if (a < s) == (s < b) == True:
+                        value += -limit(self, x, s, "+") + limit(self, x, s, "-")
+                    elif (b < s) == (s < a) == True:
+                        value += limit(self, x, s, "+") - limit(self, x, s, "-")
+            except TypeError:
+                pass
 
         return value
 
@@ -1030,7 +1058,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_number:
                         try:
                             coeff *= complex(factor)
-                        except TypeError:
+                        except (TypeError, ValueError):
                             pass
                         else:
                             continue
@@ -1775,7 +1803,15 @@ class Expr(Basic, EvalfMixin):
         values, the corresponding exponents. The resulting dictionary should
         be used with caution if the expression is a Mul and contains non-
         commutative factors since the order that they appeared will be lost in
-        the dictionary."""
+        the dictionary.
+
+        See Also
+        ========
+        as_ordered_factors: An alternative for noncommutative applications,
+                            returning an ordered list of factors.
+        args_cnc: Similar to as_ordered_factors, but guarantees separation
+                  of commutative and noncommutative factors.
+        """
         d = defaultdict(int)
         d.update(dict([self.as_base_exp()]))
         return d
@@ -1983,10 +2019,7 @@ class Expr(Basic, EvalfMixin):
         if d is S.One:
             return n
         if d.is_Number:
-            if d is S.One:
-                return n
-            else:
-                return _unevaluated_Mul(n, 1/d)
+            return _unevaluated_Mul(n, 1/d)
         else:
             return n/d
 
@@ -1994,6 +2027,9 @@ class Expr(Basic, EvalfMixin):
         """Return None if it's not possible to make self in the form
            c * something in a nice way, i.e. preserving the properties
            of arguments of self.
+
+           Examples
+           ========
 
            >>> from sympy import symbols, Rational
 
@@ -2013,8 +2049,6 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
-        from .function import _coeff_isneg
-
         c = sympify(c)
         if self is S.NaN:
             return None
@@ -2553,7 +2587,7 @@ class Expr(Basic, EvalfMixin):
         References
         ==========
 
-        - http://en.wikipedia.org/wiki/Algebraic_expression
+        - https://en.wikipedia.org/wiki/Algebraic_expression
 
         """
         if syms:
@@ -2613,16 +2647,21 @@ class Expr(Basic, EvalfMixin):
         -x
 
         """
-        from sympy import collect, Dummy, Order, Rational, Symbol
+        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling
         if x is None:
-            syms = self.atoms(Symbol)
+            syms = self.free_symbols
             if not syms:
                 return self
             elif len(syms) > 1:
                 raise ValueError('x must be given for multivariate functions.')
             x = syms.pop()
 
-        if not self.has(x):
+        if isinstance(x, Symbol):
+            dep = x in self.free_symbols
+        else:
+            d = Dummy()
+            dep = d in self.xreplace({x: d}).free_symbols
+        if not dep:
             if n is None:
                 return (s for s in [self])
             else:
@@ -2632,11 +2671,12 @@ class Expr(Basic, EvalfMixin):
             raise ValueError("Dir must be '+' or '-'")
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
-            dir = {S.Infinity: '+', S.NegativeInfinity: '-'}[x0]
-            s = self.subs(x, 1/x).series(x, n=n, dir=dir)
+            sgn = 1 if x0 is S.Infinity else -1
+            s = self.subs(x, sgn/x).series(x, n=n, dir='+')
             if n is None:
-                return (si.subs(x, 1/x) for si in s)
-            return s.subs(x, 1/x)
+                return (si.subs(x, sgn/x) for si in s)
+            return s.subs(x, sgn/x)
+
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
@@ -2687,7 +2727,7 @@ class Expr(Basic, EvalfMixin):
                         s1 = self._eval_nseries(x, n=n + more, logx=logx)
                         newn = s1.getn()
                         if newn != ngot:
-                            ndo = n + (n - ngot)*more/(newn - ngot)
+                            ndo = n + ceiling((n - ngot)*more/(newn - ngot))
                             s1 = self._eval_nseries(x, n=ndo, logx=logx)
                             while s1.getn() < n:
                                 s1 = self._eval_nseries(x, n=ndo, logx=logx)
@@ -3023,9 +3063,8 @@ class Expr(Basic, EvalfMixin):
     ###################################################################################
 
     def diff(self, *symbols, **assumptions):
-        new_symbols = list(map(sympify, symbols))  # e.g. x, 2, y, z
         assumptions.setdefault("evaluate", True)
-        return Derivative(self, *new_symbols, **assumptions)
+        return Derivative(self, *symbols, **assumptions)
 
     ###########################################################################
     ###################### EXPRESSION EXPANSION METHODS #######################
@@ -3167,7 +3206,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.integrals import integrate
         return integrate(self, *args, **kwargs)
 
-    def simplify(self, ratio=1.7, measure=None):
+    def simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
         """See the simplify function in sympy.simplify"""
         from sympy.simplify import simplify
         from sympy.core.function import count_ops
@@ -3373,9 +3412,9 @@ class AtomicExpr(Atom, Expr):
 
     def _eval_derivative_n_times(self, s, n):
         from sympy import Piecewise, Eq
-        from sympy import NDimArray, Tuple
+        from sympy import Tuple
         from sympy.matrices.common import MatrixCommon
-        if isinstance(s, (NDimArray, MatrixCommon, Tuple, Iterable)):
+        if isinstance(s, (MatrixCommon, Tuple, Iterable)):
             return super(AtomicExpr, self)._eval_derivative_n_times(s, n)
         if self == s:
             return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
@@ -3451,9 +3490,9 @@ class UnevaluatedExpr(Expr):
         obj = Expr.__new__(cls, arg, **kwargs)
         return obj
 
-    def doit(self, *args, **kwargs):
+    def doit(self, **kwargs):
         if kwargs.get("deep", True):
-            return self.args[0].doit(*args, **kwargs)
+            return self.args[0].doit(**kwargs)
         else:
             return self.args[0]
 

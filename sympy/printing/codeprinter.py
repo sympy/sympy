@@ -4,7 +4,6 @@ from functools import wraps
 
 from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
@@ -53,7 +52,8 @@ class CodePrinter(StrPrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'human': True,
-        'inline': False
+        'inline': False,
+        'allow_unknown_functions': False,
     }
 
     def __init__(self, settings=None):
@@ -116,8 +116,8 @@ class CodePrinter(StrPrinter):
             lines = self._format_code(lines)
             num_syms = set([(k, self._print(v)) for k, v in self._number_symbols])
             result = (num_syms, self._not_supported, "\n".join(lines))
-        del self._not_supported
-        del self._number_symbols
+        self._not_supported = set()
+        self._number_symbols = set()
         return result
 
     def _doprint_loops(self, expr, assign_to=None):
@@ -372,15 +372,14 @@ class CodePrinter(StrPrinter):
                         break
             if func is not None:
                 try:
-                    return func(self, *[self.parenthesize(item, 0) for item in expr.args])
+                    return func(*[self.parenthesize(item, 0) for item in expr.args])
                 except TypeError:
-                    try:
-                        return func(*[self.parenthesize(item, 0) for item in expr.args])
-                    except TypeError:
-                        return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                    return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
+        elif expr.is_Function and self._settings.get('allow_unknown_functions', False):
+            return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
             return self._print_not_supported(expr)
 
@@ -519,6 +518,8 @@ class CodePrinter(StrPrinter):
     _print_RootSum = _print_not_supported
     _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
+    _print_MutableSparseMatrix = _print_not_supported
+    _print_ImmutableSparseMatrix = _print_not_supported
     _print_Uniform = _print_not_supported
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported

@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
+from .add import _unevaluated_Add, Add
 from .basic import S
 from .compatibility import ordered
 from .expr import Expr
 from .evalf import EvalfMixin
-from .function import _coeff_isneg
 from .sympify import _sympify
 from .evaluate import global_evaluate
 
@@ -76,7 +76,6 @@ class Relational(Boolean, Expr, EvalfMixin):
             elif isinstance(rv, Relational):  # could it be otherwise?
                 from sympy.core.symbol import Symbol
                 from sympy.logic.boolalg import Boolean
-                from sympy.utilities.misc import filldedent
                 for a in rv.args:
                     if isinstance(a, Symbol):
                         continue
@@ -123,7 +122,39 @@ class Relational(Boolean, Expr, EvalfMixin):
         """
         ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
         a, b = self.args
-        return ops.get(self.func, self.func)(b, a, evaluate=False)
+        return Relational.__new__(ops.get(self.func, self.func), b, a)
+
+    @property
+    def negated(self):
+        """Return the negated relationship.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x
+        >>> Eq(x, 1)
+        Eq(x, 1)
+        >>> _.negated
+        Ne(x, 1)
+        >>> x < 1
+        x < 1
+        >>> _.negated
+        x >= 1
+
+        Notes
+        =====
+
+        This works more or less identical to ``~``/``Not``. The difference is
+        that ``negated`` returns the relationship even if `evaluate=False`.
+        Hence, this is useful in code when checking for e.g. negated relations
+        to exisiting ones as it will not be affected by the `evaluate` flag.
+
+        """
+        ops = {Eq: Ne, Ge: Lt, Gt: Le, Le: Gt, Lt: Ge, Ne: Eq}
+        # If there ever will be new Relational subclasses, the following line will work until it is properly sorted out
+        # return ops.get(self.func, lambda a, b, evaluate=False: ~(self.func(a, b, evaluate=evaluate)))(*self.args, evaluate=False)
+        return Relational.__new__(ops.get(self.func), *self.args)
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
@@ -203,9 +234,9 @@ class Relational(Boolean, Expr, EvalfMixin):
                     return r
                 return l
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         r = self
-        r = r.func(*[i.simplify(ratio=ratio, measure=measure)
+        r = r.func(*[i.simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
             for i in r.args])
         if r.is_Relational:
             dif = r.lhs - r.rhs
@@ -295,6 +326,9 @@ class Equality(Relational):
     the Equality.  If None is returned by `_eval_Eq`, an Equality object will
     be created as usual.
 
+    Since this object is already an expression, it does not respond to
+    the method `as_expr` if one tries to create `x - y` from Eq(x, y).
+    This can be done with the `rewrite(Add)` method.
     """
     rel_op = '=='
 
@@ -388,6 +422,38 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
+    def _eval_rewrite_as_Add(self, *args, **kwargs):
+        """return Eq(L, R) as L - R. To control the evaluation of
+        the result set pass `evaluate=True` to give L - R;
+        if `evaluate=None` then terms in L and R will not cancel
+        but they will be listed in canonical order; otherwise
+        non-canonical args will be returned.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq, Add
+        >>> from sympy.abc import b, x
+        >>> eq = Eq(x + b, x - b)
+        >>> eq.rewrite(Add)
+        2*b
+        >>> eq.rewrite(Add, evaluate=None).args
+        (b, b, x, -x)
+        >>> eq.rewrite(Add, evaluate=False).args
+        (b, x, b, -x)
+        """
+        L, R = args
+        evaluate = kwargs.get('evaluate', True)
+        if evaluate:
+            # allow cancellation of args
+            return L - R
+        args = Add.make_args(L) + Add.make_args(-R)
+        if evaluate is None:
+            # no cancellation, but canonical
+            return _unevaluated_Add(*args)
+        # no cancellation, not canonical
+        return Add._from_args(args)
+
     @property
     def binary_symbols(self):
         if S.true in self.args or S.false in self.args:
@@ -396,6 +462,29 @@ class Equality(Relational):
             elif self.rhs.is_Symbol:
                 return set([self.rhs])
         return set()
+
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        from sympy.solvers.solveset import linear_coeffs
+        # standard simplify
+        e = super(Equality, self)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if not isinstance(e, Equality):
+            return e
+        free = self.free_symbols
+        if len(free) == 1:
+            try:
+                x = free.pop()
+                m, b = linear_coeffs(
+                    e.rewrite(Add, evaluate=False), x)
+                if m.is_zero is False:
+                    enew = e.func(x, -b/m)
+                else:
+                    enew = e.func(m*x, -b)
+                if measure(enew) <= ratio*measure(e):
+                    e = enew
+            except ValueError:
+                pass
+        return e.canonical
 
 Eq = Equality
 
@@ -443,7 +532,7 @@ class Unequality(Relational):
         if evaluate:
             is_equal = Equality(lhs, rhs)
             if isinstance(is_equal, BooleanAtom):
-                return ~is_equal
+                return is_equal.negated
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
@@ -459,6 +548,15 @@ class Unequality(Relational):
             elif self.rhs.is_Symbol:
                 return set([self.rhs])
         return set()
+
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        # simplify as an equality
+        eq = Equality(*self.args)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if isinstance(eq, Equality):
+            # send back Ne with the new args
+            return self.func(*eq.args)
+        return eq.negated  # result of Ne is the negated Eq
 
 Ne = Unequality
 

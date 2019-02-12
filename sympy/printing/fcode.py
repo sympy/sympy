@@ -5,7 +5,7 @@ The FCodePrinter converts single sympy expressions into single Fortran
 expressions, using the functions defined in the Fortran 77 standard where
 possible. Some useful pointers to Fortran can be found on wikipedia:
 
-http://en.wikipedia.org/wiki/Fortran
+https://en.wikipedia.org/wiki/Fortran
 
 Most of the code below is based on the "Professional Programmer\'s Guide to
 Fortran77" by Clive G. Page:
@@ -23,13 +23,8 @@ from collections import defaultdict
 from itertools import chain
 import string
 
-from sympy.core import S, Add, N, Float, Symbol
-from sympy.core.compatibility import string_types, range
-from sympy.core.function import Function
-from sympy.core.relational import Eq
-from sympy.sets import Range
 from sympy.codegen.ast import (
-    Assignment, Attribute, Declaration, Pointer, Type, value_const,
+    Assignment, Declaration, Pointer, value_const,
     float32, float64, float80, complex64, complex128, int8, int16, int32,
     int64, intc, real, integer,  bool_, complex_
 )
@@ -37,9 +32,14 @@ from sympy.codegen.fnodes import (
     allocatable, isign, dsign, cmplx, merge, literal_dp, elemental, pure,
     intent_in, intent_out, intent_inout
 )
-from sympy.printing.printer import printer_context
-from sympy.printing.codeprinter import CodePrinter, requires
+from sympy.core import S, Add, N, Float, Symbol
+from sympy.core.compatibility import string_types, range
+from sympy.core.function import Function
+from sympy.core.relational import Eq
+from sympy.sets import Range
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
+from sympy.printing.printer import printer_context
 
 
 known_functions = {
@@ -59,7 +59,7 @@ known_functions = {
     "Abs": "abs",
     "conjugate": "conjg",
     "Max": "max",
-    "Min": "min"
+    "Min": "min",
 }
 
 
@@ -98,6 +98,7 @@ class FCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,
@@ -302,6 +303,19 @@ class FCodePrinter(CodePrinter):
             return self._print(eval_expr)
         else:
             return CodePrinter._print_Function(self, expr.func(*args))
+
+    def _print_Mod(self, expr):
+        # NOTE : Fortran has the functions mod() and modulo(). modulo() behaves
+        # the same wrt to the sign of the arguments as Python and SymPy's
+        # modulus computations (% and Mod()) but is not available in Fortran 66
+        # or Fortran 77, thus we raise an error.
+        if self._settings['standard'] in [66, 77]:
+            msg = ("Python % operator and SymPy's Mod() function are not "
+                   "supported by Fortran 66 or 77 standards.")
+            raise NotImplementedError(msg)
+        else:
+            x, y = expr.args
+            return "      modulo({}, {})".format(self._print(x), self._print(y))
 
     def _print_ImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.
@@ -698,7 +712,7 @@ class FCodePrinter(CodePrinter):
             "{function_head}\n"
             "end function\n"
             "end interface"
-        ).format(function_head=self._head(entity, fp, *args))
+        ).format(function_head=self._head(entity, fp))
 
     def _print_FunctionDefinition(self, fd):
         if elemental in fd.attrs:

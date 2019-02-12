@@ -372,7 +372,7 @@ def full_path_split(path):
     """
     Function to do a full split on a path.
     """
-    # Based on http://stackoverflow.com/a/13505966/161801
+    # Based on https://stackoverflow.com/a/13505966/161801
     rest, tail = os.path.split(path)
     if not rest or rest == os.path.sep:
         return (tail,)
@@ -499,7 +499,7 @@ def _GitHub_release(username=None, user='sympy', token=None,
     if not check_tag_exists():
         sys.exit(red("The tag for this version has not been pushed yet. Cannot upload the release."))
 
-    # See http://developer.github.com/v3/repos/releases/#create-a-release
+    # See https://developer.github.com/v3/repos/releases/#create-a-release
     # First, create the release
     post = {}
     post['tag_name'] = tag
@@ -573,7 +573,7 @@ def table():
 
     table = []
 
-    # http://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
+    # https://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
     # recommended as a real way to generate html, but it works better than
     # anything else I've tried.
     @contextmanager
@@ -830,8 +830,8 @@ def check_tag_exists():
 descriptions = OrderedDict([
     ('source', "The SymPy source installer.",),
     ('html', '''Html documentation. This is the same as
-the <a href="http://docs.sympy.org/latest/index.html">online documentation</a>.''',),
-    ('pdf', '''Pdf version of the <a href="http://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
+the <a href="https://docs.sympy.org/latest/index.html">online documentation</a>.''',),
+    ('pdf', '''Pdf version of the <a href="https://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
     ])
 
 def get_location(location):
@@ -1016,6 +1016,7 @@ git_whitelist = {
     'bin/sympy_time_cache.py',
     'bin/test',
     'bin/test_external_imports.py',
+    'bin/test_executable.py',
     'bin/test_import',
     'bin/test_import.py',
     'bin/test_isolated',

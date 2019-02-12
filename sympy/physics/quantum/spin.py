@@ -199,7 +199,7 @@ class JplusOp(SpinOpBase, Operator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
-    def _eval_rewrite_as_xyz(self, *args):
+    def _eval_rewrite_as_xyz(self, *args, **kwargs):
         return JxOp(args[0]) + I*JyOp(args[0])
 
 
@@ -240,7 +240,7 @@ class JminusOp(SpinOpBase, Operator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
-    def _eval_rewrite_as_xyz(self, *args):
+    def _eval_rewrite_as_xyz(self, *args, **kwargs):
         return JxOp(args[0]) - I*JyOp(args[0])
 
 
@@ -275,7 +275,7 @@ class JxOp(SpinOpBase, HermitianOperator):
         jm = JminusOp(self.name)._represent_JzOp(basis, **options)
         return (jp + jm)/Integer(2)
 
-    def _eval_rewrite_as_plusminus(self, *args):
+    def _eval_rewrite_as_plusminus(self, *args, **kwargs):
         return (JplusOp(args[0]) + JminusOp(args[0]))/2
 
 
@@ -310,7 +310,7 @@ class JyOp(SpinOpBase, HermitianOperator):
         jm = JminusOp(self.name)._represent_JzOp(basis, **options)
         return (jp - jm)/(Integer(2)*I)
 
-    def _eval_rewrite_as_plusminus(self, *args):
+    def _eval_rewrite_as_plusminus(self, *args, **kwargs):
         return (JplusOp(args[0]) - JminusOp(args[0]))/(2*I)
 
 
@@ -410,10 +410,10 @@ class J2Op(SpinOpBase, HermitianOperator):
     def _print_contents_latex(self, printer, *args):
         return r'%s^2' % str(self.name)
 
-    def _eval_rewrite_as_xyz(self, *args):
+    def _eval_rewrite_as_xyz(self, *args, **kwargs):
         return JxOp(args[0])**2 + JyOp(args[0])**2 + JzOp(args[0])**2
 
-    def _eval_rewrite_as_plusminus(self, *args):
+    def _eval_rewrite_as_plusminus(self, *args, **kwargs):
         a = args[0]
         return JzOp(a)**2 + \
             Rational(1, 2)*(JplusOp(a)*JminusOp(a) + JminusOp(a)*JplusOp(a))
@@ -1633,8 +1633,8 @@ class JzKetCoupled(CoupledSpinState, Ket):
     The other required parameter in ``jn``, which is a tuple defining the `j_n`
     angular momentum quantum numbers of the product spaces. So for example, if
     a state represented the coupling of the product basis state
-    `|j_1,m_1\rangle\times|j_2,m_2\rangle`, the ``jn`` for this state would be
-    ``(j1,j2)``.
+    `\left|j_1,m_1\right\rangle\times\left|j_2,m_2\right\rangle`, the ``jn``
+    for this state would be ``(j1,j2)``.
 
     The final option is ``jcoupling``, which is used to define how the spaces
     specified by ``jn`` are coupled, which includes both the order these spaces

@@ -22,14 +22,18 @@ fi
 
 if [[ "${TEST_SAGE}" == "true" ]]; then
     echo "Testing SAGE"
-    source deactivate
-    source activate sage
+    if [[ "${AZURE}" != "true" ]]; then
+        source deactivate
+        source activate sage
+    fi
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
     PYTHONPATH=. sage -t sympy/external/tests/test_sage.py
     export MPMATH_NOSAGE=1
-    source deactivate
-    source activate test-environment
+    if [[ "${AZURE}" != "true" ]]; then
+        source deactivate
+        source activate test-environment
+    fi
 fi
 
 if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
@@ -129,6 +133,10 @@ test_list = [
     # codegen
     'sympy/codegen/',
     'sympy/utilities/tests/test_codegen',
+    'sympy/utilities/_compilation/tests/test_compilation',
+
+    # cloudpickle
+    'pickling',
 ]
 
 blacklist = [

@@ -1,5 +1,9 @@
-from __future__ import division
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
+                   Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
+                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
+                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
+from sympy.core.compatibility import range
+from sympy.external import import_module
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, characteristic_function, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy,
@@ -12,20 +16,10 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
                          moment, cmoment, smoment)
-
-from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
-                   Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
-
-
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
-
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.external import import_module
-
-from sympy.core.compatibility import range
+from sympy.utilities.randtest import verify_numerically as tn
 
 oo = S.Infinity
 
@@ -517,9 +511,9 @@ def test_studentt():
     nu = Symbol("nu", positive=True)
 
     X = StudentT('x', nu)
-    assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - 1/2)/(sqrt(nu)*beta(1/2, nu/2))
-    assert cdf(X)(x) == 1/2 + x*gamma(nu/2 + 1/2)*hyper((1/2, nu/2 + 1/2),
-                                (3/2,), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
+    assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - S(1)/2)/(sqrt(nu)*beta(S(1)/2, nu/2))
+    assert cdf(X)(x) == S(1)/2 + x*gamma(nu/2 + S(1)/2)*hyper((S(1)/2, nu/2 + S(1)/2),
+                                (S(3)/2,), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
 
 
 def test_trapezoidal():
@@ -863,14 +857,14 @@ def test_prob_neq():
 def test_union():
     N = Normal('N', 3, 2)
     assert simplify(P(N**2 - N > 2)) == \
-        -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + 3/2
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + S(3)/2
     assert simplify(P(N**2 - 4 > 0)) == \
-        -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + 3/2
+        -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + S(3)/2
 
 def test_Or():
     N = Normal('N', 0, 1)
     assert simplify(P(Or(N > 2, N < 1))) == \
-        -erf(sqrt(2))/2 - erfc(sqrt(2)/2)/2 + 3/2
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/2)/2 + S(3)/2
     assert P(Or(N < 0, N < 1)) == P(N < 1)
     assert P(Or(N > 0, N < 0)) == 1
 

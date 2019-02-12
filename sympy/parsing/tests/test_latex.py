@@ -17,9 +17,9 @@ from sympy import (
     Symbol, Mul, Add, Eq, Abs, sin, asin, cos, Pow,
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
-    GreaterThan, Sum, Product, E, log, tan
+    GreaterThan, Sum, Product, E, log, tan, Function
 )
-from sympy.abc import x, y, z, a, b, c, f, t, k, n
+from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
 # disable tests if antlr4-python*-runtime is not present
@@ -27,6 +27,7 @@ if not antlr4:
     disabled = True
 
 theta = Symbol('theta')
+f = Function('f')
 
 
 # shorthand definitions
@@ -97,7 +98,7 @@ GOOD_PAIRS = [
     ("f(x, y)", f(x, y)),
     ("f(x, y, z)", f(x, y, z)),
     ("\\frac{d f(x)}{dx}", Derivative(f(x), x)),
-    ("\\frac{d\\theta(x)}{dx}", Derivative(theta(x), x)),
+    ("\\frac{d\\theta(x)}{dx}", Derivative(Function('theta')(x), x)),
     ("|x|", _Abs(x)),
     ("||x||", _Abs(Abs(x))),
     ("|x||y|", _Abs(x)*_Abs(y)),
@@ -133,7 +134,7 @@ GOOD_PAIRS = [
     ("h_\\theta", Symbol('h_{theta}')),
     ("h_{\\theta}", Symbol('h_{theta}')),
     ("h_{\\theta}(x_0, x_1)",
-     Symbol('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}'))),
+     Function('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}'))),
     ("x!", _factorial(x)),
     ("100!", _factorial(100)),
     ("\\theta!", _factorial(theta)),
@@ -260,28 +261,3 @@ def test_failing_not_parseable():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str)
-
-
-def test_antlr_generation():
-    """ Does rebuilding the parser create the same content as
-        what is checked in?
-    """
-    if not check_antlr_version():
-        return skip('antlr4 not available, skipping')
-
-    tmpdir = tempfile.mkdtemp()
-
-    try:
-        build_parser(tmpdir)
-
-        for filename in sorted(glob.glob(os.path.join(tmpdir, "*.*"))):
-            base = os.path.basename(filename)
-            with open(filename) as generated:
-                with open(os.path.join(dir_latex_antlr, base)) as checked_in:
-                    diff = difflib.context_diff(
-                        checked_in.readlines(),
-                        generated.readlines()
-                    )
-                    assert list(diff) == [], "{} not the same".format(base)
-    finally:
-        shutil.rmtree(tmpdir)

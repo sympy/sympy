@@ -2,12 +2,11 @@
 
 from __future__ import print_function, division
 
-from sympy.core import igcd
 from sympy import oo
-
+from sympy.core import igcd
+from sympy.core.compatibility import range
 from sympy.polys.monomials import monomial_min, monomial_div
 from sympy.polys.orderings import monomial_key
-from sympy.core.compatibility import range
 
 import random
 
@@ -322,7 +321,7 @@ def _rec_validate(f, g, i, K):
     elif not g:
         return set([i])
     else:
-        j, levels = i + 1, set([])
+        levels = set([])
 
         for c in g:
             levels |= _rec_validate(f, c, i + 1, K)

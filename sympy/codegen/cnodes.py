@@ -2,11 +2,11 @@
 AST nodes specific to the C family of languages
 """
 
+from sympy.codegen.ast import Attribute, Declaration, Node, String, Token, Type, none, FunctionCall
 from sympy.core.basic import Basic
 from sympy.core.compatibility import string_types
 from sympy.core.containers import Tuple
 from sympy.core.sympify import sympify
-from sympy.codegen.ast import Attribute, Declaration, Node, String, Token, Type, none, FunctionCall
 
 void = Type('void')
 

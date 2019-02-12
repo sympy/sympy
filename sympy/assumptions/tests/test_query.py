@@ -16,9 +16,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
-from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.utilities.pytest import XFAIL, slow, raises, warns_deprecated_sympy
 from sympy.assumptions.assume import assuming
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 import math
 
 def test_int_1():
@@ -2020,7 +2019,7 @@ def test_incompatible_resolutors():
             return None
     register_handler('prime', InconclusiveHandler)
     assert ask(Q.prime(3)) is True
-
+    remove_handler('prime', InconclusiveHandler)
 
 def test_key_extensibility():
     """test that you can add keys to the ask system at runtime"""
@@ -2154,11 +2153,11 @@ def test_issue_7246_failing():
 
 
 def test_deprecated_Q_bounded():
-    with raises(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         Q.bounded
 
 def test_deprecated_Q_infinity():
-    with raises(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         Q.infinity
 
 

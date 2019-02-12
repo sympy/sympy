@@ -9,11 +9,11 @@ Math object where possible.
 
 from __future__ import print_function, division
 
-from sympy.core import S
 from sympy.codegen.ast import Assignment
+from sympy.core import S
+from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
-from sympy.core.compatibility import string_types, range
 
 
 # dictionary mapping sympy function to (argument_conditions, Javascript_function).
@@ -55,6 +55,7 @@ class JavascriptCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
         'contract': True
     }
 

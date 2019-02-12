@@ -687,7 +687,7 @@ def test_assumptions():
     Test whether diophantine respects the assumptions.
     """
     #Test case taken from the below so question regarding assumptions in diophantine module
-    #http://stackoverflow.com/questions/23301941/how-can-i-declare-natural-symbols-with-sympy
+    #https://stackoverflow.com/questions/23301941/how-can-i-declare-natural-symbols-with-sympy
     m, n = symbols('m n', integer=True, positive=True)
     diof = diophantine(n ** 2 + m * n - 500)
     assert diof == set([(5, 20), (40, 10), (95, 5), (121, 4), (248, 2), (499, 1)])

@@ -12,8 +12,9 @@ from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
 
-from .matrices import MatrixBase, ShapeError, a2idx
+from .matrices import MatrixBase, ShapeError
 from .dense import Matrix
+from .common import a2idx
 
 
 class SparseMatrix(MatrixBase):

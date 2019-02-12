@@ -98,6 +98,7 @@ if PY3:
         MutableSet, Iterable, Hashable)
 
     from inspect import unwrap
+    from itertools import accumulate
 else:
     import codecs
     import types
@@ -177,6 +178,14 @@ else:
             memo.add(id_func)
         return func
 
+    def accumulate(iterable, func=operator.add):
+        state = iterable[0]
+        yield state
+        for i in iterable[1:]:
+            state = func(state, i)
+            yield state
+
+
 def with_metaclass(meta, *bases):
     """
     Create a base class with a metaclass.
@@ -207,9 +216,9 @@ def with_metaclass(meta, *bases):
     may omit it.
 
     >>> MyClass.__mro__
-    (<class 'MyClass'>, <... 'object'>)
+    (<class '...MyClass'>, <... 'object'>)
     >>> type(MyClass)
-    <class 'Meta'>
+    <class '...Meta'>
 
     """
     # This requires a bit of explanation: the basic idea is to make a dummy
@@ -726,7 +735,7 @@ if GROUND_TYPES == 'gmpy':
 
 
 # lru_cache compatible with py2.7 copied directly from
-#   http://code.activestate.com/
+#   https://code.activestate.com/
 #   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
 from collections import namedtuple
 from functools import update_wrapper
@@ -779,7 +788,7 @@ def lru_cache(maxsize=100, typed=False):
     f.cache_info().  Clear the cache and statistics with f.cache_clear().
     Access the underlying function with f.__wrapped__.
 
-    See:  http://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
+    See:  https://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
 
     """
 

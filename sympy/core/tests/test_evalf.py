@@ -333,6 +333,8 @@ def test_implemented_function_evalf():
     assert str(f(2)) == "f(2)"
     assert f(2).evalf() == 3
     assert f(x).evalf() == f(x)
+    f = implemented_function(Function('sin'), lambda x: x + 1)
+    assert f(2).evalf() != sin(2)
     del f._imp_     # XXX: due to caching _imp_ would influence all other tests
 
 
@@ -525,3 +527,11 @@ def test_issue_13098():
     assert ceiling(log(S('9.'+'9'*20), 10)) == 1
     assert floor(log(20 - S('9.'+'9'*20), 10)) == 1
     assert ceiling(log(20 - S('9.'+'9'*20), 10)) == 2
+
+
+def test_issue_14601():
+    e = 5*x*y/2 - y*(35*(x**3)/2 - 15*x/2)
+    subst = {x:0.0, y:0.0}
+    e2 = e.evalf(subs=subst)
+    assert float(e2) == 0.0
+    assert float((x + x*(x**2 + x)).evalf(subs={x: 0.0})) == 0.0
