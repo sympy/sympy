@@ -1759,10 +1759,8 @@ def test_issue_10158():
     assert solveset(Abs(x + 4*Abs(x + 1)), x, dom) == FiniteSet(-4/S(3), -4/S(5))
     assert solveset(2*Abs(x + Abs(x + Max(3, x))) - 2, x, S.Reals) == FiniteSet(-1, -2)
     dom = S.Complexes
-    assert solveset(x*Max(x, 15) - 10, x, dom) == \
-        ConditionSet(x, Eq(x*Max(15, x) - 10, 0), dom)
-    assert solveset(x*Min(x, 15) - 10, x, dom) == \
-        ConditionSet(x, Eq(x*Min(15, x) - 10, 0), dom)
+    raises(ValueError, lambda: solveset(x*Max(x, 15) - 10, x, dom))
+    raises(ValueError, lambda: solveset(x*Min(x, 15) - 10, x, dom))
     raises(ValueError, lambda: solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom))
     raises(ValueError, lambda: solveset(Abs(x - 1) - Abs(y), x, dom))
     raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))
