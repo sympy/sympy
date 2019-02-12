@@ -1360,9 +1360,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # integrals e.g.:
         # d^3/dx^3(x y) = F(x)
         r = _check_substitution_type(reduced_eq, func)
-        if r:
-            if r["solutions"]:
-                matching_hints['order_reducing_substitution'] = r
+        if r["solutions"]:
+            matching_hints['order_reducing_substitution'] = r
 
         r = _nth_algebraic_match(reduced_eq, func)
         if r['solutions']:
@@ -4022,12 +4021,15 @@ def _check_substitution_type(eq, func):
             order_to_subs += 1
     if order_to_subs > 0:
         return {'var':order_to_subs, 'solutions':True}
+    else:
+        return {'var':order_to_subs, 'solutions':False}
+        
 
 # Use repeated substitution until we do not have a function independent of derivative   
 def ode_order_reducing_substitution(eq, func, order, match):
     r'''
-    Substitutes lowest order derivate in equation to function with order of derivative as 0
-    match[var] here is how many times the function if solved is to be integrated to  get f(x) since g(x) = f^(match[var])
+    Substitutes lowest order derivate in equation to function with order of derivative as 0.Eg f^(n)(x) = g(x), where n is the least order derivate. 
+    match[var] or n here is how many times the function if solved is to be integrated to  get f(x) since g(x) = f^(match[var])(x)
     '''
     x = func.args[0]
     f = func.func
