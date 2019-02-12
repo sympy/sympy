@@ -1,16 +1,14 @@
-from sympy.core.compatibility import range
 from sympy import (FiniteSet, S, Symbol, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        cancel, KroneckerDelta)
-from sympy.concrete.expr_with_limits import AddWithLimits
+        cancel, exp, I)
+from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
     Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
     density, where, FiniteRV, pspace, cdf,
-    correlation, moment, cmoment, smoment)
+    correlation, moment, cmoment, smoment, characteristic_function, moment_generating_function)
 from sympy.stats.frv_types import DieDistribution
-from sympy.utilities.pytest import raises, slow
-from sympy.abc import p, x, i
+from sympy.utilities.pytest import raises
 
 oo = S.Infinity
 
@@ -22,7 +20,7 @@ def BayesTest(A, B):
 
 def test_discreteuniform():
     # Symbolic
-    a, b, c = symbols('a b c')
+    a, b, c, t = symbols('a b c t')
     X = DiscreteUniform('X', [a, b, c])
 
     assert E(X) == (a + b + c)/3
@@ -44,11 +42,13 @@ def test_discreteuniform():
     assert dict(density(Die('D', 6)).items()) == \
            dict(density(DiscreteUniform('U', range(1, 7))).items())
 
+    assert characteristic_function(X)(t) == exp(I*a*t)/3 + exp(I*b*t)/3 + exp(I*c*t)/3
+    assert moment_generating_function(X)(t) == exp(a*t)/3 + exp(b*t)/3 + exp(c*t)/3
 
 def test_dice():
     # TODO: Make iid method!
     X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
-    a, b = symbols('a b')
+    a, b, t = symbols('a b t')
 
     assert E(X) == 3 + S.Half
     assert variance(X) == S(35)/12
@@ -90,6 +90,9 @@ def test_dice():
         *[Eq(X.symbol, i) for i in [1, 2, 3, 4, 5, 6]])
 
     assert where(X > 3).set == FiniteSet(4, 5, 6)
+
+    assert characteristic_function(X)(t) == exp(6*I*t)/6 + exp(5*I*t)/6 + exp(4*I*t)/6 + exp(3*I*t)/6 + exp(2*I*t)/6 + exp(I*t)/6
+    assert moment_generating_function(X)(t) == exp(6*t)/6 + exp(5*t)/6 + exp(4*t)/6 + exp(3*t)/6 + exp(2*t)/6 + exp(t)/6
 
 
 def test_given():
@@ -145,12 +148,14 @@ def test_die_args():
 
 
 def test_bernoulli():
-    p, a, b = symbols('p a b')
+    p, a, b, t = symbols('p a b t')
     X = Bernoulli('B', p, a, b)
 
     assert E(X) == a*p + b*(-p + 1)
     assert density(X)[a] == p
     assert density(X)[b] == 1 - p
+    assert characteristic_function(X)(t) == p * exp(I * a * t) + (-p + 1) * exp(I * b * t)
+    assert moment_generating_function(X)(t) == p * exp(a * t) + (-p + 1) * exp(b * t)
 
     X = Bernoulli('B', p, 1, 0)
 
@@ -159,6 +164,8 @@ def test_bernoulli():
     assert E(a*X + b) == a*E(X) + b
     assert simplify(variance(a*X + b)) == simplify(a**2 * variance(X))
 
+    raises(ValueError, lambda: Bernoulli('B', 1.5))
+    raises(ValueError, lambda: Bernoulli('B', -0.5))
 
 def test_cdf():
     D = Die('D', 6)
@@ -208,14 +215,19 @@ def test_binomial_symbolic():
     n = 2  # Because we're using for loops, can't do symbolic n
     p = symbols('p', positive=True)
     X = Binomial('X', n, p)
+    t = Symbol('t')
+
     assert simplify(E(X)) == n*p == simplify(moment(X, 1))
     assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
     assert cancel((skewness(X) - (1 - 2*p)/sqrt(n*p*(1 - p)))) == 0
+    assert characteristic_function(X)(t) == p ** 2 * exp(2 * I * t) + 2 * p * (-p + 1) * exp(I * t) + (-p + 1) ** 2
+    assert moment_generating_function(X)(t) == p ** 2 * exp(2 * t) + 2 * p * (-p + 1) * exp(t) + (-p + 1) ** 2
 
     # Test ability to change success/failure winnings
     H, T = symbols('H T')
     Y = Binomial('Y', n, p, succ=H, fail=T)
     assert simplify(E(Y) - (n*(H*p + T*(1 - p)))) == 0
+
 
 def test_hypergeometric_numeric():
     for N in range(1, 5):
@@ -235,11 +247,14 @@ def test_hypergeometric_numeric():
 
 def test_rademacher():
     X = Rademacher('X')
+    t = Symbol('t')
 
     assert E(X) == 0
     assert variance(X) == 1
     assert density(X)[-1] == S.Half
     assert density(X)[1] == S.Half
+    assert characteristic_function(X)(t) == exp(I*t)/2 + exp(-I*t)/2
+    assert moment_generating_function(X)(t) == exp(t) / 2 + exp(-t) / 2
 
 
 def test_FiniteRV():
@@ -251,7 +266,12 @@ def test_FiniteRV():
     assert pspace(F).domain.as_boolean() == Or(
         *[Eq(F.symbol, i) for i in [1, 2, 3]])
 
+    raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S.Half, 3: S.Half}))
+    raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S(-1)/2, 3: S.One}))
+    raises(ValueError, lambda: FiniteRV('F', {1: S.One, 2: S(3)/2, 3: S.Zero, 4: S(-1)/2, 5: S(-3)/4, 6: S(-1)/4}))
+
 def test_density_call():
+    from sympy.abc import p
     x = Bernoulli('x', p)
     d = density(x)
     assert d(0) == 1 - p
@@ -264,6 +284,7 @@ def test_density_call():
 
 
 def test_DieDistribution():
+    from sympy.abc import x
     X = DieDistribution(6)
     assert X.pdf(S(1)/2) == S.Zero
     assert X.pdf(x).subs({x: 1}).doit() == S(1)/6

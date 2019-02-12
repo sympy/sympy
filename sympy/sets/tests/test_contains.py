@@ -11,7 +11,8 @@ def test_contains_basic():
 
 def test_issue_6194():
     x = Symbol('x')
-    assert Contains(x, Interval(0, 1)) == (x >= 0) & (x <= 1)
+    assert Contains(x, Interval(0, 1)) != (x >= 0) & (x <= 1)
+    assert Interval(0, 1).contains(x) == (x >= 0) & (x <= 1)
     assert Contains(x, FiniteSet(0)) != S.false
     assert Contains(x, Interval(1, 1)) != S.false
     assert Contains(x, S.Integers) != S.false

@@ -1,6 +1,6 @@
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
-from sympy.core.compatibility import string_types, range
+from sympy.core.compatibility import string_types, range, Callable
 from sympy.core.cache import cacheit
 from sympy.core import S, Dummy, Lambda
 from sympy import symbols, MatrixBase, ImmutableDenseMatrix
@@ -11,7 +11,6 @@ from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos,\
 import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-import collections
 
 
 def CoordSysCartesian(*args, **kwargs):
@@ -42,7 +41,7 @@ class CoordSys3D(Basic):
             The name of the new CoordSys3D instance.
 
         transformation : Lambda, Tuple, str
-            Transformation defined by transformation equations or choosen
+            Transformation defined by transformation equations or chosen
             from predefined ones.
 
         location : Vector
@@ -84,7 +83,7 @@ class CoordSys3D(Basic):
                 else:
                     transformation = Lambda(transformation[0],
                                             transformation[1])
-            elif isinstance(transformation, collections.Callable):
+            elif isinstance(transformation, Callable):
                 x1, x2, x3 = symbols('x1 x2 x3', cls=Dummy)
                 transformation = Lambda((x1, x2, x3),
                                         transformation(x1, x2, x3))
@@ -803,7 +802,7 @@ class CoordSys3D(Basic):
         successive simple rotations.
 
         Body fixed rotations include both Euler Angles and
-        Tait-Bryan Angles, see http://en.wikipedia.org/wiki/Euler_angles.
+        Tait-Bryan Angles, see https://en.wikipedia.org/wiki/Euler_angles.
 
         Parameters
         ==========
@@ -997,7 +996,7 @@ class CoordSys3D(Basic):
             The name of the new CoordSys3D instance.
 
         transformation : Lambda, Tuple, str
-            Transformation defined by transformation equations or choosen
+            Transformation defined by transformation equations or chosen
             from predefined ones.
 
         vector_names, variable_names : iterable(optional)

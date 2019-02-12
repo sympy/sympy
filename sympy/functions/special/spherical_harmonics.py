@@ -1,15 +1,15 @@
 from __future__ import print_function, division
 
 from sympy import pi, I
-from sympy.core.singleton import S
 from sympy.core import Dummy, sympify
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.singleton import S
 from sympy.functions import assoc_legendre
-from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin, cos, cot
 
 _x = Dummy("x")
 
@@ -62,7 +62,7 @@ class Ynm(Function):
     >>> Ynm(n, m, theta, -phi)
     exp(-2*I*m*phi)*Ynm(n, m, theta, phi)
 
-    For specific integers n and m we can evalute the harmonics
+    For specific integers n and m we can evaluate the harmonics
     to more useful expressions
 
     >>> simplify(Ynm(0, 0, theta, phi).expand(func=True))
@@ -135,7 +135,7 @@ class Ynm(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Spherical_harmonics
+    .. [1] https://en.wikipedia.org/wiki/Spherical_harmonics
     .. [2] http://mathworld.wolfram.com/SphericalHarmonic.html
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
     .. [4] http://dlmf.nist.gov/14.30
@@ -184,15 +184,15 @@ class Ynm(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, m, theta, phi):
+    def _eval_rewrite_as_polynomial(self, n, m, theta, phi, **kwargs):
         # TODO: Make sure n \in N
         # TODO: Assert |m| <= n ortherwise we should return 0
         return self.expand(func=True)
 
-    def _eval_rewrite_as_sin(self, n, m, theta, phi):
+    def _eval_rewrite_as_sin(self, n, m, theta, phi, **kwargs):
         return self.rewrite(cos)
 
-    def _eval_rewrite_as_cos(self, n, m, theta, phi):
+    def _eval_rewrite_as_cos(self, n, m, theta, phi, **kwargs):
         # This method can be expensive due to extensive use of simplification!
         from sympy.simplify import simplify, trigsimp
         # TODO: Make sure n \in N
@@ -252,7 +252,7 @@ def Ynm_c(n, m, theta, phi):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Spherical_harmonics
+    .. [1] https://en.wikipedia.org/wiki/Spherical_harmonics
     .. [2] http://mathworld.wolfram.com/SphericalHarmonic.html
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
     """
@@ -292,7 +292,7 @@ class Znm(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Spherical_harmonics
+    .. [1] https://en.wikipedia.org/wiki/Spherical_harmonics
     .. [2] http://mathworld.wolfram.com/SphericalHarmonic.html
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
     """

@@ -4,7 +4,7 @@ from sympy import (
 from sympy.simplify.fu import (
     L, TR1, TR10, TR10i, TR11, TR12, TR12i, TR13, TR14, TR15, TR16,
     TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
-    hyper_as_trig, fu, process_common_addends, trig_split,
+    TRpower, hyper_as_trig, fu, process_common_addends, trig_split,
     as_f_sign_1)
 from sympy.utilities.randtest import verify_numerically
 from sympy.core.compatibility import range
@@ -333,6 +333,15 @@ def test_TRmorrie():
     assert TR8(TRmorrie(e)) == -S(1)/8
     e = Mul(*[cos(2**i*pi/17) for i in range(1, 17)])
     assert TR8(TR3(TRmorrie(e))) == S(1)/65536
+
+
+def test_TRpower():
+    assert TRpower(1/sin(x)**2) == 1/sin(x)**2
+    assert TRpower(cos(x)**3*sin(x/2)**4) == \
+        (3*cos(x)/4 + cos(3*x)/4)*(-cos(x)/2 + cos(2*x)/8 + S(3)/8)
+    for k in range(2, 8):
+        assert verify_numerically(sin(x)**k, TRpower(sin(x)**k))
+        assert verify_numerically(cos(x)**k, TRpower(cos(x)**k))
 
 
 def test_hyper_as_trig():

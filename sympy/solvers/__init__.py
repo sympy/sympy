@@ -10,7 +10,7 @@
 """
 from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
-    det_quick, inv_quick, check_assumptions
+    det_quick, inv_quick, check_assumptions, failing_assumptions
 
 from .diophantine import diophantine
 
@@ -33,6 +33,7 @@ from .decompogen import decompogen
 
 from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution
 
+# This is here instead of sympy/sets/__init__.py to avoid circular import issues
 from ..core.singleton import S
 Complexes = S.Complexes
 del S

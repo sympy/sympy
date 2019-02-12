@@ -218,7 +218,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
     Calculates the Clebsch-Gordan coefficient
-    `\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle`.
+    `\left\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \right\rangle`.
 
     The reference for this function is [Edmonds74]_.
 
@@ -248,7 +248,7 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     .. math::
 
-        \langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle
+        \left\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \right\rangle
         =(-1)^{j_1-j_2+m_3} \sqrt{2j_3+1}
         \operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,-m_3)
 
@@ -696,7 +696,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
             _Factlist[ii + l_3 - l_2 + m_1] * _Factlist[l_1 + l_2 - l_3 - ii]
         sumres = sumres + Integer((-1) ** ii) / den
 
-    res = ressqrt * prefac * sumres * (-1) ** (bigL + l_3 + m_1 - m_2)
+    res = ressqrt * prefac * sumres * Integer((-1) ** (bigL + l_3 + m_1 - m_2))
     if prec is not None:
         res = res.n(prec)
     return res

@@ -10,7 +10,7 @@ IFT = inverse_fourier_transform
 ILT = inverse_laplace_transform
 IMT = inverse_mellin_transform
 
-from sympy.abc import t, x, y
+from sympy.abc import a, b, s, t, x, y, z
 nu, beta, rho = symbols('nu beta rho')
 
 apos, bpos, cpos, dpos, posk, p = symbols('a b c d k p', positive=True)
@@ -224,7 +224,7 @@ bench = [
     'integrate(Si(x), x, meijerg=True)',
     'integrate(Ci(u), u, meijerg=True)',
     'integrate(Shi(x), x, meijerg=True)',
-    'integrate(cosint(u), u, meijerg=True)',
+    'integrate(Chi(u), u, meijerg=True)',
     'integrate(Si(x)*exp(-x), (x, 0, oo), meijerg=True)',
     'integrate(expint(1, x)*sin(x), (x, 0, oo), meijerg=True)'
 ]

@@ -9,7 +9,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        hyperexpand, Hyper_Function, G_Function,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
-from sympy import hyper, I, S, meijerg, Piecewise, Tuple
+from sympy import hyper, I, S, meijerg, Piecewise, Tuple, Sum, binomial, Expr
 from sympy.abc import z, a, b, c
 from sympy.utilities.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
 from sympy.utilities.randtest import verify_numerically as tn
@@ -38,6 +38,7 @@ def test_hyperexpand():
     assert hyperexpand(z*hyper([], [S('3/2')], -z**2/4)) == sin(z)
     assert hyperexpand(hyper([S('1/2'), S('1/2')], [S('3/2')], z**2)*z) \
         == asin(z)
+    assert isinstance(Sum(binomial(2, z)*z**2, (z, 0, a)).doit(), Expr)
 
 
 def can_do(ap, bq, numerical=True, div=1, lowerplane=False):

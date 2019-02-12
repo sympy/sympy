@@ -305,11 +305,11 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     ee.append([bie, common_b[bib]])
                     bb.append(bib)
                 if ee:
-                    # find the number of extractions possible
+                    # find the number of integral extractions possible
                     # e.g. [(1, 2), (2, 2)] -> min(2/1, 2/2) -> 1
-                    min1 = ee[0][1]/ee[0][0]
-                    for i in range(len(ee)):
-                        rat = ee[i][1]/ee[i][0]
+                    min1 = ee[0][1]//ee[0][0]
+                    for i in range(1, len(ee)):
+                        rat = ee[i][1]//ee[i][0]
                         if rat < 1:
                             break
                         min1 = min(min1, rat)

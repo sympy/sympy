@@ -1,4 +1,4 @@
-"""Tools for arithmetic error propogation."""
+"""Tools for arithmetic error propagation."""
 from __future__ import print_function, division
 from itertools import repeat, combinations
 
@@ -14,6 +14,7 @@ def variance_prop(expr, consts=(), include_covar=False):
 
     Parameters
     ==========
+
     expr : Expr
         A sympy expression to compute the variance for.
     consts : sequence of Symbols, optional
@@ -25,6 +26,7 @@ def variance_prop(expr, consts=(), include_covar=False):
 
     Returns
     =======
+
     var_expr : Expr
         An expression for the total variance of the expr.
         The variance for the original symbols (e.g. x) are represented
@@ -48,6 +50,7 @@ def variance_prop(expr, consts=(), include_covar=False):
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/Propagation_of_uncertainty
 
     """

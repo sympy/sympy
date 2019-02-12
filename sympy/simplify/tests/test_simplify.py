@@ -1,14 +1,15 @@
 from sympy import (
-    Abs, acos, Add, atan, Basic, binomial, besselsimp, collect,cos, cosh, cot,
-    coth, count_ops, Derivative, diff, E, Eq, erf, exp, exp_polar, expand,
-    expand_multinomial, factor, factorial, Float, fraction, Function,
-    gamma, GoldenRatio, hyper, hypersimp, I, Integral, integrate, log,
-    logcombine, Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise,
-    posify, rad, Rational, root, S, separatevars, signsimp, simplify,
-    sin, sinh, solve, sqrt, Symbol, symbols, sympify, tan, tanh, zoo,
-    Sum, Lt, sign)
+    Abs, acos, Add, asin, atan, Basic, binomial, besselsimp,
+    collect,cos, cosh, cot, coth, count_ops, csch, Derivative, diff, E,
+    Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
+    factorial, Float, fraction, Function, gamma, GoldenRatio, hyper,
+    hypersimp, I, Integral, integrate, log, logcombine, Lt, Matrix,
+    MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
+    Rational, root, S, separatevars, signsimp, simplify, sign, sin,
+    sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
+    zoo)
 from sympy.core.mul import _keep_coeff
-from sympy.simplify.simplify import nthroot
+from sympy.simplify.simplify import nthroot, inversecombine
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.core.compatibility import range
 
@@ -31,7 +32,8 @@ def test_factorial_simplify():
 
 
 def test_simplify_expr():
-    x, y, z, k, n, m, w, f, s, A = symbols('x,y,z,k,n,m,w,f,s,A')
+    x, y, z, k, n, m, w, s, A = symbols('x,y,z,k,n,m,w,s,A')
+    f = Function('f')
 
     assert all(simplify(tmp) == tmp for tmp in [I, E, oo, x, -x, -oo, -E, -I])
 
@@ -66,6 +68,7 @@ def test_simplify_expr():
     e = integrate(x/(x**2 + 3*x + 1), x).diff(x)
     assert simplify(e) == x/(x**2 + 3*x + 1)
 
+    f = Symbol('f')
     A = Matrix([[2*k - m*w**2, -k], [-k, k - m*w**2]]).inv()
     assert simplify((A*Matrix([0, f]))[1]) == \
         -f*(2*k - m*w**2)/(k**2 - (k - m*w**2)*(2*k - m*w**2))
@@ -470,6 +473,14 @@ def test_logcombine_complex_coeff():
         i + log(x**2)
 
 
+def test_issue_5950():
+    x, y = symbols("x,y", positive=True)
+    assert logcombine(log(3) - log(2)) == log(Rational(3,2), evaluate=False)
+    assert logcombine(log(x) - log(y)) == log(x/y)
+    assert logcombine(log(Rational(3,2), evaluate=False) - log(2)) == \
+        log(Rational(3,4), evaluate=False)
+
+
 def test_posify():
     from sympy.abc import x
 
@@ -676,7 +687,15 @@ def test_issue_9324_simplify():
     assert simplify(e) == e
 
 
+def test_issue_13474():
+    x = Symbol('x')
+    assert simplify(x + csch(sinc(1))) == x + csch(sinc(1))
+
+
 def test_simplify_function_inverse():
+    # "inverse" attribute does not guarantee that f(g(x)) is x
+    # so this simplification should not happen automatically.
+    # See issue #12140
     x, y = symbols('x, y')
     g = Function('g')
 
@@ -684,9 +703,16 @@ def test_simplify_function_inverse():
         def inverse(self, argindex=1):
             return g
 
-    assert simplify(f(g(x))) == x
-    assert simplify(f(g(sin(x)**2 + cos(x)**2))) == 1
-    assert simplify(f(g(x, y))) == f(g(x, y))
+    assert simplify(f(g(x))) == f(g(x))
+    assert inversecombine(f(g(x))) == x
+    assert simplify(f(g(x)), inverse=True) == x
+    assert simplify(f(g(sin(x)**2 + cos(x)**2)), inverse=True) == 1
+    assert simplify(f(g(x, y)), inverse=True) == f(g(x, y))
+    assert simplify(2*asin(sin(3*x)), inverse=True) == 6*x
+    assert simplify(log(exp(x))) == log(exp(x))
+    assert simplify(log(exp(x)), inverse=True) == x
+    assert simplify(log(exp(x), 2), inverse=True) == x/log(2)
+    assert simplify(log(exp(x), 2, evaluate=False), inverse=True) == x/log(2)
 
 
 def test_clear_coefficients():
@@ -700,3 +726,58 @@ def test_clear_coefficients():
     assert clear_coefficients(S.Infinity, x) == (S.Infinity, x)
     assert clear_coefficients(-S.Pi, x) == (S.Pi, -x)
     assert clear_coefficients(2 - S.Pi/3, x) == (pi, -3*x + 6)
+
+def test_nc_simplify():
+    from sympy.simplify.simplify import nc_simplify
+    from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
+                                                       MatPow, Identity)
+    from sympy.core import Pow
+    from functools import reduce
+
+    a, b, c, d = symbols('a b c d', commutative = False)
+    x = Symbol('x')
+    A = MatrixSymbol("A", x, x)
+    B = MatrixSymbol("B", x, x)
+    C = MatrixSymbol("C", x, x)
+    D = MatrixSymbol("D", x, x)
+    subst = {a: A, b: B, c: C, d:D}
+    funcs = {Add: lambda x,y: x+y, Mul: lambda x,y: x*y }
+
+    def _to_matrix(expr):
+        if expr in subst:
+            return subst[expr]
+        if isinstance(expr, Pow):
+            return MatPow(_to_matrix(expr.args[0]), expr.args[1])
+        elif isinstance(expr, (Add, Mul)):
+            return reduce(funcs[expr.func],[_to_matrix(a) for a in expr.args])
+        else:
+            return expr*Identity(x)
+
+    def _check(expr, simplified, deep=True, matrix=True):
+        assert nc_simplify(expr, deep=deep) == simplified
+        assert expand(expr) == expand(simplified)
+        if matrix:
+            m_simp = _to_matrix(simplified).doit(inv_expand=False)
+            assert nc_simplify(_to_matrix(expr), deep=deep) == m_simp
+
+    _check(a*b*a*b*a*b*c*(a*b)**3*c, ((a*b)**3*c)**2)
+    _check(a*b*(a*b)**-2*a*b, 1)
+    _check(a**2*b*a*b*a*b*(a*b)**-1, a*(a*b)**2, matrix=False)
+    _check(b*a*b**2*a*b**2*a*b**2, b*(a*b**2)**3)
+    _check(a*b*a**2*b*a**2*b*a**3, (a*b*a)**3*a**2)
+    _check(a**2*b*a**4*b*a**4*b*a**2, (a**2*b*a**2)**3)
+    _check(a**3*b*a**4*b*a**4*b*a, a**3*(b*a**4)**3*a**-3)
+    _check(a*b*a*b + a*b*c*x*a*b*c, (a*b)**2 + x*(a*b*c)**2)
+    _check(a*b*a*b*c*a*b*a*b*c, ((a*b)**2*c)**2)
+    _check(b**-1*a**-1*(a*b)**2, a*b)
+    _check(a**-1*b*c**-1, (c*b**-1*a)**-1)
+    expr = a**3*b*a**4*b*a**4*b*a**2*b*a**2*(b*a**2)**2*b*a**2*b*a**2
+    for i in range(10):
+        expr *= a*b
+    _check(expr, a**3*(b*a**4)**2*(b*a**2)**6*(a*b)**10)
+    _check((a*b*a*b)**2, (a*b*a*b)**2, deep=False)
+    _check(a*b*(c*d)**2, a*b*(c*d)**2)
+    expr = b**-1*(a**-1*b**-1 - a**-1*c*b**-1)**-1*a**-1
+    assert nc_simplify(expr) == (1-c)**-1
+    # commutative expressions should be returned without an error
+    assert nc_simplify(2*x**2) == 2*x**2

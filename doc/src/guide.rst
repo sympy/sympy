@@ -137,7 +137,7 @@ SymPy types through the ``sympify()`` function. Thus, ``cos(x).__add__(1)``
 returns  ``Add(cos(x), Integer(1))``.
 
 Similarly, ``2/cos(x)`` is equal to ``cos(x).__rdiv__(2)`` is equal to
-``Mul(Rational(2), Pow(cos(x), Rational(-1)))``.
+``Mul(Integer(2), Pow(cos(x), Integer(-1)))``.
 
 Note that ``2/cos(x)`` calls ``cos(x).__rdiv__(2)`` instead of
 ``(2).__div__(cos(x))`` because ``2`` (type ``int``) does not know how to
