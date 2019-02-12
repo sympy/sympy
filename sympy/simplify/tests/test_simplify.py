@@ -781,3 +781,7 @@ def test_nc_simplify():
     assert nc_simplify(expr) == (1-c)**-1
     # commutative expressions should be returned without an error
     assert nc_simplify(2*x**2) == 2*x**2
+
+def test_issue_15965():
+    x, y, z = symbols('x y z')
+    assert simplify(Integral(x*y-z,x)) == y*Integral(x, x) - x*Integral(1, x)

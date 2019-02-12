@@ -526,7 +526,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
 
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
-    from sympy import Sum, Product
+    from sympy import Sum, Product, Integral
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
@@ -536,7 +536,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         if not expr.args:  # simplified to atomic
             return expr
 
-    if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
+    if not isinstance(expr, (Add, Mul, Pow, ExpBase, Integral)):
         return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational, inverse=inverse)
                          for x in expr.args])
 
@@ -596,6 +596,15 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
 
     if expr.has(Sum):
         expr = sum_simplify(expr)
+
+    if expr.has(Integral):
+        l=0
+        expr_ = expr.args[0]
+        args = Add.make_args(expr_)
+        for arg in args:
+            coeff, g = arg.as_independent(expr.args[1][0])
+            l = Add(coeff*Integral(g, expr.args[1]),l)
+        return l
 
     if expr.has(Product):
         expr = product_simplify(expr)
