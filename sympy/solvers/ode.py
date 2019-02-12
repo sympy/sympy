@@ -1362,7 +1362,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         r = _check_substitution_type_match(reduced_eq, func)
         if r["solutions"]:
             matching_hints['order_reducing_substitution'] = r
-        
+
         # Any ODE that can be solved with a combination of algebra and
         # integrals e.g.:
         # d^3/dx^3(x y) = F(x)
