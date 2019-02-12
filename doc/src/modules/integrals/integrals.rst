@@ -15,7 +15,7 @@ Examples
 SymPy can integrate a vast array of functions. It can integrate polynomial functions::
 
     >>> from sympy import *
-    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
+    >>> init_printing(use_unicode=False, wrap_line=False)
     >>> x = Symbol('x')
     >>> integrate(x**2 + x + 1, x)
      3    2
@@ -25,10 +25,10 @@ SymPy can integrate a vast array of functions. It can integrate polynomial funct
 
 Rational functions::
 
-	>>> integrate(x/(x**2+2*x+1), x)
-	               1
-	log(x + 1) + -----
-	             x + 1
+    >>> integrate(x/(x**2+2*x+1), x)
+    1
+    log(x + 1) + -----
+    x + 1
 
 
 Exponential-polynomial functions. These multiplicative combinations of polynomials and the functions ``exp``, ``cos`` and ``sin`` can be integrated by hand using repeated integration by parts, which is an extremely tedious process. Happily, SymPy will deal with these integrals.
@@ -126,3 +126,108 @@ any order and any precision:
 .. autofunction:: sympy.integrals.quadrature.gauss_chebyshev_u
 
 .. autofunction:: sympy.integrals.quadrature.gauss_jacobi
+
+.. autofunction:: sympy.integrals.quadrature.gauss_lobatto
+
+Integration over Polytopes
+==========================
+
+.. module:: sympy.integrals.intpoly
+
+The ``intpoly`` module in SymPy implements methods to calculate the integral of a polynomial over 2/3-Polytopes.
+Uses evaluation techniques as described in Chin et al. (2015) [1].
+
+The input for 2-Polytope or Polygon uses the already existing ``Polygon`` data structure in SymPy. See
+:mod:`sympy.geometry.polygon` for how to create a polygon.
+
+For the 3-Polytope or Polyhedron, the most economical representation
+is to specify a list of vertices and then to provide each constituting face(Polygon) as a list of vertex indices.
+
+For example, consider the unit cube. Here is how it would be represented.
+
+``unit_cube = [[(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1), (1, 0, 0),(1, 0, 1), (1, 1, 0), (1, 1, 1)],``
+            ``[3, 7, 6, 2], [1, 5, 7, 3], [5, 4, 6, 7], [0, 4, 5, 1], [2, 0, 1, 3], [2, 6, 4, 0]]``
+
+Here, the first sublist is the list of vertices. The other smaller lists such as ``[3, 7, 6, 2]`` represent a 2D face
+of the polyhedra with vertices having index ``3, 7, 6 and 2`` in the first sublist(in that order).
+
+Principal method in this module is :func:`polytope_integrate`
+
+  - ``polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), x)`` returns the integral of :math:`x` over the triangle with vertices (0, 0), (0, 1) and (1, 0)
+
+  - ``polytope_integrate(unit_cube, x + y + z)`` returns the integral of :math:`x + y + z` over the unit cube.
+
+References
+----------
+[1] : Chin, Eric B., Jean B. Lasserre, and N. Sukumar. "Numerical integration of homogeneous functions on convex and nonconvex polygons and polyhedra." Computational Mechanics 56.6 (2015): 967-981
+
+PDF link : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
+
+Examples
+--------
+
+For 2D Polygons
+---------------
+
+Single Polynomial::
+
+    >>> from sympy.integrals.intpoly import *
+    >>> init_printing(use_unicode=False, wrap_line=False)
+    >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), x)
+    1/6
+    >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), x + x*y + y**2)
+    7/24
+
+List of specified polynomials::
+
+    >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), [3, x*y + y**2, x**4], max_degree=4)
+              4               2
+    {3: 3/2, x : 1/30, x*y + y : 1/8}
+    >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), [1.125, x, x**2, 6.89*x**3, x*y + y**2, x**4], max_degree=4)
+                           2              3  689    4               2
+    {1.125: 9/16, x: 1/6, x : 1/12, 6.89*x : ----, x : 1/30, x*y + y : 1/8}
+                                             2000
+
+Computing all monomials up to a maximum degree::
+
+    >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)),max_degree=3)
+                            2         3                 2         3                      2         2
+    {0: 0, 1: 1/2, x: 1/6, x : 1/12, x : 1/20, y: 1/6, y : 1/12, y : 1/20, x*y: 1/24, x*y : 1/60, x *y: 1/60}
+
+
+For 3-Polytopes/Polyhedra
+-------------------------
+
+Single Polynomial::
+
+    >>> from sympy.integrals.intpoly import *
+    >>> cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0), (5, 0, 5), (5, 5, 0), (5, 5, 5)], [2, 6, 7, 3], [3, 7, 5, 1], [7, 6, 4, 5], [1, 5, 4, 0], [3, 1, 0, 2], [0, 4, 6, 2]]
+    >>> polytope_integrate(cube, x**2 + y**2 + z**2 + x*y + y*z + x*z)
+    -21875/4
+    >>> octahedron = [[(S(-1) / sqrt(2), 0, 0), (0, S(1) / sqrt(2), 0), (0, 0, S(-1) / sqrt(2)), (0, 0, S(1) / sqrt(2)), (0, S(-1) / sqrt(2), 0), (S(1) / sqrt(2), 0, 0)], [3, 4, 5], [3, 5, 1], [3, 1, 0], [3, 0, 4], [4, 0, 2], [4, 2, 5], [2, 0, 1], [5, 2, 1]]
+    >>> polytope_integrate(octahedron, x**2 + y**2 + z**2 + x*y + y*z + x*z)
+      ___
+    \/ 2
+    -----
+      20
+
+List of specified polynomials::
+
+    >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), [3, x*y + y**2, x**4], max_degree=4)
+              4               2
+    {3: 3/2, x : 1/30, x*y + y : 1/8}
+    >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), [1.125, x, x**2, 6.89*x**3, x*y + y**2, x**4], max_degree=4)
+                           2              3  689    4               2
+    {1.125: 9/16, x: 1/6, x : 1/12, 6.89*x : ----, x : 1/30, x*y + y : 1/8}
+                                             2000
+
+Computing all monomials up to a maximum degree::
+
+    >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)),max_degree=3)
+                            2         3                 2         3                      2         2
+    {0: 0, 1: 1/2, x: 1/6, x : 1/12, x : 1/20, y: 1/6, y : 1/12, y : 1/20, x*y: 1/24, x*y : 1/60, x *y: 1/60}
+
+API reference
+-------------
+
+.. autofunction:: sympy.integrals.intpoly.polytope_integrate

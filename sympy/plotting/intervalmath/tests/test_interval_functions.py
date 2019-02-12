@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy.external import import_module
 from sympy.plotting.intervalmath import (
     Abs, acos, acosh, And, asin, asinh, atan, atanh, ceil, cos, cosh,
@@ -170,7 +168,8 @@ def test_cos():
 def test_tan():
     a = tan(interval(0, np.pi / 4))
     assert a.start == 0
-    assert a.end == np.tan(np.pi / 4)
+    # must match lib_interval definition of tan:
+    assert a.end == np.sin(np.pi / 4)/np.cos(np.pi / 4)
 
     a = tan(interval(np.pi / 4, 3 * np.pi / 4))
     #discontinuity

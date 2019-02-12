@@ -12,10 +12,10 @@ http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 from __future__ import print_function, division
 
 from sympy.core import S, Symbol
-from sympy.core.numbers import I
-from sympy.polys.polytools import Poly
 from sympy.core.evalf import N
+from sympy.core.numbers import I
 from sympy.functions import sqrt
+from sympy.polys.polytools import Poly
 from sympy.utilities import public
 
 x = Symbol('x')
@@ -155,13 +155,13 @@ class PolyQuintic(object):
         return F
 
     def l0(self, theta):
-        p, q, r, s, F = self.p, self.q, self.r, self.s, self.F
+        F = self.F
         a = self.a
         l0 = Poly(a, x).eval(theta)/F
         return l0
 
     def T(self, theta, d):
-        p, q, r, s, F = self.p, self.q, self.r, self.s, self.F
+        F = self.F
         T = [0]*5
         b = self.b
         # Note that the order of sublists of the b's has been reversed compared to the paper
@@ -172,7 +172,7 @@ class PolyQuintic(object):
         return T
 
     def order(self, theta, d):
-        p, q, r, s, F = self.p, self.q, self.r, self.s, self.F
+        F = self.F
         o = self.o
         order = Poly(o, x).eval(theta)/(d*F)
         return N(order)

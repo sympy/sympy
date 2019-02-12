@@ -8,7 +8,7 @@ from sympy.polys.partfrac import (
 )
 
 from sympy import (S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda,
-                   Symbol, Dummy, factor, together, sqrt, Expr)
+                   Symbol, Dummy, factor, together, sqrt, Expr, Rational)
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.abc import x, y, a, b, c
 
@@ -36,6 +36,18 @@ def test_apart():
         2 - E + E*pi + E*x + (E*pi + 2)*(pi - 1)/(x - pi)
 
     assert apart(Eq((x**2 + 1)/(x + 1), x), x) == Eq(x - 1 + 2/(x + 1), x)
+
+    assert apart(x/2, y) == x/2
+
+    f, g = (x+y)/(2*x - y), Rational(3, 2)*y/((2*x - y)) + Rational(1, 2)
+
+    assert apart(f, x, full=False) == g
+    assert apart(f, x, full=True) == g
+
+    f, g = (x+y)/(2*x - y), 3*x/(2*x - y) - 1
+
+    assert apart(f, y, full=False) == g
+    assert apart(f, y, full=True) == g
 
     raises(NotImplementedError, lambda: apart(1/(x + 1)/(y + 2)))
 
@@ -71,7 +83,7 @@ def test_apart_extension():
 
     f = x/((x - 2)*(x + I))
 
-    assert factor(together(apart(f))) == f
+    assert factor(together(apart(f)).expand()) == f
 
 
 def test_apart_full():

@@ -1,5 +1,10 @@
-from sympy.matrices.densetools import eye
-from sympy.matrices.densearith import add, sub, mulmatmat, mulmatscaler
+from sympy.utilities.pytest import ignore_warnings
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+with ignore_warnings(SymPyDeprecationWarning):
+    from sympy.matrices.densetools import eye
+    from sympy.matrices.densearith import add, sub, mulmatmat, mulmatscaler
+
 from sympy import ZZ
 
 

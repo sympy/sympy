@@ -11,9 +11,52 @@ from sympy.core.numbers import Float
 from mpmath.libmp import bitcount as _bitlength
 
 
-
 def _int_tuple(*i):
     return tuple(int(_) for _ in i)
+
+
+def is_euler_pseudoprime(n, b):
+    """Returns True if n is prime or an Euler pseudoprime to base b, else False.
+
+    Euler Pseudoprime : In arithmetic, an odd composite integer n is called an
+    euler pseudoprime to base a, if a and n are coprime and satisfy the modular
+    arithmetic congruence relation :
+
+    a ^ (n-1)/2 = + 1(mod n) or
+    a ^ (n-1)/2 = - 1(mod n)
+
+    (where mod refers to the modulo operation).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_euler_pseudoprime
+    >>> is_euler_pseudoprime(2, 5)
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler_pseudoprime
+    """
+    from sympy.ntheory.factor_ import trailing
+
+    if not mr(n, [b]):
+        return False
+
+    n = as_int(n)
+    r = n - 1
+    c = pow(b, r >> trailing(r), n)
+
+    if c == 1:
+        return True
+
+    while True:
+        if c == n - 1:
+            return True
+        c = pow(c, 2, n)
+        if c == 1:
+            return False
 
 
 def is_square(n, prep=True):
@@ -38,7 +81,7 @@ def is_square(n, prep=True):
             return True
     m = n & 127
     if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
-        m = n % 63;
+        m = n % 63
         if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
             from sympy.ntheory import perfect_power
             if perfect_power(n, [2]):
@@ -78,7 +121,7 @@ def mr(n, bases):
       A Computational Perspective", Springer, 2nd edition, 135-138
 
     A list of thresholds and the bases they require are here:
-    http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
+    https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
 
     Examples
     ========
@@ -457,7 +500,7 @@ def isprime(n):
 
     References
     ==========
-    - http://en.wikipedia.org/wiki/Strong_pseudoprime
+    - https://en.wikipedia.org/wiki/Strong_pseudoprime
     - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
       http://mpqs.free.fr/LucasPseudoprimes.pdf
     - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
@@ -483,14 +526,7 @@ def isprime(n):
     if n < 2809:
         return True
     if n <= 23001:
-        return pow(2, n, n) == 2 and n not in [341, 561, 645, 1105, 1387, 1729,
-                                               1905, 2047, 2465, 2701, 2821,
-                                               3277, 4033, 4369, 4371, 4681,
-                                               5461, 6601, 7957, 8321, 8481,
-                                               8911, 10261, 10585, 11305,
-                                               12801, 13741, 13747, 13981,
-                                               14491, 15709, 15841, 16705,
-                                               18705, 18721, 19951, 23001]
+        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951]
 
     # bisection search on the sieve if the sieve is large enough
     from sympy.ntheory.generate import sieve as s

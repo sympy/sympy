@@ -5,10 +5,11 @@ from mpmath.libmp import (fzero,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, pi_fixed, mpf_cos,
     mpf_sin)
 from sympy.core.numbers import igcd
-import math
 from sympy.core.compatibility import range
 from .residue_ntheory import (_sqrt_mod_prime_power,
     legendre_symbol, jacobi_symbol, is_quad_residue)
+
+import math
 
 def _pre():
     maxn = 10**5

@@ -36,7 +36,7 @@ and the symbol `b` will always denote a denominator parameter. The
 subscripts `p, q, r, s` denote vectors of that length, so e.g.
 `a_p` denotes a vector of `p` numerator parameters. The subscripts
 `i` and `j` denote "running indices", so they should usually be used in
-conjuction with a "for all `i`". E.g. `a_i < 4` for all `i`.
+conjunction with a "for all `i`". E.g. `a_i < 4` for all `i`.
 Uppercase subscripts `I` and `J` denote a chosen, fixed index. So
 for example `a_I > 0` is true if the inequality holds for the one index
 `I` we are currently interested in.
@@ -160,7 +160,7 @@ If `r \ne 0`, then any such `a_p, b_q` is reachable from any
 congruent mod 1, such that `a_i < c < b_j` for all `i` and
 `j`, and similarly `a_i^0 < c^0 < b_j^0`. If `n = c - c^0 > 0` then
 we first inverse-shift all the `b_j^0` `n` times up, and then
-similarly shift shift up all the `a_i^0` `n` times. If `n <
+similarly shift up all the `a_i^0` `n` times. If `n <
 0` then we first inverse-shift down the `a_i^0` and then shift down the
 `b_j^0`. This reduces to the case `c = c^0`. But evidently we can
 now shift or inverse-shift around the `a_i^0` arbitrarily so long as we
@@ -456,7 +456,7 @@ and trivially
    = \frac{C\left(\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}\right)}
           {\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}}
 
-which is exactly what is needed for the third paramenter,
+which is exactly what is needed for the third parameter,
 ``res``, in ``add``. Finally, the whole function call to add
 this rule to the table looks like::
 
@@ -478,7 +478,7 @@ expressed as a linear combination of lower order derivatives. The matrix
 `B` contains the basis `\{B_0, B_1, \ldots\}` and is of shape
 `n \times 1`. The best way to get `B_i` is to take the first
 `n = \max(p, q+1)` derivatives of the expression for `{}_p F_q`
-and take out usefull pieces. In our case we find that
+and take out useful pieces. In our case we find that
 `n = \max{\left(1, 2+1\right)} = 3`. For computing the derivatives,
 we have to use the operator `z\frac{\mathrm{d}}{\mathrm{d}z}`. The
 first basis element `B_0` is set to the expression for `{}_1 F_2`

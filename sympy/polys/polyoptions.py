@@ -6,9 +6,9 @@ __all__ = ["Options"]
 
 from sympy.core import S, Basic, sympify
 from sympy.core.compatibility import string_types, with_metaclass
+from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
 from sympy.utilities.iterables import has_dups
-from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 
 import sympy.polys
 
@@ -402,12 +402,12 @@ class Domain(with_metaclass(OptionType, Option)):
 
     after = ['gens']
 
-    _re_realfield = re.compile("^(R|RR)(_(\d+))?$")
-    _re_complexfield = re.compile("^(C|CC)(_(\d+))?$")
-    _re_finitefield = re.compile("^(FF|GF)\((\d+)\)$")
-    _re_polynomial = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
-    _re_fraction = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
-    _re_algebraic = re.compile("^(Q|QQ)\<(.+)\>$")
+    _re_realfield = re.compile(r"^(R|RR)(_(\d+))?$")
+    _re_complexfield = re.compile(r"^(C|CC)(_(\d+))?$")
+    _re_finitefield = re.compile(r"^(FF|GF)\((\d+)\)$")
+    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ)\[(.+)\]$")
+    _re_fraction = re.compile(r"^(Z|ZZ|Q|QQ)\((.+)\)$")
+    _re_algebraic = re.compile(r"^(Q|QQ)\<(.+)\>$")
 
     @classmethod
     def preprocess(cls, domain):

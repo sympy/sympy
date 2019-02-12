@@ -184,3 +184,70 @@ def test_dyadic_latex():
                 r'\alpha \beta\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_x}')
 
     assert x._latex() == expected
+
+def test_vlatex(): # vlatex is broken #12078
+    from sympy.physics.vector import vlatex
+
+    x = symbols('x')
+    J = symbols('J')
+
+    f = Function('f')
+    g = Function('g')
+    h = Function('h')
+
+    expected = r'J \left(\frac{d}{d x} g{\left(x \right)} - \frac{d}{d x} h{\left(x \right)}\right)'
+
+    expr = J*f(x).diff(x).subs(f(x), g(x)-h(x))
+
+    assert vlatex(expr) == expected
+
+
+def test_issue_13354():
+    """
+    Test for proper pretty printing of physics vectors with ADD
+    instances in arguments.
+
+    Test is exactly the one suggested in the original bug report by
+    @moorepants.
+    """
+
+    a, b, c = symbols('a, b, c')
+    A = ReferenceFrame('A')
+    v = a * A.x + b * A.y + c * A.z
+    w = b * A.x + c * A.y + a * A.z
+    z = w + v
+
+    expected = """(a + b) a_x + (b + c) a_y + (a + c) a_z"""
+
+    assert ascii_vpretty(z) == expected
+
+def test_vector_derivative_printing():
+    # First order tested above
+
+    # Second order
+    v = omega.diff().diff() * N.x
+
+    assert v._latex() == r'\ddot{\omega}\mathbf{\hat{n}_x}'
+    assert unicode_vpretty(v) == u('ω̈ n_x')
+    assert ascii_vpretty(v) == u('omëga n_x')
+
+    # Third order
+    v = omega.diff().diff().diff() * N.x
+
+    assert v._latex() == r'\dddot{\omega}\mathbf{\hat{n}_x}'
+    assert unicode_vpretty(v) == u('ω⃛ n_x')
+    assert ascii_vpretty(v) == u('ome⃛ga n_x')
+
+    # Fourth order
+    v = omega.diff().diff().diff().diff() * N.x
+
+    assert v._latex() == r'\ddddot{\omega}\mathbf{\hat{n}_x}'
+    assert unicode_vpretty(v) == u('ω⃜ n_x')
+    assert ascii_vpretty(v) == u('ome⃜ga n_x')
+
+    # Fifth order
+    v = omega.diff().diff().diff().diff().diff() * N.x
+
+    assert v._latex() == r'\frac{d^{5}}{d t^{5}} \omega{\left(t \right)}\mathbf{\hat{n}_x}'
+    assert unicode_vpretty(v) == u('  5\n d\n───(ω) n_x\n  5\ndt')
+    assert ascii_vpretty(v) == '  5\n d\n---(omega) n_x\n  5\ndt'

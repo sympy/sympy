@@ -24,7 +24,7 @@ class AntiCommutator(Expr):
     This class returns the anticommutator in an unevaluated form.  To evaluate
     the anticommutator, use the ``.doit()`` method.
 
-    Cannonical ordering of an anticommutator is ``{A, B}`` for ``A < B``. The
+    Canonical ordering of an anticommutator is ``{A, B}`` for ``A < B``. The
     arguments of the anticommutator are put into canonical order using
     ``__cmp__``. If ``B < A``, then ``{A, B}`` is returned as ``{B, A}``.
 
@@ -72,7 +72,7 @@ class AntiCommutator(Expr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Commutator
+    .. [1] https://en.wikipedia.org/wiki/Commutator
     """
     is_commutative = False
 

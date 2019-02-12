@@ -4,7 +4,7 @@ Further improvements: eliminate calls to pl_true, implement branching rules,
 efficient unit propagation.
 
 References:
-  - http://en.wikipedia.org/wiki/DPLL_algorithm
+  - https://en.wikipedia.org/wiki/DPLL_algorithm
   - https://www.researchgate.net/publication/242384772_Implementations_of_the_DPLL_Algorithm
 """
 from __future__ import print_function, division
@@ -280,7 +280,7 @@ def find_unit_clause(clauses, model):
             sym = literal_symbol(literal)
             if sym not in model:
                 num_not_in_model += 1
-                P, value = sym, not (literal.func is Not)
+                P, value = sym, not isinstance(literal, Not)
         if num_not_in_model == 1:
             return P, value
     return None, None

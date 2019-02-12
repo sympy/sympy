@@ -195,19 +195,19 @@ for s in '+-=()':
 # TODO: Make brackets adjust to height of contents
 modifier_dict = {
     # Accents
-    'mathring': lambda s: s+u'\N{COMBINING RING ABOVE}',
-    'ddddot': lambda s: s+u'\N{COMBINING DIAERESIS}\N{COMBINING DIAERESIS}',
-    'dddot': lambda s: s+u'\N{COMBINING DIAERESIS}\N{COMBINING DOT ABOVE}',
-    'ddot': lambda s: s+u'\N{COMBINING DIAERESIS}',
-    'dot': lambda s: s+u'\N{COMBINING DOT ABOVE}',
-    'check': lambda s: s+u'\N{COMBINING CARON}',
-    'breve': lambda s: s+u'\N{COMBINING BREVE}',
-    'acute': lambda s: s+u'\N{COMBINING ACUTE ACCENT}',
-    'grave': lambda s: s+u'\N{COMBINING GRAVE ACCENT}',
-    'tilde': lambda s: s+u'\N{COMBINING TILDE}',
-    'hat': lambda s: s+u'\N{COMBINING CIRCUMFLEX ACCENT}',
-    'bar': lambda s: s+u'\N{COMBINING OVERLINE}',
-    'vec': lambda s: s+u'\N{COMBINING RIGHT ARROW ABOVE}',
+    'mathring': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING RING ABOVE}'),
+    'ddddot': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING FOUR DOTS ABOVE}'),
+    'dddot': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING THREE DOTS ABOVE}'),
+    'ddot': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING DIAERESIS}'),
+    'dot': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING DOT ABOVE}'),
+    'check': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING CARON}'),
+    'breve': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING BREVE}'),
+    'acute': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING ACUTE ACCENT}'),
+    'grave': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING GRAVE ACCENT}'),
+    'tilde': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING TILDE}'),
+    'hat': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING CIRCUMFLEX ACCENT}'),
+    'bar': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING OVERLINE}'),
+    'vec': lambda s: put_accent_in_middle_of_string(s, u'\N{COMBINING RIGHT ARROW ABOVE}'),
     'prime': lambda s: s+u'\N{PRIME}',
     'prm': lambda s: s+u'\N{PRIME}',
     # # Faces -- these are here for some compatibility with latex printing
@@ -487,10 +487,13 @@ atoms_table = {
 }
 
 
-def pretty_atom(atom_name, default=None):
+def pretty_atom(atom_name, default=None, printer=None):
     """return pretty representation of an atom"""
     if _use_unicode:
-        return atoms_table[atom_name]
+        if printer is not None and atom_name == 'ImaginaryUnit' and printer._settings['imaginary_unit'] == 'j':
+            return U('DOUBLE-STRUCK ITALIC SMALL J')
+        else:
+            return atoms_table[atom_name]
     else:
         if default is not None:
             return default
@@ -573,14 +576,13 @@ def annotated(letter):
     }
     ascii_pics = {
         'F': (3, 0, 3, 0, ' _\n|_\n|\n'),
-        'G': (3, 0, 3, 1, ' __\n/__\n\_|')
+        'G': (3, 0, 3, 1, ' __\n/__\n\\_|')
     }
 
     if _use_unicode:
         return ucode_pics[letter]
     else:
         return ascii_pics[letter]
-
 
 def is_combining(sym):
     """Check whether symbol is a unicode modifier.
@@ -595,3 +597,32 @@ def is_combining(sym):
 
                     u'\N{COMBINING LEFT HARPOON ABOVE}' <= sym <=
                     u'\N{COMBINING ASTERISK ABOVE}') else False
+
+  
+  def put_accent_in_middle_of_string(string, accent):
+    """
+    Returns a string with accent inserted on the middle character. Useful to
+    put combining accents on symbol names, including multi-character names.
+
+    Parameters
+    ==========
+
+    string : string
+        The string to place the accent in.
+    accent : string
+        The combining accent to insert
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Combining_character
+    .. [2] https://en.wikipedia.org/wiki/Combining_Diacritical_Marks
+
+    """
+
+    # Accent is placed on the previous character, although it may not always look
+    # like that depending on console
+    midpoint = len(string) // 2 + 1
+    firstpart = string[:midpoint]
+    secondpart = string[midpoint:]
+    return firstpart + accent + secondpart

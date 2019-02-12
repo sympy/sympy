@@ -1,8 +1,12 @@
 from __future__ import print_function, division
-import collections
 
 from sympy import Basic
+from sympy.core.expr import Expr
+from sympy.core.numbers import Integer
+from sympy.core.sympify import sympify
+from sympy.core.compatibility import SYMPY_INTS, Iterable
 
+import itertools
 
 class NDimArray(object):
     """
@@ -56,13 +60,16 @@ class NDimArray(object):
     [[-3, -3], [-3, -3]]
 
     """
-    def __new__(cls, *args, **kwargs):
+
+    _diff_wrt = True
+
+    def __new__(cls, iterable, shape=None, **kwargs):
         from sympy.tensor.array import ImmutableDenseNDimArray
-        return ImmutableDenseNDimArray(*args, **kwargs)
+        return ImmutableDenseNDimArray(iterable, shape, **kwargs)
 
     def _parse_index(self, index):
 
-        if isinstance(index, (int, Integer)):
+        if isinstance(index, (SYMPY_INTS, Integer)):
             if index >= self._loop_size:
                 raise ValueError("index out of range")
             return index
@@ -100,13 +107,13 @@ class NDimArray(object):
 
     def _setter_iterable_check(self, value):
         from sympy.matrices.matrices import MatrixBase
-        if isinstance(value, (collections.Iterable, MatrixBase, NDimArray)):
+        if isinstance(value, (Iterable, MatrixBase, NDimArray)):
             raise NotImplementedError
 
     @classmethod
     def _scan_iterable_shape(cls, iterable):
         def f(pointer):
-            if not isinstance(pointer, collections.Iterable):
+            if not isinstance(pointer, Iterable):
                 return [pointer], ()
 
             result = []
@@ -131,7 +138,7 @@ class NDimArray(object):
             shape = iterable.shape
             iterable = list(iterable)
         # Construct N-dim array from an iterable (numpy arrays included):
-        elif shape is None and isinstance(iterable, collections.Iterable):
+        elif shape is None and isinstance(iterable, Iterable):
             iterable, shape = cls._scan_iterable_shape(iterable)
 
         # Construct N-dim array from a Matrix:
@@ -147,12 +154,13 @@ class NDimArray(object):
             pass
 
         else:
-            raise TypeError("Data type not understood")
+            shape = ()
+            iterable = (iterable,)
 
-        if isinstance(shape, (int, Integer)):
+        if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
 
-        if any([not isinstance(dim, (int, Integer)) for dim in shape]):
+        if any([not isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape]):
             raise TypeError("Shape should contain integers only.")
 
         return tuple(shape), iterable
@@ -204,7 +212,7 @@ class NDimArray(object):
         """
         return self._rank
 
-    def diff(self, *args):
+    def diff(self, *args, **kwargs):
         """
         Calculate the derivative of each element in the array.
 
@@ -218,7 +226,33 @@ class NDimArray(object):
         [[1, 0], [0, y]]
 
         """
-        return type(self)(map(lambda x: x.diff(*args), self), self.shape)
+        from sympy import Derivative
+        kwargs.setdefault('evaluate', True)
+        return Derivative(self.as_immutable(), *args, **kwargs)
+
+    def _accept_eval_derivative(self, s):
+        return s._visit_eval_derivative_array(self)
+
+    def _visit_eval_derivative_scalar(self, base):
+        # Types are (base: scalar, self: array)
+        return self.applyfunc(lambda x: base.diff(x))
+
+    def _visit_eval_derivative_array(self, base):
+        # Types are (base: array/matrix, self: array)
+        from sympy import derive_by_array
+        return derive_by_array(base, self)
+
+    def _eval_derivative_n_times(self, s, n):
+        return Basic._eval_derivative_n_times(self, s, n)
+
+    def _eval_derivative(self, arg):
+        from sympy import derive_by_array
+        from sympy import Tuple
+        from sympy.matrices.common import MatrixCommon
+        if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):
+            return derive_by_array(self, arg)
+        else:
+            return self.applyfunc(lambda x: x.diff(arg))
 
     def applyfunc(self, f):
         """Apply a function to each element of the N-dim array.
@@ -254,28 +288,36 @@ class NDimArray(object):
             sh //= shape_left[0]
             return "[" + ", ".join([f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]) + "]" # + "\n"*len(shape_left)
 
+        if self.rank() == 0:
+            return self[()].__str__()
+
         return f(self._loop_size, self.shape, 0, self._loop_size)
-
-        out_str = ''
-
-        # forming output string
-        for i, el in enumerate(self):
-
-            out_str += str(el) + '  '
-            chidx = i+1
-            for sh in reversed(self.shape):
-                if chidx % sh == 0:
-                    out_str += '\n'
-                    chidx //= sh
-
-        return out_str
 
     def __repr__(self):
         return self.__str__()
 
+    # We don't define _repr_png_ here because it would add a large amount of
+    # data to any notebook containing SymPy expressions, without adding
+    # anything useful to the notebook. It can still enabled manually, e.g.,
+    # for the qtconsole, with init_printing().
+    def _repr_latex_(self):
+        """
+        IPython/Jupyter LaTeX printing
+
+        To change the behavior of this (e.g., pass in some settings to LaTeX),
+        use init_printing(). init_printing() will also enable LaTeX printing
+        for built in numeric types like ints and container types that contain
+        SymPy objects, like lists and dictionaries of expressions.
+        """
+        from sympy.printing.latex import latex
+        s = latex(self, mode='plain')
+        return "$\\displaystyle %s$" % s
+
+    _repr_latex_orig = _repr_latex_
+
     def tolist(self):
         """
-        Conveting MutableDenseNDimArray to one-dim list
+        Converting MutableDenseNDimArray to one-dim list
 
         Examples
         ========
@@ -323,7 +365,7 @@ class NDimArray(object):
     def __mul__(self, other):
         from sympy.matrices.matrices import MatrixBase
 
-        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
+        if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [i*other for i in self]
@@ -332,7 +374,7 @@ class NDimArray(object):
     def __rmul__(self, other):
         from sympy.matrices.matrices import MatrixBase
 
-        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
+        if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [other*i for i in self]
@@ -341,7 +383,7 @@ class NDimArray(object):
     def __div__(self, other):
         from sympy.matrices.matrices import MatrixBase
 
-        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
+        if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected")
         other = sympify(other)
         result_list = [i/other for i in self]
@@ -349,6 +391,10 @@ class NDimArray(object):
 
     def __rdiv__(self, other):
         raise NotImplementedError('unsupported operation on NDimArray')
+
+    def __neg__(self):
+        result_list = [-i for i in self]
+        return type(self)(result_list, self.shape)
 
     def __eq__(self, other):
         """
@@ -376,16 +422,10 @@ class NDimArray(object):
         return (self.shape == other.shape) and (list(self) == list(other))
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
-
-    def _eval_diff(self, *args, **kwargs):
-        if kwargs.pop("evaluate", True):
-            return self.diff(*args)
-        else:
-            return Derivative(self, *args, **kwargs)
 
     def _eval_transpose(self):
         if self.rank() != 2:
@@ -408,12 +448,41 @@ class NDimArray(object):
     def adjoint(self):
         return self._eval_adjoint()
 
+    def _slice_expand(self, s, dim):
+        if not isinstance(s, slice):
+                return (s,)
+        start, stop, step = s.indices(dim)
+        return [start + i*step for i in range((stop-start)//step)]
+
+    def _get_slice_data_for_array_access(self, index):
+        sl_factors = [self._slice_expand(i, dim) for (i, dim) in zip(index, self.shape)]
+        eindices = itertools.product(*sl_factors)
+        return sl_factors, eindices
+
+    def _get_slice_data_for_array_assignment(self, index, value):
+        if not isinstance(value, NDimArray):
+            value = type(self)(value)
+        sl_factors, eindices = self._get_slice_data_for_array_access(index)
+        slice_offsets = [min(i) if isinstance(i, list) else None for i in sl_factors]
+        # TODO: add checks for dimensions for `value`?
+        return value, eindices, slice_offsets
+
+    @classmethod
+    def _check_special_bounds(cls, flat_list, shape):
+        if shape == () and len(flat_list) != 1:
+            raise ValueError("arrays without shape need one scalar value")
+        if shape == (0,) and len(flat_list) > 0:
+            raise ValueError("if array shape is (0,) there cannot be elements")
+
 
 class ImmutableNDimArray(NDimArray, Basic):
     _op_priority = 11.0
 
+    def __hash__(self):
+        return Basic.__hash__(self)
 
-from sympy.core.numbers import Integer
-from sympy.core.sympify import sympify
-from sympy.core.function import Derivative
-from sympy.core.expr import Expr
+    def as_immutable(self):
+        return self
+
+    def as_mutable(self):
+        raise NotImplementedError("abstract method")

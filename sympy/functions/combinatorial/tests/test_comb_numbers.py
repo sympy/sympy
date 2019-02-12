@@ -2,11 +2,11 @@ import string
 
 from sympy import (
     Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
-    expand_func, diff, EulerGamma, cancel, re, im, Product)
+    expand_func, diff, EulerGamma, cancel, re, im, Product, carmichael)
 from sympy.functions import (
-    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, genocchi,
-    binomial, gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial,
-    sin, cos, cot, zeta)
+    bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
+    genocchi, partition, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    trigamma, polygamma, factorial, sin, cos, cot, zeta)
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
@@ -14,6 +14,19 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.numbers import GoldenRatio
 
 x = Symbol('x')
+
+
+def test_carmichael():
+    assert carmichael.find_carmichael_numbers_in_range(0, 561) == []
+    assert carmichael.find_carmichael_numbers_in_range(561, 562) == [561]
+    assert carmichael.find_carmichael_numbers_in_range(561, 1105) == carmichael.find_carmichael_numbers_in_range(561,
+                                                                                                                 562)
+    assert carmichael.find_first_n_carmichaels(5) == [561, 1105, 1729, 2465, 2821]
+    assert carmichael.is_prime(2821) == False
+    assert carmichael.is_prime(2465) == False
+    assert carmichael.is_prime(1729) == False
+    assert carmichael.is_prime(1105) == False
+    assert carmichael.is_prime(561) == False
 
 
 def test_bernoulli():
@@ -77,6 +90,33 @@ def test_fibonacci():
     assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
 
 
+def test_tribonacci():
+    assert [tribonacci(n) for n in range(8)] == [0, 1, 1, 2, 4, 7, 13, 24]
+    assert tribonacci(100) == 98079530178586034536500564
+
+    assert tribonacci(0, x) == 0
+    assert tribonacci(1, x) == 1
+    assert tribonacci(2, x) == x**2
+    assert tribonacci(3, x) == x**4 + x
+    assert tribonacci(4, x) == x**6 + 2*x**3 + 1
+    assert tribonacci(5, x) == x**8 + 3*x**5 + 3*x**2
+
+    n = Dummy('n')
+    assert tribonacci(n).limit(n, S.Infinity) == S.Infinity
+
+    w = (-1 + S.ImaginaryUnit * sqrt(3)) / 2
+    a = (1 + cbrt(19 + 3*sqrt(33)) + cbrt(19 - 3*sqrt(33))) / 3
+    b = (1 + w*cbrt(19 + 3*sqrt(33)) + w**2*cbrt(19 - 3*sqrt(33))) / 3
+    c = (1 + w**2*cbrt(19 + 3*sqrt(33)) + w*cbrt(19 - 3*sqrt(33))) / 3
+    assert tribonacci(n).rewrite(sqrt) == \
+      (a**(n + 1)/((a - b)*(a - c))
+      + b**(n + 1)/((b - a)*(b - c))
+      + c**(n + 1)/((c - a)*(c - b)))
+    assert tribonacci(n).rewrite(sqrt).subs(n, 4).simplify() == tribonacci(4)
+    assert tribonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
+        tribonacci(10)
+
+
 def test_bell():
     assert [bell(n) for n in range(8)] == [1, 1, 2, 5, 15, 52, 203, 877]
 
@@ -84,6 +124,11 @@ def test_bell():
     assert bell(1, x) == x
     assert bell(2, x) == x**2 + x
     assert bell(5, x) == x**5 + 10*x**4 + 25*x**3 + 15*x**2 + x
+    assert bell(oo) == S.Infinity
+    raises(ValueError, lambda: bell(oo, x))
+
+    raises(ValueError, lambda: bell(-1))
+    raises(ValueError, lambda: bell(S(1)/2))
 
     X = symbols('x:6')
     # X = (x0, x1, .. x5)
@@ -110,13 +155,14 @@ def test_bell():
     for i in [0, 2, 3, 7, 13, 42, 55]:
         assert bell(i).evalf() == bell(n).rewrite(Sum).evalf(subs={n: i})
 
-    # For negative numbers, the formula does not hold
-    m = Symbol('m', integer=True)
-    assert bell(-1).evalf() == bell(m).rewrite(Sum).evalf(subs={m: -1})
+    # issue 9184
+    n = Dummy('n')
+    assert bell(n).limit(n, S.Infinity) == S.Infinity
 
 
 def test_harmonic():
     n = Symbol("n")
+    m = Symbol("m")
 
     assert harmonic(n, 0) == n
     assert harmonic(n).evalf() == harmonic(n)
@@ -145,6 +191,8 @@ def test_harmonic():
     assert harmonic(oo, 1) == oo
     assert harmonic(oo, 2) == (pi**2)/6
     assert harmonic(oo, 3) == zeta(3)
+
+    assert harmonic(0, m) == 0
 
 
 def test_harmonic_rational():
@@ -211,7 +259,7 @@ def test_harmonic_rational():
     for h, a in zip(H, A):
         e = expand_func(h).doit()
         assert cancel(e/a) == 1
-        assert h.n() == a.n()
+        assert abs(h.n() - a.n()) < 1e-12
 
 
 def test_harmonic_evalf():
@@ -284,11 +332,16 @@ def test_euler():
     assert euler(n) != -1
     assert euler(n).subs(n, 2) == -1
 
+    raises(ValueError, lambda: euler(-2))
+    raises(ValueError, lambda: euler(-3))
+    raises(ValueError, lambda: euler(2.3))
+
     assert euler(20).evalf() == 370371188237525.0
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
 
     assert euler(n).rewrite(Sum) == euler(n)
     # XXX: Not sure what the guy who wrote this test was trying to do with the _j and _k stuff
+    n = Symbol('n', integer=True, nonnegative=True)
     assert euler(2*n + 1).rewrite(Sum) == 0
 
 
@@ -298,9 +351,39 @@ def test_euler_failing():
     assert euler(2*n).rewrite(Sum) == I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
 
 
+def test_euler_odd():
+    n = Symbol('n', odd=True, positive=True)
+    assert euler(n) == 0
+    n = Symbol('n', odd=True)
+    assert euler(n) != 0
+
+
+def test_euler_polynomials():
+    assert euler(0, x) == 1
+    assert euler(1, x) == x - Rational(1, 2)
+    assert euler(2, x) == x**2 - x
+    assert euler(3, x) == x**3 - (3*x**2)/2 + Rational(1, 4)
+    m = Symbol('m')
+    assert isinstance(euler(m, x), euler)
+    from sympy import Float
+    A = Float('-0.46237208575048694923364757452876131e8')  # from Maple
+    B = euler(19, S.Pi.evalf(32))
+    assert abs((A - B)/A) < 1e-31  # expect low relative error
+    C = euler(19, S.Pi, evaluate=False).evalf(32)
+    assert abs((A - C)/A) < 1e-31
+
+
+def test_euler_polynomial_rewrite():
+    m = Symbol('m')
+    A = euler(m, x).rewrite('Sum');
+    assert A.subs({m:3, x:5}).doit() == euler(3, 5)
+
+
 def test_catalan():
     n = Symbol('n', integer=True)
-    m = Symbol('n', integer=True, positive=True)
+    m = Symbol('m', integer=True, positive=True)
+    k = Symbol('k', integer=True, nonnegative=True)
+    p = Symbol('p', nonnegative=True)
 
     catalans = [1, 1, 2, 5, 14, 42, 132, 429, 1430, 4862, 16796, 58786]
     for i, c in enumerate(catalans):
@@ -331,6 +414,11 @@ def test_catalan():
     c = catalan(I).evalf(3)
     assert str((re(c), im(c))) == '(0.398, -0.0209)'
 
+    # Assumptions
+    assert catalan(p).is_positive is True
+    assert catalan(k).is_integer is True
+    assert catalan(m+3).is_composite is True
+
 
 def test_genocchi():
     genocchis = [1, -1, 0, 1, 0, -3, 0, 17]
@@ -348,6 +436,26 @@ def test_genocchi():
     assert genocchi(8, evaluate=False).is_prime
     assert genocchi(4 * n + 2).is_negative
     assert genocchi(4 * n - 2).is_negative
+
+
+def test_partition():
+    partition_nums = [1, 1, 2, 3, 5, 7, 11, 15, 22]
+    for n, p in enumerate(partition_nums):
+        assert partition(n) == p
+
+    x = Symbol('x')
+    y = Symbol('y', real=True)
+    m = Symbol('m', integer=True)
+    n = Symbol('n', integer=True, negative=True)
+    p = Symbol('p', integer=True, nonnegative=True)
+    assert partition(m).is_integer
+    assert not partition(m).is_negative
+    assert partition(m).is_nonnegative
+    assert partition(n).is_zero
+    assert partition(p).is_positive
+    assert partition(x).subs(x, 7) == 15
+    assert partition(y).subs(y, 8) == 22
+    raises(ValueError, lambda: partition(S(5)/4))
 
 
 def test_nC_nP_nT():
@@ -448,7 +556,7 @@ def test_nC_nP_nT():
             1, 720, -1764, 1624, -735, 175, -21,
             1, -5040, 13068, -13132, 6769, -1960, 322, -28,
             1, 40320, -109584, 118124, -67284, 22449, -4536, 546, -36, 1]
-    # http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
+    # https://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
     assert  [stirling(n, k, kind=1)
         for n in range(10) for k in range(n+1)] == [
             1,
@@ -461,7 +569,7 @@ def test_nC_nP_nT():
             0, 720, 1764, 1624, 735, 175, 21, 1,
             0, 5040, 13068, 13132, 6769, 1960, 322, 28, 1,
             0, 40320, 109584, 118124, 67284, 22449, 4536, 546, 36, 1]
-    # http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
+    # https://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
     assert [stirling(n, k, kind=2)
         for n in range(10) for k in range(n+1)] == [
             1,
@@ -507,12 +615,21 @@ def test_nC_nP_nT():
     raises(ValueError, lambda: _multiset_histogram({1:'a'}))
 
 
+def test_PR_14617():
+    from sympy.functions.combinatorial.numbers import nT
+    for n in (0, []):
+        for k in (-1, 0, 1):
+            if k == 0:
+                assert nT(n, k) == 1
+            else:
+                assert nT(n, k) == 0
+
+
 def test_issue_8496():
     n = Symbol("n")
     k = Symbol("k")
 
     raises(TypeError, lambda: catalan(n, k))
-    raises(TypeError, lambda: euler(n, k))
 
 
 def test_issue_8601():

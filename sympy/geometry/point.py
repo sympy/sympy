@@ -114,11 +114,6 @@ class Point(GeometryEntity):
 
         # unpack into coords
         coords = args[0] if len(args) == 1 else args
-        # A point where only `dim` is specified is initialized
-        # to zeros.
-        if len(coords) == 0 and kwargs.get('dim', None):
-            coords = (S.Zero,)*kwargs.get('dim')
-
 
         # check args and handle quickly handle Point instances
         if isinstance(coords, Point):
@@ -132,6 +127,10 @@ class Point(GeometryEntity):
             raise TypeError(filldedent('''
                 Expecting sequence of coordinates, not `{}`'''
                                        .format(func_name(coords))))
+        # A point where only `dim` is specified is initialized
+        # to zeros.
+        if len(coords) == 0 and kwargs.get('dim', None):
+            coords = (S.Zero,)*kwargs.get('dim')
 
         coords = Tuple(*coords)
         dim = kwargs.get('dim', len(coords))
@@ -381,18 +380,19 @@ class Point(GeometryEntity):
         points = list(uniq(points))
         return Point.affine_rank(*points) <= 2
 
-    def distance(self, p):
-        """The Euclidean distance from self to point p.
-
-        Parameters
-        ==========
-
-        p : Point
+    def distance(self, other):
+        """The Euclidean distance between self and another GeometricEntity.
 
         Returns
         =======
 
         distance : number or symbolic expression.
+
+        Raises
+        ======
+        AttributeError : if other is a GeometricEntity for which
+                         distance is not defined.
+        TypeError : if other is not recognized as a GeometricEntity.
 
         See Also
         ========
@@ -403,19 +403,34 @@ class Point(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy.geometry import Point
+        >>> from sympy.geometry import Point, Line
         >>> p1, p2 = Point(1, 1), Point(4, 5)
+        >>> l = Line((3, 1), (2, 2))
         >>> p1.distance(p2)
         5
+        >>> p1.distance(l)
+        sqrt(2)
+
+        The computed distance may be symbolic, too:
 
         >>> from sympy.abc import x, y
         >>> p3 = Point(x, y)
-        >>> p3.distance(Point(0, 0))
+        >>> p3.distance((0, 0))
         sqrt(x**2 + y**2)
 
         """
-        s, p = Point._normalize_dimension(self, Point(p))
-        return sqrt(Add(*((a - b)**2 for a, b in zip(s, p))))
+        if not isinstance(other , GeometryEntity) :
+            try :
+                other = Point(other, dim=self.ambient_dimension)
+            except TypeError :
+                raise TypeError("not recognized as a GeometricEntity: %s" % type(other))
+        if isinstance(other , Point) :
+            s, p = Point._normalize_dimension(self, Point(other))
+            return sqrt(Add(*((a - b)**2 for a, b in zip(s, p))))
+        try :
+            return other.distance(self)
+        except AttributeError :
+            raise AttributeError("distance between Point and %s is not defined" % type(other))
 
     def dot(self, p):
         """Return dot product of self with another Point."""

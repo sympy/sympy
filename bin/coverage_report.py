@@ -37,7 +37,7 @@ try:
 except ImportError:
     print(
         "You need to install module coverage (version %s or newer required).\n"
-        "See http://nedbatchelder.com/code/coverage/ or \n"
+        "See https://coverage.readthedocs.io/en/latest/ or \n"
         "https://launchpad.net/ubuntu/+source/python-coverage/" % minver)
     sys.exit(-1)
 
@@ -69,7 +69,6 @@ def make_report(source_dir, report_dir, use_cache=False, slow=False):
         sys.path.insert(0, sympy_top)
     os.chdir(sympy_top)
 
-    import sympy
     cov = coverage.coverage()
     cov.exclude("raise NotImplementedError")
     cov.exclude("def canonize")  # this should be "@decorated"
@@ -79,6 +78,7 @@ def make_report(source_dir, report_dir, use_cache=False, slow=False):
     else:
         cov.erase()
         cov.start()
+        import sympy
         sympy.test(source_dir, subprocess=False)
         if slow:
             sympy.test(source_dir, subprocess=False, slow=slow)

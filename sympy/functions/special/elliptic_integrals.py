@@ -4,12 +4,12 @@ from __future__ import print_function, division
 
 from sympy.core import S, pi, I
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.functions.elementary.hyperbolic import atanh
-from sympy.functions.elementary.trigonometric import sin, tan
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import sign
-from sympy.functions.special.hyper import hyper, meijerg
+from sympy.functions.elementary.hyperbolic import atanh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin, tan
 from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import hyper, meijerg
 
 class elliptic_k(Function):
     r"""
@@ -23,6 +23,11 @@ class elliptic_k(Function):
     The function `K(m)` is a single-valued function on the complex
     plane with branch cut along the interval `(1, \infty)`.
 
+    Note that our notation defines the incomplete elliptic integral
+    in terms of the parameter `m` instead of the elliptic modulus
+    (eccentricity) `k`.
+    In this case, the parameter `m` is defined as `m=k^2`.
+
     Examples
     ========
 
@@ -35,16 +40,17 @@ class elliptic_k(Function):
     >>> elliptic_k(m).series(n=3)
     pi/2 + pi*m/8 + 9*pi*m**2/128 + O(m**3)
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals
-    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticK
-
     See Also
     ========
 
     elliptic_f
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
+    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticK
+
     """
 
     @classmethod
@@ -74,10 +80,10 @@ class elliptic_k(Function):
         from sympy.simplify import hyperexpand
         return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
 
-    def _eval_rewrite_as_hyper(self, m):
+    def _eval_rewrite_as_hyper(self, m, **kwargs):
         return (pi/2)*hyper((S.Half, S.Half), (S.One,), m)
 
-    def _eval_rewrite_as_meijerg(self, m):
+    def _eval_rewrite_as_meijerg(self, m, **kwargs):
         return meijerg(((S.Half, S.Half), []), ((S.Zero,), (S.Zero,)), -m)/2
 
     def _sage_(self):
@@ -96,6 +102,11 @@ class elliptic_f(Function):
     This function reduces to a complete elliptic integral of
     the first kind, `K(m)`, when `z = \pi/2`.
 
+    Note that our notation defines the incomplete elliptic integral
+    in terms of the parameter `m` instead of the elliptic modulus
+    (eccentricity) `k`.
+    In this case, the parameter `m` is defined as `m=k^2`.
+
     Examples
     ========
 
@@ -106,16 +117,17 @@ class elliptic_f(Function):
     >>> elliptic_f(3.0 + I/2, 1.0 + I)
     2.909449841483 + 1.74720545502474*I
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals
-    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticF
-
     See Also
     ========
 
     elliptic_k
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
+    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticF
+
     """
 
     @classmethod
@@ -163,6 +175,11 @@ class elliptic_e(Function):
     The function `E(m)` is a single-valued function on the complex
     plane with branch cut along the interval `(1, \infty)`.
 
+    Note that our notation defines the incomplete elliptic integral
+    in terms of the parameter `m` instead of the elliptic modulus
+    (eccentricity) `k`.
+    In this case, the parameter `m` is defined as `m=k^2`.
+
     Examples
     ========
 
@@ -182,9 +199,10 @@ class elliptic_e(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals
+    .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
     .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticE2
     .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticE
+
     """
 
     @classmethod
@@ -243,12 +261,12 @@ class elliptic_e(Function):
             return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
         return super(elliptic_e, self)._eval_nseries(x, n=n, logx=logx)
 
-    def _eval_rewrite_as_hyper(self, *args):
+    def _eval_rewrite_as_hyper(self, *args, **kwargs):
         if len(args) == 1:
             m = args[0]
             return (pi/2)*hyper((-S.Half, S.Half), (S.One,), m)
 
-    def _eval_rewrite_as_meijerg(self, *args):
+    def _eval_rewrite_as_meijerg(self, *args, **kwargs):
         if len(args) == 1:
             m = args[0]
             return -meijerg(((S.Half, S(3)/2), []), \
@@ -269,6 +287,11 @@ class elliptic_pi(Function):
     .. math:: \Pi\left(n\middle| m\right) =
               \Pi\left(n; \tfrac{\pi}{2}\middle| m\right)
 
+    Note that our notation defines the incomplete elliptic integral
+    in terms of the parameter `m` instead of the elliptic modulus
+    (eccentricity) `k`.
+    In this case, the parameter `m` is defined as `m=k^2`.
+
     Examples
     ========
 
@@ -286,9 +309,10 @@ class elliptic_pi(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals
+    .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
     .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticPi3
     .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticPi
+
     """
 
     @classmethod

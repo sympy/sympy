@@ -13,20 +13,24 @@ __all__ = ['TWave']
 from sympy import (sympify, pi, sin, cos, sqrt, Symbol, S,
     symbols, Derivative, atan2)
 from sympy.core.expr import Expr
-from sympy.physics.units import c
+from sympy.physics.units import speed_of_light, meter, second
+
+
+c = speed_of_light.convert_to(meter/second)
 
 
 class TWave(Expr):
 
     r"""
-    This is a simple transverse sine wave travelling in a one dimensional space.
-    Basic properties are required at the time of creation of the object but
-    they can be changed later with respective methods provided.
+    This is a simple transverse sine wave travelling in a one-dimensional space.
+    Basic properties are required at the time of creation of the object,
+    but they can be changed later with respective methods provided.
 
-    It has been represented as :math:`A \times cos(k*x - \omega \times t + \phi )`
-    where :math:`A` is amplitude, :math:`\omega` is angular velocity, :math:`k`is
-    wavenumber, :math:`x` is a spatial variable to represent the position on the
-    dimension on which the wave propagates and :math:`\phi` is phase angle of the wave.
+    It is represented as :math:`A \times cos(k*x - \omega \times t + \phi )`,
+    where :math:`A` is the amplitude, :math:`\omega` is the angular velocity,
+    :math:`k` is the wavenumber (spatial frequency), :math:`x` is a spatial variable
+    to represent the position on the dimension on which the wave propagates,
+    and :math:`\phi` is the phase angle of the wave.
 
 
     Arguments
@@ -48,7 +52,7 @@ class TWave(Expr):
 
     ValueError : When neither frequency nor time period is provided
         or they are not consistent.
-    TypeError : When anyting other than TWave objects is added.
+    TypeError : When anything other than TWave objects is added.
 
 
     Examples
@@ -68,7 +72,7 @@ class TWave(Expr):
     >>> w3.phase
     atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2))
     >>> w3.speed
-    299792458*m/(n*s)
+    299792458*meter/(second*n)
     >>> w3.angular_velocity
     2*pi*f
 
@@ -104,7 +108,8 @@ class TWave(Expr):
     @property
     def frequency(self):
         """
-        Returns the frequency of the wave.
+        Returns the frequency of the wave,
+        in cycles per second.
 
         Examples
         ========
@@ -121,7 +126,8 @@ class TWave(Expr):
     @property
     def time_period(self):
         """
-        Returns the time period of the wave.
+        Returns the temporal period of the wave,
+        in seconds per cycle.
 
         Examples
         ========
@@ -138,7 +144,8 @@ class TWave(Expr):
     @property
     def wavelength(self):
         """
-        Returns wavelength of the wave.
+        Returns the wavelength (spatial period) of the wave,
+        in meters per cycle.
         It depends on the medium of the wave.
 
         Examples
@@ -149,7 +156,7 @@ class TWave(Expr):
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.wavelength
-        299792458*m/(f*n*s)
+        299792458*meter/(second*f*n)
         """
         return c/(self._frequency*self._n)
 
@@ -173,7 +180,8 @@ class TWave(Expr):
     @property
     def phase(self):
         """
-        Returns the phase angle of the wave.
+        Returns the phase angle of the wave,
+        in radians.
 
         Examples
         ========
@@ -190,8 +198,9 @@ class TWave(Expr):
     @property
     def speed(self):
         """
-        Returns the speed of travelling wave.
-        It is medium dependent.
+        Returns the propagation speed of the wave,
+        in meters per second.
+        It is dependent on the propagation medium.
 
         Examples
         ========
@@ -201,14 +210,15 @@ class TWave(Expr):
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.speed
-        299792458*m/(n*s)
+        299792458*meter/(second*n)
         """
         return self.wavelength*self._frequency
 
     @property
     def angular_velocity(self):
         """
-        Returns angular velocity of the wave.
+        Returns the angular velocity of the wave,
+        in radians per second.
 
         Examples
         ========
@@ -225,7 +235,8 @@ class TWave(Expr):
     @property
     def wavenumber(self):
         """
-        Returns wavenumber of the wave.
+        Returns the wavenumber of the wave,
+        in radians per meter.
 
         Examples
         ========
@@ -235,7 +246,7 @@ class TWave(Expr):
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.wavenumber
-        pi*f*n*s/(149896229*m)
+        pi*second*f*n/(149896229*meter)
         """
         return 2*pi/self.wavelength
 
@@ -268,21 +279,21 @@ class TWave(Expr):
         else:
             raise TypeError(type(other).__name__ + " and TWave objects can't be added.")
 
-    def _eval_rewrite_as_sin(self, *args):
+    def _eval_rewrite_as_sin(self, *args, **kwargs):
         return self._amplitude*sin(self.wavenumber*Symbol('x')
             - self.angular_velocity*Symbol('t') + self._phase + pi/2, evaluate=False)
 
-    def _eval_rewrite_as_cos(self, *args):
+    def _eval_rewrite_as_cos(self, *args, **kwargs):
         return self._amplitude*cos(self.wavenumber*Symbol('x')
             - self.angular_velocity*Symbol('t') + self._phase)
 
-    def _eval_rewrite_as_pde(self, *args):
+    def _eval_rewrite_as_pde(self, *args, **kwargs):
         from sympy import Function
         mu, epsilon, x, t = symbols('mu, epsilon, x, t')
         E = Function('E')
         return Derivative(E(x, t), x, 2) + mu*epsilon*Derivative(E(x, t), t, 2)
 
-    def _eval_rewrite_as_exp(self, *args):
+    def _eval_rewrite_as_exp(self, *args, **kwargs):
         from sympy import exp, I
         return self._amplitude*exp(I*(self.wavenumber*Symbol('x')
             - self.angular_velocity*Symbol('t') + self._phase))

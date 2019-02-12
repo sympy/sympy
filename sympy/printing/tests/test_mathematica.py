@@ -1,8 +1,8 @@
 from sympy.core import (S, pi, oo, symbols, Function,
-                        Rational, Integer, Tuple)
+                        Rational, Integer, Tuple, Derivative)
 from sympy.integrals import Integral
 from sympy.concrete import Sum
-from sympy.functions import exp, sin, cos
+from sympy.functions import exp, sin, cos, conjugate, Max, Min
 
 from sympy import mathematica_code as mcode
 
@@ -27,6 +27,8 @@ def test_Rational():
 def test_Function():
     assert mcode(f(x, y, z)) == "f[x, y, z]"
     assert mcode(sin(x) ** cos(x)) == "Sin[x]^Cos[x]"
+    assert mcode(conjugate(x)) == "Conjugate[x]"
+    assert mcode(Max(x,y,z)*Min(y,z)) == "Max[x, y, z]*Min[y, z]"
 
 
 def test_Pow():
@@ -65,6 +67,42 @@ def test_containers():
     assert mcode(Tuple(*[1, 2, 3])) == "{1, 2, 3}"
 
 
+def test_matrices():
+    from sympy.matrices import MutableDenseMatrix, MutableSparseMatrix
+    A = MutableDenseMatrix(
+        [[1, -1, 0, 0],
+        [0, 1, -1, 0],
+        [0, 0, 1, -1],
+        [0, 0, 0, 1]]
+    )
+    B = MutableSparseMatrix(
+        [[1, -1, 0, 0],
+        [0, 1, -1, 0],
+        [0, 0, 1, -1],
+        [0, 0, 0, 1]]
+    )
+
+    assert mcode(A) == """\
+{{1, -1, 0, 0}, \
+{0, 1, -1, 0}, \
+{0, 0, 1, -1}, \
+{0, 0, 0, 1}}\
+"""
+    assert mcode(B) == """\
+SparseArray[\
+{{1, 1} -> 1, {1, 2} -> -1, {2, 2} -> 1, {2, 3} -> -1, \
+{3, 3} -> 1, {3, 4} -> -1, {4, 4} -> 1}, {4, 4}]\
+"""
+
+    # Trivial cases of matrices
+    assert mcode(MutableDenseMatrix(0, 0, [])) == '{}'
+    assert mcode(MutableSparseMatrix(0, 0, [])) == 'SparseArray[{}, {0, 0}]'
+    assert mcode(MutableDenseMatrix(0, 3, [])) == '{}'
+    assert mcode(MutableSparseMatrix(0, 3, [])) == 'SparseArray[{}, {0, 3}]'
+    assert mcode(MutableDenseMatrix(3, 0, [])) == '{{}, {}, {}}'
+    assert mcode(MutableSparseMatrix(3, 0, [])) == 'SparseArray[{}, {3, 0}]'
+
+
 def test_Integral():
     assert mcode(Integral(sin(sin(x)), x)) == "Hold[Integrate[Sin[Sin[x]], x]]"
     assert mcode(Integral(exp(-x**2 - y**2),
@@ -72,6 +110,14 @@ def test_Integral():
                           (y, -oo, oo))) == \
         "Hold[Integrate[Exp[-x^2 - y^2], {x, -Infinity, Infinity}, " \
         "{y, -Infinity, Infinity}]]"
+
+
+def test_Derivative():
+    assert mcode(Derivative(sin(x), x)) == "Hold[D[Sin[x], x]]"
+    assert mcode(Derivative(x, x)) == "Hold[D[x, x]]"
+    assert mcode(Derivative(sin(x)*y**4, x, 2)) == "Hold[D[y^4*Sin[x], {x, 2}]]"
+    assert mcode(Derivative(sin(x)*y**4, x, y, x)) == "Hold[D[y^4*Sin[x], x, y, x]]"
+    assert mcode(Derivative(sin(x)*y**4, x, y, 3, x)) == "Hold[D[y^4*Sin[x], x, {y, 3}, x]]"
 
 
 def test_Sum():

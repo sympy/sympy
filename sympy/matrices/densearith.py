@@ -3,8 +3,14 @@ Fundamental arithmetic of dense matrices. The dense matrix is stored
 as a list of lists.
 
 """
-
 from sympy.core.compatibility import range
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+SymPyDeprecationWarning(
+    feature="densearith",
+    issue=12695,
+    deprecated_since_version="1.1").warn()
 
 def add(matlist1, matlist2, K):
     """

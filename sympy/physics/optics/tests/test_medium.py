@@ -1,9 +1,13 @@
-from __future__ import division
-
 from sympy import sqrt, simplify
 from sympy.physics.optics import Medium
 from sympy.abc import epsilon, mu
-from sympy.physics.units import c, u0, e0, m, kg, s, A
+from sympy.physics.units import speed_of_light, u0, e0, m, kg, s, A
+
+
+c = speed_of_light.convert_to(m/s)
+e0 = e0.convert_to(A**2*s**4/(kg*m**3))
+u0 = u0.convert_to(m*kg/(A**2*s**2))
+
 
 def test_medium():
     m1 = Medium('m1')

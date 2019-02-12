@@ -2,12 +2,12 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.polyutils import parallel_dict_from_basic
-from sympy.polys.polyoptions import build_options
-from sympy.polys.domains import ZZ, QQ, RR, EX
-from sympy.polys.domains.realfield import RealField
-from sympy.utilities import public
 from sympy.core import sympify
+from sympy.polys.domains import ZZ, QQ, EX
+from sympy.polys.domains.realfield import RealField
+from sympy.polys.polyoptions import build_options
+from sympy.polys.polyutils import parallel_dict_from_basic
+from sympy.utilities import public
 
 
 def _construct_simple(coeffs, opt):
@@ -120,7 +120,7 @@ def _construct_composite(coeffs, opt):
         return None
 
     if opt.composite is None:
-        if any(gen.is_number for gen in gens):
+        if any(gen.is_number and gen.is_algebraic for gen in gens):
             return None # generators are number-like so lets better use EX
 
         all_symbols = set([])
@@ -175,7 +175,8 @@ def _construct_composite(coeffs, opt):
             break
 
     if reals:
-        ground = RR
+        max_prec = max([c._prec for c in coeffs])
+        ground = RealField(prec=max_prec)
     elif rationals:
         ground = QQ
     else:

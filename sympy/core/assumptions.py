@@ -137,17 +137,17 @@ attributes of objects/classes.
 References
 ==========
 
-.. [1] http://en.wikipedia.org/wiki/Negative_number
-.. [2] http://en.wikipedia.org/wiki/Parity_%28mathematics%29
-.. [3] http://en.wikipedia.org/wiki/Imaginary_number
-.. [4] http://en.wikipedia.org/wiki/Composite_number
-.. [5] http://en.wikipedia.org/wiki/Irrational_number
-.. [6] http://en.wikipedia.org/wiki/Prime_number
-.. [7] http://en.wikipedia.org/wiki/Finite
+.. [1] https://en.wikipedia.org/wiki/Negative_number
+.. [2] https://en.wikipedia.org/wiki/Parity_%28mathematics%29
+.. [3] https://en.wikipedia.org/wiki/Imaginary_number
+.. [4] https://en.wikipedia.org/wiki/Composite_number
+.. [5] https://en.wikipedia.org/wiki/Irrational_number
+.. [6] https://en.wikipedia.org/wiki/Prime_number
+.. [7] https://en.wikipedia.org/wiki/Finite
 .. [8] https://docs.python.org/3/library/math.html#math.isfinite
 .. [9] http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
-.. [10] http://en.wikipedia.org/wiki/Transcendental_number
-.. [11] http://en.wikipedia.org/wiki/Algebraic_number
+.. [10] https://en.wikipedia.org/wiki/Transcendental_number
+.. [11] https://en.wikipedia.org/wiki/Algebraic_number
 
 """
 from __future__ import print_function, division
@@ -189,6 +189,7 @@ _assume_rules = FactRules([
 
     'prime          ->  integer & positive',
     'composite      ->  integer & positive & !prime',
+    '!composite     ->  !positive | !even | prime',
 
     'irrational     ==  real & !rational',
 
@@ -214,7 +215,7 @@ class StdFactKB(FactKB):
     def __init__(self, facts=None):
         # save a copy of the facts dict
         if not facts:
-            self._generator = {};
+            self._generator = {}
         elif not isinstance(facts, FactKB):
             self._generator = facts.copy()
         else:

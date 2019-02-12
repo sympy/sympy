@@ -5,10 +5,10 @@ from itertools import permutations
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Wild, Dummy
+from sympy.core.symbol import Wild, Dummy, symbols
 from sympy.core.basic import sympify
-from sympy.core.numbers import Rational, pi
-from sympy.core.relational import Eq
+from sympy.core.numbers import Rational, pi, I
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
@@ -19,7 +19,9 @@ from sympy.functions import hankel1, hankel2, jn, yn
 from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.elementary.piecewise import Piecewise
 
-from sympy.logic.boolalg import And
+from sympy.simplify.radsimp import collect
+
+from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
 
 from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
@@ -114,7 +116,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     >>> heurisch(cos(n*x), x)
     sin(n*x)/n
     >>> heurisch_wrapper(cos(n*x), x)
-    Piecewise((x, Eq(n, 0)), (sin(n*x)/n, True))
+    Piecewise((sin(n*x)/n, Ne(n, 0)), (x, True))
 
     See Also
     ========
@@ -163,9 +165,19 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         expr = heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries,
                         degree_offset, unnecessary_permutations)
         cond = And(*[Eq(key, value) for key, value in sub_dict.items()])
+        generic = Or(*[Ne(key, value) for key, value in sub_dict.items()])
         pairs.append((expr, cond))
-    pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
-                           degree_offset, unnecessary_permutations), True))
+    # If there is one condition, put the generic case first. Otherwise,
+    # doing so may lead to longer Piecewise formulas
+    if len(pairs) == 1:
+        pairs = [(heurisch(f, x, rewrite, hints, mappings, retries,
+                              degree_offset, unnecessary_permutations),
+                              generic),
+                 (pairs[0][0], True)]
+    else:
+        pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
+                              degree_offset, unnecessary_permutations),
+                              True))
     return Piecewise(*pairs)
 
 class BesselTable(object):
@@ -365,7 +377,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
             for g in set(terms):  # using copy of terms
                 if g.is_Function:
-                    if g.func is li:
+                    if isinstance(g, li):
                         M = g.args[0].match(a*x**b)
 
                         if M is not None:
@@ -374,7 +386,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                             #terms.add( x*(li(M[a]*x**M[b]) - x*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
                             #terms.add( li(M[a]*x**M[b]) - Ei((M[b]+1)*log(M[a]*x**M[b])/M[b]) )
 
-                    elif g.func is exp:
+                    elif isinstance(g, exp):
                         M = g.args[0].match(a*x**2)
 
                         if M is not None:
@@ -507,12 +519,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     for term in terms:
         if term.is_Function:
-            if term.func is tan:
+            if isinstance(term, tan):
                 special[1 + _substitute(term)**2] = False
-            elif term.func is tanh:
+            elif isinstance(term, tanh):
                 special[1 + _substitute(term)] = False
                 special[1 - _substitute(term)] = False
-            elif term.func is LambertW:
+            elif isinstance(term, LambertW):
                 special[_substitute(term)] = True
 
     F = _substitute(f)
@@ -583,6 +595,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     def _integrate(field=None):
         irreducibles = set()
+        atans = set()
+        pairs = set()
 
         for poly in reducibles:
             for z in poly.free_symbols:
@@ -594,8 +608,33 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                            #               V
             irreducibles |= set(root_factors(poly, z, filter=field))
 
-        log_coeffs, log_part = [], []
+        log_part, atan_part = [], []
+
+        for poly in list(irreducibles):
+            m = collect(poly, I, evaluate=False)
+            y = m.get(I, S.Zero)
+            if y:
+                x = m.get(S.One, S.Zero)
+                if x.has(I) or y.has(I):
+                    continue  # nontrivial x + I*y
+                pairs.add((x, y))
+                irreducibles.remove(poly)
+
+        while pairs:
+            x, y = pairs.pop()
+            if (x, -y) in pairs:
+                pairs.remove((x, -y))
+                # Choosing b with no minus sign
+                if y.could_extract_minus_sign():
+                    y = -y
+                irreducibles.add(x*x + y*y)
+                atans.add(atan(x/y))
+            else:
+                irreducibles.add(x + I*y)
+
+
         B = _symbols('B', len(irreducibles))
+        C = _symbols('C', len(atans))
 
         # Note: the ordering matters here
         for poly, b in reversed(list(ordered(zip(irreducibles, B)))):
@@ -603,12 +642,17 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 poly_coeffs.append(b)
                 log_part.append(b * log(poly))
 
+        for poly, c in reversed(list(ordered(zip(atans, C)))):
+            if poly.has(*V):
+                poly_coeffs.append(c)
+                atan_part.append(c * poly)
+
         # TODO: Currently it's better to use symbolic expressions here instead
         # of rational functions, because it's simpler and FracElement doesn't
-        # give big speed improvement yet. This is because cancelation is slow
+        # give big speed improvement yet. This is because cancellation is slow
         # due to slow polynomial GCD algorithms. If this gets improved then
         # revise this code.
-        candidate = poly_part/poly_denom + Add(*log_part)
+        candidate = poly_part/poly_denom + Add(*log_part) + Add(*atan_part)
         h = F - _derivation(candidate) / denom
         raw_numer = h.as_numer_denom()[0]
 
