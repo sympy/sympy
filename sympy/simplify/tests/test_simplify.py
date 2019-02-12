@@ -784,4 +784,4 @@ def test_nc_simplify():
 
 def test_issue_15965():
     x, y, z = symbols('x y z')
-    assert simplify(Integral(x*y-z,x)) == y*Integral(x, x) - x*Integral(1, x)
+    assert simplify(Integral(x*y-z,x)) == y*Integral(x, x) - z*Integral(1, x)

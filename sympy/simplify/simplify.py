@@ -596,15 +596,17 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
 
     if expr.has(Sum):
         expr = sum_simplify(expr)
-
-    if expr.has(Integral):
-        l=0
-        expr_ = expr.args[0]
-        args = Add.make_args(expr_)
-        for arg in args:
-            coeff, g = arg.as_independent(expr.args[1][0])
-            l = Add(coeff*Integral(g, expr.args[1]),l)
-        return l
+    try:
+        if expr.has(Integral):
+            l=0
+            expr_ = expr.args[0]
+            args = Add.make_args(expr_)
+            for arg in args:
+                coeff, g = arg.as_independent(expr.args[1][0])
+                l = Add(coeff*Integral(g, expr.args[1]),l)
+            return l
+    except TypeError:
+        pass
 
     if expr.has(Product):
         expr = product_simplify(expr)
