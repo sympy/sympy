@@ -4022,10 +4022,10 @@ def _check_substitution_type_match(eq, func):
     else:
         return {'var':order_to_subs, 'solutions':False}
 
-# Use repeated substitution until we do not have a function independent of derivative   
+# Use repeated substitution until we do not have a function independent of derivative
 def ode_order_reducing_substitution(eq, func, order, match):
     r'''
-    Substitutes lowest order derivate in equation to function with order of derivative as 0.Eg f^(n)(x) = g(x), where n is the least order derivate. 
+    Substitutes lowest order derivate in equation to function with order of derivative as 0.Eg f^(n)(x) = g(x), where n is the least order derivate.
     match[var] or n here is how many times the function if solved is to be integrated to  get f(x) since g(x) = f^(match[var])(x)
     '''
     x = func.args[0]
