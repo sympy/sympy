@@ -4008,7 +4008,6 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 def _check_substitution_type_match(eq, func):
     #Matches any differential equation that order_reducing_substitution can solve.
     #For this to work equation should min order of derivative to be 1, i.e., f(x) should not be present
-    
     x = func.args[0]
     f = func.func
     order_to_subs = 0
