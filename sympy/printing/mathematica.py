@@ -4,8 +4,8 @@ Mathematica code printer
 
 from __future__ import print_function, division
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
+from sympy.printing.str import StrPrinter
 
 # Used in MCodePrinter._print_Function(self)
 known_functions = {
@@ -30,7 +30,9 @@ known_functions = {
     "acoth": [(lambda x: True, "ArcCoth")],
     "asech": [(lambda x: True, "ArcSech")],
     "acsch": [(lambda x: True, "ArcCsch")],
-
+    "conjugate": [(lambda x: True, "Conjugate")],
+    "Max": [(lambda *x: True, "Max")],
+    "Min": [(lambda *x: True, "Min")],
 }
 
 
@@ -46,6 +48,7 @@ class MCodePrinter(CodePrinter):
         'precision': 15,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
     }
 
     _number_symbols = set()
@@ -91,6 +94,33 @@ class MCodePrinter(CodePrinter):
     _print_tuple = _print_list
     _print_Tuple = _print_list
 
+    def _print_Matrix(self, expr):
+        return self._print_list(
+        [self._print_list(expr.row(i)) for i in range(expr.rows)]
+        )
+    _print_ImmutableMatrix = _print_Matrix
+    _print_ImmutableDenseMatrix = _print_Matrix
+    _print_MutableDenseMatrix = _print_Matrix
+
+    def _print_SparseMatrix(self, expr):
+        from sympy.core.compatibility import default_sort_key
+
+        def print_rule(pos, val):
+            return '{} -> {}'.format(
+            self.doprint((pos[0]+1, pos[1]+1)), self.doprint(val))
+        def print_data():
+            return self._print_list(
+            [print_rule(key, value)
+            for key, value in sorted(expr._smat.items(), key=default_sort_key)]
+            )
+        def print_dims():
+            return self._print_list(
+            [self.doprint(expr.rows), self.doprint(expr.cols)]
+            )
+        return 'SparseArray[{}, {}]'.format(print_data(), print_dims())
+    _print_MutableSparseMatrix = _print_SparseMatrix
+    _print_ImmutableSparseMatrix = _print_SparseMatrix
+
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_mfunc = self.known_functions[expr.func.__name__]
@@ -98,6 +128,8 @@ class MCodePrinter(CodePrinter):
                 if cond(*expr.args):
                     return "%s[%s]" % (mfunc, self.stringify(expr.args, ", "))
         return expr.func.__name__ + "[%s]" % self.stringify(expr.args, ", ")
+
+    _print_MinMaxBase = _print_Function
 
     def _print_Integral(self, expr):
         if len(expr.variables) == 1 and not expr.limits[0][1:]:

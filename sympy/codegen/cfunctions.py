@@ -1,23 +1,19 @@
 """
-Functions with corresponding implementations in C.
+This module contains SymPy functions mathcin corresponding to special math functions in the
+C standard library (since C99, also available in C++11).
 
 The functions defined in this module allows the user to express functions such as ``expm1``
 as a SymPy function for symbolic manipulation.
 
 """
 
-import math
-from sympy.core.singleton import S
+from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Rational
-from sympy.core.function import ArgumentIndexError, Function, Lambda
 from sympy.core.power import Pow
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp, log
-from .ast import Attribute
+from sympy.functions.elementary.miscellaneous import sqrt
 
-restrict = Attribute('restrict')  # guarantees no pointer aliasing
-volatile = Attribute('volatile')
-static = Attribute('static')
 
 def _expm1(x):
     return exp(x) - S.One
@@ -62,7 +58,7 @@ class expm1(Function):
     def _eval_expand_func(self, **hints):
         return _expm1(*self.args)
 
-    def _eval_rewrite_as_exp(self, arg):
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
         return exp(arg) - S.One
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_exp
@@ -80,7 +76,6 @@ class expm1(Function):
         return self.args[0].is_finite
 
 
-
 def _log1p(x):
     return log(x + S.One)
 
@@ -95,9 +90,11 @@ class log1p(Function):
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log1p
-    >>> '%.0e' % log1p(1e-99).evalf()
+    >>> from sympy.core.function import expand_log
+    >>> '%.0e' % expand_log(log1p(1e-99)).evalf()
     '1e-99'
     >>> from math import log
     >>> log(1 + 1e-99)
@@ -107,7 +104,6 @@ class log1p(Function):
 
     See Also
     ========
-
 
     expm1
     """
@@ -127,17 +123,19 @@ class log1p(Function):
     def _eval_expand_func(self, **hints):
         return _log1p(*self.args)
 
-    def _eval_rewrite_as_log(self, arg):
+    def _eval_rewrite_as_log(self, arg, **kwargs):
         return _log1p(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     @classmethod
     def eval(cls, arg):
-        if not arg.is_Float:  # not safe to add 1 to Float
+        if arg.is_Rational:
+            return log(arg + S.One)
+        elif not arg.is_Float:  # not safe to add 1 to Float
             return log.eval(arg + S.One)
         elif arg.is_number:
-            return log.eval(Rational(arg) + S.One)
+            return log(Rational(arg) + S.One)
 
     def _eval_is_real(self):
         return (self.args[0] + S.One).is_nonnegative
@@ -171,6 +169,7 @@ class exp2(Function):
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import exp2
     >>> exp2(2).evalf() == 4
@@ -195,7 +194,7 @@ class exp2(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Pow(self, arg):
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
         return _exp2(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
@@ -223,6 +222,7 @@ class log2(Function):
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log2
     >>> log2(4).evalf() == 2
@@ -260,7 +260,7 @@ class log2(Function):
     def _eval_expand_func(self, **hints):
         return _log2(*self.args)
 
-    def _eval_rewrite_as_log(self, arg):
+    def _eval_rewrite_as_log(self, arg, **kwargs):
         return _log2(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
@@ -280,6 +280,7 @@ class fma(Function):
 
     Examples
     ========
+
     >>> from sympy.abc import x, y, z
     >>> from sympy.codegen.cfunctions import fma
     >>> fma(x, y, z).diff(x)
@@ -303,7 +304,7 @@ class fma(Function):
     def _eval_expand_func(self, **hints):
         return _fma(*self.args)
 
-    def _eval_rewrite_as_tractable(self, arg):
+    def _eval_rewrite_as_tractable(self, arg, **kwargs):
         return _fma(arg)
 
 
@@ -320,6 +321,7 @@ class log10(Function):
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log10
     >>> log10(100).evalf() == 2
@@ -356,7 +358,7 @@ class log10(Function):
     def _eval_expand_func(self, **hints):
         return _log10(*self.args)
 
-    def _eval_rewrite_as_log(self, arg):
+    def _eval_rewrite_as_log(self, arg, **kwargs):
         return _log10(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
@@ -376,6 +378,7 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import Sqrt
     >>> Sqrt(x)
@@ -402,7 +405,7 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
     def _eval_expand_func(self, **hints):
         return _Sqrt(*self.args)
 
-    def _eval_rewrite_as_Pow(self, arg):
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
         return _Sqrt(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
@@ -450,7 +453,7 @@ class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.mi
     def _eval_expand_func(self, **hints):
         return _Cbrt(*self.args)
 
-    def _eval_rewrite_as_Pow(self, arg):
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
         return _Cbrt(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
@@ -496,7 +499,7 @@ class hypot(Function):
     def _eval_expand_func(self, **hints):
         return _hypot(*self.args)
 
-    def _eval_rewrite_as_Pow(self, arg):
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
         return _hypot(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow

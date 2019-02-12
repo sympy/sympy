@@ -12,7 +12,7 @@ polynomials within SymPy. All code examples assume::
 
     >>> from sympy import *
     >>> x, y, z = symbols('x,y,z')
-    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
+    >>> init_printing(use_unicode=False, wrap_line=False)
 
 Basic concepts
 ==============
@@ -211,7 +211,7 @@ elements of a factorial domain are usually called *primes*.
 A family of integers has only a finite number of common divisors
 and the greatest of them is divisible by all of them. More generally,
 given a family of nonzero elements `(a_i)` in an integral domain,
-a common divisor `d` of the elements is is called a *greatest common
+a common divisor `d` of the elements is called a *greatest common
 divisor*, abbreviated *gcd*, of the family if it is a multiple
 of all common divisors.
 A greatest common divisor, if it exists, is not unique in general;

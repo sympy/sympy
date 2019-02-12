@@ -1,3 +1,5 @@
+.. _series_expansions:
+
 Series Expansions
 =================
 

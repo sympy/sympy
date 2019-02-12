@@ -1,6 +1,6 @@
 from sympy import sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix, symbols
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym, Point,
-                                  dynamicsymbols, time_derivative, express)
+                                  dynamicsymbols, time_derivative, express, dot)
 
 Vector.simp = True
 
@@ -158,6 +158,27 @@ def test_dcm():
          cos(q1)*cos(q2)]])
 
 
+# This test has been added to test the _w_diff_dcm() function
+# for which a test was previously not included.
+# Also note that the _w_diff_dcm() function was changed as part of
+# PR #14758 as it was observed to be giving incorrect results
+# when compared with Autolev results.
+def test_w_diff_dcm():
+    a = ReferenceFrame('a')
+    b = ReferenceFrame('b')
+    c11, c12, c13, c21, c22, c23, c31, c32, c33 = dynamicsymbols('c11 c12 c13 c21 c22 c23 c31 c32 c33')
+    c11d, c12d, c13d, c21d, c22d, c23d, c31d, c32d, c33d = dynamicsymbols('c11 c12 c13 c21 c22 c23 c31 c32 c33', 1)
+    b.orient(a, 'DCM', Matrix([c11,c12,c13,c21,c22,c23,c31,c32,c33]).reshape(3, 3))
+    b1a=(b.x).express(a)
+    b2a=(b.y).express(a)
+    b3a=(b.z).express(a)
+    b.set_ang_vel(a, b.x*(dot((b3a).dt(a), b.y)) + b.y*(dot((b1a).dt(a), b.z)) +
+                     b.z*(dot((b2a).dt(a), b.x)))
+    expr = ((c12*c13d + c22*c23d + c32*c33d)*b.x + (c13*c11d + c23*c21d + c33*c31d)*b.y +
+           (c11*c12d + c21*c22d + c31*c32d)*b.z)
+    assert b.ang_vel_in(a) - expr == 0
+
+
 def test_orientnew_respects_parent_class():
     class MyReferenceFrame(ReferenceFrame):
         pass
@@ -165,6 +186,59 @@ def test_orientnew_respects_parent_class():
     C = B.orientnew('C', 'Axis', [0, B.x])
     assert isinstance(C, MyReferenceFrame)
 
+
+def test_orientnew_respects_input_indices():
+    N = ReferenceFrame('N')
+    q1 = dynamicsymbols('q1')
+    A = N.orientnew('a', 'Axis', [q1, N.z])
+    #modify default indices:
+    minds = [x+'1' for x in N.indices]
+    B = N.orientnew('b', 'Axis', [q1, N.z], indices=minds)
+
+    assert N.indices == A.indices
+    assert B.indices == minds
+
+def test_orientnew_respects_input_latexs():
+    N = ReferenceFrame('N')
+    q1 = dynamicsymbols('q1')
+    A = N.orientnew('a', 'Axis', [q1, N.z])
+
+    #build default and alternate latex_vecs:
+    def_latex_vecs = [(r"\mathbf{\hat{%s}_%s}" % (A.name.lower(),
+                      A.indices[0])), (r"\mathbf{\hat{%s}_%s}" %
+                      (A.name.lower(), A.indices[1])),
+                      (r"\mathbf{\hat{%s}_%s}" % (A.name.lower(),
+                      A.indices[2]))]
+
+    name = 'b'
+    indices = [x+'1' for x in N.indices]
+    new_latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+                      indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
+                      (name.lower(), indices[1])),
+                      (r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+                      indices[2]))]
+
+    B = N.orientnew(name, 'Axis', [q1, N.z], latexs=new_latex_vecs)
+
+    assert A.latex_vecs == def_latex_vecs
+    assert B.latex_vecs == new_latex_vecs
+    assert B.indices != indices
+
+def test_orientnew_respects_input_variables():
+    N = ReferenceFrame('N')
+    q1 = dynamicsymbols('q1')
+    A = N.orientnew('a', 'Axis', [q1, N.z])
+
+    #build non-standard variable names
+    name = 'b'
+    new_variables = ['notb_'+x+'1' for x in N.indices]
+    B = N.orientnew(name, 'Axis', [q1, N.z], variables=new_variables)
+
+    for j,var in enumerate(A.varlist):
+        assert var.name == A.name + '_' + A.indices[j]
+
+    for j,var in enumerate(B.varlist):
+        assert var.name == new_variables[j]
 
 def test_issue_10348():
     u = dynamicsymbols('u:3')

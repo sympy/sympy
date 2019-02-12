@@ -1,12 +1,10 @@
-import warnings
-
 from sympy.core.compatibility import range
 from sympy.core.backend import cos, Matrix, sin, zeros, tan, pi, symbols
 from sympy import trigsimp, simplify, solve
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, KanesMethod,
                                      inertia, inertia_of_point_mass,
                                      Point, ReferenceFrame, RigidBody)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import warns_deprecated_sympy
 
 
 def test_aux_dep():
@@ -22,7 +20,7 @@ def test_aux_dep():
     # u[3], u[4] and u[5].
 
 
-    # First, mannual derivation of Fr, Fr_star, Fr_star_steady.
+    # First, manual derivation of Fr, Fr_star, Fr_star_steady.
 
     # Symbols for time and constant parameters.
     # Symbols for contact forces: Fx, Fy, Fz.
@@ -180,8 +178,7 @@ def test_aux_dep():
         )
 
     # fr, frstar, frstar_steady and kdd(kinematic differential equations).
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         (fr, frstar)= kane.kanes_equations(forceList, bodyList)
     frstar_steady = frstar.subs(ud_zero).subs(u_dep_dict).subs(steady_conditions)\
                     .subs({q[3]: -r*cos(q[1])}).expand()
@@ -266,8 +263,7 @@ def test_non_central_inertia():
 
     forces = [(pS_star, -M*g*F.x), (pQ, Q1*A.x + Q2*A.y + Q3*A.z)]
     bodies = [rbA, rbB, rbC]
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         fr, fr_star = km.kanes_equations(forces, bodies)
     vc_map = solve(vc, [u4, u5])
 
@@ -289,8 +285,7 @@ def test_non_central_inertia():
                                            rb.frame)
         bodies2.append(RigidBody('', rb.masscenter, rb.frame, rb.mass,
                                  (I, pD)))
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         fr2, fr_star2 = km.kanes_equations(forces, bodies2)
 
     t = trigsimp(fr_star2.subs(vc_map).subs({u3: 0})).doit()
@@ -380,8 +375,7 @@ def test_sub_qdot():
             -(mA + 2*mB +2*J/R**2) * u2.diff(t) + mA*a*u1**2,
             0])
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         fr, fr_star = km.kanes_equations(forces, bodies)
     assert (fr.expand() == fr_expected.expand())
     assert ((fr_star_expected - trigsimp(fr_star)).expand() == zeros(3, 1))
@@ -442,8 +436,7 @@ def test_sub_qdot2():
     u_expr += qd[3:]
     kde = [ui - e for ui, e in zip(u, u_expr)]
     km1 = KanesMethod(A, q, u, kde)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         fr1, _ = km1.kanes_equations(forces, [])
 
     ## Calculate generalized active forces if we impose the condition that the
@@ -453,8 +446,7 @@ def test_sub_qdot2():
     vc = [pC_hat.vel(A) & uv for uv in [A.x, A.y]]
     km2 = KanesMethod(A, q, u_indep, kde,
                       u_dependent=u_dep, velocity_constraints=vc)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         fr2, _ = km2.kanes_equations(forces, [])
 
     fr1_expected = Matrix([

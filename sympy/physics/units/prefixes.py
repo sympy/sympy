@@ -29,6 +29,7 @@ class Prefix(Expr):
       class).
     """
     _op_priority = 13.0
+    is_commutative = True
 
     def __new__(cls, name, abbrev, exponent, base=sympify(10)):
 
@@ -73,6 +74,9 @@ class Prefix(Expr):
     __repr__ = __str__
 
     def __mul__(self, other):
+        if not hasattr(other, "scale_factor"):
+            return super(Prefix, self).__mul__(other)
+
         fact = self.scale_factor * other.scale_factor
 
         if fact == 1:
@@ -87,6 +91,9 @@ class Prefix(Expr):
         return self.scale_factor * other
 
     def __div__(self, other):
+        if not hasattr(other, "scale_factor"):
+            return super(Prefix, self).__div__(other)
+
         fact = self.scale_factor / other.scale_factor
 
         if fact == 1:
@@ -132,9 +139,13 @@ def prefix_unit(unit, prefixes):
     prefixed_units = []
 
     for prefix_abbr, prefix in prefixes.items():
-        prefixed_units.append(Quantity("%s%s" % (prefix.name, unit.name), unit.dimension, unit.scale_factor * prefix,
-                                       abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
-                                       ))
+        quantity = Quantity(
+                "%s%s" % (prefix.name, unit.name),
+                abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
+           )
+        quantity.set_dimension(unit.dimension)
+        quantity.set_scale_factor(unit.scale_factor*prefix)
+        prefixed_units.append(quantity)
 
     return prefixed_units
 

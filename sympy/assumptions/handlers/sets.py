@@ -74,8 +74,8 @@ class AskIntegerHandler(CommonHandler):
 
     int, Integer = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
-    Pi, Exp1, GoldenRatio, Infinity, NegativeInfinity, ImaginaryUnit = \
-        [staticmethod(CommonHandler.AlwaysFalse)]*6
+    Pi, Exp1, GoldenRatio, TribonacciConstant, Infinity, NegativeInfinity, ImaginaryUnit = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*7
 
     @staticmethod
     def Rational(expr, assumptions):
@@ -132,11 +132,13 @@ class AskRationalHandler(CommonHandler):
             if ask(Q.prime(expr.base), assumptions):
                 return False
 
-    Rational, Float = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*2 # Float is finite-precision
 
-    ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio = \
-        [staticmethod(CommonHandler.AlwaysFalse)]*6
+    Rational = staticmethod(CommonHandler.AlwaysTrue)
+
+    Float = staticmethod(CommonHandler.AlwaysNone)
+
+    ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio, TribonacciConstant = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*7
 
     @staticmethod
     def exp(expr, assumptions):
@@ -284,8 +286,8 @@ class AskRealHandler(CommonHandler):
                 elif ask(Q.negative(expr.base), assumptions):
                     return False
 
-    Rational, Float, Pi, Exp1, GoldenRatio, Abs, re, im = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*8
+    Rational, Float, Pi, Exp1, GoldenRatio, TribonacciConstant, Abs, re, im = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*9
 
     ImaginaryUnit, Infinity, NegativeInfinity = \
         [staticmethod(CommonHandler.AlwaysFalse)]*3
@@ -643,8 +645,8 @@ class AskAlgebraicHandler(CommonHandler):
     def Rational(expr, assumptions):
         return expr.q != 0
 
-    Float, GoldenRatio, ImaginaryUnit, AlgebraicNumber = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*4
+    Float, GoldenRatio, TribonacciConstant, ImaginaryUnit, AlgebraicNumber = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*5
 
     Infinity, NegativeInfinity, ComplexInfinity, Pi, Exp1 = \
         [staticmethod(CommonHandler.AlwaysFalse)]*5

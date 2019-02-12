@@ -2,14 +2,14 @@
 Examples
 ========
 
-In the following sections we give few examples of what can be do with this
+In the following sections we give few examples of what can be done with this
 module.
 
 
 Dimensional analysis
 ====================
 
-We will start from the second Newton's law
+We will start from Newton's second law
 
 .. math::
     m a = F
@@ -81,26 +81,39 @@ variables (taken from Wikipedia). The result should be 224.701 days.
     >>> from sympy.physics.units import day, gravitational_constant as G
     >>> from sympy.physics.units import meter, kilogram
     >>> T = symbols("T")
-    >>> a = Quantity("venus_a", length, 108208000e3*meter)
-    >>> M = Quantity("solar_mass", mass, 1.9891e30*kilogram)
+    >>> a = Quantity("venus_a")
+
+    Specify the dimension and scale in SI units:
+
+    >>> a.set_dimension(length, "SI")
+    >>> a.set_scale_factor(108208000e3*meter, "SI")
+
+    Add the solar mass as quantity:
+
+    >>> M = Quantity("solar_mass")
+    >>> M.set_dimension(mass, "SI")
+    >>> M.set_scale_factor(1.9891e30*kilogram, "SI")
+
+    Now Kepler's law:
+
     >>> eq = Eq(T**2 / a**3, 4*pi**2 / G / M)
     >>> eq
     Eq(T**2/venus_a**3, 4*pi**2/(gravitational_constant*solar_mass))
     >>> q = solve(eq, T)[1]
     >>> q
-    6.28318530717959*venus_a**(3/2)/(sqrt(gravitational_constant)*sqrt(solar_mass))
+    2*pi*venus_a**(3/2)/(sqrt(gravitational_constant)*sqrt(solar_mass))
 
 To convert to days, use the ``convert_to`` function (and possibly approximate
-the outcoming result:
+the outcoming result):
 
     >>> from sympy.physics.units import convert_to
     >>> convert_to(q, day)
-    2.15992161980729e-7*sqrt(1081898088255574765)*day
+    71.5123904642338*pi*day
     >>> convert_to(q, day).n()
     224.662800523082*day
 
 We could also have the solar mass and the day as units coming from the
-astrophysical system, but I wanted to show how to create a unit that one needs.
+astrophysical system, but we wanted to show how to create a unit that one needs.
 
 We can see in this example that intermediate dimensions can be ill-defined,
 such as sqrt(G), but one should check that the final result - when all

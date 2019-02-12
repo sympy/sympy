@@ -10,16 +10,17 @@ Bernoulli
 Coin
 Binomial
 Hypergeometric
+Rademacher
 """
 
 from __future__ import print_function, division
 
+from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
+        Dict, Basic, KroneckerDelta, Dummy)
+from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
 from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
-from sympy.concrete.summations import Sum
-from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
-        Dict, Basic, KroneckerDelta, Dummy)
 
 __all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
         'Binomial', 'Hypergeometric']
@@ -35,6 +36,13 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
 
     def __new__(cls, density):
         density = Dict(density)
+        for k in density.values():
+            k_sym = sympify(k)
+            if fuzzy_not(fuzzy_and((k_sym.is_nonnegative, (k_sym - 1).is_nonpositive))):
+                raise ValueError("Probability at a point must be between 0 and 1.")
+        sum_sym = sum(density.values())
+        if sum_sym != 1:
+            raise ValueError("Total Probability must be equal to 1.")
         return Basic.__new__(cls, density)
 
 def FiniteRV(name, density):
@@ -97,6 +105,12 @@ def DiscreteUniform(name, items):
     >>> density(Y).dict
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
 
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Discrete_uniform_distribution
+    .. [2] http://mathworld.wolfram.com/DiscreteUniformDistribution.html
+
     """
     return rv(name, DiscreteUniformDistribution, *items)
 
@@ -114,7 +128,7 @@ class DieDistribution(SingleFiniteDistribution):
     @property
     @cacheit
     def dict(self):
-        sides = as_int(self.sides)
+        as_int(self.sides) # Check that self.sides can be converted to an integer
         return super(DieDistribution, self).dict
 
     @property
@@ -140,6 +154,9 @@ def Die(name, sides=6):
 
     Returns a RandomSymbol.
 
+    Examples
+    ========
+
     >>> from sympy.stats import Die, density
 
     >>> D6 = Die('D6', 6) # Six sided Die
@@ -157,6 +174,15 @@ def Die(name, sides=6):
 class BernoulliDistribution(SingleFiniteDistribution):
     _argnames = ('p', 'succ', 'fail')
 
+    def __new__(cls, *args):
+        p = args[BernoulliDistribution._argnames.index('p')]
+        p_sym = sympify(p)
+
+        if fuzzy_not(fuzzy_and((p_sym.is_nonnegative, (p_sym - 1).is_nonpositive))):
+            raise ValueError("p = %s is not in range [0, 1]." % str(p))
+        else:
+            return super(BernoulliDistribution, cls).__new__(cls, *args)
+
     @property
     @cacheit
     def dict(self):
@@ -169,6 +195,9 @@ def Bernoulli(name, p, succ=1, fail=0):
 
     Returns a RandomSymbol
 
+    Examples
+    ========
+
     >>> from sympy.stats import Bernoulli, density
     >>> from sympy import S
 
@@ -179,6 +208,13 @@ def Bernoulli(name, p, succ=1, fail=0):
     >>> X = Bernoulli('X', S.Half, 'Heads', 'Tails') # A fair coin toss
     >>> density(X).dict
     {Heads: 1/2, Tails: 1/2}
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Bernoulli_distribution
+    .. [2] http://mathworld.wolfram.com/BernoulliDistribution.html
+
     """
 
     return rv(name, BernoulliDistribution, p, succ, fail)
@@ -192,6 +228,9 @@ def Coin(name, p=S.Half):
 
     Returns a RandomSymbol.
 
+    Examples
+    ========
+
     >>> from sympy.stats import Coin, density
     >>> from sympy import Rational
 
@@ -202,6 +241,17 @@ def Coin(name, p=S.Half):
     >>> C2 = Coin('C2', Rational(3, 5)) # An unfair coin
     >>> density(C2).dict
     {H: 3/5, T: 2/5}
+
+    See Also
+    ========
+
+    sympy.stats.Binomial
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Coin_flipping
+
     """
     return rv(name, BernoulliDistribution, p, 'H', 'T')
 
@@ -246,6 +296,13 @@ def Binomial(name, n, p, succ=1, fail=0):
     >>> X = Binomial('X', 4, S.Half) # Four "coin flips"
     >>> density(X).dict
     {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Binomial_distribution
+    .. [2] http://mathworld.wolfram.com/BinomialDistribution.html
+
     """
 
     return rv(name, BinomialDistribution, n, p, succ, fail)
@@ -281,6 +338,13 @@ def Hypergeometric(name, N, m, n):
     >>> X = Hypergeometric('X', 10, 5, 3) # 10 marbles, 5 white (success), 3 draws
     >>> density(X).dict
     {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Hypergeometric_distribution
+    .. [2] http://mathworld.wolfram.com/HypergeometricDistribution.html
+
     """
     return rv(name, HypergeometricDistribution, N, m, n)
 
@@ -315,7 +379,7 @@ def Rademacher(name):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Rademacher_distribution
+    .. [1] https://en.wikipedia.org/wiki/Rademacher_distribution
 
     """
     return rv(name, RademacherDistribution)

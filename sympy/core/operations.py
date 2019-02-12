@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.sympify import _sympify, sympify
-from sympy.core.basic import Basic, _aresame
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, range
 from sympy.core.logic import fuzzy_and
@@ -31,7 +31,10 @@ class AssocOp(Basic):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
-        if not options.pop('evaluate', global_evaluate[0]):
+        evaluate = options.get('evaluate')
+        if evaluate is None:
+            evaluate = global_evaluate[0]
+        if not evaluate:
             return cls._from_args(args)
 
         if len(args) == 0:
@@ -279,7 +282,7 @@ class AssocOp(Basic):
                     if not nc:
                         return True
                     elif len(nc) <= len(_nc):
-                        for i in range(len(_nc) - len(nc)):
+                        for i in range(len(_nc) - len(nc) + 1):
                             if _nc[i:i + len(nc)] == nc:
                                 return True
             return False
@@ -392,7 +395,7 @@ class LatticeOp(AssocOp):
 
     References:
 
-    [1] - http://en.wikipedia.org/wiki/Lattice_%28order%29
+    [1] - https://en.wikipedia.org/wiki/Lattice_%28order%29
     """
 
     is_commutative = True

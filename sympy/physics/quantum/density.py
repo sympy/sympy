@@ -267,7 +267,7 @@ def fidelity(state1, state2):
     The arguments provided to this function should be a square matrix or a
     Density object. If it is a square matrix, it is assumed to be diagonalizable.
 
-    Parameters:
+    Parameters
     ==========
 
     state1, state2 : a density matrix or Matrix
@@ -302,7 +302,7 @@ def fidelity(state1, state2):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Fidelity_of_quantum_states
+    .. [1] https://en.wikipedia.org/wiki/Fidelity_of_quantum_states
 
     """
     state1 = represent(state1) if isinstance(state1, Density) else state1

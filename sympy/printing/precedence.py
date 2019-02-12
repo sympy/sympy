@@ -38,9 +38,12 @@ PRECEDENCE_VALUES = {
     "Function" : PRECEDENCE["Func"],
     "NegativeInfinity": PRECEDENCE["Add"],
     "MatAdd": PRECEDENCE["Add"],
-    "MatMul": PRECEDENCE["Mul"],
     "MatPow": PRECEDENCE["Pow"],
+    "TensAdd": PRECEDENCE["Add"],
+    # As soon as `TensMul` is a subclass of `Mul`, remove this:
+    "TensMul": PRECEDENCE["Mul"],
     "HadamardProduct": PRECEDENCE["Mul"],
+    "KroneckerProduct": PRECEDENCE["Mul"],
     "Equality": PRECEDENCE["Mul"],
     "Unequality": PRECEDENCE["Mul"],
 }

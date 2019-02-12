@@ -132,8 +132,8 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                 etaa, etad = frac_in(dcoeff, DE.t)
                 A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
                 if A is not None:
-                    a, m, z = A
-                    if a == 1:
+                    Q, m, z = A
+                    if Q == 1:
                         n = min(n, m)
 
         elif case == 'tan':
@@ -147,9 +147,9 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                     A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
                     B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
                     if A is not None and B is not None:
-                        a, s, z = A
+                        Q, s, z = A
                         # TODO: Add test
-                        if a == 1:
+                        if Q == 1:
                             n = min(n, s/2)
 
     N = max(0, -nb)
@@ -858,8 +858,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
             # deg(q) > B, no solution for c.
             return None
 
-        N, M = s[c1].as_numer_denom()  # N and M are integers
-        N, M = Poly(N, DE.t), Poly(M, DE.t)
+        M, N = s[c1].as_numer_denom()
 
         nfmwa = N*fa*wd - M*wa*fd
         nfmwd = fd*wd
@@ -869,9 +868,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
             # (N*f - M*w) is not the logarithmic derivative of a k(t)-radical.
             return None
 
-        Q, e, v = Qv
-        if e != 1:
-            return None
+        Q, v = Qv
 
         if Q.is_zero or v.is_zero:
             return None

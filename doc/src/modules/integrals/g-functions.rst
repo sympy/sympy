@@ -115,7 +115,7 @@ Suppose now we want to rewrite as a product of two G-functions. To do this,
 we (try to) find all inequivalent ways of splitting `f(x)` into a product
 `f_1(x) f_2(x)`.
 We could try these splittings in any order, but it is often a good idea to
-minimise (a) the number of powers occurring in `f_i(x)` and (b) the number of
+minimize (a) the number of powers occurring in `f_i(x)` and (b) the number of
 different functions occurring in `f_i(x)`. Thus given e.g.
 `f(x) = \sin{x}\, e^{x} \sin{2x}` we should try `f_1(x) = \sin{x}\, \sin{2x}`,
 `f_2(x) = e^{x}` first.
@@ -161,7 +161,7 @@ is satisfies `G(\operatorname{Exp}(2 \pi i)z) = G(z)` for all `z \in \mathcal{S}
 be used to exploit the information. This is done transparently by the
 integration code.
 
-.. [BlogPost] http://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/
+.. [BlogPost] https://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/
 
 The G-Function Integration Theorems
 ***********************************

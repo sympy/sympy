@@ -1,0 +1,8 @@
+{
+    "sympy/physics/mechanics/tests/test_kane3.py": [
+        "test_bicycle"
+    ],
+    "sympy/utilities/tests/test_wester.py": [
+        "test_W25"
+    ]
+}

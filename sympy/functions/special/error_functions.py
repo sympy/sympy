@@ -4,6 +4,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Add, S, sympify, cacheit, pi, I
+from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial
@@ -14,7 +15,6 @@ from sympy.functions.elementary.complexes import polar_lift
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.trigonometric import cos, sin, sinc
 from sympy.functions.special.hyper import hyper, meijerg
-from sympy.core.compatibility import range
 
 # TODO series expansions
 # TODO see the "Note:" in Ei
@@ -89,7 +89,7 @@ class erf(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Error_function
+    .. [1] https://en.wikipedia.org/wiki/Error_function
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/Erf.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/Erf
@@ -159,34 +159,34 @@ class erf(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_rewrite_as_uppergamma(self, z):
+    def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy import uppergamma
         return sqrt(z**2)/z*(S.One - uppergamma(S.Half, z**2)/sqrt(S.Pi))
 
-    def _eval_rewrite_as_fresnels(self, z):
+    def _eval_rewrite_as_fresnels(self, z, **kwargs):
         arg = (S.One - S.ImaginaryUnit)*z/sqrt(pi)
         return (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
-    def _eval_rewrite_as_fresnelc(self, z):
+    def _eval_rewrite_as_fresnelc(self, z, **kwargs):
         arg = (S.One - S.ImaginaryUnit)*z/sqrt(pi)
         return (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
-    def _eval_rewrite_as_meijerg(self, z):
+    def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], z**2)
 
-    def _eval_rewrite_as_hyper(self, z):
+    def _eval_rewrite_as_hyper(self, z, **kwargs):
         return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **kwargs):
         return sqrt(z**2)/z - z*expint(S.Half, z**2)/sqrt(S.Pi)
 
-    def _eval_rewrite_as_tractable(self, z):
+    def _eval_rewrite_as_tractable(self, z, **kwargs):
         return S.One - _erfs(z)*exp(-z**2)
 
-    def _eval_rewrite_as_erfc(self, z):
+    def _eval_rewrite_as_erfc(self, z, **kwargs):
         return S.One - erfc(z)
 
-    def _eval_rewrite_as_erfi(self, z):
+    def _eval_rewrite_as_erfi(self, z, **kwargs):
         return -I*erfi(I*z)
 
     def _eval_as_leading_term(self, x):
@@ -282,7 +282,7 @@ class erfc(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Error_function
+    .. [1] https://en.wikipedia.org/wiki/Error_function
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/Erfc.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/Erfc
@@ -348,35 +348,38 @@ class erfc(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_rewrite_as_tractable(self, z):
+    def _eval_rewrite_as_tractable(self, z, **kwargs):
         return self.rewrite(erf).rewrite("tractable", deep=True)
 
-    def _eval_rewrite_as_erf(self, z):
+    def _eval_rewrite_as_erf(self, z, **kwargs):
         return S.One - erf(z)
 
-    def _eval_rewrite_as_erfi(self, z):
+    def _eval_rewrite_as_erfi(self, z, **kwargs):
         return S.One + I*erfi(I*z)
 
-    def _eval_rewrite_as_fresnels(self, z):
+    def _eval_rewrite_as_fresnels(self, z, **kwargs):
         arg = (S.One - S.ImaginaryUnit)*z/sqrt(pi)
         return S.One - (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
-    def _eval_rewrite_as_fresnelc(self, z):
+    def _eval_rewrite_as_fresnelc(self, z, **kwargs):
         arg = (S.One-S.ImaginaryUnit)*z/sqrt(pi)
         return S.One - (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
-    def _eval_rewrite_as_meijerg(self, z):
+    def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return S.One - z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], z**2)
 
-    def _eval_rewrite_as_hyper(self, z):
+    def _eval_rewrite_as_hyper(self, z, **kwargs):
         return S.One - 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
 
-    def _eval_rewrite_as_uppergamma(self, z):
+    def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy import uppergamma
         return S.One - sqrt(z**2)/z*(S.One - uppergamma(S.Half, z**2)/sqrt(S.Pi))
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **kwargs):
         return S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
+
+    def _eval_expand_func(self, **hints):
+        return self.rewrite(erf)
 
     def _eval_as_leading_term(self, x):
         from sympy import Order
@@ -468,7 +471,7 @@ class erfi(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Error_function
+    .. [1] https://en.wikipedia.org/wiki/Error_function
     .. [2] http://mathworld.wolfram.com/Erfi.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/Erfi
     """
@@ -526,35 +529,38 @@ class erfi(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
-    def _eval_rewrite_as_tractable(self, z):
+    def _eval_rewrite_as_tractable(self, z, **kwargs):
         return self.rewrite(erf).rewrite("tractable", deep=True)
 
-    def _eval_rewrite_as_erf(self, z):
+    def _eval_rewrite_as_erf(self, z, **kwargs):
         return -I*erf(I*z)
 
-    def _eval_rewrite_as_erfc(self, z):
+    def _eval_rewrite_as_erfc(self, z, **kwargs):
         return I*erfc(I*z) - I
 
-    def _eval_rewrite_as_fresnels(self, z):
+    def _eval_rewrite_as_fresnels(self, z, **kwargs):
         arg = (S.One + S.ImaginaryUnit)*z/sqrt(pi)
         return (S.One - S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
-    def _eval_rewrite_as_fresnelc(self, z):
+    def _eval_rewrite_as_fresnelc(self, z, **kwargs):
         arg = (S.One + S.ImaginaryUnit)*z/sqrt(pi)
         return (S.One - S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
-    def _eval_rewrite_as_meijerg(self, z):
+    def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], -z**2)
 
-    def _eval_rewrite_as_hyper(self, z):
+    def _eval_rewrite_as_hyper(self, z, **kwargs):
         return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], z**2)
 
-    def _eval_rewrite_as_uppergamma(self, z):
+    def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy import uppergamma
         return sqrt(-z**2)/z*(uppergamma(S.Half, -z**2)/sqrt(S.Pi) - S.One)
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **kwargs):
         return sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
+
+    def _eval_expand_func(self, **hints):
+        return self.rewrite(erf)
 
     def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
@@ -676,34 +682,38 @@ class erf2(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
 
-    def _eval_rewrite_as_erf(self, x, y):
+    def _eval_rewrite_as_erf(self, x, y, **kwargs):
         return erf(y) - erf(x)
 
-    def _eval_rewrite_as_erfc(self, x, y):
+    def _eval_rewrite_as_erfc(self, x, y, **kwargs):
         return erfc(x) - erfc(y)
 
-    def _eval_rewrite_as_erfi(self, x, y):
+    def _eval_rewrite_as_erfi(self, x, y, **kwargs):
         return I*(erfi(I*x)-erfi(I*y))
 
-    def _eval_rewrite_as_fresnels(self, x, y):
+    def _eval_rewrite_as_fresnels(self, x, y, **kwargs):
         return erf(y).rewrite(fresnels) - erf(x).rewrite(fresnels)
 
-    def _eval_rewrite_as_fresnelc(self, x, y):
+    def _eval_rewrite_as_fresnelc(self, x, y, **kwargs):
         return erf(y).rewrite(fresnelc) - erf(x).rewrite(fresnelc)
 
-    def _eval_rewrite_as_meijerg(self, x, y):
+    def _eval_rewrite_as_meijerg(self, x, y, **kwargs):
         return erf(y).rewrite(meijerg) - erf(x).rewrite(meijerg)
 
-    def _eval_rewrite_as_hyper(self, x, y):
+    def _eval_rewrite_as_hyper(self, x, y, **kwargs):
         return erf(y).rewrite(hyper) - erf(x).rewrite(hyper)
 
-    def _eval_rewrite_as_uppergamma(self, x, y):
+    def _eval_rewrite_as_uppergamma(self, x, y, **kwargs):
         from sympy import uppergamma
         return (sqrt(y**2)/y*(S.One - uppergamma(S.Half, y**2)/sqrt(S.Pi)) -
             sqrt(x**2)/x*(S.One - uppergamma(S.Half, x**2)/sqrt(S.Pi)))
 
-    def _eval_rewrite_as_expint(self, x, y):
+    def _eval_rewrite_as_expint(self, x, y, **kwargs):
         return erf(y).rewrite(expint) - erf(x).rewrite(expint)
+
+    def _eval_expand_func(self, **hints):
+        return self.rewrite(erf)
+
 
 class erfinv(Function):
     r"""
@@ -750,7 +760,7 @@ class erfinv(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Error_function#Inverse_functions
+    .. [1] https://en.wikipedia.org/wiki/Error_function#Inverse_functions
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErf/
     """
 
@@ -786,8 +796,9 @@ class erfinv(Function):
         if nz is not None and (isinstance(nz, erf) and (nz.args[0]).is_real):
             return -nz.args[0]
 
-    def _eval_rewrite_as_erfcinv(self, z):
+    def _eval_rewrite_as_erfcinv(self, z, **kwargs):
        return erfcinv(1-z)
+
 
 class erfcinv (Function):
     r"""
@@ -828,7 +839,7 @@ class erfcinv (Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Error_function#Inverse_functions
+    .. [1] https://en.wikipedia.org/wiki/Error_function#Inverse_functions
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
     """
 
@@ -856,8 +867,9 @@ class erfcinv (Function):
         elif z == 2:
             return S.NegativeInfinity
 
-    def _eval_rewrite_as_erfinv(self, z):
+    def _eval_rewrite_as_erfinv(self, z, **kwargs):
         return erfinv(1-z)
+
 
 class erf2inv(Function):
     r"""
@@ -1022,7 +1034,7 @@ class Ei(Function):
     ==========
 
     .. [1] http://dlmf.nist.gov/6.6
-    .. [2] http://en.wikipedia.org/wiki/Exponential_integral
+    .. [2] https://en.wikipedia.org/wiki/Exponential_integral
     .. [3] Abramowitz & Stegun, section 5: http://people.math.sfu.ca/~cbm/aands/page_228.htm
 
     """
@@ -1054,16 +1066,16 @@ class Ei(Function):
             return Function._eval_evalf(self, prec) + (I*pi)._eval_evalf(prec)
         return Function._eval_evalf(self, prec)
 
-    def _eval_rewrite_as_uppergamma(self, z):
+    def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy import uppergamma
         # XXX this does not currently work usefully because uppergamma
         #     immediately turns into expint
         return -uppergamma(0, polar_lift(-1)*z) - I*pi
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **kwargs):
         return -expint(1, polar_lift(-1)*z) - I*pi
 
-    def _eval_rewrite_as_li(self, z):
+    def _eval_rewrite_as_li(self, z, **kwargs):
         if isinstance(z, log):
             return li(z.args[0])
         # TODO:
@@ -1072,13 +1084,13 @@ class Ei(Function):
         # for -pi < imag(z) <= pi
         return li(exp(z))
 
-    def _eval_rewrite_as_Si(self, z):
+    def _eval_rewrite_as_Si(self, z, **kwargs):
         return Shi(z) + Chi(z)
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
-    def _eval_rewrite_as_tractable(self, z):
+    def _eval_rewrite_as_tractable(self, z, **kwargs):
         return exp(z) * _eis(z)
 
     def _eval_nseries(self, x, n, logx):
@@ -1185,7 +1197,7 @@ class expint(Function):
 
     .. [1] http://dlmf.nist.gov/8.19
     .. [2] http://functions.wolfram.com/GammaBetaErf/ExpIntegralE/
-    .. [3] http://en.wikipedia.org/wiki/Exponential_integral
+    .. [3] https://en.wikipedia.org/wiki/Exponential_integral
 
     """
 
@@ -1223,11 +1235,11 @@ class expint(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_uppergamma(self, nu, z):
+    def _eval_rewrite_as_uppergamma(self, nu, z, **kwargs):
         from sympy import uppergamma
         return z**(nu - 1)*uppergamma(1 - nu, z)
 
-    def _eval_rewrite_as_Ei(self, nu, z):
+    def _eval_rewrite_as_Ei(self, nu, z, **kwargs):
         from sympy import exp_polar, unpolarify, exp, factorial
         if nu == 1:
             return -Ei(z*exp_polar(-I*pi)) - I*pi
@@ -1243,7 +1255,7 @@ class expint(Function):
     def _eval_expand_func(self, **hints):
         return self.rewrite(Ei).rewrite(expint, **hints)
 
-    def _eval_rewrite_as_Si(self, nu, z):
+    def _eval_rewrite_as_Si(self, nu, z, **kwargs):
         if nu != 1:
             return self
         return Shi(z) - Chi(z)
@@ -1371,7 +1383,7 @@ class li(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Logarithmic_integral
+    .. [1] https://en.wikipedia.org/wiki/Logarithmic_integral
     .. [2] http://mathworld.wolfram.com/LogarithmicIntegral.html
     .. [3] http://dlmf.nist.gov/6
     .. [4] http://mathworld.wolfram.com/SoldnersConstant.html
@@ -1400,37 +1412,37 @@ class li(Function):
         if not (z.is_real and z.is_negative):
             return self.func(z.conjugate())
 
-    def _eval_rewrite_as_Li(self, z):
+    def _eval_rewrite_as_Li(self, z, **kwargs):
         return Li(z) + li(2)
 
-    def _eval_rewrite_as_Ei(self, z):
+    def _eval_rewrite_as_Ei(self, z, **kwargs):
         return Ei(log(z))
 
-    def _eval_rewrite_as_uppergamma(self, z):
+    def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy import uppergamma
         return (-uppergamma(0, -log(z)) +
                 S.Half*(log(log(z)) - log(S.One/log(z))) - log(-log(z)))
 
-    def _eval_rewrite_as_Si(self, z):
+    def _eval_rewrite_as_Si(self, z, **kwargs):
         return (Ci(I*log(z)) - I*Si(I*log(z)) -
                 S.Half*(log(S.One/log(z)) - log(log(z))) - log(I*log(z)))
 
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
 
-    def _eval_rewrite_as_Shi(self, z):
+    def _eval_rewrite_as_Shi(self, z, **kwargs):
         return (Chi(log(z)) - Shi(log(z)) - S.Half*(log(S.One/log(z)) - log(log(z))))
 
     _eval_rewrite_as_Chi = _eval_rewrite_as_Shi
 
-    def _eval_rewrite_as_hyper(self, z):
+    def _eval_rewrite_as_hyper(self, z, **kwargs):
         return (log(z)*hyper((1, 1), (2, 2), log(z)) +
                 S.Half*(log(log(z)) - log(S.One/log(z))) + S.EulerGamma)
 
-    def _eval_rewrite_as_meijerg(self, z):
+    def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return (-log(-log(z)) - S.Half*(log(S.One/log(z)) - log(log(z)))
                 - meijerg(((), (1,)), ((0, 0), ()), -log(z)))
 
-    def _eval_rewrite_as_tractable(self, z):
+    def _eval_rewrite_as_tractable(self, z, **kwargs):
         return z * _eis(log(z))
 
 
@@ -1489,7 +1501,7 @@ class Li(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Logarithmic_integral
+    .. [1] https://en.wikipedia.org/wiki/Logarithmic_integral
     .. [2] http://mathworld.wolfram.com/LogarithmicIntegral.html
     .. [3] http://dlmf.nist.gov/6
     """
@@ -1512,10 +1524,10 @@ class Li(Function):
     def _eval_evalf(self, prec):
         return self.rewrite(li).evalf(prec)
 
-    def _eval_rewrite_as_li(self, z):
+    def _eval_rewrite_as_li(self, z, **kwargs):
         return li(z) - li(2)
 
-    def _eval_rewrite_as_tractable(self, z):
+    def _eval_rewrite_as_tractable(self, z, **kwargs):
         return self.rewrite(li).rewrite("tractable", deep=True)
 
 ###############################################################################
@@ -1561,10 +1573,10 @@ class TrigonometricIntegral(Function):
         if argindex == 1:
             return self._trigfunc(arg)/arg
 
-    def _eval_rewrite_as_Ei(self, z):
+    def _eval_rewrite_as_Ei(self, z, **kwargs):
         return self._eval_rewrite_as_expint(z).rewrite(Ei)
 
-    def _eval_rewrite_as_uppergamma(self, z):
+    def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy import uppergamma
         return self._eval_rewrite_as_expint(z).rewrite(uppergamma)
 
@@ -1647,7 +1659,7 @@ class Si(TrigonometricIntegral):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1670,11 +1682,11 @@ class Si(TrigonometricIntegral):
     def _Ifactor(cls, z, sign):
         return I*Shi(z)*sign
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **kwargs):
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
 
-    def _eval_rewrite_as_sinc(self, z):
+    def _eval_rewrite_as_sinc(self, z, **kwargs):
         from sympy import Integral
         t = Symbol('t', Dummy=True)
         return Integral(sinc(t), (t, 0, z))
@@ -1755,7 +1767,7 @@ class Ci(TrigonometricIntegral):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1778,7 +1790,7 @@ class Ci(TrigonometricIntegral):
     def _Ifactor(cls, z, sign):
         return Chi(z) + I*pi/2*sign
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **kwargs):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
 
     def _sage_(self):
@@ -1842,7 +1854,7 @@ class Shi(TrigonometricIntegral):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1865,7 +1877,7 @@ class Shi(TrigonometricIntegral):
     def _Ifactor(cls, z, sign):
         return I*Si(z)*sign
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **kwargs):
         from sympy import exp_polar
         # XXX should we polarify z?
         return (E1(z) - E1(exp_polar(I*pi)*z))/2 - I*pi/2
@@ -1942,7 +1954,7 @@ class Chi(TrigonometricIntegral):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1965,23 +1977,9 @@ class Chi(TrigonometricIntegral):
     def _Ifactor(cls, z, sign):
         return Ci(z) + I*pi/2*sign
 
-    def _eval_rewrite_as_expint(self, z):
+    def _eval_rewrite_as_expint(self, z, **kwargs):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
-
-    def _latex(self, printer, exp=None):
-        if len(self.args) != 1:
-            raise ValueError("Arg length should be 1")
-        if exp:
-            return r'\operatorname{Chi}^{%s}{\left (%s \right )}' \
-                % (printer._print(exp), printer._print(self.args[0]))
-        else:
-            return r'\operatorname{Chi}{\left (%s \right )}' \
-                % printer._print(self.args[0])
-
-    @staticmethod
-    def _latex_no_arg(printer):
-        return r'\operatorname{Chi}'
 
     def _sage_(self):
         import sage.all as sage
@@ -2144,7 +2142,7 @@ class fresnels(FresnelIntegral):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Fresnel_integral
+    .. [1] https://en.wikipedia.org/wiki/Fresnel_integral
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelS
@@ -2168,13 +2166,13 @@ class fresnels(FresnelIntegral):
             else:
                 return x**3 * (-x**4)**n * (S(2)**(-2*n - 1)*pi**(2*n + 1)) / ((4*n + 3)*factorial(2*n + 1))
 
-    def _eval_rewrite_as_erf(self, z):
+    def _eval_rewrite_as_erf(self, z, **kwargs):
         return (S.One + I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) - I*erf((S.One - I)/2*sqrt(pi)*z))
 
-    def _eval_rewrite_as_hyper(self, z):
+    def _eval_rewrite_as_hyper(self, z, **kwargs):
         return pi*z**3/6 * hyper([S(3)/4], [S(3)/2, S(7)/4], -pi**2*z**4/16)
 
-    def _eval_rewrite_as_meijerg(self, z):
+    def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return (pi*z**(S(9)/4) / (sqrt(2)*(z**2)**(S(3)/4)*(-z)**(S(3)/4))
                 * meijerg([], [1], [S(3)/4], [S(1)/4, 0], -pi**2*z**4/16))
 
@@ -2182,22 +2180,27 @@ class fresnels(FresnelIntegral):
         from sympy import Order
         point = args0[0]
 
-        # Expansion at oo
-        if point is S.Infinity:
+        # Expansion at oo and -oo
+        if point in [S.Infinity, -S.Infinity]:
             z = self.args[0]
 
             # expansion of S(x) = S1(x*sqrt(pi/2)), see reference[5] page 1-8
+            # as only real infinities are dealt with, sin and cos are O(1)
             p = [(-1)**k * factorial(4*k + 1) /
                  (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*factorial(2*k))
-                 for k in range(0, n)]
+                 for k in range(0, n) if 4*k + 3 < n]
             q = [1/(2*z)] + [(-1)**k * factorial(4*k - 1) /
                  (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*factorial(2*k - 1))
-                 for k in range(1, n)]
+                 for k in range(1, n) if 4*k + 1 < n]
 
-            p = [-sqrt(2/pi)*t for t in p] + [Order(1/z**n, x)]
-            q = [-sqrt(2/pi)*t for t in q] + [Order(1/z**n, x)]
-
-            return S.Half + (sin(z**2)*Add(*p) + cos(z**2)*Add(*q)).subs(x, sqrt(2/pi)*x)
+            p = [-sqrt(2/pi)*t for t in p]
+            q = [-sqrt(2/pi)*t for t in q]
+            s = 1 if point is S.Infinity else -1
+            # The expansion at oo is 1/2 + some odd powers of z
+            # To get the expansion at -oo, replace z by -z and flip the sign
+            # The result -1/2 + the same odd powers of z as before.
+            return s*S.Half + (sin(z**2)*Add(*p) + cos(z**2)*Add(*q)
+                ).subs(x, sqrt(2/pi)*x) + Order(1/z**n, x)
 
         # All other points are not handled
         return super(fresnels, self)._eval_aseries(n, args0, x, logx)
@@ -2277,7 +2280,7 @@ class fresnelc(FresnelIntegral):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Fresnel_integral
+    .. [1] https://en.wikipedia.org/wiki/Fresnel_integral
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelC
@@ -2300,13 +2303,13 @@ class fresnelc(FresnelIntegral):
             else:
                 return x * (-x**4)**n * (S(2)**(-2*n)*pi**(2*n)) / ((4*n + 1)*factorial(2*n))
 
-    def _eval_rewrite_as_erf(self, z):
+    def _eval_rewrite_as_erf(self, z, **kwargs):
         return (S.One - I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))
 
-    def _eval_rewrite_as_hyper(self, z):
+    def _eval_rewrite_as_hyper(self, z, **kwargs):
         return z * hyper([S.One/4], [S.One/2, S(5)/4], -pi**2*z**4/16)
 
-    def _eval_rewrite_as_meijerg(self, z):
+    def _eval_rewrite_as_meijerg(self, z, **kwargs):
         return (pi*z**(S(3)/4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
                 * meijerg([], [1], [S(1)/4], [S(3)/4, 0], -pi**2*z**4/16))
 
@@ -2315,21 +2318,26 @@ class fresnelc(FresnelIntegral):
         point = args0[0]
 
         # Expansion at oo
-        if point is S.Infinity:
+        if point in [S.Infinity, -S.Infinity]:
             z = self.args[0]
 
             # expansion of C(x) = C1(x*sqrt(pi/2)), see reference[5] page 1-8
+            # as only real infinities are dealt with, sin and cos are O(1)
             p = [(-1)**k * factorial(4*k + 1) /
                  (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*factorial(2*k))
-                 for k in range(0, n)]
+                 for k in range(0, n) if 4*k + 3 < n]
             q = [1/(2*z)] + [(-1)**k * factorial(4*k - 1) /
                  (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*factorial(2*k - 1))
-                 for k in range(1, n)]
+                 for k in range(1, n) if 4*k + 1 < n]
 
-            p = [-sqrt(2/pi)*t for t in p] + [Order(1/z**n, x)]
-            q = [ sqrt(2/pi)*t for t in q] + [Order(1/z**n, x)]
-
-            return S.Half + (cos(z**2)*Add(*p) + sin(z**2)*Add(*q)).subs(x, sqrt(2/pi)*x)
+            p = [-sqrt(2/pi)*t for t in p]
+            q = [ sqrt(2/pi)*t for t in q]
+            s = 1 if point is S.Infinity else -1
+            # The expansion at oo is 1/2 + some odd powers of z
+            # To get the expansion at -oo, replace z by -z and flip the sign
+            # The result -1/2 + the same odd powers of z as before.
+            return s*S.Half + (cos(z**2)*Add(*p) + sin(z**2)*Add(*q)
+                ).subs(x, sqrt(2/pi)*x) + Order(1/z**n, x)
 
         # All other points are not handled
         return super(fresnelc, self)._eval_aseries(n, args0, x, logx)
@@ -2381,7 +2389,7 @@ class _erfs(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_intractable(self, z):
+    def _eval_rewrite_as_intractable(self, z, **kwargs):
         return (S.One - erf(z))*exp(z**2)
 
 
@@ -2411,7 +2419,7 @@ class _eis(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_intractable(self, z):
+    def _eval_rewrite_as_intractable(self, z, **kwargs):
         return exp(-z)*Ei(z)
 
     def _eval_nseries(self, x, n, logx):

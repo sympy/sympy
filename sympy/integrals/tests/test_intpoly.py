@@ -1,18 +1,15 @@
-from __future__ import print_function, division
-
 from sympy import sqrt, Abs
 
 from sympy.core import S
 
 from sympy.integrals.intpoly import (decompose, best_origin,
-                                     polytope_integrate)
+                                     polytope_integrate, point_sort)
 
 from sympy.geometry.line import Segment2D
 from sympy.geometry.polygon import Polygon
-from sympy.geometry.point import Point
+from sympy.geometry.point import Point, Point2D
 from sympy.abc import x, y, z
 
-from sympy.utilities.pytest import XFAIL
 
 
 def test_decompose():
@@ -493,12 +490,16 @@ def test_polytope_integrate():
          y * z: 3125 / S(4), z ** 2: 3125 / S(3), y ** 2: 3125 / S(3),
          z: 625 / S(2), x * y: 3125 / S(4), x ** 2: 3125 / S(3)}
 
+def test_point_sort():
+    assert point_sort([Point(0, 0), Point(1, 0), Point(1, 1)]) == \
+        [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
 
-@XFAIL
+    fig6 = Polygon((0, 0), (1, 0), (1, 1))
+    assert polytope_integrate(fig6, x*y) == S(-1)/8
+    assert polytope_integrate(fig6, x*y, clockwise = True) == S(1)/8
+
+
 def test_polytopes_intersecting_sides():
-    #  Intersecting polygons not implemented yet in SymPy. Will be implemented
-    #  soon. As of now, the intersection point will have to be manually
-    #  supplied by user.
     fig5 = Polygon(Point(-4.165, -0.832), Point(-3.668, 1.568),
                    Point(-3.266, 1.279), Point(-1.090, -2.080),
                    Point(3.313, -0.683), Point(3.033, -4.845),
