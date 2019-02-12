@@ -25,10 +25,16 @@ from __future__ import division, print_function
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.basic import Basic
+from sympy.core.symbol import _symbol
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
 from sympy.matrices import eye
 from sympy.sets import Set
+from sympy.utilities.misc import func_name
+from sympy.multipledispatch import dispatch
+from sympy.sets.handlers.union import union_sets
+from sympy.sets.handlers.intersection import intersection_sets
+
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -456,7 +462,7 @@ class GeometryEntity(Basic):
         Triangle(Point2D(1, 0), Point2D(-1/2, sqrt(3)/2), Point2D(-1/2, -sqrt(3)/2))
         >>> t.scale(2)
         Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)/2), Point2D(-1, -sqrt(3)/2))
-        >>> t.scale(2,2)
+        >>> t.scale(2, 2)
         Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)), Point2D(-1, -sqrt(3)))
 
         """
@@ -496,6 +502,37 @@ class GeometryEntity(Basic):
                 newargs.append(a)
         return self.func(*newargs)
 
+    def parameter_value(self, other, t):
+        """Return the parameter corresponding to the given point.
+        Evaluating an arbitrary point of the entity at this parameter
+        value will return the given point.
+
+        Examples
+        ========
+
+        >>> from sympy import Line, Point
+        >>> from sympy.abc import t
+        >>> a = Point(0, 0)
+        >>> b = Point(2, 2)
+        >>> Line(a, b).parameter_value((1, 1), t)
+        {t: 1/2}
+        >>> Line(a, b).arbitrary_point(t).subs(_)
+        Point2D(1, 1)
+        """
+        from sympy.geometry.point import Point
+        from sympy.core.symbol import Dummy
+        from sympy.solvers.solvers import solve
+        if not isinstance(other, GeometryEntity):
+            other = Point(other, dim=self.ambient_dimension)
+        if not isinstance(other, Point):
+            raise ValueError("other must be a point")
+        T = Dummy('t', real=True)
+        sol = solve(self.arbitrary_point(T) - other, T, dict=True)
+        if not sol:
+            raise ValueError("Given point is not on %s" % func_name(self))
+        return {t: sol[0][T]}
+
+
 class GeometrySet(GeometryEntity, Set):
     """Parent class of all GeometryEntity that are also Sets
     (compatible with sympy.sets)
@@ -508,47 +545,50 @@ class GeometrySet(GeometryEntity, Set):
 
         return self.__contains__(other)
 
-    def _union(self, o):
-        """ Returns the union of self and o
-        for use with sympy.sets.Set, if possible. """
+@dispatch(GeometrySet, Set)
+def union_sets(self, o):
+    """ Returns the union of self and o
+    for use with sympy.sets.Set, if possible. """
 
-        from sympy.sets import Union, FiniteSet
+    from sympy.sets import Union, FiniteSet
 
-        # if its a FiniteSet, merge any points
-        # we contain and return a union with the rest
+    # if its a FiniteSet, merge any points
+    # we contain and return a union with the rest
+    if o.is_FiniteSet:
+        other_points = [p for p in o if not self._contains(p)]
+        if len(other_points) == len(o):
+            return None
+        return Union(self, FiniteSet(*other_points))
+    if self._contains(o):
+        return self
+    return None
+
+
+@dispatch(GeometrySet, Set)
+def intersection_sets(self, o):
+    """ Returns a sympy.sets.Set of intersection objects,
+    if possible. """
+
+    from sympy.sets import Set, FiniteSet, Union
+    from sympy.geometry import Point
+
+    try:
+        # if o is a FiniteSet, find the intersection directly
+        # to avoid infinite recursion
         if o.is_FiniteSet:
-            other_points = [p for p in o if not self._contains(p)]
-            if len(other_points) == len(o):
-                return None
-            return Union(self, FiniteSet(*other_points))
-        if self._contains(o):
-            return self
+            inter = FiniteSet(*(p for p in o if self.contains(p)))
+        else:
+            inter = self.intersection(o)
+    except NotImplementedError:
+        # sympy.sets.Set.reduce expects None if an object
+        # doesn't know how to simplify
         return None
 
-    def _intersect(self, o):
-        """ Returns a sympy.sets.Set of intersection objects,
-        if possible. """
+    # put the points in a FiniteSet
+    points = FiniteSet(*[p for p in inter if isinstance(p, Point)])
+    non_points = [p for p in inter if not isinstance(p, Point)]
 
-        from sympy.sets import Set, FiniteSet, Union
-        from sympy.geometry import Point
-
-        try:
-            # if o is a FiniteSet, find the intersection directly
-            # to avoid infinite recursion
-            if o.is_FiniteSet:
-                inter = FiniteSet(*(p for p in o if self.contains(p)))
-            else:
-                inter = self.intersection(o)
-        except NotImplementedError:
-            # sympy.sets.Set.reduce expects None if an object
-            # doesn't know how to simplify
-            return None
-
-        # put the points in a FiniteSet
-        points = FiniteSet(*[p for p in inter if isinstance(p, Point)])
-        non_points = [p for p in inter if not isinstance(p, Point)]
-
-        return Union(*(non_points + [points]))
+    return Union(*(non_points + [points]))
 
 def translate(x, y):
     """Return the matrix to translate a 2-D point by x and y."""

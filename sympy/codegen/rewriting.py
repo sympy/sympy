@@ -32,11 +32,11 @@ The ``optims_c99`` imported above is tuple containing the following instances
 
 """
 from __future__ import (absolute_import, division, print_function)
-from itertools import tee, chain
-from sympy import log, Add, exp, Max, Min, Wild, Pow, expand_log, Dummy
-from sympy.utilities.iterables import sift
-from sympy.core.compatibility import filterfalse
+from itertools import chain
+from sympy import log, exp, Max, Min, Wild, expand_log, Dummy
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
+from sympy.core.mul import Mul
+from sympy.utilities.iterables import sift
 
 
 class Optimization(object):
@@ -75,7 +75,7 @@ class ReplaceOptim(Optimization):
     >>> from sympy.codegen.rewriting import ReplaceOptim
     >>> from sympy.codegen.cfunctions import exp2
     >>> x = Symbol('x')
-    >>> exp2_opt = ReplaceOptim(lambda p: (isinstance(p, Pow) and p.base == 2),
+    >>> exp2_opt = ReplaceOptim(lambda p: p.is_Pow and p.base == 2,
     ...     lambda p: exp2(p.exp))
     >>> exp2_opt(2**x)
     exp2(x)
@@ -96,6 +96,7 @@ def optimize(expr, optimizations):
 
     Parameters
     ==========
+
     expr : expression
     optimizations : iterable of ``Optimization`` instances
         The optimizations will be sorted with respect to ``priority`` (highest first).
@@ -123,8 +124,7 @@ def optimize(expr, optimizations):
 
 
 exp2_opt = ReplaceOptim(
-    lambda p: (isinstance(p, Pow)
-               and p.base == 2),
+    lambda p: p.is_Pow and p.base == 2,
     lambda p: exp2(p.exp)
 )
 
@@ -136,7 +136,7 @@ _w = Wild('w')
 
 log2_opt = ReplaceOptim(_v*log(_w)/log(2), _v*log2(_w), cost_function=lambda expr: expr.count(
     lambda e: (  # division & eval of transcendentals are expensive floating point operations...
-        (isinstance(e, Pow) and e.exp.is_negative)  # division
+        e.is_Pow and e.exp.is_negative  # division
         or (isinstance(e, (log, log2)) and not e.args[0].is_number))  # transcendental
     )
 )
@@ -145,7 +145,7 @@ log2const_opt = ReplaceOptim(log(2)*log2(_w), log(_w))
 
 logsumexp_2terms_opt = ReplaceOptim(
     lambda l: (isinstance(l, log)
-               and isinstance(l.args[0], Add)
+               and l.args[0].is_Add
                and len(l.args[0].args) == 2
                and all(isinstance(t, exp) for t in l.args[0].args)),
     lambda l: (
@@ -193,6 +193,37 @@ log1p_opt = ReplaceOptim(
         log, lambda arg: log(arg.factor())
     )).replace(log(_u+1), log1p(_u))
 )
+
+def create_expand_pow_optimization(limit):
+    """ Creates an instance of :class:`ReplaceOptim` for expanding ``Pow``.
+
+    The requirements for expansions are that the base needs to be a symbol
+    and the exponent needs to be an integer (and be less than or equal to
+    ``limit``).
+
+    Parameters
+    ==========
+
+    limit : int
+         The highest power which is expanded into multiplication.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, sin
+    >>> from sympy.codegen.rewriting import create_expand_pow_optimization
+    >>> x = Symbol('x')
+    >>> expand_opt = create_expand_pow_optimization(3)
+    >>> expand_opt(x**5 + x**3)
+    x**5 + x*x*x
+    >>> expand_opt(x**5 + x**3 + sin(x)**3)
+    x**5 + x*x*x + sin(x)**3
+
+    """
+    return ReplaceOptim(
+        lambda e: e.is_Pow and e.base.is_symbol and e.exp.is_integer and e.exp.is_nonnegative and e.exp <= limit,
+        lambda p: Mul(*([p.base]*p.exp), evaluate=False)
+    )
 
 # Collections of optimizations:
 optims_c99 = (expm1_opt, log1p_opt, exp2_opt, log2_opt, log2const_opt)

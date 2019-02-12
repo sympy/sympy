@@ -5,7 +5,7 @@ from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample)
-from sympy.stats.rv import (ProductPSpace, rs_swap, Density, NamedArgsMixin,
+from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, PSpace)
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import range
@@ -52,7 +52,7 @@ def test_pspace():
     raises(ValueError, lambda: pspace(x < 1))
     assert pspace(X) == X.pspace
     assert pspace(2*X + 1) == X.pspace
-    assert pspace(2*X + Y) == ProductPSpace(Y.pspace, X.pspace)
+    assert pspace(2*X + Y) == IndependentProductPSpace(Y.pspace, X.pspace)
 
 
 def test_rs_swap():
@@ -95,13 +95,13 @@ def test_overlap():
     raises(ValueError, lambda: P(X > Y))
 
 
-def test_ProductPSpace():
+def test_IndependentProductPSpace():
     X = Normal('X', 0, 1)
     Y = Normal('Y', 0, 1)
     px = X.pspace
     py = Y.pspace
-    assert pspace(X + Y) == ProductPSpace(px, py)
-    assert pspace(X + Y) == ProductPSpace(py, px)
+    assert pspace(X + Y) == IndependentProductPSpace(px, py)
+    assert pspace(X + Y) == IndependentProductPSpace(py, px)
 
 
 def test_E():

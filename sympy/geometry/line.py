@@ -18,12 +18,13 @@ Segment3D
 """
 from __future__ import division, print_function
 
-import warnings
 
+from sympy import Expr
 from sympy.core import S, sympify
 from sympy.core.compatibility import ordered
+from sympy.core.numbers import Rational, oo
 from sympy.core.relational import Eq
-from sympy.core.symbol import _symbol
+from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
@@ -33,7 +34,7 @@ from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.sets import Intersection
 from sympy.matrices import Matrix
-
+from sympy.solvers.solveset import linear_coeffs
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
 from sympy.utilities.misc import Undecidable, filldedent
@@ -233,7 +234,7 @@ class LinearEntity(GeometrySet):
 
         See Also
         ========
-        angle_bewteen, Ray2D.closing_angle
+        angle_between, Ray2D.closing_angle
         """
         if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
@@ -978,7 +979,7 @@ class LinearEntity(GeometrySet):
         raise GeometryError(
             "Do not know how to project %s onto %s" % (other, self))
 
-    def random_point(self):
+    def random_point(self, seed=None):
         """A random point on a LinearEntity.
 
         Returns
@@ -994,40 +995,44 @@ class LinearEntity(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Line
+        >>> from sympy import Point, Line, Ray, Segment
         >>> p1, p2 = Point(0, 0), Point(5, 3)
-        >>> l1 = Line(p1, p2)
-        >>> p3 = l1.random_point()
-        >>> # random point - don't know its coords in advance
-        >>> p3 # doctest: +ELLIPSIS
-        Point2D(...)
-        >>> # point should belong to the line
-        >>> p3 in l1
+        >>> line = Line(p1, p2)
+        >>> r = line.random_point(seed=42)  # seed value is optional
+        >>> r.n(3)
+        Point2D(-0.72, -0.432)
+        >>> r in line
         True
+        >>> Ray(p1, p2).random_point(seed=42).n(3)
+        Point2D(0.72, 0.432)
+        >>> Segment(p1, p2).random_point(seed=42).n(3)
+        Point2D(3.2, 1.92)
 
         """
-        from random import randint
-        from sympy.functions import floor
+        import random
 
-        # The lower and upper
-        lower, upper = -2**32 - 1, 2**32
-
+        if seed is not None:
+            rng = random.Random(seed)
+        else:
+            rng = random
+        t = Dummy()
+        pt = self.arbitrary_point(t)
         if isinstance(self, Ray):
-            lower = 0
-        if isinstance(self, Segment):
-            lower = 0
-            upper = floor(self.length)
-        t = randint(lower, upper)
-
-        return self.direction*t/abs(self.direction) + self.p1
+            v = abs(rng.gauss(0, 1))
+        elif isinstance(self, Segment):
+            v = rng.random()
+        elif isinstance(self, Line):
+            v = rng.gauss(0, 1)
+        else:
+            raise NotImplementedError('unhandled line type')
+        return pt.subs(t, Rational(v))
 
 
 class Line(LinearEntity):
     """An infinite line in space.
 
-    A line is declared with two distinct points.
-    A 2D line may be declared with a point and slope
-    and a 3D line may be defined with a point and a direction ratio.
+    A 2D line is declared with two distinct points, point and slope, or
+    an equation. A 3D line may be defined with a point and a direction ratio.
 
     Parameters
     ==========
@@ -1036,6 +1041,7 @@ class Line(LinearEntity):
     p2 : Point
     slope : sympy expression
     direction_ratio : list
+    equation : equation of a line
 
     Notes
     =====
@@ -1055,8 +1061,10 @@ class Line(LinearEntity):
     Examples
     ========
 
-    >>> from sympy import Point
+    >>> from sympy import Point, Eq
     >>> from sympy.geometry import Line, Segment
+    >>> from sympy.abc import x, y, a, b
+
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
     Line2D(Point2D(2, 3), Point2D(3, 5))
@@ -1077,24 +1085,64 @@ class Line(LinearEntity):
     >>> s = Segment((0, 0), (0, 1))
     >>> Line(s).equation()
     x
+
+    The line corresponding to an equation in the for `ax + by + c = 0`,
+    can be entered:
+
+    >>> Line(3*x + y + 18)
+    Line2D(Point2D(0, -18), Point2D(1, -21))
+
+    If `x` or `y` has a different name, then they can be specified, too,
+    as a string (to match the name) or symbol:
+
+    >>> Line(Eq(3*a + b, -18), x='a', y=b)
+    Line2D(Point2D(0, -18), Point2D(1, -21))
     """
 
-    def __new__(cls, p1, p2=None, **kwargs):
-        if isinstance(p1, LinearEntity):
-            if p2:
-                raise ValueError('If p1 is a LinearEntity, p2 must be None.')
-            dim = len(p1.p1)
-        else:
-            p1 = Point(p1)
-            dim = len(p1)
-            if p2 is not None or isinstance(p2, Point) and p2.ambient_dimension != dim:
-                p2 = Point(p2)
+    def __new__(cls, *args, **kwargs):
+        from sympy.geometry.util import find
 
-        if dim == 2:
-            return Line2D(p1, p2, **kwargs)
-        elif dim == 3:
-            return Line3D(p1, p2, **kwargs)
-        return LinearEntity.__new__(cls, p1, p2, **kwargs)
+        if len(args) == 1 and isinstance(args[0], Expr):
+            x = kwargs.get('x', 'x')
+            y = kwargs.get('y', 'y')
+            equation = args[0]
+            if isinstance(equation, Eq):
+                equation = equation.lhs - equation.rhs
+            xin, yin = x, y
+            x = find(x, equation) or Dummy()
+            y = find(y, equation) or Dummy()
+
+            a, b, c = linear_coeffs(equation, x, y)
+
+            if b:
+                return Line((0, -c/b), slope=-a/b)
+            if a:
+                return Line((-c/a, 0), slope=oo)
+            raise ValueError('neither %s nor %s were found in the equation' % (xin, yin))
+
+        else:
+            if len(args) > 0:
+                p1 = args[0]
+                if len(args) > 1:
+                    p2 = args[1]
+                else:
+                    p2=None
+
+                if isinstance(p1, LinearEntity):
+                    if p2:
+                        raise ValueError('If p1 is a LinearEntity, p2 must be None.')
+                    dim = len(p1.p1)
+                else:
+                    p1 = Point(p1)
+                    dim = len(p1)
+                    if p2 is not None or isinstance(p2, Point) and p2.ambient_dimension != dim:
+                        p2 = Point(p2)
+
+                if dim == 2:
+                    return Line2D(p1, p2, **kwargs)
+                elif dim == 3:
+                    return Line3D(p1, p2, **kwargs)
+                return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def contains(self, other):
         """

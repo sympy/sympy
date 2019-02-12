@@ -1,15 +1,13 @@
-from __future__ import print_function, division
-
 from sympy import sqrt, Abs
 
 from sympy.core import S
 
 from sympy.integrals.intpoly import (decompose, best_origin,
-                                     polytope_integrate)
+                                     polytope_integrate, point_sort)
 
 from sympy.geometry.line import Segment2D
 from sympy.geometry.polygon import Polygon
-from sympy.geometry.point import Point
+from sympy.geometry.point import Point, Point2D
 from sympy.abc import x, y, z
 
 
@@ -491,6 +489,14 @@ def test_polytope_integrate():
         {1: 125, x: 625 / S(2), x * z: 3125 / S(4), y: 625 / S(2),
          y * z: 3125 / S(4), z ** 2: 3125 / S(3), y ** 2: 3125 / S(3),
          z: 625 / S(2), x * y: 3125 / S(4), x ** 2: 3125 / S(3)}
+
+def test_point_sort():
+    assert point_sort([Point(0, 0), Point(1, 0), Point(1, 1)]) == \
+        [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
+
+    fig6 = Polygon((0, 0), (1, 0), (1, 1))
+    assert polytope_integrate(fig6, x*y) == S(-1)/8
+    assert polytope_integrate(fig6, x*y, clockwise = True) == S(1)/8
 
 
 def test_polytopes_intersecting_sides():

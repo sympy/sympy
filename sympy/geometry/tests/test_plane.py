@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import Dummy, S, Symbol, symbols, pi, sqrt, asin, sin, cos
 from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane
 from sympy.geometry.util import are_coplanar
@@ -219,7 +217,7 @@ def test_plane():
 def test_dimension_normalization():
     A = Plane(Point3D(1, 1, 2), normal_vector=(1, 1, 1))
     b = Point(1, 1)
-    assert A.projection(b) == Point(5/3, 5/3, 2/3)
+    assert A.projection(b) == Point(S(5)/3, S(5)/3, S(2)/3)
 
     a, b = Point(0, 0), Point3D(0, 1)
     Z = (0, 0, 1)
@@ -227,3 +225,11 @@ def test_dimension_normalization():
     assert p.perpendicular_plane(a, b) == Plane(Point3D(0, 0, 0), (1, 0, 0))
     assert Plane((1, 2, 1), (2, 1, 0), (3, 1, 2)
         ).intersection((2, 1)) == [Point(2, 1, 0)]
+
+
+def test_parameter_value():
+    t, u, v = symbols("t, u v")
+    p = Plane((0, 0, 0), (0, 0, 1), (0, 1, 0))
+    assert p.parameter_value((0, -3, 2), t) == {t: asin(2*sqrt(13)/13)}
+    assert p.parameter_value((0, -3, 2), u, v) == {u: 3, v: 2}
+    raises(ValueError, lambda: p.parameter_value((1, 0, 0), t))

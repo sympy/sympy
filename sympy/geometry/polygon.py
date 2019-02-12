@@ -2,7 +2,7 @@ from __future__ import division, print_function
 
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, range, ordered
-from sympy.core.symbol import _symbol
+from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -11,7 +11,8 @@ from sympy.logic import And
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import has_dups, has_variety, uniq
+from sympy.utilities.iterables import has_dups, has_variety, uniq, rotate_left, least_rotation
+from sympy.utilities.misc import func_name
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point
@@ -270,6 +271,10 @@ class Polygon(GeometrySet):
         return ret
 
     @property
+    def ambient_dimension(self):
+        return self.vertices[0].ambient_dimension
+
+    @property
     def perimeter(self):
         """The perimeter of the polygon.
 
@@ -368,6 +373,70 @@ class Polygon(GeometrySet):
             cx += v*(x1 + x2)
             cy += v*(y1 + y2)
         return Point(simplify(A*cx), simplify(A*cy))
+
+
+    def second_moment_of_area(self, point=None):
+        """Returns the second moment and product moment of area of a two dimensional polygon.
+
+        Parameters
+        ==========
+
+        point : Point, two-tuple of sympifiable objects, or None(default=None)
+            point is the point about which second moment of area is to be found.
+            If "point=None" it will be calculated about the axis passing through the
+            centroid of the polygon.
+
+        Returns
+        =======
+
+        I_xx, I_yy, I_xy : number or sympy expression
+                           I_xx, I_yy are second moment of area of a two dimensional polygon.
+                           I_xy is product moment of area of a two dimensional polygon.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Polygon, symbols
+        >>> a, b = symbols('a, b')
+        >>> p1, p2, p3, p4, p5 = [(0, 0), (a, 0), (a, b), (0, b), (a/3, b/3)]
+        >>> rectangle = Polygon(p1, p2, p3, p4)
+        >>> rectangle.second_moment_of_area()
+        (a*b**3/12, a**3*b/12, 0)
+        >>> rectangle.second_moment_of_area(p5)
+        (a*b**3/9, a**3*b/9, a**2*b**2/36)
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Second_moment_of_area
+
+        """
+
+        I_xx, I_yy, I_xy = 0, 0, 0
+        args = self.args
+        for i in range(len(args)):
+            x1, y1 = args[i-1].args
+            x2, y2 = args[i].args
+            v = x1*y2 - x2*y1
+            I_xx += (y1**2 + y1*y2 + y2**2)*v
+            I_yy += (x1**2 + x1*x2 + x2**2)*v
+            I_xy += (x1*y2 + 2*x1*y1 + 2*x2*y2 + x2*y1)*v
+        A = self.area
+        c_x = self.centroid[0]
+        c_y = self.centroid[1]
+        # parallel axis theorem
+        I_xx_c = (I_xx/12) - (A*(c_y**2))
+        I_yy_c = (I_yy/12) - (A*(c_x**2))
+        I_xy_c = (I_xy/24) - (A*(c_x*c_y))
+        if point is None:
+            return I_xx_c, I_yy_c, I_xy_c
+
+        I_xx = (I_xx_c + A*((point[1]-c_y)**2))
+        I_yy = (I_yy_c + A*((point[0]-c_x)**2))
+        I_xy = (I_xy_c + A*((point[0]-c_x)*(point[1]-c_y)))
+
+        return I_xx, I_yy, I_xy
+
 
     @property
     def sides(self):
@@ -607,6 +676,29 @@ class Polygon(GeometrySet):
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
+    def parameter_value(self, other, t):
+        from sympy.solvers.solvers import solve
+        if not isinstance(other,GeometryEntity):
+            other = Point(other, dim=self.ambient_dimension)
+        if not isinstance(other,Point):
+            raise ValueError("other must be a point")
+        if other.free_symbols:
+            raise NotImplementedError('non-numeric coordinates')
+        unknown = False
+        T = Dummy('t', real=True)
+        p = self.arbitrary_point(T)
+        for pt, cond in p.args:
+            sol = solve(pt - other, T, dict=True)
+            if not sol:
+                continue
+            value = sol[0][T]
+            if simplify(cond.subs(T, value)) == True:
+                return {t: value}
+            unknown = True
+        if unknown:
+            raise ValueError("Given point may not be on %s" % func_name(self))
+        raise ValueError("Given point is not on %s" % func_name(self))
+
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the polygon.
 
@@ -696,7 +788,7 @@ class Polygon(GeometrySet):
         Returns the shortest distance between self and o.
 
         If o is a point, then self does not need to be convex.
-        If o is another polygon self and o must be complex.
+        If o is another polygon self and o must be convex.
 
         Examples
         ========
@@ -753,9 +845,9 @@ class Polygon(GeometrySet):
         Method:
         [1] http://cgm.cs.mcgill.ca/~orm/mind2p.html
         Uses rotating calipers:
-        [2] http://en.wikipedia.org/wiki/Rotating_calipers
+        [2] https://en.wikipedia.org/wiki/Rotating_calipers
         and antipodal points:
-        [3] http://en.wikipedia.org/wiki/Antipodal_point
+        [3] https://en.wikipedia.org/wiki/Antipodal_point
         """
         e1 = self
 
@@ -855,7 +947,7 @@ class Polygon(GeometrySet):
             e2_next = point1
 
         '''
-        Loop which determins the distance between anti-podal pairs and updates the
+        Loop which determines the distance between anti-podal pairs and updates the
         minimum distance accordingly. It repeats until it reaches the starting position.
         '''
         while True:
@@ -941,26 +1033,26 @@ class Polygon(GeometrySet):
             'stroke-width="{0}" opacity="0.6" d="{1}" />'
             ).format(2. * scale_factor, path, fill_color)
 
-    def __eq__(self, o):
-        if not isinstance(o, Polygon) or len(self.args) != len(o.args):
-            return False
+    def _hashable_content(self):
 
-        # See if self can ever be traversed (cw or ccw) from any of its
-        # vertices to match all points of o
-        args = self.args
-        oargs = o.args
-        n = len(args)
-        o0 = oargs[0]
-        for i0 in range(n):
-            if args[i0] == o0:
-                if all(args[(i0 + i) % n] == oargs[i] for i in range(1, n)):
-                    return True
-                if all(args[(i0 - i) % n] == oargs[i] for i in range(1, n)):
-                    return True
-        return False
+        D = {}
+        def ref_list(point_list):
+            kee = {}
+            for i, p in enumerate(ordered(set(point_list))):
+                kee[p] = i
+                D[i] = p
+            return [kee[p] for p in point_list]
 
-    def __hash__(self):
-        return super(Polygon, self).__hash__()
+        S1 = ref_list(self.args)
+        r_nor = rotate_left(S1, least_rotation(S1))
+        S2 = ref_list(list(reversed(self.args)))
+        r_rev = rotate_left(S2, least_rotation(S2))
+        if r_nor < r_rev:
+            r = r_nor
+        else:
+            r = r_rev
+        canonical_args = [ D[order] for order in r ]
+        return tuple(canonical_args)
 
     def __contains__(self, o):
         """

@@ -1,5 +1,7 @@
 Plane
 -----
 
-.. automodule:: sympy.geometry.plane
+.. module:: sympy.geometry.plane
+
+.. autoclass:: Plane
    :members:

@@ -4,7 +4,7 @@
 A tool to generate AUTHORS. We started tracking authors before moving
 to git, so we have to do some manual rearrangement of the git history
 authors in order to get the order in AUTHORS. bin/mailmap_update.py
-should be run before commiting the results.
+should be run before committing the results.
 """
 
 from __future__ import unicode_literals
@@ -92,6 +92,8 @@ try:
     # this will fail if the .mailmap is not right
     assert 'Sergey B Kirpichev' == author_name(git_people.pop(226)
         ), 'Sergey B Kirpichev was not found at line 226.'
+    assert 'azure-pipelines[bot]' == \
+        author_name(git_people.pop(751)), 'azure-pipelines[bot] was not found at line 751'
 except AssertionError as msg:
     print(red(msg))
     sys.exit(1)

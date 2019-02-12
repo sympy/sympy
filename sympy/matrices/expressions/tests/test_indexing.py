@@ -152,9 +152,9 @@ def test_matrix_expression_from_index_summation():
     expr = Sum((A[a, b] + B[b, a])*C[b, c], (b, 0, k-1))
     assert MatrixExpr.from_index_summation(expr, a) == (A+B.T)*C
     expr = Sum(A[a, b]*A[b, c]*A[c, d], (b, 0, k-1), (c, 0, k-1))
-    assert MatrixExpr.from_index_summation(expr, a) == MatMul(A, A, A)
+    assert MatrixExpr.from_index_summation(expr, a) == A**3
     expr = Sum(A[a, b]*A[b, c]*B[c, d], (b, 0, k-1), (c, 0, k-1))
-    assert MatrixExpr.from_index_summation(expr, a) == MatMul(A, A, B)
+    assert MatrixExpr.from_index_summation(expr, a) == A**2*B
 
     # Parse the trace of a matrix:
 

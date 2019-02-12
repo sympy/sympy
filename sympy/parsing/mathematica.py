@@ -318,7 +318,7 @@ class MathematicaParser(object):
             # add the corresponding actual argument
             scanned += template[:xbgn] + d[x]
 
-            # update cursor to the end of the model arugment
+            # update cursor to the end of the model argument
             cur = m.end()
 
             # shrink template
@@ -386,7 +386,7 @@ class MathematicaParser(object):
                 raise ValueError(err)
 
         if '{' in s:
-            err = "Currently list is not suported.".format(f=s)
+            err = "Currently list is not supported.".format(f=s)
             raise ValueError(err)
 
     def parse(self, s):
