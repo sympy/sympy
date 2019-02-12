@@ -1673,7 +1673,7 @@ class LatexPrinter(Printer):
 
     def _print_tuple(self, expr):
         return r"\left( %s\right)" % \
-            r", \quad ".join([ self._print(i) for i in expr ])
+            r", \  ".join([ self._print(i) for i in expr ])
 
     def _print_TensorProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
@@ -1688,7 +1688,7 @@ class LatexPrinter(Printer):
 
     def _print_list(self, expr):
         return r"\left[ %s\right]" % \
-            r", \quad ".join([ self._print(i) for i in expr ])
+            r", \  ".join([ self._print(i) for i in expr ])
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -1698,7 +1698,7 @@ class LatexPrinter(Printer):
             val = d[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
-        return r"\left\{ %s\right\}" % r", \quad ".join(items)
+        return r"\left\{ %s\right\}" % r", \  ".join(items)
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
@@ -2450,7 +2450,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     dictionary.
 
     >>> print(latex([2/x, y], mode='inline'))
-    $\left[ 2 / x, \quad y\right]$
+    $\left[ 2 / x, \  y\right]$
 
     """
     if symbol_names is None:
