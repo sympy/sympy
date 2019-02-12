@@ -273,10 +273,6 @@ class Mul(Expr, AssocOp):
                 coeff = o.__mul__(coeff)
                 continue
 
-            elif isinstance(o, MatrixExpr):
-                nc_part.append(o)
-                continue
-
             elif o is S.ComplexInfinity:
                 if not coeff:
                     # 0 * zoo = NaN
