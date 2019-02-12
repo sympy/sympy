@@ -3063,6 +3063,14 @@ def test_sysode_linear_neq_order1():
     assert dsolve(eq, simplify=False) == sols_eq
 
 
+def test_order_reducing_substitution():
+    eqn = Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2))
+    sol = Eq(f(x),
+             C1 - sqrt(-1/C1)*log(-C1*sqrt(-1/C1) + x) + sqrt(-1/C1)*log(C1*sqrt(-1/C1) + x))
+    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), hint='check_substitution_type')
+    assert sol == dsolve(eqn, f(x))
+    
 def test_nth_algebraic():
     eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
     sol = Eq(f(x), C1 + g(x))

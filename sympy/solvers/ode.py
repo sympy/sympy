@@ -1359,7 +1359,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # Any ODE that can be solved with a substitution and
         # repeated integration e.g.:
         # d^2/dx^2(y) + x*d/dx(y) = constant
-        r = _check_substitution_type(reduced_eq, func)
+        r = _check_substitution_type_match(reduced_eq, func)
         if r["solutions"]:
             matching_hints['order_reducing_substitution'] = r
         
@@ -4005,8 +4005,7 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
     return frobdict
 
-
-def _check_substitution_type(eq, func):
+def _check_substitution_type_match(eq, func):
     #Matches any differential equation that order_reducing_substitution can solve.
     #For this to work equation should min order of derivative to be 1, i.e., f(x) should not be present
     
