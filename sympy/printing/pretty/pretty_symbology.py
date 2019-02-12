@@ -598,8 +598,8 @@ def is_combining(sym):
                     u'\N{COMBINING LEFT HARPOON ABOVE}' <= sym <=
                     u'\N{COMBINING ASTERISK ABOVE}') else False
 
-  
-  def put_accent_in_middle_of_string(string, accent):
+
+def put_accent_in_middle_of_string(string, accent):
     """
     Returns a string with accent inserted on the middle character. Useful to
     put combining accents on symbol names, including multi-character names.
