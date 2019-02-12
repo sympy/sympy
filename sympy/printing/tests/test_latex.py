@@ -17,7 +17,7 @@ from sympy import (
     Contains, divisor_sigma, Dummy, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
-     UnevaluatedExpr, Quaternion)
+     UnevaluatedExpr, Quaternion, I)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -1931,3 +1931,9 @@ def test_print_basic():
     assert latex(unimplemented_expr(x)) == r'UnimplementedExpr\left(x\right)'
     assert latex(unimplemented_expr(x**2)) == r'UnimplementedExpr\left(x^{2}\right)'
     assert latex(unimplemented_expr_sup_sub(x)) == r'UnimplementedExpr^{1}_{x}\left(x\right)'
+
+def test_imaginary_unit():
+    assert latex(1 + I) == '1 + i'
+    assert latex(1 + I, imaginary_unit='j') == '1 + j'
+    assert latex(1 + I, imaginary_unit='foo') == '1 + foo'
+    assert latex(I, imaginary_unit=r"ti") == '\\text{i}'
