@@ -1356,13 +1356,16 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             matching_hints["2nd_power_series_regular"] = coeff_dict
 
     if order > 0:
-        # Any ODE that can be solved with a combination of algebra and
-        # integrals e.g.:
-        # d^3/dx^3(x y) = F(x)
+        # Any ODE that can be solved with a substitution and
+        # repeated integration e.g.:
+        # d^2/dx^2(y) + x*d/dx(y) = constant
         r = _check_substitution_type(reduced_eq, func)
         if r["solutions"]:
             matching_hints['order_reducing_substitution'] = r
-
+        
+        # Any ODE that can be solved with a combination of algebra and
+        # integrals e.g.:
+        # d^3/dx^3(x y) = F(x)
         r = _nth_algebraic_match(reduced_eq, func)
         if r['solutions']:
             matching_hints['nth_algebraic'] = r
@@ -4004,12 +4007,9 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
 
 def _check_substitution_type(eq, func):
-    r"""
-    Matches any differential equation that order_reducing_substitution can solve.
-
-    For this to work equation should min order of derivative to be 1, i.e., f(x) should not be present.
-    """
-
+    #Matches any differential equation that order_reducing_substitution can solve.
+    #For this to work equation should min order of derivative to be 1, i.e., f(x) should not be present
+    
     x = func.args[0]
     f = func.func
     order_to_subs = 0
@@ -4023,7 +4023,6 @@ def _check_substitution_type(eq, func):
         return {'var':order_to_subs, 'solutions':True}
     else:
         return {'var':order_to_subs, 'solutions':False}
-        
 
 # Use repeated substitution until we do not have a function independent of derivative   
 def ode_order_reducing_substitution(eq, func, order, match):
