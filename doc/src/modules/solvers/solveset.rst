@@ -346,10 +346,10 @@ How do we manipulate and return an infinite solution?
    >>> from sympy import ImageSet, Lambda, pi, S, Dummy, pprint
    >>> n = Dummy('n')
    >>> pprint(ImageSet(Lambda(n, 2*pi*n), S.Integers), use_unicode=True)
-   {2⋅n⋅π | n ∊ ℤ}
+   {2⋅_n⋅π | _n ∊ ℤ}
 
 
-   Where ``n`` is a dummy variable. It is basically the image of the
+   Where ``_n`` is a dummy variable. It is basically the image of the
    set of integers under the function `2\pi n`.
 
  * In the complex domain, we use complex sets, which are implemented as the
@@ -361,12 +361,12 @@ How do we manipulate and return an infinite solution?
 
    >>> from sympy import ComplexRegion, FiniteSet, Interval, pi, pprint
    >>> pprint(ComplexRegion(FiniteSet(1)*Interval(0, 2*pi), polar=True), use_unicode=True)
-   {r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ {1} × [0, 2⋅π)}
+   {_r⋅(ⅈ⋅sin(_θ) + cos(_θ)) | _r, _θ ∊ {1} × [0, 2⋅π)}
 
 
    Where the ``FiniteSet`` in the ``ProductSet`` is the range of the value
-   of `r`, which is the radius of the circle and the ``Interval`` is the range
-   of `\theta`, the angle from the `x` axis representing a unit circle in the
+   of `\_r`, which is the radius of the circle and the ``Interval`` is the range
+   of `\_\theta`, the angle from the `x` axis representing a unit circle in the
    Argand plane.
 
    Note: We also have non-polar form notation for representing solution
@@ -376,10 +376,10 @@ How do we manipulate and return an infinite solution?
 
    >>> from sympy import ComplexRegion, Interval, pi, oo, pprint
    >>> pprint(ComplexRegion(Interval(-oo, oo)*Interval(0, oo)), use_unicode=True)
-   {x + y⋅ⅈ | x, y ∊ (-∞, ∞) × [0, ∞)}
+   {_x + _y⋅ⅈ | _x, _y ∊ (-∞, ∞) × [0, ∞)}
 
 
-   where the Intervals are the range of `x` and `y` for the set of complex
+   where the Intervals are the range of `\_x` and `\_y` for the set of complex
    numbers `x + iy`.
 
 
