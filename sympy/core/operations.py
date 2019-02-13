@@ -35,7 +35,9 @@ class AssocOp(Basic):
         if evaluate is None:
             evaluate = global_evaluate[0]
         if not evaluate:
-            return cls._from_args(args)
+            obj = cls._from_args(args)
+            obj = cls._exec_constructor_postprocessors(obj)
+            return obj
 
         if len(args) == 0:
             return cls.identity
