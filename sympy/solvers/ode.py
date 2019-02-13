@@ -3065,6 +3065,7 @@ def ode_1st_exact(eq, func, order, match):
     y = r['y']
     C1 = get_numbered_constants(eq, num=1)
     # Refer Joel Moses, "Symbolic Integration - The Stormy Decade",
+
     # Communications of the ACM, Volume 14, Number 8, August 1971, pp. 558
     # which gives the method to solve an exact differential equation.
     sol = Integral(d, x) + Integral((e - (Integral(d, x).diff(y))), y)
