@@ -1360,7 +1360,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # Any ODE that can be solved with a substitution and
         # repeated integration e.g.:
         # `d^2/dx^2(y) + x*d/dx(y) = constant
-        #f'(x) must be finite for this to work  
+        #f'(x) must be finite for this to work
         r = _check_substitution_type_match(reduced_eq, func)
         if r["solutions"]:
             matching_hints['order_reducing_substitution'] = r
