@@ -130,8 +130,8 @@ def test_matmul_no_matrices():
 
 def test_matmul_args_cnc():
     a, b = symbols('a b', commutative=False)
-    assert MatMul(n, a, b, A, A.T).args_cnc() == ([n], [a, b, A, A.T])
-    assert MatMul(A, A.T).args_cnc() == ([1], [A, A.T])
+    assert MatMul(n, a, b, A, A.T).args_cnc() == [[n], [a, b, A, A.T]]
+    assert MatMul(A, A.T).args_cnc() == [[1], [A, A.T]]
 
 def test_issue_12950():
     M = Matrix([[Symbol("x")]]) * MatrixSymbol("A", 1, 1)
