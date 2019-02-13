@@ -159,8 +159,7 @@ class VectorLatexPrinter(LatexPrinter):
 
 class VectorPrettyPrinter(PrettyPrinter):
     """Pretty Printer for vectorialexpressions. """
-
-    def _print_Derivative(self, deriv): 
+    def _print_Derivative(self, deriv):
         from sympy.physics.vector.functions import dynamicsymbols
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
         t = dynamicsymbols._t
@@ -185,7 +184,7 @@ class VectorPrettyPrinter(PrettyPrinter):
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
         # There are only special symbols up to fourth-order derivatives
-        if dot_i >= 5:
+        if dot_i >= 5 or not self._use_unicode:
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
         # Deal with special symbols
