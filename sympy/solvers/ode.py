@@ -1362,7 +1362,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # `d^2/dx^2(y) + x*d/dx(y) = constant
         #f'(x) must be finite for this to work
         r = _check_substitution_type_match(reduced_eq, func)
-        if r["solutions"]:
+        if r:
             matching_hints['order_reducing_substitution'] = r
 
         # Any ODE that can be solved with a combination of algebra and
@@ -4030,7 +4030,7 @@ def _check_substitution_type_match(eq, func):
     if order_to_subs > 0:
         return {'var':order_to_subs, 'solutions':True}
     else:
-        return {'var':order_to_subs, 'solutions':False}
+        return None
 
 # Use repeated substitution until we do not have a function independent of derivative
 def ode_order_reducing_substitution(eq, func, order, match):
