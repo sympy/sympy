@@ -1359,7 +1359,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     if order > 0:
         # Any ODE that can be solved with a substitution and
         # repeated integration e.g.:
-        # d^2/dx^2(y) + x*d/dx(y) = constant
+        # d^2/dx^2(y) + x*d/dx(y) = 0
         r = _check_substitution_type_match(reduced_eq, func)
         if r["solutions"]:
             matching_hints['order_reducing_substitution'] = r
@@ -4012,8 +4012,11 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     return frobdict
 
 def _check_substitution_type_match(eq, func):
-    #Matches any differential equation that order_reducing_substitution can solve.
-    #For this to work equation should min order of derivative to be 1, i.e., f(x) should not be present
+    r"""
+    Matches any differential equation that order_reducing_substitution can solve.
+    For this to work equation should min order of derivative to be 1, i.e.,
+    f(x) should not be present.
+    """
     x = func.args[0]
     f = func.func
     order_to_subs = 0
@@ -4030,10 +4033,12 @@ def _check_substitution_type_match(eq, func):
 
 # Use repeated substitution until we do not have a function independent of derivative
 def ode_order_reducing_substitution(eq, func, order, match):
-    r'''
-    Substitutes lowest order derivate in equation to function with order of derivative as 0.Eg f^(n)(x) = g(x), where n is the least order derivate.
-    match[var] or n here is how many times the function if solved is to be integrated to  get f(x) since g(x) = f^(match[var])(x)
-    '''
+    r"""
+    Substitutes lowest order derivate in equation to function with order
+    of derivative as 0.Eg ```f^(n)(x) = g(x)```, where n is the least order derivate.
+    match[var] or n here is how many times the function if solved is to be integrated
+    to  get f(x) since ```g(x) = f^(match[var])(x)```.
+    """
     x = func.args[0]
     f = func.func
     g = Function('g')
