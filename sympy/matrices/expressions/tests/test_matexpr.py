@@ -349,6 +349,11 @@ def test_factor_expand():
     assert expand(expr1) == expr2
     assert factor(expr2) == expr1
 
+    expr = B**(-1)*(A**(-1)*B**(-1) - A**(-1)*C*B**(-1))**(-1)*A**(-1)
+    I = Identity(n)
+    # Ideally we get the first, but we at least don't want a wrong answer
+    assert factor(expr) in [I - C, B**-1*(A**-1*(I - C)*B**-1)**-1*A**-1]
+
 def test_issue_2749():
     A = MatrixSymbol("A", 5, 2)
     assert (A.T * A).I.as_explicit() == Matrix([[(A.T * A).I[0, 0], (A.T * A).I[0, 1]], \
