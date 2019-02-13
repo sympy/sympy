@@ -128,12 +128,9 @@ class MatMul(MatrixExpr, Mul):
 
     # Needed for partial compatibility with Mul
     def args_cnc(self, **kwargs):
-        coeff, matrices = self.as_coeff_matrices()
-        # I don't know how coeff could have noncommutative factors, but this
-        # handles it.
-        coeff_c, coeff_nc = coeff.args_cnc(**kwargs)
-
-        return [coeff_c, coeff_nc + matrices]
+        coeff_c = [x for x in self.args if x.is_commutative]
+        coeff_nc = [x for x in self.args if not x.is_commutative]
+        return [coeff_c, coeff_nc]
 
     def _eval_derivative_matrix_lines(self, x):
         from .transpose import Transpose
