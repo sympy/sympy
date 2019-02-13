@@ -6500,6 +6500,7 @@ def test_issue_15560():
     result = 'a*(a x a)'
     assert e == result
 
+
 def test_issue_15583():
 
     N = mechanics.ReferenceFrame('N')
@@ -6555,3 +6556,14 @@ def test_center_accent():
     assert center_accent('aaaa', u'\N{COMBINING TILDE}') == u'aaãa'
     assert center_accent('aaaaa', u'\N{COMBINING TILDE}') == u'aaãaa'
     assert center_accent('abcdefg', u'\N{COMBINING FOUR DOTS ABOVE}') == u'abcd⃜efg'
+
+
+def test_imaginary_unit():
+    from sympy import pretty # As it is redefined above
+    assert pretty(1 + I, use_unicode=False) == '1 + I'
+    assert pretty(1 + I, use_unicode=True) == u'1 + ⅈ'
+    assert pretty(1 + I, use_unicode=False, imaginary_unit='j') == '1 + I'
+    assert pretty(1 + I, use_unicode=True, imaginary_unit='j') == u'1 + ⅉ'
+
+    raises(TypeError, lambda: pretty(I, imaginary_unit=I))
+    raises(ValueError, lambda: pretty(I, imaginary_unit="kkk"))

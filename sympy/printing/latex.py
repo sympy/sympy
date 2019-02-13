@@ -136,6 +136,7 @@ class LatexPrinter(Printer):
         "symbol_names": {},
         "root_notation": True,
         "mat_symbol_style": "plain",
+        "imaginary_unit": "i",
     }
 
     def __init__(self, settings=None):
@@ -177,6 +178,22 @@ class LatexPrinter(Printer):
                     self._settings['mul_symbol']
 
         self._delim_dict = {'(': ')', '[': ']'}
+
+        imaginary_unit_table = {
+            None: r"i",
+            "i": r"i",
+            "ri": r"\mathrm{i}",
+            "ti": r"\text{i}",
+            "j": r"j",
+            "rj": r"\mathrm{j}",
+            "tj": r"\text{j}",
+        }
+        try:
+            self._settings['imaginary_unit_latex'] = \
+                imaginary_unit_table[self._settings['imaginary_unit']]
+        except KeyError:
+            self._settings['imaginary_unit_latex'] = \
+                self._settings['imaginary_unit']
 
     def parenthesize(self, item, level, strict=False):
         prec_val = precedence_traditional(item)
@@ -1664,7 +1681,7 @@ class LatexPrinter(Printer):
 
     def _print_tuple(self, expr):
         return r"\left( %s\right)" % \
-            r", \quad ".join([ self._print(i) for i in expr ])
+            r", \  ".join([ self._print(i) for i in expr ])
 
     def _print_TensorProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
@@ -1679,7 +1696,7 @@ class LatexPrinter(Printer):
 
     def _print_list(self, expr):
         return r"\left[ %s\right]" % \
-            r", \quad ".join([ self._print(i) for i in expr ])
+            r", \  ".join([ self._print(i) for i in expr ])
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -1689,7 +1706,7 @@ class LatexPrinter(Printer):
             val = d[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
-        return r"\left\{ %s\right\}" % r", \quad ".join(items)
+        return r"\left\{ %s\right\}" % r", \  ".join(items)
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
@@ -2278,7 +2295,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
     order=None, symbol_names=None, root_notation=True,
-    mat_symbol_style="plain"):
+    mat_symbol_style="plain", imaginary_unit="i"):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2337,6 +2354,10 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     mat_symbol_style : string, optional
         Can be either ``plain`` (default) or ``bold``. If set to ``bold``,
         a MatrixSymbol A will be printed as ``\mathbf{A}``, otherwise as ``A``.
+    imaginary_unit : string, optional
+        String to use for the imaginary unit. Defined options are "i" (default)
+        and "j". Adding "b" or "t" in front gives ``\mathrm`` or ``\text``, so
+        "bi" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
 
     Notes
     =====
@@ -2441,7 +2462,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     dictionary.
 
     >>> print(latex([2/x, y], mode='inline'))
-    $\left[ 2 / x, \quad y\right]$
+    $\left[ 2 / x, \  y\right]$
 
     """
     if symbol_names is None:
@@ -2463,6 +2484,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'symbol_names' : symbol_names,
         'root_notation' : root_notation,
         'mat_symbol_style' : mat_symbol_style,
+        'imaginary_unit' : imaginary_unit,
     }
 
     return LatexPrinter(settings).doprint(expr)
