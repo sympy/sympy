@@ -719,6 +719,7 @@ def test_classify_ode():
         '2nd_power_series_ordinary',
         'nth_algebraic_Integral',
         'Liouville_Integral',
+        'order_reducing_substitution'
         )
     assert classify_ode(f(x), f(x)) == ()
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == (
