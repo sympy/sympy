@@ -1444,6 +1444,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     r_rescaled['trialset'] = undetcoeff['trialset']
                     matching_hints["nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"] = r_rescaled
 
+
     # Order keys based on allhints.
     retlist = [i for i in allhints if i in matching_hints]
     if dict:
@@ -1454,6 +1455,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
+
 
 def classify_sysode(eq, funcs=None, **kwargs):
     r"""
