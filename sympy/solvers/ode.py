@@ -338,10 +338,13 @@ lie_heuristics = (
     )
 
 
-def sub_func_doit(eq, func, new):
+def sub_func_doit(eq, func, new, order=None):
     r"""
     When replacing the func with something else, we usually want the
     derivative evaluated, so this function helps in making that happen.
+    If ``order`` is provided, then all derivatives of all orders will
+    be evaluated; otherwise, only the derivatives present (default)
+    will be evaluated.
 
     Examples
     ========
@@ -359,9 +362,13 @@ def sub_func_doit(eq, func, new):
     x*(-1/(x**2*(z + 1/x)) + 1/(x**3*(z + 1/x)**2)) + 1/(x*(z + 1/x))
     ...- 1/(x**2*(z + 1/x)**2)
     """
-    reps = {func: new}
-    for d in eq.atoms(Derivative):
-        reps[d] = d.subs(func, new).doit(deep=False)
+    if order:
+        x = func.args[0]
+        reps = dict([(func.diff(x, i), new.diff(x, i)) for i in range(order, -1, -1)])
+    else:
+        reps = {func: new}
+        for d in eq.atoms(Derivative):
+            reps[d] = d.subs(func, new).doit(deep=False)
     return eq.xreplace(reps)
 
 def get_numbered_constants(eq, num=1, start=1, prefix='C'):
@@ -2410,7 +2417,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             ode_diff = ode.lhs - ode.rhs
 
             if sol.lhs == func:
-                s = sub_func_doit(ode_diff, func, sol.rhs)
+                s = sub_func_doit(ode_diff, func, sol.rhs, order)
             else:
                 testnum += 1
                 continue
