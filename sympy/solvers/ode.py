@@ -4018,19 +4018,21 @@ def _check_substitution_type_match(eq, func):
     For this to work equation should have a minimum order of derivative to be 1, i.e.,
     `f(x)` should not be present.
     """
+    fx = func
+    assert len(func.args) == 1  # ODE only handles functions of 1 variable
     x = func.args[0]
-    f = func.func
-    order_to_subs = 0
     D = Dummy()
-    for nsubs_try in range(1,ode_order(eq,f(x))):
-        if eq.subs(f(x).diff(x, nsubs_try), D).has(f(x)):
-            break
-        else:
-            order_to_subs += 1
-    if order_to_subs > 0:
-        return {'var':order_to_subs, 'solutions':True}
-    else:
-        return None
+    for d in ordered(eq.atoms(Derivative)):
+        try:
+            (v, c), = d.variable_count  # ValueError if not a singleton
+            if v != x:
+                raise ValueError  # not a derivative of interest
+        except ValueError:
+            continue
+        # d was the lowest-ordered derivative of interest
+        if eq.subs(d, D).has(fx):
+            return  # it didn't clear all occurrences of f(x)
+        return {'var': c}
 
 # Use repeated substitution until we do not have a function independent of derivative
 def ode_order_reducing_substitution(eq, func, order, match):
