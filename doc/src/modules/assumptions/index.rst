@@ -1,3 +1,5 @@
+.. _assumptions_module:
+
 ==================
 Assumptions Module
 ==================
