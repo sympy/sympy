@@ -2041,78 +2041,160 @@ class primeomega(Function):
             else:
                 return sum(factorint(n).values())
 				
+"""
+    All Mersenne prime numbers is of the form 2^p - 1 and all perfect numbers is of the form 2^(p-1)*(2^p-1)
+    Perfect number. c is a list of p in ascending order
+    A perfect number is a positive integer that is equal to the sum of its proper positive divisors
+    d is a list of no. of digits of Perfect number
+    List c and d should be updated when new Mersenne prime is found
+"""
+
+c = (2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933)
+d = (1,2,3,4,8,10,12,19,37,54,65,77,314,366,770,1327,1373,1937,2561,2663,5834,5985,6751,12003,13066,13973,26790,51924,66530,79502,130100,455663,517430,757263,841842,1791864,1819050,4197919,8107892,12640858,14471465,15632458,18304103,19616714,22370543,25674127,25956377,34850340,44677235,46498850,49724095)
+
+def mersenne_number(nth):
+
+    """Returns the nth known mersenne number, there may exist not-yet-found mersenne primes
+    """
+    n = as_int(nth)
+    if n <  1:
+        raise ValueError("nth must be a positive integer; prime(1) == 2")
+
+    if n > 51:
+        raise ValueError("There are only 51 perfect numbers; nth must be less than or equal to 51")
+
+    p = c[n-1]
+    x = 2**p -1
+    return x
+
+
 def perfect_number(nth):
 
-        c = (2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933)
-        n = as_int(nth)
-        if n < 1:
-            raise ValueError("nth must be a positive integer; prime(1) == 2")
-    
-        p = c[n-1]
-        x = 2**(p-1) * (2**p - 1)
+    """ Returns the nth known perfect number, there may exist not-yet-found perfect number
+    """
+        
+    n = as_int(nth)
+    if n < 1:
+        raise ValueError("nth must be a positive integer; prime(1) == 2")
 
-        return x
+    if n > 51:
+        raise ValueError("There are only 51 perfect numbers; nth must be less than or equal to 51")
+    
+    p = c[n-1]
+    x = 2**(p-1) * (2**p - 1)
+
+    return x
 
 def perfect_numberpi(n):
 
-        c = (2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933)
-        n = int(n)
-        d = ()
+    n = int(n)
+    d = ()
 
-        for i in c:
-            p = i
-            x = 2**(p-1) * (2**p - 1)
+    for i in c:
+        p = i
+        x = 2**(p-1) * (2**p - 1)
 
-            if( x > n):
-                t = i
-                break
+        if( x > n):
+            t = i
+            break
 
-            d = d + (x,)
+        d = d + (x,)
 
-        return d
+    return d
 
 def next_perfect_number(n):
 
-        c = (2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933)
-        n = int(n)
+    n = int(n)
 
-        for i in c:
-            p = i
-            x = 2**(p-1) * (2**p - 1)
-            if( x >= n):
-                return x
+    for i in c:
+         p = i
+         x = 2**(p-1) * (2**p - 1)
+         if( x >= n):
+             return x
                 
 def prev_perfect_number(n):
-        c = (2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933)
-        n = int(n)
 
-        for i in range(50):
-            p = c[i+1]
-            x = 2**(p-1) * (2**p - 1)
-            if( x > n):
-                k = 2**(c[i]-1) * (2**c[i]-1)
-                return k
+    n = int(n)
+
+    for i in range(50):
+        p = c[i+1]
+        x = 2**(p-1) * (2**p - 1)
+        if( x > n):
+            k = 2**(c[i]-1) * (2**c[i]-1)
+            return k
 
 def perfect_number_range(a,b):
-        c = (2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933)
 
-        from sympy.functions.elementary.integers import ceiling
+    from sympy.functions.elementary.integers import ceiling
 
-        if a >= b :
-            return 
+    if a >= b :
+        return 
 
-        d = ()
-        a = as_int(ceiling(a)) - 1
-        b = as_int(ceiling(b))
+    d = ()
+    a = as_int(ceiling(a)) - 1
+    b = as_int(ceiling(b))
 
-        for i in range(50):
-            p = c[i]
-            x = 2**(p-1) * (2**p - 1)
+    for i in range(50):
+        p = c[i]
+        x = 2**(p-1) * (2**p - 1)
 
-            if( x > a and x < b):
-                d = d + (x,)
+        if( x > a and x < b):
+            d = d + (x,)
 
-            else:
-                break
+        else:
+            break
 
-        return d
+    return d
+
+def ischeck_perfect_number(n):
+    from sympy.functions.elementary.integers import ceiling
+    from sympy.functions.elementary.exponential import log
+
+    k = as_int(ceiling(log(n+1,10)))
+
+    if k in d:
+        m = (1 + (1 + 4*n*2)**(1/2) )/4
+        if log(m,2)+1 in c:
+            return True
+
+    return False
+
+def isless_than_perfect_number(a,n):
+    from sympy.functions.elementary.integers import ceiling
+    from sympy.functions.elementary.exponential import log
+    k = as_int(ceiling(log(a+1,10)))
+    if( k < d[n-1]):
+        return True
+
+    if( k > d[n-1]):
+        return False
+
+    if( d[n-1] == k):
+        t = (1 + (1 + 4*a*2)**(1/2) )/4
+        m = log(t,2)
+        print(t)
+        print(m)
+        if(m+1 < c[n-1]):
+            return True
+
+        else:
+            return False
+
+def isgreater_than_perfect_number(a,n):
+    from sympy.functions.elementary.integers import ceiling
+    from sympy.functions.elementary.exponential import log
+    k = as_int(ceiling(log(a+1,10))) 
+    if( k < d[n-1]):
+        return False
+
+    if( k > d[n-1]):
+        return True
+
+    if(d[n-1] == k):
+        t = (1 + (1 + 4*a*2)**(1/2) )/4
+        m = log(t,2)
+        if(m+1 > c[n-1]):
+            return True
+
+        else:
+            return False
