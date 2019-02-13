@@ -1790,6 +1790,13 @@ class LatexPrinter(Printer):
               + r"\right\}")
 
     def _print_SeqFormula(self, s):
+        if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:
+            return r"\left\{%s\right\}_{%s=%s}^{%s}" % (
+                self._print(s.formula),
+                self._print(s.variables[0]),
+                self._print(s.start),
+                self._print(s.stop)
+            )
         if s.start is S.NegativeInfinity:
             stop = s.stop
             printset = (r'\ldots', s.coeff(stop - 3), s.coeff(stop - 2),
