@@ -255,25 +255,6 @@ FAILING_BAD_STRINGS = [
     "a / b /",
 ]
 
-def test_parseable():
-    from sympy.parsing.latex import parse_latex
-    for latex_str, sympy_expr in GOOD_PAIRS:
-        assert parse_latex(latex_str) == sympy_expr
-
-
-def test_failing_parseable():
-    from sympy.parsing.latex import parse_latex
-    for latex_str, sympy_expr in FAILING_PAIRS:
-        with pytest.raises(Exception):
-            assert parse_latex(latex_str) == sympy_expr
-
-
-def test_not_parseable():
-    from sympy.parsing.latex import parse_latex, LaTeXParsingError
-    for latex_str in BAD_STRINGS:
-        with pytest.raises(LaTeXParsingError):
-            parse_latex(latex_str)
-
 
 @XFAIL
 def test_failing_not_parseable():
