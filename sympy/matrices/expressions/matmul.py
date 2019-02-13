@@ -133,7 +133,7 @@ class MatMul(MatrixExpr, Mul):
         # handles it.
         coeff_c, coeff_nc = coeff.args_cnc(**kwargs)
 
-        return coeff_c, coeff_nc + matrices
+        return [coeff_c, coeff_nc + matrices]
 
     def _eval_derivative_matrix_lines(self, x):
         from .transpose import Transpose
