@@ -1,15 +1,15 @@
 """Module for querying SymPy objects about assumptions."""
 from __future__ import print_function, division
 
+from sympy.assumptions.assume import (global_assumptions, Predicate,
+        AppliedPredicate)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
+from sympy.core.decorators import deprecated
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
     BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
-from sympy.assumptions.assume import (global_assumptions, Predicate,
-        AppliedPredicate)
-from sympy.core.decorators import deprecated
 from sympy.utilities.decorator import memoize_property
 
 
@@ -228,7 +228,7 @@ class AssumptionKeys(object):
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Algebraic_number
+        .. [1] https://en.wikipedia.org/wiki/Algebraic_number
         """
         return Predicate('algebraic')
 
@@ -1328,7 +1328,7 @@ def register_handler(key, handler):
         >>> from sympy.assumptions import register_handler, ask, Q
         >>> from sympy.assumptions.handlers import AskHandler
         >>> class MersenneHandler(AskHandler):
-        ...     # Mersenne numbers are in the form 2**n + 1, n integer
+        ...     # Mersenne numbers are in the form 2**n - 1, n integer
         ...     @staticmethod
         ...     def Integer(expr, assumptions):
         ...         from sympy import log

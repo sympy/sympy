@@ -140,7 +140,7 @@ def bspline_basis(d, knots, n, x):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/B-spline
+    .. [1] https://en.wikipedia.org/wiki/B-spline
 
     """
     knots = [sympify(k) for k in knots]

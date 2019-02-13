@@ -2,19 +2,17 @@ from __future__ import print_function, division
 
 from sympy.core import sympify
 from sympy.core.add import Add
-from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
+from sympy.core.compatibility import range
+from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
+from sympy.core.logic import fuzzy_not
+from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
-from sympy.core.mul import Mul
-from sympy.core.logic import fuzzy_not
-
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
-from sympy.core.compatibility import range
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -140,7 +138,7 @@ class exp_polar(ExpBase):
     >>> exp_polar(2)*exp_polar(3)
     exp_polar(5)
 
-    See also
+    See Also
     ========
 
     sympy.simplify.simplify.powsimp
@@ -230,6 +228,8 @@ class exp(ExpBase):
         from sympy.assumptions import ask, Q
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
+        from sympy.matrices.matrices import MatrixBase
+        from sympy import logcombine
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -241,6 +241,8 @@ class exp(ExpBase):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Zero
+        elif arg is S.ComplexInfinity:
+            return S.NaN
         elif isinstance(arg, log):
             return arg.args[0]
         elif isinstance(arg, AccumBounds):
@@ -274,9 +276,10 @@ class exp(ExpBase):
 
             coeffs, log_term = [coeff], None
             for term in Mul.make_args(terms):
-                if isinstance(term, log):
+                term_ = logcombine(term)
+                if isinstance(term_, log):
                     if log_term is None:
-                        log_term = term.args[0]
+                        log_term = term_.args[0]
                     else:
                         return None
                 elif term.is_comparable:
@@ -301,7 +304,7 @@ class exp(ExpBase):
             if out:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
-        elif arg.is_Matrix:
+        elif isinstance(arg, MatrixBase):
             return arg.exp()
 
     @property
@@ -441,19 +444,34 @@ class exp(ExpBase):
             return S.One
         return exp(arg)
 
-    def _eval_rewrite_as_sin(self, arg):
+    def _eval_rewrite_as_sin(self, arg, **kwargs):
         from sympy import sin
         I = S.ImaginaryUnit
         return sin(I*arg + S.Pi/2) - I*sin(I*arg)
 
-    def _eval_rewrite_as_cos(self, arg):
+    def _eval_rewrite_as_cos(self, arg, **kwargs):
         from sympy import cos
         I = S.ImaginaryUnit
         return cos(I*arg) + I*cos(I*arg + S.Pi/2)
 
-    def _eval_rewrite_as_tanh(self, arg):
+    def _eval_rewrite_as_tanh(self, arg, **kwargs):
         from sympy import tanh
         return (1 + tanh(arg/2))/(1 - tanh(arg/2))
+
+    def _eval_rewrite_as_sqrt(self, arg, **kwargs):
+        from sympy.functions.elementary.trigonometric import sin, cos
+        if arg.is_Mul:
+            coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
+            if coeff and coeff.is_number:
+                cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
+                if not isinstance(cosine, cos) and not isinstance (sine, sin):
+                    return cosine + S.ImaginaryUnit*sine
+
+    def _eval_rewrite_as_Pow(self, arg, **kwargs):
+        if arg.is_Mul:
+            logs = [a for a in arg.args if isinstance(a, log) and len(a.args) == 1]
+            if logs:
+                return Pow(logs[0].args[0], arg.coeff(logs[0]))
 
 
 class log(Function):
@@ -529,10 +547,11 @@ class log(Function):
                 return S.Infinity
             elif arg is S.NaN:
                 return S.NaN
-            elif arg.is_Rational:
-                if arg.q != 1:
-                    return cls(arg.p) - cls(arg.q)
+            elif arg.is_Rational and arg.p == 1:
+                return -cls(arg.q)
 
+        if arg is S.ComplexInfinity:
+                return S.ComplexInfinity
         if isinstance(arg, exp) and arg.args[0].is_real:
             return arg.args[0]
         elif isinstance(arg, exp_polar):
@@ -604,6 +623,8 @@ class log(Function):
             p = perfect_power(int(arg))
             if p is not False:
                 return p[1]*self.func(p[0])
+        elif arg.is_Rational:
+            return log(arg.p) - log(arg.q)
         elif arg.is_Mul:
             expr = []
             nonpos = []
@@ -637,11 +658,15 @@ class log(Function):
 
         return self.func(arg)
 
-    def _eval_simplify(self, ratio, measure):
-        from sympy.simplify.simplify import expand_log, simplify
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        from sympy.simplify.simplify import expand_log, simplify, inversecombine
         if (len(self.args) == 2):
-            return simplify(self.func(*self.args), ratio=ratio, measure=measure)
-        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
+            return simplify(self.func(*self.args), ratio=ratio, measure=measure,
+                            rational=rational, inverse=inverse)
+        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure,
+                         rational=rational, inverse=inverse))
+        if inverse:
+            expr = inversecombine(expr)
         expr = expand_log(expr, deep=True)
         return min([expr, self], key=measure)
 
@@ -786,7 +811,7 @@ class LambertW(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Lambert_W_function
+    .. [1] https://en.wikipedia.org/wiki/Lambert_W_function
     """
 
     @classmethod
@@ -862,6 +887,3 @@ class LambertW(Function):
                 return False
         else:
             return s.is_algebraic
-
-
-from sympy.core.function import _coeff_isneg

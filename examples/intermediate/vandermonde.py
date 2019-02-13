@@ -3,7 +3,7 @@
 """Vandermonde matrix example
 
 Demonstrates matrix computations using the Vandermonde matrix.
-  * http://en.wikipedia.org/wiki/Vandermonde_matrix
+  * https://en.wikipedia.org/wiki/Vandermonde_matrix
 """
 
 from sympy import Matrix, pprint, Rational, sqrt, symbols, Symbol, zeros

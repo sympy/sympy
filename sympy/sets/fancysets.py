@@ -148,35 +148,6 @@ class Integers(with_metaclass(Singleton, Set)):
     def _boundary(self):
         return self
 
-    def _eval_imageset(self, f):
-        expr = f.expr
-        if not isinstance(expr, Expr):
-            return
-
-        if len(f.variables) > 1:
-            return
-
-        n = f.variables[0]
-
-        # f(x) + c and f(-x) + c cover the same integers
-        # so choose the form that has the fewest negatives
-        c = f(0)
-        fx = f(n) - c
-        f_x = f(-n) - c
-        neg_count = lambda e: sum(_coeff_isneg(_) for _ in Add.make_args(e))
-        if neg_count(f_x) < neg_count(fx):
-            expr = f_x + c
-
-        a = Wild('a', exclude=[n])
-        b = Wild('b', exclude=[n])
-        match = expr.match(a*n + b)
-        if match and match[a]:
-            # canonical shift
-            expr = match[a]*n + match[b] % match[a]
-
-        if expr != f.expr:
-            return ImageSet(Lambda(n, expr), S.Integers)
-
 
 class Reals(with_metaclass(Singleton, Interval)):
 
@@ -365,8 +336,10 @@ class ImageSet(Set):
         return self.base_set.is_iterable
 
     def doit(self, **kwargs):
-        return self.base_set._eval_imageset(self.lamda)
-
+        from sympy.sets.setexpr import SetExpr
+        f = self.lamda
+        base_set = self.base_set
+        return SetExpr(base_set)._eval_func(f).set
 
 
 class Range(Set):
@@ -666,30 +639,6 @@ class Range(Set):
             if rv < self.inf or rv > self.sup:
                 raise IndexError("Range index out of range")
             return rv
-
-    def _eval_imageset(self, f):
-        from sympy.core.function import expand_mul
-        if not self:
-            return S.EmptySet
-        if not isinstance(f.expr, Expr):
-            return
-        if self.size == 1:
-            return FiniteSet(f(self[0]))
-        if f is S.IdentityFunction:
-            return self
-
-        x = f.variables[0]
-        expr = f.expr
-        # handle f that is linear in f's variable
-        if x not in expr.free_symbols or x in expr.diff(x).free_symbols:
-            return
-        if self.start.is_finite:
-            F = f(self.step*x + self.start)  # for i in range(len(self))
-        else:
-            F = f(-self.step*x + self[-1])
-        F = expand_mul(F)
-        if F != expr:
-            return imageset(x, F, Range(self.size))
 
     @property
     def _inf(self):

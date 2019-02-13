@@ -180,6 +180,7 @@ class Mul(Expr, AssocOp):
             a, b = seq
             if b.is_Rational:
                 a, b = b, a
+                seq = [a, b]
             assert not a is S.One
             if not a.is_zero and a.is_Rational:
                 r, b = b.as_coeff_Mul()
@@ -261,7 +262,7 @@ class Mul(Expr, AssocOp):
                 if o is S.NaN or coeff is S.ComplexInfinity and o is S.Zero:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
-                elif coeff.is_Number:  # it could be zoo
+                elif coeff.is_Number or isinstance(coeff, AccumBounds):  # it could be zoo
                     coeff *= o
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
@@ -273,7 +274,10 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif isinstance(o, MatrixExpr):
-                coeff = o.__mul__(coeff)
+                if isinstance(coeff, MatrixExpr):
+                    coeff *= o
+                else:
+                    coeff = o.__mul__(coeff)
                 continue
 
             elif o is S.ComplexInfinity:
@@ -319,10 +323,6 @@ class Mul(Expr, AssocOp):
                         elif b.is_positive or e.is_integer:
                             num_exp.append((b, e))
                             continue
-
-                    elif b is S.ImaginaryUnit and e.is_Rational:
-                        neg1e += e/2
-                        continue
 
                 c_powers.append((b, e))
 
@@ -617,8 +617,8 @@ class Mul(Expr, AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if (global_distribute[0] and not nc_part and len(c_part) == 2 and c_part[0].is_Number and
-                c_part[1].is_Add):
+        if (global_distribute[0] and not nc_part and len(c_part) == 2 and
+                c_part[0].is_Number and c_part[0].is_finite and c_part[1].is_Add):
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
@@ -906,41 +906,32 @@ class Mul(Expr, AssocOp):
 
     @cacheit
     def _eval_derivative_n_times(self, s, n):
-        # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
-        from sympy import Integer, factorial, prod, Dummy, symbols, Sum
-        args = [arg for arg in self.args if arg.free_symbols & s.free_symbols]
-        coeff_args = [arg for arg in self.args if arg not in args]
-        m = len(args)
-        if m == 1:
-            return args[0].diff((s, n))*Mul.fromiter(coeff_args)
-
-        if isinstance(n, (int, Integer)):
+        from sympy import Integer, factorial, prod, Sum, Max
+        from sympy.ntheory.multinomial import multinomial_coefficients_iterator
+        from .function import AppliedUndef
+        from .symbol import Symbol, symbols, Dummy
+        if not isinstance(s, AppliedUndef) and not isinstance(s, Symbol):
+            # other types of s may not be well behaved, e.g.
+            # (cos(x)*sin(y)).diff([[x, y, z]])
             return super(Mul, self)._eval_derivative_n_times(s, n)
-
-            # Code not yet activated:
-            def sum_to_n(n, m):
-                if m == 1:
-                    yield (n,)
-                else:
-                    for x in range(n+1):
-                        for y in sum_to_n(n-x, m-1):
-                            yield (x,) + y
-            accum_sum = S.Zero
-            for kvals in sum_to_n(n, m):
-                part1 = factorial(n)/prod([factorial(k) for k in kvals])
-                part2 = prod([arg.diff((s, k)) for k, arg in zip(kvals, args)])
-                accum_sum += part1 * part2
-            return accum_sum * Mul.fromiter(coeff_args)
-
+        args = self.args
+        m = len(args)
+        if isinstance(n, (int, Integer)):
+            # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
+            terms = []
+            for kvals, c in multinomial_coefficients_iterator(m, n):
+                p = prod([arg.diff((s, k)) for k, arg in zip(kvals, args)])
+                terms.append(c * p)
+            return Add(*terms)
         kvals = symbols("k1:%i" % m, cls=Dummy)
         klast = n - sum(kvals)
-        result = Sum(
-            # better to use the multinomial?
-            factorial(n)/prod(map(factorial, kvals))/factorial(klast)*\
+        nfact = factorial(n)
+        e, l = (# better to use the multinomial?
+            nfact/prod(map(factorial, kvals))/factorial(klast)*\
             prod([args[t].diff((s, kvals[t])) for t in range(m-1)])*\
-            args[-1].diff((s, klast)),
-            *[(k, 0, n) for k in kvals])
-        return result*Mul.fromiter(coeff_args)
+            args[-1].diff((s, Max(0, klast))),
+            [(k, 0, n) for k in kvals])
+        return Sum(e, *l)
 
     def _eval_difference_delta(self, n, step):
         from sympy.series.limitseq import difference_delta as dd

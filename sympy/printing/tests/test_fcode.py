@@ -1,17 +1,21 @@
 from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
-    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq,
-    Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda, sign)
+                   factorial, Integral, Piecewise, Add, diff, symbols, S,
+                   Float, Dummy, Eq, Range, Catalan, EulerGamma, E,
+                   GoldenRatio, I, pi, Function, Rational, Integer, Lambda,
+                   sign, Mod)
 
-from sympy.codegen import For, Assignment
-from sympy.codegen.ast import Declaration, Type, Variable, float32, float64, value_const, real, bool_
+from sympy.codegen import For, Assignment, aug_assign
+from sympy.codegen.ast import Declaration, Variable, float32, float64, \
+        value_const, real, bool_, While, FunctionPrototype, FunctionDefinition, \
+        integer, Return
+from sympy.core.compatibility import range
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
+from sympy.matrices import Matrix, MatrixSymbol
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
-from sympy.matrices import Matrix, MatrixSymbol
 
 
 def test_printmethod():
@@ -46,7 +50,7 @@ def test_fcode_Pow():
     assert fcode(x**0.5) == '      sqrt(x)'
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
-    assert fcode(x**-1.0) == '      1.0/x'
+    assert fcode(x**-1.0) == '      1d0/x'
     assert fcode(x**-2.0, 'y', source_format='free') == 'y = x**(-2.0d0)'  # 2823
     assert fcode(x**Rational(3, 7)) == '      x**(3.0d0/7.0d0)'
 
@@ -74,6 +78,13 @@ def test_fcode_Float():
 def test_fcode_functions():
     x, y = symbols('x,y')
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
+    raises(NotImplementedError, lambda: fcode(Mod(x, y), standard=66))
+    raises(NotImplementedError, lambda: fcode(x % y, standard=66))
+    raises(NotImplementedError, lambda: fcode(Mod(x, y), standard=77))
+    raises(NotImplementedError, lambda: fcode(x % y, standard=77))
+    for standard in [90, 95, 2003, 2008]:
+        assert fcode(Mod(x, y), standard=standard) == "      modulo(x, y)"
+        assert fcode(x % y, standard=standard) == "      modulo(x, y)"
 
 
 def test_case():
@@ -168,8 +179,8 @@ def test_implicit():
 def test_not_fortran():
     x = symbols('x')
     g = Function('g')
-    assert fcode(
-        gamma(x)) == "C     Not supported in Fortran:\nC     gamma\n      gamma(x)"
+    gamma_f = fcode(gamma(x))
+    assert gamma_f == "C     Not supported in Fortran:\nC     gamma\n      gamma(x)"
     assert fcode(Integral(sin(x))) == "C     Not supported in Fortran:\nC     Integral\n      Integral(sin(x), x)"
     assert fcode(g(x)) == "C     Not supported in Fortran:\nC     g\n      g(x)"
 
@@ -728,22 +739,22 @@ def test_fcode_Declaration():
     i = symbols('i', integer=True)
     var1 = Variable.deduced(i)
     dcl1 = Declaration(var1)
-    check(dcl1, "integer :: i")
+    check(dcl1, "integer*4 :: i")
 
 
     x, y = symbols('x y')
-    var2 = Variable(x, {value_const}, float32)
-    dcl2b = Declaration(var2, 42)
-    check(dcl2b, 'real(4), parameter :: x = 42')
+    var2 = Variable(x, float32, value=42, attrs={value_const})
+    dcl2b = Declaration(var2)
+    check(dcl2b, 'real*4, parameter :: x = 42')
 
-    var3 = Variable(y, (), bool_)
+    var3 = Variable(y, type=bool_)
     dcl3 = Declaration(var3)
     check(dcl3, 'logical :: y')
 
-    check(float32, "real(4)")
-    check(float64, "real(8)")
-    check(real, "real(4)", type_aliases={real: float32})
-    check(real, "real(8)", type_aliases={real: float64})
+    check(float32, "real*4")
+    check(float64, "real*8")
+    check(real, "real*4", type_aliases={real: float32})
+    check(real, "real*8", type_aliases={real: float64})
 
 
 def test_MatrixElement_printing():
@@ -756,4 +767,41 @@ def test_MatrixElement_printing():
     assert(fcode(3 * A[0, 0]) == "      3*A(1, 1)")
 
     F = C[0, 0].subs(C, A - B)
-    assert(fcode(F) == "      ((-1)*B + A)(1, 1)")
+    assert(fcode(F) == "      (A - B)(1, 1)")
+
+
+def test_aug_assign():
+    x = symbols('x')
+    assert fcode(aug_assign(x, '+', 1), source_format='free') == 'x = x + 1'
+
+
+def test_While():
+    x = symbols('x')
+    assert fcode(While(abs(x) > 1, [aug_assign(x, '-', 1)]), source_format='free') == (
+        'do while (abs(x) > 1)\n'
+        '   x = x - 1\n'
+        'end do'
+    )
+
+
+def test_FunctionPrototype_print():
+    x = symbols('x')
+    n = symbols('n', integer=True)
+    vx = Variable(x, type=real)
+    vn = Variable(n, type=integer)
+    fp1 = FunctionPrototype(real, 'power', [vx, vn])
+    # Should be changed to proper test once multi-line generation is working
+    # see https://github.com/sympy/sympy/issues/15824
+    raises(NotImplementedError, lambda: fcode(fp1))
+
+
+def test_FunctionDefinition_print():
+    x = symbols('x')
+    n = symbols('n', integer=True)
+    vx = Variable(x, type=real)
+    vn = Variable(n, type=integer)
+    body = [Assignment(x, x**n), Return(x)]
+    fd1 = FunctionDefinition(real, 'power', [vx, vn], body)
+    # Should be changed to proper test once multi-line generation is working
+    # see https://github.com/sympy/sympy/issues/15824
+    raises(NotImplementedError, lambda: fcode(fd1))

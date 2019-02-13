@@ -20,12 +20,10 @@ from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
 from sympy.sets.contains import Contains
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
-
 from mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.utilities import subsets
 from sympy.multipledispatch import dispatch
-
 
 class Set(Basic):
     """
@@ -132,7 +130,7 @@ class Set(Basic):
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Disjoint_sets
+        .. [1] https://en.wikipedia.org/wiki/Disjoint_sets
         """
         return self.intersect(other) == S.EmptySet
 
@@ -214,7 +212,7 @@ class Set(Basic):
 
         >>> from sympy import S, EmptySet
         >>> S.Reals.symmetric_difference(EmptySet())
-        S.Reals
+        Reals
 
         References
         ==========
@@ -403,7 +401,7 @@ class Set(Basic):
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Power_set
+        .. [1] https://en.wikipedia.org/wiki/Power_set
 
         """
         return self._eval_powerset()
@@ -498,7 +496,7 @@ class Set(Basic):
         ========
         >>> from sympy import S, Interval
         >>> S.Reals.closure
-        S.Reals
+        Reals
         >>> Interval(0, 1).closure
         Interval(0, 1)
         """
@@ -524,10 +522,6 @@ class Set(Basic):
     @property
     def _boundary(self):
         raise NotImplementedError()
-
-    def _eval_imageset(self, f):
-        from sympy.sets.setexpr import SetExpr
-        return SetExpr(self)._eval_func(f).set
 
     @property
     def _measure(self):
@@ -600,7 +594,7 @@ class ProductSet(Set):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Cartesian_product
+    .. [1] https://en.wikipedia.org/wiki/Cartesian_product
     """
     is_ProductSet = True
 
@@ -755,7 +749,7 @@ class Interval(Set, EvalfMixin):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Interval_%28mathematics%29
+    .. [1] https://en.wikipedia.org/wiki/Interval_%28mathematics%29
     """
     is_Interval = True
 
@@ -1012,7 +1006,7 @@ class Union(Set, EvalfMixin):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Union_%28set_theory%29
+    .. [1] https://en.wikipedia.org/wiki/Union_%28set_theory%29
     """
     is_Union = True
 
@@ -1193,7 +1187,7 @@ class Intersection(Set):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Intersection_%28set_theory%29
+    .. [1] https://en.wikipedia.org/wiki/Intersection_%28set_theory%29
     """
     is_Intersection = True
 
@@ -1374,7 +1368,7 @@ class Complement(Set, EvalfMixin):
             return Intersection(s.complement(A) for s in B.args)
 
         result = B._complement(A)
-        if result != None:
+        if result is not None:
             return result
         else:
             return Complement(A, B, evaluate=False)
@@ -1408,7 +1402,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Empty_set
+    .. [1] https://en.wikipedia.org/wiki/Empty_set
     """
     is_EmptySet = True
     is_FiniteSet = True
@@ -1466,7 +1460,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Universal_set
+    .. [1] https://en.wikipedia.org/wiki/Universal_set
     """
 
     is_UniversalSet = True
@@ -1517,7 +1511,7 @@ class FiniteSet(Set, EvalfMixin):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Finite_set
+    .. [1] https://en.wikipedia.org/wiki/Finite_set
     """
     is_FiniteSet = True
     is_iterable = True
@@ -1706,7 +1700,7 @@ class SymmetricDifference(Set):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Symmetric_difference
+    .. [1] https://en.wikipedia.org/wiki/Symmetric_difference
     """
 
     is_SymmetricDifference = True
@@ -1762,7 +1756,7 @@ def imageset(*args):
     then the unevaluated ImageSet should be used.
 
     >>> imageset(x, -2*x + 5, S.Integers)
-    ImageSet(Lambda(x, 2*x + 1), S.Integers)
+    ImageSet(Lambda(x, 2*x + 1), Integers)
 
     See Also
     ========
@@ -1772,6 +1766,7 @@ def imageset(*args):
     """
     from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
+    from sympy.sets.setexpr import set_function
 
     if len(args) < 2:
         raise ValueError('imageset expects at least 2 args, got: %s' % len(args))
@@ -1809,7 +1804,9 @@ def imageset(*args):
 
     if len(set_list) == 1:
         set = set_list[0]
-        r = set._eval_imageset(f)
+        r = set_function(f, set)
+        if r is None:
+            r = ImageSet(f, set)
         if isinstance(r, ImageSet):
             f, set = r.args
 
@@ -1960,3 +1957,60 @@ def simplify_intersection(args):
         return args.pop()
     else:
         return Intersection(args, evaluate=False)
+
+
+def _handle_finite_sets(op, x, y, commutative):
+    # Handle finite sets:
+    fs_args, other = sift([x, y], lambda x: isinstance(x, FiniteSet), binary=True)
+    if len(fs_args) == 2:
+        return FiniteSet(*[op(i, j) for i in fs_args[0] for j in fs_args[1]])
+    elif len(fs_args) == 1:
+        sets = [_apply_operation(op, other[0], i, commutative) for i in fs_args[0]]
+        return Union(*sets)
+    else:
+        return None
+
+def _apply_operation(op, x, y, commutative):
+    from sympy.sets import ImageSet
+    from sympy import symbols,Lambda
+    d = Dummy('d')
+
+    out = _handle_finite_sets(op, x, y, commutative)
+    if out is None:
+        out = op(x, y)
+
+    if out is None and commutative:
+        out = op(y, x)
+    if out is None:
+        _x, _y = symbols("x y")
+        if isinstance(x, Set) and not isinstance(y, Set):
+            out = ImageSet(Lambda(d, op(d, y)), x).doit()
+        elif not isinstance(x, Set) and isinstance(y, Set):
+            out = ImageSet(Lambda(d, op(x, d)), y).doit()
+        else:
+            out = ImageSet(Lambda((_x, _y), op(_x, _y)), x, y)
+    return out
+
+def set_add(x, y):
+    from sympy.sets.handlers.add import _set_add
+    return _apply_operation(_set_add, x, y, commutative=True)
+
+def set_sub(x, y):
+    from sympy.sets.handlers.add import _set_sub
+    return _apply_operation(_set_sub, x, y, commutative=False)
+
+def set_mul(x, y):
+    from sympy.sets.handlers.mul import _set_mul
+    return _apply_operation(_set_mul, x, y, commutative=True)
+
+def set_div(x, y):
+    from sympy.sets.handlers.mul import _set_div
+    return _apply_operation(_set_div, x, y, commutative=False)
+
+def set_pow(x, y):
+    from sympy.sets.handlers.power import _set_pow
+    return _apply_operation(_set_pow, x, y, commutative=False)
+
+def set_function(f, x):
+    from sympy.sets.handlers.functions import _set_function
+    return _set_function(f, x)
