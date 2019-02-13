@@ -1040,11 +1040,11 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         reps = []
         for i, (c, nc) in enumerate(args):
             if nc:
-                nc = Mul._from_args(nc)
+                nc = Mul(*nc)
                 d = Dummy()
                 reps.append((d, nc))
                 c.append(d)
-                args[i] = Mul._from_args(c)
+                args[i] = Mul(*c)
             else:
                 args[i] = c
         return args, dict(reps)

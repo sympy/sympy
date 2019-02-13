@@ -1,5 +1,5 @@
 from sympy import KroneckerDelta, diff, Piecewise, And
-from sympy import Sum, Dummy, factor, expand, zeros
+from sympy import Sum, Dummy, factor, expand, zeros, gcd_terms
 
 from sympy.core import S, symbols, Add, Mul
 from sympy.core.compatibility import long
@@ -428,3 +428,8 @@ def test_MatAdd_postprocessor():
     a = Add(A, x, M, M, x)
     assert isinstance(a, Add)
     assert a.args == (2*x, A + 2*M)
+
+def test_simplify_matrix_expressions():
+    # Various simplification functions
+    assert type(gcd_terms(C*D + D*C)) == MatAdd
+    assert gcd_terms(2*C*D + 4*D*C) == 2*(C*D + 2*D*C)
