@@ -4042,7 +4042,10 @@ def ode_order_reducing_substitution(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    g = Function(Dummy().name)
+    while True:
+        g = Function(Dummy().name)
+        if not eq.has(g(x)):
+            break
     eq = eq.subs(f(x).diff(x, match['var']), g(x))
     eq = dsolve(eq)
     eq = dsolve(eq.subs(g(x), f(x).diff(x, match['var'])))
