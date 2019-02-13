@@ -1355,6 +1355,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                             matching_hints["2nd_power_series_regular"] = coeff_dict
 
+
     if order > 0:
         # Any ODE that can be solved with a substitution and
         # repeated integration e.g.:
