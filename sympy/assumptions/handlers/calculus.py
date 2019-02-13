@@ -229,3 +229,130 @@ class AskFiniteHandler(CommonHandler):
         [staticmethod(CommonHandler.AlwaysTrue)]*9
 
     Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysFalse)]*2
+
+class AskTranscendentalHandler(CommonHandler):
+    """
+    Handler for key 'transcendental'.
+
+    Test that an expression is transcendental.
+
+    Examples of usage:
+
+    >>> from sympy import Symbol, Q, E, Pi
+    >>> from sympy.assumptions.handlers.calculus import AskTranscendentalHandler
+    >>> from sympy.abc import x
+    >>> a = AskTranscendentalHandler()
+    >>> a.Add(E + Pi)
+    None
+    >>> a.Mul(2*E)
+    True
+
+    """
+
+    @staticmethod
+    def Symbol(expr, assumptions):
+        """
+        Handles Symbol.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Q
+        >>> from sympy.assumptions.handlers.calculus import AskFiniteHandler
+        >>> from sympy.abc import x
+        >>> a = AskTranscendentalHandler()
+        >>> a.Symbol(x, Q.transcendental(x))
+        True
+        >>> a.Symbol(x)
+        None
+
+        """
+
+        if expr.is_transcendental is not None:
+            return expr.is_transcendental
+        if Q.transcendental(expr) in conjuncts(assumptions):
+            return True
+        return None
+
+    @staticmethod
+    def Add(expr, assumptions):
+        """
+        Returns True if expr can be proven transcendental.
+
+        If only one of the arguments is transcendental then
+        `True` is returned.
+        If all of the arguments are non-transcendental then
+        `False` is returned.
+        In all other cases, `None` is returned.
+
+        """
+
+        _num_transcendental = 0
+        for arg in expr.args:
+            if ask(Q.transcendental(arg), assumptions):
+                _num_transcendental += 1
+        if _num_transcendental == 0:
+            return False
+        if _num_transcendental == 1:
+            return True
+        return None
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        """
+        Returns True if expr can be proven transcendental.
+
+        If only one of the arguments is transcendental then
+        True is returned.
+        If all of the arguments are non-transcendental then
+        False is returned.
+        In all other cases, None is returned.
+
+        """
+
+        expr = sum([arg for arg in expr.args])
+        return Add(expr, assumptions)
+
+    @staticmethod
+    def Pow(expr, assumptions):
+        """
+        Returns True if expr can be proven transcendental.
+
+        If base is transcendental and exponent is
+        non-transcendental then True is returned.
+        If base is non-transcendental and exponent is
+        irrational then also True is returned.
+        In all other cases, None is returned.
+
+        """
+
+        base_transcendental = ask(Q.transcendental(expr.base), assumptions)
+        exp_transcendental = ask(Q.transcendental(exp.exp), assumptions)
+        exp_irrational = ask(Q.rational(exp.exp), assumptions)
+        if base_transcendental and not exp_transcendental:
+            return True
+        if not base_transcendental and exp_irrational:
+            return True
+        return None
+
+    @staticmethod
+    def log(expr, assumptions):
+        if expr.args[0] not in (0, 1):
+            return not ask(Q.transcendental(expr.args[0]), assumptions)
+        return None
+
+    @staticmethod
+    def cos(expr, assumptions):
+        arg_transcendental = ask(Q.transcendental(expr.args[0]), assumptions)
+        if not arg_transcendental and expr.args[0] != 0:
+            return True
+        return None
+
+    @staticmethod
+    def sin(expr, assumptions):
+        return cos(expr, assumptions)
+
+    Pi, Exp1 = [staticmethod(CommonHandler.AlwaysTrue)]*2
+    GoldenRatio, TribonacciConstant, ImaginaryUnit = [staticmethod(CommonHandler.AlwaysFalse)]*3
+
+    Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysNone)]*2
