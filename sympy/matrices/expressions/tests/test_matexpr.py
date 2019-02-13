@@ -339,6 +339,7 @@ def test_inv():
     B = MatrixSymbol('B', 3, 3)
     assert B.inv() == B**-1
 
+@XFAIL
 def test_factor_expand():
     A = MatrixSymbol("A", n, n)
     B = MatrixSymbol("B", n, n)
