@@ -287,6 +287,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: ``best``, and ``all_Integral`` meta-hints should not be included in this
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
+    "order_reducing_substitution",
     "nth_algebraic",
     "separable",
     "1st_exact",
@@ -323,8 +324,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
-    "order_reducing_substitution",
-    )
+      )
 
 lie_heuristics = (
     "abaco1_simple",
