@@ -1447,6 +1447,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     # Order keys based on allhints.
     retlist = [i for i in allhints if i in matching_hints]
+
     if dict:
         # Dictionaries are ordered arbitrarily, so make note of which
         # hint would come first for dsolve().  Use an ordered dict in Py 3.
@@ -1455,7 +1456,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
-
 
 def classify_sysode(eq, funcs=None, **kwargs):
     r"""
