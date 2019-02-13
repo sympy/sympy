@@ -1879,7 +1879,7 @@ class LatexPrinter(Printer):
             vars_print,
             vars_print,
             self._print(s.base_set),
-            self._print(s.condition.as_expr()))
+            self._print(s.condition))
 
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])

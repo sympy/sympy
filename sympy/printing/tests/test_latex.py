@@ -1883,6 +1883,13 @@ def test_latex_printer_tensor():
     assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'
 
 
+def test_issue_15353():
+    from sympy import nonlinsolve, sin, cos, symbols
+    a, x = symbols('a x')
+    sol = nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
+    assert latex(sol) == r'\left\{\left( x, \  a\right) \mid \left( x, \  a\right) \in \mathbb{C} \wedge \left\{\sin{\left(a x \right)}, \cos{\left(a x \right)}\right\} \right\}'
+
+
 def test_trace():
     # Issue 15303
     from sympy import trace
