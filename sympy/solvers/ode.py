@@ -1666,6 +1666,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     return matching_hints
 
+
 def check_linear_2eq_order1(eq, func, func_coef):
     x = func[0].func
     y = func[1].func
