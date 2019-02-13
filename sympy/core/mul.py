@@ -1777,7 +1777,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
                 r = c/q
                 if r == int(r):
                     return coeff*factors
-        return Mul._from_args((coeff, factors))
+        return Mul(coeff, factors, evaluate=False)
     elif factors.is_Mul:
         margs = list(factors.args)
         if margs[0].is_Number:

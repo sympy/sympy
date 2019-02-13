@@ -437,4 +437,6 @@ def test_MatAdd_postprocessor():
 def test_simplify_matrix_expressions():
     # Various simplification functions
     assert type(gcd_terms(C*D + D*C)) == MatAdd
-    assert gcd_terms(2*C*D + 4*D*C) == 2*(C*D + 2*D*C)
+    a = gcd_terms(2*C*D + 4*D*C)
+    assert type(a) == MatMul
+    assert a.args == (2, (C*D + 2*D*C))
