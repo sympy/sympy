@@ -356,6 +356,32 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_Derivative2(self, deriv):
+        syms = ((s,len(list(repeats))) for s,repeats in itertools.groupby(reversed(deriv.symbols)))
+        x = None
+        for sym,times in syms:
+            S = self._print(sym)
+            dS= prettyForm(*S.left('d'))
+            if times > 1:
+                dS = dS ** prettyForm(str(times))
+            if x is None:
+                x = dS
+            else:
+                x = prettyForm(*x.right(' '))
+                x = prettyForm(*x.right(dS))
+
+        f = prettyForm(binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
+
+        pform = prettyForm('d')
+        dim = len(deriv.symbols)
+        if dim > 1:
+            pform = pform ** prettyForm(str(dim))
+
+        pform = prettyForm(*pform.below(stringPict.LINE, x))
+        pform.baseline = pform.baseline + 1
+        pform = prettyForm(*stringPict.next(pform, f))
+        return pform
+
     def _print_Cycle(self, dc):
         from sympy.combinatorics.permutations import Permutation, Cycle
         # for Empty Cycle

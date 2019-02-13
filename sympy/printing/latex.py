@@ -660,6 +660,27 @@ class LatexPrinter(Printer):
 
         return r"%s %s" % (tex, self.parenthesize(expr.expr, PRECEDENCE["Mul"], strict=True))
 
+    def _print_Derivative2(self,expr):
+        tex = ""
+        def to_tex(sym_and_times):
+            times= len(list(sym_and_times[1]))
+            if times == 1:
+                return r"\partial %s" % self._print(sym_and_times[0])
+            else:
+                return r"\partial^{%s} %s" % (times, self._print(sym_and_times[0]))
+
+        tex = ''.join(itertools.imap(to_tex, itertools.groupby(expr.symbols)))
+        dim = len(expr.symbols)
+        if dim > 1:
+            tex = r"\frac{\partial^{%s}}{%s} " % (dim, tex)
+        else:
+            tex = r"\frac{\partial}{%s}" % (tex)
+
+        if isinstance(expr.expr, AssocOp):
+            return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
+        else:
+            return r"%s %s" % (tex, self._print(expr.expr))
+
     def _print_Subs(self, subs):
         expr, old, new = subs.args
         latex_expr = self._print(expr)

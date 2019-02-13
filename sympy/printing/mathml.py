@@ -11,6 +11,7 @@ from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer
 
+from itertools import groupby
 
 class MathMLPrinterBase(Printer):
     """Contains common code required for MathMLContentPrinter and
@@ -422,6 +423,23 @@ class MathMLContentPrinter(MathMLPrinterBase):
         x_1 = self.dom.createElement('bvar')
         for sym in e.variables:
             x_1.appendChild(self._print(sym))
+
+        x.appendChild(x_1)
+        x.appendChild(self._print(e.expr))
+        return x
+
+    def _print_Derivative2(self,e):
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement(self.mathml_tag(e)))
+        x_1 = self.dom.createElement('bvar')
+        rle_syms = ((s,len(list(repeats))) for s,repeats in groupby(e.symbols))
+
+        for sym,times in rle_syms:
+            x_1.appendChild(self._print(sym))
+            if times > 1:
+                degree = self.dom.createElement('degree')
+                degree.appendChild(self._print(sympify(times)))
+                x_1.appendChild(degree)
 
         x.appendChild(x_1)
         x.appendChild(self._print(e.expr))
