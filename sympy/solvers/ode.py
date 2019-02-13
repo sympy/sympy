@@ -362,11 +362,12 @@ def sub_func_doit(eq, func, new, order=None):
     x*(-1/(x**2*(z + 1/x)) + 1/(x**3*(z + 1/x)**2)) + 1/(x*(z + 1/x))
     ...- 1/(x**2*(z + 1/x)**2)
     """
+    reps = {func: new}
     if order:
         x = func.args[0]
-        reps = dict([(func.diff(x, i), new.diff(x, i)) for i in range(order, -1, -1)])
+        for i in range(order, -1, -1):
+            reps[func.diff(x, i)] = new.diff(x, i)
     else:
-        reps = {func: new}
         for d in eq.atoms(Derivative):
             reps[d] = d.subs(func, new).doit(deep=False)
     return eq.xreplace(reps)
