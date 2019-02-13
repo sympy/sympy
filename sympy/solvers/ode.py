@@ -1394,6 +1394,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             # Homogeneous case: F(x) is identically 0
             else:
                 matching_hints["nth_linear_constant_coeff_homogeneous"] = r
+
         # nth order Euler equation a_n*x**n*y^(n) + ... + a_1*x*y' + a_0*y = F(x)
         #In case of Homogeneous euler equation F(x) = 0
         def _test_term(coeff, order):
