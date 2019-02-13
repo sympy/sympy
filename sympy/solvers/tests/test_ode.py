@@ -3072,6 +3072,16 @@ def test_order_reducing_substitution():
     assert sol == dsolve(eqn, f(x), hint='order_reducing_substitution')
     assert sol == dsolve(eqn, f(x))
 
+    w, x, y= symbols('w x y')
+    f = Function('f')
+    F = lambda eq: _check_substitution_type_match(eq, f(x))
+    fx = f(x)
+    D = Derivative
+    assert F(D(y*fx, x, y) + D(fx, x)) is None
+    assert F(D(y*f(y), y, y) + D(f(y), y)) is None
+    assert F(fx*D(fx, x) + D(fx, x, 2)) is None
+    assert F(D(x*f(y), y, 2) + D(w*y*fx, x, 3)) == dict(var=3)
+    assert F(D(f(w), w, 2) + D(f(w), w, 3) + D(fx, x, 4)) == dict(var=4)
 
 def test_nth_algebraic():
     eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
