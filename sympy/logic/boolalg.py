@@ -534,6 +534,7 @@ class BooleanFunction(Application, Boolean):
         Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
         if len(Rel) <= 1:
             return rv
+        Rel, nonRealRel = sift(rv.args, lambda i: all(s.is_real for s in i.free_symbols), binary=True)
         Rel = [i.canonical for i in Rel]
         while changed and len(Rel) >= 2:
             changed = False
@@ -596,7 +597,7 @@ class BooleanFunction(Application, Boolean):
                 # We did change comething so try again
                 changed = True
 
-        rv = rv.func(*([i.canonical for i in ordered(Rel)] + nonRel))
+        rv = rv.func(*([i.canonical for i in ordered(Rel)] + nonRel + nonRealRel))
         return rv
 
 class And(LatticeOp, BooleanFunction):

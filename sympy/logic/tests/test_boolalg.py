@@ -832,6 +832,8 @@ def test_BooleanFunction_diff():
 
 
 def test_relational_simplification():
+    w, x, y = symbols('w x y', real=True)
+    d, e = symbols('d e', real=True)
     assert Or(x >= y, x < y).simplify() == S.true
     assert And(x >= y, x < y).simplify() == S.false
     assert Or(x >= y, Eq(y, x)).simplify() == (x >= y)
@@ -840,3 +842,4 @@ def test_relational_simplification():
     assert And(Eq(x,y), x >= y, w < y, y >= z, z < y).simplify() == And(Eq(x, y), y > Max(w, z))
     assert Or(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y).simplify() == (Eq(x, y) | (x >= 1) | (y > Min(2, z)))
     assert And(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y).simplify() == (Eq(x, y) & (x >= 1) & (y >= 5) & (y > z))
+    assert Eq(x, y) & Eq(d, e) & (x >= y) & (d >= e) == Eq(a, b) & Eq(d, e) & (d >= e)
