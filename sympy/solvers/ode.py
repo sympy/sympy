@@ -287,7 +287,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: ``best``, and ``all_Integral`` meta-hints should not be included in this
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
-    "order_reducing_substitution",
+    "order_reducible_substitution",
     "nth_algebraic",
     "separable",
     "1st_exact",
@@ -1361,9 +1361,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # repeated integration e.g.:
         # `d^2/dx^2(y) + x*d/dx(y) = constant
         #f'(x) must be finite for this to work
-        r = _check_substitution_type_match(reduced_eq, func)
+        r = _order_reducible_substitution_match(reduced_eq, func)
         if r:
-            matching_hints['order_reducing_substitution'] = r
+            matching_hints['order_reducible_substitution'] = r
 
         # Any ODE that can be solved with a combination of algebra and
         # integrals e.g.:
@@ -4012,9 +4012,9 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
     return frobdict
 
-def _check_substitution_type_match(eq, func):
+def _order_reducible_substitution_match(eq, func):
     r"""
-    Matches any differential equation that `order_reducing_substitution` can solve.
+    Matches any differential equation that `order_reducible_substitution` can solve.
     For this to work equation should have a minimum order of derivative to be 1, i.e.,
     `f(x)` should not be present.
     """
@@ -4039,7 +4039,7 @@ def _check_substitution_type_match(eq, func):
         return {'var': c}
 
 # Use repeated substitution until we do not have a function independent of derivative
-def ode_order_reducing_substitution(eq, func, order, match):
+def ode_order_reducible_substitution(eq, func, order, match):
     r"""
     Substitutes lowest order derivate in equation to function with order
     of derivative as 0.Eg `f^(n)(x) = g(x)`, where n is the least order derivate.
@@ -4056,6 +4056,7 @@ def ode_order_reducing_substitution(eq, func, order, match):
     eq = eq.subs(w, g(x))
     eq = dsolve(eq, g(x))
     eq = dsolve(eq.subs(g(x), w), f(x))
+    
     return eq
 
 def _nth_algebraic_match(eq, func):
