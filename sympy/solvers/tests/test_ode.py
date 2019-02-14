@@ -712,14 +712,14 @@ def test_dsolve_options():
 
 def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
-        ('nth_algebraic',
+        ('order_reducible_substitution',
+        'nth_algebraic',
         'nth_linear_constant_coeff_homogeneous',
         'nth_linear_euler_eq_homogeneous',
         'Liouville',
         '2nd_power_series_ordinary',
         'nth_algebraic_Integral',
         'Liouville_Integral',
-        'order_reducing_substitution'
         )
     assert classify_ode(f(x), f(x)) == ()
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == (
@@ -3064,15 +3064,15 @@ def test_sysode_linear_neq_order1():
     assert dsolve(eq, simplify=False) == sols_eq
 
 
-def test_order_reducing_substitution():
+def test_order_reducible_substitution():
     eqn = Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2))
     sol = Eq(f(x),
              C1 - sqrt(-1/C1)*log(-C1*sqrt(-1/C1) + x) + sqrt(-1/C1)*log(C1*sqrt(-1/C1) + x))
     assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x), hint='order_reducing_substitution')
+    assert sol == dsolve(eqn, f(x), hint='order_reducible_substitution')
     assert sol == dsolve(eqn, f(x))
 
-    w, x, y= symbols('w x y')
+    w, y= symbols('w y')
     f = Function('f')
     F = lambda eq: _check_substitution_type_match(eq, f(x))
     fx = f(x)
