@@ -4030,8 +4030,12 @@ def _check_substitution_type_match(eq, func):
         except ValueError:
             continue
         # d was the lowest-ordered derivative of interest
-        if eq.subs(d, D).has(fx):
+        Deq = eq.subs(d, D)
+        if Deq.has(fx):
             return  # it didn't clear all occurrences of f(x)
+        # there is no fx right now; see if there is a derivative of D
+        if not Deq.subs(Derivative(D, x), fx).has(fx):
+            return  # there was no derivative left
         return {'var': c}
 
 # Use repeated substitution until we do not have a function independent of derivative
@@ -4048,9 +4052,10 @@ def ode_order_reducing_substitution(eq, func, order, match):
         g = Function(Dummy().name)
         if not eq.has(g(x)):
             break
-    eq = eq.subs(f(x).diff(x, match['var']), g(x))
+    w = f(x).diff(x, match['var'])
+    eq = eq.subs(w, g(x))
     eq = dsolve(eq, g(x))
-    eq = dsolve(eq.subs(g(x), f(x).diff(x, match['var'])), f(x))
+    eq = dsolve(eq.subs(g(x), w, f(x))
     return eq
 
 def _nth_algebraic_match(eq, func):
