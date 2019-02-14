@@ -1,14 +1,14 @@
 from __future__ import print_function, division
 
 from sympy import Number
-from sympy.core import Mul, Basic, sympify, Add
+from sympy.core import Mul, Basic, sympify, Add, Dummy
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-        Identity, ZeroMatrix)
+        Identity, ZeroMatrix, UndefinedMatrixShapeSymbol)
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.matrices import MatrixBase
 
@@ -30,6 +30,9 @@ class MatMul(MatrixExpr, Mul):
     is_MatMul = True
 
     def __new__(cls, *args, **kwargs):
+        if not args:
+            return Identity(UndefinedMatrixShapeSymbol(Dummy('n')))
+
         check = kwargs.get('check', True)
         args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
@@ -165,7 +168,9 @@ def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
     for i in range(len(matrices)-1):
         A, B = matrices[i:i+2]
-        if A.cols != B.rows:
+        if sympify(A.cols).has(UndefinedMatrixShapeSymbol) or sympify(B.rows).has(UndefinedMatrixShapeSymbol):
+            pass
+        elif A.cols != B.rows:
             raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
 # Rules

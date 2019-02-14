@@ -5,7 +5,7 @@ import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq
 from sympy.core.decorators import call_highest_priority
-from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key
+from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key, string_types
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -163,6 +163,8 @@ class MatrixExpr(Expr):
 
     @property
     def is_square(self):
+        if sympify(self.rows).has(UndefinedMatrixShapeSymbol) or sympify(self.cols).has(UndefinedMatrixShapeSymbol):
+            return None
         return self.rows == self.cols
 
     def _eval_conjugate(self):
@@ -550,6 +552,63 @@ class MatrixExpr(Expr):
         return ElementwiseApplyFunction(func, self)
 
 
+class UndefinedMatrixShapeSymbol(Expr):
+    """
+    An undefined value for a Matrix shape
+
+    Unlike a symbolic shape, like ``Symbol('n')``,
+    ``UndefinedMatrixShapeSymbol('n')`` will not compare unequal to any other
+    matrix shape in type checks. This lets you do things like
+
+    >>> from sympy import Symbol
+    >>> from sympy.matrices.expressions.matexpr import UndefinedMatrixShapeSymbol, Identity, MatrixSymbol
+    >>> _n = UndefinedMatrixShapeSymbol('_n')
+    >>> k = Symbol('k')
+    >>> MatrixSymbol("A", k, k) + Identity(_n)
+    I + A
+
+    Compare this to if ``n`` were a Symbol, which results in an error:
+
+    >>> n = Symbol('n')
+    >>> MatrixSymbol("A", k, k) + Identity(n)
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    ...
+    sympy.matrices.common.ShapeError: Matrices A and I are not aligned
+
+    This is useful for creating unevaluated matrix expressions where the exact
+    equality of shapes is known or possible.
+
+    Two caveats:
+
+    - This does not attempt to guard against impossible combinations.
+
+      >>> MatrixSymbol("A", _n, 2) + MatrixSymbol("B", 3, _n)
+      A + B
+
+      Here there is no explicit integer value for _n that can make the
+      expression valid.
+
+    - MadAdd.shape takes the shape of the first argument.
+
+      >>> (MatrixSymbol("A", _n, _n) + MatrixSymbol("B", 2, 2)).shape
+      (UndefinedMatrixShapeSymbol(_n), UndefinedMatrixShapeSymbol(_n))
+
+    """
+    def __new__(cls, name):
+        if isinstance(name, string_types):
+            name = Symbol(name)
+
+        if not isinstance(name, Symbol):
+            raise TypeError("name should be a string or a Symbol")
+
+        obj = Expr.__new__(cls, name)
+        obj._assumptions = name._assumptions
+        return obj
+
+    is_integer = True
+    is_nonnegative = True
+
 def _matrix_derivative(expr, x):
     from sympy import Derivative
     lines = expr._eval_derivative_matrix_lines(x)
@@ -876,9 +935,13 @@ class _LeftRightArgs(object):
         return rank
 
     def append_first(self, other):
+        if isinstance(other, Identity):
+            return
         self.first *= other
 
     def append_second(self, other):
+        if isinstance(other, Identity):
+            return
         self.second *= other
 
     def __hash__(self):

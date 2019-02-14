@@ -3,13 +3,14 @@ from __future__ import print_function, division
 from sympy.core.compatibility import reduce
 from operator import add
 
-from sympy.core import Add, Basic, sympify
+from sympy.core import Add, Basic, sympify, S, Dummy
 from sympy.functions import adjoint
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
         exhaust, do_one, glom)
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
+from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
+        ZeroMatrix, UndefinedMatrixShapeSymbol)
 from sympy.utilities import default_sort_key, sift
 from sympy.core.operations import AssocOp
 
@@ -32,6 +33,9 @@ class MatAdd(MatrixExpr, Add):
     is_MatAdd = True
 
     def __new__(cls, *args, **kwargs):
+        if not args:
+            return ZeroMatrix(UndefinedMatrixShapeSymbol(Dummy('n')), UndefinedMatrixShapeSymbol(Dummy('m')))
+
         args = list(map(sympify, args))
         check = kwargs.get('check', False)
 
@@ -78,7 +82,9 @@ def validate(*args):
 
     A = args[0]
     for B in args[1:]:
-        if A.shape != B.shape:
+        if any(i.has(UndefinedMatrixShapeSymbol) for i in sympify(A.shape + B.shape)):
+            pass
+        elif A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
 factor_of = lambda arg: arg.as_coeff_mmul()[0]

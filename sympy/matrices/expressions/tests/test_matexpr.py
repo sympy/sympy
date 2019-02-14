@@ -1,14 +1,14 @@
 from sympy import KroneckerDelta, diff, Piecewise, And
 from sympy import Sum, Dummy, factor, expand
 
-from sympy.core import S, symbols, Add, Mul
+from sympy.core import S, symbols, Add, Mul, Dummy, Symbol
 from sympy.core.compatibility import long
 from sympy.functions import transpose, sin, cos, sqrt, cbrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         SparseMatrix, Transpose, Adjoint)
-from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.matrices.expressions.matexpr import MatrixElement, UndefinedMatrixShapeSymbol
 from sympy.utilities.pytest import raises
 
 
@@ -352,3 +352,50 @@ def test_issue_2749():
     A = MatrixSymbol("A", 5, 2)
     assert (A.T * A).I.as_explicit() == Matrix([[(A.T * A).I[0, 0], (A.T * A).I[0, 1]], \
     [(A.T * A).I[1, 0], (A.T * A).I[1, 1]]])
+
+def test_UndefinedMatrixShapeSymbol():
+    _n = UndefinedMatrixShapeSymbol('n')
+    _k = UndefinedMatrixShapeSymbol('k')
+    _d = UndefinedMatrixShapeSymbol(Dummy('k'))
+    _e = UndefinedMatrixShapeSymbol(Symbol('e', even=True))
+
+    n = Symbol('n')
+    k = Symbol('k')
+
+    assert _k != _d
+    assert _k == _k
+    assert _k != k
+
+    assert _n.is_integer
+    assert _n.is_nonnegative
+    assert _e.is_even
+
+    A = MatrixSymbol("A", n, k)
+    _A = MatrixSymbol("A", _n, _k)
+
+    # Make sure none of these error
+
+    A*_A
+    _A*A
+    _A + A
+    A + _A
+    _A + Matrix([1])
+    _A*Matrix([1])
+    Matrix([1]) + _A
+    Matrix([1])*_A
+
+    _B = MatrixSymbol("B", _n + 1, _k + 1)
+    A*_B
+    _B*A
+    A + _B
+    _B + A
+    _B + Matrix([1])
+    Matrix([1]) + _B
+    _B*Matrix([1])
+    Matrix([1])*_B
+
+    Inverse(_A)
+
+    # The shapes use Dummy, so can't compare directly
+    assert type(MatAdd()) == ZeroMatrix
+    assert type(MatMul()) == Identity
