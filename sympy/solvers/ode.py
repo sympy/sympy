@@ -4049,8 +4049,8 @@ def ode_order_reducing_substitution(eq, func, order, match):
         if not eq.has(g(x)):
             break
     eq = eq.subs(f(x).diff(x, match['var']), g(x))
-    eq = dsolve(eq)
-    eq = dsolve(eq.subs(g(x), f(x).diff(x, match['var'])))
+    eq = dsolve(eq, g(x))
+    eq = dsolve(eq.subs(g(x), f(x).diff(x, match['var'])), f(x))
     return eq
 
 def _nth_algebraic_match(eq, func):
