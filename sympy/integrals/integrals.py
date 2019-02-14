@@ -234,9 +234,9 @@ class Integral(AddWithLimits):
         replacing `x` must be identified by passing `u` as a tuple:
 
         >>> Integral(x, (x, 0, 1)).transform(x, (u + a, u))
-        Integral(a + u, (u, -a, -a + 1))
+        Integral(a + u, (u, -a, 1 - a))
         >>> Integral(x, (x, 0, 1)).transform(x, (u + a, a))
-        Integral(a + u, (a, -u, -u + 1))
+        Integral(a + u, (a, -u, 1 - u))
 
         See Also
         ========

@@ -401,7 +401,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     >>> from sympy.solvers.diophantine import diop_solve
     >>> from sympy.abc import x, y, z, w
     >>> diop_solve(2*x + 3*y - 5)
-    (3*t_0 - 5, -2*t_0 + 5)
+    (3*t_0 - 5, 5 - 2*t_0)
     >>> diop_solve(4*x + 3*y - 4*z + 5)
     (t_0, 8*t_0 + 4*t_1 + 5, 7*t_0 + 3*t_1 + 5)
     >>> diop_solve(x + 3*y - 4*z + w - 6)
@@ -827,7 +827,7 @@ def base_solution_linear(c, a, b, t=None):
     >>> base_solution_linear(0, 5, 7) # equation 5*x + 7*y = 0
     (0, 0)
     >>> base_solution_linear(5, 2, 3, t) # equation 2*x + 3*y = 5
-    (3*t - 5, -2*t + 5)
+    (3*t - 5, 5 - 2*t)
     >>> base_solution_linear(0, 5, 7, t) # equation 5*x + 7*y = 0
     (7*t, -5*t)
     """

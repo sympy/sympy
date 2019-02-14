@@ -326,7 +326,7 @@ class SeqBase(Basic):
         >>> sequence(x+y*(-2)**(-n), (n, 0, oo)).find_linear_recurrence(30)
         [1/2, 1/2]
         >>> sequence(3*5**n + 12).find_linear_recurrence(20,gfvar=x)
-        ([6, -5], 3*(-21*x + 5)/((x - 1)*(5*x - 1)))
+        ([6, -5], 3*(5 - 21*x)/((x - 1)*(5*x - 1)))
         >>> sequence(lucas(n)).find_linear_recurrence(15,gfvar=x)
         ([1, 1], (x - 2)/(x**2 + x - 1))
         """

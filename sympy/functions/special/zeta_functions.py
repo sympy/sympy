@@ -253,9 +253,9 @@ class polylog(Function):
     >>> from sympy import expand_func
     >>> from sympy.abc import z
     >>> expand_func(polylog(1, z))
-    -log(-z + 1)
+    -log(1 - z)
     >>> expand_func(polylog(0, z))
-    z/(-z + 1)
+    z/(1 - z)
 
     The derivative with respect to :math:`z` can be computed in closed form:
 
@@ -389,7 +389,7 @@ class zeta(Function):
 
     >>> from sympy import dirichlet_eta
     >>> zeta(s).rewrite(dirichlet_eta)
-    dirichlet_eta(s)/(-2**(-s + 1) + 1)
+    dirichlet_eta(s)/(1 - 2**(1 - s))
 
     The Riemann zeta function at positive even integer and negative odd integer
     values is related to the Bernoulli numbers:
@@ -532,7 +532,7 @@ class dirichlet_eta(Function):
     >>> from sympy import dirichlet_eta, zeta
     >>> from sympy.abc import s
     >>> dirichlet_eta(s).rewrite(zeta)
-    (-2**(-s + 1) + 1)*zeta(s)
+    (1 - 2**(1 - s))*zeta(s)
 
     """
 
