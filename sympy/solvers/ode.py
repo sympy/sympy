@@ -4055,7 +4055,7 @@ def ode_order_reducing_substitution(eq, func, order, match):
     w = f(x).diff(x, match['var'])
     eq = eq.subs(w, g(x))
     eq = dsolve(eq, g(x))
-    eq = dsolve(eq.subs(g(x), w, f(x))
+    eq = dsolve(eq.subs(g(x), w), f(x))
     return eq
 
 def _nth_algebraic_match(eq, func):
