@@ -3074,7 +3074,7 @@ def test_order_reducible_substitution():
 
     w, y= symbols('w y')
     f = Function('f')
-    F = lambda eq: _order_ruducible_substitution_match(eq, f(x))
+    F = lambda eq: _order_reducible_substitution_match(eq, f(x))
     fx = f(x)
     D = Derivative
     assert F(D(y*fx, x, y) + D(fx, x)) is None
