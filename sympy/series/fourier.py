@@ -115,7 +115,7 @@ def finite_check(f, x):
     for s in add_coeff[1]:
         mul_coeffs = s.as_coeff_mul()[1]
         for t in mul_coeffs:
-            if not(check_fx(t, x) or check_sincos(t, x)):
+            if not (check_fx(t, x) or check_sincos(t, x)):
                 return False, f
         res_expr += TR10(s)
     a = Wild('a', properties=[lambda k:k.is_Integer, lambda k:k != 0, ])
