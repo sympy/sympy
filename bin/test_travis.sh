@@ -47,8 +47,10 @@ mkdir empty
 cd empty
 
 if [[ "${TEST_ASCII}" == "true" ]]; then
-    export OLD_LC_ALL=$LC_ALL
-    export LC_ALL=C
+    # Force Python to act like pre-3.7 where LC_ALL=C causes
+    # UnicodeEncodeErrors. Once the lowest Python version we support is 3.7,
+    # we can consider dropping this test entirely. See PEP 538.
+    export PYTHONIOENCODING=ascii:strict
     cat <<EOF | python
 print('Testing ASCII')
 try:
@@ -61,7 +63,6 @@ import sympy
 if not (sympy.test('print') and sympy.doctest()):
     raise Exception('Tests failed')
 EOF
-    export LC_ALL=$OLD_LC_ALL
 fi
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
