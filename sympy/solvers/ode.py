@@ -4010,7 +4010,7 @@ def _order_reducible_match(eq, func):
     r"""
     Matches any differential equation that can be rewritten with a smaller
     order. Only derivatives of ``func`` alone, wrt a single variable,
-    are considered.
+    are considered, and only in them should ``func`` appear.
     """
     # ODE only handles functions of 1 variable so this affirms that state
     assert len(func.args) == 1
@@ -4018,15 +4018,17 @@ def _order_reducible_match(eq, func):
     vc= [d.variable_count[0] for d in eq.atoms(Derivative)
          if d.expr == func and len(d.variable_count) == 1]
     ords = [c for v, c in vc if v == x]
-    if len(ords) > 1:
-        smallest = min(ords)
-        # as long as no order is < 1 this should be true
-        if smallest < 2:
-            smallest = None
-    else:
-        smallest = None
-    if smallest:
-        return {'n': smallest}
+    if len(ords) < 2:
+        return
+    smallest = min(ords)
+    # as long as no order is < 1 this should be true
+    if smallest < 2:
+        return
+    # make sure func does not appear outside of derivatives
+    D = Dummy()
+    if eq.subs(func.diff(x, smallest)).has(func):
+        return
+    return {'n': smallest}
 
 def ode_order_reducible(eq, func, order, match):
     r"""
