@@ -2671,6 +2671,11 @@ def test_sympy__matrices__expressions__matexpr__Identity():
 def test_sympy__matrices__expressions__matexpr__MatrixExpr():
     pass
 
+def test_sympy__matrices__expressions__matexpr__UndefinedMatrixShapeSymbol():
+    from sympy.matrices.expressions.matexpr import UndefinedMatrixShapeSymbol
+    n = UndefinedMatrixShapeSymbol('n')
+    assert _test_args(n)
+
 def test_sympy__matrices__expressions__matexpr__MatrixElement():
     from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
     from sympy import S
