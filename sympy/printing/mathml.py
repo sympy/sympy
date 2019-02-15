@@ -584,6 +584,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_MatrixBase(self, m):
         brac = self.dom.createElement('mfenced')
+        if self._settings["mat_delim"] == "[":
+            brac.setAttribute('open', '[')
+            brac.setAttribute('close', ']')
         table = self.dom.createElement('mtable')
         for i in range(m.rows):
             x = self.dom.createElement('mtr')
@@ -591,7 +594,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 y = self.dom.createElement('mtd')
                 y.appendChild(self._print(m[i, j]))
                 x.appendChild(y)
-            table.appendChild(x)
+                table.appendChild(x)
+        if self._settings["mat_delim"] == '':
+            return table
         brac.appendChild(table)
         return brac
 
