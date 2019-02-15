@@ -230,6 +230,86 @@ class AskFiniteHandler(CommonHandler):
 
     Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysFalse)]*2
 
+class AskInfiniteHandler(CommonHandler):
+    """
+    Handler for key 'infinite'.
+
+    Tests whether an expression is unbounded.
+
+    Examples of usage:
+
+    >>> from sympy import Symbol, Q
+    >>> from sympy.assumptions.handlers.calculus import AskInfiniteHandler
+    >>> from sympy.abc import x
+    >>> a = AskInfiniteHandler()
+    >>> a.Symbol(x, Q.positive(x)) == None
+    True
+    >>> a.Symbol(x, Q.finite(x))
+    False
+
+    """
+
+    @staticmethod
+    def Symbol(expr, assumptions):
+        """
+        Handles Symbol.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Q
+        >>> from sympy.assumptions.handlers.calculus import AskFiniteHandler
+        >>> from sympy.abc import x
+        >>> a = AskFiniteHandler()
+        >>> a.Symbol(x, Q.positive(x)) == None
+        True
+        >>> a.Symbol(x, Q.finite(x))
+        True
+
+        """
+        if expr.is_finite is not None:
+            return not expr.is_finite
+        if Q.infinite(expr) in conjuncts(assumptions):
+            return True
+        return None
+
+    @staticmethod
+    def Add(expr, assumptions):
+        _bounded = AskFiniteHandler.Add(expr, assumptions)
+        if _bounded is not None:
+            return not _bounded
+        return None
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        _bounded = AskFiniteHandler.Mul(expr, assumptions)
+        if _bounded is not None:
+            return not _bounded
+        return None
+
+    @staticmethod
+    def Pow(expr, assumptions):
+        _bounded = AskFiniteHandler.Pow(expr, assumptions)
+        if _bounded is not None:
+            return not _bounded
+        return None
+
+    @staticmethod
+    def log(expr, assumptions):
+        _bounded = AskFiniteHandler.log(expr, assumpptions)
+        if _bounded is not None:
+            return not _bounded
+        return None
+
+    exp = log
+
+    cos, sin, Number, Pi, Exp1, GoldenRatio, TribonacciConstant, ImaginaryUnit, sign = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*9
+
+    Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysTrue)]*2
+
+
+
 class AskTranscendentalHandler(CommonHandler):
     """
     Handler for key 'transcendental'.
@@ -238,14 +318,14 @@ class AskTranscendentalHandler(CommonHandler):
 
     Examples of usage:
 
-    >>> from sympy import Symbol, Q, E, Pi
+    >>> from sympy import Symbol, Q, E, pi
     >>> from sympy.assumptions.handlers.calculus import AskTranscendentalHandler
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y
     >>> a = AskTranscendentalHandler()
-    >>> a.Add(E + Pi)
-    None
-    >>> a.Mul(2*E)
+    >>> a.Add(x + y, Q.transcendental(x))
     True
+    >>> a.Mul(x*1, Q.rational(x))
+    False
 
     """
 
@@ -275,20 +355,14 @@ class AskTranscendentalHandler(CommonHandler):
         return None
 
     @staticmethod
-    def Add(expr, assumptions):
+    def _count_transcendental(args, assumptions):
         """
-        Returns True if expr can be proven transcendental.
-
-        If only one of the arguments is transcendental then
-        `True` is returned.
-        If all of the arguments are non-transcendental then
-        `False` is returned.
-        In all other cases, `None` is returned.
+        Checks the number of transcendental elements in the list
+        or tuple passed as argument and returns boolean values.
 
         """
-
         _num_transcendental = 0
-        for arg in expr.args:
+        for arg in args:
             if ask(Q.transcendental(arg), assumptions):
                 _num_transcendental += 1
         if _num_transcendental == 0:
@@ -296,6 +370,22 @@ class AskTranscendentalHandler(CommonHandler):
         if _num_transcendental == 1:
             return True
         return None
+
+    @staticmethod
+    def Add(expr, assumptions):
+        """
+        Returns True if expr can be proven transcendental.
+
+        If only one of the arguments is transcendental then
+        True is returned.
+        If all of the arguments are non-transcendental then
+        False is returned.
+        In all other cases, None is returned.
+
+        """
+        return AskTranscendentalHandler._count_transcendental(expr.args,
+                                                              assumptions)
+
 
     @staticmethod
     def Mul(expr, assumptions):
@@ -309,9 +399,8 @@ class AskTranscendentalHandler(CommonHandler):
         In all other cases, None is returned.
 
         """
-
-        expr = sum([arg for arg in expr.args])
-        return Add(expr, assumptions)
+        return AskTranscendentalHandler._count_transcendental(expr.args,
+                                                              assumptions)
 
     @staticmethod
     def Pow(expr, assumptions):

@@ -386,7 +386,7 @@ class AssumptionKeys(object):
         ========
         >>> from sympy import ask, Q, oo, I
         >>> ask(Q.infinite(oo+I*oo))
-        True
+        None
         >>> ask(Q.infinite(oo))
         True
         >>> ask(Q.infinite(I))
@@ -729,7 +729,7 @@ class AssumptionKeys(object):
         Examples
         ========
         >>> from sympy import ask, Q, MatrixSymbol, I
-        >>> X=MatrixSymbol('X', 2, 2)
+        >>> X = MatrixSymbol('X', 2, 2)
         >>> ask(Q.commutative(X))
         True
         >>> ask(Q.commutative(2))
@@ -1490,6 +1490,7 @@ _handlers = [
     ("real_elements",     "matrices.AskRealElementsHandler"),
     ("complex_elements",  "matrices.AskComplexElementsHandler"),
     ("transcendental",    "calculus.AskTranscendentalHandler"),
+    ("infinite",          "calculus.AskInfiniteHandler"),
 ]
 
 for name, value in _handlers:
