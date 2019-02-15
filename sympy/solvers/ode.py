@@ -4018,8 +4018,9 @@ def _order_reducible_match(eq, func):
     vc= [d.variable_count[0] for d in eq.atoms(Derivative)
          if d.expr == func and len(d.variable_count) == 1]
     ords = [c for v, c in vc if v == x]
-    if ords:
+    if len(ords) > 1:
         smallest = min(ords)
+        # as long as no order is < 1 this should be true
         if smallest < 2:
             smallest = None
     else:
