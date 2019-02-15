@@ -287,8 +287,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: ``best``, and ``all_Integral`` meta-hints should not be included in this
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
-    "order_reducible_substitution",
-    "nth_algebraic",
+   "nth_algebraic",
     "separable",
     "1st_exact",
     "1st_linear",
@@ -324,7 +323,8 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
-      )
+    "order_reducible",
+       )
 
 lie_heuristics = (
     "abaco1_simple",
@@ -1355,9 +1355,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # repeated integration e.g.:
         # `d^2/dx^2(y) + x*d/dx(y) = constant
         #f'(x) must be finite for this to work
-        r = _order_reducible_substitution_match(reduced_eq, func)
+        r = _order_reducible_match(reduced_eq, func)
         if r:
-            matching_hints['order_reducible_substitution'] = r
+            matching_hints['order_reducible'] = r
 
         # Any ODE that can be solved with a combination of algebra and
         # integrals e.g.:
@@ -4006,52 +4006,50 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
     return frobdict
 
-def _order_reducible_substitution_match(eq, func):
+def _order_reducible_match(eq, func):
     r"""
-    Matches any differential equation that `order_reducible_substitution` can solve.
-    For this to work equation should have a minimum order of derivative to be 1, i.e.,
-    `f(x)` should not be present.
+    Matches any differential equation that can be rewritten with a smaller
+    order. Only derivatives of ``func`` alone, wrt a single variable,
+    are considered.
     """
-    fx = func
-    assert len(func.args) == 1  # ODE only handles functions of 1 variable
+    # ODE only handles functions of 1 variable so this affirms that state
+    assert len(func.args) == 1
     x = func.args[0]
-    D = Dummy()
-    for d in ordered(eq.atoms(Derivative)):
-        try:
-            (v, c), = d.variable_count  # ValueError if not a singleton
-            if v != x:
-                raise ValueError  # not a derivative of interest
-        except ValueError:
-            continue
-        # d was the lowest-ordered derivative of interest
-        Deq = eq.subs(d, D)
-        if Deq.has(fx):
-            return  # it didn't clear all occurrences of f(x)
-        # there is no fx right now; see if there is a derivative of D
-        if not Deq.subs(Derivative(D, x), fx).has(fx):
-            return  # there was no derivative left
-        return {'var': c}
+    vc= [d.variable_count[0] for d in eq.atoms(Derivative)
+         if d.expr == func and len(d.variable_count) == 1]
+    ords = [c for v, c in vc if v == x]
+    if ords:
+        smallest = min(ords)
+        if smallest < 2:
+            smallest = None
+    else:
+        smallest = None
+    if smallest:
+        return {'n': smallest}
 
-# Use repeated substitution until we do not have a function independent of derivative
-def ode_order_reducible_substitution(eq, func, order, match):
+def ode_order_reducible(eq, func, order, match):
     r"""
     Substitutes lowest order derivate in equation to function with order
-    of derivative as 0.Eg `f^(n)(x) = g(x)`, where n is the least order derivate.
-    match[var] or n here is how many times the function if solved is to be integrated
-    to  get f(x) since `g(x) = f^(match[var])(x)`.
+    of derivative as `f^(n)(x) = g(x)`, where `n` (`match['n']`)
+    is the least-order derivative. The solution for `f(x)` is the n-times
+    integrated value of `g(x)`.
     """
     x = func.args[0]
     f = func.func
+    n = match['n']
+    # get a unique function name for g
+    names = [f.name for f in eq.atoms(AppliedUndef)]
     while True:
-        g = Function(Dummy().name)
-        if not eq.has(g(x)):
+        g = Dummy().name
+        if g not in names:
+            g = Function(name)
             break
-    w = f(x).diff(x, match['var'])
-    eq = eq.subs(w, g(x))
-    eq = dsolve(eq, g(x))
-    eq = dsolve(eq.subs(g(x), w), f(x))
+    w = f(x).diff(x, n)
+    geq = eq.subs(w, g(x))
+    gsol = dsolve(eq, g(x))
+    fsol = dsolve(gsol.subs(g(x), w), f(x))  # or do integration n times
 
-    return eq
+    return fsol
 
 def _nth_algebraic_match(eq, func):
     r"""
