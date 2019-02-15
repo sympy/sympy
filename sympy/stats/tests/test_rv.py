@@ -111,11 +111,11 @@ def test_H():
     p = symbols('p')
     L = Geometric('L', p)
     X = Normal('X', 0, 1)
-    D = Die('D')
-    assert simplify(H(X) - (log(pi)/2 + 1/2 + log(2)/2)) == 0
+    D = Die('D', sides = 4)
+    assert H(X, X < 0) == -log(2) + 1 + log(pi)
+    assert H(X, X > 0, X < 1) == log(2) + 1 + log(pi)
     assert simplify(H(L) - (-p*log(p) - (-p + 1)*log(-p + 1))/p) == 0
-    assert H(D) == log(6)
-    assert H(D > 3) == log(6)/2
+    assert H(D > 2) == log(4)/2
 
 def test_Sample():
     X = Die('X', 6)
