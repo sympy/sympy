@@ -347,8 +347,8 @@ class AskTranscendentalHandler(CommonHandler):
         >>> a = AskTranscendentalHandler()
         >>> a.Symbol(x, Q.transcendental(x))
         True
-        >>> a.Symbol(x)
-        None
+        >>> a.Symbol(x, Q.rational(x)) == None
+        True
 
         """
 
