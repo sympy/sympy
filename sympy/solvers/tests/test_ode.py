@@ -1264,7 +1264,6 @@ def test_1st_exact1():
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     # issue 5080 blocks the testing of this solution
     # FIXME: assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2b, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
     assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
