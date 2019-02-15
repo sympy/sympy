@@ -22,18 +22,10 @@ fi
 
 if [[ "${TEST_SAGE}" == "true" ]]; then
     echo "Testing SAGE"
-    if [[ "${AZURE}" != "true" ]]; then
-        source deactivate
-        source activate sage
-    fi
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
     PYTHONPATH=. sage -t sympy/external/tests/test_sage.py
     export MPMATH_NOSAGE=1
-    if [[ "${AZURE}" != "true" ]]; then
-        source deactivate
-        source activate test-environment
-    fi
 fi
 
 if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
