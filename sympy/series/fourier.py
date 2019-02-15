@@ -97,7 +97,7 @@ def finite_check(f, x):
 
     def check_sincos(expr, x):
         if type(expr) == sin or type(expr) == cos:
-            a = Wild('a', properties=[lambda k: x not in k.free_symbols, ])
+            a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
             b = Wild('b', properties=[lambda k: x not in k.free_symbols or k == S.Zero, ])
 
             sincos_args = expr.args[0]
