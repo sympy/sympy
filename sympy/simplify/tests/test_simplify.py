@@ -758,7 +758,10 @@ def test_nc_simplify():
         assert expand(expr) == expand(simplified)
         if matrix:
             m_simp = _to_matrix(simplified).doit(inv_expand=False)
-            assert nc_simplify(_to_matrix(expr), deep=deep) == m_simp
+            if simplified == 1:
+                assert isinstance(nc_simplify(_to_matrix(expr), deep=deep), Identity)
+            else:
+                assert nc_simplify(_to_matrix(expr), deep=deep) == m_simp
 
     _check(a*b*a*b*a*b*c*(a*b)**3*c, ((a*b)**3*c)**2)
     _check(a*b*(a*b)**-2*a*b, 1)
