@@ -3125,7 +3125,7 @@ def test_order_reducible():
     assert F(D(f(w), w, 2) + D(f(w), w, 3) + D(fx, x, 4)) is None
     assert F(D(fx, x, 2) + D(fx, x, 3)) == dict(n=2)
 
-    
+
 def test_nth_algebraic():
     eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
     sol = Eq(f(x), C1 + g(x))
