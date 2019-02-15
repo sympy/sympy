@@ -1,19 +1,17 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Number, Symbol
+from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Symbol
 from sympy.core.basic import as_Basic
-from sympy.core.sympify import SympifyError
-from sympy.core.relational import (Equality, Unequality, Relational,
-    _canonical)
+from sympy.core.compatibility import range
 from sympy.core.function import UndefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol
+from sympy.core.relational import (Equality, Unequality, Relational,
+    _canonical)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
-    true, false, Not, Or, ITE, simplify_logic)
-from sympy.utilities.iterables import cartes
-from sympy.core.compatibility import default_sort_key, range
-from sympy.utilities.iterables import uniq, is_sequence, ordered, product, sift
-from sympy.utilities.misc import filldedent, Undecidable, func_name
+    true, false, Or, ITE, simplify_logic)
+from sympy.utilities.iterables import uniq, ordered, product, sift
+from sympy.utilities.misc import filldedent, func_name
 
 
 Undefined = S.NaN  # Piecewise()
@@ -892,7 +890,6 @@ class Piecewise(Function):
     @classmethod
     def __eval_cond(cls, cond):
         """Return the truth value of the condition."""
-        from sympy.solvers.solvers import checksol
         if cond == True:
             return True
         if isinstance(cond, Equality):

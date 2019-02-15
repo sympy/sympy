@@ -1058,7 +1058,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_number:
                         try:
                             coeff *= complex(factor)
-                        except TypeError:
+                        except (TypeError, ValueError):
                             pass
                         else:
                             continue
@@ -2019,10 +2019,7 @@ class Expr(Basic, EvalfMixin):
         if d is S.One:
             return n
         if d.is_Number:
-            if d is S.One:
-                return n
-            else:
-                return _unevaluated_Mul(n, 1/d)
+            return _unevaluated_Mul(n, 1/d)
         else:
             return n/d
 
@@ -2030,6 +2027,9 @@ class Expr(Basic, EvalfMixin):
         """Return None if it's not possible to make self in the form
            c * something in a nice way, i.e. preserving the properties
            of arguments of self.
+
+           Examples
+           ========
 
            >>> from sympy import symbols, Rational
 
@@ -2049,8 +2049,6 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
-        from .function import _coeff_isneg
-
         c = sympify(c)
         if self is S.NaN:
             return None

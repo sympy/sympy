@@ -282,7 +282,7 @@ class FreeGroup(DefaultPrinting):
         can refer to the smallest cardinality of a generating set
         for G, that is
 
-        \operatorname{rank}(G)=\min\{ |X|: X\subseteq G, \langle X\rangle =G\}.
+        \operatorname{rank}(G)=\min\{ |X|: X\subseteq G, \left\langle X\right\rangle =G\}.
 
         """
         return self._rank

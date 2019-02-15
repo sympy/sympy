@@ -570,12 +570,19 @@ def idiff(eq, y, x, n=1):
         y = y[0]
     elif isinstance(y, Symbol):
         dep = {y}
+    elif isinstance(y, Function):
+        pass
     else:
-        raise ValueError("expecting x-dependent symbol(s) but got: %s" % y)
+        raise ValueError("expecting x-dependent symbol(s) or function(s) but got: %s" % y)
 
     f = dict([(s, Function(
         s.name)(x)) for s in eq.free_symbols if s != x and s in dep])
-    dydx = Function(y.name)(x).diff(x)
+
+    if isinstance(y, Symbol):
+        dydx = Function(y.name)(x).diff(x)
+    else:
+        dydx = y.diff(x)
+
     eq = eq.subs(f)
     derivs = {}
     for i in range(n):

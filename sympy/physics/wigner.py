@@ -218,7 +218,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
     Calculates the Clebsch-Gordan coefficient
-    `\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle`.
+    `\left\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \right\rangle`.
 
     The reference for this function is [Edmonds74]_.
 
@@ -248,7 +248,7 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     .. math::
 
-        \langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle
+        \left\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \right\rangle
         =(-1)^{j_1-j_2+m_3} \sqrt{2j_3+1}
         \operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,-m_3)
 

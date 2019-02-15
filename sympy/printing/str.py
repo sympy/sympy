@@ -9,8 +9,7 @@ from sympy.core.mul import _keep_coeff
 from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
-import mpmath.libmp as mlib
-from mpmath.libmp import prec_to_dps
+from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
 from sympy.utilities import default_sort_key
 
@@ -625,7 +624,7 @@ class StrPrinter(Printer):
             strip = True
         elif self._settings["full_prec"] == "auto":
             strip = self._print_level > 1
-        rv = mlib.to_str(expr._mpf_, dps, strip_zeros=strip)
+        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip)
         if rv.startswith('-.0'):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):

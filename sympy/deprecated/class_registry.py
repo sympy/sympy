@@ -1,4 +1,4 @@
-from sympy.core.decorators import deprecated
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.core import BasicMeta, Registry, all_classes
 
 
@@ -26,14 +26,17 @@ class ClassRegistry(Registry):
         if cls not in self.__class__.__dict__.itervalues():
             all_classes.remove(cls)
 
-    @deprecated(
-        feature='C, including its class ClassRegistry,',
-        last_supported_version='1.0',
-        useinstead='direct imports from the defining module',
-        issue=9371,
-        deprecated_since_version='1.0')
-
     def __getattr__(self, name):
+        # Warning on hasattr(C, '__wrapped__') leadds to warnings during test
+        # collection when running doctests under pytest.
+        if name != '__wrapped__':
+            SymPyDeprecationWarning(
+                feature='C, including its class ClassRegistry,',
+                last_supported_version='1.0',
+                useinstead='direct imports from the defining module',
+                issue=9371,
+                deprecated_since_version='1.0').warn(stacklevel=2)
+
         return any(cls.__name__ == name for cls in all_classes)
 
     @property

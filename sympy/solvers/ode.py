@@ -4469,7 +4469,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     where `W(x)` is the Wronskian of the fundamental system (the system of `n`
     linearly independent solutions to the homogeneous equation), and `W_i(x)`
     is the Wronskian of the fundamental system with the `i`\th column replaced
-    with `[0, 0, \cdots, 0, \frac{x^{- n}}{a_n} g{\left (x \right )}]`.
+    with `[0, 0, \cdots, 0, \frac{x^{- n}}{a_n} g{\left(x \right)}]`.
 
     This method is general enough to solve any `n`\th order inhomogeneous
     linear differential equation, but sometimes SymPy cannot simplify the

@@ -5,7 +5,6 @@ from .basic import S
 from .compatibility import ordered
 from .expr import Expr
 from .evalf import EvalfMixin
-from .function import _coeff_isneg
 from .sympify import _sympify
 from .evaluate import global_evaluate
 
@@ -77,7 +76,6 @@ class Relational(Boolean, Expr, EvalfMixin):
             elif isinstance(rv, Relational):  # could it be otherwise?
                 from sympy.core.symbol import Symbol
                 from sympy.logic.boolalg import Boolean
-                from sympy.utilities.misc import filldedent
                 for a in rv.args:
                     if isinstance(a, Symbol):
                         continue
@@ -520,11 +518,13 @@ class Unequality(Relational):
         return set()
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
+        # simplify as an equality
         eq = Equality(*self.args)._eval_simplify(
             ratio, measure, rational, inverse)
         if isinstance(eq, Equality):
-            eq = self.func(*eq.args)
-        return eq
+            # send back Ne with the new args
+            return self.func(*eq.args)
+        return ~eq  # result of Ne is ~Eq
 
 Ne = Unequality
 

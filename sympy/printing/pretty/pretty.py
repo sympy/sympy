@@ -3,31 +3,26 @@ from __future__ import print_function, division
 import itertools
 
 from sympy.core import S
+from sympy.core.compatibility import range
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
-from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Equality
 from sympy.core.symbol import Symbol
-from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
-from sympy.utilities import group
-from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
-from sympy.core.compatibility import range
-from sympy.core.add import Add
-
+from sympy.printing.conventions import requires_partial
+from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
-from sympy.printing.conventions import requires_partial
+from sympy.utilities import default_sort_key
+from sympy.utilities.iterables import has_variety
 
-from .stringpict import prettyForm, stringPict
-from .pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
+from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.printing.pretty.pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
     pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek_unicode, U, \
     annotated
-
-from sympy.utilities import default_sort_key
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
@@ -45,6 +40,7 @@ class PrettyPrinter(Printer):
         "wrap_line": True,
         "num_columns": None,
         "use_unicode_sqrt_char": True,
+        "root_notation": True,
     }
 
     def __init__(self, settings=None):
@@ -1026,8 +1022,6 @@ class PrettyPrinter(Printer):
         top = stringPict(" "*center.width())
         bot = stringPict(" "*center.width())
 
-        no_top = True
-        no_bot = True
         last_valence = None
         prev_map = None
 
@@ -1045,12 +1039,10 @@ class PrettyPrinter(Printer):
             else:
                 prev_map = False
             if index.is_up:
-                no_top = False
                 top = stringPict(*top.right(indpic))
                 center = stringPict(*center.right(" "*indpic.width()))
                 bot = stringPict(*bot.right(" "*indpic.width()))
             else:
-                no_bot = False
                 bot = stringPict(*bot.right(indpic))
                 center = stringPict(*center.right(" "*indpic.width()))
                 top = stringPict(*top.right(" "*indpic.width()))
@@ -1741,7 +1733,7 @@ class PrettyPrinter(Printer):
             if e is S.NegativeOne:
                 return prettyForm("1")/self._print(b)
             n, d = fraction(e)
-            if n is S.One and d.is_Atom and not e.is_Integer:
+            if n is S.One and d.is_Atom and not e.is_Integer and self._settings['root_notation']:
                 return self._print_nth_root(b, e)
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))
@@ -1977,21 +1969,37 @@ class PrettyPrinter(Printer):
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):
         s = None
+        try:
+            for item in seq:
+                pform = self._print(item)
 
-        for item in seq:
-            pform = self._print(item)
+                if parenthesize(item):
+                    pform = prettyForm(*pform.parens())
+                if s is None:
+                    # first element
+                    s = pform
+                else:
+                    s = prettyForm(*stringPict.next(s, delimiter))
+                    s = prettyForm(*stringPict.next(s, pform))
 
-            if parenthesize(item):
-                pform = prettyForm(*pform.parens())
             if s is None:
-                # first element
-                s = pform
-            else:
-                s = prettyForm(*stringPict.next(s, delimiter))
-                s = prettyForm(*stringPict.next(s, pform))
+                s = stringPict('')
 
-        if s is None:
-            s = stringPict('')
+        except AttributeError:
+            s = None
+            for item in seq:
+                pform = self.doprint(item)
+                if parenthesize(item):
+                    pform = prettyForm(*pform.parens())
+                if s is None:
+                    # first element
+                    s = pform
+                else :
+                    s = prettyForm(*stringPict.next(s, delimiter))
+                    s = prettyForm(*stringPict.next(s, pform))
+
+            if s is None:
+                s = stringPict('')
 
         s = prettyForm(*s.parens(left, right, ifascii_nougly=True))
         return s
@@ -2450,7 +2458,7 @@ def pretty(expr, **settings):
 
 
 def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
-                 full_prec="auto", order=None, use_unicode_sqrt_char=True):
+                 full_prec="auto", order=None, use_unicode_sqrt_char=True, root_notation = True):
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
@@ -2481,10 +2489,14 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
     use_unicode_sqrt_char : bool, optional (default=True)
         Use compact single-character square root symbol (when unambiguous).
 
+    root_notation : bool,optional( default= True)
+        Set to 'False' for printing exponents of the form 1/n in fractional form;
+        By default exponent is printed in root form.
+
     """
     print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
                  use_unicode=use_unicode, full_prec=full_prec, order=order,
-                 use_unicode_sqrt_char=use_unicode_sqrt_char))
+                 use_unicode_sqrt_char=use_unicode_sqrt_char, root_notation=root_notation))
 
 pprint = pretty_print
 
