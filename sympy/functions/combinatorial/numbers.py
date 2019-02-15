@@ -21,7 +21,8 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
-from sympy.ntheory import isprime, is_square
+from sympy.ntheory import isprime
+from sympy.ntheory.primetest import is_square
 from sympy.utilities.memoization import recurrence_memo
 
 from mpmath import bernfrac, workprec
