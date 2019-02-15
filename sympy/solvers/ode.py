@@ -287,7 +287,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: ``best``, and ``all_Integral`` meta-hints should not be included in this
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
-   "nth_algebraic",
+    "nth_algebraic",
     "separable",
     "1st_exact",
     "1st_linear",
