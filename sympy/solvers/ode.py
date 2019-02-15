@@ -287,6 +287,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: ``best``, and ``all_Integral`` meta-hints should not be included in this
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
+    "order_reducible_substitution",
     "nth_algebraic",
     "separable",
     "1st_exact",
@@ -323,7 +324,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
-    )
+      )
 
 lie_heuristics = (
     "abaco1_simple",
@@ -1350,6 +1351,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
 
     if order > 0:
+        # Any ODE that can be solved with a substitution and
+        # repeated integration e.g.:
+        # `d^2/dx^2(y) + x*d/dx(y) = constant
+        #f'(x) must be finite for this to work
+        r = _order_reducible_substitution_match(reduced_eq, func)
+        if r:
+            matching_hints['order_reducible_substitution'] = r
+
         # Any ODE that can be solved with a combination of algebra and
         # integrals e.g.:
         # d^3/dx^3(x y) = F(x)
@@ -3996,6 +4005,53 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
             frobdict[numsyms[i]] = -num/(indicial.subs(d, m+i))
 
     return frobdict
+
+def _order_reducible_substitution_match(eq, func):
+    r"""
+    Matches any differential equation that `order_reducible_substitution` can solve.
+    For this to work equation should have a minimum order of derivative to be 1, i.e.,
+    `f(x)` should not be present.
+    """
+    fx = func
+    assert len(func.args) == 1  # ODE only handles functions of 1 variable
+    x = func.args[0]
+    D = Dummy()
+    for d in ordered(eq.atoms(Derivative)):
+        try:
+            (v, c), = d.variable_count  # ValueError if not a singleton
+            if v != x:
+                raise ValueError  # not a derivative of interest
+        except ValueError:
+            continue
+        # d was the lowest-ordered derivative of interest
+        Deq = eq.subs(d, D)
+        if Deq.has(fx):
+            return  # it didn't clear all occurrences of f(x)
+        # there is no fx right now; see if there is a derivative of D
+        if not Deq.subs(Derivative(D, x), fx).has(fx):
+            return  # there was no derivative left
+        return {'var': c}
+
+# Use repeated substitution until we do not have a function independent of derivative
+def ode_order_reducible_substitution(eq, func, order, match):
+    r"""
+    Substitutes lowest order derivate in equation to function with order
+    of derivative as 0.Eg `f^(n)(x) = g(x)`, where n is the least order derivate.
+    match[var] or n here is how many times the function if solved is to be integrated
+    to  get f(x) since `g(x) = f^(match[var])(x)`.
+    """
+    x = func.args[0]
+    f = func.func
+    while True:
+        g = Function(Dummy().name)
+        if not eq.has(g(x)):
+            break
+    w = f(x).diff(x, match['var'])
+    eq = eq.subs(w, g(x))
+    eq = dsolve(eq, g(x))
+    eq = dsolve(eq.subs(g(x), w), f(x))
+
+    return eq
 
 def _nth_algebraic_match(eq, func):
     r"""
