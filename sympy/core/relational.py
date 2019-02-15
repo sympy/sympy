@@ -296,7 +296,7 @@ class Relational(Boolean, Expr, EvalfMixin):
             r = r.canonical
             # If there is only one symbol in the expression,
             # try to write it on a simplified form
-            free = r.free_symbols
+            free = list(filter(lambda x: x.is_real, r.free_symbols))
             if len(free) == 1:
                 try:
                     from sympy.solvers.solveset import linear_coeffs
@@ -318,9 +318,7 @@ class Relational(Boolean, Expr, EvalfMixin):
                     try:
                         p = poly(dif, x)
                         c = p.all_coeffs()
-                        leading = c[0]
-                        constant = c[-1]
-                        c[-1] = 0
+                        constant = c.pop()
                         scale = gcd(c)
                         c = [ctmp/scale for ctmp in c]
                         r = r.func(Poly.from_list(c, x).as_expr(), -constant/scale)
