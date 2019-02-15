@@ -50,6 +50,8 @@ class AskFiniteHandler(CommonHandler):
             return expr.is_finite
         if Q.finite(expr) in conjuncts(assumptions):
             return True
+        if Q.infinite(expr) in conjuncts(assumptions):
+            return False
         return None
 
     @staticmethod
@@ -258,19 +260,21 @@ class AskInfiniteHandler(CommonHandler):
         ========
 
         >>> from sympy import Symbol, Q
-        >>> from sympy.assumptions.handlers.calculus import AskFiniteHandler
+        >>> from sympy.assumptions.handlers.calculus import AskInfiniteHandler
         >>> from sympy.abc import x
-        >>> a = AskFiniteHandler()
+        >>> a = AskInfiniteHandler()
         >>> a.Symbol(x, Q.positive(x)) == None
         True
         >>> a.Symbol(x, Q.finite(x))
-        True
+        False
 
         """
         if expr.is_finite is not None:
             return not expr.is_finite
         if Q.infinite(expr) in conjuncts(assumptions):
             return True
+        if Q.finite(expr) in conjuncts(assumptions):
+            return False
         return None
 
     @staticmethod
@@ -338,7 +342,7 @@ class AskTranscendentalHandler(CommonHandler):
         ========
 
         >>> from sympy import Symbol, Q
-        >>> from sympy.assumptions.handlers.calculus import AskFiniteHandler
+        >>> from sympy.assumptions.handlers.calculus import AskTranscendentalHandler
         >>> from sympy.abc import x
         >>> a = AskTranscendentalHandler()
         >>> a.Symbol(x, Q.transcendental(x))

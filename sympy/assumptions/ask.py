@@ -385,8 +385,8 @@ class AssumptionKeys(object):
         Examples
         ========
         >>> from sympy import ask, Q, oo, I
-        >>> ask(Q.infinite(oo+I*oo))
-        None
+        >>> ask(Q.infinite(oo+I*oo)) == None
+        True
         >>> ask(Q.infinite(oo))
         True
         >>> ask(Q.infinite(I))
