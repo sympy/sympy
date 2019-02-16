@@ -424,29 +424,15 @@ class MathMLContentPrinter(MathMLPrinterBase):
         if requires_partial(e):
             diff_symbol = 'partialdiff'
         x.appendChild(self.dom.createElement(diff_symbol))
-
         x_1 = self.dom.createElement('bvar')
-        for sym in e.variables:
-            x_1.appendChild(self._print(sym))
 
-        x.appendChild(x_1)
-        x.appendChild(self._print(e.expr))
-        return x
-
-    def _print_Derivative2(self,e):
-        x = self.dom.createElement('apply')
-        x.appendChild(self.dom.createElement(self.mathml_tag(e)))
-        x_1 = self.dom.createElement('bvar')
-        rle_syms = ((s,len(list(repeats))) for s,repeats in groupby(e.symbols))
-
-
-        for sym,times in rle_syms:
+        rle_syms = ((s,len(list(repeats))) for s, repeats in groupby(e.variables))
+        for sym, times in rle_syms:
             x_1.appendChild(self._print(sym))
             if times > 1:
                 degree = self.dom.createElement('degree')
                 degree.appendChild(self._print(sympify(times)))
                 x_1.appendChild(degree)
-
 
         x.appendChild(x_1)
         x.appendChild(self._print(e.expr))
@@ -859,7 +845,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_Derivative(self, e):
-        mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mo')
         if requires_partial(e):
             x.appendChild(self.dom.createTextNode('&#x2202;'))
@@ -870,15 +855,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             y = self.dom.createElement('mo')
             y.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
 
-        brac = self.dom.createElement('mfenced')
-        brac.appendChild(self._print(e.expr))
         mrow = self.dom.createElement('mrow')
-        mrow.appendChild(x)
-        mrow.appendChild(brac)
+        frac = self.dom.createElement('mfrac')
+        frac.appendChild(x)
 
+        m = self.dom.createElement('mrow')
         for sym in e.variables:
-            frac = self.dom.createElement('mfrac')
-            m = self.dom.createElement('mrow')
             x = self.dom.createElement('mo')
             if requires_partial(e):
                 x.appendChild(self.dom.createTextNode('&#x2202;'))
@@ -887,11 +869,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             y = self._print(sym)
             m.appendChild(x)
             m.appendChild(y)
-            frac.appendChild(mrow)
-            frac.appendChild(m)
-            mrow = frac
+        frac.appendChild(m)
+        mrow.appendChild(frac)
 
-        return frac
+        mrow.appendChild(self._print(e.expr))
+
+        return mrow
 
     def _print_Function(self, e):
         mrow = self.dom.createElement('mrow')
