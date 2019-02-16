@@ -11,7 +11,6 @@ from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer
 
-from itertools import groupby
 
 class MathMLPrinterBase(Printer):
     """Contains common code required for MathMLContentPrinter and
@@ -426,8 +425,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createElement(diff_symbol))
         x_1 = self.dom.createElement('bvar')
 
-        rle_syms = ((s,len(list(repeats))) for s, repeats in groupby(e.variables))
-        for sym, times in rle_syms:
+        for sym, times in reversed(e.variable_count):
             x_1.appendChild(self._print(sym))
             if times > 1:
                 degree = self.dom.createElement('degree')
