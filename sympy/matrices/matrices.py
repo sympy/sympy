@@ -196,7 +196,7 @@ class MatrixDeterminant(MatrixCommon):
             # Relevant issues: #10279 and #13877.
             pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
                                          iszerofunc=iszerofunc)
-            if pivot_pos == None:
+            if pivot_pos is None:
                 return S.Zero
 
             # if we have a valid pivot, we'll do a "row swap", so keep the
