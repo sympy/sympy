@@ -941,7 +941,7 @@ def test_print_basic():
 
 
 def test_mat_delim_print():
-    aexpr = Matrix([[1, 2], [3, 4]])
+    expr = Matrix([[1, 2], [3, 4]])
     assert mathml(expr, printer='presentation', mat_delim='[') == '<mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
     assert mathml(expr, printer='presentation', mat_delim='(') == '<mfenced><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
     assert mathml(expr, printer='presentation', mat_delim='') == '<mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable>'
