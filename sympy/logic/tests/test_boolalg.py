@@ -21,6 +21,7 @@ from sympy.logic.boolalg import (
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
 
+from itertools import combinations
 
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
@@ -843,3 +844,31 @@ def test_relational_simplification():
     assert Or(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y).simplify() == (Eq(x, y) | (x >= 1) | (y > Min(2, z)))
     assert And(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y).simplify() == (Eq(x, y) & (x >= 1) & (y >= 5) & (y > z))
     assert (Eq(x, y) & Eq(d, e) & (x >= y) & (d >= e)).simplify() == (Eq(x, y) & Eq(d, e) & (d >= e))
+
+
+def test_relational_simplification_numerically():
+    def test_simplification_numerically_function(original, simplified):
+        symb = original.free_symbols
+        n = len(symb)
+        valuelist = list(set(list(combinations(list(range(-(n-1),n))*n, n))))
+        for values in valuelist:
+            sublist = dict(zip(symb, values))
+            originalvalue = original.subs(sublist)
+            simplifiedvalue = simplified.subs(sublist)
+            if originalvalue != simplifiedvalue:
+                # In case something fails, show clearly which case
+                print("Original: {}\nand simplified: {}\ndo not evaluate to the same value for {}".format(original, simplified, sublist))
+            assert originalvalue == simplifiedvalue
+
+    w, x, y, z = symbols('w x y z', real=True)
+    d, e = symbols('d e')
+
+    expressions = (And(Eq(x,y), x >= y, w < y, y >= z, z < y),
+                   And(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y),
+                   Or(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y),
+                   And(x >= y, Eq(y, x)),
+                   Or(And(Eq(x,y), x >= y, w < y, Or(y >= z, z < y)), And(Eq(x,y), x >= 1, 2 < y, y >= -1, z < y)),
+                     )
+
+    for expression in expressions:
+        test_simplification_numerically_function(expression, expression.simplify())
