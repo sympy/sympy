@@ -203,8 +203,6 @@ class Relational(Boolean, Expr, EvalfMixin):
         """
         args = self.args
         r = self
-        rhsnumber = (len(r.rhs.free_symbols) == 0)
-        lhsnumber = (len(r.lhs.free_symbols) == 0)
         if len(r.rhs.free_symbols) == 0:
             if len(r.lhs.free_symbols) == 0 and r.lhs > r.rhs:
                 r = r.reversed

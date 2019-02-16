@@ -852,5 +852,7 @@ def test_improved_canonical():
     test_different_forms(generate_forms(x >= -y))
     test_different_forms(generate_forms(Eq(x, -y)))
     test_different_forms(generate_forms(Ne(x, -y)))
+    test_different_forms(generate_forms(pi < x))
+    test_different_forms(generate_forms(pi - 5*y < -x + 2*y**2 -7))
 
     assert (pi >= x).canonical == (x <= pi)
