@@ -845,33 +845,49 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_Derivative(self, e):
-        x = self.dom.createElement('mo')
-        if requires_partial(e):
-            x.appendChild(self.dom.createTextNode('&#x2202;'))
-            y = self.dom.createElement('mo')
-            y.appendChild(self.dom.createTextNode('&#x2202;'))
-        else:
-            x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-            y = self.dom.createElement('mo')
-            y.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
 
+        if requires_partial(e):
+            d = '&#x2202;'
+        else:
+            d = self.mathml_tag(e)
+
+        # Determine denominator
+        m = self.dom.createElement('mrow')
+        dim = 0 # Total diff dimension, for numerator
+        for sym, num in reversed(e.variable_count):
+            dim += num
+            if num >= 2:
+                x = self.dom.createElement('msup')
+                xx = self.dom.createElement('mo')
+                xx.appendChild(self.dom.createTextNode(d))
+                x.appendChild(xx)
+                x.appendChild(self._print(num))
+            else:
+                x = self.dom.createElement('mo')
+                x.appendChild(self.dom.createTextNode(d))
+            m.appendChild(x)
+            y = self._print(sym)
+            m.appendChild(y)
+
+        mnum = self.dom.createElement('mrow')
+        if dim >= 2:
+            x = self.dom.createElement('msup')
+            xx = self.dom.createElement('mo')
+            xx.appendChild(self.dom.createTextNode(d))
+            x.appendChild(xx)
+            x.appendChild(self._print(dim))
+        else:
+            x = self.dom.createElement('mo')
+            x.appendChild(self.dom.createTextNode(d))
+
+        mnum.appendChild(x)
         mrow = self.dom.createElement('mrow')
         frac = self.dom.createElement('mfrac')
-        frac.appendChild(x)
-
-        m = self.dom.createElement('mrow')
-        for sym in e.variables:
-            x = self.dom.createElement('mo')
-            if requires_partial(e):
-                x.appendChild(self.dom.createTextNode('&#x2202;'))
-            else:
-                x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-            y = self._print(sym)
-            m.appendChild(x)
-            m.appendChild(y)
+        frac.appendChild(mnum)
         frac.appendChild(m)
         mrow.appendChild(frac)
 
+        # Print function
         mrow.appendChild(self._print(e.expr))
 
         return mrow
