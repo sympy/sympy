@@ -214,13 +214,13 @@ class Relational(Boolean, Expr, EvalfMixin):
         elif r.lhs.is_number:
             r = r.reversed
         elif tuple(ordered(args)) != args:
-                r = r.reversed
+            r = r.reversed
 
         # Check if first value has negative sign
-        if (not isinstance(r.lhs, BooleanAtom)) and r.lhs.could_extract_minus_sign():
+        if not isinstance(r.lhs, BooleanAtom) and r.lhs.could_extract_minus_sign():
             r = r.reversedsign
 #        elif (not isinstance(r.rhs, BooleanAtom)) and r.rhs.free_symbols and r.rhs.could_extract_minus_sign():
-        elif (not isinstance(r.rhs, BooleanAtom)) and r.rhs.is_number and r.rhs.could_extract_minus_sign():
+        elif not isinstance(r.rhs, BooleanAtom) and not r.rhs.is_number and r.rhs.could_extract_minus_sign():
             # Right hand side have a minus, but not lhs.
             # How does the expression with reversed signs behave?
             # This is so that expressions of the type Eq(x, -y) and Eq(-x, y) have the same canonical representation
