@@ -841,6 +841,27 @@ def test_reversedsign_property():
     for f in (Eq, Ne, Ge, Gt, Le, Lt):
         assert f(x, y).reversedsign.reversedsign == f(x, y)
 
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(-x, y).reversedsign.reversedsign == f(-x, y)
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(x, -y).reversedsign.reversedsign == f(x, -y)
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(-x, -y).reversedsign.reversedsign == f(-x, -y)
+
+def test_reversed_reversedsign_property():
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(x, y).reversed.reversedsign == f(x, y).reversedsign.reversed
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(-x, y).reversed.reversedsign == f(-x, y).reversedsign.reversed
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(x, -y).reversed.reversedsign == f(x, -y).reversedsign.reversed
+
+    for f in (Eq, Ne, Ge, Gt, Le, Lt):
+        assert f(-x, -y).reversed.reversedsign == f(-x, -y).reversedsign.reversed
 
 def test_improved_canonical():
     def test_different_forms(listofforms):

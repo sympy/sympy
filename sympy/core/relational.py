@@ -142,9 +142,12 @@ class Relational(Boolean, Expr, EvalfMixin):
         >>> _.reversedsign
         -x > -1
         """
-        ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
         a, b = self.args
-        return Relational.__new__(ops.get(self.func, self.func), -a, -b)
+        if not (isinstance(a, BooleanAtom) or isinstance(b, BooleanAtom)):
+            ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
+            return Relational.__new__(ops.get(self.func, self.func), -a, -b)
+        else:
+            return self
 
     @property
     def negated(self):
@@ -203,25 +206,27 @@ class Relational(Boolean, Expr, EvalfMixin):
         """
         args = self.args
         r = self
+#        if not r.rhs.free_symbols:
         if r.rhs.is_number:
             if r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
                 r = r.reversed
+ #       elif not r.lhs.free_symbols:
         elif r.lhs.is_number:
             r = r.reversed
         elif tuple(ordered(args)) != args:
                 r = r.reversed
 
         # Check if first value has negative sign
-        if r.lhs.could_extract_minus_sign():
+        if (not isinstance(r.lhs, BooleanAtom)) and r.lhs.could_extract_minus_sign():
             r = r.reversedsign
-        elif not r.rhs.is_number and r.rhs.could_extract_minus_sign():
+#        elif (not isinstance(r.rhs, BooleanAtom)) and r.rhs.free_symbols and r.rhs.could_extract_minus_sign():
+        elif (not isinstance(r.rhs, BooleanAtom)) and r.rhs.is_number and r.rhs.could_extract_minus_sign():
             # Right hand side have a minus, but not lhs.
             # How does the expression with reversed signs behave?
             # This is so that expressions of the type Eq(x, -y) and Eq(-x, y) have the same canonical representation
-            rs = r.reversed.reversedsign
-            orderedlhs = ordered([r.lhs, rs.lhs])
-            if next(orderedlhs) == rs.lhs:
-                r = rs
+            orderedlhs = ordered([r.lhs, -r.rhs])
+            if next(orderedlhs) != r.lhs:
+                r = r.reversed.reversedsign
         return r
 
     def equals(self, other, failing_expression=False):
