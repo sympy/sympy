@@ -30,7 +30,7 @@ def split_super_sub(text):
     ('var', ['sup'], ['sub1', 'sub2'])
 
     """
-    if len(text) == 0:
+    if not text:
         return text, [], []
 
     pos = 0
