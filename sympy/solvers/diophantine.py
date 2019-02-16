@@ -1505,7 +1505,7 @@ def PQa(P_0, Q_0, D):
     P_i = P_0
     Q_i = Q_0
 
-    while(1):
+    while True:
 
         a_i = floor((P_i + sqrt(D))/Q_i)
         A_i = a_i*A_i_1 + A_i_2

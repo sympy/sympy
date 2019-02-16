@@ -1052,7 +1052,7 @@ class SeqAdd(SeqExprOp):
 
         """
         new_args = True
-        while(new_args):
+        while new_args:
             for id1, s in enumerate(args):
                 new_args = False
                 for id2, t in enumerate(args):
@@ -1159,7 +1159,7 @@ class SeqMul(SeqExprOp):
 
         """
         new_args = True
-        while(new_args):
+        while new_args:
             for id1, s in enumerate(args):
                 new_args = False
                 for id2, t in enumerate(args):
