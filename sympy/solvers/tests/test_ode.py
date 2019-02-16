@@ -3113,16 +3113,14 @@ def test_order_reducible():
     assert sol == dsolve(eqn, f(x), hint='order_reducible')
     assert sol == dsolve(eqn, f(x))
 
-    w, y= symbols('w y')
-    f = Function('f')
     F = lambda eq: _order_reducible_match(eq, f(x))
     fx = f(x)
     D = Derivative
     assert F(D(y*fx, x, y) + D(fx, x)) is None
     assert F(D(y*f(y), y, y) + D(f(y), y)) is None
     assert F(fx*D(fx, x) + D(fx, x, 2)) is None
-    assert F(D(x*f(y), y, 2) + D(w*y*fx, x, 3)) is None  # no simplification by design
-    assert F(D(f(w), w, 2) + D(f(w), w, 3) + D(fx, x, 4)) is None
+    assert F(D(x*f(y), y, 2) + D(u*y*fx, x, 3)) is None  # no simplification by design
+    assert F(D(f(y), y, 2) + D(f(y), y, 3) + D(fx, x, 4)) is None
     assert F(D(fx, x, 2) + D(fx, x, 3)) == dict(n=2)
 
 
