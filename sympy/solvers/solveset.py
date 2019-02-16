@@ -2967,9 +2967,9 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve((e1, e2), (x, y))
     {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
-    {(1, 2), (1 + sqrt(5), 2 - sqrt(5)), (1 - sqrt(5), 2 + sqrt(5))}
+    {(1, 2), (1 - sqrt(5), 2 + sqrt(5)), (1 + sqrt(5), 2 - sqrt(5))}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
-    {(2, 1), (2 + sqrt(5), 1 - sqrt(5)), (2 - sqrt(5), 1 + sqrt(5))}
+    {(2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5))}
 
     6. It is better to use symbols instead of Trigonometric Function or
     Function (e.g. replace `sin(x)` with symbol, replace `f(x)` with symbol

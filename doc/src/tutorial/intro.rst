@@ -162,7 +162,7 @@ Find the eigenvalues of `\left[\begin{smallmatrix}1 & 2\\2 &
 
  >>> Matrix([[1, 2], [2, 2]]).eigenvals()
  ⎧3   √17     3   √17   ⎫
- ⎨─ + ───: 1, ─ - ───: 1⎬
+ ⎨─ - ───: 1, ─ + ───: 1⎬
  ⎩2    2      2    2    ⎭
 
 Rewrite the Bessel function `J_{\nu}\left(z\right)` in terms of the

@@ -108,10 +108,10 @@ class Product(ExprWithIntLimits):
     pi**2*Product(1 - pi**2/(4*k**2), (k, 1, n))/2
     >>> Pe = P.doit()
     >>> Pe
-    pi**2*RisingFactorial(1 + pi/2, n)*RisingFactorial(1 - pi/2, n)/(2*factorial(n)**2)
+    pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(1 + pi/2, n)/(2*factorial(n)**2)
     >>> Pe = Pe.rewrite(gamma)
     >>> Pe
-    pi**2*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/(2*gamma(1 + pi/2)*gamma(1 - pi/2)*gamma(n + 1)**2)
+    pi**2*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/(2*gamma(1 - pi/2)*gamma(1 + pi/2)*gamma(n + 1)**2)
     >>> Pe = simplify(Pe)
     >>> Pe
     sin(pi**2/2)*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/gamma(n + 1)**2
