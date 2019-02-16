@@ -438,7 +438,7 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
     myprod = product if evaluate else Product
     g = []
     res = []
-    if variables == None:
+    if variables is None:
         symb = symbols('i:'+str(niter))
     else:
         symb = variables

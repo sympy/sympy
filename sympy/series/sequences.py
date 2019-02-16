@@ -333,7 +333,7 @@ class SeqBase(Basic):
         from sympy.matrices import Matrix
         x = [simplify(expand(t)) for t in self[:n]]
         lx = len(x)
-        if d == None:
+        if d is None:
             r = lx//2
         else:
             r = min(d,lx//2)
@@ -356,7 +356,7 @@ class SeqBase(Basic):
                 if m*y == Matrix(x[l2:]):
                     coeffs = flatten(y[::-1])
                     break
-        if gfvar == None:
+        if gfvar is None:
             return coeffs
         else:
             l = len(coeffs)
