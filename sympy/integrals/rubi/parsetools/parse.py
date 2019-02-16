@@ -346,7 +346,7 @@ def set_matchq_in_constraint(a, cons_index):
     '''
     lst = []
     res = ''
-    if(isinstance(a, list)):
+    if isinstance(a, list):
         if a[0] == 'MatchQ':
             s = a
             optional = get_default_values(s, {})

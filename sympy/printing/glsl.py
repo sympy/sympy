@@ -282,7 +282,7 @@ class GLSLPrinter(CodePrinter):
         return "%s.0/%s.0" % (expr.p, expr.q)
 
     def _print_Add(self, expr, order=None):
-        if(self._settings['use_operators']):
+        if self._settings['use_operators']:
             return CodePrinter._print_Add(self, expr, order=order)
 
         terms = expr.as_ordered_terms()
@@ -303,7 +303,7 @@ class GLSLPrinter(CodePrinter):
         return s
 
     def _print_Mul(self, expr, **kwargs):
-        if(self._settings['use_operators']):
+        if self._settings['use_operators']:
             return CodePrinter._print_Mul(self, expr, **kwargs)
         terms = expr.as_ordered_factors()
         def mul(a,b):
