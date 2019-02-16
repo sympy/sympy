@@ -7,7 +7,7 @@ from sympy.interactive.printing import init_printing
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter, translate
 from sympy.printing.pretty.pretty import PrettyPrinter
-from sympy.printing.pretty.pretty_symbology import put_accent_in_middle_of_string
+from sympy.printing.pretty.pretty_symbology import center_accent
 from sympy.printing.str import StrPrinter
 
 __all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex',
@@ -211,7 +211,13 @@ class VectorPrettyPrinter(PrettyPrinter):
         else:
             d['picture'] = [pic_split[0] + dots[dot_i] + pic_split[1]]
 
+<<<<<<< HEAD
         d['unicode'] =  uni_split[0] + dots[dot_i] + uni_split[1]
+=======
+        d['picture'] = [center_accent(d['picture'][0], dots[dot_i])]
+        d['unicode'] =  center_accent(d['unicode'], dots[dot_i])
+
+>>>>>>> master
         return pform
 
     def _print_Function(self, e):

@@ -133,6 +133,8 @@ class MathMLContentPrinter(MathMLPrinterBase):
             'int': 'cn',
             'Pow': 'power',
             'Symbol': 'ci',
+            'MatrixSymbol': 'ci',
+            'RandomSymbol': 'ci',
             'Integral': 'int',
             'Sum': 'sum',
             'sin': 'sin',
@@ -386,6 +388,9 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 ci.appendChild(msubsup)
         return ci
 
+    _print_MatrixSymbol = _print_Symbol
+    _print_RandomSymbol = _print_Symbol
+
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
         if self._settings['root_notation'] and e.exp.is_Rational and e.exp.p == 1:
@@ -583,7 +588,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_MatrixBase(self, m):
-        brac = self.dom.createElement('mfenced')
         table = self.dom.createElement('mtable')
         for i in range(m.rows):
             x = self.dom.createElement('mtr')
@@ -592,6 +596,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 y.appendChild(self._print(m[i, j]))
                 x.appendChild(y)
             table.appendChild(x)
+        if self._settings["mat_delim"] == '':
+            return table
+        brac = self.dom.createElement('mfenced')
+        if self._settings["mat_delim"] == "[":
+            brac.setAttribute('open', '[')
+            brac.setAttribute('close', ']')
         brac.appendChild(table)
         return brac
 
@@ -737,8 +747,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
         return mrow
 
-    def _print_Symbol(self, sym):
+    def _print_Symbol(self, sym, style='plain'):
         x = self.dom.createElement('mi')
+
+        if style == 'bold':
+            x.setAttribute('mathvariant', 'bold')
 
         def join(items):
             if len(items) > 1:
@@ -792,6 +805,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 msubsup.appendChild(join(supers))
                 x.appendChild(msubsup)
         return x
+
+    def _print_MatrixSymbol(self, sym):
+        return self._print_Symbol(sym, style=self._settings['mat_symbol_style'])
+
+    _print_RandomSymbol = _print_Symbol
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer

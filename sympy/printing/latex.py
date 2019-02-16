@@ -23,7 +23,7 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key, range, string_types
+from sympy.core.compatibility import default_sort_key, range
 from sympy.utilities.iterables import has_variety
 
 import re
@@ -135,6 +135,7 @@ class LatexPrinter(Printer):
         "order": None,
         "symbol_names": {},
         "root_notation": True,
+        "mat_symbol_style": "plain",
         "imaginary_unit": "i",
     }
 
@@ -1361,15 +1362,22 @@ class LatexPrinter(Printer):
                 s += self._print(expr.point[0])
         return r"O\left(%s\right)" % s
 
-    def _print_Symbol(self, expr):
+    def _print_Symbol(self, expr, style='plain'):
         if expr in self._settings['symbol_names']:
             return self._settings['symbol_names'][expr]
 
-        return self._deal_with_super_sub(expr.name) if \
+        result = self._deal_with_super_sub(expr.name) if \
             '\\' not in expr.name else expr.name
 
+        if style == 'bold':
+            result = r"\mathbf{{{}}}".format(result)
+
+        return result
+
     _print_RandomSymbol = _print_Symbol
-    _print_MatrixSymbol = _print_Symbol
+
+    def _print_MatrixSymbol(self, expr):
+        return self._print_Symbol(expr, style=self._settings['mat_symbol_style'])
 
     def _deal_with_super_sub(self, string):
         if '{' in string:
@@ -1673,7 +1681,7 @@ class LatexPrinter(Printer):
 
     def _print_tuple(self, expr):
         return r"\left( %s\right)" % \
-            r", \quad ".join([ self._print(i) for i in expr ])
+            r", \  ".join([ self._print(i) for i in expr ])
 
     def _print_TensorProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
@@ -1688,7 +1696,7 @@ class LatexPrinter(Printer):
 
     def _print_list(self, expr):
         return r"\left[ %s\right]" % \
-            r", \quad ".join([ self._print(i) for i in expr ])
+            r", \  ".join([ self._print(i) for i in expr ])
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -1698,7 +1706,7 @@ class LatexPrinter(Printer):
             val = d[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
-        return r"\left\{ %s\right\}" % r", \quad ".join(items)
+        return r"\left\{ %s\right\}" % r", \  ".join(items)
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
@@ -2286,7 +2294,8 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     fold_short_frac=None, inv_trig_style="abbreviated",
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-    order=None, symbol_names=None, root_notation=True, imaginary_unit="i"):
+    order=None, symbol_names=None, root_notation=True,
+    mat_symbol_style="plain", imaginary_unit="i"):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2342,6 +2351,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     root_notation : boolean, optional
         If set to ``False``, exponents of the form 1/n are printed in fractonal form.
         Default is ``True``, to print exponent in root form.
+    mat_symbol_style : string, optional
+        Can be either ``plain`` (default) or ``bold``. If set to ``bold``,
+        a MatrixSymbol A will be printed as ``\mathbf{A}``, otherwise as ``A``.
     imaginary_unit : string, optional
         String to use for the imaginary unit. Defined options are "i" (default)
         and "j". Adding "b" or "t" in front gives ``\mathrm`` or ``\text``, so
@@ -2450,7 +2462,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     dictionary.
 
     >>> print(latex([2/x, y], mode='inline'))
-    $\left[ 2 / x, \quad y\right]$
+    $\left[ 2 / x, \  y\right]$
 
     """
     if symbol_names is None:
@@ -2471,6 +2483,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'order' : order,
         'symbol_names' : symbol_names,
         'root_notation' : root_notation,
+        'mat_symbol_style' : mat_symbol_style,
         'imaginary_unit' : imaginary_unit,
     }
 

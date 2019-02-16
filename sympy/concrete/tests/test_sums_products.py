@@ -3,7 +3,7 @@ from sympy import (
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod, Dummy)
+    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma)
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -1067,6 +1067,12 @@ def test_issue_14640():
     s = Sum(i*(a**(n - i) - b**(n - i))/(a - b), (i, 0, n)).doit()
     assert not s.has(Sum)
     assert s.subs({a: 2, b: 3, n: 5}) == 122
+
+
+def test_issue_15943():
+    assert Sum(binomial(n, k)*factorial(n - k), (k, 0, n)).doit() == -E*(
+        n + 1)*gamma(n + 1)*lowergamma(n + 1, 1)/gamma(n + 2
+        ) + E*gamma(n + 1)
 
 
 def test_Sum_dummy_eq():
