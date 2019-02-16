@@ -41,6 +41,7 @@ class PrettyPrinter(Printer):
         "num_columns": None,
         "use_unicode_sqrt_char": True,
         "root_notation": True,
+        "mat_symbol_style": "plain",
         "imaginary_unit": "i",
     }
 
@@ -75,10 +76,12 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left('atan2'))
         return pform
 
-    def _print_Symbol(self, e):
-        symb = pretty_symbol(e.name)
+    def _print_Symbol(self, e, bold_name=False):
+        symb = pretty_symbol(e.name, bold_name)
         return prettyForm(symb)
     _print_RandomSymbol = _print_Symbol
+    def _print_MatrixSymbol(self, e):
+        return self._print_Symbol(e, self._settings['mat_symbol_style'] == "bold")
 
     def _print_Float(self, e):
         # we will use StrPrinter's Float printer, but we need to handle the
@@ -881,8 +884,6 @@ class PrettyPrinter(Printer):
             delim = ' x '
         return self._print_seq(expr.args, None, None, delim,
                 parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
-
-    _print_MatrixSymbol = _print_Symbol
 
     def _print_FunctionMatrix(self, X):
         D = self._print(X.lamda.expr)
@@ -2471,7 +2472,7 @@ def pretty(expr, **settings):
 
 def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
                  full_prec="auto", order=None, use_unicode_sqrt_char=True,
-                 root_notation = True, imaginary_unit="i"):
+                 root_notation = True, mat_symbol_style="plain", imaginary_unit="i"):
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
@@ -2502,9 +2503,13 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
     use_unicode_sqrt_char : bool, optional (default=True)
         Use compact single-character square root symbol (when unambiguous).
 
-    root_notation : bool,optional( default= True)
-        Set to 'False' for printing exponents of the form 1/n in fractional form;
+    root_notation : bool, optional (default=True)
+        Set to 'False' for printing exponents of the form 1/n in fractional form.
         By default exponent is printed in root form.
+
+    mat_symbol_style : string, optional (default="plain")
+        Set to "bold" for printing MatrixSymbols using a bold mathematical symbol face.
+        By default the standard face is used.
 
     imaginary_unit : string, optional (default="i")
         Letter to use for imaginary unit when use_unicode is True.
@@ -2513,7 +2518,8 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
     print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
                  use_unicode=use_unicode, full_prec=full_prec, order=order,
                  use_unicode_sqrt_char=use_unicode_sqrt_char,
-                 root_notation=root_notation, imaginary_unit=imaginary_unit))
+                 root_notation=root_notation, mat_symbol_style=mat_symbol_style,
+                 imaginary_unit=imaginary_unit))
 
 pprint = pretty_print
 
