@@ -2668,7 +2668,7 @@ def _get_constant_subexpressions(expr, Cs):
     Ces = []
     def _recursive_walk(expr):
         expr_syms = expr.free_symbols
-        if len(expr_syms) > 0 and expr_syms.issubset(Cs):
+        if expr_syms and expr_syms.issubset(Cs):
             Ces.append(expr)
         else:
             if expr.func == exp:
