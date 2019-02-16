@@ -611,7 +611,7 @@ class NumPyPrinter(PythonCodePrinter):
         from sympy.codegen.array_utils import CodegenArrayTensorProduct
         base = expr.expr
         contraction_indices = expr.contraction_indices
-        if len(contraction_indices) == 0:
+        if not contraction_indices:
             return self._print(base)
         if isinstance(base, CodegenArrayTensorProduct):
             counter = 0

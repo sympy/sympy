@@ -225,7 +225,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
             return lastProcessed
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('plus'))
-        while len(plusNodes) > 0:
+        while plusNodes:
             x.appendChild(plusNodes.pop(0))
         return x
 
@@ -366,8 +366,8 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
         mname = self.dom.createElement('mml:mi')
         mname.appendChild(self.dom.createTextNode(name))
-        if len(supers) == 0:
-            if len(subs) == 0:
+        if not supers:
+            if not subs:
                 ci.appendChild(self.dom.createTextNode(name))
             else:
                 msub = self.dom.createElement('mml:msub')
@@ -375,7 +375,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 msub.appendChild(join(subs))
                 ci.appendChild(msub)
         else:
-            if len(subs) == 0:
+            if not subs:
                 msup = self.dom.createElement('mml:msup')
                 msup.appendChild(mname)
                 msup.appendChild(join(supers))

@@ -1138,7 +1138,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _hprint_vec(self, vec):
-        if len(vec) == 0:
+        if not vec:
             return ""
         s = ""
         for i in vec[:-1]:
@@ -1353,7 +1353,7 @@ class LatexPrinter(Printer):
             s += '; '
             if len(expr.variables) > 1:
                 s += self._print(expr.variables)
-            elif len(expr.variables):
+            elif expr.variables:
                 s += self._print(expr.variables[0])
             s += r'\rightarrow '
             if len(expr.point) > 1:
@@ -1390,9 +1390,9 @@ class LatexPrinter(Printer):
         subs = [translate(sub) for sub in subs]
 
         # glue all items together:
-        if len(supers) > 0:
+        if supers:
             name += "^{%s}" % " ".join(supers)
-        if len(subs) > 0:
+        if subs:
             name += "_{%s}" % " ".join(subs)
 
         return name
@@ -2292,7 +2292,7 @@ def translate(s):
     else:
         # Process modifiers, if any, and recurse
         for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True):
-            if s.lower().endswith(key) and len(s)>len(key):
+            if s.lower().endswith(key) and len(s) > len(key):
                 return modifier_dict[key](translate(s[:-len(key)]))
         return s
 
