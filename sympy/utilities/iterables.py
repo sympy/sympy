@@ -1451,11 +1451,10 @@ def partitions(n, m=None, k=None, size=False):
     sympy.combinatorics.partitions.IntegerPartition
 
     """
-    if (
-            n <= 0 or
-            m is not None and m < 1 or
-            k is not None and k < 1 or
-            m and k and m*k < n):
+    if (n <= 0 or
+        m is not None and m < 1 or
+        k is not None and k < 1 or
+        m and k and m*k < n):
         # the empty set is the only way to handle these inputs
         # and returning {} to represent it is consistent with
         # the counting convention, e.g. nT(0) == 1.
