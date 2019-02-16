@@ -342,7 +342,7 @@ class MatrixDeterminant(MatrixCommon):
         det
         """
 
-        if self.rows != self.cols:
+        if not self.is_square:
             raise NonSquareMatrixError()
 
         berk_vector = self._eval_berkowitz_vector()
@@ -360,7 +360,7 @@ class MatrixDeterminant(MatrixCommon):
         minor_submatrix
         """
 
-        if self.rows != self.cols or self.rows < 1:
+        if not self.is_square or self.rows < 1:
             raise NonSquareMatrixError()
 
         return (-1)**((i + j) % 2) * self.minor(i, j, method)
@@ -377,7 +377,7 @@ class MatrixDeterminant(MatrixCommon):
         adjugate
         """
 
-        if self.rows != self.cols or self.rows < 1:
+        if not self.is_square or self.rows < 1:
             raise NonSquareMatrixError()
 
         return self._new(self.rows, self.cols,
@@ -456,7 +456,7 @@ class MatrixDeterminant(MatrixCommon):
         # if methods were made internal and all determinant calculations
         # passed through here, then these lines could be factored out of
         # the method routines
-        if self.rows != self.cols:
+        if not self.is_square:
             raise NonSquareMatrixError()
 
         n = self.rows
@@ -494,7 +494,7 @@ class MatrixDeterminant(MatrixCommon):
         det
         """
 
-        if self.rows != self.cols or self.rows < 1:
+        if not self.is_square or self.rows < 1:
             raise NonSquareMatrixError()
 
         return self.minor_submatrix(i, j).det(method=method)
@@ -1224,7 +1224,7 @@ class MatrixEigen(MatrixSubspaces):
         if not mat:
             return {}
         if flags.pop('rational', True):
-            if any(v.has(Float) for v in mat):
+            if mat.has(Float):
                 mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
         if mat.is_upper or mat.is_lower:
@@ -1337,7 +1337,7 @@ class MatrixEigen(MatrixSubspaces):
 
         mat = self
         # roots doesn't like Floats, so replace them with Rationals
-        has_floats = any(v.has(Float) for v in self)
+        has_floats = self.has(Float)
         if has_floats:
             mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
@@ -1502,7 +1502,7 @@ class MatrixEigen(MatrixSubspaces):
 
         chop = kwargs.pop('chop', False)
         mat = self
-        has_floats = any(v.has(Float) for v in self)
+        has_floats = self.has(Float)
 
         if has_floats:
             try:

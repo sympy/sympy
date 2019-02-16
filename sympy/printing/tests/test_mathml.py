@@ -1,6 +1,8 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S
+    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
+    MatrixSymbol
+from sympy.stats.rv import RandomSymbol
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
     MathMLPrinter
 
@@ -929,3 +931,17 @@ def test_root_notation_print():
     assert mathml(x**(S(1)/3), printer='presentation', root_notation=False) == '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
     assert mathml(x**(S(1)/3), printer='content') == '<apply><root/><degree><ci>3</ci></degree><ci>x</ci></apply>'
     assert mathml(x**(S(1)/3), printer='content', root_notation=False) == '<apply><power/><ci>x</ci><apply><divide/><cn>1</cn><cn>3</cn></apply></apply>'
+
+
+def test_print_matrix_symbol():
+    A = MatrixSymbol('A', 1, 2)
+    assert mpp.doprint(A) == '<mi>A</mi>'
+    assert mp.doprint(A) == '<ci>A</ci>'
+    assert mathml(A, printer='presentation', mat_symbol_style="bold" )== '<mi mathvariant="bold">A</mi>'
+    assert mathml(A, mat_symbol_style="bold" )== '<ci>A</ci>' # No effect in content printer
+
+
+def test_print_random_symbol():
+    R = RandomSymbol(Symbol('R'))
+    assert mpp.doprint(R) == '<mi>R</mi>'
+    assert mp.doprint(R) == '<ci>R</ci>'

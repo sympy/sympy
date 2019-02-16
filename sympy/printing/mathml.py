@@ -133,6 +133,8 @@ class MathMLContentPrinter(MathMLPrinterBase):
             'int': 'cn',
             'Pow': 'power',
             'Symbol': 'ci',
+            'MatrixSymbol': 'ci',
+            'RandomSymbol': 'ci',
             'Integral': 'int',
             'Sum': 'sum',
             'sin': 'sin',
@@ -385,6 +387,9 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 msubsup.appendChild(join(supers))
                 ci.appendChild(msubsup)
         return ci
+
+    _print_MatrixSymbol = _print_Symbol
+    _print_RandomSymbol = _print_Symbol
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
@@ -737,8 +742,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
         return mrow
 
-    def _print_Symbol(self, sym):
-
+    def _print_Symbol(self, sym, style='plain'):
         def join(items):
             if len(items) > 1:
                 mrow = self.dom.createElement('mrow')
@@ -772,8 +776,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mname.appendChild(self.dom.createTextNode(name))
         if len(supers) == 0:
             if len(subs) == 0:
-                x = self.dom.createElement('mi')
-                x.appendChild(self.dom.createTextNode(name))
+                x = mname
             else:
                 x = self.dom.createElement('msub')
                 x.appendChild(mname)
@@ -788,7 +791,15 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 x.appendChild(mname)
                 x.appendChild(join(subs))
                 x.appendChild(join(supers))
+        # Set bold font?
+        if style == 'bold':
+            x.setAttribute('mathvariant', 'bold')
         return x
+
+    def _print_MatrixSymbol(self, sym):
+        return self._print_Symbol(sym, style=self._settings['mat_symbol_style'])
+
+    _print_RandomSymbol = _print_Symbol
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
