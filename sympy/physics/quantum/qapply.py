@@ -93,7 +93,7 @@ def qapply(e, **options):
         result = 0
         for arg in e.args:
             result += qapply(arg, **options)
-        return result
+        return result.expand()
 
     # For a Density operator call qapply on its state
     elif isinstance(e, Density):
