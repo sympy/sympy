@@ -5,6 +5,7 @@ from __future__ import print_function, division
 from sympy.core import S
 from sympy.core.compatibility import reduce, range, iterable
 from sympy.core.function import Function
+from sympy.core.relational import _canonical
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
 from sympy.integrals import integrate, Integral
@@ -1064,7 +1065,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     if simplify:
         F = _simplifyconds(F, s, a)
         aux = _simplifyconds(aux, s, a)
-    return _simplify(F.subs(s, s_), simplify), sbs(a), sbs(aux)
+    return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
 
 
 class LaplaceTransform(IntegralTransform):
@@ -1124,7 +1125,7 @@ def laplace_transform(f, t, s, **hints):
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**a, t, s)
-    (s**(-a)*gamma(a + 1)/s, 0, -re(a) < 1)
+    (s**(-a)*gamma(a + 1)/s, 0, re(a) > -1)
 
     See Also
     ========

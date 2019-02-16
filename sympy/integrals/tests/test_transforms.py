@@ -480,7 +480,7 @@ def test_laplace_transform():
 
     assert LT(exp(t), t, s)[:2] == (1/(s - 1), 1)
     assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
-    assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
+    assert LT(exp(a*t), t, s)[:2] == (1/(s - a), 0)
 
     assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
 
@@ -808,14 +808,14 @@ def test_issue_7173():
     ans = laplace_transform(sinh(a*x)*cosh(a*x), x, s)
     r, e = cse(ans)
     assert r == [
-        (x0, pi/2),
-        (x1, arg(a)),
-        (x2, Abs(x1)),
-        (x3, Abs(x1 + pi))]
+        (x0, arg(a)),
+        (x1, Abs(x0)),
+        (x2, pi/2),
+        (x3, Abs(x0 + pi))]
     assert e == [
         a/(-4*a**2 + s**2),
         0,
-        ((x0 >= x2) | (x2 < x0)) & ((x0 >= x3) | (x3 < x0))]
+        ((x1 <= x2) | (x1 < x2)) & ((x3 <= x2) | (x3 < x2))]
 
 
 def test_issue_8514():
