@@ -143,3 +143,6 @@ def test_FourierSeries_finite():
     assert fourier_series(sin(4*x+3) + cos(3*x+4)) ==  -sin(4)*sin(3*x) + sin(4*x)*cos(3) \
            + cos(4)*cos(3*x) + sin(3)*cos(4*x)
     assert fourier_series(sin(x)+cos(x)*tan(x)) == 2*sin(x)
+    assert fourier_series(cos(pi*x), (x, -1, 1)) == cos(pi*x)
+    assert fourier_series(cos(3*pi*x + 4) - sin(4*pi*x)*log(pi*y) , (x,-1,1)) ==  -log(pi*y)*sin(4*pi*x) \
+           - sin(4)*sin(3*pi*x) + cos(4)*cos(3*pi*x)

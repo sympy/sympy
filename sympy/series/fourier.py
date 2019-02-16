@@ -91,18 +91,18 @@ def _process_limits(func, limits):
     return sympify((x, start, stop))
 
 
-def finite_check(f, x):
+def finite_check(f, x, L):
     def check_fx(exprs, x):
         return x not in exprs.free_symbols
 
-    def check_sincos(expr, x):
+    def check_sincos(expr, x, L):
         if type(expr) == sin or type(expr) == cos:
             a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
             b = Wild('b', properties=[lambda k: x not in k.free_symbols or k == S.Zero, ])
 
             sincos_args = expr.args[0]
 
-            if sincos_args.match(a * x + b) is not None:
+            if sincos_args.match(a*(pi/L)*x + b) is not None:
                 return True
             else:
                 return False
@@ -115,11 +115,11 @@ def finite_check(f, x):
     for s in add_coeff[1]:
         mul_coeffs = s.as_coeff_mul()[1]
         for t in mul_coeffs:
-            if not (check_fx(t, x) or check_sincos(t, x)):
+            if not (check_fx(t, x) or check_sincos(t, x, L)):
                 return False, f
         res_expr += TR10(s)
     a = Wild('a', properties=[lambda k:k.is_Integer, lambda k:k != 0, ])
-    return True, res_expr.collect([sin(a*x), cos(a*x)])
+    return True, res_expr.collect([sin(a*(pi/L)*x), cos(a*(pi/L)*x)])
 
 
 class FourierSeries(SeriesBase):
@@ -502,7 +502,8 @@ def fourier_series(f, limits=None):
     if x not in f.free_symbols:
         return f
 
-    is_finite, res_f = finite_check(f, x)
+    L = abs(limits[2] - limits[1])/2
+    is_finite, res_f = finite_check(f, x, L)
 
     if is_finite:
         return res_f
