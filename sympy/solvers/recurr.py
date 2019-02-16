@@ -498,7 +498,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     >>> from sympy.abc import x
 
     >>> rsolve_hyper([-1, -1, 1], 0, x)
-    C0*(1/2 + sqrt(5)/2)**x + C1*(1/2 - sqrt(5)/2)**x
+    C0*(1/2 - sqrt(5)/2)**x + C1*(1/2 + sqrt(5)/2)**x
 
     >>> rsolve_hyper([-1, 1], 1 + x, x)
     C0 + x*(x + 1)/2

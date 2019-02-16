@@ -1017,6 +1017,24 @@ class Expr(Basic, EvalfMixin):
         [sin(x)**2*cos(x), sin(x)**2, 1]
 
         """
+
+        from .numbers import Number, NumberSymbol
+
+        if order == None and self.is_Add:
+            # Spot the special case of Add(Number, Mul(Number, expr)) with the
+            # first number positive and thhe second number nagative
+            key = lambda x:not isinstance(x, (Number, NumberSymbol))
+            add_args = sorted(Add.make_args(self), key=key)
+            if (len(add_args) == 2
+                and isinstance(add_args[0], (Number, NumberSymbol))
+                and isinstance(add_args[1], Mul)):
+                mul_args = sorted(Mul.make_args(add_args[1]), key=key)
+                if (len(mul_args) == 2
+                    and isinstance(mul_args[0], Number)
+                    and add_args[0].is_positive
+                    and mul_args[0].is_negative):
+                    return add_args
+
         key, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
 

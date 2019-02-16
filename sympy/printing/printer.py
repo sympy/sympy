@@ -174,11 +174,10 @@ from __future__ import print_function, division
 
 from contextlib import contextmanager
 
-from sympy import Basic, Add, Mul
+from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
-from sympy.core.numbers import Rational
 
 from functools import cmp_to_key
 
@@ -298,16 +297,4 @@ class Printer(object):
         if order == 'old':
             return sorted(Add.make_args(expr), key=cmp_to_key(Basic._compare_pretty))
         else:
-            # Spot the special case of Add(Rational, Mul(Rational, expr)) with the
-            # first number positive and thhe second number nagative
-            add_args = sorted(Add.make_args(expr), key=lambda x:not isinstance(x, Rational))
-            if (len(add_args) == 2 and
-                isinstance(add_args[0], Rational) and
-                isinstance(add_args[1], Mul)):
-                mul_args = sorted(Mul.make_args(add_args[1]),
-                                               key=lambda x:not isinstance(x, Rational))
-                if (len(mul_args) == 2 and isinstance(add_args[0], Rational)):
-                    if add_args[0].is_positive and mul_args[0].is_negative:
-                        return add_args
-
             return expr.as_ordered_terms(order=order)
