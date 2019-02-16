@@ -288,7 +288,6 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
     "nth_algebraic",
-    "order_reducible",
     "separable",
     "1st_exact",
     "1st_linear",
@@ -309,6 +308,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
     "Liouville",
+    "order_reducible",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
     "nth_algebraic_Integral",
