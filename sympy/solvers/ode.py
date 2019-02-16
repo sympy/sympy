@@ -4044,7 +4044,7 @@ def ode_order_reducible(eq, func, order, match):
     f = func.func
     n = match['n']
     # get a unique function name for g
-    names = [f.name for f in eq.atoms(AppliedUndef)]
+    names = [a.name for a in eq.atoms(AppliedUndef)]
     while True:
         name = Dummy().name
         if name not in names:
