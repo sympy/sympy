@@ -5,7 +5,6 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
 from sympy.stats.rv import RandomSymbol
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
     MathMLPrinter
-
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
@@ -941,6 +940,13 @@ def test_print_basic():
     expr = Basic(1, 2)
     assert mpp.doprint(expr) == '<mrow><mi>basic</mi><mfenced><mn>1</mn><mn>2</mn></mfenced></mrow>'
     assert mp.doprint(expr) == '<basic><cn>1</cn><cn>2</cn></basic>'
+
+
+def test_mat_delim_print():
+    expr = Matrix([[1, 2], [3, 4]])
+    assert mathml(expr, printer='presentation', mat_delim='[') == '<mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
+    assert mathml(expr, printer='presentation', mat_delim='(') == '<mfenced><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
+    assert mathml(expr, printer='presentation', mat_delim='') == '<mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable>'
 
 
 def test_root_notation_print():
