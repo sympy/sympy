@@ -288,6 +288,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
     "nth_algebraic",
+    "order_reducible",
     "separable",
     "1st_exact",
     "1st_linear",
@@ -323,7 +324,6 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
-    "order_reducible",
        )
 
 lie_heuristics = (
@@ -4021,12 +4021,9 @@ def _order_reducible_match(eq, func):
     if len(ords) < 2:
         return
     smallest = min(ords)
-    # as long as no order is < 1 this should be true
-    if smallest < 2:
-        return
     # make sure func does not appear outside of derivatives
     D = Dummy()
-    if eq.subs(func.diff(x, smallest)).has(func):
+    if eq.subs(func.diff(x, smallest), D).has(func):
         return
     return {'n': smallest}
 
@@ -4043,13 +4040,13 @@ def ode_order_reducible(eq, func, order, match):
     # get a unique function name for g
     names = [f.name for f in eq.atoms(AppliedUndef)]
     while True:
-        g = Dummy().name
-        if g not in names:
+        name = Dummy().name
+        if name not in names:
             g = Function(name)
             break
     w = f(x).diff(x, n)
     geq = eq.subs(w, g(x))
-    gsol = dsolve(eq, g(x))
+    gsol = dsolve(geq, g(x))
     fsol = dsolve(gsol.subs(g(x), w), f(x))  # or do integration n times
 
     return fsol

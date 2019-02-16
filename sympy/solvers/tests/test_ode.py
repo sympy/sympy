@@ -743,7 +743,6 @@ def test_classify_ode():
         '2nd_power_series_ordinary',
         'nth_algebraic_Integral',
         'Liouville_Integral',
-        'order_reducible',
         )
     assert classify_ode(f(x), f(x)) == ()
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == (
@@ -3106,6 +3105,8 @@ def test_sysode_linear_neq_order1():
 
 
 def test_order_reducible():
+    from sympy.solvers.ode import _order_reducible_match
+
     eqn = Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2))
     sol = Eq(f(x),
              C1 - sqrt(-1/C1)*log(-C1*sqrt(-1/C1) + x) + sqrt(-1/C1)*log(C1*sqrt(-1/C1) + x))
