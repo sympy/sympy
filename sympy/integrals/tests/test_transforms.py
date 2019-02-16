@@ -99,10 +99,10 @@ def test_mellin_transform():
         (1/(nu + s), (-re(nu), oo), True)
 
     assert MT((1 - x)**(beta - 1)*Heaviside(1 - x), x, s) == \
-        (gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), -re(beta) < 0)
+        (gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), re(beta) > 0)
     assert MT((x - 1)**(beta - 1)*Heaviside(x - 1), x, s) == \
         (gamma(beta)*gamma(1 - beta - s)/gamma(1 - s),
-            (-oo, -re(beta) + 1), -re(beta) < 0)
+            (-oo, -re(beta) + 1), re(beta) > 0)
 
     assert MT((1 + x)**(-rho), x, s) == \
         (gamma(s)*gamma(rho - s)/gamma(rho), (0, re(rho)), True)
@@ -116,7 +116,7 @@ def test_mellin_transform():
         (0, re(rho)), And(re(rho) - 1 < 0, re(rho) < 1))
     mt = MT((1 - x)**(beta - 1)*Heaviside(1 - x)
             + a*(x - 1)**(beta - 1)*Heaviside(x - 1), x, s)
-    assert mt[1], mt[2] == ((0, -re(beta) + 1), -re(beta) < 0)
+    assert mt[1], mt[2] == ((0, -re(beta) + 1), re(beta) > 0)
 
     assert MT((x**a - b**a)/(x - b), x, s)[0] == \
         pi*b**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s)))

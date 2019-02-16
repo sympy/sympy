@@ -204,7 +204,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         args = self.args
         r = self
         if r.rhs.is_number:
-            if r.lhs.is_number and r.lhs > r.rhs:
+            if r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
                 r = r.reversed
         elif r.lhs.is_number:
             r = r.reversed
