@@ -285,7 +285,7 @@ def checksol(f, symbol, sol=None, **flags):
             if val.atoms() & illegal:
                 return False
         elif attempt == 1:
-            if val.free_symbols:
+            if not val.is_number:
                 if not val.is_constant(*list(sol.keys()), simplify=not minimal):
                     return False
                 # there are free symbols -- simple expansion might work
@@ -304,7 +304,7 @@ def checksol(f, symbol, sol=None, **flags):
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
                 exval = _mexpand(val, recursive=True)
-                if exval.is_number or not exval.free_symbols:
+                if exval.is_number:
                     # we can decide now
                     val = exval
         else:
@@ -351,7 +351,7 @@ def checksol(f, symbol, sol=None, **flags):
             continue
         elif val.is_Rational:
             return val == 0
-        if numerical and not val.free_symbols:
+        if numerical and val.is_number:
             if val in (S.true, S.false):
                 return bool(val)
             return bool(abs(val.n(18).n(12, chop=True)) < 1e-9)
@@ -1085,8 +1085,7 @@ def solve(f, *symbols, **flags):
         if fi.has(*symset):
             ok = True
         else:
-            free = fi.free_symbols
-            if not free:
+            if fi.is_number:
                 if fi.is_Number:
                     if fi.is_zero:
                         continue

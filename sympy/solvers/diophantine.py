@@ -176,9 +176,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                 return {tuple([t[dict_sym_index[i]] for i in var])
                             for t in diophantine(eq, param)}
         n, d = eq.as_numer_denom()
-        if not n.free_symbols:
+        if n.is_number:
             return set()
-        if d.free_symbols:
+        if not d.is_number:
             dsol = diophantine(d)
             good = diophantine(n) - dsol
             return {s for s in good if _mexpand(d.subs(zip(var, s)))}

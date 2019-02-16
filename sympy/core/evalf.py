@@ -943,7 +943,7 @@ def do_integral(expr, prec, options):
         # difference
         if xhigh.free_symbols & xlow.free_symbols:
             diff = xhigh - xlow
-            if not diff.free_symbols:
+            if diff.is_number:
                 xlow, xhigh = 0, diff
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)

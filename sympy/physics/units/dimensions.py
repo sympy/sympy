@@ -189,7 +189,7 @@ class Dimension(Expr):
                 other = Dimension(Quantity.get_dimensional_expr(other))
             if isinstance(other, Dimension):
                 return Dimension(self.name*other.name)
-            if not other.free_symbols:
+            if other.is_number:
                 return self
             return super(Dimension, self).__mul__(other)
         return self
