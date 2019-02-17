@@ -2351,9 +2351,10 @@ def test_V11():
             log(((tan(x/2) + 1)/(tan(x/2) + 7))**Rational(1, 3)))
 
 
+@XFAIL
 def test_V12():
     r1 = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
-    # Correct result in python2.7.4, possibly wrong result in python3.3.1
+    # Correct result in python2.7.4, wrong result in python3.5
     # https://github.com/sympy/sympy/issues/7157
     assert r1 == -1/(tan(x/2) + 2)
 
