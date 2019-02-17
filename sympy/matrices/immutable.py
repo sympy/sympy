@@ -39,23 +39,34 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     _op_priority = 10.001
 
     def __new__(cls, *args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], ImmutableDenseMatrix):
-            return args[0]
-        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
-        rows = Integer(rows)
-        cols = Integer(cols)
-        mat = Tuple(*flat_list)
-        return Basic.__new__(cls, rows, cols, mat)
+        return cls._new(*args, **kwargs)
 
     __hash__ = MatrixExpr.__hash__
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        return cls(*args, **kwargs)
+        if len(args) == 1 and isinstance(args[0], ImmutableDenseMatrix):
+            return args[0]
+        if kwargs.get('copy', True) is False:
+            if len(args) != 3:
+                raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
+            rows, cols, flat_list = args
+        else:
+            rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
+            flat_list = list(flat_list) # create a shallow copy
+        rows = Integer(rows)
+        cols = Integer(cols)
+        if not isinstance(flat_list, Tuple):
+            flat_list = Tuple(*flat_list)
+
+        return Basic.__new__(cls, rows, cols, flat_list)
 
     @property
     def _mat(self):
-        return list(self.args[2])
+        # self.args[2] is a Tuple.  Access to the elements
+        # of a tuple are significantly faster than Tuple,
+        # so return the internal tuple.
+        return self.args[2].args
 
     def _entry(self, i, j):
         return DenseMatrix.__getitem__(self, (i, j))
@@ -80,6 +91,15 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
             return None
         diff = self - other
         return sympify(diff.is_zero)
+
+    def _eval_extract(self, rowsList, colsList):
+        # self._mat is a Tuple.  It is slightly faster to index a
+        # tuple over a Tuple, so grab the internal tuple directly
+        mat = self._mat
+        cols = self.cols
+        indices = (i * cols + j for i in rowsList for j in colsList)
+        return self._new(len(rowsList), len(colsList),
+                         Tuple(*(mat[i] for i in indices), sympify=False), copy=False)
 
     @property
     def cols(self):

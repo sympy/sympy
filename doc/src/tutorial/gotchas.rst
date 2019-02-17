@@ -183,7 +183,7 @@ not the same symbolically. One is the power of an addition of two terms, and
 the other is the addition of three terms.
 
 It turns out that when using SymPy as a library, having ``==`` test for exact
-symbolic equality is far more useful than having it represent symbolic
+structural equality is far more useful than having it represent symbolic
 equality, or having it test for mathematical equality.  However, as a new
 user, you will probably care more about the latter two.  We have already seen
 an alternative to representing equalities symbolically, ``Eq``.  To test if
@@ -192,7 +192,7 @@ then `a - b = 0`.  Thus, the best way to check if `a = b` is to take `a - b`
 and simplify it, and see if it goes to 0.  We will learn :ref:`later
 <tutorial-simplify>` that the function to do this is called ``simplify``. This
 method is not infallible---in fact, it can be `theoretically proven
-<http://en.wikipedia.org/wiki/Richardson%27s_theorem>`_ that it is impossible
+<https://en.wikipedia.org/wiki/Richardson%27s_theorem>`_ that it is impossible
 to determine if two symbolic expressions are identically equal in
 general---but for most common expressions, it works quite well.
 

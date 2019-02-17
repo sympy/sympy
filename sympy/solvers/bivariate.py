@@ -126,10 +126,10 @@ def _lambert(eq, x):
     if not mainlog:
         return []  # violated assumptions
     other = eq.subs(mainlog, 0)
-    if (-other).func is log:
+    if isinstance(-other, log):
         eq = (eq - other).subs(mainlog, mainlog.args[0])
         mainlog = mainlog.args[0]
-        if mainlog.func is not log:
+        if not isinstance(mainlog, log):
             return []  # violated assumptions
         other = -(-other).args[0]
         eq += other

@@ -6,7 +6,7 @@ Module defining unit prefixe class and some constants.
 Constant dict for SI and binary prefixes are defined as PREFIXES and
 BIN_PREFIXES.
 """
-from sympy import sympify, Expr
+from sympy import Expr, sympify
 
 
 class Prefix(Expr):
@@ -29,6 +29,7 @@ class Prefix(Expr):
       class).
     """
     _op_priority = 13.0
+    is_commutative = True
 
     def __new__(cls, name, abbrev, exponent, base=sympify(10)):
 
@@ -64,13 +65,18 @@ class Prefix(Expr):
     def __str__(self):
         # TODO: add proper printers and tests:
         if self.base == 10:
-            return "Prefix(%s, %s, %s)" % (self.name, self.abbrev, self._exponent)
+            return "Prefix(%r, %r, %r)" % (
+                str(self.name), str(self.abbrev), self._exponent)
         else:
-            return "Prefix(%s, %s, %s, %s)" % (self.name, self.abbrev, self._exponent, self.base)
+            return "Prefix(%r, %r, %r, %r)" % (
+                str(self.name), str(self.abbrev), self._exponent, self.base)
 
     __repr__ = __str__
 
     def __mul__(self, other):
+        if not hasattr(other, "scale_factor"):
+            return super(Prefix, self).__mul__(other)
+
         fact = self.scale_factor * other.scale_factor
 
         if fact == 1:
@@ -85,6 +91,9 @@ class Prefix(Expr):
         return self.scale_factor * other
 
     def __div__(self, other):
+        if not hasattr(other, "scale_factor"):
+            return super(Prefix, self).__div__(other)
+
         fact = self.scale_factor / other.scale_factor
 
         if fact == 1:
@@ -130,8 +139,13 @@ def prefix_unit(unit, prefixes):
     prefixed_units = []
 
     for prefix_abbr, prefix in prefixes.items():
-        prefixed_units.append(Quantity("%s%s" % (prefix.name, unit.name), unit.dimension, unit.scale_factor * prefix,
-                                       "%s%s" % (prefix.abbrev, unit.abbrev)))
+        quantity = Quantity(
+                "%s%s" % (prefix.name, unit.name),
+                abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
+           )
+        quantity.set_dimension(unit.dimension)
+        quantity.set_scale_factor(unit.scale_factor*prefix)
+        prefixed_units.append(quantity)
 
     return prefixed_units
 
@@ -183,11 +197,11 @@ PREFIXES = {
 }
 
 
-kibi = Prefix('kibi', 'Y', 10, 2),
-mebi = Prefix('mebi', 'Y', 20, 2),
-gibi = Prefix('gibi', 'Y', 30, 2),
-tebi = Prefix('tebi', 'Y', 40, 2),
-pebi = Prefix('pebi', 'Y', 50, 2),
+kibi = Prefix('kibi', 'Y', 10, 2)
+mebi = Prefix('mebi', 'Y', 20, 2)
+gibi = Prefix('gibi', 'Y', 30, 2)
+tebi = Prefix('tebi', 'Y', 40, 2)
+pebi = Prefix('pebi', 'Y', 50, 2)
 exbi = Prefix('exbi', 'Y', 60, 2)
 
 

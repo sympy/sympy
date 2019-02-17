@@ -84,15 +84,19 @@ References
 """
 from __future__ import print_function, division
 
-from sympy.core import Dict, Symbol
-from sympy.sets import FiniteSet
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
-from sympy.utilities import default_sort_key
-from itertools import chain
+from sympy.core import Dict, Symbol
 from sympy.core.compatibility import iterable, range
 from sympy.printing import latex
+from sympy.sets import FiniteSet
+from sympy.utilities import default_sort_key
 from sympy.utilities.decorator import doctest_depends_on
+
+from itertools import chain
+
+
+__doctest_requires__ = {('preview_diagram',): 'pyglet'}
 
 
 class _GrowableGrid(object):
@@ -294,7 +298,7 @@ class DiagramGrid(object):
     References
     ==========
 
-    [FiveLemma] http://en.wikipedia.org/wiki/Five_lemma
+    [FiveLemma] https://en.wikipedia.org/wiki/Five_lemma
     """
     @staticmethod
     def _simplify_morphisms(morphisms):
@@ -439,7 +443,7 @@ class DiagramGrid(object):
         aspects of layout.  For triangles with only simple morphisms
         in the edge, this assures that triangles with all three edges
         visible will get typeset after triangles with less visible
-        edges, which sometimes minimises the necessity in diagonal
+        edges, which sometimes minimizes the necessity in diagonal
         arrows.  For triangles with composite morphisms in the edges,
         this assures that objects connected with shorter morphisms
         will be laid out first, resulting the visual proximity of
@@ -541,7 +545,6 @@ class DiagramGrid(object):
             # edge.
 
             A = grid[edge[0]]
-            B = grid[edge[1]]
 
             if skeleton.get(frozenset([A, obj])):
                 return pt1
@@ -1541,7 +1544,7 @@ class XypicDiagramDrawer(object):
     should be done:
 
     >>> def formatter(astr):
-    ...   astr.label = "\exists !" + astr.label
+    ...   astr.label = r"\exists !" + astr.label
     ...   astr.arrow_style = "{-->}"
     >>> drawer.arrow_formatters["unique"] = formatter
     >>> print(drawer.draw(diagram, grid))
@@ -2086,7 +2089,7 @@ class XypicDiagramDrawer(object):
         # Let's now get the name of the morphism.
         morphism_name = ""
         if isinstance(morphism, IdentityMorphism):
-            morphism_name = "id_{%s}" + latex(obj)
+            morphism_name = "id_{%s}" + latex(grid[i, j])
         elif isinstance(morphism, CompositeMorphism):
             component_names = [latex(Symbol(component.name)) for
                                component in morphism.components]

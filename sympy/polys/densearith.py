@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range
 from sympy.polys.densebasic import (
     dup_slice,
     dup_LC, dmp_LC,
@@ -10,9 +11,7 @@ from sympy.polys.densebasic import (
     dmp_zero_p, dmp_zero,
     dmp_one_p, dmp_one,
     dmp_ground, dmp_zeros)
-
 from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
-from sympy.core.compatibility import range
 
 def dup_add_term(f, c, i, K):
     """
@@ -320,7 +319,7 @@ def dup_quo_ground(f, c, K):
     if not f:
         return f
 
-    if K.has_Field:
+    if K.is_Field:
         return [ K.quo(cf, c) for cf in f ]
     else:
         return [ cf // c for cf in f ]
@@ -1527,7 +1526,7 @@ def dup_div(f, g, K):
     (1/2*x + 1, 5)
 
     """
-    if K.has_Field:
+    if K.is_Field:
         return dup_ff_div(f, g, K)
     else:
         return dup_rr_div(f, g, K)
@@ -1620,7 +1619,7 @@ def dmp_div(f, g, u, K):
     (1/2*x + 1/2*y - 1/2, -y + 1)
 
     """
-    if K.has_Field:
+    if K.is_Field:
         return dmp_ff_div(f, g, u, K)
     else:
         return dmp_rr_div(f, g, u, K)

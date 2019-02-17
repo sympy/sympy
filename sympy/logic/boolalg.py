@@ -6,14 +6,52 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import combinations, product
 
-from sympy.core.basic import Basic
+from sympy.core.add import Add
+from sympy.core.basic import Basic, as_Basic
 from sympy.core.cache import cacheit
-from sympy.core.numbers import Number
+from sympy.core.numbers import Number, oo
 from sympy.core.operations import LatticeOp
-from sympy.core.function import Application, Derivative
-from sympy.core.compatibility import ordered, range, with_metaclass, as_int
+from sympy.core.function import Application, Derivative, count_ops
+from sympy.core.compatibility import (ordered, range, with_metaclass,
+    as_int, reduce)
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
+from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import sift
+
+
+def as_Boolean(e):
+    """Like bool, return the Boolean value of an expression, e,
+    which can be any instance of Boolean or bool.
+
+    Examples
+    ========
+
+    >>> from sympy import true, false, nan
+    >>> from sympy.logic.boolalg import as_Boolean
+    >>> from sympy.abc import x
+    >>> as_Boolean(1) is true
+    True
+    >>> as_Boolean(x)
+    x
+    >>> as_Boolean(2)
+    Traceback (most recent call last):
+    ...
+    TypeError: expecting bool or Boolean, not `2`.
+    """
+    from sympy.core.symbol import Symbol
+    if e == True:
+        return S.true
+    if e == False:
+        return S.false
+    if isinstance(e, Symbol):
+        z = e.is_zero
+        if z is None:
+            return e
+        return S.false if z else S.true
+    if isinstance(e, Boolean):
+        return e
+    raise TypeError('expecting bool or Boolean, not `%s`.' % e)
 
 
 class Boolean(Basic):
@@ -78,13 +116,71 @@ class Boolean(Basic):
         return self.atoms() == other.atoms() and \
                 not satisfiable(Not(Equivalent(self, other)))
 
+    def to_nnf(self, simplify=True):
+        # override where necessary
+        return self
+
+    def as_set(self):
+        """
+        Rewrites Boolean expression in terms of real sets.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Eq, Or, And
+        >>> x = Symbol('x', real=True)
+        >>> Eq(x, 0).as_set()
+        {0}
+        >>> (x > 0).as_set()
+        Interval.open(0, oo)
+        >>> And(-2 < x, x < 2).as_set()
+        Interval.open(-2, 2)
+        >>> Or(x < -2, 2 < x).as_set()
+        Union(Interval.open(-oo, -2), Interval.open(2, oo))
+        """
+        from sympy.calculus.util import periodicity
+        from sympy.core.relational import Relational
+        free = self.free_symbols
+        if len(free) == 1:
+            x = free.pop()
+            reps = {}
+            for r in self.atoms(Relational):
+                if periodicity(r, x) not in (0, None):
+                    s = r._eval_as_set()
+                    if s in (S.EmptySet, S.UniversalSet, S.Reals):
+                        reps[r] = s.as_relational(x)
+                        continue
+                    raise NotImplementedError(filldedent('''
+                        as_set is not implemented for relationals
+                        with periodic solutions
+                        '''))
+            return self.subs(reps)._eval_as_set()
+        else:
+            raise NotImplementedError("Sorry, as_set has not yet been"
+                                      " implemented for multivariate"
+                                      " expressions")
+
+    @property
+    def binary_symbols(self):
+        from sympy.core.relational import Eq, Ne
+        return set().union(*[i.binary_symbols for i in self.args
+            if i.is_Boolean or i.is_Symbol
+            or isinstance(i, (Eq, Ne))])
+
 
 class BooleanAtom(Boolean):
     """
     Base class of BooleanTrue and BooleanFalse.
     """
     is_Boolean = True
+    is_Atom = True
     _op_priority = 11  # higher than Expr
+
+    def simplify(self, *a, **kw):
+        return self
+
+    def expand(self, *a, **kw):
+        return self
 
     @property
     def canonical(self):
@@ -108,6 +204,20 @@ class BooleanAtom(Boolean):
     __mod__ = _noop
     __rmod__ = _noop
     _eval_power = _noop
+
+    # /// drop when Py2 is no longer supported
+    def __lt__(self, other):
+        from sympy.utilities.misc import filldedent
+        raise TypeError(filldedent('''
+            A Boolean argument can only be used in
+            Eq and Ne; all other relationals expect
+            real expressions.
+        '''))
+
+    __le__ = __lt__
+    __gt__ = __lt__
+    __ge__ = __lt__
+    # \\\
 
 
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
@@ -170,15 +280,32 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     Examples
     ========
 
-    >>> from sympy import sympify, true, Or
+    >>> from sympy import sympify, true, false, Or
     >>> sympify(True)
     True
-    >>> ~true
-    False
-    >>> ~True
-    -2
-    >>> Or(True, False)
+    >>> _ is True, _ is true
+    (False, True)
+
+    >>> Or(true, false)
     True
+    >>> _ is true
+    True
+
+    Python operators give a boolean result for true but a
+    bitwise result for True
+
+    >>> ~true, ~True
+    (False, -2)
+    >>> true >> true, True >> True
+    (True, 0)
+
+    Python operators give a boolean result for true but a
+    bitwise result for True
+
+    >>> ~true, ~True
+    (False, -2)
+    >>> true >> true, True >> True
+    (True, 0)
 
     See Also
     ========
@@ -192,6 +319,10 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
 
     def __hash__(self):
         return hash(True)
+
+    @property
+    def negated(self):
+        return S.false
 
     def as_set(self):
         """
@@ -224,15 +355,24 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
     Examples
     ========
 
-    >>> from sympy import sympify, false, Or, true
+    >>> from sympy import sympify, true, false, Or
     >>> sympify(False)
     False
-    >>> false >> false
+    >>> _ is False, _ is false
+    (False, True)
+
+    >>> Or(true, false)
     True
-    >>> False >> False
-    0
-    >>> Or(True, False)
+    >>> _ is true
     True
+
+    Python operators give a boolean result for false but a
+    bitwise result for False
+
+    >>> ~false, ~False
+    (True, -1)
+    >>> false >> false, False >> False
+    (True, 0)
 
     See Also
     ========
@@ -247,6 +387,10 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
     def __hash__(self):
         return hash(False)
 
+    @property
+    def negated(self):
+        return S.true
+
     def as_set(self):
         """
         Rewrite logic operators and relationals in terms of real sets.
@@ -258,8 +402,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
         >>> false.as_set()
         EmptySet()
         """
-        from sympy.sets.sets import EmptySet
-        return EmptySet()
+        return S.EmptySet
 
 true = BooleanTrue()
 false = BooleanFalse()
@@ -278,8 +421,48 @@ class BooleanFunction(Application, Boolean):
     """
     is_Boolean = True
 
-    def _eval_simplify(self, ratio, measure):
-        return simplify_logic(self)
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        rv = self.func(*[a._eval_simplify(ratio=ratio, measure=measure,
+            rational=rational, inverse=inverse) for a in self.args])
+        return simplify_logic(rv)
+
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+        return self._eval_simplify(ratio, measure, rational, inverse)
+
+    # /// drop when Py2 is no longer supported
+    def __lt__(self, other):
+        from sympy.utilities.misc import filldedent
+        raise TypeError(filldedent('''
+            A Boolean argument can only be used in
+            Eq and Ne; all other relationals expect
+            real expressions.
+        '''))
+    __le__ = __lt__
+    __ge__ = __lt__
+    __gt__ = __lt__
+    # \\\
+
+    @classmethod
+    def binary_check_and_simplify(self, *args):
+        from sympy.core.relational import Relational, Eq, Ne
+        args = [as_Boolean(i) for i in args]
+        bin = set().union(*[i.binary_symbols for i in args])
+        rel = set().union(*[i.atoms(Relational) for i in args])
+        reps = {}
+        for x in bin:
+            for r in rel:
+                if x in bin and x in r.free_symbols:
+                    if isinstance(r, (Eq, Ne)):
+                        if not (
+                                S.true in r.args or
+                                S.false in r.args):
+                            reps[r] = S.false
+                    else:
+                        raise TypeError(filldedent('''
+                            Incompatible use of binary symbol `%s` as a
+                            real variable in `%s`
+                            ''' % (x, r)))
+        return [i.subs(reps) for i in args]
 
     def to_nnf(self, simplify=True):
         return self._to_nnf(*self.args, simplify=simplify)
@@ -303,6 +486,25 @@ class BooleanFunction(Application, Boolean):
             else:
                 argset.add(arg)
         return cls(*argset)
+
+    # the diff method below is copied from Expr class
+    def diff(self, *symbols, **assumptions):
+        assumptions.setdefault("evaluate", True)
+        return Derivative(self, *symbols, **assumptions)
+
+    def _eval_derivative(self, x):
+        from sympy.core.relational import Eq, Relational
+        from sympy.functions.elementary.piecewise import Piecewise
+        if x in self.binary_symbols:
+            return Piecewise(
+                (0, Eq(self.subs(x, 0), self.subs(x, 1))),
+                (1, True))
+        elif x in self.free_symbols:
+            # not implemented, see https://www.encyclopediaofmath.org/
+            # index.php/Boolean_differential_calculus
+            pass
+        else:
+            return S.Zero
 
 
 class And(LatticeOp, BooleanFunction):
@@ -342,40 +544,79 @@ class And(LatticeOp, BooleanFunction):
     def _new_args_filter(cls, args):
         newargs = []
         rel = []
-        for x in reversed(list(args)):
-            if isinstance(x, Number) or x in (0, 1):
-                newargs.append(True if x else False)
-                continue
+        args = BooleanFunction.binary_check_and_simplify(*args)
+        for x in reversed(args):
             if x.is_Relational:
                 c = x.canonical
                 if c in rel:
                     continue
-                nc = (~c).canonical
+                nc = c.negated.canonical
                 if any(r == nc for r in rel):
                     return [S.false]
                 rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
-    def as_set(self):
-        """
-        Rewrite logic operators and relationals in terms of real sets.
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        from sympy.core.relational import Equality, Relational
+        from sympy.solvers.solveset import linear_coeffs
+        # standard simplify
+        rv = super(And, self)._eval_simplify(
+            ratio, measure, rational, inverse)
+        if not isinstance(rv, And):
+            return rv
+        # simplify args that are equalities involving
+        # symbols so x == 0 & x == y -> x==0 & y == 0
+        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
+        if not Rel:
+            return rv
+        eqs, other = sift(Rel, lambda i: isinstance(i, Equality), binary=True)
+        if not eqs:
+            return rv
+        reps = {}
+        sifted = {}
+        if eqs:
+            # group by length of free symbols
+            sifted = sift(ordered([
+                (i.free_symbols, i) for i in eqs]),
+                lambda x: len(x[0]))
+            eqs = []
+            while 1 in sifted:
+                for free, e in sifted.pop(1):
+                    x = free.pop()
+                    if e.lhs != x or x in e.rhs.free_symbols:
+                        try:
+                            m, b = linear_coeffs(
+                                e.rewrite(Add, evaluate=False), x)
+                            enew = e.func(x, -b/m)
+                            if measure(enew) <= ratio*measure(e):
+                                e = enew
+                            else:
+                                eqs.append(e)
+                                continue
+                        except ValueError:
+                            pass
+                    if x in reps:
+                        eqs.append(e.func(e.rhs, reps[x]))
+                    else:
+                        reps[x] = e.rhs
+                        eqs.append(e)
+                resifted = defaultdict(list)
+                for k in sifted:
+                    for f, e in sifted[k]:
+                        e = e.subs(reps)
+                        f = e.free_symbols
+                        resifted[len(f)].append((f, e))
+                sifted = resifted
+        for k in sifted:
+            eqs.extend([e for f, e in sifted[k]])
+        other = [ei.subs(reps) for ei in other]
+        rv = rv.func(*([i.canonical for i in (eqs + other)] + nonRel))
+        return rv
 
-        Examples
-        ========
-
-        >>> from sympy import And, Symbol
-        >>> x = Symbol('x', real=True)
-        >>> And(x<2, x>-2).as_set()
-        Interval(-2, 2, True, True)
-        """
+    def _eval_as_set(self):
         from sympy.sets.sets import Intersection
-        if len(self.free_symbols) == 1:
-            return Intersection(*[arg.as_set() for arg in self.args])
-        else:
-            raise NotImplementedError("Sorry, And.as_set has not yet been"
-                                      " implemented for multivariate"
-                                      " expressions")
+        return Intersection(*[arg.as_set() for arg in self.args])
 
 
 class Or(LatticeOp, BooleanFunction):
@@ -413,40 +654,22 @@ class Or(LatticeOp, BooleanFunction):
     def _new_args_filter(cls, args):
         newargs = []
         rel = []
+        args = BooleanFunction.binary_check_and_simplify(*args)
         for x in args:
-            if isinstance(x, Number) or x in (0, 1):
-                newargs.append(True if x else False)
-                continue
             if x.is_Relational:
                 c = x.canonical
                 if c in rel:
                     continue
-                nc = (~c).canonical
+                nc = c.negated.canonical
                 if any(r == nc for r in rel):
                     return [S.true]
                 rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
 
-    def as_set(self):
-        """
-        Rewrite logic operators and relationals in terms of real sets.
-
-        Examples
-        ========
-
-        >>> from sympy import Or, Symbol
-        >>> x = Symbol('x', real=True)
-        >>> Or(x>2, x<-2).as_set()
-        Union(Interval(-oo, -2, True, True), Interval(2, oo, True, True))
-        """
+    def _eval_as_set(self):
         from sympy.sets.sets import Union
-        if len(self.free_symbols) == 1:
-            return Union(*[arg.as_set() for arg in self.args])
-        else:
-            raise NotImplementedError("Sorry, Or.as_set has not yet been"
-                                      " implemented for multivariate"
-                                      " expressions")
+        return Union(*[arg.as_set() for arg in self.args])
 
 
 class Not(BooleanFunction):
@@ -521,7 +744,7 @@ class Not(BooleanFunction):
         if isinstance(arg, GreaterThan):
             return StrictLessThan(*arg.args)
 
-    def as_set(self):
+    def _eval_as_set(self):
         """
         Rewrite logic operators and relationals in terms of real sets.
 
@@ -529,16 +752,11 @@ class Not(BooleanFunction):
         ========
 
         >>> from sympy import Not, Symbol
-        >>> x = Symbol('x', real=True)
-        >>> Not(x>0).as_set()
-        Interval(-oo, 0, True)
+        >>> x = Symbol('x')
+        >>> Not(x > 0).as_set()
+        Interval(-oo, 0)
         """
-        if len(self.free_symbols) == 1:
-            return self.args[0].as_set().complement(S.Reals)
-        else:
-            raise NotImplementedError("Sorry, Not.as_set has not yet been"
-                                      " implemented for mutivariate"
-                                      " expressions")
+        return self.args[0].as_set().complement(S.Reals)
 
     def to_nnf(self, simplify=True):
         if is_literal(self):
@@ -632,7 +850,7 @@ class Xor(BooleanFunction):
                 argset.remove(arg)
             else:
                 argset.add(arg)
-        rel = [(r, r.canonical, (~r).canonical) for r in argset if r.is_Relational]
+        rel = [(r, r.canonical, r.negated.canonical) for r in argset if r.is_Relational]
         odd = False  # is number of complimentary pairs odd? start 0 -> False
         remove = []
         for i, (r, c, nc) in enumerate(rel):
@@ -840,7 +1058,7 @@ class Implies(BooleanFunction):
         elif A.is_Relational and B.is_Relational:
             if A.canonical == B.canonical:
                 return S.true
-            if (~A).canonical == B.canonical:
+            if A.negated.canonical == B.canonical:
                 return B
         else:
             return Basic.__new__(cls, *args)
@@ -883,7 +1101,7 @@ class Equivalent(BooleanFunction):
         rel = []
         for r in argset:
             if isinstance(r, Relational):
-                rel.append((r, r.canonical, (~r).canonical))
+                rel.append((r, r.canonical, r.negated.canonical))
         remove = []
         for i, (r, c, nc) in enumerate(rel):
             for j in range(i + 1, len(rel)):
@@ -928,7 +1146,7 @@ class ITE(BooleanFunction):
     If then else clause.
 
     ITE(A, B, C) evaluates and returns the result of B if A is true
-    else it returns the result of C
+    else it returns the result of C. All args must be Booleans.
 
     Examples
     ========
@@ -947,38 +1165,94 @@ class ITE(BooleanFunction):
     y
     >>> ITE(x, y, y)
     y
+
+    Trying to use non-Boolean args will generate a TypeError:
+
+    >>> ITE(True, [], ())
+    Traceback (most recent call last):
+    ...
+    TypeError: expecting bool, Boolean or ITE, not `[]`
+
     """
+    def __new__(cls, *args, **kwargs):
+        from sympy.core.relational import Eq, Ne
+        if len(args) != 3:
+            raise ValueError('expecting exactly 3 args')
+        a, b, c = args
+        # check use of binary symbols
+        if isinstance(a, (Eq, Ne)):
+            # in this context, we can evaluate the Eq/Ne
+            # if one arg is a binary symbol and the other
+            # is true/false
+            b, c = map(as_Boolean, (b, c))
+            bin = set().union(*[i.binary_symbols for i in (b, c)])
+            if len(set(a.args) - bin) == 1:
+                # one arg is a binary_symbols
+                _a = a
+                if a.lhs is S.true:
+                    a = a.rhs
+                elif a.rhs is S.true:
+                    a = a.lhs
+                elif a.lhs is S.false:
+                    a = ~a.rhs
+                elif a.rhs is S.false:
+                    a = ~a.lhs
+                else:
+                    # binary can only equal True or False
+                    a = S.false
+                if isinstance(_a, Ne):
+                    a = ~a
+        else:
+            a, b, c = BooleanFunction.binary_check_and_simplify(
+                a, b, c)
+        rv = None
+        if kwargs.get('evaluate', True):
+            rv = cls.eval(a, b, c)
+        if rv is None:
+            rv = BooleanFunction.__new__(cls, a, b, c, evaluate=False)
+        return rv
+
     @classmethod
     def eval(cls, *args):
-        try:
-            a, b, c = args
-        except ValueError:
-            raise ValueError("ITE expects exactly 3 arguments")
-        if a == True:
+        from sympy.core.relational import Eq, Ne
+        # do the args give a singular result?
+        a, b, c = args
+        if isinstance(a, (Ne, Eq)):
+            _a = a
+            if S.true in a.args:
+                a = a.lhs if a.rhs is S.true else a.rhs
+            elif S.false in a.args:
+                a = ~a.lhs if a.rhs is S.false else ~a.rhs
+            else:
+                _a = None
+            if _a is not None and isinstance(_a, Ne):
+                a = ~a
+        if a is S.true:
             return b
-        if a == False:
+        if a is S.false:
             return c
         if b == c:
             return b
         else:
-            if b == True and c == False:
+            # or maybe the results allow the answer to be expressed
+            # in terms of the condition
+            if b is S.true and c is S.false:
                 return a
-            if b == False and c == True:
+            if b is S.false and c is S.true:
                 return Not(a)
+        if [a, b, c] != args:
+            return cls(a, b, c, evaluate=False)
 
     def to_nnf(self, simplify=True):
         a, b, c = self.args
         return And._to_nnf(Or(~a, b), Or(a, c), simplify=simplify)
 
-    def _eval_derivative(self, x):
-        return self.func(self.args[0], *[a.diff(x) for a in self.args[1:]])
+    def _eval_as_set(self):
+        return self.to_nnf().as_set()
 
-    # the diff method below is copied from Expr class
-    def diff(self, *symbols, **assumptions):
-        new_symbols = list(map(sympify, symbols))  # e.g. x, 2, y, z
-        assumptions.setdefault("evaluate", True)
-        return Derivative(self, *new_symbols, **assumptions)
-
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
+        from sympy.functions import Piecewise
+        return Piecewise((args[1], args[0]), (args[2], True))
 
 ### end class definitions. Some useful methods
 
@@ -1055,9 +1329,9 @@ def _distribute(info):
     """
     Distributes info[1] over info[2] with respect to info[0].
     """
-    if info[0].func is info[2]:
+    if isinstance(info[0], info[2]):
         for arg in info[0].args:
-            if arg.func is info[1]:
+            if isinstance(arg, info[1]):
                 conj = arg
                 break
         else:
@@ -1065,7 +1339,7 @@ def _distribute(info):
         rest = info[2](*[a for a in info[0].args if a is not conj])
         return info[1](*list(map(_distribute,
             [(info[2](c, rest), info[1], info[2]) for c in conj.args])))
-    elif info[0].func is info[1]:
+    elif isinstance(info[0], info[1]):
         return info[1](*list(map(_distribute,
             [(x, info[1], info[2]) for x in info[0].args])))
     else:
@@ -1258,9 +1532,9 @@ def _is_form(expr, function1, function2):
         return True
 
     # Special case of a single expression of function2
-    if expr.func is function2:
+    if isinstance(expr, function2):
         for lit in expr.args:
-            if lit.func is Not:
+            if isinstance(lit, Not):
                 if not lit.args[0].is_Atom:
                     return False
             else:
@@ -1269,23 +1543,23 @@ def _is_form(expr, function1, function2):
         return True
 
     # Special case of a single negation
-    if expr.func is Not:
+    if isinstance(expr, Not):
         if not expr.args[0].is_Atom:
             return False
 
-    if expr.func is not function1:
+    if not isinstance(expr, function1):
         return False
 
     for cls in expr.args:
         if cls.is_Atom:
             continue
-        if cls.func is Not:
+        if isinstance(cls, Not):
             if not cls.args[0].is_Atom:
                 return False
-        elif cls.func is not function2:
+        elif not isinstance(cls, function2):
             return False
         for lit in cls.args:
-            if lit.func is Not:
+            if isinstance(lit, Not):
                 if not lit.args[0].is_Atom:
                     return False
             else:
@@ -1314,7 +1588,7 @@ def eliminate_implications(expr):
     >>> eliminate_implications(Equivalent(A, B, C))
     (A | ~C) & (B | ~A) & (C | ~B)
     """
-    return to_nnf(expr)
+    return to_nnf(expr, simplify=False)
 
 
 def is_literal(expr):
@@ -1362,7 +1636,7 @@ def to_int_repr(clauses, symbols):
     symbols = dict(list(zip(symbols, list(range(1, len(symbols) + 1)))))
 
     def append_symbol(arg, symbols):
-        if arg.func is Not:
+        if isinstance(arg, Not):
             return -symbols[arg.args[0]]
         else:
             return symbols[arg]
@@ -1505,7 +1779,7 @@ def _check_pair(minterm1, minterm2):
 
 def _convert_to_varsSOP(minterm, variables):
     """
-    Converts a term in the expansion of a function from binary to it's
+    Converts a term in the expansion of a function from binary to its
     variable form (for SOP).
     """
     temp = []
@@ -1521,7 +1795,7 @@ def _convert_to_varsSOP(minterm, variables):
 
 def _convert_to_varsPOS(maxterm, variables):
     """
-    Converts a term in the expansion of a function from binary to it's
+    Converts a term in the expansion of a function from binary to its
     variable form (for POS).
     """
     temp = []
@@ -1751,26 +2025,32 @@ def simplify_logic(expr, form=None, deep=True):
 
     """
 
-    if form == 'cnf' or form == 'dnf' or form is None:
-        expr = sympify(expr)
-        if not isinstance(expr, BooleanFunction):
-            return expr
-        variables = _find_predicates(expr)
-        truthtable = []
-        for t in product([0, 1], repeat=len(variables)):
-            t = list(t)
-            if expr.xreplace(dict(zip(variables, t))) == True:
-                truthtable.append(t)
-        if deep:
-            from sympy.simplify.simplify import simplify
-            variables = [simplify(v) for v in variables]
-        if form == 'dnf' or \
-           (form is None and len(truthtable) >= (2 ** (len(variables) - 1))):
-            return SOPform(variables, truthtable)
-        elif form == 'cnf' or form is None:
-            return POSform(variables, truthtable)
-    else:
+    if form not in (None, 'cnf', 'dnf'):
         raise ValueError("form can be cnf or dnf only")
+    expr = sympify(expr)
+    if deep:
+        variables = _find_predicates(expr)
+        from sympy.simplify.simplify import simplify
+        s = [simplify(v) for v in variables]
+        expr = expr.xreplace(dict(zip(variables, s)))
+    if not isinstance(expr, BooleanFunction):
+        return expr
+    # get variables in case not deep or after doing
+    # deep simplification since they may have changed
+    variables = _find_predicates(expr)
+    # group into constants and variable values
+    c, v = sift(variables, lambda x: x in (True, False), binary=True)
+    variables = c + v
+    truthtable = []
+    # standardize constants to be 1 or 0 in keeping with truthtable
+    c = [1 if i==True else 0 for i in c]
+    for t in product([0, 1], repeat=len(v)):
+        if expr.xreplace(dict(zip(v, t))) == True:
+            truthtable.append(c + list(t))
+    big = len(truthtable) >= (2 ** (len(variables) - 1))
+    if form == 'dnf' or form is None and big:
+        return SOPform(variables, truthtable)
+    return POSform(variables, truthtable)
 
 
 def _finger(eq):
@@ -1781,8 +2061,9 @@ def _finger(eq):
     # of times it appeared as a Not(symbol),
     # of times it appeared as a Symbol in an And or Or,
     # of times it appeared as a Not(Symbol) in an And or Or,
-    sum of the number of arguments with which it appeared,
-    counting Symbol as 1 and Not(Symbol) as 2
+    sum of the number of arguments with which it appeared
+    as a Symbol, counting Symbol as 1 and Not(Symbol) as 2
+    and counting self as 1
     ]
 
     >>> from sympy.logic.boolalg import _finger as finger
@@ -1790,7 +2071,18 @@ def _finger(eq):
     >>> from sympy.abc import a, b, x, y
     >>> eq = Or(And(Not(y), a), And(Not(y), b), And(x, y))
     >>> dict(finger(eq))
-    {(0, 0, 1, 0, 2): [x], (0, 0, 1, 0, 3): [a, b], (0, 0, 1, 2, 8): [y]}
+    {(0, 0, 1, 0, 2): [x], (0, 0, 1, 0, 3): [a, b], (0, 0, 1, 2, 2): [y]}
+    >>> dict(finger(x & ~y))
+    {(0, 1, 0, 0, 0): [y], (1, 0, 0, 0, 0): [x]}
+
+    The equation must not have more than one level of nesting:
+
+    >>> dict(finger(And(Or(x, y), y)))
+    {(0, 0, 1, 0, 2): [x], (1, 0, 1, 0, 2): [y]}
+    >>> dict(finger(And(Or(x, And(a, x)), y)))
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: unexpected level of nesting
 
     So y and x have unique fingerprints, but a and b do not.
     """
@@ -1802,14 +2094,15 @@ def _finger(eq):
         elif a.is_Not:
             d[a.args[0]][1] += 1
         else:
-            o = len(a.args) + sum(ai.func is Not for ai in a.args)
+            o = len(a.args) + sum(isinstance(ai, Not) for ai in a.args)
             for ai in a.args:
                 if ai.is_Symbol:
                     d[ai][2] += 1
                     d[ai][-1] += o
-                else:
+                elif ai.is_Not:
                     d[ai.args[0]][3] += 1
-                    d[ai.args[0]][-1] += o
+                else:
+                    raise NotImplementedError('unexpected level of nesting')
     inv = defaultdict(list)
     for k, v in ordered(iter(d.items())):
         inv[tuple(v)].append(k)
@@ -1867,9 +2160,9 @@ def bool_map(bool1, bool2):
 
         # do some quick checks
         if function1.__class__ != function2.__class__:
-            return None
+            return None  # maybe simplification would make them the same
         if len(function1.args) != len(function2.args):
-            return None
+            return None  # maybe simplification would make them the same
         if function1.is_Symbol:
             return {function1: function2}
 
@@ -1897,4 +2190,4 @@ def bool_map(bool1, bool2):
     m = match(a, b)
     if m:
         return a, m
-    return m is not None
+    return m
