@@ -518,6 +518,7 @@ def test_pure_key_dict():
     raises(ValueError, lambda: dont(1))
 
 
+@slow
 def test_eval_approx_relative():
     CRootOf.clear_cache()
     t = [CRootOf(x**3 + 10*x + 1, i) for i in range(3)]

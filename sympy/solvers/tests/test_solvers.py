@@ -341,7 +341,7 @@ def test_linear_systemLU():
 # should be expected to break if the implementation of the solver changes
 # in such a way that a different branch is chosen
 
-
+@slow
 def test_solve_transcendental():
     from sympy.abc import a, b
 
@@ -1547,6 +1547,7 @@ def test_issue_14607():
         assert s[0][var].simplify() == knownsolution[var].simplify()
 
 
+@slow
 def test_lambert_multivariate():
     from sympy.abc import a, x, y
     from sympy.solvers.bivariate import _filtered_gens, _lambert, _solve_lambert
@@ -1828,6 +1829,7 @@ def test_issue_8828():
     assert p == q == r
 
 
+@slow
 def test_issue_2840_8155():
     assert solve(sin(3*x) + sin(6*x)) == [
         0, -pi, pi, 14*pi/9, 16*pi/9, 2*pi, 2*I*(log(2) - log(-1 - sqrt(3)*I)),

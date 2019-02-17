@@ -4,6 +4,8 @@ from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
                                    reidemeister_presentation, FpSubgroup)
 from sympy.combinatorics.free_groups import free_group
 
+from sympy.utilities.pytest import slow
+
 """
 References
 ==========
@@ -146,8 +148,8 @@ def test_subgroup_presentations():
     assert len(rels) == 18
 
 
+@slow
 def test_order():
-    from sympy import S
     F, x, y = free_group("x, y")
     f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
     assert f.order() == 8

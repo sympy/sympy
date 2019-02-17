@@ -619,6 +619,7 @@ def test_nonlinear_3eq_order1():
     # FIXME: assert checksysodesol(eq2, sol2) == (True, [0, 0, 0])
 
 
+@slow
 def test_checkodesol():
     from sympy import Ei
     # For the most part, checkodesol is well tested in the tests below.
@@ -1243,6 +1244,7 @@ def test_Riccati_special_minus2():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
+@slow
 def test_1st_exact1():
     # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
     # where dp/df == dq/dx
@@ -1328,6 +1330,7 @@ def test_separable1():
     assert checkodesol(eq6, sol6, order=1, solve_for_func=False)[0]
 
 
+@slow
 def test_separable2():
     a = Symbol('a')
     eq6 = f(x)*x**2*f(x).diff(x) - f(x)**3 - 2*x**2*f(x).diff(x)
@@ -3071,6 +3074,7 @@ def test_issue_11290():
     assert checkodesol(eq, sol_1, order=1, solve_for_func=False)
 
 
+@slow
 def test_issue_14395():
     eq = Derivative(f(x), x, x) + 9*f(x) - sec(x)
     sol = Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))

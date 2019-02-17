@@ -772,6 +772,7 @@ def test_precomputed_cdf():
         assert compdiff == 0
 
 
+@slow
 def test_precomputed_characteristic_functions():
     import mpmath
 

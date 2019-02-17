@@ -2,7 +2,7 @@ from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
                    SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx, sqrt,
                    fibonacci, tribonacci)
 from sympy.series.sequences import SeqExpr, SeqExprOp
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 x, y, z = symbols('x y z')
 n, m = symbols('n m')
@@ -256,6 +256,8 @@ def test_Idx_limits():
     assert SeqFormula(r, (i, 0, 5))[:] == [r.subs(i, j) for j in range(6)]
     assert SeqPer((1, 2), (i, 0, 5))[:] == [1, 2, 1, 2, 1, 2]
 
+
+@slow
 def test_find_linear_recurrence():
     assert sequence((0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55), \
     (n, 0, 10)).find_linear_recurrence(11) == [1, 1]

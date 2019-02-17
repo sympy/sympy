@@ -5,7 +5,7 @@ from sympy import (
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
     factor_terms, DiracDelta, Heaviside, Add, Mul, factorial)
 from sympy.printing import srepr
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises, slow
 
 from sympy.functions.elementary.piecewise import Undefined
 
@@ -209,6 +209,7 @@ def test_piecewise_integrate1b():
         (y - 1, True))
 
 
+@slow
 def test_piecewise_integrate1c():
     y = symbols('y', real=True)
     for i, g in enumerate([
@@ -288,6 +289,7 @@ def test_piecewise_integrate3_inequality_conditions():
     # values
 
 
+@slow
 def test_piecewise_integrate4_symbolic_conditions():
     a = Symbol('a', real=True, finite=True)
     b = Symbol('b', real=True, finite=True)
