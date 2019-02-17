@@ -1176,6 +1176,7 @@ def test_complex():
     assert ask(Q.complex(im(x))) is True
 
 
+@slow
 def test_even_query():
     assert ask(Q.even(x)) is None
     assert ask(Q.even(x), Q.integer(x)) is None
@@ -1536,6 +1537,7 @@ def test_integer():
     assert ask(Q.integer(x/3), Q.even(x)) is None
 
 
+@slow
 def test_negative():
     assert ask(Q.negative(x), Q.negative(x)) is True
     assert ask(Q.negative(x), Q.positive(x)) is False
@@ -1607,6 +1609,7 @@ def test_nonzero():
     assert ask(Q.nonzero(cos(1)**2 + sin(1)**2 - 1)) is None
 
 
+@slow
 def test_zero():
     assert ask(Q.zero(x)) is None
     assert ask(Q.zero(x), Q.real(x)) is None
@@ -1637,6 +1640,7 @@ def test_zero():
     assert ask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
 
 
+@slow
 def test_odd_query():
     assert ask(Q.odd(x)) is None
     assert ask(Q.odd(x), Q.odd(x)) is True
@@ -1742,6 +1746,7 @@ def test_prime():
     assert ask(Q.prime(x**y), Q.integer(x) & Q.integer(y)) is False
 
 
+@slow
 def test_positive():
     assert ask(Q.positive(x), Q.positive(x)) is True
     assert ask(Q.positive(x), Q.negative(x)) is False
