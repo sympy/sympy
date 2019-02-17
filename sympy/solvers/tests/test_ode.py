@@ -1219,7 +1219,6 @@ def test_old_ode_tests():
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
 
 
-@slow
 def test_1st_linear():
     # Type: first order linear form f'(x)+p(x)f(x)=q(x)
     eq = Eq(f(x).diff(x) + x*f(x), x**2)

@@ -539,13 +539,11 @@ def test_H25():
     assert factor(expand(e)) == e
 
 
-@slow
 def test_H26():
     g = expand((sin(x) - 2*cos(y)**2 + 3*tan(z)**3)**20)
     assert factor(g, expand=False) == (-sin(x) + 2*cos(y)**2 - 3*tan(z)**3)**20
 
 
-@slow
 def test_H27():
     f = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
     g = 34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
@@ -2090,7 +2088,6 @@ def test_T4():
                  - exp(x))/x, x, oo) == -exp(2)
 
 
-@slow
 def test_T5():
     assert  limit(x*log(x)*log(x*exp(x) - x**2)**2/log(log(x**2
                   + 2*exp(exp(3*x**3*log(x))))), x, oo) == Rational(1, 3)
@@ -2305,7 +2302,6 @@ def test_V4():
 
 
 @XFAIL
-@slow
 def test_V5():
     # Takes extremely long time
     # https://github.com/sympy/sympy/issues/7149
