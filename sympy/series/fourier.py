@@ -92,14 +92,12 @@ def _process_limits(func, limits):
 
 
 def finite_check(f, x, L):
+
     def check_fx(exprs, x):
         return x not in exprs.free_symbols
 
-    def check_sincos(expr, x, L):
+    def check_sincos(expr, x, L, a, b):
         if type(expr) == sin or type(expr) == cos:
-            a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
-            b = Wild('b', properties=[lambda k: x not in k.free_symbols or k == S.Zero, ])
-
             sincos_args = expr.args[0]
 
             if sincos_args.match(a*(pi/L)*x + b) is not None:
@@ -112,13 +110,15 @@ def finite_check(f, x, L):
     add_coeff = expr.as_coeff_add()
     res_expr += add_coeff[0]
 
+    a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
+    b = Wild('b', properties=[lambda k: x not in k.free_symbols or k == S.Zero, ])
+
     for s in add_coeff[1]:
         mul_coeffs = s.as_coeff_mul()[1]
         for t in mul_coeffs:
-            if not (check_fx(t, x) or check_sincos(t, x, L)):
+            if not (check_fx(t, x) or check_sincos(t, x, L,a ,b)):
                 return False, f
         res_expr += TR10(s)
-    a = Wild('a', properties=[lambda k:k.is_Integer, lambda k:k != 0, ])
     return True, res_expr.collect([sin(a*(pi/L)*x), cos(a*(pi/L)*x)])
 
 
