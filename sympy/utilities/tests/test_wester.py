@@ -1705,12 +1705,10 @@ def test_P36():
                               [1, 4]])
 
 
-@XFAIL
 def test_P37():
     M = Matrix([[1, 1, 0],
                 [0, 1, 0],
                 [0, 0, 1]])
-    #raises NotImplementedError: Implemented only for diagonalizable matrices
     M**Rational(1, 2)
 
 
@@ -2119,9 +2117,8 @@ def test_T9():
 
 @XFAIL
 def test_T10():
-    # raises PoleError should return euler-mascheroni constant
-    limit(zeta(x) - 1/(x - 1), x, 1)
-
+    # No longer raises PoleError, but should return euler-mascheroni constant
+    assert limit(zeta(x) - 1/(x - 1), x, 1) == integrate(-1/x + 1/floor(x), (x, 1, oo))
 
 @XFAIL
 def test_T11():
@@ -2354,10 +2351,9 @@ def test_V11():
             log(((tan(x/2) + 1)/(tan(x/2) + 7))**Rational(1, 3)))
 
 
-@XFAIL
 def test_V12():
     r1 = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
-    # Correct result in python2.7.4 wrong result in python3.3.1
+    # Correct result in python2.7.4, possibly wrong result in python3.3.1
     # https://github.com/sympy/sympy/issues/7157
     assert r1 == -1/(tan(x/2) + 2)
 

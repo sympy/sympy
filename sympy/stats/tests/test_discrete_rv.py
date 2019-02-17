@@ -63,7 +63,7 @@ def test_zeta():
     assert E(x) == zeta(s-1) / zeta(s)
     assert simplify(variance(x)) == (zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
 
-def test_sample():
+def test_sample_discrete():
     X, Y, Z = Geometric('X', S(1)/2), Poisson('Y', 4), Poisson('Z', 1000)
     W = Poisson('W', S(1)/100)
     assert sample(X) in X.pspace.domain.set

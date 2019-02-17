@@ -15,7 +15,7 @@ from sympy import (
     solve, legendre_poly
 )
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.core.compatibility import range
 
 from sympy.abc import a, b, x, y, z, r
@@ -178,6 +178,7 @@ def test_CRootOf_diff():
     assert rootof(x**3 + x + 1, 0).diff(y) == 0
 
 
+@slow
 def test_CRootOf_evalf():
     real = rootof(x**3 + x + 3, 0).evalf(n=20)
 

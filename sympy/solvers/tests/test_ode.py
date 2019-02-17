@@ -188,6 +188,7 @@ def test_dsolve_linsystem_symbol_piecewise():
     assert all(s.has(Piecewise) for s in sol)
 
 
+@slow
 def test_linear_2eq_order2():
     x, y, z = symbols('x, y, z', cls=Function)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
@@ -2593,6 +2594,7 @@ def test_exact_enhancement():
     assert checkodesol(eq, sol, order=1, solve_for_func=False) == [(True, 0), (True, 0)]
 
 
+@slow
 def test_separable_reduced():
     f = Function('f')
     x = Symbol('x')
@@ -2945,6 +2947,7 @@ def test_issue_7081():
     assert checkodesol(eq, s) == (True, 0)
 
 
+@slow
 def test_2nd_power_series_ordinary():
     # FIXME: Maybe there should be a way to check series solutions
     # checkodesol doesn't work with them.

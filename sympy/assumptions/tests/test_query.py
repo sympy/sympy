@@ -1176,7 +1176,7 @@ def test_complex():
     assert ask(Q.complex(im(x))) is True
 
 
-def test_even():
+def test_even_query():
     assert ask(Q.even(x)) is None
     assert ask(Q.even(x), Q.integer(x)) is None
     assert ask(Q.even(x), ~Q.integer(x)) is False
@@ -1330,6 +1330,7 @@ def test_rational():
         assert ask(Q.rational(h(x)), Q.rational(x)) is False
 
 
+@slow
 def test_hermitian():
     assert ask(Q.hermitian(x)) is None
     assert ask(Q.hermitian(x), Q.antihermitian(x)) is False
@@ -1636,7 +1637,7 @@ def test_zero():
     assert ask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
 
 
-def test_odd():
+def test_odd_query():
     assert ask(Q.odd(x)) is None
     assert ask(Q.odd(x), Q.odd(x)) is True
     assert ask(Q.odd(x), Q.integer(x)) is None
@@ -2239,9 +2240,8 @@ def test_issue_9636():
     assert ask(Q.odd(3.0)) is False
 
 
-@XFAIL
-def test_autosimp_fails():
-    # Unxfail after fixing issue #9807
+def test_autosimp_used_to_fail():
+    # See issue #9807
     assert ask(Q.imaginary(0**I)) is False
     assert ask(Q.imaginary(0**(-I))) is False
     assert ask(Q.real(0**I)) is False

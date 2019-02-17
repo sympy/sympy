@@ -13,7 +13,7 @@ from sympy.functions.special.error_functions import _erfs, _eis
 
 from sympy.core.function import ArgumentIndexError
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
@@ -563,6 +563,7 @@ def test_ci():
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
 
 
+@slow
 def test_fresnel():
     assert fresnels(0) == 0
     assert fresnels(oo) == S.Half

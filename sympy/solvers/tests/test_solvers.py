@@ -1141,8 +1141,8 @@ def test_issue_4463():
     assert solve(
         (a/x + exp(x/2)).diff(x), x) == [4*LambertW(sqrt(2)*sqrt(a)/4)]
 
-
-def test_issue_5114():
+@slow
+def test_issue_5114_solvers():
     a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('a:r')
 
     # there is no 'a' in the equation set but this is how the
@@ -1760,6 +1760,7 @@ def test_nsolve():
     raises(TypeError, lambda: nsolve((x + y, x - y), (0, 1)))
 
 
+@slow
 def test_high_order_multivariate():
     assert len(solve(a*x**3 - x + 1, x)) == 3
     assert len(solve(a*x**4 - x + 1, x)) == 4
@@ -1864,6 +1865,7 @@ def test_issue_11538():
     assert len(solve([e1, e2], x, y)) == 3
 
 
+@slow
 def test_issue_12114():
     a, b, c, d, e, f, g = symbols('a,b,c,d,e,f,g')
     terms = [1 + a*b + d*e, 1 + a*c + d*f, 1 + b*c + e*f,
@@ -1995,6 +1997,8 @@ def test_issue_15415():
     assert solve([Eq(y + 3*x**2/2, y + 3*x)], y) == []
     assert solve([Eq(y + 3*x**2/2, y + 3*x), Eq(x, 1)], y) == []
 
+
+@slow
 def test_issue_15731():
     # f(x)**g(x)=c
     assert solve(Eq((x**2 - 7*x + 11)**(x**2 - 13*x + 42), 1)) == [2, 3, 4, 5, 6, 7]
