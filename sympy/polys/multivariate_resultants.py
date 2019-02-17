@@ -88,8 +88,8 @@ class DixonResultant():
 
         # A list of the d_max of each variable.
         self.max_degrees = [
-            max([degree_list(poly) for poly in self.polynomials],
-                key=itemgetter(i))[i] for i in range(len(self.variables))]
+            max(degree_list(poly)[i] for poly in self.polynomials)
+            for i in range(self.n)]
 
     def get_dixon_polynomial(self):
         r"""
