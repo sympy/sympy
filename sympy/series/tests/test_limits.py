@@ -539,4 +539,4 @@ def test_issue_14377():
 
 
 def test_issue_15984():
-    assert Limit((-x + log(exp(x) + 1))/x) , x , oo , dir = '-').doit() == 0
+    assert Limit((-x + log(exp(x) + 1))/x, x, oo, dir='-').doit() == 0
