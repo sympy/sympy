@@ -20,7 +20,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
     residue, Derivative, logcombine, Symbol, Intersection, Union,
-    EmptySet, Interval, Integral, idiff)
+    EmptySet, Interval, Integral, idiff, ImageSet, acos)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -944,14 +944,16 @@ def test_M14():
 @XFAIL
 def test_M15():
     n = Dummy('n')
-    assert solveset(sin(x) - S.Half) == Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
-                                           ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers))
+    assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+                                           ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)),
+                                           Union(ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers),
+                                           ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
 
 
 @XFAIL
 def test_M16():
     n = Dummy('n')
-    assert solveset(sin(x) - tan(x), x) == ImageSet(Lambda(n, n*pi), Integers())
+    assert solveset(sin(x) - tan(x), x) == ImageSet(Lambda(n, n*pi), S.Integers)
 
 
 @XFAIL

@@ -16,7 +16,6 @@ def test_Abs():
     assert refine(Abs(x**2), Q.real(x)) == x**2
 
 
-@slow
 def test_pow1():
     assert refine((-1)**x, Q.even(x)) == 1
     assert refine((-1)**x, Q.odd(x)) == -1
