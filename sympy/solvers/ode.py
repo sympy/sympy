@@ -374,6 +374,17 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     in eq already.
     """
 
+    ncs = iter_numbered_constants(eq, start, prefix)
+    Cs = [next(ncs) for i in range(num)]
+    return (Cs[0] if num == 1 else tuple(Cs))
+
+
+def iter_numbered_constants(eq, start=1, prefix='C'):
+    """
+    Returns an iterator of constants that do not occur
+    in eq already.
+    """
+
     if isinstance(eq, Expr):
         eq = [eq]
     elif not iterable(eq):
@@ -383,9 +394,7 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     func_set = set().union(*[i.atoms(Function) for i in eq])
     if func_set:
         atom_set |= {Symbol(str(f.func)) for f in func_set}
-    ncs = numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
-    Cs = [next(ncs) for i in range(num)]
-    return (Cs[0] if num == 1 else tuple(Cs))
+    return numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
 
 
 def dsolve(eq, func=None, hint="default", simplify=True,
@@ -3998,7 +4007,7 @@ def _nth_algebraic_match(eq, func):
     """
 
     # Each integration should generate a different constant
-    constants = iter(numbered_symbols(prefix='C', cls=Symbol, start=1))
+    constants = iter_numbered_constants(eq)
     constant = lambda: next(constants, None)
 
     # Like Derivative but "invertible"
