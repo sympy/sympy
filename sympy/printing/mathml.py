@@ -6,11 +6,10 @@ from __future__ import print_function, division
 
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
-from sympy.core.alphabets import greeks
 from sympy.core.compatibility import range
-from .printer import Printer
-from .pretty.pretty_symbology import greek_unicode
-from .conventions import split_super_sub, requires_partial
+from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.pretty.pretty_symbology import greek_unicode
+from sympy.printing.printer import Printer
 
 
 class MathMLPrinterBase(Printer):
@@ -20,8 +19,20 @@ class MathMLPrinterBase(Printer):
 
     _default_settings = {
         "order": None,
-        "encoding": "utf-8"
+        "encoding": "utf-8",
+        "fold_frac_powers": False,
+        "fold_func_brackets": False,
+        "fold_short_frac": None,
+        "inv_trig_style": "abbreviated",
+        "ln_notation": False,
+        "long_frac_ratio": None,
+        "mat_delim": "[",
+        "mat_symbol_style": "plain",
+        "mul_symbol": None,
+        "root_notation": True,
+        "symbol_names": {},
     }
+
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
         from xml.dom.minidom import Document,Text
@@ -122,6 +133,8 @@ class MathMLContentPrinter(MathMLPrinterBase):
             'int': 'cn',
             'Pow': 'power',
             'Symbol': 'ci',
+            'MatrixSymbol': 'ci',
+            'RandomSymbol': 'ci',
             'Integral': 'int',
             'Sum': 'sum',
             'sin': 'sin',
@@ -340,7 +353,6 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 return mi
 
         # translate name, supers and subs to unicode characters
-        greek_letters = set(greeks) # make a copy
         def translate(s):
             if s in greek_unicode:
                 return greek_unicode.get(s)
@@ -376,9 +388,12 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 ci.appendChild(msubsup)
         return ci
 
+    _print_MatrixSymbol = _print_Symbol
+    _print_RandomSymbol = _print_Symbol
+
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
-        if e.exp.is_Rational and e.exp.p == 1:
+        if self._settings['root_notation'] and e.exp.is_Rational and e.exp.p == 1:
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('root'))
             if e.exp.q != 2:
@@ -426,7 +441,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Basic(self, e):
         x = self.dom.createElement(self.mathml_tag(e))
-        for arg in e:
+        for arg in e.args:
             x.appendChild(self._print(arg))
         return x
 
@@ -573,7 +588,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_MatrixBase(self, m):
-        brac = self.dom.createElement('mfenced')
         table = self.dom.createElement('mtable')
         for i in range(m.rows):
             x = self.dom.createElement('mtr')
@@ -582,6 +596,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 y.appendChild(self._print(m[i, j]))
                 x.appendChild(y)
             table.appendChild(x)
+        if self._settings["mat_delim"] == '':
+            return table
+        brac = self.dom.createElement('mfenced')
+        if self._settings["mat_delim"] == "[":
+            brac.setAttribute('open', '[')
+            brac.setAttribute('close', ']')
         brac.appendChild(table)
         return brac
 
@@ -727,8 +747,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
         return mrow
 
-    def _print_Symbol(self, sym):
+    def _print_Symbol(self, sym, style='plain'):
         x = self.dom.createElement('mi')
+
+        if style == 'bold':
+            x.setAttribute('mathvariant', 'bold')
 
         def join(items):
             if len(items) > 1:
@@ -748,7 +771,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 return mi
 
         # translate name, supers and subs to unicode characters
-        greek_letters = set(greeks) # make a copy
         def translate(s):
             if s in greek_unicode:
                 return greek_unicode.get(s)
@@ -784,6 +806,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 x.appendChild(msubsup)
         return x
 
+    def _print_MatrixSymbol(self, sym):
+        return self._print_Symbol(sym, style=self._settings['mat_symbol_style'])
+
+    _print_RandomSymbol = _print_Symbol
+
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
         if e.exp.is_negative or len(str(e.base)) > 1:
@@ -796,7 +823,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             x.appendChild(self._print(e.exp))
             return x
 
-        if e.exp.is_Rational and e.exp.p == 1:
+        if e.exp.is_Rational and e.exp.p == 1 and self._settings['root_notation']:
             if e.exp.q == 2:
                 x = self.dom.createElement('msqrt')
                 x.appendChild(self._print(e.base))
@@ -867,8 +894,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mi = self.dom.createElement('mi')
         mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         mrow.appendChild(mi)
-        for arg in e:
-            x.appendChild(self._print(arg))
+        brac = self.dom.createElement('mfenced')
+        for arg in e.args:
+            brac.appendChild(self._print(arg))
+        mrow.appendChild(brac)
         return mrow
 
     def _print_AssocOp(self, e):

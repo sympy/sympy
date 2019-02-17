@@ -10,15 +10,15 @@ sympy.stats.frv
 
 from __future__ import print_function, division
 
-from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
-from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
-from sympy.polys.polyerrors import PolynomialError
+from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
+        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 import random
 
 
@@ -153,8 +153,10 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     Provides methods for pdf, cdf, and sampling
 
-    See Also:
-        sympy.stats.crv_types.*
+    See Also
+    ========
+
+    sympy.stats.crv_types.*
     """
 
     set = Interval(-oo, oo)

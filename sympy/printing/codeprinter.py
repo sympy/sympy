@@ -4,7 +4,6 @@ from functools import wraps
 
 from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
@@ -519,6 +518,8 @@ class CodePrinter(StrPrinter):
     _print_RootSum = _print_not_supported
     _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
+    _print_MutableSparseMatrix = _print_not_supported
+    _print_ImmutableSparseMatrix = _print_not_supported
     _print_Uniform = _print_not_supported
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported

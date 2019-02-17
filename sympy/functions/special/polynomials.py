@@ -8,9 +8,9 @@ combinatorial polynomials.
 
 from __future__ import print_function, division
 
-from sympy.core.singleton import S
 from sympy.core import Rational
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import binomial, factorial, RisingFactorial
 from sympy.functions.elementary.complexes import re

@@ -1,9 +1,10 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix
+    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
+    MatrixSymbol
+from sympy.stats.rv import RandomSymbol
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
     MathMLPrinter
-
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
@@ -933,3 +934,37 @@ def test_toprettyxml_hooking():
 
     assert prettyxml_old1 == doc1.toprettyxml()
     assert prettyxml_old2 == doc2.toprettyxml()
+
+
+def test_print_basic():
+    expr = Basic(1, 2)
+    assert mpp.doprint(expr) == '<mrow><mi>basic</mi><mfenced><mn>1</mn><mn>2</mn></mfenced></mrow>'
+    assert mp.doprint(expr) == '<basic><cn>1</cn><cn>2</cn></basic>'
+
+
+def test_mat_delim_print():
+    expr = Matrix([[1, 2], [3, 4]])
+    assert mathml(expr, printer='presentation', mat_delim='[') == '<mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
+    assert mathml(expr, printer='presentation', mat_delim='(') == '<mfenced><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
+    assert mathml(expr, printer='presentation', mat_delim='') == '<mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable>'
+
+
+def test_root_notation_print():
+    assert mathml(x**(S(1)/3), printer='presentation') == '<mroot><mi>x</mi><mn>3</mn></mroot>'
+    assert mathml(x**(S(1)/3), printer='presentation', root_notation=False) == '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
+    assert mathml(x**(S(1)/3), printer='content') == '<apply><root/><degree><ci>3</ci></degree><ci>x</ci></apply>'
+    assert mathml(x**(S(1)/3), printer='content', root_notation=False) == '<apply><power/><ci>x</ci><apply><divide/><cn>1</cn><cn>3</cn></apply></apply>'
+
+
+def test_print_matrix_symbol():
+    A = MatrixSymbol('A', 1, 2)
+    assert mpp.doprint(A) == '<mi>A</mi>'
+    assert mp.doprint(A) == '<ci>A</ci>'
+    assert mathml(A, printer='presentation', mat_symbol_style="bold" )== '<mi mathvariant="bold">A</mi>'
+    assert mathml(A, mat_symbol_style="bold" )== '<ci>A</ci>' # No effect in content printer
+
+
+def test_print_random_symbol():
+    R = RandomSymbol(Symbol('R'))
+    assert mpp.doprint(R) == '<mi>R</mi>'
+    assert mp.doprint(R) == '<ci>R</ci>'

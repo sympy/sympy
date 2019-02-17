@@ -1,10 +1,10 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
     IndexedBase)
-from sympy.stats.rv import _value_check, random_symbols
-from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
-    JointDistributionHandmade, MarginalDistribution)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
+from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
+    JointDistributionHandmade, MarginalDistribution)
+from sympy.stats.rv import _value_check, random_symbols
 
 # __all__ = ['MultivariateNormal',
 # 'MultivariateLaplace',

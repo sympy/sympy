@@ -5,17 +5,17 @@ The functions defined in this module allows the user to express functions such a
 as a SymPy function for symbolic manipulation.
 """
 
+from sympy.codegen.ast import (
+    Attribute, CodeBlock, FunctionCall, Node, none, String,
+    Token, _mk_Tuple, Variable
+)
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
 from sympy.core.compatibility import string_types
 from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.numbers import Float, Integer
 from sympy.core.sympify import sympify
-from sympy.codegen.ast import (
-    Attribute, CodeBlock, Declaration, FunctionCall, Node, none, String,
-    Token, Type, _mk_Tuple, Variable
-)
 from sympy.logic import true, false
 from sympy.utilities.iterables import iterable
 
@@ -355,7 +355,7 @@ def array(symbol, dim, intent=None, **kwargs):
     else:
         dim = dimension(*dim)
 
-    attrs=list(kwargs.pop('attrs', [])) + [dim]
+    attrs = list(kwargs.pop('attrs', [])) + [dim]
     if intent is not None:
         if intent not in (intent_in, intent_out, intent_inout):
             intent = {'in': intent_in, 'out': intent_out, 'inout': intent_inout}[intent]
