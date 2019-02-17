@@ -694,6 +694,15 @@ def test_latex_sequences():
     latex_str = r'\left[\ldots, 18, 4, 2, 0\right]'
     assert latex(SeqMul(s5, s6)) == latex_str
 
+    # Sequences with symbolic limits, issue 12629
+    s7 = SeqFormula(a**2, (a, 0, x))
+    latex_str = r'\left\{a^{2}\right\}_{a=0}^{x}'
+    assert latex(s7) == latex_str
+
+    b = Symbol('b')
+    s8 = SeqFormula(b*a**2, (a, 0, 2))
+    latex_str = r'\left[0, b, 4 b\right]'
+    assert latex(s8) == latex_str
 
 def test_latex_FourierSeries():
     latex_str = r'2 \sin{\left(x \right)} - \sin{\left(2 x \right)} + \frac{2 \sin{\left(3 x \right)}}{3} + \ldots'

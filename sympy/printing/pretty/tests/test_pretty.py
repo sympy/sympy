@@ -3769,6 +3769,18 @@ def test_pretty_sequences():
     assert pretty(SeqMul(s5, s6)) == ascii_str
     assert upretty(SeqMul(s5, s6)) == ucode_str
 
+    # Sequences with symbolic limits, issue 12629
+    s7 = SeqFormula(a**2, (a, 0, x))
+    raises(NotImplementedError, lambda: pretty(s7))
+    raises(NotImplementedError, lambda: upretty(s7))
+
+    b = Symbol('b')
+    s8 = SeqFormula(b*a**2, (a, 0, 2))
+    ascii_str = u'[0, b, 4*b]'
+    ucode_str = u'[0, b, 4⋅b]'
+    assert pretty(s8) == ascii_str
+    assert upretty(s8) == ucode_str
+
 
 def test_pretty_FourierSeries():
     f = fourier_series(x, (x, -pi, pi))
