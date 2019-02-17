@@ -533,8 +533,10 @@ def test_issue_10102():
     assert limit(fresnels(x), x, -oo) == -S.Half
     assert limit(4*fresnelc(x), x, -oo) == -2   
 
+    
 def test_issue_14377():
     raises(NotImplementedError, lambda: limit(exp(I*x)*sin(pi*x), x, oo))
 
+    
 def test_issue_15984():
     assert limit((-x + log(exp(x) + 1))/x, x, oo) == 0
