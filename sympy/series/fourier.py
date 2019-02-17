@@ -96,7 +96,7 @@ def finite_check(f, x, L):
     def check_fx(exprs, x):
         return x not in exprs.free_symbols
 
-    def check_sincos(expr, x, L, a, b):
+    def check_sincos(expr, x, L):
         if type(expr) == sin or type(expr) == cos:
             sincos_args = expr.args[0]
 
@@ -116,7 +116,7 @@ def finite_check(f, x, L):
     for s in add_coeff[1]:
         mul_coeffs = s.as_coeff_mul()[1]
         for t in mul_coeffs:
-            if not (check_fx(t, x) or check_sincos(t, x, L,a ,b)):
+            if not (check_fx(t, x) or check_sincos(t, x, L)):
                 return False, f
         res_expr += TR10(s)
     return True, res_expr.collect([sin(a*(pi/L)*x), cos(a*(pi/L)*x)])
