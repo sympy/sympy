@@ -3,7 +3,7 @@
 """
 Plotting Examples
 
-Suggested Usage:    python -i plotting.py
+Suggested Usage:    python -i pyglet_plotting.py
 """
 
 
