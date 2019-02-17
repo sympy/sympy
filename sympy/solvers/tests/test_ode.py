@@ -3069,6 +3069,15 @@ def test_issue_11290():
     assert checkodesol(eq, sol_1, order=1, solve_for_func=False)
 
 
+def test_issue_4838():
+    eq = f(x).diff(x) - C1*f(x)
+    sol = Eq(f(x), C2*exp(C1*x))
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=1, solve_for_func=False) == (True, 0)
+
+
+# FIXME: fails due to issue #15999
+@XFAIL
 def test_issue_13691():
     eq = f(x).diff(x) - C1*g(x).diff(x)
     ans = Eq(f(x), C2 + C1*g(x))

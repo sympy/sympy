@@ -2160,8 +2160,8 @@ def checksysodesol(eqs, sols, func=None):
 @vectorize(0)
 def odesimp(eq, func, order, constants, hint):
     r"""
-    Simplifies ODEs, including trying to solve for ``func`` and running
-    :py:meth:`~sympy.solvers.ode.constantsimp`.
+    Simplifies solutions of ODEs, including trying to solve for ``func`` and
+    running :py:meth:`~sympy.solvers.ode.constantsimp`.
 
     It may use knowledge of the type of solution that the hint returns to
     apply additional simplifications.
@@ -2220,7 +2220,6 @@ def odesimp(eq, func, order, constants, hint):
     C1 = get_numbered_constants(eq, num=1)
 
     # First, integrate if the hint allows it.
-    eq_constants = list(eq.free_symbols)[:-order]
     eq = _handle_Integral(eq, func, order, hint)
     if hint.startswith("nth_linear_euler_eq_nonhomogeneous"):
         eq = simplify(eq)
@@ -2319,9 +2318,20 @@ def odesimp(eq, func, order, constants, hint):
     # We cleaned up the constants before solving to help the solve engine with
     # a simpler expression, but the solved expression could have introduced
     # things like -C1, so rerun constantsimp() one last time before returning.
+
+    # Don't clobber the symbols already in the ODE. This is important when the
+    # input ODE derives from output of a previous call to dsolve (issue #4838)
+    if iterable(eq):
+        symbols_eq = set()
+        for eq_single in eq:
+            symbols_eq |= eq_single.free_symbols
+    else:
+        symbols_eq = eq.free_symbols
+    exclude = symbols_eq - constants
+
     for i, eqi in enumerate(eq):
         eq[i] = constantsimp(eqi, constants)
-        eq[i] = constant_renumber(eq[i], 'C', 1, 2*order,exclude = eq_constants)
+        eq[i] = constant_renumber(eq[i], 'C', 1, 2*order, exclude=exclude)
 
     # If there is only 1 solution, return it;
     # otherwise return the list of solutions.
@@ -2871,7 +2881,7 @@ def constantsimp(expr, constants):
     return expr
 
 
-def constant_renumber(expr, symbolname, startnumber, endnumber,exclude = None):
+def constant_renumber(expr, symbolname, startnumber, endnumber, exclude=None):
     r"""
     Renumber arbitrary constants in ``expr`` to have numbers 1 through `N`
     where `N` is ``endnumber - startnumber + 1`` at most.
@@ -2916,7 +2926,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber,exclude = None):
     """
     if type(expr) in (set, list, tuple):
         return type(expr)(
-            [constant_renumber(i, symbolname=symbolname, startnumber=startnumber, endnumber=endnumber, exclude = exclude)
+            [constant_renumber(i, symbolname=symbolname, startnumber=startnumber, endnumber=endnumber, exclude=exclude)
                 for i in expr]
         )
     global newstartnumber
@@ -2965,22 +2975,17 @@ def constant_renumber(expr, symbolname, startnumber, endnumber,exclude = None):
             sortedargs.sort(key=sort_key)
             return expr.func(*[_constant_renumber(x) for x in sortedargs])
     expr = _constant_renumber(expr)
-    # Renumbering happens here
-    newconsts = list(symbols('C1:%d' % newstartnumber))
-    if exclude is not None:
-        old_constants = list(exclude)
-        for c in old_constants:
-            if c in constants_found[1:]:
-                index = constants_found.index(c)
-                constants_found.remove(c)
-                del newconsts[-1]
-                newstartnumber -= 1
 
-        for c in old_constants:
-            if c in newconsts:
-                index = newconsts.index(c)
-                newconsts[index] = symbols("C%d"%newstartnumber)
-                newstartnumber += 1
+    # Use Symbols not in the original ODE
+    if exclude is None:
+        exclude = []
+    dummy_ode = Add(*exclude)
+    newconsts = get_numbered_constants(dummy_ode, num=newstartnumber)
+    # FIXME: Why does get_numbered_constants not always return a list?
+    if not iterable(newconsts):
+        newconsts = [newconsts]
+    constants_found = [c for c in constants_found if c not in exclude]
+    # Renumbering happens here
     expr = expr.subs(zip(constants_found[1:], newconsts), simultaneous=True)
     return expr
 
