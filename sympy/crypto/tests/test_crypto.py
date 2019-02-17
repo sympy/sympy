@@ -13,7 +13,7 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_elgamal, decipher_elgamal, dh_private_key, dh_public_key,
       dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
       decipher_bifid, bifid_square, padded_key, uniq, decipher_gm,
-      encipher_gm, gm_public_key, gm_private_key,encipher_railfence,decipher_railfence)
+      encipher_gm, gm_public_key, gm_private_key, encipher_railfence, decipher_railfence)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
