@@ -531,8 +531,7 @@ def test_issue_10102():
     assert limit(5*fresnels(x), x, oo) == 5*S.Half
     assert limit(fresnelc(x), x, oo) == S.Half
     assert limit(fresnels(x), x, -oo) == -S.Half
-    assert limit(4*fresnelc(x), x, -oo) == -2
-    
+    assert limit(4*fresnelc(x), x, -oo) == -2   
 
 def test_issue_14377():
     raises(NotImplementedError, lambda: limit(exp(I*x)*sin(pi*x), x, oo))
