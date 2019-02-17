@@ -3069,6 +3069,13 @@ def test_issue_11290():
     assert checkodesol(eq, sol_1, order=1, solve_for_func=False)
 
 
+def test_issue_13691():
+    eq = f(x).diff(x) - C1*g(x).diff(x)
+    ans = Eq(f(x), C2 + C1*g(x))
+    sol = dsolve(eq, f(x))
+    assert str(sol) == str(ans)
+
+
 def test_issue_14395():
     eq = Derivative(f(x), x, x) + 9*f(x) - sec(x)
     sol = Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))

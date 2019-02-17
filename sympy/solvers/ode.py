@@ -2220,6 +2220,7 @@ def odesimp(eq, func, order, constants, hint):
     C1 = get_numbered_constants(eq, num=1)
 
     # First, integrate if the hint allows it.
+    eq_constants = list(eq.free_symbols)[:-order]
     eq = _handle_Integral(eq, func, order, hint)
     if hint.startswith("nth_linear_euler_eq_nonhomogeneous"):
         eq = simplify(eq)
@@ -2320,7 +2321,7 @@ def odesimp(eq, func, order, constants, hint):
     # things like -C1, so rerun constantsimp() one last time before returning.
     for i, eqi in enumerate(eq):
         eq[i] = constantsimp(eqi, constants)
-        eq[i] = constant_renumber(eq[i], 'C', 1, 2*order)
+        eq[i] = constant_renumber(eq[i], 'C', 1, 2*order,exclude = eq_constants)
 
     # If there is only 1 solution, return it;
     # otherwise return the list of solutions.
@@ -2870,7 +2871,7 @@ def constantsimp(expr, constants):
     return expr
 
 
-def constant_renumber(expr, symbolname, startnumber, endnumber):
+def constant_renumber(expr, symbolname, startnumber, endnumber,exclude = None):
     r"""
     Renumber arbitrary constants in ``expr`` to have numbers 1 through `N`
     where `N` is ``endnumber - startnumber + 1`` at most.
@@ -2915,7 +2916,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
     """
     if type(expr) in (set, list, tuple):
         return type(expr)(
-            [constant_renumber(i, symbolname=symbolname, startnumber=startnumber, endnumber=endnumber)
+            [constant_renumber(i, symbolname=symbolname, startnumber=startnumber, endnumber=endnumber, exclude = exclude)
                 for i in expr]
         )
     global newstartnumber
@@ -2965,7 +2966,21 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             return expr.func(*[_constant_renumber(x) for x in sortedargs])
     expr = _constant_renumber(expr)
     # Renumbering happens here
-    newconsts = symbols('C1:%d' % newstartnumber)
+    newconsts = list(symbols('C1:%d' % newstartnumber))
+    if exclude is not None:
+        old_constants = list(exclude)
+        for c in old_constants:
+            if c in constants_found[1:]:
+                index = constants_found.index(c)
+                constants_found.remove(c)
+                del newconsts[-1]
+                newstartnumber -= 1
+
+        for c in old_constants:
+            if c in newconsts:
+                index = newconsts.index(c)
+                newconsts[index] = symbols("C%d"%newstartnumber)
+                newstartnumber += 1
     expr = expr.subs(zip(constants_found[1:], newconsts), simultaneous=True)
     return expr
 
