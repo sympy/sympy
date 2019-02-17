@@ -2555,21 +2555,18 @@ def test_W22():
         (-sin(Min(1, u)) + sin(Min(2, u)), True))
 
 
-@XFAIL
 @slow
 def test_W23():
     a, b = symbols('a b', real=True, positive=True)
     r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
-    assert r1.simplify() == pi*(-a + b)
+    assert r1.collect(pi) == pi*(-a + b)
 
 
-@SKIP("integrate raises RuntimeError: maximum recursion depth exceeded")
-@slow
 def test_W23b():
     # like W23 but limits are reversed
     a, b = symbols('a b', real=True, positive=True)
     r2 = integrate(integrate(x/(x**2 + y**2), (y, -oo, oo)), (x, a, b))
-    assert r2 == pi*(-a + b)
+    assert r2.collect(pi) == pi*(-a + b)
 
 
 @XFAIL
@@ -2577,6 +2574,8 @@ def test_W23b():
 def test_W24():
     if ON_TRAVIS:
         skip("Too slow for travis.")
+    # Not that slow, but does not fully evaluate so simplify is slow.
+    # Maybe also require doit()
     x, y = symbols('x y', real=True)
     r1 = integrate(integrate(sqrt(x**2 + y**2), (x, 0, 1)), (y, 0, 1))
     assert (r1 - (sqrt(2) + asinh(1))/3).simplify() == 0
@@ -2704,7 +2703,7 @@ def test_X12():
     # Look at the generalized Taylor series around x = 1
     # Result => (x - 1)^a/e^b [1 - (a + 2 b) (x - 1) / 2 + O((x - 1)^2)]
     a, b, x = symbols('a b x', real=True)
-    # series returns O(log(x)**2)
+    # series returns O(log(x-1)**2)
     # https://github.com/sympy/sympy/issues/7168
     assert (series(log(x)**a*exp(-b*x), x, x0=1, n=2) ==
             (x - 1)**a/exp(b)*(1 - (a + 2*b)*(x - 1)/2 + O((x - 1)**2)))
@@ -2727,6 +2726,9 @@ def test_X15():
     x, t = symbols('x t', real=True)
     # raises RuntimeError: maximum recursion depth exceeded
     # https://github.com/sympy/sympy/issues/7164
+    # 2019-02-17: Raises
+    # PoleError:
+    # Asymptotic expansion of Ei around [-oo] is not implemented.
     e1 = integrate(exp(-t)/t, (t, x, oo))
     assert (series(e1, x, x0=oo, n=5) ==
             6/x**4 + 2/x**3 - 1/x**2 + 1/x + O(x**(-5), (x, oo)))
@@ -2863,8 +2865,6 @@ def test_Y2():
     assert f == cos(t*w - t)
 
 
-@slow
-@XFAIL
 def test_Y3():
     t = symbols('t', real=True, positive=True)
     w = symbols('w', real=True)
@@ -2944,6 +2944,8 @@ def test_Y11():
     x, s = symbols('x s')
     # raises RuntimeError: maximum recursion depth exceeded
     # https://github.com/sympy/sympy/issues/7181
+    # Update 2019-02-17 raises:
+    # TypeError: cannot unpack non-iterable MellinTransform object
     F, _, _ =  mellin_transform(1/(1 - x), x, s)
     assert F == pi*cot(pi*s)
 
