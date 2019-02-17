@@ -2257,8 +2257,9 @@ def encipher_railfence(message,rails):
     """
     Performs Railfence Encryption on plaintext and returns ciphertext
 
-    EXAMPLE
-    =======
+    Examples
+    ========
+
     >>> from sympy.crypto.crypto import encipher_railfence
     >>> message = "hello world"
     >>> encipher_railfence(message,3)
@@ -2272,6 +2273,7 @@ def encipher_railfence(message,rails):
     
     Returns
     =======
+
     The Encrypted string message.
     
      References
@@ -2288,8 +2290,9 @@ def decipher_railfence(ciphertext,rails):
     """
     Decrypt the message using the given rails
     
-    Example
-    =======
+    Examples
+    ========
+
     >>> from sympy.crypto.crypto import decipher_railfence
     >>> decipher_railfence("horel ollwd",3)
     'hello world'
@@ -2302,6 +2305,7 @@ def decipher_railfence(ciphertext,rails):
     
     Returns
     =======
+
     The Decrypted string message.
     
     """
