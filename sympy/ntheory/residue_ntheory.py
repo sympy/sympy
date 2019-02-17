@@ -1201,6 +1201,7 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
                         return e
                 except ValueError:
                     pass
+                break
     raise ValueError("Pollard's Rho failed to find logarithm")
 
 
