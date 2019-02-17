@@ -59,7 +59,7 @@ ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 #         sympy.test(split='{}/{}'.format(i, num_splits), time_balance=False)
 #         delays.append(time() - tic)
 #     tot = sum(delays)
-#     print([round(x / tot, 4) for x in delays]))
+#     print([round(x / tot, 4) for x in delays])
 SPLIT_DENSITY = [0.2464, 0.0507, 0.0328, 0.0113, 0.0418, 0.012, 0.0269, 0.0095, 0.091, 0.0215, 0.001, 0.0023, 0.0116, 0.0137, 0.0041, 0.0039, 0.0145, 0.0172, 0.059, 0.0017, 0.0112, 0.0128, 0.0012, 0.0293, 0.0705, 0.0284, 0.1495, 0.0073, 0.0052, 0.0115]
 SPLIT_DENSITY_SLOW = [0.3616, 0.0003, 0.0004, 0.0004, 0.0255, 0.0005, 0.0674, 0.0337, 0.1057, 0.0329, 0.0002, 0.0002, 0.0184, 0.0028, 0.0046, 0.0148, 0.0046, 0.0083, 0.0004, 0.0002, 0.0069, 0.0004, 0.0004, 0.0046, 0.0205, 0.1378, 0.1451, 0.0003, 0.0006, 0.0006]
 
@@ -1100,7 +1100,7 @@ class SymPyTests(object):
         if fast_threshold:
             self._fast_threshold = float(fast_threshold)
         else:
-            self._fast_threshold = 0.1
+            self._fast_threshold = 5
         if slow_threshold:
             self._slow_threshold = float(slow_threshold)
         else:
