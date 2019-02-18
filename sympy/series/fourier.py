@@ -440,7 +440,7 @@ class FourierSeries(SeriesBase):
         return self.__add__(-other)
 
 
-class FiniteFourierSeries:
+class FiniteFourierSeries(object):
 
     def __init__(self, series):
         self.series = series
