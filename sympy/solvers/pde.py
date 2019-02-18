@@ -497,7 +497,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     where `a`, `b` and `c` are constants.
 
     The general solution is of the form:
-    
+
     .. math::
         f(x, y) = F(- a y + b x ) e^{- \frac{c (a x + b y)}{a^2 + b^2}}
 
