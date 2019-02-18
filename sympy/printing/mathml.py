@@ -423,10 +423,14 @@ class MathMLContentPrinter(MathMLPrinterBase):
         if requires_partial(e):
             diff_symbol = 'partialdiff'
         x.appendChild(self.dom.createElement(diff_symbol))
-
         x_1 = self.dom.createElement('bvar')
-        for sym in e.variables:
+
+        for sym, times in reversed(e.variable_count):
             x_1.appendChild(self._print(sym))
+            if times > 1:
+                degree = self.dom.createElement('degree')
+                degree.appendChild(self._print(sympify(times)))
+                x_1.appendChild(degree)
 
         x.appendChild(x_1)
         x.appendChild(self._print(e.expr))
@@ -748,11 +752,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_Symbol(self, sym, style='plain'):
-        x = self.dom.createElement('mi')
-
-        if style == 'bold':
-            x.setAttribute('mathvariant', 'bold')
-
         def join(items):
             if len(items) > 1:
                 mrow = self.dom.createElement('mrow')
@@ -786,24 +785,24 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mname.appendChild(self.dom.createTextNode(name))
         if len(supers) == 0:
             if len(subs) == 0:
-                x.appendChild(self.dom.createTextNode(name))
+                x = mname
             else:
-                msub = self.dom.createElement('msub')
-                msub.appendChild(mname)
-                msub.appendChild(join(subs))
-                x.appendChild(msub)
+                x = self.dom.createElement('msub')
+                x.appendChild(mname)
+                x.appendChild(join(subs))
         else:
             if len(subs) == 0:
-                msup = self.dom.createElement('msup')
-                msup.appendChild(mname)
-                msup.appendChild(join(supers))
-                x.appendChild(msup)
+                x = self.dom.createElement('msup')
+                x.appendChild(mname)
+                x.appendChild(join(supers))
             else:
-                msubsup = self.dom.createElement('msubsup')
-                msubsup.appendChild(mname)
-                msubsup.appendChild(join(subs))
-                msubsup.appendChild(join(supers))
-                x.appendChild(msubsup)
+                x = self.dom.createElement('msubsup')
+                x.appendChild(mname)
+                x.appendChild(join(subs))
+                x.appendChild(join(supers))
+        # Set bold font?
+        if style == 'bold':
+            x.setAttribute('mathvariant', 'bold')
         return x
 
     def _print_MatrixSymbol(self, sym):
@@ -844,39 +843,52 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_Derivative(self, e):
-        mrow = self.dom.createElement('mrow')
-        x = self.dom.createElement('mo')
+
         if requires_partial(e):
-            x.appendChild(self.dom.createTextNode('&#x2202;'))
-            y = self.dom.createElement('mo')
-            y.appendChild(self.dom.createTextNode('&#x2202;'))
+            d = '&#x2202;'
         else:
-            x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-            y = self.dom.createElement('mo')
-            y.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
+            d = self.mathml_tag(e)
 
-        brac = self.dom.createElement('mfenced')
-        brac.appendChild(self._print(e.expr))
-        mrow = self.dom.createElement('mrow')
-        mrow.appendChild(x)
-        mrow.appendChild(brac)
-
-        for sym in e.variables:
-            frac = self.dom.createElement('mfrac')
-            m = self.dom.createElement('mrow')
-            x = self.dom.createElement('mo')
-            if requires_partial(e):
-                x.appendChild(self.dom.createTextNode('&#x2202;'))
+        # Determine denominator
+        m = self.dom.createElement('mrow')
+        dim = 0 # Total diff dimension, for numerator
+        for sym, num in reversed(e.variable_count):
+            dim += num
+            if num >= 2:
+                x = self.dom.createElement('msup')
+                xx = self.dom.createElement('mo')
+                xx.appendChild(self.dom.createTextNode(d))
+                x.appendChild(xx)
+                x.appendChild(self._print(num))
             else:
-                x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-            y = self._print(sym)
+                x = self.dom.createElement('mo')
+                x.appendChild(self.dom.createTextNode(d))
             m.appendChild(x)
+            y = self._print(sym)
             m.appendChild(y)
-            frac.appendChild(mrow)
-            frac.appendChild(m)
-            mrow = frac
 
-        return frac
+        mnum = self.dom.createElement('mrow')
+        if dim >= 2:
+            x = self.dom.createElement('msup')
+            xx = self.dom.createElement('mo')
+            xx.appendChild(self.dom.createTextNode(d))
+            x.appendChild(xx)
+            x.appendChild(self._print(dim))
+        else:
+            x = self.dom.createElement('mo')
+            x.appendChild(self.dom.createTextNode(d))
+
+        mnum.appendChild(x)
+        mrow = self.dom.createElement('mrow')
+        frac = self.dom.createElement('mfrac')
+        frac.appendChild(mnum)
+        frac.appendChild(m)
+        mrow.appendChild(frac)
+
+        # Print function
+        mrow.appendChild(self._print(e.expr))
+
+        return mrow
 
     def _print_Function(self, e):
         mrow = self.dom.createElement('mrow')
