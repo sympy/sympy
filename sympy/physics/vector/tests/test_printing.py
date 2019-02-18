@@ -229,21 +229,21 @@ def test_vector_derivative_printing():
 
     assert v._latex() == r'\ddot{\omega}\mathbf{\hat{n}_x}'
     assert unicode_vpretty(v) == u('ω̈ n_x')
-    assert ascii_vpretty(v) == u('omëga n_x')
+    assert ascii_vpretty(v) == u('  2\n d\n---(omega) n_x\n  2\ndt')
 
     # Third order
     v = omega.diff().diff().diff() * N.x
 
     assert v._latex() == r'\dddot{\omega}\mathbf{\hat{n}_x}'
     assert unicode_vpretty(v) == u('ω⃛ n_x')
-    assert ascii_vpretty(v) == u('ome⃛ga n_x')
+    assert ascii_vpretty(v) == u('  3\n d\n---(omega) n_x\n  3\ndt')
 
     # Fourth order
     v = omega.diff().diff().diff().diff() * N.x
 
     assert v._latex() == r'\ddddot{\omega}\mathbf{\hat{n}_x}'
     assert unicode_vpretty(v) == u('ω⃜ n_x')
-    assert ascii_vpretty(v) == u('ome⃜ga n_x')
+    assert ascii_vpretty(v) == u('  4\n d\n---(omega) n_x\n  4\ndt')
 
     # Fifth order
     v = omega.diff().diff().diff().diff().diff() * N.x
