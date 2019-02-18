@@ -2363,9 +2363,7 @@ def encipher_bg(i, key, seed=None):
         rand_bits.append(x % 2)
         x = x**2 % key
 
-    encrypt_msg = []
-    for (m, b) in zip(enc_msg, rand_bits):
-        encrypt_msg.append(m ^ b)
+    encrypt_msg = [m ^ b for (m, b) in zip(enc_msg, rand_bits)]
 
     return (encrypt_msg, x_L)
 
