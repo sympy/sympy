@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import pi, oo, Wild
+from sympy import pi, oo, Wild, Basic
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.compatibility import is_sequence
@@ -440,13 +440,13 @@ class FourierSeries(SeriesBase):
         return self.__add__(-other)
 
 
-class FiniteFourierSeries(object):
-
-    def __init__(self, series):
-        self.series = series
+class FiniteFourierSeries(Basic):
+    def __new__(cls, *args):
+        obj = Basic.__new__(cls, *args)
+        return obj
 
     def truncate(self, n=3):
-        return self.series
+        return Add(*self._args)
 
 
 def fourier_series(f, limits=None):
