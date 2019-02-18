@@ -16,7 +16,7 @@ from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
 from sympy.integrals.integrals import Integral
 
-x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
+x, y, a, t, x_1, x_2, z, s, b= symbols('x y a t x_1 x_2 z s b')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -1465,6 +1465,11 @@ def test_issue_15640_log_substitutions():
     f = sqrt(log(x))/x**2
     F = -sqrt(pi)*erfc(sqrt(log(x)))/2 - sqrt(log(x))/x
     assert integrate(f, x) == F and F.diff(x) == f
+
+def test_issue_15509():
+    assert integrate(cos(a*x + b), (x, x_1, x_2)) == Piecewise(
+        (-sin(a*x_1 + b)/a + sin(a*x_2 + b)/a, (a > -oo) & (a < oo) & Ne(a, 0)), \
+            (-x_1*cos(b) + x_2*cos(b), True))
 
 
 def test_issue_4311():

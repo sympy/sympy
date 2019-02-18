@@ -450,7 +450,6 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     rev_mapping = {v: k for k, v in mapping}                            #
     if mappings is None:                                                #
         # optimizing the number of permutations of mapping              #
-        assert mapping[-1][0] == x  # if not, find it and correct this comment
         unnecessary_permutations = [mapping.pop(-1)]
         mappings = permutations(mapping)
     else:
