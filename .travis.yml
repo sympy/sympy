@@ -2,7 +2,7 @@ language: python
 sudo: false
 stages:
   - baseline
-  - fulltest
+  - test
 env:
   matrix:
   - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
@@ -49,7 +49,7 @@ matrix:
       env:
         - SPLIT="4/4" TEST_SYMPY="true"
 
-    - stage: fulltest
+    - stage: test
     - python: 2.7
       env:
         - TEST_ASCII="true"
