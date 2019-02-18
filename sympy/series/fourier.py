@@ -440,6 +440,15 @@ class FourierSeries(SeriesBase):
         return self.__add__(-other)
 
 
+class FiniteFourierSeries:
+
+    def __init__(self, series):
+        self.series = series
+
+    def truncate(self, n=3):
+        return self.series
+
+
 def fourier_series(f, limits=None):
     """Computes Fourier sine/cosine series expansion.
 
@@ -506,7 +515,7 @@ def fourier_series(f, limits=None):
     is_finite, res_f = finite_check(f, x, L)
 
     if is_finite:
-        return res_f
+        return FiniteFourierSeries(res_f)
 
     n = Dummy('n')
     neg_f = f.subs(x, -x)
