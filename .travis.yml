@@ -1,5 +1,8 @@
 language: python
 sudo: false
+stages:
+  - baseline
+  - fulltest
 env:
   matrix:
   - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
@@ -19,6 +22,7 @@ python:
 
 matrix:
   include:
+    - stage: baseline
     - python: 3.7
       dist: xenial
       sudo: true
@@ -45,6 +49,7 @@ matrix:
       env:
         - SPLIT="4/4" TEST_SYMPY="true"
 
+    - stage: fulltest
     - python: 2.7
       env:
         - TEST_ASCII="true"
