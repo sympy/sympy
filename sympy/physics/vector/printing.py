@@ -202,7 +202,6 @@ class VectorPrettyPrinter(PrettyPrinter):
         lu = len(uni) // 2 + 1
         pic_split = [pic[:lp], pic[lp:]]
         uni_split = [uni[:lu], uni[lu:]]
-        
         d['picture'] = [pic_split[0] + dots[dot_i] + pic_split[1]]
         d['unicode'] =  uni_split[0] + dots[dot_i] + uni_split[1]
 
