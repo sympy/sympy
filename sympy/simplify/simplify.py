@@ -594,19 +594,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         # automatically passed to gammasimp
         expr = combsimp(expr)
 
-    if expr.has(Sum):
-        expr = sum_simplify(expr)
-    try:
-        if expr.has(Integral):
-            l=0
-            expr_ = expr.args[0]
-            args = Add.make_args(expr_)
-            for arg in args:
-                coeff, g = arg.as_independent(expr.args[1][0])
-                l = Add(coeff*Integral(g, expr.args[1]),l)
-            return l
-    except TypeError:
-        pass
+    if expr.has(Sum, Integral):
+        expr = extract_constants_from_sum_integral(expr)
 
     if expr.has(Product):
         expr = product_simplify(expr)
@@ -726,6 +715,22 @@ def sum_combine(s_t):
             result = Add(result, s_term)
 
     return result
+
+def extract_constants_from_sum_integral(expr):
+
+    from sympy import Sum, Integral
+
+    si = expr.atoms(Sum, Integral)
+    reps = dict()
+    for i in si:
+        limsym = [a[0] for a in i.args[1:]]
+        e = i.args[0]
+        if isinstance(e, Add):
+            e = factor_terms(e)
+        c, d = e.as_independent(*limsym, as_Add=False)
+        if c != 1:
+            reps[i] = c*i.func(d, *i.args[1:])
+    return expr.xreplace(reps)
 
 def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, sign=True):
     """Helper function for Sum simplification
