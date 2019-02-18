@@ -783,5 +783,5 @@ def test_nc_simplify():
     assert nc_simplify(2*x**2) == 2*x**2
 
 def test_issue_15965():
-    x, y, z = symbols('x y z')
-    assert simplify(Integral(x*y-z,x)) == y*Integral(x, x) - z*Integral(1, x)
+    x, y, z, n = symbols('x y z n')
+    assert simplify(Integral(x*y,x)+Sum(z*x**y, (x, 1, n))) == y*Integral(x, x) + z*Sum(x**y, (x,1, n))
