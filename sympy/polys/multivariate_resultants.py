@@ -184,6 +184,8 @@ class MacaulayResultant():
 
     >>> mac = MacaulayResultant(polynomials=[f, g, h], variables=[x, y, z])
     >>> mac.monomial_set
+    [x**4, x**3*y, x**3*z, x**2*y**2, x**2*y*z, x**2*z**2, x*y**3,
+    x*y**2*z, x*y*z**2, x*z**3, y**4, y**3*z, y**2*z**2, y*z**3, z**4]
     >>> matrix = mac.get_matrix()
     >>> submatrix = mac.get_submatrix(matrix)
     >>> submatrix
