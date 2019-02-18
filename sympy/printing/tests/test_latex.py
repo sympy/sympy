@@ -694,6 +694,15 @@ def test_latex_sequences():
     latex_str = r'\left[\ldots, 18, 4, 2, 0\right]'
     assert latex(SeqMul(s5, s6)) == latex_str
 
+    # Sequences with symbolic limits, issue 12629
+    s7 = SeqFormula(a**2, (a, 0, x))
+    latex_str = r'\left\{a^{2}\right\}_{a=0}^{x}'
+    assert latex(s7) == latex_str
+
+    b = Symbol('b')
+    s8 = SeqFormula(b*a**2, (a, 0, 2))
+    latex_str = r'\left[0, b, 4 b\right]'
+    assert latex(s8) == latex_str
 
 def test_latex_FourierSeries():
     latex_str = r'2 \sin{\left(x \right)} - \sin{\left(2 x \right)} + \frac{2 \sin{\left(3 x \right)}}{3} + \ldots'
@@ -1883,6 +1892,13 @@ def test_latex_printer_tensor():
     assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'
 
 
+def test_issue_15353():
+    from sympy import nonlinsolve, sin, cos, symbols
+    a, x = symbols('a x')
+    sol = nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
+    assert latex(sol) == r'\left\{\left( x, \  a\right) \mid \left( x, \  a\right) \in \mathbb{C} \wedge \left\{\sin{\left(a x \right)}, \cos{\left(a x \right)}\right\} \right\}'
+
+
 def test_trace():
     # Issue 15303
     from sympy import trace
@@ -1913,6 +1929,25 @@ def test_print_basic():
     assert latex(unimplemented_expr(x)) == r'UnimplementedExpr\left(x\right)'
     assert latex(unimplemented_expr(x**2)) == r'UnimplementedExpr\left(x^{2}\right)'
     assert latex(unimplemented_expr_sup_sub(x)) == r'UnimplementedExpr^{1}_{x}\left(x\right)'
+
+
+def test_MatrixSymbol_bold():
+    # Issue #15871
+    from sympy import trace
+    A = MatrixSymbol("A", 2, 2)
+    assert latex(trace(A), mat_symbol_style='bold') == r"\mathrm{tr}\left(\mathbf{A} \right)"
+
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    C = MatrixSymbol("C", 3, 3)
+
+    assert latex(-A, mat_symbol_style='bold') == r"- \mathbf{A}"
+    assert latex(A - A*B - B, mat_symbol_style='bold') == r"\mathbf{A} - \mathbf{A} \mathbf{B} - \mathbf{B}"
+    assert latex(-A*B - A*B*C - B, mat_symbol_style='bold') == r"- \mathbf{A} \mathbf{B} - \mathbf{A} \mathbf{B} \mathbf{C} - \mathbf{B}"
+
+    A = MatrixSymbol("A_k", 3, 3)
+    assert latex(A, mat_symbol_style='bold') == r"\mathbf{A_{k}}"
+
 
 def test_imaginary_unit():
     assert latex(1 + I) == '1 + i'

@@ -48,7 +48,7 @@ def test_get_upper_degree():
     h = c * x ** 2 + y
     dixon = DixonResultant(polynomials=[h, q], variables=[x, y])
 
-    assert dixon.get_upper_degree() == 2
+    assert dixon.get_upper_degree() == 3
 
 def test_get_dixon_matrix_example_two():
     """Test Dixon's matrix for example from [Palancz08]_."""
