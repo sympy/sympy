@@ -95,7 +95,6 @@ def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
     from sympy import Q
     assert _test_args(UnevaluatedOnFree(Q.positive))
     assert _test_args(UnevaluatedOnFree(Q.positive(x)))
-    assert _test_args(UnevaluatedOnFree(Q.positive(x*y)))
 
 def test_sympy__assumptions__sathandlers__AllArgs():
     from sympy.assumptions.sathandlers import AllArgs
@@ -3760,6 +3759,10 @@ def test_sympy__series__series_class__SeriesBase():
 def test_sympy__series__fourier__FourierSeries():
     from sympy.series.fourier import fourier_series
     assert _test_args(fourier_series(x, (x, -pi, pi)))
+
+def test_sympy__series__fourier__FiniteFourierSeries():
+    from sympy.series.fourier import fourier_series
+    assert _test_args(fourier_series(sin(pi*x), (x, -1, 1)))
 
 
 def test_sympy__series__formal__FormalPowerSeries():
