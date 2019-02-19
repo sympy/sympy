@@ -1005,6 +1005,49 @@ class Ellipse(GeometrySet):
         """
         return self.major * (1 - self.eccentricity ** 2)
 
+    def auxiliary_circle(self, x='x', y='y'):
+        """Returns equation of auxiliary circle of the ellipse.
+
+        Parameters
+        ==========
+
+        x : str, optional
+            Label for the x-axis. Default value is 'x'.
+        y : str, optional
+            Label for the y-axis. Default value is 'y'.
+
+        Returns
+        =======
+
+        equation : sympy expression
+
+        Examples
+        ========
+
+        >>> from sympy import Point2D, Ellipse, Circle
+        >>> e1 = Ellipse(Point2D(3, 0), 7, 8)
+        >>> e1.auxiliary_circle()
+        y**2 + (x - 3)**2 - 64
+        >>> c1 = Circle(Point2D(2, 0), 4)
+        >>> c1.auxiliary_circle()
+        y**2 + (x - 2)**2 - 16
+        """
+        if(self.hradius != 100 and self.vradius != 100):
+            if(self.hradius >= self.vradius):
+                x = _symbol(x, real=True)
+                y = _symbol(y, real=True)
+                t1 = (x - self.center.x)**2
+                t2 = (y - self.center.y)**2
+                return t1 + t2 - (self.hradius**2)
+            else:
+                x = _symbol(x, real=True)
+                y = _symbol(y, real=True)
+                t1 = (x - self.center.x)**2
+                t2 = (y - self.center.y)**2
+                return t1 + t2 - (self.vradius**2)
+        else:
+            raise NotImplementedError('Auxiliary Circle of arbitrary Ellipse is not supported.')
+
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.
 
