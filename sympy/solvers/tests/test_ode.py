@@ -3070,19 +3070,23 @@ def test_issue_11290():
 
 
 def test_issue_4838():
+    # Issue #15999
     eq = f(x).diff(x) - C1*f(x)
     sol = Eq(f(x), C2*exp(C1*x))
     assert dsolve(eq, f(x)) == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False) == (True, 0)
 
-
-# FIXME: fails due to issue #15999
-@XFAIL
-def test_issue_13691():
+    # Issue #13691
     eq = f(x).diff(x) - C1*g(x).diff(x)
-    ans = Eq(f(x), C2 + C1*g(x))
-    sol = dsolve(eq, f(x))
-    assert str(sol) == str(ans)
+    sol = Eq(f(x), C2 + C1*g(x))
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, f(x), order=1, solve_for_func=False) == (True, 0)
+
+    # Issue #4838
+    eq = f(x).diff(x) - 3*C1 - 3*x**2
+    sol = Eq(f(x), C2 + 3*C1*x + x**3)
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=1, solve_for_func=False) == (True, 0)
 
 
 def test_issue_14395():
@@ -3256,13 +3260,11 @@ def test_nth_algebraic():
 
 
 def test_nth_algebraic_issue15999():
-    # FIXME: When issue 4838 is resolved this test should be changed...
     eqn = f(x).diff(x) - C1
-    sol1 = Eq(f(x), C1*x + C2) # Correct solution
-    sol2 = Eq(f(x), C2*x + C1) # Incorrect: issue 4838
-    assert checkodesol(eqn, sol1, order=1, solve_for_func=False) == (True, 0)
-    assert dsolve(eqn, f(x), hint='nth_algebraic') == sol2
-    assert dsolve(eqn, f(x)) == sol2
+    sol = Eq(f(x), C1*x + C2) # Correct solution
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False) == (True, 0)
+    assert dsolve(eqn, f(x), hint='nth_algebraic') == sol
+    assert dsolve(eqn, f(x)) == sol
 
 
 def test_nth_algebraic_redundant_solutions():
