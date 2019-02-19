@@ -806,3 +806,10 @@ def test_Equality_rewrite_as_Add():
 def test_issue_15847():
     a = Ne(x*(x+y), x**2 + x*y)
     assert simplify(a) == False
+
+
+def test_issue_12690():
+    from sympy import Symbol
+    x = Symbol('x', positive = True)
+    assert Eq(pi/x, 0) == None
+    assert Eq(1/x, pi/x) == None
