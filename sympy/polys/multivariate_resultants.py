@@ -19,7 +19,6 @@ from sympy.functions.combinatorial.factorials import binomial
 
 from itertools import combinations_with_replacement
 
-from operator import itemgetter
 
 class DixonResultant():
     """
@@ -268,16 +267,6 @@ class MacaulayResultant():
 
         return sorted(monomials, reverse=True,
                       key=monomial_key('lex', self.variables))
-
-    def get_monomials_set(self):
-        r"""
-        Returns
-        -------
-        self.monomial_set: set
-            The set T. Set of all possible monomials of degree degree_m
-        """
-        monomial_set = self.get_monomials_of_certain_degree(self.degree_m)
-        self.monomial_set = monomial_set
 
     def get_row_coefficients(self):
         """
