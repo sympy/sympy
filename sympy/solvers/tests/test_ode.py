@@ -3069,7 +3069,7 @@ def test_order_reducible():
 
     eqn = Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2))
     sol = Eq(f(x),
-             C1 - sqrt(-1/C1)*log(-C1*sqrt(-1/C1) + x) + sqrt(-1/C1)*log(C1*sqrt(-1/C1) + x))
+             C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert sol == dsolve(eqn, f(x), hint='order_reducible')
     assert sol == dsolve(eqn, f(x))
@@ -3121,7 +3121,7 @@ def test_order_reducible_6():
     eqn = f(x).diff(x, 4) - f(x).diff(x, 3) - 4*f(x).diff(x, 2) + \
         4*f(x).diff(x)
     sol = Eq(f(x), C1 + C2*exp(x) + C3*exp(-2*x) + C4*exp(2*x))
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol, 'C', 1, 4)
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
@@ -3129,7 +3129,7 @@ def test_order_reducible_6():
 def test_order_reducible_7():
     eqn = f(x).diff(x, 4) + 3*f(x).diff(x, 3)
     sol = Eq(f(x), C1 + C2*x + C3*x**2 + C4*exp(-3*x))
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol, 'C', 1, 4)
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
@@ -3137,7 +3137,7 @@ def test_order_reducible_7():
 def test_order_reducible_8():
     eqn = f(x).diff(x, 4) - 2*f(x).diff(x, 2)
     sol = Eq(f(x), C1 + C2*x + C3*exp(x*sqrt(2)) + C4*exp(-x*sqrt(2)))
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol, 'C', 1, 4)
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
@@ -3145,18 +3145,22 @@ def test_order_reducible_8():
 def test_order_reducible_9():
     eqn = f(x).diff(x, 4) + 4*f(x).diff(x, 2)
     sol = Eq(f(x), C1 + C2*sin(2*x) + C3*cos(2*x) + C4*x)
-    sols = constant_renumber(sol, 'C', 1, 3)
+    sols = constant_renumber(sol, 'C', 1, 4)
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
 
 def test_order_reducible_10():
     eqn = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x)
-    sol = Eq(f(x), C1 + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
-    sols = constant_renumber(sol, 'C', 1, 2)
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
-    assert dsolve(eqn, f(x)) in (sol, sols)
-    assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
+    # These are equivalent:
+    sol1 = Eq(f(x), C1 + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
+    sol2 = Eq(f(x), C1 + C2*(x*sin(x) + cos(x)) + C3*(-x*cos(x) + sin(x)) + C4*sin(x) + C5*cos(x))
+    sol1s = constant_renumber(sol1, 'C', 1, 5)
+    sol2s = constant_renumber(sol2, 'C', 1, 5)
+    assert checkodesol(eqn, sol1, order=2, solve_for_func=False) == (True, 0)
+    assert checkodesol(eqn, sol2, order=2, solve_for_func=False) == (True, 0)
+    assert dsolve(eqn, f(x)) in (sol1, sol1s)
+    assert dsolve(eqn, f(x), hint='order_reducible') in (sol2, sol2s)
 
 def test_nth_algebraic():
     eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
