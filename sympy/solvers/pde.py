@@ -681,7 +681,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     differential equation is
 
     .. math:: a(x, y) \frac{df(x, y)}{dx} + a(x, y) \frac{df(x, y)}{dy}
-                + c(x, y) f(x, y) - G(x, y)
+                + c(x, y) f(x, y) = G(x, y)
 
     where `a(x, y)`, `b(x, y)`, `c(x, y)` and `G(x, y)` are arbitrary
     functions in `x` and `y`. This PDE is converted into an ODE by
@@ -690,15 +690,13 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     1. `\xi` as `x`
 
     2. `\eta` as the constant in the solution to the differential
-      equation `\frac{dy}{dx} = -\frac{b}{a}`
+       equation `\frac{dy}{dx} = -\frac{b}{a}`
 
     Making the following substitutions reduces it to the linear ODE
 
     .. math:: a(\xi, \eta)\frac{du}{d\xi} + c(\xi, \eta)u - d(\xi, \eta) = 0
 
-    which can be solved using dsolve.
-
-    The general form of this PDE is::
+    which can be solved using ``dsolve``.
 
         >>> from sympy.solvers.pde import pdsolve
         >>> from sympy.abc import x, y
