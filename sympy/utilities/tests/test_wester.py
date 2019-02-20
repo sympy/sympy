@@ -33,7 +33,7 @@ from sympy.matrices import Matrix, GramSchmidt, eye
 from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
 from sympy.physics.quantum import Commutator
-from sympy.assumptions import assuming, ImageSet
+from sympy.assumptions import assuming
 from sympy.polys.rings import vring
 from sympy.polys.fields import vfield
 from sympy.polys.solvers import solve_lin_sys
@@ -45,6 +45,7 @@ from sympy.integrals.transforms import laplace_transform,\
     mellin_transform
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.sets import ImageSet
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.solveset import solveset, solveset_real, linsolve
 from sympy.solvers.ode import dsolve
