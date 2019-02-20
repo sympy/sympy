@@ -344,8 +344,8 @@ class Equality(Relational):
                     if lhs == -rhs:  # Eq(oo, -oo)
                         return S.false
                     return S.true
-            else:
-                return None
+            elif None in fin:
+                return Relational.__new__(cls, lhs, rhs, **options)
 
             if all(isinstance(i, Expr) for i in (lhs, rhs)):
                 # see if the difference evaluates
