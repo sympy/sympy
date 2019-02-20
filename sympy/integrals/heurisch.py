@@ -5,9 +5,9 @@ from itertools import permutations
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Wild, Dummy
+from sympy.core.symbol import Wild, Dummy, symbols
 from sympy.core.basic import sympify
-from sympy.core.numbers import Rational, pi
+from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 
@@ -18,6 +18,8 @@ from sympy.functions import besselj, bessely, besseli, besselk
 from sympy.functions import hankel1, hankel2, jn, yn
 from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.elementary.piecewise import Piecewise
+
+from sympy.simplify.radsimp import collect
 
 from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
@@ -593,6 +595,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     def _integrate(field=None):
         irreducibles = set()
+        atans = set()
+        pairs = set()
 
         for poly in reducibles:
             for z in poly.free_symbols:
@@ -604,8 +608,33 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                            #               V
             irreducibles |= set(root_factors(poly, z, filter=field))
 
-        log_coeffs, log_part = [], []
+        log_part, atan_part = [], []
+
+        for poly in list(irreducibles):
+            m = collect(poly, I, evaluate=False)
+            y = m.get(I, S.Zero)
+            if y:
+                x = m.get(S.One, S.Zero)
+                if x.has(I) or y.has(I):
+                    continue  # nontrivial x + I*y
+                pairs.add((x, y))
+                irreducibles.remove(poly)
+
+        while pairs:
+            x, y = pairs.pop()
+            if (x, -y) in pairs:
+                pairs.remove((x, -y))
+                # Choosing b with no minus sign
+                if y.could_extract_minus_sign():
+                    y = -y
+                irreducibles.add(x*x + y*y)
+                atans.add(atan(x/y))
+            else:
+                irreducibles.add(x + I*y)
+
+
         B = _symbols('B', len(irreducibles))
+        C = _symbols('C', len(atans))
 
         # Note: the ordering matters here
         for poly, b in reversed(list(ordered(zip(irreducibles, B)))):
@@ -613,12 +642,17 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 poly_coeffs.append(b)
                 log_part.append(b * log(poly))
 
+        for poly, c in reversed(list(ordered(zip(atans, C)))):
+            if poly.has(*V):
+                poly_coeffs.append(c)
+                atan_part.append(c * poly)
+
         # TODO: Currently it's better to use symbolic expressions here instead
         # of rational functions, because it's simpler and FracElement doesn't
         # give big speed improvement yet. This is because cancellation is slow
         # due to slow polynomial GCD algorithms. If this gets improved then
         # revise this code.
-        candidate = poly_part/poly_denom + Add(*log_part)
+        candidate = poly_part/poly_denom + Add(*log_part) + Add(*atan_part)
         h = F - _derivation(candidate) / denom
         raw_numer = h.as_numer_denom()[0]
 

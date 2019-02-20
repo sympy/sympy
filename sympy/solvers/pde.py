@@ -429,7 +429,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     >>> assert checkpdesol(eq, sol)[0]
     >>> eq = x*f(x,y) + f(x,y).diff(x)
     >>> checkpdesol(eq, sol)
-    (False, (x*F(4*x - 3*y) - 6*F(4*x - 3*y)/25 + 4*Subs(Derivative(F(_xi_1), _xi_1), (_xi_1,), (4*x - 3*y,)))*exp(-6*x/25 - 8*y/25))
+    (False, (x*F(4*x - 3*y) - 6*F(4*x - 3*y)/25 + 4*Subs(Derivative(F(_xi_1), _xi_1), _xi_1, 4*x - 3*y))*exp(-6*x/25 - 8*y/25))
     """
 
     # Converting the pde into an equation

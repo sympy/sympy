@@ -103,7 +103,7 @@ def test_multiplicity():
     raises(ValueError, lambda: multiplicity(1.3, 0))
 
     # handles Rationals
-    assert multiplicity(10, Rational(30, 7)) == 0
+    assert multiplicity(10, Rational(30, 7)) == 1
     assert multiplicity(Rational(2, 7), Rational(4, 7)) == 1
     assert multiplicity(Rational(1, 7), Rational(3, 49)) == 2
     assert multiplicity(Rational(2, 7), Rational(7, 2)) == -1
@@ -172,6 +172,15 @@ def test_factorint():
     assert factorint(5951757, multiple=True) == [3, 7, 29, 29, 337]
     assert factorint(64015937, multiple=True) == [7993, 8009]
     assert factorint(2**(2**6) + 1, multiple=True) == [274177, 67280421310721]
+
+    assert factorint(fac(1, evaluate=False)) == {}
+    assert factorint(fac(7, evaluate=False)) == {2: 4, 3: 2, 5: 1, 7: 1}
+    assert factorint(fac(15, evaluate=False)) == \
+        {2: 11, 3: 6, 5: 3, 7: 2, 11: 1, 13: 1}
+    assert factorint(fac(20, evaluate=False)) == \
+        {2: 18, 3: 8, 5: 4, 7: 2, 11: 1, 13: 1, 17: 1, 19: 1}
+    assert factorint(fac(23, evaluate=False)) == \
+        {2: 19, 3: 9, 5: 4, 7: 3, 11: 2, 13: 1, 17: 1, 19: 1, 23: 1}
 
     assert multiproduct(factorint(fac(200))) == fac(200)
     assert multiproduct(factorint(fac(200, evaluate=False))) == fac(200)
@@ -462,10 +471,10 @@ def test_factorrat():
 
     assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
     assert factorrat(S(1)/1, multiple=True) == []
-    assert factorrat(S(25)/14, multiple=True) == [1/7, 1/2, 5, 5]
+    assert factorrat(S(25)/14, multiple=True) == [S(1)/7, S(1)/2, 5, 5]
     assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
     assert factorrat(S(-25)/14/9, multiple=True) == \
-        [-1, 1/7, 1/3, 1/3, 1/2, 5, 5]
+        [-1, S(1)/7, S(1)/3, S(1)/3, S(1)/2, 5, 5]
 
 
 def test_visual_io():

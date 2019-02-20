@@ -68,11 +68,6 @@ def test_gamma():
     assert gamma(3*exp_polar(I*pi)/4).is_nonnegative is False
     assert gamma(3*exp_polar(I*pi)/4).is_nonpositive is True
 
-    # Issue 8526
-    k = Symbol('k', integer=True, nonnegative=True)
-    assert isinstance(gamma(k), gamma)
-    assert gamma(-k) == zoo
-
 
 def test_gamma_rewrite():
     assert gamma(n).rewrite(factorial) == factorial(n - 1)
@@ -230,6 +225,7 @@ def test_polygamma():
     assert t(4, 3)
     assert t(3, 4)
     assert t(2, 3)
+    assert t(123, 5)
 
     assert polygamma(0, x).rewrite(zeta) == polygamma(0, x)
     assert polygamma(1, x).rewrite(zeta) == zeta(2, x)
@@ -409,7 +405,7 @@ def test_issue_8657():
     m = Symbol('m', integer=True)
     o = Symbol('o', positive=True)
     p = Symbol('p', negative=True, integer=False)
-    assert gamma(n).is_real is False
+    assert gamma(n).is_real is None
     assert gamma(m).is_real is None
     assert gamma(o).is_real is True
     assert gamma(p).is_real is True
@@ -432,3 +428,14 @@ def test_issue_8524():
     assert gamma(r).is_positive is None
     assert gamma(e + S.Half).is_positive is True
     assert gamma(e - S.Half).is_positive is False
+
+def test_issue_14450():
+    assert uppergamma(S(3)/8, x).evalf() == uppergamma(0.375, x)
+    assert lowergamma(x, S(3)/8).evalf() == lowergamma(x, 0.375)
+    # some values from Wolfram Alpha for comparison
+    assert abs(uppergamma(S(3)/8, 2).evalf() - 0.07105675881) < 1e-9
+    assert abs(lowergamma(S(3)/8, 2).evalf() - 2.2993794256) < 1e-9
+
+def test_issue_14528():
+    k = Symbol('k', integer=True, nonpositive=True)
+    assert isinstance(gamma(k), gamma)

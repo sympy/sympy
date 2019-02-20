@@ -1,9 +1,9 @@
 from sympy import KroneckerDelta, diff, Piecewise, And
-from sympy import Sum
+from sympy import Sum, Dummy, factor, expand
 
 from sympy.core import S, symbols, Add, Mul
 from sympy.core.compatibility import long
-from sympy.functions import transpose, sin, cos, sqrt
+from sympy.functions import transpose, sin, cos, sqrt, cbrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
@@ -142,6 +142,10 @@ def test_multiplication():
     B = MatrixSymbol('B', n, n)
     assert Identity(n) * (A + B) == A + B
 
+    assert A**2*A == A**3
+    assert A**2*(A.I)**3 == A.I
+    assert A**3*(A.I)**2 == A
+
 
 def test_MatPow():
     A = MatrixSymbol('A', n, n)
@@ -155,7 +159,10 @@ def test_MatPow():
     assert A**1 == A
     assert A**2 == AA
     assert A**-1 == Inverse(A)
+    assert (A**-1)**-1 == A
+    assert (A**2)**3 == A**6
     assert A**S.Half == sqrt(A)
+    assert A**(S(1)/3) == cbrt(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
 
 
@@ -291,6 +298,11 @@ def test_matrixelement_diff():
     assert w[k, p].diff(w[0, 0]) == KroneckerDelta(0, k)*KroneckerDelta(0, p)
     assert str(dexpr) == "Sum(KroneckerDelta(_i_1, p)*D[k, _i_1], (_i_1, 0, n - 1))"
     assert str(dexpr.doit()) == 'Piecewise((D[k, p], (p >= 0) & (p <= n - 1)), (0, True))'
+    # TODO: bug with .dummy_eq( ), the previous 2 lines should be replaced by:
+    return  # stop eval
+    _i_1 = Dummy("_i_1")
+    assert dexpr.dummy_eq(Sum(KroneckerDelta(_i_1, p)*D[k, _i_1], (_i_1, 0, n - 1)))
+    assert dexpr.doit().dummy_eq(Piecewise((D[k, p], (p >= 0) & (p <= n - 1)), (0, True)))
 
 
 def test_MatrixElement_with_values():
@@ -326,3 +338,17 @@ def test_MatrixElement_with_values():
 def test_inv():
     B = MatrixSymbol('B', 3, 3)
     assert B.inv() == B**-1
+
+def test_factor_expand():
+    A = MatrixSymbol("A", n, n)
+    B = MatrixSymbol("B", n, n)
+    expr1 = (A + B)*(C + D)
+    expr2 = A*C + B*C + A*D + B*D
+    assert expr1 != expr2
+    assert expand(expr1) == expr2
+    assert factor(expr2) == expr1
+
+def test_issue_2749():
+    A = MatrixSymbol("A", 5, 2)
+    assert (A.T * A).I.as_explicit() == Matrix([[(A.T * A).I[0, 0], (A.T * A).I[0, 1]], \
+    [(A.T * A).I[1, 0], (A.T * A).I[1, 1]]])

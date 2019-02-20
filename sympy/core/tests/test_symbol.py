@@ -47,18 +47,6 @@ def test_Dummy_force_dummy_index():
     assert Dummy()._count == Dummy('d', dummy_index=3)._count
 
 
-def test_as_dummy():
-    x = Symbol('x')
-    x1 = x.as_dummy()
-    assert x1 != x
-    assert x1 != x.as_dummy()
-
-    x = Symbol('x', commutative=False)
-    x1 = x.as_dummy()
-    assert x1 != x
-    assert x1.is_commutative is False
-
-
 def test_lt_gt():
     from sympy import sympify as S
     x, y = Symbol('x'), Symbol('y')
@@ -332,10 +320,13 @@ def test_symbols():
     raises(ValueError, lambda: symbols('::a'))
 
 
-def test_call():
-    f = Symbol('f')
-    assert f(2)
-    raises(TypeError, lambda: Wild('x')(1))
+def test_symbols_become_functions_issue_3539():
+    from sympy.abc import alpha, phi, beta, t
+    raises(TypeError, lambda: beta(2))
+    raises(TypeError, lambda: beta(2.5))
+    raises(TypeError, lambda: phi(2.5))
+    raises(TypeError, lambda: alpha(2.5))
+    raises(TypeError, lambda: phi(t))
 
 
 def test_unicode():

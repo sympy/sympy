@@ -165,7 +165,7 @@ from .definitions import (
     von_klitzing_constant,
     amu, amus, atomic_mass_unit, atomic_mass_constant,
     gee, gees, acceleration_due_to_gravity,
-    u0, magnetic_constant,
+    u0, magnetic_constant, vacuum_permeability,
     e0, electric_constant, vacuum_permittivity,
     Z0, vacuum_impedance,
     coulomb_constant, electric_force_constant,

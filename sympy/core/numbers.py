@@ -3,9 +3,7 @@ from __future__ import print_function, division
 import decimal
 import fractions
 import math
-import warnings
 import re as regex
-from collections import defaultdict
 
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError, _convert_numpy_types
@@ -17,6 +15,8 @@ from .logic import fuzzy_not
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
+from sympy.core.cache import lru_cache
+
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp.backend import MPZ
@@ -153,11 +153,10 @@ def _literal_float(f):
     return bool(regex.match(pat, f))
 
 # (a,b) -> gcd(a,b)
-_gcdcache = {}
 
 # TODO caching with decorator, but not to degrade performance
 
-
+@lru_cache(1024)
 def igcd(*args):
     """Computes nonnegative integer greatest common divisor.
 
@@ -177,33 +176,12 @@ def igcd(*args):
     if len(args) < 2:
         raise TypeError(
             'igcd() takes at least 2 arguments (%s given)' % len(args))
-    if 1 in args:
-        a = 1
-        k = 0
-    else:
-        a = abs(as_int(args[0]))
-        k = 1
-    if a != 1:
-        while k < len(args):
-            b = args[k]
-            k += 1
-            try:
-                a = _gcdcache[(a, b)]
-            except KeyError:
-                b = as_int(b)
-                if not b:
-                    continue
-                if b == 1:
-                    a = 1
-                    break
-                if b < 0:
-                    b = -b
-                t = a, b
-                a = igcd2(a, b)
-                _gcdcache[t] = _gcdcache[t[1], t[0]] = a
-    while k < len(args):
-        ok = as_int(args[k])
-        k += 1
+    args_temp = [abs(as_int(i)) for i in args]
+    if 1 in args_temp:
+        return 1
+    a = args_temp.pop()
+    for b in args_temp:
+        a = igcd2(a, b) if b else a
     return a
 
 
@@ -391,7 +369,7 @@ def ilcm(*args):
         return 0
     a = args[0]
     for b in args[1:]:
-        a = a*b // igcd(a, b)
+        a = a // igcd(a, b) * b # since gcd(a,b) | a
     return a
 
 
@@ -440,9 +418,9 @@ def igcdex(a, b):
 
 def mod_inverse(a, m):
     """
-    Return the number c such that, ( a * c ) % m == 1 where
-    c has the same sign as a. If no such value exists, a
-    ValueError is raised.
+    Return the number c such that, (a * c) = 1 (mod m)
+    where c has the same sign as m. If no such value exists,
+    a ValueError is raised.
 
     Examples
     ========
@@ -453,13 +431,13 @@ def mod_inverse(a, m):
     Suppose we wish to find multiplicative inverse x of
     3 modulo 11. This is the same as finding x such
     that 3 * x = 1 (mod 11). One value of x that satisfies
-    this congruence is 4. Because 3 * 4 = 12 and 12 = 1 mod(11).
+    this congruence is 4. Because 3 * 4 = 12 and 12 = 1 (mod 11).
     This is the value return by mod_inverse:
 
     >>> mod_inverse(3, 11)
     4
     >>> mod_inverse(-3, 11)
-    -4
+    7
 
     When there is a common factor between the numerators of
     ``a`` and ``m`` the inverse does not exist:
@@ -480,12 +458,10 @@ def mod_inverse(a, m):
     c = None
     try:
         a, m = as_int(a), as_int(m)
-        if m > 1:
+        if m != 1 and m != -1:
             x, y, g = igcdex(a, m)
             if g == 1:
                 c = x % m
-            if a < 0:
-                c -= m
     except ValueError:
         a, m = sympify(a), sympify(m)
         if not (a.is_number and m.is_number):
@@ -506,16 +482,29 @@ def mod_inverse(a, m):
 
 
 class Number(AtomicExpr):
-    """
-    Represents any kind of number in sympy.
+    """Represents atomic numbers in SymPy.
 
     Floating point numbers are represented by the Float class.
-    Integer numbers (of any size), together with rational numbers (again,
-    there is no limit on their size) are represented by the Rational class.
+    Rational numbers (of any size) are represented by the Rational class.
+    Integer numbers (of any size) are represented by the Integer class.
+    Float and Rational are subclasses of Number; Integer is a subclass
+    of Rational.
 
-    If you want to represent, for example, ``1+sqrt(2)``, then you need to do::
+    For example, ``2/3`` is represented as ``Rational(2, 3)`` which is
+    a different object from the floating point number obtained with
+    Python division ``2/3``. Even for numbers that are exactly
+    represented in binary, there is a difference between how two forms,
+    such as ``Rational(1, 2)`` and ``Float(0.5)``, are used in SymPy.
+    The rational form is to be preferred in symbolic computations.
 
-      Rational(1) + sqrt(Rational(2))
+    Other kinds of numbers, such as algebraic numbers ``sqrt(2)`` or
+    complex numbers ``3 + 4*I``, are not instances of Number class as
+    they are not atomic.
+
+    See Also
+    ========
+
+    Float, Integer, Rational
     """
     is_commutative = True
     is_number = True
@@ -555,7 +544,6 @@ class Number(AtomicExpr):
 
     def __divmod__(self, other):
         from .containers import Tuple
-        from sympy.functions.elementary.complexes import sign
 
         try:
             other = Number(other)
@@ -568,7 +556,7 @@ class Number(AtomicExpr):
             return Tuple(*divmod(self.p, other.p))
         else:
             rat = self/other
-        w = sign(rat)*int(abs(rat))  # = rat.floor()
+        w = int(rat) if rat > 0 else int(rat) - 1
         r = self - other*w
         return Tuple(w, r)
 
@@ -1374,14 +1362,12 @@ RealNumber = Float
 
 
 class Rational(Number):
-    """Represents integers and rational numbers (p/q) of any size.
+    """Represents rational numbers (p/q) of any size.
 
     Examples
     ========
 
     >>> from sympy import Rational, nsimplify, S, pi
-    >>> Rational(3)
-    3
     >>> Rational(1, 2)
     1/2
 
@@ -1473,35 +1459,38 @@ class Rational(Number):
             if isinstance(p, Rational):
                 return p
 
-            if isinstance(p, string_types):
-                if p.count('/') > 1:
-                    raise TypeError('invalid input: %s' % p)
-                pq = p.rsplit('/', 1)
-                if len(pq) == 2:
-                    p, q = pq
-                    fp = fractions.Fraction(p)
-                    fq = fractions.Fraction(q)
-                    f = fp/fq
-                    return Rational(f.numerator, f.denominator, 1)
-                p = p.replace(' ', '')
-                try:
-                    p = fractions.Fraction(p)
-                except ValueError:
-                    pass  # error will raise below
-
-            if not isinstance(p, string_types):
-                try:
-                    if isinstance(p, fractions.Fraction):
-                        return Rational(p.numerator, p.denominator, 1)
-                except NameError:
-                    pass  # error will raise below
-
+            if isinstance(p, SYMPY_INTS):
+                pass
+            else:
                 if isinstance(p, (float, Float)):
                     return Rational(*_as_integer_ratio(p))
 
-            if not isinstance(p, SYMPY_INTS + (Rational,)):
-                raise TypeError('invalid input: %s' % p)
-            q = q or S.One
+                if not isinstance(p, string_types):
+                    try:
+                        p = sympify(p)
+                    except (SympifyError, SyntaxError):
+                        pass  # error will raise below
+                else:
+                    if p.count('/') > 1:
+                        raise TypeError('invalid input: %s' % p)
+                    p = p.replace(' ', '')
+                    pq = p.rsplit('/', 1)
+                    if len(pq) == 2:
+                        p, q = pq
+                        fp = fractions.Fraction(p)
+                        fq = fractions.Fraction(q)
+                        p = fp/fq
+                    try:
+                        p = fractions.Fraction(p)
+                    except ValueError:
+                        pass  # error will raise below
+                    else:
+                        return Rational(p.numerator, p.denominator, 1)
+
+                if not isinstance(p, Rational):
+                    raise TypeError('invalid input: %s' % p)
+
+            q = 1
             gcd = 1
         else:
             p = Rational(p)
@@ -1851,7 +1840,7 @@ class Rational(Number):
     def lcm(self, other):
         if isinstance(other, Rational):
             return Rational(
-                self.p*other.p//igcd(self.p, other.p),
+                self.p // igcd(self.p, other.p) * other.p,
                 igcd(self.q, other.q))
         return Number.lcm(self, other)
 
@@ -1951,7 +1940,32 @@ def int_trace(f):
 
 
 class Integer(Rational):
+    """Represents integer numbers of any size.
 
+    Examples
+    ========
+
+    >>> from sympy import Integer
+    >>> Integer(3)
+    3
+
+    If a float or a rational is passed to Integer, the fractional part
+    will be discarded; the effect is of rounding toward zero.
+
+    >>> Integer(3.8)
+    3
+    >>> Integer(-3.8)
+    -3
+
+    A string is acceptable input if it can be parsed as an integer:
+
+    >>> Integer("9" * 20)
+    99999999999999999999
+
+    It is rarely needed to explicitly instantiate an Integer, because
+    Python integers are automatically converted to Integer when they
+    are used in SymPy expressions.
+    """
     q = 1
     is_integer = True
     is_number = True
@@ -1981,7 +1995,7 @@ class Integer(Rational):
             ival = int(i)
         except TypeError:
             raise TypeError(
-                'Integer can only work with integer expressions.')
+                "Argument of Integer should be of numeric type, got %s." % i)
         try:
             return _intcache[ival]
         except KeyError:
@@ -2351,10 +2365,6 @@ class AlgebraicNumber(Expr):
             rep = DMP.from_list([1, 0], 0, dom)
             scoeffs = Tuple(1, 0)
 
-            if root.is_negative:
-                rep = -rep
-                scoeffs = Tuple(-1, 0)
-
         sargs = (root, scoeffs)
 
         if alias is not None:
@@ -2421,7 +2431,7 @@ class AlgebraicNumber(Expr):
 
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         from sympy.polys import CRootOf, minpoly
 
         for r in [r for r in self.minpoly.all_roots() if r.func != CRootOf]:
@@ -2469,7 +2479,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Zero
+    .. [1] https://en.wikipedia.org/wiki/Zero
     """
 
     p = 0
@@ -2534,7 +2544,7 @@ class One(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/1_%28number%29
+    .. [1] https://en.wikipedia.org/wiki/1_%28number%29
     """
     is_number = True
 
@@ -2586,7 +2596,7 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/%E2%88%921_%28number%29
+    .. [1] https://en.wikipedia.org/wiki/%E2%88%921_%28number%29
 
     """
     is_number = True
@@ -2642,7 +2652,7 @@ class Half(with_metaclass(Singleton, RationalConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/One_half
+    .. [1] https://en.wikipedia.org/wiki/One_half
     """
     is_number = True
 
@@ -2691,7 +2701,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Infinity
+    .. [1] https://en.wikipedia.org/wiki/Infinity
     """
 
     is_commutative = True
@@ -3167,7 +3177,7 @@ class NaN(with_metaclass(Singleton, Number)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/NaN
+    .. [1] https://en.wikipedia.org/wiki/NaN
 
     """
     is_commutative = True
@@ -3405,7 +3415,7 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/E_%28mathematical_constant%29
+    .. [1] https://en.wikipedia.org/wiki/E_%28mathematical_constant%29
     """
 
     is_real = True
@@ -3441,12 +3451,12 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
         from sympy import exp
         return exp(expt)
 
-    def _eval_rewrite_as_sin(self):
+    def _eval_rewrite_as_sin(self, **kwargs):
         from sympy import sin
         I = S.ImaginaryUnit
         return sin(I + S.Pi/2) - I*sin(I)
 
-    def _eval_rewrite_as_cos(self):
+    def _eval_rewrite_as_cos(self, **kwargs):
         from sympy import cos
         I = S.ImaginaryUnit
         return cos(I) + I*cos(I + S.Pi/2)
@@ -3487,7 +3497,7 @@ class Pi(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Pi
+    .. [1] https://en.wikipedia.org/wiki/Pi
     """
 
     is_real = True
@@ -3548,7 +3558,7 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Golden_ratio
+    .. [1] https://en.wikipedia.org/wiki/Golden_ratio
     """
 
     is_real = True
@@ -3589,6 +3599,73 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     _eval_rewrite_as_sqrt = _eval_expand_func
 
 
+class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
+    r"""The tribonacci constant.
+
+    The tribonacci numbers are like the Fibonacci numbers, but instead
+    of starting with two predetermined terms, the sequence starts with
+    three predetermined terms and each term afterwards is the sum of the
+    preceding three terms.
+
+    The tribonacci constant is the ratio toward which adjacent tribonacci
+    numbers tend. It is a root of the polynomial `x^3 - x^2 - x - 1 = 0`,
+    and also satisfies the equation `x + x^{-3} = 2`.
+
+    TribonacciConstant is a singleton, and can be accessed
+    by ``S.TribonacciConstant``.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.TribonacciConstant > 1
+    True
+    >>> S.TribonacciConstant.expand(func=True)
+    1/3 + (-3*sqrt(33) + 19)**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
+    >>> S.TribonacciConstant.is_irrational
+    True
+    >>> S.TribonacciConstant.n(20)
+    1.8392867552141611326
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Generalizations_of_Fibonacci_numbers#Tribonacci_numbers
+    """
+
+    is_real = True
+    is_positive = True
+    is_negative = False
+    is_irrational = True
+    is_number = True
+    is_algebraic = True
+    is_transcendental = False
+
+    __slots__ = []
+
+    def _latex(self, printer):
+        return r"\mathrm{TribonacciConstant}"
+
+    def __int__(self):
+        return 2
+
+    def _eval_evalf(self, prec):
+        rv = self._eval_expand_func(function=True)._eval_evalf(prec + 4)
+        return Float(rv, precision=prec)
+
+    def _eval_expand_func(self, **hints):
+        from sympy import sqrt, cbrt
+        return (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
+
+    def approximation_interval(self, number_cls):
+        if issubclass(number_cls, Integer):
+            return (S.One, Rational(2))
+        elif issubclass(number_cls, Rational):
+            pass
+
+    _eval_rewrite_as_sqrt = _eval_expand_func
+
+
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     r"""The Euler-Mascheroni constant.
 
@@ -3615,7 +3692,7 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
+    .. [1] https://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
     """
 
     is_real = True
@@ -3671,7 +3748,7 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Catalan%27s_constant
+    .. [1] https://en.wikipedia.org/wiki/Catalan%27s_constant
     """
 
     is_real = True
@@ -3722,7 +3799,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Imaginary_unit
+    .. [1] https://en.wikipedia.org/wiki/Imaginary_unit
     """
 
     is_commutative = True
@@ -3735,7 +3812,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     __slots__ = []
 
     def _latex(self, printer):
-        return r"i"
+        return printer._settings['imaginary_unit_latex']
 
     @staticmethod
     def __abs__():
@@ -3769,7 +3846,6 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
                 if expt == 2:
                     return -S.One
                 return -S.ImaginaryUnit
-            return (S.NegativeOne)**(expt*S.Half)
         return
 
     def as_base_exp(self):
@@ -3787,10 +3863,9 @@ I = S.ImaginaryUnit
 
 
 def sympify_fractions(f):
-    return Rational(f.numerator, f.denominator)
+    return Rational(f.numerator, f.denominator, 1)
 
 converter[fractions.Fraction] = sympify_fractions
-
 
 try:
     if HAS_GMPY == 2:
@@ -3816,6 +3891,13 @@ def sympify_mpmath(x):
     return Expr._from_mpmath(x, x.context.prec)
 
 converter[mpnumeric] = sympify_mpmath
+
+
+def sympify_mpq(x):
+    p, q = x._mpq_
+    return Rational(p, q, 1)
+
+converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpq
 
 
 def sympify_complex(a):

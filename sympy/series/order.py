@@ -1,12 +1,12 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, Expr, Rational, Symbol, Dummy
+from sympy.core import S, sympify, Expr, Rational, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
 from sympy.core.containers import Tuple
-from sympy.utilities.iterables import uniq
 from sympy.sets.sets import Complement
+from sympy.utilities.iterables import uniq
 
 
 class Order(Expr):
@@ -93,7 +93,7 @@ class Order(Expr):
     References
     ==========
 
-    .. [1] `Big O notation <http://en.wikipedia.org/wiki/Big_O_notation>`_
+    .. [1] `Big O notation <https://en.wikipedia.org/wiki/Big_O_notation>`_
 
     Notes
     =====
@@ -179,10 +179,14 @@ class Order(Expr):
 
         if variables:
             if any(p != point[0] for p in point):
-                raise NotImplementedError
+                raise NotImplementedError(
+                    "Multivariable orders at different points are not supported.")
             if point[0] is S.Infinity:
                 s = {k: 1/Dummy() for k in variables}
                 rs = {1/v: 1/k for k, v in s.items()}
+            elif point[0] is S.NegativeInfinity:
+                s = {k: -1/Dummy() for k in variables}
+                rs = {-1/v: -1/k for k, v in s.items()}
             elif point[0] is not S.Zero:
                 s = dict((k, Dummy() + point[0]) for k in variables)
                 rs = dict((v - point[0], k - point[0]) for k, v in s.items())
@@ -306,7 +310,7 @@ class Order(Expr):
             if (not all(o[1] == order_symbols[0][1] for o in order_symbols) and
                     not all(p == self.point[0] for p in self.point)):  # pragma: no cover
                 raise NotImplementedError('Order at points other than 0 '
-                    'or oo not supported, got %s as a point.' % point)
+                    'or oo not supported, got %s as a point.' % self.point)
             if order_symbols and order_symbols[0][1] != self.point[0]:
                 raise NotImplementedError(
                         "Multiplying Order at different points is not supported.")
@@ -336,21 +340,11 @@ class Order(Expr):
             return True
         if expr is S.NaN:
             return False
+        point = self.point[0] if self.point else S.Zero
         if expr.is_Order:
-            if (not all(p == expr.point[0] for p in expr.point) and
-                   not all(p == self.point[0] for p in self.point)):  # pragma: no cover
-                raise NotImplementedError('Order at points other than 0 '
-                    'or oo not supported, got %s as a point.' % point)
-            else:
-                # self and/or expr is O(1):
-                if any(not p for p in [expr.point, self.point]):
-                    point = self.point + expr.point
-                    if point:
-                        point = point[0]
-                    else:
-                        point = S.Zero
-                else:
-                    point = self.point[0]
+            if (any(p != point for p in expr.point) or
+                   any(p != point for p in self.point)):
+                return None
             if expr.expr == self.expr:
                 # O(1) + O(1), O(1) + O(1, x), etc.
                 return all([x in self.args[1:] for x in expr.args[1:]])
@@ -368,17 +362,19 @@ class Order(Expr):
                 common_symbols = expr.variables
             if not common_symbols:
                 return None
-            if (self.expr.is_Pow and self.expr.base.is_symbol
-                and self.expr.exp.is_positive):
-                if expr.expr.is_Pow and self.expr.base == expr.expr.base:
-                    return not (self.expr.exp-expr.expr.exp).is_positive
-                if expr.expr.is_Mul:
-                    for arg in expr.expr.args:
-                        if (arg.is_Pow and self.expr.base == arg.base
-                            and (expr.expr/arg).is_number):
-                            r = (self.expr.exp-arg.exp).is_positive
-                            if not (r is None):
-                                return not r
+            if (self.expr.is_Pow and len(self.variables) == 1
+                and self.variables == expr.variables):
+                    symbol = self.variables[0]
+                    other = expr.expr.as_independent(symbol, as_Add=False)[1]
+                    if (other.is_Pow and other.base == symbol and
+                        self.expr.base == symbol):
+                            if point == S.Zero:
+                                rv = (self.expr.exp - other.exp).is_nonpositive
+                            if point.is_infinite:
+                                rv = (self.expr.exp - other.exp).is_nonnegative
+                            if rv is not None:
+                                return rv
+
             r = None
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
@@ -395,17 +391,19 @@ class Order(Expr):
                     if r != l:
                         return
             return r
-        if (self.expr.is_Pow and self.expr.base.is_symbol
-            and self.expr.exp.is_positive):
-            if expr.is_Pow and self.expr.base == expr.base:
-                return not (self.expr.exp-expr.exp).is_positive
-            if expr.is_Mul:
-                for arg in expr.args:
-                    if (arg.is_Pow and self.expr.base == arg.base
-                        and (expr/arg).is_number):
-                        r = (self.expr.exp-arg.exp).is_positive
-                        if not (r is None):
-                            return not r
+
+        if self.expr.is_Pow and len(self.variables) == 1:
+            symbol = self.variables[0]
+            other = expr.as_independent(symbol, as_Add=False)[1]
+            if (other.is_Pow and other.base == symbol and
+                self.expr.base == symbol):
+                    if point == S.Zero:
+                        rv = (self.expr.exp - other.exp).is_nonpositive
+                    if point.is_infinite:
+                        rv = (self.expr.exp - other.exp).is_nonnegative
+                    if rv is not None:
+                        return rv
+
         obj = self.func(expr, *self.args[1:])
         return self.contains(obj)
 

@@ -2,7 +2,7 @@ from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
-    AccumBounds)
+    AccumBounds, MatrixSymbol, Pow)
 from sympy.abc import x, y, z
 
 
@@ -81,6 +81,7 @@ def test_exp_infinity():
     assert refine(exp(I*oo)) == nan
     assert refine(exp(-I*oo)) == nan
     assert exp(y*I*oo) != nan
+    assert exp(zoo) == nan
 
 
 def test_exp_subs():
@@ -107,12 +108,24 @@ def test_exp_conjugate():
 
 
 def test_exp_rewrite():
+    from sympy.concrete.summations import Sum
     assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
     assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
     assert exp(1).rewrite(cos) == sinh(1) + cosh(1)
     assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
     assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
     assert exp(x).rewrite(tanh) == (1 + tanh(x/2))/(1 - tanh(x/2))
+    assert exp(pi*I/4).rewrite(sqrt) == sqrt(2)/2 + sqrt(2)*I/2
+    assert exp(pi*I/3).rewrite(sqrt) == S(1)/2 + sqrt(3)*I/2
+    assert exp(x*log(y)).rewrite(Pow) == y**x
+    assert exp(log(x)*log(y)).rewrite(Pow) in [x**log(y), y**log(x)]
+    assert exp(log(log(x))*y).rewrite(Pow) == log(x)**y
+
+    n = Symbol('n', integer=True)
+
+    assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == S(4)/5 + 2*I/5
+    assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
+    assert Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(S(3)/4 - sqrt(3)*I/4)
 
 
 def test_exp_leading_term():
@@ -125,6 +138,11 @@ def test_exp_taylor_term():
     assert exp(x).taylor_term(1, x) == x
     assert exp(x).taylor_term(3, x) == x**3/6
     assert exp(x).taylor_term(4, x) == x**4/24
+
+
+def test_exp_MatrixSymbol():
+    A = MatrixSymbol("A", 2, 2)
+    assert exp(A).has(exp)
 
 
 def test_log_values():
@@ -178,10 +196,10 @@ def test_log_base():
     assert log(3**3, 3) == 3
     assert log(5, 1) == zoo
     assert log(1, 1) == nan
-    assert log(Rational(2, 3), 10) == (-log(3) + log(2))/log(10)
+    assert log(Rational(2, 3), 10) == log(S(2)/3)/log(10)
     assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
     assert log(Rational(2, 3), Rational(2, 5)) == \
-        (-log(3) + log(2))/(-log(5) + log(2))
+        log(S(2)/3)/log(S(2)/5)
 
 
 def test_log_symbolic():

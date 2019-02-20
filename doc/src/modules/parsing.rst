@@ -10,30 +10,10 @@ Parsing Functions Reference
 
 .. autofunction:: sympy.parsing.sympy_parser.eval_expr
 
-.. autofunction:: sympy.parsing.sympy_tokenize.printtoken
-
-.. autofunction:: sympy.parsing.sympy_tokenize.tokenize
-
-.. autofunction:: sympy.parsing.sympy_tokenize.untokenize
-
-.. autofunction:: sympy.parsing.sympy_tokenize.generate_tokens
-
-.. autofunction:: sympy.parsing.sympy_tokenize.group
-
-.. autofunction:: sympy.parsing.sympy_tokenize.any
-
-.. autofunction:: sympy.parsing.sympy_tokenize.maybe
-
 .. autofunction:: sympy.parsing.maxima.parse_maxima
 
 .. autofunction:: sympy.parsing.mathematica.mathematica
 
-Parsing Exceptions Reference
-----------------------------
-
-.. autoclass:: sympy.parsing.sympy_tokenize.TokenError
-
-.. autoclass:: sympy.parsing.sympy_tokenize.StopTokenizing
 
 Parsing Transformations Reference
 ---------------------------------
@@ -65,12 +45,15 @@ These are included in
 :data:``sympy.parsing.sympy_parser.standard_transformations`` and generally
 don't need to be manually added by the user.
 
-.. autofunction:: sympy.parsing.sympy_parser.factorial_notation
+.. autofunction:: sympy.parsing.sympy_parser.lambda_notation
 
 .. autofunction:: sympy.parsing.sympy_parser.auto_symbol
 
+.. autofunction:: sympy.parsing.sympy_parser.repeated_decimals
+
 .. autofunction:: sympy.parsing.sympy_parser.auto_number
 
+.. autofunction:: sympy.parsing.sympy_parser.factorial_notation
 
 Experimental `\LaTeX` Parsing
 -----------------------------

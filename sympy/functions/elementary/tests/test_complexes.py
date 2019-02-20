@@ -1,5 +1,5 @@
 from sympy import (
-    Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
+    Abs, adjoint, arg, atan, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
     Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
@@ -399,6 +399,12 @@ def test_Abs():
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
     assert Abs(x)**-3 == Abs(x)/(x**4)
     assert Abs(x**3) == x**2*Abs(x)
+    assert Abs(I**I) == exp(-pi/2)
+    assert Abs((4 + 5*I)**(6 + 7*I)) == 68921*exp(-7*atan(S(5)/4))
+    y = Symbol('y', real=True)
+    assert Abs(I**y) == 1
+    y = Symbol('y')
+    assert Abs(I**y) == exp(-pi*im(y)/2)
 
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)
@@ -845,6 +851,9 @@ def test_principal_branch():
     assert principal_branch(exp_polar(3*pi*I)*x, 2*pi) == \
         principal_branch(exp_polar(I*pi)*x, 2*pi)
     assert principal_branch(neg*exp_polar(pi*I), 2*pi) == neg*exp_polar(-I*pi)
+    # related to issue #14692
+    assert principal_branch(exp_polar(-I*pi/2)/polar_lift(neg), 2*pi) == \
+        exp_polar(-I*pi/2)/neg
 
     assert N_equals(principal_branch((1 + I)**2, 2*pi), 2*I)
     assert N_equals(principal_branch((1 + I)**2, 3*pi), 2*I)
@@ -870,3 +879,31 @@ def test_issue_6167_6151():
     assert sign(simplify(e)) == 1
     for xi in (111, 11, 1, S(1)/10):
         assert sign(e.subs(x, xi)) == 1
+
+
+def test_issue_14216():
+    from sympy.functions.elementary.complexes import unpolarify
+    A = MatrixSymbol("A", 2, 2)
+    assert unpolarify(A[0, 0]) == A[0, 0]
+    assert unpolarify(A[0, 0]*A[1, 0]) == A[0, 0]*A[1, 0]
+
+
+def test_issue_14238():
+    # doesn't cause recursion error
+    r = Symbol('r', real=True)
+    assert Abs(r + Piecewise((0, r > 0), (1 - r, True)))
+
+def test_zero_assumptions():
+    nr = Symbol('nonreal', real=False)
+    ni = Symbol('nonimaginary', imaginary=False)
+    # imaginary implies not zero
+    nzni = Symbol('nonzerononimaginary', zero=False, imaginary=False)
+
+    assert re(nr).is_zero is None
+    assert im(nr).is_zero is False
+
+    assert re(ni).is_zero is None
+    assert im(ni).is_zero is None
+
+    assert re(nzni).is_zero is False
+    assert im(nzni).is_zero is None

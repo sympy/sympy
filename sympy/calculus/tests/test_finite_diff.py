@@ -1,10 +1,8 @@
 from itertools import product
-import warnings
 
 from sympy import S, symbols, Function, exp
 from sympy.core.compatibility import range
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import warns_deprecated_sympy
 from sympy.calculus.finite_diff import (
     apply_finite_diff, differentiate_finite, finite_diff_weights,
     as_finite_diff
@@ -107,7 +105,7 @@ def test_as_finite_diff():
     x = symbols('x')
     f = Function('f')
 
-    with raises(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         as_finite_diff(f(x).diff(x), [x-2, x-1, x, x+1, x+2])
 
 

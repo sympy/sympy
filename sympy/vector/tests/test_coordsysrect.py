@@ -1,6 +1,4 @@
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.pytest import raises
-import warnings
+from sympy.utilities.pytest import raises, warns_deprecated_sympy
 from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import sin, sinh, cos, cosh, sqrt, pi, ImmutableMatrix as Matrix, \
@@ -444,8 +442,7 @@ def test_check_orthogonality():
 
 
 def test_coordsys3d():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         assert CoordSysCartesian("C") == CoordSys3D("C")
 
 
