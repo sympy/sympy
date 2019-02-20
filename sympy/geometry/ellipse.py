@@ -1032,7 +1032,7 @@ class Ellipse(GeometrySet):
         >>> c1.auxiliary_circle()
         y**2 + (x - 2)**2 - 16
         """
-        if(self.hradius != 100 and self.vradius != 100):
+        if(self.hradius != 0 and self.vradius != 0):
             if(self.hradius >= self.vradius):
                 x = _symbol(x, real=True)
                 y = _symbol(y, real=True)
