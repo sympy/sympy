@@ -13,7 +13,8 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_elgamal, decipher_elgamal, dh_private_key, dh_public_key,
       dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
       decipher_bifid, bifid_square, padded_key, uniq, decipher_gm,
-      encipher_gm, gm_public_key, gm_private_key)
+      encipher_gm, gm_public_key, gm_private_key, encipher_bg, decipher_bg,
+      bg_private_key, bg_public_key)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -335,3 +336,32 @@ def test_gm_public_key():
     assert 323 == gm_public_key(17, 19)[1]
     assert 15  == gm_public_key(3, 5)[1]
     raises(ValueError, lambda: gm_public_key(15, 19))
+
+def test_encipher_decipher_bg():
+    ps = [67, 7, 71, 103, 11, 43, 107, 47,
+          79, 19, 83, 23, 59, 127, 31]
+    qs = qs = [7, 71, 103, 11, 43, 107, 47,
+               79, 19, 83, 23, 59, 127, 31, 67]
+    messages = [
+        0, 328, 343, 148, 1280, 758, 383,
+        724, 603, 516, 766, 618, 186,
+    ]
+
+    for p, q in zip(ps, qs):
+        pri = bg_private_key(p, q)
+        for msg in messages:
+            pub = bg_public_key(p, q)
+            enc = encipher_bg(msg, pub)
+            dec = decipher_bg(enc, pri)
+            assert dec == msg
+
+def test_bg_private_key():
+    raises(ValueError, lambda: bg_private_key(8, 16))
+    raises(ValueError, lambda: bg_private_key(8, 8))
+    raises(ValueError, lambda: bg_private_key(13, 17))
+    assert 23, 31 == bg_private_key(23, 31)
+
+def test_bg_public_key():
+    assert 5293 == bg_public_key(67, 79)
+    assert 713 == bg_public_key(23, 31)
+    raises(ValueError, lambda: bg_private_key(13, 17))

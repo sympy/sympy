@@ -6,7 +6,7 @@ from __future__ import print_function, division
 
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, string_types
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer
@@ -488,7 +488,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
         translate = {
-            'Mul': '&InvisibleTimes;',
             'Number': 'mn',
             'Limit' : '&#x2192;',
             'Derivative': '&dd;',
@@ -516,11 +515,26 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'StrictLessThan': '<',
         }
 
+        def mul_symbol_selection():
+            if self._settings["mul_symbol"] is None or self._settings["mul_symbol"] == 'None':
+                return '&InvisibleTimes;'
+            elif self._settings["mul_symbol"] == 'times':
+                return '&#xD7;'
+            elif self._settings["mul_symbol"] == 'dot':
+                return '&#xB7;'
+            elif self._settings["mul_symbol"] == 'ldot':
+                return '&#x2024;'
+            elif not isinstance(self._settings["mul_symbol"], string_types):
+                raise TypeError
+            else:
+                return self._settings["mul_symbol"]
         for cls in e.__class__.__mro__:
             n = cls.__name__
             if n in translate:
                 return translate[n]
         # Not found in the MRO set
+        if e.__class__.__name__ == "Mul":
+            return mul_symbol_selection()
         n = e.__class__.__name__
         return n.lower()
 
@@ -529,7 +543,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         def multiply(expr, mrow):
             from sympy.simplify import fraction
             numer, denom = fraction(expr)
-
             if denom is not S.One:
                 frac = self.dom.createElement('mfrac')
                 xnum = self._print(numer)
@@ -541,7 +554,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             coeff, terms = expr.as_coeff_mul()
             if coeff is S.One and len(terms) == 1:
                 return self._print(terms[0])
-
             if self.order != 'old':
                 terms = Mul._from_args(terms).as_ordered_factors()
 
@@ -559,7 +571,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                     y.appendChild(self.dom.createTextNode(self.mathml_tag(expr)))
                     mrow.appendChild(y)
             return mrow
-
         mrow = self.dom.createElement('mrow')
         if _coeff_isneg(expr):
             x = self.dom.createElement('mo')
@@ -893,7 +904,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_Function(self, e):
         mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mi')
-        x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
+        if self.mathml_tag(e) == 'log' and self._settings["ln_notation"] == True:
+            x.appendChild(self.dom.createTextNode('ln'))
+        else:
+            x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         y = self.dom.createElement('mfenced')
         for arg in e.args:
             y.appendChild(self._print(arg))

@@ -3152,6 +3152,16 @@ def test_nth_algebraic():
     assert set(solns) == set(dsolve(eqn, f(x)))
 
 
+def test_nth_algebraic_issue15999():
+    # FIXME: When issue 4838 is resolved this test should be changed...
+    eqn = f(x).diff(x) - C1
+    sol1 = Eq(f(x), C1*x + C2) # Correct solution
+    sol2 = Eq(f(x), C2*x + C1) # Incorrect: issue 4838
+    assert checkodesol(eqn, sol1, order=1, solve_for_func=False) == (True, 0)
+    assert dsolve(eqn, f(x), hint='nth_algebraic') == sol2
+    assert dsolve(eqn, f(x)) == sol2
+
+
 def test_nth_algebraic_redundant_solutions():
     # This one has a redundant solution that should be removed
     eqn = f(x)*f(x).diff(x)
