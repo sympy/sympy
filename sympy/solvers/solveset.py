@@ -42,14 +42,14 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
-from sympy.utilities import filldedent
+from sympy.utilities import filldedent, sift
 from sympy.utilities.iterables import numbered_symbols, has_dups
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
 from types import GeneratorType
 from collections import defaultdict
-
+from itertools import combinations
 
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
@@ -535,6 +535,107 @@ def _solve_trig(f, symbol, domain):
             is yet to be implemented'''))
     return sol
 
+def _simplify_union(expr):
+    if isinstance(expr, Union):
+        imagesets, othersets = sift(expr.args, lambda lSet: isinstance(lSet, ImageSet)
+                                        and isinstance(lSet.args[0], Lambda)
+                                        and lSet.args[1] == S.Integers, binary=True)
+    elif (isinstance(expr, ImageSet) and isinstance(expr.args[0], Lambda)
+                                        and expr.args[1] == S.Integers):
+        imagesets = [expr]
+        othersets = []
+    else:
+        return expr
+
+    expressions = []
+    for cSet in imagesets:
+        symbol = cSet.args[0].args[0]
+        if len(symbol) == 1:
+            symbol = symbol[0]
+            if isinstance(cSet.args[0].args[1], Add):
+                withdummies, wodummies = sift(cSet.args[0].args[1].args, lambda addTerm: addTerm.has(symbol), binary=True)
+                dummyconstant = Add(*[dummy/symbol for dummy in withdummies])
+                if not dummyconstant.has(symbol):
+                    newwodummies = []
+                    # Remove constant terms equal to the integer multiple,
+                    # e.g., 2*pi*_n + 2*pi => 2*pi*_n
+                    for cons in wodummies:
+                        if cons != dummyconstant:
+                            newwodummies.append(cons)
+                    if len(newwodummies):
+                        expressions.append((symbol, dummyconstant, Add(*newwodummies)))
+                    else:
+                        expressions.append((symbol, dummyconstant, S.Zero))
+                else:
+                    othersets.append(cSet)
+                    continue
+            else: # Just a single entry
+                dummyconstant = cSet.args[0].args[1]/symbol
+                if not dummyconstant.has(symbol):
+                    expressions.append((symbol, dummyconstant, S.Zero))
+                else:
+                    othersets.append(cSet)
+                    continue
+        else:
+            othersets.append(cSet)
+    mergeablecombinations = []
+    def get_int_multiplier(e):
+        if isinstance(e, Mul):
+            for a in e.args:
+                if a.is_integer and a.is_Number:
+                    return a
+        elif e.is_integer and e.is_Number:
+            return e
+        return 0
+    def determine_order(e1, e2, i, j):
+        e1ops = e1.count_ops()
+        e2ops = e2.count_ops()
+        if e1ops == e2ops:
+            if e1 == 0:
+                return (i, j)
+            elif e2 == 0:
+                return (j, i)
+            elif e1 < 0:
+                return (j, i)
+            else:
+                return (i, j)
+        elif e1ops < e2ops:
+            return (i, j)
+        else:
+            return (j, i)
+
+    merging = dict()
+    if len(expressions) >= 2:
+        for (i, expr1), (j, expr2) in combinations(enumerate(expressions), 2):
+            if expr1[0].name == expr2[0].name and expr1[1] == expr2[1]:
+                if expr1[2] == expr2[2]:
+                    mergeablecombinations.append((i, j))
+                else:
+                    maxint = get_int_multiplier(expr1[1])
+                    if maxint >= 2:
+                        e2 = expr2[2] + expr2[1]/maxint
+                        if expr1[2] == e2:
+                            mergeablecombinations.append(determine_order(expr1[2], expr2[2], i, j))
+                        e2 = expr2[2] - expr2[1]/maxint
+                        if expr1[2] == e2:
+                            mergeablecombinations.append(determine_order(expr1[2], expr2[2], i, j))
+        for i, j in mergeablecombinations:
+            if i in merging:
+                merging[i].append(j)
+            else:
+                merging[i] = [j]
+    for i, e in enumerate(expressions):
+        tobemerged = True
+        for key in merging:
+            if i in merging[key]:
+                tobemerged = False
+        if tobemerged:
+            if i in merging.keys():
+                othersets.append(ImageSet(Lambda(e[0], e[0]*e[1]/get_int_multiplier(e[1]) + e[2]), S.Integers))
+            else:
+                othersets.append(ImageSet(Lambda(e[0], e[0]*e[1] + e[2]), S.Integers))
+
+    return Union(*othersets)
 
 def _solve_trig1(f, symbol, domain):
     """Primary Helper to solve trigonometric equations """
@@ -558,7 +659,7 @@ def _solve_trig1(f, symbol, domain):
             raise NotImplementedError
         result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
                        for s in solns])
-        return Intersection(result, domain)
+        return Intersection(_simplify_union(result), domain)
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
@@ -619,7 +720,7 @@ def _solve_trig2(f, symbol, domain):
         dsol = invert_real(tan(symbol/mu), oo, symbol)[1]
         if degree(h) > degree(g):                   # If degree(denom)>degree(num) then there
             result = Union(result, dsol)            # would be another sol at Lim(denom-->oo)
-        return Intersection(result, domain)
+        return Intersection(_simplify_union(result), domain)
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
