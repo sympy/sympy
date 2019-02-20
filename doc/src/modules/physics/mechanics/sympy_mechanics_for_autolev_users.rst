@@ -20,7 +20,7 @@ It would be nice to have a basic understanding of SymPy and SymPy Mechanics befo
 going over this page.
 If you are completely new to Python, you can check out the official
 `Python Tutorial <https://docs.python.org/3/tutorial/>`_.
-Check out the `SymPy Documentation <https://docs.sympy.org/>`_, especially
+Check out the :ref:`SymPy Documentation <documentation>`, especially
 the tutorial to get a feel for SymPy.
 For an introduction to Multibody dynamics in Python, `this <https://www.youtube.com/watch?v=mdo2NYtA-xY&t=6950s>`_
 lecture is very helpful.
@@ -85,8 +85,8 @@ Rough Autolev-SymPy Equivalents
 The tables below give rough equivalents for some common Autolev
 expressions. **These are not exact equivalents**, but rather should be
 taken as hints to get you going in the right direction. For more detail
-read the built-in documentation on `SymPy vectors <https://docs.sympy.org/latest/modules/physics/vector/index.html>`_,
-`SymPy mechanics <https://docs.sympy.org/latest/modules/physics/mechanics/index.html>`_ and
+read the built-in documentation on :ref:`SymPy vectors <physics_vector>`,
+:ref:`SymPy mechanics <classical_mechanics>` and
 `PyDy <https://www.pydy.org/documentation.html>`_ .
 
 In the tables below, it is assumed that you have executed the following
@@ -117,12 +117,9 @@ Mathematical Equivalents
 +-----------------------+-----------------------+-----------------------+
 ||                      ||                      ||                      |
 | ``Constants C+``      | ``c = sm.symbols(‘c’, | Refer to SymPy        |
-|                       | real=True,            | `assumptions <https://|
-|                       | nonnegative=True)``   | docs.sympy.org/latest/|
-|                       |                       | modules/core.html#    |
-|                       |                       | module-sympy.core.    |
-|                       |                       | assumptions>`_ for    |
-|                       |                       | more information.     |
+|                       | real=True,            | :ref:`assumptions     | 
+|                       | nonnegative=True)``   | <assumptions_module>` |            
+|                       |                       | for more information. |
 +-----------------------+-----------------------+-----------------------+
 ||                      ||                      ||                      |
 | ``Constants D-``      | ``d = sm.symbols(‘d’, |                       |
@@ -221,10 +218,10 @@ Mathematical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``E = (x+2*y)^2 +     | ``E = (x+2*y)**2 +    | For more information  |
 | 3*(7+x)*(x+y)``       | 3*(7+x)*(x+y)``       | refer to              |
-|                       |                       | `simplification. <htt |
-| ``Expand(E)``         | ``sm.expand(E)``      | p://docs.sympy.org/la |
-|                       |                       | test/tutorial/simplif |
-| ``Factor(E, x)``      | ``sm.horner(E,        | ication.html>`_       |
+|                       |                       | :ref:`simplification. |
+| ``Expand(E)``         | ``sm.expand(E)``      | <tutorial-simplify>`  |
+|                       |                       |                       |
+| ``Factor(E, x)``      | ``sm.horner(E,        |                       |
 |                       | wrt=x)``              |                       |
 |                       |                       |                       |
 | ``Coef(y, x)``        | ``y.coeff(x)``        | These SymPy functions |
@@ -241,10 +238,10 @@ Mathematical Equivalents
 | ``Arrange(E,2,y)``    | ``e.collect(y)``      | 3})``                 |
 +-----------------------+-----------------------+-----------------------+
 | ``Dy = D(E, y)``      | ``E.diff(y)``         | For more information  |
-|                       |                       | refer to `calculus.   |
-| ``Dt = Dt(E)``        | ``E.diff(             | <http: //docs.sympy.or|
-|                       | me.dynamicsymbols._t  | g/latest/tutorial/    |
-|                       | )``                   | calculus.html>`_      |
+|                       |                       | refer to              |
+| ``Dt = Dt(E)``        | ``E.diff(             | :ref:`calculus.       |
+|                       | me.dynamicsymbols._t  | <calculus>`           |
+|                       | )``                   |                       |
 |                       |                       |                       |
 |                       | Works if the          |                       |
 |                       | expression is made up |                       |
@@ -257,10 +254,10 @@ Mathematical Equivalents
 |                       |                       |                       |
 +-----------------------+-----------------------+-----------------------+
 | ``E = COS(X*Y)``      | ``e = sm.cos(x*y)``   | For more information  |
-|                       |                       | refer to `series.     |
-| ``TY = Taylor(E,      | ``b = e.series(x, 0,  | <https://docs.sympy   |
-| 0:2, x=0, y=0)``      | 2).removeO().series(y,| .org/latest/modules   |
-|                       | 0, 2).removeO()``     | /series/series.html>`_|
+|                       |                       | refer to :ref:`series.|
+| ``TY = Taylor(E,      | ``b = e.series(x, 0,  | <series_expansions>`  |
+| 0:2, x=0, y=0)``      | 2).removeO().series(y,|                       |
+|                       | 0, 2).removeO()``     |                       |
 |                       |                       |                       |
 +-----------------------+-----------------------+-----------------------+
 | ``F = Evaluate(E,     | ``E.subs([(x, a), (y, |                       |
@@ -276,10 +273,8 @@ Mathematical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``P = Polynomial([a,  | ``p =                 | For more information  |
 | b, c], x)``           | sm.Poly(sm.Matrix([a, | refer to              |
-|                       | b, c]).reshape(1, 3), | `polys. <htt          |
-|                       | x)``                  | p://docs.sympy.org/la |
-|                       |                       | test/modules/polys/re |
-|                       |                       | ference.html>`_       |
+|                       | b, c]).reshape(1, 3), | :ref:`polys.          |
+|                       | x)``                  | <polys-reference>`    |
 +-----------------------+-----------------------+-----------------------+
 | ``Roots(Polynomial(   | ``sm.solve(           | For more information  |
 | a*x^2 + b*x + c, x,   | sm.Poly(a*x**2 +      | refer to              |
@@ -297,25 +292,23 @@ Mathematical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``Solve(A, x1, x2)``  | ``sm.linsolve(A,      | For more information  |
 |                       | (x1, x2))``           | refer to              |   
-|                       |                       | `solvers/solveset. <ht|
-| where A is an         | where A is an         | tp://docs.sympy.org/l |
-| augmented matrix that | augmented matrix      | atest/modules/solvers |
-| represents the linear |                       | /solveset.html>`_     |
+|                       |                       | :ref:`                |
+| where A is an         | where A is an         | solvers/solveset.     |
+| augmented matrix that | augmented matrix      | <solveset>`           |
+| represents the linear |                       |                       |
 | equations and x1, x2  |                       |                       |
 | are the variables to  |                       | For non linear solvers|
 | solve for.            |                       | refer to              |
 |                       |                       | ``nonlinsolve`` and   |
 |                       |                       | ``nsolve`` in         |
-|                       |                       | `solvers. <https://   |
-|                       |                       | docs.sympy.org/latest/|
-|                       |                       | modules/solvers/      |
-|                       |                       | solvers.html>`_       |
+|                       |                       | :ref:`solvers.        |
+|                       |                       | <solvers>`            |
 +-----------------------+-----------------------+-----------------------+
 | ``RowMatrix = [1, 2,  | ``row_matrix =        | For more information  |
-| 3, 4]``               | sm.Matrix([[1],[2],   | refer to `matrices. <h|
-|                       | [3],[4]])``           | ttp://docs.sympy.org/ |
-|                       |                       | latest/tutorial/      |            
-| ``ColMatrix = [1; 2;  | ``col_matrix =        | matrices.html>`_      |                     
+| 3, 4]``               | sm.Matrix([[1],[2],   | refer to              |
+|                       | [3],[4]])``           | :ref:`matrices.       |
+|                       |                       | <matrices>`           |            
+| ``ColMatrix = [1; 2;  | ``col_matrix =        |                       |                     
 | 3; 4]``               | sm.Matrix([1, 2, 3,   |                       |       
 |                       | 4])``                 |                       |           
 |                       |                       |                       |
@@ -381,19 +374,15 @@ Physical Equivalents
 |                       |                       |                       |
 |                       | Af.x, Af.y and Af.z   | For more information  |
 |                       | are equivalent to     | refer to              |
-|                       | A1>, A2> and A3>.     | `mechanics/masses. <ht|
-|                       |                       | tp://docs.sym         |
-|                       |                       | py.org/latest/modules |
-|                       |                       | /physics/mechanics/ma |
-|                       |                       | sses.html>`_          |
+|                       | A1>, A2> and A3>.     | :ref:`mechanics/masses|
+|                       |                       | .<masses>`            |
 +-----------------------+-----------------------+-----------------------+
 | ``Frames A``          | ``A =                 | For more information  |
 |                       | me.ReferenceFrame(‘A’ | refer to              |
-| ``V1> =               | )``                   | `physics/vectors. <htt|
-| X1*A1> + X2*A2>``     |                       | p://docs.sympy        |
-|                       | ``v1 =                | .org/latest/modules/p |
-|                       | x1*A.x + x2*A.y``     | hysics/vector/index   |
-|                       |                       | .html>`_              |
+| ``V1> =               | )``                   | :ref:`physics/vectors.|
+| X1*A1> + X2*A2>``     |                       | <matrices>`           |
+|                       | ``v1 =                |                       |
+|                       | x1*A.x + x2*A.y``     |                       |
 +-----------------------+-----------------------+-----------------------+
 | ``Newtonian N``       | ``N =                 | SymPy doesn’t specify |
 |                       | me.ReferenceFrame(‘N’ | that a frame is       |
@@ -428,11 +417,11 @@ Physical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``Inertia B, I1, I2,  | ``I = me.inertia(Bf,  | For more information  |
 | I3, I12, I23, I31``   | i1, i2, i3, i12, i23, | refer to the          |
-|                       | i31)``                | `mechanics api. <http:|
-|                       |                       | //docs.sympy.org/lates|                       
-|                       | ``B.inertia = (I, P)``| t/modules/physics/mech|                      
-|                       | where B is a          | anics/api/part_bod.   |
-|                       | rigidbody, Bf is the  | html>`_               |
+|                       | i31)``                | :ref:`mechanics api.  |
+|                       |                       | <part_bod>`           |                       
+|                       | ``B.inertia = (I, P)``|                       |                      
+|                       | where B is a          |                       |
+|                       | rigidbody, Bf is the  |                       |
 |                       | related frame and P is|                       |
 |                       | the center of mass of |                       |
 |                       | B.                    |                       |
@@ -446,11 +435,11 @@ Physical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``vec> = P_O_Q>/L``   | ``vec  =              | For more information  |                
 |                       | (Qo.pos_from(O))/L``  | refer to              |
-| ``vec> =              |                       | `physics/vectors. <htt|
-| u1*N1> + u2*N2>``     | ``vec =               | p://docs.sympy.org/   |
-|                       | u1*N.x + u2*N.y``     | latest/modules/       |
-| ``Cross(a>, b>)``     |                       | physics/vector/       |
-|                       | ``cross(a, b)``       | index.html>`_         |
+| ``vec> =              |                       | :ref:`physics/vectors.|
+| u1*N1> + u2*N2>``     | ``vec =               | <physics_vector>`     |
+|                       | u1*N.x + u2*N.y``     |                       |
+| ``Cross(a>, b>)``     |                       |                       |
+|                       | ``cross(a, b)``       |                       |
 | ``Dot(a>, b>)``       |                       |                       |
 |                       | ``dot(a, b)``         |                       |
 | ``Mag(v>)``           |                       |                       |
@@ -466,11 +455,11 @@ Physical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``P_O_Q> = LA*A1>``   | ``Q.point =           | For more information  |
 |                       | O.locatenew(‘Qo’,     | refer to the          | 
-|                       | LA*A.x)``             | `kinematics api. <http|
-|                       |                       | ://docs.sympy.org/late|
-| ``P_P_Q> = LA*A1>``   | where A is a          | st/modules/physics/vec|
-|                       | reference frame.      | tor/api/kinematics.   |
-|                       |                       | html>`_               |
+|                       | LA*A.x)``             | :ref:`kinematics api. |
+|                       |                       | <kinematics>`         |
+| ``P_P_Q> = LA*A1>``   | where A is a          |                       |
+|                       | reference frame.      |                       |
+|                       |                       |                       |
 |                       | ``Q.point =           |                       |   
 |                       | P.point.locatenew(‘Qo | All these vector and  | 
 |                       | ’,                    | kinematic functions   |
@@ -597,30 +586,29 @@ Physical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``Constrain(...)``    | ``velocity_constraints| For more details      |
 |                       | = [...]``             | refer to              |
-|                       |                       | `mechanics/kane <http |
-|                       | ``u_dependent =       | ://docs.sympy.or      |
-|                       | [...]``               | g/latest/modules/phys |
-|                       |                       | ics/mechanics/kane.ht |
-|                       | ``u_auxiliary =       | ml>`_ and the         |
-|                       | [...]``               | `kane api. <htt       |
-|                       |                       | p://docs.sympy.org/0.7|
-|                       | These lists are       | .5/modules/physics/mec|
-|                       | passed to the         | hanics/api/kane.      |
-|                       | KanesMethod object.   | html>`_               |
+|                       |                       | :ref:`mechanics/kane  |
+|                       | ``u_dependent =       | <kane_method>` and    |
+|                       | [...]``               | the :ref:`kane api.   |
+|                       |                       | <kane_lagrange>`      |
+|                       | ``u_auxiliary =       |                       |
+|                       | [...]``               |                       |
 |                       |                       |                       |
+|                       | These lists are       |                       |
+|                       | passed to the         |                       |
+|                       | KanesMethod object.   |                       |
 +-----------------------+-----------------------+-----------------------+
 | ``Fr()``              | ``KM = KanesMethod(f, | For more details      |
 | ``FrStar()``          | q_ind, u_ind, kd_eqs, | refer to              |
-|                       | q_dependent, configura| `mechanics/kane <http |
-|                       | tion_constraints, u_de| ://docs.sympy.or      |
-|                       | pendent, velocity_cons| g/latest/modules/phys |
-|                       | traints, acceleration_| ics/mechanics/kane.ht |
-|                       | constraints, u_auxilia| ml>`_ and the         |
-|                       | ry)``                 | `kane api. <htt       |
-|                       |                       | p://docs.sympy.org/0.7|
-|                       | The KanesMethod       | .5/modules/physics/mec|
-|                       | object takes a        | hanics/api/kane.      |
-|                       | reference frame       | html>`_               |
+|                       | q_dependent, configura| :ref:`mechanics/kane  |
+|                       | tion_constraints, u_de| <kane_method>` and    |
+|                       | pendent, velocity_cons| the :ref:`kane api.   |
+|                       | traints, acceleration_| <kane_lagrange>`      |
+|                       | constraints, u_auxilia|                       |
+|                       | ry)``                 |                       |
+|                       |                       |                       |
+|                       | The KanesMethod       |                       |
+|                       | object takes a        |                       |
+|                       | reference frame       |                       |
 |                       | followed by multiple  |                       |
 |                       | lists as arguments.   |                       |
 |                       |                       |                       |
@@ -714,15 +702,15 @@ scientific computing with Python.
 Links
 ----------
 
-`SymPy Tutorial <https://docs.sympy.org/latest/tutorial/index.html>`_
+:ref:`SymPy Tutorial <tutorial>`
 
-`SymPy Documentation <https://docs.sympy.org/>`_
+:ref:`SymPy Documentation <documentation>`
 
-`SymPy Physics Vector
-Documentation <https://docs.sympy.org/latest/modules/physics/vector/index.html>`_
+:ref:`SymPy Physics Vector
+Documentation <physics_vector>`
 
-`SymPy Mechanics
-Documentation <https://docs.sympy.org/latest/modules/physics/mechanics/index.html>`_
+:ref:`SymPy Mechanics
+Documentation <classical_mechanics>`
 
 `PyDy Documentation <https://www.pydy.org/documentation.html>`_
 

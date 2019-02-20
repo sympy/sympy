@@ -672,7 +672,7 @@ class SeqFormula(SeqExpr):
             raise ValueError('Invalid limits given: %s' % str(limits))
 
         if start is S.NegativeInfinity and stop is S.Infinity:
-                raise ValueError("Both the start and end value"
+                raise ValueError("Both the start and end value "
                                  "cannot be unbounded")
         limits = sympify((x, start, stop))
 

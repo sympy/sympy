@@ -1,3 +1,5 @@
+.. _classical_mechanics:
+
 ===================
 Classical Mechanics
 ===================
