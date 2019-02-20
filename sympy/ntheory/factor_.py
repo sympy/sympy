@@ -2042,11 +2042,11 @@ class primeomega(Function):
                 return sum(factorint(n).values())
 				
 """
-    All Mersenne prime numbers is of the form 2^p - 1 and all perfect numbers is of the form 2^(p-1)*(2^p-1)
-    Perfect number. c is a list of p in ascending order
-    A perfect number is a positive integer that is equal to the sum of its proper positive divisors
-    d is a list of no. of digits of Perfect number
-    List c and d should be updated when new Mersenne prime is found
+All Mersenne prime numbers is of the form 2^p - 1 and all perfect numbers is of the form 2^(p-1)*(2^p-1)
+Perfect number. c is a list of p in ascending order
+A perfect number is a positive integer that is equal to the sum of its proper positive divisors
+d is a list of no. of digits of Perfect number
+List c and d should be updated when new Mersenne prime is found
 """
 
 c = (2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933)
