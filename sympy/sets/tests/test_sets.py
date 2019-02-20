@@ -3,7 +3,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, signsimp, Range, Dummy)
+    Matrix, signsimp, Range, Dummy, Add, symbols)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -27,6 +27,9 @@ def test_imageset():
     assert imageset(x, y, ints) == FiniteSet(y)
     assert (str(imageset(lambda y: x + y, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
+    x1, x2 = symbols("x1, x2")
+    assert imageset(lambda x,y: Add(x,y), Interval(1,2), Interval(2, 3)) == \
+        ImageSet(Lambda((x1, x2), x1+x2), Interval(1,2), Interval(2,3))
 
 
 def test_interval_arguments():
@@ -187,6 +190,10 @@ def test_Complement():
 
     assert S.Reals - Union(S.Naturals, FiniteSet(pi)) == \
             Intersection(S.Reals - S.Naturals, S.Reals - FiniteSet(pi))
+    # issue 12712
+    assert Complement(FiniteSet(x, y, 2), Interval(-10, 10)) == \
+            Complement(FiniteSet(x, y), Interval(-10, 10))
+
 
 def test_complement():
     assert Interval(0, 1).complement(S.Reals) == \
@@ -248,7 +255,7 @@ def test_intersect():
     assert Interval(0, 2).intersect(Union(Interval(0, 1), Interval(2, 3))) == \
         Union(Interval(0, 1), Interval(2, 2))
 
-    assert FiniteSet(1, 2)._intersect((1, 2, 3)) == FiniteSet(1, 2)
+    assert FiniteSet(1, 2).intersect(FiniteSet(1, 2, 3)) == FiniteSet(1, 2)
     assert FiniteSet(1, 2, x).intersect(FiniteSet(x)) == FiniteSet(x)
     assert FiniteSet('ham', 'eggs').intersect(FiniteSet('ham')) == \
         FiniteSet('ham')

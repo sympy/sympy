@@ -429,7 +429,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     >>> assert checkpdesol(eq, sol)[0]
     >>> eq = x*f(x,y) + f(x,y).diff(x)
     >>> checkpdesol(eq, sol)
-    (False, (x*F(4*x - 3*y) - 6*F(4*x - 3*y)/25 + 4*Subs(Derivative(F(_xi_1), _xi_1), (_xi_1,), (4*x - 3*y,)))*exp(-6*x/25 - 8*y/25))
+    (False, (x*F(4*x - 3*y) - 6*F(4*x - 3*y)/25 + 4*Subs(Derivative(F(_xi_1), _xi_1), _xi_1, 4*x - 3*y))*exp(-6*x/25 - 8*y/25))
     """
 
     # Converting the pde into an equation
@@ -835,7 +835,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
 
     >>> eq = Eq(D(u(x, t), x, 2), D(u(x, t), t, 2))
     >>> pde_separate(eq, u(x, t), [X(x), T(t)], strategy='mul')
-    [Derivative(X(x), x, x)/X(x), Derivative(T(t), t, t)/T(t)]
+    [Derivative(X(x), (x, 2))/X(x), Derivative(T(t), (t, 2))/T(t)]
 
     See Also
     ========
@@ -848,7 +848,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     elif strategy == 'mul':
         do_add = False
     else:
-        assert ValueError('Unknown strategy: %s' % strategy)
+        raise ValueError('Unknown strategy: %s' % strategy)
 
     if isinstance(eq, Equality):
         if eq.rhs != 0:
@@ -940,7 +940,7 @@ def pde_separate_mul(eq, fun, sep):
 
     >>> eq = Eq(D(u(x, y), x, 2), D(u(x, y), y, 2))
     >>> pde_separate_mul(eq, u(x, y), [X(x), Y(y)])
-    [Derivative(X(x), x, x)/X(x), Derivative(Y(y), y, y)/Y(y)]
+    [Derivative(X(x), (x, 2))/X(x), Derivative(Y(y), (y, 2))/Y(y)]
 
     """
     return pde_separate(eq, fun, sep, strategy='mul')

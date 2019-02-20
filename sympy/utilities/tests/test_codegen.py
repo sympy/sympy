@@ -1,4 +1,3 @@
-import warnings
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.core.compatibility import StringIO
 from sympy import erf, Integral
@@ -8,7 +7,6 @@ from sympy.utilities.codegen import (
     codegen, make_routine, CCodeGen, C89CodeGen, C99CodeGen, InputArgument,
     CodeGenError, FCodeGen, CodeGenArgumentListError, OutputArgument,
     InOutArgument)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 
@@ -60,10 +58,8 @@ def test_Routine_argument_order():
 
 def test_empty_c_code():
     code_gen = C89CodeGen()
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        source = get_string(code_gen.dump_c, [])
-        assert source == "#include \"file.h\"\n#include <math.h>\n"
+    source = get_string(code_gen.dump_c, [])
+    assert source == "#include \"file.h\"\n#include <math.h>\n"
 
 
 def test_empty_c_code_with_comment():
@@ -194,10 +190,8 @@ def test_simple_c_codegen():
         "double test(double x, double y, double z);\n"
         "#endif\n")
     ]
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        result = codegen(("test", expr), "C", "file", header=False, empty=False)
-        assert result == expected
+    result = codegen(("test", expr), "C", "file", header=False, empty=False)
+    assert result == expected
 
 
 def test_multiple_results_c():
@@ -532,13 +526,11 @@ def test_ccode_results_named_ordered():
         '   (*B) = 2*x;\n'
         '}\n'
     )
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
 
-        result = codegen(name_expr, "c", "test", header=False, empty=False,
-                         argument_sequence=(x, C, z, y, A, B))
-        source = result[0][1]
-        assert source == expected
+    result = codegen(name_expr, "c", "test", header=False, empty=False,
+                     argument_sequence=(x, C, z, y, A, B))
+    source = result[0][1]
+    assert source == expected
 
 
 def test_ccode_matrixsymbol_slice():
@@ -1454,12 +1446,10 @@ def test_global_vars():
         '   return f_result;\n'
         '}\n'
     )
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        result = codegen(('f', x*y+z), "C", header=False, empty=False,
-                         global_vars=(z, t))
-        source = result[0][1]
-        assert source == expected
+    result = codegen(('f', x*y+z), "C", header=False, empty=False,
+                     global_vars=(z, t))
+    source = result[0][1]
+    assert source == expected
 
 def test_custom_codegen():
     from sympy.printing.ccode import C99CodePrinter
@@ -1506,3 +1496,31 @@ def test_custom_codegen():
     result = codegen(('expr', expr), header=False, empty=False, code_gen=gen)
     source = result[0][1]
     assert source == expected
+
+def test_c_with_printer():
+    #issue 13586
+    from sympy.printing.ccode import C99CodePrinter
+    class CustomPrinter(C99CodePrinter):
+        def _print_Pow(self, expr):
+            return "fastpow({}, {})".format(self._print(expr.base),
+                                            self._print(expr.exp))
+
+    x = symbols('x')
+    expr = x**3
+    expected =[
+        ("file.c",
+        "#include \"file.h\"\n"
+        "#include <math.h>\n"
+        "double test(double x) {\n"
+        "   double test_result;\n"
+        "   test_result = fastpow(x, 3);\n"
+        "   return test_result;\n"
+        "}\n"),
+        ("file.h",
+        "#ifndef PROJECT__FILE__H\n"
+        "#define PROJECT__FILE__H\n"
+        "double test(double x);\n"
+        "#endif\n")
+    ]
+    result = codegen(("test", expr), "C","file", header=False, empty=False, printer = CustomPrinter())
+    assert result == expected

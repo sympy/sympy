@@ -90,6 +90,5 @@ def test_trace_constant_factor():
     assert trace(MatMul(2, X)) == 10
 
 
-@XFAIL
 def test_rewrite():
     assert isinstance(trace(A).rewrite(Sum), Sum)

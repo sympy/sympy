@@ -19,12 +19,37 @@ python:
 
 matrix:
   include:
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="1/4" TEST_SYMPY="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="2/4" TEST_SYMPY="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="3/4" TEST_SYMPY="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="4/4" TEST_SYMPY="true"
+
     - python: 2.7
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
-        # autowrap installs libgfortran libgcc gcc cython
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.*"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7"
       addons:
         apt:
           packages:
@@ -33,10 +58,14 @@ matrix:
             - libatlas-base-dev
             - liblapack-dev
             - gfortran
-    - python: 3.5
+    - python: 3.6
+      # This is actually 3.7 (once all the dependencies support it). We use
+      # python: 3.6 here because 3.7 requires the slower xenial/sudo: true container,
+      # and we aren't actually using the Travis Python anyway.
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap python-symengine=0.3.*"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle"
+        - TEST_SAGE="true"
       addons:
         apt:
           packages:
@@ -47,7 +76,9 @@ matrix:
             - gfortran
             - python-scipy
 
-    - python: 3.5
+    - python: 3.7
+      dist: xenial
+      sudo: true
       env:
         - TEST_SPHINX="true"
         - FASTCACHE="false"
@@ -78,34 +109,31 @@ matrix:
       env:
         - TEST_SLOW="true"
         - SPLIT="3/3"
-    - python: 3.5
+    - python: 3.7
+      dist: xenial
+      sudo: true
       env:
         - TEST_SLOW="true"
         - SPLIT="1/3"
-    - python: 3.5
+    - python: 3.7
+      dist: xenial
+      sudo: true
       env:
         - TEST_SLOW="true"
         - SPLIT="2/3"
-    - python: 3.5
+    - python: 3.7
+      dist: xenial
+      sudo: true
       env:
         - TEST_SLOW="true"
         - SPLIT="3/3"
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
-    - python: 3.5 # Dummy value
-      env:
-        - TEST_SAGE="true"
-        - FASTCACHE="false"
-        - TEST_TENSORFLOW="true"
-      sudo: true
-      dist: trusty
-
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
-        - TEST_SETUP="true"
       addons:
         apt:
           sources:
@@ -158,20 +186,11 @@ matrix:
             - pypy
 
   allow_failures:
-    # The apt installation of sage fails sometimes
-    - python: 3.5 # Dummy value
-      env:
-        - TEST_SAGE="true"
-        - FASTCACHE="false"
-        - TEST_TENSORFLOW="true"
-      sudo: true
-      dist: trusty
     # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
-        - TEST_SETUP="true"
       addons:
         apt:
           sources:
@@ -224,20 +243,20 @@ matrix:
             - pypy
 
 before_install:
+  - set -e
+  - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
     fi
-  - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr;
-    fi
   - |
-    if [[ "${TEST_OPT_DEPENDENCY}" ]]; then
+    if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     # We do this conditionally because it saves us some downloading if the
     # version is the same.
+        deactivate; # Deactivate the Travis virtualenv
         if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-          wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+          wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -q -O miniconda.sh;
         else
-          wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+          wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -q -O miniconda.sh;
         fi
         bash miniconda.sh -b -p $HOME/miniconda;
         export PATH="$HOME/miniconda/bin:$PATH";
@@ -245,51 +264,55 @@ before_install:
         conda config --set always_yes yes --set changeps1 no;
         conda update -q conda;
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
+
         conda info -a;
-        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip ${TEST_OPT_DEPENDENCY/autowrap/libgfortran libgcc gcc cython};
+        conda create -q -n test-environment ${TEST_OPT_DEPENDENCY};
         source activate test-environment;
+        export CPATH=$CONDA_PREFIX/include;
+        export LIBRARY_PATH=$CONDA_PREFIX/lib;
+        export LD_LIBRARY_PATH=$CONDA_PREFIX/lib;
+        export SYMPY_STRICT_COMPILER_CHECKS=1;
+        conda clean --all;
+        if [[ "$TEST_SAGE" == "true" ]]; then
+            # Use a separate environment because sage downgrades matplotlib
+            conda create -c conda-forge/label/cf201901 -n sage sagelib mpmath "ipython>=5.5.0,<6";
+            conda clean --all;
+        fi
+        if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+            conda install matchpy;
+        fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
-        pip list --format=legacy | grep "numpy" && pip uninstall -y numpy;
+        pip list | grep "numpy" && pip uninstall -y numpy;
     fi
-  - |
-    if [[ "${TEST_TENSORFLOW}" == "true" ]]; then
-      pip install mpmath;
-      if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-        pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.9.0-cp27-none-linux_x86_64.whl;
-      elif [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]]; then
-        pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.9.0-cp34-cp34m-linux_x86_64.whl;
-      elif [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
-        pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.9.0-cp35-cp35m-linux_x86_64.whl;
-      fi
+  - if [[ "${TEST_SPHINX}" == "true" ]]; then
+      pip install "sphinx" "docutils" doctr matplotlib;
     fi
-  - if [[ "${TEST_SAGE}" == "true" ]]; then
-      sudo apt-add-repository -y ppa:aims/sagemath;
-      sudo apt-get update;
-      sudo apt-get install -y sagemath-upstream-binary;
-    fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-      pip install matchpy;
-    fi
+
 install:
   # If a command fails, fail the build.
   - set -e
-#The install cycle below is to test installation on systems without setuptools.
   - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
       then virtualenv -p /usr/bin/pypy ~/.venv;
            . ~/.venv/bin/activate;
     fi
+  # Once https://github.com/fredrik-johansson/mpmath/pull/403 is in a released
+  # version of mpmath remove this line.
+  - pip install mpmath
   # -We:invalid makes invalid escape sequences error in Python 3.6. See
   # -#12028.
-  - if [[ "${TEST_SAGE}" != "true" ]]; then
-      pip install mpmath;
-      pip uninstall -y setuptools;
-      python -We:invalid setup.py install;
-      pip uninstall -y sympy;
-      pip install --upgrade setuptools;
-      python -We:invalid -m compileall -f sympy/ || (echo "ERROR Invalid escape sequence found. You likely need to use a raw string." && exit 1);
-      python -We:invalid setup.py install;
-      pip list --format=columns;
+  - |
+    if [[ "${TEST_SETUP}" == "true" ]]; then
+      # The install cycle below is to test installation on systems without
+      # setuptools.
+      virtualenv ~/.venv-no-setuptools;
+      ~/.venv-no-setuptools/bin/pip install mpmath;
+      ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
+      ~/.venv-no-setuptools/bin/python -We:invalid setup.py -q install;
     fi
+    python -We:invalid -m compileall -f sympy/;
+    python -We:invalid setup.py -q install;
+    pip list --format=columns;
+
 script:
   # Don't run doctr if the build fails
   - set -e

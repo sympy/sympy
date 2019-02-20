@@ -1,5 +1,7 @@
+.. _assumptions_module:
+
 ==================
-Assumptions module
+Assumptions Module
 ==================
 
 .. automodule:: sympy.assumptions
@@ -54,7 +56,7 @@ Design
 ======
 
 Each time ask is called, the appropriate Handler for the current key is called. This is
-always a subclass of sympy.assumptions.AskHandler. It's classmethods have the name's of the classes
+always a subclass of sympy.assumptions.AskHandler. Its classmethods have the names of the classes
 it supports. For example, a (simplified) AskHandler for the ask 'positive' would
 look like this::
 
@@ -121,7 +123,7 @@ in notable speed improvements.
 
 Logic inference used in one ask could be used to speed up further queries, and
 current system does not take advantage of this. For example, a truth maintenance
-system (http://en.wikipedia.org/wiki/Truth_maintenance_system) could be implemented.
+system (https://en.wikipedia.org/wiki/Truth_maintenance_system) could be implemented.
 
 Misc
 ====

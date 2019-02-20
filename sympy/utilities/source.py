@@ -3,10 +3,11 @@ This module adds several functions for interactive source code inspection.
 """
 
 from __future__ import print_function, division
+from sympy.core.decorators import deprecated
 
 import inspect
 
-
+@deprecated(useinstead="?? in IPython/Jupyter or inspect.getsource", issue=14905, deprecated_since_version="1.3")
 def source(object):
     """
     Prints the source code of a given object.
@@ -36,11 +37,14 @@ def get_class(lookup_view):
 def get_mod_func(callback):
     """
     splits the string path to a class into a string path to the module
-    and the name of the class. For example:
+    and the name of the class.
 
-        >>> from sympy.utilities.source import get_mod_func
-        >>> get_mod_func('sympy.core.basic.Basic')
-        ('sympy.core.basic', 'Basic')
+    Examples
+    ========
+
+    >>> from sympy.utilities.source import get_mod_func
+    >>> get_mod_func('sympy.core.basic.Basic')
+    ('sympy.core.basic', 'Basic')
 
     """
     dot = callback.rfind('.')

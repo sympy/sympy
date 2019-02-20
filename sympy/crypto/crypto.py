@@ -4,6 +4,14 @@
 This file contains some classical ciphers and routines
 implementing a linear-feedback shift register (LFSR)
 and the Diffie-Hellman key exchange.
+
+.. warning::
+
+   This module is intended for educational purposes only. Do not use the
+   functions in this module for real cryptographic applications. If you wish
+   to encrypt real data, we recommend using something like the `cryptography
+   <https://cryptography.io/en/latest/>`_ module.
+
 """
 
 from __future__ import print_function
@@ -20,7 +28,8 @@ from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq
-from sympy.utilities.randtest import _randrange
+from sympy.utilities.randtest import _randrange, _randint
+
 
 def AZ(s=None):
     """Return the letters of ``s`` in uppercase. In case more than
@@ -373,7 +382,7 @@ def encipher_substitution(msg, old, new=None):
     >>> encipher_substitution(ct, new, old)
     'GONAVYBEATARMY'
 
-    In the special case where ``old`` and ``new`` are a permuation of
+    In the special case where ``old`` and ``new`` are a permutation of
     order 2 (representing a transposition of characters) their order
     is immaterial:
 
@@ -479,7 +488,7 @@ def encipher_vigenere(msg, key, symbols=None):
                corresponding integers. Let ``n1 = len(L1)``.
             2. Compute from the string ``msg`` a list ``L2`` of
                corresponding integers. Let ``n2 = len(L2)``.
-            3. Break ``L2`` up sequencially into sublists of size
+            3. Break ``L2`` up sequentially into sublists of size
                ``n1``; the last sublist may be smaller than ``n1``
             4. For each of these sublists ``L`` of ``L2``, compute a
                new list ``C`` given by ``C[i] = L[i] + L1[i] (mod N)``
@@ -550,7 +559,7 @@ def encipher_vigenere(msg, key, symbols=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Vigenere_cipher
+    .. [1] https://en.wikipedia.org/wiki/Vigenere_cipher
     .. [2] http://web.archive.org/web/20071116100808/
        http://filebox.vt.edu/users/batman/kryptos.html
        (short URL: https://goo.gl/ijr22d)
@@ -997,7 +1006,7 @@ def encipher_bifid5(msg, key):
     >>> from sympy.crypto.crypto import (
     ...     encipher_bifid5, decipher_bifid5)
 
-    "J" will be omitted unless it is replaced with somthing else:
+    "J" will be omitted unless it is replaced with something else:
 
     >>> round_trip = lambda m, k: \
     ...     decipher_bifid5(encipher_bifid5(m, k), k)
@@ -1424,7 +1433,7 @@ def encode_morse(msg, sep='|', mapping=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Morse_code
+    .. [1] https://en.wikipedia.org/wiki/Morse_code
 
     Examples
     ========
@@ -1472,7 +1481,7 @@ def decode_morse(msg, sep='|', mapping=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Morse_code
+    .. [1] https://en.wikipedia.org/wiki/Morse_code
 
     Examples
     ========
@@ -1698,7 +1707,6 @@ def lfsr_connection_polynomial(s):
     """
     # Initialization:
     p = s[0].mod
-    F = FF(p)
     x = Symbol("x")
     C = 1*x**0
     B = 1*x**0
@@ -1935,7 +1943,7 @@ def dh_private_key(digit=10, seed=None):
     =======
 
     (p, g, a) : p = prime number, g = primitive root of p,
-                a = random number from 2 thru p - 1
+                a = random number from 2 through p - 1
 
     Notes
     =====
@@ -2037,3 +2045,372 @@ def dh_shared_key(key, b):
             than prime %s.''' % p))
 
     return pow(x, b, p)
+
+
+################ Goldwasser-Micali Encryption  #########################
+
+
+def _legendre(a, p):
+    """
+    Returns the legendre symbol of a and p
+    assuming that p is a prime
+
+    i.e. 1 if a is a quadratic residue mod p
+        -1 if a is not a quadratic residue mod p
+         0 if a is divisible by p
+
+    Parameters
+    ==========
+
+    a : int the number to test
+    p : the prime to test a against
+
+    Returns
+    =======
+
+    legendre symbol (a / p) (int)
+
+    """
+    sig = pow(a, (p - 1)//2, p)
+    if sig == 1:
+        return 1
+    elif sig == 0:
+        return 0
+    else:
+        return -1
+
+
+def _random_coprime_stream(n, seed=None):
+    randrange = _randrange(seed)
+    while True:
+        y = randrange(n)
+        if gcd(y, n) == 1:
+            yield y
+
+
+def gm_private_key(p, q, a=None):
+    """
+    Check if p and q can be used as private keys for
+    the Goldwasser-Micali encryption. The method works
+    roughly as follows.
+
+    Pick two large primes p ands q. Call their product N.
+    Given a message as an integer i, write i in its
+    bit representation b_0,...,b_n. For each k,
+
+     if b_k = 0:
+        let a_k be a random square
+        (quadratic residue) modulo p * q
+        such that jacobi_symbol(a, p * q) = 1
+     if b_k = 1:
+        let a_k be a random non-square
+        (non-quadratic residue) modulo p * q
+        such that jacobi_symbol(a, p * q) = 1
+
+    return [a_1, a_2,...]
+
+    b_k can be recovered by checking whether or not
+    a_k is a residue. And from the b_k's, the message
+    can be reconstructed.
+
+    The idea is that, while jacobi_symbol(a, p * q)
+    can be easily computed (and when it is equal to -1 will
+    tell you that a is not a square mod p * q), quadratic
+    residuosity modulo a composite number is hard to compute
+    without knowing its factorization.
+
+    Moreover, approximately half the numbers coprime to p * q have
+    jacobi_symbol equal to 1. And among those, approximately half
+    are residues and approximately half are not. This maximizes the
+    entropy of the code.
+
+    Parameters
+    ==========
+
+    p, q, a : initialization variables
+
+    Returns
+    =======
+
+    p, q : the input value p and q
+
+    Raises
+    ======
+
+    ValueError : if p and q are not distinct odd primes
+
+    """
+    if p == q:
+        raise ValueError("expected distinct primes, "
+                         "got two copies of %i" % p)
+    elif not isprime(p) or not isprime(q):
+        raise ValueError("first two arguments must be prime, "
+                         "got %i of %i" % (p, q))
+    elif p == 2 or q == 2:
+        raise ValueError("first two arguments must not be even, "
+                         "got %i of %i" % (p, q))
+    return p, q
+
+
+def gm_public_key(p, q, a=None, seed=None):
+    """
+    Compute public keys for p and q.
+    Note that in Goldwasser-Micali Encrpytion,
+    public keys are randomly selected.
+
+    Parameters
+    ==========
+
+    p, q, a : (int) initialization variables
+
+    Returns
+    =======
+
+    (a, N) : tuple[int]
+        a is the input a if it is not None otherwise
+        some random integer coprime to p and q.
+
+        N is the product of p and q
+    """
+
+    p, q = gm_private_key(p, q)
+    N = p * q
+
+    if a is None:
+        randrange = _randrange(seed)
+        while True:
+            a = randrange(N)
+            if _legendre(a, p) == _legendre(a, q) == -1:
+                break
+    else:
+        if _legendre(a, p) != -1 or _legendre(a, q) != -1:
+            return False
+    return (a, N)
+
+
+def encipher_gm(i, key, seed=None):
+    """
+    Encrypt integer 'i' using public_key 'key'
+    Note that gm uses random encrpytion.
+
+    Parameters
+    ==========
+
+    i: (int) the message to encrypt
+    key: Tuple (a, N) the public key
+
+    Returns
+    =======
+
+    List[int] the randomized encrpyted message.
+
+    """
+    if i < 0:
+        raise ValueError(
+            "message must be a non-negative "
+            "integer: got %d instead" % i)
+    a, N = key
+    bits = []
+    while i > 0:
+        bits.append(i % 2)
+        i //= 2
+
+    gen = _random_coprime_stream(N, seed)
+    rev = reversed(bits)
+    encode = lambda b: next(gen)**2*pow(a, b) % N
+    return [ encode(b) for b in rev ]
+
+
+
+def decipher_gm(message, key):
+    """
+    Decrypt message 'message' using public_key 'key'.
+
+    Parameters
+    ==========
+
+    List[int]: the randomized encrpyted message.
+    key: Tuple (p, q) the private key
+
+    Returns
+    =======
+
+    i (int) the encrpyted message
+    """
+    p, q = key
+    res = lambda m, p: _legendre(m, p) > 0
+    bits = [res(m, p) * res(m, q) for m in message]
+    m = 0
+    for b in bits:
+        m <<= 1
+        m += not b
+    return m
+
+################ Blum–Goldwasser cryptosystem  #########################
+
+def bg_private_key(p, q):
+    """
+    Check if p and q can be used as private keys for
+    the Blum–Goldwasser cryptosystem.
+
+    The three necessary checks for p and q to pass
+    so that they can be used as private keys:
+
+        1. p and q must both be prime
+        2. p and q must be distinct
+        3. p and q must be congruent to 3 mod 4
+
+    Parameters
+    ==========
+
+    p, q : the keys to be checked
+
+    Returns
+    =======
+
+    p, q : input values
+
+    Raises
+    ======
+
+    ValueError : if p and q do not pass the above conditions
+
+    """
+
+    if not isprime(p) or not isprime(q):
+        raise ValueError("the two arguments must be prime, "
+                         "got %i and %i" %(p, q))
+    elif p == q:
+        raise ValueError("the two arguments must be distinct, "
+                         "got two copies of %i. " %p)
+    elif (p - 3) % 4 != 0 or (q - 3) % 4 != 0:
+        raise ValueError("the two arguments must be congruent to 3 mod 4, "
+                         "got %i and %i" %(p, q))
+    return p, q
+
+def bg_public_key(p, q):
+    """
+    Calculates public keys from private keys.
+
+    The function first checks the validity of
+    private keys passed as arguments and
+    then returns their product.
+
+    Parameters
+    ==========
+
+    p, q : the private keys
+
+    Returns
+    =======
+
+    N : the public key
+    """
+    p, q = bg_private_key(p, q)
+    N = p * q
+    return N
+
+def encipher_bg(i, key, seed=None):
+    """
+    Encrypts the message using public key and seed.
+
+    ALGORITHM:
+        1. Encodes i as a string of L bits, m.
+        2. Select a random element r, where 1 < r < key, and computes
+           x = r^2 mod key.
+        3. Use BBS pseudo-random number generator to generate L random bits, b,
+        using the initial seed as x.
+        4. Encrypted message, c_i = m_i XOR b_i, 1 <= i <= L.
+        5. x_L = x^(2^L) mod key.
+        6. Return (c, x_L)
+
+    Parameters
+    ==========
+
+    i : message, a non-negative integer
+    key : the public key
+
+    Returns
+    =======
+
+    (encrypted_message, x_L) : Tuple
+
+    Raises
+    ======
+
+    ValueError : if i is negative
+    """
+
+    if i < 0:
+        raise ValueError(
+            "message must be a non-negative "
+            "integer: got %d instead" % i)
+
+    enc_msg = []
+    while i > 0:
+        enc_msg.append(i % 2)
+        i //= 2
+    enc_msg.reverse()
+    L = len(enc_msg)
+
+    r = _randint(seed)(2, key - 1)
+    x = r**2 % key
+    x_L = pow(int(x), int(2**L), int(key))
+
+    rand_bits = []
+    for k in range(L):
+        rand_bits.append(x % 2)
+        x = x**2 % key
+
+    encrypt_msg = [m ^ b for (m, b) in zip(enc_msg, rand_bits)]
+
+    return (encrypt_msg, x_L)
+
+def decipher_bg(message, key):
+    """
+    Decrypts the message using private keys.
+
+    ALGORITHM:
+        1. Let, c be the encrypted message, y the second number received,
+        and p and q be the private keys.
+        2. Compute, r_p = y^((p+1)/4 ^ L) mod p and
+        r_q = y^((q+1)/4 ^ L) mod q.
+        3. Compute x_0 = (q(q^-1 mod p)r_p + p(p^-1 mod q)r_q) mod N.
+        4. From, recompute the bits using the BBS generator, as in the
+        encryption algorithm.
+        5. Compute original message by XORing c and b.
+
+    Parameters
+    ==========
+
+    message : Tuple of encrypted message and a non-negative integer.
+    key : Tuple of private keys
+
+    Returns
+    =======
+
+    orig_msg : The original message
+    """
+
+    p, q = key
+    encrypt_msg, y = message
+    public_key = p * q
+    L = len(encrypt_msg)
+    p_t = ((p + 1)/4)**L
+    q_t = ((q + 1)/4)**L
+    r_p = pow(int(y), int(p_t), int(p))
+    r_q = pow(int(y), int(q_t), int(q))
+
+    x = (q * mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
+
+    orig_bits = []
+    for k in range(L):
+        orig_bits.append(x % 2)
+        x = x**2 % public_key
+
+    orig_msg = 0
+    for (m, b) in zip(encrypt_msg, orig_bits):
+        orig_msg = orig_msg * 2
+        orig_msg += (m ^ b)
+
+    return orig_msg

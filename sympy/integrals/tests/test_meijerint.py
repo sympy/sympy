@@ -286,6 +286,40 @@ def test_inversion():
     assert meijerint_inversion(exp(-s**2), s, t) is None
 
 
+def test_inversion_conditional_output():
+    from sympy import Symbol, InverseLaplaceTransform
+
+    a = Symbol('a', positive=True)
+    F = sqrt(pi/a)*exp(-2*sqrt(a)*sqrt(s))
+    f = meijerint_inversion(F, s, t)
+    assert not f.is_Piecewise
+
+    b = Symbol('b', real=True)
+    F = F.subs(a, b)
+    f2 = meijerint_inversion(F, s, t)
+    assert f2.is_Piecewise
+    # first piece is same as f
+    assert f2.args[0][0] == f.subs(a, b)
+    # last piece is an unevaluated transform
+    assert f2.args[-1][1]
+    ILT = InverseLaplaceTransform(F, s, t, None)
+    assert f2.args[-1][0] == ILT or f2.args[-1][0] == ILT.as_integral
+
+
+def test_inversion_exp_real_nonreal_shift():
+    from sympy import Symbol, DiracDelta
+    r = Symbol('r', real=True)
+    c = Symbol('c', real=False)
+    a = 1 + 2*I
+    z = Symbol('z')
+    assert not meijerint_inversion(exp(r*s), s, t).is_Piecewise
+    assert meijerint_inversion(exp(a*s), s, t) is None
+    assert meijerint_inversion(exp(c*s), s, t) is None
+    f = meijerint_inversion(exp(z*s), s, t)
+    assert f.is_Piecewise
+    assert isinstance(f.args[0][0], DiracDelta)
+
+
 @slow
 def test_lookup_table():
     from random import uniform, randrange
@@ -611,7 +645,7 @@ def test_messy():
         log(S(1)/2 + sqrt(2)/2)
 
     assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
-        Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
+        Piecewise((-acosh(1/x), abs(x**(-2)) > 1), (I*asin(1/x), True))
 
 
 def test_issue_6122():
@@ -673,3 +707,8 @@ def test_issue_10681():
     g = (1.0/3)*R**1.0*r**3*hyper((-0.5, S(3)/2), (S(5)/2,),
                                   r**2*exp_polar(2*I*pi)/R**2)
     assert RR.almosteq((f/g).n(), 1.0, 1e-12)
+
+def test_issue_13536():
+    from sympy import Symbol
+    a = Symbol('a', real=True, positive=True)
+    assert integrate(1/x**2, (x, oo, a)) == -1/a

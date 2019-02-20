@@ -284,10 +284,26 @@ def test_is_normal():
     assert G1.is_subgroup(G6)
     assert not G1.is_subgroup(G4)
     assert G2.is_subgroup(G4)
-    s4 = PermutationGroup(Permutation(0, 1, 2, 3), Permutation(3)(0, 1))
-    s6 = PermutationGroup(Permutation(0, 1, 2, 3, 5), Permutation(5)(0, 1))
-    assert s6.is_normal(s4, strict=False)
-    assert not s4.is_normal(s6, strict=False)
+    I5 = PermutationGroup(Permutation(4))
+    assert I5.is_normal(G5)
+    assert I5.is_normal(G6, strict=False)
+    p1 = Permutation([1, 0, 2, 3, 4])
+    p2 = Permutation([0, 1, 2, 4, 3])
+    p3 = Permutation([3, 4, 2, 1, 0])
+    id_ = Permutation([0, 1, 2, 3, 4])
+    H = PermutationGroup([p1, p3])
+    H_n1 = PermutationGroup([p1, p2])
+    H_n2_1 = PermutationGroup(p1)
+    H_n2_2 = PermutationGroup(p2)
+    H_id = PermutationGroup(id_)
+    assert H_n1.is_normal(H)
+    assert H_n2_1.is_normal(H_n1)
+    assert H_n2_2.is_normal(H_n1)
+    assert H_id.is_normal(H_n2_1)
+    assert H_id.is_normal(H_n1)
+    assert H_id.is_normal(H)
+    assert not H_n2_1.is_normal(H)
+    assert not H_n2_2.is_normal(H)
 
 
 def test_eq():
@@ -843,6 +859,11 @@ def test_presentation():
         G = P.presentation()
         return G.order() == P.order()
 
+    def _strong_test(P):
+        G = P.strong_presentation()
+        chk = len(G.generators) == len(P.strong_gens)
+        return chk and G.order() == P.order()
+
     P = PermutationGroup(Permutation(0,1,5,2)(3,7,4,6), Permutation(0,3,5,4)(1,6,2,7))
     assert _test(P)
 
@@ -851,3 +872,17 @@ def test_presentation():
 
     P = SymmetricGroup(5)
     assert _test(P)
+
+    P = PermutationGroup([Permutation(0,3,1,2), Permutation(3)(0,1), Permutation(0,1)(2,3)])
+    G = P.strong_presentation()
+    assert _strong_test(P)
+
+    P = DihedralGroup(6)
+    G = P.strong_presentation()
+    assert _strong_test(P)
+
+    a = Permutation(0,1)(2,3)
+    b = Permutation(0,2)(3,1)
+    c = Permutation(4,5)
+    P = PermutationGroup(c, a, b)
+    assert _strong_test(P)

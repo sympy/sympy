@@ -174,7 +174,7 @@ def test_evalf_ramanujan():
 def test_evalf_bugs():
     assert NS(sin(1) + exp(-10**10), 10) == NS(sin(1), 10)
     assert NS(exp(10**10) + sin(1), 10) == NS(exp(10**10), 10)
-    assert NS('log(1+1/10**50)', 20) == '1.0000000000000000000e-50'
+    assert NS('expand_log(log(1+1/10**50))', 20) == '1.0000000000000000000e-50'
     assert NS('log(10**100,10)', 10) == '100.0000000'
     assert NS('log(2)', 10) == '0.6931471806'
     assert NS(
@@ -257,6 +257,8 @@ def test_evalf_integer_parts():
     assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
     assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
 
+    assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
+    assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)
@@ -331,6 +333,8 @@ def test_implemented_function_evalf():
     assert str(f(2)) == "f(2)"
     assert f(2).evalf() == 3
     assert f(x).evalf() == f(x)
+    f = implemented_function(Function('sin'), lambda x: x + 1)
+    assert f(2).evalf() != sin(2)
     del f._imp_     # XXX: due to caching _imp_ would influence all other tests
 
 
@@ -493,18 +497,21 @@ def test_issue_10323():
 
 
 def test_AssocOp_Function():
-    e = S('''
+    # the first arg of Min is not comparable in the imaginary part
+    raises(ValueError, lambda: S('''
     Min(-sqrt(3)*cos(pi/18)/6 + re(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3 + sin(pi/18)/2 + 2 + I*(-cos(pi/18)/2 -
     sqrt(3)*sin(pi/18)/6 + im(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3), re(1/((-1/2 + sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3 - sqrt(3)*cos(pi/18)/6 - sin(pi/18)/2 + 2 +
     I*(im(1/((-1/2 + sqrt(3)*I/2)*(1/6 + sqrt(3)*I/18)**(1/3)))/3 -
-    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))''')
-    # the following should not raise a recursion error; it
-    # should raise a value error because the first arg computes
-    # a non-comparable (prec=1) imaginary part
-    raises(ValueError, lambda: e._eval_evalf(2))
+    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))'''))
+    # if that is changed so a non-comparable number remains as
+    # an arg, then the Min/Max instantiation needs to be changed
+    # to watch out for non-comparable args when making simplifications
+    # and the following test should be added instead (with e being
+    # the sympified expression above):
+    # raises(ValueError, lambda: e._eval_evalf(2))
 
 
 def test_issue_10395():
@@ -513,3 +520,18 @@ def test_issue_10395():
     eq = x*Max(y, -1.1)
     assert nfloat(eq) == eq
     assert Max(y, 4).n() == Max(4.0, y)
+
+
+def test_issue_13098():
+    assert floor(log(S('9.'+'9'*20), 10)) == 0
+    assert ceiling(log(S('9.'+'9'*20), 10)) == 1
+    assert floor(log(20 - S('9.'+'9'*20), 10)) == 1
+    assert ceiling(log(20 - S('9.'+'9'*20), 10)) == 2
+
+
+def test_issue_14601():
+    e = 5*x*y/2 - y*(35*(x**3)/2 - 15*x/2)
+    subst = {x:0.0, y:0.0}
+    e2 = e.evalf(subs=subst)
+    assert float(e2) == 0.0
+    assert float((x + x*(x**2 + x)).evalf(subs={x: 0.0})) == 0.0

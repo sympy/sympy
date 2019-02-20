@@ -179,7 +179,7 @@ def test_files():
             if gen_raise_re.search(line):
                 assert False, message_gen_raise % (fname, idx + 1)
             if (implicit_test_re.search(line) and
-                    not filter(lambda ex: ex in fname, import_exclude)):
+                    not list(filter(lambda ex: ex in fname, import_exclude))):
                 assert False, message_implicit % (fname, idx + 1)
             if func_is_re.search(line) and not test_file_re.search(fname):
                 assert False, message_func_is % (fname, idx + 1)
@@ -199,12 +199,19 @@ def test_files():
 
     # Files to test at top level
     top_level_files = [join(TOP_PATH, file) for file in [
+        "isympy.py",
         "build.py",
         "setup.py",
         "setupegg.py",
     ]]
     # Files to exclude from all tests
-    exclude = set()
+    exclude = set([
+        "%(sep)ssympy%(sep)sparsing%(sep)sautolev%(sep)s_antlr%(sep)sautolevparser.py" % sepd,
+        "%(sep)ssympy%(sep)sparsing%(sep)sautolev%(sep)s_antlr%(sep)sautolevlexer.py" % sepd,
+        "%(sep)ssympy%(sep)sparsing%(sep)sautolev%(sep)s_antlr%(sep)sautolevlistener.py" % sepd,
+        "%(sep)ssympy%(sep)sparsing%(sep)slatex%(sep)s_antlr%(sep)slatexparser.py" % sepd,
+        "%(sep)ssympy%(sep)sparsing%(sep)slatex%(sep)s_antlr%(sep)slatexlexer.py" % sepd,
+    ])
     # Files to exclude from the implicit import test
     import_exclude = set([
         # glob imports are allowed in top-level __init__.py:
@@ -218,8 +225,8 @@ def test_files():
         "%(sep)spolys%(sep)sdomains%(sep)s__init__.py" % sepd,
         # interactive sympy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
-        # isympy executes ``from sympy import *``:
-        "%(sep)sbin%(sep)sisympy" % sepd,
+        # isympy.py executes ``from sympy import *``:
+        "%(sep)sisympy.py" % sepd,
         # these two are import timing tests:
         "%(sep)sbin%(sep)ssympy_time.py" % sepd,
         "%(sep)sbin%(sep)ssympy_time_cache.py" % sepd,
@@ -227,6 +234,8 @@ def test_files():
         "%(sep)sparsing%(sep)ssympy_tokenize.py" % sepd,
         # this one should be fixed:
         "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
+        # False positive in the docstring
+        "%(sep)sbin%(sep)stest_external_imports.py" % sepd,
     ])
     check_files(top_level_files, test)
     check_directory_tree(BIN_PATH, test, set(["~", ".pyc", ".sh"]), "*")

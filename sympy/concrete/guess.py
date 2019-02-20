@@ -3,8 +3,8 @@ from __future__ import print_function, division
 
 from sympy.utilities import public
 
-from sympy.core.compatibility import range
 from sympy.core import Function, Symbol
+from sympy.core.compatibility import range
 from sympy.core.numbers import Zero
 from sympy import (sympify, floor, lcm, denom, Integer, Rational,
                    exp, integrate, symbols, Product, product)
@@ -38,7 +38,7 @@ def find_simple_recurrence_vector(l):
     >>> find_simple_recurrence_vector([fibonacci(k) for k in range(12)])
     [1, -1, -1]
 
-    See also
+    See Also
     ========
 
     See the function sympy.concrete.guess.find_simple_recurrence which is more
@@ -132,7 +132,7 @@ def rationalize(x, maxcoeff=10000):
     >>> rationalize(pi, maxcoeff = 250)
     355/113
 
-    See also
+    See Also
     ========
     Several other methods can approximate a real number as a rational, like:
 
@@ -182,9 +182,11 @@ def guess_generating_function_rational(v, X=Symbol('x')):
     >>> guess_generating_function_rational(l)
     (3*x + 5)/(-x**2 - x + 1)
 
-    See also
+    See Also
     ========
-    See function sympy.series.approximants and mpmath.pade
+
+    sympy.series.approximants
+    mpmath.pade
 
     """
     #   a) compute the denominator as q
@@ -193,7 +195,7 @@ def guess_generating_function_rational(v, X=Symbol('x')):
     if n <= 1: return None
     #   b) compute the numerator as p
     p = [sum(v[i-k]*q[k] for k in range(min(i+1, n)))
-            for i in range(len(v))] # TODO: maybe better with:  len(v)>>1
+            for i in range(len(v)>>1)]
     return (sum(p[k]*X**k for k in range(len(p)))
             / sum(q[k]*X**k for k in range(n)))
 
@@ -264,8 +266,9 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     References
     ==========
-    "Concrete Mathematics", R.L. Graham, D.E. Knuth, O. Patashnik
-    https://oeis.org/wiki/Generating_functions
+
+    .. [1] "Concrete Mathematics", R.L. Graham, D.E. Knuth, O. Patashnik
+    .. [2] https://oeis.org/wiki/Generating_functions
 
     """
     # List of all types of all g.f. known by the algorithm
@@ -414,6 +417,9 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
     the least should be the value of 'niter' (more is acceptable but only
     the first symbols will be used); in this case, the main variable will be
     the first symbol in the list.
+
+    Examples
+    ========
 
     >>> from sympy.concrete.guess import guess
     >>> guess([1,2,6,24,120], evaluate=False)

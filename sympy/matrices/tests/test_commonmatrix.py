@@ -2,9 +2,9 @@ import collections
 import random
 
 from sympy import (
-    Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
-    sympify, trigsimp, tan, sstr, diff)
+    Abs, Add, E, Float, Function, I, Integer, Max, Min, N, Poly, Pow, PurePoly,
+    Rational, S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt,
+    symbols, sympify, trigsimp, tan, sstr, diff)
 from sympy.matrices.common import (ShapeError, MatrixError, NonSquareMatrixError,
     _MinimalMatrix, MatrixShaping, MatrixProperties, MatrixOperations, MatrixArithmetic,
     MatrixSpecial)
@@ -200,6 +200,14 @@ def test_col_insert():
         l = [0, 0, 0]
         l.insert(i, 4)
         assert flatten(zeros_Shaping(3).col_insert(i, c4).row(0).tolist()) == l
+    # issue 13643
+    assert eye_Shaping(6).col_insert(3, Matrix([[2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2]])) == \
+           Matrix([[1, 0, 0, 2, 2, 0, 0, 0],
+                   [0, 1, 0, 2, 2, 0, 0, 0],
+                   [0, 0, 1, 2, 2, 0, 0, 0],
+                   [0, 0, 0, 2, 2, 1, 0, 0],
+                   [0, 0, 0, 2, 2, 0, 1, 0],
+                   [0, 0, 0, 2, 2, 0, 0, 1]])
 
 def test_extract():
     m = ShapingOnlyMatrix(4, 3, lambda i, j: i*3 + j)
@@ -490,7 +498,6 @@ def test_refine():
 
 
 def test_replace():
-    from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
     K = OperationsOnlyMatrix(2, 2, lambda i, j: G(i+j))
     M = OperationsOnlyMatrix(2, 2, lambda i, j: F(i+j))
@@ -499,7 +506,6 @@ def test_replace():
 
 
 def test_replace_map():
-    from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
     K = OperationsOnlyMatrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}), (G(1), {F(1) \
                                                                               : G(1)}), (G(2), {F(2): G(2)})])
@@ -509,7 +515,8 @@ def test_replace_map():
 
 
 def test_simplify():
-    f, n = symbols('f, n')
+    n = Symbol('n')
+    f = Function('f')
 
     M = OperationsOnlyMatrix([[            1/x + 1/y,                 (x + x*y) / x  ],
                 [ (f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n) / pi ]])
@@ -666,6 +673,30 @@ def test_multiplication():
         assert c[1, 0] == 3*5
         assert c[1, 1] == 0
 
+def test_matmul():
+    a = Matrix([[1, 2], [3, 4]])
+
+    assert a.__matmul__(2) == NotImplemented
+
+    assert a.__rmatmul__(2) == NotImplemented
+
+    #This is done this way because @ is only supported in Python 3.5+
+    #To check 2@a case
+    try:
+        eval('2 @ a')
+    except SyntaxError:
+        pass
+    except TypeError:  #TypeError is raised in case of NotImplemented is returned
+        pass
+
+    #Check a@2 case
+    try:
+        eval('a @ 2')
+    except SyntaxError:
+        pass
+    except TypeError:  #TypeError is raised in case of NotImplemented is returned
+        pass
+
 def test_power():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2))**2)
 
@@ -688,7 +719,7 @@ def test_sub():
 
 def test_div():
     n = ArithmeticOnlyMatrix(1, 2, [1, 2])
-    assert n/2 == ArithmeticOnlyMatrix(1, 2, [1/2, 2/2])
+    assert n/2 == ArithmeticOnlyMatrix(1, 2, [S(1)/2, S(2)/2])
 
 
 # DeterminantOnlyMatrix tests
@@ -926,11 +957,11 @@ def test_echelon_form():
 
     a = ReductionsOnlyMatrix(3, 3, [2, 1, 3, 0, 0, 0, 2, 1, 3])
     nulls = [Matrix([
-             [-1/2],
+             [-S(1)/2],
              [   1],
              [   0]]),
              Matrix([
-             [-3/2],
+             [-S(3)/2],
              [   0],
              [   1]])]
     rows = [a[i,:] for i in range(a.rows)]
@@ -1300,9 +1331,11 @@ def test_singular_values():
 
 
 # CalculusOnlyMatrix tests
+@XFAIL
 def test_diff():
     x, y = symbols('x y')
     m = CalculusOnlyMatrix(2, 1, [x, y])
+    # TODO: currently not working as ``_MinimalMatrix`` cannot be sympified:
     assert m.diff(x) == Matrix(2, 1, [1, 0])
 
 def test_integrate():
@@ -1330,3 +1363,9 @@ def test_limit():
     x, y = symbols('x y')
     m = CalculusOnlyMatrix(2, 1, [1/x, y])
     assert m.limit(x, 5) == Matrix(2, 1, [S(1)/5, y])
+
+def test_issue_13774():
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    v = [1,1,1]
+    raises(TypeError, lambda: M*v)
+    raises(TypeError, lambda: v*M)

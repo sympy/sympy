@@ -259,12 +259,18 @@ to introduce the names of user-defined functions in the Fortran expression.
     >>> print(fcode(1 - gamma(x)**2, user_functions={'gamma': 'mygamma'}))
           -mygamma(x)**2 + 1
 
-However, when the user_functions argument is not provided, ``fcode`` attempts to
-use a reasonable default and adds a comment to inform the user of the issue.
+However, when the user_functions argument is not provided, ``fcode`` will
+generate code which assumes that a function of the same name will be provided
+by the user.  A comment will be added to inform the user of the issue:
 
     >>> print(fcode(1 - gamma(x)**2))
     C     Not supported in Fortran:
     C     gamma
+          -gamma(x)**2 + 1
+
+The printer can be configured to omit these comments:
+
+    >>> print(fcode(1 - gamma(x)**2, allow_unknown_functions=True))
           -gamma(x)**2 + 1
 
 By default the output is human readable code, ready for copy and paste. With the
@@ -365,6 +371,8 @@ Theano Code printing
 
    .. autoattribute:: TheanoPrinter.printmethod
 
+.. autofunction:: sympy.printing.theanocode.theano_code
+
 .. autofunction:: sympy.printing.theanocode.theano_function
 
 Gtk
@@ -426,16 +434,29 @@ MathMLPrinter
 
 This class is responsible for MathML printing. See ``sympy.printing.mathml``.
 
-More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
+More info on mathml : http://www.w3.org/TR/MathML2
 
-.. autoclass:: MathMLPrinter
+.. autoclass:: MathMLPrinterBase
+
+.. autoclass:: MathMLContentPrinter
    :members:
 
-   .. autoattribute:: MathMLPrinter.printmethod
+   .. autoattribute:: MathMLContentPrinter.printmethod
+
+.. autoclass:: MathMLPresentationPrinter
+   :members:
+
+   .. autoattribute:: MathMLPresentationPrinter.printmethod
 
 .. autofunction:: mathml
 
 .. autofunction:: print_mathml
+
+PythonCodePrinter
+-----------------
+
+.. automodule:: sympy.printing.pycode
+    :members:
 
 PythonPrinter
 -------------

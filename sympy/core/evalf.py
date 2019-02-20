@@ -329,17 +329,36 @@ def get_integer_part(expr, no, options, return_ints=False):
     margin = 10
 
     if gap >= -margin:
-        ire, iim, ire_acc, iim_acc = \
-            evalf(expr, margin + assumed_size + gap, options)
+        prec = margin + assumed_size + gap
+        ire, iim, ire_acc, iim_acc = evalf(
+            expr, prec, options)
+    else:
+        prec = assumed_size
 
     # We can now easily find the nearest integer, but to find floor/ceil, we
     # must also calculate whether the difference to the nearest integer is
     # positive or negative (which may fail if very close).
-    def calc_part(expr, nexpr):
+    def calc_part(re_im, nexpr):
         from sympy.core.add import Add
-        nint = int(to_int(nexpr, rnd))
         n, c, p, b = nexpr
         is_int = (p == 0)
+        nint = int(to_int(nexpr, rnd))
+        if is_int:
+            # make sure that we had enough precision to distinguish
+            # between nint and the re or im part (re_im) of expr that
+            # was passed to calc_part
+            ire, iim, ire_acc, iim_acc = evalf(
+                re_im - nint, 10, options)  # don't need much precision
+            assert not iim
+            size = -fastlog(ire) + 2  # -ve b/c ire is less than 1
+            if size > prec:
+                ire, iim, ire_acc, iim_acc = evalf(
+                    re_im, size, options)
+                assert not iim
+                nexpr = ire
+                n, c, p, b = nexpr
+                is_int = (p == 0)
+                nint = int(to_int(nexpr, rnd))
         if not is_int:
             # if there are subs and they all contain integer re/im parts
             # then we can (hopefully) safely substitute them into the
@@ -359,19 +378,19 @@ def get_integer_part(expr, no, options, return_ints=False):
                             doit = False
                             break
                 if doit:
-                    expr = expr.subs(s)
+                    re_im = re_im.subs(s)
 
-            expr = Add(expr, -nint, evaluate=False)
-            x, _, x_acc, _ = evalf(expr, 10, options)
+            re_im = Add(re_im, -nint, evaluate=False)
+            x, _, x_acc, _ = evalf(re_im, 10, options)
             try:
-                check_target(expr, (x, None, x_acc, None), 3)
+                check_target(re_im, (x, None, x_acc, None), 3)
             except PrecisionExhausted:
-                if not expr.equals(0):
+                if not re_im.equals(0):
                     raise PrecisionExhausted
                 x = fzero
             nint += int(no*(mpf_cmp(x or fzero, fzero) == no))
         nint = from_int(nint)
-        return nint, fastlog(nint) + 10
+        return nint, INF
 
     re_, im_, re_acc, im_acc = None, None, None, None
 
@@ -422,7 +441,7 @@ def add_terms(terms, prec, target_prec):
     XXX explain why this is needed and why one can't just loop using mpf_add
     """
 
-    terms = [t for t in terms if not iszero(t)]
+    terms = [t for t in terms if not iszero(t[0])]
     if not terms:
         return None, None
     elif len(terms) == 1:
@@ -1372,6 +1391,24 @@ class EvalfMixin(object):
             verbose=<bool>
                 Print debug information (default=False)
 
+        Notes
+        =====
+
+        When Floats are naively substituted into an expression, precision errors
+        may adversely affect the result. For example, adding 1e16 (a Float) to 1
+        will truncate to 1e16; if 1e16 is then subtracted, the result will be 0.
+        That is exactly what happens in the following:
+
+        >>> from sympy.abc import x, y, z
+        >>> values = {x: 1e16, y: 1, z: 1e16}
+        >>> (x + y - z).subs(values)
+        0
+
+        Using the subs argument for evalf is the accurate way to evaluate such an
+        expression:
+
+        >>> (x + y - z).evalf(subs=values)
+        1.00000000000000
         """
         from sympy import Float, Number
         n = n if n is not None else 15

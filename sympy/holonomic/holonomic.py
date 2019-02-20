@@ -5,30 +5,29 @@ various operations on them.
 
 from __future__ import print_function, division
 
-from sympy import (Symbol, diff, S, Dummy, Order, rf, meijerint, I,
+from sympy import (Symbol, S, Dummy, Order, rf, meijerint, I,
     solve, limit, Float, nsimplify, gamma)
-from sympy.printing import sstr
 from sympy.core.compatibility import range, ordered
-from sympy.functions.combinatorial.factorials import binomial, factorial
-from sympy.core.sympify import sympify
-from sympy.simplify.hyperexpand import hyperexpand
-from sympy.functions.special.hyper import hyper, meijerg
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
-from sympy.matrices import Matrix
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import exp_polar, exp
+from sympy.functions.special.hyper import hyper, meijerg
+from sympy.matrices import Matrix
+from sympy.polys.rings import PolyElement
+from sympy.polys.fields import FracElement
+from sympy.polys.domains import QQ, RR
+from sympy.polys.polyclasses import DMF
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import Poly
+from sympy.printing import sstr
+from sympy.simplify.hyperexpand import hyperexpand
 
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
 from .holonomicerrors import (NotPowerSeriesError, NotHyperSeriesError,
     SingularityError, NotHolonomicError)
 
-from sympy.polys.rings import PolyElement
-from sympy.polys.fields import FracElement
-from sympy.polys.domains import QQ, ZZ, RR
-from sympy.polys.domains.pythonrational import PythonRational
-from sympy.polys.polyclasses import DMF
-from sympy.polys.polyroots import roots
-from sympy.polys.polytools import Poly
 
 
 def DifferentialOperators(base, generator):
@@ -356,7 +355,7 @@ class DifferentialOperator(object):
                 return False
         else:
             if self.listofpoly[0] == other:
-                for i in listofpoly[1:]:
+                for i in self.listofpoly[1:]:
                     if i is not self.parent.base.zero:
                         return False
                 return True
@@ -461,7 +460,7 @@ class HolonomicFunction(object):
 
         # initial condition
         self.y0 = y0
-        # the point for initial conditions, defualt is zero.
+        # the point for initial conditions, default is zero.
         self.x0 = x0
         # differential operator L such that L.f = 0
         self.annihilator = annihilator
@@ -834,7 +833,7 @@ class HolonomicFunction(object):
 
         return HolonomicFunction(self.annihilator * D, self.x)
 
-    def diff(self, *args):
+    def diff(self, *args, **kwargs):
         r"""
         Differentiation of the given Holonomic function.
 
@@ -856,7 +855,7 @@ class HolonomicFunction(object):
 
         .integrate()
         """
-
+        kwargs.setdefault('evaluate', True)
         if args:
             if args[0] != self.x:
                 return S(0)
@@ -867,7 +866,6 @@ class HolonomicFunction(object):
                 return sol
 
         ann = self.annihilator
-        dx = ann.parent.derivative_operator
 
         # if the function is constant.
         if ann.listofpoly[0] == ann.parent.base.zero and ann.order == 1:
@@ -988,7 +986,7 @@ class HolonomicFunction(object):
         # until a non trivial solution is found
         while sol[0].is_zero:
 
-            # updating the coefficents Dx^i(f).Dx^j(g) for next degree
+            # updating the coefficients Dx^i(f).Dx^j(g) for next degree
             for i in range(a - 1, -1, -1):
                 for j in range(b - 1, -1, -1):
                     coeff_mul[i][j + 1] += coeff_mul[i][j]
@@ -1030,7 +1028,7 @@ class HolonomicFunction(object):
             # if both the conditions are at same point
             if self.x0 == other.x0:
 
-                # try to find more inital conditions
+                # try to find more initial conditions
                 y0_self = _extend_y0(self, sol_ann.order)
                 y0_other = _extend_y0(other, sol_ann.order)
                 # h(x0) = f(x0) * g(x0)
@@ -1222,10 +1220,10 @@ class HolonomicFunction(object):
 
             # check for linear relations
             system.append(coeffs)
-            sol_tuple = (Matrix(system).transpose()).gauss_jordan_solve(homogeneous)
-            sol = sol_tuple[0]
+            sol, taus = (Matrix(system).transpose()
+                ).gauss_jordan_solve(homogeneous)
 
-        tau = sol.atoms(Dummy).pop()
+        tau = list(taus)[0]
         sol = sol.subs(tau, 1)
         sol = _normalize(sol[0:], R, negative=False)
 
@@ -1442,8 +1440,6 @@ class HolonomicFunction(object):
         compl.sort(key=lambda x : x[1])
         compl.sort(key=lambda x : x[2])
         reals.sort()
-
-        x = self.x
 
         # grouping the roots, roots differ by an integer are put in the same group.
         grp = []
@@ -2556,16 +2552,13 @@ def _hyper_to_meijerg(func):
     ap = func.ap
     bq = func.bq
 
-    p = len(ap)
-    q = len(bq)
-
     ispoly = any(i <= 0 and int(i) == i for i in ap)
     if ispoly:
         return hyperexpand(func)
 
     z = func.args[2]
 
-    # paramters of the `meijerg` function.
+    # parameters of the `meijerg` function.
     an = (1 - i for i in ap)
     anp = ()
     bm = (S(0), )
@@ -2604,7 +2597,6 @@ def _extend_y0(Holonomic, n):
 
     annihilator = Holonomic.annihilator
     a = annihilator.order
-    x = Holonomic.x
 
     listofpoly = []
 
@@ -2742,7 +2734,6 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
             y0 = {indicial: S(coeff)}
 
     elif israt:
-        order = 1
         p, q = func.as_numer_denom()
         # differential equation satisfied by rational
         sol = p * q * Dx + p * q.diff(x) - q * p.diff(x)

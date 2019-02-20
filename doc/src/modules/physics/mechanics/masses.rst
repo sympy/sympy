@@ -1,3 +1,5 @@
+.. _masses:
+
 =================================================================
 Masses, Inertias, Particles and Rigid Bodies in Physics/Mechanics
 =================================================================
@@ -224,7 +226,7 @@ the reference frame is created and the kinematics are done. ::
   >> from sympy import symbols
   >> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
   >> from sympy.physics.mechanics import RigidBody, Particle, Point, outer
-  >> from symp.physics.mechanics import linear_momentum, angular_momentum
+  >> from sympy.physics.mechanics import linear_momentum, angular_momentum
   >> m, M, l1 = symbols('m M l1')
   >> q1d = dynamicsymbols('q1d')
   >> N = ReferenceFrame('N')
