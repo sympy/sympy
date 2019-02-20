@@ -562,3 +562,59 @@ def test_primeomega():
     assert primeomega(n)
     assert primeomega(n).subs(n, 2 ** 31 - 1) == 1
     assert summation(primeomega(n), (n, 2, 30)) == 59
+	
+
+def test_perfect_numbers():
+    assert perfect_number(1) == 6
+    assert perfect_number(2) == 28
+    assert perfect_number(3) == 496
+    assert perfect_number(4) == 8128
+    assert perfect_number(7) == 137438691328
+    assert perfect_number(11) == 13164036458569648337239753460458722910223472318386943117783728128
+	
+
+def test_next_perfect_number():
+    assert next_perfect_number(5) == 6
+    assert next_perfect_number(7) == 28
+    assert next_perfect_number(100) == 496
+    assert next_perfect_number(1000) == 8128
+
+def test_prev_next_number():
+    assert prev_perfect_number(7) == 6
+    assert prev_perfect_number(29) == 28
+    assert prev_perfect_number(500) == 496
+    assert prev_perfect_number(10000) == 8128
+    assert prev_perfect_number(13164036458569648337239753460458722910223472318386943117783728130) == 13164036458569648337239753460458722910223472318386943117783728128
+
+
+def test_ischeck_perfect_number():
+    assert ischeck_perfect_number(6) == True
+    assert ischeck_perfect_number(15) == False
+    assert ischeck_perfect_number(28) == True
+    assert ischeck_perfect_number(400) == False
+    assert ischeck_perfect_number(496) == True
+    assert ischeck_perfect_number(8128) == True
+    assert ischeck_perfect_number(10000) == False
+	
+
+def test_isless_than_perfect_number():
+    assert isless_than_perfect_number(7,1) == False
+    assert isless_than_perfect_number(5,1) == True
+    assert isless_than_perfect_number(20,2) == True
+    assert isless_than_perfect_number(490,3) == True
+    assert isless_than_perfect_number(1000000000000000000000000000,13) == True
+	
+
+def test_isgreater_than_perfect_number():
+    assert isgreater_than_perfect_number(10,1) == True
+    assert isgreater_than_perfect_number(100,3) == False
+    assert isgreater_than_perfect_number(100,2) == True
+    assert isgreater_than_perfect_number(1000,3) == True
+    assert isgreater_than_perfect_number(1000,4) == False
+    assert isgreater_than_perfect_number(10000,4) == True
+	
+
+def test_perfect_number_range():
+    assert perfect_number_range(1,10000000) == (6, 28, 496, 8128)
+    assert perfect_number_range(1000,10000000000000000000000000000) == (8128, 33550336, 8589869056, 137438691328, 2305843008139952128)
+    assert perfect_number_range(100,10000) == (496,8128)
