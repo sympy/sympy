@@ -33,7 +33,7 @@ from sympy.matrices import Matrix, GramSchmidt, eye
 from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
 from sympy.physics.quantum import Commutator
-from sympy.assumptions import assuming
+from sympy.assumptions import assuming, ImageSet
 from sympy.polys.rings import vring
 from sympy.polys.fields import vfield
 from sympy.polys.solvers import solve_lin_sys
@@ -929,13 +929,11 @@ def test_M12():
     ]
 
 
-@XFAIL
 def test_M13():
     n = Dummy('n')
-    assert solveset_real(sin(x) - cos(x), x) == ImageSet(Lambda(n, n*pi - 7*pi/4), S.Integers)
+    assert solveset_real(sin(x) - cos(x), x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
 
 
-@XFAIL
 def test_M14():
     n = Dummy('n')
     assert solveset_real(tan(x) - 1, x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
@@ -948,10 +946,9 @@ def test_M15():
                                            ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers))
 
 
-@XFAIL
 def test_M16():
     n = Dummy('n')
-    assert solveset(sin(x) - tan(x), x) == ImageSet(Lambda(n, n*pi), Integers())
+    assert solveset(sin(x) - tan(x), x) == ImageSet(Lambda(n, n*pi), S.Integers)
 
 
 @XFAIL
