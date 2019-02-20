@@ -2556,7 +2556,7 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align", use_dots=Fa
     \end{eqnarray}
 
     Using "IEEEeqnarray":
-    >>> print(multiline_latex(x, expr, terms_per_line=2, environment="IEEEeqnarray"))
+    >>> print(multiline_latex(x, expr, environment="IEEEeqnarray"))
     \begin{IEEEeqnarray}{rCl}
     x & = & e^{i \alpha} \nonumber\\
     & & + \sin{\left(\alpha y \right)} \nonumber\\
