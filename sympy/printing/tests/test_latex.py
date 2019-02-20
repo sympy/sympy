@@ -1923,6 +1923,7 @@ def test_multiline_latex():
     r'\end{align*}'
 
     assert multiline_latex(f, expr, 3) == expected3align
+    assert multiline_latex(f, expr, 3, environment='align*') == expected3align
 
     expected2ieee = r'\begin{IEEEeqnarray}{rCl}' + '\n'\
     r'f & = &- a + 2 b \nonumber\\' + '\n'\
@@ -1932,6 +1933,7 @@ def test_multiline_latex():
 
     assert multiline_latex(f, expr, 2, environment="IEEEeqnarray") == expected2ieee
 
+    raises(ValueError, lambda: multiline_latex(f, expr, environment="foo"))
 
 def test_trace():
     # Issue 15303

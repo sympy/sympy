@@ -2514,6 +2514,7 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align", use_dots=Fa
     \end{eqnarray}
 
     Using "IEEEeqnarray":
+    >>> print(multiline_latex(x, expr, terms_per_line=2, environment="IEEEeqnarray"))
     \begin{IEEEeqnarray}{rCl}
     x & = & e^{i \alpha} \nonumber\\
     & & + \sin{\left(\alpha y \right)} \nonumber\\
@@ -2541,12 +2542,14 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align", use_dots=Fa
         nonumber = r'\nonumber'
         end_term = '\n\\end{IEEEeqnarray}'
         doubleet = True
-    else:
+    elif environment.lower().startswith('a'):
         result = r'\begin{align*}' + '\n'
         first_term = '= &'
         nonumber = ''
         end_term =  '\n\\end{align*}'
         doubleet = False
+    else:
+        raise ValueError("Unknown environment: {}".format(environment))
     dots = ''
     if use_dots:
         dots=r'\dots'
@@ -2556,8 +2559,8 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align", use_dots=Fa
     for i in range(n_terms):
         term = terms[i]
         term_start = ''
-        term_end = r''
-        sign = r'+'
+        term_end = ''
+        sign = '+'
         if term_count > terms_per_line:
             if doubleet:
                 term_start = '& & '
