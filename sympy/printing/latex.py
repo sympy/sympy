@@ -2503,7 +2503,7 @@ def print_latex(expr, **settings):
     print(latex(expr, **settings))
 
 
-def multiline_latex(lhs, rhs, terms_per_line=1, environment="align", use_dots=False, **settings):
+def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=False, **settings):
     r"""
     This function generates a LaTeX equation with a multiline right-hand side
     in either an ``eqnarray`` or ``align*`` environment.
@@ -2522,8 +2522,7 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align", use_dots=Fa
 
     environment : "string", optional
         Which LaTeX wnvironment to use for the output. Options are "align*"
-        (default), "eqnarray", and "IEEEeqnarray". Note the only the first
-        character is detected so exact spelling is not important.
+        (default), "eqnarray", and "IEEEeqnarray".
 
     use_dots : boolean, optional
         If ``True``, ``\\dots`` is added to the end of each line. Default is ``False``.
@@ -2572,19 +2571,19 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align", use_dots=Fa
 
     # Based on code from https://github.com/sympy/sympy/issues/3001
     l = LatexPrinter(**settings)
-    if environment.lower().startswith('e'):
+    if environment == "eqnarray":
         result = r'\begin{eqnarray}' + '\n'
         first_term = '& = &'
         nonumber = r'\nonumber'
         end_term = '\n\\end{eqnarray}'
         doubleet = True
-    elif environment.lower().startswith('i'):
+    elif environment == "IEEEeqnarray":
         result = r'\begin{IEEEeqnarray}{rCl}' + '\n'
         first_term = '& = &'
         nonumber = r'\nonumber'
         end_term = '\n\\end{IEEEeqnarray}'
         doubleet = True
-    elif environment.lower().startswith('a'):
+    elif environment == "align*":
         result = r'\begin{align*}' + '\n'
         first_term = '= &'
         nonumber = ''
