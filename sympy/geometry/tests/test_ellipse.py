@@ -463,3 +463,38 @@ def test_circumference():
     assert abs(Ellipse(None, hradius=5, vradius=3).circumference.evalf(16) - 25.52699886339813) < 1e-10
 def test_issue_15259():
     assert Circle((1, 2), 0) == Point(1, 2)
+
+def test_auxiliary_circle():
+    x, y = symbols('x, y')
+
+    p1 = Point(0, 0)
+    p2 = Point(3, 4)
+
+    e1 = Ellipse(p1, 1,1)
+    e2 = Ellipse(p2, 2,2)
+
+    c1 = Circle(p1, 4)
+    c2 = Circle(p2, 8)
+
+    e3 = Ellipse(p1, 5,2)
+    e4 = Ellipse(p2, 6,4)
+
+    e5 = Ellipse(p2, 4,7)
+    e6 = Ellipse(p1, 9,5)
+
+    # circle If self.hradius = self.vradius
+
+    assert e1.auxiliary_circle() == x**2 + y**2 - 1
+    assert e2.auxiliary_circle() == (x - 3)**2 + (y - 4)**2 - 4
+    assert c1.auxiliary_circle() == x**2 + y**2 - 16
+    assert c2.auxiliary_circle() == (x - 3)**2 + (y - 4)**2 - 64
+
+    # horizontal ellipse If self.hradius > self.vradius
+
+    assert e3.auxiliary_circle() == x**2 + y**2 - 25
+    assert e4.auxiliary_circle() == (x - 3)**2 + (y - 4)**2 - 36
+
+    # vertical ellipse If self.hradius < self.vradius
+
+    assert e5.auxiliary_circle() == (x - 3)**2 + (y - 4)**2 - 49
+    assert e6.auxiliary_circle() == x**2 + y**2 - 81
