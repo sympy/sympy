@@ -594,26 +594,43 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         >>> uy = u.diff(y)
         >>> genform = a*ux + b*uy + c*u - G(x,y)
         >>> pprint(genform)
-          ∂               ∂
-        a⋅──(f(x, y)) + b⋅──(f(x, y)) + c⋅f(x, y) - G(x, y)
-          ∂x              ∂y
+          d               d
+        a*--(f(x, y)) + b*--(f(x, y)) + c*f(x, y) - G(x, y)
+          dx              dy
         >>> pprint(pdsolve(genform, hint='1st_linear_constant_coeff_Integral'))
-                  ⎛⎛       a⋅x + b⋅y                                     ⎞         ⎞│
-                  ⎜⎜           ⌠                                         ⎟         ⎟│
-                  ⎜⎜           ⎮                                 c⋅ξ     ⎟         ⎟│
-                  ⎜⎜           ⎮                               ───────   ⎟         ⎟│
-                  ⎜⎜           ⎮                                2    2   ⎟         ⎟│
-                  ⎜⎜           ⎮      ⎛a⋅ξ + b⋅η  -a⋅η + b⋅ξ⎞  a  + b    ⎟         ⎟│
-                  ⎜⎜           ⎮     G⎜─────────, ──────────⎟⋅ℯ        dξ⎟         ⎟│
-                  ⎜⎜           ⎮      ⎜  2    2     2    2  ⎟            ⎟   -c⋅ξ  ⎟│
-                  ⎜⎜           ⎮      ⎝ a  + b     a  + b   ⎠            ⎟  ───────⎟│
-                  ⎜⎜           ⌡                                         ⎟   2    2⎟│
-                  ⎜⎜                                                     ⎟  a  + b ⎟│
-        f(x, y) = ⎜⎜F(η) + ──────────────────────────────────────────────⎟⋅ℯ       ⎟│
-                  ⎜⎜                           2    2                    ⎟         ⎟│
-                  ⎝⎝                          a  + b                     ⎠         ⎠│η
+                  //          a*x + b*y                                             \
+                  ||              /                                                 |
+                  ||             |                                                  |
+                  ||             |                                       c*xi       |
+                  ||             |                                     -------      |
+                  ||             |                                      2    2      |
+                  ||             |      /a*xi + b*eta  -a*eta + b*xi\  a  + b       |
+                  ||             |     G|------------, -------------|*e        d(xi)|
+                  ||             |      |   2    2         2    2   |               |
+                  ||             |      \  a  + b         a  + b    /               |
+                  ||             |                                                  |
+                  ||            /                                                   |
+                  ||                                                                |
+        f(x, y) = ||F(eta) + -------------------------------------------------------|*
+                  ||                                  2    2                        |
+                  \\                                 a  + b                         /
         <BLANKLINE>
-        =-a⋅y + b⋅x, ξ=a⋅x + b⋅y
+                \|
+                ||
+                ||
+                ||
+                ||
+                ||
+                ||
+                ||
+                ||
+          -c*xi ||
+         -------||
+          2    2||
+         a  + b ||
+        e       ||
+                ||
+                /|eta=-a*y + b*x, xi=a*x + b*y
 
 
     Examples
@@ -690,9 +707,10 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     >>> uy = u.diff(y)
     >>> genform = a(x, y)*u + b(x, y)*ux + c(x, y)*uy - G(x,y)
     >>> pprint(genform)
-                       ∂                     ∂                 
-    -G(x, y) + a(x, y)⋅──(f(x, y)) + b(x, y)⋅──(f(x, y)) + c(x, y)⋅f(x, y)
-                       ∂x                    ∂y
+                                         d                     d
+    -G(x, y) + a(x, y)*f(x, y) + b(x, y)*--(f(x, y)) + c(x, y)*--(f(x, y))
+                                         dx                    dy
+
 
     Examples
     ========
