@@ -186,7 +186,7 @@ class VectorPrettyPrinter(PrettyPrinter):
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
         # There are only special symbols up to fourth-order derivatives
-        if dot_i >= 5 or not self._use_unicode:
+        if dot_i >= 5:
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
         # Deal with special symbols
@@ -208,7 +208,7 @@ class VectorPrettyPrinter(PrettyPrinter):
             apostrophes = ""
             for i in range(0, dot_i):
                 apostrophes += "'"
-            d['picture'][0] += apostrophes
+            d['picture'][0] += apostrophes + "(t)"
         else:
             d['picture'] = [center_accent(d['picture'][0], dots[dot_i])]
         d['unicode'] =  center_accent(d['unicode'], dots[dot_i])
