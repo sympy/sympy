@@ -575,12 +575,12 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     The general solution of the PDE is:
 
     .. math::
-        f(x, y) = \left. \left[F(\eta) + \frac{1}{b^2 + c^2}
-        \int^{b x + c y} G\left (\frac{b \xi + c \eta}{b^2 + c^2},
-        \frac{- b \eta + c \xi}{b^2 + c^2} \right )
-        e^{\frac{a \xi}{b^2 + c^2}}\, d\xi\right)
-        e^{- \frac{a \xi}{b^2 + c^2}}
-        \right|_{\substack{ \eta=- b y + c x\\ \xi=b x + c y }}
+        f(x, y) = \left. \left[F(\eta) + \frac{1}{a^2 + b^2}
+        \int\limits^{a x + b y} G\left(\frac{a \xi + b \eta}{a^2 + b^2},
+        \frac{- a \eta + b \xi}{a^2 + b^2} \right)
+        e^{\frac{a \xi}{a^2 + b^2}}\, d\xi\right]
+        e^{- \frac{c \xi}{a^2 + b^2}}
+        \right|_{\substack{\eta=- a y + b x\\ \xi=a x + b y }}
 
     and can be found in sympy with ``pdsolve``::
 
@@ -592,45 +592,28 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         >>> u = f(x,y)
         >>> ux = u.diff(x)
         >>> uy = u.diff(y)
-        >>> genform = a*u + b*ux + c*uy - G(x,y)
+        >>> genform = a*ux + b*uy + c*u - G(x,y)
         >>> pprint(genform)
-                  d               d
-        a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y)) - G(x, y)
-                  dx              dy
+          ∂               ∂
+        a⋅──(f(x, y)) + b⋅──(f(x, y)) + c⋅f(x, y) - G(x, y)
+          ∂x              ∂y
         >>> pprint(pdsolve(genform, hint='1st_linear_constant_coeff_Integral'))
-                  //          b*x + c*y                                             \
-                  ||              /                                                 |
-                  ||             |                                                  |
-                  ||             |                                       a*xi       |
-                  ||             |                                     -------      |
-                  ||             |                                      2    2      |
-                  ||             |      /b*xi + c*eta  -b*eta + c*xi\  b  + c       |
-                  ||             |     G|------------, -------------|*e        d(xi)|
-                  ||             |      |   2    2         2    2   |               |
-                  ||             |      \  b  + c         b  + c    /               |
-                  ||             |                                                  |
-                  ||            /                                                   |
-                  ||                                                                |
-        f(x, y) = ||F(eta) + -------------------------------------------------------|*
-                  ||                                  2    2                        |
-                  \\                                 b  + c                         /
+                  ⎛⎛       a⋅x + b⋅y                                     ⎞         ⎞│
+                  ⎜⎜           ⌠                                         ⎟         ⎟│
+                  ⎜⎜           ⎮                                 c⋅ξ     ⎟         ⎟│
+                  ⎜⎜           ⎮                               ───────   ⎟         ⎟│
+                  ⎜⎜           ⎮                                2    2   ⎟         ⎟│
+                  ⎜⎜           ⎮      ⎛a⋅ξ + b⋅η  -a⋅η + b⋅ξ⎞  a  + b    ⎟         ⎟│
+                  ⎜⎜           ⎮     G⎜─────────, ──────────⎟⋅ℯ        dξ⎟         ⎟│
+                  ⎜⎜           ⎮      ⎜  2    2     2    2  ⎟            ⎟   -c⋅ξ  ⎟│
+                  ⎜⎜           ⎮      ⎝ a  + b     a  + b   ⎠            ⎟  ───────⎟│
+                  ⎜⎜           ⌡                                         ⎟   2    2⎟│
+                  ⎜⎜                                                     ⎟  a  + b ⎟│
+        f(x, y) = ⎜⎜F(η) + ──────────────────────────────────────────────⎟⋅ℯ       ⎟│
+                  ⎜⎜                           2    2                    ⎟         ⎟│
+                  ⎝⎝                          a  + b                     ⎠         ⎠│η
         <BLANKLINE>
-                \|
-                ||
-                ||
-                ||
-                ||
-                ||
-                ||
-                ||
-                ||
-          -a*xi ||
-         -------||
-          2    2||
-         b  + c ||
-        e       ||
-                ||
-                /|eta=-b*y + c*x, xi=b*x + c*y
+        =-a⋅y + b⋅x, ξ=a⋅x + b⋅y
 
 
     Examples
@@ -680,36 +663,36 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     with variable coefficients. The general form of this partial
     differential equation is
 
-    .. math:: a(x, y) \frac{df(x, y)}{dx} + a(x, y) \frac{df(x, y)}{dy}
+    .. math:: a(x, y) \frac{df(x, y)}{dx} + b(x, y) \frac{df(x, y)}{dy}
                 + c(x, y) f(x, y) = G(x, y)
 
     where `a(x, y)`, `b(x, y)`, `c(x, y)` and `G(x, y)` are arbitrary
     functions in `x` and `y`. This PDE is converted into an ODE by
-    making the following transformation.
+    making the following transformation:
 
     1. `\xi` as `x`
 
     2. `\eta` as the constant in the solution to the differential
        equation `\frac{dy}{dx} = -\frac{b}{a}`
 
-    Making the following substitutions reduces it to the linear ODE
+    Making the previous substitutions reduces it to the linear ODE
 
-    .. math:: a(\xi, \eta)\frac{du}{d\xi} + c(\xi, \eta)u - d(\xi, \eta) = 0
+    .. math:: a(\xi, \eta)\frac{du}{d\xi} + c(\xi, \eta)u - G(\xi, \eta) = 0
 
     which can be solved using ``dsolve``.
 
-        >>> from sympy.solvers.pde import pdsolve
-        >>> from sympy.abc import x, y
-        >>> from sympy import Function, pprint
-        >>> a, b, c, G, f= [Function(i) for i in ['a', 'b', 'c', 'G', 'f']]
-        >>> u = f(x,y)
-        >>> ux = u.diff(x)
-        >>> uy = u.diff(y)
-        >>> genform = a(x, y)*u + b(x, y)*ux + c(x, y)*uy - G(x,y)
-        >>> pprint(genform)
-                                             d                     d
-        -G(x, y) + a(x, y)*f(x, y) + b(x, y)*--(f(x, y)) + c(x, y)*--(f(x, y))
-                                             dx                    dy
+    >>> from sympy.solvers.pde import pdsolve
+    >>> from sympy.abc import x, y
+    >>> from sympy import Function, pprint
+    >>> a, b, c, G, f= [Function(i) for i in ['a', 'b', 'c', 'G', 'f']]
+    >>> u = f(x,y)
+    >>> ux = u.diff(x)
+    >>> uy = u.diff(y)
+    >>> genform = a(x, y)*u + b(x, y)*ux + c(x, y)*uy - G(x,y)
+    >>> pprint(genform)
+                       ∂                     ∂                 
+    -G(x, y) + a(x, y)⋅──(f(x, y)) + b(x, y)⋅──(f(x, y)) + c(x, y)⋅f(x, y)
+                       ∂x                    ∂y
 
     Examples
     ========
