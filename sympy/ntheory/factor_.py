@@ -2040,7 +2040,7 @@ class primeomega(Function):
                 raise ValueError("n must be a positive integer")
             else:
                 return sum(factorint(n).values())
-				
+
 """
 All Mersenne prime numbers is of the form 2^p - 1 and all perfect numbers is of the form 2^(p-1)*(2^p-1)
 Perfect number. c is a list of p in ascending order
@@ -2072,14 +2072,14 @@ def perfect_number(nth):
 
     """ Returns the nth known perfect number, there may exist not-yet-found perfect number
     """
-        
+
     n = as_int(nth)
     if n < 1:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
 
     if n > 51:
         raise ValueError("There are only 51 perfect numbers; nth must be less than or equal to 51")
-    
+
     p = c[n-1]
     x = 2**(p-1) * (2**p - 1)
 
@@ -2111,7 +2111,7 @@ def next_perfect_number(n):
          x = 2**(p-1) * (2**p - 1)
          if( x >= n):
              return x
-                
+
 def prev_perfect_number(n):
 
     n = int(n)
@@ -2128,7 +2128,7 @@ def perfect_number_range(a,b):
     from sympy.functions.elementary.integers import ceiling
 
     if a >= b :
-        return 
+        return
 
     d = ()
     a = as_int(ceiling(a)) - 1
@@ -2183,7 +2183,7 @@ def isless_than_perfect_number(a,n):
 def isgreater_than_perfect_number(a,n):
     from sympy.functions.elementary.integers import ceiling
     from sympy.functions.elementary.exponential import log
-    k = as_int(ceiling(log(a+1,10))) 
+    k = as_int(ceiling(log(a+1,10)))
     if( k < d[n-1]):
         return False
 
