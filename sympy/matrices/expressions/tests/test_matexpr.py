@@ -370,6 +370,8 @@ def test_generic_zero_matrix():
 
     assert MatAdd() == z
     assert MatAdd(z, A) == MatAdd(A)
+    # Make sure it is hashable
+    hash(z)
 
 def test_generic_identity():
     I = GenericIdentity()
@@ -388,3 +390,5 @@ def test_generic_identity():
 
     assert MatMul() == I
     assert MatMul(I, A) == MatMul(A)
+    # Make sure it is hashable
+    hash(I)

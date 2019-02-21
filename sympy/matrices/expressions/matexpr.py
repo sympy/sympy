@@ -796,6 +796,9 @@ class GenericIdentity(Identity):
     def __ne__(self, other):
         return not (self == other)
 
+    def __hash__(self):
+        return super(GenericIdentity, self).__hash__()
+
 class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
 
@@ -850,7 +853,6 @@ class ZeroMatrix(MatrixExpr):
 
     __bool__ = __nonzero__
 
-
 class GenericZeroMatrix(ZeroMatrix):
     """
     A zero matrix without a specified shape
@@ -881,6 +883,10 @@ class GenericZeroMatrix(ZeroMatrix):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+    def __hash__(self):
+        return super(GenericZeroMatrix, self).__hash__()
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
