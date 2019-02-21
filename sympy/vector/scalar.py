@@ -43,6 +43,7 @@ class BaseScalar(AtomicExpr):
         return obj
 
     is_commutative = True
+    is_symbol = True
 
     @property
     def free_symbols(self):
