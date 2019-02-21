@@ -3,10 +3,8 @@ sudo: false
 env:
   matrix:
   - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
-  - SPLIT="1/4" TEST_SYMPY="true"
-  - SPLIT="2/4" TEST_SYMPY="true"
-  - SPLIT="3/4" TEST_SYMPY="true"
-  - SPLIT="4/4" TEST_SYMPY="true"
+  - SPLIT="1/2" TEST_SYMPY="true"
+  - SPLIT="2/2" TEST_SYMPY="true"
   global:
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
 dist: trusty
@@ -28,22 +26,12 @@ matrix:
       dist: xenial
       sudo: true
       env:
-        - SPLIT="1/4" TEST_SYMPY="true"
+        - SPLIT="1/2" TEST_SYMPY="true"
     - python: 3.7
       dist: xenial
       sudo: true
       env:
-        - SPLIT="2/4" TEST_SYMPY="true"
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env:
-        - SPLIT="3/4" TEST_SYMPY="true"
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env:
-        - SPLIT="4/4" TEST_SYMPY="true"
+        - SPLIT="2/2" TEST_SYMPY="true"
 
     - python: 2.7
       env:
@@ -100,33 +88,11 @@ matrix:
     - python: 2.7
       env:
         - TEST_SLOW="true"
-        - SPLIT="1/3"
-    - python: 2.7
-      env:
-        - TEST_SLOW="true"
-        - SPLIT="2/3"
-    - python: 2.7
-      env:
-        - TEST_SLOW="true"
-        - SPLIT="3/3"
     - python: 3.7
       dist: xenial
       sudo: true
       env:
         - TEST_SLOW="true"
-        - SPLIT="1/3"
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env:
-        - TEST_SLOW="true"
-        - SPLIT="2/3"
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env:
-        - TEST_SLOW="true"
-        - SPLIT="3/3"
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
@@ -143,7 +109,7 @@ matrix:
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
-        - SPLIT="1/4"
+        - SPLIT="1/2"
         - FASTCACHE="false"
       addons:
         apt:
@@ -154,29 +120,7 @@ matrix:
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
-        - SPLIT="2/4"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="3/4"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="4/4"
+        - SPLIT="2/2"
         - FASTCACHE="false"
       addons:
         apt:
@@ -200,7 +144,7 @@ matrix:
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
-        - SPLIT="1/4"
+        - SPLIT="1/2"
         - FASTCACHE="false"
       addons:
         apt:
@@ -211,29 +155,7 @@ matrix:
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
-        - SPLIT="2/4"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="3/4"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="4/4"
+        - SPLIT="2/2"
         - FASTCACHE="false"
       addons:
         apt:
