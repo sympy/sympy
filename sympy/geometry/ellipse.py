@@ -1029,24 +1029,26 @@ class Ellipse(GeometrySet):
         >>> c = Symbol('c')
         >>> e1 = Ellipse(Point2D(3, 8), 7, 8)
         >>> e = e1.auxiliary_circle()
+        >>> e
+        Circle(Point2D(2,5),8)
         >>> e.equation()
         (x - 3)**2 + (y - 8)**2 - 64
         >>> c1 = Circle(Point2D(2, 5), 4)
         >>> c = c1.auxiliary_circle()
+        >>> pprint(c)
+               2          2     
+        (x - 2)  + (y - 5)  - 16
         >>> c
         (x - 2)**2 + (y - 5)**2 - 16
         """
-        if(self.hradius != 0 and self.vradius != 0):
-            if(self.hradius >= self.vradius):
-                x = _symbol(x, real=True)
-                y = _symbol(y, real=True)
-                return Circle(Point2D(self.center.x, self.center.y), self.hradius)
-            else:
-                x = _symbol(x, real=True)
-                y = _symbol(y, real=True)
-                return Circle(Point2D(self.center.x, self.center.y), self.vradius)
-        else:
-            raise NotImplementedError('Auxiliary Circle of arbitrary Ellipse is not supported.')
+        if(self.hradius >= self.vradius):
+            x = _symbol(x, real=True)
+            y = _symbol(y, real=True)
+            return Circle(Point2D(self.center.x, self.center.y), self.hradius)
+        elif(self.hradius < self.vradius):
+            x = _symbol(x, real=True)
+            y = _symbol(y, real=True)
+            return Circle(Point2D(self.center.x, self.center.y), self.vradius)
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.
