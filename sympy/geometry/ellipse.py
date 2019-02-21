@@ -1024,7 +1024,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import *
+        >>> from sympy import Circle, Ellipse, Point2D
         >>> e = Symbol('e')
         >>> c = Symbol('c')
         >>> e1 = Ellipse(Point2D(3, 8), 7, 8)
