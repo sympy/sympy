@@ -2059,63 +2059,47 @@ def mersenne_number(nth):
     n = as_int(nth)
     if n <  1:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
-
     if n > 51:
         raise ValueError("There are only 51 perfect numbers; nth must be less than or equal to 51")
-
     p = c[n-1]
     x = 2**p -1
     return x
 
 
 def perfect_number(nth):
-
     """ Returns the nth known perfect number, there may exist not-yet-found perfect number
     """
-
     n = as_int(nth)
     if n < 1:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
-
     if n > 51:
         raise ValueError("There are only 51 perfect numbers; nth must be less than or equal to 51")
-
     p = c[n-1]
     x = 2**(p-1) * (2**p - 1)
-
     return x
 
 def perfect_numberpi(n):
-
     n = int(n)
     d = ()
-
     for i in c:
         p = i
         x = 2**(p-1) * (2**p - 1)
-
         if( x > n):
             t = i
             break
-
         d = d + (x,)
-
     return d
 
 def next_perfect_number(n):
-
     n = int(n)
-
     for i in c:
-         p = i
-         x = 2**(p-1) * (2**p - 1)
-         if( x >= n):
-             return x
+        p = i
+        x = 2**(p-1) * (2**p - 1)
+        if( x >= n):
+            return x
 
 def prev_perfect_number(n):
-
     n = int(n)
-
     for i in range(50):
         p = c[i+1]
         x = 2**(p-1) * (2**p - 1)
@@ -2124,34 +2108,25 @@ def prev_perfect_number(n):
             return k
 
 def perfect_number_range(a,b):
-
     from sympy.functions.elementary.integers import ceiling
-
     if a >= b :
         return
-
     d = ()
     a = as_int(ceiling(a)) - 1
     b = as_int(ceiling(b))
-
     for i in range(50):
         p = c[i]
         x = 2**(p-1) * (2**p - 1)
-
         if( x > a and x < b):
             d = d + (x,)
-
         else:
             break
-
     return d
 
 def ischeck_perfect_number(n):
     from sympy.functions.elementary.integers import ceiling
     from sympy.functions.elementary.exponential import log
-
     k = as_int(ceiling(log(n+1,10)))
-
     if k in d:
         m = (1 + (1 + 4*n*2)**(1/2) )/4
         if log(m,2)+1 in c:
@@ -2165,10 +2140,8 @@ def isless_than_perfect_number(a,n):
     k = as_int(ceiling(log(a+1,10)))
     if( k < d[n-1]):
         return True
-
     if( k > d[n-1]):
         return False
-
     if( d[n-1] == k):
         t = (1 + (1 + 4*a*2)**(1/2) )/4
         m = log(t,2)
@@ -2176,7 +2149,6 @@ def isless_than_perfect_number(a,n):
         print(m)
         if(m+1 < c[n-1]):
             return True
-
         else:
             return False
 
@@ -2186,15 +2158,12 @@ def isgreater_than_perfect_number(a,n):
     k = as_int(ceiling(log(a+1,10)))
     if( k < d[n-1]):
         return False
-
     if( k > d[n-1]):
         return True
-
     if(d[n-1] == k):
         t = (1 + (1 + 4*a*2)**(1/2) )/4
         m = log(t,2)
         if(m+1 > c[n-1]):
             return True
-
         else:
             return False
