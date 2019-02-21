@@ -1030,16 +1030,14 @@ class Ellipse(GeometrySet):
         >>> e1 = Ellipse(Point2D(3, 8), 7, 8)
         >>> e = e1.auxiliary_circle()
         >>> e
-        Circle(Point2D(2,5),8)
+        Circle(Point2D(3, 8), 8)
         >>> e.equation()
         (x - 3)**2 + (y - 8)**2 - 64
         >>> c1 = Circle(Point2D(2, 5), 4)
         >>> c = c1.auxiliary_circle()
-        >>> pprint(c)
-               2          2     
-        (x - 2)  + (y - 5)  - 16
         >>> c
-        (x - 2)**2 + (y - 5)**2 - 16
+        Circle(Point2D(2, 5), 4)
+
         """
         if(self.hradius >= self.vradius):
             x = _symbol(x, real=True)
