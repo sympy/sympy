@@ -344,7 +344,7 @@ class Equality(Relational):
                     if lhs == -rhs:  # Eq(oo, -oo)
                         return S.false
                     return S.true
-            elif None in fin:
+            elif None in fin and False in fin:
                 return Relational.__new__(cls, lhs, rhs, **options)
 
             if all(isinstance(i, Expr) for i in (lhs, rhs)):
@@ -370,6 +370,8 @@ class Equality(Relational):
                         rv = S.true
                     elif n.is_zero is False:
                         rv = d.is_infinite
+                        if rv is False:
+                            return Relational.__new__(cls, lhs, rhs, **options)
                         if rv is None:
                             # if the condition that makes the denominator infinite does not
                             # make the original expression True then False can be returned

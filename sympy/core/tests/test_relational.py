@@ -17,7 +17,7 @@ def test_rel_ne():
 
     # issue 6116
     p = Symbol('p', positive=True)
-    assert Ne(p, 0).func is Ne
+    assert Ne(p, 0) is S.true
 
 
 def test_rel_subs():
@@ -92,7 +92,7 @@ def test_Eq():
 
     # issue 6116
     p = Symbol('p', positive=True)
-    assert Eq(p, 0).subs(p, 0) is S.true
+    assert Eq(p, 0) is S.false
 
     # issue 13348
     assert Eq(True, 1) is S.false
@@ -684,6 +684,7 @@ def test_issue_10304():
 
 
 def test_issue_10401():
+    from sympy import oo
     x = symbols('x')
     fin = symbols('inf', finite=True)
     inf = symbols('inf', infinite=True)
@@ -696,22 +697,22 @@ def test_issue_10401():
     assert Eq(1/(1/fin + 1), 1).subs(fin, 1) is S.false
 
     T, F = S.true, S.false
-    assert Eq(fin, inf) is F
+    assert Eq(fin, inf).subs(fin, 1234567) is F
     assert Eq(inf, inf2) is T and inf != inf2
     assert Eq(inf/inf2, 0) is F
-    assert Eq(inf/fin, 0).subs(fin, 2314561) is F
-    assert Eq(fin/inf, 0) is T
+    assert Eq(inf/fin, 0).subs(fin, 1) is F
+    assert Eq(fin/inf, 0).subs(fin, 0) is T
     assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
     assert Eq(inf, -inf) is F
 
 
-    assert Eq(fin/(fin + 1), 1).subs(fin, 5) is S.false
+    assert Eq(fin/(fin + 1), 1).subs(fin, 1) is S.false
 
     o = symbols('o', odd=True)
-    assert Eq(o, 2*o).func is Eq
+    assert Eq(o, 2*o) is S.false
 
     p = symbols('p', positive=True)
-    assert Eq(p/(p - 1), 1).func is Eq
+    assert Eq(p/(p - 1), 1) is F
 
 
 def test_issue_10633():
@@ -809,8 +810,10 @@ def test_issue_15847():
     assert simplify(a) == False
 
 
-def test_issue_12690():
-    from sympy import Symbol
-    x = Symbol('x', positive = True)
-    assert Eq(pi/x, 0).subs(x, 1) is S.false
-    assert Eq(1/x, pi/x).func is Eq
+def test_issue_12770():
+    x = Symbol('x', finite=True)
+    assert Eq(pi/x, 0).func is Eq
+    assert Eq(1/x, 1/x) == True
+
+    p = Symbol('p', positive=True)
+    assert Eq(p/p+10, 1) == False
