@@ -1024,27 +1024,27 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point2D, Ellipse, Circle
-        >>> e1 = Ellipse(Point2D(3, 0), 7, 8)
-        >>> e1.auxiliary_circle()
-        y**2 + (x - 3)**2 - 64
-        >>> c1 = Circle(Point2D(2, 0), 4)
-        >>> c1.auxiliary_circle()
-        y**2 + (x - 2)**2 - 16
+        >>> from sympy import *
+        >>> e = Symbol('e')
+        >>> c = Symbol('c')
+        >>> e1 = Ellipse(Point2D(3, 8), 7, 8)
+        >>> e = e1.auxiliary_circle()
+        >>> e.equation()
+        (x - 3)**2 + (y - 8)**2 - 64
+        >>> c1 = Circle(Point2D(2, 5), 4)
+        >>> c = c1.auxiliary_circle()
+        >>> c
+        (x - 2)**2 + (y - 5)**2 - 16
         """
         if(self.hradius != 0 and self.vradius != 0):
             if(self.hradius >= self.vradius):
                 x = _symbol(x, real=True)
                 y = _symbol(y, real=True)
-                t1 = (x - self.center.x)**2
-                t2 = (y - self.center.y)**2
-                return t1 + t2 - (self.hradius**2)
+                return Circle(Point2D(self.center.x, self.center.y), self.hradius)
             else:
                 x = _symbol(x, real=True)
                 y = _symbol(y, real=True)
-                t1 = (x - self.center.x)**2
-                t2 = (y - self.center.y)**2
-                return t1 + t2 - (self.vradius**2)
+                return Circle(Point2D(self.center.x, self.center.y), self.vradius)
         else:
             raise NotImplementedError('Auxiliary Circle of arbitrary Ellipse is not supported.')
 
