@@ -929,7 +929,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_AssocOp(self, e):
         mrow = self.dom.createElement('mrow')
         mi = self.dom.createElement('mi')
-        mi.append(self.dom.createTextNode(self.mathml_tag(e)))
+        mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         mrow.appendChild(mi)
         for arg in e.args:
             mrow.appendChild(self._print(arg))
@@ -948,6 +948,50 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         dom_element = self.dom.createElement(self.mathml_tag(p))
         dom_element.appendChild(self.dom.createTextNode(str(p)))
         return dom_element
+
+
+    def _print_Integers(self, e):
+        x = self.dom.createElement('mi')
+        x.setAttribute('mathvariant', 'normal')
+        x.appendChild(self.dom.createTextNode('&#x2124;'))
+        return x
+
+
+    def _print_Complexes(self, e):
+        x = self.dom.createElement('mi')
+        x.setAttribute('mathvariant', 'normal')
+        x.appendChild(self.dom.createTextNode('&#x2102;'))
+        return x
+
+
+    def _print_Reals(self, e):
+        x = self.dom.createElement('mi')
+        x.setAttribute('mathvariant', 'normal')
+        x.appendChild(self.dom.createTextNode('&#x211D;'))
+        return x
+
+
+    def _print_Naturals(self, e):
+        x = self.dom.createElement('mi')
+        x.setAttribute('mathvariant', 'normal')
+        x.appendChild(self.dom.createTextNode('&#x2115;'))
+        return x
+
+
+    def _print_Naturals0(self, e):
+        sub = self.dom.createElement('msub')
+        x = self.dom.createElement('mi')
+        x.setAttribute('mathvariant', 'normal')
+        x.appendChild(self.dom.createTextNode('&#x2115;'))
+        sub.appendChild(x)
+        sub.appendChild(self._print(S.Zero))
+        return sub
+
+
+    def _print_EmptySet(self, e):
+        x = self.dom.createElement('mo')
+        x.appendChild(self.dom.createTextNode('&#x2205;'))
+        return x
 
 
 def mathml(expr, printer='content', **settings):
