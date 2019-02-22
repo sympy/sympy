@@ -2183,7 +2183,7 @@ def from_hyper(func, x0=0, evalf=False):
             else:
                 val = simp.subs(x, x0)
             # return None if it is Infinite or NaN
-            if val.is_finite is not None and not val.is_finite or isinstance(val, NaN):
+            if val.is_finite is False or isinstance(val, NaN):
                 return None
             y0.append(val)
             simp = simp.diff(x)
@@ -2268,7 +2268,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
                 val = simp.subs(x, x0).evalf()
             else:
                 val = simp.subs(x, x0)
-            if val.is_finite is not None and not val.is_finite or isinstance(val, NaN):
+            if val.is_finite is False or isinstance(val, NaN):
                 return None
             y0.append(val)
             simp = simp.diff(x)
@@ -2876,7 +2876,7 @@ def _find_conditions(func, x, x0, order):
         val = func.subs(x, x0)
         if isinstance(val, NaN):
             val = limit(func, x, x0)
-        if val.is_finite is not None and not val.is_finite or isinstance(val, NaN):
+        if val.is_finite is False or isinstance(val, NaN):
             return None
         y0.append(val)
         func = func.diff(x)
