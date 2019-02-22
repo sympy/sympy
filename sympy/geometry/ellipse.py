@@ -1034,7 +1034,7 @@ class Ellipse(GeometrySet):
         Circle(Point2D(2, 5), 4)
 
         """
-        return Circle(Point2D(self.center.x, self.center.y), Max(self.hradius, self.vradius))
+        return Circle(Point2D(self.center), Max(self.hradius, self.vradius))
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.
