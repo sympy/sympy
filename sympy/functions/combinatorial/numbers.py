@@ -22,6 +22,7 @@ from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.ntheory import isprime
+from sympy.ntheory.primetest import is_square
 from sympy.utilities.memoization import recurrence_memo
 
 from mpmath import bernfrac, workprec
@@ -103,11 +104,7 @@ class carmichael(Function):
 
     @staticmethod
     def is_perfect_square(n):
-        from sympy.ntheory.primetest import is_square
-        if is_square(n):
-            return True
-        else:
-            return False
+        return is_square(n)
 
     @staticmethod
     def divides(p, n):
@@ -310,7 +307,7 @@ class tribonacci(Function):
     r"""
     Tribonacci numbers / Tribonacci polynomials
 
-    The Fibonacci numbers are the integer sequence defined by the
+    The Tibonacci numbers are the integer sequence defined by the
     initial terms `T_0 = 0`, `T_1 = 1`, `T_2 = 1` and the three-term
     recurrence relation `T_n = T_{n-1} + T_{n-2} + T_{n-3}`.
 
@@ -1107,7 +1104,7 @@ class catalan(Function):
     4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))
 
     >>> catalan(n).rewrite(hyper)
-    hyper((-n + 1, -n), (2,), 1)
+    hyper((1 - n, -n), (2,), 1)
 
     For some non-integer values of n we can get closed form
     expressions by rewriting in terms of gamma functions:

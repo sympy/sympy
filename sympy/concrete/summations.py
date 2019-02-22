@@ -94,7 +94,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     >>> Sum(x**k, (k, 0, oo))
     Sum(x**k, (k, 0, oo))
     >>> Sum(x**k, (k, 0, oo)).doit()
-    Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
+    Piecewise((1/(1 - x), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
     >>> Sum(x**k/factorial(k), (k, 0, oo)).doit()
     exp(x)
 
@@ -1135,7 +1135,7 @@ def _eval_sum_hyper(f, i, a):
     bq = params[1]
     x = ab[0]/ab[1]
     h = hyper(ap, bq, x)
-
+    f = combsimp(f)
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
 
 

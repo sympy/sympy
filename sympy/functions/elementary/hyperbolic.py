@@ -1236,7 +1236,7 @@ class asech(InverseHyperbolicFunction):
     >>> from sympy import asech, sqrt, S
     >>> from sympy.abc import x
     >>> asech(x).diff(x)
-    -1/(x*sqrt(-x**2 + 1))
+    -1/(x*sqrt(1 - x**2))
     >>> asech(1).diff(x)
     0
     >>> asech(1)
