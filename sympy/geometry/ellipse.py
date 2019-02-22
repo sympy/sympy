@@ -1008,7 +1008,7 @@ class Ellipse(GeometrySet):
     def auxiliary_circle(self):
         """Returns equation of auxiliary circle of the ellipse.
 
-        Auxiliary Circle of an ellipse is circumcircle of an ellipse i.e. the circle 
+        Auxiliary Circle of an ellipse is circumcircle of an ellipse i.e. the circle
         whose center concurs with that of the ellipse and whose radius is equal to the ellipse's semi-major axis.
 
         Parameters
