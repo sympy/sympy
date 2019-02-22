@@ -2071,7 +2071,7 @@ class MatrixArithmetic(MatrixRequired):
                     except (AttributeError, MatrixError):
                         pass
                 return a._eval_pow_by_recursion(num)
-            elif num.is_Number != True and num.is_negative is None and a.det() == 0:
+            elif not num.is_Number and num.is_negative is None and a.det() == 0:
                 from sympy.matrices.expressions import MatPow
                 return MatPow(a, num)
             elif isinstance(num, (Expr, float)):
