@@ -11,7 +11,7 @@ from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
-    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
+    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
 from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
@@ -3369,6 +3369,12 @@ def test_legacy_det():
     assert M.det(method="bareis") == 123
     assert M.det(method="det_lu") == 123
     assert M.det(method="LU") == 123
+
+def test_case_6913():
+    m = MatrixSymbol('m', 1, 1)
+    a = Symbol("a")
+    a = m[0, 0]>0
+    assert str(a) == 'm[0, 0] > 0'
 
 def test_issue_15872():
     A = Matrix([[1, 1, 1, 0], [-2, -1, 0, -1], [0, 0, -1, -1], [0, 0, 2, 1]])

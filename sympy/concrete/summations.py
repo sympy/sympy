@@ -1135,7 +1135,7 @@ def _eval_sum_hyper(f, i, a):
     bq = params[1]
     x = ab[0]/ab[1]
     h = hyper(ap, bq, x)
-
+    f = combsimp(f)
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
 
 
