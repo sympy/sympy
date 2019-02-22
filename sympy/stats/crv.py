@@ -258,7 +258,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """
         x = symbols('x', real = True, cls = Dummy)
         pdf = self.pdf(x)
-        h = integrate(-pdf * log(pdf), (x, -oo, oo))
+        lower_bound = self.set.start
+        upper_bound = self.set.end
+        h = integrate(-pdf * log(pdf), (x, lower_bound, upper_bound))
         return h
 
     def _moment_generating_function(self, t):
@@ -404,7 +406,9 @@ class ContinuousPSpace(PSpace):
 
         d = self.compute_density(expr, **kwargs)
         x = symbols('x', real=True, cls=Dummy)
-        h = integrate(-d(x)*log(d(x)), (x, -oo, oo), **kwargs)
+        lower_bound = self.domain.set.start
+        upper_bound = self.domain.set.end
+        h = integrate(-d(x)*log(d(x)), (x, lower_bound, upper_bound), **kwargs)
         return h
 
     def probability(self, condition, **kwargs):
