@@ -152,3 +152,5 @@ if new_authors:
     print()
     for i in sorted(new_authors, key=lambda x: x.lower()):
         print('\t%s' % i)
+else:
+    print(yellow("The AUTHORS file was updated."))
