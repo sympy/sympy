@@ -50,7 +50,7 @@ suppress_warnings = ['ref.citation', 'ref.footnote']
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2018 SymPy Development Team'
+copyright = '2019 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
