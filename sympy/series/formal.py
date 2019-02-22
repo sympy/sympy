@@ -1083,7 +1083,7 @@ class FormalPowerSeries(SeriesBase):
         >>> f.integrate(x).truncate()
         -1 + x**2/2 - x**4/24 + O(x**6)
         >>> integrate(f, (x, 0, 1))
-        -cos(1) + 1
+        1 - cos(1)
         """
         from sympy.integrals import integrate
 

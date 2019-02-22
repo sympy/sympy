@@ -226,7 +226,7 @@ def test_jl_piecewise_():
         "function pwtest(x)\n"
         "    out1 = ((x < -1) ? (0) :\n"
         "    (x <= 1) ? (x.^2) :\n"
-        "    (x > 1) ? (-x + 2) : (1))\n"
+        "    (x > 1) ? (2 - x) : (1))\n"
         "    return out1\n"
         "end\n"
     )

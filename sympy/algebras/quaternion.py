@@ -145,7 +145,7 @@ class Quaternion(Expr):
         >>> M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
         >>> q = trigsimp(Quaternion.from_rotation_matrix(M))
         >>> q
-        sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(-2*cos(x) + 2)/2*k
+        sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(2 - 2*cos(x))/2*k
         """
 
         absQ = M.det()**Rational(1, 3)
