@@ -915,6 +915,20 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(y)
         return mrow
 
+    def _print_polylog(self, expr, exp=None):
+        mrow = self.dom.createElement('mrow')
+        m = self.dom.createElement('msub')
+
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('Li'))
+        m.appendChild(mi)
+        m.appendChild(self._print(expr.args[0]))
+        mrow.appendChild(m)
+        brac = self.dom.createElement('mfenced')
+        brac.appendChild(self._print(expr.args[1]))
+        mrow.appendChild(brac)
+        return mrow
+
     def _print_Basic(self, e):
         mrow = self.dom.createElement('mrow')
         mi = self.dom.createElement('mi')

@@ -2,6 +2,7 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
     MatrixSymbol, Function, Derivative, log
+from sympy.functions.special.zeta_functions import polylog
 from sympy.stats.rv import RandomSymbol
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
     MathMLPrinter
@@ -952,6 +953,11 @@ def test_mul_symbol_print():
     assert mathml(expr, printer='presentation', mul_symbol='dot') == '<mrow><mi>x</mi><mo>&#xB7;</mo><mi>y</mi></mrow>'
     assert mathml(expr, printer='presentation', mul_symbol='ldot') == '<mrow><mi>x</mi><mo>&#x2024;</mo><mi>y</mi></mrow>'
     assert mathml(expr, printer='presentation', mul_symbol='times') == '<mrow><mi>x</mi><mo>&#xD7;</mo><mi>y</mi></mrow>'
+
+
+def test_print_polylog():
+    assert mp(polylog(x, y)) == '<apply><polylog/><ci>x</ci><ci>y</ci></apply>'
+    assert mpp(polylog(x, y)) == '<mrow><msub><mi>Li</mi><mi>x</mi></msub><mfenced><mi>y</mi></mfenced></mrow>'
 
 
 def test_root_notation_print():
