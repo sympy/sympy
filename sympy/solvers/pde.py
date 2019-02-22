@@ -578,7 +578,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         f(x, y) = \left. \left[F(\eta) + \frac{1}{a^2 + b^2}
         \int\limits^{a x + b y} G\left(\frac{a \xi + b \eta}{a^2 + b^2},
         \frac{- a \eta + b \xi}{a^2 + b^2} \right)
-        e^{\frac{a \xi}{a^2 + b^2}}\, d\xi\right]
+        e^{\frac{c \xi}{a^2 + b^2}}\, d\xi\right]
         e^{- \frac{c \xi}{a^2 + b^2}}
         \right|_{\substack{\eta=- a y + b x\\ \xi=a x + b y }}
 
