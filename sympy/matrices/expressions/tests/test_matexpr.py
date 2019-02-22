@@ -335,9 +335,11 @@ def test_MatrixElement_with_values():
     raises(ValueError, lambda: M[2, i])
     raises(ValueError, lambda: M[-1, i])
 
+
 def test_inv():
     B = MatrixSymbol('B', 3, 3)
     assert B.inv() == B**-1
+
 
 def test_factor_expand():
     A = MatrixSymbol("A", n, n)
@@ -347,3 +349,8 @@ def test_factor_expand():
     assert expr1 != expr2
     assert expand(expr1) == expr2
     assert factor(expr2) == expr1
+
+
+def test_issue_2750():
+    x = MatrixSymbol('x', 1, 1)
+    assert (x.T*x).as_explicit()**-1 == Matrix([[x[0, 0]**(-2)]])
