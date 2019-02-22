@@ -744,9 +744,7 @@ class Max(MinMaxBase, Application):
                 for j in args])
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        is_real = all(i.is_real for i in args)
-        if is_real:
-            return _minmax_as_Piecewise('>=', *args)
+        return _minmax_as_Piecewise('>=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_or(a.is_positive for a in self.args)
@@ -809,9 +807,7 @@ class Min(MinMaxBase, Application):
                 for j in args])
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        is_real = all(i.is_real for i in args)
-        if is_real:
-            return _minmax_as_Piecewise('<=', *args)
+        return _minmax_as_Piecewise('<=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_and(a.is_positive for a in self.args)
