@@ -351,7 +351,7 @@ def test_factor_expand():
     assert factor(expr2) == expr1
 
 
-def test_issue_7842():
+def test_matrix_equality():
     from sympy import Eq
     A = MatrixSymbol('A', 3, 1)
     B = MatrixSymbol('B', 2, 1)
