@@ -52,7 +52,7 @@ def test_as_explicit():
     v = s.MatrixSymbol('v',3,1)
     A = s.MatrixSymbol('A',3,3)
     quadratic = v.T*A*v
-    x = s.Matrix([i+1 for i in xrange(n)])
+    x = s.Matrix([i+1 for i in range(n)])
     X = s.Identity(n)
     subbed = quadratic.xreplace({v:x,A:X})
     assert subbed.as_explicit()

@@ -30,7 +30,9 @@ def test_factorial_simplify():
     assert simplify(factorial(x)/x) == factorial(x - 1)
     assert simplify(factorial(factorial(x))) == factorial(factorial(x))
 
+
 def test_simplify_scalar_for_quadratic_Matrix_computations():
+    import sympy as s
     n = 3
     v = s.MatrixSymbol('v',3,1)
     A = s.MatrixSymbol('A',3,3)
@@ -39,6 +41,7 @@ def test_simplify_scalar_for_quadratic_Matrix_computations():
     X = s.Identity(n)
     subbed = quadratic.xreplace({v:x,A:X})
     assert simplify(s.trace(subbed))
+
 
 def test_simplify_expr():
     x, y, z, k, n, m, w, s, A = symbols('x,y,z,k,n,m,w,s,A')
