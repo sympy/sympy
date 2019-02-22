@@ -188,7 +188,7 @@ class Token(Basic):
     @classmethod
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
-        if arg == None:
+        if arg is None:
             return cls.defaults.get(attr, none)
         else:
             if isinstance(arg, Dummy):  # sympy's replace uses Dummy instances
@@ -1467,7 +1467,7 @@ class Variable(Node):
         >>> from sympy.codegen.ast import Variable
         >>> x = Variable('x')
         >>> decl1 = x.as_Declaration()
-        >>> decl1.variable.value == None
+        >>> decl1.variable.value is None
         True
         >>> decl2 = x.as_Declaration(value=42.0)
         >>> decl2.variable.value == 42
@@ -1560,7 +1560,7 @@ class Declaration(Token):
     >>> z = Declaration('z')
     >>> z.variable.type == untyped
     True
-    >>> z.variable.value == None
+    >>> z.variable.value is None
     True
     """
     __slots__ = ['variable']

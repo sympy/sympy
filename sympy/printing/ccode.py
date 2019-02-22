@@ -524,7 +524,7 @@ class C89CodePrinter(CodePrinter):
         return 'false'
 
     def _print_Element(self, elem):
-        if elem.strides == None:
+        if elem.strides is None:
             if elem.offset is not None:
                 raise ValueError("Expected strides when offset is given")
             idxs = ']['.join(map(lambda arg: self._print(arg),
