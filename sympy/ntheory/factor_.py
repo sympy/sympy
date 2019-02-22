@@ -1429,6 +1429,13 @@ def divisor_count(n, modulus=1):
         return 0
     return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
 
+def proper_divisors(n, generator = False):
+    return divisors(n)[0:-1]
+
+
+def proper_divisors_count(n,modulus=1):
+    return divisor_count(n)-1
+
 
 def _udivisors(n):
     """Helper function for udivisors which generates the unitary divisors."""
