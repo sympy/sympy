@@ -1011,14 +1011,6 @@ class Ellipse(GeometrySet):
         Auxiliary Circle of an ellipse is circumcircle of an ellipse i.e. the circle
         whose center concurs with that of the ellipse and whose radius is equal to the ellipse's semi-major axis.
 
-        Parameters
-        ==========
-
-        x : str, optional
-            Label for the x-axis. Default value is 'x'.
-        y : str, optional
-            Label for the y-axis. Default value is 'y'.
-
         Returns
         =======
 
