@@ -3,6 +3,8 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
     MatrixSymbol, Function, Derivative, log
 from sympy.functions.special.zeta_functions import polylog
+from sympy.logic.boolalg import And, Or, Implies, Equivalent, Xor
+from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import RandomSymbol
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
     MathMLPrinter
@@ -956,8 +958,33 @@ def test_mul_symbol_print():
 
 
 def test_print_polylog():
-    assert mp(polylog(x, y)) == '<apply><polylog/><ci>x</ci><ci>y</ci></apply>'
-    assert mpp(polylog(x, y)) == '<mrow><msub><mi>Li</mi><mi>x</mi></msub><mfenced><mi>y</mi></mfenced></mrow>'
+    assert mp.doprint(polylog(x, y)) == '<apply><polylog/><ci>x</ci><ci>y</ci></apply>'
+    assert mpp.doprint(polylog(x, y)) == '<mrow><msub><mi>Li</mi><mi>x</mi></msub><mfenced><mi>y</mi></mfenced></mrow>'
+
+
+def test_print_set_frozenset():
+    f = frozenset({1, 5, 3})
+    assert mpp.doprint(f) == '<mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mn>5</mn></mfenced>'
+    s = set({1, 2, 3})
+    assert mpp.doprint(s) == '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mn>3</mn></mfenced>'
+
+
+def test_print_FiniteSet():
+    f1 = FiniteSet(x, 1, 3)
+    assert mpp.doprint(f1) == '<mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced>'
+
+
+def test_print_logic():
+    assert mpp.doprint(And(x, y)) == '<mrow><mi>x</mi><mo>&#x2227;</mo><mi>y</mi></mrow>'
+    assert mpp.doprint(Or(x, y)) == '<mrow><mi>x</mi><mo>&#x2228;</mo><mi>y</mi></mrow>'
+    assert mpp.doprint(Xor(x, y)) == '<mrow><mi>x</mi><mo>&#x22BB;</mo><mi>y</mi></mrow>'
+    assert mpp.doprint(Implies(x, y)) == '<mrow><mi>x</mi><mo>&#x21D2;</mo><mi>y</mi></mrow>'
+    assert mpp.doprint(Equivalent(x, y)) == '<mrow><mi>x</mi><mo>&#x21D4;</mo><mi>y</mi></mrow>'
+
+    assert mpp.doprint(And(Eq(x, y), x > 4)) == '<mrow><mrow><mi>x</mi><mo>=</mo><mi>y</mi></mrow><mo>&#x2227;</mo><mrow><mi>x</mi><mo>></mo><mn>4</mn></mrow></mrow>'
+    assert mpp.doprint(And(Eq(x, 3), y < 3, x > y + 1)) == '<mrow><mrow><mi>x</mi><mo>=</mo><mn>3</mn></mrow><mo>&#x2227;</mo><mrow><mi>x</mi><mo>></mo><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow></mrow><mo>&#x2227;</mo><mrow><mi>y</mi><mo><</mo><mn>3</mn></mrow></mrow>'
+    assert mpp.doprint(Or(Eq(x, y), x > 4)) == '<mrow><mrow><mi>x</mi><mo>=</mo><mi>y</mi></mrow><mo>&#x2228;</mo><mrow><mi>x</mi><mo>></mo><mn>4</mn></mrow></mrow>'
+    assert mpp.doprint(And(Eq(x, 3), Or(y < 3, x > y + 1))) == '<mrow><mrow><mi>x</mi><mo>=</mo><mn>3</mn></mrow><mo>&#x2227;</mo><mfenced><mrow><mrow><mi>x</mi><mo>></mo><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow></mrow><mo>&#x2228;</mo><mrow><mi>y</mi><mo><</mo><mn>3</mn></mrow></mrow></mfenced></mrow>'
 
 
 def test_root_notation_print():
