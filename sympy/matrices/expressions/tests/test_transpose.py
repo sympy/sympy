@@ -45,6 +45,7 @@ def test_transpose1x1():
     assert m == refine(m.T)
     assert m == refine(m.T.T)
 
+
 def test_as_explicit():
     import sympy as s
     n = 3
