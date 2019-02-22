@@ -498,7 +498,7 @@ class C89CodePrinter(CodePrinter):
             )
         else:
             raise NotImplementedError("Unknown type of var: %s" % type(var))
-        if val != None:
+        if val is not None:
             result += ' = %s' % self._print(val)
         return result
 
@@ -525,13 +525,13 @@ class C89CodePrinter(CodePrinter):
 
     def _print_Element(self, elem):
         if elem.strides == None:
-            if elem.offset != None:
+            if elem.offset is not None:
                 raise ValueError("Expected strides when offset is given")
             idxs = ']['.join(map(lambda arg: self._print(arg),
                                  elem.indices))
         else:
             global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
-            if elem.offset != None:
+            if elem.offset is not None:
                 global_idx += elem.offset
             idxs = self._print(global_idx)
 
