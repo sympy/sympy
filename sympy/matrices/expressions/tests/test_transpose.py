@@ -44,3 +44,15 @@ def test_transpose1x1():
     m = MatrixSymbol('m', 1, 1)
     assert m == refine(m.T)
     assert m == refine(m.T.T)
+
+def test_as_explicit():
+    import sympy as s
+    n = 3
+    v = s.MatrixSymbol('v',3,1)
+    A = s.MatrixSymbol('A',3,3)
+    quadratic = v.T*A*v
+    x = s.Matrix([i+1 for i in xrange(n)])
+    X = s.Identity(n)
+    subbed = quadratic.xreplace({v:x,A:X})
+    assert subbed.as_explicit()
+    assert s.simplify((s.trace(quadratic.as_explicit())).xreplace({v:x,A:X}))
