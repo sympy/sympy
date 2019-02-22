@@ -4,7 +4,7 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     MatrixSymbol, Function, Derivative, log
 from sympy.functions.special.zeta_functions import polylog
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, Xor
-from sympy.sets.sets import FiniteSet
+from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, SymmetricDifference
 from sympy.stats.rv import RandomSymbol
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
     MathMLPrinter
@@ -972,6 +972,16 @@ def test_print_set_frozenset():
 def test_print_FiniteSet():
     f1 = FiniteSet(x, 1, 3)
     assert mpp.doprint(f1) == '<mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced>'
+
+
+def test_print_SetOp():
+    f1 = FiniteSet(x, 1, 3)
+    f2 = FiniteSet(y, 2, 4)
+
+    assert mpp.doprint(Union(f1, f2, evaluate=False)) == '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x222A;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
+    assert mpp.doprint(Intersection(f1, f2, evaluate=False)) == '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x2229;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
+    assert mpp.doprint(Complement(f1, f2, evaluate=False)) == '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x2216;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
+    assert mpp.doprint(SymmetricDifference(f1, f2, evaluate=False)) == '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x2206;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
 
 
 def test_print_logic():
