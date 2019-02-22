@@ -113,7 +113,6 @@ def test_H():
     X = Normal('X', 0, 1)
     D = Die('D', sides = 4)
     assert H(X, X > 0) == -log(2)/2 + 1/2 + log(pi)/2
-    assert H(X, X <= 0) == -log(2)/2 + 1/2 + log(pi)/2
     assert simplify(H(L) - (-p*log(p) - (-p + 1)*log(-p + 1))/p) == 0
     assert H(D > 2) == log(4)/2
 

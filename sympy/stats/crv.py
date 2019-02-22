@@ -12,7 +12,8 @@ from __future__ import print_function, division
 
 from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial, log)
+        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial, log,
+        simplify)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
@@ -251,18 +252,6 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         mgf = integrate(exp(t * x) * pdf, (x, -oo, oo))
         return Lambda(t, mgf)
 
-    @cacheit
-    def compute_entropy(self, **kwargs):
-        """ Compute the entropy from the PDF
-        Returns a Lambda
-        """
-        x = symbols('x', real = True, cls = Dummy)
-        pdf = self.pdf(x)
-        lower_bound = self.set.start
-        upper_bound = self.set.end
-        h = integrate(-pdf * log(pdf), (x, lower_bound, upper_bound))
-        return h
-
     def _moment_generating_function(self, t):
         return None
 
@@ -398,18 +387,6 @@ class ContinuousPSpace(PSpace):
         x, t = symbols('x, t', real=True, cls=Dummy)
         mgf = integrate(exp(t * x) * d(x), (x, -oo, oo), **kwargs)
         return Lambda(t, mgf)
-
-    @cacheit
-    def compute_entropy(self, expr, **kwargs):
-        if not self.domain.set.is_Interval:
-            raise NotImplementedError("Entropy of multivariate expressions not implemented")
-
-        d = self.compute_density(expr, **kwargs)
-        x = symbols('x', real=True, cls=Dummy)
-        lower_bound = self.domain.set.start
-        upper_bound = self.domain.set.end
-        h = integrate(-d(x)*log(d(x)), (x, lower_bound, upper_bound), **kwargs)
-        return h
 
     def probability(self, condition, **kwargs):
         z = Dummy('z', real=True, finite=True)
@@ -554,7 +531,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         # Definition - http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
         if expr == self.value:
             return self.distribution.entropy(**kwargs)
-        return ContinuousPSpace.compute_entropy(self, expr, **kwargs)
+        return ContinuousPSpace.compute_expectation(self, -log(expr), **kwargs)
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:
