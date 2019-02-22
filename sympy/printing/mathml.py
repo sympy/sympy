@@ -513,6 +513,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'LessThan': '&#x2264;',
             'StrictGreaterThan': '>',
             'StrictLessThan': '<',
+            'lerchphi': '&#x3A6;',
         }
 
         def mul_symbol_selection():

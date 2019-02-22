@@ -2,7 +2,7 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
     MatrixSymbol, Function, Derivative, log
-from sympy.functions.special.zeta_functions import polylog
+from sympy.functions.special.zeta_functions import polylog, lerchphi
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, Xor
 from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, SymmetricDifference
 from sympy.stats.rv import RandomSymbol
@@ -955,6 +955,10 @@ def test_mul_symbol_print():
     assert mathml(expr, printer='presentation', mul_symbol='dot') == '<mrow><mi>x</mi><mo>&#xB7;</mo><mi>y</mi></mrow>'
     assert mathml(expr, printer='presentation', mul_symbol='ldot') == '<mrow><mi>x</mi><mo>&#x2024;</mo><mi>y</mi></mrow>'
     assert mathml(expr, printer='presentation', mul_symbol='times') == '<mrow><mi>x</mi><mo>&#xD7;</mo><mi>y</mi></mrow>'
+
+
+def test_print_lerchphi():
+    assert mpp.doprint(lerchphi(1, 2, 3)) == '<mrow><mi>&#x3A6;</mi><mfenced><mn>1</mn><mn>2</mn><mn>3</mn></mfenced></mrow>'
 
 
 def test_print_polylog():
