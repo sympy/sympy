@@ -706,7 +706,7 @@ class Expr(Basic, EvalfMixin):
         if constant is False:
             return False
 
-        if constant is None and (diff.free_symbols or not diff.is_number):
+        if constant is None and not diff.is_number:
             # e.g. unless the right simplification is done, a symbolic
             # zero is possible (see expression of issue 6829: without
             # simplification constant will be None).
@@ -2399,7 +2399,7 @@ class Expr(Basic, EvalfMixin):
                     piimult += coeff
                     continue
             extras += [exp]
-        if not piimult.free_symbols:
+        if piimult.is_number:
             coeff = piimult
             tail = ()
         else:
