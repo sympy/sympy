@@ -788,7 +788,7 @@ class Polygon(GeometrySet):
         Returns the shortest distance between self and o.
 
         If o is a point, then self does not need to be convex.
-        If o is another polygon self and o must be complex.
+        If o is another polygon self and o must be convex.
 
         Examples
         ========

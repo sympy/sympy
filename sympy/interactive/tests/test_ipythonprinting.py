@@ -88,7 +88,7 @@ def test_print_builtin_option():
                     u'{n\N{LATIN SUBSCRIPT SMALL LETTER I}: 3, \N{GREEK SMALL LETTER PI}: 3.14}',
                     "{n_i: 3, pi: 3.14}",
                     u'{\N{GREEK SMALL LETTER PI}: 3.14, n\N{LATIN SUBSCRIPT SMALL LETTER I}: 3}')
-    assert latex == r'$\displaystyle \left\{ n_{i} : 3, \quad \pi : 3.14\right\}$'
+    assert latex == r'$\displaystyle \left\{ n_{i} : 3, \  \pi : 3.14\right\}$'
 
     app.run_cell("inst.display_formatter.formatters['text/latex'].enabled = True")
     app.run_cell("init_printing(use_latex=True, print_builtin=False)")

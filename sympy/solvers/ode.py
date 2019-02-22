@@ -343,10 +343,6 @@ def sub_func_doit(eq, func, new):
     When replacing the func with something else, we usually want the
     derivative evaluated, so this function helps in making that happen.
 
-    To keep subs from having to look through all derivatives, we mask them off
-    with dummy variables, do the func sub, and then replace masked-off
-    derivatives with their doit values.
-
     Examples
     ========
 
@@ -363,29 +359,29 @@ def sub_func_doit(eq, func, new):
     x*(-1/(x**2*(z + 1/x)) + 1/(x**3*(z + 1/x)**2)) + 1/(x*(z + 1/x))
     ...- 1/(x**2*(z + 1/x)**2)
     """
-    reps = {}
-    repu = {}
+    reps= {func: new}
     for d in eq.atoms(Derivative):
-        u = Dummy('u')
-        repu[u] = d.subs(func, new).doit()
-        reps[d] = u
-
-    # Make sure that expressions such as ``Derivative(f(x), (x, 2))`` get
-    # replaced before ``Derivative(f(x), x)``:
-    #
-    # Also replace e.g. Derivative(x*Derivative(f(x), x), x) before
-    # Derivative(f(x), x)
-    def cmp(subs1, subs2):
-        return subs2[0].has(subs1[0]) - subs1[0].has(subs2[0])
-    key = lambda x: (-x[0].derivative_count, cmp_to_key(cmp)(x))
-    reps = sorted(reps.items(), key=key)
-
-    return eq.subs(reps).subs(func, new).subs(repu)
+        if d.expr == func:
+            reps[d] = new.diff(*d.variable_count)
+        else:
+            reps[d] = d.xreplace({func: new}).doit(deep=False)
+    return eq.xreplace(reps)
 
 
 def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     """
     Returns a list of constants that do not occur
+    in eq already.
+    """
+
+    ncs = iter_numbered_constants(eq, start, prefix)
+    Cs = [next(ncs) for i in range(num)]
+    return (Cs[0] if num == 1 else tuple(Cs))
+
+
+def iter_numbered_constants(eq, start=1, prefix='C'):
+    """
+    Returns an iterator of constants that do not occur
     in eq already.
     """
 
@@ -398,9 +394,7 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     func_set = set().union(*[i.atoms(Function) for i in eq])
     if func_set:
         atom_set |= {Symbol(str(f.func)) for f in func_set}
-    ncs = numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
-    Cs = [next(ncs) for i in range(num)]
-    return (Cs[0] if num == 1 else tuple(Cs))
+    return numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
 
 
 def dsolve(eq, func=None, hint="default", simplify=True,
@@ -4013,7 +4007,7 @@ def _nth_algebraic_match(eq, func):
     """
 
     # Each integration should generate a different constant
-    constants = iter(numbered_symbols(prefix='C', cls=Symbol, start=1))
+    constants = iter_numbered_constants(eq)
     constant = lambda: next(constants, None)
 
     # Like Derivative but "invertible"
