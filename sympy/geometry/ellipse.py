@@ -1005,8 +1005,11 @@ class Ellipse(GeometrySet):
         """
         return self.major * (1 - self.eccentricity ** 2)
 
-    def auxiliary_circle(self, x='x', y='y'):
+    def auxiliary_circle(self):
         """Returns equation of auxiliary circle of the ellipse.
+
+        Auxiliary Circle of an ellipse is circumcircle of an ellipse i.e. the circle 
+        whose center concurs with that of the ellipse and whose radius is equal to the ellipse's semi-major axis.
 
         Parameters
         ==========
@@ -1040,12 +1043,8 @@ class Ellipse(GeometrySet):
 
         """
         if(self.hradius >= self.vradius):
-            x = _symbol(x, real=True)
-            y = _symbol(y, real=True)
             return Circle(Point2D(self.center.x, self.center.y), self.hradius)
         elif(self.hradius < self.vradius):
-            x = _symbol(x, real=True)
-            y = _symbol(y, real=True)
             return Circle(Point2D(self.center.x, self.center.y), self.vradius)
 
     def plot_interval(self, parameter='t'):
