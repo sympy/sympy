@@ -367,10 +367,10 @@ def Beta(name, alpha, beta):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-     alpha - 1         beta - 1
-    z         *(-z + 1)
-    ---------------------------
-           B(alpha, beta)
+     alpha - 1        beta - 1
+    z         *(1 - z)
+    --------------------------
+          B(alpha, beta)
 
     >>> expand_func(simplify(E(X, meijerg=True)))
     alpha/(alpha + beta)
@@ -579,7 +579,7 @@ def Chi(name, k):
     >>> X = Chi("x", k)
 
     >>> density(X)(z)
-    2**(-k/2 + 1)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
+    2**(1 - k/2)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
 
     References
     ==========
@@ -1577,14 +1577,12 @@ def Kumaraswamy(name, a, b):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                         b - 1
-         a - 1 /   a    \
-    a*b*z     *\- z  + 1/
+                       b - 1
+         a - 1 /     a\
+    a*b*z     *\1 - z /
 
     >>> cdf(X)(z)
-    Piecewise((0, z < 0),
-            (-(-z**a + 1)**b + 1, z <= 1),
-            (1, True))
+    Piecewise((0, z < 0), (1 - (1 - z**a)**b, z <= 1), (1, True))
 
     References
     ==========
@@ -1657,8 +1655,7 @@ def Laplace(name, mu, b):
     exp(-Abs(mu - z)/b)/(2*b)
 
     >>> cdf(X)(z)
-    Piecewise((exp((-mu + z)/b)/2, mu > z),
-            (-exp((mu - z)/b)/2 + 1, True))
+    Piecewise((exp((-mu + z)/b)/2, mu > z), (1 - exp((mu - z)/b)/2, True))
 
     >>> L = Laplace('L', [1, 2], [[1, 0], [0, 1]])
     >>> pprint(density(L)(1, 2), use_unicode=False)
@@ -2085,12 +2082,12 @@ def Normal(name, mean, std):
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> pprint(density(m)(y, z))
-           /  y   1\ /2*y   z\   /  z    \ /  y   2*z    \
-           |- - + -|*|--- - -| + |- - + 1|*|- - + --- - 1|
-      ___  \  2   2/ \ 3    3/   \  2    / \  3    3     /
+           /1   y\ /2*y   z\   /    z\ /  y   2*z    \
+           |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
+      ___  \2   2/ \ 3    3/   \    2/ \  3    3     /
     \/ 3 *e
-    ------------------------------------------------------
-                             6*pi
+    --------------------------------------------------
+                           6*pi
 
     >>> marginal_distribution(m, m[0])(1)
      1/(2*sqrt(pi))
