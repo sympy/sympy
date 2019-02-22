@@ -3115,33 +3115,26 @@ def test_order_reducible():
     assert sol == dsolve(eqn, f(x))
 
     F = lambda eq: _order_reducible_match(eq, f(x))
-    fx = f(x)
     D = Derivative
-    assert F(D(y*fx, x, y) + D(fx, x)) is None
+    assert F(D(y*f(x), x, y) + D(f(x), x)) is None
     assert F(D(y*f(y), y, y) + D(f(y), y)) is None
-    assert F(fx*D(fx, x) + D(fx, x, 2)) is None
-    assert F(D(x*f(y), y, 2) + D(u*y*fx, x, 3)) is None  # no simplification by design
-    assert F(D(f(y), y, 2) + D(f(y), y, 3) + D(fx, x, 4)) is None
-    assert F(D(fx, x, 2) + D(fx, x, 3)) == dict(n=2)
+    assert F(f(x)*D(f(x), x) + D(f(x), x, 2)) is None
+    assert F(D(x*f(y), y, 2) + D(u*y*f(x), x, 3)) is None  # no simplification by design
+    assert F(D(f(y), y, 2) + D(f(y), y, 3) + D(f(x), x, 4)) is None
+    assert F(D(f(x), x, 2) + D(f(x), x, 3)) == dict(n=2)
 
-# FIXME before merging. When the test_order_reducible tests are passing they should be
-# combined into a single function.
-
-def test_order_reducible_2():
     eqn = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
     sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert sol == dsolve(eqn, f(x))
     assert sol == dsolve(eqn, f(x), hint='order_reducible')
 
-def test_order_reducible_3():
     eqn = Eq(sqrt(2) * f(x).diff(x,x,x) + f(x).diff(x), 0)
     sol = Eq(f(x), C1 + C2*sin(2**(S(3)/4)*x/2) + C3*cos(2**(S(3)/4)*x/2))
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert sol == dsolve(eqn, f(x))
     assert sol == dsolve(eqn, f(x), hint='order_reducible')
 
-def test_order_reducible_4():
     eqn = f(x).diff(x, 2) + 2*f(x).diff(x)
     sol = Eq(f(x), C1 + C2*exp(-2*x))
     sols = constant_renumber(sol, 'C', 1, 2)
@@ -3149,7 +3142,6 @@ def test_order_reducible_4():
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
 
-def test_order_reducible_5():
     eqn = f(x).diff(x, 3) + f(x).diff(x, 2) - 6*f(x).diff(x)
     sol = Eq(f(x), C1 + C2*exp(-3*x) + C3*exp(2*x))
     sols = constant_renumber(sol, 'C', 1, 2)
@@ -3157,7 +3149,6 @@ def test_order_reducible_5():
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
 
-def test_order_reducible_6():
     eqn = f(x).diff(x, 4) - f(x).diff(x, 3) - 4*f(x).diff(x, 2) + \
         4*f(x).diff(x)
     sol = Eq(f(x), C1 + C2*exp(x) + C3*exp(-2*x) + C4*exp(2*x))
@@ -3166,7 +3157,6 @@ def test_order_reducible_6():
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
 
-def test_order_reducible_7():
     eqn = f(x).diff(x, 4) + 3*f(x).diff(x, 3)
     sol = Eq(f(x), C1 + C2*x + C3*x**2 + C4*exp(-3*x))
     sols = constant_renumber(sol, 'C', 1, 4)
@@ -3174,7 +3164,6 @@ def test_order_reducible_7():
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
 
-def test_order_reducible_8():
     eqn = f(x).diff(x, 4) - 2*f(x).diff(x, 2)
     sol = Eq(f(x), C1 + C2*x + C3*exp(x*sqrt(2)) + C4*exp(-x*sqrt(2)))
     sols = constant_renumber(sol, 'C', 1, 4)
@@ -3182,7 +3171,6 @@ def test_order_reducible_8():
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
 
-def test_order_reducible_9():
     eqn = f(x).diff(x, 4) + 4*f(x).diff(x, 2)
     sol = Eq(f(x), C1 + C2*sin(2*x) + C3*cos(2*x) + C4*x)
     sols = constant_renumber(sol, 'C', 1, 4)
@@ -3190,7 +3178,6 @@ def test_order_reducible_9():
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
 
-def test_order_reducible_10():
     eqn = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x)
     # These are equivalent:
     sol1 = Eq(f(x), C1 + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
@@ -3201,6 +3188,7 @@ def test_order_reducible_10():
     assert checkodesol(eqn, sol2, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol1, sol1s)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol2, sol2s)
+
 
 def test_nth_algebraic():
     eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
