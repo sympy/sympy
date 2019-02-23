@@ -57,4 +57,3 @@ def test_as_explicit():
     X = Identity(n)
     subbed = quadratic.xreplace({v:x,A:X})
     assert subbed.as_explicit() == Matrix([[14]])
-    
