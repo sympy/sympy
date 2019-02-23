@@ -1437,7 +1437,7 @@ class Circle(Ellipse):
             elif len(args) == 2:
                 # Assume (center, radius) pair
                 c = Point(args[0], dim=2, evaluate=evaluate)
-                r = Point(r, 0, evaluate=evaluate).x  # convert via Point as necessary
+                r = Point(args[1], 0, evaluate=evaluate).x  # convert via Point as necessary
 
             if not (c is None or r is None):
                 if r == 0:
